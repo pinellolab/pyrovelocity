@@ -28,7 +28,9 @@ Features
 * Multivariate denoised gene expression and velocity prediction
 * Quantification of RNA velocity performance with lineage tracing data
 
-![Velocity workflow comparison](docs/readme.rst)
+.. image:: docs/readme_figure1.png
+  :width: 800
+  :alt: Velocity workflow comparison
 
 Installation with miniconda
 ---------------------------------
