@@ -15,9 +15,7 @@ Pyro-Velocity
 
 A multivariate RNA Velocity model to estimate the uncertainty of cell future state using Pyro
 
-
 * Free software: Affero GPL V3
-* Documentation: https://pyrovelocity.readthedocs.io.
 
 
 Features
@@ -29,6 +27,8 @@ Features
 * Synchronized cell time estimation across genes
 * Multivariate denoised gene expression and velocity prediction
 * Quantification of RNA velocity performance with lineage tracing data
+
+![Velocity workflow comparison](docs/readme.rst)
 
 Installation with miniconda
 ---------------------------------
