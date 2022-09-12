@@ -239,8 +239,7 @@ These 6 plots side by side from left to right are following the same order as ab
   :width: 400
   :alt: Pancreas shared time uncertainty
 
-The left figure shows the average of 30 posterior samples from Pyro-Velocity shared time per cell, the right figure shows the standard deviation across posterior samples of shared time.
-
+The left figure shows the average of 30 posterior samples from Pyro-Velocity shared time per cell, the title of the figure shows the Spearman's correlation with Cytotrace score. the right figure shows the standard deviation across posterior samples of shared time.
 
 **Gene selection and visualization**
 
@@ -281,6 +280,8 @@ Latent time and on the side you show shared time uncertainty, and has a well-kno
 .. image:: docs/source/readme_figure9.png
   :width: 800
   :alt: Pancreas shared time uncertainty
+
+The leftmost figure shows the Cospar fate potency score, the middle figure shows the average of 30 posterior samples from Pyro-Velocity shared time per cell, the title of the figure shows the Spearman's correlation with Cospar fate potency, the right figure shows the standard deviation across posterior samples of shared time.
 
 The full example can be reproduced using the `LARRY`_ jupyter notebook. 
 
