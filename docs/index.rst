@@ -8,6 +8,7 @@ Welcome to pyrovelocity's documentation!
    readme
    installation
    usage
+   source/notebooks/pancreas
    modules
    contributing
    authors
