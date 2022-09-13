@@ -2,17 +2,6 @@
 Pyro-Velocity
 =================
 
-
-.. image:: https://img.shields.io/pypi/v/pyrovelocity.svg
-        :target: https://pypi.python.org/pypi/pyrovelocity
-
-.. image:: https://img.shields.io/travis/qinqian/pyrovelocity.svg
-        :target: https://travis-ci.com/qinqian/pyrovelocity
-
-.. image:: https://readthedocs.org/projects/pyrovelocity/badge/?version=latest
-        :target: https://pyrovelocity.readthedocs.io/en/latest/?version=latest
-        :alt: Documentation Status
-
 Pyro-Velocity is a Bayesian, generative and multivariate RNA Velocity model to estimate the *uncertainty* of cell future states. This approach models *raw sequencing counts* with the *synchronized cell time* across all expressed genes to provide quantifiable and improved information on cell fate choices and developmental trajectory dynamics.
 
 * LICENSE - Free software: Affero GPL V3
