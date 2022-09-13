@@ -13,9 +13,9 @@ Pyro-Velocity
         :target: https://pyrovelocity.readthedocs.io/en/latest/?version=latest
         :alt: Documentation Status
 
-A multivariate RNA Velocity model to estimate the uncertainty of cell future state using Pyro
+Pyro-Velocity is a Bayesian, generative and multivariate RNA Velocity model to estimate the *uncertainty* of cell future states. This approach models *raw sequencing counts* with the *synchronized cell time* across all expressed genes to provide quantifiable and improved information on cell fate choices and developmental trajectory dynamics.
 
-* Free software: Affero GPL V3
+* LICENSE - Free software: Affero GPL V3
 
 
 Features
@@ -23,10 +23,10 @@ Features
 
 * Probabilistic modeling of RNA velocity
 * Direct modeling of raw spliced and unspliced read count
-* Multiple uncertainty diagnostics analysis
+* Multiple uncertainty diagnostics analysis and visualizations
 * Synchronized cell time estimation across genes
 * Multivariate denoised gene expression and velocity prediction
-* Quantification of RNA velocity performance with lineage tracing data
+
 
 .. image:: docs/source/readme_figure1.png
   :width: 800
@@ -35,6 +35,8 @@ Features
 
 Installation with miniconda
 ---------------------------------
+
+Please install miniconda following the instructions here: https://docs.conda.io/en/latest/miniconda.html
 
 .. code-block:: bash
  
@@ -56,31 +58,31 @@ Installation with miniconda
         git clone https://github.com/pinellolab/pyrovelocity
         cd pyrovelocity && python setup.py install
 
-Install additional packages
----------------------------
+Additional packages necessary to reproduce all the analyses presented in the notebooks
+---------------------------------------------------------------------------------------
 
 .. code-block:: bash
 
         pip install cospar==0.1.9 
 
 
-Brief usage
+Quick start
 ---------------------------------
 
 After installation, now let's look at your dataset to see how Pyro-Velocity can help understand cell dynamics.
 
-If you only have raw FASTQ files from SMART-seq, 10X genomics or inDrop sequencing protocols. First, prepare your input using cellranger+velocyto or kallisto pipeline to generate the spliced and unspliced tables in h5ad file or loom file.
+Starting from raw sequencing FASTQ files, obtained for example with SMART-seq, 10X genomics, inDrop or other similar single-cell assays, you can preprocess the data to generate spliced and unspliced gene count tables in h5ad file (or loom file using cellranger+velocyto or the kallisto pipeline.
 
-Then, following the steps to traing and model and utilize all the features of Pyro-Velocity, 
+Starting from these count tables we show below a minimal step-by-step workflow to illustrate the main features of Pyro-Velocity in a Jupyter Notebook:
 
-Step 1. open the jupyter notebook or ipython command line, load your data(*local_file.h5ad*) with scvelo by using 
+Step 1. Load your data , load your data(e.g. *local_file.h5ad*) with scvelo by using: 
 
 .. code-block:: python
 
        import scvelo as scv
        adata = scv.read("local_file.h5ad")
        
-Step 2. apply a minimal preprocessing on the *adata* object:
+Step 2. Minimally preprocess your *adata* object:
 
 .. code-block:: python
 
@@ -123,6 +125,7 @@ Step 3. Train the Pyro-Velocity model:
                                       model_type='auto',
                                       guide_type='auto',
                                       train_size=1.0)  
+       
        # adata_model_pos is a returned list in which 0th element is the trained model, 
        # the 1st element is the posterior samples of all random variables 
        save_res = True
@@ -135,7 +138,7 @@ Step 3. Train the Pyro-Velocity model:
            with open("model_posterior_samples.pkl", "wb") as f:
                 pickle.dump(result_dict, f)       
 
-Step 4: apply minimal postprocessing using scvelo and evaluate Pyro-Velocity's velocity-based trajectory uncertainty. 
+Step 4: Generate Pyro-Velocity's vector field and shared time plots with uncertainty estimation. 
 
 .. code-block:: python
 
@@ -185,7 +188,7 @@ Step 4: apply minimal postprocessing using scvelo and evaluate Pyro-Velocity's v
                 adata.obsm[f'X_{embedding}'][:, 1][select], ax=ax[1], levels=3, fill=False)
     ax[1].axis('off')
     ax[1].set_title("vector field\nrayleigh test\nfdr<0.05: %s%%" % (round((fdri < 0.05).sum()/fdri.shape[0], 2)*100), fontsize=7)                                      
-Step 5: Prioritization of cell fate markers based on negative mean absolute errors and pearson correlation between denoised spliced expression and posterior mean shared time, and then visualize top selected markers with rainbow plots
+Step 5: Prioritize putative cell fate marker genes based on negative mean absolute errors and pearson correlation between denoised spliced expression and posterior mean shared time, and then visualize the top one with rainbow plots
 
 .. code-block:: python
 
@@ -200,8 +203,8 @@ Step 5: Prioritization of cell fate markers based on negative mean absolute erro
                     subfig[1], data=['st', 'ut'], num_genes=4)
                     
 
-Examples on real dataset
----------------------------------
+Illustrative examples of Pyro-Velocity analyses on different single-cell datasets
+---------------------------------------------------------------------------------
 
 Pyro-Velocity on the PBMC dataset[`1`_]
 =========================================
