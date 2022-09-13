@@ -279,8 +279,9 @@ These 5 plots from left to right shows: 1) Cell types, 2) Clone progression vect
 **Shared time with uncertainty**
 
 To quantitatively assess the quality of the the receovered shared time we also considered the agreement of our method with Cospar, a state-of-the-art method specifically designed for predicting fate potency based on LARRY data.  
+
 .. image:: docs/source/readme_figure9.png
-  :width: 800
+  :width: 1000
   :alt: Pancreas shared time uncertainty
 
 The leftmost figure shows the Cospar fate potency score, the middle figure shows the average of 30 posterior samples from Pyro-Velocity shared time per cell, the title of the figure shows the Spearman’s correlation between cell latent shared time and fate potency scores derived from Cospar, the right figure shows the standard deviation across posterior samples of shared time.
