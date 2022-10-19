@@ -26,11 +26,9 @@ titlesonly: true
 
 readme.md
 installation.md
-usage.md
-source/notebooks/pancreas.ipynb
-source/notebooks/pbmc.ipynb
-source/notebooks/larry.ipynb
+tutorials.md
 modules.md
+usage.md
 contributing.md
 authors.md
 history.md
@@ -41,4 +39,3 @@ GitHub <https://github.com/pinellolab/pyrovelocity>
 
 - {ref}`genindex`
 - {ref}`modindex`
-- {ref}`search`
