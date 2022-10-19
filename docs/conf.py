@@ -1,16 +1,42 @@
 """Sphinx configuration."""
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('..'))
+autodoc_mock_imports = [
+    "anndata",
+    "adjusttext",
+    "astropy",
+    "cospar",
+    "cytotrace",
+    "h5py",
+    "matplotlib",
+    "mpl_toolkits",
+    "numpy",
+    "pandas",
+    "pyro",
+    "pytorch_lightning",
+    "scanpy",
+    "scipy",
+    "scvelo",
+    "scvi",
+    "seaborn",
+    "sklearn",
+    "torch",
+    "torchmetrics",
+]
+
+needs_sphinx = "5.0"
 
 project = 'pyrovelocity'
 author = "Qian Qin"
-copyright = "2022, Qian Qin"
+copyright = "2022, Pinello Lab"
 extensions = [
+    'myst_parser',
     'sphinx.ext.autodoc',
-    'sphinx.ext.viewcode',
     'nbsphinx',
-    'myst_parser'
+    'sphinx.ext.viewcode',
+    "sphinx.ext.mathjax",
+    "sphinx.ext.napoleon",
+    "sphinx_autodoc_typehints",
+    "sphinx.ext.autosummary",
+    "sphinx_copybutton",
 ]
 templates_path = ['_templates']
 source_suffix = [
