@@ -1,4 +1,4 @@
-# pyrovelocity package
+# pyrovelocity
 
 ## Submodules
 
