@@ -8,7 +8,7 @@
 To install pyrovelocity, run this command in your terminal:
 
 ```console
-$ pip install pyrovelocity
+$ conda install -c bioconda pyrovelocity
 ```
 
 This is the preferred method to install pyrovelocity, as it will always install the most recent stable release.

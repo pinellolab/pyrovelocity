@@ -20,27 +20,44 @@ cell fate choices and developmental trajectory dynamics.
 
 ## Installation with miniconda
 
-Please install miniconda following the instructions here:
-<https://docs.conda.io/en/latest/miniconda.html>
+Please install miniconda following the instructions here: <https://docs.conda.io/en/latest/miniconda.html>, this step takes about 1-2 mins.
+
+``` bash 
+wget -c https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
+# then follow the instruction to setup the conda base environment
+```
+
+After the conda has been setup, logout and re-login to install *mamba* to speed up installation, this step takes about 20s.
 
 ``` bash
-mamba create -n pyrovelocity_release python==3.8.8
-conda activate pyrovelocity_release
+conda install -c conda-forge mamba
+```
 
-pip install pyro-ppl==1.6.0
-pip install scvelo
-pip install scvi-tools==0.13.0
-pip install pytorch_lightning==1.3.0
-pip install torchmetrics==0.5.1
-pip install h5py==3.2.1 anndata==0.7.5 # h5py problem for writing anndata
-pip install adjustText
-pip install astropy
-# install corresponding cuda version
-pip install torch==1.8.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html # this fix gpu memory issue, both 1.8.0/1.8.1 work
-pip install seaborn==0.11.2 # for avoiding seaborn api changes
+Then add the channels, this step takes 1~2s.
 
-git clone https://github.com/pinellolab/pyrovelocity
-cd pyrovelocity && python setup.py install
+``` bash
+conda config --add channels defaults
+conda config --add channels bioconda
+conda config --add channels conda-forge
+conda config --set channel_priority flexible
+```
+
+After that, install *pyrovelocity* package in one mamba command line, this step takes about 6-8min depending on the network speed:
+
+``` bash
+mamba create -n pyrovelocity_bioconda -c bioconda pyrovelocity
+```
+
+Last, test the installation by:
+
+``` bash 
+conda activate pyrovelocity_bioconda
+python 
+```
+
+``` python
+import pyrovelocity
 ```
 
 ## Additional packages necessary to reproduce all the analyses presented in the notebooks
@@ -77,7 +94,7 @@ Step 2. Minimally preprocess your *adata* object:
 ``` python
 adata.layers['raw_spliced']   = adata.layers['spliced']
 adata.layers['raw_unspliced'] = adata.layers['unspliced']
-adata.obs['u_lib_size_raw'] = adata.layers['raw_spliced'].toarray().sum(-1)
+adata.obs['u_lib_size_raw'] = adata.layers['raw_unspliced'].toarray().sum(-1)
 adata.obs['s_lib_size_raw'] = adata.layers['raw_spliced'].toarray().sum(-1)
 scv.pp.filter_and_normalize(adata, min_shared_counts=30, n_top_genes=2000)
 scv.pp.moments(adata, n_pcs=30, n_neighbors=30)
@@ -89,7 +106,7 @@ Step 3. Train the Pyro-Velocity model:
 from pyrovelocity.api import train_model
 # Model 1
 num_epochs = 1000 # large data
-num_epochs = 4000 # small data
+# num_epochs = 4000 # small data
 adata_model_pos = train_model(adata,
                                max_epochs=num_epochs, svi_train=True, log_every=100,
                                patient_init=45,
