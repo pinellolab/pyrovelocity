@@ -24,7 +24,10 @@ except ImportError:
 package = "pyrovelocity"
 python_versions = ["3.8"]
 nox.needs_version = ">= 2021.6.6"
-nox.options.sessions = ("docs-build",)
+nox.options.sessions = (
+    "pre-commit",
+    "docs-build",
+)
 
 
 def activate_virtualenv_in_precommit_hooks(session: Session) -> None:
