@@ -64,3 +64,6 @@ myst-parser = {version = ">=0.16.1"}
 dparse = ">=0.5.2"
 pytest-cov = "^4.0.0"
 pytest-mock = "^3.10.0"
+
+[tool.poetry.scripts]
+pyrovelocity = "pyrovelocity.pyrovelocity:main"
