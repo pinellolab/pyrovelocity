@@ -1,17 +1,31 @@
-from typing import Any, Callable, Optional, Tuple, Union
-from typing import Dict, Iterable, Optional, Sequence, Union
-import torch
-import pyro
-from scvi.train import PyroTrainingPlan, TrainRunner
-import numpy as np
-from scvi.dataloaders import DataSplitter
-from pytorch_lightning.callbacks import Callback
-from ._velocity_module import VelocityModule
-from pyro.infer import JitTrace_ELBO, TraceEnum_ELBO, config_enumerate, Trace_ELBO, TraceMeanField_ELBO, JitTraceEnum_ELBO
-from pyro.optim.optim import PyroOptim
-from pyro.optim.clipped_adam import ClippedAdam
 import math
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import Iterable
+from typing import Optional
+from typing import Sequence
+from typing import Tuple
+from typing import Union
+
+import numpy as np
+import pyro
+import torch
+from pyro.infer import JitTrace_ELBO
+from pyro.infer import JitTraceEnum_ELBO
+from pyro.infer import Trace_ELBO
+from pyro.infer import TraceEnum_ELBO
+from pyro.infer import TraceMeanField_ELBO
+from pyro.infer import config_enumerate
 from pyro.infer.autoguide.guides import AutoGuideList
+from pyro.optim.clipped_adam import ClippedAdam
+from pyro.optim.optim import PyroOptim
+from pytorch_lightning.callbacks import Callback
+from scvi.dataloaders import DataSplitter
+from scvi.train import PyroTrainingPlan
+from scvi.train import TrainRunner
+
+from ._velocity_module import VelocityModule
 
 
 class VelocityAdam(ClippedAdam):
@@ -29,7 +43,7 @@ class VelocityAdam(ClippedAdam):
                 grad = p.grad.data
                 grad.clamp_(-group["clip_norm"], group["clip_norm"])
                 # freeze non-velocity gene gradient
-                grad[grad.isnan()] = 0.
+                grad[grad.isnan()] = 0.0
                 state = self.state[p]
 
                 # State initialization
@@ -75,18 +89,24 @@ class EnumTrainingPlan(PyroTrainingPlan):
         pyro_velocity: VelocityModule,
         optim: Optional[pyro.optim.PyroOptim] = None,
     ):
-        super().__init__(pyro_velocity, TraceEnum_ELBO(strict_enumeration_warning=True), optim)
+        super().__init__(
+            pyro_velocity, TraceEnum_ELBO(strict_enumeration_warning=True), optim
+        )
         self.svi = pyro.infer.SVI(
             model=self.pyro_model,
             guide=self.pyro_guide,
             optim=self.optim,
-            loss=self.loss_fn)
+            loss=self.loss_fn,
+        )
         self.n_elem = self.module.num_genes * self.module.num_cells * 2
 
     def training_step(self, batch, batch_idx, optimizer_idx=0):
         args, kwargs = self.module._get_fn_args_from_batch(batch)
         loss = self.svi.step(*args, **kwargs)
-        return {"train_step_loss": loss, "num_elem": args[0].shape[0] * args[0].shape[1] * 2}
+        return {
+            "train_step_loss": loss,
+            "num_elem": args[0].shape[0] * args[0].shape[1] * 2,
+        }
 
     def training_epoch_end(self, outputs):
         n_batch, elbo = 0, 0
@@ -95,15 +115,18 @@ class EnumTrainingPlan(PyroTrainingPlan):
         for tensors in outputs:
             elbo += tensors["train_step_loss"]
             n_batch += 1
-            #n_elem += tensors['num_elem']
+            # n_elem += tensors['num_elem']
         self.log("elbo_train", elbo / n_batch, prog_bar=True, on_epoch=True)
-        #self.log("elbo_train", elbo / self.n_elem, prog_bar=True, on_epoch=True)
-        #self.log("elbo_train", elbo / n_elem, prog_bar=True, on_epoch=True)
+        # self.log("elbo_train", elbo / self.n_elem, prog_bar=True, on_epoch=True)
+        # self.log("elbo_train", elbo / n_elem, prog_bar=True, on_epoch=True)
 
     def validation_step(self, batch, batch_idx):
         args, kwargs = self.module._get_fn_args_from_batch(batch)
         loss = self.svi.evaluate_loss(*args, **kwargs)
-        return {"valid_step_loss": loss, "num_elem": args[0].shape[0] * args[0].shape[1] * 2}
+        return {
+            "valid_step_loss": loss,
+            "num_elem": args[0].shape[0] * args[0].shape[1] * 2,
+        }
 
     def validation_epoch_end(self, outputs):
         """Aggregate validation step information."""
@@ -114,7 +137,7 @@ class EnumTrainingPlan(PyroTrainingPlan):
             n_batch += 1
             ##n_elem += tensors['num_elem']
         self.log("elbo_validation", elbo / n_batch, prog_bar=True, on_epoch=True)
-        #self.log("elbo_validation", elbo / self.n_elem, prog_bar=True, on_epoch=True)
+        # self.log("elbo_validation", elbo / self.n_elem, prog_bar=True, on_epoch=True)
         ##self.log("elbo_validation", elbo / n_elem, prog_bar=True, on_epoch=True)
 
 
@@ -132,7 +155,7 @@ class VelocityTrainingMixin:
         check_val_every_n_epoch: Optional[int] = 1,
         patience: int = 10,
         min_delta: float = 0.0,
-        **kwargs
+        **kwargs,
     ):
         pyro.clear_param_store()
         pyro.set_rng_seed(seed)
@@ -144,8 +167,7 @@ class VelocityTrainingMixin:
             use_gpu=use_gpu,
         )
         training_plan = EnumTrainingPlan(
-            self.module,
-            VelocityClippedAdam({"lr": lr, "lrd": 0.9999})
+            self.module, VelocityClippedAdam({"lr": lr, "lrd": 0.9999})
         )
         runner = TrainRunner(
             self,
@@ -157,7 +179,7 @@ class VelocityTrainingMixin:
             early_stopping=early_stopping,
             early_stopping_patience=patience,
             early_stopping_min_delta=min_delta,
-            **kwargs
+            **kwargs,
         )
         return runner()
 
@@ -169,35 +191,65 @@ class VelocityTrainingMixin:
         max_epochs: int = 5000,
         log_every: int = 100,
         patient_init: int = 45,
-        patient_improve: float = 0.001
+        patient_improve: float = 0.001,
     ):
-        """ this method input all adata input gpu for faster IO,
+        """this method input all adata input gpu for faster IO,
         increase larger dataset by 5-6 fold, however should not
         be used for >20k cells with less than 40GB GPU memory,
-        this ignores validation cells """
-        if (use_gpu is False) or (use_gpu == 'cpu') or (use_gpu == -1):
-            device = 'cpu'
+        this ignores validation cells"""
+        if (use_gpu is False) or (use_gpu == "cpu") or (use_gpu == -1):
+            device = "cpu"
         else:
-            device = f'cuda:{use_gpu}'
+            device = f"cuda:{use_gpu}"
         pyro.clear_param_store()
         pyro.set_rng_seed(seed)
         pyro.enable_validation(True)
         optim = VelocityClippedAdam({"lr": lr, "lrd": 0.1 ** (1 / max_epochs)})
         self.module._model = self.module._model.to(device)
         print("TraceEnum")
-        svi = pyro.infer.SVI(self.module._model, self.module._guide, optim, TraceEnum_ELBO(strict_enumeration_warning=True))
+        svi = pyro.infer.SVI(
+            self.module._model,
+            self.module._guide,
+            optim,
+            TraceEnum_ELBO(strict_enumeration_warning=True),
+        )
 
         normalizer = self.adata.shape[0] * self.adata.shape[1] * 2
-        u = torch.tensor(np.array(self.adata.layers['raw_unspliced'].toarray(), dtype='float32'), dtype=torch.float32).to(device)
-        s = torch.tensor(np.array(self.adata.layers['raw_spliced'].toarray(), dtype='float32'), dtype=torch.float32).to(device)
-        u_library = torch.tensor(np.array(self.adata.obs.u_lib_size, dtype='float32'), dtype=torch.float32).to(device)
-        s_library = torch.tensor(np.array(self.adata.obs.s_lib_size, dtype='float32'), dtype=torch.float32).to(device)
-        u_library_mean = torch.tensor(np.array(self.adata.obs.u_lib_size_mean, dtype='float32'), dtype=torch.float32).to(device)
-        s_library_mean = torch.tensor(np.array(self.adata.obs.s_lib_size_mean, dtype='float32'), dtype=torch.float32).to(device)
-        u_library_scale = torch.tensor(np.array(self.adata.obs.u_lib_size_scale, dtype='float32'), dtype=torch.float32).to(device)
-        s_library_scale = torch.tensor(np.array(self.adata.obs.s_lib_size_scale, dtype='float32'), dtype=torch.float32).to(device)
-        if 'pyro_cell_state' in self.adata.obs.columns:
-            cell_state = torch.tensor(np.array(self.adata.obs.pyro_cell_state, dtype='float32'), dtype=torch.float32).to(device)
+        u = torch.tensor(
+            np.array(self.adata.layers["raw_unspliced"].toarray(), dtype="float32"),
+            dtype=torch.float32,
+        ).to(device)
+        s = torch.tensor(
+            np.array(self.adata.layers["raw_spliced"].toarray(), dtype="float32"),
+            dtype=torch.float32,
+        ).to(device)
+        u_library = torch.tensor(
+            np.array(self.adata.obs.u_lib_size, dtype="float32"), dtype=torch.float32
+        ).to(device)
+        s_library = torch.tensor(
+            np.array(self.adata.obs.s_lib_size, dtype="float32"), dtype=torch.float32
+        ).to(device)
+        u_library_mean = torch.tensor(
+            np.array(self.adata.obs.u_lib_size_mean, dtype="float32"),
+            dtype=torch.float32,
+        ).to(device)
+        s_library_mean = torch.tensor(
+            np.array(self.adata.obs.s_lib_size_mean, dtype="float32"),
+            dtype=torch.float32,
+        ).to(device)
+        u_library_scale = torch.tensor(
+            np.array(self.adata.obs.u_lib_size_scale, dtype="float32"),
+            dtype=torch.float32,
+        ).to(device)
+        s_library_scale = torch.tensor(
+            np.array(self.adata.obs.s_lib_size_scale, dtype="float32"),
+            dtype=torch.float32,
+        ).to(device)
+        if "pyro_cell_state" in self.adata.obs.columns:
+            cell_state = torch.tensor(
+                np.array(self.adata.obs.pyro_cell_state, dtype="float32"),
+                dtype=torch.float32,
+            ).to(device)
         else:
             cell_state = None
 
@@ -205,13 +257,41 @@ class VelocityTrainingMixin:
         patience = patient_init
         for step in range(max_epochs):
             if cell_state is None:
-                elbos = svi.step(u, s, u_library.reshape(-1, 1), s_library.reshape(-1, 1), u_library_mean.reshape(-1, 1), s_library_mean.reshape(-1, 1), u_library_scale.reshape(-1, 1), s_library_scale.reshape(-1, 1), None, None) / normalizer
+                elbos = (
+                    svi.step(
+                        u,
+                        s,
+                        u_library.reshape(-1, 1),
+                        s_library.reshape(-1, 1),
+                        u_library_mean.reshape(-1, 1),
+                        s_library_mean.reshape(-1, 1),
+                        u_library_scale.reshape(-1, 1),
+                        s_library_scale.reshape(-1, 1),
+                        None,
+                        None,
+                    )
+                    / normalizer
+                )
             else:
-                elbos = svi.step(u, s, u_library.reshape(-1, 1), s_library.reshape(-1, 1), u_library_mean.reshape(-1, 1), s_library_mean.reshape(-1, 1), u_library_scale.reshape(-1, 1), s_library_scale.reshape(-1, 1), None, cell_state.reshape(-1, 1)) / normalizer
+                elbos = (
+                    svi.step(
+                        u,
+                        s,
+                        u_library.reshape(-1, 1),
+                        s_library.reshape(-1, 1),
+                        u_library_mean.reshape(-1, 1),
+                        s_library_mean.reshape(-1, 1),
+                        u_library_scale.reshape(-1, 1),
+                        s_library_scale.reshape(-1, 1),
+                        None,
+                        cell_state.reshape(-1, 1),
+                    )
+                    / normalizer
+                )
             if step % log_every == 0:
                 print(f"step {step: >4d} loss = {elbos:0.6g} patience = {patience}")
             if step > log_every:
-                if (losses[-1] - elbos) < losses[-1]*patient_improve:
+                if (losses[-1] - elbos) < losses[-1] * patient_improve:
                     patience -= 1
                 else:
                     patience = patient_init
@@ -231,12 +311,12 @@ class VelocityTrainingMixin:
         batch_size: Optional[int] = None,
         new_valid_guide: Optional[AutoGuideList] = None,
         patient_init: int = 45,
-        patient_improve: float = 0.
+        patient_improve: float = 0.0,
     ):
-        if (use_gpu is False) or (use_gpu == 'cpu') or (use_gpu == -1):
-            device = 'cpu'
+        if (use_gpu is False) or (use_gpu == "cpu") or (use_gpu == -1):
+            device = "cpu"
         else:
-            device = f'cuda:{use_gpu}'
+            device = f"cuda:{use_gpu}"
         pyro.clear_param_store()
         pyro.set_rng_seed(seed)
         pyro.enable_validation(True)
@@ -249,13 +329,23 @@ class VelocityTrainingMixin:
         self.module._model = self.module._model.to(device)
 
         if new_valid_guide is None:
-            svi = pyro.infer.SVI(self.module._model, self.module._guide, optim, TraceEnum_ELBO(strict_enumeration_warning=True))
+            svi = pyro.infer.SVI(
+                self.module._model,
+                self.module._guide,
+                optim,
+                TraceEnum_ELBO(strict_enumeration_warning=True),
+            )
         else:
-            svi = pyro.infer.SVI(self.module._model, new_valid_guide, optim, TraceEnum_ELBO(strict_enumeration_warning=True))
+            svi = pyro.infer.SVI(
+                self.module._model,
+                new_valid_guide,
+                optim,
+                TraceEnum_ELBO(strict_enumeration_warning=True),
+            )
 
         losses = []
         patience = patient_init
-        #normalizer = self.adata.shape[0] * self.adata.shape[1] * 2
+        # normalizer = self.adata.shape[0] * self.adata.shape[1] * 2
         for step in range(max_epochs):
             n_batch = 0
             elbos = 0
@@ -265,14 +355,14 @@ class VelocityTrainingMixin:
                 loss = svi.step(*args, **kwargs)
                 elbos += loss
                 n_batch += 1
-            #elbos = elbos / normalizer #n_batch
+            # elbos = elbos / normalizer #n_batch
             elbos = elbos / n_batch
             if step % log_every == 0:
                 print(f"step {step: >4d} loss = {elbos:0.6g} patience = {patience}")
             if step > log_every:
                 if (losses[-1] - elbos) < losses[-1] * patient_improve:
                     patience -= 1
-                    #print(f"step {step: >4d} loss = {elbos:0.6g} patience = {patience}")
+                    # print(f"step {step: >4d} loss = {elbos:0.6g} patience = {patience}")
                 else:
                     patience = patient_init
             if patience <= 0:

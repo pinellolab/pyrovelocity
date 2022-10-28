@@ -1,23 +1,36 @@
-from anndata import AnnData
-from .utils import tau_inv, mRNA, debug, init_with_all_cells
-import numpy as np
-from scvi.model.base import BaseModelClass
-from scvi.module.base import PyroBaseModuleClass
-from scvi.model.base import PyroSviTrainMixin, PyroSampleMixin
-from scvi.model._utils import parse_use_gpu_arg
-from scvi.model.base._utils import _initialize_model, _validate_var_names
-
-from scvi.data import get_from_registry, transfer_anndata_setup
-from pyrovelocity.data import setup_anndata_multilayers
-from typing import Optional, Sequence, Union, Literal
-import torch
-import pyro
-import scvi
-import pickle
-from ._velocity_module import VelocityModule
-from ._trainer import VelocityTrainingMixin
 import logging
 import os
+import pickle
+from typing import Literal
+from typing import Optional
+from typing import Sequence
+from typing import Union
+
+import numpy as np
+import pyro
+import scvi
+import torch
+from anndata import AnnData
+from scvi.data import get_from_registry
+from scvi.data import transfer_anndata_setup
+from scvi.model._utils import parse_use_gpu_arg
+from scvi.model.base import BaseModelClass
+from scvi.model.base import PyroSampleMixin
+from scvi.model.base import PyroSviTrainMixin
+from scvi.model.base._utils import _initialize_model
+from scvi.model.base._utils import _validate_var_names
+from scvi.module.base import PyroBaseModuleClass
+
+from pyrovelocity.data import setup_anndata_multilayers
+
+from ._trainer import VelocityTrainingMixin
+from ._velocity_module import VelocityModule
+from .utils import debug
+from .utils import init_with_all_cells
+from .utils import mRNA
+from .utils import tau_inv
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -25,15 +38,15 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
     def __init__(
         self,
         adata: AnnData,
-        input_type: str = 'raw',
+        input_type: str = "raw",
         shared_time: bool = True,
-        model_type: str = 'auto',
-        guide_type: str = 'auto',
-        likelihood: str = 'Poisson',
+        model_type: str = "auto",
+        guide_type: str = "auto",
+        likelihood: str = "Poisson",
         t_scale_on: bool = False,
         plate_size: int = 2,
-        latent_factor: str = 'none',
-        latent_factor_operation: str = 'selection',
+        latent_factor: str = "none",
+        latent_factor_operation: str = "selection",
         inducing_point_size: int = 0,
         latent_factor_size: int = 0,
         include_prior: bool = False,
@@ -50,16 +63,16 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         self.use_gpu = use_gpu
         self.cell_specific_kinetics = cell_specific_kinetics
         self.k = kinetics_num
-        if input_type == 'knn':
+        if input_type == "knn":
             layers = ["Mu", "Ms"]
-            assert likelihood in ['Normal', 'LogNormal']
+            assert likelihood in ["Normal", "LogNormal"]
             assert "Mu" in adata.layers
-        elif input_type == 'raw_cpm':
+        elif input_type == "raw_cpm":
             layers = ["unspliced", "spliced"]
-            assert likelihood in ['Normal', 'LogNormal']
+            assert likelihood in ["Normal", "LogNormal"]
         else:
             layers = ["raw_unspliced", "raw_spliced"]
-            assert likelihood != 'Normal'
+            assert likelihood != "Normal"
 
         self.layers = layers
         self.input_type = input_type
@@ -70,12 +83,20 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             copy=True,
             batch_key=None,
             input_type=input_type,
-            cluster=self.cell_specific_kinetics
+            cluster=self.cell_specific_kinetics,
         )
         scvi.data.view_anndata_setup(adata)
         super().__init__(adata)
         if init:
-            initial_values = init_with_all_cells(self.adata, input_type, shared_time, latent_factor, latent_factor_size, plate_size, num_aux_cells=num_aux_cells)
+            initial_values = init_with_all_cells(
+                self.adata,
+                input_type,
+                shared_time,
+                latent_factor,
+                latent_factor_size,
+                plate_size,
+                num_aux_cells=num_aux_cells,
+            )
         else:
             initial_values = {}
         logger.info(self.summary_stats)
@@ -92,31 +113,32 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             latent_factor_operation=latent_factor_operation,
             latent_factor_size=latent_factor_size,
             inducing_point_size=inducing_point_size,
-            include_prior = include_prior,
-            use_gpu = use_gpu,
+            include_prior=include_prior,
+            use_gpu=use_gpu,
             num_aux_cells=num_aux_cells,
             only_cell_times=only_cell_times,
             decoder_on=decoder_on,
             add_offset=add_offset,
             correct_library_size=correct_library_size,
-            cell_specific_kinetics = cell_specific_kinetics,
+            cell_specific_kinetics=cell_specific_kinetics,
             kinetics_num=self.k,
-            **initial_values)
+            **initial_values,
+        )
         self.num_cells = self.module.num_cells
-        self._model_summary_string = f'''
+        self._model_summary_string = f"""
         RNA velocity Pyro model with following parameters:
-        '''
+        """
         self.init_params_ = self._get_init_params(locals())
         logger.info("The model has been initialized")
 
     def train(self, **kwargs):
         pyro.enable_validation(True)
-        #pyro.infer.util.enable_validation(False) # turn off with state sample in the guide function
-        #the only variable cell_time needs warmup before training 
-        #to get a reasonable correlation with differentiation
-        #somehow cell_time is only linearly with the initialization
-        #might not be effective in current map_estimate formulation
-        #self.module.guide(torch.tensor(self.adata.layers["Mu"]),
+        # pyro.infer.util.enable_validation(False) # turn off with state sample in the guide function
+        # the only variable cell_time needs warmup before training
+        # to get a reasonable correlation with differentiation
+        # somehow cell_time is only linearly with the initialization
+        # might not be effective in current map_estimate formulation
+        # self.module.guide(torch.tensor(self.adata.layers["Mu"]),
         #                  torch.tensor(self.adata.layers["Ms"]),
         #                  torch.tensor(self.adata.obs["_indices"].values).long())
         super().train(**kwargs)
@@ -126,7 +148,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         adata: Optional[AnnData] = None,
         indices: Optional[Sequence[int]] = None,
         batch_size: Optional[int] = None,
-        num_samples=100
+        num_samples=100,
     ):
         adata = setup_anndata_multilayers(
             adata,
@@ -138,7 +160,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         return self.posterior_samples(adata, indices, batch_size, num_samples)
 
     def enum_parallel_predict(self):
-        """ work for parallel enumeration """
+        """work for parallel enumeration"""
         return
 
     def posterior_samples(
@@ -146,62 +168,64 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         adata: Optional[AnnData] = None,
         indices: Optional[Sequence[int]] = None,
         batch_size: Optional[int] = None,
-        num_samples=100
+        num_samples=100,
     ):
-        """ only work for sequential enumeration """
+        """only work for sequential enumeration"""
         self.module.eval()
         predictive = self.module.create_predictive(
-            model=pyro.poutine.uncondition(self.module.model),  # do not input u_obs, and s_obs
+            model=pyro.poutine.uncondition(
+                self.module.model
+            ),  # do not input u_obs, and s_obs
             num_samples=num_samples,
         )
-        #predictive.eval() not work...
+        # predictive.eval() not work...
         scdl = self._make_data_loader(
-            adata=adata, indices=indices, batch_size=batch_size)
+            adata=adata, indices=indices, batch_size=batch_size
+        )
 
         with torch.no_grad(), pyro.poutine.mask(mask=False):
             posterior_samples = []
             for tensor in scdl:
                 args, kwargs = self.module._get_fn_args_from_batch(tensor)
                 posterior_sample = {
-                    k: v.cpu().numpy()
-                    for k, v in predictive(*args, **kwargs).items()
+                    k: v.cpu().numpy() for k, v in predictive(*args, **kwargs).items()
                 }
                 posterior_samples.append(posterior_sample)
             samples = {}
             for k in posterior_samples[0].keys():
-                if 'aux' in k:
-                    samples[k] = posterior_samples[0][k] # alpha, beta, gamma...
+                if "aux" in k:
+                    samples[k] = posterior_samples[0][k]  # alpha, beta, gamma...
                 elif posterior_samples[0][k].shape[-2] == 1:
                     samples[k] = posterior_samples[0][k]
-                    if k == 'kinetics_prob':
+                    if k == "kinetics_prob":
                         samples[k] = np.concatenate(
-                               [
-                                   # cat mini-batches
-                                   posterior_samples[j][k] ##.squeeze()
-                                   for j in range(
-                                       len(posterior_samples)
-                                   )
-                               ],
-                               axis=-3)
+                            [
+                                # cat mini-batches
+                                posterior_samples[j][k]  ##.squeeze()
+                                for j in range(len(posterior_samples))
+                            ],
+                            axis=-3,
+                        )
                 else:
                     samples[k] = np.concatenate(
-                           [
-                               # cat mini-batches
-                               posterior_samples[j][k] ##.squeeze()
-                               for j in range(
-                                   len(posterior_samples)
-                               )
-                           ],
-                           axis=-2)
+                        [
+                            # cat mini-batches
+                            posterior_samples[j][k]  ##.squeeze()
+                            for j in range(len(posterior_samples))
+                        ],
+                        axis=-2,
+                    )
         return samples
 
-    def save(self,
-             dir_path: str,
-             overwrite: bool = True,
-             save_anndata: bool = False,
-             **anndata_write_kwargs):
+    def save(
+        self,
+        dir_path: str,
+        overwrite: bool = True,
+        save_anndata: bool = False,
+        **anndata_write_kwargs,
+    ):
         super().save(dir_path, overwrite, save_anndata, **anndata_write_kwargs)
-        pyro.get_param_store().save(os.path.join(dir_path, 'param_store_test.pt'))
+        pyro.get_param_store().save(os.path.join(dir_path, "param_store_test.pt"))
 
     @classmethod
     def load(
@@ -236,7 +260,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             model.module.load_state_dict(model_state_dict)
         except RuntimeError as err:
             if isinstance(model.module, PyroBaseModuleClass):
-                #old_history = model.history_
+                # old_history = model.history_
                 logger.info("Preparing underlying module for load")
                 try:
                     model.train(max_steps=1, use_gpu=use_gpu)
@@ -249,14 +273,15 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                 raise err
         model.to_device(device)
 
-        #predictive.eval() not work...
+        # predictive.eval() not work...
         model.module.eval()
-        #model.module.model.eval()
+        # model.module.model.eval()
 
         model._validate_anndata(adata)
         # load pyro pyaram stores
-        pyro.get_param_store().load(os.path.join(dir_path, 'param_store_test.pt'),
-                                    map_location=device)
+        pyro.get_param_store().load(
+            os.path.join(dir_path, "param_store_test.pt"), map_location=device
+        )
         return model
 
 
