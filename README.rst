@@ -28,7 +28,7 @@ Installation with miniconda
 Please install miniconda following the instructions here: https://docs.conda.io/en/latest/miniconda.html
 
 .. code-block:: bash
- 
+
         mamba create -n pyrovelocity_release python==3.8.8
         conda activate pyrovelocity_release
 
@@ -52,7 +52,7 @@ Additional packages necessary to reproduce all the analyses presented in the not
 
 .. code-block:: bash
 
-        pip install cospar==0.1.9 
+        pip install cospar==0.1.9
 
 
 Quick start
@@ -64,23 +64,23 @@ Starting from raw sequencing FASTQ files, obtained for example with SMART-seq, 1
 
 Starting from these count tables we show below a minimal step-by-step workflow to illustrate the main features of Pyro-Velocity in a Jupyter Notebook:
 
-Step 1. Load your data, load your data(e.g. *local_file.h5ad*) with scvelo by using: 
+Step 1. Load your data, load your data(e.g. *local_file.h5ad*) with scvelo by using:
 
 .. code-block:: python
 
        import scvelo as scv
        adata = scv.read("local_file.h5ad")
-       
+
 Step 2. Minimally preprocess your *adata* object:
 
 .. code-block:: python
 
        adata.layers['raw_spliced']   = adata.layers['spliced']
-       adata.layers['raw_unspliced'] = adata.layers['unspliced']       
+       adata.layers['raw_unspliced'] = adata.layers['unspliced']
        adata.obs['u_lib_size_raw'] = adata.layers['raw_spliced'].toarray().sum(-1)
-       adata.obs['s_lib_size_raw'] = adata.layers['raw_spliced'].toarray().sum(-1)       
+       adata.obs['s_lib_size_raw'] = adata.layers['raw_spliced'].toarray().sum(-1)
        scv.pp.filter_and_normalize(adata, min_shared_counts=30, n_top_genes=2000)
-       scv.pp.moments(adata, n_pcs=30, n_neighbors=30)     
+       scv.pp.moments(adata, n_pcs=30, n_neighbors=30)
 
 Step 3. Train the Pyro-Velocity model:
 
@@ -100,8 +100,8 @@ Step 3. Train the Pyro-Velocity model:
                                       patient_improve=1e-3,
                                       model_type='auto',
                                       guide_type='auto_t0_constraint',
-                                      train_size=1.0)       
-              
+                                      train_size=1.0)
+
        # Or Model 2
        adata_model_pos = train_model(adata,
                                       max_epochs=num_epochs, svi_train=True, log_every=100,
@@ -113,21 +113,21 @@ Step 3. Train the Pyro-Velocity model:
                                       patient_improve=1e-3,
                                       model_type='auto',
                                       guide_type='auto',
-                                      train_size=1.0)  
-       
-       # adata_model_pos is a returned list in which 0th element is the trained model, 
-       # the 1st element is the posterior samples of all random variables 
+                                      train_size=1.0)
+
+       # adata_model_pos is a returned list in which 0th element is the trained model,
+       # the 1st element is the posterior samples of all random variables
        save_res = True
        if save_res:
            adata_model_pos[0].save('saved_model', overwrite=True)
-           result_dict = {"adata_model_pos": adata_model_pos[1], 
+           result_dict = {"adata_model_pos": adata_model_pos[1],
                           "v_map_all": v_map_all,
                           "embeds_radian": embeds_radian, "fdri": fdri, "embed_mean": embed_mean}
            import pickle
            with open("model_posterior_samples.pkl", "wb") as f:
-                pickle.dump(result_dict, f)       
+                pickle.dump(result_dict, f)
 
-Step 4: Generate Pyro-Velocity's vector field and shared time plots with uncertainty estimation. 
+Step 4: Generate Pyro-Velocity's vector field and shared time plots with uncertainty estimation.
 
 .. code-block:: python
 
@@ -136,25 +136,25 @@ Step 4: Generate Pyro-Velocity's vector field and shared time plots with uncerta
           vector_field_uncertainty, plot_vector_field_uncertain,\
           plot_mean_vector_field, project_grid_points,rainbowplot,denoised_umap,\
           us_rainbowplot, plot_arrow_examples
-      
+
     embedding = 'emb' # change to umap or tsne based on your embedding method
 
     # This generates the posterior samples of all vector fields
     # and statistical testing results from Rayleigh test
-    v_map_all, embeds_radian, fdri = vector_field_uncertainty(adata, adata_model_pos[1], 
+    v_map_all, embeds_radian, fdri = vector_field_uncertainty(adata, adata_model_pos[1],
                                                               basis=embedding, denoised=False, n_jobs=30)
     fig, ax = plt.subplots()
     # This returns the posterior mean of the vector field
-    embed_mean = plot_mean_vector_field(adata_model_pos[1], adata, ax=ax, n_jobs=30, basis=embedding)                                                              
-    # This plot single-cell level vector field uncertainty 
+    embed_mean = plot_mean_vector_field(adata_model_pos[1], adata, ax=ax, n_jobs=30, basis=embedding)
+    # This plot single-cell level vector field uncertainty
     # and averaged cell vector field uncertainty on the grid points
     # based on angular standard deviation
     fig, ax = plt.subplots(1, 2)
-    fig.set_size_inches(11.5, 5)    
-    plot_vector_field_uncertain(adata, embed_mean, embeds_radian, 
+    fig.set_size_inches(11.5, 5)
+    plot_vector_field_uncertain(adata, embed_mean, embeds_radian,
                                 ax=ax,
-                                fig=fig, cbar=False, basis=embedding, scale=None)    
-                                
+                                fig=fig, cbar=False, basis=embedding, scale=None)
+
     # This generates shared time uncertainty plot with contour lines
     fig, ax = plt.subplots(1, 3)
     fig.set_size_inches(12, 2.8)
@@ -164,7 +164,7 @@ Step 4: Generate Pyro-Velocity's vector field and shared time plots with uncerta
     sns.kdeplot(adata.obsm[f'X_{embedding}'][:, 0][select],
                 adata.obsm[f'X_{embedding}'][:, 1][select],
                 ax=ax[0], levels=3, fill=False)
-                
+
     # This generates vector field uncertainty based on Rayleigh test.
     adata.obs.loc[:, 'vector_field_rayleigh_test'] = fdri
     im = ax[1].scatter(adata.obsm[f'X_{basis}'][:, 0],
@@ -176,7 +176,7 @@ Step 4: Generate Pyro-Velocity's vector field and shared time plots with uncerta
     sns.kdeplot(adata.obsm[f'X_{embedding}'][:, 0][select],
                 adata.obsm[f'X_{embedding}'][:, 1][select], ax=ax[1], levels=3, fill=False)
     ax[1].axis('off')
-    ax[1].set_title("vector field\nrayleigh test\nfdr<0.05: %s%%" % (round((fdri < 0.05).sum()/fdri.shape[0], 2)*100), fontsize=7)                                      
+    ax[1].set_title("vector field\nrayleigh test\nfdr<0.05: %s%%" % (round((fdri < 0.05).sum()/fdri.shape[0], 2)*100), fontsize=7)
 Step 5: Prioritize putative cell fate marker genes based on negative mean absolute errors and pearson correlation between denoised spliced expression and posterior mean shared time, and then visualize the top one with rainbow plots
 
 .. code-block:: python
@@ -184,13 +184,13 @@ Step 5: Prioritize putative cell fate marker genes based on negative mean absolu
     fig = plt.figure(figsize=(7.07, 4.5))
     subfig = fig.subfigures(1, 2, wspace=0.0, hspace=0, width_ratios=[1.6, 4])
     ax = fig.subplots(1)
-    # This generates the selected cell fate markers and output in DataFrame        
+    # This generates the selected cell fate markers and output in DataFrame
     volcano_data, _ = plot_gene_ranking([adata_model_pos[1]], [adata], ax=ax,
                                          time_correlation_with='st', assemble=True)
     # This generates the rainbow plots for the selected markers.
-    _ = rainbowplot(volcano_data, adata, adata_model_pos[1], 
+    _ = rainbowplot(volcano_data, adata, adata_model_pos[1],
                     subfig[1], data=['st', 'ut'], num_genes=4)
-                    
+
 
 Illustrative examples of Pyro-Velocity analyses on different single-cell datasets
 ---------------------------------------------------------------------------------
@@ -199,7 +199,7 @@ Pyro-Velocity on the PBMC dataset[`1`_]
 =========================================
 This is a scRNA-seq dataset of fully mature peripheral blood mononuclear cells (PBMC) generated using the 10X genomics kit and containing 65,877 cells with 11 fully differentiated immune cell types. This dataset doesn't contain stem and progenitor cells or other signature of and undergoing dynamical differentiation, thus no consistent velocity flow should be detected.
 
-Below we show the main output generated by Pyro-Velocity Model 1 analysis. Pyro-Velocity failed to detect high-confidence trajectories in the mature blood cell states, consistent with what is known about the biology underlying these cells. 
+Below we show the main output generated by Pyro-Velocity Model 1 analysis. Pyro-Velocity failed to detect high-confidence trajectories in the mature blood cell states, consistent with what is known about the biology underlying these cells.
 
 **Vector Field with uncertainty**
 
@@ -209,13 +209,13 @@ Below we show the main output generated by Pyro-Velocity Model 1 analysis. Pyro-
 
 These 6 plots from left to right show: 1. cell types, 2. stream plot of Pyro-velocity vector field based on the posterior mean of 30 posterior samples, 3. single cell vector field examples showing all 30 posterior samples as vectors for 3 arbitrarily selected cells; 4. single cell vector field with uncertainty based on angular standard deviation across 30 posterior samples, 5. averaged vector field uncertainty from 4. 6. Rayleigh test of posterior samples vector field, the title shows the expected false discovery rate using a 5% threshold.
 
-The full example can be reproduced using the `PBMC`_ Jupyter notebook. 
+The full example can be reproduced using the `PBMC`_ Jupyter notebook.
 
 Pyro-Velocity on the Pancreas dataset[`2`_]
 =============================================
 Here we apply Pyro-Velocity to a single cell RNA-seq dataset of mouse pancreas in the E15.5 embryo developmental stage. This dataset was generated using the 10X genomics kit and contains 3,696 cells with 8 cell types including progenitor cells, intermediate and terminal cell states.
 
-Below we show the main output generated by Pyro-Velocity Model 1 analysis. Pyro-Velocity was able to define well-known developmental cell hierarchies identifying cell trajectories originating from ductal progenitor cells and culminated in the production of mature Alpha, Beta, Delta, and Epsilon cells. 
+Below we show the main output generated by Pyro-Velocity Model 1 analysis. Pyro-Velocity was able to define well-known developmental cell hierarchies identifying cell trajectories originating from ductal progenitor cells and culminated in the production of mature Alpha, Beta, Delta, and Epsilon cells.
 
 **Vector Field with uncertainty**
 
@@ -247,7 +247,7 @@ For the selected genes, it is possible to explore in depth their dynamic, using 
   :width: 1000
   :alt: Pancreas vector field uncertainty
 
-The full example can be reproduced using the `Pancreas`_ jupyter notebook. 
+The full example can be reproduced using the `Pancreas`_ jupyter notebook.
 
 
 Pyro-Velocity on the Larry dataset[`3`_]
@@ -267,7 +267,7 @@ These 5 plots from left to right shows: 1) Cell types, 2) Clone progression vect
 
 **Shared time with uncertainty**
 
-To quantitatively assess the quality of the the receovered shared time we also considered the agreement of our method with Cospar, a state-of-the-art method specifically designed for predicting fate potency based on LARRY data.  
+To quantitatively assess the quality of the the receovered shared time we also considered the agreement of our method with Cospar, a state-of-the-art method specifically designed for predicting fate potency based on LARRY data.
 
 .. image:: docs/source/readme_figure9.png
   :width: 1000
@@ -275,13 +275,12 @@ To quantitatively assess the quality of the the receovered shared time we also c
 
 The leftmost figure shows the Cospar fate potency score, the middle figure shows the average of 30 posterior samples from Pyro-Velocity shared time per cell, the title of the figure shows the Spearman’s correlation between cell latent shared time and fate potency scores derived from Cospar, the right figure shows the standard deviation across posterior samples of shared time.
 
-The full example can be reproduced using the `LARRY`_ jupyter notebook. 
+The full example can be reproduced using the `LARRY`_ jupyter notebook.
 
 .. _Notebook: https://github.com/pinellolab/pyrovelocity/tree/master/docs/source/notebooks
 .. _PBMC: https://github.com/pinellolab/pyrovelocity/blob/master/docs/source/notebooks/pbmc.ipynb
 .. _Pancreas: https://github.com/pinellolab/pyrovelocity/blob/master/docs/source/notebooks/pancreas.ipynb
 .. _LARRY: https://github.com/pinellolab/pyrovelocity/blob/master/docs/source/notebooks/larry.ipynb
-.. _1: https://scvelo.readthedocs.io/perspectives/Perspectives/ 
+.. _1: https://scvelo.readthedocs.io/perspectives/Perspectives/
 .. _2: https://scvelo.readthedocs.io/VelocityBasics/
-.. _3: https://figshare.com/articles/dataset/larry_invitro_adata_sub_raw_h5ad/20780344 
-
+.. _3: https://figshare.com/articles/dataset/larry_invitro_adata_sub_raw_h5ad/20780344

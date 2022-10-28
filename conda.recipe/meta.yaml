@@ -9,7 +9,7 @@ build:
   noarch: python
   number: 0
   script: {{ PYTHON }} -m pip install --no-deps --ignore-installed .
-      
+
 source:
   url: https://github.com/pinellolab/{{ name }}/archive/refs/tags/0.1.0.tar.gz
   sha256: c24742d3ab85cbf36608fb486116d04a015e3bcd6bfdb29c6916a728cf7e3887

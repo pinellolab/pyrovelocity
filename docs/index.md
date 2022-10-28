@@ -1,9 +1,9 @@
 # Documentation
 
 `pyrovelocity` is a Bayesian, generative, and multivariate RNA velocity
-model to estimate *uncertainty* in predictions of future cell states from
+model to estimate _uncertainty_ in predictions of future cell states from
 minimal models approximating splicing dynamics.
-This approach models *raw sequencing counts* with *synchronized cell time* across
+This approach models _raw sequencing counts_ with _synchronized cell time_ across
 all expressed genes to provide quantifiable information on
 cell fate choice and developmental trajectory dynamics.
 
@@ -16,7 +16,6 @@ cell fate choice and developmental trajectory dynamics.
 -   Multivariate modeling of gene expression and velocity prediction
 
 ![Velocity workflow comparison](source/readme_figure1.png)
-
 
 ```{toctree}
 ---
@@ -38,5 +37,5 @@ GitHub <https://github.com/pinellolab/pyrovelocity>
 
 # Indices and tables
 
-- {ref}`genindex`
-- {ref}`modindex`
+-   {ref}`genindex`
+-   {ref}`modindex`
