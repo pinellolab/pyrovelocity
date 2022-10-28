@@ -43,13 +43,14 @@ conda config --add channels conda-forge
 conda config --set channel_priority flexible
 ```
 
-After that, install *pyrovelocity* package in one mamba command line, this step takes about 6-8min depending on the network speed:
+After that, install the *pyrovelocity* package in one mamba command:
 
 ``` bash
 mamba create -n pyrovelocity_bioconda -c bioconda pyrovelocity
 ```
+This step takes about 6-8 minutes depending on the network speed. If you prefer to use conda environment configurations, see the `conda` subfolder.
 
-Last, test the installation by:
+Lastly, test the installation by:
 
 ``` bash 
 conda activate pyrovelocity_bioconda
