@@ -24,9 +24,8 @@ except ImportError:
 package = "pyrovelocity"
 python_versions = ["3.8"]
 nox.needs_version = ">= 2021.6.6"
-nox.options.sessions = (
-    "docs-build",
-)
+nox.options.sessions = ("docs-build",)
+
 
 def activate_virtualenv_in_precommit_hooks(session: Session) -> None:
     """Activate virtualenv in hooks installed by pre-commit.
@@ -138,13 +137,15 @@ def docs_build(session: Session) -> None:
         args.insert(0, "--color")
 
     session.install(".")
-    session.install("sphinx",
-                    "nbsphinx",
-                    "furo",
-                    "myst-parser",
-                    "sphinx_autodoc_typehints",
-                    "sphinx_copybutton",
-                    "sphinx-click")
+    session.install(
+        "sphinx",
+        "nbsphinx",
+        "furo",
+        "myst-parser",
+        "sphinx_autodoc_typehints",
+        "sphinx_copybutton",
+        "sphinx-click",
+    )
 
     build_dir = Path("docs", "_build")
     if build_dir.exists():
@@ -158,7 +159,9 @@ def docs(session: Session) -> None:
     """Build and serve the documentation with live reloading on file changes."""
     args = session.posargs or ["--open-browser", "docs", "docs/_build"]
     session.install(".")
-    session.install("sphinx", "nbsphinx", "sphinx-autobuild", "sphinx-click", "furo", "myst-parser")
+    session.install(
+        "sphinx", "nbsphinx", "sphinx-autobuild", "sphinx-click", "furo", "myst-parser"
+    )
 
     build_dir = Path("docs", "_build")
     if build_dir.exists():
