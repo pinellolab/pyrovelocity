@@ -67,3 +67,15 @@ pytest-mock = "^3.10.0"
 
 [tool.poetry.scripts]
 pyrovelocity = "pyrovelocity.pyrovelocity:main"
+
+[tool.coverage.paths]
+source = ["pyrovelocity", "*/site-packages"]
+tests = ["tests", "*/tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["pyrovelocity", "tests"]
+
+[tool.coverage.report]
+show_missing = true
+#fail_under = 100
