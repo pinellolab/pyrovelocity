@@ -5,8 +5,8 @@
 We provide two example conda configuration files supporting [cpu](./environment-cpu.yml) and [gpu](./environment-gpu.yml) environments. Most examples will not run efficiently in the `cpu` environment, but this may still be useful for testing. These environments currently support `linux-64`. They may work on other operating systems and processor architectures.
 
 ```shell
-conda create -n pyrovelocity-gpu -y python=3.8
-mamba update -n pyrovelocity-gpu -f environment-cpu.yaml -y
+conda create -n pyrovelocity-cpu -y python=3.8
+mamba update -n pyrovelocity-cpu -f environment-cpu.yaml -y
 ```
 
 ## lockfile configurations
