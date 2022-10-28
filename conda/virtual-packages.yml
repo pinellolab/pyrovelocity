@@ -1,5 +1,5 @@
 subdirs:
-  linux-64:
-    packages:
-      __cuda: 11.7
-      __glibc: 2.36
+    linux-64:
+        packages:
+            __cuda: 11.7
+            __glibc: 2.36

@@ -11,11 +11,11 @@ mamba update -n pyrovelocity-cpu -f environment-cpu.yaml -y
 
 ## lockfile configurations
 
-We use [conda-lock][conda-lock] to provide examples of explicit dependencies. 
+We use [conda-lock][conda-lock] to provide examples of explicit dependencies.
 [conda-lock][conda-lock] can be installed with
 
 ```shell
-mamba install -y conda-lock -c conda-forge 
+mamba install -y conda-lock -c conda-forge
 ```
 
 These cannot be guaranteed to work in your environment, but should generate an
@@ -27,8 +27,7 @@ The script [gen-conda-lock.sh](./gen-conda-lock.sh) depends upon [conda-lock] ca
 
 ```shell
 conda create -n <env> --file <lockfile>
- ```
-
+```
 
 [conda-lock]: https://github.com/conda-incubator/conda-lock
 [conda-virt-packages]: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-virtual.html#managing-virtual-packages

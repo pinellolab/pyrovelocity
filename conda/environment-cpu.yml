@@ -1,31 +1,31 @@
 name: pyrovelocity-cpu
 
 channels:
-  - conda-forge
-  - bioconda
-  # https://stackoverflow.com/a/71110028/446907
-  # We want to have a reproducible setup, so we don't want default channels,
-  # which may be different for different users. All required channels should
-  # be listed explicitly here.
-  - nodefaults
+    - conda-forge
+    - bioconda
+    # https://stackoverflow.com/a/71110028/446907
+    # We want to have a reproducible setup, so we don't want default channels,
+    # which may be different for different users. All required channels should
+    # be listed explicitly here.
+    - nodefaults
 
 dependencies:
-  - python=3.8
-  - leidenalg=0.9.0
-  - pyro-ppl=1.6.0
-  - pip=22.2.2
-  - seaborn=0.11.2
-  - scvelo=0.2.4
-  - scvi-tools=0.13.0
-  - pytorch-lightning=1.3.0
-  - pytorch=1.8.*
-  - scikit-misc=0.1.4
-  - torchmetrics=0.5.1
-  - h5py=3.7.0
-  - anndata=0.7.5
-  - adjusttext=0.7.3
-  - astropy=5.1
+    - python=3.8
+    - leidenalg=0.9.0
+    - pyro-ppl=1.6.0
+    - pip=22.2.2
+    - seaborn=0.11.2
+    - scvelo=0.2.4
+    - scvi-tools=0.13.0
+    - pytorch-lightning=1.3.0
+    - pytorch=1.8.*
+    - scikit-misc=0.1.4
+    - torchmetrics=0.5.1
+    - h5py=3.7.0
+    - anndata=0.7.5
+    - adjusttext=0.7.3
+    - astropy=5.1
 
 # Non-standard section listing target platforms for conda-lock:
 platforms:
-  - linux-64
+    - linux-64
