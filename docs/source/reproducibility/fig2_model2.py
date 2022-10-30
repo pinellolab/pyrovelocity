@@ -1,47 +1,17 @@
-# %load_ext autoreload
-# %autoreload 2
-
 import pickle
 
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scvelo as scv
 import seaborn as sns
-import torch
-from dynamical_velocity2.api import train_model
-from dynamical_velocity2.data import load_data
-from dynamical_velocity2.plot import denoised_umap
-from dynamical_velocity2.plot import plot_arrow_examples
-from dynamical_velocity2.plot import plot_gene_ranking
-from dynamical_velocity2.plot import plot_mean_vector_field
-from dynamical_velocity2.plot import plot_posterior_time
-from dynamical_velocity2.plot import plot_vector_field_uncertain
-from dynamical_velocity2.plot import project_grid_points
-from dynamical_velocity2.plot import rainbowplot
-from dynamical_velocity2.plot import us_rainbowplot
-from dynamical_velocity2.plot import vector_field_uncertainty
-from dynamical_velocity2.utils import mae
-from dynamical_velocity2.utils import mae_evaluate
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-from scipy.stats import pearsonr
-from scipy.stats import spearmanr
-from sklearn.model_selection import train_test_split
 
+from pyrovelocity.plot import plot_arrow_examples
+from pyrovelocity.plot import plot_gene_ranking
+from pyrovelocity.plot import plot_posterior_time
+from pyrovelocity.plot import plot_vector_field_uncertain
+from pyrovelocity.plot import rainbowplot
 
-####adata = load_data(top_n=2000, min_shared_counts=30)
-###### No u_scale and s_scale manually
-####adata_model_pos = train_model(adata, max_epochs=1, svi_train=True, lr=0.01,
-####                              patient_init=45, batch_size=-1, use_gpu=0, log_every=100,
-####                              patient_improve=1e-4,
-####                              model_type='multikinetics',
-####                              guide_type='auto',
-####                              train_size=1.0,
-####                              offset=True, library_size=False,
-####                              include_prior=True)
-####model = adata_model_pos[0]
-####model.load("Fig2_pancreas_model", model.adata, use_gpu=0)
 
 with open("fig2_pbmc_data_model2.pkl", "rb") as f:
     result_dict = pickle.load(f)
@@ -137,8 +107,6 @@ scv.pl.velocity_embedding_stream(
 )
 ax[2].set_title("Pyro-Velocity\n", fontsize=7)
 
-# plot_arrow_examples(adata_train, np.transpose(v_map_all, (1, 2, 0)), embeds_radian, ax=ax[3],
-#                     n_sample=30, fig=fig, basis='umap', scale=0.004, alpha=0.18)
 plot_arrow_examples(
     adata_pbmc,
     np.transpose(v_map_all_pbmc, (1, 2, 0)),
@@ -242,8 +210,6 @@ scv.pl.velocity_embedding_stream(
 )
 ax[2].set_title("Pyro-Velocity\n", fontsize=7)
 
-# plot_arrow_examples(adata_train, np.transpose(v_map_all, (1, 2, 0)), embeds_radian, ax=ax[3],
-#                     n_sample=30, fig=fig, basis='umap', scale=0.004, alpha=0.18)
 plot_arrow_examples(
     adata,
     np.transpose(v_map_all, (1, 2, 0)),
@@ -345,10 +311,6 @@ volcano_data2, _ = plot_gene_ranking(
     assemble=True,
     negative=True,
 )
-# ax[0].text (-0.22, 1.15, 'c', transform=ax[0].transAxes,
-#            fontsize=7, fontweight='bold', va='top', ha='right')
-# ax[1].text(-0.1, 1.15, 'd', transform=ax[1].transAxes,
-#            fontsize=7, fontweight='bold', va='top', ha='right')
 _ = rainbowplot(
     volcano_data2,
     adata,
@@ -359,7 +321,6 @@ _ = rainbowplot(
     negative=True,
 )
 
-# supfig.savefig("SuppFig1_model1.tif", facecolor=fig.get_facecolor(), bbox_inches='tight', edgecolor='none', dpi=300)
 supfig.savefig(
     "SuppFig1_model2.tif.svg",
     facecolor=supfig.get_facecolor(),
