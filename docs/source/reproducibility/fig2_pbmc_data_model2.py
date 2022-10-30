@@ -1,67 +1,9 @@
-import functools
-from collections import defaultdict
-from typing import Iterable
-from typing import Literal
-from typing import Optional
-from typing import Tuple
-from typing import Union
-
 import matplotlib.pyplot as plt
-import numpy as np
-import pyro
 import scvelo as scv
-import seaborn as sns
-import torch
-from dynamical_velocity2 import PyroVelocity
-from dynamical_velocity2._trainer import VelocityClippedAdam
-from dynamical_velocity2._velocity_guide import AuxCellVelocityGuide
-from dynamical_velocity2._velocity_model import AuxCellVelocityModel
-from dynamical_velocity2._velocity_model import TimeEncoder
-from dynamical_velocity2.cytotrace import cytotrace_sparse
-from dynamical_velocity2.data import load_data
-from dynamical_velocity2.utils import debug
-from dynamical_velocity2.utils import mRNA
-from dynamical_velocity2.utils import ode_mRNA
-from dynamical_velocity2.utils import tau_inv
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-from pyro import poutine
-from pyro.distributions import Bernoulli
-from pyro.distributions import Delta
-from pyro.distributions import HalfNormal
-from pyro.distributions import LogNormal
-from pyro.distributions import NegativeBinomial
-from pyro.distributions import Normal
-from pyro.distributions import Poisson
-from pyro.distributions.constraints import positive
-from pyro.infer import SVI
-from pyro.infer import JitTrace_ELBO
-from pyro.infer import JitTraceMeanField_ELBO
-from pyro.infer import Predictive
-from pyro.infer import Trace_ELBO
-from pyro.infer import TraceEnum_ELBO
-from pyro.infer import TraceMeanField_ELBO
-from pyro.infer.autoguide import AutoDelta
-from pyro.infer.autoguide import AutoDiagonalNormal
-from pyro.infer.autoguide import AutoDiscreteParallel
-from pyro.infer.autoguide import AutoLowRankMultivariateNormal
-from pyro.infer.autoguide import AutoNormal
-from pyro.infer.autoguide import init_to_mean
-from pyro.infer.autoguide.guides import AutoGuideList
-from pyro.nn import PyroModule
-from pyro.nn import PyroParam
-from pyro.nn import PyroSample
-from pyro.optim.clipped_adam import ClippedAdam
-from scipy.stats import pearsonr
-from scipy.stats import spearmanr
-from scvelo.datasets import simulation
-from scvi.nn import Decoder
-from scvi.nn import DecoderSCVI
-from scvi.nn import Encoder
-from scvi.nn import FCLayers
-from torch import nn
-from torch.nn.functional import relu
-from torch.nn.functional import softmax
-from torch.nn.functional import softplus
+
+from pyrovelocity.api import train_model
+from pyrovelocity.plot import plot_mean_vector_field
+from pyrovelocity.plot import vector_field_uncertainty
 
 
 kwargs = dict(
@@ -75,20 +17,6 @@ kwargs = dict(
     add_outline=True,
     outline_width=(0.02, 0.02),
 )
-import matplotlib
-import pandas as pd
-import seaborn as sns
-from dynamical_velocity2.api import train_model
-from dynamical_velocity2.plot import plot_arrow_examples
-from dynamical_velocity2.plot import plot_gene_ranking
-from dynamical_velocity2.plot import plot_mean_vector_field
-from dynamical_velocity2.plot import plot_posterior_time
-from dynamical_velocity2.plot import plot_vector_field_uncertain
-from dynamical_velocity2.plot import project_grid_points
-from dynamical_velocity2.plot import rainbowplot
-from dynamical_velocity2.plot import vector_field_uncertainty
-from scipy.stats import pearsonr
-from scipy.stats import spearmanr
 
 
 adata = scv.read("pbmc_processed.h5ad")
