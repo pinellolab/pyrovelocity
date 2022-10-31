@@ -2,39 +2,23 @@ import os
 import pickle
 
 import cospar as cs
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scvelo as scv
 import seaborn as sns
-import torch
-from dynamical_velocity2.api import train_model
-from dynamical_velocity2.data import load_data
-from dynamical_velocity2.plot import denoised_umap
-from dynamical_velocity2.plot import plot_arrow_examples
-from dynamical_velocity2.plot import plot_gene_ranking
-from dynamical_velocity2.plot import plot_mean_vector_field
-from dynamical_velocity2.plot import plot_posterior_time
-from dynamical_velocity2.plot import plot_vector_field_uncertain
-from dynamical_velocity2.plot import project_grid_points
-from dynamical_velocity2.plot import rainbowplot
-from dynamical_velocity2.plot import set_colorbar
-from dynamical_velocity2.plot import us_rainbowplot
-from dynamical_velocity2.plot import vector_field_uncertainty
-from dynamical_velocity2.utils import mae
-from dynamical_velocity2.utils import mae_evaluate
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-from scipy.spatial import distance
-from scipy.stats import pearsonr
 from scipy.stats import spearmanr
-from sklearn.model_selection import train_test_split
+
+from pyrovelocity.plot import plot_gene_ranking
+from pyrovelocity.plot import plot_posterior_time
+from pyrovelocity.plot import rainbowplot
+from pyrovelocity.plot import set_colorbar
 
 
 cs.logging.print_version()
 cs.settings.verbosity = 2
-cs.settings.data_path = "LARRY_data"  # A relative path to save data. If not existed before, create a new one.
-cs.settings.figure_path = "LARRY_figure"  # A relative path to save figures. If not existed before, create a new one.
+cs.settings.data_path = "LARRY_data"  # A relative path to save data.
+cs.settings.figure_path = "LARRY_figure"  # A relative path to save figures.
 cs.settings.set_figure_params(
     format="png", figsize=[4, 3.5], dpi=75, fontsize=14, pointsize=2
 )
@@ -348,7 +332,7 @@ ax[1][0].text(
     ha="right",
 )
 
-from dynamical_velocity2.plot import plot_state_uncertainty
+from pyrovelocity.plot import plot_state_uncertainty
 
 
 adata_input_all.obs["shared_time_uncertain"] = (
