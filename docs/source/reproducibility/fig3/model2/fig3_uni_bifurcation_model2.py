@@ -4,42 +4,20 @@ import cospar as cs
 import matplotlib.pyplot as plt
 import numpy as np
 import scvelo as scv
-import seaborn as sns
-from dynamical_velocity2 import PyroVelocity
-from dynamical_velocity2.data import load_data
-from scipy.stats import pearsonr
 from scipy.stats import spearmanr
-from scvelo.datasets import simulation
+
+from pyrovelocity.api import train_model
+from pyrovelocity.plot import plot_mean_vector_field
+from pyrovelocity.plot import vector_field_uncertainty
 
 
 cs.logging.print_version()
 cs.settings.verbosity = 2
-cs.settings.data_path = "LARRY_data"  # A relative path to save data. If not existed before, create a new one.
-cs.settings.figure_path = "LARRY_figure"  # A relative path to save figures. If not existed before, create a new one.
+cs.settings.data_path = "LARRY_data"  # A relative path to save data.
+cs.settings.figure_path = "LARRY_figure"  # A relative path to save figures.
 cs.settings.set_figure_params(
     format="png", figsize=[4, 3.5], dpi=75, fontsize=14, pointsize=2
 )
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import scvelo as scv
-import seaborn as sns
-from dynamical_velocity2 import PyroVelocity
-from dynamical_velocity2.api import train_model
-from dynamical_velocity2.data import load_data
-from dynamical_velocity2.plot import denoised_umap
-from dynamical_velocity2.plot import plot_arrow_examples
-from dynamical_velocity2.plot import plot_gene_ranking
-from dynamical_velocity2.plot import plot_mean_vector_field
-from dynamical_velocity2.plot import plot_posterior_time
-from dynamical_velocity2.plot import plot_vector_field_uncertain
-from dynamical_velocity2.plot import project_grid_points
-from dynamical_velocity2.plot import rainbowplot
-from dynamical_velocity2.plot import us_rainbowplot
-from dynamical_velocity2.plot import vector_field_uncertainty
-from scipy.stats import pearsonr
-from scipy.stats import spearmanr
-from scvelo.datasets import simulation
 
 
 adata = scv.read("mono_unipotent_cells.h5ad")
@@ -126,7 +104,7 @@ adata_cytotrace_sub = adata_cytotrace[
 
 
 def check_shared_time(adata_model_pos, adata):
-    ###adata_cospar_sub = adata_cospar[(adata_cospar.obs['fate_bias_Neutrophil_Monocyte'] != 0.5), :].copy()
+    # adata_cospar_sub = adata_cospar[(adata_cospar.obs['fate_bias_Neutrophil_Monocyte'] != 0.5), :].copy()
     gold_standard = adata_cospar_sub.obs["fate_potency"].values
     (select,) = np.where(~np.isnan(gold_standard))
     print("--------------")
@@ -187,12 +165,3 @@ embed_mean = plot_mean_vector_field(
 )
 fig.savefig("fig3_uni_bifurcation_vectorfield_model2.pdf")
 
-# adata_input.write("fig3_larry_uni_bifurcation_top2000_model2.h5ad")
-# adata_model_pos_split[0].save('Fig3_uni_bifurcation_model2', overwrite=True)
-#
-# result_dict = {"adata_model_pos": adata_model_pos_split[1], "v_map_all": v_map_all, "embeds_radian": embeds_radian, "fdri": fdri, "embed_mean": embed_mean}
-# import pickle
-#
-# with open("fig3_uni_bifurcation_data_model2.pkl", "wb") as f:
-#    pickle.dump(result_dict, f)
-#
