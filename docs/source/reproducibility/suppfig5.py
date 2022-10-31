@@ -1,32 +1,17 @@
 import pickle
 
 import cospar as cs
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scvelo as scv
 import seaborn as sns
-import torch
-from dynamical_velocity2.api import train_model
-from dynamical_velocity2.data import load_data
-from dynamical_velocity2.plot import denoised_umap
-from dynamical_velocity2.plot import plot_arrow_examples
-from dynamical_velocity2.plot import plot_gene_ranking
-from dynamical_velocity2.plot import plot_mean_vector_field
-from dynamical_velocity2.plot import plot_posterior_time
-from dynamical_velocity2.plot import plot_vector_field_uncertain
-from dynamical_velocity2.plot import project_grid_points
-from dynamical_velocity2.plot import rainbowplot
-from dynamical_velocity2.plot import us_rainbowplot
-from dynamical_velocity2.plot import vector_field_uncertainty
-from dynamical_velocity2.utils import mae
-from dynamical_velocity2.utils import mae_evaluate
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.spatial import distance
-from scipy.stats import pearsonr
 from scipy.stats import spearmanr
-from sklearn.model_selection import train_test_split
+
+from pyrovelocity.plot import get_clone_trajectory
+from pyrovelocity.plot import plot_posterior_time
+from pyrovelocity.plot import plot_vector_field_uncertain
 
 
 cs.logging.print_version()
@@ -100,9 +85,6 @@ embed_mean_all = result_dict["embed_mean"]
 adata_input_all = scv.read("fig3_larry_allcells_top2000_model1.h5ad")
 
 
-from dynamical_velocity2.plot import get_clone_trajectory
-
-
 adata_input_neu_clone = get_clone_trajectory(adata_input_neu)
 adata_input_mono_clone = get_clone_trajectory(adata_input_mono)
 # adata_input_clone_both = get_clone_trajectory(adata_input) # map bipotent clones together may lead to average arrows with wrong direction
@@ -110,7 +92,7 @@ adata_input_uni_clone = adata_input_neu_clone.concatenate(adata_input_mono_clone
 
 # adata_input_clone = get_clone_trajectory(adata_input)
 
-# adata_input_all_clone = scv.read("/PHShome/qq06/dynamical_velocity2/figures/global_gold_standard2.h5ad")
+# adata_input_all_clone = scv.read("/PHShome/qq06/pyrovelocity/figures/global_gold_standard2.h5ad")
 adata_input_all_clone = scv.read("global_gold_standard2.h5ad")
 
 adata_input_all_clone.obsm["clone_vector_emb"][
@@ -126,52 +108,7 @@ adata_input_uni_clone.obsm["clone_vector_emb"][
     np.isnan(adata_input_uni_clone.obsm["clone_vector_emb"])
 ] = 0
 
-# graph_all = np.zeros((adata_cospar.shape[0],
-#                       adata_cospar.shape[0]), dtype=np.float32) # row: first time; col: second time
-
-# for index, t1 in enumerate(adata_cospar.uns['Tmap_cell_id_t1']):
-#     graph_all[t1, adata_cospar.uns['Tmap_cell_id_t2']] = adata_cospar.uns['transition_map'][index].toarray()
-# from scipy.sparse import csr_matrix
-# graph_all = csr_matrix(graph_all)
-# scv.tl.velocity_embedding(adata_cospar, basis='emb', vkey='Ms', T=graph_all,
-#                           autoscale=False)
-# adata_cospar.obsm['Ms_emb'][np.isnan(adata_cospar.obsm['Ms_emb'])] = 0
-
-# # # count barcode connected cells to see vector fields
-# # clone_mat = adata_cospar.obsm['X_clone'].toarray()
-# # time_info = adata_cospar.obs.time_info
-
-# # for clone in range(adata_cospar.obsm['X_clone'].shape[1]):
-# #     clone_index, = np.where(clone_mat[:, clone]>0)
-# #     time = time_info[clone_index].values
-# #     time_order = np.argsort(time)
-# #     time_unique = np.unique(time)
-# #     if len(time_unique) == 1:
-# #         continue
-# #     # print(clone_index[time_order])
-# #     # print(time[time_order])
-# #     for time_comb in [[2, 4], [4, 6], [2, 6]]:
-# #         start_time, = np.where(time[time_order] == time_comb[0])
-# #         end_time, = np.where(time[time_order] == time_comb[1])
-# #         if (len(start_time)==0) or (len(end_time) == 0):
-# #             continue
-# #         start_index = clone_index[time_order][start_time]
-# #         end_index = clone_index[time_order][end_time]
-# #         ratio = len(start_index)/len(end_index)
-# #         # print(start_index, end_index)
-# #         # print(time[time_order][start_time], time[time_order][end_time])
-# #         clone_comb = np.array(np.meshgrid(start_index, end_index)).T.reshape(-1, 2)
-# #         # print(clone_comb, ratio)
-# #         graph_all[tuple(clone_comb.T)] = ratio
-
-# # scv.pp.neighbors(adata_cospar, use_rep='pca')
-# # scv.tl.velocity_embedding(adata_cospar, basis='emb', vkey='Ms', T=csr_matrix(graph_all),
-# #                           autoscale=False)
-
-# # adata_cospar.obsm['Ms_emb'][np.isnan(adata_cospar.obsm['Ms_emb'])] = 0
-
-# Calculate mean cosine similarity
-from dynamical_velocity2.plot import align_trajectory_diff
+from pyrovelocity.plot import align_trajectory_diff
 
 
 cutoff = 10
@@ -271,7 +208,6 @@ pyro_all_cos = pd.DataFrame(diff_all).apply(
 scvelo_all_cos_mean = scvelo_all_cos.mean()
 pyro_all_cos_mean = pyro_all_cos.mean()
 
-from scvelo.plotting.velocity_embedding_grid import compute_velocity_on_grid
 from scvelo.plotting.velocity_embedding_grid import default_arrow
 
 
@@ -580,9 +516,6 @@ ax0[7].set_title(
     fontsize=7,
 )
 
-# scv.pl.scatter(adata_input, basis='emb', fontsize=7,
-#                legend_loc='on data', legend_fontsize=7,
-#                color='state_info', cmap='RdBu_r', show=False, ax=ax1[0])
 res = pd.DataFrame(
     {
         "X": adata_input.obsm["X_emb"][:, 0],
@@ -759,10 +692,6 @@ scv.pl.velocity_embedding_grid(
     arrow_color="black",
     fontsize=7,
 )
-## scv.pl.velocity_embedding_grid(adata_cospar, scale=0.2, show=False,
-#                                s=1, density=density, arrow_size=3, linewidth=1,  vkey='Ms', basis='emb',
-#                                ax=ax2[1], title='Clonal progression', color='gray', arrow_color='black', fontsize=7)
-# scvelo
 scv.pl.velocity_embedding_grid(
     adata_input_all,
     show=False,
