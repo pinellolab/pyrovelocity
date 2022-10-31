@@ -1,30 +1,11 @@
 import pickle
 
-import matplotlib
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import scvelo as scv
-import seaborn as sns
-import torch
-from dynamical_velocity2.api import train_model
-from dynamical_velocity2.data import load_data
-from dynamical_velocity2.plot import denoised_umap
-from dynamical_velocity2.plot import plot_arrow_examples
-from dynamical_velocity2.plot import plot_gene_ranking
-from dynamical_velocity2.plot import plot_mean_vector_field
-from dynamical_velocity2.plot import plot_posterior_time
-from dynamical_velocity2.plot import plot_vector_field_uncertain
-from dynamical_velocity2.plot import project_grid_points
-from dynamical_velocity2.plot import rainbowplot
-from dynamical_velocity2.plot import us_rainbowplot
-from dynamical_velocity2.plot import vector_field_uncertainty
-from dynamical_velocity2.utils import mae
-from dynamical_velocity2.utils import mae_evaluate
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-from scipy.stats import pearsonr
-from scipy.stats import spearmanr
-from sklearn.model_selection import train_test_split
+
+from pyrovelocity.cytotrace import compute_similarity2
+from pyrovelocity.plot import plot_gene_ranking
 
 
 with open("fig2_pancreas_data.pkl", "rb") as f:
@@ -38,7 +19,6 @@ embed_mean = result_dict["embed_mean"]
 
 adata = scv.read("fig2_pancreas_processed.h5ad")
 
-from dynamical_velocity2.cytotrace import compute_similarity2
 
 
 df_genes_cors = compute_similarity2(
@@ -87,7 +67,7 @@ embed_mean = result_dict["embed_mean"]
 
 adata = scv.read("fig2_pancreas_processed_model2.h5ad")
 
-from dynamical_velocity2.cytotrace import compute_similarity2
+from pyrovelocity.cytotrace import compute_similarity2
 
 
 df_genes_cors = compute_similarity2(
