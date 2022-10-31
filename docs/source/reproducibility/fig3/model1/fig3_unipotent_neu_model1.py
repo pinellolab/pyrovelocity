@@ -2,43 +2,20 @@ import os
 
 import cospar as cs
 import matplotlib.pyplot as plt
-import numpy as np
 import scvelo as scv
-import seaborn as sns
-from dynamical_velocity2 import PyroVelocity
-from dynamical_velocity2.api import train_model
-from dynamical_velocity2.data import load_data
-from scipy.stats import pearsonr
-from scipy.stats import spearmanr
-from scvelo.datasets import simulation
+
+from pyrovelocity.api import train_model
+from pyrovelocity.plot import plot_mean_vector_field
+from pyrovelocity.plot import vector_field_uncertainty
 
 
 cs.logging.print_version()
 cs.settings.verbosity = 2
-cs.settings.data_path = "LARRY_data"  # A relative path to save data. If not existed before, create a new one.
-cs.settings.figure_path = "LARRY_figure"  # A relative path to save figures. If not existed before, create a new one.
+cs.settings.data_path = "LARRY_data"  # A relative path to save data.
+cs.settings.figure_path = "LARRY_figure"  # A relative path to save figures.
 cs.settings.set_figure_params(
     format="png", figsize=[4, 3.5], dpi=75, fontsize=14, pointsize=2
 )
-import matplotlib.pyplot as plt
-import numpy as np
-import scvelo as scv
-import seaborn as sns
-from dynamical_velocity2 import PyroVelocity
-from dynamical_velocity2.data import load_data
-from dynamical_velocity2.plot import denoised_umap
-from dynamical_velocity2.plot import plot_arrow_examples
-from dynamical_velocity2.plot import plot_gene_ranking
-from dynamical_velocity2.plot import plot_mean_vector_field
-from dynamical_velocity2.plot import plot_posterior_time
-from dynamical_velocity2.plot import plot_vector_field_uncertain
-from dynamical_velocity2.plot import project_grid_points
-from dynamical_velocity2.plot import rainbowplot
-from dynamical_velocity2.plot import us_rainbowplot
-from dynamical_velocity2.plot import vector_field_uncertainty
-from scipy.stats import pearsonr
-from scipy.stats import spearmanr
-from scvelo.datasets import simulation
 
 
 adata = scv.read("neu_unipotent_cells.h5ad")
