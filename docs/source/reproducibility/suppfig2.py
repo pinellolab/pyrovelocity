@@ -4,19 +4,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import scvelo as scv
 import seaborn as sns
-from dynamical_velocity2.cytotrace import compute_similarity2
-from dynamical_velocity2.plot import denoised_umap
-from dynamical_velocity2.plot import plot_arrow_examples
-from dynamical_velocity2.plot import plot_gene_ranking
-from dynamical_velocity2.plot import plot_mean_vector_field
-from dynamical_velocity2.plot import plot_posterior_time
-from dynamical_velocity2.plot import plot_state_uncertainty
-from dynamical_velocity2.plot import plot_vector_field_uncertain
-from dynamical_velocity2.plot import project_grid_points
-from dynamical_velocity2.plot import rainbowplot
-from dynamical_velocity2.plot import us_rainbowplot
-from dynamical_velocity2.plot import vector_field_uncertainty
-from scipy.stats import spearmanr
+
+from pyrovelocity.cytotrace import compute_similarity2
+from pyrovelocity.plot import plot_gene_ranking
+from pyrovelocity.plot import plot_posterior_time
+from pyrovelocity.plot import plot_state_uncertainty
+from pyrovelocity.plot import rainbowplot
 
 
 def param_set(top_genes=2000, n_neighbors=30):
@@ -216,10 +209,6 @@ sns.kdeplot(
     levels=3,
     fill=False,
 )
-# _ = ax[1][3].hist(adata_sub.obs.shared_time_uncertain, bins=bin, color='black', alpha=0.9)
-# ax[1][3].set_xlabel("shared time\nstandard deviation", fontsize=7)
-# ax[1][3].xaxis.set_tick_params(labelsize=5)
-# ax[1][3].yaxis.set_tick_params(labelsize=5)
 adata_pbmc.obs["vector_field_rayleigh_test"] = fdri_pbmc
 scv.pl.scatter(
     adata_pbmc,
@@ -258,68 +247,11 @@ plot_state_uncertainty(
 )
 ax[2].set_title("state uncertainty", fontsize=7)
 
-from dynamical_velocity2.data import load_data
+from pyrovelocity.data import load_data
 
 
 adata = load_data(top_n=2000, min_shared_counts=30)
 
-# pos = adata_model_pos
-# # fig, ax = plt.subplots(2, 3)
-# # fig.set_size_inches(9, 5)
-# st = pos['st'].mean(0)
-# ut = pos['ut'].mean(0)
-# for i, g in enumerate(["Cpe", "Ins1"]):
-#     index, = np.where(adata.var_names==g)
-#     ress = pd.DataFrame({"cell_type": adata.obs['clusters'].values,
-#                          "denoised_unspliced": ut[:, index].flatten(),
-#                          "denoised_spliced":   st[:, index].flatten(),
-#                          "knn_unspliced": adata[:, g].layers['Mu'].toarray().flatten(),
-#                          "knn_spliced":   adata[:, g].layers['Ms'].toarray().flatten(),
-#                          "spliced": adata[:, g].layers['spliced'].toarray().flatten(),
-#                          "unspliced": adata[:, g].layers['unspliced'].toarray().flatten(),
-#                          "raw_spliced": adata[:, g].layers['raw_spliced'].toarray().flatten(),
-#                          "raw_unspliced": adata[:, g].layers['raw_unspliced'].toarray().flatten()})
-#     #scv.pl.scatter(adata, g, use_raw=True, alpha=0.1, ax=ax[i, i],show=False)
-#     # scv.pl.scatter(adata, g, use_raw=False, alpha=0.01, ax=ax[i, 1],show=False, legend_loc='none')
-#     sns.scatterplot(x='knn_spliced', y='knn_unspliced', data=ress, alpha=1,
-#                     linewidth=0, edgecolor="none",hue='cell_type',
-#                     #palette=dict(zip(adata.obs.clusters.cat.categories, adata.uns['clusters_colors'])),
-#                     ax=ax[i, 1], marker='o', legend=False, s=5)
-#     ax[i, 1].set_title("")
-
-#     if i == 1:
-#         ax[i, 1].set_xlabel("KNN spliced", fontsize=7)
-#     else:
-#         ax[i, 1].set_xlabel("")
-
-#     ax[i, 1].set_ylabel("KNN\nunspliced", fontsize=7)
-
-#     sns.scatterplot(x='raw_spliced', y='raw_unspliced', data=ress, alpha=1,
-#                     linewidth=0, edgecolor="none",hue='cell_type',
-#                     #palette=dict(zip(adata.obs.clusters.cat.categories, adata.uns['clusters_colors'])),
-#                     ax=ax[i, 0], marker='o', legend=False, s=5)
-#     if i == 1:
-#         ax[i, 0].set_xlabel("spliced", fontsize=7)
-#     else:
-#         ax[i, 0].set_xlabel("")
-#     ax[i, 0].set_ylabel("%s\nunspliced" % g, fontsize=7)
-
-#     sns.scatterplot(x='denoised_spliced', y='denoised_unspliced', data=ress, alpha=1,
-#                     linewidth=0, edgecolor="none",hue='cell_type',
-#                     #palette=dict(zip(adata.obs.clusters.cat.categories, adata.uns['clusters_colors'])),
-#                     ax=ax[i, 2], marker='o', legend=False, s=5)
-#     if i == 1:
-#         ax[i, 2].set_xlabel("denoised spliced", fontsize=7)
-#     else:
-#         ax[i, 2].set_xlabel("")
-#     ax[i, 2].set_ylabel("denoised\nunspliced", fontsize=7)
-
-#     ax[i, 2].xaxis.set_tick_params(labelsize=5)
-#     ax[i, 2].yaxis.set_tick_params(labelsize=5)
-#     ax[i, 1].xaxis.set_tick_params(labelsize=5)
-#     ax[i, 1].yaxis.set_tick_params(labelsize=5)
-#     ax[i, 0].xaxis.set_tick_params(labelsize=5)
-#     ax[i, 0].yaxis.set_tick_params(labelsize=5)
 
 scv.tl.latent_time(adata)
 df_genes_cors = compute_similarity2(
@@ -337,8 +269,6 @@ _, ax = plt.subplots()
 volcano_data2, _ = plot_gene_ranking(
     [adata_model_pos], [adata], ax=ax, time_correlation_with="st", assemble=True
 )
-# volcano_data1, _ = plot_gene_ranking([adata_model_pos], [adata], ax=ax,
-#                                     time_correlation_with='s', assemble=True)
 
 adata.obs["shared_time"] = adata_model_pos["cell_time"].mean(0).flatten()
 ax = subfig[1].subplots(1, 7)
@@ -380,26 +310,9 @@ ax_cb = scv.pl.scatter(
     fontsize=7,
     colorbar=True,
 )
-# bin=30
-# _ = ax[1][0].hist(adata.obs.cytotrace, bins=bin, color='black', alpha=0.9)
-# ax[1][0].set_xlabel("cytotrace score", fontsize=7)
-# ax[1][0].set_ylabel("Frequency", fontsize=7)
-# ax[1][0].xaxis.set_tick_params(labelsize=5)
-# ax[1][0].yaxis.set_tick_params(labelsize=5)
-
-# _ = ax[1][1].hist(adata.obs.latent_time, bins=bin, color='black', alpha=0.9)
-# ax[1][1].set_xlabel("latent time", fontsize=7)
-# ax[1][1].xaxis.set_tick_params(labelsize=5)
-# ax[1][1].yaxis.set_tick_params(labelsize=5)
-
-# _ = ax[1][2].hist(adata.obs.shared_time, bins=bin, color='black', alpha=0.9)
-# ax[1][2].set_xlabel("shared time", fontsize=7)
-# ax[1][2].xaxis.set_tick_params(labelsize=5)
-# ax[1][2].yaxis.set_tick_params(labelsize=5)
 
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn2
-from matplotlib_venn import venn3
 
 
 set1 = set(
@@ -418,23 +331,6 @@ set3 = set(
     .index
 )
 
-# celltime_cors = []
-# celltime_labels = []
-# for index in range(adata_model_pos['cell_time'].shape[0]):
-#     celltime_cors.append(spearmanr(1-adata.obs.cytotrace, adata_model_pos['cell_time'][index])[0])
-#     celltime_labels.append('Pyro-Velocity')
-# celltime_cors.append(spearmanr(1-adata.obs.cytotrace, adata.obs.latent_time)[0])
-# celltime_labels.append('scvelo')
-# sns.boxplot(x='label', y='correlation', #fontsize=7,
-#             data=pd.DataFrame({"correlation": celltime_cors, "label": celltime_labels}),ax=ax[0][3])
-# ax[0][3].set_ylabel("Cytotrace\nCorrelation", fontsize=5, labelpad=0)
-# ax[0][3].set_xlabel("")
-# ax[0][3].set_title("Benchmark shared time", fontsize=7)
-# ax[0][3].set_ylim(0.8, 1)
-# ax[0][3].xaxis.set_tick_params(labelsize=5)
-# ax[0][3].yaxis.set_tick_params(labelsize=5)
-
-# out = venn3([set1, set2, set3], ['Denoised', 'Raw', 'Scvelo\ntop 50'], ax=ax[1][3])
 out = venn2([set1, set3], ["Denoised", "Scvelo\ntop 50"], ax=ax[3])
 for text in out.set_labels:
     text.set_fontsize(7)
@@ -465,11 +361,6 @@ sns.kdeplot(
     fill=False,
 )
 
-# _ = ax[1][4].hist(adata.obs.shared_time_uncertain, bins=bin, color='black', alpha=0.9)
-# ax[1][4].set_xlabel("shared time\nstandard deviation", fontsize=7)
-# ax[1][4].xaxis.set_tick_params(labelsize=5)
-# ax[1][4].yaxis.set_tick_params(labelsize=5)
-# ax[1][4].set_ylabel("Frequency", fontsize=7)
 
 adata.obs["vector_field_rayleigh_test"] = fdri
 ax_cb = scv.pl.scatter(
@@ -497,70 +388,11 @@ ax[5].set_title(
     fontsize=5,
 )
 
-# _ = ax[1][5].hist(adata.obs.vector_field_rayleigh_test, bins=bin, color='black', alpha=0.9)
-# ax[1][5].set_xlabel("vector field\nrayleigh test fdr", fontsize=7)
-# ax[1][5].text(0.08, 2000, "<1%% FDR:%s%%" % (round((fdri < 0.01).sum()/fdri.shape[0], 2)*100), fontsize=5)
-
-# ax[1][5].xaxis.set_tick_params(labelsize=5)
-# ax[1][5].yaxis.set_tick_params(labelsize=5)
-
-# _ = plot_state_uncertainty(pos, adata, kde=True, data='denoised', top_percentile=0.9, ax=ax[0][6])
 _ = plot_state_uncertainty(
     pos, adata, kde=True, data="raw", top_percentile=0.9, ax=ax[6]
 )
 ax[6].set_title("state uncertainty", fontsize=7)
 
-# ax[1][6].hist(adata.obs['state_uncertain'], bins=bin, color='black', alpha=0.9)
-# ax[1][6].set_xlabel("averaged state uncertainty", fontsize=7)
-# ax[1][6].xaxis.set_tick_params(labelsize=5)
-# ax[1][6].yaxis.set_tick_params(labelsize=5)
-
-
-# ax = subfig[2].subplots(2, 7)
-# adata_cytotrace.obs['1-cytotrace'] = 1-adata_cytotrace.obs['cytotrace']
-# adata_sub.obs['shared_time'] = adata_model_pos_pbmc['cell_time'].mean(0).flatten()
-
-# scv.pl.scatter(adata_cytotrace, c='1-cytotrace', ax=ax[0][0], show=False, cmap='inferno', fontsize=7, colorbar=False)
-# scv.pl.scatter(adata_sub_scvelo, c='latent_time', ax=ax[0][1], show=False, cmap='inferno', fontsize=7, colorbar=False)
-# # plot_posterior_time(adata_model_pos_pbmc, adata_sub_scvelo, ax=ax[0][2], basis='tsne', fig=fig, addition=False)
-# scv.pl.scatter(adata_sub, c='shared_time', ax=ax[0][2], show=False, cmap='inferno', fontsize=7, colorbar=False)
-# bin=30
-
-# _ = ax[1][0].hist(adata_cytotrace.obs.cytotrace, bins=bin, color='black', alpha=0.9)
-# ax[1][0].set_xlabel("cytotrace score", fontsize=7)
-# ax[1][0].set_ylabel("Frequency", fontsize=7)
-# ax[1][0].xaxis.set_tick_params(labelsize=5)
-# ax[1][0].yaxis.set_tick_params(labelsize=5)
-
-# _ = ax[1][1].hist(adata_sub_scvelo.obs.latent_time, bins=bin, color='black', alpha=0.9)
-# ax[1][1].set_xlabel("latent time", fontsize=7)
-# ax[1][1].xaxis.set_tick_params(labelsize=5)
-# ax[1][1].yaxis.set_tick_params(labelsize=5)
-
-# _ = ax[1][2].hist(adata_sub.obs.shared_time, bins=bin, color='black', alpha=0.9)
-# ax[1][2].set_xlabel("shared time", fontsize=7)
-# ax[1][2].xaxis.set_tick_params(labelsize=5)
-# ax[1][2].yaxis.set_tick_params(labelsize=5)
-
-# _ = ax[1][4].hist(fdri_pbmc, bins=bin, color='black', alpha=0.9)
-# ax[1][4].set_xlabel("vector field\nrayleigh test fdr", fontsize=7)
-# ax[1][4].text(0.08, 1e4, "<1%% FDR:%.2f%%" % (round((fdri_pbmc < 0.01).sum()/fdri_pbmc.shape[0], 3)*100), fontsize=5)
-# ax[1][4].text(0.08, 5000, "<5%% FDR:%.2f%%" % (round((fdri_pbmc < 0.05).sum()/fdri_pbmc.shape[0], 3)*100), fontsize=5)
-# ax[1][4].xaxis.set_tick_params(labelsize=5)
-# ax[1][4].yaxis.set_tick_params(labelsize=5)
-
-# _ = ax[1][5].hist(adata_sub.obs['state_uncertain'], bins=bin, color='black', alpha=0.9)
-# ax[1][5].set_xlabel("averaged state uncertainty", fontsize=7)
-# ax[1][5].xaxis.set_tick_params(labelsize=5)
-# ax[1][5].yaxis.set_tick_params(labelsize=5)
-# ax[1][0].set_ylabel("Frequency", fontsize=7)
-
-# ax[1][6].axis('off')
-# ax[0][6].axis('off')
-# fig.tight_layout()
-
-# # fig.savefig("Suppfig2.pdf", facecolor=fig.get_facecolor(), bbox_inches='tight', edgecolor='none', dpi=300)
-# # supfig = plt.figure(figsize=(7.57, 3.5))
 subfig[0].subplots_adjust(
     hspace=0.3, wspace=0.18, left=0.0, right=0.92, top=0.92, bottom=0.25
 )
@@ -610,8 +442,6 @@ _ = rainbowplot(
     num_genes=4,
     negative=True,
 )
-# # supfig.savefig("SuppFig2_model1.tif.svg", facecolor=supfig.get_facecolor(), bbox_inches='tight', edgecolor='none', dpi=300)
-# fig.subplots_adjust(hspace=0.3, wspace=0.7, left=0.01, right=0.8, top=0.92, bottom=0.17)
 fig.savefig(
     "SuppFigure2.pdf",
     facecolor=fig.get_facecolor(),
@@ -619,7 +449,3 @@ fig.savefig(
     edgecolor="none",
     dpi=300,
 )
-
-## Supplementary table 1
-## Supplementary table 2
-## Supplementary table 3

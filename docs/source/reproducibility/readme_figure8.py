@@ -1,38 +1,24 @@
 import pickle
 
 import cospar as cs
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scvelo as scv
 import seaborn as sns
-import torch
-from dynamical_velocity2.api import train_model
-from dynamical_velocity2.data import load_data
-from dynamical_velocity2.plot import denoised_umap
-from dynamical_velocity2.plot import plot_arrow_examples
-from dynamical_velocity2.plot import plot_gene_ranking
-from dynamical_velocity2.plot import plot_mean_vector_field
-from dynamical_velocity2.plot import plot_posterior_time
-from dynamical_velocity2.plot import plot_vector_field_uncertain
-from dynamical_velocity2.plot import project_grid_points
-from dynamical_velocity2.plot import rainbowplot
-from dynamical_velocity2.plot import us_rainbowplot
-from dynamical_velocity2.plot import vector_field_uncertainty
-from dynamical_velocity2.utils import mae
-from dynamical_velocity2.utils import mae_evaluate
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.spatial import distance
-from scipy.stats import pearsonr
 from scipy.stats import spearmanr
-from sklearn.model_selection import train_test_split
+from scvelo.plotting.velocity_embedding_grid import default_arrow
+
+from pyrovelocity.plot import plot_posterior_time
+from pyrovelocity.plot import plot_vector_field_uncertain
+from pyrovelocity.plot import set_colorbar
 
 
 cs.logging.print_version()
 cs.settings.verbosity = 2
-cs.settings.data_path = "LARRY_data"  # A relative path to save data. If not existed before, create a new one.
-cs.settings.figure_path = "LARRY_figure"  # A relative path to save figures. If not existed before, create a new one.
+cs.settings.data_path = "LARRY_data"  # A relative path to save data.
+cs.settings.figure_path = "LARRY_figure"  # A relative path to save figures.
 cs.settings.set_figure_params(
     format="png", figsize=[4, 3.5], dpi=75, fontsize=14, pointsize=2
 )
@@ -68,17 +54,14 @@ embed_mean_all = result_dict["embed_mean"]
 adata_input_all = scv.read("fig3_larry_allcells_top2000_model2.h5ad")
 
 
-from dynamical_velocity2.plot import get_clone_trajectory
-
-
-# adata_input_all_clone = scv.read("/PHShome/qq06/dynamical_velocity2/figures/global_gold_standard2.h5ad")
+# adata_input_all_clone = scv.read("/PHShome/qq06/pyrovelocity/figures/global_gold_standard2.h5ad")
 adata_input_all_clone = scv.read("global_gold_standard2.h5ad")
 adata_input_all_clone.obsm["clone_vector_emb"][
     np.isnan(adata_input_all_clone.obsm["clone_vector_emb"])
 ] = 0
 
 # Calculate mean cosine similarity
-from dynamical_velocity2.plot import align_trajectory_diff
+from pyrovelocity.plot import align_trajectory_diff
 
 
 cutoff = 10
@@ -121,9 +104,6 @@ pyro_all_cos = pd.DataFrame(diff_all).apply(
 scvelo_all_cos_mean = scvelo_all_cos.mean()
 pyro_all_cos_mean = pyro_all_cos.mean()
 
-from scvelo.plotting.velocity_embedding_grid import compute_velocity_on_grid
-from scvelo.plotting.velocity_embedding_grid import default_arrow
-
 
 hl, hw, hal = default_arrow(3)
 quiver_kwargs = {"angles": "xy", "scale_units": "xy"}
@@ -148,18 +128,6 @@ scv.pl.scatter(
     color="state_info",
     show=False,
 )
-
-from dynamical_velocity2.plot import denoised_umap
-from dynamical_velocity2.plot import plot_arrow_examples
-from dynamical_velocity2.plot import plot_gene_ranking
-from dynamical_velocity2.plot import plot_mean_vector_field
-from dynamical_velocity2.plot import plot_posterior_time
-from dynamical_velocity2.plot import plot_vector_field_uncertain
-from dynamical_velocity2.plot import project_grid_points
-from dynamical_velocity2.plot import rainbowplot
-from dynamical_velocity2.plot import set_colorbar
-from dynamical_velocity2.plot import us_rainbowplot
-from dynamical_velocity2.plot import vector_field_uncertainty
 
 
 dotsize = 3
