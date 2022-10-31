@@ -19,9 +19,7 @@ adata = scv.read("larry_invitro_adata_sub_raw.h5ad")
 adata_cospar = scv.read(
     "LARRY_MultiTimeClone_Later_FullSpace0_t*2.0*4.0*6_adata_with_transition_map.h5ad"
 )
-adata_cytotrace = scv.read(
-    "larry_invitro_adata_sub_raw_withcytotrace.h5ad"
-) 
+adata_cytotrace = scv.read("larry_invitro_adata_sub_raw_withcytotrace.h5ad")
 
 adata_uni_mono = scv.read("mono_unipotent_cells.h5ad")
 adata_uni_mono = adata_uni_mono[adata_uni_mono.obs.state_info != "Centroid", :].copy()
@@ -61,7 +59,6 @@ embed_mean = result_dict["embed_mean"]
 adata = scv.read("fig2_pancreas_processed.h5ad")
 
 
-
 fig = denoised_umap(
     adata_model_pos_all, adata_input_all, cell_state="state_info", n_jobs=30
 )
@@ -72,7 +69,6 @@ fig.savefig(
     edgecolor="none",
     dpi=300,
 )
-
 
 
 fig2 = denoised_umap(adata_model_pos, adata, cell_state="clusters")

@@ -3,12 +3,11 @@ import os
 import cospar as cs
 import matplotlib.pyplot as plt
 import scvelo as scv
-from pyrovelocity.api import train_model
 
-import matplotlib.pyplot as plt
-import scvelo as scv
+from pyrovelocity.api import train_model
 from pyrovelocity.plot import plot_mean_vector_field
 from pyrovelocity.plot import vector_field_uncertainty
+
 
 cs.logging.print_version()
 cs.settings.verbosity = 2

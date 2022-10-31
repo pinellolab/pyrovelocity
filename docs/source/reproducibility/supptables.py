@@ -20,7 +20,6 @@ embed_mean = result_dict["embed_mean"]
 adata = scv.read("fig2_pancreas_processed.h5ad")
 
 
-
 df_genes_cors = compute_similarity2(
     adata.layers["spliced"].toarray(), adata.obs.latent_time.values.reshape(-1, 1)
 )

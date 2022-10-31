@@ -449,4 +449,3 @@ fig.savefig(
     edgecolor="none",
     dpi=300,
 )
-

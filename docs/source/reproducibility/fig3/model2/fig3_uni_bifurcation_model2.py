@@ -164,4 +164,3 @@ embed_mean = plot_mean_vector_field(
     adata_model_pos_split[1], adata_input, ax=ax, basis="emb"
 )
 fig.savefig("fig3_uni_bifurcation_vectorfield_model2.pdf")
-
