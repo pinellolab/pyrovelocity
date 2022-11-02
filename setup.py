@@ -19,15 +19,13 @@ test_requirements = []
 setup(
     author="Qian Qin",
     author_email="qqin@mgh.harvard.edu",
-    python_requires=">=3.6",
+    python_requires="^3.8",
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Natural Language :: English",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
     description="a multivariate RNA Velocity model to estimate the uncertainty of cell future state using Pyro",
