@@ -39,7 +39,7 @@ articles, and such.
 
 ### Submit Feedback
 
-The best way to send feedback is to file an issue at <https://github.com/qinqian/pyrovelocity/issues>.
+The best way to send feedback is to file an issue at <https://github.com/pinellolab/pyrovelocity/issues>.
 
 If you are proposing a feature:
 
@@ -48,25 +48,25 @@ If you are proposing a feature:
 -   Remember that this is a volunteer-driven project, and that contributions
     are welcome :)
 
-## Get Started!
+## Get Started
 
-Ready to contribute? Here's how to set up `pyrovelocity` for local development.
+### Remote
+
+See the [reproducibility/environment](https://github.com/pinellolab/pyrovelocity/tree/master/reproducibility/environment) folder and associated README.md.
+
+### Local
+
+The following is a rough guide to setting up `pyrovelocity` for local development.
 
 1. Fork the `pyrovelocity` repo on GitHub.
 
 2. Clone your fork locally:
 
     ```
-    $ git clone git@github.com:your_name_here/pyrovelocity.git
+    $ git clone https://github.com/your_name_here/pyrovelocity.git
     ```
 
-3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development:
-
-    ```
-    $ mkvirtualenv pyrovelocity
-    $ cd pyrovelocity/
-    $ python setup.py develop
-    ```
+3. Install your local copy with [poetry and nox](https://cookiecutter-hypermodern-python.readthedocs.io/en/2022.6.3.post1/guide.html#requirements).
 
 4. Create a branch for local development:
 
@@ -76,16 +76,13 @@ Ready to contribute? Here's how to set up `pyrovelocity` for local development.
 
     Now you can make your changes locally.
 
-5. When you're done making changes, check that your changes pass flake8 and the
-   tests, including testing other Python versions with tox:
+5. When you're done making changes, check that your changes pass the
+   checks implemented in noxfile.py:
 
     ```
-    $ flake8 pyrovelocity tests
-    $ python setup.py test or pytest
-    $ tox
+    $ nox --list-sessions
+    $ nox -r
     ```
-
-    To get flake8 and tox, just pip install them into your virtualenv.
 
 6. Commit your changes and push your branch to GitHub:
 
@@ -104,29 +101,5 @@ Before you submit a pull request, check that it meets these guidelines:
 1. The pull request should include tests.
 2. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
-   feature to the list in README.rst.
-3. The pull request should work for Python 3.5, 3.6, 3.7 and 3.8, and for PyPy. Check
-   <https://travis-ci.com/qinqian/pyrovelocity/pull_requests>
-   and make sure that the tests pass for all supported Python versions.
-
-## Tips
-
-To run a subset of tests:
-
-```
-$ python -m unittest tests.test_pyrovelocity
-```
-
-## Deploying
-
-A reminder for the maintainers on how to deploy.
-Make sure all your changes are committed (including an entry in HISTORY.rst).
-Then run:
-
-```
-$ bump2version patch # possible: major / minor / patch
-$ git push
-$ git push --tags
-```
-
-Travis will then deploy to PyPI if tests pass.
+   feature to the list in README.md.
+3. The pull request should work for Python 3.8.
