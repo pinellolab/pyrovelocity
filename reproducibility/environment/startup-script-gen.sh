@@ -6,14 +6,14 @@
 # relating to the startup script:
 #
 #     source startup-script-gen.sh
-# 
+#
 # and upload post-startup-script-*.sh to github gist
 #
 # - depends on [gh cli](https://cli.github.com/)
 # - depends on [dotenv-gen.sh](dotenv-gen.sh)
-# 
 #
-########## 
+#
+##########
 
 # set -xv
 
@@ -29,7 +29,7 @@ then
 fi
 
 
-set -a            
+set -a
 source .env
 set +a
 
@@ -64,7 +64,7 @@ echo "view post startup script in stdout: gh gist view $GITHUB_STARTUP_SCRIPT_GI
 echo "check startup script gists with: gh gist list | grep '.*post-startup-script.*'"
 echo "post startup script url status: $url_status"
 
-# hardcode these values in the .env file if you don't want to use github gist 
+# hardcode these values in the .env file if you don't want to use github gist
 {
     echo "TF_VAR_post_startup_script_url=$TF_VAR_post_startup_script_url";
     echo "GITHUB_STARTUP_SCRIPT_GIST_ID=$GITHUB_STARTUP_SCRIPT_GIST_ID";

@@ -4,9 +4,9 @@
 #
 # setup remote development environment:
 #
-# install conda environment 
-# for development 
-# 
+# install conda environment
+# for development
+#
 ##########################################
 
 set -x
@@ -19,10 +19,10 @@ CONDA_PATH=/opt/conda/bin
 JUPYTER_USER=jupyter
 REPO_PATH=/home/$JUPYTER_USER/$GITHUB_REPO
 
-$CONDA_PATH/conda init --all --system 
+$CONDA_PATH/conda init --all --system
 sudo -u $JUPYTER_USER $CONDA_PATH/conda init bash
 
-$CONDA_PATH/conda install -n base -c conda-forge -y mamba 
+$CONDA_PATH/conda install -n base -c conda-forge -y mamba
 $CONDA_PATH/conda config --add channels bioconda
 $CONDA_PATH/conda config --add channels conda-forge
 $CONDA_PATH/conda config --set channel_priority flexible
@@ -42,7 +42,7 @@ $CONDA_PATH/mamba install -n base -c conda-forge \
     jupyterlab_execute_time
 
 sudo git clone --branch $GITHUB_BRANCH https://github.com/$GITHUB_ORG/$GITHUB_REPO $REPO_PATH
-sudo chown -R $JUPYTER_USER:$JUPYTER_USER /home/$JUPYTER_USER 
+sudo chown -R $JUPYTER_USER:$JUPYTER_USER /home/$JUPYTER_USER
 sudo chmod -R 755 /home/$JUPYTER_USER
 
 $CONDA_PATH/mamba env create -n $GITHUB_REPO \

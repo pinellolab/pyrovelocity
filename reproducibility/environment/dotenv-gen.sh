@@ -5,18 +5,18 @@
 # source this file to set environment variables:
 #
 #     source dotenv-gen.sh
-# 
+#
 # - depends on [pass](https://www.passwordstore.org/)
-# 
+#
 # - replace values with hardcoded values if you aren't able to use pass
 #
-# - .env included to set variables from Makefile 
-# 
+# - .env included to set variables from Makefile
+#
 # note: default path for gcp_credentials_file is
 #
 #    ~/.config/gcloud/application_default_credentials.json
 #
-########## 
+##########
 
 # set -xv
 

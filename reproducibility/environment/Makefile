@@ -24,7 +24,7 @@
 #
 # [pass]: https://www.passwordstore.org/
 #
-# usage: 
+# usage:
 #
 #     make up - create -OR- update the instance
 # 	  make stop - stop the instance
@@ -72,7 +72,7 @@ setup: test
 	terraform plan -out=tfplan
 
 apply: setup
-	terraform apply -auto-approve "tfplan" 
+	terraform apply -auto-approve "tfplan"
 
 info:
 	gcloud compute instances list

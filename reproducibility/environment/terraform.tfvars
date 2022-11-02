@@ -47,11 +47,11 @@ vm_image_family  = "pytorch-1-12-cu113-notebooks"
 # container_image       = "nvcr.io/nvidia/pytorch"
 # container_tag         = "22.09-py3"
 
-# startup script: 
+# startup script:
 #
 # this can be set to any public url
 # for testing you could use a public paste bin
-#   post_startup_script_url = "https://hastebin.com/raw/ledahubuqe" 
+#   post_startup_script_url = "https://hastebin.com/raw/ledahubuqe"
 # by default it is set by exporting the current local copy of
 # post-startup-script.sh to github gist in startup-script-gen.sh
 #
