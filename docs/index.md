@@ -9,11 +9,11 @@ cell fate choice and developmental trajectory dynamics.
 
 ## Features
 
--   Probabilistic modeling of RNA velocity
--   Direct modeling of raw spliced and unspliced read counts
--   Diagnostic analyses and visualizations of model uncertainty
--   Synchronized cell time estimation across genes
--   Multivariate modeling of gene expression and velocity prediction
+- Probabilistic modeling of RNA velocity
+- Direct modeling of raw spliced and unspliced read counts
+- Diagnostic analyses and visualizations of model uncertainty
+- Synchronized cell time estimation across genes
+- Multivariate modeling of gene expression and velocity prediction
 
 ![Velocity workflow comparison](source/readme_figure1.png)
 
@@ -37,5 +37,5 @@ GitHub <https://github.com/pinellolab/pyrovelocity>
 
 # Indices and tables
 
--   {ref}`genindex`
--   {ref}`modindex`
+- {ref}`genindex`
+- {ref}`modindex`

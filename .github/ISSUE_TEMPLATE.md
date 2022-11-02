@@ -1,6 +1,6 @@
--   pyrovelocity version:
--   Python version:
--   Operating System:
+- pyrovelocity version:
+- Python version:
+- Operating System:
 
 ### Description
 
