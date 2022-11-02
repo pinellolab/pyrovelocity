@@ -6,15 +6,15 @@ models _raw sequencing counts_ with the _synchronized cell time_ across
 all expressed genes to provide quantifiable and improved information on
 cell fate choices and developmental trajectory dynamics.
 
--   LICENSE - Free software: Affero GPL V3
+- LICENSE - Free software: Affero GPL V3
 
 ## Features
 
--   Probabilistic modeling of RNA velocity
--   Direct modeling of raw spliced and unspliced read count
--   Multiple uncertainty diagnostics analysis and visualizations
--   Synchronized cell time estimation across genes
--   Multivariate denoised gene expression and velocity prediction
+- Probabilistic modeling of RNA velocity
+- Direct modeling of raw spliced and unspliced read count
+- Multiple uncertainty diagnostics analysis and visualizations
+- Synchronized cell time estimation across genes
+- Multivariate denoised gene expression and velocity prediction
 
 ![Velocity workflow comparison](docs/source/readme_figure1.png)
 

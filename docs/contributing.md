@@ -17,9 +17,9 @@ Report bugs at <https://github.com/pinellolab/pyrovelocity/issues>.
 
 If you are reporting a bug, please include:
 
--   Your operating system name and version.
--   Any details about your local setup that might be helpful in troubleshooting.
--   Detailed steps to reproduce the bug.
+- Your operating system name and version.
+- Any details about your local setup that might be helpful in troubleshooting.
+- Detailed steps to reproduce the bug.
 
 ### Fix Bugs
 
@@ -43,10 +43,10 @@ The best way to send feedback is to file an issue at <https://github.com/pinello
 
 If you are proposing a feature:
 
--   Explain in detail how it would work.
--   Keep the scope as narrow as possible, to make it easier to implement.
--   Remember that this is a volunteer-driven project, and that contributions
-    are welcome :)
+- Explain in detail how it would work.
+- Keep the scope as narrow as possible, to make it easier to implement.
+- Remember that this is a volunteer-driven project, and that contributions
+  are welcome :)
 
 ## Get Started
 
@@ -62,35 +62,35 @@ The following is a rough guide to setting up `pyrovelocity` for local developmen
 
 2. Clone your fork locally:
 
-    ```
-    $ git clone https://github.com/your_name_here/pyrovelocity.git
-    ```
+   ```
+   $ git clone https://github.com/your_name_here/pyrovelocity.git
+   ```
 
 3. Install your local copy with [poetry and nox](https://cookiecutter-hypermodern-python.readthedocs.io/en/2022.6.3.post1/guide.html#requirements).
 
 4. Create a branch for local development:
 
-    ```
-    $ git checkout -b name-of-your-bugfix-or-feature
-    ```
+   ```
+   $ git checkout -b name-of-your-bugfix-or-feature
+   ```
 
-    Now you can make your changes locally.
+   Now you can make your changes locally.
 
 5. When you're done making changes, check that your changes pass the
    checks implemented in noxfile.py:
 
-    ```
-    $ nox --list-sessions
-    $ nox -r
-    ```
+   ```
+   $ nox --list-sessions
+   $ nox -r
+   ```
 
 6. Commit your changes and push your branch to GitHub:
 
-    ```
-    $ git add .
-    $ git commit -m "Your detailed description of your changes."
-    $ git push origin name-of-your-bugfix-or-feature
-    ```
+   ```
+   $ git add .
+   $ git commit -m "Your detailed description of your changes."
+   $ git push origin name-of-your-bugfix-or-feature
+   ```
 
 7. Submit a pull request through the GitHub website.
 
