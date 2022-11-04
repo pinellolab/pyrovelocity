@@ -1,20 +1,20 @@
 # Introduction
 
 Pyro-Velocity is a Bayesian, generative and multivariate RNA Velocity
-model to estimate the *uncertainty* of cell future states. This approach
-models *raw sequencing counts* with the *synchronized cell time* across
+model to estimate the _uncertainty_ of cell future states. This approach
+models _raw sequencing counts_ with the _synchronized cell time_ across
 all expressed genes to provide quantifiable and improved information on
 cell fate choices and developmental trajectory dynamics.
 
--   LICENSE - Free software: Affero GPL V3
+- LICENSE - Free software: Affero GPL V3
 
 ## Features
 
--   Probabilistic modeling of RNA velocity
--   Direct modeling of raw spliced and unspliced read count
--   Multiple uncertainty diagnostics analysis and visualizations
--   Synchronized cell time estimation across genes
--   Multivariate denoised gene expression and velocity prediction
+- Probabilistic modeling of RNA velocity
+- Direct modeling of raw spliced and unspliced read count
+- Multiple uncertainty diagnostics analysis and visualizations
+- Synchronized cell time estimation across genes
+- Multivariate denoised gene expression and velocity prediction
 
 ![Velocity workflow comparison](docs/source/readme_figure1.png)
 
@@ -43,17 +43,43 @@ conda config --add channels conda-forge
 conda config --set channel_priority flexible
 ```
 
-After that, install *pyrovelocity* package in one mamba command line, this step takes about 6-8min depending on the network speed:
+``` python
+After that, install the _pyrovelocity_ package in one mamba command:
 
-``` bash
+```bash
 mamba create -n pyrovelocity_bioconda -c bioconda pyrovelocity
 ```
 
-Last, test the installation by:
+This step takes about 6-8 minutes depending on the network speed. If you prefer to use conda environment configurations, see the `conda` subfolder for installation with *prefix* to specify the installation path, such as:
 
-``` bash 
+```
+# GPU
+mamba env create --prefix /path_to_conda_env/qq-pyrovelocity-dev -f conda/environment-gpu.yml
+# or CPU
+mamba env create --prefix /path_to_conda_env/qq-pyrovelocity-dev -f conda/environment-cpu.yml
+```
+
+Or with more control of installing the environment,
+
+``` bash
+conda create -n pyrovelocity_bioconda python=3.8.8
+mamba install -n pyrovelocity_bioconda -c bioconda pyrovelocity
+# CPU
+mamba env update -n pyrovelocity_bioconda -f conda/environment-cpu.yml
+# or GPU
+mamba env update -n pyrovelocity_bioconda -f conda/environment-gpu.yml
+```
+
+For windows user installation, please refer to the [issue](https://github.com/pinellolab/pyrovelocity/issues/9).
+
+For gcp users, please refer to the setup [tutorial](https://github.com/pinellolab/pyrovelocity/tree/master/reproducibility/environment).
+
+
+Lastly, test the installation by:
+
+``` bash
 conda activate pyrovelocity_bioconda
-python 
+python
 ```
 
 ``` python
@@ -81,7 +107,7 @@ Starting from these count tables we show below a minimal step-by-step
 workflow to illustrate the main features of Pyro-Velocity in a Jupyter
 Notebook:
 
-Step 1. Load your data, load your data(e.g. *local_file.h5ad*) with
+Step 1. Load your data, load your data(e.g. _local_file.h5ad_) with
 scvelo by using:
 
 ``` python
@@ -89,7 +115,7 @@ import scvelo as scv
 adata = scv.read("local_file.h5ad")
 ```
 
-Step 2. Minimally preprocess your *adata* object:
+Step 2. Minimally preprocess your _adata_ object:
 
 ``` python
 adata.layers['raw_spliced']   = adata.layers['spliced']

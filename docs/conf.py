@@ -24,40 +24,33 @@ autodoc_mock_imports = [
 
 needs_sphinx = "5.0"
 
-project = 'pyrovelocity'
+project = "pyrovelocity"
 author = "Qian Qin"
 copyright = "2022, Pinello Lab"
 extensions = [
-    'myst_parser',
-    'sphinx.ext.autodoc',
-    'nbsphinx',
-    'sphinx.ext.viewcode',
+    "myst_parser",
+    "sphinx.ext.autodoc",
+    "nbsphinx",
+    "sphinx.ext.viewcode",
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
     "sphinx_autodoc_typehints",
     "sphinx.ext.autosummary",
     "sphinx_copybutton",
 ]
-templates_path = ['_templates']
-source_suffix = [
-    '.md',
-    '.rst'
-]
-master_doc = 'index'
-language = 'en'
-exclude_patterns = [
-    '_build',
-    'Thumbs.db',
-    '.DS_Store'
-]
-pygments_style = 'sphinx'
+templates_path = ["_templates"]
+source_suffix = [".md", ".rst"]
+master_doc = "index"
+language = "en"
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+pygments_style = "sphinx"
 todo_include_todos = False
 
 # HTML
-html_theme = 'furo'
+html_theme = "furo"
 html_title = "pyrovelocity"
 html_logo = "_static/logo.png"
-html_static_path = ['_static']
+html_static_path = ["_static"]
 html_theme_options = {
     "footer_icons": [
         {
@@ -75,7 +68,3 @@ html_theme_options = {
     "source_branch": "master",
     "source_directory": "docs/",
 }
-
-
-
-
