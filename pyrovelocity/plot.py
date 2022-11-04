@@ -221,7 +221,7 @@ def plot_multigenes_dynamical(
     ax=None,
     raw=False,
 ):
-    import numpy as np
+    pass
 
     # softplus operation as pyro
     # https://stackoverflow.com/questions/44230635/avoid-overflow-with-softplus-function-in-python
@@ -376,7 +376,7 @@ def plot_posterior_time(
     # return fig
 
 
-def mae_per_gene(pred_counts, true_counts):
+def mae_per_gene(pred_counts: ndarray, true_counts: ndarray) -> ndarray:
     """Computes mean average error between counts and predicted probabilities."""
     error = np.abs(true_counts - pred_counts).sum(-2)
     total = np.clip(true_counts.sum(-2), 1, np.inf)
@@ -560,7 +560,7 @@ def plot_gene_ranking(
 
 
 def denoised_umap(pos, adata, cell_state="state_info"):
-    import copy
+    pass
 
     import sklearn
     import umap
@@ -640,11 +640,16 @@ def denoised_umap(pos, adata, cell_state="state_info"):
     )
 
 
-def vector_field_uncertainty(adata, pos, basis="tsne", n_jobs=1, denoised=False):
+def vector_field_uncertainty(
+    adata: AnnData,
+    pos: Dict[str, ndarray],
+    basis: str = "tsne",
+    n_jobs: int = 1,
+    denoised: bool = False,
+) -> Tuple[ndarray, ndarray, ndarray]:
     import numpy as np
     import sklearn
     import umap
-    from astropy import units as u
     from astropy.stats import rayleightest
     from sklearn.pipeline import Pipeline
 
@@ -732,8 +737,6 @@ def plot_vector_field_uncertain(
     density=0.3,
     arrow_size=5,
 ):
-    from astropy.stats import circstd
-    from scvelo.plotting.velocity_embedding_grid import compute_velocity_on_grid
     from scvelo.plotting.velocity_embedding_grid import default_arrow
 
     if not only_grid:
@@ -744,7 +747,6 @@ def plot_vector_field_uncertain(
         # norm = Normalize()
         # norm.autoscale(fdri_grids)
         # colormap = cm.inferno
-        import seaborn as sns
 
         adata.obs["uncertain"] = get_posterior_sample_angle_uncertainty(
             embeds_radian / np.pi * 180
@@ -812,7 +814,6 @@ def plot_vector_field_uncertain(
     ax.axis("off")
     if cbar:
         from matplotlib.ticker import MaxNLocator
-        from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
         # divider = make_axes_locatable(ax[1])
         # cax = divider.append_axes('bottom', size='5%', pad=0.08)
@@ -839,11 +840,7 @@ def plot_mean_vector_field(
     spliced="spliced_pyro",
     raw=False,
 ):
-    import copy
-
-    import sklearn
-    import umap
-    from sklearn.pipeline import Pipeline
+    pass
 
     if basis == "umap":
         # projection = [ ('PCA', sklearn.decomposition.PCA(random_state=99, n_components=50)),
@@ -954,7 +951,6 @@ def project_grid_points(
 ):
     from scipy.stats import norm as normal
     from scvelo.tools.velocity_embedding import quiver_autoscale
-    from scvelo.tools.velocity_embedding import velocity_embedding
     from sklearn.neighbors import NearestNeighbors
 
     X_grid = []
@@ -1026,8 +1022,6 @@ def plot_arrow_examples(
     density=0.3,
     arrow_size=4,
 ):
-    from astropy.stats import circstd
-    from scvelo.plotting.velocity_embedding_grid import compute_velocity_on_grid
     from scvelo.plotting.velocity_embedding_grid import default_arrow
 
     X_grid, V_grid, uncertain = project_grid_points(
@@ -1117,7 +1111,13 @@ def set_colorbar(
     cb.update_ticks()
 
 
-def us_rainbowplot(genes, adata, pos, data=["st", "ut"], cell_state="clusters"):
+def us_rainbowplot(
+    genes: Index,
+    adata: AnnData,
+    pos: Dict[str, ndarray],
+    data: List[str] = ["st", "ut"],
+    cell_state: str = "clusters",
+) -> Figure:
     import matplotlib.lines as mlines
 
     fig, ax = plt.subplots(len(genes), 2)
@@ -1253,7 +1253,6 @@ def rainbowplot(
     negative=False,
     scvelo_colors=False,
 ):
-    import matplotlib.lines as mlines
     import matplotlib.pyplot as plt
 
     if genes is None:
