@@ -11,9 +11,10 @@ from sklearn.decomposition import PCA
 from torch.nn.functional import relu
 from torch.nn.functional import softmax
 from torch.nn.functional import softplus
+from typing import Tuple
 
 
-def inv(x):
+def inv(x: torch.Tensor) -> torch.Tensor:
     return x.reciprocal()
 
 
@@ -70,7 +71,14 @@ def ode_mRNA(tau, u0, s0, alpha, beta, gamma):
     return ut, st
 
 
-def mRNA(tau, u0, s0, alpha, beta, gamma):
+def mRNA(
+    tau: torch.Tensor,
+    u0: torch.Tensor,
+    s0: torch.Tensor,
+    alpha: torch.Tensor,
+    beta: torch.Tensor,
+    gamma: torch.Tensor,
+) -> Tuple[torch.Tensor, torch.Tensor]:
     expu, exps = torch.exp(-beta * tau), torch.exp(-gamma * tau)
 
     # invalid values caused by below codes:
