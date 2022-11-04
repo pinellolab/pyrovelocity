@@ -1,10 +1,9 @@
 from typing import Dict
-from typing import Tuple
 from typing import List
+from typing import Tuple
 
 import matplotlib
 import matplotlib.cm as cm
-from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -14,6 +13,7 @@ import seaborn as sns
 import torch
 from anndata import AnnData
 from matplotlib.colors import Normalize
+from matplotlib.figure import Figure
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 from scipy.stats import spearmanr

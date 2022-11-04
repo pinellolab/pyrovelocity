@@ -1,5 +1,6 @@
 import functools
 import pdb
+from typing import Tuple
 
 import numpy as np
 import seaborn as sns
@@ -11,7 +12,6 @@ from sklearn.decomposition import PCA
 from torch.nn.functional import relu
 from torch.nn.functional import softmax
 from torch.nn.functional import softplus
-from typing import Tuple
 
 
 def inv(x: torch.Tensor) -> torch.Tensor:
