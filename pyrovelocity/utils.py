@@ -1,5 +1,6 @@
 import functools
 import pdb
+from typing import Tuple
 
 import numpy as np
 import seaborn as sns
@@ -13,7 +14,7 @@ from torch.nn.functional import softmax
 from torch.nn.functional import softplus
 
 
-def inv(x):
+def inv(x: torch.Tensor) -> torch.Tensor:
     return x.reciprocal()
 
 
@@ -70,7 +71,14 @@ def ode_mRNA(tau, u0, s0, alpha, beta, gamma):
     return ut, st
 
 
-def mRNA(tau, u0, s0, alpha, beta, gamma):
+def mRNA(
+    tau: torch.Tensor,
+    u0: torch.Tensor,
+    s0: torch.Tensor,
+    alpha: torch.Tensor,
+    beta: torch.Tensor,
+    gamma: torch.Tensor,
+) -> Tuple[torch.Tensor, torch.Tensor]:
     expu, exps = torch.exp(-beta * tau), torch.exp(-gamma * tau)
 
     # invalid values caused by below codes:

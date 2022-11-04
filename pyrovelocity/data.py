@@ -1,16 +1,12 @@
 import os
 from typing import List
 from typing import Optional
-from typing import Tuple
-from typing import Union
 
 import anndata
+import anndata._core.anndata
 import numpy as np
 import scvelo as scv
 import scvi
-import torch
-from anndata import AnnData
-from scipy import sparse as sp_sparse
 from scvi.data import register_tensor_from_anndata
 from scvi.data._anndata import _register_anndata
 from scvi.data._anndata import _setup_batch
@@ -22,22 +18,21 @@ from scvi.data._anndata import _setup_summary_stats
 from scvi.data._anndata import _setup_x
 from scvi.data._anndata import _verify_and_correct_data_format
 from scvi.data._anndata import logger
-from scvi.dataloaders import DataSplitter
 
 from pyrovelocity.cytotrace import cytotrace_sparse
 
 
 def load_data(
-    data="pancrease",
-    top_n=2000,
-    min_shared_counts=30,
-    eps=1e-6,
-    force=False,
-):
+    data: str = "pancreas",
+    top_n: int = 2000,
+    min_shared_counts: int = 30,
+    eps: float = 1e-6,
+    force: bool = False,
+) -> anndata._core.anndata.AnnData:
     if force or (
         not os.path.exists(f"{data}_scvelo_fitted_{top_n}_{min_shared_counts}.h5ad")
     ):
-        if data == "pancrease":
+        if data == "pancreas":
             adata = scv.datasets.pancreas()
         elif data == "forebrain":
             adata = scv.datasets.forebrain()

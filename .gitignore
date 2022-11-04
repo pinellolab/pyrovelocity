@@ -4,6 +4,9 @@ archive/
 #
 .DS_Store
 
+#
+monkeytype.sqlite3
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

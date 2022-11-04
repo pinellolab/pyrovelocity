@@ -1,24 +1,20 @@
+from typing import Any
+from typing import Dict
 from typing import Iterable
-from typing import Literal
 from typing import Optional
 from typing import Tuple
 from typing import Union
 
-import numpy as np
 import pyro
 import pyro.distributions as dist
 import pyro.poutine as poutine
 import torch
 from pyro.distributions import Bernoulli
 from pyro.distributions import Beta
-from pyro.distributions import Binomial
 from pyro.distributions import Categorical
-from pyro.distributions import Delta
 from pyro.distributions import Dirichlet
 from pyro.distributions import Gamma
-from pyro.distributions import InverseGamma
 from pyro.distributions import LogNormal
-from pyro.distributions import Multinomial
 from pyro.distributions import NegativeBinomial
 from pyro.distributions import Normal
 from pyro.distributions import Poisson
@@ -27,18 +23,15 @@ from pyro.nn import PyroModule
 from pyro.nn import PyroParam
 from pyro.nn import PyroSample
 from pyro.ops.indexing import Vindex
+from pyro.primitives import plate
 from scvi.nn import Decoder
 from scvi.nn import DecoderSCVI
-from scvi.nn import Encoder
 from scvi.nn import FCLayers
 from torch import nn
 from torch.nn.functional import relu
-from torch.nn.functional import softmax
 from torch.nn.functional import softplus
 
-from .utils import debug
 from .utils import mRNA
-from .utils import ode_mRNA
 from .utils import tau_inv
 
 
@@ -49,7 +42,7 @@ class LogNormalModel(PyroModule):
         num_genes: int,
         likelihood: str = "Poisson",
         plate_size: int = 2,
-    ):
+    ) -> None:
         assert num_cells > 0 and num_genes > 0
         super().__init__()
         self.num_cells = num_cells
@@ -81,7 +74,7 @@ class LogNormalModel(PyroModule):
         ind_x: Optional[torch.Tensor] = None,
         cell_state: Optional[torch.Tensor] = None,
         time_info: Optional[torch.Tensor] = None,
-    ):
+    ) -> Tuple[plate, plate]:
         cell_plate = pyro.plate("cells", self.num_cells, subsample=ind_x, dim=-2)
         gene_plate = pyro.plate("genes", self.num_genes, dim=-1)
         return cell_plate, gene_plate
@@ -251,7 +244,24 @@ class LogNormalModel(PyroModule):
         )
 
     @staticmethod
-    def _get_fn_args_from_batch(tensor_dict):
+    def _get_fn_args_from_batch(
+        tensor_dict: Dict[str, torch.Tensor]
+    ) -> Tuple[
+        Tuple[
+            torch.Tensor,
+            torch.Tensor,
+            torch.Tensor,
+            torch.Tensor,
+            torch.Tensor,
+            torch.Tensor,
+            torch.Tensor,
+            torch.Tensor,
+            torch.Tensor,
+            None,
+            None,
+        ],
+        Dict[Any, Any],
+    ]:
         u_obs = tensor_dict["U"]
         s_obs = tensor_dict["X"]
         u_log_library = tensor_dict["u_lib_size"]
@@ -285,19 +295,19 @@ class LogNormalModel(PyroModule):
 
     def get_likelihood(
         self,
-        ut,
-        st,
-        u_log_library=None,
-        s_log_library=None,
-        u_scale=None,
-        s_scale=None,
-        u_read_depth=None,
-        s_read_depth=None,
-        u_cell_size_coef=None,
-        ut_coef=None,
-        s_cell_size_coef=None,
-        st_coef=None,
-    ):
+        ut: torch.Tensor,
+        st: torch.Tensor,
+        u_log_library: Optional[torch.Tensor] = None,
+        s_log_library: Optional[torch.Tensor] = None,
+        u_scale: Optional[torch.Tensor] = None,
+        s_scale: Optional[torch.Tensor] = None,
+        u_read_depth: Optional[torch.Tensor] = None,
+        s_read_depth: Optional[torch.Tensor] = None,
+        u_cell_size_coef: None = None,
+        ut_coef: None = None,
+        s_cell_size_coef: None = None,
+        st_coef: None = None,
+    ) -> Tuple[Poisson, Poisson]:
         ##if not (self.likelihood in ['Normal', 'LogNormal']): # and u_scale is None and s_scale is None:
         ##    ut = pyro.sample("ut", Normal(ut, u_scale))
         ##    st = pyro.sample("st", Normal(st, s_scale))
@@ -427,7 +437,7 @@ class VelocityModel(LogNormalModel):
         cell_specific_kinetics: Optional[str] = None,
         kinetics_num: Optional[int] = None,
         **initial_values,
-    ):
+    ) -> None:
         assert num_cells > 0 and num_genes > 0
         super().__init__(num_cells, num_genes, likelihood, plate_size)
         # TODO set self.num_aux_cells in self.__init__, 10-200
@@ -3014,7 +3024,7 @@ class LatentFactor(LogNormalModel):
 
 
 class VelocityModelAuto(AuxCellVelocityModel):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         if self.guide_type in [
             "velocity_auto",
@@ -3051,19 +3061,19 @@ class VelocityModelAuto(AuxCellVelocityModel):
 
     def get_rna(
         self,
-        u_scale,
-        s_scale,
-        alpha,
-        beta,
-        gamma,
-        t,
-        u0,
-        s0,
-        t0,
-        switching=None,
-        u_inf=None,
-        s_inf=None,
-    ):
+        u_scale: torch.Tensor,
+        s_scale: torch.Tensor,
+        alpha: torch.Tensor,
+        beta: torch.Tensor,
+        gamma: torch.Tensor,
+        t: torch.Tensor,
+        u0: torch.Tensor,
+        s0: torch.Tensor,
+        t0: torch.Tensor,
+        switching: Optional[torch.Tensor] = None,
+        u_inf: Optional[torch.Tensor] = None,
+        s_inf: Optional[torch.Tensor] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         if self.cell_specific_kinetics is None:
             if self.guide_type == "auto":
                 enum = "parallel"
@@ -3169,7 +3179,7 @@ class VelocityModelAuto(AuxCellVelocityModel):
         ind_x: Optional[torch.Tensor] = None,
         cell_state: Optional[torch.Tensor] = None,
         time_info: Optional[torch.Tensor] = None,
-    ):
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         cell_plate, gene_plate = self.create_plates(
             u_obs,
             s_obs,

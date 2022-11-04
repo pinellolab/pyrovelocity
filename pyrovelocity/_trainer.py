@@ -2,25 +2,18 @@ import math
 from typing import Any
 from typing import Callable
 from typing import Dict
-from typing import Iterable
+from typing import List
 from typing import Optional
 from typing import Sequence
-from typing import Tuple
 from typing import Union
 
 import numpy as np
 import pyro
 import torch
-from pyro.infer import JitTrace_ELBO
-from pyro.infer import JitTraceEnum_ELBO
-from pyro.infer import Trace_ELBO
 from pyro.infer import TraceEnum_ELBO
-from pyro.infer import TraceMeanField_ELBO
-from pyro.infer import config_enumerate
 from pyro.infer.autoguide.guides import AutoGuideList
 from pyro.optim.clipped_adam import ClippedAdam
 from pyro.optim.optim import PyroOptim
-from pytorch_lightning.callbacks import Callback
 from scvi.dataloaders import DataSplitter
 from scvi.train import PyroTrainingPlan
 from scvi.train import TrainRunner
@@ -76,7 +69,7 @@ class VelocityAdam(ClippedAdam):
         return loss
 
 
-def VelocityClippedAdam(optim_args) -> PyroOptim:
+def VelocityClippedAdam(optim_args: Dict[str, float]) -> PyroOptim:
     """
     Wraps :class:`pyro.optim.clipped_adam.ClippedAdam` with :class:`~pyro.optim.optim.PyroOptim`.
     """
@@ -192,7 +185,7 @@ class VelocityTrainingMixin:
         log_every: int = 100,
         patient_init: int = 45,
         patient_improve: float = 0.001,
-    ):
+    ) -> List[float]:
         """this method input all adata input gpu for faster IO,
         increase larger dataset by 5-6 fold, however should not
         be used for >20k cells with less than 40GB GPU memory,
