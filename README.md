@@ -72,9 +72,6 @@ mamba env update -n pyrovelocity_bioconda -f conda/environment-gpu.yml
 
 For windows user installation, please refer to the [issue](https://github.com/pinellolab/pyrovelocity/issues/9).
 
-For gcp users, please refer to the setup [tutorial](https://github.com/pinellolab/pyrovelocity/tree/master/reproducibility/environment).
-
-
 Lastly, test the installation by:
 
 ``` bash
