@@ -1,45 +1,43 @@
+from typing import Dict
+from typing import Optional
+from typing import Tuple
+
 import matplotlib.pyplot as plt
 import numpy as np
-import sklearn
+from anndata._core.anndata import AnnData
+from numpy import ndarray
 from pyro import poutine
-from pyro.infer.autoguide import AutoDelta
-from pyro.infer.autoguide import AutoDiagonalNormal
-from pyro.infer.autoguide import AutoDiscreteParallel
-from pyro.infer.autoguide import AutoLowRankMultivariateNormal
 from pyro.infer.autoguide import AutoNormal
-from pyro.infer.autoguide import init_to_mean
 from pyro.infer.autoguide.guides import AutoGuideList
 from sklearn.model_selection import train_test_split
 
 from pyrovelocity._velocity import PyroVelocity
 
-from ._velocity_guide import VelocityAutoGuideList
-
 
 def train_model(
-    adata,
-    guide_type="auto",
-    model_type="auto",
-    svi_train=False,  # svi_train alreadys turn off
-    batch_size=-1,
-    train_size=1.0,
-    use_gpu=0,
-    likelihood="Poisson",
-    num_samples=30,
-    log_every=100,
-    cell_state="clusters",
-    patient_improve=5e-4,
-    patient_init=30,
-    seed=99,
-    lr=0.01,
-    max_epochs=3000,
-    include_prior=True,
-    library_size=True,
-    offset=False,
-    input_type="raw",
-    cell_specific_kinetics=None,
-    kinetics_num=2,
-):
+    adata: AnnData,
+    guide_type: str = "auto",
+    model_type: str = "auto",
+    svi_train: bool = False,  # svi_train alreadys turn off
+    batch_size: int = -1,
+    train_size: float = 1.0,
+    use_gpu: int = 0,
+    likelihood: str = "Poisson",
+    num_samples: int = 30,
+    log_every: int = 100,
+    cell_state: str = "clusters",
+    patient_improve: float = 5e-4,
+    patient_init: int = 30,
+    seed: int = 99,
+    lr: float = 0.01,
+    max_epochs: int = 3000,
+    include_prior: bool = True,
+    library_size: bool = True,
+    offset: bool = False,
+    input_type: str = "raw",
+    cell_specific_kinetics: Optional[str] = None,
+    kinetics_num: int = 2,
+) -> Tuple[PyroVelocity, Dict[str, ndarray]]:
     model = PyroVelocity(
         adata,
         likelihood=likelihood,
