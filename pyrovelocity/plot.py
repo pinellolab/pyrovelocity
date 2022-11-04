@@ -1,5 +1,10 @@
+from typing import Dict
+from typing import Tuple
+from typing import List
+
 import matplotlib
 import matplotlib.cm as cm
+from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -7,8 +12,10 @@ import pyro
 import scvelo as scv
 import seaborn as sns
 import torch
+from anndata import AnnData
 from matplotlib.colors import Normalize
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from numpy import ndarray
 from scipy.stats import spearmanr
 
 from pyrovelocity.cytotrace import compute_similarity2
@@ -1112,7 +1119,7 @@ def set_colorbar(
 
 
 def us_rainbowplot(
-    genes: Index,
+    genes: pd.Index,
     adata: AnnData,
     pos: Dict[str, ndarray],
     data: List[str] = ["st", "ut"],
