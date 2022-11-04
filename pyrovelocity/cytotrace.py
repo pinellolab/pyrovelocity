@@ -25,16 +25,15 @@ __all__ = [
     "run_cytotrace",
 ]
 
-import re
 from time import time
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import scanpy as sc
 
 # Cell
 import scvelo as scv
+from numpy import ndarray
 from scipy.stats import mannwhitneyu
 from scipy.stats import rankdata
 
@@ -80,7 +79,7 @@ def remove_zero_mvg(mat):
 
 
 # Cell
-def compute_similarity2(O, P):
+def compute_similarity2(O: ndarray, P: ndarray) -> ndarray:
     "Compute pearson correlation between two matrices O and P using einstein summation"
     (n, t) = O.shape  # n traces of t samples
     (n_bis, m) = P.shape  # n predictions for each of m candidates
@@ -152,7 +151,6 @@ def convert_to_markov(sim):
 from numpy import abs
 from numpy import arange
 from numpy import argmax
-from numpy import diag
 from numpy import finfo
 from numpy import float64
 from numpy import int64
