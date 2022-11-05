@@ -7,6 +7,7 @@ from typing import Union
 import anndata
 import numpy as np
 import scvelo as scv
+from scanpy import read
 import scvi
 import torch
 from anndata import AnnData
@@ -65,13 +66,20 @@ def load_data(
     return adata
 
 
-# class _VelocityCONSTANTS_NT(_CONSTANTS_NT):
-#    X_KEY: str = "X"
-#    U_KEY: str = "U"
-#    LABELS_KEY: str= "labels"
+def load_larry(file_path='data/larry.h5ad'):
+    """In vitro Hemotopoiesis Larry datasets
 
+    Data from `CALEB WEINREB et al. (2020) <DOI: 10.1126/science.aaw3381>'
+    https://figshare.com/ndownloader/articles/20780344/versions/1
 
-# VelocityCONSTANTS = _VelocityCONSTANTS_NT()
+    Returns
+    -------
+    Returns `adata` object
+    """
+    #url = "https://ndownloader.figshare.com/files/20780344"
+    url = "https://figshare.com/ndownloader/files/37028569"
+    adata = read(file_path, backup_url=url, sparse=True, cache=True)
+    return adata
 
 
 def setup_anndata_multilayers(
@@ -377,19 +385,6 @@ def setup_anndata_multilayers(
             adata_attr_name="obs",
             adata_key_name="time_info",
         )
-
-    # register_tensor_from_anndata(
-    #    adata,
-    #    registry_key="u_gene_count",
-    #    adata_attr_name="obs",
-    #    adata_key_name="u_gene_count",
-    # )
-    # register_tensor_from_anndata(
-    #    adata,
-    #    registry_key="s_gene_count",
-    #    adata_attr_name="obs",
-    #    adata_key_name="s_gene_count",
-    # )
 
     if copy:
         return adata
