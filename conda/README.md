@@ -28,7 +28,7 @@ equivalent environment to one in which `pyrovelocity` has previously been execut
 
 ### generate lock files
 
-The script [gen-conda-lock.sh](./gen-conda-lock.sh) depends upon [conda-lock] can be used to generate `conda-linux-64-cpu.lock` and `conda/conda-linux-64-gpu.lock` . It may be necessary to edit [virtual-packages.yml](./virtual-packages.yml) to generate a configuration compatible with your system. See [managing virtual packages][conda-virt-packages] for reference. Either of the lock files can be used to reproduce a conda environment with:
+The script [gen-conda-lock.sh](./gen-conda-lock.sh) depends upon [conda-lock] and can be used to generate `conda-linux-64-cpu.lock` and `conda/conda-linux-64-gpu.lock`. It may be necessary to edit [virtual-packages.yml](./virtual-packages.yml) to generate a configuration compatible with your system. See [managing virtual packages][conda-virt-packages] for reference. Either of the lock files can be used to reproduce a conda environment with:
 
 ```shell
 conda create -n <env> --file <lockfile>

@@ -1,31 +1,13 @@
-from typing import Literal
 from typing import Optional
-from typing import Tuple
 from typing import Union
 
-import pyro
-import torch
 from pyro import poutine
-from pyro.distributions import Bernoulli
-from pyro.distributions import LogNormal
-from pyro.distributions import Normal
-from pyro.distributions import Poisson
-from pyro.distributions.constraints import positive
-from pyro.infer.autoguide import AutoDelta
-from pyro.infer.autoguide import AutoDiagonalNormal
-from pyro.infer.autoguide import AutoDiscreteParallel
 from pyro.infer.autoguide import AutoLowRankMultivariateNormal
 from pyro.infer.autoguide import AutoNormal
-from pyro.infer.autoguide import init_to_mean
-from pyro.infer.autoguide import init_to_value
 from pyro.infer.autoguide.guides import AutoGuideList
-from pyro.nn import PyroModule
-from pyro.nn import PyroParam
-from pyro.nn import PyroSample
 from scvi.module.base import PyroBaseModuleClass
 
-# from .data import VelocityCONSTANTS
-from torch.nn.functional import softplus
+from pyrovelocity._velocity_model import VelocityModelAuto
 
 from ._velocity_guide import AutoDeltaRNAVelocityGuide
 from ._velocity_guide import AutoNormalRNAVelocityGuide
@@ -38,13 +20,10 @@ from ._velocity_guide import VelocityAutoGuideList
 from ._velocity_guide import VelocityGuide
 from ._velocity_model import AuxCellVelocityModel
 from ._velocity_model import AuxTrajectoryModel
-from ._velocity_model import BlockedKineticsModel
 from ._velocity_model import DecoderTimeModel
 from ._velocity_model import LatentFactor
-from ._velocity_model import MultiKineticsModel
 from ._velocity_model import MultiKineticsModelDirichlet
 from ._velocity_model import MultiKineticsModelDirichletLinear
-from ._velocity_model import TimeEncoder2
 from ._velocity_model import VelocityModel
 from ._velocity_model import VelocityModelAuto
 
@@ -74,7 +53,7 @@ class VelocityModule(PyroBaseModuleClass):
         cell_specific_kinetics: Optional[str] = None,
         kinetics_num: Optional[int] = None,
         **initial_values
-    ):
+    ) -> None:
         super().__init__()
         self.num_cells = num_cells
         self.num_genes = num_genes
@@ -509,9 +488,9 @@ class VelocityModule(PyroBaseModuleClass):
         self._get_fn_args_from_batch = self._model._get_fn_args_from_batch
 
     @property
-    def model(self):
+    def model(self) -> VelocityModelAuto:
         return self._model
 
     @property
-    def guide(self):
+    def guide(self) -> AutoGuideList:
         return self._guide

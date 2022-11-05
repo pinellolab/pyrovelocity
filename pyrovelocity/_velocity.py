@@ -1,6 +1,7 @@
 import logging
 import os
 import pickle
+from typing import Dict
 from typing import Literal
 from typing import Optional
 from typing import Sequence
@@ -11,12 +12,10 @@ import pyro
 import scvi
 import torch
 from anndata import AnnData
-from scvi.data import get_from_registry
+from numpy import ndarray
 from scvi.data import transfer_anndata_setup
 from scvi.model._utils import parse_use_gpu_arg
 from scvi.model.base import BaseModelClass
-from scvi.model.base import PyroSampleMixin
-from scvi.model.base import PyroSviTrainMixin
 from scvi.model.base._utils import _initialize_model
 from scvi.model.base._utils import _validate_var_names
 from scvi.module.base import PyroBaseModuleClass
@@ -25,10 +24,7 @@ from pyrovelocity.data import setup_anndata_multilayers
 
 from ._trainer import VelocityTrainingMixin
 from ._velocity_module import VelocityModule
-from .utils import debug
 from .utils import init_with_all_cells
-from .utils import mRNA
-from .utils import tau_inv
 
 
 logger = logging.getLogger(__name__)
@@ -59,7 +55,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         correct_library_size: Union[bool, str] = True,
         cell_specific_kinetics: Optional[str] = None,
         kinetics_num: Optional[int] = None,
-    ):
+    ) -> None:
         self.use_gpu = use_gpu
         self.cell_specific_kinetics = cell_specific_kinetics
         self.k = kinetics_num
@@ -168,8 +164,8 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         adata: Optional[AnnData] = None,
         indices: Optional[Sequence[int]] = None,
         batch_size: Optional[int] = None,
-        num_samples=100,
-    ):
+        num_samples: int = 100,
+    ) -> Dict[str, ndarray]:
         """only work for sequential enumeration"""
         self.module.eval()
         predictive = self.module.create_predictive(
@@ -223,7 +219,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         overwrite: bool = True,
         save_anndata: bool = False,
         **anndata_write_kwargs,
-    ):
+    ) -> None:
         super().save(dir_path, overwrite, save_anndata, **anndata_write_kwargs)
         pyro.get_param_store().save(os.path.join(dir_path, "param_store_test.pt"))
 
