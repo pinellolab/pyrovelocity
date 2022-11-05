@@ -43,9 +43,9 @@ adata_model_pos = train_model(
     use_gpu=0,
     cell_state="celltype",
     patient_improve=1e-4,
-    guide_type="auto_t0_constraint",
+    guide_type="auto",
     train_size=1.0,
-    offset=False,
+    offset=True,
     library_size=True,
     include_prior=True,
 )
@@ -57,8 +57,8 @@ v_map_all, embeds_radian, fdri = vector_field_uncertainty(
 fig, ax = plt.subplots()
 embed_mean = plot_mean_vector_field(adata_model_pos[1], adata, ax=ax, basis="tsne", n_jobs=20)
 
-adata.write("fig2_pbmc_processed.h5ad")
-adata_model_pos[0].save("Fig2_pbmc_model", overwrite=True)
+adata.write("fig2_pbmc_processed_model2.h5ad")
+adata_model_pos[0].save("Fig2_pbmc_model2", overwrite=True)
 
 result_dict = {
     "adata_model_pos": adata_model_pos[1],
@@ -68,5 +68,5 @@ result_dict = {
     "embed_mean": embed_mean,
 }
 
-with open("fig2_pbmc_data.pkl", "wb") as f:
+with open("fig2_pbmc_data_model2.pkl", "wb") as f:
     pickle.dump(result_dict, f)

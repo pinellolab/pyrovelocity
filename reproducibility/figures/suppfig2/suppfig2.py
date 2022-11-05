@@ -34,7 +34,7 @@ import pickle
 import numpy as np
 
 
-with open("fig2_pancreas_data.pkl", "rb") as f:
+with open("../fig2/model1/fig2_pancreas_data.pkl", "rb") as f:
     result_dict = pickle.load(f)
 adata_model_pos = result_dict["adata_model_pos"]
 v_map_all = result_dict["v_map_all"]
@@ -42,17 +42,14 @@ embeds_radian = result_dict["embeds_radian"]
 fdri = result_dict["fdri"]
 embed_mean = result_dict["embed_mean"]
 
-# adata_sub_scvelo = scv.read("pbmc_processed_with_latent_time.h5ad")
-# adata_cytotrace = scv.read("pbmc_cytotrace_skip_nnls.h5ad")
-
-with open("fig2_pbmc_data.pkl", "rb") as f:
+with open("../fig2/model1/fig2_pbmc_data.pkl", "rb") as f:
     result_dict = pickle.load(f)
 adata_model_pos_pbmc = result_dict["adata_model_pos"]
 v_map_all_pbmc = result_dict["v_map_all"]
 embeds_radian_pbmc = result_dict["embeds_radian"]
 fdri_pbmc = result_dict["fdri"]
 embed_mean_pbmc = result_dict["embed_mean"]
-adata_pbmc = scv.read("pbmc_processed.h5ad")
+adata_pbmc = scv.read("../fig2/model1/pbmc_processed.h5ad")
 
 
 s = 3

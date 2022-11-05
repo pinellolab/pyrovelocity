@@ -654,6 +654,8 @@ def vector_field_uncertainty(
     n_jobs: int = 1,
     denoised: bool = False,
 ) -> Tuple[ndarray, ndarray, ndarray]:
+    """ Run cosine similarity-based vector field across posterior samples
+    """
     import numpy as np
     import sklearn
     import umap

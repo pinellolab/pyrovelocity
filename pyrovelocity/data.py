@@ -61,7 +61,9 @@ def load_data(
     return adata
 
 
-def load_larry(file_path='data/larry.h5ad'):
+def load_larry(
+    file_path: str ='data/larry.h5ad'
+) -> anndata._core.anndata.AnnData:
     """In vitro Hemotopoiesis Larry datasets
 
     Data from `CALEB WEINREB et al. (2020) <DOI: 10.1126/science.aaw3381>'
@@ -71,8 +73,28 @@ def load_larry(file_path='data/larry.h5ad'):
     -------
     Returns `adata` object
     """
-    #url = "https://ndownloader.figshare.com/files/20780344"
     url = "https://figshare.com/ndownloader/files/37028569"
+    adata = read(file_path, backup_url=url, sparse=True, cache=True)
+    return adata
+
+
+def load_unipotent_larry(
+    celltype: str = 'mono'
+) -> anndata._core.anndata.AnnData:
+    """In vitro Hemotopoiesis Larry datasets
+    Subset of Data from `CALEB WEINREB et al. (2020) <DOI: 10.1126/science.aaw3381>'
+    unipotent monocytes: https://figshare.com/ndownloader/files/37028572
+    unipotent neutrophils: https://figshare.com/ndownloader/files/37028575
+
+    Returns
+    -------
+    Returns `adata` object
+    """
+    file_path = f'data/larry_{celltype}.h5ad'
+    if celltype == 'mono':
+        url = "https://figshare.com/ndownloader/files/37028572"
+    else: # neutrophil
+        url = "https://figshare.com/ndownloader/files/37028575"
     adata = read(file_path, backup_url=url, sparse=True, cache=True)
     return adata
 
