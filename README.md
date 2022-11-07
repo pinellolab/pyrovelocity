@@ -22,49 +22,70 @@ cell fate choices and developmental trajectory dynamics.
 
 Please install miniconda following the instructions here: <https://docs.conda.io/en/latest/miniconda.html>, this step takes about 1-2 mins.
 
-```bash
+``` bash 
 wget -c https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 bash Miniconda3-latest-Linux-x86_64.sh
 # then follow the instruction to setup the conda base environment
 ```
 
-After the conda has been setup, logout and re-login to install _mamba_ to speed up installation, this step takes about 20s.
+After the conda has been setup, logout and re-login to install *mamba* to speed up installation, this step takes about 20s.
 
-```bash
+``` bash
 conda install -c conda-forge mamba
 ```
 
 Then add the channels, this step takes 1~2s.
 
-```bash
+``` bash
 conda config --add channels defaults
 conda config --add channels bioconda
 conda config --add channels conda-forge
 conda config --set channel_priority flexible
 ```
 
+``` python
 After that, install the _pyrovelocity_ package in one mamba command:
 
 ```bash
 mamba create -n pyrovelocity_bioconda -c bioconda pyrovelocity
 ```
 
-This step takes about 6-8 minutes depending on the network speed. If you prefer to use conda environment configurations, see the `conda` subfolder.
+This step takes about 6-8 minutes depending on the network speed. If you prefer to use conda environment configurations, see the `conda` subfolder for installation with *prefix* to specify the installation path, such as:
+
+```
+# GPU
+mamba env create --prefix /path_to_conda_env/qq-pyrovelocity-dev -f conda/environment-gpu.yml
+# or CPU
+mamba env create --prefix /path_to_conda_env/qq-pyrovelocity-dev -f conda/environment-cpu.yml
+```
+
+Or with more control of installing the environment,
+
+``` bash
+conda create -n pyrovelocity_bioconda python=3.8.8
+mamba install -n pyrovelocity_bioconda -c bioconda pyrovelocity
+# CPU
+mamba env update -n pyrovelocity_bioconda -f conda/environment-cpu.yml
+# or GPU
+mamba env update -n pyrovelocity_bioconda -f conda/environment-gpu.yml
+```
+
+For windows user installation, please refer to the [issue](https://github.com/pinellolab/pyrovelocity/issues/9).
 
 Lastly, test the installation by:
 
-```bash
+``` bash
 conda activate pyrovelocity_bioconda
 python
 ```
 
-```python
+``` python
 import pyrovelocity
 ```
 
 ## Additional packages necessary to reproduce all the analyses presented in the notebooks
 
-```bash
+``` bash
 pip install cospar==0.1.9
 ```
 
@@ -86,14 +107,14 @@ Notebook:
 Step 1. Load your data, load your data(e.g. _local_file.h5ad_) with
 scvelo by using:
 
-```python
+``` python
 import scvelo as scv
 adata = scv.read("local_file.h5ad")
 ```
 
 Step 2. Minimally preprocess your _adata_ object:
 
-```python
+``` python
 adata.layers['raw_spliced']   = adata.layers['spliced']
 adata.layers['raw_unspliced'] = adata.layers['unspliced']
 adata.obs['u_lib_size_raw'] = adata.layers['raw_unspliced'].toarray().sum(-1)
@@ -104,7 +125,7 @@ scv.pp.moments(adata, n_pcs=30, n_neighbors=30)
 
 Step 3. Train the Pyro-Velocity model:
 
-```python
+``` python
 from pyrovelocity.api import train_model
 # Model 1
 num_epochs = 1000 # large data
@@ -150,7 +171,7 @@ if save_res:
 Step 4: Generate Pyro-Velocity's vector field and shared time plots
 with uncertainty estimation.
 
-```python
+``` python
 from pyrovelocity.plot import plot_state_uncertainty
 from pyrovelocity.plot import plot_posterior_time, plot_gene_ranking,\
       vector_field_uncertainty, plot_vector_field_uncertain,\
@@ -204,7 +225,7 @@ mean absolute errors and pearson correlation between denoised spliced
 expression and posterior mean shared time, and then visualize the top
 one with rainbow plots
 
-```python
+``` python
 fig = plt.figure(figsize=(7.07, 4.5))
 subfig = fig.subfigures(1, 2, wspace=0.0, hspace=0, width_ratios=[1.6, 4])
 ax = fig.subplots(1)
@@ -295,7 +316,7 @@ For the selected genes, it is possible to explore in depth their
 dynamic, using phase portraits, rainbow plots, and UMAP rendering of
 denoised splicing gene expression across cells.
 
-![Pancreas vector field uncertainty](docs/source/readme_figure7.png){width="1000px"}
+![Pancreas vector field uncertainty](docs/source/readme_figure7.png)
 
 The full example can be reproduced using the
 [Pancreas](https://github.com/pinellolab/pyrovelocity/blob/master/docs/source/notebooks/pancreas.ipynb)

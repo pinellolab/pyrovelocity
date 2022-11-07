@@ -1,5 +1,7 @@
+from pyrovelocity.plot import plot_state_uncertainty
 import os
 import pickle
+from pyrovelocity.data import load_larry
 
 import cospar as cs
 import matplotlib.pyplot as plt
@@ -13,33 +15,32 @@ from pyrovelocity.plot import plot_gene_ranking
 from pyrovelocity.plot import plot_posterior_time
 from pyrovelocity.plot import rainbowplot
 from pyrovelocity.plot import set_colorbar
+from pyrovelocity.data import load_larry, load_unipotent_larry
 
 
 cs.logging.print_version()
 cs.settings.verbosity = 2
-cs.settings.data_path = "LARRY_data"  # A relative path to save data.
-cs.settings.figure_path = "LARRY_figure"  # A relative path to save figures.
+cs.settings.data_path = "../fig3/LARRY_data"  # A relative path to save data.
+cs.settings.figure_path = "../fig3/LARRY_figure"  # A relative path to save figures.
 cs.settings.set_figure_params(
     format="png", figsize=[4, 3.5], dpi=75, fontsize=14, pointsize=2
 )
 
-adata_input = scv.read("larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad")
-adata = scv.read("larry_invitro_adata_sub_raw.h5ad")
+adata_input = scv.read("../fig3/larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad")
+adata = load_larry()
 adata_cospar = scv.read(
-    "LARRY_MultiTimeClone_Later_FullSpace0_t*2.0*4.0*6_adata_with_transition_map.h5ad"
+    "../fig3/LARRY_data/LARRY_MultiTimeClone_Later_FullSpace0_t*2.0*4.0*6_adata_with_transition_map.h5ad"
 )
 adata_cytotrace = scv.read(
-    "larry_invitro_adata_sub_raw_withcytotrace.h5ad"
+    "../fig3/larry_invitro_adata_sub_raw_withcytotrace.h5ad"
 )  # skip_regress=False
 
-adata_uni_mono = scv.read("mono_unipotent_cells.h5ad")
+adata_uni_mono = load_unipotent_larry()
 adata_uni_mono = adata_uni_mono[adata_uni_mono.obs.state_info != "Centroid", :].copy()
 
-adata_uni_neu = scv.read("neu_unipotent_cells.h5ad")
+adata_uni_neu = load_unipotent_larry('neu')
 adata_uni_neu = adata_uni_neu[adata_uni_neu.obs.state_info != "Centroid", :].copy()
-
 adata_uni_bifurcation = adata_uni_mono.concatenate(adata_uni_neu)
-
 
 cs.pl.fate_potency(
     adata_cospar,
@@ -50,16 +51,14 @@ cs.pl.fate_potency(
     fate_count=True,
 )
 
-# with open("fig3_allcells_data.pkl", "rb") as pk:
-with open("fig3_allcells_data_model2.pkl", "rb") as pk:
+with open("../fig3/fig3_allcells_data_model2.pkl", "rb") as pk:
     result_dict = pickle.load(pk)
 adata_model_pos_all = result_dict["adata_model_pos"]
 v_map_all_all = result_dict["v_map_all"]
 embeds_radian_all = result_dict["embeds_radian"]
 fdri_all = result_dict["fdri"]
 embed_mean_all = result_dict["embed_mean"]
-# adata_input_all = scv.read("larry_allcells_top2000.h5ad")
-adata_input_all = scv.read("fig3_larry_allcells_top2000_model2.h5ad")
+adata_input_all = scv.read("../fig3/fig3_larry_allcells_top2000_model2.h5ad")
 adata_input_all.obs.cytotrace = adata_cytotrace.obs.cytotrace
 
 gold = adata_cospar[adata_input_all.obs_names.str.replace("-0", ""), :].obs.fate_potency
@@ -95,8 +94,6 @@ gold_select_uni_mono = ~np.isnan(gold_uni_mono)
 if not os.path.exists("larry_mono_top2000.h5ad"):
     scv.pp.filter_and_normalize(adata_uni_mono, n_top_genes=2000, min_shared_counts=20)
     scv.pp.moments(adata_uni_mono)
-    ###    scv.pp.filter_and_normalize(adata_uni_mono, min_shared_counts=30, n_top_genes=2000)
-    ###    scv.pp.moments(adata_uni_mono, n_pcs=30, n_neighbors=30)
     scv.tl.recover_dynamics(adata_uni_mono, n_jobs=10)
     scv.tl.velocity(adata_uni_mono, mode="dynamical")
     scv.tl.velocity_graph(adata_uni_mono)
@@ -104,7 +101,7 @@ if not os.path.exists("larry_mono_top2000.h5ad"):
     scv.tl.latent_time(adata_uni_mono)
 else:
     adata_uni_mono = scv.read("larry_mono_top2000.h5ad")
-with open("fig3_mono_data_model1.pkl", "rb") as pk:
+with open("../fig3/fig3_mono_data_model1.pkl", "rb") as pk:
     result_dict = pickle.load(pk)
 adata_model_pos_mono = result_dict["adata_model_pos"]
 v_map_all_mono = result_dict["v_map_all"]
@@ -142,8 +139,6 @@ gold_select_uni_neu = ~np.isnan(gold_uni_neu)
 if not os.path.exists("larry_neu_top2000.h5ad"):
     scv.pp.filter_and_normalize(adata_uni_neu, n_top_genes=2000, min_shared_counts=20)
     scv.pp.moments(adata_uni_neu)
-    ###    scv.pp.filter_and_normalize(adata_uni_neu, min_shared_counts=30, n_top_genes=2000)
-    ###    scv.pp.moments(adata_uni_neu, n_pcs=30, n_neighbors=30)
     scv.tl.recover_dynamics(adata_uni_neu, n_jobs=10)
     scv.tl.velocity(adata_uni_neu, mode="dynamical")
     scv.tl.velocity_graph(adata_uni_neu)
@@ -152,7 +147,7 @@ if not os.path.exists("larry_neu_top2000.h5ad"):
 else:
     adata_uni_neu = scv.read("larry_neu_top2000.h5ad")
 
-with open("fig3_neu_data_model1.pkl", "rb") as pk:
+with open("../fig3/fig3_neu_data_model1.pkl", "rb") as pk:
     result_dict = pickle.load(pk)
 adata_model_pos_neu = result_dict["adata_model_pos"]
 v_map_all_neu = result_dict["v_map_all"]
@@ -202,7 +197,7 @@ if not os.path.exists("larry_bifurcation_top2000.h5ad"):
 else:
     adata_uni_bifurcation = scv.read("larry_bifurcation_top2000.h5ad")
 
-with open("fig3_uni_bifurcation_data_model2.pkl", "rb") as pk:
+with open("../fig3/fig3_uni_bifurcation_data_model2.pkl", "rb") as pk:
     result_dict = pickle.load(pk)
 adata_model_pos_bifurcation = result_dict["adata_model_pos"]
 v_map_all_bifurcation = result_dict["v_map_all"]
@@ -331,8 +326,6 @@ ax[1][0].text(
     va="top",
     ha="right",
 )
-
-from pyrovelocity.plot import plot_state_uncertainty
 
 
 adata_input_all.obs["shared_time_uncertain"] = (
@@ -464,7 +457,6 @@ _ = rainbowplot(
     cell_state="state_info",
     scvelo_colors=True,
 )
-## fig.subplots_adjust(hspace=0.3, wspace=0.3, left=0.01, right=0.99, top=0.95, bottom=0.)
 fig.savefig(
     "SuppFigure4.pdf",
     facecolor=fig.get_facecolor(),

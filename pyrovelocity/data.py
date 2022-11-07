@@ -6,6 +6,7 @@ import anndata
 import anndata._core.anndata
 import numpy as np
 import scvelo as scv
+from scanpy import read
 import scvi
 from scvi.data import register_tensor_from_anndata
 from scvi.data._anndata import _register_anndata
@@ -60,13 +61,42 @@ def load_data(
     return adata
 
 
-# class _VelocityCONSTANTS_NT(_CONSTANTS_NT):
-#    X_KEY: str = "X"
-#    U_KEY: str = "U"
-#    LABELS_KEY: str= "labels"
+def load_larry(
+    file_path: str ='data/larry.h5ad'
+) -> anndata._core.anndata.AnnData:
+    """In vitro Hemotopoiesis Larry datasets
+
+    Data from `CALEB WEINREB et al. (2020) <DOI: 10.1126/science.aaw3381>'
+    https://figshare.com/ndownloader/articles/20780344/versions/1
+
+    Returns
+    -------
+    Returns `adata` object
+    """
+    url = "https://figshare.com/ndownloader/files/37028569"
+    adata = read(file_path, backup_url=url, sparse=True, cache=True)
+    return adata
 
 
-# VelocityCONSTANTS = _VelocityCONSTANTS_NT()
+def load_unipotent_larry(
+    celltype: str = 'mono'
+) -> anndata._core.anndata.AnnData:
+    """In vitro Hemotopoiesis Larry datasets
+    Subset of Data from `CALEB WEINREB et al. (2020) <DOI: 10.1126/science.aaw3381>'
+    unipotent monocytes: https://figshare.com/ndownloader/files/37028572
+    unipotent neutrophils: https://figshare.com/ndownloader/files/37028575
+
+    Returns
+    -------
+    Returns `adata` object
+    """
+    file_path = f'data/larry_{celltype}.h5ad'
+    if celltype == 'mono':
+        url = "https://figshare.com/ndownloader/files/37028572"
+    else: # neutrophil
+        url = "https://figshare.com/ndownloader/files/37028575"
+    adata = read(file_path, backup_url=url, sparse=True, cache=True)
+    return adata
 
 
 def setup_anndata_multilayers(
@@ -372,19 +402,6 @@ def setup_anndata_multilayers(
             adata_attr_name="obs",
             adata_key_name="time_info",
         )
-
-    # register_tensor_from_anndata(
-    #    adata,
-    #    registry_key="u_gene_count",
-    #    adata_attr_name="obs",
-    #    adata_key_name="u_gene_count",
-    # )
-    # register_tensor_from_anndata(
-    #    adata,
-    #    registry_key="s_gene_count",
-    #    adata_attr_name="obs",
-    #    adata_key_name="s_gene_count",
-    # )
 
     if copy:
         return adata
