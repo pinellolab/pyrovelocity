@@ -316,7 +316,7 @@ For the selected genes, it is possible to explore in depth their
 dynamic, using phase portraits, rainbow plots, and UMAP rendering of
 denoised splicing gene expression across cells.
 
-![Pancreas vector field uncertainty](docs/source/readme_figure7.png){width="1000px"}
+![Pancreas vector field uncertainty](docs/source/readme_figure7.png)
 
 The full example can be reproduced using the
 [Pancreas](https://github.com/pinellolab/pyrovelocity/blob/master/docs/source/notebooks/pancreas.ipynb)
