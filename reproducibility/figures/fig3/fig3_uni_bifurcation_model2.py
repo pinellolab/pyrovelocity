@@ -63,3 +63,12 @@ embed_mean = plot_mean_vector_field(
     adata_model_pos_split[1], adata_input, ax=ax, basis="emb", n_jobs=5
 )
 fig.savefig("fig3_uni_bifurcation_vectorfield_model2.pdf")
+
+adata_input.write("fig3_larry_uni_bifurcation_top2000_model2.h5ad")
+adata_model_pos_split[0].save('Fig3_uni_bifurcation_model2', overwrite=True)
+
+result_dict = {"adata_model_pos": adata_model_pos_split[1], "v_map_all": v_map_all, "embeds_radian": embeds_radian, "fdri": fdri, "embed_mean": embed_mean}
+import pickle
+
+with open("fig3_uni_bifurcation_data_model2.pkl", "wb") as f:
+    pickle.dump(result_dict, f)

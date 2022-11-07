@@ -1,4 +1,5 @@
 import pickle
+import os
 
 import cospar as cs
 import matplotlib.pyplot as plt
@@ -13,6 +14,7 @@ from pyrovelocity.plot import align_trajectory_diff
 from pyrovelocity.plot import get_clone_trajectory
 from pyrovelocity.plot import plot_posterior_time
 from pyrovelocity.plot import plot_vector_field_uncertain
+from pyrovelocity.data import load_larry
 
 
 cs.logging.print_version()
@@ -23,10 +25,10 @@ cs.settings.set_figure_params(
     format="png", figsize=[4, 3.5], dpi=75, fontsize=14, pointsize=2
 )
 
+adata = load_larry()
 adata_input = scv.read("larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad")
-adata = scv.read("larry_invitro_adata_sub_raw.h5ad")
 adata_cospar = scv.read(
-    "LARRY_MultiTimeClone_Later_FullSpace0_t*2.0*4.0*6_adata_with_transition_map.h5ad"
+    "LARRY_data/LARRY_MultiTimeClone_Later_FullSpace0_t*2.0*4.0*6_adata_with_transition_map.h5ad"
 )
 adata_cytotrace = scv.read(
     "larry_invitro_adata_sub_raw_withcytotrace.h5ad"
@@ -83,7 +85,13 @@ adata_input_neu_clone = get_clone_trajectory(adata_input_neu)
 adata_input_mono_clone = get_clone_trajectory(adata_input_mono)
 adata_input_uni_clone = adata_input_neu_clone.concatenate(adata_input_mono_clone)
 
-adata_input_all_clone = scv.read("global_gold_standard2.h5ad")
+if os.path.exists("global_gold_standard2.h5ad"):
+    adata_input_all_clone = scv.read("global_gold_standard2.h5ad")
+else:
+    adata_reduced_gene_for_clone_vec = adata[:, adata_input.var_names].copy()
+    print(adata_reduced_gene_for_clone_vec.shape)
+    adata_input_all_clone = get_clone_trajectory(adata_reduced_gene_for_clone_vec)
+    adata_input_all_clone.write("global_gold_standard2.h5ad")
 
 adata_input_all_clone.obsm["clone_vector_emb"][
     np.isnan(adata_input_all_clone.obsm["clone_vector_emb"])
@@ -178,10 +186,10 @@ if exclude_day6:
     )
 else:
     diff_all = align_trajectory_diff(
-        [adata_input_all_clone, adata_input_all, adata_input_all],
+        [adata_input_all_clone, adata_input, adata_input_all],
         [
             adata_input_all_clone.obsm["clone_vector_emb"],
-            adata_input_all.obsm["velocity_emb"],
+            adata_input.obsm["velocity_emb"],
             embed_mean_all,
         ],
         embed="emb",
