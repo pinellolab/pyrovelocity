@@ -1,12 +1,15 @@
-import pickle
-import scvelo as scv
 import os
+import pickle
+
 import matplotlib.pyplot as plt
+import scvelo as scv
 
 from pyrovelocity.api import train_model
+from pyrovelocity.data import load_larry
+from pyrovelocity.data import load_unipotent_larry
 from pyrovelocity.plot import plot_mean_vector_field
 from pyrovelocity.plot import vector_field_uncertainty
-from pyrovelocity.data import load_larry, load_unipotent_larry
+
 
 if os.path.exists("mono_unipotent_cells.h5ad"):
     adata = scv.read("mono_unipotent_cells.h5ad")

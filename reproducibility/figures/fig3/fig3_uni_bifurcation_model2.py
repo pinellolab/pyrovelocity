@@ -1,19 +1,21 @@
-import matplotlib.pyplot as plt
-import numpy as np
 import os
 
+import matplotlib.pyplot as plt
+import numpy as np
 import scvelo as scv
 from scipy.stats import spearmanr
 
 from pyrovelocity.api import train_model
+from pyrovelocity.data import load_larry
+from pyrovelocity.data import load_unipotent_larry
 from pyrovelocity.plot import plot_mean_vector_field
 from pyrovelocity.plot import vector_field_uncertainty
-from pyrovelocity.data import load_larry, load_unipotent_larry
+
 
 adata = load_unipotent_larry()
 adata_input = adata[adata.obs.state_info != "Centroid", :].copy()
 
-adata2 = load_unipotent_larry('neu')
+adata2 = load_unipotent_larry("neu")
 adata_input2 = adata2[adata2.obs.state_info != "Centroid", :].copy()
 
 adata = adata.concatenate(adata2)
@@ -65,10 +67,17 @@ embed_mean = plot_mean_vector_field(
 fig.savefig("fig3_uni_bifurcation_vectorfield_model2.pdf")
 
 adata_input.write("fig3_larry_uni_bifurcation_top2000_model2.h5ad")
-adata_model_pos_split[0].save('Fig3_uni_bifurcation_model2', overwrite=True)
+adata_model_pos_split[0].save("Fig3_uni_bifurcation_model2", overwrite=True)
 
-result_dict = {"adata_model_pos": adata_model_pos_split[1], "v_map_all": v_map_all, "embeds_radian": embeds_radian, "fdri": fdri, "embed_mean": embed_mean}
+result_dict = {
+    "adata_model_pos": adata_model_pos_split[1],
+    "v_map_all": v_map_all,
+    "embeds_radian": embeds_radian,
+    "fdri": fdri,
+    "embed_mean": embed_mean,
+}
 import pickle
+
 
 with open("fig3_uni_bifurcation_data_model2.pkl", "wb") as f:
     pickle.dump(result_dict, f)

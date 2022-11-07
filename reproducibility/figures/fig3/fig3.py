@@ -1,5 +1,5 @@
-import pickle
 import os
+import pickle
 
 import cospar as cs
 import matplotlib.pyplot as plt
@@ -10,11 +10,11 @@ import seaborn as sns
 from scipy.spatial import distance
 from scipy.stats import spearmanr
 
+from pyrovelocity.data import load_larry
 from pyrovelocity.plot import align_trajectory_diff
 from pyrovelocity.plot import get_clone_trajectory
 from pyrovelocity.plot import plot_posterior_time
 from pyrovelocity.plot import plot_vector_field_uncertain
-from pyrovelocity.data import load_larry
 
 
 cs.logging.print_version()

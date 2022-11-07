@@ -1,9 +1,8 @@
-Reproduce Supplemenetary Figure 2
-===================================
+# Reproduce Supplemenetary Figure 2
 
 First, install required visualization dependency,
 
-``` bash
+```bash
 pip install -r requirements.txt
 ```
 
@@ -11,6 +10,6 @@ Then, make sure to reproduce the `../fig2/model1/` results first to generate int
 
 Last, run the script,
 
-``` bash
+```bash
 python suppfig2.py
 ```
