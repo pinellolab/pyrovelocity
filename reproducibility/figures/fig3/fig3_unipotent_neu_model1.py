@@ -11,6 +11,28 @@ from pyrovelocity.plot import plot_mean_vector_field
 from pyrovelocity.plot import vector_field_uncertainty
 
 
+"""Caches unipotent neutrophil data and trains and saves model1 model.
+
+Inputs:
+  "data/larry_neu.h5ad" via load_unipotent_larry("neu")
+
+Outputs:
+  data:
+    "fig3_neu_processed_model1.h5ad"
+    "fig3_neu_data_model1.pkl"
+  models:
+    Fig3_neu_model1/
+    ├── attr.pkl
+    ├── model_params.pt
+    ├── param_store_test.pt
+    └── var_names.csv
+"""
+
+
+###########
+# load data
+###########
+
 if os.path.exists("neu_unipotent_cells.h5ad"):
     adata = scv.read("neu_unipotent_cells.h5ad")
 else:
@@ -35,6 +57,11 @@ adata_input.layers["raw_unspliced"] = adata[
 adata_input.obs["u_lib_size_raw"] = adata_input.layers["unspliced"].toarray().sum(-1)
 adata_input.obs["s_lib_size_raw"] = adata_input.layers["spliced"].toarray().sum(-1)
 
+
+#############
+# train model
+#############
+
 adata_model_pos_split = train_model(
     adata_input,
     max_epochs=4000,
@@ -56,10 +83,20 @@ v_map_all, embeds_radian, fdri = vector_field_uncertainty(
     adata_input, adata_model_pos_split[1], basis="emb"
 )
 
+
+##################
+# generate figures
+##################
+
 fig, ax = plt.subplots()
 embed_mean = plot_mean_vector_field(
     adata_model_pos_split[1], adata_input, ax=ax, basis="emb"
 )
+
+
+##################
+# save checkpoints
+##################
 
 adata_input.write("fig3_neu_processed_model1.h5ad")
 
