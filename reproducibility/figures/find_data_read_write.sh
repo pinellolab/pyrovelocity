@@ -39,4 +39,3 @@ gen_folder "$OUTPATH" "suppfig1"
 gen_folder "$OUTPATH" "suppfig2"
 gen_folder "$OUTPATH" "suppfig3"
 gen_folder "$OUTPATH" "suppfig4"
-

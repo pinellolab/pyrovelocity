@@ -2,7 +2,7 @@
 
 set -eoux pipefail
 
-# example command for running a single 
+# example command for running a single
 # python module
 #
 # $ cd fig2/model1
