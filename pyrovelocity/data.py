@@ -6,8 +6,8 @@ import anndata
 import anndata._core.anndata
 import numpy as np
 import scvelo as scv
-from scanpy import read
 import scvi
+from scanpy import read
 from scvi.data import register_tensor_from_anndata
 from scvi.data._anndata import _register_anndata
 from scvi.data._anndata import _setup_batch
@@ -61,9 +61,7 @@ def load_data(
     return adata
 
 
-def load_larry(
-    file_path: str ='data/larry.h5ad'
-) -> anndata._core.anndata.AnnData:
+def load_larry(file_path: str = "data/larry.h5ad") -> anndata._core.anndata.AnnData:
     """In vitro Hemotopoiesis Larry datasets
 
     Data from `CALEB WEINREB et al. (2020) <DOI: 10.1126/science.aaw3381>'
@@ -78,9 +76,7 @@ def load_larry(
     return adata
 
 
-def load_unipotent_larry(
-    celltype: str = 'mono'
-) -> anndata._core.anndata.AnnData:
+def load_unipotent_larry(celltype: str = "mono") -> anndata._core.anndata.AnnData:
     """In vitro Hemotopoiesis Larry datasets
     Subset of Data from `CALEB WEINREB et al. (2020) <DOI: 10.1126/science.aaw3381>'
     unipotent monocytes: https://figshare.com/ndownloader/files/37028572
@@ -90,10 +86,10 @@ def load_unipotent_larry(
     -------
     Returns `adata` object
     """
-    file_path = f'data/larry_{celltype}.h5ad'
-    if celltype == 'mono':
+    file_path = f"data/larry_{celltype}.h5ad"
+    if celltype == "mono":
         url = "https://figshare.com/ndownloader/files/37028572"
-    else: # neutrophil
+    else:  # neutrophil
         url = "https://figshare.com/ndownloader/files/37028575"
     adata = read(file_path, backup_url=url, sparse=True, cache=True)
     return adata

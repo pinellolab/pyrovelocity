@@ -1,9 +1,8 @@
-Reproduce Supplementary Figure 1
-===================================
+# Reproduce Supplementary Figure 1
 
-The visualization of model graph structure needs pyro version >=1.8.1, please create an environment first: 
+The visualization of model graph structure needs pyro version >=1.8.1, please create an environment first:
 
-``` bash
+```bash
 conda create -n pyrovelocity_graph python=3.8.8
 mamba env update -n pyrovelocity_graph -f environment.yml
 
@@ -12,7 +11,7 @@ cd ../../../ && python setup.py develop
 
 Then, run the plot script:
 
-``` bash
+```bash
 cd && python suppfig1_models_graph.py
 ```
 

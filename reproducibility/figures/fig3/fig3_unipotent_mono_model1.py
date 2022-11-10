@@ -1,12 +1,36 @@
-import pickle
-import scvelo as scv
 import os
+import pickle
+
 import matplotlib.pyplot as plt
+import scvelo as scv
 
 from pyrovelocity.api import train_model
+from pyrovelocity.data import load_unipotent_larry
 from pyrovelocity.plot import plot_mean_vector_field
 from pyrovelocity.plot import vector_field_uncertainty
-from pyrovelocity.data import load_larry, load_unipotent_larry
+
+
+"""Caches unipotent monocyte data and trains and saves model1 model.
+
+Inputs:
+  "data/larry_mono.h5ad" via load_unipotent_larry()
+
+Outputs:
+  data:
+    "fig3_mono_processed_model1.h5ad"
+    "fig3_mono_data_model1.pkl"
+  models:
+    Fig3_mono_model1/
+    ├── attr.pkl
+    ├── model_params.pt
+    ├── param_store_test.pt
+    └── var_names.csv
+"""
+
+
+###########
+# load data
+###########
 
 if os.path.exists("mono_unipotent_cells.h5ad"):
     adata = scv.read("mono_unipotent_cells.h5ad")
@@ -32,6 +56,11 @@ adata_input.layers["raw_unspliced"] = adata[
 adata_input.obs["u_lib_size_raw"] = adata_input.layers["unspliced"].toarray().sum(-1)
 adata_input.obs["s_lib_size_raw"] = adata_input.layers["spliced"].toarray().sum(-1)
 
+
+#############
+# train model
+#############
+
 adata_model_pos_split = train_model(
     adata_input,
     max_epochs=4000,
@@ -53,11 +82,20 @@ v_map_all, embeds_radian, fdri = vector_field_uncertainty(
     adata_input, adata_model_pos_split[1], basis="emb"
 )
 
+
+##################
+# generate figures
+##################
+
 fig, ax = plt.subplots()
 embed_mean = plot_mean_vector_field(
     adata_model_pos_split[1], adata_input, ax=ax, basis="emb"
 )
 
+
+##################
+# save checkpoints
+##################
 adata_input.write("fig3_mono_processed_model1.h5ad")
 
 adata_model_pos_split[0].save("Fig3_mono_model1", overwrite=True)

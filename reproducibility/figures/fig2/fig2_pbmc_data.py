@@ -1,13 +1,37 @@
-import pickle
-import numpy as np
 import os
+import pickle
+
 import matplotlib.pyplot as plt
+import numpy as np
 import scvelo as scv
 
 from pyrovelocity.api import train_model
 from pyrovelocity.plot import plot_mean_vector_field
 from pyrovelocity.plot import vector_field_uncertainty
 
+
+"""Loads PBMC data and trains and saves model1 model.
+
+Inputs:
+  "data/PBMC/pbmc68k.h5ad" via load_data()
+
+Outputs:
+  data:
+    "pbmc_processed.h5ad"
+    "fig2_pbmc_processed.h5ad"
+  models:
+    "fig2_pbmc_data.pkl"
+    Fig2_pbmc_model/
+    ├── attr.pkl
+    ├── model_params.pt
+    ├── param_store_test.pt
+    └── var_names.csv
+"""
+
+
+###########
+# load data
+###########
 
 if os.path.exists("pbmc_processed.h5ad"):
     adata = scv.read("pbmc_processed.h5ad")
@@ -17,20 +41,33 @@ else:
     scv.pp.remove_duplicate_cells(adata)
     scv.pp.filter_and_normalize(adata, min_shared_counts=30, n_top_genes=2000)
     scv.pp.moments(adata)
-    scv.tl.velocity(adata, mode='stochastic')
+    scv.tl.velocity(adata, mode="stochastic")
     scv.tl.recover_dynamics(adata, n_jobs=-1)
-    top_genes = adata.var['fit_likelihood'].sort_values(ascending=False).index
-    adata_sub =  adata[:, top_genes[:3]].copy()
+    top_genes = adata.var["fit_likelihood"].sort_values(ascending=False).index
+    adata_sub = adata[:, top_genes[:3]].copy()
     scv.tl.velocity_graph(adata_sub, n_jobs=-1)
     scv.tl.velocity_embedding(adata_sub)
 
     adata_all = scv.datasets.pbmc68k()
-    adata_sub.layers['raw_spliced'] = adata_all[:, adata_sub.var_names].layers['spliced']
-    adata_sub.layers['raw_unspliced'] = adata_all[:, adata_sub.var_names].layers['unspliced']
-    adata_sub.obs['u_lib_size_raw'] = np.array(adata_sub.layers['raw_unspliced'].sum(axis=-1), dtype=np.float32).flatten()
-    adata_sub.obs['s_lib_size_raw'] = np.array(adata_sub.layers['raw_spliced'].sum(axis=-1), dtype=np.float32).flatten()
+    adata_sub.layers["raw_spliced"] = adata_all[:, adata_sub.var_names].layers[
+        "spliced"
+    ]
+    adata_sub.layers["raw_unspliced"] = adata_all[:, adata_sub.var_names].layers[
+        "unspliced"
+    ]
+    adata_sub.obs["u_lib_size_raw"] = np.array(
+        adata_sub.layers["raw_unspliced"].sum(axis=-1), dtype=np.float32
+    ).flatten()
+    adata_sub.obs["s_lib_size_raw"] = np.array(
+        adata_sub.layers["raw_spliced"].sum(axis=-1), dtype=np.float32
+    ).flatten()
     adata = adata_sub.copy()
     adata.write("pbmc_processed.h5ad")
+
+
+#############
+# train model
+#############
 
 adata_model_pos = train_model(
     adata,
@@ -54,8 +91,20 @@ v_map_all, embeds_radian, fdri = vector_field_uncertainty(
     adata, adata_model_pos[1], n_jobs=20
 )
 
+
+##################
+# generate figures
+##################
+
 fig, ax = plt.subplots()
-embed_mean = plot_mean_vector_field(adata_model_pos[1], adata, ax=ax, basis="tsne", n_jobs=20)
+embed_mean = plot_mean_vector_field(
+    adata_model_pos[1], adata, ax=ax, basis="tsne", n_jobs=20
+)
+
+
+##################
+# save checkpoints
+##################
 
 adata.write("fig2_pbmc_processed.h5ad")
 adata_model_pos[0].save("Fig2_pbmc_model", overwrite=True)

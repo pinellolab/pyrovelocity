@@ -1,7 +1,5 @@
-from pyrovelocity.plot import plot_state_uncertainty
 import os
 import pickle
-from pyrovelocity.data import load_larry
 
 import cospar as cs
 import matplotlib.pyplot as plt
@@ -11,11 +9,13 @@ import scvelo as scv
 import seaborn as sns
 from scipy.stats import spearmanr
 
+from pyrovelocity.data import load_larry
+from pyrovelocity.data import load_unipotent_larry
 from pyrovelocity.plot import plot_gene_ranking
 from pyrovelocity.plot import plot_posterior_time
+from pyrovelocity.plot import plot_state_uncertainty
 from pyrovelocity.plot import rainbowplot
 from pyrovelocity.plot import set_colorbar
-from pyrovelocity.data import load_larry, load_unipotent_larry
 
 
 cs.logging.print_version()
@@ -38,7 +38,7 @@ adata_cytotrace = scv.read(
 adata_uni_mono = load_unipotent_larry()
 adata_uni_mono = adata_uni_mono[adata_uni_mono.obs.state_info != "Centroid", :].copy()
 
-adata_uni_neu = load_unipotent_larry('neu')
+adata_uni_neu = load_unipotent_larry("neu")
 adata_uni_neu = adata_uni_neu[adata_uni_neu.obs.state_info != "Centroid", :].copy()
 adata_uni_bifurcation = adata_uni_mono.concatenate(adata_uni_neu)
 

@@ -1,5 +1,5 @@
-import pickle
 import os
+import pickle
 
 import cospar as cs
 import matplotlib.pyplot as plt
@@ -9,13 +9,44 @@ import scvelo as scv
 import seaborn as sns
 from scipy.spatial import distance
 from scipy.stats import spearmanr
+from scvelo.plotting.velocity_embedding_grid import default_arrow
 
+from pyrovelocity.data import load_larry
 from pyrovelocity.plot import align_trajectory_diff
 from pyrovelocity.plot import get_clone_trajectory
 from pyrovelocity.plot import plot_posterior_time
 from pyrovelocity.plot import plot_vector_field_uncertain
-from pyrovelocity.data import load_larry
 
+
+"""Loads preprocessed figure 3 data and produces figure 3.
+
+Inputs:
+  data:
+    "data/larry.h5ad" via load_larry()
+    "larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad"
+    "LARRY_data/LARRY_MultiTimeClone_Later_FullSpace0_t*2.0*4.0*6_adata_with_transition_map.h5ad"
+    "larry_invitro_adata_sub_raw_withcytotrace.h5ad"
+    "fig3_mono_processed_model1.h5ad"
+    "fig3_neu_processed_model1.h5ad"
+    "fig3_larry_uni_bifurcation_top2000_model2.h5ad"
+    "fig3_larry_allcells_top2000_model2.h5ad"
+  models:
+    "fig3_mono_data_model1.pkl"
+    "fig3_neu_data_model1.pkl"
+    "fig3_uni_bifurcation_data_model2.pkl"
+    "fig3_allcells_data_model2.pkl"
+
+Outputs:
+  data:
+    "global_gold_standard2.h5ad"
+  figures:
+    "Figure3.pdf"
+"""
+
+
+##################
+# load checkpoints
+##################
 
 cs.logging.print_version()
 cs.settings.verbosity = 2
@@ -204,8 +235,10 @@ pyro_all_cos = pd.DataFrame(diff_all).apply(
 scvelo_all_cos_mean = scvelo_all_cos.mean()
 pyro_all_cos_mean = pyro_all_cos.mean()
 
-from scvelo.plotting.velocity_embedding_grid import default_arrow
 
+##################
+# generate figures
+##################
 
 hl, hw, hal = default_arrow(3)
 quiver_kwargs = {"angles": "xy", "scale_units": "xy"}

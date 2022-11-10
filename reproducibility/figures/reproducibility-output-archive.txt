@@ -1,0 +1,365 @@
+[142G]  .
+├── [9.1G]  fig2
+│   └── [9.1G]  model1
+│       ├── [168M]  data
+│       │   ├── [ 50M]  Pancreas
+│       │   │   └── [ 50M]  endocrinogenesis_day15.h5ad
+│       │   └── [118M]  PBMC
+│       │       └── [118M]  pbmc68k.h5ad
+│       ├── [6.6G]  fig2_pancreas_data.pkl
+│       ├── [3.3K]  fig2_pancreas_data.py
+│       ├── [1.1M]  Fig2_pancreas_model
+│       │   ├── [1.3K]  attr.pkl
+│       │   ├── [559K]  model_params.pt
+│       │   ├── [559K]  param_store_test.pt
+│       │   └── [ 12K]  var_names.csv
+│       ├── [467M]  fig2_pancreas_processed.h5ad
+│       ├── [ 38M]  Fig2_pancreas_raw_gene_selection_model1.pdf
+│       ├── [ 36M]  Fig2_pancreas_raw_gene_selection_model1-red.pdf
+│       ├── [ 47M]  Fig2_pancreas_raw_gene_selection_model1.svg
+│       ├── [ 18M]  Fig2_pancreas_raw_gene_selection_model1.tif
+│       ├── [250M]  fig2_pbmc_data.pkl
+│       ├── [2.4K]  fig2_pbmc_data.py
+│       ├── [3.0M]  Fig2_pbmc_model
+│       │   ├── [1.3K]  attr.pkl
+│       │   ├── [1.5M]  model_params.pt
+│       │   ├── [1.5M]  param_store_test.pt
+│       │   └── [  15]  var_names.csv
+│       ├── [718M]  fig2_pbmc_processed.h5ad
+│       ├── [6.5K]  fig2.py
+│       ├── [649K]  fig2_test_rainbow_sub.pdf
+│       ├── [603K]  fig2_test_sub.pdf
+│       ├── [398K]  fig2_test_vecfield_sub.pdf
+│       ├── [ 45K]  fig2_test_volcano_sub.pdf
+│       ├── [405M]  pancreas_scvelo_fitted_2000_30.h5ad
+│       ├── [393M]  pbmc_processed.h5ad
+│       └── [ 599]  README.md
+
+
+├── [120G]  fig3
+│   ├── [1.5G]  data
+│   │   ├── [1.4G]  larry.h5ad
+│   │   ├── [ 63M]  larry_mono.h5ad
+│   │   └── [ 57M]  larry_neu.h5ad
+│   ├── [ 933]  fig3_allcells_cospar.py
+│   ├── [ 305]  fig3_allcells_cytotrace.py
+│   ├── [ 77G]  fig3_allcells_data_model2.pkl
+│   ├── [3.8M]  Fig3_allcells_model2
+│   │   ├── [1.3K]  attr.pkl
+│   │   ├── [1.9M]  model_params.pt
+│   │   ├── [1.9M]  param_store_test.pt
+│   │   └── [ 13K]  var_names.csv
+│   ├── [3.6K]  fig3_allcells_model2.py
+│   ├── [4.7M]  fig3_all_test_rainbow_sub_model2.pdf
+│   ├── [ 47K]  fig3_all_test_volcano_sub_model2.pdf
+│   ├── [5.9G]  fig3_larry_allcells_top2000_model2.h5ad
+│   ├── [310M]  fig3_larry_uni_bifurcation_top2000_model2.h5ad
+│   ├── [2.0G]  fig3_mono_data_model1.pkl
+│   ├── [956K]  Fig3_mono_model1
+│   │   ├── [1.3K]  attr.pkl
+│   │   ├── [470K]  model_params.pt
+│   │   ├── [469K]  param_store_test.pt
+│   │   └── [ 11K]  var_names.csv
+│   ├── [160M]  fig3_mono_processed_model1.h5ad
+│   ├── [1.7G]  fig3_neu_data_model1.pkl
+│   ├── [900K]  Fig3_neu_model1
+│   │   ├── [1.3K]  attr.pkl
+│   │   ├── [442K]  model_params.pt
+│   │   ├── [442K]  param_store_test.pt
+│   │   └── [ 11K]  var_names.csv
+│   ├── [135M]  fig3_neu_processed_model1.h5ad
+│   ├── [ 20K]  fig3.py
+│   ├── [312K]  fig3_test_vecfield_sub_model2.pdf
+│   ├── [3.6G]  fig3_uni_bifurcation_data_model2.pkl
+│   ├── [1.6M]  Fig3_uni_bifurcation_model2
+│   │   ├── [1.3K]  attr.pkl
+│   │   ├── [808K]  model_params.pt
+│   │   ├── [808K]  param_store_test.pt
+│   │   └── [ 12K]  var_names.csv
+│   ├── [2.4K]  fig3_uni_bifurcation_model2.py
+│   ├── [ 72K]  fig3_uni_bifurcation_vectorfield_model2.pdf
+│   ├── [2.2K]  fig3_unipotent_mono_model1.py
+│   ├── [2.2K]  fig3_unipotent_neu_model1.py
+│   ├── [4.8M]  Figure3.pdf
+│   ├── [821M]  global_gold_standard2.h5ad
+│   ├── [ 21G]  LARRY_data
+│   │   ├── [1.7G]  LARRY_MultiTimeClone_Later_FullSpace0_t*2.0*4.0*6_adata_with_transition_map.h5ad
+│   │   ├── [4.1G]  LARRY_Similarity_matrix_with_all_cell_states_kNN20_Truncate0001_SM10.npz
+│   │   ├── [5.8G]  LARRY_Similarity_matrix_with_all_cell_states_kNN20_Truncate0001_SM15.npz
+│   │   ├── [7.2G]  LARRY_Similarity_matrix_with_all_cell_states_kNN20_Truncate0001_SM20.npz
+│   │   └── [1.8G]  LARRY_Similarity_matrix_with_all_cell_states_kNN20_Truncate0001_SM5.npz
+│   ├── [437K]  LARRY_figure
+│   │   └── [433K]  LARRY_MultiTimeClone_Later_FullSpace0_t*2.0*4.0*6_fate_potency.png
+│   ├── [1.4G]  larry_invitro_adata_sub_raw_withcytotrace.h5ad
+│   ├── [4.9G]  larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad
+│   ├── [ 939]  README.md
+│   ├── [  14]  requirements.txt
+│   └── [ 11K]  test.pdf
+├── [ 166]  README.md
+├── [ 11K]  reproducibility-output-11082022.txt
+├── [   0]  reproducibility-output-11092022.txt
+├── [1.9K]  run_profile_summary.sh
+├── [2.2K]  run_reproducibility.sh
+
+
+
+├── [ 50M]  suppfig1
+│   ├── [ 50M]  data
+│   │   └── [ 50M]  Pancreas
+│   │       └── [ 50M]  endocrinogenesis_day15.h5ad
+│   ├── [ 393]  environment.yml
+│   ├── [ 520]  README.md
+│   └── [2.5K]  suppfig1_models_graph.py
+
+
+
+├── [2.2G]  suppfig2
+│   ├── [ 50M]  data
+│   │   └── [ 50M]  Pancreas
+│   │       └── [ 50M]  endocrinogenesis_day15.h5ad
+│   ├── [434M]  pancreas_paramset_2000_300.h5ad
+│   ├── [382M]  pancreas_paramset_2000_30.h5ad
+│   ├── [374M]  pancreas_paramset_2000_3.h5ad
+│   ├── [568M]  pancreas_paramset_3000_30.h5ad
+│   ├── [ 19M]  pancreas_paramset_50_30.h5ad
+│   ├── [405M]  pancreas_scvelo_fitted_2000_30.h5ad
+│   ├── [ 323]  README.md
+│   ├── [  16]  requirements.txt
+│   ├── [ 10K]  suppfig2.py
+│   └── [1.9M]  SuppFigure2.pdf
+
+
+
+├── [8.2G]  suppfig3
+│   └── [8.2G]  model2
+│       ├── [168M]  data
+│       │   ├── [ 50M]  Pancreas
+│       │   │   └── [ 50M]  endocrinogenesis_day15.h5ad
+│       │   └── [118M]  PBMC
+│       │       └── [118M]  pbmc68k.h5ad
+│       ├── [7.3K]  fig2_model2.py
+│       ├── [5.8G]  fig2_pancreas_data_model2.pkl
+│       ├── [3.3K]  fig2_pancreas_data_model2.py
+│       ├── [1.7M]  Fig2_pancreas_model2
+│       │   ├── [1.3K]  attr.pkl
+│       │   ├── [841K]  model_params.pt
+│       │   ├── [840K]  param_store_test.pt
+│       │   └── [ 12K]  var_names.csv
+│       ├── [467M]  fig2_pancreas_processed_model2.h5ad
+│       ├── [ 47M]  Fig2_pancreas_raw_gene_selection_model2.svg
+│       ├── [ 18M]  Fig2_pancreas_raw_gene_selection_model2.tif
+│       ├── [228M]  fig2_pbmc_data_model2.pkl
+│       ├── [2.4K]  fig2_pbmc_data_model2.py
+│       ├── [3.0M]  Fig2_pbmc_model2
+│       │   ├── [1.3K]  attr.pkl
+│       │   ├── [1.5M]  model_params.pt
+│       │   ├── [1.5M]  param_store_test.pt
+│       │   └── [  15]  var_names.csv
+│       ├── [718M]  fig2_pbmc_processed_model2.h5ad
+│       ├── [657K]  fig2_test_rainbow_sub_model2.pdf
+│       ├── [635K]  fig2_test_sub_model2.pdf
+│       ├── [398K]  fig2_test_vecfield_sub.pdf
+│       ├── [ 46K]  fig2_test_volcano_sub_model2.pdf
+│       ├── [405M]  pancreas_scvelo_fitted_2000_30.h5ad
+│       ├── [393M]  pbmc_processed.h5ad
+│       ├── [ 648]  README.md
+│       └── [ 11M]  SuppFig1_model2.tif.svg
+
+
+
+├── [1.6G]  suppfig4
+│   ├── [1.5G]  data
+│   │   ├── [1.4G]  larry.h5ad
+│   │   ├── [ 63M]  larry_mono.h5ad
+│   │   └── [ 57M]  larry_neu.h5ad
+│   ├── [ 14K]  suppfig4_larry_cytotrace.py
+│   ├── [188K]  SuppFigure4-IM.png
+│   ├── [ 16M]  SuppFigure4.pdf
+│   └── [727K]  SuppFigure4.png
+├── [ 49K]  suppfig5
+│   ├── [ 16K]  model1
+│   │   ├── [5.6K]  fig3_allcells_model1.py
+│   │   └── [6.0K]  fig3_uni_bifurcation_model1.py
+│   ├── [9.1K]  model2
+│   │   ├── [2.4K]  fig3_unipotent_mono_model2.py
+│   │   └── [2.6K]  fig3_unipotent_neu_model2.py
+│   └── [ 21K]  suppfig5.py
+└── [3.5K]  supptables.py
+
+ 142G used in 34 directories, 192 files
+
+├── [ 76M]  output
+│   ├── [ 457]  fig2.log
+│   ├── [ 989]  fig2_model2.log
+│   ├── [3.6M]  fig2_model2.stats
+│   ├── [ 16K]  fig2_pancreas_data.log
+│   ├── [ 19K]  fig2_pancreas_data_model2.log
+│   ├── [4.5M]  fig2_pancreas_data_model2.stats
+│   ├── [ 47K]  fig2_pancreas_data.pdf
+│   ├── [1.1M]  fig2_pancreas_data.png
+│   ├── [4.4M]  fig2_pancreas_data.stats
+│   ├── [163K]  fig2_pbmc_data.log
+│   ├── [ 17K]  fig2_pbmc_data_model2.log
+│   ├── [4.1M]  fig2_pbmc_data_model2.stats
+│   ├── [ 40K]  fig2_pbmc_data.pdf
+│   ├── [935K]  fig2_pbmc_data.png
+│   ├── [4.2M]  fig2_pbmc_data.stats
+│   ├── [ 45K]  fig2.pdf
+│   ├── [1.3M]  fig2.png
+│   ├── [3.6M]  fig2.stats
+│   ├── [3.4K]  fig3_allcells_cospar.log
+│   ├── [ 29K]  fig3_allcells_cospar.pdf
+│   ├── [653K]  fig3_allcells_cospar.png
+│   ├── [3.7M]  fig3_allcells_cospar.stats
+│   ├── [ 146]  fig3_allcells_cytotrace.log
+│   ├── [ 16K]  fig3_allcells_cytotrace.pdf
+│   ├── [ 96K]  fig3_allcells_cytotrace.png
+│   ├── [3.0M]  fig3_allcells_cytotrace.stats
+│   ├── [2.1M]  fig3_allcells_model2.log
+│   ├── [ 28K]  fig3_allcells_model2.pdf
+│   ├── [570K]  fig3_allcells_model2.png
+│   ├── [4.5M]  fig3_allcells_model2.stats
+│   ├── [ 30K]  fig3.log
+│   ├── [ 32K]  fig3.pdf
+│   ├── [704K]  fig3.png
+│   ├── [4.0M]  fig3.stats
+│   ├── [ 18K]  fig3_uni_bifurcation_model2.log
+│   ├── [ 49K]  fig3_uni_bifurcation_model2.pdf
+│   ├── [1.4M]  fig3_uni_bifurcation_model2.png
+│   ├── [4.3M]  fig3_uni_bifurcation_model2.stats
+│   ├── [122K]  fig3_unipotent_mono_model1.log
+│   ├── [ 46K]  fig3_unipotent_mono_model1.pdf
+│   ├── [1.3M]  fig3_unipotent_mono_model1.png
+│   ├── [4.1M]  fig3_unipotent_mono_model1.stats
+│   ├── [112K]  fig3_unipotent_neu_model1.log
+│   ├── [ 48K]  fig3_unipotent_neu_model1.pdf
+│   ├── [1.4M]  fig3_unipotent_neu_model1.png
+│   ├── [4.1M]  fig3_unipotent_neu_model1.stats
+│   ├── [ 16K]  monkeytype_fig2_pancreas_data.log
+│   ├── [5.9K]  suppfig1_models_graph.log
+│   ├── [3.2M]  suppfig1_models_graph.stats
+│   ├── [9.9K]  suppfig2.log
+│   ├── [4.1M]  suppfig2.stats
+│   ├── [476K]  suppfig4_larry_cytotrace.log
+│   └── [4.3M]  suppfig4_larry_cytotrace.stats
+
+Data
+
+│       │   │   └── [ 50M]  endocrinogenesis_day15.h5ad
+│       │       └── [118M]  pbmc68k.h5ad
+│       ├── [467M]  fig2_pancreas_processed.h5ad
+│       ├── [718M]  fig2_pbmc_processed.h5ad
+│       ├── [405M]  pancreas_scvelo_fitted_2000_30.h5ad
+│       ├── [393M]  pbmc_processed.h5ad
+│   │   ├── [1.4G]  larry.h5ad
+│   │   ├── [ 63M]  larry_mono.h5ad
+│   │   └── [ 57M]  larry_neu.h5ad
+│   ├── [5.9G]  fig3_larry_allcells_top2000_model2.h5ad
+│   ├── [310M]  fig3_larry_uni_bifurcation_top2000_model2.h5ad
+│   ├── [160M]  fig3_mono_processed_model1.h5ad
+│   ├── [135M]  fig3_neu_processed_model1.h5ad
+│   ├── [821M]  global_gold_standard2.h5ad
+│   │   ├── [1.7G]  LARRY_MultiTimeClone_Later_FullSpace0_t*2.0*4.0*6_adata_with_transition_map.h5ad
+│   ├── [1.4G]  larry_invitro_adata_sub_raw_withcytotrace.h5ad
+│   ├── [4.9G]  larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad
+│   │       └── [ 50M]  endocrinogenesis_day15.h5ad
+│   │       └── [ 50M]  endocrinogenesis_day15.h5ad
+│   ├── [434M]  pancreas_paramset_2000_300.h5ad
+│   ├── [382M]  pancreas_paramset_2000_30.h5ad
+│   ├── [374M]  pancreas_paramset_2000_3.h5ad
+│   ├── [568M]  pancreas_paramset_3000_30.h5ad
+│   ├── [ 19M]  pancreas_paramset_50_30.h5ad
+│   ├── [405M]  pancreas_scvelo_fitted_2000_30.h5ad
+│       │   │   └── [ 50M]  endocrinogenesis_day15.h5ad
+│       │       └── [118M]  pbmc68k.h5ad
+│       ├── [467M]  fig2_pancreas_processed_model2.h5ad
+│       ├── [718M]  fig2_pbmc_processed_model2.h5ad
+│       ├── [405M]  pancreas_scvelo_fitted_2000_30.h5ad
+│       ├── [393M]  pbmc_processed.h5ad
+│   │   ├── [1.4G]  larry.h5ad
+│   │   ├── [ 63M]  larry_mono.h5ad
+│   │   └── [ 57M]  larry_neu.h5ad
+
+
+Models
+
+│       ├── [6.6G]  fig2_pancreas_data.pkl
+│       │   ├── [1.3K]  attr.pkl
+│       │   ├── [559K]  model_params.pt
+│       │   ├── [559K]  param_store_test.pt
+│       ├── [250M]  fig2_pbmc_data.pkl
+│       │   ├── [1.3K]  attr.pkl
+│       │   ├── [1.5M]  model_params.pt
+│       │   ├── [1.5M]  param_store_test.pt
+│   ├── [ 77G]  fig3_allcells_data_model2.pkl
+│   │   ├── [1.3K]  attr.pkl
+│   │   ├── [1.9M]  model_params.pt
+│   │   ├── [1.9M]  param_store_test.pt
+│   ├── [2.0G]  fig3_mono_data_model1.pkl
+│   │   ├── [1.3K]  attr.pkl
+│   │   ├── [470K]  model_params.pt
+│   │   ├── [469K]  param_store_test.pt
+│   ├── [1.7G]  fig3_neu_data_model1.pkl
+│   │   ├── [1.3K]  attr.pkl
+│   │   ├── [442K]  model_params.pt
+│   │   ├── [442K]  param_store_test.pt
+│   ├── [3.6G]  fig3_uni_bifurcation_data_model2.pkl
+│   │   ├── [1.3K]  attr.pkl
+│   │   ├── [808K]  model_params.pt
+│   │   ├── [808K]  param_store_test.pt
+│       ├── [5.8G]  fig2_pancreas_data_model2.pkl
+│       │   ├── [1.3K]  attr.pkl
+│       │   ├── [841K]  model_params.pt
+│       │   ├── [840K]  param_store_test.pt
+│       ├── [228M]  fig2_pbmc_data_model2.pkl
+│       │   ├── [1.3K]  attr.pkl
+│       │   ├── [1.5M]  model_params.pt
+│       │   ├── [1.5M]  param_store_test.pt
+
+
+Figures
+
+│       ├── [ 38M]  Fig2_pancreas_raw_gene_selection_model1.pdf
+│       ├── [ 36M]  Fig2_pancreas_raw_gene_selection_model1-red.pdf
+│       ├── [ 18M]  Fig2_pancreas_raw_gene_selection_model1.tif
+│       ├── [649K]  fig2_test_rainbow_sub.pdf
+│       ├── [603K]  fig2_test_sub.pdf
+│       ├── [398K]  fig2_test_vecfield_sub.pdf
+│       ├── [ 45K]  fig2_test_volcano_sub.pdf
+│   ├── [4.7M]  fig3_all_test_rainbow_sub_model2.pdf
+│   ├── [ 47K]  fig3_all_test_volcano_sub_model2.pdf
+│   ├── [312K]  fig3_test_vecfield_sub_model2.pdf
+│   ├── [ 72K]  fig3_uni_bifurcation_vectorfield_model2.pdf
+│   ├── [4.8M]  Figure3.pdf
+│   │   └── [433K]  LARRY_MultiTimeClone_Later_FullSpace0_t*2.0*4.0*6_fate_potency.png
+│   └── [ 11K]  test.pdf
+│   └── [1.9M]  SuppFigure2.pdf
+│       ├── [ 18M]  Fig2_pancreas_raw_gene_selection_model2.tif
+│       ├── [657K]  fig2_test_rainbow_sub_model2.pdf
+│       ├── [635K]  fig2_test_sub_model2.pdf
+│       ├── [398K]  fig2_test_vecfield_sub.pdf
+│       ├── [ 46K]  fig2_test_volcano_sub_model2.pdf
+│       └── [ 11M]  SuppFig1_model2.tif.svg
+│   ├── [188K]  SuppFigure4-IM.png
+│   ├── [ 16M]  SuppFigure4.pdf
+│   └── [727K]  SuppFigure4.png
+│   ├── [ 47K]  fig2_pancreas_data.pdf
+│   ├── [1.1M]  fig2_pancreas_data.png
+│   ├── [ 40K]  fig2_pbmc_data.pdf
+│   ├── [935K]  fig2_pbmc_data.png
+│   ├── [ 45K]  fig2.pdf
+│   ├── [1.3M]  fig2.png
+│   ├── [ 29K]  fig3_allcells_cospar.pdf
+│   ├── [653K]  fig3_allcells_cospar.png
+│   ├── [ 16K]  fig3_allcells_cytotrace.pdf
+│   ├── [ 96K]  fig3_allcells_cytotrace.png
+│   ├── [ 28K]  fig3_allcells_model2.pdf
+│   ├── [570K]  fig3_allcells_model2.png
+│   ├── [ 32K]  fig3.pdf
+│   ├── [704K]  fig3.png
+│   ├── [ 49K]  fig3_uni_bifurcation_model2.pdf
+│   ├── [1.4M]  fig3_uni_bifurcation_model2.png
+│   ├── [ 46K]  fig3_unipotent_mono_model1.pdf
+│   ├── [1.3M]  fig3_unipotent_mono_model1.png
+│   ├── [ 48K]  fig3_unipotent_neu_model1.pdf
+│   ├── [1.4M]  fig3_unipotent_neu_model1.png
