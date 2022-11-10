@@ -10,7 +10,7 @@ Inputs:
 Outputs:
   data:
     "larry_invitro_adata_sub_raw_withcytotrace.h5ad"
-""" 
+"""
 
 
 ###########

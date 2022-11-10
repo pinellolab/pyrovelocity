@@ -12,6 +12,7 @@ from pyrovelocity.plot import plot_posterior_time
 from pyrovelocity.plot import plot_vector_field_uncertain
 from pyrovelocity.plot import rainbowplot
 
+
 """Loads preprocessed figure 2 data and produces figure 2.
 
 Inputs:

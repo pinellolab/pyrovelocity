@@ -70,6 +70,7 @@ v_map_all, embeds_radian, fdri = vector_field_uncertainty(
 # generate figures
 ##################
 
+
 def check_shared_time(adata_model_pos, adata):
     adata.obs["cell_time"] = adata_model_pos[1]["cell_time"].squeeze().mean(0)
     adata.obs["1-Cytotrace"] = 1 - adata.obs["cytotrace"]
@@ -103,6 +104,7 @@ def check_shared_time(adata_model_pos, adata):
         edgecolor="none",
         dpi=300,
     )
+
 
 check_shared_time(adata_model_pos, adata)
 
