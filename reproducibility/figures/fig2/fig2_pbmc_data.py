@@ -10,6 +10,29 @@ from pyrovelocity.plot import plot_mean_vector_field
 from pyrovelocity.plot import vector_field_uncertainty
 
 
+"""Loads PBMC data and trains and saves model1 model.
+
+Inputs:
+  "data/PBMC/pbmc68k.h5ad" via load_data()
+
+Outputs:
+  data:
+    "pbmc_processed.h5ad"
+    "fig2_pbmc_processed.h5ad"
+  models:
+    "fig2_pbmc_data.pkl"
+    Fig2_pbmc_model/
+    ├── attr.pkl
+    ├── model_params.pt
+    ├── param_store_test.pt
+    └── var_names.csv
+"""
+
+
+###########
+# load data
+###########
+
 if os.path.exists("pbmc_processed.h5ad"):
     adata = scv.read("pbmc_processed.h5ad")
 else:
@@ -41,6 +64,11 @@ else:
     adata = adata_sub.copy()
     adata.write("pbmc_processed.h5ad")
 
+
+#############
+# train model
+#############
+
 adata_model_pos = train_model(
     adata,
     max_epochs=4000,
@@ -63,10 +91,20 @@ v_map_all, embeds_radian, fdri = vector_field_uncertainty(
     adata, adata_model_pos[1], n_jobs=20
 )
 
+
+##################
+# generate figures
+##################
+
 fig, ax = plt.subplots()
 embed_mean = plot_mean_vector_field(
     adata_model_pos[1], adata, ax=ax, basis="tsne", n_jobs=20
 )
+
+
+##################
+# save checkpoints
+##################
 
 adata.write("fig2_pbmc_processed.h5ad")
 adata_model_pos[0].save("Fig2_pbmc_model", overwrite=True)

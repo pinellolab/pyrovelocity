@@ -12,7 +12,39 @@ from pyrovelocity.plot import us_rainbowplot
 from pyrovelocity.plot import vector_field_uncertainty
 
 
+"""Loads pancreas data and trains and saves model1 model.
+
+Inputs:
+  "data/Pancreas/endocrinogenesis_day15.h5ad" via load_data()
+
+Outputs:
+  data:
+    "fig2_pancreas_processed.h5ad"
+  models:
+    "fig2_pancreas_data.pkl"
+    Fig2_pancreas_model/
+    ├── attr.pkl
+    ├── model_params.pt
+    ├── param_store_test.pt
+    └── var_names.csv
+  figures:
+    "fig2_test_volcano_sub.pdf"
+    "fig2_test_rainbow_sub.pdf"
+    "fig2_test_vecfield_sub.pdf"
+"""
+
+
+###########
+# load data
+###########
+
 adata = load_data(top_n=2000, min_shared_counts=30)
+
+
+#############
+# train model
+#############
+
 
 adata_model_pos = train_model(
     adata,
@@ -30,6 +62,13 @@ adata_model_pos = train_model(
     train_size=1.0,
 )
 
+v_map_all, embeds_radian, fdri = vector_field_uncertainty(
+    adata, adata_model_pos[1], basis="umap"
+)
+
+##################
+# generate figures
+##################
 
 def check_shared_time(adata_model_pos, adata):
     adata.obs["cell_time"] = adata_model_pos[1]["cell_time"].squeeze().mean(0)
@@ -64,7 +103,6 @@ def check_shared_time(adata_model_pos, adata):
         edgecolor="none",
         dpi=300,
     )
-
 
 check_shared_time(adata_model_pos, adata)
 
@@ -104,10 +142,6 @@ fig.savefig(
     dpi=300,
 )
 
-v_map_all, embeds_radian, fdri = vector_field_uncertainty(
-    adata, adata_model_pos[1], basis="umap"
-)
-
 fig, ax = plt.subplots()
 embed_mean = plot_mean_vector_field(adata_model_pos[1], adata, ax=ax)
 fig.savefig(
@@ -117,6 +151,11 @@ fig.savefig(
     edgecolor="none",
     dpi=300,
 )
+
+
+##################
+# save checkpoints
+##################
 
 adata.write("fig2_pancreas_processed.h5ad")
 

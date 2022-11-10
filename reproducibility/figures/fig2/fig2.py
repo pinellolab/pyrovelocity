@@ -12,6 +12,26 @@ from pyrovelocity.plot import plot_posterior_time
 from pyrovelocity.plot import plot_vector_field_uncertain
 from pyrovelocity.plot import rainbowplot
 
+"""Loads preprocessed figure 2 data and produces figure 2.
+
+Inputs:
+  data:
+    "fig2_pancreas_processed.h5ad"
+    "fig2_pbmc_processed.h5ad"
+  models:
+    "fig2_pancreas_data.pkl"
+    "fig2_pbmc_data.pkl"
+
+Outputs:
+  figures:
+    "Fig2_pancreas_raw_gene_selection_model1.tif"
+    "Fig2_pancreas_raw_gene_selection_model1.svg"
+"""
+
+
+##################
+# load checkpoints
+##################
 
 with open("fig2_pbmc_data.pkl", "rb") as f:
     result_dict = pickle.load(f)
@@ -34,6 +54,10 @@ embed_mean = result_dict["embed_mean"]
 adata = scv.read("fig2_pancreas_processed.h5ad")
 adata_pbmc = scv.read("fig2_pbmc_processed.h5ad")
 
+
+#################
+# generate figure
+#################
 
 fig = plt.figure(figsize=(7.07, 6.5))
 dot_size = 3
@@ -107,6 +131,7 @@ scv.pl.velocity_embedding_stream(
 )
 ax[2].set_title("Pyro-Velocity\n", fontsize=7)
 
+
 plot_arrow_examples(
     adata_pbmc,
     np.transpose(v_map_all_pbmc, (1, 2, 0)),
@@ -123,6 +148,7 @@ plot_arrow_examples(
     num_total=4,
 )
 ax[3].set_title("Single cell\nvector field", fontsize=7)
+
 
 plot_vector_field_uncertain(
     adata_pbmc,
@@ -209,6 +235,7 @@ scv.pl.velocity_embedding_stream(
 )
 ax[2].set_title("Pyro-Velocity\n", fontsize=7)
 
+
 plot_arrow_examples(
     adata,
     np.transpose(v_map_all, (1, 2, 0)),
@@ -225,6 +252,7 @@ plot_arrow_examples(
     num_total=6,
 )
 ax[3].set_title("Single cell\nvector field", fontsize=7)
+
 
 plot_vector_field_uncertain(
     adata,
@@ -251,6 +279,8 @@ plot_posterior_time(adata_model_pos, adata, ax=ax[0], fig=subfig_B[0], addition=
 subfig_B[0].subplots_adjust(
     hspace=0.3, wspace=0.1, left=0.01, right=0.8, top=0.92, bottom=0.17
 )
+
+
 volcano_data2, _ = plot_gene_ranking(
     [adata_model_pos], [adata], ax=ax[1], time_correlation_with="st", assemble=True
 )
@@ -275,9 +305,11 @@ ax[1].text(
     ha="right",
 )
 
+
 _ = rainbowplot(
     volcano_data2, adata, adata_model_pos, subfig_B[1], data=["st", "ut"], num_genes=4
 )
+
 
 fig.savefig(
     "Fig2_pancreas_raw_gene_selection_model1.tif",
