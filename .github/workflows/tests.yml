@@ -1,6 +1,7 @@
 name: Tests
 
 on:
+  - workflow_dispatch
   - push
   - pull_request
 
@@ -13,6 +14,7 @@ jobs:
       matrix:
         include:
           - { python: "3.8", os: "ubuntu-latest", session: "pre-commit" }
+          - { python: "3.8", os: "ubuntu-latest", session: "tests" }
           - { python: "3.8", os: "ubuntu-latest", session: "docs-build" }
 
     env:
