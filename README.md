@@ -103,6 +103,12 @@ Starting from these count tables we show below a minimal step-by-step
 workflow to illustrate the main features of Pyro-Velocity in a Jupyter
 Notebook:
 
+
+Step 0. Even though _pyrovelocity_ is a cluster-free method to evaluate uncertainty 
+of cell fate, it will dependend on 2 dimensional embedding results for evaluation of 
+uncertainty and generate visualization, we would suggest run your new datasets using
+[scanpy tutorial](https://scanpy-tutorials.readthedocs.io/en/latest/pbmc3k.html). 
+
 Step 1. Load your data, load your data(e.g. _local_file.h5ad_) with
 scvelo by using:
 
