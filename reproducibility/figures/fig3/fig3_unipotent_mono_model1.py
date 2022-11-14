@@ -1,6 +1,7 @@
 import os
 import pickle
 
+import cospar as cs
 import matplotlib.pyplot as plt
 import scvelo as scv
 

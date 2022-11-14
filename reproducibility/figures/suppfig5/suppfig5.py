@@ -1,3 +1,10 @@
+import os
+import pickle
+
+import cospar as cs
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import pickle
 
 import cospar as cs
@@ -9,10 +16,43 @@ import seaborn as sns
 from scipy.spatial import distance
 from scipy.stats import spearmanr
 
+from scvelo.plotting.velocity_embedding_grid import default_arrow
+from pyrovelocity.data import load_larry
+from pyrovelocity.plot import align_trajectory_diff
 from pyrovelocity.plot import get_clone_trajectory
 from pyrovelocity.plot import plot_posterior_time
 from pyrovelocity.plot import plot_vector_field_uncertain
 
+
+"""Loads preprocessed supp figure 5 data and produces supp figure 5.
+
+Inputs:
+  data:
+    "data/larry.h5ad" via load_larry()
+    "larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad"
+    "LARRY_data/LARRY_MultiTimeClone_Later_FullSpace0_t*2.0*4.0*6_adata_with_transition_map.h5ad"
+    "larry_invitro_adata_sub_raw_withcytotrace.h5ad"
+    "fig3_mono_processed_model2.h5ad"
+    "fig3_neu_processed_model2.h5ad"
+    "fig3_larry_uni_bifurcation_top2000_model1.h5ad"
+    "fig3_larry_allcells_top2000_model1.h5ad"
+  models:
+    "fig3_mono_data_model2.pkl"
+    "fig3_neu_data_model2.pkl"
+    "fig3_uni_bifurcation_data_model1.pkl"
+    "fig3_allcells_data_model1.pkl"
+
+Outputs:
+  data:
+    "global_gold_standard2.h5ad"
+  figures:
+    "SuppFigure5.pdf"
+"""
+
+
+##################
+# load checkpoints
+##################
 
 cs.logging.print_version()
 cs.settings.verbosity = 2
@@ -22,13 +62,13 @@ cs.settings.set_figure_params(
     format="png", figsize=[4, 3.5], dpi=75, fontsize=14, pointsize=2
 )
 
-adata_input = scv.read("larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad")
-adata = scv.read("larry_invitro_adata_sub_raw.h5ad")
+adata = scv.read("../fig3/data/larry.h5ad")
+adata_input = scv.read("../fig3/larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad")
 adata_cospar = scv.read(
-    "LARRY_MultiTimeClone_Later_FullSpace0_t*2.0*4.0*6_adata_with_transition_map.h5ad"
+    "../fig3/LARRY_data/LARRY_MultiTimeClone_Later_FullSpace0_t*2.0*4.0*6_adata_with_transition_map.h5ad"
 )
 adata_cytotrace = scv.read(
-    "larry_invitro_adata_sub_raw_withcytotrace.h5ad"
+    "../fig3/larry_invitro_adata_sub_raw_withcytotrace.h5ad"
 )  # skip=False
 
 cs.pl.fate_potency(
@@ -40,7 +80,6 @@ cs.pl.fate_potency(
     fate_count=True,
 )
 
-# with open("fig3_mono_data.pkl", "rb") as pk:
 with open("fig3_mono_data_model2.pkl", "rb") as pk:
     result_dict = pickle.load(pk)
 adata_model_pos_mono = result_dict["adata_model_pos"]
@@ -48,7 +87,6 @@ v_map_all_mono = result_dict["v_map_all"]
 embeds_radian_mono = result_dict["embeds_radian"]
 fdri_mono = result_dict["fdri"]
 embed_mean_mono = result_dict["embed_mean"]
-# adata_input_mono = scv.read("fig3_mono_processed.h5ad")
 adata_input_mono = scv.read("fig3_mono_processed_model2.h5ad")
 
 with open("fig3_neu_data_model2.pkl", "rb") as pk:
@@ -60,7 +98,6 @@ fdri_neu = result_dict["fdri"]
 embed_mean_neu = result_dict["embed_mean"]
 adata_input_neu = scv.read("fig3_neu_processed_model2.h5ad")
 
-##with open("fig3_bifurcation_data.pkl", "rb") as pk:
 with open("fig3_uni_bifurcation_data_model1.pkl", "rb") as pk:
     result_dict = pickle.load(pk)
 
@@ -69,11 +106,8 @@ v_map_all = result_dict["v_map_all"]
 embeds_radian = result_dict["embeds_radian"]
 fdri = result_dict["fdri"]
 embed_mean = result_dict["embed_mean"]
-# adata_input = scv.read("larry_bifurcation_top2000.h5ad")
-# adata_input = scv.read("fig3_larry_uni_bifurcation_top2000_model2.h5ad")
 adata_input = scv.read("fig3_larry_uni_bifurcation_top2000_model1.h5ad")
 
-# with open("fig3_allcells_data.pkl", "rb") as pk:
 with open("fig3_allcells_data_model1.pkl", "rb") as pk:
     result_dict = pickle.load(pk)
 adata_model_pos_all = result_dict["adata_model_pos"]
@@ -81,19 +115,20 @@ v_map_all_all = result_dict["v_map_all"]
 embeds_radian_all = result_dict["embeds_radian"]
 fdri_all = result_dict["fdri"]
 embed_mean_all = result_dict["embed_mean"]
-# adata_input_all = scv.read("larry_allcells_top2000.h5ad")
 adata_input_all = scv.read("fig3_larry_allcells_top2000_model1.h5ad")
 
 
 adata_input_neu_clone = get_clone_trajectory(adata_input_neu)
 adata_input_mono_clone = get_clone_trajectory(adata_input_mono)
-# adata_input_clone_both = get_clone_trajectory(adata_input) # map bipotent clones together may lead to average arrows with wrong direction
 adata_input_uni_clone = adata_input_neu_clone.concatenate(adata_input_mono_clone)
 
-# adata_input_clone = get_clone_trajectory(adata_input)
-
-# adata_input_all_clone = scv.read("/PHShome/qq06/pyrovelocity/figures/global_gold_standard2.h5ad")
-adata_input_all_clone = scv.read("global_gold_standard2.h5ad")
+if os.path.exists("global_gold_standard2.h5ad"):
+    adata_input_all_clone = scv.read("global_gold_standard2.h5ad")
+else:
+    adata_reduced_gene_for_clone_vec = adata[:, adata_input.var_names].copy()
+    print(adata_reduced_gene_for_clone_vec.shape)
+    adata_input_all_clone = get_clone_trajectory(adata_reduced_gene_for_clone_vec)
+    adata_input_all_clone.write("global_gold_standard2.h5ad")
 
 adata_input_all_clone.obsm["clone_vector_emb"][
     np.isnan(adata_input_all_clone.obsm["clone_vector_emb"])
@@ -107,8 +142,6 @@ adata_input_neu_clone.obsm["clone_vector_emb"][
 adata_input_uni_clone.obsm["clone_vector_emb"][
     np.isnan(adata_input_uni_clone.obsm["clone_vector_emb"])
 ] = 0
-
-from pyrovelocity.plot import align_trajectory_diff
 
 
 cutoff = 10
@@ -190,10 +223,10 @@ if exclude_day6:
     )
 else:
     diff_all = align_trajectory_diff(
-        [adata_input_all_clone, adata_input_all, adata_input_all],
+        [adata_input_all_clone, adata_input, adata_input_all],
         [
             adata_input_all_clone.obsm["clone_vector_emb"],
-            adata_input_all.obsm["velocity_emb"],
+            adata_input.obsm["velocity_emb"],
             embed_mean_all,
         ],
         embed="emb",
@@ -208,9 +241,9 @@ pyro_all_cos = pd.DataFrame(diff_all).apply(
 scvelo_all_cos_mean = scvelo_all_cos.mean()
 pyro_all_cos_mean = pyro_all_cos.mean()
 
-from scvelo.plotting.velocity_embedding_grid import default_arrow
-
-
+##################
+# generate figures
+##################
 hl, hw, hal = default_arrow(3)
 quiver_kwargs = {"angles": "xy", "scale_units": "xy"}
 quiver_kwargs.update({"width": 0.001, "headlength": hl / 2})
@@ -541,7 +574,6 @@ sns.scatterplot(
     ax=ax1[0],
 )
 ax1[0].set_title("Cell types", fontsize=7)
-# scv.pl.velocity_embedding_grid(adata_input_clone, scale=0.25, show=False,
 scv.pl.velocity_embedding_grid(
     adata_input_uni_clone,
     # scale=None,

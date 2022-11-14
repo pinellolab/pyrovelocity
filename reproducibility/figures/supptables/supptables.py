@@ -8,7 +8,7 @@ from pyrovelocity.cytotrace import compute_similarity2
 from pyrovelocity.plot import plot_gene_ranking
 
 
-with open("fig2_pancreas_data.pkl", "rb") as f:
+with open("../fig2/model1/fig2_pancreas_data.pkl", "rb") as f:
     result_dict = pickle.load(f)
 
 adata_model_pos = result_dict["adata_model_pos"]
@@ -17,7 +17,7 @@ embeds_radian = result_dict["embeds_radian"]
 fdri = result_dict["fdri"]
 embed_mean = result_dict["embed_mean"]
 
-adata = scv.read("fig2_pancreas_processed.h5ad")
+adata = scv.read("../fig2/model1/fig2_pancreas_processed.h5ad")
 
 
 df_genes_cors = compute_similarity2(
@@ -55,7 +55,7 @@ with pd.ExcelWriter("SuppTable1.xlsx") as writer:
     ).head(50).to_excel(writer, sheet_name="scvelo_top_negative_correlation_genes")
 
 
-with open("fig2_pancreas_data_model2.pkl", "rb") as f:
+with open("../suppfig3/model2/fig2_pancreas_data_model2.pkl", "rb") as f:
     result_dict = pickle.load(f)
 
 adata_model_pos = result_dict["adata_model_pos"]
@@ -64,7 +64,7 @@ embeds_radian = result_dict["embeds_radian"]
 fdri = result_dict["fdri"]
 embed_mean = result_dict["embed_mean"]
 
-adata = scv.read("fig2_pancreas_processed_model2.h5ad")
+adata = scv.read("../suppfig3/model2/fig2_pancreas_processed_model2.h5ad")
 
 from pyrovelocity.cytotrace import compute_similarity2
 

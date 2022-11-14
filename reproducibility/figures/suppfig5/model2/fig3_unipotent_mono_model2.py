@@ -1,36 +1,45 @@
 import os
+import pickle
 
 import cospar as cs
 import matplotlib.pyplot as plt
 import scvelo as scv
 
 from pyrovelocity.api import train_model
+from pyrovelocity.data import load_unipotent_larry
 from pyrovelocity.plot import plot_mean_vector_field
 from pyrovelocity.plot import vector_field_uncertainty
 
+"""Caches unipotent monocyte data and trains and saves model2 model.
 
-cs.logging.print_version()
-cs.settings.verbosity = 2
-cs.settings.data_path = "LARRY_data"  # A relative path to save data.
-cs.settings.figure_path = "LARRY_figure"  # A relative path to save figures.
-cs.settings.set_figure_params(
-    format="png", figsize=[4, 3.5], dpi=75, fontsize=14, pointsize=2
-)
+Inputs:
+  "data/larry_mono.h5ad" via load_unipotent_larry()
 
+Outputs:
+  data:
+    "fig3_mono_processed_model2.h5ad"
+    "fig3_mono_data_model2.pkl"
+  models:
+    Fig3_mono_model2/
+    ├── attr.pkl
+    ├── model_params.pt
+    ├── param_store_test.pt
+    └── var_names.csv
+"""
 
-adata = scv.read("mono_unipotent_cells.h5ad")
-adata_input = adata[adata.obs.state_info != "Centroid", :].copy()
-
-if not os.path.exists("larry_mono_top2000.h5ad"):
-    scv.pp.filter_and_normalize(adata_input, n_top_genes=2000, min_shared_counts=20)
-    scv.pp.moments(adata_input)
-    scv.tl.recover_dynamics(adata_input, n_jobs=10)
-    scv.tl.velocity(adata_input, mode="dynamical")
-    scv.tl.velocity_graph(adata_input)
-    scv.tl.velocity_embedding(adata_input, basis="emb")
-    scv.tl.latent_time(adata_input)
+if os.path.exists("mono_unipotent_cells.h5ad"):
+    adata = scv.read("mono_unipotent_cells.h5ad")
 else:
-    adata_input = scv.read("larry_mono_top2000.h5ad")
+    adata = load_unipotent_larry()
+
+adata_input = adata[adata.obs.state_info != "Centroid", :].copy()
+scv.pp.filter_and_normalize(adata_input, n_top_genes=2000, min_shared_counts=20)
+scv.pp.moments(adata_input)
+scv.tl.recover_dynamics(adata_input, n_jobs=10)
+scv.tl.velocity(adata_input, mode="dynamical")
+scv.tl.velocity_graph(adata_input)
+scv.tl.velocity_embedding(adata_input, basis="emb")
+scv.tl.latent_time(adata_input)
 
 adata_input.layers["raw_spliced"] = adata[
     adata_input.obs_names, adata_input.var_names
@@ -42,6 +51,9 @@ adata_input.layers["raw_unspliced"] = adata[
 adata_input.obs["u_lib_size_raw"] = adata_input.layers["unspliced"].toarray().sum(-1)
 adata_input.obs["s_lib_size_raw"] = adata_input.layers["spliced"].toarray().sum(-1)
 
+#############
+# train model
+#############
 adata_model_pos_split = train_model(
     adata_input,
     max_epochs=4000,
@@ -63,11 +75,17 @@ v_map_all, embeds_radian, fdri = vector_field_uncertainty(
     adata_input, adata_model_pos_split[1], basis="emb"
 )
 
+##################
+# generate figures
+##################
 fig, ax = plt.subplots()
 embed_mean = plot_mean_vector_field(
     adata_model_pos_split[1], adata_input, ax=ax, basis="emb"
 )
 
+##################
+# save checkpoints
+##################
 adata_input.write("fig3_mono_processed_model2.h5ad")
 
 adata_model_pos_split[0].save("Fig3_mono_model2", overwrite=True)
@@ -78,8 +96,5 @@ result_dict = {
     "fdri": fdri,
     "embed_mean": embed_mean,
 }
-import pickle
-
-
 with open("fig3_mono_data_model2.pkl", "wb") as f:
     pickle.dump(result_dict, f)
