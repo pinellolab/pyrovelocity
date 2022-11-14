@@ -47,7 +47,7 @@ After that, install the _pyrovelocity_ package in one mamba command:
 
 ```bash
 mamba create -n pyrovelocity_bioconda -c bioconda pyrovelocity
-````
+```
 
 This step takes about 6-8 minutes depending on the network speed. If you prefer to use conda environment configurations, see the `conda` subfolder for installation with _prefix_ to specify the installation path, such as:
 
@@ -368,9 +368,9 @@ jupyter notebook.
 
 ## TypeError: fate_potency() got an unexpected keyword argument 'used_Tmap'
 
-Please use specific *cospar* version:
+Please use specific _cospar_ version:
 
-``` bash
+```bash
 pip install cospar==0.1.9
 ``` 
 
@@ -379,7 +379,7 @@ pip install cospar==0.1.9
 
 Please install the specific cuda-enabled pytorch version:
 
-``` bash 
+```bash 
 pip3 install torch==1.8.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
 ``` 
 

@@ -30,7 +30,7 @@ Outputs:
 if os.path.exists("neu_unipotent_cells.h5ad"):
     adata = scv.read("neu_unipotent_cells.h5ad")
 else:
-    adata = load_unipotent_larry('neu')
+    adata = load_unipotent_larry("neu")
 adata_input = adata[adata.obs.state_info != "Centroid", :].copy()
 scv.pp.filter_and_normalize(adata_input, n_top_genes=2000, min_shared_counts=20)
 scv.pp.moments(adata_input)
