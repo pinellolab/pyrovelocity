@@ -10,7 +10,7 @@ from pyrovelocity.utils import get_pylogger
 from pyrovelocity.utils import print_attributes
 
 
-def data_load(config_path: Text) -> None:
+def data_load(config_path: str) -> None:
     """Load external data.
     Args:
         config_path {Text}: path to config

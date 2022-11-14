@@ -14,7 +14,7 @@ from pytorch_lightning.utilities import rank_zero_only
 from pyrovelocity.utils import get_pylogger
 
 
-def config_setup(config_path: Text) -> None:
+def config_setup(config_path: str) -> None:
     """Convert template into concrete configuration file.
     Args:
         config_path {Text}: path to config

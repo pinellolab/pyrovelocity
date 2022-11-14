@@ -2,7 +2,6 @@ vars:
   - config.yaml
 
 stages:
-
   data_load:
     cmd: python data_load.py --config=config.yaml
     deps:
