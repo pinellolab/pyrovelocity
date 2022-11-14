@@ -1,0 +1,26 @@
+base:
+  log_level: INFO
+paths:
+  data: data
+  models: models
+  reports: reports
+  output: output
+data_external:
+  root_path: data/external
+  sources:
+    figshare_root_url: https://ndownloader.figshare.com/files
+    scvelo_root_url: https://github.com/theislab/scvelo_notebooks/raw/master
+  pancreas:
+    data_file: endocrinogenesis_day15.h5ad
+    dl_root: data/Pancreas
+    dl_path: data/Pancreas/endocrinogenesis_day15.h5ad
+    rel_path: data/external/endocrinogenesis_day15.h5ad
+    url: https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad
+  pbmc:
+    data_file: pbmc68k.h5ad
+    dl_root: data/PBMC
+    dl_path: data/PBMC/pbmc68k.h5ad
+    rel_path: data/external/pbmc68k.h5ad
+    url: https://ndownloader.figshare.com/files/27686886
+data_processed:
+  root_path: data/processed
