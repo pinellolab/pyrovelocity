@@ -43,7 +43,6 @@ conda config --add channels conda-forge
 conda config --set channel_priority flexible
 ```
 
-````python
 After that, install the _pyrovelocity_ package in one mamba command:
 
 ```bash
@@ -364,3 +363,23 @@ across posterior samples of shared time.
 The full example can be reproduced using the
 [LARRY](https://github.com/pinellolab/pyrovelocity/blob/master/docs/source/notebooks/larry.ipynb)
 jupyter notebook.
+
+# TroubleShooting
+
+## TypeError: fate_potency() got an unexpected keyword argument 'used_Tmap'
+
+Please use specific *cospar* version:
+
+``` bash
+pip install cospar==0.1.9
+``` 
+
+
+## Cuda error: no kernel image is available for execution on the device
+
+Please install the specific cuda-enabled pytorch version:
+
+``` bash 
+pip3 install torch==1.8.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
+``` 
+
