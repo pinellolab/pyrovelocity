@@ -1,0 +1,15 @@
+vars:
+  - config.yaml
+
+stages:
+
+  data_load:
+    cmd: python data_load.py --config=config.yaml
+    deps:
+      - data_load.py
+    params:
+      - config.yaml:
+          - base
+          - data_external.pancreas
+    outs:
+      - ${data_external.pancreas.rel_path}
