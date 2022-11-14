@@ -381,8 +381,20 @@ pip install cospar==0.1.9
 
 ## Cuda error: no kernel image is available for execution on the device
 
-Please install the specific cuda-enabled pytorch version:
+All reference to GPU support applies to linux. We do not currently support windows
+and there is no GPU-compatible pytorch version `<1.12` for darwin.
+On linux, either use [conda](./conda) (as exemplified in
+[reproducibility/environment](./reproducibility/environment)),
+or install the specific cuda-enabled pytorch version manually
 
 ```bash
 pip3 install torch==1.8.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
 ```
+
+If you are using poetry, you can also use the poetry helper
+
+```bash
+poetry install && poetry run poe force-cuda11
+```
+
+Also see [contributing](./docs/contributing.md).
