@@ -103,11 +103,10 @@ Starting from these count tables we show below a minimal step-by-step
 workflow to illustrate the main features of Pyro-Velocity in a Jupyter
 Notebook:
 
-
-Step 0. Even though _pyrovelocity_ is a cluster-free method to evaluate uncertainty 
-of cell fate, it will dependend on 2 dimensional embedding results for evaluation of 
+Step 0. Even though _pyrovelocity_ is a cluster-free method to evaluate uncertainty
+of cell fate, it will dependend on 2 dimensional embedding results for evaluation of
 uncertainty and generate visualization, we would suggest run your new datasets using
-[scanpy tutorial](https://scanpy-tutorials.readthedocs.io/en/latest/pbmc3k.html). 
+[scanpy tutorial](https://scanpy-tutorials.readthedocs.io/en/latest/pbmc3k.html).
 
 Step 1. Load your data, load your data(e.g. _local_file.h5ad_) with
 scvelo by using:
@@ -378,14 +377,24 @@ Please use specific _cospar_ version:
 
 ```bash
 pip install cospar==0.1.9
-``` 
-
+```
 
 ## Cuda error: no kernel image is available for execution on the device
 
-Please install the specific cuda-enabled pytorch version:
+All reference to GPU support applies to linux. We do not currently support windows
+and there is no GPU-compatible pytorch version `<1.12` for darwin.
+On linux, either use [conda](./conda) (as exemplified in
+[reproducibility/environment](./reproducibility/environment)),
+or install the specific cuda-enabled pytorch version manually
 
-```bash 
+```bash
 pip3 install torch==1.8.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
-``` 
+```
 
+If you are using poetry, you can also use the poetry helper
+
+```bash
+poetry install && poetry run poe force-cuda11
+```
+
+Also see [contributing](./docs/contributing.md).

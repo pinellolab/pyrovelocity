@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+# In this form, setup.py is a stub to indicate
+# this repository contains a python package.
+# If you would like to use setuptools
+# instead of poetry, a previously functioning
+# setup.py for this repository is retained in the
+# comments of this file. Otherwise, see pyproject.toml
+# and consider managing builds with poetry.
 
 # from setuptools import find_packages
 from setuptools import setup

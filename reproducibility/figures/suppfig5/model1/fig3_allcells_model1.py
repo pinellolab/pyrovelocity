@@ -40,8 +40,10 @@ Outputs:
 # load data
 ###############
 
-adata = scv.read('../../fig3/data/larry.h5ad')
-adata_input = scv.read("../../fig3/larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad")
+adata = scv.read("../../fig3/data/larry.h5ad")
+adata_input = scv.read(
+    "../../fig3/larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad"
+)
 
 adata_input.layers["raw_spliced"] = adata[:, adata_input.var_names].layers["spliced"]
 adata_input.layers["raw_unspliced"] = adata[:, adata_input.var_names].layers[
@@ -113,11 +115,7 @@ fig.savefig(
 
 fig, ax = plt.subplots()
 embed_mean = plot_mean_vector_field(
-    adata_model_pos_split[1],
-    adata_input,
-    ax=ax,
-    basis="emb",
-    n_jobs=1
+    adata_model_pos_split[1], adata_input, ax=ax, basis="emb", n_jobs=1
 )
 fig.savefig(
     "fig3_test_vecfield_sub_model1.pdf",

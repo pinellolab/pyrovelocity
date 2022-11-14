@@ -667,7 +667,7 @@ def vector_field_uncertainty(
     v_map_all = []
     if ("u_scale" in pos) and ("s_scale" in pos):  # Gaussian models
         scale = pos["u_scale"] / pos["s_scale"]
-    elif ("u_scale" in pos) and not ("s_scale" in pos):  # Poisson Model 2 
+    elif ("u_scale" in pos) and not ("s_scale" in pos):  # Poisson Model 2
         scale = pos["u_scale"]
     else:  # Poisson Model 1
         scale = 1
