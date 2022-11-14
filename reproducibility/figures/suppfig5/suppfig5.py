@@ -62,11 +62,15 @@ cs.settings.set_figure_params(
     format="png", figsize=[4, 3.5], dpi=75, fontsize=14, pointsize=2
 )
 
-os.mkdir("LARRY_data")
-os.mkdir("LARRY_figure")
+if not os.path.exists("LARRY_data"):
+    os.mkdir("LARRY_data")
+if not os.path.exists("LARRY_figure"):
+    os.mkdir("LARRY_figure")
 
 adata = scv.read("../fig3/data/larry.h5ad")
-adata_input = scv.read("../fig3/larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad")
+adata_input_vel = scv.read("../fig3/larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad")
+scv.tl.velocity_embedding(adata_input_vel, basis="emb")
+
 adata_cospar = scv.read(
     "../fig3/LARRY_data/LARRY_MultiTimeClone_Later_FullSpace0_t*2.0*4.0*6_adata_with_transition_map.h5ad"
 )
@@ -226,10 +230,10 @@ if exclude_day6:
     )
 else:
     diff_all = align_trajectory_diff(
-        [adata_input_all_clone, adata_input, adata_input_all],
+        [adata_input_all_clone, adata_input_vel, adata_input_all],
         [
             adata_input_all_clone.obsm["clone_vector_emb"],
-            adata_input.obsm["velocity_emb"],
+            adata_input_vel.obsm["velocity_emb"],
             embed_mean_all,
         ],
         embed="emb",

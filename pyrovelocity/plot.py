@@ -374,7 +374,7 @@ def plot_posterior_time(
     print(spearmanr(adata.obs["cell_time"].values, 1 - adata.obs.cytotrace.values)[1])
     print(spearmanr(adata.obs["cell_time"].values, 1 - adata.obs.cytotrace.values))
     ax.set_title(
-        "Pyro-Velocity shared time\ncorrelation: %.2f"
+        "Pyro-Velocity shared time\ncorrelation with Cytotrace: %.2f"
         % (spearmanr(adata.obs["cell_time"].values, 1 - adata.obs.cytotrace.values)[0]),
         fontsize=7,
     )
