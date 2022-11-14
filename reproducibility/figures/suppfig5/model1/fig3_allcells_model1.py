@@ -1,45 +1,47 @@
+import os
 import pickle
 
-import cospar as cs
 import matplotlib.pyplot as plt
 import numpy as np
 import scvelo as scv
-from scipy.stats import spearmanr
 
 from pyrovelocity.api import train_model
+from pyrovelocity.data import load_larry
 from pyrovelocity.plot import plot_gene_ranking
 from pyrovelocity.plot import plot_mean_vector_field
 from pyrovelocity.plot import us_rainbowplot
 from pyrovelocity.plot import vector_field_uncertainty
 
 
-cs.logging.print_version()
-cs.settings.verbosity = 2
-cs.settings.data_path = "LARRY_data"  # A relative path to save data.
-cs.settings.figure_path = "LARRY_figure"  # A relative path to save figures.
-cs.settings.set_figure_params(
-    format="png", figsize=[4, 3.5], dpi=75, fontsize=14, pointsize=2
-)
+"""Loads and plots data for all cell types and trains and saves model2 model.
+
+Inputs:
+  "data/larry.h5ad" via load_larry()
+
+Outputs:
+  data:
+    "larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad"
+    "fig3_larry_allcells_top2000_model1.h5ad"
+    "fig3_allcells_data_model1.pkl"
+  models:
+    Fig3_allcells_model1/
+    ├── attr.pkl
+    ├── model_params.pt
+    ├── param_store_test.pt
+    └── var_names.csv
+  figures:
+    "fig3_all_test_volcano_sub_model1.pdf"
+    "fig3_all_test_rainbow_sub_model1.pdf"
+    "fig3_test_vecfield_sub_model1.pdf"
+"""
 
 
-adata_input = scv.read("larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad")
-adata = scv.read("larry_invitro_adata_sub_raw.h5ad")
+###############
+# load data
+###############
 
-adata_cospar = scv.read(
-    "LARRY_MultiTimeClone_Later_FullSpace0_t*2.0*4.0*6_adata_with_transition_map.h5ad"
-)
-adata_cytotrace = scv.read("larry_invitro_adata_sub_raw_withcytotrace.h5ad")
-adata_vel = scv.read("larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad")
-
-cs.pl.fate_potency(
-    adata_cospar,
-    used_Tmap="transition_map",
-    map_backward=True,
-    method="norm-sum",
-    color_bar=True,
-    fate_count=True,
-)
-
+adata = scv.read('../../fig3/data/larry.h5ad')
+adata_input = scv.read("../../fig3/larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad")
 
 adata_input.layers["raw_spliced"] = adata[:, adata_input.var_names].layers["spliced"]
 adata_input.layers["raw_unspliced"] = adata[:, adata_input.var_names].layers[
@@ -48,15 +50,18 @@ adata_input.layers["raw_unspliced"] = adata[:, adata_input.var_names].layers[
 adata_input.obs["u_lib_size_raw"] = adata_input.layers["unspliced"].toarray().sum(-1)
 adata_input.obs["s_lib_size_raw"] = adata_input.layers["spliced"].toarray().sum(-1)
 
+#############
+# train model
+#############
+
 adata_model_pos_split = train_model(
     adata_input,
     max_epochs=1000,
     svi_train=True,
-    lr=0.01,
+    log_every=100,
     patient_init=45,
     batch_size=4000,
     use_gpu=1,
-    log_every=100,
     patient_improve=1e-3,
     model_type="auto",
     guide_type="auto_t0_constraint",
@@ -66,78 +71,27 @@ adata_model_pos_split = train_model(
     include_prior=True,
 )
 
-pos = adata_model_pos_split[1]
-scale = 1
-# pos_ut = pos['ut'].mean(axis=0)
-# pos_st = pos['st'].mean(axis=0)
-# pos_u = pos['u'].mean(axis=0)
-# pos_s = pos['s'].mean(axis=0)
-# pos_v = pos['beta'].mean(0)[0]* pos_ut / scale - pos['gamma'].mean(0)[0] * pos_st
-pos_time = pos["cell_time"].mean(0)
-
-gold_standard = adata_cospar.obs["fate_potency"].values
-(select,) = np.where(~np.isnan(gold_standard))
-print(spearmanr(pos_time[select], gold_standard[select]))
-
-# velocity_samples = pos['beta_k'] * pos['ut'] / scale - pos['gamma_k'] * pos['st']
+v_map_all, embeds_radian, fdri = vector_field_uncertainty(
+    adata_input, adata_model_pos_split[1], basis="emb", denoised=False, n_jobs=1
+)
 
 
-def check_shared_time(adata_model_pos, adata):
-    gold_standard = adata_cospar.obs["fate_potency"].values
-    (select,) = np.where(~np.isnan(gold_standard))
-    print(spearmanr(pos_time[select], gold_standard[select]))
-
-    adata.obs["cell_time"] = adata_model_pos[1]["cell_time"].squeeze().mean(0)
-    adata.obs["1-Cytotrace"] = 1 - adata_cytotrace.obs["cytotrace"]
-    fig, ax = plt.subplots(1, 4)
-    fig.set_size_inches(15, 3)
-    scv.tl.latent_time(adata_vel)
-    scv.pl.scatter(
-        adata_vel,
-        color="latent_time",
-        show=False,
-        ax=ax[0],
-        title="scvelo %.2f"
-        % spearmanr(1 - adata_cytotrace.obs.cytotrace, adata.obs.latent_time)[0],
-        cmap="RdBu_r",
-        basis="emb",
-    )
-    scv.pl.scatter(
-        adata,
-        color="cell_time",
-        show=False,
-        basis="emb",
-        ax=ax[1],
-        title="pyro %.2f"
-        % spearmanr(1 - adata_cytotrace.obs.cytotrace, adata.obs.cell_time)[0],
-    )
-    scv.pl.scatter(adata, color="1-Cytotrace", show=False, ax=ax[2], basis="emb")
-    scv.pl.scatter(
-        adata_cospar, color="fate_potency", show=False, ax=ax[3], basis="emb"
-    )
-    print(spearmanr(adata.obs.cell_time, adata_vel.obs.latent_time))
-    fig.savefig(
-        "fig3_all_test_sub_model1.pdf",
-        facecolor=fig.get_facecolor(),
-        bbox_inches="tight",
-        edgecolor="none",
-        dpi=300,
-    )
-
-
-check_shared_time(adata_model_pos_split, adata_input)
+##################
+# generate figures
+##################
 
 fig, ax = plt.subplots()
 volcano_data, _ = plot_gene_ranking(
     [adata_model_pos_split[1]], [adata_input], ax=ax, time_correlation_with="st"
 )
 fig.savefig(
-    "fig3_all_test_volcano_sub.pdf",
+    "fig3_all_test_volcano_sub_model1.pdf",
     facecolor=fig.get_facecolor(),
     bbox_inches="tight",
     edgecolor="none",
     dpi=300,
 )
+
 fig = us_rainbowplot(
     volcano_data.sort_values("mean_mae", ascending=False)
     .head(50)
@@ -149,7 +103,6 @@ fig = us_rainbowplot(
     data=["st", "ut"],
     cell_state="state_info",
 )
-# fig = us_rainbowplot(['Grin2b', 'Map1b', 'Ppp3ca'],
 fig.savefig(
     "fig3_all_test_rainbow_sub_model1.pdf",
     facecolor=fig.get_facecolor(),
@@ -160,7 +113,11 @@ fig.savefig(
 
 fig, ax = plt.subplots()
 embed_mean = plot_mean_vector_field(
-    adata_model_pos_split[1], adata_input, ax=ax, basis="emb"
+    adata_model_pos_split[1],
+    adata_input,
+    ax=ax,
+    basis="emb",
+    n_jobs=1
 )
 fig.savefig(
     "fig3_test_vecfield_sub_model1.pdf",
@@ -170,14 +127,11 @@ fig.savefig(
     dpi=300,
 )
 
-v_map_all, embeds_radian, fdri = vector_field_uncertainty(
-    adata_input, adata_model_pos_split[1], basis="emb", denoised=False, n_jobs=1
-)
 
-fig, ax = plt.subplots()
-embed_mean = plot_mean_vector_field(
-    adata_model_pos_split[1], adata_input, ax=ax, basis="emb"
-)
+##################
+# save checkpoints
+##################
+
 
 adata_input.write("fig3_larry_allcells_top2000_model1.h5ad")
 adata_model_pos_split[0].save("Fig3_allcells_model1", overwrite=True)
@@ -189,7 +143,6 @@ result_dict = {
     "fdri": fdri,
     "embed_mean": embed_mean,
 }
-
 
 with open("fig3_allcells_data_model1.pkl", "wb") as f:
     pickle.dump(result_dict, f)

@@ -58,7 +58,6 @@ adata_input.layers["raw_spliced"] = adata[:, adata_input.var_names].layers["spli
 adata_input.layers["raw_unspliced"] = adata[:, adata_input.var_names].layers[
     "unspliced"
 ]
-
 adata_input.obs["u_lib_size_raw"] = adata_input.layers["unspliced"].toarray().sum(-1)
 adata_input.obs["s_lib_size_raw"] = adata_input.layers["spliced"].toarray().sum(-1)
 

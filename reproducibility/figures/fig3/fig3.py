@@ -57,7 +57,9 @@ cs.settings.set_figure_params(
 )
 
 adata = load_larry()
-adata_input = scv.read("larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad")
+adata_input_vel = scv.read("larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad")
+scv.tl.velocity_embedding(adata_input_vel, basis="emb")
+
 adata_cospar = scv.read(
     "LARRY_data/LARRY_MultiTimeClone_Later_FullSpace0_t*2.0*4.0*6_adata_with_transition_map.h5ad"
 )
@@ -220,7 +222,7 @@ else:
         [adata_input_all_clone, adata_input, adata_input_all],
         [
             adata_input_all_clone.obsm["clone_vector_emb"],
-            adata_input.obsm["velocity_emb"],
+            adata_input_vel.obsm["velocity_emb"],
             embed_mean_all,
         ],
         embed="emb",
@@ -726,7 +728,8 @@ scv.pl.velocity_embedding_grid(
 )
 
 scv.pl.velocity_embedding_grid(
-    adata_input_all,
+    #adata_input_all,
+    adata_input_vel,
     show=False,
     s=dotsize,
     density=density,

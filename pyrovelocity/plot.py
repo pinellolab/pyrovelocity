@@ -374,7 +374,7 @@ def plot_posterior_time(
     print(spearmanr(adata.obs["cell_time"].values, 1 - adata.obs.cytotrace.values)[1])
     print(spearmanr(adata.obs["cell_time"].values, 1 - adata.obs.cytotrace.values))
     ax.set_title(
-        "Pyro-Velocity shared time\ncorrelation: %.2f"
+        "Pyro-Velocity shared time\ncorrelation with Cytotrace: %.2f"
         % (spearmanr(adata.obs["cell_time"].values, 1 - adata.obs.cytotrace.values)[0]),
         fontsize=7,
     )
@@ -665,9 +665,11 @@ def vector_field_uncertainty(
     # fig.set_size_inches(16, 36)
     # ax = ax.flatten()
     v_map_all = []
-    if ("u_scale" in pos) and ("s_scale" in pos):
+    if ("u_scale" in pos) and ("s_scale" in pos):  # Gaussian models
         scale = pos["u_scale"] / pos["s_scale"]
-    else:
+    elif ("u_scale" in pos) and not ("s_scale" in pos):  # Poisson Model 2 
+        scale = pos["u_scale"]
+    else:  # Poisson Model 1
         scale = 1
 
     if "beta_k" in pos:

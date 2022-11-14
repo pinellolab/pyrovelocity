@@ -43,12 +43,11 @@ conda config --add channels conda-forge
 conda config --set channel_priority flexible
 ```
 
-````python
 After that, install the _pyrovelocity_ package in one mamba command:
 
 ```bash
 mamba create -n pyrovelocity_bioconda -c bioconda pyrovelocity
-````
+```
 
 This step takes about 6-8 minutes depending on the network speed. If you prefer to use conda environment configurations, see the `conda` subfolder for installation with _prefix_ to specify the installation path, such as:
 
@@ -103,6 +102,12 @@ kallisto pipeline.
 Starting from these count tables we show below a minimal step-by-step
 workflow to illustrate the main features of Pyro-Velocity in a Jupyter
 Notebook:
+
+
+Step 0. Even though _pyrovelocity_ is a cluster-free method to evaluate uncertainty 
+of cell fate, it will dependend on 2 dimensional embedding results for evaluation of 
+uncertainty and generate visualization, we would suggest run your new datasets using
+[scanpy tutorial](https://scanpy-tutorials.readthedocs.io/en/latest/pbmc3k.html). 
 
 Step 1. Load your data, load your data(e.g. _local_file.h5ad_) with
 scvelo by using:
@@ -364,3 +369,23 @@ across posterior samples of shared time.
 The full example can be reproduced using the
 [LARRY](https://github.com/pinellolab/pyrovelocity/blob/master/docs/source/notebooks/larry.ipynb)
 jupyter notebook.
+
+# TroubleShooting
+
+## TypeError: fate_potency() got an unexpected keyword argument 'used_Tmap'
+
+Please use specific _cospar_ version:
+
+```bash
+pip install cospar==0.1.9
+``` 
+
+
+## Cuda error: no kernel image is available for execution on the device
+
+Please install the specific cuda-enabled pytorch version:
+
+```bash 
+pip3 install torch==1.8.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
+``` 
+
