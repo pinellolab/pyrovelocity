@@ -1,0 +1,22 @@
+schema: '2.0'
+stages:
+  data_load:
+    cmd: python data_load.py --config=config.yaml
+    deps:
+    - path: data_load.py
+      md5: 73a0b0f280bfb7085f7c3e6c21f7dc53
+      size: 1957
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+        data_external.pancreas:
+          data_file: endocrinogenesis_day15.h5ad
+          dl_root: data/Pancreas
+          dl_path: data/Pancreas/endocrinogenesis_day15.h5ad
+          rel_path: data/external/endocrinogenesis_day15.h5ad
+          url: https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad
+    outs:
+    - path: data/external/endocrinogenesis_day15.h5ad
+      md5: 783ec70c72fd895eeea28c07735efc27
+      size: 52477898
