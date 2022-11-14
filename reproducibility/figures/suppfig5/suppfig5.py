@@ -62,6 +62,9 @@ cs.settings.set_figure_params(
     format="png", figsize=[4, 3.5], dpi=75, fontsize=14, pointsize=2
 )
 
+os.mkdir("LARRY_data")
+os.mkdir("LARRY_figure")
+
 adata = scv.read("../fig3/data/larry.h5ad")
 adata_input = scv.read("../fig3/larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad")
 adata_cospar = scv.read(
@@ -80,25 +83,25 @@ cs.pl.fate_potency(
     fate_count=True,
 )
 
-with open("fig3_mono_data_model2.pkl", "rb") as pk:
+with open("model2/fig3_mono_data_model2.pkl", "rb") as pk:
     result_dict = pickle.load(pk)
 adata_model_pos_mono = result_dict["adata_model_pos"]
 v_map_all_mono = result_dict["v_map_all"]
 embeds_radian_mono = result_dict["embeds_radian"]
 fdri_mono = result_dict["fdri"]
 embed_mean_mono = result_dict["embed_mean"]
-adata_input_mono = scv.read("fig3_mono_processed_model2.h5ad")
+adata_input_mono = scv.read("model2/fig3_mono_processed_model2.h5ad")
 
-with open("fig3_neu_data_model2.pkl", "rb") as pk:
+with open("model2/fig3_neu_data_model2.pkl", "rb") as pk:
     result_dict = pickle.load(pk)
 adata_model_pos_neu = result_dict["adata_model_pos"]
 v_map_all_neu = result_dict["v_map_all"]
 embeds_radian_neu = result_dict["embeds_radian"]
 fdri_neu = result_dict["fdri"]
 embed_mean_neu = result_dict["embed_mean"]
-adata_input_neu = scv.read("fig3_neu_processed_model2.h5ad")
+adata_input_neu = scv.read("model2/fig3_neu_processed_model2.h5ad")
 
-with open("fig3_uni_bifurcation_data_model1.pkl", "rb") as pk:
+with open("model1/fig3_uni_bifurcation_data_model1.pkl", "rb") as pk:
     result_dict = pickle.load(pk)
 
 adata_model_pos = result_dict["adata_model_pos"]
@@ -106,29 +109,29 @@ v_map_all = result_dict["v_map_all"]
 embeds_radian = result_dict["embeds_radian"]
 fdri = result_dict["fdri"]
 embed_mean = result_dict["embed_mean"]
-adata_input = scv.read("fig3_larry_uni_bifurcation_top2000_model1.h5ad")
+adata_input = scv.read("model1/fig3_larry_uni_bifurcation_top2000_model1.h5ad")
 
-with open("fig3_allcells_data_model1.pkl", "rb") as pk:
+with open("model1/fig3_allcells_data_model1.pkl", "rb") as pk:
     result_dict = pickle.load(pk)
 adata_model_pos_all = result_dict["adata_model_pos"]
 v_map_all_all = result_dict["v_map_all"]
 embeds_radian_all = result_dict["embeds_radian"]
 fdri_all = result_dict["fdri"]
 embed_mean_all = result_dict["embed_mean"]
-adata_input_all = scv.read("fig3_larry_allcells_top2000_model1.h5ad")
+adata_input_all = scv.read("model1/fig3_larry_allcells_top2000_model1.h5ad")
 
 
 adata_input_neu_clone = get_clone_trajectory(adata_input_neu)
 adata_input_mono_clone = get_clone_trajectory(adata_input_mono)
 adata_input_uni_clone = adata_input_neu_clone.concatenate(adata_input_mono_clone)
 
-if os.path.exists("global_gold_standard2.h5ad"):
-    adata_input_all_clone = scv.read("global_gold_standard2.h5ad")
+if os.path.exists("../fig3/global_gold_standard2.h5ad"):
+    adata_input_all_clone = scv.read("../fig3/global_gold_standard2.h5ad")
 else:
     adata_reduced_gene_for_clone_vec = adata[:, adata_input.var_names].copy()
     print(adata_reduced_gene_for_clone_vec.shape)
     adata_input_all_clone = get_clone_trajectory(adata_reduced_gene_for_clone_vec)
-    adata_input_all_clone.write("global_gold_standard2.h5ad")
+    adata_input_all_clone.write("../fig3/global_gold_standard2.h5ad")
 
 adata_input_all_clone.obsm["clone_vector_emb"][
     np.isnan(adata_input_all_clone.obsm["clone_vector_emb"])
