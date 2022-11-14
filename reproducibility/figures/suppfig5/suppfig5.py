@@ -5,18 +5,12 @@ import cospar as cs
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import pickle
-
-import cospar as cs
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 import scvelo as scv
 import seaborn as sns
 from scipy.spatial import distance
 from scipy.stats import spearmanr
-
 from scvelo.plotting.velocity_embedding_grid import default_arrow
+
 from pyrovelocity.data import load_larry
 from pyrovelocity.plot import align_trajectory_diff
 from pyrovelocity.plot import get_clone_trajectory
@@ -68,7 +62,9 @@ if not os.path.exists("LARRY_figure"):
     os.mkdir("LARRY_figure")
 
 adata = scv.read("../fig3/data/larry.h5ad")
-adata_input_vel = scv.read("../fig3/larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad")
+adata_input_vel = scv.read(
+    "../fig3/larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad"
+)
 scv.tl.velocity_embedding(adata_input_vel, basis="emb")
 
 adata_cospar = scv.read(

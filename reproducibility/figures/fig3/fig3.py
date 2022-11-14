@@ -728,7 +728,7 @@ scv.pl.velocity_embedding_grid(
 )
 
 scv.pl.velocity_embedding_grid(
-    #adata_input_all,
+    # adata_input_all,
     adata_input_vel,
     show=False,
     s=dotsize,
