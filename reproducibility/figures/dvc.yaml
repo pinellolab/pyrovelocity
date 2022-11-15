@@ -11,8 +11,11 @@ stages:
           - base
           - data_external.scvelo.pancreas
           - data_external.scvelo.pbmc68k
+          - data_external.pyrovelocity.larry
     outs:
       - ${data_external.scvelo.pancreas.rel_path}:
           persist: true
       - ${data_external.scvelo.pbmc68k.rel_path}:
+          persist: true
+      - ${data_external.pyrovelocity.larry.rel_path}:
           persist: true

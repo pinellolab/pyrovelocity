@@ -24,12 +24,18 @@ stages:
     cmd: python data_download.py --config=config.yaml
     deps:
     - path: data_download.py
-      md5: f3b5024beb58397bd417715b4945e11c
-      size: 2239
+      md5: c2a39526972488fbc735ad3f943b0812
+      size: 3372
     params:
       config.yaml:
         base:
           log_level: INFO
+        data_external.pyrovelocity.larry:
+          data_file: larry.h5ad
+          dl_root: data/external
+          dl_path: data/external/larry.h5ad
+          rel_path: data/external/larry.h5ad
+          url: https://ndownloader.figshare.com/files/37028569
         data_external.scvelo.pancreas:
           data_file: endocrinogenesis_day15.h5ad
           dl_root: data/Pancreas
@@ -46,6 +52,9 @@ stages:
     - path: data/external/endocrinogenesis_day15.h5ad
       md5: 783ec70c72fd895eeea28c07735efc27
       size: 52477898
+    - path: data/external/larry.h5ad
+      md5: d618305c0ee0e41570b1147e63df332a
+      size: 1525338690
     - path: data/external/pbmc68k.h5ad
       md5: ee0953e5fb994bc3cec05d4cf638ac79
       size: 123707283
