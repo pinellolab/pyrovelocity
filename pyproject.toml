@@ -109,7 +109,8 @@ show_error_context = true
 ignore_missing_imports = true
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+# requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core==1.1"]
 build-backend = "poetry.core.masonry.api"
 
 # plan to upgrade torch installation to tool.poetry.source
