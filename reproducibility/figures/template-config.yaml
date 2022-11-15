@@ -7,6 +7,7 @@ paths:
   output: output
 data_external:
   root_path: ${..paths.data}/external
+  sources: [scvelo, pyrovelocity]
   scvelo:
     download: [pancreas, pbmc68k]
     sources:
@@ -24,5 +25,15 @@ data_external:
       dl_path: ${.dl_root}/${.data_file}
       rel_path: ${data_external.root_path}/${.data_file}
       url: ${..sources.figshare_root_url}/27686886
+  pyrovelocity:
+    download: [larry]
+    sources:
+      figshare_root_url: https://ndownloader.figshare.com/files
+    larry:
+      data_file: larry.h5ad
+      dl_root: ${data_external.root_path}
+      dl_path: ${.dl_root}/${.data_file}
+      rel_path: ${data_external.root_path}/${.data_file}
+      url: ${..sources.figshare_root_url}/37028569
 data_processed:
   root_path: ${..paths.data}/processed
