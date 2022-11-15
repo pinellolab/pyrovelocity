@@ -1,4 +1,5 @@
 import functools
+import logging
 import pdb
 from inspect import getmembers
 from pprint import pprint
@@ -8,6 +9,8 @@ from typing import Tuple
 import numpy as np
 import seaborn as sns
 import torch
+import colorlog
+from pytorch_lightning.utilities import rank_zero_only
 from scipy.sparse import issparse
 from sklearn.decomposition import PCA
 
@@ -397,6 +400,55 @@ def mae_evaluate(pos, adata):
     ax.tick_params(axis="x", rotation=90)
     print(df.groupby("label").mean())
     return df
+
+
+def get_pylogger(name=__name__, log_level="DEBUG") -> logging.Logger:
+    """Initializes multi-GPU-friendly python command line logger."""
+
+    numeric_level = getattr(logging, log_level.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError("Invalid log level: %s" % log_level)
+    logging.basicConfig(level=numeric_level)
+
+    formatter = colorlog.ColoredFormatter(
+        "%(log_color)s%(levelname)s:%(name)s: %(message)s"
+        # "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
+        # datefmt=None,
+        # reset=True,
+        # log_colors={
+        #     "debug": "cyan",
+        #     "info": "green",
+        #     "warning": "yellow",
+        #     "error": "red",
+        #     "exception": "red",
+        #     "fatal": "red",
+        #     "critical": "red",
+        #     },
+        )
+
+    # handler = logging.StreamHandler()
+    handler = colorlog.StreamHandler()
+    handler.setFormatter(formatter)
+    logger = colorlog.getLogger(name)
+    logger.addHandler(handler)
+    logger.propagate = False
+    
+    # this ensures all logging levels get marked with the rank zero decorator
+    # otherwise logs would get multiplied for each GPU process in multi-GPU setup
+    logging_levels = (
+        "debug",
+        "info",
+        "warning",
+        "error",
+        "exception",
+        "fatal",
+        "critical",
+    )
+    for level in logging_levels:
+        setattr(logger, level, rank_zero_only(getattr(logger, level)))
+
+    return logger
+
 
 def attributes(obj):
     """
