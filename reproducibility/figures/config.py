@@ -1,20 +1,20 @@
 import argparse
 from pathlib import Path
-from typing import Sequence
+from typing import Sequence, Union
 from typing import Text
 
 import rich.console
 import rich.pretty
 import rich.syntax
 import rich.tree
-from omegaconf import DictConfig
+from omegaconf import DictConfig, ListConfig
 from omegaconf import OmegaConf
 from pytorch_lightning.utilities import rank_zero_only
 
 from pyrovelocity.utils import get_pylogger
 
 
-def config_setup(config_path: str) -> None:
+def config_setup(config_path: str) -> Union[DictConfig, ListConfig]:
     """Convert template into concrete configuration file.
     Args:
         config_path {Text}: path to config
@@ -22,13 +22,13 @@ def config_setup(config_path: str) -> None:
 
     logger = get_pylogger(name="CONF")
 
-    conf = OmegaConf.load(f"template-{config_path}")
+    template_config_path = config_path.replace("config.yaml", "template-config.yaml")
+    conf = OmegaConf.load(template_config_path)
     with open(config_path, "w") as conf_file:
         OmegaConf.save(config=conf, f=conf_file, resolve=True)
 
     conf = OmegaConf.load(config_path)
     print_config_tree(conf, logger, ())
-
     return conf
 
     # with open(config_path, "r") as conf_file:
