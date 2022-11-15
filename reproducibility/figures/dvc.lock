@@ -4,8 +4,8 @@ stages:
     cmd: python data_load.py --config=config.yaml
     deps:
     - path: data_load.py
-      md5: 73a0b0f280bfb7085f7c3e6c21f7dc53
-      size: 1957
+      md5: 719e8518cc12d92ca3fd60bc019ab1c1
+      size: 1956
     params:
       config.yaml:
         base:
@@ -20,3 +20,32 @@ stages:
     - path: data/external/endocrinogenesis_day15.h5ad
       md5: 783ec70c72fd895eeea28c07735efc27
       size: 52477898
+  data_download:
+    cmd: python data_download.py --config=config.yaml
+    deps:
+    - path: data_download.py
+      md5: f3b5024beb58397bd417715b4945e11c
+      size: 2239
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+        data_external.scvelo.pancreas:
+          data_file: endocrinogenesis_day15.h5ad
+          dl_root: data/Pancreas
+          dl_path: data/Pancreas/endocrinogenesis_day15.h5ad
+          rel_path: data/external/endocrinogenesis_day15.h5ad
+          url: https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad
+        data_external.scvelo.pbmc68k:
+          data_file: pbmc68k.h5ad
+          dl_root: data/PBMC
+          dl_path: data/PBMC/pbmc68k.h5ad
+          rel_path: data/external/pbmc68k.h5ad
+          url: https://ndownloader.figshare.com/files/27686886
+    outs:
+    - path: data/external/endocrinogenesis_day15.h5ad
+      md5: 783ec70c72fd895eeea28c07735efc27
+      size: 52477898
+    - path: data/external/pbmc68k.h5ad
+      md5: ee0953e5fb994bc3cec05d4cf638ac79
+      size: 123707283

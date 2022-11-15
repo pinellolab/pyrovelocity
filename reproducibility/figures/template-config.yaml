@@ -7,20 +7,22 @@ paths:
   output: output
 data_external:
   root_path: ${..paths.data}/external
-  sources:
-    figshare_root_url: https://ndownloader.figshare.com/files
-    scvelo_root_url: https://github.com/theislab/scvelo_notebooks/raw/master
-  pancreas:
-    data_file: endocrinogenesis_day15.h5ad
-    dl_root: data/Pancreas
-    dl_path: ${.dl_root}/${.data_file}
-    rel_path: ${..root_path}/${.data_file}
-    url: ${..sources.scvelo_root_url}/${.dl_path}
-  pbmc:
-    data_file: pbmc68k.h5ad
-    dl_root: data/PBMC
-    dl_path: ${.dl_root}/${.data_file}
-    rel_path: ${..root_path}/${.data_file}
-    url: ${..sources.figshare_root_url}/27686886
+  scvelo:
+    download: [pancreas, pbmc68k]
+    sources:
+      figshare_root_url: https://ndownloader.figshare.com/files
+      scvelo_root_url: https://github.com/theislab/scvelo_notebooks/raw/master
+    pancreas:
+      data_file: endocrinogenesis_day15.h5ad
+      dl_root: data/Pancreas
+      dl_path: ${.dl_root}/${.data_file}
+      rel_path: ${data_external.root_path}/${.data_file}
+      url: ${..sources.scvelo_root_url}/${.dl_path}
+    pbmc68k:
+      data_file: pbmc68k.h5ad
+      dl_root: data/PBMC
+      dl_path: ${.dl_root}/${.data_file}
+      rel_path: ${data_external.root_path}/${.data_file}
+      url: ${..sources.figshare_root_url}/27686886
 data_processed:
   root_path: ${..paths.data}/processed
