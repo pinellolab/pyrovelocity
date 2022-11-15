@@ -1,5 +1,8 @@
 import functools
 import pdb
+from inspect import getmembers
+from pprint import pprint
+from types import FunctionType
 from typing import Tuple
 
 import numpy as np
@@ -394,3 +397,23 @@ def mae_evaluate(pos, adata):
     ax.tick_params(axis="x", rotation=90)
     print(df.groupby("label").mean())
     return df
+
+def attributes(obj):
+    """
+    get object attributes
+    """
+    disallowed_names = {
+        name for name, value in getmembers(type(obj)) if isinstance(value, FunctionType)
+    }
+    return {
+        name: getattr(obj, name)
+        for name in dir(obj)
+        if name[0] != "_" and name not in disallowed_names and hasattr(obj, name)
+    }
+
+
+def print_attributes(obj):
+    """
+    print object attributes
+    """
+    pprint(attributes(obj))
