@@ -83,6 +83,7 @@ def load_data(
 
     return adata
 
+
 def load_pbmc(
     data: str = None,
     processed_path: str = "pbmc_processed.h5ad",
@@ -96,10 +97,7 @@ def load_pbmc(
     else:
         if data is None:
             adata = scv.datasets.pbmc68k()
-        elif (
-            os.path.isfile(data)
-            and os.access(data, os.R_OK)
-        ): 
+        elif os.path.isfile(data) and os.access(data, os.R_OK):
             adata = scv.read(data)
         adata_all = adata.copy()
         adata.obsm["X_tsne"][:, 0] *= -1
@@ -126,8 +124,9 @@ def load_pbmc(
             adata_sub.layers["raw_spliced"].sum(axis=-1), dtype=np.float32
         ).flatten()
         adata_sub.write(processed_path)
-    
+
     return adata_sub
+
 
 def load_larry(file_path: str = "data/larry.h5ad") -> anndata._core.anndata.AnnData:
     """In vitro Hemotopoiesis Larry datasets
