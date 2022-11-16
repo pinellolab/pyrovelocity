@@ -19,3 +19,20 @@ stages:
           persist: true
       - ${data_external.pyrovelocity.larry.rel_path}:
           persist: true
+
+  preprocess:
+    cmd: python preprocess.py --config=config.yaml
+    deps:
+      - preprocess.py
+      - ${data_external.scvelo.pancreas.rel_path}
+      - ${data_external.scvelo.pbmc68k.rel_path}
+    params:
+      - config.yaml:
+          - base
+          - data_external.scvelo.pancreas
+          - data_external.scvelo.pbmc68k
+    outs:
+      - ${data_external.scvelo.pancreas.derived.rel_path}:
+          persist: true
+      - ${data_external.scvelo.pbmc68k.derived.rel_path}:
+          persist: true
