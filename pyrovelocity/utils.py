@@ -405,11 +405,6 @@ def mae_evaluate(pos, adata):
 def get_pylogger(name=__name__, log_level="DEBUG") -> logging.Logger:
     """Initializes multi-GPU-friendly python command line logger."""
 
-    numeric_level = getattr(logging, log_level.upper(), None)
-    if not isinstance(numeric_level, int):
-        raise ValueError("Invalid log level: %s" % log_level)
-    logging.basicConfig(level=numeric_level)
-
     formatter = colorlog.ColoredFormatter(
         "%(log_color)s%(levelname)s:%(name)s: %(message)s"
         # "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
@@ -426,10 +421,10 @@ def get_pylogger(name=__name__, log_level="DEBUG") -> logging.Logger:
         #     },
     )
 
-    # handler = logging.StreamHandler()
     handler = colorlog.StreamHandler()
     handler.setFormatter(formatter)
     logger = colorlog.getLogger(name)
+    logger.setLevel(log_level)
     logger.addHandler(handler)
     logger.propagate = False
 
