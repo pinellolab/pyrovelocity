@@ -73,10 +73,10 @@ def main(config_path: str) -> None:
     logger.info(
         f"\n\nVerifying existence of paths for:\n\n"
         f"  external data: {conf.data_external.root_path}\n"
-        f"  processed data: {conf.data_processed.root_path}\n"
+        f"  processed data: {conf.data_external.processed_path}\n"
     )
     Path(conf.data_external.root_path).mkdir(parents=True, exist_ok=True)
-    Path(conf.data_processed.root_path).mkdir(parents=True, exist_ok=True)
+    Path(conf.data_external.processed_path).mkdir(parents=True, exist_ok=True)
 
     download_datasets(conf.data_external, logger)
 
