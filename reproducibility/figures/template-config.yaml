@@ -7,9 +7,11 @@ paths:
   output: output
 data_external:
   root_path: ${..paths.data}/external
+  processed_path: ${..paths.data}/processed
   sources: [scvelo, pyrovelocity]
   scvelo:
     download: [pancreas, pbmc68k]
+    process: [pancreas, pbmc68k]
     sources:
       figshare_root_url: https://ndownloader.figshare.com/files
       scvelo_root_url: https://github.com/theislab/scvelo_notebooks/raw/master
@@ -19,14 +21,21 @@ data_external:
       dl_path: ${.dl_root}/${.data_file}
       rel_path: ${data_external.root_path}/${.data_file}
       url: ${..sources.scvelo_root_url}/${.dl_path}
+      derived:
+        process_method: load_data
+        rel_path: ${data_external.processed_path}/pancreas_processed.h5ad
     pbmc68k:
       data_file: pbmc68k.h5ad
       dl_root: data/PBMC
       dl_path: ${.dl_root}/${.data_file}
       rel_path: ${data_external.root_path}/${.data_file}
       url: ${..sources.figshare_root_url}/27686886
+      derived:
+        process_method: load_pbmc
+        rel_path: ${data_external.processed_path}/pbmc_processed.h5ad
   pyrovelocity:
     download: [larry]
+    process: []
     sources:
       figshare_root_url: https://ndownloader.figshare.com/files
     larry:
@@ -35,5 +44,3 @@ data_external:
       dl_path: ${.dl_root}/${.data_file}
       rel_path: ${data_external.root_path}/${.data_file}
       url: ${..sources.figshare_root_url}/37028569
-data_processed:
-  root_path: ${..paths.data}/processed

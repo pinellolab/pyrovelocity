@@ -7,13 +7,17 @@ paths:
   output: output
 data_external:
   root_path: data/external
+  processed_path: data/processed
   sources:
-    - scvelo
-    - pyrovelocity
+  - scvelo
+  - pyrovelocity
   scvelo:
     download:
-      - pancreas
-      - pbmc68k
+    - pancreas
+    - pbmc68k
+    process:
+    - pancreas
+    - pbmc68k
     sources:
       figshare_root_url: https://ndownloader.figshare.com/files
       scvelo_root_url: https://github.com/theislab/scvelo_notebooks/raw/master
@@ -23,15 +27,22 @@ data_external:
       dl_path: data/Pancreas/endocrinogenesis_day15.h5ad
       rel_path: data/external/endocrinogenesis_day15.h5ad
       url: https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad
+      derived:
+        process_method: load_data
+        rel_path: data/processed/pancreas_processed.h5ad
     pbmc68k:
       data_file: pbmc68k.h5ad
       dl_root: data/PBMC
       dl_path: data/PBMC/pbmc68k.h5ad
       rel_path: data/external/pbmc68k.h5ad
       url: https://ndownloader.figshare.com/files/27686886
+      derived:
+        process_method: load_pbmc
+        rel_path: data/processed/pbmc_processed.h5ad
   pyrovelocity:
     download:
-      - larry
+    - larry
+    process: []
     sources:
       figshare_root_url: https://ndownloader.figshare.com/files
     larry:
@@ -40,5 +51,3 @@ data_external:
       dl_path: data/external/larry.h5ad
       rel_path: data/external/larry.h5ad
       url: https://ndownloader.figshare.com/files/37028569
-data_processed:
-  root_path: data/processed
