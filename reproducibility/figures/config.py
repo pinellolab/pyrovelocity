@@ -1,13 +1,15 @@
 import argparse
 from pathlib import Path
-from typing import Sequence, Union
+from typing import Sequence
 from typing import Text
+from typing import Union
 
 import rich.console
 import rich.pretty
 import rich.syntax
 import rich.tree
-from omegaconf import DictConfig, ListConfig
+from omegaconf import DictConfig
+from omegaconf import ListConfig
 from omegaconf import OmegaConf
 from pytorch_lightning.utilities import rank_zero_only
 

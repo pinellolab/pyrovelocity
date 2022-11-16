@@ -47,9 +47,7 @@ def download_datasets(conf: DictConfig, logger: Logger) -> None:
                     try:
                         os.rmdir(conf[source][data_set].dl_root)
                     except OSError as e:
-                        logger.warn(
-                            "%s : %s" % (conf[source][data_set].dl_root, e.strerror)
-                        )
+                        logger.warn(f"{conf[source][data_set].dl_root} : {e.strerror}")
                         pass
 
                 if os.path.isfile(conf[source][data_set].rel_path) and os.access(

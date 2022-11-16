@@ -8,12 +8,12 @@ paths:
 data_external:
   root_path: data/external
   sources:
-  - scvelo
-  - pyrovelocity
+    - scvelo
+    - pyrovelocity
   scvelo:
     download:
-    - pancreas
-    - pbmc68k
+      - pancreas
+      - pbmc68k
     sources:
       figshare_root_url: https://ndownloader.figshare.com/files
       scvelo_root_url: https://github.com/theislab/scvelo_notebooks/raw/master
@@ -31,7 +31,7 @@ data_external:
       url: https://ndownloader.figshare.com/files/27686886
   pyrovelocity:
     download:
-    - larry
+      - larry
     sources:
       figshare_root_url: https://ndownloader.figshare.com/files
     larry:

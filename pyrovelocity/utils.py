@@ -6,10 +6,10 @@ from pprint import pprint
 from types import FunctionType
 from typing import Tuple
 
+import colorlog
 import numpy as np
 import seaborn as sns
 import torch
-import colorlog
 from pytorch_lightning.utilities import rank_zero_only
 from scipy.sparse import issparse
 from sklearn.decomposition import PCA
@@ -424,7 +424,7 @@ def get_pylogger(name=__name__, log_level="DEBUG") -> logging.Logger:
         #     "fatal": "red",
         #     "critical": "red",
         #     },
-        )
+    )
 
     # handler = logging.StreamHandler()
     handler = colorlog.StreamHandler()
@@ -432,7 +432,7 @@ def get_pylogger(name=__name__, log_level="DEBUG") -> logging.Logger:
     logger = colorlog.getLogger(name)
     logger.addHandler(handler)
     logger.propagate = False
-    
+
     # this ensures all logging levels get marked with the rank zero decorator
     # otherwise logs would get multiplied for each GPU process in multi-GPU setup
     logging_levels = (
