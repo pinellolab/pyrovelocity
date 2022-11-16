@@ -29,18 +29,42 @@ def load_data(
     min_shared_counts: int = 30,
     eps: float = 1e-6,
     force: bool = False,
+    processed_path: str = None,
 ) -> anndata._core.anndata.AnnData:
-    if force or (
-        not os.path.exists(f"{data}_scvelo_fitted_{top_n}_{min_shared_counts}.h5ad")
+    """Preprocess data from scvelo.
+
+    Args:
+        data (str, optional): data set name. Defaults to scvelo's "pancreas" data set.
+        top_n (int, optional): number of genes to retain. Defaults to 2000.
+        min_shared_counts (int, optional): minimum shared counts. Defaults to 30.
+        eps (float, optional): tolerance. Defaults to 1e-6.
+        force (bool, optional): force reprocessing. Defaults to False.
+        processed_path (str, optional): path to read/write processed AnnData. Defaults to None.
+
+    Returns:
+        anndata._core.anndata.AnnData: processed AnnData object
+    """
+    if processed_path is None:
+        processed_path = f"{data}_scvelo_fitted_{top_n}_{min_shared_counts}.h5ad"
+
+    # if force or (not os.path.exists(processed_path)):
+    if (
+        os.path.isfile(processed_path)
+        and os.access(processed_path, os.R_OK)
+        and (not force)
     ):
+        adata = read(processed_path)
+    else:
         if data == "pancreas":
             adata = scv.datasets.pancreas()
         elif data == "forebrain":
             adata = scv.datasets.forebrain()
         elif data == "dentategyrus_lamanno":
             adata = scv.datasets.dentategyrus_lamanno()
-        else:
+        elif data == "dentategyrus":
             adata = scv.datasets.dentategyrus()
+        else:
+            adata = read(data)
         adata.layers["raw_unspliced"] = adata.layers["unspliced"]
         adata.layers["raw_spliced"] = adata.layers["spliced"]
         adata.obs["u_lib_size_raw"] = adata.layers["raw_unspliced"].toarray().sum(-1)
@@ -54,10 +78,9 @@ def load_data(
         scv.tl.velocity(adata, mode="dynamical", use_raw=False)
         scv.tl.velocity_graph(adata)
         scv.tl.velocity_embedding(adata)
-        adata.write(f"{data}_scvelo_fitted_{top_n}_{min_shared_counts}.h5ad")
-    else:
-        adata = scv.read(f"{data}_scvelo_fitted_{top_n}_{min_shared_counts}.h5ad")
-    scv.tl.latent_time(adata)
+        scv.tl.latent_time(adata)
+        adata.write(processed_path)
+
     return adata
 
 
