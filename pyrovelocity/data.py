@@ -83,6 +83,51 @@ def load_data(
 
     return adata
 
+def load_pbmc(
+    data: str = None,
+    processed_path: str = "pbmc_processed.h5ad",
+) -> anndata._core.anndata.AnnData:
+    if (
+        os.path.isfile(processed_path)
+        and os.access(processed_path, os.R_OK)
+        and (not force)
+    ):
+        adata = scv.read(processed_path)
+    else:
+        if data is None:
+            adata = scv.datasets.pbmc68k()
+        elif (
+            os.path.isfile(data)
+            and os.access(data, os.R_OK)
+        ): 
+            adata = scv.read(data)
+        adata_all = adata.copy()
+        adata.obsm["X_tsne"][:, 0] *= -1
+        scv.pp.remove_duplicate_cells(adata)
+        scv.pp.filter_and_normalize(adata, min_shared_counts=30, n_top_genes=2000)
+        scv.pp.moments(adata)
+        scv.tl.velocity(adata, mode="stochastic")
+        scv.tl.recover_dynamics(adata, n_jobs=-1)
+        top_genes = adata.var["fit_likelihood"].sort_values(ascending=False).index
+        adata_sub = adata[:, top_genes[:3]].copy()
+        scv.tl.velocity_graph(adata_sub, n_jobs=-1)
+        scv.tl.velocity_embedding(adata_sub)
+
+        adata_sub.layers["raw_spliced"] = adata_all[:, adata_sub.var_names].layers[
+            "spliced"
+        ]
+        adata_sub.layers["raw_unspliced"] = adata_all[:, adata_sub.var_names].layers[
+            "unspliced"
+        ]
+        adata_sub.obs["u_lib_size_raw"] = np.array(
+            adata_sub.layers["raw_unspliced"].sum(axis=-1), dtype=np.float32
+        ).flatten()
+        adata_sub.obs["s_lib_size_raw"] = np.array(
+            adata_sub.layers["raw_spliced"].sum(axis=-1), dtype=np.float32
+        ).flatten()
+        adata_sub.write(processed_path)
+    
+    return adata_sub
 
 def load_larry(file_path: str = "data/larry.h5ad") -> anndata._core.anndata.AnnData:
     """In vitro Hemotopoiesis Larry datasets
