@@ -35,11 +35,17 @@ accelerator_number = 1
 # image
 #########
 
-# image-based
+# vm image-based
+# https://cloud.google.com/deep-learning-vm/docs/images
+# list available images
+# gcloud compute images list \
+#        --project deeplearning-platform-release \
+#        --no-standard-images
+# consider piping to `grep notebooks`
 vm_image_project = "deeplearning-platform-release"
 vm_image_family  = "pytorch-1-12-cu113-notebooks"
 
-# container-based
+# container image-based
 # container_image       = "gcr.io/deeplearning-platform-release/pytorch-gpu"
 # container_tag         = "latest"
 # container_image       = "docker.io/cameronraysmith/notebooks"
