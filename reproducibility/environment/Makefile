@@ -107,6 +107,9 @@ update_os_login: update_gcp_zone
 ssh_gcp:
 	gcloud compute ssh $(TF_VAR_notebooks_name) --command="bash -i -c 'cd /home/jupyter && sudo su jupyter'" -- -t
 
+update_gcp_machine_type:
+	gcloud compute instances set-machine-type $(TF_VAR_notebooks_name) --machine-type $(TF_VAR_notebook_machine_type)
+
 delete_gist:
 	@echo "github gist ID to be removed: $(GITHUB_STARTUP_SCRIPT_GIST_ID)"
 	gh gist delete $(GITHUB_STARTUP_SCRIPT_GIST_ID)
