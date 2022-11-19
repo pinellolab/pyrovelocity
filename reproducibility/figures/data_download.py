@@ -16,50 +16,47 @@ from pyrovelocity.utils import print_attributes
 def download_datasets(conf: DictConfig, logger: Logger) -> None:
     for source in conf.sources:
         for data_set in conf[source].download:
+            data_url = conf[source][data_set].url
+            dl_root = conf[source][data_set].dl_root
+            dl_path = conf[source][data_set].dl_path
+            data_path = conf[source][data_set].rel_path
+
             logger.info(
                 f"\n\nVerifying {data_set} data:\n\n"
-                f"  from url {conf[source][data_set].url}\n"
-                f"  temporarily downloaded to {conf[source][data_set].dl_path}\n"
-                f"  stored in {conf[source][data_set].rel_path}\n"
+                f"  from url {data_url}\n"
+                f"  temporarily downloaded to {dl_path}\n"
+                f"  stored in {data_path}\n"
             )
 
-            if os.path.isfile(conf[source][data_set].rel_path) and os.access(
-                conf[source][data_set].rel_path, os.R_OK
-            ):
-                logger.info(f"{conf[source][data_set].rel_path} exists")
+            if os.path.isfile(data_path) and os.access(data_path, os.R_OK):
+                logger.info(f"{data_path} exists")
             else:
-                logger.info(f"downloading {conf[source][data_set].rel_path} ...")
+                logger.info(f"downloading {data_path} ...")
                 if source == "scvelo":
                     dl_method = getattr(scv.datasets, data_set)
                     adata = dl_method()  # e.g. scv.datasets.pancreas()
                 else:
                     adata = scp.read(
-                        conf[source][data_set].rel_path,
-                        backup_url=conf[source][data_set].url,
+                        data_path,
+                        backup_url=data_url,
                     )
 
                 print_attributes(adata)
-                if conf[source][data_set].dl_path != conf[source][data_set].rel_path:
+                if dl_path != data_path:
                     os.replace(
-                        conf[source][data_set].dl_path,
-                        conf[source][data_set].rel_path,
+                        dl_path,
+                        data_path,
                     )
                     try:
-                        os.rmdir(conf[source][data_set].dl_root)
+                        os.rmdir(dl_root)
                     except OSError as e:
-                        logger.warn(f"{conf[source][data_set].dl_root} : {e.strerror}")
+                        logger.warn(f"{dl_root} : {e.strerror}")
                         pass
 
-                if os.path.isfile(conf[source][data_set].rel_path) and os.access(
-                    conf[source][data_set].rel_path, os.R_OK
-                ):
-                    logger.info(
-                        f"successfully downloaded {conf[source][data_set].rel_path}"
-                    )
+                if os.path.isfile(data_path) and os.access(data_path, os.R_OK):
+                    logger.info(f"successfully downloaded {data_path}")
                 else:
-                    logger.warn(
-                        f"cannot find and read {conf[source][data_set].rel_path}"
-                    )
+                    logger.warn(f"cannot find and read {data_path}")
 
 
 def main(config_path: str) -> None:
