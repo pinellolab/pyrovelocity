@@ -72,6 +72,7 @@ v_map_all, embeds_radian, fdri = vector_field_uncertainty(
 # postprocess
 #############
 
+
 def check_shared_time(adata_model_pos, adata):
     adata.obs["cell_time"] = adata_model_pos[1]["cell_time"].squeeze().mean(0)
     adata.obs["1-Cytotrace"] = 1 - adata.obs["cytotrace"]
@@ -112,8 +113,7 @@ scv.pl.scatter(
     color="latent_time",
     show=False,
     ax=ax[0],
-    title="scvelo %.2f"
-    % spearmanr(1 - adata.obs.cytotrace, adata.obs.latent_time)[0],
+    title="scvelo %.2f" % spearmanr(1 - adata.obs.cytotrace, adata.obs.latent_time)[0],
     cmap="RdBu_r",
     basis="umap",
 )
@@ -187,4 +187,3 @@ fig.savefig(
     edgecolor="none",
     dpi=300,
 )
-

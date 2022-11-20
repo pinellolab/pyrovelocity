@@ -838,13 +838,14 @@ def plot_vector_field_uncertain(
         cbar.ax.locator = MaxNLocator(nbins=2, integer=True)
         cbar.ax.set_xlabel("Angle uncertainty", fontsize=6)
 
+
 def compute_mean_vector_field(
     pos,
     adata,
     basis="umap",
     n_jobs=1,
     spliced="spliced_pyro",
-    raw=False, 
+    raw=False,
 ):
     scv.pp.neighbors(adata, use_rep="pca")
 
@@ -906,6 +907,7 @@ def compute_mean_vector_field(
 
     scv.tl.velocity_embedding(adata, vkey="velocity_pyro", basis=basis)
 
+
 def plot_mean_vector_field(
     pos,
     adata,
@@ -918,12 +920,12 @@ def plot_mean_vector_field(
     raw=False,
 ):
     compute_mean_vector_field(
-            pos=pos,
-            adata=adata,
-            basis=basis,
-            n_jobs=n_jobs,
-            spliced=spliced,
-            raw=raw,
+        pos=pos,
+        adata=adata,
+        basis=basis,
+        n_jobs=n_jobs,
+        spliced=spliced,
+        raw=raw,
     )
     scv.pl.velocity_embedding_grid(
         adata,

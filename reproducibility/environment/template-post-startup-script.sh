@@ -125,7 +125,7 @@ eval "$(pyenv init -)"
     done < initpyenv
     rm initpyenv
 }
-echo 
+echo
 sudo -u $JUPYTER_USER bash -c \
 "$(declare -f install_pyenv); install_pyenv $PYENV_PYTHON_VERSION"
 sudo rm -f /opt/conda/envs/$GITHUB_REPO/bin/poetry
@@ -144,5 +144,5 @@ function install_poetry_env() {
     $HOME/.local/bin/poetry install -n
 }
 sudo -u $JUPYTER_USER bash -c \
-"$(declare -f install_poetry_env);\ 
+"$(declare -f install_poetry_env);\
 install_poetry_env $CONDA_BIN $PYENV_PYTHON_VERSION $REPO_PATH"
