@@ -1,5 +1,5 @@
-import os
 import argparse
+import os
 import pickle
 from logging import Logger
 from pathlib import Path
@@ -45,7 +45,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     volcano_plot = pancreas_model1.volcano_plot
     rainbow_plot = pancreas_model1.rainbow_plot
     vector_field_plot = pancreas_model1.vector_field_plot
-    
+
     logger.info(f"Loading trained data: {trained_data_path}")
     adata = scv.read(trained_data_path)
 
@@ -61,9 +61,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     # shared time plot
 
     if os.path.isfile(shared_time_plot):
-        logger.info(
-            f"{shared_time_plot} exists"
-        )
+        logger.info(f"{shared_time_plot} exists")
     else:
         logger.info(f"Generating figure: {shared_time_plot}")
         fig, ax = plt.subplots(1, 3)
@@ -84,7 +82,8 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             show=False,
             basis="umap",
             ax=ax[1],
-            title="pyro %.2f" % spearmanr(1 - adata.obs.cytotrace, adata.obs.cell_time)[0],
+            title="pyro %.2f"
+            % spearmanr(1 - adata.obs.cytotrace, adata.obs.cell_time)[0],
         )
         scv.pl.scatter(adata, color="1-Cytotrace", show=False, ax=ax[2])
         print(spearmanr(adata.obs.cytotrace, adata.obs.cell_time))
@@ -100,9 +99,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     # volcano plot
 
     if os.path.isfile(volcano_plot):
-        logger.info(
-            f"{volcano_plot} exists"
-        )
+        logger.info(f"{volcano_plot} exists")
     else:
         logger.info(f"Generating figure: {volcano_plot}")
         fig, ax = plt.subplots()
@@ -117,18 +114,16 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             dpi=300,
         )
         print(
-                volcano_data.sort_values("mean_mae", ascending=False)
-                .head(300)
-                .sort_values("time_correlation", ascending=False)
-                .head(8)
-            )
+            volcano_data.sort_values("mean_mae", ascending=False)
+            .head(300)
+            .sort_values("time_correlation", ascending=False)
+            .head(8)
+        )
 
     # rainbow plot
 
     if os.path.isfile(rainbow_plot):
-        logger.info(
-            f"{rainbow_plot} exists"
-        )
+        logger.info(f"{rainbow_plot} exists")
     else:
         logger.info(f"Generating figure: {rainbow_plot}")
         fig = us_rainbowplot(
@@ -152,9 +147,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     # mean vector field plot
 
     if os.path.isfile(vector_field_plot):
-        logger.info(
-            f"{vector_field_plot} exists"
-        )
+        logger.info(f"{vector_field_plot} exists")
     else:
         logger.info(f"Generating figure: {vector_field_plot}")
         fig, ax = plt.subplots()

@@ -8,15 +8,15 @@ data_external:
   root_path: data/external
   processed_path: data/processed
   sources:
-  - scvelo
-  - pyrovelocity
+    - scvelo
+    - pyrovelocity
   scvelo:
     download:
-    - pancreas
-    - pbmc68k
+      - pancreas
+      - pbmc68k
     process:
-    - pancreas
-    - pbmc68k
+      - pancreas
+      - pbmc68k
     sources:
       figshare_root_url: https://ndownloader.figshare.com/files
       scvelo_root_url: https://github.com/theislab/scvelo_notebooks/raw/master
@@ -40,7 +40,7 @@ data_external:
         rel_path: data/processed/pbmc_processed.h5ad
   pyrovelocity:
     download:
-    - larry
+      - larry
     process: []
     sources:
       figshare_root_url: https://ndownloader.figshare.com/files
