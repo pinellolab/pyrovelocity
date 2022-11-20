@@ -49,3 +49,12 @@ model_training:
     model_path: ${.path}/model
     trained_data_path: ${.path}/trained.h5ad
     pyrovelocity_data_path: ${.path}/pyrovelocity.pkl
+reports:
+  figure2:
+    tag: fig2
+    path: ${paths.reports}/${.tag}
+    pancreas_model1:
+      shared_time_plot: ${..path}/${..tag}_pancreas_shared_time.pdf
+      volcano_plot: ${..path}/${..tag}_pancreas_volcano.pdf
+      rainbow_plot: ${..path}/${..tag}_pancreas_rainbow.pdf
+      vector_field_plot: ${..path}/${..tag}_pancreas_vector_field.pdf

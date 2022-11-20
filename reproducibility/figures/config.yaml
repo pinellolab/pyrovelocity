@@ -8,15 +8,15 @@ data_external:
   root_path: data/external
   processed_path: data/processed
   sources:
-    - scvelo
-    - pyrovelocity
+  - scvelo
+  - pyrovelocity
   scvelo:
     download:
-      - pancreas
-      - pbmc68k
+    - pancreas
+    - pbmc68k
     process:
-      - pancreas
-      - pbmc68k
+    - pancreas
+    - pbmc68k
     sources:
       figshare_root_url: https://ndownloader.figshare.com/files
       scvelo_root_url: https://github.com/theislab/scvelo_notebooks/raw/master
@@ -40,7 +40,7 @@ data_external:
         rel_path: data/processed/pbmc_processed.h5ad
   pyrovelocity:
     download:
-      - larry
+    - larry
     process: []
     sources:
       figshare_root_url: https://ndownloader.figshare.com/files
@@ -56,3 +56,12 @@ model_training:
     model_path: models/pancreas_model1/model
     trained_data_path: models/pancreas_model1/trained.h5ad
     pyrovelocity_data_path: models/pancreas_model1/pyrovelocity.pkl
+reports:
+  figure2:
+    tag: fig2
+    path: reports/fig2
+    pancreas_model1:
+      shared_time_plot: reports/fig2/fig2_pancreas_shared_time.pdf
+      volcano_plot: reports/fig2/fig2_pancreas_volcano.pdf
+      rainbow_plot: reports/fig2/fig2_pancreas_rainbow.pdf
+      vector_field_plot: reports/fig2/fig2_pancreas_vector_field.pdf
