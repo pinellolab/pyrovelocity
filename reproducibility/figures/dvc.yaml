@@ -52,3 +52,23 @@ stages:
           persist: true
       - ${model_training.pancreas_model1.pyrovelocity_data_path}:
           persist: true
+
+  plot_pancreas_model1:
+    cmd: python fig2/fig2_pancreas_plot.py --config=config.yaml
+    deps:
+      - fig2/fig2_pancreas_plot.py
+      - ${model_training.pancreas_model1.trained_data_path}
+      - ${model_training.pancreas_model1.pyrovelocity_data_path}
+    params:
+      - config.yaml:
+          - model_training.pancreas_model1
+          - reports.figure2.pancreas_model1
+    outs:
+      - ${reports.figure2.pancreas_model1.shared_time_plot}:
+          persist: true
+      - ${reports.figure2.pancreas_model1.volcano_plot}:
+          persist: true
+      - ${reports.figure2.pancreas_model1.rainbow_plot}:
+          persist: true
+      - ${reports.figure2.pancreas_model1.vector_field_plot}:
+          persist: true

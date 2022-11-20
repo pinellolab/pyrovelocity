@@ -112,8 +112,8 @@ stages:
       md5: 7af1dfb39e8d77008a94b1c17c9c3858
       size: 424767328
     - path: fig2/fig2_pancreas_train.py
-      md5: dd12eec711261e32f957f7a343f7d445
-      size: 4775
+      md5: f353dda90c2342b35c2fc06ef7b7c946
+      size: 4787
     params:
       config.yaml:
         model_training.pancreas_model1:
@@ -132,3 +132,40 @@ stages:
     - path: models/pancreas_model1/trained.h5ad
       md5: bf05b29b0d0573ae6f5b9b4bde7a2bac
       size: 489752680
+  plot_pancreas_model1:
+    cmd: python fig2/fig2_pancreas_plot.py --config=config.yaml
+    deps:
+    - path: fig2/fig2_pancreas_plot.py
+      md5: f3d1dfafd9d7572a541e84ff43fdbbf5
+      size: 5932
+    - path: models/pancreas_model1/pyrovelocity.pkl
+      md5: 757ffff483fb95bb3f08af88aff2bfd4
+      size: 7102321859
+    - path: models/pancreas_model1/trained.h5ad
+      md5: bf05b29b0d0573ae6f5b9b4bde7a2bac
+      size: 489752680
+    params:
+      config.yaml:
+        model_training.pancreas_model1:
+          path: models/pancreas_model1
+          model_path: models/pancreas_model1/model
+          trained_data_path: models/pancreas_model1/trained.h5ad
+          pyrovelocity_data_path: models/pancreas_model1/pyrovelocity.pkl
+        reports.figure2.pancreas_model1:
+          shared_time_plot: reports/fig2/fig2_pancreas_shared_time.pdf
+          volcano_plot: reports/fig2/fig2_pancreas_volcano.pdf
+          rainbow_plot: reports/fig2/fig2_pancreas_rainbow.pdf
+          vector_field_plot: reports/fig2/fig2_pancreas_vector_field.pdf
+    outs:
+    - path: reports/fig2/fig2_pancreas_rainbow.pdf
+      md5: 9f07830302c1eea3643f1bf0e7cd2b7a
+      size: 663311
+    - path: reports/fig2/fig2_pancreas_shared_time.pdf
+      md5: 29e04b9dadd81b00efcc95e285ddf8b5
+      size: 616498
+    - path: reports/fig2/fig2_pancreas_vector_field.pdf
+      md5: 81812deb48b687d34d4d2660e8fb4641
+      size: 408048
+    - path: reports/fig2/fig2_pancreas_volcano.pdf
+      md5: ce1df5f5b991c9c0d9a7f0ebcf55d8db
+      size: 46339
