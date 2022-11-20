@@ -24,8 +24,8 @@ stages:
     cmd: python data_download.py --config=config.yaml
     deps:
     - path: data_download.py
-      md5: 99b070d52299ad63b6b165115c6dbad2
-      size: 3320
+      md5: 6c28129f51067c89efbf28b2cd1f431b
+      size: 2971
     params:
       config.yaml:
         base:
@@ -74,8 +74,8 @@ stages:
       md5: ee0953e5fb994bc3cec05d4cf638ac79
       size: 123707283
     - path: preprocess.py
-      md5: 603d34f52b4dbcf0ae54202fb3932422
-      size: 2529
+      md5: 1d4a14a5ff1328d499e72514ee442e9a
+      size: 2542
     params:
       config.yaml:
         base:
