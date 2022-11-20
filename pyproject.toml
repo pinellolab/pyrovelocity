@@ -41,6 +41,8 @@ adjusttext = "0.7.3"
 astropy = "5.1"
 cospar = "0.1.9"
 colorlog = "^6.7.0"
+omegaconf = "^2.2.3"
+rich = "^12.6.0"
 
 [tool.poetry.group.dev.dependencies]
 Pygments = ">=2.10.0"
@@ -72,7 +74,6 @@ pytest-cov = "^4.0.0"
 pytest-mock = "^3.10.0"
 poethepoet = "^0.16.0"
 dvc-gs = "^2.20.0"
-omegaconf = "^2.2.3"
 
 [tool.poetry.scripts]
 pyrovelocity = "pyrovelocity.pyrovelocity:main"

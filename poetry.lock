@@ -82,7 +82,7 @@ test = ["boltons", "codacy-coverage", "docutils", "joblib", "loompy (>=3.0.5)", 
 name = "antlr4-python3-runtime"
 version = "4.9.3"
 description = "ANTLR 4.9.3 runtime for Python 3.7"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -1717,7 +1717,7 @@ signedtoken = ["cryptography (>=3.0.0)", "pyjwt (>=2.0.0,<3)"]
 name = "omegaconf"
 version = "2.2.3"
 description = "A flexible configuration library"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 
@@ -3329,7 +3329,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8.8"
-content-hash = "36a785491fb55a7eb360acba457d34bbdaff24924141ff7fc79550a038e3ad7b"
+content-hash = "7f7f4e27ca597f29fa73abf1f63049f7e175d58ecbcf8d9e96e59a51b8cb2b40"
 
 [metadata.files]
 absl-py = [
