@@ -105,3 +105,30 @@ stages:
     - path: data/processed/pbmc_processed.h5ad
       md5: 0a1eb8cd91bdee14ea9898b284e53f5e
       size: 412368967
+  train_pancreas_model1:
+    cmd: python fig2/fig2_pancreas_train.py --config=config.yaml
+    deps:
+    - path: data/processed/pancreas_processed.h5ad
+      md5: 7af1dfb39e8d77008a94b1c17c9c3858
+      size: 424767328
+    - path: fig2/fig2_pancreas_train.py
+      md5: dd12eec711261e32f957f7a343f7d445
+      size: 4775
+    params:
+      config.yaml:
+        model_training.pancreas_model1:
+          path: models/pancreas_model1
+          model_path: models/pancreas_model1/model
+          trained_data_path: models/pancreas_model1/trained.h5ad
+          pyrovelocity_data_path: models/pancreas_model1/pyrovelocity.pkl
+    outs:
+    - path: models/pancreas_model1/model
+      md5: a4db44f3261ab3fdbf93590a452bebdb.dir
+      size: 1159443
+      nfiles: 4
+    - path: models/pancreas_model1/pyrovelocity.pkl
+      md5: 757ffff483fb95bb3f08af88aff2bfd4
+      size: 7102321859
+    - path: models/pancreas_model1/trained.h5ad
+      md5: bf05b29b0d0573ae6f5b9b4bde7a2bac
+      size: 489752680
