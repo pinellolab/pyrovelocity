@@ -4,10 +4,10 @@ from logging import Logger
 from pathlib import Path
 from typing import Text
 
-from config import config_setup
 from omegaconf import DictConfig
 
 import pyrovelocity.data
+from pyrovelocity.config import config_setup
 from pyrovelocity.utils import get_pylogger
 from pyrovelocity.utils import print_attributes
 

@@ -6,9 +6,9 @@ from typing import Text
 
 import scanpy as scp
 import scvelo as scv
-from config import config_setup
 from omegaconf import DictConfig
 
+from pyrovelocity.config import config_setup
 from pyrovelocity.utils import get_pylogger
 from pyrovelocity.utils import print_attributes
 
