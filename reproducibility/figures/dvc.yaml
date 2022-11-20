@@ -36,3 +36,19 @@ stages:
           persist: true
       - ${data_external.scvelo.pbmc68k.derived.rel_path}:
           persist: true
+
+  train_pancreas_model1:
+    cmd: python fig2/fig2_pancreas_train.py --config=config.yaml
+    deps:
+      - fig2/fig2_pancreas_train.py
+      - ${data_external.scvelo.pancreas.derived.rel_path}
+    params:
+      - config.yaml:
+          - model_training.pancreas_model1
+    outs:
+      - ${model_training.pancreas_model1.trained_data_path}:
+          persist: true
+      - ${model_training.pancreas_model1.model_path}:
+          persist: true
+      - ${model_training.pancreas_model1.pyrovelocity_data_path}:
+          persist: true

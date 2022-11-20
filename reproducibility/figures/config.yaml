@@ -4,7 +4,6 @@ paths:
   data: data
   models: models
   reports: reports
-  output: output
 data_external:
   root_path: data/external
   processed_path: data/processed
@@ -51,3 +50,9 @@ data_external:
       dl_path: data/external/larry.h5ad
       rel_path: data/external/larry.h5ad
       url: https://ndownloader.figshare.com/files/37028569
+model_training:
+  pancreas_model1:
+    path: models/pancreas_model1
+    model_path: models/pancreas_model1/model
+    trained_data_path: models/pancreas_model1/trained.h5ad
+    pyrovelocity_data_path: models/pancreas_model1/pyrovelocity.pkl

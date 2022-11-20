@@ -4,10 +4,9 @@ paths:
   data: data
   models: models
   reports: reports
-  output: output
 data_external:
-  root_path: ${..paths.data}/external
-  processed_path: ${..paths.data}/processed
+  root_path: ${paths.data}/external
+  processed_path: ${paths.data}/processed
   sources: [scvelo, pyrovelocity]
   scvelo:
     download: [pancreas, pbmc68k]
@@ -44,3 +43,9 @@ data_external:
       dl_path: ${.dl_root}/${.data_file}
       rel_path: ${data_external.root_path}/${.data_file}
       url: ${..sources.figshare_root_url}/37028569
+model_training:
+  pancreas_model1:
+    path: ${paths.models}/pancreas_model1
+    model_path: ${.path}/model
+    trained_data_path: ${.path}/trained.h5ad
+    pyrovelocity_data_path: ${.path}/pyrovelocity.pkl
