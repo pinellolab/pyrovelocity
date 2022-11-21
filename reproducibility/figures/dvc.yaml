@@ -38,10 +38,10 @@ stages:
           persist: true
 
   train_pancreas_model1:
-    cmd: python fig2/fig2_pancreas_train.py --config=config.yaml
+    cmd: python train.py model_training.train=[pancreas_model1]
     deps:
-      - fig2/fig2_pancreas_train.py
-      - ${data_external.scvelo.pancreas.derived.rel_path}
+      - train.py
+      - ${model_training.pancreas_model1.input_data_path}
     params:
       - config.yaml:
           - model_training.pancreas_model1
@@ -71,4 +71,20 @@ stages:
       - ${reports.figure2.pancreas_model1.rainbow_plot}:
           persist: true
       - ${reports.figure2.pancreas_model1.vector_field_plot}:
+          persist: true
+
+  train_pbmc68k_model1:
+    cmd: python train.py model_training.train=[pbmc68k_model1]
+    deps:
+      - train.py
+      - ${model_training.pbmc68k_model1.input_data_path}
+    params:
+      - config.yaml:
+          - model_training.pbmc68k_model1
+    outs:
+      - ${model_training.pbmc68k_model1.trained_data_path}:
+          persist: true
+      - ${model_training.pbmc68k_model1.model_path}:
+          persist: true
+      - ${model_training.pbmc68k_model1.pyrovelocity_data_path}:
           persist: true

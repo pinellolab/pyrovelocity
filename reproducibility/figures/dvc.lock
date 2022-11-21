@@ -1,25 +1,5 @@
 schema: '2.0'
 stages:
-  data_load:
-    cmd: python data_load.py --config=config.yaml
-    deps:
-    - path: data_load.py
-      md5: 719e8518cc12d92ca3fd60bc019ab1c1
-      size: 1956
-    params:
-      config.yaml:
-        base:
-          log_level: INFO
-        data_external.pancreas:
-          data_file: endocrinogenesis_day15.h5ad
-          dl_root: data/Pancreas
-          dl_path: data/Pancreas/endocrinogenesis_day15.h5ad
-          rel_path: data/external/endocrinogenesis_day15.h5ad
-          url: https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad
-    outs:
-    - path: data/external/endocrinogenesis_day15.h5ad
-      md5: 783ec70c72fd895eeea28c07735efc27
-      size: 52477898
   data_download:
     cmd: python data_download.py --config=config.yaml
     deps:
@@ -106,21 +86,30 @@ stages:
       md5: 0a1eb8cd91bdee14ea9898b284e53f5e
       size: 412368967
   train_pancreas_model1:
-    cmd: python fig2/fig2_pancreas_train.py --config=config.yaml
+    cmd: python train.py model_training.train=[pancreas_model1]
     deps:
     - path: data/processed/pancreas_processed.h5ad
       md5: 7af1dfb39e8d77008a94b1c17c9c3858
       size: 424767328
-    - path: fig2/fig2_pancreas_train.py
-      md5: f353dda90c2342b35c2fc06ef7b7c946
-      size: 4787
+    - path: train.py
+      md5: 5d60583fb2dbdd2a38bfbd96e1e11622
+      size: 5467
     params:
       config.yaml:
         model_training.pancreas_model1:
           path: models/pancreas_model1
           model_path: models/pancreas_model1/model
+          input_data_path: data/processed/pancreas_processed.h5ad
           trained_data_path: models/pancreas_model1/trained.h5ad
           pyrovelocity_data_path: models/pancreas_model1/pyrovelocity.pkl
+          vector_field_parameters:
+            basis: umap
+          training_parameters:
+            guide_type: auto_t0_constraint
+            log_every: 1000
+            patient_improve: 0.0001
+            patient_init: 45
+            max_epochs: 4000
     outs:
     - path: models/pancreas_model1/model
       md5: a4db44f3261ab3fdbf93590a452bebdb.dir
@@ -136,8 +125,8 @@ stages:
     cmd: python fig2/fig2_pancreas_plot.py --config=config.yaml
     deps:
     - path: fig2/fig2_pancreas_plot.py
-      md5: f3d1dfafd9d7572a541e84ff43fdbbf5
-      size: 5932
+      md5: 49231e575e0b6962ad80c873308c1731
+      size: 5832
     - path: models/pancreas_model1/pyrovelocity.pkl
       md5: 757ffff483fb95bb3f08af88aff2bfd4
       size: 7102321859
@@ -149,8 +138,17 @@ stages:
         model_training.pancreas_model1:
           path: models/pancreas_model1
           model_path: models/pancreas_model1/model
+          input_data_path: data/processed/pancreas_processed.h5ad
           trained_data_path: models/pancreas_model1/trained.h5ad
           pyrovelocity_data_path: models/pancreas_model1/pyrovelocity.pkl
+          vector_field_parameters:
+            basis: umap
+          training_parameters:
+            guide_type: auto_t0_constraint
+            log_every: 1000
+            patient_improve: 0.0001
+            patient_init: 45
+            max_epochs: 4000
         reports.figure2.pancreas_model1:
           shared_time_plot: reports/fig2/fig2_pancreas_shared_time.pdf
           volcano_plot: reports/fig2/fig2_pancreas_volcano.pdf
@@ -169,3 +167,40 @@ stages:
     - path: reports/fig2/fig2_pancreas_volcano.pdf
       md5: ce1df5f5b991c9c0d9a7f0ebcf55d8db
       size: 46339
+  train_pbmc68k_model1:
+    cmd: python train.py model_training.train=[pbmc68k_model1]
+    deps:
+    - path: data/processed/pbmc_processed.h5ad
+      md5: 0a1eb8cd91bdee14ea9898b284e53f5e
+      size: 412368967
+    - path: train.py
+      md5: 5d60583fb2dbdd2a38bfbd96e1e11622
+      size: 5467
+    params:
+      config.yaml:
+        model_training.pbmc68k_model1:
+          path: models/pbmc68k_model1
+          model_path: models/pbmc68k_model1/model
+          input_data_path: data/processed/pbmc_processed.h5ad
+          trained_data_path: models/pbmc68k_model1/trained.h5ad
+          pyrovelocity_data_path: models/pbmc68k_model1/pyrovelocity.pkl
+          vector_field_parameters:
+            basis: tsne
+          training_parameters:
+            guide_type: auto_t0_constraint
+            log_every: 100
+            cell_state: celltype
+            patient_improve: 0.0001
+            patient_init: 45
+            max_epochs: 4000
+    outs:
+    - path: models/pbmc68k_model1/model
+      md5: 2c81a0f9d0a387673344c8298438fc48.dir
+      size: 3171745
+      nfiles: 4
+    - path: models/pbmc68k_model1/pyrovelocity.pkl
+      md5: e41af497e10e22065cce31a089187b80
+      size: 262458283
+    - path: models/pbmc68k_model1/trained.h5ad
+      md5: a0ee6b16b4847e4c45b87f29e0519205
+      size: 752511155
