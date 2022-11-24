@@ -88,3 +88,18 @@ stages:
           persist: true
       - ${model_training.pbmc68k_model1.pyrovelocity_data_path}:
           persist: true
+
+  figure2:
+    cmd: python fig2/figure.py
+    deps:
+      - fig2/figure.py
+      - ${model_training.pbmc68k_model1.trained_data_path}
+      - ${model_training.pbmc68k_model1.pyrovelocity_data_path}
+    params:
+      - config.yaml:
+          - reports.figure2
+    outs:
+      - ${reports.figure2.tif_path}:
+          persist: true
+      - ${reports.figure2.svg_path}:
+          persist: true
