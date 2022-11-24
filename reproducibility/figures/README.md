@@ -1,3 +1,3 @@
-# Pyro-Velocity reprodubile scripts
+# Pyro-Velocity reproducibility
 
-Please refer to our [manuscript](https://www.biorxiv.org/content/10.1101/2022.09.12.507691v2) for the interpretation of figures.
+We provide python scripts as well as a [DVC pipeline](https://dvc.org/doc/user-guide/pipelines) (see [dvc.yaml](./dvc.yaml)) for reproducing our results. If you would like to use this, you would need to install [hydra](https://hydra.cc/docs/intro/#installation) ([hydra-core](https://anaconda.org/conda-forge/hydra-core) in conda) and [data version control](https://dvc.org/doc/install) with [google cloud storage support](https://dvc.org/doc/install/linux#install-with-pip) (i.e. `pipx install dvc[gs]`). Please refer to our [manuscript](https://www.biorxiv.org/content/10.1101/2022.09.12.507691v2) for interpretation of the resulting figures.
