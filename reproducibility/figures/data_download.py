@@ -1,14 +1,14 @@
-import argparse
 import os
 from logging import Logger
 from pathlib import Path
 from typing import Text
 
+import hydra
 import scanpy as scp
 import scvelo as scv
 from omegaconf import DictConfig
 
-from pyrovelocity.config import config_setup
+from pyrovelocity.config import print_config_tree
 from pyrovelocity.utils import get_pylogger
 from pyrovelocity.utils import print_attributes
 
@@ -59,14 +59,16 @@ def download_datasets(conf: DictConfig, logger: Logger) -> None:
                     logger.warn(f"cannot find and read {data_path}")
 
 
-def main(config_path: str) -> None:
+@hydra.main(version_base="1.2", config_path=".", config_name="config.yaml")
+def main(conf: DictConfig) -> None:
     """Load external data.
     Args:
-        config_path {Text}: path to config
+        conf {DictConfig}: hydra configuration
     """
-    conf = config_setup(config_path)
 
     logger = get_pylogger(name="DATA_LOAD", log_level=conf.base.log_level)
+    print_config_tree(conf, logger, ())
+
     logger.info(
         f"\n\nVerifying existence of paths for:\n\n"
         f"  external data: {conf.data_external.root_path}\n"
@@ -79,9 +81,4 @@ def main(config_path: str) -> None:
 
 
 if __name__ == "__main__":
-
-    args_parser = argparse.ArgumentParser()
-    args_parser.add_argument("--config", dest="config", required=True)
-    args = args_parser.parse_args()
-
-    main(config_path=args.config)
+    main()
