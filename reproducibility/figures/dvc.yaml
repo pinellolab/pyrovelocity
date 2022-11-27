@@ -2,38 +2,122 @@ vars:
   - config.yaml
 
 stages:
-  data_download:
-    cmd: python data_download.py --config=config.yaml
+  ## Integrated data download stage introduces unnecessary dependence among downstream stages
+  # data_download:
+  #   cmd: python data_download.py
+  #   deps:
+  #     - data_download.py
+  #   params:
+  #     - config.yaml:
+  #         - base
+  #         - data_external.scvelo.pancreas
+  #         - data_external.scvelo.pbmc68k
+  #         - data_external.pyrovelocity.larry
+  #   outs:
+  #     - ${data_external.scvelo.pancreas.rel_path}:
+  #         persist: true
+  #     - ${data_external.scvelo.pbmc68k.rel_path}:
+  #         persist: true
+  #     - ${data_external.pyrovelocity.larry.rel_path}:
+  #         persist: true
+
+  ## foreach stage doesn't clearly support nesting variables in the output definition
+  # data_download:
+  #   foreach:
+  #     - source: scvelo
+  #       data: pancreas
+  #     - source: scvelo
+  #       data: pbmc68k
+  #     - source: pyrovelocity
+  #       data: larry
+  #   do:
+  #     cmd: python data_download.py data_external.sources=[${item.source}] data_external.scvelo.download=[${item.data}]
+  #     deps:
+  #       - data_download.py
+  #     params:
+  #       - config.yaml:
+  #           - base
+  #           - data_external.${item.source}.${item.data}
+  #     outs:
+  #       - ${data_external.${item.source}.${item.data}.rel_path}:
+  #           persist: true
+
+  data_download_pancreas:
+    cmd: python data_download.py data_external.sources=[scvelo] data_external.scvelo.download=[pancreas]
     deps:
       - data_download.py
     params:
       - config.yaml:
           - base
           - data_external.scvelo.pancreas
-          - data_external.scvelo.pbmc68k
-          - data_external.pyrovelocity.larry
     outs:
       - ${data_external.scvelo.pancreas.rel_path}:
           persist: true
+
+  data_download_pbmc68k:
+    cmd: python data_download.py data_external.sources=[scvelo] data_external.scvelo.download=[pbmc68k]
+    deps:
+      - data_download.py
+    params:
+      - config.yaml:
+          - base
+          - data_external.scvelo.pbmc68k
+    outs:
       - ${data_external.scvelo.pbmc68k.rel_path}:
           persist: true
+
+  data_download_larry:
+    cmd: python data_download.py data_external.sources=[pyrovelocity] data_external.pyrovelocity.download=[larry]
+    deps:
+      - data_download.py
+    params:
+      - config.yaml:
+          - base
+          - data_external.pyrovelocity.larry
+    outs:
       - ${data_external.pyrovelocity.larry.rel_path}:
           persist: true
 
-  preprocess:
-    cmd: python preprocess.py --config=config.yaml
+  # preprocess:
+  #   cmd: python preprocess.py
+  #   deps:
+  #     - preprocess.py
+  #     - ${data_external.scvelo.pancreas.rel_path}
+  #     - ${data_external.scvelo.pbmc68k.rel_path}
+  #   params:
+  #     - config.yaml:
+  #         - base
+  #         - data_external.scvelo.pancreas
+  #         - data_external.scvelo.pbmc68k
+  #   outs:
+  #     - ${data_external.scvelo.pancreas.derived.rel_path}:
+  #         persist: true
+  #     - ${data_external.scvelo.pbmc68k.derived.rel_path}:
+  #         persist: true
+
+  preprocess_pancreas:
+    cmd: python preprocess.py data_external.sources=[scvelo] data_external.scvelo.process=[pancreas]
     deps:
       - preprocess.py
       - ${data_external.scvelo.pancreas.rel_path}
-      - ${data_external.scvelo.pbmc68k.rel_path}
     params:
       - config.yaml:
           - base
           - data_external.scvelo.pancreas
-          - data_external.scvelo.pbmc68k
     outs:
       - ${data_external.scvelo.pancreas.derived.rel_path}:
           persist: true
+
+  preprocess_pbmc68k:
+    cmd: python preprocess.py data_external.sources=[scvelo] data_external.scvelo.process=[pbmc68k]
+    deps:
+      - preprocess.py
+      - ${data_external.scvelo.pbmc68k.rel_path}
+    params:
+      - config.yaml:
+          - base
+          - data_external.scvelo.pbmc68k
+    outs:
       - ${data_external.scvelo.pbmc68k.derived.rel_path}:
           persist: true
 
@@ -93,6 +177,8 @@ stages:
     cmd: python fig2/figure.py
     deps:
       - fig2/figure.py
+      - ${model_training.pancreas_model1.trained_data_path}
+      - ${model_training.pancreas_model1.pyrovelocity_data_path}
       - ${model_training.pbmc68k_model1.trained_data_path}
       - ${model_training.pbmc68k_model1.pyrovelocity_data_path}
     params:
