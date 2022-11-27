@@ -839,45 +839,15 @@ def plot_vector_field_uncertain(
         cbar.ax.set_xlabel("Angle uncertainty", fontsize=6)
 
 
-def plot_mean_vector_field(
+def compute_mean_vector_field(
     pos,
     adata,
-    ax,
     basis="umap",
     n_jobs=1,
-    scale=0.2,
-    density=0.4,
     spliced="spliced_pyro",
     raw=False,
 ):
-    pass
-
-    if basis == "umap":
-        # projection = [ ('PCA', sklearn.decomposition.PCA(random_state=99, n_components=50)),
-        #               ('UMAP', umap.UMAP(random_state=99, n_components=2)) ]
-        # pipelines = Pipeline(projection)
-        # expression = [pos['st'].mean(0)]
-        # pipelines.fit(expression[0])
-        # umap_orig = pipelines.transform(expression[0])
-        # adata.obsm['X_umap1'] = umap_orig
-        # joint_pcs = pipelines.steps[0][1].transform(expression[0])
-        # adata.obsm['X_pyropca'] = joint_pcs
-        # scv.pp.neighbors(adata, use_rep='pyropca')
-        # pca = sklearn.decomposition.PCA(random_state=99, n_components=50)
-        # expression = [pos['st'].mean(0)]
-        # pca.fit(expression[0])
-        # joint_pcs = pca.transform(expression[0])
-        # adata.obsm['X_pyropca'] = joint_pcs
-        scv.pp.neighbors(adata, use_rep="pca")
-    else:
-        # pca = sklearn.decomposition.PCA(random_state=99, n_components=50)
-        # expression = [pos['st'].mean(0)]
-        # pca.fit(expression[0])
-        # joint_pcs = pca.transform(expression[0])
-        # adata.obsm['X_pyropca'] = joint_pcs
-        # scv.pp.neighbors(adata, use_rep='pyropca')
-        scv.pp.neighbors(adata, use_rep="pca")
-        ####scv.pp.neighbors(adata, use_rep=basis)
+    scv.pp.neighbors(adata, use_rep="pca")
 
     adata.var["velocity_genes"] = True
 
@@ -890,11 +860,7 @@ def plot_mean_vector_field(
         else:
             ut = pos["ut"]
             st = pos["st"]
-        # print(st.shape)
         adata.layers["spliced_pyro"] = st.mean(0).squeeze()
-        # print(ut.shape)
-        # print(pos['beta_k'].shape)
-        # print(pos['beta'].shape)
         # if ('u_scale' in pos) and ('s_scale' in pos): # TODO: two scale for Normal distribution
         if "u_scale" in pos:  # only one scale for Poisson distribution
             adata.layers["velocity_pyro"] = (
@@ -940,6 +906,27 @@ def plot_mean_vector_field(
         )
 
     scv.tl.velocity_embedding(adata, vkey="velocity_pyro", basis=basis)
+
+
+def plot_mean_vector_field(
+    pos,
+    adata,
+    ax,
+    basis="umap",
+    n_jobs=1,
+    scale=0.2,
+    density=0.4,
+    spliced="spliced_pyro",
+    raw=False,
+):
+    compute_mean_vector_field(
+        pos=pos,
+        adata=adata,
+        basis=basis,
+        n_jobs=n_jobs,
+        spliced=spliced,
+        raw=raw,
+    )
     scv.pl.velocity_embedding_grid(
         adata,
         basis=basis,

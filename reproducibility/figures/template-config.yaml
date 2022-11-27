@@ -1,0 +1,87 @@
+base:
+  log_level: INFO
+paths:
+  data: data
+  models: models
+  reports: reports
+data_external:
+  root_path: ${paths.data}/external
+  processed_path: ${paths.data}/processed
+  sources: [scvelo, pyrovelocity]
+  scvelo:
+    download: [pancreas, pbmc68k]
+    process: [pancreas, pbmc68k]
+    sources:
+      figshare_root_url: https://ndownloader.figshare.com/files
+      scvelo_root_url: https://github.com/theislab/scvelo_notebooks/raw/master
+    pancreas:
+      data_file: endocrinogenesis_day15.h5ad
+      dl_root: data/Pancreas
+      dl_path: ${.dl_root}/${.data_file}
+      rel_path: ${data_external.root_path}/${.data_file}
+      url: ${..sources.scvelo_root_url}/${.dl_path}
+      derived:
+        process_method: load_data
+        rel_path: ${data_external.processed_path}/pancreas_processed.h5ad
+    pbmc68k:
+      data_file: pbmc68k.h5ad
+      dl_root: data/PBMC
+      dl_path: ${.dl_root}/${.data_file}
+      rel_path: ${data_external.root_path}/${.data_file}
+      url: ${..sources.figshare_root_url}/27686886
+      derived:
+        process_method: load_pbmc
+        rel_path: ${data_external.processed_path}/pbmc_processed.h5ad
+  pyrovelocity:
+    download: [larry]
+    process: []
+    sources:
+      figshare_root_url: https://ndownloader.figshare.com/files
+    larry:
+      data_file: larry.h5ad
+      dl_root: ${data_external.root_path}
+      dl_path: ${.dl_root}/${.data_file}
+      rel_path: ${data_external.root_path}/${.data_file}
+      url: ${..sources.figshare_root_url}/37028569
+model_training:
+  train: [pancreas_model1, pbmc68k_model1]
+  pancreas_model1:
+    path: ${paths.models}/pancreas_model1
+    model_path: ${.path}/model
+    input_data_path: ${data_external.scvelo.pancreas.derived.rel_path}
+    trained_data_path: ${.path}/trained.h5ad
+    pyrovelocity_data_path: ${.path}/pyrovelocity.pkl
+    vector_field_parameters:
+      basis: umap
+    training_parameters:
+      guide_type: auto_t0_constraint
+      log_every: 1000
+      patient_improve: 1e-4
+      patient_init: 45
+      max_epochs: 4000
+  pbmc68k_model1:
+    path: ${paths.models}/pbmc68k_model1
+    model_path: ${.path}/model
+    input_data_path: ${data_external.scvelo.pbmc68k.derived.rel_path}
+    trained_data_path: ${.path}/trained.h5ad
+    pyrovelocity_data_path: ${.path}/pyrovelocity.pkl
+    vector_field_parameters:
+      basis: tsne
+    training_parameters:
+      guide_type: auto_t0_constraint
+      log_every: 100
+      cell_state: celltype
+      patient_improve: 1e-4
+      patient_init: 45
+      max_epochs: 4000
+reports:
+  figure2:
+    tag: fig2
+    path: ${paths.reports}/${.tag}
+    tif_path: ${.path}/${.tag}_raw_gene_selection_model1.tif
+    svg_path: ${.path}/${.tag}_raw_gene_selection_model1.svg
+    pancreas_model1:
+      shared_time_plot: ${..path}/${..tag}_pancreas_shared_time.pdf
+      volcano_plot: ${..path}/${..tag}_pancreas_volcano.pdf
+      rainbow_plot: ${..path}/${..tag}_pancreas_rainbow.pdf
+      vector_field_plot: ${..path}/${..tag}_pancreas_vector_field.pdf

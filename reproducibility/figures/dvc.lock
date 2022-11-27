@@ -1,0 +1,276 @@
+schema: '2.0'
+stages:
+  data_download_pancreas:
+    cmd: python data_download.py data_external.sources=[scvelo] data_external.scvelo.download=[pancreas]
+    deps:
+    - path: data_download.py
+      md5: 391e26ebb263cd5e550f9365c4a7f21f
+      size: 2881
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+        data_external.scvelo.pancreas:
+          data_file: endocrinogenesis_day15.h5ad
+          dl_root: data/Pancreas
+          dl_path: data/Pancreas/endocrinogenesis_day15.h5ad
+          rel_path: data/external/endocrinogenesis_day15.h5ad
+          url: https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad
+          derived:
+            process_method: load_data
+            rel_path: data/processed/pancreas_processed.h5ad
+    outs:
+    - path: data/external/endocrinogenesis_day15.h5ad
+      md5: 783ec70c72fd895eeea28c07735efc27
+      size: 52477898
+  preprocess_pancreas:
+    cmd: python preprocess.py data_external.sources=[scvelo] data_external.scvelo.process=[pancreas]
+    deps:
+    - path: data/external/endocrinogenesis_day15.h5ad
+      md5: 783ec70c72fd895eeea28c07735efc27
+      size: 52477898
+    - path: preprocess.py
+      md5: 22ce92ee699e0fe1fb8772414930750b
+      size: 2451
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+        data_external.scvelo.pancreas:
+          data_file: endocrinogenesis_day15.h5ad
+          dl_root: data/Pancreas
+          dl_path: data/Pancreas/endocrinogenesis_day15.h5ad
+          rel_path: data/external/endocrinogenesis_day15.h5ad
+          url: https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad
+          derived:
+            process_method: load_data
+            rel_path: data/processed/pancreas_processed.h5ad
+    outs:
+    - path: data/processed/pancreas_processed.h5ad
+      md5: 7af1dfb39e8d77008a94b1c17c9c3858
+      size: 424767328
+  train_pancreas_model1:
+    cmd: python train.py model_training.train=[pancreas_model1]
+    deps:
+    - path: data/processed/pancreas_processed.h5ad
+      md5: 7af1dfb39e8d77008a94b1c17c9c3858
+      size: 424767328
+    - path: train.py
+      md5: 6afc7225a4855db55f331bd797920e3f
+      size: 5471
+    params:
+      config.yaml:
+        model_training.pancreas_model1:
+          path: models/pancreas_model1
+          model_path: models/pancreas_model1/model
+          input_data_path: data/processed/pancreas_processed.h5ad
+          trained_data_path: models/pancreas_model1/trained.h5ad
+          pyrovelocity_data_path: models/pancreas_model1/pyrovelocity.pkl
+          vector_field_parameters:
+            basis: umap
+          training_parameters:
+            guide_type: auto_t0_constraint
+            log_every: 1000
+            patient_improve: 0.0001
+            patient_init: 45
+            max_epochs: 4000
+    outs:
+    - path: models/pancreas_model1/model
+      md5: a4db44f3261ab3fdbf93590a452bebdb.dir
+      size: 1159443
+      nfiles: 4
+    - path: models/pancreas_model1/pyrovelocity.pkl
+      md5: 757ffff483fb95bb3f08af88aff2bfd4
+      size: 7102321859
+    - path: models/pancreas_model1/trained.h5ad
+      md5: bf05b29b0d0573ae6f5b9b4bde7a2bac
+      size: 489752680
+  data_download_pbmc68k:
+    cmd: python data_download.py data_external.sources=[scvelo] data_external.scvelo.download=[pbmc68k]
+    deps:
+    - path: data_download.py
+      md5: 391e26ebb263cd5e550f9365c4a7f21f
+      size: 2881
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+        data_external.scvelo.pbmc68k:
+          data_file: pbmc68k.h5ad
+          dl_root: data/PBMC
+          dl_path: data/PBMC/pbmc68k.h5ad
+          rel_path: data/external/pbmc68k.h5ad
+          url: https://ndownloader.figshare.com/files/27686886
+          derived:
+            process_method: load_pbmc
+            rel_path: data/processed/pbmc_processed.h5ad
+    outs:
+    - path: data/external/pbmc68k.h5ad
+      md5: ee0953e5fb994bc3cec05d4cf638ac79
+      size: 123707283
+  preprocess_pbmc68k:
+    cmd: python preprocess.py data_external.sources=[scvelo] data_external.scvelo.process=[pbmc68k]
+    deps:
+    - path: data/external/pbmc68k.h5ad
+      md5: ee0953e5fb994bc3cec05d4cf638ac79
+      size: 123707283
+    - path: preprocess.py
+      md5: 22ce92ee699e0fe1fb8772414930750b
+      size: 2451
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+        data_external.scvelo.pbmc68k:
+          data_file: pbmc68k.h5ad
+          dl_root: data/PBMC
+          dl_path: data/PBMC/pbmc68k.h5ad
+          rel_path: data/external/pbmc68k.h5ad
+          url: https://ndownloader.figshare.com/files/27686886
+          derived:
+            process_method: load_pbmc
+            rel_path: data/processed/pbmc_processed.h5ad
+    outs:
+    - path: data/processed/pbmc_processed.h5ad
+      md5: 0a1eb8cd91bdee14ea9898b284e53f5e
+      size: 412368967
+  train_pbmc68k_model1:
+    cmd: python train.py model_training.train=[pbmc68k_model1]
+    deps:
+    - path: data/processed/pbmc_processed.h5ad
+      md5: 0a1eb8cd91bdee14ea9898b284e53f5e
+      size: 412368967
+    - path: train.py
+      md5: 6afc7225a4855db55f331bd797920e3f
+      size: 5471
+    params:
+      config.yaml:
+        model_training.pbmc68k_model1:
+          path: models/pbmc68k_model1
+          model_path: models/pbmc68k_model1/model
+          input_data_path: data/processed/pbmc_processed.h5ad
+          trained_data_path: models/pbmc68k_model1/trained.h5ad
+          pyrovelocity_data_path: models/pbmc68k_model1/pyrovelocity.pkl
+          vector_field_parameters:
+            basis: tsne
+          training_parameters:
+            guide_type: auto_t0_constraint
+            log_every: 100
+            cell_state: celltype
+            patient_improve: 0.0001
+            patient_init: 45
+            max_epochs: 4000
+    outs:
+    - path: models/pbmc68k_model1/model
+      md5: f9eeea9771a1e312a4b77d44fb3da536.dir
+      size: 3172516
+      nfiles: 4
+    - path: models/pbmc68k_model1/pyrovelocity.pkl
+      md5: eda25e092065d1150748cd6b9c16c7b0
+      size: 262458283
+    - path: models/pbmc68k_model1/trained.h5ad
+      md5: 122ef8a84e3a6dbce46fdc5fc530fb34
+      size: 752493819
+  figure2:
+    cmd: python fig2/figure.py
+    deps:
+    - path: fig2/figure.py
+      md5: 5935f85b3469305728e9fba097161574
+      size: 12685
+    - path: models/pancreas_model1/pyrovelocity.pkl
+      md5: 757ffff483fb95bb3f08af88aff2bfd4
+      size: 7102321859
+    - path: models/pancreas_model1/trained.h5ad
+      md5: bf05b29b0d0573ae6f5b9b4bde7a2bac
+      size: 489752680
+    - path: models/pbmc68k_model1/pyrovelocity.pkl
+      md5: eda25e092065d1150748cd6b9c16c7b0
+      size: 262458283
+    - path: models/pbmc68k_model1/trained.h5ad
+      md5: 122ef8a84e3a6dbce46fdc5fc530fb34
+      size: 752493819
+    params:
+      config.yaml:
+        reports.figure2:
+          tag: fig2
+          path: reports/fig2
+          tif_path: reports/fig2/fig2_raw_gene_selection_model1.tif
+          svg_path: reports/fig2/fig2_raw_gene_selection_model1.svg
+          pancreas_model1:
+            shared_time_plot: reports/fig2/fig2_pancreas_shared_time.pdf
+            volcano_plot: reports/fig2/fig2_pancreas_volcano.pdf
+            rainbow_plot: reports/fig2/fig2_pancreas_rainbow.pdf
+            vector_field_plot: reports/fig2/fig2_pancreas_vector_field.pdf
+    outs:
+    - path: reports/fig2/fig2_raw_gene_selection_model1.svg
+      md5: e8a95c847efd3c060823b1a7bd06c80e
+      size: 49612282
+    - path: reports/fig2/fig2_raw_gene_selection_model1.tif
+      md5: a98824d2a78ed67450914d8a708f55c8
+      size: 19360526
+  plot_pancreas_model1:
+    cmd: python fig2/fig2_pancreas_plot.py --config=config.yaml
+    deps:
+    - path: fig2/fig2_pancreas_plot.py
+      md5: 49231e575e0b6962ad80c873308c1731
+      size: 5832
+    - path: models/pancreas_model1/pyrovelocity.pkl
+      md5: 757ffff483fb95bb3f08af88aff2bfd4
+      size: 7102321859
+    - path: models/pancreas_model1/trained.h5ad
+      md5: bf05b29b0d0573ae6f5b9b4bde7a2bac
+      size: 489752680
+    params:
+      config.yaml:
+        model_training.pancreas_model1:
+          path: models/pancreas_model1
+          model_path: models/pancreas_model1/model
+          input_data_path: data/processed/pancreas_processed.h5ad
+          trained_data_path: models/pancreas_model1/trained.h5ad
+          pyrovelocity_data_path: models/pancreas_model1/pyrovelocity.pkl
+          vector_field_parameters:
+            basis: umap
+          training_parameters:
+            guide_type: auto_t0_constraint
+            log_every: 1000
+            patient_improve: 0.0001
+            patient_init: 45
+            max_epochs: 4000
+        reports.figure2.pancreas_model1:
+          shared_time_plot: reports/fig2/fig2_pancreas_shared_time.pdf
+          volcano_plot: reports/fig2/fig2_pancreas_volcano.pdf
+          rainbow_plot: reports/fig2/fig2_pancreas_rainbow.pdf
+          vector_field_plot: reports/fig2/fig2_pancreas_vector_field.pdf
+    outs:
+    - path: reports/fig2/fig2_pancreas_rainbow.pdf
+      md5: 9f07830302c1eea3643f1bf0e7cd2b7a
+      size: 663311
+    - path: reports/fig2/fig2_pancreas_shared_time.pdf
+      md5: 29e04b9dadd81b00efcc95e285ddf8b5
+      size: 616498
+    - path: reports/fig2/fig2_pancreas_vector_field.pdf
+      md5: 81812deb48b687d34d4d2660e8fb4641
+      size: 408048
+    - path: reports/fig2/fig2_pancreas_volcano.pdf
+      md5: ce1df5f5b991c9c0d9a7f0ebcf55d8db
+      size: 46339
+  data_download_larry:
+    cmd: python data_download.py data_external.sources=[pyrovelocity] data_external.pyrovelocity.download=[larry]
+    deps:
+    - path: data_download.py
+      md5: 391e26ebb263cd5e550f9365c4a7f21f
+      size: 2881
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+        data_external.pyrovelocity.larry:
+          data_file: larry.h5ad
+          dl_root: data/external
+          dl_path: data/external/larry.h5ad
+          rel_path: data/external/larry.h5ad
+          url: https://ndownloader.figshare.com/files/37028569
+    outs:
+    - path: data/external/larry.h5ad
+      md5: d618305c0ee0e41570b1147e63df332a
+      size: 1525338690

@@ -1,10 +1,16 @@
 import functools
+import logging
 import pdb
+from inspect import getmembers
+from pprint import pprint
+from types import FunctionType
 from typing import Tuple
 
+import colorlog
 import numpy as np
 import seaborn as sns
 import torch
+from pytorch_lightning.utilities import rank_zero_only
 from scipy.sparse import issparse
 from sklearn.decomposition import PCA
 
@@ -394,3 +400,67 @@ def mae_evaluate(pos, adata):
     ax.tick_params(axis="x", rotation=90)
     print(df.groupby("label").mean())
     return df
+
+
+def get_pylogger(name=__name__, log_level="DEBUG") -> logging.Logger:
+    """Initializes multi-GPU-friendly python command line logger."""
+
+    formatter = colorlog.ColoredFormatter(
+        "%(log_color)s%(levelname)s:%(name)s: %(message)s"
+        # "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
+        # datefmt=None,
+        # reset=True,
+        # log_colors={
+        #     "debug": "cyan",
+        #     "info": "green",
+        #     "warning": "yellow",
+        #     "error": "red",
+        #     "exception": "red",
+        #     "fatal": "red",
+        #     "critical": "red",
+        #     },
+    )
+
+    handler = colorlog.StreamHandler()
+    handler.setFormatter(formatter)
+    logger = colorlog.getLogger(name)
+    logger.setLevel(log_level)
+    logger.addHandler(handler)
+    logger.propagate = False
+
+    # this ensures all logging levels get marked with the rank zero decorator
+    # otherwise logs would get multiplied for each GPU process in multi-GPU setup
+    logging_levels = (
+        "debug",
+        "info",
+        "warning",
+        "error",
+        "exception",
+        "fatal",
+        "critical",
+    )
+    for level in logging_levels:
+        setattr(logger, level, rank_zero_only(getattr(logger, level)))
+
+    return logger
+
+
+def attributes(obj):
+    """
+    get object attributes
+    """
+    disallowed_names = {
+        name for name, value in getmembers(type(obj)) if isinstance(value, FunctionType)
+    }
+    return {
+        name: getattr(obj, name)
+        for name in dir(obj)
+        if name[0] != "_" and name not in disallowed_names and hasattr(obj, name)
+    }
+
+
+def print_attributes(obj):
+    """
+    print object attributes
+    """
+    pprint(attributes(obj))
