@@ -76,7 +76,7 @@ down: ## Destroy existing cloud machine. Boot disk will be deleted and data disk
 ############################################
 ############################################
 
-setup: test ## Setup terraform with init, fmt, validate, and plan output to "tfplan".
+setup: env_print ## Setup terraform with init, fmt, validate, and plan output to "tfplan".
 	terraform init
 	terraform fmt
 	terraform validate
