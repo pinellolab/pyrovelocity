@@ -189,6 +189,22 @@ stages:
       - ${model_training.pbmc68k_model1.pyrovelocity_data_path}:
           persist: true
 
+  train_pbmc68k_model2:
+    cmd: python train.py model_training.train=[pbmc68k_model2]
+    deps:
+      - train.py
+      - ${model_training.pbmc68k_model2.input_data_path}
+    params:
+      - config.yaml:
+          - model_training.pbmc68k_model2
+    outs:
+      - ${model_training.pbmc68k_model2.trained_data_path}:
+          persist: true
+      - ${model_training.pbmc68k_model2.model_path}:
+          persist: true
+      - ${model_training.pbmc68k_model2.pyrovelocity_data_path}:
+          persist: true
+
   figure2:
     cmd: python fig2/figure.py
     deps:
