@@ -349,3 +349,35 @@ stages:
     - path: models/pbmc68k_model2/trained.h5ad
       md5: 6ce531c1abf2f44feea91d9e641438b6
       size: 752493819
+  figureS3:
+    cmd: python figS3/figure.py
+    deps:
+    - path: figS3/figure.py
+      md5: 4f084d0e7c81ac52d54df26cf83223af
+      size: 12700
+    - path: models/pancreas_model2/pyrovelocity.pkl
+      md5: d03b8a0048ba078b87785de38ed9dea4
+      size: 6216001966
+    - path: models/pancreas_model2/trained.h5ad
+      md5: 09d3e6f0c43b8ff97fea1104e61fe4b5
+      size: 489752680
+    - path: models/pbmc68k_model2/pyrovelocity.pkl
+      md5: df009d8912d1ed173f01ab54701fa0c3
+      size: 238743719
+    - path: models/pbmc68k_model2/trained.h5ad
+      md5: 6ce531c1abf2f44feea91d9e641438b6
+      size: 752493819
+    params:
+      config.yaml:
+        reports.figureS3:
+          tag: figS3
+          path: reports/figS3
+          tif_path: reports/figS3/figS3_raw_gene_selection_model2.tif
+          svg_path: reports/figS3/figS3_raw_gene_selection_model2.svg
+    outs:
+    - path: reports/figS3/figS3_raw_gene_selection_model2.svg
+      md5: 30406a30fed1dec429eb961bd9e582f2
+      size: 49561968
+    - path: reports/figS3/figS3_raw_gene_selection_model2.tif
+      md5: cf2ea0b437d5494d1b43c7be83a6e5b8
+      size: 19294478
