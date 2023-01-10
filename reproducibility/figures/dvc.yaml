@@ -221,3 +221,20 @@ stages:
           persist: true
       - ${reports.figure2.svg_path}:
           persist: true
+
+  figureS3:
+    cmd: python figS3/figure.py
+    deps:
+      - figS3/figure.py
+      - ${model_training.pancreas_model2.trained_data_path}
+      - ${model_training.pancreas_model2.pyrovelocity_data_path}
+      - ${model_training.pbmc68k_model2.trained_data_path}
+      - ${model_training.pbmc68k_model2.pyrovelocity_data_path}
+    params:
+      - config.yaml:
+          - reports.figureS3
+    outs:
+      - ${reports.figureS3.tif_path}:
+          persist: true
+      - ${reports.figureS3.svg_path}:
+          persist: true
