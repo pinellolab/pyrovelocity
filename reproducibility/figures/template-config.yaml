@@ -116,3 +116,8 @@ reports:
       volcano_plot: ${..path}/${..tag}_pancreas_volcano.pdf
       rainbow_plot: ${..path}/${..tag}_pancreas_rainbow.pdf
       vector_field_plot: ${..path}/${..tag}_pancreas_vector_field.pdf
+  figureS3:
+    tag: figS3
+    path: ${paths.reports}/${.tag}
+    tif_path: ${.path}/${.tag}_raw_gene_selection_model2.tif
+    svg_path: ${.path}/${.tag}_raw_gene_selection_model2.svg
