@@ -311,3 +311,41 @@ stages:
     - path: models/pancreas_model2/trained.h5ad
       md5: 09d3e6f0c43b8ff97fea1104e61fe4b5
       size: 489752680
+  train_pbmc68k_model2:
+    cmd: python train.py model_training.train=[pbmc68k_model2]
+    deps:
+    - path: data/processed/pbmc_processed.h5ad
+      md5: 0a1eb8cd91bdee14ea9898b284e53f5e
+      size: 412368967
+    - path: train.py
+      md5: 6afc7225a4855db55f331bd797920e3f
+      size: 5471
+    params:
+      config.yaml:
+        model_training.pbmc68k_model2:
+          path: models/pbmc68k_model2
+          model_path: models/pbmc68k_model2/model
+          input_data_path: data/processed/pbmc_processed.h5ad
+          trained_data_path: models/pbmc68k_model2/trained.h5ad
+          pyrovelocity_data_path: models/pbmc68k_model2/pyrovelocity.pkl
+          vector_field_parameters:
+            basis: tsne
+          training_parameters:
+            guide_type: auto
+            log_every: 100
+            cell_state: celltype
+            patient_improve: 0.0001
+            patient_init: 45
+            max_epochs: 4000
+            offset: true
+    outs:
+    - path: models/pbmc68k_model2/model
+      md5: c63b1aec68db8f794846078fe102407a.dir
+      size: 3173270
+      nfiles: 4
+    - path: models/pbmc68k_model2/pyrovelocity.pkl
+      md5: df009d8912d1ed173f01ab54701fa0c3
+      size: 238743719
+    - path: models/pbmc68k_model2/trained.h5ad
+      md5: 6ce531c1abf2f44feea91d9e641438b6
+      size: 752493819
