@@ -44,7 +44,7 @@ data_external:
       rel_path: ${data_external.root_path}/${.data_file}
       url: ${..sources.figshare_root_url}/37028569
 model_training:
-  train: [pancreas_model1, pbmc68k_model1]
+  train: [pancreas_model1, pancreas_model2, pbmc68k_model1, pbmc68k_model2]
   pancreas_model1:
     path: ${paths.models}/pancreas_model1
     model_path: ${.path}/model
@@ -59,6 +59,21 @@ model_training:
       patient_improve: 1e-4
       patient_init: 45
       max_epochs: 4000
+  pancreas_model2:
+    path: ${paths.models}/pancreas_model2
+    model_path: ${.path}/model
+    input_data_path: ${data_external.scvelo.pancreas.derived.rel_path}
+    trained_data_path: ${.path}/trained.h5ad
+    pyrovelocity_data_path: ${.path}/pyrovelocity.pkl
+    vector_field_parameters:
+      basis: umap
+    training_parameters:
+      guide_type: auto
+      log_every: 1000
+      patient_improve: 1e-4
+      patient_init: 45
+      max_epochs: 4000
+      offset: True
   pbmc68k_model1:
     path: ${paths.models}/pbmc68k_model1
     model_path: ${.path}/model
@@ -74,6 +89,22 @@ model_training:
       patient_improve: 1e-4
       patient_init: 45
       max_epochs: 4000
+  pbmc68k_model2:
+    path: ${paths.models}/pbmc68k_model2
+    model_path: ${.path}/model
+    input_data_path: ${data_external.scvelo.pbmc68k.derived.rel_path}
+    trained_data_path: ${.path}/trained.h5ad
+    pyrovelocity_data_path: ${.path}/pyrovelocity.pkl
+    vector_field_parameters:
+      basis: tsne
+    training_parameters:
+      guide_type: auto
+      log_every: 100
+      cell_state: celltype
+      patient_improve: 1e-4
+      patient_init: 45
+      max_epochs: 4000
+      offset: True
 reports:
   figure2:
     tag: fig2
@@ -85,3 +116,8 @@ reports:
       volcano_plot: ${..path}/${..tag}_pancreas_volcano.pdf
       rainbow_plot: ${..path}/${..tag}_pancreas_rainbow.pdf
       vector_field_plot: ${..path}/${..tag}_pancreas_vector_field.pdf
+  figureS3:
+    tag: figS3
+    path: ${paths.reports}/${.tag}
+    tif_path: ${.path}/${.tag}_raw_gene_selection_model2.tif
+    svg_path: ${.path}/${.tag}_raw_gene_selection_model2.svg

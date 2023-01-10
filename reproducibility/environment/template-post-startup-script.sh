@@ -68,7 +68,7 @@ sudo chmod -R 755 /home/$JUPYTER_USER
 $CONDA_BIN/mamba env create -n $GITHUB_REPO \
     -f $REPO_PATH/$GIHUB_REPO_CONDA_ENV_YML_PATH
 $CONDA_BIN/mamba install -n $GITHUB_REPO -c conda-forge \
-    python=3.9 \
+    python=3.8 \
     gh \
     htop \
     bat \
@@ -79,13 +79,13 @@ $CONDA_BIN/mamba install -n $GITHUB_REPO -c conda-forge \
     expect \
     colorlog \
     shellcheck \
-    google-cloud-sdk \
-    "dvc>=2.30.0" \
-    dvc-gs
+    google-cloud-sdk
 $CONDA_BIN/conda-develop -n $GITHUB_REPO $REPO_PATH
 
 /opt/conda/envs/$GITHUB_REPO/bin/python -m ipykernel \
     install --prefix=/opt/conda/ --name=$GITHUB_REPO
+/opt/conda/envs/$GITHUB_REPO/bin/python -c \
+    "import sys; print('\n'.join(sys.path))"
 sudo chown -R $JUPYTER_USER:$JUPYTER_USER $CONDA_PATH
 # If the jupyter server does not function as expected, try:
 # sudo systemctl restart jupyter.service
@@ -109,6 +109,7 @@ function install_pyenv() {
     PYENV_PYTHON_VERSION=$1
     curl https://pyenv.run | bash
     .pyenv/bin/pyenv install --skip-existing $PYENV_PYTHON_VERSION
+    .pyenv/bin/pyenv install --skip-existing 3.9
     printf '
 # >>> pyenv >>>
 export PYENV_ROOT="$HOME/.pyenv"
@@ -138,8 +139,12 @@ function install_poetry_env() {
     $CONDA_BIN/pipx install poetry
     $CONDA_BIN/pipx install nox
     $CONDA_BIN/pipx inject nox nox-poetry
+    cd $HOME
+    .pyenv/bin/pyenv global 3.9
+    $CONDA_BIN/pipx install --python python3.9 "dvc[gs]>=2.30.0"
     echo $PYENV_PYTHON_VERSION | tee -a $REPO_PATH/.python-version
     cd $REPO_PATH
+    git config core.filemode false # https://stackoverflow.com/a/1257613/446907
     $HOME/.local/bin/poetry env use -n $PYENV_PYTHON_VERSION
     $HOME/.local/bin/poetry install -n
 }

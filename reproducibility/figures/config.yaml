@@ -53,7 +53,9 @@ data_external:
 model_training:
   train:
     - pancreas_model1
+    - pancreas_model2
     - pbmc68k_model1
+    - pbmc68k_model2
   pancreas_model1:
     path: models/pancreas_model1
     model_path: models/pancreas_model1/model
@@ -68,6 +70,21 @@ model_training:
       patient_improve: 0.0001
       patient_init: 45
       max_epochs: 4000
+  pancreas_model2:
+    path: models/pancreas_model2
+    model_path: models/pancreas_model2/model
+    input_data_path: data/processed/pancreas_processed.h5ad
+    trained_data_path: models/pancreas_model2/trained.h5ad
+    pyrovelocity_data_path: models/pancreas_model2/pyrovelocity.pkl
+    vector_field_parameters:
+      basis: umap
+    training_parameters:
+      guide_type: auto
+      log_every: 1000
+      patient_improve: 0.0001
+      patient_init: 45
+      max_epochs: 4000
+      offset: true
   pbmc68k_model1:
     path: models/pbmc68k_model1
     model_path: models/pbmc68k_model1/model
@@ -83,6 +100,22 @@ model_training:
       patient_improve: 0.0001
       patient_init: 45
       max_epochs: 4000
+  pbmc68k_model2:
+    path: models/pbmc68k_model2
+    model_path: models/pbmc68k_model2/model
+    input_data_path: data/processed/pbmc_processed.h5ad
+    trained_data_path: models/pbmc68k_model2/trained.h5ad
+    pyrovelocity_data_path: models/pbmc68k_model2/pyrovelocity.pkl
+    vector_field_parameters:
+      basis: tsne
+    training_parameters:
+      guide_type: auto
+      log_every: 100
+      cell_state: celltype
+      patient_improve: 0.0001
+      patient_init: 45
+      max_epochs: 4000
+      offset: true
 reports:
   figure2:
     tag: fig2
@@ -94,3 +127,8 @@ reports:
       volcano_plot: reports/fig2/fig2_pancreas_volcano.pdf
       rainbow_plot: reports/fig2/fig2_pancreas_rainbow.pdf
       vector_field_plot: reports/fig2/fig2_pancreas_vector_field.pdf
+  figureS3:
+    tag: figS3
+    path: reports/figS3
+    tif_path: reports/figS3/figS3_raw_gene_selection_model2.tif
+    svg_path: reports/figS3/figS3_raw_gene_selection_model2.svg
