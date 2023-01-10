@@ -274,3 +274,40 @@ stages:
     - path: data/external/larry.h5ad
       md5: d618305c0ee0e41570b1147e63df332a
       size: 1525338690
+  train_pancreas_model2:
+    cmd: python train.py model_training.train=[pancreas_model2]
+    deps:
+    - path: data/processed/pancreas_processed.h5ad
+      md5: 7af1dfb39e8d77008a94b1c17c9c3858
+      size: 424767328
+    - path: train.py
+      md5: 6afc7225a4855db55f331bd797920e3f
+      size: 5471
+    params:
+      config.yaml:
+        model_training.pancreas_model2:
+          path: models/pancreas_model2
+          model_path: models/pancreas_model2/model
+          input_data_path: data/processed/pancreas_processed.h5ad
+          trained_data_path: models/pancreas_model2/trained.h5ad
+          pyrovelocity_data_path: models/pancreas_model2/pyrovelocity.pkl
+          vector_field_parameters:
+            basis: umap
+          training_parameters:
+            guide_type: auto
+            log_every: 1000
+            patient_improve: 0.0001
+            patient_init: 45
+            max_epochs: 4000
+            offset: true
+    outs:
+    - path: models/pancreas_model2/model
+      md5: 6be9541584a09bd41b6e9a678010616f.dir
+      size: 1735429
+      nfiles: 4
+    - path: models/pancreas_model2/pyrovelocity.pkl
+      md5: d03b8a0048ba078b87785de38ed9dea4
+      size: 6216001966
+    - path: models/pancreas_model2/trained.h5ad
+      md5: 09d3e6f0c43b8ff97fea1104e61fe4b5
+      size: 489752680
