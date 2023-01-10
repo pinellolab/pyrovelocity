@@ -137,6 +137,22 @@ stages:
       - ${model_training.pancreas_model1.pyrovelocity_data_path}:
           persist: true
 
+  train_pancreas_model2:
+    cmd: python train.py model_training.train=[pancreas_model2]
+    deps:
+      - train.py
+      - ${model_training.pancreas_model2.input_data_path}
+    params:
+      - config.yaml:
+          - model_training.pancreas_model2
+    outs:
+      - ${model_training.pancreas_model2.trained_data_path}:
+          persist: true
+      - ${model_training.pancreas_model2.model_path}:
+          persist: true
+      - ${model_training.pancreas_model2.pyrovelocity_data_path}:
+          persist: true
+
   plot_pancreas_model1:
     cmd: python fig2/fig2_pancreas_plot.py --config=config.yaml
     deps:
