@@ -53,6 +53,7 @@ data_external:
 model_training:
   train:
     - pancreas_model1
+    - pancreas_model2
     - pbmc68k_model1
   pancreas_model1:
     path: models/pancreas_model1
@@ -68,6 +69,21 @@ model_training:
       patient_improve: 0.0001
       patient_init: 45
       max_epochs: 4000
+  pancreas_model2:
+    path: models/pancreas_model2
+    model_path: models/pancreas_model2/model
+    input_data_path: data/processed/pancreas_processed.h5ad
+    trained_data_path: models/pancreas_model2/trained.h5ad
+    pyrovelocity_data_path: models/pancreas_model2/pyrovelocity.pkl
+    vector_field_parameters:
+      basis: umap
+    training_parameters:
+      guide_type: auto
+      log_every: 1000
+      patient_improve: 0.0001
+      patient_init: 45
+      max_epochs: 4000
+      offset: true
   pbmc68k_model1:
     path: models/pbmc68k_model1
     model_path: models/pbmc68k_model1/model

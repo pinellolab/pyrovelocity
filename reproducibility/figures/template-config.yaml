@@ -44,7 +44,7 @@ data_external:
       rel_path: ${data_external.root_path}/${.data_file}
       url: ${..sources.figshare_root_url}/37028569
 model_training:
-  train: [pancreas_model1, pbmc68k_model1]
+  train: [pancreas_model1, pancreas_model2, pbmc68k_model1]
   pancreas_model1:
     path: ${paths.models}/pancreas_model1
     model_path: ${.path}/model
@@ -59,6 +59,21 @@ model_training:
       patient_improve: 1e-4
       patient_init: 45
       max_epochs: 4000
+  pancreas_model2:
+    path: ${paths.models}/pancreas_model2
+    model_path: ${.path}/model
+    input_data_path: ${data_external.scvelo.pancreas.derived.rel_path}
+    trained_data_path: ${.path}/trained.h5ad
+    pyrovelocity_data_path: ${.path}/pyrovelocity.pkl
+    vector_field_parameters:
+      basis: umap
+    training_parameters:
+      guide_type: auto
+      log_every: 1000
+      patient_improve: 1e-4
+      patient_init: 45
+      max_epochs: 4000
+      offset: True
   pbmc68k_model1:
     path: ${paths.models}/pbmc68k_model1
     model_path: ${.path}/model
