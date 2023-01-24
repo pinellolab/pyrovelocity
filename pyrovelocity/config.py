@@ -103,7 +103,6 @@ def print_config_tree(
 
 
 if __name__ == "__main__":
-
     args_parser = argparse.ArgumentParser()
     args_parser.add_argument("--config", dest="config", required=True)
     args = args_parser.parse_args()

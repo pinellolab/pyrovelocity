@@ -413,7 +413,9 @@ class VelocityGuide(easyguide.EasyGuide):
         pyro.sample("switching", Delta(switching).to_event(1))
 
         cell_plate = self.plate("cells", self.num_cells, subsample=ind_x, dim=-1)
-        with cell_plate:  # , poutine.mask(mask=pyro.subsample(self.mask.to(u_obs.device), event_dim=self.event_dim)):
+        with (
+            cell_plate
+        ):  # , poutine.mask(mask=pyro.subsample(self.mask.to(u_obs.device), event_dim=self.event_dim)):
             u_ = u_obs / scale
             s_ = s_obs
             tau = tau_inv(u_, s_, self.zero, self.zero, alpha, beta, gamma)
