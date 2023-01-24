@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Maximize build space
-        uses: easimon/maximize-build-space@master
+        uses: cameronraysmith/maximize-build-space@master
         with:
           root-reserve-mb: 128
           swap-size-mb: 128
@@ -42,6 +42,9 @@ jobs:
         with:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      - name: Run docker root relocation script
+        run: ./.github/mv-docker-root-dir.sh
+        shell: bash
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
