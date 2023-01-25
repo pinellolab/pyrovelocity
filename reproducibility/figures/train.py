@@ -38,7 +38,6 @@ Outputs:
 
 def train(conf: DictConfig, logger: Logger) -> None:
     for data_model in conf.model_training.train:
-
         ###########
         # load data
         ###########

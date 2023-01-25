@@ -15,7 +15,6 @@ from pyrovelocity.utils import print_attributes
 def preprocess(conf: DictConfig, logger: Logger) -> None:
     for source in conf.sources:
         for data_set in conf[source].process:
-
             data_path = conf[source][data_set].rel_path
             processed_path = conf[source][data_set].derived.rel_path
             process_method = conf[source][data_set].derived.process_method

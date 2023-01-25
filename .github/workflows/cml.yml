@@ -1,0 +1,15 @@
+name: CML
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  deploy-runner:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: test
+        run: echo "cml"

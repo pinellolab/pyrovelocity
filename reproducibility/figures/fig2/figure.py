@@ -38,7 +38,6 @@ Outputs:
 
 
 def plots(conf: DictConfig, logger: Logger) -> None:
-
     ##################
     # load data
     ##################

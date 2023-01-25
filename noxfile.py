@@ -198,8 +198,8 @@ def docs_build(session: Session) -> None:
         "nbsphinx",
         "furo",
         "myst-parser",
-        "sphinx_autodoc_typehints",
-        "sphinx_copybutton",
+        "sphinx-autodoc-typehints",
+        "sphinx-copybutton",
         "sphinx-click",
     )
 
@@ -216,7 +216,14 @@ def docs(session: Session) -> None:
     args = session.posargs or ["--open-browser", "docs", "docs/_build"]
     session.install(".")
     session.install(
-        "sphinx", "nbsphinx", "sphinx-autobuild", "sphinx-click", "furo", "myst-parser"
+        "sphinx",
+        "nbsphinx",
+        "sphinx-autobuild",
+        "sphinx-click",
+        "furo",
+        "myst-parser",
+        "sphinx-autodoc-typehints",
+        "sphinx-copybutton",
     )
 
     build_dir = Path("docs", "_build")
