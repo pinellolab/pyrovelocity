@@ -118,3 +118,4 @@ ENV/
 *.pdf
 *.tif
 *.h5ad
+.nox/
