@@ -141,7 +141,14 @@ restart_container:
 	gcloud compute ssh $(TF_VAR_notebooks_name) --command 'docker restart payload-container'
 
 env_print: ## Print environment variables with name containing "TF_VAR" or "GITHUB" including those defined in ".env" file.
-	env | grep "TF_VAR\|GITHUB"
+	env | grep "TF_VAR\|GITHUB\|GH_\|GCP_"
+
+ghsecrets: ## Update github secrets for GH_REPO from environment vars stored in GH_PAT and GCP_GACD.
+	gh secret list --repo=$(GH_REPO)
+	gh secret set GOOGLE_APPLICATION_CREDENTIALS_DATA --repo="$(GH_REPO)" --body='$(GCP_GACD)'
+	gh secret set PERSONAL_ACCESS_TOKEN --repo="$(GH_REPO)" --body="$(GH_PAT)"
+	gh secret set GCP_SERVICE_ACCOUNT --repo="$(GH_REPO)" --body="$(GCP_SERVICE_ACCOUNT)"
+	gh secret list --repo=$(GH_REPO)
 
 
 ############################################
