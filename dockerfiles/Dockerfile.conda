@@ -1,4 +1,4 @@
-# Dockerfile
+# syntax=docker/dockerfile:1
 
 # Build container
 FROM quay.io/condaforge/mambaforge:latest as conda
@@ -10,7 +10,6 @@ RUN mamba info --envs && \
 RUN conda-lock install -p /opt/env --copy /locks/conda-lock.yml
 
 # Primary container
-
 FROM ghcr.io/iterative/cml:latest-gpu
 
 LABEL maintainer="pyrovelocity team"
