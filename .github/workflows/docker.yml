@@ -16,14 +16,14 @@ jobs:
       packages: write
 
     steps:
-      - name: Maximize build space
-        uses: cameronraysmith/maximize-build-space@master
-        with:
-          root-reserve-mb: 128
-          swap-size-mb: 128
-          remove-dotnet: "true"
-          remove-android: "true"
-          remove-haskell: "true"
+      # - name: Maximize build space
+      #   uses: cameronraysmith/maximize-build-space@master
+      #   with:
+      #     root-reserve-mb: 128
+      #     swap-size-mb: 128
+      #     remove-dotnet: "true"
+      #     remove-android: "true"
+      #     remove-haskell: "true"
       - name: Checkout
         uses: actions/checkout@v3
       - name: Set up QEMU
@@ -45,13 +45,15 @@ jobs:
         with:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-      - name: Run docker root relocation script
-        run: ./.github/mv-docker-root-dir.sh
-        shell: bash
+      # - name: Run docker root relocation script
+      #   run: ./.github/mv-docker-root-dir.sh
+      #   shell: bash
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
           context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
