@@ -13,4 +13,5 @@ RUN conda-lock install -p /opt/env --copy /locks/conda-lock.yml
 
 FROM ghcr.io/iterative/cml:latest-gpu
 
+LABEL maintainer="pyrovelocity team"
 COPY --from=conda /opt/env /opt/env
