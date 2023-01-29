@@ -187,7 +187,10 @@ def train_model(
                     seed=seed,
                     elbo_name="-ELBO validation",
                 )
-            elif guide_type in {"velocity_auto", "velocity_auto_t0_constraint"}:  # velocity_auto, not support (velocity_auto_depth, failure by error)
+            elif guide_type in {
+                "velocity_auto",
+                "velocity_auto_t0_constraint",
+            }:  # velocity_auto, not support (velocity_auto_depth, failure by error)
                 print("valid new guide")
                 #### not valid guide
                 ##new_guide = model.module._guide
