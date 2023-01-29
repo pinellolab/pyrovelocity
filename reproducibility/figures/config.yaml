@@ -70,6 +70,9 @@ model_training:
       patient_improve: 0.0001
       patient_init: 45
       max_epochs: 4000
+      lr: 0.01
+      train_size: 1.0
+      loss_plot_path: models/pancreas_model1/loss_plot.png
   pancreas_model2:
     path: models/pancreas_model2
     model_path: models/pancreas_model2/model
@@ -85,6 +88,9 @@ model_training:
       patient_init: 45
       max_epochs: 4000
       offset: true
+      lr: 0.01
+      train_size: 1.0
+      loss_plot_path: models/pancreas_model2/loss_plot.png
   pbmc68k_model1:
     path: models/pbmc68k_model1
     model_path: models/pbmc68k_model1/model
@@ -100,6 +106,9 @@ model_training:
       patient_improve: 0.0001
       patient_init: 45
       max_epochs: 4000
+      lr: 0.01
+      train_size: 1.0
+      loss_plot_path: models/pbmc68k_model1/loss_plot.png
   pbmc68k_model2:
     path: models/pbmc68k_model2
     model_path: models/pbmc68k_model2/model
@@ -116,6 +125,9 @@ model_training:
       patient_init: 45
       max_epochs: 4000
       offset: true
+      lr: 0.01
+      train_size: 1.0
+      loss_plot_path: models/pbmc68k_model2/loss_plot.png
 reports:
   figure2:
     tag: fig2

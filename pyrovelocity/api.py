@@ -37,6 +37,7 @@ def train_model(
     input_type: str = "raw",
     cell_specific_kinetics: Optional[str] = None,
     kinetics_num: int = 2,
+    loss_plot_path: str = "loss_plot.png",
 ) -> Tuple[PyroVelocity, Dict[str, ndarray]]:
     model = PyroVelocity(
         adata,
@@ -50,9 +51,10 @@ def train_model(
         cell_specific_kinetics=cell_specific_kinetics,
         kinetics_num=kinetics_num,
     )
-    if svi_train and (
-        guide_type == "velocity_auto" or guide_type == "velocity_auto_t0_constraint"
-    ):
+    if svi_train and guide_type in {
+        "velocity_auto",
+        "velocity_auto_t0_constraint",
+    }:
         if batch_size == -1:
             batch_size = adata.shape[0]
         model.train(
@@ -82,10 +84,8 @@ def train_model(
                 -model.history_["elbo_validation"][:-1],
                 label="Valid",
             )
-        # ax.set_yscale('log')
-        ax.set_yscale("symlog")
-        ax.set_xlabel("Epochs")
-        ax.set_ylabel("-ELBO")
+        set_loss_plot_axes(ax)
+        fig.savefig(loss_plot_path, facecolor="white", bbox_inches="tight")
         pos = model.posterior_samples(
             model.adata, num_samples=num_samples, batch_size=512
         )
@@ -121,13 +121,13 @@ def train_model(
             ax.scatter(
                 np.arange(len(losses)), -np.array(losses), label="train", alpha=0.25
             )
-            ax.set_yscale("symlog")
-            ax.set_xlabel("Epochs")
-            ax.set_ylabel("-ELBO")
-
+            set_loss_plot_axes(ax)
             pos = model.posterior_samples(
                 model.adata, num_samples=num_samples, batch_size=512
             )
+
+            fig.savefig(loss_plot_path, facecolor="white", bbox_inches="tight")
+
             return model, pos
         else:  # train validation procedure
             if (
@@ -143,10 +143,7 @@ def train_model(
                 random_state=seed,
                 shuffle=False,
             )
-            if batch_size == -1:
-                train_batch_size = train_ind.shape[0]
-            else:
-                train_batch_size = batch_size
+            train_batch_size = train_ind.shape[0] if batch_size == -1 else batch_size
             losses = model.train_faster_with_batch(
                 max_epochs=max_epochs,
                 batch_size=train_batch_size,
@@ -162,12 +159,8 @@ def train_model(
                 model.adata, num_samples=num_samples, indices=train_ind, batch_size=512
             )
 
-            if batch_size == -1:
-                test_batch_size = test_ind.shape[0]
-            else:
-                test_batch_size = batch_size
-
-            if guide_type == "auto" or guide_type == "auto_t0_constraint":
+            test_batch_size = test_ind.shape[0] if batch_size == -1 else batch_size
+            if guide_type in {"auto", "auto_t0_constraint"}:
                 new_guide = AutoGuideList(
                     model.module._model, create_plates=model.module._model.create_plates
                 )
@@ -192,11 +185,12 @@ def train_model(
                     lr=lr,
                     use_gpu=use_gpu,
                     seed=seed,
+                    elbo_name="-ELBO validation",
                 )
-            elif (
-                guide_type == "velocity_auto"
-                or guide_type == "velocity_auto_t0_constraint"
-            ):  # velocity_auto, not support (velocity_auto_depth, failure by error)
+            elif guide_type in {
+                "velocity_auto",
+                "velocity_auto_t0_constraint",
+            }:  # velocity_auto, not support (velocity_auto_depth, failure by error)
                 print("valid new guide")
                 #### not valid guide
                 ##new_guide = model.module._guide
@@ -232,9 +226,14 @@ def train_model(
                 label="validation",
                 alpha=0.25,
             )
-            # ax.set_yscale('log')
-            ax.set_yscale("symlog")
-            ax.set_xlabel("Epochs")
-            ax.set_ylabel("-ELBO")
+            set_loss_plot_axes(ax)
         plt.legend()
+        plt.savefig(loss_plot_path, facecolor="white", bbox_inches="tight")
         return pos, pos_test, train_ind, test_ind
+
+
+def set_loss_plot_axes(ax):
+    # ax.set_yscale('log')
+    ax.set_yscale("symlog")
+    ax.set_xlabel("Epochs")
+    ax.set_ylabel("-ELBO")

@@ -7,6 +7,7 @@ from typing import Optional
 from typing import Sequence
 from typing import Union
 
+import mlflow
 import numpy as np
 import pyro
 import torch
@@ -150,6 +151,7 @@ class VelocityTrainingMixin:
         min_delta: float = 0.0,
         **kwargs,
     ):
+        print("base train function")
         pyro.clear_param_store()
         pyro.set_rng_seed(seed)
         data_splitter = DataSplitter(
@@ -190,6 +192,7 @@ class VelocityTrainingMixin:
         increase larger dataset by 5-6 fold, however should not
         be used for >20k cells with less than 40GB GPU memory,
         this ignores validation cells"""
+        print("train_faster")
         if (use_gpu is False) or (use_gpu == "cpu") or (use_gpu == -1):
             device = "cpu"
         else:
@@ -282,6 +285,7 @@ class VelocityTrainingMixin:
                     / normalizer
                 )
             if step % log_every == 0:
+                mlflow.log_metric("-ELBO", -elbos, step=step)
                 print(f"step {step: >4d} loss = {elbos:0.6g} patience = {patience}")
             if step > log_every:
                 if (losses[-1] - elbos) < losses[-1] * patient_improve:
@@ -291,6 +295,7 @@ class VelocityTrainingMixin:
             if patience <= 0:
                 break
             losses.append(elbos)
+        mlflow.log_metric("real_epochs", step + 1)
         return losses
 
     def train_faster_with_batch(
@@ -305,7 +310,9 @@ class VelocityTrainingMixin:
         new_valid_guide: Optional[AutoGuideList] = None,
         patient_init: int = 45,
         patient_improve: float = 0.0,
+        elbo_name: str = "-ELBO",
     ):
+        print("train_faster_with_batch")
         if (use_gpu is False) or (use_gpu == "cpu") or (use_gpu == -1):
             device = "cpu"
         else:
@@ -351,6 +358,7 @@ class VelocityTrainingMixin:
             # elbos = elbos / normalizer #n_batch
             elbos = elbos / n_batch
             if step % log_every == 0:
+                mlflow.log_metric(elbo_name, -elbos, step=step)
                 print(f"step {step: >4d} loss = {elbos:0.6g} patience = {patience}")
             if step > log_every:
                 if (losses[-1] - elbos) < losses[-1] * patient_improve:
@@ -361,4 +369,5 @@ class VelocityTrainingMixin:
             if patience <= 0:
                 break
             losses.append(elbos)
+        mlflow.log_metric("real_epochs", step + 1)
         return losses

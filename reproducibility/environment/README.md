@@ -45,10 +45,13 @@ The expected workflow is to
     GITHUB_REPO_NAME=reponame # name of a github repository with a conda environment yaml file
     GITHUB_BRANCH_NAME=master # name of github repository branch to checkout
     GITHUB_REPO_CONDA_ENV_PATH_NAME=conda/environment-gpu.yml # path to conda environment yaml file in the github repository
-    GH_PAT=ghp_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX # github personal access token with repo scope
+    GH_PAT=ghp_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX # github personal access token with repo scope
     GH_REPO=${GITHUB_USERNAME}/${GITHUB_REPO_NAME} # derived
     GCP_GACD=$(shell cat service-account-credentials.json) # GCP service account credentials
     GCP_SERVICE_ACCOUNT=111111111111-compute@developer.gserviceaccount.com # GCP service account email
+    MLFLOW_TRACKING_URI=https://server.mlflow
+    MLFLOW_TRACKING_USERNAME=username
+    MLFLOW_TRACKING_PASSWORD=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     TF_VAR_post_startup_script_url=https://gist.githubusercontent.com/githubusername/b6c8cd158b00f99d21511a905cc7626a/raw/post-startup-script-dev-notebook.sh # publicly accessible URL to a startup script
     GITHUB_STARTUP_SCRIPT_GIST_ID=b6c8cd158b00f99d21511a905cc7626a # the github gist ID if you would like to use a github gist
     ```
