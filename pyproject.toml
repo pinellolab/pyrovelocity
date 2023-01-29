@@ -44,6 +44,8 @@ cospar = { version = "0.1.9", source = "pypi" }
 colorlog = "^6.7.0"
 omegaconf = "^2.2.3"
 rich = "^12.6.0"
+hydra-core = "1.2.0"
+mlflow = "1.30.0"
 
 # extras
 Pygments = { version = ">=2.10.0", optional = true }
