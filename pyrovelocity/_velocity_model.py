@@ -2626,69 +2626,6 @@ class MultiKineticsModelDirichletLinear(VelocityModel):
             pyro.deterministic("beta_k", beta, event_dim=0)
             pyro.deterministic("gamma_k", gamma, event_dim=0)
 
-        ### remove kinetics plate using to_event
-        ### put kinetics_weights into event_shape
-        ### only work for sequential enumeration
-        # cell_plate, gene_plate = self.create_plates(u_obs, s_obs, u_log_library, s_log_library, u_log_library_loc, s_log_library_loc, u_log_library_scale, s_log_library_scale, ind_x, cell_state, time_info)
-        # zero = self.zero.new_zeros(self.k)
-        # one = self.one.new_ones(self.k)
-        # with gene_plate:
-        #    alpha_k = pyro.sample("alpha", LogNormal(zero, one).to_event(1))
-        #    beta_k = pyro.sample("beta", LogNormal(zero, one).to_event(1))
-        #    gamma_k = pyro.sample("gamma", LogNormal(zero, one).to_event(1))
-        #    dt_switching_k = pyro.sample("dt_switching", LogNormal(zero, one).to_event(1))
-        #    t0_k = pyro.sample("t0", Normal(one, one).to_event(1))
-        #    u_inf_k, s_inf_k = mRNA(dt_switching_k, zero, zero, alpha_k, beta_k, gamma_k)
-        #    switching_k = t0_k + dt_switching_k
-        #    assert u_inf_k.shape == (gene_plate.size, self.k), u_inf_k.shape
-        #    if self.add_offset:
-        #        u_offset_k = pyro.sample("u_offset", LogNormal(zero, one).to_event(1))
-        #        s_offset_k = pyro.sample("s_offset", LogNormal(zero, one).to_event(1))
-        #    else:
-        #        u_offset_k = s_offset_k = zero
-
-        # kinetics_weights = pyro.sample("kinetics_weights", Beta(one*2, one*5).to_event(1))
-        # assert kinetics_weights.shape == (self.k, ), kinetics_weights.shape
-        # with cell_plate:
-        #    t = pyro.sample("cell_time", LogNormal(self.zero, self.one).mask(self.include_prior))
-        #    if self.correct_library_size and (self.likelihood != 'Normal'):
-        #        u_read_depth = pyro.sample("u_read_depth", LogNormal(u_log_library, u_log_library_scale))
-        #        s_read_depth = pyro.sample("s_read_depth", LogNormal(s_log_library, s_log_library_scale))
-        #        ##if self.correct_library_size == 'cell_size_regress':
-        #        ##    # cell-wise coef per cell
-        #        ##    u_cell_size_coef = pyro.sample("u_cell_size_coef", Normal(self.zero, self.one))
-        #        ##    ut_coef = pyro.sample("ut_coef", Normal(self.zero, self.one))
-        #        ##    s_cell_size_coef = pyro.sample("s_cell_size_coef", Normal(self.zero, self.one))
-        #        ##    st_coef = pyro.sample("st_coef", Normal(self.zero, self.one))
-        #        ##else:
-        #        ##    u_cell_size_coef = ut_coef = s_cell_size_coef = st_coef = None
-        #    else:
-        #        u_read_depth = s_read_depth = None
-        #        u_cell_size_coef = ut_coef = s_cell_size_coef = st_coef = None
-        #    with gene_plate:
-        #        ###if self.guide_type == 'auto_t0_constraint' or self.guide_type == 'velocity_auto_t0_constraint':
-        #        ###    pyro.sample("time_constraint", Bernoulli(logits=t-t0_k), obs=self.one)
-        #        logits_k = t.unsqueeze(-1)-switching_k
-        #        assert logits_k.shape == (cell_plate.subsample_size, gene_plate.size, self.k)
-
-        #        state_k = pyro.sample("cell_gene_state", Bernoulli(logits=logits_k).to_event(1),
-        #                              infer={'enumerate': 'sequential'}) == self.zero
-        #                              #infer={'enumerate': 'parallel'}) == self.zero # NotImplementedError: Enumeration over cartesian product is not implemented
-        #        assert state_k.shape == (cell_plate.subsample_size, gene_plate.size, self.k)
-
-        #        u0_k = torch.where(state_k, u_offset_k, u_inf_k)
-        #        s0_k = torch.where(state_k, s_offset_k, s_inf_k)
-
-        #        alpha_k = torch.where(state_k, alpha_k, self.zero)
-        #        tau_k = softplus(torch.where(state_k, t.unsqueeze(-1)-t0_k, logits_k))
-        #        ut_k, st_k = mRNA(tau_k, u0_k, s0_k, alpha_k, beta_k, gamma_k)
-        #        ut = torch.einsum("ijk,k->ij", ut_k, kinetics_weights)
-        #        st = torch.einsum("ijk,k->ij", st_k, kinetics_weights)
-        #        assert ut.shape == (cell_plate.subsample_size, gene_plate.size), ut.shape
-        #        u_dist, s_dist = self.get_likelihood(ut, st, u_log_library, s_log_library, None, None, u_read_depth=u_read_depth, s_read_depth=s_read_depth)
-        #        u = pyro.sample("u", u_dist, obs=u_obs)
-        #        s = pyro.sample("s", s_dist, obs=s_obs)
-
 
 class AuxTrajectoryModel(PyroModule):
     def __init__(
