@@ -937,6 +937,308 @@ class AuxCellVelocityModel(VelocityModel):
         return ut, st
 
 
+class VelocityModelAuto(AuxCellVelocityModel):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        if self.guide_type in [
+            "velocity_auto",
+            "velocity_auto_depth",
+            "velocity_auto_t0_constraint",
+        ]:
+            self.time_encoder = TimeEncoder2(
+                self.num_genes,
+                n_output=1,
+                dropout_rate=0.5,
+                activation_fn=nn.ELU,
+                n_layers=3,
+                var_eps=1e-6,
+            )
+        if self.correct_library_size and (
+            self.guide_type == "velocity_auto"
+            or self.guide_type == "velocity_auto_t0_constraint"
+        ):
+            self.u_lib_encoder = TimeEncoder2(
+                self.num_genes + 1, 1, n_layers=3, dropout_rate=0.5
+            )
+            self.s_lib_encoder = TimeEncoder2(
+                self.num_genes + 1, 1, n_layers=3, dropout_rate=0.5
+            )
+
+        if self.cell_specific_kinetics is not None:
+            self.multikinetics_encoder = TimeEncoder2(
+                1,  # encode cell state
+                1,  # encode cell specificity of kinetics
+                dropout_rate=0.5,
+                last_layer_activation=nn.Sigmoid(),
+                n_layers=3,
+            )
+
+    def get_rna(
+        self,
+        u_scale: torch.Tensor,
+        s_scale: torch.Tensor,
+        alpha: torch.Tensor,
+        beta: torch.Tensor,
+        gamma: torch.Tensor,
+        t: torch.Tensor,
+        u0: torch.Tensor,
+        s0: torch.Tensor,
+        t0: torch.Tensor,
+        switching: Optional[torch.Tensor] = None,
+        u_inf: Optional[torch.Tensor] = None,
+        s_inf: Optional[torch.Tensor] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        if self.cell_specific_kinetics is None:
+            if self.guide_type == "auto":
+                enum = "parallel"
+            else:
+                if pyro.__version__.startswith(
+                    "1.8.1"
+                ):  # parallel still memory leaky from pip install
+                    enum = "parallel"
+                elif pyro.__version__.startswith("1.6.0"):
+                    # neural network guide only works in sequential enumeration
+                    # only 1.6.0 version supports model-side sequential enumeration
+                    enum = "sequential"
+
+            state = (
+                pyro.sample(
+                    "cell_gene_state",
+                    Bernoulli(logits=t - switching),
+                    infer={"enumerate": enum},
+                )
+                == self.zero
+            )
+            alpha_off = self.zero
+            u0_vec = torch.where(state, u0, u_inf)
+            s0_vec = torch.where(state, s0, s_inf)
+            alpha_vec = torch.where(state, alpha, alpha_off)
+            tau = softplus(torch.where(state, t - t0, t - switching))
+        else:
+            u0_vec = u0
+            s0_vec = s0
+            alpha_vec = alpha
+            tau = softplus(t - t0)
+            ##tau = relu(torch.where(state, t - t0, t - switching))
+        # print(alpha_vec.shape)
+        ut, st = mRNA(tau, u0_vec, s0_vec, alpha_vec, beta, gamma)
+        ut = ut * u_scale / s_scale
+        return ut, st
+
+    def get_time(
+        self,
+        u_scale,
+        s_scale,
+        alpha,
+        beta,
+        gamma,
+        u_obs,
+        s_obs,
+        u0,
+        s0,
+        t0,
+        dt_switching,
+        u_inf,
+        s_inf,
+        u_read_depth=None,
+        s_read_depth=None,
+    ):
+        scale = u_scale / s_scale
+
+        # if u_read_depth is None:
+        #    u_ = u_obs / scale
+        #    s_ = s_obs
+        # else:
+        #    #neural network correction of read depth not converge
+        #    u_ = u_obs / u_read_depth / scale
+        #    s_ = s_obs / s_read_depth
+        u_ = u_obs / scale
+        s_ = s_obs
+
+        std_u = u_scale / scale
+        tau = tau_inv(u_, s_, u0, s0, alpha, beta, gamma)
+        ut, st = mRNA(tau, u0, s0, alpha, beta, gamma)
+        if self.cell_specific_kinetics is None:
+            tau_ = tau_inv(u_, s_, u_inf, s_inf, self.zero, beta, gamma)
+            ut_, st_ = mRNA(tau_, u_inf, s_inf, self.zero, beta, gamma)
+        state_on = ((ut - u_) / std_u) ** 2 + ((st - s_) / s_scale) ** 2
+        state_zero = ((ut - u0) / std_u) ** 2 + ((st - s0) / s_scale) ** 2
+        if self.cell_specific_kinetics is None:
+            state_inf = ((ut_ - u_inf) / std_u) ** 2 + ((st_ - s_inf) / s_scale) ** 2
+            state_off = ((ut_ - u_) / std_u) ** 2 + ((st_ - s_) / s_scale) ** 2
+            cell_gene_state_logits = torch.stack(
+                [state_on, state_zero, state_off, state_inf], dim=-1
+            ).argmin(-1)
+        if self.cell_specific_kinetics is None:
+            state = (cell_gene_state_logits > 1) == self.zero
+            t = torch.where(state, tau + t0, tau_ + dt_switching + t0)
+        else:
+            t = softplus(tau + t0)
+        cell_time_loc, cell_time_scale = self.time_encoder(t)
+        t = pyro.sample(
+            "cell_time", LogNormal(cell_time_loc, torch.sqrt(cell_time_scale))
+        )
+        return t
+
+    def forward(
+        self,
+        u_obs: Optional[torch.Tensor] = None,
+        s_obs: Optional[torch.Tensor] = None,
+        u_log_library: Optional[torch.Tensor] = None,
+        s_log_library: Optional[torch.Tensor] = None,
+        u_log_library_loc: Optional[torch.Tensor] = None,
+        s_log_library_loc: Optional[torch.Tensor] = None,
+        u_log_library_scale: Optional[torch.Tensor] = None,
+        s_log_library_scale: Optional[torch.Tensor] = None,
+        ind_x: Optional[torch.Tensor] = None,
+        cell_state: Optional[torch.Tensor] = None,
+        time_info: Optional[torch.Tensor] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        cell_plate, gene_plate = self.create_plates(
+            u_obs,
+            s_obs,
+            u_log_library,
+            s_log_library,
+            u_log_library_loc,
+            s_log_library_loc,
+            u_log_library_scale,
+            s_log_library_scale,
+            ind_x,
+            cell_state,
+            time_info,
+        )
+
+        with gene_plate, poutine.mask(mask=self.include_prior):
+            alpha = self.alpha
+            gamma = self.gamma
+            beta = self.beta
+
+            # if self.cell_specific_kinetics is not None:
+            #     rho, _ = self.multikinetics_encoder(cell_state)
+            #     alpha = rho * alpha
+            #     beta = beta * rho
+            #     gamma = gamma * rho
+
+            if self.add_offset:
+                u0 = pyro.sample("u_offset", LogNormal(self.zero, self.one))
+                s0 = pyro.sample("s_offset", LogNormal(self.zero, self.one))
+            else:
+                s0 = u0 = self.zero
+
+            t0 = pyro.sample("t0", Normal(self.zero, self.one))
+
+            if (self.likelihood == "Normal") or (self.guide_type == "auto"):
+                u_scale = self.u_scale
+                s_scale = self.one
+                if self.likelihood == "Normal":
+                    s_scale = self.s_scale
+            else:
+                # NegativeBinomial and Poisson model
+                u_scale = s_scale = self.one
+
+            if self.cell_specific_kinetics is None:
+                dt_switching = self.dt_switching
+                u_inf, s_inf = mRNA(dt_switching, u0, s0, alpha, beta, gamma)
+                u_inf = pyro.deterministic("u_inf", u_inf, event_dim=0)
+                s_inf = pyro.deterministic("s_inf", s_inf, event_dim=0)
+                switching = pyro.deterministic(
+                    "switching", dt_switching + t0, event_dim=0
+                )
+            else:
+                switching = u_inf = s_inf = None
+
+        with cell_plate:
+            t = pyro.sample(
+                "cell_time", LogNormal(self.zero, self.one).mask(self.include_prior)
+            )
+            # physical time constraint or cytotrace constraint
+            # if time_info is not None:
+            #     physical_time = pyro.sample("physical_time", Bernoulli(logits=t), obs=time_info)
+            ## Gioele's suggestion
+            # alpha = alpha * t
+            # beta = beta * t
+            # gamma = gamma * t
+            # dt_switching = dt_switching * t
+            # with gene_plate:
+            #    if self.cell_specific_kinetics is None:
+            #        u_inf, s_inf = mRNA(dt_switching, u0, s0, alpha, beta, gamma)
+            #        u_inf = pyro.deterministic("u_inf", u_inf, event_dim=0)
+            #        s_inf = pyro.deterministic("s_inf", s_inf, event_dim=0)
+            #        switching = pyro.deterministic("switching", dt_switching + t0, event_dim=0)
+            #    else:
+            #        switching = u_inf = s_inf = None
+
+        with cell_plate:
+            u_cell_size_coef = ut_coef = s_cell_size_coef = st_coef = None
+            u_read_depth = s_read_depth = None
+            if self.correct_library_size and (self.likelihood != "Normal"):
+                if self.guide_type == "velocity_auto":
+                    u_read_depth = torch.exp(u_log_library)
+                    s_read_depth = torch.exp(s_log_library)
+                else:
+                    u_read_depth = pyro.sample(
+                        "u_read_depth", LogNormal(u_log_library, u_log_library_scale)
+                    )
+                    s_read_depth = pyro.sample(
+                        "s_read_depth", LogNormal(s_log_library, s_log_library_scale)
+                    )
+                    if self.correct_library_size == "cell_size_regress":
+                        # cell-wise coef per cell
+                        u_cell_size_coef = pyro.sample(
+                            "u_cell_size_coef", Normal(self.zero, self.one)
+                        )
+                        ut_coef = pyro.sample("ut_coef", Normal(self.zero, self.one))
+                        s_cell_size_coef = pyro.sample(
+                            "s_cell_size_coef", Normal(self.zero, self.one)
+                        )
+                        st_coef = pyro.sample("st_coef", Normal(self.zero, self.one))
+            with gene_plate:
+                if (
+                    self.guide_type == "auto_t0_constraint"
+                    or self.guide_type == "velocity_auto_t0_constraint"
+                ):
+                    pyro.sample(
+                        "time_constraint", Bernoulli(logits=t - t0), obs=self.one
+                    )
+                # constraint u_inf > u0, s_inf > s0, reduce performance..
+                # pyro.sample("u_inf_constraint", Bernoulli(logits=alpha/beta-u0), obs=self.one)
+                # pyro.sample("s_inf_constraint", Bernoulli(logits=alpha/gamma-s0), obs=self.one)
+                # pyro.sample("u_inf_constraint2", Bernoulli(logits=alpha/beta-u_inf), obs=self.one)
+                # pyro.sample("s_inf_constraint2", Bernoulli(logits=alpha/gamma-s_inf), obs=self.one)
+                ut, st = self.get_rna(
+                    u_scale,
+                    s_scale,
+                    alpha,
+                    beta,
+                    gamma,
+                    t,
+                    u0,
+                    s0,
+                    t0,
+                    switching,
+                    u_inf,
+                    s_inf,
+                )
+                u_dist, s_dist = self.get_likelihood(
+                    ut,
+                    st,
+                    u_log_library,
+                    s_log_library,
+                    u_scale,
+                    s_scale,
+                    u_read_depth=u_read_depth,
+                    s_read_depth=s_read_depth,
+                    u_cell_size_coef=u_cell_size_coef,
+                    ut_coef=ut_coef,
+                    s_cell_size_coef=s_cell_size_coef,
+                    st_coef=st_coef,
+                )
+                u = pyro.sample("u", u_dist, obs=u_obs)
+                s = pyro.sample("s", s_dist, obs=s_obs)
+        return u, s
+
+
+
 class TimeEncoder(nn.Module):
     """adapt https://docs.scvi-tools.org/en/0.9.1/_modules/scvi/nn/_base_components.html#Encoder
     for shap DeepExplainer usage
@@ -2826,501 +3128,3 @@ class LatentFactor(LogNormalModel):
         else:
             self.model2(u_obs, s_obs, u_log_library, s_log_library, ind_x)
 
-
-##class VelocityModelAuto(AuxCellVelocityModel):
-##    def __init__(self, *args, **kwargs):
-##        super().__init__(*args, **kwargs)
-##        if self.guide_type in ['velocity_auto', 'velocity_auto_depth', 'velocity_auto_t0_constraint']:
-##            self.time_encoder = TimeEncoder2(
-##                self.num_genes,
-##                n_output=1,
-##                dropout_rate=0.5,
-##                activation_fn=nn.ELU,
-##                n_layers=3, var_eps=1e-6)
-##        if self.correct_library_size and (self.guide_type == 'velocity_auto' or self.guide_type == 'velocity_auto_t0_constraint'):
-##            self.u_lib_encoder = TimeEncoder2(self.num_genes+1, 1, n_layers=3, dropout_rate=0.5)
-##            self.s_lib_encoder = TimeEncoder2(self.num_genes+1, 1, n_layers=3, dropout_rate=0.5)
-##        if self.cell_specific_kinetics is not None:
-##            self.multikinetics_encoder = TimeEncoder2(
-##                    1, # encode cell state
-##                    1, # encode cell specificity of kinetics
-##                    dropout_rate=0.5,
-##                    last_layer_activation=nn.Sigmoid(),
-##                    n_layers=3)
-##
-##    def get_rna(self, u_scale, s_scale,
-##                alpha, beta, gamma,
-##                t, u0, s0, t0,
-##                switching=None, u_inf=None, s_inf=None):
-##        if self.cell_specific_kinetics is None:
-##            state = pyro.sample("cell_gene_state", Bernoulli(logits=t-switching),
-##                                infer={'enumerate': 'sequential'}) == self.zero
-##                                ###infer={'enumerate': 'parallel'}) == self.zero
-##            u0_vec = torch.where(state, u0, u_inf)
-##            s0_vec = torch.where(state, s0, s_inf)
-##            alpha_vec = torch.where(state, alpha, self.zero)
-##            tau = softplus(torch.where(state, t - t0, t - switching))
-##        else:
-##            u0_vec = u0
-##            s0_vec = s0
-##            alpha_vec = alpha
-##            tau = softplus(t - t0)
-##            ##tau = relu(torch.where(state, t - t0, t - switching))
-##        ut, st = mRNA(tau, u0_vec, s0_vec, alpha_vec, beta, gamma)
-##        ut = ut * u_scale / s_scale
-##        return ut, st
-##
-##    def get_time(self,
-##                 u_scale, s_scale,
-##                 alpha, beta, gamma,
-##                 u_obs, s_obs, u0, s0, t0,
-##                 dt_switching, u_inf, s_inf,
-##                 u_read_depth=None, s_read_depth=None,
-##                 ut_coef=None,
-##                 u_cell_size_coef=None,
-##                 s_cell_size_coef=None,
-##                 st_coef=None):
-##        scale = u_scale / s_scale
-##
-##        #if u_read_depth is None:
-##        u_ = u_obs / scale
-##        s_ = s_obs
-##        #else:
-##        #    #neural network correction of read depth not converge
-##        #    #if self.model.correct_library_size == 'cell_size_regress'
-##        #    #    u_ = (torch.log(u_obs+self.one*1e-6)-u_cell_size_coef*u_read_depth)/scale
-##        #    #    s_ = (torch.log(s_obs+self.one*1e-6)-s_cell_size_coef*s_read_depth)
-##        #    #else:
-##        #    u_ = u_obs / u_read_depth / scale
-##        #    s_ = s_obs / s_read_depth
-##
-##        std_u = u_scale / scale
-##        tau = tau_inv(u_, s_, u0, s0, alpha, beta, gamma)
-##        ut, st = mRNA(tau, u0, s0, alpha, beta, gamma)
-##        if self.cell_specific_kinetics is None:
-##            tau_ = tau_inv(u_, s_, u_inf, s_inf, self.zero, beta, gamma)
-##            ut_, st_ = mRNA(tau_, u_inf, s_inf, self.zero, beta, gamma)
-##        state_on = ((ut - u_)/std_u)**2 + ((st - s_)/s_scale)**2
-##        state_zero = ((ut - u0)/std_u)**2 + ((st - s0)/s_scale)**2
-##        if self.cell_specific_kinetics is None:
-##            state_inf = ((ut_ - u_inf)/std_u)**2 + ((st_ - s_inf)/s_scale)**2
-##            state_off = ((ut_ - u_)/std_u)**2 + ((st_ - s_)/s_scale)**2
-##            cell_gene_state_logits = torch.stack([state_on, state_zero, state_off, state_inf], dim=-1).argmin(-1)
-##        if self.cell_specific_kinetics is None:
-##            state = (cell_gene_state_logits > 1) == self.zero
-##            t = torch.where(state, tau+t0, tau_+dt_switching+t0)
-##        else:
-##            t = softplus(tau + t0)
-##        cell_time_loc, cell_time_scale = self.time_encoder(t)
-##        t = pyro.sample("cell_time", LogNormal(cell_time_loc, torch.sqrt(cell_time_scale)))
-##        return t
-##
-##    def forward(
-##        self,
-##        u_obs: Optional[torch.Tensor] = None,
-##        s_obs: Optional[torch.Tensor] = None,
-##        u_log_library: Optional[torch.Tensor] = None,
-##        s_log_library: Optional[torch.Tensor] = None,
-##        u_log_library_loc: Optional[torch.Tensor] = None,
-##        s_log_library_loc: Optional[torch.Tensor] = None,
-##        u_log_library_scale: Optional[torch.Tensor] = None,
-##        s_log_library_scale: Optional[torch.Tensor] = None,
-##        ind_x: Optional[torch.Tensor] = None,
-##        cell_state: Optional[torch.Tensor] = None,
-##        time_info: Optional[torch.Tensor] = None,
-##    ):
-##        cell_plate, gene_plate = self.create_plates(u_obs, s_obs, u_log_library, s_log_library, u_log_library_loc, s_log_library_loc, u_log_library_scale, s_log_library_scale, ind_x, cell_state, time_info)
-##
-##        with gene_plate, poutine.mask(mask=self.include_prior):
-##            alpha = self.alpha
-##            gamma = self.gamma
-##            beta = self.beta
-##
-##            if self.cell_specific_kinetics is not None:
-##                rho, _ = self.multikinetics_encoder(cell_state)
-##                alpha = rho * alpha
-##                beta = beta * rho
-##                gamma = gamma * rho
-##            t0 = pyro.sample("t0", Normal(self.zero, self.one))
-##            if self.add_offset:
-##                u0 = pyro.sample("u_offset", LogNormal(self.zero, self.one))
-##                s0 = pyro.sample("s_offset", LogNormal(self.zero, self.one))
-##                ##u0 = pyro.sample("u_offset", Gamma(self.one, self.one))
-##                ##s0 = pyro.sample("s_offset", Gamma(self.one, self.one))
-##            else:
-##                s0 = u0 = self.zero
-##
-##            if self.likelihood == 'Normal':
-##                u_scale = self.u_scale
-##                s_scale = self.s_scale
-##            else:
-##                # NegativeBinomial and Poisson model
-##                u_scale = s_scale = self.one
-##
-##            if self.cell_specific_kinetics is None:
-##                dt_switching = self.dt_switching
-##                u_inf, s_inf = mRNA(dt_switching, u0, s0, alpha, beta, gamma)
-##                u_inf = pyro.deterministic("u_inf", u_inf, event_dim=0)
-##                s_inf = pyro.deterministic("s_inf", s_inf, event_dim=0)
-##                switching = pyro.deterministic("switching", dt_switching + t0, event_dim=0)
-##            else:
-##                switching = u_inf = s_inf = None
-##
-##        with cell_plate:
-##            t = pyro.sample("cell_time", LogNormal(self.zero, self.one).mask(self.include_prior))
-##
-##            # physical time constraint or cytotrace constraint
-##            if time_info is not None:
-##                physical_time = pyro.sample("physical_time", Bernoulli(logits=t), obs=time_info)
-##            ## Gioele's suggestion
-##            #alpha = alpha * t
-##            #beta = beta * t
-##            #gamma = gamma * t
-##            #dt_switching = dt_switching * t
-##            #with gene_plate:
-##            #    if self.cell_specific_kinetics is None:
-##            #        u_inf, s_inf = mRNA(dt_switching, u0, s0, alpha, beta, gamma)
-##            #        u_inf = pyro.deterministic("u_inf", u_inf, event_dim=0)
-##            #        s_inf = pyro.deterministic("s_inf", s_inf, event_dim=0)
-##            #        switching = pyro.deterministic("switching", dt_switching + t0, event_dim=0)
-##            #    else:
-##            #        switching = u_inf = s_inf = None
-##
-##        with cell_plate:
-##            if self.correct_library_size and (self.likelihood != 'Normal'):
-##                if self.correct_library_size == 'cell_size_regress':
-##                    #u_read_depth = u_log_library
-##                    #s_read_depth = s_log_library
-##                    u_read_depth = torch.log(pyro.sample("u_read_depth", LogNormal(u_log_library, u_log_library_scale)))
-##                    s_read_depth = torch.log(pyro.sample("s_read_depth", LogNormal(s_log_library, s_log_library_scale)))
-##                    # cell-wise coef per cell
-##                    u_cell_size_coef = pyro.sample("u_cell_size_coef", Normal(self.zero, self.one))
-##                    ut_coef = pyro.sample("ut_coef", Normal(self.zero, self.one))
-##                    s_cell_size_coef = pyro.sample("s_cell_size_coef", Normal(self.zero, self.one))
-##                    st_coef = pyro.sample("st_coef", Normal(self.zero, self.one))
-##                else:
-##                    #u_read_depth = torch.exp(u_log_library)
-##                    #s_read_depth = torch.exp(s_log_library)
-##                    u_read_depth = pyro.sample("u_read_depth", LogNormal(u_log_library, u_log_library_scale))
-##                    s_read_depth = pyro.sample("s_read_depth", LogNormal(s_log_library, s_log_library_scale))
-##                    u_cell_size_coef = ut_coef = s_cell_size_coef = st_coef = None
-##            else:
-##                u_read_depth = s_read_depth = None
-##                u_cell_size_coef = ut_coef = s_cell_size_coef = st_coef = None
-##            with gene_plate:
-##                if self.guide_type == 'auto_t0_constraint' or self.guide_type == 'velocity_auto_t0_constraint':
-##                    pyro.sample("time_constraint", Bernoulli(logits=t-t0), obs=self.one)
-##
-##                # constraint u_inf > u0, s_inf > s0, reduce performance..
-##                # pyro.sample("u_inf_constraint", Bernoulli(logits=alpha/beta-u0), obs=self.one)
-##                # pyro.sample("s_inf_constraint", Bernoulli(logits=alpha/gamma-s0), obs=self.one)
-##                # pyro.sample("u_inf_constraint2", Bernoulli(logits=alpha/beta-u_inf), obs=self.one)
-##                # pyro.sample("s_inf_constraint2", Bernoulli(logits=alpha/gamma-s_inf), obs=self.one)
-##
-##                ut, st = self.get_rna(u_scale, s_scale, alpha, beta, gamma,
-##                                      t, u0, s0, t0, switching, u_inf, s_inf)
-##                u_dist, s_dist = self.get_likelihood(ut, st, u_log_library, s_log_library, u_scale, s_scale, u_read_depth=u_read_depth, s_read_depth=s_read_depth, u_cell_size_coef=u_cell_size_coef, ut_coef=ut_coef, s_cell_size_coef=s_cell_size_coef, st_coef=st_coef)
-##                u = pyro.sample("u", u_dist, obs=u_obs)
-##                s = pyro.sample("s", s_dist, obs=s_obs)
-##        return u, s
-
-
-class VelocityModelAuto(AuxCellVelocityModel):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        if self.guide_type in [
-            "velocity_auto",
-            "velocity_auto_depth",
-            "velocity_auto_t0_constraint",
-        ]:
-            self.time_encoder = TimeEncoder2(
-                self.num_genes,
-                n_output=1,
-                dropout_rate=0.5,
-                activation_fn=nn.ELU,
-                n_layers=3,
-                var_eps=1e-6,
-            )
-        if self.correct_library_size and (
-            self.guide_type == "velocity_auto"
-            or self.guide_type == "velocity_auto_t0_constraint"
-        ):
-            self.u_lib_encoder = TimeEncoder2(
-                self.num_genes + 1, 1, n_layers=3, dropout_rate=0.5
-            )
-            self.s_lib_encoder = TimeEncoder2(
-                self.num_genes + 1, 1, n_layers=3, dropout_rate=0.5
-            )
-
-        if self.cell_specific_kinetics is not None:
-            self.multikinetics_encoder = TimeEncoder2(
-                1,  # encode cell state
-                1,  # encode cell specificity of kinetics
-                dropout_rate=0.5,
-                last_layer_activation=nn.Sigmoid(),
-                n_layers=3,
-            )
-
-    def get_rna(
-        self,
-        u_scale: torch.Tensor,
-        s_scale: torch.Tensor,
-        alpha: torch.Tensor,
-        beta: torch.Tensor,
-        gamma: torch.Tensor,
-        t: torch.Tensor,
-        u0: torch.Tensor,
-        s0: torch.Tensor,
-        t0: torch.Tensor,
-        switching: Optional[torch.Tensor] = None,
-        u_inf: Optional[torch.Tensor] = None,
-        s_inf: Optional[torch.Tensor] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        if self.cell_specific_kinetics is None:
-            if self.guide_type == "auto":
-                enum = "parallel"
-            else:
-                if pyro.__version__.startswith(
-                    "1.8.1"
-                ):  # parallel still memory leaky from pip install
-                    enum = "parallel"
-                elif pyro.__version__.startswith("1.6.0"):
-                    # neural network guide only works in sequential enumeration
-                    # only 1.6.0 version supports model-side sequential enumeration
-                    enum = "sequential"
-
-            state = (
-                pyro.sample(
-                    "cell_gene_state",
-                    Bernoulli(logits=t - switching),
-                    infer={"enumerate": enum},
-                )
-                == self.zero
-            )
-            alpha_off = self.zero
-            u0_vec = torch.where(state, u0, u_inf)
-            s0_vec = torch.where(state, s0, s_inf)
-            alpha_vec = torch.where(state, alpha, alpha_off)
-            tau = softplus(torch.where(state, t - t0, t - switching))
-        else:
-            u0_vec = u0
-            s0_vec = s0
-            alpha_vec = alpha
-            tau = softplus(t - t0)
-            ##tau = relu(torch.where(state, t - t0, t - switching))
-        # print(alpha_vec.shape)
-        ut, st = mRNA(tau, u0_vec, s0_vec, alpha_vec, beta, gamma)
-        ut = ut * u_scale / s_scale
-        return ut, st
-
-    def get_time(
-        self,
-        u_scale,
-        s_scale,
-        alpha,
-        beta,
-        gamma,
-        u_obs,
-        s_obs,
-        u0,
-        s0,
-        t0,
-        dt_switching,
-        u_inf,
-        s_inf,
-        u_read_depth=None,
-        s_read_depth=None,
-    ):
-        scale = u_scale / s_scale
-
-        # if u_read_depth is None:
-        #    u_ = u_obs / scale
-        #    s_ = s_obs
-        # else:
-        #    #neural network correction of read depth not converge
-        #    u_ = u_obs / u_read_depth / scale
-        #    s_ = s_obs / s_read_depth
-        u_ = u_obs / scale
-        s_ = s_obs
-
-        std_u = u_scale / scale
-        tau = tau_inv(u_, s_, u0, s0, alpha, beta, gamma)
-        ut, st = mRNA(tau, u0, s0, alpha, beta, gamma)
-        if self.cell_specific_kinetics is None:
-            tau_ = tau_inv(u_, s_, u_inf, s_inf, self.zero, beta, gamma)
-            ut_, st_ = mRNA(tau_, u_inf, s_inf, self.zero, beta, gamma)
-        state_on = ((ut - u_) / std_u) ** 2 + ((st - s_) / s_scale) ** 2
-        state_zero = ((ut - u0) / std_u) ** 2 + ((st - s0) / s_scale) ** 2
-        if self.cell_specific_kinetics is None:
-            state_inf = ((ut_ - u_inf) / std_u) ** 2 + ((st_ - s_inf) / s_scale) ** 2
-            state_off = ((ut_ - u_) / std_u) ** 2 + ((st_ - s_) / s_scale) ** 2
-            cell_gene_state_logits = torch.stack(
-                [state_on, state_zero, state_off, state_inf], dim=-1
-            ).argmin(-1)
-        if self.cell_specific_kinetics is None:
-            state = (cell_gene_state_logits > 1) == self.zero
-            t = torch.where(state, tau + t0, tau_ + dt_switching + t0)
-        else:
-            t = softplus(tau + t0)
-        cell_time_loc, cell_time_scale = self.time_encoder(t)
-        t = pyro.sample(
-            "cell_time", LogNormal(cell_time_loc, torch.sqrt(cell_time_scale))
-        )
-        return t
-
-    def forward(
-        self,
-        u_obs: Optional[torch.Tensor] = None,
-        s_obs: Optional[torch.Tensor] = None,
-        u_log_library: Optional[torch.Tensor] = None,
-        s_log_library: Optional[torch.Tensor] = None,
-        u_log_library_loc: Optional[torch.Tensor] = None,
-        s_log_library_loc: Optional[torch.Tensor] = None,
-        u_log_library_scale: Optional[torch.Tensor] = None,
-        s_log_library_scale: Optional[torch.Tensor] = None,
-        ind_x: Optional[torch.Tensor] = None,
-        cell_state: Optional[torch.Tensor] = None,
-        time_info: Optional[torch.Tensor] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        cell_plate, gene_plate = self.create_plates(
-            u_obs,
-            s_obs,
-            u_log_library,
-            s_log_library,
-            u_log_library_loc,
-            s_log_library_loc,
-            u_log_library_scale,
-            s_log_library_scale,
-            ind_x,
-            cell_state,
-            time_info,
-        )
-
-        with gene_plate, poutine.mask(mask=self.include_prior):
-            alpha = self.alpha
-            gamma = self.gamma
-            beta = self.beta
-
-            # if self.cell_specific_kinetics is not None:
-            #     rho, _ = self.multikinetics_encoder(cell_state)
-            #     alpha = rho * alpha
-            #     beta = beta * rho
-            #     gamma = gamma * rho
-
-            if self.add_offset:
-                u0 = pyro.sample("u_offset", LogNormal(self.zero, self.one))
-                s0 = pyro.sample("s_offset", LogNormal(self.zero, self.one))
-            else:
-                s0 = u0 = self.zero
-
-            t0 = pyro.sample("t0", Normal(self.zero, self.one))
-
-            if (self.likelihood == "Normal") or (self.guide_type == "auto"):
-                u_scale = self.u_scale
-                s_scale = self.one
-                if self.likelihood == "Normal":
-                    s_scale = self.s_scale
-            else:
-                # NegativeBinomial and Poisson model
-                u_scale = s_scale = self.one
-
-            if self.cell_specific_kinetics is None:
-                dt_switching = self.dt_switching
-                u_inf, s_inf = mRNA(dt_switching, u0, s0, alpha, beta, gamma)
-                u_inf = pyro.deterministic("u_inf", u_inf, event_dim=0)
-                s_inf = pyro.deterministic("s_inf", s_inf, event_dim=0)
-                switching = pyro.deterministic(
-                    "switching", dt_switching + t0, event_dim=0
-                )
-            else:
-                switching = u_inf = s_inf = None
-
-        with cell_plate:
-            t = pyro.sample(
-                "cell_time", LogNormal(self.zero, self.one).mask(self.include_prior)
-            )
-            # physical time constraint or cytotrace constraint
-            # if time_info is not None:
-            #     physical_time = pyro.sample("physical_time", Bernoulli(logits=t), obs=time_info)
-            ## Gioele's suggestion
-            # alpha = alpha * t
-            # beta = beta * t
-            # gamma = gamma * t
-            # dt_switching = dt_switching * t
-            # with gene_plate:
-            #    if self.cell_specific_kinetics is None:
-            #        u_inf, s_inf = mRNA(dt_switching, u0, s0, alpha, beta, gamma)
-            #        u_inf = pyro.deterministic("u_inf", u_inf, event_dim=0)
-            #        s_inf = pyro.deterministic("s_inf", s_inf, event_dim=0)
-            #        switching = pyro.deterministic("switching", dt_switching + t0, event_dim=0)
-            #    else:
-            #        switching = u_inf = s_inf = None
-
-        with cell_plate:
-            u_cell_size_coef = ut_coef = s_cell_size_coef = st_coef = None
-            u_read_depth = s_read_depth = None
-            if self.correct_library_size and (self.likelihood != "Normal"):
-                if self.guide_type == "velocity_auto":
-                    u_read_depth = torch.exp(u_log_library)
-                    s_read_depth = torch.exp(s_log_library)
-                else:
-                    u_read_depth = pyro.sample(
-                        "u_read_depth", LogNormal(u_log_library, u_log_library_scale)
-                    )
-                    s_read_depth = pyro.sample(
-                        "s_read_depth", LogNormal(s_log_library, s_log_library_scale)
-                    )
-                    if self.correct_library_size == "cell_size_regress":
-                        # cell-wise coef per cell
-                        u_cell_size_coef = pyro.sample(
-                            "u_cell_size_coef", Normal(self.zero, self.one)
-                        )
-                        ut_coef = pyro.sample("ut_coef", Normal(self.zero, self.one))
-                        s_cell_size_coef = pyro.sample(
-                            "s_cell_size_coef", Normal(self.zero, self.one)
-                        )
-                        st_coef = pyro.sample("st_coef", Normal(self.zero, self.one))
-            with gene_plate:
-                if (
-                    self.guide_type == "auto_t0_constraint"
-                    or self.guide_type == "velocity_auto_t0_constraint"
-                ):
-                    pyro.sample(
-                        "time_constraint", Bernoulli(logits=t - t0), obs=self.one
-                    )
-                # constraint u_inf > u0, s_inf > s0, reduce performance..
-                # pyro.sample("u_inf_constraint", Bernoulli(logits=alpha/beta-u0), obs=self.one)
-                # pyro.sample("s_inf_constraint", Bernoulli(logits=alpha/gamma-s0), obs=self.one)
-                # pyro.sample("u_inf_constraint2", Bernoulli(logits=alpha/beta-u_inf), obs=self.one)
-                # pyro.sample("s_inf_constraint2", Bernoulli(logits=alpha/gamma-s_inf), obs=self.one)
-                ut, st = self.get_rna(
-                    u_scale,
-                    s_scale,
-                    alpha,
-                    beta,
-                    gamma,
-                    t,
-                    u0,
-                    s0,
-                    t0,
-                    switching,
-                    u_inf,
-                    s_inf,
-                )
-                u_dist, s_dist = self.get_likelihood(
-                    ut,
-                    st,
-                    u_log_library,
-                    s_log_library,
-                    u_scale,
-                    s_scale,
-                    u_read_depth=u_read_depth,
-                    s_read_depth=s_read_depth,
-                    u_cell_size_coef=u_cell_size_coef,
-                    ut_coef=ut_coef,
-                    s_cell_size_coef=s_cell_size_coef,
-                    st_coef=st_coef,
-                )
-                u = pyro.sample("u", u_dist, obs=u_obs)
-                s = pyro.sample("s", s_dist, obs=s_obs)
-        return u, s
