@@ -1,4 +1,6 @@
 [core]
     remote = gcs
+[hydra]
+    enabled = False
 ['remote "gcs"']
     url = gs://pyrovelocity/dvcstore
