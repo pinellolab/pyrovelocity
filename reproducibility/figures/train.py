@@ -1,12 +1,16 @@
 import multiprocessing
 import os
 import pickle
+import uuid
 from logging import Logger
 from pathlib import Path
+from statistics import harmonic_mean
 from typing import Text
 
 import hydra
+import mlflow
 import torch
+from mlflow import MlflowClient
 from omegaconf import DictConfig
 
 from pyrovelocity.api import train_model
@@ -15,6 +19,7 @@ from pyrovelocity.data import load_data
 from pyrovelocity.plot import compute_mean_vector_field
 from pyrovelocity.plot import vector_field_uncertainty
 from pyrovelocity.utils import get_pylogger
+from pyrovelocity.utils import mae_evaluate
 from pyrovelocity.utils import print_attributes
 
 
@@ -70,7 +75,7 @@ def train(conf: DictConfig, logger: Logger) -> None:
         #############
 
         if torch.cuda.is_available():
-            accelerators = [d for d in range(torch.cuda.device_count())]
+            accelerators = list(range(torch.cuda.device_count()))
             gpu_id = accelerators.pop()
         else:
             gpu_id = False
@@ -81,27 +86,49 @@ def train(conf: DictConfig, logger: Logger) -> None:
             )
         else:
             logger.info(f"Training model: {data_model}")
-            adata_model_pos = train_model(
-                adata, use_gpu=gpu_id, **data_model_conf.training_parameters
-            )
-            logger.info(f"Data attributes after model training")
-            print_attributes(adata_model_pos[1])
 
-            logger.info(f"computing vector field uncertainty")
-            v_map_all, embeds_radian, fdri = vector_field_uncertainty(
-                adata, adata_model_pos[1], basis=vector_field_basis, n_jobs=ncpus_use
-            )
-            logger.info(
-                f"Data attributes after computation of vector field uncertainty"
-            )
-            print_attributes(adata_model_pos[1])
+            # UPDATE: v2.1.1 12/26/2022 autolog only supports pytorch lightning
+            # mlflow.pytorch.autolog(log_every_n_epoch=200, log_models=False, silent=False)
+            with mlflow.start_run(
+                run_name=f"{data_model}-{uuid.uuid4().hex[:7]}"
+            ) as run:
+                mlflow.set_tag("mlflow.runName", f"{data_model}-{run.info.run_id[:7]}")
+                print(f"Active run_id: {run.info.run_id}")
+                mlflow.log_params(data_model_conf.training_parameters)
+
+                # train model
+                adata_model_pos = train_model(
+                    adata, use_gpu=gpu_id, **data_model_conf.training_parameters
+                )
+
+                # logger.info(f"Data attributes after model training")
+                # print_attributes(adata_model_pos[1])
+                mae_df = mae_evaluate(adata_model_pos[1], adata)
+                mlflow.log_metric("MAE", mae_df["MAE"].mean())
+
+                logger.info("computing vector field uncertainty")
+                v_map_all, embeds_radian, fdri = vector_field_uncertainty(
+                    adata,
+                    adata_model_pos[1],
+                    basis=vector_field_basis,
+                    n_jobs=ncpus_use,
+                )
+                mlflow.log_metric(
+                    "FDR_sig_frac", round((fdri < 0.05).sum() / fdri.shape[0], 3)
+                )
+                mlflow.log_metric("FDR_HMP", harmonic_mean(fdri))
+                # logger.info(
+                #     f"Data attributes after computation of vector field uncertainty"
+                # )
+                # print_attributes(adata_model_pos[1])
+                print_logged_info(mlflow.get_run(run_id=run.info.run_id))
 
             #############
             # postprocess
             #############
 
             if "pancreas" in data_model:
-                logger.info(f"checking shared time")
+                logger.info("checking shared time")
 
                 def check_shared_time(adata_model_pos, adata):
                     adata.obs["cell_time"] = (
@@ -111,7 +138,7 @@ def train(conf: DictConfig, logger: Logger) -> None:
 
                 check_shared_time(adata_model_pos, adata)
 
-            logger.info(f"computing mean vector field")
+            logger.info("computing mean vector field")
             compute_mean_vector_field(
                 pos=adata_model_pos[1],
                 adata=adata,
@@ -119,7 +146,7 @@ def train(conf: DictConfig, logger: Logger) -> None:
                 n_jobs=ncpus_use,
             )
             embed_mean = adata.obsm[f"velocity_pyro_{vector_field_basis}"]
-            logger.info(f"Data attributes after computation of mean vector field")
+            logger.info("Data attributes after computation of mean vector field")
             print_attributes(adata)
 
             ##################
@@ -142,6 +169,16 @@ def train(conf: DictConfig, logger: Logger) -> None:
             logger.info(f"Saving pyrovelocity data: {pyrovelocity_data_path}")
             with open(pyrovelocity_data_path, "wb") as f:
                 pickle.dump(result_dict, f)
+
+
+def print_logged_info(r):
+    tags = {k: v for k, v in r.data.tags.items() if not k.startswith("mlflow.")}
+    artifacts = [f.path for f in MlflowClient().list_artifacts(r.info.run_id, "model")]
+    print(f"run_id: {r.info.run_id}")
+    print(f"artifacts: {artifacts}")
+    print(f"params: {r.data.params}")
+    print(f"metrics: {r.data.metrics}")
+    print(f"tags: {tags}")
 
 
 @hydra.main(version_base="1.2", config_path=".", config_name="config.yaml")
