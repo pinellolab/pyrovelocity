@@ -1,19 +1,14 @@
 from typing import Any
 from typing import Dict
-from typing import Iterable
 from typing import Optional
 from typing import Tuple
 from typing import Union
 
 import pyro
-import pyro.distributions as dist
 import pyro.poutine as poutine
 import torch
 from pyro.distributions import Bernoulli
 from pyro.distributions import Beta
-from pyro.distributions import Categorical
-from pyro.distributions import Dirichlet
-from pyro.distributions import Gamma
 from pyro.distributions import LogNormal
 from pyro.distributions import NegativeBinomial
 from pyro.distributions import Normal
@@ -22,11 +17,8 @@ from pyro.distributions.constraints import positive
 from pyro.nn import PyroModule
 from pyro.nn import PyroParam
 from pyro.nn import PyroSample
-from pyro.ops.indexing import Vindex
 from pyro.primitives import plate
 from scvi.nn import Decoder
-from scvi.nn import DecoderSCVI
-from scvi.nn import FCLayers
 from torch import nn
 from torch.nn.functional import relu
 from torch.nn.functional import softplus
