@@ -1,5 +1,6 @@
 from typing import Any
 from typing import Dict
+from typing import Iterable
 from typing import Optional
 from typing import Tuple
 from typing import Union
@@ -79,8 +80,7 @@ class LogNormalModel(PyroModule):
         s_log_library: Optional[torch.Tensor] = None,
         ind_x: Optional[torch.Tensor] = None,
     ):
-        cell_plate = pyro.plate("cells", self.num_cells, subsample=ind_x, dim=-1)
-        return cell_plate
+        return pyro.plate("cells", self.num_cells, subsample=ind_x, dim=-1)
 
     @PyroSample
     def alpha(self):
@@ -203,15 +203,10 @@ class LogNormalModel(PyroModule):
 
     @PyroSample
     def cell_time(self):
-        if self.plate_size == 2:
-            if self.shared_time:
-                return Normal(
-                    self.zero, self.one
-                )  # .mask(self.include_prior) # mask=False generate the same estimation as initialization
-                # return LogNormal(self.zero, self.one) #.mask(self.include_prior) # mask=False generate the same estimation as initialization
-        return LogNormal(
-            self.zero, self.one
-        )  # .mask(False) # mask=False with LogNormal makes negative correlation
+        if self.plate_size == 2 and self.shared_time:
+            return Normal(self.zero, self.one)
+        else:
+            return LogNormal(self.zero, self.one)
 
     @PyroSample
     def p_velocity(self):
@@ -263,14 +258,8 @@ class LogNormalModel(PyroModule):
         u_log_library_scale = tensor_dict["u_lib_size_scale"]
         s_log_library_scale = tensor_dict["s_lib_size_scale"]
         ind_x = tensor_dict["ind_x"].long().squeeze()
-        if "pyro_cell_state" in tensor_dict:
-            cell_state = tensor_dict["pyro_cell_state"]
-        else:
-            cell_state = None
-        if "time_info" in tensor_dict:
-            time_info = tensor_dict["time_info"]
-        else:
-            time_info = None
+        cell_state = tensor_dict.get("pyro_cell_state")
+        time_info = tensor_dict.get("time_info")
         return (
             u_obs,
             s_obs,
@@ -309,9 +298,10 @@ class LogNormalModel(PyroModule):
                 st = relu(st) + self.one * 1e-6
                 ut = pyro.deterministic("ut", ut, event_dim=0)
                 st = pyro.deterministic("st", st, event_dim=0)
-                if not (
-                    self.guide_type in ["velocity_auto", "velocity_auto_depth"]
-                ):  # time is learned from scaled u_obs/s_obs, no need to scale
+                if self.guide_type not in [
+                    "velocity_auto",
+                    "velocity_auto_depth",
+                ]:  # time is learned from scaled u_obs/s_obs, no need to scale
                     ut = ut / torch.sum(ut, dim=-1, keepdim=True)
                     st = st / torch.sum(st, dim=-1, keepdim=True)
                 ut = pyro.deterministic("ut_norm", ut, event_dim=0)
@@ -506,25 +496,24 @@ class VelocityModel(LogNormalModel):
             with cell_plate:
                 cell_time = self.cell_time
 
-        if self.likelihood in ["NB", "Poisson"]:
-            # with cell_plate:
-            #    u_read_depth = pyro.sample('u_read_depth', dist.LogNormal(u_log_library, self.one))
-            #    s_read_depth = pyro.sample('s_read_depth', dist.LogNormal(s_log_library, self.one))
-            u_read_depth = None
-            s_read_depth = None
-        else:
-            u_read_depth = None
-            s_read_depth = None
+        # if self.likelihood in ["NB", "Poisson"]:
+        #     # with cell_plate:
+        #     #    u_read_depth = pyro.sample('u_read_depth', dist.LogNormal(u_log_library, self.one))
+        #     #    s_read_depth = pyro.sample('s_read_depth', dist.LogNormal(s_log_library, self.one))
+        #     u_read_depth = None
+        #     s_read_depth = None
+        # else:
+        #     u_read_depth = None
+        #     s_read_depth = None
+        u_read_depth = None
+        s_read_depth = None
 
         with cell_plate, gene_plate, poutine.mask(
             mask=pyro.subsample(self.mask.to(alpha.device), event_dim=0)
         ):
             t = self.latent_time
             if self.shared_time:
-                if self.t_scale_on:
-                    t = cell_time * t_scale + t
-                else:
-                    t = cell_time + t
+                t = cell_time * t_scale + t if self.t_scale_on else cell_time + t
             state = (
                 pyro.sample("cell_gene_state", Bernoulli(logits=t - switching))
                 == self.zero
@@ -683,10 +672,7 @@ class AuxCellVelocityModel(VelocityModel):
             s0 = pyro.sample("s_offset", LogNormal(self.zero, self.one))
             t_scale = None
 
-            if self.add_offset:
-                gene_offset = self.gene_offset
-            else:
-                gene_offset = self.zero
+            gene_offset = self.gene_offset if self.add_offset else self.zero
             switching = dt_switching + gene_offset
             # u_inf, s_inf = mRNA(switching, self.zero, self.zero, alpha, beta, gamma)
             # u_inf, s_inf = mRNA(dt_switching, self.zero, self.zero, alpha, beta, gamma)
@@ -706,25 +692,16 @@ class AuxCellVelocityModel(VelocityModel):
             else:
                 u_pcs_mean, s_pcs_mean = None, None
 
-        if self.likelihood in ["NB", "Poisson"]:
-            # with cell_plate:
-            #    u_read_depth = pyro.sample('u_read_depth', dist.LogNormal(u_log_library, self.one))
-            #    s_read_depth = pyro.sample('s_read_depth', dist.LogNormal(s_log_library, self.one))
-            u_read_depth = None
-            s_read_depth = None
-        else:
-            u_read_depth = None
-            s_read_depth = None
-
+        s_read_depth = None
+        # with cell_plate:
+        #    u_read_depth = pyro.sample('u_read_depth', dist.LogNormal(u_log_library, self.one))
+        #    s_read_depth = pyro.sample('s_read_depth', dist.LogNormal(s_log_library, self.one))
+        u_read_depth = None
         # same as before, just refactored slightly
         # with cell_plate, gene_plate:
         #     cell_gene_mask = pyro.subsample(self.mask.to(alpha.device), event_dim=0)
 
-        if self.latent_factor == "linear":
-            cell_codebook = self.cell_codebook
-        else:
-            cell_codebook = None
-
+        cell_codebook = self.cell_codebook if self.latent_factor == "linear" else None
         # with cell_plate, poutine.mask(mask=(u_obs > 0) & (s_obs > 0)):
         with cell_plate:  # , poutine.mask(mask=cell_gene_mask):
             # u_observed_total_dist = ...  # needs to be positive - maybe Poisson(num_genes * sequencing_depth)?
@@ -852,27 +829,27 @@ class AuxCellVelocityModel(VelocityModel):
             else:
                 cellgene_type = None
 
-            if not self.only_cell_times:
-                if self.shared_time:
-                    t = pyro.sample(
-                        "latent_time",
-                        Normal(self.zero, self.one).mask(self.include_prior),
-                    )
-                    if self.t_scale_on and t_scale is not None:
-                        t = cell_time * t_scale + t + gene_offset
-                    else:
-                        t = cell_time + t  # + gene_offset
-                else:
-                    t = pyro.sample(
-                        "latent_time",
-                        LogNormal(self.zero, self.one).mask(self.include_prior),
-                    )
-            else:
+            if self.only_cell_times:
                 if self.decoder_on:
                     t, _ = self.decoder(cell_time)
                 else:
                     t = cell_time
 
+            elif self.shared_time:
+                t = pyro.sample(
+                    "latent_time",
+                    Normal(self.zero, self.one).mask(self.include_prior),
+                )
+                t = (
+                    cell_time * t_scale + t + gene_offset
+                    if self.t_scale_on and t_scale is not None
+                    else cell_time + t
+                )
+            else:
+                t = pyro.sample(
+                    "latent_time",
+                    LogNormal(self.zero, self.one).mask(self.include_prior),
+                )
             ##state = pyro.sample("cell_gene_state", Bernoulli(logits=t-switching)) == self.zero
             state = (
                 pyro.sample(
@@ -932,38 +909,38 @@ class AuxCellVelocityModel(VelocityModel):
 class VelocityModelAuto(AuxCellVelocityModel):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        if self.guide_type in [
-            "velocity_auto",
-            "velocity_auto_depth",
-            "velocity_auto_t0_constraint",
-        ]:
-            self.time_encoder = TimeEncoder2(
-                self.num_genes,
-                n_output=1,
-                dropout_rate=0.5,
-                activation_fn=nn.ELU,
-                n_layers=3,
-                var_eps=1e-6,
-            )
-        if self.correct_library_size and (
-            self.guide_type == "velocity_auto"
-            or self.guide_type == "velocity_auto_t0_constraint"
-        ):
-            self.u_lib_encoder = TimeEncoder2(
-                self.num_genes + 1, 1, n_layers=3, dropout_rate=0.5
-            )
-            self.s_lib_encoder = TimeEncoder2(
-                self.num_genes + 1, 1, n_layers=3, dropout_rate=0.5
-            )
+        # if self.guide_type in [
+        #     "velocity_auto",
+        #     "velocity_auto_depth",
+        #     "velocity_auto_t0_constraint",
+        # ]:
+        #     self.time_encoder = TimeEncoder2(
+        #         self.num_genes,
+        #         n_output=1,
+        #         dropout_rate=0.5,
+        #         activation_fn=nn.ELU,
+        #         n_layers=3,
+        #         var_eps=1e-6,
+        #     )
+        # if self.correct_library_size and (
+        #     self.guide_type == "velocity_auto"
+        #     or self.guide_type == "velocity_auto_t0_constraint"
+        # ):
+        #     self.u_lib_encoder = TimeEncoder2(
+        #         self.num_genes + 1, 1, n_layers=3, dropout_rate=0.5
+        #     )
+        #     self.s_lib_encoder = TimeEncoder2(
+        #         self.num_genes + 1, 1, n_layers=3, dropout_rate=0.5
+        #     )
 
-        if self.cell_specific_kinetics is not None:
-            self.multikinetics_encoder = TimeEncoder2(
-                1,  # encode cell state
-                1,  # encode cell specificity of kinetics
-                dropout_rate=0.5,
-                last_layer_activation=nn.Sigmoid(),
-                n_layers=3,
-            )
+        # if self.cell_specific_kinetics is not None:
+        #     self.multikinetics_encoder = TimeEncoder2(
+        #         1,  # encode cell state
+        #         1,  # encode cell specificity of kinetics
+        #         dropout_rate=0.5,
+        #         last_layer_activation=nn.Sigmoid(),
+        #         n_layers=3,
+        #     )
 
     def get_rna(
         self,
@@ -981,17 +958,20 @@ class VelocityModelAuto(AuxCellVelocityModel):
         s_inf: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         if self.cell_specific_kinetics is None:
-            if self.guide_type == "auto":
+            if (
+                self.guide_type != "auto"
+                and pyro.__version__.startswith("1.8.1")
+                or self.guide_type == "auto"
+            ):  # parallel still memory leaky from pip install
                 enum = "parallel"
-            else:
-                if pyro.__version__.startswith(
-                    "1.8.1"
-                ):  # parallel still memory leaky from pip install
-                    enum = "parallel"
-                elif pyro.__version__.startswith("1.6.0"):
-                    # neural network guide only works in sequential enumeration
-                    # only 1.6.0 version supports model-side sequential enumeration
-                    enum = "sequential"
+            elif (
+                self.guide_type != "auto"
+                and not pyro.__version__.startswith("1.8.1")
+                and pyro.__version__.startswith("1.6.0")
+            ):
+                # neural network guide only works in sequential enumeration
+                # only 1.6.0 version supports model-side sequential enumeration
+                enum = "sequential"
 
             state = (
                 pyro.sample(
@@ -1122,12 +1102,12 @@ class VelocityModelAuto(AuxCellVelocityModel):
             if (self.likelihood == "Normal") or (self.guide_type == "auto"):
                 u_scale = self.u_scale
                 s_scale = self.one
-                if self.likelihood == "Normal":
-                    s_scale = self.s_scale
             else:
                 # NegativeBinomial and Poisson model
                 u_scale = s_scale = self.one
 
+            if self.likelihood == "Normal":
+                s_scale = self.s_scale
             if self.cell_specific_kinetics is None:
                 dt_switching = self.dt_switching
                 u_inf, s_inf = mRNA(dt_switching, u0, s0, alpha, beta, gamma)
@@ -1185,10 +1165,10 @@ class VelocityModelAuto(AuxCellVelocityModel):
                         )
                         st_coef = pyro.sample("st_coef", Normal(self.zero, self.one))
             with gene_plate:
-                if (
-                    self.guide_type == "auto_t0_constraint"
-                    or self.guide_type == "velocity_auto_t0_constraint"
-                ):
+                if self.guide_type in [
+                    "auto_t0_constraint",
+                    "velocity_auto_t0_constraint",
+                ]:
                     pyro.sample(
                         "time_constraint", Bernoulli(logits=t - t0), obs=self.one
                     )
