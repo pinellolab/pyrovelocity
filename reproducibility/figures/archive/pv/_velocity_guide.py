@@ -35,7 +35,7 @@ from torch.nn.functional import relu
 from torch.nn.functional import softmax
 from torch.nn.functional import softplus
 
-# from ._velocity_model import LatentFactor
+from ._velocity_model import LatentFactor
 from ._velocity_model import VelocityModel
 from .utils import debug
 from .utils import mRNA
@@ -1473,146 +1473,146 @@ class AutoNormalRNAVelocityGuide(autoguide.AutoNormal):
         )
 
 
-# class LatentGuide(easyguide.EasyGuide):
-#     def __init__(
-#         self,
-#         model: LatentFactor,
-#         latent_factor_size: int = 10,
-#         plate_size: int = 2,
-#         inducing_point_size: int = 20,
-#         **initial_values,
-#     ):
-#         super().__init__(model)
-#         self.num_genes = model.num_genes
-#         self.num_cells = model.num_cells
-#         self.zero = model.zero
-#         self.mask = initial_values.get("mask", None)
-#         self.latent_factor_size = latent_factor_size
-#         self.plate_size = plate_size
-#         self.inducing_point_size = inducing_point_size
+class LatentGuide(easyguide.EasyGuide):
+    def __init__(
+        self,
+        model: LatentFactor,
+        latent_factor_size: int = 10,
+        plate_size: int = 2,
+        inducing_point_size: int = 20,
+        **initial_values,
+    ):
+        super().__init__(model)
+        self.num_genes = model.num_genes
+        self.num_cells = model.num_cells
+        self.zero = model.zero
+        self.mask = initial_values.get("mask", None)
+        self.latent_factor_size = latent_factor_size
+        self.plate_size = plate_size
+        self.inducing_point_size = inducing_point_size
 
-#         for key in initial_values:
-#             self.register_buffer(f"{key}_init", initial_values[key])
+        for key in initial_values:
+            self.register_buffer(f"{key}_init", initial_values[key])
 
-#     def init(self, site):
-#         if site["name"] == "cell_code":
-#             return autoguide.init_to_value(
-#                 site,
-#                 values={site["name"]: pyro.subsample(self.cell_code_init, event_dim=1)},
-#             )
-#         if hasattr(self, f"{site['name']}_init"):
-#             return autoguide.init_to_value(
-#                 site, values={site["name"]: getattr(self, f"{site['name']}_init")}
-#             )
-#         return super().init(site)
+    def init(self, site):
+        if site["name"] == "cell_code":
+            return autoguide.init_to_value(
+                site,
+                values={site["name"]: pyro.subsample(self.cell_code_init, event_dim=1)},
+            )
+        if hasattr(self, f"{site['name']}_init"):
+            return autoguide.init_to_value(
+                site, values={site["name"]: getattr(self, f"{site['name']}_init")}
+            )
+        return super().init(site)
 
-#     def guide(
-#         self,
-#         u_obs: Optional[torch.Tensor] = None,
-#         s_obs: Optional[torch.Tensor] = None,
-#         u_log_library: Optional[torch.Tensor] = None,
-#         s_log_library: Optional[torch.Tensor] = None,
-#         ind_x: Optional[torch.Tensor] = None,
-#     ):
-#         """max plate = 2 cell plate and gene plate"""
-#         if self.plate_size == 2:
-#             decoder_weights = self.map_estimate("cell_codebook")
-#             encoder_weights = decoder_weights.T
-#             gene_plate = self.plate("genes", self.num_genes, dim=-1)
-#             with gene_plate:
-#                 u_scale = self.map_estimate("u_scale")
-#                 s_scale = self.map_estimate("s_scale")
-#                 u_pcs_mean = self.map_estimate("u_pcs_mean")
-#                 s_pcs_mean = self.map_estimate("s_pcs_mean")
+    def guide(
+        self,
+        u_obs: Optional[torch.Tensor] = None,
+        s_obs: Optional[torch.Tensor] = None,
+        u_log_library: Optional[torch.Tensor] = None,
+        s_log_library: Optional[torch.Tensor] = None,
+        ind_x: Optional[torch.Tensor] = None,
+    ):
+        """max plate = 2 cell plate and gene plate"""
+        if self.plate_size == 2:
+            decoder_weights = self.map_estimate("cell_codebook")
+            encoder_weights = decoder_weights.T
+            gene_plate = self.plate("genes", self.num_genes, dim=-1)
+            with gene_plate:
+                u_scale = self.map_estimate("u_scale")
+                s_scale = self.map_estimate("s_scale")
+                u_pcs_mean = self.map_estimate("u_pcs_mean")
+                s_pcs_mean = self.map_estimate("s_pcs_mean")
 
-#             if self.inducing_point_size == 0:
-#                 cell_code_scale = pyro.param(
-#                     "cell_code_scale", lambda: torch.tensor(0.1), constraint=positive
-#                 ).to(u_obs.device)
-#             cell_plate = self.plate("cells", self.num_cells, dim=-2, subsample=ind_x)
-#             with cell_plate:
-#                 cell_code_loc = (
-#                     torch.cat((u_obs - u_pcs_mean, s_obs - s_pcs_mean), dim=-1)
-#                     @ encoder_weights
-#                 )
-#                 if self.inducing_point_size > 0:
-#                     inducing_points = pyro.param(
-#                         "inducing_points",
-#                         lambda: torch.randn(
-#                             self.inducing_point_size, self.latent_factor_size
-#                         ),
-#                     ).to(u_obs.device)
-#                     inducing_mean = pyro.param(
-#                         "inducing_mean",
-#                         lambda: torch.randn(
-#                             self.inducing_point_size, self.latent_factor_size
-#                         ),
-#                     ).to(u_obs.device)
+            if self.inducing_point_size == 0:
+                cell_code_scale = pyro.param(
+                    "cell_code_scale", lambda: torch.tensor(0.1), constraint=positive
+                ).to(u_obs.device)
+            cell_plate = self.plate("cells", self.num_cells, dim=-2, subsample=ind_x)
+            with cell_plate:
+                cell_code_loc = (
+                    torch.cat((u_obs - u_pcs_mean, s_obs - s_pcs_mean), dim=-1)
+                    @ encoder_weights
+                )
+                if self.inducing_point_size > 0:
+                    inducing_points = pyro.param(
+                        "inducing_points",
+                        lambda: torch.randn(
+                            self.inducing_point_size, self.latent_factor_size
+                        ),
+                    ).to(u_obs.device)
+                    inducing_mean = pyro.param(
+                        "inducing_mean",
+                        lambda: torch.randn(
+                            self.inducing_point_size, self.latent_factor_size
+                        ),
+                    ).to(u_obs.device)
 
-#                     kernel = pyro.contrib.gp.kernels.RBF(
-#                         input_dim=self.latent_factor_size
-#                     )
-#                     assert cell_code_loc.shape == (
-#                         cell_plate.subsample_size,
-#                         self.latent_factor_size,
-#                     )
-#                     assert inducing_points.shape == (
-#                         self.inducing_point_size,
-#                         self.latent_factor_size,
-#                     )
-#                     assert inducing_mean.shape == (
-#                         self.inducing_point_size,
-#                         self.latent_factor_size,
-#                     )
-#                     cell_code_loc, cell_code_scale = pyro.contrib.gp.util.conditional(
-#                         cell_code_loc,
-#                         inducing_points,
-#                         kernel,
-#                         inducing_mean.transpose(-1, -2),
-#                         full_cov=False,
-#                     )
-#                     assert cell_code_loc.shape == (
-#                         self.latent_factor_size,
-#                         cell_plate.subsample_size,
-#                     )
-#                     cell_code_loc = cell_code_loc.T.unsqueeze(-1).transpose(-1, -2)
-#                     cell_code_scale = cell_code_scale.T.unsqueeze(-1).transpose(-1, -2)
-#                 else:
-#                     cell_code_loc = cell_code_loc.unsqueeze(-1).transpose(-1, -2)
-#                 cell_code = pyro.sample(
-#                     "cell_code", Normal(cell_code_loc, cell_code_scale).to_event(1)
-#                 )
-#         else:
-#             cell_code = self.guide2(u_obs, s_obs, u_log_library, s_log_library, ind_x)
-#         return cell_code
+                    kernel = pyro.contrib.gp.kernels.RBF(
+                        input_dim=self.latent_factor_size
+                    )
+                    assert cell_code_loc.shape == (
+                        cell_plate.subsample_size,
+                        self.latent_factor_size,
+                    )
+                    assert inducing_points.shape == (
+                        self.inducing_point_size,
+                        self.latent_factor_size,
+                    )
+                    assert inducing_mean.shape == (
+                        self.inducing_point_size,
+                        self.latent_factor_size,
+                    )
+                    cell_code_loc, cell_code_scale = pyro.contrib.gp.util.conditional(
+                        cell_code_loc,
+                        inducing_points,
+                        kernel,
+                        inducing_mean.transpose(-1, -2),
+                        full_cov=False,
+                    )
+                    assert cell_code_loc.shape == (
+                        self.latent_factor_size,
+                        cell_plate.subsample_size,
+                    )
+                    cell_code_loc = cell_code_loc.T.unsqueeze(-1).transpose(-1, -2)
+                    cell_code_scale = cell_code_scale.T.unsqueeze(-1).transpose(-1, -2)
+                else:
+                    cell_code_loc = cell_code_loc.unsqueeze(-1).transpose(-1, -2)
+                cell_code = pyro.sample(
+                    "cell_code", Normal(cell_code_loc, cell_code_scale).to_event(1)
+                )
+        else:
+            cell_code = self.guide2(u_obs, s_obs, u_log_library, s_log_library, ind_x)
+        return cell_code
 
-#     def guide2(
-#         self,
-#         u_obs: Optional[torch.Tensor] = None,
-#         s_obs: Optional[torch.Tensor] = None,
-#         u_log_library: Optional[torch.Tensor] = None,
-#         s_log_library: Optional[torch.Tensor] = None,
-#         ind_x: Optional[torch.Tensor] = None,
-#     ):
-#         """max plate = 1 only cell plate"""
-#         cell_plate = self.plate("cells", self.num_cells, subsample=ind_x, dim=-1)
-#         decoder_weights = self.map_estimate("cell_codebook")
-#         encoder_weights = decoder_weights.T
-#         u_scale = self.map_estimate("u_scale")
-#         s_scale = self.map_estimate("s_scale")
-#         u_pcs_mean = self.map_estimate("u_pcs_mean")
-#         s_pcs_mean = self.map_estimate("s_pcs_mean")
-#         cell_plate = self.plate("cells", self.num_cells, subsample=ind_x, dim=-1)
-#         # cell_code_scale = pyro.param("cell_code_scale", lambda: torch.ones(self.latent_factor_size) * 0.1, constraint=positive, event_dim=1).to(u_obs.device)
-#         cell_code_scale = pyro.param(
-#             "cell_code_scale", lambda: torch.tensor(0.1), constraint=positive
-#         ).to(u_obs.device)
-#         with cell_plate:
-#             cell_code = (
-#                 torch.cat((u_obs - u_pcs_mean, s_obs - s_pcs_mean), dim=-1)
-#                 @ encoder_weights
-#             )
-#             cell_code = pyro.sample(
-#                 "cell_code", Normal(cell_code, cell_code_scale).to_event(1)
-#             )
-#         return cell_code
+    def guide2(
+        self,
+        u_obs: Optional[torch.Tensor] = None,
+        s_obs: Optional[torch.Tensor] = None,
+        u_log_library: Optional[torch.Tensor] = None,
+        s_log_library: Optional[torch.Tensor] = None,
+        ind_x: Optional[torch.Tensor] = None,
+    ):
+        """max plate = 1 only cell plate"""
+        cell_plate = self.plate("cells", self.num_cells, subsample=ind_x, dim=-1)
+        decoder_weights = self.map_estimate("cell_codebook")
+        encoder_weights = decoder_weights.T
+        u_scale = self.map_estimate("u_scale")
+        s_scale = self.map_estimate("s_scale")
+        u_pcs_mean = self.map_estimate("u_pcs_mean")
+        s_pcs_mean = self.map_estimate("s_pcs_mean")
+        cell_plate = self.plate("cells", self.num_cells, subsample=ind_x, dim=-1)
+        # cell_code_scale = pyro.param("cell_code_scale", lambda: torch.ones(self.latent_factor_size) * 0.1, constraint=positive, event_dim=1).to(u_obs.device)
+        cell_code_scale = pyro.param(
+            "cell_code_scale", lambda: torch.tensor(0.1), constraint=positive
+        ).to(u_obs.device)
+        with cell_plate:
+            cell_code = (
+                torch.cat((u_obs - u_pcs_mean, s_obs - s_pcs_mean), dim=-1)
+                @ encoder_weights
+            )
+            cell_code = pyro.sample(
+                "cell_code", Normal(cell_code, cell_code_scale).to_event(1)
+            )
+        return cell_code

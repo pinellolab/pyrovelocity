@@ -66,7 +66,7 @@ model_training:
       basis: umap
     training_parameters:
       guide_type: auto_t0_constraint
-      log_every: 1000
+      log_every: 100
       patient_improve: 0.0001
       patient_init: 45
       max_epochs: 4000
@@ -83,7 +83,7 @@ model_training:
       basis: umap
     training_parameters:
       guide_type: auto
-      log_every: 1000
+      log_every: 100
       patient_improve: 0.0001
       patient_init: 45
       max_epochs: 4000
