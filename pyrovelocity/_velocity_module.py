@@ -7,25 +7,27 @@ from pyro.infer.autoguide import AutoNormal
 from pyro.infer.autoguide.guides import AutoGuideList
 from scvi.module.base import PyroBaseModuleClass
 
-from pyrovelocity._velocity_model import VelocityModelAuto
-
+# from ._velocity_guide import LatentGuide
 from ._velocity_guide import AutoDeltaRNAVelocityGuide
 from ._velocity_guide import AutoNormalRNAVelocityGuide
 from ._velocity_guide import AuxCellVelocityGuide
 from ._velocity_guide import DecoderTimeGuide
-from ._velocity_guide import LatentGuide
 from ._velocity_guide import MultiKineticsGuide
 from ._velocity_guide import TrajectoryGuide
 from ._velocity_guide import VelocityAutoGuideList
 from ._velocity_guide import VelocityGuide
-from ._velocity_model import AuxCellVelocityModel
-from ._velocity_model import AuxTrajectoryModel
-from ._velocity_model import DecoderTimeModel
-from ._velocity_model import LatentFactor
-from ._velocity_model import MultiKineticsModelDirichlet
-from ._velocity_model import MultiKineticsModelDirichletLinear
-from ._velocity_model import VelocityModel
+
+# from ._velocity_model import AuxCellVelocityModel
+# from ._velocity_model import AuxTrajectoryModel
+# from ._velocity_model import DecoderTimeModel
+# from ._velocity_model import LatentFactor
+# from ._velocity_model import MultiKineticsModelDirichlet
+# from ._velocity_model import MultiKineticsModelDirichletLinear
+# from ._velocity_model import VelocityModel
 from ._velocity_model import VelocityModelAuto
+
+
+# from pyrovelocity._velocity_model import VelocityModelAuto
 
 
 class VelocityModule(PyroBaseModuleClass):
@@ -68,51 +70,51 @@ class VelocityModule(PyroBaseModuleClass):
         print(self.guide_type)
 
         self.cell_specific_kinetics = cell_specific_kinetics
-        if self.model_type == "multikinetics":
-            # self._model = MultiKineticsModel(self.num_cells, self.num_genes, likelihood,
-            self._model = MultiKineticsModelDirichlet(
-                self.num_cells,
-                self.num_genes,
-                likelihood,
-                shared_time,
-                t_scale_on,
-                self.plate_size,
-                latent_factor,
-                latent_factor_operation=latent_factor_operation,
-                latent_factor_size=latent_factor_size,
-                include_prior=include_prior,
-                num_aux_cells=num_aux_cells,
-                only_cell_times=self.only_cell_times,
-                decoder_on=decoder_on,
-                add_offset=add_offset,
-                correct_library_size=correct_library_size,
-                guide_type=self.guide_type,
-                cell_specific_kinetics=self.cell_specific_kinetics,
-                kinetics_num=kinetics_num,
-                **initial_values
-            )
-        if self.model_type == "multikinetics_linear":
-            self._model = MultiKineticsModelDirichletLinear(
-                self.num_cells,
-                self.num_genes,
-                likelihood,
-                shared_time,
-                t_scale_on,
-                self.plate_size,
-                latent_factor,
-                latent_factor_operation=latent_factor_operation,
-                latent_factor_size=latent_factor_size,
-                include_prior=include_prior,
-                num_aux_cells=num_aux_cells,
-                only_cell_times=self.only_cell_times,
-                decoder_on=decoder_on,
-                add_offset=add_offset,
-                correct_library_size=correct_library_size,
-                guide_type=self.guide_type,
-                cell_specific_kinetics=self.cell_specific_kinetics,
-                kinetics_num=kinetics_num,
-                **initial_values
-            )
+        # if self.model_type == "multikinetics":
+        #     # self._model = MultiKineticsModel(self.num_cells, self.num_genes, likelihood,
+        #     self._model = MultiKineticsModelDirichlet(
+        #         self.num_cells,
+        #         self.num_genes,
+        #         likelihood,
+        #         shared_time,
+        #         t_scale_on,
+        #         self.plate_size,
+        #         latent_factor,
+        #         latent_factor_operation=latent_factor_operation,
+        #         latent_factor_size=latent_factor_size,
+        #         include_prior=include_prior,
+        #         num_aux_cells=num_aux_cells,
+        #         only_cell_times=self.only_cell_times,
+        #         decoder_on=decoder_on,
+        #         add_offset=add_offset,
+        #         correct_library_size=correct_library_size,
+        #         guide_type=self.guide_type,
+        #         cell_specific_kinetics=self.cell_specific_kinetics,
+        #         kinetics_num=kinetics_num,
+        #         **initial_values
+        #     )
+        # if self.model_type == "multikinetics_linear":
+        #     self._model = MultiKineticsModelDirichletLinear(
+        #         self.num_cells,
+        #         self.num_genes,
+        #         likelihood,
+        #         shared_time,
+        #         t_scale_on,
+        #         self.plate_size,
+        #         latent_factor,
+        #         latent_factor_operation=latent_factor_operation,
+        #         latent_factor_size=latent_factor_size,
+        #         include_prior=include_prior,
+        #         num_aux_cells=num_aux_cells,
+        #         only_cell_times=self.only_cell_times,
+        #         decoder_on=decoder_on,
+        #         add_offset=add_offset,
+        #         correct_library_size=correct_library_size,
+        #         guide_type=self.guide_type,
+        #         cell_specific_kinetics=self.cell_specific_kinetics,
+        #         kinetics_num=kinetics_num,
+        #         **initial_values
+        #     )
 
         if self.model_type == "auto":
             # self._model = BlockedKineticsModel(self.num_cells,
@@ -141,59 +143,59 @@ class VelocityModule(PyroBaseModuleClass):
                 cell_specific_kinetics=self.cell_specific_kinetics,
                 **initial_values
             )
-        if self.model_type == "traj":
-            self._model = AuxTrajectoryModel(
-                self.num_cells,
-                self.num_genes,
-                likelihood,
-                num_aux_cells=num_aux_cells,
-                **initial_values
-            )
-        if self.model_type == "decoder_time":
-            self._model = DecoderTimeModel(self.num_cells, self.num_genes, likelihood)
-        elif self.model_type in ["velocity", "velocity2"]:
-            if self.num_aux_cells >= 0:
-                self._model = AuxCellVelocityModel(
-                    self.num_cells,
-                    self.num_genes,
-                    likelihood,
-                    shared_time,
-                    t_scale_on,
-                    self.plate_size,
-                    latent_factor,
-                    latent_factor_operation=latent_factor_operation,
-                    latent_factor_size=latent_factor_size,
-                    include_prior=include_prior,
-                    num_aux_cells=num_aux_cells,
-                    only_cell_times=self.only_cell_times,
-                    decoder_on=decoder_on,
-                    add_offset=add_offset,
-                    correct_library_size=correct_library_size,
-                    guide_type=self.guide_type,
-                    **initial_values
-                )
-            else:
-                self._model = VelocityModel(
-                    self.num_cells,
-                    self.num_genes,
-                    likelihood,
-                    shared_time,
-                    t_scale_on,
-                    self.plate_size,
-                    latent_factor,
-                    latent_factor_operation=latent_factor_operation,
-                    latent_factor_size=latent_factor_size,
-                    include_prior=include_prior,
-                    **initial_values
-                )
-        elif self.model_type == "latentfactor":
-            self._model = LatentFactor(
-                self.num_cells,
-                self.num_genes,
-                likelihood,
-                initial_values.get("mask", None),
-                self.plate_size,
-            )
+        # if self.model_type == "traj":
+        #     self._model = AuxTrajectoryModel(
+        #         self.num_cells,
+        #         self.num_genes,
+        #         likelihood,
+        #         num_aux_cells=num_aux_cells,
+        #         **initial_values
+        #     )
+        # if self.model_type == "decoder_time":
+        #     self._model = DecoderTimeModel(self.num_cells, self.num_genes, likelihood)
+        # if self.model_type in ["velocity", "velocity2"]:
+        #     if self.num_aux_cells >= 0:
+        #         self._model = AuxCellVelocityModel(
+        #             self.num_cells,
+        #             self.num_genes,
+        #             likelihood,
+        #             shared_time,
+        #             t_scale_on,
+        #             self.plate_size,
+        #             latent_factor,
+        #             latent_factor_operation=latent_factor_operation,
+        #             latent_factor_size=latent_factor_size,
+        #             include_prior=include_prior,
+        #             num_aux_cells=num_aux_cells,
+        #             only_cell_times=self.only_cell_times,
+        #             decoder_on=decoder_on,
+        #             add_offset=add_offset,
+        #             correct_library_size=correct_library_size,
+        #             guide_type=self.guide_type,
+        #             **initial_values
+        #         )
+        #     else:
+        #         self._model = VelocityModel(
+        #             self.num_cells,
+        #             self.num_genes,
+        #             likelihood,
+        #             shared_time,
+        #             t_scale_on,
+        #             self.plate_size,
+        #             latent_factor,
+        #             latent_factor_operation=latent_factor_operation,
+        #             latent_factor_size=latent_factor_size,
+        #             include_prior=include_prior,
+        #             **initial_values
+        #         )
+        # elif self.model_type == "latentfactor":
+        #     self._model = LatentFactor(
+        #         self.num_cells,
+        #         self.num_genes,
+        #         likelihood,
+        #         initial_values.get("mask", None),
+        #         self.plate_size,
+        #     )
         # create_plates is useful for keeping
         # batch_size same between model and guide
         if guide_type == "traj":
@@ -477,14 +479,14 @@ class VelocityModule(PyroBaseModuleClass):
                     )
                 )
             self._guide = guide
-        else:
-            if self.model_type == "latentfactor":
-                self._guide = LatentGuide(
-                    self._model,
-                    plate_size=plate_size,
-                    inducing_point_size=inducing_point_size,
-                    **initial_values
-                )
+        # else:
+        #     if self.model_type == "latentfactor":
+        #         self._guide = LatentGuide(
+        #             self._model,
+        #             plate_size=plate_size,
+        #             inducing_point_size=inducing_point_size,
+        #             **initial_values
+        #         )
         self._get_fn_args_from_batch = self._model._get_fn_args_from_batch
 
     @property
