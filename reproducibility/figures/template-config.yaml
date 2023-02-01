@@ -51,11 +51,13 @@ model_training:
     input_data_path: ${data_external.scvelo.pancreas.derived.rel_path}
     trained_data_path: ${.path}/trained.h5ad
     pyrovelocity_data_path: ${.path}/pyrovelocity.pkl
+    metrics_path: ${.path}/metrics.json
+    run_info_path: ${.path}/run_info.json
     vector_field_parameters:
       basis: umap
     training_parameters:
       guide_type: auto_t0_constraint
-      log_every: 1000
+      log_every: 100
       patient_improve: 1e-4
       patient_init: 45
       max_epochs: 4000
@@ -68,11 +70,13 @@ model_training:
     input_data_path: ${data_external.scvelo.pancreas.derived.rel_path}
     trained_data_path: ${.path}/trained.h5ad
     pyrovelocity_data_path: ${.path}/pyrovelocity.pkl
+    metrics_path: ${.path}/metrics.json
+    run_info_path: ${.path}/run_info.json
     vector_field_parameters:
       basis: umap
     training_parameters:
       guide_type: auto
-      log_every: 1000
+      log_every: 100
       patient_improve: 1e-4
       patient_init: 45
       max_epochs: 4000
@@ -86,6 +90,8 @@ model_training:
     input_data_path: ${data_external.scvelo.pbmc68k.derived.rel_path}
     trained_data_path: ${.path}/trained.h5ad
     pyrovelocity_data_path: ${.path}/pyrovelocity.pkl
+    metrics_path: ${.path}/metrics.json
+    run_info_path: ${.path}/run_info.json
     vector_field_parameters:
       basis: tsne
     training_parameters:
@@ -104,6 +110,8 @@ model_training:
     input_data_path: ${data_external.scvelo.pbmc68k.derived.rel_path}
     trained_data_path: ${.path}/trained.h5ad
     pyrovelocity_data_path: ${.path}/pyrovelocity.pkl
+    metrics_path: ${.path}/metrics.json
+    run_info_path: ${.path}/run_info.json
     vector_field_parameters:
       basis: tsne
     training_parameters:
