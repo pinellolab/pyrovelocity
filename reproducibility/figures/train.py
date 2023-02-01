@@ -1,3 +1,4 @@
+import json
 import multiprocessing
 import os
 import pickle
@@ -53,6 +54,8 @@ def train(conf: DictConfig, logger: Logger) -> None:
         model_path = data_model_conf.model_path
         pyrovelocity_data_path = data_model_conf.pyrovelocity_data_path
         vector_field_basis = data_model_conf.vector_field_parameters.basis
+        metrics_path = data_model_conf.metrics_path
+        run_info_path = data_model_conf.run_info_path
 
         ncpus_use = min(30, max(1, round(multiprocessing.cpu_count() * 0.8)))
 
@@ -121,7 +124,22 @@ def train(conf: DictConfig, logger: Logger) -> None:
                 #     f"Data attributes after computation of vector field uncertainty"
                 # )
                 # print_attributes(adata_model_pos[1])
-                print_logged_info(mlflow.get_run(run_id=run.info.run_id))
+
+                run_id = run.info.run_id
+
+            ##############
+            # save metrics
+            ##############
+
+            r = mlflow.get_run(run_id)
+
+            Path(metrics_path).write_text(json.dumps(r.data.metrics, indent=4))
+
+            Path(run_info_path).write_text(
+                json.dumps(r.to_dictionary()["info"], indent=4)
+            )
+
+            print_logged_info(r)
 
             #############
             # postprocess
@@ -171,7 +189,7 @@ def train(conf: DictConfig, logger: Logger) -> None:
                 pickle.dump(result_dict, f)
 
 
-def print_logged_info(r):
+def print_logged_info(r: mlflow.entities.run.Run) -> None:
     tags = {k: v for k, v in r.data.tags.items() if not k.startswith("mlflow.")}
     artifacts = [f.path for f in MlflowClient().list_artifacts(r.info.run_id, "model")]
     print(f"run_id: {r.info.run_id}")
