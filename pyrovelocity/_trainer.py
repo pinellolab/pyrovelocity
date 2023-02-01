@@ -284,9 +284,11 @@ class VelocityTrainingMixin:
                     )
                     / normalizer
                 )
-            if step % log_every == 0:
-                mlflow.log_metric("-ELBO", -elbos, step=step)
-                print(f"step {step: >4d} loss = {elbos:0.6g} patience = {patience}")
+            if (step == 0) or (
+                ((step + 1) % log_every == 0) and ((step + 1) < max_epochs)
+            ):
+                mlflow.log_metric("-ELBO", -elbos, step=step + 1)
+                print(f"step {step + 1: >4d} loss = {elbos:0.6g} patience = {patience}")
             if step > log_every:
                 if (losses[-1] - elbos) < losses[-1] * patient_improve:
                     patience -= 1
@@ -295,7 +297,9 @@ class VelocityTrainingMixin:
             if patience <= 0:
                 break
             losses.append(elbos)
+        mlflow.log_metric("-ELBO", -elbos, step=step + 1)
         mlflow.log_metric("real_epochs", step + 1)
+        print(f"step {step + 1: >4d} loss = {elbos:0.6g} patience = {patience}")
         return losses
 
     def train_faster_with_batch(
@@ -357,9 +361,11 @@ class VelocityTrainingMixin:
                 n_batch += 1
             # elbos = elbos / normalizer #n_batch
             elbos = elbos / n_batch
-            if step % log_every == 0:
-                mlflow.log_metric(elbo_name, -elbos, step=step)
-                print(f"step {step: >4d} loss = {elbos:0.6g} patience = {patience}")
+            if (step == 0) or (
+                ((step + 1) % log_every == 0) and ((step + 1) < max_epochs)
+            ):
+                mlflow.log_metric("-ELBO", -elbos, step=step + 1)
+                print(f"step {step + 1: >4d} loss = {elbos:0.6g} patience = {patience}")
             if step > log_every:
                 if (losses[-1] - elbos) < losses[-1] * patient_improve:
                     patience -= 1
@@ -369,5 +375,7 @@ class VelocityTrainingMixin:
             if patience <= 0:
                 break
             losses.append(elbos)
+        mlflow.log_metric("-ELBO", -elbos, step=step + 1)
         mlflow.log_metric("real_epochs", step + 1)
+        print(f"step {step: >4d} loss = {elbos:0.6g} patience = {patience}")
         return losses
