@@ -129,7 +129,12 @@ stages:
     params:
       - config.yaml:
           - model_training.pancreas_model1
+    metrics:
+      - ${model_training.pancreas_model1.metrics_path}:
+          cache: false
     outs:
+      - ${model_training.pancreas_model1.run_info_path}:
+          cache: false
       - ${model_training.pancreas_model1.trained_data_path}
         # persist: true
       - ${model_training.pancreas_model1.model_path}
@@ -145,7 +150,12 @@ stages:
     params:
       - config.yaml:
           - model_training.pancreas_model2
+    metrics:
+      - ${model_training.pancreas_model2.metrics_path}:
+          cache: false
     outs:
+      - ${model_training.pancreas_model2.run_info_path}:
+          cache: false
       - ${model_training.pancreas_model2.trained_data_path}
         # persist: true
       - ${model_training.pancreas_model2.model_path}
