@@ -400,7 +400,7 @@ def plot_gene_ranking(
     data="correlation",
     negative=False,
     adjust_text=False,
-):
+) -> None:
     assert isinstance(pos, tuple) or isinstance(pos, list)
     assert isinstance(adata, list) or isinstance(adata, tuple)
 
@@ -422,21 +422,8 @@ def plot_gene_ranking(
             )
             cors.append(df_genes_cors[0])
             genes.append(ad.var_names.values)
-            # if 'dt_switching' in p:
-            #     if 't0' in p:
-            #         switching.append((p['t0'] + p['dt_switching'])[sample].flatten())
-            #     else:
-            #         switching.append((p['dt_switching'])[sample].flatten())
             labels.append(["Poisson_%s" % label] * len(ad.var_names.values))
 
-    # if 'dt_switching' in p:
-    #     volcano_data = pd.DataFrame({"mean_mae":         np.hstack(maes_list),
-    #                                  "label":            np.hstack(labels),
-    #                                  "time_correlation": np.hstack(cors),
-    #                                  "switching":        np.hstack(switching),
-    #                                  "genes":            np.hstack(genes)})
-    # volcano_data = volcano_data.groupby("genes").mean(['mean_mae', 'time_correlation', 'switching'])
-    # else:
     volcano_data = pd.DataFrame(
         {
             "mean_mae": np.hstack(maes_list),
@@ -456,9 +443,6 @@ def plot_gene_ranking(
     )
 
     if selected_genes is None:
-        # selected_genes = volcano_data.sort_values('rank_product', ascending=True).head(20)
-        # genes = np.hstack([selected_genes.loc[selected_genes.loc[:, 'time_correlation'] > 0, :].index[:2],
-        #                   selected_genes.loc[selected_genes.loc[:, 'time_correlation'] < 0, :].index[:2]])
         genes = (
             volcano_data.sort_values("mean_mae", ascending=False)
             .head(300)
@@ -1249,14 +1233,9 @@ def rainbowplot(
     add_line=True,
     negative=False,
     scvelo_colors=False,
-):
-    import matplotlib.pyplot as plt
-
+) -> None:
+    matplotlib.rcParams.update({"font.size": 7})
     if genes is None:
-        # selected_genes = volcano_data.sort_values('rank_product', ascending=True).head(20)
-        # genes = np.hstack([selected_genes.loc[selected_genes.loc[:, 'time_correlation'] > 0, :].index[:2],
-        #           selected_genes.loc[selected_genes.loc[:, 'time_correlation'] < 0, :].index[:2]])
-
         genes = (
             volcano_data.sort_values("mean_mae", ascending=False)
             .head(300)
@@ -1264,13 +1243,7 @@ def rainbowplot(
             .head(num_genes)
             .index
         )
-
-    import matplotlib
-
-    matplotlib.rcParams.update({"font.size": 7})
     adata.layers["pyro_spliced"] = pos[data[0]].mean(0)
-
-    # fig, ax = plt.subplots(len(genes), 3)
     if fig is None:
         fig = plt.figure(figsize=(5.5, 4.5))
 
@@ -1323,10 +1296,6 @@ def rainbowplot(
                 "unspliced": ut[:, index].flatten(),
             }
         )
-        # sns.scatterplot(x='cell_time', y='spliced', data=ress, alpha=0.1,
-        #                 linewidth=0, edgecolor="none",hue='cell_type',
-        #                 #palette=dict(zip(adata.obs.clusters.cat.categories, adata.uns['clusters_colors'])),
-        #                 ax=ax1, marker='o', legend=False, s=5)
         sns.scatterplot(
             x="cell_time",
             y="spliced",
@@ -1341,14 +1310,9 @@ def rainbowplot(
             legend=False,
             s=5,
         )
-        # for celltype in scvelo_color:
-        #    print(celltype)
-        #    ax1.vlines(x=ress.cell_time[ress.cell_type==celltype], ymin=0, ymax=ress.spliced[ress.cell_type==celltype],
-        #               colors=scvelo_color[celltype], alpha=0.1)
         if add_line:
             ress = ress.sort_values("cell_time")
             for row in range(ress.shape[0]):
-                # ax1.vlines(x=ress.cell_time[row], ymin=0, ymax=ress.spliced[row], colors=scvelo_color[ress.cell_type[row]], alpha=0.1)
                 ax1.vlines(
                     x=ress.cell_time[row],
                     ymin=0,
@@ -1368,25 +1332,6 @@ def rainbowplot(
         t = [0, round(ress["spliced"].max(), 5)]
         t_label = ["0", "%.1E" % ress["spliced"].max()]
         ax1.set_yticks(t, t_label, fontsize=7)
-        # ax1.ticklabel_format(style='sci', axis='both')
-
-        #         t = [ress['unspliced'].min(), ress['unspliced'].max()]
-        #         ax1.set_yticks(t,t)
-        #         ax_twin = ax1.twinx()
-        #         sns.scatterplot(x='cell_time', y='unspliced', data=ress, alpha=0.4, s=25,
-        #                         edgecolor="none", hue='cell_type', ax=ax_twin, legend=False, marker="*")
-        #         ax_twin.set_ylabel("")
-        #         ax1.set_ylabel("")
-        #         ax1.set_xlabel("")
-        #         ax1.tick_params(labelbottom=False)
-        #         ax_twin.tick_params(labelbottom=False)
-        #         ax_twin.set_xlabel("")
-        #         ax2 = ax[n, 0]
-        #         divider = make_axes_locatable(ax2)
-        #         cax = divider.append_axes('right', size='5%', pad=0.05)
-        #         ax2.set_ylabel("")
-
-        # ress = pd.DataFrame({"cell_time": pos['cell_time'].mean(0).flatten(),
         ress = pd.DataFrame(
             {
                 "cell_type": adata.obs[cell_state].values,
@@ -1394,7 +1339,6 @@ def rainbowplot(
                 "spliced": st[:, index].flatten(),
             }
         )
-        # im = ax2.scatter(st[:, index], ut[:, index], c=ress.cell_time, s=25, cmap = 'seismic')
         sns.scatterplot(
             x="spliced",
             y="unspliced",
@@ -1403,7 +1347,6 @@ def rainbowplot(
             linewidth=0,
             edgecolor="none",
             hue="cell_type",
-            # palette=dict(zip(adata.obs.clusters.cat.categories, adata.uns['clusters_colors'])),
             palette=colors,
             ax=ax2,
             marker="o",
@@ -1411,8 +1354,6 @@ def rainbowplot(
             s=3,
         )
         ax2.set_xlabel("")
-
-        #         fig.colorbar(im, cax=cax, orientation='vertical')
         ax2.set_ylabel(gene, fontsize=7, rotation=0, labelpad=23)
         if n == len(genes) - 1:
             ax2.set_xlabel("spliced", fontsize=7)
@@ -1423,22 +1364,6 @@ def rainbowplot(
         t_label = ["0", "%.1E" % ress["spliced"].max()]
         # ax2.ticklabel_format(style='sci', axis='both')
         ax2.set_xticks(t, t_label, fontsize=7)
-        # if n == 3:
-        #    divider = make_axes_locatable(ax2)
-        #    cax = divider.append_axes('bottom', size='5%', pad=0.05)
-        #    fig.colorbar(im, cax=cax, orientation='horizontal')
-        #         if n == 3:
-        #             blue_star = mlines.Line2D([], [], color='black', marker='o', linestyle='None',
-        #                                       markersize=5, label='Spliced')
-        #             red_square = mlines.Line2D([], [], color='black', marker='+', linestyle='None',
-        #                                       markersize=5, label='Unspliced')
-        #             ax1.legend(handles=[blue_star, red_square], bbox_to_anchor=[2, -0.03])
-        #             ax1.set_xlabel("")
-        #         if n == 9:
-        #             ax1.tick_params(labelbottom=True)
-        #             ax_twin.tick_params(labelbottom=False)
-        #             ax2.set_xlabel("spliced")
-        # scv.pl.umap(adata, color=gene, ax=ax3, show=False, fontsize=9, title='') #, legend_fontsize=7)
         im = ax3.scatter(
             adata.obsm[f"X_{basis}"][:, 0],
             adata.obsm[f"X_{basis}"][:, 1],
@@ -1453,16 +1378,15 @@ def rainbowplot(
         n += 1
     sns.despine()
     subfigs[0].subplots_adjust(
-        hspace=0.8, wspace=1.4, left=0.26, right=0.94, top=0.92, bottom=0.12
+        hspace=0.8, wspace=1.4, left=0.32, right=0.94, top=0.92, bottom=0.12
     )
     subfigs[1].subplots_adjust(
         hspace=0.8, wspace=0.4, left=0.2, right=0.7, top=0.92, bottom=0.08
     )
-    # subfigs[0].text(0.073, 0.58, "unspliced expression", size=7, rotation="vertical", va="center")
     subfigs[0].text(
-        -0.01, 0.58, "unspliced expression", size=7, rotation="vertical", va="center"
+        -0.025, 0.58, "unspliced expression", size=7, rotation="vertical", va="center"
     )
-    subfigs[0].text(0, 0.97, "f", fontsize=7, fontweight="bold", va="top", ha="right")
+    # subfigs[0].text(0, 0.97, "f", fontsize=7, fontweight="bold", va="top", ha="right")
     subfigs[0].text(
         0.552, 0.58, "spliced expression", size=7, rotation="vertical", va="center"
     )
