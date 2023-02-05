@@ -6,11 +6,12 @@ from pathlib import Path
 
 import hydra
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
 import numpy as np
 import pandas as pd
 import scvelo as scv
 import seaborn as sns
+from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib_venn import venn2
 from omegaconf import DictConfig
 
 from pyrovelocity.config import print_config_tree
@@ -20,7 +21,6 @@ from pyrovelocity.plot import plot_posterior_time
 from pyrovelocity.plot import plot_vector_field_uncertain
 from pyrovelocity.plot import rainbowplot
 from pyrovelocity.utils import get_pylogger
-from matplotlib_venn import venn2
 
 
 """Loads trained figure 2 data and produces figure 2.
@@ -51,7 +51,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         conf.model_training.pancreas_model2.pyrovelocity_data_path
     )
     trained_pancreas_data_path = conf.model_training.pancreas_model1.trained_data_path
-    trained_pancreas_model2_data_path = conf.model_training.pancreas_model2.trained_data_path
+    trained_pancreas_model2_data_path = (
+        conf.model_training.pancreas_model2.trained_data_path
+    )
 
     pyrovelocity_pbmc68k_data_path = (
         conf.model_training.pbmc68k_model1.pyrovelocity_data_path
@@ -63,7 +65,6 @@ def plots(conf: DictConfig, logger: Logger) -> None:
 
     revision_marker_path = conf.reports.figure2.biomarker_selection_path
     revision_phaseport_path = conf.reports.figure2.biomarker_phaseportrait_path
-
 
     if os.path.isfile(pyrovelocity_pancreas_data_path) and os.access(
         pyrovelocity_pancreas_data_path, os.R_OK
@@ -436,45 +437,65 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         volcano_data2.sort_values("mean_mae", ascending=False)
         .head(300)
         .sort_values("time_correlation", ascending=False)
-        .head(4).index
+        .head(4)
+        .index
     )
     print(model1_genes)
     model2_volcano, _ = plot_gene_ranking(
-        [model2_adata_model_pos], [adata_model2], ax=ax[0], time_correlation_with="st", assemble=False, selected_genes=model1_genes
+        [model2_adata_model_pos],
+        [adata_model2],
+        ax=ax[0],
+        time_correlation_with="st",
+        assemble=False,
+        selected_genes=model1_genes,
     )
     ax[0].set_title("Model 1 genes on Model 2 plot", fontsize=7)
     model2_genes = (
         model2_volcano.sort_values("mean_mae", ascending=False)
         .head(300)
         .sort_values("time_correlation", ascending=False)
-        .head(4).index
+        .head(4)
+        .index
     )
     print(model2_genes)
     _, _ = plot_gene_ranking(
-        [adata_model_pos], [adata], ax=ax[1], time_correlation_with="st", assemble=False, selected_genes=model2_genes
+        [adata_model_pos],
+        [adata],
+        ax=ax[1],
+        time_correlation_with="st",
+        assemble=False,
+        selected_genes=model2_genes,
     )
     ax[1].set_title("Model 2 genes on Model 1 plot", fontsize=7)
     model1_geneset = set(
         volcano_data2.sort_values("mean_mae", ascending=False)
         .head(300)
         .sort_values("time_correlation", ascending=False)
-        .head(50).index
+        .head(50)
+        .index
     )
     model2_geneset = set(
         model2_volcano.sort_values("mean_mae", ascending=False)
         .head(300)
         .sort_values("time_correlation", ascending=False)
-        .head(50).index
+        .head(50)
+        .index
     )
-    venn2([model1_geneset, model2_geneset],
-          ["Model1\ntop 50", "Model 2\ntop 50"], ax=ax[2])
-    ax[2].set_title('Marker comparison', fontsize=7)
+    venn2(
+        [model1_geneset, model2_geneset],
+        ["Model1\ntop 50", "Model 2\ntop 50"],
+        ax=ax[2],
+    )
+    ax[2].set_title("Marker comparison", fontsize=7)
     print(model1_genes.intersection(model2_genes))
 
-    fig_revision.savefig(revision_marker_path,
-                         facecolor=fig.get_facecolor(),
-                         bbox_inches="tight",
-                         edgecolor="none", dpi=300)
+    fig_revision.savefig(
+        revision_marker_path,
+        facecolor=fig.get_facecolor(),
+        bbox_inches="tight",
+        edgecolor="none",
+        dpi=300,
+    )
 
     with PdfPages(revision_phaseport_path) as pdf:
         fig_revision2 = rainbowplot(
@@ -484,7 +505,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             None,
             data=["st", "ut"],
             num_genes=8,
-            genes = np.hstack([model1_genes, model2_genes])
+            genes=np.hstack([model1_genes, model2_genes]),
         )
         pdf.savefig()
 
@@ -495,7 +516,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             None,
             data=["st", "ut"],
             num_genes=8,
-            genes = np.hstack([model1_genes, model2_genes])
+            genes=np.hstack([model1_genes, model2_genes]),
         )
         pdf.savefig()
         plt.close()
@@ -518,9 +539,11 @@ def main(conf: DictConfig) -> None:
     )
     Path(conf.reports.figure2.path).mkdir(parents=True, exist_ok=True)
 
-    if os.path.isfile(conf.reports.figure2.tif_path) and os.path.isfile(
-        conf.reports.figure2.svg_path
-    ) and os.path.isfile(conf.reports.figure2.biomarker_selection_path):
+    if (
+        os.path.isfile(conf.reports.figure2.tif_path)
+        and os.path.isfile(conf.reports.figure2.svg_path)
+        and os.path.isfile(conf.reports.figure2.biomarker_selection_path)
+    ):
         logger.info(
             f"\n\nFigure 2 outputs already exist:\n\n"
             f"  see contents of: {conf.reports.figure2.path}\n"
