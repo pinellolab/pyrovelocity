@@ -1,4 +1,9 @@
-exclude: conda.recipe/meta.yaml
+exclude: |
+  (?x)^(
+    conda/recipe/meta.yaml|
+    reproducibility/figures/models/.*|
+    reproducibility/figures/config.yaml
+  )$
 repos:
   - repo: local
     hooks:
