@@ -191,8 +191,8 @@ stages:
     cmd: python fig2/figure.py
     deps:
     - path: fig2/figure.py
-      md5: e98a8269c69e429f5816a56619f29916
-      size: 16278
+      md5: 79a6a55999a20278e14bfdb15e8fd7ae
+      size: 16420
     - path: models/pancreas_model1/pyrovelocity.pkl
       md5: be84ba0bda845db65756dca4ee5ee301
       size: 7102321859
@@ -221,16 +221,16 @@ stages:
             vector_field_plot: reports/fig2/fig2_pancreas_vector_field.pdf
     outs:
     - path: reports/fig2/fig2_markers_phaseportrait.pdf
-      md5: e0e45617be493db50a156cf4972a0c6a
+      md5: 560bb7f497b83cad9ed9023544566e43
       size: 4520121
     - path: reports/fig2/fig2_markers_selection_scatterplot.tif
-      md5: aef1cd0a2957d475e370ca3c3f9846af
+      md5: 5da830612ea4d281be1de5b072bf8366
       size: 6101990
     - path: reports/fig2/fig2_raw_gene_selection_model1.svg
-      md5: 6d737d4abf8e0b7505fb36bbdeda4047
-      size: 49595396
+      md5: 498bfe711e9eb7f3d0597b7651737d87
+      size: 49595390
     - path: reports/fig2/fig2_raw_gene_selection_model1.tif
-      md5: aa61f8012fe6793a235d88a2f77dc2eb
+      md5: 1e9492104ffa77b210edeae58ab0e2ee
       size: 19360526
   plot_pancreas_model1:
     cmd: python fig2/fig2_pancreas_plot.py --config=config.yaml
