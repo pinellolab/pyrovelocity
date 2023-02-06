@@ -47,7 +47,6 @@ def load_data(
     if processed_path is None:
         processed_path = f"{data}_scvelo_fitted_{top_n}_{min_shared_counts}.h5ad"
 
-    # if force or (not os.path.exists(processed_path)):
     if (
         os.path.isfile(processed_path)
         and os.access(processed_path, os.R_OK)
@@ -87,7 +86,18 @@ def load_data(
 def load_pbmc(
     data: str = None,
     processed_path: str = "pbmc_processed.h5ad",
+    top_n: int = 3,
+    force: bool = True
 ) -> anndata._core.anndata.AnnData:
+    """Preprocess PBMC data from scvelo.
+
+    Args:
+        data (str, optional): data set path
+        processed_path (str, optional): processed data set path
+
+    Returns:
+        anndata._core.anndata.AnnData: processed AnnData object
+    """
     if (
         os.path.isfile(processed_path)
         and os.access(processed_path, os.R_OK)
@@ -99,15 +109,28 @@ def load_pbmc(
             adata = scv.datasets.pbmc68k()
         elif os.path.isfile(data) and os.access(data, os.R_OK):
             adata = scv.read(data)
+        # all genes adata for subset
         adata_all = adata.copy()
+
         adata.obsm["X_tsne"][:, 0] *= -1
         scv.pp.remove_duplicate_cells(adata)
         scv.pp.filter_and_normalize(adata, min_shared_counts=30, n_top_genes=2000)
+        print(adata.shape)
         scv.pp.moments(adata)
         scv.tl.velocity(adata, mode="stochastic")
+        print(adata.shape)
         scv.tl.recover_dynamics(adata, n_jobs=-1)
-        top_genes = adata.var["fit_likelihood"].sort_values(ascending=False).index
-        adata_sub = adata[:, top_genes[:3]].copy()
+        print(adata.shape)
+        if top_n < 2000:
+            top_genes = adata.var["fit_likelihood"].sort_values(ascending=False).index
+            adata_sub = adata[:, top_genes[:top_n]].copy()
+            assert adata_sub.shape[1] == top_n
+        elif top_n == 2000:
+            adata_sub = adata[:, adata.var_names].copy()
+            print(adata_sub.shape)
+        else:
+            raise ValueError("Invalid option")
+
         scv.tl.velocity_graph(adata_sub, n_jobs=-1)
         scv.tl.velocity_embedding(adata_sub)
 

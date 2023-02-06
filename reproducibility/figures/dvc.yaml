@@ -96,7 +96,7 @@ stages:
   #         persist: true
 
   preprocess_pancreas:
-    cmd: python preprocess.py data_external.sources=[scvelo] data_external.scvelo.process=[pancreas]
+    cmd: python preprocess.py data_external.sources=[scvelo] data_external.scvelo.process=[pancreas] +data_external.top_n=2000
     deps:
       - preprocess.py
       - ${data_external.scvelo.pancreas.rel_path}
@@ -109,7 +109,7 @@ stages:
           persist: true
 
   preprocess_pbmc68k:
-    cmd: python preprocess.py data_external.sources=[scvelo] data_external.scvelo.process=[pbmc68k]
+    cmd: python preprocess.py data_external.sources=[scvelo] data_external.scvelo.process=[pbmc68k] +data_external.top_n=3
     deps:
       - preprocess.py
       - ${data_external.scvelo.pbmc68k.rel_path}
@@ -119,6 +119,19 @@ stages:
           - data_external.scvelo.pbmc68k
     outs:
       - ${data_external.scvelo.pbmc68k.derived.rel_path}:
+          persist: true
+
+  preprocess_pbmc68k_2000genes:
+    cmd: python preprocess.py data_external.sources=[scvelo] data_external.scvelo.process=[pbmc68k] +data_external.top_n=2000
+    deps:
+      - preprocess.py
+      - ${data_external.scvelo.pbmc68k.rel_path}
+    params:
+      - config.yaml:
+          - base
+          - data_external.scvelo.pbmc68k
+    outs:
+      - ${data_external.scvelo.pbmc68k.derived.rel_path_2000genes}:
           persist: true
 
   train_pancreas_model1:
@@ -213,6 +226,22 @@ stages:
       - ${model_training.pbmc68k_model2.model_path}
         # persist: true
       - ${model_training.pbmc68k_model2.pyrovelocity_data_path}
+        # persist: true
+
+  train_pbmc68k_model2_2000genes:
+    cmd: python train.py model_training.train=[pbmc68k_model2_2000genes]
+    deps:
+      - train.py
+      - ${model_training.pbmc68k_model2_2000genes.input_data_path}
+    params:
+      - config.yaml:
+          - model_training.pbmc68k_model2_2000genes
+    outs:
+      - ${model_training.pbmc68k_model2_2000genes.trained_data_path}
+        # persist: true
+      - ${model_training.pbmc68k_model2_2000genes.model_path}
+        # persist: true
+      - ${model_training.pbmc68k_model2_2000genes.pyrovelocity_data_path}
         # persist: true
 
   figure2:

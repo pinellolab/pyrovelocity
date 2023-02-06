@@ -13,10 +13,19 @@ from pyrovelocity.utils import print_attributes
 
 
 def preprocess(conf: DictConfig, logger: Logger) -> None:
-    for source in conf.sources:
+    for source in conf.sources: # only scvelo now
         for data_set in conf[source].process:
             data_path = conf[source][data_set].rel_path
-            processed_path = conf[source][data_set].derived.rel_path
+            if data_set == 'pancreas':
+                processed_path = conf[source][data_set].derived.rel_path
+            elif data_set == 'pbmc68k':
+                if conf.top_n == 2000:
+                    processed_path = conf[source][data_set].derived.rel_path_2000genes
+                else:
+                    processed_path = conf[source][data_set].derived.rel_path
+            else:
+                raise ValueError(f"Invalid {data_set}")
+
             process_method = conf[source][data_set].derived.process_method
 
             logger.info(
@@ -26,23 +35,22 @@ def preprocess(conf: DictConfig, logger: Logger) -> None:
                 f"  using method: {process_method}\n"
             )
 
-            if os.path.isfile(processed_path) and os.access(processed_path, os.R_OK):
-                logger.info(f"{processed_path} exists")
-            else:
-                logger.info(f"generating {processed_path} ...")
-                process_method_fn = getattr(pyrovelocity.data, process_method)
-                adata = process_method_fn(
-                    data=data_path,
-                    processed_path=processed_path,
-                )
-                print_attributes(adata)
+            # skip checking existing files for pbmc 2000 genes
+            logger.info(f"generating {processed_path} ...")
+            process_method_fn = getattr(pyrovelocity.data, process_method)
+            adata = process_method_fn(
+                data=data_path,
+                processed_path=processed_path,
+                top_n=conf.top_n
+            )
+            print_attributes(adata)
 
-                if os.path.isfile(processed_path) and os.access(
-                    processed_path, os.R_OK
-                ):
-                    logger.info(f"successfully generated {processed_path}")
-                else:
-                    logger.warn(f"cannot find and read {processed_path}")
+            # if os.path.isfile(processed_path) and os.access(
+            #     processed_path, os.R_OK
+            # ):
+            #     logger.info(f"successfully generated {processed_path}")
+            # else:
+            #     logger.warn(f"cannot find and read {processed_path}")
 
 
 @hydra.main(version_base="1.2", config_path=".", config_name="config.yaml")

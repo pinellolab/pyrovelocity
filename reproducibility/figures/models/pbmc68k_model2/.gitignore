@@ -1,3 +1,5 @@
 /model
 /pyrovelocity.pkl
 loss_plot.png
+/model_2000genes
+/pyrovelocity_2000genes.pkl

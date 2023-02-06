@@ -1,0 +1,12 @@
+{
+    "artifact_uri": "file:///home/jupyter/pyrovelocity/reproducibility/figures/mlruns/0/98bfd76ed630469fa3e099c95bbd5d50/artifacts",
+    "end_time": 1675663970668,
+    "experiment_id": "0",
+    "lifecycle_stage": "active",
+    "run_id": "98bfd76ed630469fa3e099c95bbd5d50",
+    "run_name": "pbmc68k_model2_2000genes-98bfd76",
+    "run_uuid": "98bfd76ed630469fa3e099c95bbd5d50",
+    "start_time": 1675659146663,
+    "status": "FINISHED",
+    "user_id": "jupyter"
+}

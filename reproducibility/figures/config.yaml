@@ -38,6 +38,7 @@ data_external:
       derived:
         process_method: load_pbmc
         rel_path: data/processed/pbmc_processed.h5ad
+        rel_path_2000genes: data/processed/pbmc_processed_2000genes.h5ad
   pyrovelocity:
     download:
     - larry
@@ -56,6 +57,7 @@ model_training:
   - pancreas_model2
   - pbmc68k_model1
   - pbmc68k_model2
+  - pbmc68k_model2_2000genes
   pancreas_model1:
     path: models/pancreas_model1
     model_path: models/pancreas_model1/model
@@ -136,6 +138,27 @@ model_training:
       lr: 0.01
       train_size: 1.0
       loss_plot_path: models/pbmc68k_model2/loss_plot.png
+  pbmc68k_model2_2000genes:
+    path: models/pbmc68k_model2
+    model_path: models/pbmc68k_model2/model_2000genes
+    input_data_path: data/processed/pbmc_processed_2000genes.h5ad
+    trained_data_path: models/pbmc68k_model2/trained_2000genes.h5ad
+    pyrovelocity_data_path: models/pbmc68k_model2/pyrovelocity_2000genes.pkl
+    metrics_path: models/pbmc68k_model2/2000genes_metrics.json
+    run_info_path: models/pbmc68k_model2/2000genes_run_info.json
+    vector_field_parameters:
+      basis: tsne
+    training_parameters:
+      guide_type: auto
+      log_every: 100
+      cell_state: celltype
+      patient_improve: 0.0001
+      patient_init: 45
+      max_epochs: 4000
+      offset: true
+      lr: 0.01
+      train_size: 1.0
+      loss_plot_path: models/pbmc68k_model2/2000genes_loss_plot.png
 reports:
   figure2:
     tag: fig2
