@@ -18,6 +18,7 @@ on:
 
 env:
   # set these secrets via gh CLI or UI:
+  #   gh secret list --repo=$(GH_REPO)
   #   gh secret set PERSONAL_ACCESS_TOKEN --repo="$(GH_REPO)" --body="$(GH_PAT)"
   # see also:
   #   https://cml.dev/doc/self-hosted-runners?tab=GitHub#personal-access-token
@@ -36,8 +37,20 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - name: test
-        run: echo "cml"
+      - uses: iterative/setup-cml@v1
       - name: Setup tmate debug session
         uses: mxschmitt/action-tmate@v3
         if: ${{ github.event.inputs.debug_enabled }}
+      - name: deploy cloud runner instance
+        run: |
+          cml runner launch \
+          --labels=cml-gpu \
+          --reuse-idle \
+          --cloud=gcp \
+          --cloud-type=n1-standard-16+nvidia-tesla-t4*1 \
+          --cloud-hdd-size=300 \
+          --cloud-spot \
+          --cloud-region=us-central1-c \
+          --cloud-permission-set="${GCP_SERVICE_ACCOUNT},scopes=storage-rw"
+      # - name: test
+      #   run: echo "cml"
