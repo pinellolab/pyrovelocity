@@ -4,12 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       debug_enabled:
-        description: 'Run the build with tmate debugging enabled (mxschmitt/action-tmate)'
+        description: "Run the build with tmate debugging enabled (mxschmitt/action-tmate)"
         required: false
         default: "false"
   push:
-    branches:    
-      - 'exp*'
+    branches:
+      - "exp*"
     paths:
       - "pyrovelocity/**"
       - "reproducibility/figures/*.py"
@@ -22,8 +22,8 @@ env:
   # see also:
   #   https://cml.dev/doc/self-hosted-runners?tab=GitHub#personal-access-token
   REPO_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-  GOOGLE_APPLICATION_CREDENTIALS_DATA: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }} 
-  GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }} 
+  GOOGLE_APPLICATION_CREDENTIALS_DATA: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}
+  GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
   MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
   MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
   MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
