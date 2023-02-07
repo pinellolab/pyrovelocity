@@ -2,6 +2,11 @@ name: CML
 
 on:
   workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate debugging enabled (mxschmitt/action-tmate)'
+        required: false
+        default: "false"
   push:
 
 jobs:
@@ -13,3 +18,6 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: test
         run: echo "cml"
+      - name: Setup tmate debug session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event.inputs.debug_enabled }}
