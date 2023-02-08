@@ -5,8 +5,9 @@ on:
     inputs:
       debug_enabled:
         description: "Run the build with tmate debugging enabled (mxschmitt/action-tmate)"
-        required: false
-        default: "false"
+        required: true
+        type: boolean
+        default: false
   push:
     branches:
       - "exp*"
@@ -54,5 +55,58 @@ jobs:
           --cloud-spot \
           --cloud-region=us-central1-c \
           --cloud-permission-set="${GCP_SERVICE_ACCOUNT},scopes=storage-rw"
-      # - name: test
-      #   run: echo "cml"
+
+  train-model:
+    needs: deploy-runner
+    runs-on: [self-hosted, cml-gpu]
+    container:
+      image: iterativeai/cml:0-dvc2-base1-gpu
+      options: --gpus all
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+        # with:
+        #   ref: ${{ github.event.pull_request.head.sha }}
+      # - uses: actions/setup-python@v2
+      #   with:
+      #     python-version: "3.9"
+      - name: Setup tmate debug session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event.inputs.debug_enabled }}
+      - name: CML setup
+        run: cml ci
+      - name: Run experiment and submit report
+        run: |
+          set -x
+
+          ### Execute experiment run ###
+          pip install -e .
+          cd reproducibility/figures
+          dvc pull
+
+          dvc exp run \
+          -S config.yaml:model_training.pancreas_model1.training_parameters.max_epochs=421 \
+          train_pancreas_model1
+
+          dvc push
+          cml pr create --skip-ci .
+          #########################
+
+
+          ### Post experiment report comment ###
+          echo "## Metrics" >> report.md
+          dvc metrics show --md models/pancreas_model1/metrics.json >> report.md
+
+          echo "## Training plots" >> report.md
+          echo '!'"[ELBO](./models/pancreas_model1/loss_plot.png)" >> report.md
+
+          echo "## Run information" >> report.md
+          printf "\n\`\`\`json\n" >> report.md
+          cat models/pancreas_model1/run_info.json >> report.md
+          printf "\n\`\`\`\n" >> report.md
+
+          cml comment update --target=pr report.md
+          #########################
+
+          set +x
