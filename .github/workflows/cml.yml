@@ -16,12 +16,14 @@ on:
       - "reproducibility/figures/dvc.*"
       - "reproducibility/figures/config.yaml"
 
+# review/set variables via gh CLI:
+#
+#   gh secret list --repo=$(GH_REPO)
+#   gh secret set PERSONAL_ACCESS_TOKEN --repo="$(GH_REPO)" --body="$(GH_PAT)"
+#
+# see also:
+#   https://cml.dev/doc/self-hosted-runners?tab=GitHub#personal-access-token
 env:
-  # set these secrets via gh CLI or UI:
-  #   gh secret list --repo=$(GH_REPO)
-  #   gh secret set PERSONAL_ACCESS_TOKEN --repo="$(GH_REPO)" --body="$(GH_PAT)"
-  # see also:
-  #   https://cml.dev/doc/self-hosted-runners?tab=GitHub#personal-access-token
   REPO_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   GOOGLE_APPLICATION_CREDENTIALS_DATA: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}
   GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
