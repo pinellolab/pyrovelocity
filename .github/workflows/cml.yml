@@ -40,10 +40,10 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: iterative/setup-cml@v1
-      - name: Setup tmate debug session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ github.event.inputs.debug_enabled }}
-      - name: deploy cloud runner instance
+      # - name: Setup tmate debug session
+      #   uses: mxschmitt/action-tmate@v3
+      #   if: ${{ github.event.inputs.debug_enabled }}
+      - name: Deploy cloud runner instance
         run: |
           cml runner launch \
           --labels=cml-gpu \
