@@ -41,8 +41,12 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: iterative/setup-cml@v1
-      # - name: Setup tmate debug session
-      #   uses: mxschmitt/action-tmate@v3
+      # TODO: uncomment when fixed: https://github.com/actions/runner/issues/2005
+      # https://github.blog/changelog/2022-06-10-github-actions-inputs-unified-across-manual-and-reusable-workflows/
+      # https://github.com/community/community/discussions/9343#discussioncomment-3030843
+      - name: Setup tmate debug session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ inputs.debug_enabled }}
       #   if: ${{ github.event.inputs.debug_enabled }}
       - name: Deploy cloud runner instance
         run: |
