@@ -17,7 +17,7 @@ on:
       - "reproducibility/figures/dvc.*"
       - "reproducibility/figures/config.yaml"
 
-# review/set variables via gh CLI:
+# Review/set variables via gh CLI:
 #
 #   gh secret list --repo=$(GH_REPO)
 #   gh secret set PERSONAL_ACCESS_TOKEN --repo="$(GH_REPO)" --body="$(GH_PAT)"
@@ -66,26 +66,27 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      # https://github.com/actions/runner/issues/2005
+      # TODO: uncomment when fixed: https://github.com/actions/runner/issues/2005
       # - name: Setup tmate debug session
       #   uses: mxschmitt/action-tmate@v3
       #   if: ${{ github.event.inputs.debug_enabled }}
-      # https://github.com/iterative/cml/issues/1344
       - name: CML setup
         run: cml ci
+      # To test uncommitted changes and/or individual pipeline stages
+      # replace `dvc repro` with something analogous to:
+      #   dvc exp run \
+      #   -S config.yaml:model_training.pancreas_model1.training_parameters.max_epochs=421 \
+      #   train_pancreas_model1
+      # TODO: replace npx ... with cml https://github.com/iterative/cml/issues/1344
       - name: Run experiment and submit report
         run: |
           set -x
 
-          ### Execute experiment run ###
+          ### Execute experiment run and submit PR ###
           pip install -e .
           cd reproducibility/figures
           dvc pull
-
-          dvc exp run \
-          -S config.yaml:model_training.pancreas_model1.training_parameters.max_epochs=421 \
-          train_pancreas_model1
-
+          dvc repro
           dvc push
           npx github:iterative/cml#b923f3e pr create --skip-ci .
           #########################
