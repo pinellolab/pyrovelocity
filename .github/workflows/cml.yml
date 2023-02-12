@@ -3,8 +3,13 @@ name: CML
 on:
   workflow_dispatch:
     inputs:
-      debug_enabled:
-        description: "Run the build with tmate debugging enabled (mxschmitt/action-tmate)"
+      deploy_debug_enabled:
+        description: "Run the deployment with tmate.io debugging enabled"
+        required: true
+        type: boolean
+        default: false
+      model_debug_enabled:
+        description: "Run the model with tmate.io debugging enabled"
         required: true
         type: boolean
         default: false
@@ -41,13 +46,9 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: iterative/setup-cml@v1
-      # TODO: uncomment when fixed: https://github.com/actions/runner/issues/2005
-      # https://github.blog/changelog/2022-06-10-github-actions-inputs-unified-across-manual-and-reusable-workflows/
-      # https://github.com/community/community/discussions/9343#discussioncomment-3030843
       - name: Setup tmate debug session
         uses: mxschmitt/action-tmate@v3
-        if: ${{ inputs.debug_enabled }}
-      #   if: ${{ github.event.inputs.debug_enabled }}
+        if: ${{ inputs.deploy_debug_enabled }}
       - name: Deploy cloud runner instance
         run: |
           cml runner launch \
@@ -70,10 +71,9 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      # TODO: uncomment when fixed: https://github.com/actions/runner/issues/2005
-      # - name: Setup tmate debug session
-      #   uses: mxschmitt/action-tmate@v3
-      #   if: ${{ github.event.inputs.debug_enabled }}
+      - name: Setup tmate debug session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ inputs.model_debug_enabled }}
       - name: CML setup
         run: cml ci
       # To test uncommitted changes and/or individual pipeline stages
