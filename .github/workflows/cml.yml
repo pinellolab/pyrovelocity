@@ -66,7 +66,7 @@ jobs:
     runs-on: [self-hosted, cml-gpu]
     container:
       # image: iterativeai/cml:0-dvc2-base1-gpu
-      image: ghcr.io/cameronraysmith/pyrovelocity:master
+      image: ghcr.io/pinellolab/pyrovelocity:master
       options: --gpus all
     steps:
       - uses: actions/checkout@v3
@@ -96,8 +96,8 @@ jobs:
           -S config.yaml:model_training.pancreas_model1.training_parameters.max_epochs=425 \
           train_pancreas_model1
           dvc push
-          # npx github:iterative/cml#b923f3e pr create --skip-ci .
-          cml pr create --skip-ci .
+          # cml pr create --skip-ci .
+          npx github:iterative/cml#b923f3e pr create --skip-ci .
           #########################
 
 
