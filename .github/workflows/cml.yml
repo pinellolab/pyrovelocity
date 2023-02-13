@@ -58,14 +58,15 @@ jobs:
           --cloud-type=n1-standard-16+nvidia-tesla-t4*1 \
           --cloud-hdd-size=300 \
           --cloud-spot \
-          --cloud-region=us-central1-c \
+          --cloud-region=us-central1-a \
           --cloud-permission-set="${GCP_SERVICE_ACCOUNT},scopes=storage-rw"
 
   train-model:
     needs: deploy-runner
     runs-on: [self-hosted, cml-gpu]
     container:
-      image: iterativeai/cml:0-dvc2-base1-gpu
+      # image: iterativeai/cml:0-dvc2-base1-gpu
+      image: ghcr.io/cameronraysmith/pyrovelocity:master
       options: --gpus all
     steps:
       - uses: actions/checkout@v3
