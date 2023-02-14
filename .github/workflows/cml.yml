@@ -48,9 +48,10 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: ${{ inputs.deploy_debug_enabled }}
       - name: Deploy cloud runner
-        env:
-          GCP_ZONES: ("us-central1-c" "us-central1-a" "us-central1-b")
         run: |
+          GCP_ZONES=( "us-central1-b" "us-central1-f" 
+                      "us-central1-a" "us-central1-c" 
+                      "us-west4-b" )
           for trial in {1..3}; do
             for zone in "${GCP_ZONES[@]}"; do
               echo "Trial $trial in zone $zone"
