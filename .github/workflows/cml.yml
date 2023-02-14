@@ -49,8 +49,8 @@ jobs:
         if: ${{ inputs.deploy_debug_enabled }}
       - name: Deploy cloud runner
         run: |
-          GCP_ZONES=( "us-central1-b" "us-central1-f" 
-                      "us-central1-a" "us-central1-c" 
+          GCP_ZONES=( "us-central1-b" "us-central1-f"
+                      "us-central1-a" "us-central1-c"
                       "us-west4-b" )
           for trial in {1..3}; do
             for zone in "${GCP_ZONES[@]}"; do
@@ -63,7 +63,8 @@ jobs:
               --cloud-hdd-size=300 \
               --cloud-spot \
               --cloud-region="$zone" \
-              --cloud-permission-set="${GCP_SERVICE_ACCOUNT},scopes=storage-rw" && exit
+              --cloud-permission-set="${GCP_SERVICE_ACCOUNT},scopes=storage-rw" \
+              && break 2
             done
           done
   train:
