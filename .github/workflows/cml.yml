@@ -59,7 +59,7 @@ jobs:
               --labels=cml-gpu \
               --reuse-idle \
               --cloud=gcp \
-              --cloud-type=n1-standard-16+nvidia-tesla-t4*1 \
+              --cloud-type=n1-standard-32+nvidia-tesla-t4*1 \
               --cloud-hdd-size=300 \
               --cloud-spot \
               --cloud-region="$zone" \
