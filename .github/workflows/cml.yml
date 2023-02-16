@@ -67,7 +67,7 @@ jobs:
               && break 2
             done
           done
-  train:
+  pipeline:
     needs: deploy
     runs-on: [self-hosted, cml-gpu]
     container:
@@ -82,41 +82,6 @@ jobs:
         if: ${{ inputs.model_debug_enabled }}
       - name: CML setup
         run: cml ci
-      # To test uncommitted changes and/or individual pipeline stages
-      # replace `dvc repro` with something analogous to:
-      #   dvc exp run \
-      #   -S config.yaml:model_training.pancreas_model1.training_parameters.max_epochs=421 \
-      #   train_pancreas_model1
       - name: Run experiment and submit report
-        run: |
-          set -x
-
-          ### Execute experiment run and submit PR ###
-          pip install -e .
-          cd reproducibility/figures
-          dvc pull
-          # dvc repro
-          dvc exp run \
-          -S config.yaml:model_training.pancreas_model1.training_parameters.max_epochs=425 \
-          train_pancreas_model1
-          dvc push
-          cml pr create --skip-ci .
-          #########################
-
-
-          ### Post experiment report comment ###
-          echo "## Metrics" >> report.md
-          dvc metrics show --md models/pancreas_model1/metrics.json >> report.md
-
-          echo "## Training plots" >> report.md
-          echo '!'"[ELBO](./models/pancreas_model1/loss_plot.png)" >> report.md
-
-          echo "## Run information" >> report.md
-          printf "\n\`\`\`json\n" >> report.md
-          cat models/pancreas_model1/run_info.json >> report.md
-          printf "\n\`\`\`\n" >> report.md
-
-          cml comment update --target=pr report.md
-          #########################
-
-          set +x
+        run: ./.github/pipeline.sh
+        shell: bash
