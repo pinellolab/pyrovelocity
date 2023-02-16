@@ -12,6 +12,7 @@
 # https://github.com/iterative/cml/issues/1344 resolved in
 # https://github.com/iterative/cml/releases/tag/v0.18.21
 # TODO: move matplotlib-venn to package manager if persistent
+# TODO: move /usr/bin/time install to Docker
 #########################
 
 set -x
@@ -19,6 +20,7 @@ set -x
 ### Execute experiment run and submit PR ###
 pip install -e .
 pip install matplotlib-venn==0.11.7
+sudo apt-get update && sudo apt-get install -y time && which time
 cd reproducibility/figures || exit
 
 dvc pull

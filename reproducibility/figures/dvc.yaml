@@ -122,7 +122,7 @@ stages:
           persist: true
 
   train_pancreas_model1:
-    cmd: python train.py model_training.train=[pancreas_model1]
+    cmd: /usr/bin/time -v python train.py model_training.train=[pancreas_model1]
     deps:
       - train.py
       - ${model_training.pancreas_model1.input_data_path}
@@ -145,7 +145,7 @@ stages:
         # persist: true
 
   train_pancreas_model2:
-    cmd: python train.py model_training.train=[pancreas_model2]
+    cmd: /usr/bin/time -v python train.py model_training.train=[pancreas_model2]
     deps:
       - train.py
       - ${model_training.pancreas_model2.input_data_path}
@@ -188,7 +188,7 @@ stages:
         # persist: true
 
   train_pbmc68k_model1:
-    cmd: python train.py model_training.train=[pbmc68k_model1]
+    cmd: /usr/bin/time -v python train.py model_training.train=[pbmc68k_model1]
     deps:
       - train.py
       - ${model_training.pbmc68k_model1.input_data_path}
@@ -211,7 +211,7 @@ stages:
         # persist: true
 
   train_pbmc68k_model2:
-    cmd: python train.py model_training.train=[pbmc68k_model2]
+    cmd: /usr/bin/time -v python train.py model_training.train=[pbmc68k_model2]
     deps:
       - train.py
       - ${model_training.pbmc68k_model2.input_data_path}
