@@ -1,12 +1,28 @@
+# pyrovelocity
+
+<div align="center">
+
+<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/_static/logo.png" alt="Pyro-Velocity logo" width="300" role="img">
+
+|         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CI/CD   | [![CI - Test](https://github.com/pinellolab/pyrovelocity/actions/workflows/tests.yml/badge.svg)](https://github.com/pinellolab/pyrovelocity/actions/workflows/tests.yml) [![CML](https://github.com/pinellolab/pyrovelocity/actions/workflows/cml.yml/badge.svg)](https://github.com/pinellolab/pyrovelocity/actions/workflows/cml.yml) [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/pinellolab/pyrovelocity/master.svg)](https://results.pre-commit.ci/latest/github/pinellolab/pyrovelocity/master) |
+| Docs    | [![Documentation Status](https://readthedocs.org/projects/pyrovelocity/badge/?version=latest)](https://pyrovelocity.readthedocs.io/en/latest/?badge=latest)                                                                                                                                                                                                                                                                                                                                                                  |
+| Package | [![PyPI - Version](https://img.shields.io/pypi/v/pyrovelocity.svg?logo=pypi&label=PyPI&logoColor=gold)](https://pypi.org/project/pyrovelocity/) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyrovelocity.svg?logo=python&label=Python&logoColor=gold)](https://pypi.org/project/pyrovelocity/)                                                                                                                                                                                                          |
+| Meta    | [![code style - Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![License - MIT](https://img.shields.io/badge/license-AGPL%203-purple)](https://spdx.org/licenses/)                                                                                                                                                                                                                                                                                                       |
+
+</div>
+
+---
+
 # Introduction
 
-Pyro-Velocity is a Bayesian, generative and multivariate RNA Velocity
-model to estimate the _uncertainty_ of cell future states. This approach
-models _raw sequencing counts_ with the _synchronized cell time_ across
-all expressed genes to provide quantifiable and improved information on
-cell fate choices and developmental trajectory dynamics.
-
-- LICENSE - Free software: Affero GPL V3
+`Pyro-Velocity` is a Bayesian, generative, and multivariate RNA velocity
+model to estimate _uncertainty_ in predictions of future cell states from
+minimal models approximating splicing dynamics.
+This approach models _raw sequencing counts_ with _synchronized cell time_ across
+all expressed genes to provide quantifiable information on
+cell fate choice and developmental trajectory dynamics.
 
 ## Features
 
@@ -16,7 +32,8 @@ cell fate choices and developmental trajectory dynamics.
 - Synchronized cell time estimation across genes
 - Multivariate denoised gene expression and velocity prediction
 
-![Velocity workflow comparison](docs/source/readme_figure1.png)
+<!-- ![Velocity workflow comparison](docs/source/readme_figure1.png) -->
+<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/source/readme_figure1.png" alt="Velocity workflow comparison">
 
 ## Installation with miniconda
 
@@ -243,7 +260,7 @@ _ = rainbowplot(volcano_data, adata, adata_model_pos[1],
 
 ## Illustrative examples of Pyro-Velocity analyses on different single-cell datasets
 
-### Pyro-Velocity on the PBMC dataset \[[1](https://scvelo.readthedocs.io/perspectives/Perspectives/)\]
+### Pyro-Velocity applied to a PBMC dataset \[[1](https://scvelo.readthedocs.io/perspectives/Perspectives/)\]
 
 This is a scRNA-seq dataset of fully mature peripheral blood mononuclear
 cells (PBMC) generated using the 10X genomics kit and containing 65,877
@@ -257,9 +274,10 @@ analysis. Pyro-Velocity failed to detect high-confidence trajectories in
 the mature blood cell states, consistent with what is known about the
 biology underlying these cells.
 
-**Vector Field with uncertainty**
+**Vector field with uncertainty**
 
-![PBMC vector field uncertainty](docs/source/readme_figure2.png)
+<!-- ![PBMC vector field uncertainty](docs/source/readme_figure2.png) -->
+<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/source/readme_figure2.png" alt="PBMC vector field uncertainty">
 
 These 6 plots from left to right show: 1. cell types, 2. stream plot of
 Pyro-velocity vector field based on the posterior mean of 30 posterior
@@ -274,7 +292,7 @@ The full example can be reproduced using the
 [PBMC](https://github.com/pinellolab/pyrovelocity/blob/master/docs/source/notebooks/pbmc.ipynb)
 Jupyter notebook.
 
-### Pyro-Velocity on the Pancreas dataset \[[2](https://scvelo.readthedocs.io/VelocityBasics/)\]
+### Pyro-Velocity applied to a pancreas development dataset \[[2](https://scvelo.readthedocs.io/VelocityBasics/)\]
 
 Here we apply Pyro-Velocity to a single cell RNA-seq dataset of mouse
 pancreas in the E15.5 embryo developmental stage. This dataset was
@@ -288,16 +306,18 @@ hierarchies identifying cell trajectories originating from ductal
 progenitor cells and culminated in the production of mature Alpha, Beta,
 Delta, and Epsilon cells.
 
-**Vector Field with uncertainty**
+**Vector field with uncertainty**
 
-![Pancreas vector field uncertainty](docs/source/readme_figure3.png)
+<!-- ![Pancreas vector field uncertainty](docs/source/readme_figure3.png) -->
+<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/source/readme_figure3.png" alt="Pancreas vector field uncertainty">
 
 These 6 plots from left to right are showing the same analyses presented
 as in the example above.
 
 **Shared time with uncertainty**
 
-![Pancreas shared time uncertainty](docs/source/readme_figure4.png)
+<!-- ![Pancreas shared time uncertainty](docs/source/readme_figure4.png) -->
+<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/source/readme_figure4.png" alt="Pancreas vector field uncertainty">
 
 The left figure shows the average of 30 posterior samples for the cell
 shared time, the title of the figure shows the Spearman\'s correlation
@@ -314,19 +334,21 @@ fit (we use negative mean absolute error ), then we rank the filtered
 genes using Pearson\'s correlation between denoised spliced expression
 and the posterior mean of the recovered shared time across cells.
 
-![Pancreas Volcano plot for gene selection](docs/source/readme_figure6.png)
+<!-- ![Pancreas Volcano plot for gene selection](docs/source/readme_figure6.png) -->
+<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/source/readme_figure6.png" alt="Pancreas Volcano plot for gene selection">
 
 For the selected genes, it is possible to explore in depth their
 dynamic, using phase portraits, rainbow plots, and UMAP rendering of
 denoised splicing gene expression across cells.
 
-![Pancreas vector field uncertainty](docs/source/readme_figure7.png)
+<!-- ![Pancreas vector field uncertainty](docs/source/readme_figure7.png) -->
+<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/source/readme_figure7.png" alt="Pancreas vector field uncertainty">
 
 The full example can be reproduced using the
 [Pancreas](https://github.com/pinellolab/pyrovelocity/blob/master/docs/source/notebooks/pancreas.ipynb)
 jupyter notebook.
 
-### Pyro-Velocity on the Larry dataset \[[3](https://figshare.com/articles/dataset/larry_invitro_adata_sub_raw_h5ad/20780344)\]
+### Pyro-Velocity applied to the LARRY dataset \[[3](https://figshare.com/articles/dataset/larry_invitro_adata_sub_raw_h5ad/20780344)\]
 
 This last example, present the analysis of a recent scRNA-seq dataset
 profiling mouse hematopoises at high resolution thanks to lineage
@@ -336,9 +358,10 @@ to clonally trace cell fates over time (Weinrab et al. Cell 20).
 
 Below we show the main output generated by Pyro-Velocity analysis.
 
-**Vector Field with uncertainty**
+**Vector field with uncertainty**
 
-![LARRY vector field uncertainty](docs/source/readme_figure8.png)
+<!-- ![LARRY vector field uncertainty](docs/source/readme_figure8.png) -->
+<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/source/readme_figure8.png" alt="LARRY vector field uncertainty">
 
 These 5 plots from left to right shows: 1) Cell types, 2) Clone
 progression vector field by using centroid of cells belonging to the
@@ -356,7 +379,8 @@ we also considered the agreement of our method with Cospar, a
 state-of-the-art method specifically designed for predicting fate
 potency based on LARRY data.
 
-![Pancreas shared time uncertainty](docs/source/readme_figure9.png)
+<!-- ![Pancreas shared time uncertainty](docs/source/readme_figure9.png) -->
+<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/source/readme_figure9.png" alt="Pancreas shared time uncertainty">
 
 The leftmost figure shows the Cospar fate potency score, the middle
 figure shows the average of 30 posterior samples from Pyro-Velocity
@@ -369,17 +393,17 @@ The full example can be reproduced using the
 [LARRY](https://github.com/pinellolab/pyrovelocity/blob/master/docs/source/notebooks/larry.ipynb)
 jupyter notebook.
 
-# TroubleShooting
+# Troubleshooting
 
 ## TypeError: fate_potency() got an unexpected keyword argument 'used_Tmap'
 
-Please use specific _cospar_ version:
+Please use the specific _cospar_ version:
 
 ```bash
 pip install cospar==0.1.9
 ```
 
-## Cuda error: no kernel image is available for execution on the device
+## CUDA error: no kernel image is available for execution on the device
 
 All reference to GPU support applies to linux. We do not currently support windows
 and there is no GPU-compatible pytorch version `<1.12` for darwin.
