@@ -11,12 +11,14 @@
 # npx github:iterative/cml#b923f3e pr create --skip-ci .
 # https://github.com/iterative/cml/issues/1344 resolved in
 # https://github.com/iterative/cml/releases/tag/v0.18.21
+# TODO: move matplotlib-venn to package manager if persistent
 #########################
 
 set -x
 
 ### Execute experiment run and submit PR ###
 pip install -e .
+pip install matplotlib-venn==0.11.7
 cd reproducibility/figures || exit
 
 dvc pull
