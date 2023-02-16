@@ -43,15 +43,6 @@ dvc dag --md
 printf "\n# pancreas\n\n## model 1\n\n### Metrics\n"
 dvc metrics show --md models/pancreas_model1/metrics.json
 
-# pipeline
-printf "# pipeline\n"
-dvc dag --md
-
-# pancreas
-## model 1
-printf "\n# pancreas\n\n## model 1\n\n### Metrics\n"
-dvc metrics show --md models/pancreas_model1/metrics.json
-
 echo "### Training plots"
 echo '!'"[ELBO](./models/pancreas_model1/loss_plot.png)"
 
@@ -98,6 +89,10 @@ echo "### Run information"
 printf "\n\`\`\`json\n"
 cat models/pbmc68k_model2/run_info.json
 printf "\n\`\`\`\n"
+
+# pipeline files
+printf "# pipeline files\n"
+dvc dag -o --md
 } >> report.md
 
 cml comment update report.md
