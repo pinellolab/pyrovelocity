@@ -122,7 +122,7 @@ stages:
           persist: true
 
   train_pancreas_model1:
-    cmd: python train.py model_training.train=[pancreas_model1]
+    cmd: /usr/bin/time -v python train.py model_training.train=[pancreas_model1]
     deps:
       - train.py
       - ${model_training.pancreas_model1.input_data_path}
@@ -135,6 +135,8 @@ stages:
     outs:
       - ${model_training.pancreas_model1.run_info_path}:
           cache: false
+      - ${model_training.pancreas_model1.training_parameters.loss_plot_path}
+        # persist: true
       - ${model_training.pancreas_model1.trained_data_path}
         # persist: true
       - ${model_training.pancreas_model1.model_path}
@@ -143,7 +145,7 @@ stages:
         # persist: true
 
   train_pancreas_model2:
-    cmd: python train.py model_training.train=[pancreas_model2]
+    cmd: /usr/bin/time -v python train.py model_training.train=[pancreas_model2]
     deps:
       - train.py
       - ${model_training.pancreas_model2.input_data_path}
@@ -156,6 +158,8 @@ stages:
     outs:
       - ${model_training.pancreas_model2.run_info_path}:
           cache: false
+      - ${model_training.pancreas_model2.training_parameters.loss_plot_path}
+        # persist: true
       - ${model_training.pancreas_model2.trained_data_path}
         # persist: true
       - ${model_training.pancreas_model2.model_path}
@@ -184,14 +188,21 @@ stages:
         # persist: true
 
   train_pbmc68k_model1:
-    cmd: python train.py model_training.train=[pbmc68k_model1]
+    cmd: /usr/bin/time -v python train.py model_training.train=[pbmc68k_model1]
     deps:
       - train.py
       - ${model_training.pbmc68k_model1.input_data_path}
     params:
       - config.yaml:
           - model_training.pbmc68k_model1
+    metrics:
+      - ${model_training.pbmc68k_model1.metrics_path}:
+          cache: false
     outs:
+      - ${model_training.pbmc68k_model1.run_info_path}:
+          cache: false
+      - ${model_training.pbmc68k_model1.training_parameters.loss_plot_path}
+        # persist: true
       - ${model_training.pbmc68k_model1.trained_data_path}
         #  persist: true
       - ${model_training.pbmc68k_model1.model_path}
@@ -200,14 +211,21 @@ stages:
         # persist: true
 
   train_pbmc68k_model2:
-    cmd: python train.py model_training.train=[pbmc68k_model2]
+    cmd: /usr/bin/time -v python train.py model_training.train=[pbmc68k_model2]
     deps:
       - train.py
       - ${model_training.pbmc68k_model2.input_data_path}
     params:
       - config.yaml:
           - model_training.pbmc68k_model2
+    metrics:
+      - ${model_training.pbmc68k_model2.metrics_path}:
+          cache: false
     outs:
+      - ${model_training.pbmc68k_model2.run_info_path}:
+          cache: false
+      - ${model_training.pbmc68k_model2.training_parameters.loss_plot_path}
+        # persist: true
       - ${model_training.pbmc68k_model2.trained_data_path}
         # persist: true
       - ${model_training.pbmc68k_model2.model_path}

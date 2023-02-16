@@ -2,14 +2,86 @@ name: CML
 
 on:
   workflow_dispatch:
+    inputs:
+      deploy_debug_enabled:
+        description: "Run the deployment with tmate.io debugging enabled"
+        required: true
+        type: boolean
+        default: false
+      model_debug_enabled:
+        description: "Run the model with tmate.io debugging enabled"
+        required: true
+        type: boolean
+        default: false
   push:
+    branches:
+      - "exp*"
+    paths:
+      - "pyrovelocity/**"
+      - "reproducibility/figures/*.py"
+      - "reproducibility/figures/dvc.*"
+      - "reproducibility/figures/config.yaml"
+
+# Review/set variables via gh CLI:
+#
+#   gh secret list --repo=$(GH_REPO)
+#   gh secret set PERSONAL_ACCESS_TOKEN --repo="$(GH_REPO)" --body="$(GH_PAT)"
+#
+# see also:
+#   https://cml.dev/doc/self-hosted-runners?tab=GitHub#personal-access-token
+env:
+  REPO_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+  GOOGLE_APPLICATION_CREDENTIALS_DATA: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}
+  GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+  MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+  MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+  MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+  TF_LOG_PROVIDER: DEBUG
 
 jobs:
-  deploy-runner:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: iterative/setup-cml@v1
+      - name: Setup tmate debug session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ inputs.deploy_debug_enabled }}
+      - name: Deploy cloud runner
+        run: |
+          GCP_ZONES=( "us-central1-b" "us-central1-f"
+                      "us-central1-a" "us-central1-c"
+                      "us-west4-b" )
+          for trial in {1..3}; do
+            for zone in "${GCP_ZONES[@]}"; do
+              echo "Trial $trial in zone $zone"
+              cml runner launch \
+              --labels=cml-gpu \
+              --reuse-idle \
+              --cloud=gcp \
+              --cloud-type=n1-standard-32+nvidia-tesla-t4*1 \
+              --cloud-hdd-size=300 \
+              --cloud-spot \
+              --cloud-region="$zone" \
+              --cloud-permission-set="${GCP_SERVICE_ACCOUNT},scopes=storage-rw" \
+              && break 2
+            done
+          done
+  pipeline:
+    needs: deploy
+    runs-on: [self-hosted, cml-gpu]
+    container:
+      image: ghcr.io/pinellolab/pyrovelocity:master
+      options: --gpus all
+    steps:
+      - uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
-      - name: test
-        run: echo "cml"
+          fetch-depth: 0
+      - name: Setup tmate debug session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ inputs.model_debug_enabled }}
+      - name: CML setup
+        run: cml ci
+      - name: Run experiment and submit report
+        run: ./.github/pipeline.sh
+        shell: bash
