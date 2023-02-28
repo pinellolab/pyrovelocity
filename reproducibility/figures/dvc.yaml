@@ -132,6 +132,19 @@ stages:
       - ${data_external.scvelo.pbmc68k.derived.rel_path}:
           persist: true
 
+  preprocess_pons:
+    cmd: python preprocess.py data_external.sources=[velocyto] data_external.velocyto.process=[pons]
+    deps:
+      - preprocess.py
+      - ${data_external.velocyto.pons.rel_path}
+    params:
+      - config.yaml:
+          - base
+          - data_external.velocyto.pons
+    outs:
+      - ${data_external.velocyto.pons.derived.rel_path}:
+          persist: true
+
   train_pancreas_model1:
     cmd: /usr/bin/time -v python train.py model_training.train=[pancreas_model1]
     deps:

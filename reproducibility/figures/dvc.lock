@@ -473,3 +473,29 @@ stages:
     - path: data/external/oligo_lite.h5ad
       md5: 82f5e9f9736e556662f56653d2f927ab
       size: 82166707
+  preprocess_pons:
+    cmd: python preprocess.py data_external.sources=[velocyto] data_external.velocyto.process=[pons]
+    deps:
+    - path: data/external/oligo_lite.h5ad
+      md5: 82f5e9f9736e556662f56653d2f927ab
+      size: 82166707
+    - path: preprocess.py
+      md5: 346eaf42eb0c6c729be1bfc60148787c
+      size: 2451
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+        data_external.velocyto.pons:
+          data_file: oligo_lite.h5ad
+          dl_root: data/external
+          dl_path: data/external/oligo_lite.h5ad
+          rel_path: data/external/oligo_lite.h5ad
+          url: https://storage.googleapis.com/pyrovelocity/data/oligo_lite.h5ad
+          derived:
+            process_method: load_data
+            rel_path: data/processed/pons_processed.h5ad
+    outs:
+    - path: data/processed/pons_processed.h5ad
+      md5: 068b9403c6855b03b6593953946aa850
+      size: 740973882
