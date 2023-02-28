@@ -58,7 +58,14 @@ data_external:
       rel_path: ${data_external.root_path}/${.data_file}
       url: ${..sources.figshare_root_url}/37028569
 model_training:
-  train: [pancreas_model1, pancreas_model2, pbmc68k_model1, pbmc68k_model2]
+  train:
+    [
+      pancreas_model1,
+      pancreas_model2,
+      pbmc68k_model1,
+      pbmc68k_model2,
+      pons_model1,
+    ]
   pancreas_model1:
     path: ${paths.models}/pancreas_model1
     model_path: ${.path}/model
@@ -136,6 +143,25 @@ model_training:
       patient_init: 45
       max_epochs: 4000
       offset: True
+      lr: 0.01
+      train_size: 1.0
+      loss_plot_path: ${..path}/loss_plot.png
+  pons_model1:
+    path: ${paths.models}/pons_model1
+    model_path: ${.path}/model
+    input_data_path: ${data_external.velocyto.pons.derived.rel_path}
+    trained_data_path: ${.path}/trained.h5ad
+    pyrovelocity_data_path: ${.path}/pyrovelocity.pkl
+    metrics_path: ${.path}/metrics.json
+    run_info_path: ${.path}/run_info.json
+    vector_field_parameters:
+      basis: umap
+    training_parameters:
+      guide_type: auto_t0_constraint
+      log_every: 100
+      patient_improve: 1e-4
+      patient_init: 45
+      max_epochs: 4000
       lr: 0.01
       train_size: 1.0
       loss_plot_path: ${..path}/loss_plot.png

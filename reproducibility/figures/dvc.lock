@@ -499,3 +499,53 @@ stages:
     - path: data/processed/pons_processed.h5ad
       md5: 068b9403c6855b03b6593953946aa850
       size: 740973882
+  train_pons_model1:
+    cmd: /usr/bin/time -v python train.py model_training.train=[pons_model1]
+    deps:
+    - path: data/processed/pons_processed.h5ad
+      md5: 068b9403c6855b03b6593953946aa850
+      size: 740973882
+    - path: train.py
+      md5: 0a9d3edec45ada6f48200246157d82b9
+      size: 7526
+    params:
+      config.yaml:
+        model_training.pons_model1:
+          path: models/pons_model1
+          model_path: models/pons_model1/model
+          input_data_path: data/processed/pons_processed.h5ad
+          trained_data_path: models/pons_model1/trained.h5ad
+          pyrovelocity_data_path: models/pons_model1/pyrovelocity.pkl
+          metrics_path: models/pons_model1/metrics.json
+          run_info_path: models/pons_model1/run_info.json
+          vector_field_parameters:
+            basis: umap
+          training_parameters:
+            guide_type: auto_t0_constraint
+            log_every: 100
+            patient_improve: 0.0001
+            patient_init: 45
+            max_epochs: 4000
+            lr: 0.01
+            train_size: 1.0
+            loss_plot_path: models/pons_model1/loss_plot.png
+    outs:
+    - path: models/pons_model1/loss_plot.png
+      md5: c07cc6a9c5522ce0fcbbab8207382a3c
+      size: 10765
+    - path: models/pons_model1/metrics.json
+      md5: 413833e168f104563fe27e772faf1f1a
+      size: 158
+    - path: models/pons_model1/model
+      md5: 4dd472bc2d5027869da74bd6c122ea9b.dir
+      size: 1282454
+      nfiles: 4
+    - path: models/pons_model1/pyrovelocity.pkl
+      md5: 4dd7ace90982aaabb4e27bfa51accd52
+      size: 12014584796
+    - path: models/pons_model1/run_info.json
+      md5: b42184cefde0fc4df6a210c51988b878
+      size: 451
+    - path: models/pons_model1/trained.h5ad
+      md5: 3f9610d4eea87daa1992f5b062bf5fb2
+      size: 855656950
