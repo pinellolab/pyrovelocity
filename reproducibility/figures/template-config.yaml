@@ -7,7 +7,21 @@ paths:
 data_external:
   root_path: ${paths.data}/external
   processed_path: ${paths.data}/processed
-  sources: [scvelo, pyrovelocity]
+  sources: [velocyto, scvelo, pyrovelocity]
+  velocyto:
+    download: [pons]
+    process: [pons]
+    sources:
+      gcs_root_url: https://storage.googleapis.com/pyrovelocity/data
+    pons:
+      data_file: oligo_lite.h5ad
+      dl_root: ${data_external.root_path}
+      dl_path: ${.dl_root}/${.data_file}
+      rel_path: ${data_external.root_path}/${.data_file}
+      url: ${..sources.gcs_root_url}/${.data_file}
+      derived:
+        process_method: load_data
+        rel_path: ${data_external.processed_path}/pons_processed.h5ad
   scvelo:
     download: [pancreas, pbmc68k]
     process: [pancreas, pbmc68k]

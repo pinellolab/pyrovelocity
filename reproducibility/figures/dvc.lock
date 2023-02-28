@@ -450,3 +450,26 @@ stages:
     - path: reports/figS3/figS3_raw_gene_selection_model2.tif
       md5: 0f7f437df24735118f527ad8d6e0860a
       size: 19294478
+  data_download_pons:
+    cmd: python data_download.py data_external.sources=[velocyto] data_external.velocyto.download=[pons]
+    deps:
+    - path: data_download.py
+      md5: 391e26ebb263cd5e550f9365c4a7f21f
+      size: 2881
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+        data_external.velocyto.pons:
+          data_file: oligo_lite.h5ad
+          dl_root: data/external
+          dl_path: data/external/oligo_lite.h5ad
+          rel_path: data/external/oligo_lite.h5ad
+          url: https://storage.googleapis.com/pyrovelocity/data/oligo_lite.h5ad
+          derived:
+            process_method: load_data
+            rel_path: data/processed/pons_processed.h5ad
+    outs:
+    - path: data/external/oligo_lite.h5ad
+      md5: 82f5e9f9736e556662f56653d2f927ab
+      size: 82166707

@@ -78,6 +78,17 @@ stages:
       - ${data_external.pyrovelocity.larry.rel_path}:
           persist: true
 
+  data_download_pons:
+    cmd: python data_download.py data_external.sources=[velocyto] data_external.velocyto.download=[pons]
+    deps:
+      - data_download.py
+    params:
+      - config.yaml:
+          - base
+          - data_external.velocyto.pons
+    outs:
+      - ${data_external.velocyto.pons.rel_path}:
+          persist: true
   # preprocess:
   #   cmd: python preprocess.py
   #   deps:

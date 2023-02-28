@@ -8,8 +8,25 @@ data_external:
   root_path: data/external
   processed_path: data/processed
   sources:
+  - velocyto
   - scvelo
   - pyrovelocity
+  velocyto:
+    download:
+    - pons
+    process:
+    - pons
+    sources:
+      gcs_root_url: https://storage.googleapis.com/pyrovelocity/data
+    pons:
+      data_file: oligo_lite.h5ad
+      dl_root: data/external
+      dl_path: data/external/oligo_lite.h5ad
+      rel_path: data/external/oligo_lite.h5ad
+      url: https://storage.googleapis.com/pyrovelocity/data/oligo_lite.h5ad
+      derived:
+        process_method: load_data
+        rel_path: data/processed/pons_processed.h5ad
   scvelo:
     download:
     - pancreas
