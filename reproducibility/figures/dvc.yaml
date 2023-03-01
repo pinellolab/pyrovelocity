@@ -78,6 +78,17 @@ stages:
       - ${data_external.pyrovelocity.larry.rel_path}:
           persist: true
 
+  data_download_pons:
+    cmd: python data_download.py data_external.sources=[velocyto] data_external.velocyto.download=[pons]
+    deps:
+      - data_download.py
+    params:
+      - config.yaml:
+          - base
+          - data_external.velocyto.pons
+    outs:
+      - ${data_external.velocyto.pons.rel_path}:
+          persist: true
   # preprocess:
   #   cmd: python preprocess.py
   #   deps:
@@ -119,6 +130,19 @@ stages:
           - data_external.scvelo.pbmc68k
     outs:
       - ${data_external.scvelo.pbmc68k.derived.rel_path}:
+          persist: true
+
+  preprocess_pons:
+    cmd: python preprocess.py data_external.sources=[velocyto] data_external.velocyto.process=[pons]
+    deps:
+      - preprocess.py
+      - ${data_external.velocyto.pons.rel_path}
+    params:
+      - config.yaml:
+          - base
+          - data_external.velocyto.pons
+    outs:
+      - ${data_external.velocyto.pons.derived.rel_path}:
           persist: true
 
   train_pancreas_model1:
@@ -231,6 +255,52 @@ stages:
       - ${model_training.pbmc68k_model2.model_path}
         # persist: true
       - ${model_training.pbmc68k_model2.pyrovelocity_data_path}
+        # persist: true
+
+  train_pons_model1:
+    cmd: /usr/bin/time -v python train.py model_training.train=[pons_model1]
+    deps:
+      - train.py
+      - ${model_training.pons_model1.input_data_path}
+    params:
+      - config.yaml:
+          - model_training.pons_model1
+    metrics:
+      - ${model_training.pons_model1.metrics_path}:
+          cache: false
+    outs:
+      - ${model_training.pons_model1.run_info_path}:
+          cache: false
+      - ${model_training.pons_model1.training_parameters.loss_plot_path}
+        # persist: true
+      - ${model_training.pons_model1.trained_data_path}
+        # persist: true
+      - ${model_training.pons_model1.model_path}
+        # persist: true
+      - ${model_training.pons_model1.pyrovelocity_data_path}
+        # persist: true
+
+  train_pons_model2:
+    cmd: /usr/bin/time -v python train.py model_training.train=[pons_model2]
+    deps:
+      - train.py
+      - ${model_training.pons_model2.input_data_path}
+    params:
+      - config.yaml:
+          - model_training.pons_model2
+    metrics:
+      - ${model_training.pons_model2.metrics_path}:
+          cache: false
+    outs:
+      - ${model_training.pons_model2.run_info_path}:
+          cache: false
+      - ${model_training.pons_model2.training_parameters.loss_plot_path}
+        # persist: true
+      - ${model_training.pons_model2.trained_data_path}
+        # persist: true
+      - ${model_training.pons_model2.model_path}
+        # persist: true
+      - ${model_training.pons_model2.pyrovelocity_data_path}
         # persist: true
 
   figure2:
