@@ -321,6 +321,7 @@ stages:
         # persist: true
       - ${reports.figure2.biomarker_selection_path}
       - ${reports.figure2.biomarker_phaseportrait_path}
+      - ${reports.figure2.uncertainty_param_plot_path}
 
   figureS3:
     cmd: python figS3/figure.py

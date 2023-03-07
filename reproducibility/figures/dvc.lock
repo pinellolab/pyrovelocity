@@ -203,8 +203,8 @@ stages:
     cmd: python fig2/figure.py
     deps:
     - path: fig2/figure.py
-      md5: 79a6a55999a20278e14bfdb15e8fd7ae
-      size: 16420
+      md5: 563d37e8ee55a54c2761c96491b0d6d3
+      size: 18285
     - path: models/pancreas_model1/pyrovelocity.pkl
       md5: 356ba5db1c2dd67be3537777add30127
       size: 7102321859
@@ -226,6 +226,7 @@ stages:
           svg_path: reports/fig2/fig2_raw_gene_selection_model1.svg
           biomarker_selection_path: reports/fig2/fig2_markers_selection_scatterplot.tif
           biomarker_phaseportrait_path: reports/fig2/fig2_markers_phaseportrait.pdf
+          uncertainty_param_plot_path: reports/fig2/fig2_param_uncertainties.pdf
           pancreas_model1:
             shared_time_plot: reports/fig2/fig2_pancreas_shared_time.pdf
             volcano_plot: reports/fig2/fig2_pancreas_volcano.pdf
@@ -233,16 +234,19 @@ stages:
             vector_field_plot: reports/fig2/fig2_pancreas_vector_field.pdf
     outs:
     - path: reports/fig2/fig2_markers_phaseportrait.pdf
-      md5: a3d592ac2f7ef759923f76b63204b9df
-      size: 4505593
+      md5: 136fbea025ebce2accea33141071d14a
+      size: 4505356
     - path: reports/fig2/fig2_markers_selection_scatterplot.tif
-      md5: 56a33ad95cda5dae2099972ebb71d646
+      md5: 253d229cbdd6643a7cb8e031db951ec9
       size: 6101990
+    - path: reports/fig2/fig2_param_uncertainties.pdf
+      md5: 343de8903c570e1ae715237a95d38538
+      size: 78986
     - path: reports/fig2/fig2_raw_gene_selection_model1.svg
-      md5: e70dc2924c9c10efc8f362df6b2ce91c
-      size: 49588526
+      md5: 8a2cd1dc95d943a2be2d1488cfe44b7d
+      size: 49583818
     - path: reports/fig2/fig2_raw_gene_selection_model1.tif
-      md5: 76cae1fa158a498a721cc566d79d2699
+      md5: e72b42cc3d702bc5b202855a93ebc20b
       size: 19360526
   plot_pancreas_model1:
     cmd: python fig2/fig2_pancreas_plot.py --config=config.yaml
