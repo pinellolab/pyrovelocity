@@ -194,6 +194,7 @@ reports:
     svg_path: ${.path}/${.tag}_raw_gene_selection_model1.svg
     biomarker_selection_path: ${.path}/${.tag}_markers_selection_scatterplot.tif
     biomarker_phaseportrait_path: ${.path}/${.tag}_markers_phaseportrait.pdf
+    uncertainty_param_plot_path: ${.path}/${.tag}_param_uncertainties.pdf
     pancreas_model1:
       shared_time_plot: ${..path}/${..tag}_pancreas_shared_time.pdf
       volcano_plot: ${..path}/${..tag}_pancreas_volcano.pdf

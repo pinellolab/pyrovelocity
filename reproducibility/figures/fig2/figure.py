@@ -66,6 +66,8 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     revision_marker_path = conf.reports.figure2.biomarker_selection_path
     revision_phaseport_path = conf.reports.figure2.biomarker_phaseportrait_path
 
+    revision_uncertainty_plot_path = conf.reports.figure2.uncertainty_param_plot_path
+
     if os.path.isfile(pyrovelocity_pancreas_data_path) and os.access(
         pyrovelocity_pancreas_data_path, os.R_OK
     ):
@@ -519,6 +521,51 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             genes=np.hstack([model1_genes, model2_genes]),
         )
         pdf.savefig()
+        plt.close()
+
+    with PdfPages(revision_uncertainty_plot_path) as pdf:
+        fig, ax = plt.subplots(3, 1)
+        fig.set_size_inches(18, 12)
+        for index, kinetics in enumerate(["alpha", "beta", "gamma"]):
+            print(adata_model_pos[kinetics].squeeze().shape)
+            print(np.isin(adata.var_names, list(model1_geneset)).sum())
+            df = pd.DataFrame(
+                adata_model_pos[kinetics].squeeze()[
+                    :, np.isin(adata.var_names, list(model1_geneset))
+                ],
+                columns=adata.var_names[np.isin(adata.var_names, list(model1_geneset))],
+            )
+            df_long = df.melt()
+            print(df_long.head())
+            ax1 = sns.boxplot(x="index", y="value", data=df_long, ax=ax[index])
+            ax1.set_xticklabels(ax1.get_xticklabels(), rotation=30, ha="right")
+            ax1.set_ylabel(kinetics)
+        fig.subplots_adjust(
+            hspace=0.4, wspace=0.45, left=0.08, right=0.95, top=0.9, bottom=0.15
+        )
+        pdf.savefig()
+
+        fig, ax = plt.subplots(3, 1)
+        fig.set_size_inches(18, 12)
+        for index, kinetics in enumerate(["alpha", "beta", "gamma"]):
+            df = pd.DataFrame(
+                model2_adata_model_pos[kinetics].squeeze()[
+                    :, np.isin(adata_model2.var_names, list(model2_geneset))
+                ],
+                columns=adata_model2.var_names[
+                    np.isin(adata_model2.var_names, list(model2_geneset))
+                ],
+            )
+            df_long = df.melt()
+            print(df_long.head())
+            ax1 = sns.boxplot(x="index", y="value", data=df_long, ax=ax[index])
+            ax1.set_xticklabels(ax1.get_xticklabels(), rotation=30, ha="right")
+            ax1.set_ylabel(kinetics)
+        fig.subplots_adjust(
+            hspace=0.4, wspace=0.45, left=0.08, right=0.95, top=0.9, bottom=0.15
+        )
+        pdf.savefig()
+
         plt.close()
     logger.info(f"\n\nCOMPLETE: plot revision figure\n\n")
 
