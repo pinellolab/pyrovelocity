@@ -13,6 +13,7 @@ import torch
 from pytorch_lightning.utilities import rank_zero_only
 from scipy.sparse import issparse
 from sklearn.decomposition import PCA
+from termcolor import colored
 
 # from torchdiffeq import odeint, odeint_adjoint
 from torch.nn.functional import relu
@@ -464,3 +465,11 @@ def print_attributes(obj):
     print object attributes
     """
     pprint(attributes(obj))
+
+
+def pretty_print_dict(d: dict):
+    for key, value in d.items():
+        key_colored = colored(key, "green")
+        value_lines = str(value).split("\n")
+        value_colored = "\n".join(colored(line, "white") for line in value_lines)
+        print(f"{key_colored}:\n{value_colored}\n")

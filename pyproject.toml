@@ -46,6 +46,7 @@ omegaconf = "^2.2.3"
 rich = "^12.6.0"
 hydra-core = "1.2.0"
 mlflow = "1.30.0"
+termcolor = "^2.2.0"
 
 # extras
 Pygments = { version = ">=2.10.0", optional = true }
@@ -180,7 +181,7 @@ pyrovelocity = "pyrovelocity.pyrovelocity:main"
 force-cuda11 = "python -m pip install torch==1.8.1+cu111 --extra-index-url https://download.pytorch.org/whl/cu111"
 
 [tool.coverage.paths]
-source = ["pyrovelocity", "*/site-packages"]
+source = ["src", "*/site-packages"]
 tests = ["tests", "*/tests"]
 
 [tool.coverage.run]
