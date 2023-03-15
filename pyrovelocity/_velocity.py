@@ -166,7 +166,25 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         batch_size: Optional[int] = None,
         num_samples: int = 100,
     ) -> Dict[str, ndarray]:
-        """only work for sequential enumeration"""
+        """
+        If the guide uses sequential enumeration, computes the posterior samples for
+        the given data using the trained PyroVelocity model.
+
+        The method generates posterior samples by running the trained model on the
+        provided data and returns a dictionary containing samples for each parameter.
+
+        Args:
+            adata (AnnData, optional): Anndata object containing the data for which posterior samples
+                are to be computed. If not provided, the anndata used to initialize the model will be used.
+            indices (Sequence[int], optional): Indices of cells in `adata` for which the posterior
+                samples are to be computed.
+            batch_size (int, optional): The size of the mini-batches used during computation.
+                If not provided, the entire dataset will be used.
+            num_samples (int, default: 100): The number of posterior samples to compute for each parameter.
+
+        Returns:
+            Dict[str, ndarray]: A dictionary containing the posterior samples for each parameter.
+        """
         self.module.eval()
         predictive = self.module.create_predictive(
             model=pyro.poutine.uncondition(
@@ -174,7 +192,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             ),  # do not input u_obs, and s_obs
             num_samples=num_samples,
         )
-        # predictive.eval() not work...
+
         scdl = self._make_data_loader(
             adata=adata, indices=indices, batch_size=batch_size
         )
@@ -197,7 +215,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                         samples[k] = np.concatenate(
                             [
                                 # cat mini-batches
-                                posterior_samples[j][k]  ##.squeeze()
+                                posterior_samples[j][k]
                                 for j in range(len(posterior_samples))
                             ],
                             axis=-3,
@@ -206,7 +224,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                     samples[k] = np.concatenate(
                         [
                             # cat mini-batches
-                            posterior_samples[j][k]  ##.squeeze()
+                            posterior_samples[j][k]
                             for j in range(len(posterior_samples))
                         ],
                         axis=-2,
