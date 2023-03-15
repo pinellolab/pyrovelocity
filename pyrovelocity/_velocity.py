@@ -255,25 +255,23 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         try:
             model.module.load_state_dict(model_state_dict)
         except RuntimeError as err:
-            if isinstance(model.module, PyroBaseModuleClass):
-                # old_history = model.history_
-                logger.info("Preparing underlying module for load")
-                try:
-                    model.train(max_steps=1, use_gpu=use_gpu)
-                except:
-                    model.train(max_steps=1, use_gpu=use_gpu, batch_size=adata.shape[0])
-                model.history_ = old_history
-                pyro.clear_param_store()
-                model.module.load_state_dict(model_state_dict)
-            else:
+            if not isinstance(model.module, PyroBaseModuleClass):
                 raise err
+            # old_history = model.history_
+            logger.info("Preparing underlying module for load")
+            try:
+                model.train(max_steps=1, use_gpu=use_gpu)
+            except Exception:
+                model.train(max_steps=1, use_gpu=use_gpu, batch_size=adata.shape[0])
+            model.history_ = old_history
+            pyro.clear_param_store()
+            model.module.load_state_dict(model_state_dict)
         model.to_device(device)
 
-        # predictive.eval() not work...
         model.module.eval()
-        # model.module.model.eval()
 
         model._validate_anndata(adata)
+
         # load pyro pyaram stores
         pyro.get_param_store().load(
             os.path.join(dir_path, "param_store_test.pt"), map_location=device
