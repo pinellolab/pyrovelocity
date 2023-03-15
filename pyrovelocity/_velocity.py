@@ -46,7 +46,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         inducing_point_size: int = 0,
         latent_factor_size: int = 0,
         include_prior: bool = False,
-        use_gpu: int = 0,
+        use_gpu: Union[bool, int] = 0,
         init: bool = False,
         num_aux_cells: int = 0,
         only_cell_times: bool = True,
@@ -56,16 +56,71 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         cell_specific_kinetics: Optional[str] = None,
         kinetics_num: Optional[int] = None,
     ) -> None:
+        """
+        PyroVelocity class for estimating RNA velocity and related tasks.
+
+        Args:
+            adata (AnnData): An AnnData object containing the gene expression data.
+            input_type (str, optional): Type of input data. Can be "raw", "knn", or "raw_cpm". Defaults to "raw".
+            shared_time (bool, optional): Whether to use shared time. Defaults to True.
+            model_type (str, optional): Type of model to use. Defaults to "auto".
+            guide_type (str, optional): Type of guide to use. Defaults to "auto".
+            likelihood (str, optional): Type of likelihood to use. Defaults to "Poisson".
+            t_scale_on (bool, optional): Whether to use t_scale. Defaults to False.
+            plate_size (int, optional): Size of the plate. Defaults to 2.
+            latent_factor (str, optional): Type of latent factor. Defaults to "none".
+            latent_factor_operation (str, optional): Operation to perform on the latent factor. Defaults to "selection".
+            inducing_point_size (int, optional): Size of inducing points. Defaults to 0.
+            latent_factor_size (int, optional): Size of latent factors. Defaults to 0.
+            include_prior (bool, optional): Whether to include prior information. Defaults to False.
+            use_gpu (Union[bool, int], optional): Whether and which GPU to use. Defaults to 0. Can be False.
+            init (bool, optional): Whether to initialize the model. Defaults to False.
+            num_aux_cells (int, optional): Number of auxiliary cells. Defaults to 0.
+            only_cell_times (bool, optional): Whether to use only cell times. Defaults to True.
+            decoder_on (bool, optional): Whether to use decoder. Defaults to False.
+            add_offset (bool, optional): Whether to add offset. Defaults to False.
+            correct_library_size (Union[bool, str], optional): Whether to correct library size or method to correct. Defaults to True.
+            cell_specific_kinetics (Optional[str], optional): Type of cell-specific kinetics. Defaults to None.
+            kinetics_num (Optional[int], optional): Number of kinetics. Defaults to None.
+
+        Examples:
+            >>> import numpy as np
+            >>> import anndata
+            >>> from pyrovelocity._velocity import PyroVelocity
+            >>> from pyrovelocity.utils import pretty_print_dict
+            >>> from scvi.data import synthetic_iid
+            >>> n_obs = 3
+            >>> n_var = 4
+            >>> adata = synthetic_iid(
+            ...     batch_size=n_obs,
+            ...     n_genes=n_var,
+            ...     n_batches=1,
+            ...     n_labels=1,
+            ... )
+            >>> print(adata)
+            >>> adata.layers['spliced'] = adata.X.copy()
+            >>> adata.layers['unspliced'] = adata.X.copy()
+            >>> adata.layers['raw_spliced'] = adata.layers['spliced']
+            >>> adata.layers['raw_unspliced'] = adata.layers['unspliced']
+            >>> adata.obs['u_lib_size_raw'] = adata.layers['raw_unspliced'].sum(-1)
+            >>> adata.obs['s_lib_size_raw'] = adata.layers['raw_spliced'].sum(-1)
+            >>> print(adata)
+            >>> model = PyroVelocity(adata)
+            >>> model.train(max_epochs=2)
+            >>> posterior_samples = model.posterior_samples(model.adata, num_samples=5)
+            >>> assert isinstance(posterior_samples, dict), f"Expected a dictionary, got {type(posterior_samples)}"
+            >>> pretty_print_dict(posterior_samples)
+        """
         self.use_gpu = use_gpu
         self.cell_specific_kinetics = cell_specific_kinetics
         self.k = kinetics_num
         if input_type == "knn":
             layers = ["Mu", "Ms"]
-            assert likelihood in ["Normal", "LogNormal"]
+            assert likelihood in {"Normal", "LogNormal"}
             assert "Mu" in adata.layers
         elif input_type == "raw_cpm":
             layers = ["unspliced", "spliced"]
-            assert likelihood in ["Normal", "LogNormal"]
+            assert likelihood in {"Normal", "LogNormal"}
         else:
             layers = ["raw_unspliced", "raw_spliced"]
             assert likelihood != "Normal"
@@ -121,8 +176,8 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             **initial_values,
         )
         self.num_cells = self.module.num_cells
-        self._model_summary_string = f"""
-        RNA velocity Pyro model with following parameters:
+        self._model_summary_string = """
+        RNA velocity Pyro model with parameters:
         """
         self.init_params_ = self._get_init_params(locals())
         logger.info("The model has been initialized")
