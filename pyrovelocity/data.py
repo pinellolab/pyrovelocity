@@ -221,7 +221,9 @@ def setup_anndata_multilayers(
         labels encoded as integers
     .obs['_scvi_batch']
         batch encoded as integers
+    """
 
+    """
     Examples
     --------
     Example setting up a scanpy dataset with random gene data and no batch nor label information
