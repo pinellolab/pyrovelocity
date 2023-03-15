@@ -128,15 +128,19 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         logger.info("The model has been initialized")
 
     def train(self, **kwargs):
+        """
+        Trains the PyroVelocity model using the provided data and configuration.
+
+        The method leverages the Pyro library to train the model using the underlying
+        data. It relies on the `VelocityTrainingMixin` to define the training logic.
+
+        Args:
+
+            **kwargs : dict, optional
+                Additional keyword arguments to be passed to the underlying train method
+                provided by the `VelocityTrainingMixin`.
+        """
         pyro.enable_validation(True)
-        # pyro.infer.util.enable_validation(False) # turn off with state sample in the guide function
-        # the only variable cell_time needs warmup before training
-        # to get a reasonable correlation with differentiation
-        # somehow cell_time is only linearly with the initialization
-        # might not be effective in current map_estimate formulation
-        # self.module.guide(torch.tensor(self.adata.layers["Mu"]),
-        #                  torch.tensor(self.adata.layers["Ms"]),
-        #                  torch.tensor(self.adata.obs["_indices"].values).long())
         super().train(**kwargs)
 
     def predict_new_samples(
@@ -144,8 +148,8 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         adata: Optional[AnnData] = None,
         indices: Optional[Sequence[int]] = None,
         batch_size: Optional[int] = None,
-        num_samples=100,
-    ):
+        num_samples: Optional[int] = 100,
+    ) -> Dict[str, ndarray]:
         adata = setup_anndata_multilayers(
             adata,
             layer=self.layers,
