@@ -46,7 +46,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         inducing_point_size: int = 0,
         latent_factor_size: int = 0,
         include_prior: bool = False,
-        use_gpu: int = 0,
+        use_gpu: Union[bool, int] = 0,
         init: bool = False,
         num_aux_cells: int = 0,
         only_cell_times: bool = True,
@@ -56,16 +56,71 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         cell_specific_kinetics: Optional[str] = None,
         kinetics_num: Optional[int] = None,
     ) -> None:
+        """
+        PyroVelocity class for estimating RNA velocity and related tasks.
+
+        Args:
+            adata (AnnData): An AnnData object containing the gene expression data.
+            input_type (str, optional): Type of input data. Can be "raw", "knn", or "raw_cpm". Defaults to "raw".
+            shared_time (bool, optional): Whether to use shared time. Defaults to True.
+            model_type (str, optional): Type of model to use. Defaults to "auto".
+            guide_type (str, optional): Type of guide to use. Defaults to "auto".
+            likelihood (str, optional): Type of likelihood to use. Defaults to "Poisson".
+            t_scale_on (bool, optional): Whether to use t_scale. Defaults to False.
+            plate_size (int, optional): Size of the plate. Defaults to 2.
+            latent_factor (str, optional): Type of latent factor. Defaults to "none".
+            latent_factor_operation (str, optional): Operation to perform on the latent factor. Defaults to "selection".
+            inducing_point_size (int, optional): Size of inducing points. Defaults to 0.
+            latent_factor_size (int, optional): Size of latent factors. Defaults to 0.
+            include_prior (bool, optional): Whether to include prior information. Defaults to False.
+            use_gpu (Union[bool, int], optional): Whether and which GPU to use. Defaults to 0. Can be False.
+            init (bool, optional): Whether to initialize the model. Defaults to False.
+            num_aux_cells (int, optional): Number of auxiliary cells. Defaults to 0.
+            only_cell_times (bool, optional): Whether to use only cell times. Defaults to True.
+            decoder_on (bool, optional): Whether to use decoder. Defaults to False.
+            add_offset (bool, optional): Whether to add offset. Defaults to False.
+            correct_library_size (Union[bool, str], optional): Whether to correct library size or method to correct. Defaults to True.
+            cell_specific_kinetics (Optional[str], optional): Type of cell-specific kinetics. Defaults to None.
+            kinetics_num (Optional[int], optional): Number of kinetics. Defaults to None.
+
+        Examples:
+            >>> import numpy as np
+            >>> import anndata
+            >>> from pyrovelocity._velocity import PyroVelocity
+            >>> from pyrovelocity.utils import pretty_print_dict
+            >>> from scvi.data import synthetic_iid
+            >>> n_obs = 3
+            >>> n_var = 4
+            >>> adata = synthetic_iid(
+            ...     batch_size=n_obs,
+            ...     n_genes=n_var,
+            ...     n_batches=1,
+            ...     n_labels=1,
+            ... )
+            >>> print(adata)
+            >>> adata.layers['spliced'] = adata.X.copy()
+            >>> adata.layers['unspliced'] = adata.X.copy()
+            >>> adata.layers['raw_spliced'] = adata.layers['spliced']
+            >>> adata.layers['raw_unspliced'] = adata.layers['unspliced']
+            >>> adata.obs['u_lib_size_raw'] = adata.layers['raw_unspliced'].sum(-1)
+            >>> adata.obs['s_lib_size_raw'] = adata.layers['raw_spliced'].sum(-1)
+            >>> print(adata)
+            >>> model = PyroVelocity(adata)
+            >>> model.train(max_epochs=2)
+            >>> posterior_samples = model.posterior_samples(model.adata, num_samples=5)
+            >>> assert isinstance(posterior_samples, dict), f"Expected a dictionary, got {type(posterior_samples)}"
+            >>> pretty_print_dict(posterior_samples)
+        """
         self.use_gpu = use_gpu
         self.cell_specific_kinetics = cell_specific_kinetics
         self.k = kinetics_num
         if input_type == "knn":
             layers = ["Mu", "Ms"]
-            assert likelihood in ["Normal", "LogNormal"]
+            assert likelihood in {"Normal", "LogNormal"}
             assert "Mu" in adata.layers
         elif input_type == "raw_cpm":
             layers = ["unspliced", "spliced"]
-            assert likelihood in ["Normal", "LogNormal"]
+            assert likelihood in {"Normal", "LogNormal"}
         else:
             layers = ["raw_unspliced", "raw_spliced"]
             assert likelihood != "Normal"
@@ -121,22 +176,26 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             **initial_values,
         )
         self.num_cells = self.module.num_cells
-        self._model_summary_string = f"""
-        RNA velocity Pyro model with following parameters:
+        self._model_summary_string = """
+        RNA velocity Pyro model with parameters:
         """
         self.init_params_ = self._get_init_params(locals())
         logger.info("The model has been initialized")
 
     def train(self, **kwargs):
+        """
+        Trains the PyroVelocity model using the provided data and configuration.
+
+        The method leverages the Pyro library to train the model using the underlying
+        data. It relies on the `VelocityTrainingMixin` to define the training logic.
+
+        Args:
+
+            **kwargs : dict, optional
+                Additional keyword arguments to be passed to the underlying train method
+                provided by the `VelocityTrainingMixin`.
+        """
         pyro.enable_validation(True)
-        # pyro.infer.util.enable_validation(False) # turn off with state sample in the guide function
-        # the only variable cell_time needs warmup before training
-        # to get a reasonable correlation with differentiation
-        # somehow cell_time is only linearly with the initialization
-        # might not be effective in current map_estimate formulation
-        # self.module.guide(torch.tensor(self.adata.layers["Mu"]),
-        #                  torch.tensor(self.adata.layers["Ms"]),
-        #                  torch.tensor(self.adata.obs["_indices"].values).long())
         super().train(**kwargs)
 
     def predict_new_samples(
@@ -144,8 +203,8 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         adata: Optional[AnnData] = None,
         indices: Optional[Sequence[int]] = None,
         batch_size: Optional[int] = None,
-        num_samples=100,
-    ):
+        num_samples: Optional[int] = 100,
+    ) -> Dict[str, ndarray]:
         adata = setup_anndata_multilayers(
             adata,
             layer=self.layers,
@@ -166,7 +225,25 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         batch_size: Optional[int] = None,
         num_samples: int = 100,
     ) -> Dict[str, ndarray]:
-        """only work for sequential enumeration"""
+        """
+        If the guide uses sequential enumeration, computes the posterior samples for
+        the given data using the trained PyroVelocity model.
+
+        The method generates posterior samples by running the trained model on the
+        provided data and returns a dictionary containing samples for each parameter.
+
+        Args:
+            adata (AnnData, optional): Anndata object containing the data for which posterior samples
+                are to be computed. If not provided, the anndata used to initialize the model will be used.
+            indices (Sequence[int], optional): Indices of cells in `adata` for which the posterior
+                samples are to be computed.
+            batch_size (int, optional): The size of the mini-batches used during computation.
+                If not provided, the entire dataset will be used.
+            num_samples (int, default: 100): The number of posterior samples to compute for each parameter.
+
+        Returns:
+            Dict[str, ndarray]: A dictionary containing the posterior samples for each parameter.
+        """
         self.module.eval()
         predictive = self.module.create_predictive(
             model=pyro.poutine.uncondition(
@@ -174,7 +251,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             ),  # do not input u_obs, and s_obs
             num_samples=num_samples,
         )
-        # predictive.eval() not work...
+
         scdl = self._make_data_loader(
             adata=adata, indices=indices, batch_size=batch_size
         )
@@ -197,7 +274,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                         samples[k] = np.concatenate(
                             [
                                 # cat mini-batches
-                                posterior_samples[j][k]  ##.squeeze()
+                                posterior_samples[j][k]
                                 for j in range(len(posterior_samples))
                             ],
                             axis=-3,
@@ -206,7 +283,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                     samples[k] = np.concatenate(
                         [
                             # cat mini-batches
-                            posterior_samples[j][k]  ##.squeeze()
+                            posterior_samples[j][k]
                             for j in range(len(posterior_samples))
                         ],
                         axis=-2,
@@ -255,25 +332,23 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         try:
             model.module.load_state_dict(model_state_dict)
         except RuntimeError as err:
-            if isinstance(model.module, PyroBaseModuleClass):
-                # old_history = model.history_
-                logger.info("Preparing underlying module for load")
-                try:
-                    model.train(max_steps=1, use_gpu=use_gpu)
-                except:
-                    model.train(max_steps=1, use_gpu=use_gpu, batch_size=adata.shape[0])
-                model.history_ = old_history
-                pyro.clear_param_store()
-                model.module.load_state_dict(model_state_dict)
-            else:
+            if not isinstance(model.module, PyroBaseModuleClass):
                 raise err
+            # old_history = model.history_
+            logger.info("Preparing underlying module for load")
+            try:
+                model.train(max_steps=1, use_gpu=use_gpu)
+            except Exception:
+                model.train(max_steps=1, use_gpu=use_gpu, batch_size=adata.shape[0])
+            model.history_ = old_history
+            pyro.clear_param_store()
+            model.module.load_state_dict(model_state_dict)
         model.to_device(device)
 
-        # predictive.eval() not work...
         model.module.eval()
-        # model.module.model.eval()
 
         model._validate_anndata(adata)
+
         # load pyro pyaram stores
         pyro.get_param_store().load(
             os.path.join(dir_path, "param_store_test.pt"), map_location=device
