@@ -16,7 +16,6 @@ Example:
 
 
 def to_ntwx_json(data: dict) -> nx.DiGraph:
-
     nt = nx.DiGraph()
 
     def _ensure_key(name):
