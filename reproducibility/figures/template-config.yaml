@@ -187,6 +187,70 @@ model_training:
       train_size: 1.0
       loss_plot_path: ${..path}/loss_plot.png
 reports:
+  model_summary:
+    summarize:
+      [
+        pancreas_model1,
+        pancreas_model2,
+        pbmc68k_model1,
+        pbmc68k_model2,
+        pons_model1,
+        pons_model2,
+      ]
+    pancreas_model1:
+      path: ${paths.reports}/pancreas_model1
+      shared_time_plot: ${.path}/shared_time.pdf
+      volcano_plot: ${.path}/volcano.pdf
+      rainbow_plot: ${.path}/rainbow.pdf
+      uncertainty_param_plot: ${.path}/param_uncertainties.pdf
+      vector_field_plot: ${.path}/vector_field.pdf
+      biomarker_selection_plot: ${.path}/markers_selection_scatterplot.tif
+      biomarker_phaseportrait_plot: ${.path}/markers_phaseportrait.pdf
+    pancreas_model2:
+      path: ${paths.reports}/pancreas_model2
+      shared_time_plot: ${.path}/shared_time.pdf
+      volcano_plot: ${.path}/volcano.pdf
+      rainbow_plot: ${.path}/rainbow.pdf
+      uncertainty_param_plot: ${.path}/param_uncertainties.pdf
+      vector_field_plot: ${.path}/vector_field.pdf
+      biomarker_selection_plot: ${.path}/markers_selection_scatterplot.tif
+      biomarker_phaseportrait_plot: ${.path}/markers_phaseportrait.pdf
+    pbmc68k_model1:
+      path: ${paths.reports}/pbmc68k_model1
+      shared_time_plot: ${.path}/shared_time.pdf
+      volcano_plot: ${.path}/volcano.pdf
+      rainbow_plot: ${.path}/rainbow.pdf
+      uncertainty_param_plot: ${.path}/param_uncertainties.pdf
+      vector_field_plot: ${.path}/vector_field.pdf
+      biomarker_selection_plot: ${.path}/markers_selection_scatterplot.tif
+      biomarker_phaseportrait_plot: ${.path}/markers_phaseportrait.pdf
+    pbmc68k_model2:
+      path: ${paths.reports}/pbmc68k_model2
+      shared_time_plot: ${.path}/shared_time.pdf
+      volcano_plot: ${.path}/volcano.pdf
+      rainbow_plot: ${.path}/rainbow.pdf
+      uncertainty_param_plot: ${.path}/param_uncertainties.pdf
+      vector_field_plot: ${.path}/vector_field.pdf
+      biomarker_selection_plot: ${.path}/markers_selection_scatterplot.tif
+      biomarker_phaseportrait_plot: ${.path}/markers_phaseportrait.pdf
+    pons_model1:
+      path: ${paths.reports}/pons_model1
+      shared_time_plot: ${.path}/shared_time.pdf
+      volcano_plot: ${.path}/volcano.pdf
+      rainbow_plot: ${.path}/rainbow.pdf
+      uncertainty_param_plot: ${.path}/param_uncertainties.pdf
+      vector_field_plot: ${.path}/vector_field.pdf
+      biomarker_selection_plot: ${.path}/markers_selection_scatterplot.tif
+      biomarker_phaseportrait_plot: ${.path}/markers_phaseportrait.pdf
+    pons_model2:
+      path: ${paths.reports}/pons_model2
+      shared_time_plot: ${.path}/shared_time.pdf
+      volcano_plot: ${.path}/volcano.pdf
+      rainbow_plot: ${.path}/rainbow.pdf
+      uncertainty_param_plot: ${.path}/param_uncertainties.pdf
+      vector_field_plot: ${.path}/vector_field.pdf
+      biomarker_selection_plot: ${.path}/markers_selection_scatterplot.tif
+      biomarker_phaseportrait_plot: ${.path}/markers_phaseportrait.pdf
   figure2:
     tag: fig2
     path: ${paths.reports}/${.tag}
