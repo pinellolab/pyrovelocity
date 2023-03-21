@@ -1,4 +1,3 @@
-
 from logging import Logger
 from pathlib import Path
 from statistics import harmonic_mean
@@ -6,17 +5,18 @@ from typing import Text
 
 import hydra
 import matplotlib.pyplot as plt
-from omegaconf import DictConfig
 import scvelo as scv
+from omegaconf import DictConfig
 
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.data import load_data
 from pyrovelocity.plot import compute_mean_vector_field
-from pyrovelocity.plot import vector_field_uncertainty
 from pyrovelocity.plot import plot_gene_ranking
 from pyrovelocity.plot import us_rainbowplot
+from pyrovelocity.plot import vector_field_uncertainty
 from pyrovelocity.utils import get_pylogger
 from pyrovelocity.utils import mae_evaluate
+from pyrovelocity.utils import print_anndata
 from pyrovelocity.utils import print_attributes
 
 
@@ -48,6 +48,7 @@ Outputs:
     biomarker_phaseportrait_plot: reports/{data_model}/markers_phaseportrait.pdf
 """
 
+
 def plots(conf: DictConfig, logger: Logger) -> None:
     for data_model in conf.reports.model_summary.summarize:
         ##################
@@ -55,27 +56,27 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         ##################
         print(data_model)
 
-
         data_model_conf = conf.model_training[data_model]
         trained_data_path = data_model_conf.trained_data_path
         model_path = data_model_conf.model_path
         pyrovelocity_data_path = data_model_conf.pyrovelocity_data_path
         vector_field_basis = data_model_conf.vector_field_parameters.basis
- 
+
         reports_data_model_conf = conf.reports.model_summary[data_model]
         logger.info(
-                f"\n\nVerifying existence of path for:\n\n"
-                f"  reports: {reports_data_model_conf.path}\n"
-            )
+            f"\n\nVerifying existence of path for:\n\n"
+            f"  reports: {reports_data_model_conf.path}\n"
+        )
         Path(reports_data_model_conf.path).mkdir(parents=True, exist_ok=True)
 
         logger.info(f"Loading trained data: {trained_data_path}")
         adata = scv.read(trained_data_path)
-        print(adata)
+        print_anndata(adata)
 
         ##################
         # generate figures
         ##################
+
 
 @hydra.main(version_base="1.2", config_path=".", config_name="config.yaml")
 def main(conf: DictConfig) -> None:
@@ -87,7 +88,9 @@ def main(conf: DictConfig) -> None:
     logger = get_pylogger(name="PLOT", log_level=conf.base.log_level)
     print_config_tree(conf, logger, ())
 
-    logger.info(f"\n\nPlotting summary figure(s) in: {conf.reports.model_summary.summarize}\n\n")
+    logger.info(
+        f"\n\nPlotting summary figure(s) in: {conf.reports.model_summary.summarize}\n\n"
+    )
 
     plots(conf, logger)
 
