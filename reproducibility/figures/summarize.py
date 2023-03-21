@@ -69,6 +69,10 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             )
         Path(reports_data_model_conf.path).mkdir(parents=True, exist_ok=True)
 
+        logger.info(f"Loading trained data: {trained_data_path}")
+        adata = scv.read(trained_data_path)
+        print(adata)
+
         ##################
         # generate figures
         ##################
