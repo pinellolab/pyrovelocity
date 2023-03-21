@@ -1,3 +1,4 @@
+import os
 import pickle
 from logging import Logger
 from pathlib import Path
@@ -82,6 +83,32 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         ##################
         # generate figures
         ##################
+
+        # volcano plot
+
+        volcano_plot = reports_data_model_conf.volcano_plot
+
+        if os.path.isfile(volcano_plot):
+            logger.info(f"{volcano_plot} exists")
+        else:
+            logger.info(f"Generating figure: {volcano_plot}")
+            fig, ax = plt.subplots()
+            volcano_data, _ = plot_gene_ranking(
+                [adata_model_pos], [adata], ax=ax, time_correlation_with="st"
+            )
+            fig.savefig(
+                volcano_plot,
+                facecolor=fig.get_facecolor(),
+                bbox_inches="tight",
+                edgecolor="none",
+                dpi=300,
+            )
+            print(
+                volcano_data.sort_values("mean_mae", ascending=False)
+                .head(300)
+                .sort_values("time_correlation", ascending=False)
+                .head(8)
+            )
 
 
 @hydra.main(version_base="1.2", config_path=".", config_name="config.yaml")
