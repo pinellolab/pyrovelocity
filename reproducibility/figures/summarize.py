@@ -13,6 +13,7 @@ from omegaconf import DictConfig
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.data import load_data
 from pyrovelocity.plot import compute_mean_vector_field
+from pyrovelocity.plot import compute_volcano_data
 from pyrovelocity.plot import plot_gene_ranking
 from pyrovelocity.plot import us_rainbowplot
 from pyrovelocity.plot import vector_field_uncertainty
@@ -59,6 +60,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         print(data_model)
 
         data_model_conf = conf.model_training[data_model]
+        cell_state = data_model_conf.training_parameters.cell_state
         trained_data_path = data_model_conf.trained_data_path
         model_path = data_model_conf.model_path
         pyrovelocity_data_path = data_model_conf.pyrovelocity_data_path
@@ -108,6 +110,36 @@ def plots(conf: DictConfig, logger: Logger) -> None:
                 .head(300)
                 .sort_values("time_correlation", ascending=False)
                 .head(8)
+            )
+
+        # rainbow plot
+
+        rainbow_plot = reports_data_model_conf.rainbow_plot
+
+        if os.path.isfile(rainbow_plot):
+            logger.info(f"{rainbow_plot} exists")
+        else:
+            volcano_data, _ = compute_volcano_data(
+                [adata_model_pos], [adata], time_correlation_with="st"
+            )
+            logger.info(f"Generating figure: {rainbow_plot}")
+            fig = us_rainbowplot(
+                volcano_data.sort_values("mean_mae", ascending=False)
+                .head(300)
+                .sort_values("time_correlation", ascending=False)
+                .head(5)
+                .index,
+                adata,
+                adata_model_pos,
+                data=["st", "ut"],
+                cell_state=cell_state,
+            )
+            fig.savefig(
+                rainbow_plot,
+                facecolor=fig.get_facecolor(),
+                bbox_inches="tight",
+                edgecolor="none",
+                dpi=300,
             )
 
 

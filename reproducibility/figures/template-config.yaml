@@ -80,6 +80,7 @@ model_training:
     training_parameters:
       guide_type: auto_t0_constraint
       log_every: 100
+      cell_state: clusters
       patient_improve: 1e-4
       patient_init: 45
       max_epochs: 4000
@@ -99,6 +100,7 @@ model_training:
     training_parameters:
       guide_type: auto
       log_every: 100
+      cell_state: clusters
       patient_improve: 1e-4
       patient_init: 45
       max_epochs: 4000
@@ -160,6 +162,7 @@ model_training:
     training_parameters:
       guide_type: auto_t0_constraint
       log_every: 100
+      cell_state: celltype
       patient_improve: 1e-4
       patient_init: 45
       max_epochs: 4000
@@ -179,6 +182,7 @@ model_training:
     training_parameters:
       guide_type: auto
       log_every: 100
+      cell_state: celltype
       patient_improve: 1e-4
       patient_init: 45
       max_epochs: 4000
