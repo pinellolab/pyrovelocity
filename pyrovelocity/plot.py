@@ -730,7 +730,7 @@ def plot_vector_field_uncertain(
     autoscale=False,
     density=0.3,
     arrow_size=5,
-    uncertain_measure='angle'
+    uncertain_measure="angle",
 ):
     from scvelo.plotting.velocity_embedding_grid import default_arrow
 
@@ -743,15 +743,15 @@ def plot_vector_field_uncertain(
         # norm.autoscale(fdri_grids)
         # colormap = cm.inferno
 
-        if uncertain_measure == 'angle': 
+        if uncertain_measure == "angle":
             adata.obs["uncertain"] = get_posterior_sample_angle_uncertainty(
                 embeds_radian_or_magnitude / np.pi * 180
             )
             im = ax[0].scatter(
                 adata.obsm[f"X_{basis}"][:, 0],
                 adata.obsm[f"X_{basis}"][:, 1],
-                #c=get_posterior_sample_angle_uncertainty(embeds_radian_or_magnitude / np.pi * 180),
-                c=adata.obs['uncertain'].values,
+                # c=get_posterior_sample_angle_uncertainty(embeds_radian_or_magnitude / np.pi * 180),
+                c=adata.obs["uncertain"].values,
                 s=dot_size,
                 linewidth=0,
                 vmin=0,
@@ -766,25 +766,27 @@ def plot_vector_field_uncertain(
             im = ax[0].scatter(
                 adata.obsm[f"X_{basis}"][:, 0],
                 adata.obsm[f"X_{basis}"][:, 1],
-                #c=get_posterior_sample_angle_uncertainty(embeds_radian_or_magnitude / np.pi * 180),
-                c=colormap(norm(adata.obs['uncertain'].values)),
+                # c=get_posterior_sample_angle_uncertainty(embeds_radian_or_magnitude / np.pi * 180),
+                c=colormap(norm(adata.obs["uncertain"].values)),
                 s=dot_size,
                 linewidth=0,
                 vmin=0,
                 vmax=360,
                 norm=Normalize(vmin=0, vmax=360),
-                cmap='winter'
+                cmap="winter",
             )
 
         ax[0].axis("off")
-        ax[0].set_title(f"Single-cell\nvector field {uncertain_measure} uncertainty ", fontsize=7)
+        ax[0].set_title(
+            f"Single-cell\nvector field {uncertain_measure} uncertainty ", fontsize=7
+        )
         ax = ax[1]
 
     X_grid, V_grid, uncertain = project_grid_points(
         adata.obsm[f"X_{basis}"],
         embed_mean,
-        #get_posterior_sample_angle_uncertainty(embeds_radian_or_magnitude / np.pi * 180),
-        adata.obs['uncertain'].values,
+        # get_posterior_sample_angle_uncertainty(embeds_radian_or_magnitude / np.pi * 180),
+        adata.obs["uncertain"].values,
         p_mass_min=p_mass_min,
         autoscale=autoscale,
         density=density,
