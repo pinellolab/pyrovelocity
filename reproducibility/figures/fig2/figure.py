@@ -67,6 +67,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     revision_phaseport_path = conf.reports.figure2.biomarker_phaseportrait_path
 
     revision_uncertainty_plot_path = conf.reports.figure2.uncertainty_param_plot_path
+    revision_uncertainty_uncertain_plot_path = conf.reports.figure2.uncertainty_magnitude_plot_path
 
     if os.path.isfile(pyrovelocity_pancreas_data_path) and os.access(
         pyrovelocity_pancreas_data_path, os.R_OK
@@ -498,6 +499,32 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         edgecolor="none",
         dpi=300,
     )
+
+    print(v_map_all.shape)
+    logger.info(f"Loading: {v_map_all.shape}")
+
+    # (30, 3696, 2)
+    assert v_map_all.shape == (30, 3696, 2)
+    embeds_magnitude = np.sqrt((v_map_all ** 2).sum(axis=-1))
+    fig, ax = plt.subplots()
+    fig.set_size_inches(13.5, 9.5)
+    plot_vector_field_uncertain(
+        adata,
+        embed_mean,
+        embeds_magnitude,
+        fig=fig,
+        ax=None,
+        cbar=True,
+        basis="umap",
+        scale=0.03,
+        # scale=1.0,
+        arrow_size=5,
+        uncertain_measure='magnitude'
+    )
+    fig.subplots_adjust(
+        hspace=0.2, wspace=0.1, left=0.12, right=0.95, top=0.95, bottom=0.42
+    )
+    fig.savefig(revision_uncertainty_uncertain_plot_path)
 
     with PdfPages(revision_phaseport_path) as pdf:
         fig_revision2 = rainbowplot(
