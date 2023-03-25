@@ -718,7 +718,7 @@ def get_posterior_sample_angle_uncertainty(posterior_angles):
 def plot_vector_field_uncertain(
     adata,
     embed_mean,
-    embeds_radian,
+    embeds_radian_or_magnitude,
     fig=None,
     cbar=True,
     basis="umap",
@@ -730,6 +730,7 @@ def plot_vector_field_uncertain(
     autoscale=False,
     density=0.3,
     arrow_size=5,
+    uncertain_measure="angle",
 ):
     from scvelo.plotting.velocity_embedding_grid import default_arrow
 
@@ -742,34 +743,54 @@ def plot_vector_field_uncertain(
         # norm.autoscale(fdri_grids)
         # colormap = cm.inferno
 
-        adata.obs["uncertain"] = get_posterior_sample_angle_uncertainty(
-            embeds_radian / np.pi * 180
-        )
-        im = ax[0].scatter(
-            adata.obsm[f"X_{basis}"][:, 0],
-            adata.obsm[f"X_{basis}"][:, 1],
-            c=get_posterior_sample_angle_uncertainty(embeds_radian / np.pi * 180),
-            s=dot_size,
-            linewidth=0,
-            vmin=0,
-            vmax=360,
-            cmap="winter",
-        )
+        if uncertain_measure == "angle":
+            adata.obs["uncertain"] = get_posterior_sample_angle_uncertainty(
+                embeds_radian_or_magnitude / np.pi * 180
+            )
+            im = ax[0].scatter(
+                adata.obsm[f"X_{basis}"][:, 0],
+                adata.obsm[f"X_{basis}"][:, 1],
+                # c=get_posterior_sample_angle_uncertainty(embeds_radian_or_magnitude / np.pi * 180),
+                c=adata.obs["uncertain"].values,
+                s=dot_size,
+                linewidth=0,
+                vmin=0,
+                vmax=360,
+                cmap="winter",
+            )
+        else:
+            adata.obs["uncertain"] = embeds_radian_or_magnitude.std(axis=0)
+            norm = Normalize()
+            norm.autoscale(adata.obs["uncertain"])
+            colormap = cm.winter
+            im = ax[0].scatter(
+                adata.obsm[f"X_{basis}"][:, 0],
+                adata.obsm[f"X_{basis}"][:, 1],
+                # c=get_posterior_sample_angle_uncertainty(embeds_radian_or_magnitude / np.pi * 180),
+                c=colormap(norm(adata.obs["uncertain"].values)),
+                s=dot_size,
+                linewidth=0,
+                vmin=0,
+                vmax=360,
+                norm=Normalize(vmin=0, vmax=360),
+                cmap="winter",
+            )
+
         ax[0].axis("off")
-        ax[0].set_title("Single-cell\nvector field uncertainty ", fontsize=7)
+        ax[0].set_title(
+            f"Single-cell\nvector field {uncertain_measure} uncertainty ", fontsize=7
+        )
         ax = ax[1]
 
     X_grid, V_grid, uncertain = project_grid_points(
         adata.obsm[f"X_{basis}"],
         embed_mean,
-        get_posterior_sample_angle_uncertainty(embeds_radian / np.pi * 180),
+        # get_posterior_sample_angle_uncertainty(embeds_radian_or_magnitude / np.pi * 180),
+        adata.obs["uncertain"].values,
         p_mass_min=p_mass_min,
         autoscale=autoscale,
         density=density,
     )
-    # print(X_grid)
-    # print(V_grid)
-    # print(uncertain)
 
     # scale = None
     hl, hw, hal = default_arrow(arrow_size)
@@ -789,6 +810,7 @@ def plot_vector_field_uncertain(
         color="gray",
         alpha=0.2,
     )
+    print(adata.obs["uncertain"])
     im = ax.quiver(
         X_grid[:, 0],
         X_grid[:, 1],
@@ -804,7 +826,7 @@ def plot_vector_field_uncertain(
         scale=scale,
         **quiver_kwargs,
     )
-    ax.set_title("Averaged\nvector field uncertainty ", fontsize=7)
+    ax.set_title(f"Averaged\nvector field {uncertain_measure} uncertainty ", fontsize=7)
     ax.axis("off")
     if cbar:
         from matplotlib.ticker import MaxNLocator
@@ -820,7 +842,7 @@ def plot_vector_field_uncertain(
         # cbar.tick_params(axis='x', labelsize=6)
         cbar.ax.set_xticks([0, 180, 360], [0, 180, 360], fontsize=6)
         cbar.ax.locator = MaxNLocator(nbins=2, integer=True)
-        cbar.ax.set_xlabel("Angle uncertainty", fontsize=6)
+        cbar.ax.set_xlabel(f"{uncertain_measure} uncertainty", fontsize=6)
 
 
 def compute_mean_vector_field(
