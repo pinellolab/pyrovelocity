@@ -87,7 +87,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> import numpy as np
             >>> import anndata
             >>> from pyrovelocity._velocity import PyroVelocity
-            >>> from pyrovelocity.utils import pretty_print_dict, print_attributes
+            >>> from pyrovelocity.utils import pretty_print_dict, print_anndata
             >>> from scvi.data import synthetic_iid
             >>> n_obs = 3
             >>> n_var = 4
@@ -97,7 +97,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             ...     n_batches=1,
             ...     n_labels=1,
             ... )
-            >>> print(adata)
+            >>> print_anndata(adata)
             >>> print(adata.X)
             >>> adata.layers['spliced'] = adata.X.copy()
             >>> adata.layers['unspliced'] = adata.X.copy()
@@ -105,7 +105,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> adata.layers['raw_unspliced'] = adata.layers['unspliced']
             >>> adata.obs['u_lib_size_raw'] = adata.layers['raw_unspliced'].sum(-1)
             >>> adata.obs['s_lib_size_raw'] = adata.layers['raw_spliced'].sum(-1)
-            >>> print(adata)
+            >>> print_anndata(adata)
             >>> print(adata.X)
             >>> print(adata.layers['spliced'])
             >>> print(adata.layers['unspliced'])
