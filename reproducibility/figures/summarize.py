@@ -62,11 +62,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         data_model_conf = conf.model_training[data_model]
         cell_state = data_model_conf.training_parameters.cell_state
         trained_data_path = data_model_conf.trained_data_path
-        model_path = data_model_conf.model_path
         pyrovelocity_data_path = data_model_conf.pyrovelocity_data_path
-        vector_field_basis = data_model_conf.vector_field_parameters.basis
-
         reports_data_model_conf = conf.reports.model_summary[data_model]
+
         logger.info(
             f"\n\nVerifying existence of path for:\n\n"
             f"  reports: {reports_data_model_conf.path}\n"
@@ -136,6 +134,42 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             )
             fig.savefig(
                 rainbow_plot,
+                facecolor=fig.get_facecolor(),
+                bbox_inches="tight",
+                edgecolor="none",
+                dpi=300,
+            )
+
+        # mean vector field plot
+
+        vector_field_plot = reports_data_model_conf.vector_field_plot
+        if os.path.isfile(vector_field_plot):
+            logger.info(f"{vector_field_plot} exists")
+        else:
+            logger.info(f"Generating figure: {vector_field_plot}")
+            fig, ax = plt.subplots()
+
+            vector_field_basis = data_model_conf.vector_field_parameters.basis
+
+            # embed_mean = plot_mean_vector_field(adata_model_pos[1], adata, ax=ax)
+            scv.pl.velocity_embedding_grid(
+                adata,
+                basis=vector_field_basis,
+                color=cell_state,
+                title="",
+                vkey="velocity_pyro",
+                linewidth=1,
+                ax=ax,
+                show=False,
+                legend_loc="right margin",
+                density=0.4,
+                scale=0.2,
+                arrow_size=2,
+                arrow_length=2,
+                arrow_color="black",
+            )
+            fig.savefig(
+                vector_field_plot,
                 facecolor=fig.get_facecolor(),
                 bbox_inches="tight",
                 edgecolor="none",
