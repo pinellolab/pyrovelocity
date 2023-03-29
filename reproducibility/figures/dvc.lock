@@ -116,8 +116,8 @@ stages:
           rel_path: data/external/pbmc68k.h5ad
           url: https://ndownloader.figshare.com/files/27686886
           derived:
-            process_method: load_pbmc
-            rel_path: data/processed/pbmc_processed.h5ad
+            process_method: load_data
+            rel_path: data/processed/pbmc68k_processed.h5ad
     outs:
     - path: data/external/pbmc68k.h5ad
       md5: ee0953e5fb994bc3cec05d4cf638ac79
@@ -143,15 +143,15 @@ stages:
           url: https://ndownloader.figshare.com/files/27686886
           derived:
             process_method: load_pbmc
-            rel_path: data/processed/pbmc_processed.h5ad
+            rel_path: data/processed/pbmc68k_processed.h5ad
     outs:
-    - path: data/processed/pbmc_processed.h5ad
+    - path: data/processed/pbmc68k_processed.h5ad
       md5: 0a1eb8cd91bdee14ea9898b284e53f5e
       size: 412368967
   train_pbmc68k_model1:
     cmd: /usr/bin/time -v python train.py model_training.train=[pbmc68k_model1]
     deps:
-    - path: data/processed/pbmc_processed.h5ad
+    - path: data/processed/pbmc68k_processed.h5ad
       md5: 0a1eb8cd91bdee14ea9898b284e53f5e
       size: 412368967
     - path: train.py
@@ -162,7 +162,7 @@ stages:
         model_training.pbmc68k_model1:
           path: models/pbmc68k_model1
           model_path: models/pbmc68k_model1/model
-          input_data_path: data/processed/pbmc_processed.h5ad
+          input_data_path: data/processed/pbmc68k_processed.h5ad
           trained_data_path: models/pbmc68k_model1/trained.h5ad
           pyrovelocity_data_path: models/pbmc68k_model1/pyrovelocity.pkl
           metrics_path: models/pbmc68k_model1/metrics.json
@@ -374,7 +374,7 @@ stages:
   train_pbmc68k_model2:
     cmd: /usr/bin/time -v python train.py model_training.train=[pbmc68k_model2]
     deps:
-    - path: data/processed/pbmc_processed.h5ad
+    - path: data/processed/pbmc68k_processed.h5ad
       md5: 0a1eb8cd91bdee14ea9898b284e53f5e
       size: 412368967
     - path: train.py
@@ -385,7 +385,7 @@ stages:
         model_training.pbmc68k_model2:
           path: models/pbmc68k_model2
           model_path: models/pbmc68k_model2/model
-          input_data_path: data/processed/pbmc_processed.h5ad
+          input_data_path: data/processed/pbmc68k_processed.h5ad
           trained_data_path: models/pbmc68k_model2/trained.h5ad
           pyrovelocity_data_path: models/pbmc68k_model2/pyrovelocity.pkl
           metrics_path: models/pbmc68k_model2/metrics.json
