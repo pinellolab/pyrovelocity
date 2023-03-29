@@ -19,6 +19,7 @@ from pyrovelocity.config import print_config_tree
 from pyrovelocity.data import load_data
 from pyrovelocity.plot import compute_mean_vector_field
 from pyrovelocity.plot import vector_field_uncertainty
+from pyrovelocity.utils import filter_startswith_dict
 from pyrovelocity.utils import get_pylogger
 from pyrovelocity.utils import mae_evaluate
 from pyrovelocity.utils import print_attributes
@@ -101,7 +102,11 @@ def train(conf: DictConfig, logger: Logger) -> None:
 
                 # train model
                 adata_model_pos = train_model(
-                    adata, use_gpu=gpu_id, **data_model_conf.training_parameters
+                    adata,
+                    **dict(
+                        filter_startswith_dict(data_model_conf.training_parameters),
+                        use_gpu=gpu_id,
+                    ),
                 )
 
                 # logger.info(f"Data attributes after model training")
