@@ -6,6 +6,7 @@ from pprint import pprint
 from types import FunctionType
 from typing import Tuple
 
+import anndata
 import colorlog
 import numpy as np
 import seaborn as sns
@@ -489,3 +490,67 @@ def filter_startswith_dict(dictionary_with_underscore_keys):
         for k, v in dictionary_with_underscore_keys.items()
         if not k.startswith("_")
     }
+
+
+def print_anndata(anndata_obj):
+    """
+    Print a formatted representation of an AnnData object.
+
+    This function produces a custom output for the AnnData object with each
+    element of obs, var, uns, obsm, varm, layers, obsp, varp indented and
+    displayed on a new line.
+
+    Args:
+        anndata_obj (anndata.AnnData): The AnnData object to be printed.
+
+    Raises:
+        AssertionError: If the input object is not an instance of anndata.AnnData.
+
+    Example:
+        >>> import anndata
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> np.random.seed(42)
+        >>> X = np.random.randn(10, 5)
+        >>> obs = pd.DataFrame({"clusters_coarse": np.random.randint(0, 2, 10),
+        ...                     "clusters": np.random.randint(0, 2, 10),
+        ...                     "S_score": np.random.rand(10),
+        ...                     "G2M_score": np.random.rand(10)})
+        >>> var = pd.DataFrame({"gene_name": [f"gene_{i}" for i in range(5)]})
+        >>> adata = anndata.AnnData(X, obs=obs, var=var)
+        >>> print_anndata(adata)  # doctest: +NORMALIZE_WHITESPACE
+        AnnData object with n_obs × n_vars = 10 × 5
+            obs:
+                clusters_coarse,
+                clusters,
+                S_score,
+                G2M_score,
+            var:
+                gene_name,
+    """
+    assert isinstance(
+        anndata_obj, anndata.AnnData
+    ), "Input object must be of type AnnData."
+
+    def format_elements(elements):
+        formatted = "\n".join([f"        {elem}," for elem in elements])
+        return formatted
+
+    print(
+        f"AnnData object with n_obs × n_vars = {anndata_obj.n_obs} × {anndata_obj.n_vars}"
+    )
+
+    properties = {
+        "obs": anndata_obj.obs.columns,
+        "var": anndata_obj.var.columns,
+        "uns": anndata_obj.uns.keys(),
+        "obsm": anndata_obj.obsm.keys(),
+        "varm": anndata_obj.varm.keys(),
+        "layers": anndata_obj.layers.keys(),
+        "obsp": anndata_obj.obsp.keys(),
+        "varp": anndata_obj.varp.keys(),
+    }
+
+    for prop_name, elements in properties.items():
+        if len(elements) > 0:
+            print(f"    {prop_name}:\n{format_elements(elements)}")

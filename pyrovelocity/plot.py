@@ -390,19 +390,15 @@ def mae_per_gene(pred_counts: ndarray, true_counts: ndarray) -> ndarray:
     return -np.array(error / total)
 
 
-def plot_gene_ranking(
+def compute_volcano_data(
     pos,
     adata,
-    ax=None,
     time_correlation_with="s",
     selected_genes=None,
-    assemble=False,
-    data="correlation",
     negative=False,
-    adjust_text=False,
 ) -> None:
-    assert isinstance(pos, tuple) or isinstance(pos, list)
-    assert isinstance(adata, list) or isinstance(adata, tuple)
+    assert isinstance(pos, (tuple, list))
+    assert isinstance(adata, (tuple, list))
 
     maes_list = []
     cors = []
@@ -422,7 +418,7 @@ def plot_gene_ranking(
             )
             cors.append(df_genes_cors[0])
             genes.append(ad.var_names.values)
-            labels.append(["Poisson_%s" % label] * len(ad.var_names.values))
+            labels.append([f"Poisson_{label}"] * len(ad.var_names.values))
 
     volcano_data = pd.DataFrame(
         {
@@ -452,10 +448,28 @@ def plot_gene_ranking(
         )
     else:
         genes = selected_genes
-    fig = None
     volcano_data.loc[:, "selected genes"] = 0
     volcano_data.loc[genes, "selected genes"] = 1
 
+    return volcano_data, genes
+
+
+def plot_gene_ranking(
+    pos,
+    adata,
+    ax=None,
+    time_correlation_with="s",
+    selected_genes=None,
+    assemble=False,
+    data="correlation",
+    negative=False,
+    adjust_text=False,
+) -> None:
+    volcano_data, genes = compute_volcano_data(
+        pos, adata, time_correlation_with, selected_genes, negative
+    )
+
+    fig = None
     from adjustText import adjust_text
 
     if data == "correlation":
