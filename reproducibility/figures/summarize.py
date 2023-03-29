@@ -53,6 +53,15 @@ Outputs:
 
 
 def plots(conf: DictConfig, logger: Logger) -> None:
+    """Construct summary plots for each data set and model.
+
+    Args:
+        conf (DictConfig): OmegaConf configuration object
+        logger (Logger): Python logger
+
+    Examples:
+        plots(conf, logger)
+    """
     for data_model in conf.reports.model_summary.summarize:
         ##################
         # load data
