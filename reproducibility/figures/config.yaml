@@ -53,7 +53,7 @@ data_external:
       rel_path: data/external/pbmc68k.h5ad
       url: https://ndownloader.figshare.com/files/27686886
       derived:
-        process_method: load_pbmc
+        process_method: load_data
         rel_path: data/processed/pbmc68k_processed.h5ad
   pyrovelocity:
     download:

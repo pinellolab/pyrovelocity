@@ -118,7 +118,7 @@ config = make_config(
                 data_file="pbmc68k.h5ad",
                 rel_path="${data_external.root_path}/pbmc68k.h5ad",
                 url="${data_external.scvelo.sources.figshare_root_url}/27686886",
-                process_method="load_pbmc",
+                process_method="load_data",
             ),
         ),
         pyrovelocity=dict(
