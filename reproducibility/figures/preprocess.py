@@ -13,6 +13,15 @@ from pyrovelocity.utils import print_attributes
 
 
 def preprocess(conf: DictConfig, logger: Logger) -> None:
+    """Preprocess data.
+
+    Args:
+        conf (DictConfig): omegaconf configuration
+        logger (Logger): PREPROCESS logger
+
+    Examples:
+        preprocess(conf.data_external, logger)
+    """
     for source in conf.sources:
         for data_set in conf[source].process:
             data_path = conf[source][data_set].rel_path
