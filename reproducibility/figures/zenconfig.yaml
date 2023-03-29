@@ -110,7 +110,7 @@ model_training:
       patient_init: 45
       seed: 99
       lr: 0.01
-      max_epochs: 4000
+      max_epochs: 2000
       include_prior: true
       library_size: true
       offset: false
@@ -145,7 +145,7 @@ model_training:
       patient_init: 45
       seed: 99
       lr: 0.01
-      max_epochs: 4000
+      max_epochs: 2000
       include_prior: true
       library_size: true
       offset: true
@@ -180,7 +180,7 @@ model_training:
       patient_init: 45
       seed: 99
       lr: 0.01
-      max_epochs: 4000
+      max_epochs: 2000
       include_prior: true
       library_size: true
       offset: false
@@ -215,7 +215,7 @@ model_training:
       patient_init: 45
       seed: 99
       lr: 0.01
-      max_epochs: 4000
+      max_epochs: 2000
       include_prior: true
       library_size: true
       offset: true
@@ -250,7 +250,7 @@ model_training:
       patient_init: 45
       seed: 99
       lr: 0.01
-      max_epochs: 4000
+      max_epochs: 2000
       include_prior: true
       library_size: true
       offset: false
@@ -285,7 +285,7 @@ model_training:
       patient_init: 45
       seed: 99
       lr: 0.01
-      max_epochs: 4000
+      max_epochs: 2000
       include_prior: true
       library_size: true
       offset: true

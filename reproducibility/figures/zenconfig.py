@@ -49,7 +49,7 @@ def create_model_config(
             loss_plot_path="${..path}/loss_plot.png",
             patient_improve=0.0001,
             patient_init=45,
-            max_epochs=4000,
+            max_epochs=2000,
             **custom_training_parameters,
         ),
     )
