@@ -117,6 +117,7 @@ stages:
           url: https://ndownloader.figshare.com/files/27686886
           derived:
             process_method: load_data
+            process_args: {}
             rel_path: data/processed/pbmc68k_processed.h5ad
     outs:
     - path: data/external/pbmc68k.h5ad
@@ -129,8 +130,8 @@ stages:
       md5: ee0953e5fb994bc3cec05d4cf638ac79
       size: 123707283
     - path: preprocess.py
-      md5: 346eaf42eb0c6c729be1bfc60148787c
-      size: 2451
+      md5: bf09c86fc25b1d1a98b9aa1c5fa04361
+      size: 2757
     params:
       config.yaml:
         base:
@@ -142,12 +143,13 @@ stages:
           rel_path: data/external/pbmc68k.h5ad
           url: https://ndownloader.figshare.com/files/27686886
           derived:
-            process_method: load_pbmc
+            process_method: load_data
+            process_args: {}
             rel_path: data/processed/pbmc68k_processed.h5ad
     outs:
     - path: data/processed/pbmc68k_processed.h5ad
-      md5: 0a1eb8cd91bdee14ea9898b284e53f5e
-      size: 412368967
+      md5: 1edae75c64e8bdffcf75ce8aa3e319fd
+      size: 1776958726
   train_pbmc68k_model1:
     cmd: /usr/bin/time -v python train.py model_training.train=[pbmc68k_model1]
     deps:
