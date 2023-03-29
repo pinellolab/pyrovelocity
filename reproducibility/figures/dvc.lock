@@ -18,6 +18,8 @@ stages:
           url: https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad
           derived:
             process_method: load_data
+            process_args:
+              process_cytotrace: true
             rel_path: data/processed/pancreas_processed.h5ad
     outs:
     - path: data/external/endocrinogenesis_day15.h5ad
@@ -30,8 +32,8 @@ stages:
       md5: 783ec70c72fd895eeea28c07735efc27
       size: 52477898
     - path: preprocess.py
-      md5: 346eaf42eb0c6c729be1bfc60148787c
-      size: 2451
+      md5: bf09c86fc25b1d1a98b9aa1c5fa04361
+      size: 2757
     params:
       config.yaml:
         base:
@@ -44,6 +46,8 @@ stages:
           url: https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad
           derived:
             process_method: load_data
+            process_args:
+              process_cytotrace: true
             rel_path: data/processed/pancreas_processed.h5ad
     outs:
     - path: data/processed/pancreas_processed.h5ad
@@ -475,6 +479,7 @@ stages:
           url: https://storage.googleapis.com/pyrovelocity/data/oligo_lite.h5ad
           derived:
             process_method: load_data
+            process_args: {}
             rel_path: data/processed/pons_processed.h5ad
     outs:
     - path: data/external/oligo_lite.h5ad
@@ -487,8 +492,8 @@ stages:
       md5: 82f5e9f9736e556662f56653d2f927ab
       size: 82166707
     - path: preprocess.py
-      md5: 346eaf42eb0c6c729be1bfc60148787c
-      size: 2451
+      md5: bf09c86fc25b1d1a98b9aa1c5fa04361
+      size: 2757
     params:
       config.yaml:
         base:
@@ -501,6 +506,7 @@ stages:
           url: https://storage.googleapis.com/pyrovelocity/data/oligo_lite.h5ad
           derived:
             process_method: load_data
+            process_args: {}
             rel_path: data/processed/pons_processed.h5ad
     outs:
     - path: data/processed/pons_processed.h5ad
