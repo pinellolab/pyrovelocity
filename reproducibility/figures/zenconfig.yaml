@@ -26,6 +26,7 @@ data_external:
       url: https://storage.googleapis.com/pyrovelocity/data/oligo_lite.h5ad
       derived:
         process_method: load_data
+        process_args: {}
         rel_path: data/processed/pons_processed.h5ad
   scvelo:
     download:
@@ -45,6 +46,8 @@ data_external:
       url: https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad
       derived:
         process_method: load_data
+        process_args:
+          process_cytotrace: true
         rel_path: data/processed/pancreas_processed.h5ad
     pbmc68k:
       data_file: pbmc68k.h5ad
@@ -54,6 +57,7 @@ data_external:
       url: https://ndownloader.figshare.com/files/27686886
       derived:
         process_method: load_data
+        process_args: {}
         rel_path: data/processed/pbmc68k_processed.h5ad
   pyrovelocity:
     download:
@@ -69,6 +73,7 @@ data_external:
       url: https://ndownloader.figshare.com/files/37028569
       derived:
         process_method: ""
+        process_args: {}
         rel_path: data/processed/larry_processed.h5ad
 model_training:
   train:
