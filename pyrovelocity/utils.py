@@ -473,3 +473,19 @@ def pretty_print_dict(d: dict):
         value_lines = str(value).split("\n")
         value_colored = "\n".join(colored(line, "white") for line in value_lines)
         print(f"{key_colored}:\n{value_colored}\n")
+
+
+def filter_startswith_dict(dictionary_with_underscore_keys):
+    """Remove entries from a dictionary whose keys start with an underscore.
+
+    Args:
+        dictionary_with_underscore_keys (dict): Dictionary to be filtered.
+
+    Returns:
+        dict: Filtered dictionary.
+    """
+    return {
+        k: v
+        for k, v in dictionary_with_underscore_keys.items()
+        if not k.startswith("_")
+    }
