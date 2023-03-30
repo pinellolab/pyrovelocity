@@ -98,6 +98,11 @@ def load_data(
         copy_raw_counts(adata)
         print_anndata(adata)
 
+        if "pbmc68k" in processed_path:
+            print("Removing duplicate cells and tSNE x-parity in pbmc68k data...")
+            scv.pp.remove_duplicate_cells(adata)
+            adata.obsm["X_tsne"][:, 0] *= -1
+
         if process_cytotrace:
             print("Processing data with cytotrace ...")
             cytotrace_sparse(adata, layer="spliced")
