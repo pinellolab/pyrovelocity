@@ -872,3 +872,151 @@ stages:
     - path: reports/pancreas_model2/volcano.pdf
       md5: 6f758b3822f7a80a9b7f6b9dd65e7483
       size: 47994
+  summarize_pbmc68k_model1:
+    cmd: python summarize.py reports.model_summary.summarize=[pbmc68k_model1]
+    deps:
+    - path: models/pbmc68k_model1/pyrovelocity.pkl
+      md5: 6ca1631a7a0e54bb448f333b35f1a9aa
+      size: 27836354015
+    - path: models/pbmc68k_model1/trained.h5ad
+      md5: 853666ff9527ae7f13b96612f05da241
+      size: 2461828643
+    - path: summarize.py
+      md5: 42746a8362f9b88d961dc7da7614c7dc
+      size: 7036
+    params:
+      config.yaml:
+        model_training.pbmc68k_model1:
+          path: models/pbmc68k_model1
+          model_path: models/pbmc68k_model1/model
+          input_data_path: data/processed/pbmc68k_processed.h5ad
+          trained_data_path: models/pbmc68k_model1/trained.h5ad
+          pyrovelocity_data_path: models/pbmc68k_model1/pyrovelocity.pkl
+          metrics_path: models/pbmc68k_model1/metrics.json
+          run_info_path: models/pbmc68k_model1/run_info.json
+          vector_field_parameters:
+            basis: tsne
+          training_parameters:
+            _target_: pyrovelocity.api.train_model
+            _partial_: true
+            guide_type: auto_t0_constraint
+            model_type: auto
+            svi_train: false
+            batch_size: -1
+            train_size: 1.0
+            use_gpu: 0
+            likelihood: Poisson
+            num_samples: 30
+            log_every: 100
+            cell_state: celltype
+            patient_improve: 0.0001
+            patient_init: 45
+            seed: 99
+            lr: 0.01
+            max_epochs: 2000
+            include_prior: true
+            library_size: true
+            offset: false
+            input_type: raw
+            cell_specific_kinetics:
+            kinetics_num: 2
+            loss_plot_path: models/pbmc68k_model1/loss_plot.png
+        reports.model_summary.pbmc68k_model1:
+          path: reports/pbmc68k_model1
+          shared_time_plot: reports/pbmc68k_model1/shared_time.pdf
+          volcano_plot: reports/pbmc68k_model1/volcano.pdf
+          rainbow_plot: reports/pbmc68k_model1/rainbow.pdf
+          uncertainty_param_plot: reports/pbmc68k_model1/param_uncertainties.pdf
+          vector_field_plot: reports/pbmc68k_model1/vector_field.pdf
+          biomarker_selection_plot: reports/pbmc68k_model1/markers_selection_scatterplot.tif
+          biomarker_phaseportrait_plot: reports/pbmc68k_model1/markers_phaseportrait.pdf
+    outs:
+    - path: reports/pbmc68k_model1/rainbow.pdf
+      md5: f5deceab13f6493dcc53ddb9dc882a86
+      size: 11137957
+    - path: reports/pbmc68k_model1/rainbow.pdf.png
+      md5: 602e9173f515727e7d359a787981f57b
+      size: 1763923
+    - path: reports/pbmc68k_model1/vector_field.pdf
+      md5: 2f95c3bcf106f5b722aafcccb69f4205
+      size: 1033545
+    - path: reports/pbmc68k_model1/vector_field.pdf.png
+      md5: 4ed286418bc1fac6d8ff60abcd05a0cc
+      size: 1196529
+    - path: reports/pbmc68k_model1/volcano.pdf
+      md5: 97eb5fb07a12f4d4ed888d8dd0f6261e
+      size: 24677
+  summarize_pbmc68k_model2:
+    cmd: python summarize.py reports.model_summary.summarize=[pbmc68k_model2]
+    deps:
+    - path: models/pbmc68k_model2/pyrovelocity.pkl
+      md5: f58cd6cadb67e55ed0ad777095a02e3b
+      size: 24366111782
+    - path: models/pbmc68k_model2/trained.h5ad
+      md5: 742815f11dd23fd5ccfbcac0b07b89b7
+      size: 2461836835
+    - path: summarize.py
+      md5: 42746a8362f9b88d961dc7da7614c7dc
+      size: 7036
+    params:
+      config.yaml:
+        model_training.pbmc68k_model2:
+          path: models/pbmc68k_model2
+          model_path: models/pbmc68k_model2/model
+          input_data_path: data/processed/pbmc68k_processed.h5ad
+          trained_data_path: models/pbmc68k_model2/trained.h5ad
+          pyrovelocity_data_path: models/pbmc68k_model2/pyrovelocity.pkl
+          metrics_path: models/pbmc68k_model2/metrics.json
+          run_info_path: models/pbmc68k_model2/run_info.json
+          vector_field_parameters:
+            basis: tsne
+          training_parameters:
+            _target_: pyrovelocity.api.train_model
+            _partial_: true
+            guide_type: auto
+            model_type: auto
+            svi_train: false
+            batch_size: -1
+            train_size: 1.0
+            use_gpu: 0
+            likelihood: Poisson
+            num_samples: 30
+            log_every: 100
+            cell_state: celltype
+            patient_improve: 0.0001
+            patient_init: 45
+            seed: 99
+            lr: 0.01
+            max_epochs: 2000
+            include_prior: true
+            library_size: true
+            offset: true
+            input_type: raw
+            cell_specific_kinetics:
+            kinetics_num: 2
+            loss_plot_path: models/pbmc68k_model2/loss_plot.png
+        reports.model_summary.pbmc68k_model2:
+          path: reports/pbmc68k_model2
+          shared_time_plot: reports/pbmc68k_model2/shared_time.pdf
+          volcano_plot: reports/pbmc68k_model2/volcano.pdf
+          rainbow_plot: reports/pbmc68k_model2/rainbow.pdf
+          uncertainty_param_plot: reports/pbmc68k_model2/param_uncertainties.pdf
+          vector_field_plot: reports/pbmc68k_model2/vector_field.pdf
+          biomarker_selection_plot: reports/pbmc68k_model2/markers_selection_scatterplot.tif
+          biomarker_phaseportrait_plot: reports/pbmc68k_model2/markers_phaseportrait.pdf
+    outs:
+    - path: reports/pbmc68k_model2/rainbow.pdf
+      md5: b25a2e5c107da99cd9ee9797f4bff048
+      size: 11400995
+    - path: reports/pbmc68k_model2/rainbow.pdf.png
+      md5: 8e9997d9b3d31326522b1a00f2afdcd2
+      size: 2265543
+    - path: reports/pbmc68k_model2/vector_field.pdf
+      md5: 7014be19b5a0ca52d14729aab1577054
+      size: 1033595
+    - path: reports/pbmc68k_model2/vector_field.pdf.png
+      md5: 51da58ab557cde078f50348dcdbc8c76
+      size: 1196476
+    - path: reports/pbmc68k_model2/volcano.pdf
+      md5: 52a0caf238c0d57f8bdb4e202a83d61d
+      size: 24695
