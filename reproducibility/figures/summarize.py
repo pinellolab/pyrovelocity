@@ -80,6 +80,14 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         )
         Path(reports_data_model_conf.path).mkdir(parents=True, exist_ok=True)
 
+        volcano_plot = reports_data_model_conf.volcano_plot
+        rainbow_plot = reports_data_model_conf.rainbow_plot
+        vector_field_plot = reports_data_model_conf.vector_field_plot
+        plot_filenames = [volcano_plot, rainbow_plot, vector_field_plot]
+        if all(os.path.isfile(f) for f in plot_filenames):
+            logger.info("\n\t" + "\n\t".join(plot_filenames) + "\nAll plot files exist")
+            return print("Remove plot files if you want to regenerate them.")
+
         logger.info(f"Loading trained data: {trained_data_path}")
         adata = scv.read(trained_data_path)
         print_anndata(adata)
@@ -94,8 +102,6 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         ##################
 
         # volcano plot
-
-        volcano_plot = reports_data_model_conf.volcano_plot
 
         if os.path.isfile(volcano_plot):
             logger.info(f"{volcano_plot} exists")
@@ -120,8 +126,6 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             )
 
         # rainbow plot
-
-        rainbow_plot = reports_data_model_conf.rainbow_plot
 
         if os.path.isfile(rainbow_plot):
             logger.info(f"{rainbow_plot} exists")
@@ -152,7 +156,6 @@ def plots(conf: DictConfig, logger: Logger) -> None:
 
         # mean vector field plot
 
-        vector_field_plot = reports_data_model_conf.vector_field_plot
         if os.path.isfile(vector_field_plot):
             logger.info(f"{vector_field_plot} exists")
         else:
