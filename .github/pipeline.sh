@@ -90,6 +90,32 @@ printf "\n\`\`\`json\n"
 cat models/pbmc68k_model2/run_info.json
 printf "\n\`\`\`\n"
 
+# pons
+## model 1
+printf "# pons\n\n## model 1\n\n### Metrics\n"
+dvc metrics show --md models/pons_model1/metrics.json
+
+echo "### Training plots"
+echo '!'"[ELBO](./models/pons_model1/loss_plot.png)"
+
+echo "### Run information"
+printf "\n\`\`\`json\n"
+cat models/pons_model1/run_info.json
+printf "\n\`\`\`\n"
+
+# pons
+## model 2
+printf "## model 2\n\n### Metrics\n"
+dvc metrics show --md models/pons_model2/metrics.json
+
+echo "### Training plots"
+echo '!'"[ELBO](./models/pons_model2/loss_plot.png)"
+
+echo "### Run information"
+printf "\n\`\`\`json\n"
+cat models/pons_model2/run_info.json
+printf "\n\`\`\`\n"
+
 # pipeline files
 printf "# pipeline files\n"
 dvc dag -o --md

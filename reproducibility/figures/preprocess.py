@@ -27,6 +27,7 @@ def preprocess(conf: DictConfig, logger: Logger) -> None:
             data_path = conf[source][data_set].rel_path
             processed_path = conf[source][data_set].derived.rel_path
             process_method = conf[source][data_set].derived.process_method
+            process_args = conf[source][data_set].derived.process_args
 
             logger.info(
                 f"\n\nPreprocessing {data_set} data :\n\n"
@@ -43,6 +44,7 @@ def preprocess(conf: DictConfig, logger: Logger) -> None:
                 adata = process_method_fn(
                     data=data_path,
                     processed_path=processed_path,
+                    **process_args,
                 )
                 print_attributes(adata)
 

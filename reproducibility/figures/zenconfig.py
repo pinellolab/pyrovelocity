@@ -15,7 +15,9 @@ from pyrovelocity.utils import get_pylogger
 pbuilds = make_custom_builds_fn(zen_partial=True, populate_full_signature=True)
 
 
-def create_dataset_config(name, dl_root, data_file, rel_path, url, process_method):
+def create_dataset_config(
+    name, dl_root, data_file, rel_path, url, process_method, process_args
+):
     return dict(
         data_file=data_file,
         dl_root=dl_root,
@@ -24,6 +26,7 @@ def create_dataset_config(name, dl_root, data_file, rel_path, url, process_metho
         url=url,
         derived=dict(
             process_method=process_method,
+            process_args=process_args,
             rel_path="${data_external.processed_path}/" + f"{name}_processed.h5ad",
         ),
     )
@@ -46,7 +49,7 @@ def create_model_config(
             loss_plot_path="${..path}/loss_plot.png",
             patient_improve=0.0001,
             patient_init=45,
-            max_epochs=4000,
+            max_epochs=2000,
             **custom_training_parameters,
         ),
     )
@@ -95,6 +98,7 @@ config = make_config(
                 rel_path="${data_external.root_path}/oligo_lite.h5ad",
                 url="${data_external.velocyto.sources.gcs_root_url}/oligo_lite.h5ad",
                 process_method="load_data",
+                process_args=dict(),
             ),
         ),
         scvelo=dict(
@@ -111,6 +115,7 @@ config = make_config(
                 rel_path="${data_external.root_path}/endocrinogenesis_day15.h5ad",
                 url="${data_external.scvelo.sources.scvelo_root_url}/data/Pancreas/endocrinogenesis_day15.h5ad",
                 process_method="load_data",
+                process_args=dict(process_cytotrace=True),
             ),
             pbmc68k=create_dataset_config(
                 "pbmc68k",
@@ -118,7 +123,8 @@ config = make_config(
                 data_file="pbmc68k.h5ad",
                 rel_path="${data_external.root_path}/pbmc68k.h5ad",
                 url="${data_external.scvelo.sources.figshare_root_url}/27686886",
-                process_method="load_pbmc",
+                process_method="load_data",
+                process_args=dict(),
             ),
         ),
         pyrovelocity=dict(
@@ -132,6 +138,7 @@ config = make_config(
                 rel_path="${data_external.root_path}/larry.h5ad",
                 url="${data_external.pyrovelocity.sources.figshare_root_url}/37028569",
                 process_method="",
+                process_args=dict(),
             ),
         ),
     ),

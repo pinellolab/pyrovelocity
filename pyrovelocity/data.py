@@ -21,6 +21,34 @@ from scvi.data._anndata import _verify_and_correct_data_format
 from scvi.data._anndata import logger
 
 from pyrovelocity.cytotrace import cytotrace_sparse
+from pyrovelocity.utils import print_anndata
+
+
+def copy_raw_counts(
+    adata: anndata._core.anndata.AnnData,
+) -> anndata._core.anndata.AnnData:
+    """Copy unspliced and spliced raw counts to adata.layers and adata.obs.
+
+    Args:
+        adata (anndata._core.anndata.AnnData): AnnData object
+
+    Returns:
+        anndata._core.anndata.AnnData: AnnData object with raw counts.
+
+    Examples:
+        import scvelo as scv
+        adata = scv.datasets.pancreas()
+        copy_raw_counts(adata)
+    """
+    adata.layers["raw_unspliced"] = adata.layers["unspliced"]
+    print("'raw_unspliced', raw unspliced counts (adata.layers)")
+    adata.layers["raw_spliced"] = adata.layers["spliced"]
+    print("'raw_spliced', raw spliced counts (adata.layers)")
+    adata.obs["u_lib_size_raw"] = adata.layers["raw_unspliced"].toarray().sum(-1)
+    print("'u_lib_size_raw', unspliced library size (adata.obs)")
+    adata.obs["s_lib_size_raw"] = adata.layers["raw_spliced"].toarray().sum(-1)
+    print("'s_lib_size_raw', spliced library size (adata.obs)")
+    return adata
 
 
 def load_data(
@@ -30,6 +58,7 @@ def load_data(
     eps: float = 1e-6,
     force: bool = False,
     processed_path: str = None,
+    process_cytotrace: bool = False,
 ) -> anndata._core.anndata.AnnData:
     """Preprocess data from scvelo.
 
@@ -47,7 +76,6 @@ def load_data(
     if processed_path is None:
         processed_path = f"{data}_scvelo_fitted_{top_n}_{min_shared_counts}.h5ad"
 
-    # if force or (not os.path.exists(processed_path)):
     if (
         os.path.isfile(processed_path)
         and os.access(processed_path, os.R_OK)
@@ -65,20 +93,31 @@ def load_data(
             adata = scv.datasets.dentategyrus()
         else:
             adata = read(data)
-        adata.layers["raw_unspliced"] = adata.layers["unspliced"]
-        adata.layers["raw_spliced"] = adata.layers["spliced"]
-        adata.obs["u_lib_size_raw"] = adata.layers["raw_unspliced"].toarray().sum(-1)
-        adata.obs["s_lib_size_raw"] = adata.layers["raw_spliced"].toarray().sum(-1)
-        cytotrace_sparse(adata, layer="spliced")
+
+        print_anndata(adata)
+        copy_raw_counts(adata)
+        print_anndata(adata)
+
+        if "pbmc68k" in processed_path:
+            print("Removing duplicate cells and tSNE x-parity in pbmc68k data...")
+            scv.pp.remove_duplicate_cells(adata)
+            adata.obsm["X_tsne"][:, 0] *= -1
+
+        if process_cytotrace:
+            print("Processing data with cytotrace ...")
+            cytotrace_sparse(adata, layer="spliced")
+
         scv.pp.filter_and_normalize(
             adata, min_shared_counts=min_shared_counts, n_top_genes=top_n
         )
         scv.pp.moments(adata, n_pcs=30, n_neighbors=30)
-        scv.tl.recover_dynamics(adata, n_jobs=20, use_raw=False)
+        scv.tl.recover_dynamics(adata, n_jobs=-1, use_raw=False)
         scv.tl.velocity(adata, mode="dynamical", use_raw=False)
-        scv.tl.velocity_graph(adata)
+        scv.tl.velocity_graph(adata, n_jobs=-1)
         scv.tl.velocity_embedding(adata)
         scv.tl.latent_time(adata)
+
+        print_anndata(adata)
         adata.write(processed_path)
 
     return adata
@@ -86,7 +125,7 @@ def load_data(
 
 def load_pbmc(
     data: str = None,
-    processed_path: str = "pbmc_processed.h5ad",
+    processed_path: str = "pbmc68k_perspectives_processed.h5ad",
 ) -> anndata._core.anndata.AnnData:
     if (
         os.path.isfile(processed_path)
@@ -99,30 +138,43 @@ def load_pbmc(
             adata = scv.datasets.pbmc68k()
         elif os.path.isfile(data) and os.access(data, os.R_OK):
             adata = scv.read(data)
-        adata_all = adata.copy()
+
+        # adata_all = adata.copy()
+
+        # adata.layers["raw_unspliced"] = adata.layers["unspliced"]
+        # adata.layers["raw_spliced"] = adata.layers["spliced"]
+        # adata.obs["u_lib_size_raw"] = adata.layers["raw_unspliced"].toarray().sum(-1)
+        # adata.obs["s_lib_size_raw"] = adata.layers["raw_spliced"].toarray().sum(-1)
+        print_anndata(adata)
+        copy_raw_counts(adata)
+        print_anndata(adata)
+
         adata.obsm["X_tsne"][:, 0] *= -1
         scv.pp.remove_duplicate_cells(adata)
         scv.pp.filter_and_normalize(adata, min_shared_counts=30, n_top_genes=2000)
         scv.pp.moments(adata)
         scv.tl.velocity(adata, mode="stochastic")
         scv.tl.recover_dynamics(adata, n_jobs=-1)
+
         top_genes = adata.var["fit_likelihood"].sort_values(ascending=False).index
+        print(top_genes[:10])
         adata_sub = adata[:, top_genes[:3]].copy()
         scv.tl.velocity_graph(adata_sub, n_jobs=-1)
         scv.tl.velocity_embedding(adata_sub)
 
-        adata_sub.layers["raw_spliced"] = adata_all[:, adata_sub.var_names].layers[
-            "spliced"
-        ]
-        adata_sub.layers["raw_unspliced"] = adata_all[:, adata_sub.var_names].layers[
-            "unspliced"
-        ]
+        # adata_sub.layers["raw_spliced"] = adata_all[:, adata_sub.var_names].layers[
+        #     "spliced"
+        # ]
+        # adata_sub.layers["raw_unspliced"] = adata_all[:, adata_sub.var_names].layers[
+        #     "unspliced"
+        # ]
         adata_sub.obs["u_lib_size_raw"] = np.array(
             adata_sub.layers["raw_unspliced"].sum(axis=-1), dtype=np.float32
         ).flatten()
         adata_sub.obs["s_lib_size_raw"] = np.array(
             adata_sub.layers["raw_spliced"].sum(axis=-1), dtype=np.float32
         ).flatten()
+        print_anndata(adata_sub)
         adata_sub.write(processed_path)
 
     return adata_sub

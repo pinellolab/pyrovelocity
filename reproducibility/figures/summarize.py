@@ -141,13 +141,14 @@ def plots(conf: DictConfig, logger: Logger) -> None:
                 data=["st", "ut"],
                 cell_state=cell_state,
             )
-            fig.savefig(
-                rainbow_plot,
-                facecolor=fig.get_facecolor(),
-                bbox_inches="tight",
-                edgecolor="none",
-                dpi=300,
-            )
+            for ext in ["", ".png"]:
+                fig.savefig(
+                    f"{rainbow_plot}{ext}",
+                    facecolor=fig.get_facecolor(),
+                    bbox_inches="tight",
+                    edgecolor="none",
+                    dpi=300,
+                )
 
         # mean vector field plot
 
@@ -177,13 +178,14 @@ def plots(conf: DictConfig, logger: Logger) -> None:
                 arrow_length=2,
                 arrow_color="black",
             )
-            fig.savefig(
-                vector_field_plot,
-                facecolor=fig.get_facecolor(),
-                bbox_inches="tight",
-                edgecolor="none",
-                dpi=300,
-            )
+            for ext in ["", ".png"]:
+                fig.savefig(
+                    f"{vector_field_plot}{ext}",
+                    facecolor=fig.get_facecolor(),
+                    bbox_inches="tight",
+                    edgecolor="none",
+                    dpi=300,
+                )
 
 
 @hydra.main(version_base="1.2", config_path=".", config_name="config.yaml")

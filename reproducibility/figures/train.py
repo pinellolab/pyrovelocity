@@ -204,6 +204,15 @@ def print_logged_info(r: mlflow.entities.run.Run) -> None:
     print(f"tags: {tags}")
 
 
+def get_least_busy_gpu():
+    from gpustat import GPUStatCollection
+
+    gpu_stats = GPUStatCollection.new_query()
+    least_busy_gpu = min(gpu_stats, key=lambda gpu: len(gpu.processes))
+
+    return least_busy_gpu.index
+
+
 @hydra.main(version_base="1.2", config_path=".", config_name="config.yaml")
 def main(conf: DictConfig) -> None:
     """Train model
