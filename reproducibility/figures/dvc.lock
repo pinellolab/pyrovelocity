@@ -152,17 +152,17 @@ stages:
             rel_path: data/processed/pbmc68k_processed.h5ad
     outs:
     - path: data/processed/pbmc68k_processed.h5ad
-      md5: 1edae75c64e8bdffcf75ce8aa3e319fd
-      size: 1776958726
+      md5: 8833461e46bfb395df94f22b1cd02f2e
+      size: 1890403966
   train_pbmc68k_model1:
     cmd: /usr/bin/time -v python train.py model_training.train=[pbmc68k_model1]
     deps:
     - path: data/processed/pbmc68k_processed.h5ad
-      md5: 0a1eb8cd91bdee14ea9898b284e53f5e
-      size: 412368967
+      md5: 1edae75c64e8bdffcf75ce8aa3e319fd
+      size: 1776958726
     - path: train.py
-      md5: 0a9d3edec45ada6f48200246157d82b9
-      size: 7526
+      md5: 3c21ee486b9774fb606dd4991fdb30f5
+      size: 7702
     params:
       config.yaml:
         model_training.pbmc68k_model1:
@@ -176,35 +176,50 @@ stages:
           vector_field_parameters:
             basis: tsne
           training_parameters:
+            _target_: pyrovelocity.api.train_model
+            _partial_: true
             guide_type: auto_t0_constraint
+            model_type: auto
+            svi_train: false
+            batch_size: -1
+            train_size: 1.0
+            use_gpu: 0
+            likelihood: Poisson
+            num_samples: 30
             log_every: 100
             cell_state: celltype
             patient_improve: 0.0001
             patient_init: 45
-            max_epochs: 4000
+            seed: 99
             lr: 0.01
-            train_size: 1.0
+            max_epochs: 2000
+            include_prior: true
+            library_size: true
+            offset: false
+            input_type: raw
+            cell_specific_kinetics:
+            kinetics_num: 2
             loss_plot_path: models/pbmc68k_model1/loss_plot.png
     outs:
     - path: models/pbmc68k_model1/loss_plot.png
-      md5: 1c3602f4224852da2f90c192a4db26ba
-      size: 32748
+      md5: 3d0f849ca7179120539b1675ea5ff025
+      size: 17409
     - path: models/pbmc68k_model1/metrics.json
-      md5: cd3b043215e9af71ee8839ad70f9b27f
-      size: 154
+      md5: 12530b58971a24e02ec391559aa6db6a
+      size: 162
     - path: models/pbmc68k_model1/model
-      md5: a752343d70d22ccf436c354ddfbb07e0.dir
-      size: 3172240
+      md5: b5eb6e72c5d28e0e9f4e95a03489815e.dir
+      size: 3384457
       nfiles: 4
     - path: models/pbmc68k_model1/pyrovelocity.pkl
-      md5: 13c851051ec5879b934cf5db2ebac849
-      size: 262458283
+      md5: 24eacdc132e551c84f8c7b39beb6fbf2
+      size: 27836354015
     - path: models/pbmc68k_model1/run_info.json
-      md5: 56552e977819aa8edc0c8102a9d0e488
-      size: 435
+      md5: 3e579d727b1a6118dadff871e109a6f5
+      size: 454
     - path: models/pbmc68k_model1/trained.h5ad
-      md5: 405bf59abbc8946ce74c87cc630cd0d3
-      size: 752477435
+      md5: db97f519e5bad5e202b514d5adacf53c
+      size: 2223094955
   figure2:
     cmd: python fig2/figure.py
     deps:
