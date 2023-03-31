@@ -339,3 +339,135 @@ stages:
         # persist: true
       - ${reports.figureS3.svg_path}
         # persist: true
+
+  summarize_pancreas_model1:
+    cmd: python summarize.py reports.model_summary.summarize=[pancreas_model1]
+    deps:
+      - summarize.py
+      - ${model_training.pancreas_model1.trained_data_path}
+      - ${model_training.pancreas_model1.pyrovelocity_data_path}
+    params:
+      - config.yaml:
+          - model_training.pancreas_model1
+          - reports.model_summary.pancreas_model1
+    outs:
+      - ${reports.model_summary.pancreas_model1.volcano_plot}:
+          persist: true
+      - ${reports.model_summary.pancreas_model1.rainbow_plot}:
+          persist: true
+      - ${reports.model_summary.pancreas_model1.vector_field_plot}:
+          persist: true
+      - ${reports.model_summary.pancreas_model1.rainbow_plot}.png:
+          persist: true
+      - ${reports.model_summary.pancreas_model1.vector_field_plot}.png:
+          persist: true
+
+  summarize_pancreas_model2:
+    cmd: python summarize.py reports.model_summary.summarize=[pancreas_model2]
+    deps:
+      - summarize.py
+      - ${model_training.pancreas_model2.trained_data_path}
+      - ${model_training.pancreas_model2.pyrovelocity_data_path}
+    params:
+      - config.yaml:
+          - model_training.pancreas_model2
+          - reports.model_summary.pancreas_model2
+    outs:
+      - ${reports.model_summary.pancreas_model2.volcano_plot}:
+          persist: true
+      - ${reports.model_summary.pancreas_model2.rainbow_plot}:
+          persist: true
+      - ${reports.model_summary.pancreas_model2.vector_field_plot}:
+          persist: true
+      - ${reports.model_summary.pancreas_model2.rainbow_plot}.png:
+          persist: true
+      - ${reports.model_summary.pancreas_model2.vector_field_plot}.png:
+          persist: true
+
+  summarize_pbmc68k_model1:
+    cmd: python summarize.py reports.model_summary.summarize=[pbmc68k_model1]
+    deps:
+      - summarize.py
+      - ${model_training.pbmc68k_model1.trained_data_path}
+      - ${model_training.pbmc68k_model1.pyrovelocity_data_path}
+    params:
+      - config.yaml:
+          - model_training.pbmc68k_model1
+          - reports.model_summary.pbmc68k_model1
+    outs:
+      - ${reports.model_summary.pbmc68k_model1.volcano_plot}:
+          persist: true
+      - ${reports.model_summary.pbmc68k_model1.rainbow_plot}:
+          persist: true
+      - ${reports.model_summary.pbmc68k_model1.vector_field_plot}:
+          persist: true
+      - ${reports.model_summary.pbmc68k_model1.rainbow_plot}.png:
+          persist: true
+      - ${reports.model_summary.pbmc68k_model1.vector_field_plot}.png:
+          persist: true
+
+  summarize_pbmc68k_model2:
+    cmd: python summarize.py reports.model_summary.summarize=[pbmc68k_model2]
+    deps:
+      - summarize.py
+      - ${model_training.pbmc68k_model2.trained_data_path}
+      - ${model_training.pbmc68k_model2.pyrovelocity_data_path}
+    params:
+      - config.yaml:
+          - model_training.pbmc68k_model2
+          - reports.model_summary.pbmc68k_model2
+    outs:
+      - ${reports.model_summary.pbmc68k_model2.volcano_plot}:
+          persist: true
+      - ${reports.model_summary.pbmc68k_model2.rainbow_plot}:
+          persist: true
+      - ${reports.model_summary.pbmc68k_model2.vector_field_plot}:
+          persist: true
+      - ${reports.model_summary.pbmc68k_model2.rainbow_plot}.png:
+          persist: true
+      - ${reports.model_summary.pbmc68k_model2.vector_field_plot}.png:
+          persist: true
+
+  summarize_pons_model1:
+    cmd: python summarize.py reports.model_summary.summarize=[pons_model1]
+    deps:
+      - summarize.py
+      - ${model_training.pons_model1.trained_data_path}
+      - ${model_training.pons_model1.pyrovelocity_data_path}
+    params:
+      - config.yaml:
+          - model_training.pons_model1
+          - reports.model_summary.pons_model1
+    outs:
+      - ${reports.model_summary.pons_model1.volcano_plot}:
+          persist: true
+      - ${reports.model_summary.pons_model1.rainbow_plot}:
+          persist: true
+      - ${reports.model_summary.pons_model1.vector_field_plot}:
+          persist: true
+      - ${reports.model_summary.pons_model1.rainbow_plot}.png:
+          persist: true
+      - ${reports.model_summary.pons_model1.vector_field_plot}.png:
+          persist: true
+
+  summarize_pons_model2:
+    cmd: python summarize.py reports.model_summary.summarize=[pons_model2]
+    deps:
+      - summarize.py
+      - ${model_training.pons_model2.trained_data_path}
+      - ${model_training.pons_model2.pyrovelocity_data_path}
+    params:
+      - config.yaml:
+          - model_training.pons_model2
+          - reports.model_summary.pons_model2
+    outs:
+      - ${reports.model_summary.pons_model2.volcano_plot}:
+          persist: true
+      - ${reports.model_summary.pons_model2.rainbow_plot}:
+          persist: true
+      - ${reports.model_summary.pons_model2.vector_field_plot}:
+          persist: true
+      - ${reports.model_summary.pons_model2.rainbow_plot}.png:
+          persist: true
+      - ${reports.model_summary.pons_model2.vector_field_plot}.png:
+          persist: true
