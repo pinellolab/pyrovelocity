@@ -1,87 +1,39 @@
-.PHONY: clean clean-build clean-pyc clean-test coverage dist docs help install lint lint/flake8
 .DEFAULT_GOAL := help
 
-define BROWSER_PYSCRIPT
-import os, webbrowser, sys
+##@ Utility
+help: ## Display this help. (Default)
+# based on "https://gist.github.com/prwhite/8168133?permalink_comment_id=4260260#gistcomment-4260260"
+	@grep -hE '^[A-Za-z0-9_ \-]*?:.*##.*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-from urllib.request import pathname2url
+##@ Utility
+help_sort: ## Display alphabetized version of help.
+	@grep -hE '^[A-Za-z0-9_ \-]*?:.*##.*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-webbrowser.open("file://" + pathname2url(os.path.abspath(sys.argv[1])))
-endef
-export BROWSER_PYSCRIPT
+app_build: ## Build pyrovelocity application container image.
+	docker build -t pyrovelocityapp -f dockerfiles/Dockerfile.app .
 
-define PRINT_HELP_PYSCRIPT
-import re, sys
+app_run: ## Run the pyrovelocity web user interface.
+app_run: \
+app_build
+	docker run -p 8080:8080 pyrovelocityapp
 
-for line in sys.stdin:
-	match = re.match(r'^([a-zA-Z_-]+):.*?## (.*)$$', line)
-	if match:
-		target, help = match.groups()
-		print("%-20s %s" % (target, help))
-endef
-export PRINT_HELP_PYSCRIPT
+app_dev: ## Run the pyrovelocity web user interface in development mode.
+app_dev: \
+# app_build
+	docker run -it \
+		-v ${PWD}:/pyrovelocity \
+		-p 8080:8080 \
+		--label=pyrovelocityappdev \
+		pyrovelocityapp
 
-BROWSER := python -c "$$BROWSER_PYSCRIPT"
+app_run_shell: ## Attach to shell in running container: make app_run_shell CONTAINER_ID="98aca71ab536"
+ifdef CONTAINER_ID
+	docker exec -it $(CONTAINER_ID) /bin/bash
+else
+	@echo 'Run "make help" and define CONTAINER_ID'
+endif
 
-help:
-	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
-
-clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
-
-clean-build: ## remove build artifacts
-	rm -fr build/
-	rm -fr dist/
-	rm -fr .eggs/
-	find . -name '*.egg-info' -exec rm -fr {} +
-	find . -name '*.egg' -exec rm -f {} +
-
-clean-pyc: ## remove Python file artifacts
-	find . -name '*.pyc' -exec rm -f {} +
-	find . -name '*.pyo' -exec rm -f {} +
-	find . -name '*~' -exec rm -f {} +
-	find . -name '__pycache__' -exec rm -fr {} +
-
-clean-test: ## remove test and coverage artifacts
-	rm -fr .tox/
-	rm -f .coverage
-	rm -fr htmlcov/
-	rm -fr .pytest_cache
-
-lint/flake8: ## check style with flake8
-	flake8 pyrovelocity tests
-
-lint: lint/flake8 ## check style
-
-test: ## run tests quickly with the default Python
-	python setup.py test
-
-test-all: ## run tests on every Python version with tox
-	tox
-
-coverage: ## check code coverage quickly with the default Python
-	coverage run --source pyrovelocity setup.py test
-	coverage report -m
-	coverage html
-	$(BROWSER) htmlcov/index.html
-
-docs: ## generate Sphinx HTML documentation, including API docs
-	rm -f docs/pyrovelocity.rst
-	rm -f docs/modules.rst
-	sphinx-apidoc -o docs/ pyrovelocity
-	$(MAKE) -C docs clean
-	$(MAKE) -C docs html
-	$(BROWSER) docs/_build/html/index.html
-
-servedocs: docs ## compile the docs watching for changes
-	watchmedo shell-command -p '*.rst' -c '$(MAKE) -C docs html' -R -D .
-
-release: dist ## package and upload a release
-	twine upload dist/*
-
-dist: clean ## builds source and wheel package
-	python setup.py sdist
-	python setup.py bdist_wheel
-	ls -l dist
-
-install: clean ## install the package to the active Python's site-packages
-	python setup.py install
+app_shell: ## Run a shell inside the pyrovelocity application container image.
+app_shell: \
+# app_build
+	docker run -it --entrypoint /bin/bash pyrovelocityapp

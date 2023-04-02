@@ -1,0 +1,30 @@
+# generate lock file:
+#   conda-lock --conda mamba --log-level DEBUG -f environment-gpu.yml --lockfile conda-lock.yml
+# see conda-lock.yml header for installation instructions:
+#   conda-lock install -n YOURENV --file conda-lock.yml
+
+channels:
+  - conda-forge
+  - bioconda
+  # https://stackoverflow.com/a/71110028/446907
+  # We want to have a reproducible setup, so we don't want default channels,
+  # which may be different for different users. All required channels should
+  # be listed explicitly here.
+  - nodefaults
+
+dependencies:
+  - python=3.8
+  - streamlit
+  - altair
+  - vega_datasets
+  - google-cloud-storage
+  - leidenalg=[version='==0.9.0']
+  - astropy[version='==5.1']
+  - pip
+  # see: https://github.com/conda-incubator/conda-lock/issues/179
+  # - pip:
+  #   - cospar==0.1.9
+
+# Non-standard section listing target platforms for conda-lock:
+platforms:
+  - linux-64
