@@ -17,8 +17,10 @@ dependencies:
   - streamlit
   - altair
   - vega_datasets
-  - scvelo
-  # - pip
+  - google-cloud-storage
+  - leidenalg=[version='==0.9.0']
+  - astropy[version='==5.1']
+  - pip
   # see: https://github.com/conda-incubator/conda-lock/issues/179
   # - pip:
   #   - cospar==0.1.9
