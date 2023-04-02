@@ -21,12 +21,19 @@ app_dev: ## Run the pyrovelocity web user interface in development mode.
 app_dev: \
 # app_build
 	docker run -it \
-		-v ${PWD}/app:/pyrovelocity \
+		-v ${PWD}:/pyrovelocity \
 		-p 8080:8080 \
 		--label=pyrovelocityappdev \
 		pyrovelocityapp
 
+app_run_shell: ## Attach to shell in running container: make app_run_shell CONTAINER_ID="98aca71ab536"
+ifdef CONTAINER_ID
+	docker exec -it $(CONTAINER_ID) /bin/bash
+else
+	@echo 'Run "make help" and define CONTAINER_ID'
+endif
+
 app_shell: ## Run a shell inside the pyrovelocity application container image.
 app_shell: \
-app_build
+# app_build
 	docker run -it --entrypoint /bin/bash pyrovelocityapp
