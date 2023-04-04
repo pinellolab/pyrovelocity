@@ -5,11 +5,11 @@ import scvelo as scv
 import streamlit as st
 from modules import home
 from modules import simulation
+from utils.altair_theme import custom_theme
 from utils.html_factory import CSSStyle
 from utils.html_factory import make_div
 from utils.html_factory import make_img
 from utils.html_factory import st_write_bs4
-from utils.altair_theme import custom_theme
 
 from pyrovelocity.config import initialize_hydra_config
 

@@ -96,9 +96,11 @@ def st_show():
         unspliced_var_gt_threshold,
     ) = filter_var_counts_to_df(adata, spliced_threshold, unspliced_threshold)
 
-    title = f"Spliced vs unspliced counts (obs: {total_obs}, " + \
-    f"var: {total_var}, spliced > {spliced_threshold}: {spliced_var_gt_threshold}, " + \
-    f"unspliced > 0: {unspliced_var_gt_threshold})"
+    title = (
+        f"Spliced vs unspliced counts (obs: {total_obs}, "
+        + f"var: {total_var}, spliced > {spliced_threshold}: {spliced_var_gt_threshold}, "
+        + f"unspliced > 0: {unspliced_var_gt_threshold})"
+    )
 
     c = interactive_spliced_unspliced_plot(df, title)
     st.altair_chart(c, use_container_width=True)
