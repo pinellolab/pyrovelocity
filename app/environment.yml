@@ -23,8 +23,8 @@ dependencies:
   - astropy[version='==5.1']
   - pip
   # see: https://github.com/conda-incubator/conda-lock/issues/179
-  # - pip:
-  #   - cospar==0.1.9
+  - pip:
+      - streamlit-book==0.7.5
 
 # Non-standard section listing target platforms for conda-lock:
 platforms:
