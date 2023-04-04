@@ -1,10 +1,12 @@
 import base64
 from functools import partial
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal
+from typing import Optional
 
 import streamlit as st
 from bs4 import BeautifulSoup
+
 
 TAG = Literal["div", "a", "span", "img"]
 
@@ -24,8 +26,14 @@ class CSSStyle:
         return key.replace("_", "-")
 
 
-def make_tag(name: TAG, style: Optional[CSSStyle] = None, text: Optional[str] = None) -> BeautifulSoup:
-    new_tag = BeautifulSoup().new_tag(name, style=str(style)) if style else BeautifulSoup().new_tag(name)
+def make_tag(
+    name: TAG, style: Optional[CSSStyle] = None, text: Optional[str] = None
+) -> BeautifulSoup:
+    new_tag = (
+        BeautifulSoup().new_tag(name, style=str(style))
+        if style
+        else BeautifulSoup().new_tag(name)
+    )
 
     if text:
         new_tag.append(text)
@@ -41,7 +49,7 @@ def make_img(src: Path, style: Optional[CSSStyle] = None) -> BeautifulSoup:
     image_ext = src.suffix[1:]
 
     if image_ext == "svg":
-        with open(src, "r") as f:
+        with open(src) as f:
             lines = f.readlines()
             svg = "".join(lines)
         b64_image = base64.b64encode(svg.encode("utf-8")).decode("utf-8")

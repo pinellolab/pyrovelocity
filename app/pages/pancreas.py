@@ -1,6 +1,6 @@
-from streamlit import st
 import scvelo as scv
 from google.cloud import storage
+from streamlit import st
 
 
 # https://bit.ly/42WbSYD

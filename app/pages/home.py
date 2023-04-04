@@ -1,6 +1,11 @@
 from pathlib import Path
-from utils.html_factory import CSSStyle, make_div, make_img, st_write_bs4
+
 import streamlit as st
+from utils.html_factory import CSSStyle
+from utils.html_factory import make_div
+from utils.html_factory import make_img
+from utils.html_factory import st_write_bs4
+
 
 # Title
 TITLE_P1 = ""
@@ -63,9 +68,8 @@ def st_show():
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.write(' ')
+        st.write(" ")
     with col2:
         st.markdown(home_markdown_table, unsafe_allow_html=True)
     with col3:
-        st.write(' ')
-    
+        st.write(" ")
