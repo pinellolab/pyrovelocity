@@ -3,12 +3,13 @@ from pathlib import Path
 import altair as alt
 import scvelo as scv
 import streamlit as st
-from pages import home
-from pages import simulation
+from modules import home
+from modules import simulation
 from utils.html_factory import CSSStyle
 from utils.html_factory import make_div
 from utils.html_factory import make_img
 from utils.html_factory import st_write_bs4
+from utils.altair_theme import custom_theme
 
 from pyrovelocity.config import initialize_hydra_config
 
@@ -34,6 +35,7 @@ streamlit_style = """
 			}
             footer {visibility: hidden;}
             header {visibility: hidden;}
+            #MainMenu {visibility: visible;}
             div.block-container{padding-top:2rem;}
             </style>
             """
@@ -41,6 +43,10 @@ st.markdown(streamlit_style, unsafe_allow_html=True)
 
 # initialize hydra configuration
 cfg = initialize_hydra_config()
+
+# register and use the custom altair theme
+alt.themes.register("custom_theme", custom_theme)
+alt.themes.enable("custom_theme")
 
 sidebar_header_logo = make_img(
     src=Path("./docs/_static/logo.png"),
