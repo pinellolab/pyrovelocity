@@ -61,11 +61,11 @@ sidebar_header_title.extend(
         ),
         make_div(
             style=CSSStyle(font_size="14px"),
-            text="Probabilistic model of",
+            text="Probabilistic modeling",
         ),
         make_div(
             style=CSSStyle(font_size="14px", font_style="italic"),
-            text="RNA velocity",
+            text="of RNA velocity",
         ),
     ]
 )
@@ -81,21 +81,21 @@ with st.sidebar:
 no_data = "🪹 home"
 sidebar_label = "NAVIGATE"
 
-selected_page = st.sidebar.selectbox(
+selected_module = st.sidebar.selectbox(
     label=sidebar_label,
     options=[
         no_data,
+        "🖥️ simulation",
         "⚪️ pancreas",
         "🟠 pons",
         "🔴 peripheral blood",
         "🔵 hematopoietic stem cells",
-        "🖥️ simulation",
     ],
 )
 
-if selected_page == no_data:
+if selected_module == no_data:
     home.st_show()
-elif selected_page == "🖥️ simulation":
+elif selected_module == "🖥️ simulation":
     simulation.st_show()
 else:
     st.error("Page does not yet exist.")
