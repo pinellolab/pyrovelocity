@@ -1,7 +1,7 @@
 import streamlit as st
 from utils.data import filter_var_counts_to_df
 from utils.data import generate_sample_data
-from utils.data import interactive_spliced_unspliced_plot 
+from utils.data import interactive_spliced_unspliced_plot
 
 
 adata = generate_sample_data()

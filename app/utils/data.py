@@ -1,6 +1,7 @@
 import altair as alt
-import scvelo as scv
 import pandas as pd
+import scvelo as scv
+
 
 def generate_sample_data():
 
@@ -16,6 +17,7 @@ def generate_sample_data():
     )
 
     return adata
+
 
 def filter_var_counts_to_df(adata, min_spliced_counts, min_unspliced_counts):
     # Create DataFrames for spliced and unspliced counts
@@ -58,6 +60,7 @@ def filter_var_counts_to_df(adata, min_spliced_counts, min_unspliced_counts):
         spliced_var_gt_threshold,
         unspliced_var_gt_threshold,
     )
+
 
 def interactive_spliced_unspliced_plot(df, title):
     chart = (

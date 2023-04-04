@@ -16,7 +16,5 @@ def st_show():
         icons=[""],
         save_answers=False,
         orientation="vertical",
-        styles={
-            "nav-link": {"font-family": "LMSans10"}
-        }
+        styles={"nav-link": {"font-family": "LMSans10"}},
     )
