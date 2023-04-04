@@ -18,6 +18,7 @@ dependencies:
   - altair
   - vega_datasets
   - google-cloud-storage
+  - beautifulsoup4
   - leidenalg=[version='==0.9.0']
   - astropy[version='==5.1']
   - pip
