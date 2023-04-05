@@ -45,9 +45,8 @@ dependencies:
   - termcolor
   # see: https://github.com/conda-incubator/conda-lock/issues/179
   - pip:
-    - cospar
-    - hydra-zen
-
+      - cospar
+      - hydra-zen
 
 # Non-standard section listing target platforms for conda-lock:
 platforms:

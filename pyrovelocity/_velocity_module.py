@@ -7,6 +7,16 @@ from pyro.infer.autoguide import AutoNormal
 from pyro.infer.autoguide.guides import AutoGuideList
 from scvi.module.base import PyroBaseModuleClass
 
+# from ._velocity_model import AuxCellVelocityModel
+# from ._velocity_model import AuxTrajectoryModel
+# from ._velocity_model import DecoderTimeModel
+# from ._velocity_model import LatentFactor
+# from ._velocity_model import MultiKineticsModelDirichlet
+# from ._velocity_model import MultiKineticsModelDirichletLinear
+# from ._velocity_model import VelocityModel
+from ._velocity_model import VelocityModelAuto
+
+
 # from ._velocity_guide import LatentGuide
 # from ._velocity_guide import AutoDeltaRNAVelocityGuide
 # from ._velocity_guide import AutoNormalRNAVelocityGuide
@@ -17,14 +27,6 @@ from scvi.module.base import PyroBaseModuleClass
 # from ._velocity_guide import VelocityAutoGuideList
 # from ._velocity_guide import VelocityGuide
 
-# from ._velocity_model import AuxCellVelocityModel
-# from ._velocity_model import AuxTrajectoryModel
-# from ._velocity_model import DecoderTimeModel
-# from ._velocity_model import LatentFactor
-# from ._velocity_model import MultiKineticsModelDirichlet
-# from ._velocity_model import MultiKineticsModelDirichletLinear
-# from ._velocity_model import VelocityModel
-from ._velocity_model import VelocityModelAuto
 
 class VelocityModule(PyroBaseModuleClass):
     def __init__(

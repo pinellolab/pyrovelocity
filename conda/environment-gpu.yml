@@ -45,9 +45,8 @@ dependencies:
   - termcolor[version='>=2.2.0']
   # see: https://github.com/conda-incubator/conda-lock/issues/179
   - pip:
-    - cospar==0.1.9
-    - hydra-zen==0.10.0
-
+      - cospar==0.1.9
+      - hydra-zen==0.10.0
 
 # Non-standard section listing target platforms for conda-lock:
 platforms:
