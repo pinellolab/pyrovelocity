@@ -62,7 +62,31 @@ def filter_var_counts_to_df(adata, min_spliced_counts, min_unspliced_counts):
     )
 
 
-def interactive_spliced_unspliced_plot(df, title):
+def interactive_spliced_unspliced_plot(
+    df, title, selected_vars=None, selected_obs=None
+):
+    if selected_vars is None:
+        selected_vars = []
+    if selected_obs is None:
+        selected_obs = []
+
+    # color_condition = alt.condition(
+    #     (alt.datum.var_name in selected_vars | alt.datum.obs_name in selected_obs),
+    #     alt.value("green"),
+    #     alt.value("gray"),
+    # )
+
+    # Create a new column to indicate whether a data point should be highlighted
+    df["highlight"] = df["var_name"].isin(selected_vars) | df["obs_name"].isin(
+        selected_obs
+    )
+
+    color_condition = alt.condition(
+        alt.datum.highlight,
+        alt.value("green"),
+        alt.value("gray"),
+    )
+
     chart = (
         alt.Chart(df)
         .mark_circle()
@@ -70,6 +94,7 @@ def interactive_spliced_unspliced_plot(df, title):
             x=alt.X("spliced:Q", title="Spliced Counts"),
             y=alt.Y("unspliced:Q", title="Unspliced Counts"),
             tooltip=["spliced:Q", "unspliced:Q", "var_name:N", "obs_name:N"],
+            color=color_condition,
         )
         .properties(
             title=title,

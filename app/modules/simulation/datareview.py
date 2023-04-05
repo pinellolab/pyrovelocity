@@ -21,47 +21,34 @@ title = (
     + f"unspliced > 0: {unspliced_var_gt_threshold})"
 )
 
-c = interactive_spliced_unspliced_plot(df, title)
-st.altair_chart(c, use_container_width=True)
 
-st.dataframe(df)
+col_1, _, col_3 = st.columns([7, 1, 5])
 
-# from google.cloud import storage
-# scv.set_figure_params(vector_friendly=False, transparent=False, facecolor="white")
-# # Plot initial scatter plots
-# axs = scv.pl.scatter(
-#     adata,
-#     ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"],
-#     ncols=4,
-#     nrows=3,
-#     xlim=[-1, 20],
-#     ylim=[-1, 20],
-#     show=False,
-#     dpi=300,
-#     figsize=(7, 5),
-# )
-# st.pyplot(axs[0].get_figure(), format="png", dpi=300)
+with col_1:
 
-# # Recover dynamics and plot
-# scv.tl.recover_dynamics(adata)
+    col11, col12 = st.columns([1, 1])
 
-# axs2 = scv.pl.scatter(
-#     adata,
-#     ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"],
-#     ncols=4,
-#     nrows=3,
-#     xlim=[-1, 20],
-#     ylim=[-1, 20],
-#     color=["true_t"],
-#     show=False,
-#     dpi=300,
-#     figsize=(7, 5),
-# )
-# st.pyplot(axs2[0].get_figure(), format="png", dpi=300)
+    with col11:
+        obs_values = sorted(df["obs_name"].unique())
+        selected_obs = st.multiselect("Select cell(s)", obs_values)
 
-# c = (
-#     alt.Chart(iris)
-#     .mark_point()
-#     .encode(x="petalLength", y="petalWidth", color="species")
-# )
-# st.altair_chart(c, use_container_width=True)
+    with col12:
+        var_values = sorted(df["var_name"].unique())
+        selected_var = st.multiselect("Select gene(s)", var_values)
+
+    c = interactive_spliced_unspliced_plot(df, title, selected_var, selected_obs)
+    st.altair_chart(c, use_container_width=True)
+
+with col_3:
+    if selected_var and selected_obs:
+        display_df = df[
+            df["var_name"].isin(selected_var) & df["obs_name"].isin(selected_obs)
+        ]
+    elif selected_var:
+        display_df = df[df["var_name"].isin(selected_var)]
+    elif selected_obs:
+        display_df = df[df["obs_name"].isin(selected_obs)]
+    else:
+        display_df = df
+
+    st.dataframe(display_df)
