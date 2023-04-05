@@ -36,9 +36,18 @@ dependencies:
   - fastcluster[version='>=1.1.26']
   - plotnine[version='>=0.7.1']
   - matplotlib[version='>=3.1.2']
+  - click[version'>=8.0.1']
+  - colorlog[version='>=6.7.0']
+  - omegaconf[version='>=2.2.3']
+  - rich[version='>=12.6.0']
+  - hydra-core[version='1.2.0']
+  - mlflow[version='1.30.0']
+  - termcolor[version='>=2.2.0']
   # see: https://github.com/conda-incubator/conda-lock/issues/179
-  # - pip:
-  #   - cospar==0.1.9
+  - pip:
+    - cospar==0.1.9
+    - hydra-zen==0.10.0
+
 
 # Non-standard section listing target platforms for conda-lock:
 platforms:
