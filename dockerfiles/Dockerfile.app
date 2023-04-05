@@ -16,7 +16,7 @@ RUN apt-get -qq update && \
     gfortran
 RUN mamba init
 RUN mamba env update -n base -f app/environment.yml
-RUN pip install -e .
+RUN pip install -e .[dev]
 
 # install development packages not in environment.yml
 # RUN mamba info && \

@@ -15,12 +15,12 @@ app_build: ## Build pyrovelocity application container image.
 app_run: ## Run the pyrovelocity web user interface.
 app_run: \
 app_build
-	docker run -p 8080:8080 pyrovelocityapp
+	docker run --rm -p 8080:8080 pyrovelocityapp
 
 app_dev: ## Run the pyrovelocity web user interface in development mode.
 app_dev: \
 # app_build
-	docker run -it \
+	docker run --rm -it \
 		-v ${PWD}:/pyrovelocity \
 		-p 8080:8080 \
 		--label=pyrovelocityappdev \
@@ -36,4 +36,4 @@ endif
 app_shell: ## Run a shell inside the pyrovelocity application container image.
 app_shell: \
 # app_build
-	docker run -it --entrypoint /bin/bash pyrovelocityapp
+	docker run --rm -it --entrypoint /bin/bash pyrovelocityapp
