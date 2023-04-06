@@ -171,7 +171,6 @@ class LogNormalModel(PyroModule):
     def dt_switching(self):
         if self.plate_size == 2:
             return LogNormal(self.zero, self.one)
-            # return Normal(self.zero, self.one)
         return (
             LogNormal(self.zero, self.one * 0.1)
             .expand((self.num_genes,))
@@ -185,21 +184,21 @@ class LogNormalModel(PyroModule):
             if self.plate_size == 2:
                 return Normal(self.zero, self.one * 0.1).mask(
                     self.include_prior
-                )  # with shared cell_time
+                )
             else:
                 return (
                     Normal(self.zero, self.one * 0.1)
                     .expand((self.num_genes,))
                     .to_event(1)
                     .mask(self.include_prior)
-                )  # with shared cell_time
+                )
         if self.plate_size == 2:
             return LogNormal(self.zero, self.one).mask(
                 self.include_prior
-            )  # without shared cell_time
+            )
         return (
             LogNormal(self.zero, self.one).expand((self.num_genes,)).to_event(1)
-        )  # .mask(False) # without shared cell_time
+        )
 
     @PyroSample
     def cell_time(self):
