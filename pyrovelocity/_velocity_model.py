@@ -914,13 +914,6 @@ class VelocityModelAuto(AuxCellVelocityModel):
     ):
         scale = u_scale / s_scale
 
-        # if u_read_depth is None:
-        #    u_ = u_obs / scale
-        #    s_ = s_obs
-        # else:
-        #    #neural network correction of read depth not converge
-        #    u_ = u_obs / u_read_depth / scale
-        #    s_ = s_obs / s_read_depth
         u_ = u_obs / scale
         s_ = s_obs
 
