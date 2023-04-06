@@ -29,12 +29,41 @@ from .utils import tau_inv
 
 
 class LogNormalModel(PyroModule):
+    """
+    A base class for pyrovelocity models.
+
+    This class serves as the base class for constructing a pyrovelocity model.
+    It provides basic methods for handling gene expression data, such as creating plates
+    for cells and genes, encoding cell-specific features, and computing the likelihood
+    of the observed data.
+
+    Attributes:
+        num_cells (int): The number of cells.
+        num_genes (int): The number of genes.
+        likelihood (str): The likelihood type for the model, defaults to "Poisson".
+        plate_size (int): The size of the plate for the model, defaults to 2.
+
+    Example:
+        >>> import torch
+        >>> from pyro.nn import PyroModule
+        >>> num_cells = 10
+        >>> num_genes = 20
+        >>> likelihood = "Poisson"
+        >>> plate_size = 2
+        >>> model = LogNormalModel(num_cells, num_genes, likelihood, plate_size)
+        >>> assert model.num_cells == num_cells
+        >>> assert model.num_genes == num_genes
+        >>> assert model.likelihood == likelihood
+        >>> assert model.plate_size == plate_size
+    """
+
     def __init__(
         self,
         num_cells: int,
         num_genes: int,
         likelihood: str = "Poisson",
         plate_size: int = 2,
+        correct_library_size: Union[bool, str] = True,
     ) -> None:
         assert num_cells > 0 and num_genes > 0
         super().__init__()
@@ -42,6 +71,7 @@ class LogNormalModel(PyroModule):
         self.num_genes = num_genes
         self.n_obs = None
         self.plate_size = plate_size
+        self.correct_library_size = correct_library_size
         self.register_buffer("zero", torch.tensor(0.0))
         self.register_buffer("one", torch.tensor(1.0))
 
@@ -182,9 +212,7 @@ class LogNormalModel(PyroModule):
     def latent_time(self):
         if self.shared_time:
             if self.plate_size == 2:
-                return Normal(self.zero, self.one * 0.1).mask(
-                    self.include_prior
-                )
+                return Normal(self.zero, self.one * 0.1).mask(self.include_prior)
             else:
                 return (
                     Normal(self.zero, self.one * 0.1)
@@ -193,12 +221,8 @@ class LogNormalModel(PyroModule):
                     .mask(self.include_prior)
                 )
         if self.plate_size == 2:
-            return LogNormal(self.zero, self.one).mask(
-                self.include_prior
-            )
-        return (
-            LogNormal(self.zero, self.one).expand((self.num_genes,)).to_event(1)
-        )
+            return LogNormal(self.zero, self.one).mask(self.include_prior)
+        return LogNormal(self.zero, self.one).expand((self.num_genes,)).to_event(1)
 
     @PyroSample
     def cell_time(self):
@@ -288,6 +312,42 @@ class LogNormalModel(PyroModule):
         s_cell_size_coef: None = None,
         st_coef: None = None,
     ) -> Tuple[Poisson, Poisson]:
+        """
+        Compute the likelihood of the given count data.
+
+        Args:
+            ut (torch.Tensor): Tensor representing unspliced transcripts.
+            st (torch.Tensor): Tensor representing spliced transcripts.
+            u_log_library (Optional[torch.Tensor], optional): Log library tensor for unspliced transcripts. Defaults to None.
+            s_log_library (Optional[torch.Tensor], optional): Log library tensor for spliced transcripts. Defaults to None.
+            u_scale (Optional[torch.Tensor], optional): Scale tensor for unspliced transcripts. Defaults to None.
+            s_scale (Optional[torch.Tensor], optional): Scale tensor for spliced transcripts. Defaults to None.
+            u_read_depth (Optional[torch.Tensor], optional): Read depth tensor for unspliced transcripts. Defaults to None.
+            s_read_depth (Optional[torch.Tensor], optional): Read depth tensor for spliced transcripts. Defaults to None.
+            u_cell_size_coef (Optional[Any], optional): Cell size coefficient for unspliced transcripts. Defaults to None.
+            ut_coef (Optional[Any], optional): Coefficient for unspliced transcripts. Defaults to None.
+            s_cell_size_coef (Optional[Any], optional): Cell size coefficient for spliced transcripts. Defaults to None.
+            st_coef (Optional[Any], optional): Coefficient for spliced transcripts. Defaults to None.
+
+        Returns:
+            Tuple[Poisson, Poisson]: A tuple of Poisson distributions for unspliced and spliced transcripts, respectively.
+
+        Example:
+            >>> import torch
+            >>> from pyro.nn import PyroModule
+            >>> num_cells = 10
+            >>> num_genes = 20
+            >>> likelihood = "Poisson"
+            >>> plate_size = 2
+            >>> model = LogNormalModel(num_cells, num_genes, likelihood, plate_size)
+            >>> ut = torch.rand(num_cells, num_genes)
+            >>> st = torch.rand(num_cells, num_genes)
+            >>> u_read_depth = torch.rand(num_cells, 1)
+            >>> s_read_depth = torch.rand(num_cells, 1)
+            >>> u_dist, s_dist = model.get_likelihood(ut, st, u_read_depth=u_read_depth, s_read_depth=s_read_depth)
+            >>> assert isinstance(u_dist, torch.distributions.Poisson)
+            >>> assert isinstance(s_dist, torch.distributions.Poisson)
+        """
         if self.likelihood == "NB":
             if self.correct_library_size:
                 ut = relu(ut) + self.one * 1e-6
@@ -359,25 +419,17 @@ class LogNormalModel(PyroModule):
             s_dist = Poisson(st)
         elif self.likelihood == "Normal":
             if u_scale is not None and s_scale is not None:
-                u_dist = Normal(
-                    ut, u_scale
-                )
+                u_dist = Normal(ut, u_scale)
                 s_dist = Normal(st, s_scale)
             else:
-                u_dist = Normal(
-                    ut, self.one * 0.1
-                )
+                u_dist = Normal(ut, self.one * 0.1)
                 s_dist = Normal(st, self.one * 0.1)
         elif self.likelihood == "LogNormal":
             if u_scale is not None and s_scale is not None:
-                u_dist = LogNormal(
-                    (ut + self.one * 1e-6).log(), u_scale
-                )
+                u_dist = LogNormal((ut + self.one * 1e-6).log(), u_scale)
                 s_dist = LogNormal((st + self.one * 1e-6).log(), s_scale)
             else:
-                u_dist = LogNormal(
-                    ut, self.one * 0.1
-                )
+                u_dist = LogNormal(ut, self.one * 0.1)
                 s_dist = LogNormal(st, self.one * 0.1)
         else:
             raise
@@ -407,6 +459,49 @@ class VelocityModel(LogNormalModel):
         kinetics_num: Optional[int] = None,
         **initial_values,
     ) -> None:
+        """
+        Derived class for modeling RNA velocity with shared latent time.
+
+        Inherits from LogNormalModel.
+
+        Args:
+            num_cells (int): Number of cells.
+            num_genes (int): Number of genes.
+            likelihood (str, optional): Likelihood model. Defaults to "Poisson".
+            shared_time (bool, optional): Whether to share time across cells. Defaults to True.
+            t_scale_on (bool, optional): Whether to scale the time. Defaults to False.
+            plate_size (int, optional): The number of dimensions for the plates. Defaults to 2.
+            latent_factor (str, optional): Latent factor type. Defaults to "none".
+            latent_factor_size (int, optional): Latent factor size. Defaults to 30.
+            latent_factor_operation (str, optional): Latent factor operation. Defaults to "selection".
+            include_prior (bool, optional): Whether to include prior. Defaults to False.
+            num_aux_cells (int, optional): Number of auxiliary cells. Defaults to 100.
+            only_cell_times (bool, optional): Whether to use only cell times. Defaults to False.
+            decoder_on (bool, optional): Whether to use a decoder. Defaults to False.
+            add_offset (bool, optional): Whether to add an offset. Defaults to False.
+            correct_library_size (Union[bool, str], optional): Whether to correct library size. Defaults to True.
+            guide_type (bool, optional): Guide type for the model. Defaults to "velocity".
+            cell_specific_kinetics (Optional[str], optional): Cell-specific kinetics. Defaults to None.
+            kinetics_num (Optional[int], optional): Number of kinetics. Defaults to None.
+            **initial_values: Initial values for various parameters in the model.
+
+        Example:
+            >>> import torch
+            >>> from pyro.nn import PyroModule
+            >>> num_cells = 10
+            >>> num_genes = 20
+            >>> likelihood = "Poisson"
+            >>> plate_size = 2
+            >>> model = VelocityModel(num_cells, num_genes, likelihood, plate_size)
+            >>> u_obs = torch.rand(num_cells, num_genes)
+            >>> s_obs = torch.rand(num_cells, num_genes)
+            >>> u_log_library = torch.rand(num_cells, 1)
+            >>> s_log_library = torch.rand(num_cells, 1)
+            >>> ind_x = torch.randint(0, num_cells, (num_cells,))
+            >>> ut, st = model(u_obs, s_obs, u_log_library, s_log_library, ind_x)
+            >>> assert ut.shape == (num_cells, num_genes)
+            >>> assert st.shape == (num_cells, num_genes)
+        """
         assert num_cells > 0 and num_genes > 0
         super().__init__(num_cells, num_genes, likelihood, plate_size)
         # TODO set self.num_aux_cells in self.__init__, 10-200
@@ -554,9 +649,7 @@ class VelocityModel(LogNormalModel):
         switching = self.switching
         u_scale = self.u_scale
         s_scale = self.s_scale
-        with (
-            cell_plate
-        ):
+        with (cell_plate):
             t = self.latent_time
             u_inf, s_inf = mRNA(switching, self.zero, self.zero, alpha, beta, gamma)
             state = (
