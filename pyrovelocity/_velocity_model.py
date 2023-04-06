@@ -556,7 +556,7 @@ class VelocityModel(LogNormalModel):
         s_scale = self.s_scale
         with (
             cell_plate
-        ):  # , poutine.mask(mask=pyro.subsample(self.mask.to(alpha.device), event_dim=1)):
+        ):
             t = self.latent_time
             u_inf, s_inf = mRNA(switching, self.zero, self.zero, alpha, beta, gamma)
             state = (
