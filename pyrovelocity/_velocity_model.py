@@ -623,32 +623,14 @@ class AuxCellVelocityModel(VelocityModel):
             dt_switching = self.dt_switching
             u_scale = self.u_scale
             s_scale = self.s_scale
-            # u_inf, s_inf = ode_mRNA(switching, self.zero, self.zero, alpha, beta, gamma)
-            # if self.t_scale_on and self.shared_time:
-            #    t_scale = self.t_scale
-            #    gene_offset = self.gene_offset
-            # else:
-            #    t_scale = None
-            #    gene_offset = None
-            # u0 = pyro.sample("u0", Gamma(self.one, self.one*2).mask(True))
-            # s0 = pyro.sample("s0", Gamma(self.one, self.one*2).mask(True))
-            # u0 = torch.where(u0 >= u_inf, u_inf, u0)
-            # s0 = torch.where(s0 >= s_inf, s_inf, s0)
-            # t_scale = self.t_scale
 
-            # u0 = s0 = self.zero
             u0 = pyro.sample("u_offset", LogNormal(self.zero, self.one))
             s0 = pyro.sample("s_offset", LogNormal(self.zero, self.one))
             t_scale = None
 
             gene_offset = self.gene_offset if self.add_offset else self.zero
             switching = dt_switching + gene_offset
-            # u_inf, s_inf = mRNA(switching, self.zero, self.zero, alpha, beta, gamma)
-            # u_inf, s_inf = mRNA(dt_switching, self.zero, self.zero, alpha, beta, gamma)
             u_inf, s_inf = mRNA(dt_switching, u0, s0, alpha, beta, gamma)
-
-            # u0 = torch.where(u0 > u_inf, u_inf, u0)
-            # s0 = torch.where(s0 > s_inf, s_inf, s0)
 
             if self.latent_factor_operation == "selection":
                 p_velocity = pyro.sample("p_velocity", Beta(self.one * 5, self.one))
@@ -662,21 +644,10 @@ class AuxCellVelocityModel(VelocityModel):
                 u_pcs_mean, s_pcs_mean = None, None
 
         s_read_depth = None
-        # with cell_plate:
-        #    u_read_depth = pyro.sample('u_read_depth', dist.LogNormal(u_log_library, self.one))
-        #    s_read_depth = pyro.sample('s_read_depth', dist.LogNormal(s_log_library, self.one))
         u_read_depth = None
-        # same as before, just refactored slightly
-        # with cell_plate, gene_plate:
-        #     cell_gene_mask = pyro.subsample(self.mask.to(alpha.device), event_dim=0)
 
         cell_codebook = self.cell_codebook if self.latent_factor == "linear" else None
-        # with cell_plate, poutine.mask(mask=(u_obs > 0) & (s_obs > 0)):
-        with cell_plate:  # , poutine.mask(mask=cell_gene_mask):
-            # u_observed_total_dist = ...  # needs to be positive - maybe Poisson(num_genes * sequencing_depth)?
-            # u_observed_total = pyro.sample("u_observed_total", u_observed_total_dist, obs=u_obs.sum(-2))
-            # u_read_depth = pyro.sample('u_read_depth', LogNormal(u_log_library, self.one))
-            # s_read_depth = pyro.sample('s_read_depth', LogNormal(s_log_library, self.one))
+        with cell_plate:
             with pyro.condition(data={"u": u_obs, "s": s_obs}):
                 ut, st = self.generate_cell(
                     gene_plate,
@@ -703,22 +674,16 @@ class AuxCellVelocityModel(VelocityModel):
                     s0=s0,
                 )
 
-        # new: add population of fake cells to introduce global correlation across cells
         if self.num_aux_cells > 0:
             with pyro.contrib.autoname.scope(prefix="aux"):
-                # TODO set self.num_aux_cells in self.__init__, 10-200
                 aux_cell_plate = pyro.plate(
                     "aux_cell_plate", self.num_aux_cells, dim=cell_plate.dim
                 )
                 with aux_cell_plate:
-                    # aux_u_obs = pyro.param("aux_u_obs", lambda: self.aux_u_obs_init, constraint=positive, event_dim=0)  # TODO initialize
-                    # aux_s_obs = pyro.param("aux_s_obs", lambda: self.aux_s_obs_init, constraint=positive, event_dim=0)  # TODO initialize
-                    # TODO: change the parameter cells into fixed cells
-                    # use a larger number of fixed cells
                     aux_u_obs = self.aux_u_obs_init
                     aux_s_obs = self.aux_s_obs_init
-                    aux_u_log_library = torch.log(aux_u_obs.sum(axis=-1))  # TODO define
-                    aux_s_log_library = torch.log(aux_s_obs.sum(axis=-1))  # TODO define
+                    aux_u_log_library = torch.log(aux_u_obs.sum(axis=-1))
+                    aux_s_log_library = torch.log(aux_s_obs.sum(axis=-1))
                     with pyro.condition(data={"u": aux_u_obs, "s": aux_s_obs}):
                         aux_ut, aux_st = self.generate_cell(
                             gene_plate,
@@ -744,7 +709,6 @@ class AuxCellVelocityModel(VelocityModel):
                             u0=u0,
                             s0=s0,
                         )
-        # same as before: return only non-auxiliary cell predictions
         return ut, st
 
     def generate_cell(
