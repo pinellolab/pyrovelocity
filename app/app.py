@@ -14,7 +14,6 @@ from utils.html_factory import st_write_bs4
 from pyrovelocity.config import initialize_hydra_config
 
 
-# setup
 st.set_page_config(
     page_title="pyrovelocity report",
     page_icon="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/_static/logo.png",
@@ -22,8 +21,6 @@ st.set_page_config(
     initial_sidebar_state="auto",
 )
 
-# #MainMenu {visibility: hidden;}
-# header {visibility: hidden;}
 streamlit_style = """
             <style>
             @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100&display=swap');
@@ -41,10 +38,8 @@ streamlit_style = """
             """
 st.markdown(streamlit_style, unsafe_allow_html=True)
 
-# initialize hydra configuration
 cfg = initialize_hydra_config()
 
-# register and use the custom altair theme
 alt.themes.register("custom_theme", custom_theme)
 alt.themes.enable("custom_theme")
 
@@ -77,7 +72,6 @@ sidebar_header.extend([sidebar_header_logo, sidebar_header_title])
 with st.sidebar:
     st_write_bs4(sidebar_header)
 
-# Main Chapter selection
 no_data = "🪹 home"
 sidebar_label = "NAVIGATE"
 
