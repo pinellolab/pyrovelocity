@@ -288,9 +288,6 @@ class LogNormalModel(PyroModule):
         s_cell_size_coef: None = None,
         st_coef: None = None,
     ) -> Tuple[Poisson, Poisson]:
-        ##if not (self.likelihood in ['Normal', 'LogNormal']): # and u_scale is None and s_scale is None:
-        ##    ut = pyro.sample("ut", Normal(ut, u_scale))
-        ##    st = pyro.sample("st", Normal(st, s_scale))
         if self.likelihood == "NB":
             if self.correct_library_size:
                 ut = relu(ut) + self.one * 1e-6
@@ -300,7 +297,7 @@ class LogNormalModel(PyroModule):
                 if self.guide_type not in [
                     "velocity_auto",
                     "velocity_auto_depth",
-                ]:  # time is learned from scaled u_obs/s_obs, no need to scale
+                ]:
                     ut = ut / torch.sum(ut, dim=-1, keepdim=True)
                     st = st / torch.sum(st, dim=-1, keepdim=True)
                 ut = pyro.deterministic("ut_norm", ut, event_dim=0)
@@ -330,16 +327,7 @@ class LogNormalModel(PyroModule):
                 st = relu(st) + self.one * 1e-6
                 ut = pyro.deterministic("ut", ut, event_dim=0)
                 st = pyro.deterministic("st", st, event_dim=0)
-                ##if not (self.guide_type in ['velocity_auto', 'velocity_auto_depth']): # time is learned from scaled u_obs/s_obs, no need to scale
                 if self.correct_library_size == "cell_size_regress":
-                    ##ut = relu(self.one * u_read_depth + ut * ut_coef + u_cell_size_coef)+self.one*1e-6
-                    ##st = relu(self.one * s_read_depth + st * st_coef + s_cell_size_coef)+self.one*1e-6
-                    ##ut = relu(self.one * u_read_depth + ut * ut_coef)+self.one*1e-6
-                    ##st = relu(self.one * s_read_depth + st * st_coef)+self.one*1e-6
-                    ##ut = torch.exp(relu(self.one * u_read_depth + ut * ut_coef + u_cell_size_coef)+self.one*1e-6)
-                    ##st = torch.exp(relu(self.one * s_read_depth + st * st_coef + s_cell_size_coef)+self.one*1e-6)
-                    ##ut = torch.exp(self.one * u_read_depth + u_cell_size_coef)
-                    ##st = torch.exp(self.one * s_read_depth + s_cell_size_coef)
                     ut_sum = torch.log(torch.sum(ut, dim=-1, keepdim=True))
                     st_sum = torch.log(torch.sum(st, dim=-1, keepdim=True))
                     ut = torch.log(ut)
@@ -373,23 +361,23 @@ class LogNormalModel(PyroModule):
             if u_scale is not None and s_scale is not None:
                 u_dist = Normal(
                     ut, u_scale
-                )  # NOTE: add scale parameters significantly decrease ELBO
+                )
                 s_dist = Normal(st, s_scale)
             else:
                 u_dist = Normal(
                     ut, self.one * 0.1
-                )  # NOTE: add scale parameters significantly decrease ELBO
+                )
                 s_dist = Normal(st, self.one * 0.1)
         elif self.likelihood == "LogNormal":
             if u_scale is not None and s_scale is not None:
                 u_dist = LogNormal(
                     (ut + self.one * 1e-6).log(), u_scale
-                )  # NOTE: add scale parameters significantly decrease ELBO
+                )
                 s_dist = LogNormal((st + self.one * 1e-6).log(), s_scale)
             else:
                 u_dist = LogNormal(
                     ut, self.one * 0.1
-                )  # NOTE: add scale parameters significantly decrease ELBO
+                )
                 s_dist = LogNormal(st, self.one * 0.1)
         else:
             raise
