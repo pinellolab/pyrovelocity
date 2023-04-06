@@ -750,11 +750,9 @@ class AuxCellVelocityModel(VelocityModel):
             cell_code = None
 
         if self.shared_time:
-            ##cell_time = pyro.sample("cell_time", LogNormal(self.zero, self.one).mask(False)) # mask=False works for cpm and raw read count, count needs steady-state initialization
             cell_time = pyro.sample(
                 "cell_time", LogNormal(self.zero, self.one).mask(self.include_prior)
-            )  # mask=False works for cpm and raw read count, count needs steady-state initialization
-        ##assert cell_time.shape == (256, 1)
+            )
 
         with gene_plate:
             if self.latent_factor_operation == "selection":
@@ -783,7 +781,7 @@ class AuxCellVelocityModel(VelocityModel):
                     "latent_time",
                     LogNormal(self.zero, self.one).mask(self.include_prior),
                 )
-            ##state = pyro.sample("cell_gene_state", Bernoulli(logits=t-switching)) == self.zero
+
             state = (
                 pyro.sample(
                     "cell_gene_state",
@@ -797,10 +795,9 @@ class AuxCellVelocityModel(VelocityModel):
             alpha_vec = torch.where(state, alpha, self.zero)
 
             tau = softplus(torch.where(state, t - gene_offset, t - switching))
-            # tau = relu(torch.where(state, t-gene_offset, t - switching))
 
             ut, st = mRNA(tau, u0_vec, s0_vec, alpha_vec, beta, gamma)
-            # ut, st = ode_mRNA(tau, u0_vec, s0_vec, alpha_vec, beta, gamma)
+
             if self.latent_factor == "linear":
                 regressor_output = torch.einsum(
                     "abc,cd->ad", cell_code, cell_codebook.squeeze()
