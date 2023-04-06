@@ -839,38 +839,6 @@ class AuxCellVelocityModel(VelocityModel):
 class VelocityModelAuto(AuxCellVelocityModel):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        # if self.guide_type in [
-        #     "velocity_auto",
-        #     "velocity_auto_depth",
-        #     "velocity_auto_t0_constraint",
-        # ]:
-        #     self.time_encoder = TimeEncoder2(
-        #         self.num_genes,
-        #         n_output=1,
-        #         dropout_rate=0.5,
-        #         activation_fn=nn.ELU,
-        #         n_layers=3,
-        #         var_eps=1e-6,
-        #     )
-        # if self.correct_library_size and (
-        #     self.guide_type == "velocity_auto"
-        #     or self.guide_type == "velocity_auto_t0_constraint"
-        # ):
-        #     self.u_lib_encoder = TimeEncoder2(
-        #         self.num_genes + 1, 1, n_layers=3, dropout_rate=0.5
-        #     )
-        #     self.s_lib_encoder = TimeEncoder2(
-        #         self.num_genes + 1, 1, n_layers=3, dropout_rate=0.5
-        #     )
-
-        # if self.cell_specific_kinetics is not None:
-        #     self.multikinetics_encoder = TimeEncoder2(
-        #         1,  # encode cell state
-        #         1,  # encode cell specificity of kinetics
-        #         dropout_rate=0.5,
-        #         last_layer_activation=nn.Sigmoid(),
-        #         n_layers=3,
-        #     )
 
     def get_rna(
         self,
@@ -892,15 +860,15 @@ class VelocityModelAuto(AuxCellVelocityModel):
                 self.guide_type != "auto"
                 and pyro.__version__.startswith("1.8.1")
                 or self.guide_type == "auto"
-            ):  # parallel leads to memory leak
+            ):
                 enum = "parallel"
             elif (
                 self.guide_type != "auto"
                 and not pyro.__version__.startswith("1.8.1")
                 and pyro.__version__.startswith("1.6.0")
             ):
-                # neural network guide only works in sequential enumeration
-                # only 1.6.0 version supports model-side sequential enumeration
+                # neural network guide only works with sequential enumeration
+                # only version 1.6.0 supports model-side sequential enumeration
                 enum = "sequential"
 
             state = (
@@ -921,8 +889,7 @@ class VelocityModelAuto(AuxCellVelocityModel):
             s0_vec = s0
             alpha_vec = alpha
             tau = softplus(t - t0)
-            ##tau = relu(torch.where(state, t - t0, t - switching))
-        # print(alpha_vec.shape)
+
         ut, st = mRNA(tau, u0_vec, s0_vec, alpha_vec, beta, gamma)
         ut = ut * u_scale / s_scale
         return ut, st
