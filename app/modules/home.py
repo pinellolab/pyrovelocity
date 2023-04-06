@@ -7,7 +7,6 @@ from utils.html_factory import make_img
 from utils.html_factory import st_write_bs4
 
 
-# Title
 TITLE_P1 = ""
 TITLE_P2 = "Probabilistic modeling"
 TITLE_P3 = "of RNA velocity"
@@ -60,7 +59,7 @@ BIG_LOGO_IMG = make_img(
     src=Path("./docs/_static/logo.png"),
 )
 
-# main
+
 def st_show():
     st_write_bs4(BIG_LOGO_IMG)
     st_write_bs4(BIG_TITLE_DIV)

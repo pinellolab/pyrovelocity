@@ -1,7 +1,6 @@
 import altair as alt
 
 
-# define a custom altair theme
 def custom_theme():
 
     font = "LMSans10"
@@ -19,7 +18,7 @@ def custom_theme():
             "legend": {"titleFontSize": 14, "labelFontSize": 12, "font": font},
             "mark": {
                 "fontSize": 14,
-                "tooltip": {"content": "encoding"},  # enable tooltips
+                "tooltip": {"content": "encoding"},
                 "font": font,
             },
         }

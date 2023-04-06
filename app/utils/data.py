@@ -20,7 +20,7 @@ def generate_sample_data():
 
 
 def filter_var_counts_to_df(adata, min_spliced_counts, min_unspliced_counts):
-    # Create DataFrames for spliced and unspliced counts
+    # create dataframes for spliced and unspliced counts
     spliced_df = pd.DataFrame(
         adata.layers["spliced"], index=adata.obs_names, columns=adata.var_names
     )
@@ -28,7 +28,7 @@ def filter_var_counts_to_df(adata, min_spliced_counts, min_unspliced_counts):
         adata.layers["unspliced"], index=adata.obs_names, columns=adata.var_names
     )
 
-    # Melt the DataFrames to long format
+    # melt the dataframes to long format
     spliced_melted = spliced_df.reset_index().melt(
         id_vars="index", var_name="var_name", value_name="spliced"
     )
@@ -36,16 +36,16 @@ def filter_var_counts_to_df(adata, min_spliced_counts, min_unspliced_counts):
         id_vars="index", var_name="var_name", value_name="unspliced"
     )
 
-    # Combine the DataFrames
+    # combine the dataframes
     df = spliced_melted.merge(unspliced_melted, on=["index", "var_name"])
 
-    # Rename the 'index' column to 'obs_name'
+    # rename the 'index' column
     df = df.rename(columns={"index": "obs_name"})
 
     spliced_var_gt_threshold = (spliced_df > min_spliced_counts).sum().sum()
     unspliced_var_gt_threshold = (unspliced_df > min_unspliced_counts).sum().sum()
 
-    # Filter the DataFrame to include only rows where either the spliced or unspliced count is greater than 0
+    # filter the dataframe to include rows where the spliced or unspliced counts are greater than 0
     df_filtered = df[
         (df["spliced"] > min_spliced_counts) | (df["unspliced"] > min_unspliced_counts)
     ]
@@ -70,13 +70,6 @@ def interactive_spliced_unspliced_plot(
     if selected_obs is None:
         selected_obs = []
 
-    # color_condition = alt.condition(
-    #     (alt.datum.var_name in selected_vars | alt.datum.obs_name in selected_obs),
-    #     alt.value("green"),
-    #     alt.value("gray"),
-    # )
-
-    # Create a new column to indicate whether a data point should be highlighted
     df["highlight"] = df["var_name"].isin(selected_vars) | df["obs_name"].isin(
         selected_obs
     )

@@ -962,7 +962,7 @@ class VelocityModelAuto(AuxCellVelocityModel):
                 self.guide_type != "auto"
                 and pyro.__version__.startswith("1.8.1")
                 or self.guide_type == "auto"
-            ):  # parallel still memory leaky from pip install
+            ):  # parallel leads to memory leak
                 enum = "parallel"
             elif (
                 self.guide_type != "auto"
