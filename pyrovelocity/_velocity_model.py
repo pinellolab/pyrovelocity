@@ -455,25 +455,17 @@ class VelocityModel(LogNormalModel):
             beta = self.beta
             gamma = self.gamma
             switching = self.switching
-            u_scale = self.u_scale  # if self.likelihood == 'Normal' else None
-            s_scale = self.s_scale  # if self.likelihood == 'Normal' else None
-            ##u_inf = self.u_inf
-            ##s_inf = self.s_inf
-            ##switching = tau_inv(u_inf, s_inf, self.zero, self.zero, alpha, beta, gamma)
-            ##switching = pyro.sample("switching", Normal(switching, self.one*0.1))
+            u_scale = self.u_scale
+            s_scale = self.s_scale
             if self.t_scale_on and self.shared_time:
                 t_scale = self.t_scale
             if self.latent_factor_operation == "selection":
                 p_velocity = self.p_velocity
 
-            # if self.latent_factor_operation == 'selection':
-            #    velocity_genecellpair = pyro.sample("genecellpair_type", Bernoulli(self.one))
             if self.latent_factor == "linear":
                 u_pcs_mean = pyro.sample("u_pcs_mean", Normal(self.zero, self.one))
                 s_pcs_mean = pyro.sample("s_pcs_mean", Normal(self.zero, self.one))
             u_inf, s_inf = mRNA(switching, self.zero, self.zero, alpha, beta, gamma)
-            # u_inf = pyro.sample("u_inf", Normal(u_inf, u_scale))
-            # s_inf = pyro.sample("s_inf", Normal(s_inf, s_scale))
 
         if self.latent_factor == "linear":
             cell_codebook = self.cell_codebook
@@ -483,15 +475,6 @@ class VelocityModel(LogNormalModel):
             with cell_plate:
                 cell_time = self.cell_time
 
-        # if self.likelihood in ["NB", "Poisson"]:
-        #     # with cell_plate:
-        #     #    u_read_depth = pyro.sample('u_read_depth', dist.LogNormal(u_log_library, self.one))
-        #     #    s_read_depth = pyro.sample('s_read_depth', dist.LogNormal(s_log_library, self.one))
-        #     u_read_depth = None
-        #     s_read_depth = None
-        # else:
-        #     u_read_depth = None
-        #     s_read_depth = None
         u_read_depth = None
         s_read_depth = None
 
@@ -508,7 +491,6 @@ class VelocityModel(LogNormalModel):
             u0_vec = torch.where(state, self.zero, u_inf)
             s0_vec = torch.where(state, self.zero, s_inf)
             alpha_vec = torch.where(state, alpha, self.zero)
-            # tau = softplus(torch.where(state, t, t - switching))
             tau = relu(torch.where(state, t, t - switching))
             ut, st = mRNA(tau, u0_vec, s0_vec, alpha_vec, beta, gamma)
             if self.latent_factor_operation == "selection":
