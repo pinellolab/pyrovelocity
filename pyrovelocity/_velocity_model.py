@@ -975,12 +975,6 @@ class VelocityModelAuto(AuxCellVelocityModel):
             gamma = self.gamma
             beta = self.beta
 
-            # if self.cell_specific_kinetics is not None:
-            #     rho, _ = self.multikinetics_encoder(cell_state)
-            #     alpha = rho * alpha
-            #     beta = beta * rho
-            #     gamma = gamma * rho
-
             if self.add_offset:
                 u0 = pyro.sample("u_offset", LogNormal(self.zero, self.one))
                 s0 = pyro.sample("s_offset", LogNormal(self.zero, self.one))
@@ -993,7 +987,6 @@ class VelocityModelAuto(AuxCellVelocityModel):
                 u_scale = self.u_scale
                 s_scale = self.one
             else:
-                # NegativeBinomial and Poisson model
                 u_scale = s_scale = self.one
 
             if self.likelihood == "Normal":
@@ -1013,22 +1006,6 @@ class VelocityModelAuto(AuxCellVelocityModel):
             t = pyro.sample(
                 "cell_time", LogNormal(self.zero, self.one).mask(self.include_prior)
             )
-            # physical time constraint or cytotrace constraint
-            # if time_info is not None:
-            #     physical_time = pyro.sample("physical_time", Bernoulli(logits=t), obs=time_info)
-            ## Gioele's suggestion
-            # alpha = alpha * t
-            # beta = beta * t
-            # gamma = gamma * t
-            # dt_switching = dt_switching * t
-            # with gene_plate:
-            #    if self.cell_specific_kinetics is None:
-            #        u_inf, s_inf = mRNA(dt_switching, u0, s0, alpha, beta, gamma)
-            #        u_inf = pyro.deterministic("u_inf", u_inf, event_dim=0)
-            #        s_inf = pyro.deterministic("s_inf", s_inf, event_dim=0)
-            #        switching = pyro.deterministic("switching", dt_switching + t0, event_dim=0)
-            #    else:
-            #        switching = u_inf = s_inf = None
 
         with cell_plate:
             u_cell_size_coef = ut_coef = s_cell_size_coef = st_coef = None
@@ -1045,7 +1022,6 @@ class VelocityModelAuto(AuxCellVelocityModel):
                         "s_read_depth", LogNormal(s_log_library, s_log_library_scale)
                     )
                     if self.correct_library_size == "cell_size_regress":
-                        # cell-wise coef per cell
                         u_cell_size_coef = pyro.sample(
                             "u_cell_size_coef", Normal(self.zero, self.one)
                         )
@@ -1062,11 +1038,6 @@ class VelocityModelAuto(AuxCellVelocityModel):
                     pyro.sample(
                         "time_constraint", Bernoulli(logits=t - t0), obs=self.one
                     )
-                # constraint u_inf > u0, s_inf > s0, reduce performance..
-                # pyro.sample("u_inf_constraint", Bernoulli(logits=alpha/beta-u0), obs=self.one)
-                # pyro.sample("s_inf_constraint", Bernoulli(logits=alpha/gamma-s0), obs=self.one)
-                # pyro.sample("u_inf_constraint2", Bernoulli(logits=alpha/beta-u_inf), obs=self.one)
-                # pyro.sample("s_inf_constraint2", Bernoulli(logits=alpha/gamma-s_inf), obs=self.one)
                 ut, st = self.get_rna(
                     u_scale,
                     s_scale,
