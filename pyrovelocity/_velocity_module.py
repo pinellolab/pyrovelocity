@@ -7,28 +7,68 @@ from pyro.infer.autoguide import AutoNormal
 from pyro.infer.autoguide.guides import AutoGuideList
 from scvi.module.base import PyroBaseModuleClass
 
-# from ._velocity_model import AuxCellVelocityModel
-# from ._velocity_model import AuxTrajectoryModel
-# from ._velocity_model import DecoderTimeModel
-# from ._velocity_model import LatentFactor
-# from ._velocity_model import MultiKineticsModelDirichlet
-# from ._velocity_model import MultiKineticsModelDirichletLinear
-# from ._velocity_model import VelocityModel
-from ._velocity_model import VelocityModelAuto
-
-
-# from ._velocity_guide import LatentGuide
-# from ._velocity_guide import AutoDeltaRNAVelocityGuide
-# from ._velocity_guide import AutoNormalRNAVelocityGuide
-# from ._velocity_guide import AuxCellVelocityGuide
-# from ._velocity_guide import DecoderTimeGuide
-# from ._velocity_guide import MultiKineticsGuide
-# from ._velocity_guide import TrajectoryGuide
-# from ._velocity_guide import VelocityAutoGuideList
-# from ._velocity_guide import VelocityGuide
+from pyrovelocity._velocity_model import VelocityModelAuto
 
 
 class VelocityModule(PyroBaseModuleClass):
+    """
+    VelocityModule is an scvi-tools pyro module that combines the VelocityModelAuto and pyro AutoGuideList classes.
+
+    Args:
+        num_cells (int): Number of cells.
+        num_genes (int): Number of genes.
+        model_type (str, optional): Model type. Default is "auto".
+        guide_type (str, optional): Guide type. Default is "velocity_auto".
+        likelihood (str, optional): Likelihood type. Default is "Poisson".
+        shared_time (bool, optional): If True, a shared time parameter will be used. Default is True.
+        t_scale_on (bool, optional): If True, scale time parameter. Default is False.
+        plate_size (int, optional): Size of the plate set. Default is 2.
+        latent_factor (str, optional): Latent factor. Default is "none".
+        latent_factor_operation (str, optional): Latent factor operation mode. Default is "selection".
+        latent_factor_size (int, optional): Size of the latent factor. Default is 10.
+        inducing_point_size (int, optional): Inducing point size. Default is 0.
+        include_prior (bool, optional): If True, include prior in the model. Default is False.
+        use_gpu (int, optional): GPU device index. Default is 0.
+        num_aux_cells (int, optional): Number of auxiliary cells. Default is 0.
+        only_cell_times (bool, optional): If True, only model cell times. Default is True.
+        decoder_on (bool, optional): If True, use the decoder. Default is False.
+        add_offset (bool, optional): If True, add offset to the model. Default is True.
+        correct_library_size (Union[bool, str], optional): Library size correction method. Default is True.
+        cell_specific_kinetics (Optional[str], optional): Cell-specific kinetics method. Default is None.
+        kinetics_num (Optional[int], optional): Number of kinetics. Default is None.
+        **initial_values: Initial values for the model parameters.
+
+    Examples:
+        >>> from scvi.module.base import PyroBaseModuleClass
+        >>> from pyrovelocity._velocity_module import VelocityModule
+        >>> num_cells = 10
+        >>> num_genes = 20
+        >>> velocity_module1 = VelocityModule(
+        ...     num_cells, num_genes, model_type="auto",
+        ...     guide_type="auto_t0_constraint", add_offset=False
+        ... )
+        -----------
+        auto
+        auto_t0_constraint
+        {}
+        >>> type(velocity_module1.model)
+        <class 'pyrovelocity._velocity_model.VelocityModelAuto'>
+        >>> type(velocity_module1.guide)
+        <class 'pyro.infer.autoguide.guides.AutoGuideList'>
+        >>> velocity_module2 = VelocityModule(
+        ...     num_cells, num_genes, model_type="auto",
+        ...     guide_type="auto", add_offset=True
+        ... )
+        -----------
+        auto
+        auto
+        {}
+        >>> type(velocity_module2.model)
+        <class 'pyrovelocity._velocity_model.VelocityModelAuto'>
+        >>> type(velocity_module2.guide)
+        <class 'pyro.infer.autoguide.guides.AutoGuideList'>
+    """
+
     def __init__(
         self,
         num_cells: int,
