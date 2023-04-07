@@ -23,19 +23,69 @@ from torch.nn.functional import softplus
 
 
 def inv(x: torch.Tensor) -> torch.Tensor:
+    """
+    Computes the element-wise reciprocal of a tensor.
+
+    Args:
+        x (torch.Tensor): Input tensor.
+
+    Returns:
+        torch.Tensor: Tensor with element-wise reciprocal of x.
+
+    Examples:
+        >>> import torch
+        >>> x = torch.tensor([2., 4., 0.5])
+        >>> inv(x)
+        tensor([0.5000, 0.2500, 2.0000])
+    """
     return x.reciprocal()
 
 
 def log(x):
+    """
+    Computes the element-wise natural logarithm of a tensor, while clipping
+    its values to avoid numerical instability.
+
+    Args:
+        x (torch.Tensor): Input tensor.
+
+    Returns:
+        torch.Tensor: Tensor with element-wise natural logarithm of x.
+
+    Examples:
+        >>> import torch
+        >>> x = torch.tensor([0.0001, 0.5, 0.9999])
+        >>> log(x)
+        tensor([-9.2103e+00, -6.9315e-01, -1.0002e-04])
+    """
     eps = torch.finfo(x.dtype).eps
     return torch.log(x.clamp(eps, 1 - eps))
 
 
-def protein():
-    pass
-
-
 def velocity_dus_dt(alpha, beta, gamma, tau, x):
+    """
+    Computes the velocity du/dt and ds/dt.
+
+    Args:
+        alpha (torch.Tensor): Alpha parameter.
+        beta (torch.Tensor): Beta parameter.
+        gamma (torch.Tensor): Gamma parameter.
+        tau (torch.Tensor): Time points.
+        x (Tuple[torch.Tensor, torch.Tensor]): Tuple containing u and s.
+
+    Returns:
+        Tuple[torch.Tensor, torch.Tensor]: Tuple containing du/dt and ds/dt.
+
+    Examples:
+        >>> import torch
+        >>> alpha = torch.tensor(0.5)
+        >>> beta = torch.tensor(0.4)
+        >>> gamma = torch.tensor(0.3)
+        >>> tau = torch.tensor(2.0)
+        >>> x = (torch.tensor(1.0), torch.tensor(0.5))
+        >>> velocity_dus_dt(alpha, beta, gamma, tau, x)
+        (tensor(0.1000), tensor(0.2500))
+    """
     u, s = x
     du_dt = alpha - beta * u
     ds_dt = beta * u - gamma * s
@@ -44,8 +94,26 @@ def velocity_dus_dt(alpha, beta, gamma, tau, x):
 
 def rescale_time(dx_dt, t_start, t_end):
     """
-    Convert an ODE to be solved on a batch of different time intervals
-      into an equivalent system of ODEs to be solved on [0, 1].
+    Converts an ODE to be solved on a batch of different time intervals into an
+    equivalent system of ODEs to be solved on [0, 1].
+
+    Args:
+        dx_dt (Callable): Function representing the ODE system.
+        t_start (torch.Tensor): Start time of the time interval.
+        t_end (torch.Tensor): End time of the time interval.
+
+    Returns:
+        Callable: Function representing the rescaled ODE system.
+
+    Examples:
+        >>> import torch
+        >>> def dx_dt(t, x):
+        ...     return -x
+        >>> t_start = torch.tensor(0.0)
+        >>> t_end = torch.tensor(1.0)
+        >>> rescaled_dx_dt = rescale_time(dx_dt, t_start, t_end)
+        >>> rescaled_dx_dt(torch.tensor(0.5), torch.tensor(2.0))
+        tensor(-2.)
     """
     dt = t_end - t_start
 
@@ -66,6 +134,32 @@ def rescale_time(dx_dt, t_start, t_end):
 
 
 def ode_mRNA(tau, u0, s0, alpha, beta, gamma):
+    """
+    Solves the ODE system for mRNA dynamics.
+
+    Args:
+        tau (torch.Tensor): Time points.
+        u0 (torch.Tensor): Initial value of u.
+        s0 (torch.Tensor): Initial value of s.
+        alpha (torch.Tensor): Alpha parameter.
+        beta (torch.Tensor): Beta parameter.
+        gamma (torch.Tensor): Gamma parameter.
+
+    Returns:
+        Tuple[torch.Tensor, torch.Tensor]: Tuple containing the final values of u and s.
+    """
+    """
+    Examples:
+        >>> import torch
+        >>> tau = torch.tensor(2.0)
+        >>> u0 = torch.tensor(1.0)
+        >>> s0 = torch.tensor(0.5)
+        >>> alpha = torch.tensor(0.5)
+        >>> beta = torch.tensor(0.4)
+        >>> gamma = torch.tensor(0.3)
+        >>> ode_mRNA(tau, u0, s0, alpha, beta, gamma)
+        (tensor(0.6703), tensor(0.4596))
+    """
     dx_dt = functools.partial(velocity_dus_dt, alpha, beta, gamma)
     dx_dt = rescale_time(
         dx_dt, torch.tensor(0.0, dtype=tau.dtype, device=tau.device), tau
@@ -87,6 +181,31 @@ def mRNA(
     beta: torch.Tensor,
     gamma: torch.Tensor,
 ) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    Computes the mRNA dynamics given the parameters and initial conditions.
+
+    Args:
+        tau (torch.Tensor): Time points.
+        u0 (torch.Tensor): Initial value of u.
+        s0 (torch.Tensor): Initial value of s.
+        alpha (torch.Tensor): Alpha parameter.
+        beta (torch.Tensor): Beta parameter.
+        gamma (torch.Tensor): Gamma parameter.
+
+    Returns:
+        Tuple[torch.Tensor, torch.Tensor]: Tuple containing the final values of u and s.
+
+    Examples:
+        >>> import torch
+        >>> tau = torch.tensor(2.0)
+        >>> u0 = torch.tensor(1.0)
+        >>> s0 = torch.tensor(0.5)
+        >>> alpha = torch.tensor(0.5)
+        >>> beta = torch.tensor(0.4)
+        >>> gamma = torch.tensor(0.3)
+        >>> mRNA(tau, u0, s0, alpha, beta, gamma)
+        (tensor(1.1377), tensor(0.9269))
+    """
     expu, exps = torch.exp(-beta * tau), torch.exp(-gamma * tau)
 
     # invalid values caused by below codes:
@@ -114,6 +233,33 @@ def mRNA(
 
 
 def tau_inv(u=None, s=None, u0=None, s0=None, alpha=None, beta=None, gamma=None):
+    """
+    Computes the inverse tau given the parameters and initial conditions.
+
+    Args:
+        u (torch.Tensor): Value of u.
+        s (torch.Tensor): Value of s.
+        u0 (torch.Tensor): Initial value of u.
+        s0 (torch.Tensor): Initial value of s.
+        alpha (torch.Tensor): Alpha parameter.
+        beta (torch.Tensor): Beta parameter.
+        gamma (torch.Tensor): Gamma parameter.
+
+    Returns:
+        torch.Tensor: Inverse tau.
+
+    Examples:
+        >>> import torch
+        >>> u = torch.tensor(0.6703)
+        >>> s = torch.tensor(0.4596)
+        >>> u0 = torch.tensor(1.0)
+        >>> s0 = torch.tensor(0.5)
+        >>> alpha = torch.tensor(0.5)
+        >>> beta = torch.tensor(0.4)
+        >>> gamma = torch.tensor(0.3)
+        >>> tau_inv(u, s, u0, s0, alpha, beta, gamma)
+        tensor(3.9736e-07)
+    """
     beta_ = beta * inv(gamma - beta)
     xinf = alpha / gamma - beta_ * (alpha / beta)
     tau1 = -1.0 / gamma * log((s - beta_ * u - xinf) * inv(s0 - beta_ * u0 - xinf))
@@ -124,22 +270,88 @@ def tau_inv(u=None, s=None, u0=None, s0=None, alpha=None, beta=None, gamma=None)
     return relu(tau)
 
 
-def debug(x):
-    if torch.any(torch.isnan(x)):
-        print("nan number: ", torch.isnan(x).sum())
-        pdb.set_trace()
-
-
 def mse_loss_sum(u_model, s_model, u_data, s_data):
+    """
+    Computes the mean squared error loss sum between the model and data.
+
+    Args:
+        u_model (torch.Tensor): Predicted values of u from the model.
+        s_model (torch.Tensor): Predicted values of s from the model.
+        u_data (torch.Tensor): True values of u from the data.
+        s_data (torch.Tensor): True values of s from the data.
+
+    Returns:
+        torch.Tensor: Mean squared error loss sum.
+
+    Examples:
+        >>> import torch
+        >>> u_model = torch.tensor([0.5, 0.6])
+        >>> s_model = torch.tensor([0.7, 0.8])
+        >>> u_data = torch.tensor([0.4, 0.5])
+        >>> s_data = torch.tensor([0.6, 0.7])
+        >>> mse_loss_sum(u_model, s_model, u_data, s_data)
+        tensor(0.0200)
+    """
     return ((u_model - u_data) ** 2 + (s_model - s_data) ** 2).mean(0)
 
 
-def site_is_discrete(site: dict) -> bool:
-    return (
-        site["type"] == "sample"
-        and not site["is_observed"]
-        and getattr(site["fn"], "has_enumerate_support", False)
-    )
+def get_velocity_samples(posterior_samples, model):
+    """
+    Computes the velocity samples from the posterior samples.
+
+    Args:
+        posterior_samples (dict): Dictionary containing posterior samples.
+        model: Model used for predictions.
+
+    Returns:
+        torch.Tensor: Velocity samples.
+
+    Examples:
+        >>> import torch
+        >>> posterior_samples = {
+        ...     "beta": torch.tensor([[0.4]]),
+        ...     "gamma": torch.tensor([[0.3]]),
+        ...     "u_scale": torch.tensor([[[1.0, 2.0]]]),
+        ...     "s_scale": torch.tensor([[[2.0, 4.0]]]),
+        ...     "u": torch.tensor([[1.0, 2.0]]),
+        ...     "s": torch.tensor([[0.5, 1.0]])
+        ... }
+        >>> model = None  # Model is not used in the function
+        >>> get_velocity_samples(posterior_samples, model)
+        tensor([[0.6500, 1.3000]])
+    """
+    beta = posterior_samples["beta"].mean(0)[0]
+    gamma = posterior_samples["gamma"].mean(0)[0]
+    scale = (
+        posterior_samples["u_scale"][:, 0, :] / posterior_samples["s_scale"][:, 0, :]
+    ).mean(0)
+    ut = posterior_samples["u"] / scale
+    st = posterior_samples["s"]
+    v = beta * ut - gamma * st
+    return v
+
+
+def mae(pred_counts, true_counts):
+    """
+    Computes the mean average error between predicted counts and true counts.
+
+    Args:
+        pred_counts (np.ndarray): Predicted counts.
+        true_counts (np.ndarray): True counts.
+
+    Returns:
+        float: Mean average error.
+
+    Examples:
+        >>> import numpy as np
+        >>> pred_counts = np.array([[1, 2], [3, 4]])
+        >>> true_counts = np.array([[2, 3], [4, 5]])
+        >>> mae(pred_counts, true_counts)
+        1.0
+    """
+    error = np.abs(true_counts - pred_counts).sum()
+    total = pred_counts.shape[0] * pred_counts.shape[1]
+    return (error / total).mean().item()
 
 
 def init_with_all_cells(
@@ -336,25 +548,6 @@ def init_with_all_cells(
     return init_values
 
 
-def get_velocity_samples(posterior_samples, model):
-    beta = posterior_samples["beta"].mean(0)[0]
-    gamma = posterior_samples["gamma"].mean(0)[0]
-    scale = (
-        posterior_samples["u_scale"][:, 0, :] / posterior_samples["s_scale"][:, 0, :]
-    ).mean(0)
-    ut = posterior_samples["u"] / scale
-    st = posterior_samples["s"]
-    v = beta * ut - gamma * st
-    return v
-
-
-def mae(pred_counts, true_counts):
-    """Computes mean average error between counts and predicted probabilities."""
-    error = np.abs(true_counts - pred_counts).sum()
-    total = pred_counts.shape[0] * pred_counts.shape[1]
-    return (error / total).mean().item()
-
-
 def mae_evaluate(pos, adata):
     import matplotlib.pyplot as plt
 
@@ -402,6 +595,20 @@ def mae_evaluate(pos, adata):
     ax.tick_params(axis="x", rotation=90)
     print(df.groupby("label").mean())
     return df
+
+
+def debug(x):
+    if torch.any(torch.isnan(x)):
+        print("nan number: ", torch.isnan(x).sum())
+        pdb.set_trace()
+
+
+def site_is_discrete(site: dict) -> bool:
+    return (
+        site["type"] == "sample"
+        and not site["is_observed"]
+        and getattr(site["fn"], "has_enumerate_support", False)
+    )
 
 
 def get_pylogger(name=__name__, log_level="DEBUG") -> logging.Logger:
