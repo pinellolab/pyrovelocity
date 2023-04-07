@@ -948,6 +948,71 @@ class VelocityModelAuto(AuxCellVelocityModel):
         u_inf: Optional[torch.Tensor] = None,
         s_inf: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Computes the unspliced (u) and spliced (s) RNA expression levels given the model parameters.
+
+        Args:
+            u_scale (torch.Tensor): Scaling factor for unspliced expression.
+            s_scale (torch.Tensor): Scaling factor for spliced expression.
+            alpha (torch.Tensor): Transcription rate.
+            beta (torch.Tensor): Splicing rate.
+            gamma (torch.Tensor): Degradation rate.
+            t (torch.Tensor): Cell time.
+            u0 (torch.Tensor): Unspliced RNA initial expression.
+            s0 (torch.Tensor): Spliced RNA initial expression.
+            t0 (torch.Tensor): Initial cell time.
+            switching (Optional[torch.Tensor], optional): Switching time. Default is None.
+            u_inf (Optional[torch.Tensor], optional): Unspliced RNA expression at switching time. Default is None.
+            s_inf (Optional[torch.Tensor], optional): Spliced RNA expression at switching time. Default is None.
+
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor]: The unspliced (u) and spliced (s) RNA expression levels.
+
+        Examples:
+            >>> import torch
+            >>> from pyrovelocity._velocity_model import VelocityModelAuto
+            >>> model = VelocityModelAuto(
+            ...             3,
+            ...             4,
+            ...             "Poisson",
+            ...             True,
+            ...             False,
+            ...             2,
+            ...             "none",
+            ...             latent_factor_operation="selection",
+            ...             latent_factor_size=10,
+            ...             include_prior=False,
+            ...             num_aux_cells=0,
+            ...             only_cell_times=True,
+            ...             decoder_on=False,
+            ...             add_offset=False,
+            ...             correct_library_size=True,
+            ...             guide_type="auto_t0_constraint",
+            ...             cell_specific_kinetics=None,
+            ...             **{}
+            ...         )
+            >>> u, s = model.get_rna(
+            ...            u_scale=torch.tensor([0.9793, 1.0567, 0.8610, 0.9304], device="cpu"),
+            ...            s_scale=torch.tensor(1.0),
+            ...            alpha=torch.tensor([0.4869, 1.5997, 1.3962, 0.5038], device="cpu"),
+            ...            beta=torch.tensor([0.5403, 1.1192, 0.9912, 1.1783], device="cpu"),
+            ...            gamma=torch.tensor([1.9612, 0.5533, 2.1050, 4.9345], device="cpu"),
+            ...            t=torch.tensor([[0.4230], [0.5119], [0.2689]], device="cpu"),
+            ...            u0=torch.tensor(0.0),
+            ...            s0=torch.tensor(0.0),
+            ...            t0=torch.tensor([-0.4867, 0.5581, -0.6957, 0.6028], device="cpu"),
+            ...            switching=torch.tensor([1.1886, 1.1227, 0.6789, 4.1003], device="cpu"),
+            ...            u_inf=torch.tensor([0.5367, 0.6695, 1.0479, 0.4206], device="cpu"),
+            ...            s_inf=torch.tensor([0.1132, 0.2100, 0.3750, 0.0999], device="cpu"),
+            >>>        )
+            >>> u, s
+            (tensor([[0.4329, 0.7624, 0.5111, 0.2033],
+            [0.4209, 0.7971, 0.9301, 0.2126],
+            [0.4060, 0.7024, 0.5448, 0.1873]]),
+            tensor([[0.0818, 0.2512, 0.3615, 0.0381],
+            [0.1229, 0.2801, 0.3978, 0.0410],
+            [0.0733, 0.2065, 0.3721, 0.0333]]))
+        """
         if self.cell_specific_kinetics is None:
             if (
                 self.guide_type != "auto"
@@ -1001,6 +1066,68 @@ class VelocityModelAuto(AuxCellVelocityModel):
         cell_state: Optional[torch.Tensor] = None,
         time_info: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Defines the forward model, which computes the unspliced (u) and spliced (s) RNA expression levels given the observations and model parameters.
+
+        Args:
+            u_obs (Optional[torch.Tensor], optional): Observed unspliced RNA expression. Default is None.
+            s_obs (Optional[torch.Tensor], optional): Observed spliced RNA expression. Default is None.
+            u_log_library (Optional[torch.Tensor], optional): Log-transformed library size for unspliced RNA. Default is None.
+            s_log_library (Optional[torch.Tensor], optional): Log-transformed library size for spliced RNA. Default is None.
+            u_log_library_loc (Optional[torch.Tensor], optional): Mean of log-transformed library size for unspliced RNA. Default is None.
+            s_log_library_loc (Optional[torch.Tensor], optional): Mean of log-transformed library size for spliced RNA. Default is None.
+            u_log_library_scale (Optional[torch.Tensor], optional): Scale of log-transformed library size for unspliced RNA. Default is None.
+            s_log_library_scale (Optional[torch.Tensor], optional): Scale of log-transformed library size for spliced RNA. Default is None.
+            ind_x (Optional[torch.Tensor], optional): Indices for the cells. Default is None.
+            cell_state (Optional[torch.Tensor], optional): Cell state information. Default is None.
+            time_info (Optional[torch.Tensor], optional): Time information for the cells. Default is None.
+
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor]: The unspliced (u) and spliced (s) RNA expression levels.
+
+        Examples:
+            >>> import torch
+            >>> from pyrovelocity._velocity_model import VelocityModelAuto
+            >>> u_obs=torch.tensor(
+            ...     [[33.,  1.,  7.,  1.],
+            ...     [12., 30., 11.,  3.],
+            ...     [ 1.,  1.,  8.,  5.]],
+            ...     device="cpu",
+            >>> )
+            >>> s_obs=torch.tensor(
+            ...     [[32.0, 0.0, 6.0, 0.0],
+            ...     [11.0, 29.0, 10.0, 2.0],
+            ...     [0.0, 0.0, 7.0, 4.0]],
+            ...     device="cpu",
+            >>> )
+            >>> u_log_library=torch.tensor([[3.7377], [4.0254], [2.7081]], device="cpu")
+            >>> s_log_library=torch.tensor([[3.6376], [3.9512], [2.3979]], device="cpu")
+            >>> u_log_library_loc=torch.tensor([[3.4904], [3.4904], [3.4904]], device="cpu")
+            >>> s_log_library_loc=torch.tensor([[3.3289], [3.3289], [3.3289]], device="cpu")
+            >>> u_log_library_scale=torch.tensor([[0.6926], [0.6926], [0.6926]], device="cpu")
+            >>> s_log_library_scale=torch.tensor([[0.8214], [0.8214], [0.8214]], device="cpu")
+            >>> ind_x=torch.tensor([2, 0, 1], device="cpu")
+            >>> model = VelocityModelAuto(3,4)
+            >>> u, s = model.forward(
+            >>>            u_obs,
+            >>>            s_obs,
+            >>>            u_log_library,
+            >>>            s_log_library,
+            >>>            u_log_library_loc,
+            >>>            s_log_library_loc,
+            >>>            u_log_library_scale,
+            >>>            s_log_library_scale,
+            >>>            ind_x,
+            >>>        )
+            >>> u, s
+            (tensor([[33.,  1.,  7.,  1.],
+                    [12., 30., 11.,  3.],
+                    [ 1.,  1.,  8.,  5.]]),
+            tensor([[32.,  0.,  6.,  0.],
+                    [11., 29., 10.,  2.],
+                    [ 0.,  0.,  7.,  4.]]))
+        """
+
         cell_plate, gene_plate = self.create_plates(
             u_obs,
             s_obs,
