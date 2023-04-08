@@ -103,10 +103,9 @@ def load_data(
             scv.pp.remove_duplicate_cells(adata)
             adata.obsm["X_tsne"][:, 0] *= -1
 
-        #TypeError: Can't implicitly convert non-string objects to strings
-        #if process_cytotrace:
-        #    print("Processing data with cytotrace ...")
-        #    cytotrace_sparse(adata, layer="spliced")
+        if process_cytotrace:
+            print("Processing data with cytotrace ...")
+            cytotrace_sparse(adata, layer="spliced")
 
         scv.pp.filter_and_normalize(
             adata, min_shared_counts=min_shared_counts, n_top_genes=top_n
