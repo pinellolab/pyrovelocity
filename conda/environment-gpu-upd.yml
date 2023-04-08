@@ -16,19 +16,20 @@ channels:
 
 dependencies:
   - python
-  - leidenalg
+    # - leidenalg
   - pyro-ppl
   - pip
   - seaborn
   - scvelo
   - scvi-tools
-  - pytorch-lightning
-  - pytorch-gpu
-  - scikit-misc
-  - torchmetrics
-  - h5py
-  - anndata
+    #- pytorch-lightning
+    # - pytorch-gpu
+    # - scikit-misc
+    # - torchmetrics
+    # - h5py
+    # - anndata
   - adjusttext
+  - xdoctest
   - astropy
   - click
   - colorlog
@@ -44,10 +45,10 @@ dependencies:
   - plotnine
   - matplotlib
   # see: https://github.com/conda-incubator/conda-lock/issues/179
-  - pip:
-      - cospar
-      - hydra-zen
+  # - pip:
+  #     - cospar
+  #     - hydra-zen
 
-# Non-standard section listing target platforms for conda-lock:
-platforms:
-  - linux-64
+        ## Non-standard section listing target platforms for conda-lock:
+        #platforms:
+        #  - linux-64

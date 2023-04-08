@@ -12,6 +12,7 @@ from pyro.infer.autoguide.guides import AutoGuideList
 from sklearn.model_selection import train_test_split
 
 from pyrovelocity._velocity import PyroVelocity
+import pandas as pd
 
 
 def train_model(
@@ -39,6 +40,8 @@ def train_model(
     kinetics_num: int = 2,
     loss_plot_path: str = "loss_plot.png",
 ) -> Tuple[PyroVelocity, Dict[str, ndarray]]:
+    PyroVelocity.setup_anndata(adata)
+
     model = PyroVelocity(
         adata,
         likelihood=likelihood,
@@ -69,7 +72,6 @@ def train_model(
             patience=patient_init,
             min_delta=patient_improve,
         )
-        import pandas as pd
 
         fig, ax = plt.subplots()
         fig.set_size_inches(2.5, 1.5)

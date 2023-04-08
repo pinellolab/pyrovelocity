@@ -51,8 +51,8 @@ stages:
             rel_path: data/processed/pancreas_processed.h5ad
     outs:
     - path: data/processed/pancreas_processed.h5ad
-      md5: 7af1dfb39e8d77008a94b1c17c9c3858
-      size: 424767328
+      md5: 646e9cf49c77699851fa57487fbe85eb
+      size: 424666616
   train_pancreas_model1:
     cmd: /usr/bin/time -v python train.py model_training.train=[pancreas_model1]
     deps:

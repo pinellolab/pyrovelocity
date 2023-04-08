@@ -1,4 +1,5 @@
 import math
+import scipy
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -87,8 +88,8 @@ class EnumTrainingPlan(PyroTrainingPlan):
             pyro_velocity, TraceEnum_ELBO(strict_enumeration_warning=True), optim
         )
         self.svi = pyro.infer.SVI(
-            model=self.pyro_model,
-            guide=self.pyro_guide,
+            model=self.module.model,
+            guide=self.module.guide,
             optim=self.optim,
             loss=self.loss_fn,
         )
@@ -154,8 +155,9 @@ class VelocityTrainingMixin:
         print("base train function")
         pyro.clear_param_store()
         pyro.set_rng_seed(seed)
+
         data_splitter = DataSplitter(
-            self.adata,
+            self.adata_manager,
             train_size=train_size,
             validation_size=valid_size,
             batch_size=batch_size,
@@ -212,35 +214,48 @@ class VelocityTrainingMixin:
 
         normalizer = self.adata.shape[0] * self.adata.shape[1] * 2
         u = torch.tensor(
-            np.array(self.adata.layers["raw_unspliced"].toarray(), dtype="float32"),
+            np.array(self.adata.layers["raw_unspliced"].toarray(), dtype="float32") if scipy.sparse.issparse(self.adata.layers["raw_unspliced"]) else self.adata.layers["raw_unspliced"],
             dtype=torch.float32,
         ).to(device)
         s = torch.tensor(
-            np.array(self.adata.layers["raw_spliced"].toarray(), dtype="float32"),
+            np.array(self.adata.layers["raw_spliced"].toarray(), dtype="float32") if scipy.sparse.issparse(self.adata.layers["raw_spliced"]) else self.adata.layers["raw_spliced"],
             dtype=torch.float32,
         ).to(device)
+
+        epsilon = 1e-6
+
         u_library = torch.tensor(
-            np.array(self.adata.obs.u_lib_size, dtype="float32"), dtype=torch.float32
+            #np.array(self.adata.obs.u_lib_size, dtype="float32"), dtype=torch.float32
+            np.array(np.log(self.adata.obs.u_lib_size_raw+epsilon), dtype="float32"), dtype=torch.float32
         ).to(device)
         s_library = torch.tensor(
-            np.array(self.adata.obs.s_lib_size, dtype="float32"), dtype=torch.float32
+            #np.array(self.adata.obs.s_lib_size, dtype="float32"), dtype=torch.float32
+            np.array(np.log(self.adata.obs.s_lib_size_raw+epsilon), dtype="float32"), dtype=torch.float32
         ).to(device)
         u_library_mean = torch.tensor(
-            np.array(self.adata.obs.u_lib_size_mean, dtype="float32"),
+            #np.array(self.adata.obs.u_lib_size_mean, dtype="float32"),
+            np.mean(np.log(self.adata.obs.u_lib_size_raw+epsilon)),
             dtype=torch.float32,
-        ).to(device)
+        ).expand(u_library.shape).to(device)
         s_library_mean = torch.tensor(
-            np.array(self.adata.obs.s_lib_size_mean, dtype="float32"),
+            #np.array(self.adata.obs.s_lib_size_mean, dtype="float32"),
+            np.mean(np.log(self.adata.obs.s_lib_size_raw+epsilon)),
             dtype=torch.float32,
-        ).to(device)
+        ).expand(u_library.shape).to(device)
         u_library_scale = torch.tensor(
-            np.array(self.adata.obs.u_lib_size_scale, dtype="float32"),
+            #np.array(self.adata.obs.u_lib_size_scale, dtype="float32"),
+            np.std(np.log(self.adata.obs.u_lib_size_raw+epsilon)),
             dtype=torch.float32,
-        ).to(device)
+        ).expand(u_library.shape).to(device)
         s_library_scale = torch.tensor(
-            np.array(self.adata.obs.s_lib_size_scale, dtype="float32"),
+            #np.array(self.adata.obs.s_lib_size_scale, dtype="float32"),
+            np.std(np.log(self.adata.obs.s_lib_size_raw+epsilon)),
             dtype=torch.float32,
-        ).to(device)
+        ).expand(u_library.shape).to(device)
+
+        print(u_library_scale.shape)
+        print(u.shape)
+        print(u_library.shape)
         if "pyro_cell_state" in self.adata.obs.columns:
             cell_state = torch.tensor(
                 np.array(self.adata.obs.pyro_cell_state, dtype="float32"),

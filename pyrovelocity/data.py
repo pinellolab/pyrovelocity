@@ -8,17 +8,17 @@ import numpy as np
 import scvelo as scv
 import scvi
 from scanpy import read
-from scvi.data import register_tensor_from_anndata
-from scvi.data._anndata import _register_anndata
-from scvi.data._anndata import _setup_batch
-from scvi.data._anndata import _setup_extra_categorical_covs
-from scvi.data._anndata import _setup_extra_continuous_covs
-from scvi.data._anndata import _setup_labels
-from scvi.data._anndata import _setup_protein_expression
-from scvi.data._anndata import _setup_summary_stats
-from scvi.data._anndata import _setup_x
-from scvi.data._anndata import _verify_and_correct_data_format
-from scvi.data._anndata import logger
+#from scvi.data import register_tensor_from_anndata
+#from scvi.data._anndata import _register_anndata
+#from scvi.data._anndata import _setup_batch
+#from scvi.data._anndata import _setup_extra_categorical_covs
+#from scvi.data._anndata import _setup_extra_continuous_covs
+#from scvi.data._anndata import _setup_labels
+#from scvi.data._anndata import _setup_protein_expression
+#from scvi.data._anndata import _setup_summary_stats
+#from scvi.data._anndata import _setup_x
+#from scvi.data._anndata import _verify_and_correct_data_format
+#from scvi.data._anndata import logger
 
 from pyrovelocity.cytotrace import cytotrace_sparse
 from pyrovelocity.utils import print_anndata
@@ -103,9 +103,10 @@ def load_data(
             scv.pp.remove_duplicate_cells(adata)
             adata.obsm["X_tsne"][:, 0] *= -1
 
-        if process_cytotrace:
-            print("Processing data with cytotrace ...")
-            cytotrace_sparse(adata, layer="spliced")
+        #TypeError: Can't implicitly convert non-string objects to strings
+        #if process_cytotrace:
+        #    print("Processing data with cytotrace ...")
+        #    cytotrace_sparse(adata, layer="spliced")
 
         scv.pp.filter_and_normalize(
             adata, min_shared_counts=min_shared_counts, n_top_genes=top_n
