@@ -26,7 +26,6 @@ from pyrovelocity.utils import print_anndata
 # from scvi.data._anndata import logger
 
 
-
 def copy_raw_counts(
     adata: anndata._core.anndata.AnnData,
 ) -> anndata._core.anndata.AnnData:
