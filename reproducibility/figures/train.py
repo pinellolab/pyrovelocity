@@ -84,6 +84,8 @@ def train(conf: DictConfig, logger: Logger) -> None:
         else:
             gpu_id = False
 
+        print(gpu_id)
+
         if os.path.exists(model_path) and os.path.isfile(pyrovelocity_data_path):
             logger.info(
                 f"{processed_path}\n{model_path}\n{pyrovelocity_data_path}\nall exist"

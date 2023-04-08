@@ -553,7 +553,7 @@ def cytotrace_sparse(
     scores = rank / gcs.shape[0]
 
     print(gcs)
-    adata.obs["gcs"] = None
+    adata.obs["gcs"] = np.nan
     adata.obs.iloc[cells_selected, adata.obs.columns.get_loc("gcs")] = gcs
 
     cytoGenes = compute_similarity2(census_X.T.A, scores.reshape(-1, 1))[0, :]
@@ -564,7 +564,7 @@ def cytotrace_sparse(
     adata.obs["counts"] = np.nan
     adata.obs.iloc[cells_selected, adata.obs.columns.get_loc("counts")] = gcs
 
-    adata.var["cytotrace"] = np.nan
+    adata.var["cytotrace"] = False
     adata.var.iloc[features_selected, adata.var.columns.get_loc("cytotrace")] = True
 
     adata.var["cytotrace_corrs"] = np.nan

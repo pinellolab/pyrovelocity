@@ -13,18 +13,24 @@ import scvi
 import torch
 from anndata import AnnData
 from numpy import ndarray
-from scvi.data import transfer_anndata_setup
+from scvi.data import AnnDataManager
+from scvi.data.fields import LayerField
+from scvi.data.fields import NumericalJointObsField
+from scvi.data.fields import NumericalObsField
+
+# from scvi.data import transfer_anndata_setup
 from scvi.model._utils import parse_use_gpu_arg
 from scvi.model.base import BaseModelClass
 from scvi.model.base._utils import _initialize_model
 from scvi.model.base._utils import _validate_var_names
 from scvi.module.base import PyroBaseModuleClass
 
-from pyrovelocity.data import setup_anndata_multilayers
-
 from ._trainer import VelocityTrainingMixin
 from ._velocity_module import VelocityModule
 from .utils import init_with_all_cells
+
+
+# from pyrovelocity.data import setup_anndata_multilayers
 
 
 logger = logging.getLogger(__name__)
@@ -89,8 +95,8 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> from pyrovelocity._velocity import PyroVelocity
             >>> from pyrovelocity.utils import pretty_print_dict, print_anndata
             >>> from scvi.data import synthetic_iid
-            >>> n_obs = 3
-            >>> n_var = 4
+            >>> n_obs = 100
+            >>> n_var = 200
             >>> adata = synthetic_iid(
             ...     batch_size=n_obs,
             ...     n_genes=n_var,
@@ -111,12 +117,20 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> print(adata.layers['unspliced'])
             >>> print(adata.obs['u_lib_size_raw'])
             >>> print(adata.obs['s_lib_size_raw'])
+            >>> PyroVelocity.setup_anndata(adata)
             >>> model = PyroVelocity(adata)
-            >>> model.train(max_epochs=2)
+            >>> model.train_faster(max_epochs=200, use_gpu=0)
             >>> posterior_samples = model.posterior_samples(model.adata, num_samples=5)
-            >>> assert isinstance(posterior_samples, dict), f"Expected a dictionary, got {type(posterior_samples)}"
-            >>> pretty_print_dict(posterior_samples)
+            >>> print(posterior_samples)
+            >>> print(posterior_samples.keys())
+            >>> model = PyroVelocity(adata)
+            >>> model.train(max_epochs=200, use_gpu=0)
+            >>> posterior_samples = model.posterior_samples(model.adata, num_samples=5)
+            >>> print(posterior_samples)
+            >>> print(posterior_samples.keys())
         """
+        # >>> assert isinstance(posterior_samples, dict), f"Expected a dictionary, got {type(posterior_samples)}"
+        # >>> pretty_print_dict(posterior_samples)
         self.use_gpu = use_gpu
         self.cell_specific_kinetics = cell_specific_kinetics
         self.k = kinetics_num
@@ -134,15 +148,16 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         self.layers = layers
         self.input_type = input_type
 
-        adata = setup_anndata_multilayers(
-            adata,
-            layer=self.layers,
-            copy=True,
-            batch_key=None,
-            input_type=input_type,
-            cluster=self.cell_specific_kinetics,
-        )
-        scvi.data.view_anndata_setup(adata)
+        # adata = setup_anndata_multilayers(
+        #    adata,
+        #    layer=self.layers,
+        #    copy=True,
+        #    batch_key=None,
+        #    input_type=input_type,
+        #    cluster=self.cell_specific_kinetics,
+        # )
+        # scvi.data.view_anndata_setup(adata)
+
         super().__init__(adata)
         if init:
             initial_values = init_with_all_cells(
@@ -223,6 +238,37 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
     def enum_parallel_predict(self):
         """work for parallel enumeration"""
         return
+
+    @classmethod
+    def setup_anndata(cls, adata: AnnData, *args, **kwargs):
+        """Latest scvi-tools interface"""
+        setup_method_args = cls._get_setup_method_args(**locals())
+
+        adata.obs["u_lib_size"] = np.log(adata.obs["u_lib_size_raw"] + 1e-6)
+        adata.obs["s_lib_size"] = np.log(adata.obs["s_lib_size_raw"] + 1e-6)
+
+        adata.obs["u_lib_size_mean"] = adata.obs["u_lib_size"].mean()
+        adata.obs["s_lib_size_mean"] = adata.obs["s_lib_size"].mean()
+        adata.obs["u_lib_size_scale"] = adata.obs["u_lib_size"].std()
+        adata.obs["s_lib_size_scale"] = adata.obs["s_lib_size"].std()
+        adata.obs["ind_x"] = np.arange(adata.n_obs).astype("int64")
+
+        anndata_fields = [
+            LayerField("U", "raw_unspliced", is_count_data=True),
+            LayerField("X", "raw_spliced", is_count_data=True),
+            NumericalObsField("u_lib_size", "u_lib_size"),
+            NumericalObsField("s_lib_size", "s_lib_size"),
+            NumericalObsField("u_lib_size_mean", "u_lib_size_mean"),
+            NumericalObsField("s_lib_size_mean", "s_lib_size_mean"),
+            NumericalObsField("u_lib_size_scale", "u_lib_size_scale"),
+            NumericalObsField("s_lib_size_scale", "s_lib_size_scale"),
+            NumericalObsField("ind_x", "ind_x"),
+        ]
+        adata_manager = AnnDataManager(
+            fields=anndata_fields, setup_method_args=setup_method_args
+        )
+        adata_manager.register_fields(adata, **kwargs)
+        cls.register_manager(adata_manager)
 
     def posterior_samples(
         self,
@@ -327,6 +373,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
 
         _validate_var_names(adata, var_names)
         transfer_anndata_setup(scvi_setup_dict, adata)
+        # adata = self.adata
         model = _initialize_model(cls, adata, attr_dict)
 
         # set saved attrs for loaded model

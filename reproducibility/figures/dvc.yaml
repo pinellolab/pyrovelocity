@@ -116,8 +116,8 @@ stages:
           - base
           - data_external.scvelo.pancreas
     outs:
-      - ${data_external.scvelo.pancreas.derived.rel_path}:
-          persist: true
+      - ${data_external.scvelo.pancreas.derived.rel_path}
+        #          persist: true
 
   preprocess_pbmc68k:
     cmd: python preprocess.py data_external.sources=[scvelo] data_external.scvelo.process=[pbmc68k]
@@ -146,7 +146,8 @@ stages:
           persist: true
 
   train_pancreas_model1:
-    cmd: /usr/bin/time -v python train.py model_training.train=[pancreas_model1]
+    #cmd: /usr/bin/time -v python train.py model_training.train=[pancreas_model1]
+    cmd: python train.py model_training.train=[pancreas_model1]
     deps:
       - train.py
       - ${model_training.pancreas_model1.input_data_path}
