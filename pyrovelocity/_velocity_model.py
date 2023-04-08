@@ -1,6 +1,5 @@
 from typing import Any
 from typing import Dict
-from packaging import version
 from typing import Iterable
 from typing import Optional
 from typing import Tuple
@@ -9,6 +8,7 @@ from typing import Union
 import pyro
 import pyro.poutine as poutine
 import torch
+from packaging import version
 from pyro.distributions import Bernoulli
 from pyro.distributions import Beta
 from pyro.distributions import LogNormal
@@ -1006,18 +1006,18 @@ class VelocityModelAuto(AuxCellVelocityModel):
             ...            s_inf=torch.tensor([0.1132, 0.2100, 0.3750, 0.0999], device="cpu"),
             >>>        )
         """
-            #>>> u, s
-            #(tensor([[0.4329, 0.7624, 0.5111, 0.2033],
-            #[0.4209, 0.7971, 0.9301, 0.2126],
-            #[0.4060, 0.7024, 0.5448, 0.1873]]),
-            #tensor([[0.0818, 0.2512, 0.3615, 0.0381],
-            #[0.1229, 0.2801, 0.3978, 0.0410],
-            #[0.0733, 0.2065, 0.3721, 0.0333]]))
+        # >>> u, s
+        # (tensor([[0.4329, 0.7624, 0.5111, 0.2033],
+        # [0.4209, 0.7971, 0.9301, 0.2126],
+        # [0.4060, 0.7024, 0.5448, 0.1873]]),
+        # tensor([[0.0818, 0.2512, 0.3615, 0.0381],
+        # [0.1229, 0.2801, 0.3978, 0.0410],
+        # [0.0733, 0.2065, 0.3721, 0.0333]]))
         if self.cell_specific_kinetics is None:
             # enum = "parallel"
             if (
                 self.guide_type != "auto"
-                and version.parse(pyro.__version__) > version.parse('1.8.1')
+                and version.parse(pyro.__version__) > version.parse("1.8.1")
                 or self.guide_type == "auto"
             ):
                 enum = "parallel"

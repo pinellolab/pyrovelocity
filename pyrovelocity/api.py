@@ -4,6 +4,7 @@ from typing import Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from anndata._core.anndata import AnnData
 from numpy import ndarray
 from pyro import poutine
@@ -12,7 +13,6 @@ from pyro.infer.autoguide.guides import AutoGuideList
 from sklearn.model_selection import train_test_split
 
 from pyrovelocity._velocity import PyroVelocity
-import pandas as pd
 
 
 def train_model(

@@ -7,7 +7,7 @@ We provide python scripts as well as a [DVC pipeline](https://dvc.org/doc/user-g
 ```bash
 mamba env create -n pv2 -f conda/environment-gpu-upd.yml
 conda activate pv2
-pip install xdoctest or mamba install -y xdoctest 
+pip install xdoctest or mamba install -y xdoctest
 ```
 
 ## Debugging development dependencies in flux
