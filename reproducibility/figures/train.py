@@ -84,7 +84,6 @@ def train(conf: DictConfig, logger: Logger) -> None:
         else:
             gpu_id = False
 
-        gpu_id = False
         print(gpu_id)
 
         if os.path.exists(model_path) and os.path.isfile(pyrovelocity_data_path):
