@@ -2,7 +2,6 @@ import altair as alt
 
 
 def custom_theme():
-
     font = "LMSans10"
 
     return {
