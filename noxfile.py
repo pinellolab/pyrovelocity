@@ -156,6 +156,19 @@ def tests(session: Session) -> None:
     """Run the test suite."""
     session.install(".")
     session.install("coverage[toml]", "pytest", "pygments", "pytest-mock")
+
+    ld_library_path = {
+        "LD_LIBRARY_PATH": os.pathsep.join(
+            [
+                (
+                    session.env.get("VIRTUAL_ENV")
+                    + f"/lib/python{session.python}/site-packages/nvidia/cublas/lib"
+                ),
+                session.env.get("LD_LIBRARY_PATH"),
+            ]
+        )
+    }
+
     try:
         session.run(
             "coverage",
@@ -166,6 +179,7 @@ def tests(session: Session) -> None:
             "-rA",
             "-m",
             "not e2e",
+            env=ld_library_path,
             *session.posargs,
         )
     finally:
