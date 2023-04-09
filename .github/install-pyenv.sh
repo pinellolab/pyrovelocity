@@ -2,7 +2,8 @@
 
 set -x
 
-sudo apt install -y \
+sudo apt-get update -qq && \
+sudo apt-get install -y \
     zlib1g \
     zlib1g-dev \
     libssl-dev \
