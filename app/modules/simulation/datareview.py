@@ -25,7 +25,6 @@ title = (
 col_1, _, col_3 = st.columns([7, 1, 5])
 
 with col_1:
-
     col11, col12 = st.columns([1, 1])
 
     with col11:

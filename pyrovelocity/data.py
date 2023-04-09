@@ -230,7 +230,6 @@ def setup_anndata_multilayers(
     n_aux_cells: int = 10,
     cluster: str = "clusters",
 ) -> Optional[anndata.AnnData]:
-
     if copy:
         adata = adata.copy()
 

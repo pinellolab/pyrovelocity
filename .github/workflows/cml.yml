@@ -64,7 +64,7 @@ jobs:
               --reuse-idle \
               --cloud=gcp \
               --cloud-type=n1-standard-64+nvidia-tesla-t4*4 \
-              --cloud-hdd-size=300 \
+              --cloud-hdd-size=500 \
               --cloud-region="$zone" \
               --cloud-permission-set="${GCP_SERVICE_ACCOUNT},scopes=storage-rw" \
               && break 2
@@ -86,5 +86,9 @@ jobs:
       - name: CML setup
         run: cml ci
       - name: Run experiment and submit report
-        run: ./.github/pipeline.sh
+        run: |
+          export PYENV_VERSION=3.10.10 && \
+          ./.github/install-pyenv.sh $PYENV_VERSION && \
+          source $HOME/.bashrc && \
+          ./.github/pipeline.sh
         shell: bash

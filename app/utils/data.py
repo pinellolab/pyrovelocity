@@ -4,7 +4,6 @@ import scvelo as scv
 
 
 def generate_sample_data():
-
     adata = scv.datasets.simulation(
         random_seed=0,
         n_obs=100,
