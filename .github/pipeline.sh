@@ -18,8 +18,11 @@
 set -x
 
 ### Execute experiment run and submit PR ###
+python --version
+pip install --upgrade pip
+pip --version
 pip install -e .
-pip install matplotlib-venn==0.11.7
+pip install matplotlib-venn==0.11.9
 sudo apt-get update && sudo apt-get install -y time && which time
 cd reproducibility/figures || exit
 
