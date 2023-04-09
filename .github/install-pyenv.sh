@@ -26,6 +26,7 @@ eval "$(pyenv init -)"
 # <<< pyenv <<<
 ' > initpyenv
     target=.bashrc
+    touch .bashrc
     sed -i -e '$a\' "$target"
     while IFS= read -r line ; do
         if ! grep -Fqxe "$line" "$target" ; then
