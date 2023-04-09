@@ -86,5 +86,12 @@ jobs:
       - name: CML setup
         run: cml ci
       - name: Run experiment and submit report
-        run: ./.github/pipeline.sh
+        run: |
+          PYENV_VERSION=3.10.10 \
+          ./.github/install-pyenv.sh $PYENV_VERSION \
+          source $HOME/.bashrc \
+          pyenv versions \
+          python --version \
+          pip --version \
+          ./.github/pipeline.sh
         shell: bash
