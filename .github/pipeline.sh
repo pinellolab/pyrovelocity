@@ -27,7 +27,7 @@ sudo apt-get update && sudo apt-get install -y time && which time
 cd reproducibility/figures || exit
 
 dvc pull
-dvc repro
+dvc repro -f
 dvc push
 
 npm update -g @dvcorg/cml
