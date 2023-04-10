@@ -1,8 +1,7 @@
 import logging
 import os
-import sys
 import pickle
-from scipy import sparse
+import sys
 from typing import Dict
 from typing import Literal
 from typing import Optional
@@ -15,7 +14,12 @@ import scvi
 import torch
 from anndata import AnnData
 from numpy import ndarray
+from scipy import sparse
 from scvi.data import AnnDataManager
+from scvi.data._constants import _MODEL_NAME_KEY
+from scvi.data._constants import _SCVI_UUID_KEY
+from scvi.data._constants import _SETUP_ARGS_KEY
+from scvi.data._constants import _SETUP_METHOD_NAME
 from scvi.data.fields import LayerField
 from scvi.data.fields import NumericalJointObsField
 from scvi.data.fields import NumericalObsField
@@ -23,15 +27,10 @@ from scvi.data.fields import NumericalObsField
 # from scvi.data import transfer_anndata_setup
 from scvi.model._utils import parse_use_gpu_arg
 from scvi.model.base import BaseModelClass
-from scvi.model.base._utils import _initialize_model, _load_saved_files
+from scvi.model.base._utils import _initialize_model
+from scvi.model.base._utils import _load_saved_files
 from scvi.model.base._utils import _validate_var_names
 from scvi.module.base import PyroBaseModuleClass
-from scvi.data._constants import (
-    _MODEL_NAME_KEY,
-    _SCVI_UUID_KEY,
-    _SETUP_ARGS_KEY,
-    _SETUP_METHOD_NAME,
-)
 
 from ._trainer import VelocityTrainingMixin
 from ._velocity_module import VelocityModule
@@ -236,7 +235,6 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         pyro.enable_validation(True)
         super().train(**kwargs)
 
-
     def predict_new_samples(
         self,
         adata: Optional[AnnData] = None,
@@ -336,7 +334,11 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                 posterior_samples.append(posterior_sample)
             samples = {}
             for k in posterior_samples[0].keys():
-                if k in ['ut_norm', 'st_norm', 'cell_gene_state']: # skip unused variables
+                if k in [
+                    "ut_norm",
+                    "st_norm",
+                    "cell_gene_state",
+                ]:  # skip unused variables
                     continue
 
                 if "aux" in k:
@@ -362,8 +364,8 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                         axis=-2,
                     )
 
-                print(k, 'before', sys.getsizeof(samples[k]))
-                #if k in ['ut', 'st', 'u', 's']: # skip unused variables
+                print(k, "before", sys.getsizeof(samples[k]))
+                # if k in ['ut', 'st', 'u', 's']: # skip unused variables
                 #    print(k, 'before', sys.getsizeof(samples[k]))
                 #    samples[k] = sparse.csr_matrix(samples[k]) # cannot compress 3D tensor
                 #    print(k, 'after', sys.getsizeof(samples[k]))
@@ -392,14 +394,19 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         load_adata = adata is None
         _, _, device = parse_use_gpu_arg(use_gpu)
 
-            #scvi_setup_dict,
+        # scvi_setup_dict,
         (
             attr_dict,
             var_names,
             model_state_dict,
             new_adata,
-        ) = _load_saved_files(dir_path, load_adata, 
-                 map_location=device, prefix=prefix, backup_url=backup_url)
+        ) = _load_saved_files(
+            dir_path,
+            load_adata,
+            map_location=device,
+            prefix=prefix,
+            backup_url=backup_url,
+        )
 
         adata = new_adata if new_adata is not None else adata
 
@@ -412,12 +419,12 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         )
 
         model = _initialize_model(cls, adata, attr_dict)
-        print('---------initiliaze-------')
+        print("---------initiliaze-------")
 
         # set saved attrs for loaded model
         for attr, val in attr_dict.items():
             setattr(model, attr, val)
-        print('setattr')
+        print("setattr")
 
         # some Pyro modules with AutoGuides may need one training step
         pyro.clear_param_store()
@@ -432,11 +439,16 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                 print("train 1---")
                 model.train(max_epochs=1, max_steps=1, use_gpu=use_gpu)
             except Exception:
-                model.train(max_epochs=1, max_steps=1, use_gpu=use_gpu, batch_size=adata.shape[0])
+                model.train(
+                    max_epochs=1,
+                    max_steps=1,
+                    use_gpu=use_gpu,
+                    batch_size=adata.shape[0],
+                )
             model.module.load_state_dict(model_state_dict)
 
         model.history_ = old_history
-        print('load finished.')
+        print("load finished.")
         model.to_device(device)
         # avoid dropout prediction problem
         model.module.eval()
@@ -448,11 +460,11 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         return model
 
 
-#def _load_saved_files(
+# def _load_saved_files(
 #    dir_path: str,
 #    load_adata: bool,
 #    map_location: Optional[Literal["cpu", "cuda"]] = None,
-#):
+# ):
 #    """Helper to load saved files, adapt from scvi-tools removing check in _CONSTANTS keys"""
 #    setup_dict_path = os.path.join(dir_path, "attr.pkl")
 #    adata_path = os.path.join(dir_path, "adata.h5ad")
