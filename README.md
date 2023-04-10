@@ -1,4 +1,4 @@
-# pyrovelocity
+# Pyrovelocity
 
 <div align="center">
 
@@ -14,8 +14,6 @@
 </div>
 
 ---
-
-# Introduction
 
 `Pyro-Velocity` is a Bayesian, generative, and multivariate RNA velocity
 model to estimate _uncertainty_ in predictions of future cell states from
@@ -35,75 +33,44 @@ cell fate choice and developmental trajectory dynamics.
 <!-- ![Velocity workflow comparison](docs/source/readme_figure1.png) -->
 <img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/source/readme_figure1.png" alt="Velocity workflow comparison">
 
-## Installation with miniconda
+## Installation with mambaforge
 
-Please install miniconda following the instructions here: <https://docs.conda.io/en/latest/miniconda.html>, this step takes about 1-2 mins.
+We currently support installation and usage in a linux 64-bit development environment with access to a GPU.
+An [IaC](https://en.wikipedia.org/wiki/Infrastructure_as_code) setup that works with [GCP](https://registry.terraform.io/providers/hashicorp/google/latest/docs) is documented in [reproducibility/environment/README.md](reproducibility/environment/README.md).
+Before proceeding to setup a minimal development environment, please fork this repository and clone a copy of your fork to your development machine. Unless otherwise mentioned, all commands assume your current working directory is the root of your local copy of your fork of this repository.
 
-```bash
-wget -c https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-bash Miniconda3-latest-Linux-x86_64.sh
-# then follow the instruction to setup the conda base environment
-```
+Please install mambaforge according to the instructions provided in [conda-forge/miniforge](https://github.com/conda-forge/miniforge#install).
 
-After the conda has been setup, logout and re-login to install _mamba_ to speed up installation, this step takes about 20s.
+You can then create a development environment with
 
 ```bash
-conda install -c conda-forge mamba
+mamba env create [--prefix /path_to_conda_environment] -f conda/environment-gpu.yml
 ```
 
-Then add the channels, this step takes 1~2s.
+This step takes about 10 minutes depending on network speed.
+
+Make sure you are able to successfully activate the installed environment
 
 ```bash
-conda config --add channels defaults
-conda config --add channels bioconda
-conda config --add channels conda-forge
-conda config --set channel_priority flexible
+conda activate pyrovelocity-gpu
+which python
 ```
 
-After that, install the _pyrovelocity_ package in one mamba command:
+by checking that the output of which python following activation refers to the python binary in the correct conda environment.
 
-```bash
-mamba create -n pyrovelocity_bioconda -c bioconda pyrovelocity
-```
-
-This step takes about 6-8 minutes depending on the network speed. If you prefer to use conda environment configurations, see the `conda` subfolder for installation with _prefix_ to specify the installation path, such as:
+You can then install a development copy with
 
 ```
-# GPU
-mamba env create --prefix /path_to_conda_env/qq-pyrovelocity-dev -f conda/environment-gpu.yml
-# or CPU
-mamba env create --prefix /path_to_conda_env/qq-pyrovelocity-dev -f conda/environment-cpu.yml
+pip install --no-deps -e .[dev]
 ```
 
-Or with more control of installing the environment,
-
-```bash
-conda create -n pyrovelocity_bioconda python=3.8.8
-mamba install -n pyrovelocity_bioconda -c bioconda pyrovelocity
-# CPU
-mamba env update -n pyrovelocity_bioconda -f conda/environment-cpu.yml
-# or GPU
-mamba env update -n pyrovelocity_bioconda -f conda/environment-gpu.yml
-```
-
-For windows user installation, please refer to the [issue](https://github.com/pinellolab/pyrovelocity/issues/9).
-
-Lastly, test the installation by:
-
-```bash
-conda activate pyrovelocity_bioconda
-python
-```
+If this is successful, you will be able to
 
 ```python
 import pyrovelocity
 ```
 
-## Additional packages necessary to reproduce all the analyses presented in the notebooks
-
-```bash
-pip install cospar==0.1.9
-```
+from a python interpreter.
 
 ## Quick start
 
@@ -260,7 +227,9 @@ _ = rainbowplot(volcano_data, adata, adata_model_pos[1],
 
 ## Illustrative examples of Pyro-Velocity analyses on different single-cell datasets
 
-### Pyro-Velocity applied to a PBMC dataset \[[1](https://scvelo.readthedocs.io/perspectives/Perspectives/)\]
+### Pyro-Velocity applied to a PBMC dataset
+
+See the [data referred to here](https://scvelo.readthedocs.io/en/stable/perspectives/Perspectives/).
 
 This is a scRNA-seq dataset of fully mature peripheral blood mononuclear
 cells (PBMC) generated using the 10X genomics kit and containing 65,877
@@ -292,7 +261,9 @@ The full example can be reproduced using the
 [PBMC](https://github.com/pinellolab/pyrovelocity/blob/master/docs/source/notebooks/pbmc.ipynb)
 Jupyter notebook.
 
-### Pyro-Velocity applied to a pancreas development dataset \[[2](https://scvelo.readthedocs.io/VelocityBasics/)\]
+### Pyro-Velocity applied to a pancreas development dataset
+
+See the [data referred to here](https://scvelo.readthedocs.io/en/stable/VelocityBasics/).
 
 Here we apply Pyro-Velocity to a single cell RNA-seq dataset of mouse
 pancreas in the E15.5 embryo developmental stage. This dataset was
@@ -348,7 +319,9 @@ The full example can be reproduced using the
 [Pancreas](https://github.com/pinellolab/pyrovelocity/blob/master/docs/source/notebooks/pancreas.ipynb)
 jupyter notebook.
 
-### Pyro-Velocity applied to the LARRY dataset \[[3](https://figshare.com/articles/dataset/larry_invitro_adata_sub_raw_h5ad/20780344)\]
+### Pyro-Velocity applied to the LARRY dataset
+
+See the [data referred to here](https://figshare.com/articles/dataset/larry_invitro_adata_sub_raw_h5ad/20780344).
 
 This last example, present the analysis of a recent scRNA-seq dataset
 profiling mouse hematopoises at high resolution thanks to lineage
@@ -395,30 +368,7 @@ jupyter notebook.
 
 # Troubleshooting
 
-## TypeError: fate_potency() got an unexpected keyword argument 'used_Tmap'
-
-Please use the specific _cospar_ version:
-
-```bash
-pip install cospar==0.1.9
-```
-
-## CUDA error: no kernel image is available for execution on the device
-
-All reference to GPU support applies to linux. We do not currently support windows
-and there is no GPU-compatible pytorch version `<1.12` for darwin.
-On linux, either use [conda](./conda) (as exemplified in
-[reproducibility/environment](./reproducibility/environment)),
-or install the specific cuda-enabled pytorch version manually
-
-```bash
-pip3 install torch==1.8.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
-```
-
-If you are using poetry, you can also use the poetry helper
-
-```bash
-poetry install && poetry run poe force-cuda11
-```
+If you are having an issue using pyrovelocity, please feel free to [start a discussion](https://github.com/pinellolab/pyrovelocity/discussions)
+or [file an issue](https://github.com/pinellolab/pyrovelocity/issues) containing a [MRE](https://en.wikipedia.org/wiki/Minimal_reproducible_example).
 
 Also see [contributing](./docs/contributing.md).
