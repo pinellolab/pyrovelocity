@@ -399,7 +399,9 @@ jupyter notebook.
 
 # Troubleshooting
 
-## TypeError: fate_potency() got an unexpected keyword argument 'used_Tmap'
+```pytb
+TypeError: fate_potency() got an unexpected keyword argument 'used_Tmap'
+```
 
 Please use the specific _cospar_ version:
 
@@ -407,7 +409,11 @@ Please use the specific _cospar_ version:
 pip install cospar==0.1.9
 ```
 
-## CUDA error: no kernel image is available for execution on the device
+---
+
+```pytb
+CUDA error: no kernel image is available for execution on the device
+```
 
 All reference to GPU support applies to linux. We do not currently support windows
 and there is no GPU-compatible pytorch version `<1.12` for darwin.
