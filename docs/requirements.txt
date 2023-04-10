@@ -1,4 +1,4 @@
-furo==2022.9.29
+furo==2023.3.27
 myst_parser==1.0.0
 nbsphinx==0.9.1
 sphinx==6.1.3
