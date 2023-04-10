@@ -72,7 +72,7 @@ pyupgrade = { version = ">=2.29.1", optional = true }
 safety = { version = ">=1.10.3", optional = true }
 sphinx = { version = ">=4.3.2", optional = true }
 sphinx-autobuild = { version = ">=2021.3.14", optional = true }
-sphinx-click = { version = ">=3.0.2", optional = true }
+sphinx-click = { version = ">=4.4.0", optional = true }
 typeguard = { version = ">=2.13.3", optional = true }
 xdoctest = {extras = ["colors"], version = ">=0.15.10", optional = true }
 myst-parser = {version = ">=1.0.0", optional = true}
