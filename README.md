@@ -1,4 +1,4 @@
-# pyrovelocity
+# Pyrovelocity
 
 <div align="center">
 
@@ -14,8 +14,6 @@
 </div>
 
 ---
-
-# Introduction
 
 `Pyro-Velocity` is a Bayesian, generative, and multivariate RNA velocity
 model to estimate _uncertainty_ in predictions of future cell states from
