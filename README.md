@@ -258,7 +258,9 @@ _ = rainbowplot(volcano_data, adata, adata_model_pos[1],
 
 ## Illustrative examples of Pyro-Velocity analyses on different single-cell datasets
 
-### Pyro-Velocity applied to a PBMC dataset \[[1](https://scvelo.readthedocs.io/perspectives/Perspectives/)\]
+### Pyro-Velocity applied to a PBMC dataset
+
+See the [data referred to here](https://scvelo.readthedocs.io/en/stable/perspectives/Perspectives/).
 
 This is a scRNA-seq dataset of fully mature peripheral blood mononuclear
 cells (PBMC) generated using the 10X genomics kit and containing 65,877
@@ -290,7 +292,9 @@ The full example can be reproduced using the
 [PBMC](https://github.com/pinellolab/pyrovelocity/blob/master/docs/source/notebooks/pbmc.ipynb)
 Jupyter notebook.
 
-### Pyro-Velocity applied to a pancreas development dataset \[[2](https://scvelo.readthedocs.io/VelocityBasics/)\]
+### Pyro-Velocity applied to a pancreas development dataset
+
+See the [data referred to here](https://scvelo.readthedocs.io/en/stable/VelocityBasics/).
 
 Here we apply Pyro-Velocity to a single cell RNA-seq dataset of mouse
 pancreas in the E15.5 embryo developmental stage. This dataset was
@@ -346,7 +350,9 @@ The full example can be reproduced using the
 [Pancreas](https://github.com/pinellolab/pyrovelocity/blob/master/docs/source/notebooks/pancreas.ipynb)
 jupyter notebook.
 
-### Pyro-Velocity applied to the LARRY dataset \[[3](https://figshare.com/articles/dataset/larry_invitro_adata_sub_raw_h5ad/20780344)\]
+### Pyro-Velocity applied to the LARRY dataset
+
+See the [data referred to here](https://figshare.com/articles/dataset/larry_invitro_adata_sub_raw_h5ad/20780344).
 
 This last example, present the analysis of a recent scRNA-seq dataset
 profiling mouse hematopoises at high resolution thanks to lineage
