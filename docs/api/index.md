@@ -8,7 +8,6 @@ hidden: true
 maxdepth: 4
 ---
 
-pyrovelocity
 api
 data
 plot
