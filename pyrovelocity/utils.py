@@ -761,3 +761,16 @@ def print_anndata(anndata_obj):
     for prop_name, elements in properties.items():
         if len(elements) > 0:
             print(f"    {prop_name}:\n{format_elements(elements)}")
+
+
+def generate_sample_data(
+    n_obs: int = 100,
+    n_vars: int = 12,
+    alpha: float = 5,
+    beta: float = 0.5,
+    gamma: float = 0.3,
+    alpha_: float = 0,
+    noise_model: str = "gillespie",
+    random_seed: int = 0,
+) -> anndata.AnnData:
+    pass
