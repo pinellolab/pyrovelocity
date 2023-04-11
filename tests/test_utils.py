@@ -1,6 +1,7 @@
 """Tests for `pyrovelocity.utils` module."""
 
 import pytest
+
 from pyrovelocity.utils import generate_sample_data
 
 
