@@ -9,8 +9,18 @@ help: ## Display this help. (Default)
 help_sort: ## Display alphabetized version of help.
 	@grep -hE '^[A-Za-z0-9_ \-]*?:.*##.*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
+st: ## Run streamlit app in local environment.
+	streamlit run app/app.py \
+	--server.port=8080 \
+	--server.address=0.0.0.0
+
+# --progress=plain
+# --platform linux/amd64
 app_build: ## Build pyrovelocity application container image.
-	docker build -t pyrovelocityapp -f dockerfiles/Dockerfile.app .
+	docker build \
+	--progress=plain \
+	-t pyrovelocityapp \
+	-f dockerfiles/Dockerfile.app .
 
 app_run: ## Run the pyrovelocity web user interface.
 app_run: \
@@ -36,4 +46,5 @@ endif
 app_shell: ## Run a shell inside the pyrovelocity application container image.
 app_shell: \
 # app_build
-	docker run --rm -it --entrypoint /bin/bash pyrovelocityapp
+	docker run --rm -it \
+	--entrypoint /bin/bash pyrovelocityapp
