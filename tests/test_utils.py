@@ -36,3 +36,9 @@ def test_generate_sample_data_reproducibility():
     assert (adata1.layers["spliced"] == adata2.layers["spliced"]).all()
     assert (adata1.layers["unspliced"] == adata2.layers["unspliced"]).all()
 
+
+def test_generate_sample_data_invalid_noise_model():
+    with pytest.raises(
+        ValueError, match="noise_model must be one of 'iid', 'gillespie', 'normal'"
+    ):
+        generate_sample_data(noise_model="wishful thinking")
