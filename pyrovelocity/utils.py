@@ -9,14 +9,14 @@ from typing import Tuple
 import anndata
 import colorlog
 import numpy as np
+import scvelo as scv
 import seaborn as sns
 import torch
 from pytorch_lightning.utilities import rank_zero_only
 from scipy.sparse import issparse
+from scvi.data import synthetic_iid
 from sklearn.decomposition import PCA
 from termcolor import colored
-
-# from torchdiffeq import odeint, odeint_adjoint
 from torch.nn.functional import relu
 from torch.nn.functional import softmax
 from torch.nn.functional import softplus
@@ -713,7 +713,7 @@ def print_anndata(anndata_obj):
     Raises:
         AssertionError: If the input object is not an instance of anndata.AnnData.
 
-    Example:
+    Examples:
         >>> import anndata
         >>> import numpy as np
         >>> import pandas as pd
