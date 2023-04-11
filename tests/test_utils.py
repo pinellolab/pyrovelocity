@@ -28,3 +28,11 @@ def test_generate_sample_data_layers(sample_data):
     assert "spliced" in sample_data.layers
     assert "unspliced" in sample_data.layers
 
+
+def test_generate_sample_data_reproducibility():
+    adata1 = generate_sample_data(random_seed=42)
+    adata2 = generate_sample_data(random_seed=42)
+    assert (adata1.X == adata2.X).all()
+    assert (adata1.layers["spliced"] == adata2.layers["spliced"]).all()
+    assert (adata1.layers["unspliced"] == adata2.layers["unspliced"]).all()
+
