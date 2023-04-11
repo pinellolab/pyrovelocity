@@ -11,7 +11,8 @@ from utils.html_factory import make_div
 from utils.html_factory import make_img
 from utils.html_factory import st_write_bs4
 
-from pyrovelocity.config import initialize_hydra_config
+
+# from pyrovelocity.config import initialize_hydra_config
 
 
 st.set_page_config(
@@ -38,7 +39,7 @@ streamlit_style = """
             """
 st.markdown(streamlit_style, unsafe_allow_html=True)
 
-cfg = initialize_hydra_config()
+# cfg = initialize_hydra_config()
 
 alt.themes.register("custom_theme", custom_theme)
 alt.themes.enable("custom_theme")
