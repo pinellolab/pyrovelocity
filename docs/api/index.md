@@ -8,9 +8,6 @@ hidden: true
 maxdepth: 4
 ---
 
-api
-data
-plot
-utils
-cytotrace
+user
+developer
 ```
