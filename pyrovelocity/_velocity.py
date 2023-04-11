@@ -93,20 +93,11 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> import numpy as np
             >>> import anndata
             >>> from pyrovelocity._velocity import PyroVelocity
-            >>> from pyrovelocity.utils import pretty_print_dict, print_anndata
-            >>> from scvi.data import synthetic_iid
-            >>> n_obs = 100
-            >>> n_var = 200
-            >>> adata = synthetic_iid(
-            ...     batch_size=n_obs,
-            ...     n_genes=n_var,
-            ...     n_batches=1,
-            ...     n_labels=1,
-            ... )
+            >>> from pyrovelocity.utils import pretty_print_dict, print_anndata, generate_sample_data
+            >>> n_obs = 10
+            >>> n_vars = 5
+            >>> adata = generate_sample_data(n_obs=n_obs, n_vars=n_vars)
             >>> print_anndata(adata)
-            >>> print(adata.X)
-            >>> adata.layers['spliced'] = adata.X.copy()
-            >>> adata.layers['unspliced'] = adata.X.copy()
             >>> adata.layers['raw_spliced'] = adata.layers['spliced']
             >>> adata.layers['raw_unspliced'] = adata.layers['unspliced']
             >>> adata.obs['u_lib_size_raw'] = adata.layers['raw_unspliced'].sum(-1)
@@ -121,12 +112,12 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> model = PyroVelocity(adata)
             >>> model.train_faster(max_epochs=200, use_gpu=0)
             >>> posterior_samples = model.posterior_samples(model.adata, num_samples=5)
-            >>> print(posterior_samples)
+            >>> pretty_print_dict(posterior_samples)
             >>> print(posterior_samples.keys())
             >>> model = PyroVelocity(adata)
             >>> model.train(max_epochs=200, use_gpu=0)
             >>> posterior_samples = model.posterior_samples(model.adata, num_samples=5)
-            >>> print(posterior_samples)
+            >>> pretty_print_dict(posterior_samples)
             >>> print(posterior_samples.keys())
         """
         # >>> assert isinstance(posterior_samples, dict), f"Expected a dictionary, got {type(posterior_samples)}"
