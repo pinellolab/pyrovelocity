@@ -12,7 +12,7 @@ def generate_sample_data():
         beta=0.5,
         gamma=0.3,
         alpha_=0,
-        noise_model="normal",  # vs "gillespie" broken in 0.2.4
+        noise_model="gillespie",  # "normal" vs "gillespie"
     )
 
     return adata
@@ -87,6 +87,7 @@ def interactive_spliced_unspliced_plot(
             y=alt.Y("unspliced:Q", title="Unspliced Counts"),
             tooltip=["spliced:Q", "unspliced:Q", "var_name:N", "obs_name:N"],
             color=color_condition,
+            size=alt.Size("highlight:N", scale=alt.Scale(range=[15, 100]), legend=None),
         )
         .properties(
             title=title,

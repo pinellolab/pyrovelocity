@@ -1,2 +1,9 @@
 [ui]
 hideSidebarNav=true
+
+[theme]
+base="dark"
+primaryColor="#167f76"
+
+[browser]
+gatherUsageStats=false
