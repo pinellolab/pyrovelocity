@@ -794,6 +794,19 @@ def generate_sample_data(
 
     Raises:
         ValueError: If noise_model is not one of 'iid', 'gillespie', or 'normal'.
+
+    Examples:
+        >>> from pyrovelocity.utils import generate_sample_data, print_anndata
+        >>> adata = generate_sample_data(random_seed=99)
+        >>> print_anndata(adata)
+        >>> adata = generate_sample_data(n_obs=50, n_vars=10, noise_model="normal", random_seed=99)
+        >>> print_anndata(adata)
+        >>> adata = generate_sample_data(n_obs=50, n_vars=10, noise_model="iid", random_seed=99)
+        >>> print_anndata(adata)
+        >>> adata = generate_sample_data(noise_model="wishful thinking")
+        Traceback (most recent call last):
+            ...
+        ValueError: noise_model must be one of 'iid', 'gillespie', 'normal'
     """
     if noise_model == "iid":
         adata = synthetic_iid(
