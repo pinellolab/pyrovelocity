@@ -23,3 +23,8 @@ def test_generate_sample_data_dimensions(n_obs, n_vars, noise_model):
     )
     assert adata.shape == (n_obs, n_vars)
 
+
+def test_generate_sample_data_layers(sample_data):
+    assert "spliced" in sample_data.layers
+    assert "unspliced" in sample_data.layers
+
