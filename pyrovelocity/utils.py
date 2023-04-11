@@ -782,4 +782,17 @@ def generate_sample_data(
         )
         adata.layers['spliced'] = adata.X.copy()
         adata.layers['unspliced'] = adata.X.copy()
+    elif noise_model in {"gillespie", "normal"}:
+        adata = scv.datasets.simulation(
+            random_seed=random_seed,
+            n_obs=n_obs,
+            n_vars=n_vars,
+            alpha=alpha,
+            beta=beta,
+            gamma=gamma,
+            alpha_=alpha_,
+            noise_model=noise_model,
+        )
+    else:
+        raise ValueError("noise_model must be one of 'iid', 'gillespie', 'normal'")
     return adata
