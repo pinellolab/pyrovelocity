@@ -773,6 +773,28 @@ def generate_sample_data(
     noise_model: str = "gillespie",
     random_seed: int = 0,
 ) -> anndata.AnnData:
+    """
+    Generate synthetic single-cell RNA sequencing data with spliced and unspliced layers.
+    If using the "iid" noise model, the data will be generated with scvi.data.synthetic_iid.
+    If using the "normal" or "gillespie" noise model, the data will be generated with
+    scvelo.datasets.simulation accounting for the given expression dynamics parameters.
+
+    Args:
+        n_obs (int, optional): Number of observations (cells). Default is 100.
+        n_vars (int, optional): Number of variables (genes). Default is 12.
+        alpha (float, optional): Transcription rate. Default is 5.
+        beta (float, optional): Splicing rate. Default is 0.5.
+        gamma (float, optional): Degradation rate. Default is 0.3.
+        alpha_ (float, optional): Additional transcription rate. Default is 0.
+        noise_model (str, optional): Noise model to be used. Must be one of 'iid', 'gillespie', or 'normal'. Default is 'gillespie'.
+        random_seed (int, optional): Random seed for reproducibility. Default is 0.
+
+    Returns:
+        anndata.AnnData: An AnnData object containing the generated synthetic data.
+
+    Raises:
+        ValueError: If noise_model is not one of 'iid', 'gillespie', or 'normal'.
+    """
     if noise_model == "iid":
         adata = synthetic_iid(
             batch_size=n_obs,
@@ -780,8 +802,8 @@ def generate_sample_data(
             n_batches=1,
             n_labels=1,
         )
-        adata.layers['spliced'] = adata.X.copy()
-        adata.layers['unspliced'] = adata.X.copy()
+        adata.layers["spliced"] = adata.X.copy()
+        adata.layers["unspliced"] = adata.X.copy()
     elif noise_model in {"gillespie", "normal"}:
         adata = scv.datasets.simulation(
             random_seed=random_seed,
