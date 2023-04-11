@@ -773,4 +773,13 @@ def generate_sample_data(
     noise_model: str = "gillespie",
     random_seed: int = 0,
 ) -> anndata.AnnData:
-    pass
+    if noise_model == "iid":
+        adata = synthetic_iid(
+            batch_size=n_obs,
+            n_genes=n_vars,
+            n_batches=1,
+            n_labels=1,
+        )
+        adata.layers['spliced'] = adata.X.copy()
+        adata.layers['unspliced'] = adata.X.copy()
+    return adata
