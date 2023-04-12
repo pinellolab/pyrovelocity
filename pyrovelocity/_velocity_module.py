@@ -50,7 +50,6 @@ class VelocityModule(PyroBaseModuleClass):
         -----------
         auto
         auto_t0_constraint
-        {}
         >>> type(velocity_module1.model)
         <class 'pyrovelocity._velocity_model.VelocityModelAuto'>
         >>> type(velocity_module1.guide)
@@ -62,7 +61,6 @@ class VelocityModule(PyroBaseModuleClass):
         -----------
         auto
         auto
-        {}
         >>> type(velocity_module2.model)
         <class 'pyrovelocity._velocity_model.VelocityModelAuto'>
         >>> type(velocity_module2.guide)
