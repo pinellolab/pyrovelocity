@@ -6,24 +6,11 @@ import anndata
 import anndata._core.anndata
 import numpy as np
 import scvelo as scv
-import scvi
 from scanpy import read
+from scipy.sparse import issparse
 
 from pyrovelocity.cytotrace import cytotrace_sparse
 from pyrovelocity.utils import print_anndata
-
-
-# from scvi.data import register_tensor_from_anndata
-# from scvi.data._anndata import _register_anndata
-# from scvi.data._anndata import _setup_batch
-# from scvi.data._anndata import _setup_extra_categorical_covs
-# from scvi.data._anndata import _setup_extra_continuous_covs
-# from scvi.data._anndata import _setup_labels
-# from scvi.data._anndata import _setup_protein_expression
-# from scvi.data._anndata import _setup_summary_stats
-# from scvi.data._anndata import _setup_x
-# from scvi.data._anndata import _verify_and_correct_data_format
-# from scvi.data._anndata import logger
 
 
 def copy_raw_counts(
@@ -38,17 +25,25 @@ def copy_raw_counts(
         anndata._core.anndata.AnnData: AnnData object with raw counts.
 
     Examples:
-        import scvelo as scv
-        adata = scv.datasets.pancreas()
-        copy_raw_counts(adata)
+        >>> from pyrovelocity.utils import generate_sample_data
+        >>> adata = generate_sample_data()
+        >>> copy_raw_counts(adata)
     """
     adata.layers["raw_unspliced"] = adata.layers["unspliced"]
     print("'raw_unspliced', raw unspliced counts (adata.layers)")
     adata.layers["raw_spliced"] = adata.layers["spliced"]
     print("'raw_spliced', raw spliced counts (adata.layers)")
-    adata.obs["u_lib_size_raw"] = adata.layers["raw_unspliced"].toarray().sum(-1)
+    adata.obs["u_lib_size_raw"] = (
+        adata.layers["raw_unspliced"].toarray().sum(-1)
+        if issparse(adata.layers["raw_unspliced"])
+        else adata.layers["raw_unspliced"].sum(-1)
+    )
     print("'u_lib_size_raw', unspliced library size (adata.obs)")
-    adata.obs["s_lib_size_raw"] = adata.layers["raw_spliced"].toarray().sum(-1)
+    adata.obs["s_lib_size_raw"] = (
+        adata.layers["raw_spliced"].toarray().sum(-1)
+        if issparse(adata.layers["raw_spliced"])
+        else adata.layers["raw_spliced"].sum(-1)
+    )
     print("'s_lib_size_raw', spliced library size (adata.obs)")
     return adata
 
