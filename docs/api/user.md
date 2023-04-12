@@ -1,5 +1,18 @@
 # User
 
+```{toctree}
+---
+maxdepth: 2
+---
+
+user/api
+user/data
+user/plot
+user/utils
+user/cytotrace
+```
+
+<!--
 ## pyrovelocity.api
 
 ```{eval-rst}
@@ -45,4 +58,4 @@
    :show-inheritance:
 ```
 
-
+ -->

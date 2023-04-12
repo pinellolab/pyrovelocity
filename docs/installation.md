@@ -4,42 +4,29 @@
 
 # Installation
 
+We currently only support linux amd64 with access to at least one GPU having NVIDIA drivers installed.
+This is related to issues [such as this](https://github.com/google/jax/issues/7097) among the indirect dependencies.
+We provide a [docker container](https://github.com/pinellolab/pyrovelocity/pkgs/container/pyrovelocity) for the same architecture. We also provide an [IaC development environment](https://github.com/pinellolab/pyrovelocity/blob/master/reproducibility/environment/README.md).
+
+If you are planning to attempt to install Pyro-Velocity on your own linux amd64 machine, it should be performed inside a virtual environment such as provided by [virtualenv](https://virtualenv.pypa.io/en/latest/) or [conda](https://github.com/conda-forge/miniforge#mambaforge).
+
 ## Stable release
 
-To install pyrovelocity, run this command in your terminal:
+To install pyrovelocity from [PyPI](https://pypi.org/project/pyrovelocity/) run
 
 ```console
-$ conda install -c bioconda pyrovelocity
+$ pip install pyrovelocity
 ```
 
-This is the preferred method to install pyrovelocity, as it will always install the most recent stable release.
+## Development source
 
-If you don't have [pip] installed, this [Python installation guide] can guide
-you through the process.
+The source for pyrovelocity can be downloaded from the [GitHub repository].
 
-## From sources
-
-The sources for pyrovelocity can be downloaded from the [Github repo].
-
-You can either clone the public repository:
+You can install the latest development version directly from github
 
 ```console
-$ git clone git://github.com/qinqian/pyrovelocity
+$ python -m pip install "pyrovelocity @ git+https://github.com/pinellolab/pyrovelocity.git@master"
 ```
 
-Or download the [tarball]:
-
-```console
-$ curl -OJL https://github.com/qinqian/pyrovelocity/tarball/master
-```
-
-Once you have a copy of the source, you can install it with:
-
-```console
-$ python setup.py install
-```
-
-[github repo]: https://github.com/qinqian/pyrovelocity
+[github repository]: https://github.com/pinellolab/pyrovelocity
 [pip]: https://pip.pypa.io
-[python installation guide]: http://docs.python-guide.org/en/latest/starting/installation/
-[tarball]: https://github.com/qinqian/pyrovelocity/tarball/master

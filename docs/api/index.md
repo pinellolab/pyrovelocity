@@ -8,6 +8,6 @@ hidden: true
 maxdepth: 4
 ---
 
-user
-developer
+user.md
+developer.md
 ```

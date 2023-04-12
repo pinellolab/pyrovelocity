@@ -1,5 +1,17 @@
 # Developer
 
+```{toctree}
+---
+maxdepth: 2
+---
+
+developer/velocity
+developer/trainer
+developer/velocity_module
+developer/velocity_model
+```
+
+<!--
 ## pyrovelocity._velocity
 
 ```{eval-rst}
@@ -34,4 +46,4 @@
    :members:
    :undoc-members:
    :show-inheritance:
-```
+``` -->
