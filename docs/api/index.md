@@ -8,10 +8,6 @@ hidden: true
 maxdepth: 4
 ---
 
-pyrovelocity
-api
-data
-plot
-utils
-cytotrace
+user.md
+developer.md
 ```

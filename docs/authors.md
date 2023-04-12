@@ -1,8 +1,6 @@
 # Credits
 
-## Development Lead
+## Development
 
-- Qian Qin \<<mailto:qqin@mgh.harvard.edu>>
+- Qian Qin \<<mailto:qqin@broadinstitute.org>>
 - Eli Bingham \<<mailto:ebingham@broadinstitute.org>>
-
-## Contributors
