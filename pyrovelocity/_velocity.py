@@ -210,21 +210,21 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         pyro.enable_validation(True)
         super().train(**kwargs)
 
-    def predict_new_samples(
-        self,
-        adata: Optional[AnnData] = None,
-        indices: Optional[Sequence[int]] = None,
-        batch_size: Optional[int] = None,
-        num_samples: Optional[int] = 100,
-    ) -> Dict[str, ndarray]:
-        adata = setup_anndata_multilayers(
-            adata,
-            layer=self.layers,
-            copy=True,
-            batch_key=None,
-            input_type=self.input_type,
-        )
-        return self.posterior_samples(adata, indices, batch_size, num_samples)
+    # def predict_new_samples(
+    #     self,
+    #     adata: Optional[AnnData] = None,
+    #     indices: Optional[Sequence[int]] = None,
+    #     batch_size: Optional[int] = None,
+    #     num_samples: Optional[int] = 100,
+    # ) -> Dict[str, ndarray]:
+    #     adata = setup_anndata_multilayers(
+    #         adata,
+    #         layer=self.layers,
+    #         copy=True,
+    #         batch_key=None,
+    #         input_type=self.input_type,
+    #     )
+    #     return self.posterior_samples(adata, indices, batch_size, num_samples)
 
     def enum_parallel_predict(self):
         """work for parallel enumeration"""
