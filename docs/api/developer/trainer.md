@@ -1,4 +1,4 @@
-# pyrovelocity._trainer
+# pyrovelocity.\_trainer
 
 ```{eval-rst}
 .. automodule:: pyrovelocity._trainer

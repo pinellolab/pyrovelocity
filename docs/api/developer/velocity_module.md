@@ -1,4 +1,4 @@
-# pyrovelocity._velocity_module
+# pyrovelocity.\_velocity_module
 
 ```{eval-rst}
 .. automodule:: pyrovelocity._velocity_module
