@@ -1,6 +1,7 @@
 import logging
 import os
 import pickle
+import sys
 from typing import Dict
 from typing import Literal
 from typing import Optional
@@ -13,7 +14,12 @@ import scvi
 import torch
 from anndata import AnnData
 from numpy import ndarray
+from scipy import sparse
 from scvi.data import AnnDataManager
+from scvi.data._constants import _MODEL_NAME_KEY
+from scvi.data._constants import _SCVI_UUID_KEY
+from scvi.data._constants import _SETUP_ARGS_KEY
+from scvi.data._constants import _SETUP_METHOD_NAME
 from scvi.data.fields import LayerField
 from scvi.data.fields import NumericalJointObsField
 from scvi.data.fields import NumericalObsField
@@ -22,6 +28,7 @@ from scvi.data.fields import NumericalObsField
 from scvi.model._utils import parse_use_gpu_arg
 from scvi.model.base import BaseModelClass
 from scvi.model.base._utils import _initialize_model
+from scvi.model.base._utils import _load_saved_files
 from scvi.model.base._utils import _validate_var_names
 from scvi.module.base import PyroBaseModuleClass
 
@@ -110,15 +117,26 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> print(adata.obs['s_lib_size_raw'])
             >>> PyroVelocity.setup_anndata(adata)
             >>> model = PyroVelocity(adata)
-            >>> model.train_faster(max_epochs=200, use_gpu=0)
-            >>> posterior_samples = model.posterior_samples(model.adata, num_samples=5)
+            >>> model.train_faster(max_epochs=5, use_gpu=0)
+            >>> model.save('pyrovel_test_saved_model', overwrite=True)
+            >>> model = PyroVelocity.load('pyrovel_test_saved_model', adata, use_gpu=0)
+            >>> posterior_samples = model.posterior_samples(model.adata, num_samples=30)
             >>> pretty_print_dict(posterior_samples)
             >>> print(posterior_samples.keys())
             >>> model = PyroVelocity(adata)
-            >>> model.train(max_epochs=200, use_gpu=0)
-            >>> posterior_samples = model.posterior_samples(model.adata, num_samples=5)
+            >>> model.train_faster_with_batch(batch_size=24, max_epochs=5, use_gpu=0)
+            >>> model.save('pyrovel_test_saved_model', overwrite=True)
+            >>> model = PyroVelocity.load('pyrovel_test_saved_model', adata, use_gpu=0)
+            >>> posterior_samples = model.posterior_samples(model.adata, num_samples=30)
             >>> pretty_print_dict(posterior_samples)
             >>> print(posterior_samples.keys())
+            >>> model = PyroVelocity(adata)
+            >>> model.train(max_epochs=5, use_gpu=0)
+            >>> posterior_samples = model.posterior_samples(model.adata, num_samples=30)
+            >>> print(posterior_samples.keys())
+            >>> model.save('pyrovel_test_saved_model', overwrite=True)
+            >>> model = PyroVelocity.load('pyrovel_test_saved_model', adata, use_gpu=0)
+
         """
         # >>> assert isinstance(posterior_samples, dict), f"Expected a dictionary, got {type(posterior_samples)}"
         # >>> pretty_print_dict(posterior_samples)
@@ -309,6 +327,13 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                 posterior_samples.append(posterior_sample)
             samples = {}
             for k in posterior_samples[0].keys():
+                if k in [
+                    "ut_norm",
+                    "st_norm",
+                    "cell_gene_state",
+                ]:  # skip unused variables
+                    continue
+
                 if "aux" in k:
                     samples[k] = posterior_samples[0][k]  # alpha, beta, gamma...
                 elif posterior_samples[0][k].shape[-2] == 1:
@@ -331,16 +356,23 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                         ],
                         axis=-2,
                     )
+
+                print(k, "before", sys.getsizeof(samples[k]))
+                # if k in ['ut', 'st', 'u', 's']: # skip unused variables
+                #    print(k, 'before', sys.getsizeof(samples[k]))
+                #    samples[k] = sparse.csr_matrix(samples[k]) # cannot compress 3D tensor
+                #    print(k, 'after', sys.getsizeof(samples[k]))
         return samples
 
     def save(
         self,
         dir_path: str,
+        prefix: Optional[str] = None,
         overwrite: bool = True,
         save_anndata: bool = False,
         **anndata_write_kwargs,
     ) -> None:
-        super().save(dir_path, overwrite, save_anndata, **anndata_write_kwargs)
+        super().save(dir_path, prefix, overwrite, save_anndata, **anndata_write_kwargs)
         pyro.get_param_store().save(os.path.join(dir_path, "param_store_test.pt"))
 
     @classmethod
@@ -349,50 +381,71 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         dir_path: str,
         adata: Optional[AnnData] = None,
         use_gpu: Optional[Union[str, int, bool]] = None,
+        prefix: Optional[str] = None,
+        backup_url: Optional[str] = None,
     ):
         load_adata = adata is None
-        _, device = parse_use_gpu_arg(use_gpu)
+        _, _, device = parse_use_gpu_arg(use_gpu)
 
+        # scvi_setup_dict,
         (
-            scvi_setup_dict,
             attr_dict,
             var_names,
             model_state_dict,
             new_adata,
-        ) = _load_saved_files(dir_path, load_adata, map_location=device)
+        ) = _load_saved_files(
+            dir_path,
+            load_adata,
+            map_location=device,
+            prefix=prefix,
+            backup_url=backup_url,
+        )
+
         adata = new_adata if new_adata is not None else adata
 
         _validate_var_names(adata, var_names)
-        transfer_anndata_setup(scvi_setup_dict, adata)
-        # adata = self.adata
+
+        registry = attr_dict.pop("registry_")
+        method_name = registry.get(_SETUP_METHOD_NAME, "setup_anndata")
+        getattr(cls, method_name)(
+            adata, source_registry=registry, **registry[_SETUP_ARGS_KEY]
+        )
+
         model = _initialize_model(cls, adata, attr_dict)
+        print("---------initiliaze-------")
 
         # set saved attrs for loaded model
         for attr, val in attr_dict.items():
             setattr(model, attr, val)
+        print("setattr")
 
         # some Pyro modules with AutoGuides may need one training step
+        pyro.clear_param_store()
         old_history = model.history_
         try:
             model.module.load_state_dict(model_state_dict)
         except RuntimeError as err:
             if not isinstance(model.module, PyroBaseModuleClass):
                 raise err
-            # old_history = model.history_
             logger.info("Preparing underlying module for load")
             try:
-                model.train(max_steps=1, use_gpu=use_gpu)
+                print("train 1---")
+                model.train(max_epochs=1, max_steps=1, use_gpu=use_gpu)
             except Exception:
-                model.train(max_steps=1, use_gpu=use_gpu, batch_size=adata.shape[0])
-            model.history_ = old_history
-            pyro.clear_param_store()
+                model.train(
+                    max_epochs=1,
+                    max_steps=1,
+                    use_gpu=use_gpu,
+                    batch_size=adata.shape[0],
+                )
             model.module.load_state_dict(model_state_dict)
+
+        model.history_ = old_history
+        print("load finished.")
         model.to_device(device)
-
+        # avoid dropout prediction problem
         model.module.eval()
-
         model._validate_anndata(adata)
-
         # load pyro pyaram stores
         pyro.get_param_store().load(
             os.path.join(dir_path, "param_store_test.pt"), map_location=device
@@ -400,29 +453,29 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         return model
 
 
-def _load_saved_files(
-    dir_path: str,
-    load_adata: bool,
-    map_location: Optional[Literal["cpu", "cuda"]] = None,
-):
-    """Helper to load saved files, adapt from scvi-tools removing check in _CONSTANTS keys"""
-    setup_dict_path = os.path.join(dir_path, "attr.pkl")
-    adata_path = os.path.join(dir_path, "adata.h5ad")
-    varnames_path = os.path.join(dir_path, "var_names.csv")
-    model_path = os.path.join(dir_path, "model_params.pt")
-
-    if os.path.exists(adata_path) and load_adata:
-        adata = read(adata_path)
-    elif not os.path.exists(adata_path) and load_adata:
-        raise ValueError("Save path contains no saved anndata and no adata was passed.")
-    else:
-        adata = None
-
-    var_names = np.genfromtxt(varnames_path, delimiter=",", dtype=str)
-
-    with open(setup_dict_path, "rb") as handle:
-        attr_dict = pickle.load(handle)
-    scvi_setup_dict = attr_dict.pop("scvi_setup_dict_")
-    print(map_location)
-    model_state_dict = torch.load(model_path, map_location=map_location)
-    return scvi_setup_dict, attr_dict, var_names, model_state_dict, adata
+# def _load_saved_files(
+#    dir_path: str,
+#    load_adata: bool,
+#    map_location: Optional[Literal["cpu", "cuda"]] = None,
+# ):
+#    """Helper to load saved files, adapt from scvi-tools removing check in _CONSTANTS keys"""
+#    setup_dict_path = os.path.join(dir_path, "attr.pkl")
+#    adata_path = os.path.join(dir_path, "adata.h5ad")
+#    varnames_path = os.path.join(dir_path, "var_names.csv")
+#    model_path = os.path.join(dir_path, "model_params.pt")
+#
+#    if os.path.exists(adata_path) and load_adata:
+#        adata = read(adata_path)
+#    elif not os.path.exists(adata_path) and load_adata:
+#        raise ValueError("Save path contains no saved anndata and no adata was passed.")
+#    else:
+#        adata = None
+#
+#    var_names = np.genfromtxt(varnames_path, delimiter=",", dtype=str)
+#
+#    with open(setup_dict_path, "rb") as handle:
+#        attr_dict = pickle.load(handle)
+#    scvi_setup_dict = attr_dict.pop("scvi_setup_dict_")
+#    print(map_location)
+#    model_state_dict = torch.load(model_path, map_location=map_location)
+#    return scvi_setup_dict, attr_dict, var_names, model_state_dict, adata
