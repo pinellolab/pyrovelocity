@@ -33,7 +33,9 @@ cell fate choice and developmental trajectory dynamics.
 <!-- ![Velocity workflow comparison](docs/source/readme_figure1.png) -->
 <img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/source/readme_figure1.png" alt="Velocity workflow comparison">
 
-## Installation with mambaforge
+## Installation
+
+### Development
 
 We currently support installation and usage in a linux 64-bit development environment with access to a GPU.
 An [IaC](https://en.wikipedia.org/wiki/Infrastructure_as_code) setup that works with [GCP](https://registry.terraform.io/providers/hashicorp/google/latest/docs) is documented in [reproducibility/environment/README.md](reproducibility/environment/README.md).
@@ -71,6 +73,10 @@ import pyrovelocity
 ```
 
 from a python interpreter.
+
+### User
+
+Please see the [documentation](https://pyrovelocity.readthedocs.io/en/latest/installation.html).
 
 ## Quick start
 
