@@ -216,207 +216,207 @@ def load_unipotent_larry(celltype: str = "mono") -> anndata._core.anndata.AnnDat
     return adata
 
 
-def setup_anndata_multilayers(
-    adata: anndata.AnnData,
-    batch_key: Optional[str] = None,
-    labels_key: Optional[str] = None,
-    layer: Optional[str] = None,
-    protein_expression_obsm_key: Optional[str] = None,
-    protein_names_uns_key: Optional[str] = None,
-    categorical_covariate_keys: Optional[List[str]] = None,
-    continuous_covariate_keys: Optional[List[str]] = None,
-    copy: bool = False,
-    input_type: str = "knn",
-    n_aux_cells: int = 10,
-    cluster: str = "clusters",
-) -> Optional[anndata.AnnData]:
-    if copy:
-        adata = adata.copy()
+# def setup_anndata_multilayers(
+#     adata: anndata.AnnData,
+#     batch_key: Optional[str] = None,
+#     labels_key: Optional[str] = None,
+#     layer: Optional[str] = None,
+#     protein_expression_obsm_key: Optional[str] = None,
+#     protein_names_uns_key: Optional[str] = None,
+#     categorical_covariate_keys: Optional[List[str]] = None,
+#     continuous_covariate_keys: Optional[List[str]] = None,
+#     copy: bool = False,
+#     input_type: str = "knn",
+#     n_aux_cells: int = 10,
+#     cluster: str = "clusters",
+# ) -> Optional[anndata.AnnData]:
+#     if copy:
+#         adata = adata.copy()
 
-    if adata.is_view:
-        raise ValueError(
-            "Please run `adata = adata.copy()` or use the copy option in this function."
-        )
+#     if adata.is_view:
+#         raise ValueError(
+#             "Please run `adata = adata.copy()` or use the copy option in this function."
+#         )
 
-    adata.uns["_scvi"] = {}
-    adata.uns["_scvi"]["scvi_version"] = scvi.__version__
+#     adata.uns["_scvi"] = {}
+#     adata.uns["_scvi"]["scvi_version"] = scvi.__version__
 
-    batch_key = _setup_batch(adata, batch_key)
-    labels_key = _setup_labels(adata, labels_key)
-    assert len(layer) >= 2
-    u_loc, u_key = _setup_x(adata, layer[0])
-    s_loc, s_key = _setup_x(adata, layer[1])
+#     batch_key = _setup_batch(adata, batch_key)
+#     labels_key = _setup_labels(adata, labels_key)
+#     assert len(layer) >= 2
+#     u_loc, u_key = _setup_x(adata, layer[0])
+#     s_loc, s_key = _setup_x(adata, layer[1])
 
-    data_registry = {
-        "X": {"attr_name": s_loc, "attr_key": s_key},
-        "U": {"attr_name": u_loc, "attr_key": u_key},
-        "batch": {"attr_name": "obs", "attr_key": batch_key},
-        "label": {"attr_name": "obs", "attr_key": labels_key},
-    }
+#     data_registry = {
+#         "X": {"attr_name": s_loc, "attr_key": s_key},
+#         "U": {"attr_name": u_loc, "attr_key": u_key},
+#         "batch": {"attr_name": "obs", "attr_key": batch_key},
+#         "label": {"attr_name": "obs", "attr_key": labels_key},
+#     }
 
-    if protein_expression_obsm_key is not None:
-        protein_expression_obsm_key = _setup_protein_expression(
-            adata, protein_expression_obsm_key, protein_names_uns_key, batch_key
-        )
-        data_registry[_CONSTANTS.PROTEIN_EXP_KEY] = {
-            "attr_name": "obsm",
-            "attr_key": protein_expression_obsm_key,
-        }
+#     if protein_expression_obsm_key is not None:
+#         protein_expression_obsm_key = _setup_protein_expression(
+#             adata, protein_expression_obsm_key, protein_names_uns_key, batch_key
+#         )
+#         data_registry[_CONSTANTS.PROTEIN_EXP_KEY] = {
+#             "attr_name": "obsm",
+#             "attr_key": protein_expression_obsm_key,
+#         }
 
-    if categorical_covariate_keys is not None:
-        cat_loc, cat_key = _setup_extra_categorical_covs(
-            adata, categorical_covariate_keys
-        )
-        data_registry[_CONSTANTS.CAT_COVS_KEY] = {
-            "attr_name": cat_loc,
-            "attr_key": cat_key,
-        }
+#     if categorical_covariate_keys is not None:
+#         cat_loc, cat_key = _setup_extra_categorical_covs(
+#             adata, categorical_covariate_keys
+#         )
+#         data_registry[_CONSTANTS.CAT_COVS_KEY] = {
+#             "attr_name": cat_loc,
+#             "attr_key": cat_key,
+#         }
 
-    if continuous_covariate_keys is not None:
-        cont_loc, cont_key = _setup_extra_continuous_covs(
-            adata, continuous_covariate_keys
-        )
-        data_registry[_CONSTANTS.CONT_COVS_KEY] = {
-            "attr_name": cont_loc,
-            "attr_key": cont_key,
-        }
+#     if continuous_covariate_keys is not None:
+#         cont_loc, cont_key = _setup_extra_continuous_covs(
+#             adata, continuous_covariate_keys
+#         )
+#         data_registry[_CONSTANTS.CONT_COVS_KEY] = {
+#             "attr_name": cont_loc,
+#             "attr_key": cont_key,
+#         }
 
-    _register_anndata(adata, data_registry_dict=data_registry)
-    logger.debug(f"Registered keys:{list(data_registry.keys())}")
-    _setup_summary_stats(
-        adata,
-        batch_key,
-        labels_key,
-        protein_expression_obsm_key,
-        categorical_covariate_keys,
-        continuous_covariate_keys,
-    )
+#     _register_anndata(adata, data_registry_dict=data_registry)
+#     logger.debug(f"Registered keys:{list(data_registry.keys())}")
+#     _setup_summary_stats(
+#         adata,
+#         batch_key,
+#         labels_key,
+#         protein_expression_obsm_key,
+#         categorical_covariate_keys,
+#         continuous_covariate_keys,
+#     )
 
-    logger.info("Please do not further modify adata until model is trained.")
+#     logger.info("Please do not further modify adata until model is trained.")
 
-    _verify_and_correct_data_format(adata, data_registry)
+#     _verify_and_correct_data_format(adata, data_registry)
 
-    adata.obs["_indices"] = np.arange(adata.n_obs).astype("int64")
-    register_tensor_from_anndata(
-        adata,
-        registry_key="ind_x",
-        adata_attr_name="obs",
-        adata_key_name="_indices",
-    )
+#     adata.obs["_indices"] = np.arange(adata.n_obs).astype("int64")
+#     register_tensor_from_anndata(
+#         adata,
+#         registry_key="ind_x",
+#         adata_attr_name="obs",
+#         adata_key_name="_indices",
+#     )
 
-    epsilon = 1e-6
-    if input_type == "knn":
-        adata.obs["u_lib_size"] = np.log(
-            adata.layers["Mu"].sum(axis=-1).astype("float32") + epsilon
-        )
-        adata.obs["s_lib_size"] = np.log(
-            adata.layers["Ms"].sum(axis=-1).astype("float32") + epsilon
-        )
-    elif input_type == "raw_cpm":
-        from scipy.sparse import issparse
+#     epsilon = 1e-6
+#     if input_type == "knn":
+#         adata.obs["u_lib_size"] = np.log(
+#             adata.layers["Mu"].sum(axis=-1).astype("float32") + epsilon
+#         )
+#         adata.obs["s_lib_size"] = np.log(
+#             adata.layers["Ms"].sum(axis=-1).astype("float32") + epsilon
+#         )
+#     elif input_type == "raw_cpm":
+#         from scipy.sparse import issparse
 
-        if issparse(adata.layers["unspliced"]):
-            adata.obs["u_lib_size"] = np.log(
-                adata.layers["unspliced"].toarray().sum(axis=-1).astype("float32")
-                + epsilon
-            )
-            adata.obs["s_lib_size"] = np.log(
-                adata.layers["spliced"].toarray().sum(axis=-1).astype("float32")
-                + epsilon
-            )
-        else:
-            adata.obs["u_lib_size"] = np.log(
-                adata.layers["unspliced"].sum(axis=-1).astype("float32") + epsilon
-            )
-            adata.obs["s_lib_size"] = np.log(
-                adata.layers["spliced"].sum(axis=-1).astype("float32") + epsilon
-            )
-    else:
-        adata.obs["u_lib_size"] = np.log(adata.obs["u_lib_size_raw"] + epsilon)
-        adata.obs["s_lib_size"] = np.log(adata.obs["s_lib_size_raw"] + epsilon)
-    adata.obs["u_lib_size_mean"] = adata.obs["u_lib_size"].mean()
-    adata.obs["s_lib_size_mean"] = adata.obs["s_lib_size"].mean()
-    adata.obs["u_lib_size_scale"] = adata.obs["u_lib_size"].std()
-    adata.obs["s_lib_size_scale"] = adata.obs["s_lib_size"].std()
+#         if issparse(adata.layers["unspliced"]):
+#             adata.obs["u_lib_size"] = np.log(
+#                 adata.layers["unspliced"].toarray().sum(axis=-1).astype("float32")
+#                 + epsilon
+#             )
+#             adata.obs["s_lib_size"] = np.log(
+#                 adata.layers["spliced"].toarray().sum(axis=-1).astype("float32")
+#                 + epsilon
+#             )
+#         else:
+#             adata.obs["u_lib_size"] = np.log(
+#                 adata.layers["unspliced"].sum(axis=-1).astype("float32") + epsilon
+#             )
+#             adata.obs["s_lib_size"] = np.log(
+#                 adata.layers["spliced"].sum(axis=-1).astype("float32") + epsilon
+#             )
+#     else:
+#         adata.obs["u_lib_size"] = np.log(adata.obs["u_lib_size_raw"] + epsilon)
+#         adata.obs["s_lib_size"] = np.log(adata.obs["s_lib_size_raw"] + epsilon)
+#     adata.obs["u_lib_size_mean"] = adata.obs["u_lib_size"].mean()
+#     adata.obs["s_lib_size_mean"] = adata.obs["s_lib_size"].mean()
+#     adata.obs["u_lib_size_scale"] = adata.obs["u_lib_size"].std()
+#     adata.obs["s_lib_size_scale"] = adata.obs["s_lib_size"].std()
 
-    register_tensor_from_anndata(
-        adata,
-        registry_key="u_lib_size",
-        adata_attr_name="obs",
-        adata_key_name="u_lib_size",
-    )
-    register_tensor_from_anndata(
-        adata,
-        registry_key="s_lib_size",
-        adata_attr_name="obs",
-        adata_key_name="s_lib_size",
-    )
-    register_tensor_from_anndata(
-        adata,
-        registry_key="u_lib_size_mean",
-        adata_attr_name="obs",
-        adata_key_name="u_lib_size_mean",
-    )
-    register_tensor_from_anndata(
-        adata,
-        registry_key="s_lib_size_mean",
-        adata_attr_name="obs",
-        adata_key_name="s_lib_size_mean",
-    )
-    register_tensor_from_anndata(
-        adata,
-        registry_key="u_lib_size_scale",
-        adata_attr_name="obs",
-        adata_key_name="u_lib_size_scale",
-    )
-    register_tensor_from_anndata(
-        adata,
-        registry_key="s_lib_size_scale",
-        adata_attr_name="obs",
-        adata_key_name="s_lib_size_scale",
-    )
+#     register_tensor_from_anndata(
+#         adata,
+#         registry_key="u_lib_size",
+#         adata_attr_name="obs",
+#         adata_key_name="u_lib_size",
+#     )
+#     register_tensor_from_anndata(
+#         adata,
+#         registry_key="s_lib_size",
+#         adata_attr_name="obs",
+#         adata_key_name="s_lib_size",
+#     )
+#     register_tensor_from_anndata(
+#         adata,
+#         registry_key="u_lib_size_mean",
+#         adata_attr_name="obs",
+#         adata_key_name="u_lib_size_mean",
+#     )
+#     register_tensor_from_anndata(
+#         adata,
+#         registry_key="s_lib_size_mean",
+#         adata_attr_name="obs",
+#         adata_key_name="s_lib_size_mean",
+#     )
+#     register_tensor_from_anndata(
+#         adata,
+#         registry_key="u_lib_size_scale",
+#         adata_attr_name="obs",
+#         adata_key_name="u_lib_size_scale",
+#     )
+#     register_tensor_from_anndata(
+#         adata,
+#         registry_key="s_lib_size_scale",
+#         adata_attr_name="obs",
+#         adata_key_name="s_lib_size_scale",
+#     )
 
-    if "cytotrace" in adata.obs.columns:
-        register_tensor_from_anndata(
-            adata,
-            registry_key="cytotrace",
-            adata_attr_name="obs",
-            adata_key_name="cytotrace",
-        )
+#     if "cytotrace" in adata.obs.columns:
+#         register_tensor_from_anndata(
+#             adata,
+#             registry_key="cytotrace",
+#             adata_attr_name="obs",
+#             adata_key_name="cytotrace",
+#         )
 
-    if "kmeans10" in adata.obs.columns:
-        register_tensor_from_anndata(
-            adata,
-            registry_key="kmeans10",
-            adata_attr_name="obs",
-            adata_key_name="kmeans10",
-        )
-    if cluster in adata.obs.columns:
-        cell_state_dict = {}
-        for index, cat in enumerate(adata.obs[cluster].cat.categories):
-            cell_state_dict[cat] = index
-        adata.obs["pyro_cell_state"] = adata.obs[cluster].map(cell_state_dict)
-        print(cell_state_dict)
-        print(adata.obs["pyro_cell_state"])
-        register_tensor_from_anndata(
-            adata,
-            registry_key="pyro_cell_state",
-            adata_attr_name="obs",
-            adata_key_name="pyro_cell_state",
-        )
+#     if "kmeans10" in adata.obs.columns:
+#         register_tensor_from_anndata(
+#             adata,
+#             registry_key="kmeans10",
+#             adata_attr_name="obs",
+#             adata_key_name="kmeans10",
+#         )
+#     if cluster in adata.obs.columns:
+#         cell_state_dict = {}
+#         for index, cat in enumerate(adata.obs[cluster].cat.categories):
+#             cell_state_dict[cat] = index
+#         adata.obs["pyro_cell_state"] = adata.obs[cluster].map(cell_state_dict)
+#         print(cell_state_dict)
+#         print(adata.obs["pyro_cell_state"])
+#         register_tensor_from_anndata(
+#             adata,
+#             registry_key="pyro_cell_state",
+#             adata_attr_name="obs",
+#             adata_key_name="pyro_cell_state",
+#         )
 
-    if "age(days)" in adata.obs.columns:
-        time_info_dict = {}
-        for index, cat in enumerate(adata.obs["age(days)"].cat.categories):
-            time_info_dict[cat] = index
+#     if "age(days)" in adata.obs.columns:
+#         time_info_dict = {}
+#         for index, cat in enumerate(adata.obs["age(days)"].cat.categories):
+#             time_info_dict[cat] = index
 
-        adata.obs["time_info"] = adata.obs["age(days)"].map(time_info_dict)
-        register_tensor_from_anndata(
-            adata,
-            registry_key="time_info",
-            adata_attr_name="obs",
-            adata_key_name="time_info",
-        )
+#         adata.obs["time_info"] = adata.obs["age(days)"].map(time_info_dict)
+#         register_tensor_from_anndata(
+#             adata,
+#             registry_key="time_info",
+#             adata_attr_name="obs",
+#             adata_key_name="time_info",
+#         )
 
-    if copy:
-        return adata
+#     if copy:
+#         return adata
