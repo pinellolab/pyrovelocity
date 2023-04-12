@@ -26,7 +26,6 @@ titlesonly: true
 
 readme.md
 installation.md
-usage.md
 tutorials.md
 api/index.md
 contributing.md

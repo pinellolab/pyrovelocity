@@ -22,6 +22,14 @@ autodoc_mock_imports = [
     "torchmetrics",
 ]
 
+autodoc_default_options = {
+    # 'members': True,
+    # 'member-order': 'bysource',
+    "special-members": "__init__",
+    # 'undoc-members': True,
+    # 'exclude-members': '__weakref__'
+}
+
 needs_sphinx = "5.0"
 
 project = "pyrovelocity"

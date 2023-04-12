@@ -9,14 +9,14 @@ from typing import Tuple
 import anndata
 import colorlog
 import numpy as np
+import scvelo as scv
 import seaborn as sns
 import torch
 from pytorch_lightning.utilities import rank_zero_only
 from scipy.sparse import issparse
+from scvi.data import synthetic_iid
 from sklearn.decomposition import PCA
 from termcolor import colored
-
-# from torchdiffeq import odeint, odeint_adjoint
 from torch.nn.functional import relu
 from torch.nn.functional import softmax
 from torch.nn.functional import softplus
@@ -713,7 +713,7 @@ def print_anndata(anndata_obj):
     Raises:
         AssertionError: If the input object is not an instance of anndata.AnnData.
 
-    Example:
+    Examples:
         >>> import anndata
         >>> import numpy as np
         >>> import pandas as pd
@@ -761,3 +761,73 @@ def print_anndata(anndata_obj):
     for prop_name, elements in properties.items():
         if len(elements) > 0:
             print(f"    {prop_name}:\n{format_elements(elements)}")
+
+
+def generate_sample_data(
+    n_obs: int = 100,
+    n_vars: int = 12,
+    alpha: float = 5,
+    beta: float = 0.5,
+    gamma: float = 0.3,
+    alpha_: float = 0,
+    noise_model: str = "gillespie",
+    random_seed: int = 0,
+) -> anndata.AnnData:
+    """
+    Generate synthetic single-cell RNA sequencing data with spliced and unspliced layers.
+    If using the "iid" noise model, the data will be generated with scvi.data.synthetic_iid.
+    If using the "normal" or "gillespie" noise model, the data will be generated with
+    scvelo.datasets.simulation accounting for the given expression dynamics parameters.
+
+    Args:
+        n_obs (int, optional): Number of observations (cells). Default is 100.
+        n_vars (int, optional): Number of variables (genes). Default is 12.
+        alpha (float, optional): Transcription rate. Default is 5.
+        beta (float, optional): Splicing rate. Default is 0.5.
+        gamma (float, optional): Degradation rate. Default is 0.3.
+        alpha_ (float, optional): Additional transcription rate. Default is 0.
+        noise_model (str, optional): Noise model to be used. Must be one of 'iid', 'gillespie', or 'normal'. Default is 'gillespie'.
+        random_seed (int, optional): Random seed for reproducibility. Default is 0.
+
+    Returns:
+        anndata.AnnData: An AnnData object containing the generated synthetic data.
+
+    Raises:
+        ValueError: If noise_model is not one of 'iid', 'gillespie', or 'normal'.
+
+    Examples:
+        >>> from pyrovelocity.utils import generate_sample_data, print_anndata
+        >>> adata = generate_sample_data(random_seed=99)
+        >>> print_anndata(adata)
+        >>> adata = generate_sample_data(n_obs=50, n_vars=10, noise_model="normal", random_seed=99)
+        >>> print_anndata(adata)
+        >>> adata = generate_sample_data(n_obs=50, n_vars=10, noise_model="iid", random_seed=99)
+        >>> print_anndata(adata)
+        >>> adata = generate_sample_data(noise_model="wishful thinking")
+        Traceback (most recent call last):
+            ...
+        ValueError: noise_model must be one of 'iid', 'gillespie', 'normal'
+    """
+    if noise_model == "iid":
+        adata = synthetic_iid(
+            batch_size=n_obs,
+            n_genes=n_vars,
+            n_batches=1,
+            n_labels=1,
+        )
+        adata.layers["spliced"] = adata.X.copy()
+        adata.layers["unspliced"] = adata.X.copy()
+    elif noise_model in {"gillespie", "normal"}:
+        adata = scv.datasets.simulation(
+            random_seed=random_seed,
+            n_obs=n_obs,
+            n_vars=n_vars,
+            alpha=alpha,
+            beta=beta,
+            gamma=gamma,
+            alpha_=alpha_,
+            noise_model=noise_model,
+        )
+    else:
+        raise ValueError("noise_model must be one of 'iid', 'gillespie', 'normal'")
+    return adata

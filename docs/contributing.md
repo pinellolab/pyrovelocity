@@ -4,8 +4,7 @@
 
 # Contributing
 
-Contributions are welcome, and they are greatly appreciated! Every little bit
-helps, and credit will always be given.
+Contributions are welcome, greatly appreciated, and credit will always be given.
 
 You can contribute in many ways:
 
@@ -15,7 +14,7 @@ You can contribute in many ways:
 
 Report bugs at <https://github.com/pinellolab/pyrovelocity/issues>.
 
-If you are reporting a bug, please include:
+If you are reporting a bug, please fill out the provided template including:
 
 - Your operating system name and version.
 - Any details about your local setup that might be helpful in troubleshooting.
@@ -50,7 +49,7 @@ If you are proposing a feature:
 
 ## Get Started
 
-### Remote
+### Cloud
 
 See the [reproducibility/environment](https://github.com/pinellolab/pyrovelocity/tree/master/reproducibility/environment) folder and associated README.md.
 
@@ -66,7 +65,7 @@ The following is a rough guide to setting up `pyrovelocity` for local developmen
    $ git clone https://github.com/your_name_here/pyrovelocity.git
    ```
 
-3. Install your local copy with [poetry and nox](https://cookiecutter-hypermodern-python.readthedocs.io/en/2022.6.3.post1/guide.html#requirements).
+3. Install your local copy with [poetry and nox](https://cookiecutter-hypermodern-python.readthedocs.io/en/2022.6.3.post1/guide.html#requirements) or with [conda]().
 
 4. Create a branch for local development:
 
@@ -76,13 +75,16 @@ The following is a rough guide to setting up `pyrovelocity` for local developmen
 
    Now you can make your changes locally.
 
-5. When you're done making changes, check that your changes pass the
-   checks implemented in noxfile.py:
+5. When you're done making changes, you can check that your changes pass the
+   most basic checks implemented in noxfile.py (run `nox --list-sessions` to list all available):
 
    ```
-   $ nox --list-sessions
-   $ nox -r
+   $ nox -x -rs pre-commit
+   $ nox -x -rs tests-3.10
+   $ nox -x -rs docs-build
    ```
+
+   These will be confirmed via the GitHub actions workflow that will run on your fork and pull request.
 
 6. Commit your changes and push your branch to GitHub:
 
@@ -98,8 +100,7 @@ The following is a rough guide to setting up `pyrovelocity` for local developmen
 
 Before you submit a pull request, check that it meets these guidelines:
 
-1. The pull request should include tests.
+1. The pull request should include pytest tests and xdoctests.
 2. If the pull request adds functionality, the docs should be updated. Put
-   your new functionality into a function with a docstring, and add the
-   feature to the list in README.md.
-3. The pull request should work for Python 3.8.
+   your new functionality into a function with a docstring.
+3. The pull request should work for Python 3.10.
