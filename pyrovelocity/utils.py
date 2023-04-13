@@ -13,6 +13,7 @@ import scvelo as scv
 import seaborn as sns
 import torch
 from pytorch_lightning.utilities import rank_zero_only
+import matplotlib.pyplot as plt
 from scipy.sparse import issparse
 from scvi.data import synthetic_iid
 from sklearn.decomposition import PCA
@@ -549,15 +550,13 @@ def init_with_all_cells(
 
 
 def mae_evaluate(pos, adata):
-    import matplotlib.pyplot as plt
-
     maes_list = []
     labels = []
     if isinstance(pos, tuple):
         for model_label, model_obj, split_index in zip(
             ["Poisson train", "Poisson valid"], pos[:2], pos[2:]
         ):
-            for sample in range(30):
+            for sample in range(model_obj["u"].shape[0]):
                 maes_list.append(
                     mae(
                         np.hstack([model_obj["u"][sample], model_obj["s"][sample]]),
@@ -572,7 +571,7 @@ def mae_evaluate(pos, adata):
                 labels.append(model_label)
     else:
         for model_label, model_obj in zip(["Poisson all cells"], [pos]):
-            for sample in range(30):
+            for sample in range(model_obj["u"].shape[0]):
                 maes_list.append(
                     mae(
                         np.hstack([model_obj["u"][sample], model_obj["s"][sample]]),
