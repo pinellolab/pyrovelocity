@@ -408,14 +408,14 @@ stages:
             train_size: 1.0
             use_gpu: 0
             likelihood: Poisson
-            num_samples: 3
+            num_samples: 30
             log_every: 100
             cell_state: clusters
             patient_improve: 0.0001
             patient_init: 45
             seed: 99
             lr: 0.01
-            max_epochs: 5
+            max_epochs: 2000
             include_prior: true
             library_size: true
             offset: true
@@ -425,24 +425,24 @@ stages:
             loss_plot_path: models/pancreas_model2/loss_plot.png
     outs:
     - path: models/pancreas_model2/loss_plot.png
-      md5: b5dce1f9bf38b525b8b98c211db9fd48
-      size: 7360
+      md5: 8a8de154eb3e3ad3c1f11264eadedacd
+      size: 11500
     - path: models/pancreas_model2/metrics.json
-      md5: 80f4fc5a7e58a0210151ce75ae14a961
-      size: 90
+      md5: 0fd80b26017cee4066580ba71735bc65
+      size: 94
     - path: models/pancreas_model2/model
-      md5: 29c6f59052ba5de242e2d42eaf75aeff.dir
+      md5: ab22410f00e813ce91b68c087c74da85.dir
       size: 923626
       nfiles: 1
     - path: models/pancreas_model2/pyrovelocity.pkl
-      md5: b5abf4f5844aed9a31759e03d3f6b24e
-      size: 59904651
+      md5: f44bc7f5f154f8979e769825732e5fbb
+      size: 65873440
     - path: models/pancreas_model2/run_info.json
-      md5: f57e3d7a7a8697e5ca3553b50ec4e387
+      md5: e9aa7fd284668405a57ee07ab079144a
       size: 455
     - path: models/pancreas_model2/trained.h5ad
-      md5: b9dad891403e8f6b916d404c94533b58
-      size: 489895376
+      md5: 0cd0fc02eb32f34d886fd23f4486b655
+      size: 489882800
   train_pbmc68k_model2:
     cmd: /usr/bin/time -v python train.py model_training.train=[pbmc68k_model2]
     deps:
@@ -802,11 +802,11 @@ stages:
     cmd: python summarize.py reports.model_summary.summarize=[pancreas_model2]
     deps:
     - path: models/pancreas_model2/pyrovelocity.pkl
-      md5: b5abf4f5844aed9a31759e03d3f6b24e
-      size: 59904651
+      md5: f44bc7f5f154f8979e769825732e5fbb
+      size: 65873440
     - path: models/pancreas_model2/trained.h5ad
-      md5: b9dad891403e8f6b916d404c94533b58
-      size: 489895376
+      md5: 0cd0fc02eb32f34d886fd23f4486b655
+      size: 489882800
     - path: summarize.py
       md5: 0dd4bdc367a163856f6b03bfb9e20cce
       size: 7035
@@ -832,14 +832,14 @@ stages:
             train_size: 1.0
             use_gpu: 0
             likelihood: Poisson
-            num_samples: 3
+            num_samples: 30
             log_every: 100
             cell_state: clusters
             patient_improve: 0.0001
             patient_init: 45
             seed: 99
             lr: 0.01
-            max_epochs: 5
+            max_epochs: 2000
             include_prior: true
             library_size: true
             offset: true
@@ -858,20 +858,20 @@ stages:
           biomarker_phaseportrait_plot: reports/pancreas_model2/markers_phaseportrait.pdf
     outs:
     - path: reports/pancreas_model2/rainbow.pdf
-      md5: b23107f69e85a39852eade2adca3f7e8
-      size: 664138
+      md5: 4cc007d9d70084efa4545b7ae8c53c9a
+      size: 674523
     - path: reports/pancreas_model2/rainbow.pdf.png
-      md5: 5c56966dca3ff84c7a59e23cce70d0f0
-      size: 2686177
+      md5: a053e9fbf0755a4fa529e92e3ef03f45
+      size: 1592710
     - path: reports/pancreas_model2/vector_field.pdf
-      md5: 99b44a0b02c0797f16566481a3878f06
-      size: 397799
+      md5: c5159280c8c687c0ec32f9e7fc5bba60
+      size: 397586
     - path: reports/pancreas_model2/vector_field.pdf.png
-      md5: f72539b3ffc927f6b97967f76da29cbd
-      size: 698481
+      md5: 2bff17b5b0187728de366ba4f0b02cd3
+      size: 698541
     - path: reports/pancreas_model2/volcano.pdf
-      md5: 4998bd575aecdddc5febf4b35e9c6b45
-      size: 21101
+      md5: f728875db6828b384f9d7a61f4798265
+      size: 20346
   summarize_pbmc68k_model1:
     cmd: python summarize.py reports.model_summary.summarize=[pbmc68k_model1]
     deps:
