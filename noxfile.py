@@ -155,7 +155,7 @@ def mypy(session: Session) -> None:
 def tests(session: Session) -> None:
     """Run the test suite."""
     session.install(".")
-    session.install("coverage[toml]", "pytest", "pygments", "pytest-mock")
+    session.install("coverage[toml]", "pytest", "hypothesis", "pygments", "pytest-mock")
 
     ld_library_path = {
         "LD_LIBRARY_PATH": os.pathsep.join(
