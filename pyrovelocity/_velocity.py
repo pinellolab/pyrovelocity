@@ -1,4 +1,3 @@
-import mlflow
 import logging
 import os
 import pickle
@@ -9,10 +8,8 @@ from typing import Literal
 from typing import Optional
 from typing import Sequence
 from typing import Union
-from pyrovelocity.plot import compute_mean_vector_field
-from pyrovelocity.plot import vector_field_uncertainty
-from pyrovelocity.plot import compute_volcano_data
 
+import mlflow
 import numpy as np
 import pyro
 import scvi
@@ -27,13 +24,16 @@ from scvi.data._constants import _SETUP_ARGS_KEY
 from scvi.data._constants import _SETUP_METHOD_NAME
 from scvi.data.fields import LayerField
 from scvi.data.fields import NumericalObsField
-
 from scvi.model._utils import parse_use_gpu_arg
 from scvi.model.base import BaseModelClass
 from scvi.model.base._utils import _initialize_model
 from scvi.model.base._utils import _load_saved_files
 from scvi.model.base._utils import _validate_var_names
 from scvi.module.base import PyroBaseModuleClass
+
+from pyrovelocity.plot import compute_mean_vector_field
+from pyrovelocity.plot import compute_volcano_data
+from pyrovelocity.plot import vector_field_uncertainty
 
 from ._trainer import VelocityTrainingMixin
 from ._velocity_module import VelocityModule
@@ -369,23 +369,29 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         return samples
 
     def get_mlflow_logs(self):
-        return 
+        return
 
-    def reduce_posterior_samples_dict(self, adata, model_posterior_samples, vector_field_basis: str = 'umap', ncpus_use: int = 4):
+    def reduce_posterior_samples_dict(
+        self,
+        adata,
+        model_posterior_samples,
+        vector_field_basis: str = "umap",
+        ncpus_use: int = 4,
+    ):
         """reduce posterior samples by precomputing metrics."""
-        #adata = self._adata_manager.adata
+        # adata = self._adata_manager.adata
 
         vector_field_posterior_samples, embeds_radian, fdri = vector_field_uncertainty(
             adata,
-            model_posterior_samples, 
+            model_posterior_samples,
             basis=vector_field_basis,
             n_jobs=ncpus_use,
         )
-        embeds_magnitude = np.sqrt((vector_field_posterior_samples ** 2).sum(axis=-1).sum(axis=-1))
-        
-        mlflow.log_metric(
-            "FDR_sig_frac", round((fdri < 0.05).sum() / fdri.shape[0], 3)
+        embeds_magnitude = np.sqrt(
+            (vector_field_posterior_samples**2).sum(axis=-1).sum(axis=-1)
         )
+
+        mlflow.log_metric("FDR_sig_frac", round((fdri < 0.05).sum() / fdri.shape[0], 3))
         mlflow.log_metric("FDR_HMP", harmonic_mean(fdri))
 
         compute_mean_vector_field(
@@ -397,24 +403,38 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
 
         vector_field_posterior_mean = adata.obsm[f"velocity_pyro_{vector_field_basis}"]
 
-        gene_ranking, genes = compute_volcano_data([model_posterior_samples], [adata], time_correlation_with="st")
-        gene_ranking = gene_ranking.sort_values("mean_mae", ascending=False).head(300).sort_values("time_correlation", ascending=False)
-        model_posterior_samples['gene_ranking'] = gene_ranking
-        model_posterior_samples['genes'] = genes
-        model_posterior_samples['vector_field_posterior_samples'] = vector_field_posterior_samples
-        model_posterior_samples['vector_field_posterior_mean'] = vector_field_posterior_mean
-        model_posterior_samples['fdri'] = fdri
-        model_posterior_samples['embeds_magnitude'] = embeds_magnitude
-        #assert embeds_radian.shape == (self.num_samples, adata.shape[0], 2)
+        gene_ranking, genes = compute_volcano_data(
+            [model_posterior_samples], [adata], time_correlation_with="st"
+        )
+        gene_ranking = (
+            gene_ranking.sort_values("mean_mae", ascending=False)
+            .head(300)
+            .sort_values("time_correlation", ascending=False)
+        )
+        model_posterior_samples["gene_ranking"] = gene_ranking
+        model_posterior_samples["genes"] = genes
+        model_posterior_samples[
+            "vector_field_posterior_samples"
+        ] = vector_field_posterior_samples
+        model_posterior_samples[
+            "vector_field_posterior_mean"
+        ] = vector_field_posterior_mean
+        model_posterior_samples["fdri"] = fdri
+        model_posterior_samples["embeds_magnitude"] = embeds_magnitude
+        # assert embeds_radian.shape == (self.num_samples, adata.shape[0], 2)
         print(embeds_radian.shape)
-        model_posterior_samples['embeds_angle'] = embeds_radian
-        model_posterior_samples['ut_mean'] = model_posterior_samples['ut'].mean(0).squeeze()
-        model_posterior_samples['st_mean'] = model_posterior_samples['st'].mean(0).squeeze()
+        model_posterior_samples["embeds_angle"] = embeds_radian
+        model_posterior_samples["ut_mean"] = (
+            model_posterior_samples["ut"].mean(0).squeeze()
+        )
+        model_posterior_samples["st_mean"] = (
+            model_posterior_samples["st"].mean(0).squeeze()
+        )
 
-        del model_posterior_samples['u']
-        del model_posterior_samples['s']
-        del model_posterior_samples['ut']
-        del model_posterior_samples['st']
+        del model_posterior_samples["u"]
+        del model_posterior_samples["s"]
+        del model_posterior_samples["ut"]
+        del model_posterior_samples["st"]
         return model_posterior_samples
 
     def save_prediction_pkl(self, model_posterior_samples, pyrovelocity_data_path):

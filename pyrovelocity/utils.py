@@ -8,12 +8,12 @@ from typing import Tuple
 
 import anndata
 import colorlog
+import matplotlib.pyplot as plt
 import numpy as np
 import scvelo as scv
 import seaborn as sns
 import torch
 from pytorch_lightning.utilities import rank_zero_only
-import matplotlib.pyplot as plt
 from scipy.sparse import issparse
 from scvi.data import synthetic_iid
 from sklearn.decomposition import PCA

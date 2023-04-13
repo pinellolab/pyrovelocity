@@ -399,8 +399,8 @@ def compute_volcano_data(
 ) -> None:
     assert isinstance(pos, (tuple, list))
     assert isinstance(adata, (tuple, list))
-    assert 's' in pos[0]
-    assert 'alpha' in pos[0]
+    assert "s" in pos[0]
+    assert "alpha" in pos[0]
 
     maes_list = []
     cors = []
@@ -469,13 +469,13 @@ def plot_gene_ranking(
     adjust_text=False,
 ) -> None:
     print(pos[0].keys())
-    if 'u' in pos[0]:
+    if "u" in pos[0]:
         volcano_data, genes = compute_volcano_data(
             pos, adata, time_correlation_with, selected_genes, negative
         )
     else:
-        volcano_data = pos[0]['gene_ranking']
-        genes = pos[0]['genes']
+        volcano_data = pos[0]["gene_ranking"]
+        genes = pos[0]["genes"]
 
     fig = None
     from adjustText import adjust_text
@@ -1153,8 +1153,8 @@ def us_rainbowplot(
         pos_s = pos[data[0]].mean(0).squeeze()
         pos_u = pos[data[1]].mean(0).squeeze()
     else:
-        pos_u = pos['ut_mean']
-        pos_s = pos['st_mean']
+        pos_u = pos["ut_mean"]
+        pos_s = pos["st_mean"]
 
     for gene in genes:
         (index,) = np.where(adata.var_names == gene)
