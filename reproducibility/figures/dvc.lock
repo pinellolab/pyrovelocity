@@ -408,14 +408,14 @@ stages:
             train_size: 1.0
             use_gpu: 0
             likelihood: Poisson
-            num_samples: 30
+            num_samples: 3
             log_every: 100
             cell_state: clusters
             patient_improve: 0.0001
             patient_init: 45
             seed: 99
             lr: 0.01
-            max_epochs: 2000
+            max_epochs: 5
             include_prior: true
             library_size: true
             offset: true
@@ -832,14 +832,14 @@ stages:
             train_size: 1.0
             use_gpu: 0
             likelihood: Poisson
-            num_samples: 30
+            num_samples: 3
             log_every: 100
             cell_state: clusters
             patient_improve: 0.0001
             patient_init: 45
             seed: 99
             lr: 0.01
-            max_epochs: 2000
+            max_epochs: 5
             include_prior: true
             library_size: true
             offset: true
