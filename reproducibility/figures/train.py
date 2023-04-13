@@ -116,23 +116,31 @@ def train(conf: DictConfig, logger: Logger) -> None:
                 mae_df = mae_evaluate(adata_model_pos[1], adata)
                 mlflow.log_metric("MAE", mae_df["MAE"].mean())
 
-                logger.info("computing vector field uncertainty")
-                v_map_all, embeds_radian, fdri = vector_field_uncertainty(
-                    adata,
-                    adata_model_pos[1],
-                    basis=vector_field_basis,
-                    n_jobs=ncpus_use,
-                )
-                mlflow.log_metric(
-                    "FDR_sig_frac", round((fdri < 0.05).sum() / fdri.shape[0], 3)
-                )
-                mlflow.log_metric("FDR_HMP", harmonic_mean(fdri))
+                # logger.info("computing vector field uncertainty")
+                # v_map_all, embeds_radian, fdri = vector_field_uncertainty(
+                #    adata,
+                #    adata_model_pos[1],
+                #    basis=vector_field_basis,
+                #    n_jobs=ncpus_use,
+                # )
+                # mlflow.log_metric(
+                #    "FDR_sig_frac", round((fdri < 0.05).sum() / fdri.shape[0], 3)
+                # )
+                # mlflow.log_metric("FDR_HMP", harmonic_mean(fdri))
                 # logger.info(
                 #     f"Data attributes after computation of vector field uncertainty"
                 # )
                 # print_attributes(adata_model_pos[1])
 
                 run_id = run.info.run_id
+
+            reduced_adata_model_pos = adata_model_pos[0].reduce_posterior_samples_dict(
+                adata, adata_model_pos[1]
+            )
+
+            adata_model_pos[0].save_prediction_pkl(
+                reduced_adata_model_pos, pyrovelocity_data_path
+            )
 
             ##############
             # save metrics
@@ -163,15 +171,15 @@ def train(conf: DictConfig, logger: Logger) -> None:
 
                 check_shared_time(adata_model_pos, adata)
 
-            logger.info("computing mean vector field")
-            compute_mean_vector_field(
-                pos=adata_model_pos[1],
-                adata=adata,
-                basis=vector_field_basis,
-                n_jobs=ncpus_use,
-            )
-            embed_mean = adata.obsm[f"velocity_pyro_{vector_field_basis}"]
-            logger.info("Data attributes after computation of mean vector field")
+            # logger.info("computing mean vector field")
+            # compute_mean_vector_field(
+            #    pos=adata_model_pos[1],
+            #    adata=adata,
+            #    basis=vector_field_basis,
+            #    n_jobs=ncpus_use,
+            # )
+            # embed_mean = adata.obsm[f"velocity_pyro_{vector_field_basis}"]
+            # logger.info("Data attributes after computation of mean vector field")
             print_attributes(adata)
 
             ##################
@@ -183,17 +191,20 @@ def train(conf: DictConfig, logger: Logger) -> None:
 
             logger.info(f"Saving model: {model_path}")
             adata_model_pos[0].save(model_path, overwrite=True)
-            result_dict = {
-                "adata_model_pos": adata_model_pos[1],
-                "v_map_all": v_map_all,
-                "embeds_radian": embeds_radian,
-                "fdri": fdri,
-                "embed_mean": embed_mean,
-            }
 
-            logger.info(f"Saving pyrovelocity data: {pyrovelocity_data_path}")
-            with open(pyrovelocity_data_path, "wb") as f:
-                pickle.dump(result_dict, f)
+            del adata_model_pos
+
+            # result_dict = {
+            #    "adata_model_pos": adata_model_pos[1],
+            #    "v_map_all": v_map_all,
+            #    "embeds_radian": embeds_radian,
+            #    "fdri": fdri,
+            #    "embed_mean": embed_mean,
+            # }
+
+            # logger.info(f"Saving pyrovelocity data: {pyrovelocity_data_path}")
+            # with open(pyrovelocity_data_path, "wb") as f:
+            #    pickle.dump(result_dict, f)
 
 
 def print_logged_info(r: mlflow.entities.run.Run) -> None:

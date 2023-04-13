@@ -94,8 +94,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
 
         logger.info(f"Loading pyrovelocity data: {pyrovelocity_data_path}")
         with open(pyrovelocity_data_path, "rb") as f:
-            result_dict = pickle.load(f)
-        adata_model_pos = result_dict["adata_model_pos"]
+            model_posterior_samples = pickle.load(f)
 
         ##################
         # generate figures
@@ -107,10 +106,15 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             logger.info(f"{volcano_plot} exists")
         else:
             logger.info(f"Generating figure: {volcano_plot}")
+            print(model_posterior_samples.keys())
+            for key in model_posterior_samples.keys():
+                print(model_posterior_samples[key].shape)
             fig, ax = plt.subplots()
+
             volcano_data, _ = plot_gene_ranking(
-                [adata_model_pos], [adata], ax=ax, time_correlation_with="st"
+                [model_posterior_samples], [adata], ax=ax, time_correlation_with="st"
             )
+
             fig.savefig(
                 volcano_plot,
                 facecolor=fig.get_facecolor(),
@@ -130,9 +134,6 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         if os.path.isfile(rainbow_plot):
             logger.info(f"{rainbow_plot} exists")
         else:
-            volcano_data, _ = compute_volcano_data(
-                [adata_model_pos], [adata], time_correlation_with="st"
-            )
             logger.info(f"Generating figure: {rainbow_plot}")
             fig = us_rainbowplot(
                 volcano_data.sort_values("mean_mae", ascending=False)
@@ -141,7 +142,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
                 .head(5)
                 .index,
                 adata,
-                adata_model_pos,
+                model_posterior_samples,
                 data=["st", "ut"],
                 cell_state=cell_state,
             )
