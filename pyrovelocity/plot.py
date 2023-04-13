@@ -399,6 +399,8 @@ def compute_volcano_data(
 ) -> None:
     assert isinstance(pos, (tuple, list))
     assert isinstance(adata, (tuple, list))
+    assert 's' in pos[0]
+    assert 'alpha' in pos[0]
 
     maes_list = []
     cors = []
@@ -406,7 +408,8 @@ def compute_volcano_data(
     labels = []
     switching = []
     for p, ad, label in zip(pos, adata, ["train", "valid"]):
-        for sample in range(30):
+        print(label)
+        for sample in range(p["alpha"].shape[0]):
             maes_list.append(
                 mae_per_gene(
                     p["s"][sample].squeeze(), ad.layers["raw_spliced"].toarray()
@@ -465,9 +468,14 @@ def plot_gene_ranking(
     negative=False,
     adjust_text=False,
 ) -> None:
-    volcano_data, genes = compute_volcano_data(
-        pos, adata, time_correlation_with, selected_genes, negative
-    )
+    print(pos[0].keys())
+    if 'u' in pos[0]:
+        volcano_data, genes = compute_volcano_data(
+            pos, adata, time_correlation_with, selected_genes, negative
+        )
+    else:
+        volcano_data = pos[0]['gene_ranking']
+        genes = pos[0]['genes']
 
     fig = None
     from adjustText import adjust_text
@@ -694,7 +702,8 @@ def vector_field_uncertainty(
         scv.pp.neighbors(adata, use_rep="pca")
     ##scv.pp.neighbors(adata, use_rep=basis)
 
-    for sample in range(30):
+    assert len(pos["st"].shape) == 3
+    for sample in range(pos["st"].shape[0]):
         adata.layers["spliced_pyro"] = pos["st"][sample]
         adata.layers["velocity_pyro"] = velocity_samples[sample]
         adata.var["velocity_genes"] = True
@@ -1140,8 +1149,12 @@ def us_rainbowplot(
     fig, ax = plt.subplots(len(genes), 2)
     fig.set_size_inches(7, 14)
     n = 0
-    pos_s = pos[data[0]].mean(0).squeeze()
-    pos_u = pos[data[1]].mean(0).squeeze()
+    if data[0] in pos:
+        pos_s = pos[data[0]].mean(0).squeeze()
+        pos_u = pos[data[1]].mean(0).squeeze()
+    else:
+        pos_u = pos['ut_mean']
+        pos_s = pos['st_mean']
 
     for gene in genes:
         (index,) = np.where(adata.var_names == gene)

@@ -1,12 +1,17 @@
+import mlflow
 import logging
 import os
 import pickle
 import sys
+from statistics import harmonic_mean
 from typing import Dict
 from typing import Literal
 from typing import Optional
 from typing import Sequence
 from typing import Union
+from pyrovelocity.plot import compute_mean_vector_field
+from pyrovelocity.plot import vector_field_uncertainty
+from pyrovelocity.plot import compute_volcano_data
 
 import numpy as np
 import pyro
@@ -21,10 +26,8 @@ from scvi.data._constants import _SCVI_UUID_KEY
 from scvi.data._constants import _SETUP_ARGS_KEY
 from scvi.data._constants import _SETUP_METHOD_NAME
 from scvi.data.fields import LayerField
-from scvi.data.fields import NumericalJointObsField
 from scvi.data.fields import NumericalObsField
 
-# from scvi.data import transfer_anndata_setup
 from scvi.model._utils import parse_use_gpu_arg
 from scvi.model.base import BaseModelClass
 from scvi.model.base._utils import _initialize_model
@@ -101,8 +104,8 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> import anndata
             >>> from pyrovelocity._velocity import PyroVelocity
             >>> from pyrovelocity.utils import pretty_print_dict, print_anndata, generate_sample_data
-            >>> n_obs = 10
-            >>> n_vars = 5
+            >>> n_obs = 3000
+            >>> n_vars = 500
             >>> adata = generate_sample_data(n_obs=n_obs, n_vars=n_vars)
             >>> print_anndata(adata)
             >>> adata.layers['raw_spliced'] = adata.layers['spliced']
@@ -118,15 +121,15 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> PyroVelocity.setup_anndata(adata)
             >>> model = PyroVelocity(adata)
             >>> model.train_faster(max_epochs=5, use_gpu=0)
-            >>> model.save('pyrovel_test_saved_model', overwrite=True)
-            >>> model = PyroVelocity.load('pyrovel_test_saved_model', adata, use_gpu=0)
+            >>> model.save_model('pyrovel_test_saved_model', overwrite=True)
+            >>> model = PyroVelocity.load_model('pyrovel_test_saved_model', adata, use_gpu=0)
             >>> posterior_samples = model.posterior_samples(model.adata, num_samples=30)
             >>> pretty_print_dict(posterior_samples)
             >>> print(posterior_samples.keys())
             >>> model = PyroVelocity(adata)
             >>> model.train_faster_with_batch(batch_size=24, max_epochs=5, use_gpu=0)
-            >>> model.save('pyrovel_test_saved_model', overwrite=True)
-            >>> model = PyroVelocity.load('pyrovel_test_saved_model', adata, use_gpu=0)
+            >>> model.save_model('pyrovel_test_saved_model', overwrite=True)
+            >>> model = PyroVelocity.load_model('pyrovel_test_saved_model', adata, use_gpu=0)
             >>> posterior_samples = model.posterior_samples(model.adata, num_samples=30)
             >>> pretty_print_dict(posterior_samples)
             >>> print(posterior_samples.keys())
@@ -134,8 +137,8 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> model.train(max_epochs=5, use_gpu=0)
             >>> posterior_samples = model.posterior_samples(model.adata, num_samples=30)
             >>> print(posterior_samples.keys())
-            >>> model.save('pyrovel_test_saved_model', overwrite=True)
-            >>> model = PyroVelocity.load('pyrovel_test_saved_model', adata, use_gpu=0)
+            >>> model.save_model('pyrovel_test_saved_model', overwrite=True)
+            >>> model = PyroVelocity.load_model('pyrovel_test_saved_model', adata, use_gpu=0)
 
         """
         # >>> assert isinstance(posterior_samples, dict), f"Expected a dictionary, got {type(posterior_samples)}"
@@ -362,9 +365,64 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                 #    print(k, 'before', sys.getsizeof(samples[k]))
                 #    samples[k] = sparse.csr_matrix(samples[k]) # cannot compress 3D tensor
                 #    print(k, 'after', sys.getsizeof(samples[k]))
+        self.num_samples = num_samples
         return samples
 
-    def save(
+    def get_mlflow_logs(self):
+        return 
+
+    def reduce_posterior_samples_dict(self, adata, model_posterior_samples, vector_field_basis: str = 'umap', ncpus_use: int = 4):
+        """reduce posterior samples by precomputing metrics."""
+        #adata = self._adata_manager.adata
+
+        vector_field_posterior_samples, embeds_radian, fdri = vector_field_uncertainty(
+            adata,
+            model_posterior_samples, 
+            basis=vector_field_basis,
+            n_jobs=ncpus_use,
+        )
+        embeds_magnitude = np.sqrt((vector_field_posterior_samples ** 2).sum(axis=-1).sum(axis=-1))
+        
+        mlflow.log_metric(
+            "FDR_sig_frac", round((fdri < 0.05).sum() / fdri.shape[0], 3)
+        )
+        mlflow.log_metric("FDR_HMP", harmonic_mean(fdri))
+
+        compute_mean_vector_field(
+            pos=model_posterior_samples,
+            adata=adata,
+            basis=vector_field_basis,
+            n_jobs=ncpus_use,
+        )
+
+        vector_field_posterior_mean = adata.obsm[f"velocity_pyro_{vector_field_basis}"]
+
+        gene_ranking, genes = compute_volcano_data([model_posterior_samples], [adata], time_correlation_with="st")
+        gene_ranking = gene_ranking.sort_values("mean_mae", ascending=False).head(300).sort_values("time_correlation", ascending=False)
+        model_posterior_samples['gene_ranking'] = gene_ranking
+        model_posterior_samples['genes'] = genes
+        model_posterior_samples['vector_field_posterior_samples'] = vector_field_posterior_samples
+        model_posterior_samples['vector_field_posterior_mean'] = vector_field_posterior_mean
+        model_posterior_samples['fdri'] = fdri
+        model_posterior_samples['embeds_magnitude'] = embeds_magnitude
+        #assert embeds_radian.shape == (self.num_samples, adata.shape[0], 2)
+        print(embeds_radian.shape)
+        model_posterior_samples['embeds_angle'] = embeds_radian
+        model_posterior_samples['ut_mean'] = model_posterior_samples['ut'].mean(0).squeeze()
+        model_posterior_samples['st_mean'] = model_posterior_samples['st'].mean(0).squeeze()
+
+        del model_posterior_samples['u']
+        del model_posterior_samples['s']
+        del model_posterior_samples['ut']
+        del model_posterior_samples['st']
+        return model_posterior_samples
+
+    def save_prediction_pkl(self, model_posterior_samples, pyrovelocity_data_path):
+        logger.info(f"Saving pyrovelocity data: {pyrovelocity_data_path}")
+        with open(pyrovelocity_data_path, "wb") as f:
+            pickle.dump(model_posterior_samples, f)
+
+    def save_model(
         self,
         dir_path: str,
         prefix: Optional[str] = None,
@@ -376,7 +434,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         pyro.get_param_store().save(os.path.join(dir_path, "param_store_test.pt"))
 
     @classmethod
-    def load(
+    def load_model(
         cls,
         dir_path: str,
         adata: Optional[AnnData] = None,
