@@ -52,8 +52,8 @@ def plots(conf: DictConfig, logger: Logger) -> None:
 
     logger.info(f"Loading pyrovelocity data: {pyrovelocity_data_path}")
     with open(pyrovelocity_data_path, "rb") as f:
-        result_dict = pickle.load(f)
-    adata_model_pos = result_dict["adata_model_pos"]
+        adata_model_pos = pickle.load(f)
+    # adata_model_pos = result_dict["adata_model_pos"]
 
     ##################
     # generate figures
