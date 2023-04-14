@@ -1,12 +1,12 @@
 {
-    "artifact_uri": "mlflow-artifacts:/1a741690552b410eb9c7ba642cf21e2d/537be163d9bc422385871154ada088ed/artifacts",
-    "end_time": 1681408168027,
+    "artifact_uri": "file:///home/jupyter/pyrovelocity/reproducibility/figures/mlruns/0/eaadd6dd59554ab2a04394ec4bad2666/artifacts",
+    "end_time": 1681431400845,
     "experiment_id": "0",
     "lifecycle_stage": "active",
-    "run_id": "537be163d9bc422385871154ada088ed",
-    "run_name": "pancreas_model1-537be16",
-    "run_uuid": "537be163d9bc422385871154ada088ed",
-    "start_time": 1681407412963,
+    "run_id": "eaadd6dd59554ab2a04394ec4bad2666",
+    "run_name": "pancreas_model1-eaadd6d",
+    "run_uuid": "eaadd6dd59554ab2a04394ec4bad2666",
+    "start_time": 1681429114486,
     "status": "FINISHED",
-    "user_id": "root"
+    "user_id": "jupyter"
 }
