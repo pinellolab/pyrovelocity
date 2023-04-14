@@ -1,0 +1,79 @@
+name: Colab
+on:
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: "Run with tmate.io debugging enabled"
+        required: true
+        type: boolean
+        default: false
+  push:
+    branches:
+      - "*"
+    tags:
+      - "*"
+  pull_request:
+    branches:
+      - master
+
+concurrency:
+  # Concurrency group that uses the workflow name and PR number if available
+  # or commit SHA as a fallback. If a new build is triggered under that
+  # concurrency group while a previous build is running it will be canceled.
+  # Repeated pushes to a PR will cancel all previous builds, while multiple
+  # merges to master will not cancel.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+jobs:
+  package:
+    name: ${{ matrix.os }}, Python ${{ matrix.pyver }}
+    runs-on: ${{ matrix.os }}-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu]
+        pyver: ["3.10"]
+    env:
+      PYTHONUNBUFFERED: True
+    steps:
+      - name: Print github context
+        run: |
+          echo "EVENT_NAME:" "$GITHUB_EVENT_NAME"
+          echo "       REF:" "$GITHUB_REF"
+          echo "  HEAD_REF:" "$GITHUB_HEAD_REF"
+          echo "  BASE_REF:" "$GITHUB_BASE_REF"
+          echo "       SHA:" "$GITHUB_SHA"
+      - name: Retrieve the source code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Setup tmate debug session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ inputs.debug_enabled }}
+      - name: Install constructor
+        run: |
+          source $CONDA/etc/profile.d/conda.sh
+          conda create -n constructor -c conda-forge -yq constructor conda-libmamba-solver
+          conda activate constructor
+          set -x
+          which constructor
+          constructor --version
+      - name: Construct environment with conda-libmamba-solver
+        run: |
+          source $CONDA/etc/profile.d/conda.sh
+          conda activate constructor
+          mkdir -p examples_artifacts/
+          conda list
+          CONDA_SOLVER=libmamba CONDA_VERBOSITY=1 CONDA_OVERRIDE_CUDA="11.8" constructor conda/colab/ --output-dir=examples_artifacts/
+      - name: Upload the Colab installer as a workflow artifact
+        # if: github.event_name == 'pull_request' && matrix.pyver == '3.10'
+        uses: actions/upload-artifact@v3
+        with:
+          name: installers-${{ runner.os }}-${{ github.sha }}-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}
+          path: examples_artifacts/
+          retention-days: 14
