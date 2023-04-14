@@ -384,7 +384,11 @@ def plots(conf: DictConfig, logger: Logger) -> None:
 
     logger.info(f"\n\nplotting pancreas pyrovelocity gene ranking\n\n")
     volcano_data2, _ = plot_gene_ranking(
-        [posterior_samples], [adata], ax=ax[1], time_correlation_with="st", assemble=True
+        [posterior_samples],
+        [adata],
+        ax=ax[1],
+        time_correlation_with="st",
+        assemble=True,
     )
     ax[0].text(
         -0.22,
