@@ -549,12 +549,12 @@ def init_with_all_cells(
     return init_values
 
 
-def mae_evaluate(pos, adata):
+def mae_evaluate(posterior_samples, adata):
     maes_list = []
     labels = []
-    if isinstance(pos, tuple):
+    if isinstance(posterior_samples, tuple):
         for model_label, model_obj, split_index in zip(
-            ["Poisson train", "Poisson valid"], pos[:2], pos[2:]
+            ["Poisson train", "Poisson valid"], posterior_samples[:2], posterior_samples[2:]
         ):
             for sample in range(model_obj["u"].shape[0]):
                 maes_list.append(
@@ -570,7 +570,7 @@ def mae_evaluate(pos, adata):
                 )
                 labels.append(model_label)
     else:
-        for model_label, model_obj in zip(["Poisson all cells"], [pos]):
+        for model_label, model_obj in zip(["Poisson all cells"], [posterior_samples]):
             for sample in range(model_obj["u"].shape[0]):
                 maes_list.append(
                     mae(

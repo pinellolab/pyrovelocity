@@ -129,10 +129,10 @@ def train_model(
             )
         set_loss_plot_axes(ax)
         fig.savefig(loss_plot_path, facecolor="white", bbox_inches="tight")
-        pos = model.generate_posterior_samples(
+        posterior_samples = model.generate_posterior_samples(
             model.adata, num_samples=num_samples, batch_size=512
         )
-        return model, pos
+        return model, posterior_samples
     else:
         if train_size >= 1:  ##support velocity_auto_depth
             if batch_size == -1:
@@ -165,13 +165,13 @@ def train_model(
                 np.arange(len(losses)), -np.array(losses), label="train", alpha=0.25
             )
             set_loss_plot_axes(ax)
-            pos = model.generate_posterior_samples(
+            posterior_samples = model.generate_posterior_samples(
                 model.adata, num_samples=num_samples, batch_size=512
             )
 
             fig.savefig(loss_plot_path, facecolor="white", bbox_inches="tight")
 
-            return model, pos
+            return model, posterior_samples
         else:  # train validation procedure
             if (
                 guide_type == "velocity_auto_depth"
@@ -198,7 +198,7 @@ def train_model(
                 patient_improve=patient_improve,
                 patient_init=patient_init,
             )
-            pos = model.generate_posterior_samples(
+            posterior_samples = model.generate_posterior_samples(
                 model.adata, num_samples=num_samples, indices=train_ind, batch_size=512
             )
 
@@ -264,7 +264,7 @@ def train_model(
             set_loss_plot_axes(ax)
         plt.legend()
         plt.savefig(loss_plot_path, facecolor="white", bbox_inches="tight")
-        return pos, pos_test, train_ind, test_ind
+        return posterior_samples, pos_test, train_ind, test_ind
 
 
 def set_loss_plot_axes(ax):

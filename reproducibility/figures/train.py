@@ -180,7 +180,7 @@ def train(conf: DictConfig, logger: Logger) -> None:
 
             # logger.info("computing mean vector field")
             # compute_mean_vector_field(
-            #    pos=posterior_samples,
+            #    posterior_samples=posterior_samples,
             #    adata=adata,
             #    basis=vector_field_basis,
             #    n_jobs=ncpus_use,

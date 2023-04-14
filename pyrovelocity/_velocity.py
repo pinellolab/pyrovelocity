@@ -386,7 +386,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         mlflow.log_metric("FDR_HMP", harmonic_mean(fdri))
 
         compute_mean_vector_field(
-            pos=model_posterior_samples,
+            posterior_samples=model_posterior_samples,
             adata=adata,
             basis=vector_field_basis,
             n_jobs=ncpus_use,
