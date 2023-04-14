@@ -1332,7 +1332,7 @@ def rainbowplot(
             .head(num_genes)
             .index
         )
-    adata.layers["pyro_spliced"] = posterior_samples[data[0]].mean(0)
+    # adata.layers["pyro_spliced"] = posterior_samples[data[0]].mean(0)
     if fig is None:
         fig = plt.figure(figsize=(5.5, 4.5))
 
@@ -1364,8 +1364,16 @@ def rainbowplot(
     ax_fig2 = subfigs[1].subplots(len(genes), 1)
 
     n = 0
-    st = posterior_samples[data[0]].mean(0)
-    ut = posterior_samples[data[1]].mean(0)
+    # st = posterior_samples[data[0]].mean(0)
+    # ut = posterior_samples[data[1]].mean(0)
+
+    if (data[0] in posterior_samples) and (data[1] in posterior_samples):
+        st = posterior_samples[data[0]].mean(0).squeeze()
+        ut = posterior_samples[data[1]].mean(0).squeeze()
+    else:
+        st = posterior_samples["st_mean"]
+        ut = posterior_samples["ut_mean"]
+
     for gene in genes:
         print(gene)
         (index,) = np.where(adata.var_names == gene)
