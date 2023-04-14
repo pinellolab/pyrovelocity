@@ -165,7 +165,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
 
             vector_field_basis = data_model_conf.vector_field_parameters.basis
 
-            # embed_mean = plot_mean_vector_field(adata_model_pos[1], adata, ax=ax)
+            # embed_mean = plot_mean_vector_field(posterior_samples, adata, ax=ax)
             scv.pl.velocity_embedding_grid(
                 adata,
                 basis=vector_field_basis,

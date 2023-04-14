@@ -110,15 +110,15 @@ def train(conf: DictConfig, logger: Logger) -> None:
                 )
 
                 logger.info("Data attributes after model training")
-                pretty_print_dict(adata_model_pos[1])
+                pretty_print_dict(posterior_samples)
 
-                mae_df = mae_evaluate(adata_model_pos[1], adata)
+                mae_df = mae_evaluate(posterior_samples, adata)
                 mlflow.log_metric("MAE", mae_df["MAE"].mean())
 
                 logger.info("computing vector field uncertainty")
                 # v_map_all, embeds_radian, fdri = vector_field_uncertainty(
                 #    adata,
-                #    adata_model_pos[1],
+                #    posterior_samples,
                 #    basis=vector_field_basis,
                 #    n_jobs=ncpus_use,
                 # )
@@ -129,18 +129,18 @@ def train(conf: DictConfig, logger: Logger) -> None:
                 # logger.info(
                 #     f"Data attributes after computation of vector field uncertainty"
                 # )
-                # print_attributes(adata_model_pos[1])
+                # print_attributes(posterior_samples)
 
                 reduced_adata_model_pos = trained_model.compute_statistics_from_posterior_samples(
                     adata,
-                    adata_model_pos[1],
+                    posterior_samples,
                     vector_field_basis=vector_field_basis,
                     ncpus_use=ncpus_use,
                 )
                 logger.info(
                     "Data attributes after computation of vector field uncertainty"
                 )
-                print_attributes(adata_model_pos[1])
+                print_attributes(posterior_samples)
 
                 run_id = run.info.run_id
 
@@ -172,7 +172,7 @@ def train(conf: DictConfig, logger: Logger) -> None:
 
                 def check_shared_time(adata_model_pos, adata):
                     adata.obs["cell_time"] = (
-                        adata_model_pos[1]["cell_time"].squeeze().mean(0)
+                        posterior_samples["cell_time"].squeeze().mean(0)
                     )
                     adata.obs["1-Cytotrace"] = 1 - adata.obs["cytotrace"]
 
@@ -180,7 +180,7 @@ def train(conf: DictConfig, logger: Logger) -> None:
 
             # logger.info("computing mean vector field")
             # compute_mean_vector_field(
-            #    pos=adata_model_pos[1],
+            #    pos=posterior_samples,
             #    adata=adata,
             #    basis=vector_field_basis,
             #    n_jobs=ncpus_use,
@@ -202,7 +202,7 @@ def train(conf: DictConfig, logger: Logger) -> None:
             del adata_model_pos
 
             # result_dict = {
-            #    "adata_model_pos": adata_model_pos[1],
+            #    "adata_model_pos": posterior_samples,
             #    "v_map_all": v_map_all,
             #    "embeds_radian": embeds_radian,
             #    "fdri": fdri,

@@ -152,7 +152,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     else:
         logger.info(f"Generating figure: {vector_field_plot}")
         fig, ax = plt.subplots()
-        # embed_mean = plot_mean_vector_field(adata_model_pos[1], adata, ax=ax)
+        # embed_mean = plot_mean_vector_field(posterior_samples, adata, ax=ax)
         scv.pl.velocity_embedding_grid(
             adata,
             basis="umap",
