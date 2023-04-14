@@ -1,0 +1,56 @@
+name: pyrovelocity-colab
+version: 0.1.1
+
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+specs:
+  - python=3.10
+  - pip
+  - conda
+  - mamba # mamba is not needed but recommended
+
+  # If any of your packages pulls in cudatoolkit:
+  # uncomment the line below to make sure it matches
+  # the output of `!echo $CUDA_VERSION` on colab
+  # and take only the major.minor components
+  # Right now, Colab uses CUDA 11.8
+  - cudatoolkit=11.8
+
+  # core
+  - leidenalg
+  - pyro-ppl=1.8.3
+  - pytorch-gpu=1.13.1
+  - seaborn=0.11.2
+  - anndata=0.8.0
+  - scvelo=0.2.5
+  - pandas=1.5.3
+  - h5py
+  - anndata
+  - scvi-tools
+  - scikit-misc
+  - torchmetrics
+  - matplotlib-venn
+  - adjusttext
+  - xdoctest
+  - astropy
+  - click
+  - colorlog
+  - omegaconf
+  - rich
+  - hydra-core
+  - mlflow
+  - termcolor
+  - tqdm
+  - ipywidgets
+  # development
+  - dvc
+  - git
+  - gh
+
+# Pip dependencies are NOT recommended. If you do need them
+# uncomment the line below and edit `pip-dependencies.sh`.
+# post_install: pip-dependencies.sh
+
+installer_type: sh
