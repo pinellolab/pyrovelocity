@@ -94,7 +94,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
 
         logger.info(f"Loading pyrovelocity data: {pyrovelocity_data_path}")
         with open(pyrovelocity_data_path, "rb") as f:
-            model_posterior_samples = pickle.load(f)
+            posterior_samples = pickle.load(f)
 
         ##################
         # generate figures
@@ -106,13 +106,13 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             logger.info(f"{volcano_plot} exists")
         else:
             logger.info(f"Generating figure: {volcano_plot}")
-            print(model_posterior_samples.keys())
-            for key in model_posterior_samples.keys():
-                print(model_posterior_samples[key].shape)
+            print(posterior_samples.keys())
+            for key in posterior_samples.keys():
+                print(posterior_samples[key].shape)
             fig, ax = plt.subplots()
 
             volcano_data, _ = plot_gene_ranking(
-                [model_posterior_samples], [adata], ax=ax, time_correlation_with="st"
+                [posterior_samples], [adata], ax=ax, time_correlation_with="st"
             )
 
             fig.savefig(
@@ -142,7 +142,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
                 .head(5)
                 .index,
                 adata,
-                model_posterior_samples,
+                posterior_samples,
                 data=["st", "ut"],
                 cell_state=cell_state,
             )

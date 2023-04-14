@@ -158,7 +158,7 @@ if save_res:
                    "v_map_all": v_map_all,
                    "embeds_radian": embeds_radian, "fdri": fdri, "embed_mean": embed_mean}
     import pickle
-    with open("model_posterior_samples.pkl", "wb") as f:
+    with open("posterior_samples.pkl", "wb") as f:
          pickle.dump(result_dict, f)
 ```
 

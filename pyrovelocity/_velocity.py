@@ -365,7 +365,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
     def compute_statistics_from_posterior_samples(
         self,
         adata,
-        model_posterior_samples,
+        posterior_samples,
         vector_field_basis,
         ncpus_use,
     ):
@@ -374,7 +374,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
 
         vector_field_posterior_samples, embeds_radian, fdri = vector_field_uncertainty(
             adata,
-            model_posterior_samples,
+            posterior_samples,
             basis=vector_field_basis,
             n_jobs=ncpus_use,
         )
@@ -386,7 +386,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         mlflow.log_metric("FDR_HMP", harmonic_mean(fdri))
 
         compute_mean_vector_field(
-            posterior_samples=model_posterior_samples,
+            posterior_samples=posterior_samples,
             adata=adata,
             basis=vector_field_basis,
             n_jobs=ncpus_use,
@@ -395,42 +395,42 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         vector_field_posterior_mean = adata.obsm[f"velocity_pyro_{vector_field_basis}"]
 
         gene_ranking, genes = compute_volcano_data(
-            [model_posterior_samples], [adata], time_correlation_with="st"
+            [posterior_samples], [adata], time_correlation_with="st"
         )
         gene_ranking = (
             gene_ranking.sort_values("mean_mae", ascending=False)
             .head(300)
             .sort_values("time_correlation", ascending=False)
         )
-        model_posterior_samples["gene_ranking"] = gene_ranking
-        model_posterior_samples["genes"] = genes
-        model_posterior_samples[
+        posterior_samples["gene_ranking"] = gene_ranking
+        posterior_samples["genes"] = genes
+        posterior_samples[
             "vector_field_posterior_samples"
         ] = vector_field_posterior_samples
-        model_posterior_samples[
+        posterior_samples[
             "vector_field_posterior_mean"
         ] = vector_field_posterior_mean
-        model_posterior_samples["fdri"] = fdri
-        model_posterior_samples["embeds_magnitude"] = embeds_magnitude
+        posterior_samples["fdri"] = fdri
+        posterior_samples["embeds_magnitude"] = embeds_magnitude
         # assert embeds_radian.shape == (self.num_samples, adata.shape[0], 2)
         print(embeds_radian.shape)
-        model_posterior_samples["embeds_angle"] = embeds_radian
-        model_posterior_samples["ut_mean"] = (
-            model_posterior_samples["ut"].mean(0).squeeze()
+        posterior_samples["embeds_angle"] = embeds_radian
+        posterior_samples["ut_mean"] = (
+            posterior_samples["ut"].mean(0).squeeze()
         )
-        model_posterior_samples["st_mean"] = (
-            model_posterior_samples["st"].mean(0).squeeze()
+        posterior_samples["st_mean"] = (
+            posterior_samples["st"].mean(0).squeeze()
         )
 
-        del model_posterior_samples["u"]
-        del model_posterior_samples["s"]
-        del model_posterior_samples["ut"]
-        del model_posterior_samples["st"]
-        return model_posterior_samples
+        del posterior_samples["u"]
+        del posterior_samples["s"]
+        del posterior_samples["ut"]
+        del posterior_samples["st"]
+        return posterior_samples
 
-    def save_prediction_pkl(self, model_posterior_samples, pyrovelocity_data_path):
+    def save_prediction_pkl(self, posterior_samples, pyrovelocity_data_path):
         with open(pyrovelocity_data_path, "wb") as f:
-            pickle.dump(model_posterior_samples, f)
+            pickle.dump(posterior_samples, f)
 
     def save_model(
         self,
