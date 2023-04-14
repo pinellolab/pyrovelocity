@@ -142,7 +142,8 @@ def train(conf: DictConfig, logger: Logger) -> None:
                 logger.info(
                     "Data attributes after computation of vector field uncertainty"
                 )
-                print_attributes(posterior_samples)
+                pretty_print_dict(posterior_samples)
+                print(posterior_samples.keys())
 
                 run_id = run.info.run_id
 
@@ -172,13 +173,13 @@ def train(conf: DictConfig, logger: Logger) -> None:
             if "pancreas" in data_model:
                 logger.info("checking shared time")
 
-                def check_shared_time(adata_model_pos, adata):
+                def check_shared_time(posterior_samples, adata):
                     adata.obs["cell_time"] = (
                         posterior_samples["cell_time"].squeeze().mean(0)
                     )
                     adata.obs["1-Cytotrace"] = 1 - adata.obs["cytotrace"]
 
-                check_shared_time(adata_model_pos, adata)
+                check_shared_time(posterior_samples, adata)
 
             # logger.info("computing mean vector field")
             # compute_mean_vector_field(
@@ -200,8 +201,6 @@ def train(conf: DictConfig, logger: Logger) -> None:
 
             logger.info(f"Saving model: {model_path}")
             trained_model.save(model_path, overwrite=True)
-
-            del adata_model_pos
 
             # result_dict = {
             #    "adata_model_pos": posterior_samples,
