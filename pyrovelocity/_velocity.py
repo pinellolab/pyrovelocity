@@ -362,7 +362,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
     def get_mlflow_logs(self):
         return
 
-    def reduce_posterior_samples_dict(
+    def compute_statistics_from_posterior_samples(
         self,
         adata,
         model_posterior_samples,
