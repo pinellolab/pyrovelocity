@@ -104,7 +104,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     ):
         logger.info(f"Loading: {pyrovelocity_pbmc68k_data_path}")
         with open(pyrovelocity_pbmc68k_data_path, "rb") as f:
-            posterior_samples = pickle.load(f)
+            posterior_samples_pbmc = pickle.load(f)
     else:
         logger.error(
             f"{pyrovelocity_pbmc68k_data_path} does not exist or is not accessible"
@@ -114,10 +114,10 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         )
 
     # posterior_samples_pbmc = posterior_samples["posterior_samples"]
-    v_map_all_pbmc = posterior_samples["vector_field_posterior_samples"]
-    embeds_radian_pbmc = posterior_samples["embeds_angle"]
-    fdri_pbmc = posterior_samples["fdri"]
-    embed_mean_pbmc = posterior_samples["vector_field_posterior_mean"]
+    v_map_all_pbmc = posterior_samples_pbmc["vector_field_posterior_samples"]
+    embeds_radian_pbmc = posterior_samples_pbmc["embeds_angle"]
+    fdri_pbmc = posterior_samples_pbmc["fdri"]
+    embed_mean_pbmc = posterior_samples_pbmc["vector_field_posterior_mean"]
 
     if os.path.isfile(trained_pancreas_data_path) and os.access(
         trained_pancreas_data_path, os.R_OK
