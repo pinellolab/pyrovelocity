@@ -76,9 +76,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     ):
         logger.info(f"Loading: {pyrovelocity_pancreas_data_path}")
         with open(pyrovelocity_pancreas_data_path, "rb") as f:
-            result_dict = pickle.load(f)
+            posterior_samples = pickle.load(f)
         with open(pyrovelocity_pancreas_model2_data_path, "rb") as f:
-            model2_result_dict = pickle.load(f)
+            model2_posterior_samples = pickle.load(f)
     else:
         logger.error(
             f"{pyrovelocity_pancreas_data_path} does not exist or is not accessible"
@@ -87,24 +87,24 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             errno.ENOENT, os.strerror(errno.ENOENT), pyrovelocity_pancreas_data_path
         )
 
-    adata_model_pos = result_dict["adata_model_pos"]
-    v_map_all = result_dict["v_map_all"]
-    embeds_radian = result_dict["embeds_radian"]
-    fdri = result_dict["fdri"]
-    embed_mean = result_dict["embed_mean"]
+    # posterior_samples = posterior_samples["posterior_samples"]
+    v_map_all = posterior_samples["vector_field_posterior_samples"]
+    embeds_radian = posterior_samples["embeds_angle"]
+    fdri = posterior_samples["fdri"]
+    embed_mean = posterior_samples["vector_field_posterior_mean"]
 
-    model2_adata_model_pos = model2_result_dict["adata_model_pos"]
-    model2_v_map_all = model2_result_dict["v_map_all"]
-    model2_embeds_radian = model2_result_dict["embeds_radian"]
-    model2_fdri = model2_result_dict["fdri"]
-    model2_embed_mean = model2_result_dict["embed_mean"]
+    # model2_posterior_samples = model2_posterior_samples["posterior_samples"]
+    model2_v_map_all = model2_posterior_samples["vector_field_posterior_samples"]
+    model2_embeds_radian = model2_posterior_samples["embeds_angle"]
+    model2_fdri = model2_posterior_samples["fdri"]
+    model2_embed_mean = model2_posterior_samples["vector_field_posterior_mean"]
 
     if os.path.isfile(pyrovelocity_pbmc68k_data_path) and os.access(
         pyrovelocity_pbmc68k_data_path, os.R_OK
     ):
         logger.info(f"Loading: {pyrovelocity_pbmc68k_data_path}")
         with open(pyrovelocity_pbmc68k_data_path, "rb") as f:
-            result_dict = pickle.load(f)
+            posterior_samples = pickle.load(f)
     else:
         logger.error(
             f"{pyrovelocity_pbmc68k_data_path} does not exist or is not accessible"
@@ -113,11 +113,11 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             errno.ENOENT, os.strerror(errno.ENOENT), pyrovelocity_pbmc68k_data_path
         )
 
-    adata_model_pos_pbmc = result_dict["adata_model_pos"]
-    v_map_all_pbmc = result_dict["v_map_all"]
-    embeds_radian_pbmc = result_dict["embeds_radian"]
-    fdri_pbmc = result_dict["fdri"]
-    embed_mean_pbmc = result_dict["embed_mean"]
+    # posterior_samples_pbmc = posterior_samples["posterior_samples"]
+    v_map_all_pbmc = posterior_samples["vector_field_posterior_samples"]
+    embeds_radian_pbmc = posterior_samples["embeds_angle"]
+    fdri_pbmc = posterior_samples["fdri"]
+    embed_mean_pbmc = posterior_samples["vector_field_posterior_mean"]
 
     if os.path.isfile(trained_pancreas_data_path) and os.access(
         trained_pancreas_data_path, os.R_OK
@@ -376,7 +376,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     subfig_B = subfig[2].subfigures(1, 2, wspace=0.0, hspace=0, width_ratios=[1.6, 4])
     ax = subfig_B[0].subplots(2, 1)
     plot_posterior_time(
-        adata_model_pos, adata, ax=ax[0], fig=subfig_B[0], addition=False
+        posterior_samples, adata, ax=ax[0], fig=subfig_B[0], addition=False
     )
     subfig_B[0].subplots_adjust(
         hspace=0.3, wspace=0.1, left=0.01, right=0.8, top=0.92, bottom=0.17
@@ -384,7 +384,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
 
     logger.info(f"\n\nplotting pancreas pyrovelocity gene ranking\n\n")
     volcano_data2, _ = plot_gene_ranking(
-        [adata_model_pos], [adata], ax=ax[1], time_correlation_with="st", assemble=True
+        [posterior_samples], [adata], ax=ax[1], time_correlation_with="st", assemble=True
     )
     ax[0].text(
         -0.22,
@@ -411,7 +411,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     _ = rainbowplot(
         volcano_data2,
         adata,
-        adata_model_pos,
+        posterior_samples,
         subfig_B[1],
         data=["st", "ut"],
         num_genes=4,
@@ -447,7 +447,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     )
     print(model1_genes)
     model2_volcano, _ = plot_gene_ranking(
-        [model2_adata_model_pos],
+        [model2_posterior_samples],
         [adata_model2],
         ax=ax[0],
         time_correlation_with="st",
@@ -464,7 +464,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     )
     print(model2_genes)
     _, _ = plot_gene_ranking(
-        [adata_model_pos],
+        [posterior_samples],
         [adata],
         ax=ax[1],
         time_correlation_with="st",
@@ -532,7 +532,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         fig_revision2 = rainbowplot(
             volcano_data2,
             adata,
-            adata_model_pos,
+            posterior_samples,
             None,
             data=["st", "ut"],
             num_genes=8,
@@ -543,7 +543,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         fig_revision2 = rainbowplot(
             model2_volcano,
             adata_model2,
-            model2_adata_model_pos,
+            model2_posterior_samples,
             None,
             data=["st", "ut"],
             num_genes=8,
@@ -556,10 +556,10 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         fig, ax = plt.subplots(3, 1)
         fig.set_size_inches(18, 12)
         for index, kinetics in enumerate(["alpha", "beta", "gamma"]):
-            print(adata_model_pos[kinetics].squeeze().shape)
+            print(posterior_samples[kinetics].squeeze().shape)
             print(np.isin(adata.var_names, list(model1_geneset)).sum())
             df = pd.DataFrame(
-                adata_model_pos[kinetics].squeeze()[
+                posterior_samples[kinetics].squeeze()[
                     :, np.isin(adata.var_names, list(model1_geneset))
                 ],
                 columns=adata.var_names[np.isin(adata.var_names, list(model1_geneset))],
@@ -578,7 +578,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         fig.set_size_inches(18, 12)
         for index, kinetics in enumerate(["alpha", "beta", "gamma"]):
             df = pd.DataFrame(
-                model2_adata_model_pos[kinetics].squeeze()[
+                model2_posterior_samples[kinetics].squeeze()[
                     :, np.isin(adata_model2.var_names, list(model2_geneset))
                 ],
                 columns=adata_model2.var_names[
