@@ -131,7 +131,7 @@ def train(conf: DictConfig, logger: Logger) -> None:
                 # )
                 # print_attributes(posterior_samples)
 
-                reduced_adata_model_pos = (
+                pyrovelocity_data = (
                     trained_model.compute_statistics_from_posterior_samples(
                         adata,
                         posterior_samples,
@@ -147,8 +147,8 @@ def train(conf: DictConfig, logger: Logger) -> None:
                 run_id = run.info.run_id
 
             logger.info(f"Saving pyrovelocity data: {pyrovelocity_data_path}")
-            trained_model.save_prediction_pkl(
-                reduced_adata_model_pos, pyrovelocity_data_path
+            trained_model.save_pyrovelocity_data(
+                pyrovelocity_data, pyrovelocity_data_path
             )
 
             ##############

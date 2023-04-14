@@ -423,7 +423,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         del posterior_samples["st"]
         return posterior_samples
 
-    def save_prediction_pkl(self, posterior_samples, pyrovelocity_data_path):
+    def save_pyrovelocity_data(self, posterior_samples, pyrovelocity_data_path):
         with open(pyrovelocity_data_path, "wb") as f:
             pickle.dump(posterior_samples, f)
 
