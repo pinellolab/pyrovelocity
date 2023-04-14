@@ -322,7 +322,14 @@ def plot_multigenes_dynamical(
 
 
 def plot_posterior_time(
-    pos, adata, ax=None, fig=None, basis="umap", addition=True, position="left", s=3
+    posterior_samples,
+    adata,
+    ax=None,
+    fig=None,
+    basis="umap",
+    addition=True,
+    position="left",
+    s=3,
 ):
     if addition:
         sns.set_style("white")
@@ -330,8 +337,8 @@ def plot_posterior_time(
         matplotlib.rcParams.update({"font.size": 7})
         # celltime_cors = []
         # celltime_labels = []
-        # for index in range(pos['cell_time'].shape[0]):
-        #    celltime_cors.append(spearmanr(1-adata.obs.cytotrace, pos['cell_time'][index])[0])
+        # for index in range(posterior_samples['cell_time'].shape[0]):
+        #    celltime_cors.append(spearmanr(1-adata.obs.cytotrace, posterior_samples['cell_time'][index])[0])
         #    celltime_labels.append('Pyro-Velocity train data')
         # celltime_cors.append(spearmanr(1-adata.obs.cytotrace, adata.obs.latent_time)[0])
         # celltime_labels.append('scvelo')
@@ -343,12 +350,14 @@ def plot_posterior_time(
         # plt.title("Benchmark shared cell time")
         # plt.ylim(0, 1)
         plt.figure()
-        test_hist = plt.hist(pos["cell_time"].mean(0), bins=100, label="test")
+        test_hist = plt.hist(
+            posterior_samples["cell_time"].mean(0), bins=100, label="test"
+        )
         plt.xlabel("mean of cell time")
         plt.ylabel("frequency")
         plt.title("Histogram of cell time posterior samples")
         plt.legend()
-    pos_mean_time = pos["cell_time"].mean(0)
+    pos_mean_time = posterior_samples["cell_time"].mean(0)
     # scale to 0-1?
     adata.obs["cell_time"] = pos_mean_time / pos_mean_time.max()
     if ax is None:
@@ -391,23 +400,23 @@ def mae_per_gene(pred_counts: ndarray, true_counts: ndarray) -> ndarray:
 
 
 def compute_volcano_data(
-    pos,
+    posterior_samples,
     adata,
     time_correlation_with="s",
     selected_genes=None,
     negative=False,
 ) -> None:
-    assert isinstance(pos, (tuple, list))
+    assert isinstance(posterior_samples, (tuple, list))
     assert isinstance(adata, (tuple, list))
-    assert "s" in pos[0]
-    assert "alpha" in pos[0]
+    assert "s" in posterior_samples[0]
+    assert "alpha" in posterior_samples[0]
 
     maes_list = []
     cors = []
     genes = []
     labels = []
     switching = []
-    for p, ad, label in zip(pos, adata, ["train", "valid"]):
+    for p, ad, label in zip(posterior_samples, adata, ["train", "valid"]):
         print(label)
         for sample in range(p["alpha"].shape[0]):
             maes_list.append(
@@ -458,7 +467,7 @@ def compute_volcano_data(
 
 
 def plot_gene_ranking(
-    pos,
+    posterior_samples,
     adata,
     ax=None,
     time_correlation_with="s",
@@ -468,14 +477,14 @@ def plot_gene_ranking(
     negative=False,
     adjust_text=False,
 ) -> None:
-    print(pos[0].keys())
-    if "u" in pos[0]:
+    print(posterior_samples[0].keys())
+    if "u" in posterior_samples[0]:
         volcano_data, genes = compute_volcano_data(
-            pos, adata, time_correlation_with, selected_genes, negative
+            posterior_samples, adata, time_correlation_with, selected_genes, negative
         )
     else:
-        volcano_data = pos[0]["gene_ranking"]
-        genes = pos[0]["genes"]
+        volcano_data = posterior_samples[0]["gene_ranking"]
+        genes = posterior_samples[0]["genes"]
 
     fig = None
     from adjustText import adjust_text
@@ -572,7 +581,7 @@ def plot_gene_ranking(
     return volcano_data, fig
 
 
-def denoised_umap(pos, adata, cell_state="state_info"):
+def denoised_umap(posterior_samples, adata, cell_state="state_info"):
     pass
 
     import sklearn
@@ -586,7 +595,7 @@ def denoised_umap(pos, adata, cell_state="state_info"):
     pipelines = Pipeline(projection)
     fig, ax = plt.subplots(2, 2)
     fig.set_size_inches(9, 9)
-    expression = [pos["st"].mean(0)]
+    expression = [posterior_samples["st"].mean(0)]
     pipelines.fit(expression[0])
     umap_orig = pipelines.transform(expression[0])
     adata.obsm["X_umap1"] = umap_orig
@@ -595,15 +604,18 @@ def denoised_umap(pos, adata, cell_state="state_info"):
     joint_pcs = pipelines.steps[0][1].transform(expression[0])
     adata.obsm["X_pyropca"] = joint_pcs
     scv.pp.neighbors(adata, use_rep="pyropca")
-    adata.layers["spliced_pyro"] = pos["st"].mean(0)
-    if "u_scale" in pos:
+    adata.layers["spliced_pyro"] = posterior_samples["st"].mean(0)
+    if "u_scale" in posterior_samples:
         adata.layers["velocity_pyro"] = (
-            pos["ut"] * pos["beta"] / (pos["u_scale"] / pos["s_scale"])
-            - pos["st"] * pos["gamma"]
+            posterior_samples["ut"]
+            * posterior_samples["beta"]
+            / (posterior_samples["u_scale"] / posterior_samples["s_scale"])
+            - posterior_samples["st"] * posterior_samples["gamma"]
         ).mean(0)
     else:
         adata.layers["velocity_pyro"] = (
-            pos["ut"] * pos["beta"] - pos["st"] * pos["gamma"]
+            posterior_samples["ut"] * posterior_samples["beta"]
+            - posterior_samples["st"] * posterior_samples["gamma"]
         ).mean(0)
     scv.tl.velocity_graph(adata, vkey="velocity_pyro", xkey="spliced_pyro")
     scv.tl.velocity_embedding(adata, vkey="velocity_pyro", basis="umap1")
@@ -620,7 +632,9 @@ def denoised_umap(pos, adata, cell_state="state_info"):
     )
     adata.obsm["X_umap1"] = umap_orig
 
-    expression = [np.hstack([pos["st"].mean(0), pos["ut"].mean(0)])]
+    expression = [
+        np.hstack([posterior_samples["st"].mean(0), posterior_samples["ut"].mean(0)])
+    ]
     pipelines.fit(expression[0])
     umap_orig = pipelines.transform(expression[0])
     adata.obsm["X_umap2"] = umap_orig
@@ -628,15 +642,18 @@ def denoised_umap(pos, adata, cell_state="state_info"):
     joint_pcs = pipelines.steps[0][1].transform(expression[0])
     adata.obsm["X_pyropca"] = joint_pcs
     scv.pp.neighbors(adata, use_rep="pyropca")
-    adata.layers["spliced_pyro"] = pos["st"].mean(0)
-    if "u_scale" in pos:
+    adata.layers["spliced_pyro"] = posterior_samples["st"].mean(0)
+    if "u_scale" in posterior_samples:
         adata.layers["velocity_pyro"] = (
-            pos["ut"] * pos["beta"] / (pos["u_scale"] / pos["s_scale"])
-            - pos["st"] * pos["gamma"]
+            posterior_samples["ut"]
+            * posterior_samples["beta"]
+            / (posterior_samples["u_scale"] / posterior_samples["s_scale"])
+            - posterior_samples["st"] * posterior_samples["gamma"]
         ).mean(0)
     else:
         adata.layers["velocity_pyro"] = (
-            pos["ut"] * pos["beta"] - pos["st"] * pos["gamma"]
+            posterior_samples["ut"] * posterior_samples["beta"]
+            - posterior_samples["st"] * posterior_samples["gamma"]
         ).mean(0)
     scv.tl.velocity_graph(adata, vkey="velocity_pyro", xkey="spliced_pyro")
     scv.tl.velocity_embedding(adata, vkey="velocity_pyro", basis="umap1")
@@ -655,7 +672,7 @@ def denoised_umap(pos, adata, cell_state="state_info"):
 
 def vector_field_uncertainty(
     adata: AnnData,
-    pos: Dict[str, ndarray],
+    posterior_samples: Dict[str, ndarray],
     basis: str = "tsne",
     n_jobs: int = 1,
     denoised: bool = False,
@@ -671,19 +688,27 @@ def vector_field_uncertainty(
     # fig.set_size_inches(16, 36)
     # ax = ax.flatten()
     v_map_all = []
-    if ("u_scale" in pos) and ("s_scale" in pos):  # Gaussian models
-        scale = pos["u_scale"] / pos["s_scale"]
-    elif ("u_scale" in pos) and not ("s_scale" in pos):  # Poisson Model 2
-        scale = pos["u_scale"]
+    if ("u_scale" in posterior_samples) and (
+        "s_scale" in posterior_samples
+    ):  # Gaussian models
+        scale = posterior_samples["u_scale"] / posterior_samples["s_scale"]
+    elif ("u_scale" in posterior_samples) and not (
+        "s_scale" in posterior_samples
+    ):  # Poisson Model 2
+        scale = posterior_samples["u_scale"]
     else:  # Poisson Model 1
         scale = 1
 
-    if "beta_k" in pos:
+    if "beta_k" in posterior_samples:
         velocity_samples = (
-            pos["ut"] * pos["beta_k"] / scale - pos["st"] * pos["gamma_k"]
+            posterior_samples["ut"] * posterior_samples["beta_k"] / scale
+            - posterior_samples["st"] * posterior_samples["gamma_k"]
         )
     else:
-        velocity_samples = pos["beta"] * pos["ut"] / scale - pos["gamma"] * pos["st"]
+        velocity_samples = (
+            posterior_samples["beta"] * posterior_samples["ut"] / scale
+            - posterior_samples["gamma"] * posterior_samples["st"]
+        )
 
     if denoised:
         projection = [
@@ -691,7 +716,7 @@ def vector_field_uncertainty(
             ("UMAP", umap.UMAP(random_state=99, n_components=2)),
         ]
         pipelines = Pipeline(projection)
-        expression = [pos["st"].mean(0)]
+        expression = [posterior_samples["st"].mean(0)]
         pipelines.fit(expression[0])
         umap_orig = pipelines.transform(expression[0])
         adata.obsm["X_umap1"] = umap_orig
@@ -702,9 +727,9 @@ def vector_field_uncertainty(
         scv.pp.neighbors(adata, use_rep="pca")
     ##scv.pp.neighbors(adata, use_rep=basis)
 
-    assert len(pos["st"].shape) == 3
-    for sample in range(pos["st"].shape[0]):
-        adata.layers["spliced_pyro"] = pos["st"][sample]
+    assert len(posterior_samples["st"].shape) == 3
+    for sample in range(posterior_samples["st"].shape[0]):
+        adata.layers["spliced_pyro"] = posterior_samples["st"][sample]
         adata.layers["velocity_pyro"] = velocity_samples[sample]
         adata.var["velocity_genes"] = True
         scv.tl.velocity_graph(
@@ -869,7 +894,7 @@ def plot_vector_field_uncertain(
 
 
 def compute_mean_vector_field(
-    pos,
+    posterior_samples,
     adata,
     basis="umap",
     n_jobs=1,
@@ -882,27 +907,34 @@ def compute_mean_vector_field(
 
     if spliced == "spliced_pyro":
         if raw:
-            ut = pos["ut"]
-            st = pos["st"]
+            ut = posterior_samples["ut"]
+            st = posterior_samples["st"]
             ut = ut / ut.sum(axis=-1, keepdims=True)
             st = st / st.sum(axis=-1, keepdims=True)
         else:
-            ut = pos["ut"]
-            st = pos["st"]
+            ut = posterior_samples["ut"]
+            st = posterior_samples["st"]
         adata.layers["spliced_pyro"] = st.mean(0).squeeze()
-        # if ('u_scale' in pos) and ('s_scale' in pos): # TODO: two scale for Normal distribution
-        if "u_scale" in pos:  # only one scale for Poisson distribution
+        # if ('u_scale' in posterior_samples) and ('s_scale' in posterior_samples): # TODO: two scale for Normal distribution
+        if "u_scale" in posterior_samples:  # only one scale for Poisson distribution
             adata.layers["velocity_pyro"] = (
-                ut * pos["beta"] / pos["u_scale"] - st * pos["gamma"]
+                ut * posterior_samples["beta"] / posterior_samples["u_scale"]
+                - st * posterior_samples["gamma"]
             ).mean(0)
         else:
-            if "beta_k" in pos:
+            if "beta_k" in posterior_samples:
                 adata.layers["velocity_pyro"] = (
-                    (ut * pos["beta_k"] - pos["st"] * pos["gamma_k"]).mean(0).squeeze()
+                    (
+                        ut * posterior_samples["beta_k"]
+                        - posterior_samples["st"] * posterior_samples["gamma_k"]
+                    )
+                    .mean(0)
+                    .squeeze()
                 )
             else:
                 adata.layers["velocity_pyro"] = (
-                    ut * pos["beta"] - pos["st"] * pos["gamma"]
+                    ut * posterior_samples["beta"]
+                    - posterior_samples["st"] * posterior_samples["gamma"]
                 ).mean(0)
         scv.tl.velocity_graph(
             adata, vkey="velocity_pyro", xkey="spliced_pyro", n_jobs=n_jobs
@@ -910,25 +942,33 @@ def compute_mean_vector_field(
     elif spliced in ["Ms"]:
         ut = adata.layers["Mu"]
         st = adata.layers["Ms"]
-        if ("u_scale" in pos) and ("s_scale" in pos):
+        if ("u_scale" in posterior_samples) and ("s_scale" in posterior_samples):
             adata.layers["velocity_pyro"] = (
-                ut * pos["beta"] / (pos["u_scale"] / pos["s_scale"]) - st * pos["gamma"]
+                ut
+                * posterior_samples["beta"]
+                / (posterior_samples["u_scale"] / posterior_samples["s_scale"])
+                - st * posterior_samples["gamma"]
             ).mean(0)
         else:
             adata.layers["velocity_pyro"] = (
-                ut * pos["beta"] - pos["st"] * pos["gamma"]
+                ut * posterior_samples["beta"]
+                - posterior_samples["st"] * posterior_samples["gamma"]
             ).mean(0)
         scv.tl.velocity_graph(adata, vkey="velocity_pyro", xkey="Ms", n_jobs=n_jobs)
     elif spliced in ["spliced"]:
         ut = adata.layers["unspliced"]
         st = adata.layers["spliced"]
-        if ("u_scale" in pos) and ("s_scale" in pos):
+        if ("u_scale" in posterior_samples) and ("s_scale" in posterior_samples):
             adata.layers["velocity_pyro"] = (
-                ut * pos["beta"] / (pos["u_scale"] / pos["s_scale"]) - st * pos["gamma"]
+                ut
+                * posterior_samples["beta"]
+                / (posterior_samples["u_scale"] / posterior_samples["s_scale"])
+                - st * posterior_samples["gamma"]
             ).mean(0)
         else:
             adata.layers["velocity_pyro"] = (
-                ut * pos["beta"] - pos["st"] * pos["gamma"]
+                ut * posterior_samples["beta"]
+                - posterior_samples["st"] * posterior_samples["gamma"]
             ).mean(0)
         scv.tl.velocity_graph(
             adata, vkey="velocity_pyro", xkey="spliced", n_jobs=n_jobs
@@ -938,7 +978,7 @@ def compute_mean_vector_field(
 
 
 def plot_mean_vector_field(
-    pos,
+    posterior_samples,
     adata,
     ax,
     basis="umap",
@@ -949,7 +989,7 @@ def plot_mean_vector_field(
     raw=False,
 ):
     compute_mean_vector_field(
-        pos=pos,
+        posterior_samples=posterior_samples,
         adata=adata,
         basis=basis,
         n_jobs=n_jobs,
@@ -1140,7 +1180,7 @@ def set_colorbar(
 def us_rainbowplot(
     genes: pd.Index,
     adata: AnnData,
-    pos: Dict[str, ndarray],
+    posterior_samples: Dict[str, ndarray],
     data: List[str] = ["st", "ut"],
     cell_state: str = "clusters",
 ) -> Figure:
@@ -1149,12 +1189,12 @@ def us_rainbowplot(
     fig, ax = plt.subplots(len(genes), 2)
     fig.set_size_inches(7, 14)
     n = 0
-    if data[0] in pos:
-        pos_s = pos[data[0]].mean(0).squeeze()
-        pos_u = pos[data[1]].mean(0).squeeze()
+    if data[0] in posterior_samples:
+        pos_s = posterior_samples[data[0]].mean(0).squeeze()
+        pos_u = posterior_samples[data[1]].mean(0).squeeze()
     else:
-        pos_u = pos["ut_mean"]
-        pos_s = pos["st_mean"]
+        pos_u = posterior_samples["ut_mean"]
+        pos_s = posterior_samples["st_mean"]
 
     for gene in genes:
         (index,) = np.where(adata.var_names == gene)
@@ -1163,7 +1203,7 @@ def us_rainbowplot(
             ax1.set_title("Rainbow plot")
         ress = pd.DataFrame(
             {
-                "cell_time": pos["cell_time"].mean(0).squeeze(),
+                "cell_time": posterior_samples["cell_time"].mean(0).squeeze(),
                 "cell_type": adata.obs[cell_state].values,
                 "spliced": pos_s[:, index].squeeze(),
                 "unspliced": pos_u[:, index].squeeze(),
@@ -1214,7 +1254,7 @@ def us_rainbowplot(
         ##cax = divider.append_axes('right', size='5%', pad=0.05)
         # ax2.set_ylabel("")
 
-        ##ress = pd.DataFrame({"cell_time": pos['cell_time'].mean(0).flatten(),
+        ##ress = pd.DataFrame({"cell_time": posterior_samples['cell_time'].mean(0).flatten(),
         ##                     "cell_type": adata.obs[cell_state].values,
         ##                     "unspliced": pos_u[:, index].flatten(),
         ##                     "spliced": pos_s[:, index].flatten()})
@@ -1272,7 +1312,7 @@ def us_rainbowplot(
 def rainbowplot(
     volcano_data,
     adata,
-    pos,
+    posterior_samples,
     fig=None,
     genes=None,
     data=["st", "ut"],
@@ -1292,7 +1332,7 @@ def rainbowplot(
             .head(num_genes)
             .index
         )
-    adata.layers["pyro_spliced"] = pos[data[0]].mean(0)
+    # adata.layers["pyro_spliced"] = posterior_samples[data[0]].mean(0)
     if fig is None:
         fig = plt.figure(figsize=(5.5, 4.5))
 
@@ -1324,8 +1364,16 @@ def rainbowplot(
     ax_fig2 = subfigs[1].subplots(len(genes), 1)
 
     n = 0
-    st = pos[data[0]].mean(0)
-    ut = pos[data[1]].mean(0)
+    # st = posterior_samples[data[0]].mean(0)
+    # ut = posterior_samples[data[1]].mean(0)
+
+    if (data[0] in posterior_samples) and (data[1] in posterior_samples):
+        st = posterior_samples[data[0]].mean(0).squeeze()
+        ut = posterior_samples[data[1]].mean(0).squeeze()
+    else:
+        st = posterior_samples["st_mean"]
+        ut = posterior_samples["ut_mean"]
+
     for gene in genes:
         print(gene)
         (index,) = np.where(adata.var_names == gene)
@@ -1335,7 +1383,7 @@ def rainbowplot(
         if n == 0:
             ax1.set_title("Rainbow plot", fontsize=7)
             ax2.set_title("Phase portrait", fontsize=7)
-        pos_mean_time = pos["cell_time"].mean(0).flatten()
+        pos_mean_time = posterior_samples["cell_time"].mean(0).flatten()
         print(pos_mean_time)
         ress = pd.DataFrame(
             {
@@ -1443,19 +1491,26 @@ def rainbowplot(
 
 
 def plot_state_uncertainty(
-    pos, adata, kde=True, data="denoised", top_percentile=0.9, ax=None, basis="umap"
+    posterior_samples,
+    adata,
+    kde=True,
+    data="denoised",
+    top_percentile=0.9,
+    ax=None,
+    basis="umap",
 ):
     if data == "denoised":
         adata.obs["state_uncertain"] = np.sqrt(
             (
-                (pos["st"] - pos["st"].mean(0)) ** 2
-                + (pos["ut"] - pos["ut"].mean(0)) ** 2
+                (posterior_samples["st"] - posterior_samples["st"].mean(0)) ** 2
+                + (posterior_samples["ut"] - posterior_samples["ut"].mean(0)) ** 2
             ).sum(-1)
         ).mean(0)
     else:
         adata.obs["state_uncertain"] = np.sqrt(
             (
-                (pos["s"] - pos["s"].mean(0)) ** 2 + (pos["u"] - pos["u"].mean(0)) ** 2
+                (posterior_samples["s"] - posterior_samples["s"].mean(0)) ** 2
+                + (posterior_samples["u"] - posterior_samples["u"].mean(0)) ** 2
             ).sum(-1)
         ).mean(0)
 

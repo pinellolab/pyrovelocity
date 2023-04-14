@@ -153,12 +153,12 @@ adata_model_pos = train_model(adata,
 # the 1st element is the posterior samples of all random variables
 save_res = True
 if save_res:
-    adata_model_pos[0].save('saved_model', overwrite=True)
-    result_dict = {"adata_model_pos": adata_model_pos[1],
+    trained_model.save('saved_model', overwrite=True)
+    result_dict = {"adata_model_pos": posterior_samples,
                    "v_map_all": v_map_all,
                    "embeds_radian": embeds_radian, "fdri": fdri, "embed_mean": embed_mean}
     import pickle
-    with open("model_posterior_samples.pkl", "wb") as f:
+    with open("posterior_samples.pkl", "wb") as f:
          pickle.dump(result_dict, f)
 ```
 
@@ -176,11 +176,11 @@ embedding = 'emb' # change to umap or tsne based on your embedding method
 
 # This generates the posterior samples of all vector fields
 # and statistical testing results from Rayleigh test
-v_map_all, embeds_radian, fdri = vector_field_uncertainty(adata, adata_model_pos[1],
+v_map_all, embeds_radian, fdri = vector_field_uncertainty(adata, posterior_samples,
                                                           basis=embedding, denoised=False, n_jobs=30)
 fig, ax = plt.subplots()
 # This returns the posterior mean of the vector field
-embed_mean = plot_mean_vector_field(adata_model_pos[1], adata, ax=ax, n_jobs=30, basis=embedding)
+embed_mean = plot_mean_vector_field(posterior_samples, adata, ax=ax, n_jobs=30, basis=embedding)
 # This plot single-cell level vector field uncertainty
 # and averaged cell vector field uncertainty on the grid points
 # based on angular standard deviation
@@ -193,7 +193,7 @@ plot_vector_field_uncertain(adata, embed_mean, embeds_radian,
 # This generates shared time uncertainty plot with contour lines
 fig, ax = plt.subplots(1, 3)
 fig.set_size_inches(12, 2.8)
-adata.obs['shared_time_uncertain'] = adata_model_pos[1]['cell_time'].std(0).flatten()
+adata.obs['shared_time_uncertain'] = posterior_samples['cell_time'].std(0).flatten()
 ax_cb = scv.pl.scatter(adata, c='shared_time_uncertain', ax=ax[0], show=False, cmap='inferno', fontsize=7, s=20, colorbar=True, basis=embedding)
 select = adata.obs['shared_time_uncertain'] > np.quantile(adata.obs['shared_time_uncertain'], 0.9)
 sns.kdeplot(adata.obsm[f'X_{embedding}'][:, 0][select],
@@ -224,10 +224,10 @@ fig = plt.figure(figsize=(7.07, 4.5))
 subfig = fig.subfigures(1, 2, wspace=0.0, hspace=0, width_ratios=[1.6, 4])
 ax = fig.subplots(1)
 # This generates the selected cell fate markers and output in DataFrame
-volcano_data, _ = plot_gene_ranking([adata_model_pos[1]], [adata], ax=ax,
+volcano_data, _ = plot_gene_ranking([posterior_samples], [adata], ax=ax,
                                      time_correlation_with='st', assemble=True)
 # This generates the rainbow plots for the selected markers.
-_ = rainbowplot(volcano_data, adata, adata_model_pos[1],
+_ = rainbowplot(volcano_data, adata, posterior_samples,
                 subfig[1], data=['st', 'ut'], num_genes=4)
 ```
 

@@ -52,8 +52,8 @@ def plots(conf: DictConfig, logger: Logger) -> None:
 
     logger.info(f"Loading pyrovelocity data: {pyrovelocity_data_path}")
     with open(pyrovelocity_data_path, "rb") as f:
-        result_dict = pickle.load(f)
-    adata_model_pos = result_dict["adata_model_pos"]
+        posterior_samples = pickle.load(f)
+    # adata_model_pos = result_dict["adata_model_pos"]
 
     ##################
     # generate figures
@@ -105,7 +105,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         logger.info(f"Generating figure: {volcano_plot}")
         fig, ax = plt.subplots()
         volcano_data, _ = plot_gene_ranking(
-            [adata_model_pos], [adata], ax=ax, time_correlation_with="st"
+            [posterior_samples], [adata], ax=ax, time_correlation_with="st"
         )
         fig.savefig(
             volcano_plot,
@@ -134,7 +134,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             .head(5)
             .index,
             adata,
-            adata_model_pos,
+            posterior_samples,
             data=["st", "ut"],
         )
         fig.savefig(
@@ -152,7 +152,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     else:
         logger.info(f"Generating figure: {vector_field_plot}")
         fig, ax = plt.subplots()
-        # embed_mean = plot_mean_vector_field(adata_model_pos[1], adata, ax=ax)
+        # embed_mean = plot_mean_vector_field(posterior_samples, adata, ax=ax)
         scv.pl.velocity_embedding_grid(
             adata,
             basis="umap",

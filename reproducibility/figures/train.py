@@ -1,12 +1,9 @@
 import json
 import multiprocessing
 import os
-import pickle
 import uuid
 from logging import Logger
 from pathlib import Path
-from statistics import harmonic_mean
-from typing import Text
 
 import hydra
 import mlflow
@@ -17,11 +14,10 @@ from omegaconf import DictConfig
 from pyrovelocity.api import train_model
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.data import load_data
-from pyrovelocity.plot import compute_mean_vector_field
-from pyrovelocity.plot import vector_field_uncertainty
 from pyrovelocity.utils import filter_startswith_dict
 from pyrovelocity.utils import get_pylogger
 from pyrovelocity.utils import mae_evaluate
+from pyrovelocity.utils import pretty_print_dict
 from pyrovelocity.utils import print_attributes
 
 
@@ -72,7 +68,9 @@ def train(conf: DictConfig, logger: Logger) -> None:
             print_attributes(adata)
         else:
             logger.error(f"Input data: {processed_path} does not exist")
-            raise Exception(f"Check {processed_path} output of preprocessing stage.")
+            raise FileNotFoundError(
+                f"Check {processed_path} output of preprocessing stage."
+            )
 
         #############
         # train model
@@ -103,7 +101,7 @@ def train(conf: DictConfig, logger: Logger) -> None:
                 mlflow.log_params(data_model_conf.training_parameters)
 
                 # train model
-                adata_model_pos = train_model(
+                trained_model, posterior_samples = train_model(
                     adata,
                     **dict(
                         filter_startswith_dict(data_model_conf.training_parameters),
@@ -111,15 +109,16 @@ def train(conf: DictConfig, logger: Logger) -> None:
                     ),
                 )
 
-                # logger.info(f"Data attributes after model training")
-                # print_attributes(adata_model_pos[1])
-                mae_df = mae_evaluate(adata_model_pos[1], adata)
+                logger.info("Data attributes after model training")
+                pretty_print_dict(posterior_samples)
+
+                mae_df = mae_evaluate(posterior_samples, adata)
                 mlflow.log_metric("MAE", mae_df["MAE"].mean())
 
-                # logger.info("computing vector field uncertainty")
+                logger.info("computing vector field uncertainty")
                 # v_map_all, embeds_radian, fdri = vector_field_uncertainty(
                 #    adata,
-                #    adata_model_pos[1],
+                #    posterior_samples,
                 #    basis=vector_field_basis,
                 #    n_jobs=ncpus_use,
                 # )
@@ -130,16 +129,27 @@ def train(conf: DictConfig, logger: Logger) -> None:
                 # logger.info(
                 #     f"Data attributes after computation of vector field uncertainty"
                 # )
-                # print_attributes(adata_model_pos[1])
+                # print_attributes(posterior_samples)
+
+                pyrovelocity_data = (
+                    trained_model.compute_statistics_from_posterior_samples(
+                        adata,
+                        posterior_samples,
+                        vector_field_basis=vector_field_basis,
+                        ncpus_use=ncpus_use,
+                    )
+                )
+                logger.info(
+                    "Data attributes after computation of vector field uncertainty"
+                )
+                pretty_print_dict(posterior_samples)
+                print(posterior_samples.keys())
 
                 run_id = run.info.run_id
 
-            reduced_adata_model_pos = adata_model_pos[0].reduce_posterior_samples_dict(
-                adata, adata_model_pos[1]
-            )
-
-            adata_model_pos[0].save_prediction_pkl(
-                reduced_adata_model_pos, pyrovelocity_data_path
+            logger.info(f"Saving pyrovelocity data: {pyrovelocity_data_path}")
+            trained_model.save_pyrovelocity_data(
+                pyrovelocity_data, pyrovelocity_data_path
             )
 
             ##############
@@ -163,17 +173,17 @@ def train(conf: DictConfig, logger: Logger) -> None:
             if "pancreas" in data_model:
                 logger.info("checking shared time")
 
-                def check_shared_time(adata_model_pos, adata):
+                def check_shared_time(posterior_samples, adata):
                     adata.obs["cell_time"] = (
-                        adata_model_pos[1]["cell_time"].squeeze().mean(0)
+                        posterior_samples["cell_time"].squeeze().mean(0)
                     )
                     adata.obs["1-Cytotrace"] = 1 - adata.obs["cytotrace"]
 
-                check_shared_time(adata_model_pos, adata)
+                check_shared_time(posterior_samples, adata)
 
             # logger.info("computing mean vector field")
             # compute_mean_vector_field(
-            #    pos=adata_model_pos[1],
+            #    posterior_samples=posterior_samples,
             #    adata=adata,
             #    basis=vector_field_basis,
             #    n_jobs=ncpus_use,
@@ -190,12 +200,10 @@ def train(conf: DictConfig, logger: Logger) -> None:
             adata.write(trained_data_path)
 
             logger.info(f"Saving model: {model_path}")
-            adata_model_pos[0].save(model_path, overwrite=True)
-
-            del adata_model_pos
+            trained_model.save(model_path, overwrite=True)
 
             # result_dict = {
-            #    "adata_model_pos": adata_model_pos[1],
+            #    "adata_model_pos": posterior_samples,
             #    "v_map_all": v_map_all,
             #    "embeds_radian": embeds_radian,
             #    "fdri": fdri,
