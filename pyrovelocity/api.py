@@ -129,7 +129,7 @@ def train_model(
             )
         set_loss_plot_axes(ax)
         fig.savefig(loss_plot_path, facecolor="white", bbox_inches="tight")
-        pos = model.posterior_samples(
+        pos = model.generate_posterior_samples(
             model.adata, num_samples=num_samples, batch_size=512
         )
         return model, pos
@@ -165,7 +165,7 @@ def train_model(
                 np.arange(len(losses)), -np.array(losses), label="train", alpha=0.25
             )
             set_loss_plot_axes(ax)
-            pos = model.posterior_samples(
+            pos = model.generate_posterior_samples(
                 model.adata, num_samples=num_samples, batch_size=512
             )
 
@@ -198,7 +198,7 @@ def train_model(
                 patient_improve=patient_improve,
                 patient_init=patient_init,
             )
-            pos = model.posterior_samples(
+            pos = model.generate_posterior_samples(
                 model.adata, num_samples=num_samples, indices=train_ind, batch_size=512
             )
 
@@ -247,7 +247,7 @@ def train_model(
                 )
             else:
                 raise
-            pos_test = model.posterior_samples(
+            pos_test = model.generate_posterior_samples(
                 model.adata, num_samples=30, indices=test_ind, batch_size=512
             )
             fig, ax = plt.subplots()

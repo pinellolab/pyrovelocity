@@ -4,7 +4,6 @@ import pickle
 import sys
 from statistics import harmonic_mean
 from typing import Dict
-from typing import Literal
 from typing import Optional
 from typing import Sequence
 from typing import Union
@@ -12,14 +11,10 @@ from typing import Union
 import mlflow
 import numpy as np
 import pyro
-import scvi
 import torch
 from anndata import AnnData
 from numpy import ndarray
-from scipy import sparse
 from scvi.data import AnnDataManager
-from scvi.data._constants import _MODEL_NAME_KEY
-from scvi.data._constants import _SCVI_UUID_KEY
 from scvi.data._constants import _SETUP_ARGS_KEY
 from scvi.data._constants import _SETUP_METHOD_NAME
 from scvi.data.fields import LayerField
@@ -40,11 +35,7 @@ from ._velocity_module import VelocityModule
 from .utils import init_with_all_cells
 
 
-# from pyrovelocity.data import setup_anndata_multilayers
-
-
 logger = logging.getLogger(__name__)
-
 
 class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
     def __init__(
@@ -104,14 +95,12 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> import anndata
             >>> from pyrovelocity._velocity import PyroVelocity
             >>> from pyrovelocity.utils import pretty_print_dict, print_anndata, generate_sample_data
-            >>> n_obs = 3000
-            >>> n_vars = 500
+            >>> from pyrovelocity.data import copy_raw_counts
+            >>> # setup sample data
+            >>> n_obs = 10
+            >>> n_vars = 5
             >>> adata = generate_sample_data(n_obs=n_obs, n_vars=n_vars)
-            >>> print_anndata(adata)
-            >>> adata.layers['raw_spliced'] = adata.layers['spliced']
-            >>> adata.layers['raw_unspliced'] = adata.layers['unspliced']
-            >>> adata.obs['u_lib_size_raw'] = adata.layers['raw_unspliced'].sum(-1)
-            >>> adata.obs['s_lib_size_raw'] = adata.layers['raw_spliced'].sum(-1)
+            >>> copy_raw_counts(adata)
             >>> print_anndata(adata)
             >>> print(adata.X)
             >>> print(adata.layers['spliced'])
@@ -119,30 +108,32 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> print(adata.obs['u_lib_size_raw'])
             >>> print(adata.obs['s_lib_size_raw'])
             >>> PyroVelocity.setup_anndata(adata)
-            >>> model = PyroVelocity(adata)
-            >>> model.train_faster(max_epochs=5, use_gpu=0)
-            >>> model.save_model('pyrovel_test_saved_model', overwrite=True)
-            >>> model = PyroVelocity.load_model('pyrovel_test_saved_model', adata, use_gpu=0)
-            >>> posterior_samples = model.posterior_samples(model.adata, num_samples=30)
-            >>> pretty_print_dict(posterior_samples)
-            >>> print(posterior_samples.keys())
-            >>> model = PyroVelocity(adata)
-            >>> model.train_faster_with_batch(batch_size=24, max_epochs=5, use_gpu=0)
-            >>> model.save_model('pyrovel_test_saved_model', overwrite=True)
-            >>> model = PyroVelocity.load_model('pyrovel_test_saved_model', adata, use_gpu=0)
-            >>> posterior_samples = model.posterior_samples(model.adata, num_samples=30)
-            >>> pretty_print_dict(posterior_samples)
-            >>> print(posterior_samples.keys())
+            >>> # train model  
             >>> model = PyroVelocity(adata)
             >>> model.train(max_epochs=5, use_gpu=0)
-            >>> posterior_samples = model.posterior_samples(model.adata, num_samples=30)
+            >>> posterior_samples = model.generate_posterior_samples(model.adata, num_samples=30)
             >>> print(posterior_samples.keys())
-            >>> model.save_model('pyrovel_test_saved_model', overwrite=True)
-            >>> model = PyroVelocity.load_model('pyrovel_test_saved_model', adata, use_gpu=0)
-
+            >>> assert isinstance(posterior_samples, dict), f"Expected a dictionary, got {type(posterior_samples)}"
+            >>> pretty_print_dict(posterior_samples)
+            >>> model.save_model('save_pyrovelocity_doctest_model', overwrite=True)
+            >>> model = PyroVelocity.load_model('save_pyrovelocity_doctest_model', adata, use_gpu=0)
+            >>> # train model with 
+            >>> model = PyroVelocity(adata)
+            >>> model.train_faster(max_epochs=5, use_gpu=0)
+            >>> model.save_model('save_pyrovelocity_doctest_model', overwrite=True)
+            >>> model = PyroVelocity.load_model('save_pyrovelocity_doctest_model', adata, use_gpu=0)
+            >>> posterior_samples = model.generate_posterior_samples(model.adata, num_samples=30)
+            >>> pretty_print_dict(posterior_samples)
+            >>> print(posterior_samples.keys())
+            >>> # train model with 
+            >>> model = PyroVelocity(adata)
+            >>> model.train_faster_with_batch(batch_size=24, max_epochs=5, use_gpu=0)
+            >>> model.save_model('save_pyrovelocity_doctest_model', overwrite=True)
+            >>> model = PyroVelocity.load_model('save_pyrovelocity_doctest_model', adata, use_gpu=0)
+            >>> posterior_samples = model.generate_posterior_samples(model.adata, num_samples=30)
+            >>> pretty_print_dict(posterior_samples)
+            >>> print(posterior_samples.keys())
         """
-        # >>> assert isinstance(posterior_samples, dict), f"Expected a dictionary, got {type(posterior_samples)}"
-        # >>> pretty_print_dict(posterior_samples)
         self.use_gpu = use_gpu
         self.cell_specific_kinetics = cell_specific_kinetics
         self.k = kinetics_num
@@ -245,7 +236,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
     #         batch_key=None,
     #         input_type=self.input_type,
     #     )
-    #     return self.posterior_samples(adata, indices, batch_size, num_samples)
+    #     return self.generate_posterior_samples(adata, indices, batch_size, num_samples)
 
     def enum_parallel_predict(self):
         """work for parallel enumeration"""
@@ -282,7 +273,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         adata_manager.register_fields(adata, **kwargs)
         cls.register_manager(adata_manager)
 
-    def posterior_samples(
+    def generate_posterior_samples(
         self,
         adata: Optional[AnnData] = None,
         indices: Optional[Sequence[int]] = None,
@@ -489,7 +480,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         )
 
         model = _initialize_model(cls, adata, attr_dict)
-        print("---------initiliaze-------")
+        print("---------initialize-------")
 
         # set saved attrs for loaded model
         for attr, val in attr_dict.items():
