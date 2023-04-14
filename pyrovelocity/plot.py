@@ -322,7 +322,14 @@ def plot_multigenes_dynamical(
 
 
 def plot_posterior_time(
-    posterior_samples, adata, ax=None, fig=None, basis="umap", addition=True, position="left", s=3
+    posterior_samples,
+    adata,
+    ax=None,
+    fig=None,
+    basis="umap",
+    addition=True,
+    position="left",
+    s=3,
 ):
     if addition:
         sns.set_style("white")
@@ -343,7 +350,9 @@ def plot_posterior_time(
         # plt.title("Benchmark shared cell time")
         # plt.ylim(0, 1)
         plt.figure()
-        test_hist = plt.hist(posterior_samples["cell_time"].mean(0), bins=100, label="test")
+        test_hist = plt.hist(
+            posterior_samples["cell_time"].mean(0), bins=100, label="test"
+        )
         plt.xlabel("mean of cell time")
         plt.ylabel("frequency")
         plt.title("Histogram of cell time posterior samples")
@@ -598,12 +607,15 @@ def denoised_umap(posterior_samples, adata, cell_state="state_info"):
     adata.layers["spliced_pyro"] = posterior_samples["st"].mean(0)
     if "u_scale" in posterior_samples:
         adata.layers["velocity_pyro"] = (
-            posterior_samples["ut"] * posterior_samples["beta"] / (posterior_samples["u_scale"] / posterior_samples["s_scale"])
+            posterior_samples["ut"]
+            * posterior_samples["beta"]
+            / (posterior_samples["u_scale"] / posterior_samples["s_scale"])
             - posterior_samples["st"] * posterior_samples["gamma"]
         ).mean(0)
     else:
         adata.layers["velocity_pyro"] = (
-            posterior_samples["ut"] * posterior_samples["beta"] - posterior_samples["st"] * posterior_samples["gamma"]
+            posterior_samples["ut"] * posterior_samples["beta"]
+            - posterior_samples["st"] * posterior_samples["gamma"]
         ).mean(0)
     scv.tl.velocity_graph(adata, vkey="velocity_pyro", xkey="spliced_pyro")
     scv.tl.velocity_embedding(adata, vkey="velocity_pyro", basis="umap1")
@@ -620,7 +632,9 @@ def denoised_umap(posterior_samples, adata, cell_state="state_info"):
     )
     adata.obsm["X_umap1"] = umap_orig
 
-    expression = [np.hstack([posterior_samples["st"].mean(0), posterior_samples["ut"].mean(0)])]
+    expression = [
+        np.hstack([posterior_samples["st"].mean(0), posterior_samples["ut"].mean(0)])
+    ]
     pipelines.fit(expression[0])
     umap_orig = pipelines.transform(expression[0])
     adata.obsm["X_umap2"] = umap_orig
@@ -631,12 +645,15 @@ def denoised_umap(posterior_samples, adata, cell_state="state_info"):
     adata.layers["spliced_pyro"] = posterior_samples["st"].mean(0)
     if "u_scale" in posterior_samples:
         adata.layers["velocity_pyro"] = (
-            posterior_samples["ut"] * posterior_samples["beta"] / (posterior_samples["u_scale"] / posterior_samples["s_scale"])
+            posterior_samples["ut"]
+            * posterior_samples["beta"]
+            / (posterior_samples["u_scale"] / posterior_samples["s_scale"])
             - posterior_samples["st"] * posterior_samples["gamma"]
         ).mean(0)
     else:
         adata.layers["velocity_pyro"] = (
-            posterior_samples["ut"] * posterior_samples["beta"] - posterior_samples["st"] * posterior_samples["gamma"]
+            posterior_samples["ut"] * posterior_samples["beta"]
+            - posterior_samples["st"] * posterior_samples["gamma"]
         ).mean(0)
     scv.tl.velocity_graph(adata, vkey="velocity_pyro", xkey="spliced_pyro")
     scv.tl.velocity_embedding(adata, vkey="velocity_pyro", basis="umap1")
@@ -671,19 +688,27 @@ def vector_field_uncertainty(
     # fig.set_size_inches(16, 36)
     # ax = ax.flatten()
     v_map_all = []
-    if ("u_scale" in posterior_samples) and ("s_scale" in posterior_samples):  # Gaussian models
+    if ("u_scale" in posterior_samples) and (
+        "s_scale" in posterior_samples
+    ):  # Gaussian models
         scale = posterior_samples["u_scale"] / posterior_samples["s_scale"]
-    elif ("u_scale" in posterior_samples) and not ("s_scale" in posterior_samples):  # Poisson Model 2
+    elif ("u_scale" in posterior_samples) and not (
+        "s_scale" in posterior_samples
+    ):  # Poisson Model 2
         scale = posterior_samples["u_scale"]
     else:  # Poisson Model 1
         scale = 1
 
     if "beta_k" in posterior_samples:
         velocity_samples = (
-            posterior_samples["ut"] * posterior_samples["beta_k"] / scale - posterior_samples["st"] * posterior_samples["gamma_k"]
+            posterior_samples["ut"] * posterior_samples["beta_k"] / scale
+            - posterior_samples["st"] * posterior_samples["gamma_k"]
         )
     else:
-        velocity_samples = posterior_samples["beta"] * posterior_samples["ut"] / scale - posterior_samples["gamma"] * posterior_samples["st"]
+        velocity_samples = (
+            posterior_samples["beta"] * posterior_samples["ut"] / scale
+            - posterior_samples["gamma"] * posterior_samples["st"]
+        )
 
     if denoised:
         projection = [
@@ -893,16 +918,23 @@ def compute_mean_vector_field(
         # if ('u_scale' in posterior_samples) and ('s_scale' in posterior_samples): # TODO: two scale for Normal distribution
         if "u_scale" in posterior_samples:  # only one scale for Poisson distribution
             adata.layers["velocity_pyro"] = (
-                ut * posterior_samples["beta"] / posterior_samples["u_scale"] - st * posterior_samples["gamma"]
+                ut * posterior_samples["beta"] / posterior_samples["u_scale"]
+                - st * posterior_samples["gamma"]
             ).mean(0)
         else:
             if "beta_k" in posterior_samples:
                 adata.layers["velocity_pyro"] = (
-                    (ut * posterior_samples["beta_k"] - posterior_samples["st"] * posterior_samples["gamma_k"]).mean(0).squeeze()
+                    (
+                        ut * posterior_samples["beta_k"]
+                        - posterior_samples["st"] * posterior_samples["gamma_k"]
+                    )
+                    .mean(0)
+                    .squeeze()
                 )
             else:
                 adata.layers["velocity_pyro"] = (
-                    ut * posterior_samples["beta"] - posterior_samples["st"] * posterior_samples["gamma"]
+                    ut * posterior_samples["beta"]
+                    - posterior_samples["st"] * posterior_samples["gamma"]
                 ).mean(0)
         scv.tl.velocity_graph(
             adata, vkey="velocity_pyro", xkey="spliced_pyro", n_jobs=n_jobs
@@ -912,11 +944,15 @@ def compute_mean_vector_field(
         st = adata.layers["Ms"]
         if ("u_scale" in posterior_samples) and ("s_scale" in posterior_samples):
             adata.layers["velocity_pyro"] = (
-                ut * posterior_samples["beta"] / (posterior_samples["u_scale"] / posterior_samples["s_scale"]) - st * posterior_samples["gamma"]
+                ut
+                * posterior_samples["beta"]
+                / (posterior_samples["u_scale"] / posterior_samples["s_scale"])
+                - st * posterior_samples["gamma"]
             ).mean(0)
         else:
             adata.layers["velocity_pyro"] = (
-                ut * posterior_samples["beta"] - posterior_samples["st"] * posterior_samples["gamma"]
+                ut * posterior_samples["beta"]
+                - posterior_samples["st"] * posterior_samples["gamma"]
             ).mean(0)
         scv.tl.velocity_graph(adata, vkey="velocity_pyro", xkey="Ms", n_jobs=n_jobs)
     elif spliced in ["spliced"]:
@@ -924,11 +960,15 @@ def compute_mean_vector_field(
         st = adata.layers["spliced"]
         if ("u_scale" in posterior_samples) and ("s_scale" in posterior_samples):
             adata.layers["velocity_pyro"] = (
-                ut * posterior_samples["beta"] / (posterior_samples["u_scale"] / posterior_samples["s_scale"]) - st * posterior_samples["gamma"]
+                ut
+                * posterior_samples["beta"]
+                / (posterior_samples["u_scale"] / posterior_samples["s_scale"])
+                - st * posterior_samples["gamma"]
             ).mean(0)
         else:
             adata.layers["velocity_pyro"] = (
-                ut * posterior_samples["beta"] - posterior_samples["st"] * posterior_samples["gamma"]
+                ut * posterior_samples["beta"]
+                - posterior_samples["st"] * posterior_samples["gamma"]
             ).mean(0)
         scv.tl.velocity_graph(
             adata, vkey="velocity_pyro", xkey="spliced", n_jobs=n_jobs
@@ -1443,7 +1483,13 @@ def rainbowplot(
 
 
 def plot_state_uncertainty(
-    posterior_samples, adata, kde=True, data="denoised", top_percentile=0.9, ax=None, basis="umap"
+    posterior_samples,
+    adata,
+    kde=True,
+    data="denoised",
+    top_percentile=0.9,
+    ax=None,
+    basis="umap",
 ):
     if data == "denoised":
         adata.obs["state_uncertain"] = np.sqrt(
@@ -1455,7 +1501,8 @@ def plot_state_uncertainty(
     else:
         adata.obs["state_uncertain"] = np.sqrt(
             (
-                (posterior_samples["s"] - posterior_samples["s"].mean(0)) ** 2 + (posterior_samples["u"] - posterior_samples["u"].mean(0)) ** 2
+                (posterior_samples["s"] - posterior_samples["s"].mean(0)) ** 2
+                + (posterior_samples["u"] - posterior_samples["u"].mean(0)) ** 2
             ).sum(-1)
         ).mean(0)
 

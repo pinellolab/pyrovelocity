@@ -17,8 +17,8 @@ from pyrovelocity.data import load_data
 from pyrovelocity.utils import filter_startswith_dict
 from pyrovelocity.utils import get_pylogger
 from pyrovelocity.utils import mae_evaluate
-from pyrovelocity.utils import print_attributes
 from pyrovelocity.utils import pretty_print_dict
+from pyrovelocity.utils import print_attributes
 
 
 """Loads processed data and trains and saves model.
@@ -131,11 +131,13 @@ def train(conf: DictConfig, logger: Logger) -> None:
                 # )
                 # print_attributes(posterior_samples)
 
-                reduced_adata_model_pos = trained_model.compute_statistics_from_posterior_samples(
-                    adata,
-                    posterior_samples,
-                    vector_field_basis=vector_field_basis,
-                    ncpus_use=ncpus_use,
+                reduced_adata_model_pos = (
+                    trained_model.compute_statistics_from_posterior_samples(
+                        adata,
+                        posterior_samples,
+                        vector_field_basis=vector_field_basis,
+                        ncpus_use=ncpus_use,
+                    )
                 )
                 logger.info(
                     "Data attributes after computation of vector field uncertainty"

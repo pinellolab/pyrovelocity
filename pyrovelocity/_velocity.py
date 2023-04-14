@@ -37,6 +37,7 @@ from .utils import init_with_all_cells
 
 logger = logging.getLogger(__name__)
 
+
 class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
     def __init__(
         self,
@@ -108,7 +109,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> print(adata.obs['u_lib_size_raw'])
             >>> print(adata.obs['s_lib_size_raw'])
             >>> PyroVelocity.setup_anndata(adata)
-            >>> # train model  
+            >>> # train model
             >>> model = PyroVelocity(adata)
             >>> model.train(max_epochs=5, use_gpu=0)
             >>> posterior_samples = model.generate_posterior_samples(model.adata, num_samples=30)
@@ -117,7 +118,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> pretty_print_dict(posterior_samples)
             >>> model.save_model('save_pyrovelocity_doctest_model', overwrite=True)
             >>> model = PyroVelocity.load_model('save_pyrovelocity_doctest_model', adata, use_gpu=0)
-            >>> # train model with 
+            >>> # train model with
             >>> model = PyroVelocity(adata)
             >>> model.train_faster(max_epochs=5, use_gpu=0)
             >>> model.save_model('save_pyrovelocity_doctest_model', overwrite=True)
@@ -125,7 +126,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> posterior_samples = model.generate_posterior_samples(model.adata, num_samples=30)
             >>> pretty_print_dict(posterior_samples)
             >>> print(posterior_samples.keys())
-            >>> # train model with 
+            >>> # train model with
             >>> model = PyroVelocity(adata)
             >>> model.train_faster_with_batch(batch_size=24, max_epochs=5, use_gpu=0)
             >>> model.save_model('save_pyrovelocity_doctest_model', overwrite=True)
@@ -407,20 +408,14 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         posterior_samples[
             "vector_field_posterior_samples"
         ] = vector_field_posterior_samples
-        posterior_samples[
-            "vector_field_posterior_mean"
-        ] = vector_field_posterior_mean
+        posterior_samples["vector_field_posterior_mean"] = vector_field_posterior_mean
         posterior_samples["fdri"] = fdri
         posterior_samples["embeds_magnitude"] = embeds_magnitude
         # assert embeds_radian.shape == (self.num_samples, adata.shape[0], 2)
         print(embeds_radian.shape)
         posterior_samples["embeds_angle"] = embeds_radian
-        posterior_samples["ut_mean"] = (
-            posterior_samples["ut"].mean(0).squeeze()
-        )
-        posterior_samples["st_mean"] = (
-            posterior_samples["st"].mean(0).squeeze()
-        )
+        posterior_samples["ut_mean"] = posterior_samples["ut"].mean(0).squeeze()
+        posterior_samples["st_mean"] = posterior_samples["st"].mean(0).squeeze()
 
         del posterior_samples["u"]
         del posterior_samples["s"]

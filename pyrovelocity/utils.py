@@ -554,7 +554,9 @@ def mae_evaluate(posterior_samples, adata):
     labels = []
     if isinstance(posterior_samples, tuple):
         for model_label, model_obj, split_index in zip(
-            ["Poisson train", "Poisson valid"], posterior_samples[:2], posterior_samples[2:]
+            ["Poisson train", "Poisson valid"],
+            posterior_samples[:2],
+            posterior_samples[2:],
         ):
             for sample in range(model_obj["u"].shape[0]):
                 maes_list.append(
