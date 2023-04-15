@@ -36,7 +36,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu]
-        pyver: ["3.10"]
+        pyver: ["3.9"]
     env:
       PYTHONUNBUFFERED: True
     steps:
@@ -67,13 +67,22 @@ jobs:
         run: |
           source $CONDA/etc/profile.d/conda.sh
           conda activate constructor
-          mkdir -p examples_artifacts/
+          mkdir -p scripts/
           conda list
-          CONDA_SOLVER=libmamba CONDA_VERBOSITY=1 CONDA_OVERRIDE_CUDA="11.8" constructor conda/colab/ --output-dir=examples_artifacts/
-      - name: Upload the Colab installer as a workflow artifact
-        # if: github.event_name == 'pull_request' && matrix.pyver == '3.10'
-        uses: actions/upload-artifact@v3
+          CONDA_SOLVER=libmamba CONDA_VERBOSITY=1 CONDA_OVERRIDE_CUDA="11.8" constructor conda/colab/ --output-dir=scripts/
+      - name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v1'
         with:
-          name: installers-${{ runner.os }}-${{ github.sha }}-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}
-          path: examples_artifacts/
-          retention-days: 14
+            credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}'
+      - name: 'Upload environment to GCS'
+        uses: 'google-github-actions/upload-cloud-storage@v1'
+        with:
+            path: 'scripts'
+            destination: 'pyrovelocity/data'    
+    #   - name: Upload the Colab installer as a workflow artifact
+    #     # if: github.event_name == 'pull_request' && matrix.pyver == '3.10'
+    #     uses: actions/upload-artifact@v3
+    #     with:
+    #       name: installers-${{ runner.os }}-${{ github.sha }}-${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}
+    #       path: scripts/
+    #       retention-days: 14
