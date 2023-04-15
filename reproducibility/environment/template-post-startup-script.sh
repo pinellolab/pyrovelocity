@@ -68,7 +68,7 @@ sudo chmod -R 755 /home/$JUPYTER_USER
 $CONDA_BIN/mamba env create -n $GITHUB_REPO \
     -f $REPO_PATH/$GIHUB_REPO_CONDA_ENV_YML_PATH
 $CONDA_BIN/mamba install -n $GITHUB_REPO -c conda-forge \
-    python=3.8 \
+    python=3.10 \
     gh \
     htop \
     bat \
@@ -103,7 +103,7 @@ sudo apt install -y \
     libncursesw5 \
     libffi-dev \
     liblzma-dev
-PYENV_PYTHON_VERSION=3.8
+PYENV_PYTHON_VERSION=3.10
 function install_pyenv() {
     cd $HOME
     PYENV_PYTHON_VERSION=$1
