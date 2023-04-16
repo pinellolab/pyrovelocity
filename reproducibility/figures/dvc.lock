@@ -101,23 +101,23 @@ stages:
             loss_plot_path: models/pancreas_model1/loss_plot.png
     outs:
     - path: models/pancreas_model1/loss_plot.png
-      md5: 92574c7781f07bea7769485cbb51b8f0
-      size: 12280
+      md5: 5a0d4bd417a02d36b83211a695acf47c
+      size: 11561
     - path: models/pancreas_model1/metrics.json
-      md5: 8a58d40c3dbf03d1f8ae3d6756987294
-      size: 153
+      md5: 37a146281f1d1ea77953a0d03c872367
+      size: 160
     - path: models/pancreas_model1/model
-      md5: 01a834cc913bee9b83398cd3c4141edb.dir
+      md5: 6cc72f8c267a3d34de818b6aa177fc0b.dir
       size: 635690
       nfiles: 1
     - path: models/pancreas_model1/pyrovelocity.pkl
-      md5: 12657556fb88c99c401d1dad10806b60
-      size: 952193370
+      md5: 15a77a1db13b60fa1005201a08f512e7
+      size: 65153304
     - path: models/pancreas_model1/run_info.json
-      md5: 56548d50e9a284ad7fe205fee9a9aac5
-      size: 436
+      md5: ae30ff0e56cbcb2310e31cf5a5c76ff0
+      size: 455
     - path: models/pancreas_model1/trained.h5ad
-      md5: 2c06a73016cb3473236a168940ce2d36
+      md5: 72a05b2966bee39e85c17b16c569733c
       size: 489882800
   data_download_pbmc68k:
     cmd: python data_download.py data_external.sources=[scvelo] data_external.scvelo.download=[pbmc68k]
@@ -218,24 +218,24 @@ stages:
             loss_plot_path: models/pbmc68k_model1/loss_plot.png
     outs:
     - path: models/pbmc68k_model1/loss_plot.png
-      md5: b3611aef38768b4c5e8b367bdc297914
-      size: 16571
+      md5: fd8a5a047b791aaff6c78ae3f407c2bc
+      size: 15992
     - path: models/pbmc68k_model1/metrics.json
-      md5: 285aa3ff720486f73ca019c503d4da6f
-      size: 156
+      md5: bc752a5244eaea5ddd195aeea4e93e5e
+      size: 160
     - path: models/pbmc68k_model1/model
-      md5: c4d5fd3ae78eb4f58ecba93c6d37fa67.dir
+      md5: 3da668a675ae86f927b7c70a46a26dcc.dir
       size: 1705450
       nfiles: 1
     - path: models/pbmc68k_model1/pyrovelocity.pkl
-      md5: ebfaaa9af527a448a9e765bfc5098ab4
-      size: 3774928157
+      md5: 4584173130491fd4d3062a2aa108376e
+      size: 304527729
     - path: models/pbmc68k_model1/run_info.json
-      md5: 04a109058ca8f9e01c32b50d8a56c57d
-      size: 435
+      md5: 5713c070c04592902a1fb6a794926c1f
+      size: 454
     - path: models/pbmc68k_model1/trained.h5ad
-      md5: d4f921404f59bbbf0eee5414e2b4d50e
-      size: 2465547357
+      md5: 1c8ebe9fa607745d55eb74ab48b00f83
+      size: 2465530973
   figure2:
     cmd: python fig2/figure.py
     deps:
@@ -243,17 +243,17 @@ stages:
       md5: ff1ac53128478106cf019fc967bd35c4
       size: 19573
     - path: models/pancreas_model1/pyrovelocity.pkl
-      md5: 12657556fb88c99c401d1dad10806b60
-      size: 952193370
+      md5: 15a77a1db13b60fa1005201a08f512e7
+      size: 65153304
     - path: models/pancreas_model1/trained.h5ad
-      md5: 2c06a73016cb3473236a168940ce2d36
+      md5: 72a05b2966bee39e85c17b16c569733c
       size: 489882800
     - path: models/pbmc68k_model1/pyrovelocity.pkl
-      md5: ebfaaa9af527a448a9e765bfc5098ab4
-      size: 3774928157
+      md5: 4584173130491fd4d3062a2aa108376e
+      size: 304527729
     - path: models/pbmc68k_model1/trained.h5ad
-      md5: d4f921404f59bbbf0eee5414e2b4d50e
-      size: 2465547357
+      md5: 1c8ebe9fa607745d55eb74ab48b00f83
+      size: 2465530973
     params:
       config.yaml:
         reports.figure2:
@@ -272,19 +272,19 @@ stages:
             vector_field_plot: reports/fig2/fig2_pancreas_vector_field.pdf
     outs:
     - path: reports/fig2/fig2_markers_phaseportrait.pdf
-      md5: b65a0f6f1adfd9a7083ace84b42d20be
+      md5: 27397f9d90dc28438e4fb07e3a8fe885
       size: 4548720
     - path: reports/fig2/fig2_markers_selection_scatterplot.tif
-      md5: 2bf4528b73112ead7cbdb1f28362850b
+      md5: 964cb7b603252f62eeed9c5c311187ee
       size: 6125606
     - path: reports/fig2/fig2_param_uncertainties.pdf
-      md5: 3a1cd195091c314165daa1f0b9a78bb5
+      md5: 9401cac90267d4b0e99587c17c6346be
       size: 79990
     - path: reports/fig2/fig2_raw_gene_selection_model1.svg
-      md5: d2f16ff9b9fd9aae304a240f17e62320
-      size: 49297135
+      md5: 175a6e56fb0a81e928d68c8eba9986be
+      size: 49297217
     - path: reports/fig2/fig2_raw_gene_selection_model1.tif
-      md5: cc2583c166a244e5e40fa96e57f037ab
+      md5: 3cf7d72a522d1e216f21f7c089c48cda
       size: 19864142
   plot_pancreas_model1:
     cmd: python fig2/fig2_pancreas_plot.py
@@ -293,10 +293,10 @@ stages:
       md5: 9760277a8b45c2994e44f0ebc69b26e1
       size: 5816
     - path: models/pancreas_model1/pyrovelocity.pkl
-      md5: 12657556fb88c99c401d1dad10806b60
-      size: 952193370
+      md5: 15a77a1db13b60fa1005201a08f512e7
+      size: 65153304
     - path: models/pancreas_model1/trained.h5ad
-      md5: 2c06a73016cb3473236a168940ce2d36
+      md5: 72a05b2966bee39e85c17b16c569733c
       size: 489882800
     params:
       config.yaml:
@@ -342,17 +342,17 @@ stages:
           vector_field_plot: reports/fig2/fig2_pancreas_vector_field.pdf
     outs:
     - path: reports/fig2/fig2_pancreas_rainbow.pdf
-      md5: 70f2b06cba969b1a584b837b202a5347
-      size: 673574
+      md5: 82877cd7b900f387a54d19b06be2ba25
+      size: 673601
     - path: reports/fig2/fig2_pancreas_shared_time.pdf
-      md5: 9854ceb35f296d3aef20d3c0fac1008e
+      md5: 1ebc59338583fdd967960461f3d8c0b1
       size: 659903
     - path: reports/fig2/fig2_pancreas_vector_field.pdf
-      md5: 1087c334ced8b7a27bad0c41e319856c
+      md5: 2a61d276b6797daaf27e971758179dcd
       size: 407981
     - path: reports/fig2/fig2_pancreas_volcano.pdf
-      md5: c4ba39e4cdcaae03de0e5473d569aa07
-      size: 21304
+      md5: f866f0103c235ecc53db61393aabac17
+      size: 21291
   data_download_larry:
     cmd: python data_download.py data_external.sources=[pyrovelocity] data_external.pyrovelocity.download=[larry]
     deps:
@@ -428,20 +428,20 @@ stages:
       md5: 8a8de154eb3e3ad3c1f11264eadedacd
       size: 11500
     - path: models/pancreas_model2/metrics.json
-      md5: 24b5a4137151fdba8a7b470a05355c00
+      md5: bee341290f771daa82fe093995c39428
       size: 158
     - path: models/pancreas_model2/model
-      md5: b8a6140e59342a7d268932d79fec1cea.dir
+      md5: c3f7b719c0522e018ce56fc084fcf525.dir
       size: 923626
       nfiles: 1
     - path: models/pancreas_model2/pyrovelocity.pkl
-      md5: 9896fb7464045315a83b15ae343d5221
+      md5: 1eeaa0c042af52c18af112c6c33893c3
       size: 65873440
     - path: models/pancreas_model2/run_info.json
-      md5: 0be3891fab0080142f1b05c27be68b43
+      md5: 057ab39af12d4b1ad667a86eddce52bb
       size: 455
     - path: models/pancreas_model2/trained.h5ad
-      md5: cbada7aa408196272718a9123ba79b3c
+      md5: 1d4521ada3f003b83c25be30516ef139
       size: 489882800
   train_pbmc68k_model2:
     cmd: /usr/bin/time -v python train.py model_training.train=[pbmc68k_model2]
@@ -516,10 +516,10 @@ stages:
       md5: 26fb835fc33be2700fe9e65a9f236c9a
       size: 12921
     - path: models/pancreas_model2/pyrovelocity.pkl
-      md5: 9896fb7464045315a83b15ae343d5221
+      md5: 1eeaa0c042af52c18af112c6c33893c3
       size: 65873440
     - path: models/pancreas_model2/trained.h5ad
-      md5: cbada7aa408196272718a9123ba79b3c
+      md5: 1d4521ada3f003b83c25be30516ef139
       size: 489882800
     - path: models/pbmc68k_model2/pyrovelocity.pkl
       md5: 073d21fa1594648dac0856b73d9f3d68
@@ -536,8 +536,8 @@ stages:
           svg_path: reports/figS3/figS3_raw_gene_selection_model2.svg
     outs:
     - path: reports/figS3/figS3_raw_gene_selection_model2.svg
-      md5: fa7f43196d7cdc9504f75ccb32a3afe3
-      size: 49177027
+      md5: 0a06c48dd9646464d1460dbaedd80d8d
+      size: 49177026
     - path: reports/figS3/figS3_raw_gene_selection_model2.tif
       md5: 0c9fdafad22013c66f8f86573f8c9c95
       size: 19732046
@@ -640,23 +640,23 @@ stages:
             loss_plot_path: models/pons_model1/loss_plot.png
     outs:
     - path: models/pons_model1/loss_plot.png
-      md5: b58e7329e8cc7f2d4d68cae8a6afe19d
-      size: 12073
+      md5: f9221e79d3feccf2ec2f4df7471f9e43
+      size: 11331
     - path: models/pons_model1/metrics.json
-      md5: 518a2201bd026b0ba1b8333b7d73087a
-      size: 154
+      md5: 49ed1b0204730204905b62e8d5fbb104
+      size: 159
     - path: models/pons_model1/model
-      md5: dab160ed540f4fc967bdc2306ef131a9.dir
+      md5: 2521863977184a84265f2e3b52443f0e.dir
       size: 697386
       nfiles: 1
     - path: models/pons_model1/pyrovelocity.pkl
-      md5: a7d463557710d28fbde20b2af18a1aba
-      size: 1609608288
+      md5: 64d1f8a752442cdaf2d1f466b9acf0c9
+      size: 108888222
     - path: models/pons_model1/run_info.json
-      md5: 7fa487fb2f638995cf1e669e9befcda8
-      size: 432
+      md5: 26ac35d760dca9ec06a6227a80df6cb1
+      size: 451
     - path: models/pons_model1/trained.h5ad
-      md5: 648ab9670db5285c9c17defc92de86ef
+      md5: f1e93db377fd7d323c9dc3b7bd722542
       size: 855745190
   train_pons_model2:
     cmd: /usr/bin/time -v python train.py model_training.train=[pons_model2]
@@ -728,10 +728,10 @@ stages:
     cmd: python summarize.py reports.model_summary.summarize=[pancreas_model1]
     deps:
     - path: models/pancreas_model1/pyrovelocity.pkl
-      md5: 12657556fb88c99c401d1dad10806b60
-      size: 952193370
+      md5: 15a77a1db13b60fa1005201a08f512e7
+      size: 65153304
     - path: models/pancreas_model1/trained.h5ad
-      md5: 2c06a73016cb3473236a168940ce2d36
+      md5: 72a05b2966bee39e85c17b16c569733c
       size: 489882800
     - path: summarize.py
       md5: 4181b7b924bd90c6d4a762e7d5493c41
@@ -784,28 +784,28 @@ stages:
           biomarker_phaseportrait_plot: reports/pancreas_model1/markers_phaseportrait.pdf
     outs:
     - path: reports/pancreas_model1/rainbow.pdf
-      md5: cd47f48fc2dd695ce366381f8a102409
-      size: 673574
+      md5: 017388f5e1284fdf0027ae43ee798d12
+      size: 673601
     - path: reports/pancreas_model1/rainbow.pdf.png
-      md5: b7d5256461fdce30a32605f72bafd553
-      size: 2076300
+      md5: 48a79de6b0115442d072fb33e2fb27fd
+      size: 2086273
     - path: reports/pancreas_model1/vector_field.pdf
-      md5: 1747b90fb32304ac7c2774d034824808
-      size: 397543
+      md5: f4cf773f4a5f465fc8e7e013c7ba640e
+      size: 397545
     - path: reports/pancreas_model1/vector_field.pdf.png
-      md5: 52b32bae85976453665c5f60b5a575bd
-      size: 691091
+      md5: e0dd14331806e6f483796f36a26fb551
+      size: 692363
     - path: reports/pancreas_model1/volcano.pdf
-      md5: 91be8f396803006cb2ee179c7c7def9e
-      size: 21304
+      md5: b3e1383c0c9e18ffb442609138f64882
+      size: 21291
   summarize_pancreas_model2:
     cmd: python summarize.py reports.model_summary.summarize=[pancreas_model2]
     deps:
     - path: models/pancreas_model2/pyrovelocity.pkl
-      md5: 9896fb7464045315a83b15ae343d5221
+      md5: 1eeaa0c042af52c18af112c6c33893c3
       size: 65873440
     - path: models/pancreas_model2/trained.h5ad
-      md5: cbada7aa408196272718a9123ba79b3c
+      md5: 1d4521ada3f003b83c25be30516ef139
       size: 489882800
     - path: summarize.py
       md5: 4181b7b924bd90c6d4a762e7d5493c41
@@ -858,29 +858,29 @@ stages:
           biomarker_phaseportrait_plot: reports/pancreas_model2/markers_phaseportrait.pdf
     outs:
     - path: reports/pancreas_model2/rainbow.pdf
-      md5: 4d4cd6d77c201245bf35c2c7375d4934
+      md5: 118a4a1290fcb17272e280b68486404e
       size: 674523
     - path: reports/pancreas_model2/rainbow.pdf.png
       md5: a053e9fbf0755a4fa529e92e3ef03f45
       size: 1592710
     - path: reports/pancreas_model2/vector_field.pdf
-      md5: c50a8c0607dddbafa4571a7aceeabace
+      md5: e8af40718a5a33b835137833694c359e
       size: 397586
     - path: reports/pancreas_model2/vector_field.pdf.png
       md5: 2bff17b5b0187728de366ba4f0b02cd3
       size: 698541
     - path: reports/pancreas_model2/volcano.pdf
-      md5: e1f1a28bb2989048234c680231602f8d
-      size: 20347
+      md5: 2f8f99821e36cdea9d8b88e19031ad8a
+      size: 20335
   summarize_pbmc68k_model1:
     cmd: python summarize.py reports.model_summary.summarize=[pbmc68k_model1]
     deps:
     - path: models/pbmc68k_model1/pyrovelocity.pkl
-      md5: ebfaaa9af527a448a9e765bfc5098ab4
-      size: 3774928157
+      md5: 4584173130491fd4d3062a2aa108376e
+      size: 304527729
     - path: models/pbmc68k_model1/trained.h5ad
-      md5: d4f921404f59bbbf0eee5414e2b4d50e
-      size: 2465547357
+      md5: 1c8ebe9fa607745d55eb74ab48b00f83
+      size: 2465530973
     - path: summarize.py
       md5: 4181b7b924bd90c6d4a762e7d5493c41
       size: 6998
@@ -932,20 +932,20 @@ stages:
           biomarker_phaseportrait_plot: reports/pbmc68k_model1/markers_phaseportrait.pdf
     outs:
     - path: reports/pbmc68k_model1/rainbow.pdf
-      md5: 0fe0d4d51deba59cbc3186eeadb4643a
+      md5: 73da5431afe277e8871ea58ae15971be
       size: 11031762
     - path: reports/pbmc68k_model1/rainbow.pdf.png
       md5: b4c31e65e4b6747ceb6991b9bba5db23
       size: 1268122
     - path: reports/pbmc68k_model1/vector_field.pdf
-      md5: cfdaf0b1692235acb2a834aac7f81aa8
-      size: 1033651
+      md5: 2ac59ea0b2ab3d95ef8d934b468777dd
+      size: 1033522
     - path: reports/pbmc68k_model1/vector_field.pdf.png
-      md5: 78430a988d1f4c4ae7ac8d4ad321f451
-      size: 1201689
+      md5: 41968bc3f231c66e155bf787127d08d3
+      size: 1201485
     - path: reports/pbmc68k_model1/volcano.pdf
-      md5: 74f4b4f68b1b54e0888814c28274c991
-      size: 22273
+      md5: 7ca222db7068caffcba91a5eb6720468
+      size: 22252
   summarize_pbmc68k_model2:
     cmd: python summarize.py reports.model_summary.summarize=[pbmc68k_model2]
     deps:
@@ -1024,10 +1024,10 @@ stages:
     cmd: python summarize.py reports.model_summary.summarize=[pons_model1]
     deps:
     - path: models/pons_model1/pyrovelocity.pkl
-      md5: a7d463557710d28fbde20b2af18a1aba
-      size: 1609608288
+      md5: 64d1f8a752442cdaf2d1f466b9acf0c9
+      size: 108888222
     - path: models/pons_model1/trained.h5ad
-      md5: 648ab9670db5285c9c17defc92de86ef
+      md5: f1e93db377fd7d323c9dc3b7bd722542
       size: 855745190
     - path: summarize.py
       md5: 4181b7b924bd90c6d4a762e7d5493c41
@@ -1080,20 +1080,20 @@ stages:
           biomarker_phaseportrait_plot: reports/pons_model1/markers_phaseportrait.pdf
     outs:
     - path: reports/pons_model1/rainbow.pdf
-      md5: 65755d1c30ff175e2ddf2b6f9d45ee0d
-      size: 1055175
+      md5: 49fab698d94432726255032423b2e0be
+      size: 1055211
     - path: reports/pons_model1/rainbow.pdf.png
-      md5: a27917bfbf967a693c53a350d1ffe1f6
-      size: 981998
+      md5: 5849a1d785f56ad9945bef447f1ef384
+      size: 988477
     - path: reports/pons_model1/vector_field.pdf
-      md5: 6c088ff4228da17331189682bb61e68d
-      size: 376834
+      md5: 04f66bf6dc4343fc2fae4fff47320413
+      size: 376837
     - path: reports/pons_model1/vector_field.pdf.png
-      md5: 53e3ce42c92c56c78efe530d4fac5775
-      size: 789157
+      md5: e0f4266d818388dca780f686c1f8059a
+      size: 789252
     - path: reports/pons_model1/volcano.pdf
-      md5: 5a295de5b058b29730ceb3572c00f075
-      size: 20404
+      md5: 25465b5563db8bff3ddd98078bb0870d
+      size: 20394
   summarize_pons_model2:
     cmd: python summarize.py reports.model_summary.summarize=[pons_model2]
     deps:

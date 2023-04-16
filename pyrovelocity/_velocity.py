@@ -326,6 +326,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                     "ut_norm",
                     "st_norm",
                     "cell_gene_state",
+                    "time_constraint" # model 1 time constraint
                 ]:  # skip unused variables
                     continue
 
@@ -426,6 +427,8 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
     def save_pyrovelocity_data(self, posterior_samples, pyrovelocity_data_path):
         with open(pyrovelocity_data_path, "wb") as f:
             pickle.dump(posterior_samples, f)
+        for k in posterior_samples:
+            print(k, "after", sys.getsizeof(posterior_samples[k]))
 
     def save_model(
         self,
