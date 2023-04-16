@@ -1,0 +1,72 @@
+name: Colab
+on:
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: "Run with tmate.io debugging enabled"
+        required: true
+        type: boolean
+        default: false
+  push:
+    paths:
+      - "conda/colab/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+jobs:
+  environment:
+    name: ${{ matrix.os }}, Python ${{ matrix.pyver }}
+    runs-on: ${{ matrix.os }}-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu]
+        pyver: ["3.9"]
+    env:
+      PYTHONUNBUFFERED: True
+    steps:
+      - name: "Print github context"
+        run: |
+          echo "EVENT_NAME:" "$GITHUB_EVENT_NAME"
+          echo "       REF:" "$GITHUB_REF"
+          echo "  HEAD_REF:" "$GITHUB_HEAD_REF"
+          echo "  BASE_REF:" "$GITHUB_BASE_REF"
+          echo "       SHA:" "$GITHUB_SHA"
+      - name: Retrieve the source code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - name: "Setup tmate debug session"
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ inputs.debug_enabled }}
+      - name: "Install constructor"
+        run: |
+          source $CONDA/etc/profile.d/conda.sh
+          conda create -n constructor -c conda-forge -yq constructor conda-libmamba-solver
+          conda activate constructor
+          set -x
+          which constructor
+          constructor --version
+      - name: "Construct environment"
+        run: |
+          source $CONDA/etc/profile.d/conda.sh
+          conda activate constructor
+          set -x
+          mkdir -p scripts/
+          conda list
+          CONDA_SOLVER=libmamba CONDA_VERBOSITY=1 CONDA_OVERRIDE_CUDA="11.8" constructor conda/colab/ --output-dir=scripts/
+      - name: "Authenticate to Google Cloud"
+        uses: "google-github-actions/auth@v1"
+        with:
+          credentials_json: "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}"
+      - name: "Upload environment to GCS"
+        uses: "google-github-actions/upload-cloud-storage@v1"
+        with:
+          path: "scripts"
+          destination: "pyrovelocity/data"
