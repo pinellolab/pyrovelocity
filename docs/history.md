@@ -1,5 +1,9 @@
 # History
 
+## 0.1.2 (2023-04-16)
+
+- See [0.1.2](https://github.com/pinellolab/pyrovelocity/releases/tag/v0.1.2)
+
 ## 0.1.1 (2023-02-16)
 
 - See [0.1.1](https://github.com/pinellolab/pyrovelocity/releases/tag/v0.1.1)
