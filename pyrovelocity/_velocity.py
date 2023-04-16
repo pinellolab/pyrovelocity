@@ -326,7 +326,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                     "ut_norm",
                     "st_norm",
                     "cell_gene_state",
-                    "time_constraint" # model 1 time constraint
+                    "time_constraint",  # model 1 time constraint
                 ]:  # skip unused variables
                     continue
 
