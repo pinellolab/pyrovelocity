@@ -638,7 +638,7 @@ name = "cffi"
 version = "1.15.1"
 description = "Foreign Function Interface for Python calling C code."
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "cffi-1.15.1-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:a66d3508133af6e8548451b25058d5812812ec3798c886bf38ed24a98216fab2"},
@@ -1156,7 +1156,7 @@ name = "cryptography"
 version = "40.0.2"
 description = "cryptography is a package which provides cryptographic recipes and primitives to Python developers."
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 files = [
     {file = "cryptography-40.0.2-cp36-abi3-macosx_10_12_universal2.whl", hash = "sha256:8f79b5ff5ad9d3218afb1e7e20ea74da5f76943ee5edb7f76e56ec5161ec782b"},
@@ -2049,14 +2049,14 @@ six = ">=1.12,<2.0"
 
 [[package]]
 name = "flax"
-version = "0.6.8"
+version = "0.6.9"
 description = "Flax: A neural network library for JAX designed for flexibility"
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "flax-0.6.8-py3-none-any.whl", hash = "sha256:221225804c263e39fe3cc8f754dc4192597cb0f063926b2338ea6563604747ed"},
-    {file = "flax-0.6.8.tar.gz", hash = "sha256:bf1f81dd5dfbb10c603490531a86b1174ebbc38e5c5e8116a98115c135194c10"},
+    {file = "flax-0.6.9-py3-none-any.whl", hash = "sha256:feb3abd0019b673ffe85b9b286ef59fbb0ecff51707925be77f58038521f8a2f"},
+    {file = "flax-0.6.9.tar.gz", hash = "sha256:b45b0fc356d3de13587374fdc23184ff22fe844dc0d109af50ce9587ba4ffdad"},
 ]
 
 [package.dependencies]
@@ -2064,7 +2064,7 @@ jax = ">=0.4.2"
 msgpack = "*"
 numpy = ">=1.12"
 optax = "*"
-orbax = "*"
+orbax-checkpoint = "*"
 PyYAML = ">=5.4.1"
 rich = ">=11.1"
 tensorstore = "*"
@@ -4469,15 +4469,15 @@ numpy = ">=1.18.0"
 typing-extensions = ">=3.10.0"
 
 [[package]]
-name = "orbax"
-version = "0.1.7"
-description = "Orbax"
+name = "orbax-checkpoint"
+version = "0.2.1"
+description = "Orbax Checkpoint"
 category = "main"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "orbax-0.1.7-py3-none-any.whl", hash = "sha256:67c7ce52b5476202af84977e8db03dede6c009b5d1f1095acfc175578038449b"},
-    {file = "orbax-0.1.7.tar.gz", hash = "sha256:2517f566134db6597d2850450b7f486efd24bf24962bc4881007f4cc8e978b37"},
+    {file = "orbax-checkpoint-0.2.1.tar.gz", hash = "sha256:3a61b65bf9561edccb666cb51000ecbcd3565af4289e0735c3eac6ae9267ca89"},
+    {file = "orbax_checkpoint-0.2.1-py3-none-any.whl", hash = "sha256:1de9205add14a5ee15503c6b3cd31a796da8ed13c4ae5f8640b3aaf765e8e080"},
 ]
 
 [package.dependencies]
@@ -4485,13 +4485,13 @@ absl-py = "*"
 cached_property = "*"
 etils = "*"
 importlib_resources = "*"
-jax = ">=0.4.6"
+jax = ">=0.4.8"
 jaxlib = "*"
 msgpack = "*"
 nest_asyncio = "*"
 numpy = "*"
 pyyaml = "*"
-tensorstore = ">=0.1.20"
+tensorstore = ">=0.1.35"
 typing_extensions = "*"
 
 [package.extras]
@@ -4973,7 +4973,7 @@ name = "psutil"
 version = "5.9.5"
 description = "Cross-platform lib for process and system monitoring in Python."
 category = "main"
-optional = false
+optional = true
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 files = [
     {file = "psutil-5.9.5-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:be8929ce4313f9f8146caad4272f6abb8bf99fc6cf59344a3167ecd74f4f203f"},
@@ -5104,7 +5104,7 @@ name = "pycparser"
 version = "2.21"
 description = "C parser in Python"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 files = [
     {file = "pycparser-2.21-py2.py3-none-any.whl", hash = "sha256:8ee45429555515e1f6b185e78100aea234072576aa43ab53aefcae078162fca9"},
