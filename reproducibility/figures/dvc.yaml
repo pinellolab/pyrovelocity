@@ -42,6 +42,18 @@ stages:
   #       - ${data_external.${item.source}.${item.data}.rel_path}:
   #           persist: true
 
+  data_download_simulate:
+    cmd: python data_download.py data_external.sources=[simulate] data_external.simulate.download=[medium]
+    deps:
+      - data_download.py
+    params:
+      - config.yaml:
+          - base
+          - data_external.simulate.medium
+    outs:
+      - ${data_external.simulate.medium.rel_path}:
+          persist: true
+
   data_download_pancreas:
     cmd: python data_download.py data_external.sources=[scvelo] data_external.scvelo.download=[pancreas]
     deps:

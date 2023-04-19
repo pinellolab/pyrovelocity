@@ -9,7 +9,9 @@ import scvelo as scv
 from omegaconf import DictConfig
 
 from pyrovelocity.config import print_config_tree
+from pyrovelocity.utils import generate_sample_data
 from pyrovelocity.utils import get_pylogger
+from pyrovelocity.utils import print_anndata
 from pyrovelocity.utils import print_attributes
 
 
@@ -35,6 +37,14 @@ def download_datasets(conf: DictConfig, logger: Logger) -> None:
                 if source == "scvelo":
                     dl_method = getattr(scv.datasets, data_set)
                     adata = dl_method()  # e.g. scv.datasets.pancreas()
+                elif source == "simulate":
+                    adata = generate_sample_data(
+                        n_obs=3000,
+                        n_vars=1000,
+                        noise_model="gillespie",
+                        random_seed=99,
+                    )
+                    adata.write(data_path)
                 else:
                     adata = scp.read(
                         data_path,
@@ -42,6 +52,7 @@ def download_datasets(conf: DictConfig, logger: Logger) -> None:
                     )
 
                 print_attributes(adata)
+                print_anndata(adata)
                 if dl_path != data_path:
                     os.replace(
                         dl_path,
@@ -51,8 +62,6 @@ def download_datasets(conf: DictConfig, logger: Logger) -> None:
                         os.rmdir(dl_root)
                     except OSError as e:
                         logger.warn(f"{dl_root} : {e.strerror}")
-                        pass
-
                 if os.path.isfile(data_path) and os.access(data_path, os.R_OK):
                     logger.info(f"successfully downloaded {data_path}")
                 else:
