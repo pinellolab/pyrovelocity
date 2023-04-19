@@ -1168,3 +1168,27 @@ stages:
     - path: reports/pons_model2/volcano.pdf
       md5: f0b94256a7cad5fabd1e6b700a6d0079
       size: 21539
+  data_download_simulate:
+    cmd: python data_download.py data_external.sources=[simulate] data_external.simulate.download=[medium]
+    deps:
+    - path: data_download.py
+      md5: ad3f7b1ebb04255d013852982865de45
+      size: 3305
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+        data_external.simulate.medium:
+          data_file: simulated_medium.h5ad
+          dl_root: data/external
+          dl_path: data/external/simulated_medium.h5ad
+          rel_path: data/external/simulated_medium.h5ad
+          url: https://storage.googleapis.com/pyrovelocity/data/simulated_medium.h5ad
+          derived:
+            process_method: generate_sample_data
+            process_args: {}
+            rel_path: data/processed/simulated_medium_processed.h5ad
+    outs:
+    - path: data/external/simulated_medium.h5ad
+      md5: c8483b84bd68f57acb407f715f807f9e
+      size: 60248568
