@@ -107,7 +107,23 @@ def hydra_zen_configure():
         data_external=dict(
             root_path="${paths.data}/external",
             processed_path="${paths.data}/processed",
-            sources=["velocyto", "scvelo", "pyrovelocity"],
+            sources=["simulate", "velocyto", "scvelo", "pyrovelocity"],
+            simulate=dict(
+                download=["medium"],
+                process=["medium"],
+                sources=dict(
+                    gcs_root_url="https://storage.googleapis.com/pyrovelocity/data"
+                ),
+                medium=create_dataset_config(
+                    "simulated_medium",
+                    dl_root="${data_external.root_path}",
+                    data_file="simulated_medium.h5ad",
+                    rel_path="${data_external.root_path}/simulated_medium.h5ad",
+                    url="${data_external.simulate.sources.gcs_root_url}/simulated_medium.h5ad",
+                    process_method="generate_sample_data",
+                    process_args=dict(),
+                ),
+            ),
             velocyto=dict(
                 download=["pons"],
                 process=["pons"],

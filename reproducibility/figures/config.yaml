@@ -8,9 +8,27 @@ data_external:
   root_path: data/external
   processed_path: data/processed
   sources:
+  - simulate
   - velocyto
   - scvelo
   - pyrovelocity
+  simulate:
+    download:
+    - medium
+    process:
+    - medium
+    sources:
+      gcs_root_url: https://storage.googleapis.com/pyrovelocity/data
+    medium:
+      data_file: simulated_medium.h5ad
+      dl_root: data/external
+      dl_path: data/external/simulated_medium.h5ad
+      rel_path: data/external/simulated_medium.h5ad
+      url: https://storage.googleapis.com/pyrovelocity/data/simulated_medium.h5ad
+      derived:
+        process_method: generate_sample_data
+        process_args: {}
+        rel_path: data/processed/simulated_medium_processed.h5ad
   velocyto:
     download:
     - pons
