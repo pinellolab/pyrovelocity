@@ -1290,14 +1290,14 @@ tests = ["check-manifest (>=0.42)", "mock (>=1.3.0)", "pytest (==5.4.3)", "pytes
 
 [[package]]
 name = "diskcache"
-version = "5.5.1"
+version = "5.6.1"
 description = "Disk Cache -- Disk and file backed persistent cache."
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3"
 files = [
-    {file = "diskcache-5.5.1-py3-none-any.whl", hash = "sha256:6cf72618688a8be50462d2cfdeba6828119ac495283c5b820b508452b7239a9f"},
-    {file = "diskcache-5.5.1.tar.gz", hash = "sha256:8685515584cc110a463d0728d98beaba56c7e2803b60a19cb8983a4c9e341d91"},
+    {file = "diskcache-5.6.1-py3-none-any.whl", hash = "sha256:558c6a2d5d7c721bb00e40711803d6804850c9f76c426ed81ecc627fe9d2ce2d"},
+    {file = "diskcache-5.6.1.tar.gz", hash = "sha256:e4c978532feff5814c4cc00fe1e11e40501985946643d73220d41ee7737c72c3"},
 ]
 
 [[package]]
