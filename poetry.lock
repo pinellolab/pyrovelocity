@@ -362,7 +362,7 @@ name = "asyncssh"
 version = "2.13.1"
 description = "AsyncSSH: Asynchronous SSHv2 client and server library"
 category = "main"
-optional = true
+optional = false
 python-versions = ">= 3.6"
 files = [
     {file = "asyncssh-2.13.1-py3-none-any.whl", hash = "sha256:c90eb5e2b4f9a7cc6e6af01fd844563d722c0d667f8c5f51fe5b3c2a79fa0575"},
@@ -1458,7 +1458,7 @@ name = "dulwich"
 version = "0.21.3"
 description = "Python Git Library"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.7"
 files = [
     {file = "dulwich-0.21.3-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:25376efc6ea2ee9daa868a120d4f9c905dcb7774f68931be921fba41a657f58a"},
@@ -2245,7 +2245,7 @@ name = "funcy"
 version = "2.0"
 description = "A fancy and practical functional tools"
 category = "main"
-optional = true
+optional = false
 python-versions = "*"
 files = [
     {file = "funcy-2.0-py2.py3-none-any.whl", hash = "sha256:53df23c8bb1651b12f095df764bfb057935d49537a56de211b098f4c79614bb0"},
@@ -4656,7 +4656,7 @@ name = "pathspec"
 version = "0.11.1"
 description = "Utility library for gitignore style pattern matching of file paths."
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.7"
 files = [
     {file = "pathspec-0.11.1-py3-none-any.whl", hash = "sha256:d8af70af76652554bd134c22b3e8a1cc46ed7d91edcdd721ef1a0c51a84a5293"},
@@ -5218,7 +5218,7 @@ name = "pygit2"
 version = "1.12.0"
 description = "Python bindings for libgit2."
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.8"
 files = [
     {file = "pygit2-1.12.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:b44a3b38e62dbf8cb559a40d2b39506a638d13542502ddb927f1c05565048f27"},
@@ -5277,7 +5277,7 @@ name = "pygtrie"
 version = "2.5.0"
 description = "A pure Python trie data structure implementation."
 category = "main"
-optional = true
+optional = false
 python-versions = "*"
 files = [
     {file = "pygtrie-2.5.0-py3-none-any.whl", hash = "sha256:8795cda8105493d5ae159a5bef313ff13156c5d4d72feddefacaad59f8c8ce16"},
@@ -5972,14 +5972,14 @@ test = ["asv", "gmpy2", "mpmath", "pooch", "pytest", "pytest-cov", "pytest-timeo
 
 [[package]]
 name = "scmrepo"
-version = "1.0.1"
+version = "1.0.2"
 description = "SCM wrapper and fsspec filesystem for Git for use in DVC"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "scmrepo-1.0.1-py3-none-any.whl", hash = "sha256:f685d0900fd196ecea0886b8021483153a3602855ae2eb0556f8b60f569aa180"},
-    {file = "scmrepo-1.0.1.tar.gz", hash = "sha256:f6ba8dc2e3866b9f93848de1b2bb98785ad20c69eb4bca314cee985b4d622172"},
+    {file = "scmrepo-1.0.2-py3-none-any.whl", hash = "sha256:d5cf8b088556036d54cb9ba93712e3e890cf45ee169a2ae86b1a84b6d39ec74c"},
+    {file = "scmrepo-1.0.2.tar.gz", hash = "sha256:08babb115810ad646639c24b46b80944a2bc394635cabe2b2d85577c3e9b4550"},
 ]
 
 [package.dependencies]
@@ -6180,7 +6180,7 @@ name = "shortuuid"
 version = "1.0.11"
 description = "A generator library for concise, unambiguous and URL-safe UUIDs."
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.5"
 files = [
     {file = "shortuuid-1.0.11-py3-none-any.whl", hash = "sha256:27ea8f28b1bd0bf8f15057a3ece57275d2059d2b0bb02854f02189962c13b6aa"},
