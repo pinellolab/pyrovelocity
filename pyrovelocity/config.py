@@ -74,7 +74,6 @@ def hydra_zen_configure():
                 loss_plot_path="${..path}/loss_plot.png",
                 patient_improve=0.0001,
                 patient_init=45,
-                max_epochs=2000,
                 **custom_training_parameters,
             ),
         )
@@ -185,6 +184,7 @@ def hydra_zen_configure():
         ),
         model_training=dict(
             train=[
+                "simulate_model2",
                 "pancreas_model1",
                 "pancreas_model2",
                 "pbmc68k_model1",
@@ -192,11 +192,24 @@ def hydra_zen_configure():
                 "pons_model1",
                 "pons_model2",
             ],
+            simulate_model2=create_model_config(
+                "simulate", "medium", 2, "umap", max_epochs=4000, offset=True
+            ),
             pancreas_model1=create_model_config(
-                "scvelo", "pancreas", 1, "umap", guide_type="auto_t0_constraint"
+                "scvelo",
+                "pancreas",
+                1,
+                "umap",
+                guide_type="auto_t0_constraint",
+                max_epochs=2000,
             ),
             pancreas_model2=create_model_config(
-                "scvelo", "pancreas", 2, "umap", offset=True
+                "scvelo",
+                "pancreas",
+                2,
+                "umap",
+                offset=True,
+                max_epochs=2000,
             ),
             pbmc68k_model1=create_model_config(
                 "scvelo",
@@ -205,9 +218,16 @@ def hydra_zen_configure():
                 "tsne",
                 guide_type="auto_t0_constraint",
                 cell_state="celltype",
+                max_epochs=2000,
             ),
             pbmc68k_model2=create_model_config(
-                "scvelo", "pbmc68k", 2, "tsne", cell_state="celltype", offset=True
+                "scvelo",
+                "pbmc68k",
+                2,
+                "tsne",
+                cell_state="celltype",
+                offset=True,
+                max_epochs=2000,
             ),
             pons_model1=create_model_config(
                 "velocyto",
@@ -216,9 +236,16 @@ def hydra_zen_configure():
                 "umap",
                 guide_type="auto_t0_constraint",
                 cell_state="celltype",
+                max_epochs=2000,
             ),
             pons_model2=create_model_config(
-                "velocyto", "pons", 2, "umap", cell_state="celltype", offset=True
+                "velocyto",
+                "pons",
+                2,
+                "umap",
+                cell_state="celltype",
+                offset=True,
+                max_epochs=2000,
             ),
         ),
         reports=dict(
