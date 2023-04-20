@@ -120,7 +120,7 @@ def hydra_zen_configure():
                     data_file="simulated_medium.h5ad",
                     rel_path="${data_external.root_path}/simulated_medium.h5ad",
                     url="${data_external.simulate.sources.gcs_root_url}/simulated_medium.h5ad",
-                    process_method="generate_sample_data",
+                    process_method="load_data",
                     process_args=dict(),
                 ),
             ),

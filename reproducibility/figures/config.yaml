@@ -26,7 +26,7 @@ data_external:
       rel_path: data/external/simulated_medium.h5ad
       url: https://storage.googleapis.com/pyrovelocity/data/simulated_medium.h5ad
       derived:
-        process_method: generate_sample_data
+        process_method: load_data
         process_args: {}
         rel_path: data/processed/simulated_medium_processed.h5ad
   velocyto:
