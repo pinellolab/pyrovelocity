@@ -1,16 +1,10 @@
 # syntax=docker/dockerfile:1
-
-# Build container
-FROM quay.io/condaforge/mambaforge:latest as conda
-
-ADD conda/conda-lock.yml /locks/conda-lock.yml
-RUN mamba info --envs && \
-    mamba install -y conda-lock && \
-    which conda-lock
-RUN conda-lock install -p /opt/env --copy /locks/conda-lock.yml
-
-# Primary container
-FROM ghcr.io/iterative/cml:latest-gpu
-
+FROM condaforge/mambaforge:23.1.0-1
 LABEL maintainer="pyrovelocity team"
-COPY --from=conda /opt/env /opt/env
+
+WORKDIR /pyrovelocity
+COPY . .
+
+RUN mamba init
+RUN mamba env update -n base -f conda/environment-gpu.yml
+RUN pip install --no-deps -e .
