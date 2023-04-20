@@ -108,6 +108,8 @@ def load_data(
             adata, min_shared_counts=min_shared_counts, n_top_genes=top_n
         )
         scv.pp.moments(adata, n_pcs=30, n_neighbors=30)
+        if "X_umap" not in adata.obsm.keys():
+            scv.tl.umap(adata)
         scv.tl.recover_dynamics(adata, n_jobs=-1, use_raw=False)
         scv.tl.velocity(adata, mode="dynamical", use_raw=False)
         scv.tl.velocity_graph(adata, n_jobs=-1)

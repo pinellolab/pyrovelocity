@@ -1217,5 +1217,137 @@ stages:
             rel_path: data/processed/simulated_medium_processed.h5ad
     outs:
     - path: data/processed/simulated_medium_processed.h5ad
-      md5: 647f62064bb3a784cdc18b8f0a47e966
-      size: 257987568
+      md5: 8ace9126696d7b1a6695f76c3df82395
+      size: 257342912
+  train_simulate_model2:
+    cmd: /usr/bin/time -v python train.py model_training.train=[simulate_model2]
+    deps:
+    - path: data/processed/simulated_medium_processed.h5ad
+      md5: 8ace9126696d7b1a6695f76c3df82395
+      size: 257342912
+    - path: train.py
+      md5: 0e7c46a112eab9290b48ad4f3deecaaa
+      size: 8684
+    params:
+      config.yaml:
+        model_training.simulate_model2:
+          path: models/medium_model2
+          model_path: models/medium_model2/model
+          input_data_path: data/processed/simulated_medium_processed.h5ad
+          trained_data_path: models/medium_model2/trained.h5ad
+          pyrovelocity_data_path: models/medium_model2/pyrovelocity.pkl
+          metrics_path: models/medium_model2/metrics.json
+          run_info_path: models/medium_model2/run_info.json
+          vector_field_parameters:
+            basis: umap
+          training_parameters:
+            _target_: pyrovelocity.api.train_model
+            _partial_: true
+            guide_type: auto
+            model_type: auto
+            svi_train: false
+            batch_size: -1
+            train_size: 1.0
+            use_gpu: 0
+            likelihood: Poisson
+            num_samples: 30
+            log_every: 100
+            cell_state: clusters
+            patient_improve: 0.0001
+            patient_init: 45
+            seed: 99
+            lr: 0.01
+            max_epochs: 4000
+            include_prior: true
+            library_size: true
+            offset: true
+            input_type: raw
+            cell_specific_kinetics:
+            kinetics_num: 2
+            loss_plot_path: models/medium_model2/loss_plot.png
+    outs:
+    - path: models/medium_model2/loss_plot.png
+      md5: 77cb69bc1f4e1de9ef25957ccb66fe2f
+      size: 10825
+    - path: models/medium_model2/metrics.json
+      md5: 61ba5f01677f579a99991c39fb44d8a7
+      size: 158
+    - path: models/medium_model2/model
+      md5: 6c0f35b78876e7d248422f23571f2d8b.dir
+      size: 487274
+      nfiles: 1
+    - path: models/medium_model2/pyrovelocity.pkl
+      md5: 18cc5d038c9acb33fb7a282c537deff3
+      size: 28649579
+    - path: models/medium_model2/run_info.json
+      md5: a64024c28226264c08206b75d4e3ad03
+      size: 455
+    - path: models/medium_model2/trained.h5ad
+      md5: 333125983b307a79ef88ef7264122e3b
+      size: 283008448
+  train_simulate_model1:
+    cmd: /usr/bin/time -v python train.py model_training.train=[simulate_model1]
+    deps:
+    - path: data/processed/simulated_medium_processed.h5ad
+      md5: 8ace9126696d7b1a6695f76c3df82395
+      size: 257342912
+    - path: train.py
+      md5: 0e7c46a112eab9290b48ad4f3deecaaa
+      size: 8684
+    params:
+      config.yaml:
+        model_training.simulate_model1:
+          path: models/medium_model1
+          model_path: models/medium_model1/model
+          input_data_path: data/processed/simulated_medium_processed.h5ad
+          trained_data_path: models/medium_model1/trained.h5ad
+          pyrovelocity_data_path: models/medium_model1/pyrovelocity.pkl
+          metrics_path: models/medium_model1/metrics.json
+          run_info_path: models/medium_model1/run_info.json
+          vector_field_parameters:
+            basis: umap
+          training_parameters:
+            _target_: pyrovelocity.api.train_model
+            _partial_: true
+            guide_type: auto_t0_constraint
+            model_type: auto
+            svi_train: false
+            batch_size: -1
+            train_size: 1.0
+            use_gpu: 0
+            likelihood: Poisson
+            num_samples: 30
+            log_every: 100
+            cell_state: clusters
+            patient_improve: 0.0001
+            patient_init: 45
+            seed: 99
+            lr: 0.01
+            max_epochs: 4000
+            include_prior: true
+            library_size: true
+            offset: false
+            input_type: raw
+            cell_specific_kinetics:
+            kinetics_num: 2
+            loss_plot_path: models/medium_model1/loss_plot.png
+    outs:
+    - path: models/medium_model1/loss_plot.png
+      md5: 63f564801f73360c48d0aba7ddd9ab90
+      size: 10649
+    - path: models/medium_model1/metrics.json
+      md5: 763f5ed1f7d6350b2470a3260e6ae697
+      size: 156
+    - path: models/medium_model1/model
+      md5: 3f9147537a5e58e297f9185b85d3816d.dir
+      size: 343338
+      nfiles: 1
+    - path: models/medium_model1/pyrovelocity.pkl
+      md5: 0dc154ecc3da7b0a2702c7c9e9301b37
+      size: 28289417
+    - path: models/medium_model1/run_info.json
+      md5: 4c3919f8ba30be763dfba6b9dc992afb
+      size: 455
+    - path: models/medium_model1/trained.h5ad
+      md5: c8a19f0969b2a590feb80d599cc8adc5
+      size: 283008192
