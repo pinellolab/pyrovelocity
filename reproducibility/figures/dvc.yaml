@@ -118,6 +118,18 @@ stages:
   #     - ${data_external.scvelo.pbmc68k.derived.rel_path}:
   #         persist: true
 
+  preprocess_simulate:
+    cmd: python preprocess.py data_external.sources=[simulate] data_external.simulate.process=[medium]
+    deps:
+      - preprocess.py
+      - ${data_external.simulate.medium.rel_path}
+    params:
+      - config.yaml:
+          - base
+          - data_external.simulate.medium
+    outs:
+      - ${data_external.simulate.medium.derived.rel_path}
+
   preprocess_pancreas:
     cmd: python preprocess.py data_external.sources=[scvelo] data_external.scvelo.process=[pancreas]
     deps:
