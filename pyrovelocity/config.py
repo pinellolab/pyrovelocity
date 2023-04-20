@@ -184,6 +184,7 @@ def hydra_zen_configure():
         ),
         model_training=dict(
             train=[
+                "simulate_model1",
                 "simulate_model2",
                 "pancreas_model1",
                 "pancreas_model2",
@@ -192,6 +193,14 @@ def hydra_zen_configure():
                 "pons_model1",
                 "pons_model2",
             ],
+            simulate_model1=create_model_config(
+                "simulate",
+                "medium",
+                1,
+                "umap",
+                guide_type="auto_t0_constraint",
+                max_epochs=4000,
+            ),
             simulate_model2=create_model_config(
                 "simulate", "medium", 2, "umap", max_epochs=4000, offset=True
             ),
