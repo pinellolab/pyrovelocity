@@ -169,6 +169,29 @@ stages:
       - ${data_external.velocyto.pons.derived.rel_path}
         # persist: true
 
+  train_simulate_model2:
+    cmd: /usr/bin/time -v python train.py model_training.train=[simulate_model2]
+    deps:
+      - train.py
+      - ${model_training.simulate_model2.input_data_path}
+    params:
+      - config.yaml:
+          - model_training.simulate_model2
+    metrics:
+      - ${model_training.simulate_model2.metrics_path}:
+          cache: false
+    outs:
+      - ${model_training.simulate_model2.run_info_path}:
+          cache: false
+      - ${model_training.simulate_model2.training_parameters.loss_plot_path}
+        # persist: true
+      - ${model_training.simulate_model2.trained_data_path}
+        # persist: true
+      - ${model_training.simulate_model2.model_path}
+        # persist: true
+      - ${model_training.simulate_model2.pyrovelocity_data_path}
+        # persist: true
+
   train_pancreas_model1:
     cmd: /usr/bin/time -v python train.py model_training.train=[pancreas_model1]
     deps:
