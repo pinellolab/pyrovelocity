@@ -1,0 +1,27 @@
+{
+  "name": "pyrovelocity",
+  "build": {
+    "dockerfile": "../dockerfiles/Dockerfile.conda.cpu",
+    "context": ".."
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "donjayamanne.python-extension-pack",
+        "ms-vscode.makefile-tools",
+        "ms-vsliveshare.vsli",
+        "eamodio.gitlens",
+        "github.vscode-github-actions",
+        "github.copilot",
+        "ms-azuretools.vscode-docker",
+        "vscode-icons-team.vscode-icons",
+        "iterative.dvc",
+        "hashicorp.terraform",
+        "ms-toolsai.jupyter"
+      ]
+    }
+  }
+}
