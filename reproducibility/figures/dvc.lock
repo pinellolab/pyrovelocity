@@ -1185,10 +1185,37 @@ stages:
           rel_path: data/external/simulated_medium.h5ad
           url: https://storage.googleapis.com/pyrovelocity/data/simulated_medium.h5ad
           derived:
-            process_method: generate_sample_data
+            process_method: load_data
             process_args: {}
             rel_path: data/processed/simulated_medium_processed.h5ad
     outs:
     - path: data/external/simulated_medium.h5ad
       md5: c8483b84bd68f57acb407f715f807f9e
       size: 60248568
+  preprocess_simulate:
+    cmd: python preprocess.py data_external.sources=[simulate] data_external.simulate.process=[medium]
+    deps:
+    - path: data/external/simulated_medium.h5ad
+      md5: c8483b84bd68f57acb407f715f807f9e
+      size: 60248568
+    - path: preprocess.py
+      md5: bf09c86fc25b1d1a98b9aa1c5fa04361
+      size: 2757
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+        data_external.simulate.medium:
+          data_file: simulated_medium.h5ad
+          dl_root: data/external
+          dl_path: data/external/simulated_medium.h5ad
+          rel_path: data/external/simulated_medium.h5ad
+          url: https://storage.googleapis.com/pyrovelocity/data/simulated_medium.h5ad
+          derived:
+            process_method: load_data
+            process_args: {}
+            rel_path: data/processed/simulated_medium_processed.h5ad
+    outs:
+    - path: data/processed/simulated_medium_processed.h5ad
+      md5: 647f62064bb3a784cdc18b8f0a47e966
+      size: 257987568

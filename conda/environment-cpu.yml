@@ -1,5 +1,10 @@
 name: pyrovelocity-cpu
 
+# generate lock file:
+#   conda-lock --conda mamba --log-level DEBUG -f environment-gpu.yml --lockfile conda-lock.yml
+# see conda-lock.yml header for installation instructions:
+#   conda-lock install -n YOURENV --file conda-lock.yml
+
 channels:
   - conda-forge
   - bioconda
@@ -10,22 +15,46 @@ channels:
   - nodefaults
 
 dependencies:
-  - python=3.8
-  - leidenalg=0.9.0
-  - pyro-ppl=1.6.0
-  - pip=22.2.2
+  - python
+  - leidenalg
+  - pyro-ppl=1.8.3
+  - pytorch-cpu=1.13.1
   - seaborn=0.11.2
-  - scvelo=0.2.4
-  - scvi-tools=0.13.0
-  - pytorch-lightning=1.3.0
-  - pytorch=1.8.*
-  - scikit-misc=0.1.4
-  - torchmetrics=0.5.1
-  - h5py=3.7.0
-  - anndata=0.7.5
-  - adjusttext=0.7.3
-  - astropy=5.1
+  - anndata=0.8.0
+  - scvelo=0.2.5
+  - pandas=1.5.3
+  - h5py
+  - anndata
+  - pip
+  - scvi-tools
+  - scikit-misc
+  - torchmetrics
+  - adjusttext
+  - astropy
+  - click
+  - colorlog
+  - omegaconf
+  - rich
+  - hydra-core
+  - mlflow
+  - termcolor
+  - tqdm
+  - ipywidgets
+  # dev
+  - zsh
+  - tree
+  - htop
+  - make
+  - pytest
+  - hypothesis
+  - xdoctest
+  - dvc
+  - git
+  - gh
+  - pip:
+      - hydra-zen==0.10.0
+      - cospar==0.1.9
 
-# Non-standard section listing target platforms for conda-lock:
+## Non-standard section listing target platforms for conda-lock:
 platforms:
   - linux-64

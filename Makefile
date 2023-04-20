@@ -34,7 +34,9 @@ app_dev: \
 		-v ${PWD}:/pyrovelocity \
 		-p 8080:8080 \
 		--label=pyrovelocityappdev \
-		pyrovelocityapp
+		pyrovelocityapp \
+		"--server.enableCORS=false" \
+		"--server.enableXsrfProtection=false"
 
 app_run_shell: ## Attach to shell in running container: make app_run_shell CONTAINER_ID="98aca71ab536"
 ifdef CONTAINER_ID
