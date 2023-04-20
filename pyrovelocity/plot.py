@@ -19,9 +19,9 @@ from numpy import ndarray
 from scipy.stats import spearmanr
 
 from pyrovelocity.cytotrace import compute_similarity2
-
-from .utils import mRNA
-from .utils import mse_loss_sum
+from pyrovelocity.utils import ensure_numpy_array
+from pyrovelocity.utils import mRNA
+from pyrovelocity.utils import mse_loss_sum
 
 
 def plot_evaluate_dynamic_orig(adata, gene="Cpe", velocity=None, ax=None):
@@ -421,7 +421,8 @@ def compute_volcano_data(
         for sample in range(p["alpha"].shape[0]):
             maes_list.append(
                 mae_per_gene(
-                    p["s"][sample].squeeze(), ad.layers["raw_spliced"].toarray()
+                    p["s"][sample].squeeze(),
+                    ensure_numpy_array(ad.layers["raw_spliced"]),
                 )
             )
             df_genes_cors = compute_similarity2(

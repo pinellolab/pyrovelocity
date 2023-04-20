@@ -549,6 +549,10 @@ def init_with_all_cells(
     return init_values
 
 
+def ensure_numpy_array(obj):
+    return obj.toarray() if hasattr(obj, "toarray") else obj
+
+
 def mae_evaluate(posterior_samples, adata):
     maes_list = []
     labels = []
@@ -579,8 +583,8 @@ def mae_evaluate(posterior_samples, adata):
                         np.hstack([model_obj["u"][sample], model_obj["s"][sample]]),
                         np.hstack(
                             [
-                                adata.layers["raw_unspliced"].toarray(),
-                                adata.layers["raw_spliced"].toarray(),
+                                ensure_numpy_array(adata.layers["raw_unspliced"]),
+                                ensure_numpy_array(adata.layers["raw_spliced"]),
                             ]
                         ),
                     )
