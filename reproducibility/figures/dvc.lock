@@ -1217,14 +1217,14 @@ stages:
             rel_path: data/processed/simulated_medium_processed.h5ad
     outs:
     - path: data/processed/simulated_medium_processed.h5ad
-      md5: 8ace9126696d7b1a6695f76c3df82395
-      size: 257342912
+      md5: a3b043f214bc630880e0882c802ee2f6
+      size: 257351792
   train_simulate_model2:
     cmd: /usr/bin/time -v python train.py model_training.train=[simulate_model2]
     deps:
     - path: data/processed/simulated_medium_processed.h5ad
-      md5: 8ace9126696d7b1a6695f76c3df82395
-      size: 257342912
+      md5: a3b043f214bc630880e0882c802ee2f6
+      size: 257351792
     - path: train.py
       md5: 0e7c46a112eab9290b48ad4f3deecaaa
       size: 8684
@@ -1252,7 +1252,7 @@ stages:
             likelihood: Poisson
             num_samples: 30
             log_every: 100
-            cell_state: clusters
+            cell_state: leiden
             patient_improve: 0.0001
             patient_init: 45
             seed: 99
@@ -1273,24 +1273,24 @@ stages:
       md5: 61ba5f01677f579a99991c39fb44d8a7
       size: 158
     - path: models/medium_model2/model
-      md5: 6c0f35b78876e7d248422f23571f2d8b.dir
+      md5: 353c17d70817f8af85bcdf88e47c0f33.dir
       size: 487274
       nfiles: 1
     - path: models/medium_model2/pyrovelocity.pkl
       md5: 18cc5d038c9acb33fb7a282c537deff3
       size: 28649579
     - path: models/medium_model2/run_info.json
-      md5: a64024c28226264c08206b75d4e3ad03
+      md5: c06db2d24426378aae87ef1fc97d328b
       size: 455
     - path: models/medium_model2/trained.h5ad
-      md5: 333125983b307a79ef88ef7264122e3b
-      size: 283008448
+      md5: 0bf8d1aff6d9ad885666b82589d0d78b
+      size: 283017032
   train_simulate_model1:
     cmd: /usr/bin/time -v python train.py model_training.train=[simulate_model1]
     deps:
     - path: data/processed/simulated_medium_processed.h5ad
-      md5: 8ace9126696d7b1a6695f76c3df82395
-      size: 257342912
+      md5: a3b043f214bc630880e0882c802ee2f6
+      size: 257351792
     - path: train.py
       md5: 0e7c46a112eab9290b48ad4f3deecaaa
       size: 8684
@@ -1318,7 +1318,7 @@ stages:
             likelihood: Poisson
             num_samples: 30
             log_every: 100
-            cell_state: clusters
+            cell_state: leiden
             patient_improve: 0.0001
             patient_init: 45
             seed: 99
@@ -1339,15 +1339,163 @@ stages:
       md5: 763f5ed1f7d6350b2470a3260e6ae697
       size: 156
     - path: models/medium_model1/model
-      md5: 3f9147537a5e58e297f9185b85d3816d.dir
+      md5: 04a6d5b29bef623290e36941804d5249.dir
       size: 343338
       nfiles: 1
     - path: models/medium_model1/pyrovelocity.pkl
       md5: 0dc154ecc3da7b0a2702c7c9e9301b37
       size: 28289417
     - path: models/medium_model1/run_info.json
-      md5: 4c3919f8ba30be763dfba6b9dc992afb
+      md5: 2a0a17a345d3141ae8a2188fded82022
       size: 455
     - path: models/medium_model1/trained.h5ad
-      md5: c8a19f0969b2a590feb80d599cc8adc5
-      size: 283008192
+      md5: 6152df9397b02843f6f61022d9f74bb5
+      size: 283016776
+  summarize_simulate_model1:
+    cmd: python summarize.py reports.model_summary.summarize=[simulate_model1]
+    deps:
+    - path: models/medium_model1/pyrovelocity.pkl
+      md5: 0dc154ecc3da7b0a2702c7c9e9301b37
+      size: 28289417
+    - path: models/medium_model1/trained.h5ad
+      md5: 6152df9397b02843f6f61022d9f74bb5
+      size: 283016776
+    - path: summarize.py
+      md5: 4181b7b924bd90c6d4a762e7d5493c41
+      size: 6998
+    params:
+      config.yaml:
+        model_training.simulate_model1:
+          path: models/medium_model1
+          model_path: models/medium_model1/model
+          input_data_path: data/processed/simulated_medium_processed.h5ad
+          trained_data_path: models/medium_model1/trained.h5ad
+          pyrovelocity_data_path: models/medium_model1/pyrovelocity.pkl
+          metrics_path: models/medium_model1/metrics.json
+          run_info_path: models/medium_model1/run_info.json
+          vector_field_parameters:
+            basis: umap
+          training_parameters:
+            _target_: pyrovelocity.api.train_model
+            _partial_: true
+            guide_type: auto_t0_constraint
+            model_type: auto
+            svi_train: false
+            batch_size: -1
+            train_size: 1.0
+            use_gpu: 0
+            likelihood: Poisson
+            num_samples: 30
+            log_every: 100
+            cell_state: leiden
+            patient_improve: 0.0001
+            patient_init: 45
+            seed: 99
+            lr: 0.01
+            max_epochs: 4000
+            include_prior: true
+            library_size: true
+            offset: false
+            input_type: raw
+            cell_specific_kinetics:
+            kinetics_num: 2
+            loss_plot_path: models/medium_model1/loss_plot.png
+        reports.model_summary.simulate_model1:
+          path: reports/medium_model1
+          shared_time_plot: reports/medium_model1/shared_time.pdf
+          volcano_plot: reports/medium_model1/volcano.pdf
+          rainbow_plot: reports/medium_model1/rainbow.pdf
+          uncertainty_param_plot: reports/medium_model1/param_uncertainties.pdf
+          vector_field_plot: reports/medium_model1/vector_field.pdf
+          biomarker_selection_plot: reports/medium_model1/markers_selection_scatterplot.tif
+          biomarker_phaseportrait_plot: reports/medium_model1/markers_phaseportrait.pdf
+    outs:
+    - path: reports/medium_model1/rainbow.pdf
+      md5: 1d3d9c2beb0f5f2eabd56f573cadcb54
+      size: 415343
+    - path: reports/medium_model1/rainbow.pdf.png
+      md5: e2a988c1b94ccac347654758176abb1c
+      size: 709724
+    - path: reports/medium_model1/vector_field.pdf
+      md5: 7ddd64acd156a24832f8af731b27cb5b
+      size: 202510
+    - path: reports/medium_model1/vector_field.pdf.png
+      md5: 1e229501f9e65fbca6db66bc2071573d
+      size: 497363
+    - path: reports/medium_model1/volcano.pdf
+      md5: 526c4688ab2ef7977fed475ebec07a6f
+      size: 20550
+  summarize_simulate_model2:
+    cmd: python summarize.py reports.model_summary.summarize=[simulate_model2]
+    deps:
+    - path: models/medium_model2/pyrovelocity.pkl
+      md5: 18cc5d038c9acb33fb7a282c537deff3
+      size: 28649579
+    - path: models/medium_model2/trained.h5ad
+      md5: 0bf8d1aff6d9ad885666b82589d0d78b
+      size: 283017032
+    - path: summarize.py
+      md5: 4181b7b924bd90c6d4a762e7d5493c41
+      size: 6998
+    params:
+      config.yaml:
+        model_training.simulate_model2:
+          path: models/medium_model2
+          model_path: models/medium_model2/model
+          input_data_path: data/processed/simulated_medium_processed.h5ad
+          trained_data_path: models/medium_model2/trained.h5ad
+          pyrovelocity_data_path: models/medium_model2/pyrovelocity.pkl
+          metrics_path: models/medium_model2/metrics.json
+          run_info_path: models/medium_model2/run_info.json
+          vector_field_parameters:
+            basis: umap
+          training_parameters:
+            _target_: pyrovelocity.api.train_model
+            _partial_: true
+            guide_type: auto
+            model_type: auto
+            svi_train: false
+            batch_size: -1
+            train_size: 1.0
+            use_gpu: 0
+            likelihood: Poisson
+            num_samples: 30
+            log_every: 100
+            cell_state: leiden
+            patient_improve: 0.0001
+            patient_init: 45
+            seed: 99
+            lr: 0.01
+            max_epochs: 4000
+            include_prior: true
+            library_size: true
+            offset: true
+            input_type: raw
+            cell_specific_kinetics:
+            kinetics_num: 2
+            loss_plot_path: models/medium_model2/loss_plot.png
+        reports.model_summary.simulate_model2:
+          path: reports/medium_model2
+          shared_time_plot: reports/medium_model2/shared_time.pdf
+          volcano_plot: reports/medium_model2/volcano.pdf
+          rainbow_plot: reports/medium_model2/rainbow.pdf
+          uncertainty_param_plot: reports/medium_model2/param_uncertainties.pdf
+          vector_field_plot: reports/medium_model2/vector_field.pdf
+          biomarker_selection_plot: reports/medium_model2/markers_selection_scatterplot.tif
+          biomarker_phaseportrait_plot: reports/medium_model2/markers_phaseportrait.pdf
+    outs:
+    - path: reports/medium_model2/rainbow.pdf
+      md5: 9d201364f5f85d13f235aecf0902dbcc
+      size: 463594
+    - path: reports/medium_model2/rainbow.pdf.png
+      md5: e732a7a5a4fb3f7cf695a7883b6563f7
+      size: 993907
+    - path: reports/medium_model2/vector_field.pdf
+      md5: df52fb0a23f8cac59d6fda682b14f5c1
+      size: 204749
+    - path: reports/medium_model2/vector_field.pdf.png
+      md5: a17fb5265f36996dd08159e3c96aed5f
+      size: 513295
+    - path: reports/medium_model2/volcano.pdf
+      md5: b9dfd5b655ff7e163fe7aba645599322
+      size: 19646

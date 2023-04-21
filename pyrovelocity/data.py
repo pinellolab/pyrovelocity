@@ -5,8 +5,8 @@ from typing import Optional
 import anndata
 import anndata._core.anndata
 import numpy as np
+import scanpy as sc
 import scvelo as scv
-from scanpy import read
 from scipy.sparse import issparse
 
 from pyrovelocity.cytotrace import cytotrace_sparse
@@ -78,7 +78,7 @@ def load_data(
         and os.access(processed_path, os.R_OK)
         and (not force)
     ):
-        adata = read(processed_path)
+        adata = sc.read(processed_path)
     else:
         if data == "pancreas":
             adata = scv.datasets.pancreas()
@@ -89,7 +89,7 @@ def load_data(
         elif data == "dentategyrus":
             adata = scv.datasets.dentategyrus()
         else:
-            adata = read(data)
+            adata = sc.read(data)
 
         print_anndata(adata)
         copy_raw_counts(adata)
@@ -110,6 +110,8 @@ def load_data(
         scv.pp.moments(adata, n_pcs=30, n_neighbors=30)
         if "X_umap" not in adata.obsm.keys():
             scv.tl.umap(adata)
+        if "leiden" not in adata.obs.keys():
+            sc.tl.leiden(adata)
         scv.tl.recover_dynamics(adata, n_jobs=-1, use_raw=False)
         scv.tl.velocity(adata, mode="dynamical", use_raw=False)
         scv.tl.velocity_graph(adata, n_jobs=-1)
@@ -131,12 +133,12 @@ def load_pbmc(
         and os.access(processed_path, os.R_OK)
         and (not force)
     ):
-        adata = scv.read(processed_path)
+        adata = scv.sc.read(processed_path)
     else:
         if data is None:
             adata = scv.datasets.pbmc68k()
         elif os.path.isfile(data) and os.access(data, os.R_OK):
-            adata = scv.read(data)
+            adata = scv.sc.read(data)
 
         # adata_all = adata.copy()
 
@@ -190,7 +192,7 @@ def load_larry(file_path: str = "data/larry.h5ad") -> anndata._core.anndata.AnnD
     Returns `adata` object
     """
     url = "https://figshare.com/ndownloader/files/37028569"
-    adata = read(file_path, backup_url=url, sparse=True, cache=True)
+    adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
     return adata
 
 
@@ -209,7 +211,7 @@ def load_unipotent_larry(celltype: str = "mono") -> anndata._core.anndata.AnnDat
         url = "https://figshare.com/ndownloader/files/37028572"
     else:  # neutrophil
         url = "https://figshare.com/ndownloader/files/37028575"
-    adata = read(file_path, backup_url=url, sparse=True, cache=True)
+    adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
     return adata
 
 

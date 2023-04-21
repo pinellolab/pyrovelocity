@@ -198,11 +198,18 @@ def hydra_zen_configure():
                 "medium",
                 1,
                 "umap",
+                cell_state="leiden",
                 guide_type="auto_t0_constraint",
                 max_epochs=4000,
             ),
             simulate_model2=create_model_config(
-                "simulate", "medium", 2, "umap", max_epochs=4000, offset=True
+                "simulate",
+                "medium",
+                2,
+                "umap",
+                cell_state="leiden",
+                max_epochs=4000,
+                offset=True,
             ),
             pancreas_model1=create_model_config(
                 "scvelo",
@@ -260,6 +267,8 @@ def hydra_zen_configure():
         reports=dict(
             model_summary=dict(
                 summarize=[
+                    "simulate_model1",
+                    "simulate_model2",
                     "pancreas_model1",
                     "pancreas_model2",
                     "pbmc68k_model1",
@@ -267,6 +276,8 @@ def hydra_zen_configure():
                     "pons_model1",
                     "pons_model2",
                 ],
+                simulate_model1=create_reports_config("medium", 1),
+                simulate_model2=create_reports_config("medium", 2),
                 pancreas_model1=create_reports_config("pancreas", 1),
                 pancreas_model2=create_reports_config("pancreas", 2),
                 pbmc68k_model1=create_reports_config("pbmc68k", 1),
