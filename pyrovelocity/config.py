@@ -3,12 +3,11 @@ from pathlib import Path
 from typing import Sequence
 from typing import Union
 
+import hydra
 import rich.console
 import rich.pretty
 import rich.syntax
 import rich.tree
-from hydra import compose
-from hydra import initialize
 from hydra.core.config_store import ConfigStore
 from hydra.core.global_hydra import GlobalHydra
 from hydra_zen import make_config
@@ -325,10 +324,10 @@ def initialize_hydra_config() -> DictConfig:
     """
     GlobalHydra.instance().clear()
     config = hydra_zen_configure()
-    initialize(version_base="1.2", config_path=None)
+    hydra.initialize(version_base="1.2", config_path=None)
     cs = ConfigStore.instance()
     cs.store(name="config", node=config)
-    return compose(config_name="config")
+    return hydra.compose(config_name="config")
 
 
 def config_setup(config_path: str) -> Union[DictConfig, ListConfig]:
