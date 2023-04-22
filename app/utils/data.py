@@ -18,13 +18,21 @@ def generate_sample_data():
     return adata
 
 
+def ensure_numpy_array(obj):
+    return obj.toarray() if hasattr(obj, "toarray") else obj
+
+
 def filter_var_counts_to_df(adata, min_spliced_counts, min_unspliced_counts):
     # create dataframes for spliced and unspliced counts
     spliced_df = pd.DataFrame(
-        adata.layers["spliced"], index=adata.obs_names, columns=adata.var_names
+        ensure_numpy_array(adata.layers["spliced"]),
+        index=adata.obs_names,
+        columns=adata.var_names,
     )
     unspliced_df = pd.DataFrame(
-        adata.layers["unspliced"], index=adata.obs_names, columns=adata.var_names
+        ensure_numpy_array(adata.layers["unspliced"]),
+        index=adata.obs_names,
+        columns=adata.var_names,
     )
 
     # melt the dataframes to long format
