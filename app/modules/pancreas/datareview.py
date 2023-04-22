@@ -1,22 +1,23 @@
 import streamlit as st
+from utils.config import get_app_config
 from utils.data import filter_var_counts_to_df
 from utils.data import generate_sample_data
 from utils.data import interactive_spliced_unspliced_plot
-from utils.config import get_app_config
 
 
 PATH_PREFIX = "reproducibility/figures/"
 cfg = get_app_config()
 
+
 @st.cache_data(show_spinner=False, persist=True)
 def load_data(PATH_PREFIX=PATH_PREFIX, cfg=cfg):
     import scvelo as scv
+
     return scv.read(PATH_PREFIX + cfg.model_training.pancreas_model2.trained_data_path)
 
+
 # adata = generate_sample_data()
-with st.spinner(
-    f"loading {cfg.model_training.pancreas_model2.trained_data_path} ..."
-):
+with st.spinner(f"loading {cfg.model_training.pancreas_model2.trained_data_path} ..."):
     adata = load_data()
 
 spliced_threshold = 0
