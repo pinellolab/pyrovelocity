@@ -1,5 +1,5 @@
-import streamlit as st
 import numpy as np
+import streamlit as st
 from utils.config import get_app_config
 
 
@@ -54,9 +54,7 @@ def extract_pbmc68k_df_from_adata(
 
 
 @st.cache_data(show_spinner="filtering dataframe by count thresholds", persist=True)
-def filter_count_thresholds_from_pbmc68k_df(
-    df, spliced_threshold, unspliced_threshold
-):
+def filter_count_thresholds_from_pbmc68k_df(df, spliced_threshold, unspliced_threshold):
     from utils.data import filter_var_counts_by_thresholds
 
     return filter_var_counts_by_thresholds(df, spliced_threshold, unspliced_threshold)

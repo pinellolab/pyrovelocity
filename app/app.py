@@ -3,10 +3,10 @@ from pathlib import Path
 import altair as alt
 import streamlit as st
 from modules import home
-from modules import simulation
 from modules import pancreas
-from modules import pons
 from modules import pbmc68k
+from modules import pons
+from modules import simulation
 from utils.altair_theme import custom_theme
 from utils.html_factory import CSSStyle
 from utils.html_factory import make_div
