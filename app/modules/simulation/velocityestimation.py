@@ -5,6 +5,9 @@ from utils.data import interactive_spliced_unspliced_plot
 
 
 adata = generate_sample_data()
+adata.layers["raw_unspliced"] = adata.layers["unspliced"]
+adata.layers["raw_spliced"] = adata.layers["spliced"]
+
 spliced_threshold = 0
 unspliced_threshold = 0
 (
