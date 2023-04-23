@@ -191,7 +191,6 @@ def plots(conf: DictConfig, logger: Logger) -> None:
                     dpi=300,
                 )
 
-        
 
 @hydra.main(version_base="1.2", config_path=".", config_name="config.yaml")
 def main(conf: DictConfig) -> None:

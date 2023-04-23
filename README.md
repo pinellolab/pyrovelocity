@@ -121,7 +121,7 @@ Step 3. Train the Pyro-Velocity model:
 
 ```python
 from pyrovelocity.api import train_model
-from pyrovelocity.plot import vector_field_uncertainty 
+from pyrovelocity.plot import vector_field_uncertainty
 num_epochs = 1000 # large data
 # num_epochs = 4000 # small data
 # Model 1
@@ -152,8 +152,8 @@ adata_model_pos = train_model(adata,
 # adata_model_pos is a returned list in which 0th element is the trained model,
 # the 1st element is the posterior samples of all random variables
 
-trained_model = adata_model_pos[0] 
-posterior_samples = adata_model_pos[1] 
+trained_model = adata_model_pos[0]
+posterior_samples = adata_model_pos[1]
 v_map_all, embeds_radian, fdri = vector_field_uncertainty(
     adata,
     posterior_samples=posterior_samples,
@@ -165,7 +165,7 @@ if save_res:
     trained_model.save('saved_model', overwrite=True)
     result_dict = {"adata_model_pos": posterior_samples,
                    "v_map_all": v_map_all,
-                   "embeds_radian": embeds_radian, "fdri": fdri} #, "embed_mean": embed_mean} 
+                   "embeds_radian": embeds_radian, "fdri": fdri} #, "embed_mean": embed_mean}
     import pickle
     with open("posterior_samples.pkl", "wb") as f:
          pickle.dump(result_dict, f)
@@ -179,11 +179,11 @@ from pyrovelocity.plot import plot_state_uncertainty
 from pyrovelocity.plot import plot_posterior_time, plot_gene_ranking,\
       vector_field_uncertainty, plot_vector_field_uncertain,\
       plot_mean_vector_field, project_grid_points,rainbowplot,denoised_umap,\
-      us_rainbowplot, plot_arrow_examples, set_colorbar 
-      
-import numpy as np     
-import matplotlib.pyplot as plt 
-import seaborn as sns 
+      us_rainbowplot, plot_arrow_examples, set_colorbar
+
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 embedding = 'umap' # change to umap or tsne based on your embedding method
@@ -216,8 +216,8 @@ sns.kdeplot(adata.obsm[f'X_{embedding}'][:, 0][select],
 
 # This generates vector field uncertainty based on Rayleigh test.
 adata.obs.loc[:, 'vector_field_rayleigh_test'] = fdri
-im = ax[1].scatter(adata.obsm[f'X_{embedding}'][:, 0],      
-                   adata.obsm[f'X_{embedding}'][:, 1], s=3, alpha=0.9, 
+im = ax[1].scatter(adata.obsm[f'X_{embedding}'][:, 0],
+                   adata.obsm[f'X_{embedding}'][:, 1], s=3, alpha=0.9,
                    c=adata.obs['vector_field_rayleigh_test'], cmap='inferno_r',
                    linewidth=0)
 set_colorbar(im, ax[1], labelsize=5, fig=fig, position='right')
