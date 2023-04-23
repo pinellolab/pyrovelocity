@@ -1,4 +1,5 @@
 import altair as alt
+import numpy as np
 import pandas as pd
 import scvelo as scv
 
@@ -23,19 +24,19 @@ def ensure_numpy_array(obj):
 
 
 def filter_var_counts_to_df(adata, min_spliced_counts, min_unspliced_counts):
-    # create dataframes for spliced and unspliced counts
     spliced_df = pd.DataFrame(
-        ensure_numpy_array(adata.layers["spliced"]),
+        ensure_numpy_array(adata.layers["raw_spliced"]),
+        # ensure_numpy_array(adata.layers["spliced"]),
         index=adata.obs_names,
         columns=adata.var_names,
     )
     unspliced_df = pd.DataFrame(
-        ensure_numpy_array(adata.layers["unspliced"]),
+        ensure_numpy_array(adata.layers["raw_unspliced"]),
+        # ensure_numpy_array(adata.layers["unspliced"]),
         index=adata.obs_names,
         columns=adata.var_names,
     )
 
-    # melt the dataframes to long format
     spliced_melted = spliced_df.reset_index().melt(
         id_vars="index", var_name="var_name", value_name="spliced"
     )
@@ -43,10 +44,8 @@ def filter_var_counts_to_df(adata, min_spliced_counts, min_unspliced_counts):
         id_vars="index", var_name="var_name", value_name="unspliced"
     )
 
-    # combine the dataframes
     df = spliced_melted.merge(unspliced_melted, on=["index", "var_name"])
 
-    # rename the 'index' column
     df = df.rename(columns={"index": "obs_name"})
 
     spliced_var_gt_threshold = (spliced_df > min_spliced_counts).sum().sum()
@@ -100,6 +99,49 @@ def interactive_spliced_unspliced_plot(
         .properties(
             title=title,
         )
+        .interactive()
+    )
+
+    return chart
+
+
+def interactive_spliced_unspliced_histogram(
+    df, title, selected_vars=None, selected_obs=None
+):
+    if selected_vars is None:
+        selected_vars = []
+    if selected_obs is None:
+        selected_obs = []
+
+    df["highlight"] = df["var_name"].isin(selected_vars) | df["obs_name"].isin(
+        selected_obs
+    )
+
+    number_of_histogram_bins = np.maximum(60, np.sqrt(len(df)))
+
+    chart = (
+        alt.Chart(df)
+        .mark_rect()
+        .encode(
+            x=alt.X(
+                "spliced:Q",
+                title="Spliced Counts",
+                bin=alt.Bin(maxbins=number_of_histogram_bins),
+            ),
+            y=alt.Y(
+                "unspliced:Q",
+                title="Unspliced Counts",
+                bin=alt.Bin(maxbins=number_of_histogram_bins),
+            ),
+            color=alt.Color("count():Q", scale=alt.Scale(scheme="greenblue")),
+        )
+        .properties(
+            title=title,
+        )
+        .configure(
+            countTitle="counts",
+        )
+        .configure_legend(orient="top-right", titleOrient="left")
         .interactive()
     )
 
