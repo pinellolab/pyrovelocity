@@ -23,7 +23,7 @@ def ensure_numpy_array(obj):
     return obj.toarray() if hasattr(obj, "toarray") else obj
 
 
-def filter_var_counts_to_df(adata, min_spliced_counts, min_unspliced_counts):
+def anndata_counts_to_df(adata):
     spliced_df = pd.DataFrame(
         ensure_numpy_array(adata.layers["raw_spliced"]),
         # ensure_numpy_array(adata.layers["spliced"]),
@@ -48,21 +48,74 @@ def filter_var_counts_to_df(adata, min_spliced_counts, min_unspliced_counts):
 
     df = df.rename(columns={"index": "obs_name"})
 
-    spliced_var_gt_threshold = (spliced_df > min_spliced_counts).sum().sum()
-    unspliced_var_gt_threshold = (unspliced_df > min_unspliced_counts).sum().sum()
+    # spliced_var_gt_threshold = (spliced_df >= min_spliced_counts).sum().sum()
+    # unspliced_var_gt_threshold = (unspliced_df >= min_unspliced_counts).sum().sum()
 
-    # filter the dataframe to include rows where the spliced or unspliced counts are greater than 0
-    df_filtered = df[
-        (df["spliced"] > min_spliced_counts) | (df["unspliced"] > min_unspliced_counts)
-    ]
+    # # filter the dataframe to include rows where the spliced or unspliced counts are greater than 0
+    # df_filtered = df[
+    #     (df["spliced"] >= min_spliced_counts) & (df["unspliced"] >= min_unspliced_counts)
+    # ]
 
     total_obs = adata.n_obs
     total_var = adata.n_vars
 
     return (
-        df_filtered,
+        df,
         total_obs,
         total_var,
+        # spliced_var_gt_threshold,
+        # unspliced_var_gt_threshold,
+    )
+
+
+def filter_var_counts_by_thresholds(
+    df, spliced_count_thresholds, unspliced_count_thresholds
+):
+    spliced_var_gt_threshold = (
+        (
+            (df["spliced"] >= spliced_count_thresholds[0])
+            & (df["spliced"] <= spliced_count_thresholds[1])
+        )
+        .sum()
+        .sum()
+    )
+
+    unspliced_var_gt_threshold = (
+        (
+            (df["unspliced"] >= unspliced_count_thresholds[0])
+            & (df["unspliced"] <= unspliced_count_thresholds[1])
+        )
+        .sum()
+        .sum()
+    )
+
+    df_filtered = df[
+        (
+            (df["spliced"] >= spliced_count_thresholds[0])
+            & (df["unspliced"] >= unspliced_count_thresholds[0])
+            & (df["spliced"] <= spliced_count_thresholds[1])
+            & (df["unspliced"] <= unspliced_count_thresholds[1])
+        )
+    ]
+
+    return (
+        df_filtered,
+        spliced_var_gt_threshold,
+        unspliced_var_gt_threshold,
+    )
+
+
+def filter_var_counts_by_threshold(df, min_spliced_counts, min_unspliced_counts):
+    spliced_var_gt_threshold = (df["spliced"] >= min_spliced_counts).sum().sum()
+    unspliced_var_gt_threshold = (df["unspliced"] >= min_unspliced_counts).sum().sum()
+
+    df_filtered = df[
+        (df["spliced"] >= min_spliced_counts)
+        & (df["unspliced"] >= min_unspliced_counts)
+    ]
+
+    return (
+        df_filtered,
         spliced_var_gt_threshold,
         unspliced_var_gt_threshold,
     )
