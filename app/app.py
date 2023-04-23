@@ -3,8 +3,10 @@ from pathlib import Path
 import altair as alt
 import streamlit as st
 from modules import home
-from modules import pancreas
 from modules import simulation
+from modules import pancreas
+from modules import pons
+from modules import pbmc68k
 from utils.altair_theme import custom_theme
 from utils.html_factory import CSSStyle
 from utils.html_factory import make_div
@@ -94,5 +96,9 @@ elif selected_module == "🖥️ simulation":
     simulation.st_show()
 elif selected_module == "⚪️ pancreas":
     pancreas.st_show()
+elif selected_module == "🟠 pons":
+    pons.st_show()
+elif selected_module == "🔴 peripheral blood":
+    pbmc68k.st_show()
 else:
     st.error("Page does not yet exist.")
