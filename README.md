@@ -121,22 +121,9 @@ Step 3. Train the Pyro-Velocity model:
 
 ```python
 from pyrovelocity.api import train_model
-# Model 1
+from pyrovelocity.plot import vector_field_uncertainty 
 num_epochs = 1000 # large data
 # num_epochs = 4000 # small data
-adata_model_pos = train_model(adata,
-                               max_epochs=num_epochs, svi_train=True, log_every=100,
-                               patient_init=45,
-                               batch_size=4000, use_gpu=0, cell_state='state_info',
-                               include_prior=True,
-                               offset=False,
-                               library_size=True,
-                               patient_improve=1e-3,
-                               model_type='auto',
-                               guide_type='auto_t0_constraint',
-                               train_size=1.0)
-
-# Or Model 2
 adata_model_pos = train_model(adata,
                                max_epochs=num_epochs, svi_train=True, log_every=100,
                                patient_init=45,
@@ -151,12 +138,21 @@ adata_model_pos = train_model(adata,
 
 # adata_model_pos is a returned list in which 0th element is the trained model,
 # the 1st element is the posterior samples of all random variables
+
+trained_model = adata_model_pos[0] 
+posterior_samples = adata_model_pos[1] 
+v_map_all, embeds_radian, fdri = vector_field_uncertainty(
+    adata,
+    posterior_samples=posterior_samples,
+    basis="umap"
+)
+
 save_res = True
 if save_res:
     trained_model.save('saved_model', overwrite=True)
     result_dict = {"adata_model_pos": posterior_samples,
                    "v_map_all": v_map_all,
-                   "embeds_radian": embeds_radian, "fdri": fdri, "embed_mean": embed_mean}
+                   "embeds_radian": embeds_radian, "fdri": fdri} #, "embed_mean": embed_mean} 
     import pickle
     with open("posterior_samples.pkl", "wb") as f:
          pickle.dump(result_dict, f)
@@ -170,9 +166,14 @@ from pyrovelocity.plot import plot_state_uncertainty
 from pyrovelocity.plot import plot_posterior_time, plot_gene_ranking,\
       vector_field_uncertainty, plot_vector_field_uncertain,\
       plot_mean_vector_field, project_grid_points,rainbowplot,denoised_umap,\
-      us_rainbowplot, plot_arrow_examples
+      us_rainbowplot, plot_arrow_examples, set_colorbar 
+      
+import numpy as np     
+import matplotlib.pyplot as plt 
+import seaborn as sns 
 
-embedding = 'emb' # change to umap or tsne based on your embedding method
+
+embedding = 'umap' # change to umap or tsne based on your embedding method
 
 # This generates the posterior samples of all vector fields
 # and statistical testing results from Rayleigh test
@@ -202,8 +203,8 @@ sns.kdeplot(adata.obsm[f'X_{embedding}'][:, 0][select],
 
 # This generates vector field uncertainty based on Rayleigh test.
 adata.obs.loc[:, 'vector_field_rayleigh_test'] = fdri
-im = ax[1].scatter(adata.obsm[f'X_{basis}'][:, 0],
-                   adata.obsm[f'X_{basis}'][:, 1], s=3, alpha=0.9,
+im = ax[1].scatter(adata.obsm[f'X_{embedding}'][:, 0],      
+                   adata.obsm[f'X_{embedding}'][:, 1], s=3, alpha=0.9, 
                    c=adata.obs['vector_field_rayleigh_test'], cmap='inferno_r',
                    linewidth=0)
 set_colorbar(im, ax[1], labelsize=5, fig=fig, position='right')
