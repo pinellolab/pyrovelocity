@@ -124,6 +124,19 @@ from pyrovelocity.api import train_model
 from pyrovelocity.plot import vector_field_uncertainty 
 num_epochs = 1000 # large data
 # num_epochs = 4000 # small data
+# Model 1
+adata_model_pos = train_model(adata,
+                               max_epochs=num_epochs, svi_train=True, log_every=100,
+                               patient_init=45,
+                               batch_size=4000, use_gpu=0, cell_state='state_info',
+                               include_prior=True,
+                               offset=False,
+                               library_size=True,
+                               patient_improve=1e-3,
+                               model_type='auto',
+                               guide_type='auto_t0_constraint',
+                               train_size=1.0)
+# Or Model 2
 adata_model_pos = train_model(adata,
                                max_epochs=num_epochs, svi_train=True, log_every=100,
                                patient_init=45,
