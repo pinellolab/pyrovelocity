@@ -11,3 +11,7 @@ def test_data():
 @pytest.fixture(scope="module")
 def test_file():
     return "test_data.pkl.zst"
+
+def test_save(test_data, test_file):
+    CompressedPickle.save(test_file, test_data)
+    assert os.path.exists(test_file)
