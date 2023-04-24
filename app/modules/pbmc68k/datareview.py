@@ -2,55 +2,17 @@ import streamlit as st
 from utils.config import get_app_config
 
 
-# from utils.data import filter_var_counts_to_df
-# from utils.data import interactive_spliced_unspliced_plot
-
-
 PATH_PREFIX = "reproducibility/figures/"
 cfg = get_app_config()
 
 
-# @st.cache_data(
-#     show_spinner=f"loading pbmc data",
-#     persist=True,
-# )
-# def load_pbmc68k_data(PATH_PREFIX=PATH_PREFIX, cfg=cfg):
-#     import scvelo as scv
-
-#     return scv.read(PATH_PREFIX + cfg.model_training.pbmc68k_model2.trained_data_path)
-
-
-# adata = load_pbmc68k_data()
-
-# random_indices = np.random.choice(adata.n_obs, size=6000, replace=False)
-# adata = adata[random_indices, :]
-
-# max_spliced = adata.layers["raw_spliced"].max()
-# max_unspliced = adata.layers["raw_unspliced"].max()
-
-# @st.cache_data(show_spinner="extracting dataframe", persist=True)
-# def extract_pbmc68k_df_from_adata(
-#     _adata,
-# ):
-#     from utils.data import anndata_counts_to_df
-
-#     return anndata_counts_to_df(_adata)
-
-# (
-#     df,
-#     total_obs,
-#     total_var,
-#     max_spliced,
-#     max_unspliced,
-# ) = extract_pbmc68k_df_from_adata(adata)
-
-
 @st.cache_data(show_spinner="loading dataframe", persist=True)
 def load_pbmc68k_df(PATH_PREFIX=PATH_PREFIX, cfg=cfg):
-    import pickle
+    from utils.data import load_compressed_pickle
 
-    with open("app/pbmc68k_dataframe.pkl", "rb") as f:
-        return pickle.load(f)
+    return load_compressed_pickle(
+        PATH_PREFIX + cfg.reports.model_summary.pbmc68k_model2.dataframe_path
+    )
 
 
 (
