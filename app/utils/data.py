@@ -1,7 +1,19 @@
+import pickle
+from typing import Any
+
 import altair as alt
 import numpy as np
 import pandas as pd
 import scvelo as scv
+import zstandard as zstd
+
+
+def load_compressed_pickle(file_path: str) -> Any:
+    with open(file_path, "rb") as f:
+        decompression_context = zstd.ZstdDecompressor()
+        with decompression_context.stream_reader(f) as decompressor:
+            obj = pickle.load(decompressor)
+    return obj
 
 
 def generate_sample_data():
