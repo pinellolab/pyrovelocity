@@ -30,6 +30,7 @@ dependencies:
   - anndata
   - zstandard
   - pip
+  - hydra-core
   # - scvi-tools
   # - scikit-misc
   # - torchmetrics

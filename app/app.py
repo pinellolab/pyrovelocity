@@ -1,9 +1,11 @@
 from pathlib import Path
 
 import altair as alt
-import scvelo as scv
 import streamlit as st
 from modules import home
+from modules import pancreas
+from modules import pbmc68k
+from modules import pons
 from modules import simulation
 from utils.altair_theme import custom_theme
 from utils.html_factory import CSSStyle
@@ -92,5 +94,11 @@ if selected_module == no_data:
     home.st_show()
 elif selected_module == "🖥️ simulation":
     simulation.st_show()
+elif selected_module == "⚪️ pancreas":
+    pancreas.st_show()
+elif selected_module == "🟠 pons":
+    pons.st_show()
+elif selected_module == "🔴 peripheral blood":
+    pbmc68k.st_show()
 else:
     st.error("Page does not yet exist.")
