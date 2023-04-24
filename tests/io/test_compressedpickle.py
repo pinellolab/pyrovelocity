@@ -15,3 +15,8 @@ def test_file():
 def test_save(test_data, test_file):
     CompressedPickle.save(test_file, test_data)
     assert os.path.exists(test_file)
+
+def test_load(test_data, test_file):
+    loaded_data = CompressedPickle.load(test_file)
+    assert loaded_data.equals(test_data)
+
