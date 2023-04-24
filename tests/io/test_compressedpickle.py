@@ -39,6 +39,27 @@ def test_save_load_dict(test_file):
     loaded_dict = CompressedPickle.load(test_file)
     assert compare_dicts(test_dict, loaded_dict)
 
+def compare_complex_objects(obj1, obj2):
+    if len(obj1) != len(obj2):
+        return False
+
+    for item1, item2 in zip(obj1, obj2):
+        if isinstance(item1, dict) and isinstance(item2, dict):
+            if not compare_dicts(item1, item2):
+                return False
+        elif isinstance(item1, np.ndarray) and isinstance(item2, np.ndarray):
+            if not np.array_equal(item1, item2):
+                return False
+        elif item1 != item2:
+            return False
+
+    return True
+
+def test_save_load_complex_object(test_file):
+    test_obj = [{'a': np.array([1, 2, 3]), 'b': 1.5}, (4, 'test', [1, 2])]
+    CompressedPickle.save(test_file, test_obj)
+    loaded_obj = CompressedPickle.load(test_file)
+    assert compare_complex_objects(test_obj, loaded_obj)
 
 def test_load_non_existent_file():
     with pytest.raises(FileNotFoundError):
