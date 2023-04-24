@@ -2,28 +2,26 @@ import streamlit as st
 from utils.config import get_app_config
 
 
-# from utils.data import filter_var_counts_to_df
-# from utils.data import interactive_spliced_unspliced_plot
-
-
 PATH_PREFIX = "reproducibility/figures/"
 cfg = get_app_config()
 
 
-@st.cache_data(
-    show_spinner=f"loading pancreas data",
-    persist=True,
-)
-def load_pancreas_data(PATH_PREFIX=PATH_PREFIX, cfg=cfg):
-    import scvelo as scv
+@st.cache_data(show_spinner="loading dataframe", persist=True)
+def load_pancreas_df(PATH_PREFIX=PATH_PREFIX, cfg=cfg):
+    from utils.data import load_compressed_pickle
 
-    return scv.read(PATH_PREFIX + cfg.model_training.pancreas_model2.trained_data_path)
+    return load_compressed_pickle(
+        PATH_PREFIX + cfg.reports.model_summary.pancreas_model2.dataframe_path
+    )
 
 
-adata = load_pancreas_data()
-
-max_spliced = adata.layers["raw_spliced"].max()
-max_unspliced = adata.layers["raw_unspliced"].max()
+(
+    df,
+    total_obs,
+    total_var,
+    max_spliced,
+    max_unspliced,
+) = load_pancreas_df()
 
 
 if "pancreas_spliced_threshold" not in st.session_state:
@@ -31,22 +29,6 @@ if "pancreas_spliced_threshold" not in st.session_state:
 
 if "pancreas_unspliced_threshold" not in st.session_state:
     st.session_state.pancreas_unspliced_threshold = (2, int(max_unspliced * 0.5))
-
-
-@st.cache_data(show_spinner="extracting dataframe", persist=True)
-def extract_pancreas_df_from_adata(
-    _adata,
-):
-    from utils.data import anndata_counts_to_df
-
-    return anndata_counts_to_df(_adata)
-
-
-(
-    df,
-    total_obs,
-    total_var,
-) = extract_pancreas_df_from_adata(adata)
 
 
 @st.cache_data(show_spinner="filtering dataframe by count thresholds", persist=True)
