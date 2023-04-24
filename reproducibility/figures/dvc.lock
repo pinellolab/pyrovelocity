@@ -734,8 +734,8 @@ stages:
       md5: 72a05b2966bee39e85c17b16c569733c
       size: 489882800
     - path: summarize.py
-      md5: 4181b7b924bd90c6d4a762e7d5493c41
-      size: 6998
+      md5: 8523c42ace38ddde19a1188acffa0c25
+      size: 7852
     params:
       config.yaml:
         model_training.pancreas_model1:
@@ -775,6 +775,7 @@ stages:
             loss_plot_path: models/pancreas_model1/loss_plot.png
         reports.model_summary.pancreas_model1:
           path: reports/pancreas_model1
+          dataframe_path: data/processed/pancreas_model1_dataframe.pkl.zst
           shared_time_plot: reports/pancreas_model1/shared_time.pdf
           volcano_plot: reports/pancreas_model1/volcano.pdf
           rainbow_plot: reports/pancreas_model1/rainbow.pdf
@@ -783,20 +784,23 @@ stages:
           biomarker_selection_plot: reports/pancreas_model1/markers_selection_scatterplot.tif
           biomarker_phaseportrait_plot: reports/pancreas_model1/markers_phaseportrait.pdf
     outs:
+    - path: data/processed/pancreas_model1_dataframe.pkl.zst
+      md5: bbff19677beed1c7cf3766506f391723
+      size: 12359084
     - path: reports/pancreas_model1/rainbow.pdf
-      md5: 017388f5e1284fdf0027ae43ee798d12
+      md5: a17cdde7378a6ce81ed14cd8ed4df3d8
       size: 673601
     - path: reports/pancreas_model1/rainbow.pdf.png
       md5: 48a79de6b0115442d072fb33e2fb27fd
       size: 2086273
     - path: reports/pancreas_model1/vector_field.pdf
-      md5: f4cf773f4a5f465fc8e7e013c7ba640e
+      md5: bfc0c775cbab4d8bec70e283f309d448
       size: 397545
     - path: reports/pancreas_model1/vector_field.pdf.png
       md5: e0dd14331806e6f483796f36a26fb551
       size: 692363
     - path: reports/pancreas_model1/volcano.pdf
-      md5: b3e1383c0c9e18ffb442609138f64882
+      md5: 5c00360ef19f3f3ced2a6e0cf4b46926
       size: 21291
   summarize_pancreas_model2:
     cmd: python summarize.py reports.model_summary.summarize=[pancreas_model2]
@@ -808,8 +812,8 @@ stages:
       md5: 1d4521ada3f003b83c25be30516ef139
       size: 489882800
     - path: summarize.py
-      md5: 4181b7b924bd90c6d4a762e7d5493c41
-      size: 6998
+      md5: 8523c42ace38ddde19a1188acffa0c25
+      size: 7852
     params:
       config.yaml:
         model_training.pancreas_model2:
@@ -849,6 +853,7 @@ stages:
             loss_plot_path: models/pancreas_model2/loss_plot.png
         reports.model_summary.pancreas_model2:
           path: reports/pancreas_model2
+          dataframe_path: data/processed/pancreas_model2_dataframe.pkl.zst
           shared_time_plot: reports/pancreas_model2/shared_time.pdf
           volcano_plot: reports/pancreas_model2/volcano.pdf
           rainbow_plot: reports/pancreas_model2/rainbow.pdf
@@ -857,20 +862,23 @@ stages:
           biomarker_selection_plot: reports/pancreas_model2/markers_selection_scatterplot.tif
           biomarker_phaseportrait_plot: reports/pancreas_model2/markers_phaseportrait.pdf
     outs:
+    - path: data/processed/pancreas_model2_dataframe.pkl.zst
+      md5: bbff19677beed1c7cf3766506f391723
+      size: 12359084
     - path: reports/pancreas_model2/rainbow.pdf
-      md5: 118a4a1290fcb17272e280b68486404e
+      md5: 173f6c4c2126ce62d19ac49cafb5b70a
       size: 674523
     - path: reports/pancreas_model2/rainbow.pdf.png
       md5: a053e9fbf0755a4fa529e92e3ef03f45
       size: 1592710
     - path: reports/pancreas_model2/vector_field.pdf
-      md5: e8af40718a5a33b835137833694c359e
+      md5: 8cebb33bc70a6d880aa60e7158368272
       size: 397586
     - path: reports/pancreas_model2/vector_field.pdf.png
       md5: 2bff17b5b0187728de366ba4f0b02cd3
       size: 698541
     - path: reports/pancreas_model2/volcano.pdf
-      md5: 2f8f99821e36cdea9d8b88e19031ad8a
+      md5: 21df7add7cf9ec85af3723fc133e76c7
       size: 20335
   summarize_pbmc68k_model1:
     cmd: python summarize.py reports.model_summary.summarize=[pbmc68k_model1]
@@ -882,8 +890,8 @@ stages:
       md5: 1c8ebe9fa607745d55eb74ab48b00f83
       size: 2465530973
     - path: summarize.py
-      md5: 4181b7b924bd90c6d4a762e7d5493c41
-      size: 6998
+      md5: 8523c42ace38ddde19a1188acffa0c25
+      size: 7852
     params:
       config.yaml:
         model_training.pbmc68k_model1:
@@ -923,6 +931,7 @@ stages:
             loss_plot_path: models/pbmc68k_model1/loss_plot.png
         reports.model_summary.pbmc68k_model1:
           path: reports/pbmc68k_model1
+          dataframe_path: data/processed/pbmc68k_model1_dataframe.pkl.zst
           shared_time_plot: reports/pbmc68k_model1/shared_time.pdf
           volcano_plot: reports/pbmc68k_model1/volcano.pdf
           rainbow_plot: reports/pbmc68k_model1/rainbow.pdf
@@ -931,20 +940,23 @@ stages:
           biomarker_selection_plot: reports/pbmc68k_model1/markers_selection_scatterplot.tif
           biomarker_phaseportrait_plot: reports/pbmc68k_model1/markers_phaseportrait.pdf
     outs:
+    - path: data/processed/pbmc68k_model1_dataframe.pkl.zst
+      md5: dc17c1ef835c7500d0b694422481fbd1
+      size: 38352654
     - path: reports/pbmc68k_model1/rainbow.pdf
-      md5: 73da5431afe277e8871ea58ae15971be
+      md5: 0cddb60d8c539c9c0a4cd6ab71c2be7f
       size: 11031762
     - path: reports/pbmc68k_model1/rainbow.pdf.png
       md5: b4c31e65e4b6747ceb6991b9bba5db23
       size: 1268122
     - path: reports/pbmc68k_model1/vector_field.pdf
-      md5: 2ac59ea0b2ab3d95ef8d934b468777dd
+      md5: b8cf4d1a988b25f1a74da9463e1521b5
       size: 1033522
     - path: reports/pbmc68k_model1/vector_field.pdf.png
       md5: 41968bc3f231c66e155bf787127d08d3
       size: 1201485
     - path: reports/pbmc68k_model1/volcano.pdf
-      md5: 7ca222db7068caffcba91a5eb6720468
+      md5: 579d0f66bcf87a89f3a5f921f4d0ccc1
       size: 22252
   summarize_pbmc68k_model2:
     cmd: python summarize.py reports.model_summary.summarize=[pbmc68k_model2]
@@ -956,8 +968,8 @@ stages:
       md5: 78e3c7608fa71637865b1853f6efd96e
       size: 2465547357
     - path: summarize.py
-      md5: 4181b7b924bd90c6d4a762e7d5493c41
-      size: 6998
+      md5: 8523c42ace38ddde19a1188acffa0c25
+      size: 7852
     params:
       config.yaml:
         model_training.pbmc68k_model2:
@@ -997,6 +1009,7 @@ stages:
             loss_plot_path: models/pbmc68k_model2/loss_plot.png
         reports.model_summary.pbmc68k_model2:
           path: reports/pbmc68k_model2
+          dataframe_path: data/processed/pbmc68k_model2_dataframe.pkl.zst
           shared_time_plot: reports/pbmc68k_model2/shared_time.pdf
           volcano_plot: reports/pbmc68k_model2/volcano.pdf
           rainbow_plot: reports/pbmc68k_model2/rainbow.pdf
@@ -1005,20 +1018,23 @@ stages:
           biomarker_selection_plot: reports/pbmc68k_model2/markers_selection_scatterplot.tif
           biomarker_phaseportrait_plot: reports/pbmc68k_model2/markers_phaseportrait.pdf
     outs:
+    - path: data/processed/pbmc68k_model2_dataframe.pkl.zst
+      md5: dc17c1ef835c7500d0b694422481fbd1
+      size: 38352654
     - path: reports/pbmc68k_model2/rainbow.pdf
-      md5: 9367ebfe8a89f07f6db969c878639d06
+      md5: 6d0d7b9cf6292228a75ddc1068bc30a4
       size: 11383839
     - path: reports/pbmc68k_model2/rainbow.pdf.png
       md5: f21a38a0d5f4aafc64a19666e0c6042b
       size: 2414280
     - path: reports/pbmc68k_model2/vector_field.pdf
-      md5: 32185ec82aa2fe893d423336ccc29157
+      md5: e819167a5feb3e6fadb965e3227bf158
       size: 1033622
     - path: reports/pbmc68k_model2/vector_field.pdf.png
       md5: 813190b1897a4ae2006db59490b6d281
       size: 1196210
     - path: reports/pbmc68k_model2/volcano.pdf
-      md5: d4fd9c65f86d724c52c30d44075ffdd5
+      md5: 968203def65c7232cfa0db1ccb9d5014
       size: 20455
   summarize_pons_model1:
     cmd: python summarize.py reports.model_summary.summarize=[pons_model1]
@@ -1030,8 +1046,8 @@ stages:
       md5: f1e93db377fd7d323c9dc3b7bd722542
       size: 855745190
     - path: summarize.py
-      md5: 4181b7b924bd90c6d4a762e7d5493c41
-      size: 6998
+      md5: 8523c42ace38ddde19a1188acffa0c25
+      size: 7852
     params:
       config.yaml:
         model_training.pons_model1:
@@ -1071,6 +1087,7 @@ stages:
             loss_plot_path: models/pons_model1/loss_plot.png
         reports.model_summary.pons_model1:
           path: reports/pons_model1
+          dataframe_path: data/processed/pons_model1_dataframe.pkl.zst
           shared_time_plot: reports/pons_model1/shared_time.pdf
           volcano_plot: reports/pons_model1/volcano.pdf
           rainbow_plot: reports/pons_model1/rainbow.pdf
@@ -1079,20 +1096,23 @@ stages:
           biomarker_selection_plot: reports/pons_model1/markers_selection_scatterplot.tif
           biomarker_phaseportrait_plot: reports/pons_model1/markers_phaseportrait.pdf
     outs:
+    - path: data/processed/pons_model1_dataframe.pkl.zst
+      md5: b17eb7eaadc357d32ae68e3c30ee33f4
+      size: 20173882
     - path: reports/pons_model1/rainbow.pdf
-      md5: 49fab698d94432726255032423b2e0be
+      md5: 27a83e5b4cfc2079ae02d766ee368c5a
       size: 1055211
     - path: reports/pons_model1/rainbow.pdf.png
       md5: 5849a1d785f56ad9945bef447f1ef384
       size: 988477
     - path: reports/pons_model1/vector_field.pdf
-      md5: 04f66bf6dc4343fc2fae4fff47320413
+      md5: 009437cfcb70255adab040e443bbae47
       size: 376837
     - path: reports/pons_model1/vector_field.pdf.png
       md5: e0f4266d818388dca780f686c1f8059a
       size: 789252
     - path: reports/pons_model1/volcano.pdf
-      md5: 25465b5563db8bff3ddd98078bb0870d
+      md5: e8ed5e4f46f9678a7bf8a0a902a46bce
       size: 20394
   summarize_pons_model2:
     cmd: python summarize.py reports.model_summary.summarize=[pons_model2]
@@ -1104,8 +1124,8 @@ stages:
       md5: 56ea0f1773ba92f27f1670a486729621
       size: 855745190
     - path: summarize.py
-      md5: 4181b7b924bd90c6d4a762e7d5493c41
-      size: 6998
+      md5: 8523c42ace38ddde19a1188acffa0c25
+      size: 7852
     params:
       config.yaml:
         model_training.pons_model2:
@@ -1145,6 +1165,7 @@ stages:
             loss_plot_path: models/pons_model2/loss_plot.png
         reports.model_summary.pons_model2:
           path: reports/pons_model2
+          dataframe_path: data/processed/pons_model2_dataframe.pkl.zst
           shared_time_plot: reports/pons_model2/shared_time.pdf
           volcano_plot: reports/pons_model2/volcano.pdf
           rainbow_plot: reports/pons_model2/rainbow.pdf
@@ -1153,20 +1174,23 @@ stages:
           biomarker_selection_plot: reports/pons_model2/markers_selection_scatterplot.tif
           biomarker_phaseportrait_plot: reports/pons_model2/markers_phaseportrait.pdf
     outs:
+    - path: data/processed/pons_model2_dataframe.pkl.zst
+      md5: b17eb7eaadc357d32ae68e3c30ee33f4
+      size: 20173882
     - path: reports/pons_model2/rainbow.pdf
-      md5: 4bc391d34d82a32af9c7e1c23f69db3d
-      size: 1078988
+      md5: 6b3b0a1cc8f46df4b599ab67a6d0a888
+      size: 1079005
     - path: reports/pons_model2/rainbow.pdf.png
-      md5: bd073ea0cc3d313a9286b954adfd7ef1
-      size: 954742
+      md5: bad7afd11e2404c13ce0d65348de117b
+      size: 960916
     - path: reports/pons_model2/vector_field.pdf
-      md5: b4011d71c2cb40999c4c576c5fb59588
-      size: 377125
+      md5: 76b62b975a87e3c0dd1b4992beb8b9ed
+      size: 377124
     - path: reports/pons_model2/vector_field.pdf.png
-      md5: 395a23f79d7e6a5f8a696ac8b1b7f896
-      size: 798031
+      md5: 9c9391629c8b3f51712f317fda453394
+      size: 798042
     - path: reports/pons_model2/volcano.pdf
-      md5: f0b94256a7cad5fabd1e6b700a6d0079
+      md5: 2bfcf8c91b80a54c821e446e984f3c81
       size: 21539
   data_download_simulate:
     cmd: python data_download.py data_external.sources=[simulate] data_external.simulate.download=[medium]
@@ -1361,8 +1385,8 @@ stages:
       md5: 6152df9397b02843f6f61022d9f74bb5
       size: 283016776
     - path: summarize.py
-      md5: 4181b7b924bd90c6d4a762e7d5493c41
-      size: 6998
+      md5: 8523c42ace38ddde19a1188acffa0c25
+      size: 7852
     params:
       config.yaml:
         model_training.simulate_model1:
@@ -1402,6 +1426,7 @@ stages:
             loss_plot_path: models/medium_model1/loss_plot.png
         reports.model_summary.simulate_model1:
           path: reports/medium_model1
+          dataframe_path: data/processed/medium_model1_dataframe.pkl.zst
           shared_time_plot: reports/medium_model1/shared_time.pdf
           volcano_plot: reports/medium_model1/volcano.pdf
           rainbow_plot: reports/medium_model1/rainbow.pdf
@@ -1410,20 +1435,23 @@ stages:
           biomarker_selection_plot: reports/medium_model1/markers_selection_scatterplot.tif
           biomarker_phaseportrait_plot: reports/medium_model1/markers_phaseportrait.pdf
     outs:
+    - path: data/processed/medium_model1_dataframe.pkl.zst
+      md5: 12e544a30c6d793d04f0a48245d309c8
+      size: 5068789
     - path: reports/medium_model1/rainbow.pdf
-      md5: 1d3d9c2beb0f5f2eabd56f573cadcb54
+      md5: 7fbc14de69a02a1b751f2a7bd170315f
       size: 415343
     - path: reports/medium_model1/rainbow.pdf.png
       md5: e2a988c1b94ccac347654758176abb1c
       size: 709724
     - path: reports/medium_model1/vector_field.pdf
-      md5: 7ddd64acd156a24832f8af731b27cb5b
+      md5: 451da93ad3544fd16415d8f68498dbcf
       size: 202510
     - path: reports/medium_model1/vector_field.pdf.png
       md5: 1e229501f9e65fbca6db66bc2071573d
       size: 497363
     - path: reports/medium_model1/volcano.pdf
-      md5: 526c4688ab2ef7977fed475ebec07a6f
+      md5: 196bba6e29cbf4a34393de81d21bcfa1
       size: 20550
   summarize_simulate_model2:
     cmd: python summarize.py reports.model_summary.summarize=[simulate_model2]
@@ -1435,8 +1463,8 @@ stages:
       md5: 0bf8d1aff6d9ad885666b82589d0d78b
       size: 283017032
     - path: summarize.py
-      md5: 4181b7b924bd90c6d4a762e7d5493c41
-      size: 6998
+      md5: 8523c42ace38ddde19a1188acffa0c25
+      size: 7852
     params:
       config.yaml:
         model_training.simulate_model2:
@@ -1476,6 +1504,7 @@ stages:
             loss_plot_path: models/medium_model2/loss_plot.png
         reports.model_summary.simulate_model2:
           path: reports/medium_model2
+          dataframe_path: data/processed/medium_model2_dataframe.pkl.zst
           shared_time_plot: reports/medium_model2/shared_time.pdf
           volcano_plot: reports/medium_model2/volcano.pdf
           rainbow_plot: reports/medium_model2/rainbow.pdf
@@ -1484,18 +1513,21 @@ stages:
           biomarker_selection_plot: reports/medium_model2/markers_selection_scatterplot.tif
           biomarker_phaseportrait_plot: reports/medium_model2/markers_phaseportrait.pdf
     outs:
+    - path: data/processed/medium_model2_dataframe.pkl.zst
+      md5: 12e544a30c6d793d04f0a48245d309c8
+      size: 5068789
     - path: reports/medium_model2/rainbow.pdf
-      md5: 9d201364f5f85d13f235aecf0902dbcc
+      md5: b92859226beae37fabb9fc402d4aeac0
       size: 463594
     - path: reports/medium_model2/rainbow.pdf.png
       md5: e732a7a5a4fb3f7cf695a7883b6563f7
       size: 993907
     - path: reports/medium_model2/vector_field.pdf
-      md5: df52fb0a23f8cac59d6fda682b14f5c1
+      md5: e8e6bd3002a9e626c524edaeb4deaa32
       size: 204749
     - path: reports/medium_model2/vector_field.pdf.png
       md5: a17fb5265f36996dd08159e3c96aed5f
       size: 513295
     - path: reports/medium_model2/volcano.pdf
-      md5: b9dfd5b655ff7e163fe7aba645599322
+      md5: 9feea92bb557edbee7952e1c4df573e3
       size: 19646
