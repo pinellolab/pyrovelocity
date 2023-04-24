@@ -47,12 +47,15 @@ def anndata_counts_to_df(adata):
     total_obs = adata.n_obs
     total_var = adata.n_vars
 
+    max_spliced = adata.layers["raw_spliced"].max()
+    max_unspliced = adata.layers["raw_unspliced"].max()
+
     return (
         df,
         total_obs,
         total_var,
-        # spliced_var_gt_threshold,
-        # unspliced_var_gt_threshold,
+        # max_spliced,
+        # max_unspliced,
     )
 
 
