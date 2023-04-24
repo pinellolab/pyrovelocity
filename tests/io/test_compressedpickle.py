@@ -39,3 +39,8 @@ def test_save_load_dict(test_file):
     loaded_dict = CompressedPickle.load(test_file)
     assert compare_dicts(test_dict, loaded_dict)
 
+
+def test_load_non_existent_file():
+    with pytest.raises(FileNotFoundError):
+        CompressedPickle.load('non_existent.pkl.zst')
+
