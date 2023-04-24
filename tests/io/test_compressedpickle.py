@@ -20,3 +20,22 @@ def test_load(test_data, test_file):
     loaded_data = CompressedPickle.load(test_file)
     assert loaded_data.equals(test_data)
 
+def compare_dicts(dict1, dict2):
+    if dict1.keys() != dict2.keys():
+        return False
+    
+    for key in dict1:
+        if isinstance(dict1[key], np.ndarray):
+            if not np.array_equal(dict1[key], dict2[key]):
+                return False
+        elif dict1[key] != dict2[key]:
+            return False
+    
+    return True
+
+def test_save_load_dict(test_file):
+    test_dict = {'a': np.arange(5), 'b': np.linspace(0, 1, 5)}
+    CompressedPickle.save(test_file, test_dict)
+    loaded_dict = CompressedPickle.load(test_file)
+    assert compare_dicts(test_dict, loaded_dict)
+
