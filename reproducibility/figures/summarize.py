@@ -12,11 +12,13 @@ from omegaconf import DictConfig
 
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.data import load_data
+from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.plot import compute_mean_vector_field
 from pyrovelocity.plot import compute_volcano_data
 from pyrovelocity.plot import plot_gene_ranking
 from pyrovelocity.plot import us_rainbowplot
 from pyrovelocity.plot import vector_field_uncertainty
+from pyrovelocity.utils import anndata_counts_to_df
 from pyrovelocity.utils import get_pylogger
 from pyrovelocity.utils import mae_evaluate
 from pyrovelocity.utils import print_anndata
@@ -80,13 +82,21 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         )
         Path(reports_data_model_conf.path).mkdir(parents=True, exist_ok=True)
 
+        dataframe_path = reports_data_model_conf.dataframe_path
         volcano_plot = reports_data_model_conf.volcano_plot
         rainbow_plot = reports_data_model_conf.rainbow_plot
         vector_field_plot = reports_data_model_conf.vector_field_plot
-        plot_filenames = [volcano_plot, rainbow_plot, vector_field_plot]
-        if all(os.path.isfile(f) for f in plot_filenames):
-            logger.info("\n\t" + "\n\t".join(plot_filenames) + "\nAll plot files exist")
-            return print("Remove plot files if you want to regenerate them.")
+        output_filenames = [
+            dataframe_path,
+            volcano_plot,
+            rainbow_plot,
+            vector_field_plot,
+        ]
+        if all(os.path.isfile(f) for f in output_filenames):
+            logger.info(
+                "\n\t" + "\n\t".join(output_filenames) + "\nAll output files exist"
+            )
+            return logger.warn("Remove output files if you want to regenerate them.")
 
         logger.info(f"Loading trained data: {trained_data_path}")
         adata = scv.read(trained_data_path)
@@ -95,6 +105,30 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         logger.info(f"Loading pyrovelocity data: {pyrovelocity_data_path}")
         with open(pyrovelocity_data_path, "rb") as f:
             posterior_samples = pickle.load(f)
+
+        ##################
+        # save dataframe
+        ##################
+
+        logger.info(f"Saving AnnData object to dataframe: {dataframe_path}")
+        (
+            df,
+            total_obs,
+            total_var,
+            max_spliced,
+            max_unspliced,
+        ) = anndata_counts_to_df(adata)
+
+        CompressedPickle.save(
+            dataframe_path,
+            (
+                df,
+                total_obs,
+                total_var,
+                max_spliced,
+                max_unspliced,
+            ),
+        )
 
         ##################
         # generate figures

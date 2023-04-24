@@ -41,6 +41,7 @@ dependencies:
   - termcolor
   - tqdm
   - ipywidgets
+  - zstandard
   # dev
   - zsh
   - tree

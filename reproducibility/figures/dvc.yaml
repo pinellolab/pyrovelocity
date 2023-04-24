@@ -421,6 +421,7 @@ stages:
           - model_training.simulate_model1
           - reports.model_summary.simulate_model1
     outs:
+      - ${reports.model_summary.simulate_model1.dataframe_path}
       - ${reports.model_summary.simulate_model1.volcano_plot}
         # persist: true
       - ${reports.model_summary.simulate_model1.rainbow_plot}
@@ -443,6 +444,7 @@ stages:
           - model_training.simulate_model2
           - reports.model_summary.simulate_model2
     outs:
+      - ${reports.model_summary.simulate_model2.dataframe_path}
       - ${reports.model_summary.simulate_model2.volcano_plot}
         # persist: true
       - ${reports.model_summary.simulate_model2.rainbow_plot}
@@ -465,6 +467,7 @@ stages:
           - model_training.pancreas_model1
           - reports.model_summary.pancreas_model1
     outs:
+      - ${reports.model_summary.pancreas_model1.dataframe_path}
       - ${reports.model_summary.pancreas_model1.volcano_plot}
         # persist: true
       - ${reports.model_summary.pancreas_model1.rainbow_plot}
@@ -487,6 +490,7 @@ stages:
           - model_training.pancreas_model2
           - reports.model_summary.pancreas_model2
     outs:
+      - ${reports.model_summary.pancreas_model2.dataframe_path}
       - ${reports.model_summary.pancreas_model2.volcano_plot}
         # persist: true
       - ${reports.model_summary.pancreas_model2.rainbow_plot}
@@ -509,6 +513,7 @@ stages:
           - model_training.pbmc68k_model1
           - reports.model_summary.pbmc68k_model1
     outs:
+      - ${reports.model_summary.pbmc68k_model1.dataframe_path}
       - ${reports.model_summary.pbmc68k_model1.volcano_plot}
         # persist: true
       - ${reports.model_summary.pbmc68k_model1.rainbow_plot}
@@ -531,6 +536,7 @@ stages:
           - model_training.pbmc68k_model2
           - reports.model_summary.pbmc68k_model2
     outs:
+      - ${reports.model_summary.pbmc68k_model2.dataframe_path}
       - ${reports.model_summary.pbmc68k_model2.volcano_plot}
         # persist: true
       - ${reports.model_summary.pbmc68k_model2.rainbow_plot}
@@ -553,6 +559,7 @@ stages:
           - model_training.pons_model1
           - reports.model_summary.pons_model1
     outs:
+      - ${reports.model_summary.pons_model1.dataframe_path}
       - ${reports.model_summary.pons_model1.volcano_plot}
         # persist: true
       - ${reports.model_summary.pons_model1.rainbow_plot}
@@ -575,6 +582,7 @@ stages:
           - model_training.pons_model2
           - reports.model_summary.pons_model2
     outs:
+      - ${reports.model_summary.pons_model2.dataframe_path}
       - ${reports.model_summary.pons_model2.volcano_plot}
         # persist: true
       - ${reports.model_summary.pons_model2.rainbow_plot}

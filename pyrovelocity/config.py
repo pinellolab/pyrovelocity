@@ -82,6 +82,7 @@ def hydra_zen_configure():
         path = f"{paths['reports']}/{model_name}_model{model_number}"
         return dict(
             path=path,
+            dataframe_path=f"{paths['data']}/processed/{model_name}_model{model_number}_dataframe.pkl.zst",
             shared_time_plot=f"{path}/shared_time.pdf",
             volcano_plot=f"{path}/volcano.pdf",
             rainbow_plot=f"{path}/rainbow.pdf",
