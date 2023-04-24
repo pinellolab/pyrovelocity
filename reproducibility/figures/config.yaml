@@ -396,6 +396,7 @@ reports:
     - pons_model2
     simulate_model1:
       path: reports/medium_model1
+      dataframe_path: data/processed/medium_model1_dataframe.pkl.zst
       shared_time_plot: reports/medium_model1/shared_time.pdf
       volcano_plot: reports/medium_model1/volcano.pdf
       rainbow_plot: reports/medium_model1/rainbow.pdf
@@ -405,6 +406,7 @@ reports:
       biomarker_phaseportrait_plot: reports/medium_model1/markers_phaseportrait.pdf
     simulate_model2:
       path: reports/medium_model2
+      dataframe_path: data/processed/medium_model2_dataframe.pkl.zst
       shared_time_plot: reports/medium_model2/shared_time.pdf
       volcano_plot: reports/medium_model2/volcano.pdf
       rainbow_plot: reports/medium_model2/rainbow.pdf
@@ -414,6 +416,7 @@ reports:
       biomarker_phaseportrait_plot: reports/medium_model2/markers_phaseportrait.pdf
     pancreas_model1:
       path: reports/pancreas_model1
+      dataframe_path: data/processed/pancreas_model1_dataframe.pkl.zst
       shared_time_plot: reports/pancreas_model1/shared_time.pdf
       volcano_plot: reports/pancreas_model1/volcano.pdf
       rainbow_plot: reports/pancreas_model1/rainbow.pdf
@@ -423,6 +426,7 @@ reports:
       biomarker_phaseportrait_plot: reports/pancreas_model1/markers_phaseportrait.pdf
     pancreas_model2:
       path: reports/pancreas_model2
+      dataframe_path: data/processed/pancreas_model2_dataframe.pkl.zst
       shared_time_plot: reports/pancreas_model2/shared_time.pdf
       volcano_plot: reports/pancreas_model2/volcano.pdf
       rainbow_plot: reports/pancreas_model2/rainbow.pdf
@@ -432,6 +436,7 @@ reports:
       biomarker_phaseportrait_plot: reports/pancreas_model2/markers_phaseportrait.pdf
     pbmc68k_model1:
       path: reports/pbmc68k_model1
+      dataframe_path: data/processed/pbmc68k_model1_dataframe.pkl.zst
       shared_time_plot: reports/pbmc68k_model1/shared_time.pdf
       volcano_plot: reports/pbmc68k_model1/volcano.pdf
       rainbow_plot: reports/pbmc68k_model1/rainbow.pdf
@@ -441,6 +446,7 @@ reports:
       biomarker_phaseportrait_plot: reports/pbmc68k_model1/markers_phaseportrait.pdf
     pbmc68k_model2:
       path: reports/pbmc68k_model2
+      dataframe_path: data/processed/pbmc68k_model2_dataframe.pkl.zst
       shared_time_plot: reports/pbmc68k_model2/shared_time.pdf
       volcano_plot: reports/pbmc68k_model2/volcano.pdf
       rainbow_plot: reports/pbmc68k_model2/rainbow.pdf
@@ -450,6 +456,7 @@ reports:
       biomarker_phaseportrait_plot: reports/pbmc68k_model2/markers_phaseportrait.pdf
     pons_model1:
       path: reports/pons_model1
+      dataframe_path: data/processed/pons_model1_dataframe.pkl.zst
       shared_time_plot: reports/pons_model1/shared_time.pdf
       volcano_plot: reports/pons_model1/volcano.pdf
       rainbow_plot: reports/pons_model1/rainbow.pdf
@@ -459,6 +466,7 @@ reports:
       biomarker_phaseportrait_plot: reports/pons_model1/markers_phaseportrait.pdf
     pons_model2:
       path: reports/pons_model2
+      dataframe_path: data/processed/pons_model2_dataframe.pkl.zst
       shared_time_plot: reports/pons_model2/shared_time.pdf
       volcano_plot: reports/pons_model2/volcano.pdf
       rainbow_plot: reports/pons_model2/rainbow.pdf

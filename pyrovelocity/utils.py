@@ -10,6 +10,7 @@ import anndata
 import colorlog
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import scvelo as scv
 import seaborn as sns
 import torch
@@ -836,3 +837,41 @@ def generate_sample_data(
     else:
         raise ValueError("noise_model must be one of 'iid', 'gillespie', 'normal'")
     return adata
+
+
+def anndata_counts_to_df(adata):
+    spliced_df = pd.DataFrame(
+        ensure_numpy_array(adata.layers["raw_spliced"]),
+        index=adata.obs_names,
+        columns=adata.var_names,
+    )
+    unspliced_df = pd.DataFrame(
+        ensure_numpy_array(adata.layers["raw_unspliced"]),
+        index=adata.obs_names,
+        columns=adata.var_names,
+    )
+
+    spliced_melted = spliced_df.reset_index().melt(
+        id_vars="index", var_name="var_name", value_name="spliced"
+    )
+    unspliced_melted = unspliced_df.reset_index().melt(
+        id_vars="index", var_name="var_name", value_name="unspliced"
+    )
+
+    df = spliced_melted.merge(unspliced_melted, on=["index", "var_name"])
+
+    df = df.rename(columns={"index": "obs_name"})
+
+    total_obs = adata.n_obs
+    total_var = adata.n_vars
+
+    max_spliced = adata.layers["raw_spliced"].max()
+    max_unspliced = adata.layers["raw_unspliced"].max()
+
+    return (
+        df,
+        total_obs,
+        total_var,
+        max_spliced,
+        max_unspliced,
+    )
