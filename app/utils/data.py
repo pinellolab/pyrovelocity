@@ -5,7 +5,7 @@ import scvelo as scv
 
 
 def generate_sample_data():
-    adata = scv.datasets.simulation(
+    return scv.datasets.simulation(
         random_seed=0,
         n_obs=100,
         n_vars=12,
@@ -16,8 +16,6 @@ def generate_sample_data():
         noise_model="gillespie",  # "normal" vs "gillespie"
     )
 
-    return adata
-
 
 def ensure_numpy_array(obj):
     return obj.toarray() if hasattr(obj, "toarray") else obj
@@ -26,13 +24,11 @@ def ensure_numpy_array(obj):
 def anndata_counts_to_df(adata):
     spliced_df = pd.DataFrame(
         ensure_numpy_array(adata.layers["raw_spliced"]),
-        # ensure_numpy_array(adata.layers["spliced"]),
         index=adata.obs_names,
         columns=adata.var_names,
     )
     unspliced_df = pd.DataFrame(
         ensure_numpy_array(adata.layers["raw_unspliced"]),
-        # ensure_numpy_array(adata.layers["unspliced"]),
         index=adata.obs_names,
         columns=adata.var_names,
     )
@@ -47,14 +43,6 @@ def anndata_counts_to_df(adata):
     df = spliced_melted.merge(unspliced_melted, on=["index", "var_name"])
 
     df = df.rename(columns={"index": "obs_name"})
-
-    # spliced_var_gt_threshold = (spliced_df >= min_spliced_counts).sum().sum()
-    # unspliced_var_gt_threshold = (unspliced_df >= min_unspliced_counts).sum().sum()
-
-    # # filter the dataframe to include rows where the spliced or unspliced counts are greater than 0
-    # df_filtered = df[
-    #     (df["spliced"] >= min_spliced_counts) & (df["unspliced"] >= min_unspliced_counts)
-    # ]
 
     total_obs = adata.n_obs
     total_var = adata.n_vars
