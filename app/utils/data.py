@@ -180,11 +180,13 @@ def interactive_spliced_unspliced_histogram(
                 "spliced:Q",
                 title="Spliced Counts",
                 bin=alt.Bin(maxbins=number_of_histogram_bins),
+                axis=alt.Axis(tickMinStep=1),
             ),
             y=alt.Y(
                 "unspliced:Q",
                 title="Unspliced Counts",
                 bin=alt.Bin(maxbins=number_of_histogram_bins),
+                axis=alt.Axis(tickMinStep=1),
             ),
             color=alt.Color("count():Q", scale=alt.Scale(scheme="greenblue")),
         )
