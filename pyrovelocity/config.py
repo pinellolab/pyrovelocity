@@ -177,7 +177,7 @@ def hydra_zen_configure():
                     data_file="larry.h5ad",
                     rel_path="${data_external.root_path}/larry.h5ad",
                     url="${data_external.pyrovelocity.sources.figshare_root_url}/37028569",
-                    process_method="",
+                    process_method="load_data",
                     process_args=dict(),
                 ),
             ),
