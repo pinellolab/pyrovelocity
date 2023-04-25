@@ -1,30 +1,33 @@
 import streamlit as st
-from utils.data import filter_var_counts_to_df
+from utils.data import anndata_counts_to_df
 from utils.data import generate_sample_data
 from utils.data import interactive_spliced_unspliced_plot
 
 
-adata = generate_sample_data()
-spliced_threshold = 0
-unspliced_threshold = 0
-(
-    df,
-    total_obs,
-    total_var,
-    spliced_var_gt_threshold,
-    unspliced_var_gt_threshold,
-) = filter_var_counts_to_df(adata, spliced_threshold, unspliced_threshold)
+# adata = generate_sample_data()
+# adata.layers["raw_unspliced"] = adata.layers["unspliced"]
+# adata.layers["raw_spliced"] = adata.layers["spliced"]
 
-title = (
-    f"Spliced vs unspliced counts (obs: {total_obs}, "
-    + f"var: {total_var}, spliced > {spliced_threshold}: {spliced_var_gt_threshold}, "
-    + f"unspliced > 0: {unspliced_var_gt_threshold})"
-)
+# spliced_threshold = 0
+# unspliced_threshold = 0
+# (
+#     df,
+#     total_obs,
+#     total_var,
+#     spliced_var_gt_threshold,
+#     unspliced_var_gt_threshold,
+# ) = anndata_counts_to_df(adata, spliced_threshold, unspliced_threshold)
 
-c = interactive_spliced_unspliced_plot(df, title)
-st.altair_chart(c, use_container_width=True)
+# title = (
+#     f"Spliced vs unspliced counts (obs: {total_obs}, "
+#     + f"var: {total_var}, spliced > {spliced_threshold}: {spliced_var_gt_threshold}, "
+#     + f"unspliced > 0: {unspliced_var_gt_threshold})"
+# )
 
-st.dataframe(df)
+# c = interactive_spliced_unspliced_plot(df, title)
+# st.altair_chart(c, use_container_width=True)
+
+# st.dataframe(df)
 
 # from google.cloud import storage
 # scv.set_figure_params(vector_friendly=False, transparent=False, facecolor="white")

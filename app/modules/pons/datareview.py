@@ -1,41 +1,37 @@
 import streamlit as st
-from utils.data import generate_sample_data
+from utils.config import get_app_config
 
 
-adata = generate_sample_data()
-adata.layers["raw_unspliced"] = adata.layers["unspliced"]
-adata.layers["raw_spliced"] = adata.layers["spliced"]
-
-max_spliced = adata.layers["raw_spliced"].max()
-max_unspliced = adata.layers["raw_unspliced"].max()
-
-if "simulated_spliced_threshold" not in st.session_state:
-    st.session_state.simulated_spliced_threshold = (1, int(max_spliced))
-
-if "simulated_unspliced_threshold" not in st.session_state:
-    st.session_state.simulated_unspliced_threshold = (1, int(max_unspliced))
+PATH_PREFIX = "reproducibility/figures/"
+cfg = get_app_config()
 
 
-@st.cache_data(show_spinner="extracting dataframe", persist=True)
-def extract_simulated_df_from_adata(
-    _adata,
-):
-    from utils.data import anndata_counts_to_df
+@st.cache_data(show_spinner="loading dataframe", persist=True)
+def load_pons_df(PATH_PREFIX=PATH_PREFIX, cfg=cfg):
+    from utils.data import load_compressed_pickle
 
-    return anndata_counts_to_df(_adata)
+    return load_compressed_pickle(
+        PATH_PREFIX + cfg.reports.model_summary.pons_model2.dataframe_path
+    )
 
 
 (
     df,
     total_obs,
     total_var,
-) = extract_simulated_df_from_adata(adata)
+    max_spliced,
+    max_unspliced,
+) = load_pons_df()
+
+if "pons_spliced_threshold" not in st.session_state:
+    st.session_state.pons_spliced_threshold = (2, int(max_spliced * 0.5))
+
+if "pons_unspliced_threshold" not in st.session_state:
+    st.session_state.pons_unspliced_threshold = (2, int(max_unspliced * 0.5))
 
 
 @st.cache_data(show_spinner="filtering dataframe by count thresholds", persist=True)
-def filter_count_thresholds_from_simulated_df(
-    df, spliced_threshold, unspliced_threshold
-):
+def filter_count_thresholds_from_pons_df(df, spliced_threshold, unspliced_threshold):
     from utils.data import filter_var_counts_by_thresholds
 
     return filter_var_counts_by_thresholds(df, spliced_threshold, unspliced_threshold)
@@ -45,15 +41,15 @@ def filter_count_thresholds_from_simulated_df(
     df_thresholded,
     spliced_var_gt_threshold,
     unspliced_var_gt_threshold,
-) = filter_count_thresholds_from_simulated_df(
+) = filter_count_thresholds_from_pons_df(
     df,
-    st.session_state.simulated_spliced_threshold,
-    st.session_state.simulated_unspliced_threshold,
+    st.session_state.pons_spliced_threshold,
+    st.session_state.pons_unspliced_threshold,
 )
 
 
 @st.cache_data(show_spinner="generating histogram", persist=True)
-def generate_simulated_histogram(df, title, selected_var, selected_obs):
+def generate_pons_histogram(df, title, selected_var, selected_obs):
     from utils.data import interactive_spliced_unspliced_histogram
 
     chart = interactive_spliced_unspliced_histogram(
@@ -68,7 +64,7 @@ var_values = sorted(df["var_name"].unique())
 
 
 @st.cache_data(show_spinner="filtering dataframe by selected cells/genes", persist=True)
-def filter_obs_vars_from_simulated_df(df, selected_var, selected_obs):
+def filter_obs_vars_from_pons_df(df, selected_var, selected_obs):
     if selected_var and selected_obs:
         return df[df["var_name"].isin(selected_var) & df["obs_name"].isin(selected_obs)]
     elif selected_var:
@@ -80,17 +76,17 @@ def filter_obs_vars_from_simulated_df(df, selected_var, selected_obs):
 
 
 def next_page(last_page):
-    if st.session_state.simulated_page + 1 > last_page:
-        st.session_state.simulated_page = 1
+    if st.session_state.pons_page + 1 > last_page:
+        st.session_state.pons_page = 1
     else:
-        st.session_state.simulated_page += 1
+        st.session_state.pons_page += 1
 
 
 def prev_page(last_page):
-    if st.session_state.simulated_page <= 1:
-        st.session_state.simulated_page = last_page
+    if st.session_state.pons_page <= 1:
+        st.session_state.pons_page = last_page
     else:
-        st.session_state.simulated_page -= 1
+        st.session_state.pons_page -= 1
 
 
 col_1, _, col_3 = st.columns([6.25, 0.25, 3.5])
@@ -104,7 +100,7 @@ with col_1:
     with col12:
         selected_var = st.multiselect("Select gene(s)", var_values)
 
-    filtered_df = filter_obs_vars_from_simulated_df(
+    filtered_df = filter_obs_vars_from_pons_df(
         df_thresholded, selected_var, selected_obs
     )
 
@@ -123,21 +119,21 @@ with col_3:
             prev_page(last_page)
 
         if first.button("⏮"):
-            st.session_state.simulated_page = 1
+            st.session_state.pons_page = 1
 
         if last.button("⏭"):
-            st.session_state.simulated_page = last_page
+            st.session_state.pons_page = last_page
 
         with current:
             with st.spinner("loading page number"):
                 st.selectbox(
                     "page",
                     range(1, last_page + 1),
-                    key="simulated_page",
+                    key="pons_page",
                     label_visibility="collapsed",
                 )
 
-        page_start_index = (st.session_state.simulated_page - 1) * page_size
+        page_start_index = (st.session_state.pons_page - 1) * page_size
         page_end_index = page_start_index + page_size
 
         with st.spinner("computing display dataframe"):
@@ -154,7 +150,7 @@ with col_3:
         st.text(f"showing {len(display_df)} of {len(filtered_df)} rows")
 
 with col_1:
-    spliced_unspliced_histogram_chart = generate_simulated_histogram(
+    spliced_unspliced_histogram_chart = generate_pons_histogram(
         filtered_df, "Spliced vs unspliced counts", selected_var, selected_obs
     )
 
@@ -167,10 +163,10 @@ with col_1:
 
     summary_text, unspliced_slider, _, spliced_slider = st.columns([2.7, 3.6, 0.1, 3.6])
     with summary_text:
-        unspliced_lower_threshold = st.session_state.simulated_unspliced_threshold[0]
-        unspliced_upper_threshold = st.session_state.simulated_unspliced_threshold[1]
-        spliced_lower_threshold = st.session_state.simulated_spliced_threshold[0]
-        spliced_upper_threshold = st.session_state.simulated_spliced_threshold[1]
+        unspliced_lower_threshold = st.session_state.pons_unspliced_threshold[0]
+        unspliced_upper_threshold = st.session_state.pons_unspliced_threshold[1]
+        spliced_lower_threshold = st.session_state.pons_spliced_threshold[0]
+        spliced_upper_threshold = st.session_state.pons_spliced_threshold[1]
 
         st.text(
             f"cells: {total_obs}, "
@@ -186,10 +182,10 @@ with col_1:
             "unspliced thresholds",
             0,
             int(max_unspliced),
-            key="simulated_unspliced_threshold",
+            key="pons_unspliced_threshold",
         )
 
     with spliced_slider:
         st.slider(
-            "spliced thresholds", 0, int(max_spliced), key="simulated_spliced_threshold"
+            "spliced thresholds", 0, int(max_spliced), key="pons_spliced_threshold"
         )

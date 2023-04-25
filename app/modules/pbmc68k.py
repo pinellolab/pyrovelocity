@@ -9,7 +9,7 @@ def st_show():
             "data review",
         ],
         paths=[
-            "app/modules/pancreas/datareview.py",
+            "app/modules/pbmc68k/datareview.py",
         ],
         icons=[""],
         save_answers=False,

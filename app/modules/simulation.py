@@ -7,11 +7,11 @@ def st_show():
         menu_icon="",
         options=[
             "data review",
-            "velocity estimation",
+            # "velocity estimation",
         ],
         paths=[
             "app/modules/simulation/datareview.py",
-            "app/modules/simulation/velocityestimation.py",
+            # "app/modules/simulation/velocityestimation.py",
         ],
         icons=[""],
         save_answers=False,
