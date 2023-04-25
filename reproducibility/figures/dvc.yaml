@@ -169,6 +169,19 @@ stages:
       - ${data_external.velocyto.pons.derived.rel_path}
         # persist: true
 
+  preprocess_larry:
+    cmd: python preprocess.py data_external.sources=[pyrovelocity] data_external.pyrovelocity.process=[larry]
+    deps:
+      - preprocess.py
+      - ${data_external.pyrovelocity.larry.rel_path}
+    params:
+      - config.yaml:
+          - base
+          - data_external.pyrovelocity.larry
+    outs:
+      - ${data_external.pyrovelocity.larry.derived.rel_path}
+        #          persist: true
+
   train_simulate_model1:
     cmd: /usr/bin/time -v python train.py model_training.train=[simulate_model1]
     deps:
