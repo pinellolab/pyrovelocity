@@ -1,5 +1,8 @@
-import anndata
 from typing import Tuple
+
+import anndata
+import numpy as np
+import pandas as pd
 
 
 def calculate_criticality_index(
@@ -45,3 +48,40 @@ def calculate_criticality_index(
         >>> print(f"H Mean: {H_mean}")
         >>> print(f"Criticality Index: {criticality_index:.4f}")
     """
+
+    unspliced_data = adata.layers["unspliced"].T
+    spliced_data = adata.layers["spliced"].T
+
+    pcc_unspliced = np.corrcoef(unspliced_data)
+    pcc_spliced = np.corrcoef(spliced_data)
+
+    pcc_mean = np.mean(
+        (
+            pcc_unspliced[np.triu_indices(unspliced_data.shape[0], k=1)]
+            + pcc_spliced[np.triu_indices(spliced_data.shape[0], k=1)]
+        )
+        / 2
+    )
+
+    sd_mean = np.mean(
+        np.hstack((np.std(unspliced_data, axis=1), np.std(spliced_data, axis=1)))
+    )
+
+    def conditional_entropy(data):
+        df = pd.DataFrame(data)
+        joint_prob = (
+            df.apply(lambda x: x.value_counts() / len(x)).fillna(0).values.flatten()
+        )
+        joint_prob = joint_prob.reshape(data.shape[1], -1)
+        marginal_prob = np.sum(joint_prob, axis=1)
+        cond_prob = joint_prob / marginal_prob[:, None]
+        cond_entropy = -np.nansum(joint_prob * np.log2(cond_prob))
+        return cond_entropy
+
+    H_unspliced = conditional_entropy(unspliced_data)
+    H_spliced = conditional_entropy(spliced_data)
+
+    H_mean = (H_unspliced + H_spliced) / 2
+
+    criticality_index = (pcc_mean * sd_mean) / H_mean
+    return criticality_index, pcc_mean, sd_mean, H_mean
