@@ -1,5 +1,5 @@
+import pandas as pd
 import streamlit as st
-from utils.config import get_app_config
 
 
 class DataReview:
@@ -7,11 +7,11 @@ class DataReview:
         self,
         dataset: str,
         fraction_max_counts: float,
-        df,
-        total_obs,
-        total_var,
-        max_spliced,
-        max_unspliced,
+        df: pd.DataFrame,
+        total_obs: int,
+        total_var: int,
+        max_spliced: int,
+        max_unspliced: int,
     ):
         self.dataset = dataset
         self.fraction_max_counts = fraction_max_counts
