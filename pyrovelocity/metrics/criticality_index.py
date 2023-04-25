@@ -49,6 +49,14 @@ def calculate_criticality_index(
         >>> print(f"Criticality Index: {criticality_index:.4f}")
     """
 
+    if adata.X.size == 0:
+        raise ValueError("AnnData object must not be empty.")
+
+    if "unspliced" not in adata.layers or "spliced" not in adata.layers:
+        raise KeyError(
+            "AnnData object must contain both 'unspliced' and 'spliced' layers."
+        )
+
     unspliced_data = adata.layers["unspliced"].T
     spliced_data = adata.layers["spliced"].T
 
