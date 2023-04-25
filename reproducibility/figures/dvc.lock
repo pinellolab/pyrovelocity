@@ -370,7 +370,7 @@ stages:
           rel_path: data/external/larry.h5ad
           url: https://ndownloader.figshare.com/files/37028569
           derived:
-            process_method: ''
+            process_method: load_data
             process_args: {}
             rel_path: data/processed/larry_processed.h5ad
     outs:
