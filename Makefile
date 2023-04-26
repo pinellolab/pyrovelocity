@@ -14,6 +14,13 @@ st: ## Run streamlit app in local environment.
 	--server.port=8080 \
 	--server.address=0.0.0.0
 
+stcloud: ## Run streamlit app in local environment.
+	streamlit run app/app.py \
+	--server.port=8080 \
+	--server.enableCORS=false \
+	--server.enableXsrfProtection=false \
+	--server.address=0.0.0.0
+
 # --progress=plain
 # --platform linux/amd64
 app_build: ## Build pyrovelocity application container image.
@@ -21,6 +28,12 @@ app_build: ## Build pyrovelocity application container image.
 	--progress=plain \
 	-t pyrovelocityapp \
 	-f dockerfiles/Dockerfile.app .
+
+local_app_build: ## Build pyrovelocity application container image.
+	docker build \
+	--progress=plain \
+	-t pyrovelocityapp \
+	-f dockerfiles/Dockerfile.app.local .
 
 app_run: ## Run the pyrovelocity web user interface.
 app_run: \
