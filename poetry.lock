@@ -1458,7 +1458,7 @@ name = "dulwich"
 version = "0.21.3"
 description = "Python Git Library"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "dulwich-0.21.3-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:25376efc6ea2ee9daa868a120d4f9c905dcb7774f68931be921fba41a657f58a"},
@@ -1709,7 +1709,7 @@ name = "dvc-studio-client"
 version = "0.8.0"
 description = "Small library to post data from DVC/DVCLive to Iterative Studio"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "dvc-studio-client-0.8.0.tar.gz", hash = "sha256:110097f39970bbb8f14f9c26e730d8d1fa3d5c3928d6ec6ccdadd86769049f4c"},
@@ -2881,14 +2881,14 @@ files = [
 
 [[package]]
 name = "importlib-metadata"
-version = "6.5.0"
+version = "6.6.0"
 description = "Read metadata from Python packages"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "importlib_metadata-6.5.0-py3-none-any.whl", hash = "sha256:03ba783c3a2c69d751b109fc0c94a62c51f581b3d6acf8ed1331b6d5729321ff"},
-    {file = "importlib_metadata-6.5.0.tar.gz", hash = "sha256:7a8bdf1bc3a726297f5cfbc999e6e7ff6b4fa41b26bba4afc580448624460045"},
+    {file = "importlib_metadata-6.6.0-py3-none-any.whl", hash = "sha256:43dd286a2cd8995d5eaef7fee2066340423b818ed3fd70adf0bad5f1fac53fed"},
+    {file = "importlib_metadata-6.6.0.tar.gz", hash = "sha256:92501cdf9cc66ebd3e612f1b4f0c0765dfa42f0fa38ffb319b6bd84dd675d705"},
 ]
 
 [package.dependencies]
@@ -7167,7 +7167,7 @@ name = "voluptuous"
 version = "0.13.1"
 description = ""
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "voluptuous-0.13.1-py3-none-any.whl", hash = "sha256:4b838b185f5951f2d6e8752b68fcf18bd7a9c26ded8f143f92d6d28f3921a3e6"},
