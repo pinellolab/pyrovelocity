@@ -5,10 +5,13 @@ on:
   push:
     paths:
       - "dockerfiles/Dockerfile.app"
+      - ".github/workflows/deploy.yml"
       - "app/**"
 
 env:
   REGISTRY: ghcr.io
+  GAR_REGISTRY: us-central1-docker.pkg.dev
+  GAR_REPOSITORY: pyrovelocity
   IMAGE_NAME: ${{ github.repository }}app
 
 jobs:
@@ -19,24 +22,38 @@ jobs:
       packages: write
 
     steps:
+      - name: "Print github context"
+        run: |
+          echo "EVENT_NAME:" "$GITHUB_EVENT_NAME"
+          echo "       REF:" "$GITHUB_REF"
+          echo "  HEAD_REF:" "$GITHUB_HEAD_REF"
+          echo "  BASE_REF:" "$GITHUB_BASE_REF"
+          echo "       SHA:" "$GITHUB_SHA"
       - name: Checkout
         uses: actions/checkout@v3
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-      - name: Log in to container registry
+      - name: Log in to GitHub container registry
         uses: docker/login-action@v2
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to Google Artifact Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.GAR_REGISTRY }}
+          username: _json_key
+          password: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}
       - name: Extract github metadata for docker labels
         id: meta
         uses: docker/metadata-action@v4
         with:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+            ${{ env.GAR_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/pyrovelocityapp
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
