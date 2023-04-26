@@ -37,6 +37,10 @@ local_app_build: ## Local build of pyrovelocity application container image.
 
 cloud_build: ## Build with google cloud build: make cloud_build PROJECT_ID="gcp-projectID"
 ifdef PROJECT_ID
+	dvc stage list \
+    --name-only reproducibility/figures/dvc.yaml | \
+    grep -E "summarize" | \
+    xargs -t -I {} dvc pull {}
 	PROJECT_ID=$(PROJECT_ID) gcloud builds submit
 else
 	@echo 'Run "make help" and define PROJECT_ID'
