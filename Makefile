@@ -1,5 +1,15 @@
 .DEFAULT_GOAL := help
 
+ENV_PREFIX ?= ./
+ENV_FILE := $(wildcard $(ENV_PREFIX)/.env)
+
+ifeq ($(strip $(ENV_FILE)),)
+$(info $(ENV_PREFIX)/.env file not found, skipping inclusion)
+else
+include $(ENV_PREFIX)/.env
+export
+endif
+
 ##@ Utility
 help: ## Display this help. (Default)
 # based on "https://gist.github.com/prwhite/8168133?permalink_comment_id=4260260#gistcomment-4260260"
@@ -74,3 +84,18 @@ app_shell: \
 # app_build
 	docker run --rm -it \
 	--entrypoint /bin/bash pyrovelocityapp
+
+deploy: ## Deploy application manually with cloud run
+ifdef GCP_RUN_SERVICE_NAME
+	gcloud run deploy $(GCP_RUN_SERVICE_NAME) \
+	--image=$(PKG_ARCHIVE_URL)/$(PKG_APP):$(PKG_IMAGE_TAG) \
+	--platform=managed \
+	--project=$(GCP_PROJECT_ID) \
+	--region=$(GCP_REGION) \
+	--allow-unauthenticated
+else
+	@echo 'Run "make help" and define necessary variables'
+endif
+
+env_print: ## Print a subset of environment variables defined in ".env" file.
+	env | grep "TF_VAR\|GITHUB\|GH_\|GCP_\|MLFLOW" | sort
