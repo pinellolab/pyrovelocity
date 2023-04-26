@@ -2,6 +2,12 @@ name: Deploy
 
 on:
   workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Deploy image to cloud run"
+        required: true
+        type: boolean
+        default: false
   push:
     paths:
       - "dockerfiles/Dockerfile.app"
@@ -12,7 +18,7 @@ env:
   REGISTRY: ghcr.io
   GAR_REGISTRY: us-central1-docker.pkg.dev
   GAR_REPOSITORY: pyrovelocity
-  IMAGE_NAME: ${{ github.repository }}app
+  IMAGE_NAME: pyrovelocityapp
 
 jobs:
   build-and-push-image:
@@ -24,11 +30,13 @@ jobs:
     steps:
       - name: "Print github context"
         run: |
-          echo "EVENT_NAME:" "$GITHUB_EVENT_NAME"
-          echo "       REF:" "$GITHUB_REF"
-          echo "  HEAD_REF:" "$GITHUB_HEAD_REF"
-          echo "  BASE_REF:" "$GITHUB_BASE_REF"
-          echo "       SHA:" "$GITHUB_SHA"
+          echo "      EVENT_NAME:" "$GITHUB_EVENT_NAME"
+          echo "             REF:" "$GITHUB_REF"
+          echo "REPOSITORY OWNER:" "$GITHUB_REPOSITORY_OWNER"
+          echo "        REF NAME:" "$GITHUB_REF_NAME"
+          echo "        HEAD_REF:" "$GITHUB_HEAD_REF"
+          echo "        BASE_REF:" "$GITHUB_BASE_REF"
+          echo "             SHA:" "$GITHUB_SHA"
       - name: Checkout
         uses: actions/checkout@v3
       - name: Set up QEMU
@@ -52,8 +60,15 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-            ${{ env.GAR_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/pyrovelocityapp
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+            ${{ env.GAR_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=,format=long
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
@@ -64,3 +79,24 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
+  deploy-cloud-run:
+    needs: build-and-push-image
+    runs-on: ubuntu-latest
+    if: ${{ inputs.deploy }}
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: "Authenticate to Google Cloud"
+        uses: "google-github-actions/auth@v1"
+        with:
+          credentials_json: "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}"
+      - name: Deploy to Cloud Run
+        id: "deploy"
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: pyrovelocityapp
+          image: ${{ env.GAR_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+      - name: Post url
+        run: 'echo "${{ steps.deploy.outputs.url }}"'
