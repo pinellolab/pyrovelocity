@@ -1,0 +1,14 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-f",
+        "dockerfiles/Dockerfile.app",
+        "-t",
+        "gcr.io/$PROJECT_ID/pyrovelocityapp",
+        ".",
+      ]
+images:
+  - "gcr.io/$PROJECT_ID/pyrovelocityapp"
+timeout: "10620s"

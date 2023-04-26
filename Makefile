@@ -23,17 +23,24 @@ stcloud: ## Run streamlit app in local environment.
 
 # --progress=plain
 # --platform linux/amd64
-app_build: ## Build pyrovelocity application container image.
+app_build: ## Cloud build of pyrovelocity application container image.
 	docker build \
 	--progress=plain \
 	-t pyrovelocityapp \
 	-f dockerfiles/Dockerfile.app .
 
-local_app_build: ## Build pyrovelocity application container image.
+local_app_build: ## Local build of pyrovelocity application container image.
 	docker build \
 	--progress=plain \
 	-t pyrovelocityapp \
 	-f dockerfiles/Dockerfile.app.local .
+
+cloud_build: ## Build with google cloud build: make cloud_build PROJECT_ID="gcp-projectID"
+ifdef PROJECT_ID
+	PROJECT_ID=$(PROJECT_ID) gcloud builds submit
+else
+	@echo 'Run "make help" and define PROJECT_ID'
+endif
 
 app_run: ## Run the pyrovelocity web user interface.
 app_run: \
