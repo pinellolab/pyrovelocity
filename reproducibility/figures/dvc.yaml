@@ -90,6 +90,30 @@ stages:
       - ${data_external.pyrovelocity.larry.rel_path}:
           persist: true
 
+  data_download_larry_mono:
+    cmd: python data_download.py data_external.sources=[pyrovelocity] data_external.pyrovelocity.download=[larry_mono]
+    deps:
+      - data_download.py
+    params:
+      - config.yaml:
+          - base
+          - data_external.pyrovelocity.larry_mono
+    outs:
+      - ${data_external.pyrovelocity.larry_mono.rel_path}:
+          persist: true
+
+  data_download_larry_neu:
+    cmd: python data_download.py data_external.sources=[pyrovelocity] data_external.pyrovelocity.download=[larry_neu]
+    deps:
+      - data_download.py
+    params:
+      - config.yaml:
+          - base
+          - data_external.pyrovelocity.larry_neu
+    outs:
+      - ${data_external.pyrovelocity.larry_neu.rel_path}:
+          persist: true
+
   data_download_pons:
     cmd: python data_download.py data_external.sources=[velocyto] data_external.velocyto.download=[pons]
     deps:
@@ -180,6 +204,32 @@ stages:
           - data_external.pyrovelocity.larry
     outs:
       - ${data_external.pyrovelocity.larry.derived.rel_path}
+        #          persist: true
+
+  preprocess_larry_mono:
+    cmd: python preprocess.py data_external.sources=[pyrovelocity] data_external.pyrovelocity.process=[larry_mono]
+    deps:
+      - preprocess.py
+      - ${data_external.pyrovelocity.larry_mono.rel_path}
+    params:
+      - config.yaml:
+          - base
+          - data_external.pyrovelocity.larry_mono
+    outs:
+      - ${data_external.pyrovelocity.larry_mono.derived.rel_path}
+        #          persist: true
+
+  preprocess_larry_neu:
+    cmd: python preprocess.py data_external.sources=[pyrovelocity] data_external.pyrovelocity.process=[larry_neu]
+    deps:
+      - preprocess.py
+      - ${data_external.pyrovelocity.larry_neu.rel_path}
+    params:
+      - config.yaml:
+          - base
+          - data_external.pyrovelocity.larry_neu
+    outs:
+      - ${data_external.pyrovelocity.larry_neu.derived.rel_path}
         #          persist: true
 
   train_simulate_model1:
@@ -407,6 +457,52 @@ stages:
       - ${model_training.larry_model2.model_path}
         # persist: true
       - ${model_training.larry_model2.pyrovelocity_data_path}
+        # persist: true
+
+  train_larry_mono_model2:
+    cmd: /usr/bin/time -v python train.py model_training.train=[larry_mono_model2]
+    deps:
+      - train.py
+      - ${model_training.larry_mono_model2.input_data_path}
+    params:
+      - config.yaml:
+          - model_training.larry_mono_model2
+    metrics:
+      - ${model_training.larry_mono_model2.metrics_path}:
+          cache: false
+    outs:
+      - ${model_training.larry_mono_model2.run_info_path}:
+          cache: false
+      - ${model_training.larry_mono_model2.training_parameters.loss_plot_path}
+        # persist: true
+      - ${model_training.larry_mono_model2.trained_data_path}
+        # persist: true
+      - ${model_training.larry_mono_model2.model_path}
+        # persist: true
+      - ${model_training.larry_mono_model2.pyrovelocity_data_path}
+        # persist: true
+
+  train_larry_neu_model2:
+    cmd: /usr/bin/time -v python train.py model_training.train=[larry_neu_model2]
+    deps:
+      - train.py
+      - ${model_training.larry_neu_model2.input_data_path}
+    params:
+      - config.yaml:
+          - model_training.larry_neu_model2
+    metrics:
+      - ${model_training.larry_neu_model2.metrics_path}:
+          cache: false
+    outs:
+      - ${model_training.larry_neu_model2.run_info_path}:
+          cache: false
+      - ${model_training.larry_neu_model2.training_parameters.loss_plot_path}
+        # persist: true
+      - ${model_training.larry_neu_model2.trained_data_path}
+        # persist: true
+      - ${model_training.larry_neu_model2.model_path}
+        # persist: true
+      - ${model_training.larry_neu_model2.pyrovelocity_data_path}
         # persist: true
 
   figure2:
