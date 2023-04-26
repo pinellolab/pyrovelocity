@@ -31,7 +31,6 @@ dependencies:
   - zstandard
   - pip
   - hydra-core
-  - dvc-gs
   # - scvi-tools
   # - scikit-misc
   # - torchmetrics
