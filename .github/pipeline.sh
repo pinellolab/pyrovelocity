@@ -119,6 +119,19 @@ printf "\n\`\`\`json\n"
 cat models/pons_model2/run_info.json
 printf "\n\`\`\`\n"
 
+# larry
+## model 2
+printf "# larry\n\n## model 2\n\n### Metrics\n"
+dvc metrics show --md models/larry_model2/metrics.json
+
+echo "### Training plots"
+echo '!'"[ELBO](./models/larry_model2/loss_plot.png)"
+
+echo "### Run information"
+printf "\n\`\`\`json\n"
+cat models/larry_model2/run_info.json
+printf "\n\`\`\`\n"
+
 # pipeline files
 printf "# pipeline files\n"
 dvc dag -o --md
