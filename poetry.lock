@@ -1458,7 +1458,7 @@ name = "dulwich"
 version = "0.21.3"
 description = "Python Git Library"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "dulwich-0.21.3-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:25376efc6ea2ee9daa868a120d4f9c905dcb7774f68931be921fba41a657f58a"},
@@ -1709,7 +1709,7 @@ name = "dvc-studio-client"
 version = "0.8.0"
 description = "Small library to post data from DVC/DVCLive to Iterative Studio"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "dvc-studio-client-0.8.0.tar.gz", hash = "sha256:110097f39970bbb8f14f9c26e730d8d1fa3d5c3928d6ec6ccdadd86769049f4c"},
@@ -5304,13 +5304,13 @@ tests = ["coverage[toml] (==5.0.4)", "pytest (>=6.0.0,<7.0.0)"]
 
 [[package]]
 name = "pynndescent"
-version = "0.5.8"
+version = "0.5.10"
 description = "Nearest Neighbor Descent"
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "pynndescent-0.5.8.tar.gz", hash = "sha256:a7c552569bf604a101fd54bba1d27c12389e065945dee3a6777a518c63a46f2b"},
+    {file = "pynndescent-0.5.10.tar.gz", hash = "sha256:5d5dc683c03ef55fe3ddf693859720ca18f85c6e6e5bb0b4f14870278d5288ad"},
 ]
 
 [package.dependencies]
@@ -7167,7 +7167,7 @@ name = "voluptuous"
 version = "0.13.1"
 description = ""
 category = "main"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "voluptuous-0.13.1-py3-none-any.whl", hash = "sha256:4b838b185f5951f2d6e8752b68fcf18bd7a9c26ded8f143f92d6d28f3921a3e6"},
