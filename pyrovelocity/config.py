@@ -198,6 +198,15 @@ def hydra_zen_configure():
                     process_method="load_data",
                     process_args=dict(),
                 ),
+                larry_multilineage=create_dataset_config(
+                    "larry_multilineage",
+                    dl_root="${data_external.root_path}",
+                    data_file="larry_mono.h5ad",
+                    rel_path="${data_external.root_path}/larry_mono.h5ad",
+                    url="${data_external.pyrovelocity.sources.figshare_root_url}/37028572",
+                    process_method="load_data",
+                    process_args=dict(),
+                ),
             ),
         ),
         model_training=dict(
@@ -213,6 +222,7 @@ def hydra_zen_configure():
                 "larry_model2",
                 "larry_mono_model2",
                 "larry_neu_model2",
+                "larry_multilineage_model2",
             ],
             simulate_model1=create_model_config(
                 "simulate",
@@ -309,6 +319,17 @@ def hydra_zen_configure():
             larry_neu_model2=create_model_config(
                 "pyrovelocity",
                 "larry_neu",
+                2,
+                "emb",
+                svi_train=True,
+                batch_size=4000,
+                cell_state="state_info",
+                offset=True,
+                max_epochs=1000,
+            ),
+            larry_multilineage_model2=create_model_config(
+                "pyrovelocity",
+                "larry_multilineage",
                 2,
                 "emb",
                 svi_train=True,
