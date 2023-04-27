@@ -90,8 +90,8 @@ def load_data(
             adata = scv.datasets.dentategyrus()
         elif data == "larry":
             adata = load_larry()
-        elif data in ['larry_mono', 'larry_neu']:
-            adata = load_unipotent_larry(data.split('-')[1])
+        elif data in ["larry_mono", "larry_neu"]:
+            adata = load_unipotent_larry(data.split("-")[1])
             adata = adata[adata.obs.state_info != "Centroid", :]
         else:
             adata = sc.read(data)
