@@ -49,9 +49,15 @@ The expected workflow is to
     GH_REPO=${GITHUB_USERNAME}/${GITHUB_REPO_NAME} # derived
     GCP_GACD=$(shell cat service-account-credentials.json) # GCP service account credentials
     GCP_SERVICE_ACCOUNT=111111111111-compute@developer.gserviceaccount.com # GCP service account email
-    MLFLOW_TRACKING_URI=https://server.mlflow
-    MLFLOW_TRACKING_USERNAME=username
-    MLFLOW_TRACKING_PASSWORD=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    GCP_PROJECT_ID=${TF_VAR_project} # this is an alias for the gcp project ID
+    GCP_REGION=us-central1 # the google cloud platform region for application deployment
+    GCP_RUN_SERVICE_NAME=app-test # the service name for application deployment
+    PKG_ARCHIVE_URL=us-central1-docker.pkg.dev/${GCP_PROJECT_ID}/${GITHUB_REPO_NAME} # the url to the GAR package
+    PKG_APP=${GITHUB_REPO_NAME}app # the package name containing the application
+    PKG_IMAGE_TAG=latest # the package tag to deploy
+    MLFLOW_TRACKING_URI=https://server.mlflow # the url to the mlflow tracking server
+    MLFLOW_TRACKING_USERNAME=username # the username for the mlflow tracking server
+    MLFLOW_TRACKING_PASSWORD=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX # the key for the mlflow tracking server
     TF_VAR_post_startup_script_url=https://gist.githubusercontent.com/githubusername/b6c8cd158b00f99d21511a905cc7626a/raw/post-startup-script-dev-notebook.sh # publicly accessible URL to a startup script
     GITHUB_STARTUP_SCRIPT_GIST_ID=b6c8cd158b00f99d21511a905cc7626a # the github gist ID if you would like to use a github gist
     ```

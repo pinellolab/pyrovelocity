@@ -1,7 +1,6 @@
 # syntax=docker/dockerfile:1
 FROM ghcr.io/iterative/cml:0-dvc2-base1-gpu
 
-LABEL maintainer="pyrovelocity team"
 WORKDIR ${CML_RUNNER_PATH}
 COPY . pyrovelocity/
 ENV PYENV_VERSION=3.10.10
@@ -12,3 +11,9 @@ RUN cd pyrovelocity && \
     eval "$(pyenv init -)" && \
     pip install --upgrade pip && \
     pip install -e .
+
+LABEL org.opencontainers.image.title="pyrovelocity" \
+      org.opencontainers.image.authors="pyrovelocity team" \
+      org.opencontainers.image.description="This image contains the pyrovelocity library." \
+      org.opencontainers.image.url="https://github.com/pinellolab/pyrovelocity" \
+      org.opencontainers.image.licenses="AGPL-3.0-only"
