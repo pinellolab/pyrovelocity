@@ -327,7 +327,6 @@ def hydra_zen_configure():
                 offset=True,
                 max_epochs=1000,
             ),
-            
             larry_multilineage_model2=create_model_config(
                 "pyrovelocity",
                 "larry_multilineage",
@@ -338,7 +337,7 @@ def hydra_zen_configure():
                 cell_state="state_info",
                 offset=True,
                 max_epochs=1000,
-            )
+            ),
         ),
         reports=dict(
             model_summary=dict(
