@@ -93,6 +93,36 @@ data_external:
         process_method: load_data
         process_args: {}
         rel_path: data/processed/larry_processed.h5ad
+    larry_mono:
+      data_file: larry_mono.h5ad
+      dl_root: data/external
+      dl_path: data/external/larry_mono.h5ad
+      rel_path: data/external/larry_mono.h5ad
+      url: https://ndownloader.figshare.com/files/37028572
+      derived:
+        process_method: load_data
+        process_args: {}
+        rel_path: data/processed/larry_mono_processed.h5ad
+    larry_neu:
+      data_file: larry_neu.h5ad
+      dl_root: data/external
+      dl_path: data/external/larry_neu.h5ad
+      rel_path: data/external/larry_neu.h5ad
+      url: https://ndownloader.figshare.com/files/37028575
+      derived:
+        process_method: load_data
+        process_args: {}
+        rel_path: data/processed/larry_neu_processed.h5ad
+    larry_multilineage:
+      data_file: larry_mono.h5ad
+      dl_root: data/external
+      dl_path: data/external/larry_mono.h5ad
+      rel_path: data/external/larry_mono.h5ad
+      url: https://ndownloader.figshare.com/files/37028572
+      derived:
+        process_method: load_data
+        process_args: {}
+        rel_path: data/processed/larry_multilineage_processed.h5ad
 model_training:
   train:
   - simulate_model1
@@ -104,6 +134,9 @@ model_training:
   - pons_model1
   - pons_model2
   - larry_model2
+  - larry_mono_model2
+  - larry_neu_model2
+  - larry_multilineage_model2
   simulate_model1:
     path: models/medium_model1
     model_path: models/medium_model1/model
@@ -419,6 +452,111 @@ model_training:
       cell_specific_kinetics: null
       kinetics_num: 2
       loss_plot_path: models/larry_model2/loss_plot.png
+  larry_mono_model2:
+    path: models/larry_mono_model2
+    model_path: models/larry_mono_model2/model
+    input_data_path: data/processed/larry_mono_processed.h5ad
+    trained_data_path: models/larry_mono_model2/trained.h5ad
+    pyrovelocity_data_path: models/larry_mono_model2/pyrovelocity.pkl
+    metrics_path: models/larry_mono_model2/metrics.json
+    run_info_path: models/larry_mono_model2/run_info.json
+    vector_field_parameters:
+      basis: emb
+    training_parameters:
+      _target_: pyrovelocity.api.train_model
+      _partial_: true
+      guide_type: auto
+      model_type: auto
+      svi_train: true
+      batch_size: 4000
+      train_size: 1.0
+      use_gpu: 0
+      likelihood: Poisson
+      num_samples: 30
+      log_every: 100
+      cell_state: state_info
+      patient_improve: 0.0001
+      patient_init: 45
+      seed: 99
+      lr: 0.01
+      max_epochs: 1000
+      include_prior: true
+      library_size: true
+      offset: true
+      input_type: raw
+      cell_specific_kinetics: null
+      kinetics_num: 2
+      loss_plot_path: models/larry_mono_model2/loss_plot.png
+  larry_neu_model2:
+    path: models/larry_neu_model2
+    model_path: models/larry_neu_model2/model
+    input_data_path: data/processed/larry_neu_processed.h5ad
+    trained_data_path: models/larry_neu_model2/trained.h5ad
+    pyrovelocity_data_path: models/larry_neu_model2/pyrovelocity.pkl
+    metrics_path: models/larry_neu_model2/metrics.json
+    run_info_path: models/larry_neu_model2/run_info.json
+    vector_field_parameters:
+      basis: emb
+    training_parameters:
+      _target_: pyrovelocity.api.train_model
+      _partial_: true
+      guide_type: auto
+      model_type: auto
+      svi_train: true
+      batch_size: 4000
+      train_size: 1.0
+      use_gpu: 0
+      likelihood: Poisson
+      num_samples: 30
+      log_every: 100
+      cell_state: state_info
+      patient_improve: 0.0001
+      patient_init: 45
+      seed: 99
+      lr: 0.01
+      max_epochs: 1000
+      include_prior: true
+      library_size: true
+      offset: true
+      input_type: raw
+      cell_specific_kinetics: null
+      kinetics_num: 2
+      loss_plot_path: models/larry_neu_model2/loss_plot.png
+  larry_multilineage_model2:
+    path: models/larry_multilineage_model2
+    model_path: models/larry_multilineage_model2/model
+    input_data_path: data/processed/larry_multilineage_processed.h5ad
+    trained_data_path: models/larry_multilineage_model2/trained.h5ad
+    pyrovelocity_data_path: models/larry_multilineage_model2/pyrovelocity.pkl
+    metrics_path: models/larry_multilineage_model2/metrics.json
+    run_info_path: models/larry_multilineage_model2/run_info.json
+    vector_field_parameters:
+      basis: emb
+    training_parameters:
+      _target_: pyrovelocity.api.train_model
+      _partial_: true
+      guide_type: auto
+      model_type: auto
+      svi_train: true
+      batch_size: 4000
+      train_size: 1.0
+      use_gpu: 0
+      likelihood: Poisson
+      num_samples: 30
+      log_every: 100
+      cell_state: state_info
+      patient_improve: 0.0001
+      patient_init: 45
+      seed: 99
+      lr: 0.01
+      max_epochs: 1000
+      include_prior: true
+      library_size: true
+      offset: true
+      input_type: raw
+      cell_specific_kinetics: null
+      kinetics_num: 2
+      loss_plot_path: models/larry_multilineage_model2/loss_plot.png
 reports:
   model_summary:
     summarize:

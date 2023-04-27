@@ -90,6 +90,22 @@ def load_data(
             adata = scv.datasets.dentategyrus()
         elif data == "larry":
             adata = load_larry()
+        elif data in ["larry_mono", "larry_neu"]:
+            adata = load_unipotent_larry(data.split("-")[1])
+            adata = adata[adata.obs.state_info != "Centroid", :]
+        elif data == "larry_multilineage":
+            adata_mono = load_unipotent_larry("mono")
+            adata_mono_C = adata_mono[adata_mono.obs.state_info != "Centroid", :].copy()
+            adata_neu = load_unipotent_larry("neu")
+            adata_neu_C = adata_neu[adata_neu.obs.state_info != "Centroid", :].copy()
+            adata_multilineage = adata_mono.concatenate(adata_neu)
+            adata = adata_mono_C.concatenate(adata_neu_C)
+            adata.layers["raw_spliced"] = adata_multilineage[
+                adata.obs_names, adata.var_names
+            ].layers["spliced"]
+            adata.layers["raw_unspliced"] = adata_multilineage[
+                adata.obs_names, adata.var_names
+            ].layers["unspliced"]
         else:
             adata = sc.read(data)
 
@@ -118,7 +134,7 @@ def load_data(
         scv.tl.velocity(adata, mode="dynamical", use_raw=False)
         scv.tl.velocity_graph(adata, n_jobs=-1)
 
-        if data == "larry":
+        if "larry" in data:
             scv.tl.velocity_embedding(adata, basis="emb")
         else:
             scv.tl.velocity_embedding(adata)
