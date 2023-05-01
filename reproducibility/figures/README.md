@@ -9,6 +9,8 @@ mamba env create -n pv2 -f conda/environment-gpu-upd.yml
 conda activate pv2
 pip install xdoctest or mamba install -y xdoctest
 pip install matplotlib_venn
+pip install statannotations
+
 ```
 
 ## Debugging development dependencies in flux
