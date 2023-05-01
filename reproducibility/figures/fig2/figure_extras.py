@@ -10,11 +10,10 @@ import numpy as np
 import pandas as pd
 import scvelo as scv
 import seaborn as sns
-from statannotations.Annotator import Annotator
-
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib_venn import venn2
 from omegaconf import DictConfig
+from statannotations.Annotator import Annotator
 
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.plot import plot_arrow_examples
@@ -62,9 +61,11 @@ def plots(conf: DictConfig, logger: Logger) -> None:
 
         with open(pyrovelocity_data_path, "rb") as f:
             posterior_samples = pickle.load(f)
-        cell_magnitudes = np.sqrt((posterior_samples["vector_field_posterior_samples"]**2).sum(axis=-1))
+        cell_magnitudes = np.sqrt(
+            (posterior_samples["vector_field_posterior_samples"] ** 2).sum(axis=-1)
+        )
         cell_magnitudes_mean = cell_magnitudes.mean(axis=-2)
-        #cell_magnitudes_mean = np.sqrt((posterior_samples["vector_field_posterior_mean"] ** 2).sum(axis=-1))
+        # cell_magnitudes_mean = np.sqrt((posterior_samples["vector_field_posterior_mean"] ** 2).sum(axis=-1))
         cell_magnitudes_std = cell_magnitudes.std(axis=-2)
         cell_magnitudes_deviance = cell_magnitudes_std / cell_magnitudes_mean
 
@@ -78,23 +79,35 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     time_dev_list = np.hstack(time_dev_list)
     mag_dev_list = np.hstack(mag_dev_list)
 
-    metrics_df = pd.DataFrame({"time_deviance": time_dev_list, "magnitude_deviance": mag_dev_list, "dataset": names})
+    metrics_df = pd.DataFrame(
+        {
+            "time_deviance": time_dev_list,
+            "magnitude_deviance": mag_dev_list,
+            "dataset": names,
+        }
+    )
     logger.info(metrics_df.head())
     shared_time_plot = conf.reports.figure2_extras.shared_time_plot
     fig, ax = plt.subplots(1, 2)
     fig.set_size_inches(9.6, 3.5)
-    order = ('pancreas_model2', 'pbmc68k_model2')
-    sns.boxplot(x='dataset', y='time_deviance', data=metrics_df, ax=ax[0], order=order)
-    sns.boxplot(x='dataset', y='magnitude_deviance', data=metrics_df, ax=ax[1], order=order)
-    pairs = [('pancreas_model2', 'pbmc68k_model2')]
-    time_annotator = Annotator(ax[0], pairs, data=metrics_df, x='dataset', y='time_deviance', order=order)
-    time_annotator.configure(test='Mann-Whitney', text_format='star', loc='outside')
+    order = ("pancreas_model2", "pbmc68k_model2")
+    sns.boxplot(x="dataset", y="time_deviance", data=metrics_df, ax=ax[0], order=order)
+    sns.boxplot(
+        x="dataset", y="magnitude_deviance", data=metrics_df, ax=ax[1], order=order
+    )
+    pairs = [("pancreas_model2", "pbmc68k_model2")]
+    time_annotator = Annotator(
+        ax[0], pairs, data=metrics_df, x="dataset", y="time_deviance", order=order
+    )
+    time_annotator.configure(test="Mann-Whitney", text_format="star", loc="outside")
     time_annotator.apply_and_annotate()
-    mag_annotator = Annotator(ax[1], pairs, data=metrics_df, x='dataset', y='magnitude_deviance', order=order)
-    mag_annotator.configure(test='Mann-Whitney', text_format='star', loc='outside')
+    mag_annotator = Annotator(
+        ax[1], pairs, data=metrics_df, x="dataset", y="magnitude_deviance", order=order
+    )
+    mag_annotator.configure(test="Mann-Whitney", text_format="star", loc="outside")
     mag_annotator.apply_and_annotate()
 
-    #ax[1].set_ylim(0, 3)
+    # ax[1].set_ylim(0, 3)
     print(shared_time_plot)
     fig.savefig(
         shared_time_plot,
