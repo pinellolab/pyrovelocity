@@ -144,8 +144,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         cell_time_std = posterior_samples["cell_time"].std(0).flatten()
         adata.obs["shared_time_uncertain"] = cell_time_std
         adata.obs["shared_time_mean"] = cell_time_mean
-        fig, ax = plt.subplots(1, 2)
-        fig.set_size_inches(9.2, 3.5)
+        fig, ax = plt.subplots(2, 2)
+        fig.set_size_inches(9.6, 7)
+        ax = ax.flatten()
         ax_cb = scv.pl.scatter(
             adata,
             c="shared_time_mean",
@@ -174,6 +175,8 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             levels=3,
             fill=False,
         )
+        ax[2].hist(cell_time_std, bins=100)
+        ax[3].hist(cell_time_std / cell_time_mean, bins=100)
         fig.savefig(
             shared_time_plot,
             facecolor=fig.get_facecolor(),

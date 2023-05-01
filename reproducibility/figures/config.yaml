@@ -662,6 +662,8 @@ reports:
       volcano_plot: reports/fig2/fig2_pancreas_volcano.pdf
       rainbow_plot: reports/fig2/fig2_pancreas_rainbow.pdf
       vector_field_plot: reports/fig2/fig2_pancreas_vector_field.pdf
+  figure2_extras:
+    shared_time_plot: reports/fig2/fig2_pancreas_pbmc_uncertainties_comparison.pdf
   figureS3:
     tag: figS3
     path: reports/figS3
