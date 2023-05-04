@@ -1954,3 +1954,96 @@ stages:
     - path: models/larry_multilineage_model2/trained.h5ad
       md5: 479152b0bfd2dcfd479ae9f44afc52fe
       size: 158935226
+  preprocess_pbmc10k:
+    cmd: python preprocess.py data_external.sources=[pyrovelocity] data_external.scvelo.process=[pyrovelocity]
+    deps:
+    - path: data/external/pbmc10k.h5ad
+      md5: 3b64b4cd122454610957f5c6086e2eac
+      size: 592149007
+    - path: preprocess.py
+      md5: bf09c86fc25b1d1a98b9aa1c5fa04361
+      size: 2757
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+        data_external.pyrovelocity.pbmc10k:
+          data_file: pbmc10k.h5ad
+          dl_root: data/external
+          dl_path: data/external/pbmc10k.h5ad
+          rel_path: data/external/pbmc10k.h5ad
+          url: https://ndownloader.figshare.com/files/pbmc10k
+          derived:
+            process_method: load_data
+            process_args: {}
+            rel_path: data/processed/pbmc10k_processed.h5ad
+    outs:
+    - path: data/processed/pbmc10k_processed.h5ad
+      md5: 5a03c2060cec05ca147fbe897bc875f8
+      size: 1364055449
+  train_pbmc10k_model2:
+    cmd: /usr/bin/time -v python train.py model_training.train=[pbmc10k_model2]
+    deps:
+    - path: data/processed/pbmc10k_processed.h5ad
+      md5: 5a03c2060cec05ca147fbe897bc875f8
+      size: 1364055449
+    - path: train.py
+      md5: 0e7c46a112eab9290b48ad4f3deecaaa
+      size: 8684
+    params:
+      config.yaml:
+        model_training.pbmc10k_model2:
+          path: models/pbmc10k_model2
+          model_path: models/pbmc10k_model2/model
+          input_data_path: data/processed/pbmc10k_processed.h5ad
+          trained_data_path: models/pbmc10k_model2/trained.h5ad
+          pyrovelocity_data_path: models/pbmc10k_model2/pyrovelocity.pkl
+          metrics_path: models/pbmc10k_model2/metrics.json
+          run_info_path: models/pbmc10k_model2/run_info.json
+          vector_field_parameters:
+            basis: tsne
+          training_parameters:
+            _target_: pyrovelocity.api.train_model
+            _partial_: true
+            guide_type: auto
+            model_type: auto
+            svi_train: false
+            batch_size: -1
+            train_size: 1.0
+            use_gpu: 0
+            likelihood: Poisson
+            num_samples: 30
+            log_every: 100
+            cell_state: leiden
+            patient_improve: 0.0001
+            patient_init: 45
+            seed: 99
+            lr: 0.01
+            max_epochs: 2000
+            include_prior: true
+            library_size: true
+            offset: true
+            input_type: raw
+            cell_specific_kinetics:
+            kinetics_num: 2
+            loss_plot_path: models/pbmc10k_model2/loss_plot.png
+    outs:
+    - path: models/pbmc10k_model2/loss_plot.png
+      md5: 5f7a8ad68a2dd4efd0996e05df2836a9
+      size: 11472
+    - path: models/pbmc10k_model2/metrics.json
+      md5: e24bb51919d306318bcb754e0a91b760
+      size: 159
+    - path: models/pbmc10k_model2/model
+      md5: 7fb6ef5f7a5b58a2901443e591cd6bb8.dir
+      size: 1131242
+      nfiles: 1
+    - path: models/pbmc10k_model2/pyrovelocity.pkl
+      md5: 7e51a86ef980fd1c0f296f8e340d35fe
+      size: 198889646
+    - path: models/pbmc10k_model2/run_info.json
+      md5: f6f1f1e0788a15fb4efe1534f09aa434
+      size: 454
+    - path: models/pbmc10k_model2/trained.h5ad
+      md5: 481ef7cac162e7a9402e68cc600d5ff5
+      size: 1568261213
