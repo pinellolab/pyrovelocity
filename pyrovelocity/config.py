@@ -166,8 +166,8 @@ def hydra_zen_configure():
                 ),
             ),
             pyrovelocity=dict(
-                download=["larry"],
-                process=[],
+                download=["larry", "pbmc10k"],
+                process=["pbmc10k"],
                 sources=dict(
                     figshare_root_url="https://ndownloader.figshare.com/files"
                 ),
@@ -207,6 +207,15 @@ def hydra_zen_configure():
                     process_method="load_data",
                     process_args=dict(),
                 ),
+                pbmc10k=create_dataset_config(
+                    "pbmc10k",
+                    dl_root="${data_external.root_path}",
+                    data_file="pbmc10k.h5ad",
+                    rel_path="${data_external.root_path}/pbmc10k.h5ad",
+                    url="${data_external.pyrovelocity.sources.figshare_root_url}/pbmc10k",
+                    process_method="load_data",
+                    process_args=dict(),
+                ),
             ),
         ),
         model_training=dict(
@@ -223,6 +232,7 @@ def hydra_zen_configure():
                 "larry_mono_model2",
                 "larry_neu_model2",
                 "larry_multilineage_model2",
+                "pbmc10k_model2",
             ],
             simulate_model1=create_model_config(
                 "simulate",
@@ -338,6 +348,15 @@ def hydra_zen_configure():
                 offset=True,
                 max_epochs=1000,
             ),
+            pbmc10k_model2=create_model_config(
+                "pyrovelocity",
+                "pbmc10k",
+                2,
+                "tsne",
+                cell_state="leiden",
+                offset=True,
+                max_epochs=2000,
+            ),
         ),
         reports=dict(
             model_summary=dict(
@@ -350,6 +369,7 @@ def hydra_zen_configure():
                     "pbmc68k_model2",
                     "pons_model1",
                     "pons_model2",
+                    "pbmc10k_model2",
                 ],
                 simulate_model1=create_reports_config("medium", 1),
                 simulate_model2=create_reports_config("medium", 2),
@@ -359,6 +379,7 @@ def hydra_zen_configure():
                 pbmc68k_model2=create_reports_config("pbmc68k", 2),
                 pons_model1=create_reports_config("pons", 1),
                 pons_model2=create_reports_config("pons", 2),
+                pbmc10k_model2=create_reports_config("pbmc10k", 2),
             ),
             figure2=dict(
                 tag="fig2",
