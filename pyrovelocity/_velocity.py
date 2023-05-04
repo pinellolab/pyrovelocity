@@ -380,9 +380,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             basis=vector_field_basis,
             n_jobs=ncpus_use,
         )
-        embeds_magnitude = np.sqrt(
-            (vector_field_posterior_samples**2).sum(axis=-1).sum(axis=-1)
-        )
+        embeds_magnitude = np.sqrt((vector_field_posterior_samples**2).sum(axis=-1))
 
         mlflow.log_metric("FDR_sig_frac", round((fdri < 0.05).sum() / fdri.shape[0], 3))
         mlflow.log_metric("FDR_HMP", harmonic_mean(fdri))

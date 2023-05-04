@@ -600,6 +600,18 @@ stages:
       - ${reports.figure2.biomarker_phaseportrait_path}
       - ${reports.figure2.uncertainty_param_plot_path}
 
+  figure2_extras:
+    cmd: python fig2/figure_extras.py reports.model_summary.summarize=[pancreas_model2,pbmc68k_model2]
+    deps:
+      - fig2/figure_extras.py
+      - ${model_training.pancreas_model2.pyrovelocity_data_path}
+      - ${model_training.pbmc68k_model2.pyrovelocity_data_path}
+    params:
+      - config.yaml:
+          - reports.figure2
+    outs:
+      - ${reports.figure2_extras.shared_time_plot}
+
   figureS3:
     cmd: python figS3/figure.py
     deps:
@@ -639,6 +651,7 @@ stages:
         # persist: true
       - ${reports.model_summary.simulate_model1.vector_field_plot}.png
         # persist: true
+      - ${reports.model_summary.simulate_model1.shared_time_plot}
 
   summarize_simulate_model2:
     cmd: python summarize.py reports.model_summary.summarize=[simulate_model2]
@@ -662,6 +675,7 @@ stages:
         # persist: true
       - ${reports.model_summary.simulate_model2.vector_field_plot}.png
         # persist: true
+      - ${reports.model_summary.simulate_model2.shared_time_plot}
 
   summarize_pancreas_model1:
     cmd: python summarize.py reports.model_summary.summarize=[pancreas_model1]
@@ -685,6 +699,7 @@ stages:
         # persist: true
       - ${reports.model_summary.pancreas_model1.vector_field_plot}.png
         # persist: true
+      - ${reports.model_summary.pancreas_model1.shared_time_plot}
 
   summarize_pancreas_model2:
     cmd: python summarize.py reports.model_summary.summarize=[pancreas_model2]
@@ -708,6 +723,7 @@ stages:
         # persist: true
       - ${reports.model_summary.pancreas_model2.vector_field_plot}.png
         # persist: true
+      - ${reports.model_summary.pancreas_model2.shared_time_plot}
 
   summarize_pbmc68k_model1:
     cmd: python summarize.py reports.model_summary.summarize=[pbmc68k_model1]
@@ -731,6 +747,7 @@ stages:
         # persist: true
       - ${reports.model_summary.pbmc68k_model1.vector_field_plot}.png
         # persist: true
+      - ${reports.model_summary.pbmc68k_model1.shared_time_plot}
 
   summarize_pbmc68k_model2:
     cmd: python summarize.py reports.model_summary.summarize=[pbmc68k_model2]
@@ -754,6 +771,7 @@ stages:
         # persist: true
       - ${reports.model_summary.pbmc68k_model2.vector_field_plot}.png
         # persist: true
+      - ${reports.model_summary.pbmc68k_model2.shared_time_plot}
 
   summarize_pons_model1:
     cmd: python summarize.py reports.model_summary.summarize=[pons_model1]
@@ -777,6 +795,7 @@ stages:
         # persist: true
       - ${reports.model_summary.pons_model1.vector_field_plot}.png
         # persist: true
+      - ${reports.model_summary.pons_model1.shared_time_plot}
 
   summarize_pons_model2:
     cmd: python summarize.py reports.model_summary.summarize=[pons_model2]
@@ -800,3 +819,4 @@ stages:
         # persist: true
       - ${reports.model_summary.pons_model2.vector_field_plot}.png
         # persist: true
+      - ${reports.model_summary.pons_model2.shared_time_plot}
