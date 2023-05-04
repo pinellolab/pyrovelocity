@@ -259,7 +259,6 @@ stages:
       - ${data_external.pyrovelocity.pbmc10k.derived.rel_path}
         # persist: true
 
-
   train_simulate_model1:
     cmd: /usr/bin/time -v python train.py model_training.train=[simulate_model1]
     deps:
@@ -578,7 +577,6 @@ stages:
         # persist: true
       - ${model_training.pbmc10k_model2.pyrovelocity_data_path}
         # persist: true
-
 
   figure2:
     cmd: python fig2/figure.py
