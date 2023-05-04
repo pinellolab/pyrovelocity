@@ -91,7 +91,7 @@ def load_data(
         elif data == "larry":
             adata = load_larry()
         elif data in ["larry_mono", "larry_neu"]:
-            adata = load_unipotent_larry(data.split("-")[1])
+            adata = load_unipotent_larry(data.split("_")[1])
             adata = adata[adata.obs.state_info != "Centroid", :]
         elif data == "larry_multilineage":
             adata_mono = load_unipotent_larry("mono")
@@ -106,11 +106,14 @@ def load_data(
             adata.layers["raw_unspliced"] = adata_multilineage[
                 adata.obs_names, adata.var_names
             ].layers["unspliced"]
+        elif 'pbmc' in data:
+            adata = load_pbmc(data=data, force=True)
         else:
             adata = sc.read(data)
 
         print_anndata(adata)
-        copy_raw_counts(adata)
+        if 'raw_unspliced' not in adata.layers:
+            copy_raw_counts(adata)
         print_anndata(adata)
 
         if "pbmc68k" in processed_path:
@@ -148,20 +151,25 @@ def load_data(
 
 
 def load_pbmc(
-    data: str = None,
-    processed_path: str = "pbmc68k_perspectives_processed.h5ad",
+    data: str = 'pbmc68k', # pbmc68k or pbmc10k
+    processed_path: str = None,
+    use_sub: bool = False,
+    force: bool = False,
 ) -> anndata._core.anndata.AnnData:
+    if processed_path is None:
+        processed_path = f"{data}_perspectives_processed.h5ad" 
     if (
         os.path.isfile(processed_path)
         and os.access(processed_path, os.R_OK)
         and (not force)
     ):
-        adata = scv.sc.read(processed_path)
+        adata = sc.read(processed_path)
+    
     else:
-        if data is None:
+        if data == 'pbmc68k':
             adata = scv.datasets.pbmc68k()
-        elif os.path.isfile(data) and os.access(data, os.R_OK):
-            adata = scv.sc.read(data)
+        elif os.path.isfile(data) and os.access(data, os.R_OK): 
+            adata = sc.read(data)
 
         print_anndata(adata)
         copy_raw_counts(adata)
@@ -176,20 +184,24 @@ def load_pbmc(
 
         top_genes = adata.var["fit_likelihood"].sort_values(ascending=False).index
         print(top_genes[:10])
-        adata_sub = adata[:, top_genes[:3]].copy()
-        scv.tl.velocity_graph(adata_sub, n_jobs=-1)
-        scv.tl.velocity_embedding(adata_sub)
+        
+        if use_sub:
+            adata_sub = adata[:, top_genes[:3]].copy()
+            scv.tl.velocity_graph(adata_sub, n_jobs=-1)
+            scv.tl.velocity_embedding(adata_sub)
 
-        adata_sub.obs["u_lib_size_raw"] = np.array(
-            adata_sub.layers["raw_unspliced"].sum(axis=-1), dtype=np.float32
-        ).flatten()
-        adata_sub.obs["s_lib_size_raw"] = np.array(
-            adata_sub.layers["raw_spliced"].sum(axis=-1), dtype=np.float32
-        ).flatten()
-        print_anndata(adata_sub)
-        adata_sub.write(processed_path)
+            adata_sub.obs["u_lib_size_raw"] = np.array(
+                adata_sub.layers["raw_unspliced"].sum(axis=-1), dtype=np.float32
+            ).flatten()
+            adata_sub.obs["s_lib_size_raw"] = np.array(
+                adata_sub.layers["raw_spliced"].sum(axis=-1), dtype=np.float32
+            ).flatten()
+            print_anndata(adata_sub)
+            adata = adata_sub.copy()
+            
+        adata.write(processed_path)
 
-    return adata_sub
+    return adata 
 
 
 def load_larry(file_path: str = "data/larry.h5ad") -> anndata._core.anndata.AnnData:
@@ -224,3 +236,5 @@ def load_unipotent_larry(celltype: str = "mono") -> anndata._core.anndata.AnnDat
         url = "https://figshare.com/ndownloader/files/37028575"
     adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
     return adata
+
+

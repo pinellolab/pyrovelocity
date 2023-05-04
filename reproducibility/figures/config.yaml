@@ -80,7 +80,9 @@ data_external:
   pyrovelocity:
     download:
     - larry
-    process: []
+    - pbmc10k
+    process:
+    - pbmc10k
     sources:
       figshare_root_url: https://ndownloader.figshare.com/files
     larry:
@@ -123,6 +125,16 @@ data_external:
         process_method: load_data
         process_args: {}
         rel_path: data/processed/larry_multilineage_processed.h5ad
+    pbmc10k:
+      data_file: pbmc10k.h5ad
+      dl_root: data/external
+      dl_path: data/external/pbmc10k.h5ad
+      rel_path: data/external/pbmc10k.h5ad
+      url: https://ndownloader.figshare.com/files/pbmc10k
+      derived:
+        process_method: load_data
+        process_args: {}
+        rel_path: data/processed/pbmc10k_processed.h5ad
 model_training:
   train:
   - simulate_model1
@@ -137,6 +149,7 @@ model_training:
   - larry_mono_model2
   - larry_neu_model2
   - larry_multilineage_model2
+  - pbmc10k_model2
   simulate_model1:
     path: models/medium_model1
     model_path: models/medium_model1/model
@@ -557,6 +570,41 @@ model_training:
       cell_specific_kinetics: null
       kinetics_num: 2
       loss_plot_path: models/larry_multilineage_model2/loss_plot.png
+  pbmc10k_model2:
+    path: models/pbmc10k_model2
+    model_path: models/pbmc10k_model2/model
+    input_data_path: data/processed/pbmc10k_processed.h5ad
+    trained_data_path: models/pbmc10k_model2/trained.h5ad
+    pyrovelocity_data_path: models/pbmc10k_model2/pyrovelocity.pkl
+    metrics_path: models/pbmc10k_model2/metrics.json
+    run_info_path: models/pbmc10k_model2/run_info.json
+    vector_field_parameters:
+      basis: tsne
+    training_parameters:
+      _target_: pyrovelocity.api.train_model
+      _partial_: true
+      guide_type: auto
+      model_type: auto
+      svi_train: false
+      batch_size: -1
+      train_size: 1.0
+      use_gpu: 0
+      likelihood: Poisson
+      num_samples: 30
+      log_every: 100
+      cell_state: leiden
+      patient_improve: 0.0001
+      patient_init: 45
+      seed: 99
+      lr: 0.01
+      max_epochs: 2000
+      include_prior: true
+      library_size: true
+      offset: true
+      input_type: raw
+      cell_specific_kinetics: null
+      kinetics_num: 2
+      loss_plot_path: models/pbmc10k_model2/loss_plot.png
 reports:
   model_summary:
     summarize:
@@ -568,6 +616,7 @@ reports:
     - pbmc68k_model2
     - pons_model1
     - pons_model2
+    - pbmc10k_model2
     simulate_model1:
       path: reports/medium_model1
       dataframe_path: data/processed/medium_model1_dataframe.pkl.zst
@@ -648,6 +697,16 @@ reports:
       vector_field_plot: reports/pons_model2/vector_field.pdf
       biomarker_selection_plot: reports/pons_model2/markers_selection_scatterplot.tif
       biomarker_phaseportrait_plot: reports/pons_model2/markers_phaseportrait.pdf
+    pbmc10k_model2:
+      path: reports/pbmc10k_model2
+      dataframe_path: data/processed/pbmc10k_model2_dataframe.pkl.zst
+      shared_time_plot: reports/pbmc10k_model2/shared_time.pdf
+      volcano_plot: reports/pbmc10k_model2/volcano.pdf
+      rainbow_plot: reports/pbmc10k_model2/rainbow.pdf
+      uncertainty_param_plot: reports/pbmc10k_model2/param_uncertainties.pdf
+      vector_field_plot: reports/pbmc10k_model2/vector_field.pdf
+      biomarker_selection_plot: reports/pbmc10k_model2/markers_selection_scatterplot.tif
+      biomarker_phaseportrait_plot: reports/pbmc10k_model2/markers_phaseportrait.pdf
   figure2:
     tag: fig2
     path: reports/fig2

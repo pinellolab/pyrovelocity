@@ -246,6 +246,20 @@ stages:
       - ${data_external.pyrovelocity.larry_multilineage.derived.rel_path}
         #          persist: true
 
+  preprocess_pbmc10k:
+    cmd: python preprocess.py data_external.sources=[pyrovelocity] data_external.scvelo.process=[pyrovelocity]
+    deps:
+      - preprocess.py
+      - ${data_external.pyrovelocity.pbmc10k.rel_path}
+    params:
+      - config.yaml:
+          - base
+          - data_external.pyrovelocity.pbmc10k
+    outs:
+      - ${data_external.pyrovelocity.pbmc10k.derived.rel_path}
+        # persist: true
+
+
   train_simulate_model1:
     cmd: /usr/bin/time -v python train.py model_training.train=[simulate_model1]
     deps:
@@ -541,6 +555,30 @@ stages:
         # persist: true
       - ${model_training.larry_multilineage_model2.pyrovelocity_data_path}
         # persist: true
+
+  train_pbmc10k_model2:
+    cmd: /usr/bin/time -v python train.py model_training.train=[pbmc10k_model2]
+    deps:
+      - train.py
+      - ${model_training.pbmc10k_model2.input_data_path}
+    params:
+      - config.yaml:
+          - model_training.pbmc10k_model2
+    metrics:
+      - ${model_training.pbmc10k_model2.metrics_path}:
+          cache: false
+    outs:
+      - ${model_training.pbmc10k_model2.run_info_path}:
+          cache: false
+      - ${model_training.pbmc10k_model2.training_parameters.loss_plot_path}
+        # persist: true
+      - ${model_training.pbmc10k_model2.trained_data_path}
+        # persist: true
+      - ${model_training.pbmc10k_model2.model_path}
+        # persist: true
+      - ${model_training.pbmc10k_model2.pyrovelocity_data_path}
+        # persist: true
+
 
   figure2:
     cmd: python fig2/figure.py
