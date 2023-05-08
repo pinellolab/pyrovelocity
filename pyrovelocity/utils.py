@@ -842,13 +842,13 @@ def generate_sample_data(
 def anndata_counts_to_df(adata):
     spliced_df = pd.DataFrame(
         ensure_numpy_array(adata.layers["raw_spliced"]),
-        index=adata.obs_names,
-        columns=adata.var_names,
+        index=list(adata.obs_names),
+        columns=list(adata.var_names),
     )
     unspliced_df = pd.DataFrame(
         ensure_numpy_array(adata.layers["raw_unspliced"]),
-        index=adata.obs_names,
-        columns=adata.var_names,
+        index=list(adata.obs_names),
+        columns=list(adata.var_names),
     )
 
     spliced_melted = spliced_df.reset_index().melt(
