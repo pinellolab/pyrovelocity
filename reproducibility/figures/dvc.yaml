@@ -819,7 +819,6 @@ stages:
         # persist: true
       - ${reports.model_summary.pons_model2.shared_time_plot}
 
-
   summarize_pbmc10k_model2:
     cmd: python summarize.py reports.model_summary.summarize=[pbmc10k_model2]
     deps:
