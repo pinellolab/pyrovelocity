@@ -818,3 +818,27 @@ stages:
       - ${reports.model_summary.pons_model2.vector_field_plot}.png
         # persist: true
       - ${reports.model_summary.pons_model2.shared_time_plot}
+
+  summarize_pbmc10k_model2:
+    cmd: python summarize.py reports.model_summary.summarize=[pbmc10k_model2]
+    deps:
+      - summarize.py
+      - ${model_training.pbmc10k_model2.trained_data_path}
+      - ${model_training.pbmc10k_model2.pyrovelocity_data_path}
+    params:
+      - config.yaml:
+          - model_training.pbmc10k_model2
+          - reports.model_summary.pbmc10k_model2
+    outs:
+      - ${reports.model_summary.pbmc10k_model2.dataframe_path}
+      - ${reports.model_summary.pbmc10k_model2.volcano_plot}
+        # persist: true
+      - ${reports.model_summary.pbmc10k_model2.rainbow_plot}
+        # persist: true
+      - ${reports.model_summary.pbmc10k_model2.vector_field_plot}
+        # persist: true
+      - ${reports.model_summary.pbmc10k_model2.rainbow_plot}.png
+        # persist: true
+      - ${reports.model_summary.pbmc10k_model2.vector_field_plot}.png
+        # persist: true
+      - ${reports.model_summary.pbmc10k_model2.shared_time_plot}
