@@ -2075,8 +2075,8 @@ stages:
     cmd: python fig2/figure_extras.py reports.model_summary.summarize=[pancreas_model2,pbmc68k_model2]
     deps:
     - path: fig2/figure_extras.py
-      md5: 25ad6282b2e318fbe29d5babbe3aaf1d
-      size: 5817
+      md5: e40ad67e697be6dddb77c73719844a38
+      size: 6017
     - path: models/pancreas_model2/pyrovelocity.pkl
       md5: 1eeaa0c042af52c18af112c6c33893c3
       size: 65873440
@@ -2101,7 +2101,7 @@ stages:
             vector_field_plot: reports/fig2/fig2_pancreas_vector_field.pdf
     outs:
     - path: reports/fig2/fig2_pancreas_pbmc_uncertainties_comparison.pdf
-      md5: f1118c261194af09de9871a696bd097f
+      md5: 8f99726bf73777508059c78bc1ef0bf1
       size: 132845
   summarize_pbmc10k_model2:
     cmd: python summarize.py reports.model_summary.summarize=[pbmc10k_model2]
@@ -2184,3 +2184,27 @@ stages:
     - path: reports/pbmc10k_model2/volcano.pdf
       md5: fd08d4f8cbb3715cdbbae4984f9c544a
       size: 21847
+  data_download_pbmc10k:
+    cmd: echo "Reference pbmc10k"
+    deps:
+    - path: data_download.py
+      md5: 30f38cc794cbf4caad2675ffd88c2467
+      size: 3305
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+        data_external.pyrovelocity.pbmc10k:
+          data_file: pbmc10k.h5ad
+          dl_root: data/external
+          dl_path: data/external/pbmc10k.h5ad
+          rel_path: data/external/pbmc10k.h5ad
+          url: https://ndownloader.figshare.com/files/pbmc10k
+          derived:
+            process_method: load_data
+            process_args: {}
+            rel_path: data/processed/pbmc10k_processed.h5ad
+    outs:
+    - path: data/external/pbmc10k.h5ad
+      md5: 3b64b4cd122454610957f5c6086e2eac
+      size: 592149007

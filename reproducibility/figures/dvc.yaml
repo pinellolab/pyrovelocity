@@ -78,6 +78,18 @@ stages:
       - ${data_external.scvelo.pbmc68k.rel_path}:
           persist: true
 
+  data_download_pbmc10k:
+    cmd: echo "Reference pbmc10k"
+    deps:
+      - data_download.py
+    params:
+      - config.yaml:
+          - base
+          - data_external.pyrovelocity.pbmc10k
+    outs:
+      - ${data_external.pyrovelocity.pbmc10k.rel_path}:
+          persist: true
+
   data_download_larry:
     cmd: python data_download.py data_external.sources=[pyrovelocity] data_external.pyrovelocity.download=[larry]
     deps:
