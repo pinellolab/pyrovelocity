@@ -133,6 +133,8 @@ def plots(conf: DictConfig, logger: Logger) -> None:
                 max_unspliced,
             ),
         )
+        print(posterior_samples.keys())
+        print(posterior_samples["original_spaces_embeds_magnitude"].shape)
 
         ##################
         # generate figures
