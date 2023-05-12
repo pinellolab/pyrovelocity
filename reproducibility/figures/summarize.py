@@ -134,7 +134,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             ),
         )
         print(posterior_samples.keys())
-        print(posterior_samples['original_spaces_embeds_magnitude'].shape)
+        print(posterior_samples["original_spaces_embeds_magnitude"].shape)
 
         ##################
         # generate figures

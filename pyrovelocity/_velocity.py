@@ -386,7 +386,9 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             posterior_samples["beta"] * posterior_samples["ut"] / scale
             - posterior_samples["gamma"] * posterior_samples["st"]
         )
-        original_spaces_embeds_magnitude = np.sqrt((original_spaces_velocity_samples**2).sum(axis=-1))
+        original_spaces_embeds_magnitude = np.sqrt(
+            (original_spaces_velocity_samples**2).sum(axis=-1)
+        )
 
         vector_field_posterior_samples, embeds_radian, fdri = vector_field_uncertainty(
             adata,
@@ -417,7 +419,9 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             .sort_values("time_correlation", ascending=False)
         )
         posterior_samples["gene_ranking"] = gene_ranking
-        posterior_samples["original_spaces_embeds_magnitude"] = original_spaces_embeds_magnitude
+        posterior_samples[
+            "original_spaces_embeds_magnitude"
+        ] = original_spaces_embeds_magnitude
         posterior_samples["genes"] = genes
         posterior_samples[
             "vector_field_posterior_samples"
@@ -431,21 +435,21 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         posterior_samples["ut_mean"] = posterior_samples["ut"].mean(0).squeeze()
         posterior_samples["st_mean"] = posterior_samples["st"].mean(0).squeeze()
 
-        pca_vector_field_posterior_samples, pca_embeds_radian, pca_fdri = vector_field_uncertainty(
+        (
+            pca_vector_field_posterior_samples,
+            pca_embeds_radian,
+            pca_fdri,
+        ) = vector_field_uncertainty(
             adata,
             posterior_samples,
-            basis='pca',
+            basis="pca",
             n_jobs=ncpus_use,
         )
         posterior_samples[
             "pca_vector_field_posterior_samples"
         ] = pca_vector_field_posterior_samples
-        posterior_samples[
-            "pca_embeds_angle"
-        ] = pca_embeds_radian
-        posterior_samples[
-            "pca_fdri"
-        ] = pca_fdri
+        posterior_samples["pca_embeds_angle"] = pca_embeds_radian
+        posterior_samples["pca_fdri"] = pca_fdri
 
         del posterior_samples["u"]
         del posterior_samples["s"]

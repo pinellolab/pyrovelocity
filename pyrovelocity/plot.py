@@ -2,10 +2,6 @@ from typing import Dict
 from typing import List
 from typing import Tuple
 
-import sklearn
-import umap
-from astropy.stats import rayleightest
-from sklearn.pipeline import Pipeline
 import matplotlib
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
@@ -14,13 +10,17 @@ import pandas as pd
 import pyro
 import scvelo as scv
 import seaborn as sns
+import sklearn
 import torch
+import umap
 from anndata import AnnData
+from astropy.stats import rayleightest
 from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 from scipy.stats import spearmanr
+from sklearn.pipeline import Pipeline
 
 from pyrovelocity.cytotrace import compute_similarity2
 from pyrovelocity.utils import ensure_numpy_array
@@ -734,9 +734,10 @@ def vector_field_uncertainty(
         adata.layers["spliced_pyro"] = posterior_samples["st"][sample]
         adata.layers["velocity_pyro"] = velocity_samples[sample]
 
-        if basis == 'pca':
-            scv.tl.velocity_embedding(adata, vkey="velocity_pyro", basis='pca', 
-                                      direct_pca_projection=True)
+        if basis == "pca":
+            scv.tl.velocity_embedding(
+                adata, vkey="velocity_pyro", basis="pca", direct_pca_projection=True
+            )
         else:
             scv.tl.velocity_graph(
                 adata, vkey="velocity_pyro", xkey="spliced_pyro", n_jobs=n_jobs
