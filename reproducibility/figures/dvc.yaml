@@ -904,7 +904,6 @@ stages:
         # persist: true
       - ${reports.model_summary.pbmc10k_model2.shared_time_plot}
 
-
   summarize_larry_tips_model2:
     cmd: python summarize.py reports.model_summary.summarize=[larry_tips_model2]
     deps:
@@ -928,4 +927,3 @@ stages:
       - ${reports.model_summary.larry_tips_model2.vector_field_plot}.png
         # persist: true
       - ${reports.model_summary.larry_tips_model2.shared_time_plot}
-

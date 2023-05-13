@@ -73,7 +73,12 @@ def load_data(
     """
     if processed_path is None:
         processed_path = f"{data}_processed.h5ad"
-    print(processed_path, os.path.isfile(processed_path), os.access(processed_path, os.R_OK), (not force))
+    print(
+        processed_path,
+        os.path.isfile(processed_path),
+        os.access(processed_path, os.R_OK),
+        (not force),
+    )
     if (
         os.path.isfile(processed_path)
         and os.access(processed_path, os.R_OK)
@@ -81,7 +86,7 @@ def load_data(
     ):
         adata = sc.read(processed_path)
     else:
-        print('Dataset name:', data)
+        print("Dataset name:", data)
         if data == "pancreas":
             adata = scv.datasets.pancreas()
         elif data == "forebrain":
@@ -91,22 +96,26 @@ def load_data(
         elif data == "dentategyrus":
             adata = scv.datasets.dentategyrus()
         elif "larry" in data:
-            data = data.split('/')[-1].split('.')[0]
-            print('Larry dataset name:', data)
+            data = data.split("/")[-1].split(".")[0]
+            print("Larry dataset name:", data)
             if data == "larry":
                 adata = load_larry()
             elif data == "larry_tips":
                 adata = load_larry()
-                adata = adata[adata.obs['time_info'] == 6.0]
-                adata = adata[adata.obs['state_info'] != 'Undifferentiated']
+                adata = adata[adata.obs["time_info"] == 6.0]
+                adata = adata[adata.obs["state_info"] != "Undifferentiated"]
             elif data in ["larry_mono", "larry_neu"]:
                 adata = load_unipotent_larry(data.split("_")[1])
                 adata = adata[adata.obs.state_info != "Centroid", :]
             elif data == "larry_multilineage":
                 adata_mono = load_unipotent_larry("mono")
-                adata_mono_C = adata_mono[adata_mono.obs.state_info != "Centroid", :].copy()
+                adata_mono_C = adata_mono[
+                    adata_mono.obs.state_info != "Centroid", :
+                ].copy()
                 adata_neu = load_unipotent_larry("neu")
-                adata_neu_C = adata_neu[adata_neu.obs.state_info != "Centroid", :].copy()
+                adata_neu_C = adata_neu[
+                    adata_neu.obs.state_info != "Centroid", :
+                ].copy()
                 adata_multilineage = adata_mono.concatenate(adata_neu)
                 adata = adata_mono_C.concatenate(adata_neu_C)
                 adata.layers["raw_spliced"] = adata_multilineage[
@@ -117,7 +126,7 @@ def load_data(
                 ].layers["unspliced"]
         elif "pbmc68k" in data:
             adata = load_pbmc68k()
-        else: # pbmc10k
+        else:  # pbmc10k
             adata = sc.read(data)
 
         print_anndata(adata)
@@ -133,13 +142,13 @@ def load_data(
             scv.pp.filter_and_normalize(
                 adata, min_shared_counts=min_shared_counts, n_top_genes=top_n
             )
-            scv.pp.moments(adata, n_pcs=30, n_neighbors=30) 
+            scv.pp.moments(adata, n_pcs=30, n_neighbors=30)
             scv.tl.recover_dynamics(adata, n_jobs=-1, use_raw=False)
-            scv.tl.velocity(adata, mode="dynamical", use_raw=False) 
+            scv.tl.velocity(adata, mode="dynamical", use_raw=False)
         if ("X_umap" not in adata.obsm.keys()) or (data == "larry_tips"):
             scv.tl.umap(adata)
         if "leiden" not in adata.obs.keys():
-            sc.tl.leiden(adata)        
+            sc.tl.leiden(adata)
         if use_sub:
             top_genes = adata.var["fit_likelihood"].sort_values(ascending=False).index
             print(top_genes[:10])
@@ -166,11 +175,11 @@ def load_pbmc68k(
         adata = scv.datasets.pbmc68k()
     elif os.path.isfile(data) and os.access(data, os.R_OK):
         adata = sc.read(data)
-        
+
     print_anndata(adata)
     if "raw_unspliced" not in adata.layers:
         copy_raw_counts(adata)
-        print_anndata(adata)        
+        print_anndata(adata)
     print("Removing duplicate cells and tSNE x-parity in pbmc68k data...")
     scv.pp.remove_duplicate_cells(adata)
     adata.obsm["X_tsne"][:, 0] *= -1
@@ -182,7 +191,9 @@ def load_pbmc68k(
     return adata
 
 
-def load_larry(file_path: str = "data/external/larry.h5ad") -> anndata._core.anndata.AnnData:
+def load_larry(
+    file_path: str = "data/external/larry.h5ad",
+) -> anndata._core.anndata.AnnData:
     """In vitro Hemotopoiesis Larry datasets
 
     Data from `CALEB WEINREB et al. (2020) <DOI: 10.1126/science.aaw3381>'
