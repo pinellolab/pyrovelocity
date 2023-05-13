@@ -13,7 +13,10 @@ on:
 
 env:
   REGISTRY: ghcr.io
+  GAR_REGISTRY: us-central1-docker.pkg.dev
+  GAR_REPOSITORY: pyrovelocity
   IMAGE_NAME: ${{ github.repository }}
+  CONDA_IMAGE_NAME: pyrovelocityconda
 
 jobs:
   build-and-push-image:
@@ -60,6 +63,55 @@ jobs:
         with:
           context: .
           file: ./dockerfiles/Dockerfile
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  build-and-push-conda-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Log in to GitHub container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to Google Artifact Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.GAR_REGISTRY }}
+          username: _json_key
+          password: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}
+      - name: Extract github metadata for docker labels
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.CONDA_IMAGE_NAME }}
+            ${{ env.GAR_REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/${{ env.CONDA_IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=,format=long
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./dockerfiles/Dockerfile.conda
           platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
