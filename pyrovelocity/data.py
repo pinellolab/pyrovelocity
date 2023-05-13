@@ -124,7 +124,7 @@ def load_data(
                 adata.layers["raw_unspliced"] = adata_multilineage[
                     adata.obs_names, adata.var_names
                 ].layers["unspliced"]
-        elif "pbmc68k" in data: 
+        elif "pbmc68k" in data:
             adata = load_pbmc68k(data)
         else:  # pbmc10k
             adata = sc.read(data)
