@@ -2,6 +2,8 @@
 FROM condaforge/mambaforge:23.1.0-1
 LABEL maintainer="pyrovelocity team"
 
+ARG CONDA_OVERRIDE_CUDA=11.8
+
 WORKDIR /pyrovelocity
 COPY . .
 
