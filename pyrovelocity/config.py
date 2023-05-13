@@ -180,6 +180,15 @@ def hydra_zen_configure():
                     process_method="load_data",
                     process_args=dict(),
                 ),
+                larry_tips=create_dataset_config(
+                    "larry_tips",
+                    dl_root="${data_external.root_path}",
+                    data_file="larry_tips.h5ad",
+                    rel_path="${data_external.root_path}/larry_tips.h5ad",
+                    url="${data_external.pyrovelocity.sources.figshare_root_url}/37028569",
+                    process_method="load_data",
+                    process_args=dict(),
+                ),
                 larry_mono=create_dataset_config(
                     "larry_mono",
                     dl_root="${data_external.root_path}",
@@ -229,6 +238,7 @@ def hydra_zen_configure():
                 "pons_model1",
                 "pons_model2",
                 "larry_model2",
+                "larry_tips_model2",
                 "larry_mono_model2",
                 "larry_neu_model2",
                 "larry_multilineage_model2",
@@ -315,6 +325,17 @@ def hydra_zen_configure():
                 offset=True,
                 max_epochs=1000,
             ),
+            larry_tips_model2=create_model_config(
+                "pyrovelocity",
+                "larry_tips",
+                2,
+                "umap",
+                svi_train=True,
+                batch_size=4000,
+                cell_state="state_info",
+                offset=True,
+                max_epochs=1000,
+            ),
             larry_mono_model2=create_model_config(
                 "pyrovelocity",
                 "larry_mono",
@@ -370,6 +391,7 @@ def hydra_zen_configure():
                     "pons_model1",
                     "pons_model2",
                     "pbmc10k_model2",
+                    "larry_tips_model2",
                 ],
                 simulate_model1=create_reports_config("medium", 1),
                 simulate_model2=create_reports_config("medium", 2),
@@ -380,6 +402,7 @@ def hydra_zen_configure():
                 pons_model1=create_reports_config("pons", 1),
                 pons_model2=create_reports_config("pons", 2),
                 pbmc10k_model2=create_reports_config("pbmc10k", 2),
+                larry_tips_model2=create_reports_config("larry_tips", 2)
             ),
             figure2=dict(
                 tag="fig2",
@@ -397,6 +420,11 @@ def hydra_zen_configure():
                     vector_field_plot="${..path}/${..tag}_pancreas_vector_field.pdf",
                 ),
             ),
+            figure2_extras=dict(
+                tag="fig2",
+                path="${paths.reports}/${.tag}",
+                shared_time_plot="${.path}/figure2_extras.pdf",
+            ),            
             figureS3=dict(
                 tag="figS3",
                 path="${paths.reports}/${.tag}",

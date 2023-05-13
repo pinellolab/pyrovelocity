@@ -54,8 +54,8 @@ def train(conf: DictConfig, logger: Logger) -> None:
         metrics_path = data_model_conf.metrics_path
         run_info_path = data_model_conf.run_info_path
 
-        ncpus_use = min(30, max(1, round(multiprocessing.cpu_count() * 0.8)))
-
+        ncpus_use = min(16, max(1, round(multiprocessing.cpu_count() * 0.8)))
+        print('ncpus_use:', ncpus_use)
         logger.info(
             f"\n\nVerifying existence of paths for:\n\n"
             f"  model data: {data_model_conf.path}\n"

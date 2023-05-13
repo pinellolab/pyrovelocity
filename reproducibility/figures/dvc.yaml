@@ -102,6 +102,18 @@ stages:
       - ${data_external.pyrovelocity.larry.rel_path}:
           persist: true
 
+  data_download_larry_tips:
+    cmd: python data_download.py data_external.sources=[pyrovelocity] data_external.pyrovelocity.download=[larry_tips]
+    deps:
+      - data_download.py
+    params:
+      - config.yaml:
+          - base
+          - data_external.pyrovelocity.larry_tips
+    outs:
+      - ${data_external.pyrovelocity.larry_tips.rel_path}:
+          persist: true
+
   data_download_larry_mono:
     cmd: python data_download.py data_external.sources=[pyrovelocity] data_external.pyrovelocity.download=[larry_mono]
     deps:
@@ -216,6 +228,19 @@ stages:
           - data_external.pyrovelocity.larry
     outs:
       - ${data_external.pyrovelocity.larry.derived.rel_path}
+        #          persist: true
+
+  preprocess_larry_tips:
+    cmd: python preprocess.py data_external.sources=[pyrovelocity] data_external.pyrovelocity.process=[larry_tips]
+    deps:
+      - preprocess.py
+      - ${data_external.pyrovelocity.larry_tips.rel_path}
+    params:
+      - config.yaml:
+          - base
+          - data_external.pyrovelocity.larry_tips
+    outs:
+      - ${data_external.pyrovelocity.larry_tips.derived.rel_path}
         #          persist: true
 
   preprocess_larry_mono:
@@ -498,6 +523,29 @@ stages:
       - ${model_training.larry_model2.pyrovelocity_data_path}
         # persist: true
 
+  train_larry_tips_model2:
+    cmd: /usr/bin/time -v python train.py model_training.train=[larry_tips_model2]
+    deps:
+      - train.py
+      - ${model_training.larry_tips_model2.input_data_path}
+    params:
+      - config.yaml:
+          - model_training.larry_tips_model2
+    metrics:
+      - ${model_training.larry_tips_model2.metrics_path}:
+          cache: false
+    outs:
+      - ${model_training.larry_tips_model2.run_info_path}:
+          cache: false
+      - ${model_training.larry_tips_model2.training_parameters.loss_plot_path}
+        # persist: true
+      - ${model_training.larry_tips_model2.trained_data_path}
+        # persist: true
+      - ${model_training.larry_tips_model2.model_path}
+        # persist: true
+      - ${model_training.larry_tips_model2.pyrovelocity_data_path}
+        # persist: true
+
   train_larry_mono_model2:
     cmd: /usr/bin/time -v python train.py model_training.train=[larry_mono_model2]
     deps:
@@ -611,10 +659,11 @@ stages:
       - ${reports.figure2.uncertainty_param_plot_path}
 
   figure2_extras:
-    cmd: python fig2/figure_extras.py reports.model_summary.summarize=[pancreas_model2,pbmc68k_model2]
+    cmd: python fig2/figure_extras.py reports.model_summary.summarize=[pbmc10k_model2,larry_tips_model2,pbmc68k_model2]
     deps:
       - fig2/figure_extras.py
-      - ${model_training.pancreas_model2.pyrovelocity_data_path}
+      - ${model_training.pbmc10k_model2.pyrovelocity_data_path}
+      - ${model_training.larry_tips_model2.pyrovelocity_data_path}
       - ${model_training.pbmc68k_model2.pyrovelocity_data_path}
     params:
       - config.yaml:
@@ -854,3 +903,29 @@ stages:
       - ${reports.model_summary.pbmc10k_model2.vector_field_plot}.png
         # persist: true
       - ${reports.model_summary.pbmc10k_model2.shared_time_plot}
+
+
+  summarize_larry_tips_model2:
+    cmd: python summarize.py reports.model_summary.summarize=[larry_tips_model2]
+    deps:
+      - summarize.py
+      - ${model_training.larry_tips_model2.trained_data_path}
+      - ${model_training.larry_tips_model2.pyrovelocity_data_path}
+    params:
+      - config.yaml:
+          - model_training.larry_tips_model2
+          - reports.model_summary.larry_tips_model2
+    outs:
+      - ${reports.model_summary.larry_tips_model2.dataframe_path}
+      - ${reports.model_summary.larry_tips_model2.volcano_plot}
+        # persist: true
+      - ${reports.model_summary.larry_tips_model2.rainbow_plot}
+        # persist: true
+      - ${reports.model_summary.larry_tips_model2.vector_field_plot}
+        # persist: true
+      - ${reports.model_summary.larry_tips_model2.rainbow_plot}.png
+        # persist: true
+      - ${reports.model_summary.larry_tips_model2.vector_field_plot}.png
+        # persist: true
+      - ${reports.model_summary.larry_tips_model2.shared_time_plot}
+

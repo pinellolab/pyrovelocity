@@ -102,7 +102,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     shared_time_plot = conf.reports.figure2_extras.shared_time_plot
     fig, ax = plt.subplots(1, 3)
     fig.set_size_inches(15.6, 3.5)
-    order = ("pancreas_model2", "pbmc68k_model2")
+    order = ("pbmc10k_model2", "larry_tips_model2", "pbmc68k_model2")
     sns.boxplot(
         x="dataset",
         y="time_coefficient_of_variation",
@@ -124,7 +124,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         ax=ax[2],
         order=order,
     )
-    pairs = [("pancreas_model2", "pbmc68k_model2")]
+    pairs = [("pbmc10k_model2", "larry_tips_model2")]
     time_annotator = Annotator(
         ax[0],
         pairs,
