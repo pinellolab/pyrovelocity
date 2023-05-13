@@ -3,10 +3,11 @@ FROM condaforge/mambaforge:23.1.0-1
 LABEL maintainer="pyrovelocity team"
 
 ARG CONDA_OVERRIDE_CUDA=11.8
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV LD_LIBRARY_PATH=/usr/local/nvidia/lib64
 
 WORKDIR /pyrovelocity
 COPY . .
 
-RUN mamba init
-RUN mamba env update -n base -f conda/environment-gpu.yml
-RUN pip install --no-deps -e .
+RUN mamba env update -n base -f conda/environment-gpu.yml && \
+    pip install --no-deps -e .
