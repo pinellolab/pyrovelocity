@@ -10,13 +10,17 @@ import pandas as pd
 import pyro
 import scvelo as scv
 import seaborn as sns
+import sklearn
 import torch
+import umap
 from anndata import AnnData
+from astropy.stats import rayleightest
 from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 from scipy.stats import spearmanr
+from sklearn.pipeline import Pipeline
 
 from pyrovelocity.cytotrace import compute_similarity2
 from pyrovelocity.utils import ensure_numpy_array
@@ -679,11 +683,6 @@ def vector_field_uncertainty(
     denoised: bool = False,
 ) -> Tuple[ndarray, ndarray, ndarray]:
     """Run cosine similarity-based vector field across posterior samples"""
-    import numpy as np
-    import sklearn
-    import umap
-    from astropy.stats import rayleightest
-    from sklearn.pipeline import Pipeline
 
     # fig, ax = plt.subplots(10, 3)
     # fig.set_size_inches(16, 36)
@@ -729,14 +728,21 @@ def vector_field_uncertainty(
     ##scv.pp.neighbors(adata, use_rep=basis)
 
     assert len(posterior_samples["st"].shape) == 3
+    scv.pp.pca(adata)
+    adata.var["velocity_genes"] = True
     for sample in range(posterior_samples["st"].shape[0]):
         adata.layers["spliced_pyro"] = posterior_samples["st"][sample]
         adata.layers["velocity_pyro"] = velocity_samples[sample]
-        adata.var["velocity_genes"] = True
-        scv.tl.velocity_graph(
-            adata, vkey="velocity_pyro", xkey="spliced_pyro", n_jobs=n_jobs
-        )
-        scv.tl.velocity_embedding(adata, vkey="velocity_pyro", basis=basis)
+
+        if basis == "pca":
+            scv.tl.velocity_embedding(
+                adata, vkey="velocity_pyro", basis="pca", direct_pca_projection=True
+            )
+        else:
+            scv.tl.velocity_graph(
+                adata, vkey="velocity_pyro", xkey="spliced_pyro", n_jobs=n_jobs
+            )
+            scv.tl.velocity_embedding(adata, vkey="velocity_pyro", basis=basis)
         v_map_all.append(adata.obsm[f"velocity_pyro_{basis}"])
     v_map_all = np.stack(v_map_all)
     embeds_radian = np.arctan2(v_map_all[:, :, 1], v_map_all[:, :, 0])
