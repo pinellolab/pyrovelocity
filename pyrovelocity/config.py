@@ -402,7 +402,7 @@ def hydra_zen_configure():
                 pons_model1=create_reports_config("pons", 1),
                 pons_model2=create_reports_config("pons", 2),
                 pbmc10k_model2=create_reports_config("pbmc10k", 2),
-                larry_tips_model2=create_reports_config("larry_tips", 2)
+                larry_tips_model2=create_reports_config("larry_tips", 2),
             ),
             figure2=dict(
                 tag="fig2",
@@ -424,7 +424,7 @@ def hydra_zen_configure():
                 tag="fig2",
                 path="${paths.reports}/${.tag}",
                 shared_time_plot="${.path}/figure2_extras.pdf",
-            ),            
+            ),
             figureS3=dict(
                 tag="figS3",
                 path="${paths.reports}/${.tag}",
