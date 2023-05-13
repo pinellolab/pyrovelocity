@@ -51,8 +51,8 @@ stages:
             rel_path: data/processed/pancreas_processed.h5ad
     outs:
     - path: data/processed/pancreas_processed.h5ad
-      md5: 09cd1685ebf6d96d69c500fec653a337
-      size: 424784368
+      md5: 14f5abed25caaaaf7be172657b809b96
+      size: 424775272
   train_pancreas_model1:
     cmd: /usr/bin/time -v python train.py model_training.train=[pancreas_model1]
     deps:
@@ -590,8 +590,8 @@ stages:
             rel_path: data/processed/pons_processed.h5ad
     outs:
     - path: data/processed/pons_processed.h5ad
-      md5: b34bfedb75377eba646a9bb5b53f5099
-      size: 740872455
+      md5: 5175aab14f09c1a4b50ebbdd631ef083
+      size: 740860850
   train_pons_model1:
     cmd: /usr/bin/time -v python train.py model_training.train=[pons_model1]
     deps:
@@ -1259,7 +1259,7 @@ stages:
             rel_path: data/processed/simulated_medium_processed.h5ad
     outs:
     - path: data/processed/simulated_medium_processed.h5ad
-      md5: 63c9bcb761899f90b7430c13f20985aa
+      md5: a3b043f214bc630880e0882c802ee2f6
       size: 257351792
   train_simulate_model2:
     cmd: /usr/bin/time -v python train.py model_training.train=[simulate_model2]
@@ -1580,7 +1580,7 @@ stages:
             rel_path: data/processed/larry_processed.h5ad
     outs:
     - path: data/processed/larry_processed.h5ad
-      md5: aaccdd2ed8713ce1e1b1aa078993a75c
+      md5: b560530dc084582b04c57cba7bcb07e7
       size: 5361832686
   train_larry_model2:
     cmd: /usr/bin/time -v python train.py model_training.train=[larry_model2]
