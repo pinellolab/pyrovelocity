@@ -1,0 +1,12 @@
+{
+    "artifact_uri": "file:///home/jupyter/pyrovelocity/reproducibility/figures/mlruns/0/3c041eee46a04740b210757fe706339b/artifacts",
+    "end_time": 1683963759869,
+    "experiment_id": "0",
+    "lifecycle_stage": "active",
+    "run_id": "3c041eee46a04740b210757fe706339b",
+    "run_name": "larry_tips_model2-3c041ee",
+    "run_uuid": "3c041eee46a04740b210757fe706339b",
+    "start_time": 1683947445616,
+    "status": "FINISHED",
+    "user_id": "jupyter"
+}
