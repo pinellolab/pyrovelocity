@@ -16,7 +16,7 @@ env:
   GAR_REGISTRY: us-central1-docker.pkg.dev
   GAR_REPOSITORY: pyrovelocity
   IMAGE_NAME: ${{ github.repository }}
-  CONDA_IMAGE_NAME: pyrovelocityconda
+  CONDA_IMAGE_NAME: pyrovelocitygpu
 
 jobs:
   build-and-push-image:
@@ -26,14 +26,19 @@ jobs:
       packages: write
 
     steps:
-      # - name: Maximize build space
-      #   uses: cameronraysmith/maximize-build-space@master
-      #   with:
-      #     root-reserve-mb: 128
-      #     swap-size-mb: 128
-      #     remove-dotnet: "true"
-      #     remove-android: "true"
-      #     remove-haskell: "true"
+      - name: "Print github context"
+        run: |
+          echo "      EVENT_NAME:" "$GITHUB_EVENT_NAME"
+          echo "             REF:" "$GITHUB_REF"
+          echo "       full_name: ${{ github.event.repository.full_name }}"
+          echo "      repository: ${{ github.repository }}"
+          echo "repository_owner: ${{ github.repository_owner }}"
+          echo "  default_branch: ${{ github.event.repository.default_branch }}"
+          echo "REPOSITORY_OWNER:" "$GITHUB_REPOSITORY_OWNER"
+          echo "        REF_NAME:" "$GITHUB_REF_NAME"
+          echo "        HEAD_REF:" "$GITHUB_HEAD_REF"
+          echo "        BASE_REF:" "$GITHUB_BASE_REF"
+          echo "             SHA:" "$GITHUB_SHA"
       - name: Checkout
         uses: actions/checkout@v3
       - name: Set up QEMU
@@ -55,9 +60,6 @@ jobs:
         with:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-      # - name: Run docker root relocation script
-      #   run: ./.github/mv-docker-root-dir.sh
-      #   shell: bash
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
@@ -75,6 +77,19 @@ jobs:
       packages: write
 
     steps:
+      - name: "Print github context"
+        run: |
+          echo "      EVENT_NAME:" "$GITHUB_EVENT_NAME"
+          echo "             REF:" "$GITHUB_REF"
+          echo "       full_name: ${{ github.event.repository.full_name }}"
+          echo "      repository: ${{ github.repository }}"
+          echo "repository_owner: ${{ github.repository_owner }}"
+          echo "  default_branch: ${{ github.event.repository.default_branch }}"
+          echo "REPOSITORY_OWNER:" "$GITHUB_REPOSITORY_OWNER"
+          echo "        REF_NAME:" "$GITHUB_REF_NAME"
+          echo "        HEAD_REF:" "$GITHUB_HEAD_REF"
+          echo "        BASE_REF:" "$GITHUB_BASE_REF"
+          echo "             SHA:" "$GITHUB_SHA"
       - name: Checkout
         uses: actions/checkout@v3
       - name: Set up QEMU
