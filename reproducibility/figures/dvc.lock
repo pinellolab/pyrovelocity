@@ -57,8 +57,8 @@ stages:
     cmd: /usr/bin/time -v python train.py model_training.train=[pancreas_model1]
     deps:
     - path: data/processed/pancreas_processed.h5ad
-      md5: 14f5abed25caaaaf7be172657b809b96
-      size: 424775272
+      md5: 4aaf4084689b5e10c60231552502bd98
+      size: 424784368
     - path: train.py
       md5: 02a061d8df9ebef4952c0e2c8a18ce19
       size: 8722
@@ -2075,14 +2075,17 @@ stages:
     cmd: python fig2/figure_extras.py reports.model_summary.summarize=[pbmc10k_model2,larry_tips_model2,pbmc68k_model2]
     deps:
     - path: fig2/figure_extras.py
-      md5: 632a9c3472762b91ca0d2d713edd93ab
-      size: 6039
+      md5: fa2ffb6ee7dc74b6eabdf39715312cba
+      size: 8868
     - path: models/larry_tips_model2/pyrovelocity.pkl
       md5: 52d63551f18a58477150a01d48cbb16f
       size: 323695520
     - path: models/pbmc10k_model2/pyrovelocity.pkl
       md5: 2bc59cb5aee3692f2513da3c1a26f7da
       size: 207371037
+    - path: models/pancreas_model2/pyrovelocity.pkl
+      md5: 1eeaa0c042af52c18af112c6c33893c3
+      size: 65873440
     - path: models/pbmc68k_model2/pyrovelocity.pkl
       md5: 51b6e251fff5481399746326fe165657
       size: 320496178
@@ -2106,6 +2109,9 @@ stages:
     - path: reports/fig2/figure2_extras.pdf
       md5: 6849b13f7417618075f646134241ac6d
       size: 181830
+    - path: reports/fig2/fig2_pancreas_pbmc_uncertainties_comparison.pdf
+      md5: 96b95db9d262cae8dfae37e2f0174831
+      size: 270423
   summarize_pbmc10k_model2:
     cmd: python summarize.py reports.model_summary.summarize=[pbmc10k_model2]
     deps:
