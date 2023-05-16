@@ -1,8 +1,9 @@
-from kfp.v2 import dsl
-from kfp.v2.dsl import Output, Dataset  # , Input, Model, Artifact
 from google_cloud_pipeline_components.v1.custom_job import (
     create_custom_training_job_from_component,
 )
+from kfp.v2 import dsl
+from kfp.v2.dsl import Dataset  # , Input, Model, Artifact
+from kfp.v2.dsl import Output
 
 
 def create_environment_log_component(

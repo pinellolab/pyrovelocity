@@ -13,6 +13,7 @@ from hydra_zen import zen
 from kfp.v2 import dsl
 from kfp.v2.dsl import Dataset  # Output, Input, Model, Artifact
 
+
 load_dotenv(".envrc")
 
 
@@ -36,7 +37,6 @@ envlog_store(base_envlog, name="base_for_envlog_component")
 
 PipelineConf = builds(
     create_complete_pipeline,
-
 )
 base_pipeline = PipelineConf(
     pipeline_root=pipeline_root,
@@ -52,11 +52,11 @@ JobConf = builds(
 )
 base_job = JobConf(
     pipeline_func=base_pipeline,
-    parameter_values= {
+    parameter_values={
         "project": os.environ["ARGO_GCP_PROJECT_ID"],
         "location": os.environ["ARGO_GCP_REGION"],
         "message": "message text",
-    } 
+    },
 )
 
 job_store = store(group="job")

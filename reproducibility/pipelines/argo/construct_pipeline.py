@@ -6,6 +6,7 @@ from hydra_zen import make_custom_builds_fn
 from kfp.v2 import dsl
 from kfp.v2.dsl import Dataset  # Output, Input, Model, Artifact
 
+
 load_dotenv(".envrc")
 
 
@@ -34,5 +35,5 @@ def create_complete_pipeline(
             location=location,
             message=message,
         ).outputs["environment_info"]
-    
+
     return complete_pipeline
