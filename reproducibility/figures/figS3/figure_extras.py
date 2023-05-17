@@ -135,7 +135,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     fig, ax = plt.subplots(2, 3)
     ax = ax.flatten()
     fig.set_size_inches(20, 10)
-    order = ("larry", "neu", "mono","multilineage","tips")
+    order = ("larry", "neu", "mono", "multilineage", "tips")
 
     sns.boxplot(
         x="dataset",
