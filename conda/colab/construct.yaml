@@ -6,7 +6,7 @@ channels:
   - bioconda
   - nodefaults
 specs:
-  - python=3.9
+  - python=3.10
   - pip
   - conda
   - mamba # mamba is not needed but recommended

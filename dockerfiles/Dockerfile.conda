@@ -2,9 +2,18 @@
 FROM condaforge/mambaforge:23.1.0-1
 LABEL maintainer="pyrovelocity team"
 
+ARG CONDA_OVERRIDE_CUDA=11.8
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV LD_LIBRARY_PATH=/usr/local/nvidia/lib64
+
 WORKDIR /pyrovelocity
 COPY . .
 
-RUN mamba init
-RUN mamba env update -n base -f conda/environment-gpu.yml
-RUN pip install --no-deps -e .
+LABEL org.opencontainers.image.title="pyrovelocitygpu" \
+      org.opencontainers.image.authors="pyrovelocity team" \
+      org.opencontainers.image.description="This image contains the pyrovelocity library with dependencies necessary for execution on NVIDIA GPUs." \
+      org.opencontainers.image.url="https://github.com/pinellolab/pyrovelocity" \
+      org.opencontainers.image.licenses="AGPL-3.0-only"
+
+RUN mamba env update -n base -f conda/environment-gpu.yml && \
+    pip install --no-deps -e .

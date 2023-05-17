@@ -5,6 +5,11 @@ LABEL maintainer="pyrovelocity team"
 WORKDIR /pyrovelocity
 COPY . .
 
-RUN mamba init
-RUN mamba env update -n base -f conda/environment-cpu.yml
-RUN pip install --no-deps -e .
+LABEL org.opencontainers.image.title="pyrovelocitycpu" \
+      org.opencontainers.image.authors="pyrovelocity team" \
+      org.opencontainers.image.description="This image contains the pyrovelocity library with dependencies necessary for execution on CPUs." \
+      org.opencontainers.image.url="https://github.com/pinellolab/pyrovelocity" \
+      org.opencontainers.image.licenses="AGPL-3.0-only"
+
+RUN mamba env update -n base -f conda/environment-cpu.yml && \
+    pip install --no-deps -e .

@@ -26,7 +26,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu]
-        pyver: ["3.9"]
+        pyver: ["3.10"]
     env:
       PYTHONUNBUFFERED: True
     steps:
