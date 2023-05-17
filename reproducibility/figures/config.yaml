@@ -787,3 +787,7 @@ reports:
     path: reports/figS3
     tif_path: reports/figS3/figS3_raw_gene_selection_model2.tif
     svg_path: reports/figS3/figS3_raw_gene_selection_model2.svg
+  figureS3_extras:
+    tag: figS3
+    path: reports/figS3
+    shared_time_plot: reports/figS3/figureS3_extras.pdf
