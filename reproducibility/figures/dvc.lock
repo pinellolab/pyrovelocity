@@ -2413,8 +2413,8 @@ stages:
     cmd: python figS3/figure_extras.py reports.model_summary.summarize=[larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
     deps:
     - path: figS3/figure_extras.py
-      md5: 58b9c2d0b2b6cc70f7521f21bd40354f
-      size: 8930
+      md5: 40c4ea0dfad919096832efa7c3885000
+      size: 8932
     - path: models/larry_model2/pyrovelocity.pkl
       md5: f2506ec58d39242340c1161bdbe0fa41
       size: 1467519359
