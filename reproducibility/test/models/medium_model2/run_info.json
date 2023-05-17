@@ -1,0 +1,12 @@
+{
+  "artifact_uri": "file:///home/jupyter/pyrovelocity/reproducibility/test/mlruns/0/95a00516f7e14aa5966690671c3850bb/artifacts",
+  "end_time": 1684360423114,
+  "experiment_id": "0",
+  "lifecycle_stage": "active",
+  "run_id": "95a00516f7e14aa5966690671c3850bb",
+  "run_name": "simulate_model2-95a0051",
+  "run_uuid": "95a00516f7e14aa5966690671c3850bb",
+  "start_time": 1684360053984,
+  "status": "FINISHED",
+  "user_id": "jupyter"
+}
