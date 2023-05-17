@@ -431,6 +431,11 @@ def hydra_zen_configure():
                 tif_path="${.path}/${.tag}_raw_gene_selection_model2.tif",
                 svg_path="${.path}/${.tag}_raw_gene_selection_model2.svg",
             ),
+            figureS3_extras=dict(
+                tag="figS3",
+                path="${paths.reports}/${.tag}",
+                shared_time_plot="${.path}/figureS3_extras.pdf",
+            ),
         ),
     )
     return config
