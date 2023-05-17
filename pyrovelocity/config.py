@@ -440,6 +440,7 @@ def hydra_zen_configure():
     )
     return config
 
+
 def test_hydra_zen_configure():
     """
     Use hydra-zen to generate a test configuration for hydra's config store.
