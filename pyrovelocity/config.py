@@ -441,6 +441,145 @@ def hydra_zen_configure():
     return config
 
 
+def test_hydra_zen_configure():
+    """
+    Use hydra-zen to generate a test configuration for hydra's config store.
+    Generates a hydra-zen configuration to test the pyrovelocity pipeline,
+    which includes dataset, model training, and reporting configurations.
+
+    This function defines helper functions for creating dataset, model,
+    and reports configurations, and uses these functions to generate the
+    hydra-zen configuration.
+
+    Returns:
+        Config : Type[DataClass]
+        See the documentation for hydra_zen.make_config for more information.
+    """
+    pbuilds = make_custom_builds_fn(zen_partial=True, populate_full_signature=True)
+
+    def create_dataset_config(
+        name, dl_root, data_file, rel_path, url, process_method, process_args
+    ):
+        return dict(
+            data_file=data_file,
+            dl_root=dl_root,
+            dl_path="${.dl_root}/${.data_file}",
+            rel_path=rel_path,
+            url=url,
+            derived=dict(
+                process_method=process_method,
+                process_args=process_args,
+                rel_path="${data_external.processed_path}/" + f"{name}_processed.h5ad",
+            ),
+        )
+
+    def create_model_config(
+        source, name, model_suffix, vector_field_basis, **custom_training_parameters
+    ):
+        return dict(
+            path="${paths.models}/" + f"{name}_model{model_suffix}",
+            model_path="${.path}/model",
+            input_data_path="${data_external."
+            + f"{source}.{name}"
+            + ".derived.rel_path}",
+            trained_data_path="${.path}/trained.h5ad",
+            pyrovelocity_data_path="${.path}/pyrovelocity.pkl",
+            metrics_path="${.path}/metrics.json",
+            run_info_path="${.path}/run_info.json",
+            vector_field_parameters=dict(basis=vector_field_basis),
+            training_parameters=pbuilds(
+                train_model,
+                loss_plot_path="${..path}/loss_plot.png",
+                patient_improve=0.0001,
+                patient_init=45,
+                **custom_training_parameters,
+            ),
+        )
+
+    def create_reports_config(model_name: str, model_number: int):
+        path = f"{paths['reports']}/{model_name}_model{model_number}"
+        return dict(
+            path=path,
+            dataframe_path=f"{paths['data']}/processed/{model_name}_model{model_number}_dataframe.pkl.zst",
+            shared_time_plot=f"{path}/shared_time.pdf",
+            volcano_plot=f"{path}/volcano.pdf",
+            rainbow_plot=f"{path}/rainbow.pdf",
+            uncertainty_param_plot=f"{path}/param_uncertainties.pdf",
+            vector_field_plot=f"{path}/vector_field.pdf",
+            biomarker_selection_plot=f"{path}/markers_selection_scatterplot.tif",
+            biomarker_phaseportrait_plot=f"{path}/markers_phaseportrait.pdf",
+        )
+
+    base = dict(log_level="INFO")
+
+    paths = dict(
+        data="data",
+        models="models",
+        reports="reports",
+    )
+
+    config = make_config(
+        base=base,
+        paths=paths,
+        data_external=dict(
+            root_path="${paths.data}/external",
+            processed_path="${paths.data}/processed",
+            sources=["simulate"],
+            simulate=dict(
+                download=["medium"],
+                process=["medium"],
+                sources=dict(
+                    gcs_root_url="https://storage.googleapis.com/pyrovelocity/data"
+                ),
+                medium=create_dataset_config(
+                    "simulated_medium",
+                    dl_root="${data_external.root_path}",
+                    data_file="simulated_medium.h5ad",
+                    rel_path="${data_external.root_path}/simulated_medium.h5ad",
+                    url="${data_external.simulate.sources.gcs_root_url}/simulated_medium.h5ad",
+                    process_method="load_data",
+                    process_args=dict(),
+                ),
+            ),
+        ),
+        model_training=dict(
+            train=[
+                "simulate_model1",
+                "simulate_model2",
+            ],
+            simulate_model1=create_model_config(
+                "simulate",
+                "medium",
+                1,
+                "umap",
+                cell_state="leiden",
+                guide_type="auto_t0_constraint",
+                max_epochs=1000,
+            ),
+            simulate_model2=create_model_config(
+                "simulate",
+                "medium",
+                2,
+                "umap",
+                cell_state="leiden",
+                max_epochs=1000,
+                offset=True,
+            ),
+        ),
+        reports=dict(
+            model_summary=dict(
+                summarize=[
+                    "simulate_model1",
+                    "simulate_model2",
+                ],
+                simulate_model1=create_reports_config("medium", 1),
+                simulate_model2=create_reports_config("medium", 2),
+            ),
+        ),
+    )
+    return config
+
+
 def initialize_hydra_config() -> DictConfig:
     """Initialize Hydra configuration for PyroVelocity pipeline.
 

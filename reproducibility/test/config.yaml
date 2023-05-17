@@ -1,0 +1,127 @@
+base:
+  log_level: INFO
+paths:
+  data: data
+  models: models
+  reports: reports
+data_external:
+  root_path: data/external
+  processed_path: data/processed
+  sources:
+    - simulate
+  simulate:
+    download:
+      - medium
+    process:
+      - medium
+    sources:
+      gcs_root_url: https://storage.googleapis.com/pyrovelocity/data
+    medium:
+      data_file: simulated_medium.h5ad
+      dl_root: data/external
+      dl_path: data/external/simulated_medium.h5ad
+      rel_path: data/external/simulated_medium.h5ad
+      url: https://storage.googleapis.com/pyrovelocity/data/simulated_medium.h5ad
+      derived:
+        process_method: load_data
+        process_args: {}
+        rel_path: data/processed/simulated_medium_processed.h5ad
+model_training:
+  train:
+    - simulate_model1
+    - simulate_model2
+  simulate_model1:
+    path: models/medium_model1
+    model_path: models/medium_model1/model
+    input_data_path: data/processed/simulated_medium_processed.h5ad
+    trained_data_path: models/medium_model1/trained.h5ad
+    pyrovelocity_data_path: models/medium_model1/pyrovelocity.pkl
+    metrics_path: models/medium_model1/metrics.json
+    run_info_path: models/medium_model1/run_info.json
+    vector_field_parameters:
+      basis: umap
+    training_parameters:
+      _target_: pyrovelocity.api.train_model
+      _partial_: true
+      guide_type: auto_t0_constraint
+      model_type: auto
+      svi_train: false
+      batch_size: -1
+      train_size: 1.0
+      use_gpu: 0
+      likelihood: Poisson
+      num_samples: 30
+      log_every: 100
+      cell_state: leiden
+      patient_improve: 0.0001
+      patient_init: 45
+      seed: 99
+      lr: 0.01
+      max_epochs: 1000
+      include_prior: true
+      library_size: true
+      offset: false
+      input_type: raw
+      cell_specific_kinetics: null
+      kinetics_num: 2
+      loss_plot_path: models/medium_model1/loss_plot.png
+  simulate_model2:
+    path: models/medium_model2
+    model_path: models/medium_model2/model
+    input_data_path: data/processed/simulated_medium_processed.h5ad
+    trained_data_path: models/medium_model2/trained.h5ad
+    pyrovelocity_data_path: models/medium_model2/pyrovelocity.pkl
+    metrics_path: models/medium_model2/metrics.json
+    run_info_path: models/medium_model2/run_info.json
+    vector_field_parameters:
+      basis: umap
+    training_parameters:
+      _target_: pyrovelocity.api.train_model
+      _partial_: true
+      guide_type: auto
+      model_type: auto
+      svi_train: false
+      batch_size: -1
+      train_size: 1.0
+      use_gpu: 0
+      likelihood: Poisson
+      num_samples: 30
+      log_every: 100
+      cell_state: leiden
+      patient_improve: 0.0001
+      patient_init: 45
+      seed: 99
+      lr: 0.01
+      max_epochs: 1000
+      include_prior: true
+      library_size: true
+      offset: true
+      input_type: raw
+      cell_specific_kinetics: null
+      kinetics_num: 2
+      loss_plot_path: models/medium_model2/loss_plot.png
+reports:
+  model_summary:
+    summarize:
+      - simulate_model1
+      - simulate_model2
+    simulate_model1:
+      path: reports/medium_model1
+      dataframe_path: data/processed/medium_model1_dataframe.pkl.zst
+      shared_time_plot: reports/medium_model1/shared_time.pdf
+      volcano_plot: reports/medium_model1/volcano.pdf
+      rainbow_plot: reports/medium_model1/rainbow.pdf
+      uncertainty_param_plot: reports/medium_model1/param_uncertainties.pdf
+      vector_field_plot: reports/medium_model1/vector_field.pdf
+      biomarker_selection_plot: reports/medium_model1/markers_selection_scatterplot.tif
+      biomarker_phaseportrait_plot: reports/medium_model1/markers_phaseportrait.pdf
+    simulate_model2:
+      path: reports/medium_model2
+      dataframe_path: data/processed/medium_model2_dataframe.pkl.zst
+      shared_time_plot: reports/medium_model2/shared_time.pdf
+      volcano_plot: reports/medium_model2/volcano.pdf
+      rainbow_plot: reports/medium_model2/rainbow.pdf
+      uncertainty_param_plot: reports/medium_model2/param_uncertainties.pdf
+      vector_field_plot: reports/medium_model2/vector_field.pdf
+      biomarker_selection_plot: reports/medium_model2/markers_selection_scatterplot.tif
+      biomarker_phaseportrait_plot: reports/medium_model2/markers_phaseportrait.pdf
