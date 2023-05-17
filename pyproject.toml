@@ -86,6 +86,10 @@ dvc-gs = { version = ">=2.20.0", optional = true }
 jupyter-core = { version = ">=5.1.3", optional = true, source = "pypi" }
 pyvis = { version = ">=0.3.2", optional = true }
 hypothesis = {version = ">=6.71.0", optional = true }
+kfp = { version = ">=1.8.18", optional = true }
+google-cloud-aiplatform = { version = ">=1.24.1", optional = true }
+google-cloud-pipeline-components = { version = ">=1.0.43", optional = true }
+python-dotenv = { version = ">=1.0.0", optional = true }
 
 [tool.conda-lock.dependencies]
 seaborn = { version = "0.11.2", source = "conda-forge" }
@@ -104,39 +108,49 @@ platforms = [
 
 [tool.poetry.extras]
 dev = [
- "Pygments",
- "black",
- "coverage",
- "darglint",
- "flake8",
- "flake8-bandit",
- "flake8-bugbear",
- "flake8-docstrings",
- "flake8-rst-docstrings",
- "furo",
- "hypothesis",
- "isort",
- "ipython",
- "mypy",
- "pep8-naming",
- "pre-commit",
- "pre-commit-hooks",
- "pytest",
- "pyupgrade",
- "pyvis",
- "safety",
- "sphinx",
- "sphinx-autobuild",
- "sphinx-click",
- "typeguard",
- "xdoctest",
- "myst-parser",
- "dparse",
- "pytest-cov",
- "pytest-mock",
- "poethepoet",
- "dvc-gs",
- "jupyter-core"
+  "black",
+  "coverage",
+  "darglint",
+  "dparse",
+  "dvc-gs",
+  "flake8-bandit",
+  "flake8-bugbear",
+  "flake8-docstrings",
+  "flake8-rst-docstrings",
+  "flake8",
+  "hypothesis",
+  "ipython",
+  "isort",
+  "jupyter-core",
+  "mypy",
+  "pep8-naming",
+  "poethepoet",
+  "pre-commit-hooks",
+  "pre-commit",
+  "Pygments",
+  "pytest-cov",
+  "pytest-mock",
+  "pytest",
+  "pyupgrade",
+  "pyvis",
+  "safety",
+  "typeguard",
+  "xdoctest",
+ ]
+
+ docs = [
+  "furo",
+  "myst-parser",
+  "sphinx-autobuild",
+  "sphinx-click",
+  "sphinx",
+ ]
+
+ pipeline = [
+  "google-cloud-aiplatform",
+  "google-cloud-pipeline-components",
+  "kfp",
+  "python-dotenv",
  ]
 
 

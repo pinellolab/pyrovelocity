@@ -21,9 +21,6 @@ on:
       - "reproducibility/figures/*.py"
       - "reproducibility/figures/dvc.*"
       - "reproducibility/figures/config.yaml"
-  pull_request:
-    branches:
-      - master
 
 # Review/set variables via gh CLI:
 #
