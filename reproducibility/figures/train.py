@@ -119,33 +119,10 @@ def train(conf: DictConfig, logger: Logger) -> None:
                 )
 
                 logger.info("Data attributes after model training")
-                # pretty_print_dict(posterior_samples)
-
-                # mae_df = mae_evaluate(posterior_samples, adata)
-                # mlflow.log_metric("MAE", mae_df["MAE"].mean())
-
-                # logger.info("Computing vector field uncertainty")
-
-                # pyrovelocity_data = (
-                # trained_model.compute_statistics_from_posterior_samples(
-                #         adata,
-                #         posterior_samples,
-                #         vector_field_basis=vector_field_basis,
-                #         ncpus_use=ncpus_use,
-                #     )
-                # )
-                # logger.info(
-                #     "Data attributes after computation of vector field uncertainty"
-                # )
-                # pretty_print_dict(posterior_samples)
-                # print(posterior_samples.keys())
 
                 run_id = run.info.run_id
 
             logger.info(f"Saving pyrovelocity data: {pyrovelocity_data_path}")
-            # trained_model.save_pyrovelocity_data(
-            #     pyrovelocity_data, pyrovelocity_data_path
-            # )
             CompressedPickle.save(
                 posterior_samples_path,
                 posterior_samples,
