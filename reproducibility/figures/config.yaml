@@ -524,18 +524,10 @@ model_training:
       loss_plot_path: models/pbmc10k_model2/loss_plot.png
 reports:
   model_summary:
-    simulate_model2:
-      path: reports/medium_model2
-      dataframe_path: data/processed/medium_model2_dataframe.pkl.zst
-      shared_time_plot: reports/medium_model2/shared_time.pdf
-      volcano_plot: reports/medium_model2/volcano.pdf
-      rainbow_plot: reports/medium_model2/rainbow.pdf
-      uncertainty_param_plot: reports/medium_model2/param_uncertainties.pdf
-      vector_field_plot: reports/medium_model2/vector_field.pdf
-      biomarker_selection_plot: reports/medium_model2/markers_selection_scatterplot.tif
-      biomarker_phaseportrait_plot: reports/medium_model2/markers_phaseportrait.pdf
     pancreas_model2:
       path: reports/pancreas_model2
+      trained_data_path: models/pancreas_model2/trained.h5ad
+      pyrovelocity_data_path: models/pancreas_model2/pyrovelocity.pkl.zst
       dataframe_path: data/processed/pancreas_model2_dataframe.pkl.zst
       shared_time_plot: reports/pancreas_model2/shared_time.pdf
       volcano_plot: reports/pancreas_model2/volcano.pdf
@@ -546,6 +538,8 @@ reports:
       biomarker_phaseportrait_plot: reports/pancreas_model2/markers_phaseportrait.pdf
     pbmc68k_model2:
       path: reports/pbmc68k_model2
+      trained_data_path: models/pbmc68k_model2/trained.h5ad
+      pyrovelocity_data_path: models/pbmc68k_model2/pyrovelocity.pkl.zst
       dataframe_path: data/processed/pbmc68k_model2_dataframe.pkl.zst
       shared_time_plot: reports/pbmc68k_model2/shared_time.pdf
       volcano_plot: reports/pbmc68k_model2/volcano.pdf
@@ -556,6 +550,8 @@ reports:
       biomarker_phaseportrait_plot: reports/pbmc68k_model2/markers_phaseportrait.pdf
     pons_model2:
       path: reports/pons_model2
+      trained_data_path: models/pons_model2/trained.h5ad
+      pyrovelocity_data_path: models/pons_model2/pyrovelocity.pkl.zst
       dataframe_path: data/processed/pons_model2_dataframe.pkl.zst
       shared_time_plot: reports/pons_model2/shared_time.pdf
       volcano_plot: reports/pons_model2/volcano.pdf
@@ -566,6 +562,8 @@ reports:
       biomarker_phaseportrait_plot: reports/pons_model2/markers_phaseportrait.pdf
     pbmc10k_model2:
       path: reports/pbmc10k_model2
+      trained_data_path: models/pbmc10k_model2/trained.h5ad
+      pyrovelocity_data_path: models/pbmc10k_model2/pyrovelocity.pkl.zst
       dataframe_path: data/processed/pbmc10k_model2_dataframe.pkl.zst
       shared_time_plot: reports/pbmc10k_model2/shared_time.pdf
       volcano_plot: reports/pbmc10k_model2/volcano.pdf
@@ -576,6 +574,8 @@ reports:
       biomarker_phaseportrait_plot: reports/pbmc10k_model2/markers_phaseportrait.pdf
     larry_tips_model2:
       path: reports/larry_tips_model2
+      trained_data_path: models/larry_tips_model2/trained.h5ad
+      pyrovelocity_data_path: models/larry_tips_model2/pyrovelocity.pkl.zst
       dataframe_path: data/processed/larry_tips_model2_dataframe.pkl.zst
       shared_time_plot: reports/larry_tips_model2/shared_time.pdf
       volcano_plot: reports/larry_tips_model2/volcano.pdf
