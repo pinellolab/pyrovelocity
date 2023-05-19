@@ -118,21 +118,14 @@ def load_data(
                 ].copy()
                 adata_multilineage = adata_mono.concatenate(adata_neu)
                 adata = adata_mono_C.concatenate(adata_neu_C)
-                adata.layers["raw_spliced"] = adata_multilineage[
-                    adata.obs_names, adata.var_names
-                ].layers["spliced"]
-                adata.layers["raw_unspliced"] = adata_multilineage[
-                    adata.obs_names, adata.var_names
-                ].layers["unspliced"]
         elif "pbmc68k" in data:
             adata = load_pbmc68k(data)
         else:  # pbmc10k
             adata = sc.read(data)
 
         print_anndata(adata)
-        if "raw_unspliced" not in adata.layers:
-            copy_raw_counts(adata)
-            print_anndata(adata)
+        copy_raw_counts(adata)
+        print_anndata(adata)
 
         if process_cytotrace:
             print("Processing data with cytotrace ...")
