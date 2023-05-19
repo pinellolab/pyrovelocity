@@ -57,9 +57,7 @@ def preprocess(conf: DictConfig, logger: Logger) -> None:
             )
             print_attributes(adata)
 
-            if os.path.isfile(processed_path) and os.access(
-                processed_path, os.R_OK
-            ):
+            if os.path.isfile(processed_path) and os.access(processed_path, os.R_OK):
                 logger.info(f"successfully generated {processed_path}")
             else:
                 logger.warn(f"cannot find and read {processed_path}")
