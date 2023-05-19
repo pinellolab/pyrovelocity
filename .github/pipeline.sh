@@ -21,8 +21,8 @@ set -x
 python --version
 pip install --upgrade pip
 pip --version
-pip install -e .
-pip install matplotlib-venn==0.11.9
+pip install -e .[plotting]
+pip list
 sudo apt-get update && sudo apt-get install -y time && which time
 cd reproducibility/figures || exit
 
