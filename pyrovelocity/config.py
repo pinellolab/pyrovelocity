@@ -505,6 +505,8 @@ def hydra_zen_compressed_configure():
         path = f"{paths['reports']}/{model_name}_model{model_number}"
         return dict(
             path=path,
+            trained_data_path="${paths.models}/" + f"{model_name}_model{model_number}/trained.h5ad",
+            pyrovelocity_data_path="${paths.models}/" + f"{model_name}_model{model_number}/pyrovelocity.pkl.zst",
             dataframe_path=f"{paths['data']}/processed/{model_name}_model{model_number}_dataframe.pkl.zst",
             shared_time_plot=f"{path}/shared_time.pdf",
             volcano_plot=f"{path}/volcano.pdf",
@@ -824,7 +826,7 @@ def hydra_zen_compressed_configure():
         reports=dict(
             model_summary=dict(
                 # simulate_model1=create_reports_config("medium", 1),
-                simulate_model2=create_reports_config("medium", 2),
+                # simulate_model2=create_reports_config("medium", 2),
                 # pancreas_model1=create_reports_config("pancreas", 1),
                 pancreas_model2=create_reports_config("pancreas", 2),
                 # pbmc68k_model1=create_reports_config("pbmc68k", 1),
