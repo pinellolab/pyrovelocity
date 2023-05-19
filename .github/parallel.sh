@@ -43,3 +43,11 @@ dvc stage list --name-only |\
     xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 6 + 3)); dvc repro "$@"' --
 
 wait
+
+dvc stage list --name-only |\
+    grep -E "summarize*" |\
+    xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 6 + 3)); dvc repro "$@"' --
+
+wait
+
+dvc repro
