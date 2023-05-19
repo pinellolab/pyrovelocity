@@ -28,7 +28,7 @@ cd reproducibility/figures || exit
 
 dvc pull
 # dvc repro
-./parallel.sh
+./../../.github/parallel.sh
 dvc push
 
 npm update -g @dvcorg/cml
