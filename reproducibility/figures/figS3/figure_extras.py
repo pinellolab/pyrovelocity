@@ -18,6 +18,7 @@ from omegaconf import DictConfig
 from statannotations.Annotator import Annotator
 
 from pyrovelocity.config import print_config_tree
+from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.plot import plot_arrow_examples
 from pyrovelocity.plot import plot_gene_ranking
 from pyrovelocity.plot import plot_posterior_time
@@ -57,7 +58,14 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     pca_angle_cov_list = []
     pca_mag_cov_list = []
     names = []
-    for data_model in conf.reports.model_summary.summarize:
+    logger.info(
+        f"\n\nVerifying existence of paths for:\n\n"
+        f"  reports: {conf.reports.figureS3.path}\n"
+    )
+    Path(conf.reports.figureS3.path).mkdir(parents=True, exist_ok=True)
+    print_config_tree(conf.reports.figureS3_extras, logger, ())
+
+    for data_model in conf.train_models:
         ##################
         # load data
         ##################
@@ -65,8 +73,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         data_model_conf = conf.model_training[data_model]
         pyrovelocity_data_path = data_model_conf.pyrovelocity_data_path
 
-        with open(pyrovelocity_data_path, "rb") as f:
-            posterior_samples = pickle.load(f)
+        posterior_samples = CompressedPickle.load(pyrovelocity_data_path)
+
+        print_config_tree(data_model_conf, logger, ())
 
         cell_angles = posterior_samples["embeds_angle"] / np.pi * 180
         cell_angles_mean = cell_angles.mean(axis=0)
@@ -75,7 +84,6 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         angle_cov_list.append(cell_angles_cov)
 
         pca_cell_vector = posterior_samples["pca_vector_field_posterior_samples"]
-        # (samples, cell, 50pcs)
         pca_cell_magnitudes = np.sqrt((pca_cell_vector**2).sum(axis=-1))
         pca_cell_magnitudes_mean = pca_cell_magnitudes.mean(axis=-2)
         pca_cell_magnitudes_std = pca_cell_magnitudes.std(axis=-2)
@@ -248,15 +256,7 @@ def main(conf: DictConfig) -> None:
     """
 
     logger = get_pylogger(name="PLOT", log_level=conf.base.log_level)
-    print_config_tree(conf, logger, ())
 
-    logger.info(
-        f"\n\nVerifying existence of paths for:\n\n"
-        f"  reports: {conf.reports.figureS3.path}\n"
-    )
-    Path(conf.reports.figureS3.path).mkdir(parents=True, exist_ok=True)
-
-    print(conf.reports.figureS3_extras.shared_time_plot)
     if os.path.isfile(conf.reports.figureS3_extras.shared_time_plot):
         logger.info(
             f"\n\nFigure 2 outputs already exist:\n\n"
