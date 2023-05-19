@@ -17,6 +17,56 @@
 
 set -x
 
+
+### Define parallel execution function ###
+function run_parallel_pipeline() {
+    dvc stage list --name-only |\
+        grep -E "data_download*" |\
+        xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 8 + 3)); dvc repro "$@"' --
+
+    wait
+
+    dvc stage list --name-only |\
+        grep -E "preprocess*" |\
+        xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 8 + 3)); dvc repro "$@"' --
+
+    wait
+
+    # manually execute training stages to distribute over four GPUs
+    dvc repro train@pancreas_model2 &
+    sleep 2
+    dvc repro train@pbmc68k_model2 &
+    sleep 2
+    dvc repro train@pons_model2 &
+    sleep 2
+    dvc repro train@larry_model2 &
+    wait
+    dvc repro train@larry_tips_model2 &
+    sleep 2
+    dvc repro train@larry_mono_model2 &
+    sleep 2
+    dvc repro train@larry_neu_model2 &
+    sleep 2
+    dvc repro train@larry_multilineage_model2 &
+    wait
+    dvc repro train@pbmc10k_model2 &
+
+    wait
+
+    dvc stage list --name-only |\
+        grep -E "postprocess*" |\
+        xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 8 + 3)); dvc repro "$@"' --
+
+    wait
+
+    dvc stage list --name-only |\
+        grep -E "summarize*" |\
+        xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 8 + 3)); dvc repro "$@"' --
+
+    wait
+}
+
+
 ### Execute experiment run and submit PR ###
 python --version
 pip install --upgrade pip
@@ -27,8 +77,8 @@ sudo apt-get update && sudo apt-get install -y time && which time
 cd reproducibility/figures || exit
 
 dvc pull
-# dvc repro
-./../../.github/parallel.sh
+run_parallel_pipeline
+dvc repro
 dvc push
 
 npm update -g @dvcorg/cml
@@ -53,7 +103,6 @@ generate_markdown() {
 
 ### Post experiment report comment ###
 {
-# pipeline
 printf "# pipeline\n"
 dvc dag --md
 
@@ -76,7 +125,6 @@ for data_set in "${data_sets[@]}"; do
     done
 done
 
-# pipeline files
 printf "# pipeline files\n"
 dvc dag -o --md
 } >> report.md
