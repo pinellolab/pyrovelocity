@@ -4102,6 +4102,22 @@ files = [
 traitlets = "*"
 
 [[package]]
+name = "matplotlib-venn"
+version = "0.11.9"
+description = "Functions for plotting area-proportional two- and three-way Venn diagrams in matplotlib."
+category = "main"
+optional = true
+python-versions = "*"
+files = [
+    {file = "matplotlib-venn-0.11.9.tar.gz", hash = "sha256:bbf12f2a066c7f8448793b35a307b192004ba4bd8bba133bce09165dbdc9528b"},
+]
+
+[package.dependencies]
+matplotlib = "*"
+numpy = "*"
+scipy = "*"
+
+[[package]]
 name = "mccabe"
 version = "0.7.0"
 description = "McCabe checker, plugin for flake8"
@@ -7221,6 +7237,25 @@ pure-eval = "*"
 tests = ["cython", "littleutils", "pygments", "pytest", "typeguard"]
 
 [[package]]
+name = "statannotations"
+version = "0.5.0"
+description = "add statistical significance or custom annotations on seaborn plots. Based on statannot 0.2.3"
+category = "main"
+optional = true
+python-versions = ">=3.6"
+files = [
+    {file = "statannotations-0.5.0-py3-none-any.whl", hash = "sha256:fbcec5666e0eab9eca41e5337e60ee4dce552d0dda2e70c05f73e41498c62b46"},
+    {file = "statannotations-0.5.0.tar.gz", hash = "sha256:15449b8c9835c4f4e582aef7698eb2994fe75ced5df0882115f355cc0fe181fb"},
+]
+
+[package.dependencies]
+matplotlib = ">=2.2.2"
+numpy = ">=1.12.1"
+pandas = ">=0.23.0"
+scipy = ">=1.1.0"
+seaborn = ">=0.9.0,<0.12"
+
+[[package]]
 name = "statsmodels"
 version = "0.13.2"
 description = "Statistical computations and models for Python"
@@ -8232,8 +8267,9 @@ cffi = ["cffi (>=1.11)"]
 dev = ["Pygments", "black", "coverage", "darglint", "dparse", "dvc-gs", "flake8", "flake8-bandit", "flake8-bugbear", "flake8-docstrings", "flake8-rst-docstrings", "hypothesis", "ipython", "isort", "jupyter-core", "mypy", "pep8-naming", "poethepoet", "pre-commit", "pre-commit-hooks", "pytest", "pytest-cov", "pytest-mock", "pyupgrade", "pyvis", "safety", "typeguard", "xdoctest"]
 docs = ["furo", "myst-parser", "sphinx", "sphinx-autobuild", "sphinx-click"]
 pipeline = ["google-cloud-aiplatform", "google-cloud-pipeline-components", "kfp", "python-dotenv"]
+plotting = ["matplotlib-venn", "statannotations"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <3.11"
-content-hash = "eda4e6b49c6452dbc19e4c502944ec402ac172a81ae8c0f778d1421357b1f41e"
+content-hash = "7720a968e1c9b20edc57d30d1993dd161f2260230976d9f6e66861bfa1de2d85"
