@@ -4,7 +4,8 @@ from hydra_zen import save_as_yaml
 from omegaconf import DictConfig
 from omegaconf import OmegaConf
 
-from pyrovelocity.config import hydra_zen_configure
+# from pyrovelocity.config import hydra_zen_configure
+from pyrovelocity.config import hydra_zen_compressed_configure as hydra_zen_configure
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.utils import get_pylogger
 
@@ -23,7 +24,6 @@ def main(conf: DictConfig) -> None:
 
 
 if __name__ == "__main__":
-    # register the configuration in hydra's ConfigStore
     config = hydra_zen_configure()
     cs = ConfigStore.instance()
     cs.store(name="config", node=config)

@@ -1,5 +1,6 @@
 [core]
     remote = gcs
+    analytics = false
 [hydra]
     enabled = False
 ['remote "gcs"']

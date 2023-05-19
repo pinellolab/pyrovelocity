@@ -1,174 +1,175 @@
-vars:
-  - config.yaml
+# vars:
+#   - config.yaml
 
-stages:
-  # data_download:
-  #   foreach: ${data_external.sources}
-  #   do:
-  #     cmd: python data_download.py data_external.sources=[${item}] data_external.${item}.download=[medium]
-  #     deps:
-  #       - data_download.py
-  #     params:
-  #       - config.yaml:
-  #           - base
-  #           - data_external.${item}.medium
-  #     outs:
-  #       - ${data_external.${item}.medium.rel_path}:
-  #           persist: true
+# stages:
+#   data_download:
+#     foreach: ${data_sets}
+#     do:
+#       cmd: python data_download.py data_sources.source=${item.source} data_sources.download=${item.download}
+#       deps:
+#         - data_download.py
+#       params:
+#         - config.yaml:
+#             - base
+#             - data_sources.${key}
+#       outs:
+#         - ${item.dl_path}:
+#             persist: true
 
-  # preprocess:
-  #   foreach: ${data_external.sources}
-  #   do:
-  #     cmd: python preprocess.py data_external.sources=[${item}] data_external.${item}.process=[medium]
-  #     deps:
-  #       - preprocess.py
-  #       - ${data_external.${item}.medium.rel_path}
-  #     params:
-  #       - config.yaml:
-  #           - base
-  #           - data_external.${item}.medium
-  #     outs:
-  #       - ${data_external.${item}.medium.derived.rel_path}
+#   preprocess:
+#     foreach: ${data_sets}
+#     do:
+#       cmd: python preprocess.py data_sources.source=${item.source} data_sources.process=${item.process}
+#       deps:
+#         - preprocess.py
+#         - ${item.dl_path}
+#       params:
+#         - config.yaml:
+#             - base
+#             - data_sources.${key}
+#       outs:
+#         - ${item.derived.rel_path}
 
-  # train:
-  #   foreach: ${model_training.train}
-  #   do:
-  #     cmd: /usr/bin/time -v python train.py model_training.train=[${item}]
-  #     deps:
-  #       - train.py
-  #       - ${model_training.${item}.input_data_path}
-  #     params:
-  #       - config.yaml:
-  #           - model_training.${item}
-  #     metrics:
-  #       - ${model_training.${item}.metrics_path}:
-  #           cache: false
-  #     outs:
-  #       - ${model_training.${item}.run_info_path}:
-  #           cache: false
-  #       - ${model_training.${item}.training_parameters.loss_plot_path}
-  #       - ${model_training.${item}.trained_data_path}
-  #       - ${model_training.${item}.model_path}
-  #       - ${model_training.${item}.pyrovelocity_data_path}
+#   train:
+#     foreach: ${models}
+#     do:
+#       cmd: /usr/bin/time -v python train.py models.name=${key}
+#       deps:
+#         - train.py
+#         - ${item.input_data_path}
+#       params:
+#         - config.yaml:
+#             - base
+#             - models.${key}
+#       metrics:
+#         - ${item.metrics_path}:
+#             cache: false
+#       outs:
+#         - ${item.run_info_path}:
+#             cache: false
+#         - ${item.training_parameters.loss_plot_path}
+#         - ${item.trained_data_path}
+#         - ${item.model_path}
+#         - ${item.pyrovelocity_data_path}
 
-  # summarize:
-  #   foreach: ${reports.model_summary.summarize}
-  #   do:
-  #     cmd: python summarize.py reports.model_summary.summarize=[${item}]
-  #     deps:
-  #       - summarize.py
-  #       - ${model_training.${item}.trained_data_path}
-  #       - ${model_training.${item}.pyrovelocity_data_path}
-  #     params:
-  #       - config.yaml:
-  #           - model_training.${item}
-  #           - reports.model_summary.${item}
-  #     outs:
-  #       - ${reports.model_summary.${item}.dataframe_path}
-  #       - ${reports.model_summary.${item}.volcano_plot}
-  #       - ${reports.model_summary.${item}.rainbow_plot}
-  #       - ${reports.model_summary.${item}.vector_field_plot}
-  #       - ${reports.model_summary.${item}.rainbow_plot}.png
-  #       - ${reports.model_summary.${item}.vector_field_plot}.png
-  #       - ${reports.model_summary.${item}.shared_time_plot}
+#   summarize:
+#     foreach: ${models}
+#     do:
+#       cmd: python summarize.py models.name=${key}
+#       deps:
+#         - summarize.py
+#         - ${item.trained_data_path}
+#         - ${item.pyrovelocity_data_path}
+#       params:
+#         - config.yaml:
+#             - base
+#             - models.${key}
+#       outs:
+#         - ${item.dataframe_path}
+#         - ${item.volcano_plot}
+#         - ${item.rainbow_plot}
+#         - ${item.vector_field_plot}
+#         - ${item.rainbow_plot}.png
+#         - ${item.vector_field_plot}.png
+#         - ${item.shared_time_plot}
 
-  data_download_simulate:
-    cmd: python data_download.py data_external.sources=[simulate] data_external.simulate.download=[medium]
-    deps:
-      - data_download.py
-    params:
-      - config.yaml:
-          - base
-          - data_external.simulate.medium
-    outs:
-      - ${data_external.simulate.medium.rel_path}:
-          persist: true
+#   # data_download_simulate:
+#   #   cmd: python data_download.py data_external.sources=[simulate] data_external.simulate.download=[medium]
+#   #   deps:
+#   #     - data_download.py
+#   #   params:
+#   #     - config.yaml:
+#   #         - base
+#   #         - data_external.simulate.medium
+#   #   outs:
+#   #     - ${data_external.simulate.medium.rel_path}:
+#   #         persist: true
 
-  preprocess_simulate:
-    cmd: python preprocess.py data_external.sources=[simulate] data_external.simulate.process=[medium]
-    deps:
-      - preprocess.py
-      - ${data_external.simulate.medium.rel_path}
-    params:
-      - config.yaml:
-          - base
-          - data_external.simulate.medium
-    outs:
-      - ${data_external.simulate.medium.derived.rel_path}
+#   # preprocess_simulate:
+#   #   cmd: python preprocess.py data_external.sources=[simulate] data_external.simulate.process=[medium]
+#   #   deps:
+#   #     - preprocess.py
+#   #     - ${data_external.simulate.medium.rel_path}
+#   #   params:
+#   #     - config.yaml:
+#   #         - base
+#   #         - data_external.simulate.medium
+#   #   outs:
+#   #     - ${data_external.simulate.medium.derived.rel_path}
 
-  train_simulate_model2:
-    cmd: /usr/bin/time -v python train.py model_training.train=[simulate_model2]
-    deps:
-      - train.py
-      - ${model_training.simulate_model2.input_data_path}
-    params:
-      - config.yaml:
-          - model_training.simulate_model2
-    metrics:
-      - ${model_training.simulate_model2.metrics_path}:
-          cache: false
-    outs:
-      - ${model_training.simulate_model2.run_info_path}:
-          cache: false
-      - ${model_training.simulate_model2.training_parameters.loss_plot_path}
-      - ${model_training.simulate_model2.trained_data_path}
-      - ${model_training.simulate_model2.model_path}
-      - ${model_training.simulate_model2.pyrovelocity_data_path}
-        # persist: true
+#   # train_simulate_model2:
+#   #   cmd: /usr/bin/time -v python train.py model_training.train=[simulate_model2]
+#   #   deps:
+#   #     - train.py
+#   #     - ${model_training.simulate_model2.input_data_path}
+#   #   params:
+#   #     - config.yaml:
+#   #         - model_training.simulate_model2
+#   #   metrics:
+#   #     - ${model_training.simulate_model2.metrics_path}:
+#   #         cache: false
+#   #   outs:
+#   #     - ${model_training.simulate_model2.run_info_path}:
+#   #         cache: false
+#   #     - ${model_training.simulate_model2.training_parameters.loss_plot_path}
+#   #     - ${model_training.simulate_model2.trained_data_path}
+#   #     - ${model_training.simulate_model2.model_path}
+#   #     - ${model_training.simulate_model2.pyrovelocity_data_path}
+#   #       # persist: true
 
-  summarize_simulate_model2:
-    cmd: python summarize.py reports.model_summary.summarize=[simulate_model2]
-    deps:
-      - summarize.py
-      - ${model_training.simulate_model2.trained_data_path}
-      - ${model_training.simulate_model2.pyrovelocity_data_path}
-    params:
-      - config.yaml:
-          - model_training.simulate_model2
-          - reports.model_summary.simulate_model2
-    outs:
-      - ${reports.model_summary.simulate_model2.dataframe_path}
-      - ${reports.model_summary.simulate_model2.volcano_plot}
-      - ${reports.model_summary.simulate_model2.rainbow_plot}
-      - ${reports.model_summary.simulate_model2.vector_field_plot}
-      - ${reports.model_summary.simulate_model2.rainbow_plot}.png
-      - ${reports.model_summary.simulate_model2.vector_field_plot}.png
-      - ${reports.model_summary.simulate_model2.shared_time_plot}
+#   # summarize_simulate_model2:
+#   #   cmd: python summarize.py reports.model_summary.summarize=[simulate_model2]
+#   #   deps:
+#   #     - summarize.py
+#   #     - ${model_training.simulate_model2.trained_data_path}
+#   #     - ${model_training.simulate_model2.pyrovelocity_data_path}
+#   #   params:
+#   #     - config.yaml:
+#   #         - model_training.simulate_model2
+#   #         - reports.model_summary.simulate_model2
+#   #   outs:
+#   #     - ${reports.model_summary.simulate_model2.dataframe_path}
+#   #     - ${reports.model_summary.simulate_model2.volcano_plot}
+#   #     - ${reports.model_summary.simulate_model2.rainbow_plot}
+#   #     - ${reports.model_summary.simulate_model2.vector_field_plot}
+#   #     - ${reports.model_summary.simulate_model2.rainbow_plot}.png
+#   #     - ${reports.model_summary.simulate_model2.vector_field_plot}.png
+#   #     - ${reports.model_summary.simulate_model2.shared_time_plot}
 
-  # train_simulate_model1:
-  #   cmd: /usr/bin/time -v python train.py model_training.train=[simulate_model1]
-  #   deps:
-  #     - train.py
-  #     - ${model_training.simulate_model1.input_data_path}
-  #   params:
-  #     - config.yaml:
-  #         - model_training.simulate_model1
-  #   metrics:
-  #     - ${model_training.simulate_model1.metrics_path}:
-  #         cache: false
-  #   outs:
-  #     - ${model_training.simulate_model1.run_info_path}:
-  #         cache: false
-  #     - ${model_training.simulate_model1.training_parameters.loss_plot_path}
-  #     - ${model_training.simulate_model1.trained_data_path}
-  #     - ${model_training.simulate_model1.model_path}
-  #     - ${model_training.simulate_model1.pyrovelocity_data_path}
+#   # train_simulate_model1:
+#   #   cmd: /usr/bin/time -v python train.py model_training.train=[simulate_model1]
+#   #   deps:
+#   #     - train.py
+#   #     - ${model_training.simulate_model1.input_data_path}
+#   #   params:
+#   #     - config.yaml:
+#   #         - model_training.simulate_model1
+#   #   metrics:
+#   #     - ${model_training.simulate_model1.metrics_path}:
+#   #         cache: false
+#   #   outs:
+#   #     - ${model_training.simulate_model1.run_info_path}:
+#   #         cache: false
+#   #     - ${model_training.simulate_model1.training_parameters.loss_plot_path}
+#   #     - ${model_training.simulate_model1.trained_data_path}
+#   #     - ${model_training.simulate_model1.model_path}
+#   #     - ${model_training.simulate_model1.pyrovelocity_data_path}
 
-  # summarize_simulate_model1:
-  #   cmd: python summarize.py reports.model_summary.summarize=[simulate_model1]
-  #   deps:
-  #     - summarize.py
-  #     - ${model_training.simulate_model1.trained_data_path}
-  #     - ${model_training.simulate_model1.pyrovelocity_data_path}
-  #   params:
-  #     - config.yaml:
-  #         - model_training.simulate_model1
-  #         - reports.model_summary.simulate_model1
-  #   outs:
-  #     - ${reports.model_summary.simulate_model1.dataframe_path}
-  #     - ${reports.model_summary.simulate_model1.volcano_plot}
-  #     - ${reports.model_summary.simulate_model1.rainbow_plot}
-  #     - ${reports.model_summary.simulate_model1.vector_field_plot}
-  #     - ${reports.model_summary.simulate_model1.rainbow_plot}.png
-  #     - ${reports.model_summary.simulate_model1.vector_field_plot}.png
-  #     - ${reports.model_summary.simulate_model1.shared_time_plot}
+#   # summarize_simulate_model1:
+#   #   cmd: python summarize.py reports.model_summary.summarize=[simulate_model1]
+#   #   deps:
+#   #     - summarize.py
+#   #     - ${model_training.simulate_model1.trained_data_path}
+#   #     - ${model_training.simulate_model1.pyrovelocity_data_path}
+#   #   params:
+#   #     - config.yaml:
+#   #         - model_training.simulate_model1
+#   #         - reports.model_summary.simulate_model1
+#   #   outs:
+#   #     - ${reports.model_summary.simulate_model1.dataframe_path}
+#   #     - ${reports.model_summary.simulate_model1.volcano_plot}
+#   #     - ${reports.model_summary.simulate_model1.rainbow_plot}
+#   #     - ${reports.model_summary.simulate_model1.vector_field_plot}
+#   #     - ${reports.model_summary.simulate_model1.rainbow_plot}.png
+#   #     - ${reports.model_summary.simulate_model1.vector_field_plot}.png
+#   #     - ${reports.model_summary.simulate_model1.shared_time_plot}

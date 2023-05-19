@@ -17,16 +17,67 @@
 
 set -x
 
+
+### Define parallel execution function ###
+function run_parallel_pipeline() {
+    dvc stage list --name-only |\
+        grep -E "data_download*" |\
+        xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 8 + 3)); dvc repro "$@"' --
+
+    wait
+
+    dvc stage list --name-only |\
+        grep -E "preprocess*" |\
+        xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 8 + 3)); dvc repro "$@"' --
+
+    wait
+
+    # manually execute training stages to distribute over four GPUs
+    dvc repro train@pancreas_model2 &
+    sleep 2
+    dvc repro train@pbmc68k_model2 &
+    sleep 2
+    dvc repro train@pons_model2 &
+    sleep 2
+    dvc repro train@larry_model2 &
+    wait
+    dvc repro train@larry_tips_model2 &
+    sleep 2
+    dvc repro train@larry_mono_model2 &
+    sleep 2
+    dvc repro train@larry_neu_model2 &
+    sleep 2
+    dvc repro train@larry_multilineage_model2 &
+    wait
+    dvc repro train@pbmc10k_model2 &
+
+    wait
+
+    dvc stage list --name-only |\
+        grep -E "postprocess*" |\
+        xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 8 + 3)); dvc repro "$@"' --
+
+    wait
+
+    dvc stage list --name-only |\
+        grep -E "summarize*" |\
+        xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 8 + 3)); dvc repro "$@"' --
+
+    wait
+}
+
+
 ### Execute experiment run and submit PR ###
 python --version
 pip install --upgrade pip
 pip --version
-pip install -e .
-pip install matplotlib-venn==0.11.9
+pip install -e .[plotting]
+pip list
 sudo apt-get update && sudo apt-get install -y time && which time
 cd reproducibility/figures || exit
 
 dvc pull
+run_parallel_pipeline
 dvc repro
 dvc push
 
@@ -34,105 +85,46 @@ npm update -g @dvcorg/cml
 cml pr create --skip-ci .
 #########################
 
+generate_markdown() {
+    local data_set="$1"
+    local model="$2"
+
+    printf "\n# %s\n\n## %s\n\n### Metrics\n" "$data_set" "$model"
+    dvc metrics show --md "models/${data_set}_${model}/metrics.json"
+
+    echo "### Training plots"
+    echo '!'"[ELBO](./models/${data_set}_${model}/loss_plot.png)"
+
+    echo "### Run information"
+    printf "\n\`\`\`json\n"
+    cat "models/${data_set}_${model}/run_info.json"
+    printf "\n\`\`\`\n"
+}
 
 ### Post experiment report comment ###
 {
-# pipeline
 printf "# pipeline\n"
 dvc dag --md
 
-# pancreas
-## model 1
-printf "\n# pancreas\n\n## model 1\n\n### Metrics\n"
-dvc metrics show --md models/pancreas_model1/metrics.json
+data_sets=(
+    "pancreas"
+    "pons"
+    "pbmc68k"
+    "pbmc10k"
+    "larry"
+    "larry_mono"
+    "larry_neu"
+    "larry_multilineage"
+    "larry_tips"
+)
+models=("model2")
 
-echo "### Training plots"
-echo '!'"[ELBO](./models/pancreas_model1/loss_plot.png)"
+for data_set in "${data_sets[@]}"; do
+    for model in "${models[@]}"; do
+        generate_markdown "$data_set" "$model"
+    done
+done
 
-echo "### Run information"
-printf "\n\`\`\`json\n"
-cat models/pancreas_model1/run_info.json
-printf "\n\`\`\`\n"
-
-# pancreas
-## model 2
-printf "## model 2\n\n### Metrics\n"
-dvc metrics show --md models/pancreas_model2/metrics.json
-
-echo "### Training plots"
-echo '!'"[ELBO](./models/pancreas_model2/loss_plot.png)"
-
-echo "### Run information"
-printf "\n\`\`\`json\n"
-cat models/pancreas_model2/run_info.json
-printf "\n\`\`\`\n"
-
-# pbmc68k
-## model 1
-printf "# pbmc68k\n\n## model 1\n\n### Metrics\n"
-dvc metrics show --md models/pbmc68k_model1/metrics.json
-
-echo "### Training plots"
-echo '!'"[ELBO](./models/pbmc68k_model1/loss_plot.png)"
-
-echo "### Run information"
-printf "\n\`\`\`json\n"
-cat models/pbmc68k_model1/run_info.json
-printf "\n\`\`\`\n"
-
-# pbmc68k
-## model 2
-printf "## model 2\n\n### Metrics\n"
-dvc metrics show --md models/pbmc68k_model2/metrics.json
-
-echo "### Training plots"
-echo '!'"[ELBO](./models/pbmc68k_model2/loss_plot.png)"
-
-echo "### Run information"
-printf "\n\`\`\`json\n"
-cat models/pbmc68k_model2/run_info.json
-printf "\n\`\`\`\n"
-
-# pons
-## model 1
-printf "# pons\n\n## model 1\n\n### Metrics\n"
-dvc metrics show --md models/pons_model1/metrics.json
-
-echo "### Training plots"
-echo '!'"[ELBO](./models/pons_model1/loss_plot.png)"
-
-echo "### Run information"
-printf "\n\`\`\`json\n"
-cat models/pons_model1/run_info.json
-printf "\n\`\`\`\n"
-
-# pons
-## model 2
-printf "## model 2\n\n### Metrics\n"
-dvc metrics show --md models/pons_model2/metrics.json
-
-echo "### Training plots"
-echo '!'"[ELBO](./models/pons_model2/loss_plot.png)"
-
-echo "### Run information"
-printf "\n\`\`\`json\n"
-cat models/pons_model2/run_info.json
-printf "\n\`\`\`\n"
-
-# larry
-## model 2
-printf "# larry\n\n## model 2\n\n### Metrics\n"
-dvc metrics show --md models/larry_model2/metrics.json
-
-echo "### Training plots"
-echo '!'"[ELBO](./models/larry_model2/loss_plot.png)"
-
-echo "### Run information"
-printf "\n\`\`\`json\n"
-cat models/larry_model2/run_info.json
-printf "\n\`\`\`\n"
-
-# pipeline files
 printf "# pipeline files\n"
 dvc dag -o --md
 } >> report.md

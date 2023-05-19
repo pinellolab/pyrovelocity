@@ -2,26 +2,12 @@
 
 We provide python scripts as well as a [DVC pipeline](https://dvc.org/doc/user-guide/pipelines) (see [dvc.yaml](./dvc.yaml)) for reproducing our results. If you would like to use this, you would need to install [data version control](https://dvc.org/doc/install) with [google cloud storage support](https://dvc.org/doc/install/linux#install-with-pip) (i.e. `pipx install dvc[gs]`). Please refer to our [manuscript](https://www.biorxiv.org/content/10.1101/2022.09.12.507691v2) for interpretation of the resulting figures.
 
-## Latest version
-
-```bash
-mamba env create -n pv2 -f conda/environment-gpu-upd.yml
-conda activate pv2
-pip install xdoctest or mamba install -y xdoctest
-pip install matplotlib_venn
-pip install statannotations
-
-```
-
 ## Debugging development dependencies in flux
 
-As new dependencies are being tested, you may find the environmented created by the [reproducibility/environment/Makefile](../environment/Makefile) is transiently out of sync with some scripts in this directory. For example, recently added dependencies including [hydra](https://hydra.cc/docs/intro/#installation) ([hydra-core](https://anaconda.org/conda-forge/hydra-core) in conda), [mlflow](https://mlflow.org/docs/latest/python_api/mlflow.html), and [matplotlib-venn](https://github.com/konstantint/matplotlib-venn) may require some variation of:
+As new dependencies are being tested, you may find the environmented created by the [reproducibility/environment/Makefile](../environment/Makefile) is transiently out of sync with some scripts in this directory. For example, installing [matplotlib-venn](https://github.com/konstantint/matplotlib-venn) while freezing other dependencies may require some variation of:
 
 ```bash
 mamba install --freeze-installed \
-  importlib_metadata=5.0.0 \
-  mlflow=1.30.0 \
-  hydra-core=1.2.0 \
   matplotlib-venn=0.11.7
 ```
 

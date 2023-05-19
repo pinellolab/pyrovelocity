@@ -14,10 +14,12 @@ from omegaconf import DictConfig
 from pyrovelocity.api import train_model
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.data import load_data
+from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.utils import filter_startswith_dict
 from pyrovelocity.utils import get_pylogger
 from pyrovelocity.utils import mae_evaluate
 from pyrovelocity.utils import pretty_print_dict
+from pyrovelocity.utils import print_anndata
 from pyrovelocity.utils import print_attributes
 
 
@@ -40,7 +42,7 @@ Outputs:
 
 
 def train(conf: DictConfig, logger: Logger) -> None:
-    for data_model in conf.model_training.train:
+    for data_model in conf.train_models:
         ###########
         # load data
         ###########
@@ -49,12 +51,16 @@ def train(conf: DictConfig, logger: Logger) -> None:
 
         trained_data_path = data_model_conf.trained_data_path
         model_path = data_model_conf.model_path
+        posterior_samples_path = data_model_conf.posterior_samples_path
         pyrovelocity_data_path = data_model_conf.pyrovelocity_data_path
         vector_field_basis = data_model_conf.vector_field_parameters.basis
         metrics_path = data_model_conf.metrics_path
         run_info_path = data_model_conf.run_info_path
 
-        ncpus_use = min(16, max(1, round(multiprocessing.cpu_count() * 0.8)))
+        print_config_tree(data_model_conf, logger, ())
+        logger.info(f"\n\nTraining model(s) in: {data_model}\n\n")
+
+        ncpus_use = min(23, max(1, round(multiprocessing.cpu_count() * 0.8)))
         print("ncpus_use:", ncpus_use)
         logger.info(
             f"\n\nVerifying existence of paths for:\n\n"
@@ -66,6 +72,7 @@ def train(conf: DictConfig, logger: Logger) -> None:
             logger.info(f"Loading data: {processed_path}")
             adata = load_data(processed_path=processed_path)
             print_attributes(adata)
+            print_anndata(adata)
         else:
             logger.error(f"Input data: {processed_path} does not exist")
             raise FileNotFoundError(
@@ -78,11 +85,14 @@ def train(conf: DictConfig, logger: Logger) -> None:
 
         if torch.cuda.is_available():
             accelerators = list(range(torch.cuda.device_count()))
-            gpu_id = accelerators.pop()
+            if len(accelerators) >= 4:
+                gpu_id = data_model_conf.gpu_id
+            else:
+                gpu_id = accelerators.pop()
         else:
             gpu_id = False
 
-        print(gpu_id)
+        print(f"GPU ID: {gpu_id}")
 
         if os.path.exists(model_path) and os.path.isfile(pyrovelocity_data_path):
             logger.info(
@@ -100,7 +110,6 @@ def train(conf: DictConfig, logger: Logger) -> None:
                 print(f"Active run_id: {run.info.run_id}")
                 mlflow.log_params(data_model_conf.training_parameters)
 
-                # train model
                 trained_model, posterior_samples = train_model(
                     adata,
                     **dict(
@@ -110,46 +119,13 @@ def train(conf: DictConfig, logger: Logger) -> None:
                 )
 
                 logger.info("Data attributes after model training")
-                pretty_print_dict(posterior_samples)
-
-                mae_df = mae_evaluate(posterior_samples, adata)
-                mlflow.log_metric("MAE", mae_df["MAE"].mean())
-
-                logger.info("computing vector field uncertainty")
-                # v_map_all, embeds_radian, fdri = vector_field_uncertainty(
-                #    adata,
-                #    posterior_samples,
-                #    basis=vector_field_basis,
-                #    n_jobs=ncpus_use,
-                # )
-                # mlflow.log_metric(
-                #    "FDR_sig_frac", round((fdri < 0.05).sum() / fdri.shape[0], 3)
-                # )
-                # mlflow.log_metric("FDR_HMP", harmonic_mean(fdri))
-                # logger.info(
-                #     f"Data attributes after computation of vector field uncertainty"
-                # )
-                # print_attributes(posterior_samples)
-
-                pyrovelocity_data = (
-                    trained_model.compute_statistics_from_posterior_samples(
-                        adata,
-                        posterior_samples,
-                        vector_field_basis=vector_field_basis,
-                        ncpus_use=ncpus_use,
-                    )
-                )
-                logger.info(
-                    "Data attributes after computation of vector field uncertainty"
-                )
-                pretty_print_dict(posterior_samples)
-                print(posterior_samples.keys())
 
                 run_id = run.info.run_id
 
             logger.info(f"Saving pyrovelocity data: {pyrovelocity_data_path}")
-            trained_model.save_pyrovelocity_data(
-                pyrovelocity_data, pyrovelocity_data_path
+            CompressedPickle.save(
+                posterior_samples_path,
+                posterior_samples,
             )
 
             ##############
@@ -181,16 +157,8 @@ def train(conf: DictConfig, logger: Logger) -> None:
 
                 check_shared_time(posterior_samples, adata)
 
-            # logger.info("computing mean vector field")
-            # compute_mean_vector_field(
-            #    posterior_samples=posterior_samples,
-            #    adata=adata,
-            #    basis=vector_field_basis,
-            #    n_jobs=ncpus_use,
-            # )
-            # embed_mean = adata.obsm[f"velocity_pyro_{vector_field_basis}"]
-            # logger.info("Data attributes after computation of mean vector field")
             print_attributes(adata)
+            print_anndata(adata)
 
             ##################
             # save checkpoints
@@ -200,19 +168,7 @@ def train(conf: DictConfig, logger: Logger) -> None:
             adata.write(trained_data_path)
 
             logger.info(f"Saving model: {model_path}")
-            trained_model.save(model_path, overwrite=True)
-
-            # result_dict = {
-            #    "adata_model_pos": posterior_samples,
-            #    "v_map_all": v_map_all,
-            #    "embeds_radian": embeds_radian,
-            #    "fdri": fdri,
-            #    "embed_mean": embed_mean,
-            # }
-
-            # logger.info(f"Saving pyrovelocity data: {pyrovelocity_data_path}")
-            # with open(pyrovelocity_data_path, "wb") as f:
-            #    pickle.dump(result_dict, f)
+            trained_model.save_model(model_path, overwrite=True)
 
 
 def print_logged_info(r: mlflow.entities.run.Run) -> None:
@@ -242,10 +198,6 @@ def main(conf: DictConfig) -> None:
     """
 
     logger = get_pylogger(name="TRAIN", log_level=conf.base.log_level)
-    print_config_tree(conf, logger, ())
-
-    logger.info(f"\n\nTraining model(s) in: {conf.model_training.train}\n\n")
-
     train(conf, logger)
 
 

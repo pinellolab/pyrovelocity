@@ -1,3 +1,5 @@
 /loss_plot.png
 /model
 /pyrovelocity.pkl
+/posterior_samples.pkl.zst
+/pyrovelocity.pkl.zst
