@@ -6,58 +6,72 @@ stages:
   data_download:
     foreach: ${data_sets}
     do:
-      # cmd: python data_download.py data_external.source=${item.source} data_external.download=${item.download}
       cmd: python data_download.py process_data=[${key}]
       deps:
         - data_download.py
       params:
         - config.yaml:
-            - base
             - data_sets.${key}
       outs:
         - ${item.rel_path}:
             persist: true
 
-  # preprocess:
-  #   foreach: ${data_sources}
-  #   do:
-  #     cmd: python preprocess.py data_sources.source=${item.source} data_sources.process=${item.process}
-  #     deps:
-  #       - preprocess.py
-  #       - ${item.dl_path}
-  #     params:
-  #       - config.yaml:
-  #           - base
-  #           - data_sources.${key}
-  #     outs:
-  #       - ${item.derived.rel_path}
+  preprocess:
+    foreach: ${data_sets}
+    do:
+      cmd: python preprocess.py process_data=[${key}]
+      deps:
+        - preprocess.py
+        - ${item.rel_path}
+      params:
+        - config.yaml:
+            - data_sets.${key}
+      outs:
+        - ${item.derived.rel_path}
 
-  # train:
-  #   foreach: ${models}
-  #   do:
-  #     cmd: /usr/bin/time -v python train.py models.name=${key}
-  #     deps:
-  #       - train.py
-  #       - ${item.input_data_path}
-  #     params:
-  #       - config.yaml:
-  #           - base
-  #           - models.${key}
-  #     metrics:
-  #       - ${item.metrics_path}:
-  #           cache: false
-  #     outs:
-  #       - ${item.run_info_path}:
-  #           cache: false
-  #       - ${item.training_parameters.loss_plot_path}
-  #       - ${item.trained_data_path}
-  #       - ${item.model_path}
-  #       - ${item.pyrovelocity_data_path}
+  train:
+    foreach: ${model_training}
+    do:
+      cmd: /usr/bin/time -v python train.py train_models=[${key}]
+      deps:
+        - train.py
+        - ${item.input_data_path}
+      params:
+        - config.yaml:
+            - base
+            - model_training.${key}
+      outs:
+        - ${item.run_info_path}:
+            cache: false
+        - ${item.training_parameters.loss_plot_path}
+        - ${item.trained_data_path}
+        - ${item.model_path}
+        - ${item.posterior_samples_path}
+        # - ${item.pyrovelocity_data_path}
+
+  postprocess:
+    foreach: ${model_training}
+    do:
+      cmd: /usr/bin/time -v python postprocess.py train_models=[${key}]
+      deps:
+        - postprocess.py
+        - ${item.trained_data_path}
+        - ${item.model_path}
+        - ${item.posterior_samples_path}
+      params:
+        - config.yaml:
+            - base
+            - model_training.${key}
+      metrics:
+        - ${item.metrics_path}:
+            cache: false
+      outs:
+        - ${item.pyrovelocity_data_path}
 
   # summarize:
-  #   foreach: ${models}
+  #   foreach: ${reports.model_summary}
   #   do:
-  #     cmd: python summarize.py models.name=${key}
+  #     cmd: python summarize.py train_models=${key}
   #     deps:
   #       - summarize.py
   #       - ${item.trained_data_path}
@@ -65,7 +79,7 @@ stages:
   #     params:
   #       - config.yaml:
   #           - base
-  #           - models.${key}
+  #           - reports.model_summary.${key}
   #     outs:
   #       - ${item.dataframe_path}
   #       - ${item.volcano_plot}
@@ -76,67 +90,67 @@ stages:
   #       - ${item.shared_time_plot}
 
 
-  figure2:
-    cmd: python fig2/figure.py
-    deps:
-      - fig2/figure.py
-      - ${model_training.pancreas_model1.trained_data_path}
-      - ${model_training.pancreas_model1.pyrovelocity_data_path}
-      - ${model_training.pbmc68k_model1.trained_data_path}
-      - ${model_training.pbmc68k_model1.pyrovelocity_data_path}
-    params:
-      - config.yaml:
-          - reports.figure2
-    outs:
-      - ${reports.figure2.tif_path}
-        # persist: true
-      - ${reports.figure2.svg_path}
-        # persist: true
-      - ${reports.figure2.biomarker_selection_path}
-      - ${reports.figure2.biomarker_phaseportrait_path}
-      - ${reports.figure2.uncertainty_param_plot_path}
+  # figure2:
+  #   cmd: python fig2/figure.py
+  #   deps:
+  #     - fig2/figure.py
+  #     - ${model_training.pancreas_model1.trained_data_path}
+  #     - ${model_training.pancreas_model1.pyrovelocity_data_path}
+  #     - ${model_training.pbmc68k_model1.trained_data_path}
+  #     - ${model_training.pbmc68k_model1.pyrovelocity_data_path}
+  #   params:
+  #     - config.yaml:
+  #         - reports.figure2
+  #   outs:
+  #     - ${reports.figure2.tif_path}
+  #       # persist: true
+  #     - ${reports.figure2.svg_path}
+  #       # persist: true
+  #     - ${reports.figure2.biomarker_selection_path}
+  #     - ${reports.figure2.biomarker_phaseportrait_path}
+  #     - ${reports.figure2.uncertainty_param_plot_path}
 
-  figure2_extras:
-    cmd: python fig2/figure_extras.py reports.model_summary.summarize=[pbmc10k_model2,larry_tips_model2,pbmc68k_model2]
-    deps:
-      - fig2/figure_extras.py
-      - ${model_training.pbmc10k_model2.pyrovelocity_data_path}
-      - ${model_training.larry_tips_model2.pyrovelocity_data_path}
-      - ${model_training.pbmc68k_model2.pyrovelocity_data_path}
-    params:
-      - config.yaml:
-          - reports.figure2
-    outs:
-      - ${reports.figure2_extras.shared_time_plot}
+  # figure2_extras:
+  #   cmd: python fig2/figure_extras.py reports.model_summary.summarize=[pbmc10k_model2,larry_tips_model2,pbmc68k_model2]
+  #   deps:
+  #     - fig2/figure_extras.py
+  #     - ${model_training.pbmc10k_model2.pyrovelocity_data_path}
+  #     - ${model_training.larry_tips_model2.pyrovelocity_data_path}
+  #     - ${model_training.pbmc68k_model2.pyrovelocity_data_path}
+  #   params:
+  #     - config.yaml:
+  #         - reports.figure2
+  #   outs:
+  #     - ${reports.figure2_extras.shared_time_plot}
 
-  figureS3:
-    cmd: python figS3/figure.py
-    deps:
-      - figS3/figure.py
-      - ${model_training.pancreas_model2.trained_data_path}
-      - ${model_training.pancreas_model2.pyrovelocity_data_path}
-      - ${model_training.pbmc68k_model2.trained_data_path}
-      - ${model_training.pbmc68k_model2.pyrovelocity_data_path}
-    params:
-      - config.yaml:
-          - reports.figureS3
-    outs:
-      - ${reports.figureS3.tif_path}
-        # persist: true
-      - ${reports.figureS3.svg_path}
-        # persist: true
+  # figureS3:
+  #   cmd: python figS3/figure.py
+  #   deps:
+  #     - figS3/figure.py
+  #     - ${model_training.pancreas_model2.trained_data_path}
+  #     - ${model_training.pancreas_model2.pyrovelocity_data_path}
+  #     - ${model_training.pbmc68k_model2.trained_data_path}
+  #     - ${model_training.pbmc68k_model2.pyrovelocity_data_path}
+  #   params:
+  #     - config.yaml:
+  #         - reports.figureS3
+  #   outs:
+  #     - ${reports.figureS3.tif_path}
+  #       # persist: true
+  #     - ${reports.figureS3.svg_path}
+  #       # persist: true
 
-  figureS3_extras:
-    cmd: python figS3/figure_extras.py reports.model_summary.summarize=[larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
-    deps:
-      - figS3/figure_extras.py
-      - ${model_training.larry_model2.pyrovelocity_data_path}
-      - ${model_training.larry_neu_model2.pyrovelocity_data_path}
-      - ${model_training.larry_mono_model2.pyrovelocity_data_path}
-      - ${model_training.larry_multilineage_model2.pyrovelocity_data_path}
-      - ${model_training.larry_tips_model2.pyrovelocity_data_path}
-    params:
-      - config.yaml:
-          - reports.figureS3
-    outs:
-      - ${reports.figureS3_extras.shared_time_plot}
+  # figureS3_extras:
+  #   cmd: python figS3/figure_extras.py reports.model_summary.summarize=[larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
+  #   deps:
+  #     - figS3/figure_extras.py
+  #     - ${model_training.larry_model2.pyrovelocity_data_path}
+  #     - ${model_training.larry_neu_model2.pyrovelocity_data_path}
+  #     - ${model_training.larry_mono_model2.pyrovelocity_data_path}
+  #     - ${model_training.larry_multilineage_model2.pyrovelocity_data_path}
+  #     - ${model_training.larry_tips_model2.pyrovelocity_data_path}
+  #   params:
+  #     - config.yaml:
+  #         - reports.figureS3
+  #   outs:
+  #     - ${reports.figureS3_extras.shared_time_plot}
