@@ -13,6 +13,7 @@ import seaborn as sns
 from omegaconf import DictConfig
 
 from pyrovelocity.config import print_config_tree
+from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.plot import plot_arrow_examples
 from pyrovelocity.plot import plot_gene_ranking
 from pyrovelocity.plot import plot_posterior_time
@@ -55,12 +56,19 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     figure2_tif_path = conf.reports.figureS3.tif_path
     figure2_svg_path = conf.reports.figureS3.svg_path
 
+    print_config_tree(conf.reports.figureS3, logger, ())
+
+    logger.info(
+        f"\n\nVerifying existence of paths for:\n\n"
+        f"  reports: {conf.reports.figureS3.path}\n"
+    )
+    Path(conf.reports.figureS3.path).mkdir(parents=True, exist_ok=True)
+
     if os.path.isfile(pyrovelocity_pancreas_data_path) and os.access(
         pyrovelocity_pancreas_data_path, os.R_OK
     ):
         logger.info(f"Loading: {pyrovelocity_pancreas_data_path}")
-        with open(pyrovelocity_pancreas_data_path, "rb") as f:
-            posterior_samples = pickle.load(f)
+        posterior_samples = CompressedPickle.load(pyrovelocity_pancreas_data_path)
     else:
         logger.error(
             f"{pyrovelocity_pancreas_data_path} does not exist or is not accessible"
@@ -69,7 +77,6 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             errno.ENOENT, os.strerror(errno.ENOENT), pyrovelocity_pancreas_data_path
         )
 
-    # posterior_samples = posterior_samples["posterior_samples"]
     v_map_all = posterior_samples["vector_field_posterior_samples"]
     embeds_radian = posterior_samples["embeds_angle"]
     fdri = posterior_samples["fdri"]
@@ -79,8 +86,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         pyrovelocity_pbmc68k_data_path, os.R_OK
     ):
         logger.info(f"Loading: {pyrovelocity_pbmc68k_data_path}")
-        with open(pyrovelocity_pbmc68k_data_path, "rb") as f:
-            posterior_samples_pbmc = pickle.load(f)
+        posterior_samples_pbmc = CompressedPickle.load(pyrovelocity_pbmc68k_data_path)
     else:
         logger.error(
             f"{pyrovelocity_pbmc68k_data_path} does not exist or is not accessible"
@@ -423,13 +429,6 @@ def main(conf: DictConfig) -> None:
     """
 
     logger = get_pylogger(name="PLOT", log_level=conf.base.log_level)
-    print_config_tree(conf, logger, ())
-
-    logger.info(
-        f"\n\nVerifying existence of paths for:\n\n"
-        f"  reports: {conf.reports.figureS3.path}\n"
-    )
-    Path(conf.reports.figureS3.path).mkdir(parents=True, exist_ok=True)
 
     if os.path.isfile(conf.reports.figureS3.tif_path) and os.path.isfile(
         conf.reports.figureS3.svg_path
