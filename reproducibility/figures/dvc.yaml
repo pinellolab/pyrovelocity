@@ -2,7 +2,6 @@ vars:
   - config.yaml
 
 stages:
-
   data_download:
     foreach: ${data_sets}
     do:
@@ -89,7 +88,6 @@ stages:
         - ${item.rainbow_plot}.png
         - ${item.vector_field_plot}.png
         - ${item.shared_time_plot}
-
 
   figureS3:
     cmd: python figS3/figure.py
