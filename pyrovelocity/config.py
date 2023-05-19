@@ -1,4 +1,5 @@
 import argparse
+import fnmatch
 from pathlib import Path
 from typing import Sequence
 from typing import Union
@@ -471,27 +472,26 @@ def hydra_zen_compressed_configure():
             derived=dict(
                 process_method=process_method,
                 process_args=process_args,
-                rel_path="${paths.data}/processed/" + f"{name}_processed.h5ad",
+                rel_path="${paths.data_processed}/" + f"{name}_processed.h5ad",
             ),
         )
 
     def create_model_config(
-        source, name, model_suffix, vector_field_basis, **custom_training_parameters
+        source, name, model_suffix, vector_field_basis, gpu_id=0, **custom_training_parameters
     ):
         return dict(
             path="${paths.models}/" + f"{name}_model{model_suffix}",
             model_path="${.path}/model",
-            # input_data_path="${data_external."
-            # + f"{source}.{name}"
-            # + ".derived.rel_path}",
             input_data_path="${data_sets."
             + f"{name}"
             + ".derived.rel_path}",
             trained_data_path="${.path}/trained.h5ad",
-            pyrovelocity_data_path="${.path}/pyrovelocity.pkl",
+            pyrovelocity_data_path="${.path}/pyrovelocity.pkl.zst",
+            posterior_samples_path="${.path}/posterior_samples.pkl.zst",
             metrics_path="${.path}/metrics.json",
             run_info_path="${.path}/run_info.json",
             vector_field_parameters=dict(basis=vector_field_basis),
+            gpu_id=gpu_id,
             training_parameters=pbuilds(
                 train_model,
                 loss_plot_path="${..path}/loss_plot.png",
@@ -515,14 +515,24 @@ def hydra_zen_compressed_configure():
             biomarker_phaseportrait_plot=f"{path}/markers_phaseportrait.pdf",
         )
 
-    # define configuration
     base = dict(log_level="INFO")
 
     paths = dict(
         data="data",
         models="models",
         reports="reports",
+        data_external="${paths.data}/external",
+        data_processed="${paths.data}/processed",
     )
+
+    download_data = [
+        "simulate_medium",
+        "pons",
+        "pancreas",
+        "pbmc10k",
+        "pbmc68k",
+        "larry",
+    ]
 
     process_data = [
         "simulate_medium",
@@ -554,139 +564,7 @@ def hydra_zen_compressed_configure():
         "pbmc10k_model2",
     ]
 
-    return make_config(
-        base=base,
-        paths=paths,
-        process_data=process_data,
-        train_models=train_models,
-        data_sets=dict(
-            # root_path="${paths.data}/external",
-            # processed_path="${paths.data}/processed",
-            # sources=["simulate", "velocyto", "scvelo", "pyrovelocity"],
-            simulate_medium=create_dataset_config(
-                    source="simulate",
-                    name="simulated_medium",
-                    dl_root="${paths.data}/external",
-                    data_file="simulated_medium.h5ad",
-                    rel_path="${.dl_root}/simulated_medium.h5ad",
-                    url="https://storage.googleapis.com/pyrovelocity/data/simulated_medium.h5ad",
-                    process_method="load_data",
-                    process_args=dict(),
-                ),
-            # velocyto=dict(
-            #     download=["pons"],
-            #     process=["pons"],
-            #     sources=dict(
-            #         gcs_root_url="https://storage.googleapis.com/pyrovelocity/data"
-            #     ),
-                pons=create_dataset_config(
-                    source="velocyto",
-                    name="pons",
-                    dl_root="${paths.data}/external",
-                    data_file="oligo_lite.h5ad",
-                    rel_path="${.dl_root}/oligo_lite.h5ad",
-                    url="https://storage.googleapis.com/pyrovelocity/data/oligo_lite.h5ad",
-                    process_method="load_data",
-                    process_args=dict(),
-                ),
-            # ),
-            # scvelo=dict(
-            #     download=["pancreas", "pbmc68k"],
-            #     process=["pancreas", "pbmc68k"],
-            #     sources=dict(
-            #         figshare_root_url="https://ndownloader.figshare.com/files",
-            #         scvelo_root_url="https://github.com/theislab/scvelo_notebooks/raw/master",
-            #     ),
-                pancreas=create_dataset_config(
-                    source="scvelo",
-                    name="pancreas",
-                    dl_root="data/Pancreas",
-                    data_file="endocrinogenesis_day15.h5ad",
-                    rel_path="${paths.data}/external/endocrinogenesis_day15.h5ad",
-                    url="https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad",
-                    process_method="load_data",
-                    process_args=dict(process_cytotrace=True),
-                ),
-                pbmc68k=create_dataset_config(
-                    source="scvelo",
-                    name="pbmc68k",
-                    dl_root="data/PBMC",
-                    data_file="pbmc68k.h5ad",
-                    rel_path="${paths.data}/external/pbmc68k.h5ad",
-                    url="https://ndownloader.figshare.com/files/27686886",
-                    process_method="load_data",
-                    process_args=dict(),
-                ),
-            # ),
-            # pyrovelocity=dict(
-            #     download=["larry", "pbmc10k"],
-            #     process=["pbmc10k"],
-            #     sources=dict(
-            #         figshare_root_url="https://ndownloader.figshare.com/files"
-            #     ),
-                larry=create_dataset_config(
-                    source="pyrovelocity",
-                    name="larry",
-                    dl_root="${paths.data}/external",
-                    data_file="larry.h5ad",
-                    rel_path="${.dl_root}/larry.h5ad",
-                    url="https://ndownloader.figshare.com/files/37028569",
-                    process_method="load_data",
-                    process_args=dict(),
-                ),
-                larry_tips=create_dataset_config(
-                    source="pyrovelocity",
-                    name="larry_tips",
-                    dl_root="${paths.data}/external",
-                    data_file="larry_tips.h5ad",
-                    rel_path="${.dl_root}/larry_tips.h5ad",
-                    url="https://storage.googleapis.com/pyrovelocity/data/larry_tips.h5ad",
-                    process_method="load_data",
-                    process_args=dict(),
-                ),
-                larry_mono=create_dataset_config(
-                    source="pyrovelocity",
-                    name="larry_mono",
-                    dl_root="${paths.data}/external",
-                    data_file="larry_mono.h5ad",
-                    rel_path="${.dl_root}/larry_mono.h5ad",
-                    url="https://storage.googleapis.com/pyrovelocity/data/larry_mono.h5ad",
-                    process_method="load_data",
-                    process_args=dict(),
-                ),
-                larry_neu=create_dataset_config(
-                    source="pyrovelocity",
-                    name="larry_neu",
-                    dl_root="${paths.data}/external",
-                    data_file="larry_neu.h5ad",
-                    rel_path="${.dl_root}/larry_neu.h5ad",
-                    url="https://storage.googleapis.com/pyrovelocity/data/larry_neu.h5ad",
-                    process_method="load_data",
-                    process_args=dict(),
-                ),
-                larry_multilineage=create_dataset_config(
-                    source="pyrovelocity",
-                    name="larry_multilineage",
-                    dl_root="${paths.data}/external",
-                    data_file="larry_multilineage.h5ad",
-                    rel_path="${.dl_root}/larry_multilineage.h5ad",
-                    url="https://storage.googleapis.com/pyrovelocity/data/larry_multilineage.h5ad",
-                    process_method="load_data",
-                    process_args=dict(),
-                ),
-                pbmc10k=create_dataset_config(
-                    source="pyrovelocity",
-                    name="pbmc10k",
-                    dl_root="${paths.data}/external",
-                    data_file="pbmc10k.h5ad",
-                    rel_path="${.dl_root}/pbmc10k.h5ad",
-                    url="https://storage.googleapis.com/pyrovelocity/data/pbmc10k.h5ad",
-                    process_method="load_data",
-                    process_args=dict(),
-                ),
-            # ),
-        ),
-        model_training=dict(
+    model_training=dict(
             simulate_model1=create_model_config(
                 "simulate",
                 "simulate_medium",
@@ -702,7 +580,7 @@ def hydra_zen_compressed_configure():
                 2,
                 "umap",
                 cell_state="leiden",
-                max_epochs=4000,
+                max_epochs=300,
                 offset=True,
             ),
             pancreas_model1=create_model_config(
@@ -718,6 +596,7 @@ def hydra_zen_compressed_configure():
                 "pancreas",
                 2,
                 "umap",
+                gpu_id=0,
                 offset=True,
                 max_epochs=2000,
             ),
@@ -735,6 +614,7 @@ def hydra_zen_compressed_configure():
                 "pbmc68k",
                 2,
                 "tsne",
+                gpu_id=1,
                 cell_state="celltype",
                 offset=True,
                 max_epochs=2000,
@@ -753,6 +633,7 @@ def hydra_zen_compressed_configure():
                 "pons",
                 2,
                 "umap",
+                gpu_id=2,
                 cell_state="celltype",
                 offset=True,
                 max_epochs=2000,
@@ -762,6 +643,7 @@ def hydra_zen_compressed_configure():
                 "larry",
                 2,
                 "emb",
+                gpu_id=3,
                 svi_train=True,
                 batch_size=4000,
                 cell_state="state_info",
@@ -773,6 +655,7 @@ def hydra_zen_compressed_configure():
                 "larry_tips",
                 2,
                 "umap",
+                gpu_id=0,
                 svi_train=True,
                 batch_size=4000,
                 cell_state="state_info",
@@ -784,6 +667,7 @@ def hydra_zen_compressed_configure():
                 "larry_mono",
                 2,
                 "emb",
+                gpu_id=1,
                 svi_train=True,
                 batch_size=4000,
                 cell_state="state_info",
@@ -795,6 +679,7 @@ def hydra_zen_compressed_configure():
                 "larry_neu",
                 2,
                 "emb",
+                gpu_id=2,
                 svi_train=True,
                 batch_size=4000,
                 cell_state="state_info",
@@ -806,6 +691,7 @@ def hydra_zen_compressed_configure():
                 "larry_multilineage",
                 2,
                 "emb",
+                gpu_id=3,
                 svi_train=True,
                 batch_size=4000,
                 cell_state="state_info",
@@ -817,32 +703,133 @@ def hydra_zen_compressed_configure():
                 "pbmc10k",
                 2,
                 "tsne",
+                gpu_id=0,
                 cell_state="leiden",
                 offset=True,
                 max_epochs=2000,
             ),
-        ),
+        )
+    
+    data_sets = dict(
+            simulate_medium=create_dataset_config(
+                    source="simulate",
+                    name="simulated_medium",
+                    dl_root="${paths.data_external}",
+                    data_file="simulated_medium.h5ad",
+                    rel_path="${paths.data_external}/${.data_file}",
+                    url="https://storage.googleapis.com/pyrovelocity/data/simulated_medium.h5ad",
+                    process_method="load_data",
+                    process_args=dict(),
+                ),
+            pons=create_dataset_config(
+                source="velocyto",
+                name="pons",
+                dl_root="${paths.data_external}",
+                data_file="oligo_lite.h5ad",
+                rel_path="${paths.data_external}/${.data_file}",
+                url="https://storage.googleapis.com/pyrovelocity/data/oligo_lite.h5ad",
+                process_method="load_data",
+                process_args=dict(),
+            ),
+            pancreas=create_dataset_config(
+                source="scvelo",
+                name="pancreas",
+                dl_root="data/Pancreas",
+                data_file="endocrinogenesis_day15.h5ad",
+                rel_path="${paths.data_external}/${.data_file}",
+                url="https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad",
+                process_method="load_data",
+                process_args=dict(process_cytotrace=True),
+            ),
+            pbmc68k=create_dataset_config(
+                source="scvelo",
+                name="pbmc68k",
+                dl_root="data/PBMC",
+                data_file="pbmc68k.h5ad",
+                rel_path="${paths.data_external}/${.data_file}",
+                url="https://ndownloader.figshare.com/files/27686886",
+                process_method="load_data",
+                process_args=dict(),
+            ),
+            larry=create_dataset_config(
+                source="pyrovelocity",
+                name="larry",
+                dl_root="${paths.data_external}",
+                data_file="larry.h5ad",
+                rel_path="${paths.data_external}/${.data_file}",
+                url="https://ndownloader.figshare.com/files/37028569",
+                process_method="load_data",
+                process_args=dict(),
+            ),
+            larry_tips=create_dataset_config(
+                source="pyrovelocity",
+                name="larry_tips",
+                dl_root="${paths.data_external}",
+                data_file="larry_tips.h5ad",
+                rel_path="${paths.data_external}/${.data_file}",
+                url="https://ndownloader.figshare.com/files/37028569",
+                process_method="load_data",
+                process_args=dict(),
+            ),
+            larry_mono=create_dataset_config(
+                source="pyrovelocity",
+                name="larry_mono",
+                dl_root="${paths.data_external}",
+                data_file="larry_mono.h5ad",
+                rel_path="${paths.data_external}/${.data_file}",
+                url="https://ndownloader.figshare.com/files/37028569",
+                process_method="load_data",
+                process_args=dict(),
+            ),
+            larry_neu=create_dataset_config(
+                source="pyrovelocity",
+                name="larry_neu",
+                dl_root="${paths.data_external}",
+                data_file="larry_neu.h5ad",
+                rel_path="${paths.data_external}/${.data_file}",
+                url="https://ndownloader.figshare.com/files/37028575",
+                process_method="load_data",
+                process_args=dict(),
+            ),
+            larry_multilineage=create_dataset_config(
+                source="pyrovelocity",
+                name="larry_multilineage",
+                dl_root="${paths.data_external}",
+                data_file="larry_multilineage.h5ad",
+                rel_path="${paths.data_external}/${.data_file}",
+                url="https://ndownloader.figshare.com/files/37028569",
+                process_method="load_data",
+                process_args=dict(),
+            ),
+            pbmc10k=create_dataset_config(
+                source="pyrovelocity",
+                name="pbmc10k",
+                dl_root="${paths.data_external}",
+                data_file="pbmc10k.h5ad",
+                rel_path="${paths.data_external}/${.data_file}",
+                url="https://storage.googleapis.com/pyrovelocity/data/pbmc10k.h5ad",
+                process_method="load_data",
+                process_args=dict(),
+            ),
+        )
+    
+    return make_config(
+        base=base,
+        paths=paths,
+        download_data=download_data,
+        process_data=process_data,
+        train_models=train_models,
+        data_sets=data_sets,
+        model_training = {k: model_training[k] for k in model_training if fnmatch.fnmatch(k, '*_model2')},
         reports=dict(
             model_summary=dict(
-                # summarize=[
-                #     "simulate_model1",
-                #     "simulate_model2",
-                #     "pancreas_model1",
-                #     "pancreas_model2",
-                #     "pbmc68k_model1",
-                #     "pbmc68k_model2",
-                #     "pons_model1",
-                #     "pons_model2",
-                #     "pbmc10k_model2",
-                #     "larry_tips_model2",
-                # ],
-                simulate_model1=create_reports_config("medium", 1),
+                # simulate_model1=create_reports_config("medium", 1),
                 simulate_model2=create_reports_config("medium", 2),
-                pancreas_model1=create_reports_config("pancreas", 1),
+                # pancreas_model1=create_reports_config("pancreas", 1),
                 pancreas_model2=create_reports_config("pancreas", 2),
-                pbmc68k_model1=create_reports_config("pbmc68k", 1),
+                # pbmc68k_model1=create_reports_config("pbmc68k", 1),
                 pbmc68k_model2=create_reports_config("pbmc68k", 2),
-                pons_model1=create_reports_config("pons", 1),
+                # pons_model1=create_reports_config("pons", 1),
                 pons_model2=create_reports_config("pons", 2),
                 pbmc10k_model2=create_reports_config("pbmc10k", 2),
                 larry_tips_model2=create_reports_config("larry_tips", 2),
