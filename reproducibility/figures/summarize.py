@@ -66,7 +66,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     Examples:
         plots(conf, logger)
     """
-    for data_model in conf.reports.model_summary.summarize:
+    for data_model in conf.train_models:
         ##################
         # load data
         ##################
@@ -74,9 +74,13 @@ def plots(conf: DictConfig, logger: Logger) -> None:
 
         data_model_conf = conf.model_training[data_model]
         cell_state = data_model_conf.training_parameters.cell_state
-        trained_data_path = data_model_conf.trained_data_path
-        pyrovelocity_data_path = data_model_conf.pyrovelocity_data_path
         reports_data_model_conf = conf.reports.model_summary[data_model]
+        trained_data_path = reports_data_model_conf.trained_data_path
+        pyrovelocity_data_path = reports_data_model_conf.pyrovelocity_data_path
+
+        print_config_tree(reports_data_model_conf, logger, ())
+
+        logger.info(f"\n\nPlotting summary figure(s) in: {data_model}\n\n")
 
         logger.info(
             f"\n\nVerifying existence of path for:\n\n"
@@ -107,8 +111,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         print_anndata(adata)
 
         logger.info(f"Loading pyrovelocity data: {pyrovelocity_data_path}")
-        with open(pyrovelocity_data_path, "rb") as f:
-            posterior_samples = pickle.load(f)
+        posterior_samples = CompressedPickle.load(pyrovelocity_data_path)
 
         ##################
         # save dataframe
@@ -285,12 +288,6 @@ def main(conf: DictConfig) -> None:
     """
 
     logger = get_pylogger(name="PLOT", log_level=conf.base.log_level)
-    print_config_tree(conf, logger, ())
-
-    logger.info(
-        f"\n\nPlotting summary figure(s) in: {conf.reports.model_summary.summarize}\n\n"
-    )
-
     plots(conf, logger)
 
 
