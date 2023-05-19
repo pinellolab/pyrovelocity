@@ -1,7 +1,6 @@
 import json
 import multiprocessing
 import os
-import pickle
 import uuid
 from logging import Logger
 from pathlib import Path
@@ -9,21 +8,17 @@ from pathlib import Path
 import hydra
 import mlflow
 import scvelo as scv
-import torch
 from mlflow import MlflowClient
 from omegaconf import DictConfig
 
-# from pyrovelocity.api import train_model
+from pyrovelocity._velocity import PyroVelocity
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.io.compressedpickle import CompressedPickle
-# from pyrovelocity.data import load_data
-# from pyrovelocity.utils import filter_startswith_dict
 from pyrovelocity.utils import get_pylogger
 from pyrovelocity.utils import mae_evaluate
 from pyrovelocity.utils import pretty_print_dict
 from pyrovelocity.utils import print_anndata
 from pyrovelocity.utils import print_attributes
-from pyrovelocity._velocity import PyroVelocity
 
 
 """Loads processed data and trains and saves model.
@@ -58,7 +53,6 @@ def postprocess(conf: DictConfig, logger: Logger) -> None:
         posterior_samples_path = data_model_conf.posterior_samples_path
         vector_field_basis = data_model_conf.vector_field_parameters.basis
         metrics_path = data_model_conf.metrics_path
-        # run_info_path = data_model_conf.run_info_path
 
         print_config_tree(data_model_conf, logger, ())
 
@@ -66,29 +60,12 @@ def postprocess(conf: DictConfig, logger: Logger) -> None:
 
         ncpus_use = min(23, max(1, round(multiprocessing.cpu_count() * 0.8)))
         print("ncpus_use:", ncpus_use)
-        # logger.info(
-        #     f"\n\nVerifying existence of paths for:\n\n"
-        #     f"  model data: {data_model_conf.path}\n"
-        # )
-        # Path(data_model_conf.path).mkdir(parents=True, exist_ok=True)
 
-        # if os.path.isfile(processed_path):
-        #     logger.info(f"Loading data: {processed_path}")
-        #     adata = load_data(processed_path=processed_path)
-        #     print_attributes(adata)
-        # else:
-        #     logger.error(f"Input data: {processed_path} does not exist")
-        #     raise FileNotFoundError(
-        #         f"Check {processed_path} output of preprocessing stage."
-        #     )
-
-        logger.info(f"Loading trained data: {trained_data_path}")
-        adata = scv.read(trained_data_path)
+        logger.info(f"Loading preprocessed data: {processed_path}")
+        adata = scv.read(processed_path)
         print_anndata(adata)
 
         logger.info(f"Loading pyrovelocity data: {pyrovelocity_data_path}")
-        # with open(pyrovelocity_data_path, "rb") as f:
-        #     posterior_samples = pickle.load(f)
         posterior_samples = CompressedPickle.load(posterior_samples_path)
 
         logger.info(f"Loading model data: {model_path}")
@@ -114,15 +91,6 @@ def postprocess(conf: DictConfig, logger: Logger) -> None:
                 print(f"Active run_id: {run.info.run_id}")
                 mlflow.log_params(data_model_conf.training_parameters)
 
-                # trained_model, posterior_samples = train_model(
-                #     adata,
-                #     **dict(
-                #         filter_startswith_dict(data_model_conf.training_parameters),
-                #         use_gpu=gpu_id,
-                #     ),
-                # )
-
-                # logger.info("Data attributes after model training")
                 pretty_print_dict(posterior_samples)
 
                 mae_df = mae_evaluate(posterior_samples, adata)
@@ -147,12 +115,10 @@ def postprocess(conf: DictConfig, logger: Logger) -> None:
                 run_id = run.info.run_id
 
             logger.info(f"Saving pyrovelocity data: {pyrovelocity_data_path}")
-            # trained_model.save_pyrovelocity_data(
-            #     pyrovelocity_data, pyrovelocity_data_path
-            # )
-            CompressedPickle.save(
-                pyrovelocity_data_path, pyrovelocity_data
-            )
+            CompressedPickle.save(pyrovelocity_data_path, pyrovelocity_data)
+
+            logger.info(f"Saving trained data: {trained_data_path}")
+            adata.write(trained_data_path)
 
             ################
             # update metrics
@@ -160,16 +126,9 @@ def postprocess(conf: DictConfig, logger: Logger) -> None:
 
             r = mlflow.get_run(run_id)
 
-            # Path(metrics_path).write_text(json.dumps(r.data.metrics, indent=4))
             update_json(r, metrics_path)
 
-            # Path(run_info_path).write_text(
-            #     json.dumps(r.to_dictionary()["info"], indent=4)
-            # )
-
             print_logged_info(r)
-
-
 
 
 def update_json(r: mlflow.entities.run.Run, metrics_path: str) -> None:
@@ -182,7 +141,7 @@ def update_json(r: mlflow.entities.run.Run, metrics_path: str) -> None:
 
     existing_data.update(r.data.metrics)
 
-    with metrics_path.open('w') as file:
+    with metrics_path.open("w") as file:
         json.dump(existing_data, file, indent=4)
 
 
