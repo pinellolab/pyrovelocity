@@ -22,38 +22,47 @@ def preprocess(conf: DictConfig, logger: Logger) -> None:
     Examples:
         preprocess(conf.data_external, logger)
     """
-    for source in conf.sources:
-        for data_set in conf[source].process:
-            data_path = conf[source][data_set].rel_path
-            processed_path = conf[source][data_set].derived.rel_path
-            process_method = conf[source][data_set].derived.process_method
-            process_args = conf[source][data_set].derived.process_args
+    for data_set in conf.process_data:
+        print_config_tree(conf.data_sets[data_set], logger, ())
+        data_set_conf = conf.data_sets[data_set]
+        data_path = data_set_conf.rel_path
+        processed_path = data_set_conf.derived.rel_path
+        process_method = data_set_conf.derived.process_method
+        process_args = data_set_conf.derived.process_args
 
-            logger.info(
-                f"\n\nPreprocessing {data_set} data :\n\n"
-                f"  from external: {data_path}\n"
-                f"  to processed: {processed_path}\n"
-                f"  using method: {process_method}\n"
+        logger.info(
+            f"\n\nVerifying existence of path for:\n\n"
+            f"  downloaded data: {conf.paths.data_external}\n"
+            f"  processed data: {conf.paths.data_processed}\n"
+        )
+        Path(conf.paths.data_external).mkdir(parents=True, exist_ok=True)
+        Path(conf.paths.data_processed).mkdir(parents=True, exist_ok=True)
+
+        logger.info(
+            f"\n\nPreprocessing {data_set} data :\n\n"
+            f"  from external: {data_path}\n"
+            f"  to processed: {processed_path}\n"
+            f"  using method: {process_method}\n"
+        )
+
+        if os.path.isfile(processed_path) and os.access(processed_path, os.R_OK):
+            logger.info(f"{processed_path} exists")
+        else:
+            logger.info(f"generating {processed_path} ...")
+            process_method_fn = getattr(pyrovelocity.data, process_method)
+            adata = process_method_fn(
+                data=data_path,
+                processed_path=processed_path,
+                **process_args,
             )
+            print_attributes(adata)
 
-            if os.path.isfile(processed_path) and os.access(processed_path, os.R_OK):
-                logger.info(f"{processed_path} exists")
+            if os.path.isfile(processed_path) and os.access(
+                processed_path, os.R_OK
+            ):
+                logger.info(f"successfully generated {processed_path}")
             else:
-                logger.info(f"generating {processed_path} ...")
-                process_method_fn = getattr(pyrovelocity.data, process_method)
-                adata = process_method_fn(
-                    data=data_path,
-                    processed_path=processed_path,
-                    **process_args,
-                )
-                print_attributes(adata)
-
-                if os.path.isfile(processed_path) and os.access(
-                    processed_path, os.R_OK
-                ):
-                    logger.info(f"successfully generated {processed_path}")
-                else:
-                    logger.warn(f"cannot find and read {processed_path}")
+                logger.warn(f"cannot find and read {processed_path}")
 
 
 @hydra.main(version_base="1.2", config_path=".", config_name="config.yaml")
@@ -64,17 +73,7 @@ def main(conf: DictConfig) -> None:
     """
 
     logger = get_pylogger(name="PREPROCESS", log_level=conf.base.log_level)
-    print_config_tree(conf, logger, ())
-
-    logger.info(
-        f"\n\nVerifying existence of paths for:\n\n"
-        f"  external data: {conf.data_external.root_path}\n"
-        f"  processed data: {conf.data_external.processed_path}\n"
-    )
-    Path(conf.data_external.root_path).mkdir(parents=True, exist_ok=True)
-    Path(conf.data_external.processed_path).mkdir(parents=True, exist_ok=True)
-
-    preprocess(conf.data_external, logger)
+    preprocess(conf, logger)
 
 
 if __name__ == "__main__":
