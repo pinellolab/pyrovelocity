@@ -16,8 +16,8 @@ from pyrovelocity.utils import print_attributes
 
 
 def download_datasets(conf: DictConfig, logger: Logger) -> None:
-    # for source in conf.sources:
     for data_set in conf.process_data:
+        print_config_tree(conf.data_sets[data_set], logger, ())
         data_set_conf = conf.data_sets[data_set]
         source = data_set_conf.source
         data_url = data_set_conf.url
@@ -27,11 +27,11 @@ def download_datasets(conf: DictConfig, logger: Logger) -> None:
 
         logger.info(
             f"\n\nVerifying existence of path for:\n\n"
-            f"  downloaded data: {data_set_conf.dl_root}\n"
-            #     f"  processed data: {conf.data_external.processed_path}\n"
+            f"  downloaded data: {conf.paths.data_external}\n"
+            f"  processed data: {conf.paths.data_processed}\n"
         )
-        Path(data_set_conf.dl_root).mkdir(parents=True, exist_ok=True)
-        # Path(conf.data_external.processed_path).mkdir(parents=True, exist_ok=True)
+        Path(conf.paths.data_external).mkdir(parents=True, exist_ok=True)
+        Path(conf.paths.data_processed).mkdir(parents=True, exist_ok=True)
 
         logger.info(
             f"\n\nVerifying {data_set} data:\n\n"
@@ -86,8 +86,6 @@ def main(conf: DictConfig) -> None:
     """
 
     logger = get_pylogger(name="DATA_LOAD", log_level=conf.base.log_level)
-    print_config_tree(conf, logger, ())
-
     download_datasets(conf, logger)
 
 
