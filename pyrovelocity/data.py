@@ -68,10 +68,10 @@ def plot_high_us_genes(
         )
 
     max_unspliced = np.array(
-        np.max(adata.layers[unspliced_layer].toarray(), axis=0)
+        np.max(ensure_numpy_array(adata.layers[unspliced_layer]), axis=0)
     ).flatten()
     max_spliced = np.array(
-        np.max(adata.layers[spliced_layer].toarray(), axis=0)
+        np.max(ensure_numpy_array(adata.layers[spliced_layer]), axis=0)
     ).flatten()
 
     ### create figure
