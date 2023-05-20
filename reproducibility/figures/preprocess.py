@@ -29,6 +29,7 @@ def preprocess(conf: DictConfig, logger: Logger) -> None:
         processed_path = data_set_conf.derived.rel_path
         process_method = data_set_conf.derived.process_method
         process_args = data_set_conf.derived.process_args
+        thresh_histogram_path =  data_set_conf.derived.thresh_histogram_path
 
         logger.info(
             f"\n\nVerifying existence of path for:\n\n"
@@ -53,6 +54,7 @@ def preprocess(conf: DictConfig, logger: Logger) -> None:
             adata = process_method_fn(
                 data=data_path,
                 processed_path=processed_path,
+                thresh_histogram_path=thresh_histogram_path,
                 **process_args,
             )
             print_attributes(adata)
@@ -61,6 +63,7 @@ def preprocess(conf: DictConfig, logger: Logger) -> None:
                 logger.info(f"successfully generated {processed_path}")
             else:
                 logger.warn(f"cannot find and read {processed_path}")
+
 
 
 @hydra.main(version_base="1.2", config_path=".", config_name="config.yaml")
