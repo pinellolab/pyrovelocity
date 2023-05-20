@@ -473,7 +473,8 @@ def hydra_zen_compressed_configure():
                 process_method=process_method,
                 process_args=process_args,
                 rel_path="${paths.data_processed}/" + f"{name}_processed.h5ad",
-                thresh_histogram_path="${paths.data_processed}/" + f"{name}_thresh_histogram.pdf",
+                thresh_histogram_path="${paths.data_processed}/"
+                + f"{name}_thresh_histogram.pdf",
             ),
         )
 
