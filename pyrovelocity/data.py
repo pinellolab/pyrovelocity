@@ -57,6 +57,15 @@ def plot_high_us_genes(
     unspliced_layer: str = "unspliced",
     spliced_layer: str = "spliced",
 ) -> Optional[matplotlib.figure.Figure]:
+    if (
+        adata is None
+        or unspliced_layer not in adata.layers
+        or spliced_layer not in adata.layers
+    ):
+        raise ValueError(
+            "Invalid data set. Please ensure that adata is an AnnData object"
+            "and that the layers 'unspliced' and 'spliced' are present."
+        )
 
     max_unspliced = np.array(
         np.max(adata.layers[unspliced_layer].toarray(), axis=0)
