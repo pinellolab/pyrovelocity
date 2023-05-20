@@ -4,13 +4,17 @@ from typing import Optional
 
 import anndata
 import anndata._core.anndata
+import matplotlib.figure
+import matplotlib.pyplot as plt
 import numpy as np
 import scanpy as sc
 import scvelo as scv
 from scipy.sparse import issparse
 
 from pyrovelocity.cytotrace import cytotrace_sparse
+from pyrovelocity.utils import ensure_numpy_array
 from pyrovelocity.utils import print_anndata
+from pyrovelocity.utils import trace
 
 
 def copy_raw_counts(
