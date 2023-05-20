@@ -27,6 +27,8 @@ stages:
             - data_sets.${key}
       outs:
         - ${item.derived.rel_path}
+        - ${item.derived.thresh_histogram_path}
+        - ${item.derived.thresh_histogram_path}.png
 
   train:
     foreach: ${model_training}
