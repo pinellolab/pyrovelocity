@@ -120,8 +120,10 @@ def plot_high_us_genes(
     ax.set_xscale("log")
     ax.set_xlabel("max. spliced counts")
     ax.set_ylabel("max. unspliced counts")
-    ax.axhline(y=minlim_s, color="r", linestyle="--")
-    ax.axvline(x=minlim_u, color="r", linestyle="--")
+    if minlim_s > 0:
+        ax.axhline(y=minlim_s - 1, color="r", linestyle="--")
+    if minlim_u > 0:
+        ax.axvline(x=minlim_u - 1, color="r", linestyle="--")
 
     ### the histograms:
     bins = 50
