@@ -47,12 +47,23 @@ def copy_raw_counts(
     print("'s_lib_size_raw', spliced library size (adata.obs)")
     return adata
 
- 
-def plot_high_us_genes(adata, thresh_histogram_path, minlim_u=3, minlim_s=3, unspliced_layer='unspliced', spliced_layer='spliced'):
+
+def plot_high_us_genes(
+    adata,
+    thresh_histogram_path,
+    minlim_u=3,
+    minlim_s=3,
+    unspliced_layer="unspliced",
+    spliced_layer="spliced",
+):
     import matplotlib.pyplot as plt
-    
-    max_unspliced = np.array(np.max(adata.layers[unspliced_layer].toarray(), axis=0)).flatten()
-    max_spliced = np.array(np.max(adata.layers[spliced_layer].toarray(), axis=0)).flatten()
+
+    max_unspliced = np.array(
+        np.max(adata.layers[unspliced_layer].toarray(), axis=0)
+    ).flatten()
+    max_spliced = np.array(
+        np.max(adata.layers[spliced_layer].toarray(), axis=0)
+    ).flatten()
 
     ### create figure
     x = max_spliced
@@ -60,10 +71,10 @@ def plot_high_us_genes(adata, thresh_histogram_path, minlim_u=3, minlim_s=3, uns
 
     colors = []
     for idx in range(len(max_spliced)):
-        if ((max_spliced[idx] >= minlim_s) & (max_unspliced[idx] >= minlim_u)):
-            colors.append('black')
+        if (max_spliced[idx] >= minlim_s) & (max_unspliced[idx] >= minlim_u):
+            colors.append("black")
         else:
-            colors.append('lightgrey')
+            colors.append("lightgrey")
 
     left, width = 0.1, 0.65
     bottom, height = 0.1, 0.65
@@ -85,18 +96,18 @@ def plot_high_us_genes(adata, thresh_histogram_path, minlim_u=3, minlim_s=3, uns
     ax.scatter(max_spliced, max_unspliced, s=1, c=colors)
     ax.set_yscale("log")
     ax.set_xscale("log")
-    ax.set_xlabel('max. spliced counts')
-    ax.set_ylabel('max. unspliced counts')
-    ax.axhline(y=minlim_s, color='r', linestyle='--')
-    ax.axvline(x=minlim_u, color='r', linestyle='--')
+    ax.set_xlabel("max. spliced counts")
+    ax.set_ylabel("max. unspliced counts")
+    ax.axhline(y=minlim_s, color="r", linestyle="--")
+    ax.axvline(x=minlim_u, color="r", linestyle="--")
 
     ### the histograms:
     bins = 50
     hist, bins = np.histogram(x, bins=bins)
-    logbins = np.logspace(0,np.log10(bins[-1]),len(bins))
+    logbins = np.logspace(0, np.log10(bins[-1]), len(bins))
     ax_histx.hist(x, bins=logbins)
-    ax_histy.hist(y, bins=logbins, orientation='horizontal')
-    
+    ax_histy.hist(y, bins=logbins, orientation="horizontal")
+
     for ext in ["", ".png"]:
         fig.savefig(
             f"{thresh_histogram_path}{ext}",
@@ -106,11 +117,13 @@ def plot_high_us_genes(adata, thresh_histogram_path, minlim_u=3, minlim_s=3, uns
             dpi=300,
         )
 
-    return 
+    return
 
 
-def get_high_us_genes(adata, minlim_u=0, minlim_s=0, unspliced_layer='unspliced', spliced_layer='spliced'):
-    '''
+def get_high_us_genes(
+    adata, minlim_u=0, minlim_s=0, unspliced_layer="unspliced", spliced_layer="spliced"
+):
+    """
     Function to select genes that have spliced and unspliced counts above a certain threshold. Genes of
     which the maximum u and s count is above a set threshold are selected. Threshold varies per dataset
     and influences the numbers of genes that are selected.
@@ -129,22 +142,25 @@ def get_high_us_genes(adata, minlim_u=0, minlim_s=0, unspliced_layer='unspliced'
         Name of layer that contains the unspliced counts.
     spliced_layer: `str` (default: 'spliced')
         Name of layer that contains the spliced counts.
-    '''
-    print('adata.shape before filtering:', adata.shape)
+    """
+    print("adata.shape before filtering:", adata.shape)
     from scipy import sparse
+
     # test if layers are not sparse but dense
     for layer in [unspliced_layer, spliced_layer]:
-        if sparse.issparse(adata.layers[layer]): adata.layers[layer] = adata.layers[layer].todense()
+        if sparse.issparse(adata.layers[layer]):
+            adata.layers[layer] = adata.layers[layer].todense()
 
     # get high US genes
     u_genes = np.max(adata.layers[unspliced_layer], axis=0) >= minlim_u
     s_genes = np.max(adata.layers[spliced_layer], axis=0) >= minlim_s
     us_genes = adata.var_names[np.array(u_genes & s_genes).flatten()].values
-    adata = adata[:,us_genes]
+    adata = adata[:, us_genes]
     for layer in [unspliced_layer, spliced_layer]:
-        adata.layers[layer] = sparse.csr_matrix(adata.layers[layer])   
-    print('adata.shape after filtering:', adata.shape)
+        adata.layers[layer] = sparse.csr_matrix(adata.layers[layer])
+    print("adata.shape after filtering:", adata.shape)
     return adata
+
 
 def load_data(
     data: str = "pancreas",
@@ -219,7 +235,11 @@ def load_data(
                 adata_multilineage = adata_mono.concatenate(adata_neu)
                 adata = adata_mono_C.concatenate(adata_neu_C)
         elif "pbmc68k" in data:
-            adata = load_pbmc68k(data, count_thres=count_thres, thresh_histogram_path=thresh_histogram_path)
+            adata = load_pbmc68k(
+                data,
+                count_thres=count_thres,
+                thresh_histogram_path=thresh_histogram_path,
+            )
         else:  # pbmc10k
             adata = sc.read(data)
 
@@ -236,8 +256,21 @@ def load_data(
                 adata, min_shared_counts=min_shared_counts, n_top_genes=top_n
             )
             if count_thres:
-                plot_high_us_genes(adata, thresh_histogram_path, minlim_u=count_thres, minlim_s=count_thres, unspliced_layer='raw_unspliced', spliced_layer='raw_spliced')
-                adata = get_high_us_genes(adata, minlim_u=count_thres, minlim_s=count_thres, unspliced_layer='raw_unspliced', spliced_layer='raw_spliced')
+                plot_high_us_genes(
+                    adata,
+                    thresh_histogram_path,
+                    minlim_u=count_thres,
+                    minlim_s=count_thres,
+                    unspliced_layer="raw_unspliced",
+                    spliced_layer="raw_spliced",
+                )
+                adata = get_high_us_genes(
+                    adata,
+                    minlim_u=count_thres,
+                    minlim_s=count_thres,
+                    unspliced_layer="raw_unspliced",
+                    spliced_layer="raw_spliced",
+                )
             scv.pp.moments(adata, n_pcs=30, n_neighbors=30)
             scv.tl.recover_dynamics(adata, n_jobs=-1, use_raw=False)
             scv.tl.velocity(adata, mode="dynamical", use_raw=False)
@@ -283,8 +316,21 @@ def load_pbmc68k(
     adata.obsm["X_tsne"][:, 0] *= -1
     scv.pp.filter_and_normalize(adata, min_shared_counts=30, n_top_genes=2000)
     if count_thres:
-        plot_high_us_genes(adata, thresh_histogram_path, minlim_u=count_thres, minlim_s=count_thres, unspliced_layer='raw_unspliced', spliced_layer='raw_spliced')
-        adata = get_high_us_genes(adata, minlim_u=count_thres, minlim_s=count_thres, unspliced_layer='raw_unspliced', spliced_layer='raw_spliced')
+        plot_high_us_genes(
+            adata,
+            thresh_histogram_path,
+            minlim_u=count_thres,
+            minlim_s=count_thres,
+            unspliced_layer="raw_unspliced",
+            spliced_layer="raw_spliced",
+        )
+        adata = get_high_us_genes(
+            adata,
+            minlim_u=count_thres,
+            minlim_s=count_thres,
+            unspliced_layer="raw_unspliced",
+            spliced_layer="raw_spliced",
+        )
     scv.pp.moments(adata)
     scv.tl.velocity(adata, mode="stochastic")
     scv.tl.recover_dynamics(adata, n_jobs=-1)
