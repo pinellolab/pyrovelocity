@@ -17,8 +17,10 @@ stages:
           url: https://storage.googleapis.com/pyrovelocity/data/simulated_medium.h5ad
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/simulated_medium_processed.h5ad
+            thresh_histogram_path: data/processed/simulated_medium_thresh_histogram.pdf
     outs:
     - path: data/external/simulated_medium.h5ad
       md5: c8483b84bd68f57acb407f715f807f9e
@@ -40,8 +42,10 @@ stages:
           url: https://storage.googleapis.com/pyrovelocity/data/oligo_lite.h5ad
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/pons_processed.h5ad
+            thresh_histogram_path: data/processed/pons_thresh_histogram.pdf
     outs:
     - path: data/external/oligo_lite.h5ad
       md5: 82f5e9f9736e556662f56653d2f927ab
@@ -65,7 +69,9 @@ stages:
             process_method: load_data
             process_args:
               process_cytotrace: true
+              count_thres: 4
             rel_path: data/processed/pancreas_processed.h5ad
+            thresh_histogram_path: data/processed/pancreas_thresh_histogram.pdf
     outs:
     - path: data/external/endocrinogenesis_day15.h5ad
       md5: 783ec70c72fd895eeea28c07735efc27
@@ -87,8 +93,10 @@ stages:
           url: https://ndownloader.figshare.com/files/27686886
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/pbmc68k_processed.h5ad
+            thresh_histogram_path: data/processed/pbmc68k_thresh_histogram.pdf
     outs:
     - path: data/external/pbmc68k.h5ad
       md5: ee0953e5fb994bc3cec05d4cf638ac79
@@ -110,8 +118,10 @@ stages:
           url: https://ndownloader.figshare.com/files/37028569
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/larry_processed.h5ad
+            thresh_histogram_path: data/processed/larry_thresh_histogram.pdf
     outs:
     - path: data/external/larry.h5ad
       md5: d618305c0ee0e41570b1147e63df332a
@@ -133,8 +143,10 @@ stages:
           url: https://ndownloader.figshare.com/files/37028569
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/larry_tips_processed.h5ad
+            thresh_histogram_path: data/processed/larry_tips_thresh_histogram.pdf
     outs:
     - path: data/external/larry_tips.h5ad
       md5: d618305c0ee0e41570b1147e63df332a
@@ -179,8 +191,10 @@ stages:
           url: https://ndownloader.figshare.com/files/37028575
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/larry_neu_processed.h5ad
+            thresh_histogram_path: data/processed/larry_neu_thresh_histogram.pdf
     outs:
     - path: data/external/larry_neu.h5ad
       md5: 3192e2fe89d64f5d0d158c0e7d26c79d
@@ -202,8 +216,10 @@ stages:
           url: https://ndownloader.figshare.com/files/37028569
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/larry_multilineage_processed.h5ad
+            thresh_histogram_path: data/processed/larry_multilineage_thresh_histogram.pdf
     outs:
     - path: data/external/larry_multilineage.h5ad
       md5: 9df0c8d32ad48f584327008e84e19133
@@ -225,8 +241,10 @@ stages:
           url: https://storage.googleapis.com/pyrovelocity/data/pbmc10k.h5ad
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/pbmc10k_processed.h5ad
+            thresh_histogram_path: data/processed/pbmc10k_thresh_histogram.pdf
     outs:
     - path: data/external/pbmc10k.h5ad
       md5: 3b64b4cd122454610957f5c6086e2eac
