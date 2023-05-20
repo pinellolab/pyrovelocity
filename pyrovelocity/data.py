@@ -281,8 +281,8 @@ def load_data(
             )
             if count_thres:
                 plot_high_us_genes(
-                    adata,
-                    thresh_histogram_path,
+                    adata=adata,
+                    thresh_histogram_path=thresh_histogram_path,
                     minlim_u=count_thres,
                     minlim_s=count_thres,
                     unspliced_layer="raw_unspliced",
