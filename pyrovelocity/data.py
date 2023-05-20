@@ -49,6 +49,13 @@ def copy_raw_counts(
 
 
 
+def get_thresh_histogram_title_from_path(path):
+    title = os.path.basename(path)
+    title = os.path.splitext(title)[0]
+    title = title.replace("_thresh_histogram", "")
+    return title.replace("_", " ")
+
+
 def plot_high_us_genes(
     adata: anndata.AnnData,
     thresh_histogram_path: str,
@@ -78,12 +85,7 @@ def plot_high_us_genes(
     x = max_spliced
     y = max_unspliced
 
-    colors = []
-    for idx in range(len(max_spliced)):
-        if (max_spliced[idx] >= minlim_s) & (max_unspliced[idx] >= minlim_u):
-            colors.append("black")
-        else:
-            colors.append("lightgrey")
+    title = get_thresh_histogram_title_from_path(thresh_histogram_path)
 
     left, width = 0.1, 0.65
     bottom, height = 0.1, 0.65
@@ -94,6 +96,7 @@ def plot_high_us_genes(
     rect_histy = [left + width + spacing, bottom, 0.2, height]
 
     fig = plt.figure(figsize=(4, 4))
+    fig.suptitle(title, y=1.00, fontsize=12)
 
     ax = fig.add_axes(rect_scatter)
     ax_histx = fig.add_axes(rect_histx, sharex=ax)
