@@ -48,6 +48,14 @@ def copy_raw_counts(
     return adata
 
 
+def assign_colors(
+    max_spliced: int, max_unspliced: int, minlim_s: int, minlim_u: int
+) -> List[str]:
+    return [
+        "black" if (spliced >= minlim_s) & (unspliced >= minlim_u) else "lightgrey"
+        for spliced, unspliced in zip(max_spliced, max_unspliced)
+    ]
+
 
 def get_thresh_histogram_title_from_path(path):
     title = os.path.basename(path)
@@ -86,6 +94,8 @@ def plot_high_us_genes(
     y = max_unspliced
 
     title = get_thresh_histogram_title_from_path(thresh_histogram_path)
+
+    colors = assign_colors(max_spliced, max_unspliced, minlim_s, minlim_u)
 
     left, width = 0.1, 0.65
     bottom, height = 0.1, 0.65
