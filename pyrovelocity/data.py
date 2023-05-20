@@ -48,15 +48,15 @@ def copy_raw_counts(
     return adata
 
 
+
 def plot_high_us_genes(
-    adata,
-    thresh_histogram_path,
-    minlim_u=3,
-    minlim_s=3,
-    unspliced_layer="unspliced",
-    spliced_layer="spliced",
-):
-    import matplotlib.pyplot as plt
+    adata: anndata.AnnData,
+    thresh_histogram_path: str,
+    minlim_u: int = 3,
+    minlim_s: int = 3,
+    unspliced_layer: str = "unspliced",
+    spliced_layer: str = "spliced",
+) -> Optional[matplotlib.figure.Figure]:
 
     max_unspliced = np.array(
         np.max(adata.layers[unspliced_layer].toarray(), axis=0)
