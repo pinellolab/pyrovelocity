@@ -141,7 +141,7 @@ def plot_high_us_genes(
             dpi=300,
         )
 
-    return
+    return fig
 
 
 def get_high_us_genes(
