@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.special as sp
+from sklearn.metrics.pairwise import euclidean_distances
+from sklearn.metrics.pairwise import rbf_kernel
 from sklearn.neighbors import KernelDensity
 
 
@@ -147,6 +149,41 @@ def js_divergence(p, q, bandwidth=None):
     js_div = 0.5 * kl_pq + 0.5 * kl_qp
 
     return js_div, bandwidth
+
+
+def mmd(p, q, gamma=None):
+    """
+    Compute the Maximum Mean Discrepancy (MMD) between two multidimensional distributions using the RBF kernel.
+
+    Args:
+        p (ndarray): Samples from the first distribution.
+        q (ndarray): Samples from the second distribution.
+        gamma (float, optional): The gamma parameter for the RBF kernel. If not provided, it will be set to the inverse
+                                 of the median of the pairwise distances in the combined data.
+
+    Returns:
+        float: The Maximum Mean Discrepancy between the first and second distributions.
+    """
+    combined = np.vstack((p, q))
+
+    if gamma is None:
+        pairwise_dists = euclidean_distances(combined, combined)
+
+        gamma = 1.0 / np.median(pairwise_dists)
+
+    p_kernel = rbf_kernel(p, p, gamma)
+    q_kernel = rbf_kernel(q, q, gamma)
+    cross_kernel = rbf_kernel(p, q, gamma)
+
+    p_mean = np.mean(p_kernel)
+    q_mean = np.mean(q_kernel)
+    cross_mean = np.mean(cross_kernel)
+
+    mmd = p_mean - 2 * cross_mean + q_mean
+
+    return mmd, gamma
+
+
 def plot_samples_and_kde(ax, samples_vmf, samples_uniform, kappa, dim=3, bandwidth=0.1):
     if dim not in [2, 3]:
         raise ValueError("Dimension must be 2 or 3.")
@@ -212,9 +249,7 @@ def sample_and_plot_vMF(num_samples, kappas, dim):
     for idx, kappa in enumerate(kappas):
         vmf.kappa = kappa  # Update kappa
         vmf_samples = vmf.sample(num_samples)
-        kl_div, bandwidth = kl_divergence(
-            vmf_samples, uniform_samples, dim, num_samples
-        )
+        kl_div, bandwidth = mmd(vmf_samples, uniform_samples)
         print(f"KL divergence for kappa = {kappa}: {kl_div:.3f}")
 
         kl_divs.append(kl_div)
@@ -258,9 +293,9 @@ if __name__ == "__main__":
         kl_div_vs_kappa_4D.png kl_div_vs_kappa_10D.png kl_div_vs_kappa_100D.png \
         kl_div_vs_kappa_1000D.png ND_KLD_vs_vMF_kappa.png
     """
-    num_samples = 1000
+    num_samples = 30
     kappas = [1, 3, 4, 6, 8, 10, 15, 20, 35, 50, 75, 100, 150, 200, 250, 300]
-    dims = [2, 3, 4, 10, 100, 1000]
+    dims = [2, 3, 4, 10, 20, 40, 80, 100, 1000]
 
     for dim in dims:
         print(f"\n==Dimension: {dim}==\n")
