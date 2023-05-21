@@ -93,7 +93,7 @@ def sample_uniform(dimension, sample_number):
     return result
 
 
-def kl_divergence(p, q, dimension, sample_number):
+def kl_divergence(p, q, bandwidth=None):
     """
     Computes the Kullback-Leibler divergence between two distributions, estimated using kernel density estimation.
     This uses Scott's rule to estimate the bandwidth parameter.
@@ -103,15 +103,17 @@ def kl_divergence(p, q, dimension, sample_number):
     Args:
         p (ndarray): Samples from the first distribution.
         q (ndarray): Samples from the second distribution.
-        sample_number (float): The number of samples used to estimate the distributions.
-        dimension (int): The dimension of the distributions.
+        bandwidth (float, optional): The bandwidth parameter for the kernel density estimation.
 
     Returns:
         float: The Kullback-Leibler divergence between the first and second distributions.
         float: The bandwidth parameter for the kernel density estimation used in the Kullback-Leibler divergence computation.
     """
 
-    bandwidth = sample_number ** (-1 / (dimension + 4))
+    sample_number, dimension = p.shape
+
+    if bandwidth is None:
+        bandwidth = sample_number ** (-1 / (dimension + 4))
 
     p_kde = KernelDensity(kernel="gaussian", bandwidth=bandwidth).fit(p)
     q_kde = KernelDensity(kernel="gaussian", bandwidth=bandwidth).fit(q)
@@ -119,10 +121,32 @@ def kl_divergence(p, q, dimension, sample_number):
     p_scores = p_kde.score_samples(p)
     q_scores = q_kde.score_samples(p)
 
-    kl_div = np.sum(p_scores - q_scores) / len(p)
+    kl_div = np.sum(p_scores - q_scores) / sample_number
+
     return kl_div, bandwidth
 
 
+def js_divergence(p, q, bandwidth=None):
+    """
+    Computes the Jensen-Shannon divergence between two distributions using `kl_divergence`.
+
+    Args:
+        p (ndarray): Samples from the first distribution.
+        q (ndarray): Samples from the second distribution.
+        bandwidth (float, optional): The bandwidth parameter for the kernel density estimation.
+
+    Returns:
+        float: The Jensen-Shannon divergence between the first and second distributions.
+    """
+
+    # Calculate the KL divergences and ignore bandwidths
+    kl_pq, bandwidth = kl_divergence(p, q, bandwidth)
+    kl_qp, _ = kl_divergence(q, p, bandwidth)
+
+    # Calculate the JS divergence
+    js_div = 0.5 * kl_pq + 0.5 * kl_qp
+
+    return js_div, bandwidth
 def plot_samples_and_kde(ax, samples_vmf, samples_uniform, kappa, dim=3, bandwidth=0.1):
     if dim not in [2, 3]:
         raise ValueError("Dimension must be 2 or 3.")
