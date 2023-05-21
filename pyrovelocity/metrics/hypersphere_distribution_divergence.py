@@ -158,3 +158,70 @@ def plot_samples_and_kde(ax, samples_vmf, samples_uniform, kappa, dim=3, bandwid
         ax.set_xlim([-1.3, 1.3])
         ax.set_ylim([-1.3, 1.3])
 
+
+def sample_and_plot_vMF(num_samples, kappas, dim):
+    """
+    Demonstrates sampling from an N-dimensional von Mises-Fisher
+    distribution with different scale parameters, and compares them to a
+    uniform distribution on the unit hypersphere using the Kullback-Leibler divergence.
+    This quantifies the extent to which samples of N-dimensional vectors are
+    pointing in a coherent direction versus uniformly random directions.
+
+    Args:
+        num_samples (int): The number of samples to draw from each distribution.
+        kappas (list of float): The scale parameters for the von Mises-Fisher distributions.
+        dim (int): The number of dimensions for the distributions.
+    """
+
+    mu = np.ones(dim) / np.sqrt(dim)
+    print(mu)
+    vmf = VMF(mu, kappas[0])
+    uniform_samples = sample_uniform(dim, num_samples)
+
+    kl_divs = []
+
+    if dim in [2, 3]:
+        fig = plt.figure(figsize=(18, 18))
+
+    # Sample from von Mises-Fisher distributions and
+    # compute KL divergence from uniform samples
+    for idx, kappa in enumerate(kappas):
+        vmf.kappa = kappa  # Update kappa
+        vmf_samples = vmf.sample(num_samples)
+        kl_div, bandwidth = kl_divergence(
+            vmf_samples, uniform_samples, dim, num_samples
+        )
+        print(f"KL divergence for kappa = {kappa}: {kl_div:.3f}")
+
+        kl_divs.append(kl_div)
+
+        if dim == 2:
+            ax = fig.add_subplot(4, 4, idx + 1)
+            plot_samples_and_kde(
+                ax, vmf_samples, uniform_samples, kappa, dim, bandwidth
+            )
+        elif dim == 3:
+            ax = fig.add_subplot(4, 4, idx + 1, projection="3d")
+            plot_samples_and_kde(
+                ax, vmf_samples, uniform_samples, kappa, dim, bandwidth
+            )
+
+    if dim in [2, 3]:
+        plt.subplots_adjust(wspace=0.2, hspace=0.2)
+
+        plt.savefig(f"vmf_samples_{dim}D_kde_subplots.pdf", format="pdf")
+        plt.savefig(f"vmf_samples_{dim}D_kde_subplots.png", format="png")
+        plt.show()
+
+    # Plot KL divergence vs scale parameter
+    plt.figure(figsize=(6, 6))
+    plt.plot(kappas, kl_divs, "o", color="darkgreen", markersize=10)
+    plt.xlabel(r"$\kappa$")
+    plt.ylabel("KL Divergence")
+    plt.title(f"{dim}D KL Divergence vs Scale parameter of vMF distribution")
+    plt.savefig(f"kl_div_vs_kappa_{dim}D.pdf", format="pdf")
+    plt.savefig(f"kl_div_vs_kappa_{dim}D.png", format="png")
+    plt.show()
+
+    return bandwidth
+
