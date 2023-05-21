@@ -17,8 +17,10 @@ stages:
           url: https://storage.googleapis.com/pyrovelocity/data/simulated_medium.h5ad
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/simulated_medium_processed.h5ad
+            thresh_histogram_path: data/processed/simulated_medium_thresh_histogram.pdf
     outs:
     - path: data/external/simulated_medium.h5ad
       md5: c8483b84bd68f57acb407f715f807f9e
@@ -40,8 +42,10 @@ stages:
           url: https://storage.googleapis.com/pyrovelocity/data/oligo_lite.h5ad
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/pons_processed.h5ad
+            thresh_histogram_path: data/processed/pons_thresh_histogram.pdf
     outs:
     - path: data/external/oligo_lite.h5ad
       md5: 82f5e9f9736e556662f56653d2f927ab
@@ -65,7 +69,9 @@ stages:
             process_method: load_data
             process_args:
               process_cytotrace: true
+              count_thres: 4
             rel_path: data/processed/pancreas_processed.h5ad
+            thresh_histogram_path: data/processed/pancreas_thresh_histogram.pdf
     outs:
     - path: data/external/endocrinogenesis_day15.h5ad
       md5: 783ec70c72fd895eeea28c07735efc27
@@ -87,8 +93,10 @@ stages:
           url: https://ndownloader.figshare.com/files/27686886
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/pbmc68k_processed.h5ad
+            thresh_histogram_path: data/processed/pbmc68k_thresh_histogram.pdf
     outs:
     - path: data/external/pbmc68k.h5ad
       md5: ee0953e5fb994bc3cec05d4cf638ac79
@@ -110,8 +118,10 @@ stages:
           url: https://ndownloader.figshare.com/files/37028569
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/larry_processed.h5ad
+            thresh_histogram_path: data/processed/larry_thresh_histogram.pdf
     outs:
     - path: data/external/larry.h5ad
       md5: d618305c0ee0e41570b1147e63df332a
@@ -133,8 +143,10 @@ stages:
           url: https://ndownloader.figshare.com/files/37028569
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/larry_tips_processed.h5ad
+            thresh_histogram_path: data/processed/larry_tips_thresh_histogram.pdf
     outs:
     - path: data/external/larry_tips.h5ad
       md5: d618305c0ee0e41570b1147e63df332a
@@ -156,8 +168,10 @@ stages:
           url: https://ndownloader.figshare.com/files/37028569
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/larry_mono_processed.h5ad
+            thresh_histogram_path: data/processed/larry_mono_thresh_histogram.pdf
     outs:
     - path: data/external/larry_mono.h5ad
       md5: 01f4e084c37482e26800ba4dfa0202bd
@@ -179,8 +193,10 @@ stages:
           url: https://ndownloader.figshare.com/files/37028575
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/larry_neu_processed.h5ad
+            thresh_histogram_path: data/processed/larry_neu_thresh_histogram.pdf
     outs:
     - path: data/external/larry_neu.h5ad
       md5: 3192e2fe89d64f5d0d158c0e7d26c79d
@@ -202,8 +218,10 @@ stages:
           url: https://ndownloader.figshare.com/files/37028569
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/larry_multilineage_processed.h5ad
+            thresh_histogram_path: data/processed/larry_multilineage_thresh_histogram.pdf
     outs:
     - path: data/external/larry_multilineage.h5ad
       md5: 9df0c8d32ad48f584327008e84e19133
@@ -225,8 +243,10 @@ stages:
           url: https://storage.googleapis.com/pyrovelocity/data/pbmc10k.h5ad
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/pbmc10k_processed.h5ad
+            thresh_histogram_path: data/processed/pbmc10k_thresh_histogram.pdf
     outs:
     - path: data/external/pbmc10k.h5ad
       md5: 3b64b4cd122454610957f5c6086e2eac
@@ -238,8 +258,8 @@ stages:
       md5: c8483b84bd68f57acb407f715f807f9e
       size: 60248568
     - path: preprocess.py
-      md5: 1cda99421bae4e5676096a0aaa0907a7
-      size: 2607
+      md5: ccbe8f3aa9ca398e232c69b48a041c4d
+      size: 2744
     params:
       config.yaml:
         data_sets.simulate_medium:
@@ -251,12 +271,20 @@ stages:
           url: https://storage.googleapis.com/pyrovelocity/data/simulated_medium.h5ad
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/simulated_medium_processed.h5ad
+            thresh_histogram_path: data/processed/simulated_medium_thresh_histogram.pdf
     outs:
     - path: data/processed/simulated_medium_processed.h5ad
-      md5: 18bf69cf2c2b9a5e0e1eda93efe88bd3
-      size: 257351704
+      md5: f8ff420282196e81a8e861f60d50e967
+      size: 249243888
+    - path: data/processed/simulated_medium_thresh_histogram.pdf
+      md5: e2c300090969f1a10e1eb01b270cc26c
+      size: 17746
+    - path: data/processed/simulated_medium_thresh_histogram.pdf.png
+      md5: ee60475430fb0a6b1a8bbce59f09c1b8
+      size: 78499
   preprocess@pons:
     cmd: python preprocess.py process_data=[pons]
     deps:
@@ -264,8 +292,8 @@ stages:
       md5: 82f5e9f9736e556662f56653d2f927ab
       size: 82166707
     - path: preprocess.py
-      md5: 1cda99421bae4e5676096a0aaa0907a7
-      size: 2607
+      md5: ccbe8f3aa9ca398e232c69b48a041c4d
+      size: 2744
     params:
       config.yaml:
         data_sets.pons:
@@ -277,12 +305,20 @@ stages:
           url: https://storage.googleapis.com/pyrovelocity/data/oligo_lite.h5ad
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/pons_processed.h5ad
+            thresh_histogram_path: data/processed/pons_thresh_histogram.pdf
     outs:
     - path: data/processed/pons_processed.h5ad
-      md5: 8b66cd9859c0b22b7ca969a20816ea95
-      size: 740872463
+      md5: 3acf23c08d7c2567840dfaa016e50a24
+      size: 241821182
+    - path: data/processed/pons_thresh_histogram.pdf
+      md5: 82f47c732ae3cc1a1b62b68b3d1c37a7
+      size: 23820
+    - path: data/processed/pons_thresh_histogram.pdf.png
+      md5: fd09db1d0065d0c13b94216a641758a7
+      size: 108165
   preprocess@pancreas:
     cmd: python preprocess.py process_data=[pancreas]
     deps:
@@ -290,8 +326,8 @@ stages:
       md5: 783ec70c72fd895eeea28c07735efc27
       size: 52477898
     - path: preprocess.py
-      md5: 1cda99421bae4e5676096a0aaa0907a7
-      size: 2607
+      md5: ccbe8f3aa9ca398e232c69b48a041c4d
+      size: 2744
     params:
       config.yaml:
         data_sets.pancreas:
@@ -305,11 +341,19 @@ stages:
             process_method: load_data
             process_args:
               process_cytotrace: true
+              count_thres: 4
             rel_path: data/processed/pancreas_processed.h5ad
+            thresh_histogram_path: data/processed/pancreas_thresh_histogram.pdf
     outs:
     - path: data/processed/pancreas_processed.h5ad
-      md5: 4aaf4084689b5e10c60231552502bd98
-      size: 424784368
+      md5: 4962dab972042df4475ec8d73146a5f9
+      size: 142963946
+    - path: data/processed/pancreas_thresh_histogram.pdf
+      md5: a08bd90d4ef85c909631cb662deab3c6
+      size: 25480
+    - path: data/processed/pancreas_thresh_histogram.pdf.png
+      md5: b4d0394e562575558d142c0245c5b68c
+      size: 107519
   preprocess@pbmc68k:
     cmd: python preprocess.py process_data=[pbmc68k]
     deps:
@@ -317,8 +361,8 @@ stages:
       md5: ee0953e5fb994bc3cec05d4cf638ac79
       size: 123707283
     - path: preprocess.py
-      md5: 1cda99421bae4e5676096a0aaa0907a7
-      size: 2607
+      md5: ccbe8f3aa9ca398e232c69b48a041c4d
+      size: 2744
     params:
       config.yaml:
         data_sets.pbmc68k:
@@ -330,12 +374,20 @@ stages:
           url: https://ndownloader.figshare.com/files/27686886
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/pbmc68k_processed.h5ad
+            thresh_histogram_path: data/processed/pbmc68k_thresh_histogram.pdf
     outs:
     - path: data/processed/pbmc68k_processed.h5ad
-      md5: 00512e0c632850bdb69625413a97bca6
-      size: 1677116165
+      md5: 99cf064c7e6f9accb5af82b41924537a
+      size: 707049814
+    - path: data/processed/pbmc68k_thresh_histogram.pdf
+      md5: 61b179ecc1dc3a2287677f640fe3f79b
+      size: 14899
+    - path: data/processed/pbmc68k_thresh_histogram.pdf.png
+      md5: f1933e9db3153f03a5fc67da53105fb6
+      size: 67802
   preprocess@larry:
     cmd: python preprocess.py process_data=[larry]
     deps:
@@ -343,8 +395,8 @@ stages:
       md5: d618305c0ee0e41570b1147e63df332a
       size: 1525338690
     - path: preprocess.py
-      md5: 1cda99421bae4e5676096a0aaa0907a7
-      size: 2607
+      md5: ccbe8f3aa9ca398e232c69b48a041c4d
+      size: 2744
     params:
       config.yaml:
         data_sets.larry:
@@ -356,12 +408,20 @@ stages:
           url: https://ndownloader.figshare.com/files/37028569
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/larry_processed.h5ad
+            thresh_histogram_path: data/processed/larry_thresh_histogram.pdf
     outs:
     - path: data/processed/larry_processed.h5ad
-      md5: 55ca2501b4f2b8c3d41ef1be5ec6c1d6
-      size: 5361832686
+      md5: 9acb5d31f469b92db4aeb7e6ae20793a
+      size: 2203146830
+    - path: data/processed/larry_thresh_histogram.pdf
+      md5: b9c955fddd0fea50e251c2ccee4a9c63
+      size: 25614
+    - path: data/processed/larry_thresh_histogram.pdf.png
+      md5: c2a86492a1941e8e452d7977b05f5dbd
+      size: 105500
   preprocess@larry_tips:
     cmd: python preprocess.py process_data=[larry_tips]
     deps:
@@ -369,8 +429,8 @@ stages:
       md5: d618305c0ee0e41570b1147e63df332a
       size: 1525338690
     - path: preprocess.py
-      md5: 1cda99421bae4e5676096a0aaa0907a7
-      size: 2607
+      md5: ccbe8f3aa9ca398e232c69b48a041c4d
+      size: 2744
     params:
       config.yaml:
         data_sets.larry_tips:
@@ -382,12 +442,20 @@ stages:
           url: https://ndownloader.figshare.com/files/37028569
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/larry_tips_processed.h5ad
+            thresh_histogram_path: data/processed/larry_tips_thresh_histogram.pdf
     outs:
     - path: data/processed/larry_tips_processed.h5ad
-      md5: 9a776e794d60642f46df5d27864a68f3
-      size: 2026603122
+      md5: d155508cc87be9565372c158fd8eaeb9
+      size: 707111778
+    - path: data/processed/larry_tips_thresh_histogram.pdf
+      md5: 75a62c0b360729f1e8812f47a0722908
+      size: 25060
+    - path: data/processed/larry_tips_thresh_histogram.pdf.png
+      md5: 17eeab1c0db561b33fc19f406956401b
+      size: 104374
   preprocess@larry_mono:
     cmd: python preprocess.py process_data=[larry_mono]
     deps:
@@ -395,8 +463,8 @@ stages:
       md5: 01f4e084c37482e26800ba4dfa0202bd
       size: 66173538
     - path: preprocess.py
-      md5: 1cda99421bae4e5676096a0aaa0907a7
-      size: 2607
+      md5: ccbe8f3aa9ca398e232c69b48a041c4d
+      size: 2744
     params:
       config.yaml:
         data_sets.larry_mono:
@@ -408,12 +476,20 @@ stages:
           url: https://ndownloader.figshare.com/files/37028569
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/larry_mono_processed.h5ad
+            thresh_histogram_path: data/processed/larry_mono_thresh_histogram.pdf
     outs:
     - path: data/processed/larry_mono_processed.h5ad
-      md5: 9df0c8d32ad48f584327008e84e19133
-      size: 112022632
+      md5: ebdf4930814f027a5cf858b07bb470db
+      size: 20878748
+    - path: data/processed/larry_mono_thresh_histogram.pdf
+      md5: 37da86433c8337aef64f2eff6073f657
+      size: 19767
+    - path: data/processed/larry_mono_thresh_histogram.pdf.png
+      md5: fa701812a2ec0636d0c18d7b8b917a58
+      size: 81413
   preprocess@larry_neu:
     cmd: python preprocess.py process_data=[larry_neu]
     deps:
@@ -421,8 +497,8 @@ stages:
       md5: 3192e2fe89d64f5d0d158c0e7d26c79d
       size: 60008807
     - path: preprocess.py
-      md5: 1cda99421bae4e5676096a0aaa0907a7
-      size: 2607
+      md5: ccbe8f3aa9ca398e232c69b48a041c4d
+      size: 2744
     params:
       config.yaml:
         data_sets.larry_neu:
@@ -434,12 +510,20 @@ stages:
           url: https://ndownloader.figshare.com/files/37028575
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/larry_neu_processed.h5ad
+            thresh_histogram_path: data/processed/larry_neu_thresh_histogram.pdf
     outs:
     - path: data/processed/larry_neu_processed.h5ad
-      md5: b1602d1ee3f37735ab7d9a485e50bf7b
-      size: 92577976
+      md5: 5727a90445d9b4dd392ddc9963556b4d
+      size: 16985686
+    - path: data/processed/larry_neu_thresh_histogram.pdf
+      md5: 2aad0d0d09715de51d7c41164b7bbcd4
+      size: 19853
+    - path: data/processed/larry_neu_thresh_histogram.pdf.png
+      md5: 3093d5dbe795c2a02ffc47592c292af5
+      size: 82206
   preprocess@larry_multilineage:
     cmd: python preprocess.py process_data=[larry_multilineage]
     deps:
@@ -447,8 +531,8 @@ stages:
       md5: 9df0c8d32ad48f584327008e84e19133
       size: 112022632
     - path: preprocess.py
-      md5: 1cda99421bae4e5676096a0aaa0907a7
-      size: 2607
+      md5: ccbe8f3aa9ca398e232c69b48a041c4d
+      size: 2744
     params:
       config.yaml:
         data_sets.larry_multilineage:
@@ -460,12 +544,20 @@ stages:
           url: https://ndownloader.figshare.com/files/37028569
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/larry_multilineage_processed.h5ad
+            thresh_histogram_path: data/processed/larry_multilineage_thresh_histogram.pdf
     outs:
     - path: data/processed/larry_multilineage_processed.h5ad
-      md5: dd92683b8a035a37cae58f7dc775847f
-      size: 291990233
+      md5: 7eeddf877f95bd5be6d9c0f3e951cc8f
+      size: 56575161
+    - path: data/processed/larry_multilineage_thresh_histogram.pdf
+      md5: 1c6d429298844d77be2f32c160d1137d
+      size: 23459
+    - path: data/processed/larry_multilineage_thresh_histogram.pdf.png
+      md5: ba526cc30a1bac52741f382b0d41fe03
+      size: 89374
   preprocess@pbmc10k:
     cmd: python preprocess.py process_data=[pbmc10k]
     deps:
@@ -473,8 +565,8 @@ stages:
       md5: 3b64b4cd122454610957f5c6086e2eac
       size: 592149007
     - path: preprocess.py
-      md5: 1cda99421bae4e5676096a0aaa0907a7
-      size: 2607
+      md5: ccbe8f3aa9ca398e232c69b48a041c4d
+      size: 2744
     params:
       config.yaml:
         data_sets.pbmc10k:
@@ -486,12 +578,20 @@ stages:
           url: https://storage.googleapis.com/pyrovelocity/data/pbmc10k.h5ad
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/pbmc10k_processed.h5ad
+            thresh_histogram_path: data/processed/pbmc10k_thresh_histogram.pdf
     outs:
     - path: data/processed/pbmc10k_processed.h5ad
-      md5: 795e204da33aa5a9b2ae7e8cd2668527
-      size: 1306068803
+      md5: e85e95320eec8b7b0828bec252867ecb
+      size: 865762589
+    - path: data/processed/pbmc10k_thresh_histogram.pdf
+      md5: 30f574af2820d8f9a54078ad2d5ea461
+      size: 29233
+    - path: data/processed/pbmc10k_thresh_histogram.pdf.png
+      md5: aee89b028f6bbaa1b643f6e573277d15
+      size: 143092
   train@simulate_model2:
     cmd: /usr/bin/time -v python train.py train_models=[simulate_model2]
     deps:
