@@ -118,6 +118,11 @@ def load_data(
                 ].copy()
                 adata_multilineage = adata_mono.concatenate(adata_neu)
                 adata = adata_mono_C.concatenate(adata_neu_C)
+            elif data in ["larry_cospar", "larry_cytotrace", "larry_dynamical"]:
+                adata = sc.read(f"data/external/{data}.h5ad")
+                print_anndata(adata)
+                adata.write(processed_path)
+                return adata
         elif "pbmc68k" in data:
             adata = load_pbmc68k(data)
         else:  # pbmc10k
