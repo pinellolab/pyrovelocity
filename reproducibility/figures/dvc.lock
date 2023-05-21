@@ -2116,3 +2116,150 @@ stages:
     - path: reports/figS3/figureS3_extras.pdf
       md5: b0d92b2280c60c83024c1e9c7616c5fc
       size: 286813
+  data_download@larry_cospar:
+    cmd: python data_download.py process_data=[larry_cospar]
+    deps:
+    - path: data_download.py
+      md5: 35532543a7cbebeb209b9cc4cf2af144
+      size: 3150
+    params:
+      config.yaml:
+        data_sets.larry_cospar:
+          source: pyrovelocity
+          data_file: larry_cospar.h5ad
+          dl_root: data/external
+          dl_path: data/external/larry_cospar.h5ad
+          rel_path: data/external/larry_cospar.h5ad
+          url: https://storage.googleapis.com/pyrovelocity/data/larry_cospar.h5ad
+          derived:
+            process_method: load_data
+            process_args: {}
+            rel_path: data/processed/larry_cospar_processed.h5ad
+    outs:
+    - path: data/external/larry_cospar.h5ad
+      md5: a37647045e7265b4f63958e4fcdf5a44
+      size: 1856953062
+  preprocess@larry_cospar:
+    cmd: python preprocess.py process_data=[larry_cospar]
+    deps:
+    - path: data/external/larry_cospar.h5ad
+      md5: a37647045e7265b4f63958e4fcdf5a44
+      size: 1856953062
+    - path: preprocess.py
+      md5: 1cda99421bae4e5676096a0aaa0907a7
+      size: 2607
+    params:
+      config.yaml:
+        data_sets.larry_cospar:
+          source: pyrovelocity
+          data_file: larry_cospar.h5ad
+          dl_root: data/external
+          dl_path: data/external/larry_cospar.h5ad
+          rel_path: data/external/larry_cospar.h5ad
+          url: https://storage.googleapis.com/pyrovelocity/data/larry_cospar.h5ad
+          derived:
+            process_method: load_data
+            process_args: {}
+            rel_path: data/processed/larry_cospar_processed.h5ad
+    outs:
+    - path: data/processed/larry_cospar_processed.h5ad
+      md5: 9b5849e81f2d2bb9f0cd7f5c94281a2c
+      size: 2844291912
+  data_download@larry_dynamical:
+    cmd: python data_download.py process_data=[larry_dynamical]
+    deps:
+    - path: data_download.py
+      md5: 35532543a7cbebeb209b9cc4cf2af144
+      size: 3150
+    params:
+      config.yaml:
+        data_sets.larry_dynamical:
+          source: pyrovelocity
+          data_file: larry_dynamical.h5ad
+          dl_root: data/external
+          dl_path: data/external/larry_dynamical.h5ad
+          rel_path: data/external/larry_dynamical.h5ad
+          url: https://storage.googleapis.com/pyrovelocity/data/larry_dynamical.h5ad
+          derived:
+            process_method: load_data
+            process_args: {}
+            rel_path: data/processed/larry_dynamical_processed.h5ad
+    outs:
+    - path: data/external/larry_dynamical.h5ad
+      md5: 8e436da12c7d04f049d822e88ef75680
+      size: 5269119872
+  data_download@larry_cytotrace:
+    cmd: python data_download.py process_data=[larry_cytotrace]
+    deps:
+    - path: data_download.py
+      md5: 35532543a7cbebeb209b9cc4cf2af144
+      size: 3150
+    params:
+      config.yaml:
+        data_sets.larry_cytotrace:
+          source: pyrovelocity
+          data_file: larry_cytotrace.h5ad
+          dl_root: data/external
+          dl_path: data/external/larry_cytotrace.h5ad
+          rel_path: data/external/larry_cytotrace.h5ad
+          url: https://storage.googleapis.com/pyrovelocity/data/larry_cytotrace.h5ad
+          derived:
+            process_method: load_data
+            process_args: {}
+            rel_path: data/processed/larry_cytotrace_processed.h5ad
+    outs:
+    - path: data/external/larry_cytotrace.h5ad
+      md5: 5149fda86944ac19f0c9ab31461ec22f
+      size: 1526733926
+  preprocess@larry_cytotrace:
+    cmd: python preprocess.py process_data=[larry_cytotrace]
+    deps:
+    - path: data/external/larry_cytotrace.h5ad
+      md5: 5149fda86944ac19f0c9ab31461ec22f
+      size: 1526733926
+    - path: preprocess.py
+      md5: 1cda99421bae4e5676096a0aaa0907a7
+      size: 2607
+    params:
+      config.yaml:
+        data_sets.larry_cytotrace:
+          source: pyrovelocity
+          data_file: larry_cytotrace.h5ad
+          dl_root: data/external
+          dl_path: data/external/larry_cytotrace.h5ad
+          rel_path: data/external/larry_cytotrace.h5ad
+          url: https://storage.googleapis.com/pyrovelocity/data/larry_cytotrace.h5ad
+          derived:
+            process_method: load_data
+            process_args: {}
+            rel_path: data/processed/larry_cytotrace_processed.h5ad
+    outs:
+    - path: data/processed/larry_cytotrace_processed.h5ad
+      md5: 4d902b4d69a4e078f5ebef923c25dd2b
+      size: 1526746438
+  preprocess@larry_dynamical:
+    cmd: python preprocess.py process_data=[larry_dynamical]
+    deps:
+    - path: data/external/larry_dynamical.h5ad
+      md5: 8e436da12c7d04f049d822e88ef75680
+      size: 5269119872
+    - path: preprocess.py
+      md5: 1cda99421bae4e5676096a0aaa0907a7
+      size: 2607
+    params:
+      config.yaml:
+        data_sets.larry_dynamical:
+          source: pyrovelocity
+          data_file: larry_dynamical.h5ad
+          dl_root: data/external
+          dl_path: data/external/larry_dynamical.h5ad
+          rel_path: data/external/larry_dynamical.h5ad
+          url: https://storage.googleapis.com/pyrovelocity/data/larry_dynamical.h5ad
+          derived:
+            process_method: load_data
+            process_args: {}
+            rel_path: data/processed/larry_dynamical_processed.h5ad
+    outs:
+    - path: data/processed/larry_dynamical_processed.h5ad
+      md5: 1457723ff99dbd7b9e9188d4270f21f4
+      size: 5269133104
