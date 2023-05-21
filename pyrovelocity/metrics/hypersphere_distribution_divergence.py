@@ -77,3 +77,19 @@ class VMF:
         proj_mu_v = self.mu * np.dot(self.mu, v)
         return (v - proj_mu_v) / np.linalg.norm(v - proj_mu_v)
 
+
+def sample_uniform(dimension, sample_number):
+    """
+    Samples from a uniform distribution on the N-D unit hypersphere.
+
+    Args:
+        sample_number (int): The number of samples to draw.
+
+    Returns:
+        ndarray: The sampled points in the form of a sample_number by dimension array.
+    """
+    result = np.random.randn(sample_number, dimension)
+    result /= np.linalg.norm(result, axis=1)[:, np.newaxis]
+    return result
+
+
