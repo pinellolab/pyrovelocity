@@ -93,3 +93,32 @@ def sample_uniform(dimension, sample_number):
     return result
 
 
+def kl_divergence(p, q, dimension, sample_number):
+    """
+    Computes the Kullback-Leibler divergence between two distributions, estimated using kernel density estimation.
+    This uses Scott's rule to estimate the bandwidth parameter.
+
+    Scott, D.W. (1992) Multivariate Density Estimation. Theory, Practice and Visualization. New York: Wiley.
+
+    Args:
+        p (ndarray): Samples from the first distribution.
+        q (ndarray): Samples from the second distribution.
+        sample_number (float): The number of samples used to estimate the distributions.
+        dimension (int): The dimension of the distributions.
+
+    Returns:
+        float: The Kullback-Leibler divergence between the first and second distributions.
+        float: The bandwidth parameter for the kernel density estimation used in the Kullback-Leibler divergence computation.
+    """
+
+    bandwidth = sample_number ** (-1 / (dimension + 4))
+
+    p_kde = KernelDensity(kernel="gaussian", bandwidth=bandwidth).fit(p)
+    q_kde = KernelDensity(kernel="gaussian", bandwidth=bandwidth).fit(q)
+
+    p_scores = p_kde.score_samples(p)
+    q_scores = q_kde.score_samples(p)
+
+    kl_div = np.sum(p_scores - q_scores) / len(p)
+    return kl_div, bandwidth
+
