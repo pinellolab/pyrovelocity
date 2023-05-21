@@ -4,13 +4,17 @@ from typing import Optional
 
 import anndata
 import anndata._core.anndata
+import matplotlib.figure
+import matplotlib.pyplot as plt
 import numpy as np
 import scanpy as sc
 import scvelo as scv
 from scipy.sparse import issparse
 
 from pyrovelocity.cytotrace import cytotrace_sparse
+from pyrovelocity.utils import ensure_numpy_array
 from pyrovelocity.utils import print_anndata
+from pyrovelocity.utils import trace
 
 
 def copy_raw_counts(
@@ -48,33 +52,54 @@ def copy_raw_counts(
     return adata
 
 
+def assign_colors(
+    max_spliced: int, max_unspliced: int, minlim_s: int, minlim_u: int
+) -> List[str]:
+    return [
+        "black" if (spliced >= minlim_s) & (unspliced >= minlim_u) else "lightgrey"
+        for spliced, unspliced in zip(max_spliced, max_unspliced)
+    ]
+
+
+def get_thresh_histogram_title_from_path(path):
+    title = os.path.basename(path)
+    title = os.path.splitext(title)[0]
+    title = title.replace("_thresh_histogram", "")
+    return title.replace("_", " ")
+
+
 def plot_high_us_genes(
-    adata,
-    thresh_histogram_path,
-    minlim_u=3,
-    minlim_s=3,
-    unspliced_layer="unspliced",
-    spliced_layer="spliced",
-):
-    import matplotlib.pyplot as plt
+    adata: anndata.AnnData,
+    thresh_histogram_path: str,
+    minlim_u: int = 3,
+    minlim_s: int = 3,
+    unspliced_layer: str = "unspliced",
+    spliced_layer: str = "spliced",
+) -> Optional[matplotlib.figure.Figure]:
+    if (
+        adata is None
+        or unspliced_layer not in adata.layers
+        or spliced_layer not in adata.layers
+    ):
+        raise ValueError(
+            "Invalid data set. Please ensure that adata is an AnnData object"
+            "and that the layers 'unspliced' and 'spliced' are present."
+        )
 
     max_unspliced = np.array(
-        np.max(adata.layers[unspliced_layer].toarray(), axis=0)
+        np.max(ensure_numpy_array(adata.layers[unspliced_layer]), axis=0)
     ).flatten()
     max_spliced = np.array(
-        np.max(adata.layers[spliced_layer].toarray(), axis=0)
+        np.max(ensure_numpy_array(adata.layers[spliced_layer]), axis=0)
     ).flatten()
 
     ### create figure
     x = max_spliced
     y = max_unspliced
 
-    colors = []
-    for idx in range(len(max_spliced)):
-        if (max_spliced[idx] >= minlim_s) & (max_unspliced[idx] >= minlim_u):
-            colors.append("black")
-        else:
-            colors.append("lightgrey")
+    title = get_thresh_histogram_title_from_path(thresh_histogram_path)
+
+    colors = assign_colors(max_spliced, max_unspliced, minlim_s, minlim_u)
 
     left, width = 0.1, 0.65
     bottom, height = 0.1, 0.65
@@ -85,6 +110,7 @@ def plot_high_us_genes(
     rect_histy = [left + width + spacing, bottom, 0.2, height]
 
     fig = plt.figure(figsize=(4, 4))
+    fig.suptitle(title, y=1.00, fontsize=12)
 
     ax = fig.add_axes(rect_scatter)
     ax_histx = fig.add_axes(rect_histx, sharex=ax)
@@ -98,8 +124,10 @@ def plot_high_us_genes(
     ax.set_xscale("log")
     ax.set_xlabel("max. spliced counts")
     ax.set_ylabel("max. unspliced counts")
-    ax.axhline(y=minlim_s, color="r", linestyle="--")
-    ax.axvline(x=minlim_u, color="r", linestyle="--")
+    if minlim_s > 0:
+        ax.axhline(y=minlim_s - 1, color="r", linestyle="--")
+    if minlim_u > 0:
+        ax.axvline(x=minlim_u - 1, color="r", linestyle="--")
 
     ### the histograms:
     bins = 50
@@ -117,7 +145,7 @@ def plot_high_us_genes(
             dpi=300,
         )
 
-    return
+    return fig
 
 
 def get_high_us_genes(
@@ -262,8 +290,8 @@ def load_data(
             )
             if count_thres:
                 plot_high_us_genes(
-                    adata,
-                    thresh_histogram_path,
+                    adata=adata,
+                    thresh_histogram_path=thresh_histogram_path,
                     minlim_u=count_thres,
                     minlim_s=count_thres,
                     unspliced_layer="raw_unspliced",
