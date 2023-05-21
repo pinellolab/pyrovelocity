@@ -122,3 +122,39 @@ def kl_divergence(p, q, dimension, sample_number):
     kl_div = np.sum(p_scores - q_scores) / len(p)
     return kl_div, bandwidth
 
+
+def plot_samples_and_kde(ax, samples_vmf, samples_uniform, kappa, dim=3, bandwidth=0.1):
+    if dim not in [2, 3]:
+        raise ValueError("Dimension must be 2 or 3.")
+
+    if dim == 3:
+        ax.scatter(
+            samples_vmf[:, 0], samples_vmf[:, 1], samples_vmf[:, 2], color="darkgreen"
+        )
+        ax.set_title(rf"VMF distribution ($\kappa$={kappa})")
+        ax.set_xlim([-1, 1])
+        ax.set_ylim([-1, 1])
+        ax.set_zlim([-1, 1])
+
+    else:
+        kde_vmf = KernelDensity(bandwidth=bandwidth).fit(samples_vmf)
+        kde_uniform = KernelDensity(bandwidth=bandwidth).fit(samples_uniform)
+
+        # grid
+        num_points = 100
+        x = np.linspace(min(samples_vmf[:, 0]), max(samples_vmf[:, 0]), num_points)
+        y = np.linspace(min(samples_vmf[:, 1]), max(samples_vmf[:, 1]), num_points)
+        X, Y = np.meshgrid(x, y)
+        xy = np.vstack([X.ravel(), Y.ravel()]).T
+
+        # evaluate
+        Z_vmf = np.exp(kde_vmf.score_samples(xy)).reshape(X.shape)
+        Z_uniform = np.exp(kde_uniform.score_samples(xy)).reshape(X.shape)
+
+        # 2-D vMF distribution with contours
+        ax.scatter(samples_vmf[:, 0], samples_vmf[:, 1], color="darkgreen")
+        ax.contour(X, Y, Z_vmf, cmap="viridis")
+        ax.set_title(rf"VMF distribution ($\kappa$={kappa})")
+        ax.set_xlim([-1.3, 1.3])
+        ax.set_ylim([-1.3, 1.3])
+
