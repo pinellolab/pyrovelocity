@@ -92,6 +92,9 @@ generate_markdown() {
     printf "\n# %s\n\n## %s\n\n### Metrics\n" "$data_set" "$model"
     dvc metrics show --md "models/${data_set}_${model}/metrics.json"
 
+    echo "### Data summary"
+    echo '!'"[Raw Count Histogram](./data/processed/${data_set}_thresh_histogram.pdf.png)"
+
     echo "### Training plots"
     echo '!'"[ELBO](./models/${data_set}_${model}/loss_plot.png)"
 
