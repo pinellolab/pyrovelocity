@@ -225,3 +225,20 @@ def sample_and_plot_vMF(num_samples, kappas, dim):
 
     return bandwidth
 
+
+if __name__ == "__main__":
+    """
+    Compute examples over a range of dimensions and scale parameters.
+
+    > montage -geometry 800x kl_div_vs_kappa_2D.png kl_div_vs_kappa_3D.png \
+        kl_div_vs_kappa_4D.png kl_div_vs_kappa_10D.png kl_div_vs_kappa_100D.png \
+        kl_div_vs_kappa_1000D.png ND_KLD_vs_vMF_kappa.png
+    """
+    num_samples = 1000
+    kappas = [1, 3, 4, 6, 8, 10, 15, 20, 35, 50, 75, 100, 150, 200, 250, 300]
+    dims = [2, 3, 4, 10, 100, 1000]
+
+    for dim in dims:
+        print(f"\n==Dimension: {dim}==\n")
+        bandwidth = sample_and_plot_vMF(num_samples, kappas, dim)
+        print(f"KD bandwidth: {bandwidth}")
