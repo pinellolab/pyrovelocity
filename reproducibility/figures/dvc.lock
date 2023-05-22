@@ -2056,11 +2056,11 @@ stages:
     cmd: python summarize.py train_models=[pbmc10k_model2]
     deps:
     - path: models/pbmc10k_model2/pyrovelocity.pkl.zst
-      md5: 6c429cfd714bd8fa25b30d57c653e810
-      size: 330050183
+      md5: 6fb18ff8e809e2151b9a36ddce4fd7f3
+      size: 266838725
     - path: models/pbmc10k_model2/trained.h5ad
-      md5: a4ea4b235e8f35c2db4e711ca0f9243b
-      size: 1529235151
+      md5: 211422bd3bfcdb07afb0973a3464bb7c
+      size: 1021599729
     - path: summarize.py
       md5: a8dc7ed049c91d7f64eb80958bee71dc
       size: 9541
@@ -2082,26 +2082,26 @@ stages:
           biomarker_phaseportrait_plot: reports/pbmc10k_model2/markers_phaseportrait.pdf
     outs:
     - path: data/processed/pbmc10k_model2_dataframe.pkl.zst
-      md5: 6464f86c3b2ed5661778d78c7f11c994
-      size: 37856415
+      md5: 624cf20c5bb3f324ded7c0365daefb9b
+      size: 26163662
     - path: reports/pbmc10k_model2/rainbow.pdf
-      md5: e9e52cb24edada63369725386a012cf1
-      size: 2046931
+      md5: 6b836b1ef07d6fa64039290a6e9aa6cc
+      size: 2046642
     - path: reports/pbmc10k_model2/rainbow.pdf.png
-      md5: df3527785c8544b3ef41ef65bb4a62b5
-      size: 1587744
+      md5: d472ec872bf4b5dcf87e8d7cdced5a86
+      size: 1579450
     - path: reports/pbmc10k_model2/shared_time.pdf
-      md5: 396ed13570893f3b3fd2d3a9842a97d4
-      size: 411751
+      md5: 717b47b7ed134c02db2723d4ea888022
+      size: 396542
     - path: reports/pbmc10k_model2/vector_field.pdf
-      md5: c95623104ffa45437a28415ca5e56fe4
-      size: 504856
+      md5: ae3458e90c7f3870fa1414a0477a2f16
+      size: 504748
     - path: reports/pbmc10k_model2/vector_field.pdf.png
-      md5: 56ececa7f5b2f4b826c6bf7628660f7f
-      size: 985242
+      md5: fe2effae8a98dc89eb12be4506ad32b4
+      size: 985481
     - path: reports/pbmc10k_model2/volcano.pdf
-      md5: dfe15aec9058c18528a6fbc09fee6032
-      size: 21232
+      md5: 115c7fffb937b23ad90a9986b0fdc42c
+      size: 21793
   summarize@larry_tips_model2:
     cmd: python summarize.py train_models=[larry_tips_model2]
     deps:
