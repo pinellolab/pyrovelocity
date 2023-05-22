@@ -118,8 +118,10 @@ data_sets:
     url: https://storage.googleapis.com/pyrovelocity/data/larry_cospar.h5ad
     derived:
       process_method: load_data
-      process_args: {}
+      process_args:
+        count_thres: 4
       rel_path: data/processed/larry_cospar_processed.h5ad
+      thresh_histogram_path: data/processed/larry_cospar_thresh_histogram.pdf
   larry_cytotrace:
     source: pyrovelocity
     data_file: larry_cytotrace.h5ad
@@ -129,8 +131,10 @@ data_sets:
     url: https://storage.googleapis.com/pyrovelocity/data/larry_cytotrace.h5ad
     derived:
       process_method: load_data
-      process_args: {}
+      process_args:
+        count_thres: 4
       rel_path: data/processed/larry_cytotrace_processed.h5ad
+      thresh_histogram_path: data/processed/larry_cytotrace_thresh_histogram.pdf
   larry_dynamical:
     source: pyrovelocity
     data_file: larry_dynamical.h5ad
@@ -140,8 +144,10 @@ data_sets:
     url: https://storage.googleapis.com/pyrovelocity/data/larry_dynamical.h5ad
     derived:
       process_method: load_data
-      process_args: {}
+      process_args:
+        count_thres: 4
       rel_path: data/processed/larry_dynamical_processed.h5ad
+      thresh_histogram_path: data/processed/larry_dynamical_thresh_histogram.pdf
   larry_tips:
     source: pyrovelocity
     data_file: larry_tips.h5ad

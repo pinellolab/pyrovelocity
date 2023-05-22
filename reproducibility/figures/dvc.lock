@@ -788,8 +788,8 @@ stages:
     cmd: /usr/bin/time -v python train.py train_models=[pons_model2]
     deps:
     - path: data/processed/pons_processed.h5ad
-      md5: 8b66cd9859c0b22b7ca969a20816ea95
-      size: 740872463
+      md5: 3acf23c08d7c2567840dfaa016e50a24
+      size: 241821182
     - path: train.py
       md5: 4cf2c31c17dbb07e8de124c36735401b
       size: 6703
@@ -836,17 +836,17 @@ stages:
             loss_plot_path: models/pons_model2/loss_plot.png
     outs:
     - path: models/pons_model2/loss_plot.png
-      md5: 78780667ef0761b1e2fe2521492e3336
-      size: 11344
+      md5: 26987d2ceb1e81518919538ec2f38823
+      size: 12264
     - path: models/pons_model2/model
-      md5: 25c289ce21afc24351e35fefa2968931.dir
-      size: 1906485
+      md5: 0f34877c8b88761fc4aba5267432266b.dir
+      size: 747317
       nfiles: 2
     - path: models/pons_model2/posterior_samples.pkl.zst
-      md5: d9679ddd7b0192cd845325d95057fe30
-      size: 2495542100
+      md5: 0ef7984f2a667965a5794983c6f7e4d2
+      size: 690600564
     - path: models/pons_model2/run_info.json
-      md5: dbf6cefe0a7c918d6d12aaf1d7622d80
+      md5: a832420dcb6c5a5f8b4fbbe79cb832fb
       size: 451
   train@larry_model2:
     cmd: /usr/bin/time -v python train.py train_models=[larry_model2]
@@ -1437,15 +1437,15 @@ stages:
     cmd: /usr/bin/time -v python postprocess.py train_models=[pons_model2]
     deps:
     - path: data/processed/pons_processed.h5ad
-      md5: 8b66cd9859c0b22b7ca969a20816ea95
-      size: 740872463
+      md5: 3acf23c08d7c2567840dfaa016e50a24
+      size: 241821182
     - path: models/pons_model2/model
-      md5: 25c289ce21afc24351e35fefa2968931.dir
-      size: 1906485
+      md5: 0f34877c8b88761fc4aba5267432266b.dir
+      size: 747317
       nfiles: 2
     - path: models/pons_model2/posterior_samples.pkl.zst
-      md5: d9679ddd7b0192cd845325d95057fe30
-      size: 2495542100
+      md5: 0ef7984f2a667965a5794983c6f7e4d2
+      size: 690600564
     - path: postprocess.py
       md5: 2d194b66a6964f4ac39022fe6a4fbb8f
       size: 5679
@@ -1492,14 +1492,14 @@ stages:
             loss_plot_path: models/pons_model2/loss_plot.png
     outs:
     - path: models/pons_model2/metrics.json
-      md5: f8a681c49e5938747761d4dd932738a9
+      md5: 28f56d929186fd485c0edcd3a1846ac0
       size: 99
     - path: models/pons_model2/pyrovelocity.pkl.zst
-      md5: 6102fb752559082e3ebd2e33013a0f5f
-      size: 175510242
+      md5: e19265b3df8c7204f1711ba5139e0247
+      size: 107391424
     - path: models/pons_model2/trained.h5ad
-      md5: 7bf76d4663cda7587c3f5e1e279b8ce6
-      size: 859739291
+      md5: 392c542b606b76feeac271c0a687438d
+      size: 288360805
   postprocess@larry_model2:
     cmd: /usr/bin/time -v python postprocess.py train_models=[larry_model2]
     deps:
@@ -2279,8 +2279,10 @@ stages:
           url: https://storage.googleapis.com/pyrovelocity/data/larry_cospar.h5ad
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/larry_cospar_processed.h5ad
+            thresh_histogram_path: data/processed/larry_cospar_thresh_histogram.pdf
     outs:
     - path: data/external/larry_cospar.h5ad
       md5: a37647045e7265b4f63958e4fcdf5a44
@@ -2292,8 +2294,8 @@ stages:
       md5: a37647045e7265b4f63958e4fcdf5a44
       size: 1856953062
     - path: preprocess.py
-      md5: 1cda99421bae4e5676096a0aaa0907a7
-      size: 2607
+      md5: ccbe8f3aa9ca398e232c69b48a041c4d
+      size: 2744
     params:
       config.yaml:
         data_sets.larry_cospar:
@@ -2305,12 +2307,20 @@ stages:
           url: https://storage.googleapis.com/pyrovelocity/data/larry_cospar.h5ad
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/larry_cospar_processed.h5ad
+            thresh_histogram_path: data/processed/larry_cospar_thresh_histogram.pdf
     outs:
     - path: data/processed/larry_cospar_processed.h5ad
-      md5: 9b5849e81f2d2bb9f0cd7f5c94281a2c
-      size: 2844291912
+      md5: 4e5a8af46dc090bcebb2b4f7d4c8087e
+      size: 2965439664
+    - path: data/processed/larry_cospar_thresh_histogram.pdf
+      md5: bf3cc2b4ecd0035ae56622ffa9638a38
+      size: 41194
+    - path: data/processed/larry_cospar_thresh_histogram.pdf.png
+      md5: fa31fae5d1c63703e1fcf2e4623b7d07
+      size: 127625
   data_download@larry_dynamical:
     cmd: python data_download.py process_data=[larry_dynamical]
     deps:
@@ -2328,8 +2338,10 @@ stages:
           url: https://storage.googleapis.com/pyrovelocity/data/larry_dynamical.h5ad
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/larry_dynamical_processed.h5ad
+            thresh_histogram_path: data/processed/larry_dynamical_thresh_histogram.pdf
     outs:
     - path: data/external/larry_dynamical.h5ad
       md5: 8e436da12c7d04f049d822e88ef75680
@@ -2351,8 +2363,10 @@ stages:
           url: https://storage.googleapis.com/pyrovelocity/data/larry_cytotrace.h5ad
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/larry_cytotrace_processed.h5ad
+            thresh_histogram_path: data/processed/larry_cytotrace_thresh_histogram.pdf
     outs:
     - path: data/external/larry_cytotrace.h5ad
       md5: 5149fda86944ac19f0c9ab31461ec22f
@@ -2364,8 +2378,8 @@ stages:
       md5: 5149fda86944ac19f0c9ab31461ec22f
       size: 1526733926
     - path: preprocess.py
-      md5: 1cda99421bae4e5676096a0aaa0907a7
-      size: 2607
+      md5: ccbe8f3aa9ca398e232c69b48a041c4d
+      size: 2744
     params:
       config.yaml:
         data_sets.larry_cytotrace:
@@ -2377,12 +2391,20 @@ stages:
           url: https://storage.googleapis.com/pyrovelocity/data/larry_cytotrace.h5ad
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/larry_cytotrace_processed.h5ad
+            thresh_histogram_path: data/processed/larry_cytotrace_thresh_histogram.pdf
     outs:
     - path: data/processed/larry_cytotrace_processed.h5ad
-      md5: 4d902b4d69a4e078f5ebef923c25dd2b
-      size: 1526746438
+      md5: 5f7f6440a0f2e4bed3007c2e02625e27
+      size: 1967302734
+    - path: data/processed/larry_cytotrace_thresh_histogram.pdf
+      md5: e52ee783625e9a46cf8afb23ab63cffc
+      size: 69411
+    - path: data/processed/larry_cytotrace_thresh_histogram.pdf.png
+      md5: ab1e8f22815ae9ce01aafffda98364d2
+      size: 115786
   preprocess@larry_dynamical:
     cmd: python preprocess.py process_data=[larry_dynamical]
     deps:
@@ -2390,8 +2412,8 @@ stages:
       md5: 8e436da12c7d04f049d822e88ef75680
       size: 5269119872
     - path: preprocess.py
-      md5: 1cda99421bae4e5676096a0aaa0907a7
-      size: 2607
+      md5: ccbe8f3aa9ca398e232c69b48a041c4d
+      size: 2744
     params:
       config.yaml:
         data_sets.larry_dynamical:
@@ -2403,10 +2425,20 @@ stages:
           url: https://storage.googleapis.com/pyrovelocity/data/larry_dynamical.h5ad
           derived:
             process_method: load_data
-            process_args: {}
+            process_args:
+              count_thres: 4
             rel_path: data/processed/larry_dynamical_processed.h5ad
+            thresh_histogram_path: data/processed/larry_dynamical_thresh_histogram.pdf
     outs:
     - path: data/processed/larry_dynamical_processed.h5ad
+      md5: d9671e0b9076f3f9f0697494a80aa67e
+      size: 5390277128
+    - path: data/processed/larry_dynamical_thresh_histogram.pdf
+      md5: 679951ec6c4549f2ab94fa5d24fe1f89
+      size: 41201
+    - path: data/processed/larry_dynamical_thresh_histogram.pdf.png
+      md5: a2fcc5a3c6d43f5740af9191a28ddcd0
+      size: 128311
       md5: 1457723ff99dbd7b9e9188d4270f21f4
       size: 5269133104
   summarize@larry_model2:
