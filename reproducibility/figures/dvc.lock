@@ -1906,11 +1906,11 @@ stages:
     cmd: python summarize.py train_models=[pancreas_model2]
     deps:
     - path: models/pancreas_model2/pyrovelocity.pkl.zst
-      md5: 143f044ba49870ba395c1974ea702d27
-      size: 105520126
+      md5: e589bc2a15f2db756df3ae9c2e1db3ed
+      size: 65630080
     - path: models/pancreas_model2/trained.h5ad
-      md5: d6871cdb5403d14454d842e6e8bc7969
-      size: 492522608
+      md5: db1f418ac3a13d7f0ec40adfbec0cbcf
+      size: 169776624
     - path: summarize.py
       md5: a8dc7ed049c91d7f64eb80958bee71dc
       size: 9541
@@ -1932,26 +1932,26 @@ stages:
           biomarker_phaseportrait_plot: reports/pancreas_model2/markers_phaseportrait.pdf
     outs:
     - path: data/processed/pancreas_model2_dataframe.pkl.zst
-      md5: bbff19677beed1c7cf3766506f391723
-      size: 12359084
+      md5: 234e75746db57d84b5bbf0f3758c4fe9
+      size: 4245340
     - path: reports/pancreas_model2/rainbow.pdf
-      md5: 19effac0b7762ca4b4d255ce4c104c5d
-      size: 674523
+      md5: e3cbd2d4d4cddbbb593e79f8f06e4b0a
+      size: 672215
     - path: reports/pancreas_model2/rainbow.pdf.png
-      md5: a053e9fbf0755a4fa529e92e3ef03f45
-      size: 1592710
+      md5: ab5741e9a3ab6ece205db1bd9f340709
+      size: 1362103
     - path: reports/pancreas_model2/shared_time.pdf
-      md5: 8340f4cac8063d25de16af11ad94c31d
-      size: 470124
+      md5: 801c598b85386496a84e899e4801bc32
+      size: 473609
     - path: reports/pancreas_model2/vector_field.pdf
-      md5: 4c167bd3bb924645b9cd697d57f3e003
-      size: 397645
+      md5: 346feb7e2bf13c0f6be3c27307b97893
+      size: 397382
     - path: reports/pancreas_model2/vector_field.pdf.png
-      md5: 1193ca868b77e7f6a3132aec649cf00c
-      size: 697781
+      md5: f7de40753ea89a455d6c2fdd7d380359
+      size: 689803
     - path: reports/pancreas_model2/volcano.pdf
-      md5: 689fac47004183923fcdc6dcf6807176
-      size: 20339
+      md5: 9942c41dd678d20a7feabe99157ddd4c
+      size: 20827
   summarize@pbmc68k_model2:
     cmd: python summarize.py train_models=[pbmc68k_model2]
     deps:
