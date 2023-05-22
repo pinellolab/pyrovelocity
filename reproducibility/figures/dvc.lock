@@ -1956,11 +1956,11 @@ stages:
     cmd: python summarize.py train_models=[pbmc68k_model2]
     deps:
     - path: models/pbmc68k_model2/pyrovelocity.pkl.zst
-      md5: fe639f3f107789827275fad0dc4c1bd4
-      size: 679019086
+      md5: c4adabfaa2e0ea3baa15776847cc7a93
+      size: 513892944
     - path: models/pbmc68k_model2/trained.h5ad
-      md5: 0bcb9e487d242deabd6dec70bf31a254
-      size: 2150870473
+      md5: 1416f0cc98346453f87d197c61887aa2
+      size: 1112777602
     - path: summarize.py
       md5: a8dc7ed049c91d7f64eb80958bee71dc
       size: 9541
@@ -1982,26 +1982,26 @@ stages:
           biomarker_phaseportrait_plot: reports/pbmc68k_model2/markers_phaseportrait.pdf
     outs:
     - path: data/processed/pbmc68k_model2_dataframe.pkl.zst
-      md5: dc17c1ef835c7500d0b694422481fbd1
-      size: 38352654
+      md5: 5dfddd2f9d6f93d34569eeaa4982eb99
+      size: 9123664
     - path: reports/pbmc68k_model2/rainbow.pdf
-      md5: 44f46c0c6cdb64973be510709373db45
-      size: 11383839
+      md5: f87a4808d7a773426ffe62918311d15d
+      size: 11373025
     - path: reports/pbmc68k_model2/rainbow.pdf.png
-      md5: f21a38a0d5f4aafc64a19666e0c6042b
-      size: 2414280
+      md5: e4e65f50e954b215773e69cb5adb3a61
+      size: 1928679
     - path: reports/pbmc68k_model2/shared_time.pdf
-      md5: 7f35e10bc43e3f8a681accc5569c7366
-      size: 367630
+      md5: f9c92f32ded0716e59129cf443fcdde8
+      size: 396354
     - path: reports/pbmc68k_model2/vector_field.pdf
-      md5: e8ca463e8dfff2da7365859d2a1dc77f
-      size: 1033617
+      md5: 6c22e89e20251fd8ac30b4cd2ce7365f
+      size: 1033594
     - path: reports/pbmc68k_model2/vector_field.pdf.png
-      md5: 5e64eb0e91563c943a1aebcfe854b24b
-      size: 1193268
+      md5: 60716b193ea554d7e1835a47b9bdeae7
+      size: 1199390
     - path: reports/pbmc68k_model2/volcano.pdf
-      md5: 0f359b6d92daf7871aef1a0fbab9d238
-      size: 20444
+      md5: c563dd48cc487e1d50fe7868468d3804
+      size: 18699
   summarize@pons_model2:
     cmd: python summarize.py train_models=[pons_model2]
     deps:
@@ -2056,11 +2056,11 @@ stages:
     cmd: python summarize.py train_models=[pbmc10k_model2]
     deps:
     - path: models/pbmc10k_model2/pyrovelocity.pkl.zst
-      md5: 6c429cfd714bd8fa25b30d57c653e810
-      size: 330050183
+      md5: 6fb18ff8e809e2151b9a36ddce4fd7f3
+      size: 266838725
     - path: models/pbmc10k_model2/trained.h5ad
-      md5: a4ea4b235e8f35c2db4e711ca0f9243b
-      size: 1529235151
+      md5: 211422bd3bfcdb07afb0973a3464bb7c
+      size: 1021599729
     - path: summarize.py
       md5: a8dc7ed049c91d7f64eb80958bee71dc
       size: 9541
@@ -2082,26 +2082,26 @@ stages:
           biomarker_phaseportrait_plot: reports/pbmc10k_model2/markers_phaseportrait.pdf
     outs:
     - path: data/processed/pbmc10k_model2_dataframe.pkl.zst
-      md5: 6464f86c3b2ed5661778d78c7f11c994
-      size: 37856415
+      md5: 624cf20c5bb3f324ded7c0365daefb9b
+      size: 26163662
     - path: reports/pbmc10k_model2/rainbow.pdf
-      md5: e9e52cb24edada63369725386a012cf1
-      size: 2046931
+      md5: 4a3e2fbaedd2f445b35edab12d8bbda3
+      size: 2046642
     - path: reports/pbmc10k_model2/rainbow.pdf.png
-      md5: df3527785c8544b3ef41ef65bb4a62b5
-      size: 1587744
+      md5: d472ec872bf4b5dcf87e8d7cdced5a86
+      size: 1579450
     - path: reports/pbmc10k_model2/shared_time.pdf
-      md5: 396ed13570893f3b3fd2d3a9842a97d4
-      size: 411751
+      md5: 7b06c4c2adfe354463ff088044e03a4f
+      size: 396542
     - path: reports/pbmc10k_model2/vector_field.pdf
-      md5: c95623104ffa45437a28415ca5e56fe4
-      size: 504856
+      md5: 10025c6b028dc9eea7f702f4cf5635f7
+      size: 504748
     - path: reports/pbmc10k_model2/vector_field.pdf.png
-      md5: 56ececa7f5b2f4b826c6bf7628660f7f
-      size: 985242
+      md5: fe2effae8a98dc89eb12be4506ad32b4
+      size: 985481
     - path: reports/pbmc10k_model2/volcano.pdf
-      md5: dfe15aec9058c18528a6fbc09fee6032
-      size: 21232
+      md5: 8581ed2f59eb281a73bf788ac99097b5
+      size: 21793
   summarize@larry_tips_model2:
     cmd: python summarize.py train_models=[larry_tips_model2]
     deps:
