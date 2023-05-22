@@ -265,6 +265,17 @@ def load_data(
             elif data in ["larry_cospar", "larry_cytotrace", "larry_dynamical"]:
                 adata = sc.read(f"data/external/{data}.h5ad")
                 print_anndata(adata)
+                copy_raw_counts(adata)
+                print_anndata(adata)
+                if count_thres:
+                    plot_high_us_genes(
+                        adata=adata,
+                        thresh_histogram_path=thresh_histogram_path,
+                        minlim_u=count_thres,
+                        minlim_s=count_thres,
+                        unspliced_layer="raw_unspliced",
+                        spliced_layer="raw_spliced",
+                    )
                 adata.write(processed_path)
                 return adata
         elif "pbmc68k" in data:

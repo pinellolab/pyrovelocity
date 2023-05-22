@@ -784,7 +784,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://storage.googleapis.com/pyrovelocity/data/larry_cospar.h5ad",
             process_method="load_data",
-            process_args=dict(),
+            process_args=dict(count_thres=4),
         ),
         larry_cytotrace=create_dataset_config(
             source="pyrovelocity",
@@ -794,7 +794,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://storage.googleapis.com/pyrovelocity/data/larry_cytotrace.h5ad",
             process_method="load_data",
-            process_args=dict(),
+            process_args=dict(count_thres=4),
         ),
         larry_dynamical=create_dataset_config(
             source="pyrovelocity",
@@ -804,7 +804,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://storage.googleapis.com/pyrovelocity/data/larry_dynamical.h5ad",
             process_method="load_data",
-            process_args=dict(),
+            process_args=dict(count_thres=4),
         ),
         larry_tips=create_dataset_config(
             source="pyrovelocity",
