@@ -646,4 +646,7 @@ reports:
   figureS3_extras:
     tag: figS3
     path: reports/figS3
-    shared_time_plot: reports/figS3/figureS3_extras.pdf
+    violin_plots_pbmc_lin: reports/figS3/figureS3_extras_pbmc_lin.pdf
+    violin_plots_pbmc_log: reports/figS3/figureS3_extras_pbmc_log.pdf
+    violin_plots_larry_lin: reports/figS3/figureS3_extras_larry_lin.pdf
+    violin_plots_larry_log: reports/figS3/figureS3_extras_larry_log.pdf

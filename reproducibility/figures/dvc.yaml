@@ -105,9 +105,13 @@ stages:
       - ${reports.figureS3.svg_path}
 
   figureS3_extras:
-    cmd: python figS3/figure_extras.py train_models=[larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
+    cmd: python figS3/figure_extras.py train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
     deps:
       - figS3/figure_extras.py
+      - ${model_training.pancreas_model2.pyrovelocity_data_path}
+      - ${model_training.pbmc10k_model2.pyrovelocity_data_path}
+      - ${model_training.pbmc68k_model2.pyrovelocity_data_path}
+      - ${model_training.pons_model2.pyrovelocity_data_path}
       - ${model_training.larry_model2.pyrovelocity_data_path}
       - ${model_training.larry_neu_model2.pyrovelocity_data_path}
       - ${model_training.larry_mono_model2.pyrovelocity_data_path}
@@ -117,8 +121,10 @@ stages:
       - config.yaml:
           - reports.figureS3
     outs:
-      - ${reports.figureS3_extras.shared_time_plot}
-
+      - ${reports.figureS3_extras.violin_plots_pbmc_lin}
+      - ${reports.figureS3_extras.violin_plots_pbmc_log}
+      - ${reports.figureS3_extras.violin_plots_larry_lin}
+      - ${reports.figureS3_extras.violin_plots_larry_log}
   # figure2:
   #   cmd: python fig2/figure.py
   #   deps:

@@ -435,7 +435,10 @@ def hydra_zen_configure():
             figureS3_extras=dict(
                 tag="figS3",
                 path="${paths.reports}/${.tag}",
-                shared_time_plot="${.path}/figureS3_extras.pdf",
+                violin_plots_pbmc_lin="${.path}/figureS3_extras_pbmc_lin.pdf",
+                violin_plots_pbmc_log="${.path}/figureS3_extras_pbmc_log.pdf",
+                violin_plots_larry_lin="${.path}/figureS3_extras_larry_lin.pdf",
+                violin_plots_larry_log="${.path}/figureS3_extras_larry_log.pdf",
             ),
         ),
     )
@@ -908,7 +911,10 @@ def hydra_zen_compressed_configure():
             figureS3_extras=dict(
                 tag="figS3",
                 path="${paths.reports}/${.tag}",
-                shared_time_plot="${.path}/figureS3_extras.pdf",
+                violin_plots_pbmc_lin="${.path}/figureS3_extras_pbmc_lin.pdf",
+                violin_plots_pbmc_log="${.path}/figureS3_extras_pbmc_log.pdf",
+                violin_plots_larry_lin="${.path}/figureS3_extras_larry_lin.pdf",
+                violin_plots_larry_log="${.path}/figureS3_extras_larry_log.pdf",
             ),
         ),
     )

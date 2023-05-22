@@ -2085,11 +2085,11 @@ stages:
       md5: 05030c694f704032fc3f6ff11fe68b9b
       size: 19732046
   figureS3_extras:
-    cmd: python figS3/figure_extras.py train_models=[larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
+    cmd: python figS3/figure_extras.py train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
     deps:
     - path: figS3/figure_extras.py
-      md5: 0a3596e5f22b53c5ab5e0b5e31b785db
-      size: 8938
+      md5: a6a68cbf573bbe9042e2b463f17092b2
+      size: 10530
     - path: models/larry_model2/pyrovelocity.pkl.zst
       md5: 5411628e572ab2952f85001e6fcb8a68
       size: 1368571204
@@ -2105,6 +2105,18 @@ stages:
     - path: models/larry_tips_model2/pyrovelocity.pkl.zst
       md5: d490daa40e5ed835791ab8273c006ad2
       size: 515004641
+    - path: models/pancreas_model2/pyrovelocity.pkl.zst
+      md5: 143f044ba49870ba395c1974ea702d27
+      size: 105520126
+    - path: models/pbmc10k_model2/pyrovelocity.pkl.zst
+      md5: 6c429cfd714bd8fa25b30d57c653e810
+      size: 330050183
+    - path: models/pbmc68k_model2/pyrovelocity.pkl.zst
+      md5: fe639f3f107789827275fad0dc4c1bd4
+      size: 679019086
+    - path: models/pons_model2/pyrovelocity.pkl.zst
+      md5: 6102fb752559082e3ebd2e33013a0f5f
+      size: 175510242
     params:
       config.yaml:
         reports.figureS3:
@@ -2113,9 +2125,18 @@ stages:
           tif_path: reports/figS3/figS3_raw_gene_selection_model2.tif
           svg_path: reports/figS3/figS3_raw_gene_selection_model2.svg
     outs:
-    - path: reports/figS3/figureS3_extras.pdf
-      md5: b0d92b2280c60c83024c1e9c7616c5fc
-      size: 286813
+    - path: reports/figS3/figureS3_extras_larry_lin.pdf
+      md5: 2d9d006ad6cdfd510ab8d6fb43f3d6c4
+      size: 82965
+    - path: reports/figS3/figureS3_extras_larry_log.pdf
+      md5: f1e97d9e3f5d8205838609865c971db4
+      size: 83495
+    - path: reports/figS3/figureS3_extras_pbmc_lin.pdf
+      md5: 30b437f481f5093c94fbd97068bb04a0
+      size: 69086
+    - path: reports/figS3/figureS3_extras_pbmc_log.pdf
+      md5: 09950440c97ecb1a355d39e0e5220278
+      size: 71273
   data_download@larry_cospar:
     cmd: python data_download.py process_data=[larry_cospar]
     deps:
