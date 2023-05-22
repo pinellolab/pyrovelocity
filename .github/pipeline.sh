@@ -77,7 +77,7 @@ sudo apt-get update && sudo apt-get install -y time && which time
 cd reproducibility/figures || exit
 
 dvc pull
-# run_parallel_pipeline
+run_parallel_pipeline
 dvc repro
 dvc push
 
