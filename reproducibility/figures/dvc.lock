@@ -1370,15 +1370,15 @@ stages:
     cmd: /usr/bin/time -v python postprocess.py train_models=[pbmc68k_model2]
     deps:
     - path: data/processed/pbmc68k_processed.h5ad
-      md5: 00512e0c632850bdb69625413a97bca6
-      size: 1677116165
+      md5: 440212d95a4ff113de02620bce823785
+      size: 705223086
     - path: models/pbmc68k_model2/model
-      md5: f053c32fd05d83067d15dc84eb3e2391.dir
-      size: 3521589
+      md5: 319765156e0a833744483a8375b0e73f.dir
+      size: 3250165
       nfiles: 2
     - path: models/pbmc68k_model2/posterior_samples.pkl.zst
-      md5: 2334200930efa2baeb2a4cc2e065bb48
-      size: 6869182180
+      md5: 24d01757379c34ee2dbc6e1922e5526f
+      size: 1656572938
     - path: postprocess.py
       md5: 2d194b66a6964f4ac39022fe6a4fbb8f
       size: 5679
@@ -1425,14 +1425,14 @@ stages:
             loss_plot_path: models/pbmc68k_model2/loss_plot.png
     outs:
     - path: models/pbmc68k_model2/metrics.json
-      md5: b0a6449a0dadb678aaf3e3fe6a503584
+      md5: 7a0cccb8350de3ebb0c2b383b21459e3
       size: 99
     - path: models/pbmc68k_model2/pyrovelocity.pkl.zst
-      md5: fe639f3f107789827275fad0dc4c1bd4
-      size: 679019086
+      md5: c4adabfaa2e0ea3baa15776847cc7a93
+      size: 513892944
     - path: models/pbmc68k_model2/trained.h5ad
-      md5: 0bcb9e487d242deabd6dec70bf31a254
-      size: 2150870473
+      md5: 1416f0cc98346453f87d197c61887aa2
+      size: 1112777602
   postprocess@pons_model2:
     cmd: /usr/bin/time -v python postprocess.py train_models=[pons_model2]
     deps:
