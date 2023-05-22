@@ -288,8 +288,9 @@ def load_data(
             adata = sc.read(data)
 
         print_anndata(adata)
-        copy_raw_counts(adata)
-        print_anndata(adata)
+        if "raw_unspliced" not in adata.layers:
+            copy_raw_counts(adata)
+            print_anndata(adata)
 
         if process_cytotrace:
             print("Processing data with cytotrace ...")
