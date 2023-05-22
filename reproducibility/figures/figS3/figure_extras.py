@@ -12,6 +12,8 @@ import scvelo as scv
 import seaborn as sns
 from astropy import units as u
 from astropy.stats import circstd
+
+# from scipy.stats import circvar, circstd, circmean
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib_venn import venn2
 from omegaconf import DictConfig
@@ -19,6 +21,7 @@ from statannotations.Annotator import Annotator
 
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.io.compressedpickle import CompressedPickle
+from pyrovelocity.plot import get_posterior_sample_angle_uncertainty
 from pyrovelocity.plot import plot_arrow_examples
 from pyrovelocity.plot import plot_gene_ranking
 from pyrovelocity.plot import plot_posterior_time
@@ -27,20 +30,16 @@ from pyrovelocity.plot import rainbowplot
 from pyrovelocity.utils import get_pylogger
 
 
-"""Loads trained figure 2 data and produces extra plots
-
-Inputs:
-  models:
-    "models/pancreas_model1/pyrovelocity.pkl"
-    "models/pbmc68k_model1/pyrovelocity.pkl"
-
-Outputs:
-  figures:
-    "reports/figS3/figS3_pancreas_pbmc_uncertainties_comparison.pdf"
-"""
-
-
-def plots(conf: DictConfig, logger: Logger) -> None:
+def plots(
+    conf: DictConfig,
+    logger: Logger,
+    order: list,
+    log_flag: bool,
+    violin_flag: bool,
+    pairs: list,
+    show_outlier: bool,
+    fig_name: str = None,
+) -> None:
     """Construct summary plots for each data set and model.
 
     Args:
@@ -54,9 +53,11 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     time_cov_list = []
     mag_cov_list = []
     umap_mag_cov_list = []
-    angle_cov_list = []
-    pca_angle_cov_list = []
+    umap_angle_std_list = []
+    pca_angle_std_list = []
     pca_mag_cov_list = []
+    pca_angle_uncertain_list = []
+    umap_angle_uncertain_list = []
     names = []
     logger.info(
         f"\n\nVerifying existence of paths for:\n\n"
@@ -77,11 +78,12 @@ def plots(conf: DictConfig, logger: Logger) -> None:
 
         print_config_tree(data_model_conf, logger, ())
 
-        cell_angles = posterior_samples["embeds_angle"] / np.pi * 180
-        cell_angles_mean = cell_angles.mean(axis=0)
-        angles_std = circstd(cell_angles * u.deg, method="angular", axis=0)
-        cell_angles_cov = angles_std / cell_angles_mean
-        angle_cov_list.append(cell_angles_cov)
+        umap_cell_angles = posterior_samples["embeds_angle"] / np.pi * 180
+        # umap_cell_cirsvar = circvar(umap_cell_angles, axis=0)
+        umap_angle_std = circstd(umap_cell_angles * u.deg, method="angular", axis=0)
+        umap_angle_std_list.append(umap_angle_std)
+        umap_angle_uncertain = get_posterior_sample_angle_uncertainty(umap_cell_angles)
+        umap_angle_uncertain_list.append(umap_angle_uncertain)
 
         pca_cell_vector = posterior_samples["pca_vector_field_posterior_samples"]
         pca_cell_magnitudes = np.sqrt((pca_cell_vector**2).sum(axis=-1))
@@ -91,10 +93,11 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         pca_mag_cov_list.append(pca_cell_magnitudes_cov)
 
         pca_cell_angles = posterior_samples["pca_embeds_angle"] / np.pi * 180
-        pca_cell_angles_mean = pca_cell_angles.mean(axis=0)
-        pca_angles_std = circstd(pca_cell_angles * u.deg, method="angular", axis=0)
-        pca_cell_angles_cov = pca_angles_std / pca_cell_angles_mean
-        pca_angle_cov_list.append(pca_cell_angles_cov)
+        # pca_cell_cirsvar = circvar(pca_cell_angles, axis=0)
+        pca_cell_cirsstd = circstd(pca_cell_angles * u.deg, method="angular", axis=0)
+        pca_angle_std_list.append(pca_cell_cirsstd)
+        pca_angle_uncertain = get_posterior_sample_angle_uncertainty(pca_cell_angles)
+        pca_angle_uncertain_list.append(pca_angle_uncertain)
 
         umap_cell_magnitudes = np.sqrt(
             (posterior_samples["vector_field_posterior_samples"] ** 2).sum(axis=-1)
@@ -122,125 +125,100 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     print(posterior_samples["embeds_angle"].shape)
     time_cov_list = np.hstack(time_cov_list)
     mag_cov_list = np.hstack(mag_cov_list)
-    angle_cov_list = np.hstack(angle_cov_list)
-    umap_mag_cov_list = np.hstack(umap_mag_cov_list)
-    pca_angle_cov_list = np.hstack(pca_angle_cov_list)
     pca_mag_cov_list = np.hstack(pca_mag_cov_list)
+    pca_angle_std_list = np.hstack(pca_angle_std_list)
+    umap_mag_cov_list = np.hstack(umap_mag_cov_list)
+    umap_angle_std_list = np.hstack(umap_angle_std_list)
 
     metrics_df = pd.DataFrame(
         {
-            "time_coefficient_of_variation": time_cov_list,
-            "magnitude_coefficient_of_variation": mag_cov_list,
-            "pca_magnitude_coefficient_of_variation": pca_mag_cov_list,
-            "pca_angle_coefficient_of_variation": pca_angle_cov_list,
-            "umap_magnitude_coefficient_of_variation": umap_mag_cov_list,
-            "umap_angle_coefficient_of_variation": angle_cov_list,
+            r"$CoV({\mathrm{time}})$": time_cov_list,
+            r"$CoV({\mathrm{magnitude}})$": mag_cov_list,
+            r"$Std({\mathrm{angle}}_{pca})$": pca_angle_std_list,
+            r"$CoV({\mathrm{magnitude}}_{pca})$": pca_mag_cov_list,
+            r"$Std({\mathrm{angle}}_{umap})$": umap_angle_std_list,
+            r"$CoV({\mathrm{magnitude}}_{umap})$": umap_mag_cov_list,
             "dataset": names,
         }
     )
+
+    max_values, min_values = {}, {}
+    for key in metrics_df.keys()[0:6]:
+        key_data = metrics_df[key]
+        q1, q3 = np.percentile(key_data, (25, 75))
+        max_values[key] = q3 + (q3 - q1) * 1.5
+        if key_data.min() >= 0:
+            min_values[key] = 0
+        else:
+            min_values[key] = q1 - (q3 - q1) * 1.5
+    print(max_values)
+    print(min_values)
+
+    if log_flag:
+        log_time_cov_list = np.log(time_cov_list)
+        log_mag_cov_list = np.log(mag_cov_list)
+        log_umap_mag_cov_list = np.log(umap_mag_cov_list)
+        pca_angle_uncertain_list = np.hstack(pca_angle_uncertain_list)
+        log_pca_mag_cov_list = np.log(pca_mag_cov_list)
+        umap_angle_uncertain_list = np.hstack(umap_angle_uncertain_list)
+        metrics_df = pd.DataFrame(
+            {
+                r"$\log(CoV({\mathrm{time}}))$": log_time_cov_list,
+                r"$\log(CoV({\mathrm{magnitude}}))$": log_mag_cov_list,
+                r"$CircStd({\mathrm{angle}}_{pca})$": pca_angle_uncertain_list,
+                r"$\log(CoV({\mathrm{magnitude}}_{pca}))$": log_pca_mag_cov_list,
+                r"$CircStd({\mathrm{angle}}_{umap})$": umap_angle_uncertain_list,
+                r"$\log(CoV({\mathrm{magnitude}}_{umap}))$": log_umap_mag_cov_list,
+                "dataset": names,
+            }
+        )
+
     logger.info(metrics_df.head())
-    shared_time_plot = conf.reports.figureS3_extras.shared_time_plot
-    fig, ax = plt.subplots(2, 3)
+    parameters = {"axes.labelsize": 25, "axes.titlesize": 35}
+    plt.rcParams.update(parameters)
+    fig, ax = plt.subplots(3, 2)
     ax = ax.flatten()
-    fig.set_size_inches(20, 10)
-    order = ("larry", "neu", "mono", "multilineage", "tips")
+    fig.set_size_inches(20, 20)
 
-    sns.boxplot(
-        x="dataset",
-        y="time_coefficient_of_variation",
-        data=metrics_df,
-        ax=ax[0],
-        order=order,
-    )
-    sns.boxplot(
-        x="dataset",
-        y="magnitude_coefficient_of_variation",
-        data=metrics_df,
-        ax=ax[1],
-        order=order,
-    )
-    sns.boxplot(
-        x="dataset",
-        y="pca_magnitude_coefficient_of_variation",
-        data=metrics_df,
-        ax=ax[2],
-        order=order,
-    )
-    sns.boxplot(
-        x="dataset",
-        y="umap_magnitude_coefficient_of_variation",
-        data=metrics_df,
-        ax=ax[3],
-        order=order,
-    )
-    sns.boxplot(
-        x="dataset",
-        y="pca_angle_coefficient_of_variation",
-        data=metrics_df,
-        ax=ax[4],
-        order=order,
-    )
-    sns.boxplot(
-        x="dataset",
-        y="umap_angle_coefficient_of_variation",
-        data=metrics_df,
-        ax=ax[5],
-        order=order,
-    )
-    pairs = [("larry", "tips")]
-    time_annotator = Annotator(
-        ax[0],
-        pairs,
-        data=metrics_df,
-        x="dataset",
-        y="time_coefficient_of_variation",
-        order=order,
-    )
-    time_annotator.configure(test="Mann-Whitney", text_format="star", loc="inside")
-    time_annotator.apply_and_annotate()
-    mag_annotator = Annotator(
-        ax[1],
-        pairs,
-        data=metrics_df,
-        x="dataset",
-        y="magnitude_coefficient_of_variation",
-        order=order,
-    )
-    mag_annotator.configure(test="Mann-Whitney", text_format="star", loc="inside")
-    mag_annotator.apply_and_annotate()
+    if violin_flag:
+        for i in range(6):
+            sns.violinplot(
+                x="dataset",
+                y=metrics_df.keys()[i],
+                data=metrics_df,
+                ax=ax[i],
+                order=order,
+                showfliers=show_outlier,
+            )
+    else:
+        for i in range(6):
+            sns.boxplot(
+                x="dataset",
+                y=metrics_df.keys()[i],
+                data=metrics_df,
+                ax=ax[i],
+                order=order,
+                showfliers=show_outlier,
+            )
 
-    mag_annotator = Annotator(
-        ax[2],
-        pairs,
-        data=metrics_df,
-        x="dataset",
-        y="pca_magnitude_coefficient_of_variation",
-        order=order,
-    )
-    mag_annotator.configure(test="Mann-Whitney", text_format="star", loc="inside")
-    mag_annotator.apply_and_annotate()
+    if not pairs is None:
+        for i in range(6):
+            annotator = Annotator(
+                ax[i],
+                pairs,
+                data=metrics_df,
+                x="dataset",
+                y=metrics_df.keys()[i],
+                order=order,
+            )
+            annotator.configure(test="Mann-Whitney", text_format="star", loc="inside")
+            annotator.apply_and_annotate()
 
-    mag_annotator = Annotator(
-        ax[3],
-        pairs,
-        data=metrics_df,
-        x="dataset",
-        y="umap_magnitude_coefficient_of_variation",
-        order=order,
-    )
-    mag_annotator.configure(test="Mann-Whitney", text_format="star", loc="inside")
-    mag_annotator.apply_and_annotate()
-
-    # angle_annotator = Annotator(
-    #    ax[2], pairs, data=metrics_df, x="dataset", y="angle_coefficient_of_variation", order=order
-    # )
-    # angle_annotator.configure(test="Mann-Whitney", text_format="star", loc="inside")
-    # angle_annotator.apply_and_annotate()
-    ax[4].set_ylim(-0.1, 0.1)
-    ax[5].set_ylim(-0.1, 0.1)
+    for axi in ax:
+        axi.tick_params(axis="both", labelsize=20)
 
     fig.savefig(
-        shared_time_plot,
+        fig_name,
         facecolor=fig.get_facecolor(),
         bbox_inches="tight",
         edgecolor="none",
@@ -256,15 +234,54 @@ def main(conf: DictConfig) -> None:
     """
 
     logger = get_pylogger(name="PLOT", log_level=conf.base.log_level)
+    print_config_tree(conf, logger, ())
 
-    if os.path.isfile(conf.reports.figureS3_extras.shared_time_plot):
+    logger.info(
+        f"\n\nVerifying existence of paths for:\n\n"
+        f"  reports: {conf.reports.figureS3.path}\n"
+    )
+    Path(conf.reports.figureS3.path).mkdir(parents=True, exist_ok=True)
+    confS3 = conf.reports.figureS3_extras
+    print(confS3.violin_plots_pbmc_lin)
+    if os.path.isfile(confS3.violin_plots_pbmc_lin):
         logger.info(
-            f"\n\nFigure 2 outputs already exist:\n\n"
+            f"\n\nFigure S3 outputs already exist:\n\n"
             f"  see contents of: {conf.reports.figureS3.path}\n"
         )
     else:
-        logger.info(f"\n\nPlotting figure 2\n\n")
-        plots(conf, logger)
+        logger.info(f"\n\nPlotting figure S3\n\n")
+        all_ex = ["larry_linear", "larry_log", "pbmc_linear", "pbmc_log"]
+        for ex in all_ex:  # ['larry_log']:
+            if ex == "larry_linear":
+                order = ["larry", "neu", "mono", "multilineage", "tips"]
+                pairs = None
+                log_flag = False
+                fig_name = confS3.violin_plots_larry_lin
+            elif ex == "larry_log":
+                order = ["larry", "neu", "mono", "multilineage", "tips"]
+                pairs = None
+                log_flag = True
+                fig_name = confS3.violin_plots_larry_log
+            elif ex == "pbmc_linear":
+                order = ["pancreas", "pbmc10k", "pbmc68k", "pons"]
+                pairs = None  # [("pancreas", "pbmc10k")]
+                log_flag = False
+                fig_name = confS3.violin_plots_pbmc_lin
+            elif ex == "pbmc_log":
+                order = ["pancreas", "pbmc10k", "pbmc68k", "pons"]
+                pairs = None  # [("pancreas", "pbmc10k")]
+                log_flag = True
+                fig_name = confS3.violin_plots_pbmc_log
+            plots(
+                conf,
+                logger,
+                order=order,
+                log_flag=log_flag,
+                violin_flag=True,
+                pairs=pairs,
+                show_outlier=False,
+                fig_name=fig_name,
+            )
 
 
 if __name__ == "__main__":
