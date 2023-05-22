@@ -2,8 +2,14 @@ import os
 import pickle
 from logging import Logger
 from pathlib import Path
+from pyrovelocity.plot import plot_posterior_time
 from statistics import harmonic_mean
 from typing import Text
+import pandas as pd
+from pyrovelocity.plot import plot_vector_field_uncertain
+#from astropy import units as u
+#from astropy.stats import circstd
+from scipy.stats import circstd, circmean, circvar
 
 import hydra
 import matplotlib.pyplot as plt
@@ -25,6 +31,8 @@ from pyrovelocity.utils import get_pylogger
 from pyrovelocity.utils import mae_evaluate
 from pyrovelocity.utils import print_anndata
 from pyrovelocity.utils import print_attributes
+from pyrovelocity.plot import plot_arrow_examples
+from pyrovelocity.plot import rainbowplot
 
 
 """Loads model-trained data and generates figures.
@@ -55,6 +63,233 @@ Outputs:
     biomarker_phaseportrait_plot: reports/{data_model}/markers_phaseportrait.pdf
 """
 
+def summarize_fig2_part1(adata, 
+                         posterior_vector_field,
+                         posterior_time,
+                         cell_magnitudes,
+                         pca_embeds_angle,
+                         embed_radians,
+                         embedding, embed_mean, cluster="cell_type", 
+                         plot_name='test'):
+    dot_size = 3.5
+    font_size = 6.5
+    scale = 0.35
+    #scale_high = 0.05
+    #scale_low = 0.009
+    scale_high = 7.8
+    scale_low = 7.8
+
+    arrow = 3.6
+    density = 0.4
+    ress = pd.DataFrame(
+        {
+            "cell_type": adata.obs[cluster].values,
+            "X1": adata.obsm[f"X_{embedding}"][:, 0],
+            "X2": adata.obsm[f"X_{embedding}"][:, 1],
+        }
+    )
+    fig = plt.figure(figsize=(9.6, 2), constrained_layout=False)
+    fig.subplots_adjust(
+        hspace=0.2, wspace=0.1, left=0.01, right=0.99, top=0.99, bottom=0.45
+    )
+    ax = fig.subplots(1, 6)
+    pos = ax[0].get_position()
+
+    sns.scatterplot(
+        x="X1",
+        y="X2",
+        data=ress,
+        alpha=0.9,
+        s=dot_size,
+        linewidth=0,
+        edgecolor="none",
+        hue="cell_type",
+        ax=ax[0],
+        legend="brief",
+    )
+    ax[0].axis("off")
+    ax[0].set_title("Cell types\n", fontsize=font_size)
+    print(pos.x0, pos.x1)
+    ax[0].legend(
+        loc='lower left', bbox_to_anchor=(0.5, -0.48),
+        ncol=5,
+        fancybox=True,
+        prop={"size": font_size},
+        fontsize=font_size,
+        frameon=False,
+    )
+    kwargs = dict(
+        color="gray",
+        s=dot_size,
+        show=False,
+        alpha=0.25,
+        min_mass=3.5,
+        scale=scale,
+        frameon=False,
+        density=density,
+        arrow_size=3,
+        linewidth=1,
+    )
+    scv.pl.velocity_embedding_grid(
+        adata, basis=embedding, fontsize=font_size, ax=ax[1], 
+        title="", **kwargs
+    )
+    ax[1].set_title("Scvelo\n", fontsize=7)
+    scv.pl.velocity_embedding_grid(
+        adata,
+        fontsize=font_size,
+        basis=embedding,
+        title="",
+        ax=ax[2],
+        vkey="velocity_pyro",
+        **kwargs
+    )
+    ax[2].set_title("Pyro-Velocity\n", fontsize=7)
+    
+    #astropy degree angular deviation is buggy...
+    #pca_cell_angles = pca_embeds_angle / np.pi * 180 # degree
+    #pca_cell_angles_mean = pca_cell_angles.mean(axis=0)
+    #pca_angles_std = circstd(pca_cell_angles * u.deg, method="angular", axis=0)
+    #pca_cell_angles_cov = pca_angles_std / pca_cell_angles_mean
+    #scipy version circstd [0, inf]
+    pca_cell_radians = pca_embeds_angle
+    #pca_cell_cirstd = circstd(pca_cell_radians, axis=0)
+    #scipy circvar [0, 1]
+    pca_cell_circov = circvar(pca_cell_radians, axis=0)
+
+#    plot_arrow_examples(
+#        adata,
+#        np.transpose(posterior_vector_field, (1, 2, 0)),
+#        embed_radians,
+#        embed_mean,
+#        ax=ax[3],
+#        n_sample=20,
+#        fig=fig,
+#        basis=embedding,
+#        scale=scale_high,
+#        alpha=0.2,
+#        index=3,
+#        index2=5,
+#        scale2=scale_low,
+#        num_certain=2, #TODO: add parameter for selecting arrows
+#        num_total=4,
+#        density=density,
+#        arrow_size=arrow+0.2,
+#        customize_uncertain=pca_cell_circov
+#    )
+#    ax[3].set_title("Single cell\nvector field", fontsize=7)
+
+    cell_time_mean = posterior_time.mean(0).flatten()
+    cell_time_std = posterior_time.std(0).flatten()
+    cell_time_cov = cell_time_std / cell_time_mean
+
+    plot_vector_field_uncertain(
+        adata,
+        embed_mean,
+        cell_time_cov,
+        ax=ax[3],
+        cbar=True,
+        fig=fig,
+        basis=embedding,
+        scale=scale,
+        arrow_size=arrow,
+        p_mass_min=1,
+        autoscale=True,
+        density=density,
+        only_grid=False,
+        uncertain_measure="shared time",
+        cmap='winter',
+        cmax=None
+    )
+
+    cell_magnitudes_mean = cell_magnitudes.mean(axis=-2)
+    cell_magnitudes_std = cell_magnitudes.std(axis=-2)
+    cell_magnitudes_cov = cell_magnitudes_std / cell_magnitudes_mean
+    plot_vector_field_uncertain(
+        adata,
+        embed_mean,
+        cell_magnitudes_cov,
+        ax=ax[4],
+        cbar=True,
+        fig=fig,
+        basis=embedding,
+        scale=scale,
+        arrow_size=arrow,
+        p_mass_min=1,
+        autoscale=True,
+        density=density,
+        only_grid=False,
+        uncertain_measure="base magnitude",
+        cmap="summer",
+        cmax=None
+    )
+
+    plot_vector_field_uncertain(
+        adata,
+        embed_mean,
+        pca_cell_circov,
+        ax=ax[5],
+        cbar=True,
+        fig=fig,
+        basis=embedding,
+        scale=scale,
+        arrow_size=arrow,
+        p_mass_min=1,
+        autoscale=True,
+        density=density,
+        only_grid=False,
+        uncertain_measure="PCA angle",
+        cmap="inferno",
+        cmax=None,
+    )
+    fig.savefig(
+        plot_name,
+        facecolor=fig.get_facecolor(),
+        bbox_inches="tight",
+        edgecolor="none",
+        dpi=300
+    )
+
+
+def summarize_fig2_part2(adata, 
+                         posterior_samples,
+                         plot_name="",
+                         basis="",
+                         cell_state="",
+                         fig=None):
+    if fig is None:
+        fig = plt.figure(figsize=(9.5, 5))
+        subfigs = fig.subfigures(1, 2, wspace=0.0, hspace=0,
+                                 width_ratios=[1.8, 4])
+        ax = subfigs[0].subplots(2, 1)
+        plot_posterior_time(
+            posterior_samples, adata, 
+            ax=ax[0], fig=subfigs[0],
+            addition=False,
+            basis=basis
+        )
+        volcano_data, _ = plot_gene_ranking(
+            [posterior_samples], [adata], ax=ax[1], time_correlation_with="st"
+        )
+        print(volcano_data.head())
+        _ = rainbowplot(
+            volcano_data,
+            adata,
+            posterior_samples,
+            subfigs[1],
+            data=["st", "ut"],
+            basis=basis,
+            cell_state=cell_state,
+            num_genes=4,
+        )
+        fig.savefig(
+            plot_name,
+            facecolor=fig.get_facecolor(),
+            bbox_inches="tight",
+            edgecolor="none",
+            dpi=300
+        )
+
 
 def plots(conf: DictConfig, logger: Logger) -> None:
     """Construct summary plots for each data set and model.
@@ -70,15 +305,16 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         ##################
         # load data
         ##################
-        print(data_model)
 
         data_model_conf = conf.model_training[data_model]
         cell_state = data_model_conf.training_parameters.cell_state
+        trained_data_path = data_model_conf.trained_data_path
+        pyrovelocity_data_path = data_model_conf.pyrovelocity_data_path
         reports_data_model_conf = conf.reports.model_summary[data_model]
         trained_data_path = reports_data_model_conf.trained_data_path
         pyrovelocity_data_path = reports_data_model_conf.pyrovelocity_data_path
 
-        print_config_tree(reports_data_model_conf, logger, ())
+        #print_config_tree(reports_data_model_conf, logger, ())
 
         logger.info(f"\n\nPlotting summary figure(s) in: {data_model}\n\n")
 
@@ -93,6 +329,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         rainbow_plot = reports_data_model_conf.rainbow_plot
         vector_field_plot = reports_data_model_conf.vector_field_plot
         shared_time_plot = reports_data_model_conf.shared_time_plot
+        fig2_part1_plot = reports_data_model_conf.fig2_part1_plot
+        fig2_part2_plot = reports_data_model_conf.fig2_part2_plot
+
         output_filenames = [
             dataframe_path,
             volcano_plot,
@@ -108,7 +347,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
 
         logger.info(f"Loading trained data: {trained_data_path}")
         adata = scv.read(trained_data_path)
-        print_anndata(adata)
+        #print_anndata(adata)
 
         logger.info(f"Loading pyrovelocity data: {pyrovelocity_data_path}")
         posterior_samples = CompressedPickle.load(pyrovelocity_data_path)
@@ -137,20 +376,38 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             ),
         )
         print(posterior_samples.keys())
-        print(posterior_samples["original_spaces_embeds_magnitude"].shape)
+
+        vector_field_basis = data_model_conf.vector_field_parameters.basis
+        #print(vector_field_basis)
+
+        cell_type = data_model_conf.training_parameters.cell_state
+        summarize_fig2_part1(adata, 
+                             posterior_samples["vector_field_posterior_samples"], 
+                             posterior_samples["cell_time"],
+                             posterior_samples["original_spaces_embeds_magnitude"],
+                             posterior_samples["pca_embeds_angle"],
+                             posterior_samples["embeds_angle"],
+                             vector_field_basis,
+                             posterior_samples["vector_field_posterior_mean"],
+                             cell_type, fig2_part1_plot)
+
+        summarize_fig2_part2(adata, posterior_samples, 
+                             basis=vector_field_basis, 
+                             cell_state=cell_type,
+                             plot_name=fig2_part2_plot, fig=None)
 
         ##################
         # generate figures
         ##################
-        vector_field_basis = data_model_conf.vector_field_parameters.basis
 
         # shared time plot
         cell_time_mean = posterior_samples["cell_time"].mean(0).flatten()
         cell_time_std = posterior_samples["cell_time"].std(0).flatten()
         adata.obs["shared_time_uncertain"] = cell_time_std
         adata.obs["shared_time_mean"] = cell_time_mean
-        fig, ax = plt.subplots(2, 2)
-        fig.set_size_inches(9.6, 7)
+
+        fig, ax = plt.subplots(1, 3)
+        fig.set_size_inches(9.2, 2.6)
         ax = ax.flatten()
         ax_cb = scv.pl.scatter(
             adata,
@@ -180,8 +437,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             levels=3,
             fill=False,
         )
-        ax[2].hist(cell_time_std, bins=100)
-        ax[3].hist(cell_time_std / cell_time_mean, bins=100)
+        ax[2].hist(cell_time_std / cell_time_mean, bins=100)
         fig.savefig(
             shared_time_plot,
             facecolor=fig.get_facecolor(),
@@ -191,14 +447,10 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         )
 
         # volcano plot
-
         if os.path.isfile(volcano_plot):
             logger.info(f"{volcano_plot} exists")
         else:
             logger.info(f"Generating figure: {volcano_plot}")
-            print(posterior_samples.keys())
-            for key in posterior_samples.keys():
-                print(posterior_samples[key].shape)
             fig, ax = plt.subplots()
 
             volcano_data, _ = plot_gene_ranking(

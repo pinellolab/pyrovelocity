@@ -381,7 +381,6 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     subfig_B[0].subplots_adjust(
         hspace=0.3, wspace=0.1, left=0.01, right=0.8, top=0.92, bottom=0.17
     )
-
     logger.info(f"\n\nplotting pancreas pyrovelocity gene ranking\n\n")
     volcano_data2, _ = plot_gene_ranking(
         [posterior_samples],
@@ -466,7 +465,6 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         .head(4)
         .index
     )
-    print(model2_genes)
     _, _ = plot_gene_ranking(
         [posterior_samples],
         [adata],

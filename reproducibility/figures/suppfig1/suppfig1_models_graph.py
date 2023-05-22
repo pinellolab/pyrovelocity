@@ -60,7 +60,7 @@ pyrovelocity_graph = pyro.render_model(
     ),
     render_params=True,
     render_distributions=True,
-    filename="suppfig1_graph_model2.pdf",
+    filename="suppfig1_graph_model2.dot",
 )
 # pyrovelocity_graph.unflatten(stagger=2)
 
@@ -95,6 +95,6 @@ pyrovelocity_graph = pyro.render_model(
     ),
     render_params=True,
     render_distributions=True,
-    filename="suppfig1_graph_model1.pdf",
+    filename="suppfig1_graph_model1.dot",
 )
 # pyrovelocity_graph.unflatten(stagger=2)
