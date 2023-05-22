@@ -88,21 +88,22 @@ stages:
         - ${item.rainbow_plot}.png
         - ${item.vector_field_plot}.png
         - ${item.shared_time_plot}
+        - ${item.fig2_part1_plot}
 
-  figureS3:
-    cmd: python figS3/figure.py
-    deps:
-      - figS3/figure.py
-      - ${model_training.pancreas_model2.trained_data_path}
-      - ${model_training.pancreas_model2.pyrovelocity_data_path}
-      - ${model_training.pbmc68k_model2.trained_data_path}
-      - ${model_training.pbmc68k_model2.pyrovelocity_data_path}
-    params:
-      - config.yaml:
-          - reports.figureS3
-    outs:
-      - ${reports.figureS3.tif_path}
-      - ${reports.figureS3.svg_path}
+  # figureS3:
+  #   cmd: python figS3/figure.py
+  #   deps:
+  #     - figS3/figure.py
+  #     - ${model_training.pancreas_model2.trained_data_path}
+  #     - ${model_training.pancreas_model2.pyrovelocity_data_path}
+  #     - ${model_training.pbmc68k_model2.trained_data_path}
+  #     - ${model_training.pbmc68k_model2.pyrovelocity_data_path}
+  #   params:
+  #     - config.yaml:
+  #         - reports.figureS3
+  #   outs:
+  #     - ${reports.figureS3.tif_path}
+  #     - ${reports.figureS3.svg_path}
 
   figureS3_extras:
     cmd: python figS3/figure_extras.py train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]

@@ -523,6 +523,8 @@ def hydra_zen_compressed_configure():
             vector_field_plot=f"{path}/vector_field.pdf",
             biomarker_selection_plot=f"{path}/markers_selection_scatterplot.tif",
             biomarker_phaseportrait_plot=f"{path}/markers_phaseportrait.pdf",
+            fig2_part1_plot=f"{path}/fig2_part1_plot.pdf",
+            fig2_part2_plot=f"{path}/fig2_part2_plot.pdf",
         )
 
     base = dict(log_level="INFO")
@@ -880,6 +882,7 @@ def hydra_zen_compressed_configure():
                 pons_model2=create_reports_config("pons", 2),
                 pbmc10k_model2=create_reports_config("pbmc10k", 2),
                 larry_tips_model2=create_reports_config("larry_tips", 2),
+                larry_model2=create_reports_config("larry", 2),
             ),
             figure2=dict(
                 tag="fig2",

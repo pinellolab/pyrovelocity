@@ -572,6 +572,8 @@ reports:
       vector_field_plot: reports/pancreas_model2/vector_field.pdf
       biomarker_selection_plot: reports/pancreas_model2/markers_selection_scatterplot.tif
       biomarker_phaseportrait_plot: reports/pancreas_model2/markers_phaseportrait.pdf
+      fig2_part1_plot: reports/pancreas_model2/fig2_part1_plot.pdf
+      fig2_part2_plot: reports/pancreas_model2/fig2_part2_plot.pdf
     pbmc68k_model2:
       path: reports/pbmc68k_model2
       trained_data_path: models/pbmc68k_model2/trained.h5ad
@@ -584,6 +586,8 @@ reports:
       vector_field_plot: reports/pbmc68k_model2/vector_field.pdf
       biomarker_selection_plot: reports/pbmc68k_model2/markers_selection_scatterplot.tif
       biomarker_phaseportrait_plot: reports/pbmc68k_model2/markers_phaseportrait.pdf
+      fig2_part1_plot: reports/pbmc68k_model2/fig2_part1_plot.pdf
+      fig2_part2_plot: reports/pbmc68k_model2/fig2_part2_plot.pdf
     pons_model2:
       path: reports/pons_model2
       trained_data_path: models/pons_model2/trained.h5ad
@@ -596,6 +600,8 @@ reports:
       vector_field_plot: reports/pons_model2/vector_field.pdf
       biomarker_selection_plot: reports/pons_model2/markers_selection_scatterplot.tif
       biomarker_phaseportrait_plot: reports/pons_model2/markers_phaseportrait.pdf
+      fig2_part1_plot: reports/pons_model2/fig2_part1_plot.pdf
+      fig2_part2_plot: reports/pons_model2/fig2_part2_plot.pdf
     pbmc10k_model2:
       path: reports/pbmc10k_model2
       trained_data_path: models/pbmc10k_model2/trained.h5ad
@@ -608,6 +614,8 @@ reports:
       vector_field_plot: reports/pbmc10k_model2/vector_field.pdf
       biomarker_selection_plot: reports/pbmc10k_model2/markers_selection_scatterplot.tif
       biomarker_phaseportrait_plot: reports/pbmc10k_model2/markers_phaseportrait.pdf
+      fig2_part1_plot: reports/pbmc10k_model2/fig2_part1_plot.pdf
+      fig2_part2_plot: reports/pbmc10k_model2/fig2_part2_plot.pdf
     larry_tips_model2:
       path: reports/larry_tips_model2
       trained_data_path: models/larry_tips_model2/trained.h5ad
@@ -620,6 +628,22 @@ reports:
       vector_field_plot: reports/larry_tips_model2/vector_field.pdf
       biomarker_selection_plot: reports/larry_tips_model2/markers_selection_scatterplot.tif
       biomarker_phaseportrait_plot: reports/larry_tips_model2/markers_phaseportrait.pdf
+      fig2_part1_plot: reports/larry_tips_model2/fig2_part1_plot.pdf
+      fig2_part2_plot: reports/larry_tips_model2/fig2_part2_plot.pdf
+    larry_model2:
+      path: reports/larry_model2
+      trained_data_path: models/larry_model2/trained.h5ad
+      pyrovelocity_data_path: models/larry_model2/pyrovelocity.pkl.zst
+      dataframe_path: data/processed/larry_model2_dataframe.pkl.zst
+      shared_time_plot: reports/larry_model2/shared_time.pdf
+      volcano_plot: reports/larry_model2/volcano.pdf
+      rainbow_plot: reports/larry_model2/rainbow.pdf
+      uncertainty_param_plot: reports/larry_model2/param_uncertainties.pdf
+      vector_field_plot: reports/larry_model2/vector_field.pdf
+      biomarker_selection_plot: reports/larry_model2/markers_selection_scatterplot.tif
+      biomarker_phaseportrait_plot: reports/larry_model2/markers_phaseportrait.pdf
+      fig2_part1_plot: reports/larry_model2/fig2_part1_plot.pdf
+      fig2_part2_plot: reports/larry_model2/fig2_part2_plot.pdf
   figure2:
     tag: fig2
     path: reports/fig2
