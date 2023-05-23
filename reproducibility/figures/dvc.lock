@@ -1936,24 +1936,27 @@ stages:
     - path: data/processed/pancreas_model2_dataframe.pkl.zst
       md5: 234e75746db57d84b5bbf0f3758c4fe9
       size: 4245340
+    - path: reports/pancreas_model2/fig2_part1_plot.pdf
+      md5: 6d6821ba5a2f56fb6ca0f0febc05944f
+      size: 430503
     - path: reports/pancreas_model2/rainbow.pdf
-      md5: e3cbd2d4d4cddbbb593e79f8f06e4b0a
+      md5: 5a79ecc745499a41caca0d000c291767
       size: 672215
     - path: reports/pancreas_model2/rainbow.pdf.png
       md5: ab5741e9a3ab6ece205db1bd9f340709
       size: 1362103
     - path: reports/pancreas_model2/shared_time.pdf
-      md5: 801c598b85386496a84e899e4801bc32
-      size: 473609
+      md5: ae9b38b0af0c8a33f3541a5434a089be
+      size: 285448
     - path: reports/pancreas_model2/vector_field.pdf
-      md5: 346feb7e2bf13c0f6be3c27307b97893
+      md5: d29a7c0c1e390987560f05b8a0a0c9ca
       size: 397382
     - path: reports/pancreas_model2/vector_field.pdf.png
       md5: f7de40753ea89a455d6c2fdd7d380359
       size: 689803
     - path: reports/pancreas_model2/volcano.pdf
-      md5: 9942c41dd678d20a7feabe99157ddd4c
-      size: 20827
+      md5: 521adda0635637e40703f4ea8170f37a
+      size: 20843
   summarize@pbmc68k_model2:
     cmd: python summarize.py train_models=[pbmc68k_model2]
     deps:
@@ -1988,24 +1991,27 @@ stages:
     - path: data/processed/pbmc68k_model2_dataframe.pkl.zst
       md5: 5dfddd2f9d6f93d34569eeaa4982eb99
       size: 9123664
+    - path: reports/pbmc68k_model2/fig2_part1_plot.pdf
+      md5: 904bbb1cacf42c3658b16597648aee80
+      size: 4365798
     - path: reports/pbmc68k_model2/rainbow.pdf
-      md5: f87a4808d7a773426ffe62918311d15d
-      size: 11373025
+      md5: 9aa91888a5506ed154d3665fb0c08214
+      size: 11373038
     - path: reports/pbmc68k_model2/rainbow.pdf.png
-      md5: e4e65f50e954b215773e69cb5adb3a61
-      size: 1928679
+      md5: 6652d8c942b3f7d20add5f99d3e183bf
+      size: 1926520
     - path: reports/pbmc68k_model2/shared_time.pdf
-      md5: f9c92f32ded0716e59129cf443fcdde8
-      size: 396354
+      md5: 4b8e1285590cb9846205c737f42e3663
+      size: 222681
     - path: reports/pbmc68k_model2/vector_field.pdf
-      md5: 6c22e89e20251fd8ac30b4cd2ce7365f
-      size: 1033594
+      md5: ef1d1ebb4ce7792fd0e35a485201de7d
+      size: 1033583
     - path: reports/pbmc68k_model2/vector_field.pdf.png
-      md5: 60716b193ea554d7e1835a47b9bdeae7
-      size: 1199390
+      md5: 8036dede27153608a625c6f47a924339
+      size: 1198770
     - path: reports/pbmc68k_model2/volcano.pdf
-      md5: c563dd48cc487e1d50fe7868468d3804
-      size: 18699
+      md5: 6be3bf6d0e194596ba22ae5d5b48b90a
+      size: 18726
   summarize@pons_model2:
     cmd: python summarize.py train_models=[pons_model2]
     deps:
@@ -2040,24 +2046,27 @@ stages:
     - path: data/processed/pons_model2_dataframe.pkl.zst
       md5: 936e4a0bbe8912ebf3e3d6e7e6435be1
       size: 6630182
+    - path: reports/pons_model2/fig2_part1_plot.pdf
+      md5: 741a735841814830f47dc4d8a783cf48
+      size: 599193
     - path: reports/pons_model2/rainbow.pdf
-      md5: 3ec8124f70c419ec291b1e9b9a04c7dd
+      md5: d85485272a2fa929a1bc858a05058f8c
       size: 1080869
     - path: reports/pons_model2/rainbow.pdf.png
       md5: 105f59a687bbe25efbdac83e6d4e6123
       size: 1246782
     - path: reports/pons_model2/shared_time.pdf
-      md5: 76f8a67b5e7e38148ad77c912d349030
-      size: 563141
+      md5: c41a99e5902f72aba4cbf470c2c3d57e
+      size: 313498
     - path: reports/pons_model2/vector_field.pdf
-      md5: aed5740d33251aead123af26b8978a4a
+      md5: 5407b55999ed87204e57d76a8fb171d5
       size: 377068
     - path: reports/pons_model2/vector_field.pdf.png
       md5: 8666e40b79cfc459102c55f42fe2ac69
       size: 799436
     - path: reports/pons_model2/volcano.pdf
-      md5: 8996019355f566173a34e8469081599a
-      size: 19846
+      md5: 7830596482e8bfbf0071859a1ca67999
+      size: 19859
   summarize@pbmc10k_model2:
     cmd: python summarize.py train_models=[pbmc10k_model2]
     deps:
@@ -2092,24 +2101,27 @@ stages:
     - path: data/processed/pbmc10k_model2_dataframe.pkl.zst
       md5: 624cf20c5bb3f324ded7c0365daefb9b
       size: 26163662
+    - path: reports/pbmc10k_model2/fig2_part1_plot.pdf
+      md5: 080e0bf6e7a88cd7ea4e1a10ab5bb989
+      size: 990624
     - path: reports/pbmc10k_model2/rainbow.pdf
-      md5: 4a3e2fbaedd2f445b35edab12d8bbda3
-      size: 2046642
+      md5: 1a7f980e9b18e450ffe2cf7cf25aac79
+      size: 2046640
     - path: reports/pbmc10k_model2/rainbow.pdf.png
-      md5: d472ec872bf4b5dcf87e8d7cdced5a86
-      size: 1579450
+      md5: 1081fe19599b0371293b0013991c938c
+      size: 1588518
     - path: reports/pbmc10k_model2/shared_time.pdf
-      md5: 7b06c4c2adfe354463ff088044e03a4f
-      size: 396542
+      md5: 3041d2abd14991d4c2e528740d24e7e6
+      size: 218916
     - path: reports/pbmc10k_model2/vector_field.pdf
-      md5: 10025c6b028dc9eea7f702f4cf5635f7
-      size: 504748
+      md5: a3545d2e403aa97a5181e634b4b3e792
+      size: 504890
     - path: reports/pbmc10k_model2/vector_field.pdf.png
-      md5: fe2effae8a98dc89eb12be4506ad32b4
-      size: 985481
+      md5: 19be108c836b8df13f8afd41c07c5ac0
+      size: 985483
     - path: reports/pbmc10k_model2/volcano.pdf
-      md5: 8581ed2f59eb281a73bf788ac99097b5
-      size: 21793
+      md5: 6d26fe44d3fe6a86fdfa9af40dc51de6
+      size: 21852
   summarize@larry_tips_model2:
     cmd: python summarize.py train_models=[larry_tips_model2]
     deps:
@@ -2144,24 +2156,27 @@ stages:
     - path: data/processed/larry_tips_model2_dataframe.pkl.zst
       md5: 0c8bf3e7eb8d948d778fc3c84a65399a
       size: 16799831
+    - path: reports/larry_tips_model2/fig2_part1_plot.pdf
+      md5: 673524e0fc32324d281bea93c9ab9cbd
+      size: 1303846
     - path: reports/larry_tips_model2/rainbow.pdf
-      md5: 28a710cbcca83db4b8a262220ab21e4e
+      md5: dc169ee4b32f8aebb28349a990d1e56f
       size: 3109049
     - path: reports/larry_tips_model2/rainbow.pdf.png
       md5: e13fc0f67012ee078a676c3ba550d4f3
       size: 1448570
     - path: reports/larry_tips_model2/shared_time.pdf
-      md5: 8decbdf65dc999f9c5f5548dd8c5beb6
-      size: 452570
+      md5: 364557af3f05880358df90f9255ab6f3
+      size: 258534
     - path: reports/larry_tips_model2/vector_field.pdf
-      md5: 5f051d23e830779175b4cb1fdfe921f1
+      md5: 5778005f34937b033cda7a3975de4dc9
       size: 241606
     - path: reports/larry_tips_model2/vector_field.pdf.png
       md5: 23301340b2cd4ec1579dbeb026166102
       size: 490270
     - path: reports/larry_tips_model2/volcano.pdf
-      md5: 8ce84ed49ceb3dbd73b07b0193931d46
-      size: 20897
+      md5: 1410268cee787fd22856c6df69c4e55a
+      size: 20891
   figureS3:
     cmd: python figS3/figure.py
     deps:
@@ -2198,8 +2213,6 @@ stages:
     cmd: python figS3/figure_extras.py train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
     deps:
     - path: figS3/figure_extras.py
-      md5: 3e702755599f83d2c960a897d6e92f9e
-      size: 10635
       md5: 3e702755599f83d2c960a897d6e92f9e
       size: 10635
     - path: models/larry_model2/pyrovelocity.pkl.zst
@@ -2430,11 +2443,11 @@ stages:
     cmd: python summarize.py train_models=[larry_model2]
     deps:
     - path: models/larry_model2/pyrovelocity.pkl.zst
-      md5: 5411628e572ab2952f85001e6fcb8a68
-      size: 1368571204
+      md5: 9e04d6b9595bf1e246c9b7ab107722ac
+      size: 916363882
     - path: models/larry_model2/trained.h5ad
-      md5: 653fe0f530036ae62155888cb2b16289
-      size: 6327385438
+      md5: 3c3c4f5e86c01c2699bcecd3a71bdb24
+      size: 2684816079
     - path: summarize.py
       md5: 679271dba0aef13c92885c679119b51c
       size: 17021
@@ -2458,26 +2471,26 @@ stages:
           fig2_part2_plot: reports/larry_model2/fig2_part2_plot.pdf
     outs:
     - path: data/processed/larry_model2_dataframe.pkl.zst
-      md5: 91a40d3791dce553689481b4d6c3ad2d
-      size: 130451734
+      md5: 41ff5e0daccbf80a589152e6d97c7469
+      size: 51777436
     - path: reports/larry_model2/fig2_part1_plot.pdf
-      md5: 646f7da4bb969221da07a004480933cb
-      size: 3268645
+      md5: 514a41f9c7e5ae0111d1dbd7845d124a
+      size: 3269196
     - path: reports/larry_model2/rainbow.pdf
-      md5: 5e97349ecf60640500883f3aac4ec2cc
-      size: 8104552
+      md5: 4c1f899584217d316eaa36a532a6fde1
+      size: 7891400
     - path: reports/larry_model2/rainbow.pdf.png
-      md5: 4157ef480c4054a2b95b2a93bb85f664
-      size: 1731582
+      md5: cf027f5b83aef1e8f3009709d6566b32
+      size: 1881011
     - path: reports/larry_model2/shared_time.pdf
-      md5: bca5484f201fb805e7d96f5c9519b607
-      size: 226180
+      md5: 0b643309f2dc87976f5bc0cd64359506
+      size: 196283
     - path: reports/larry_model2/vector_field.pdf
-      md5: d53904eae1b193db9daf5ab8f3d0cd93
-      size: 390566
+      md5: c8147476bc955651b141d03dccd7de85
+      size: 390492
     - path: reports/larry_model2/vector_field.pdf.png
-      md5: f7224806268bc88ed091713f44ea7a3b
-      size: 752489
+      md5: 9a23e89a98460cd3a177739f37d6cf95
+      size: 739738
     - path: reports/larry_model2/volcano.pdf
-      md5: ee031a8acd0390783f1bba9a72c317e3
-      size: 21100
+      md5: e6cc85b694c7d370a372213d6e4cb013
+      size: 21034
