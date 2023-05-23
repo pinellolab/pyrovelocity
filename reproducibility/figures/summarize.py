@@ -155,7 +155,6 @@ def summarize_fig2_part1(
     )
     ax[2].set_title("Pyro-Velocity\n", fontsize=7)
     
-    #astropy degree angular deviation is buggy...
     pca_cell_angles = pca_embeds_angle / np.pi * 180 # degree
     pca_angles_std = get_posterior_sample_angle_uncertainty(pca_cell_angles)
 

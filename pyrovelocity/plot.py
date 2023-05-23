@@ -903,11 +903,6 @@ def plot_vector_field_uncertain(
     ax.set_title(f"Averaged\n {uncertain_measure} uncertainty ", fontsize=7)
     ax.axis("off")
     if cbar:
-        # divider = make_axes_locatable(ax)
-        # cax = divider.append_axes('bottom', size='5%', pad=0.1)
-        # cbar = fig.colorbar(im, cax=cax, orientation="horizontal", shrink=0.6)
-        ### cbar.ax.set_xticks([0, 180, 360], [0, 180, 360])
-        ##fig.colorbar(im, ax=ax, shrink=0.6, location='bottom')
         pos = ax.get_position()
         cbar_ax = fig.add_axes(
             [pos.x0+pos.width*0.05, pos.y0-pos.height/10, pos.width*0.5, pos.height/17]
@@ -917,7 +912,6 @@ def plot_vector_field_uncertain(
         )  # fraction=0.046, pad=0.04
         cbar.ax.tick_params(axis="x", labelsize=5.5)
         cbar.ax.locator = MaxNLocator(nbins=2, integer=True)
-    # cbar.ax.set_xlabel(f"{uncertain_measure} uncertainty", fontsize=7)
 
 
 def compute_mean_vector_field(
