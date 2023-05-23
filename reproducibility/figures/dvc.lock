@@ -2169,17 +2169,17 @@ stages:
       md5: d5cf643f22a24319523a5078a3648654
       size: 12882
     - path: models/pancreas_model2/pyrovelocity.pkl.zst
-      md5: 143f044ba49870ba395c1974ea702d27
-      size: 105520126
+      md5: e589bc2a15f2db756df3ae9c2e1db3ed
+      size: 65630080
     - path: models/pancreas_model2/trained.h5ad
-      md5: d6871cdb5403d14454d842e6e8bc7969
-      size: 492522608
+      md5: db1f418ac3a13d7f0ec40adfbec0cbcf
+      size: 169776624
     - path: models/pbmc68k_model2/pyrovelocity.pkl.zst
-      md5: fe639f3f107789827275fad0dc4c1bd4
-      size: 679019086
+      md5: c4adabfaa2e0ea3baa15776847cc7a93
+      size: 513892944
     - path: models/pbmc68k_model2/trained.h5ad
-      md5: 0bcb9e487d242deabd6dec70bf31a254
-      size: 2150870473
+      md5: 1416f0cc98346453f87d197c61887aa2
+      size: 1112777602
     params:
       config.yaml:
         reports.figureS3:
@@ -2189,44 +2189,46 @@ stages:
           svg_path: reports/figS3/figS3_raw_gene_selection_model2.svg
     outs:
     - path: reports/figS3/figS3_raw_gene_selection_model2.svg
-      md5: 16d24d0ebd7ad1cd7f1aca2f70877087
-      size: 49283436
+      md5: 9aaf6c1738a98e7745513c2ec8be482e
+      size: 49194925
     - path: reports/figS3/figS3_raw_gene_selection_model2.tif
-      md5: 05030c694f704032fc3f6ff11fe68b9b
-      size: 19732046
+      md5: 380c043d793b7bf90b8983b61aede637
+      size: 19533902
   figureS3_extras:
     cmd: python figS3/figure_extras.py train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
     deps:
     - path: figS3/figure_extras.py
       md5: 3e702755599f83d2c960a897d6e92f9e
       size: 10635
+      md5: 3e702755599f83d2c960a897d6e92f9e
+      size: 10635
     - path: models/larry_model2/pyrovelocity.pkl.zst
-      md5: 5411628e572ab2952f85001e6fcb8a68
-      size: 1368571204
+      md5: 9e04d6b9595bf1e246c9b7ab107722ac
+      size: 916363882
     - path: models/larry_mono_model2/pyrovelocity.pkl.zst
-      md5: 6fc7960842938b4229da7462b3717d9c
-      size: 29734791
+      md5: 563b2292845f0b9e6efb7be3c1dce28d
+      size: 10659012
     - path: models/larry_multilineage_model2/pyrovelocity.pkl.zst
-      md5: 713c587442cedf0f68ca041bbbb45484
-      size: 66381412
+      md5: c6dce321aa14c9bae803e2503d155171
+      size: 36144922
     - path: models/larry_neu_model2/pyrovelocity.pkl.zst
-      md5: 0e106789eec7ec47e43e24b53a58825a
-      size: 25862188
+      md5: 9bf602e57152397bba9a57a724d978e6
+      size: 9345592
     - path: models/larry_tips_model2/pyrovelocity.pkl.zst
-      md5: d490daa40e5ed835791ab8273c006ad2
-      size: 515004641
+      md5: 0046be61af73fbe971b8f3b7a0a31a17
+      size: 328390612
     - path: models/pancreas_model2/pyrovelocity.pkl.zst
-      md5: 143f044ba49870ba395c1974ea702d27
-      size: 105520126
+      md5: e589bc2a15f2db756df3ae9c2e1db3ed
+      size: 65630080
     - path: models/pbmc10k_model2/pyrovelocity.pkl.zst
-      md5: 6c429cfd714bd8fa25b30d57c653e810
-      size: 330050183
+      md5: 6fb18ff8e809e2151b9a36ddce4fd7f3
+      size: 266838725
     - path: models/pbmc68k_model2/pyrovelocity.pkl.zst
-      md5: fe639f3f107789827275fad0dc4c1bd4
-      size: 679019086
+      md5: c4adabfaa2e0ea3baa15776847cc7a93
+      size: 513892944
     - path: models/pons_model2/pyrovelocity.pkl.zst
-      md5: 6102fb752559082e3ebd2e33013a0f5f
-      size: 175510242
+      md5: e19265b3df8c7204f1711ba5139e0247
+      size: 107391424
     params:
       config.yaml:
         reports.figureS3:
@@ -2236,17 +2238,17 @@ stages:
           svg_path: reports/figS3/figS3_raw_gene_selection_model2.svg
     outs:
     - path: reports/figS3/figureS3_extras_larry_lin.pdf
-      md5: 9428b95eaf04f07a15075149ae523b2e
-      size: 82965
+      md5: 4aa4e379aa8b65528ae98d98a3ea3a71
+      size: 81373
     - path: reports/figS3/figureS3_extras_larry_log.pdf
-      md5: be9564181fe0983d155dafb67576b55f
-      size: 83495
+      md5: 3e56c24554982a60db000eab439ea30d
+      size: 82300
     - path: reports/figS3/figureS3_extras_pbmc_lin.pdf
-      md5: d77bfe458901b715e162cf8a8e4e4f93
-      size: 69086
+      md5: d8d9bcd442ebfe03e53fa86ef71cc313
+      size: 69809
     - path: reports/figS3/figureS3_extras_pbmc_log.pdf
-      md5: 20fc28afe0fb9bac07120b26cc4af896
-      size: 71273
+      md5: a3833625c03e8376b5beab2d38a65ebb
+      size: 71616
   data_download@larry_cospar:
     cmd: python data_download.py process_data=[larry_cospar]
     deps:
