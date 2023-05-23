@@ -2364,3 +2364,53 @@ stages:
     - path: reports/larry_model2/volcano.pdf
       md5: ee031a8acd0390783f1bba9a72c317e3
       size: 21100
+  figure3:
+    cmd: python fig3/figure.py
+    deps:
+    - path: fig2/figure.py
+      md5: 1858c8e879a72d0cbde5be01e8727af7
+      size: 19548
+    - path: models/larry_model2/pyrovelocity.pkl.zst
+      md5: 5411628e572ab2952f85001e6fcb8a68
+      size: 1368571204
+    - path: models/larry_model2/trained.h5ad
+      md5: 653fe0f530036ae62155888cb2b16289
+      size: 6327385438
+    - path: models/larry_mono_model2/pyrovelocity.pkl.zst
+      md5: 6fc7960842938b4229da7462b3717d9c
+      size: 29734791
+    - path: models/larry_mono_model2/trained.h5ad
+      md5: 392c7dbb36210d52c5928a85f4da7bfc
+      size: 128025936
+    - path: models/larry_multilineage_model2/pyrovelocity.pkl.zst
+      md5: 713c587442cedf0f68ca041bbbb45484
+      size: 66381412
+    - path: models/larry_multilineage_model2/trained.h5ad
+      md5: 77c0b115416766708c746349f324c859
+      size: 334122037
+    - path: models/larry_neu_model2/pyrovelocity.pkl.zst
+      md5: 0e106789eec7ec47e43e24b53a58825a
+      size: 25862188
+    - path: models/larry_neu_model2/trained.h5ad
+      md5: e368f8894ee2c7af9e9d5320523a1344
+      size: 105830236
+    params:
+      config.yaml:
+        reports.figure2:
+          tag: fig2
+          path: reports/fig2
+          tif_path: reports/fig2/fig2_raw_gene_selection_model1.tif
+          svg_path: reports/fig2/fig2_raw_gene_selection_model1.svg
+          biomarker_selection_path: reports/fig2/fig2_markers_selection_scatterplot.tif
+          biomarker_phaseportrait_path: reports/fig2/fig2_markers_phaseportrait.pdf
+          uncertainty_param_plot_path: reports/fig2/fig2_param_uncertainties.pdf
+          uncertainty_magnitude_plot_path: reports/fig2/fig2_magnitude_uncertainties.pdf
+          pancreas_model1:
+            shared_time_plot: reports/fig2/fig2_pancreas_shared_time.pdf
+            volcano_plot: reports/fig2/fig2_pancreas_volcano.pdf
+            rainbow_plot: reports/fig2/fig2_pancreas_rainbow.pdf
+            vector_field_plot: reports/fig2/fig2_pancreas_vector_field.pdf
+    outs:
+    - path: reports/fig3/figure3.pdf
+      md5: 487bb06ad3efb1349652e839e1382a82
+      size: 3081492

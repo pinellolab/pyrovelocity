@@ -662,6 +662,10 @@ reports:
     tag: fig2
     path: reports/fig2
     shared_time_plot: reports/fig2/figure2_extras.pdf
+  figure3:
+    tag: fig3
+    path: reports/fig3
+    figure3: reports/fig3/figure3.pdf
   figureS3:
     tag: figS3
     path: reports/figS3
