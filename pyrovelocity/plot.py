@@ -1,9 +1,6 @@
 from typing import Dict
 from typing import List
 from typing import Tuple
-from scvelo.plotting.velocity_embedding_grid import default_arrow
-from matplotlib.ticker import MaxNLocator
-from adjustText import adjust_text
 
 import matplotlib
 import matplotlib.cm as cm
@@ -16,13 +13,16 @@ import seaborn as sns
 import sklearn
 import torch
 import umap
+from adjustText import adjust_text
 from anndata import AnnData
 from astropy.stats import rayleightest
 from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
+from matplotlib.ticker import MaxNLocator
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ndarray
 from scipy.stats import spearmanr
+from scvelo.plotting.velocity_embedding_grid import default_arrow
 from sklearn.pipeline import Pipeline
 
 from pyrovelocity.cytotrace import compute_similarity2
@@ -372,14 +372,15 @@ def plot_posterior_time(
     if "cytotrace" in adata.obs.columns:
         ax.set_title(
             "Pyro-Velocity shared time\ncorrelation with Cytotrace: %.2f"
-            % (spearmanr(adata.obs["cell_time"].values, 1 - adata.obs.cytotrace.values)[0]),
-            fontsize=7
+            % (
+                spearmanr(
+                    adata.obs["cell_time"].values, 1 - adata.obs.cytotrace.values
+                )[0]
+            ),
+            fontsize=7,
         )
     else:
-        ax.set_title(
-            "Pyro-Velocity shared time\n",
-            fontsize=7
-        )
+        ax.set_title("Pyro-Velocity shared time\n", fontsize=7)
 
 
 def mae_per_gene(pred_counts: ndarray, true_counts: ndarray) -> ndarray:
@@ -771,11 +772,11 @@ def plot_vector_field_uncertain(
     arrow_size=5,
     uncertain_measure="angle",
     cmap="winter",
-    cmax=0.305
+    cmax=0.305,
 ):
-    if cmap=="inferno":
+    if cmap == "inferno":
         colormap = cm.inferno
-    elif cmap == 'summer':
+    elif cmap == "summer":
         colormap = cm.summer
     else:
         colormap = cm.winter
@@ -791,18 +792,18 @@ def plot_vector_field_uncertain(
         adata.obs["uncertain"] = embeds_radian_or_magnitude
 
     dot_size = 1
-    #plt.rcParams["image.cmap"] = "winter"
+    # plt.rcParams["image.cmap"] = "winter"
     if ax is None:
         ax = fig.subplots(1, 2)
     if isinstance(ax, list) and len(ax) == 2:
         if not only_grid:
-            #norm = Normalize()
-            #norm.autoscale(adata.obs["uncertain"])
-            order=np.argsort(adata.obs['uncertain'].values)
+            # norm = Normalize()
+            # norm.autoscale(adata.obs["uncertain"])
+            order = np.argsort(adata.obs["uncertain"].values)
             im = ax[0].scatter(
                 adata.obsm[f"X_{basis}"][:, 0][order],
                 adata.obsm[f"X_{basis}"][:, 1][order],
-                #c=colormap(norm(adata.obs["uncertain"].values[order])),
+                # c=colormap(norm(adata.obs["uncertain"].values[order])),
                 c=adata.obs["uncertain"].values[order],
                 cmap=cmap,
                 norm=None,
@@ -810,7 +811,7 @@ def plot_vector_field_uncertain(
                 vmax=np.percentile(uncertain, 95),
                 s=dot_size,
                 linewidth=1,
-                edgecolors='face',
+                edgecolors="face",
             )
             ax[0].axis("off")
             ax[0].set_title(
@@ -830,7 +831,7 @@ def plot_vector_field_uncertain(
     # scale = None
     hl, hw, hal = default_arrow(arrow_size)
     quiver_kwargs = {"angles": "xy", "scale_units": "xy"}
-    #quiver_kwargs = {"angles": "xy", "scale_units": "width"}
+    # quiver_kwargs = {"angles": "xy", "scale_units": "width"}
     quiver_kwargs.update({"width": 0.001, "headlength": hl / 2})
     quiver_kwargs.update({"headwidth": hw / 2, "headaxislength": hal / 2})
     quiver_kwargs.update({"linewidth": 1, "zorder": 3})
@@ -852,25 +853,32 @@ def plot_vector_field_uncertain(
         uncertain,
         norm=None,
         cmap=cmap,
-        edgecolors='face',
+        edgecolors="face",
         scale=scale,
-        clim=(np.percentile(uncertain, 5), np.percentile(uncertain, 95) if cmax is None else cmax),
+        clim=(
+            np.percentile(uncertain, 5),
+            np.percentile(uncertain, 95) if cmax is None else cmax,
+        ),
         **quiver_kwargs,
     )
     ax.set_title(f"Averaged\n {uncertain_measure} uncertainty ", fontsize=7)
     ax.axis("off")
     if cbar:
-        #divider = make_axes_locatable(ax)
-        #cax = divider.append_axes('bottom', size='5%', pad=0.1)
-        #cbar = fig.colorbar(im, cax=cax, orientation="horizontal", shrink=0.6)
+        # divider = make_axes_locatable(ax)
+        # cax = divider.append_axes('bottom', size='5%', pad=0.1)
+        # cbar = fig.colorbar(im, cax=cax, orientation="horizontal", shrink=0.6)
         ### cbar.ax.set_xticks([0, 180, 360], [0, 180, 360])
         ##fig.colorbar(im, ax=ax, shrink=0.6, location='bottom')
         pos = ax.get_position()
-        cbar_ax = fig.add_axes([pos.x0+0.05, pos.y0-0.05, pos.width*0.5, pos.height/17])
-        cbar = fig.colorbar(im, cax=cbar_ax, orientation="horizontal") # fraction=0.046, pad=0.04
-        cbar.ax.tick_params(axis='x', labelsize=5.5)
+        cbar_ax = fig.add_axes(
+            [pos.x0 + 0.05, pos.y0 - 0.05, pos.width * 0.5, pos.height / 17]
+        )
+        cbar = fig.colorbar(
+            im, cax=cbar_ax, orientation="horizontal"
+        )  # fraction=0.046, pad=0.04
+        cbar.ax.tick_params(axis="x", labelsize=5.5)
         cbar.ax.locator = MaxNLocator(nbins=2, integer=True)
-       # cbar.ax.set_xlabel(f"{uncertain_measure} uncertainty", fontsize=7)
+    # cbar.ax.set_xlabel(f"{uncertain_measure} uncertainty", fontsize=7)
 
 
 def compute_mean_vector_field(
@@ -1075,7 +1083,9 @@ def plot_arrow_examples(
     X_grid, V_grid, uncertain = project_grid_points(
         adata.obsm[f"X_{basis}"],
         v_maps,
-        get_posterior_sample_angle_uncertainty(embeds_radian / np.pi * 180) if customize_uncertain is None else customize_uncertain,
+        get_posterior_sample_angle_uncertainty(embeds_radian / np.pi * 180)
+        if customize_uncertain is None
+        else customize_uncertain,
         p_mass_min=p_mass_min,
         density=density,
     )
@@ -1088,7 +1098,7 @@ def plot_arrow_examples(
     hl, hw, hal = default_arrow(arrow_size)
     print(hl, hw, hal)
     quiver_kwargs = {"angles": "xy", "scale_units": "xy"}
-    #quiver_kwargs = {"angles": "xy", "scale_units": "width"}
+    # quiver_kwargs = {"angles": "xy", "scale_units": "width"}
     quiver_kwargs = {"width": 0.002, "zorder": 0}
     quiver_kwargs.update({"headlength": hl / 2})
     quiver_kwargs.update({"headwidth": hw / 2, "headaxislength": hal / 2})
@@ -1103,12 +1113,12 @@ def plot_arrow_examples(
     )
 
     # normalize arrow size the constant
-    V_grid[:, 0] = V_grid[:, 0] / np.sqrt(V_grid[:, 0]**2 + V_grid[:,1]**2)
-    V_grid[:, 1] = V_grid[:, 1] / np.sqrt(V_grid[:, 1]**2 + V_grid[:,1]**2)
+    V_grid[:, 0] = V_grid[:, 0] / np.sqrt(V_grid[:, 0] ** 2 + V_grid[:, 1] ** 2)
+    V_grid[:, 1] = V_grid[:, 1] / np.sqrt(V_grid[:, 1] ** 2 + V_grid[:, 1] ** 2)
 
     for i in range(n_sample):
         for j in indexes:
-            #ax.quiver(
+            # ax.quiver(
             #    X_grid[j, 0],
             #    X_grid[j, 1],
             #    embed_mean[j, 0],
@@ -1117,13 +1127,13 @@ def plot_arrow_examples(
             #    scale=scale,
             #    color=colormap(norm(uncertain))[j],
             #    **quiver_kwargs,
-            #)
+            # )
             ax.quiver(
                 X_grid[j, 0],
                 X_grid[j, 1],
                 V_grid[j][0][i],
                 V_grid[j][1][i],
-                ec='face',
+                ec="face",
                 norm=Normalize(vmin=0, vmax=360),
                 scale=scale,
                 color=colormap(norm(uncertain))[j],
@@ -1136,7 +1146,7 @@ def plot_arrow_examples(
             X_grid[j, 1],
             V_grid[j][0].mean(),
             V_grid[j][1].mean(),
-            ec='black',
+            ec="black",
             alpha=1,
             norm=Normalize(vmin=0, vmax=360),
             scale=scale,
@@ -1147,7 +1157,7 @@ def plot_arrow_examples(
     indexes = np.argsort(uncertain)[index2 : (index2 + num_certain)]
     for i in range(n_sample):
         for j in indexes:
-            #ax.quiver(
+            # ax.quiver(
             #    X_grid[j, 0],
             #    X_grid[j, 1],
             #    embed_mean[j, 0],
@@ -1156,14 +1166,14 @@ def plot_arrow_examples(
             #    scale=scale,
             #    color=colormap(norm(uncertain))[j],
             #    **quiver_kwargs,
-            #)
+            # )
             ax.quiver(
                 X_grid[j, 0],
                 X_grid[j, 1],
                 V_grid[j][0][i],
                 V_grid[j][1][i],
-                #ec=colormap(norm(uncertain))[j],
-                ec='face',
+                # ec=colormap(norm(uncertain))[j],
+                ec="face",
                 scale=scale2,
                 alpha=0.3,
                 linewidth=0,
@@ -1176,7 +1186,7 @@ def plot_arrow_examples(
             X_grid[j, 1],
             V_grid[j][0].mean(),
             V_grid[j][1].mean(),
-            ec='black',
+            ec="black",
             alpha=1,
             linewidth=0,
             norm=Normalize(vmin=0, vmax=360),
