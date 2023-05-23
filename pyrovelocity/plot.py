@@ -2060,5 +2060,6 @@ def align_trajectory_diff(
 
     results = np.hstack(results)
     results = results[mass_index]
+    print(results.shape)
     length_filter = np.sqrt((results[:, 2:4] ** 2).sum(1)) > length_cutoff
     return results[length_filter]
