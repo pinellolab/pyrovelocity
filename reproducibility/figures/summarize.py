@@ -2,28 +2,33 @@ import os
 import pickle
 from logging import Logger
 from pathlib import Path
-from pyrovelocity.plot import plot_posterior_time
 from statistics import harmonic_mean
 from typing import Text
-import pandas as pd
-from pyrovelocity.plot import plot_vector_field_uncertain
-#from astropy import units as u
-#from astropy.stats import circstd
-from scipy.stats import circstd, circmean, circvar
 
 import hydra
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import scvelo as scv
 import seaborn as sns
 from omegaconf import DictConfig
+
+# from astropy import units as u
+# from astropy.stats import circstd
+from scipy.stats import circmean
+from scipy.stats import circstd
+from scipy.stats import circvar
 
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.data import load_data
 from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.plot import compute_mean_vector_field
 from pyrovelocity.plot import compute_volcano_data
+from pyrovelocity.plot import plot_arrow_examples
 from pyrovelocity.plot import plot_gene_ranking
+from pyrovelocity.plot import plot_posterior_time
+from pyrovelocity.plot import plot_vector_field_uncertain
+from pyrovelocity.plot import rainbowplot
 from pyrovelocity.plot import us_rainbowplot
 from pyrovelocity.plot import vector_field_uncertainty
 from pyrovelocity.utils import anndata_counts_to_df
@@ -31,8 +36,6 @@ from pyrovelocity.utils import get_pylogger
 from pyrovelocity.utils import mae_evaluate
 from pyrovelocity.utils import print_anndata
 from pyrovelocity.utils import print_attributes
-from pyrovelocity.plot import plot_arrow_examples
-from pyrovelocity.plot import rainbowplot
 
 
 """Loads model-trained data and generates figures.
@@ -63,19 +66,24 @@ Outputs:
     biomarker_phaseportrait_plot: reports/{data_model}/markers_phaseportrait.pdf
 """
 
-def summarize_fig2_part1(adata, 
-                         posterior_vector_field,
-                         posterior_time,
-                         cell_magnitudes,
-                         pca_embeds_angle,
-                         embed_radians,
-                         embedding, embed_mean, cluster="cell_type", 
-                         plot_name='test'):
+
+def summarize_fig2_part1(
+    adata,
+    posterior_vector_field,
+    posterior_time,
+    cell_magnitudes,
+    pca_embeds_angle,
+    embed_radians,
+    embedding,
+    embed_mean,
+    cluster="cell_type",
+    plot_name="test",
+):
     dot_size = 3.5
     font_size = 6.5
     scale = 0.35
-    #scale_high = 0.05
-    #scale_low = 0.009
+    # scale_high = 0.05
+    # scale_low = 0.009
     scale_high = 7.8
     scale_low = 7.8
 
@@ -111,7 +119,8 @@ def summarize_fig2_part1(adata,
     ax[0].set_title("Cell types\n", fontsize=font_size)
     print(pos.x0, pos.x1)
     ax[0].legend(
-        loc='lower left', bbox_to_anchor=(0.5, -0.48),
+        loc="lower left",
+        bbox_to_anchor=(0.5, -0.48),
         ncol=5,
         fancybox=True,
         prop={"size": font_size},
@@ -131,8 +140,7 @@ def summarize_fig2_part1(adata,
         linewidth=1,
     )
     scv.pl.velocity_embedding_grid(
-        adata, basis=embedding, fontsize=font_size, ax=ax[1], 
-        title="", **kwargs
+        adata, basis=embedding, fontsize=font_size, ax=ax[1], title="", **kwargs
     )
     ax[1].set_title("Scvelo\n", fontsize=7)
     scv.pl.velocity_embedding_grid(
@@ -142,42 +150,42 @@ def summarize_fig2_part1(adata,
         title="",
         ax=ax[2],
         vkey="velocity_pyro",
-        **kwargs
+        **kwargs,
     )
     ax[2].set_title("Pyro-Velocity\n", fontsize=7)
-    
-    #astropy degree angular deviation is buggy...
-    #pca_cell_angles = pca_embeds_angle / np.pi * 180 # degree
-    #pca_cell_angles_mean = pca_cell_angles.mean(axis=0)
-    #pca_angles_std = circstd(pca_cell_angles * u.deg, method="angular", axis=0)
-    #pca_cell_angles_cov = pca_angles_std / pca_cell_angles_mean
-    #scipy version circstd [0, inf]
+
+    # astropy degree angular deviation is buggy...
+    # pca_cell_angles = pca_embeds_angle / np.pi * 180 # degree
+    # pca_cell_angles_mean = pca_cell_angles.mean(axis=0)
+    # pca_angles_std = circstd(pca_cell_angles * u.deg, method="angular", axis=0)
+    # pca_cell_angles_cov = pca_angles_std / pca_cell_angles_mean
+    # scipy version circstd [0, inf]
     pca_cell_radians = pca_embeds_angle
-    #pca_cell_cirstd = circstd(pca_cell_radians, axis=0)
-    #scipy circvar [0, 1]
+    # pca_cell_cirstd = circstd(pca_cell_radians, axis=0)
+    # scipy circvar [0, 1]
     pca_cell_circov = circvar(pca_cell_radians, axis=0)
 
-#    plot_arrow_examples(
-#        adata,
-#        np.transpose(posterior_vector_field, (1, 2, 0)),
-#        embed_radians,
-#        embed_mean,
-#        ax=ax[3],
-#        n_sample=20,
-#        fig=fig,
-#        basis=embedding,
-#        scale=scale_high,
-#        alpha=0.2,
-#        index=3,
-#        index2=5,
-#        scale2=scale_low,
-#        num_certain=2, #TODO: add parameter for selecting arrows
-#        num_total=4,
-#        density=density,
-#        arrow_size=arrow+0.2,
-#        customize_uncertain=pca_cell_circov
-#    )
-#    ax[3].set_title("Single cell\nvector field", fontsize=7)
+    #    plot_arrow_examples(
+    #        adata,
+    #        np.transpose(posterior_vector_field, (1, 2, 0)),
+    #        embed_radians,
+    #        embed_mean,
+    #        ax=ax[3],
+    #        n_sample=20,
+    #        fig=fig,
+    #        basis=embedding,
+    #        scale=scale_high,
+    #        alpha=0.2,
+    #        index=3,
+    #        index2=5,
+    #        scale2=scale_low,
+    #        num_certain=2, #TODO: add parameter for selecting arrows
+    #        num_total=4,
+    #        density=density,
+    #        arrow_size=arrow+0.2,
+    #        customize_uncertain=pca_cell_circov
+    #    )
+    #    ax[3].set_title("Single cell\nvector field", fontsize=7)
 
     cell_time_mean = posterior_time.mean(0).flatten()
     cell_time_std = posterior_time.std(0).flatten()
@@ -198,8 +206,8 @@ def summarize_fig2_part1(adata,
         density=density,
         only_grid=False,
         uncertain_measure="shared time",
-        cmap='winter',
-        cmax=None
+        cmap="winter",
+        cmax=None,
     )
 
     cell_magnitudes_mean = cell_magnitudes.mean(axis=-2)
@@ -221,7 +229,7 @@ def summarize_fig2_part1(adata,
         only_grid=False,
         uncertain_measure="base magnitude",
         cmap="summer",
-        cmax=None
+        cmax=None,
     )
 
     plot_vector_field_uncertain(
@@ -247,26 +255,24 @@ def summarize_fig2_part1(adata,
         facecolor=fig.get_facecolor(),
         bbox_inches="tight",
         edgecolor="none",
-        dpi=300
+        dpi=300,
     )
 
 
-def summarize_fig2_part2(adata, 
-                         posterior_samples,
-                         plot_name="",
-                         basis="",
-                         cell_state="",
-                         fig=None):
+def summarize_fig2_part2(
+    adata, posterior_samples, plot_name="", basis="", cell_state="", fig=None
+):
     if fig is None:
         fig = plt.figure(figsize=(9.5, 5))
-        subfigs = fig.subfigures(1, 2, wspace=0.0, hspace=0,
-                                 width_ratios=[1.8, 4])
+        subfigs = fig.subfigures(1, 2, wspace=0.0, hspace=0, width_ratios=[1.8, 4])
         ax = subfigs[0].subplots(2, 1)
         plot_posterior_time(
-            posterior_samples, adata, 
-            ax=ax[0], fig=subfigs[0],
+            posterior_samples,
+            adata,
+            ax=ax[0],
+            fig=subfigs[0],
             addition=False,
-            basis=basis
+            basis=basis,
         )
         volcano_data, _ = plot_gene_ranking(
             [posterior_samples], [adata], ax=ax[1], time_correlation_with="st"
@@ -287,7 +293,7 @@ def summarize_fig2_part2(adata,
             facecolor=fig.get_facecolor(),
             bbox_inches="tight",
             edgecolor="none",
-            dpi=300
+            dpi=300,
         )
 
 
@@ -314,7 +320,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         trained_data_path = reports_data_model_conf.trained_data_path
         pyrovelocity_data_path = reports_data_model_conf.pyrovelocity_data_path
 
-        #print_config_tree(reports_data_model_conf, logger, ())
+        # print_config_tree(reports_data_model_conf, logger, ())
 
         logger.info(f"\n\nPlotting summary figure(s) in: {data_model}\n\n")
 
@@ -347,7 +353,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
 
         logger.info(f"Loading trained data: {trained_data_path}")
         adata = scv.read(trained_data_path)
-        #print_anndata(adata)
+        # print_anndata(adata)
 
         logger.info(f"Loading pyrovelocity data: {pyrovelocity_data_path}")
         posterior_samples = CompressedPickle.load(pyrovelocity_data_path)
@@ -378,23 +384,30 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         print(posterior_samples.keys())
 
         vector_field_basis = data_model_conf.vector_field_parameters.basis
-        #print(vector_field_basis)
+        # print(vector_field_basis)
 
         cell_type = data_model_conf.training_parameters.cell_state
-        summarize_fig2_part1(adata, 
-                             posterior_samples["vector_field_posterior_samples"], 
-                             posterior_samples["cell_time"],
-                             posterior_samples["original_spaces_embeds_magnitude"],
-                             posterior_samples["pca_embeds_angle"],
-                             posterior_samples["embeds_angle"],
-                             vector_field_basis,
-                             posterior_samples["vector_field_posterior_mean"],
-                             cell_type, fig2_part1_plot)
+        summarize_fig2_part1(
+            adata,
+            posterior_samples["vector_field_posterior_samples"],
+            posterior_samples["cell_time"],
+            posterior_samples["original_spaces_embeds_magnitude"],
+            posterior_samples["pca_embeds_angle"],
+            posterior_samples["embeds_angle"],
+            vector_field_basis,
+            posterior_samples["vector_field_posterior_mean"],
+            cell_type,
+            fig2_part1_plot,
+        )
 
-        summarize_fig2_part2(adata, posterior_samples, 
-                             basis=vector_field_basis, 
-                             cell_state=cell_type,
-                             plot_name=fig2_part2_plot, fig=None)
+        summarize_fig2_part2(
+            adata,
+            posterior_samples,
+            basis=vector_field_basis,
+            cell_state=cell_type,
+            plot_name=fig2_part2_plot,
+            fig=None,
+        )
 
         ##################
         # generate figures
