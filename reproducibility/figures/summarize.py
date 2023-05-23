@@ -16,17 +16,28 @@ from astropy import units as u
 from astropy.stats import circstd as acircstd
 from omegaconf import DictConfig
 
+<<<<<<< HEAD
 # from scipy.stats import circmean
 # from scipy.stats import circstd
 from scipy.stats import circvar
 from statannotations.Annotator import Annotator
+=======
+# from astropy import units as u
+# from astropy.stats import circstd
+from scipy.stats import circmean
+from scipy.stats import circstd
+from scipy.stats import circvar
+>>>>>>> c8c4b7c (add script to upload run data to drive (#296))
 
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.data import load_data
 from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.plot import compute_mean_vector_field
 from pyrovelocity.plot import compute_volcano_data
+<<<<<<< HEAD
 from pyrovelocity.plot import get_posterior_sample_angle_uncertainty
+=======
+>>>>>>> c8c4b7c (add script to upload run data to drive (#296))
 from pyrovelocity.plot import plot_arrow_examples
 from pyrovelocity.plot import plot_gene_ranking
 from pyrovelocity.plot import plot_posterior_time
@@ -85,6 +96,11 @@ def summarize_fig2_part1(
     dot_size = 3.5
     font_size = 6.5
     scale = 0.35
+<<<<<<< HEAD
+=======
+    # scale_high = 0.05
+    # scale_low = 0.009
+>>>>>>> c8c4b7c (add script to upload run data to drive (#296))
     scale_high = 7.8
     scale_low = 7.8
 
@@ -229,6 +245,13 @@ def summarize_fig2_part1(
             edgecolor="none",
             dpi=300,
         )
+    fig.savefig(
+        plot_name,
+        facecolor=fig.get_facecolor(),
+        bbox_inches="tight",
+        edgecolor="none",
+        dpi=300,
+    )
 
 
 def summarize_fig2_part2(
@@ -552,6 +575,30 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         # print(vector_field_basis)
 
         cell_type = data_model_conf.training_parameters.cell_state
+<<<<<<< HEAD
+=======
+        summarize_fig2_part1(
+            adata,
+            posterior_samples["vector_field_posterior_samples"],
+            posterior_samples["cell_time"],
+            posterior_samples["original_spaces_embeds_magnitude"],
+            posterior_samples["pca_embeds_angle"],
+            posterior_samples["embeds_angle"],
+            vector_field_basis,
+            posterior_samples["vector_field_posterior_mean"],
+            cell_type,
+            fig2_part1_plot,
+        )
+
+        summarize_fig2_part2(
+            adata,
+            posterior_samples,
+            basis=vector_field_basis,
+            cell_state=cell_type,
+            plot_name=fig2_part2_plot,
+            fig=None,
+        )
+>>>>>>> c8c4b7c (add script to upload run data to drive (#296))
 
         ##################
         # generate figures

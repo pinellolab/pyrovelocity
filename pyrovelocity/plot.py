@@ -909,9 +909,10 @@ def plot_vector_field_uncertain(
         )
         cbar = fig.colorbar(
             im, cax=cbar_ax, orientation="horizontal"
-        )  # fraction=0.046, pad=0.04
+        )
         cbar.ax.tick_params(axis="x", labelsize=5.5)
         cbar.ax.locator = MaxNLocator(nbins=2, integer=True)
+    # cbar.ax.set_xlabel(f"{uncertain_measure} uncertainty", fontsize=7)
 
 
 def compute_mean_vector_field(
