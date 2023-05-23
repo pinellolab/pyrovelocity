@@ -69,9 +69,7 @@ function run_parallel_pipeline() {
 
 ### Execute experiment run and submit PR ###
 python --version
-pip install --upgrade pip
 pip --version
-pip install -e .[plotting]
 pip list
 sudo apt-get update && sudo apt-get install -y time && which time
 cd reproducibility/figures || exit
