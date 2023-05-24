@@ -6,28 +6,29 @@ from statistics import harmonic_mean
 from typing import Text
 
 import anndata
-from astropy import units as u
 import hydra
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scvelo as scv
 import seaborn as sns
-from statannotations.Annotator import Annotator
-from omegaconf import DictConfig
+from astropy import units as u
 
 # from astropy import units as u
 # from astropy.stats import circstd
 from astropy.stats import circstd as acircstd
+from omegaconf import DictConfig
 from scipy.stats import circmean
 from scipy.stats import circstd
 from scipy.stats import circvar
+from statannotations.Annotator import Annotator
 
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.data import load_data
 from pyrovelocity.io.compressedpickle import CompressedPickle
-from pyrovelocity.plot import compute_mean_vector_field, get_posterior_sample_angle_uncertainty
+from pyrovelocity.plot import compute_mean_vector_field
 from pyrovelocity.plot import compute_volcano_data
+from pyrovelocity.plot import get_posterior_sample_angle_uncertainty
 from pyrovelocity.plot import plot_arrow_examples
 from pyrovelocity.plot import plot_gene_ranking
 from pyrovelocity.plot import plot_posterior_time
@@ -280,8 +281,7 @@ def cluster_violin_plots(
     show_outlier: bool,
     fig_name: str = None,
 ) -> None:
-    """Construct violin plots for each cluster.
-    """
+    """Construct violin plots for each cluster."""
 
     time_cov_list = []
     mag_cov_list = []
@@ -299,13 +299,15 @@ def cluster_violin_plots(
     cluster_time_list = []
     clusters = adata.obs[cluster_key].values.categories
     for cluster in clusters:
-        adata_cluster = adata[adata.obs[cluster_key]==cluster]
-        cluster_time = adata_cluster.obs['velocity_pseudotime'].mean()
+        adata_cluster = adata[adata.obs[cluster_key] == cluster]
+        cluster_time = adata_cluster.obs["velocity_pseudotime"].mean()
         cluster_time_list.append(cluster_time)
     print(cluster_time_list)
-    sorted_cluster_id = sorted(range(len(cluster_time_list)), key=lambda k: cluster_time_list[k], reverse=False)
+    sorted_cluster_id = sorted(
+        range(len(cluster_time_list)), key=lambda k: cluster_time_list[k], reverse=False
+    )
     order = clusters[sorted_cluster_id]
-        
+
     umap_cell_angles = posterior_samples["embeds_angle"] / np.pi * 180
     # umap_cell_cirsvar = circvar(umap_cell_angles, axis=0)
     umap_angle_std = acircstd(umap_cell_angles * u.deg, method="angular", axis=0)
@@ -458,7 +460,6 @@ def cluster_violin_plots(
         )
 
 
-
 def plots(conf: DictConfig, logger: Logger) -> None:
     """Construct summary plots for each data set and model.
 
@@ -501,7 +502,6 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         fig2_part2_plot = reports_data_model_conf.fig2_part2_plot
         violin_clusters_lin = reports_data_model_conf.violin_clusters_lin
         violin_clusters_log = reports_data_model_conf.violin_clusters_log
-
 
         output_filenames = [
             dataframe_path,
@@ -606,7 +606,6 @@ def plots(conf: DictConfig, logger: Logger) -> None:
                     show_outlier=False,
                     fig_name=fig_name,
                 )
-
 
         # shared time plot
         cell_time_mean = posterior_samples["cell_time"].mean(0).flatten()
