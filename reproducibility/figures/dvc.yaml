@@ -89,6 +89,9 @@ stages:
         - ${item.vector_field_plot}.png
         - ${item.shared_time_plot}
         - ${item.fig2_part1_plot}
+        - ${item.fig2_part1_plot}.png
+        - ${item.fig2_part2_plot}
+        - ${item.fig2_part2_plot}.png
         - ${item.violin_clusters_lin}
         - ${item.violin_clusters_lin}.png
         - ${item.violin_clusters_log}
