@@ -525,6 +525,8 @@ def hydra_zen_compressed_configure():
             biomarker_phaseportrait_plot=f"{path}/markers_phaseportrait.pdf",
             fig2_part1_plot=f"{path}/fig2_part1_plot.pdf",
             fig2_part2_plot=f"{path}/fig2_part2_plot.pdf",
+            violin_clusters_lin=f"{path}/clusters_violin_lin.pdf",
+            violin_clusters_log=f"{path}/clusters_violin_log.pdf",
         )
 
     base = dict(log_level="INFO")
