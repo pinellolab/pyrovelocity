@@ -574,6 +574,8 @@ reports:
       biomarker_phaseportrait_plot: reports/pancreas_model2/markers_phaseportrait.pdf
       fig2_part1_plot: reports/pancreas_model2/fig2_part1_plot.pdf
       fig2_part2_plot: reports/pancreas_model2/fig2_part2_plot.pdf
+      violin_clusters_lin: reports/pancreas_model2/clusters_violin_lin.pdf
+      violin_clusters_log: reports/pancreas_model2/clusters_violin_log.pdf
     pbmc68k_model2:
       path: reports/pbmc68k_model2
       trained_data_path: models/pbmc68k_model2/trained.h5ad
@@ -588,6 +590,8 @@ reports:
       biomarker_phaseportrait_plot: reports/pbmc68k_model2/markers_phaseportrait.pdf
       fig2_part1_plot: reports/pbmc68k_model2/fig2_part1_plot.pdf
       fig2_part2_plot: reports/pbmc68k_model2/fig2_part2_plot.pdf
+      violin_clusters_lin: reports/pbmc68k_model2/clusters_violin_lin.pdf
+      violin_clusters_log: reports/pbmc68k_model2/clusters_violin_log.pdf
     pons_model2:
       path: reports/pons_model2
       trained_data_path: models/pons_model2/trained.h5ad
@@ -602,6 +606,8 @@ reports:
       biomarker_phaseportrait_plot: reports/pons_model2/markers_phaseportrait.pdf
       fig2_part1_plot: reports/pons_model2/fig2_part1_plot.pdf
       fig2_part2_plot: reports/pons_model2/fig2_part2_plot.pdf
+      violin_clusters_lin: reports/pons_model2/clusters_violin_lin.pdf
+      violin_clusters_log: reports/pons_model2/clusters_violin_log.pdf
     pbmc10k_model2:
       path: reports/pbmc10k_model2
       trained_data_path: models/pbmc10k_model2/trained.h5ad
@@ -616,6 +622,8 @@ reports:
       biomarker_phaseportrait_plot: reports/pbmc10k_model2/markers_phaseportrait.pdf
       fig2_part1_plot: reports/pbmc10k_model2/fig2_part1_plot.pdf
       fig2_part2_plot: reports/pbmc10k_model2/fig2_part2_plot.pdf
+      violin_clusters_lin: reports/pbmc10k_model2/clusters_violin_lin.pdf
+      violin_clusters_log: reports/pbmc10k_model2/clusters_violin_log.pdf
     larry_tips_model2:
       path: reports/larry_tips_model2
       trained_data_path: models/larry_tips_model2/trained.h5ad
@@ -630,6 +638,8 @@ reports:
       biomarker_phaseportrait_plot: reports/larry_tips_model2/markers_phaseportrait.pdf
       fig2_part1_plot: reports/larry_tips_model2/fig2_part1_plot.pdf
       fig2_part2_plot: reports/larry_tips_model2/fig2_part2_plot.pdf
+      violin_clusters_lin: reports/larry_tips_model2/clusters_violin_lin.pdf
+      violin_clusters_log: reports/larry_tips_model2/clusters_violin_log.pdf
     larry_model2:
       path: reports/larry_model2
       trained_data_path: models/larry_model2/trained.h5ad
@@ -644,6 +654,8 @@ reports:
       biomarker_phaseportrait_plot: reports/larry_model2/markers_phaseportrait.pdf
       fig2_part1_plot: reports/larry_model2/fig2_part1_plot.pdf
       fig2_part2_plot: reports/larry_model2/fig2_part2_plot.pdf
+      violin_clusters_lin: reports/larry_model2/clusters_violin_lin.pdf
+      violin_clusters_log: reports/larry_model2/clusters_violin_log.pdf
   figure2:
     tag: fig2
     path: reports/fig2

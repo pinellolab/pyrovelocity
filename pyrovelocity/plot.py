@@ -468,6 +468,7 @@ def plot_gene_ranking(
     data="correlation",
     negative=False,
     adjust_text_bool=False,
+    show_marginal_histograms=False,
 ) -> None:
     if "u" in posterior_samples[0]:
         volcano_data, genes = compute_volcano_data(
@@ -480,22 +481,64 @@ def plot_gene_ranking(
     fig = None
 
     if data == "correlation":
+        defaultfontsize = 7
+        defaultdotsize = 3
+        plot_title = "Pyro-Velocity genes"
+
+        if show_marginal_histograms:
+            time_corr_hist, time_corr_bins = np.histogram(
+                volcano_data["time_correlation"], bins="auto", density=False
+            )
+            mean_mae_hist, mean_mae_bins = np.histogram(
+                volcano_data["mean_mae"], bins=50, density=False
+            )
+
+            fig = plt.figure(figsize=(10, 10))
+            ax_scatter = plt.subplot2grid((3, 3), (1, 0), colspan=2, rowspan=2)
+            ax_hist_x = plt.subplot2grid((3, 3), (0, 0), colspan=2)
+            ax_hist_y = plt.subplot2grid((3, 3), (1, 2), rowspan=2)
+            # time histogram
+            ax_hist_x.bar(
+                time_corr_bins[:-1],
+                time_corr_hist,
+                width=np.diff(time_corr_bins),
+                align="edge",
+            )
+
+            # MAE histogram
+            ax_hist_y.barh(
+                mean_mae_bins[:-1],
+                mean_mae_hist,
+                height=np.diff(mean_mae_bins),
+                align="edge",
+            )
+            ax_hist_x.tick_params(axis="x", labelbottom=False)
+            ax_hist_y.tick_params(axis="y", labelleft=False)
+
+            defaultfontsize = 14
+            defaultdotsize = 12
+            plot_title = ""
+            ax = ax_scatter
+
         sns.scatterplot(
             x="time_correlation",
             y="mean_mae",
             hue="selected genes",
             data=volcano_data,
-            s=3,
+            s=defaultdotsize,
             linewidth=0,
             ax=ax,
             legend=False,
             alpha=0.3,
         )
-        ax.set_title("Pyro-Velocity genes", fontsize=7)
-        ax.set_xlabel("shared time correlation\nwith spliced expression", fontsize=7)
-        ax.set_ylabel("negative mean\nabsolute error", fontsize=7)
+        ax.set_title(plot_title, fontsize=defaultfontsize)
+        ax.set_xlabel(
+            "shared time correlation\nwith spliced expression", fontsize=defaultfontsize
+        )
+        ax.set_ylabel("negative mean\nabsolute error", fontsize=defaultfontsize)
         sns.despine()
-        ax.tick_params(labelsize=6)
+        ax.tick_params(labelsize=defaultfontsize - 1)
+
         texts = []
         for i, g in enumerate(genes):
             ax.scatter(
@@ -505,13 +548,12 @@ def plot_gene_ranking(
                 color="red",
                 marker="*",
             )
-            # texts.append(ax.text(volcano_data.loc[g, :].time_correlation-0.45, volcano_data.loc[g, :].mean_mae-0.22*i,
             texts.append(
                 ax.text(
                     volcano_data.loc[g, :].time_correlation,
                     volcano_data.loc[g, :].mean_mae,
                     g,
-                    fontsize=5,
+                    fontsize=defaultfontsize - 2,
                     color="black",
                     ha="center",
                     va="center",
@@ -526,12 +568,6 @@ def plot_gene_ranking(
                     offset_y = -10 + i * 5
                 else:
                     offset_y = -10 + i * 5
-                # ax.annotate(
-                #     g,
-                #     xy=(volcano_data.loc[g, :].time_correlation, volcano_data.loc[g, :].mean_mae), xytext=(offset, offset_y),
-                #     textcoords='offset points', ha='right', va='bottom',
-                #     bbox=dict(boxstyle='round,pad=0.5', fc='yellow', alpha=0.5),
-                #     arrowprops=dict(arrowstyle = '->', connectionstyle='arc3,rad=0', color='black'))
                 if not adjust_text_bool:
                     adjust_text(
                         texts,
