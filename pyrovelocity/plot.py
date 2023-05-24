@@ -817,6 +817,9 @@ def plot_vector_field_uncertain(
     else:
         colormap = cm.winter
 
+    print(adata.shape)
+    print(embeds_radian_or_magnitude.shape)
+
     if uncertain_measure == "angle":
         adata.obs["uncertain"] = get_posterior_sample_angle_uncertainty(
             embeds_radian_or_magnitude / np.pi * 180
