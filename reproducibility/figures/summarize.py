@@ -13,13 +13,11 @@ import pandas as pd
 import scvelo as scv
 import seaborn as sns
 from astropy import units as u
-
-# from astropy import units as u
-# from astropy.stats import circstd
 from astropy.stats import circstd as acircstd
 from omegaconf import DictConfig
-from scipy.stats import circmean
-from scipy.stats import circstd
+
+# from scipy.stats import circmean
+# from scipy.stats import circstd
 from scipy.stats import circvar
 from statannotations.Annotator import Annotator
 
@@ -223,13 +221,14 @@ def summarize_fig2_part1(
         cmap="inferno",
         cmax=None,
     )
-    fig.savefig(
-        plot_name,
-        facecolor=fig.get_facecolor(),
-        bbox_inches="tight",
-        edgecolor="none",
-        dpi=300,
-    )
+    for ext in ["", ".png"]:
+        fig.savefig(
+            f"{plot_name}{ext}",
+            facecolor=fig.get_facecolor(),
+            bbox_inches="tight",
+            edgecolor="none",
+            dpi=300,
+        )
 
 
 def summarize_fig2_part2(
@@ -261,13 +260,14 @@ def summarize_fig2_part2(
             cell_state=cell_state,
             num_genes=4,
         )
-        fig.savefig(
-            plot_name,
-            facecolor=fig.get_facecolor(),
-            bbox_inches="tight",
-            edgecolor="none",
-            dpi=300,
-        )
+        for ext in ["", ".png"]:
+            fig.savefig(
+                f"{plot_name}{ext}",
+                facecolor=fig.get_facecolor(),
+                bbox_inches="tight",
+                edgecolor="none",
+                dpi=300,
+            )
 
 
 def cluster_violin_plots(
@@ -658,10 +658,13 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             logger.info(f"{volcano_plot} exists")
         else:
             logger.info(f"Generating figure: {volcano_plot}")
-            fig, ax = plt.subplots()
+            # fig, ax = plt.subplots()
 
-            volcano_data, _ = plot_gene_ranking(
-                [posterior_samples], [adata], ax=ax, time_correlation_with="st"
+            volcano_data, fig = plot_gene_ranking(
+                [posterior_samples],
+                [adata],
+                time_correlation_with="st",
+                show_marginal_histograms=True,
             )
 
             fig.savefig(
