@@ -107,11 +107,16 @@ jobs:
         if: ${{ inputs.model_debug_enabled }}
       - name: CML setup
         run: cml ci
+      - name: Setup rclone
+        run: |
+          sudo -v ; curl https://rclone.org/install.sh | sudo bash
+          which rclone
+          sudo apt-get update && sudo apt-get install tree
+          which tree
+          mkdir -p $HOME/.config/rclone/
+          echo '${{ secrets.RCLONE_CONF }}' > $HOME/.config/rclone/rclone.conf
       - name: Run experiment and submit report
         run: |
-          # export PYENV_VERSION=3.10.10 && \
-          # ./.github/install-pyenv.sh $PYENV_VERSION && \
-          # source $HOME/.bashrc && \
           source .venv/bin/activate
           ./.github/pipeline.sh
         shell: bash
