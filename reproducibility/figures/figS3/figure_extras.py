@@ -50,7 +50,7 @@ def plots(
         plots(conf, logger)
     """
 
-    time_cov_list = []
+    cell_time_distribution_measure_list = []
     mag_cov_list = []
     umap_mag_cov_list = []
     umap_angle_std_list = []
@@ -112,18 +112,29 @@ def plots(
         cell_magnitudes_std = cell_magnitudes.std(axis=-2)
         cell_magnitudes_cov = cell_magnitudes_std / cell_magnitudes_mean
 
-        cell_time_mean = posterior_samples["cell_time"].mean(0).flatten()
         cell_time_std = posterior_samples["cell_time"].std(0).flatten()
-        cell_time_cov = cell_time_std / cell_time_mean
-        time_cov_list.append(cell_time_cov)
+        cell_time_distribution_measure = "std"
+        if cell_time_distribution_measure == "cov":
+            cell_time_mean = posterior_samples["cell_time"].mean(0).flatten()
+            cell_time_cov = cell_time_std / cell_time_mean
+            cell_time_distribution_measure_list.append(cell_time_cov)
+            cell_time_distribution_measure_label = r"CoV({\mathrm{time}})"
+        elif cell_time_distribution_measure == "std":
+            cell_time_distribution_measure_list.append(cell_time_std)
+            cell_time_distribution_measure_label = r"Std({\mathrm{time}})"
+        else:
+            raise ValueError(
+                f"cell_time_distribution_measure must be"
+                f"'cov' or 'std', not {cell_time_distribution_measure}"
+            )
         mag_cov_list.append(cell_magnitudes_cov)
         umap_mag_cov_list.append(umap_cell_magnitudes_cov)
         name = data_model.replace("_model2", "").replace("larry_", "")
-        names += [name] * len(cell_time_cov)
+        names += [name] * len(cell_time_std)
 
     print(posterior_samples["pca_vector_field_posterior_samples"].shape)
     print(posterior_samples["embeds_angle"].shape)
-    time_cov_list = np.hstack(time_cov_list)
+    cell_time_distribution_measure_list = np.hstack(cell_time_distribution_measure_list)
     mag_cov_list = np.hstack(mag_cov_list)
     pca_mag_cov_list = np.hstack(pca_mag_cov_list)
     pca_angle_std_list = np.hstack(pca_angle_std_list)
@@ -132,7 +143,7 @@ def plots(
 
     metrics_df = pd.DataFrame(
         {
-            r"$CoV({\mathrm{time}})$": time_cov_list,
+            rf"${cell_time_distribution_measure_label}$": cell_time_distribution_measure_list,
             r"$CoV({\mathrm{magnitude}})$": mag_cov_list,
             r"$Std({\mathrm{angle}}_{pca})$": pca_angle_std_list,
             r"$CoV({\mathrm{magnitude}}_{pca})$": pca_mag_cov_list,
@@ -155,7 +166,7 @@ def plots(
     print(min_values)
 
     if log_flag:
-        log_time_cov_list = np.log(time_cov_list)
+        log_time_std_list = np.log(cell_time_distribution_measure_list)
         log_mag_cov_list = np.log(mag_cov_list)
         log_umap_mag_cov_list = np.log(umap_mag_cov_list)
         pca_angle_uncertain_list = np.hstack(pca_angle_uncertain_list)
@@ -163,7 +174,7 @@ def plots(
         umap_angle_uncertain_list = np.hstack(umap_angle_uncertain_list)
         metrics_df = pd.DataFrame(
             {
-                r"$\log(CoV({\mathrm{time}}))$": log_time_cov_list,
+                rf"$\log({cell_time_distribution_measure_label})$": log_time_std_list,
                 r"$\log(CoV({\mathrm{magnitude}}))$": log_mag_cov_list,
                 r"$CircStd({\mathrm{angle}}_{pca})$": pca_angle_uncertain_list,
                 r"$\log(CoV({\mathrm{magnitude}}_{pca}))$": log_pca_mag_cov_list,
@@ -216,6 +227,7 @@ def plots(
 
     for axi in ax:
         axi.tick_params(axis="both", labelsize=20)
+        axi.set_xlabel("")
 
     fig.savefig(
         fig_name,
@@ -234,7 +246,7 @@ def main(conf: DictConfig) -> None:
     """
 
     logger = get_pylogger(name="PLOT", log_level=conf.base.log_level)
-    print_config_tree(conf, logger, ())
+    print_config_tree(conf.reports.figureS3_extras, logger, ())
 
     logger.info(
         f"\n\nVerifying existence of paths for:\n\n"
