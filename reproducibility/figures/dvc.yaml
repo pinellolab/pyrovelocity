@@ -137,7 +137,7 @@ stages:
   figure3:
     cmd: python fig3/figure.py
     deps:
-      - fig2/figure.py
+      - fig3/figure.py
       - ${model_training.larry_model2.trained_data_path}
       - ${model_training.larry_model2.pyrovelocity_data_path}
       - ${model_training.larry_mono_model2.trained_data_path}
@@ -148,9 +148,11 @@ stages:
       - ${model_training.larry_multilineage_model2.pyrovelocity_data_path}
     params:
       - config.yaml:
-          - reports.figure2
+          - reports.figure3
     outs:
-      - ${reports.figure3.figure3}
+      - ${reports.figure3.figure3_pdf}
+      - ${reports.figure3.figure3_png}
+
 
   # figure2:
   #   cmd: python fig2/figure.py

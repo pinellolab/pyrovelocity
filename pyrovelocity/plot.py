@@ -894,10 +894,10 @@ def plot_vector_field_uncertain(
         cmap=cmap,
         edgecolors="face",
         scale=scale,
-        clim=(
-            np.percentile(uncertain, 5),
-            np.percentile(uncertain, 95) if cmax is None else cmax,
-        ),
+        #clim=(
+        #    np.percentile(uncertain, 1),
+        #    np.percentile(uncertain, 99) if cmax is None else cmax,
+        #),
         **quiver_kwargs,
     )
     ax.set_title(f"Averaged\n {uncertain_measure} uncertainty ", fontsize=7)
@@ -905,7 +905,7 @@ def plot_vector_field_uncertain(
     if cbar:
         pos = ax.get_position()
         cbar_ax = fig.add_axes(
-            [pos.x0+pos.width*0.05, pos.y0-pos.height/10, pos.width*0.5, pos.height/17]
+            [pos.x0+pos.width*0.04, pos.y0-pos.height/10, pos.width*0.65, pos.height/17]
         )
         cbar = fig.colorbar(
             im, cax=cbar_ax, orientation="horizontal"

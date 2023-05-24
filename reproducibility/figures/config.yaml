@@ -677,7 +677,8 @@ reports:
   figure3:
     tag: fig3
     path: reports/fig3
-    figure3: reports/fig3/figure3.pdf
+    figure3_pdf: reports/fig3/figure3.pdf
+    figure3_png: reports/fig3/figure3.pdf.png
   figureS3:
     tag: figS3
     path: reports/figS3

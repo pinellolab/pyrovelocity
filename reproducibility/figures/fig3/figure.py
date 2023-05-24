@@ -20,7 +20,6 @@ from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.plot import plot_arrow_examples
 from pyrovelocity.plot import plot_gene_ranking
 from pyrovelocity.plot import plot_posterior_time
-from pyrovelocity.plot import plot_vector_field_uncertain
 from pyrovelocity.plot import rainbowplot
 from pyrovelocity.utils import get_pylogger
 from pyrovelocity.data import load_larry
@@ -66,7 +65,7 @@ def plot_larry_subset(pyrovelocity_data_path,
     adata_input_clone.obsm["clone_vector_emb"][
         np.isnan(adata_input_clone.obsm["clone_vector_emb"])
     ] = 0
-    cutoff = 10
+    cutoff = 5
     density = 0.35
     diff = align_trajectory_diff(
         [adata_input_clone, adata_scvelo, adata_scvelo],
@@ -169,13 +168,10 @@ def plot_larry_subset(pyrovelocity_data_path,
     ax[3].set_title(
         "Pyro-Velocity cosine similarity: %.2f" % pyro_cos_mean, fontsize=7
     )
-
     cell_magnitudes = posterior_samples["original_spaces_embeds_magnitude"]
     cell_magnitudes_mean = cell_magnitudes.mean(axis=-2)
     cell_magnitudes_std = cell_magnitudes.std(axis=-2)
     cell_magnitudes_cov = cell_magnitudes_std / cell_magnitudes_mean
-    print(cell_magnitudes_cov)
-
     plot_vector_field_uncertain(
         adata_pyrovelocity,
         embed_mean,
@@ -284,7 +280,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     cs.settings.set_figure_params(
         format="png", figsize=[4, 3.5], dpi=75, fontsize=14, pointsize=2
     )
-    figure3_plot_name = conf.reports.figure3.figure3
+    figure3_plot_name = conf.reports.figure3.figure3_pdf
 
     pyrovelocity_larry_data_path = (
         conf.model_training.larry_model2.pyrovelocity_data_path
@@ -329,7 +325,6 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     Path(conf.reports.figure3.path).mkdir(parents=True, exist_ok=True)
 
     posterior_samples = CompressedPickle.load(pyrovelocity_larry_data_path)
-    
     v_map_all = posterior_samples["vector_field_posterior_samples"]
     embeds_radian_all = posterior_samples["embeds_angle"]
     fdri = posterior_samples["fdri"]
@@ -367,7 +362,6 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     )
     scvelo_all_cos_mean = scvelo_all_cos.mean()
     pyro_all_cos_mean = pyro_all_cos.mean()
-    print(scvelo_all_cos_mean, pyro_all_cos_mean)
 
     color_dict = dict(
         zip(
@@ -396,7 +390,6 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     pyrovelocity_multilineage_data_path = conf.model_training.larry_multilineage_model2.pyrovelocity_data_path
     trained_multilineage_data_path = conf.model_training.larry_multilineage_model2.trained_data_path
     adata_multilineage_dynamical_data_path = conf.data_sets.larry_multilineage.derived.rel_path
-
 
     res = pd.DataFrame(
         {
@@ -532,6 +525,12 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     ax2[5].set_title(
         "Pyro-Velocity cosine similarity: %.2f" % pyro_all_cos_mean, fontsize=7
     )
+
+    for a in ax2[3:6]:
+        pos = a.get_position()
+        a.text(
+            pos.x0+pos.width*0.06, pos.y0-pos.height/13, "unspliced expression", size=7, va="center"
+        )
 
     scv.pl.scatter(
         adata_cospar,
