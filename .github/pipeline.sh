@@ -25,55 +25,60 @@ function run_parallel_pipeline() {
         xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 8 + 3)); dvc repro "$@"' --
 
     wait
+    dvc repro data_download
 
     dvc stage list --name-only |\
         grep -E "preprocess*" |\
         xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 8 + 3)); dvc repro "$@"' --
-
     wait
+    dvc repro preprocess
 
     # manually execute training stages to distribute over four GPUs
     dvc repro train@pancreas_model2 &
-    sleep 2
+    sleep 7
     dvc repro train@pbmc68k_model2 &
-    sleep 2
+    sleep 7
     dvc repro train@pons_model2 &
-    sleep 2
+    sleep 7
     dvc repro train@larry_model2 &
     wait
+
     dvc repro train@larry_tips_model2 &
-    sleep 2
+    sleep 7
     dvc repro train@larry_mono_model2 &
-    sleep 2
+    sleep 7
     dvc repro train@larry_neu_model2 &
-    sleep 2
+    sleep 7
     dvc repro train@larry_multilineage_model2 &
     wait
+
     dvc repro train@pbmc10k_model2 &
 
     wait
+    dvc repro train
 
     dvc stage list --name-only |\
         grep -E "postprocess*" |\
         xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 8 + 3)); dvc repro "$@"' --
-
     wait
+    dvc repro postprocess
 
     dvc stage list --name-only |\
         grep -E "summarize*" |\
         xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 8 + 3)); dvc repro "$@"' --
-
     wait
+    dvc repro summarize
 }
 
 
 ### Execute experiment run and submit PR ###
 python --version
-pip install --upgrade pip
 pip --version
-pip install -e .[plotting]
 pip list
-sudo apt-get update && sudo apt-get install -y time && which time
+sudo apt-get update
+sudo apt-get install -y \
+  time
+which time
 cd reproducibility/figures || exit
 
 dvc pull
@@ -91,6 +96,9 @@ generate_markdown() {
 
     printf "\n# %s\n\n## %s\n\n### Metrics\n" "$data_set" "$model"
     dvc metrics show --md "models/${data_set}_${model}/metrics.json"
+
+    echo "### Data summary"
+    echo '!'"[Raw Count Histogram](./data/processed/${data_set}_thresh_histogram.pdf.png)"
 
     echo "### Training plots"
     echo '!'"[ELBO](./models/${data_set}_${model}/loss_plot.png)"
@@ -130,6 +138,9 @@ dvc dag -o --md
 } >> report.md
 
 cml comment update report.md
-#########################
 
+### Upload figures to drive ###
+./upload_figures_drive.sh
+
+#########################
 set +x
