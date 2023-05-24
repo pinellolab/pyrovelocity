@@ -89,6 +89,10 @@ stages:
         - ${item.vector_field_plot}.png
         - ${item.shared_time_plot}
         - ${item.fig2_part1_plot}
+        - ${item.violin_clusters_lin}
+        - ${item.violin_clusters_lin}.png
+        - ${item.violin_clusters_log}
+        - ${item.violin_clusters_log}.png
 
   # figureS3:
   #   cmd: python figS3/figure.py
