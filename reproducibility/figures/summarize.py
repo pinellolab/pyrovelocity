@@ -147,15 +147,14 @@ def summarize_fig2_part1(adata,
     ax[2].set_title("Pyro-Velocity\n", fontsize=7)
     
     #astropy degree angular deviation is buggy...
-    #pca_cell_angles = pca_embeds_angle / np.pi * 180 # degree
-    #pca_cell_angles_mean = pca_cell_angles.mean(axis=0)
-    #pca_angles_std = circstd(pca_cell_angles * u.deg, method="angular", axis=0)
-    #pca_cell_angles_cov = pca_angles_std / pca_cell_angles_mean
+    pca_cell_angles = pca_embeds_angle / np.pi * 180 # degree
+    pca_angles_std = get_posterior_sample_angle_uncertainty(pca_cell_angles)
+
     #scipy version circstd [0, inf]
-    pca_cell_radians = pca_embeds_angle
-    #pca_cell_cirstd = circstd(pca_cell_radians, axis=0)
-    #scipy circvar [0, 1]
-    pca_cell_circov = circvar(pca_cell_radians, axis=0)
+    # pca_cell_radians = pca_embeds_angle
+    # pca_cell_cirstd = circstd(pca_cell_radians, axis=0)
+    # scipy circvar [0, 1]
+    # pca_cell_circov = circvar(pca_cell_radians, axis=0)
 
 #    plot_arrow_examples(
 #        adata,
@@ -227,7 +226,7 @@ def summarize_fig2_part1(adata,
     plot_vector_field_uncertain(
         adata,
         embed_mean,
-        pca_cell_circov,
+        pca_angles_std,
         ax=ax[5],
         cbar=True,
         fig=fig,

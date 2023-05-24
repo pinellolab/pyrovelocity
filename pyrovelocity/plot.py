@@ -780,6 +780,9 @@ def plot_vector_field_uncertain(
     else:
         colormap = cm.winter
 
+    print(adata.shape)
+    print(embeds_radian_or_magnitude.shape)
+
     if uncertain_measure == "angle":
         adata.obs["uncertain"] = get_posterior_sample_angle_uncertainty(
             embeds_radian_or_magnitude / np.pi * 180
@@ -866,7 +869,7 @@ def plot_vector_field_uncertain(
         ### cbar.ax.set_xticks([0, 180, 360], [0, 180, 360])
         ##fig.colorbar(im, ax=ax, shrink=0.6, location='bottom')
         pos = ax.get_position()
-        cbar_ax = fig.add_axes([pos.x0+0.05, pos.y0-0.05, pos.width*0.5, pos.height/17])
+        cbar_ax = fig.add_axes([pos.x0+pos.width*0.05, pos.y0-pos.height/10, pos.width*0.5, pos.height/17])
         cbar = fig.colorbar(im, cax=cbar_ax, orientation="horizontal") # fraction=0.046, pad=0.04
         cbar.ax.tick_params(axis='x', labelsize=5.5)
         cbar.ax.locator = MaxNLocator(nbins=2, integer=True)
