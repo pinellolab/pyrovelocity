@@ -153,6 +153,7 @@ stages:
           - reports.figure2
     outs:
       - ${reports.figure3.figure3}
+      - ${reports.figure3.figure3}.png
 
   # figure2:
   #   cmd: python fig2/figure.py
