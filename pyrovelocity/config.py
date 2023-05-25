@@ -909,6 +909,11 @@ def hydra_zen_compressed_configure():
                 path="${paths.reports}/${.tag}",
                 shared_time_plot="${.path}/figure2_extras.pdf",
             ),
+            figure3=dict(
+                tag="fig3",
+                path="${paths.reports}/${.tag}",
+                figure3="${.path}/figure3.pdf",
+            ),
             figureS3=dict(
                 tag="figS3",
                 path="${paths.reports}/${.tag}",
