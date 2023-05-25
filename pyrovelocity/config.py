@@ -743,7 +743,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://storage.googleapis.com/pyrovelocity/data/simulated_medium.h5ad",
             process_method="load_data",
-            process_args=dict(count_thres=4),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         pons=create_dataset_config(
             source="velocyto",
@@ -753,7 +753,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://storage.googleapis.com/pyrovelocity/data/oligo_lite.h5ad",
             process_method="load_data",
-            process_args=dict(count_thres=4),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         pancreas=create_dataset_config(
             source="scvelo",
@@ -763,7 +763,9 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad",
             process_method="load_data",
-            process_args=dict(process_cytotrace=True, count_thres=4),
+            process_args=dict(
+                process_cytotrace=True, count_thres="${base.count_threshold}"
+            ),
         ),
         pbmc68k=create_dataset_config(
             source="scvelo",
@@ -773,7 +775,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://ndownloader.figshare.com/files/27686886",
             process_method="load_data",
-            process_args=dict(count_thres=4),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         larry=create_dataset_config(
             source="pyrovelocity",
@@ -783,7 +785,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://ndownloader.figshare.com/files/37028569",
             process_method="load_data",
-            process_args=dict(count_thres=4),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         larry_cospar=create_dataset_config(
             source="pyrovelocity",
@@ -793,7 +795,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://storage.googleapis.com/pyrovelocity/data/larry_cospar.h5ad",
             process_method="load_data",
-            process_args=dict(count_thres=4),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         larry_cytotrace=create_dataset_config(
             source="pyrovelocity",
@@ -803,7 +805,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://storage.googleapis.com/pyrovelocity/data/larry_cytotrace.h5ad",
             process_method="load_data",
-            process_args=dict(count_thres=4),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         larry_dynamical=create_dataset_config(
             source="pyrovelocity",
@@ -813,7 +815,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://storage.googleapis.com/pyrovelocity/data/larry_dynamical.h5ad",
             process_method="load_data",
-            process_args=dict(count_thres=4),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         larry_tips=create_dataset_config(
             source="pyrovelocity",
@@ -823,7 +825,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://ndownloader.figshare.com/files/37028569",
             process_method="load_data",
-            process_args=dict(count_thres=4),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         larry_mono=create_dataset_config(
             source="pyrovelocity",
@@ -833,7 +835,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://ndownloader.figshare.com/files/37028569",
             process_method="load_data",
-            process_args=dict(count_thres=4),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         larry_neu=create_dataset_config(
             source="pyrovelocity",
@@ -843,7 +845,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://ndownloader.figshare.com/files/37028575",
             process_method="load_data",
-            process_args=dict(count_thres=4),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         larry_multilineage=create_dataset_config(
             source="pyrovelocity",
@@ -853,7 +855,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://ndownloader.figshare.com/files/37028569",
             process_method="load_data",
-            process_args=dict(count_thres=4),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         pbmc10k=create_dataset_config(
             source="pyrovelocity",
@@ -863,7 +865,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://storage.googleapis.com/pyrovelocity/data/pbmc10k.h5ad",
             process_method="load_data",
-            process_args=dict(count_thres=4),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
     )
 
