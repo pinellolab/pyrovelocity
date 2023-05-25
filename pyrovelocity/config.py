@@ -534,7 +534,7 @@ def hydra_zen_compressed_configure():
 
     base = dict(
         log_level="INFO",
-        count_threshold=0,
+        count_threshold=3,
         seed=99,
     )
 
