@@ -22,6 +22,7 @@ set -x
 function run_parallel_pipeline() {
     dvc stage list --name-only |\
         grep -E "data_download*" |\
+        /usr/bin/time -v \
         xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 8 + 3)); dvc repro "$@"' --
 
     wait
@@ -29,6 +30,7 @@ function run_parallel_pipeline() {
 
     dvc stage list --name-only |\
         grep -E "preprocess*" |\
+        /usr/bin/time -v \
         xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 8 + 3)); dvc repro "$@"' --
     wait
     dvc repro preprocess
@@ -59,12 +61,14 @@ function run_parallel_pipeline() {
 
     dvc stage list --name-only |\
         grep -E "postprocess*" |\
+        /usr/bin/time -v \
         xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 8 + 3)); dvc repro "$@"' --
     wait
     dvc repro postprocess
 
     dvc stage list --name-only |\
         grep -E "summarize*" |\
+        /usr/bin/time -v \
         xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 8 + 3)); dvc repro "$@"' --
     wait
     dvc repro summarize
