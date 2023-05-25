@@ -2639,29 +2639,29 @@ stages:
       md5: 1858c8e879a72d0cbde5be01e8727af7
       size: 19548
     - path: models/larry_model2/pyrovelocity.pkl.zst
-      md5: 5411628e572ab2952f85001e6fcb8a68
-      size: 1368571204
+      md5: 9e04d6b9595bf1e246c9b7ab107722ac
+      size: 916363882
     - path: models/larry_model2/trained.h5ad
-      md5: 653fe0f530036ae62155888cb2b16289
-      size: 6327385438
+      md5: 3c3c4f5e86c01c2699bcecd3a71bdb24
+      size: 2684816079
     - path: models/larry_mono_model2/pyrovelocity.pkl.zst
-      md5: 6fc7960842938b4229da7462b3717d9c
-      size: 29734791
+      md5: 563b2292845f0b9e6efb7be3c1dce28d
+      size: 10659012
     - path: models/larry_mono_model2/trained.h5ad
-      md5: 392c7dbb36210d52c5928a85f4da7bfc
-      size: 128025936
+      md5: 25d418e8186ddbab158bf2015406101f
+      size: 25104916
     - path: models/larry_multilineage_model2/pyrovelocity.pkl.zst
-      md5: 713c587442cedf0f68ca041bbbb45484
-      size: 66381412
+      md5: c6dce321aa14c9bae803e2503d155171
+      size: 36144922
     - path: models/larry_multilineage_model2/trained.h5ad
-      md5: 77c0b115416766708c746349f324c859
-      size: 334122037
+      md5: 41207a30e9b357de5cdc6d3f2ecd6d0b
+      size: 67521149
     - path: models/larry_neu_model2/pyrovelocity.pkl.zst
-      md5: 0e106789eec7ec47e43e24b53a58825a
-      size: 25862188
+      md5: 9bf602e57152397bba9a57a724d978e6
+      size: 9345592
     - path: models/larry_neu_model2/trained.h5ad
-      md5: e368f8894ee2c7af9e9d5320523a1344
-      size: 105830236
+      md5: 47974e5f444abdf8cf01467443dc1df7
+      size: 20338202
     params:
       config.yaml:
         reports.figure2:
@@ -2680,5 +2680,5 @@ stages:
             vector_field_plot: reports/fig2/fig2_pancreas_vector_field.pdf
     outs:
     - path: reports/fig3/figure3.pdf
-      md5: 487bb06ad3efb1349652e839e1382a82
-      size: 3081492
+      md5: 5a5d6eabf2178fe9aeb808239c3e0c14
+      size: 5690236
