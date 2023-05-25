@@ -476,6 +476,8 @@ def hydra_zen_compressed_configure():
                 process_method=process_method,
                 process_args=process_args,
                 rel_path="${paths.data_processed}/" + f"{name}_processed.h5ad",
+                thresh_histogram_path="${paths.data_processed}/"
+                + f"{name}_thresh_histogram.pdf",
             ),
         )
 
@@ -503,6 +505,7 @@ def hydra_zen_compressed_configure():
                 loss_plot_path="${..path}/loss_plot.png",
                 patient_improve=0.0001,
                 patient_init=45,
+                seed="${base.seed}",
                 **custom_training_parameters,
             ),
         )
@@ -529,7 +532,11 @@ def hydra_zen_compressed_configure():
             violin_clusters_log=f"{path}/clusters_violin_log.pdf",
         )
 
-    base = dict(log_level="INFO")
+    base = dict(
+        log_level="INFO",
+        count_threshold=0,
+        seed=99,
+    )
 
     paths = dict(
         data="data",
@@ -736,7 +743,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://storage.googleapis.com/pyrovelocity/data/simulated_medium.h5ad",
             process_method="load_data",
-            process_args=dict(),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         pons=create_dataset_config(
             source="velocyto",
@@ -746,7 +753,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://storage.googleapis.com/pyrovelocity/data/oligo_lite.h5ad",
             process_method="load_data",
-            process_args=dict(),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         pancreas=create_dataset_config(
             source="scvelo",
@@ -756,7 +763,9 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad",
             process_method="load_data",
-            process_args=dict(process_cytotrace=True),
+            process_args=dict(
+                process_cytotrace=True, count_thres="${base.count_threshold}"
+            ),
         ),
         pbmc68k=create_dataset_config(
             source="scvelo",
@@ -766,7 +775,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://ndownloader.figshare.com/files/27686886",
             process_method="load_data",
-            process_args=dict(),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         larry=create_dataset_config(
             source="pyrovelocity",
@@ -776,7 +785,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://ndownloader.figshare.com/files/37028569",
             process_method="load_data",
-            process_args=dict(),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         larry_cospar=create_dataset_config(
             source="pyrovelocity",
@@ -786,7 +795,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://storage.googleapis.com/pyrovelocity/data/larry_cospar.h5ad",
             process_method="load_data",
-            process_args=dict(),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         larry_cytotrace=create_dataset_config(
             source="pyrovelocity",
@@ -796,7 +805,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://storage.googleapis.com/pyrovelocity/data/larry_cytotrace.h5ad",
             process_method="load_data",
-            process_args=dict(),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         larry_dynamical=create_dataset_config(
             source="pyrovelocity",
@@ -806,7 +815,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://storage.googleapis.com/pyrovelocity/data/larry_dynamical.h5ad",
             process_method="load_data",
-            process_args=dict(),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         larry_tips=create_dataset_config(
             source="pyrovelocity",
@@ -816,7 +825,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://ndownloader.figshare.com/files/37028569",
             process_method="load_data",
-            process_args=dict(),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         larry_mono=create_dataset_config(
             source="pyrovelocity",
@@ -826,7 +835,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://ndownloader.figshare.com/files/37028569",
             process_method="load_data",
-            process_args=dict(),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         larry_neu=create_dataset_config(
             source="pyrovelocity",
@@ -836,7 +845,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://ndownloader.figshare.com/files/37028575",
             process_method="load_data",
-            process_args=dict(),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         larry_multilineage=create_dataset_config(
             source="pyrovelocity",
@@ -846,7 +855,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://ndownloader.figshare.com/files/37028569",
             process_method="load_data",
-            process_args=dict(),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         pbmc10k=create_dataset_config(
             source="pyrovelocity",
@@ -856,7 +865,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://storage.googleapis.com/pyrovelocity/data/pbmc10k.h5ad",
             process_method="load_data",
-            process_args=dict(),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
     )
 
@@ -906,6 +915,11 @@ def hydra_zen_compressed_configure():
                 tag="fig2",
                 path="${paths.reports}/${.tag}",
                 shared_time_plot="${.path}/figure2_extras.pdf",
+            ),
+            figure3=dict(
+                tag="fig3",
+                path="${paths.reports}/${.tag}",
+                figure3="${.path}/figure3.pdf",
             ),
             figureS3=dict(
                 tag="figS3",
