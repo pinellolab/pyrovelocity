@@ -505,6 +505,7 @@ def hydra_zen_compressed_configure():
                 loss_plot_path="${..path}/loss_plot.png",
                 patient_improve=0.0001,
                 patient_init=45,
+                seed="${base.seed}",
                 **custom_training_parameters,
             ),
         )
@@ -531,7 +532,11 @@ def hydra_zen_compressed_configure():
             violin_clusters_log=f"{path}/clusters_violin_log.pdf",
         )
 
-    base = dict(log_level="INFO")
+    base = dict(
+        log_level="INFO",
+        count_threshold=0,
+        seed=99,
+    )
 
     paths = dict(
         data="data",
