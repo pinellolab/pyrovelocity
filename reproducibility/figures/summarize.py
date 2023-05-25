@@ -460,6 +460,41 @@ def cluster_violin_plots(
         )
 
 
+def plot_parameter_posterior_distributions(
+    posterior_samples,
+    adata: anndata.AnnData,
+    geneset,
+    parameter_uncertainty_plot_path: str,
+):
+    fig, ax = plt.subplots(3, 1)
+    fig.set_size_inches(18, 12)
+    for index, kinetics in enumerate(["alpha", "beta", "gamma"]):
+        print(posterior_samples[kinetics].squeeze().shape)
+        print(np.isin(adata.var_names, list(geneset)).sum())
+        df = pd.DataFrame(
+            posterior_samples[kinetics].squeeze()[
+                :, np.isin(adata.var_names, list(geneset))
+            ],
+            columns=adata.var_names[np.isin(adata.var_names, list(geneset))],
+        )
+        df_long = df.melt()
+        print(df_long.head())
+        ax1 = sns.violinplot(x="index", y="value", data=df_long, ax=ax[index])
+        ax1.set_xticklabels(ax1.get_xticklabels(), rotation=30, ha="right")
+        ax1.set_ylabel(kinetics)
+    fig.subplots_adjust(
+        hspace=0.4, wspace=0.45, left=0.08, right=0.95, top=0.9, bottom=0.15
+    )
+    for ext in ["", ".png"]:
+        fig.savefig(
+            f"{parameter_uncertainty_plot_path}{ext}",
+            facecolor=fig.get_facecolor(),
+            bbox_inches="tight",
+            edgecolor="none",
+            dpi=300,
+        )
+
+
 def plots(conf: DictConfig, logger: Logger) -> None:
     """Construct summary plots for each data set and model.
 
@@ -502,6 +537,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         fig2_part2_plot = reports_data_model_conf.fig2_part2_plot
         violin_clusters_lin = reports_data_model_conf.violin_clusters_lin
         violin_clusters_log = reports_data_model_conf.violin_clusters_log
+        parameter_uncertainty_plot_path = reports_data_model_conf.uncertainty_param_plot
 
         output_filenames = [
             dataframe_path,
@@ -653,7 +689,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             dpi=300,
         )
 
-        # volcano plot
+        # volcano plot        
         if os.path.isfile(volcano_plot):
             logger.info(f"{volcano_plot} exists")
         else:
@@ -667,6 +703,14 @@ def plots(conf: DictConfig, logger: Logger) -> None:
                 show_marginal_histograms=True,
             )
 
+            geneset = set(
+                volcano_data.sort_values("mean_mae", ascending=False)
+                .head(300)
+                .sort_values("time_correlation", ascending=False)
+                .head(50)
+                .index
+            )
+
             fig.savefig(
                 volcano_plot,
                 facecolor=fig.get_facecolor(),
@@ -674,11 +718,17 @@ def plots(conf: DictConfig, logger: Logger) -> None:
                 edgecolor="none",
                 dpi=300,
             )
-            print(
-                volcano_data.sort_values("mean_mae", ascending=False)
-                .head(300)
-                .sort_values("time_correlation", ascending=False)
-                .head(8)
+            print(geneset)
+
+        # parameter uncertainty
+        if os.path.isfile(parameter_uncertainty_plot_path):
+            logger.info(f"{parameter_uncertainty_plot_path} exists")
+        else:
+            plot_parameter_posterior_distributions(
+                    posterior_samples=posterior_samples,
+                    adata=adata,
+                    geneset=geneset,
+                    parameter_uncertainty_plot_path=parameter_uncertainty_plot_path,
             )
 
         # rainbow plot
