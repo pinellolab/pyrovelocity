@@ -206,7 +206,7 @@ def summarize_fig2_part1(
     plot_vector_field_uncertain(
         adata,
         embed_mean,
-        pca_cell_circov,
+        pca_angles_std,
         ax=ax[5],
         cbar=True,
         fig=fig,

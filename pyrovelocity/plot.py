@@ -817,6 +817,9 @@ def plot_vector_field_uncertain(
     else:
         colormap = cm.winter
 
+    print(adata.shape)
+    print(embeds_radian_or_magnitude.shape)
+
     if uncertain_measure == "angle":
         adata.obs["uncertain"] = get_posterior_sample_angle_uncertainty(
             embeds_radian_or_magnitude / np.pi * 180
@@ -2060,5 +2063,6 @@ def align_trajectory_diff(
 
     results = np.hstack(results)
     results = results[mass_index]
+    print(results.shape)
     length_filter = np.sqrt((results[:, 2:4] ** 2).sum(1)) > length_cutoff
     return results[length_filter]
