@@ -63,7 +63,7 @@ by checking that the output of which python following activation refers to the p
 You can then install a development copy with
 
 ```
-pip install --no-deps -e .[dev]
+pip install --no-deps -e .
 ```
 
 If this is successful, you will be able to

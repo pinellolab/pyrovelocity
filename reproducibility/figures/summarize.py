@@ -155,8 +155,8 @@ def summarize_fig2_part1(
     )
     ax[2].set_title("Pyro-Velocity\n", fontsize=7)
 
-    pca_cell_radians = pca_embeds_angle
-    pca_cell_circov = circvar(pca_cell_radians, axis=0)
+    pca_cell_angles = pca_embeds_angle / np.pi * 180  # degree
+    pca_angles_std = get_posterior_sample_angle_uncertainty(pca_cell_angles)
 
     cell_time_mean = posterior_time.mean(0).flatten()
     cell_time_std = posterior_time.std(0).flatten()
@@ -165,7 +165,7 @@ def summarize_fig2_part1(
     plot_vector_field_uncertain(
         adata,
         embed_mean,
-        cell_time_cov,
+        cell_time_std,
         ax=ax[3],
         cbar=True,
         fig=fig,
