@@ -267,15 +267,15 @@ def load_data(
                 print_anndata(adata)
                 copy_raw_counts(adata)
                 print_anndata(adata)
-                if count_thres:
-                    plot_high_us_genes(
-                        adata=adata,
-                        thresh_histogram_path=thresh_histogram_path,
-                        minlim_u=count_thres,
-                        minlim_s=count_thres,
-                        unspliced_layer="raw_unspliced",
-                        spliced_layer="raw_spliced",
-                    )
+                # if count_thres:
+                plot_high_us_genes(
+                    adata=adata,
+                    thresh_histogram_path=thresh_histogram_path,
+                    minlim_u=count_thres,
+                    minlim_s=count_thres,
+                    unspliced_layer="raw_unspliced",
+                    spliced_layer="raw_spliced",
+                )
                 adata.write(processed_path)
                 return adata
         elif "pbmc68k" in data:
@@ -300,22 +300,22 @@ def load_data(
             scv.pp.filter_and_normalize(
                 adata, min_shared_counts=min_shared_counts, n_top_genes=top_n
             )
-            if count_thres:
-                plot_high_us_genes(
-                    adata=adata,
-                    thresh_histogram_path=thresh_histogram_path,
-                    minlim_u=count_thres,
-                    minlim_s=count_thres,
-                    unspliced_layer="raw_unspliced",
-                    spliced_layer="raw_spliced",
-                )
-                adata = get_high_us_genes(
-                    adata,
-                    minlim_u=count_thres,
-                    minlim_s=count_thres,
-                    unspliced_layer="raw_unspliced",
-                    spliced_layer="raw_spliced",
-                )
+            # if count_thres:
+            plot_high_us_genes(
+                adata=adata,
+                thresh_histogram_path=thresh_histogram_path,
+                minlim_u=count_thres,
+                minlim_s=count_thres,
+                unspliced_layer="raw_unspliced",
+                spliced_layer="raw_spliced",
+            )
+            adata = get_high_us_genes(
+                adata,
+                minlim_u=count_thres,
+                minlim_s=count_thres,
+                unspliced_layer="raw_unspliced",
+                spliced_layer="raw_spliced",
+            )
             scv.pp.moments(adata, n_pcs=30, n_neighbors=30)
             scv.tl.recover_dynamics(adata, n_jobs=-1, use_raw=False)
             scv.tl.velocity(adata, mode="dynamical", use_raw=False)
@@ -360,22 +360,22 @@ def load_pbmc68k(
     scv.pp.remove_duplicate_cells(adata)
     adata.obsm["X_tsne"][:, 0] *= -1
     scv.pp.filter_and_normalize(adata, min_shared_counts=30, n_top_genes=2000)
-    if count_thres:
-        plot_high_us_genes(
-            adata,
-            thresh_histogram_path,
-            minlim_u=count_thres,
-            minlim_s=count_thres,
-            unspliced_layer="raw_unspliced",
-            spliced_layer="raw_spliced",
-        )
-        adata = get_high_us_genes(
-            adata,
-            minlim_u=count_thres,
-            minlim_s=count_thres,
-            unspliced_layer="raw_unspliced",
-            spliced_layer="raw_spliced",
-        )
+    # if count_thres:
+    plot_high_us_genes(
+        adata,
+        thresh_histogram_path,
+        minlim_u=count_thres,
+        minlim_s=count_thres,
+        unspliced_layer="raw_unspliced",
+        spliced_layer="raw_spliced",
+    )
+    adata = get_high_us_genes(
+        adata,
+        minlim_u=count_thres,
+        minlim_s=count_thres,
+        unspliced_layer="raw_unspliced",
+        spliced_layer="raw_spliced",
+    )
     scv.pp.moments(adata)
     scv.tl.velocity(adata, mode="stochastic")
     scv.tl.recover_dynamics(adata, n_jobs=-1)
