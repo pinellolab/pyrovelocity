@@ -83,21 +83,38 @@ stages:
             - base
             - reports.model_summary.${key}
       outs:
-        - ${item.dataframe_path}
-        - ${item.volcano_plot}
-        - ${item.rainbow_plot}
-        - ${item.vector_field_plot}
-        - ${item.rainbow_plot}.png
-        - ${item.vector_field_plot}.png
-        - ${item.shared_time_plot}
-        - ${item.fig2_part1_plot}
-        - ${item.fig2_part1_plot}.png
-        - ${item.fig2_part2_plot}
-        - ${item.fig2_part2_plot}.png
-        - ${item.violin_clusters_lin}
-        - ${item.violin_clusters_lin}.png
-        - ${item.violin_clusters_log}
-        - ${item.violin_clusters_log}.png
+        - ${item.dataframe_path}:
+            cache: true
+        - ${item.volcano_plot}:
+            cache: true
+        - ${item.rainbow_plot}:
+            cache: true
+        - ${item.vector_field_plot}:
+            cache: true
+        - ${item.rainbow_plot}.png:
+            cache: true
+        - ${item.vector_field_plot}.png:
+            cache: true
+        - ${item.shared_time_plot}:
+            cache: true
+        - ${item.fig2_part1_plot}:
+            cache: true
+        - ${item.fig2_part1_plot}.png:
+            cache: true
+        - ${item.fig2_part2_plot}:
+            cache: true
+        - ${item.fig2_part2_plot}.png:
+            cache: true
+        - ${item.violin_clusters_lin}:
+            cache: true
+        - ${item.violin_clusters_lin}.png:
+            cache: true
+        - ${item.violin_clusters_log}:
+            cache: true
+        - ${item.violin_clusters_log}.png:
+            cache: true
+        - ${item.uncertainty_param_plot}
+        - ${item.uncertainty_param_plot}.png
 
   # figureS3:
   #   cmd: python figS3/figure.py
