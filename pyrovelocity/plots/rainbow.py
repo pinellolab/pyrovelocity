@@ -1,5 +1,6 @@
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 import scvelo as scv
@@ -25,9 +26,19 @@ def rainbowplot(
 
     if genes is None:
         genes = get_genes(volcano_data, num_genes, negative)
+    number_of_genes = len(genes)
+
+    subplot_height = 1  # Set the height of each subplot
+    subplot_width = (
+        subplot_height * 2.0 * 3
+    )  # Width for each row of subplots to keep 1:1 aspect ratio
 
     if fig is None:
-        fig = create_figure()
+        fig, ax = plt.subplots(
+            number_of_genes,
+            3,
+            figsize=(subplot_width, subplot_height * number_of_genes),
+        )
 
     if scvelo_colors:
         colors = setup_scvelo_colors(adata, cell_state)
@@ -36,21 +47,15 @@ def rainbowplot(
 
     st, ut = get_posterior_samples(data, posterior_samples)
 
-    number_of_genes = len(genes)
-
-    subfigs = fig.subfigures(1, 2, wspace=0.0, width_ratios=[3, 1.5])
-
-    ax = subfigs[0].subplots(number_of_genes, 2)
-    ax_fig2 = subfigs[1].subplots(number_of_genes, 1)
-
     for n, gene in enumerate(genes):
         ress = get_data(gene, st, ut, adata, cell_state, posterior_samples)
         ax1 = ax[n, 1]
         ax2 = ax[n, 0]
-        ax3 = ax_fig2[n]
+        ax3 = ax[n, 2]
         if n == 0:
             ax1.set_title("Rainbow plot", fontsize=7)
             ax2.set_title("Phase portrait", fontsize=7)
+            ax3.set_title("Denoised spliced", fontsize=7)
         plot_gene(ax1, ress, colors, add_line)
         scatterplot(ax2, ress, colors)
         (index,) = np.where(adata.var_names == gene)
@@ -61,22 +66,14 @@ def rainbowplot(
             c=st[:, index].flatten(),
             cmap="RdBu_r",
         )
-        set_colorbar(im, ax3, labelsize=5, fig=subfigs[1], rainbow=True)
+        set_colorbar(im, ax3, labelsize=5, fig=fig, rainbow=True)
         ax3.axis("off")
         set_labels(ax1, ax2, ax3, gene, number_of_genes, ress, n)
 
     sns.despine()
-    subfigs[0].subplots_adjust(
-        hspace=0.8, wspace=1.4, left=0.32, right=0.94, top=0.92, bottom=0.12
-    )
-    subfigs[1].subplots_adjust(
-        hspace=0.8, wspace=0.4, left=0.2, right=0.7, top=0.92, bottom=0.08
-    )
-    subfigs[0].text(
-        -0.025, 0.58, "unspliced expression", size=7, rotation="vertical", va="center"
-    )
-    subfigs[0].text(
-        0.552, 0.58, "spliced expression", size=7, rotation="vertical", va="center"
+    fig.subplots_adjust(
+        hspace=0.5,
+        wspace=0.5,  # left=0.15, right=0.4, top=0.92, bottom=0.12
     )
     return fig
 
@@ -122,37 +119,55 @@ def adjust_subfigure(subfig):
 
 
 def pareto_frontier_genes(volcano_data, num_genes):
-    sorted_data = volcano_data.sort_values(
-        by=["mean_mae", "time_correlation"], ascending=[False, False]
-    )
+    volcano_data = volcano_data.loc[~volcano_data.index.str.startswith(("Rpl", "Rps"))]
+    pareto_frontier = pd.DataFrame()
 
-    pareto_frontier = sorted_data.iloc[:1]
-    for i in range(1, len(sorted_data)):
-        if (
-            sorted_data["time_correlation"].iloc[i]
-            >= pareto_frontier["time_correlation"].iloc[-1]
-        ):
-            pareto_frontier = pareto_frontier.append(sorted_data.iloc[i])
+    if len(volcano_data) < num_genes:
+        print(
+            f"\nWarning: Not enough genes in the input data.\n"
+            f"Only {len(volcano_data)} genes were found,\n"
+            f"but {num_genes} were requested.\n"
+            "Attempting to return as many as possible.\n"
+        )
 
-    if len(pareto_frontier) < num_genes:
-        additional_genes = sorted_data.loc[
-            ~sorted_data.index.isin(pareto_frontier.index)
-        ].head(num_genes - len(pareto_frontier))
-        pareto_frontier = pareto_frontier.append(additional_genes)
+    while len(pareto_frontier) < num_genes and len(volcano_data) > 0:
+        sorted_data = volcano_data.sort_values(
+            by=["mean_mae", "time_correlation"], ascending=[False, False]
+        )
+        pareto_frontier_current = sorted_data.iloc[:1]
+        for i in range(1, len(sorted_data)):
+            if (
+                sorted_data["time_correlation"].iloc[i]
+                >= pareto_frontier_current["time_correlation"].iloc[-1]
+            ):
+                pareto_frontier_current = pareto_frontier_current.append(
+                    sorted_data.iloc[i]
+                )
+
+        pareto_frontier = pareto_frontier.append(pareto_frontier_current)
+        volcano_data = volcano_data.loc[~volcano_data.index.isin(pareto_frontier.index)]
+        print(
+            f"\nFound {len(pareto_frontier_current)} genes on the current Pareto frontier:\n\n"
+            f"  {pareto_frontier_current.index.tolist()}\n\n"
+            f"Total genes found: {len(pareto_frontier)}."
+        )
 
     pareto_frontier = pareto_frontier.sort_values(
         by="time_correlation", ascending=False
     )
+
+    if len(pareto_frontier) > num_genes:
+        print(
+            f"Found more than {num_genes} genes on the Pareto frontiers. "
+            f"Returning the top {num_genes} genes."
+        )
+        pareto_frontier = pareto_frontier.head(num_genes)
 
     return pareto_frontier.index.tolist()
 
 
 def set_font_size(size: int):
     matplotlib.rcParams.update({"font.size": size})
-
-
-def create_figure():
-    return plt.figure(figsize=(5.5, 4.5))
 
 
 def get_genes(volcano_data, num_genes, negative):
@@ -245,24 +260,58 @@ def set_labels(ax1, ax2, ax3, gene, ngenes, ress, n):
         ax3.set_title("Denoised spliced", fontsize=7)
     if n == ngenes - 1:
         ax1.set_xlabel("shared time", fontsize=7)
+        ax1.set_ylabel("expression", fontsize=7)
         ax2.set_xlabel("spliced", fontsize=7)
+        ax2.set_ylabel("uspliced", fontsize=7)
     else:
         ax1.set_xlabel("")
         ax2.set_xlabel("")
-    ax1.set_ylabel("")
-    ax2.set_ylabel(gene, fontsize=7, rotation=0, labelpad=23)
-    t = [0, round(ress["cell_time"].max(), 5)]
-    t_label = ["0", "%.1E" % ress["cell_time"].max()]
-    ax1.set_xticks(t, t_label, fontsize=7)
-    t = [0, round(ress["spliced"].max(), 5)]
-    t_label = ["0", "%.1E" % ress["spliced"].max()]
-    ax1.set_yticks(t, t_label, fontsize=7)
-    t = [0, round(ress["unspliced"].max(), 5)]
-    t_label = ["0", "%.1E" % ress["unspliced"].max()]
-    ax2.set_yticks(t, t_label, fontsize=7)
-    t = [0, round(ress["spliced"].max(), 5)]
-    t_label = ["0", "%.1E" % ress["spliced"].max()]
-    ax2.set_xticks(t, t_label, fontsize=7)
+        ax1.set_ylabel("")
+        ax2.set_ylabel("")
+    ax2.text(
+        -0.5,
+        0.5,
+        gene,
+        fontsize=8,
+        weight="normal",
+        rotation=0,
+        va="center",
+        ha="right",
+        transform=ax2.transAxes,
+    )
+
+    x_ticks = [0, np.power(10, get_closest_pow_of_10(ress["cell_time"].max()))]
+    y_ticks = [0, np.power(10, get_closest_pow_of_10(ress["spliced"].max()))]
+    ax1.set_xticks(x_ticks)
+    ax1.set_yticks(y_ticks)
+    ax1.get_xaxis().set_major_formatter(
+        ticker.FuncFormatter(lambda x, _: construct_log_string(x))
+    )
+    ax1.get_yaxis().set_major_formatter(
+        ticker.FuncFormatter(lambda x, _: construct_log_string(x))
+    )
+    ax1.tick_params(axis="both", which="major", labelsize=7)
+
+    x_ticks = [0, np.power(10, get_closest_pow_of_10(ress["spliced"].max()))]
+    y_ticks = [0, np.power(10, get_closest_pow_of_10(ress["unspliced"].max()))]
+    ax2.set_xticks(x_ticks)
+    ax2.set_yticks(y_ticks)
+    ax2.get_xaxis().set_major_formatter(
+        ticker.FuncFormatter(lambda x, _: construct_log_string(x))
+    )
+    ax2.get_yaxis().set_major_formatter(
+        ticker.FuncFormatter(lambda x, _: construct_log_string(x))
+    )
+    ax2.tick_params(axis="both", which="major", labelsize=7)
+
+
+def get_closest_pow_of_10(value):
+    return np.floor(np.log10(value))
+
+
+def construct_log_string(x):
+    str_val = f"$10^{{{int(np.log10(x))}}}$" if x > 0 else "0"
+    return rf"{str_val}"
 
 
 def scatterplot(ax2, ress, colors):
