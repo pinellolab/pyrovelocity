@@ -458,6 +458,9 @@ def compute_volcano_data(
     return volcano_data, genes
 
 
+import matplotlib.gridspec as gridspec
+
+
 def plot_gene_ranking(
     posterior_samples,
     adata,
@@ -470,7 +473,12 @@ def plot_gene_ranking(
     adjust_text_bool=False,
     show_marginal_histograms=False,
 ) -> None:
-    if "u" in posterior_samples[0]:
+    if selected_genes is not None:
+        assert isinstance(selected_genes, (tuple, list))
+        assert isinstance(selected_genes[0], str)
+        volcano_data = posterior_samples[0]["gene_ranking"]
+        genes = selected_genes
+    elif "u" in posterior_samples[0]:
         volcano_data, genes = compute_volcano_data(
             posterior_samples, adata, time_correlation_with, selected_genes, negative
         )
@@ -490,13 +498,20 @@ def plot_gene_ranking(
                 volcano_data["time_correlation"], bins="auto", density=False
             )
             mean_mae_hist, mean_mae_bins = np.histogram(
-                volcano_data["mean_mae"], bins=50, density=False
+                volcano_data["mean_mae"], bins="auto", density=False
             )
 
             fig = plt.figure(figsize=(10, 10))
-            ax_scatter = plt.subplot2grid((3, 3), (1, 0), colspan=2, rowspan=2)
-            ax_hist_x = plt.subplot2grid((3, 3), (0, 0), colspan=2)
-            ax_hist_y = plt.subplot2grid((3, 3), (1, 2), rowspan=2)
+            # ax_scatter = plt.subplot2grid((3, 3), (1, 0), colspan=2, rowspan=2)
+            # ax_hist_x = plt.subplot2grid((3, 3), (0, 0), colspan=2)
+            # ax_hist_y = plt.subplot2grid((3, 3), (1, 2), rowspan=2)
+            gs = gridspec.GridSpec(
+                3, 3, width_ratios=[2, 2, 1], height_ratios=[1, 2, 2]
+            )
+            ax_scatter = plt.subplot(gs[1:, :2])
+            ax_hist_x = plt.subplot(gs[0, :2])
+            ax_hist_y = plt.subplot(gs[1:, 2])
+
             # time histogram
             ax_hist_x.bar(
                 time_corr_bins[:-1],
@@ -1330,26 +1345,7 @@ def us_rainbowplot(
                 s=10,
             )
 
-        # ax_twin = ax1.twinx()
-        # sns.scatterplot(x='cell_time', y='unspliced', data=ress, alpha=0.4, s=25,
-        #                edgecolor="none", palette='bright', hue='cell_type', ax=ax_twin, legend=False, marker="*")
-        # ax_twin.set_ylabel("")
-        # ax1.set_ylabel("")
-        # ax1.set_xlabel("")
-        # ax1.tick_params(labelbottom=False)
-        # ax_twin.tick_params(labelbottom=False)
-        # ax_twin.set_xlabel("")
         ax2 = ax[n, 0]
-        ##divider = make_axes_locatable(ax2)
-        ##cax = divider.append_axes('right', size='5%', pad=0.05)
-        # ax2.set_ylabel("")
-
-        ##ress = pd.DataFrame({"cell_time": posterior_samples['cell_time'].mean(0).flatten(),
-        ##                     "cell_type": adata.obs[cell_state].values,
-        ##                     "unspliced": pos_u[:, index].flatten(),
-        ##                     "spliced": pos_s[:, index].flatten()})
-        ##im = ax2.scatter(pos_s[:, index], pos_u[:, index], c=ress.cell_time, s=25, cmap = 'seismic')
-        ##fig.colorbar(im, cax=cax, orientation='vertical')
         ax2.set_title(gene)
         ax2.set_ylabel("")
         ax2.set_xlabel("")
@@ -1393,7 +1389,6 @@ def us_rainbowplot(
         ax2.set_xlabel("spliced")
         ax2.set_title(gene)
 
-        # ax_twin.tick_params(labelbottom=False)
     plt.subplots_adjust(hspace=0.8, wspace=0.6, left=0.1, right=0.91)
     return fig
 
@@ -1421,7 +1416,6 @@ def rainbowplot(
             .head(num_genes)
             .index
         )
-    # adata.layers["pyro_spliced"] = posterior_samples[data[0]].mean(0)
     if fig is None:
         fig = plt.figure(figsize=(5.5, 4.5))
 
@@ -1453,8 +1447,6 @@ def rainbowplot(
     ax_fig2 = subfigs[1].subplots(len(genes), 1)
 
     n = 0
-    # st = posterior_samples[data[0]].mean(0)
-    # ut = posterior_samples[data[1]].mean(0)
 
     if (data[0] in posterior_samples) and (data[1] in posterior_samples):
         st = posterior_samples[data[0]].mean(0).squeeze()
@@ -1506,7 +1498,7 @@ def rainbowplot(
                 )
 
         if n == len(genes) - 1:
-            ax1.set_xlabel("Shared time", fontsize=7)
+            ax1.set_xlabel("shared time", fontsize=7)
         else:
             ax1.set_xlabel("")
         ax1.set_ylabel("")
@@ -1546,7 +1538,6 @@ def rainbowplot(
         ax2.set_yticks(t, t_label, fontsize=7)
         t = [0, round(ress["spliced"].max(), 5)]
         t_label = ["0", "%.1E" % ress["spliced"].max()]
-        # ax2.ticklabel_format(style='sci', axis='both')
         ax2.set_xticks(t, t_label, fontsize=7)
         im = ax3.scatter(
             adata.obsm[f"X_{basis}"][:, 0],
@@ -1570,7 +1561,6 @@ def rainbowplot(
     subfigs[0].text(
         -0.025, 0.58, "unspliced expression", size=7, rotation="vertical", va="center"
     )
-    # subfigs[0].text(0, 0.97, "f", fontsize=7, fontweight="bold", va="top", ha="right")
     subfigs[0].text(
         0.552, 0.58, "spliced expression", size=7, rotation="vertical", va="center"
     )
