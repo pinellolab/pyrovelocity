@@ -85,6 +85,7 @@ stages:
       outs:
         - ${item.dataframe_path}
         - ${item.volcano_plot}
+        - ${item.volcano_plot}.png
         - ${item.rainbow_plot}
         - ${item.vector_field_plot}
         - ${item.rainbow_plot}.png
@@ -98,6 +99,8 @@ stages:
         - ${item.violin_clusters_lin}.png
         - ${item.violin_clusters_log}
         - ${item.violin_clusters_log}.png
+        - ${item.uncertainty_param_plot}
+        - ${item.uncertainty_param_plot}.png
 
   # figureS3:
   #   cmd: python figS3/figure.py
