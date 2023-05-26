@@ -1,12 +1,12 @@
 {
-    "artifact_uri": "mlflow-artifacts:/1a741690552b410eb9c7ba642cf21e2d/2decc60c16b4426db9b88141c7178d58/artifacts",
-    "end_time": 1685008064146,
+    "artifact_uri": "mlflow-artifacts:/1a741690552b410eb9c7ba642cf21e2d/93cffa54420b4d72bb01d13c85830f5c/artifacts",
+    "end_time": 1685094581359,
     "experiment_id": "0",
     "lifecycle_stage": "active",
-    "run_id": "2decc60c16b4426db9b88141c7178d58",
-    "run_name": "simulate_model2-2decc60",
-    "run_uuid": "2decc60c16b4426db9b88141c7178d58",
-    "start_time": 1685007998910,
+    "run_id": "93cffa54420b4d72bb01d13c85830f5c",
+    "run_name": "simulate_model2-93cffa5",
+    "run_uuid": "93cffa54420b4d72bb01d13c85830f5c",
+    "start_time": 1685094532086,
     "status": "FINISHED",
     "user_id": "root"
 }
