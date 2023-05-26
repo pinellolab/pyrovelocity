@@ -24,6 +24,8 @@ from statannotations.Annotator import Annotator
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.data import load_data
 from pyrovelocity.io.compressedpickle import CompressedPickle
+
+# from pyrovelocity.plot import rainbowplot
 from pyrovelocity.plot import compute_mean_vector_field
 from pyrovelocity.plot import compute_volcano_data
 from pyrovelocity.plot import get_posterior_sample_angle_uncertainty
@@ -31,9 +33,10 @@ from pyrovelocity.plot import plot_arrow_examples
 from pyrovelocity.plot import plot_gene_ranking
 from pyrovelocity.plot import plot_posterior_time
 from pyrovelocity.plot import plot_vector_field_uncertain
-from pyrovelocity.plot import rainbowplot
 from pyrovelocity.plot import us_rainbowplot
 from pyrovelocity.plot import vector_field_uncertainty
+from pyrovelocity.plots.rainbow import pareto_frontier_genes
+from pyrovelocity.plots.rainbow import rainbowplot
 from pyrovelocity.utils import anndata_counts_to_df
 from pyrovelocity.utils import get_pylogger
 from pyrovelocity.utils import mae_evaluate
@@ -554,6 +557,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             rainbow_plot,
             vector_field_plot,
             shared_time_plot,
+            parameter_uncertainty_plot_path,
         ]
         if all(os.path.isfile(f) for f in output_filenames):
             logger.info(
@@ -563,7 +567,6 @@ def plots(conf: DictConfig, logger: Logger) -> None:
 
         logger.info(f"Loading trained data: {trained_data_path}")
         adata = scv.read(trained_data_path)
-        # print_anndata(adata)
 
         logger.info(f"Loading pyrovelocity data: {pyrovelocity_data_path}")
         posterior_samples = CompressedPickle.load(pyrovelocity_data_path)
@@ -594,7 +597,6 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         print(posterior_samples.keys())
 
         vector_field_basis = data_model_conf.vector_field_parameters.basis
-        # print(vector_field_basis)
 
         cell_type = data_model_conf.training_parameters.cell_state
 
@@ -658,86 +660,86 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         adata.obs["shared_time_uncertain"] = cell_time_std
         adata.obs["shared_time_mean"] = cell_time_mean
 
-        fig, ax = plt.subplots(1, 3)
-        fig.set_size_inches(9.2, 2.6)
-        ax = ax.flatten()
-        ax_cb = scv.pl.scatter(
-            adata,
-            c="shared_time_mean",
-            ax=ax[0],
-            show=False,
-            cmap="inferno",
-            fontsize=7,
-            colorbar=True,
-        )
-        ax_cb = scv.pl.scatter(
-            adata,
-            c="shared_time_uncertain",
-            ax=ax[1],
-            show=False,
-            cmap="inferno",
-            fontsize=7,
-            colorbar=True,
-        )
-        select = adata.obs["shared_time_uncertain"] > np.quantile(
-            adata.obs["shared_time_uncertain"], 0.9
-        )
-        sns.kdeplot(
-            adata.obsm[f"X_{vector_field_basis}"][:, 0][select],
-            adata.obsm[f"X_{vector_field_basis}"][:, 1][select],
-            ax=ax[1],
-            levels=3,
-            fill=False,
-        )
-        ax[2].hist(cell_time_std / cell_time_mean, bins=100)
-        fig.savefig(
-            shared_time_plot,
-            facecolor=fig.get_facecolor(),
-            bbox_inches="tight",
-            edgecolor="none",
-            dpi=300,
-        )
-
-        # volcano plot        
-        if os.path.isfile(volcano_plot):
-            logger.info(f"{volcano_plot} exists")
+        if os.path.isfile(shared_time_plot):
+            logger.info(f"{shared_time_plot} exists")
         else:
-            logger.info(f"Generating figure: {volcano_plot}")
-            # fig, ax = plt.subplots()
-
-            volcano_data, fig = plot_gene_ranking(
-                [posterior_samples],
-                [adata],
-                time_correlation_with="st",
-                show_marginal_histograms=True,
+            fig, ax = plt.subplots(1, 3)
+            fig.set_size_inches(9.2, 2.6)
+            ax = ax.flatten()
+            ax_cb = scv.pl.scatter(
+                adata,
+                c="shared_time_mean",
+                ax=ax[0],
+                show=False,
+                cmap="inferno",
+                fontsize=7,
+                colorbar=True,
             )
-
-            geneset = set(
-                volcano_data.sort_values("mean_mae", ascending=False)
-                .head(300)
-                .sort_values("time_correlation", ascending=False)
-                .head(50)
-                .index
+            ax_cb = scv.pl.scatter(
+                adata,
+                c="shared_time_uncertain",
+                ax=ax[1],
+                show=False,
+                cmap="inferno",
+                fontsize=7,
+                colorbar=True,
             )
-
+            select = adata.obs["shared_time_uncertain"] > np.quantile(
+                adata.obs["shared_time_uncertain"], 0.9
+            )
+            sns.kdeplot(
+                adata.obsm[f"X_{vector_field_basis}"][:, 0][select],
+                adata.obsm[f"X_{vector_field_basis}"][:, 1][select],
+                ax=ax[1],
+                levels=3,
+                fill=False,
+            )
+            ax[2].hist(cell_time_std / cell_time_mean, bins=100)
             fig.savefig(
-                volcano_plot,
+                shared_time_plot,
                 facecolor=fig.get_facecolor(),
                 bbox_inches="tight",
                 edgecolor="none",
                 dpi=300,
             )
-            print(geneset)
+
+        volcano_data = posterior_samples["gene_ranking"]
+        geneset = pareto_frontier_genes(volcano_data, 8)
+
+        # volcano plot
+        if os.path.isfile(volcano_plot):
+            logger.info(f"{volcano_plot} exists")
+        else:
+            logger.info(f"Generating figure: {volcano_plot}")
+
+            volcano_data, fig = plot_gene_ranking(
+                [posterior_samples],
+                [adata],
+                selected_genes=geneset,
+                time_correlation_with="st",
+                show_marginal_histograms=True,
+            )
+
+            fig.subplots_adjust(wspace=0.1, hspace=0.1)
+            for ext in ["", ".png"]:
+                fig.savefig(
+                    f"{volcano_plot}{ext}",
+                    facecolor=fig.get_facecolor(),
+                    bbox_inches="tight",
+                    edgecolor="none",
+                    dpi=300,
+                )
 
         # parameter uncertainty
         if os.path.isfile(parameter_uncertainty_plot_path):
             logger.info(f"{parameter_uncertainty_plot_path} exists")
         else:
+            logger.info(f"Generating figure: {parameter_uncertainty_plot_path}")
             plot_parameter_posterior_distributions(
-                    posterior_samples=posterior_samples,
-                    adata=adata,
-                    geneset=geneset,
-                    parameter_uncertainty_plot_path=parameter_uncertainty_plot_path,
+                posterior_samples=posterior_samples,
+                adata=adata,
+                geneset=geneset,
+                parameter_uncertainty_plot_path=parameter_uncertainty_plot_path,
             )
 
         # rainbow plot
@@ -745,17 +747,16 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             logger.info(f"{rainbow_plot} exists")
         else:
             logger.info(f"Generating figure: {rainbow_plot}")
-            fig = us_rainbowplot(
-                volcano_data.sort_values("mean_mae", ascending=False)
-                .head(300)
-                .sort_values("time_correlation", ascending=False)
-                .head(5)
-                .index,
-                adata,
-                posterior_samples,
+            fig = rainbowplot(
+                volcano_data=volcano_data,
+                adata=adata,
+                posterior_samples=posterior_samples,
+                genes=geneset,
                 data=["st", "ut"],
+                basis=vector_field_basis,
                 cell_state=cell_state,
             )
+
             for ext in ["", ".png"]:
                 fig.savefig(
                     f"{rainbow_plot}{ext}",
@@ -772,7 +773,6 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             logger.info(f"Generating figure: {vector_field_plot}")
             fig, ax = plt.subplots()
 
-            # embed_mean = plot_mean_vector_field(posterior_samples, adata, ax=ax)
             scv.pl.velocity_embedding_grid(
                 adata,
                 basis=vector_field_basis,
