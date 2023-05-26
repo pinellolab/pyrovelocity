@@ -893,6 +893,11 @@ def hydra_zen_compressed_configure():
                 pons_model2=create_reports_config("pons", 2),
                 pbmc10k_model2=create_reports_config("pbmc10k", 2),
                 larry_tips_model2=create_reports_config("larry_tips", 2),
+                larry_mono_model2=create_reports_config("larry_mono", 2),
+                larry_neu_model2=create_reports_config("larry_neu", 2),
+                larry_multilineage_model2=create_reports_config(
+                    "larry_multilineage", 2
+                ),
                 larry_model2=create_reports_config("larry", 2),
             ),
             figure2=dict(
