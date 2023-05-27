@@ -2636,7 +2636,7 @@ stages:
           derived:
             process_method: load_data
             process_args:
-              count_thres: 0
+              count_thres: 5
             rel_path: data/processed/larry_dynamical_processed.h5ad
             thresh_histogram_path: data/processed/larry_dynamical_thresh_histogram.pdf
     outs:
@@ -2644,11 +2644,11 @@ stages:
       md5: d9671e0b9076f3f9f0697494a80aa67e
       size: 5390277128
     - path: data/processed/larry_dynamical_thresh_histogram.pdf
-      md5: 7bd17183d5c54b78a78bab1e4efa2585
-      size: 40301
+      md5: d3a9defd31414651a28cea817645614c
+      size: 41612
     - path: data/processed/larry_dynamical_thresh_histogram.pdf.png
-      md5: 5d0ccba965f1d9e65bf6807e0276df47
-      size: 129830
+      md5: f08f58e62a971ad387364d32248b2c1f
+      size: 126236
   summarize@larry_model2:
     cmd: /usr/bin/time -v python summarize.py train_models=[larry_model2]
     deps:
