@@ -1,12 +1,12 @@
 {
-    "artifact_uri": "mlflow-artifacts:/1a741690552b410eb9c7ba642cf21e2d/886e853745e94484a873458877f78dae/artifacts",
-    "end_time": 1685000703048,
+    "artifact_uri": "mlflow-artifacts:/1a741690552b410eb9c7ba642cf21e2d/2f753c01296f41dd856429c79da09523/artifacts",
+    "end_time": 1685088168251,
     "experiment_id": "0",
     "lifecycle_stage": "active",
-    "run_id": "886e853745e94484a873458877f78dae",
-    "run_name": "pancreas_model2-886e853",
-    "run_uuid": "886e853745e94484a873458877f78dae",
-    "start_time": 1685000149315,
+    "run_id": "2f753c01296f41dd856429c79da09523",
+    "run_name": "pancreas_model2-2f753c0",
+    "run_uuid": "2f753c01296f41dd856429c79da09523",
+    "start_time": 1685087938487,
     "status": "FINISHED",
     "user_id": "root"
 }
