@@ -73,6 +73,7 @@ jobs:
   pipeline:
     needs: deploy
     runs-on: [self-hosted, cml-gpu]
+    timeout-minutes: 1440
     container:
       image: ghcr.io/pinellolab/pyrovelocity:master
       options: --gpus all
