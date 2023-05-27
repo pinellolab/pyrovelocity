@@ -24,8 +24,6 @@ from statannotations.Annotator import Annotator
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.data import load_data
 from pyrovelocity.io.compressedpickle import CompressedPickle
-
-# from pyrovelocity.plot import rainbowplot
 from pyrovelocity.plot import compute_mean_vector_field
 from pyrovelocity.plot import compute_volcano_data
 from pyrovelocity.plot import get_posterior_sample_angle_uncertainty
@@ -33,10 +31,10 @@ from pyrovelocity.plot import plot_arrow_examples
 from pyrovelocity.plot import plot_gene_ranking
 from pyrovelocity.plot import plot_posterior_time
 from pyrovelocity.plot import plot_vector_field_uncertain
+from pyrovelocity.plot import rainbowplot
 from pyrovelocity.plot import us_rainbowplot
 from pyrovelocity.plot import vector_field_uncertainty
 from pyrovelocity.plots.rainbow import pareto_frontier_genes
-from pyrovelocity.plots.rainbow import rainbowplot
 from pyrovelocity.utils import anndata_counts_to_df
 from pyrovelocity.utils import get_pylogger
 from pyrovelocity.utils import mae_evaluate
@@ -483,7 +481,7 @@ def plot_parameter_posterior_distributions(
             columns=adata.var_names[np.isin(adata.var_names, list(geneset))],
         )
         df = df.apply(lambda x: x - x.mean())
-        df_long = df.melt()
+        df_long = df.melt(var_name="index", value_name="value")
         print(df_long.head())
         df_long["index"] = pd.Categorical(
             df_long["index"], categories=geneset, ordered=True
@@ -567,6 +565,8 @@ def plots(conf: DictConfig, logger: Logger) -> None:
 
         logger.info(f"Loading trained data: {trained_data_path}")
         adata = scv.read(trained_data_path)
+        # gene_mapping = {"1100001G20Rik": "Wfdc21"}
+        # adata = rename_anndata_genes(adata, gene_mapping)
 
         logger.info(f"Loading pyrovelocity data: {pyrovelocity_data_path}")
         posterior_samples = CompressedPickle.load(pyrovelocity_data_path)
@@ -704,7 +704,11 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             )
 
         volcano_data = posterior_samples["gene_ranking"]
-        geneset = pareto_frontier_genes(volcano_data, 8)
+        number_of_marker_genes = min(
+            max(int(len(volcano_data) * 0.1), 4), 20, len(volcano_data)
+        )
+        print(f"Searching for {number_of_marker_genes} marker genes")
+        geneset = pareto_frontier_genes(volcano_data, number_of_marker_genes)
 
         # volcano plot
         if os.path.isfile(volcano_plot):
@@ -743,6 +747,8 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             )
 
         # rainbow plot
+        from pyrovelocity.plots.rainbow import rainbowplot
+
         if os.path.isfile(rainbow_plot):
             logger.info(f"{rainbow_plot} exists")
         else:
@@ -797,6 +803,32 @@ def plots(conf: DictConfig, logger: Logger) -> None:
                     edgecolor="none",
                     dpi=300,
                 )
+
+
+def rename_anndata_genes(adata, gene_mapping):
+    """
+    Renames genes in an AnnData object according to a dictionary mapping.
+
+    Parameters:
+    -----------
+    adata: anndata.AnnData
+        The AnnData object.
+    gene_mapping: dict
+        A dictionary containing mappings of old gene names (keys) to new gene names (values).
+
+    Returns:
+    -------
+    adata: anndata.AnnData
+        The AnnData object with renamed genes.
+    """
+
+    var_names = adata.var_names.tolist()
+    var_names = [
+        gene_mapping[name] if name in gene_mapping else name for name in var_names
+    ]
+    adata.var_names = var_names
+
+    return adata
 
 
 @hydra.main(version_base="1.2", config_path=".", config_name="config.yaml")

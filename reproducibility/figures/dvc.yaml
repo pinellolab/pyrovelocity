@@ -73,7 +73,7 @@ stages:
   summarize:
     foreach: ${reports.model_summary}
     do:
-      cmd: python summarize.py train_models=[${key}]
+      cmd: /usr/bin/time -v python summarize.py train_models=[${key}]
       deps:
         - summarize.py
         - ${item.trained_data_path}
@@ -87,8 +87,8 @@ stages:
         - ${item.volcano_plot}
         - ${item.volcano_plot}.png
         - ${item.rainbow_plot}
-        - ${item.vector_field_plot}
         - ${item.rainbow_plot}.png
+        - ${item.vector_field_plot}
         - ${item.vector_field_plot}.png
         - ${item.shared_time_plot}
         - ${item.fig2_part1_plot}
