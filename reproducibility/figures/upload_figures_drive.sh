@@ -67,6 +67,10 @@ cp "dvc.lock" "dvc.lock.txt"
 rclone copy "dvc.lock.txt" "${gdrive_name}:${gdrive_folder}/"
 rm "dvc.lock.txt"
 
+cp "config.yaml" "config.yaml.txt"
+rclone copy "config.yaml.txt" "${gdrive_name}:${gdrive_folder}/"
+rm "config.yaml.txt"
+
 dvc_tracked_files=$(dvc list --dvc-only -R .)
 for file in $dvc_tracked_files; do
   du -sh "$file"
