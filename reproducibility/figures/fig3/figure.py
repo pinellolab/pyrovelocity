@@ -284,7 +284,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     cs.settings.set_figure_params(
         format="png", figsize=[4, 3.5], dpi=75, fontsize=14, pointsize=2
     )
-    figure3_plot_name = conf.reports.figure3.figure3
+    figure3_plot_name = conf.reports.figure3.figure3_pdf
 
     pyrovelocity_larry_data_path = (
         conf.model_training.larry_model2.pyrovelocity_data_path
