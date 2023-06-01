@@ -98,7 +98,11 @@ def plots(
     fig.set_size_inches(15, 3.5)
     sns.barplot(data=cell_uncertainties_metrics, x='dataset', y='rayleigh_umap_angles_test', ax=ax[0])
     sns.barplot(data=cell_uncertainties_metrics, x='dataset', y='rayleigh_pca_angles_test', ax=ax[1])
-    sns.boxplot(data=global_uncertainties_aucs, x='dataset', y='macro_aucs', ax=ax[2])
+
+    print(global_uncertainties_aucs.groupby('dataset').median())
+    grouped_index = global_uncertainties_aucs.groupby('dataset').median().sort_values(by='macro_aucs').index
+    print(grouped_index)
+    sns.boxplot(data=global_uncertainties_aucs, x='dataset', y='macro_aucs', ax=ax[2], order=grouped_index)
     fig.autofmt_xdate(rotation=45)
     fig.savefig(
         fig_name,
@@ -131,7 +135,7 @@ def main(conf: DictConfig) -> None:
             f"  see contents of: {conf.reports.figureS2_extras.path}\n"
         )
     else:
-        for fig_name in [confS2.violin_plots_other_lin, confS2.violin_plots_larry_lin]:
+        for fig_name in [confS2.violin_plots_other_lin]:
             plots(
                 conf,
                 logger,

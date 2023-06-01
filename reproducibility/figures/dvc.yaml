@@ -120,7 +120,6 @@ stages:
           - reports.figureS2
     outs:
       - ${reports.figureS2.violin_plots_other_lin}
-      - ${reports.figureS2.violin_plots_larry_lin}
 
   # figureS3:
   #   cmd: python figS3/figure.py

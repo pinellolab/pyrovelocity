@@ -3097,8 +3097,8 @@ stages:
     cmd: python figS2/figure.py train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
     deps:
     - path: figS2/figure.py
-      md5: ba4ba02261553a8f53034b4bc4bfce2b
-      size: 5176
+      md5: 6659a338c8c72cf4aa799d7707fb7894
+      size: 5366
     - path: models/larry_model2/pyrovelocity.pkl.zst
       md5: 07aabc2f0e592483cb3268ca1bf73675
       size: 1368569189
@@ -3132,11 +3132,7 @@ stages:
           tag: figS2
           path: reports/figS2
           violin_plots_other_lin: reports/figS2/figureS2_other_lin.pdf
-          violin_plots_larry_lin: reports/figS2/figureS2_larry_lin.pdf
     outs:
-    - path: reports/figS2/figureS2_larry_lin.pdf
-      md5: 5810a854c370e226830822ed70f4f15f
-      size: 16072
     - path: reports/figS2/figureS2_other_lin.pdf
-      md5: 9d09ba8e00ee35b45b095cc7acf5deb4
-      size: 16072
+      md5: 2909b97543f839bfc4772ec61d1285d4
+      size: 16067

@@ -769,7 +769,6 @@ reports:
     tag: figS2
     path: reports/figS2
     violin_plots_other_lin: reports/figS2/figureS2_other_lin.pdf
-    violin_plots_larry_lin: reports/figS2/figureS2_larry_lin.pdf
     #figureS2_extras:
     #  tag: figS2
     #  path: reports/figS2
