@@ -54,7 +54,7 @@ def plots(
     rayleigh_pca_angles_test = []
     multiclass_macro_aucs_test_all_models = []
     macro_labels = []
-    sample_size = 2
+    sample_size = 30
 
     for data_model in conf.train_models:
         ##################
@@ -99,7 +99,7 @@ def plots(
     print(len(macro_labels))
     print(len(multiclass_macro_aucs_test_all_models))
     print(multiclass_macro_aucs_test_all_models)
-    global_uncertainties_aucs = pd.DataFrame({"dataset": macro_labels, 'macro_aucs': multiclass_macro_aucs_test_all_models})
+    global_uncertainties_aucs = pd.DataFrame({"dataset": macro_labels, 'f1_macro': multiclass_macro_aucs_test_all_models})
     cell_uncertainties_metrics = pd.DataFrame({"dataset": conf.train_models, "rayleigh_umap_angles_test": rayleigh_umap_angles_test, "rayleigh_pca_angles_test":rayleigh_pca_angles_test})
     fig, ax = plt.subplots(1, 3)
     fig.set_size_inches(15, 3.5)
@@ -107,9 +107,9 @@ def plots(
     sns.barplot(data=cell_uncertainties_metrics, x='dataset', y='rayleigh_pca_angles_test', ax=ax[1])
 
     print(global_uncertainties_aucs.groupby('dataset').median())
-    grouped_index = global_uncertainties_aucs.groupby('dataset').median().sort_values(by='macro_aucs').index
+    grouped_index = global_uncertainties_aucs.groupby('dataset').median().sort_values(by='f1_macro').index
     print(grouped_index)
-    sns.boxplot(data=global_uncertainties_aucs, x='dataset', y='macro_aucs', ax=ax[2], order=grouped_index)
+    sns.boxplot(data=global_uncertainties_aucs, x='dataset', y='f1_macro', ax=ax[2], order=grouped_index)
     fig.autofmt_xdate(rotation=45)
     fig.savefig(
         fig_name,
