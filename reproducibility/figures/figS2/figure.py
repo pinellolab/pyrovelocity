@@ -32,6 +32,7 @@ from pyrovelocity.utils import get_pylogger
 from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import LabelEncoder, LabelBinarizer
 from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import cross_val_score
 
 
 def plots(
@@ -53,7 +54,7 @@ def plots(
     rayleigh_pca_angles_test = []
     multiclass_macro_aucs_test_all_models = []
     macro_labels = []
-    sample_size = 30
+    sample_size = 2
 
     for data_model in conf.train_models:
         ##################
@@ -79,19 +80,25 @@ def plots(
         for sample in range(sample_size):
             # le = LabelBinarizer()
             le = LabelEncoder()
-            lr = LogisticRegression()
             y_sample = le.fit_transform(adata.obs[cell_state].values)
-            x_all = posterior_samples["cell_time"][sample]
-            y_score = lr.fit(x_all, y_sample).predict_proba(x_all)
 
-            # TODO: cross validation
-            macro_roc_auc_ovr = roc_auc_score(y_sample, y_score, multi_class="ovr", average="macro")
-            multiclass_macro_aucs_test.append(macro_roc_auc_ovr)
+            lr = LogisticRegression(random_state=42, C=1.0, penalty=None, max_iter=100)
+            x_all = posterior_samples["cell_time"][sample]
+            # y_score = lr.fit(x_all, y_sample).predict_proba(x_all)
+
+            # single test
+            # macro_roc_auc_ovr = roc_auc_score(y_sample, y_score, multi_class="ovr", average="macro")
+            # multiclass_macro_aucs_test.append(macro_roc_auc_ovr)
+
+            # cross validation test
+            macro_roc_auc_ovr_crossval = cross_val_score(lr, x_all, y_sample, cv=5, scoring='f1_macro')
+            multiclass_macro_aucs_test.append(np.mean(macro_roc_auc_ovr_crossval))
         macro_labels += [data_model] * sample_size
         multiclass_macro_aucs_test_all_models += multiclass_macro_aucs_test
 
     print(len(macro_labels))
     print(len(multiclass_macro_aucs_test_all_models))
+    print(multiclass_macro_aucs_test_all_models)
     global_uncertainties_aucs = pd.DataFrame({"dataset": macro_labels, 'macro_aucs': multiclass_macro_aucs_test_all_models})
     cell_uncertainties_metrics = pd.DataFrame({"dataset": conf.train_models, "rayleigh_umap_angles_test": rayleigh_umap_angles_test, "rayleigh_pca_angles_test":rayleigh_pca_angles_test})
     fig, ax = plt.subplots(1, 3)
