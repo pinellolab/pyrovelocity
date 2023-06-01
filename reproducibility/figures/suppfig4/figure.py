@@ -3,32 +3,32 @@ import os
 import pickle
 from logging import Logger
 from pathlib import Path
-import cospar as cs
 
+import cospar as cs
 import hydra
 import matplotlib.pyplot as plt
-from scipy.spatial import distance
-from scipy.stats import spearmanr
 import numpy as np
 import pandas as pd
 import scvelo as scv
 import seaborn as sns
 from omegaconf import DictConfig
+from scipy.spatial import distance
+from scipy.stats import spearmanr
+from scvelo.plotting.velocity_embedding_grid import default_arrow
 
 from pyrovelocity.config import print_config_tree
+from pyrovelocity.data import load_larry
 from pyrovelocity.io.compressedpickle import CompressedPickle
+from pyrovelocity.plot import align_trajectory_diff
+from pyrovelocity.plot import get_clone_trajectory
+from pyrovelocity.plot import get_posterior_sample_angle_uncertainty
 from pyrovelocity.plot import plot_arrow_examples
 from pyrovelocity.plot import plot_gene_ranking
 from pyrovelocity.plot import plot_posterior_time
+from pyrovelocity.plot import plot_vector_field_uncertain
 from pyrovelocity.plot import rainbowplot
+from pyrovelocity.plot import set_colorbar
 from pyrovelocity.utils import get_pylogger
-from pyrovelocity.data import load_larry
-
-from scvelo.plotting.velocity_embedding_grid import default_arrow
-from pyrovelocity.plot import align_trajectory_diff
-from pyrovelocity.plot import get_clone_trajectory
-from pyrovelocity.plot import plot_posterior_time, set_colorbar
-from pyrovelocity.plot import plot_vector_field_uncertain, get_posterior_sample_angle_uncertainty
 
 
 """Loads trained figure S4 data and produces figure S4.
@@ -87,10 +87,10 @@ def plots(conf: DictConfig, logger: Logger) -> None:
 
     # raw data
     adata = load_larry()
-    adata_input_all = scv.read(trained_larry_data_path) #pyro-velocity
-    adata_input_vel = scv.read(larry_dynamical_data_path) #scvelo
-    adata_cospar = scv.read(larry_cospar_data_path) #cospar
-    adata_cytotrace = scv.read(larry_cytotrace_data_path) #cytotrace
+    adata_input_all = scv.read(trained_larry_data_path)  # pyro-velocity
+    adata_input_vel = scv.read(larry_dynamical_data_path)  # scvelo
+    adata_cospar = scv.read(larry_cospar_data_path)  # cospar
+    adata_cytotrace = scv.read(larry_cytotrace_data_path)  # cytotrace
 
     cs.pl.fate_potency(
         adata_cospar,
@@ -110,7 +110,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         color="state_info",
         show=False,
     )
-        
+
     print_config_tree(conf.reports.figure3, logger, ())
 
     logger.info(
@@ -125,7 +125,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     fdri = posterior_samples["fdri"]
     pca_fdri = posterior_samples["pca_fdri"]
     embed_mean_all = posterior_samples["vector_field_posterior_mean"]
-    
+
     if os.path.exists("global_gold_standard2.h5ad"):
         adata_input_all_clone = scv.read("global_gold_standard2.h5ad")
     else:
@@ -135,13 +135,21 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         adata_input_all_clone.write("global_gold_standard2.h5ad")
 
     adata_cytotrace.obs.loc[:, "1-Cytotrace"] = 1 - adata_cytotrace.obs.cytotrace
-    gold = adata_cospar[adata_input_all.obs_names.str.replace("-0", ""), :].obs.fate_potency
+    gold = adata_cospar[
+        adata_input_all.obs_names.str.replace("-0", ""), :
+    ].obs.fate_potency
     gold_select = ~np.isnan(gold)
 
-    metrics_all = evaluate_time(adata_input_vel, adata_cytotrace, posterior_samples, gold, gold_select)
-    
-    pyrovelocity_mono_data_path = conf.model_training.larry_mono_model2.pyrovelocity_data_path
-    trained_mono_data_path = conf.model_training.larry_mono_model2.trained_data_path #pyro-velocity
+    metrics_all = evaluate_time(
+        adata_input_vel, adata_cytotrace, posterior_samples, gold, gold_select
+    )
+
+    pyrovelocity_mono_data_path = (
+        conf.model_training.larry_mono_model2.pyrovelocity_data_path
+    )
+    trained_mono_data_path = (
+        conf.model_training.larry_mono_model2.trained_data_path
+    )  # pyro-velocity
     adata_mono_dynamical_data_path = conf.data_sets.larry_mono.derived.rel_path
     adata_uni_mono = scv.read(adata_mono_dynamical_data_path)
     posterior_samples = CompressedPickle.load(pyrovelocity_mono_data_path)
@@ -150,10 +158,20 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         adata_uni_mono.obs_names.str.replace("-0", ""), :
     ].obs.fate_potency
     gold_select_uni_mono = ~np.isnan(gold_uni_mono)
-    metrics_mono =evaluate_time(adata_uni_mono, adata_uni_mono, posterior_samples, gold_uni_mono, gold_select_uni_mono)
+    metrics_mono = evaluate_time(
+        adata_uni_mono,
+        adata_uni_mono,
+        posterior_samples,
+        gold_uni_mono,
+        gold_select_uni_mono,
+    )
 
-    pyrovelocity_neu_data_path = conf.model_training.larry_neu_model2.pyrovelocity_data_path
-    trained_neu_data_path = conf.model_training.larry_neu_model2.trained_data_path #pyro-velocity
+    pyrovelocity_neu_data_path = (
+        conf.model_training.larry_neu_model2.pyrovelocity_data_path
+    )
+    trained_neu_data_path = (
+        conf.model_training.larry_neu_model2.trained_data_path
+    )  # pyro-velocity
     adata_neu_dynamical_data_path = conf.data_sets.larry_neu.derived.rel_path
     adata_uni_neu = scv.read(adata_neu_dynamical_data_path)
     posterior_samples = CompressedPickle.load(pyrovelocity_neu_data_path)
@@ -161,18 +179,35 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         adata_uni_neu.obs_names.str.replace("-0", ""), :
     ].obs.fate_potency
     gold_select_uni_neu = ~np.isnan(gold_uni_neu)
-    metrics_neu = evaluate_time(adata_uni_neu, adata_uni_neu, posterior_samples, gold_uni_neu, gold_select_uni_neu)
+    metrics_neu = evaluate_time(
+        adata_uni_neu,
+        adata_uni_neu,
+        posterior_samples,
+        gold_uni_neu,
+        gold_select_uni_neu,
+    )
 
-    pyrovelocity_multilineage_data_path = conf.model_training.larry_multilineage_model2.pyrovelocity_data_path
-    trained_multilineage_data_path = conf.model_training.larry_multilineage_model2.trained_data_path
-    adata_multilineage_dynamical_data_path = scv.read(conf.data_sets.larry_multilineage.derived.rel_path)
+    pyrovelocity_multilineage_data_path = (
+        conf.model_training.larry_multilineage_model2.pyrovelocity_data_path
+    )
+    trained_multilineage_data_path = (
+        conf.model_training.larry_multilineage_model2.trained_data_path
+    )
+    adata_multilineage_dynamical_data_path = scv.read(
+        conf.data_sets.larry_multilineage.derived.rel_path
+    )
     posterior_samples = CompressedPickle.load(pyrovelocity_multilineage_data_path)
     gold_multilineage = adata_cospar[
         adata_multilineage_dynamical_data_path.obs_names.str.replace(r"-\d", ""), :
     ].obs.fate_potency
     gold_multi_select = ~np.isnan(gold_multilineage)
-    metrics_multi = evaluate_time(adata_multilineage_dynamical_data_path, adata_multilineage_dynamical_data_path, 
-                  posterior_samples, gold_multilineage, gold_multi_select)
+    metrics_multi = evaluate_time(
+        adata_multilineage_dynamical_data_path,
+        adata_multilineage_dynamical_data_path,
+        posterior_samples,
+        gold_multilineage,
+        gold_multi_select,
+    )
 
     fig = plt.figure(figsize=(9.6, 4))
     ax = fig.subplots(2, 4)
@@ -188,14 +223,16 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     )
     ax[0][0].set_title(
         "Cytotrace\ncorrelation with fate potency: %.2f"
-        % spearmanr(1 - adata_cytotrace.obs.cytotrace[gold_select], -gold[gold_select])[0],
+        % spearmanr(1 - adata_cytotrace.obs.cytotrace[gold_select], -gold[gold_select])[
+            0
+        ],
         fontsize=7,
     )
 
     for index, fdr in enumerate([fdri, pca_fdri]):
         adata_input_all.obs.loc[:, "vector_field_rayleigh_test"] = fdr
         basis = "emb"
-        im = ax[0][index+1].scatter(
+        im = ax[0][index + 1].scatter(
             adata.obsm[f"X_{basis}"][:, 0],
             adata.obsm[f"X_{basis}"][:, 1],
             s=3,
@@ -204,7 +241,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             cmap="inferno_r",
             linewidth=0,
         )
-        #ax[0][index+1].text(
+        # ax[0][index+1].text(
         #    -0.1,
         #    1.15,
         #    "b",
@@ -213,15 +250,22 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         #    fontweight="bold",
         #    va="top",
         #    ha="right",
-        #)
-        set_colorbar(im, ax[0][index+1], labelsize=5, fig=fig, position="right")
-        ax[0][index+1].axis('off')
+        # )
+        set_colorbar(im, ax[0][index + 1], labelsize=5, fig=fig, position="right")
+        ax[0][index + 1].axis("off")
 
-    ax[0][1].set_title(f'UMAP angle Rayleigh test {(fdri<0.05).sum()/fdri.shape[0]}', fontsize=7)
-    ax[0][2].set_title(f'PCA angle Rayleigh test {(pca_fdri<0.05).sum()/pca_fdri.shape[0]}', fontsize=7)
-    ax[0][3].axis('off')
+    ax[0][1].set_title(
+        f"UMAP angle Rayleigh test {(fdri<0.05).sum()/fdri.shape[0]}", fontsize=7
+    )
+    ax[0][2].set_title(
+        f"PCA angle Rayleigh test {(pca_fdri<0.05).sum()/pca_fdri.shape[0]}", fontsize=7
+    )
+    ax[0][3].axis("off")
     n = 0
-    for title, metric in zip(['All', 'Monocyte', 'Neutrophil', 'Bifurcation'], [metrics_all, metrics_mono, metrics_neu, metrics_multi]):
+    for title, metric in zip(
+        ["All", "Monocyte", "Neutrophil", "Bifurcation"],
+        [metrics_all, metrics_mono, metrics_neu, metrics_multi],
+    ):
         g = sns.heatmap(
             metric,
             annot=True,
