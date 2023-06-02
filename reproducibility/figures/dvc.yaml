@@ -120,6 +120,7 @@ stages:
           - reports.figureS2
     outs:
       - ${reports.figureS2.violin_plots_other_lin}
+      - ${reports.figureS2.violin_plots_other_lin}.png
 
   # figureS3:
   #   cmd: python figS3/figure.py
@@ -193,8 +194,8 @@ stages:
       - config.yaml:
           - reports.figureS4
     outs:
-      - ${reports.figureS4.figS4_pdf}
-      - ${reports.figureS4.figS4_png}
+      - ${reports.figureS4.figureS4}
+      - ${reports.figureS4.figureS4}.png
 
   # figure2:
   #   cmd: python fig2/figure.py
