@@ -2742,8 +2742,8 @@ stages:
     cmd: python fig3/figure.py
     deps:
     - path: fig3/figure.py
-      md5: f44332b7f12f01a7035f72556b8644a0
-      size: 19927
+      md5: 02a482ff407064578261b98e80dd4092
+      size: 19861
     - path: models/larry_model2/pyrovelocity.pkl.zst
       md5: 07aabc2f0e592483cb3268ca1bf73675
       size: 1368569189
@@ -2776,7 +2776,7 @@ stages:
           figure3: reports/fig3/figure3.pdf
     outs:
     - path: reports/fig3/figure3.pdf
-      md5: 8074ae22e04ef19e89fccc9bf05d3b08
+      md5: ab03951d0acc88bbd1dd831ed51d5a7a
       size: 5704383
     - path: reports/fig3/figure3.pdf.png
       md5: b01f97ddd758c3459942b898af0eef99
@@ -3096,8 +3096,8 @@ stages:
     cmd: python figS2/figure.py train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
     deps:
     - path: figS2/figure.py
-      md5: c43a4626bf62fe5a0eccccb29727c5db
-      size: 5993
+      md5: 71332818df3f5c483ef919a91ef3ec9e
+      size: 6225
     - path: models/larry_model2/pyrovelocity.pkl.zst
       md5: 07aabc2f0e592483cb3268ca1bf73675
       size: 1368569189
@@ -3133,14 +3133,17 @@ stages:
           violin_plots_other_lin: reports/figS2/figS2_other_lin.pdf
     outs:
     - path: reports/figS2/figS2_other_lin.pdf
-      md5: a43dff37bc73da2e5ec3d0ad19159dbf
+      md5: c8f65ef984f5b8c69c9e3d306ebb084e
       size: 15970
+    - path: reports/figS2/figS2_other_lin.pdf.png
+      md5: d290b0b43446f59a1f912b3fe88f6ff7
+      size: 245509
   figureS4:
     cmd: python figS4/figure.py
     deps:
     - path: figS4/figure.py
-      md5: be873893c30c5f7b6b4e7287dcc96ab7
-      size: 11075
+      md5: 24802f80a4034443fd29a65a012eb69c
+      size: 11021
     - path: models/larry_model2/pyrovelocity.pkl.zst
       md5: 07aabc2f0e592483cb3268ca1bf73675
       size: 1368569189
@@ -3168,14 +3171,13 @@ stages:
     params:
       config.yaml:
         reports.figureS4:
-          tag: figureS4
-          path: reports/figureS4
-          figS4_pdf: reports/figureS4/figureS4.pdf
-          figS4_png: reports/figureS4/figureS4.pdf.png
+          tag: figS4
+          path: reports/figS4
+          figureS4: reports/figS4/figS4.pdf
     outs:
-    - path: reports/figureS4/figureS4.pdf
-      md5: 34401998ee0bf8ec471a0ff57cade54a
+    - path: reports/figS4/figS4.pdf
+      md5: 1c905b9c029a3ae408316ebb0e5eb00e
       size: 1932972
-    - path: reports/figureS4/figureS4.pdf.png
+    - path: reports/figS4/figS4.pdf.png
       md5: 11799f5a3dcd585546fae58da182f864
       size: 526943
