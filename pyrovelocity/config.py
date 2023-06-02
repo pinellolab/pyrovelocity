@@ -932,10 +932,9 @@ def hydra_zen_compressed_configure():
                 violin_plots_other_lin="${.path}/${.tag}_other_lin.pdf",
             ),
             figureS4=dict(
-                tag="figureS4",
+                tag="figS4",
                 path="${paths.reports}/${.tag}",
-                figS4_pdf="${.path}/${.tag}.pdf",
-                figS4_png="${.path}/${.tag}.pdf.png",
+                figureS4="${.path}/${.tag}.pdf",
             ),
             figureS3=dict(
                 tag="figS3",
