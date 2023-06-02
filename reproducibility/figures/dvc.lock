@@ -2742,8 +2742,8 @@ stages:
     cmd: python fig3/figure.py
     deps:
     - path: fig3/figure.py
-      md5: b77f16a73a6a1435666360c7d752e17e
-      size: 19966
+      md5: f44332b7f12f01a7035f72556b8644a0
+      size: 19927
     - path: models/larry_model2/pyrovelocity.pkl.zst
       md5: 07aabc2f0e592483cb3268ca1bf73675
       size: 1368569189
@@ -2773,15 +2773,14 @@ stages:
         reports.figure3:
           tag: fig3
           path: reports/fig3
-          figure3_pdf: reports/fig3/figure3.pdf
-          figure3_png: reports/fig3/figure3.pdf.png
+          figure3: reports/fig3/figure3.pdf
     outs:
     - path: reports/fig3/figure3.pdf
-      md5: 6639cb279a6522c34eaf67b141c274d9
-      size: 5717566
+      md5: 8074ae22e04ef19e89fccc9bf05d3b08
+      size: 5704383
     - path: reports/fig3/figure3.pdf.png
-      md5: df3de2093bb24816d7a5ec5006e4ee01
-      size: 3409896
+      md5: b01f97ddd758c3459942b898af0eef99
+      size: 3365609
   summarize@larry_mono_model2:
     cmd: /usr/bin/time -v python summarize.py train_models=[larry_mono_model2]
     deps:
@@ -3097,8 +3096,8 @@ stages:
     cmd: python figS2/figure.py train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
     deps:
     - path: figS2/figure.py
-      md5: 2c961c6de8b754c624bf3d1ce944a03e
-      size: 5731
+      md5: c43a4626bf62fe5a0eccccb29727c5db
+      size: 5993
     - path: models/larry_model2/pyrovelocity.pkl.zst
       md5: 07aabc2f0e592483cb3268ca1bf73675
       size: 1368569189
@@ -3131,8 +3130,52 @@ stages:
         reports.figureS2:
           tag: figS2
           path: reports/figS2
-          violin_plots_other_lin: reports/figS2/figureS2_other_lin.pdf
+          violin_plots_other_lin: reports/figS2/figS2_other_lin.pdf
     outs:
-    - path: reports/figS2/figureS2_other_lin.pdf
-      md5: 70c2df08a9e68d19115bc0520132ce5f
+    - path: reports/figS2/figS2_other_lin.pdf
+      md5: a43dff37bc73da2e5ec3d0ad19159dbf
       size: 15970
+  figureS4:
+    cmd: python figS4/figure.py
+    deps:
+    - path: figS4/figure.py
+      md5: be873893c30c5f7b6b4e7287dcc96ab7
+      size: 11075
+    - path: models/larry_model2/pyrovelocity.pkl.zst
+      md5: 07aabc2f0e592483cb3268ca1bf73675
+      size: 1368569189
+    - path: models/larry_model2/trained.h5ad
+      md5: 3077156894a95741f88ebb0c3eedad02
+      size: 6320835070
+    - path: models/larry_mono_model2/pyrovelocity.pkl.zst
+      md5: 34d8665530998c09c777d2fa626fb5b8
+      size: 29734744
+    - path: models/larry_mono_model2/trained.h5ad
+      md5: e4be131edbd5eccd10ec89ca85278374
+      size: 128091984
+    - path: models/larry_multilineage_model2/pyrovelocity.pkl.zst
+      md5: 37b5f641e6470f3bb45712c6ffa313d5
+      size: 66381699
+    - path: models/larry_multilineage_model2/trained.h5ad
+      md5: 324c410d940e5b11d29f02566d51c12a
+      size: 334119477
+    - path: models/larry_neu_model2/pyrovelocity.pkl.zst
+      md5: 1f8707241085692cc00a16bc61bc50c1
+      size: 25862424
+    - path: models/larry_neu_model2/trained.h5ad
+      md5: 4dd1e6d0046128f15724f5724b16dc59
+      size: 105880284
+    params:
+      config.yaml:
+        reports.figureS4:
+          tag: figureS4
+          path: reports/figureS4
+          figS4_pdf: reports/figureS4/figureS4.pdf
+          figS4_png: reports/figureS4/figureS4.pdf.png
+    outs:
+    - path: reports/figureS4/figureS4.pdf
+      md5: 34401998ee0bf8ec471a0ff57cade54a
+      size: 1932972
+    - path: reports/figureS4/figureS4.pdf.png
+      md5: 11799f5a3dcd585546fae58da182f864
+      size: 526943

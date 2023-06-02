@@ -284,7 +284,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     cs.settings.set_figure_params(
         format="png", figsize=[4, 3.5], dpi=75, fontsize=14, pointsize=2
     )
-    figure3_plot_name = conf.reports.figure3.figure3_pdf
+    figure3_plot_name = conf.reports.figure3.figure3
 
     pyrovelocity_larry_data_path = (
         conf.model_training.larry_model2.pyrovelocity_data_path
@@ -593,7 +593,6 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         fontsize=7,
     )
 
-    print("mono")
     plot_larry_subset(
         pyrovelocity_mono_data_path,
         trained_mono_data_path,
@@ -603,7 +602,6 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         fig,
         color_dict,
     )
-    print("neu")
     plot_larry_subset(
         pyrovelocity_neu_data_path,
         trained_neu_data_path,

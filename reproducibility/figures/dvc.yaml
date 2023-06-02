@@ -174,13 +174,13 @@ stages:
       - config.yaml:
           - reports.figure3
     outs:
-      - ${reports.figure3.figure3_pdf}
-      - ${reports.figure3.figure3_png}
+      - ${reports.figure3.figure3}
+      - ${reports.figure3.figure3}.png
 
-  suppfig4:
-    cmd: python suppfig4/figure.py
+  figureS4:
+    cmd: python figS4/figure.py
     deps:
-      - suppfig4/figure.py
+      - figS4/figure.py
       - ${model_training.larry_model2.trained_data_path}
       - ${model_training.larry_model2.pyrovelocity_data_path}
       - ${model_training.larry_mono_model2.trained_data_path}
@@ -191,10 +191,10 @@ stages:
       - ${model_training.larry_multilineage_model2.pyrovelocity_data_path}
     params:
       - config.yaml:
-          - reports.suppfig4
+          - reports.figureS4
     outs:
-      - ${reports.suppfig4.suppfig4_pdf}
-      - ${reports.suppfig4.suppfig4_png}
+      - ${reports.figureS4.figS4_pdf}
+      - ${reports.figureS4.figS4_png}
 
   # figure2:
   #   cmd: python fig2/figure.py
