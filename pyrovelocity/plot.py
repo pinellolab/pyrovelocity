@@ -924,7 +924,7 @@ def plot_vector_field_uncertain(
         ##fig.colorbar(im, ax=ax, shrink=0.6, location='bottom')
         pos = ax.get_position()
         cbar_ax = fig.add_axes(
-            [pos.x0 + 0.05, pos.y0 - 0.05, pos.width * 0.5, pos.height / 17]
+            [pos.x0 + 0.05, pos.y0 - 0.02, pos.width * 0.6, pos.height / 17]
         )
         cbar = fig.colorbar(
             im, cax=cbar_ax, orientation="horizontal"

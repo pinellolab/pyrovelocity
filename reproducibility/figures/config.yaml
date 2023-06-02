@@ -754,6 +754,14 @@ reports:
     tag: fig3
     path: reports/fig3
     figure3: reports/fig3/figure3.pdf
+  figureS2:
+    tag: figS2
+    path: reports/figS2
+    violin_plots_other_lin: reports/figS2/figS2_other_lin.pdf
+  figureS4:
+    tag: figS4
+    path: reports/figS4
+    figureS4: reports/figS4/figS4.pdf
   figureS3:
     tag: figS3
     path: reports/figS3
