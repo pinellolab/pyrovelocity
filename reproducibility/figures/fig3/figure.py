@@ -675,15 +675,13 @@ def main(conf: DictConfig) -> None:
 
     logger = get_pylogger(name="PLOT", log_level=conf.base.log_level)
 
-    if os.path.isfile(conf.reports.figureS3.tif_path) and os.path.isfile(
-        conf.reports.figureS3.svg_path
-    ):
+    if os.path.isfile(conf.reports.figure3.figure3):
         logger.info(
-            f"\n\nFigure 2 outputs already exist:\n\n"
-            f"  see contents of: {conf.reports.figureS3.path}\n"
+            f"\n\nFigure 3 outputs already exist:\n\n"
+            f"  see contents of: {conf.reports.figure3.figure3}\n"
         )
     else:
-        logger.info(f"\n\nPlotting figure S3\n\n")
+        logger.info(f"\n\nPlotting figure 3\n\n")
         plots(conf, logger)
 
 
