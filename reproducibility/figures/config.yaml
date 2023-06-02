@@ -759,10 +759,9 @@ reports:
     path: reports/figS2
     violin_plots_other_lin: reports/figS2/figS2_other_lin.pdf
   figureS4:
-    tag: figureS4
-    path: reports/figureS4
-    figS4_pdf: reports/figureS4/figureS4.pdf
-    figS4_png: reports/figureS4/figureS4.pdf.png
+    tag: figS4
+    path: reports/figS4
+    figureS4: reports/figS4/figS4.pdf
   figureS3:
     tag: figS3
     path: reports/figS3
