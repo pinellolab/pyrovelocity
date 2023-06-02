@@ -75,7 +75,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     cs.settings.set_figure_params(
         format="png", figsize=[4, 3.5], dpi=75, fontsize=14, pointsize=2
     )
-    figS4_plot_name = conf.reports.figureS4.figS4_pdf
+    figS4_plot_name = conf.reports.figureS4.figureS4
 
     pyrovelocity_larry_data_path = (
         conf.model_training.larry_model2.pyrovelocity_data_path
@@ -283,13 +283,13 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     fig.subplots_adjust(
         hspace=0.25, wspace=0.5, left=0.01, right=0.92, top=0.93, bottom=0.1
     )
-    fig.savefig(
-        figS4_plot_name,
-        facecolor=fig.get_facecolor(),
-        bbox_inches="tight",
-        edgecolor="none",
-        dpi=300,
-    )
+    # fig.savefig(
+    #     figS4_plot_name,
+    #     facecolor=fig.get_facecolor(),
+    #     bbox_inches="tight",
+    #     edgecolor="none",
+    #     dpi=300,
+    # )
     for ext in ["", ".png"]:
         fig.savefig(
             f"{figS4_plot_name}{ext}",
@@ -309,15 +309,13 @@ def main(conf: DictConfig) -> None:
 
     logger = get_pylogger(name="PLOT", log_level=conf.base.log_level)
 
-    if os.path.isfile(conf.reports.figureS3.tif_path) and os.path.isfile(
-        conf.reports.figureS3.svg_path
-    ):
+    if os.path.isfile(conf.reports.figureS4.figureS4):
         logger.info(
-            f"\n\nFigure 2 outputs already exist:\n\n"
-            f"  see contents of: {conf.reports.figureS3.path}\n"
+            f"\n\nFigure S4 already exists:\n\n"
+            f"  see contents of: {conf.reports.figureS4.figureS4}\n"
         )
     else:
-        logger.info(f"\n\nPlotting figure S3\n\n")
+        logger.info(f"\n\nPlotting figure S4\n\n")
         plots(conf, logger)
 
 
