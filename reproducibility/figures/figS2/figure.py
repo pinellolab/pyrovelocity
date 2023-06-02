@@ -40,7 +40,7 @@ def plots(
     logger: Logger,
     fig_name: str = None,
 ) -> None:
-    """Design cell-wise uncertainties metrics across all datasets
+    """Compute cell-wise uncertainty metrics across all datasets
 
     Args:
         conf (DictConfig): OmegaConf configuration object
@@ -142,13 +142,21 @@ def plots(
         order=grouped_index,
     )
     fig.autofmt_xdate(rotation=45)
-    fig.savefig(
-        fig_name,
-        facecolor=fig.get_facecolor(),
-        bbox_inches="tight",
-        edgecolor="none",
-        dpi=300,
-    )
+    # fig.savefig(
+    #     fig_name,
+    #     facecolor=fig.get_facecolor(),
+    #     bbox_inches="tight",
+    #     edgecolor="none",
+    #     dpi=300,
+    # )
+    for ext in ["", ".png"]:
+        fig.savefig(
+            f"{fig_name}{ext}",
+            facecolor=fig.get_facecolor(),
+            bbox_inches="tight",
+            edgecolor="none",
+            dpi=300,
+        )
 
 
 @hydra.main(version_base="1.2", config_path="..", config_name="config.yaml")
@@ -162,7 +170,7 @@ def main(conf: DictConfig) -> None:
 
     logger.info(
         f"\n\nVerifying existence of paths for:\n\n"
-        f"  reports: {conf.reports.figureS3.path}\n"
+        f"  reports: {conf.reports.figureS2.path}\n"
     )
     Path(conf.reports.figureS2.path).mkdir(parents=True, exist_ok=True)
     confS2 = conf.reports.figureS2
