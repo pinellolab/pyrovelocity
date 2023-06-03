@@ -757,7 +757,12 @@ reports:
   figureS2:
     tag: figS2
     path: reports/figS2
-    violin_plots_other_lin: reports/figS2/figS2_other_lin.pdf
+    boxplot_other_lin: reports/figS2/figS2_other_lin.pdf
+  figureS2_extras:
+    tag: figS2
+    path: reports/figS2
+    subset_genes_plot: reports/figS2/figS2_subset3g_pbmc68k.pdf
+    subset_pkl: reports/figS2/figS2_subset3g_pbmc68k.pkl
   figureS4:
     tag: figS4
     path: reports/figS4
