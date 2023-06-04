@@ -754,6 +754,10 @@ reports:
     tag: fig3
     path: reports/fig3
     figure3: reports/fig3/figure3.pdf
+  figureS2_extra_2:
+    tag: figS2
+    path: reports/figS2
+    mean_length_vs_uncertain: reports/figS2/figS2_mean_length_vs_uncertain.pdf
   figureS2:
     tag: figS2
     path: reports/figS2

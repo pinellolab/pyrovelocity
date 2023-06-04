@@ -926,6 +926,11 @@ def hydra_zen_compressed_configure():
                 path="${paths.reports}/${.tag}",
                 figure3="${.path}/figure3.pdf",
             ),
+            figureS2_extra_2=dict(
+                tag="figS2",
+                path="${paths.reports}/${.tag}",
+                mean_length_vs_uncertain="${.path}/${.tag}_mean_length_vs_uncertain.pdf",
+            ),
             figureS2=dict(
                 tag="figS2",
                 path="${paths.reports}/${.tag}",
