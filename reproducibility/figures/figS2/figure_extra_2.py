@@ -86,6 +86,7 @@ def plots(
         ax[0][index].text(.05, .8, 'r={:.2f}, p={:.2g}'.format(r1[0], r1[1]),
                    transform=ax[0][index].transAxes)
         ax[0][index].set_title(data_model)
+        ax[0][index].set_ylim(0, 360)
         r2 = pearsonr(umap_magnitude, cell_time_std)
         sns.regplot(x='umap_magnitude', y='shared_time', data=res, ax=ax[1][index], scatter_kws=dict(s=1, linewidth=0))
         ax[1][index].text(.05, .8, 'r={:.2f}, p={:.2g}'.format(r2[0], r2[1]),
