@@ -3185,8 +3185,8 @@ stages:
     cmd: python figS2/figure_extras.py train_models=[pbmc68k_model2]
     deps:
     - path: figS2/figure_extras.py
-      md5: 8f6ee5162f786944a495f0b800205324
-      size: 11107
+      md5: 20283ba388e23581a16093e1d68297e3
+      size: 11273
     - path: models/pbmc68k_model2/pyrovelocity.pkl.zst
       md5: b3ae8fc391dda9f35cdb36056fac7223
       size: 679013346
@@ -3199,8 +3199,8 @@ stages:
           subset_pkl: reports/figS2/figS2_subset3g_pbmc68k.pkl
     outs:
     - path: reports/figS2/figS2_subset3g_pbmc68k.pdf
-      md5: 18da1d6a2ddf83f63be8af621f80023c
-      size: 5605321
+      md5: c1eadf935916329f02f949facfc7eb4b
+      size: 5605317
     - path: reports/figS2/figS2_subset3g_pbmc68k.pdf.png
-      md5: e52a672be926a2b368c5164d944b718c
-      size: 1482017
+      md5: 0e79aab1beb3819b1f7fa12824c5998b
+      size: 1480115
