@@ -52,8 +52,8 @@ def plots(
         plots(conf, logger)
     """
 
-    fig, ax = plt.subplots(2, len(conf.train_models))
-    fig.set_size_inches(28, 5.8)
+    fig, ax = plt.subplots(3, len(conf.train_models))
+    fig.set_size_inches(28, 8)
     for index, data_model in enumerate(conf.train_models):
         ##################
         # load data
@@ -68,23 +68,32 @@ def plots(
         adata = scv.read(adata_data_path)
         posterior_samples = CompressedPickle.load(pyrovelocity_data_path)
         mean_arrow_length = posterior_samples["vector_field_posterior_mean"]
-        magnitude = np.sqrt((mean_arrow_length**2).sum(axis=-1))
+        umap_magnitude = np.sqrt((mean_arrow_length**2).sum(axis=-1))
 
         cell_time_std = posterior_samples["cell_time"].std(0).flatten()
         umap_cell_angles = posterior_samples["embeds_angle"] / np.pi * 180
         umap_angle_uncertain = get_posterior_sample_angle_uncertainty(umap_cell_angles)
+
+        cell_magnitudes = posterior_samples["original_spaces_embeds_magnitude"]
+        cell_magnitudes_mean = cell_magnitudes.mean(axis=-2)
+        cell_magnitudes_std = cell_magnitudes.std(axis=-2)
+        cell_magnitudes_cov = cell_magnitudes_std / cell_magnitudes_mean
         print(umap_angle_uncertain.shape)
 
-        res = pd.DataFrame({'magnitude': magnitude, 'umap_angle': umap_angle_uncertain, 'shared_time': cell_time_std})
-        sns.regplot(x='magnitude', y='umap_angle', data=res, ax=ax[0][index], scatter_kws=dict(s=1, linewidth=0))
-        r1 = pearsonr(magnitude, umap_angle_uncertain)
+        res = pd.DataFrame({'umap_magnitude': umap_magnitude, 'umap_angle': umap_angle_uncertain, 'shared_time': cell_time_std, 'raw_magnitudes_cov': cell_magnitudes_cov})
+        sns.regplot(x='umap_magnitude', y='umap_angle', data=res, ax=ax[0][index], scatter_kws=dict(s=1, linewidth=0))
+        r1 = pearsonr(umap_magnitude, umap_angle_uncertain)
         ax[0][index].text(.05, .8, 'r={:.2f}, p={:.2g}'.format(r1[0], r1[1]),
                    transform=ax[0][index].transAxes)
         ax[0][index].set_title(data_model)
-        r2 = pearsonr(magnitude, cell_time_std)
-        sns.regplot(x='magnitude', y='shared_time', data=res, ax=ax[1][index], scatter_kws=dict(s=1, linewidth=0))
+        r2 = pearsonr(umap_magnitude, cell_time_std)
+        sns.regplot(x='umap_magnitude', y='shared_time', data=res, ax=ax[1][index], scatter_kws=dict(s=1, linewidth=0))
         ax[1][index].text(.05, .8, 'r={:.2f}, p={:.2g}'.format(r2[0], r2[1]),
                    transform=ax[1][index].transAxes)
+        r3 = pearsonr(umap_angle_uncertain, cell_magnitudes_cov)
+        sns.regplot(x='umap_angle', y='raw_magnitudes_cov', data=res, ax=ax[2][index], scatter_kws=dict(s=1, linewidth=0))
+        ax[2][index].text(.05, .8, 'r={:.2f}, p={:.2g}'.format(r3[0], r3[1]),
+                   transform=ax[2][index].transAxes)
     fig.tight_layout()
 
     for ext in ["", ".png"]:

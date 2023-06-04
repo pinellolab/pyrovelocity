@@ -3208,8 +3208,8 @@ stages:
     cmd: python figS2/figure_extra_2.py train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
     deps:
     - path: figS2/figure_extra_2.py
-      md5: f6a3ceb57b37d35c859c43c2abf17b84
-      size: 4510
+      md5: bf13245b42580248519a5e2feac4b4b7
+      size: 5179
     - path: models/larry_model2/pyrovelocity.pkl.zst
       md5: 07aabc2f0e592483cb3268ca1bf73675
       size: 1368569189
@@ -3245,8 +3245,8 @@ stages:
           mean_length_vs_uncertain: reports/figS2/figS2_mean_length_vs_uncertain.pdf
     outs:
     - path: reports/figS2/figS2_mean_length_vs_uncertain.pdf
-      md5: 467122d6c43ee263385d26921d427c64
-      size: 4127417
+      md5: 307c2f91760f26e38d4d2ceb868263a6
+      size: 5895381
     - path: reports/figS2/figS2_mean_length_vs_uncertain.pdf.png
-      md5: cf6fe146ce78df94b666b224dfda4674
-      size: 1896719
+      md5: 37197e4435196df35363bf33ec896e42
+      size: 2766143
