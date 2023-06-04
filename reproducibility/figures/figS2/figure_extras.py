@@ -26,17 +26,17 @@ from statannotations.Annotator import Annotator
 
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.io.compressedpickle import CompressedPickle
+from pyrovelocity.plot import compute_mean_vector_field
+from pyrovelocity.plot import compute_volcano_data
 from pyrovelocity.plot import get_posterior_sample_angle_uncertainty
 from pyrovelocity.plot import plot_arrow_examples
 from pyrovelocity.plot import plot_gene_ranking
 from pyrovelocity.plot import plot_posterior_time
 from pyrovelocity.plot import plot_vector_field_uncertain
 from pyrovelocity.plot import rainbowplot
-from pyrovelocity.plot import compute_mean_vector_field
-from pyrovelocity.plot import compute_volcano_data
+from pyrovelocity.plot import set_colorbar
 from pyrovelocity.plot import vector_field_uncertainty
 from pyrovelocity.utils import get_pylogger
-from pyrovelocity.plot import set_colorbar
 
 
 def plots(
@@ -76,7 +76,7 @@ def plots(
         posterior_samples = CompressedPickle.load(pyrovelocity_posterior_samples_path)
 
         genes = ["NKG7", "IGHM", "GNLY"]
-        genes_index, = np.where(adata.var_names.isin(genes))
+        (genes_index,) = np.where(adata.var_names.isin(genes))
         adata = adata[:, genes_index].copy()
 
         print(adata.shape)
@@ -107,13 +107,19 @@ def plots(
                 (original_spaces_velocity_samples**2).sum(axis=-1)
             )
 
-            vector_field_posterior_samples, embeds_radian, fdri = vector_field_uncertainty(
+            (
+                vector_field_posterior_samples,
+                embeds_radian,
+                fdri,
+            ) = vector_field_uncertainty(
                 adata,
                 posterior_samples,
                 basis=vector_field_basis,
                 n_jobs=ncpus_use,
             )
-            embeds_magnitude = np.sqrt((vector_field_posterior_samples**2).sum(axis=-1))
+            embeds_magnitude = np.sqrt(
+                (vector_field_posterior_samples**2).sum(axis=-1)
+            )
 
             compute_mean_vector_field(
                 posterior_samples=posterior_samples,
@@ -121,7 +127,9 @@ def plots(
                 basis=vector_field_basis,
                 n_jobs=ncpus_use,
             )
-            vector_field_posterior_mean = adata.obsm[f"velocity_pyro_{vector_field_basis}"]
+            vector_field_posterior_mean = adata.obsm[
+                f"velocity_pyro_{vector_field_basis}"
+            ]
             (
                 pca_vector_field_posterior_samples,
                 pca_embeds_radian,
@@ -140,7 +148,9 @@ def plots(
             posterior_samples[
                 "vector_field_posterior_samples"
             ] = vector_field_posterior_samples
-            posterior_samples["vector_field_posterior_mean"] = vector_field_posterior_mean
+            posterior_samples[
+                "vector_field_posterior_mean"
+            ] = vector_field_posterior_mean
             posterior_samples["fdri"] = fdri
             posterior_samples["embeds_magnitude"] = embeds_magnitude
             posterior_samples["embeds_angle"] = embeds_radian
@@ -161,7 +171,7 @@ def plots(
         else:
             with open(pyrovelocity_data_path_3genes, "rb") as f:
                 posterior_samples = pickle.load(f)
-            print((posterior_samples["fdri"]<0.001).sum())
+            print((posterior_samples["fdri"] < 0.001).sum())
 
     adata.obs.loc[:, "vector_field_rayleigh_test"] = posterior_samples["fdri"]
 
@@ -275,8 +285,8 @@ def plots(
     pca_fdri = posterior_samples["pca_fdri"]
     for index, fdr in enumerate([fdri, pca_fdri]):
         adata.obs.loc[:, "vector_field_rayleigh_test"] = fdr
-        basis = 'tsne'
-        im = ax[4+index].scatter(
+        basis = "tsne"
+        im = ax[4 + index].scatter(
             adata.obsm[f"X_{basis}"][:, 0],
             adata.obsm[f"X_{basis}"][:, 1],
             s=3,
@@ -285,14 +295,15 @@ def plots(
             cmap="inferno_r",
             linewidth=0,
         )
-        set_colorbar(im, ax[4+index], labelsize=5, fig=fig, position="right")
-        ax[4+index].axis("off")
+        set_colorbar(im, ax[4 + index], labelsize=5, fig=fig, position="right")
+        ax[4 + index].axis("off")
 
     ax[4].set_title(
-            f"UMAP angle Rayleigh test {(fdri<0.05).sum()/fdri.shape[0]:.2f}", fontsize=7
+        f"UMAP angle Rayleigh test {(fdri<0.05).sum()/fdri.shape[0]:.2f}", fontsize=7
     )
     ax[5].set_title(
-            f"PCA angle Rayleigh test {(pca_fdri<0.05).sum()/pca_fdri.shape[0]:.2f}", fontsize=7
+        f"PCA angle Rayleigh test {(pca_fdri<0.05).sum()/pca_fdri.shape[0]:.2f}",
+        fontsize=7,
     )
 
     for ext in ["", ".png"]:
