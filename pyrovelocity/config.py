@@ -929,7 +929,13 @@ def hydra_zen_compressed_configure():
             figureS2=dict(
                 tag="figS2",
                 path="${paths.reports}/${.tag}",
-                violin_plots_other_lin="${.path}/${.tag}_other_lin.pdf",
+                boxplot_other_lin="${.path}/${.tag}_other_lin.pdf",
+            ),
+            figureS2_extras=dict(
+                tag="figS2",
+                path="${paths.reports}/${.tag}",
+                subset_genes_plot="${.path}/${.tag}_subset3g_pbmc68k.pdf",
+                subset_pkl="${.path}/${.tag}_subset3g_pbmc68k.pkl",
             ),
             figureS4=dict(
                 tag="figS4",

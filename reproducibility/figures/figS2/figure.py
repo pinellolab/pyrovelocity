@@ -142,13 +142,6 @@ def plots(
         order=grouped_index,
     )
     fig.autofmt_xdate(rotation=45)
-    # fig.savefig(
-    #     fig_name,
-    #     facecolor=fig.get_facecolor(),
-    #     bbox_inches="tight",
-    #     edgecolor="none",
-    #     dpi=300,
-    # )
     for ext in ["", ".png"]:
         fig.savefig(
             f"{fig_name}{ext}",
@@ -175,15 +168,13 @@ def main(conf: DictConfig) -> None:
     Path(conf.reports.figureS2.path).mkdir(parents=True, exist_ok=True)
     confS2 = conf.reports.figureS2
 
-    if os.path.isfile(confS2.violin_plots_other_lin) and os.path.isfile(
-        confS2.violin_plots_larry_lin
-    ):
+    if os.path.isfile(confS2.boxplot_other_lin):
         logger.info(
             f"\n\nFigure S2 extras outputs already exist:\n\n"
-            f"  see contents of: {conf.reports.figureS2_extras.path}\n"
+            f"  see contents of: {conf.reports.figureS2.path}\n"
         )
     else:
-        for fig_name in [confS2.violin_plots_other_lin]:
+        for fig_name in [confS2.boxplot_other_lin]:
             plots(conf, logger, fig_name=fig_name)
 
 

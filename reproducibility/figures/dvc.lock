@@ -3093,11 +3093,11 @@ stages:
       md5: 11799f5a3dcd585546fae58da182f864
       size: 526943
   figureS2:
-    cmd: python figS2/figure.py train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
+    cmd: python figS2/figure.py train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_tips_model2]
     deps:
     - path: figS2/figure.py
-      md5: 71332818df3f5c483ef919a91ef3ec9e
-      size: 6225
+      md5: 9fdb24c3daa54273e9fd77b374011ed9
+      size: 5978
     - path: models/larry_model2/pyrovelocity.pkl.zst
       md5: 07aabc2f0e592483cb3268ca1bf73675
       size: 1368569189
@@ -3130,14 +3130,14 @@ stages:
         reports.figureS2:
           tag: figS2
           path: reports/figS2
-          violin_plots_other_lin: reports/figS2/figS2_other_lin.pdf
+          boxplot_other_lin: reports/figS2/figS2_other_lin.pdf
     outs:
     - path: reports/figS2/figS2_other_lin.pdf
-      md5: c8f65ef984f5b8c69c9e3d306ebb084e
-      size: 15970
+      md5: 5ffeca559f35807fcce8e06da197d71b
+      size: 15658
     - path: reports/figS2/figS2_other_lin.pdf.png
-      md5: d290b0b43446f59a1f912b3fe88f6ff7
-      size: 245509
+      md5: 656a5322c3c25d8e3d4c49259762bbeb
+      size: 220043
   figureS4:
     cmd: python figS4/figure.py
     deps:
@@ -3181,3 +3181,26 @@ stages:
     - path: reports/figS4/figS4.pdf.png
       md5: 11799f5a3dcd585546fae58da182f864
       size: 526943
+  figureS2_extras:
+    cmd: python figS2/figure_extras.py train_models=[pbmc68k_model2]
+    deps:
+    - path: figS2/figure_extras.py
+      md5: 20283ba388e23581a16093e1d68297e3
+      size: 11273
+    - path: models/pbmc68k_model2/pyrovelocity.pkl.zst
+      md5: b3ae8fc391dda9f35cdb36056fac7223
+      size: 679013346
+    params:
+      config.yaml:
+        reports.figureS2_extras:
+          tag: figS2
+          path: reports/figS2
+          subset_genes_plot: reports/figS2/figS2_subset3g_pbmc68k.pdf
+          subset_pkl: reports/figS2/figS2_subset3g_pbmc68k.pkl
+    outs:
+    - path: reports/figS2/figS2_subset3g_pbmc68k.pdf
+      md5: c1eadf935916329f02f949facfc7eb4b
+      size: 5605317
+    - path: reports/figS2/figS2_subset3g_pbmc68k.pdf.png
+      md5: 0e79aab1beb3819b1f7fa12824c5998b
+      size: 1480115
