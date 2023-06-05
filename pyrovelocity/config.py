@@ -374,7 +374,7 @@ def hydra_zen_configure():
                 "pyrovelocity",
                 "pbmc10k",
                 2,
-                "tsne",
+                "umap",
                 cell_state="celltype",
                 offset=True,
                 max_epochs=2000,
