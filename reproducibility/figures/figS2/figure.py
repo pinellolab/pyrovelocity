@@ -62,8 +62,15 @@ def plots(
         ##################
         print(data_model)
 
-        data_model_conf = conf.model_training[data_model]
-        cell_state = data_model_conf.training_parameters.cell_state
+        if data_model == "pbmc10k_model2_coarse":
+            macro_labels += [data_model] * sample_size
+            data_model = "pbmc10k_model2"
+            data_model_conf = conf.model_training[data_model]
+            cell_state = "celltype_low_resolution"
+        else:
+            macro_labels += [data_model] * sample_size
+            data_model_conf = conf.model_training[data_model]
+            cell_state = data_model_conf.training_parameters.cell_state
         adata_data_path = data_model_conf.trained_data_path
         pyrovelocity_data_path = data_model_conf.pyrovelocity_data_path
 
@@ -78,24 +85,15 @@ def plots(
         print(posterior_samples["cell_time"].shape)
         multiclass_macro_aucs_test = []
         for sample in range(sample_size):
-            # le = LabelBinarizer()
             le = LabelEncoder()
             y_sample = le.fit_transform(adata.obs[cell_state].values)
 
             lr = LogisticRegression(random_state=42, C=1.0, penalty=None, max_iter=100)
             x_all = posterior_samples["cell_time"][sample]
-            # y_score = lr.fit(x_all, y_sample).predict_proba(x_all)
-
-            # single test
-            # macro_roc_auc_ovr = roc_auc_score(y_sample, y_score, multi_class="ovr", average="macro")
-            # multiclass_macro_aucs_test.append(macro_roc_auc_ovr)
-
-            # cross validation test
             macro_roc_auc_ovr_crossval = cross_val_score(
                 lr, x_all, y_sample, cv=5, scoring="f1_macro"
             )
             multiclass_macro_aucs_test.append(np.mean(macro_roc_auc_ovr_crossval))
-        macro_labels += [data_model] * sample_size
         multiclass_macro_aucs_test_all_models += multiclass_macro_aucs_test
 
     print(len(macro_labels))
