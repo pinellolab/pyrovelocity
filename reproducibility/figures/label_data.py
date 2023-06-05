@@ -8,8 +8,10 @@ import scanpy as sc
 from pyensembl import EnsemblRelease
 
 
-DATA_FILE_PATH = "data/external/pbmc10k.h5ad"
-BACKUP_URL = "https://storage.googleapis.com/pyrovelocity/data/pbmc10k.h5ad"
+DATA_FILE_PATH = "data/external/pbmc10k_unlabeled.h5ad"
+BACKUP_URL = "https://storage.googleapis.com/pyrovelocity/data/pbmc10k_unlabeled.h5ad"
+# Install the relevant Ensembl release with:
+#   pyensembl install --release 98 --species human
 ENSEMBL_RELEASE = 98
 # See model descriptions at https://www.celltypist.org/models
 # Low here refers to inclusion of cell types at the
@@ -26,8 +28,7 @@ HIGH_RES_PLOT_FILENAME = "labeled_pbmc10k_high_resolution.pdf"
 def load_data(file_path, backup_url):
     if not os.path.exists(file_path):
         print(f"{file_path} not found. Downloading from backup URL.")
-        file_path = backup_url
-    return sc.read(file_path)
+    return sc.read(file_path, backup_url=backup_url)
 
 
 def rename_var_to_gene_symbol(adata, release):
@@ -110,7 +111,7 @@ def main():
     adata = label_cell_types(adata, HIGH_RESOLUTION_MODEL, "celltype")
     plot_umap(adata, HIGH_RES_PLOT_FILENAME, "celltype")
 
-    output_file_path = DATA_FILE_PATH.replace(".h5ad", "_labeled.h5ad")
+    output_file_path = DATA_FILE_PATH.replace("_unlabaled.h5ad", "_labeled.h5ad")
     adata.write(output_file_path)
 
 
