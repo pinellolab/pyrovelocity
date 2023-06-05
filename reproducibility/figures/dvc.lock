@@ -3093,11 +3093,11 @@ stages:
       md5: 11799f5a3dcd585546fae58da182f864
       size: 526943
   figureS2:
-    cmd: python figS2/figure.py train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_tips_model2]
+    cmd: python figS2/figure.py train_models=[pancreas_model2,pbmc10k_model2,pbmc10k_model2_coarse,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_tips_model2]
     deps:
     - path: figS2/figure.py
-      md5: 9fdb24c3daa54273e9fd77b374011ed9
-      size: 5978
+      md5: f52865afa425ac6787340f19673f71d5
+      size: 5925
     - path: models/larry_model2/pyrovelocity.pkl.zst
       md5: 07aabc2f0e592483cb3268ca1bf73675
       size: 1368569189
@@ -3133,11 +3133,11 @@ stages:
           boxplot_other_lin: reports/figS2/figS2_other_lin.pdf
     outs:
     - path: reports/figS2/figS2_other_lin.pdf
-      md5: 6646b0f12dfeacb7751495c5ae4cd6d5
-      size: 15655
+      md5: a6990431e817562fe74806ff597c522a
+      size: 15912
     - path: reports/figS2/figS2_other_lin.pdf.png
-      md5: 5c2b86c74e77ecf56d11e0d01a3a6aa3
-      size: 219740
+      md5: 2c2c5f94f0a2e8cadd65524918f3acd2
+      size: 247210
   figureS4:
     cmd: python figS4/figure.py
     deps:
