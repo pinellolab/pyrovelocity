@@ -559,7 +559,7 @@ model_training:
     metrics_path: models/pbmc10k_model2/metrics.json
     run_info_path: models/pbmc10k_model2/run_info.json
     vector_field_parameters:
-      basis: tsne
+      basis: umap
     gpu_id: 0
     training_parameters:
       _target_: pyrovelocity.api.train_model
@@ -573,7 +573,7 @@ model_training:
       likelihood: Poisson
       num_samples: 30
       log_every: 100
-      cell_state: leiden
+      cell_state: celltype
       patient_improve: 0.0001
       patient_init: 45
       seed: 99
