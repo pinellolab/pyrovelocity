@@ -119,7 +119,7 @@ def adjust_subfigure(subfig):
 
 
 def pareto_frontier_genes(volcano_data, num_genes):
-    volcano_data = volcano_data.loc[~volcano_data.index.str.startswith(("Rpl", "Rps"))]
+    volcano_data = volcano_data.loc[~volcano_data.index.str.contains(("^Rpl|^Rps"), case=False)]
     pareto_frontier = pd.DataFrame()
 
     if len(volcano_data) < num_genes:
