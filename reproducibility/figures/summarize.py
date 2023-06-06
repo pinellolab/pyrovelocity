@@ -250,7 +250,6 @@ def summarize_fig2_part2(
         volcano_data, _ = plot_gene_ranking(
             [posterior_samples], [adata], ax=ax[1], time_correlation_with="st"
         )
-        print(volcano_data.head())
         _ = rainbowplot(
             volcano_data,
             adata,
@@ -293,8 +292,6 @@ def cluster_violin_plots(
     pca_angle_uncertain_list = []
     umap_angle_uncertain_list = []
     names = []
-    print(adata)
-    print(adata.obs[cluster_key])
 
     # get cluster order
     cluster_time_list = []
@@ -303,7 +300,6 @@ def cluster_violin_plots(
         adata_cluster = adata[adata.obs[cluster_key] == cluster]
         cluster_time = adata_cluster.obs["velocity_pseudotime"].mean()
         cluster_time_list.append(cluster_time)
-    print(cluster_time_list)
     sorted_cluster_id = sorted(
         range(len(cluster_time_list)), key=lambda k: cluster_time_list[k], reverse=False
     )
@@ -337,7 +333,6 @@ def cluster_violin_plots(
     umap_cell_magnitudes_std = umap_cell_magnitudes.std(axis=-2)
     umap_cell_magnitudes_cov = umap_cell_magnitudes_std / umap_cell_magnitudes_mean
 
-    print(posterior_samples.keys())
     cell_magnitudes = posterior_samples["original_spaces_embeds_magnitude"]
     cell_magnitudes_mean = cell_magnitudes.mean(axis=-2)
     cell_magnitudes_std = cell_magnitudes.std(axis=-2)
@@ -352,8 +347,6 @@ def cluster_violin_plots(
     name = list(adata.obs[cluster_key])
     names += name
 
-    print(posterior_samples["pca_vector_field_posterior_samples"].shape)
-    print(posterior_samples["embeds_angle"].shape)
     time_cov_list = np.hstack(time_cov_list)
     mag_cov_list = np.hstack(mag_cov_list)
     pca_mag_cov_list = np.hstack(pca_mag_cov_list)
@@ -524,6 +517,8 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         cell_state = data_model_conf.training_parameters.cell_state
         trained_data_path = data_model_conf.trained_data_path
         pyrovelocity_data_path = data_model_conf.pyrovelocity_data_path
+        posterior_samples_data_path = data_model_conf.posterior_samples_path
+
         reports_data_model_conf = conf.reports.model_summary[data_model]
         trained_data_path = reports_data_model_conf.trained_data_path
         pyrovelocity_data_path = reports_data_model_conf.pyrovelocity_data_path
@@ -570,6 +565,8 @@ def plots(conf: DictConfig, logger: Logger) -> None:
 
         logger.info(f"Loading pyrovelocity data: {pyrovelocity_data_path}")
         posterior_samples = CompressedPickle.load(pyrovelocity_data_path)
+        #all_posterior_samples = CompressedPickle.load(posterior_samples_data_path)
+        #print(all_posterior_samples.keys())
 
         ##################
         # save dataframe

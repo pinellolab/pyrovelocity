@@ -30,6 +30,7 @@ from pyrovelocity.utils import ensure_numpy_array
 from pyrovelocity.utils import mRNA
 from pyrovelocity.utils import mse_loss_sum
 
+from torch.nn.functional import softplus, relu
 
 def plot_evaluate_dynamic_orig(adata, gene="Cpe", velocity=None, ax=None):
     # compute dynamics
@@ -223,109 +224,52 @@ def plot_dynamic_pyro(
 
 
 def plot_multigenes_dynamical(
-    summary,
     alpha,
     beta,
     gamma,
-    t_,
-    t,
-    adata,
-    gene="Cpe",
-    scale=None,
+    scale,
+    switching,
+    u0, s0,
+    u_inf, s_inf,
+    t, t0,
     ax=None,
     raw=False,
 ):
-    pass
-
-    # softplus operation as pyro
-    # https://stackoverflow.com/questions/44230635/avoid-overflow-with-softplus-function-in-python
-    # t_ = torch.log(1+torch.exp(-np.abs(t_))) + torch.maximum(t_,
-    #     torch.zeros(t_.shape))
-
-    t = t.sort()[0].max().int()
-    t = torch.linspace(0.0, t, 500)
-    u0, s0 = torch.tensor(0.0), torch.tensor(0.0)
-    # u0, s0 = pyro.param("u0"), pyro.param("s0")
-    u_inf, s_inf = mRNA(t_, u0, s0, alpha, beta, gamma)
-    state = (t < t_).int()
-    tau = t * state + (t - t_) * (1 - state)
-
-    # tau = torch.log(1+torch.exp(-np.abs(tau))) + torch.maximum(tau,
-    #    torch.zeros(tau.shape))
-
+    print(type(t0))
+    print(t0.shape)
+    print(type(t))
+    print(t.shape)
+    print(alpha.shape)
+    print(switching.shape)
+    #t = np.linspace(t0[0]-10, np.max(t)+10, 500)
+    state = (t < switching).astype(int)
+    #tau = softplus(torch.tensor((t - t0) * state + (t - switching) * (1 - state)))
+    tau = softplus(torch.tensor(np.where(state == 1, (t - t0), (t - switching))))
     u0_vec = u0 * state + u_inf * (1 - state)
     s0_vec = s0 * state + s_inf * (1 - state)
     alpha_ = 0.0
     alpha_vec = alpha * state + alpha_ * (1 - state)
-    ut, st = mRNA(tau, u0_vec, s0_vec, alpha_vec, beta, gamma)
-    if scale is None:
-        ut = ut + u0
-    else:
-        ut = ut * scale + u0
-    st = st + s0
-    xnew = torch.linspace(
-        torch.tensor(st.min().detach().numpy()),
-        torch.tensor(st.max().detach().numpy()),
-        50,
-    )
-    if scale is not None:
-        ynew = (gamma / beta * (xnew - torch.min(xnew))) * scale + torch.min(
-            ut * scale + u0
-        )
-    else:
-        ynew = gamma / beta * (xnew - torch.min(xnew)) + torch.min(ut)
+    print(alpha_vec.shape)
 
-    if ax is None:
-        fig, ax = plt.subplots()
-    try:
-        if raw:
-            scv.pl.scatter(
-                adata,
-                gene,
-                x="spliced",
-                y="unspliced",
-                color=["clusters"],
-                ax=ax,
-                show=False,
-            )
-        else:
-            scv.pl.scatter(adata, gene, color=["clusters"], ax=ax, show=False)
-    except:
-        if raw:
-            scv.pl.scatter(
-                adata,
-                gene,
-                x="spliced",
-                y="unspliced",
-                color=["Clusters"],
-                ax=ax,
-                show=False,
-            )
-        else:
-            scv.pl.scatter(adata, gene, color=["Clusters"], ax=ax, show=False)
-    ax.plot(
-        st.detach().numpy(),
-        ut.detach().numpy(),
-        linestyle="-",
-        linewidth=2.5,
-        color="red",
-        label="Pyro-Velocity",
+    ut, st = mRNA(torch.tensor(tau), torch.tensor(u0_vec), torch.tensor(s0_vec), torch.tensor(alpha_vec), torch.tensor(beta), torch.tensor(gamma))
+    ut = relu(ut * torch.tensor(scale)) + 1e-6
+    st = relu(st) + 1e-6
+    print(ut.shape)
+    print(st.shape)
+    ax.scatter(
+        st.numpy().mean(0),
+        ut.numpy().mean(0),
+        color="gray",
+        s=3, linewidth=0.1,
     )
-    ax.plot(
-        xnew.detach().numpy(),
-        ynew.detach().numpy(),
-        color="red",
-        linestyle="--",
-        linewidth=2.5,
-        alpha=0.4,
-    )
-    if summary is not None:
-        ax.scatter(
-            summary["x_obs"]["mean"][:, 1],
-            summary["x_obs"]["mean"][:, 0],
-            alpha=0.5,
-            color="red",
-        )
+    #ax.plot(
+    #    st.numpy().mean(0),
+    #    ut.numpy().mean(0),
+    #    linestyle="-",
+    #    linewidth=0.8,
+    #    color="red",
+    #    label="Pyro-Velocity"
+    #)
 
 
 def plot_posterior_time(
@@ -408,7 +352,6 @@ def compute_volcano_data(
     labels = []
     switching = []
     for p, ad, label in zip(posterior_samples, adata, ["train", "valid"]):
-        print(label)
         for sample in range(p["alpha"].shape[0]):
             maes_list.append(
                 mae_per_gene(
@@ -1455,6 +1398,16 @@ def rainbowplot(
         st = posterior_samples["st_mean"]
         ut = posterior_samples["ut_mean"]
 
+    print(posterior_samples.keys())
+    alpha = posterior_samples['alpha']
+    beta = posterior_samples['beta']
+    gamma = posterior_samples['gamma']
+    scale = posterior_samples['u_scale']
+    switching = posterior_samples['switching']
+    u0, s0 = posterior_samples['u_offset'], posterior_samples['s_offset']
+    u_inf, s_inf = posterior_samples['u_inf'], posterior_samples['s_inf']
+    cell_time, t0 = posterior_samples['cell_time'], posterior_samples['t0']
+
     for gene in genes:
         (index,) = np.where(adata.var_names == gene)
         ax1 = ax[n, 1]
@@ -1529,6 +1482,15 @@ def rainbowplot(
             legend=False,
             s=3,
         )
+        plot_multigenes_dynamical(alpha[:, :, index],
+                                  beta[:, :, index],
+                                  gamma[:, :, index],
+                                  scale[:, :, index],
+                                  switching[:, :, index],
+                                  u0[:, :, index],
+                                  s0[:, :, index],
+                                  u_inf[:, :, index],
+                                  s_inf[:, :, index], cell_time, t0[:, :, index], ax=ax2)
         ax2.set_xlabel("")
         ax2.set_ylabel(gene, fontsize=7, rotation=0, labelpad=23)
         if n == len(genes) - 1:
