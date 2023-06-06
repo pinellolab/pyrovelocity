@@ -152,7 +152,6 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         self.layers = layers
         self.input_type = input_type
 
-
         super().__init__(adata)
         if init:
             initial_values = init_with_all_cells(
@@ -213,7 +212,6 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         """
         pyro.enable_validation(True)
         super().train(**kwargs)
-
 
     def enum_parallel_predict(self):
         """work for parallel enumeration"""
@@ -278,9 +276,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         """
         self.module.eval()
         predictive = self.module.create_predictive(
-            model=pyro.poutine.uncondition(
-                self.module.model
-            ),  
+            model=pyro.poutine.uncondition(self.module.model),
             num_samples=num_samples,
         )
 
@@ -307,7 +303,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                     continue
 
                 if "aux" in k:
-                    samples[k] = posterior_samples[0][k]  
+                    samples[k] = posterior_samples[0][k]
                 elif posterior_samples[0][k].shape[-2] == 1:
                     samples[k] = posterior_samples[0][k]
                     if k == "kinetics_prob":
@@ -342,15 +338,11 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         ncpus_use,
     ):
         """reduce posterior samples by precomputing metrics."""
-        if ("u_scale" in posterior_samples) and (
-            "s_scale" in posterior_samples
-        ):  
+        if ("u_scale" in posterior_samples) and ("s_scale" in posterior_samples):
             scale = posterior_samples["u_scale"] / posterior_samples["s_scale"]
-        elif ("u_scale" in posterior_samples) and not (
-            "s_scale" in posterior_samples
-        ):  
+        elif ("u_scale" in posterior_samples) and not ("s_scale" in posterior_samples):
             scale = posterior_samples["u_scale"]
-        else:  
+        else:
             scale = 1
         original_spaces_velocity_samples = (
             posterior_samples["beta"] * posterior_samples["ut"] / scale
@@ -514,5 +506,3 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             os.path.join(dir_path, "param_store_test.pt"), map_location=device
         )
         return model
-
-
