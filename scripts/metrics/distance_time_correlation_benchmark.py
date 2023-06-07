@@ -1,9 +1,10 @@
-import numpy as np
 import time
+
 import matplotlib.pyplot as plt
+import numpy as np
+from memory_profiler import memory_usage
 from scipy.stats import spearmanr
 from sklearn.metrics.pairwise import pairwise_distances
-from memory_profiler import memory_usage
 
 
 def generate_data_with_correlation(n_cells, n_genes, correlation):
@@ -115,7 +116,7 @@ plt.plot(correlations, "o-", color="black", label="Correlations")
 plt.xticks(
     range(len(n_genes_list)),
     [
-        "{}\n{}\n{}".format(x, y, z)
+        f"{x}\n{y}\n{z}"
         for x, y, z in zip(n_genes_list, n_cells_list, desired_corr_list)
     ],
 )
@@ -126,7 +127,7 @@ plt.plot(p_values, "o-", color="black", label="P-values")
 plt.xticks(
     range(len(n_genes_list)),
     [
-        "{}\n{}\n{}".format(x, y, z)
+        f"{x}\n{y}\n{z}"
         for x, y, z in zip(n_genes_list, n_cells_list, desired_corr_list)
     ],
 )
@@ -137,7 +138,7 @@ plt.plot(memory_usages, "o-", color="black", label="Memory Usage (MB)")
 plt.xticks(
     range(len(n_genes_list)),
     [
-        "{}\n{}\n{}".format(x, y, z)
+        f"{x}\n{y}\n{z}"
         for x, y, z in zip(n_genes_list, n_cells_list, desired_corr_list)
     ],
 )
@@ -148,7 +149,7 @@ plt.plot(total_times, "o-", color="black", label="Total Time (s)")
 plt.xticks(
     range(len(n_genes_list)),
     [
-        "{}\n{}\n{}".format(x, y, z)
+        f"{x}\n{y}\n{z}"
         for x, y, z in zip(n_genes_list, n_cells_list, desired_corr_list)
     ],
 )
