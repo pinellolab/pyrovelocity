@@ -119,7 +119,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     confS2 = conf.reports.figureS2
 
     if os.path.isfile(confS2.rayleigh_classifier_plot):
-        logger.info(f"\n\nFigure already exists:\n\n" f"  {confS2.rayleigh_classifier_plot}\n")
+        logger.info(
+            f"\n\nFigure already exists:\n\n" f"  {confS2.rayleigh_classifier_plot}\n"
+        )
         rayleigh_classifier_plot_exists = True
     else:
         rayleigh_classifier_plot_exists = False
@@ -139,9 +141,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         sample_size = 30
 
     for data_model in conf.train_models:
-        logger.info(
-            f"\n\nLoading data for {data_model}\n\n"
-        )
+        logger.info(f"\n\nLoading data for {data_model}\n\n")
         if data_model == "pbmc10k_model2_coarse":
             data_model_conf = conf.model_training["pbmc10k_model2"]
         else:
@@ -150,9 +150,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         adata, posterior_samples = load_data(data_model_conf)
 
         if not rayleigh_classifier_plot_exists:
-            logger.info(
-                    f"\n\nComputing Rayleigh statistics for {data_model}\n\n"
-                )
+            logger.info(f"\n\nComputing Rayleigh statistics for {data_model}\n\n")
             (
                 m_labels,
                 rayleigh_umap,
@@ -165,18 +163,14 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             rayleigh_umap_angles_test.append(rayleigh_umap)
             rayleigh_pca_angles_test.append(rayleigh_pca)
 
-            logger.info(
-                    f"\n\nTraining classifier for {data_model}\n\n"
-                )
+            logger.info(f"\n\nTraining classifier for {data_model}\n\n")
             multiclass_macro_aucs_test = train_classifier(
                 posterior_samples, sample_size, adata, cell_state
             )
             multiclass_macro_aucs_test_all_models += multiclass_macro_aucs_test
 
     if not rayleigh_classifier_plot_exists:
-        logger.info(
-                f"\n\nCreating {confS2.rayleigh_classifier_plot}\n\n"
-            )
+        logger.info(f"\n\nCreating {confS2.rayleigh_classifier_plot}\n\n")
         global_uncertainties_aucs = pd.DataFrame(
             {"dataset": macro_labels, "f1_macro": multiclass_macro_aucs_test_all_models}
         )

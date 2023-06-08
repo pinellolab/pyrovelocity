@@ -103,7 +103,7 @@ stages:
         - ${item.uncertainty_param_plot}.png
 
   figureS2:
-    cmd: python figS2/figure.py train_models=[pancreas_model2,pbmc10k_model2,pbmc10k_model2_coarse,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_tips_model2]
+    cmd: /usr/bin/time -v python figS2/figure.py train_models=[pbmc10k_model2_coarse,pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_tips_model2]
     deps:
       - figS2/figure.py
       - ${model_training.pancreas_model2.pyrovelocity_data_path}
@@ -119,8 +119,8 @@ stages:
       - config.yaml:
           - reports.figureS2
     outs:
-      - ${reports.figureS2.boxplot_other_lin}
-      - ${reports.figureS2.boxplot_other_lin}.png
+      - ${reports.figureS2.rayleigh_classifier_plot}
+      - ${reports.figureS2.rayleigh_classifier_plot}.png
 
   figureS2_extras:
     cmd: python figS2/figure_extras.py train_models=[pbmc68k_model2]
