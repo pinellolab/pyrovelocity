@@ -1,4 +1,17 @@
 import os
+import torch
+from torch.nn.functional import relu
+from torch.nn.functional import softplus
+import pyro
+import pyro.poutine as poutine
+from pyro.distributions import Bernoulli
+from pyro.primitives import plate
+from pyro.distributions import Beta
+from pyro.distributions import LogNormal
+from pyro.distributions import NegativeBinomial
+from pyro.distributions import Normal
+from pyro.distributions import Poisson
+from pyro.distributions.constraints import positive
 import pickle
 from logging import Logger
 from pathlib import Path
@@ -36,7 +49,7 @@ from pyrovelocity.plot import rainbowplot
 from pyrovelocity.plot import us_rainbowplot
 from pyrovelocity.plot import vector_field_uncertainty
 from pyrovelocity.plots.rainbow import pareto_frontier_genes
-from pyrovelocity.utils import anndata_counts_to_df
+from pyrovelocity.utils import anndata_counts_to_df, mRNA
 from pyrovelocity.utils import get_pylogger
 from pyrovelocity.utils import mae_evaluate
 from pyrovelocity.utils import print_anndata
@@ -499,33 +512,38 @@ def plot_parameter_posterior_distributions(
         )
 
 
-def extended_time_model(expand_time_span: int = 100):
+def extended_time_model(expand_time_span: int = 100, grid_cells: int = 1000):
     """ a sampler that use all the parameters of pyrovelocity 
     except the cell_time, we replaced the cell_time with a 
     grid points of time.
     """
-    expanded_time_plate = pyro.plate("new_grid_cells", 500, dim=-2)
+    expanded_time_plate = pyro.plate("new_grid_cells", grid_cells, dim=-2)
     gene_plate = pyro.plate("genes", 2000, dim=-1)
     with gene_plate, poutine.mask(mask=True):
-        alpha = self.alpha
-        gamma = self.gamma
-        beta = self.beta
-        u0 = pyro.sample("u_offset", LogNormal(self.zero, self.one))
-        s0 = pyro.sample("s_offset", LogNormal(self.zero, self.one))
-        t0 = pyro.sample("t0", Normal(self.zero, self.one))
-        u_scale = self.u_scale
-        s_scale = self.one
+        alpha = pyro.sample("alpha", LogNormal(0, 1))
+        gamma = pyro.sample("gamma", LogNormal(0, 1))
+        beta = pyro.sample("beta", LogNormal(0, 1))
+        u0 = pyro.sample("u_offset", LogNormal(0, 1))
+        s0 = pyro.sample("s_offset", LogNormal(0, 1))
+        t0 = pyro.sample("t0", Normal(0, 1))
+        u_scale = pyro.sample("u_scale", LogNormal(0, 0.1))
+        s_scale = u_scale.new_ones(1)
 
-        dt_switching = self.dt_switching
+        dt_switching = pyro.sample("dt_switching", LogNormal(0, 0.1))
         u_inf, s_inf = mRNA(dt_switching, u0, s0, alpha, beta, gamma)
         u_inf = pyro.deterministic("u_inf", u_inf, event_dim=0)
         s_inf = pyro.deterministic("s_inf", s_inf, event_dim=0)
+        print(u_inf, s_inf)
+        print(u0, s0)
         switching = pyro.deterministic(
             "switching", dt_switching + t0, event_dim=0
         )
 
     with expanded_time_plate:
-        t = pyro.deterministic("expanded_cell_time", torch.linspace(t0-expand_time_span, expand_time_span, expanded_time_plate.plate_size), event_dim=0)
+        t = pyro.deterministic("expanded_cell_time", torch.linspace(0, expand_time_span, expanded_time_plate.size))
+        t = t.unsqueeze(-1)
+        print(t)
+        print(t.shape)
         with gene_plate:
             state = (
                 pyro.sample(
@@ -533,8 +551,9 @@ def extended_time_model(expand_time_span: int = 100):
                     Bernoulli(logits=t - switching),
                     infer={"enumerate": 'parallel'},
                 )
-                == self.zero
+                == 0
             )
+            print(state)
             alpha_off = alpha.new_zeros(1)
             u0_vec = torch.where(state, u0, u_inf)
             s0_vec = torch.where(state, s0, s_inf)
@@ -542,8 +561,13 @@ def extended_time_model(expand_time_span: int = 100):
             tau = softplus(torch.where(state, t - t0, t - switching))
             ut, st = mRNA(tau, u0_vec, s0_vec, alpha_vec, beta, gamma)
             ut = ut * u_scale / s_scale
-            ut = relu(ut) + self.one * 1e-6
-            st = relu(st) + self.one * 1e-6
+            print(ut)
+            print(st)
+            print('-------')
+            ut = relu(ut) + 1e-6
+            st = relu(st) + 1e-6
+            print(ut)
+            print(st)
             ut = pyro.deterministic("ut", ut, event_dim=0)
             st = pyro.deterministic("st", st, event_dim=0)
     return ut, st
@@ -924,5 +948,5 @@ def main(conf: DictConfig) -> None:
     plots(conf, logger)
 
 
-if __name__ == "__main__":
-    main()
+#if __name__ == "__main__":
+#    main()
