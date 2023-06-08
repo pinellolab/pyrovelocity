@@ -570,15 +570,9 @@ def hydra_zen_compressed_configure():
         "larry_neu",
         "larry_multilineage",
     ]
-
     train_models = [
-        "simulate_medium_model1",
-        "simulate_medium_model2",
-        "pancreas_model1",
         "pancreas_model2",
-        "pbmc68k_model1",
         "pbmc68k_model2",
-        "pons_model1",
         "pons_model2",
         "larry_model2",
         "larry_tips_model2",
@@ -934,7 +928,7 @@ def hydra_zen_compressed_configure():
             figureS2=dict(
                 tag="figS2",
                 path="${paths.reports}/${.tag}",
-                boxplot_other_lin="${.path}/${.tag}_other_lin.pdf",
+                rayleigh_classifier_plot="${.path}/${.tag}_rayleigh_classifier.pdf",
             ),
             figureS2_extras=dict(
                 tag="figS2",
