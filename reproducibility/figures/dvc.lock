@@ -3096,8 +3096,8 @@ stages:
     cmd: /usr/bin/time -v python figS2/figure.py train_models=[pbmc10k_model2_coarse,pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_tips_model2]
     deps:
     - path: figS2/figure.py
-      md5: 155c91cca501f34a5ae9bb31961fdf78
-      size: 6521
+      md5: b56bfde8aff1600cc86544f67c0d11b7
+      size: 6415
     - path: models/larry_model2/pyrovelocity.pkl.zst
       md5: 07aabc2f0e592483cb3268ca1bf73675
       size: 1368569189
