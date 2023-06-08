@@ -16,6 +16,8 @@ from sklearn.preprocessing import LabelEncoder
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.utils import get_pylogger
+from pyrovelocity.utils import pretty_print_dict
+from pyrovelocity.utils import print_anndata
 
 
 def load_data(data_model_conf):
@@ -110,13 +112,89 @@ def make_rayleigh_classifier_plot(
         )
 
 
+import time
+
+import numpy as np
+from scipy.stats import pearsonr
+from scipy.stats import spearmanr
+from sklearn.metrics import pairwise_distances
+
+
+def compute_distances_and_correlation(adata, posterior_samples):
+    expression_vectors = adata.layers["raw_spliced"]
+    n_cells, n_genes = expression_vectors.shape
+
+    max_cells_for_subsample = 7000
+    subsample_size = 5000
+    distance_metric = "euclidean"
+
+    if n_cells <= max_cells_for_subsample:
+        expression_distances_matrix = pairwise_distances(
+            expression_vectors, metric=distance_metric, n_jobs=-1
+        )
+
+    correlations = []
+    p_values = []
+    for temporal_coordinates in posterior_samples["cell_time"][:2]:
+        temporal_coordinates = temporal_coordinates.reshape(-1)
+        sort_indices = np.argsort(temporal_coordinates)
+
+        if n_cells > max_cells_for_subsample:
+            subsample_indices = np.random.choice(
+                sort_indices, subsample_size, replace=False
+            )
+            sorted_subsample_indices = np.argsort(
+                temporal_coordinates[subsample_indices]
+            )
+            final_subsample_indices = subsample_indices[sorted_subsample_indices]
+
+            selected_expression_vectors = expression_vectors[final_subsample_indices, :]
+            selected_temporal_coordinates = temporal_coordinates[
+                final_subsample_indices
+            ]
+
+            selected_expression_distances_matrix = pairwise_distances(
+                selected_expression_vectors, metric="euclidean", n_jobs=-1
+            )
+        else:
+            selected_expression_vectors = expression_vectors[sort_indices, :]
+            selected_temporal_coordinates = temporal_coordinates[sort_indices]
+            selected_expression_distances_matrix = expression_distances_matrix[
+                sort_indices, :
+            ][:, sort_indices]
+
+        n_selected_cells = selected_expression_vectors.shape[0]
+
+        selected_expression_distances = selected_expression_distances_matrix[
+            np.triu_indices(n_selected_cells, k=1)
+        ]
+
+        temporal_differences_matrix = (
+            selected_temporal_coordinates - selected_temporal_coordinates.reshape(-1, 1)
+        )
+        temporal_differences = temporal_differences_matrix[
+            np.triu_indices(n_selected_cells, k=1)
+        ]
+
+        correlation, p_value = spearmanr(
+            selected_expression_distances, temporal_differences
+        )
+        correlations.append(correlation)
+        p_values.append(p_value)
+
+    return correlations, p_values
+    # return correlations, p_values, time_dist, time_temporal, time_corr, total_time
+
+
 def plots(conf: DictConfig, logger: Logger) -> None:
     logger.info(
         f"\n\nVerifying existence of paths for:\n\n"
         f"  figure S2: {conf.reports.figureS2.path}\n"
     )
     Path(conf.reports.figureS2.path).mkdir(parents=True, exist_ok=True)
+
     confS2 = conf.reports.figureS2
+    print_config_tree(confS2, logger, ())
 
     if os.path.isfile(confS2.rayleigh_classifier_plot):
         logger.info(
@@ -126,7 +204,16 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     else:
         rayleigh_classifier_plot_exists = False
 
-    if rayleigh_classifier_plot_exists:
+    if os.path.isfile(confS2.distance_time_correlation_plot):
+        logger.info(
+            f"\n\nFigure already exists:\n\n"
+            f"  {confS2.distance_time_correlation_plot}\n"
+        )
+        distance_time_correlation_plot_exists = True
+    else:
+        distance_time_correlation_plot_exists = False
+
+    if rayleigh_classifier_plot_exists & distance_time_correlation_plot_exists:
         logger.info(
             f"\n\nFigure S2 extras outputs already exist:\n\n"
             f"  see contents of: {conf.reports.figureS2.path}\n"
@@ -148,6 +235,12 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             data_model_conf = conf.model_training[data_model]
 
         adata, posterior_samples = load_data(data_model_conf)
+        print_anndata(adata)
+        pretty_print_dict(posterior_samples)
+        correlations, p_values = compute_distances_and_correlation(
+            adata, posterior_samples
+        )
+        breakpoint()
 
         if not rayleigh_classifier_plot_exists:
             logger.info(f"\n\nComputing Rayleigh statistics for {data_model}\n\n")
