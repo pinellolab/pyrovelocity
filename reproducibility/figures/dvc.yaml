@@ -119,8 +119,10 @@ stages:
       - config.yaml:
           - reports.figureS2
     outs:
-      - ${reports.figureS2.rayleigh_classifier_plot}
-      - ${reports.figureS2.rayleigh_classifier_plot}.png
+      - ${reports.figureS2.rayleigh_classifier_plot}:
+          persist: true
+      - ${reports.figureS2.rayleigh_classifier_plot}.png:
+          persist: true
 
   figureS2_extras:
     cmd: python figS2/figure_extras.py train_models=[pbmc68k_model2]
