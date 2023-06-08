@@ -1952,8 +1952,8 @@ stages:
       md5: 5488e83a70c427afd51f264f35e72735
       size: 492128112
     - path: summarize.py
-      md5: fb1be9c2d6308f94e476ad3cd46ad3ed
-      size: 27812
+      md5: 9e94aebc586157101baf2c2683fdbd50
+      size: 31522
     params:
       config.yaml:
         base:
@@ -1981,52 +1981,52 @@ stages:
       md5: bbff19677beed1c7cf3766506f391723
       size: 12359084
     - path: reports/pancreas_model2/clusters_violin_lin.pdf
-      md5: e2e147ca154f0982f9bd9896f8186589
+      md5: c83b6d18ff2e30d86a200590c265a507
       size: 127497
     - path: reports/pancreas_model2/clusters_violin_lin.pdf.png
       md5: e30d28abc83a29951318f37d7a312ab4
       size: 2356560
     - path: reports/pancreas_model2/clusters_violin_log.pdf
-      md5: 588d7b97bc7fbfe6fad6ac33ecf2b0df
+      md5: de427ac3caf113698dee25380a54f60b
       size: 128507
     - path: reports/pancreas_model2/clusters_violin_log.pdf.png
       md5: d7bd94742d8cbd0b1c7d56476a47512f
       size: 2452889
     - path: reports/pancreas_model2/fig2_part1_plot.pdf
-      md5: 820eb980f3d5c66901680282f8c77b54
+      md5: 742bc14a4f9543b98d19185ce1ce1eb6
       size: 431713
     - path: reports/pancreas_model2/fig2_part1_plot.pdf.png
       md5: 8ef3e40c15766142c8de633bda62c254
       size: 630588
     - path: reports/pancreas_model2/fig2_part2_plot.pdf
-      md5: 081d9c85b71f6fe5bc27af55d51e8e2e
+      md5: b03538e9f54954561302522d892f608d
       size: 1496986
     - path: reports/pancreas_model2/fig2_part2_plot.pdf.png
       md5: 5c0c602ece338cdf589b01463acfc9fe
       size: 680903
     - path: reports/pancreas_model2/param_uncertainties.pdf
-      md5: 76dbe9b2f63466ba71d2584e3dd7c9f2
+      md5: 2cca67d3f0159ed9fbc70a97a97dbe93
       size: 140075
     - path: reports/pancreas_model2/param_uncertainties.pdf.png
       md5: 3f88d6dc17bda0f42c8f436e7382f454
       size: 782898
     - path: reports/pancreas_model2/rainbow.pdf
-      md5: 602293e3b87646107f2520d9115ba66a
+      md5: 147c520809b020a229a1ceca39cc3abf
       size: 5213471
     - path: reports/pancreas_model2/rainbow.pdf.png
       md5: 4df1b65124602086846e1b799b0b0fb4
       size: 1374852
     - path: reports/pancreas_model2/shared_time.pdf
-      md5: 2eee9459a45686de97d168c85a3bf0ad
+      md5: 23740a84122242de85028d27d6519e51
       size: 284036
     - path: reports/pancreas_model2/vector_field.pdf
-      md5: 1c527bc386a26b7a8f03e655bd31f8d7
+      md5: 571c8d1deaaa4c0171f3ebdd1ac62f1a
       size: 397596
     - path: reports/pancreas_model2/vector_field.pdf.png
       md5: 2bff17b5b0187728de366ba4f0b02cd3
       size: 698541
     - path: reports/pancreas_model2/volcano.pdf
-      md5: 2bdb03cf6841e548211ef9235f325e99
+      md5: f00509a2cada9dd8bbb2637013d40ed9
       size: 38346
     - path: reports/pancreas_model2/volcano.pdf.png
       md5: dcd4bad6fb0f085d8ff048521eb0b4f2

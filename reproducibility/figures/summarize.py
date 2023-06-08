@@ -22,6 +22,7 @@ from scipy.stats import circvar
 from statannotations.Annotator import Annotator
 
 from pyrovelocity.config import print_config_tree
+from pyrovelocity._velocity import PyroVelocity
 from pyrovelocity.data import load_data
 from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.plot import compute_mean_vector_field
@@ -498,6 +499,60 @@ def plot_parameter_posterior_distributions(
         )
 
 
+def extended_time_model(expand_time_span: int = 100):
+    """ a sampler that use all the parameters of pyrovelocity 
+    except the cell_time, we replaced the cell_time with a 
+    grid points of time.
+    """
+    expanded_time_plate = pyro.plate("new_grid_cells", 500, dim=-2)
+    gene_plate = pyro.plate("genes", 2000, dim=-1)
+    with gene_plate, poutine.mask(mask=True):
+        alpha = self.alpha
+        gamma = self.gamma
+        beta = self.beta
+        u0 = pyro.sample("u_offset", LogNormal(self.zero, self.one))
+        s0 = pyro.sample("s_offset", LogNormal(self.zero, self.one))
+        t0 = pyro.sample("t0", Normal(self.zero, self.one))
+        u_scale = self.u_scale
+        s_scale = self.one
+
+        dt_switching = self.dt_switching
+        u_inf, s_inf = mRNA(dt_switching, u0, s0, alpha, beta, gamma)
+        u_inf = pyro.deterministic("u_inf", u_inf, event_dim=0)
+        s_inf = pyro.deterministic("s_inf", s_inf, event_dim=0)
+        switching = pyro.deterministic(
+            "switching", dt_switching + t0, event_dim=0
+        )
+
+    with expanded_time_plate:
+        t = pyro.deterministic("expanded_cell_time", torch.linspace(t0-expand_time_span, expand_time_span, expanded_time_plate.plate_size), event_dim=0)
+        with gene_plate:
+            state = (
+                pyro.sample(
+                    "cell_gene_state",
+                    Bernoulli(logits=t - switching),
+                    infer={"enumerate": 'parallel'},
+                )
+                == self.zero
+            )
+            alpha_off = alpha.new_zeros(1)
+            u0_vec = torch.where(state, u0, u_inf)
+            s0_vec = torch.where(state, s0, s_inf)
+            alpha_vec = torch.where(state, alpha, alpha_off)
+            tau = softplus(torch.where(state, t - t0, t - switching))
+            ut, st = mRNA(tau, u0_vec, s0_vec, alpha_vec, beta, gamma)
+            ut = ut * u_scale / s_scale
+            ut = relu(ut) + self.one * 1e-6
+            st = relu(st) + self.one * 1e-6
+            ut = pyro.deterministic("ut", ut, event_dim=0)
+            st = pyro.deterministic("st", st, event_dim=0)
+    return ut, st
+
+
+def extrapolate_time_phase_portrait_curve():
+    return
+
+
 def plots(conf: DictConfig, logger: Logger) -> None:
     """Construct summary plots for each data set and model.
 
@@ -562,6 +617,35 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         adata = scv.read(trained_data_path)
         # gene_mapping = {"1100001G20Rik": "Wfdc21"}
         # adata = rename_anndata_genes(adata, gene_mapping)
+
+        pyrovelocity_model_path = data_model_conf.model_path
+        PyroVelocity.setup_anndata(adata)
+        model = PyroVelocity(adata)
+        print(pyrovelocity_model_path)
+        model = model.load_model(pyrovelocity_model_path, adata, use_gpu=0)
+        posterior_samples = model.generate_posterior_samples(model.adata, num_samples=21)
+        print(posterior_samples.keys())
+        print(posterior_samples["st"].shape)
+        print(posterior_samples["ut"].shape)
+        for figi, gene in enumerate(['Iapp', 'Cpe', 'Pcsk2', 'Tmem27', 'Ins1', 'Ins2']):
+            (index,) = np.where(adata.var_names == gene)
+            fig, ax = plt.subplots(4, 5)
+            fig.set_size_inches(18, 12)
+            ax = ax.flatten()
+            for sample in range(20):
+                ax[sample].scatter(posterior_samples["st"][sample][:,index[0]], 
+                                   posterior_samples["ut"][sample][:,index[0]], s=1.5, linewidth=0, color='r')
+                ax[sample].set_title(f"{gene} model 2 sample {sample}")
+                ax[sample].set_xlim(0, np.max(posterior_samples["st"][:, :, index[0]])*1.1)
+                ax[sample].set_ylim(0, np.max(posterior_samples["ut"][:, :, index[0]])*1.1)
+            fig.tight_layout()
+            fig.savefig(
+                f"fig{figi}_test.png",
+                facecolor=fig.get_facecolor(),
+                bbox_inches="tight",
+                edgecolor="none",
+                dpi=300,
+            )
 
         logger.info(f"Loading pyrovelocity data: {pyrovelocity_data_path}")
         posterior_samples = CompressedPickle.load(pyrovelocity_data_path)
