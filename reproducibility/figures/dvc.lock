@@ -3093,11 +3093,11 @@ stages:
       md5: 11799f5a3dcd585546fae58da182f864
       size: 526943
   figureS2:
-    cmd: python figS2/figure.py train_models=[pancreas_model2,pbmc10k_model2,pbmc10k_model2_coarse,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_tips_model2]
+    cmd: /usr/bin/time -v python figS2/figure.py train_models=[pbmc10k_model2_coarse,pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_tips_model2]
     deps:
     - path: figS2/figure.py
-      md5: f52865afa425ac6787340f19673f71d5
-      size: 5925
+      md5: 155c91cca501f34a5ae9bb31961fdf78
+      size: 6521
     - path: models/larry_model2/pyrovelocity.pkl.zst
       md5: 07aabc2f0e592483cb3268ca1bf73675
       size: 1368569189
@@ -3130,14 +3130,14 @@ stages:
         reports.figureS2:
           tag: figS2
           path: reports/figS2
-          boxplot_other_lin: reports/figS2/figS2_other_lin.pdf
+          rayleigh_classifier_plot: reports/figS2/figS2_rayleigh_classifier.pdf
     outs:
-    - path: reports/figS2/figS2_other_lin.pdf
-      md5: a6990431e817562fe74806ff597c522a
-      size: 15912
-    - path: reports/figS2/figS2_other_lin.pdf.png
-      md5: 2c2c5f94f0a2e8cadd65524918f3acd2
-      size: 247210
+    - path: reports/figS2/figS2_rayleigh_classifier.pdf
+      md5: 3b7709c8ec3d0dbed8a7a445e261baa4
+      size: 15897
+    - path: reports/figS2/figS2_rayleigh_classifier.pdf.png
+      md5: 79f504bc9e2fab6cb42d38b748e271b7
+      size: 249141
   figureS4:
     cmd: python figS4/figure.py
     deps:
