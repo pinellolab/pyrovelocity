@@ -627,7 +627,8 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         print(posterior_samples.keys())
         print(posterior_samples["st"].shape)
         print(posterior_samples["ut"].shape)
-        for figi, gene in enumerate(['Iapp', 'Cpe', 'Pcsk2', 'Tmem27', 'Ins1', 'Ins2']):
+        #for figi, gene in enumerate(['Iapp', 'Cpe', 'Pcsk2', 'Tmem27', 'Ins1', 'Ins2']):
+        for figi, gene in enumerate(model.adata.var_names[:5]):
             (index,) = np.where(adata.var_names == gene)
             fig, ax = plt.subplots(4, 5)
             fig.set_size_inches(18, 12)
