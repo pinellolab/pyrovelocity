@@ -929,6 +929,7 @@ def hydra_zen_compressed_configure():
                 tag="figS2",
                 path="${paths.reports}/${.tag}",
                 rayleigh_classifier_plot="${.path}/${.tag}_rayleigh_classifier.pdf",
+                distance_time_correlation_plot="${.path}/${.tag}_distance_time_correlation.pdf",
             ),
             figureS2_extras=dict(
                 tag="figS2",
