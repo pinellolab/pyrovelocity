@@ -3096,8 +3096,8 @@ stages:
     cmd: /usr/bin/time -v python figS2/figure.py train_models=[pbmc10k_model2_coarse,pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_tips_model2]
     deps:
     - path: figS2/figure.py
-      md5: b56bfde8aff1600cc86544f67c0d11b7
-      size: 6415
+      md5: 529c1b640e897610d67a846cd89473e0
+      size: 13170
     - path: models/larry_model2/pyrovelocity.pkl.zst
       md5: 07aabc2f0e592483cb3268ca1bf73675
       size: 1368569189
@@ -3131,7 +3131,14 @@ stages:
           tag: figS2
           path: reports/figS2
           rayleigh_classifier_plot: reports/figS2/figS2_rayleigh_classifier.pdf
+          distance_time_correlation_plot: reports/figS2/figS2_distance_time_correlation.pdf
     outs:
+    - path: reports/figS2/figS2_distance_time_correlation.pdf
+      md5: 8b520586ab629e689ee68c52cbef7e11
+      size: 27568
+    - path: reports/figS2/figS2_distance_time_correlation.pdf.png
+      md5: 56b90093a8551436fb981e4842510f0a
+      size: 90243
     - path: reports/figS2/figS2_rayleigh_classifier.pdf
       md5: 3b7709c8ec3d0dbed8a7a445e261baa4
       size: 15897
