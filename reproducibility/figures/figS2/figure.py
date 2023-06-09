@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import scvelo as scv
 import seaborn as sns
+from annoy import AnnoyIndex
 from omegaconf import DictConfig
 from scipy.stats import spearmanr
 from sklearn.linear_model import LogisticRegression
@@ -122,7 +123,10 @@ def compute_distances_and_correlation(
     n_neighbors=None,
     max_cells_for_subsample=7000,
     subsample_size=5000,
-    distance_metric="cityblock",
+    distance_metric="euclidean",
+    use_approx_nn=True,
+    neighborhood_fraction=0.1,
+    minimum_neighborhood_size=300,
 ):
     """
     Compute the correlation between expression distances and temporal differences.
@@ -133,7 +137,10 @@ def compute_distances_and_correlation(
         n_neighbors (int, optional): Number of neighbors to consider for computing distances.
         max_cells_for_subsample (int, optional): Maximum number of cells before subsampling is used.
         subsample_size (int, optional): Number of cells to subsample if n_cells > max_cells_for_subsample.
-        distance_metric (str, optional): Metric to use for distance computation. Defaults to 'cityblock'.
+        distance_metric (str, optional): Metric to use for distance computation. Defaults to 'euclidean'.
+        use_approx_nn (bool, optional): Whether to use Annoy for nearest neighbors computation. Defaults to True.
+        neighborhood_fraction (float, optional): Fraction of subsample size to be used as neighborhood size if n_neighbors is None. Defaults to 0.1.
+        minimum_neighborhood_size (int, optional): Minimum neighborhood size if n_neighbors is None. Defaults to 300.
 
     Returns:
         list: correlations between expression distances and temporal differences.
@@ -141,18 +148,38 @@ def compute_distances_and_correlation(
     """
 
     def compute_nearest_neighbors(expression_vectors, n_neighbors, distance_metric):
-        nbrs = NearestNeighbors(n_neighbors=n_neighbors, metric=distance_metric).fit(
-            expression_vectors
-        )
-        indices = nbrs.kneighbors(return_distance=False)
-        return indices
+        if use_approx_nn:
+            f = expression_vectors.shape[1]
+            t = AnnoyIndex(f, metric=distance_metric)
+
+            if hasattr(expression_vectors, "todense"):
+                expression_vectors = expression_vectors.todense()
+
+            for i in range(expression_vectors.shape[0]):
+                vector = np.array(expression_vectors[i, :]).flatten()
+                t.add_item(i, vector)
+
+            t.build(10)
+            indices = [
+                t.get_nns_by_item(i, n_neighbors)
+                for i in range(expression_vectors.shape[0])
+            ]
+            return indices
+        else:
+            nbrs = NearestNeighbors(
+                n_neighbors=n_neighbors, metric=distance_metric
+            ).fit(expression_vectors)
+            indices = nbrs.kneighbors(return_distance=False)
+            return indices
 
     expression_vectors = adata.layers["raw_spliced"]
     n_cells, _ = expression_vectors.shape
 
     if n_neighbors is None:
         n_neighbors = round(
-            subsample_size / 10 if n_cells > max_cells_for_subsample else n_cells / 10
+            subsample_size * neighborhood_fraction
+            if n_cells > max_cells_for_subsample
+            else max(minimum_neighborhood_size, n_cells * neighborhood_fraction)
         )
         print(f"neighborhood size set to {n_neighbors}")
 
@@ -254,6 +281,19 @@ def plot_distance_time_correlation(correlations, p_values, file_path, dataset_la
         )
 
 
+def profile_function(func, *args, **kwargs):
+    import cProfile
+
+    profiler = cProfile.Profile()
+    profiler.runctx(
+        "func(*args, **kwargs)",
+        globals(),
+        {"func": func, "args": args, "kwargs": kwargs},
+    )
+    profiler.dump_stats("profiling_results.out")
+    profiler.print_stats(sort="cumtime")
+
+
 def plots(conf: DictConfig, logger: Logger) -> None:
     logger.info(
         f"\n\nVerifying existence of paths for:\n\n"
@@ -311,6 +351,7 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         # pretty_print_dict(posterior_samples)
 
         if not distance_time_correlation_plot_exists and "_coarse" not in data_model:
+            # profile_function(compute_distances_and_correlation, adata, posterior_samples)
             correlations, p_values = compute_distances_and_correlation(
                 adata, posterior_samples
             )
