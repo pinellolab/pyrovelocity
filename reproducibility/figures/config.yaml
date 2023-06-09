@@ -30,13 +30,8 @@ process_data:
 - larry_neu
 - larry_multilineage
 train_models:
-- simulate_medium_model1
-- simulate_medium_model2
-- pancreas_model1
 - pancreas_model2
-- pbmc68k_model1
 - pbmc68k_model2
-- pons_model1
 - pons_model2
 - larry_model2
 - larry_tips_model2
@@ -761,7 +756,8 @@ reports:
   figureS2:
     tag: figS2
     path: reports/figS2
-    boxplot_other_lin: reports/figS2/figS2_other_lin.pdf
+    rayleigh_classifier_plot: reports/figS2/figS2_rayleigh_classifier.pdf
+    distance_time_correlation_plot: reports/figS2/figS2_distance_time_correlation.pdf
   figureS2_extras:
     tag: figS2
     path: reports/figS2

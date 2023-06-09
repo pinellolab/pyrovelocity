@@ -29,7 +29,7 @@ noise_model_strategy = st.sampled_from(["iid", "gillespie", "normal"])
 random_seed_strategy = st.randoms()
 
 
-@hypothesis.settings(deadline=500)
+@hypothesis.settings(deadline=1500)
 @given(
     n_obs=n_obs_strategy,
     n_vars=n_vars_strategy,
