@@ -9,9 +9,13 @@ import pandas as pd
 import scvelo as scv
 import seaborn as sns
 from omegaconf import DictConfig
+from scipy.stats import spearmanr
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import pairwise_distances
 from sklearn.model_selection import cross_val_score
+from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import LabelEncoder
+from tqdm import tqdm
 
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.io.compressedpickle import CompressedPickle
@@ -112,22 +116,47 @@ def make_rayleigh_classifier_plot(
         )
 
 
-import time
+def compute_distances_and_correlation(
+    adata,
+    posterior_samples,
+    n_neighbors=None,
+    max_cells_for_subsample=7000,
+    subsample_size=5000,
+    distance_metric="cityblock",
+):
+    """
+    Compute the correlation between expression distances and temporal differences.
 
-import numpy as np
-from scipy.stats import pearsonr
-from scipy.stats import spearmanr
-from sklearn.metrics import pairwise_distances
+    Parameters:
+        adata (anndata.AnnData): The annotated data object.
+        posterior_samples (dict): Dictionary containing temporal coordinates samples.
+        n_neighbors (int, optional): Number of neighbors to consider for computing distances.
+        max_cells_for_subsample (int, optional): Maximum number of cells before subsampling is used.
+        subsample_size (int, optional): Number of cells to subsample if n_cells > max_cells_for_subsample.
+        distance_metric (str, optional): Metric to use for distance computation. Defaults to 'cityblock'.
 
+    Returns:
+        list: correlations between expression distances and temporal differences.
+        list: p-values associated with the correlations.
+    """
 
-def compute_distances_and_correlation(adata, posterior_samples):
+    def compute_nearest_neighbors(expression_vectors, n_neighbors, distance_metric):
+        nbrs = NearestNeighbors(n_neighbors=n_neighbors, metric=distance_metric).fit(
+            expression_vectors
+        )
+        indices = nbrs.kneighbors(return_distance=False)
+        return indices
+
     expression_vectors = adata.layers["raw_spliced"]
-    n_cells, n_genes = expression_vectors.shape
+    n_cells, _ = expression_vectors.shape
 
-    max_cells_for_subsample = 7000
-    subsample_size = 5000
-    distance_metric = "euclidean"
+    if n_neighbors is None:
+        n_neighbors = round(
+            subsample_size / 10 if n_cells > max_cells_for_subsample else n_cells / 10
+        )
+        print(f"neighborhood size set to {n_neighbors}")
 
+    expression_distances_matrix = None
     if n_cells <= max_cells_for_subsample:
         expression_distances_matrix = pairwise_distances(
             expression_vectors, metric=distance_metric, n_jobs=-1
@@ -135,55 +164,94 @@ def compute_distances_and_correlation(adata, posterior_samples):
 
     correlations = []
     p_values = []
-    for temporal_coordinates in posterior_samples["cell_time"][:2]:
+    for temporal_coordinates in tqdm(
+        posterior_samples["cell_time"][:3], desc="computing distance-time correlations"
+    ):
         temporal_coordinates = temporal_coordinates.reshape(-1)
-        sort_indices = np.argsort(temporal_coordinates)
+
+        selected_expression_vectors = expression_vectors
+        selected_temporal_coordinates = temporal_coordinates
+        selected_expression_distances_matrix = expression_distances_matrix
 
         if n_cells > max_cells_for_subsample:
             subsample_indices = np.random.choice(
-                sort_indices, subsample_size, replace=False
+                np.arange(n_cells), subsample_size, replace=False
             )
-            sorted_subsample_indices = np.argsort(
-                temporal_coordinates[subsample_indices]
-            )
-            final_subsample_indices = subsample_indices[sorted_subsample_indices]
-
-            selected_expression_vectors = expression_vectors[final_subsample_indices, :]
-            selected_temporal_coordinates = temporal_coordinates[
-                final_subsample_indices
-            ]
-
+            selected_expression_vectors = expression_vectors[subsample_indices, :]
+            selected_temporal_coordinates = temporal_coordinates[subsample_indices]
             selected_expression_distances_matrix = pairwise_distances(
-                selected_expression_vectors, metric="euclidean", n_jobs=-1
+                selected_expression_vectors, metric=distance_metric, n_jobs=-1
             )
-        else:
-            selected_expression_vectors = expression_vectors[sort_indices, :]
-            selected_temporal_coordinates = temporal_coordinates[sort_indices]
-            selected_expression_distances_matrix = expression_distances_matrix[
-                sort_indices, :
-            ][:, sort_indices]
 
         n_selected_cells = selected_expression_vectors.shape[0]
+        indices = compute_nearest_neighbors(
+            selected_expression_vectors, n_neighbors, distance_metric
+        )
 
         selected_expression_distances = selected_expression_distances_matrix[
-            np.triu_indices(n_selected_cells, k=1)
-        ]
-
-        temporal_differences_matrix = (
-            selected_temporal_coordinates - selected_temporal_coordinates.reshape(-1, 1)
-        )
-        temporal_differences = temporal_differences_matrix[
-            np.triu_indices(n_selected_cells, k=1)
-        ]
+            np.arange(n_selected_cells)[:, None], indices
+        ].flatten()
+        selected_temporal_differences = np.abs(
+            selected_temporal_coordinates[np.arange(n_selected_cells)[:, None]]
+            - selected_temporal_coordinates[indices]
+        ).flatten()
 
         correlation, p_value = spearmanr(
-            selected_expression_distances, temporal_differences
+            selected_expression_distances, selected_temporal_differences
         )
         correlations.append(correlation)
         p_values.append(p_value)
 
     return correlations, p_values
-    # return correlations, p_values, time_dist, time_temporal, time_corr, total_time
+
+
+def plot_distance_time_correlation(correlations, p_values, file_path, dataset_labels):
+    """
+    Create a violin plot of the correlation between expression distances and temporal differences.
+
+    Parameters:
+        correlations (list of list of float): A list containing correlation values for multiple datasets.
+        p_values (list of list of float): A list containing p-values associated with correlations.
+        file_path (str): The path to save the plot.
+        dataset_labels (list of str): A list containing labels for each dataset.
+    """
+
+    data = []
+    for i in range(len(correlations)):
+        data.extend(
+            {
+                "dataset": dataset_labels[i],
+                "correlation": correlations[i][j],
+                "p_value": p_values[i][j],
+            }
+            for j in range(len(correlations[i]))
+        )
+    data = pd.DataFrame(data)
+
+    order = (
+        data.groupby("dataset")["correlation"]
+        .median()
+        .sort_values(ascending=False)
+        .index
+    )
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.violinplot(
+        x="dataset", y="correlation", data=data, inner="box", ax=ax, order=order
+    )
+
+    ax.set_xlabel("dataset")
+    ax.set_ylabel("distance-shared time correlation")
+    ax.set_title("")
+
+    for ext in ["", ".png"]:
+        fig.savefig(
+            f"{file_path}{ext}",
+            facecolor=fig.get_facecolor(),
+            bbox_inches="tight",
+            edgecolor="none",
+            dpi=300,
+        )
 
 
 def plots(conf: DictConfig, logger: Logger) -> None:
@@ -227,7 +295,11 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         macro_labels = []
         sample_size = 30
 
-    for data_model in conf.train_models:
+    if not distance_time_correlation_plot_exists:
+        correlations_all_models = []
+        p_values_all_models = []
+
+    for data_model in tqdm(conf.train_models, desc="processing data sets"):
         logger.info(f"\n\nLoading data for {data_model}\n\n")
         if data_model == "pbmc10k_model2_coarse":
             data_model_conf = conf.model_training["pbmc10k_model2"]
@@ -235,12 +307,15 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             data_model_conf = conf.model_training[data_model]
 
         adata, posterior_samples = load_data(data_model_conf)
-        print_anndata(adata)
-        pretty_print_dict(posterior_samples)
-        correlations, p_values = compute_distances_and_correlation(
-            adata, posterior_samples
-        )
-        breakpoint()
+        # print_anndata(adata)
+        # pretty_print_dict(posterior_samples)
+
+        if not distance_time_correlation_plot_exists and "_coarse" not in data_model:
+            correlations, p_values = compute_distances_and_correlation(
+                adata, posterior_samples
+            )
+            correlations_all_models.append(correlations)
+            p_values_all_models.append(p_values)
 
         if not rayleigh_classifier_plot_exists:
             logger.info(f"\n\nComputing Rayleigh statistics for {data_model}\n\n")
@@ -261,6 +336,21 @@ def plots(conf: DictConfig, logger: Logger) -> None:
                 posterior_samples, sample_size, adata, cell_state
             )
             multiclass_macro_aucs_test_all_models += multiclass_macro_aucs_test
+
+    if not distance_time_correlation_plot_exists:
+        logger.info(f"\n\nCreating {confS2.distance_time_correlation_plot}\n\n")
+        dataset_labels = [
+            label.split("_model")[0]
+            for label in conf.train_models
+            if not label.endswith("_coarse")
+        ]
+
+        plot_distance_time_correlation(
+            correlations_all_models,
+            p_values_all_models,
+            confS2.distance_time_correlation_plot,
+            dataset_labels,
+        )
 
     if not rayleigh_classifier_plot_exists:
         logger.info(f"\n\nCreating {confS2.rayleigh_classifier_plot}\n\n")
