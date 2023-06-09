@@ -123,6 +123,10 @@ stages:
           persist: true
       - ${reports.figureS2.rayleigh_classifier_plot}.png:
           persist: true
+      - ${reports.figureS2.distance_time_correlation_plot}:
+          persist: true
+      - ${reports.figureS2.distance_time_correlation_plot}.png:
+          persist: true
 
   figureS2_extras:
     cmd: python figS2/figure_extras.py train_models=[pbmc68k_model2]
