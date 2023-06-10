@@ -768,9 +768,7 @@ def hydra_zen_compressed_configure():
             rel_path="${paths.data_external}/${.data_file}",
             url="https://ndownloader.figshare.com/files/27686835",
             process_method="load_data",
-            process_args=dict(
-                count_thres="${base.count_threshold}"
-            ),
+            process_args=dict(count_thres="${base.count_threshold}"),
         ),
         pancreas=create_dataset_config(
             source="scvelo",
