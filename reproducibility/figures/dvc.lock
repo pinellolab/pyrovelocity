@@ -3257,3 +3257,62 @@ stages:
     - path: reports/figS2/figS2_mean_length_vs_uncertain.pdf.png
       md5: 54390a076d9fee2af48687d08683dde2
       size: 2783281
+  data_download@bonemarrow:
+    cmd: python data_download.py process_data=[bonemarrow]
+    deps:
+    - path: data_download.py
+      md5: 35532543a7cbebeb209b9cc4cf2af144
+      size: 3150
+    params:
+      config.yaml:
+        data_sets.bonemarrow:
+          source: scvelo
+          data_file: human_cd34_bone_marrow.h5ad
+          dl_root: data/BoneMarrow
+          dl_path: data/BoneMarrow/human_cd34_bone_marrow.h5ad
+          rel_path: data/external/human_cd34_bone_marrow.h5ad
+          url: https://ndownloader.figshare.com/files/27686835
+          derived:
+            process_method: load_data
+            process_args:
+              count_thres: 0
+            rel_path: data/processed/bonemarrow_processed.h5ad
+            thresh_histogram_path: data/processed/bonemarrow_thresh_histogram.pdf
+    outs:
+    - path: data/external/human_cd34_bone_marrow.h5ad
+      md5: 0e176a725d9a3b81ea95365e3e2ba1ae
+      size: 169575532
+  preprocess@bonemarrow:
+    cmd: python preprocess.py process_data=[bonemarrow]
+    deps:
+    - path: data/external/human_cd34_bone_marrow.h5ad
+      md5: 0e176a725d9a3b81ea95365e3e2ba1ae
+      size: 169575532
+    - path: preprocess.py
+      md5: ccbe8f3aa9ca398e232c69b48a041c4d
+      size: 2744
+    params:
+      config.yaml:
+        data_sets.bonemarrow:
+          source: scvelo
+          data_file: human_cd34_bone_marrow.h5ad
+          dl_root: data/BoneMarrow
+          dl_path: data/BoneMarrow/human_cd34_bone_marrow.h5ad
+          rel_path: data/external/human_cd34_bone_marrow.h5ad
+          url: https://ndownloader.figshare.com/files/27686835
+          derived:
+            process_method: load_data
+            process_args:
+              count_thres: 0
+            rel_path: data/processed/bonemarrow_processed.h5ad
+            thresh_histogram_path: data/processed/bonemarrow_thresh_histogram.pdf
+    outs:
+    - path: data/processed/bonemarrow_processed.h5ad
+      md5: e8e881920c5fdc7fdfe7c8eed676774b
+      size: 651900368
+    - path: data/processed/bonemarrow_thresh_histogram.pdf
+      md5: d52fbfa1af2f93d652be29692e0651fd
+      size: 23574
+    - path: data/processed/bonemarrow_thresh_histogram.pdf.png
+      md5: a78d13936ffeb58a1734439fc1d5e48d
+      size: 110691
