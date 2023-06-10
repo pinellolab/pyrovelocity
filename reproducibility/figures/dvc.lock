@@ -3257,3 +3257,286 @@ stages:
     - path: reports/figS2/figS2_mean_length_vs_uncertain.pdf.png
       md5: 54390a076d9fee2af48687d08683dde2
       size: 2783281
+  data_download@bonemarrow:
+    cmd: python data_download.py process_data=[bonemarrow]
+    deps:
+    - path: data_download.py
+      md5: 35532543a7cbebeb209b9cc4cf2af144
+      size: 3150
+    params:
+      config.yaml:
+        data_sets.bonemarrow:
+          source: scvelo
+          data_file: human_cd34_bone_marrow.h5ad
+          dl_root: data/BoneMarrow
+          dl_path: data/BoneMarrow/human_cd34_bone_marrow.h5ad
+          rel_path: data/external/human_cd34_bone_marrow.h5ad
+          url: https://ndownloader.figshare.com/files/27686835
+          derived:
+            process_method: load_data
+            process_args:
+              count_thres: 0
+            rel_path: data/processed/bonemarrow_processed.h5ad
+            thresh_histogram_path: data/processed/bonemarrow_thresh_histogram.pdf
+    outs:
+    - path: data/external/human_cd34_bone_marrow.h5ad
+      md5: 0e176a725d9a3b81ea95365e3e2ba1ae
+      size: 169575532
+  preprocess@bonemarrow:
+    cmd: python preprocess.py process_data=[bonemarrow]
+    deps:
+    - path: data/external/human_cd34_bone_marrow.h5ad
+      md5: 0e176a725d9a3b81ea95365e3e2ba1ae
+      size: 169575532
+    - path: preprocess.py
+      md5: ccbe8f3aa9ca398e232c69b48a041c4d
+      size: 2744
+    params:
+      config.yaml:
+        data_sets.bonemarrow:
+          source: scvelo
+          data_file: human_cd34_bone_marrow.h5ad
+          dl_root: data/BoneMarrow
+          dl_path: data/BoneMarrow/human_cd34_bone_marrow.h5ad
+          rel_path: data/external/human_cd34_bone_marrow.h5ad
+          url: https://ndownloader.figshare.com/files/27686835
+          derived:
+            process_method: load_data
+            process_args:
+              count_thres: 0
+            rel_path: data/processed/bonemarrow_processed.h5ad
+            thresh_histogram_path: data/processed/bonemarrow_thresh_histogram.pdf
+    outs:
+    - path: data/processed/bonemarrow_processed.h5ad
+      md5: e8e881920c5fdc7fdfe7c8eed676774b
+      size: 651900368
+    - path: data/processed/bonemarrow_thresh_histogram.pdf
+      md5: d52fbfa1af2f93d652be29692e0651fd
+      size: 23574
+    - path: data/processed/bonemarrow_thresh_histogram.pdf.png
+      md5: a78d13936ffeb58a1734439fc1d5e48d
+      size: 110691
+  train@bonemarrow_model2:
+    cmd: /usr/bin/time -v python train.py train_models=[bonemarrow_model2]
+    deps:
+    - path: data/processed/bonemarrow_processed.h5ad
+      md5: e8e881920c5fdc7fdfe7c8eed676774b
+      size: 651900368
+    - path: train.py
+      md5: 4cf2c31c17dbb07e8de124c36735401b
+      size: 6703
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+          count_threshold: 0
+          seed: 99
+        model_training.bonemarrow_model2:
+          path: models/bonemarrow_model2
+          model_path: models/bonemarrow_model2/model
+          input_data_path: data/processed/bonemarrow_processed.h5ad
+          trained_data_path: models/bonemarrow_model2/trained.h5ad
+          pyrovelocity_data_path: models/bonemarrow_model2/pyrovelocity.pkl.zst
+          posterior_samples_path: models/bonemarrow_model2/posterior_samples.pkl.zst
+          metrics_path: models/bonemarrow_model2/metrics.json
+          run_info_path: models/bonemarrow_model2/run_info.json
+          vector_field_parameters:
+            basis: umap
+          gpu_id: 0
+          training_parameters:
+            _target_: pyrovelocity.api.train_model
+            _partial_: true
+            guide_type: auto
+            model_type: auto
+            svi_train: false
+            batch_size: -1
+            train_size: 1.0
+            use_gpu: 0
+            likelihood: Poisson
+            num_samples: 30
+            log_every: 100
+            cell_state: clusters
+            patient_improve: 0.0001
+            patient_init: 45
+            seed: 99
+            lr: 0.01
+            max_epochs: 2000
+            include_prior: true
+            library_size: true
+            offset: true
+            input_type: raw
+            cell_specific_kinetics:
+            kinetics_num: 2
+            loss_plot_path: models/bonemarrow_model2/loss_plot.png
+    outs:
+    - path: models/bonemarrow_model2/loss_plot.png
+      md5: abc038d6c66ee944df1ca61d26fccf26
+      size: 11213
+    - path: models/bonemarrow_model2/model
+      md5: 8520f73c5216a28351d1bf34c3bed3d1.dir
+      size: 1884213
+      nfiles: 2
+    - path: models/bonemarrow_model2/posterior_samples.pkl.zst
+      md5: 8b5e05a2017afd651d08a000b37b16da
+      size: 2518920834
+    - path: models/bonemarrow_model2/run_info.json
+      md5: db9c1d357e5bbbd9e3f86e431e1e9bc6
+      size: 457
+  postprocess@bonemarrow_model2:
+    cmd: /usr/bin/time -v python postprocess.py train_models=[bonemarrow_model2]
+    deps:
+    - path: data/processed/bonemarrow_processed.h5ad
+      md5: e8e881920c5fdc7fdfe7c8eed676774b
+      size: 651900368
+    - path: models/bonemarrow_model2/model
+      md5: 8520f73c5216a28351d1bf34c3bed3d1.dir
+      size: 1884213
+      nfiles: 2
+    - path: models/bonemarrow_model2/posterior_samples.pkl.zst
+      md5: 8b5e05a2017afd651d08a000b37b16da
+      size: 2518920834
+    - path: postprocess.py
+      md5: 2d194b66a6964f4ac39022fe6a4fbb8f
+      size: 5679
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+          count_threshold: 0
+          seed: 99
+        model_training.bonemarrow_model2:
+          path: models/bonemarrow_model2
+          model_path: models/bonemarrow_model2/model
+          input_data_path: data/processed/bonemarrow_processed.h5ad
+          trained_data_path: models/bonemarrow_model2/trained.h5ad
+          pyrovelocity_data_path: models/bonemarrow_model2/pyrovelocity.pkl.zst
+          posterior_samples_path: models/bonemarrow_model2/posterior_samples.pkl.zst
+          metrics_path: models/bonemarrow_model2/metrics.json
+          run_info_path: models/bonemarrow_model2/run_info.json
+          vector_field_parameters:
+            basis: umap
+          gpu_id: 0
+          training_parameters:
+            _target_: pyrovelocity.api.train_model
+            _partial_: true
+            guide_type: auto
+            model_type: auto
+            svi_train: false
+            batch_size: -1
+            train_size: 1.0
+            use_gpu: 0
+            likelihood: Poisson
+            num_samples: 30
+            log_every: 100
+            cell_state: clusters
+            patient_improve: 0.0001
+            patient_init: 45
+            seed: 99
+            lr: 0.01
+            max_epochs: 2000
+            include_prior: true
+            library_size: true
+            offset: true
+            input_type: raw
+            cell_specific_kinetics:
+            kinetics_num: 2
+            loss_plot_path: models/bonemarrow_model2/loss_plot.png
+    outs:
+    - path: models/bonemarrow_model2/metrics.json
+      md5: a6337d9d768bdc6ec9ed5fafd33dd56c
+      size: 98
+    - path: models/bonemarrow_model2/pyrovelocity.pkl.zst
+      md5: cd0a08363b530eb4e66451b65d87662f
+      size: 162542506
+    - path: models/bonemarrow_model2/trained.h5ad
+      md5: 5c0d598b6ce53d54015e4abaf4954fb1
+      size: 760341824
+  summarize@bonemarrow_model2:
+    cmd: /usr/bin/time -v python summarize.py train_models=[bonemarrow_model2]
+    deps:
+    - path: models/bonemarrow_model2/pyrovelocity.pkl.zst
+      md5: cd0a08363b530eb4e66451b65d87662f
+      size: 162542506
+    - path: models/bonemarrow_model2/trained.h5ad
+      md5: 5c0d598b6ce53d54015e4abaf4954fb1
+      size: 760341824
+    - path: summarize.py
+      md5: d42d6ccbd1c16e746c726a6e2c9cfc2f
+      size: 27880
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+          count_threshold: 0
+          seed: 99
+        reports.model_summary.bonemarrow_model2:
+          path: reports/bonemarrow_model2
+          trained_data_path: models/bonemarrow_model2/trained.h5ad
+          pyrovelocity_data_path: models/bonemarrow_model2/pyrovelocity.pkl.zst
+          dataframe_path: data/processed/bonemarrow_model2_dataframe.pkl.zst
+          shared_time_plot: reports/bonemarrow_model2/shared_time.pdf
+          volcano_plot: reports/bonemarrow_model2/volcano.pdf
+          rainbow_plot: reports/bonemarrow_model2/rainbow.pdf
+          uncertainty_param_plot: reports/bonemarrow_model2/param_uncertainties.pdf
+          vector_field_plot: reports/bonemarrow_model2/vector_field.pdf
+          biomarker_selection_plot: reports/bonemarrow_model2/markers_selection_scatterplot.tif
+          biomarker_phaseportrait_plot: reports/bonemarrow_model2/markers_phaseportrait.pdf
+          fig2_part1_plot: reports/bonemarrow_model2/fig2_part1_plot.pdf
+          fig2_part2_plot: reports/bonemarrow_model2/fig2_part2_plot.pdf
+          violin_clusters_lin: reports/bonemarrow_model2/clusters_violin_lin.pdf
+          violin_clusters_log: reports/bonemarrow_model2/clusters_violin_log.pdf
+    outs:
+    - path: data/processed/bonemarrow_model2_dataframe.pkl.zst
+      md5: ab00ad34356484260492e66b2ad8f912
+      size: 17615324
+    - path: reports/bonemarrow_model2/clusters_violin_lin.pdf
+      md5: 9068dc30cd683c9d00cfadb7fc563022
+      size: 150717
+    - path: reports/bonemarrow_model2/clusters_violin_lin.pdf.png
+      md5: 6fd43e195a753036b028a38813e32bef
+      size: 2316012
+    - path: reports/bonemarrow_model2/clusters_violin_log.pdf
+      md5: d674a37e253566b9533b52cb0a1c930d
+      size: 151467
+    - path: reports/bonemarrow_model2/clusters_violin_log.pdf.png
+      md5: a846cc0d014b0563216e15eab71dafd7
+      size: 2485038
+    - path: reports/bonemarrow_model2/fig2_part1_plot.pdf
+      md5: 9e77d680f39a41dac3943f049bd498d0
+      size: 486075
+    - path: reports/bonemarrow_model2/fig2_part1_plot.pdf.png
+      md5: fa9af7dd5356dc410c07c7c8b09820a4
+      size: 418493
+    - path: reports/bonemarrow_model2/fig2_part2_plot.pdf
+      md5: b694bf93944e3a80d7ad810a41f2b9c1
+      size: 1931458
+    - path: reports/bonemarrow_model2/fig2_part2_plot.pdf.png
+      md5: 682373901caf02aba63df837ce79f68a
+      size: 511903
+    - path: reports/bonemarrow_model2/param_uncertainties.pdf
+      md5: 1ce1edf70061328166e0558975306448
+      size: 138685
+    - path: reports/bonemarrow_model2/param_uncertainties.pdf.png
+      md5: 361fca5e5f00f0ccaf95c4005266cc56
+      size: 809961
+    - path: reports/bonemarrow_model2/rainbow.pdf
+      md5: 4c56b631bdda62c987525dc85c44e39f
+      size: 8157744
+    - path: reports/bonemarrow_model2/rainbow.pdf.png
+      md5: 98ad0cd2b66713d37d26b4258949f171
+      size: 1112702
+    - path: reports/bonemarrow_model2/shared_time.pdf
+      md5: 90350eb65d1ba2d97a607a1a73b90111
+      size: 168622
+    - path: reports/bonemarrow_model2/vector_field.pdf
+      md5: 9780386159349e913b36b64f2b0ee916
+      size: 320629
+    - path: reports/bonemarrow_model2/vector_field.pdf.png
+      md5: d4511e2cf1ff27bff8d9b48348438aad
+      size: 463204
+    - path: reports/bonemarrow_model2/volcano.pdf
+      md5: 781565d48fd61e0e2fee282a61e743b4
+      size: 40856
+    - path: reports/bonemarrow_model2/volcano.pdf.png
+      md5: 860edac120b7ab2fb4be67aa1bbb4e38
+      size: 342473

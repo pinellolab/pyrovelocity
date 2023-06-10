@@ -233,6 +233,8 @@ def load_data(
         print("Dataset name:", data)
         if data == "pancreas":
             adata = scv.datasets.pancreas()
+        elif data == "bonemarrow":
+            adata = scv.datasets.bonemarrow()
         elif data == "forebrain":
             adata = scv.datasets.forebrain()
         elif data == "dentategyrus_lamanno":
