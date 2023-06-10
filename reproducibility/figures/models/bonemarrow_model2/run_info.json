@@ -1,0 +1,12 @@
+{
+    "artifact_uri": "file:///home/jupyter/pyrovelocity/reproducibility/figures/mlruns/0/7d31ef27cdc2463f875982bc4f4e200e/artifacts",
+    "end_time": 1686367263392,
+    "experiment_id": "0",
+    "lifecycle_stage": "active",
+    "run_id": "7d31ef27cdc2463f875982bc4f4e200e",
+    "run_name": "bonemarrow_model2-7d31ef2",
+    "run_uuid": "7d31ef27cdc2463f875982bc4f4e200e",
+    "start_time": 1686366404451,
+    "status": "FINISHED",
+    "user_id": "jupyter"
+}
