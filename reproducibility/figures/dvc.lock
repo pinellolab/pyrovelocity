@@ -3451,3 +3451,92 @@ stages:
     - path: models/bonemarrow_model2/trained.h5ad
       md5: 5c0d598b6ce53d54015e4abaf4954fb1
       size: 760341824
+  summarize@bonemarrow_model2:
+    cmd: /usr/bin/time -v python summarize.py train_models=[bonemarrow_model2]
+    deps:
+    - path: models/bonemarrow_model2/pyrovelocity.pkl.zst
+      md5: cd0a08363b530eb4e66451b65d87662f
+      size: 162542506
+    - path: models/bonemarrow_model2/trained.h5ad
+      md5: 5c0d598b6ce53d54015e4abaf4954fb1
+      size: 760341824
+    - path: summarize.py
+      md5: d42d6ccbd1c16e746c726a6e2c9cfc2f
+      size: 27880
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+          count_threshold: 0
+          seed: 99
+        reports.model_summary.bonemarrow_model2:
+          path: reports/bonemarrow_model2
+          trained_data_path: models/bonemarrow_model2/trained.h5ad
+          pyrovelocity_data_path: models/bonemarrow_model2/pyrovelocity.pkl.zst
+          dataframe_path: data/processed/bonemarrow_model2_dataframe.pkl.zst
+          shared_time_plot: reports/bonemarrow_model2/shared_time.pdf
+          volcano_plot: reports/bonemarrow_model2/volcano.pdf
+          rainbow_plot: reports/bonemarrow_model2/rainbow.pdf
+          uncertainty_param_plot: reports/bonemarrow_model2/param_uncertainties.pdf
+          vector_field_plot: reports/bonemarrow_model2/vector_field.pdf
+          biomarker_selection_plot: reports/bonemarrow_model2/markers_selection_scatterplot.tif
+          biomarker_phaseportrait_plot: reports/bonemarrow_model2/markers_phaseportrait.pdf
+          fig2_part1_plot: reports/bonemarrow_model2/fig2_part1_plot.pdf
+          fig2_part2_plot: reports/bonemarrow_model2/fig2_part2_plot.pdf
+          violin_clusters_lin: reports/bonemarrow_model2/clusters_violin_lin.pdf
+          violin_clusters_log: reports/bonemarrow_model2/clusters_violin_log.pdf
+    outs:
+    - path: data/processed/bonemarrow_model2_dataframe.pkl.zst
+      md5: ab00ad34356484260492e66b2ad8f912
+      size: 17615324
+    - path: reports/bonemarrow_model2/clusters_violin_lin.pdf
+      md5: 9068dc30cd683c9d00cfadb7fc563022
+      size: 150717
+    - path: reports/bonemarrow_model2/clusters_violin_lin.pdf.png
+      md5: 6fd43e195a753036b028a38813e32bef
+      size: 2316012
+    - path: reports/bonemarrow_model2/clusters_violin_log.pdf
+      md5: d674a37e253566b9533b52cb0a1c930d
+      size: 151467
+    - path: reports/bonemarrow_model2/clusters_violin_log.pdf.png
+      md5: a846cc0d014b0563216e15eab71dafd7
+      size: 2485038
+    - path: reports/bonemarrow_model2/fig2_part1_plot.pdf
+      md5: 9e77d680f39a41dac3943f049bd498d0
+      size: 486075
+    - path: reports/bonemarrow_model2/fig2_part1_plot.pdf.png
+      md5: fa9af7dd5356dc410c07c7c8b09820a4
+      size: 418493
+    - path: reports/bonemarrow_model2/fig2_part2_plot.pdf
+      md5: b694bf93944e3a80d7ad810a41f2b9c1
+      size: 1931458
+    - path: reports/bonemarrow_model2/fig2_part2_plot.pdf.png
+      md5: 682373901caf02aba63df837ce79f68a
+      size: 511903
+    - path: reports/bonemarrow_model2/param_uncertainties.pdf
+      md5: 1ce1edf70061328166e0558975306448
+      size: 138685
+    - path: reports/bonemarrow_model2/param_uncertainties.pdf.png
+      md5: 361fca5e5f00f0ccaf95c4005266cc56
+      size: 809961
+    - path: reports/bonemarrow_model2/rainbow.pdf
+      md5: 4c56b631bdda62c987525dc85c44e39f
+      size: 8157744
+    - path: reports/bonemarrow_model2/rainbow.pdf.png
+      md5: 98ad0cd2b66713d37d26b4258949f171
+      size: 1112702
+    - path: reports/bonemarrow_model2/shared_time.pdf
+      md5: 90350eb65d1ba2d97a607a1a73b90111
+      size: 168622
+    - path: reports/bonemarrow_model2/vector_field.pdf
+      md5: 9780386159349e913b36b64f2b0ee916
+      size: 320629
+    - path: reports/bonemarrow_model2/vector_field.pdf.png
+      md5: d4511e2cf1ff27bff8d9b48348438aad
+      size: 463204
+    - path: reports/bonemarrow_model2/volcano.pdf
+      md5: 781565d48fd61e0e2fee282a61e743b4
+      size: 40856
+    - path: reports/bonemarrow_model2/volcano.pdf.png
+      md5: 860edac120b7ab2fb4be67aa1bbb4e38
+      size: 342473
