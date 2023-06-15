@@ -547,9 +547,13 @@ def extrapolate_prediction_sample_predictive(data_model_conf, adata, grid_time_p
     grid_time_samples_ut = []
     grid_time_samples_st = []
     grid_time_samples_state = []
+
     for t in grid_cell_time:
-        test = Predictive(pyro.condition(model.module.model, data={"cell_time": t}), 
+        test = Predictive(pyro.condition(model.module.model, data={"cell_time": t, "cell_gene_state": (t > (posterior_samples['dt_switching'] + posterior_samples['t0']).mean(0)).int()}), 
                 posterior_samples=posterior_samples)(*dummy_obs)
+        print(test['ut'].shape)
+        #print(test['cell_gene_state'])
+        #print(test['cell_time'])
         grid_time_samples_ut.append(test['ut'])
         grid_time_samples_st.append(test['st'])
         grid_time_samples_state.append(test['cell_gene_state'])
@@ -564,7 +568,8 @@ def extrapolate_prediction_trace(data_model_conf, adata, grid_time_points=500):
     PyroVelocity.setup_anndata(adata)
     model = PyroVelocity(adata)
     model = model.load_model(pyrovelocity_model_path, adata, use_gpu=0)
-    grid_cell_time = torch.linspace(-10, 20, grid_time_points)
+    #grid_cell_time = torch.linspace(-10, 20, grid_time_points)
+    grid_cell_time = torch.linspace(0.01, 50, grid_time_points)
     print(grid_cell_time.shape)
     dummy_obs = (torch.ones((1, adata.shape[1])), 
                  torch.ones((1, adata.shape[1])),
@@ -597,9 +602,10 @@ def posterior_curve(adata, posterior_samples, grid_time_samples_ut, grid_time_sa
         ax = ax.flatten()
         for sample in range(20):
             ax[sample].scatter(posterior_samples["st_mean"][:,index[0]], 
-                               posterior_samples["ut_mean"][:,index[0]], s=1.5, linewidth=0, color='r')
+                               posterior_samples["ut_mean"][:,index[0]], s=1, linewidth=0, color='red')
+
             ax[sample].scatter(grid_time_samples_st[sample][:, index[0]], 
-                               grid_time_samples_ut[sample][:, index[0]], s=3, linewidth=0.2, color='g')
+                               grid_time_samples_ut[sample][:, index[0]], s=10, marker='o', linewidth=0, c=grid_time_samples_state[sample][:, index[0]])
             #ax[sample].plot(grid_time_samples_st[sample][:, index[0]], 
             #                grid_time_samples_ut[sample][:, index[0]], 
             #                linestyle="--", linewidth=3, color='g')
