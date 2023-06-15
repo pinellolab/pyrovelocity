@@ -1,4 +1,9 @@
 import os
+from pyrovelocity._velocity import PyroVelocity
+from pyro.infer import MCMC, NUTS, Predictive
+import pyro
+
+import torch
 import pickle
 from logging import Logger
 from pathlib import Path
@@ -505,6 +510,112 @@ def plot_parameter_posterior_distributions(
         )
 
 
+def extrapolate_prediction_sample_predictive(data_model_conf, adata, grid_time_points=500):
+    pyrovelocity_model_path = data_model_conf.model_path
+    PyroVelocity.setup_anndata(adata)
+    model = PyroVelocity(adata)
+    model = model.load_model(pyrovelocity_model_path, adata, use_gpu=0)
+    grid_cell_time = torch.linspace(-50, 50, grid_time_points)
+
+    samples = []
+    for sample in range(30):
+        sample = model.module.guide()
+        samples.append(sample)
+
+    posterior_samples = {}
+    for key in ["alpha", "beta", "gamma", "u_offset", "s_offset", "t0", "u_scale", "dt_switching"]:
+        posterior_samples[key] = torch.tensor(np.concatenate(
+            [
+                samples[j][key].unsqueeze(-2).unsqueeze(-3).cpu().detach().numpy()
+                for j in range(len(samples))
+            ],
+            axis=-3,
+            )).to('cuda:0')
+    for key in posterior_samples:
+        print(posterior_samples[key].shape)
+    print('-------')
+    dummy_obs = (torch.ones((1, adata.shape[1])).to('cuda:0'), 
+                 torch.ones((1, adata.shape[1])).to('cuda:0'),
+                 torch.ones((1, 1)).to('cuda:0'),
+                 torch.ones((1, 1)).to('cuda:0'),
+                 torch.ones((1, 1)).to('cuda:0'),
+                 torch.ones((1, 1)).to('cuda:0'),
+                 torch.ones((1, 1)).to('cuda:0'),
+                 torch.ones((1, 1)).to('cuda:0'),
+                 torch.ones((1, 1)).to('cuda:0'))
+
+    grid_time_samples_ut = []
+    grid_time_samples_st = []
+    grid_time_samples_state = []
+    for t in grid_cell_time:
+        test = Predictive(pyro.condition(model.module.model, data={"cell_time": t}), 
+                posterior_samples=posterior_samples)(*dummy_obs)
+        grid_time_samples_ut.append(test['ut'])
+        grid_time_samples_st.append(test['st'])
+        grid_time_samples_state.append(test['cell_gene_state'])
+    grid_time_samples_ut = torch.cat(grid_time_samples_ut, dim=-2)
+    grid_time_samples_st = torch.cat(grid_time_samples_st, dim=-2)
+    grid_time_samples_state = torch.cat(grid_time_samples_state, dim=-2)
+    return grid_time_samples_ut.cpu().detach().numpy(), grid_time_samples_st.cpu().detach().numpy(), grid_time_samples_state.cpu().detach().numpy()
+
+
+def extrapolate_prediction_trace(data_model_conf, adata, grid_time_points=500):
+    pyrovelocity_model_path = data_model_conf.model_path
+    PyroVelocity.setup_anndata(adata)
+    model = PyroVelocity(adata)
+    model = model.load_model(pyrovelocity_model_path, adata, use_gpu=0)
+    grid_cell_time = torch.linspace(-10, 20, grid_time_points)
+    print(grid_cell_time.shape)
+    dummy_obs = (torch.ones((1, adata.shape[1])), 
+                 torch.ones((1, adata.shape[1])),
+                 torch.ones((1, 1)),
+                 torch.ones((1, 1)),
+                 torch.ones((1, 1)),
+                 torch.ones((1, 1)),
+                 torch.ones((1, 1)),
+                 torch.ones((1, 1)))
+
+    for sample in range(30):
+        for t in grid_cell_time:
+            guide_trace = pyro.poutine.trace(pyro.poutine.block(model.module.guide, hide=["cell_time"])).get_trace()
+            conditioned_model = pyro.condition(model.module.model, data={"cell_time": t})
+            model_trace = pyro.poutine.trace(pyro.poutine.replay(conditioned_model, trace=guide_trace)).get_trace(*dummy_obs)
+            for key in model_trace.nodes.keys():
+                if key in ['ut', 'st']:
+                    print(model_trace.nodes[key].keys())
+                    print(model_trace.nodes[key]['value'].shape)
+        break
+    return
+
+
+def posterior_curve(adata, posterior_samples, grid_time_samples_ut, grid_time_samples_st, grid_time_samples_state):
+    #for figi, gene in enumerate(['Iapp', 'Cpe', 'Pcsk2', 'Tmem27', 'Ins1', 'Ins2']):
+    for figi, gene in enumerate(['Iapp', 'Cpe', 'Pcsk2', 'Tmem27']):
+        (index,) = np.where(adata.var_names == gene)
+        fig, ax = plt.subplots(4, 5)
+        fig.set_size_inches(18, 12)
+        ax = ax.flatten()
+        for sample in range(20):
+            ax[sample].scatter(posterior_samples["st_mean"][:,index[0]], 
+                               posterior_samples["ut_mean"][:,index[0]], s=1.5, linewidth=0, color='r')
+            ax[sample].scatter(grid_time_samples_st[sample][:, index[0]], 
+                               grid_time_samples_ut[sample][:, index[0]], s=3, linewidth=0.2, color='g')
+            #ax[sample].plot(grid_time_samples_st[sample][:, index[0]], 
+            #                grid_time_samples_ut[sample][:, index[0]], 
+            #                linestyle="--", linewidth=3, color='g')
+            ax[sample].set_title(f"{gene} model 2 sample {sample}")
+            ax[sample].set_xlim(0, np.max(posterior_samples["st_mean"][:,index[0]])*1.1)
+            ax[sample].set_ylim(0, np.max(posterior_samples["ut_mean"][:,index[0]])*1.1)
+        fig.tight_layout()
+        fig.savefig(
+            f"fig{figi}_test.png",
+            facecolor=fig.get_facecolor(),
+            bbox_inches="tight",
+            edgecolor="none",
+            dpi=300,
+        )
+
+
 def plots(conf: DictConfig, logger: Logger) -> None:
     """Construct summary plots for each data set and model.
 
@@ -570,6 +681,10 @@ def plots(conf: DictConfig, logger: Logger) -> None:
 
         logger.info(f"Loading pyrovelocity data: {pyrovelocity_data_path}")
         posterior_samples = CompressedPickle.load(pyrovelocity_data_path)
+
+        grid_time_samples_ut, grid_time_samples_st, grid_time_samples_state = extrapolate_prediction_sample_predictive(data_model_conf, adata, grid_time_points=500)
+        posterior_curve(adata, posterior_samples, grid_time_samples_ut, grid_time_samples_st, grid_time_samples_state)
+        #extrapolate_prediction_trace(data_model_conf, adata, grid_time_points=5)
 
         ##################
         # save dataframe
