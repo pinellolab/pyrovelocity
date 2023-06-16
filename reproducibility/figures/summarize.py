@@ -595,7 +595,7 @@ def extrapolate_prediction_trace(data_model_conf, adata, grid_time_points=500):
 
 def posterior_curve(adata, posterior_samples, grid_time_samples_ut, grid_time_samples_st, grid_time_samples_state):
     #for figi, gene in enumerate(['Iapp', 'Cpe', 'Pcsk2', 'Tmem27', 'Ins1', 'Ins2']):
-    for figi, gene in enumerate(['Iapp', 'Cpe', 'Pcsk2', 'Tmem27']):
+    for figi, gene in enumerate(['Iapp', 'Cpe', 'Pcsk2', 'Tmem27', 'Rbp4']):
         (index,) = np.where(adata.var_names == gene)
         fig, ax = plt.subplots(4, 5)
         fig.set_size_inches(18, 12)
@@ -604,7 +604,7 @@ def posterior_curve(adata, posterior_samples, grid_time_samples_ut, grid_time_sa
             ax[sample].scatter(posterior_samples["st_mean"][:,index[0]], 
                                posterior_samples["ut_mean"][:,index[0]], s=1, linewidth=0, color='red')
 
-            ax[sample].scatter(grid_time_samples_st[sample][:, index[0]], 
+            im = ax[sample].scatter(grid_time_samples_st[sample][:, index[0]], 
                                grid_time_samples_ut[sample][:, index[0]], s=10, marker='o', linewidth=0, c=grid_time_samples_state[sample][:, index[0]])
             #ax[sample].plot(grid_time_samples_st[sample][:, index[0]], 
             #                grid_time_samples_ut[sample][:, index[0]], 
@@ -612,6 +612,7 @@ def posterior_curve(adata, posterior_samples, grid_time_samples_ut, grid_time_sa
             ax[sample].set_title(f"{gene} model 2 sample {sample}")
             ax[sample].set_xlim(0, np.max(posterior_samples["st_mean"][:,index[0]])*1.1)
             ax[sample].set_ylim(0, np.max(posterior_samples["ut_mean"][:,index[0]])*1.1)
+            fig.colorbar(im, ax=ax[sample])
         fig.tight_layout()
         fig.savefig(
             f"fig{figi}_test.png",
