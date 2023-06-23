@@ -3574,3 +3574,37 @@ stages:
     - path: data/external/pbmc5k.h5ad
       md5: ab9b4aa640c5978dcff7cbea23f0fb3d
       size: 282506350
+  preprocess@pbmc5k:
+    cmd: python preprocess.py process_data=[pbmc5k]
+    deps:
+    - path: data/external/pbmc5k.h5ad
+      md5: ab9b4aa640c5978dcff7cbea23f0fb3d
+      size: 282506350
+    - path: preprocess.py
+      md5: ccbe8f3aa9ca398e232c69b48a041c4d
+      size: 2744
+    params:
+      config.yaml:
+        data_sets.pbmc5k:
+          source: pyrovelocity
+          data_file: pbmc5k.h5ad
+          dl_root: data/external
+          dl_path: data/external/pbmc5k.h5ad
+          rel_path: data/external/pbmc5k.h5ad
+          url: https://storage.googleapis.com/pyrovelocity/data/pbmc5k.h5ad
+          derived:
+            process_method: load_data
+            process_args:
+              count_thres: 0
+            rel_path: data/processed/pbmc5k_processed.h5ad
+            thresh_histogram_path: data/processed/pbmc5k_thresh_histogram.pdf
+    outs:
+    - path: data/processed/pbmc5k_processed.h5ad
+      md5: a09eeda00f2f46f2e25fdc3cd72fd411
+      size: 515978957
+    - path: data/processed/pbmc5k_thresh_histogram.pdf
+      md5: 3cb1510f8b8243b9f14aaee41282295e
+      size: 28508
+    - path: data/processed/pbmc5k_thresh_histogram.pdf.png
+      md5: a2b23641904e7f91ca8229c7a5c189be
+      size: 142848
