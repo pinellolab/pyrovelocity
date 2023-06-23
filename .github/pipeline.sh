@@ -54,7 +54,11 @@ function run_parallel_pipeline() {
     dvc repro train@larry_multilineage_model2 &
     wait
 
+    dvc repro train@bonemarrow_model2 &
+    sleep 7
     dvc repro train@pbmc10k_model2 &
+    sleep 7
+    dvc repro train@pbmc5k_model2 &
 
     wait
     dvc repro train
@@ -123,6 +127,8 @@ data_sets=(
     "pons"
     "pbmc68k"
     "pbmc10k"
+    "pbmc5k"
+    "bonemarrow"
     "larry"
     "larry_mono"
     "larry_neu"

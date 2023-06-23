@@ -8,8 +8,11 @@ import scanpy as sc
 from pyensembl import EnsemblRelease
 
 
-DATA_FILE_PATH = "data/external/pbmc10k_unlabeled.h5ad"
-BACKUP_URL = "https://storage.googleapis.com/pyrovelocity/data/pbmc10k_unlabeled.h5ad"
+DATA_SET_NAME = "pbmc5k"
+DATA_FILE_PATH = f"{DATA_SET_NAME}_unlabeled.h5ad"
+BACKUP_URL = (
+    f"https://storage.googleapis.com/pyrovelocity/data/{DATA_SET_NAME}_unlabeled.h5ad"
+)
 # Install the relevant Ensembl release with:
 #   pyensembl install --release 98 --species human
 ENSEMBL_RELEASE = 98
@@ -21,8 +24,8 @@ ENSEMBL_RELEASE = 98
 # respectively, though it is impossible to avoid potential confusion.
 HIGH_RESOLUTION_MODEL = "Immune_All_Low.pkl"
 LOW_RESOLUTION_MODEL = "Immune_All_High.pkl"
-LOW_RES_PLOT_FILENAME = "labeled_pbmc10k_low_resolution.pdf"
-HIGH_RES_PLOT_FILENAME = "labeled_pbmc10k_high_resolution.pdf"
+LOW_RES_PLOT_FILENAME = f"labeled_{DATA_SET_NAME}_low_resolution.pdf"
+HIGH_RES_PLOT_FILENAME = f"labeled_{DATA_SET_NAME}_high_resolution.pdf"
 
 
 def load_data(file_path, backup_url):
@@ -42,6 +45,7 @@ def rename_var_to_gene_symbol(adata, release):
     ]
     adata.var_names = gene_symbols
     adata = adata[:, ~adata.var_names.isin([""])]
+    adata.var_names_make_unique()
     return adata
 
 
@@ -50,6 +54,9 @@ def preprocess_data(adata, target_sum=1e4):
     sc.pp.normalize_total(adata_copy, target_sum=target_sum)
     sc.pp.log1p(adata_copy)
     adata.raw = adata_copy
+    sc.tl.pca(adata, n_comps=50)
+    sc.pp.neighbors(adata, n_neighbors=30, n_pcs=30)
+    sc.tl.umap(adata)
     return adata
 
 
@@ -104,14 +111,14 @@ def main():
     adata = load_data(DATA_FILE_PATH, BACKUP_URL)
     adata = rename_var_to_gene_symbol(adata, ENSEMBL_RELEASE)
     adata = preprocess_data(adata)
-
     adata = label_cell_types(adata, LOW_RESOLUTION_MODEL, "celltype_low_resolution")
     plot_umap(adata, LOW_RES_PLOT_FILENAME, "celltype_low_resolution")
 
     adata = label_cell_types(adata, HIGH_RESOLUTION_MODEL, "celltype")
     plot_umap(adata, HIGH_RES_PLOT_FILENAME, "celltype")
 
-    output_file_path = DATA_FILE_PATH.replace("_unlabaled.h5ad", "_labeled.h5ad")
+    output_file_path = DATA_FILE_PATH.replace("_unlabeled.h5ad", "_labeled.h5ad")
+    breakpoint()
     adata.write(output_file_path)
 
 

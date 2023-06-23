@@ -552,6 +552,7 @@ def hydra_zen_compressed_configure():
         "pons",
         "pancreas",
         "bonemarrow",
+        "pbmc5k",
         "pbmc10k",
         "pbmc68k",
         "larry",
@@ -565,6 +566,7 @@ def hydra_zen_compressed_configure():
         "pons",
         "pancreas",
         "bonemarrow",
+        "pbmc5k",
         "pbmc10k",
         "pbmc68k",
         "larry",
@@ -583,6 +585,7 @@ def hydra_zen_compressed_configure():
         "larry_neu_model2",
         "larry_multilineage_model2",
         "pbmc10k_model2",
+        "pbmc5k_model2",
     ]
 
     model_training = dict(
@@ -733,7 +736,17 @@ def hydra_zen_compressed_configure():
             "pbmc10k",
             2,
             "umap",
-            gpu_id=0,
+            gpu_id=1,
+            cell_state="celltype",
+            offset=True,
+            max_epochs=2000,
+        ),
+        pbmc5k_model2=create_model_config(
+            "pyrovelocity",
+            "pbmc5k",
+            2,
+            "umap",
+            gpu_id=2,
             cell_state="celltype",
             offset=True,
             max_epochs=2000,
@@ -883,6 +896,16 @@ def hydra_zen_compressed_configure():
             process_method="load_data",
             process_args=dict(count_thres="${base.count_threshold}"),
         ),
+        pbmc5k=create_dataset_config(
+            source="pyrovelocity",
+            name="pbmc5k",
+            dl_root="${paths.data_external}",
+            data_file="pbmc5k.h5ad",
+            rel_path="${paths.data_external}/${.data_file}",
+            url="https://storage.googleapis.com/pyrovelocity/data/pbmc5k.h5ad",
+            process_method="load_data",
+            process_args=dict(count_thres="${base.count_threshold}"),
+        ),
     )
 
     return make_config(
@@ -909,6 +932,7 @@ def hydra_zen_compressed_configure():
                 # pons_model1=create_reports_config("pons", 1),
                 pons_model2=create_reports_config("pons", 2),
                 pbmc10k_model2=create_reports_config("pbmc10k", 2),
+                pbmc5k_model2=create_reports_config("pbmc5k", 2),
                 larry_tips_model2=create_reports_config("larry_tips", 2),
                 larry_mono_model2=create_reports_config("larry_mono", 2),
                 larry_neu_model2=create_reports_config("larry_neu", 2),

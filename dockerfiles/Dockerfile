@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1
-FROM ghcr.io/iterative/cml:0-dvc2-base1-gpu
+# FROM ghcr.io/iterative/cml:0-dvc2-base1-gpu
+FROM ghcr.io/iterative/cml@sha256:ad10a563de25311241f10d9d5509cecab6bc754b6b2c90b61e309e34fe80911e
 
 WORKDIR ${CML_RUNNER_PATH}
 COPY . pyrovelocity/
