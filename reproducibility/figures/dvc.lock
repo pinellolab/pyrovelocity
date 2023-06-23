@@ -3549,3 +3549,28 @@ stages:
     - path: reports/bonemarrow_model2/volcano.pdf.png
       md5: 860edac120b7ab2fb4be67aa1bbb4e38
       size: 342473
+  data_download@pbmc5k:
+    cmd: python data_download.py process_data=[pbmc5k]
+    deps:
+    - path: data_download.py
+      md5: 35532543a7cbebeb209b9cc4cf2af144
+      size: 3150
+    params:
+      config.yaml:
+        data_sets.pbmc5k:
+          source: pyrovelocity
+          data_file: pbmc5k.h5ad
+          dl_root: data/external
+          dl_path: data/external/pbmc5k.h5ad
+          rel_path: data/external/pbmc5k.h5ad
+          url: https://storage.googleapis.com/pyrovelocity/data/pbmc5k.h5ad
+          derived:
+            process_method: load_data
+            process_args:
+              count_thres: 0
+            rel_path: data/processed/pbmc5k_processed.h5ad
+            thresh_histogram_path: data/processed/pbmc5k_thresh_histogram.pdf
+    outs:
+    - path: data/external/pbmc5k.h5ad
+      md5: ab9b4aa640c5978dcff7cbea23f0fb3d
+      size: 282506350
