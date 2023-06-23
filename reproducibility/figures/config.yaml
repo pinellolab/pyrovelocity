@@ -13,6 +13,7 @@ download_data:
 - pons
 - pancreas
 - bonemarrow
+- pbmc5k
 - pbmc10k
 - pbmc68k
 - larry
@@ -24,6 +25,7 @@ process_data:
 - pons
 - pancreas
 - bonemarrow
+- pbmc5k
 - pbmc10k
 - pbmc68k
 - larry
@@ -41,6 +43,7 @@ train_models:
 - larry_neu_model2
 - larry_multilineage_model2
 - pbmc10k_model2
+- pbmc5k_model2
 data_sets:
   simulate_medium:
     source: simulate
@@ -225,6 +228,19 @@ data_sets:
         count_thres: 0
       rel_path: data/processed/pbmc10k_processed.h5ad
       thresh_histogram_path: data/processed/pbmc10k_thresh_histogram.pdf
+  pbmc5k:
+    source: pyrovelocity
+    data_file: pbmc5k.h5ad
+    dl_root: data/external
+    dl_path: data/external/pbmc5k.h5ad
+    rel_path: data/external/pbmc5k.h5ad
+    url: https://storage.googleapis.com/pyrovelocity/data/pbmc5k.h5ad
+    derived:
+      process_method: load_data
+      process_args:
+        count_thres: 0
+      rel_path: data/processed/pbmc5k_processed.h5ad
+      thresh_histogram_path: data/processed/pbmc5k_thresh_histogram.pdf
 model_training:
   simulate_model2:
     path: models/simulate_medium_model2
@@ -633,6 +649,43 @@ model_training:
       cell_specific_kinetics: null
       kinetics_num: 2
       loss_plot_path: models/pbmc10k_model2/loss_plot.png
+  pbmc5k_model2:
+    path: models/pbmc5k_model2
+    model_path: models/pbmc5k_model2/model
+    input_data_path: data/processed/pbmc5k_processed.h5ad
+    trained_data_path: models/pbmc5k_model2/trained.h5ad
+    pyrovelocity_data_path: models/pbmc5k_model2/pyrovelocity.pkl.zst
+    posterior_samples_path: models/pbmc5k_model2/posterior_samples.pkl.zst
+    metrics_path: models/pbmc5k_model2/metrics.json
+    run_info_path: models/pbmc5k_model2/run_info.json
+    vector_field_parameters:
+      basis: umap
+    gpu_id: 1
+    training_parameters:
+      _target_: pyrovelocity.api.train_model
+      _partial_: true
+      guide_type: auto
+      model_type: auto
+      svi_train: false
+      batch_size: -1
+      train_size: 1.0
+      use_gpu: 0
+      likelihood: Poisson
+      num_samples: 30
+      log_every: 100
+      cell_state: celltype
+      patient_improve: 0.0001
+      patient_init: 45
+      seed: 99
+      lr: 0.01
+      max_epochs: 2000
+      include_prior: true
+      library_size: true
+      offset: true
+      input_type: raw
+      cell_specific_kinetics: null
+      kinetics_num: 2
+      loss_plot_path: models/pbmc5k_model2/loss_plot.png
 reports:
   model_summary:
     pancreas_model2:
@@ -662,6 +715,7 @@ reports:
       rainbow_plot: reports/bonemarrow_model2/rainbow.pdf
       uncertainty_param_plot: reports/bonemarrow_model2/param_uncertainties.pdf
       vector_field_plot: reports/bonemarrow_model2/vector_field.pdf
+      posterior_phase_portraits: reports/bonemarrow_model2/posterior_phase_portraits
       biomarker_selection_plot: reports/bonemarrow_model2/markers_selection_scatterplot.tif
       biomarker_phaseportrait_plot: reports/bonemarrow_model2/markers_phaseportrait.pdf
       fig2_part1_plot: reports/bonemarrow_model2/fig2_part1_plot.pdf
@@ -719,6 +773,23 @@ reports:
       fig2_part2_plot: reports/pbmc10k_model2/fig2_part2_plot.pdf
       violin_clusters_lin: reports/pbmc10k_model2/clusters_violin_lin.pdf
       violin_clusters_log: reports/pbmc10k_model2/clusters_violin_log.pdf
+    pbmc5k_model2:
+      path: reports/pbmc5k_model2
+      trained_data_path: models/pbmc5k_model2/trained.h5ad
+      pyrovelocity_data_path: models/pbmc5k_model2/pyrovelocity.pkl.zst
+      dataframe_path: data/processed/pbmc5k_model2_dataframe.pkl.zst
+      shared_time_plot: reports/pbmc5k_model2/shared_time.pdf
+      volcano_plot: reports/pbmc5k_model2/volcano.pdf
+      rainbow_plot: reports/pbmc5k_model2/rainbow.pdf
+      uncertainty_param_plot: reports/pbmc5k_model2/param_uncertainties.pdf
+      vector_field_plot: reports/pbmc5k_model2/vector_field.pdf
+      posterior_phase_portraits: reports/pbmc5k_model2/posterior_phase_portraits
+      biomarker_selection_plot: reports/pbmc5k_model2/markers_selection_scatterplot.tif
+      biomarker_phaseportrait_plot: reports/pbmc5k_model2/markers_phaseportrait.pdf
+      fig2_part1_plot: reports/pbmc5k_model2/fig2_part1_plot.pdf
+      fig2_part2_plot: reports/pbmc5k_model2/fig2_part2_plot.pdf
+      violin_clusters_lin: reports/pbmc5k_model2/clusters_violin_lin.pdf
+      violin_clusters_log: reports/pbmc5k_model2/clusters_violin_log.pdf
     larry_tips_model2:
       path: reports/larry_tips_model2
       trained_data_path: models/larry_tips_model2/trained.h5ad
