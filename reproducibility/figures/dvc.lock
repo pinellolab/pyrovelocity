@@ -2077,14 +2077,10 @@ stages:
     - path: reports/pbmc68k_model2/clusters_violin_lin.pdf.png
       md5: cbdc19ab48ba9d4063e74d852c9f103f
       size: 2460186
-      md5: cbdc19ab48ba9d4063e74d852c9f103f
-      size: 2460186
     - path: reports/pbmc68k_model2/clusters_violin_log.pdf
       md5: 3f700d471de9cb9d6049ff5ed3489198
       size: 167073
     - path: reports/pbmc68k_model2/clusters_violin_log.pdf.png
-      md5: bcdf46e8f26d1e4f545bd553ce618aa6
-      size: 2688487
       md5: bcdf46e8f26d1e4f545bd553ce618aa6
       size: 2688487
     - path: reports/pbmc68k_model2/fig2_part1_plot.pdf
@@ -2093,14 +2089,10 @@ stages:
     - path: reports/pbmc68k_model2/fig2_part1_plot.pdf.png
       md5: 209f6d9288a71e44199f2eba4722b80f
       size: 815723
-      md5: 209f6d9288a71e44199f2eba4722b80f
-      size: 815723
     - path: reports/pbmc68k_model2/fig2_part2_plot.pdf
       md5: b084fc647ce4db33ee9d966695a613ad
       size: 21750906
     - path: reports/pbmc68k_model2/fig2_part2_plot.pdf.png
-      md5: 91c659445824b9446200e7fd40b5924e
-      size: 880548
       md5: 91c659445824b9446200e7fd40b5924e
       size: 880548
     - path: reports/pbmc68k_model2/param_uncertainties.pdf
@@ -2122,8 +2114,6 @@ stages:
       md5: 4e18b09717fc6c1c8fbdb84c9c5c7e6b
       size: 1033561
     - path: reports/pbmc68k_model2/vector_field.pdf.png
-      md5: 995204937711bf1c6932fde14ba1d59c
-      size: 1196338
       md5: 995204937711bf1c6932fde14ba1d59c
       size: 1196338
     - path: reports/pbmc68k_model2/volcano.pdf
