@@ -623,7 +623,7 @@ model_training:
     run_info_path: models/pbmc10k_model2/run_info.json
     vector_field_parameters:
       basis: umap
-    gpu_id: 0
+    gpu_id: 1
     training_parameters:
       _target_: pyrovelocity.api.train_model
       _partial_: true
@@ -660,7 +660,7 @@ model_training:
     run_info_path: models/pbmc5k_model2/run_info.json
     vector_field_parameters:
       basis: umap
-    gpu_id: 1
+    gpu_id: 2
     training_parameters:
       _target_: pyrovelocity.api.train_model
       _partial_: true
