@@ -524,6 +524,7 @@ def hydra_zen_compressed_configure():
             rainbow_plot=f"{path}/rainbow.pdf",
             uncertainty_param_plot=f"{path}/param_uncertainties.pdf",
             vector_field_plot=f"{path}/vector_field.pdf",
+            posterior_phase_portraits=f"{path}/posterior_phase_portraits",
             biomarker_selection_plot=f"{path}/markers_selection_scatterplot.tif",
             biomarker_phaseportrait_plot=f"{path}/markers_phaseportrait.pdf",
             fig2_part1_plot=f"{path}/fig2_part1_plot.pdf",

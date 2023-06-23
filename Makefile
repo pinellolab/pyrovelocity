@@ -97,5 +97,8 @@ else
 	@echo 'Run "make help" and define necessary variables'
 endif
 
+precommit: ## Run pre-commit hooks using nox.
+	nox -x -rs pre-commit
+
 env_print: ## Print a subset of environment variables defined in ".env" file.
 	env | grep "TF_VAR\|GITHUB\|GH_\|GCP_\|MLFLOW" | sort

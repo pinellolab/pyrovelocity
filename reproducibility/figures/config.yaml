@@ -645,6 +645,7 @@ reports:
       rainbow_plot: reports/pancreas_model2/rainbow.pdf
       uncertainty_param_plot: reports/pancreas_model2/param_uncertainties.pdf
       vector_field_plot: reports/pancreas_model2/vector_field.pdf
+      posterior_phase_portraits: reports/pancreas_model2/posterior_phase_portraits
       biomarker_selection_plot: reports/pancreas_model2/markers_selection_scatterplot.tif
       biomarker_phaseportrait_plot: reports/pancreas_model2/markers_phaseportrait.pdf
       fig2_part1_plot: reports/pancreas_model2/fig2_part1_plot.pdf
@@ -677,6 +678,7 @@ reports:
       rainbow_plot: reports/pbmc68k_model2/rainbow.pdf
       uncertainty_param_plot: reports/pbmc68k_model2/param_uncertainties.pdf
       vector_field_plot: reports/pbmc68k_model2/vector_field.pdf
+      posterior_phase_portraits: reports/pbmc68k_model2/posterior_phase_portraits
       biomarker_selection_plot: reports/pbmc68k_model2/markers_selection_scatterplot.tif
       biomarker_phaseportrait_plot: reports/pbmc68k_model2/markers_phaseportrait.pdf
       fig2_part1_plot: reports/pbmc68k_model2/fig2_part1_plot.pdf
@@ -693,6 +695,7 @@ reports:
       rainbow_plot: reports/pons_model2/rainbow.pdf
       uncertainty_param_plot: reports/pons_model2/param_uncertainties.pdf
       vector_field_plot: reports/pons_model2/vector_field.pdf
+      posterior_phase_portraits: reports/pons_model2/posterior_phase_portraits
       biomarker_selection_plot: reports/pons_model2/markers_selection_scatterplot.tif
       biomarker_phaseportrait_plot: reports/pons_model2/markers_phaseportrait.pdf
       fig2_part1_plot: reports/pons_model2/fig2_part1_plot.pdf
@@ -709,6 +712,7 @@ reports:
       rainbow_plot: reports/pbmc10k_model2/rainbow.pdf
       uncertainty_param_plot: reports/pbmc10k_model2/param_uncertainties.pdf
       vector_field_plot: reports/pbmc10k_model2/vector_field.pdf
+      posterior_phase_portraits: reports/pbmc10k_model2/posterior_phase_portraits
       biomarker_selection_plot: reports/pbmc10k_model2/markers_selection_scatterplot.tif
       biomarker_phaseportrait_plot: reports/pbmc10k_model2/markers_phaseportrait.pdf
       fig2_part1_plot: reports/pbmc10k_model2/fig2_part1_plot.pdf
@@ -725,6 +729,7 @@ reports:
       rainbow_plot: reports/larry_tips_model2/rainbow.pdf
       uncertainty_param_plot: reports/larry_tips_model2/param_uncertainties.pdf
       vector_field_plot: reports/larry_tips_model2/vector_field.pdf
+      posterior_phase_portraits: reports/larry_tips_model2/posterior_phase_portraits
       biomarker_selection_plot: reports/larry_tips_model2/markers_selection_scatterplot.tif
       biomarker_phaseportrait_plot: reports/larry_tips_model2/markers_phaseportrait.pdf
       fig2_part1_plot: reports/larry_tips_model2/fig2_part1_plot.pdf
@@ -741,6 +746,7 @@ reports:
       rainbow_plot: reports/larry_mono_model2/rainbow.pdf
       uncertainty_param_plot: reports/larry_mono_model2/param_uncertainties.pdf
       vector_field_plot: reports/larry_mono_model2/vector_field.pdf
+      posterior_phase_portraits: reports/larry_mono_model2/posterior_phase_portraits
       biomarker_selection_plot: reports/larry_mono_model2/markers_selection_scatterplot.tif
       biomarker_phaseportrait_plot: reports/larry_mono_model2/markers_phaseportrait.pdf
       fig2_part1_plot: reports/larry_mono_model2/fig2_part1_plot.pdf
@@ -757,6 +763,7 @@ reports:
       rainbow_plot: reports/larry_neu_model2/rainbow.pdf
       uncertainty_param_plot: reports/larry_neu_model2/param_uncertainties.pdf
       vector_field_plot: reports/larry_neu_model2/vector_field.pdf
+      posterior_phase_portraits: reports/larry_neu_model2/posterior_phase_portraits
       biomarker_selection_plot: reports/larry_neu_model2/markers_selection_scatterplot.tif
       biomarker_phaseportrait_plot: reports/larry_neu_model2/markers_phaseportrait.pdf
       fig2_part1_plot: reports/larry_neu_model2/fig2_part1_plot.pdf
@@ -773,6 +780,7 @@ reports:
       rainbow_plot: reports/larry_multilineage_model2/rainbow.pdf
       uncertainty_param_plot: reports/larry_multilineage_model2/param_uncertainties.pdf
       vector_field_plot: reports/larry_multilineage_model2/vector_field.pdf
+      posterior_phase_portraits: reports/larry_multilineage_model2/posterior_phase_portraits
       biomarker_selection_plot: reports/larry_multilineage_model2/markers_selection_scatterplot.tif
       biomarker_phaseportrait_plot: reports/larry_multilineage_model2/markers_phaseportrait.pdf
       fig2_part1_plot: reports/larry_multilineage_model2/fig2_part1_plot.pdf
@@ -789,6 +797,7 @@ reports:
       rainbow_plot: reports/larry_model2/rainbow.pdf
       uncertainty_param_plot: reports/larry_model2/param_uncertainties.pdf
       vector_field_plot: reports/larry_model2/vector_field.pdf
+      posterior_phase_portraits: reports/larry_model2/posterior_phase_portraits
       biomarker_selection_plot: reports/larry_model2/markers_selection_scatterplot.tif
       biomarker_phaseportrait_plot: reports/larry_model2/markers_phaseportrait.pdf
       fig2_part1_plot: reports/larry_model2/fig2_part1_plot.pdf
