@@ -103,10 +103,11 @@ stages:
         - ${item.uncertainty_param_plot}.png
 
   figureS2:
-    cmd: /usr/bin/time -v python figS2/figure.py train_models=[pbmc10k_model2_coarse,pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_tips_model2]
+    cmd: /usr/bin/time -v python figS2/figure.py train_models=[pbmc5k_model2,pbmc10k_model2_coarse,pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_tips_model2]
     deps:
       - figS2/figure.py
       - ${model_training.pancreas_model2.pyrovelocity_data_path}
+      - ${model_training.pbmc5k_model2.pyrovelocity_data_path}
       - ${model_training.pbmc10k_model2.pyrovelocity_data_path}
       - ${model_training.pbmc68k_model2.pyrovelocity_data_path}
       - ${model_training.pons_model2.pyrovelocity_data_path}
