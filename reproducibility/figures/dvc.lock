@@ -3473,8 +3473,8 @@ stages:
       md5: 5c0d598b6ce53d54015e4abaf4954fb1
       size: 760341824
     - path: summarize.py
-      md5: d42d6ccbd1c16e746c726a6e2c9cfc2f
-      size: 27880
+      md5: 6827eaef68101af8db5d8b5c7d9f5f0e
+      size: 34841
     params:
       config.yaml:
         base:
@@ -3491,6 +3491,7 @@ stages:
           rainbow_plot: reports/bonemarrow_model2/rainbow.pdf
           uncertainty_param_plot: reports/bonemarrow_model2/param_uncertainties.pdf
           vector_field_plot: reports/bonemarrow_model2/vector_field.pdf
+          posterior_phase_portraits: reports/bonemarrow_model2/posterior_phase_portraits
           biomarker_selection_plot: reports/bonemarrow_model2/markers_selection_scatterplot.tif
           biomarker_phaseportrait_plot: reports/bonemarrow_model2/markers_phaseportrait.pdf
           fig2_part1_plot: reports/bonemarrow_model2/fig2_part1_plot.pdf
@@ -3502,52 +3503,52 @@ stages:
       md5: ab00ad34356484260492e66b2ad8f912
       size: 17615324
     - path: reports/bonemarrow_model2/clusters_violin_lin.pdf
-      md5: 9068dc30cd683c9d00cfadb7fc563022
+      md5: a4ce9bc14be62a8d438d62044fb90acc
       size: 150717
     - path: reports/bonemarrow_model2/clusters_violin_lin.pdf.png
       md5: 6fd43e195a753036b028a38813e32bef
       size: 2316012
     - path: reports/bonemarrow_model2/clusters_violin_log.pdf
-      md5: d674a37e253566b9533b52cb0a1c930d
+      md5: efb6a536293450bcdd0cef82fedabbb2
       size: 151467
     - path: reports/bonemarrow_model2/clusters_violin_log.pdf.png
       md5: a846cc0d014b0563216e15eab71dafd7
       size: 2485038
     - path: reports/bonemarrow_model2/fig2_part1_plot.pdf
-      md5: 9e77d680f39a41dac3943f049bd498d0
+      md5: 995a2ef3b50a36657092daff51432194
       size: 486075
     - path: reports/bonemarrow_model2/fig2_part1_plot.pdf.png
       md5: fa9af7dd5356dc410c07c7c8b09820a4
       size: 418493
     - path: reports/bonemarrow_model2/fig2_part2_plot.pdf
-      md5: b694bf93944e3a80d7ad810a41f2b9c1
+      md5: 0808262093c61de0dad7c7233baa1b19
       size: 1931458
     - path: reports/bonemarrow_model2/fig2_part2_plot.pdf.png
       md5: 682373901caf02aba63df837ce79f68a
       size: 511903
     - path: reports/bonemarrow_model2/param_uncertainties.pdf
-      md5: 1ce1edf70061328166e0558975306448
+      md5: 693a11870b643e7ccdfa8e52e11bd232
       size: 138685
     - path: reports/bonemarrow_model2/param_uncertainties.pdf.png
       md5: 361fca5e5f00f0ccaf95c4005266cc56
       size: 809961
     - path: reports/bonemarrow_model2/rainbow.pdf
-      md5: 4c56b631bdda62c987525dc85c44e39f
+      md5: fc5c7a2ef4025799b0939f1d301a2035
       size: 8157744
     - path: reports/bonemarrow_model2/rainbow.pdf.png
       md5: 98ad0cd2b66713d37d26b4258949f171
       size: 1112702
     - path: reports/bonemarrow_model2/shared_time.pdf
-      md5: 90350eb65d1ba2d97a607a1a73b90111
+      md5: 17986cd5c2898def65249c2828d9768f
       size: 168622
     - path: reports/bonemarrow_model2/vector_field.pdf
-      md5: 9780386159349e913b36b64f2b0ee916
+      md5: 1af1ea3007d5ba8257347f1ad2dbdf35
       size: 320629
     - path: reports/bonemarrow_model2/vector_field.pdf.png
       md5: d4511e2cf1ff27bff8d9b48348438aad
       size: 463204
     - path: reports/bonemarrow_model2/volcano.pdf
-      md5: 781565d48fd61e0e2fee282a61e743b4
+      md5: 65b9ed76bea3bdd42a4a2f5a91a3f400
       size: 40856
     - path: reports/bonemarrow_model2/volcano.pdf.png
       md5: 860edac120b7ab2fb4be67aa1bbb4e38
