@@ -583,11 +583,11 @@ def extrapolate_prediction_sample_predictive(
         grid_time_samples_state.append(test["cell_gene_state"])
     grid_time_samples_ut = torch.cat(grid_time_samples_ut, dim=-2)
     grid_time_samples_st = torch.cat(grid_time_samples_st, dim=-2)
-    grid_time_samples_u0 = posterior_samples['u_offset']
-    grid_time_samples_s0 = posterior_samples['s_offset']
-    grid_time_samples_uinf = test['u_inf']
-    grid_time_samples_sinf = test['s_inf']
-    grid_time_samples_uscale = posterior_samples['u_scale']
+    grid_time_samples_u0 = posterior_samples["u_offset"]
+    grid_time_samples_s0 = posterior_samples["s_offset"]
+    grid_time_samples_uinf = test["u_inf"]
+    grid_time_samples_sinf = test["s_inf"]
+    grid_time_samples_uscale = posterior_samples["u_scale"]
     grid_time_samples_state = torch.cat(grid_time_samples_state, dim=-2)
     return (
         grid_time_samples_ut.cpu().detach().numpy(),
@@ -660,9 +660,11 @@ def posterior_curve(
         fig.set_size_inches(15, 10)
         ax = ax.flatten()
         for sample in range(20):
-            t0_sample = posterior_samples['t0'][sample][:, index[0]].flatten()
-            cell_time_sample_max = posterior_samples['cell_time'][sample].flatten().max()
-            cell_time_sample = posterior_samples['cell_time'][sample].flatten()
+            t0_sample = posterior_samples["t0"][sample][:, index[0]].flatten()
+            cell_time_sample_max = (
+                posterior_samples["cell_time"][sample].flatten().max()
+            )
+            cell_time_sample = posterior_samples["cell_time"][sample].flatten()
             ax[sample].scatter(
                 posterior_samples["st_mean"][:, index[0]],
                 posterior_samples["ut_mean"][:, index[0]],
@@ -688,35 +690,42 @@ def posterior_curve(
             s_inf = grid_time_samples_sinf[sample][:, index[0]].flatten()
             print(gene, u_inf, s_inf)
 
-            #u0 = posterior_samples['u_offset'][sample][:, index[0]].flatten()
-            #s0 = posterior_samples['s_offset'][sample][:, index[0]].flatten()
-            #u_inf = posterior_samples['u_inf'][sample][:, index[0]].flatten()
-            #s_inf = posterior_samples['s_inf'][sample][:, index[0]].flatten()
+            # u0 = posterior_samples['u_offset'][sample][:, index[0]].flatten()
+            # s0 = posterior_samples['s_offset'][sample][:, index[0]].flatten()
+            # u_inf = posterior_samples['u_inf'][sample][:, index[0]].flatten()
+            # s_inf = posterior_samples['s_inf'][sample][:, index[0]].flatten()
             ax[sample].scatter(
-                s0,
-                u0*uscale,
-                s=60,
-                marker="p",
-                linewidth=0.5,
-                c='purple'
+                s0, u0 * uscale, s=60, marker="p", linewidth=0.5, c="purple"
             )
             ax[sample].scatter(
-                s_inf,
-                u_inf*uscale,
-                s=60,
-                marker="p",
-                linewidth=0.5,
-                c='black'
+                s_inf, u_inf * uscale, s=60, marker="p", linewidth=0.5, c="black"
             )
             # ax[sample].plot(grid_time_samples_st[sample][:, index[0]],
             #                grid_time_samples_ut[sample][:, index[0]],
             #                linestyle="--", linewidth=3, color='g')
-            ax[sample].set_title(f"{gene} model 2 sample {sample}\nt0>celltime:{(t0_sample>cell_time_sample_max)} {(t0_sample>cell_time_sample).sum()}", fontsize=6.5)
+            ax[sample].set_title(
+                f"{gene} model 2 sample {sample}\nt0>celltime:{(t0_sample>cell_time_sample_max)} {(t0_sample>cell_time_sample).sum()}",
+                fontsize=6.5,
+            )
             ax[sample].set_xlim(
-                0, max([np.max(posterior_samples["st_mean"][:, index[0]]) * 1.1, s0*1.1, s_inf*1.1])
+                0,
+                max(
+                    [
+                        np.max(posterior_samples["st_mean"][:, index[0]]) * 1.1,
+                        s0 * 1.1,
+                        s_inf * 1.1,
+                    ]
+                ),
             )
             ax[sample].set_ylim(
-                0, max([np.max(posterior_samples["ut_mean"][:, index[0]]) * 1.1, u0*uscale*1.1, u_inf*uscale*1.05])
+                0,
+                max(
+                    [
+                        np.max(posterior_samples["ut_mean"][:, index[0]]) * 1.1,
+                        u0 * uscale * 1.1,
+                        u_inf * uscale * 1.05,
+                    ]
+                ),
             )
             fig.colorbar(im, ax=ax[sample])
         fig.tight_layout()
@@ -803,24 +812,44 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         fig.set_size_inches(26, 24)
         ax = ax.flatten()
         for sample in range(29):
-            t0_sample = posterior_samples['t0'][sample]
-            switching_sample = posterior_samples['switching'][sample]
-            cell_time_sample = posterior_samples['cell_time'][sample]
+            t0_sample = posterior_samples["t0"][sample]
+            switching_sample = posterior_samples["switching"][sample]
+            cell_time_sample = posterior_samples["cell_time"][sample]
             print(t0_sample.shape)
             print(cell_time_sample)
-            ax[sample].scatter(t0_sample.flatten(), 2*np.ones(t0_sample.shape[-1]), s=1, c='red', label='t0')
-            ax[sample].scatter(switching_sample.flatten(), 3*np.ones(t0_sample.shape[-1]), s=1, c='purple', label='switching')
-            ax[sample].scatter(cell_time_sample.flatten(), np.ones(cell_time_sample.shape[0]), s=1, c='blue', label='shared time')
+            ax[sample].scatter(
+                t0_sample.flatten(),
+                2 * np.ones(t0_sample.shape[-1]),
+                s=1,
+                c="red",
+                label="t0",
+            )
+            ax[sample].scatter(
+                switching_sample.flatten(),
+                3 * np.ones(t0_sample.shape[-1]),
+                s=1,
+                c="purple",
+                label="switching",
+            )
+            ax[sample].scatter(
+                cell_time_sample.flatten(),
+                np.ones(cell_time_sample.shape[0]),
+                s=1,
+                c="blue",
+                label="shared time",
+            )
             ax[sample].set_ylim(-0.5, 4)
             if sample == 28:
-                ax[sample].legend(loc='best', bbox_to_anchor=(0.5, 0., 0.5, 0.5))
-            print((t0_sample.flatten()>cell_time_sample.flatten().max()).sum())
-            print((t0_sample.flatten()<switching_sample.flatten().max()).sum())
-            print((t0_sample.flatten()>switching_sample.flatten().max()).sum())
-            for gene in adata.var_names[t0_sample.flatten()>cell_time_sample.flatten().max()]:
+                ax[sample].legend(loc="best", bbox_to_anchor=(0.5, 0.0, 0.5, 0.5))
+            print((t0_sample.flatten() > cell_time_sample.flatten().max()).sum())
+            print((t0_sample.flatten() < switching_sample.flatten().max()).sum())
+            print((t0_sample.flatten() > switching_sample.flatten().max()).sum())
+            for gene in adata.var_names[
+                t0_sample.flatten() > cell_time_sample.flatten().max()
+            ]:
                 print(gene)
-        ax[-1].hist(t0_sample.flatten(), bins=200, color='red', alpha=0.3)
-        ax[-1].hist(cell_time_sample.flatten(), bins=500, color='blue', alpha=0.3)
+        ax[-1].hist(t0_sample.flatten(), bins=200, color="red", alpha=0.3)
+        ax[-1].hist(cell_time_sample.flatten(), bins=500, color="blue", alpha=0.3)
 
         fig.savefig(
             reports_data_model_conf.t0_selection,
