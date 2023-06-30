@@ -512,7 +512,7 @@ def plot_parameter_posterior_distributions(
 
 
 def extrapolate_prediction_sample_predictive(
-    data_model_conf, adata, grid_time_points=500
+    data_model_conf, adata, grid_time_points=1000
 ):
     pyrovelocity_model_path = data_model_conf.model_path
     PyroVelocity.setup_anndata(adata)
@@ -545,9 +545,6 @@ def extrapolate_prediction_sample_predictive(
                 axis=-3,
             )
         ).to("cuda:0")
-    for key in posterior_samples:
-        print(posterior_samples[key].shape)
-    print("-------")
     dummy_obs = (
         torch.ones((1, adata.shape[1])).to("cuda:0"),
         torch.ones((1, adata.shape[1])).to("cuda:0"),
@@ -580,17 +577,26 @@ def extrapolate_prediction_sample_predictive(
             ),
             posterior_samples=posterior_samples,
         )(*dummy_obs)
-        # print(test['cell_gene_state'])
-        # print(test['cell_time'])
+        print(test.keys())
         grid_time_samples_ut.append(test["ut"])
         grid_time_samples_st.append(test["st"])
         grid_time_samples_state.append(test["cell_gene_state"])
     grid_time_samples_ut = torch.cat(grid_time_samples_ut, dim=-2)
     grid_time_samples_st = torch.cat(grid_time_samples_st, dim=-2)
+    grid_time_samples_u0 = posterior_samples["u_offset"]
+    grid_time_samples_s0 = posterior_samples["s_offset"]
+    grid_time_samples_uinf = test["u_inf"]
+    grid_time_samples_sinf = test["s_inf"]
+    grid_time_samples_uscale = posterior_samples["u_scale"]
     grid_time_samples_state = torch.cat(grid_time_samples_state, dim=-2)
     return (
         grid_time_samples_ut.cpu().detach().numpy(),
         grid_time_samples_st.cpu().detach().numpy(),
+        grid_time_samples_u0.cpu().detach().numpy(),
+        grid_time_samples_s0.cpu().detach().numpy(),
+        grid_time_samples_uinf.cpu().detach().numpy(),
+        grid_time_samples_sinf.cpu().detach().numpy(),
+        grid_time_samples_uscale.cpu().detach().numpy(),
         grid_time_samples_state.cpu().detach().numpy(),
     )
 
@@ -601,8 +607,7 @@ def extrapolate_prediction_trace(data_model_conf, adata, grid_time_points=500):
     model = PyroVelocity(adata)
     model = model.load_model(pyrovelocity_model_path, adata, use_gpu=0)
     # grid_cell_time = torch.linspace(-10, 20, grid_time_points)
-    grid_cell_time = torch.linspace(0.01, 50, grid_time_points)
-    print(grid_cell_time.shape)
+    grid_cell_time = torch.linspace(-10, 100, grid_time_points)
     dummy_obs = (
         torch.ones((1, adata.shape[1])),
         torch.ones((1, adata.shape[1])),
@@ -638,6 +643,11 @@ def posterior_curve(
     posterior_samples,
     grid_time_samples_ut,
     grid_time_samples_st,
+    grid_time_samples_u0,
+    grid_time_samples_s0,
+    grid_time_samples_uinf,
+    grid_time_samples_sinf,
+    grid_time_samples_uscale,
     grid_time_samples_state,
     gene_set,
     dataset,
@@ -647,9 +657,14 @@ def posterior_curve(
     for figi, gene in enumerate(gene_set):
         (index,) = np.where(adata.var_names == gene)
         fig, ax = plt.subplots(4, 5)
-        fig.set_size_inches(18, 12)
+        fig.set_size_inches(15, 10)
         ax = ax.flatten()
         for sample in range(20):
+            t0_sample = posterior_samples["t0"][sample][:, index[0]].flatten()
+            cell_time_sample_max = (
+                posterior_samples["cell_time"][sample].flatten().max()
+            )
+            cell_time_sample = posterior_samples["cell_time"][sample].flatten()
             ax[sample].scatter(
                 posterior_samples["st_mean"][:, index[0]],
                 posterior_samples["ut_mean"][:, index[0]],
@@ -661,20 +676,56 @@ def posterior_curve(
             im = ax[sample].scatter(
                 grid_time_samples_st[sample][:, index[0]],
                 grid_time_samples_ut[sample][:, index[0]],
-                s=10,
+                s=13,
                 marker="o",
                 linewidth=0,
                 c=grid_time_samples_state[sample][:, index[0]],
             )
+
+            u0 = grid_time_samples_u0[sample][:, index[0]].flatten()
+            uscale = grid_time_samples_uscale[sample][:, index[0]].flatten()
+            s0 = grid_time_samples_s0[sample][:, index[0]].flatten()
+            print(gene, u0, s0)
+            u_inf = grid_time_samples_uinf[sample][:, index[0]].flatten()
+            s_inf = grid_time_samples_sinf[sample][:, index[0]].flatten()
+            print(gene, u_inf, s_inf)
+
+            # u0 = posterior_samples['u_offset'][sample][:, index[0]].flatten()
+            # s0 = posterior_samples['s_offset'][sample][:, index[0]].flatten()
+            # u_inf = posterior_samples['u_inf'][sample][:, index[0]].flatten()
+            # s_inf = posterior_samples['s_inf'][sample][:, index[0]].flatten()
+            ax[sample].scatter(
+                s0, u0 * uscale, s=60, marker="p", linewidth=0.5, c="purple"
+            )
+            ax[sample].scatter(
+                s_inf, u_inf * uscale, s=60, marker="p", linewidth=0.5, c="black"
+            )
             # ax[sample].plot(grid_time_samples_st[sample][:, index[0]],
             #                grid_time_samples_ut[sample][:, index[0]],
             #                linestyle="--", linewidth=3, color='g')
-            ax[sample].set_title(f"{gene} model 2 sample {sample}")
+            ax[sample].set_title(
+                f"{gene} model 2 sample {sample}\nt0>celltime:{(t0_sample>cell_time_sample_max)} {(t0_sample>cell_time_sample).sum()}",
+                fontsize=6.5,
+            )
             ax[sample].set_xlim(
-                0, np.max(posterior_samples["st_mean"][:, index[0]]) * 1.1
+                0,
+                max(
+                    [
+                        np.max(posterior_samples["st_mean"][:, index[0]]) * 1.1,
+                        s0 * 1.1,
+                        s_inf * 1.1,
+                    ]
+                ),
             )
             ax[sample].set_ylim(
-                0, np.max(posterior_samples["ut_mean"][:, index[0]]) * 1.1
+                0,
+                max(
+                    [
+                        np.max(posterior_samples["ut_mean"][:, index[0]]) * 1.1,
+                        u0 * uscale * 1.1,
+                        u_inf * uscale * 1.05,
+                    ]
+                ),
             )
             fig.colorbar(im, ax=ax[sample])
         fig.tight_layout()
@@ -755,10 +806,67 @@ def plots(conf: DictConfig, logger: Logger) -> None:
 
         logger.info(f"Loading pyrovelocity data: {pyrovelocity_data_path}")
         posterior_samples = CompressedPickle.load(pyrovelocity_data_path)
+        print(posterior_samples.keys())
+
+        fig, ax = plt.subplots(5, 6)
+        fig.set_size_inches(26, 24)
+        ax = ax.flatten()
+        for sample in range(29):
+            t0_sample = posterior_samples["t0"][sample]
+            switching_sample = posterior_samples["switching"][sample]
+            cell_time_sample = posterior_samples["cell_time"][sample]
+            print(t0_sample.shape)
+            print(cell_time_sample)
+            ax[sample].scatter(
+                t0_sample.flatten(),
+                2 * np.ones(t0_sample.shape[-1]),
+                s=1,
+                c="red",
+                label="t0",
+            )
+            ax[sample].scatter(
+                switching_sample.flatten(),
+                3 * np.ones(t0_sample.shape[-1]),
+                s=1,
+                c="purple",
+                label="switching",
+            )
+            ax[sample].scatter(
+                cell_time_sample.flatten(),
+                np.ones(cell_time_sample.shape[0]),
+                s=1,
+                c="blue",
+                label="shared time",
+            )
+            ax[sample].set_ylim(-0.5, 4)
+            if sample == 28:
+                ax[sample].legend(loc="best", bbox_to_anchor=(0.5, 0.0, 0.5, 0.5))
+            print((t0_sample.flatten() > cell_time_sample.flatten().max()).sum())
+            print((t0_sample.flatten() < switching_sample.flatten().max()).sum())
+            print((t0_sample.flatten() > switching_sample.flatten().max()).sum())
+            for gene in adata.var_names[
+                t0_sample.flatten() > cell_time_sample.flatten().max()
+            ]:
+                print(gene)
+        ax[-1].hist(t0_sample.flatten(), bins=200, color="red", alpha=0.3)
+        ax[-1].hist(cell_time_sample.flatten(), bins=500, color="blue", alpha=0.3)
+
+        fig.savefig(
+            reports_data_model_conf.t0_selection,
+            facecolor=fig.get_facecolor(),
+            bbox_inches="tight",
+            edgecolor="none",
+            dpi=300,
+        )
 
         (
             grid_time_samples_ut,
             grid_time_samples_st,
+            grid_time_samples_u0,
+            grid_time_samples_s0,
+            grid_time_samples_uinf,
+            grid_time_samples_sinf,
+            grid_time_samples_uscale,
             grid_time_samples_state,
         ) = extrapolate_prediction_sample_predictive(
             data_model_conf, adata, grid_time_points=500
@@ -909,6 +1017,11 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             posterior_samples,
             grid_time_samples_ut,
             grid_time_samples_st,
+            grid_time_samples_u0,
+            grid_time_samples_s0,
+            grid_time_samples_uinf,
+            grid_time_samples_sinf,
+            grid_time_samples_uscale,
             grid_time_samples_state,
             geneset,
             data_model,
