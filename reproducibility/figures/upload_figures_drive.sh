@@ -13,12 +13,17 @@
 #
 # A shared Google Drive folder named "pyrovelocity/figures" must exist
 # and an rclone remote name pyrovelocitydrive must be configured.
+# Generate client_id and client_secret at:
+#
+#   https://rclone.org/drive/#making-your-own-client-id
+#
 # Update the values of gdrive_name and prefix_path below accordingly
 #
 #   mamba install -y rclone
 #   rclone config create "pyrovelocitydrive" drive user_acknowledge_abuse true
 #
-# The latter will redirect to the web browser to authenticate the rclone remote.
+# Use the client_id and client_secret generated above to authenticate.
+# See: https://rclone.org/drive/#configuration
 #-------------#
 
 set -euxo pipefail
