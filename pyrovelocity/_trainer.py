@@ -12,6 +12,7 @@ import numpy as np
 import pyro
 import scipy
 import torch
+from pyro.infer import Trace_ELBO
 from pyro.infer import TraceEnum_ELBO
 from pyro.infer.autoguide.guides import AutoGuideList
 from pyro.optim.clipped_adam import ClippedAdam
@@ -209,7 +210,8 @@ class VelocityTrainingMixin:
             self.module._model,
             self.module._guide,
             optim,
-            TraceEnum_ELBO(strict_enumeration_warning=True),
+            # TraceEnum_ELBO(strict_enumeration_warning=True),
+            Trace_ELBO(strict_enumeration_warning=True),
         )
 
         normalizer = self.adata.shape[0] * self.adata.shape[1] * 2

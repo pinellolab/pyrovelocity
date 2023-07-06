@@ -919,13 +919,13 @@ def hydra_zen_compressed_configure():
         model_training={
             k: model_training[k]
             for k in model_training
-            if fnmatch.fnmatch(k, "*_model2")
+            if fnmatch.fnmatch(k, "*_model2") or k == "pancreas_model1"
         },
         reports=dict(
             model_summary=dict(
                 # simulate_model1=create_reports_config("medium", 1),
                 # simulate_model2=create_reports_config("medium", 2),
-                # pancreas_model1=create_reports_config("pancreas", 1),
+                pancreas_model1=create_reports_config("pancreas", 1),
                 pancreas_model2=create_reports_config("pancreas", 2),
                 bonemarrow_model2=create_reports_config("bonemarrow", 2),
                 # pbmc68k_model1=create_reports_config("pbmc68k", 1),
