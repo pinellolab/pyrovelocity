@@ -80,14 +80,14 @@ function run_parallel_pipeline() {
     dvc stage list --name-only |\
         grep -E "postprocess*" |\
         /usr/bin/time -v \
-        xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 15 + 5)); '"$DVC_COMMAND_POSTPROCESS"' "$@"' --
+        xargs -t -n 1 -P 6 bash -c 'sleep $((RANDOM % 15 + 5)); '"$DVC_COMMAND_POSTPROCESS"' "$@"' --
     wait
     dvc repro postprocess
 
     dvc stage list --name-only |\
         grep -E "summarize*" |\
         /usr/bin/time -v \
-        xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 15 + 5)); '"$DVC_COMMAND_SUMMARIZE"' "$@"' --
+        xargs -t -n 1 -P 6 bash -c 'sleep $((RANDOM % 15 + 5)); '"$DVC_COMMAND_SUMMARIZE"' "$@"' --
     wait
     dvc repro summarize
 }
