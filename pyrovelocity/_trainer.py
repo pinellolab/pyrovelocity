@@ -12,7 +12,8 @@ import numpy as np
 import pyro
 import scipy
 import torch
-from pyro.infer import TraceEnum_ELBO, Trace_ELBO
+from pyro.infer import Trace_ELBO
+from pyro.infer import TraceEnum_ELBO
 from pyro.infer.autoguide.guides import AutoGuideList
 from pyro.optim.clipped_adam import ClippedAdam
 from pyro.optim.optim import PyroOptim
