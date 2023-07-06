@@ -3214,11 +3214,11 @@ stages:
       md5: 11799f5a3dcd585546fae58da182f864
       size: 526943
   figureS2_extras:
-    cmd: python figS2/figure_extras.py train_models=[pbmc68k_model2]
+    cmd: /usr/bin/time -v python figS2/figure_extras.py train_models=[pbmc68k_model2]
     deps:
     - path: figS2/figure_extras.py
-      md5: 20283ba388e23581a16093e1d68297e3
-      size: 11273
+      md5: b4623932f7f04b7aad6ad9d53fdb116a
+      size: 11450
     - path: models/pbmc68k_model2/pyrovelocity.pkl.zst
       md5: b3ae8fc391dda9f35cdb36056fac7223
       size: 679013346
@@ -3228,14 +3228,17 @@ stages:
           tag: figS2
           path: reports/figS2
           subset_genes_plot: reports/figS2/figS2_subset3g_pbmc68k.pdf
-          subset_pkl: reports/figS2/figS2_subset3g_pbmc68k.pkl
+          subset_pkl: reports/figS2/figS2_subset3g_pbmc68k.pkl.zst
     outs:
     - path: reports/figS2/figS2_subset3g_pbmc68k.pdf
-      md5: c1eadf935916329f02f949facfc7eb4b
+      md5: 0c48cb5db2d6c89137740554154d2e05
       size: 5605317
     - path: reports/figS2/figS2_subset3g_pbmc68k.pdf.png
       md5: 0e79aab1beb3819b1f7fa12824c5998b
       size: 1480115
+    - path: reports/figS2/figS2_subset3g_pbmc68k.pkl.zst
+      md5: 8e8635f044c299abbb7733174794273a
+      size: 113018142
   figureS2_extra_2:
     cmd: python figS2/figure_extra_2.py train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
     deps:
