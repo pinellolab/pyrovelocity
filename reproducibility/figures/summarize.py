@@ -518,26 +518,28 @@ def extrapolate_prediction_sample_predictive(
     model = model.load_model(pyrovelocity_model_path, adata, use_gpu=0)
     print(pyrovelocity_model_path)
     print(model)
-    print('--------------------')
-    # NOTE: check the saved model 2 are the same model 2 
-    posterior_samples_new = model.generate_posterior_samples(adata=adata, batch_size=256, num_samples=30)
-    grid_time_samples_ut = posterior_samples_new['ut']
-    grid_time_samples_st = posterior_samples_new['st']
-    grid_time_samples_uinf = posterior_samples_new['u_inf']
-    grid_time_samples_sinf = posterior_samples_new['s_inf']
-    if 'u_offset' in posterior_samples_new:
-        grid_time_samples_u0 = posterior_samples_new['u_offset']
-        grid_time_samples_s0 = posterior_samples_new['s_offset']
+    print("--------------------")
+    # NOTE: check the saved model 2 are the same model 2
+    posterior_samples_new = model.generate_posterior_samples(
+        adata=adata, batch_size=256, num_samples=30
+    )
+    grid_time_samples_ut = posterior_samples_new["ut"]
+    grid_time_samples_st = posterior_samples_new["st"]
+    grid_time_samples_uinf = posterior_samples_new["u_inf"]
+    grid_time_samples_sinf = posterior_samples_new["s_inf"]
+    if "u_offset" in posterior_samples_new:
+        grid_time_samples_u0 = posterior_samples_new["u_offset"]
+        grid_time_samples_s0 = posterior_samples_new["s_offset"]
     else:
         grid_time_samples_u0 = np.zeros(grid_time_samples_uinf.shape)
         grid_time_samples_s0 = np.zeros(grid_time_samples_sinf.shape)
-    grid_time_samples_t0 = posterior_samples_new['t0']
-    grid_time_samples_dt_switching = posterior_samples_new['dt_switching']
-    if 'u_offset' in posterior_samples_new:
-        grid_time_samples_uscale = posterior_samples_new['u_scale']
+    grid_time_samples_t0 = posterior_samples_new["t0"]
+    grid_time_samples_dt_switching = posterior_samples_new["dt_switching"]
+    if "u_offset" in posterior_samples_new:
+        grid_time_samples_uscale = posterior_samples_new["u_scale"]
     else:
         grid_time_samples_uscale = np.ones(grid_time_samples_uinf.shape)
-    grid_time_samples_state = posterior_samples_new['cell_gene_state']
+    grid_time_samples_state = posterior_samples_new["cell_gene_state"]
 
     return (
         grid_time_samples_ut,
@@ -549,16 +551,16 @@ def extrapolate_prediction_sample_predictive(
         grid_time_samples_uscale,
         grid_time_samples_state,
         grid_time_samples_t0,
-        grid_time_samples_dt_switching
+        grid_time_samples_dt_switching,
     )
 
-    #samples = []
-    #for sample in range(30):
+    # samples = []
+    # for sample in range(30):
     #    sample = model.module.guide()
     #    samples.append(sample)
 
-    #posterior_samples = {}
-    #for key in [
+    # posterior_samples = {}
+    # for key in [
     #    "alpha",
     #    "beta",
     #    "gamma",
@@ -567,7 +569,7 @@ def extrapolate_prediction_sample_predictive(
     #    "t0",
     #    "u_scale",
     #    "dt_switching",
-    #]:
+    # ]:
     #    posterior_samples[key] = torch.tensor(
     #        np.concatenate(
     #            [
@@ -578,7 +580,7 @@ def extrapolate_prediction_sample_predictive(
     #        )
     #    ).to("cuda:0")
 
-    #dummy_obs = (
+    # dummy_obs = (
     #    torch.ones((1, adata.shape[1])).to("cuda:0"),
     #    torch.ones((1, adata.shape[1])).to("cuda:0"),
     #    torch.ones((1, 1)).to("cuda:0"),
@@ -588,16 +590,16 @@ def extrapolate_prediction_sample_predictive(
     #    torch.ones((1, 1)).to("cuda:0"),
     #    torch.ones((1, 1)).to("cuda:0"),
     #    torch.ones((1, 1)).to("cuda:0"),
-    #)
+    # )
 
-    #grid_time_samples_ut = []
-    #grid_time_samples_st = []
-    #grid_time_samples_state = []
+    # grid_time_samples_ut = []
+    # grid_time_samples_st = []
+    # grid_time_samples_state = []
 
     ##starting_time = posterior_samples['t0']
     ##grid_cell_time = torch.linspace(min(posterior_time.flatten()), max(posterior_time.flatten()), grid_time_points)
-    #grid_cell_time = torch.linspace(-10, 10, grid_time_points)
-    #with torch.no_grad(), pyro.poutine.mask(mask=False):
+    # grid_cell_time = torch.linspace(-10, 10, grid_time_points)
+    # with torch.no_grad(), pyro.poutine.mask(mask=False):
     #    for t in grid_cell_time:
 
     #        test = Predictive(
@@ -618,15 +620,15 @@ def extrapolate_prediction_sample_predictive(
     #        grid_time_samples_ut.append(test["ut"])
     #        grid_time_samples_st.append(test["st"])
     #        grid_time_samples_state.append(test["cell_gene_state"])
-    #grid_time_samples_ut = torch.cat(grid_time_samples_ut, dim=-2)
-    #grid_time_samples_st = torch.cat(grid_time_samples_st, dim=-2)
-    #grid_time_samples_u0 = posterior_samples["u_offset"]
-    #grid_time_samples_s0 = posterior_samples["s_offset"]
-    #grid_time_samples_uinf = test["u_inf"]
-    #grid_time_samples_sinf = test["s_inf"]
-    #grid_time_samples_uscale = posterior_samples["u_scale"]
-    #grid_time_samples_state = torch.cat(grid_time_samples_state, dim=-2)
-    #return (
+    # grid_time_samples_ut = torch.cat(grid_time_samples_ut, dim=-2)
+    # grid_time_samples_st = torch.cat(grid_time_samples_st, dim=-2)
+    # grid_time_samples_u0 = posterior_samples["u_offset"]
+    # grid_time_samples_s0 = posterior_samples["s_offset"]
+    # grid_time_samples_uinf = test["u_inf"]
+    # grid_time_samples_sinf = test["s_inf"]
+    # grid_time_samples_uscale = posterior_samples["u_scale"]
+    # grid_time_samples_state = torch.cat(grid_time_samples_state, dim=-2)
+    # return (
     #    grid_time_samples_ut.cpu().detach().numpy(),
     #    grid_time_samples_st.cpu().detach().numpy(),
     #    grid_time_samples_u0.cpu().detach().numpy(),
@@ -635,7 +637,7 @@ def extrapolate_prediction_sample_predictive(
     #    grid_time_samples_sinf.cpu().detach().numpy(),
     #    grid_time_samples_uscale.cpu().detach().numpy(),
     #    grid_time_samples_state.cpu().detach().numpy(),
-    #)
+    # )
 
 
 def extrapolate_prediction_trace(data_model_conf, adata, grid_time_points=500):
@@ -692,12 +694,12 @@ def posterior_curve(
     dataset,
     directory,
 ):
-    #grid_cell_time = np.linspace(-50, 50, 500)
-    grid_cell_time = posterior_samples['cell_time']
+    # grid_cell_time = np.linspace(-50, 50, 500)
+    grid_cell_time = posterior_samples["cell_time"]
 
     for figi, gene in enumerate(gene_set):
         (index,) = np.where(adata.var_names == gene)
-        print(adata.shape, index, posterior_samples['st_mean'].shape)
+        print(adata.shape, index, posterior_samples["st_mean"].shape)
 
         fig, ax = plt.subplots(3, 4)
         fig.set_size_inches(15, 10)
@@ -708,7 +710,7 @@ def posterior_curve(
             cell_time_sample_max = cell_time_sample.max()
             cell_time_sample_min = cell_time_sample.min()
 
-            colors = np.array(['gray', 'blue'])
+            colors = np.array(["gray", "blue"])
             mask_t0_sample = (cell_time_sample >= t0_sample).astype(int)
             cell_colors = colors[mask_t0_sample]
 
@@ -717,12 +719,17 @@ def posterior_curve(
                 posterior_samples["ut_mean"][:, index[0]],
                 s=3,
                 linewidth=0,
-                color=cell_colors, alpha=0.3,
+                color=cell_colors,
+                alpha=0.3,
             )
 
-            colors = np.array(['gray', 'blue', 'red'])
-            grid_mask_t0_sample = (grid_cell_time.mean(0).flatten() >= t0_sample).astype('float32')
-            cell_gene_state_grid = grid_time_samples_state[sample][:, index[0]].astype('float32')
+            colors = np.array(["gray", "blue", "red"])
+            grid_mask_t0_sample = (
+                grid_cell_time.mean(0).flatten() >= t0_sample
+            ).astype("float32")
+            cell_gene_state_grid = grid_time_samples_state[sample][:, index[0]].astype(
+                "float32"
+            )
             grid_mask_t0_sample = grid_mask_t0_sample + cell_gene_state_grid
             grid_mask_t0_sample = grid_mask_t0_sample.astype(int)
             grid_mask_t0_sample[grid_cell_time.mean(0).flatten() < t0_sample] = 0
@@ -735,44 +742,48 @@ def posterior_curve(
                 marker="*",
                 linewidth=0,
                 alpha=0.2,
-                c=grid_cell_colors, 
+                c=grid_cell_colors,
             )
-            ax[sample+4].scatter(
+            ax[sample + 4].scatter(
                 grid_cell_time.mean(0).flatten(),
                 posterior_samples["ut_mean"][:, index[0]],
                 s=3,
                 linewidth=0,
-                marker='.',
-                color=grid_cell_colors, alpha=0.3,
+                marker=".",
+                color=grid_cell_colors,
+                alpha=0.3,
             )
-            ax[sample+4].scatter(
+            ax[sample + 4].scatter(
                 grid_cell_time[sample].flatten(),
                 grid_time_samples_ut[sample][:, index[0]],
                 s=10,
-                marker='>',
+                marker=">",
                 linewidth=0,
-                color=grid_cell_colors, alpha=0.5,
+                color=grid_cell_colors,
+                alpha=0.5,
             )
-            ax[sample+4].set_title("Unspliced", fontsize=7)
-            ax[sample+4].set_ylabel("Unspliced (Ut)", fontsize=7)
-            ax[sample+8].scatter(
+            ax[sample + 4].set_title("Unspliced", fontsize=7)
+            ax[sample + 4].set_ylabel("Unspliced (Ut)", fontsize=7)
+            ax[sample + 8].scatter(
                 grid_cell_time.mean(0).flatten(),
                 posterior_samples["st_mean"][:, index[0]],
                 s=3,
-                marker='*',
+                marker="*",
                 linewidth=0,
-                color=grid_cell_colors, alpha=0.3,
+                color=grid_cell_colors,
+                alpha=0.3,
             )
-            ax[sample+8].scatter(
+            ax[sample + 8].scatter(
                 grid_cell_time[sample].flatten(),
                 grid_time_samples_st[sample][:, index[0]],
                 s=10,
-                marker='<',
+                marker="<",
                 linewidth=0,
-                color=grid_cell_colors, alpha=0.3,
+                color=grid_cell_colors,
+                alpha=0.3,
             )
-            ax[sample+8].set_title("Spliced", fontsize=7)
-            ax[sample+8].set_ylabel("Spliced (St)", fontsize=7)
+            ax[sample + 8].set_title("Spliced", fontsize=7)
+            ax[sample + 8].set_ylabel("Spliced (St)", fontsize=7)
 
             u0 = grid_time_samples_u0[sample][:, index[0]].flatten()
             uscale = grid_time_samples_uscale[sample][:, index[0]].flatten()
@@ -781,7 +792,9 @@ def posterior_curve(
             s_inf = grid_time_samples_sinf[sample][:, index[0]].flatten()
 
             t0_sample = grid_time_samples_t0[sample][:, index[0]].flatten()
-            dt_switching_sample = grid_time_samples_dt_switching[sample][:, index[0]].flatten()
+            dt_switching_sample = grid_time_samples_dt_switching[sample][
+                :, index[0]
+            ].flatten()
 
             ##u0 = posterior_samples['u_offset'][sample][:, index[0]].flatten()
             ##s0 = posterior_samples['s_offset'][sample][:, index[0]].flatten()
@@ -790,18 +803,36 @@ def posterior_curve(
             ##switching = posterior_samples['switching'][sample][:, index[0]].flatten()
             ##dt_switching = posterior_samples['dt_switching'][sample][:, index[0]].flatten()
 
-            ax[sample+4].scatter(
-                t0_sample, u0 * uscale, s=80, marker="p", linewidth=0.5, c="purple", alpha=0.8
+            ax[sample + 4].scatter(
+                t0_sample,
+                u0 * uscale,
+                s=80,
+                marker="p",
+                linewidth=0.5,
+                c="purple",
+                alpha=0.8,
             )
-            ax[sample+4].scatter(
-                t0_sample+dt_switching_sample, u_inf*uscale, s=80, marker="*", linewidth=0.5, c="black", alpha=0.8
+            ax[sample + 4].scatter(
+                t0_sample + dt_switching_sample,
+                u_inf * uscale,
+                s=80,
+                marker="*",
+                linewidth=0.5,
+                c="black",
+                alpha=0.8,
             )
 
-            ax[sample+8].scatter(
+            ax[sample + 8].scatter(
                 t0_sample, s0, s=80, marker="p", linewidth=0.5, c="purple", alpha=0.8
             )
-            ax[sample+8].scatter(
-                t0_sample+dt_switching_sample, s_inf, s=80, marker="p", linewidth=0.5, c="black", alpha=0.8
+            ax[sample + 8].scatter(
+                t0_sample + dt_switching_sample,
+                s_inf,
+                s=80,
+                marker="p",
+                linewidth=0.5,
+                c="black",
+                alpha=0.8,
             )
 
             ax[sample].scatter(
@@ -814,19 +845,25 @@ def posterior_curve(
             #                grid_time_samples_ut[sample][:, index[0]],
             #                linestyle="--", linewidth=3, color='g')
             if sample == 0:
-                print(gene, u0*uscale, s0)
-                print(gene, u_inf*uscale, s_inf)
-                print(t0_sample, dt_switching_sample, cell_time_sample_min, cell_time_sample_max, (cell_time_sample <= t0_sample).sum())
+                print(gene, u0 * uscale, s0)
+                print(gene, u_inf * uscale, s_inf)
+                print(
+                    t0_sample,
+                    dt_switching_sample,
+                    cell_time_sample_min,
+                    cell_time_sample_max,
+                    (cell_time_sample <= t0_sample).sum(),
+                )
                 print(cell_time_sample.shape)
 
             switching = t0_sample + dt_switching_sample
-            state0 = (cell_gene_state_grid==0)&(cell_time_sample<=switching)
-            state0_false = (cell_gene_state_grid==0)&(cell_time_sample>switching)
-            state1 = (cell_gene_state_grid==1)&(cell_time_sample>=switching)
-            state1_false = (cell_gene_state_grid==1)&(cell_time_sample<switching)
+            state0 = (cell_gene_state_grid == 0) & (cell_time_sample <= switching)
+            state0_false = (cell_gene_state_grid == 0) & (cell_time_sample > switching)
+            state1 = (cell_gene_state_grid == 1) & (cell_time_sample >= switching)
+            state1_false = (cell_gene_state_grid == 1) & (cell_time_sample < switching)
 
             ax[sample].set_title(
-                    f"{gene} model 2 sample {sample}\nt0>celltime:{(t0_sample>cell_time_sample_max)} {(t0_sample>cell_time_sample).sum()}\nstate0: {state0.sum()} {state0_false.sum()} state1: {state1.sum()} {state1_false.sum()}",
+                f"{gene} model 2 sample {sample}\nt0>celltime:{(t0_sample>cell_time_sample_max)} {(t0_sample>cell_time_sample).sum()}\nstate0: {state0.sum()} {state0_false.sum()} state1: {state1.sum()} {state1_false.sum()}",
                 fontsize=6.5,
             )
             ax[sample].set_xlim(
@@ -993,9 +1030,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             grid_time_samples_uscale,
             grid_time_samples_state,
             grid_time_samples_t0,
-            grid_time_samples_dt_switching
+            grid_time_samples_dt_switching,
         ) = extrapolate_prediction_sample_predictive(
-            posterior_samples['cell_time'], data_model_conf, adata, grid_time_points=500
+            posterior_samples["cell_time"], data_model_conf, adata, grid_time_points=500
         )
         # extrapolate_prediction_trace(data_model_conf, adata, grid_time_points=5)
 
