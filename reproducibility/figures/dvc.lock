@@ -1952,8 +1952,8 @@ stages:
       md5: 70aef236486c45aba779194a2d8d81f2
       size: 492127600
     - path: summarize.py
-      md5: 9ec3e744132999f89c61b84509e23ae5
-      size: 45617
+      md5: 424b1ddc7fe21fc2c66aac74cf8c8fbb
+      size: 46288
     params:
       config.yaml:
         base:
@@ -3993,8 +3993,8 @@ stages:
       md5: 6fcbc8bbe3cf43cbe7383cc8661b95c7
       size: 492127600
     - path: summarize.py
-      md5: 9ec3e744132999f89c61b84509e23ae5
-      size: 45617
+      md5: 424b1ddc7fe21fc2c66aac74cf8c8fbb
+      size: 46288
     params:
       config.yaml:
         base:
