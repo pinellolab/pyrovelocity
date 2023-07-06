@@ -976,7 +976,7 @@ reports:
     tag: figS2
     path: reports/figS2
     subset_genes_plot: reports/figS2/figS2_subset3g_pbmc68k.pdf
-    subset_pkl: reports/figS2/figS2_subset3g_pbmc68k.pkl
+    subset_pkl: reports/figS2/figS2_subset3g_pbmc68k.pkl.zst
   figureS4:
     tag: figS4
     path: reports/figS4
