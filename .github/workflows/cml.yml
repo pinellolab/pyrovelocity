@@ -13,6 +13,11 @@ on:
         required: true
         type: boolean
         default: false
+      force_retraining:
+        description: "Force retraining in model execution"
+        required: true
+        type: boolean
+        default: false
   push:
     branches:
       - "exp*"
@@ -120,5 +125,9 @@ jobs:
       - name: Run experiment and submit report
         run: |
           source .venv/bin/activate
-          ./.github/pipeline.sh
+          if [ "${{ github.event.inputs.force_retraining }}" = "true" ]; then
+            ./.github/pipeline.sh -f
+          else
+            ./.github/pipeline.sh
+          fi
         shell: bash
