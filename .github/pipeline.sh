@@ -17,11 +17,17 @@
 
 set -x
 
-FORCE=""
 DVC_COMMAND="dvc repro"
-while getopts ":f" opt; do
+DVC_COMMAND_POSTPROCESS="dvc repro"
+DVC_COMMAND_SUMMARIZE="dvc repro"
+FORCE_ALL=""
+
+while getopts ":ftfsfp" opt; do
   case $opt in
-    f) FORCE=true; DVC_COMMAND="dvc repro -f -s" ;;
+    f) FORCE_ALL="true"; DVC_COMMAND="dvc repro -f -s"; DVC_COMMAND_POSTPROCESS="dvc repro -f -s"; DVC_COMMAND_SUMMARIZE="dvc repro -f -s" ;;
+    ft) DVC_COMMAND="dvc repro -f -s" ;;
+    fp) DVC_COMMAND_POSTPROCESS="dvc repro -f -s" ;;
+    fs) DVC_COMMAND_SUMMARIZE="dvc repro -f -s" ;;
     \?) echo "Invalid option -$OPTARG" >&2 ;;
   esac
 done
@@ -74,14 +80,14 @@ function run_parallel_pipeline() {
     dvc stage list --name-only |\
         grep -E "postprocess*" |\
         /usr/bin/time -v \
-        xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 15 + 5)); dvc repro "$@"' --
+        xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 15 + 5)); '"$DVC_COMMAND_POSTPROCESS"' "$@"' --
     wait
     dvc repro postprocess
 
     dvc stage list --name-only |\
         grep -E "summarize*" |\
         /usr/bin/time -v \
-        xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 15 + 5)); dvc repro "$@"' --
+        xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 15 + 5)); '"$DVC_COMMAND_SUMMARIZE"' "$@"' --
     wait
     dvc repro summarize
 }
