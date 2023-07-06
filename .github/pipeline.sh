@@ -17,6 +17,14 @@
 
 set -x
 
+FORCE=""
+DVC_COMMAND="dvc repro"
+while getopts ":f" opt; do
+  case $opt in
+    f) FORCE=true; DVC_COMMAND="dvc repro -f -s" ;;
+    \?) echo "Invalid option -$OPTARG" >&2 ;;
+  esac
+done
 
 ### Define parallel execution function ###
 function run_parallel_pipeline() {
@@ -36,29 +44,29 @@ function run_parallel_pipeline() {
     dvc repro preprocess
 
     # manually execute training stages to distribute over four GPUs
-    dvc repro train@pancreas_model2 &
+    $DVC_COMMAND train@pancreas_model2 &
     sleep 7
-    dvc repro train@pbmc68k_model2 &
+    $DVC_COMMAND train@pbmc68k_model2 &
     sleep 7
-    dvc repro train@pons_model2 &
+    $DVC_COMMAND train@pons_model2 &
     sleep 7
-    dvc repro train@larry_model2 &
+    $DVC_COMMAND train@larry_model2 &
     wait
 
-    dvc repro train@larry_tips_model2 &
+    $DVC_COMMAND train@larry_tips_model2 &
     sleep 7
-    dvc repro train@larry_mono_model2 &
+    $DVC_COMMAND train@larry_mono_model2 &
     sleep 7
-    dvc repro train@larry_neu_model2 &
+    $DVC_COMMAND train@larry_neu_model2 &
     sleep 7
-    dvc repro train@larry_multilineage_model2 &
+    $DVC_COMMAND train@larry_multilineage_model2 &
     wait
 
-    dvc repro train@bonemarrow_model2 &
+    $DVC_COMMAND train@bonemarrow_model2 &
     sleep 7
-    dvc repro train@pbmc10k_model2 &
+    $DVC_COMMAND train@pbmc10k_model2 &
     sleep 7
-    dvc repro train@pbmc5k_model2 &
+    $DVC_COMMAND train@pbmc5k_model2 &
 
     wait
     dvc repro train
