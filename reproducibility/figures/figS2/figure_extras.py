@@ -166,11 +166,13 @@ def plots(
             del posterior_samples["s"]
             del posterior_samples["ut"]
             del posterior_samples["st"]
-            with open(pyrovelocity_data_path_3genes, "wb") as f:
-                pickle.dump(posterior_samples, f)
+            CompressedPickle.save(pyrovelocity_data_path_3genes, posterior_samples)
+            # with open(pyrovelocity_data_path_3genes, "wb") as f:
+            #     pickle.dump(posterior_samples, f)
         else:
-            with open(pyrovelocity_data_path_3genes, "rb") as f:
-                posterior_samples = pickle.load(f)
+            posterior_samples = CompressedPickle.load(pyrovelocity_data_path_3genes)
+            # with open(pyrovelocity_data_path_3genes, "rb") as f:
+            #     posterior_samples = pickle.load(f)
             print((posterior_samples["fdri"] < 0.001).sum())
 
     adata.obs.loc[:, "vector_field_rayleigh_test"] = posterior_samples["fdri"]
