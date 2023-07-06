@@ -101,6 +101,7 @@ stages:
         - ${item.violin_clusters_log}.png
         - ${item.uncertainty_param_plot}
         - ${item.uncertainty_param_plot}.png
+        - ${item.posterior_phase_portraits}
 
   figureS2:
     cmd: /usr/bin/time -v python figS2/figure.py train_models=[pbmc5k_model2,pbmc10k_model2_coarse,pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_tips_model2]
