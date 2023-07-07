@@ -249,6 +249,7 @@ stages:
             thresh_histogram_path: data/processed/pbmc10k_thresh_histogram.pdf
     outs:
     - path: data/external/pbmc10k.h5ad
+      hash: md5
       md5: d3e04305389fbe783950acfd9c3a7384
       size: 808692621
   preprocess@simulate_medium:
@@ -311,6 +312,7 @@ stages:
             thresh_histogram_path: data/processed/pons_thresh_histogram.pdf
     outs:
     - path: data/processed/pons_processed.h5ad
+      hash: md5
       md5: 7be4dd4a9a7a9a10eab45e5f22086489
       size: 740872463
     - path: data/processed/pons_thresh_histogram.pdf
@@ -448,6 +450,7 @@ stages:
             thresh_histogram_path: data/processed/larry_tips_thresh_histogram.pdf
     outs:
     - path: data/processed/larry_tips_processed.h5ad
+      hash: md5
       md5: f19069e9a1a38fca101b73ac91977149
       size: 2026603098
     - path: data/processed/larry_tips_thresh_histogram.pdf
@@ -562,6 +565,7 @@ stages:
     cmd: python preprocess.py process_data=[pbmc10k]
     deps:
     - path: data/external/pbmc10k.h5ad
+      hash: md5
       md5: d3e04305389fbe783950acfd9c3a7384
       size: 808692621
     - path: preprocess.py
@@ -584,6 +588,7 @@ stages:
             thresh_histogram_path: data/processed/pbmc10k_thresh_histogram.pdf
     outs:
     - path: data/processed/pbmc10k_processed.h5ad
+      hash: md5
       md5: 90560495ea8e77d1be26f7902e8ee48b
       size: 1522738521
     - path: data/processed/pbmc10k_thresh_histogram.pdf
@@ -794,6 +799,7 @@ stages:
     cmd: /usr/bin/time -v python train.py train_models=[pons_model2]
     deps:
     - path: data/processed/pons_processed.h5ad
+      hash: md5
       md5: 7be4dd4a9a7a9a10eab45e5f22086489
       size: 740872463
     - path: train.py
@@ -926,6 +932,7 @@ stages:
     cmd: /usr/bin/time -v python train.py train_models=[larry_tips_model2]
     deps:
     - path: data/processed/larry_tips_processed.h5ad
+      hash: md5
       md5: f19069e9a1a38fca101b73ac91977149
       size: 2026603098
     - path: train.py
@@ -1190,6 +1197,7 @@ stages:
     cmd: /usr/bin/time -v python train.py train_models=[pbmc10k_model2]
     deps:
     - path: data/processed/pbmc10k_processed.h5ad
+      hash: md5
       md5: 90560495ea8e77d1be26f7902e8ee48b
       size: 1522738521
     - path: train.py
@@ -1388,6 +1396,7 @@ stages:
       md5: 05357ba7befa89f83e4b11439c071d69
       size: 170952530
     - path: models/pancreas_model2/trained.h5ad
+      hash: md5
       md5: af2ba0069fd94bcea0a606a268ba7e41
       size: 492127600
   postprocess@pbmc68k_model2:
@@ -1457,12 +1466,14 @@ stages:
       md5: 8d371e47355b41e2baa329b31bbee28c
       size: 964175816
     - path: models/pbmc68k_model2/trained.h5ad
+      hash: md5
       md5: 298c11d370c21ca74fc7746022f5bac0
       size: 2263902602
   postprocess@pons_model2:
     cmd: /usr/bin/time -v python postprocess.py train_models=[pons_model2]
     deps:
     - path: data/processed/pons_processed.h5ad
+      hash: md5
       md5: 7be4dd4a9a7a9a10eab45e5f22086489
       size: 740872463
     - path: models/pons_model2/model
@@ -1526,6 +1537,7 @@ stages:
       md5: 7eb7d8a9eb458c087598835bb412a9d6
       size: 292727197
     - path: models/pons_model2/trained.h5ad
+      hash: md5
       md5: dcc3d7c35f8cafb6fb285ebc5b9eceb5
       size: 859080859
   postprocess@larry_model2:
@@ -1595,12 +1607,14 @@ stages:
       md5: 59bf4d321f6cde7f17d41c2b17e7da0a
       size: 2344041479
     - path: models/larry_model2/trained.h5ad
+      hash: md5
       md5: ff50581db4a31025553aed6afa80766d
       size: 6320872798
   postprocess@larry_tips_model2:
     cmd: /usr/bin/time -v python postprocess.py train_models=[larry_tips_model2]
     deps:
     - path: data/processed/larry_tips_processed.h5ad
+      hash: md5
       md5: f19069e9a1a38fca101b73ac91977149
       size: 2026603098
     - path: models/larry_tips_model2/model
@@ -1664,6 +1678,7 @@ stages:
       md5: 03ac488dd899ccd189648cccc10770e5
       size: 854598973
     - path: models/larry_tips_model2/trained.h5ad
+      hash: md5
       md5: 879084b57f1872318c9419950856a350
       size: 2376025578
   postprocess@larry_mono_model2:
@@ -1877,6 +1892,7 @@ stages:
     cmd: /usr/bin/time -v python postprocess.py train_models=[pbmc10k_model2]
     deps:
     - path: data/processed/pbmc10k_processed.h5ad
+      hash: md5
       md5: 90560495ea8e77d1be26f7902e8ee48b
       size: 1522738521
     - path: models/pbmc10k_model2/model
@@ -1940,6 +1956,7 @@ stages:
       md5: acba97b0a7230e566b6fb552f5e7ede2
       size: 543552723
     - path: models/pbmc10k_model2/trained.h5ad
+      hash: md5
       md5: 925616d2bb95042132008456418e2653
       size: 1737302789
   summarize@pancreas_model2:
@@ -1949,6 +1966,7 @@ stages:
       md5: 05357ba7befa89f83e4b11439c071d69
       size: 170952530
     - path: models/pancreas_model2/trained.h5ad
+      hash: md5
       md5: af2ba0069fd94bcea0a606a268ba7e41
       size: 492127600
     - path: summarize.py
@@ -2001,7 +2019,8 @@ stages:
       md5: 563fccf930a066ac09d9843bb010029b
       size: 637651
     - path: reports/pancreas_model2/fig2_part2_plot.pdf
-      md5: fa3a458fc2b5e6678c92fcd675b13c20
+      hash: md5
+      md5: eb026b5efc34153cbd8486630a5bbc06
       size: 1245113
     - path: reports/pancreas_model2/fig2_part2_plot.pdf.png
       md5: b4405fd8b3f7b14349c0353e82fd8588
@@ -2017,7 +2036,8 @@ stages:
       size: 34570282
       nfiles: 20
     - path: reports/pancreas_model2/rainbow.pdf
-      md5: a540b21f4782b73ec6e01d069da168ec
+      hash: md5
+      md5: abcd341175be31db0dcfa30b8ee5de55
       size: 5193109
     - path: reports/pancreas_model2/rainbow.pdf.png
       md5: 36f35a2d60b6466c8ffcbebf02004da6
@@ -2044,6 +2064,7 @@ stages:
       md5: 8d371e47355b41e2baa329b31bbee28c
       size: 964175816
     - path: models/pbmc68k_model2/trained.h5ad
+      hash: md5
       md5: 298c11d370c21ca74fc7746022f5bac0
       size: 2263902602
     - path: summarize.py
@@ -2139,6 +2160,7 @@ stages:
       md5: 7eb7d8a9eb458c087598835bb412a9d6
       size: 292727197
     - path: models/pons_model2/trained.h5ad
+      hash: md5
       md5: dcc3d7c35f8cafb6fb285ebc5b9eceb5
       size: 859080859
     - path: summarize.py
@@ -2191,7 +2213,8 @@ stages:
       md5: 6b240518b70a8c3cfb064aa6fc159bce
       size: 635496
     - path: reports/pons_model2/fig2_part2_plot.pdf
-      md5: cb93e9d666f77e905cda01faf0ea06de
+      hash: md5
+      md5: 238cccd7e1537277c2781e35849bfd01
       size: 2087143
     - path: reports/pons_model2/fig2_part2_plot.pdf.png
       md5: 23145f9e216a23b4266e255a7c01f9ff
@@ -2234,6 +2257,7 @@ stages:
       md5: acba97b0a7230e566b6fb552f5e7ede2
       size: 543552723
     - path: models/pbmc10k_model2/trained.h5ad
+      hash: md5
       md5: 925616d2bb95042132008456418e2653
       size: 1737302789
     - path: summarize.py
@@ -2286,7 +2310,8 @@ stages:
       md5: 95b7ab06939d8c44cc0b8f32b0a69377
       size: 750641
     - path: reports/pbmc10k_model2/fig2_part2_plot.pdf
-      md5: 3a0407a545d22b7a68b3ad6ba597b647
+      hash: md5
+      md5: b08faac7ecfa258b617bb9177d42ee5d
       size: 3668843
     - path: reports/pbmc10k_model2/fig2_part2_plot.pdf.png
       md5: b191f8e5232389d2d59c4d3b0eef23f9
@@ -2302,7 +2327,8 @@ stages:
       size: 31222272
       nfiles: 20
     - path: reports/pbmc10k_model2/rainbow.pdf
-      md5: a948cdee6034a2c37e2e490dc05dc08f
+      hash: md5
+      md5: 59959ab0f50d191562e9ca346a20fdc6
       size: 15211138
     - path: reports/pbmc10k_model2/rainbow.pdf.png
       md5: 1cd80f16634ae2e48155dfc28df3f9f2
@@ -2329,6 +2355,7 @@ stages:
       md5: 03ac488dd899ccd189648cccc10770e5
       size: 854598973
     - path: models/larry_tips_model2/trained.h5ad
+      hash: md5
       md5: 879084b57f1872318c9419950856a350
       size: 2376025578
     - path: summarize.py
@@ -2375,13 +2402,15 @@ stages:
       md5: 82bf7c25b0776dfd02ef9372a3b22672
       size: 2390087
     - path: reports/larry_tips_model2/fig2_part1_plot.pdf
-      md5: 3884773e46d6f0f2a9b99d6092735d95
+      hash: md5
+      md5: acde9f9c2bcafb0de0501624ba37436f
       size: 1321584
     - path: reports/larry_tips_model2/fig2_part1_plot.pdf.png
       md5: c43c3fa0d47d7bc458aa516d7ff948cc
       size: 548352
     - path: reports/larry_tips_model2/fig2_part2_plot.pdf
-      md5: d45dc7cad86690378f35fb1ab828c5a8
+      hash: md5
+      md5: 0b05445dba9d12b6904b8aab4de6fd76
       size: 5885615
     - path: reports/larry_tips_model2/fig2_part2_plot.pdf.png
       md5: 9de17116824869c02f9c64be802f1374
@@ -2686,6 +2715,7 @@ stages:
       md5: 59bf4d321f6cde7f17d41c2b17e7da0a
       size: 2344041479
     - path: models/larry_model2/trained.h5ad
+      hash: md5
       md5: ff50581db4a31025553aed6afa80766d
       size: 6320872798
     - path: summarize.py
@@ -2717,6 +2747,7 @@ stages:
           violin_clusters_log: reports/larry_model2/clusters_violin_log.pdf
     outs:
     - path: data/processed/larry_model2_dataframe.pkl.zst
+      hash: md5
       md5: 91a40d3791dce553689481b4d6c3ad2d
       size: 130451734
     - path: reports/larry_model2/clusters_violin_lin.pdf
@@ -2754,7 +2785,8 @@ stages:
       size: 79790662
       nfiles: 20
     - path: reports/larry_model2/rainbow.pdf
-      md5: 8974974caddf5133761dbda207382bc3
+      hash: md5
+      md5: d13c106cf25082b92660f96c9b4e84ec
       size: 68205344
     - path: reports/larry_model2/rainbow.pdf.png
       md5: f7457df5962d7d187c1cedd1a426b3f5
@@ -2784,6 +2816,7 @@ stages:
       md5: 59bf4d321f6cde7f17d41c2b17e7da0a
       size: 2344041479
     - path: models/larry_model2/trained.h5ad
+      hash: md5
       md5: ff50581db4a31025553aed6afa80766d
       size: 6320872798
     - path: models/larry_mono_model2/pyrovelocity.pkl.zst
@@ -2812,7 +2845,8 @@ stages:
           figure3: reports/fig3/figure3.pdf
     outs:
     - path: reports/fig3/figure3.pdf
-      md5: e503b0d40294f90aaa5eca201a65a8c3
+      hash: md5
+      md5: 0683d1c6f430c94ea1b08b8828fb5785
       size: 5715282
     - path: reports/fig3/figure3.pdf.png
       md5: db9e4681ff9c1d86b42e659f394ee9f1
@@ -2892,7 +2926,8 @@ stages:
       size: 34413724
       nfiles: 20
     - path: reports/larry_mono_model2/rainbow.pdf
-      md5: 147e1a73ce72f03ef3f225606b174377
+      hash: md5
+      md5: dfc3af490b7cb10af7c7806393de480b
       size: 1888637
     - path: reports/larry_mono_model2/rainbow.pdf.png
       md5: ce4a3f5e16aba3367837313f8fef4cfe
@@ -2987,7 +3022,8 @@ stages:
       size: 30501588
       nfiles: 20
     - path: reports/larry_neu_model2/rainbow.pdf
-      md5: 5a338222e010693ec590d595e780f35c
+      hash: md5
+      md5: a2204770fe2eba7bf80e27468f76b2d2
       size: 1676343
     - path: reports/larry_neu_model2/rainbow.pdf.png
       md5: 74efa31688754ff5dcf5dfacc06789ab
@@ -3212,6 +3248,7 @@ stages:
       md5: 59bf4d321f6cde7f17d41c2b17e7da0a
       size: 2344041479
     - path: models/larry_model2/trained.h5ad
+      hash: md5
       md5: ff50581db4a31025553aed6afa80766d
       size: 6320872798
     - path: models/larry_mono_model2/pyrovelocity.pkl.zst
@@ -3240,7 +3277,8 @@ stages:
           figureS4: reports/figS4/figS4.pdf
     outs:
     - path: reports/figS4/figS4.pdf
-      md5: cc73402bc20b3ad8b2bb18f35a49ad92
+      hash: md5
+      md5: be8a05ab485fddacf4e90d28827127a0
       size: 1921300
     - path: reports/figS4/figS4.pdf.png
       md5: a11622840ec8e0ecd2ea7a2b915e74f4
@@ -3263,7 +3301,8 @@ stages:
           subset_pkl: reports/figS2/figS2_subset3g_pbmc68k.pkl.zst
     outs:
     - path: reports/figS2/figS2_subset3g_pbmc68k.pdf
-      md5: 0b148c06900af7314ec486cbe964ff52
+      hash: md5
+      md5: 968b6ba02c8566fa72ebddc92f42541d
       size: 5540646
     - path: reports/figS2/figS2_subset3g_pbmc68k.pdf.png
       md5: 922ba14295de416f460672fe93458cd7
@@ -3312,7 +3351,8 @@ stages:
           mean_length_vs_uncertain: reports/figS2/figS2_mean_length_vs_uncertain.pdf
     outs:
     - path: reports/figS2/figS2_mean_length_vs_uncertain.pdf
-      md5: 427f3998d76c77bbc04185bb7b26c9ae
+      hash: md5
+      md5: 6bc81492a506f17dd843994e5ff3752f
       size: 5984382
     - path: reports/figS2/figS2_mean_length_vs_uncertain.pdf.png
       md5: e306afdb62c045994f1db1e520c7e644
@@ -3368,6 +3408,7 @@ stages:
             thresh_histogram_path: data/processed/bonemarrow_thresh_histogram.pdf
     outs:
     - path: data/processed/bonemarrow_processed.h5ad
+      hash: md5
       md5: e8e881920c5fdc7fdfe7c8eed676774b
       size: 651900368
     - path: data/processed/bonemarrow_thresh_histogram.pdf
@@ -3380,6 +3421,7 @@ stages:
     cmd: /usr/bin/time -v python train.py train_models=[bonemarrow_model2]
     deps:
     - path: data/processed/bonemarrow_processed.h5ad
+      hash: md5
       md5: e8e881920c5fdc7fdfe7c8eed676774b
       size: 651900368
     - path: train.py
@@ -3446,6 +3488,7 @@ stages:
     cmd: /usr/bin/time -v python postprocess.py train_models=[bonemarrow_model2]
     deps:
     - path: data/processed/bonemarrow_processed.h5ad
+      hash: md5
       md5: e8e881920c5fdc7fdfe7c8eed676774b
       size: 651900368
     - path: models/bonemarrow_model2/model
@@ -3509,6 +3552,7 @@ stages:
       md5: 2f77818cdab5e659d6540d6ef12bb4f9
       size: 258703585
     - path: models/bonemarrow_model2/trained.h5ad
+      hash: md5
       md5: 4983c1f39167c34cdb59be7db2e14bcd
       size: 760340800
   summarize@bonemarrow_model2:
@@ -3518,6 +3562,7 @@ stages:
       md5: 2f77818cdab5e659d6540d6ef12bb4f9
       size: 258703585
     - path: models/bonemarrow_model2/trained.h5ad
+      hash: md5
       md5: 4983c1f39167c34cdb59be7db2e14bcd
       size: 760340800
     - path: summarize.py
@@ -3570,7 +3615,8 @@ stages:
       md5: 1e8d604aa1260cba30af36b56507d163
       size: 428749
     - path: reports/bonemarrow_model2/fig2_part2_plot.pdf
-      md5: ef9e07bd1c7ab5ebbdede294c31f23f6
+      hash: md5
+      md5: 9e5a304b963e995dbafbde0a48ebebe5
       size: 2005710
     - path: reports/bonemarrow_model2/fig2_part2_plot.pdf.png
       md5: b52989dfa63323da3c3301c0642f766a
@@ -3875,7 +3921,8 @@ stages:
       size: 33073418
       nfiles: 20
     - path: reports/pbmc5k_model2/rainbow.pdf
-      md5: 88252d242740eba638d6a96e568964e3
+      hash: md5
+      md5: ea684c170d068f174e85a3fe2570e952
       size: 5334549
     - path: reports/pbmc5k_model2/rainbow.pdf.png
       md5: 1610ac6d6c92ff3290890c50244a8059
@@ -4028,6 +4075,7 @@ stages:
       md5: 625ad24059192ddb7c9977a6f0fc2aa3
       size: 166153094
     - path: models/pancreas_model1/trained.h5ad
+      hash: md5
       md5: beedf99a6777ed5f6d06bcd2b5805c29
       size: 492127600
   summarize@pancreas_model1:
@@ -4037,6 +4085,7 @@ stages:
       md5: 625ad24059192ddb7c9977a6f0fc2aa3
       size: 166153094
     - path: models/pancreas_model1/trained.h5ad
+      hash: md5
       md5: beedf99a6777ed5f6d06bcd2b5805c29
       size: 492127600
     - path: summarize.py
@@ -4105,7 +4154,8 @@ stages:
       size: 25581816
       nfiles: 20
     - path: reports/pancreas_model1/rainbow.pdf
-      md5: 79ca9d24e42e4e526e898c4dcd0a911f
+      hash: md5
+      md5: 57119ef95f97a95ebade2d36659d6d0a
       size: 5144270
     - path: reports/pancreas_model1/rainbow.pdf.png
       md5: 5e2719417cc402fe1d33fcddb18f94e2
