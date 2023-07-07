@@ -13,6 +13,11 @@ on:
         required: true
         type: boolean
         default: false
+      end_debug_enabled:
+        description: "Run tmate.io debugging at the end of the workflow"
+        required: true
+        type: boolean
+        default: false
       force_retraining:
         description: "Force retraining in model execution"
         required: true
@@ -160,3 +165,6 @@ jobs:
 
           ./.github/pipeline.sh ${FLAGS}
         shell: bash
+      - name: Setup tmate debug session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ inputs.end_debug_enabled }}
