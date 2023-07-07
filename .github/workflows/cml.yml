@@ -13,6 +13,26 @@ on:
         required: true
         type: boolean
         default: false
+      force_retraining:
+        description: "Force retraining in model execution"
+        required: true
+        type: boolean
+        default: false
+      force_postprocessing:
+        description: "Force postprocessing in model execution"
+        required: true
+        type: boolean
+        default: false
+      force_summarize:
+        description: "Force summarization in model execution"
+        required: true
+        type: boolean
+        default: false
+      force_all:
+        description: "Force all steps in model execution"
+        required: true
+        type: boolean
+        default: false
   push:
     branches:
       - "exp*"
@@ -120,5 +140,23 @@ jobs:
       - name: Run experiment and submit report
         run: |
           source .venv/bin/activate
-          ./.github/pipeline.sh
+          FLAGS=""
+
+          if [ "${{ github.event.inputs.force_retraining }}" = "true" ]; then
+            FLAGS="${FLAGS} -ft"
+          fi
+
+          if [ "${{ github.event.inputs.force_postprocessing }}" = "true" ]; then
+            FLAGS="${FLAGS} -fp"
+          fi
+
+          if [ "${{ github.event.inputs.force_summarize }}" = "true" ]; then
+            FLAGS="${FLAGS} -fs"
+          fi
+
+          if [ "${{ github.event.inputs.force_all }}" = "true" ]; then
+            FLAGS="${FLAGS} -f"
+          fi
+
+          ./.github/pipeline.sh ${FLAGS}
         shell: bash

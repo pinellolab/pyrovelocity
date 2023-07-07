@@ -376,14 +376,14 @@ class VelocityTrainingMixin:
                 self.module._model,
                 self.module._guide,
                 optim,
-                TraceEnum_ELBO(strict_enumeration_warning=True),
+                Trace_ELBO(strict_enumeration_warning=True),
             )
         else:
             svi = pyro.infer.SVI(
                 self.module._model,
                 new_valid_guide,
                 optim,
-                TraceEnum_ELBO(strict_enumeration_warning=True),
+                Trace_ELBO(strict_enumeration_warning=True),
             )
 
         losses = []

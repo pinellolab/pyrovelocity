@@ -983,7 +983,7 @@ def hydra_zen_compressed_configure():
                 tag="figS2",
                 path="${paths.reports}/${.tag}",
                 subset_genes_plot="${.path}/${.tag}_subset3g_pbmc68k.pdf",
-                subset_pkl="${.path}/${.tag}_subset3g_pbmc68k.pkl",
+                subset_pkl="${.path}/${.tag}_subset3g_pbmc68k.pkl.zst",
             ),
             figureS4=dict(
                 tag="figS4",
