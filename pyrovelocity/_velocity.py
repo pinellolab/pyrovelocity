@@ -29,6 +29,7 @@ from scvi.module.base import PyroBaseModuleClass
 from pyrovelocity.plot import compute_mean_vector_field
 from pyrovelocity.plot import compute_volcano_data
 from pyrovelocity.plot import vector_field_uncertainty
+from pyrovelocity.utils import _get_fn_args_from_batch
 
 from ._trainer import VelocityTrainingMixin
 from ._velocity_module import VelocityModule
@@ -287,7 +288,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         with torch.no_grad(), pyro.poutine.mask(mask=False):
             posterior_samples = []
             for tensor in scdl:
-                args, kwargs = self.module._get_fn_args_from_batch(tensor)
+                args, kwargs = _get_fn_args_from_batch(tensor)
                 posterior_sample = {
                     k: v.cpu().numpy() for k, v in predictive(*args, **kwargs).items()
                 }

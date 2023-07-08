@@ -21,6 +21,8 @@ from scvi.dataloaders import DataSplitter
 from scvi.train import PyroTrainingPlan
 from scvi.train import TrainRunner
 
+from pyrovelocity.utils import _get_fn_args_from_batch
+
 from ._velocity_module import VelocityModule
 
 
@@ -97,7 +99,7 @@ class EnumTrainingPlan(PyroTrainingPlan):
         self.n_elem = self.module.num_genes * self.module.num_cells * 2
 
     def training_step(self, batch, batch_idx, optimizer_idx=0):
-        args, kwargs = self.module._get_fn_args_from_batch(batch)
+        args, kwargs = _get_fn_args_from_batch(batch)
         loss = self.svi.step(*args, **kwargs)
         return {
             "train_step_loss": loss,
@@ -117,7 +119,7 @@ class EnumTrainingPlan(PyroTrainingPlan):
         # self.log("elbo_train", elbo / n_elem, prog_bar=True, on_epoch=True)
 
     def validation_step(self, batch, batch_idx):
-        args, kwargs = self.module._get_fn_args_from_batch(batch)
+        args, kwargs = _get_fn_args_from_batch(batch)
         loss = self.svi.evaluate_loss(*args, **kwargs)
         return {
             "valid_step_loss": loss,
@@ -393,7 +395,7 @@ class VelocityTrainingMixin:
             n_batch = 0
             elbos = 0
             for tensor_dict in scdl:
-                args, kwargs = self.module._get_fn_args_from_batch(tensor_dict)
+                args, kwargs = _get_fn_args_from_batch(tensor_dict)
                 args = [a.to(device) if a is not None else a for a in args]
                 loss = svi.step(*args, **kwargs)
                 elbos += loss
