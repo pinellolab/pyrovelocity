@@ -20,6 +20,7 @@ from omegaconf import DictConfig
 from pyro.infer import MCMC
 from pyro.infer import NUTS
 from pyro.infer import Predictive
+from pyro.infer import infer_discrete
 
 # from scipy.stats import circmean
 # from scipy.stats import circstd
@@ -512,6 +513,18 @@ def plot_parameter_posterior_distributions(
 def extrapolate_prediction_sample_predictive(
     posterior_time, data_model_conf, adata, grid_time_points=1000
 ):
+    dummy_obs = (
+       torch.ones((1, adata.shape[1])).to("cuda:0"),
+       torch.ones((1, adata.shape[1])).to("cuda:0"),
+       torch.ones((1, 1)).to("cuda:0"),
+       torch.ones((1, 1)).to("cuda:0"),
+       torch.ones((1, 1)).to("cuda:0"),
+       torch.ones((1, 1)).to("cuda:0"),
+       torch.ones((1, 1)).to("cuda:0"),
+       torch.ones((1, 1)).to("cuda:0"),
+       torch.ones((1, 1)).to("cuda:0"),
+    )
+
     pyrovelocity_model_path = data_model_conf.model_path
     PyroVelocity.setup_anndata(adata)
     model = PyroVelocity(adata)
@@ -519,7 +532,60 @@ def extrapolate_prediction_sample_predictive(
     print(pyrovelocity_model_path)
     print(model)
     print("--------------------")
-    # NOTE: check the saved model 2 are the same model 2
+
+    scdl = model._make_data_loader(
+        adata=adata, indices=None, batch_size=2000
+    )
+    for tensor_dict in scdl:
+        u_obs = tensor_dict["U"]
+        s_obs = tensor_dict["X"]
+        u_log_library = tensor_dict["u_lib_size"]
+        s_log_library = tensor_dict["s_lib_size"]
+        u_log_library_mean = tensor_dict["u_lib_size_mean"]
+        s_log_library_mean = tensor_dict["s_lib_size_mean"]
+        u_log_library_scale = tensor_dict["u_lib_size_scale"]
+        s_log_library_scale = tensor_dict["s_lib_size_scale"]
+        ind_x = tensor_dict["ind_x"].long().squeeze()
+        dummy_obs = (
+            torch.tensor(u_obs).to("cuda:0"),
+            torch.tensor(s_obs).to("cuda:0"),
+            torch.tensor(u_log_library).to("cuda:0"),
+            torch.tensor(s_log_library).to("cuda:0"),
+            torch.tensor(u_log_library_mean).to("cuda:0"),
+            torch.tensor(s_log_library_mean).to("cuda:0"),
+            torch.tensor(u_log_library_scale).to("cuda:0"),
+            torch.tensor(s_log_library_scale).to("cuda:0"),
+            torch.tensor(ind_x).to("cuda:0"),
+            None, None
+            )
+
+    #serving_model = infer_discrete(model.module.model, temperature=0, first_available_dim=-3)
+    #return_sites = serving_model(*dummy_obs)
+
+    guide_trace = pyro.poutine.trace(model.module.guide).get_trace(*dummy_obs)
+    trained_model = pyro.poutine.replay(model.module.model, trace=guide_trace)
+    model_discrete = infer_discrete(trained_model, temperature=0, first_available_dim=-3)
+    trace = pyro.poutine.trace(model_discrete).get_trace(*dummy_obs)
+    map_estimate_cell_gene_state = trace.nodes['cell_gene_state']['value']
+    print(map_estimate_cell_gene_state.shape)
+    print(map_estimate_cell_gene_state.mean(0))
+
+    #        test = Predictive(
+    #            pyro.condition(
+    #                model.module.model,
+    #                data={
+    #                    "cell_time": t,
+    #                    "cell_gene_state": (
+    #                        t
+    #                        > (
+    #                            posterior_samples["dt_switching"] + posterior_samples["t0"]
+    #                        ).mean(0)
+    #                    ).int(),
+    #                },
+    #            ),
+    #            posterior_samples=posterior_samples,
+    #        )(*dummy_obs)
+
     posterior_samples_new = model.generate_posterior_samples(
         adata=adata, batch_size=256, num_samples=30
     )
@@ -580,17 +646,6 @@ def extrapolate_prediction_sample_predictive(
     #        )
     #    ).to("cuda:0")
 
-    # dummy_obs = (
-    #    torch.ones((1, adata.shape[1])).to("cuda:0"),
-    #    torch.ones((1, adata.shape[1])).to("cuda:0"),
-    #    torch.ones((1, 1)).to("cuda:0"),
-    #    torch.ones((1, 1)).to("cuda:0"),
-    #    torch.ones((1, 1)).to("cuda:0"),
-    #    torch.ones((1, 1)).to("cuda:0"),
-    #    torch.ones((1, 1)).to("cuda:0"),
-    #    torch.ones((1, 1)).to("cuda:0"),
-    #    torch.ones((1, 1)).to("cuda:0"),
-    # )
 
     # grid_time_samples_ut = []
     # grid_time_samples_st = []
