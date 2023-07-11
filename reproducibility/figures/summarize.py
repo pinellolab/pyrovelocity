@@ -530,12 +530,12 @@ def extrapolate_prediction_sample_predictive(
     model = PyroVelocity(adata)
     model = model.load_model(pyrovelocity_model_path, adata, use_gpu=0)
     print(pyrovelocity_model_path)
-    print(model)
     print("--------------------")
 
     scdl = model._make_data_loader(
-        adata=adata, indices=None, batch_size=2000
+        adata=adata, indices=None, batch_size=5000
     )
+    posterior_samples_new = {}
     for tensor_dict in scdl:
         u_obs = tensor_dict["U"]
         s_obs = tensor_dict["X"]
@@ -559,36 +559,68 @@ def extrapolate_prediction_sample_predictive(
             None, None
             )
 
-    #serving_model = infer_discrete(model.module.model, temperature=0, first_available_dim=-3)
-    #return_sites = serving_model(*dummy_obs)
+        posterior_samples_batch_sample = []
+        posterior_samples = {}
+        for sample in range(5):
+            guide_trace = pyro.poutine.trace(model.module.guide).get_trace(*dummy_obs)
+            trained_model = pyro.poutine.replay(model.module.model, trace=guide_trace)
+            model_discrete = infer_discrete(trained_model, temperature=0, first_available_dim=-3)
+            trace = pyro.poutine.trace(model_discrete).get_trace(*dummy_obs)
+            map_estimate_cell_gene_state = trace.nodes['cell_gene_state']['value']
+            alpha = trace.nodes['alpha']['value']
+            beta = trace.nodes['beta']['value']
+            gamma = trace.nodes['gamma']['value']
+            t0 = trace.nodes['t0']['value']
+            dt_switching = trace.nodes['dt_switching']['value']
+            cell_time = trace.nodes['cell_time']['value']
 
-    guide_trace = pyro.poutine.trace(model.module.guide).get_trace(*dummy_obs)
-    trained_model = pyro.poutine.replay(model.module.model, trace=guide_trace)
-    model_discrete = infer_discrete(trained_model, temperature=0, first_available_dim=-3)
-    trace = pyro.poutine.trace(model_discrete).get_trace(*dummy_obs)
-    map_estimate_cell_gene_state = trace.nodes['cell_gene_state']['value']
-    print(map_estimate_cell_gene_state.shape)
-    print(map_estimate_cell_gene_state.mean(0))
+            if 'u_offset' in trace.nodes:
+                u_offset = trace.nodes['u_offset']['value']
+                s_offset = trace.nodes['s_offset']['value']
+                u_scale = trace.nodes['u_scale']['value']
+            else:
+                u_offset = alpha.new_zeros(alpha.shape)
+                s_offset = alpha.new_zeros(alpha.shape)
+                u_scale = alpha.new_zeros(alpha.shape)
+            posterior_samples_batch_sample.append(
+                    {"cell_gene_state": map_estimate_cell_gene_state.unsqueeze(-3), 
+                     "alpha": alpha.unsqueeze(-2).unsqueeze(-3), 
+                     "beta": beta.unsqueeze(-2).unsqueeze(-3), 
+                     "gamma": gamma.unsqueeze(-2).unsqueeze(-3), 
+                     "u_offset": u_offset.unsqueeze(-2).unsqueeze(-3),
+                     "s_offset": s_offset.unsqueeze(-2).unsqueeze(-3), 
+                     "u_scale": u_scale.unsqueeze(-2).unsqueeze(-3), 
+                     "dt_switching": dt_switching.unsqueeze(-2).unsqueeze(-3), 
+                     "cell_time": cell_time.unsqueeze(-3), 
+                     "t0": t0.unsqueeze(-2).unsqueeze(-3)})
 
-    #        test = Predictive(
-    #            pyro.condition(
-    #                model.module.model,
-    #                data={
-    #                    "cell_time": t,
-    #                    "cell_gene_state": (
-    #                        t
-    #                        > (
-    #                            posterior_samples["dt_switching"] + posterior_samples["t0"]
-    #                        ).mean(0)
-    #                    ).int(),
-    #                },
-    #            ),
-    #            posterior_samples=posterior_samples,
-    #        )(*dummy_obs)
+        for key in posterior_samples_batch_sample[0].keys():
+            posterior_samples[key] = torch.tensor(
+                np.concatenate(
+                    [
+                        posterior_samples_batch_sample[j][key].cpu().detach().numpy()
+                        for j in range(len(posterior_samples_batch_sample))
+                    ],
+                    axis=-3,
+                )
+            ).to("cuda:0")
 
-    posterior_samples_new = model.generate_posterior_samples(
-        adata=adata, batch_size=256, num_samples=30
-    )
+        posterior_samples_new = Predictive(
+            pyro.poutine.uncondition(
+                model.module.model,
+            ),
+            posterior_samples
+        )(*dummy_obs)
+        for key in posterior_samples:
+            posterior_samples_new[key] = posterior_samples[key]
+
+    #posterior_samples_new = model.generate_posterior_samples(
+    #    adata=adata, batch_size=512, num_samples=8
+    #)
+
+    for key in posterior_samples_new.keys():
+        print(posterior_samples_new[key].shape)
+
     grid_time_samples_ut = posterior_samples_new["ut"]
     grid_time_samples_st = posterior_samples_new["st"]
     grid_time_samples_uinf = posterior_samples_new["u_inf"]
@@ -599,100 +631,45 @@ def extrapolate_prediction_sample_predictive(
     else:
         grid_time_samples_u0 = np.zeros(grid_time_samples_uinf.shape)
         grid_time_samples_s0 = np.zeros(grid_time_samples_sinf.shape)
+
     grid_time_samples_t0 = posterior_samples_new["t0"]
     grid_time_samples_dt_switching = posterior_samples_new["dt_switching"]
     if "u_offset" in posterior_samples_new:
         grid_time_samples_uscale = posterior_samples_new["u_scale"]
     else:
         grid_time_samples_uscale = np.ones(grid_time_samples_uinf.shape)
+
     grid_time_samples_state = posterior_samples_new["cell_gene_state"]
-
-    return (
-        grid_time_samples_ut,
-        grid_time_samples_st,
-        grid_time_samples_u0,
-        grid_time_samples_s0,
-        grid_time_samples_uinf,
-        grid_time_samples_sinf,
-        grid_time_samples_uscale,
-        grid_time_samples_state,
-        grid_time_samples_t0,
-        grid_time_samples_dt_switching,
-    )
-
-    # samples = []
-    # for sample in range(30):
-    #    sample = model.module.guide()
-    #    samples.append(sample)
-
-    # posterior_samples = {}
-    # for key in [
-    #    "alpha",
-    #    "beta",
-    #    "gamma",
-    #    "u_offset",
-    #    "s_offset",
-    #    "t0",
-    #    "u_scale",
-    #    "dt_switching",
-    # ]:
-    #    posterior_samples[key] = torch.tensor(
-    #        np.concatenate(
-    #            [
-    #                samples[j][key].unsqueeze(-2).unsqueeze(-3).cpu().detach().numpy()
-    #                for j in range(len(samples))
-    #            ],
-    #            axis=-3,
-    #        )
-    #    ).to("cuda:0")
-
-
-    # grid_time_samples_ut = []
-    # grid_time_samples_st = []
-    # grid_time_samples_state = []
-
-    ##starting_time = posterior_samples['t0']
-    ##grid_cell_time = torch.linspace(min(posterior_time.flatten()), max(posterior_time.flatten()), grid_time_points)
-    # grid_cell_time = torch.linspace(-10, 10, grid_time_points)
-    # with torch.no_grad(), pyro.poutine.mask(mask=False):
-    #    for t in grid_cell_time:
-
-    #        test = Predictive(
-    #            pyro.condition(
-    #                model.module.model,
-    #                data={
-    #                    "cell_time": t,
-    #                    "cell_gene_state": (
-    #                        t
-    #                        > (
-    #                            posterior_samples["dt_switching"] + posterior_samples["t0"]
-    #                        ).mean(0)
-    #                    ).int(),
-    #                },
-    #            ),
-    #            posterior_samples=posterior_samples,
-    #        )(*dummy_obs)
-    #        grid_time_samples_ut.append(test["ut"])
-    #        grid_time_samples_st.append(test["st"])
-    #        grid_time_samples_state.append(test["cell_gene_state"])
-    # grid_time_samples_ut = torch.cat(grid_time_samples_ut, dim=-2)
-    # grid_time_samples_st = torch.cat(grid_time_samples_st, dim=-2)
-    # grid_time_samples_u0 = posterior_samples["u_offset"]
-    # grid_time_samples_s0 = posterior_samples["s_offset"]
-    # grid_time_samples_uinf = test["u_inf"]
-    # grid_time_samples_sinf = test["s_inf"]
-    # grid_time_samples_uscale = posterior_samples["u_scale"]
-    # grid_time_samples_state = torch.cat(grid_time_samples_state, dim=-2)
-    # return (
-    #    grid_time_samples_ut.cpu().detach().numpy(),
-    #    grid_time_samples_st.cpu().detach().numpy(),
-    #    grid_time_samples_u0.cpu().detach().numpy(),
-    #    grid_time_samples_s0.cpu().detach().numpy(),
-    #    grid_time_samples_uinf.cpu().detach().numpy(),
-    #    grid_time_samples_sinf.cpu().detach().numpy(),
-    #    grid_time_samples_uscale.cpu().detach().numpy(),
-    #    grid_time_samples_state.cpu().detach().numpy(),
-    # )
+    #grid_time_samples_state = map_estimate_cell_gene_state.unsqueeze(-3) #.cpu().detach().numpy() # posterior_samples_new["cell_gene_state"]
+    print(grid_time_samples_state.shape)
+    print(grid_time_samples_uscale.shape)
+    print(grid_time_samples_ut.shape)
+    print(grid_time_samples_st.shape)
+    if isinstance(grid_time_samples_state, np.ndarray):
+        return (
+           grid_time_samples_ut,
+           grid_time_samples_st,
+           grid_time_samples_u0,
+           grid_time_samples_s0,
+           grid_time_samples_uinf,
+           grid_time_samples_sinf,
+           grid_time_samples_uscale,
+           grid_time_samples_state,
+           grid_time_samples_t0,
+           grid_time_samples_dt_switching
+           )
+    else:
+        return (grid_time_samples_ut.cpu().detach().numpy(),
+           grid_time_samples_st.cpu().detach().numpy(),
+           grid_time_samples_u0.cpu().detach().numpy(),
+           grid_time_samples_s0.cpu().detach().numpy(),
+           grid_time_samples_uinf.cpu().detach().numpy(),
+           grid_time_samples_sinf.cpu().detach().numpy(),
+           grid_time_samples_uscale.cpu().detach().numpy(),
+           grid_time_samples_state.cpu().detach().numpy(),
+           grid_time_samples_t0.cpu().detach().numpy(),
+           grid_time_samples_dt_switching.cpu().detach().numpy()
+        )
 
 
 def extrapolate_prediction_trace(data_model_conf, adata, grid_time_points=500):
@@ -782,13 +759,16 @@ def posterior_curve(
             grid_mask_t0_sample = (
                 grid_cell_time.mean(0).flatten() >= t0_sample
             ).astype("float32")
-            cell_gene_state_grid = grid_time_samples_state[sample][:, index[0]].astype(
+
+            cell_gene_state_grid = grid_time_samples_state[0][:, index[0]].astype(
                 "float32"
             )
+
             grid_mask_t0_sample = grid_mask_t0_sample + cell_gene_state_grid
             grid_mask_t0_sample = grid_mask_t0_sample.astype(int)
             grid_mask_t0_sample[grid_cell_time.mean(0).flatten() < t0_sample] = 0
             grid_cell_colors = colors[grid_mask_t0_sample]
+            print(grid_time_samples_st.shape)
 
             im = ax[sample].scatter(
                 grid_time_samples_st[sample][:, index[0]],
