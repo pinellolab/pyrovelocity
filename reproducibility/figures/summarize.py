@@ -513,30 +513,20 @@ def plot_parameter_posterior_distributions(
 def extrapolate_prediction_sample_predictive(
     posterior_time, data_model_conf, adata, grid_time_points=1000
 ):
-    dummy_obs = (
-       torch.ones((1, adata.shape[1])).to("cuda:0"),
-       torch.ones((1, adata.shape[1])).to("cuda:0"),
-       torch.ones((1, 1)).to("cuda:0"),
-       torch.ones((1, 1)).to("cuda:0"),
-       torch.ones((1, 1)).to("cuda:0"),
-       torch.ones((1, 1)).to("cuda:0"),
-       torch.ones((1, 1)).to("cuda:0"),
-       torch.ones((1, 1)).to("cuda:0"),
-       torch.ones((1, 1)).to("cuda:0"),
-    )
-
     pyrovelocity_model_path = data_model_conf.model_path
     PyroVelocity.setup_anndata(adata)
-    model = PyroVelocity(adata)
+    model = PyroVelocity(adata, add_offset=False, guide_type='auto_t0_constraint')
     model = model.load_model(pyrovelocity_model_path, adata, use_gpu=0)
     print(pyrovelocity_model_path)
-    print("--------------------")
 
     scdl = model._make_data_loader(
-        adata=adata, indices=None, batch_size=5000
+        adata=adata, indices=None, batch_size=1000
     )
-    posterior_samples_new = {}
+    from collections import defaultdict
+
+    posterior_samples_list = []
     for tensor_dict in scdl:
+        print("--------------------")
         u_obs = tensor_dict["U"]
         s_obs = tensor_dict["X"]
         u_log_library = tensor_dict["u_lib_size"]
@@ -559,8 +549,8 @@ def extrapolate_prediction_sample_predictive(
             None, None
             )
 
-        posterior_samples_batch_sample = []
         posterior_samples = {}
+        posterior_samples_batch_sample = []
         for sample in range(5):
             guide_trace = pyro.poutine.trace(model.module.guide).get_trace(*dummy_obs)
             trained_model = pyro.poutine.replay(model.module.model, trace=guide_trace)
@@ -581,7 +571,7 @@ def extrapolate_prediction_sample_predictive(
             else:
                 u_offset = alpha.new_zeros(alpha.shape)
                 s_offset = alpha.new_zeros(alpha.shape)
-                u_scale = alpha.new_zeros(alpha.shape)
+                u_scale = alpha.new_ones(alpha.shape)
             posterior_samples_batch_sample.append(
                     {"cell_gene_state": map_estimate_cell_gene_state.unsqueeze(-3), 
                      "alpha": alpha.unsqueeze(-2).unsqueeze(-3), 
@@ -605,15 +595,23 @@ def extrapolate_prediction_sample_predictive(
                 )
             ).to("cuda:0")
 
-        posterior_samples_new = Predictive(
+        posterior_samples_new_tmp = Predictive(
             pyro.poutine.uncondition(
                 model.module.model,
             ),
             posterior_samples
         )(*dummy_obs)
         for key in posterior_samples:
-            posterior_samples_new[key] = posterior_samples[key]
+            posterior_samples_new_tmp[key] = posterior_samples[key]
+        posterior_samples_list.append(posterior_samples_new_tmp)
 
+    print(len(posterior_samples_list))
+    posterior_samples_new = {}
+    for key in posterior_samples_list[0].keys():
+        if posterior_samples_list[0][key].shape[-2] == 1:
+            posterior_samples_new[key] = posterior_samples_list[0][key]
+        else:
+            posterior_samples_new[key] = torch.concat([element[key] for element in posterior_samples_list], axis=-2)
     #posterior_samples_new = model.generate_posterior_samples(
     #    adata=adata, batch_size=512, num_samples=8
     #)
@@ -640,7 +638,6 @@ def extrapolate_prediction_sample_predictive(
         grid_time_samples_uscale = np.ones(grid_time_samples_uinf.shape)
 
     grid_time_samples_state = posterior_samples_new["cell_gene_state"]
-    #grid_time_samples_state = map_estimate_cell_gene_state.unsqueeze(-3) #.cpu().detach().numpy() # posterior_samples_new["cell_gene_state"]
     print(grid_time_samples_state.shape)
     print(grid_time_samples_uscale.shape)
     print(grid_time_samples_ut.shape)
@@ -670,43 +667,6 @@ def extrapolate_prediction_sample_predictive(
            grid_time_samples_t0.cpu().detach().numpy(),
            grid_time_samples_dt_switching.cpu().detach().numpy()
         )
-
-
-def extrapolate_prediction_trace(data_model_conf, adata, grid_time_points=500):
-    pyrovelocity_model_path = data_model_conf.model_path
-    PyroVelocity.setup_anndata(adata)
-    model = PyroVelocity(adata)
-    model = model.load_model(pyrovelocity_model_path, adata, use_gpu=0)
-    # grid_cell_time = torch.linspace(-10, 20, grid_time_points)
-    grid_cell_time = torch.linspace(-10, 100, grid_time_points)
-    dummy_obs = (
-        torch.ones((1, adata.shape[1])),
-        torch.ones((1, adata.shape[1])),
-        torch.ones((1, 1)),
-        torch.ones((1, 1)),
-        torch.ones((1, 1)),
-        torch.ones((1, 1)),
-        torch.ones((1, 1)),
-        torch.ones((1, 1)),
-    )
-
-    for sample in range(30):
-        for t in grid_cell_time:
-            guide_trace = pyro.poutine.trace(
-                pyro.poutine.block(model.module.guide, hide=["cell_time"])
-            ).get_trace()
-            conditioned_model = pyro.condition(
-                model.module.model, data={"cell_time": t}
-            )
-            model_trace = pyro.poutine.trace(
-                pyro.poutine.replay(conditioned_model, trace=guide_trace)
-            ).get_trace(*dummy_obs)
-            for key in model_trace.nodes.keys():
-                if key in ["ut", "st"]:
-                    print(model_trace.nodes[key].keys())
-                    print(model_trace.nodes[key]["value"].shape)
-        break
-    return
 
 
 def posterior_curve(
@@ -746,15 +706,6 @@ def posterior_curve(
             mask_t0_sample = (cell_time_sample >= t0_sample).astype(int)
             cell_colors = colors[mask_t0_sample]
 
-            ax[sample].scatter(
-                posterior_samples["st_mean"][:, index[0]],
-                posterior_samples["ut_mean"][:, index[0]],
-                s=3,
-                linewidth=0,
-                color=cell_colors,
-                alpha=0.3,
-            )
-
             colors = np.array(["gray", "blue", "red"])
             grid_mask_t0_sample = (
                 grid_cell_time.mean(0).flatten() >= t0_sample
@@ -771,9 +722,19 @@ def posterior_curve(
             print(grid_time_samples_st.shape)
 
             im = ax[sample].scatter(
+                posterior_samples["st_mean"][:, index[0]],
+                posterior_samples["ut_mean"][:, index[0]],
+                s=3,
+                linewidth=0,
+                #color=cell_colors,
+                color=grid_cell_colors,
+                alpha=0.6,
+            )
+
+            im = ax[sample].scatter(
                 grid_time_samples_st[sample][:, index[0]],
                 grid_time_samples_ut[sample][:, index[0]],
-                s=10,
+                s=15,
                 marker="*",
                 linewidth=0,
                 alpha=0.2,
@@ -791,7 +752,7 @@ def posterior_curve(
             ax[sample + 4].scatter(
                 grid_cell_time[sample].flatten(),
                 grid_time_samples_ut[sample][:, index[0]],
-                s=10,
+                s=15,
                 marker=">",
                 linewidth=0,
                 color=grid_cell_colors,
@@ -811,7 +772,7 @@ def posterior_curve(
             ax[sample + 8].scatter(
                 grid_cell_time[sample].flatten(),
                 grid_time_samples_st[sample][:, index[0]],
-                s=10,
+                s=15,
                 marker="<",
                 linewidth=0,
                 color=grid_cell_colors,
