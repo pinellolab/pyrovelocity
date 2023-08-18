@@ -29,6 +29,7 @@ from scvi.module.base import PyroBaseModuleClass
 from pyrovelocity.plot import compute_mean_vector_field
 from pyrovelocity.plot import compute_volcano_data
 from pyrovelocity.plot import vector_field_uncertainty
+from pyrovelocity.utils import _get_fn_args_from_batch
 
 from ._trainer import VelocityTrainingMixin
 from ._velocity_module import VelocityModule
@@ -152,16 +153,6 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         self.layers = layers
         self.input_type = input_type
 
-        # adata = setup_anndata_multilayers(
-        #    adata,
-        #    layer=self.layers,
-        #    copy=True,
-        #    batch_key=None,
-        #    input_type=input_type,
-        #    cluster=self.cell_specific_kinetics,
-        # )
-        # scvi.data.view_anndata_setup(adata)
-
         super().__init__(adata)
         if init:
             initial_values = init_with_all_cells(
@@ -222,22 +213,6 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         """
         pyro.enable_validation(True)
         super().train(**kwargs)
-
-    # def predict_new_samples(
-    #     self,
-    #     adata: Optional[AnnData] = None,
-    #     indices: Optional[Sequence[int]] = None,
-    #     batch_size: Optional[int] = None,
-    #     num_samples: Optional[int] = 100,
-    # ) -> Dict[str, ndarray]:
-    #     adata = setup_anndata_multilayers(
-    #         adata,
-    #         layer=self.layers,
-    #         copy=True,
-    #         batch_key=None,
-    #         input_type=self.input_type,
-    #     )
-    #     return self.generate_posterior_samples(adata, indices, batch_size, num_samples)
 
     def enum_parallel_predict(self):
         """work for parallel enumeration"""
@@ -302,9 +277,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         """
         self.module.eval()
         predictive = self.module.create_predictive(
-            model=pyro.poutine.uncondition(
-                self.module.model
-            ),  # do not input u_obs, and s_obs
+            model=pyro.poutine.uncondition(self.module.model),
             num_samples=num_samples,
         )
 
@@ -315,7 +288,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         with torch.no_grad(), pyro.poutine.mask(mask=False):
             posterior_samples = []
             for tensor in scdl:
-                args, kwargs = self.module._get_fn_args_from_batch(tensor)
+                args, kwargs = _get_fn_args_from_batch(tensor)
                 posterior_sample = {
                     k: v.cpu().numpy() for k, v in predictive(*args, **kwargs).items()
                 }
@@ -331,13 +304,12 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                     continue
 
                 if "aux" in k:
-                    samples[k] = posterior_samples[0][k]  # alpha, beta, gamma...
+                    samples[k] = posterior_samples[0][k]
                 elif posterior_samples[0][k].shape[-2] == 1:
                     samples[k] = posterior_samples[0][k]
                     if k == "kinetics_prob":
                         samples[k] = np.concatenate(
                             [
-                                # cat mini-batches
                                 posterior_samples[j][k]
                                 for j in range(len(posterior_samples))
                             ],
@@ -346,7 +318,6 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                 else:
                     samples[k] = np.concatenate(
                         [
-                            # cat mini-batches
                             posterior_samples[j][k]
                             for j in range(len(posterior_samples))
                         ],
@@ -354,10 +325,6 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                     )
 
                 print(k, "before", sys.getsizeof(samples[k]))
-                # if k in ['ut', 'st', 'u', 's']: # skip unused variables
-                #    print(k, 'before', sys.getsizeof(samples[k]))
-                #    samples[k] = sparse.csr_matrix(samples[k]) # cannot compress 3D tensor
-                #    print(k, 'after', sys.getsizeof(samples[k]))
         self.num_samples = num_samples
         return samples
 
@@ -372,15 +339,11 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         ncpus_use,
     ):
         """reduce posterior samples by precomputing metrics."""
-        if ("u_scale" in posterior_samples) and (
-            "s_scale" in posterior_samples
-        ):  # Gaussian models
+        if ("u_scale" in posterior_samples) and ("s_scale" in posterior_samples):
             scale = posterior_samples["u_scale"] / posterior_samples["s_scale"]
-        elif ("u_scale" in posterior_samples) and not (
-            "s_scale" in posterior_samples
-        ):  # Poisson Model 2
+        elif ("u_scale" in posterior_samples) and not ("s_scale" in posterior_samples):
             scale = posterior_samples["u_scale"]
-        else:  # Poisson Model 1
+        else:
             scale = 1
         original_spaces_velocity_samples = (
             posterior_samples["beta"] * posterior_samples["ut"] / scale
@@ -429,7 +392,6 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         posterior_samples["vector_field_posterior_mean"] = vector_field_posterior_mean
         posterior_samples["fdri"] = fdri
         posterior_samples["embeds_magnitude"] = embeds_magnitude
-        # assert embeds_radian.shape == (self.num_samples, adata.shape[0], 2)
         print(embeds_radian.shape)
         posterior_samples["embeds_angle"] = embeds_radian
         posterior_samples["ut_mean"] = posterior_samples["ut"].mean(0).squeeze()
@@ -486,7 +448,6 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         load_adata = adata is None
         _, _, device = parse_use_gpu_arg(use_gpu)
 
-        # scvi_setup_dict,
         (
             attr_dict,
             var_names,
@@ -513,12 +474,10 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         model = _initialize_model(cls, adata, attr_dict)
         print("---------initialize-------")
 
-        # set saved attrs for loaded model
         for attr, val in attr_dict.items():
             setattr(model, attr, val)
         print("setattr")
 
-        # some Pyro modules with AutoGuides may need one training step
         pyro.clear_param_store()
         old_history = model.history_
         try:
@@ -542,39 +501,9 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         model.history_ = old_history
         print("load finished.")
         model.to_device(device)
-        # avoid dropout prediction problem
         model.module.eval()
         model._validate_anndata(adata)
-        # load pyro pyaram stores
         pyro.get_param_store().load(
             os.path.join(dir_path, "param_store_test.pt"), map_location=device
         )
         return model
-
-
-# def _load_saved_files(
-#    dir_path: str,
-#    load_adata: bool,
-#    map_location: Optional[Literal["cpu", "cuda"]] = None,
-# ):
-#    """Helper to load saved files, adapt from scvi-tools removing check in _CONSTANTS keys"""
-#    setup_dict_path = os.path.join(dir_path, "attr.pkl")
-#    adata_path = os.path.join(dir_path, "adata.h5ad")
-#    varnames_path = os.path.join(dir_path, "var_names.csv")
-#    model_path = os.path.join(dir_path, "model_params.pt")
-#
-#    if os.path.exists(adata_path) and load_adata:
-#        adata = read(adata_path)
-#    elif not os.path.exists(adata_path) and load_adata:
-#        raise ValueError("Save path contains no saved anndata and no adata was passed.")
-#    else:
-#        adata = None
-#
-#    var_names = np.genfromtxt(varnames_path, delimiter=",", dtype=str)
-#
-#    with open(setup_dict_path, "rb") as handle:
-#        attr_dict = pickle.load(handle)
-#    scvi_setup_dict = attr_dict.pop("scvi_setup_dict_")
-#    print(map_location)
-#    model_state_dict = torch.load(model_path, map_location=map_location)
-#    return scvi_setup_dict, attr_dict, var_names, model_state_dict, adata

@@ -186,7 +186,6 @@ class VelocityModule(PyroBaseModuleClass):
                 )
             )
         self._guide = guide
-        self._get_fn_args_from_batch = self._model._get_fn_args_from_batch
 
     @property
     def model(self) -> VelocityModelAuto:
