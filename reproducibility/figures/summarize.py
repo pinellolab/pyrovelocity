@@ -515,13 +515,11 @@ def extrapolate_prediction_sample_predictive(
 ):
     pyrovelocity_model_path = data_model_conf.model_path
     PyroVelocity.setup_anndata(adata)
-    model = PyroVelocity(adata, add_offset=False, guide_type='auto_t0_constraint')
+    model = PyroVelocity(adata, add_offset=False, guide_type="auto_t0_constraint")
     model = model.load_model(pyrovelocity_model_path, adata, use_gpu=0)
     print(pyrovelocity_model_path)
 
-    scdl = model._make_data_loader(
-        adata=adata, indices=None, batch_size=1000
-    )
+    scdl = model._make_data_loader(adata=adata, indices=None, batch_size=1000)
     from collections import defaultdict
 
     posterior_samples_list = []
@@ -546,43 +544,49 @@ def extrapolate_prediction_sample_predictive(
             torch.tensor(u_log_library_scale).to("cuda:0"),
             torch.tensor(s_log_library_scale).to("cuda:0"),
             torch.tensor(ind_x).to("cuda:0"),
-            None, None
-            )
+            None,
+            None,
+        )
 
         posterior_samples = {}
         posterior_samples_batch_sample = []
         for sample in range(5):
             guide_trace = pyro.poutine.trace(model.module.guide).get_trace(*dummy_obs)
             trained_model = pyro.poutine.replay(model.module.model, trace=guide_trace)
-            model_discrete = infer_discrete(trained_model, temperature=0, first_available_dim=-3)
+            model_discrete = infer_discrete(
+                trained_model, temperature=0, first_available_dim=-3
+            )
             trace = pyro.poutine.trace(model_discrete).get_trace(*dummy_obs)
-            map_estimate_cell_gene_state = trace.nodes['cell_gene_state']['value']
-            alpha = trace.nodes['alpha']['value']
-            beta = trace.nodes['beta']['value']
-            gamma = trace.nodes['gamma']['value']
-            t0 = trace.nodes['t0']['value']
-            dt_switching = trace.nodes['dt_switching']['value']
-            cell_time = trace.nodes['cell_time']['value']
+            map_estimate_cell_gene_state = trace.nodes["cell_gene_state"]["value"]
+            alpha = trace.nodes["alpha"]["value"]
+            beta = trace.nodes["beta"]["value"]
+            gamma = trace.nodes["gamma"]["value"]
+            t0 = trace.nodes["t0"]["value"]
+            dt_switching = trace.nodes["dt_switching"]["value"]
+            cell_time = trace.nodes["cell_time"]["value"]
 
-            if 'u_offset' in trace.nodes:
-                u_offset = trace.nodes['u_offset']['value']
-                s_offset = trace.nodes['s_offset']['value']
-                u_scale = trace.nodes['u_scale']['value']
+            if "u_offset" in trace.nodes:
+                u_offset = trace.nodes["u_offset"]["value"]
+                s_offset = trace.nodes["s_offset"]["value"]
+                u_scale = trace.nodes["u_scale"]["value"]
             else:
                 u_offset = alpha.new_zeros(alpha.shape)
                 s_offset = alpha.new_zeros(alpha.shape)
                 u_scale = alpha.new_ones(alpha.shape)
             posterior_samples_batch_sample.append(
-                    {"cell_gene_state": map_estimate_cell_gene_state.unsqueeze(-3), 
-                     "alpha": alpha.unsqueeze(-2).unsqueeze(-3), 
-                     "beta": beta.unsqueeze(-2).unsqueeze(-3), 
-                     "gamma": gamma.unsqueeze(-2).unsqueeze(-3), 
-                     "u_offset": u_offset.unsqueeze(-2).unsqueeze(-3),
-                     "s_offset": s_offset.unsqueeze(-2).unsqueeze(-3), 
-                     "u_scale": u_scale.unsqueeze(-2).unsqueeze(-3), 
-                     "dt_switching": dt_switching.unsqueeze(-2).unsqueeze(-3), 
-                     "cell_time": cell_time.unsqueeze(-3), 
-                     "t0": t0.unsqueeze(-2).unsqueeze(-3)})
+                {
+                    "cell_gene_state": map_estimate_cell_gene_state.unsqueeze(-3),
+                    "alpha": alpha.unsqueeze(-2).unsqueeze(-3),
+                    "beta": beta.unsqueeze(-2).unsqueeze(-3),
+                    "gamma": gamma.unsqueeze(-2).unsqueeze(-3),
+                    "u_offset": u_offset.unsqueeze(-2).unsqueeze(-3),
+                    "s_offset": s_offset.unsqueeze(-2).unsqueeze(-3),
+                    "u_scale": u_scale.unsqueeze(-2).unsqueeze(-3),
+                    "dt_switching": dt_switching.unsqueeze(-2).unsqueeze(-3),
+                    "cell_time": cell_time.unsqueeze(-3),
+                    "t0": t0.unsqueeze(-2).unsqueeze(-3),
+                }
+            )
 
         for key in posterior_samples_batch_sample[0].keys():
             posterior_samples[key] = torch.tensor(
@@ -599,7 +603,7 @@ def extrapolate_prediction_sample_predictive(
             pyro.poutine.uncondition(
                 model.module.model,
             ),
-            posterior_samples
+            posterior_samples,
         )(*dummy_obs)
         for key in posterior_samples:
             posterior_samples_new_tmp[key] = posterior_samples[key]
@@ -611,10 +615,12 @@ def extrapolate_prediction_sample_predictive(
         if posterior_samples_list[0][key].shape[-2] == 1:
             posterior_samples_new[key] = posterior_samples_list[0][key]
         else:
-            posterior_samples_new[key] = torch.concat([element[key] for element in posterior_samples_list], axis=-2)
-    #posterior_samples_new = model.generate_posterior_samples(
+            posterior_samples_new[key] = torch.concat(
+                [element[key] for element in posterior_samples_list], axis=-2
+            )
+    # posterior_samples_new = model.generate_posterior_samples(
     #    adata=adata, batch_size=512, num_samples=8
-    #)
+    # )
 
     for key in posterior_samples_new.keys():
         print(posterior_samples_new[key].shape)
@@ -644,28 +650,29 @@ def extrapolate_prediction_sample_predictive(
     print(grid_time_samples_st.shape)
     if isinstance(grid_time_samples_state, np.ndarray):
         return (
-           grid_time_samples_ut,
-           grid_time_samples_st,
-           grid_time_samples_u0,
-           grid_time_samples_s0,
-           grid_time_samples_uinf,
-           grid_time_samples_sinf,
-           grid_time_samples_uscale,
-           grid_time_samples_state,
-           grid_time_samples_t0,
-           grid_time_samples_dt_switching
-           )
+            grid_time_samples_ut,
+            grid_time_samples_st,
+            grid_time_samples_u0,
+            grid_time_samples_s0,
+            grid_time_samples_uinf,
+            grid_time_samples_sinf,
+            grid_time_samples_uscale,
+            grid_time_samples_state,
+            grid_time_samples_t0,
+            grid_time_samples_dt_switching,
+        )
     else:
-        return (grid_time_samples_ut.cpu().detach().numpy(),
-           grid_time_samples_st.cpu().detach().numpy(),
-           grid_time_samples_u0.cpu().detach().numpy(),
-           grid_time_samples_s0.cpu().detach().numpy(),
-           grid_time_samples_uinf.cpu().detach().numpy(),
-           grid_time_samples_sinf.cpu().detach().numpy(),
-           grid_time_samples_uscale.cpu().detach().numpy(),
-           grid_time_samples_state.cpu().detach().numpy(),
-           grid_time_samples_t0.cpu().detach().numpy(),
-           grid_time_samples_dt_switching.cpu().detach().numpy()
+        return (
+            grid_time_samples_ut.cpu().detach().numpy(),
+            grid_time_samples_st.cpu().detach().numpy(),
+            grid_time_samples_u0.cpu().detach().numpy(),
+            grid_time_samples_s0.cpu().detach().numpy(),
+            grid_time_samples_uinf.cpu().detach().numpy(),
+            grid_time_samples_sinf.cpu().detach().numpy(),
+            grid_time_samples_uscale.cpu().detach().numpy(),
+            grid_time_samples_state.cpu().detach().numpy(),
+            grid_time_samples_t0.cpu().detach().numpy(),
+            grid_time_samples_dt_switching.cpu().detach().numpy(),
         )
 
 
@@ -726,7 +733,7 @@ def posterior_curve(
                 posterior_samples["ut_mean"][:, index[0]],
                 s=3,
                 linewidth=0,
-                #color=cell_colors,
+                # color=cell_colors,
                 color=grid_cell_colors,
                 alpha=0.6,
             )
