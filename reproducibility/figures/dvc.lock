@@ -64,7 +64,8 @@ stages:
           dl_root: data/Pancreas
           dl_path: data/Pancreas/endocrinogenesis_day15.h5ad
           rel_path: data/external/endocrinogenesis_day15.h5ad
-          url: https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad
+          url:
+            https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad
           derived:
             process_method: load_data
             process_args:
@@ -338,7 +339,8 @@ stages:
           dl_root: data/Pancreas
           dl_path: data/Pancreas/endocrinogenesis_day15.h5ad
           rel_path: data/external/endocrinogenesis_day15.h5ad
-          url: https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad
+          url:
+            https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad
           derived:
             process_method: load_data
             process_args:
@@ -1970,8 +1972,9 @@ stages:
       md5: af2ba0069fd94bcea0a606a268ba7e41
       size: 492127600
     - path: summarize.py
-      md5: 424b1ddc7fe21fc2c66aac74cf8c8fbb
-      size: 46288
+      hash: md5
+      md5: fd344c4bdb5cfec18d7b44f39df720e0
+      size: 47233
     params:
       config.yaml:
         base:
@@ -2001,62 +2004,78 @@ stages:
       md5: bbff19677beed1c7cf3766506f391723
       size: 12359084
     - path: reports/pancreas_model2/clusters_violin_lin.pdf
-      md5: 97eece2dd328116c4efbadfaeaecd25b
+      hash: md5
+      md5: 7bbb3c28999e0df33d1ae70116b42fe6
       size: 123959
     - path: reports/pancreas_model2/clusters_violin_lin.pdf.png
-      md5: 6dbb23747b864caaf51b30d2981b09ab
-      size: 1706829
+      hash: md5
+      md5: d7cb523e0a5fde4639b4f6a282109916
+      size: 1690614
     - path: reports/pancreas_model2/clusters_violin_log.pdf
-      md5: f9849b3c4c5c24ac047a21c9dd2926e1
+      hash: md5
+      md5: 702b62e21ee1d2bdb72af76ef66db330
       size: 124514
     - path: reports/pancreas_model2/clusters_violin_log.pdf.png
-      md5: 95ccb3200d281c3510445844b111d828
-      size: 1957898
+      hash: md5
+      md5: 750c23dd8aeca1d0163d50629665493e
+      size: 1947138
     - path: reports/pancreas_model2/fig2_part1_plot.pdf
-      md5: d90729b4424fe83854609a1675e3d347
-      size: 431054
+      hash: md5
+      md5: 4328640c3e2ca4b52312bfca8b6be267
+      size: 431049
     - path: reports/pancreas_model2/fig2_part1_plot.pdf.png
-      md5: 563fccf930a066ac09d9843bb010029b
-      size: 637651
+      hash: md5
+      md5: 58f365a5d31dedfffb887a1159ca1f54
+      size: 635030
     - path: reports/pancreas_model2/fig2_part2_plot.pdf
       hash: md5
-      md5: eb026b5efc34153cbd8486630a5bbc06
-      size: 1245113
+      md5: 1599c08457e0d91724b46f4b8aed0dbd
+      size: 1245119
     - path: reports/pancreas_model2/fig2_part2_plot.pdf.png
-      md5: b4405fd8b3f7b14349c0353e82fd8588
-      size: 659954
+      hash: md5
+      md5: f701b9eb92026bd613d202702e790175
+      size: 658273
     - path: reports/pancreas_model2/param_uncertainties.pdf
-      md5: 862bf027bda1d918871067fe66f2b772
-      size: 139628
+      hash: md5
+      md5: c3165bc57918442b4334c0c6d0ae7310
+      size: 139529
     - path: reports/pancreas_model2/param_uncertainties.pdf.png
-      md5: ea4766d5263a3383be8cac47815552e4
-      size: 834892
+      hash: md5
+      md5: 77528751e2abe1f36097bcc7f6e54c59
+      size: 833569
     - path: reports/pancreas_model2/posterior_phase_portraits
-      md5: 93d9285b5f305db5d505cf41bd966a9a.dir
-      size: 34570282
+      hash: md5
+      md5: 6e6f1089260936561cb737a8ece5253c.dir
+      size: 31791666
       nfiles: 20
     - path: reports/pancreas_model2/rainbow.pdf
       hash: md5
-      md5: abcd341175be31db0dcfa30b8ee5de55
+      md5: cb0f81d0a2bdbf3fcb601c67b0ff3bec
       size: 5193109
     - path: reports/pancreas_model2/rainbow.pdf.png
-      md5: 36f35a2d60b6466c8ffcbebf02004da6
-      size: 1499104
+      hash: md5
+      md5: 21875e8fa5976ddc7e5fc06effe2a0ff
+      size: 1503751
     - path: reports/pancreas_model2/shared_time.pdf
-      md5: c6a9d25f461e23db75458fc7e27a7f4e
-      size: 236324
+      hash: md5
+      md5: a3d7293958d98d7c5daa230365f80e3c
+      size: 236624
     - path: reports/pancreas_model2/vector_field.pdf
-      md5: 7c6dc4ebb5baa30935d985a45037a791
-      size: 397585
+      hash: md5
+      md5: bbf028773446ae0d7addc946dcf4b563
+      size: 397588
     - path: reports/pancreas_model2/vector_field.pdf.png
-      md5: 7f6b1532b428dcc88d99bdb3756962d3
-      size: 697694
+      hash: md5
+      md5: 9182cce02e5f121fdebc06852b7c6a33
+      size: 698869
     - path: reports/pancreas_model2/volcano.pdf
-      md5: 4c09ffb92a04a00b507b9f1be930308d
-      size: 35963
+      hash: md5
+      md5: f50bf70c45ed9c47273f1a7f7b720fec
+      size: 35880
     - path: reports/pancreas_model2/volcano.pdf.png
-      md5: 2f7a325c2382893024a4956e962b6efb
-      size: 397068
+      hash: md5
+      md5: 54b5b469ea0aace4bad7753f60e30c88
+      size: 386746
   summarize@pbmc68k_model2:
     cmd: /usr/bin/time -v python summarize.py train_models=[pbmc68k_model2]
     deps:
@@ -2479,7 +2498,8 @@ stages:
       md5: 380c043d793b7bf90b8983b61aede637
       size: 19533902
   figureS3_extras:
-    cmd: /usr/bin/time -v python figS3/figure_extras.py train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
+    cmd: /usr/bin/time -v python figS3/figure_extras.py
+      train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
     deps:
     - path: figS3/figure_extras.py
       md5: 8c0e23c130cb342b246fa6dde4f4240b
@@ -3183,7 +3203,8 @@ stages:
       md5: 11799f5a3dcd585546fae58da182f864
       size: 526943
   figureS2:
-    cmd: /usr/bin/time -v python figS2/figure.py train_models=[pbmc5k_model2,pbmc10k_model2_coarse,pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_tips_model2]
+    cmd: /usr/bin/time -v python figS2/figure.py
+      train_models=[pbmc5k_model2,pbmc10k_model2_coarse,pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_tips_model2]
     deps:
     - path: figS2/figure.py
       md5: 9563ca87399029d6174fcd94ac2756fb
@@ -3311,7 +3332,8 @@ stages:
       md5: 1d8922ccd1bd2ab897459b827e6787fa
       size: 398177291
   figureS2_extra_2:
-    cmd: /usr/bin/time -v python figS2/figure_extra_2.py train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
+    cmd: /usr/bin/time -v python figS2/figure_extra_2.py
+      train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
     deps:
     - path: figS2/figure_extra_2.py
       md5: ed35636cfcef647467f0be5f58ac1fee
@@ -4090,8 +4112,8 @@ stages:
       size: 492127600
     - path: summarize.py
       hash: md5
-      md5: 18ad96bac63217c483dc359dfc6943ec
-      size: 47112
+      md5: fd344c4bdb5cfec18d7b44f39df720e0
+      size: 47233
     params:
       config.yaml:
         base:
@@ -4122,7 +4144,7 @@ stages:
       size: 12359084
     - path: reports/pancreas_model1/clusters_violin_lin.pdf
       hash: md5
-      md5: f8db0045f5e23efb19a9805783db1098
+      md5: f922639b3046228c39b62ff15efe6e93
       size: 126861
     - path: reports/pancreas_model1/clusters_violin_lin.pdf.png
       hash: md5
@@ -4130,7 +4152,7 @@ stages:
       size: 2134099
     - path: reports/pancreas_model1/clusters_violin_log.pdf
       hash: md5
-      md5: d2cd23a90dbe4457d48d0f3f633a0f0d
+      md5: 873a33b9c3cb484ca5f3c7079aff8493
       size: 127268
     - path: reports/pancreas_model1/clusters_violin_log.pdf.png
       hash: md5
@@ -4138,7 +4160,7 @@ stages:
       size: 2256955
     - path: reports/pancreas_model1/fig2_part1_plot.pdf
       hash: md5
-      md5: 0e075f2c9761b41d1de9c06a0f73ea39
+      md5: e3b0dedf30787871add4e8a73bae9f9a
       size: 432521
     - path: reports/pancreas_model1/fig2_part1_plot.pdf.png
       hash: md5
@@ -4146,7 +4168,7 @@ stages:
       size: 634287
     - path: reports/pancreas_model1/fig2_part2_plot.pdf
       hash: md5
-      md5: 720752f5a02a36c61fba62d36d909585
+      md5: 94c61cc9e39f068a3eef6ff5447e86cf
       size: 1254670
     - path: reports/pancreas_model1/fig2_part2_plot.pdf.png
       hash: md5
@@ -4154,7 +4176,7 @@ stages:
       size: 651812
     - path: reports/pancreas_model1/param_uncertainties.pdf
       hash: md5
-      md5: 431f101cd2d4b1266044ab1324c8c4ef
+      md5: df4f6ebecb024589ffe4e714b7067a54
       size: 139072
     - path: reports/pancreas_model1/param_uncertainties.pdf.png
       hash: md5
@@ -4167,7 +4189,7 @@ stages:
       nfiles: 20
     - path: reports/pancreas_model1/rainbow.pdf
       hash: md5
-      md5: e15c57bbe165d31c338f4f925fd82616
+      md5: a3e240449464ad6f56f055cbd10550dc
       size: 5144270
     - path: reports/pancreas_model1/rainbow.pdf.png
       hash: md5
@@ -4175,11 +4197,11 @@ stages:
       size: 1402720
     - path: reports/pancreas_model1/shared_time.pdf
       hash: md5
-      md5: 160352e02e7fc4d2abf27ebe0b81e17b
+      md5: 625c1e98e3fd17277c2a0553a8e0af47
       size: 254000
     - path: reports/pancreas_model1/vector_field.pdf
       hash: md5
-      md5: 9a9d0d7326e054b257a6c8c1d633127c
+      md5: 96a573c5802c12012d0f37411b608021
       size: 397600
     - path: reports/pancreas_model1/vector_field.pdf.png
       hash: md5
@@ -4187,7 +4209,7 @@ stages:
       size: 700814
     - path: reports/pancreas_model1/volcano.pdf
       hash: md5
-      md5: def05743d65af80ace58b74978bccbff
+      md5: b60f59e0c2740386e73813a2df06eddc
       size: 34484
     - path: reports/pancreas_model1/volcano.pdf.png
       hash: md5
