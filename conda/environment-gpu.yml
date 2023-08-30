@@ -16,17 +16,19 @@ channels:
 
 dependencies:
   - python=3.10
+  - pandas=1.5.3
   - leidenalg
   - pyro-ppl=1.8.3
   - pytorch-gpu=1.13.1
+  - pytorch-lightning=1.9.4
   - seaborn=0.11.2
   - anndata=0.8.0
   - scvelo=0.2.5
-  - pandas=1.5.3
+  - scvi-tools=0.20.3
+  - matplotlib=3.7.1
   - h5py
   - anndata
   - pip
-  - scvi-tools
   - scikit-misc
   - torchmetrics
   - adjusttext
@@ -42,6 +44,7 @@ dependencies:
   - tqdm
   - ipywidgets
   - zstandard
+  - statannotations
   # dev
   - zsh
   - tree
@@ -51,6 +54,7 @@ dependencies:
   - hypothesis
   - xdoctest
   - dvc
+  - dvc-gs
   - git
   - gh
   - pip:
