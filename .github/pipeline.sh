@@ -125,18 +125,18 @@ function run_parallel_pipeline() {
     # $DVC_COMMAND summarize@larry_model1 &
     wait
 
-    # $DVC_COMMAND summarize@larry_tips_model1 &
+    $DVC_COMMAND summarize@larry_tips_model1 &
     sleep 7
     $DVC_COMMAND summarize@larry_mono_model1 &
     sleep 7
     $DVC_COMMAND summarize@larry_neu_model1 &
     sleep 7
-    # $DVC_COMMAND summarize@larry_multilineage_model1 &
+    $DVC_COMMAND summarize@larry_multilineage_model1 &
     wait
 
     $DVC_COMMAND summarize@bonemarrow_model1 &
     sleep 7
-    # $DVC_COMMAND summarize@pbmc10k_model1 &
+    $DVC_COMMAND summarize@pbmc10k_model1 &
     sleep 7
     $DVC_COMMAND summarize@pbmc5k_model1 &
 
@@ -218,15 +218,15 @@ dvc dag --md
 data_sets=(
     "pancreas"
     "pons"
-    # "pbmc68k"
-    # "pbmc10k"
+    "pbmc68k"
+    "pbmc10k"
     "pbmc5k"
     "bonemarrow"
     # "larry"
     "larry_mono"
     "larry_neu"
-    # "larry_multilineage"
-    # "larry_tips"
+    "larry_multilineage"
+    "larry_tips"
 )
 models=(
     "model1"

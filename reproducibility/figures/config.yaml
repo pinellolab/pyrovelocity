@@ -1204,6 +1204,24 @@ reports:
       fig2_part2_plot: reports/bonemarrow_model2/fig2_part2_plot.pdf
       violin_clusters_lin: reports/bonemarrow_model2/clusters_violin_lin.pdf
       violin_clusters_log: reports/bonemarrow_model2/clusters_violin_log.pdf
+    pbmc68k_model1:
+      path: reports/pbmc68k_model1
+      trained_data_path: models/pbmc68k_model1/trained.h5ad
+      pyrovelocity_data_path: models/pbmc68k_model1/pyrovelocity.pkl.zst
+      dataframe_path: data/processed/pbmc68k_model1_dataframe.pkl.zst
+      shared_time_plot: reports/pbmc68k_model1/shared_time.pdf
+      volcano_plot: reports/pbmc68k_model1/volcano.pdf
+      rainbow_plot: reports/pbmc68k_model1/rainbow.pdf
+      uncertainty_param_plot: reports/pbmc68k_model1/param_uncertainties.pdf
+      vector_field_plot: reports/pbmc68k_model1/vector_field.pdf
+      posterior_phase_portraits: reports/pbmc68k_model1/posterior_phase_portraits
+      t0_selection: reports/pbmc68k_model1/t0_selection.tif
+      biomarker_selection_plot: reports/pbmc68k_model1/markers_selection_scatterplot.tif
+      biomarker_phaseportrait_plot: reports/pbmc68k_model1/markers_phaseportrait.pdf
+      fig2_part1_plot: reports/pbmc68k_model1/fig2_part1_plot.pdf
+      fig2_part2_plot: reports/pbmc68k_model1/fig2_part2_plot.pdf
+      violin_clusters_lin: reports/pbmc68k_model1/clusters_violin_lin.pdf
+      violin_clusters_log: reports/pbmc68k_model1/clusters_violin_log.pdf
     pbmc68k_model2:
       path: reports/pbmc68k_model2
       trained_data_path: models/pbmc68k_model2/trained.h5ad
@@ -1258,6 +1276,24 @@ reports:
       fig2_part2_plot: reports/pons_model2/fig2_part2_plot.pdf
       violin_clusters_lin: reports/pons_model2/clusters_violin_lin.pdf
       violin_clusters_log: reports/pons_model2/clusters_violin_log.pdf
+    pbmc10k_model1:
+      path: reports/pbmc10k_model1
+      trained_data_path: models/pbmc10k_model1/trained.h5ad
+      pyrovelocity_data_path: models/pbmc10k_model1/pyrovelocity.pkl.zst
+      dataframe_path: data/processed/pbmc10k_model1_dataframe.pkl.zst
+      shared_time_plot: reports/pbmc10k_model1/shared_time.pdf
+      volcano_plot: reports/pbmc10k_model1/volcano.pdf
+      rainbow_plot: reports/pbmc10k_model1/rainbow.pdf
+      uncertainty_param_plot: reports/pbmc10k_model1/param_uncertainties.pdf
+      vector_field_plot: reports/pbmc10k_model1/vector_field.pdf
+      posterior_phase_portraits: reports/pbmc10k_model1/posterior_phase_portraits
+      t0_selection: reports/pbmc10k_model1/t0_selection.tif
+      biomarker_selection_plot: reports/pbmc10k_model1/markers_selection_scatterplot.tif
+      biomarker_phaseportrait_plot: reports/pbmc10k_model1/markers_phaseportrait.pdf
+      fig2_part1_plot: reports/pbmc10k_model1/fig2_part1_plot.pdf
+      fig2_part2_plot: reports/pbmc10k_model1/fig2_part2_plot.pdf
+      violin_clusters_lin: reports/pbmc10k_model1/clusters_violin_lin.pdf
+      violin_clusters_log: reports/pbmc10k_model1/clusters_violin_log.pdf
     pbmc10k_model2:
       path: reports/pbmc10k_model2
       trained_data_path: models/pbmc10k_model2/trained.h5ad
@@ -1312,6 +1348,24 @@ reports:
       fig2_part2_plot: reports/pbmc5k_model2/fig2_part2_plot.pdf
       violin_clusters_lin: reports/pbmc5k_model2/clusters_violin_lin.pdf
       violin_clusters_log: reports/pbmc5k_model2/clusters_violin_log.pdf
+    larry_tips_model1:
+      path: reports/larry_tips_model1
+      trained_data_path: models/larry_tips_model1/trained.h5ad
+      pyrovelocity_data_path: models/larry_tips_model1/pyrovelocity.pkl.zst
+      dataframe_path: data/processed/larry_tips_model1_dataframe.pkl.zst
+      shared_time_plot: reports/larry_tips_model1/shared_time.pdf
+      volcano_plot: reports/larry_tips_model1/volcano.pdf
+      rainbow_plot: reports/larry_tips_model1/rainbow.pdf
+      uncertainty_param_plot: reports/larry_tips_model1/param_uncertainties.pdf
+      vector_field_plot: reports/larry_tips_model1/vector_field.pdf
+      posterior_phase_portraits: reports/larry_tips_model1/posterior_phase_portraits
+      t0_selection: reports/larry_tips_model1/t0_selection.tif
+      biomarker_selection_plot: reports/larry_tips_model1/markers_selection_scatterplot.tif
+      biomarker_phaseportrait_plot: reports/larry_tips_model1/markers_phaseportrait.pdf
+      fig2_part1_plot: reports/larry_tips_model1/fig2_part1_plot.pdf
+      fig2_part2_plot: reports/larry_tips_model1/fig2_part2_plot.pdf
+      violin_clusters_lin: reports/larry_tips_model1/clusters_violin_lin.pdf
+      violin_clusters_log: reports/larry_tips_model1/clusters_violin_log.pdf
     larry_tips_model2:
       path: reports/larry_tips_model2
       trained_data_path: models/larry_tips_model2/trained.h5ad
@@ -1402,6 +1456,24 @@ reports:
       fig2_part2_plot: reports/larry_neu_model2/fig2_part2_plot.pdf
       violin_clusters_lin: reports/larry_neu_model2/clusters_violin_lin.pdf
       violin_clusters_log: reports/larry_neu_model2/clusters_violin_log.pdf
+    larry_multilineage_model1:
+      path: reports/larry_multilineage_model1
+      trained_data_path: models/larry_multilineage_model1/trained.h5ad
+      pyrovelocity_data_path: models/larry_multilineage_model1/pyrovelocity.pkl.zst
+      dataframe_path: data/processed/larry_multilineage_model1_dataframe.pkl.zst
+      shared_time_plot: reports/larry_multilineage_model1/shared_time.pdf
+      volcano_plot: reports/larry_multilineage_model1/volcano.pdf
+      rainbow_plot: reports/larry_multilineage_model1/rainbow.pdf
+      uncertainty_param_plot: reports/larry_multilineage_model1/param_uncertainties.pdf
+      vector_field_plot: reports/larry_multilineage_model1/vector_field.pdf
+      posterior_phase_portraits: reports/larry_multilineage_model1/posterior_phase_portraits
+      t0_selection: reports/larry_multilineage_model1/t0_selection.tif
+      biomarker_selection_plot: reports/larry_multilineage_model1/markers_selection_scatterplot.tif
+      biomarker_phaseportrait_plot: reports/larry_multilineage_model1/markers_phaseportrait.pdf
+      fig2_part1_plot: reports/larry_multilineage_model1/fig2_part1_plot.pdf
+      fig2_part2_plot: reports/larry_multilineage_model1/fig2_part2_plot.pdf
+      violin_clusters_lin: reports/larry_multilineage_model1/clusters_violin_lin.pdf
+      violin_clusters_log: reports/larry_multilineage_model1/clusters_violin_log.pdf
     larry_multilineage_model2:
       path: reports/larry_multilineage_model2
       trained_data_path: models/larry_multilineage_model2/trained.h5ad
