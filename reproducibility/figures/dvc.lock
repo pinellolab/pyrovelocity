@@ -64,7 +64,8 @@ stages:
           dl_root: data/Pancreas
           dl_path: data/Pancreas/endocrinogenesis_day15.h5ad
           rel_path: data/external/endocrinogenesis_day15.h5ad
-          url: https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad
+          url:
+            https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad
           derived:
             process_method: load_data
             process_args:
@@ -338,7 +339,8 @@ stages:
           dl_root: data/Pancreas
           dl_path: data/Pancreas/endocrinogenesis_day15.h5ad
           rel_path: data/external/endocrinogenesis_day15.h5ad
-          url: https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad
+          url:
+            https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad
           derived:
             process_method: load_data
             process_args:
@@ -2535,7 +2537,8 @@ stages:
       md5: 380c043d793b7bf90b8983b61aede637
       size: 19533902
   figureS3_extras:
-    cmd: /usr/bin/time -v python figS3/figure_extras.py train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
+    cmd: /usr/bin/time -v python figS3/figure_extras.py
+      train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
     deps:
     - path: figS3/figure_extras.py
       md5: 8c0e23c130cb342b246fa6dde4f4240b
@@ -3270,7 +3273,8 @@ stages:
       md5: 11799f5a3dcd585546fae58da182f864
       size: 526943
   figureS2:
-    cmd: /usr/bin/time -v python figS2/figure.py train_models=[pbmc5k_model2,pbmc10k_model2_coarse,pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_tips_model2]
+    cmd: /usr/bin/time -v python figS2/figure.py
+      train_models=[pbmc5k_model2,pbmc10k_model2_coarse,pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_tips_model2]
     deps:
     - path: figS2/figure.py
       md5: 9563ca87399029d6174fcd94ac2756fb
@@ -3398,7 +3402,8 @@ stages:
       md5: 1d8922ccd1bd2ab897459b827e6787fa
       size: 398177291
   figureS2_extra_2:
-    cmd: /usr/bin/time -v python figS2/figure_extra_2.py train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
+    cmd: /usr/bin/time -v python figS2/figure_extra_2.py
+      train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
     deps:
     - path: figS2/figure_extra_2.py
       md5: ed35636cfcef647467f0be5f58ac1fee
@@ -4300,3 +4305,75 @@ stages:
       hash: md5
       md5: 06aa62948094ebbf837f6502a1e0a91d
       size: 360007
+  train@simulate_model1:
+    cmd: /usr/bin/time -v python train.py train_models=[simulate_model1]
+    deps:
+    - path: data/processed/simulated_medium_processed.h5ad
+      hash: md5
+      md5: 6ade4ac2370f9ae5e0fcffcdd98c6802
+      size: 249243888
+    - path: train.py
+      hash: md5
+      md5: 4cf2c31c17dbb07e8de124c36735401b
+      size: 6703
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+          count_threshold: 0
+          seed: 99
+        model_training.simulate_model1:
+          path: models/simulate_medium_model1
+          model_path: models/simulate_medium_model1/model
+          input_data_path: data/processed/simulated_medium_processed.h5ad
+          trained_data_path: models/simulate_medium_model1/trained.h5ad
+          pyrovelocity_data_path: models/simulate_medium_model1/pyrovelocity.pkl.zst
+          posterior_samples_path: models/simulate_medium_model1/posterior_samples.pkl.zst
+          metrics_path: models/simulate_medium_model1/metrics.json
+          run_info_path: models/simulate_medium_model1/run_info.json
+          vector_field_parameters:
+            basis: umap
+          gpu_id: 0
+          training_parameters:
+            _target_: pyrovelocity.api.train_model
+            _partial_: true
+            guide_type: auto_t0_constraint
+            model_type: auto
+            svi_train: false
+            batch_size: -1
+            train_size: 1.0
+            use_gpu: 0
+            likelihood: Poisson
+            num_samples: 30
+            log_every: 100
+            cell_state: leiden
+            patient_improve: 0.0001
+            patient_init: 45
+            seed: 99
+            lr: 0.01
+            max_epochs: 4000
+            include_prior: true
+            library_size: true
+            offset: false
+            input_type: raw
+            cell_specific_kinetics:
+            kinetics_num: 2
+            loss_plot_path: models/simulate_medium_model1/loss_plot.png
+    outs:
+    - path: models/simulate_medium_model1/loss_plot.png
+      hash: md5
+      md5: e3d85fc84e6634669fefcd66492551a2
+      size: 10515
+    - path: models/simulate_medium_model1/model
+      hash: md5
+      md5: e20824b47e7c3133fc8feb5afe9768c7.dir
+      size: 658549
+      nfiles: 2
+    - path: models/simulate_medium_model1/posterior_samples.pkl.zst
+      hash: md5
+      md5: bfe8e799897b4e65522dffa04c592de3
+      size: 604691362
+    - path: models/simulate_medium_model1/run_info.json
+      hash: md5
+      md5: 0580ad0d4cdd65e6ab5b4c714975ec63
+      size: 455
