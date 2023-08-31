@@ -50,6 +50,31 @@ function run_parallel_pipeline() {
     dvc repro preprocess
 
     # manually execute training stages to distribute over four GPUs
+    $DVC_COMMAND train@pancreas_model1 &
+    sleep 7
+    $DVC_COMMAND train@pbmc68k_model1 &
+    sleep 7
+    $DVC_COMMAND train@pons_model1 &
+    sleep 7
+    $DVC_COMMAND train@larry_model1 &
+    wait
+
+    $DVC_COMMAND train@larry_tips_model1 &
+    sleep 7
+    $DVC_COMMAND train@larry_mono_model1 &
+    sleep 7
+    $DVC_COMMAND train@larry_neu_model1 &
+    sleep 7
+    $DVC_COMMAND train@larry_multilineage_model1 &
+    wait
+
+    $DVC_COMMAND train@bonemarrow_model1 &
+    sleep 7
+    $DVC_COMMAND train@pbmc10k_model1 &
+    sleep 7
+    $DVC_COMMAND train@pbmc5k_model1 &
+    wait
+
     $DVC_COMMAND train@pancreas_model2 &
     sleep 7
     $DVC_COMMAND train@pbmc68k_model2 &
