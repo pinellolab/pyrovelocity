@@ -1019,20 +1019,30 @@ def hydra_zen_compressed_configure():
                 # simulate_model2=create_reports_config("medium", 2),
                 pancreas_model1=create_reports_config("pancreas", 1),
                 pancreas_model2=create_reports_config("pancreas", 2),
+                bonemarrow_model1=create_reports_config("bonemarrow", 1),
                 bonemarrow_model2=create_reports_config("bonemarrow", 2),
                 # pbmc68k_model1=create_reports_config("pbmc68k", 1),
                 pbmc68k_model2=create_reports_config("pbmc68k", 2),
-                # pons_model1=create_reports_config("pons", 1),
+                pons_model1=create_reports_config("pons", 1),
                 pons_model2=create_reports_config("pons", 2),
+                # pbmc10k_model1=create_reports_config("pbmc10k", 1),
                 pbmc10k_model2=create_reports_config("pbmc10k", 2),
+                pbmc5k_model1=create_reports_config("pbmc5k", 1),
                 pbmc5k_model2=create_reports_config("pbmc5k", 2),
+                # larry_tips_model1=create_reports_config("larry_tips", 1),
                 larry_tips_model2=create_reports_config("larry_tips", 2),
+                larry_mono_model1=create_reports_config("larry_mono", 1),
                 larry_mono_model2=create_reports_config("larry_mono", 2),
+                larry_neu_model1=create_reports_config("larry_neu", 1),
                 larry_neu_model2=create_reports_config("larry_neu", 2),
+                # larry_multilineage_model1=create_reports_config(
+                #     "larry_multilineage", 1
+                # ),
                 larry_multilineage_model2=create_reports_config(
                     "larry_multilineage", 2
                 ),
-                larry_model2=create_reports_config("larry", 2),
+                # larry_model1=create_reports_config("larry", 1),
+                # larry_model2=create_reports_config("larry", 2),
             ),
             figure2=dict(
                 tag="fig2",
