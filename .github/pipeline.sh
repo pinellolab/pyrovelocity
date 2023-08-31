@@ -80,14 +80,41 @@ function run_parallel_pipeline() {
     dvc stage list --name-only |\
         grep -E "postprocess*" |\
         /usr/bin/time -v \
-        xargs -t -n 1 -P 6 bash -c 'sleep $((RANDOM % 15 + 5)); '"$DVC_COMMAND_POSTPROCESS"' "$@"' --
+        xargs -t -n 1 -P 4 bash -c 'sleep $((RANDOM % 15 + 5)); '"$DVC_COMMAND_POSTPROCESS"' "$@"' --
     wait
     dvc repro postprocess
 
-    dvc stage list --name-only |\
-        grep -E "summarize*" |\
-        /usr/bin/time -v \
-        xargs -t -n 1 -P 6 bash -c 'sleep $((RANDOM % 15 + 5)); '"$DVC_COMMAND_SUMMARIZE"' "$@"' --
+    # dvc stage list --name-only |\
+    #     grep -E "summarize*" |\
+    #     /usr/bin/time -v \
+    #     xargs -t -n 1 -P 6 bash -c 'sleep $((RANDOM % 15 + 5)); '"$DVC_COMMAND_SUMMARIZE"' "$@"' --
+    # wait
+
+    # manually execute training stages to distribute over four GPUs
+    $DVC_COMMAND summarize@pancreas_model2 &
+    sleep 7
+    $DVC_COMMAND summarize@pbmc68k_model2 &
+    sleep 7
+    $DVC_COMMAND summarize@pons_model2 &
+    sleep 7
+    $DVC_COMMAND summarize@larry_model2 &
+    wait
+
+    $DVC_COMMAND summarize@larry_tips_model2 &
+    sleep 7
+    $DVC_COMMAND summarize@larry_mono_model2 &
+    sleep 7
+    $DVC_COMMAND summarize@larry_neu_model2 &
+    sleep 7
+    $DVC_COMMAND summarize@larry_multilineage_model2 &
+    wait
+
+    $DVC_COMMAND summarize@bonemarrow_model2 &
+    sleep 7
+    $DVC_COMMAND summarize@pbmc10k_model2 &
+    sleep 7
+    $DVC_COMMAND summarize@pbmc5k_model2 &
+
     wait
     dvc repro summarize
 }
