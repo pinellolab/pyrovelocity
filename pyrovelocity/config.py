@@ -613,6 +613,7 @@ def hydra_zen_compressed_configure():
             "pancreas",
             1,
             "umap",
+            gpu_id=0,
             guide_type="auto_t0_constraint",
             max_epochs=2000,
         ),
@@ -623,6 +624,15 @@ def hydra_zen_compressed_configure():
             "umap",
             gpu_id=0,
             offset=True,
+            max_epochs=2000,
+        ),
+        bonemarrow_model1=create_model_config(
+            "scvelo",
+            "bonemarrow",
+            1,
+            "umap",
+            gpu_id=0,
+            guide_type="auto_t0_constraint",
             max_epochs=2000,
         ),
         bonemarrow_model2=create_model_config(
@@ -639,6 +649,7 @@ def hydra_zen_compressed_configure():
             "pbmc68k",
             1,
             "tsne",
+            gpu_id=1,
             guide_type="auto_t0_constraint",
             cell_state="celltype",
             max_epochs=2000,
@@ -658,6 +669,7 @@ def hydra_zen_compressed_configure():
             "pons",
             1,
             "umap",
+            gpu_id=2,
             guide_type="auto_t0_constraint",
             cell_state="celltype",
             max_epochs=2000,
@@ -672,6 +684,18 @@ def hydra_zen_compressed_configure():
             offset=True,
             max_epochs=2000,
         ),
+        larry_model1=create_model_config(
+            "pyrovelocity",
+            "larry",
+            1,
+            "emb",
+            gpu_id=3,
+            svi_train=True,
+            batch_size=4000,
+            cell_state="state_info",
+            guide_type="auto_t0_constraint",
+            max_epochs=1000,
+        ),
         larry_model2=create_model_config(
             "pyrovelocity",
             "larry",
@@ -682,6 +706,18 @@ def hydra_zen_compressed_configure():
             batch_size=4000,
             cell_state="state_info",
             offset=True,
+            max_epochs=1000,
+        ),
+        larry_tips_model1=create_model_config(
+            "pyrovelocity",
+            "larry_tips",
+            1,
+            "umap",
+            gpu_id=0,
+            svi_train=True,
+            batch_size=4000,
+            cell_state="state_info",
+            guide_type="auto_t0_constraint",
             max_epochs=1000,
         ),
         larry_tips_model2=create_model_config(
@@ -696,6 +732,18 @@ def hydra_zen_compressed_configure():
             offset=True,
             max_epochs=1000,
         ),
+        larry_mono_model1=create_model_config(
+            "pyrovelocity",
+            "larry_mono",
+            1,
+            "emb",
+            gpu_id=1,
+            svi_train=True,
+            batch_size=4000,
+            cell_state="state_info",
+            guide_type="auto_t0_constraint",
+            max_epochs=1000,
+        ),
         larry_mono_model2=create_model_config(
             "pyrovelocity",
             "larry_mono",
@@ -706,6 +754,18 @@ def hydra_zen_compressed_configure():
             batch_size=4000,
             cell_state="state_info",
             offset=True,
+            max_epochs=1000,
+        ),
+        larry_neu_model1=create_model_config(
+            "pyrovelocity",
+            "larry_neu",
+            1,
+            "emb",
+            gpu_id=2,
+            svi_train=True,
+            batch_size=4000,
+            cell_state="state_info",
+            guide_type="auto_t0_constraint",
             max_epochs=1000,
         ),
         larry_neu_model2=create_model_config(
@@ -720,6 +780,18 @@ def hydra_zen_compressed_configure():
             offset=True,
             max_epochs=1000,
         ),
+        larry_multilineage_model1=create_model_config(
+            "pyrovelocity",
+            "larry_multilineage",
+            1,
+            "emb",
+            gpu_id=3,
+            svi_train=True,
+            batch_size=4000,
+            cell_state="state_info",
+            guide_type="auto_t0_constraint",
+            max_epochs=1000,
+        ),
         larry_multilineage_model2=create_model_config(
             "pyrovelocity",
             "larry_multilineage",
@@ -732,6 +804,16 @@ def hydra_zen_compressed_configure():
             offset=True,
             max_epochs=1000,
         ),
+        pbmc10k_model1=create_model_config(
+            "pyrovelocity",
+            "pbmc10k",
+            1,
+            "umap",
+            gpu_id=1,
+            cell_state="celltype",
+            guide_type="auto_t0_constraint",
+            max_epochs=2000,
+        ),
         pbmc10k_model2=create_model_config(
             "pyrovelocity",
             "pbmc10k",
@@ -740,6 +822,16 @@ def hydra_zen_compressed_configure():
             gpu_id=1,
             cell_state="celltype",
             offset=True,
+            max_epochs=2000,
+        ),
+        pbmc5k_model1=create_model_config(
+            "pyrovelocity",
+            "pbmc5k",
+            1,
+            "umap",
+            gpu_id=2,
+            cell_state="celltype",
+            guide_type="auto_t0_constraint",
             max_epochs=2000,
         ),
         pbmc5k_model2=create_model_config(
@@ -919,7 +1011,7 @@ def hydra_zen_compressed_configure():
         model_training={
             k: model_training[k]
             for k in model_training
-            if fnmatch.fnmatch(k, "*_model2") or k == "pancreas_model1"
+            # if fnmatch.fnmatch(k, "*_model2") or k == "pancreas_model1"
         },
         reports=dict(
             model_summary=dict(
