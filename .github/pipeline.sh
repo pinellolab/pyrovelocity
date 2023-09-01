@@ -50,6 +50,31 @@ function run_parallel_pipeline() {
     dvc repro preprocess
 
     # manually execute training stages to distribute over four GPUs
+    $DVC_COMMAND train@pancreas_model1 &
+    sleep 7
+    $DVC_COMMAND train@pbmc68k_model1 &
+    sleep 7
+    $DVC_COMMAND train@pons_model1 &
+    sleep 7
+    $DVC_COMMAND train@larry_model1 &
+    wait
+
+    $DVC_COMMAND train@larry_tips_model1 &
+    sleep 7
+    $DVC_COMMAND train@larry_mono_model1 &
+    sleep 7
+    $DVC_COMMAND train@larry_neu_model1 &
+    sleep 7
+    $DVC_COMMAND train@larry_multilineage_model1 &
+    wait
+
+    $DVC_COMMAND train@bonemarrow_model1 &
+    sleep 7
+    $DVC_COMMAND train@pbmc10k_model1 &
+    sleep 7
+    $DVC_COMMAND train@pbmc5k_model1 &
+    wait
+
     $DVC_COMMAND train@pancreas_model2 &
     sleep 7
     $DVC_COMMAND train@pbmc68k_model2 &
@@ -90,7 +115,34 @@ function run_parallel_pipeline() {
     #     xargs -t -n 1 -P 6 bash -c 'sleep $((RANDOM % 15 + 5)); '"$DVC_COMMAND_SUMMARIZE"' "$@"' --
     # wait
 
-    # manually execute training stages to distribute over four GPUs
+    # manually execute summarize stages to distribute over four GPUs
+    $DVC_COMMAND summarize@pancreas_model1 &
+    sleep 7
+    $DVC_COMMAND summarize@pbmc68k_model1 &
+    sleep 7
+    $DVC_COMMAND summarize@pons_model1 &
+    sleep 7
+    # $DVC_COMMAND summarize@larry_model1 &
+    wait
+
+    $DVC_COMMAND summarize@larry_tips_model1 &
+    sleep 7
+    $DVC_COMMAND summarize@larry_mono_model1 &
+    sleep 7
+    $DVC_COMMAND summarize@larry_neu_model1 &
+    sleep 7
+    $DVC_COMMAND summarize@larry_multilineage_model1 &
+    wait
+
+    $DVC_COMMAND summarize@bonemarrow_model1 &
+    sleep 7
+    $DVC_COMMAND summarize@pbmc10k_model1 &
+    sleep 7
+    $DVC_COMMAND summarize@pbmc5k_model1 &
+
+    wait
+
+
     $DVC_COMMAND summarize@pancreas_model2 &
     sleep 7
     $DVC_COMMAND summarize@pbmc68k_model2 &
@@ -132,7 +184,7 @@ cd reproducibility/figures || exit
 
 dvc pull
 run_parallel_pipeline
-dvc repro
+# dvc repro
 dvc push
 
 npm update -g @dvcorg/cml
@@ -170,13 +222,16 @@ data_sets=(
     "pbmc10k"
     "pbmc5k"
     "bonemarrow"
-    "larry"
+    # "larry"
     "larry_mono"
     "larry_neu"
     "larry_multilineage"
     "larry_tips"
 )
-models=("model2")
+models=(
+    "model1"
+    "model2"
+ )
 
 for data_set in "${data_sets[@]}"; do
     for model in "${models[@]}"; do
