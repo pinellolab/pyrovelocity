@@ -16,6 +16,7 @@ channels:
 
 dependencies:
   - python=3.10
+  - pip
   - pandas=1.5.3
   - leidenalg
   - pyro-ppl=1.8.3
@@ -28,11 +29,9 @@ dependencies:
   - matplotlib=3.7.1
   - h5py
   - anndata
-  - pip
   - scikit-misc
   - torchmetrics
   - adjusttext
-  - xdoctest
   - astropy
   - click
   - colorlog
@@ -45,6 +44,7 @@ dependencies:
   - ipywidgets
   - zstandard
   - statannotations
+  - matplotlib-venn
   # dev
   - zsh
   - tree
