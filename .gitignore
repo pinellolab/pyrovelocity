@@ -113,7 +113,6 @@ ENV/
 
 # IDE settings
 *.code-workspace
-.vscode/
 .VSCodeCounter
 .idea/
 *.pdf
