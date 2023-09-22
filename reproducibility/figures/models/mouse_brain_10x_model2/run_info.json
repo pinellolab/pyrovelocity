@@ -1,0 +1,12 @@
+{
+    "artifact_uri": "file:///home/jupyter/pyrovelocity/reproducibility/figures/mlruns/0/0ba5f9e11c484fcf9cbc45ca24f0eb1d/artifacts",
+    "end_time": 1695255452151,
+    "experiment_id": "0",
+    "lifecycle_stage": "active",
+    "run_id": "0ba5f9e11c484fcf9cbc45ca24f0eb1d",
+    "run_name": "mouse_brain_10x_model2-0ba5f9e",
+    "run_uuid": "0ba5f9e11c484fcf9cbc45ca24f0eb1d",
+    "start_time": 1695255290086,
+    "status": "FINISHED",
+    "user_id": "jupyter"
+}

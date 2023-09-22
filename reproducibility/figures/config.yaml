@@ -20,6 +20,7 @@ download_data:
 - larry_cospar
 - larry_cytotrace
 - larry_dynamical
+- mouse_brain_10x
 process_data:
 - simulate_medium
 - pons
@@ -33,6 +34,7 @@ process_data:
 - larry_mono
 - larry_neu
 - larry_multilineage
+- mouse_brain_10x
 train_models:
 - pancreas_model2
 - pbmc68k_model2
@@ -44,6 +46,8 @@ train_models:
 - larry_multilineage_model2
 - pbmc10k_model2
 - pbmc5k_model2
+- mouse_brain_10x_model1
+- mouse_brain_10x_model2
 data_sets:
   simulate_medium:
     source: simulate
@@ -241,6 +245,19 @@ data_sets:
         count_thres: 0
       rel_path: data/processed/pbmc5k_processed.h5ad
       thresh_histogram_path: data/processed/pbmc5k_thresh_histogram.pdf
+  mouse_brain_10x:
+    source: pyrovelocity
+    data_file: mouse_brain_10x.h5ad
+    dl_root: data/external
+    dl_path: data/external/mouse_brain_10x.h5ad
+    rel_path: data/external/mouse_brain_10x.h5ad
+    url: https://storage.googleapis.com/pyrovelocity/data/mouse_brain_10x.h5ad
+    derived:
+      process_method: load_data
+      process_args:
+        count_thres: 0
+      rel_path: data/processed/mouse_brain_10x_processed.h5ad
+      thresh_histogram_path: data/processed/mouse_brain_10x_thresh_histogram.pdf
 model_training:
   simulate_model1:
     path: models/simulate_medium_model1
@@ -1130,6 +1147,80 @@ model_training:
       cell_specific_kinetics: null
       kinetics_num: 2
       loss_plot_path: models/pbmc5k_model2/loss_plot.png
+  mouse_brain_10x_model1:
+    path: models/mouse_brain_10x_model1
+    model_path: models/mouse_brain_10x_model1/model
+    input_data_path: data/processed/mouse_brain_10x_processed.h5ad
+    trained_data_path: models/mouse_brain_10x_model1/trained.h5ad
+    pyrovelocity_data_path: models/mouse_brain_10x_model1/pyrovelocity.pkl.zst
+    posterior_samples_path: models/mouse_brain_10x_model1/posterior_samples.pkl.zst
+    metrics_path: models/mouse_brain_10x_model1/metrics.json
+    run_info_path: models/mouse_brain_10x_model1/run_info.json
+    vector_field_parameters:
+      basis: umap
+    gpu_id: 0
+    training_parameters:
+      _target_: pyrovelocity.api.train_model
+      _partial_: true
+      guide_type: auto_t0_constraint
+      model_type: auto
+      svi_train: false
+      batch_size: -1
+      train_size: 1.0
+      use_gpu: 0
+      likelihood: Poisson
+      num_samples: 30
+      log_every: 100
+      cell_state: celltype
+      patient_improve: 0.0001
+      patient_init: 45
+      seed: 99
+      lr: 0.01
+      max_epochs: 2000
+      include_prior: true
+      library_size: true
+      offset: false
+      input_type: raw
+      cell_specific_kinetics: null
+      kinetics_num: 2
+      loss_plot_path: models/mouse_brain_10x_model1/loss_plot.png
+  mouse_brain_10x_model2:
+    path: models/mouse_brain_10x_model2
+    model_path: models/mouse_brain_10x_model2/model
+    input_data_path: data/processed/mouse_brain_10x_processed.h5ad
+    trained_data_path: models/mouse_brain_10x_model2/trained.h5ad
+    pyrovelocity_data_path: models/mouse_brain_10x_model2/pyrovelocity.pkl.zst
+    posterior_samples_path: models/mouse_brain_10x_model2/posterior_samples.pkl.zst
+    metrics_path: models/mouse_brain_10x_model2/metrics.json
+    run_info_path: models/mouse_brain_10x_model2/run_info.json
+    vector_field_parameters:
+      basis: umap
+    gpu_id: 0
+    training_parameters:
+      _target_: pyrovelocity.api.train_model
+      _partial_: true
+      guide_type: auto
+      model_type: auto
+      svi_train: false
+      batch_size: -1
+      train_size: 1.0
+      use_gpu: 0
+      likelihood: Poisson
+      num_samples: 30
+      log_every: 100
+      cell_state: celltype
+      patient_improve: 0.0001
+      patient_init: 45
+      seed: 99
+      lr: 0.01
+      max_epochs: 2000
+      include_prior: true
+      library_size: true
+      offset: true
+      input_type: raw
+      cell_specific_kinetics: null
+      kinetics_num: 2
+      loss_plot_path: models/mouse_brain_10x_model2/loss_plot.png
 reports:
   model_summary:
     pancreas_model1:
@@ -1492,6 +1583,42 @@ reports:
       fig2_part2_plot: reports/larry_multilineage_model2/fig2_part2_plot.pdf
       violin_clusters_lin: reports/larry_multilineage_model2/clusters_violin_lin.pdf
       violin_clusters_log: reports/larry_multilineage_model2/clusters_violin_log.pdf
+    mouse_brain_10x_model1:
+      path: reports/mouse_brain_10x_model1
+      trained_data_path: models/mouse_brain_10x_model1/trained.h5ad
+      pyrovelocity_data_path: models/mouse_brain_10x_model1/pyrovelocity.pkl.zst
+      dataframe_path: data/processed/mouse_brain_10x_model1_dataframe.pkl.zst
+      shared_time_plot: reports/mouse_brain_10x_model1/shared_time.pdf
+      volcano_plot: reports/mouse_brain_10x_model1/volcano.pdf
+      rainbow_plot: reports/mouse_brain_10x_model1/rainbow.pdf
+      uncertainty_param_plot: reports/mouse_brain_10x_model1/param_uncertainties.pdf
+      vector_field_plot: reports/mouse_brain_10x_model1/vector_field.pdf
+      posterior_phase_portraits: reports/mouse_brain_10x_model1/posterior_phase_portraits
+      t0_selection: reports/mouse_brain_10x_model1/t0_selection.tif
+      biomarker_selection_plot: reports/mouse_brain_10x_model1/markers_selection_scatterplot.tif
+      biomarker_phaseportrait_plot: reports/mouse_brain_10x_model1/markers_phaseportrait.pdf
+      fig2_part1_plot: reports/mouse_brain_10x_model1/fig2_part1_plot.pdf
+      fig2_part2_plot: reports/mouse_brain_10x_model1/fig2_part2_plot.pdf
+      violin_clusters_lin: reports/mouse_brain_10x_model1/clusters_violin_lin.pdf
+      violin_clusters_log: reports/mouse_brain_10x_model1/clusters_violin_log.pdf
+    mouse_brain_10x_model2:
+      path: reports/mouse_brain_10x_model2
+      trained_data_path: models/mouse_brain_10x_model2/trained.h5ad
+      pyrovelocity_data_path: models/mouse_brain_10x_model2/pyrovelocity.pkl.zst
+      dataframe_path: data/processed/mouse_brain_10x_model2_dataframe.pkl.zst
+      shared_time_plot: reports/mouse_brain_10x_model2/shared_time.pdf
+      volcano_plot: reports/mouse_brain_10x_model2/volcano.pdf
+      rainbow_plot: reports/mouse_brain_10x_model2/rainbow.pdf
+      uncertainty_param_plot: reports/mouse_brain_10x_model2/param_uncertainties.pdf
+      vector_field_plot: reports/mouse_brain_10x_model2/vector_field.pdf
+      posterior_phase_portraits: reports/mouse_brain_10x_model2/posterior_phase_portraits
+      t0_selection: reports/mouse_brain_10x_model2/t0_selection.tif
+      biomarker_selection_plot: reports/mouse_brain_10x_model2/markers_selection_scatterplot.tif
+      biomarker_phaseportrait_plot: reports/mouse_brain_10x_model2/markers_phaseportrait.pdf
+      fig2_part1_plot: reports/mouse_brain_10x_model2/fig2_part1_plot.pdf
+      fig2_part2_plot: reports/mouse_brain_10x_model2/fig2_part2_plot.pdf
+      violin_clusters_lin: reports/mouse_brain_10x_model2/clusters_violin_lin.pdf
+      violin_clusters_log: reports/mouse_brain_10x_model2/clusters_violin_log.pdf
   figure2:
     tag: fig2
     path: reports/fig2
