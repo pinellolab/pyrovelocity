@@ -64,7 +64,8 @@ stages:
           dl_root: data/Pancreas
           dl_path: data/Pancreas/endocrinogenesis_day15.h5ad
           rel_path: data/external/endocrinogenesis_day15.h5ad
-          url: https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad
+          url: 
+            https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad
           derived:
             process_method: load_data
             process_args:
@@ -338,7 +339,8 @@ stages:
           dl_root: data/Pancreas
           dl_path: data/Pancreas/endocrinogenesis_day15.h5ad
           rel_path: data/external/endocrinogenesis_day15.h5ad
-          url: https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad
+          url: 
+            https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad
           derived:
             process_method: load_data
             process_args:
@@ -2535,7 +2537,8 @@ stages:
       md5: 380c043d793b7bf90b8983b61aede637
       size: 19533902
   figureS3_extras:
-    cmd: /usr/bin/time -v python figS3/figure_extras.py train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
+    cmd: /usr/bin/time -v python figS3/figure_extras.py 
+      train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
     deps:
     - path: figS3/figure_extras.py
       md5: 8c0e23c130cb342b246fa6dde4f4240b
@@ -3270,7 +3273,8 @@ stages:
       md5: 11799f5a3dcd585546fae58da182f864
       size: 526943
   figureS2:
-    cmd: /usr/bin/time -v python figS2/figure.py train_models=[pbmc5k_model2,pbmc10k_model2_coarse,pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_tips_model2]
+    cmd: /usr/bin/time -v python figS2/figure.py 
+      train_models=[pbmc5k_model2,pbmc10k_model2_coarse,pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_tips_model2]
     deps:
     - path: figS2/figure.py
       md5: 9563ca87399029d6174fcd94ac2756fb
@@ -3398,7 +3402,8 @@ stages:
       md5: 1d8922ccd1bd2ab897459b827e6787fa
       size: 398177291
   figureS2_extra_2:
-    cmd: /usr/bin/time -v python figS2/figure_extra_2.py train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
+    cmd: /usr/bin/time -v python figS2/figure_extra_2.py 
+      train_models=[pancreas_model2,pbmc10k_model2,pbmc68k_model2,pons_model2,larry_model2,larry_neu_model2,larry_mono_model2,larry_multilineage_model2,larry_tips_model2]
     deps:
     - path: figS2/figure_extra_2.py
       md5: ed35636cfcef647467f0be5f58ac1fee
@@ -4106,15 +4111,17 @@ stages:
       md5: e5f1ca863908098981d8a7f16bbcc5de
       size: 11655
     - path: models/pancreas_model1/model
-      md5: a3e920a728c5d0669f3dd2a85b2e1422.dir
+      hash: md5
+      md5: d74cd25d897846d19890f0e9b0403116.dir
       size: 1207349
       nfiles: 2
     - path: models/pancreas_model1/posterior_samples.pkl.zst
       md5: eec7d67de6b6058b6ae050d1bf9f2e59
       size: 1853369765
     - path: models/pancreas_model1/run_info.json
-      md5: 58191b69dadc5d55bc5684fdc614b371
-      size: 462
+      hash: md5
+      md5: 099fcc34da59bd597587dc2737fab891
+      size: 455
   postprocess@pancreas_model1:
     cmd: /usr/bin/time -v python postprocess.py train_models=[pancreas_model1]
     deps:
@@ -4122,7 +4129,8 @@ stages:
       md5: 4aaf4084689b5e10c60231552502bd98
       size: 424784368
     - path: models/pancreas_model1/model
-      md5: a3e920a728c5d0669f3dd2a85b2e1422.dir
+      hash: md5
+      md5: d74cd25d897846d19890f0e9b0403116.dir
       size: 1207349
       nfiles: 2
     - path: models/pancreas_model1/posterior_samples.pkl.zst
@@ -4176,24 +4184,27 @@ stages:
             loss_plot_path: models/pancreas_model1/loss_plot.png
     outs:
     - path: models/pancreas_model1/metrics.json
-      md5: 9e6754eecc1e19bc946a12ec13fcf120
-      size: 95
+      hash: md5
+      md5: 80a687e3fd3bf35db19202f193f73cd8
+      size: 98
     - path: models/pancreas_model1/pyrovelocity.pkl.zst
-      md5: 625ad24059192ddb7c9977a6f0fc2aa3
-      size: 166153094
+      hash: md5
+      md5: c74c834e09e8f2936110f023536b1e99
+      size: 166153387
     - path: models/pancreas_model1/trained.h5ad
       hash: md5
-      md5: beedf99a6777ed5f6d06bcd2b5805c29
+      md5: a74000ec76dd45e0fbc33cec46ab0dc2
       size: 492127600
   summarize@pancreas_model1:
     cmd: /usr/bin/time -v python summarize.py train_models=[pancreas_model1]
     deps:
     - path: models/pancreas_model1/pyrovelocity.pkl.zst
-      md5: 625ad24059192ddb7c9977a6f0fc2aa3
-      size: 166153094
+      hash: md5
+      md5: c74c834e09e8f2936110f023536b1e99
+      size: 166153387
     - path: models/pancreas_model1/trained.h5ad
       hash: md5
-      md5: beedf99a6777ed5f6d06bcd2b5805c29
+      md5: a74000ec76dd45e0fbc33cec46ab0dc2
       size: 492127600
     - path: summarize.py
       hash: md5
@@ -4229,39 +4240,39 @@ stages:
       size: 12359084
     - path: reports/pancreas_model1/clusters_violin_lin.pdf
       hash: md5
-      md5: f922639b3046228c39b62ff15efe6e93
-      size: 126861
+      md5: 059d80bcd8fddaae5ad5db189a3b2475
+      size: 126796
     - path: reports/pancreas_model1/clusters_violin_lin.pdf.png
       hash: md5
-      md5: 21032f8c382554b7dfd6159f09b8a656
-      size: 2134099
+      md5: 02d80d823ae8d31bbc5698b8d86455df
+      size: 2134105
     - path: reports/pancreas_model1/clusters_violin_log.pdf
       hash: md5
-      md5: 873a33b9c3cb484ca5f3c7079aff8493
-      size: 127268
+      md5: b0a1211dd3702a92d82096c72b940000
+      size: 127281
     - path: reports/pancreas_model1/clusters_violin_log.pdf.png
       hash: md5
-      md5: 0f8e3d605dd3a2c74ddc653edcd51ee8
-      size: 2256955
+      md5: 742e3df25ef979f6d6f8ca6be186980d
+      size: 2256959
     - path: reports/pancreas_model1/fig2_part1_plot.pdf
       hash: md5
-      md5: e3b0dedf30787871add4e8a73bae9f9a
-      size: 432521
+      md5: 7c6309187961d950934edc202b83e088
+      size: 432538
     - path: reports/pancreas_model1/fig2_part1_plot.pdf.png
       hash: md5
       md5: 3b1ec3f4a35e6867ccd1bcf24b28e4e5
       size: 634287
     - path: reports/pancreas_model1/fig2_part2_plot.pdf
       hash: md5
-      md5: 94c61cc9e39f068a3eef6ff5447e86cf
-      size: 1254670
+      md5: bb5c50d08e036f0898e21c7f2571c861
+      size: 1254680
     - path: reports/pancreas_model1/fig2_part2_plot.pdf.png
       hash: md5
       md5: 58d669dd57418b0798a5a95d8fa6599e
       size: 651812
     - path: reports/pancreas_model1/param_uncertainties.pdf
       hash: md5
-      md5: df4f6ebecb024589ffe4e714b7067a54
+      md5: 6f31ae5273ad65c1e827c5229c06b961
       size: 139072
     - path: reports/pancreas_model1/param_uncertainties.pdf.png
       hash: md5
@@ -4274,7 +4285,7 @@ stages:
       nfiles: 20
     - path: reports/pancreas_model1/rainbow.pdf
       hash: md5
-      md5: a3e240449464ad6f56f055cbd10550dc
+      md5: 2bc24b6dabc3eed129f7f71c4bc3d747
       size: 5144270
     - path: reports/pancreas_model1/rainbow.pdf.png
       hash: md5
@@ -4282,24 +4293,24 @@ stages:
       size: 1402720
     - path: reports/pancreas_model1/shared_time.pdf
       hash: md5
-      md5: 625c1e98e3fd17277c2a0553a8e0af47
+      md5: c62cacf57ef32808343876ea1e326ccb
       size: 254000
     - path: reports/pancreas_model1/vector_field.pdf
       hash: md5
-      md5: 96a573c5802c12012d0f37411b608021
-      size: 397600
+      md5: 2f35f1f8a133425706c6c52fcc10c9a2
+      size: 397606
     - path: reports/pancreas_model1/vector_field.pdf.png
       hash: md5
       md5: be1a000c0e2d8fd18255d6daab94dd72
       size: 700814
     - path: reports/pancreas_model1/volcano.pdf
       hash: md5
-      md5: b60f59e0c2740386e73813a2df06eddc
-      size: 34484
+      md5: 97e46dab6e3e39d6b51479f6e4a81650
+      size: 34490
     - path: reports/pancreas_model1/volcano.pdf.png
       hash: md5
-      md5: 06aa62948094ebbf837f6502a1e0a91d
-      size: 360007
+      md5: d3f41752707249b34508bf5605145111
+      size: 360002
   train@simulate_model1:
     cmd: /usr/bin/time -v python train.py train_models=[simulate_model1]
     deps:
@@ -6981,3 +6992,599 @@ stages:
       hash: md5
       md5: db14c978620b726471cc09bee7c15980
       size: 380832
+  data_download@mouse_brain_10x:
+    cmd: python data_download.py process_data=[mouse_brain_10x]
+    deps:
+    - path: data_download.py
+      hash: md5
+      md5: 35532543a7cbebeb209b9cc4cf2af144
+      size: 3150
+    params:
+      config.yaml:
+        data_sets.mouse_brain_10x:
+          source: pyrovelocity
+          data_file: mouse_brain_10x.h5ad
+          dl_root: data/external
+          dl_path: data/external/mouse_brain_10x.h5ad
+          rel_path: data/external/mouse_brain_10x.h5ad
+          url: https://storage.googleapis.com/pyrovelocity/data/mouse_brain_10x.h5ad
+          derived:
+            process_method: load_data
+            process_args:
+              count_thres: 0
+            rel_path: data/processed/mouse_brain_10x_processed.h5ad
+            thresh_histogram_path: data/processed/mouse_brain_10x_thresh_histogram.pdf
+    outs:
+    - path: data/external/mouse_brain_10x.h5ad
+      hash: md5
+      md5: f3a59476493012e3eddb6fcafed6f63f
+      size: 14166189
+  preprocess@mouse_brain_10x:
+    cmd: python preprocess.py process_data=[mouse_brain_10x]
+    deps:
+    - path: data/external/mouse_brain_10x.h5ad
+      hash: md5
+      md5: f3a59476493012e3eddb6fcafed6f63f
+      size: 14166189
+    - path: preprocess.py
+      hash: md5
+      md5: ccbe8f3aa9ca398e232c69b48a041c4d
+      size: 2744
+    params:
+      config.yaml:
+        data_sets.mouse_brain_10x:
+          source: pyrovelocity
+          data_file: mouse_brain_10x.h5ad
+          dl_root: data/external
+          dl_path: data/external/mouse_brain_10x.h5ad
+          rel_path: data/external/mouse_brain_10x.h5ad
+          url: https://storage.googleapis.com/pyrovelocity/data/mouse_brain_10x.h5ad
+          derived:
+            process_method: load_data
+            process_args:
+              count_thres: 0
+            rel_path: data/processed/mouse_brain_10x_processed.h5ad
+            thresh_histogram_path: data/processed/mouse_brain_10x_thresh_histogram.pdf
+    outs:
+    - path: data/processed/mouse_brain_10x_processed.h5ad
+      hash: md5
+      md5: 04c925c89de62cd9aaa2da34804044ba
+      size: 145559367
+    - path: data/processed/mouse_brain_10x_thresh_histogram.pdf
+      hash: md5
+      md5: ef743d41de14f0fa449ef0303cd667b5
+      size: 21204
+    - path: data/processed/mouse_brain_10x_thresh_histogram.pdf.png
+      hash: md5
+      md5: ee5b90816b8fb665a74ebe0375098540
+      size: 135558
+  train@mouse_brain_10x_model2:
+    cmd: /usr/bin/time -v python train.py train_models=[mouse_brain_10x_model2]
+    deps:
+    - path: data/processed/mouse_brain_10x_processed.h5ad
+      hash: md5
+      md5: 04c925c89de62cd9aaa2da34804044ba
+      size: 145559367
+    - path: train.py
+      hash: md5
+      md5: 4cf2c31c17dbb07e8de124c36735401b
+      size: 6703
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+          count_threshold: 0
+          seed: 99
+        model_training.mouse_brain_10x_model2:
+          path: models/mouse_brain_10x_model2
+          model_path: models/mouse_brain_10x_model2/model
+          input_data_path: data/processed/mouse_brain_10x_processed.h5ad
+          trained_data_path: models/mouse_brain_10x_model2/trained.h5ad
+          pyrovelocity_data_path: models/mouse_brain_10x_model2/pyrovelocity.pkl.zst
+          posterior_samples_path: models/mouse_brain_10x_model2/posterior_samples.pkl.zst
+          metrics_path: models/mouse_brain_10x_model2/metrics.json
+          run_info_path: models/mouse_brain_10x_model2/run_info.json
+          vector_field_parameters:
+            basis: umap
+          gpu_id: 0
+          training_parameters:
+            _target_: pyrovelocity.api.train_model
+            _partial_: true
+            guide_type: auto
+            model_type: auto
+            svi_train: false
+            batch_size: -1
+            train_size: 1.0
+            use_gpu: 0
+            likelihood: Poisson
+            num_samples: 30
+            log_every: 100
+            cell_state: celltype
+            patient_improve: 0.0001
+            patient_init: 45
+            seed: 99
+            lr: 0.01
+            max_epochs: 2000
+            include_prior: true
+            library_size: true
+            offset: true
+            input_type: raw
+            cell_specific_kinetics:
+            kinetics_num: 2
+            loss_plot_path: models/mouse_brain_10x_model2/loss_plot.png
+    outs:
+    - path: models/mouse_brain_10x_model2/loss_plot.png
+      hash: md5
+      md5: 72c40a55a78c73601b8d0e160a4c7567
+      size: 12559
+    - path: models/mouse_brain_10x_model2/model
+      hash: md5
+      md5: b9a0a06b4fb21fe36cc877229d897726.dir
+      size: 739765
+      nfiles: 2
+    - path: models/mouse_brain_10x_model2/posterior_samples.pkl.zst
+      hash: md5
+      md5: 488d2c933a64c5619559c1efa0cd1245
+      size: 626027319
+    - path: models/mouse_brain_10x_model2/run_info.json
+      hash: md5
+      md5: 2a68e318d62e9a61301bf77287fb1ee1
+      size: 462
+  postprocess@mouse_brain_10x_model2:
+    cmd: /usr/bin/time -v python postprocess.py train_models=[mouse_brain_10x_model2]
+    deps:
+    - path: data/processed/mouse_brain_10x_processed.h5ad
+      hash: md5
+      md5: 04c925c89de62cd9aaa2da34804044ba
+      size: 145559367
+    - path: models/mouse_brain_10x_model2/model
+      hash: md5
+      md5: b9a0a06b4fb21fe36cc877229d897726.dir
+      size: 739765
+      nfiles: 2
+    - path: models/mouse_brain_10x_model2/posterior_samples.pkl.zst
+      hash: md5
+      md5: 488d2c933a64c5619559c1efa0cd1245
+      size: 626027319
+    - path: postprocess.py
+      hash: md5
+      md5: 2d194b66a6964f4ac39022fe6a4fbb8f
+      size: 5679
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+          count_threshold: 0
+          seed: 99
+        model_training.mouse_brain_10x_model2:
+          path: models/mouse_brain_10x_model2
+          model_path: models/mouse_brain_10x_model2/model
+          input_data_path: data/processed/mouse_brain_10x_processed.h5ad
+          trained_data_path: models/mouse_brain_10x_model2/trained.h5ad
+          pyrovelocity_data_path: models/mouse_brain_10x_model2/pyrovelocity.pkl.zst
+          posterior_samples_path: models/mouse_brain_10x_model2/posterior_samples.pkl.zst
+          metrics_path: models/mouse_brain_10x_model2/metrics.json
+          run_info_path: models/mouse_brain_10x_model2/run_info.json
+          vector_field_parameters:
+            basis: umap
+          gpu_id: 0
+          training_parameters:
+            _target_: pyrovelocity.api.train_model
+            _partial_: true
+            guide_type: auto
+            model_type: auto
+            svi_train: false
+            batch_size: -1
+            train_size: 1.0
+            use_gpu: 0
+            likelihood: Poisson
+            num_samples: 30
+            log_every: 100
+            cell_state: celltype
+            patient_improve: 0.0001
+            patient_init: 45
+            seed: 99
+            lr: 0.01
+            max_epochs: 2000
+            include_prior: true
+            library_size: true
+            offset: true
+            input_type: raw
+            cell_specific_kinetics:
+            kinetics_num: 2
+            loss_plot_path: models/mouse_brain_10x_model2/loss_plot.png
+    outs:
+    - path: models/mouse_brain_10x_model2/metrics.json
+      hash: md5
+      md5: 4e9abe77fdf6801e1639abae32f94854
+      size: 99
+    - path: models/mouse_brain_10x_model2/pyrovelocity.pkl.zst
+      hash: md5
+      md5: ea18cfa19e1c8bce87f3d8cdb83ff9bd
+      size: 66912453
+    - path: models/mouse_brain_10x_model2/trained.h5ad
+      hash: md5
+      md5: 5cf08737d4e5a13c9f0fe71a42a92311
+      size: 172228458
+  summarize@mouse_brain_10x_model2:
+    cmd: /usr/bin/time -v python summarize.py train_models=[mouse_brain_10x_model2]
+    deps:
+    - path: models/mouse_brain_10x_model2/pyrovelocity.pkl.zst
+      hash: md5
+      md5: ea18cfa19e1c8bce87f3d8cdb83ff9bd
+      size: 66912453
+    - path: models/mouse_brain_10x_model2/trained.h5ad
+      hash: md5
+      md5: 5cf08737d4e5a13c9f0fe71a42a92311
+      size: 172228458
+    - path: summarize.py
+      hash: md5
+      md5: fd344c4bdb5cfec18d7b44f39df720e0
+      size: 47233
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+          count_threshold: 0
+          seed: 99
+        reports.model_summary.mouse_brain_10x_model2:
+          path: reports/mouse_brain_10x_model2
+          trained_data_path: models/mouse_brain_10x_model2/trained.h5ad
+          pyrovelocity_data_path: models/mouse_brain_10x_model2/pyrovelocity.pkl.zst
+          dataframe_path: data/processed/mouse_brain_10x_model2_dataframe.pkl.zst
+          shared_time_plot: reports/mouse_brain_10x_model2/shared_time.pdf
+          volcano_plot: reports/mouse_brain_10x_model2/volcano.pdf
+          rainbow_plot: reports/mouse_brain_10x_model2/rainbow.pdf
+          uncertainty_param_plot: reports/mouse_brain_10x_model2/param_uncertainties.pdf
+          vector_field_plot: reports/mouse_brain_10x_model2/vector_field.pdf
+          posterior_phase_portraits: reports/mouse_brain_10x_model2/posterior_phase_portraits
+          t0_selection: reports/mouse_brain_10x_model2/t0_selection.tif
+          biomarker_selection_plot: reports/mouse_brain_10x_model2/markers_selection_scatterplot.tif
+          biomarker_phaseportrait_plot: reports/mouse_brain_10x_model2/markers_phaseportrait.pdf
+          fig2_part1_plot: reports/mouse_brain_10x_model2/fig2_part1_plot.pdf
+          fig2_part2_plot: reports/mouse_brain_10x_model2/fig2_part2_plot.pdf
+          violin_clusters_lin: reports/mouse_brain_10x_model2/clusters_violin_lin.pdf
+          violin_clusters_log: reports/mouse_brain_10x_model2/clusters_violin_log.pdf
+    outs:
+    - path: data/processed/mouse_brain_10x_model2_dataframe.pkl.zst
+      hash: md5
+      md5: 31fc92179b9d539c794a402f49d7d5d2
+      size: 3760956
+    - path: reports/mouse_brain_10x_model2/clusters_violin_lin.pdf
+      hash: md5
+      md5: c7b8b33f4c03c08e625dc3e1aef22488
+      size: 114619
+    - path: reports/mouse_brain_10x_model2/clusters_violin_lin.pdf.png
+      hash: md5
+      md5: 5585ac71cc565c1a96b96509e3997bee
+      size: 2033978
+    - path: reports/mouse_brain_10x_model2/clusters_violin_log.pdf
+      hash: md5
+      md5: 503e7b29aa327fd756edad2f8308ea40
+      size: 116479
+    - path: reports/mouse_brain_10x_model2/clusters_violin_log.pdf.png
+      hash: md5
+      md5: e1e0d8239f76449e4d886e16a6d02507
+      size: 2223060
+    - path: reports/mouse_brain_10x_model2/fig2_part1_plot.pdf
+      hash: md5
+      md5: 5a57f54bcd3b2e25238c4b01ee5a06d4
+      size: 449650
+    - path: reports/mouse_brain_10x_model2/fig2_part1_plot.pdf.png
+      hash: md5
+      md5: a3ab63c6f14e53b948d57654eb25e678
+      size: 762104
+    - path: reports/mouse_brain_10x_model2/fig2_part2_plot.pdf
+      hash: md5
+      md5: 0f9b03fe2f3a3c99b4dd643d9a56fc90
+      size: 1207180
+    - path: reports/mouse_brain_10x_model2/fig2_part2_plot.pdf.png
+      hash: md5
+      md5: 9e2ca5825c386760db8f415b9d5e71a5
+      size: 727793
+    - path: reports/mouse_brain_10x_model2/param_uncertainties.pdf
+      hash: md5
+      md5: f7fb0638cd692c81854b80997cf322c9
+      size: 141270
+    - path: reports/mouse_brain_10x_model2/param_uncertainties.pdf.png
+      hash: md5
+      md5: a74bef43b995b47942b3d6dacb704479
+      size: 1005220
+    - path: reports/mouse_brain_10x_model2/posterior_phase_portraits
+      hash: md5
+      md5: f9802f01904c4e95814457bdf63dfd82.dir
+      size: 29950233
+      nfiles: 20
+    - path: reports/mouse_brain_10x_model2/rainbow.pdf
+      hash: md5
+      md5: 73dc78553dd35e3ffddee11dbf524a37
+      size: 4987928
+    - path: reports/mouse_brain_10x_model2/rainbow.pdf.png
+      hash: md5
+      md5: c501cc5e454a8db857cc6fb753b74c4b
+      size: 1488333
+    - path: reports/mouse_brain_10x_model2/shared_time.pdf
+      hash: md5
+      md5: f4bae9f379302b4389f743d24c528397
+      size: 323253
+    - path: reports/mouse_brain_10x_model2/vector_field.pdf
+      hash: md5
+      md5: 8f0c84a099c4cfc538cfec89092bbf6c
+      size: 436612
+    - path: reports/mouse_brain_10x_model2/vector_field.pdf.png
+      hash: md5
+      md5: ee9e40c3c4bdd4547a0724f9fef17fa9
+      size: 871914
+    - path: reports/mouse_brain_10x_model2/volcano.pdf
+      hash: md5
+      md5: 257f4582fda6d8cb96fa334b41bef334
+      size: 35466
+    - path: reports/mouse_brain_10x_model2/volcano.pdf.png
+      hash: md5
+      md5: d748411efbd08ad11893308bfcd1c393
+      size: 356332
+  train@mouse_brain_10x_model1:
+    cmd: /usr/bin/time -v python train.py train_models=[mouse_brain_10x_model1]
+    deps:
+    - path: data/processed/mouse_brain_10x_processed.h5ad
+      hash: md5
+      md5: 04c925c89de62cd9aaa2da34804044ba
+      size: 145559367
+    - path: train.py
+      hash: md5
+      md5: 4cf2c31c17dbb07e8de124c36735401b
+      size: 6703
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+          count_threshold: 0
+          seed: 99
+        model_training.mouse_brain_10x_model1:
+          path: models/mouse_brain_10x_model1
+          model_path: models/mouse_brain_10x_model1/model
+          input_data_path: data/processed/mouse_brain_10x_processed.h5ad
+          trained_data_path: models/mouse_brain_10x_model1/trained.h5ad
+          pyrovelocity_data_path: models/mouse_brain_10x_model1/pyrovelocity.pkl.zst
+          posterior_samples_path: models/mouse_brain_10x_model1/posterior_samples.pkl.zst
+          metrics_path: models/mouse_brain_10x_model1/metrics.json
+          run_info_path: models/mouse_brain_10x_model1/run_info.json
+          vector_field_parameters:
+            basis: umap
+          gpu_id: 0
+          training_parameters:
+            _target_: pyrovelocity.api.train_model
+            _partial_: true
+            guide_type: auto_t0_constraint
+            model_type: auto
+            svi_train: false
+            batch_size: -1
+            train_size: 1.0
+            use_gpu: 0
+            likelihood: Poisson
+            num_samples: 30
+            log_every: 100
+            cell_state: celltype
+            patient_improve: 0.0001
+            patient_init: 45
+            seed: 99
+            lr: 0.01
+            max_epochs: 2000
+            include_prior: true
+            library_size: true
+            offset: false
+            input_type: raw
+            cell_specific_kinetics:
+            kinetics_num: 2
+            loss_plot_path: models/mouse_brain_10x_model1/loss_plot.png
+    outs:
+    - path: models/mouse_brain_10x_model1/loss_plot.png
+      hash: md5
+      md5: b78c17190222537b8ee07d400a357c78
+      size: 12444
+    - path: models/mouse_brain_10x_model1/model
+      hash: md5
+      md5: 3277642fb958f80dbb1b12302d1e4835.dir
+      size: 534453
+      nfiles: 2
+    - path: models/mouse_brain_10x_model1/posterior_samples.pkl.zst
+      hash: md5
+      md5: f3f1cfc910a8b2dd5ae00a2a1b54ab07
+      size: 607835263
+    - path: models/mouse_brain_10x_model1/run_info.json
+      hash: md5
+      md5: 65ead0a364158fb1b2ca6c0a86f0eccd
+      size: 462
+  postprocess@mouse_brain_10x_model1:
+    cmd: /usr/bin/time -v python postprocess.py train_models=[mouse_brain_10x_model1]
+    deps:
+    - path: data/processed/mouse_brain_10x_processed.h5ad
+      hash: md5
+      md5: 04c925c89de62cd9aaa2da34804044ba
+      size: 145559367
+    - path: models/mouse_brain_10x_model1/model
+      hash: md5
+      md5: 3277642fb958f80dbb1b12302d1e4835.dir
+      size: 534453
+      nfiles: 2
+    - path: models/mouse_brain_10x_model1/posterior_samples.pkl.zst
+      hash: md5
+      md5: f3f1cfc910a8b2dd5ae00a2a1b54ab07
+      size: 607835263
+    - path: postprocess.py
+      hash: md5
+      md5: 2d194b66a6964f4ac39022fe6a4fbb8f
+      size: 5679
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+          count_threshold: 0
+          seed: 99
+        model_training.mouse_brain_10x_model1:
+          path: models/mouse_brain_10x_model1
+          model_path: models/mouse_brain_10x_model1/model
+          input_data_path: data/processed/mouse_brain_10x_processed.h5ad
+          trained_data_path: models/mouse_brain_10x_model1/trained.h5ad
+          pyrovelocity_data_path: models/mouse_brain_10x_model1/pyrovelocity.pkl.zst
+          posterior_samples_path: models/mouse_brain_10x_model1/posterior_samples.pkl.zst
+          metrics_path: models/mouse_brain_10x_model1/metrics.json
+          run_info_path: models/mouse_brain_10x_model1/run_info.json
+          vector_field_parameters:
+            basis: umap
+          gpu_id: 0
+          training_parameters:
+            _target_: pyrovelocity.api.train_model
+            _partial_: true
+            guide_type: auto_t0_constraint
+            model_type: auto
+            svi_train: false
+            batch_size: -1
+            train_size: 1.0
+            use_gpu: 0
+            likelihood: Poisson
+            num_samples: 30
+            log_every: 100
+            cell_state: celltype
+            patient_improve: 0.0001
+            patient_init: 45
+            seed: 99
+            lr: 0.01
+            max_epochs: 2000
+            include_prior: true
+            library_size: true
+            offset: false
+            input_type: raw
+            cell_specific_kinetics:
+            kinetics_num: 2
+            loss_plot_path: models/mouse_brain_10x_model1/loss_plot.png
+    outs:
+    - path: models/mouse_brain_10x_model1/metrics.json
+      hash: md5
+      md5: 0131b63621c1e112617c9647cd199658
+      size: 98
+    - path: models/mouse_brain_10x_model1/pyrovelocity.pkl.zst
+      hash: md5
+      md5: 494f606cecc505ff77ca738445a4840c
+      size: 64255059
+    - path: models/mouse_brain_10x_model1/trained.h5ad
+      hash: md5
+      md5: c587c494249ad551f7a02d6084d1ce93
+      size: 172228458
+  summarize@mouse_brain_10x_model1:
+    cmd: /usr/bin/time -v python summarize.py train_models=[mouse_brain_10x_model1]
+    deps:
+    - path: models/mouse_brain_10x_model1/pyrovelocity.pkl.zst
+      hash: md5
+      md5: 494f606cecc505ff77ca738445a4840c
+      size: 64255059
+    - path: models/mouse_brain_10x_model1/trained.h5ad
+      hash: md5
+      md5: c587c494249ad551f7a02d6084d1ce93
+      size: 172228458
+    - path: summarize.py
+      hash: md5
+      md5: fd344c4bdb5cfec18d7b44f39df720e0
+      size: 47233
+    params:
+      config.yaml:
+        base:
+          log_level: INFO
+          count_threshold: 0
+          seed: 99
+        reports.model_summary.mouse_brain_10x_model1:
+          path: reports/mouse_brain_10x_model1
+          trained_data_path: models/mouse_brain_10x_model1/trained.h5ad
+          pyrovelocity_data_path: models/mouse_brain_10x_model1/pyrovelocity.pkl.zst
+          dataframe_path: data/processed/mouse_brain_10x_model1_dataframe.pkl.zst
+          shared_time_plot: reports/mouse_brain_10x_model1/shared_time.pdf
+          volcano_plot: reports/mouse_brain_10x_model1/volcano.pdf
+          rainbow_plot: reports/mouse_brain_10x_model1/rainbow.pdf
+          uncertainty_param_plot: reports/mouse_brain_10x_model1/param_uncertainties.pdf
+          vector_field_plot: reports/mouse_brain_10x_model1/vector_field.pdf
+          posterior_phase_portraits: reports/mouse_brain_10x_model1/posterior_phase_portraits
+          t0_selection: reports/mouse_brain_10x_model1/t0_selection.tif
+          biomarker_selection_plot: reports/mouse_brain_10x_model1/markers_selection_scatterplot.tif
+          biomarker_phaseportrait_plot: reports/mouse_brain_10x_model1/markers_phaseportrait.pdf
+          fig2_part1_plot: reports/mouse_brain_10x_model1/fig2_part1_plot.pdf
+          fig2_part2_plot: reports/mouse_brain_10x_model1/fig2_part2_plot.pdf
+          violin_clusters_lin: reports/mouse_brain_10x_model1/clusters_violin_lin.pdf
+          violin_clusters_log: reports/mouse_brain_10x_model1/clusters_violin_log.pdf
+    outs:
+    - path: data/processed/mouse_brain_10x_model1_dataframe.pkl.zst
+      hash: md5
+      md5: 31fc92179b9d539c794a402f49d7d5d2
+      size: 3760956
+    - path: reports/mouse_brain_10x_model1/clusters_violin_lin.pdf
+      hash: md5
+      md5: 5645d553a3ca3cad8bdf3e624294dd35
+      size: 114111
+    - path: reports/mouse_brain_10x_model1/clusters_violin_lin.pdf.png
+      hash: md5
+      md5: 87b08c6aff5ab0433abe317cb584b097
+      size: 1646290
+    - path: reports/mouse_brain_10x_model1/clusters_violin_log.pdf
+      hash: md5
+      md5: ab1f1d7ef39d91b0490a84f9e9890ccf
+      size: 116312
+    - path: reports/mouse_brain_10x_model1/clusters_violin_log.pdf.png
+      hash: md5
+      md5: 268269960334cf34e98ee3db9d96c20b
+      size: 2074116
+    - path: reports/mouse_brain_10x_model1/fig2_part1_plot.pdf
+      hash: md5
+      md5: 1ec4eee34a7f3d78122ca4ff8b77adeb
+      size: 449575
+    - path: reports/mouse_brain_10x_model1/fig2_part1_plot.pdf.png
+      hash: md5
+      md5: 1b9199518fbc87e29e63bb775fc53265
+      size: 751451
+    - path: reports/mouse_brain_10x_model1/fig2_part2_plot.pdf
+      hash: md5
+      md5: 70a310155e6c9df682598ee2c3898231
+      size: 1202568
+    - path: reports/mouse_brain_10x_model1/fig2_part2_plot.pdf.png
+      hash: md5
+      md5: 9fb4871041c2cde77d90a40fe0b86bf1
+      size: 737375
+    - path: reports/mouse_brain_10x_model1/param_uncertainties.pdf
+      hash: md5
+      md5: 719d71ef8663d0e1c54ef5fd88e657ec
+      size: 139427
+    - path: reports/mouse_brain_10x_model1/param_uncertainties.pdf.png
+      hash: md5
+      md5: 6d3454cb5c558f06c57aea7b6dcd8506
+      size: 931035
+    - path: reports/mouse_brain_10x_model1/posterior_phase_portraits
+      hash: md5
+      md5: e58bfbd9a8b1c4287f57a482961c167b.dir
+      size: 23702920
+      nfiles: 20
+    - path: reports/mouse_brain_10x_model1/rainbow.pdf
+      hash: md5
+      md5: 0d2d5c8ac40bcdefcf10414f5f92195e
+      size: 4972179
+    - path: reports/mouse_brain_10x_model1/rainbow.pdf.png
+      hash: md5
+      md5: 44241d5756b5ce0c2c01f38299c14828
+      size: 1417806
+    - path: reports/mouse_brain_10x_model1/shared_time.pdf
+      hash: md5
+      md5: 03634cdefc316003023f1bb1309f3b5e
+      size: 343410
+    - path: reports/mouse_brain_10x_model1/vector_field.pdf
+      hash: md5
+      md5: 6d9fa77909042212fa58e6236f16ab93
+      size: 436507
+    - path: reports/mouse_brain_10x_model1/vector_field.pdf.png
+      hash: md5
+      md5: 40d626f9ef4f93eb83aa72770f7c9094
+      size: 865925
+    - path: reports/mouse_brain_10x_model1/volcano.pdf
+      hash: md5
+      md5: 3c3570832e57ed1b17afb10ab1ffccc6
+      size: 34895
+    - path: reports/mouse_brain_10x_model1/volcano.pdf.png
+      hash: md5
+      md5: e2ef10a513f86800192cc2a8676e675a
+      size: 369852

@@ -167,7 +167,7 @@ def hydra_zen_configure():
                 ),
             ),
             pyrovelocity=dict(
-                download=["larry", "pbmc10k"],
+                download=["larry", "pbmc10k", "mouse_brain_10x"],
                 process=["pbmc10k"],
                 sources=dict(
                     figshare_root_url="https://ndownloader.figshare.com/files"
@@ -226,6 +226,15 @@ def hydra_zen_configure():
                     process_method="load_data",
                     process_args=dict(),
                 ),
+                mouse_brain_10x=create_dataset_config(
+                    "mouse_brain_10x",
+                    dl_root="${data_external.root_path}",
+                    data_file="mouse_brain_10x.h5ad",
+                    rel_path="${data_external.root_path}/mouse_brain_10x.h5ad",
+                    url="${data_external.pyrovelocity.sources.figshare_root_url}/mouse_brain_10x",
+                    process_method="load_data",
+                    process_args=dict(),
+                ),
             ),
         ),
         model_training=dict(
@@ -244,6 +253,8 @@ def hydra_zen_configure():
                 "larry_neu_model2",
                 "larry_multilineage_model2",
                 "pbmc10k_model2",
+                "mouse_brain_10x_model1",
+                "mouse_brain_10x_model2",
             ],
             simulate_model1=create_model_config(
                 "simulate",
@@ -379,6 +390,24 @@ def hydra_zen_configure():
                 offset=True,
                 max_epochs=2000,
             ),
+            mouse_brain_10x_model1=create_model_config(
+                "pyrovelocity",
+                "mouse_brain_10x",
+                1,
+                "umap",
+                guide_type="auto_t0_constraint",
+                cell_state="celltype",
+                max_epochs=2000,
+            ),
+            mouse_brain_10x_model2=create_model_config(
+                "pyrovelocity",
+                "mouse_brain_10x",
+                2,
+                "umap",
+                cell_state="celltype",
+                offset=True,
+                max_epochs=2000,
+            ),
         ),
         reports=dict(
             model_summary=dict(
@@ -393,6 +422,8 @@ def hydra_zen_configure():
                     "pons_model2",
                     "pbmc10k_model2",
                     "larry_tips_model2",
+                    "mouse_brain_10x_model1",
+                    "mouse_brain_10x_model2",
                 ],
                 simulate_model1=create_reports_config("medium", 1),
                 simulate_model2=create_reports_config("medium", 2),
@@ -404,6 +435,8 @@ def hydra_zen_configure():
                 pons_model2=create_reports_config("pons", 2),
                 pbmc10k_model2=create_reports_config("pbmc10k", 2),
                 larry_tips_model2=create_reports_config("larry_tips", 2),
+                mouse_brain_10x_model1=create_reports_config("mouse_brain_10x", 1),
+                mouse_brain_10x_model2=create_reports_config("mouse_brain_10x", 2),
             ),
             figure2=dict(
                 tag="fig2",
@@ -560,6 +593,7 @@ def hydra_zen_compressed_configure():
         "larry_cospar",
         "larry_cytotrace",
         "larry_dynamical",
+        "mouse_brain_10x",
     ]
 
     process_data = [
@@ -575,6 +609,7 @@ def hydra_zen_compressed_configure():
         "larry_mono",
         "larry_neu",
         "larry_multilineage",
+        "mouse_brain_10x",
     ]
     train_models = [
         "pancreas_model2",
@@ -587,6 +622,8 @@ def hydra_zen_compressed_configure():
         "larry_multilineage_model2",
         "pbmc10k_model2",
         "pbmc5k_model2",
+        "mouse_brain_10x_model1",
+        "mouse_brain_10x_model2",
     ]
 
     model_training = dict(
@@ -844,6 +881,24 @@ def hydra_zen_compressed_configure():
             offset=True,
             max_epochs=2000,
         ),
+        mouse_brain_10x_model1=create_model_config(
+            "pyrovelocity",
+            "mouse_brain_10x",
+            1,
+            "umap",
+            guide_type="auto_t0_constraint",
+            cell_state="celltype",
+            max_epochs=2000,
+        ),
+        mouse_brain_10x_model2=create_model_config(
+            "pyrovelocity",
+            "mouse_brain_10x",
+            2,
+            "umap",
+            cell_state="celltype",
+            offset=True,
+            max_epochs=2000,
+        ),
     )
 
     data_sets = dict(
@@ -999,6 +1054,16 @@ def hydra_zen_compressed_configure():
             process_method="load_data",
             process_args=dict(count_thres="${base.count_threshold}"),
         ),
+        mouse_brain_10x=create_dataset_config(
+            source="pyrovelocity",
+            name="mouse_brain_10x",
+            dl_root="${paths.data_external}",
+            data_file="mouse_brain_10x.h5ad",
+            rel_path="${paths.data_external}/${.data_file}",
+            url="https://storage.googleapis.com/pyrovelocity/data/mouse_brain_10x.h5ad",
+            process_method="load_data",
+            process_args=dict(count_thres="${base.count_threshold}"),
+        ),
     )
 
     return make_config(
@@ -1043,6 +1108,8 @@ def hydra_zen_compressed_configure():
                 ),
                 # larry_model1=create_reports_config("larry", 1),
                 # larry_model2=create_reports_config("larry", 2),
+                mouse_brain_10x_model1=create_reports_config("mouse_brain_10x", 1),
+                mouse_brain_10x_model2=create_reports_config("mouse_brain_10x", 2),
             ),
             figure2=dict(
                 tag="fig2",
