@@ -62,9 +62,18 @@ export_pip_requirements: lock
 	--without-hashes
 
 
-#-------------
-# system / dev
-#-------------
+#--------------
+# setup dev env
+#--------------
+
+uninstall_nix: ## Uninstall nix.
+	(cat /nix/receipt.json && \
+	/nix/nix-installer uninstall) || echo "nix not found, skipping uninstall"
+
+install_nix: ## Install nix. Check script before execution: https://install.determinate.systems/nix .
+install_nix: uninstall_nix
+	@which nix > /dev/null || \
+	curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
 
 install_direnv: ## Install direnv to `/usr/local/bin`. Check script before execution: https://direnv.net/ .
 	@which direnv > /dev/null || \
@@ -72,6 +81,18 @@ install_direnv: ## Install direnv to `/usr/local/bin`. Check script before execu
 	sudo install -c -m 0755 direnv /usr/local/bin && \
 	rm -f ./direnv)
 	@echo "see https://direnv.net/docs/hook.html"
+
+setup_dev: ## Setup nix development environment.
+setup_dev: install_direnv install_nix
+	@. /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh && \
+	nix profile install nixpkgs#cachix && \
+	echo "trusted-users = root $$USER" | sudo tee -a /etc/nix/nix.conf && sudo pkill nix-daemon && \
+	cachix use devenv
+
+
+#-------------
+# system / dev
+#-------------
 
 install_just: ## Install just. Check script before execution: https://just.systems/ .
 	@which cargo > /dev/null || (curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh)
