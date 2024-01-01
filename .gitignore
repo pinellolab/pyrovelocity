@@ -118,3 +118,19 @@ ENV/
 *.tif
 *.h5ad
 .nox/
+
+# nix
+.devenv
+.direnv
+# this is a bespoke "manual direnv" folder
+.dirman
+
+# flyte
+.flyte/config.yaml
+_pb_output
+_pb_output/*
+flyte-package.tgz
+
+# hydra outputs
+outputs/
+multirun/
