@@ -1,4 +1,4 @@
-name: Deploy
+name: App
 
 on:
   workflow_dispatch:
@@ -11,7 +11,7 @@ on:
   push:
     paths:
       - "dockerfiles/Dockerfile.app"
-      - ".github/workflows/deploy.yml"
+      - ".github/workflows/app.yaml"
       - "app/**"
 
 env:
