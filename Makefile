@@ -183,6 +183,9 @@ update_config: ## Update flytectl config file from template.
 	yq e '.admin.endpoint = strenv(FLYTE_CLUSTER_ENDPOINT) | .storage.stow.config.project_id = strenv(GCP_PROJECT_ID) | .storage.stow.config.scopes = strenv(GCP_STORAGE_SCOPES) | .storage.container = strenv(GCP_STORAGE_CONTAINER)' \
 	$(FLYTECTL_CONFIG_TEMPLATE) > $(FLYTECTL_CONFIG)
 
+tree: ## Print directory tree.
+	tree -a --dirsfirst -L 4 -I ".git|.direnv|*pycache*|*ruff_cache*|*pytest_cache*|outputs|multirun|conf|scripts|site|*venv*|.coverage"
+
 approve_prs: ## Approve github pull requests from bots: PR_ENTRIES="2-5 10 12-18"
 	for entry in $(PR_ENTRIES); do \
 		if [[ "$$entry" == *-* ]]; then \
