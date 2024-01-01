@@ -2980,7 +2980,7 @@ test = ["hypothesis (>=6.28.0)", "pytest (>=3.8)"]
 name = "hypothesis"
 version = "6.72.1"
 description = "A library for property-based testing"
-optional = true
+optional = false
 python-versions = ">=3.7"
 files = [
     {file = "hypothesis-6.72.1-py3-none-any.whl", hash = "sha256:1901688aac1fc8d78d5431c4a1d48cc50940e247dd8b6ebc3d4167ef31204e10"},
@@ -6732,7 +6732,7 @@ files = [
 name = "sortedcontainers"
 version = "2.4.0"
 description = "Sorted Containers -- Sorted List, Sorted Dict, Sorted Set"
-optional = true
+optional = false
 python-versions = "*"
 files = [
     {file = "sortedcontainers-2.4.0-py2.py3-none-any.whl", hash = "sha256:a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0"},
@@ -7952,4 +7952,4 @@ plotting = ["annoy", "matplotlib-venn", "statannotations"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10, <3.11"
-content-hash = "9575beb160300866a04c15ab5326421b5d9acfdb7876af39d561377f39c4b8c9"
+content-hash = "2d75ff70e1d7fc7280bfa9f269c256a0255288d9aff639196b4e355eef6d1b71"
