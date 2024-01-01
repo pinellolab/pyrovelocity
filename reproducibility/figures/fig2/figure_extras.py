@@ -1,4 +1,3 @@
-import errno
 import os
 import pickle
 from logging import Logger
@@ -8,23 +7,13 @@ import hydra
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import scvelo as scv
 import seaborn as sns
 from astropy import units as u
 from astropy.stats import circstd
-from matplotlib.backends.backend_pdf import PdfPages
-from matplotlib_venn import venn2
 from omegaconf import DictConfig
-from statannotations.Annotator import Annotator
-
 from pyrovelocity.config import print_config_tree
-from pyrovelocity.plot import plot_arrow_examples
-from pyrovelocity.plot import plot_gene_ranking
-from pyrovelocity.plot import plot_posterior_time
-from pyrovelocity.plot import plot_vector_field_uncertain
-from pyrovelocity.plot import rainbowplot
 from pyrovelocity.utils import get_pylogger
-
+from statannotations.Annotator import Annotator
 
 """Loads trained figure 2 data and produces extra plots
 
@@ -74,26 +63,36 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         cell_angles_cov = angles_std / cell_angles_mean
         angle_cov_list.append(cell_angles_cov)
 
-        pca_cell_vector = posterior_samples["pca_vector_field_posterior_samples"]
+        pca_cell_vector = posterior_samples[
+            "pca_vector_field_posterior_samples"
+        ]
         # (samples, cell, 50pcs)
         pca_cell_magnitudes = np.sqrt((pca_cell_vector**2).sum(axis=-1))
         pca_cell_magnitudes_mean = pca_cell_magnitudes.mean(axis=-2)
         pca_cell_magnitudes_std = pca_cell_magnitudes.std(axis=-2)
-        pca_cell_magnitudes_cov = pca_cell_magnitudes_std / pca_cell_magnitudes_mean
+        pca_cell_magnitudes_cov = (
+            pca_cell_magnitudes_std / pca_cell_magnitudes_mean
+        )
         pca_mag_cov_list.append(pca_cell_magnitudes_cov)
 
         pca_cell_angles = posterior_samples["pca_embeds_angle"] / np.pi * 180
         pca_cell_angles_mean = pca_cell_angles.mean(axis=0)
-        pca_angles_std = circstd(pca_cell_angles * u.deg, method="angular", axis=0)
+        pca_angles_std = circstd(
+            pca_cell_angles * u.deg, method="angular", axis=0
+        )
         pca_cell_angles_cov = pca_angles_std / pca_cell_angles_mean
         pca_angle_cov_list.append(pca_cell_angles_cov)
 
         umap_cell_magnitudes = np.sqrt(
-            (posterior_samples["vector_field_posterior_samples"] ** 2).sum(axis=-1)
+            (posterior_samples["vector_field_posterior_samples"] ** 2).sum(
+                axis=-1
+            )
         )
         umap_cell_magnitudes_mean = umap_cell_magnitudes.mean(axis=-2)
         umap_cell_magnitudes_std = umap_cell_magnitudes.std(axis=-2)
-        umap_cell_magnitudes_cov = umap_cell_magnitudes_std / umap_cell_magnitudes_mean
+        umap_cell_magnitudes_cov = (
+            umap_cell_magnitudes_std / umap_cell_magnitudes_mean
+        )
 
         print(posterior_samples.keys())
         cell_magnitudes = posterior_samples["original_spaces_embeds_magnitude"]
@@ -186,7 +185,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         y="time_coefficient_of_variation",
         order=order,
     )
-    time_annotator.configure(test="Mann-Whitney", text_format="star", loc="inside")
+    time_annotator.configure(
+        test="Mann-Whitney", text_format="star", loc="inside"
+    )
     time_annotator.apply_and_annotate()
     mag_annotator = Annotator(
         ax[1],
@@ -196,7 +197,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         y="magnitude_coefficient_of_variation",
         order=order,
     )
-    mag_annotator.configure(test="Mann-Whitney", text_format="star", loc="inside")
+    mag_annotator.configure(
+        test="Mann-Whitney", text_format="star", loc="inside"
+    )
     mag_annotator.apply_and_annotate()
 
     mag_annotator = Annotator(
@@ -207,7 +210,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         y="pca_magnitude_coefficient_of_variation",
         order=order,
     )
-    mag_annotator.configure(test="Mann-Whitney", text_format="star", loc="inside")
+    mag_annotator.configure(
+        test="Mann-Whitney", text_format="star", loc="inside"
+    )
     mag_annotator.apply_and_annotate()
 
     mag_annotator = Annotator(
@@ -218,7 +223,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         y="umap_magnitude_coefficient_of_variation",
         order=order,
     )
-    mag_annotator.configure(test="Mann-Whitney", text_format="star", loc="inside")
+    mag_annotator.configure(
+        test="Mann-Whitney", text_format="star", loc="inside"
+    )
     mag_annotator.apply_and_annotate()
 
     # angle_annotator = Annotator(

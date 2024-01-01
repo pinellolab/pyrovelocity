@@ -4,12 +4,13 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import scvelo as scv
 import seaborn as sns
-
 from pyrovelocity.cytotrace import compute_similarity2
-from pyrovelocity.plot import plot_gene_ranking
-from pyrovelocity.plot import plot_posterior_time
-from pyrovelocity.plot import plot_state_uncertainty
-from pyrovelocity.plot import rainbowplot
+from pyrovelocity.plot import (
+    plot_gene_ranking,
+    plot_posterior_time,
+    plot_state_uncertainty,
+    rainbowplot,
+)
 
 
 def param_set(top_genes=2000, n_neighbors=30):
@@ -18,7 +19,9 @@ def param_set(top_genes=2000, n_neighbors=30):
         adata = scv.read(fs)
     else:
         adata = scv.datasets.pancreas()
-        scv.pp.filter_and_normalize(adata, min_shared_counts=20, n_top_genes=top_genes)
+        scv.pp.filter_and_normalize(
+            adata, min_shared_counts=20, n_top_genes=top_genes
+        )
         scv.pp.neighbors(adata, n_pcs=30, n_neighbors=n_neighbors)
         scv.pp.moments(adata, n_pcs=30, n_neighbors=n_neighbors)
         scv.tl.recover_dynamics(adata, n_jobs=20)
@@ -32,7 +35,6 @@ def param_set(top_genes=2000, n_neighbors=30):
 import pickle
 
 import numpy as np
-
 
 with open("../fig2/model1/fig2_pancreas_data.pkl", "rb") as f:
     result_dict = pickle.load(f)
@@ -87,7 +89,11 @@ sns.scatterplot(
     legend="brief",
 )
 ax[0].legend(
-    bbox_to_anchor=[2.9, -0.01], ncol=4, prop={"size": 7}, fontsize=7, frameon=False
+    bbox_to_anchor=[2.9, -0.01],
+    ncol=4,
+    prop={"size": 7},
+    fontsize=7,
+    frameon=False,
 )
 ax[0].axis("off")
 scv.pl.velocity_embedding_grid(
@@ -246,13 +252,13 @@ ax[2].set_title("state uncertainty", fontsize=7)
 
 from pyrovelocity.data import load_data
 
-
 adata = load_data(top_n=2000, min_shared_counts=30)
 
 
 scv.tl.latent_time(adata)
 df_genes_cors = compute_similarity2(
-    adata.layers["spliced"].toarray(), adata.obs.latent_time.values.reshape(-1, 1)
+    adata.layers["spliced"].toarray(),
+    adata.obs.latent_time.values.reshape(-1, 1),
 )
 scvelo_top = pd.DataFrame(
     {
@@ -311,7 +317,6 @@ ax_cb = scv.pl.scatter(
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn2
 
-
 set1 = set(
     volcano_data2.sort_values("mean_mae", ascending=False)
     .head(300)
@@ -337,7 +342,9 @@ ax[3].set_title("cell fate marker overlap", fontsize=7)
 
 pos = adata_model_pos
 bin = 30
-adata.obs["shared_time_uncertain"] = adata_model_pos["cell_time"].std(0).flatten()
+adata.obs["shared_time_uncertain"] = (
+    adata_model_pos["cell_time"].std(0).flatten()
+)
 ax_cb = scv.pl.scatter(
     adata,
     c="shared_time_uncertain",
@@ -396,9 +403,13 @@ subfig[0].subplots_adjust(
 subfig[1].subplots_adjust(
     hspace=0.3, wspace=0.15, left=0.0, right=0.92, top=0.92, bottom=0.25
 )
-supfigs = subfig[2].subfigures(1, 2, wspace=0.0, hspace=0, width_ratios=[1.6, 4])
+supfigs = subfig[2].subfigures(
+    1, 2, wspace=0.0, hspace=0, width_ratios=[1.6, 4]
+)
 ax = supfigs[0].subplots(2, 1)
-plot_posterior_time(adata_model_pos, adata, ax=ax[0], fig=supfigs[0], addition=False)
+plot_posterior_time(
+    adata_model_pos, adata, ax=ax[0], fig=supfigs[0], addition=False
+)
 supfigs[0].subplots_adjust(
     hspace=0.3, wspace=0.1, left=0.01, right=0.75, top=0.92, bottom=0.15
 )

@@ -1,16 +1,8 @@
-import os
-
 import matplotlib.pyplot as plt
-import numpy as np
 import scvelo as scv
-from scipy.stats import spearmanr
-
 from pyrovelocity.api import train_model
-from pyrovelocity.data import load_larry
 from pyrovelocity.data import load_unipotent_larry
-from pyrovelocity.plot import plot_mean_vector_field
-from pyrovelocity.plot import vector_field_uncertainty
-
+from pyrovelocity.plot import plot_mean_vector_field, vector_field_uncertainty
 
 """Loads multilineage data and trains and saves model2 model.
 
@@ -60,8 +52,12 @@ adata_input.layers["raw_unspliced"] = adata[
     adata_input.obs_names, adata_input.var_names
 ].layers["unspliced"]
 
-adata_input.obs["u_lib_size_raw"] = adata_input.layers["unspliced"].toarray().sum(-1)
-adata_input.obs["s_lib_size_raw"] = adata_input.layers["spliced"].toarray().sum(-1)
+adata_input.obs["u_lib_size_raw"] = (
+    adata_input.layers["unspliced"].toarray().sum(-1)
+)
+adata_input.obs["s_lib_size_raw"] = (
+    adata_input.layers["spliced"].toarray().sum(-1)
+)
 
 
 #############
@@ -117,7 +113,6 @@ result_dict = {
     "embed_mean": embed_mean,
 }
 import pickle
-
 
 with open("fig3_uni_bifurcation_data_model2.pkl", "wb") as f:
     pickle.dump(result_dict, f)

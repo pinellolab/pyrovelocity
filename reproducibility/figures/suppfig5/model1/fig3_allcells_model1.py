@@ -1,17 +1,14 @@
-import os
 import pickle
 
 import matplotlib.pyplot as plt
-import numpy as np
 import scvelo as scv
-
 from pyrovelocity.api import train_model
-from pyrovelocity.data import load_larry
-from pyrovelocity.plot import plot_gene_ranking
-from pyrovelocity.plot import plot_mean_vector_field
-from pyrovelocity.plot import us_rainbowplot
-from pyrovelocity.plot import vector_field_uncertainty
-
+from pyrovelocity.plot import (
+    plot_gene_ranking,
+    plot_mean_vector_field,
+    us_rainbowplot,
+    vector_field_uncertainty,
+)
 
 """Loads and plots data for all cell types and trains and saves model2 model.
 
@@ -45,12 +42,18 @@ adata_input = scv.read(
     "../../fig3/larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad"
 )
 
-adata_input.layers["raw_spliced"] = adata[:, adata_input.var_names].layers["spliced"]
+adata_input.layers["raw_spliced"] = adata[:, adata_input.var_names].layers[
+    "spliced"
+]
 adata_input.layers["raw_unspliced"] = adata[:, adata_input.var_names].layers[
     "unspliced"
 ]
-adata_input.obs["u_lib_size_raw"] = adata_input.layers["unspliced"].toarray().sum(-1)
-adata_input.obs["s_lib_size_raw"] = adata_input.layers["spliced"].toarray().sum(-1)
+adata_input.obs["u_lib_size_raw"] = (
+    adata_input.layers["unspliced"].toarray().sum(-1)
+)
+adata_input.obs["s_lib_size_raw"] = (
+    adata_input.layers["spliced"].toarray().sum(-1)
+)
 
 #############
 # train model

@@ -1,6 +1,4 @@
-import errno
 import os
-import pickle
 from logging import Logger
 from pathlib import Path
 
@@ -12,30 +10,23 @@ import pandas as pd
 import scvelo as scv
 import seaborn as sns
 from omegaconf import DictConfig
-from scipy.spatial import distance
-from scipy.stats import spearmanr
-from scvelo.plotting.velocity_embedding_grid import default_arrow
-
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.data import load_larry
 from pyrovelocity.io.compressedpickle import CompressedPickle
-from pyrovelocity.plot import align_trajectory_diff
-from pyrovelocity.plot import get_clone_trajectory
-from pyrovelocity.plot import get_posterior_sample_angle_uncertainty
-from pyrovelocity.plot import plot_arrow_examples
-from pyrovelocity.plot import plot_gene_ranking
-from pyrovelocity.plot import plot_posterior_time
-from pyrovelocity.plot import plot_vector_field_uncertain
-from pyrovelocity.plot import rainbowplot
-from pyrovelocity.plot import set_colorbar
+from pyrovelocity.plot import (
+    get_clone_trajectory,
+    set_colorbar,
+)
 from pyrovelocity.utils import get_pylogger
-
+from scipy.stats import spearmanr
 
 """Loads trained figure S4 data and produces figure S4.
 """
 
 
-def evaluate_time(adata_scvelo, adata_cytotrace, posterior_samples, gold, gold_select):
+def evaluate_time(
+    adata_scvelo, adata_cytotrace, posterior_samples, gold, gold_select
+):
     all_metrics = np.zeros((2, 2))
     for i, gold_standard in enumerate([-gold[gold_select]]):
         for j, pred in enumerate(
@@ -129,12 +120,18 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     if os.path.exists("global_gold_standard2.h5ad"):
         adata_input_all_clone = scv.read("global_gold_standard2.h5ad")
     else:
-        adata_reduced_gene_for_clone_vec = adata[:, adata_input_vel.var_names].copy()
+        adata_reduced_gene_for_clone_vec = adata[
+            :, adata_input_vel.var_names
+        ].copy()
         print(adata_reduced_gene_for_clone_vec.shape)
-        adata_input_all_clone = get_clone_trajectory(adata_reduced_gene_for_clone_vec)
+        adata_input_all_clone = get_clone_trajectory(
+            adata_reduced_gene_for_clone_vec
+        )
         adata_input_all_clone.write("global_gold_standard2.h5ad")
 
-    adata_cytotrace.obs.loc[:, "1-Cytotrace"] = 1 - adata_cytotrace.obs.cytotrace
+    adata_cytotrace.obs.loc[:, "1-Cytotrace"] = (
+        1 - adata_cytotrace.obs.cytotrace
+    )
     gold = adata_cospar[
         adata_input_all.obs_names.str.replace("-0", ""), :
     ].obs.fate_potency
@@ -196,9 +193,14 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     adata_multilineage_dynamical_data_path = scv.read(
         conf.data_sets.larry_multilineage.derived.rel_path
     )
-    posterior_samples = CompressedPickle.load(pyrovelocity_multilineage_data_path)
+    posterior_samples = CompressedPickle.load(
+        pyrovelocity_multilineage_data_path
+    )
     gold_multilineage = adata_cospar[
-        adata_multilineage_dynamical_data_path.obs_names.str.replace(r"-\d", ""), :
+        adata_multilineage_dynamical_data_path.obs_names.str.replace(
+            r"-\d", ""
+        ),
+        :,
     ].obs.fate_potency
     gold_multi_select = ~np.isnan(gold_multilineage)
     metrics_multi = evaluate_time(
@@ -223,9 +225,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     )
     ax[0][0].set_title(
         "Cytotrace\ncorrelation with fate potency: %.2f"
-        % spearmanr(1 - adata_cytotrace.obs.cytotrace[gold_select], -gold[gold_select])[
-            0
-        ],
+        % spearmanr(
+            1 - adata_cytotrace.obs.cytotrace[gold_select], -gold[gold_select]
+        )[0],
         fontsize=7,
     )
 
@@ -251,14 +253,18 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         #    va="top",
         #    ha="right",
         # )
-        set_colorbar(im, ax[0][index + 1], labelsize=5, fig=fig, position="right")
+        set_colorbar(
+            im, ax[0][index + 1], labelsize=5, fig=fig, position="right"
+        )
         ax[0][index + 1].axis("off")
 
     ax[0][1].set_title(
-        f"UMAP angle Rayleigh test {(fdri<0.05).sum()/fdri.shape[0]}", fontsize=7
+        f"UMAP angle Rayleigh test {(fdri<0.05).sum()/fdri.shape[0]}",
+        fontsize=7,
     )
     ax[0][2].set_title(
-        f"PCA angle Rayleigh test {(pca_fdri<0.05).sum()/pca_fdri.shape[0]}", fontsize=7
+        f"PCA angle Rayleigh test {(pca_fdri<0.05).sum()/pca_fdri.shape[0]}",
+        fontsize=7,
     )
     ax[0][3].axis("off")
     n = 0

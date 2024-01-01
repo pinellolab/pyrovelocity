@@ -3,18 +3,16 @@ import os
 import pickle
 from logging import Logger
 from pathlib import Path
-from typing import Text
 
 from omegaconf import DictConfig
-
 from pyrovelocity.api import train_model
 from pyrovelocity.config import config_setup
 from pyrovelocity.data import load_data
-from pyrovelocity.plot import compute_mean_vector_field
-from pyrovelocity.plot import vector_field_uncertainty
-from pyrovelocity.utils import get_pylogger
-from pyrovelocity.utils import print_attributes
-
+from pyrovelocity.plot import (
+    compute_mean_vector_field,
+    vector_field_uncertainty,
+)
+from pyrovelocity.utils import get_pylogger, print_attributes
 
 """Loads processed pancreas data and trains and saves model1 model.
 
@@ -43,7 +41,9 @@ def train(conf: DictConfig, logger: Logger) -> None:
 
     trained_data_path = conf.model_training.pancreas_model1.trained_data_path
     model_path = conf.model_training.pancreas_model1.model_path
-    pyrovelocity_data_path = conf.model_training.pancreas_model1.pyrovelocity_data_path
+    pyrovelocity_data_path = (
+        conf.model_training.pancreas_model1.pyrovelocity_data_path
+    )
 
     logger.info(f"Loading data: {processed_path}")
     adata = load_data(processed_path=processed_path)
@@ -81,7 +81,9 @@ def train(conf: DictConfig, logger: Logger) -> None:
         v_map_all, embeds_radian, fdri = vector_field_uncertainty(
             adata, adata_model_pos[1], basis="umap"
         )
-        logger.info(f"Data attributes after computation of vector field uncertainty")
+        logger.info(
+            f"Data attributes after computation of vector field uncertainty"
+        )
         print_attributes(adata_model_pos)
 
         #############
@@ -91,14 +93,18 @@ def train(conf: DictConfig, logger: Logger) -> None:
         logger.info(f"checking shared time")
 
         def check_shared_time(adata_model_pos, adata):
-            adata.obs["cell_time"] = adata_model_pos[1]["cell_time"].squeeze().mean(0)
+            adata.obs["cell_time"] = (
+                adata_model_pos[1]["cell_time"].squeeze().mean(0)
+            )
             adata.obs["1-Cytotrace"] = 1 - adata.obs["cytotrace"]
 
         check_shared_time(adata_model_pos, adata)
 
         logger.info(f"computing mean vector field")
         basis = "umap"
-        compute_mean_vector_field(pos=adata_model_pos[1], adata=adata, basis=basis)
+        compute_mean_vector_field(
+            pos=adata_model_pos[1], adata=adata, basis=basis
+        )
         embed_mean = adata.obsm[f"velocity_pyro_{basis}"]
         logger.info(f"Data attributes after computation of mean vector field")
         print_attributes(adata)
@@ -139,7 +145,9 @@ def main(config_path: str) -> None:
         f"  model data: {conf.model_training.pancreas_model1.path}\n"
     )
     Path(conf.data_external.processed_path).mkdir(parents=True, exist_ok=True)
-    Path(conf.model_training.pancreas_model1.path).mkdir(parents=True, exist_ok=True)
+    Path(conf.model_training.pancreas_model1.path).mkdir(
+        parents=True, exist_ok=True
+    )
 
     train(conf, logger)
 

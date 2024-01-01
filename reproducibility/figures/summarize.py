@@ -1,9 +1,6 @@
 import os
-import pickle
 from logging import Logger
 from pathlib import Path
-from statistics import harmonic_mean
-from typing import Text
 
 import anndata
 import hydra
@@ -17,37 +14,25 @@ import torch
 from astropy import units as u
 from astropy.stats import circstd as acircstd
 from omegaconf import DictConfig
-from pyro.infer import MCMC
-from pyro.infer import NUTS
-from pyro.infer import Predictive
-from pyro.infer import infer_discrete
+from pyro.infer import Predictive, infer_discrete
+from pyrovelocity._velocity import PyroVelocity
+from pyrovelocity.io.compressedpickle import CompressedPickle
+from pyrovelocity.plot import (
+    get_posterior_sample_angle_uncertainty,
+    plot_gene_ranking,
+    plot_posterior_time,
+    plot_vector_field_uncertain,
+    rainbowplot,
+)
+from pyrovelocity.plots.rainbow import pareto_frontier_genes
+from pyrovelocity.utils import (
+    anndata_counts_to_df,
+    get_pylogger,
+)
 
 # from scipy.stats import circmean
 # from scipy.stats import circstd
-from scipy.stats import circvar
 from statannotations.Annotator import Annotator
-
-from pyrovelocity._velocity import PyroVelocity
-from pyrovelocity.config import print_config_tree
-from pyrovelocity.data import load_data
-from pyrovelocity.io.compressedpickle import CompressedPickle
-from pyrovelocity.plot import compute_mean_vector_field
-from pyrovelocity.plot import compute_volcano_data
-from pyrovelocity.plot import get_posterior_sample_angle_uncertainty
-from pyrovelocity.plot import plot_arrow_examples
-from pyrovelocity.plot import plot_gene_ranking
-from pyrovelocity.plot import plot_posterior_time
-from pyrovelocity.plot import plot_vector_field_uncertain
-from pyrovelocity.plot import rainbowplot
-from pyrovelocity.plot import us_rainbowplot
-from pyrovelocity.plot import vector_field_uncertainty
-from pyrovelocity.plots.rainbow import pareto_frontier_genes
-from pyrovelocity.utils import anndata_counts_to_df
-from pyrovelocity.utils import get_pylogger
-from pyrovelocity.utils import mae_evaluate
-from pyrovelocity.utils import print_anndata
-from pyrovelocity.utils import print_attributes
-
 
 """Loads model-trained data and generates figures.
 
@@ -243,7 +228,9 @@ def summarize_fig2_part2(
 ):
     if fig is None:
         fig = plt.figure(figsize=(9.5, 5))
-        subfigs = fig.subfigures(1, 2, wspace=0.0, hspace=0, width_ratios=[1.8, 4])
+        subfigs = fig.subfigures(
+            1, 2, wspace=0.0, hspace=0, width_ratios=[1.8, 4]
+        )
         ax = subfigs[0].subplots(2, 1)
         plot_posterior_time(
             posterior_samples,
@@ -310,15 +297,21 @@ def cluster_violin_plots(
         cluster_time_list.append(cluster_time)
     print(cluster_time_list)
     sorted_cluster_id = sorted(
-        range(len(cluster_time_list)), key=lambda k: cluster_time_list[k], reverse=False
+        range(len(cluster_time_list)),
+        key=lambda k: cluster_time_list[k],
+        reverse=False,
     )
     order = clusters[sorted_cluster_id]
 
     umap_cell_angles = posterior_samples["embeds_angle"] / np.pi * 180
     # umap_cell_cirsvar = circvar(umap_cell_angles, axis=0)
-    umap_angle_std = acircstd(umap_cell_angles * u.deg, method="angular", axis=0)
+    umap_angle_std = acircstd(
+        umap_cell_angles * u.deg, method="angular", axis=0
+    )
     umap_angle_std_list.append(umap_angle_std)
-    umap_angle_uncertain = get_posterior_sample_angle_uncertainty(umap_cell_angles)
+    umap_angle_uncertain = get_posterior_sample_angle_uncertainty(
+        umap_cell_angles
+    )
     umap_angle_uncertain_list.append(umap_angle_uncertain)
 
     pca_cell_vector = posterior_samples["pca_vector_field_posterior_samples"]
@@ -330,9 +323,13 @@ def cluster_violin_plots(
 
     pca_cell_angles = posterior_samples["pca_embeds_angle"] / np.pi * 180
     # pca_cell_cirsvar = circvar(pca_cell_angles, axis=0)
-    pca_cell_cirsstd = acircstd(pca_cell_angles * u.deg, method="angular", axis=0)
+    pca_cell_cirsstd = acircstd(
+        pca_cell_angles * u.deg, method="angular", axis=0
+    )
     pca_angle_std_list.append(pca_cell_cirsstd)
-    pca_angle_uncertain = get_posterior_sample_angle_uncertainty(pca_cell_angles)
+    pca_angle_uncertain = get_posterior_sample_angle_uncertainty(
+        pca_cell_angles
+    )
     pca_angle_uncertain_list.append(pca_angle_uncertain)
 
     umap_cell_magnitudes = np.sqrt(
@@ -340,7 +337,9 @@ def cluster_violin_plots(
     )
     umap_cell_magnitudes_mean = umap_cell_magnitudes.mean(axis=-2)
     umap_cell_magnitudes_std = umap_cell_magnitudes.std(axis=-2)
-    umap_cell_magnitudes_cov = umap_cell_magnitudes_std / umap_cell_magnitudes_mean
+    umap_cell_magnitudes_cov = (
+        umap_cell_magnitudes_std / umap_cell_magnitudes_mean
+    )
 
     print(posterior_samples.keys())
     cell_magnitudes = posterior_samples["original_spaces_embeds_magnitude"]
@@ -449,7 +448,9 @@ def cluster_violin_plots(
                 y=metrics_df.keys()[i],
                 order=order,
             )
-            annotator.configure(test="Mann-Whitney", text_format="star", loc="inside")
+            annotator.configure(
+                test="Mann-Whitney", text_format="star", loc="inside"
+            )
             annotator.apply_and_annotate()
 
     for axi in ax:
@@ -515,12 +516,13 @@ def extrapolate_prediction_sample_predictive(
 ):
     pyrovelocity_model_path = data_model_conf.model_path
     PyroVelocity.setup_anndata(adata)
-    model = PyroVelocity(adata, add_offset=False, guide_type="auto_t0_constraint")
+    model = PyroVelocity(
+        adata, add_offset=False, guide_type="auto_t0_constraint"
+    )
     model = model.load_model(pyrovelocity_model_path, adata, use_gpu=0)
     print(pyrovelocity_model_path)
 
     scdl = model._make_data_loader(adata=adata, indices=None, batch_size=1000)
-    from collections import defaultdict
 
     posterior_samples_list = []
     for tensor_dict in scdl:
@@ -551,13 +553,19 @@ def extrapolate_prediction_sample_predictive(
         posterior_samples = {}
         posterior_samples_batch_sample = []
         for sample in range(5):
-            guide_trace = pyro.poutine.trace(model.module.guide).get_trace(*dummy_obs)
-            trained_model = pyro.poutine.replay(model.module.model, trace=guide_trace)
+            guide_trace = pyro.poutine.trace(model.module.guide).get_trace(
+                *dummy_obs
+            )
+            trained_model = pyro.poutine.replay(
+                model.module.model, trace=guide_trace
+            )
             model_discrete = infer_discrete(
                 trained_model, temperature=0, first_available_dim=-3
             )
             trace = pyro.poutine.trace(model_discrete).get_trace(*dummy_obs)
-            map_estimate_cell_gene_state = trace.nodes["cell_gene_state"]["value"]
+            map_estimate_cell_gene_state = trace.nodes["cell_gene_state"][
+                "value"
+            ]
             alpha = trace.nodes["alpha"]["value"]
             beta = trace.nodes["beta"]["value"]
             gamma = trace.nodes["gamma"]["value"]
@@ -575,7 +583,9 @@ def extrapolate_prediction_sample_predictive(
                 u_scale = alpha.new_ones(alpha.shape)
             posterior_samples_batch_sample.append(
                 {
-                    "cell_gene_state": map_estimate_cell_gene_state.unsqueeze(-3),
+                    "cell_gene_state": map_estimate_cell_gene_state.unsqueeze(
+                        -3
+                    ),
                     "alpha": alpha.unsqueeze(-2).unsqueeze(-3),
                     "beta": beta.unsqueeze(-2).unsqueeze(-3),
                     "gamma": gamma.unsqueeze(-2).unsqueeze(-3),
@@ -592,7 +602,10 @@ def extrapolate_prediction_sample_predictive(
             posterior_samples[key] = torch.tensor(
                 np.concatenate(
                     [
-                        posterior_samples_batch_sample[j][key].cpu().detach().numpy()
+                        posterior_samples_batch_sample[j][key]
+                        .cpu()
+                        .detach()
+                        .numpy()
                         for j in range(len(posterior_samples_batch_sample))
                     ],
                     axis=-3,
@@ -718,13 +731,15 @@ def posterior_curve(
                 grid_cell_time.mean(0).flatten() >= t0_sample
             ).astype("float32")
 
-            cell_gene_state_grid = grid_time_samples_state[0][:, index[0]].astype(
-                "float32"
-            )
+            cell_gene_state_grid = grid_time_samples_state[0][
+                :, index[0]
+            ].astype("float32")
 
             grid_mask_t0_sample = grid_mask_t0_sample + cell_gene_state_grid
             grid_mask_t0_sample = grid_mask_t0_sample.astype(int)
-            grid_mask_t0_sample[grid_cell_time.mean(0).flatten() < t0_sample] = 0
+            grid_mask_t0_sample[
+                grid_cell_time.mean(0).flatten() < t0_sample
+            ] = 0
             grid_cell_colors = colors[grid_mask_t0_sample]
             print(grid_time_samples_st.shape)
 
@@ -826,7 +841,13 @@ def posterior_curve(
             )
 
             ax[sample + 8].scatter(
-                t0_sample, s0, s=80, marker="p", linewidth=0.5, c="purple", alpha=0.8
+                t0_sample,
+                s0,
+                s=80,
+                marker="p",
+                linewidth=0.5,
+                c="purple",
+                alpha=0.8,
             )
             ax[sample + 8].scatter(
                 t0_sample + dt_switching_sample,
@@ -842,7 +863,12 @@ def posterior_curve(
                 s0, u0 * uscale, s=60, marker="p", linewidth=0.5, c="purple"
             )
             ax[sample].scatter(
-                s_inf, u_inf * uscale, s=60, marker="p", linewidth=0.5, c="black"
+                s_inf,
+                u_inf * uscale,
+                s=60,
+                marker="p",
+                linewidth=0.5,
+                c="black",
             )
             # ax[sample].plot(grid_time_samples_st[sample][:, index[0]],
             #                grid_time_samples_ut[sample][:, index[0]],
@@ -860,10 +886,18 @@ def posterior_curve(
                 print(cell_time_sample.shape)
 
             switching = t0_sample + dt_switching_sample
-            state0 = (cell_gene_state_grid == 0) & (cell_time_sample <= switching)
-            state0_false = (cell_gene_state_grid == 0) & (cell_time_sample > switching)
-            state1 = (cell_gene_state_grid == 1) & (cell_time_sample >= switching)
-            state1_false = (cell_gene_state_grid == 1) & (cell_time_sample < switching)
+            state0 = (cell_gene_state_grid == 0) & (
+                cell_time_sample <= switching
+            )
+            state0_false = (cell_gene_state_grid == 0) & (
+                cell_time_sample > switching
+            )
+            state1 = (cell_gene_state_grid == 1) & (
+                cell_time_sample >= switching
+            )
+            state1_false = (cell_gene_state_grid == 1) & (
+                cell_time_sample < switching
+            )
 
             ax[sample].set_title(
                 f"{gene} model 2 sample {sample}\nt0>celltime:{(t0_sample>cell_time_sample_max)} {(t0_sample>cell_time_sample).sum()}\nstate0: {state0.sum()} {state0_false.sum()} state1: {state1.sum()} {state1_false.sum()}",
@@ -947,7 +981,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         fig2_part2_plot = reports_data_model_conf.fig2_part2_plot
         violin_clusters_lin = reports_data_model_conf.violin_clusters_lin
         violin_clusters_log = reports_data_model_conf.violin_clusters_log
-        parameter_uncertainty_plot_path = reports_data_model_conf.uncertainty_param_plot
+        parameter_uncertainty_plot_path = (
+            reports_data_model_conf.uncertainty_param_plot
+        )
 
         output_filenames = [
             dataframe_path,
@@ -959,9 +995,13 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         ]
         if all(os.path.isfile(f) for f in output_filenames):
             logger.info(
-                "\n\t" + "\n\t".join(output_filenames) + "\nAll output files exist"
+                "\n\t"
+                + "\n\t".join(output_filenames)
+                + "\nAll output files exist"
             )
-            return logger.warn("Remove output files if you want to regenerate them.")
+            return logger.warn(
+                "Remove output files if you want to regenerate them."
+            )
 
         logger.info(f"Loading trained data: {trained_data_path}")
         adata = scv.read(trained_data_path)
@@ -1004,16 +1044,26 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             )
             ax[sample].set_ylim(-0.5, 4)
             if sample == 28:
-                ax[sample].legend(loc="best", bbox_to_anchor=(0.5, 0.0, 0.5, 0.5))
-            print((t0_sample.flatten() > cell_time_sample.flatten().max()).sum())
-            print((t0_sample.flatten() < switching_sample.flatten().max()).sum())
-            print((t0_sample.flatten() > switching_sample.flatten().max()).sum())
+                ax[sample].legend(
+                    loc="best", bbox_to_anchor=(0.5, 0.0, 0.5, 0.5)
+                )
+            print(
+                (t0_sample.flatten() > cell_time_sample.flatten().max()).sum()
+            )
+            print(
+                (t0_sample.flatten() < switching_sample.flatten().max()).sum()
+            )
+            print(
+                (t0_sample.flatten() > switching_sample.flatten().max()).sum()
+            )
             for gene in adata.var_names[
                 t0_sample.flatten() > cell_time_sample.flatten().max()
             ]:
                 print(gene)
         ax[-1].hist(t0_sample.flatten(), bins=200, color="red", alpha=0.3)
-        ax[-1].hist(cell_time_sample.flatten(), bins=500, color="blue", alpha=0.3)
+        ax[-1].hist(
+            cell_time_sample.flatten(), bins=500, color="blue", alpha=0.3
+        )
 
         fig.savefig(
             reports_data_model_conf.t0_selection,
@@ -1035,7 +1085,10 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             grid_time_samples_t0,
             grid_time_samples_dt_switching,
         ) = extrapolate_prediction_sample_predictive(
-            posterior_samples["cell_time"], data_model_conf, adata, grid_time_points=500
+            posterior_samples["cell_time"],
+            data_model_conf,
+            adata,
+            grid_time_points=500,
         )
         # extrapolate_prediction_trace(data_model_conf, adata, grid_time_points=5)
 
@@ -1310,7 +1363,8 @@ def rename_anndata_genes(adata, gene_mapping):
 
     var_names = adata.var_names.tolist()
     var_names = [
-        gene_mapping[name] if name in gene_mapping else name for name in var_names
+        gene_mapping[name] if name in gene_mapping else name
+        for name in var_names
     ]
     adata.var_names = var_names
 

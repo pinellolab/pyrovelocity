@@ -1,26 +1,7 @@
-import matplotlib
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 import pyro
 import scvelo as scv
-import seaborn as sns
 import torch
-
 from pyrovelocity.api import train_model
-from pyrovelocity.plot import denoised_umap
-from pyrovelocity.plot import plot_arrow_examples
-from pyrovelocity.plot import plot_gene_ranking
-from pyrovelocity.plot import plot_mean_vector_field
-from pyrovelocity.plot import plot_posterior_time
-from pyrovelocity.plot import plot_vector_field_uncertain
-from pyrovelocity.plot import project_grid_points
-from pyrovelocity.plot import rainbowplot
-from pyrovelocity.plot import us_rainbowplot
-from pyrovelocity.plot import vector_field_uncertainty
-from pyrovelocity.utils import mae
-from pyrovelocity.utils import mae_evaluate
-
 
 adata = scv.datasets.pancreas()
 adata.layers["raw_unspliced"] = adata.layers["unspliced"]

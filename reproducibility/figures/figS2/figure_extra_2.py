@@ -1,6 +1,4 @@
-import errno
 import os
-import pickle
 from logging import Logger
 from pathlib import Path
 
@@ -10,30 +8,15 @@ import numpy as np
 import pandas as pd
 import scvelo as scv
 import seaborn as sns
-from astropy import units as u
-from astropy.stats import circstd
 
 # from scipy.stats import circvar, circstd, circmean
-from matplotlib.backends.backend_pdf import PdfPages
-from matplotlib_venn import venn2
 from omegaconf import DictConfig
-from scipy.stats import pearsonr
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import roc_auc_score
-from sklearn.model_selection import cross_val_score
-from sklearn.preprocessing import LabelBinarizer
-from sklearn.preprocessing import LabelEncoder
-from statannotations.Annotator import Annotator
-
-from pyrovelocity.config import print_config_tree
 from pyrovelocity.io.compressedpickle import CompressedPickle
-from pyrovelocity.plot import get_posterior_sample_angle_uncertainty
-from pyrovelocity.plot import plot_arrow_examples
-from pyrovelocity.plot import plot_gene_ranking
-from pyrovelocity.plot import plot_posterior_time
-from pyrovelocity.plot import plot_vector_field_uncertain
-from pyrovelocity.plot import rainbowplot
+from pyrovelocity.plot import (
+    get_posterior_sample_angle_uncertainty,
+)
 from pyrovelocity.utils import get_pylogger
+from scipy.stats import pearsonr
 
 
 def plots(
@@ -71,7 +54,9 @@ def plots(
 
         cell_time_std = posterior_samples["cell_time"].std(0).flatten()
         umap_cell_angles = posterior_samples["embeds_angle"] / np.pi * 180
-        umap_angle_uncertain = get_posterior_sample_angle_uncertainty(umap_cell_angles)
+        umap_angle_uncertain = get_posterior_sample_angle_uncertainty(
+            umap_cell_angles
+        )
 
         cell_magnitudes = posterior_samples["original_spaces_embeds_magnitude"]
         cell_magnitudes_mean = cell_magnitudes.mean(axis=-2)

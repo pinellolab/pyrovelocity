@@ -1,4 +1,3 @@
-import argparse
 import os
 import pickle
 from logging import Logger
@@ -8,14 +7,12 @@ import hydra
 import matplotlib.pyplot as plt
 import scvelo as scv
 from omegaconf import DictConfig
-from scipy.stats import spearmanr
 
 # from pyrovelocity.config import config_setup
 from pyrovelocity.config import print_config_tree
-from pyrovelocity.plot import plot_gene_ranking
-from pyrovelocity.plot import us_rainbowplot
+from pyrovelocity.plot import plot_gene_ranking, us_rainbowplot
 from pyrovelocity.utils import get_pylogger
-
+from scipy.stats import spearmanr
 
 """Loads model1-trained pancreas data and generates figures.
 
@@ -39,7 +36,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     ###########
 
     trained_data_path = conf.model_training.pancreas_model1.trained_data_path
-    pyrovelocity_data_path = conf.model_training.pancreas_model1.pyrovelocity_data_path
+    pyrovelocity_data_path = (
+        conf.model_training.pancreas_model1.pyrovelocity_data_path
+    )
 
     pancreas_model1 = conf.reports.figure2.pancreas_model1
     shared_time_plot = pancreas_model1.shared_time_plot
@@ -189,7 +188,9 @@ def main(conf: DictConfig) -> None:
         f"  model data: {conf.model_training.pancreas_model1.path}\n"
         f"  reports: {conf.reports.figure2.path}\n"
     )
-    Path(conf.model_training.pancreas_model1.path).mkdir(parents=True, exist_ok=True)
+    Path(conf.model_training.pancreas_model1.path).mkdir(
+        parents=True, exist_ok=True
+    )
     Path(conf.reports.figure2.path).mkdir(parents=True, exist_ok=True)
 
     plots(conf, logger)

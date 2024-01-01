@@ -3,10 +3,8 @@ import pickle
 import matplotlib.pyplot as plt
 import pandas as pd
 import scvelo as scv
-
 from pyrovelocity.cytotrace import compute_similarity2
 from pyrovelocity.plot import plot_gene_ranking
-
 
 with open("../fig2/model1/fig2_pancreas_data.pkl", "rb") as f:
     result_dict = pickle.load(f)
@@ -21,7 +19,8 @@ adata = scv.read("../fig2/model1/fig2_pancreas_processed.h5ad")
 
 
 df_genes_cors = compute_similarity2(
-    adata.layers["spliced"].toarray(), adata.obs.latent_time.values.reshape(-1, 1)
+    adata.layers["spliced"].toarray(),
+    adata.obs.latent_time.values.reshape(-1, 1),
 )
 
 scvelo_top = pd.DataFrame(
@@ -37,22 +36,26 @@ volcano_data2, _ = plot_gene_ranking(
 )
 
 with pd.ExcelWriter("SuppTable1.xlsx") as writer:
-    volcano_data2.sort_values("mean_mae", ascending=False).head(300).sort_values(
-        "time_correlation", ascending=False
-    ).head(50).to_excel(
+    volcano_data2.sort_values("mean_mae", ascending=False).head(
+        300
+    ).sort_values("time_correlation", ascending=False).head(50).to_excel(
         writer, sheet_name="pyro_velocity_top_positive_correlation_genes"
     )
     scvelo_top.sort_values("likelihood", ascending=False).head(300).sort_values(
         "cor", ascending=False
-    ).head(50).to_excel(writer, sheet_name="scvelo_top_positive_correlation_genes")
-    volcano_data2.sort_values("mean_mae", ascending=False).head(300).sort_values(
-        "time_correlation", ascending=True
     ).head(50).to_excel(
+        writer, sheet_name="scvelo_top_positive_correlation_genes"
+    )
+    volcano_data2.sort_values("mean_mae", ascending=False).head(
+        300
+    ).sort_values("time_correlation", ascending=True).head(50).to_excel(
         writer, sheet_name="pyro_velocity_top_negative_correlation_genes"
     )
     scvelo_top.sort_values("likelihood", ascending=False).head(300).sort_values(
         "cor", ascending=True
-    ).head(50).to_excel(writer, sheet_name="scvelo_top_negative_correlation_genes")
+    ).head(50).to_excel(
+        writer, sheet_name="scvelo_top_negative_correlation_genes"
+    )
 
 
 with open("../suppfig3/model2/fig2_pancreas_data_model2.pkl", "rb") as f:
@@ -68,9 +71,9 @@ adata = scv.read("../suppfig3/model2/fig2_pancreas_processed_model2.h5ad")
 
 from pyrovelocity.cytotrace import compute_similarity2
 
-
 df_genes_cors = compute_similarity2(
-    adata.layers["spliced"].toarray(), adata.obs.latent_time.values.reshape(-1, 1)
+    adata.layers["spliced"].toarray(),
+    adata.obs.latent_time.values.reshape(-1, 1),
 )
 
 scvelo_top = pd.DataFrame(
@@ -86,19 +89,23 @@ volcano_data2, _ = plot_gene_ranking(
 )
 
 with pd.ExcelWriter("SuppTable2.xlsx") as writer:
-    volcano_data2.sort_values("mean_mae", ascending=False).head(300).sort_values(
-        "time_correlation", ascending=False
-    ).head(50).to_excel(
+    volcano_data2.sort_values("mean_mae", ascending=False).head(
+        300
+    ).sort_values("time_correlation", ascending=False).head(50).to_excel(
         writer, sheet_name="pyro_velocity_top_positive_correlation_genes"
     )
     scvelo_top.sort_values("likelihood", ascending=False).head(300).sort_values(
         "cor", ascending=False
-    ).head(50).to_excel(writer, sheet_name="scvelo_top_positive_correlation_genes")
-    volcano_data2.sort_values("mean_mae", ascending=False).head(300).sort_values(
-        "time_correlation", ascending=True
     ).head(50).to_excel(
+        writer, sheet_name="scvelo_top_positive_correlation_genes"
+    )
+    volcano_data2.sort_values("mean_mae", ascending=False).head(
+        300
+    ).sort_values("time_correlation", ascending=True).head(50).to_excel(
         writer, sheet_name="pyro_velocity_top_negative_correlation_genes"
     )
     scvelo_top.sort_values("likelihood", ascending=False).head(300).sort_values(
         "cor", ascending=True
-    ).head(50).to_excel(writer, sheet_name="scvelo_top_negative_correlation_genes")
+    ).head(50).to_excel(
+        writer, sheet_name="scvelo_top_negative_correlation_genes"
+    )

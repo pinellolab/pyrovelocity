@@ -2,16 +2,15 @@ import os
 import pickle
 
 import matplotlib.pyplot as plt
-import numpy as np
 import scvelo as scv
-
 from pyrovelocity.api import train_model
 from pyrovelocity.data import load_larry
-from pyrovelocity.plot import plot_gene_ranking
-from pyrovelocity.plot import plot_mean_vector_field
-from pyrovelocity.plot import us_rainbowplot
-from pyrovelocity.plot import vector_field_uncertainty
-
+from pyrovelocity.plot import (
+    plot_gene_ranking,
+    plot_mean_vector_field,
+    us_rainbowplot,
+    vector_field_uncertainty,
+)
 
 """Loads and plots data for all cell types and trains and saves model2 model.
 
@@ -44,7 +43,9 @@ adata = load_larry()
 
 if not os.path.exists("larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad"):
     adata_input = adata.copy()
-    scv.pp.filter_and_normalize(adata_input, min_shared_counts=30, n_top_genes=2000)
+    scv.pp.filter_and_normalize(
+        adata_input, min_shared_counts=30, n_top_genes=2000
+    )
     scv.pp.moments(adata_input, n_pcs=30, n_neighbors=30)
     scv.tl.recover_dynamics(adata_input, n_jobs=30)
     scv.tl.velocity(adata_input, mode="dynamical")
@@ -52,14 +53,22 @@ if not os.path.exists("larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad"):
     scv.tl.latent_time(adata_input)
     adata_input.write("larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad")
 else:
-    adata_input = scv.read("larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad")
+    adata_input = scv.read(
+        "larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad"
+    )
 
-adata_input.layers["raw_spliced"] = adata[:, adata_input.var_names].layers["spliced"]
+adata_input.layers["raw_spliced"] = adata[:, adata_input.var_names].layers[
+    "spliced"
+]
 adata_input.layers["raw_unspliced"] = adata[:, adata_input.var_names].layers[
     "unspliced"
 ]
-adata_input.obs["u_lib_size_raw"] = adata_input.layers["unspliced"].toarray().sum(-1)
-adata_input.obs["s_lib_size_raw"] = adata_input.layers["spliced"].toarray().sum(-1)
+adata_input.obs["u_lib_size_raw"] = (
+    adata_input.layers["unspliced"].toarray().sum(-1)
+)
+adata_input.obs["s_lib_size_raw"] = (
+    adata_input.layers["spliced"].toarray().sum(-1)
+)
 
 
 #############
@@ -130,7 +139,7 @@ embed_mean = plot_mean_vector_field(
     adata_input,
     ax=ax,
     basis="emb",
-    n_jobs=1
+    n_jobs=1,
     # n_jobs > 1 potentially raises joblib.externals.loky.process_executor.BrokenProcessPool: A task has failed to un-serialize. Please ensure that the arguments of the function are all picklable.
     # solution: https://stackoverflow.com/questions/56154654/a-task-failed-to-un-serialize
     #           https://joblib.readthedocs.io/en/latest/parallel.html#thread-based-parallelism-vs-process-based-parallelism

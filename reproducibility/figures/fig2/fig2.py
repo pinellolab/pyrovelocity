@@ -5,13 +5,13 @@ import numpy as np
 import pandas as pd
 import scvelo as scv
 import seaborn as sns
-
-from pyrovelocity.plot import plot_arrow_examples
-from pyrovelocity.plot import plot_gene_ranking
-from pyrovelocity.plot import plot_posterior_time
-from pyrovelocity.plot import plot_vector_field_uncertain
-from pyrovelocity.plot import rainbowplot
-
+from pyrovelocity.plot import (
+    plot_arrow_examples,
+    plot_gene_ranking,
+    plot_posterior_time,
+    plot_vector_field_uncertain,
+    rainbowplot,
+)
 
 """Loads preprocessed figure 2 data and produces figure 2.
 
@@ -63,7 +63,9 @@ adata_pbmc = scv.read("fig2_pbmc_processed.h5ad")
 fig = plt.figure(figsize=(7.07, 6.5))
 dot_size = 3
 font_size = 7
-subfig = fig.subfigures(3, 1, wspace=0.0, hspace=0, height_ratios=[1.2, 1.2, 2.6])
+subfig = fig.subfigures(
+    3, 1, wspace=0.0, hspace=0, height_ratios=[1.2, 1.2, 2.6]
+)
 
 ress = pd.DataFrame(
     {
@@ -72,7 +74,9 @@ ress = pd.DataFrame(
         "X2": adata_pbmc.obsm["X_tsne"][:, 1],
     }
 )
-pbmcfig_A0 = subfig[0].subfigures(1, 2, wspace=0.0, hspace=0, width_ratios=[4, 2])
+pbmcfig_A0 = subfig[0].subfigures(
+    1, 2, wspace=0.0, hspace=0, width_ratios=[4, 2]
+)
 ax = pbmcfig_A0[0].subplots(1, 4)
 sns.scatterplot(
     x="X1",
@@ -128,7 +132,7 @@ scv.pl.velocity_embedding_stream(
     title="",
     ax=ax[2],
     vkey="velocity_pyro",
-    **kwargs
+    **kwargs,
 )
 ax[2].set_title("Pyro-Velocity\n", fontsize=7)
 
@@ -167,7 +171,9 @@ pbmcfig_A0[0].subplots_adjust(
 pbmcfig_A0[1].subplots_adjust(
     hspace=0.2, wspace=0.1, left=0.01, right=0.99, top=0.99, bottom=0.45
 )
-pbmcfig_A0[0].text(-0.06, 0.58, "PBMC", size=7, rotation="vertical", va="center")
+pbmcfig_A0[0].text(
+    -0.06, 0.58, "PBMC", size=7, rotation="vertical", va="center"
+)
 
 ress = pd.DataFrame(
     {
@@ -176,7 +182,9 @@ ress = pd.DataFrame(
         "X2": adata.obsm["X_umap"][:, 1],
     }
 )
-subfig_A0 = subfig[1].subfigures(1, 2, wspace=0.0, hspace=0, width_ratios=[4, 2])
+subfig_A0 = subfig[1].subfigures(
+    1, 2, wspace=0.0, hspace=0, width_ratios=[4, 2]
+)
 
 ax = subfig_A0[0].subplots(1, 4)
 sns.scatterplot(
@@ -232,7 +240,7 @@ scv.pl.velocity_embedding_stream(
     title="",
     ax=ax[2],
     vkey="velocity_pyro",
-    **kwargs
+    **kwargs,
 )
 ax[2].set_title("Pyro-Velocity\n", fontsize=7)
 
@@ -272,18 +280,28 @@ subfig_A0[0].subplots_adjust(
 subfig_A0[1].subplots_adjust(
     hspace=0.2, wspace=0.1, left=0.01, right=0.99, top=0.80, bottom=0.33
 )
-subfig_A0[0].text(-0.06, 0.58, "Pancreas", size=7, rotation="vertical", va="center")
+subfig_A0[0].text(
+    -0.06, 0.58, "Pancreas", size=7, rotation="vertical", va="center"
+)
 
-subfig_B = subfig[2].subfigures(1, 2, wspace=0.0, hspace=0, width_ratios=[1.6, 4])
+subfig_B = subfig[2].subfigures(
+    1, 2, wspace=0.0, hspace=0, width_ratios=[1.6, 4]
+)
 ax = subfig_B[0].subplots(2, 1)
-plot_posterior_time(adata_model_pos, adata, ax=ax[0], fig=subfig_B[0], addition=False)
+plot_posterior_time(
+    adata_model_pos, adata, ax=ax[0], fig=subfig_B[0], addition=False
+)
 subfig_B[0].subplots_adjust(
     hspace=0.3, wspace=0.1, left=0.01, right=0.8, top=0.92, bottom=0.17
 )
 
 
 volcano_data2, _ = plot_gene_ranking(
-    [adata_model_pos], [adata], ax=ax[1], time_correlation_with="st", assemble=True
+    [adata_model_pos],
+    [adata],
+    ax=ax[1],
+    time_correlation_with="st",
+    assemble=True,
 )
 ax[0].text(
     -0.22,
@@ -308,7 +326,12 @@ ax[1].text(
 
 
 _ = rainbowplot(
-    volcano_data2, adata, adata_model_pos, subfig_B[1], data=["st", "ut"], num_genes=4
+    volcano_data2,
+    adata,
+    adata_model_pos,
+    subfig_B[1],
+    data=["st", "ut"],
+    num_genes=4,
 )
 
 

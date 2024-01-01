@@ -1,15 +1,9 @@
-import os
 import pickle
 
 import matplotlib.pyplot as plt
-import numpy as np
-import scvelo as scv
-
 from pyrovelocity.api import train_model
 from pyrovelocity.data import load_pbmc
-from pyrovelocity.plot import plot_mean_vector_field
-from pyrovelocity.plot import vector_field_uncertainty
-
+from pyrovelocity.plot import plot_mean_vector_field, vector_field_uncertainty
 
 """Loads PBMC data and trains and saves model1 model.
 

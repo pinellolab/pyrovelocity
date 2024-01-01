@@ -2,10 +2,7 @@ import os
 
 import cospar as cs
 import scvelo as scv
-
-from pyrovelocity.cytotrace import cytotrace_sparse
 from pyrovelocity.data import load_larry
-
 
 """Analyzes LARRY data with cospar for model comparison.
 

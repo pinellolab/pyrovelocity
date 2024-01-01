@@ -10,6 +10,9 @@ import scvelo as scv
 import seaborn as sns
 from annoy import AnnoyIndex
 from omegaconf import DictConfig
+from pyrovelocity.config import print_config_tree
+from pyrovelocity.io.compressedpickle import CompressedPickle
+from pyrovelocity.utils import get_pylogger
 from scipy.stats import spearmanr
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import pairwise_distances
@@ -17,12 +20,6 @@ from sklearn.model_selection import cross_val_score
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import LabelEncoder
 from tqdm import tqdm
-
-from pyrovelocity.config import print_config_tree
-from pyrovelocity.io.compressedpickle import CompressedPickle
-from pyrovelocity.utils import get_pylogger
-from pyrovelocity.utils import pretty_print_dict
-from pyrovelocity.utils import print_anndata
 
 
 def load_data(data_model_conf):
@@ -42,7 +39,9 @@ def train_classifier(posterior_samples, sample_size, adata, cell_state):
         le = LabelEncoder()
         y_sample = le.fit_transform(adata.obs[cell_state].values)
 
-        lr = LogisticRegression(random_state=42, C=1.0, penalty=None, max_iter=100)
+        lr = LogisticRegression(
+            random_state=42, C=1.0, penalty=None, max_iter=100
+        )
         x_all = posterior_samples["cell_time"][sample]
         macro_roc_auc_ovr_crossval = cross_val_score(
             lr, x_all, y_sample, cv=5, scoring="f1_macro"
@@ -147,7 +146,9 @@ def compute_distances_and_correlation(
         list: p-values associated with the correlations.
     """
 
-    def compute_nearest_neighbors(expression_vectors, n_neighbors, distance_metric):
+    def compute_nearest_neighbors(
+        expression_vectors, n_neighbors, distance_metric
+    ):
         if use_approx_nn:
             f = expression_vectors.shape[1]
             t = AnnoyIndex(f, metric=distance_metric)
@@ -192,7 +193,8 @@ def compute_distances_and_correlation(
     correlations = []
     p_values = []
     for temporal_coordinates in tqdm(
-        posterior_samples["cell_time"][:3], desc="computing distance-time correlations"
+        posterior_samples["cell_time"][:3],
+        desc="computing distance-time correlations",
     ):
         temporal_coordinates = temporal_coordinates.reshape(-1)
 
@@ -204,8 +206,12 @@ def compute_distances_and_correlation(
             subsample_indices = np.random.choice(
                 np.arange(n_cells), subsample_size, replace=False
             )
-            selected_expression_vectors = expression_vectors[subsample_indices, :]
-            selected_temporal_coordinates = temporal_coordinates[subsample_indices]
+            selected_expression_vectors = expression_vectors[
+                subsample_indices, :
+            ]
+            selected_temporal_coordinates = temporal_coordinates[
+                subsample_indices
+            ]
             selected_expression_distances_matrix = pairwise_distances(
                 selected_expression_vectors, metric=distance_metric, n_jobs=-1
             )
@@ -232,7 +238,9 @@ def compute_distances_and_correlation(
     return correlations, p_values
 
 
-def plot_distance_time_correlation(correlations, p_values, file_path, dataset_labels):
+def plot_distance_time_correlation(
+    correlations, p_values, file_path, dataset_labels
+):
     """
     Create a violin plot of the correlation between expression distances and temporal differences.
 
@@ -306,7 +314,8 @@ def plots(conf: DictConfig, logger: Logger) -> None:
 
     if os.path.isfile(confS2.rayleigh_classifier_plot):
         logger.info(
-            f"\n\nFigure already exists:\n\n" f"  {confS2.rayleigh_classifier_plot}\n"
+            f"\n\nFigure already exists:\n\n"
+            f"  {confS2.rayleigh_classifier_plot}\n"
         )
         rayleigh_classifier_plot_exists = True
     else:
@@ -350,7 +359,10 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         # print_anndata(adata)
         # pretty_print_dict(posterior_samples)
 
-        if not distance_time_correlation_plot_exists and "_coarse" not in data_model:
+        if (
+            not distance_time_correlation_plot_exists
+            and "_coarse" not in data_model
+        ):
             # profile_function(compute_distances_and_correlation, adata, posterior_samples)
             correlations, p_values = compute_distances_and_correlation(
                 adata, posterior_samples
@@ -359,7 +371,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             p_values_all_models.append(p_values)
 
         if not rayleigh_classifier_plot_exists:
-            logger.info(f"\n\nComputing Rayleigh statistics for {data_model}\n\n")
+            logger.info(
+                f"\n\nComputing Rayleigh statistics for {data_model}\n\n"
+            )
             (
                 m_labels,
                 rayleigh_umap,
@@ -396,7 +410,10 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     if not rayleigh_classifier_plot_exists:
         logger.info(f"\n\nCreating {confS2.rayleigh_classifier_plot}\n\n")
         global_uncertainties_aucs = pd.DataFrame(
-            {"dataset": macro_labels, "f1_macro": multiclass_macro_aucs_test_all_models}
+            {
+                "dataset": macro_labels,
+                "f1_macro": multiclass_macro_aucs_test_all_models,
+            }
         )
         cell_uncertainties_metrics = pd.DataFrame(
             {

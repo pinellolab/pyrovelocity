@@ -10,18 +10,16 @@ import mlflow
 import torch
 from mlflow import MlflowClient
 from omegaconf import DictConfig
-
 from pyrovelocity.api import train_model
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.data import load_data
 from pyrovelocity.io.compressedpickle import CompressedPickle
-from pyrovelocity.utils import filter_startswith_dict
-from pyrovelocity.utils import get_pylogger
-from pyrovelocity.utils import mae_evaluate
-from pyrovelocity.utils import pretty_print_dict
-from pyrovelocity.utils import print_anndata
-from pyrovelocity.utils import print_attributes
-
+from pyrovelocity.utils import (
+    filter_startswith_dict,
+    get_pylogger,
+    print_anndata,
+    print_attributes,
+)
 
 """Loads processed data and trains and saves model.
 
@@ -94,7 +92,9 @@ def train(conf: DictConfig, logger: Logger) -> None:
 
         print(f"GPU ID: {gpu_id}")
 
-        if os.path.exists(model_path) and os.path.isfile(pyrovelocity_data_path):
+        if os.path.exists(model_path) and os.path.isfile(
+            pyrovelocity_data_path
+        ):
             logger.info(
                 f"{processed_path}\n{model_path}\n{pyrovelocity_data_path}\nall exist"
             )
@@ -106,14 +106,18 @@ def train(conf: DictConfig, logger: Logger) -> None:
             with mlflow.start_run(
                 run_name=f"{data_model}-{uuid.uuid4().hex[:7]}"
             ) as run:
-                mlflow.set_tag("mlflow.runName", f"{data_model}-{run.info.run_id[:7]}")
+                mlflow.set_tag(
+                    "mlflow.runName", f"{data_model}-{run.info.run_id[:7]}"
+                )
                 print(f"Active run_id: {run.info.run_id}")
                 mlflow.log_params(data_model_conf.training_parameters)
 
                 trained_model, posterior_samples = train_model(
                     adata,
                     **dict(
-                        filter_startswith_dict(data_model_conf.training_parameters),
+                        filter_startswith_dict(
+                            data_model_conf.training_parameters
+                        ),
                         use_gpu=gpu_id,
                     ),
                 )
@@ -173,7 +177,9 @@ def train(conf: DictConfig, logger: Logger) -> None:
 
 def print_logged_info(r: mlflow.entities.run.Run) -> None:
     tags = {k: v for k, v in r.data.tags.items() if not k.startswith("mlflow.")}
-    artifacts = [f.path for f in MlflowClient().list_artifacts(r.info.run_id, "model")]
+    artifacts = [
+        f.path for f in MlflowClient().list_artifacts(r.info.run_id, "model")
+    ]
     print(f"run_id: {r.info.run_id}")
     print(f"artifacts: {artifacts}")
     print(f"params: {r.data.params}")

@@ -1,6 +1,4 @@
-import errno
 import os
-import pickle
 from logging import Logger
 from pathlib import Path
 
@@ -12,23 +10,19 @@ import pandas as pd
 import scvelo as scv
 import seaborn as sns
 from omegaconf import DictConfig
-from scipy.spatial import distance
-from scipy.stats import spearmanr
-from scvelo.plotting.velocity_embedding_grid import default_arrow
-
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.data import load_larry
 from pyrovelocity.io.compressedpickle import CompressedPickle
-from pyrovelocity.plot import align_trajectory_diff
-from pyrovelocity.plot import get_clone_trajectory
-from pyrovelocity.plot import get_posterior_sample_angle_uncertainty
-from pyrovelocity.plot import plot_arrow_examples
-from pyrovelocity.plot import plot_gene_ranking
-from pyrovelocity.plot import plot_posterior_time
-from pyrovelocity.plot import plot_vector_field_uncertain
-from pyrovelocity.plot import rainbowplot
+from pyrovelocity.plot import (
+    align_trajectory_diff,
+    get_clone_trajectory,
+    get_posterior_sample_angle_uncertainty,
+    plot_posterior_time,
+    plot_vector_field_uncertain,
+)
 from pyrovelocity.utils import get_pylogger
-
+from scipy.spatial import distance
+from scipy.stats import spearmanr
 
 """Loads trained figure S3 data and produces figure S3.
 
@@ -148,7 +142,9 @@ def plot_larry_subset(
         color="gray",
         arrow_color="black",
     )
-    ax[2].set_title("scVelo cosine similarity: %.2f" % scvelo_cos_mean, fontsize=7)
+    ax[2].set_title(
+        "scVelo cosine similarity: %.2f" % scvelo_cos_mean, fontsize=7
+    )
     cell_time_mean = posterior_samples["cell_time"].mean(0).flatten()
     cell_time_std = posterior_samples["cell_time"].std(0).flatten()
     cell_time_cov = cell_time_std / cell_time_mean
@@ -171,7 +167,9 @@ def plot_larry_subset(
         uncertain_measure="shared time",
         cmap="winter",
     )
-    ax[3].set_title("Pyro-Velocity cosine similarity: %.2f" % pyro_cos_mean, fontsize=7)
+    ax[3].set_title(
+        "Pyro-Velocity cosine similarity: %.2f" % pyro_cos_mean, fontsize=7
+    )
 
     cell_magnitudes = posterior_samples["original_spaces_embeds_magnitude"]
     cell_magnitudes_mean = cell_magnitudes.mean(axis=-2)
@@ -196,7 +194,9 @@ def plot_larry_subset(
         uncertain_measure="base magnitude",
         cmap="summer",
     )
-    ax[4].set_title("Pyro-Velocity cosine similarity: %.2f" % pyro_cos_mean, fontsize=7)
+    ax[4].set_title(
+        "Pyro-Velocity cosine similarity: %.2f" % pyro_cos_mean, fontsize=7
+    )
 
     pca_angles = posterior_samples["pca_embeds_angle"]
     pca_cell_angles = pca_angles / np.pi * 180  # degree
@@ -221,7 +221,9 @@ def plot_larry_subset(
         cmap="inferno",
         cmax=360,
     )
-    ax[5].set_title("Pyro-Velocity cosine similarity: %.2f" % pyro_cos_mean, fontsize=7)
+    ax[5].set_title(
+        "Pyro-Velocity cosine similarity: %.2f" % pyro_cos_mean, fontsize=7
+    )
 
     scv.pl.scatter(
         adata_cospar[adata_pyrovelocity.obs_names.str.replace(r"-\d", ""), :],
@@ -250,7 +252,9 @@ def plot_larry_subset(
     )
     ax[7].set_title(
         "Scvelo latent time\ncorrelation: %.2f"
-        % spearmanr(-gold[select], adata_scvelo.obs.latent_time.values[select])[0],
+        % spearmanr(-gold[select], adata_scvelo.obs.latent_time.values[select])[
+            0
+        ],
         fontsize=7,
     )
     plot_posterior_time(
@@ -265,7 +269,8 @@ def plot_larry_subset(
     ax[8].set_title(
         "Pyro-Velocity shared time\ncorrelation: %.2f"
         % spearmanr(
-            -gold[select], posterior_samples["cell_time"].mean(0).flatten()[select]
+            -gold[select],
+            posterior_samples["cell_time"].mean(0).flatten()[select],
         )[0],
         fontsize=7,
     )
@@ -338,9 +343,13 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     if os.path.exists("global_gold_standard2.h5ad"):
         adata_input_all_clone = scv.read("global_gold_standard2.h5ad")
     else:
-        adata_reduced_gene_for_clone_vec = adata[:, adata_input_vel.var_names].copy()
+        adata_reduced_gene_for_clone_vec = adata[
+            :, adata_input_vel.var_names
+        ].copy()
         print(adata_reduced_gene_for_clone_vec.shape)
-        adata_input_all_clone = get_clone_trajectory(adata_reduced_gene_for_clone_vec)
+        adata_input_all_clone = get_clone_trajectory(
+            adata_reduced_gene_for_clone_vec
+        )
         adata_input_all_clone.write("global_gold_standard2.h5ad")
 
     adata_input_all_clone.obsm["clone_vector_emb"][
@@ -396,7 +405,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     pyrovelocity_neu_data_path = (
         conf.model_training.larry_neu_model2.pyrovelocity_data_path
     )
-    trained_neu_data_path = conf.model_training.larry_neu_model2.trained_data_path
+    trained_neu_data_path = (
+        conf.model_training.larry_neu_model2.trained_data_path
+    )
     adata_neu_dynamical_data_path = conf.data_sets.larry_neu.derived.rel_path
 
     pyrovelocity_multilineage_data_path = (
@@ -466,7 +477,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         arrow_color="black",
         autoscale=True,
     )
-    ax2[2].set_title("scVelo cosine similarity: %.2f" % scvelo_all_cos_mean, fontsize=7)
+    ax2[2].set_title(
+        "scVelo cosine similarity: %.2f" % scvelo_all_cos_mean, fontsize=7
+    )
 
     cell_time_mean = posterior_samples["cell_time"].mean(0).flatten()
     cell_time_std = posterior_samples["cell_time"].std(0).flatten()
@@ -572,7 +585,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     )
     ax2[7].set_title(
         "Scvelo latent time\ncorrelation: %.2f"
-        % spearmanr(-gold[select], adata_input_all.obs.latent_time.values[select])[0],
+        % spearmanr(
+            -gold[select], adata_input_all.obs.latent_time.values[select]
+        )[0],
         fontsize=7,
     )
     adata_input_all.obs.cytotrace = adata_cytotrace.obs.cytotrace
@@ -588,7 +603,8 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     ax2[8].set_title(
         "Pyro-Velocity shared time\ncorrelation: %.2f"
         % spearmanr(
-            -gold[select], posterior_samples["cell_time"].mean(0).flatten()[select]
+            -gold[select],
+            posterior_samples["cell_time"].mean(0).flatten()[select],
         )[0],
         fontsize=7,
     )
@@ -621,7 +637,11 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         color_dict,
     )
     ax2[0].legend(
-        bbox_to_anchor=[2.3, -0.03], ncol=4, prop={"size": 7}, fontsize=7, frameon=False
+        bbox_to_anchor=[2.3, -0.03],
+        ncol=4,
+        prop={"size": 7},
+        fontsize=7,
+        frameon=False,
     )
 
     for a, label, title in zip(

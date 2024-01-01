@@ -1,15 +1,12 @@
 import os
 from logging import Logger
 from pathlib import Path
-from typing import Text
 
 import hydra
-from omegaconf import DictConfig
-
 import pyrovelocity.data
+from omegaconf import DictConfig
 from pyrovelocity.config import print_config_tree
-from pyrovelocity.utils import get_pylogger
-from pyrovelocity.utils import print_attributes
+from pyrovelocity.utils import get_pylogger, print_attributes
 
 
 def preprocess(conf: DictConfig, logger: Logger) -> None:
@@ -36,7 +33,9 @@ def preprocess(conf: DictConfig, logger: Logger) -> None:
                 f"  using method: {process_method}\n"
             )
 
-            if os.path.isfile(processed_path) and os.access(processed_path, os.R_OK):
+            if os.path.isfile(processed_path) and os.access(
+                processed_path, os.R_OK
+            ):
                 logger.info(f"{processed_path} exists")
             else:
                 logger.info(f"generating {processed_path} ...")

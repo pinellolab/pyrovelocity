@@ -1,41 +1,22 @@
-import errno
 import os
-import pickle
 from logging import Logger
 from pathlib import Path
 
 import hydra
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import scvelo as scv
-import seaborn as sns
-from astropy import units as u
-from astropy.stats import circstd
 
 # from scipy.stats import circvar, circstd, circmean
-from matplotlib.backends.backend_pdf import PdfPages
-from matplotlib_venn import venn2
 from omegaconf import DictConfig
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import roc_auc_score
-from sklearn.model_selection import cross_val_score
-from sklearn.preprocessing import LabelBinarizer
-from sklearn.preprocessing import LabelEncoder
-from statannotations.Annotator import Annotator
-
-from pyrovelocity.config import print_config_tree
 from pyrovelocity.io.compressedpickle import CompressedPickle
-from pyrovelocity.plot import compute_mean_vector_field
-from pyrovelocity.plot import compute_volcano_data
-from pyrovelocity.plot import get_posterior_sample_angle_uncertainty
-from pyrovelocity.plot import plot_arrow_examples
-from pyrovelocity.plot import plot_gene_ranking
-from pyrovelocity.plot import plot_posterior_time
-from pyrovelocity.plot import plot_vector_field_uncertain
-from pyrovelocity.plot import rainbowplot
-from pyrovelocity.plot import set_colorbar
-from pyrovelocity.plot import vector_field_uncertainty
+from pyrovelocity.plot import (
+    compute_mean_vector_field,
+    get_posterior_sample_angle_uncertainty,
+    plot_vector_field_uncertain,
+    set_colorbar,
+    vector_field_uncertainty,
+)
 from pyrovelocity.utils import get_pylogger
 
 
@@ -64,16 +45,22 @@ def plots(
         print(data_model)
 
         data_model_conf = conf.model_training[data_model]
-        embedding = vector_field_basis = data_model_conf.vector_field_parameters.basis
+        embedding = (
+            vector_field_basis
+        ) = data_model_conf.vector_field_parameters.basis
         cell_state = data_model_conf.training_parameters.cell_state
         adata_data_path = data_model_conf.trained_data_path
         pyrovelocity_data_path = data_model_conf.pyrovelocity_data_path
-        pyrovelocity_posterior_samples_path = data_model_conf.posterior_samples_path
+        pyrovelocity_posterior_samples_path = (
+            data_model_conf.posterior_samples_path
+        )
 
         pyrovelocity_data_path_3genes = subset_pkl
 
         adata = scv.read(adata_data_path)
-        posterior_samples = CompressedPickle.load(pyrovelocity_posterior_samples_path)
+        posterior_samples = CompressedPickle.load(
+            pyrovelocity_posterior_samples_path
+        )
 
         genes = ["NKG7", "IGHM", "GNLY"]
         (genes_index,) = np.where(adata.var_names.isin(genes))
@@ -85,12 +72,16 @@ def plots(
 
         if not os.path.exists(pyrovelocity_data_path_3genes):
             for key in ["ut", "st", "u_scale", "beta", "gamma", "alpha"]:
-                posterior_samples[key] = posterior_samples[key][:, :, genes_index]
+                posterior_samples[key] = posterior_samples[key][
+                    :, :, genes_index
+                ]
 
             if ("u_scale" in posterior_samples) and (
                 "s_scale" in posterior_samples
             ):  # Gaussian models
-                scale = posterior_samples["u_scale"] / posterior_samples["s_scale"]
+                scale = (
+                    posterior_samples["u_scale"] / posterior_samples["s_scale"]
+                )
             elif ("u_scale" in posterior_samples) and not (
                 "s_scale" in posterior_samples
             ):  # Poisson Model 2
@@ -154,8 +145,12 @@ def plots(
             posterior_samples["fdri"] = fdri
             posterior_samples["embeds_magnitude"] = embeds_magnitude
             posterior_samples["embeds_angle"] = embeds_radian
-            posterior_samples["ut_mean"] = posterior_samples["ut"].mean(0).squeeze()
-            posterior_samples["st_mean"] = posterior_samples["st"].mean(0).squeeze()
+            posterior_samples["ut_mean"] = (
+                posterior_samples["ut"].mean(0).squeeze()
+            )
+            posterior_samples["st_mean"] = (
+                posterior_samples["st"].mean(0).squeeze()
+            )
             posterior_samples[
                 "pca_vector_field_posterior_samples"
             ] = pca_vector_field_posterior_samples
@@ -166,11 +161,15 @@ def plots(
             del posterior_samples["s"]
             del posterior_samples["ut"]
             del posterior_samples["st"]
-            CompressedPickle.save(pyrovelocity_data_path_3genes, posterior_samples)
+            CompressedPickle.save(
+                pyrovelocity_data_path_3genes, posterior_samples
+            )
             # with open(pyrovelocity_data_path_3genes, "wb") as f:
             #     pickle.dump(posterior_samples, f)
         else:
-            posterior_samples = CompressedPickle.load(pyrovelocity_data_path_3genes)
+            posterior_samples = CompressedPickle.load(
+                pyrovelocity_data_path_3genes
+            )
             # with open(pyrovelocity_data_path_3genes, "rb") as f:
             #     posterior_samples = pickle.load(f)
             print((posterior_samples["fdri"] < 0.001).sum())
@@ -301,7 +300,8 @@ def plots(
         ax[4 + index].axis("off")
 
     ax[4].set_title(
-        f"UMAP angle Rayleigh test {(fdri<0.05).sum()/fdri.shape[0]:.2f}", fontsize=7
+        f"UMAP angle Rayleigh test {(fdri<0.05).sum()/fdri.shape[0]:.2f}",
+        fontsize=7,
     )
     ax[5].set_title(
         f"PCA angle Rayleigh test {(pca_fdri<0.05).sum()/pca_fdri.shape[0]:.2f}",

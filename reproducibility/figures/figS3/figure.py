@@ -1,6 +1,5 @@
 import errno
 import os
-import pickle
 from logging import Logger
 from pathlib import Path
 
@@ -11,16 +10,16 @@ import pandas as pd
 import scvelo as scv
 import seaborn as sns
 from omegaconf import DictConfig
-
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.io.compressedpickle import CompressedPickle
-from pyrovelocity.plot import plot_arrow_examples
-from pyrovelocity.plot import plot_gene_ranking
-from pyrovelocity.plot import plot_posterior_time
-from pyrovelocity.plot import plot_vector_field_uncertain
-from pyrovelocity.plot import rainbowplot
+from pyrovelocity.plot import (
+    plot_arrow_examples,
+    plot_gene_ranking,
+    plot_posterior_time,
+    plot_vector_field_uncertain,
+    rainbowplot,
+)
 from pyrovelocity.utils import get_pylogger
-
 
 """Loads trained figure S3 data and produces figure S3.
 
@@ -46,12 +45,16 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     pyrovelocity_pancreas_data_path = (
         conf.model_training.pancreas_model2.pyrovelocity_data_path
     )
-    trained_pancreas_data_path = conf.model_training.pancreas_model2.trained_data_path
+    trained_pancreas_data_path = (
+        conf.model_training.pancreas_model2.trained_data_path
+    )
 
     pyrovelocity_pbmc68k_data_path = (
         conf.model_training.pbmc68k_model2.pyrovelocity_data_path
     )
-    trained_pbmc68k_data_path = conf.model_training.pbmc68k_model2.trained_data_path
+    trained_pbmc68k_data_path = (
+        conf.model_training.pbmc68k_model2.trained_data_path
+    )
 
     figure2_tif_path = conf.reports.figureS3.tif_path
     figure2_svg_path = conf.reports.figureS3.svg_path
@@ -68,13 +71,17 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         pyrovelocity_pancreas_data_path, os.R_OK
     ):
         logger.info(f"Loading: {pyrovelocity_pancreas_data_path}")
-        posterior_samples = CompressedPickle.load(pyrovelocity_pancreas_data_path)
+        posterior_samples = CompressedPickle.load(
+            pyrovelocity_pancreas_data_path
+        )
     else:
         logger.error(
             f"{pyrovelocity_pancreas_data_path} does not exist or is not accessible"
         )
         raise FileNotFoundError(
-            errno.ENOENT, os.strerror(errno.ENOENT), pyrovelocity_pancreas_data_path
+            errno.ENOENT,
+            os.strerror(errno.ENOENT),
+            pyrovelocity_pancreas_data_path,
         )
 
     v_map_all = posterior_samples["vector_field_posterior_samples"]
@@ -86,13 +93,17 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         pyrovelocity_pbmc68k_data_path, os.R_OK
     ):
         logger.info(f"Loading: {pyrovelocity_pbmc68k_data_path}")
-        posterior_samples_pbmc = CompressedPickle.load(pyrovelocity_pbmc68k_data_path)
+        posterior_samples_pbmc = CompressedPickle.load(
+            pyrovelocity_pbmc68k_data_path
+        )
     else:
         logger.error(
             f"{pyrovelocity_pbmc68k_data_path} does not exist or is not accessible"
         )
         raise FileNotFoundError(
-            errno.ENOENT, os.strerror(errno.ENOENT), pyrovelocity_pbmc68k_data_path
+            errno.ENOENT,
+            os.strerror(errno.ENOENT),
+            pyrovelocity_pbmc68k_data_path,
         )
 
     # posterior_samples_pbmc = posterior_samples["posterior_samples"]
@@ -120,7 +131,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         logger.info(f"Loading: {trained_pbmc68k_data_path}")
         adata_pbmc = scv.read(trained_pbmc68k_data_path)
     else:
-        logger.error(f"{trained_pbmc68k_data_path} does not exist or is not accessible")
+        logger.error(
+            f"{trained_pbmc68k_data_path} does not exist or is not accessible"
+        )
         raise FileNotFoundError(
             errno.ENOENT, os.strerror(errno.ENOENT), trained_pbmc68k_data_path
         )
@@ -132,7 +145,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     fig = plt.figure(figsize=(7.07, 6.5))
     dot_size = 3
     font_size = 7
-    subfig = fig.subfigures(3, 1, wspace=0.0, hspace=0, height_ratios=[1.2, 1.2, 2.6])
+    subfig = fig.subfigures(
+        3, 1, wspace=0.0, hspace=0, height_ratios=[1.2, 1.2, 2.6]
+    )
 
     ress = pd.DataFrame(
         {
@@ -143,7 +158,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     )
 
     logger.info(f"\n\nplotting pbmc cell types\n\n")
-    pbmcfig_A0 = subfig[0].subfigures(1, 2, wspace=0.0, hspace=0, width_ratios=[4, 2])
+    pbmcfig_A0 = subfig[0].subfigures(
+        1, 2, wspace=0.0, hspace=0, width_ratios=[4, 2]
+    )
     ax = pbmcfig_A0[0].subplots(1, 4)
     sns.scatterplot(
         x="X1",
@@ -189,7 +206,12 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         frameon=False,
     )
     scv.pl.velocity_embedding_stream(
-        adata_pbmc, basis="tsne", fontsize=font_size, ax=ax[1], title="", **kwargs
+        adata_pbmc,
+        basis="tsne",
+        fontsize=font_size,
+        ax=ax[1],
+        title="",
+        **kwargs,
     )
     ax[1].set_title("Scvelo\n", fontsize=7)
 
@@ -240,7 +262,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     pbmcfig_A0[1].subplots_adjust(
         hspace=0.2, wspace=0.1, left=0.01, right=0.99, top=0.99, bottom=0.45
     )
-    pbmcfig_A0[0].text(-0.06, 0.58, "PBMC", size=7, rotation="vertical", va="center")
+    pbmcfig_A0[0].text(
+        -0.06, 0.58, "PBMC", size=7, rotation="vertical", va="center"
+    )
 
     ress = pd.DataFrame(
         {
@@ -249,7 +273,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
             "X2": adata.obsm["X_umap"][:, 1],
         }
     )
-    subfig_A0 = subfig[1].subfigures(1, 2, wspace=0.0, hspace=0, width_ratios=[4, 2])
+    subfig_A0 = subfig[1].subfigures(
+        1, 2, wspace=0.0, hspace=0, width_ratios=[4, 2]
+    )
 
     logger.info(f"\n\nplotting pancreas cell types\n\n")
     ax = subfig_A0[0].subplots(1, 4)
@@ -301,7 +327,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     )
     ax[1].set_title("Scvelo\n", fontsize=7)
 
-    logger.info(f"\n\nplotting pancreas pyrovelocity velocity embedding stream\n\n")
+    logger.info(
+        f"\n\nplotting pancreas pyrovelocity velocity embedding stream\n\n"
+    )
     scv.pl.velocity_embedding_stream(
         adata,
         fontsize=font_size,
@@ -331,7 +359,9 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     )
     ax[3].set_title("Single cell\nvector field", fontsize=7)
 
-    logger.info(f"\n\nplotting pancreas pyrovelocity vector field uncertainty\n\n")
+    logger.info(
+        f"\n\nplotting pancreas pyrovelocity vector field uncertainty\n\n"
+    )
     plot_vector_field_uncertain(
         adata,
         embed_mean,
@@ -349,10 +379,14 @@ def plots(conf: DictConfig, logger: Logger) -> None:
     subfig_A0[1].subplots_adjust(
         hspace=0.2, wspace=0.1, left=0.01, right=0.99, top=0.80, bottom=0.33
     )
-    subfig_A0[0].text(-0.06, 0.58, "Pancreas", size=7, rotation="vertical", va="center")
+    subfig_A0[0].text(
+        -0.06, 0.58, "Pancreas", size=7, rotation="vertical", va="center"
+    )
 
     logger.info(f"\n\nplotting pancreas pyrovelocity shared time\n\n")
-    subfig_B = subfig[2].subfigures(1, 2, wspace=0.0, hspace=0, width_ratios=[1.6, 4])
+    subfig_B = subfig[2].subfigures(
+        1, 2, wspace=0.0, hspace=0, width_ratios=[1.6, 4]
+    )
     ax = subfig_B[0].subplots(2, 1)
     plot_posterior_time(
         posterior_samples, adata, ax=ax[0], fig=subfig_B[0], addition=False

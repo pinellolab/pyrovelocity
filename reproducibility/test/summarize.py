@@ -2,8 +2,6 @@ import os
 import pickle
 from logging import Logger
 from pathlib import Path
-from statistics import harmonic_mean
-from typing import Text
 
 import hydra
 import matplotlib.pyplot as plt
@@ -11,21 +9,17 @@ import numpy as np
 import scvelo as scv
 import seaborn as sns
 from omegaconf import DictConfig
-
 from pyrovelocity.config import print_config_tree
-from pyrovelocity.data import load_data
 from pyrovelocity.io.compressedpickle import CompressedPickle
-from pyrovelocity.plot import compute_mean_vector_field
-from pyrovelocity.plot import compute_volcano_data
-from pyrovelocity.plot import plot_gene_ranking
-from pyrovelocity.plot import us_rainbowplot
-from pyrovelocity.plot import vector_field_uncertainty
-from pyrovelocity.utils import anndata_counts_to_df
-from pyrovelocity.utils import get_pylogger
-from pyrovelocity.utils import mae_evaluate
-from pyrovelocity.utils import print_anndata
-from pyrovelocity.utils import print_attributes
-
+from pyrovelocity.plot import (
+    plot_gene_ranking,
+    us_rainbowplot,
+)
+from pyrovelocity.utils import (
+    anndata_counts_to_df,
+    get_pylogger,
+    print_anndata,
+)
 
 """Loads model-trained data and generates figures.
 
@@ -98,9 +92,13 @@ def plots(conf: DictConfig, logger: Logger) -> None:
         ]
         if all(os.path.isfile(f) for f in output_filenames):
             logger.info(
-                "\n\t" + "\n\t".join(output_filenames) + "\nAll output files exist"
+                "\n\t"
+                + "\n\t".join(output_filenames)
+                + "\nAll output files exist"
             )
-            return logger.warn("Remove output files if you want to regenerate them.")
+            return logger.warn(
+                "Remove output files if you want to regenerate them."
+            )
 
         logger.info(f"Loading trained data: {trained_data_path}")
         adata = scv.read(trained_data_path)

@@ -2,15 +2,15 @@ import pickle
 
 import matplotlib.pyplot as plt
 import scvelo as scv
-from scipy.stats import spearmanr
-
 from pyrovelocity.api import train_model
 from pyrovelocity.data import load_data
-from pyrovelocity.plot import plot_gene_ranking
-from pyrovelocity.plot import plot_mean_vector_field
-from pyrovelocity.plot import us_rainbowplot
-from pyrovelocity.plot import vector_field_uncertainty
-
+from pyrovelocity.plot import (
+    plot_gene_ranking,
+    plot_mean_vector_field,
+    us_rainbowplot,
+    vector_field_uncertainty,
+)
+from scipy.stats import spearmanr
 
 """Loads pancreas data and trains and saves model1 model.
 
@@ -113,7 +113,8 @@ scv.pl.scatter(
     color="latent_time",
     show=False,
     ax=ax[0],
-    title="scvelo %.2f" % spearmanr(1 - adata.obs.cytotrace, adata.obs.latent_time)[0],
+    title="scvelo %.2f"
+    % spearmanr(1 - adata.obs.cytotrace, adata.obs.latent_time)[0],
     cmap="RdBu_r",
     basis="umap",
 )
@@ -123,7 +124,8 @@ scv.pl.scatter(
     show=False,
     basis="umap",
     ax=ax[1],
-    title="pyro %.2f" % spearmanr(1 - adata.obs.cytotrace, adata.obs.cell_time)[0],
+    title="pyro %.2f"
+    % spearmanr(1 - adata.obs.cytotrace, adata.obs.cell_time)[0],
 )
 scv.pl.scatter(adata, color="1-Cytotrace", show=False, ax=ax[2])
 print(spearmanr(adata.obs.cytotrace, adata.obs.cell_time))

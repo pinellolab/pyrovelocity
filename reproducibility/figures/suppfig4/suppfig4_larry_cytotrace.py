@@ -7,26 +7,29 @@ import numpy as np
 import pandas as pd
 import scvelo as scv
 import seaborn as sns
+from pyrovelocity.data import load_larry, load_unipotent_larry
+from pyrovelocity.plot import (
+    plot_gene_ranking,
+    plot_posterior_time,
+    plot_state_uncertainty,
+    rainbowplot,
+    set_colorbar,
+)
 from scipy.stats import spearmanr
-
-from pyrovelocity.data import load_larry
-from pyrovelocity.data import load_unipotent_larry
-from pyrovelocity.plot import plot_gene_ranking
-from pyrovelocity.plot import plot_posterior_time
-from pyrovelocity.plot import plot_state_uncertainty
-from pyrovelocity.plot import rainbowplot
-from pyrovelocity.plot import set_colorbar
-
 
 cs.logging.print_version()
 cs.settings.verbosity = 2
 cs.settings.data_path = "../fig3/LARRY_data"  # A relative path to save data.
-cs.settings.figure_path = "../fig3/LARRY_figure"  # A relative path to save figures.
+cs.settings.figure_path = (
+    "../fig3/LARRY_figure"  # A relative path to save figures.
+)
 cs.settings.set_figure_params(
     format="png", figsize=[4, 3.5], dpi=75, fontsize=14, pointsize=2
 )
 
-adata_input = scv.read("../fig3/larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad")
+adata_input = scv.read(
+    "../fig3/larry_invitro_adata_with_scvelo_dynamicalvelocity.h5ad"
+)
 adata = load_larry()
 adata_cospar = scv.read(
     "../fig3/LARRY_data/LARRY_MultiTimeClone_Later_FullSpace0_t*2.0*4.0*6_adata_with_transition_map.h5ad"
@@ -36,10 +39,14 @@ adata_cytotrace = scv.read(
 )  # skip_regress=False
 
 adata_uni_mono = load_unipotent_larry()
-adata_uni_mono = adata_uni_mono[adata_uni_mono.obs.state_info != "Centroid", :].copy()
+adata_uni_mono = adata_uni_mono[
+    adata_uni_mono.obs.state_info != "Centroid", :
+].copy()
 
 adata_uni_neu = load_unipotent_larry("neu")
-adata_uni_neu = adata_uni_neu[adata_uni_neu.obs.state_info != "Centroid", :].copy()
+adata_uni_neu = adata_uni_neu[
+    adata_uni_neu.obs.state_info != "Centroid", :
+].copy()
 adata_uni_bifurcation = adata_uni_mono.concatenate(adata_uni_neu)
 
 cs.pl.fate_potency(
@@ -61,7 +68,9 @@ embed_mean_all = result_dict["embed_mean"]
 adata_input_all = scv.read("../fig3/fig3_larry_allcells_top2000_model2.h5ad")
 adata_input_all.obs.cytotrace = adata_cytotrace.obs.cytotrace
 
-gold = adata_cospar[adata_input_all.obs_names.str.replace("-0", ""), :].obs.fate_potency
+gold = adata_cospar[
+    adata_input_all.obs_names.str.replace("-0", ""), :
+].obs.fate_potency
 gold_select = ~np.isnan(gold)
 
 all_metrics = np.zeros((2, 2))
@@ -92,7 +101,9 @@ gold_uni_mono = adata_cospar[
 ].obs.fate_potency
 gold_select_uni_mono = ~np.isnan(gold_uni_mono)
 if not os.path.exists("larry_mono_top2000.h5ad"):
-    scv.pp.filter_and_normalize(adata_uni_mono, n_top_genes=2000, min_shared_counts=20)
+    scv.pp.filter_and_normalize(
+        adata_uni_mono, n_top_genes=2000, min_shared_counts=20
+    )
     scv.pp.moments(adata_uni_mono)
     scv.tl.recover_dynamics(adata_uni_mono, n_jobs=10)
     scv.tl.velocity(adata_uni_mono, mode="dynamical")
@@ -113,7 +124,9 @@ for i, gold_standard in enumerate([-gold_uni_mono[gold_select_uni_mono]]):
     for j, pred in enumerate(
         [
             adata_uni_mono.obs.latent_time.values[gold_select_uni_mono],
-            adata_model_pos_mono["cell_time"].mean(0).flatten()[gold_select_uni_mono],
+            adata_model_pos_mono["cell_time"]
+            .mean(0)
+            .flatten()[gold_select_uni_mono],
         ]
     ):
         all_unimono_metrics[i, j] = spearmanr(gold_standard, pred)[0]
@@ -137,7 +150,9 @@ gold_uni_neu = adata_cospar[
 gold_select_uni_neu = ~np.isnan(gold_uni_neu)
 
 if not os.path.exists("larry_neu_top2000.h5ad"):
-    scv.pp.filter_and_normalize(adata_uni_neu, n_top_genes=2000, min_shared_counts=20)
+    scv.pp.filter_and_normalize(
+        adata_uni_neu, n_top_genes=2000, min_shared_counts=20
+    )
     scv.pp.moments(adata_uni_neu)
     scv.tl.recover_dynamics(adata_uni_neu, n_jobs=10)
     scv.tl.velocity(adata_uni_neu, mode="dynamical")
@@ -160,7 +175,9 @@ for i, gold_standard in enumerate([-gold_uni_neu[gold_select_uni_neu]]):
     for j, pred in enumerate(
         [
             adata_uni_neu.obs.latent_time.values[gold_select_uni_neu],
-            adata_model_pos_neu["cell_time"].mean(0).flatten()[gold_select_uni_neu],
+            adata_model_pos_neu["cell_time"]
+            .mean(0)
+            .flatten()[gold_select_uni_neu],
         ]
     ):
         all_unineu_metrics[i, j] = spearmanr(gold_standard, pred)[0]
@@ -206,10 +223,14 @@ fdri_bifurcation = result_dict["fdri"]
 embed_mean_bifurcation = result_dict["embed_mean"]
 
 all_unibifurcation_metrics = np.zeros((2, 2))
-for i, gold_standard in enumerate([-gold_uni_bifurcation[gold_select_uni_bifurcation]]):
+for i, gold_standard in enumerate(
+    [-gold_uni_bifurcation[gold_select_uni_bifurcation]]
+):
     for j, pred in enumerate(
         [
-            adata_uni_bifurcation.obs.latent_time.values[gold_select_uni_bifurcation],
+            adata_uni_bifurcation.obs.latent_time.values[
+                gold_select_uni_bifurcation
+            ],
             adata_model_pos_bifurcation["cell_time"]
             .mean(0)
             .flatten()[gold_select_uni_bifurcation],
@@ -251,7 +272,9 @@ scv.pl.scatter(
 )
 ax[0][0].set_title(
     "Cytotrace\ncorrelation with fate potency: %.2f"
-    % spearmanr(1 - adata_input_all.obs.cytotrace[gold_select], -gold[gold_select])[0],
+    % spearmanr(
+        1 - adata_input_all.obs.cytotrace[gold_select], -gold[gold_select]
+    )[0],
     fontsize=7,
 )
 ax[0][0].text(
@@ -404,7 +427,9 @@ ax[0][-1].set_title("state uncertainty", fontsize=7)
 subfig[0].subplots_adjust(
     hspace=0.2, wspace=0.48, left=0.01, right=0.92, top=0.93, bottom=0.1
 )
-subfig_B = subfig[1].subfigures(1, 2, wspace=0.0, hspace=0, width_ratios=[1.8, 4])
+subfig_B = subfig[1].subfigures(
+    1, 2, wspace=0.0, hspace=0, width_ratios=[1.8, 4]
+)
 ax = subfig_B[0].subplots(2, 1)
 plot_posterior_time(
     adata_model_pos_all,

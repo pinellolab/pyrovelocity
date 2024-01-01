@@ -7,16 +7,15 @@ import numpy as np
 import pandas as pd
 import scvelo as scv
 import seaborn as sns
+from pyrovelocity.plot import (
+    align_trajectory_diff,
+    get_clone_trajectory,
+    plot_posterior_time,
+    plot_vector_field_uncertain,
+)
 from scipy.spatial import distance
 from scipy.stats import spearmanr
 from scvelo.plotting.velocity_embedding_grid import default_arrow
-
-from pyrovelocity.data import load_larry
-from pyrovelocity.plot import align_trajectory_diff
-from pyrovelocity.plot import get_clone_trajectory
-from pyrovelocity.plot import plot_posterior_time
-from pyrovelocity.plot import plot_vector_field_uncertain
-
 
 """Loads preprocessed supp figure 5 data and produces supp figure 5.
 
@@ -123,14 +122,18 @@ adata_input_all = scv.read("model1/fig3_larry_allcells_top2000_model1.h5ad")
 
 adata_input_neu_clone = get_clone_trajectory(adata_input_neu)
 adata_input_mono_clone = get_clone_trajectory(adata_input_mono)
-adata_input_uni_clone = adata_input_neu_clone.concatenate(adata_input_mono_clone)
+adata_input_uni_clone = adata_input_neu_clone.concatenate(
+    adata_input_mono_clone
+)
 
 if os.path.exists("../fig3/global_gold_standard2.h5ad"):
     adata_input_all_clone = scv.read("../fig3/global_gold_standard2.h5ad")
 else:
     adata_reduced_gene_for_clone_vec = adata[:, adata_input.var_names].copy()
     print(adata_reduced_gene_for_clone_vec.shape)
-    adata_input_all_clone = get_clone_trajectory(adata_reduced_gene_for_clone_vec)
+    adata_input_all_clone = get_clone_trajectory(
+        adata_reduced_gene_for_clone_vec
+    )
     adata_input_all_clone.write("../fig3/global_gold_standard2.h5ad")
 
 adata_input_all_clone.obsm["clone_vector_emb"][
@@ -218,7 +221,9 @@ if exclude_day6:
             adata_input_all_clone.obsm["clone_vector_emb"][
                 adata_input_all_clone.obs.time_info != 6, :
             ],
-            adata_input_all.obsm["velocity_emb"][adata_input_all.obs.time_info != 6],
+            adata_input_all.obsm["velocity_emb"][
+                adata_input_all.obs.time_info != 6
+            ],
             embed_mean_all[adata_input_all.obs.time_info != 6],
         ],
         embed="emb",
@@ -250,12 +255,18 @@ pyro_all_cos_mean = pyro_all_cos.mean()
 hl, hw, hal = default_arrow(3)
 quiver_kwargs = {"angles": "xy", "scale_units": "xy"}
 quiver_kwargs.update({"width": 0.001, "headlength": hl / 2})
-quiver_kwargs.update({"headwidth": hw / 2, "headaxislength": hal / 2, "alpha": 0.6})
+quiver_kwargs.update(
+    {"headwidth": hw / 2, "headaxislength": hal / 2, "alpha": 0.6}
+)
 quiver_kwargs.update({"linewidth": 1, "zorder": 3})
 plt.figure()
 plt.scatter(diff_all[:, 0], diff_all[:, 1], s=5, color="k")
 plt.quiver(
-    diff_all[:, 0], diff_all[:, 1], diff_all[:, 2], diff_all[:, 3], **quiver_kwargs
+    diff_all[:, 0],
+    diff_all[:, 1],
+    diff_all[:, 2],
+    diff_all[:, 3],
+    **quiver_kwargs,
 )
 plt.savefig("test.pdf")
 
@@ -356,7 +367,9 @@ scv.pl.velocity_embedding_grid(
     color="gray",
     arrow_color="black",
 )
-ax00[2].set_title("scVelo cosine similarity: %.2f" % clean_cosine[0, 0], fontsize=7)
+ax00[2].set_title(
+    "scVelo cosine similarity: %.2f" % clean_cosine[0, 0], fontsize=7
+)
 plot_vector_field_uncertain(
     adata_input_mono,
     embed_mean_mono,
@@ -404,7 +417,9 @@ scv.pl.scatter(
 )
 ax00[6].set_title(
     "Scvelo latent time\ncorrelation: %.2f"
-    % spearmanr(-gold[select], adata_input_mono.obs.latent_time.values[select])[0],
+    % spearmanr(-gold[select], adata_input_mono.obs.latent_time.values[select])[
+        0
+    ],
     fontsize=7,
 )
 plot_posterior_time(
@@ -419,7 +434,8 @@ plot_posterior_time(
 ax00[7].set_title(
     "Pyro-Velocity shared time\ncorrelation: %.2f"
     % spearmanr(
-        -gold[select], adata_model_pos_mono["cell_time"].mean(0).flatten()[select]
+        -gold[select],
+        adata_model_pos_mono["cell_time"].mean(0).flatten()[select],
     )[0],
     fontsize=7,
 )
@@ -486,7 +502,9 @@ scv.pl.velocity_embedding_grid(
     color="gray",
     arrow_color="black",
 )
-ax0[2].set_title("scVelo cosine similarity: %.2f" % clean_cosine[1, 0], fontsize=7)
+ax0[2].set_title(
+    "scVelo cosine similarity: %.2f" % clean_cosine[1, 0], fontsize=7
+)
 plot_vector_field_uncertain(
     adata_input_neu,
     embed_mean_neu,
@@ -518,7 +536,9 @@ scv.pl.scatter(
     s=dotsize,
 )
 ax0[5].set_title("Clonal fate potency", fontsize=7)
-gold = adata_cospar[adata_input_neu.obs_names.str.replace("-0", ""), :].obs.fate_potency
+gold = adata_cospar[
+    adata_input_neu.obs_names.str.replace("-0", ""), :
+].obs.fate_potency
 select = ~np.isnan(gold)
 scv.pl.scatter(
     adata_input_neu,
@@ -532,7 +552,9 @@ scv.pl.scatter(
 )
 ax0[6].set_title(
     "Scvelo latent time\ncorrelation: %.2f"
-    % spearmanr(-gold[select], adata_input_neu.obs.latent_time.values[select])[0],
+    % spearmanr(-gold[select], adata_input_neu.obs.latent_time.values[select])[
+        0
+    ],
     fontsize=7,
 )
 plot_posterior_time(
@@ -547,7 +569,8 @@ plot_posterior_time(
 ax0[7].set_title(
     "Pyro-Velocity shared time\ncorrelation: %.2f"
     % spearmanr(
-        -gold[select], adata_model_pos_neu["cell_time"].mean(0).flatten()[select]
+        -gold[select],
+        adata_model_pos_neu["cell_time"].mean(0).flatten()[select],
     )[0],
     fontsize=7,
 )
@@ -613,7 +636,9 @@ scv.pl.velocity_embedding_grid(
     arrow_color="black",
     autoscale=True,
 )
-ax1[2].set_title("scVelo cosine similarity: %.2f" % clean_cosine[2, 0], fontsize=7)
+ax1[2].set_title(
+    "scVelo cosine similarity: %.2f" % clean_cosine[2, 0], fontsize=7
+)
 plot_vector_field_uncertain(
     adata_input,
     embed_mean,
@@ -675,9 +700,9 @@ plot_posterior_time(
 )
 ax1[7].set_title(
     "Pyro-Velocity shared time\ncorrelation: %.2f"
-    % spearmanr(-gold[select], adata_model_pos["cell_time"].mean(0).flatten()[select])[
-        0
-    ],
+    % spearmanr(
+        -gold[select], adata_model_pos["cell_time"].mean(0).flatten()[select]
+    )[0],
     fontsize=7,
 )
 
@@ -744,7 +769,9 @@ scv.pl.velocity_embedding_grid(
     arrow_color="black",
     autoscale=True,
 )
-ax2[2].set_title("scVelo cosine similarity: %.2f" % clean_cosine[3, 0], fontsize=7)
+ax2[2].set_title(
+    "scVelo cosine similarity: %.2f" % clean_cosine[3, 0], fontsize=7
+)
 plot_vector_field_uncertain(
     adata_input_all,
     embed_mean_all,
@@ -778,7 +805,9 @@ scv.pl.scatter(
     s=dotsize,
 )
 ax2[5].set_title("Clonal fate potency", fontsize=7)
-gold = adata_cospar[adata_input_all.obs_names.str.replace("-0", ""), :].obs.fate_potency
+gold = adata_cospar[
+    adata_input_all.obs_names.str.replace("-0", ""), :
+].obs.fate_potency
 select = ~np.isnan(gold)
 scv.pl.scatter(
     adata_input_all,
@@ -792,7 +821,9 @@ scv.pl.scatter(
 )
 ax2[6].set_title(
     "Scvelo latent time\ncorrelation: %.2f"
-    % spearmanr(-gold[select], adata_input_all.obs.latent_time.values[select])[0],
+    % spearmanr(-gold[select], adata_input_all.obs.latent_time.values[select])[
+        0
+    ],
     fontsize=7,
 )
 adata_input_all.obs.cytotrace = adata_cytotrace.obs.cytotrace
@@ -808,7 +839,8 @@ plot_posterior_time(
 ax2[7].set_title(
     "Pyro-Velocity shared time\ncorrelation: %.2f"
     % spearmanr(
-        -gold[select], adata_model_pos_all["cell_time"].mean(0).flatten()[select]
+        -gold[select],
+        adata_model_pos_all["cell_time"].mean(0).flatten()[select],
     )[0],
     fontsize=7,
 )
@@ -816,7 +848,12 @@ ax2[7].set_title(
 for a, label, title in zip(
     [ax00[0], ax0[0], ax1[0], ax2[0]],
     ["a", "b", "c", "d"],
-    ["Monocyte lineage", "Neutrophil lineage", "Bifurcation lineages", "All lineages"],
+    [
+        "Monocyte lineage",
+        "Neutrophil lineage",
+        "Bifurcation lineages",
+        "All lineages",
+    ],
 ):
     a.text(
         -0.1,
@@ -840,7 +877,11 @@ for a, label, title in zip(
     )
     a.axis("off")
 ax2[0].legend(
-    bbox_to_anchor=[2.3, -0.03], ncol=4, prop={"size": 7}, fontsize=7, frameon=False
+    bbox_to_anchor=[2.3, -0.03],
+    ncol=4,
+    prop={"size": 7},
+    fontsize=7,
+    frameon=False,
 )
 fig.subplots_adjust(
     hspace=0.3, wspace=0.13, left=0.01, right=0.99, top=0.95, bottom=0.3

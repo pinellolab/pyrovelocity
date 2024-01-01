@@ -1,18 +1,16 @@
 import os
-from typing import Callable
 
-from components.environment_log_component import create_environment_log_component
+from components.environment_log_component import (
+    create_environment_log_component,
+)
 from construct_pipeline import create_complete_pipeline
 from dotenv import load_dotenv
 from google.cloud import aiplatform
-from hydra_zen import instantiate
-from hydra_zen import make_config
-from hydra_zen import make_custom_builds_fn
-from hydra_zen import store
-from hydra_zen import zen
-from kfp.v2 import dsl
-from kfp.v2.dsl import Dataset  # Output, Input, Model, Artifact
-
+from hydra_zen import (
+    make_custom_builds_fn,
+    store,
+    zen,
+)
 
 load_dotenv(".envrc")
 
@@ -63,7 +61,9 @@ job_store = store(group="job")
 job_store(base_job, name="base_job")
 
 
-@store(name="distributed_pipeline", hydra_defaults=["_self_", {"job": "base_job"}])
+@store(
+    name="distributed_pipeline", hydra_defaults=["_self_", {"job": "base_job"}]
+)
 def task_function(job):
     print("submitting pipeline")
     print(job)

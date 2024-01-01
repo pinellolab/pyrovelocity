@@ -10,16 +10,15 @@ import mlflow
 import scvelo as scv
 from mlflow import MlflowClient
 from omegaconf import DictConfig
-
 from pyrovelocity._velocity import PyroVelocity
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.io.compressedpickle import CompressedPickle
-from pyrovelocity.utils import get_pylogger
-from pyrovelocity.utils import mae_evaluate
-from pyrovelocity.utils import pretty_print_dict
-from pyrovelocity.utils import print_anndata
-from pyrovelocity.utils import print_attributes
-
+from pyrovelocity.utils import (
+    get_pylogger,
+    mae_evaluate,
+    pretty_print_dict,
+    print_anndata,
+)
 
 """Loads processed data and trains and saves model.
 
@@ -75,7 +74,9 @@ def postprocess(conf: DictConfig, logger: Logger) -> None:
         # postprocess
         #############
 
-        if os.path.exists(model_path) and os.path.isfile(pyrovelocity_data_path):
+        if os.path.exists(model_path) and os.path.isfile(
+            pyrovelocity_data_path
+        ):
             logger.info(
                 f"{processed_path}\n{model_path}\n{pyrovelocity_data_path}\nall exist"
             )
@@ -87,7 +88,9 @@ def postprocess(conf: DictConfig, logger: Logger) -> None:
             with mlflow.start_run(
                 run_name=f"{data_model}-{uuid.uuid4().hex[:7]}"
             ) as run:
-                mlflow.set_tag("mlflow.runName", f"{data_model}-{run.info.run_id[:7]}")
+                mlflow.set_tag(
+                    "mlflow.runName", f"{data_model}-{run.info.run_id[:7]}"
+                )
                 print(f"Active run_id: {run.info.run_id}")
                 mlflow.log_params(data_model_conf.training_parameters)
 
@@ -147,7 +150,9 @@ def update_json(r: mlflow.entities.run.Run, metrics_path: str) -> None:
 
 def print_logged_info(r: mlflow.entities.run.Run) -> None:
     tags = {k: v for k, v in r.data.tags.items() if not k.startswith("mlflow.")}
-    artifacts = [f.path for f in MlflowClient().list_artifacts(r.info.run_id, "model")]
+    artifacts = [
+        f.path for f in MlflowClient().list_artifacts(r.info.run_id, "model")
+    ]
     print(f"run_id: {r.info.run_id}")
     print(f"artifacts: {artifacts}")
     print(f"params: {r.data.params}")

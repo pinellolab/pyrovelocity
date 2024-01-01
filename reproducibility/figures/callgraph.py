@@ -4,7 +4,6 @@ import json
 import networkx as nx
 import pyvis
 
-
 """See: https://cerfacs.fr/coop/pycallgraph
 
 Example:
@@ -40,7 +39,9 @@ print(ntx.number_of_nodes())
 
 def remove_hyperconnect(ntx: nx.DiGraph, treshold=7):
     to_remove = [
-        node for node in ntx.nodes if len(list(ntx.predecessors(node))) >= treshold
+        node
+        for node in ntx.nodes
+        if len(list(ntx.predecessors(node))) >= treshold
     ]
     for node in to_remove:
         ntx.remove_node(node)
@@ -51,7 +52,9 @@ def remove_hyperconnect(ntx: nx.DiGraph, treshold=7):
 print(ntx.number_of_nodes())
 
 
-def remove_by_patterns(ntx: nx.DiGraph, forbidden_names: list = []) -> nx.DiGraph:
+def remove_by_patterns(
+    ntx: nx.DiGraph, forbidden_names: list = []
+) -> nx.DiGraph:
     def is_allowed(name):
         for pattern in forbidden_names:
             if fnmatch.filter([name], pattern):
@@ -70,7 +73,8 @@ def remove_by_patterns(ntx: nx.DiGraph, forbidden_names: list = []) -> nx.DiGrap
 
 
 ntx = remove_by_patterns(
-    ntx, forbidden_names=["<builtin>*", "numpy*", "scipy*", "pandas*", "tkinter*"]
+    ntx,
+    forbidden_names=["<builtin>*", "numpy*", "scipy*", "pandas*", "tkinter*"],
 )
 print(ntx.number_of_nodes())
 

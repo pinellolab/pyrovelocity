@@ -1,6 +1,4 @@
-import errno
 import os
-import pickle
 from logging import Logger
 from pathlib import Path
 
@@ -8,26 +6,19 @@ import hydra
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import scvelo as scv
 import seaborn as sns
 from astropy import units as u
 from astropy.stats import circstd
 
 # from scipy.stats import circvar, circstd, circmean
-from matplotlib.backends.backend_pdf import PdfPages
-from matplotlib_venn import venn2
 from omegaconf import DictConfig
-from statannotations.Annotator import Annotator
-
 from pyrovelocity.config import print_config_tree
 from pyrovelocity.io.compressedpickle import CompressedPickle
-from pyrovelocity.plot import get_posterior_sample_angle_uncertainty
-from pyrovelocity.plot import plot_arrow_examples
-from pyrovelocity.plot import plot_gene_ranking
-from pyrovelocity.plot import plot_posterior_time
-from pyrovelocity.plot import plot_vector_field_uncertain
-from pyrovelocity.plot import rainbowplot
+from pyrovelocity.plot import (
+    get_posterior_sample_angle_uncertainty,
+)
 from pyrovelocity.utils import get_pylogger
+from statannotations.Annotator import Annotator
 
 
 def plots(
@@ -80,31 +71,47 @@ def plots(
 
         umap_cell_angles = posterior_samples["embeds_angle"] / np.pi * 180
         # umap_cell_cirsvar = circvar(umap_cell_angles, axis=0)
-        umap_angle_std = circstd(umap_cell_angles * u.deg, method="angular", axis=0)
+        umap_angle_std = circstd(
+            umap_cell_angles * u.deg, method="angular", axis=0
+        )
         umap_angle_std_list.append(umap_angle_std)
-        umap_angle_uncertain = get_posterior_sample_angle_uncertainty(umap_cell_angles)
+        umap_angle_uncertain = get_posterior_sample_angle_uncertainty(
+            umap_cell_angles
+        )
         umap_angle_uncertain_list.append(umap_angle_uncertain)
 
-        pca_cell_vector = posterior_samples["pca_vector_field_posterior_samples"]
+        pca_cell_vector = posterior_samples[
+            "pca_vector_field_posterior_samples"
+        ]
         pca_cell_magnitudes = np.sqrt((pca_cell_vector**2).sum(axis=-1))
         pca_cell_magnitudes_mean = pca_cell_magnitudes.mean(axis=-2)
         pca_cell_magnitudes_std = pca_cell_magnitudes.std(axis=-2)
-        pca_cell_magnitudes_cov = pca_cell_magnitudes_std / pca_cell_magnitudes_mean
+        pca_cell_magnitudes_cov = (
+            pca_cell_magnitudes_std / pca_cell_magnitudes_mean
+        )
         pca_mag_cov_list.append(pca_cell_magnitudes_cov)
 
         pca_cell_angles = posterior_samples["pca_embeds_angle"] / np.pi * 180
         # pca_cell_cirsvar = circvar(pca_cell_angles, axis=0)
-        pca_cell_cirsstd = circstd(pca_cell_angles * u.deg, method="angular", axis=0)
+        pca_cell_cirsstd = circstd(
+            pca_cell_angles * u.deg, method="angular", axis=0
+        )
         pca_angle_std_list.append(pca_cell_cirsstd)
-        pca_angle_uncertain = get_posterior_sample_angle_uncertainty(pca_cell_angles)
+        pca_angle_uncertain = get_posterior_sample_angle_uncertainty(
+            pca_cell_angles
+        )
         pca_angle_uncertain_list.append(pca_angle_uncertain)
 
         umap_cell_magnitudes = np.sqrt(
-            (posterior_samples["vector_field_posterior_samples"] ** 2).sum(axis=-1)
+            (posterior_samples["vector_field_posterior_samples"] ** 2).sum(
+                axis=-1
+            )
         )
         umap_cell_magnitudes_mean = umap_cell_magnitudes.mean(axis=-2)
         umap_cell_magnitudes_std = umap_cell_magnitudes.std(axis=-2)
-        umap_cell_magnitudes_cov = umap_cell_magnitudes_std / umap_cell_magnitudes_mean
+        umap_cell_magnitudes_cov = (
+            umap_cell_magnitudes_std / umap_cell_magnitudes_mean
+        )
 
         print(posterior_samples.keys())
         cell_magnitudes = posterior_samples["original_spaces_embeds_magnitude"]
@@ -134,7 +141,9 @@ def plots(
 
     print(posterior_samples["pca_vector_field_posterior_samples"].shape)
     print(posterior_samples["embeds_angle"].shape)
-    cell_time_distribution_measure_list = np.hstack(cell_time_distribution_measure_list)
+    cell_time_distribution_measure_list = np.hstack(
+        cell_time_distribution_measure_list
+    )
     mag_cov_list = np.hstack(mag_cov_list)
     pca_mag_cov_list = np.hstack(pca_mag_cov_list)
     pca_angle_std_list = np.hstack(pca_angle_std_list)
@@ -222,7 +231,9 @@ def plots(
                 y=metrics_df.keys()[i],
                 order=order,
             )
-            annotator.configure(test="Mann-Whitney", text_format="star", loc="inside")
+            annotator.configure(
+                test="Mann-Whitney", text_format="star", loc="inside"
+            )
             annotator.apply_and_annotate()
 
     for axi in ax:

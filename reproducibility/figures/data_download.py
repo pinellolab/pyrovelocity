@@ -1,18 +1,18 @@
 import os
 from logging import Logger
 from pathlib import Path
-from typing import Text
 
 import hydra
 import scanpy as scp
 import scvelo as scv
 from omegaconf import DictConfig
-
 from pyrovelocity.config import print_config_tree
-from pyrovelocity.utils import generate_sample_data
-from pyrovelocity.utils import get_pylogger
-from pyrovelocity.utils import print_anndata
-from pyrovelocity.utils import print_attributes
+from pyrovelocity.utils import (
+    generate_sample_data,
+    get_pylogger,
+    print_anndata,
+    print_attributes,
+)
 
 
 def download_datasets(conf: DictConfig, logger: Logger) -> None:
