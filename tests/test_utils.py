@@ -6,7 +6,6 @@ import pytest
 from anndata import AnnData
 from hypothesis import given
 from hypothesis import strategies as st
-
 from pyrovelocity.utils import generate_sample_data
 
 
@@ -22,9 +21,7 @@ rate_strategy = st.floats(min_value=0.01, max_value=3.0)
 beta_gamma_strategy = st.tuples(
     st.floats(min_value=0.01, max_value=3.0),  # beta
     st.floats(min_value=0.01, max_value=3.0),  # gamma
-).filter(
-    lambda x: x[1] > x[0]
-)  # gamma requied to be larger than beta
+).filter(lambda x: x[1] > x[0])  # gamma requied to be larger than beta
 noise_model_strategy = st.sampled_from(["iid", "gillespie", "normal"])
 random_seed_strategy = st.randoms()
 
@@ -115,6 +112,7 @@ def test_generate_sample_data_reproducibility(sample_data):
 
 def test_generate_sample_data_invalid_noise_model():
     with pytest.raises(
-        ValueError, match="noise_model must be one of 'iid', 'gillespie', 'normal'"
+        ValueError,
+        match="noise_model must be one of 'iid', 'gillespie', 'normal'",
     ):
         generate_sample_data(noise_model="wishful thinking")

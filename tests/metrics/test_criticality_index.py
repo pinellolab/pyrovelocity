@@ -2,7 +2,6 @@ import anndata
 import numpy as np
 import pytest
 import scvelo as scv
-
 from pyrovelocity.metrics.criticality_index import calculate_criticality_index
 
 
