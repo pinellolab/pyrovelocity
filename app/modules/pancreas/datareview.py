@@ -2,7 +2,6 @@ import streamlit as st
 from pages.datareview import DataReview
 from utils.config import get_app_config
 
-
 PATH_PREFIX = "reproducibility/figures/"
 cfg = get_app_config()
 

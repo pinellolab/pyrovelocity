@@ -1,7 +1,6 @@
 import streamlit as st
 from utils.data import generate_sample_data
 
-
 adata = generate_sample_data()
 adata.layers["raw_unspliced"] = adata.layers["unspliced"]
 adata.layers["raw_spliced"] = adata.layers["spliced"]
@@ -32,13 +31,17 @@ def extract_simulated_df_from_adata(
 ) = extract_simulated_df_from_adata(adata)
 
 
-@st.cache_data(show_spinner="filtering dataframe by count thresholds", persist=True)
+@st.cache_data(
+    show_spinner="filtering dataframe by count thresholds", persist=True
+)
 def filter_count_thresholds_from_simulated_df(
     df, spliced_threshold, unspliced_threshold
 ):
     from utils.data import filter_var_counts_by_thresholds
 
-    return filter_var_counts_by_thresholds(df, spliced_threshold, unspliced_threshold)
+    return filter_var_counts_by_thresholds(
+        df, spliced_threshold, unspliced_threshold
+    )
 
 
 (
@@ -67,10 +70,15 @@ obs_values = sorted(df["obs_name"].unique())
 var_values = sorted(df["var_name"].unique())
 
 
-@st.cache_data(show_spinner="filtering dataframe by selected cells/genes", persist=True)
+@st.cache_data(
+    show_spinner="filtering dataframe by selected cells/genes", persist=True
+)
 def filter_obs_vars_from_simulated_df(df, selected_var, selected_obs):
     if selected_var and selected_obs:
-        return df[df["var_name"].isin(selected_var) & df["obs_name"].isin(selected_obs)]
+        return df[
+            df["var_name"].isin(selected_var)
+            & df["obs_name"].isin(selected_obs)
+        ]
     elif selected_var:
         return df[df["var_name"].isin(selected_var)]
     elif selected_obs:
@@ -165,12 +173,22 @@ with col_1:
             theme="streamlit",
         )
 
-    summary_text, unspliced_slider, _, spliced_slider = st.columns([2.7, 3.6, 0.1, 3.6])
+    summary_text, unspliced_slider, _, spliced_slider = st.columns(
+        [2.7, 3.6, 0.1, 3.6]
+    )
     with summary_text:
-        unspliced_lower_threshold = st.session_state.simulated_unspliced_threshold[0]
-        unspliced_upper_threshold = st.session_state.simulated_unspliced_threshold[1]
-        spliced_lower_threshold = st.session_state.simulated_spliced_threshold[0]
-        spliced_upper_threshold = st.session_state.simulated_spliced_threshold[1]
+        unspliced_lower_threshold = (
+            st.session_state.simulated_unspliced_threshold[0]
+        )
+        unspliced_upper_threshold = (
+            st.session_state.simulated_unspliced_threshold[1]
+        )
+        spliced_lower_threshold = st.session_state.simulated_spliced_threshold[
+            0
+        ]
+        spliced_upper_threshold = st.session_state.simulated_spliced_threshold[
+            1
+        ]
 
         st.text(
             f"cells: {total_obs}, "
@@ -191,5 +209,8 @@ with col_1:
 
     with spliced_slider:
         st.slider(
-            "spliced thresholds", 0, int(max_spliced), key="simulated_spliced_threshold"
+            "spliced thresholds",
+            0,
+            int(max_spliced),
+            key="simulated_spliced_threshold",
         )

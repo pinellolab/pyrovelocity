@@ -1,12 +1,10 @@
 import base64
 from functools import partial
 from pathlib import Path
-from typing import Literal
-from typing import Optional
+from typing import Literal, Optional
 
 import streamlit as st
 from bs4 import BeautifulSoup
-
 
 TAG = Literal["div", "a", "span", "img"]
 
@@ -17,7 +15,9 @@ class CSSStyle:
             setattr(self, self._format_css_key(key), value)
 
     def _to_str(self):
-        return "; ".join([f"{key}: {value}" for key, value in self.__dict__.items()])
+        return "; ".join(
+            [f"{key}: {value}" for key, value in self.__dict__.items()]
+        )
 
     __str__ = __repr__ = _to_str
 

@@ -108,9 +108,13 @@ def filter_var_counts_by_thresholds(
     )
 
 
-def filter_var_counts_by_threshold(df, min_spliced_counts, min_unspliced_counts):
+def filter_var_counts_by_threshold(
+    df, min_spliced_counts, min_unspliced_counts
+):
     spliced_var_gt_threshold = (df["spliced"] >= min_spliced_counts).sum().sum()
-    unspliced_var_gt_threshold = (df["unspliced"] >= min_unspliced_counts).sum().sum()
+    unspliced_var_gt_threshold = (
+        (df["unspliced"] >= min_unspliced_counts).sum().sum()
+    )
 
     df_filtered = df[
         (df["spliced"] >= min_spliced_counts)
@@ -150,7 +154,9 @@ def interactive_spliced_unspliced_plot(
             y=alt.Y("unspliced:Q", title="Unspliced Counts"),
             tooltip=["spliced:Q", "unspliced:Q", "var_name:N", "obs_name:N"],
             color=color_condition,
-            size=alt.Size("highlight:N", scale=alt.Scale(range=[15, 100]), legend=None),
+            size=alt.Size(
+                "highlight:N", scale=alt.Scale(range=[15, 100]), legend=None
+            ),
         )
         .properties(
             title=title,

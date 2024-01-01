@@ -2,17 +2,9 @@ from pathlib import Path
 
 import altair as alt
 import streamlit as st
-from modules import home
-from modules import pancreas
-from modules import pbmc68k
-from modules import pons
-from modules import simulation
+from modules import home, pancreas, pbmc68k, pons, simulation
 from utils.altair_theme import custom_theme
-from utils.html_factory import CSSStyle
-from utils.html_factory import make_div
-from utils.html_factory import make_img
-from utils.html_factory import st_write_bs4
-
+from utils.html_factory import CSSStyle, make_div, make_img, st_write_bs4
 
 # from pyrovelocity.config import initialize_hydra_config
 

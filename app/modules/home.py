@@ -1,11 +1,7 @@
 from pathlib import Path
 
 import streamlit as st
-from utils.html_factory import CSSStyle
-from utils.html_factory import make_div
-from utils.html_factory import make_img
-from utils.html_factory import st_write_bs4
-
+from utils.html_factory import CSSStyle, make_div, make_img, st_write_bs4
 
 TITLE_P1 = ""
 TITLE_P2 = "Probabilistic modeling"

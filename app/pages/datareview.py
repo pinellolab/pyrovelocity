@@ -21,7 +21,9 @@ class DataReview:
         self.max_spliced = max_spliced
         self.max_unspliced = max_unspliced
 
-    @st.cache_data(show_spinner="filtering dataframe by count thresholds", persist=True)
+    @st.cache_data(
+        show_spinner="filtering dataframe by count thresholds", persist=True
+    )
     def filter_count_thresholds_from_dataset_df(
         _self, df, spliced_threshold, unspliced_threshold
     ):
@@ -32,7 +34,9 @@ class DataReview:
         )
 
     @st.cache_data(show_spinner="generating histogram", persist=True)
-    def generate_dataset_histogram(_self, df, title, selected_var, selected_obs):
+    def generate_dataset_histogram(
+        _self, df, title, selected_var, selected_obs
+    ):
         from utils.data import interactive_spliced_unspliced_histogram
 
         chart = interactive_spliced_unspliced_histogram(
@@ -47,7 +51,8 @@ class DataReview:
     def filter_obs_vars_from_dataset_df(_self, df, selected_var, selected_obs):
         if selected_var and selected_obs:
             return df[
-                df["var_name"].isin(selected_var) & df["obs_name"].isin(selected_obs)
+                df["var_name"].isin(selected_var)
+                & df["obs_name"].isin(selected_obs)
             ]
         elif selected_var:
             return df[df["var_name"].isin(selected_var)]
@@ -114,7 +119,9 @@ class DataReview:
 
         with col_3:
             if st.checkbox("paginate", value=True):
-                prev, next, current, first, last, _ = st.columns([1, 1, 2.2, 1, 1, 3.8])
+                prev, next, current, first, last, _ = st.columns(
+                    [1, 1, 2.2, 1, 1, 3.8]
+                )
 
                 if next.button("⏵"):
                     self.next_page(last_page)
@@ -143,7 +150,9 @@ class DataReview:
                 page_end_index = page_start_index + page_size
 
                 with st.spinner("computing display dataframe"):
-                    display_df = filtered_df.iloc[page_start_index:page_end_index]
+                    display_df = filtered_df.iloc[
+                        page_start_index:page_end_index
+                    ]
             else:
                 display_df = filtered_df
 
@@ -157,7 +166,10 @@ class DataReview:
 
         with col_1:
             spliced_unspliced_histogram_chart = self.generate_dataset_histogram(
-                filtered_df, "Spliced vs unspliced counts", selected_var, selected_obs
+                filtered_df,
+                "Spliced vs unspliced counts",
+                selected_var,
+                selected_obs,
             )
 
             with st.spinner("loading histogram"):
