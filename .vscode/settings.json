@@ -1,6 +1,26 @@
 {
-  "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter",
-    "editor.formatOnSave": true
-  }
+  "cloudcode.autoDependencies": "on",
+  "workbench.iconTheme": "vscode-icons",
+  "workbench.colorTheme": "Catppuccin Mocha",
+  "search.exclude": {
+    "**/.devenv/**": true,
+    "**/.direnv/**": true,
+    "**/.venv/**": true,
+    "**/.mypy_cache/**": true,
+    "**/.pytest_cache/**": true,
+    "**/.ruff_cache/**": true,
+    "**/.solid/**": true
+  },
+  "files.watcherExclude": {
+    "**/.devenv/**": true,
+    "**/.direnv/**": true,
+    "**/.venv/**": true,
+    "**/.mypy_cache/**": true,
+    "**/.nox/**": true,
+    "**/.pytest_cache/**": true,
+    "**/.ruff_cache/**": true,
+    "**/.solid/**": true
+  },
+  "terminal.integrated.scrollback": 100000,
+  "terminal.integrated.persistentSessionScrollback": 100000
 }
