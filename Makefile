@@ -89,6 +89,27 @@ setup_dev: install_direnv install_nix
 	echo "trusted-users = root $$USER" | sudo tee -a /etc/nix/nix.conf && sudo pkill nix-daemon && \
 	cachix use devenv
 
+.PHONY: devshell
+devshell: ## Enter nix devshell. See use_flake in `direnv stdlib`.
+	./scripts/flake
+
+cdirenv: ## !!Enable direnv in zshrc.!!
+	@if ! grep -q 'direnv hook zsh' "${HOME}/.zshrc"; then \
+		printf '\n%s\n' 'eval "$$(direnv hook zsh)"' >> "${HOME}/.zshrc"; \
+	fi
+
+cstarship: ## !!Enable starship in zshrc.!!
+	@if ! grep -q 'starship init zsh' "${HOME}/.zshrc"; then \
+		printf '\n%s\n' 'eval "$$(starship init zsh)"' >> "${HOME}/.zshrc"; \
+	fi
+
+catuin: ## !!Enable atuin in zshrc.!!
+	@if ! grep -q 'atuin init zsh' "${HOME}/.zshrc"; then \
+		printf '\n%s\n' 'eval "$$(atuin init zsh)"' >> "${HOME}/.zshrc"; \
+	fi
+
+czsh: ## !!Enable zsh with command line info and searchable history.!!
+czsh: catuin cstarship cdirenv
 
 #-------------
 # system / dev
