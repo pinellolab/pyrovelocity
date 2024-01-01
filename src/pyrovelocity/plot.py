@@ -1,9 +1,6 @@
-from typing import Dict
-from typing import List
-from typing import Tuple
+from typing import Dict, List, Tuple
 
 import matplotlib
-import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -16,6 +13,7 @@ import umap
 from adjustText import adjust_text
 from anndata import AnnData
 from astropy.stats import rayleightest
+from matplotlib import cm
 from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
 from matplotlib.ticker import MaxNLocator
@@ -26,9 +24,7 @@ from scvelo.plotting.velocity_embedding_grid import default_arrow
 from sklearn.pipeline import Pipeline
 
 from pyrovelocity.cytotrace import compute_similarity2
-from pyrovelocity.utils import ensure_numpy_array
-from pyrovelocity.utils import mRNA
-from pyrovelocity.utils import mse_loss_sum
+from pyrovelocity.utils import ensure_numpy_array, mRNA, mse_loss_sum
 
 
 def plot_evaluate_dynamic_orig(adata, gene="Cpe", velocity=None, ax=None):
@@ -197,7 +193,11 @@ def plot_dynamic_pyro(
     # ax[2].scatter(summary['x_obs']['5%'][:, 1], summary['x_obs']['5%'][:, 0], alpha=0.2, color='r')
     # ax[2].scatter(summary['x_obs']['95%'][:, 1], summary['x_obs']['95%'][:, 0], alpha=0.2, color='r')
     ax[2].plot(
-        st.detach().numpy(), ut.detach().numpy(), linestyle="-", linewidth=5, color="g"
+        st.detach().numpy(),
+        ut.detach().numpy(),
+        linestyle="-",
+        linewidth=5,
+        color="g",
     )
     ax[2].plot(
         xnew.detach().numpy(),
@@ -374,7 +374,8 @@ def plot_posterior_time(
             "Pyro-Velocity shared time\ncorrelation with Cytotrace: %.2f"
             % (
                 spearmanr(
-                    adata.obs["cell_time"].values, 1 - adata.obs.cytotrace.values
+                    adata.obs["cell_time"].values,
+                    1 - adata.obs.cytotrace.values,
                 )[0]
             ),
             fontsize=7,
@@ -432,12 +433,16 @@ def compute_volcano_data(
             "genes": np.hstack(genes),
         }
     )
-    volcano_data = volcano_data.groupby("genes").mean(["mean_mae", "time_correlation"])
+    volcano_data = volcano_data.groupby("genes").mean(
+        ["mean_mae", "time_correlation"]
+    )
 
-    volcano_data.loc[:, "mean_mae_rank"] = volcano_data.mean_mae.rank(ascending=False)
-    volcano_data.loc[:, "time_correlation_rank"] = volcano_data.time_correlation.apply(
-        abs
-    ).rank(ascending=False)
+    volcano_data.loc[:, "mean_mae_rank"] = volcano_data.mean_mae.rank(
+        ascending=False
+    )
+    volcano_data.loc[
+        :, "time_correlation_rank"
+    ] = volcano_data.time_correlation.apply(abs).rank(ascending=False)
     volcano_data.loc[:, "rank_product"] = (
         volcano_data.mean_mae_rank * volcano_data.time_correlation_rank
     )
@@ -458,7 +463,7 @@ def compute_volcano_data(
     return volcano_data, genes
 
 
-import matplotlib.gridspec as gridspec
+from matplotlib import gridspec
 
 
 def plot_gene_ranking(
@@ -480,7 +485,11 @@ def plot_gene_ranking(
         genes = selected_genes
     elif "u" in posterior_samples[0]:
         volcano_data, genes = compute_volcano_data(
-            posterior_samples, adata, time_correlation_with, selected_genes, negative
+            posterior_samples,
+            adata,
+            time_correlation_with,
+            selected_genes,
+            negative,
         )
     else:
         volcano_data = posterior_samples[0]["gene_ranking"]
@@ -548,7 +557,8 @@ def plot_gene_ranking(
         )
         ax.set_title(plot_title, fontsize=defaultfontsize)
         ax.set_xlabel(
-            "shared time correlation\nwith spliced expression", fontsize=defaultfontsize
+            "shared time correlation\nwith spliced expression",
+            fontsize=defaultfontsize,
         )
         ax.set_ylabel("negative mean\nabsolute error", fontsize=defaultfontsize)
         sns.despine()
@@ -599,7 +609,9 @@ def plot_gene_ranking(
                         expand_points=(1.01, 1.05),
                         force_text=(0.01, 0.25),
                         force_points=(0.01, 0.25),
-                        arrowprops=dict(arrowstyle="-", color="blue", alpha=0.6),
+                        arrowprops=dict(
+                            arrowstyle="-", color="blue", alpha=0.6
+                        ),
                         ax=ax,
                     )
     else:
@@ -674,7 +686,9 @@ def denoised_umap(posterior_samples, adata, cell_state="state_info"):
     adata.obsm["X_umap1"] = umap_orig
 
     expression = [
-        np.hstack([posterior_samples["st"].mean(0), posterior_samples["ut"].mean(0)])
+        np.hstack(
+            [posterior_samples["st"].mean(0), posterior_samples["ut"].mean(0)]
+        )
     ]
     pipelines.fit(expression[0])
     umap_orig = pipelines.transform(expression[0])
@@ -747,7 +761,10 @@ def vector_field_uncertainty(
         )
     if denoised:
         projection = [
-            ("PCA", sklearn.decomposition.PCA(random_state=99, n_components=50)),
+            (
+                "PCA",
+                sklearn.decomposition.PCA(random_state=99, n_components=50),
+            ),
             ("UMAP", umap.UMAP(random_state=99, n_components=2)),
         ]
         pipelines = Pipeline(projection)
@@ -771,7 +788,10 @@ def vector_field_uncertainty(
         if basis == "pca":
             scv.pp.pca(adata)
             scv.tl.velocity_embedding(
-                adata, vkey="velocity_pyro", basis="pca", direct_pca_projection=True
+                adata,
+                vkey="velocity_pyro",
+                basis="pca",
+                direct_pca_projection=True,
             )
         else:
             scv.tl.velocity_graph(
@@ -957,7 +977,9 @@ def compute_mean_vector_field(
             st = posterior_samples["st"]
         adata.layers["spliced_pyro"] = st.mean(0).squeeze()
         # if ('u_scale' in posterior_samples) and ('s_scale' in posterior_samples): # TODO: two scale for Normal distribution
-        if "u_scale" in posterior_samples:  # only one scale for Poisson distribution
+        if (
+            "u_scale" in posterior_samples
+        ):  # only one scale for Poisson distribution
             adata.layers["velocity_pyro"] = (
                 ut * posterior_samples["beta"] / posterior_samples["u_scale"]
                 - st * posterior_samples["gamma"]
@@ -983,7 +1005,9 @@ def compute_mean_vector_field(
     elif spliced in ["Ms"]:
         ut = adata.layers["Mu"]
         st = adata.layers["Ms"]
-        if ("u_scale" in posterior_samples) and ("s_scale" in posterior_samples):
+        if ("u_scale" in posterior_samples) and (
+            "s_scale" in posterior_samples
+        ):
             adata.layers["velocity_pyro"] = (
                 ut
                 * posterior_samples["beta"]
@@ -995,11 +1019,15 @@ def compute_mean_vector_field(
                 ut * posterior_samples["beta"]
                 - posterior_samples["st"] * posterior_samples["gamma"]
             ).mean(0)
-        scv.tl.velocity_graph(adata, vkey="velocity_pyro", xkey="Ms", n_jobs=n_jobs)
+        scv.tl.velocity_graph(
+            adata, vkey="velocity_pyro", xkey="Ms", n_jobs=n_jobs
+        )
     elif spliced in ["spliced"]:
         ut = adata.layers["unspliced"]
         st = adata.layers["spliced"]
-        if ("u_scale" in posterior_samples) and ("s_scale" in posterior_samples):
+        if ("u_scale" in posterior_samples) and (
+            "s_scale" in posterior_samples
+        ):
             adata.layers["velocity_pyro"] = (
                 ut
                 * posterior_samples["beta"]
@@ -1054,7 +1082,12 @@ def plot_mean_vector_field(
 
 # def project_grid_points(emb, velocity_emb, uncertain=None, p_mass_min=3.5, density=0.3):
 def project_grid_points(
-    emb, velocity_emb, uncertain=None, p_mass_min=1.0, density=0.3, autoscale=False
+    emb,
+    velocity_emb,
+    uncertain=None,
+    p_mass_min=1.0,
+    density=0.3,
+    autoscale=False,
 ):
     from scipy.stats import norm as normal
     from scvelo.tools.velocity_embedding import quiver_autoscale
@@ -1087,9 +1120,9 @@ def project_grid_points(
     p_mass = weight.sum(1)
 
     if len(velocity_emb.shape) == 2:
-        V_grid = (velocity_emb[:, :2][neighs] * weight[:, :, None]).sum(1) / np.maximum(
-            1, p_mass
-        )[:, None]
+        V_grid = (velocity_emb[:, :2][neighs] * weight[:, :, None]).sum(
+            1
+        ) / np.maximum(1, p_mass)[:, None]
     else:
         V_grid = (velocity_emb[:, :2][neighs] * weight[:, :, None, None]).sum(
             1
@@ -1147,7 +1180,9 @@ def plot_arrow_examples(
     norm.autoscale(uncertain)
     colormap = cm.inferno
 
-    indexes = np.argsort(uncertain)[::-1][index : (index + num_total - num_certain)]
+    indexes = np.argsort(uncertain)[::-1][
+        index : (index + num_total - num_certain)
+    ]
     hl, hw, hal = default_arrow(arrow_size)
     print(hl, hw, hal)
     quiver_kwargs = {"angles": "xy", "scale_units": "xy"}
@@ -1381,7 +1416,9 @@ def us_rainbowplot(
                 markersize=5,
                 label="Unspliced",
             )
-            ax1.legend(handles=[blue_star, red_square], bbox_to_anchor=[2, -0.03])
+            ax1.legend(
+                handles=[blue_star, red_square], bbox_to_anchor=[2, -0.03]
+            )
             ax1.set_xlabel("")
         n += 1
         ax1.legend(bbox_to_anchor=[2, 0.1])
@@ -1430,7 +1467,10 @@ def rainbowplot(
             show=False,
         )
         colors = dict(
-            zip(adata.obs.state_info.cat.categories, adata.uns["state_info_colors"])
+            zip(
+                adata.obs.state_info.cat.categories,
+                adata.uns["state_info_colors"],
+            )
         )
     else:
         clusters = adata.obs.loc[:, cell_state]
@@ -1559,10 +1599,20 @@ def rainbowplot(
         hspace=0.8, wspace=0.4, left=0.2, right=0.7, top=0.92, bottom=0.08
     )
     subfigs[0].text(
-        -0.025, 0.58, "unspliced expression", size=7, rotation="vertical", va="center"
+        -0.025,
+        0.58,
+        "unspliced expression",
+        size=7,
+        rotation="vertical",
+        va="center",
     )
     subfigs[0].text(
-        0.552, 0.58, "spliced expression", size=7, rotation="vertical", va="center"
+        0.552,
+        0.58,
+        "spliced expression",
+        size=7,
+        rotation="vertical",
+        va="center",
     )
     return fig
 
@@ -1580,7 +1630,8 @@ def plot_state_uncertainty(
         adata.obs["state_uncertain"] = np.sqrt(
             (
                 (posterior_samples["st"] - posterior_samples["st"].mean(0)) ** 2
-                + (posterior_samples["ut"] - posterior_samples["ut"].mean(0)) ** 2
+                + (posterior_samples["ut"] - posterior_samples["ut"].mean(0))
+                ** 2
             ).sum(-1)
         ).mean(0)
     else:
@@ -1623,7 +1674,11 @@ from scipy.sparse import issparse
 
 
 def get_clone_trajectory(
-    adata, average_start_point=True, global_traj=True, times=[2, 4, 6], clone_num=None
+    adata,
+    average_start_point=True,
+    global_traj=True,
+    times=[2, 4, 6],
+    clone_num=None,
 ):
     if not average_start_point:
         adata.obsm["clone_vector_emb"] = np.zeros((adata.shape[0], 2))
@@ -1738,12 +1793,14 @@ def get_clone_trajectory(
                     print(adata_w[time6].obs.clonetype.unique())
                     print(adata_w[time6].obs)
 
-                    adata_new.obs.loc[:, "clonetype"] = adata_w[
-                        time6
-                    ].obs.clonetype.unique()  # use cell fate from last time point
+                    adata_new.obs.loc[:, "clonetype"] = (
+                        adata_w[time6].obs.clonetype.unique()
+                    )  # use cell fate from last time point
                     adata_new.obs.loc[:, "clones"] = int(j)
                     if "Well" in adata_w[time6].obs.columns:
-                        adata_new.obs.loc[:, "Well"] = adata_w[time6].obs.Well.unique()
+                        adata_new.obs.loc[:, "Well"] = adata_w[
+                            time6
+                        ].obs.Well.unique()
 
                     adata_new.obsm["X_umap"] = np.vstack(
                         [
@@ -1785,7 +1842,9 @@ def get_clone_trajectory(
             )
             adatas.append(adata_new)
             clones.append(clone_new)
-        return adatas[0].concatenate(adatas[1]), clones[0].concatenate(clones[1])
+        return adatas[0].concatenate(adatas[1]), clones[0].concatenate(
+            clones[1]
+        )
     else:
         if clone_num is None:
             clone_num = adata.obsm["X_clone"].shape[1]
@@ -1794,13 +1853,17 @@ def get_clone_trajectory(
             adata.obs["clonei"] = 0
             # print('----------aa------')
             if issparse(adata.obsm["X_clone"]):
-                adata.obs.loc[adata.obsm["X_clone"].toarray()[:, j] >= 1, "clonei"] = 1
+                adata.obs.loc[
+                    adata.obsm["X_clone"].toarray()[:, j] >= 1, "clonei"
+                ] = 1
             else:
                 adata.obs.loc[adata.obsm["X_clone"][:, j] >= 1, "clonei"] = 1
             # print('----------bb------')
 
             if not average_start_point:
-                for i in np.where((adata.obs.time == 2) & (adata.obs.clonei == 1))[0]:
+                for i in np.where(
+                    (adata.obs.time == 2) & (adata.obs.clonei == 1)
+                )[0]:
                     next_time = np.where(
                         (adata.obs.time == 4) & (adata.obs.clonei == 1)
                     )[0]
@@ -1808,7 +1871,9 @@ def get_clone_trajectory(
                         adata.obsm["X_umap"][next_time].mean(axis=0)
                         - adata.obsm["X_umap"][i]
                     )
-                for i in np.where((adata.obs.time == 4) & (adata.obs.clonei == 1))[0]:
+                for i in np.where(
+                    (adata.obs.time == 4) & (adata.obs.clonei == 1)
+                )[0]:
                     next_time = np.where(
                         (adata.obs.time == 6) & (adata.obs.clonei == 1)
                     )[0]
@@ -1822,7 +1887,8 @@ def get_clone_trajectory(
                     for t in times:
                         times_index.append(
                             np.where(
-                                (adata.obs.time_info == t) & (adata.obs.clonei == 1)
+                                (adata.obs.time_info == t)
+                                & (adata.obs.clonei == 1)
                             )[0]
                         )
 
@@ -1837,7 +1903,9 @@ def get_clone_trajectory(
                         adata_new = anndata.AnnData(
                             np.vstack(
                                 [
-                                    np.array(adata[time].X.mean(axis=0)).squeeze()
+                                    np.array(
+                                        adata[time].X.mean(axis=0)
+                                    ).squeeze()
                                     for time in times_index
                                     if time.shape[0] > 0
                                 ]
@@ -1852,7 +1920,11 @@ def get_clone_trajectory(
                         # print('----------cc------')
                         adata.obs.iloc[
                             np.hstack(
-                                [time for time in times_index if time.shape[0] > 0]
+                                [
+                                    time
+                                    for time in times_index
+                                    if time.shape[0] > 0
+                                ]
                             ),
                             adata.obs.columns.get_loc("clones"),
                         ] = int(j)
@@ -1878,7 +1950,9 @@ def get_clone_trajectory(
                             [
                                 adata_new.obsm["X_emb"][i + 1]
                                 - adata_new.obsm["X_emb"][i]
-                                for i in range(adata_new.obsm["X_emb"].shape[0] - 1)
+                                for i in range(
+                                    adata_new.obsm["X_emb"].shape[0] - 1
+                                )
                             ]
                             + [np.zeros(2)]
                         )
@@ -1889,9 +1963,15 @@ def get_clone_trajectory(
                         continue
 
                 else:
-                    time2 = np.where((adata.obs.time == t) & (adata.obs.clonei == 1))[0]
-                    time4 = np.where((adata.obs.time == 4) & (adata.obs.clonei == 1))[0]
-                    time6 = np.where((adata.obs.time == 6) & (adata.obs.clonei == 1))[0]
+                    time2 = np.where(
+                        (adata.obs.time == t) & (adata.obs.clonei == 1)
+                    )[0]
+                    time4 = np.where(
+                        (adata.obs.time == 4) & (adata.obs.clonei == 1)
+                    )[0]
+                    time6 = np.where(
+                        (adata.obs.time == 6) & (adata.obs.clonei == 1)
+                    )[0]
                     adata_new = anndata.AnnData(
                         np.vstack(
                             [
@@ -1941,13 +2021,15 @@ def get_clone_trajectory(
                     adata_new.obs.loc[:, "time"] = [2, 4, 6]
                     adata_new.obs.loc[:, "Cell type annotation"] = "Centroid"
                     if not global_traj:
-                        adata_new.obs.loc[:, "clonetype"] = adata[
-                            time6
-                        ].obs.clonetype.unique()  # use cell fate from last time point
+                        adata_new.obs.loc[:, "clonetype"] = (
+                            adata[time6].obs.clonetype.unique()
+                        )  # use cell fate from last time point
                     adata_new.obs.loc[:, "clones"] = j
 
                     if "noWell" in adata[time6].obs.columns:
-                        adata_new.obs.loc[:, "Well"] = adata[time6].obs.Well.unique()
+                        adata_new.obs.loc[:, "Well"] = adata[
+                            time6
+                        ].obs.Well.unique()
 
                     adata_new.obsm["X_umap"] = np.vstack(
                         [
@@ -2034,9 +2116,9 @@ def align_trajectory_diff(
         weight = normal.pdf(x=dists, scale=scale)
         # how many cells around a grid points
         p_mass = weight.sum(1)
-        V_grid = (velocity_embed[neighs] * weight[:, :, None]).sum(1) / np.maximum(
-            1, p_mass
-        )[:, None]
+        V_grid = (velocity_embed[neighs] * weight[:, :, None]).sum(
+            1
+        ) / np.maximum(1, p_mass)[:, None]
         if autoscale:
             V_grid /= 3 * quiver_autoscale(X_grid, V_grid)
         results.append(V_grid)
@@ -2047,7 +2129,8 @@ def align_trajectory_diff(
     if input_grid is None and input_scale is None:
         min_mass *= np.percentile(np.hstack(p_mass_list), 99) / 100
         mass_index = reduce(
-            np.intersect1d, [np.where(p_mass > min_mass)[0] for p_mass in p_mass_list]
+            np.intersect1d,
+            [np.where(p_mass > min_mass)[0] for p_mass in p_mass_list],
         )
 
     results = np.hstack(results)

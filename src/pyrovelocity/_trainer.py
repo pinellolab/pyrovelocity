@@ -1,25 +1,17 @@
 import math
-from typing import Any
-from typing import Callable
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Sequence
-from typing import Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
 import mlflow
 import numpy as np
 import pyro
 import scipy
 import torch
-from pyro.infer import Trace_ELBO
-from pyro.infer import TraceEnum_ELBO
+from pyro.infer import Trace_ELBO, TraceEnum_ELBO
 from pyro.infer.autoguide.guides import AutoGuideList
 from pyro.optim.clipped_adam import ClippedAdam
 from pyro.optim.optim import PyroOptim
 from scvi.dataloaders import DataSplitter
-from scvi.train import PyroTrainingPlan
-from scvi.train import TrainRunner
+from scvi.train import PyroTrainingPlan, TrainRunner
 
 from pyrovelocity.utils import _get_fn_args_from_batch
 
@@ -68,7 +60,9 @@ class VelocityAdam(ClippedAdam):
 
                 bias_correction1 = 1 - beta1 ** state["step"]
                 bias_correction2 = 1 - beta2 ** state["step"]
-                step_size = group["lr"] * math.sqrt(bias_correction2) / bias_correction1
+                step_size = (
+                    group["lr"] * math.sqrt(bias_correction2) / bias_correction1
+                )
 
                 p.data.addcdiv_(exp_avg, denom, value=-step_size)
         return loss
@@ -88,7 +82,9 @@ class EnumTrainingPlan(PyroTrainingPlan):
         optim: Optional[pyro.optim.PyroOptim] = None,
     ):
         super().__init__(
-            pyro_velocity, TraceEnum_ELBO(strict_enumeration_warning=True), optim
+            pyro_velocity,
+            TraceEnum_ELBO(strict_enumeration_warning=True),
+            optim,
         )
         self.svi = pyro.infer.SVI(
             model=self.module.model,
@@ -134,7 +130,9 @@ class EnumTrainingPlan(PyroTrainingPlan):
             elbo += tensors["valid_step_loss"]
             n_batch += 1
             ##n_elem += tensors['num_elem']
-        self.log("elbo_validation", elbo / n_batch, prog_bar=True, on_epoch=True)
+        self.log(
+            "elbo_validation", elbo / n_batch, prog_bar=True, on_epoch=True
+        )
         # self.log("elbo_validation", elbo / self.n_elem, prog_bar=True, on_epoch=True)
         ##self.log("elbo_validation", elbo / n_elem, prog_bar=True, on_epoch=True)
 
@@ -218,13 +216,17 @@ class VelocityTrainingMixin:
 
         normalizer = self.adata.shape[0] * self.adata.shape[1] * 2
         u = torch.tensor(
-            np.array(self.adata.layers["raw_unspliced"].toarray(), dtype="float32")
+            np.array(
+                self.adata.layers["raw_unspliced"].toarray(), dtype="float32"
+            )
             if scipy.sparse.issparse(self.adata.layers["raw_unspliced"])
             else self.adata.layers["raw_unspliced"],
             dtype=torch.float32,
         ).to(device)
         s = torch.tensor(
-            np.array(self.adata.layers["raw_spliced"].toarray(), dtype="float32")
+            np.array(
+                self.adata.layers["raw_spliced"].toarray(), dtype="float32"
+            )
             if scipy.sparse.issparse(self.adata.layers["raw_spliced"])
             else self.adata.layers["raw_spliced"],
             dtype=torch.float32,
@@ -234,12 +236,16 @@ class VelocityTrainingMixin:
 
         u_library = torch.tensor(
             # np.array(self.adata.obs.u_lib_size, dtype="float32"), dtype=torch.float32
-            np.array(np.log(self.adata.obs.u_lib_size_raw + epsilon), dtype="float32"),
+            np.array(
+                np.log(self.adata.obs.u_lib_size_raw + epsilon), dtype="float32"
+            ),
             dtype=torch.float32,
         ).to(device)
         s_library = torch.tensor(
             # np.array(self.adata.obs.s_lib_size, dtype="float32"), dtype=torch.float32
-            np.array(np.log(self.adata.obs.s_lib_size_raw + epsilon), dtype="float32"),
+            np.array(
+                np.log(self.adata.obs.s_lib_size_raw + epsilon), dtype="float32"
+            ),
             dtype=torch.float32,
         ).to(device)
         u_library_mean = (
@@ -329,7 +335,9 @@ class VelocityTrainingMixin:
                 ((step + 1) % log_every == 0) and ((step + 1) < max_epochs)
             ):
                 mlflow.log_metric("-ELBO", -elbos, step=step + 1)
-                print(f"step {step + 1: >4d} loss = {elbos:0.6g} patience = {patience}")
+                print(
+                    f"step {step + 1: >4d} loss = {elbos:0.6g} patience = {patience}"
+                )
             if step > log_every:
                 if (losses[-1] - elbos) < losses[-1] * patient_improve:
                     patience -= 1
@@ -406,7 +414,9 @@ class VelocityTrainingMixin:
                 ((step + 1) % log_every == 0) and ((step + 1) < max_epochs)
             ):
                 mlflow.log_metric("-ELBO", -elbos, step=step + 1)
-                print(f"step {step + 1: >4d} loss = {elbos:0.6g} patience = {patience}")
+                print(
+                    f"step {step + 1: >4d} loss = {elbos:0.6g} patience = {patience}"
+                )
             if step > log_every:
                 if (losses[-1] - elbos) < losses[-1] * patient_improve:
                     patience -= 1

@@ -1,11 +1,8 @@
 """Model training API for Pyro-Velocity."""
-from typing import Dict
-from typing import Optional
-from typing import Tuple
+from typing import Dict, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from anndata._core.anndata import AnnData
 from numpy import ndarray
 from pyro import poutine
@@ -162,7 +159,10 @@ def train_model(
             fig, ax = plt.subplots()
             fig.set_size_inches(2.5, 1.5)
             ax.scatter(
-                np.arange(len(losses)), -np.array(losses), label="train", alpha=0.25
+                np.arange(len(losses)),
+                -np.array(losses),
+                label="train",
+                alpha=0.25,
             )
             set_loss_plot_axes(ax)
             posterior_samples = model.generate_posterior_samples(
@@ -186,7 +186,9 @@ def train_model(
                 random_state=seed,
                 shuffle=False,
             )
-            train_batch_size = train_ind.shape[0] if batch_size == -1 else batch_size
+            train_batch_size = (
+                train_ind.shape[0] if batch_size == -1 else batch_size
+            )
             losses = model.train_faster_with_batch(
                 max_epochs=max_epochs,
                 batch_size=train_batch_size,
@@ -199,19 +201,29 @@ def train_model(
                 patient_init=patient_init,
             )
             posterior_samples = model.generate_posterior_samples(
-                model.adata, num_samples=num_samples, indices=train_ind, batch_size=512
+                model.adata,
+                num_samples=num_samples,
+                indices=train_ind,
+                batch_size=512,
             )
 
-            test_batch_size = test_ind.shape[0] if batch_size == -1 else batch_size
+            test_batch_size = (
+                test_ind.shape[0] if batch_size == -1 else batch_size
+            )
             if guide_type in {"auto", "auto_t0_constraint"}:
                 new_guide = AutoGuideList(
-                    model.module._model, create_plates=model.module._model.create_plates
+                    model.module._model,
+                    create_plates=model.module._model.create_plates,
                 )
                 new_guide.append(
                     AutoNormal(
                         poutine.block(
                             model.module._model,
-                            expose=["cell_time", "u_read_depth", "s_read_depth"],
+                            expose=[
+                                "cell_time",
+                                "u_read_depth",
+                                "s_read_depth",
+                            ],
                         ),
                         init_scale=0.1,
                     )
@@ -230,10 +242,13 @@ def train_model(
                     seed=seed,
                     elbo_name="-ELBO validation",
                 )
-            elif guide_type in {
-                "velocity_auto",
-                "velocity_auto_t0_constraint",
-            }:  # velocity_auto, not supported (velocity_auto_depth fails with error)
+            elif (
+                guide_type
+                in {
+                    "velocity_auto",
+                    "velocity_auto_t0_constraint",
+                }
+            ):  # velocity_auto, not supported (velocity_auto_depth fails with error)
                 print("valid new guide")
 
                 losses_test = model.train_faster_with_batch(
@@ -253,7 +268,10 @@ def train_model(
             fig, ax = plt.subplots()
             fig.set_size_inches(2.5, 1.5)
             ax.scatter(
-                np.arange(len(losses)), -np.array(losses), label="train", alpha=0.25
+                np.arange(len(losses)),
+                -np.array(losses),
+                label="train",
+                alpha=0.25,
             )
             ax.scatter(
                 np.arange(len(losses_test)),

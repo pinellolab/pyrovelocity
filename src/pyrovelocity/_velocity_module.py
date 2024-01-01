@@ -1,9 +1,7 @@
-from typing import Optional
-from typing import Union
+from typing import Optional, Union
 
 from pyro import poutine
-from pyro.infer.autoguide import AutoLowRankMultivariateNormal
-from pyro.infer.autoguide import AutoNormal
+from pyro.infer.autoguide import AutoLowRankMultivariateNormal, AutoNormal
 from pyro.infer.autoguide.guides import AutoGuideList
 from scvi.module.base import PyroBaseModuleClass
 
@@ -90,7 +88,7 @@ class VelocityModule(PyroBaseModuleClass):
         correct_library_size: Union[bool, str] = True,
         cell_specific_kinetics: Optional[str] = None,
         kinetics_num: Optional[int] = None,
-        **initial_values
+        **initial_values,
     ) -> None:
         super().__init__()
         self.num_cells = num_cells
@@ -125,10 +123,12 @@ class VelocityModule(PyroBaseModuleClass):
             correct_library_size=correct_library_size,
             guide_type=self.guide_type,
             cell_specific_kinetics=self.cell_specific_kinetics,
-            **initial_values
+            **initial_values,
         )
 
-        guide = AutoGuideList(self._model, create_plates=self._model.create_plates)
+        guide = AutoGuideList(
+            self._model, create_plates=self._model.create_plates
+        )
         guide.append(
             AutoNormal(
                 poutine.block(

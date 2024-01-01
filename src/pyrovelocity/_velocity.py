@@ -3,10 +3,7 @@ import os
 import pickle
 import sys
 from statistics import harmonic_mean
-from typing import Dict
-from typing import Optional
-from typing import Sequence
-from typing import Union
+from typing import Dict, Optional, Sequence, Union
 
 import mlflow
 import numpy as np
@@ -15,26 +12,27 @@ import torch
 from anndata import AnnData
 from numpy import ndarray
 from scvi.data import AnnDataManager
-from scvi.data._constants import _SETUP_ARGS_KEY
-from scvi.data._constants import _SETUP_METHOD_NAME
-from scvi.data.fields import LayerField
-from scvi.data.fields import NumericalObsField
+from scvi.data._constants import _SETUP_ARGS_KEY, _SETUP_METHOD_NAME
+from scvi.data.fields import LayerField, NumericalObsField
 from scvi.model._utils import parse_use_gpu_arg
 from scvi.model.base import BaseModelClass
-from scvi.model.base._utils import _initialize_model
-from scvi.model.base._utils import _load_saved_files
-from scvi.model.base._utils import _validate_var_names
+from scvi.model.base._utils import (
+    _initialize_model,
+    _load_saved_files,
+    _validate_var_names,
+)
 from scvi.module.base import PyroBaseModuleClass
 
-from pyrovelocity.plot import compute_mean_vector_field
-from pyrovelocity.plot import compute_volcano_data
-from pyrovelocity.plot import vector_field_uncertainty
+from pyrovelocity.plot import (
+    compute_mean_vector_field,
+    compute_volcano_data,
+    vector_field_uncertainty,
+)
 from pyrovelocity.utils import _get_fn_args_from_batch
 
 from ._trainer import VelocityTrainingMixin
 from ._velocity_module import VelocityModule
 from .utils import init_with_all_cells
-
 
 logger = logging.getLogger(__name__)
 
@@ -290,7 +288,8 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             for tensor in scdl:
                 args, kwargs = _get_fn_args_from_batch(tensor)
                 posterior_sample = {
-                    k: v.cpu().numpy() for k, v in predictive(*args, **kwargs).items()
+                    k: v.cpu().numpy()
+                    for k, v in predictive(*args, **kwargs).items()
                 }
                 posterior_samples.append(posterior_sample)
             samples = {}
@@ -339,9 +338,13 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         ncpus_use,
     ):
         """reduce posterior samples by precomputing metrics."""
-        if ("u_scale" in posterior_samples) and ("s_scale" in posterior_samples):
+        if ("u_scale" in posterior_samples) and (
+            "s_scale" in posterior_samples
+        ):
             scale = posterior_samples["u_scale"] / posterior_samples["s_scale"]
-        elif ("u_scale" in posterior_samples) and not ("s_scale" in posterior_samples):
+        elif ("u_scale" in posterior_samples) and not (
+            "s_scale" in posterior_samples
+        ):
             scale = posterior_samples["u_scale"]
         else:
             scale = 1
@@ -353,15 +356,23 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             (original_spaces_velocity_samples**2).sum(axis=-1)
         )
 
-        vector_field_posterior_samples, embeds_radian, fdri = vector_field_uncertainty(
+        (
+            vector_field_posterior_samples,
+            embeds_radian,
+            fdri,
+        ) = vector_field_uncertainty(
             adata,
             posterior_samples,
             basis=vector_field_basis,
             n_jobs=ncpus_use,
         )
-        embeds_magnitude = np.sqrt((vector_field_posterior_samples**2).sum(axis=-1))
+        embeds_magnitude = np.sqrt(
+            (vector_field_posterior_samples**2).sum(axis=-1)
+        )
 
-        mlflow.log_metric("FDR_sig_frac", round((fdri < 0.05).sum() / fdri.shape[0], 3))
+        mlflow.log_metric(
+            "FDR_sig_frac", round((fdri < 0.05).sum() / fdri.shape[0], 3)
+        )
         mlflow.log_metric("FDR_HMP", harmonic_mean(fdri))
 
         compute_mean_vector_field(
@@ -371,7 +382,9 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             n_jobs=ncpus_use,
         )
 
-        vector_field_posterior_mean = adata.obsm[f"velocity_pyro_{vector_field_basis}"]
+        vector_field_posterior_mean = adata.obsm[
+            f"velocity_pyro_{vector_field_basis}"
+        ]
 
         gene_ranking, genes = compute_volcano_data(
             [posterior_samples], [adata], time_correlation_with="st"
@@ -389,7 +402,9 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         posterior_samples[
             "vector_field_posterior_samples"
         ] = vector_field_posterior_samples
-        posterior_samples["vector_field_posterior_mean"] = vector_field_posterior_mean
+        posterior_samples[
+            "vector_field_posterior_mean"
+        ] = vector_field_posterior_mean
         posterior_samples["fdri"] = fdri
         posterior_samples["embeds_magnitude"] = embeds_magnitude
         print(embeds_radian.shape)
@@ -433,8 +448,12 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         save_anndata: bool = False,
         **anndata_write_kwargs,
     ) -> None:
-        super().save(dir_path, prefix, overwrite, save_anndata, **anndata_write_kwargs)
-        pyro.get_param_store().save(os.path.join(dir_path, "param_store_test.pt"))
+        super().save(
+            dir_path, prefix, overwrite, save_anndata, **anndata_write_kwargs
+        )
+        pyro.get_param_store().save(
+            os.path.join(dir_path, "param_store_test.pt")
+        )
 
     @classmethod
     def load_model(

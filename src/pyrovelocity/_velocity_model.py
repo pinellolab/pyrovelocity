@@ -1,32 +1,24 @@
-from typing import Any
-from typing import Dict
-from typing import Iterable
-from typing import Optional
-from typing import Tuple
-from typing import Union
+from typing import Optional, Tuple, Union
 
 import pyro
-import pyro.poutine as poutine
 import torch
 from packaging import version
-from pyro.distributions import Bernoulli
-from pyro.distributions import Beta
-from pyro.distributions import LogNormal
-from pyro.distributions import NegativeBinomial
-from pyro.distributions import Normal
-from pyro.distributions import Poisson
+from pyro import poutine
+from pyro.distributions import (
+    Bernoulli,
+    Beta,
+    LogNormal,
+    NegativeBinomial,
+    Normal,
+    Poisson,
+)
 from pyro.distributions.constraints import positive
-from pyro.nn import PyroModule
-from pyro.nn import PyroParam
-from pyro.nn import PyroSample
+from pyro.nn import PyroModule, PyroParam, PyroSample
 from pyro.primitives import plate
 from scvi.nn import Decoder
-from torch import nn
-from torch.nn.functional import relu
-from torch.nn.functional import softplus
+from torch.nn.functional import relu, softplus
 
 from .utils import mRNA
-from .utils import tau_inv
 
 
 class LogNormalModel(PyroModule):
@@ -98,7 +90,9 @@ class LogNormalModel(PyroModule):
         cell_state: Optional[torch.Tensor] = None,
         time_info: Optional[torch.Tensor] = None,
     ) -> Tuple[plate, plate]:
-        cell_plate = pyro.plate("cells", self.num_cells, subsample=ind_x, dim=-2)
+        cell_plate = pyro.plate(
+            "cells", self.num_cells, subsample=ind_x, dim=-2
+        )
         gene_plate = pyro.plate("genes", self.num_genes, dim=-1)
         return cell_plate, gene_plate
 
@@ -212,7 +206,9 @@ class LogNormalModel(PyroModule):
     def latent_time(self):
         if self.shared_time:
             if self.plate_size == 2:
-                return Normal(self.zero, self.one * 0.1).mask(self.include_prior)
+                return Normal(self.zero, self.one * 0.1).mask(
+                    self.include_prior
+                )
             else:
                 return (
                     Normal(self.zero, self.one * 0.1)
@@ -222,7 +218,9 @@ class LogNormalModel(PyroModule):
                 )
         if self.plate_size == 2:
             return LogNormal(self.zero, self.one).mask(self.include_prior)
-        return LogNormal(self.zero, self.one).expand((self.num_genes,)).to_event(1)
+        return (
+            LogNormal(self.zero, self.one).expand((self.num_genes,)).to_event(1)
+        )
 
     @PyroSample
     def cell_time(self):
@@ -335,8 +333,12 @@ class LogNormalModel(PyroModule):
                 s_logits = (relu(st) + self.one * 1e-6).log() - (
                     self.s_px_r.exp() + self.one * 1e-6
                 ).log()
-            u_dist = NegativeBinomial(total_count=self.u_px_r.exp(), logits=u_logits)
-            s_dist = NegativeBinomial(total_count=self.s_px_r.exp(), logits=s_logits)
+            u_dist = NegativeBinomial(
+                total_count=self.u_px_r.exp(), logits=u_logits
+            )
+            s_dist = NegativeBinomial(
+                total_count=self.s_px_r.exp(), logits=s_logits
+            )
         elif self.likelihood == "Poisson":
             if self.correct_library_size:
                 ut = relu(ut) + self.one * 1e-6
@@ -349,10 +351,12 @@ class LogNormalModel(PyroModule):
                     ut = torch.log(ut)
                     st = torch.log(st)
                     ut = torch.exp(
-                        ut_coef * ut + u_cell_size_coef * (-ut_sum + u_read_depth)
+                        ut_coef * ut
+                        + u_cell_size_coef * (-ut_sum + u_read_depth)
                     )
                     st = torch.exp(
-                        st_coef * st + s_cell_size_coef * (-st_sum + s_read_depth)
+                        st_coef * st
+                        + s_cell_size_coef * (-st_sum + s_read_depth)
                     )
                 else:
                     ut = ut / torch.sum(ut, dim=-1, keepdim=True)
@@ -529,12 +533,15 @@ class AuxCellVelocityModel(VelocityModel):
 
         if self.shared_time:
             cell_time = pyro.sample(
-                "cell_time", LogNormal(self.zero, self.one).mask(self.include_prior)
+                "cell_time",
+                LogNormal(self.zero, self.one).mask(self.include_prior),
             )
 
         with gene_plate:
             if self.latent_factor_operation == "selection":
-                cellgene_type = pyro.sample("cellgene_type", Bernoulli(p_velocity))
+                cellgene_type = pyro.sample(
+                    "cellgene_type", Bernoulli(p_velocity)
+                )
             else:
                 cellgene_type = None
 
@@ -581,10 +588,12 @@ class AuxCellVelocityModel(VelocityModel):
                     "abc,cd->ad", cell_code, cell_codebook.squeeze()
                 )
                 regressor_u = softplus(
-                    regressor_output[..., : self.num_genes].squeeze() + u_pcs_mean
+                    regressor_output[..., : self.num_genes].squeeze()
+                    + u_pcs_mean
                 )
                 regressor_s = softplus(
-                    regressor_output[..., self.num_genes :].squeeze() + s_pcs_mean
+                    regressor_output[..., self.num_genes :].squeeze()
+                    + s_pcs_mean
                 )
             if self.latent_factor_operation == "selection":
                 ut = torch.where(
@@ -592,7 +601,9 @@ class AuxCellVelocityModel(VelocityModel):
                     ut * u_scale / s_scale,
                     softplus(regressor_u),
                 )
-                st = torch.where(cellgene_type == self.one, st, softplus(regressor_s))
+                st = torch.where(
+                    cellgene_type == self.one, st, softplus(regressor_s)
+                )
             elif self.latent_factor_operation == "sum":
                 ut = ut * u_scale / s_scale + regressor_u
                 st = st + regressor_s
@@ -840,7 +851,8 @@ class VelocityModelAuto(AuxCellVelocityModel):
 
         with cell_plate:
             t = pyro.sample(
-                "cell_time", LogNormal(self.zero, self.one).mask(self.include_prior)
+                "cell_time",
+                LogNormal(self.zero, self.one).mask(self.include_prior),
             )
 
         with cell_plate:
@@ -852,27 +864,35 @@ class VelocityModelAuto(AuxCellVelocityModel):
                     s_read_depth = torch.exp(s_log_library)
                 else:
                     u_read_depth = pyro.sample(
-                        "u_read_depth", LogNormal(u_log_library, u_log_library_scale)
+                        "u_read_depth",
+                        LogNormal(u_log_library, u_log_library_scale),
                     )
                     s_read_depth = pyro.sample(
-                        "s_read_depth", LogNormal(s_log_library, s_log_library_scale)
+                        "s_read_depth",
+                        LogNormal(s_log_library, s_log_library_scale),
                     )
                     if self.correct_library_size == "cell_size_regress":
                         u_cell_size_coef = pyro.sample(
                             "u_cell_size_coef", Normal(self.zero, self.one)
                         )
-                        ut_coef = pyro.sample("ut_coef", Normal(self.zero, self.one))
+                        ut_coef = pyro.sample(
+                            "ut_coef", Normal(self.zero, self.one)
+                        )
                         s_cell_size_coef = pyro.sample(
                             "s_cell_size_coef", Normal(self.zero, self.one)
                         )
-                        st_coef = pyro.sample("st_coef", Normal(self.zero, self.one))
+                        st_coef = pyro.sample(
+                            "st_coef", Normal(self.zero, self.one)
+                        )
             with gene_plate:
                 if self.guide_type in [
                     "auto_t0_constraint",
                     "velocity_auto_t0_constraint",
                 ]:
                     pyro.sample(
-                        "time_constraint", Bernoulli(logits=t - t0), obs=self.one
+                        "time_constraint",
+                        Bernoulli(logits=t - t0),
+                        obs=self.one,
                     )
                 ut, st = self.get_rna(
                     u_scale,

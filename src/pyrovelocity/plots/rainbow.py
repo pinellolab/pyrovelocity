@@ -1,10 +1,10 @@
 import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 import scvelo as scv
 import seaborn as sns
+from matplotlib import ticker
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
@@ -109,10 +109,20 @@ def adjust_subfigure(subfig):
     )
 
     subfig[0].text(
-        -0.025, 0.58, "unspliced expression", size=7, rotation="vertical", va="center"
+        -0.025,
+        0.58,
+        "unspliced expression",
+        size=7,
+        rotation="vertical",
+        va="center",
     )
     subfig[0].text(
-        0.552, 0.58, "spliced expression", size=7, rotation="vertical", va="center"
+        0.552,
+        0.58,
+        "spliced expression",
+        size=7,
+        rotation="vertical",
+        va="center",
     )
 
     sns.despine()
@@ -147,7 +157,9 @@ def pareto_frontier_genes(volcano_data, num_genes):
                 )
 
         pareto_frontier = pareto_frontier.append(pareto_frontier_current)
-        volcano_data = volcano_data.loc[~volcano_data.index.isin(pareto_frontier.index)]
+        volcano_data = volcano_data.loc[
+            ~volcano_data.index.isin(pareto_frontier.index)
+        ]
         print(
             f"\nFound {len(pareto_frontier_current)} genes on the current Pareto frontier:\n\n"
             f"  {pareto_frontier_current.index.tolist()}\n\n"

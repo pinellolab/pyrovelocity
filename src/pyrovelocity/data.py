@@ -1,6 +1,5 @@
 import os
-from typing import List
-from typing import Optional
+from typing import List, Optional
 
 import anndata
 import anndata._core.anndata
@@ -12,9 +11,7 @@ import scvelo as scv
 from scipy.sparse import issparse
 
 from pyrovelocity.cytotrace import cytotrace_sparse
-from pyrovelocity.utils import ensure_numpy_array
-from pyrovelocity.utils import print_anndata
-from pyrovelocity.utils import trace
+from pyrovelocity.utils import ensure_numpy_array, print_anndata
 
 
 def copy_raw_counts(
@@ -56,7 +53,9 @@ def assign_colors(
     max_spliced: int, max_unspliced: int, minlim_s: int, minlim_u: int
 ) -> List[str]:
     return [
-        "black" if (spliced >= minlim_s) & (unspliced >= minlim_u) else "lightgrey"
+        "black"
+        if (spliced >= minlim_s) & (unspliced >= minlim_u)
+        else "lightgrey"
         for spliced, unspliced in zip(max_spliced, max_unspliced)
     ]
 
@@ -149,7 +148,11 @@ def plot_high_us_genes(
 
 
 def get_high_us_genes(
-    adata, minlim_u=0, minlim_s=0, unspliced_layer="unspliced", spliced_layer="spliced"
+    adata,
+    minlim_u=0,
+    minlim_s=0,
+    unspliced_layer="unspliced",
+    spliced_layer="spliced",
 ):
     """
     Function to select genes that have spliced and unspliced counts above a certain threshold. Genes of
@@ -326,7 +329,9 @@ def load_data(
         if "leiden" not in adata.obs.keys():
             sc.tl.leiden(adata)
         if use_sub:
-            top_genes = adata.var["fit_likelihood"].sort_values(ascending=False).index
+            top_genes = (
+                adata.var["fit_likelihood"].sort_values(ascending=False).index
+            )
             print(top_genes[:10])
             adata = adata[:, top_genes[:3]].copy()
         scv.tl.velocity_graph(adata, n_jobs=-1)
@@ -402,7 +407,9 @@ def load_larry(
     return adata
 
 
-def load_unipotent_larry(celltype: str = "mono") -> anndata._core.anndata.AnnData:
+def load_unipotent_larry(
+    celltype: str = "mono"
+) -> anndata._core.anndata.AnnData:
     """In vitro Hemotopoiesis Larry datasets
     Subset of Data from `CALEB WEINREB et al. (2020) <DOI: 10.1126/science.aaw3381>'
     unipotent monocytes: https://figshare.com/ndownloader/files/37028572

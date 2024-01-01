@@ -1,20 +1,13 @@
-from typing import Optional
-from typing import Tuple
-from typing import Union
+from typing import Optional, Tuple, Union
 
 import pyro
-import pyro.poutine as poutine
 import torch
-from pyro.distributions import Bernoulli
-from pyro.distributions import LogNormal
-from pyro.distributions import Normal
-from pyro.distributions import Poisson
-from pyro.nn import PyroModule
-from pyro.nn import PyroSample
+from pyro import poutine
+from pyro.distributions import Bernoulli, LogNormal, Normal, Poisson
+from pyro.nn import PyroModule, PyroSample
 from pyro.primitives import plate
 from scvi.nn import Decoder
-from torch.nn.functional import relu
-from torch.nn.functional import softplus
+from torch.nn.functional import relu, softplus
 
 from .utils import mRNA
 
@@ -53,7 +46,9 @@ class LogNormalModel(PyroModule):
         cell_state: Optional[torch.Tensor] = None,
         time_info: Optional[torch.Tensor] = None,
     ) -> Tuple[plate, plate]:
-        cell_plate = pyro.plate("cells", self.num_cells, subsample=ind_x, dim=-2)
+        cell_plate = pyro.plate(
+            "cells", self.num_cells, subsample=ind_x, dim=-2
+        )
         gene_plate = pyro.plate("genes", self.num_genes, dim=-1)
         return cell_plate, gene_plate
 
@@ -102,7 +97,11 @@ class LogNormalModel(PyroModule):
         if self.shared_time & self.plate_size == 2:
             return Normal(self.zero, self.one * 0.1).mask(self.include_prior)
         else:
-            return LogNormal(self.zero, self.one).expand((self.num_genes,)).to_event(1)
+            return (
+                LogNormal(self.zero, self.one)
+                .expand((self.num_genes,))
+                .to_event(1)
+            )
 
     @PyroSample
     def cell_time(self):
@@ -301,11 +300,14 @@ class VelocityModelAuto(LogNormalModel):
             u_inf, s_inf = mRNA(dt_switching, u0, s0, alpha, beta, gamma)
             u_inf = pyro.deterministic("u_inf", u_inf, event_dim=0)
             s_inf = pyro.deterministic("s_inf", s_inf, event_dim=0)
-            switching = pyro.deterministic("switching", dt_switching + t0, event_dim=0)
+            switching = pyro.deterministic(
+                "switching", dt_switching + t0, event_dim=0
+            )
 
         with cell_plate:
             t = pyro.sample(
-                "cell_time", LogNormal(self.zero, self.one).mask(self.include_prior)
+                "cell_time",
+                LogNormal(self.zero, self.one).mask(self.include_prior),
             )
 
         with cell_plate:

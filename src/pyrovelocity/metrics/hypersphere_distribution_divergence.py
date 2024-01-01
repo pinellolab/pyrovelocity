@@ -1,8 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy.special as sp
-from sklearn.metrics.pairwise import euclidean_distances
-from sklearn.metrics.pairwise import rbf_kernel
+from sklearn.metrics.pairwise import euclidean_distances, rbf_kernel
 from sklearn.neighbors import KernelDensity
 
 
@@ -55,9 +53,9 @@ class VMF:
         Returns:
             float: The sampled weight.
         """
-        b = (-2 * self.kappa + np.sqrt(4 * self.kappa**2 + (self.dim - 1) ** 2)) / (
-            self.dim - 1
-        )
+        b = (
+            -2 * self.kappa + np.sqrt(4 * self.kappa**2 + (self.dim - 1) ** 2)
+        ) / (self.dim - 1)
         x = (1 - b) / (1 + b)
         c = self.kappa * x + (self.dim - 1) * np.log(1 - x**2)
 
@@ -65,7 +63,9 @@ class VMF:
             z = np.random.beta(0.5 * (self.dim - 1), 0.5 * (self.dim - 1))
             w = (1 - (1 + b) * z) / (1 - (1 - b) * z)
             u = np.random.uniform(0, 1)
-            if self.kappa * w + (self.dim - 1) * np.log(1 - x * w) - c >= np.log(u):
+            if self.kappa * w + (self.dim - 1) * np.log(
+                1 - x * w
+            ) - c >= np.log(u):
                 return w
 
     def _sample_orthogonal_to(self):
@@ -184,13 +184,18 @@ def mmd(p, q, gamma=None):
     return mmd, gamma
 
 
-def plot_samples_and_kde(ax, samples_vmf, samples_uniform, kappa, dim=3, bandwidth=0.1):
+def plot_samples_and_kde(
+    ax, samples_vmf, samples_uniform, kappa, dim=3, bandwidth=0.1
+):
     if dim not in [2, 3]:
         raise ValueError("Dimension must be 2 or 3.")
 
     if dim == 3:
         ax.scatter(
-            samples_vmf[:, 0], samples_vmf[:, 1], samples_vmf[:, 2], color="darkgreen"
+            samples_vmf[:, 0],
+            samples_vmf[:, 1],
+            samples_vmf[:, 2],
+            color="darkgreen",
         )
         ax.set_title(rf"VMF distribution ($\kappa$={kappa})")
         ax.set_xlim([-1, 1])
@@ -203,8 +208,12 @@ def plot_samples_and_kde(ax, samples_vmf, samples_uniform, kappa, dim=3, bandwid
 
         # grid
         num_points = 100
-        x = np.linspace(min(samples_vmf[:, 0]), max(samples_vmf[:, 0]), num_points)
-        y = np.linspace(min(samples_vmf[:, 1]), max(samples_vmf[:, 1]), num_points)
+        x = np.linspace(
+            min(samples_vmf[:, 0]), max(samples_vmf[:, 0]), num_points
+        )
+        y = np.linspace(
+            min(samples_vmf[:, 1]), max(samples_vmf[:, 1]), num_points
+        )
         X, Y = np.meshgrid(x, y)
         xy = np.vstack([X.ravel(), Y.ravel()]).T
 

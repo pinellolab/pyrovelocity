@@ -72,13 +72,17 @@ def calculate_criticality_index(
     )
 
     sd_mean = np.mean(
-        np.hstack((np.std(unspliced_data, axis=1), np.std(spliced_data, axis=1)))
+        np.hstack(
+            (np.std(unspliced_data, axis=1), np.std(spliced_data, axis=1))
+        )
     )
 
     def conditional_entropy(data):
         df = pd.DataFrame(data)
         joint_prob = (
-            df.apply(lambda x: x.value_counts() / len(x)).fillna(0).values.flatten()
+            df.apply(lambda x: x.value_counts() / len(x))
+            .fillna(0)
+            .values.flatten()
         )
         joint_prob = joint_prob.reshape(data.shape[1], -1)
         marginal_prob = np.sum(joint_prob, axis=1)

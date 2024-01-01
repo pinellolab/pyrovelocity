@@ -32,9 +32,7 @@ import pandas as pd
 # Cell
 import scvelo as scv
 from numpy import ndarray
-from scipy.stats import mannwhitneyu
-from scipy.stats import rankdata
-
+from scipy.stats import mannwhitneyu, rankdata
 
 ##from scanorama import correct_scanpy
 scv.logging.verbosity = 3
@@ -43,8 +41,7 @@ scv.set_figure_params("scvelo")
 np.random.seed(99)
 
 # Cell
-from scipy.sparse import csr_matrix
-from scipy.sparse import issparse
+from scipy.sparse import csr_matrix, issparse
 
 
 def census_normalize(mat, count):
@@ -137,7 +134,9 @@ def convert_to_markov(sim):
     zero_rows = Ds.sum(axis=1) == 0
     zero_cols = Ds.sum(axis=0) == 0
 
-    Ds[~zero_rows, :] = (Ds[~zero_rows, :].T / Ds[~zero_rows, :].sum(axis=1)).T  # tips
+    Ds[~zero_rows, :] = (
+        Ds[~zero_rows, :].T / Ds[~zero_rows, :].sum(axis=1)
+    ).T  # tips
     Ds[:, zero_cols] = 0
     return Ds
 
@@ -146,23 +145,23 @@ def convert_to_markov(sim):
 # http://xrm.phys.northwestern.edu/research/pdf_papers/1997/bro_chemometrics_1997.pdf
 # matlab reference: https://www.mathworks.com/matlabcentral/mlc-downloads/downloads/submissions/3388/versions/1/previews/fnnls.m/index.html
 
-from numpy import abs
-from numpy import arange
-from numpy import argmax
-from numpy import finfo
-from numpy import float64
-from numpy import int64
-from numpy import min
-from numpy import newaxis
-from numpy import nonzero
-from numpy import sum
-from numpy import zeros
+from numpy import (
+    abs,
+    arange,
+    argmax,
+    finfo,
+    float64,
+    int64,
+    min,
+    newaxis,
+    nonzero,
+    sum,
+    zeros,
+)
 from scipy.linalg import solve
-
 
 nu = newaxis
 import numpy as np
-
 
 # machine epsilon
 eps = finfo(float64).eps
@@ -259,7 +258,9 @@ def regressed(markov, gcs, solver="fnnls"):
     print(solver)
     if solver == "fnnls":
         coef, err = FNNLSa(markov.T @ markov, markov.T @ gcs)
-    elif solver == "jfnnls":  # pip install fnnls # https://github.com/jvendrow/fnnls
+    elif (
+        solver == "jfnnls"
+    ):  # pip install fnnls # https://github.com/jvendrow/fnnls
         from fnnls import fnnls
 
         coef, err = fnnls(markov, gcs)
@@ -285,7 +286,9 @@ def regressed(markov, gcs, solver="fnnls"):
         from scipy import sparse
         from sklearn.linear_model import Lasso
 
-        lasso = Lasso(alpha=1e-7, max_iter=100000, fit_intercept=False, positive=True)
+        lasso = Lasso(
+            alpha=1e-7, max_iter=100000, fit_intercept=False, positive=True
+        )
         den = (markov > 0).sum() / np.prod(markov.shape)
         print(den)
         if den >= 0.5:
@@ -358,7 +361,9 @@ def compare_cytotrace(
         X = X[:, ~pgenes]
         X = (X.T / X.sum(axis=1)) * 1e6
 
-        pqcells = (pd.isnull((X > 0).sum(axis=0))) | ((X > 0).sum(axis=0) <= cell_count)
+        pqcells = (pd.isnull((X > 0).sum(axis=0))) | (
+            (X > 0).sum(axis=0) <= cell_count
+        )
         X = X[:, ~pqcells]
 
         genes_selected = genes_selected[~pgenes]
@@ -429,12 +434,15 @@ def compare_cytotrace(
         score_time = time()
         print("score time: %s" % (score_time - gc_time))
 
-        corrs_cond = compute_similarity2(mat2_cond.T, scores_cond.reshape(-1, 1))[0, :]
+        corrs_cond = compute_similarity2(
+            mat2_cond.T, scores_cond.reshape(-1, 1)
+        )[0, :]
         final_time = time()
         print("final time: %s" % (final_time - score_time))
         adata.var["cytotrace_corrs_%s" % cond] = None
         adata.var.iloc[
-            genes_selected, adata.var.columns.get_loc("cytotrace_corrs_%s" % cond)
+            genes_selected,
+            adata.var.columns.get_loc("cytotrace_corrs_%s" % cond),
         ] = corrs_cond
 
     adata.obs["gcs"] = None
@@ -472,7 +480,9 @@ def cytotrace_sparse(
     n_cells = X.shape[0]
     feature_mean = (X.sum(0) / n_cells).A1
     feature_mean_sq = (X.multiply(X).sum(0) / n_cells).A1
-    feature_var = (feature_mean_sq - feature_mean**2) * (n_cells / (n_cells - 1))
+    feature_var = (feature_mean_sq - feature_mean**2) * (
+        n_cells / (n_cells - 1)
+    )
     non_zero_features = (X > 0).sum(axis=0).A1
     pfeatures = np.isnan(non_zero_features) | (feature_var == 0)
 
@@ -487,7 +497,9 @@ def cytotrace_sparse(
 
     # filter cell, feature x cell
     feature_count_per_cell = (X > 0).sum(axis=0).A1
-    pcells = np.isnan(feature_count_per_cell) | (feature_count_per_cell < cell_count)
+    pcells = np.isnan(feature_count_per_cell) | (
+        feature_count_per_cell < cell_count
+    )
 
     # feature x cell
     X = X[:, ~pcells]
@@ -509,8 +521,12 @@ def cytotrace_sparse(
     ].tocsr()
     n_cells = census_X_topcell.shape[1]
     feature_mean = (census_X_topcell.sum(1) / n_cells).A1
-    feature_mean_sq = (census_X_topcell.multiply(census_X_topcell).sum(1) / n_cells).A1
-    feature_var = (feature_mean_sq - feature_mean**2) * (n_cells / (n_cells - 1))
+    feature_mean_sq = (
+        census_X_topcell.multiply(census_X_topcell).sum(1) / n_cells
+    ).A1
+    feature_var = (feature_mean_sq - feature_mean**2) * (
+        n_cells / (n_cells - 1)
+    )
     disp = feature_var / feature_mean
     mvg = census_X_topcell[
         disp >= (np.sort(disp)[::-1])[:1000][-1], :
@@ -528,9 +544,9 @@ def cytotrace_sparse(
     feature_count_per_cell = feature_count_per_cell[selection]
 
     # calculate GC scores
-    corrs = compute_similarity2(census_X.T.A, feature_count_per_cell.reshape(-1, 1))[
-        0, :
-    ]
+    corrs = compute_similarity2(
+        census_X.T.A, feature_count_per_cell.reshape(-1, 1)
+    )[0, :]
     # avoid nan, put all nan to -1
     corrs[np.isnan(corrs)] = -1
     gcs = census_X[np.argsort(corrs)[::-1][:top_n_features], :].mean(axis=0).A1
@@ -559,13 +575,17 @@ def cytotrace_sparse(
     cytoGenes = compute_similarity2(census_X.T.A, scores.reshape(-1, 1))[0, :]
 
     adata.obs["cytotrace"] = np.nan
-    adata.obs.iloc[cells_selected, adata.obs.columns.get_loc("cytotrace")] = scores
+    adata.obs.iloc[
+        cells_selected, adata.obs.columns.get_loc("cytotrace")
+    ] = scores
 
     adata.obs["counts"] = np.nan
     adata.obs.iloc[cells_selected, adata.obs.columns.get_loc("counts")] = gcs
 
     adata.var["cytotrace"] = False
-    adata.var.iloc[features_selected, adata.var.columns.get_loc("cytotrace")] = True
+    adata.var.iloc[
+        features_selected, adata.var.columns.get_loc("cytotrace")
+    ] = True
 
     adata.var["cytotrace_corrs"] = np.nan
     adata.var.iloc[
@@ -579,12 +599,16 @@ def cytotrace_sparse(
         "exprMatrix": census_X,
         "cytoGenes": cytoGenes,
         "gcsGenes": corrs,
-        "filteredCells": np.setdiff1d(np.arange(adata.shape[0]), cells_selected),
+        "filteredCells": np.setdiff1d(
+            np.arange(adata.shape[0]), cells_selected
+        ),
     }
 
 
 # Cell
-def cytotrace(adata, layer="all", cell_count=10, solver="nnls", top_n_genes=200):
+def cytotrace(
+    adata, layer="all", cell_count=10, solver="nnls", top_n_genes=200
+):
     "Main interface of cytotrace reimplementation used for single dataset with one condition"
     proc_time = time()
     if layer == "all":
@@ -611,7 +635,9 @@ def cytotrace(adata, layer="all", cell_count=10, solver="nnls", top_n_genes=200)
     # gene x cell
     X = (X.T / X.sum(axis=1)) * 1e6
 
-    pqcells = (pd.isnull((X > 0).sum(axis=0))) | ((X > 0).sum(axis=0) <= cell_count)
+    pqcells = (pd.isnull((X > 0).sum(axis=0))) | (
+        (X > 0).sum(axis=0) <= cell_count
+    )
     X = X[:, ~pqcells]
 
     genes_selected = genes_selected[~pgenes]
@@ -669,13 +695,17 @@ def cytotrace(adata, layer="all", cell_count=10, solver="nnls", top_n_genes=200)
     adata.obs.iloc[cells_selected, adata.obs.columns.get_loc("gcs")] = gcs
 
     adata.obs["cytotrace"] = None
-    adata.obs.iloc[cells_selected, adata.obs.columns.get_loc("cytotrace")] = scores
+    adata.obs.iloc[
+        cells_selected, adata.obs.columns.get_loc("cytotrace")
+    ] = scores
 
     adata.obs["counts"] = None
     adata.obs.iloc[cells_selected, adata.obs.columns.get_loc("counts")] = counts
 
     adata.var["cytotrace"] = None
-    adata.var.iloc[genes_selected, adata.var.columns.get_loc("cytotrace")] = True
+    adata.var.iloc[
+        genes_selected, adata.var.columns.get_loc("cytotrace")
+    ] = True
 
     adata.var["cytotrace_corrs"] = None
     adata.var.iloc[
@@ -689,7 +719,9 @@ def cytotrace(adata, layer="all", cell_count=10, solver="nnls", top_n_genes=200)
         "exprMatrix": mat2,
         "cytoGenes": cyto_corrs,
         "gcsGenes": corrs,
-        "filteredCells": np.setdiff1d(np.arange(adata.shape[0]), cells_selected),
+        "filteredCells": np.setdiff1d(
+            np.arange(adata.shape[0]), cells_selected
+        ),
     }
 
 
@@ -700,9 +732,16 @@ def visualize(adata, metrics, name="test"):
     fig, ax = plt.subplots(2)
     fig.set_size_inches(8, 6)
     sc.pl.umap(adata, color="cytotrace", show=False, ax=ax[0])
-    order = adata.obs.groupby("clusters").median().sort_values(["cytotrace"]).index
+    order = (
+        adata.obs.groupby("clusters").median().sort_values(["cytotrace"]).index
+    )
     bplot = sns.boxplot(
-        x="clusters", y="cytotrace", data=adata.obs, order=order, width=0.35, ax=ax[1]
+        x="clusters",
+        y="cytotrace",
+        data=adata.obs,
+        order=order,
+        width=0.35,
+        ax=ax[1],
     )
     ax[1].set_xticklabels(order, rotation=40, ha="right")
     fig.savefig(f"{name}_figure.pdf")
@@ -741,7 +780,9 @@ def compare_cytotrace_ncores(
     proc_time = time()
     if not is_normalized:
         if layer == "all":
-            X = adata.layers["spliced"] + adata.layers["unspliced"]  # .toarray()
+            X = (
+                adata.layers["spliced"] + adata.layers["unspliced"]
+            )  # .toarray()
         else:
             try:
                 X = (
@@ -765,7 +806,8 @@ def compare_cytotrace_ncores(
         X = X[:, ~pgenes]
         X = (X.T).multiply(1.0 / csr_matrix.sum(X.T, axis=0)).tocsr()
         pqcells = np.array(
-            (np.isnan((X > 0).sum(axis=0))) | ((X > 0).sum(axis=0) <= cell_count)
+            (np.isnan((X > 0).sum(axis=0)))
+            | ((X > 0).sum(axis=0) <= cell_count)
         )[0]
         X = X[:, ~pqcells]
 
@@ -847,12 +889,15 @@ def compare_cytotrace_ncores(
         score_time = time()
         print("score time: %s" % (score_time - gc_time))
 
-        corrs_cond = compute_similarity2(mat2_cond.T, scores_cond.reshape(-1, 1))[0, :]
+        corrs_cond = compute_similarity2(
+            mat2_cond.T, scores_cond.reshape(-1, 1)
+        )[0, :]
         final_time = time()
         print("final time: %s" % (final_time - score_time))
         adata.var["cytotrace_corrs_%s" % cond] = None
         adata.var.iloc[
-            genes_selected, adata.var.columns.get_loc("cytotrace_corrs_%s" % cond)
+            genes_selected,
+            adata.var.columns.get_loc("cytotrace_corrs_%s" % cond),
         ] = corrs_cond
 
     pool.close()
@@ -982,16 +1027,22 @@ def cytotrace_ncore(
     adata.obs.iloc[cells_selected, adata.obs.columns.get_loc("gcs")] = gcs
 
     adata.obs["cytotrace"] = None
-    adata.obs.iloc[cells_selected, adata.obs.columns.get_loc("cytotrace")] = scores
+    adata.obs.iloc[
+        cells_selected, adata.obs.columns.get_loc("cytotrace")
+    ] = scores
 
     adata.obs["counts"] = None
     adata.obs.iloc[cells_selected, adata.obs.columns.get_loc("counts")] = counts
 
     adata.var["cytotrace"] = None
-    adata.var.iloc[genes_selected, adata.var.columns.get_loc("cytotrace")] = True
+    adata.var.iloc[
+        genes_selected, adata.var.columns.get_loc("cytotrace")
+    ] = True
 
     adata.var["cytotrace_corrs"] = None
-    adata.var.iloc[genes_selected, adata.var.columns.get_loc("cytotrace_corrs")] = corrs
+    adata.var.iloc[
+        genes_selected, adata.var.columns.get_loc("cytotrace_corrs")
+    ] = corrs
 
 
 # Cell
@@ -1007,8 +1058,12 @@ def align_diffrate(
         pvalg = mannwhitneyu(scores[0], scores[1], alternative="greater")[1]
         pvall = mannwhitneyu(scores[0], scores[1], alternative="less")[1]
     else:
-        pvalg = mannwhitneyu(1 - scores[0], 1 - scores[1], alternative="greater")[1]
-        pvall = mannwhitneyu(1 - scores[0], 1 - scores[1], alternative="less")[1]
+        pvalg = mannwhitneyu(
+            1 - scores[0], 1 - scores[1], alternative="greater"
+        )[1]
+        pvall = mannwhitneyu(1 - scores[0], 1 - scores[1], alternative="less")[
+            1
+        ]
 
     for s, l in zip(scores, labels):
         if outfield in ["latent_time", "velocity_pseudotime"]:
@@ -1018,8 +1073,14 @@ def align_diffrate(
                 s = np.sort(-s)
             else:
                 s = np.sort(1 - s)
-        ax.step(np.concatenate([s, s[[-1]]]), np.arange(s.size + 1) / s.size, label=l)
-        ax.scatter(np.concatenate([s, s[[-1]]]), np.arange(s.size + 1) / s.size, s=5)
+        ax.step(
+            np.concatenate([s, s[[-1]]]),
+            np.arange(s.size + 1) / s.size,
+            label=l,
+        )
+        ax.scatter(
+            np.concatenate([s, s[[-1]]]), np.arange(s.size + 1) / s.size, s=5
+        )
         if outfield == "cytotrace":
             ax.set_xlabel("Differentiation level")
         else:

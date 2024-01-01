@@ -1,8 +1,6 @@
 import argparse
-import fnmatch
 from pathlib import Path
-from typing import Sequence
-from typing import Union
+from typing import Sequence, Union
 
 import hydra
 import rich.console
@@ -11,11 +9,8 @@ import rich.syntax
 import rich.tree
 from hydra.core.config_store import ConfigStore
 from hydra.core.global_hydra import GlobalHydra
-from hydra_zen import make_config
-from hydra_zen import make_custom_builds_fn
-from omegaconf import DictConfig
-from omegaconf import ListConfig
-from omegaconf import OmegaConf
+from hydra_zen import make_config, make_custom_builds_fn
+from omegaconf import DictConfig, ListConfig, OmegaConf
 from pytorch_lightning.utilities import rank_zero_only
 
 from pyrovelocity.api import train_model
@@ -37,7 +32,9 @@ def hydra_zen_configure():
         See the documentation for hydra_zen.make_config for more information.
     """
     # define helper functions
-    pbuilds = make_custom_builds_fn(zen_partial=True, populate_full_signature=True)
+    pbuilds = make_custom_builds_fn(
+        zen_partial=True, populate_full_signature=True
+    )
 
     def create_dataset_config(
         name, dl_root, data_file, rel_path, url, process_method, process_args
@@ -51,12 +48,17 @@ def hydra_zen_configure():
             derived=dict(
                 process_method=process_method,
                 process_args=process_args,
-                rel_path="${data_external.processed_path}/" + f"{name}_processed.h5ad",
+                rel_path="${data_external.processed_path}/"
+                + f"{name}_processed.h5ad",
             ),
         )
 
     def create_model_config(
-        source, name, model_suffix, vector_field_basis, **custom_training_parameters
+        source,
+        name,
+        model_suffix,
+        vector_field_basis,
+        **custom_training_parameters,
     ):
         return dict(
             path="${paths.models}/" + f"{name}_model{model_suffix}",
@@ -460,10 +462,19 @@ def hydra_zen_compressed_configure():
         See the documentation for hydra_zen.make_config for more information.
     """
     # define helper functions
-    pbuilds = make_custom_builds_fn(zen_partial=True, populate_full_signature=True)
+    pbuilds = make_custom_builds_fn(
+        zen_partial=True, populate_full_signature=True
+    )
 
     def create_dataset_config(
-        source, name, dl_root, data_file, rel_path, url, process_method, process_args
+        source,
+        name,
+        dl_root,
+        data_file,
+        rel_path,
+        url,
+        process_method,
+        process_args,
     ):
         return dict(
             source=source,
@@ -1124,7 +1135,9 @@ def test_hydra_zen_configure():
         Config : Type[DataClass]
         See the documentation for hydra_zen.make_config for more information.
     """
-    pbuilds = make_custom_builds_fn(zen_partial=True, populate_full_signature=True)
+    pbuilds = make_custom_builds_fn(
+        zen_partial=True, populate_full_signature=True
+    )
 
     def create_dataset_config(
         name, dl_root, data_file, rel_path, url, process_method, process_args
@@ -1138,12 +1151,17 @@ def test_hydra_zen_configure():
             derived=dict(
                 process_method=process_method,
                 process_args=process_args,
-                rel_path="${data_external.processed_path}/" + f"{name}_processed.h5ad",
+                rel_path="${data_external.processed_path}/"
+                + f"{name}_processed.h5ad",
             ),
         )
 
     def create_model_config(
-        source, name, model_suffix, vector_field_basis, **custom_training_parameters
+        source,
+        name,
+        model_suffix,
+        vector_field_basis,
+        **custom_training_parameters,
     ):
         return dict(
             path="${paths.models}/" + f"{name}_model{model_suffix}",
@@ -1275,7 +1293,9 @@ def config_setup(config_path: str) -> Union[DictConfig, ListConfig]:
 
     logger = get_pylogger(name="CONF")
 
-    template_config_path = config_path.replace("config.yaml", "template-config.yaml")
+    template_config_path = config_path.replace(
+        "config.yaml", "template-config.yaml"
+    )
     conf = OmegaConf.load(template_config_path)
     with open(config_path, "w") as conf_file:
         OmegaConf.save(config=conf, f=conf_file, resolve=True)

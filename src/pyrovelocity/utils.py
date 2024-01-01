@@ -4,9 +4,7 @@ import pdb
 from inspect import getmembers
 from pprint import pprint
 from types import FunctionType
-from typing import Any
-from typing import Dict
-from typing import Tuple
+from typing import Any, Dict, Tuple
 
 import anndata
 import colorlog
@@ -22,8 +20,6 @@ from scvi.data import synthetic_iid
 from sklearn.decomposition import PCA
 from termcolor import colored
 from torch.nn.functional import relu
-from torch.nn.functional import softmax
-from torch.nn.functional import softplus
 
 
 def trace(func):
@@ -237,7 +233,9 @@ def mRNA(
     # solution 2: conditional analytical solution
     # solution 2 issue:AutoDelta map_estimate of alpha,beta,gamma,switching will become nan, thus u_inf/s_inf/ut/st all lead to nan
     # On the Mathematics of RNA Velocity I: Theoretical Analysis: Equation (2.12) when gamma == beta
-    st2 = s0 * expu + alpha / beta * (1 - expu) - (alpha - beta * u0) * tau * expu
+    st2 = (
+        s0 * expu + alpha / beta * (1 - expu) - (alpha - beta * u0) * tau * expu
+    )
     ##st2 = s0 * expu + alpha / gamma * (1 - expu) - (alpha - gamma * u0) * tau * expu
     st = torch.where(torch.isclose(gamma, beta), st2, st)
 
@@ -246,7 +244,9 @@ def mRNA(
     return ut, st
 
 
-def tau_inv(u=None, s=None, u0=None, s0=None, alpha=None, beta=None, gamma=None):
+def tau_inv(
+    u=None, s=None, u0=None, s0=None, alpha=None, beta=None, gamma=None
+):
     """
     Computes the inverse tau given the parameters and initial conditions.
 
@@ -276,7 +276,9 @@ def tau_inv(u=None, s=None, u0=None, s0=None, alpha=None, beta=None, gamma=None)
     """
     beta_ = beta * inv(gamma - beta)
     xinf = alpha / gamma - beta_ * (alpha / beta)
-    tau1 = -1.0 / gamma * log((s - beta_ * u - xinf) * inv(s0 - beta_ * u0 - xinf))
+    tau1 = (
+        -1.0 / gamma * log((s - beta_ * u - xinf) * inv(s0 - beta_ * u0 - xinf))
+    )
 
     uinf = alpha / beta
     tau2 = -1 / beta * log((u - uinf) * inv(u0 - uinf))
@@ -337,7 +339,8 @@ def get_velocity_samples(posterior_samples, model):
     beta = posterior_samples["beta"].mean(0)[0]
     gamma = posterior_samples["gamma"].mean(0)[0]
     scale = (
-        posterior_samples["u_scale"][:, 0, :] / posterior_samples["s_scale"][:, 0, :]
+        posterior_samples["u_scale"][:, 0, :]
+        / posterior_samples["s_scale"][:, 0, :]
     ).mean(0)
     ut = posterior_samples["u"] / scale
     st = posterior_samples["s"]
@@ -453,7 +456,9 @@ def init_with_all_cells(
     tau = torch.where(tau >= switching, switching, tau)
     tau_ = tau_inv(u_obs, s_obs, u_inf, s_inf, 0.0, beta, gamma)
     tau_ = torch.where(
-        tau_ >= tau_[s_obs > 0].max(dim=0)[0], tau_[s_obs > 0].max(dim=0)[0], tau_
+        tau_ >= tau_[s_obs > 0].max(dim=0)[0],
+        tau_[s_obs > 0].max(dim=0)[0],
+        tau_,
     )
     ut, st = mRNA(tau, 0.0, 0.0, alpha, beta, gamma)
     ut_, st_ = mRNA(tau_, u_inf, s_inf, 0.0, beta, gamma)
@@ -510,7 +515,9 @@ def init_with_all_cells(
     if num_aux_cells > 0:
         np.random.seed(99)
         if "cytotrace" in adata.obs.columns:
-            order_aux = np.array_split(np.sort(adata.obs["cytotrace"].values), 50)
+            order_aux = np.array_split(
+                np.sort(adata.obs["cytotrace"].values), 50
+            )
             order_aux_list = []
             for i in order_aux:
                 order_aux_list.append(
@@ -523,17 +530,23 @@ def init_with_all_cells(
                 )
             order_aux = np.array(order_aux_list)
         else:
-            order_aux = np.argsort((adata.layers["spliced"].toarray() > 0).sum(axis=1))[
-                ::-1
-            ]
+            order_aux = np.argsort(
+                (adata.layers["spliced"].toarray() > 0).sum(axis=1)
+            )[::-1]
 
-        init_values["order_aux"] = torch.from_numpy(order_aux[:num_aux_cells].copy())
+        init_values["order_aux"] = torch.from_numpy(
+            order_aux[:num_aux_cells].copy()
+        )
 
         if input_type == "raw":
             u_obs = adata.layers["raw_unspliced"].toarray()
             s_obs = adata.layers["raw_spliced"].toarray()
-        init_values["aux_u_obs"] = torch.tensor(u_obs[order_aux][:num_aux_cells])
-        init_values["aux_s_obs"] = torch.tensor(s_obs[order_aux][:num_aux_cells])
+        init_values["aux_u_obs"] = torch.tensor(
+            u_obs[order_aux][:num_aux_cells]
+        )
+        init_values["aux_s_obs"] = torch.tensor(
+            s_obs[order_aux][:num_aux_cells]
+        )
         init_values["cell_gene_state_aux"] = cell_gene_state[:num_aux_cells]
         init_values["latent_time_aux"] = t[:num_aux_cells]
 
@@ -578,25 +591,37 @@ def mae_evaluate(posterior_samples, adata):
             for sample in range(model_obj["u"].shape[0]):
                 maes_list.append(
                     mae(
-                        np.hstack([model_obj["u"][sample], model_obj["s"][sample]]),
+                        np.hstack(
+                            [model_obj["u"][sample], model_obj["s"][sample]]
+                        ),
                         np.hstack(
                             [
-                                adata.layers["raw_unspliced"].toarray()[split_index],
-                                adata.layers["raw_spliced"].toarray()[split_index],
+                                adata.layers["raw_unspliced"].toarray()[
+                                    split_index
+                                ],
+                                adata.layers["raw_spliced"].toarray()[
+                                    split_index
+                                ],
                             ]
                         ),
                     )
                 )
                 labels.append(model_label)
     else:
-        for model_label, model_obj in zip(["Poisson all cells"], [posterior_samples]):
+        for model_label, model_obj in zip(
+            ["Poisson all cells"], [posterior_samples]
+        ):
             for sample in range(model_obj["u"].shape[0]):
                 maes_list.append(
                     mae(
-                        np.hstack([model_obj["u"][sample], model_obj["s"][sample]]),
+                        np.hstack(
+                            [model_obj["u"][sample], model_obj["s"][sample]]
+                        ),
                         np.hstack(
                             [
-                                ensure_numpy_array(adata.layers["raw_unspliced"]),
+                                ensure_numpy_array(
+                                    adata.layers["raw_unspliced"]
+                                ),
                                 ensure_numpy_array(adata.layers["raw_spliced"]),
                             ]
                         ),
@@ -677,12 +702,16 @@ def attributes(obj):
     get object attributes
     """
     disallowed_names = {
-        name for name, value in getmembers(type(obj)) if isinstance(value, FunctionType)
+        name
+        for name, value in getmembers(type(obj))
+        if isinstance(value, FunctionType)
     }
     return {
         name: getattr(obj, name)
         for name in dir(obj)
-        if name[0] != "_" and name not in disallowed_names and hasattr(obj, name)
+        if name[0] != "_"
+        and name not in disallowed_names
+        and hasattr(obj, name)
     }
 
 
@@ -697,7 +726,9 @@ def pretty_print_dict(d: dict):
     for key, value in d.items():
         key_colored = colored(key, "green")
         value_lines = str(value).split("\n")
-        value_colored = "\n".join(colored(line, "white") for line in value_lines)
+        value_colored = "\n".join(
+            colored(line, "white") for line in value_lines
+        )
         print(f"{key_colored}:\n{value_colored}\n")
 
 
@@ -847,7 +878,9 @@ def generate_sample_data(
             noise_model=noise_model,
         )
     else:
-        raise ValueError("noise_model must be one of 'iid', 'gillespie', 'normal'")
+        raise ValueError(
+            "noise_model must be one of 'iid', 'gillespie', 'normal'"
+        )
     return adata
 
 
