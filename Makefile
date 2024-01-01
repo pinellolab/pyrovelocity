@@ -119,11 +119,65 @@ install_just: ## Install just. Check script before execution: https://just.syste
 	@which cargo > /dev/null || (curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh)
 	@cargo install just
 
+install_poetry: ## Install poetry. Check script before execution: https://python-poetry.org/docs/#installation .
+	@which poetry > /dev/null || (curl -sSL https://install.python-poetry.org | python3 -)
+
+install_crane: ## Install crane. Check docs before execution: https://github.com/google/go-containerregistry/blob/main/cmd/crane/doc/crane.md .
+	@which crane > /dev/null || ( \
+		set -e; \
+		CRANE_VERSION="0.16.1"; \
+		OS=$$(uname -s | tr '[:upper:]' '[:lower:]'); \
+		ARCH=$$(uname -m); \
+		case $$ARCH in \
+			x86_64|amd64) ARCH="x86_64" ;; \
+			aarch64|arm64) ARCH="arm64" ;; \
+			*) echo "Unsupported architecture: $$ARCH" && exit 1 ;; \
+		esac; \
+		TMP_DIR=$$(mktemp -d); \
+		trap 'rm -rf "$$TMP_DIR"' EXIT; \
+		echo "Downloading crane $$CRANE_VERSION for $$OS $$ARCH to $$TMP_DIR"; \
+		FILENAME="go-containerregistry_$$OS"_$$ARCH".tar.gz"; \
+		URL="https://github.com/google/go-containerregistry/releases/download/v$$CRANE_VERSION/$$FILENAME"; \
+		curl -sSL "$$URL" | tar xz -C $$TMP_DIR; \
+		sudo mv $$TMP_DIR/crane /usr/local/bin/crane; \
+		echo "Crane installed successfully to /usr/local/bin/crane" \
+	)
+
 precommit: ## Run pre-commit hooks using nox.
 	nox -x -rs pre-commit
 
-env_print: ## Print a subset of environment variables defined in ".envrc" file.
-	env | grep "TF_VAR\|GITHUB\|GH_\|GCP_\|MLFLOW" | sort
+env_print: ## Print a subset of environment variables defined in ".env" file.
+	env | grep "TF_VAR\|GITHUB\|GH_\|GCP_\|MLFLOW|FLYTE\|WORKFLOW" | sort
+
+# gh secret set GOOGLE_APPLICATION_CREDENTIALS_DATA --repo="$(GH_REPO)" --body='$(shell cat $(GCP_GACD_PATH))'
+ghsecrets: ## Update github secrets for GH_REPO from ".env" file.
+	@echo "secrets before updates:"
+	@echo
+	PAGER=cat gh secret list --repo=$(GH_REPO)
+	@echo
+	gh secret set FLYTE_CLUSTER_ENDPOINT --repo="$(GH_REPO)" --body="$(FLYTE_CLUSTER_ENDPOINT)"
+	gh secret set FLYTE_OAUTH_CLIENT_SECRET --repo="$(GH_REPO)" --body="$(FLYTE_OAUTH_CLIENT_SECRET)"
+	gh secret set FLYTECTL_CONFIG --repo="$(GH_REPO)" --body="$(FLYTECTL_CONFIG)"
+	gh secret set CODECOV_TOKEN --repo="$(GH_REPO)" --body="$(CODECOV_TOKEN)"
+	gh secret set GCP_PROJECT_ID --repo="$(GH_REPO)" --body="$(GCP_PROJECT_ID)"
+	gh secret set GCP_STORAGE_SCOPES --repo="$(GH_REPO)" --body="$(GCP_STORAGE_SCOPES)"
+	gh secret set GCP_STORAGE_CONTAINER --repo="$(GH_REPO)" --body="$(GCP_STORAGE_CONTAINER)"
+	gh secret set GCP_ARTIFACT_REGISTRY_PATH --repo="$(GH_REPO)" --body="$(GCP_ARTIFACT_REGISTRY_PATH)"
+	@echo
+	@echo secrets after updates:
+	@echo
+	PAGER=cat gh secret list --repo=$(GH_REPO)
+
+ghvars: ## Update github secrets for GH_REPO from ".env" file.
+	@echo "variables before updates:"
+	@echo
+	PAGER=cat gh variable list --repo=$(GH_REPO)
+	@echo
+	gh variable set WORKFLOW_IMAGE --repo="$(GH_REPO)" --body="$(WORKFLOW_IMAGE)"
+	@echo
+	@echo variables after updates:
+	@echo
+	PAGER=cat gh variable list --repo=$(GH_REPO)
 
 approve_prs: ## Approve github pull requests from bots: PR_ENTRIES="2-5 10 12-18"
 	for entry in $(PR_ENTRIES); do \
