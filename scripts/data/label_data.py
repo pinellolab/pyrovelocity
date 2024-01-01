@@ -7,12 +7,9 @@ import matplotlib.pyplot as plt
 import scanpy as sc
 from pyensembl import EnsemblRelease
 
-
 DATA_SET_NAME = "pbmc5k"
 DATA_FILE_PATH = f"{DATA_SET_NAME}_unlabeled.h5ad"
-BACKUP_URL = (
-    f"https://storage.googleapis.com/pyrovelocity/data/{DATA_SET_NAME}_unlabeled.h5ad"
-)
+BACKUP_URL = f"https://storage.googleapis.com/pyrovelocity/data/{DATA_SET_NAME}_unlabeled.h5ad"
 # Install the relevant Ensembl release with:
 #   pyensembl install --release 98 --species human
 ENSEMBL_RELEASE = 98
@@ -102,7 +99,9 @@ def plot_umap(adata, plot_filename, obs_key):
         frameon=False,
     )
 
-    plt.savefig(plot_filename, bbox_extra_artists=(legend,), bbox_inches="tight")
+    plt.savefig(
+        plot_filename, bbox_extra_artists=(legend,), bbox_inches="tight"
+    )
 
     plt.show()
 
@@ -111,13 +110,17 @@ def main():
     adata = load_data(DATA_FILE_PATH, BACKUP_URL)
     adata = rename_var_to_gene_symbol(adata, ENSEMBL_RELEASE)
     adata = preprocess_data(adata)
-    adata = label_cell_types(adata, LOW_RESOLUTION_MODEL, "celltype_low_resolution")
+    adata = label_cell_types(
+        adata, LOW_RESOLUTION_MODEL, "celltype_low_resolution"
+    )
     plot_umap(adata, LOW_RES_PLOT_FILENAME, "celltype_low_resolution")
 
     adata = label_cell_types(adata, HIGH_RESOLUTION_MODEL, "celltype")
     plot_umap(adata, HIGH_RES_PLOT_FILENAME, "celltype")
 
-    output_file_path = DATA_FILE_PATH.replace("_unlabeled.h5ad", "_labeled.h5ad")
+    output_file_path = DATA_FILE_PATH.replace(
+        "_unlabeled.h5ad", "_labeled.h5ad"
+    )
     breakpoint()
     adata.write(output_file_path)
 

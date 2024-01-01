@@ -40,14 +40,18 @@ def compute_distances_and_correlation(n_cells, n_genes, desired_corr=0):
     expression_distances_matrix = pairwise_distances(
         expression_vectors, metric="cityblock", n_jobs=-1
     )
-    expression_distances = expression_distances_matrix[np.triu_indices(n_cells, k=1)]
+    expression_distances = expression_distances_matrix[
+        np.triu_indices(n_cells, k=1)
+    ]
     time_dist = time.time() - start_time
 
     start_time = time.time()
-    temporal_differences_matrix = temporal_coordinates - temporal_coordinates.reshape(
-        -1, 1
+    temporal_differences_matrix = (
+        temporal_coordinates - temporal_coordinates.reshape(-1, 1)
     )
-    temporal_differences = temporal_differences_matrix[np.triu_indices(n_cells, k=1)]
+    temporal_differences = temporal_differences_matrix[
+        np.triu_indices(n_cells, k=1)
+    ]
     time_temporal = time.time() - start_time
 
     start_time = time.time()
@@ -68,15 +72,21 @@ total_times = []
 for desired_corr in [-1, 0, 1]:
     for n_genes in [200, 2000]:
         for n_cells in [100, 1000, 10000]:
-            mem_usage, (
-                correlation,
-                p_value,
-                time_dist,
-                time_temporal,
-                time_corr,
-                total_time,
+            (
+                mem_usage,
+                (
+                    correlation,
+                    p_value,
+                    time_dist,
+                    time_temporal,
+                    time_corr,
+                    total_time,
+                ),
             ) = memory_usage(
-                (compute_distances_and_correlation, (n_cells, n_genes, desired_corr)),
+                (
+                    compute_distances_and_correlation,
+                    (n_cells, n_genes, desired_corr),
+                ),
                 interval=0.1,
                 max_usage=True,
                 retval=True,
@@ -100,7 +110,14 @@ for desired_corr in [-1, 0, 1]:
             total_times.append(total_time)
 
 data = np.column_stack(
-    (n_genes_list, n_cells_list, correlations, p_values, memory_usages, total_times)
+    (
+        n_genes_list,
+        n_cells_list,
+        correlations,
+        p_values,
+        memory_usages,
+        total_times,
+    )
 )
 np.savetxt(
     "distance_time_correlation_benchmark.csv",
