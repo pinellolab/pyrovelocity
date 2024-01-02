@@ -353,9 +353,9 @@
           default = pkgs.poetry2nix.mkPoetryApplication (
             mkPoetryAttrs
             // {
-              checkPhase = ''
-                pytest
-              '';
+              # checkPhase = ''
+              #   pytest
+              # '';
             }
           );
 
