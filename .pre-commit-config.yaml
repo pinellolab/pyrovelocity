@@ -1,26 +1,16 @@
 exclude: |
   (?x)^(
     conda/recipe/meta.yaml|
+    conda/conda-lock.yml|
     reproducibility/figures/models/.*|
     reproducibility/figures/config.yaml
   )$
 repos:
-  - repo: https://github.com/psf/black
-    rev: 23.3.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.9
     hooks:
-      - id: black
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
-    hooks:
-      - id: check-added-large-files
-      - id: check-toml
-      - id: check-yaml
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.12.0
-    hooks:
-      - id: isort
+      - id: ruff
+        args: [--target-version, py37, --line-length, "80"]
   - repo: https://github.com/asottile/pyupgrade
     rev: v3.3.1
     hooks:
