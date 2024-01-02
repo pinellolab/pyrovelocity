@@ -208,8 +208,12 @@ log_level = "INFO"
 virtual_package_spec = "conda/virtual-packages.yml"
 
 [tool.conda-lock.dependencies]
-seaborn = { version = "0.11.2", source = "conda-forge" }
+adjusttext = { source = "pypi" }
+hydra-zen = {source = "pypi"}
 jupyter_core = { version = ">=5.1.3", source = "conda-forge" }
+pip = ">=23.2"
+poethepoet = {source = "pypi"}
+seaborn = { version = "0.11.2", source = "conda-forge" }
 
 [tool.poe.tasks.conda-lock]
 cmd = """
