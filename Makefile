@@ -124,16 +124,16 @@ list_gcr_workflow_image_tags: ## List images in gcr.
 #----
 
 meta: ## Generate nix flake metadata.
-	nix flake metadata --impure
-	nix flake show --impure
+	nix flake metadata --impure --accept-flake-config
+	nix flake show --impure --accept-flake-config
 
 up: ## Update nix flake lock file.
 	nix flake update --impure --accept-flake-config
-	nix flake check --impure
+	nix flake check --impure --accept-flake-config
 
 dup: ## Debug update nix flake lock file.
 	nix flake update --impure --accept-flake-config
-	nix flake check --show-trace --print-build-logs --impure
+	nix flake check --show-trace --print-build-logs --impure --accept-flake-config
 
 re: ## Reload direnv.
 	direnv reload
