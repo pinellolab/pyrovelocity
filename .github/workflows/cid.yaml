@@ -215,7 +215,9 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@v9
       - uses: DeterminateSystems/magic-nix-cache-action@v2
       - run: nix flake check --impure --accept-flake-config
-      - run: nix build . --accept-flake-config
+      # - name: Setup tmate debug session
+      #   uses: mxschmitt/action-tmate@v3
+      - run: nix build . --accept-flake-config --impure
         env:
           NUMBA_CACHE_DIR: ${{ runner.temp }}
 
