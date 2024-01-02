@@ -75,6 +75,7 @@
           hydra-joblib-launcher = ["setuptools"];
           hydra-zen = ["setuptools"];
           marshmallow-jsonschema = ["setuptools"];
+          numba = [pkgs.tbb_2021_8];
           session-info = ["setuptools"];
           xdoctest = ["setuptools"];
         };
