@@ -7,7 +7,7 @@
     # flake-utils.url = github:numtide/flake-utils;
     poetry2nix = {
       # url = github:nix-community/poetry2nix;
-      url = github:cameronraysmith/poetry2nix/lightning-unpackphase;
+      url = github:cameronraysmith/poetry2nix/llvmlite-static-depatch;
       inputs = {
         nixpkgs.follows = "nixpkgs";
         # flake-utils.follows = "flake-utils";
@@ -106,7 +106,6 @@
             // {
               hydra-core = super.hydra-core.override {preferWheel = true;};
               hydra-joblib-launcher = super.hydra-joblib-launcher.override {preferWheel = true;};
-              llvmlite = super.llvmlite.override {preferWheel = false;};
               mkdocs-material = super.mkdocs-material.override {preferWheel = false;};
               scipy = super.scipy.override {preferWheel = true;};
               yarl = super.yarl.override {preferWheel = true;};
@@ -258,9 +257,9 @@
           url = "https://github.com/${gitHubOrg}/${packageName}.git";
           # the ref is not strictly required when specifying a rev but it should
           # be included whenever possible or it may be necessary to include
-          ref = "main";
+          # ref = "master";
           # allRefs = true;
-          # ref = "NN-feature";
+          ref = "483-devshell";
           # the rev can be omitted transiently in development to track the HEAD
           # of a ref but doing so requires `--impure` image builds (this may
           # already be required for other reasons, e.g. `builtins.getEnv`)

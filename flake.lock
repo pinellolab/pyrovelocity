@@ -5,11 +5,11 @@
         "nixpkgs-lib": "nixpkgs-lib"
       },
       "locked": {
-        "lastModified": 1701473968,
-        "narHash": "sha256-YcVE5emp1qQ8ieHUnxt1wCZCC3ZfAS+SRRWZ2TMda7E=",
+        "lastModified": 1704152458,
+        "narHash": "sha256-DS+dGw7SKygIWf9w4eNBUZsK+4Ug27NwEWmn2tnbycg=",
         "owner": "hercules-ci",
         "repo": "flake-parts",
-        "rev": "34fed993f1674c8d06d58b37ce1e0fe5eebcb9f5",
+        "rev": "88a2cd8166694ba0b6cb374700799cec53aef527",
         "type": "github"
       },
       "original": {
@@ -156,11 +156,11 @@
     "nixpkgs-lib": {
       "locked": {
         "dir": "lib",
-        "lastModified": 1701253981,
-        "narHash": "sha256-ztaDIyZ7HrTAfEEUt9AtTDNoCYxUdSd6NrRHaYOIxtk=",
+        "lastModified": 1703961334,
+        "narHash": "sha256-M1mV/Cq+pgjk0rt6VxoyyD+O8cOUiai8t9Q6Yyq4noY=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "e92039b55bcd58469325ded85d4f58dd5a4eaf58",
+        "rev": "b0d36bd0a420ecee3bc916c91886caca87c894e9",
         "type": "github"
       },
       "original": {
@@ -200,16 +200,16 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1704153382,
-        "narHash": "sha256-aCFpAVMGlqmb2yPquSpWRRz++3nz4PmBgt2EjasqOe0=",
+        "lastModified": 1704167392,
+        "narHash": "sha256-SeN4LrCjueIM2nH5yGbqp0rQRE5dfMFP7LRP7fGveqo=",
         "owner": "cameronraysmith",
         "repo": "poetry2nix",
-        "rev": "2e6802f225db1eaf43afef5b15777b9da6864a33",
+        "rev": "acb64ae83dec6ccb0e79bdb2865ab34b1891cb85",
         "type": "github"
       },
       "original": {
         "owner": "cameronraysmith",
-        "ref": "lightning-unpackphase",
+        "ref": "llvmlite-static-depatch",
         "repo": "poetry2nix",
         "type": "github"
       }
