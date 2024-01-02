@@ -105,19 +105,42 @@
           in
             buildInputsOverrides
             // {
+              # dm-tree = (super.dm-tree.override {preferWheel = false;}).overridePythonAttrs (
+              #   old: {
+              #     nativeBuildInputs = (old.nativeBuildInputs or []) ++ [pkgs.cmake];
+              #   }
+              # );
+              # dm-tree = super.dm-tree.overridePythonAttrs (
+              #   old: {
+              #     buildInputs = (old.buildInputs or []) ++ [pkgs.abseil-cpp pkgs.python310Packages.pybind11];
+              #     nativeBuildInputs = (old.nativeBuildInputs or []) ++ [pkgs.cmake pkgs.python310Packages.pybind11];
+              #     # cmakeFlags = (old.cmakeFlags or [ ]) ++ ["-S ./../tree" "-DBUILD_pybind11=OFF"];
+              #     dontUseCmakeConfigure = true;
+              #     preConfigure = ''
+              #       pwd
+              #       ls -alh
+              #     '';
+              #     preBuild = ''
+              #       pwd
+              #       ls -alh
+              #     '';
+              #   }
+              # );
+              h5py = super.h5py.override {preferWheel = true;};
               hydra-core = super.hydra-core.override {preferWheel = true;};
               hydra-joblib-launcher = super.hydra-joblib-launcher.override {preferWheel = true;};
               mkdocs-material = super.mkdocs-material.override {preferWheel = false;};
+              pyarrow = super.pyarrow.override {preferWheel = true;};
               scipy = super.scipy.override {preferWheel = true;};
               yarl = super.yarl.override {preferWheel = true;};
               optax = super.optax.overridePythonAttrs (
                 _old: {
-                      postInstall = ''
-                        rm -f $out/lib/python3.10/site-packages/docs/conf.py 
-                        # rm -fr $out/lib/python3.10/site-packages/docs/__pycache__/conf.cpython-310.pyc
-                        rm -fr $out/lib/python3.10/site-packages/docs/__pycache__
-                      '';
-              });
+                  postInstall = ''
+                    rm -f $out/lib/python3.10/site-packages/docs/conf.py
+                    rm -fr $out/lib/python3.10/site-packages/docs/__pycache__
+                  '';
+                }
+              );
             }
             // conditionalOverrides
         );
