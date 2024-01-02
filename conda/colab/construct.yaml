@@ -2,6 +2,8 @@ name: pyrovelocity-colab
 version: 0.1.3
 
 channels:
+  - pytorch
+  - nvidia
   - conda-forge
   - bioconda
   - nodefaults
