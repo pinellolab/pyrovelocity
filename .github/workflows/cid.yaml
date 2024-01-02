@@ -7,6 +7,7 @@ on:
       - beta
     paths-ignore:
       [
+        "conda/**",
         "docs/**",
         "scripts/**",
         "**.md",
@@ -19,6 +20,7 @@ on:
     types: [opened, synchronize, labeled, reopened, ready_for_review]
     paths-ignore:
       [
+        "conda/**",
         "docs/**",
         "scripts/**",
         "**.md",
