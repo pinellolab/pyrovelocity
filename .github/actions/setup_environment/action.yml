@@ -1,9 +1,9 @@
-name: 'Setup Environment'
-description: 'Shared steps to setup the environment for CI jobs'
+name: "Setup Environment"
+description: "Shared steps to setup the environment for CI jobs"
 
 inputs:
   python_version:
-    description: 'Python version to setup'
+    description: "Python version to setup"
     required: true
   debug_enabled:
     description: "Run with tmate.io debugging enabled"
