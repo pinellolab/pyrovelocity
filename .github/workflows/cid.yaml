@@ -271,9 +271,9 @@ jobs:
             echo "GIT_SHA=$CI_GITHUB_SHA" >> $GITHUB_ENV
             echo "GIT_SHA_SHORT=$CI_GITHUB_SHA_SHORT" >> $GITHUB_ENV
           fi
-      # - name: Set nix variables
-      #   run: |
-      #     echo "NIX_IMAGE_SYSTEMS=x86_64-linux" >> $GITHUB_ENV
+      - name: Set nix variables
+        run: |
+          echo "NIX_IMAGE_SYSTEMS=x86_64-linux" >> $GITHUB_ENV
       - name: Build nix images
         run: |
           echo "Using Git Repository Name: $GIT_REPO_NAME"
@@ -407,6 +407,9 @@ jobs:
             echo "GIT_SHA=$CI_GITHUB_SHA" >> $GITHUB_ENV
             echo "GIT_SHA_SHORT=$CI_GITHUB_SHA_SHORT" >> $GITHUB_ENV
           fi
+      - name: Set nix variables
+        run: |
+          echo "NIX_IMAGE_SYSTEMS=x86_64-linux" >> $GITHUB_ENV
       - name: Build nix images
         run: |
           echo "Using Git Repository Name: $GIT_REPO_NAME"
