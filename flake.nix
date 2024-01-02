@@ -105,27 +105,6 @@
           in
             buildInputsOverrides
             // {
-              # dm-tree = (super.dm-tree.override {preferWheel = false;}).overridePythonAttrs (
-              #   old: {
-              #     nativeBuildInputs = (old.nativeBuildInputs or []) ++ [pkgs.cmake];
-              #   }
-              # );
-              # dm-tree = super.dm-tree.overridePythonAttrs (
-              #   old: {
-              #     buildInputs = (old.buildInputs or []) ++ [pkgs.abseil-cpp pkgs.python310Packages.pybind11];
-              #     nativeBuildInputs = (old.nativeBuildInputs or []) ++ [pkgs.cmake pkgs.python310Packages.pybind11];
-              #     # cmakeFlags = (old.cmakeFlags or [ ]) ++ ["-S ./../tree" "-DBUILD_pybind11=OFF"];
-              #     dontUseCmakeConfigure = true;
-              #     preConfigure = ''
-              #       pwd
-              #       ls -alh
-              #     '';
-              #     preBuild = ''
-              #       pwd
-              #       ls -alh
-              #     '';
-              #   }
-              # );
               h5py = super.h5py.override {preferWheel = true;};
               hydra-core = super.hydra-core.override {preferWheel = true;};
               hydra-joblib-launcher = super.hydra-joblib-launcher.override {preferWheel = true;};
@@ -376,9 +355,9 @@
           default = pkgs.poetry2nix.mkPoetryApplication (
             mkPoetryAttrs
             // {
-              # checkPhase = ''
-              #   pytest
-              # '';
+              checkPhase = ''
+                pytest
+              '';
             }
           );
 
