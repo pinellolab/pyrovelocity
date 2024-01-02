@@ -1,5 +1,9 @@
+# versions synchronized with google colab
+# 01012024
+# !echo $CUDA_VERSION
+# !ldd --version
 subdirs:
   linux-64:
     packages:
-      __cuda: 11.7
-      __glibc: 2.36
+      __cuda: 12.2
+      __glibc: 2.35
