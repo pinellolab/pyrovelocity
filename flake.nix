@@ -356,6 +356,7 @@
             mkPoetryAttrs
             // {
               checkPhase = ''
+                export NUMBA_CACHE_DIR="${builtins.getEnv "NUMBA_CACHE_DIR"}"
                 pytest
               '';
             }
