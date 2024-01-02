@@ -199,8 +199,8 @@ plotting = [
 [tool.conda-lock]
 channels = [
     'nodefaults', 
-    # 'pytorch',
-    # 'nvidia',
+    'pytorch',
+    'nvidia',
     'conda-forge', 
     'bioconda', 
 ]
