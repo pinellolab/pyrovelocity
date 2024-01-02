@@ -12,7 +12,7 @@ on:
     branches:
       - main
     paths:
-      - "dockerfiles/Dockerfile.app"
+      - "containers/Dockerfile.app"
       - ".github/workflows/app.yaml"
       - "app/**"
 
@@ -98,7 +98,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./dockerfiles/Dockerfile.app
+          file: ./containers/Dockerfile.app
           platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
