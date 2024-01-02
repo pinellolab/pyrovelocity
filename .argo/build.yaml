@@ -16,23 +16,23 @@ spec:
             arguments:
               parameters:
                 - name: mode
-                  value: '{{workflow.parameters.mode}}'
+                  value: "{{workflow.parameters.mode}}"
                 - name: imageName
-                  value: '{{workflow.parameters.imageName1}}'
+                  value: "{{workflow.parameters.imageName1}}"
                 - name: containerFilePath
-                  value: '{{workflow.parameters.containerFilePath1}}'
+                  value: "{{workflow.parameters.containerFilePath1}}"
                 - name: appName
-                  value: '{{workflow.parameters.appName}}'
+                  value: "{{workflow.parameters.appName}}"
                 - name: branch
-                  value: '{{workflow.parameters.branch}}'
+                  value: "{{workflow.parameters.branch}}"
                 - name: shortSha
-                  value: '{{workflow.parameters.shortSha}}'
+                  value: "{{workflow.parameters.shortSha}}"
                 - name: containerRegistryURL1
-                  value: '{{workflow.parameters.containerRegistryURL1}}'
+                  value: "{{workflow.parameters.containerRegistryURL1}}"
                 - name: containerRegistryURL2
-                  value: '{{workflow.parameters.containerRegistryURL2}}'
+                  value: "{{workflow.parameters.containerRegistryURL2}}"
                 - name: gitUrlNoProtocol
-                  value: '{{workflow.parameters.gitUrlNoProtocol}}'
+                  value: "{{workflow.parameters.gitUrlNoProtocol}}"
                 - name: memoryRequest
                   value: "5Gi" # override default: 512Mi
                 - name: cpuRequest
@@ -51,23 +51,23 @@ spec:
             arguments:
               parameters:
                 - name: mode
-                  value: '{{workflow.parameters.mode}}'
+                  value: "{{workflow.parameters.mode}}"
                 - name: imageName
-                  value: '{{workflow.parameters.imageName2}}'
+                  value: "{{workflow.parameters.imageName2}}"
                 - name: containerFilePath
-                  value: '{{workflow.parameters.containerFilePath2}}'
+                  value: "{{workflow.parameters.containerFilePath2}}"
                 - name: appName
-                  value: '{{workflow.parameters.appName}}'
+                  value: "{{workflow.parameters.appName}}"
                 - name: branch
-                  value: '{{workflow.parameters.branch}}'
+                  value: "{{workflow.parameters.branch}}"
                 - name: shortSha
-                  value: '{{workflow.parameters.shortSha}}'
+                  value: "{{workflow.parameters.shortSha}}"
                 - name: containerRegistryURL1
-                  value: '{{workflow.parameters.containerRegistryURL1}}'
+                  value: "{{workflow.parameters.containerRegistryURL1}}"
                 - name: containerRegistryURL2
-                  value: '{{workflow.parameters.containerRegistryURL2}}'
+                  value: "{{workflow.parameters.containerRegistryURL2}}"
                 - name: gitUrlNoProtocol
-                  value: '{{workflow.parameters.gitUrlNoProtocol}}'
+                  value: "{{workflow.parameters.gitUrlNoProtocol}}"
                 - name: memoryRequest
                   value: "7Gi" # override default: 512Mi
                 - name: cpuRequest
