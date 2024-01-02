@@ -216,6 +216,8 @@ jobs:
       - uses: DeterminateSystems/magic-nix-cache-action@v2
       - run: nix flake check --impure --accept-flake-config
       - run: nix build . --accept-flake-config
+        env:
+          NUMBA_CACHE_DIR: ${{ runner.temp }}
 
   build-docker-images:
     needs: [set-variables]
