@@ -61,6 +61,63 @@ export_pip_requirements: lock
 	--output=requirements.txt \
 	--without-hashes
 
+#-------------
+# CI
+#-------------
+
+browse: ## Open github repo in browser at HEAD commit.
+	gh browse $(GIT_SHORT_SHA)
+
+GH_ACTIONS_DEBUG ?= false
+
+cid: ## Run CID (GH_ACTIONS_DEBUG default is false).
+	gh workflow run "CID" --ref $(GIT_BRANCH) -f debug_enabled=$(GH_ACTIONS_DEBUG)
+
+build_images: ## Run Build Images (GH_ACTIONS_DEBUG default is false).
+	gh workflow run "Build Images" --ref $(GIT_BRANCH) -f debug_enabled=$(GH_ACTIONS_DEBUG)
+
+ci_view_workflow: ## Open CI workflow summary.
+	gh workflow view "CI"
+
+build_images_view_workflow: ## Open Build Images workflow summary.
+	gh workflow view "Build Images"
+
+# CPU | MEM | DISK | MACHINE_TYPE
+# ----|-----|------|----------------
+#   2 |   8 |   32 | basicLinux32gb
+#   4 |  16 |   32 | standardLinux32gb
+#   8 |  32 |   64 | premiumLinux
+#  16 |  64 |  128 | largePremiumLinux
+MACHINE_TYPE ?= standardLinux32gb
+codespace_create: ## Create codespace. make -n codespace_create MACHINE_TYPE=largePremiumLinux
+	gh codespace create -R $(GH_REPO) -b $(GIT_BRANCH) -m $(MACHINE_TYPE)
+
+code: ## Open codespace in browser.
+	gh codespace code -R $(GH_REPO) --web
+
+codespace_list: ## List codespace.
+	PAGER=cat gh codespace list
+
+codespace_stop: ## Stop codespace.
+	gh codespace stop
+
+codespace_delete: ## Delete codespace.
+	gh codespace delete
+
+docker_login: ## Login to ghcr docker registry. Check regcreds in $HOME/.docker/config.json.
+	docker login ghcr.io -u $(GH_ORG) -p $(GITHUB_TOKEN)
+
+EXISTING_IMAGE_TAG ?= main
+NEW_IMAGE_TAG ?= $(GIT_BRANCH)
+
+# Default bumps main to the checked out branch for dev purposes
+tag_images: ## Add tag to existing images, (default main --> branch, override with make -n tag_images NEW_IMAGE_TAG=latest).
+	crane tag $(WORKFLOW_IMAGE):$(EXISTING_IMAGE_TAG) $(NEW_IMAGE_TAG)
+	crane tag ghcr.io/$(GH_ORG)/$(GH_REPO):$(EXISTING_IMAGE_TAG) $(NEW_IMAGE_TAG)
+
+list_gcr_workflow_image_tags: ## List images in gcr.
+	gcloud container images list --repository=$(GCP_ARTIFACT_REGISTRY_PATH)                                                                                                                             │
+	gcloud container images list-tags $(WORKFLOW_IMAGE)
 
 #----
 # nix
