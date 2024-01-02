@@ -62,6 +62,112 @@ export_pip_requirements: lock
 	--without-hashes
 
 
+#----
+# nix
+#----
+
+meta: ## Generate nix flake metadata.
+	nix flake metadata --impure
+	nix flake show --impure
+
+up: ## Update nix flake lock file.
+	nix flake update --impure --accept-flake-config
+	nix flake check --impure
+
+dup: ## Debug update nix flake lock file.
+	nix flake update --impure --accept-flake-config
+	nix flake check --show-trace --print-build-logs --impure
+
+re: ## Reload direnv.
+	direnv reload
+
+al: ## Enable direnv.
+	direnv allow
+
+devshell_info: ## Print devshell info.
+	nix build .#devShells.$(shell nix eval --impure --expr 'builtins.currentSystem').default --impure
+	nix path-info --recursive ./result
+	du -chL ./result
+	rm ./result
+
+cache: ## Push devshell to cachix
+	nix build --json \
+	.#devShells.$(shell nix eval --impure --expr 'builtins.currentSystem').default \
+	--impure \
+	--accept-flake-config | \
+	jq -r '.[].outputs | to_entries[].value' | \
+	cachix push $(CACHIX_CACHE_NAME)
+
+devcontainer: ## Build devcontainer.
+	nix run .#devcontainerNix2Container.copyToDockerDaemon --accept-flake-config --impure
+
+# The default value for DEVCONTAINER_IMAGE FQN can be completely overriden to
+# support specification of tags or digests (see .example.env and create .env)
+DEVCONTAINER_IMAGE ?= ghcr.io/pinellolab/pyrovelocitydev
+# DEVCONTAINER_IMAGE=ghcr.io/pinellolab/pyrovelocitydev:main
+# DEVCONTAINER_IMAGE=ghcr.io/pinellolab/pyrovelocitydev@sha256:
+
+drundc: ## Run devcontainer. make drundc DEVCONTAINER_IMAGE=
+	docker run --rm -it $(DEVCONTAINER_IMAGE)
+
+adhocpkgs: ## Install adhoc nix packages. make adhocpkgs ADHOC_NIX_PKGS="gnugrep fzf"
+	nix profile list
+	$(foreach pkg, $(ADHOC_NIX_PKGS), nix profile install nixpkgs#$(pkg);)
+	nix profile list
+
+.PHONY: jupyter
+jupyter: ## Run jupyter lab in devcontainer. make jupyter DEVCONTAINER_IMAGE=ghcr.io/pinellolab/pyrovelocitydev@sha256:
+	@echo "Attempting to start jupyter lab in"
+	@echo
+	@echo "DEVCONTAINER_IMAGE: $(DEVCONTAINER_IMAGE)"
+	@echo
+	docker compose -f containers/compose.yaml up -d jupyter
+	@echo
+	$(MAKE) jupyter_logs
+
+jupyter_logs: ## Print docker-compose logs.
+	@echo
+	@echo "Ctrl/cmd + click the http://127.0.0.1:8888/lab?token=... link to open jupyter lab in your default browser"
+	@echo
+	@trap 'printf "\n  use \`make jupyter_logs\` to reattach to logs or \`make jupyter_down\` to terminate\n\n"; exit 2' SIGINT; \
+	while true; do \
+		docker compose -f containers/compose.yaml logs -f jupyter; \
+	done
+
+jupyter_down: compose_list
+jupyter_down: ## Stop docker-compose containers.
+	docker compose -f containers/compose.yaml down jupyter
+	$(MAKE) compose_list
+
+compose_list: ## List docker-compose containers.
+	@echo
+	docker compose ls
+	@echo
+	docker compose -f containers/compose.yaml ps --services
+	@echo
+	docker compose -f containers/compose.yaml ps
+	@echo
+
+image_digests: ## Print image digests.
+	@echo
+	docker images -a --digests $(DEVCONTAINER_IMAGE)
+	@echo
+
+.PHONY: digest
+digest: ## Print image digest from tag. make digest DEVCONTAINER_IMAGE=
+	@echo
+	docker inspect --format='{{index .RepoDigests 0}}' $(DEVCONTAINER_IMAGE)
+	@echo
+
+jupyter_manual: ## Prefer `make -n jupyter` to this target. make jupyter_manual DEVCONTAINER_IMAGE=
+	docker run --rm -it -p 8888:8888 \
+	$(DEVCONTAINER_IMAGE) \
+	jupyter lab --allow-root --ip=0.0.0.0 /root/pyrovelocity
+
+findeditable: ## Find *-editable.pth files in the nix store.
+	rg --files --glob '*editable.pth' --hidden --no-ignore --follow /nix/store/
+
+
 #--------------
 # setup dev env
 #--------------
@@ -222,13 +328,13 @@ app_build: ## Cloud build of pyrovelocity application container image.
 	docker build \
 	--progress=plain \
 	-t pyrovelocityapp \
-	-f dockerfiles/Dockerfile.app .
+	-f containers/Dockerfile.app .
 
 local_app_build: ## Local build of pyrovelocity application container image.
 	docker build \
 	--progress=plain \
 	-t pyrovelocityapp \
-	-f dockerfiles/Dockerfile.app.local .
+	-f containers/Dockerfile.app.local .
 
 cloud_build: ## Build with google cloud build: make cloud_build PROJECT_ID="gcp-projectID"
 ifdef PROJECT_ID
