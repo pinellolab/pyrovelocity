@@ -73,6 +73,6 @@ html_theme_options = {
         },
     ],
     "source_repository": "https://github.com/pinellolab/pyrovelocity/",
-    "source_branch": "master",
+    "source_branch": "main",
     "source_directory": "docs/",
 }

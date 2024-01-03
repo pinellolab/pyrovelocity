@@ -13,5 +13,5 @@ for branch in `git branch -a | grep remotes | grep -v HEAD | grep -E 'upstream/f
    echo "Checking out ${branch#remotes/upstream/}"
    git checkout ${branch#remotes/upstream/}
    git reset --hard upstream/${branch#remotes/upstream/}
-   gt btr -p master
+   gt btr -p main
 done

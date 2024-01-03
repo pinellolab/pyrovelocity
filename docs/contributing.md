@@ -51,7 +51,7 @@ If you are proposing a feature:
 
 ### Cloud
 
-See the [reproducibility/environment](https://github.com/pinellolab/pyrovelocity/tree/master/reproducibility/environment) folder and associated README.md.
+See the [reproducibility/environment](https://github.com/pinellolab/pyrovelocity/tree/main/reproducibility/environment) folder and associated README.md.
 
 ### Local
 

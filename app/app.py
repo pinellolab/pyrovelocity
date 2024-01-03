@@ -11,7 +11,7 @@ from utils.html_factory import CSSStyle, make_div, make_img, st_write_bs4
 
 st.set_page_config(
     page_title="pyrovelocity report",
-    page_icon="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/_static/logo.png",
+    page_icon="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/_static/logo.png",
     layout="wide",
     initial_sidebar_state="auto",
 )

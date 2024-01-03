@@ -24,5 +24,6 @@
   "terminal.integrated.scrollback": 100000,
   "terminal.integrated.persistentSessionScrollback": 100000,
   "editor.fontSize": 16,
-  "terminal.integrated.fontSize": 14
+  "terminal.integrated.fontSize": 14,
+  "julia.environmentPath": "/Users/crs58/projects/pyrovelocity-01032024"
 }

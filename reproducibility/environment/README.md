@@ -43,7 +43,7 @@ The expected workflow is to
     GITHUB_USERNAME=username # github username associated to uploading startup scripts as github gists
     GITHUB_ORG_NAME=githuborg # name of the github org or user containing the github repository with code for development
     GITHUB_REPO_NAME=reponame # name of a github repository with a conda environment yaml file
-    GITHUB_BRANCH_NAME=master # name of github repository branch to checkout
+    GITHUB_BRANCH_NAME=main # name of github repository branch to checkout
     GITHUB_REPO_CONDA_ENV_PATH_NAME=conda/environment-gpu.yml # path to conda environment yaml file in the github repository
     GH_PAT=ghp_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX # github personal access token with repo scope
     GH_REPO=${GITHUB_USERNAME}/${GITHUB_REPO_NAME} # derived

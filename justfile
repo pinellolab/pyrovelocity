@@ -26,7 +26,7 @@ container_work := container_home / "work"
 git_username := env_var_or_default('GITHUB_USERNAME', 'pinellolab')
 git_org_name := env_var_or_default('GITHUB_ORG_NAME', 'pinellolab')
 git_repo_name := env_var_or_default('GITHUB_REPO_NAME', 'pyrovelocity')
-git_branch_name := env_var_or_default('GITHUB_BRANCH_NAME', 'master')
+git_branch_name := env_var_or_default('GITHUB_BRANCH_NAME', 'main')
 container_registry := "ghcr.io/" + git_org_name + "/"
 pod_accelerator_type := env_var_or_default('POD_ACCELERATOR_TYPE', 'nvidia-tesla-t4')
 accelerator_node_selector := "gpu-type=" + pod_accelerator_type

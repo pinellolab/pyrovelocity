@@ -2,14 +2,14 @@
 
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/_static/logo.png" alt="Pyro-Velocity logo" width="300" role="img">
+<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/_static/logo.png" alt="Pyro-Velocity logo" width="300" role="img">
 
 |         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CI/CD   | [![CID](https://github.com/pinellolab/pyrovelocity/actions/workflows/cid.yaml/badge.svg?branch=master)](https://github.com/pinellolab/pyrovelocity/actions/workflows/cid.yaml) [![CML](https://github.com/pinellolab/pyrovelocity/actions/workflows/cml.yml/badge.svg)](https://github.com/pinellolab/pyrovelocity/actions/workflows/cml.yml) [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/pinellolab/pyrovelocity/master.svg)](https://results.pre-commit.ci/latest/github/pinellolab/pyrovelocity/master) |
+| CI/CD   | [![CID](https://github.com/pinellolab/pyrovelocity/actions/workflows/cid.yaml/badge.svg?branch=master)](https://github.com/pinellolab/pyrovelocity/actions/workflows/cid.yaml) [![CML](https://github.com/pinellolab/pyrovelocity/actions/workflows/cml.yml/badge.svg)](https://github.com/pinellolab/pyrovelocity/actions/workflows/cml.yml) [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/pinellolab/pyrovelocity/main.svg)](https://results.pre-commit.ci/latest/github/pinellolab/pyrovelocity/master) |
 | Docs    | [![GitHub Pages](https://img.shields.io/github/deployments/pinellolab/pyrovelocity/github-pages?logo=github&label=Docs)](https://pinellolab.github.io/pyrovelocity) [![Preprint](https://img.shields.io/badge/doi-10.1101/2022.09.12.507691v2-B31B1B)](https://doi.org/10.1101/2022.09.12.507691)                                                                                                                                                                                                                                  |
 | Package | [![PyPI - Version](https://img.shields.io/pypi/v/pyrovelocity.svg?logo=pypi&label=PyPI&logoColor=gold)](https://pypi.org/project/pyrovelocity/) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyrovelocity.svg?logo=python&label=Python&logoColor=gold)](https://pypi.org/project/pyrovelocity/) [![Docker iamge](https://img.shields.io/badge/docker-image-blue?logo=docker)](https://github.com/pinellolab/pyrovelocity/pkgs/container/pyrovelocity)                                                          |
-| Meta    | [![codecov](https://codecov.io/gh/pinellolab/pyrovelocity/branch/master/graph/badge.svg)](https://codecov.io/gh/pinellolab/pyrovelocity) [![code style - Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![License - MIT](https://img.shields.io/badge/license-AGPL%203-purple)](https://spdx.org/licenses/) [![Tuple](https://img.shields.io/badge/Tuple%20❤️%20OSS-5A67D8?logo=tuple)](https://tuple.app/github-badge)                                                        |
+| Meta    | [![codecov](https://codecov.io/gh/pinellolab/pyrovelocity/branch/main/graph/badge.svg)](https://codecov.io/gh/pinellolab/pyrovelocity) [![code style - Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![License - MIT](https://img.shields.io/badge/license-AGPL%203-purple)](https://spdx.org/licenses/) [![Tuple](https://img.shields.io/badge/Tuple%20❤️%20OSS-5A67D8?logo=tuple)](https://tuple.app/github-badge)                                                        |
 
 </div>
 
@@ -266,7 +266,7 @@ biology underlying these cells.
 **Vector field with uncertainty**
 
 <!-- ![PBMC vector field uncertainty](docs/source/readme_figure2.png) -->
-<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/source/readme_figure2.png" alt="PBMC vector field uncertainty">
+<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure2.png" alt="PBMC vector field uncertainty">
 
 These 6 plots from left to right show: 1. cell types, 2. stream plot of
 Pyro-velocity vector field based on the posterior mean of 30 posterior
@@ -300,7 +300,7 @@ Delta, and Epsilon cells.
 **Vector field with uncertainty**
 
 <!-- ![Pancreas vector field uncertainty](docs/source/readme_figure3.png) -->
-<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/source/readme_figure3.png" alt="Pancreas vector field uncertainty">
+<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure3.png" alt="Pancreas vector field uncertainty">
 
 These 6 plots from left to right are showing the same analyses presented
 as in the example above.
@@ -326,14 +326,14 @@ genes using Pearson\'s correlation between denoised spliced expression
 and the posterior mean of the recovered shared time across cells.
 
 <!-- ![Pancreas Volcano plot for gene selection](docs/source/readme_figure6.png) -->
-<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/source/readme_figure6.png" alt="Pancreas Volcano plot for gene selection">
+<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure6.png" alt="Pancreas Volcano plot for gene selection">
 
 For the selected genes, it is possible to explore in depth their
 dynamic, using phase portraits, rainbow plots, and UMAP rendering of
 denoised splicing gene expression across cells.
 
 <!-- ![Pancreas vector field uncertainty](docs/source/readme_figure7.png) -->
-<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/source/readme_figure7.png" alt="Pancreas vector field uncertainty">
+<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure7.png" alt="Pancreas vector field uncertainty">
 
 The full example can be reproduced using the
 [Pancreas](https://github.com/pinellolab/pyrovelocity/blob/master/docs/source/notebooks/pancreas.ipynb)
@@ -354,7 +354,7 @@ Below we show the main output generated by Pyro-Velocity analysis.
 **Vector field with uncertainty**
 
 <!-- ![LARRY vector field uncertainty](docs/source/readme_figure8.png) -->
-<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/source/readme_figure8.png" alt="LARRY vector field uncertainty">
+<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure8.png" alt="LARRY vector field uncertainty">
 
 These 5 plots from left to right shows: 1) Cell types, 2) Clone
 progression vector field by using centroid of cells belonging to the
@@ -373,7 +373,7 @@ state-of-the-art method specifically designed for predicting fate
 potency based on LARRY data.
 
 <!-- ![Pancreas shared time uncertainty](docs/source/readme_figure9.png) -->
-<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/source/readme_figure9.png" alt="Pancreas shared time uncertainty">
+<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure9.png" alt="Pancreas shared time uncertainty">
 
 The leftmost figure shows the Cospar fate potency score, the middle
 figure shows the average of 30 posterior samples from Pyro-Velocity
@@ -383,7 +383,7 @@ derived from Cospar, the right figure shows the standard deviation
 across posterior samples of shared time.
 
 The full example can be reproduced using the
-[LARRY](https://github.com/pinellolab/pyrovelocity/blob/master/docs/source/notebooks/larry.ipynb)
+[LARRY](https://github.com/pinellolab/pyrovelocity/blob/main/docs/source/notebooks/larry.ipynb)
 jupyter notebook.
 
 # Troubleshooting
