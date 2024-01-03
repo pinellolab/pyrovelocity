@@ -335,6 +335,9 @@
             "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
             "GIT_SHA_SHORT=${builtins.getEnv "GIT_SHA_SHORT"}"
             "PYTHONPATH=${packageSrcPath}:${pkgs.lib.strings.makeSearchPathOutput "" "lib/python3.10/site-packages" pythonPackages}"
+            "LD_LIBRARY_PATH=/usr/lib64"
+            "NVIDIA_DRIVER_CAPABILITIES='compute,utility'"
+            "NVIDIA_VISIBLE_DEVICES=all"
           ];
         };
       in {
