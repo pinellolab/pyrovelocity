@@ -231,6 +231,8 @@
           git
           gnugrep
           gnumake
+          helix
+          jqp
           lazygit
           man-db
           man-pages
@@ -241,6 +243,7 @@
           starship
           tree
           yq-go
+          zellij
           zsh
         ];
 
