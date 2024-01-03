@@ -365,6 +365,25 @@ approve_prs: ## Approve github pull requests from bots: PR_ENTRIES="2-5 10 12-18
 		fi; \
 	done
 
+PREVIOUS_VERSION := 0.1.3
+NEXT_VERSION := 1.0.0
+
+VERSION_FILES := \
+	conda/colab/construct.yaml \
+	containers/gpu.Dockerfile \
+	containers/pkg.Dockerfile \
+	docs/source/notebooks/pyrovelocity_colab_template.ipynb
+
+update_version: ## Update version in VERSION_FILES.
+	@for file in $(VERSION_FILES); do \
+		if [ -f $$file ]; then \
+			sed -i 's/$(PREVIOUS_VERSION)/$(NEXT_VERSION)/g' $$file; \
+			echo "Updated $$file"; \
+		else \
+			echo "$$file does not exist"; \
+		fi \
+	done
+
 
 #----------------
 # web application
