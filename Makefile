@@ -47,11 +47,11 @@ typecheck: ## Run typechecker
 	poetry run pyright
 	
 docs-build: ## Build documentation
-	poetry run mkdocs build
+	poetry run sphinx-build docs site
 
 docs-serve: ## Serve documentation
-docs-serve: docs-build
-	poetry run mkdocs serve
+docs-serve:
+	poetry run sphinx-autobuild docs site --open-browser
 
 lock: ## Lock dependencies.
 	poetry lock --no-update
