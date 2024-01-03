@@ -22,5 +22,7 @@
     "**/.solid/**": true
   },
   "terminal.integrated.scrollback": 100000,
-  "terminal.integrated.persistentSessionScrollback": 100000
+  "terminal.integrated.persistentSessionScrollback": 100000,
+  "editor.fontSize": 16,
+  "terminal.integrated.fontSize": 14
 }
