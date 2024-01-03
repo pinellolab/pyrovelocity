@@ -266,7 +266,7 @@
           # be included whenever possible or it may be necessary to include
           # ref = "master";
           # allRefs = true;
-          ref = "483-devshell";
+          ref = "beta";
           # the rev can be omitted transiently in development to track the HEAD
           # of a ref but doing so requires `--impure` image builds (this may
           # already be required for other reasons, e.g. `builtins.getEnv`)
