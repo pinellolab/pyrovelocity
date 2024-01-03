@@ -203,7 +203,7 @@ specs:
   - nest-asyncio=1.5.8=pyhd8ed1ab_0
   - networkx=3.2.1=pyhd8ed1ab_0
   - numba=0.58.1=py310h7dc5dd1_0
-  - numpy=1.26.2=py310hb13e2d6_0
+  - numpy=1.26.3=py310hb13e2d6_0
   - numpy_groupies=0.10.2=pyhd8ed1ab_0
   - numpyro=0.13.2=pyhd8ed1ab_1
   - oauthlib=3.2.2=pyhd8ed1ab_0
@@ -220,7 +220,7 @@ specs:
   - pandas=1.5.3=py310h9b08913_1
   - paramiko=3.4.0=pyhd8ed1ab_0
   - patsy=0.5.5=pyhd8ed1ab_0
-  - pillow=10.1.0=py310h01dd4db_0
+  - pillow=10.2.0=py310h01dd4db_0
   - pip=23.3.2=pyhd8ed1ab_0
   - platformdirs=4.1.0=pyhd8ed1ab_0
   - pluggy=1.3.0=pyhd8ed1ab_0
@@ -271,13 +271,13 @@ specs:
   - seaborn=0.12.2=hd8ed1ab_0
   - seaborn-base=0.12.2=pyhd8ed1ab_0
   - session-info=1.0.0=pyhd8ed1ab_0
-  - setuptools=68.2.2=pyhd8ed1ab_0
+  - setuptools=69.0.3=pyhd8ed1ab_0
   - shap=0.44.0=cuda118py310he2121af_6
   - six=1.16.0=pyh6c4a22f_0
   - slicer=0.0.7=pyhd8ed1ab_0
   - smmap=5.0.0=pyhd8ed1ab_0
   - snappy=1.1.10=h9fff704_0
-  - sqlalchemy=2.0.24=py310h2372a71_0
+  - sqlalchemy=2.0.25=py310h2372a71_0
   - sqlparse=0.4.4=pyhd8ed1ab_0
   - statsmodels=0.14.1=py310h1f7b6fc_0
   - stdlib-list=0.8.0=pyhd8ed1ab_0
