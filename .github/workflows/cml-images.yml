@@ -1,22 +1,22 @@
-name: Docker
+name: CML Images
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - "containers/**"
-      - "pyrovelocity/**"
-      - "pyproject.toml"
-      - "poetry.lock"
-    # branches:
-    #   - 'master*'
+  # push:
+  #   paths:
+  #     - "containers/**"
+  #     - "pyrovelocity/**"
+  #     - "pyproject.toml"
+  #     - "poetry.lock"
+  #   branches:
+  #     - 'master*'
 
 env:
   REGISTRY: ghcr.io
   GAR_REGISTRY: us-central1-docker.pkg.dev
   GAR_REPOSITORY: pyrovelocity
-  IMAGE_NAME: ${{ github.repository }}
-  CONDA_IMAGE_NAME: pyrovelocitygpu
+  IMAGE_NAME: ${{ github.repository }}-cml
+  CONDA_IMAGE_NAME: ${{ github.repository }}-conda-gpu
 
 jobs:
   build-and-push-image:
