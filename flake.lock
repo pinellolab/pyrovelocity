@@ -200,16 +200,16 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1704167392,
+        "lastModified": 1704239253,
         "narHash": "sha256-SeN4LrCjueIM2nH5yGbqp0rQRE5dfMFP7LRP7fGveqo=",
         "owner": "cameronraysmith",
         "repo": "poetry2nix",
-        "rev": "acb64ae83dec6ccb0e79bdb2865ab34b1891cb85",
+        "rev": "65b57828727fc1698e1aa29007ff46dea66c10b6",
         "type": "github"
       },
       "original": {
         "owner": "cameronraysmith",
-        "ref": "llvmlite-static-depatch",
+        "ref": "patch",
         "repo": "poetry2nix",
         "type": "github"
       }

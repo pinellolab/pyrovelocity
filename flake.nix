@@ -7,7 +7,7 @@
     # flake-utils.url = github:numtide/flake-utils;
     poetry2nix = {
       # url = github:nix-community/poetry2nix;
-      url = github:cameronraysmith/poetry2nix/llvmlite-static-depatch;
+      url = github:cameronraysmith/poetry2nix/patch;
       inputs = {
         nixpkgs.follows = "nixpkgs";
         # flake-utils.follows = "flake-utils";
