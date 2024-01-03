@@ -2,15 +2,23 @@
 
 set -euo pipefail
 
-MANUAL_DIRENV=${1:-.dirman}
+NIX_SUBSHELL_CMD=${1:-}
+MANUAL_DIRENV=${2:-.dirman}
 
 mkdir -p "$MANUAL_DIRENV"
 
-(source <(nix print-dev-env \
-            --profile "${MANUAL_DIRENV}"/flake-profile . \
-            --impure \
-            --accept-flake-config);\
-          zsh)
+(
+    source <(nix print-dev-env \
+                --profile "${MANUAL_DIRENV}"/flake-profile . \
+                --impure \
+                --accept-flake-config)
+
+    if [[ -n "$NIX_SUBSHELL_CMD" ]]; then
+        eval "$NIX_SUBSHELL_CMD"
+    else
+        zsh
+    fi
+)
 
 # The above is equivalent to `use flake . --impure --accept-flake-config` in
 # direnv .envrc see direnv stdlib for details of the underlying function
