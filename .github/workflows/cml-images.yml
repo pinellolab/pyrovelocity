@@ -9,7 +9,7 @@ on:
   #     - "pyproject.toml"
   #     - "poetry.lock"
   #   branches:
-  #     - 'master*'
+  #     - 'main*'
 
 env:
   REGISTRY: ghcr.io

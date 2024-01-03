@@ -1,5 +1,5 @@
 codecov:
-  branch: master
+  branch: main
 
 comment: false
 github_checks: false

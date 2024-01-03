@@ -264,7 +264,7 @@
           url = "https://github.com/${gitHubOrg}/${packageName}.git";
           # the ref is not strictly required when specifying a rev but it should
           # be included whenever possible or it may be necessary to include
-          # ref = "master";
+          # ref = "main";
           # allRefs = true;
           ref = "beta";
           # the rev can be omitted transiently in development to track the HEAD
