@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0-beta.2](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.1...v0.2.0-beta.2) (2024-01-03)
+
+
+### Bug Fixes
+
+* **git:** rename master to main ([c608f9c](https://github.com/pinellolab/pyrovelocity/commit/c608f9c545b180c89b0d8392b18df0e2df201fcf))
+
 ## [0.2.0-beta.1](https://github.com/pinellolab/pyrovelocity/compare/v0.1.3...v0.2.0-beta.1) (2024-01-03)
 
 
