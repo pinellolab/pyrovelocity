@@ -5,4 +5,3 @@ sphinx==7.0.1
 sphinx-click==4.4.0
 sphinx_autodoc_typehints==1.23.3
 sphinx_copybutton==0.5.2
-sphinx-click==4.4.0
