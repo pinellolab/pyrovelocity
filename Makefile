@@ -323,6 +323,58 @@ czsh: ## !!Enable zsh with command line info and searchable history.!!
 czsh: catuin cstarship cdirenv
 
 
+#-------------------------
+##@ in-cluster development
+#-------------------------
+
+CLUSTER_DEV_IMAGE_TAG ?= $(GIT_BRANCH)
+CLUSTER_DEV_DEPLOYMENT_NAME ?= $(GH_REPO_NAME)
+
+cluster-deploy: ## Deploy latest container_image in current kube context (invert: terminate)
+	skaffold deploy
+
+cluster-stop: ## Stop latest container_image in current kube context (invert: start)
+	kubectl scale deployment/$(CLUSTER_DEV_DEPLOYMENT_NAME) --replicas=0 -n $(CLUSTER_DEV_DEPLOYMENT_NAME)
+
+cluster-start: ## Start latest container_image in current kube context (invert: stop)
+	kubectl scale deployment/$(CLUSTER_DEV_DEPLOYMENT_NAME) --replicas=1 -n $(CLUSTER_DEV_DEPLOYMENT_NAME)
+
+cluster-terminate: ## Delete deployment for container_image in current kube context (invert: deploy)
+	kubectl delete -f cluster/resources/deployment.yaml
+
+cluster-delete: ## Delete all resources created by skaffold
+	skaffold delete
+
+cluster-info: ## Print skaffold info
+	skaffold version
+	skaffold --help
+	skaffold options
+	skaffold config list
+	skaffold diagnose
+
+cluster-render: ## Render skaffold yaml with latest container_image
+	skaffold render
+
+cluster-build: ## Build image with skaffold (disabled by default: see skaffold.yaml)
+	skaffold build
+
+# https://github.com/GoogleContainerTools/skaffold/releases
+SKAFFOLD_RELEASE ?= latest # v2.9.0
+
+ifeq ($(SKAFFOLD_RELEASE),latest)
+	SKAFFOLD_BINARY_URL := "https://github.com/GoogleContainerTools/skaffold/releases/latest/download/skaffold-$(shell uname -s)-$(shell uname -m)"
+else
+	SKAFFOLD_BINARY_URL := "https://github.com/GoogleContainerTools/skaffold/releases/download/$(SKAFFOLD_RELEASE)/skaffold-$(shell uname -s)-$(shell uname -m)"
+endif
+
+install-skaffold: ## Install skaffold to /usr/local/bin (check/set: SKAFFOLD_RELEASE)
+	curl -L -o skaffold $(SKAFFOLD_BINARY_URL) && \
+	sudo install -c -m 0755 skaffold /usr/local/bin && \
+	rm -f skaffold
+	which skaffold
+	skaffold version
+
+
 #----------------------------
 ##@ extra system dependencies
 #----------------------------
