@@ -174,6 +174,7 @@
             bashInteractive
             coreutils
             cacert
+            dash
             gnutar
             gzip
             nix
