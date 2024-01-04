@@ -174,9 +174,9 @@
             bashInteractive
             coreutils
             cacert
-            libgcc
             gnutar
             gzip
+            libgcc
             nix
             nvitop
             direnv
