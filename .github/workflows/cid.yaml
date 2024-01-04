@@ -412,6 +412,10 @@ jobs:
             echo "GIT_SHA=$CI_GITHUB_SHA" >> $GITHUB_ENV
             echo "GIT_SHA_SHORT=$CI_GITHUB_SHA_SHORT" >> $GITHUB_ENV
           fi
+      # Restriction to x86_64-linux is required until torch >= 2.0.0
+      # because previous versions lack x86_64 platform markers
+      # for nvidia dependencies, which are not available for other platforms
+      # https://github.com/pytorch/pytorch/pull/93066/files
       - name: Set nix variables
         run: |
           echo "NIX_IMAGE_SYSTEMS=x86_64-linux" >> $GITHUB_ENV
