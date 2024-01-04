@@ -13,18 +13,22 @@ endif
 GIT_SHORT_SHA = $(shell git rev-parse --short HEAD)
 GIT_BRANCH = $(shell git rev-parse --abbrev-ref HEAD)
 
-##@ Utility
-help: ## Display this help. (Default)
+#-------
+##@ help
+#-------
+
 # based on "https://gist.github.com/prwhite/8168133?permalink_comment_id=4260260#gistcomment-4260260"
-	@grep -hE '^[A-Za-z0-9_ \-]*?:.*##.*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+help: ## Display this help. (Default)
+	@grep -hE '^(##@|[A-Za-z0-9_ \-]*?:.*##).*$$' $(MAKEFILE_LIST) | \
+	awk 'BEGIN {FS = ":.*?## "}; /^##@/ {print "\n" substr($$0, 5)} /^[A-Za-z0-9_ \-]*?:.*##/ {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-##@ Utility
-help_sort: ## Display alphabetized version of help.
-	@grep -hE '^[A-Za-z0-9_ \-]*?:.*##.*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+help_sort: ## Display alphabetized version of help (no section headings).
+	@grep -hE '^[A-Za-z0-9_ \-]*?:.*##.*$$' $(MAKEFILE_LIST) | sort | \
+	awk 'BEGIN {FS = ":.*?## "}; /^[A-Za-z0-9_ \-]*?:.*##/ {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-#--------
-# package
-#--------
+#----------
+##@ package
+#----------
 
 test: ## Run tests. See pyproject.toml for configuration.
 	poetry run pytest
@@ -68,9 +72,9 @@ export_pip_requirements: lock
 	--with=test \
 	--output=requirements-hashed.txt
 
-#-------------
-# CI
-#-------------
+#---------
+##@ github
+#---------
 
 browse: ## Open github repo in browser at HEAD commit.
 	gh browse $(GIT_SHORT_SHA)
@@ -114,6 +118,36 @@ codespace_delete: ## Delete codespace.
 docker_login: ## Login to ghcr docker registry. Check regcreds in $HOME/.docker/config.json.
 	docker login ghcr.io -u $(GH_ORG) -p $(GITHUB_TOKEN)
 
+# gh secret set GOOGLE_APPLICATION_CREDENTIALS_DATA --repo="$(GH_REPO)" --body='$(shell cat $(GCP_GACD_PATH))'
+ghsecrets: ## Update github secrets for GH_REPO from ".env" file.
+	@echo "secrets before updates:"
+	@echo
+	PAGER=cat gh secret list --repo=$(GH_REPO)
+	@echo
+	gh secret set FLYTE_CLUSTER_ENDPOINT --repo="$(GH_REPO)" --body="$(FLYTE_CLUSTER_ENDPOINT)"
+	gh secret set FLYTE_OAUTH_CLIENT_SECRET --repo="$(GH_REPO)" --body="$(FLYTE_OAUTH_CLIENT_SECRET)"
+	gh secret set FLYTECTL_CONFIG --repo="$(GH_REPO)" --body="$(FLYTECTL_CONFIG)"
+	# gh secret set CODECOV_TOKEN --repo="$(GH_REPO)" --body="$(CODECOV_TOKEN)"
+	gh secret set GCP_PROJECT_ID --repo="$(GH_REPO)" --body="$(GCP_PROJECT_ID)"
+	gh secret set GCP_STORAGE_SCOPES --repo="$(GH_REPO)" --body="$(GCP_STORAGE_SCOPES)"
+	gh secret set GCP_STORAGE_CONTAINER --repo="$(GH_REPO)" --body="$(GCP_STORAGE_CONTAINER)"
+	gh secret set GCP_ARTIFACT_REGISTRY_PATH --repo="$(GH_REPO)" --body="$(GCP_ARTIFACT_REGISTRY_PATH)"
+	@echo
+	@echo secrets after updates:
+	@echo
+	PAGER=cat gh secret list --repo=$(GH_REPO)
+
+ghvars: ## Update github secrets for GH_REPO from ".env" file.
+	@echo "variables before updates:"
+	@echo
+	PAGER=cat gh variable list --repo=$(GH_REPO)
+	@echo
+	gh variable set WORKFLOW_IMAGE --repo="$(GH_REPO)" --body="$(WORKFLOW_IMAGE)"
+	@echo
+	@echo variables after updates:
+	@echo
+	PAGER=cat gh variable list --repo=$(GH_REPO)
+
 EXISTING_IMAGE_TAG ?= main
 NEW_IMAGE_TAG ?= $(GIT_BRANCH)
 
@@ -126,9 +160,9 @@ list_gcr_workflow_image_tags: ## List images in gcr.
 	gcloud container images list --repository=$(GCP_ARTIFACT_REGISTRY_PATH)                                                                                                                             │
 	gcloud container images list-tags $(WORKFLOW_IMAGE)
 
-#----
-# nix
-#----
+#------
+##@ nix
+#------
 
 meta: ## Generate nix flake metadata.
 	nix flake metadata --impure --accept-flake-config
@@ -239,9 +273,9 @@ findeditable: ## Find *-editable.pth files in the nix store.
 	rg --files --glob '*editable.pth' --hidden --no-ignore --follow /nix/store/
 
 
-#--------------
-# setup dev env
-#--------------
+#----------------
+##@ setup dev env
+#----------------
 
 uninstall_nix: ## Uninstall nix.
 	(cat /nix/receipt.json && \
@@ -288,9 +322,10 @@ catuin: ## !!Enable atuin in zshrc.!!
 czsh: ## !!Enable zsh with command line info and searchable history.!!
 czsh: catuin cstarship cdirenv
 
-#-------------
-# system / dev
-#-------------
+
+#----------------------------
+##@ extra system dependencies
+#----------------------------
 
 install_just: ## Install just. Check script before execution: https://just.systems/ .
 	@which cargo > /dev/null || (curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh)
@@ -322,36 +357,6 @@ install_crane: ## Install crane. Check docs before execution: https://github.com
 
 env_print: ## Print a subset of environment variables defined in ".env" file.
 	env | grep "TF_VAR\|GITHUB\|GH_\|GCP_\|MLFLOW|FLYTE\|WORKFLOW" | sort
-
-# gh secret set GOOGLE_APPLICATION_CREDENTIALS_DATA --repo="$(GH_REPO)" --body='$(shell cat $(GCP_GACD_PATH))'
-ghsecrets: ## Update github secrets for GH_REPO from ".env" file.
-	@echo "secrets before updates:"
-	@echo
-	PAGER=cat gh secret list --repo=$(GH_REPO)
-	@echo
-	gh secret set FLYTE_CLUSTER_ENDPOINT --repo="$(GH_REPO)" --body="$(FLYTE_CLUSTER_ENDPOINT)"
-	gh secret set FLYTE_OAUTH_CLIENT_SECRET --repo="$(GH_REPO)" --body="$(FLYTE_OAUTH_CLIENT_SECRET)"
-	gh secret set FLYTECTL_CONFIG --repo="$(GH_REPO)" --body="$(FLYTECTL_CONFIG)"
-	# gh secret set CODECOV_TOKEN --repo="$(GH_REPO)" --body="$(CODECOV_TOKEN)"
-	gh secret set GCP_PROJECT_ID --repo="$(GH_REPO)" --body="$(GCP_PROJECT_ID)"
-	gh secret set GCP_STORAGE_SCOPES --repo="$(GH_REPO)" --body="$(GCP_STORAGE_SCOPES)"
-	gh secret set GCP_STORAGE_CONTAINER --repo="$(GH_REPO)" --body="$(GCP_STORAGE_CONTAINER)"
-	gh secret set GCP_ARTIFACT_REGISTRY_PATH --repo="$(GH_REPO)" --body="$(GCP_ARTIFACT_REGISTRY_PATH)"
-	@echo
-	@echo secrets after updates:
-	@echo
-	PAGER=cat gh secret list --repo=$(GH_REPO)
-
-ghvars: ## Update github secrets for GH_REPO from ".env" file.
-	@echo "variables before updates:"
-	@echo
-	PAGER=cat gh variable list --repo=$(GH_REPO)
-	@echo
-	gh variable set WORKFLOW_IMAGE --repo="$(GH_REPO)" --body="$(WORKFLOW_IMAGE)"
-	@echo
-	@echo variables after updates:
-	@echo
-	PAGER=cat gh variable list --repo=$(GH_REPO)
 
 update_config: ## Update flytectl config file from template.
 	yq e '.admin.endpoint = strenv(FLYTE_CLUSTER_ENDPOINT) | .storage.stow.config.project_id = strenv(GCP_PROJECT_ID) | .storage.stow.config.scopes = strenv(GCP_STORAGE_SCOPES) | .storage.container = strenv(GCP_STORAGE_CONTAINER)' \
@@ -393,9 +398,9 @@ update_version: ## Update version in VERSION_FILES.
 	done
 
 
-#----------------
-# web application
-#----------------
+#------------------------------
+##@ web application development
+#------------------------------
 
 st: ## Run streamlit app in local environment.
 	streamlit run app/app.py \
