@@ -1,0 +1,7 @@
+{
+  "auths": {
+    "ghcr.io": {
+      "auth": "echo 'username:password' | base64 --> This 'dXNlcm5hbWU6cGFzc3dvcmQK' goes here. echo -n 'dXNlcm5hbWU6cGFzc3dvcmQK' | base64 -d"
+    }
+  }
+}
