@@ -63,6 +63,10 @@ export_pip_requirements: lock
 	--with=test \
 	--output=requirements.txt \
 	--without-hashes
+	poetry export \
+	--format=requirements.txt \
+	--with=test \
+	--output=requirements-hashed.txt
 
 #-------------
 # CI
