@@ -162,6 +162,7 @@
               extraPackages = ps:
                 with pkgs; [
                   python310Packages.pip
+                  nvitop
                 ];
               editablePackageSources = {
                 ${packageName} = src;
@@ -178,7 +179,6 @@
             gzip
             libgcc
             nix
-            nvitop
             direnv
           ]
           ++ lib.optional (lib.elem system pkgs.shadow.meta.platforms) shadow;
@@ -265,8 +265,8 @@
           url = "https://github.com/${gitHubOrg}/${packageName}.git";
           # the ref is not strictly required when specifying a rev but it should
           # be included whenever possible or it may be necessary to include
-          # ref = "main";
           # allRefs = true;
+          # ref = "main";
           # ref = "beta";
           ref = "491-workflows";
           # the rev can be omitted transiently in development to track the HEAD
