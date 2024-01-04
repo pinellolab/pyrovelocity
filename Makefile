@@ -32,7 +32,7 @@ test: ## Run tests. See pyproject.toml for configuration.
 test-cov-xml: ## Run tests with coverage
 	poetry run pytest --cov-report=xml
 
-pre-commit: ## Run pre-commit hooks
+precommit: ## Run pre-commit hooks
 	pre-commit run -a
 
 lint: ## Run linter
@@ -319,9 +319,6 @@ install_crane: ## Install crane. Check docs before execution: https://github.com
 		sudo mv $$TMP_DIR/crane /usr/local/bin/crane; \
 		echo "Crane installed successfully to /usr/local/bin/crane" \
 	)
-
-precommit: ## Run pre-commit hooks using nox.
-	nox -x -rs pre-commit
 
 env_print: ## Print a subset of environment variables defined in ".env" file.
 	env | grep "TF_VAR\|GITHUB\|GH_\|GCP_\|MLFLOW|FLYTE\|WORKFLOW" | sort
