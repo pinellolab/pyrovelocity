@@ -174,7 +174,6 @@
             bashInteractive
             coreutils
             cacert
-            dash
             libgcc
             gnutar
             gzip
