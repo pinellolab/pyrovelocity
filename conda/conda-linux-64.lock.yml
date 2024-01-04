@@ -259,8 +259,8 @@ dependencies:
   - scipy=1.10.1=py310ha4c1d20_3
   - scvelo=0.2.5=pyhd8ed1ab_0
   - scvi-tools=0.20.3=pyhd8ed1ab_1
-  - seaborn=0.12.2=hd8ed1ab_0
-  - seaborn-base=0.12.2=pyhd8ed1ab_0
+  - seaborn=0.11.2=hd8ed1ab_0
+  - seaborn-base=0.11.2=pyhd8ed1ab_0
   - session-info=1.0.0=pyhd8ed1ab_0
   - setuptools=69.0.3=pyhd8ed1ab_0
   - shap=0.44.0=cuda118py310he2121af_6
@@ -313,4 +313,3 @@ dependencies:
       - igraph === 0.10.8 --hash=sha256:89fca31ca33957dae5df4ecf032c08eb1e897cbc5856cdaad52b67c6ace3f074
       - mizani === 0.9.3 --hash=sha256:ac5d49b913de88dc2fb28d82141e9777b97407a6971a158f758093ad5bb820a1
       - plotnine === 0.12.4 --hash=sha256:12748f346f107c33f3e0658ac46fbb052205ae7e97ffaf52be68310e5d29f799
-      - seaborn === 0.11.2 --hash=sha256:85a6baa9b55f81a0623abddc4a26b334653ff4c6b18c418361de19dbba0ef283

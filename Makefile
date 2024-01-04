@@ -224,7 +224,7 @@ jupyter_manual: ## Prefer `make -n jupyter` to this target. make jupyter_manual 
 	$(DEVCONTAINER_IMAGE) \
 	jupyter lab --allow-root --ip=0.0.0.0 /root/pyrovelocity
 
-jupyter_local: ## Run jupyter lab locally.
+jupyter_local: ## Run jupyter lab locally. See make -n setup_dev.
 	SHELL=zsh \
 	jupyter lab \
 	--ServerApp.terminado_settings="shell_command=['zsh']" \
