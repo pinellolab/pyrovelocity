@@ -1,0 +1,43 @@
+apiVersion: skaffold/v4beta8
+kind: Config
+manifests:
+  kpt:
+    - dev/cluster/resources
+  # rawYaml:
+  #   - dev/cluster/resources/*.yaml
+deploy:
+  kubectl:
+    defaultNamespace: pyrovelocity
+profiles:
+  - name: dev
+    deploy:
+      statusCheckDeadlineSeconds: 960
+# It is generally preferable and sufficient to use an image built in CI updating
+# the tag in the deployment as required to match the development branch, commit
+# sha, or image sha256, but we provide the in-cluster development build
+# configuration for reference. `docker-config.json` is a local copy of the
+# regcreds relevant to the target registry. See docker-config.example.json. If
+# you use an image registry the cluster has access to via Workload Identity/IRSA
+# the dockerConfig block can be removed.
+# build:
+#   artifacts:
+#   - image: ghcr.io/pinellolab/pyrovelocity-gpu
+#     kaniko:
+#       dockerfile: containers/gpu.Dockerfile
+#       cache:
+#         ttl: 168h
+#         cacheCopyLayers: true
+#   tagPolicy:
+#     sha256: {}
+#   cluster:
+#     namespace: pyrovelocity
+#     dockerConfig:
+#       path: ./docker-config.json
+#     resources:
+#       requests:
+#         cpu: "8"
+#         memory: 16Gi
+#       limits:
+#         cpu: "32"
+#         memory: 180Gi
+#     concurrency: 5
