@@ -1,0 +1,18 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: pyrovelocity
+info:
+  emails:
+    - team@pyrovelocity.net
+  description: "This is a kpt package providing a template for the skaffold-managed development environment for pyrovelocity."
+pipeline:
+  validators:
+    - image: gcr.io/kpt-fn/kubeval:v0.3
+      configMap:
+        strict: "false"
+        ignore_missing_schemas: "true"
+  mutators:
+    - image: gcr.io/kpt-fn/apply-setters:v0.2
+      configMap:
+        skaffold_image: ghcr.io/pinellolab/pyrovelocitydev:491-workflows
