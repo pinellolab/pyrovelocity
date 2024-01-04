@@ -134,3 +134,6 @@ flyte-package.tgz
 # hydra outputs
 outputs/
 multirun/
+
+# skaffold
+docker-config.json
