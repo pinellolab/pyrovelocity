@@ -11,3 +11,5 @@ services:
     restart: "no"
     volumes:
       - ${PWD}:/root/pyrovelocity
+    environment:
+      - SHELL=zsh
