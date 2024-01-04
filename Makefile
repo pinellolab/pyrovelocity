@@ -224,6 +224,13 @@ jupyter_manual: ## Prefer `make -n jupyter` to this target. make jupyter_manual 
 	$(DEVCONTAINER_IMAGE) \
 	jupyter lab --allow-root --ip=0.0.0.0 /root/pyrovelocity
 
+jupyter_local: ## Run jupyter lab locally.
+	SHELL=zsh \
+	jupyter lab \
+	--ServerApp.terminado_settings="shell_command=['zsh']" \
+	--allow-root \
+	--ip=0.0.0.0 ./
+
 findeditable: ## Find *-editable.pth files in the nix store.
 	rg --files --glob '*editable.pth' --hidden --no-ignore --follow /nix/store/
 
