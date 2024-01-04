@@ -3,7 +3,7 @@ name: pyrovelocity
 services:
   jupyter:
     image: "${DEVCONTAINER_IMAGE:-ghcr.io/pinellolab/pyrovelocitydev:main}"
-    command: jupyter lab --allow-root --ip=0.0.0.0 /root/pyrovelocity
+    command: jupyter lab --ServerApp.terminado_settings="shell_command=['zsh']" --allow-root --ip=0.0.0.0 /root/pyrovelocity
     ports:
       - "8888:8888"
     tty: true
