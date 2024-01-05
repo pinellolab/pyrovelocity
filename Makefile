@@ -453,6 +453,23 @@ update-version: ## Update version in VERSION_FILES.
 		fi \
 	done
 
+GHA_WORKFLOWS := \
+    .github/workflows/app.yaml \
+    .github/workflows/build-images.yaml \
+    .github/workflows/cid.yaml \
+    .github/workflows/cml-images.yml \
+    .github/workflows/cml.yml \
+    .github/workflows/colab.yml \
+    .github/workflows/labeler.yml
+
+ratchet = docker run -it --rm -v "${PWD}:${PWD}" -w "${PWD}" ghcr.io/sethvargo/ratchet:0.5.1 $1
+
+ratchet-pin: ## Pin all workflow versions to hash values. (requires docker).
+	$(foreach workflow,$(GHA_WORKFLOWS),$(call ratchet,pin $(workflow));)
+
+ratchet-unpin: ## Unpin hashed workflow versions to semantic values. (requires docker).
+	$(foreach workflow,$(GHA_WORKFLOWS),$(call ratchet,unpin $(workflow));)
+
 
 #------------------------------
 ##@ web application development
