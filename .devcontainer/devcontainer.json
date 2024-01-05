@@ -19,7 +19,7 @@
         "charliermarsh.ruff",
         "redhat.vscode-yaml",
         "ms-kubernetes-tools.vscode-kubernetes-tools",
-        "ms-vsliveshare.vsli",
+        "ms-vsliveshare.vsliveshare",
         "eamodio.gitlens",
         "GitHub.vscode-pull-request-github",
         "github.vscode-github-actions",
