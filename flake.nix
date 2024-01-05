@@ -1,7 +1,7 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
-    # nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs-2305.url = "github:NixOS/nixpkgs/nixos-23.05";
     systems.url = "github:nix-systems/default";
     flake-parts.url = "github:hercules-ci/flake-parts";
     # flake-utils.url = github:numtide/flake-utils;
@@ -48,6 +48,13 @@
         ...
       }: let
         pkgs = import inputs.nixpkgs {
+          inherit system;
+          config = {
+            allowUnfree = true;
+          };
+          overlays = [inputs.poetry2nix.overlays.default];
+        };
+        pkgs_2305 = import inputs.nixpkgs-2305 {
           inherit system;
           config = {
             allowUnfree = true;
@@ -117,7 +124,7 @@
                   old.propagatedBuildInputs
                   or []
                   ++ [
-                    pkgs.cudaPackages.cudnn_8_6
+                    pkgs_2305.cudaPackages.cudnn_8_5_0
                   ];
               });
               pyarrow = super.pyarrow.override {preferWheel = true;};

@@ -153,6 +153,22 @@
         "type": "github"
       }
     },
+    "nixpkgs-2305": {
+      "locked": {
+        "lastModified": 1704018918,
+        "narHash": "sha256-erjg/HrpC9liEfm7oLqb8GXCqsxaFwIIPqCsknW5aFY=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "2c9c58e98243930f8cb70387934daa4bc8b00373",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-23.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nixpkgs-lib": {
       "locked": {
         "dir": "lib",
@@ -220,6 +236,7 @@
         "flocken": "flocken",
         "nix2container": "nix2container",
         "nixpkgs": "nixpkgs",
+        "nixpkgs-2305": "nixpkgs-2305",
         "poetry2nix": "poetry2nix",
         "systems": "systems_5"
       }
