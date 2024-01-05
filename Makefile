@@ -22,13 +22,13 @@ help: ## Display this help. (Default)
 	@grep -hE '^(##@|[A-Za-z0-9_ \-]*?:.*##).*$$' $(MAKEFILE_LIST) | \
 	awk 'BEGIN {FS = ":.*?## "}; /^##@/ {print "\n" substr($$0, 5)} /^[A-Za-z0-9_ \-]*?:.*##/ {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-help_sort: ## Display alphabetized version of help (no section headings).
+help-sort: ## Display alphabetized version of help (no section headings).
 	@grep -hE '^[A-Za-z0-9_ \-]*?:.*##.*$$' $(MAKEFILE_LIST) | sort | \
 	awk 'BEGIN {FS = ":.*?## "}; /^[A-Za-z0-9_ \-]*?:.*##/ {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-#----------
-##@ package
-#----------
+#-------------------------
+##@ primary python package
+#-------------------------
 
 test: ## Run tests. See pyproject.toml for configuration.
 	poetry run pytest
@@ -60,8 +60,8 @@ docs-serve:
 lock: ## Lock dependencies.
 	poetry lock --no-update
 
-export_pip_requirements: ## Export requirements.txt for pip.
-export_pip_requirements: lock
+export-pip-requirements: ## Export requirements.txt for pip.
+export-pip-requirements: lock
 	poetry export \
 	--format=requirements.txt \
 	--with=test \
@@ -84,13 +84,13 @@ GH_ACTIONS_DEBUG ?= false
 cid: ## Run CID (GH_ACTIONS_DEBUG default is false).
 	gh workflow run "CID" --ref $(GIT_BRANCH) -f debug_enabled=$(GH_ACTIONS_DEBUG)
 
-build_images: ## Run Build Images (GH_ACTIONS_DEBUG default is false).
+build-images: ## Run Build Images (GH_ACTIONS_DEBUG default is false).
 	gh workflow run "Build Images" --ref $(GIT_BRANCH) -f debug_enabled=$(GH_ACTIONS_DEBUG)
 
-ci_view_workflow: ## Open CI workflow summary.
+ci-view-workflow: ## Open CI workflow summary.
 	gh workflow view "CI"
 
-build_images_view_workflow: ## Open Build Images workflow summary.
+build-images-view-workflow: ## Open Build Images workflow summary.
 	gh workflow view "Build Images"
 
 # CPU | MEM | DISK | MACHINE_TYPE
@@ -100,22 +100,22 @@ build_images_view_workflow: ## Open Build Images workflow summary.
 #   8 |  32 |   64 | premiumLinux
 #  16 |  64 |  128 | largePremiumLinux
 MACHINE_TYPE ?= standardLinux32gb
-codespace_create: ## Create codespace. make -n codespace_create MACHINE_TYPE=largePremiumLinux
+codespace-create: ## Create codespace. make -n codespace_create MACHINE_TYPE=largePremiumLinux
 	gh codespace create -R $(GH_REPO) -b $(GIT_BRANCH) -m $(MACHINE_TYPE)
 
 code: ## Open codespace in browser.
 	gh codespace code -R $(GH_REPO) --web
 
-codespace_list: ## List codespace.
+codespace-list: ## List codespace.
 	PAGER=cat gh codespace list
 
-codespace_stop: ## Stop codespace.
+codespace-stop: ## Stop codespace.
 	gh codespace stop
 
-codespace_delete: ## Delete codespace.
+codespace-delete: ## Delete codespace.
 	gh codespace delete
 
-docker_login: ## Login to ghcr docker registry. Check regcreds in $HOME/.docker/config.json.
+docker-login: ## Login to ghcr docker registry. Check regcreds in $HOME/.docker/config.json.
 	docker login ghcr.io -u $(GH_ORG) -p $(GITHUB_TOKEN)
 
 # gh secret set GOOGLE_APPLICATION_CREDENTIALS_DATA --repo="$(GH_REPO)" --body='$(shell cat $(GCP_GACD_PATH))'
@@ -152,11 +152,11 @@ EXISTING_IMAGE_TAG ?= main
 NEW_IMAGE_TAG ?= $(GIT_BRANCH)
 
 # Default bumps main to the checked out branch for dev purposes
-tag_images: ## Add tag to existing images, (default main --> branch, override with make -n tag_images NEW_IMAGE_TAG=latest).
+tag-images: ## Add tag to existing images, (default main --> branch, override with make -n tag_images NEW_IMAGE_TAG=latest).
 	crane tag $(WORKFLOW_IMAGE):$(EXISTING_IMAGE_TAG) $(NEW_IMAGE_TAG)
 	crane tag ghcr.io/$(GH_ORG)/$(GH_REPO):$(EXISTING_IMAGE_TAG) $(NEW_IMAGE_TAG)
 
-list_gcr_workflow_image_tags: ## List images in gcr.
+list-gcr-workflow-image-tags: ## List images in gcr.
 	gcloud container images list --repository=$(GCP_ARTIFACT_REGISTRY_PATH)                                                                                                                             │
 	gcloud container images list-tags $(WORKFLOW_IMAGE)
 
@@ -182,7 +182,7 @@ re: ## Reload direnv.
 al: ## Enable direnv.
 	direnv allow
 
-devshell_info: ## Print devshell info.
+devshell-info: ## Print devshell info.
 	nix build .#devShells.$(shell nix eval --impure --expr 'builtins.currentSystem').default --impure
 	nix path-info --recursive ./result
 	du -chL ./result
@@ -223,7 +223,7 @@ jupyter: ## Run jupyter lab in devcontainer. make jupyter DEVCONTAINER_IMAGE=ghc
 	@echo
 	$(MAKE) jupyter_logs
 
-jupyter_logs: ## Print docker-compose logs.
+jupyter-logs: ## Print docker-compose logs.
 	@echo
 	@echo "Ctrl/cmd + click the http://127.0.0.1:8888/lab?token=... link to open jupyter lab in your default browser"
 	@echo
@@ -232,12 +232,12 @@ jupyter_logs: ## Print docker-compose logs.
 		docker compose -f containers/compose.yaml logs -f jupyter; \
 	done
 
-jupyter_down: compose_list
-jupyter_down: ## Stop docker-compose containers.
+jupyter-down: compose_list
+jupyter-down: ## Stop docker-compose containers.
 	docker compose -f containers/compose.yaml down jupyter
 	$(MAKE) compose_list
 
-compose_list: ## List docker-compose containers.
+compose-list: ## List docker-compose containers.
 	@echo
 	docker compose ls
 	@echo
@@ -246,7 +246,7 @@ compose_list: ## List docker-compose containers.
 	docker compose -f containers/compose.yaml ps
 	@echo
 
-image_digests: ## Print image digests.
+image-digests: ## Print image digests.
 	@echo
 	docker images -a --digests $(DEVCONTAINER_IMAGE)
 	@echo
@@ -257,12 +257,12 @@ digest: ## Print image digest from tag. make digest DEVCONTAINER_IMAGE=
 	docker inspect --format='{{index .RepoDigests 0}}' $(DEVCONTAINER_IMAGE)
 	@echo
 
-jupyter_manual: ## Prefer `make -n jupyter` to this target. make jupyter_manual DEVCONTAINER_IMAGE=
+jupyter-manual: ## Prefer `make -n jupyter` to this target. make jupyter_manual DEVCONTAINER_IMAGE=
 	docker run --rm -it -p 8888:8888 \
 	$(DEVCONTAINER_IMAGE) \
 	jupyter lab --allow-root --ip=0.0.0.0 /root/pyrovelocity
 
-jupyter_local: ## Run jupyter lab locally. See make -n setup_dev.
+jupyter-local: ## Run jupyter lab locally. See make -n setup_dev.
 	SHELL=zsh \
 	jupyter lab \
 	--ServerApp.terminado_settings="shell_command=['zsh']" \
@@ -273,28 +273,28 @@ findeditable: ## Find *-editable.pth files in the nix store.
 	rg --files --glob '*editable.pth' --hidden --no-ignore --follow /nix/store/
 
 
-#----------------
-##@ setup dev env
-#----------------
+#--------------------------------------
+##@ setup local development environment
+#--------------------------------------
 
-uninstall_nix: ## Uninstall nix.
+uninstall-nix: ## Uninstall nix.
 	(cat /nix/receipt.json && \
 	/nix/nix-installer uninstall) || echo "nix not found, skipping uninstall"
 
-install_nix: ## Install nix. Check script before execution: https://install.determinate.systems/nix .
-install_nix: uninstall_nix
+install-nix: ## Install nix. Check script before execution: https://install.determinate.systems/nix .
+install-nix: uninstall_nix
 	@which nix > /dev/null || \
 	curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
 
-install_direnv: ## Install direnv to `/usr/local/bin`. Check script before execution: https://direnv.net/ .
+install-direnv: ## Install direnv to `/usr/local/bin`. Check script before execution: https://direnv.net/ .
 	@which direnv > /dev/null || \
 	(curl -sfL https://direnv.net/install.sh | bash && \
 	sudo install -c -m 0755 direnv /usr/local/bin && \
 	rm -f ./direnv)
 	@echo "see https://direnv.net/docs/hook.html"
 
-setup_dev: ## Setup nix development environment.
-setup_dev: install_direnv install_nix
+setup-dev: ## Setup nix development environment.
+setup-dev: install_direnv install_nix
 	@. /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh && \
 	nix profile install nixpkgs#cachix && \
 	echo "trusted-users = root $$USER" | sudo tee -a /etc/nix/nix.conf && sudo pkill nix-daemon && \
@@ -358,6 +358,11 @@ cluster-render: ## Render skaffold yaml with latest container_image
 cluster-build: ## Build image with skaffold (disabled by default: see skaffold.yaml)
 	skaffold build
 
+
+#----------------------------
+##@ extra system dependencies
+#----------------------------
+
 # https://github.com/GoogleContainerTools/skaffold/releases
 SKAFFOLD_RELEASE ?= latest # v2.9.0
 
@@ -367,26 +372,21 @@ else
 	SKAFFOLD_BINARY_URL := "https://github.com/GoogleContainerTools/skaffold/releases/download/$(SKAFFOLD_RELEASE)/skaffold-$(shell uname -s)-$(shell uname -m)"
 endif
 
-install-skaffold: ## Install skaffold to /usr/local/bin (check/set: SKAFFOLD_RELEASE)
+install-skaffold: ## Install skaffold. (check/set: SKAFFOLD_RELEASE).
 	curl -L -o skaffold $(SKAFFOLD_BINARY_URL) && \
 	sudo install -c -m 0755 skaffold /usr/local/bin && \
 	rm -f skaffold
 	which skaffold
 	skaffold version
 
-
-#----------------------------
-##@ extra system dependencies
-#----------------------------
-
-install_just: ## Install just. Check script before execution: https://just.systems/ .
+install-just: ## Install just. Check script before execution: https://just.systems/ .
 	@which cargo > /dev/null || (curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh)
 	@cargo install just
 
-install_poetry: ## Install poetry. Check script before execution: https://python-poetry.org/docs/#installation .
+install-poetry: ## Install poetry. Check script before execution: https://python-poetry.org/docs/#installation .
 	@which poetry > /dev/null || (curl -sSL https://install.python-poetry.org | python3 -)
 
-install_crane: ## Install crane. Check docs before execution: https://github.com/google/go-containerregistry/blob/main/cmd/crane/doc/crane.md .
+install-crane: ## Install crane. Check docs before execution: https://github.com/google/go-containerregistry/blob/main/cmd/crane/doc/crane.md .
 	@which crane > /dev/null || ( \
 		set -e; \
 		CRANE_VERSION="0.16.1"; \
@@ -407,17 +407,21 @@ install_crane: ## Install crane. Check docs before execution: https://github.com
 		echo "Crane installed successfully to /usr/local/bin/crane" \
 	)
 
-env_print: ## Print a subset of environment variables defined in ".env" file.
+#------------
+##@ utilities
+#------------
+
+env-print: ## Print a subset of environment variables defined in ".env" file.
 	env | grep "TF_VAR\|GITHUB\|GH_\|GCP_\|MLFLOW|FLYTE\|WORKFLOW" | sort
 
-update_config: ## Update flytectl config file from template.
+update-config: ## Update flytectl config file from template.
 	yq e '.admin.endpoint = strenv(FLYTE_CLUSTER_ENDPOINT) | .storage.stow.config.project_id = strenv(GCP_PROJECT_ID) | .storage.stow.config.scopes = strenv(GCP_STORAGE_SCOPES) | .storage.container = strenv(GCP_STORAGE_CONTAINER)' \
 	$(FLYTECTL_CONFIG_TEMPLATE) > $(FLYTECTL_CONFIG)
 
 tree: ## Print directory tree.
 	tree -a --dirsfirst -L 4 -I ".git|.direnv|*pycache*|*ruff_cache*|*pytest_cache*|outputs|multirun|conf|scripts|site|*venv*|.coverage"
 
-approve_prs: ## Approve github pull requests from bots: PR_ENTRIES="2-5 10 12-18"
+approve-prs: ## Approve github pull requests from bots: PR_ENTRIES="2-5 10 12-18"
 	for entry in $(PR_ENTRIES); do \
 		if [[ "$$entry" == *-* ]]; then \
 			start=$${entry%-*}; \
@@ -439,7 +443,7 @@ VERSION_FILES := \
 	containers/pkg.Dockerfile \
 	docs/source/notebooks/pyrovelocity_colab_template.ipynb
 
-update_version: ## Update version in VERSION_FILES.
+update-version: ## Update version in VERSION_FILES.
 	@for file in $(VERSION_FILES); do \
 		if [ -f $$file ]; then \
 			sed -i 's/$(PREVIOUS_VERSION)/$(NEXT_VERSION)/g' $$file; \
@@ -468,19 +472,19 @@ stcloud: ## Run streamlit app in local environment.
 
 # --progress=plain
 # --platform linux/amd64
-app_build: ## Cloud build of pyrovelocity application container image.
+app-build: ## Cloud build of pyrovelocity application container image.
 	docker build \
 	--progress=plain \
 	-t pyrovelocityapp \
 	-f containers/Dockerfile.app .
 
-local_app_build: ## Local build of pyrovelocity application container image.
+local-app-build: ## Local build of pyrovelocity application container image.
 	docker build \
 	--progress=plain \
 	-t pyrovelocityapp \
 	-f containers/Dockerfile.app.local .
 
-cloud_build: ## Build with google cloud build: make cloud_build PROJECT_ID="gcp-projectID"
+cloud-build: ## Build with google cloud build: make cloud_build PROJECT_ID="gcp-projectID"
 ifdef PROJECT_ID
 	dvc stage list \
     --name-only reproducibility/figures/dvc.yaml | \
@@ -491,13 +495,13 @@ else
 	@echo 'Run "make help" and define PROJECT_ID'
 endif
 
-app_run: ## Run the pyrovelocity web user interface.
-app_run: \
+app-run: ## Run the pyrovelocity web user interface.
+app-run: \
 app_build
 	docker run --rm -p 8080:8080 pyrovelocityapp
 
-app_dev: ## Run the pyrovelocity web user interface in development mode.
-app_dev: \
+app-dev: ## Run the pyrovelocity web user interface in development mode.
+app-dev: \
 # app_build
 	docker run --rm -it \
 		-v ${PWD}:/pyrovelocity \
@@ -507,15 +511,15 @@ app_dev: \
 		"--server.enableCORS=false" \
 		"--server.enableXsrfProtection=false"
 
-app_run_shell: ## Attach to shell in running container: make app_run_shell CONTAINER_ID="98aca71ab536"
+app-run-shell: ## Attach to shell in running container: make app_run_shell CONTAINER_ID="98aca71ab536"
 ifdef CONTAINER_ID
 	docker exec -it $(CONTAINER_ID) /bin/bash
 else
 	@echo 'Run "make help" and define CONTAINER_ID'
 endif
 
-app_shell: ## Run a shell inside the pyrovelocity application container image.
-app_shell: \
+app-shell: ## Run a shell inside the pyrovelocity application container image.
+app-shell: \
 # app_build
 	docker run --rm -it \
 	--entrypoint /bin/bash pyrovelocityapp
