@@ -257,6 +257,7 @@
             gnumake
             gnupg
             helix
+            htop
             jqp
             lazygit
             man-db
