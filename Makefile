@@ -99,7 +99,7 @@ build-images-view-workflow: ## Open Build Images workflow summary.
 #   4 |  16 |   32 | standardLinux32gb
 #   8 |  32 |   64 | premiumLinux
 #  16 |  64 |  128 | largePremiumLinux
-MACHINE_TYPE ?= standardLinux32gb
+MACHINE_TYPE ?= premiumLinux
 codespace-create: ## Create codespace. make -n codespace_create MACHINE_TYPE=largePremiumLinux
 	gh codespace create -R $(GH_REPO) -b $(GIT_BRANCH) -m $(MACHINE_TYPE)
 
