@@ -176,6 +176,11 @@ dup: ## Debug update nix flake lock file.
 	nix flake update --impure --accept-flake-config
 	nix flake check --show-trace --print-build-logs --impure --accept-flake-config
 
+NIX_DERIVATION_PATH ?= $(shell which python)
+
+closure-size: ## Print nix closure size for a given path. make -n NIX_DERIVATION_PATH=$(shell which python)
+	nix path-info -Sh $(NIX_DERIVATION_PATH)
+
 re: ## Reload direnv.
 	direnv reload
 
