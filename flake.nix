@@ -251,6 +251,7 @@
             git
             gnugrep
             gnumake
+            gnupg
             helix
             jqp
             lazygit
