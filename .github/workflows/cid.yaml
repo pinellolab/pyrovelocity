@@ -114,13 +114,13 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
 
       - name: Create Flyte config from YAML template
         id: yq-process
-        uses: mikefarah/yq@master
+        uses: mikefarah/yq@8af3e46fcb99fd38503974c2bc90094f5e07933f # ratchet:mikefarah/yq@master
         with:
           cmd: "yq e \
             '.admin.endpoint = strenv(FLYTE_CLUSTER_ENDPOINT) | \
@@ -136,7 +136,7 @@ jobs:
 
       - name: Upload Flyte config as an artifact
         id: config-output
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # ratchet:actions/upload-artifact@v3
         with:
           name: flyte-config
           path: ${{ secrets.FLYTECTL_CONFIG }}
@@ -160,7 +160,7 @@ jobs:
           echo "DEBUG=${{ needs.set-variables.outputs.debug }}"
           echo "MODE=${{ needs.set-variables.outputs.mode }}"
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
 
@@ -171,13 +171,13 @@ jobs:
           debug_enabled: ${{ needs.set-variables.outputs.debug }}
 
       - name: Download Flyte config
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # ratchet:actions/download-artifact@v3
         with:
           name: flyte-config
           path: .flyte/
 
       - name: "Setup tmate debug session"
-        uses: mxschmitt/action-tmate@v3
+        uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # ratchet:mxschmitt/action-tmate@v3
         if: ${{ inputs.debug_enabled }}
 
       - name: Lint and typecheck
@@ -189,7 +189,7 @@ jobs:
           make test-cov-xml
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # ratchet:codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
@@ -205,20 +205,20 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
-      - uses: DeterminateSystems/nix-installer-action@v9
-      - uses: DeterminateSystems/magic-nix-cache-action@v2
+      - uses: DeterminateSystems/nix-installer-action@cd46bde16ab981b0a7b2dce0574509104543276e # ratchet:DeterminateSystems/nix-installer-action@v9
+      - uses: DeterminateSystems/magic-nix-cache-action@8a218f9e264e9c3803c9a1ee1c30d8e4ab55be63 # ratchet:DeterminateSystems/magic-nix-cache-action@v2
       - run: nix flake check --impure --accept-flake-config
       - run: |
           ./scripts/flake pytest
-      # It is also possible to build the default package with a checkPhase
-      # - run: |
-      #     export NUMBA_CACHE_DIR=$(mktemp -d -p $RUNNER_TEMP numba-cache-XXXXX)
-      #     chmod 777 $NUMBA_CACHE_DIR
-      #     echo "NUMBA_CACHE_DIR: $NUMBA_CACHE_DIR"
-      #     nix build . --accept-flake-config --impure
+    # It is also possible to build the default package with a checkPhase
+    # - run: |
+    #     export NUMBA_CACHE_DIR=$(mktemp -d -p $RUNNER_TEMP numba-cache-XXXXX)
+    #     chmod 777 $NUMBA_CACHE_DIR
+    #     echo "NUMBA_CACHE_DIR: $NUMBA_CACHE_DIR"
+    #     nix build . --accept-flake-config --impure
 
   build-docker-images:
     needs: [set-variables]
@@ -248,24 +248,24 @@ jobs:
       url: https://ghcr.io/pinellolab/pyrovelocitydev
     steps:
       - name: maximize build space
-        uses: easimon/maximize-build-space@v10
+        uses: easimon/maximize-build-space@fc881a613ad2a34aca9c9624518214ebc21dfc0c # ratchet:easimon/maximize-build-space@v10
         with:
           root-reserve-mb: 38912
           swap-size-mb: 1024
           remove-dotnet: "true"
           remove-android: "true"
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
-      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # ratchet:docker/setup-qemu-action@v3
         with:
           platforms: arm64
-      - uses: DeterminateSystems/nix-installer-action@v9
+      - uses: DeterminateSystems/nix-installer-action@cd46bde16ab981b0a7b2dce0574509104543276e # ratchet:DeterminateSystems/nix-installer-action@v9
         with:
           extra-conf: |
             extra-platforms = aarch64-linux
-      - uses: DeterminateSystems/magic-nix-cache-action@v2
-      - uses: rlespinasse/github-slug-action@v4
+      - uses: DeterminateSystems/magic-nix-cache-action@8a218f9e264e9c3803c9a1ee1c30d8e4ab55be63 # ratchet:DeterminateSystems/magic-nix-cache-action@v2
+      - uses: rlespinasse/github-slug-action@102b1a064a9b145e56556e22b18b19c624538d94 # ratchet:rlespinasse/github-slug-action@v4
         with:
           prefix: CI_
       - name: Set git variables
@@ -311,7 +311,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
 
@@ -322,14 +322,14 @@ jobs:
           debug_enabled: ${{ needs.set-variables.outputs.debug }}
 
       - name: Download Flyte config
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # ratchet:actions/download-artifact@v3
         with:
           name: flyte-config
           path: .flyte/
 
       - name: Setup tmate debug session
         if: ${{ inputs.debug_enabled == 'true' }}
-        uses: mxschmitt/action-tmate@v3
+        uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # ratchet:mxschmitt/action-tmate@v3
 
       - name: Execute workflow
         id: execute
@@ -345,7 +345,7 @@ jobs:
           echo "HYDRA_OUTPUTS_TAR=$TAR_FILENAME" >> $GITHUB_ENV
 
       - name: Upload config artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # ratchet:actions/upload-artifact@v3
         with:
           name: hydra-outputs
           path: ${{ env.HYDRA_OUTPUTS_TAR }}
@@ -364,15 +364,15 @@ jobs:
       released: ${{ steps.semanticrelease.outputs.released }}
       git-head: ${{ steps.semanticrelease.outputs.git-head }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
-      - uses: DeterminateSystems/nix-installer-action@v9
-      - uses: DeterminateSystems/magic-nix-cache-action@v2
+      - uses: DeterminateSystems/nix-installer-action@cd46bde16ab981b0a7b2dce0574509104543276e # ratchet:DeterminateSystems/nix-installer-action@v9
+      - uses: DeterminateSystems/magic-nix-cache-action@8a218f9e264e9c3803c9a1ee1c30d8e4ab55be63 # ratchet:DeterminateSystems/magic-nix-cache-action@v2
       - run: nix profile install .#releaseEnv
-      - uses: cihelper/action-semanticrelease-poetry@v1
+      - uses: cihelper/action-semanticrelease-poetry@66900ba780321bcdb974891ee82f945a25a870d7 # ratchet:cihelper/action-semanticrelease-poetry@v1
         id: semanticrelease
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # ratchet:actions/upload-artifact@v3
         if: ${{ steps.semanticrelease.outputs.released == 'true' }}
         with:
           name: poetry-build
@@ -392,18 +392,18 @@ jobs:
       name: release
       url: https://ghcr.io/pinellolab/pyrovelocitydev
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
           ref: ${{ needs.release.outputs.git-head }}
-      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # ratchet:docker/setup-qemu-action@v3
         with:
           platforms: arm64
-      - uses: DeterminateSystems/nix-installer-action@v9
+      - uses: DeterminateSystems/nix-installer-action@cd46bde16ab981b0a7b2dce0574509104543276e # ratchet:DeterminateSystems/nix-installer-action@v9
         with:
           extra-conf: |
             extra-platforms = aarch64-linux
-      - uses: DeterminateSystems/magic-nix-cache-action@v2
-      - uses: rlespinasse/github-slug-action@v4
+      - uses: DeterminateSystems/magic-nix-cache-action@8a218f9e264e9c3803c9a1ee1c30d8e4ab55be63 # ratchet:DeterminateSystems/magic-nix-cache-action@v2
+      - uses: rlespinasse/github-slug-action@102b1a064a9b145e56556e22b18b19c624538d94 # ratchet:rlespinasse/github-slug-action@v4
         with:
           prefix: CI_
       - name: Set git variables
@@ -445,11 +445,11 @@ jobs:
       name: release
       url: https://pypi.org/project/pyrovelocity/${{needs.release.outputs.version}}/
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # ratchet:actions/download-artifact@v3
         with:
           name: poetry-build
           path: ./dist
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: pypa/gh-action-pypi-publish@2f6f737ca5f74c637829c0f5c3acd0e29ea5e8bf # ratchet:pypa/gh-action-pypi-publish@release/v1
 
   test-docs-build:
     runs-on: ubuntu-latest
@@ -462,7 +462,7 @@ jobs:
       contents: read
       pages: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
       - name: Setup environment
@@ -485,7 +485,7 @@ jobs:
       pages: read
     environment: github-pages
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
           ref: ${{ needs.release.outputs.git-head }}
       - name: Setup environment
@@ -496,7 +496,7 @@ jobs:
       - name: Build
         run: make docs-build
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@a753861a5debcf57bf8b404356158c8e1e33150c # ratchet:actions/upload-pages-artifact@v2
         with:
           path: ./site
 
@@ -513,4 +513,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@de14547edc9944350dc0481aa5b7afb08e75f254 # ratchet:actions/deploy-pages@v2
