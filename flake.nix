@@ -193,10 +193,13 @@
             coreutils
             cacert
             direnv
+            file
+            findutils
             gnutar
             gzip
             libgcc
             nix
+            procps
             which
           ]
           ++ lib.optional (lib.elem system pkgs.shadow.meta.platforms) shadow;
