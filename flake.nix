@@ -49,6 +49,9 @@
       }: let
         pkgs = import inputs.nixpkgs {
           inherit system;
+          config = {
+            allowUnfree = true;
+          };
           overlays = [inputs.poetry2nix.overlays.default];
         };
         inherit (inputs.nix2container.packages.${system}) nix2container;
@@ -109,6 +112,14 @@
               hydra-core = super.hydra-core.override {preferWheel = true;};
               hydra-joblib-launcher = super.hydra-joblib-launcher.override {preferWheel = true;};
               mkdocs-material = super.mkdocs-material.override {preferWheel = false;};
+              nvidia-cudnn-cu11 = super.nvidia-cudnn-cu11.overridePythonAttrs (old: {
+                propagatedBuildInputs =
+                  old.propagatedBuildInputs
+                  or []
+                  ++ [
+                    pkgs.cudaPackages.cudnn_8_6
+                  ];
+              });
               pyarrow = super.pyarrow.override {preferWheel = true;};
               scipy = super.scipy.override {preferWheel = true;};
               yarl = super.yarl.override {preferWheel = true;};
@@ -162,7 +173,6 @@
               extraPackages = ps:
                 with pkgs; [
                   python310Packages.pip
-                  nvitop
                 ];
               editablePackageSources = {
                 ${packageName} = src;
@@ -225,29 +235,31 @@
           EOF
         '';
 
-        devPackages = with pkgs; [
-          atuin
-          bat
-          gawk
-          gh
-          git
-          gnugrep
-          gnumake
-          helix
-          jqp
-          lazygit
-          man-db
-          man-pages
-          neovim
-          poetry
-          poethepoet
-          ripgrep
-          starship
-          tree
-          yq-go
-          zellij
-          zsh
-        ];
+        devPackages = with pkgs;
+          [
+            atuin
+            bat
+            gawk
+            gh
+            git
+            gnugrep
+            gnumake
+            helix
+            jqp
+            lazygit
+            man-db
+            man-pages
+            neovim
+            poetry
+            poethepoet
+            ripgrep
+            starship
+            tree
+            yq-go
+            zellij
+            zsh
+          ]
+          ++ lib.optional (lib.elem system pkgs.nvitop.meta.platforms) nvitop;
 
         # The local path can be used instead of `builtins.fetchGit` applied to
         # the repository source url to be used in `packageGitRepoToContainer` to
@@ -341,7 +353,7 @@
             "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
             "GIT_SHA_SHORT=${builtins.getEnv "GIT_SHA_SHORT"}"
             "PYTHONPATH=${packageSrcPath}:${pkgs.lib.strings.makeSearchPathOutput "" "lib/python3.10/site-packages" pythonPackages}"
-            "LD_LIBRARY_PATH=/usr/lib64"
+            "LD_LIBRARY_PATH=/usr/local/nvidia/lib64"
             "NVIDIA_DRIVER_CAPABILITIES='compute,utility'"
             "NVIDIA_VISIBLE_DEVICES=all"
           ];
