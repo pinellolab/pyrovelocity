@@ -192,11 +192,12 @@
             bashInteractive
             coreutils
             cacert
+            direnv
             gnutar
             gzip
             libgcc
             nix
-            direnv
+            which
           ]
           ++ lib.optional (lib.elem system pkgs.shadow.meta.platforms) shadow;
 
