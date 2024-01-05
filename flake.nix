@@ -262,6 +262,7 @@
             man-db
             man-pages
             neovim
+            openvscode-server
             poetry
             poethepoet
             ripgrep
