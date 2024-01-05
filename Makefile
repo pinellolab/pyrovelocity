@@ -218,6 +218,56 @@ adhocpkgs: ## Install adhoc nix packages. make adhocpkgs ADHOC_NIX_PKGS="gnugrep
 	$(foreach pkg, $(ADHOC_NIX_PKGS), nix profile install nixpkgs#$(pkg);)
 	nix profile list
 
+findeditable: ## Find *-editable.pth files in the nix store.
+	rg --files --glob '*editable.pth' --hidden --no-ignore --follow /nix/store/
+
+image-digests: ## Print image digests.
+	@echo
+	docker images -a --digests $(DEVCONTAINER_IMAGE)
+	@echo
+
+.PHONY: digest
+digest: ## Print image digest from tag. make digest DEVCONTAINER_IMAGE=
+	@echo
+	docker inspect --format='{{index .RepoDigests 0}}' $(DEVCONTAINER_IMAGE)
+	@echo
+
+#----------------
+##@ vscode server
+#----------------
+
+VSCODE_EXTENSIONS := \
+	"vscodevim.vim" \
+	"Catppuccin.catppuccin-vsc" \
+	"jnoortheen.nix-ide" \
+	"tamasfe.even-better-toml" \
+	"donjayamanne.python-extension-pack" \
+	"charliermarsh.ruff" \
+	"redhat.vscode-yaml" \
+	"ms-kubernetes-tools.vscode-kubernetes-tools" \
+	"eamodio.gitlens" \
+	"GitHub.vscode-pull-request-github" \
+	"ms-azuretools.vscode-docker" \
+	"ms-toolsai.jupyter" \
+	"njzy.stats-bar" \
+	"vscode-icons-team.vscode-icons"
+
+vscode-install-extensions: ## Install vscode extensions.
+	@echo "Listing currently installed extensions..."
+	@openvscode-server --list-extensions --show-versions
+	@echo ""
+	@$(foreach extension,$(VSCODE_EXTENSIONS),openvscode-server --install-extension $(extension) --force; echo "";)
+	@echo "Listing extensions after installation..."
+	@openvscode-server --list-extensions --show-versions
+
+vscode-server: ## Run vscode server.
+	openvscode-server --host 0.0.0.0 --without-connection-token .
+
+
+#-----------------
+##@ jupyter server
+#-----------------
+
 .PHONY: jupyter
 jupyter: ## Run jupyter lab in devcontainer. make jupyter DEVCONTAINER_IMAGE=ghcr.io/pinellolab/pyrovelocitydev@sha256:
 	@echo "Attempting to start jupyter lab in"
@@ -251,17 +301,6 @@ compose-list: ## List docker-compose containers.
 	docker compose -f containers/compose.yaml ps
 	@echo
 
-image-digests: ## Print image digests.
-	@echo
-	docker images -a --digests $(DEVCONTAINER_IMAGE)
-	@echo
-
-.PHONY: digest
-digest: ## Print image digest from tag. make digest DEVCONTAINER_IMAGE=
-	@echo
-	docker inspect --format='{{index .RepoDigests 0}}' $(DEVCONTAINER_IMAGE)
-	@echo
-
 jupyter-manual: ## Prefer `make -n jupyter` to this target. make jupyter_manual DEVCONTAINER_IMAGE=
 	docker run --rm -it -p 8888:8888 \
 	$(DEVCONTAINER_IMAGE) \
@@ -273,9 +312,6 @@ jupyter-local: ## Run jupyter lab locally. See make -n setup_dev.
 	--ServerApp.terminado_settings="shell_command=['zsh']" \
 	--allow-root \
 	--ip=0.0.0.0 ./
-
-findeditable: ## Find *-editable.pth files in the nix store.
-	rg --files --glob '*editable.pth' --hidden --no-ignore --follow /nix/store/
 
 
 #--------------------------------------
@@ -459,14 +495,14 @@ update-version: ## Update version in VERSION_FILES.
 	done
 
 GHA_WORKFLOWS := \
-    .github/actions/setup_environment/action.yml \
-    .github/workflows/app.yaml \
-    .github/workflows/build-images.yaml \
-    .github/workflows/cid.yaml \
-    .github/workflows/cml-images.yml \
-    .github/workflows/cml.yml \
-    .github/workflows/colab.yml \
-    .github/workflows/labeler.yml
+	.github/actions/setup_environment/action.yml \
+	.github/workflows/app.yaml \
+	.github/workflows/build-images.yaml \
+	.github/workflows/cid.yaml \
+	.github/workflows/cml-images.yml \
+	.github/workflows/cml.yml \
+	.github/workflows/colab.yml \
+	.github/workflows/labeler.yml
 
 ratchet = docker run -it --rm -v "${PWD}:${PWD}" -w "${PWD}" ghcr.io/sethvargo/ratchet:0.5.1 $1
 
