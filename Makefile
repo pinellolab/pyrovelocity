@@ -454,6 +454,7 @@ update-version: ## Update version in VERSION_FILES.
 	done
 
 GHA_WORKFLOWS := \
+    .github/actions/setup_environment/action.yml \
     .github/workflows/app.yaml \
     .github/workflows/build-images.yaml \
     .github/workflows/cid.yaml \
