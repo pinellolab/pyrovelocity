@@ -197,6 +197,7 @@
             findutils
             gnutar
             gzip
+            less
             libgcc
             nix
             procps
