@@ -386,6 +386,23 @@ cluster-dev-render: ## Render dev package yaml.
 	bat -P -l yaml $(CLUSTER_DEV_MODULE_PATH)/manifest.yaml
 	@echo "bat -pp -l yaml $(CLUSTER_DEV_MODULE_PATH)/manifest.yaml"
 
+cluster-dev-package-test: ## Test oci packaging of dev module.
+	docker container stop registry || true
+	docker run --rm -d -p 5001:5000 --name registry registry:2
+	timoni mod push $(CLUSTER_DEV_MODULE_PATH) \
+	oci://localhost:5001/deploydev --version=0.0.0-dev1 --latest=false
+	skopeo copy --src-tls-verify=false docker://localhost:5001/deploydev:0.0.0-dev1 oci:deploydev_oci:0.0.0-dev1
+	tree --du -ah deploydev_oci
+	@for tarball in deploydev_oci/blobs/sha256/*; do \
+		if file $$tarball | grep -q 'gzip compressed data'; then \
+			echo "Contents of $$tarball:"; \
+			tar -tzf $$tarball; \
+			echo "----------------------"; \
+		else \
+			echo "$$tarball is not a gzipped tarball."; \
+		fi \
+	done
+	
 cluster-deploy: ## Deploy latest container_image in current kube context (invert: terminate)
 	skaffold deploy
 
