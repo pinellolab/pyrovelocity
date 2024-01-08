@@ -2,6 +2,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
     nixpkgs-2305.url = "github:NixOS/nixpkgs/nixos-23.05";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     systems.url = "github:nix-systems/default";
     flake-parts.url = "github:hercules-ci/flake-parts";
     # flake-utils.url = github:numtide/flake-utils;
@@ -55,6 +56,13 @@
           overlays = [inputs.poetry2nix.overlays.default];
         };
         pkgs_2305 = import inputs.nixpkgs-2305 {
+          inherit system;
+          config = {
+            allowUnfree = true;
+          };
+          overlays = [inputs.poetry2nix.overlays.default];
+        };
+        pkgs_unstable = import inputs.nixpkgs-unstable {
           inherit system;
           config = {
             allowUnfree = true;
@@ -251,6 +259,7 @@
           [
             atuin
             bat
+            pkgs_unstable.cue
             gawk
             gh
             git
@@ -260,6 +269,9 @@
             helix
             htop
             jqp
+            k9s
+            kubectl
+            kubectx
             lazygit
             man-db
             man-pages
@@ -268,7 +280,9 @@
             poetry
             poethepoet
             ripgrep
+            skaffold
             starship
+            pkgs_unstable.timoni
             tree
             yq-go
             zellij
