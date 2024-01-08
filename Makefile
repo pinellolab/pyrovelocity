@@ -276,13 +276,13 @@ jupyter: ## Run jupyter lab in devcontainer. make jupyter DEVCONTAINER_IMAGE=ghc
 	@echo
 	docker compose -f containers/compose.yaml up -d jupyter
 	@echo
-	$(MAKE) jupyter_logs
+	$(MAKE) jupyter-logs
 
 jupyter-logs: ## Print docker-compose logs.
 	@echo
 	@echo "Ctrl/cmd + click the http://127.0.0.1:8888/lab?token=... link to open jupyter lab in your default browser"
 	@echo
-	@trap 'printf "\n  use \`make jupyter_logs\` to reattach to logs or \`make jupyter_down\` to terminate\n\n"; exit 2' SIGINT; \
+	@trap 'printf "\n  use \`make jupyter-logs\` to reattach to logs or \`make jupyter-down\` to terminate\n\n"; exit 2' SIGINT; \
 	while true; do \
 		docker compose -f containers/compose.yaml logs -f jupyter; \
 	done
@@ -301,7 +301,7 @@ compose-list: ## List docker-compose containers.
 	docker compose -f containers/compose.yaml ps
 	@echo
 
-jupyter-manual: ## Prefer `make -n jupyter` to this target. make jupyter_manual DEVCONTAINER_IMAGE=
+jupyter-manual: ## Prefer `make -n jupyter` to this target. make jupyter-manual DEVCONTAINER_IMAGE=
 	docker run --rm -it -p 8888:8888 \
 	$(DEVCONTAINER_IMAGE) \
 	jupyter lab --allow-root --ip=0.0.0.0 /root/pyrovelocity
@@ -323,7 +323,7 @@ uninstall-nix: ## Uninstall nix.
 	/nix/nix-installer uninstall) || echo "nix not found, skipping uninstall"
 
 install-nix: ## Install nix. Check script before execution: https://install.determinate.systems/nix .
-install-nix: uninstall_nix
+install-nix: uninstall-nix
 	@which nix > /dev/null || \
 	curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
 
@@ -335,7 +335,7 @@ install-direnv: ## Install direnv to `/usr/local/bin`. Check script before execu
 	@echo "see https://direnv.net/docs/hook.html"
 
 setup-dev: ## Setup nix development environment.
-setup-dev: install_direnv install_nix
+setup-dev: install-direnv install-nix
 	@. /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh && \
 	nix profile install nixpkgs#cachix && \
 	echo "trusted-users = root $$USER" | sudo tee -a /etc/nix/nix.conf && sudo pkill nix-daemon && \
