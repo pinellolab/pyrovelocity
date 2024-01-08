@@ -378,6 +378,14 @@ cluster-config: ## Set kube context for cluster in CLUSTER_DEV_CONFIG.
 	$(eval CLUSTER_DEV_CONTEXT_NAME=$(shell kubectl config view --kubeconfig='$(CLUSTER_DEV_CONFIG)' -o jsonpath='{.contexts[0].name}'))
 	kubectl config use-context --kubeconfig=$(CLUSTER_DEV_CONFIG) $(CLUSTER_DEV_CONTEXT_NAME)
 
+CLUSTER_DEV_MODULE_PATH ?=./dev/cluster/pyrovelocity/pyrovelocitydev
+
+cluster-dev-render: ## Render dev package yaml.
+	timoni build dev $(CLUSTER_DEV_MODULE_PATH) \
+	-n $(CLUSTER_DEV_NAMESPACE) > $(CLUSTER_DEV_MODULE_PATH)/manifest.yaml
+	bat -P -l yaml $(CLUSTER_DEV_MODULE_PATH)/manifest.yaml
+	@echo "bat -pp -l yaml $(CLUSTER_DEV_MODULE_PATH)/manifest.yaml"
+
 cluster-deploy: ## Deploy latest container_image in current kube context (invert: terminate)
 	skaffold deploy
 
