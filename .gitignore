@@ -135,5 +135,6 @@ flyte-package.tgz
 outputs/
 multirun/
 
-# skaffold
+# cluster
+*-kube.yaml
 docker-config.json
