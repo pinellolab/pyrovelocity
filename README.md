@@ -35,6 +35,14 @@ cell fate choice and developmental trajectory dynamics.
 
 ## Installation
 
+### Quick start
+
+See `make | grep codespace`, run `make codespace_create code`, or
+
+[![codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/?hide_repo_select=true&ref=491-workflows&repo=533596575&skip_quickstart=true&machine=premiumLinux&devcontainer_path=.devcontainer%2Fdevcontainer.json)
+
+This provides a zero install demonstration of the supported development environment. See `make -n setup_dev` to preview what is required to setup a local copy of this environment.
+
 ### Development
 
 We currently support installation and usage in a linux 64-bit development environment with access to a GPU.
