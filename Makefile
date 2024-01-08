@@ -371,6 +371,13 @@ czsh: catuin cstarship cdirenv
 CLUSTER_DEV_IMAGE_TAG ?= $(GIT_BRANCH)
 CLUSTER_DEV_DEPLOYMENT_NAME ?= $(GH_REPO_NAME)
 
+cluster-config-export: ## Export kube config for cluster in current context.
+	kubectl config view --minify --flatten > $(CLUSTER_DEV_CONFIG)
+
+cluster-config: ## Set kube context for cluster in CLUSTER_DEV_CONFIG.
+	$(eval CLUSTER_DEV_CONTEXT_NAME=$(shell kubectl config view --kubeconfig='$(CLUSTER_DEV_CONFIG)' -o jsonpath='{.contexts[0].name}'))
+	kubectl config use-context --kubeconfig=$(CLUSTER_DEV_CONFIG) $(CLUSTER_DEV_CONTEXT_NAME)
+
 cluster-deploy: ## Deploy latest container_image in current kube context (invert: terminate)
 	skaffold deploy
 
