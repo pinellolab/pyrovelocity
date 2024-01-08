@@ -3,7 +3,8 @@ exclude: |
     conda/recipe/meta.yaml|
     conda/conda-lock.yml|
     reproducibility/figures/models/.*|
-    reproducibility/figures/config.yaml
+    reproducibility/figures/config.yaml|
+    dev
   )$
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
