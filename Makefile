@@ -209,8 +209,15 @@ cache: ## Push devshell to cachix
 	jq -r '.[].outputs | to_entries[].value' | \
 	cachix push $(CACHIX_CACHE_NAME)
 
+devcontainer-script: ## Build devcontainer build script.
+	nix build .#devcontainerStream --accept-flake-config --impure --show-trace
+	cat ./result
+
+# Or the rough equivalent with nix2container
+# nix run .#devcontainerNix2Container.copyToDockerDaemon --accept-flake-config --impure
 devcontainer: ## Build devcontainer.
-	nix run .#devcontainerNix2Container.copyToDockerDaemon --accept-flake-config --impure
+devcontainer: devcontainer-script
+	./result | docker load
 
 # The default value for DEVCONTAINER_IMAGE FQN can be completely overriden to
 # support specification of tags or digests (see .example.env and create .env)
