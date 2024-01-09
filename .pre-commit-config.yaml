@@ -23,6 +23,21 @@ repos:
       - id: prettier
         additional_dependencies:
           - prettier@2.8.7
+  - repo: local
+    hooks:
+      - id: set-git-env
+        name: Set git ref and rev to environment variables
+        entry: ./scripts/git/set-git-env.sh
+        language: script
+        stages: [post-checkout, post-commit, manual]
+      - id: nix-fmt
+        name: Format nix flake
+        entry: ./scripts/nixfmt
+        language: script
+      - id: cue-fmt
+        name: Format CUE modules
+        entry: ./scripts/cuefmt
+        language: script
 ci:
   autofix_commit_msg: |
     [pre-commit.ci] auto fixes from pre-commit.com hooks
