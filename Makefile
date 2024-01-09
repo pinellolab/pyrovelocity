@@ -36,8 +36,13 @@ test: ## Run tests. See pyproject.toml for configuration.
 test-cov-xml: ## Run tests with coverage
 	poetry run pytest --cov-report=xml
 
-precommit: ## Run pre-commit hooks
+precommit-run: ## Run pre-commit hooks
 	pre-commit run -a
+
+precommit-install:
+	pre-commit install -t pre-commit
+	pre-commit install -t post-commit
+	pre-commit install -t post-checkout
 
 lint: ## Run linter
 	poetry run ruff format .
