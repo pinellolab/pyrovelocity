@@ -380,11 +380,26 @@ cluster-config: ## Set kube context for cluster in CLUSTER_DEV_CONFIG.
 
 CLUSTER_DEV_MODULE_PATH ?=./dev/cluster/pyrovelocity/pyrovelocitydev
 
+cluster-dev-lint: ## Lint dev module.
+	cue fmt dev.cue dev.example.cue
+	cue fmt $(CLUSTER_DEV_MODULE_PATH)/...
+	timoni mod vet $(CLUSTER_DEV_MODULE_PATH)
+
+CUE_DEV_VALUES ?= dev.cue
+
 cluster-dev-render: ## Render dev package yaml.
 	timoni build dev $(CLUSTER_DEV_MODULE_PATH) \
-	-n $(CLUSTER_DEV_NAMESPACE) > $(CLUSTER_DEV_MODULE_PATH)/manifest.yaml
+	-n $(CLUSTER_DEV_NAMESPACE) \
+	-f $(CUE_DEV_VALUES) > $(CLUSTER_DEV_MODULE_PATH)/manifest.yaml
 	bat -P -l yaml $(CLUSTER_DEV_MODULE_PATH)/manifest.yaml
 	@echo "bat -pp -l yaml $(CLUSTER_DEV_MODULE_PATH)/manifest.yaml"
+
+cluster-dev-apply: ## Apply dev package yaml.
+	timoni apply dev $(CLUSTER_DEV_MODULE_PATH) \
+	-n $(CLUSTER_DEV_NAMESPACE) \
+	-f $(CUE_DEV_VALUES) \
+	--dry-run \
+	--diff
 
 cluster-dev-package-test: ## Test oci packaging of dev module.
 	docker container stop registry || true
