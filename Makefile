@@ -10,8 +10,8 @@ include $(ENV_PREFIX)/.env
 export
 endif
 
-GIT_SHORT_SHA = $(shell git rev-parse --short HEAD)
-GIT_BRANCH = $(shell git rev-parse --abbrev-ref HEAD)
+GIT_SHA_SHORT = $(shell git rev-parse --short HEAD)
+GIT_REF = $(shell git rev-parse --abbrev-ref HEAD)
 
 #-------
 ##@ help
@@ -82,15 +82,15 @@ export-pip-requirements: lock
 #---------
 
 browse: ## Open github repo in browser at HEAD commit.
-	gh browse $(GIT_SHORT_SHA)
+	gh browse $(GIT_SHA_SHORT)
 
 GH_ACTIONS_DEBUG ?= false
 
 cid: ## Run CID (GH_ACTIONS_DEBUG default is false).
-	gh workflow run "CID" --ref $(GIT_BRANCH) -f debug_enabled=$(GH_ACTIONS_DEBUG)
+	gh workflow run "CID" --ref $(GIT_REF) -f debug_enabled=$(GH_ACTIONS_DEBUG)
 
 build-images: ## Run Build Images (GH_ACTIONS_DEBUG default is false).
-	gh workflow run "Build Images" --ref $(GIT_BRANCH) -f debug_enabled=$(GH_ACTIONS_DEBUG)
+	gh workflow run "Build Images" --ref $(GIT_REF) -f debug_enabled=$(GH_ACTIONS_DEBUG)
 
 ci-view-workflow: ## Open CI workflow summary.
 	gh workflow view "CI"
@@ -106,7 +106,7 @@ build-images-view-workflow: ## Open Build Images workflow summary.
 #  16 |  64 |  128 | largePremiumLinux
 MACHINE_TYPE ?= premiumLinux
 codespace-create: ## Create codespace. make -n codespace_create MACHINE_TYPE=largePremiumLinux
-	gh codespace create -R $(GH_REPO) -b $(GIT_BRANCH) -m $(MACHINE_TYPE)
+	gh codespace create -R $(GH_REPO) -b $(GIT_REF) -m $(MACHINE_TYPE)
 
 code: ## Open codespace in browser.
 	gh codespace code -R $(GH_REPO) --web
@@ -154,7 +154,7 @@ ghvars: ## Update github secrets for GH_REPO from ".env" file.
 	PAGER=cat gh variable list --repo=$(GH_REPO)
 
 EXISTING_IMAGE_TAG ?= main
-NEW_IMAGE_TAG ?= $(GIT_BRANCH)
+NEW_IMAGE_TAG ?= $(GIT_REF)
 
 # Default bumps main to the checked out branch for dev purposes
 tag-images: ## Add tag to existing images, (default main --> branch, override with make -n tag_images NEW_IMAGE_TAG=latest).
@@ -180,6 +180,9 @@ up: ## Update nix flake lock file.
 dup: ## Debug update nix flake lock file.
 	nix flake update --impure --accept-flake-config
 	nix flake check --show-trace --print-build-logs --impure --accept-flake-config
+
+nix-lint: ## Lint nix files.
+	nix fmt
 
 NIX_DERIVATION_PATH ?= $(shell which python)
 
@@ -373,7 +376,7 @@ czsh: catuin cstarship cdirenv
 ##@ in-cluster development
 #-------------------------
 
-CLUSTER_DEV_IMAGE_TAG ?= $(GIT_BRANCH)
+CLUSTER_DEV_IMAGE_TAG ?= $(GIT_REF)
 CLUSTER_DEV_DEPLOYMENT_NAME ?= $(GH_REPO_NAME)
 
 cluster-config-export: ## Export kube config for cluster in current context.
@@ -527,11 +530,17 @@ install-crane: ## Install crane. Check docs before execution: https://github.com
 #------------
 
 env-print: ## Print a subset of environment variables defined in ".env" file.
-	env | grep "TF_VAR\|GITHUB\|GH_\|GCP_\|MLFLOW|FLYTE\|WORKFLOW" | sort
+	env | grep "TF_VAR\|GIT\|GH_\|GCP_\|MLFLOW|FLYTE\|WORKFLOW" | sort
 
 update-config: ## Update flytectl config file from template.
 	yq e '.admin.endpoint = strenv(FLYTE_CLUSTER_ENDPOINT) | .storage.stow.config.project_id = strenv(GCP_PROJECT_ID) | .storage.stow.config.scopes = strenv(GCP_STORAGE_SCOPES) | .storage.container = strenv(GCP_STORAGE_CONTAINER)' \
 	$(FLYTECTL_CONFIG_TEMPLATE) > $(FLYTECTL_CONFIG)
+
+set-git-env: ## Set git environment variables.
+	@grep "GIT_.*" .env
+	pre-commit run set-git-env --hook-stage manual
+	@grep "GIT_.*" .env
+	@echo ""
 
 tree: ## Print directory tree.
 	tree -a --dirsfirst -L 4 -I ".git|.direnv|*pycache*|*ruff_cache*|*pytest_cache*|outputs|multirun|conf|scripts|site|*venv*|.coverage"
