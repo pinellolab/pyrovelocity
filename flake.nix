@@ -269,7 +269,7 @@
             helix
             htop
             jqp
-            k9s
+            pkgs_unstable.k9s
             kubectl
             kubectx
             lazygit
