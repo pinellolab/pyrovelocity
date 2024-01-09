@@ -387,6 +387,19 @@
             "NVIDIA_VISIBLE_DEVICES=all"
           ];
         };
+        devcontainerImageConfig = {
+          name = "${packageName}dev";
+          # with mkDockerManifest, tags may be automatically generated from
+          # git metadata
+          tag = "latest";
+          created = "now";
+
+          # maxLayers <=127; defaults to 100
+          maxLayers = 123;
+
+          contents = devcontainerContents;
+          config = devcontainerConfig;
+        };
       in {
         formatter = pkgs.alejandra;
 
@@ -437,19 +450,8 @@
 
           # Very similar devcontainer images can be constructed with either
           # nix2container or dockerTools
-          devcontainerDockerTools = pkgs.dockerTools.buildLayeredImage {
-            name = "${packageName}dev";
-            # with mkDockerManifest, tags may be automatically generated from
-            # git metadata
-            tag = "latest";
-            created = "now";
-
-            # maxLayers <=127; defaults to 100
-            maxLayers = 123;
-
-            contents = devcontainerContents;
-            config = devcontainerConfig;
-          };
+          devcontainerDockerTools = pkgs.dockerTools.buildLayeredImage devcontainerImageConfig;
+          devcontainerStream = pkgs.dockerTools.streamLayeredImage devcontainerImageConfig;
         };
 
         legacyPackages.devcontainerManifest = let
