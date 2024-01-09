@@ -120,10 +120,12 @@ ENV/
 .nox/
 
 # nix
+result
 .devenv
 .direnv
 # this is a bespoke "manual direnv" folder
 .dirman
+*.bak
 
 # flyte
 .flyte/config.yaml
