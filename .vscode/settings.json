@@ -9,7 +9,8 @@
     "**/.mypy_cache/**": true,
     "**/.pytest_cache/**": true,
     "**/.ruff_cache/**": true,
-    "**/.solid/**": true
+    "**/.solid/**": true,
+    "**/dev/cluster/pyrovelocity/pyrovelocitydev/cue.mod/**": true
   },
   "files.watcherExclude": {
     "**/.devenv/**": true,
@@ -19,7 +20,8 @@
     "**/.nox/**": true,
     "**/.pytest_cache/**": true,
     "**/.ruff_cache/**": true,
-    "**/.solid/**": true
+    "**/.solid/**": true,
+    "**/dev/cluster/pyrovelocity/pyrovelocitydev/cue.mod/**": true
   },
   "terminal.integrated.scrollback": 100000,
   "terminal.integrated.persistentSessionScrollback": 100000,
