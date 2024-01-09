@@ -25,11 +25,6 @@ repos:
           - prettier@2.8.7
   - repo: local
     hooks:
-      - id: set-git-env
-        name: Set git ref and rev to environment variables
-        entry: ./scripts/git/set-git-env.sh
-        language: script
-        stages: [post-checkout, post-commit, manual]
       - id: nix-fmt
         name: Format nix flake
         entry: ./scripts/nixfmt
@@ -47,5 +42,5 @@ ci:
   autoupdate_branch: ""
   autoupdate_commit_msg: "[pre-commit.ci] pre-commit autoupdate"
   autoupdate_schedule: weekly
-  skip: [set-git-env, nix-fmt, cue-fmt]
+  skip: [nix-fmt, cue-fmt]
   submodules: false

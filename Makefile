@@ -545,7 +545,7 @@ update-config: ## Update flytectl config file from template.
 
 set-git-env: ## Set git environment variables.
 	@grep "GIT_.*" .env
-	pre-commit run set-git-env --hook-stage manual
+	./scripts/git/set-git-env.sh
 	@grep "GIT_.*" .env
 	@echo ""
 
