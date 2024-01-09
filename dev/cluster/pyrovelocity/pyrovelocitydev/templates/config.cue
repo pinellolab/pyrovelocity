@@ -17,8 +17,8 @@ import (
 	image!: timoniv1.#Image
 	image: pullPolicy: *"Always" | timoniv1.#Image.pullPolicy
 
-	containerCommand?: [...string]
-	containerCommandArgs?: [...string]
+	containerCommand: [...string]
+	containerCommandArgs: [...string]
 
 	#GPUQuantity: string & =~"^[1-8]$"
 

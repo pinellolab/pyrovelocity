@@ -35,8 +35,8 @@ import (
 						name:            #config.metadata.name
 						image:           #config.image.reference
 						imagePullPolicy: #config.image.pullPolicy
-						command?:        #config.containerCommand
-						args?:           #config.containerCommandArgs
+						command:         #config.containerCommand
+						args:            #config.containerCommandArgs
 						volumeMounts: [
 							{
 								mountPath: "/workspace"
