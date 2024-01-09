@@ -1,4 +1,5 @@
 values: {
+	replicas: 1
 	image: {
 		repository: "ghcr.io/pinellolab/pyrovelocitydev"
 		digest:     ""
