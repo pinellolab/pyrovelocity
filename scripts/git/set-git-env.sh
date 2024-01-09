@@ -7,6 +7,10 @@ update_or_append() {
     local var_value=$2
     local file=".env"
 
+    if [ -f "$file" ] && [ "$(tail -c1 "$file"; echo x)" != $'\nx' ]; then
+        echo >> "$file"
+    fi
+
     if grep -q "^$var_name=" "$file"; then
         sed -i.bak "s/^$var_name=.*/$var_name=$var_value/" "$file"
     else
