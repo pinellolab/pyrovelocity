@@ -265,6 +265,7 @@
             git
             gnugrep
             gnumake
+            gnused
             gnupg
             helix
             htop
@@ -309,11 +310,13 @@
           # allRefs = true;
           # ref = "main";
           # ref = "beta";
-          ref = "491-workflows";
+          # ref = "491-workflows";
+          ref = builtins.getEnv "GIT_REF";
           # the rev can be omitted transiently in development to track the HEAD
           # of a ref but doing so requires `--impure` image builds (this may
           # already be required for other reasons, e.g. `builtins.getEnv`)
-          # rev = "b69ef531088f7a244104bc34f919619f15a8aa8d";
+          # rev = "40b7c646c5680b95db65dbf403379846be9fc983";
+          rev = builtins.getEnv "GIT_SHA";
         };
 
         # The `chmod -R` command to make the root user's home directory writable
@@ -433,20 +436,20 @@
 
           # Very similar devcontainer images can be constructed with either
           # nix2container or dockerTools
-          devcontainerNix2Container = nix2container.buildImage {
-            name = "${packageName}nixdev";
-            # generally prefer the default image hash to manual tagging
-            # tag = "latest";
-            initializeNixDatabase = true;
+          # devcontainerNix2Container = nix2container.buildImage {
+          #   name = "${packageName}nixdev";
+          #   # generally prefer the default image hash to manual tagging
+          #   # tag = "latest";
+          #   initializeNixDatabase = true;
 
-            # Setting maxLayers <=127
-            # maxLayers = 123;
-            # can be used instead of the manual layer specification below
-            layers = devcontainerLayers;
+          #   # Setting maxLayers <=127
+          #   # maxLayers = 123;
+          #   # can be used instead of the manual layer specification below
+          #   layers = devcontainerLayers;
 
-            copyToRoot = devcontainerContents;
-            config = devcontainerConfig;
-          };
+          #   copyToRoot = devcontainerContents;
+          #   config = devcontainerConfig;
+          # };
 
           # Very similar devcontainer images can be constructed with either
           # nix2container or dockerTools
