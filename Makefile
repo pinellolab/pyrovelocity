@@ -391,15 +391,37 @@ cluster-dev-render: ## Render dev package yaml.
 	timoni build dev $(CLUSTER_DEV_MODULE_PATH) \
 	-n $(CLUSTER_DEV_NAMESPACE) \
 	-f $(CUE_DEV_VALUES) > $(CLUSTER_DEV_MODULE_PATH)/manifest.yaml
-	bat -P -l yaml $(CLUSTER_DEV_MODULE_PATH)/manifest.yaml
+	@if command -v bat > /dev/null; then \
+		bat -P -l yaml $(CLUSTER_DEV_MODULE_PATH)/manifest.yaml; \
+	else \
+		cat $(CLUSTER_DEV_MODULE_PATH)/manifest.yaml; \
+	fi
 	@echo "bat -pp -l yaml $(CLUSTER_DEV_MODULE_PATH)/manifest.yaml"
 
-cluster-dev-apply: ## Apply dev package yaml.
+cluster-dev-apply-check: ## Check dev package deployment status.
+cluster-dev-apply-check: cluster-dev-render
 	timoni apply dev $(CLUSTER_DEV_MODULE_PATH) \
 	-n $(CLUSTER_DEV_NAMESPACE) \
 	-f $(CUE_DEV_VALUES) \
-	--dry-run \
 	--diff
+
+cluster-dev-apply: ## Deploy dev package resources.
+cluster-dev-apply: cluster-dev-render
+	timoni apply dev $(CLUSTER_DEV_MODULE_PATH) \
+	-n $(CLUSTER_DEV_NAMESPACE) \
+	-f $(CUE_DEV_VALUES) \
+	--timeout 12m0s
+
+cluster-dev-delete-check: ## Delete dev package resources.
+cluster-dev-delete-check: cluster-dev-render
+	timoni delete dev \
+	-n $(CLUSTER_DEV_NAMESPACE) \
+	--dry-run
+
+cluster-dev-delete: ## Delete dev package resources.
+cluster-dev-delete: cluster-dev-render
+	timoni delete dev \
+	-n $(CLUSTER_DEV_NAMESPACE)
 
 cluster-dev-package-test: ## Test oci packaging of dev module.
 	docker container stop registry || true
