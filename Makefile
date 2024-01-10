@@ -408,10 +408,11 @@ cluster-dev-lint: ## Lint dev module.
 	cue fmt $(CLUSTER_DEV_MODULE_PATH)/...
 	timoni mod vet $(CLUSTER_DEV_MODULE_PATH)
 
+CLUSTER_DEV_INSTANCE_NAME ?= dev
 CUE_DEV_VALUES ?= dev.cue
 
 cluster-dev-render: ## Render dev package yaml.
-	timoni build dev $(CLUSTER_DEV_MODULE_PATH) \
+	timoni build $(CLUSTER_DEV_INSTANCE_NAME) $(CLUSTER_DEV_MODULE_PATH) \
 	-n $(CLUSTER_DEV_NAMESPACE) \
 	-f $(CUE_DEV_VALUES) > $(CLUSTER_DEV_MODULE_PATH)/manifest.yaml
 	@if command -v bat > /dev/null; then \
@@ -423,27 +424,27 @@ cluster-dev-render: ## Render dev package yaml.
 
 cluster-dev-apply-check: ## Check dev package deployment status.
 cluster-dev-apply-check: cluster-dev-render
-	timoni apply dev $(CLUSTER_DEV_MODULE_PATH) \
+	timoni apply $(CLUSTER_DEV_INSTANCE_NAME) $(CLUSTER_DEV_MODULE_PATH) \
 	-n $(CLUSTER_DEV_NAMESPACE) \
 	-f $(CUE_DEV_VALUES) \
 	--diff
 
 cluster-dev-apply: ## Deploy dev package resources.
 cluster-dev-apply: cluster-dev-render
-	timoni apply dev $(CLUSTER_DEV_MODULE_PATH) \
+	timoni apply $(CLUSTER_DEV_INSTANCE_NAME) $(CLUSTER_DEV_MODULE_PATH) \
 	-n $(CLUSTER_DEV_NAMESPACE) \
 	-f $(CUE_DEV_VALUES) \
 	--timeout 12m0s
 
 cluster-dev-delete-check: ## Delete dev package resources.
 cluster-dev-delete-check: cluster-dev-render
-	timoni delete dev \
+	timoni delete $(CLUSTER_DEV_INSTANCE_NAME) \
 	-n $(CLUSTER_DEV_NAMESPACE) \
 	--dry-run
 
 cluster-dev-delete: ## Delete dev package resources.
 cluster-dev-delete: cluster-dev-render
-	timoni delete dev \
+	timoni delete $(CLUSTER_DEV_INSTANCE_NAME) \
 	-n $(CLUSTER_DEV_NAMESPACE)
 
 cluster-dev-package-test: ## Test oci packaging of dev module.
