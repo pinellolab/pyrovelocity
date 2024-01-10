@@ -303,10 +303,10 @@
         '';
 
         pythonPackages = [
-          (mkPoetryEnvWithSource packageName packageSrcPath [])
+          (mkPoetryEnvWithSource packageName packageSrcPath ["workflows"])
         ];
         devpythonPackages = [
-          (mkPoetryEnvWithSource packageName packageSrcPath ["test" "docs"])
+          (mkPoetryEnvWithSource packageName packageSrcPath ["test" "docs" "workflows"])
         ];
 
         devcontainerContents = [
@@ -414,7 +414,7 @@
             name = packageName;
             buildInputs = with pkgs;
               [
-                (mkPoetryEnvWithSource packageName ./src ["test" "docs"])
+                (mkPoetryEnvWithSource packageName ./src ["test" "docs" "workflows"])
               ]
               ++ devPackages;
           };
