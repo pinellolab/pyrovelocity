@@ -209,6 +209,14 @@ cache: ## Push devshell to cachix
 	jq -r '.[].outputs | to_entries[].value' | \
 	cachix push $(CACHIX_CACHE_NAME)
 
+container-script: ## Build devcontainer build script.
+	nix build .#containerStream --accept-flake-config --impure --show-trace
+	cat ./result
+
+container: ## Build container.
+container: container-script
+	./result | docker load
+
 devcontainer-script: ## Build devcontainer build script.
 	nix build .#devcontainerStream --accept-flake-config --impure --show-trace
 	cat ./result
