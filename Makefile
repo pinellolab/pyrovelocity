@@ -62,20 +62,31 @@ docs-serve: ## Serve documentation
 docs-serve:
 	poetry run sphinx-autobuild docs site --open-browser
 
-lock: ## Lock dependencies.
+lock-poetry: ## Lock poetry dependencies.
 	poetry lock --no-update
 
-export-pip-requirements: ## Export requirements.txt for pip.
-export-pip-requirements: lock
+lock-pip: ## Export requirements.txt for pip.
+lock-pip:
 	poetry export \
 	--format=requirements.txt \
 	--with=test \
+	--with=workflows \
 	--output=requirements.txt \
 	--without-hashes
 	poetry export \
 	--format=requirements.txt \
 	--with=test \
+	--with=workflows \
 	--output=requirements-hashed.txt
+
+lock-conda: ## Export environment yaml and lock files for conda. (see pyproject.toml).
+	poe conda-lock
+
+lock: ## Lock poetry, pip, and conda lock files.
+lock: lock-poetry 
+	make lock-pip 
+	make lock-conda
+	@echo "updated poetry, pip, and conda lock files"
 
 #---------
 ##@ github
