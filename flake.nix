@@ -14,12 +14,6 @@
         # flake-utils.follows = "flake-utils";
       };
     };
-    nix2container = {
-      url = github:nlewo/nix2container;
-      inputs = {
-        nixpkgs.follows = "nixpkgs";
-      };
-    };
     flocken = {
       url = "github:mirkolenz/flocken/v2";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -69,22 +63,6 @@
           };
           overlays = [inputs.poetry2nix.overlays.default];
         };
-        inherit (inputs.nix2container.packages.${system}) nix2container;
-
-        # million thanks to @kolloch for the foldImageLayers function!
-        # https://blog.eigenvalue.net/2023-nix2container-everything-once/
-        foldImageLayers = let
-          mergeToLayer = priorLayers: component:
-            assert builtins.isList priorLayers;
-            assert builtins.isAttrs component; let
-              layer = nix2container.buildLayer (component
-                // {
-                  layers = priorLayers;
-                });
-            in
-              priorLayers ++ [layer];
-        in
-          layers: pkgs.lib.foldl mergeToLayer [] layers;
 
         pyPkgsBuildRequirements = {
           cloudpickle = ["flit-core"];
@@ -159,9 +137,6 @@
           # this are identified, it may be possible to use the library-specific
           # overrides above and disable the global usage of wheels
           preferWheels = true;
-          groups = [
-            "test"
-          ];
           checkGroups = ["test"];
           extras = [];
         };
@@ -180,11 +155,11 @@
         packageName = "pyrovelocity";
         packageSrcPath = "/root/${packageName}/src";
 
-        mkPoetryEnvWithSource = packageName: src:
+        mkPoetryEnvWithSource = packageName: src: groups:
           pkgs.poetry2nix.mkPoetryEnv (
             mkPoetryAttrs
             // {
-              groups = ["test" "docs"];
+              groups = groups;
               extraPackages = ps:
                 with pkgs; [
                   python310Packages.pip
@@ -308,14 +283,10 @@
           # the ref is not strictly required when specifying a rev but it should
           # be included whenever possible or it may be necessary to include
           # allRefs = true;
-          # ref = "main";
-          # ref = "beta";
-          # ref = "491-workflows";
           ref = builtins.getEnv "GIT_REF";
           # the rev can be omitted transiently in development to track the HEAD
           # of a ref but doing so requires `--impure` image builds (this may
           # already be required for other reasons, e.g. `builtins.getEnv`)
-          # rev = "40b7c646c5680b95db65dbf403379846be9fc983";
           rev = builtins.getEnv "GIT_SHA";
         };
 
@@ -332,23 +303,11 @@
         '';
 
         pythonPackages = [
-          (mkPoetryEnvWithSource packageName packageSrcPath)
+          (mkPoetryEnvWithSource packageName packageSrcPath [])
         ];
-
-        devcontainerLayers = let
-          layerDefs = [
-            {
-              deps = sysPackages;
-            }
-            {
-              deps = devPackages;
-            }
-            {
-              deps = pythonPackages;
-            }
-          ];
-        in
-          foldImageLayers layerDefs;
+        devpythonPackages = [
+          (mkPoetryEnvWithSource packageName packageSrcPath ["test" "docs"])
+        ];
 
         devcontainerContents = [
           # similar to pkgs.fakeNss
@@ -363,19 +322,22 @@
           packageGitRepoToContainer
         ];
 
-        devcontainerConfig = {
+        makeContainerConfig = {
+          pkgs,
+          packageSrcPath,
+          pythonPackages,
+          containerPackages,
+          cmd ? [],
+          entrypoint ? [],
+        }: {
           # Use default empty Entrypoint to completely defer to Cmd for flexible override
-          Entrypoint = [];
+          Entrypoint = entrypoint;
           # but provide default Cmd to start zsh
-          Cmd = [
-            "${pkgs.bashInteractive}/bin/bash"
-            "-c"
-            "${pkgs.zsh}/bin/zsh"
-          ];
+          Cmd = cmd;
           User = "root";
           WorkingDir = "/root";
           Env = [
-            "PATH=${pkgs.lib.makeBinPath (sysPackages ++ devPackages ++ pythonPackages)}:/root/.nix-profile/bin"
+            "PATH=${pkgs.lib.makeBinPath containerPackages}:/root/.nix-profile/bin"
             "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
             "NIX_PAGER=cat"
             "USER=root"
@@ -390,6 +352,30 @@
             "NVIDIA_VISIBLE_DEVICES=all"
           ];
         };
+        containerCmd = [
+          "${pkgs.bashInteractive}/bin/bash"
+        ];
+        devcontainerCmd = [
+          "${pkgs.bashInteractive}/bin/bash"
+          "-c"
+          "${pkgs.zsh}/bin/zsh"
+        ];
+        containerImageConfig = {
+          name = "${packageName}";
+          tag = "latest";
+          created = "now";
+
+          maxLayers = 123;
+
+          contents = devcontainerContents;
+          config = makeContainerConfig {
+            pkgs = pkgs;
+            packageSrcPath = packageSrcPath;
+            pythonPackages = pythonPackages;
+            containerPackages = sysPackages ++ pythonPackages;
+            cmd = containerCmd;
+          };
+        };
         devcontainerImageConfig = {
           name = "${packageName}dev";
           # with mkDockerManifest, tags may be automatically generated from
@@ -401,8 +387,25 @@
           maxLayers = 123;
 
           contents = devcontainerContents;
-          config = devcontainerConfig;
+          config = makeContainerConfig {
+            pkgs = pkgs;
+            packageSrcPath = packageSrcPath;
+            pythonPackages = devpythonPackages;
+            containerPackages = sysPackages ++ devPackages ++ devpythonPackages;
+            cmd = devcontainerCmd;
+          };
         };
+
+        # aarch64-linux may be disabled for more rapid image builds during
+        # development setting NIX_IMAGE_SYSTEMS="x86_64-linux".
+        # Note the usage of `preferWheels` as well.
+        # images = with self.packages; [x86_64-linux.devcontainerImage aarch64-linux.devcontainerImage];
+        includedSystems = let
+          envVar = builtins.getEnv "NIX_IMAGE_SYSTEMS";
+        in
+          if envVar == ""
+          then ["x86_64-linux" "aarch64-linux"]
+          else builtins.filter (sys: sys != "") (builtins.split " " envVar);
       in {
         formatter = pkgs.alejandra;
 
@@ -411,7 +414,7 @@
             name = packageName;
             buildInputs = with pkgs;
               [
-                (mkPoetryEnvWithSource packageName ./src)
+                (mkPoetryEnvWithSource packageName ./src ["test" "docs"])
               ]
               ++ devPackages;
           };
@@ -434,62 +437,56 @@
             paths = with pkgs; [poetry python310];
           };
 
-          # Very similar devcontainer images can be constructed with either
-          # nix2container or dockerTools
-          # devcontainerNix2Container = nix2container.buildImage {
-          #   name = "${packageName}nixdev";
-          #   # generally prefer the default image hash to manual tagging
-          #   # tag = "latest";
-          #   initializeNixDatabase = true;
+          containerImage = pkgs.dockerTools.buildLayeredImage containerImageConfig;
+          containerStream = pkgs.dockerTools.streamLayeredImage containerImageConfig;
 
-          #   # Setting maxLayers <=127
-          #   # maxLayers = 123;
-          #   # can be used instead of the manual layer specification below
-          #   layers = devcontainerLayers;
-
-          #   copyToRoot = devcontainerContents;
-          #   config = devcontainerConfig;
-          # };
-
-          # Very similar devcontainer images can be constructed with either
-          # nix2container or dockerTools
-          devcontainerDockerTools = pkgs.dockerTools.buildLayeredImage devcontainerImageConfig;
+          devcontainerImage = pkgs.dockerTools.buildLayeredImage devcontainerImageConfig;
           devcontainerStream = pkgs.dockerTools.streamLayeredImage devcontainerImageConfig;
         };
 
-        legacyPackages.devcontainerManifest = let
-          includedSystems = let
-            envVar = builtins.getEnv "NIX_IMAGE_SYSTEMS";
-          in
-            if envVar == ""
-            then ["x86_64-linux" "aarch64-linux"]
-            else builtins.filter (sys: sys != "") (builtins.split " " envVar);
-        in
-          inputs.flocken.legacyPackages.${system}.mkDockerManifest {
-            github = {
-              enable = true;
-              enableRegistry = false;
-              token = builtins.getEnv "GH_TOKEN";
-            };
-            autoTags = {
-              branch = false;
-            };
-            registries = {
-              "ghcr.io" = {
-                enable = true;
-                repo = "${gitHubOrg}/${packageName}dev";
-                username = builtins.getEnv "GITHUB_ACTOR";
-                password = builtins.getEnv "GH_TOKEN";
-              };
-            };
-            version = builtins.getEnv "VERSION";
-            # aarch64-linux may be disabled for more rapid image builds during
-            # development. Note the usage of `preferWheels` above as well.
-            # images = with self.packages; [x86_64-linux.devcontainerDockerTools aarch64-linux.devcontainerDockerTools];
-            # images = with self.packages; [x86_64-linux.devcontainerDockerTools];
-            images = builtins.map (sys: self.packages.${sys}.devcontainerDockerTools) includedSystems;
-            tags = [(builtins.getEnv "GIT_SHA_SHORT") (builtins.getEnv "GIT_SHA") (builtins.getEnv "GIT_REF")];
+        legacyPackages.containerManifest = inputs.flocken.legacyPackages.${system}.mkDockerManifest {
+          github = {
+            enable = true;
+            enableRegistry = false;
+            token = builtins.getEnv "GH_TOKEN";
           };
+          autoTags = {
+            branch = false;
+          };
+          registries = {
+            "ghcr.io" = {
+              enable = true;
+              repo = "${gitHubOrg}/${packageName}";
+              username = builtins.getEnv "GITHUB_ACTOR";
+              password = builtins.getEnv "GH_TOKEN";
+            };
+          };
+          version = builtins.getEnv "VERSION";
+          images = builtins.map (sys: self.packages.${sys}.containerImage) includedSystems;
+          tags = [(builtins.getEnv "GIT_SHA_SHORT") (builtins.getEnv "GIT_SHA") (builtins.getEnv "GIT_REF")];
+        };
+
+        legacyPackages.devcontainerManifest = inputs.flocken.legacyPackages.${system}.mkDockerManifest {
+          github = {
+            enable = true;
+            enableRegistry = false;
+            token = builtins.getEnv "GH_TOKEN";
+          };
+          autoTags = {
+            branch = false;
+          };
+          registries = {
+            "ghcr.io" = {
+              enable = true;
+              repo = "${gitHubOrg}/${packageName}dev";
+              username = builtins.getEnv "GITHUB_ACTOR";
+              password = builtins.getEnv "GH_TOKEN";
+            };
+          };
+          version = builtins.getEnv "VERSION";
+          images = builtins.map (sys: self.packages.${sys}.devcontainerImage) includedSystems;
+          tags = [(builtins.getEnv "GIT_SHA_SHORT") (builtins.getEnv "GIT_SHA") (builtins.getEnv "GIT_REF")];
+        };
       };
     };
 }
