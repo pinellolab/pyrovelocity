@@ -88,6 +88,43 @@ lock: lock-poetry
 	make lock-conda
 	@echo "updated poetry, pip, and conda lock files"
 
+#---------------------
+##@ workflow execution
+#---------------------
+
+run_help: ## Print hydra help for execute script.
+	poetry run pyrovelocity --help
+
+# Capture additional arguments to pass to hydra-zen cli
+# converting them to make do-nothing targets
+# supports passing hydra overrides as ARGS, e.g.:
+#   make run HYDRA_OVERRIDES="entity_config.inputs.logistic_regression.max_iter=2000 execution_context=local_shell"
+HYDRA_OVERRIDES = $(filter-out $@,$(MAKECMDGOALS))
+%:
+	@:
+
+.PHONY: run
+run: ## Run registered workflow in remote dev mode. (default)
+	poetry run pyrovelocity $(HYDRA_OVERRIDES)
+
+run-dev: ## Run registered workflow in remote dev mode. (ci default)
+	poetry run pyrovelocity execution_context=remote_dev $(HYDRA_OVERRIDES)
+
+run-prod: ## Run registered workflow in remote prod mode. (ci default)
+	poetry run pyrovelocity execution_context=remote_prod $(HYDRA_OVERRIDES)
+
+run-local-cluster: ## Run registered workflow in local cluster dev mode.
+	poetry run pyrovelocity execution_context=local_cluster_dev $(HYDRA_OVERRIDES)
+
+run-local: ## Run registered workflow in local shell mode. (only with all python tasks)
+	poetry run pyrovelocity execution_context=local_shell $(HYDRA_OVERRIDES)
+
+run-async: ## Run registered workflow (async).
+	poetry run pyrovelocity execution_context.wait=False
+
+run-check-image: ## Check workflow image exists.
+	crane ls $(WORKFLOW_IMAGE) | grep "$(GIT_REF)\|$(GIT_SHA)\|$(GIT_SHA_SHORT)"
+
 #---------
 ##@ github
 #---------
