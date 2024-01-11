@@ -358,7 +358,7 @@ jobs:
       - name: Execute workflow
         id: execute
         run: |
-          make run_${{ needs.set-variables.outputs.mode }}
+          make run-${{ needs.set-variables.outputs.mode }}
 
       - name: Create config tarball
         id: save-hydra-outputs
