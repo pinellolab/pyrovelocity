@@ -141,3 +141,6 @@ multirun/
 *-kube.yaml
 docker-config.json
 dev.cue
+
+# bazel
+bazel-*
