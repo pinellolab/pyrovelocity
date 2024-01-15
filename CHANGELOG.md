@@ -2,20 +2,18 @@
 
 ## [0.2.0-beta.4](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.3...v0.2.0-beta.4) (2024-01-15)
 
-
 ### Features
 
-* **bazel:** add helper macro to run test modules ([0768837](https://github.com/pinellolab/pyrovelocity/commit/0768837dd28e50844ef54780ad3aee47a4a4422c))
-* **bazel:** add tests build ([27efc09](https://github.com/pinellolab/pyrovelocity/commit/27efc092c15b6159d2857b786f15f8e84c98c1fd))
-* **bazel:** init module ([46195c2](https://github.com/pinellolab/pyrovelocity/commit/46195c2f01f0344da5da5703d391e195456ae9e7))
-* **flake:** add bazelisk ([cb34805](https://github.com/pinellolab/pyrovelocity/commit/cb34805b6771b4dc392bcc6b52cd383985ddd799))
-* **make:** add target to run tests with bazel ([3c0ffcd](https://github.com/pinellolab/pyrovelocity/commit/3c0ffcda573d609a971663e5b32955a5ce1231a1))
-
+- **bazel:** add helper macro to run test modules ([0768837](https://github.com/pinellolab/pyrovelocity/commit/0768837dd28e50844ef54780ad3aee47a4a4422c))
+- **bazel:** add tests build ([27efc09](https://github.com/pinellolab/pyrovelocity/commit/27efc092c15b6159d2857b786f15f8e84c98c1fd))
+- **bazel:** init module ([46195c2](https://github.com/pinellolab/pyrovelocity/commit/46195c2f01f0344da5da5703d391e195456ae9e7))
+- **flake:** add bazelisk ([cb34805](https://github.com/pinellolab/pyrovelocity/commit/cb34805b6771b4dc392bcc6b52cd383985ddd799))
+- **make:** add target to run tests with bazel ([3c0ffcd](https://github.com/pinellolab/pyrovelocity/commit/3c0ffcda573d609a971663e5b32955a5ce1231a1))
 
 ### Bug Fixes
 
-* **docs:** clone beta branch in colab template [no ci] ([006c631](https://github.com/pinellolab/pyrovelocity/commit/006c631e5642e96d07591717a41d75717b6cbb30))
-* **vscode:** exclude `bazel-` from search/watch ([b2b63b5](https://github.com/pinellolab/pyrovelocity/commit/b2b63b5f3d68f7285128b1ccae6c996225d65d3e))
+- **docs:** clone beta branch in colab template [no ci] ([006c631](https://github.com/pinellolab/pyrovelocity/commit/006c631e5642e96d07591717a41d75717b6cbb30))
+- **vscode:** exclude `bazel-` from search/watch ([b2b63b5](https://github.com/pinellolab/pyrovelocity/commit/b2b63b5f3d68f7285128b1ccae6c996225d65d3e))
 
 ## [0.2.0-beta.3](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.2...v0.2.0-beta.3) (2024-01-11)
 
