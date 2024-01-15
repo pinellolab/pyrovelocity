@@ -33,6 +33,9 @@ help-sort: ## Display alphabetized version of help (no section headings).
 test: ## Run tests. See pyproject.toml for configuration.
 	poetry run pytest
 
+test-bazel: ## Run tests with Bazel.
+	bazel test /...
+
 test-cov-xml: ## Run tests with coverage
 	poetry run pytest --cov-report=xml
 
@@ -629,7 +632,8 @@ VERSION_FILES := \
 	conda/colab/construct.yaml \
 	containers/gpu.Dockerfile \
 	containers/pkg.Dockerfile \
-	docs/source/notebooks/pyrovelocity_colab_template.ipynb
+	docs/source/notebooks/pyrovelocity_colab_template.ipynb \
+	MODULE.bazel
 
 update-version: ## Update version in VERSION_FILES.
 	@for file in $(VERSION_FILES); do \
