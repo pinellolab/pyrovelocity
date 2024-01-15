@@ -234,6 +234,7 @@
           [
             atuin
             bat
+            bazelisk
             pkgs_unstable.cue
             gawk
             gh
