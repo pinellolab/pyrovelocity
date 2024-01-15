@@ -195,6 +195,32 @@ jobs:
           fail_ci_if_error: false
           verbose: true
 
+  test-bazel:
+    runs-on: ubuntu-latest
+    needs: [set-variables, config-workflows]
+    if: ${{ needs.set-variables.outputs.skip_ci != 'true' && needs.set-variables.outputs.skip_tests != 'true' }}
+    concurrency:
+      group: test-bazel-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}-${{ needs.set-variables.outputs.mode }}
+      cancel-in-progress: true
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
+      - name: setup gcp credentials
+        run: |
+          cat > service-account-credentials.json << EOF
+          ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}
+          EOF
+      - name: "Setup tmate debug session"
+        uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # ratchet:mxschmitt/action-tmate@v3
+        if: ${{ inputs.debug_enabled }}
+      - name: run bazel tests
+        run: |
+          bazel version
+          bazel test //...
+
   test-nix:
     runs-on: ubuntu-latest
     needs: [set-variables, config-workflows]
