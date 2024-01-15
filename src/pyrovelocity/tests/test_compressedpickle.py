@@ -17,12 +17,14 @@ def test_file():
 
 def test_save(test_data, test_file):
     from pyrovelocity.io.compressedpickle import CompressedPickle
+
     CompressedPickle.save(test_file, test_data)
     assert os.path.exists(test_file)
 
 
 def test_load(test_data, test_file):
     from pyrovelocity.io.compressedpickle import CompressedPickle
+
     loaded_data = CompressedPickle.load(test_file)
     assert loaded_data.equals(test_data)
 
@@ -43,6 +45,7 @@ def compare_dicts(dict1, dict2):
 
 def test_save_load_dict(test_file):
     from pyrovelocity.io.compressedpickle import CompressedPickle
+
     test_dict = {"a": np.arange(5), "b": np.linspace(0, 1, 5)}
     CompressedPickle.save(test_file, test_dict)
     loaded_dict = CompressedPickle.load(test_file)
@@ -68,6 +71,7 @@ def compare_complex_objects(obj1, obj2):
 
 def test_save_load_complex_object(test_file):
     from pyrovelocity.io.compressedpickle import CompressedPickle
+
     test_obj = [{"a": np.array([1, 2, 3]), "b": 1.5}, (4, "test", [1, 2])]
     CompressedPickle.save(test_file, test_obj)
     loaded_obj = CompressedPickle.load(test_file)
@@ -76,6 +80,7 @@ def test_save_load_complex_object(test_file):
 
 def test_load_non_existent_file():
     from pyrovelocity.io.compressedpickle import CompressedPickle
+
     with pytest.raises(FileNotFoundError):
         CompressedPickle.load("non_existent.pkl.zst")
 

@@ -45,6 +45,7 @@ def test_generate_sample_data(
     random_seed: np.random.RandomState,
 ):
     from pyrovelocity.utils import generate_sample_data
+
     beta, gamma = beta_gamma
     seed = random_seed.randint(0, 1000)
 
@@ -86,6 +87,7 @@ def test_generate_sample_data(
 @pytest.fixture
 def sample_data():
     from pyrovelocity.utils import generate_sample_data
+
     return generate_sample_data(random_seed=98)
 
 
@@ -93,6 +95,7 @@ def sample_data():
 @pytest.mark.parametrize("noise_model", ["iid", "gillespie", "normal"])
 def test_generate_sample_data_dimensions(n_obs, n_vars, noise_model):
     from pyrovelocity.utils import generate_sample_data
+
     adata = generate_sample_data(
         n_obs=n_obs, n_vars=n_vars, noise_model=noise_model, random_seed=98
     )
@@ -106,6 +109,7 @@ def test_generate_sample_data_layers(sample_data):
 
 def test_generate_sample_data_reproducibility(sample_data):
     from pyrovelocity.utils import generate_sample_data
+
     adata1 = sample_data
     adata2 = generate_sample_data(random_seed=98)
     assert (adata1.X == adata2.X).all()
