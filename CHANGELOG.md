@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.0-beta.5](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.4...v0.2.0-beta.5) (2024-01-15)
+
+
+### Features
+
+* **bazel:** add remote build cache ([0afae63](https://github.com/pinellolab/pyrovelocity/commit/0afae6346d06f3f0d8afcbae4570f4d24ad73110))
+* **cid:** add test-bazel job ([0fcac1e](https://github.com/pinellolab/pyrovelocity/commit/0fcac1eed272734f24c046afaa7a77ab37615e8e))
+
+
+### Bug Fixes
+
+* **gitignore:** add service-account-credentials.json ([13b3985](https://github.com/pinellolab/pyrovelocity/commit/13b3985160ab0c4f9482a1b97d0cd1fa4fb77269))
+
 ## [0.2.0-beta.4](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.3...v0.2.0-beta.4) (2024-01-15)
 
 ### Features
