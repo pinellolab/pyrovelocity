@@ -144,3 +144,4 @@ dev.cue
 
 # bazel
 bazel-*
+service-account-credentials.json
