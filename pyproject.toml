@@ -278,10 +278,14 @@ pyrovelocity = "pyrovelocity.flytezen.cli:main"
 # addopts = "-rA --xdoc --cov=src/pyrovelocity/ --cov-report=term-missing"
 addopts = "-rA --cov=src/pyrovelocity/ --cov-report=term-missing"
 asyncio_mode = "strict"
+norecursedirs = [
+  "bazel-*",
+  ".direnv",
+]
 
 [tool.coverage.paths]
-source = ["src/pyrovelocity", "*/pyrovelocity/src/pyrovelocity"]
-tests = ["tests", "*/pyrovelocity/tests"]
+source = ["src/pyrovelocity"]
+tests = ["src/pyrovelocity/tests"]
 
 [tool.coverage.run]
 source_pkgs = ["pyrovelocity"]
@@ -290,7 +294,7 @@ parallel = true
 omit = [
   "src/pyrovelocity/__init__.py",
   "src/pyrovelocity/__main__.py",
-  "tests/conftest.py",
+  "src/pyrovelocity/tests/**",
 ]
 
 [tool.coverage.report]
@@ -358,7 +362,7 @@ ban-relative-imports = "all"
 
 [tool.ruff.per-file-ignores]
 # Tests can use magic values, assertions, and relative imports
-"tests/**/*" = ["PLR2004", "S101", "TID252"]
+"src/pyrovelocity/tests/**/*" = ["PLR2004", "S101", "TID252"]
 
 [tool.pyright]
 include = ["src"]
