@@ -625,8 +625,8 @@ approve-prs: ## Approve github pull requests from bots: PR_ENTRIES="2-5 10 12-18
 		fi; \
 	done
 
-PREVIOUS_VERSION := 0.2.0b2
-NEXT_VERSION := 0.2.0b3
+PREVIOUS_VERSION := 0.2.0b3
+NEXT_VERSION := 0.2.0b4
 
 VERSION_FILES := \
 	conda/colab/construct.yaml \
