@@ -114,6 +114,7 @@ ENV/
 *.code-workspace
 .VSCodeCounter
 .idea/
+*.svg
 *.pdf
 *.tif
 *.h5ad
