@@ -663,6 +663,20 @@ ratchet-pin: ## Pin all workflow versions to hash values. (requires docker).
 ratchet-unpin: ## Unpin hashed workflow versions to semantic values. (requires docker).
 	$(foreach workflow,$(GHA_WORKFLOWS),$(call ratchet,unpin $(workflow));)
 
+module-deps-graph: ## Generate module dependency graph with pydeps.
+	rm -f pyrovelocity.svg pyrovelocity.pdf
+	pydeps src/pyrovelocity \
+	--max-bacon=3 \
+	--cluster \
+	--max-cluster-size=10 \
+	--min-cluster-size=2 \
+	--keep-target-cluster \
+	--rankdir TB \
+	--no-show \
+	--show-dot \
+	--exclude pyrovelocity.tests.* pyrovelocity.flytezen.* \
+	--rmprefix pyrovelocity.
+	svg2pdf pyrovelocity.svg pyrovelocity.pdf
 
 #------------------------------
 ##@ web application development
