@@ -214,13 +214,26 @@ jobs:
           ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}
           EOF
       - name: cache bazel
-        uses: actions/cache@v3
+        uses: actions/cache@e12d46a63a90f2fae62d114769bbf2a179198b5c # ratchet:actions/cache@v3
         with:
           path: |
             ~/.cache/bazel
           key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel') }}
           restore-keys: |
             ${{ runner.os }}-bazel-
+      - name: cache requirements
+        id: cache-requirements
+        uses: actions/cache@e12d46a63a90f2fae62d114769bbf2a179198b5c # ratchet:actions/cache@v3
+        with:
+          path: |
+            requirements-bazel.txt
+          key: ${{ runner.os }}-requirements-${{ hashFiles('requirements-darwin.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-requirements-
+      - name: update linux requirements
+        if: ${{ steps.cache-requirements.outputs.cache-hit != 'true' }}
+        run: |
+          make lock-bazel
       - name: run bazel tests
         run: |
           make meta-bazel test-bazel
