@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 3,
-  "moduleFileHash": "a23ecdc9619c2f4751fc0c02f24be929b4967660e21c45a1fcb531f66b21db05",
+  "moduleFileHash": "b252cfea20561288661e3263c4d658d81bcc48b2af7e645b1733ed51b21b8b7f",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -70,9 +70,12 @@
             {
               "tagName": "parse",
               "attributeValues": {
+                "experimental_target_platforms": [
+                  "host"
+                ],
                 "hub_name": "pip",
                 "python_version": "3.10",
-                "requirements_lock": "//:requirements-hashed.txt"
+                "requirements_lock": "//:requirements-bazel.txt"
               },
               "devDependency": false,
               "location": {
@@ -2885,7 +2888,7 @@
       "os:osx,arch:aarch64": {
         "bzlTransitiveDigest": "d0idolFFC7fQp0ycg3hTOk19xlQUMR9LV2oThQvws7c=",
         "accumulatedFileDigests": {
-          "@@//:requirements-hashed.txt": "1f5fe810d5cc1ba7dcd6841cdfca5a4ccf42e24e22cc1fb38565a6831c9b38bc"
+          "@@//:requirements-bazel.txt": "7cd55d815d0855fd8307e6cdeb0752e25e20749a70bdd8ebc0342d49fcfedf28"
         },
         "envVariables": {},
         "generatedRepoSpecs": {
@@ -2898,7 +2901,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -2922,7 +2927,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -2946,7 +2953,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -2970,7 +2979,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -2994,31 +3005,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
-              "python_interpreter": "",
-              "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
-              "quiet": true,
-              "timeout": 600,
-              "isolated": true,
-              "extra_pip_args": [],
-              "download_only": false,
-              "pip_data_exclude": [],
-              "enable_implicit_namespace_pkgs": false,
-              "environment": {},
-              "group_name": "",
-              "group_deps": []
-            }
-          },
-          "pip_310_waitress": {
-            "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "name": "rules_python~0.28.0~pip~pip_310_waitress",
-              "requirement": "waitress==2.1.2 ; python_version >= \"3.10\" and python_version < \"3.11\" and platform_system == \"Windows\"     --hash=sha256:7500c9625927c8ec60f54377d590f67b30c8e70ef4b8894214ac6e4cad233d2a     --hash=sha256:780a4082c5fbc0fde6a2fcfe5e26e6efc1e8f425730863c04085769781f51eba",
-              "repo": "pip_310",
-              "repo_prefix": "pip_310_",
-              "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3042,7 +3031,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3066,7 +3057,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3090,7 +3083,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3114,7 +3109,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3138,7 +3135,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3162,7 +3161,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3186,7 +3187,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3210,7 +3213,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3234,7 +3239,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3258,7 +3265,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3282,7 +3291,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3306,7 +3317,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3330,7 +3343,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3354,7 +3369,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3378,7 +3395,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3402,7 +3421,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3426,31 +3447,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
-              "python_interpreter": "",
-              "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
-              "quiet": true,
-              "timeout": 600,
-              "isolated": true,
-              "extra_pip_args": [],
-              "download_only": false,
-              "pip_data_exclude": [],
-              "enable_implicit_namespace_pkgs": false,
-              "environment": {},
-              "group_name": "",
-              "group_deps": []
-            }
-          },
-          "pip_310_nvidia_cublas_cu11": {
-            "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "name": "rules_python~0.28.0~pip~pip_310_nvidia_cublas_cu11",
-              "requirement": "nvidia-cublas-cu11==11.10.3.66 ; python_version >= \"3.10\" and python_version < \"3.11\" and platform_system == \"Linux\"     --hash=sha256:8ac17ba6ade3ed56ab898a036f9ae0756f1e81052a317bf98f8c6d18dc3ae49e     --hash=sha256:d32e4d75f94ddfb93ea0a5dda08389bcc65d8916a25cb9f37ac89edaeed3bded",
-              "repo": "pip_310",
-              "repo_prefix": "pip_310_",
-              "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3474,7 +3473,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3498,7 +3499,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3522,7 +3525,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3546,7 +3551,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3570,7 +3577,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3594,7 +3603,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3618,7 +3629,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3642,31 +3655,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
-              "python_interpreter": "",
-              "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
-              "quiet": true,
-              "timeout": 600,
-              "isolated": true,
-              "extra_pip_args": [],
-              "download_only": false,
-              "pip_data_exclude": [],
-              "enable_implicit_namespace_pkgs": false,
-              "environment": {},
-              "group_name": "",
-              "group_deps": []
-            }
-          },
-          "pip_310_nvidia_cudnn_cu11": {
-            "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "name": "rules_python~0.28.0~pip~pip_310_nvidia_cudnn_cu11",
-              "requirement": "nvidia-cudnn-cu11==8.5.0.96 ; python_version >= \"3.10\" and python_version < \"3.11\" and platform_system == \"Linux\"     --hash=sha256:402f40adfc6f418f9dae9ab402e773cfed9beae52333f6d86ae3107a1b9527e7     --hash=sha256:71f8111eb830879ff2836db3cccf03bbd735df9b0d17cd93761732ac50a8a108",
-              "repo": "pip_310",
-              "repo_prefix": "pip_310_",
-              "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3690,7 +3681,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3714,7 +3707,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3738,7 +3733,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3762,7 +3759,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3786,7 +3785,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3810,7 +3811,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3834,7 +3837,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3858,7 +3863,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3882,7 +3889,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3906,7 +3915,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3930,7 +3941,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3954,7 +3967,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -3978,7 +3993,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4002,7 +4019,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4026,7 +4045,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4050,7 +4071,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4074,7 +4097,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4098,7 +4123,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4122,7 +4149,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4146,7 +4175,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4170,7 +4201,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4194,7 +4227,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4218,7 +4253,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4242,7 +4279,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4266,7 +4305,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4290,7 +4331,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4314,7 +4357,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4338,7 +4383,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4362,7 +4409,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4386,7 +4435,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4410,7 +4461,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4434,7 +4487,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4458,7 +4513,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4482,7 +4539,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4506,7 +4565,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4530,7 +4591,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4554,7 +4617,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4578,7 +4643,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4602,7 +4669,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4626,7 +4695,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4650,7 +4721,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4674,7 +4747,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4698,7 +4773,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4722,7 +4799,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4755,7 +4834,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4779,7 +4860,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4803,7 +4886,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4827,7 +4912,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4851,7 +4938,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4875,7 +4964,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4899,7 +4990,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4923,7 +5016,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4947,7 +5042,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4971,7 +5068,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -4995,7 +5094,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5019,7 +5120,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5043,7 +5146,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5067,7 +5172,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5091,7 +5198,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5115,7 +5224,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5139,7 +5250,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5163,7 +5276,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5187,7 +5302,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5211,7 +5328,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5235,7 +5354,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5259,7 +5380,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5283,7 +5406,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5307,7 +5432,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5331,7 +5458,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5355,7 +5484,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5379,7 +5510,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5403,7 +5536,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5427,7 +5562,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5451,7 +5588,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5475,7 +5614,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5499,7 +5640,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5523,7 +5666,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5547,7 +5692,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5571,7 +5718,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5595,7 +5744,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5619,7 +5770,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5643,7 +5796,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5667,7 +5822,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5691,7 +5848,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5715,31 +5874,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
-              "python_interpreter": "",
-              "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
-              "quiet": true,
-              "timeout": 600,
-              "isolated": true,
-              "extra_pip_args": [],
-              "download_only": false,
-              "pip_data_exclude": [],
-              "enable_implicit_namespace_pkgs": false,
-              "environment": {},
-              "group_name": "",
-              "group_deps": []
-            }
-          },
-          "pip_310_pywinpty": {
-            "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "name": "rules_python~0.28.0~pip~pip_310_pywinpty",
-              "requirement": "pywinpty==2.0.12 ; python_version >= \"3.10\" and python_version < \"3.11\" and os_name == \"nt\"     --hash=sha256:1617b729999eb6713590e17665052b1a6ae0ad76ee31e60b444147c5b6a35dca     --hash=sha256:189380469ca143d06e19e19ff3fba0fcefe8b4a8cc942140a6b863aed7eebb2d     --hash=sha256:21319cd1d7c8844fb2c970fb3a55a3db5543f112ff9cfcd623746b9c47501575     --hash=sha256:7520575b6546db23e693cbd865db2764097bd6d4ef5dc18c92555904cd62c3d4     --hash=sha256:8197de460ae8ebb7f5d1701dfa1b5df45b157bb832e92acba316305e18ca00dd     --hash=sha256:853985a8f48f4731a716653170cd735da36ffbdc79dcb4c7b7140bce11d8c722",
-              "repo": "pip_310",
-              "repo_prefix": "pip_310_",
-              "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5763,7 +5900,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5787,7 +5926,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5811,7 +5952,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5835,31 +5978,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
-              "python_interpreter": "",
-              "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
-              "quiet": true,
-              "timeout": 600,
-              "isolated": true,
-              "extra_pip_args": [],
-              "download_only": false,
-              "pip_data_exclude": [],
-              "enable_implicit_namespace_pkgs": false,
-              "environment": {},
-              "group_name": "",
-              "group_deps": []
-            }
-          },
-          "pip_310_secretstorage": {
-            "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "name": "rules_python~0.28.0~pip~pip_310_secretstorage",
-              "requirement": "secretstorage==3.3.3 ; python_version >= \"3.10\" and python_version < \"3.11\" and sys_platform == \"linux\"     --hash=sha256:2403533ef369eca6d2ba81718576c5e0f564d5cca1b58f73a8b23e7d4eeebd77     --hash=sha256:f356e6628222568e3af06f2eba8df495efa13b3b63081dafd4f7d9a7b7bc9f99",
-              "repo": "pip_310",
-              "repo_prefix": "pip_310_",
-              "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5883,31 +6004,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
-              "python_interpreter": "",
-              "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
-              "quiet": true,
-              "timeout": 600,
-              "isolated": true,
-              "extra_pip_args": [],
-              "download_only": false,
-              "pip_data_exclude": [],
-              "enable_implicit_namespace_pkgs": false,
-              "environment": {},
-              "group_name": "",
-              "group_deps": []
-            }
-          },
-          "pip_310_jeepney": {
-            "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "name": "rules_python~0.28.0~pip~pip_310_jeepney",
-              "requirement": "jeepney==0.8.0 ; python_version >= \"3.10\" and python_version < \"3.11\" and sys_platform == \"linux\"     --hash=sha256:5efe48d255973902f6badc3ce55e2aa6c5c3b3bc642059ef3a91247bcfcc5806     --hash=sha256:c0a454ad016ca575060802ee4d590dd912e35c122fa04e70306de3d076cce755",
-              "repo": "pip_310",
-              "repo_prefix": "pip_310_",
-              "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5931,7 +6030,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5955,7 +6056,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -5979,7 +6082,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6003,7 +6108,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6027,7 +6134,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6051,7 +6160,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6075,7 +6186,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6099,7 +6212,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6123,7 +6238,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6147,7 +6264,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6171,7 +6290,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6195,7 +6316,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6219,7 +6342,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6243,7 +6368,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6267,7 +6394,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6291,7 +6420,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6315,7 +6446,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6339,7 +6472,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6363,7 +6498,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6387,7 +6524,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6411,7 +6550,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6435,7 +6576,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6459,7 +6602,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6483,7 +6628,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6507,7 +6654,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6531,7 +6680,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6555,7 +6706,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6579,7 +6732,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6603,7 +6758,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6627,7 +6784,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6651,7 +6810,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6675,7 +6836,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6699,7 +6862,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6723,7 +6888,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6747,7 +6914,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6771,7 +6940,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6795,7 +6966,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6819,7 +6992,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6843,7 +7018,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6867,7 +7044,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6891,7 +7070,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6915,7 +7096,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6939,7 +7122,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6963,7 +7148,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -6987,7 +7174,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7011,7 +7200,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7035,7 +7226,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7059,7 +7252,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7083,7 +7278,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7107,7 +7304,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7131,7 +7330,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7155,7 +7356,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7179,7 +7382,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7203,7 +7408,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7227,7 +7434,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7251,7 +7460,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7275,7 +7486,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7299,7 +7512,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7323,7 +7538,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7347,7 +7564,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7371,7 +7590,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7395,7 +7616,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7419,7 +7642,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7443,7 +7668,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7467,7 +7694,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7491,7 +7720,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7515,7 +7746,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7539,7 +7772,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7563,7 +7798,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7587,7 +7824,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7611,7 +7850,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7635,7 +7876,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7659,7 +7902,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7683,7 +7928,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7707,7 +7954,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7731,7 +7980,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7755,7 +8006,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7779,7 +8032,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7803,7 +8058,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7827,7 +8084,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7851,7 +8110,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7875,7 +8136,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7899,55 +8162,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
-              "python_interpreter": "",
-              "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
-              "quiet": true,
-              "timeout": 600,
-              "isolated": true,
-              "extra_pip_args": [],
-              "download_only": false,
-              "pip_data_exclude": [],
-              "enable_implicit_namespace_pkgs": false,
-              "environment": {},
-              "group_name": "",
-              "group_deps": []
-            }
-          },
-          "pip_310_nvidia_cuda_nvrtc_cu11": {
-            "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "name": "rules_python~0.28.0~pip~pip_310_nvidia_cuda_nvrtc_cu11",
-              "requirement": "nvidia-cuda-nvrtc-cu11==11.7.99 ; python_version >= \"3.10\" and python_version < \"3.11\" and platform_system == \"Linux\"     --hash=sha256:9f1562822ea264b7e34ed5930567e89242d266448e936b85bc97a3370feabb03     --hash=sha256:f2effeb1309bdd1b3854fc9b17eaf997808f8b25968ce0c7070945c4265d64a3     --hash=sha256:f7d9610d9b7c331fa0da2d1b2858a4a8315e6d49765091d28711c8946e7425e7",
-              "repo": "pip_310",
-              "repo_prefix": "pip_310_",
-              "whl_patches": {},
-              "experimental_target_platforms": [],
-              "python_interpreter": "",
-              "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
-              "quiet": true,
-              "timeout": 600,
-              "isolated": true,
-              "extra_pip_args": [],
-              "download_only": false,
-              "pip_data_exclude": [],
-              "enable_implicit_namespace_pkgs": false,
-              "environment": {},
-              "group_name": "",
-              "group_deps": []
-            }
-          },
-          "pip_310_pywin32": {
-            "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "name": "rules_python~0.28.0~pip~pip_310_pywin32",
-              "requirement": "pywin32==306 ; python_version >= \"3.10\" and python_version < \"3.11\" and (sys_platform == \"win32\" or platform_system == \"Windows\")     --hash=sha256:06d3420a5155ba65f0b72f2699b5bacf3109f36acbe8923765c22938a69dfc8d     --hash=sha256:1c73ea9a0d2283d889001998059f5eaaba3b6238f767c9cf2833b13e6a685f65     --hash=sha256:37257794c1ad39ee9be652da0462dc2e394c8159dfd913a8a4e8eb6fd346da0e     --hash=sha256:383229d515657f4e3ed1343da8be101000562bf514591ff383ae940cad65458b     --hash=sha256:39b61c15272833b5c329a2989999dcae836b1eed650252ab1b7bfbe1d59f30f4     --hash=sha256:5821ec52f6d321aa59e2db7e0a35b997de60c201943557d108af9d4ae1ec7040     --hash=sha256:70dba0c913d19f942a2db25217d9a1b726c278f483a919f1abfed79c9cf64d3a     --hash=sha256:72c5f621542d7bdd4fdb716227be0dd3f8565c11b280be6315b06ace35487d36     --hash=sha256:84f4471dbca1887ea3803d8848a1616429ac94a4a8d05f4bc9c5dcfd42ca99c8     --hash=sha256:a7639f51c184c0272e93f244eb24dafca9b1855707d94c192d4a0b4c01e1100e     --hash=sha256:e25fd5b485b55ac9c057f67d94bc203f3f6595078d1fb3b458c9c28b7153a802     --hash=sha256:e4c092e2589b5cf0d365849e73e02c391c1349958c5ac3e9d5ccb9a28e017b3a     --hash=sha256:e65028133d15b64d2ed8f06dd9fbc268352478d4f9289e69c190ecd6818b6407     --hash=sha256:e8ac1ae3601bee6ca9f7cb4b5363bf1c0badb935ef243c4733ff9a393b1690c0",
-              "repo": "pip_310",
-              "repo_prefix": "pip_310_",
-              "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7971,7 +8188,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -7995,7 +8214,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8019,7 +8240,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8043,7 +8266,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8067,7 +8292,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8091,7 +8318,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8115,7 +8344,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8139,7 +8370,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8163,7 +8396,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8187,7 +8422,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8211,7 +8448,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8235,7 +8474,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8259,7 +8500,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8283,7 +8526,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8307,7 +8552,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8331,7 +8578,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8355,7 +8604,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8379,7 +8630,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8403,7 +8656,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8427,7 +8682,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8451,7 +8708,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8475,7 +8734,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8499,7 +8760,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8523,7 +8786,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8547,7 +8812,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8571,7 +8838,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8595,7 +8864,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8619,7 +8890,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8643,7 +8916,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8667,7 +8942,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8691,7 +8968,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8715,31 +8994,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
-              "python_interpreter": "",
-              "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
-              "quiet": true,
-              "timeout": 600,
-              "isolated": true,
-              "extra_pip_args": [],
-              "download_only": false,
-              "pip_data_exclude": [],
-              "enable_implicit_namespace_pkgs": false,
-              "environment": {},
-              "group_name": "",
-              "group_deps": []
-            }
-          },
-          "pip_310_nvidia_cuda_runtime_cu11": {
-            "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "name": "rules_python~0.28.0~pip~pip_310_nvidia_cuda_runtime_cu11",
-              "requirement": "nvidia-cuda-runtime-cu11==11.7.99 ; python_version >= \"3.10\" and python_version < \"3.11\" and platform_system == \"Linux\"     --hash=sha256:bc77fa59a7679310df9d5c70ab13c4e34c64ae2124dd1efd7e5474b71be125c7     --hash=sha256:cc768314ae58d2641f07eac350f40f99dcb35719c4faff4bc458a7cd2b119e31",
-              "repo": "pip_310",
-              "repo_prefix": "pip_310_",
-              "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8763,7 +9020,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8787,7 +9046,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8811,7 +9072,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8835,7 +9098,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8859,7 +9124,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8883,7 +9150,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8907,7 +9176,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8931,7 +9202,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8955,7 +9228,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -8979,7 +9254,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -9003,7 +9280,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -9027,7 +9306,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -9051,7 +9332,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -9075,7 +9358,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -9376,9 +9661,6 @@
                 "googleapis_common_protos": [
                   "3.10.13"
                 ],
-                "greenlet": [
-                  "3.10.13"
-                ],
                 "grpcio": [
                   "3.10.13"
                 ],
@@ -9443,9 +9725,6 @@
                   "3.10.13"
                 ],
                 "jedi": [
-                  "3.10.13"
-                ],
-                "jeepney": [
                   "3.10.13"
                 ],
                 "jinja2": [
@@ -9640,18 +9919,6 @@
                 "numpyro": [
                   "3.10.13"
                 ],
-                "nvidia_cublas_cu11": [
-                  "3.10.13"
-                ],
-                "nvidia_cuda_nvrtc_cu11": [
-                  "3.10.13"
-                ],
-                "nvidia_cuda_runtime_cu11": [
-                  "3.10.13"
-                ],
-                "nvidia_cudnn_cu11": [
-                  "3.10.13"
-                ],
                 "oauthlib": [
                   "3.10.13"
                 ],
@@ -9808,15 +10075,6 @@
                 "pytz": [
                   "3.10.13"
                 ],
-                "pywin32": [
-                  "3.10.13"
-                ],
-                "pywin32_ctypes": [
-                  "3.10.13"
-                ],
-                "pywinpty": [
-                  "3.10.13"
-                ],
                 "pyyaml": [
                   "3.10.13"
                 ],
@@ -9872,9 +10130,6 @@
                   "3.10.13"
                 ],
                 "seaborn": [
-                  "3.10.13"
-                ],
-                "secretstorage": [
                   "3.10.13"
                 ],
                 "send2trash": [
@@ -10021,9 +10276,6 @@
                 "typing_inspect": [
                   "3.10.13"
                 ],
-                "tzdata": [
-                  "3.10.13"
-                ],
                 "umap_learn": [
                   "3.10.13"
                 ],
@@ -10031,9 +10283,6 @@
                   "3.10.13"
                 ],
                 "urllib3": [
-                  "3.10.13"
-                ],
-                "waitress": [
                   "3.10.13"
                 ],
                 "wcwidth": [
@@ -10049,9 +10298,6 @@
                   "3.10.13"
                 ],
                 "werkzeug": [
-                  "3.10.13"
-                ],
-                "wheel": [
                   "3.10.13"
                 ],
                 "wrapt": [
@@ -10082,7 +10328,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10106,7 +10354,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10130,7 +10380,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10154,7 +10406,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10178,7 +10432,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10202,7 +10458,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10226,7 +10484,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10250,7 +10510,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10274,7 +10536,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10298,7 +10562,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10322,7 +10588,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10346,7 +10614,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10370,7 +10640,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10394,7 +10666,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10418,7 +10692,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10442,7 +10718,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10466,7 +10744,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10490,7 +10770,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10514,7 +10796,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10538,7 +10822,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10562,7 +10848,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10586,7 +10874,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10610,7 +10900,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10634,7 +10926,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10658,31 +10952,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
-              "python_interpreter": "",
-              "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
-              "quiet": true,
-              "timeout": 600,
-              "isolated": true,
-              "extra_pip_args": [],
-              "download_only": false,
-              "pip_data_exclude": [],
-              "enable_implicit_namespace_pkgs": false,
-              "environment": {},
-              "group_name": "",
-              "group_deps": []
-            }
-          },
-          "pip_310_tzdata": {
-            "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "name": "rules_python~0.28.0~pip~pip_310_tzdata",
-              "requirement": "tzdata==2023.3 ; python_version >= \"3.10\" and python_version < \"3.11\" and (platform_system == \"Windows\" or platform_system == \"Emscripten\")     --hash=sha256:11ef1e08e54acb0d4f95bdb1be05da659673de4acbd21bf9c69e94cc5e907a3a     --hash=sha256:7e65763eef3120314099b6939b5546db7adce1e7d6f2e179e3df563c70511eda",
-              "repo": "pip_310",
-              "repo_prefix": "pip_310_",
-              "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10706,7 +10978,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10730,7 +11004,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10754,7 +11030,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10778,7 +11056,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10802,7 +11082,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10826,7 +11108,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10850,7 +11134,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10874,7 +11160,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10898,7 +11186,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10922,7 +11212,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10946,7 +11238,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10970,7 +11264,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -10994,7 +11290,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11018,7 +11316,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11042,7 +11342,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11066,7 +11368,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11090,7 +11394,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11114,7 +11420,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11138,7 +11446,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11162,7 +11472,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11186,7 +11498,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11210,7 +11524,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11234,7 +11550,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11258,7 +11576,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11282,31 +11602,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
-              "python_interpreter": "",
-              "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
-              "quiet": true,
-              "timeout": 600,
-              "isolated": true,
-              "extra_pip_args": [],
-              "download_only": false,
-              "pip_data_exclude": [],
-              "enable_implicit_namespace_pkgs": false,
-              "environment": {},
-              "group_name": "",
-              "group_deps": []
-            }
-          },
-          "pip_310_pywin32_ctypes": {
-            "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "name": "rules_python~0.28.0~pip~pip_310_pywin32_ctypes",
-              "requirement": "pywin32-ctypes==0.2.2 ; python_version >= \"3.10\" and python_version < \"3.11\" and sys_platform == \"win32\"     --hash=sha256:3426e063bdd5fd4df74a14fa3cf80a0b42845a87e1d1e81f6549f9daec593a60     --hash=sha256:bf490a1a709baf35d688fe0ecf980ed4de11d2b3e37b51e5442587a75d9957e7",
-              "repo": "pip_310",
-              "repo_prefix": "pip_310_",
-              "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11330,31 +11628,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
-              "python_interpreter": "",
-              "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
-              "quiet": true,
-              "timeout": 600,
-              "isolated": true,
-              "extra_pip_args": [],
-              "download_only": false,
-              "pip_data_exclude": [],
-              "enable_implicit_namespace_pkgs": false,
-              "environment": {},
-              "group_name": "",
-              "group_deps": []
-            }
-          },
-          "pip_310_greenlet": {
-            "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "name": "rules_python~0.28.0~pip~pip_310_greenlet",
-              "requirement": "greenlet==2.0.2 ; python_version >= \"3.10\" and python_version < \"3.11\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\")     --hash=sha256:03a8f4f3430c3b3ff8d10a2a86028c660355ab637cee9333d63d66b56f09d52a     --hash=sha256:0bf60faf0bc2468089bdc5edd10555bab6e85152191df713e2ab1fcc86382b5a     --hash=sha256:1087300cf9700bbf455b1b97e24db18f2f77b55302a68272c56209d5587c12d1     --hash=sha256:18a7f18b82b52ee85322d7a7874e676f34ab319b9f8cce5de06067384aa8ff43     --hash=sha256:18e98fb3de7dba1c0a852731c3070cf022d14f0d68b4c87a19cc1016f3bb8b33     --hash=sha256:1a819eef4b0e0b96bb0d98d797bef17dc1b4a10e8d7446be32d1da33e095dbb8     --hash=sha256:26fbfce90728d82bc9e6c38ea4d038cba20b7faf8a0ca53a9c07b67318d46088     --hash=sha256:2780572ec463d44c1d3ae850239508dbeb9fed38e294c68d19a24d925d9223ca     --hash=sha256:283737e0da3f08bd637b5ad058507e578dd462db259f7f6e4c5c365ba4ee9343     --hash=sha256:2d4686f195e32d36b4d7cf2d166857dbd0ee9f3d20ae349b6bf8afc8485b3645     --hash=sha256:2dd11f291565a81d71dab10b7033395b7a3a5456e637cf997a6f33ebdf06f8db     --hash=sha256:30bcf80dda7f15ac77ba5af2b961bdd9dbc77fd4ac6105cee85b0d0a5fcf74df     --hash=sha256:32e5b64b148966d9cccc2c8d35a671409e45f195864560829f395a54226408d3     --hash=sha256:36abbf031e1c0f79dd5d596bfaf8e921c41df2bdf54ee1eed921ce1f52999a86     --hash=sha256:3a06ad5312349fec0ab944664b01d26f8d1f05009566339ac6f63f56589bc1a2     --hash=sha256:3a51c9751078733d88e013587b108f1b7a1fb106d402fb390740f002b6f6551a     --hash=sha256:3c9b12575734155d0c09d6c3e10dbd81665d5c18e1a7c6597df72fd05990c8cf     --hash=sha256:3f6ea9bd35eb450837a3d80e77b517ea5bc56b4647f5502cd28de13675ee12f7     --hash=sha256:4b58adb399c4d61d912c4c331984d60eb66565175cdf4a34792cd9600f21b394     --hash=sha256:4d2e11331fc0c02b6e84b0d28ece3a36e0548ee1a1ce9ddde03752d9b79bba40     --hash=sha256:5454276c07d27a740c5892f4907c86327b632127dd9abec42ee62e12427ff7e3     --hash=sha256:561091a7be172ab497a3527602d467e2b3fbe75f9e783d8b8ce403fa414f71a6     --hash=sha256:6c3acb79b0bfd4fe733dff8bc62695283b57949ebcca05ae5c129eb606ff2d74     --hash=sha256:703f18f3fda276b9a916f0934d2fb6d989bf0b4fb5a64825260eb9bfd52d78f0     --hash=sha256:7492e2b7bd7c9b9916388d9df23fa49d9b88ac0640db0a5b4ecc2b653bf451e3     --hash=sha256:76ae285c8104046b3a7f06b42f29c7b73f77683df18c49ab5af7983994c2dd91     --hash=sha256:7cafd1208fdbe93b67c7086876f061f660cfddc44f404279c1585bbf3cdc64c5     --hash=sha256:7efde645ca1cc441d6dc4b48c0f7101e8d86b54c8530141b09fd31cef5149ec9     --hash=sha256:8512a0c38cfd4e66a858ddd1b17705587900dd760c6003998e9472b77b56d417     --hash=sha256:88d9ab96491d38a5ab7c56dd7a3cc37d83336ecc564e4e8816dbed12e5aaefc8     --hash=sha256:8eab883b3b2a38cc1e050819ef06a7e6344d4a990d24d45bc6f2cf959045a45b     --hash=sha256:910841381caba4f744a44bf81bfd573c94e10b3045ee00de0cbf436fe50673a6     --hash=sha256:9190f09060ea4debddd24665d6804b995a9c122ef5917ab26e1566dcc712ceeb     --hash=sha256:937e9020b514ceedb9c830c55d5c9872abc90f4b5862f89c0887033ae33c6f73     --hash=sha256:94c817e84245513926588caf1152e3b559ff794d505555211ca041f032abbb6b     --hash=sha256:971ce5e14dc5e73715755d0ca2975ac88cfdaefcaab078a284fea6cfabf866df     --hash=sha256:9d14b83fab60d5e8abe587d51c75b252bcc21683f24699ada8fb275d7712f5a9     --hash=sha256:9f35ec95538f50292f6d8f2c9c9f8a3c6540bbfec21c9e5b4b751e0a7c20864f     --hash=sha256:a1846f1b999e78e13837c93c778dcfc3365902cfb8d1bdb7dd73ead37059f0d0     --hash=sha256:acd2162a36d3de67ee896c43effcd5ee3de247eb00354db411feb025aa319857     --hash=sha256:b0ef99cdbe2b682b9ccbb964743a6aca37905fda5e0452e5ee239b1654d37f2a     --hash=sha256:b80f600eddddce72320dbbc8e3784d16bd3fb7b517e82476d8da921f27d4b249     --hash=sha256:b864ba53912b6c3ab6bcb2beb19f19edd01a6bfcbdfe1f37ddd1778abfe75a30     --hash=sha256:b9ec052b06a0524f0e35bd8790686a1da006bd911dd1ef7d50b77bfbad74e292     --hash=sha256:ba2956617f1c42598a308a84c6cf021a90ff3862eddafd20c3333d50f0edb45b     --hash=sha256:bdfea8c661e80d3c1c99ad7c3ff74e6e87184895bbaca6ee8cc61209f8b9b85d     --hash=sha256:be4ed120b52ae4d974aa40215fcdfde9194d63541c7ded40ee12eb4dda57b76b     --hash=sha256:c4302695ad8027363e96311df24ee28978162cdcdd2006476c43970b384a244c     --hash=sha256:c48f54ef8e05f04d6eff74b8233f6063cb1ed960243eacc474ee73a2ea8573ca     --hash=sha256:c9c59a2120b55788e800d82dfa99b9e156ff8f2227f07c5e3012a45a399620b7     --hash=sha256:cd021c754b162c0fb55ad5d6b9d960db667faad0fa2ff25bb6e1301b0b6e6a75     --hash=sha256:d27ec7509b9c18b6d73f2f5ede2622441de812e7b1a80bbd446cb0633bd3d5ae     --hash=sha256:d4606a527e30548153be1a9f155f4e283d109ffba663a15856089fb55f933e47     --hash=sha256:d5508f0b173e6aa47273bdc0a0b5ba055b59662ba7c7ee5119528f466585526b     --hash=sha256:d75209eed723105f9596807495d58d10b3470fa6732dd6756595e89925ce2470     --hash=sha256:d967650d3f56af314b72df7089d96cda1083a7fc2da05b375d2bc48c82ab3f3c     --hash=sha256:db1a39669102a1d8d12b57de2bb7e2ec9066a6f2b3da35ae511ff93b01b5d564     --hash=sha256:dbfcfc0218093a19c252ca8eb9aee3d29cfdcb586df21049b9d777fd32c14fd9     --hash=sha256:e0f72c9ddb8cd28532185f54cc1453f2c16fb417a08b53a855c4e6a418edd099     --hash=sha256:e7c8dc13af7db097bed64a051d2dd49e9f0af495c26995c00a9ee842690d34c0     --hash=sha256:ea9872c80c132f4663822dd2a08d404073a5a9b5ba6155bea72fb2a79d1093b5     --hash=sha256:eff4eb9b7eb3e4d0cae3d28c283dc16d9bed6b193c2e1ace3ed86ce48ea8df19     --hash=sha256:f82d4d717d8ef19188687aa32b8363e96062911e63ba22a0cff7802a8e58e5f1     --hash=sha256:fc3a569657468b6f3fb60587e48356fe512c1754ca05a564f11366ac9e306526",
-              "repo": "pip_310",
-              "repo_prefix": "pip_310_",
-              "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11378,7 +11654,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11402,7 +11680,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11426,7 +11706,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11450,7 +11732,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11474,7 +11758,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11498,7 +11784,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11522,7 +11810,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11546,7 +11836,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11570,7 +11862,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11594,31 +11888,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
-              "python_interpreter": "",
-              "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
-              "quiet": true,
-              "timeout": 600,
-              "isolated": true,
-              "extra_pip_args": [],
-              "download_only": false,
-              "pip_data_exclude": [],
-              "enable_implicit_namespace_pkgs": false,
-              "environment": {},
-              "group_name": "",
-              "group_deps": []
-            }
-          },
-          "pip_310_wheel": {
-            "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "name": "rules_python~0.28.0~pip~pip_310_wheel",
-              "requirement": "wheel==0.40.0 ; python_version >= \"3.10\" and python_version < \"3.11\" and platform_system == \"Linux\"     --hash=sha256:cd1196f3faee2b31968d626e1731c94f99cbdb67cf5a46e4f5656cbee7738873     --hash=sha256:d236b20e7cb522daf2390fa84c55eea81c5c30190f90f29ae2ca1ad8355bf247",
-              "repo": "pip_310",
-              "repo_prefix": "pip_310_",
-              "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
@@ -11642,7 +11914,9 @@
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
-              "experimental_target_platforms": [],
+              "experimental_target_platforms": [
+                "host"
+              ],
               "python_interpreter": "",
               "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
               "quiet": true,
