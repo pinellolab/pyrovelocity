@@ -69,19 +69,25 @@ docs-serve:
 lock-poetry: ## Lock poetry dependencies.
 	poetry lock --no-update
 
+PIP_REQUIREMENTS_NAME ?= requirements
+
 lock-pip: ## Export requirements.txt for pip.
 lock-pip:
 	poetry export \
 	--format=requirements.txt \
 	--with=test \
 	--with=workflows \
-	--output=requirements.txt \
+	--output=$(PIP_REQUIREMENTS_NAME).txt \
 	--without-hashes
 	poetry export \
 	--format=requirements.txt \
 	--with=test \
 	--with=workflows \
-	--output=requirements-hashed.txt
+	--output=$(PIP_REQUIREMENTS_NAME)-hashed.txt
+
+lock-pip-cpu: ## Export requirements-cpu.txt for pip.
+lock-pip-cpu: lock-poetry
+	make lock-pip PIP_REQUIREMENTS_NAME=requirements-cpu
 
 lock-conda: ## Export environment yaml and lock files for conda. (see pyproject.toml).
 	poe conda-lock
