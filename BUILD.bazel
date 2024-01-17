@@ -2,12 +2,12 @@
 pyrovelocity BUILD
 """
 
-load("@rules_python//python:defs.bzl", "py_library")
+load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 
-py_library(
-    name = "pyrovelocity",
-    srcs = glob(["src/pyrovelocity/**/*.py"], exclude=["src/pyrovelocity/tests/**/*.py"]),
-    visibility = [
-        "__subpackages__",
-    ],
+compile_pip_requirements(
+    name = "requirements",
+    src = "requirements.txt",
+    generate_hashes = True,
+    requirements_txt = "requirements-bazel.txt",
+    timeout = "moderate",
 )
