@@ -275,8 +275,8 @@ help = "Force install torch 1.13.1+cu111 on Linux and Windows."
 pyrovelocity = "pyrovelocity.flytezen.cli:main"
 
 [tool.pytest.ini_options]
-# addopts = "-rA --xdoc --cov=src/pyrovelocity/ --cov-report=term-missing"
-addopts = "-rA --cov=src/pyrovelocity/ --cov-report=term-missing"
+# addopts = "-rA --disable-warnings --xdoc --cov=src/pyrovelocity/ --cov-report=term-missing"
+addopts = "-rA --disable-warnings --cov=src/pyrovelocity/ --cov-report=term-missing"
 asyncio_mode = "strict"
 norecursedirs = [
   "bazel-*",
