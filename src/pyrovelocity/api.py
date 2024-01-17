@@ -76,7 +76,7 @@ def train_model(
         >>> from pyrovelocity.data import copy_raw_counts
         >>> adata = generate_sample_data(random_seed=99)
         >>> copy_raw_counts(adata)
-        >>> model, posterior_samples = train_model(adata, seed=99, max_epochs=200, loss_plot_path="loss_plot_docs.png")
+        >>> model, posterior_samples = train_model(adata, use_gpu=False, seed=99, max_epochs=200, loss_plot_path="loss_plot_docs.png")
     """
     PyroVelocity.setup_anndata(adata)
 
