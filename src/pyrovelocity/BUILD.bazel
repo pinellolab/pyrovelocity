@@ -1,29 +1,110 @@
 """
 pyrovelocity BUILD
 """
-# load("@pip//:requirements.bzl", "requirement")
+
 load("@pip//:requirements.bzl", "all_requirements")
-# load("//bazel:python.bzl", "xdoctest")
-load("@rules_python//python:defs.bzl", "py_library")
+# or if individual requirements are specified
+# load("@pip//:requirements.bzl", "all_requirements", "requirement")
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
+load("//bazel:python.bzl", "py_test_module_list", "xdoctest")
+
+# passing imports = [".."] to py_test is currently required to import the parent
+# package at the top-level of test modules even though the library dependency
+# should be sufficient to update sys.path. 
+# https://github.com/bazelbuild/rules_python/issues/1221
+
+xdoctest(
+    files = glob(
+        include=["**/*.py"],
+        exclude=[
+            "flytezen/**",
+            "tests/**",
+        ]
+    ),
+    deps = [":pyrovelocity"],
+    imports = [".."],
+)
+
+py_test_module_list(
+    files = [
+        "tests/test_api.py",
+        "tests/test_compressedpickle.py",
+        "tests/test_config.py",
+        "tests/test_criticality_index.py",
+        "tests/test_cytotrace.py",
+        "tests/test_data.py",
+        "tests/test_plot.py",
+        "tests/test_pyrovelocity.py",
+        "tests/test_trainer.py",
+        "tests/test_utils.py",
+        "tests/test_velocity_guide.py",
+        "tests/test_velocity_model.py",
+        "tests/test_velocity_module.py",
+        "tests/test_velocity.py",
+    ],
+    size = "small",
+    tags = [""],
+    deps = [":pyrovelocity"],
+    imports = [".."],
+)
 
 py_library(
     name = "pyrovelocity",
     srcs = glob(["**/*.py"], exclude=["tests/**/*.py"]),
     deps = all_requirements,
     visibility = [
-        "//:__pkg__",
-        "//:__subpackages__",
+        "//src/pyrovelocity:__pkg__",
+        "//src/pyrovelocity:__subpackages__",
     ],
 )
 
-# xdoctest(
-#     files = glob(
-#         include=["**/*.py"],
-#         exclude=[
-#             "flytezen/**",
-#             "pyrovelocity.py",
-#             "tests/**",
-#         ]
-#     ),
-#     deps = all_requirements,
+# individual tests can be specified with requirements even if the root
+# py_library is defined with deps = []. this makes installation of dependencies
+# more efficient but requires manually curating direct and transitive
+# dependencies.
+#
+# py_test(
+#     name = "test_compressedpickle",
+#     srcs = ["tests/test_compressedpickle.py"],
+#     size = "small",
+#     deps = [
+#         ":pyrovelocity",
+#         requirement("numpy"),
+#         requirement("pandas"),
+#         requirement("pytest"),
+#     ],
+#     imports = [".."],
+# )
+
+# py_test(
+#     name = "test_criticality_index",
+#     srcs = ["tests/test_criticality_index.py"],
+#     size = "small",
+#     deps = [
+#         ":pyrovelocity",
+#         requirement("anndata"),
+#         requirement("numpy"),
+#         requirement("pytest"),
+#         requirement("scvelo"),
+#     ],
+#     imports = [".."],
+# )
+
+# py_test(
+#     name = "test_utils",
+#     srcs = ["tests/test_utils.py"],
+#     size = "small",
+#     deps = [
+#         ":pyrovelocity",
+#         requirement("anndata"),
+#         requirement("hypothesis"),
+#         requirement("numpy"),
+#         requirement("pytest"),
+#     ],
+#     imports = [".."],
+# )
+#
+# py_library(
+#     name = "conftest",
+#     srcs = ["tests/conftest.py"],
 # )
