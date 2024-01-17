@@ -34,6 +34,7 @@ test: ## Run tests. See pyproject.toml for configuration.
 	poetry run pytest
 
 test-bazel: ## Run tests with Bazel.
+test-bazel: set-requirements-bazel
 	bazel test //src/...
 
 test-cov-xml: ## Run tests with coverage
@@ -97,6 +98,7 @@ lock: lock-poetry
 	@echo "updated poetry, pip, bazel, and conda lock files"
 
 meta-bazel: ## Print bazel meta information.
+meta-bazel: set-requirements-bazel
 	bazel version
 	bazel info
 	bazel query /...
@@ -104,6 +106,17 @@ meta-bazel: ## Print bazel meta information.
 clean-bazel: ## Clean local and remote bazel build caches.
 	bazel clean --async
 	gsutil -m rm gs://pyrovelocity/build/**
+
+set-requirements-bazel:
+	@if [ "$$(uname -s)" = "Darwin" ]; then \
+		cp requirements-darwin.txt requirements-bazel.txt; \
+		echo "Copied requirements-darwin.txt to requirements-bazel.txt"; \
+	elif [ "$$(uname -s)" = "Linux" ]; then \
+		cp requirements-linux.txt requirements-bazel.txt; \
+		echo "Copied requirements-linux.txt to requirements-bazel.txt"; \
+	else \
+		echo "OS unsupported for automatic copying of Bazel python requirements."; \
+	fi
 
 #---------------------
 ##@ workflow execution
