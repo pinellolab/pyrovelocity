@@ -2,7 +2,19 @@
 pyrovelocity BUILD
 """
 # load("@pip//:requirements.bzl", "requirement")
+load("@pip//:requirements.bzl", "all_requirements")
 # load("//bazel:python.bzl", "xdoctest")
+load("@rules_python//python:defs.bzl", "py_library")
+
+py_library(
+    name = "pyrovelocity",
+    srcs = glob(["**/*.py"], exclude=["tests/**/*.py"]),
+    deps = all_requirements,
+    visibility = [
+        "//:__pkg__",
+        "//:__subpackages__",
+    ],
+)
 
 # xdoctest(
 #     files = glob(
@@ -13,22 +25,5 @@ pyrovelocity BUILD
 #             "tests/**",
 #         ]
 #     ),
-#     deps = [
-#         requirement("adjusttext"),
-#         requirement("anndata"),
-#         requirement("astropy"),
-#         requirement("colorlog"),
-#         requirement("hydra-core"),
-#         requirement("hydra-zen"),
-#         requirement("matplotlib"),
-#         requirement("mlflow"),
-#         requirement("pytest"),
-#         requirement("pytorch-lightning"),
-#         requirement("scvelo"),
-#         requirement("scvi-tools"),
-#         requirement("termcolor"),
-#         requirement("torch"),
-#         requirement("xdoctest"),
-#         requirement("zstandard"),
-#     ],
+#     deps = all_requirements,
 # )

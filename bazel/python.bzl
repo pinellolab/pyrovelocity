@@ -42,6 +42,6 @@ def xdoctest(files, name="xdoctest", deps=[], srcs=[], data=[], args=[], size="m
         python_version = "PY3",
         srcs_version = "PY3",
         tags = tags,
-        deps = ["//:pyrovelocity"] + deps,
+        deps = ["//src/pyrovelocity:pyrovelocity"] + deps,
         **kwargs
     )

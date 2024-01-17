@@ -2,7 +2,7 @@
 pyrovelocity BUILD
 """
 
-load("@pip//:requirements.bzl", "requirement")
+# load("@pip//:requirements.bzl", "requirement")
 load("@rules_python//python:defs.bzl", "py_test")
 load("//bazel:python.bzl", "py_test_module_list")
 
@@ -27,7 +27,7 @@ py_test_module_list(
     ],
     size = "small",
     tags = [""],
-    deps = ["//:pyrovelocity"],
+    deps = ["//src/pyrovelocity:pyrovelocity"],
 )
 
 py_test(
@@ -35,10 +35,10 @@ py_test(
     srcs = ["test_compressedpickle.py"],
     size = "small",
     deps = [
-        "//:pyrovelocity",
-        requirement("numpy"),
-        requirement("pandas"),
-        requirement("pytest"),
+        "//src/pyrovelocity:pyrovelocity",
+        # requirement("numpy"),
+        # requirement("pandas"),
+        # requirement("pytest"),
     ],
 )
 
@@ -47,11 +47,11 @@ py_test(
     srcs = ["test_criticality_index.py"],
     size = "small",
     deps = [
-        "//:pyrovelocity",
-        requirement("anndata"),
-        requirement("numpy"),
-        requirement("pytest"),
-        requirement("scvelo"),
+        "//src/pyrovelocity:pyrovelocity",
+        # requirement("anndata"),
+        # requirement("numpy"),
+        # requirement("pytest"),
+        # requirement("scvelo"),
     ],
 )
 
@@ -60,10 +60,10 @@ py_test(
     srcs = ["test_utils.py"],
     size = "small",
     deps = [
-        "//:pyrovelocity",
-        requirement("anndata"),
-        requirement("hypothesis"),
-        requirement("numpy"),
-        requirement("pytest"),
+        "//src/pyrovelocity:pyrovelocity",
+        # requirement("anndata"),
+        # requirement("hypothesis"),
+        # requirement("numpy"),
+        # requirement("pytest"),
     ],
 )
