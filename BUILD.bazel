@@ -1,3 +1,13 @@
 """
 pyrovelocity BUILD
 """
+
+load("@rules_python//python:defs.bzl", "py_library")
+
+py_library(
+    name = "pyrovelocity",
+    srcs = glob(["src/pyrovelocity/**/*.py"], exclude=["src/pyrovelocity/tests/**/*.py"]),
+    visibility = [
+        "__subpackages__",
+    ],
+)

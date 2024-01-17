@@ -27,7 +27,7 @@ py_test_module_list(
     ],
     size = "small",
     tags = [""],
-    deps = ["//src/pyrovelocity:pyrovelocity"],
+    deps = ["//:pyrovelocity"],
 )
 
 py_test(
@@ -35,7 +35,7 @@ py_test(
     srcs = ["test_compressedpickle.py"],
     size = "small",
     deps = [
-        "//src/pyrovelocity:pyrovelocity",
+        "//:pyrovelocity",
         requirement("numpy"),
         requirement("pandas"),
         requirement("pytest"),
@@ -47,7 +47,7 @@ py_test(
     srcs = ["test_criticality_index.py"],
     size = "small",
     deps = [
-        "//src/pyrovelocity:pyrovelocity",
+        "//:pyrovelocity",
         requirement("anndata"),
         requirement("numpy"),
         requirement("pytest"),
@@ -60,7 +60,7 @@ py_test(
     srcs = ["test_utils.py"],
     size = "small",
     deps = [
-        "//src/pyrovelocity:pyrovelocity",
+        "//:pyrovelocity",
         requirement("anndata"),
         requirement("hypothesis"),
         requirement("numpy"),
