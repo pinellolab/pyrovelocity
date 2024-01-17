@@ -34,7 +34,7 @@ test: ## Run tests. See pyproject.toml for configuration.
 	poetry run pytest
 
 test-bazel: ## Run tests with Bazel.
-	bazel test /...
+	bazel test //src/...
 
 test-cov-xml: ## Run tests with coverage
 	poetry run pytest --cov-report=xml
@@ -85,11 +85,24 @@ lock-pip:
 lock-conda: ## Export environment yaml and lock files for conda. (see pyproject.toml).
 	poe conda-lock
 
+lock-bazel:
+	bazel run //:requirements.update
+
 lock: ## Lock poetry, pip, and conda lock files.
 lock: lock-poetry 
 	make lock-pip 
 	make lock-conda
-	@echo "updated poetry, pip, and conda lock files"
+	make lock-bazel
+	@echo "updated poetry, pip, bazel, and conda lock files"
+
+meta-bazel: ## Print bazel meta information.
+	bazel version
+	bazel info
+	bazel query /...
+
+clean-bazel: ## Clean local and remote bazel build caches.
+	bazel clean --async
+	gsutil -m rm gs://pyrovelocity/build/**
 
 #---------------------
 ##@ workflow execution
@@ -677,6 +690,21 @@ module-deps-graph: ## Generate module dependency graph with pydeps.
 	--exclude pyrovelocity.tests.* pyrovelocity.flytezen.* \
 	--rmprefix pyrovelocity.
 	svg2pdf pyrovelocity.svg pyrovelocity.pdf
+
+make-storage-bucket: ## Create storage bucket.
+ifdef GCP_STORAGE_BUCKET
+	gsutil mb -p $(GCP_PROJECT_ID) -c standard -l $(GCP_REGION) -b on gs://$(GCP_STORAGE_BUCKET)
+else
+	@echo 'Run "make help" and define necessary variables'
+endif
+
+list-storage-bucket-objects: ## List storage bucket objects.
+ifdef GCP_STORAGE_BUCKET
+	gsutil ls -lhR gs://$(GCP_STORAGE_BUCKET)
+else
+	@echo 'Run "make help" and define necessary variables'
+endif
+	
 
 #------------------------------
 ##@ web application development
