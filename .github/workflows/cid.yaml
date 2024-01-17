@@ -221,12 +221,14 @@ jobs:
           key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel') }}
           restore-keys: |
             ${{ runner.os }}-bazel-
-      - name: "Setup tmate debug session"
-        uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # ratchet:mxschmitt/action-tmate@v3
-        if: ${{ inputs.debug_enabled }}
       - name: run bazel tests
         run: |
           make meta-bazel lock-bazel test-bazel
+      - name: upload requirements artifact
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # ratchet:actions/upload-artifact@v3
+        with:
+          name: requirements-bazel
+          path: requirements-bazel.txt
 
   test-nix:
     runs-on: ubuntu-latest
