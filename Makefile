@@ -87,6 +87,7 @@ lock-conda: ## Export environment yaml and lock files for conda. (see pyproject.
 
 lock-bazel:
 	bazel run //:requirements.update
+	PAGER=cat git diff requirements-bazel.txt || true
 
 lock: ## Lock poetry, pip, and conda lock files.
 lock: lock-poetry 

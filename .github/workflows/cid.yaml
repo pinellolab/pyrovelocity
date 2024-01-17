@@ -218,7 +218,7 @@ jobs:
         if: ${{ inputs.debug_enabled }}
       - name: run bazel tests
         run: |
-          make meta-bazel test-bazel
+          make meta-bazel lock-bazel test-bazel
 
   test-nix:
     runs-on: ubuntu-latest
