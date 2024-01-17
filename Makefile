@@ -34,7 +34,7 @@ test: ## Run tests. See pyproject.toml for configuration.
 	poetry run pytest
 
 test-bazel: ## Run tests with Bazel.
-test-bazel: set-requirements-bazel
+test-bazel:
 	bazel test //src/...
 
 test-cov-xml: ## Run tests with coverage
@@ -86,9 +86,10 @@ lock-pip:
 lock-conda: ## Export environment yaml and lock files for conda. (see pyproject.toml).
 	poe conda-lock
 
-lock-bazel:
+lock-bazel: ## Export requirements-bazel.txt for bazel.
+	touch requirements-bazel.txt
 	bazel run //:requirements.update
-	PAGER=cat git diff requirements-bazel.txt || true
+	make cache-requirements-bazel
 
 lock: ## Lock poetry, pip, and conda lock files.
 lock: lock-poetry 
@@ -98,7 +99,7 @@ lock: lock-poetry
 	@echo "updated poetry, pip, bazel, and conda lock files"
 
 meta-bazel: ## Print bazel meta information.
-meta-bazel: set-requirements-bazel
+meta-bazel:
 	bazel version
 	bazel info
 	bazel query /...
@@ -107,13 +108,26 @@ clean-bazel: ## Clean local and remote bazel build caches.
 	bazel clean --async
 	gsutil -m rm gs://pyrovelocity/build/**
 
-set-requirements-bazel:
+set-requirements-bazel: ## Set bazel python requirements from OS specific requirements.
 	@if [ "$$(uname -s)" = "Darwin" ]; then \
 		cp requirements-darwin.txt requirements-bazel.txt; \
 		echo "Copied requirements-darwin.txt to requirements-bazel.txt"; \
 	elif [ "$$(uname -s)" = "Linux" ]; then \
 		cp requirements-linux.txt requirements-bazel.txt; \
 		echo "Copied requirements-linux.txt to requirements-bazel.txt"; \
+	else \
+		echo "OS unsupported for automatic copying of Bazel python requirements."; \
+	fi
+
+cache-requirements-bazel: ## Cache bazel python requirements as OS specific requirements.
+	@if [ "$$(uname -s)" = "Darwin" ]; then \
+		cp requirements-bazel.txt requirements-darwin.txt; \
+		echo "Cached requirements-bazel.txt as requirements-darwin.txt"; \
+		PAGER=cat git diff requirements-darwin.txt || true; \
+	elif [ "$$(uname -s)" = "Linux" ]; then \
+		cp requirements-bazel.txt requirements-linux.txt; \
+		echo "Cached requirements-bazel.txt as requirements-linux.txt"; \
+		PAGER=cat git diff requirements-linux.txt || true; \
 	else \
 		echo "OS unsupported for automatic copying of Bazel python requirements."; \
 	fi
