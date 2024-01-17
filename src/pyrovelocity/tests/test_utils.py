@@ -6,6 +6,7 @@ import pytest
 from anndata import AnnData
 from hypothesis import given
 from hypothesis import strategies as st
+from pyrovelocity.utils import generate_sample_data
 
 
 def test_load_utils():
@@ -44,8 +45,6 @@ def test_generate_sample_data(
     noise_model: str,
     random_seed: np.random.RandomState,
 ):
-    from pyrovelocity.utils import generate_sample_data
-
     beta, gamma = beta_gamma
     seed = random_seed.randint(0, 1000)
 
@@ -86,16 +85,12 @@ def test_generate_sample_data(
 
 @pytest.fixture
 def sample_data():
-    from pyrovelocity.utils import generate_sample_data
-
     return generate_sample_data(random_seed=98)
 
 
 @pytest.mark.parametrize("n_obs, n_vars", [(100, 12), (50, 10), (200, 20)])
 @pytest.mark.parametrize("noise_model", ["iid", "gillespie", "normal"])
 def test_generate_sample_data_dimensions(n_obs, n_vars, noise_model):
-    from pyrovelocity.utils import generate_sample_data
-
     adata = generate_sample_data(
         n_obs=n_obs, n_vars=n_vars, noise_model=noise_model, random_seed=98
     )
@@ -108,8 +103,6 @@ def test_generate_sample_data_layers(sample_data):
 
 
 def test_generate_sample_data_reproducibility(sample_data):
-    from pyrovelocity.utils import generate_sample_data
-
     adata1 = sample_data
     adata2 = generate_sample_data(random_seed=98)
     assert (adata1.X == adata2.X).all()
@@ -122,6 +115,4 @@ def test_generate_sample_data_invalid_noise_model():
         ValueError,
         match="noise_model must be one of 'iid', 'gillespie', 'normal'",
     ):
-        from pyrovelocity.utils import generate_sample_data
-
         generate_sample_data(noise_model="wishful thinking")
