@@ -213,6 +213,14 @@ jobs:
           cat > service-account-credentials.json << EOF
           ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}
           EOF
+      - name: cache bazel
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/bazel
+          key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'MODULE.bazel') }}
+          restore-keys: |
+            ${{ runner.os }}-bazel-
       - name: "Setup tmate debug session"
         uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # ratchet:mxschmitt/action-tmate@v3
         if: ${{ inputs.debug_enabled }}
