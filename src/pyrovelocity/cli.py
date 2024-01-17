@@ -1,8 +1,10 @@
 """Main module."""
 import click
 
-from . import __version__
-
+try:
+    from . import __version__
+except:
+    __version__ = "unknown"
 
 @click.command()
 @click.version_option(version=__version__)

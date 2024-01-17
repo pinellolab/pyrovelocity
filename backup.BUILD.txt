@@ -11,7 +11,7 @@ load("@aspect_rules_py//py:defs.bzl", "py_library", "py_test", "py_pytest_main")
 
 py_pytest_main(
     name = "__test__",
-    deps = [requirement("pytest")], # change this to the pytest target in your repo.
+    deps = [requirement("pytest"), ":pyrovelocity"], # change this to the pytest target in your repo.
 )
 
 # passing imports = [".."] to py_test is currently required to import the parent
@@ -62,16 +62,16 @@ py_pytest_main(
 #     imports = [".."],
 # )
 
-# py_library(
-#     name = "pyrovelocity",
-#     srcs = glob(["**/*.py"], exclude=["pyrovelocity.py", "tests/**/*.py"]),
-#     deps = all_requirements,
-#     visibility = [
-#         # "//src/pyrovelocity:__pkg__",
-#         # "//src/pyrovelocity:__subpackages__",
-#         "//visibility:public",
-#     ],
-# )
+py_library(
+    name = "pyrovelocity",
+    srcs = glob(["**/*.py"], exclude=["pyrovelocity.py", "tests/**/*.py"]),
+    deps = all_requirements,
+    visibility = [
+        # "//src/pyrovelocity:__pkg__",
+        # "//src/pyrovelocity:__subpackages__",
+        "//visibility:public",
+    ],
+)
 
 # individual tests can be specified with requirements even if the root
 # py_library is defined with deps = []. this makes installation of dependencies

@@ -2,7 +2,15 @@
 pyrovelocity BUILD
 """
 
+load("@aspect_rules_py//py:defs.bzl", "py_test")
+load("@bazel_gazelle//:def.bzl", "gazelle")
+load("@pip//:requirements.bzl", "all_whl_requirements")
 load("@rules_python//python:pip.bzl", "compile_pip_requirements")
+load("@rules_python_gazelle_plugin//manifest:defs.bzl", "gazelle_python_manifest")
+load("@rules_python_gazelle_plugin//modules_mapping:def.bzl", "modules_mapping")
+
+# gazelle:exclude reproducibility/** 
+# gazelle:exclude src/pyrovelocity/flytezen/**
 
 compile_pip_requirements(
     name = "requirements",
@@ -10,4 +18,28 @@ compile_pip_requirements(
     generate_hashes = True,
     requirements_txt = "requirements-bazel.txt",
     timeout = "moderate",
+)
+
+modules_mapping(
+    name = "modules_map",
+    exclude_patterns = [
+        "^_|(\\._)+",  # This is the default.
+        "(\\.tests)+",  # Add a custom one to get rid of the psutil tests.
+    ],
+    wheels = all_whl_requirements,
+)
+
+gazelle_python_manifest(
+    name = "gazelle_python_manifest",
+    modules_mapping = ":modules_map",
+    pip_repository_name = "pip",
+    requirements = [
+        "//:requirements-bazel.txt",
+    ],
+    tags = ["exclusive"],
+)
+
+gazelle(
+    name = "gazelle",
+    gazelle = "@rules_python_gazelle_plugin//python:gazelle_binary",
 )
