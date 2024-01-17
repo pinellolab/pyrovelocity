@@ -218,8 +218,7 @@ jobs:
         if: ${{ inputs.debug_enabled }}
       - name: run bazel tests
         run: |
-          bazel version
-          bazel test //...
+          make meta-bazel test-bazel
 
   test-nix:
     runs-on: ubuntu-latest
