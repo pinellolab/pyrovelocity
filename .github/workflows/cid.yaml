@@ -227,7 +227,7 @@ jobs:
         with:
           path: |
             requirements-bazel.txt
-          key: ${{ runner.os }}-requirements-${{ hashFiles('requirements.txt') }}
+          key: ${{ runner.os }}-requirements-${{ hashFiles('requirements-cpu.txt') }}
           restore-keys: |
             ${{ runner.os }}-requirements-
       - name: update linux requirements
