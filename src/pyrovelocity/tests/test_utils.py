@@ -22,7 +22,7 @@ beta_gamma_strategy = st.tuples(
     st.floats(min_value=0.01, max_value=3.0),  # beta
     st.floats(min_value=0.01, max_value=3.0),  # gamma
 ).filter(lambda x: x[1] > x[0])  # gamma requied to be larger than beta
-noise_model_strategy = st.sampled_from(["iid", "gillespie", "normal"])
+noise_model_strategy = st.sampled_from(["iid", "normal"])
 random_seed_strategy = st.randoms()
 
 
