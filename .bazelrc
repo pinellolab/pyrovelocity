@@ -1,7 +1,17 @@
+import %workspace%/.aspect/bazelrc/convenience.bazelrc
+import %workspace%/.aspect/bazelrc/correctness.bazelrc
+import %workspace%/.aspect/bazelrc/performance.bazelrc
+import %workspace%/.aspect/bazelrc/debug.bazelrc
+import %workspace%/.aspect/bazelrc/bazel7.bazelrc
+
+# project settings
+
 build --verbose_failures
-build --test_output=errors
 build --experimental_ui_max_stdouterr_bytes=-1
 build --config=cache
 build:cache --remote_cache=https://storage.googleapis.com/pyrovelocity/build
 build:cache --remote_upload_local_results=true
 build:cache --google_credentials=service-account-credentials.json
+
+# user settings (not version-controlled)
+try-import %workspace%/.aspect/bazelrc/user.bazelrc
