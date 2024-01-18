@@ -4,6 +4,7 @@ write_aspect_bazelrc_presets(
     name = "update_aspect_bazelrc_presets",
     presets = [
         "bazel7",
+        "ci",
         "convenience",
         "correctness",
         "debug",

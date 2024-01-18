@@ -1,3 +1,4 @@
+import %workspace%/.aspect/bazelrc/ci.bazelrc
 import %workspace%/.aspect/bazelrc/convenience.bazelrc
 import %workspace%/.aspect/bazelrc/correctness.bazelrc
 import %workspace%/.aspect/bazelrc/performance.bazelrc
