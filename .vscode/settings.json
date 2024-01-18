@@ -27,6 +27,10 @@
     "**/.solid/**": true,
     "**/dev/cluster/pyrovelocity/pyrovelocitydev/cue.mod/**": true
   },
+  // this is a workaround for 1000% CPU usage by
+  // /Applications/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/@vscode/ripgrep/bin/rg
+  // https://github.com/microsoft/vscode/issues/186279#issuecomment-1633159669
+  "search.followSymlinks": false,
   "terminal.integrated.scrollback": 100000,
   "terminal.integrated.persistentSessionScrollback": 100000,
   "editor.fontSize": 16,
