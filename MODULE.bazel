@@ -8,6 +8,7 @@ module(
     compatibility_level = 1,
 )
 
+bazel_dep(name = "aspect_bazel_lib", version = "2.2.0")
 bazel_dep(name = "rules_python", version = "0.28.0")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
