@@ -2,9 +2,8 @@
 pyrovelocity BUILD
 """
 
-load("@pip//:requirements.bzl", "all_requirements")
-# or if individual requirements are specified
-# load("@pip//:requirements.bzl", "all_requirements", "requirement")
+# load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
+load("@pip//:requirements.bzl", "all_requirements", "requirement")
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
 load("//bazel:python.bzl", "py_test_module_list", "xdoctest")
 
@@ -56,6 +55,7 @@ py_library(
         "//src/pyrovelocity:__pkg__",
         "//src/pyrovelocity:__subpackages__",
     ],
+    # imports = [".."],
 )
 
 # individual tests can be specified with requirements even if the root

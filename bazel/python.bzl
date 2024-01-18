@@ -2,7 +2,9 @@
 bazel macros for python
 """
 
+# load("@aspect_rules_py//py:defs.bzl", "py_pytest_main", "py_test")
 load("@bazel_skylib//lib:paths.bzl", "paths")
+# load("@pip//:requirements.bzl", "requirement")
 load("@rules_python//python:defs.bzl", "py_test")
 
 
@@ -56,3 +58,25 @@ def xdoctest(files, name="xdoctest", deps=[], srcs=[], data=[], args=[], size="m
         deps = deps,
         **kwargs
     )
+
+# for use with aspect_rules_py 
+# def py_test_module_list(files, size, deps, extra_srcs=[], name_suffix="", **kwargs):
+#     """
+#     py_test_module_list creates a py_test for each file in files.    
+#     """
+#     py_pytest_main(
+#         name = "__test__",
+#         deps = [requirement("pytest")],
+#     )
+#     for file in files:
+#         name = paths.split_extension(file)[0] + name_suffix
+#         if name == file:
+#             name = name + "_test"
+#         py_test(
+#             name = name,
+#             size = size,
+#             main = ":__test__.py",
+#             srcs = extra_srcs + [file] + [":__test__"],
+#             deps = deps + [":__test__", requirement("pytest")],
+#             **kwargs
+#         )
