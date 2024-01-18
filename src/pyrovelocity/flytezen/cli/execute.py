@@ -403,11 +403,11 @@ def main() -> None:
         "_self_",
         # test remote workflow execution
         {"execution_context": "remote_dev"},
-        {"entity_config": "lrwine_training_workflow"},
+        {"entity_config": "main_workflow_training_workflow"},
         # # test local cluster task execution
         # # {"execution_context": "local_cluster_dev"},
         # {"execution_context": "local_shell"},
-        # {"entity_config": "lrwine_process_data"},
+        # {"entity_config": "main_workflow_process_data"},
     ]
     logger.debug(f"hydra_defaults: {hydra_defaults}")
 
@@ -439,7 +439,7 @@ if __name__ == "__main__":
     == Configuration groups ==
     First override default group values (group=option)
 
-    entity_config: example_wf, lrwine_training_workflow
+    entity_config: example_wf, main_workflow_training_workflow
     execution_context: local_cluster_dev, local_cluster_prod, local_shell,
     remote_dev, remote_prod
 
@@ -472,7 +472,7 @@ if __name__ == "__main__":
         _convert_: all
         _args_:
         - logistic_regression:
-            _target_: pyrovelocity.flytezen.workflows.lrwine.LogisticRegressionInterface
+            _target_: pyrovelocity.flytezen.workflows.main_workflow.LogisticRegressionInterface
             penalty: l2
             dual: false
             tol: 0.0001
@@ -488,7 +488,7 @@ if __name__ == "__main__":
             warm_start: false
             n_jobs: null
             l1_ratio: null
-      module_name: lrwine
+      module_name: main_workflow
       entity_name: training_workflow
       entity_type: PythonFunctionWorkflow
 
@@ -498,19 +498,19 @@ if __name__ == "__main__":
         > pyrovelocity
         > pyrovelocity \
             execution_context=remote_dev \
-            entity_config=lrwine_training_workflow
+            entity_config=main_workflow_training_workflow
         > pyrovelocity \
             entity_config.inputs._args_.0.logistic_regression.C=0.4 \
             entity_config.inputs._args_.0.logistic_regression.max_iter=1200
         # The _args_=[] only works for local_shell execution of tasks
         > pyrovelocity \
             execution_context=local_shell \
-            entity_config=lrwine_process_data \
+            entity_config=main_workflow_process_data \
             entity_config.inputs._args_=[]
         # For remote execution of tasks, stub inputs must be provided.
         # This is only meant for testing purposes.
         > pyrovelocity execution_context=local_cluster_dev \
-            entity_config=lrwine_process_data \
+            entity_config=main_workflow_process_data \
             entity_config.inputs._args_.0.data.data=[[12.0, 0],[13.0, 1],[9.5, 2]] \
             entity_config.inputs._args_.0.data.columns="[ash, target]"
         # TODO: update to use joblib hydra execution backend

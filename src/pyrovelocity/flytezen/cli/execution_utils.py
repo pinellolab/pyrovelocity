@@ -30,7 +30,7 @@ from hydra_zen import ZenStore, builds, make_custom_builds_fn
 @dataclass
 class EntityConfig:
     inputs: Dict[str, Any]
-    module_name: str = "lrwine"
+    module_name: str = "main_workflow"
     entity_name: str = "training_workflow"
     entity_type: str = "WorkflowBase"
 
@@ -314,7 +314,7 @@ def generate_hydra_config() -> HydraConf:
                   # The inputs arguments in the following example must correspond
                   # to those supported by the specified entity_config.
                   * `${hydra.help.app_name} -c job \\
-                       entity_config=lrwine_training_workflow \\
+                       entity_config=main_workflow_training_workflow \\
                        entity_config.inputs._args_.0.logistic_regression.max_iter=1200`
                   # The following two examples are only meant for task testing.
                   # This example only works in the local_shell execution context.
@@ -322,13 +322,13 @@ def generate_hydra_config() -> HydraConf:
                   #      https://github.com/flyteorg/flyte/issues/1312
                   * `${hydra.help.app_name} -c job \\
                        execution_context=local_shell \\
-                       entity_config=lrwine_process_data \\
+                       entity_config=main_workflow_process_data \\
                        entity_config.inputs._args_=[]"`
                   # This will fail without specifying the inputs as it does not
                   # automatically instantiate the default arguments of the task.
                   * `${hydra.help.app_name} -c job \\
                        execution_context=local_cluster_dev \\
-                       entity_config=lrwine_process_data \\
+                       entity_config=main_workflow_process_data \\
                        entity_config.inputs._args_.0.data.data="[[12.0, 0],[13.0, 1],[9.5, 2]]" \\
                        entity_config.inputs._args_.0.data.columns="[ash, target]"`
 
@@ -461,7 +461,7 @@ def wait_for_workflow_completion(
 
 
 def generate_workflow_inputs(
-    workflow_import_path: str = "pyrovelocity.flytezen.workflows.lrwine",
+    workflow_import_path: str = "pyrovelocity.flytezen.workflows.main_workflow",
     workflow_name: str = "training_workflow",
 ) -> Dict[str, Any]:
     """
