@@ -26,6 +26,10 @@ help-sort: ## Display alphabetized version of help (no section headings).
 	@grep -hE '^[A-Za-z0-9_ \-]*?:.*##.*$$' $(MAKEFILE_LIST) | sort | \
 	awk 'BEGIN {FS = ":.*?## "}; /^[A-Za-z0-9_ \-]*?:.*##/ {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
+HELP_TARGETS_PATTERN ?= test
+help-targets: ## Print commands for all targets matching a given pattern. eval "$(make help-targets HELP_TARGETS_PATTERN=test | sed 's/\x1b\[[0-9;]*m//g')"
+	@make help-sort | awk '{print $$1}' | grep '$(HELP_TARGETS_PATTERN)' | xargs -I {} printf "printf '___\n\n{}:\n\n'\nmake -n {}\nprintf '\n'\n"
+
 #-------------------------
 ##@ primary python package
 #-------------------------
@@ -36,6 +40,12 @@ test: ## Run tests. See pyproject.toml for configuration.
 test-bazel: ## Run tests with Bazel.
 test-bazel:
 	bazel test //src/...
+
+test-bazel-debug: ## Run tests with Bazel in debug mode. See .aspect/bazelrc/debug.bazelrc.
+	bazel test --config=debug //src/...
+
+test-bazel-nodocs: ## Run tests with Bazel excluding doctests.
+	bazel test //src/... -- -//src/pyrovelocity:xdoctest
 
 test-cov-xml: ## Run tests with coverage
 	poetry run pytest --cov-report=xml
