@@ -29,6 +29,7 @@ python = ">=3.10, <3.11"
 adjusttext = "0.7.3"
 anndata = "0.8.0"
 astropy = "5.2.2"
+beartype = "0.16.4"
 # pinning chex>=0.1.82 is to avoid 
 # dm-tree = "0.1.8"
 # whose build is broken on Darwin
