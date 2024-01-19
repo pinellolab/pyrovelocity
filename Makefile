@@ -94,6 +94,26 @@ lock-pip:
 	--with=test \
 	--with=workflows \
 	--output=$(PIP_REQUIREMENTS_NAME)-hashed.txt
+ 
+local_platform_system=$(shell uname -s | tr '[:upper:]' '[:lower:]')
+
+lock-pip-compile:
+	pip-compile \
+	--resolver=backtracking \
+	--allow-unsafe \
+	--generate-hashes \
+	--output-file=requirements-$(local_platform_system).txt \
+	requirements.txt
+
+split-file:
+	@total_lines=$$(wc -l < $(file)); \
+	half_lines=$$((total_lines / 2)); \
+	base=$$(basename $(file) .txt); \
+	ext=$$(echo $(file) | awk -F. '{print $$NF}'); \
+	split -l $$half_lines $(file) $$base"_part"; \
+	mv $$base"_partaa" $$base"_partaa".$$ext; \
+	mv $$base"_partab" $$base"_partab".$$ext; \
+	echo "Split $(file) into $$base"_partaa".$$ext and $$base"_partab".$$ext"
 
 lock-pip-cpu: ## Export requirements-cpu.txt for pip.
 lock-pip-cpu: lock-poetry
