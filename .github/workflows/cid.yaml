@@ -213,6 +213,8 @@ jobs:
           cat > service-account-credentials.json << EOF
           ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}
           EOF
+      - name: Setup tmate debug session
+        uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # ratchet:mxschmitt/action-tmate@v3
       - name: cache bazel
         uses: actions/cache@e12d46a63a90f2fae62d114769bbf2a179198b5c # ratchet:actions/cache@v3
         with:
@@ -227,7 +229,7 @@ jobs:
         with:
           path: |
             requirements-bazel.txt
-          key: ${{ runner.os }}-requirements-${{ hashFiles('requirements-cpu.txt') }}
+          key: ${{ runner.os }}-requirements-${{ hashFiles('requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-requirements-
       - name: update linux requirements
