@@ -52,6 +52,7 @@ pandas = "1.5.3"
 pyro-ppl = "1.8.3"
 pytorch-lightning = "1.9.4"
 pyyaml = "6.0.1"
+returns = "0.22.0"
 rich = "12.6.0"
 scipy = "1.10.1"
 scvelo = "0.2.5"
@@ -135,7 +136,7 @@ optional = true
 
 [tool.poetry.group.lint.dependencies]
 black = { version = "23.3.0", extras = ["jupyter"] }
-mypy = "1.2.0"
+mypy = "1.5.1"
 pyright = "1.1.347"
 ruff = "0.1.5"
 docformatter = { version = ">=1.7.5", extras = ["tomli"] }
