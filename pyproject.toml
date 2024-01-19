@@ -36,7 +36,6 @@ astropy = "5.2.2"
 chex = "0.1.85"
 click = "8.1.7"
 colorlog = "6.7.0"
-cospar = { version = "0.1.9", source = "pypi" }
 desert = "2022.9.22"
 h5py = "3.8.0"
 hydra-core = "1.3.2"
@@ -52,7 +51,6 @@ pyro-ppl = "1.8.3"
 pytorch-lightning = "1.9.4"
 pyyaml = "6.0.1"
 rich = "12.6.0"
-scikit-misc = "0.1.4"
 scipy = "1.10.1"
 scvelo = "0.2.5"
 scvi-tools = "0.20.3"
@@ -61,6 +59,9 @@ termcolor = "2.2.0"
 torch = "1.13.1"
 torchmetrics = "0.11.4"
 zstandard = "0.21.0"
+# removed from library at
+# cospar = { version = "0.1.9", source = "pypi" }
+# scikit-misc = "0.1.4"
 
 # extras
 annoy = {version = "^1.17.3", optional = true }
