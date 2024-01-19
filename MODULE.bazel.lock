@@ -3499,7 +3499,7 @@
       "os:osx,arch:aarch64": {
         "bzlTransitiveDigest": "d0idolFFC7fQp0ycg3hTOk19xlQUMR9LV2oThQvws7c=",
         "accumulatedFileDigests": {
-          "@@//:requirements-bazel.txt": "0b658a982dcbd50244d4b0606ed9d1013bdeb386d778b6c00c7f634a557c7954"
+          "@@//:requirements-bazel.txt": "14ee74d9485741e79976ba4d559e3fb966fef040fc9391c8ce34400b94af69b8"
         },
         "envVariables": {},
         "generatedRepoSpecs": {
@@ -5359,35 +5359,6 @@
               "group_deps": []
             }
           },
-          "pip_310_scikit_misc": {
-            "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "name": "rules_python~0.28.0~pip~pip_310_scikit_misc",
-              "requirement": "scikit-misc==0.1.4 ; python_version >= \"3.10\" and python_version < \"3.11\"     --hash=sha256:14cfb20bb4b5515ef7b76ff493f8119966d5c5004607d9ded1a5e675cfbbd4b8     --hash=sha256:219386e9f6a30b0a55d3f0a70b87bca161c4902e47f31b9f37c33fa607b0450d     --hash=sha256:249833e18f676e18bed750e5b618373f14c39b82b32815755c68edb0f46a9381     --hash=sha256:34a6e2785cc0a56d2d6555fe5bbc201704371528a5d994faa2839a82375e24a5     --hash=sha256:3926a4837ca6053222b22e0c39d6f02d79131e9a61e16b2953ea60d8db4ffbdb     --hash=sha256:3957274035c0bfd35af6b2d66c1895b115465a96b3552545a702953a73c0d829     --hash=sha256:463df3f4c794ef5428463b285ad31cf1073070b6a87a005eea8251b0259bb105     --hash=sha256:4c29d63964e5a0cb9eb4d73ffe28a60057fda30c328d3b0c6226c0dad29a9149     --hash=sha256:57c8d8ea740e498718ec2ded59eb04f2fe2bd3fd8e9ae65f58382d2b72b841d3     --hash=sha256:5c01e261dc96312272efa8990524425009bc349d65f69e75fcaca08166567592     --hash=sha256:680fff8043651f82d5f73b429cfb8121a2d8505e75ece037468edc0c79c2c648     --hash=sha256:77b9cbcdfbf34b084b12da042006af7503b52e8d18c8b6290a6ffbeafd672665     --hash=sha256:a5f999bd61a1b00148847c4dfe287e8164f47b51b1364533ba5e01816ed099ff     --hash=sha256:a9f89fcda2959c887615a74c892ed8a33359aed67973d94fe7f85bc19d0c8d59     --hash=sha256:b1281451ae6dfa4e797a0b3a8e8c516eae75c40debb20a4bafe8caecfa5abb3a     --hash=sha256:bea9faac5e465861d50264fe950e2fc4c3140eda1f97dd0c47f0257945c5ac30     --hash=sha256:c8256d1c84ee6e5555c2a86bd688c8c02c37d6aaa5ea6dfde60435017d340746     --hash=sha256:cbce16592f0bf1d30ce8c7480c342d4df109d4adba6f19532564b09c8de3da0b     --hash=sha256:dabcd87b561e33d7f95e5c32a060a2c6f50e5aec40b2c13345a8dafc0ced4020     --hash=sha256:dc82be3113deaf9f8db768cc2485c5d74dd57f49b3766fd81bd519d04febc251     --hash=sha256:e193756612ed659d4c69139862a92d2a12226182c41e1d4c1c0cded3df82222c     --hash=sha256:e77f910d3fa50f7835a8c12610ba717965a67565cbe78b16a2ede5425a1d90be     --hash=sha256:ee1d2bed059f216250768976994d3e7708c159aa4d44754e30b5e78bfe3d5aa1     --hash=sha256:f7746a0347811063e1ecf9121df94835785003953c38b5ba84f63fc508c22911     --hash=sha256:f9d8843f566120ce677eb8f0e62172a0f0ce629971f6197a79cbe1ba0cfdb5d3",
-              "repo": "pip_310",
-              "repo_prefix": "pip_310_",
-              "whl_patches": {},
-              "experimental_target_platforms": [
-                "all"
-              ],
-              "python_interpreter": "",
-              "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
-              "quiet": true,
-              "timeout": 600,
-              "isolated": true,
-              "extra_pip_args": [
-                "--extra-index-url",
-                "https://download.pytorch.org/whl/cpu"
-              ],
-              "download_only": false,
-              "pip_data_exclude": [],
-              "enable_implicit_namespace_pkgs": false,
-              "environment": {},
-              "group_name": "",
-              "group_deps": []
-            }
-          },
           "pip_310_msal_extensions": {
             "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
             "ruleClassName": "whl_library",
@@ -5539,6 +5510,35 @@
             "attributes": {
               "name": "rules_python~0.28.0~pip~pip_310_flyteidl",
               "requirement": "flyteidl==1.10.6 ; python_version >= \"3.10\" and python_version < \"3.11\"     --hash=sha256:00cdcb38b62e92d0180d00e6680baeff00819770f7d23ad82a2d9d6d60ab3619     --hash=sha256:ec2c4e9726bac302d6f76aed3be662ff713eea31391294f8bd617abd6d134098",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_beartype": {
+            "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.28.0~pip~pip_310_beartype",
+              "requirement": "beartype==0.16.4 ; python_version >= \"3.10\" and python_version < \"3.11\"     --hash=sha256:1ada89cf2d6eb30eb6e156eed2eb5493357782937910d74380918e53c2eae0bf     --hash=sha256:64865952f9dff1e17f22684b3c7286fc79754553b47eaefeb1286224ae8c1bd9",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -6586,35 +6586,6 @@
               "group_deps": []
             }
           },
-          "pip_310_cospar": {
-            "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "name": "rules_python~0.28.0~pip~pip_310_cospar",
-              "requirement": "cospar==0.1.9 ; python_version >= \"3.10\" and python_version < \"3.11\"     --hash=sha256:48de598f00a1ec5a0e985cbc1e3915898efc782e6da2b0c38db952d478ef1c9b     --hash=sha256:601dffe101e93f2ba9284ef0c9863713d098da34153886009b9d15075a625a9d",
-              "repo": "pip_310",
-              "repo_prefix": "pip_310_",
-              "whl_patches": {},
-              "experimental_target_platforms": [
-                "all"
-              ],
-              "python_interpreter": "",
-              "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
-              "quiet": true,
-              "timeout": 600,
-              "isolated": true,
-              "extra_pip_args": [
-                "--extra-index-url",
-                "https://download.pytorch.org/whl/cpu"
-              ],
-              "download_only": false,
-              "pip_data_exclude": [],
-              "enable_implicit_namespace_pkgs": false,
-              "environment": {},
-              "group_name": "",
-              "group_deps": []
-            }
-          },
           "pip_310_kiwisolver": {
             "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
             "ruleClassName": "whl_library",
@@ -7056,6 +7027,35 @@
             "attributes": {
               "name": "rules_python~0.28.0~pip~pip_310_sphinxcontrib_applehelp",
               "requirement": "sphinxcontrib-applehelp==1.0.4 ; python_version >= \"3.10\" and python_version < \"3.11\"     --hash=sha256:29d341f67fb0f6f586b23ad80e072c8e6ad0b48417db2bde114a4c9746feb228     --hash=sha256:828f867945bbe39817c210a1abfd1bc4895c8b73fcaade56d45357a348a07d7e",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_jaxtyping": {
+            "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.28.0~pip~pip_310_jaxtyping",
+              "requirement": "jaxtyping==0.2.25 ; python_version >= \"3.10\" and python_version < \"3.11\"     --hash=sha256:4ec4bdb6839a67c062e48c27d62d44bf353099d7ff6cd3628b5a511c097ab922     --hash=sha256:503772cf985ff50bd160d0661266e1628da47cc8b9a302de16f230e07f5ac119",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -9544,35 +9544,6 @@
               "group_deps": []
             }
           },
-          "pip_310_fastcluster": {
-            "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "name": "rules_python~0.28.0~pip~pip_310_fastcluster",
-              "requirement": "fastcluster==1.2.6 ; python_version >= \"3.10\" and python_version < \"3.11\"     --hash=sha256:03f8efe6435a7b947fa4a420676942d0267dac0d323ec5ead50f1856cc7cf96f     --hash=sha256:04ea4a68e0675072ca761bad33322a0e998cb43693fd41165bc420d7db40429a     --hash=sha256:060c1cb3c84942d8d3618385e2c25998ba690c46ec8c73d64477f808abfac3f2     --hash=sha256:06df1d97edca68b2ffa43d81c3b5f4e4147bc12ab241c6585fadcdeb0bfa23ca     --hash=sha256:0bb54283b4d5ec96f167c7fd31921f169226c1261637434fdae7a69ee3c69573     --hash=sha256:11748a4e245c745030e9ddd8c2c37e378f8ad8bd8e869d954c84ff674495499f     --hash=sha256:1801c9daa9aa5bbbb0830efe8bd3034b4b7a417e4b8dd353683999be29797df2     --hash=sha256:2fcb0973ca0e6978e3242046338c350cbed1493108929231fae9bd35ad05a6d6     --hash=sha256:4093d5454bcbe48b30e32da5db43056a08889480a96e4555f28c1f7004fc5323     --hash=sha256:4b9cfd426966b8037bec2fc03a0d7a9c87313482c699b36ffa1432b49f84ed2e     --hash=sha256:55b49f6033c45a28f93540847b495ed0f718b5c3f4fef446cf77e3726662e1d5     --hash=sha256:58958a0333e3dfbad198394e9b7dd6254de0a3e622019b057288405b2a4a6bba     --hash=sha256:5fe543b6d45da27e84e5af6248722475b88943d8ef40d835cbabbb0ba5ee786b     --hash=sha256:6a7c7f51a6d2f5ab58b1d85e9d0af2af9600ec13bb43bc6aafc9085d2c4ccd93     --hash=sha256:6cf156d4203708348522393c523c2e61c81f5a6a500e0411dcba2b064551ea2f     --hash=sha256:6e51db0067e65687a5c46f00a11843d0bb15ca759e8a1767eebac8c4f6e3f4df     --hash=sha256:72503e727887a61a15f9aaa13178798d3994dfec58aa7a943e42dcfda07c0149     --hash=sha256:7254f81dc71cd29ef6f2d9747cf97ff907b569c9ef9d9760352391be5b57118c     --hash=sha256:773043d5db2790e1ff2a4e1eae0b6a60afb2a93ad2c74897a56c80bc800db04f     --hash=sha256:841d128daa6597d13781793eb482b0b566bbd58d2a9d1e2cf1b58838773beb14     --hash=sha256:855ab2b7e6fa9b05f19c4f3023dedfb1a35a88d831933d65d0d9e10a070a9e85     --hash=sha256:86a1ad972e83ba48144884fa849f87626346308b650002157123aee67d3b16fe     --hash=sha256:8bac5cf64691060cf86b0752dd385ef1eccff6d24bdb8b60691cf8cbf0e4f9ef     --hash=sha256:8d3c9eab8e69cb36dcdd64c8b3200e008aedf88e34d39e01ae6af98a9605ad18     --hash=sha256:9020899b67fe492d0ed87a3e993ec9962c5a0b51ea2df71d86b1766f065f1cef     --hash=sha256:a085e7e13f1afc517358981b2b7ed774dc9abf95f2be0da9a495d9e6b58c4409     --hash=sha256:a5ceb39379327316d34613f7c16c06d7a3816aa38f4437b5e8433aa1bf149e2c     --hash=sha256:a6f8da329c0032f2acaf4beaef958a2db0dae43d3f946f592dad5c29aa82c832     --hash=sha256:a952a84453123db0c2336b9a9c86162e99ad0b897bae8213107c055a64effd41     --hash=sha256:aa4a4c01c5fbec3623e92bc33a9f712ca416ce93255c402f5c904ac4b890ac3c     --hash=sha256:aab886efa7b6bba7ac124f4498153d053e5a08b822d2254926b7206cdf5a8aa6     --hash=sha256:ab9337b0a6a9b07b6f86fc724972d1ad729c890e2f539c1b33271c2f1f00af8b     --hash=sha256:ac1b84d4b28456a379a71451d13995eb3242143452ce9c861f8913360de842a3     --hash=sha256:aca61d16435bb7aea3901939d7d7d7e36aff9bb538123e649166a3014b280054     --hash=sha256:c12224da0b1f2f9d2b3d715dc82ecb1a3a33b990606f97da075cc46bc6d9576f     --hash=sha256:c1c776a4ec7594f47cd2e1e2da73a30134f1d402d7c93a81e3cb7c3d8e191173     --hash=sha256:c61be0bad81a21ee3e5bef91469fdd11968f33d41d142c656accba9b2992babe     --hash=sha256:c8be01f97bc2bf11a9188537864f8e520e1103cdc6007aa2c5d7979b1363b121     --hash=sha256:cb27c13225f5f77f3c5986a27ca27277cce7db12844330cf535019cd38021257     --hash=sha256:ce70c743490f6778b463524d1767a9ecccd31c8bd2dbb5739bb2174168c15d39     --hash=sha256:cf5acfe1156849279ebd44a8d1fbcbe8b8e21334f7538eda782ae31e7dade9e2     --hash=sha256:d0e8faef0437a25fd083df70fb86cc65ce3c9c9780d4ae377cbe6521e7746ce0     --hash=sha256:e03a228e018457842eb81de85be7af0b5fe8065d666dd093193e3bdcf1f13d2e     --hash=sha256:eb3f98791427d5d5d02d023b66bcef61e48954edfadae6527ef72d70cf32ec86     --hash=sha256:ffdb00782cd63bbf2c45bb048897531e868326dff5081ab9b752d294b0426c1d",
-              "repo": "pip_310",
-              "repo_prefix": "pip_310_",
-              "whl_patches": {},
-              "experimental_target_platforms": [
-                "all"
-              ],
-              "python_interpreter": "",
-              "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
-              "quiet": true,
-              "timeout": 600,
-              "isolated": true,
-              "extra_pip_args": [
-                "--extra-index-url",
-                "https://download.pytorch.org/whl/cpu"
-              ],
-              "download_only": false,
-              "pip_data_exclude": [],
-              "enable_implicit_namespace_pkgs": false,
-              "environment": {},
-              "group_name": "",
-              "group_deps": []
-            }
-          },
           "pip_310_google_auth": {
             "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
             "ruleClassName": "whl_library",
@@ -10008,35 +9979,6 @@
               "group_deps": []
             }
           },
-          "pip_310_mizani": {
-            "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "name": "rules_python~0.28.0~pip~pip_310_mizani",
-              "requirement": "mizani==0.9.0 ; python_version >= \"3.10\" and python_version < \"3.11\"     --hash=sha256:04bbacb945975d51569e0b98dd14d07410eb3b28a9ead4e66893dec5349b80c7     --hash=sha256:37fd4f4c94bf1158cacf6c14478d87b98a4ff511c57b0cfdc34cbe494385f970",
-              "repo": "pip_310",
-              "repo_prefix": "pip_310_",
-              "whl_patches": {},
-              "experimental_target_platforms": [
-                "all"
-              ],
-              "python_interpreter": "",
-              "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
-              "quiet": true,
-              "timeout": 600,
-              "isolated": true,
-              "extra_pip_args": [
-                "--extra-index-url",
-                "https://download.pytorch.org/whl/cpu"
-              ],
-              "download_only": false,
-              "pip_data_exclude": [],
-              "enable_implicit_namespace_pkgs": false,
-              "environment": {},
-              "group_name": "",
-              "group_deps": []
-            }
-          },
           "pip_310_joblib": {
             "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
             "ruleClassName": "whl_library",
@@ -10362,6 +10304,35 @@
             "attributes": {
               "name": "rules_python~0.28.0~pip~pip_310_rfc3339_validator",
               "requirement": "rfc3339-validator==0.1.4 ; python_version >= \"3.10\" and python_version < \"3.11\"     --hash=sha256:138a2abdf93304ad60530167e51d2dfb9549521a836871b88d7f4695d0022f6b     --hash=sha256:24f6ec1eda14ef823da9e36ec7113124b39c04d50a4d3d3a3c2859577e7791fa",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_typeguard": {
+            "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.28.0~pip~pip_310_typeguard",
+              "requirement": "typeguard==2.13.3 ; python_version >= \"3.10\" and python_version < \"3.11\"     --hash=sha256:00edaa8da3a133674796cf5ea87d9f4b4c367d77476e185e80251cc13dfbb8c4     --hash=sha256:5e3e3be01e887e7eafae5af63d1f36c849aaa94e3a0112097312aabfa16284f1",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -10821,6 +10792,9 @@
                 "backcall": [
                   "3.10.13"
                 ],
+                "beartype": [
+                  "3.10.13"
+                ],
                 "beautifulsoup4": [
                   "3.10.13"
                 ],
@@ -10884,9 +10858,6 @@
                 "cookiecutter": [
                   "3.10.13"
                 ],
-                "cospar": [
-                  "3.10.13"
-                ],
                 "coverage": [
                   "3.10.13"
                 ],
@@ -10941,9 +10912,6 @@
                 "et_xmlfile": [
                   "3.10.13"
                 ],
-                "ete3": [
-                  "3.10.13"
-                ],
                 "etils": [
                   "3.10.13"
                 ],
@@ -10951,9 +10919,6 @@
                   "3.10.13"
                 ],
                 "executing": [
-                  "3.10.13"
-                ],
-                "fastcluster": [
                   "3.10.13"
                 ],
                 "fastjsonschema": [
@@ -11082,6 +11047,9 @@
                 "jaxlib": [
                   "3.10.13"
                 ],
+                "jaxtyping": [
+                  "3.10.13"
+                ],
                 "jedi": [
                   "3.10.13"
                 ],
@@ -11197,9 +11165,6 @@
                   "3.10.13"
                 ],
                 "mistune": [
-                  "3.10.13"
-                ],
-                "mizani": [
                   "3.10.13"
                 ],
                 "ml_collections": [
@@ -11329,9 +11294,6 @@
                   "3.10.13"
                 ],
                 "platformdirs": [
-                  "3.10.13"
-                ],
-                "plotnine": [
                   "3.10.13"
                 ],
                 "pluggy": [
@@ -11473,9 +11435,6 @@
                   "3.10.13"
                 ],
                 "scikit_learn": [
-                  "3.10.13"
-                ],
-                "scikit_misc": [
                   "3.10.13"
                 ],
                 "scipy": [
@@ -11623,6 +11582,9 @@
                   "3.10.13"
                 ],
                 "traitlets": [
+                  "3.10.13"
+                ],
+                "typeguard": [
                   "3.10.13"
                 ],
                 "types_python_dateutil": [
@@ -12234,35 +12196,6 @@
             "attributes": {
               "name": "rules_python~0.28.0~pip~pip_310_jax",
               "requirement": "jax==0.4.23 ; python_version >= \"3.10\" and python_version < \"3.11\"     --hash=sha256:2a229a5a758d1b803891b2eaed329723f6b15b4258b14dc0ccb1498c84963685     --hash=sha256:a7a07ccd1577111e3b82378c79a8ed0f9d6613b1e98fb6bf3c0b459198f73eaa",
-              "repo": "pip_310",
-              "repo_prefix": "pip_310_",
-              "whl_patches": {},
-              "experimental_target_platforms": [
-                "all"
-              ],
-              "python_interpreter": "",
-              "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
-              "quiet": true,
-              "timeout": 600,
-              "isolated": true,
-              "extra_pip_args": [
-                "--extra-index-url",
-                "https://download.pytorch.org/whl/cpu"
-              ],
-              "download_only": false,
-              "pip_data_exclude": [],
-              "enable_implicit_namespace_pkgs": false,
-              "environment": {},
-              "group_name": "",
-              "group_deps": []
-            }
-          },
-          "pip_310_plotnine": {
-            "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "name": "rules_python~0.28.0~pip~pip_310_plotnine",
-              "requirement": "plotnine==0.10.1 ; python_version >= \"3.10\" and python_version < \"3.11\"     --hash=sha256:bac216d71b04ea4e084a529c08716a981fe073c8fcdafa7643043935d7b7fa9d     --hash=sha256:d912a04b638dcf822c51a6788b85664232348d515f151db3a64c0001966f6841",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -13011,35 +12944,6 @@
               "group_deps": []
             }
           },
-          "pip_310_ete3": {
-            "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "name": "rules_python~0.28.0~pip~pip_310_ete3",
-              "requirement": "ete3==3.1.2 ; python_version >= \"3.10\" and python_version < \"3.11\"     --hash=sha256:4fc987b8c529889d6608fab1101f1455cb5cbd42722788de6aea9c7d0a8e59e9",
-              "repo": "pip_310",
-              "repo_prefix": "pip_310_",
-              "whl_patches": {},
-              "experimental_target_platforms": [
-                "all"
-              ],
-              "python_interpreter": "",
-              "python_interpreter_target": "@@rules_python~0.28.0~python~python_3_10_aarch64-apple-darwin//:bin/python3",
-              "quiet": true,
-              "timeout": 600,
-              "isolated": true,
-              "extra_pip_args": [
-                "--extra-index-url",
-                "https://download.pytorch.org/whl/cpu"
-              ],
-              "download_only": false,
-              "pip_data_exclude": [],
-              "enable_implicit_namespace_pkgs": false,
-              "environment": {},
-              "group_name": "",
-              "group_deps": []
-            }
-          },
           "pip_310_livereload": {
             "bzlFile": "@@rules_python~0.28.0//python/pip_install:pip_repository.bzl",
             "ruleClassName": "whl_library",
@@ -13103,7 +13007,7 @@
             "ruleClassName": "whl_library",
             "attributes": {
               "name": "rules_python~0.28.0~pip~pip_310_pyyaml",
-              "requirement": "pyyaml==6.0.1 ; python_version >= \"3.10\" and python_version < \"3.11\"     --hash=sha256:04ac92ad1925b2cff1db0cfebffb6ffc43457495c9b3c39d3fcae417d7125dc5     --hash=sha256:062582fca9fabdd2c8b54a3ef1c978d786e0f6b3a1510e0ac93ef59e0ddae2bc     --hash=sha256:0d3304d8c0adc42be59c5f8a4d9e3d7379e6955ad754aa9d6ab7a398b59dd1df     --hash=sha256:1635fd110e8d85d55237ab316b5b011de701ea0f29d07611174a1b42f1444741     --hash=sha256:184c5108a2aca3c5b3d3bf9395d50893a7ab82a38004c8f61c258d4428e80206     --hash=sha256:18aeb1bf9a78867dc38b259769503436b7c72f7a1f1f4c93ff9a17de54319b27     --hash=sha256:1d4c7e777c441b20e32f52bd377e0c409713e8bb1386e1099c2415f26e479595     --hash=sha256:1e2722cc9fbb45d9b87631ac70924c11d3a401b2d7f410cc0e3bbf249f2dca62     --hash=sha256:1fe35611261b29bd1de0070f0b2f47cb6ff71fa6595c077e42bd0c419fa27b98     --hash=sha256:28c119d996beec18c05208a8bd78cbe4007878c6dd15091efb73a30e90539696     --hash=sha256:326c013efe8048858a6d312ddd31d56e468118ad4cdeda36c719bf5bb6192290     --hash=sha256:40df9b996c2b73138957fe23a16a4f0ba614f4c0efce1e9406a184b6d07fa3a9     --hash=sha256:42f8152b8dbc4fe7d96729ec2b99c7097d656dc1213a3229ca5383f973a5ed6d     --hash=sha256:49a183be227561de579b4a36efbb21b3eab9651dd81b1858589f796549873dd6     --hash=sha256:4fb147e7a67ef577a588a0e2c17b6db51dda102c71de36f8549b6816a96e1867     --hash=sha256:50550eb667afee136e9a77d6dc71ae76a44df8b3e51e41b77f6de2932bfe0f47     --hash=sha256:510c9deebc5c0225e8c96813043e62b680ba2f9c50a08d3724c7f28a747d1486     --hash=sha256:5773183b6446b2c99bb77e77595dd486303b4faab2b086e7b17bc6bef28865f6     --hash=sha256:596106435fa6ad000c2991a98fa58eeb8656ef2325d7e158344fb33864ed87e3     --hash=sha256:6965a7bc3cf88e5a1c3bd2e0b5c22f8d677dc88a455344035f03399034eb3007     --hash=sha256:69b023b2b4daa7548bcfbd4aa3da05b3a74b772db9e23b982788168117739938     --hash=sha256:6c22bec3fbe2524cde73d7ada88f6566758a8f7227bfbf93a408a9d86bcc12a0     --hash=sha256:704219a11b772aea0d8ecd7058d0082713c3562b4e271b849ad7dc4a5c90c13c     --hash=sha256:7e07cbde391ba96ab58e532ff4803f79c4129397514e1413a7dc761ccd755735     --hash=sha256:81e0b275a9ecc9c0c0c07b4b90ba548307583c125f54d5b6946cfee6360c733d     --hash=sha256:855fb52b0dc35af121542a76b9a84f8d1cd886ea97c84703eaa6d88e37a2ad28     --hash=sha256:8d4e9c88387b0f5c7d5f281e55304de64cf7f9c0021a3525bd3b1c542da3b0e4     --hash=sha256:9046c58c4395dff28dd494285c82ba00b546adfc7ef001486fbf0324bc174fba     --hash=sha256:9eb6caa9a297fc2c2fb8862bc5370d0303ddba53ba97e71f08023b6cd73d16a8     --hash=sha256:a0cd17c15d3bb3fa06978b4e8958dcdc6e0174ccea823003a106c7d4d7899ac5     --hash=sha256:afd7e57eddb1a54f0f1a974bc4391af8bcce0b444685d936840f125cf046d5bd     --hash=sha256:b1275ad35a5d18c62a7220633c913e1b42d44b46ee12554e5fd39c70a243d6a3     --hash=sha256:b786eecbdf8499b9ca1d697215862083bd6d2a99965554781d0d8d1ad31e13a0     --hash=sha256:ba336e390cd8e4d1739f42dfe9bb83a3cc2e80f567d8805e11b46f4a943f5515     --hash=sha256:baa90d3f661d43131ca170712d903e6295d1f7a0f595074f151c0aed377c9b9c     --hash=sha256:bc1bf2925a1ecd43da378f4db9e4f799775d6367bdb94671027b73b393a7c42c     --hash=sha256:bd4af7373a854424dabd882decdc5579653d7868b8fb26dc7d0e99f823aa5924     --hash=sha256:bf07ee2fef7014951eeb99f56f39c9bb4af143d8aa3c21b1677805985307da34     --hash=sha256:bfdf460b1736c775f2ba9f6a92bca30bc2095067b8a9d77876d1fad6cc3b4a43     --hash=sha256:c8098ddcc2a85b61647b2590f825f3db38891662cfc2fc776415143f599bb859     --hash=sha256:d2b04aac4d386b172d5b9692e2d2da8de7bfb6c387fa4f801fbf6fb2e6ba4673     --hash=sha256:d483d2cdf104e7c9fa60c544d92981f12ad66a457afae824d146093b8c294c54     --hash=sha256:d858aa552c999bc8a8d57426ed01e40bef403cd8ccdd0fc5f6f04a00414cac2a     --hash=sha256:e7d73685e87afe9f3b36c799222440d6cf362062f78be1013661b00c5c6f678b     --hash=sha256:f003ed9ad21d6a4713f0a9b5a7a0a79e08dd0f221aff4525a2be4c346ee60aab     --hash=sha256:f22ac1c3cac4dbc50079e965eba2c1058622631e526bd9afd45fedd49ba781fa     --hash=sha256:faca3bdcf85b2fc05d06ff3fbc1f83e1391b3e724afa3feba7d13eeab355484c     --hash=sha256:fca0e3a251908a499833aa292323f32437106001d436eca0e6e7833256674585     --hash=sha256:fd1592b3fdf65fff2ad0004b5e363300ef59ced41c2e6b3a99d4089fa8c5435d     --hash=sha256:fd66fc5d0da6d9815ba2cebeb4205f95818ff4b79c3ebe268e75d961704af52f",
+              "requirement": "pyyaml==6.0.1 ; python_version >= \"3.10\" and python_version < \"3.11\"     --hash=sha256:04ac92ad1925b2cff1db0cfebffb6ffc43457495c9b3c39d3fcae417d7125dc5     --hash=sha256:062582fca9fabdd2c8b54a3ef1c978d786e0f6b3a1510e0ac93ef59e0ddae2bc     --hash=sha256:0d3304d8c0adc42be59c5f8a4d9e3d7379e6955ad754aa9d6ab7a398b59dd1df     --hash=sha256:1635fd110e8d85d55237ab316b5b011de701ea0f29d07611174a1b42f1444741     --hash=sha256:184c5108a2aca3c5b3d3bf9395d50893a7ab82a38004c8f61c258d4428e80206     --hash=sha256:18aeb1bf9a78867dc38b259769503436b7c72f7a1f1f4c93ff9a17de54319b27     --hash=sha256:1d4c7e777c441b20e32f52bd377e0c409713e8bb1386e1099c2415f26e479595     --hash=sha256:1e2722cc9fbb45d9b87631ac70924c11d3a401b2d7f410cc0e3bbf249f2dca62     --hash=sha256:1fe35611261b29bd1de0070f0b2f47cb6ff71fa6595c077e42bd0c419fa27b98     --hash=sha256:28c119d996beec18c05208a8bd78cbe4007878c6dd15091efb73a30e90539696     --hash=sha256:326c013efe8048858a6d312ddd31d56e468118ad4cdeda36c719bf5bb6192290     --hash=sha256:40df9b996c2b73138957fe23a16a4f0ba614f4c0efce1e9406a184b6d07fa3a9     --hash=sha256:42f8152b8dbc4fe7d96729ec2b99c7097d656dc1213a3229ca5383f973a5ed6d     --hash=sha256:49a183be227561de579b4a36efbb21b3eab9651dd81b1858589f796549873dd6     --hash=sha256:4fb147e7a67ef577a588a0e2c17b6db51dda102c71de36f8549b6816a96e1867     --hash=sha256:50550eb667afee136e9a77d6dc71ae76a44df8b3e51e41b77f6de2932bfe0f47     --hash=sha256:510c9deebc5c0225e8c96813043e62b680ba2f9c50a08d3724c7f28a747d1486     --hash=sha256:5773183b6446b2c99bb77e77595dd486303b4faab2b086e7b17bc6bef28865f6     --hash=sha256:596106435fa6ad000c2991a98fa58eeb8656ef2325d7e158344fb33864ed87e3     --hash=sha256:6965a7bc3cf88e5a1c3bd2e0b5c22f8d677dc88a455344035f03399034eb3007     --hash=sha256:69b023b2b4daa7548bcfbd4aa3da05b3a74b772db9e23b982788168117739938     --hash=sha256:6c22bec3fbe2524cde73d7ada88f6566758a8f7227bfbf93a408a9d86bcc12a0     --hash=sha256:704219a11b772aea0d8ecd7058d0082713c3562b4e271b849ad7dc4a5c90c13c     --hash=sha256:7e07cbde391ba96ab58e532ff4803f79c4129397514e1413a7dc761ccd755735     --hash=sha256:81e0b275a9ecc9c0c0c07b4b90ba548307583c125f54d5b6946cfee6360c733d     --hash=sha256:855fb52b0dc35af121542a76b9a84f8d1cd886ea97c84703eaa6d88e37a2ad28     --hash=sha256:8d4e9c88387b0f5c7d5f281e55304de64cf7f9c0021a3525bd3b1c542da3b0e4     --hash=sha256:9046c58c4395dff28dd494285c82ba00b546adfc7ef001486fbf0324bc174fba     --hash=sha256:9eb6caa9a297fc2c2fb8862bc5370d0303ddba53ba97e71f08023b6cd73d16a8     --hash=sha256:a08c6f0fe150303c1c6b71ebcd7213c2858041a7e01975da3a99aed1e7a378ef     --hash=sha256:a0cd17c15d3bb3fa06978b4e8958dcdc6e0174ccea823003a106c7d4d7899ac5     --hash=sha256:afd7e57eddb1a54f0f1a974bc4391af8bcce0b444685d936840f125cf046d5bd     --hash=sha256:b1275ad35a5d18c62a7220633c913e1b42d44b46ee12554e5fd39c70a243d6a3     --hash=sha256:b786eecbdf8499b9ca1d697215862083bd6d2a99965554781d0d8d1ad31e13a0     --hash=sha256:ba336e390cd8e4d1739f42dfe9bb83a3cc2e80f567d8805e11b46f4a943f5515     --hash=sha256:baa90d3f661d43131ca170712d903e6295d1f7a0f595074f151c0aed377c9b9c     --hash=sha256:bc1bf2925a1ecd43da378f4db9e4f799775d6367bdb94671027b73b393a7c42c     --hash=sha256:bd4af7373a854424dabd882decdc5579653d7868b8fb26dc7d0e99f823aa5924     --hash=sha256:bf07ee2fef7014951eeb99f56f39c9bb4af143d8aa3c21b1677805985307da34     --hash=sha256:bfdf460b1736c775f2ba9f6a92bca30bc2095067b8a9d77876d1fad6cc3b4a43     --hash=sha256:c8098ddcc2a85b61647b2590f825f3db38891662cfc2fc776415143f599bb859     --hash=sha256:d2b04aac4d386b172d5b9692e2d2da8de7bfb6c387fa4f801fbf6fb2e6ba4673     --hash=sha256:d483d2cdf104e7c9fa60c544d92981f12ad66a457afae824d146093b8c294c54     --hash=sha256:d858aa552c999bc8a8d57426ed01e40bef403cd8ccdd0fc5f6f04a00414cac2a     --hash=sha256:e7d73685e87afe9f3b36c799222440d6cf362062f78be1013661b00c5c6f678b     --hash=sha256:f003ed9ad21d6a4713f0a9b5a7a0a79e08dd0f221aff4525a2be4c346ee60aab     --hash=sha256:f22ac1c3cac4dbc50079e965eba2c1058622631e526bd9afd45fedd49ba781fa     --hash=sha256:faca3bdcf85b2fc05d06ff3fbc1f83e1391b3e724afa3feba7d13eeab355484c     --hash=sha256:fca0e3a251908a499833aa292323f32437106001d436eca0e6e7833256674585     --hash=sha256:fd1592b3fdf65fff2ad0004b5e363300ef59ced41c2e6b3a99d4089fa8c5435d     --hash=sha256:fd66fc5d0da6d9815ba2cebeb4205f95818ff4b79c3ebe268e75d961704af52f",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
