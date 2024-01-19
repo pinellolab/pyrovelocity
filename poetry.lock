@@ -8904,4 +8904,4 @@ plotting = ["annoy", "matplotlib-venn", "statannotations"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10, <3.11"
-content-hash = "8e4ebe10005647bdeec76ddc1ddd7a7349e0984e437a623a783c8c466ebd1d4b"
+content-hash = "05ffbcec39f49d4cd894442db33f09f87292ef51f4660665f39946a3468badd5"
