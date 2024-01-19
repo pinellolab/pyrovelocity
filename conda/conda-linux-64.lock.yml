@@ -10,14 +10,14 @@ channels:
 dependencies:
   - _libgcc_mutex=0.1=conda_forge
   - _openmp_mutex=4.5=2_kmp_llvm
-  - absl-py=2.0.0=pyhd8ed1ab_0
+  - absl-py=2.1.0=pyhd8ed1ab_0
   - adal=1.2.7=pyhd8ed1ab_0
   - adlfs=2023.10.0=pyhd8ed1ab_0
   - aiobotocore=2.5.4=pyhd8ed1ab_0
   - aiohttp=3.9.1=py310h2372a71_0
   - aioitertools=0.11.0=pyhd8ed1ab_0
   - aiosignal=1.3.1=pyhd8ed1ab_0
-  - alembic=1.13.1=pyhd8ed1ab_0
+  - alembic=1.13.1=pyhd8ed1ab_1
   - anndata=0.8.0=pyhd8ed1ab_1
   - antlr-python-runtime=4.9.3=pyhd8ed1ab_1
   - aom=3.7.1=h59595ed_0
@@ -39,7 +39,7 @@ dependencies:
   - aws-checksums=0.1.17=h3e65c2a_4
   - aws-crt-cpp=0.24.4=h233f1e4_5
   - aws-sdk-cpp=1.11.182=h18c0b32_3
-  - azure-core=1.29.5=pyhd8ed1ab_0
+  - azure-core=1.29.7=pyhd8ed1ab_0
   - azure-datalake-store=0.0.51=pyh9f0ad1d_0
   - azure-identity=1.15.0=pyhd8ed1ab_0
   - azure-storage-blob=12.19.0=pyhd8ed1ab_0
@@ -98,13 +98,13 @@ dependencies:
   - entrypoints=0.4=pyhd8ed1ab_0
   - et_xmlfile=1.1.0=pyhd8ed1ab_0
   - etils=1.6.0=pyhd8ed1ab_1
-  - exceptiongroup=1.2.0=pyhd8ed1ab_0
+  - exceptiongroup=1.2.0=pyhd8ed1ab_2
   - expat=2.5.0=hcb278e6_1
   - flask=2.3.3=pyhd8ed1ab_0
   - flax=0.7.5=pyhd8ed1ab_0
   - flyteidl=1.10.6=pyhd8ed1ab_0
   - flytekit=1.10.2=pyhd8ed1ab_0
-  - fonttools=4.47.0=py310h2372a71_0
+  - fonttools=4.47.2=py310h2372a71_0
   - freetype=2.12.1=h267a509_2
   - frozenlist=1.4.1=py310h2372a71_0
   - fsspec=2023.9.2=pyh1a96a4e_0
@@ -119,7 +119,7 @@ dependencies:
   - glpk=5.0=h445213a_0
   - gmp=6.3.0=h59595ed_0
   - google-api-core=2.15.0=pyhd8ed1ab_0
-  - google-auth=2.26.1=pyhca7485f_0
+  - google-auth=2.26.2=pyhca7485f_0
   - google-auth-oauthlib=1.2.0=pyhd8ed1ab_0
   - google-cloud-core=2.4.1=pyhd8ed1ab_0
   - google-cloud-storage=2.14.0=pyhca7485f_0
@@ -135,7 +135,7 @@ dependencies:
   - hydra-core=1.3.2=pyhd8ed1ab_0
   - icu=73.2=h59595ed_0
   - idna=3.6=pyhd8ed1ab_0
-  - igraph=0.10.8=h66a01bf_0
+  - igraph=0.10.8=h52253d4_1
   - importlib-metadata=6.10.0=pyha770c72_0
   - importlib_metadata=6.10.0=hd8ed1ab_0
   - importlib_resources=6.1.1=pyhd8ed1ab_0
@@ -145,8 +145,9 @@ dependencies:
   - jaraco.classes=3.3.0=pyhd8ed1ab_0
   - jax=0.4.23=pyhd8ed1ab_0
   - jaxlib=0.4.23=cpu_py310h9ed8a0c_0
+  - jaxtyping=0.2.25=pyhd8ed1ab_0
   - jeepney=0.8.0=pyhd8ed1ab_0
-  - jinja2=3.1.2=pyhd8ed1ab_1
+  - jinja2=3.1.3=pyhd8ed1ab_0
   - jmespath=1.0.1=pyhd8ed1ab_0
   - joblib=1.3.2=pyhd8ed1ab_0
   - jsonpickle=3.0.2=pyhd8ed1ab_1
@@ -199,7 +200,6 @@ dependencies:
   - libnsl=2.0.1=hd590300_0
   - libnuma=2.0.16=h0b41bf4_1
   - libnvjpeg=11.8.0.2=0
-  - libopenblas=0.3.25=pthreads_h413a1c8_0
   - libpng=1.6.39=h753d276_0
   - libprotobuf=4.24.3=hf27288f_1
   - libre2-11=2023.06.02=h7a70373_0
@@ -214,9 +214,9 @@ dependencies:
   - libwebp-base=1.3.2=hd590300_0
   - libxcb=1.15=h0b41bf4_0
   - libxcrypt=4.4.36=hd590300_1
-  - libxml2=2.11.6=h232c23b_0
+  - libxml2=2.12.4=h232c23b_1
   - libzlib=1.2.13=hd590300_5
-  - lightning-utilities=0.10.0=pyhd8ed1ab_0
+  - lightning-utilities=0.10.1=pyhd8ed1ab_0
   - llvm-openmp=17.0.6=h4dfa4b3_0
   - llvmlite=0.41.1=py310h1b8f574_0
   - loompy=3.0.6=py_0
@@ -246,7 +246,7 @@ dependencies:
   - mypy_extensions=1.0.0=pyha770c72_0
   - natsort=8.4.0=pyhd8ed1ab_0
   - ncurses=6.4=h59595ed_2
-  - nest-asyncio=1.5.8=pyhd8ed1ab_0
+  - nest-asyncio=1.5.9=pyhd8ed1ab_0
   - networkx=3.2.1=pyhd8ed1ab_0
   - numba=0.58.1=py310h7dc5dd1_0
   - numpy=1.26.3=py310hb13e2d6_0
@@ -259,7 +259,7 @@ dependencies:
   - openssl=3.2.0=hd590300_1
   - opt-einsum=3.3.0=hd8ed1ab_2
   - opt_einsum=3.3.0=pyhc1e730c_2
-  - optax=0.1.7=pyhd8ed1ab_0
+  - optax=0.1.8=pyhd8ed1ab_0
   - orbax-checkpoint=0.4.4=pyhd8ed1ab_0
   - orc=1.9.0=h208142c_3
   - packaging=23.2=pyhd8ed1ab_0
@@ -298,7 +298,7 @@ dependencies:
   - pytest-asyncio=0.21.1=pyhd8ed1ab_0
   - python=3.10.13=hd12c33a_1_cpython
   - python-dateutil=2.8.2=pyhd8ed1ab_0
-  - python-igraph=0.11.3=py310h1e3ba49_0
+  - python-igraph=0.11.3=py310hd766dba_1
   - python-json-logger=2.0.7=pyhd8ed1ab_0
   - python-kubernetes=29.0.0=pyhd8ed1ab_0
   - python-slugify=8.0.1=pyhd8ed1ab_2
@@ -325,8 +325,7 @@ dependencies:
   - s2n=1.3.56=h06160fa_0
   - s3fs=2023.9.2=pyhd8ed1ab_0
   - scanpy=1.9.6=pyhd8ed1ab_1
-  - scikit-learn=1.3.2=py310h1fdf081_2
-  - scikit-misc=0.1.4=py310h3254323_4
+  - scikit-learn=1.4.0=py310h1fdf081_0
   - scipy=1.10.1=py310ha4c1d20_3
   - scvelo=0.2.5=pyhd8ed1ab_0
   - scvi-tools=0.20.3=pyhd8ed1ab_1
@@ -344,7 +343,7 @@ dependencies:
   - sqlparse=0.4.4=pyhd8ed1ab_0
   - statsd=3.3.0=py_0
   - statsmodels=0.14.1=py310h1f7b6fc_0
-  - stdlib-list=0.8.0=pyhd8ed1ab_0
+  - stdlib-list=0.10.0=pyhd8ed1ab_0
   - stringcase=1.2.0=py_0
   - svt-av1=1.8.0=h59595ed_0
   - tabulate=0.9.0=pyhd8ed1ab_1
@@ -359,6 +358,7 @@ dependencies:
   - toolz=0.12.0=pyhd8ed1ab_0
   - torchmetrics=0.11.4=pyhd8ed1ab_0
   - tqdm=4.66.1=pyhd8ed1ab_0
+  - typeguard=2.13.3=pyhd8ed1ab_0
   - types-python-dateutil=2.8.19.20240106=pyhd8ed1ab_0
   - typing-extensions=4.9.0=hd8ed1ab_0
   - typing_extensions=4.9.0=pyha770c72_0
@@ -377,18 +377,13 @@ dependencies:
   - xorg-libxdmcp=1.1.3=h7f98852_0
   - xz=5.2.6=h166bdaf_0
   - yaml=0.2.5=h7f98852_2
-  - yarl=1.9.3=py310h2372a71_0
+  - yarl=1.9.4=py310h2372a71_0
   - zipp=3.17.0=pyhd8ed1ab_0
   - zstandard=0.21.0=py310h1275a96_1
   - zstd=1.5.5=hfc55251_0
   - pip:
       - adjusttext === 0.7.3 --hash=sha256:b90e275a95b4d980cbbac7967914b8d66477c09bc346a0b3c9e2125bba664b06
       - antlr4-python3-runtime === 4.9.3 --hash=sha256:f224469b4168294902bb1efa80a8bf7855f24c99aef99cbefc1bcd3cce77881b
-      - cospar === 0.1.9 --hash=sha256:48de598f00a1ec5a0e985cbc1e3915898efc782e6da2b0c38db952d478ef1c9b
+      - beartype === 0.16.4 --hash=sha256:64865952f9dff1e17f22684b3c7286fc79754553b47eaefeb1286224ae8c1bd9
       - dataclasses-json === 0.5.9 --hash=sha256:1280542631df1c375b7bc92e5b86d39e06c44760d7e3571a537b3b8acabf2f0c
-      - ete3 === 3.1.3 --hash=sha256:06a3b7fa8ed90187b076a8dbbe5b1b62acee94201d3c6e822f55f449601ef6f2
-      - fastcluster === 1.2.6 --hash=sha256:9020899b67fe492d0ed87a3e993ec9962c5a0b51ea2df71d86b1766f065f1cef
       - hydra-zen === 0.10.0 --hash=sha256:78c3cddb8b7063317a3685edb570c209425988b8f5f08902e13b5e6ead46d9af
-      - igraph === 0.10.8 --hash=sha256:89fca31ca33957dae5df4ecf032c08eb1e897cbc5856cdaad52b67c6ace3f074
-      - mizani === 0.9.3 --hash=sha256:ac5d49b913de88dc2fb28d82141e9777b97407a6971a158f758093ad5bb820a1
-      - plotnine === 0.12.4 --hash=sha256:12748f346f107c33f3e0658ac46fbb052205ae7e97ffaf52be68310e5d29f799
