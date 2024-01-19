@@ -107,11 +107,11 @@ lock-bazel: ## Export requirements-bazel.txt for bazel.
 	bazel run //:requirements.update
 	make cache-requirements-bazel
 
+# make lock-bazel
 lock: ## Lock poetry, pip, and conda lock files.
 lock: lock-poetry 
 	make lock-pip 
 	make lock-conda
-	make lock-bazel
 	@echo "updated poetry, pip, bazel, and conda lock files"
 
 meta-bazel: ## Print bazel meta information.
