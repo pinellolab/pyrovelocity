@@ -6,7 +6,7 @@ load("@rules_python//python:pip.bzl", "compile_pip_requirements")
 
 compile_pip_requirements(
     name = "requirements",
-    src = "requirements-cpu.txt",
+    src = "requirements.txt",
     generate_hashes = True,
     requirements_txt = "requirements-bazel.txt",
     timeout = "moderate",
