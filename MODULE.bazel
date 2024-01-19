@@ -16,7 +16,26 @@ python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(
     configure_coverage_tool = True,
     python_version = "3.10",
+    is_default = True,
 )
+# python.toolchain(
+#     configure_coverage_tool = True,
+#     python_version = "3.11",
+#     is_default = False,
+# )
+# use_repo(python, "python_3_10", "python_3_11", "python_versions")
+#
+# use
+#
+# load("@python_versions//3.10:defs.bzl", "py_test")
+# load("@python_versions//3.11:defs.bzl", "py_test")
+#
+# in BUILD files instead of
+#
+# load("@rules_python//python:defs.bzl", "py_test")
+#
+# to load version-specific rules
+# https://rules-python.readthedocs.io/en/latest/getting-started.html#pinning-to-a-python-version
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 
