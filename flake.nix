@@ -101,9 +101,25 @@
           in
             buildInputsOverrides
             // {
+              google-auth-oauthlib = super.google-auth-oauthlib.overridePythonAttrs (
+                _old: {
+                  postInstall = ''
+                    rm -f $out/lib/python3.11/site-packages/docs/conf.py
+                    rm -fr $out/lib/python3.11/site-packages/docs/__pycache__
+                  '';
+                }
+              );
               h5py = super.h5py.override {preferWheel = true;};
               hydra-core = super.hydra-core.override {preferWheel = true;};
               hydra-joblib-launcher = super.hydra-joblib-launcher.override {preferWheel = true;};
+              ml-collections = super.ml-collections.overridePythonAttrs (
+                _old: {
+                  postInstall = ''
+                    rm -f $out/lib/python3.11/site-packages/docs/conf.py
+                    rm -fr $out/lib/python3.11/site-packages/docs/__pycache__
+                  '';
+                }
+              );
               mkdocs-material = super.mkdocs-material.override {preferWheel = false;};
               nvidia-cudnn-cu11 = super.nvidia-cudnn-cu11.overridePythonAttrs (old: {
                 propagatedBuildInputs =
@@ -113,14 +129,26 @@
                     pkgs_2305.cudaPackages.cudnn_8_5_0
                   ];
               });
+              nvidia-cudnn-cu12 = super.nvidia-cudnn-cu12.overridePythonAttrs (old: {
+                propagatedBuildInputs =
+                  old.propagatedBuildInputs
+                  or []
+                  ++ [
+                    pkgs_unstable.cudaPackages_12.cudnn_8_9
+                  ];
+              });
               pyarrow = super.pyarrow.override {preferWheel = true;};
+              # scikit-misc = super.scikit-misc.overridePythonAttrs (old: {
+              #   buildInputs = (old.buildInputs or []) ++ [pkgs.meson];
+              #   nativeBuildInputs = old.nativeBuildInputs ++ [pkgs.python311Packages.meson-python];
+              # });
               scipy = super.scipy.override {preferWheel = true;};
               yarl = super.yarl.override {preferWheel = true;};
               optax = super.optax.overridePythonAttrs (
                 _old: {
                   postInstall = ''
-                    rm -f $out/lib/python3.10/site-packages/docs/conf.py
-                    rm -fr $out/lib/python3.10/site-packages/docs/__pycache__
+                    rm -f $out/lib/python3.11/site-packages/docs/conf.py
+                    rm -fr $out/lib/python3.11/site-packages/docs/__pycache__
                   '';
                 }
               );
@@ -131,7 +159,7 @@
         mkPoetryAttrs = {
           projectDir = ./.;
           overrides = poetry2nixOverrides;
-          python = pkgs.python310;
+          python = pkgs.python311;
           # aarch64 cross-compilation on x86_64 may be intolerably slow if
           # preferWheels is disabled. If all of the individual contributors to
           # this are identified, it may be possible to use the library-specific
@@ -146,7 +174,7 @@
           // {
             extraPackages = ps:
               with pkgs; [
-                python310Packages.pip
+                python311Packages.pip
               ];
           }
         );
@@ -162,7 +190,7 @@
               groups = groups;
               extraPackages = ps:
                 with pkgs; [
-                  python310Packages.pip
+                  python311Packages.pip
                 ];
               editablePackageSources = {
                 ${packageName} = src;
@@ -347,7 +375,7 @@
             "GIT_REF=${builtins.getEnv "GIT_REF"}"
             "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
             "GIT_SHA_SHORT=${builtins.getEnv "GIT_SHA_SHORT"}"
-            "PYTHONPATH=${packageSrcPath}:${pkgs.lib.strings.makeSearchPathOutput "" "lib/python3.10/site-packages" pythonPackages}"
+            "PYTHONPATH=${packageSrcPath}:${pkgs.lib.strings.makeSearchPathOutput "" "lib/python3.11/site-packages" pythonPackages}"
             "LD_LIBRARY_PATH=/usr/local/nvidia/lib64"
             "NVIDIA_DRIVER_CAPABILITIES='compute,utility'"
             "NVIDIA_VISIBLE_DEVICES=all"
@@ -435,7 +463,7 @@
 
           releaseEnv = pkgs.buildEnv {
             name = "release-env";
-            paths = with pkgs; [poetry python310];
+            paths = with pkgs; [poetry python311];
           };
 
           containerImage = pkgs.dockerTools.buildLayeredImage containerImageConfig;
