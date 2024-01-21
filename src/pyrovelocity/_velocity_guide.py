@@ -1,26 +1,30 @@
-from typing import Iterable, Optional
+from typing import Iterable
+from typing import Optional
 
 import pyro
 import torch
 from pyro import poutine
 from pyro.contrib import easyguide
-from pyro.distributions import (
-    Bernoulli,
-    Categorical,
-    Delta,
-    Normal,
-)
+from pyro.distributions import Bernoulli
+from pyro.distributions import Categorical
+from pyro.distributions import Delta
+from pyro.distributions import Normal
 from pyro.distributions.constraints import positive
 from pyro.infer import autoguide
 from pyro.infer.autoguide.guides import AutoGuideList
-from pyro.nn import PyroModule, PyroParam
-from scvi.nn import Encoder, FCLayers
+from pyro.nn import PyroModule
+from pyro.nn import PyroParam
+from scvi.nn import Encoder
+from scvi.nn import FCLayers
 from torch import nn
-from torch.nn.functional import softmax, softplus
+from torch.nn.functional import softmax
+from torch.nn.functional import softplus
 
 # from ._velocity_model import LatentFactor
-from ._velocity_model import VelocityModel
-from .utils import mRNA, site_is_discrete, tau_inv
+from pyrovelocity._velocity_model_deprecated import VelocityModel
+from pyrovelocity.utils import mRNA
+from pyrovelocity.utils import site_is_discrete
+from pyrovelocity.utils import tau_inv
 
 
 class VelocityGuide(easyguide.EasyGuide):
