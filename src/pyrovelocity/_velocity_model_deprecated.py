@@ -9,10 +9,10 @@ from torch.distributions import (
 from packaging import version
 from pyro import poutine
 from pyro.distributions import (
-    Bernoulli, # shadowing from torch.distributions for pyright
+    Bernoulli,  # shadowing from torch.distributions for pyright
     Beta,
     LogNormal,
-    NegativeBinomial, # shadowing from torch.distributions for pyright
+    NegativeBinomial,  # shadowing from torch.distributions for pyright
     Normal,
     Poisson,
 )

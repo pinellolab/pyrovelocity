@@ -40,6 +40,7 @@ class LogNormalModel(PyroModule):
         >>> assert model.likelihood == likelihood
         >>> assert model.plate_size == plate_size
     """
+
     def __init__(
         self,
         num_cells: int,
