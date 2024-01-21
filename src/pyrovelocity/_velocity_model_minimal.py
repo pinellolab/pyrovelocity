@@ -2,6 +2,7 @@ from typing import Optional, Tuple, Union
 
 import pyro
 import torch
+from torch.distributions import Bernoulli
 from pyro import poutine
 from pyro.distributions import Bernoulli, LogNormal, Normal, Poisson
 from pyro.nn import PyroModule, PyroSample
@@ -13,6 +14,32 @@ from .utils import mRNA
 
 
 class LogNormalModel(PyroModule):
+    """
+    A base class for pyrovelocity models.
+
+    This class serves as the base class for constructing a pyrovelocity model.
+    It provides basic methods for handling gene expression data, such as creating plates
+    for cells and genes, encoding cell-specific features, and computing the likelihood
+    of the observed data.
+
+    Attributes:
+        num_cells (int): The number of cells.
+        num_genes (int): The number of genes.
+        likelihood (str): The likelihood type for the model, defaults to "Poisson".
+        plate_size (int): The size of the plate for the model, defaults to 2.
+
+    Example:
+        >>> from pyrovelocity._velocity_model import LogNormalModel
+        >>> num_cells = 10
+        >>> num_genes = 20
+        >>> likelihood = "Poisson"
+        >>> plate_size = 2
+        >>> model = LogNormalModel(num_cells, num_genes, likelihood, plate_size)
+        >>> assert model.num_cells == num_cells
+        >>> assert model.num_genes == num_genes
+        >>> assert model.likelihood == likelihood
+        >>> assert model.plate_size == plate_size
+    """
     def __init__(
         self,
         num_cells: int,
@@ -135,6 +162,42 @@ class LogNormalModel(PyroModule):
         s_cell_size_coef: None = None,
         st_coef: None = None,
     ) -> Tuple[Poisson, Poisson]:
+        """
+        Compute the likelihood of the given count data.
+
+        Args:
+            ut (torch.Tensor): Tensor representing unspliced transcripts.
+            st (torch.Tensor): Tensor representing spliced transcripts.
+            u_log_library (Optional[torch.Tensor], optional): Log library tensor for unspliced transcripts. Defaults to None.
+            s_log_library (Optional[torch.Tensor], optional): Log library tensor for spliced transcripts. Defaults to None.
+            u_scale (Optional[torch.Tensor], optional): Scale tensor for unspliced transcripts. Defaults to None.
+            s_scale (Optional[torch.Tensor], optional): Scale tensor for spliced transcripts. Defaults to None.
+            u_read_depth (Optional[torch.Tensor], optional): Read depth tensor for unspliced transcripts. Defaults to None.
+            s_read_depth (Optional[torch.Tensor], optional): Read depth tensor for spliced transcripts. Defaults to None.
+            u_cell_size_coef (Optional[Any], optional): Cell size coefficient for unspliced transcripts. Defaults to None.
+            ut_coef (Optional[Any], optional): Coefficient for unspliced transcripts. Defaults to None.
+            s_cell_size_coef (Optional[Any], optional): Cell size coefficient for spliced transcripts. Defaults to None.
+            st_coef (Optional[Any], optional): Coefficient for spliced transcripts. Defaults to None.
+
+        Returns:
+            Tuple[Poisson, Poisson]: A tuple of Poisson distributions for unspliced and spliced transcripts, respectively.
+
+        Example:
+            >>> import torch
+            >>> from pyro.nn import PyroModule
+            >>> num_cells = 10
+            >>> num_genes = 20
+            >>> likelihood = "Poisson"
+            >>> plate_size = 2
+            >>> model = LogNormalModel(num_cells, num_genes, likelihood, plate_size)
+            >>> ut = torch.rand(num_cells, num_genes)
+            >>> st = torch.rand(num_cells, num_genes)
+            >>> u_read_depth = torch.rand(num_cells, 1)
+            >>> s_read_depth = torch.rand(num_cells, 1)
+            >>> u_dist, s_dist = model.get_likelihood(ut, st, u_read_depth=u_read_depth, s_read_depth=s_read_depth)
+            >>> assert isinstance(u_dist, torch.distributions.Poisson)
+            >>> assert isinstance(s_dist, torch.distributions.Poisson)
+        """
         if self.likelihood != "Poisson":
             raise
 
@@ -185,6 +248,64 @@ class VelocityModelAuto(LogNormalModel):
         kinetics_num: Optional[int] = None,
         **initial_values,
     ) -> None:
+        """
+        Computes the unspliced (u) and spliced (s) RNA expression levels given the model parameters.
+
+        Args:
+            u_scale (torch.Tensor): Scaling factor for unspliced expression.
+            s_scale (torch.Tensor): Scaling factor for spliced expression.
+            alpha (torch.Tensor): Transcription rate.
+            beta (torch.Tensor): Splicing rate.
+            gamma (torch.Tensor): Degradation rate.
+            t (torch.Tensor): Cell time.
+            u0 (torch.Tensor): Unspliced RNA initial expression.
+            s0 (torch.Tensor): Spliced RNA initial expression.
+            t0 (torch.Tensor): Initial cell time.
+            switching (Optional[torch.Tensor], optional): Switching time. Default is None.
+            u_inf (Optional[torch.Tensor], optional): Unspliced RNA expression at switching time. Default is None.
+            s_inf (Optional[torch.Tensor], optional): Spliced RNA expression at switching time. Default is None.
+
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor]: The unspliced (u) and spliced (s) RNA expression levels.
+
+        Examples:
+            >>> import torch
+            >>> from pyrovelocity._velocity_model import VelocityModelAuto
+            >>> model = VelocityModelAuto(
+            ...             3,
+            ...             4,
+            ...             "Poisson",
+            ...             True,
+            ...             False,
+            ...             2,
+            ...             "none",
+            ...             latent_factor_operation="selection",
+            ...             latent_factor_size=10,
+            ...             include_prior=False,
+            ...             num_aux_cells=0,
+            ...             only_cell_times=True,
+            ...             decoder_on=False,
+            ...             add_offset=False,
+            ...             correct_library_size=True,
+            ...             guide_type="auto_t0_constraint",
+            ...             cell_specific_kinetics=None,
+            ...             **{}
+            ...         )
+            >>> u, s = model.get_rna(
+            ...            u_scale=torch.tensor([0.9793, 1.0567, 0.8610, 0.9304], device="cpu"),
+            ...            s_scale=torch.tensor(1.0),
+            ...            alpha=torch.tensor([0.4869, 1.5997, 1.3962, 0.5038], device="cpu"),
+            ...            beta=torch.tensor([0.5403, 1.1192, 0.9912, 1.1783], device="cpu"),
+            ...            gamma=torch.tensor([1.9612, 0.5533, 2.1050, 4.9345], device="cpu"),
+            ...            t=torch.tensor([[0.4230], [0.5119], [0.2689]], device="cpu"),
+            ...            u0=torch.tensor(0.0),
+            ...            s0=torch.tensor(0.0),
+            ...            t0=torch.tensor([-0.4867, 0.5581, -0.6957, 0.6028], device="cpu"),
+            ...            switching=torch.tensor([1.1886, 1.1227, 0.6789, 4.1003], device="cpu"),
+            ...            u_inf=torch.tensor([0.5367, 0.6695, 1.0479, 0.4206], device="cpu"),
+            ...            s_inf=torch.tensor([0.1132, 0.2100, 0.3750, 0.0999], device="cpu"),
+            >>>        )
+        """
         assert num_cells > 0 and num_genes > 0
         super().__init__(num_cells, num_genes, likelihood, plate_size)
         self.num_aux_cells = num_aux_cells
@@ -266,6 +387,67 @@ class VelocityModelAuto(LogNormalModel):
         cell_state: Optional[torch.Tensor] = None,
         time_info: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Defines the forward model, which computes the unspliced (u) and spliced (s) RNA expression levels given the observations and model parameters.
+
+        Args:
+            u_obs (Optional[torch.Tensor], optional): Observed unspliced RNA expression. Default is None.
+            s_obs (Optional[torch.Tensor], optional): Observed spliced RNA expression. Default is None.
+            u_log_library (Optional[torch.Tensor], optional): Log-transformed library size for unspliced RNA. Default is None.
+            s_log_library (Optional[torch.Tensor], optional): Log-transformed library size for spliced RNA. Default is None.
+            u_log_library_loc (Optional[torch.Tensor], optional): Mean of log-transformed library size for unspliced RNA. Default is None.
+            s_log_library_loc (Optional[torch.Tensor], optional): Mean of log-transformed library size for spliced RNA. Default is None.
+            u_log_library_scale (Optional[torch.Tensor], optional): Scale of log-transformed library size for unspliced RNA. Default is None.
+            s_log_library_scale (Optional[torch.Tensor], optional): Scale of log-transformed library size for spliced RNA. Default is None.
+            ind_x (Optional[torch.Tensor], optional): Indices for the cells. Default is None.
+            cell_state (Optional[torch.Tensor], optional): Cell state information. Default is None.
+            time_info (Optional[torch.Tensor], optional): Time information for the cells. Default is None.
+
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor]: The unspliced (u) and spliced (s) RNA expression levels.
+
+        Examples:
+            >>> import torch
+            >>> from pyrovelocity._velocity_model import VelocityModelAuto
+            >>> u_obs=torch.tensor(
+            ...     [[33.,  1.,  7.,  1.],
+            ...     [12., 30., 11.,  3.],
+            ...     [ 1.,  1.,  8.,  5.]],
+            ...     device="cpu",
+            >>> )
+            >>> s_obs=torch.tensor(
+            ...     [[32.0, 0.0, 6.0, 0.0],
+            ...     [11.0, 29.0, 10.0, 2.0],
+            ...     [0.0, 0.0, 7.0, 4.0]],
+            ...     device="cpu",
+            >>> )
+            >>> u_log_library=torch.tensor([[3.7377], [4.0254], [2.7081]], device="cpu")
+            >>> s_log_library=torch.tensor([[3.6376], [3.9512], [2.3979]], device="cpu")
+            >>> u_log_library_loc=torch.tensor([[3.4904], [3.4904], [3.4904]], device="cpu")
+            >>> s_log_library_loc=torch.tensor([[3.3289], [3.3289], [3.3289]], device="cpu")
+            >>> u_log_library_scale=torch.tensor([[0.6926], [0.6926], [0.6926]], device="cpu")
+            >>> s_log_library_scale=torch.tensor([[0.8214], [0.8214], [0.8214]], device="cpu")
+            >>> ind_x=torch.tensor([2, 0, 1], device="cpu")
+            >>> model = VelocityModelAuto(3,4)
+            >>> u, s = model.forward(
+            >>>            u_obs,
+            >>>            s_obs,
+            >>>            u_log_library,
+            >>>            s_log_library,
+            >>>            u_log_library_loc,
+            >>>            s_log_library_loc,
+            >>>            u_log_library_scale,
+            >>>            s_log_library_scale,
+            >>>            ind_x,
+            >>>        )
+            >>> u, s
+            (tensor([[33.,  1.,  7.,  1.],
+                    [12., 30., 11.,  3.],
+                    [ 1.,  1.,  8.,  5.]]),
+            tensor([[32.,  0.,  6.,  0.],
+                    [11., 29., 10.,  2.],
+                    [ 0.,  0.,  7.,  4.]]))
+        """
         cell_plate, gene_plate = self.create_plates(
             u_obs,
             s_obs,
