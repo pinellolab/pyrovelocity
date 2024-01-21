@@ -23,16 +23,14 @@ from scvi.model.base._utils import (
 )
 from scvi.module.base import PyroBaseModuleClass
 
+from pyrovelocity._trainer import VelocityTrainingMixin
+from pyrovelocity._velocity_module import VelocityModule
 from pyrovelocity.plot import (
     compute_mean_vector_field,
     compute_volcano_data,
     vector_field_uncertainty,
 )
-from pyrovelocity.utils import _get_fn_args_from_batch
-
-from ._trainer import VelocityTrainingMixin
-from ._velocity_module import VelocityModule
-from .utils import init_with_all_cells
+from pyrovelocity.utils import _get_fn_args_from_batch, init_with_all_cells
 
 logger = logging.getLogger(__name__)
 
