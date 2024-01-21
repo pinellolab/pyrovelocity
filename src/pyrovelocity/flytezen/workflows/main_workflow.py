@@ -5,7 +5,6 @@ from typing import Any, Dict, Optional, Tuple, Type
 
 import joblib
 import pandas as pd
-
 from flytekit import Resources, task, workflow
 from flytekit.extras.accelerators import T4
 from flytekit.types.file import JoblibSerializedFile
@@ -14,7 +13,7 @@ from sklearn.datasets import load_wine
 from sklearn.linear_model import LogisticRegression
 
 from pyrovelocity.flytezen.configuration import create_dataclass_from_callable
-from pyrovelocity.flytezen.logging import configure_logging
+from pyrovelocity.logging import configure_logging
 
 logger = configure_logging("pyrovelocity.flytezen.workflows.main_workflow")
 

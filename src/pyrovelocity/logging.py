@@ -6,9 +6,7 @@ from rich.logging import RichHandler
 from rich.theme import Theme
 
 
-def configure_logging(
-    logger_name: str = "pyrovelocity.flytezen"
-) -> logging.Logger:
+def configure_logging(logger_name: str = "pyrovelocity") -> logging.Logger:
     """
     Configures logging with rich handler and checks for valid log level from
     environment.

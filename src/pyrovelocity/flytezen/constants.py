@@ -1,8 +1,10 @@
 import os
 
-from dulwich.repo import NotGitRepository, Repo
+from dulwich.repo import NotGitRepository
+from dulwich.repo import Repo
 
-from pyrovelocity.flytezen.logging import configure_logging
+from pyrovelocity.logging import configure_logging
+
 
 logger = configure_logging("pyrovelocity.flytezen.constants")
 
