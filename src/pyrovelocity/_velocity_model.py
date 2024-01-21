@@ -1,24 +1,25 @@
-from typing import Optional, Tuple, Union
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 import pyro
 import torch
-from packaging import version
+from beartype import beartype
 from pyro import poutine
-from pyro.distributions import (
-    Bernoulli,
-    Beta,
-    LogNormal,
-    NegativeBinomial,
-    Normal,
-    Poisson,
-)
-from pyro.distributions.constraints import positive
-from pyro.nn import PyroModule, PyroParam, PyroSample
+from pyro.distributions import Bernoulli
+from pyro.distributions import LogNormal
+from pyro.distributions import Normal
+from pyro.distributions import Poisson
+from pyro.nn import PyroModule
+from pyro.nn import PyroSample
 from pyro.primitives import plate
 from scvi.nn import Decoder
-from torch.nn.functional import relu, softplus
 
-from .utils import mRNA
+# from torch.distributions import Bernoulli
+from torch.nn.functional import relu
+from torch.nn.functional import softplus
+
+from pyrovelocity.utils import mRNA
 
 
 class LogNormalModel(PyroModule):
@@ -49,6 +50,7 @@ class LogNormalModel(PyroModule):
         >>> assert model.plate_size == plate_size
     """
 
+    @beartype
     def __init__(
         self,
         num_cells: int,
@@ -66,15 +68,7 @@ class LogNormalModel(PyroModule):
         self.correct_library_size = correct_library_size
         self.register_buffer("zero", torch.tensor(0.0))
         self.register_buffer("one", torch.tensor(1.0))
-
         self.likelihood = likelihood
-        if self.likelihood == "NB":
-            self.u_px_r = PyroParam(
-                torch.ones(self.num_genes), constraint=positive, event_dim=0
-            )
-            self.s_px_r = PyroParam(
-                torch.ones(self.num_genes), constraint=positive, event_dim=0
-            )
 
     def create_plates(
         self,
@@ -90,137 +84,84 @@ class LogNormalModel(PyroModule):
         cell_state: Optional[torch.Tensor] = None,
         time_info: Optional[torch.Tensor] = None,
     ) -> Tuple[plate, plate]:
+        """
+        Create cell and gene plates for the model. note that usage in
+        pyro.infer.autoguide.AutoGuideList requires the set of arguments be
+        equivalent to the model's forward method. See
+        https://github.com/pyro-ppl/pyro/blob/670e9cb57003b52aea02deeb1316a42db3e1de1f/pyro/infer/autoguide/guides.py#L60-L63.
+
+        Args:
+            u_obs (Optional[torch.Tensor], optional): _description_. Defaults to None.
+            s_obs (Optional[torch.Tensor], optional): _description_. Defaults to None.
+            u_log_library (Optional[torch.Tensor], optional): _description_. Defaults to None.
+            s_log_library (Optional[torch.Tensor], optional): _description_. Defaults to None.
+            u_log_library_loc (Optional[torch.Tensor], optional): _description_. Defaults to None.
+            s_log_library_loc (Optional[torch.Tensor], optional): _description_. Defaults to None.
+            u_log_library_scale (Optional[torch.Tensor], optional): _description_. Defaults to None.
+            s_log_library_scale (Optional[torch.Tensor], optional): _description_. Defaults to None.
+            ind_x (Optional[torch.Tensor], optional): _description_. Defaults to None.
+            cell_state (Optional[torch.Tensor], optional): _description_. Defaults to None.
+            time_info (Optional[torch.Tensor], optional): _description_. Defaults to None.
+
+        Returns:
+            Tuple[plate, plate]: _description_
+        """
         cell_plate = pyro.plate(
             "cells", self.num_cells, subsample=ind_x, dim=-2
         )
         gene_plate = pyro.plate("genes", self.num_genes, dim=-1)
         return cell_plate, gene_plate
 
-    def create_plate(
-        self,
-        u_obs: Optional[torch.Tensor] = None,
-        s_obs: Optional[torch.Tensor] = None,
-        u_log_library: Optional[torch.Tensor] = None,
-        s_log_library: Optional[torch.Tensor] = None,
-        ind_x: Optional[torch.Tensor] = None,
-    ):
-        return pyro.plate("cells", self.num_cells, subsample=ind_x, dim=-1)
-
     @PyroSample
     def alpha(self):
-        if self.plate_size == 2:
-            return LogNormal(self.zero, self.one)
-        return (
-            LogNormal(self.zero, self.one * 0.1)
-            .expand((self.num_genes,))
-            .to_event(1)
-            .mask(False)
-        )
-
-    @PyroSample
-    def t_scale(self):
-        return Normal(self.zero, self.one * 0.1)
+        return self._pyrosample_helper(1.0)
 
     @PyroSample
     def beta(self):
-        if self.plate_size == 2:
-            return LogNormal(self.zero, self.one * 0.25)
-        return (
-            LogNormal(self.zero, self.one * 0.1)
-            .expand((self.num_genes,))
-            .to_event(1)
-            .mask(False)
-        )
+        return self._pyrosample_helper(0.25)
 
     @PyroSample
     def gamma(self):
-        if self.plate_size == 2:
-            return LogNormal(self.zero, self.one)
-        return (
-            LogNormal(self.zero, self.one * 0.1)
-            .expand((self.num_genes,))
-            .to_event(1)
-            .mask(False)
-        )
+        return self._pyrosample_helper(1.0)
+
+    @PyroSample
+    def u_scale(self):
+        return self._pyrosample_helper(0.1)
+
+    @PyroSample
+    def s_scale(self):
+        return self._pyrosample_helper(0.1)
+
+    @PyroSample
+    def u_inf(self):
+        return self._pyrosample_helper(0.1)
+
+    @PyroSample
+    def s_inf(self):
+        return self._pyrosample_helper(0.1)
+
+    @PyroSample
+    def dt_switching(self):
+        return self._pyrosample_helper(1.0)
 
     @PyroSample
     def gene_offset(self):
         return Normal(self.zero, self.one)
 
     @PyroSample
-    def u_scale(self):
-        if self.plate_size == 2:
-            return LogNormal(self.zero, self.one * 0.1)
-        return (
-            LogNormal(self.zero, self.one * 0.1)
-            .expand((self.num_genes,))
-            .to_event(1)
-            .mask(False)
-        )
-
-    @PyroSample
-    def s_scale(self):
-        if self.plate_size == 2:
-            return LogNormal(self.zero, self.one * 0.1)
-        return (
-            LogNormal(self.zero, self.one * 0.1)
-            .expand((self.num_genes,))
-            .to_event(1)
-            .mask(False)
-        )
-
-    @PyroSample
-    def u_inf(self):
-        if self.plate_size == 2:
-            return LogNormal(self.zero, self.one * 0.1)
-        return (
-            LogNormal(self.zero, self.one * 0.1)
-            .expand((self.num_genes,))
-            .to_event(1)
-            .mask(False)
-        )
-
-    @PyroSample
-    def s_inf(self):
-        if self.plate_size == 2:
-            return LogNormal(self.zero, self.one * 0.1)
-        return (
-            LogNormal(self.zero, self.one * 0.1)
-            .expand((self.num_genes,))
-            .to_event(1)
-            .mask(False)
-        )
-
-    @PyroSample
-    def dt_switching(self):
-        if self.plate_size == 2:
-            return LogNormal(self.zero, self.one)
-        return (
-            LogNormal(self.zero, self.one * 0.1)
-            .expand((self.num_genes,))
-            .to_event(1)
-            .mask(False)
-        )
+    def t_scale(self):
+        return Normal(self.zero, self.one * 0.1)
 
     @PyroSample
     def latent_time(self):
-        if self.shared_time:
-            if self.plate_size == 2:
-                return Normal(self.zero, self.one * 0.1).mask(
-                    self.include_prior
-                )
-            else:
-                return (
-                    Normal(self.zero, self.one * 0.1)
-                    .expand((self.num_genes,))
-                    .to_event(1)
-                    .mask(self.include_prior)
-                )
-        if self.plate_size == 2:
-            return LogNormal(self.zero, self.one).mask(self.include_prior)
-        return (
-            LogNormal(self.zero, self.one).expand((self.num_genes,)).to_event(1)
-        )
+        if self.shared_time & self.plate_size == 2:
+            return Normal(self.zero, self.one * 0.1).mask(self.include_prior)
+        else:
+            return (
+                LogNormal(self.zero, self.one)
+                .expand((self.num_genes,))
+                .to_event(1)
+            )
 
     @PyroSample
     def cell_time(self):
@@ -229,26 +170,14 @@ class LogNormalModel(PyroModule):
         else:
             return LogNormal(self.zero, self.one)
 
-    @PyroSample
-    def p_velocity(self):
-        return Beta(self.one, self.one)
-
-    @PyroSample
-    def cell_codebook(self):
+    def _pyrosample_helper(self, scale: float):
+        if self.plate_size == 2:
+            return LogNormal(self.zero, self.one * scale)
         return (
-            Normal(self.zero, self.one / (10 * self.latent_factor_size))
-            .expand((self.latent_factor_size, self.num_genes * 2))
-            .to_event(2)
-            .mask(self.include_prior)
-        )
-
-    @PyroSample
-    def cell_code(self):
-        return (
-            Normal(self.zero, self.one)
-            .expand((self.latent_factor_size,))
+            LogNormal(self.zero, self.one * 0.1)
+            .expand((self.num_genes,))
             .to_event(1)
-            .mask(self.include_prior)
+            .mask(False)
         )
 
     def get_likelihood(
@@ -302,101 +231,34 @@ class LogNormalModel(PyroModule):
             >>> assert isinstance(u_dist, torch.distributions.Poisson)
             >>> assert isinstance(s_dist, torch.distributions.Poisson)
         """
-        if self.likelihood == "NB":
-            if self.correct_library_size:
-                ut = relu(ut) + self.one * 1e-6
-                st = relu(st) + self.one * 1e-6
-                ut = pyro.deterministic("ut", ut, event_dim=0)
-                st = pyro.deterministic("st", st, event_dim=0)
-                if self.guide_type not in [
-                    "velocity_auto",
-                    "velocity_auto_depth",
-                ]:
-                    ut = ut / torch.sum(ut, dim=-1, keepdim=True)
-                    st = st / torch.sum(st, dim=-1, keepdim=True)
-                ut = pyro.deterministic("ut_norm", ut, event_dim=0)
-                st = pyro.deterministic("st_norm", st, event_dim=0)
-                u_logits = ((ut + self.one * 1e-6) * u_read_depth).log() - (
-                    self.u_px_r.exp() + self.one * 1e-6
-                ).log()
-                s_logits = ((st + self.one * 1e-6) * s_read_depth).log() - (
-                    self.s_px_r.exp() + self.one * 1e-6
-                ).log()
-            else:
-                ut = relu(ut)
-                st = relu(st)
-                ut = pyro.deterministic("ut", ut, event_dim=0)
-                st = pyro.deterministic("st", st, event_dim=0)
-                u_logits = (relu(ut) + self.one * 1e-6).log() - (
-                    self.u_px_r.exp() + self.one * 1e-6
-                ).log()
-                s_logits = (relu(st) + self.one * 1e-6).log() - (
-                    self.s_px_r.exp() + self.one * 1e-6
-                ).log()
-            u_dist = NegativeBinomial(
-                total_count=self.u_px_r.exp(), logits=u_logits
-            )
-            s_dist = NegativeBinomial(
-                total_count=self.s_px_r.exp(), logits=s_logits
-            )
-        elif self.likelihood == "Poisson":
-            if self.correct_library_size:
-                ut = relu(ut) + self.one * 1e-6
-                st = relu(st) + self.one * 1e-6
-                ut = pyro.deterministic("ut", ut, event_dim=0)
-                st = pyro.deterministic("st", st, event_dim=0)
-                if self.correct_library_size == "cell_size_regress":
-                    ut_sum = torch.log(torch.sum(ut, dim=-1, keepdim=True))
-                    st_sum = torch.log(torch.sum(st, dim=-1, keepdim=True))
-                    ut = torch.log(ut)
-                    st = torch.log(st)
-                    ut = torch.exp(
-                        ut_coef * ut
-                        + u_cell_size_coef * (-ut_sum + u_read_depth)
-                    )
-                    st = torch.exp(
-                        st_coef * st
-                        + s_cell_size_coef * (-st_sum + s_read_depth)
-                    )
-                else:
-                    ut = ut / torch.sum(ut, dim=-1, keepdim=True)
-                    st = st / torch.sum(st, dim=-1, keepdim=True)
-                ut = pyro.deterministic("ut_norm", ut, event_dim=0)
-                st = pyro.deterministic("st_norm", st, event_dim=0)
-
-                if self.correct_library_size != "cell_size_regress":
-                    ut = (ut + self.one * 1e-6) * u_read_depth
-                    st = (st + self.one * 1e-6) * s_read_depth
-            else:
-                ut = relu(ut)
-                st = relu(st)
-                ut = pyro.deterministic("ut", ut, event_dim=0)
-                st = pyro.deterministic("st", st, event_dim=0)
-                ut = ut + self.one * 1e-6
-                st = st + self.one * 1e-6
-
-            u_dist = Poisson(ut)
-            s_dist = Poisson(st)
-        elif self.likelihood == "Normal":
-            if u_scale is not None and s_scale is not None:
-                u_dist = Normal(ut, u_scale)
-                s_dist = Normal(st, s_scale)
-            else:
-                u_dist = Normal(ut, self.one * 0.1)
-                s_dist = Normal(st, self.one * 0.1)
-        elif self.likelihood == "LogNormal":
-            if u_scale is not None and s_scale is not None:
-                u_dist = LogNormal((ut + self.one * 1e-6).log(), u_scale)
-                s_dist = LogNormal((st + self.one * 1e-6).log(), s_scale)
-            else:
-                u_dist = LogNormal(ut, self.one * 0.1)
-                s_dist = LogNormal(st, self.one * 0.1)
-        else:
+        if self.likelihood != "Poisson":
             raise
+
+        if self.correct_library_size:
+            ut = relu(ut) + self.one * 1e-6
+            st = relu(st) + self.one * 1e-6
+            ut = pyro.deterministic("ut", ut, event_dim=0)
+            st = pyro.deterministic("st", st, event_dim=0)
+            ut = ut / torch.sum(ut, dim=-1, keepdim=True)
+            st = st / torch.sum(st, dim=-1, keepdim=True)
+            ut = pyro.deterministic("ut_norm", ut, event_dim=0)
+            st = pyro.deterministic("st_norm", st, event_dim=0)
+            ut = (ut + self.one * 1e-6) * u_read_depth
+            st = (st + self.one * 1e-6) * s_read_depth
+        else:
+            ut = relu(ut)
+            st = relu(st)
+            ut = pyro.deterministic("ut", ut, event_dim=0)
+            st = pyro.deterministic("st", st, event_dim=0)
+            ut = ut + self.one * 1e-6
+            st = st + self.one * 1e-6
+
+        u_dist = Poisson(ut)
+        s_dist = Poisson(st)
         return u_dist, s_dist
 
 
-class VelocityModel(LogNormalModel):
+class VelocityModelAuto(LogNormalModel):
     def __init__(
         self,
         num_cells: int,
@@ -414,57 +276,13 @@ class VelocityModel(LogNormalModel):
         decoder_on: bool = False,
         add_offset: bool = False,
         correct_library_size: Union[bool, str] = True,
-        guide_type: bool = "velocity",
+        guide_type: str = "velocity",
         cell_specific_kinetics: Optional[str] = None,
         kinetics_num: Optional[int] = None,
         **initial_values,
     ) -> None:
-        """
-        Derived class for modeling RNA velocity with shared latent time.
-
-        Inherits from LogNormalModel.
-
-        Args:
-            num_cells (int): Number of cells.
-            num_genes (int): Number of genes.
-            likelihood (str, optional): Likelihood model. Defaults to "Poisson".
-            shared_time (bool, optional): Whether to share time across cells. Defaults to True.
-            t_scale_on (bool, optional): Whether to scale the time. Defaults to False.
-            plate_size (int, optional): The number of dimensions for the plates. Defaults to 2.
-            latent_factor (str, optional): Latent factor type. Defaults to "none".
-            latent_factor_size (int, optional): Latent factor size. Defaults to 30.
-            latent_factor_operation (str, optional): Latent factor operation. Defaults to "selection".
-            include_prior (bool, optional): Whether to include prior. Defaults to False.
-            num_aux_cells (int, optional): Number of auxiliary cells. Defaults to 100.
-            only_cell_times (bool, optional): Whether to use only cell times. Defaults to False.
-            decoder_on (bool, optional): Whether to use a decoder. Defaults to False.
-            add_offset (bool, optional): Whether to add an offset. Defaults to False.
-            correct_library_size (Union[bool, str], optional): Whether to correct library size. Defaults to True.
-            guide_type (bool, optional): Guide type for the model. Defaults to "velocity".
-            cell_specific_kinetics (Optional[str], optional): Cell-specific kinetics. Defaults to None.
-            kinetics_num (Optional[int], optional): Number of kinetics. Defaults to None.
-            **initial_values: Initial values for various parameters in the model.
-
-        Example:
-            >>> import torch
-            >>> from pyro.nn import PyroModule
-            >>> num_cells = 10
-            >>> num_genes = 20
-            >>> likelihood = "Poisson"
-            >>> plate_size = 2
-            >>> model = VelocityModel(num_cells, num_genes, likelihood, plate_size)
-            >>> u_obs = torch.rand(num_cells, num_genes)
-            >>> s_obs = torch.rand(num_cells, num_genes)
-            >>> u_log_library = torch.rand(num_cells, 1)
-            >>> s_log_library = torch.rand(num_cells, 1)
-            >>> ind_x = torch.randint(0, num_cells, (num_cells,))
-            >>> # ut, st = model.model(u_obs, s_obs, u_log_library, s_log_library, ind_x)
-            >>> # assert ut.shape == (num_cells, num_genes)
-            >>> # assert st.shape == (num_cells, num_genes)
-        """
         assert num_cells > 0 and num_genes > 0
         super().__init__(num_cells, num_genes, likelihood, plate_size)
-        self.num_aux_cells = num_aux_cells
         self.num_aux_cells = num_aux_cells
         self.only_cell_times = only_cell_times
         self.guide_type = guide_type
@@ -491,131 +309,18 @@ class VelocityModel(LogNormalModel):
         if self.decoder_on:
             self.decoder = Decoder(1, self.num_genes, n_layers=2)
 
+        self.enumeration = "parallel"
+        # self.set_enumeration_strategy()
 
-class AuxCellVelocityModel(VelocityModel):
-    def generate_cell(
-        self,
-        gene_plate,
-        alpha,
-        beta,
-        gamma,
-        switching,
-        u_inf,
-        s_inf,
-        u_scale,
-        s_scale,
-        u_log_library,
-        s_log_library,
-        u_pcs_mean=None,
-        s_pcs_mean=None,
-        cell_codebook=None,
-        t_scale=None,
-        gene_offset=None,
-        p_velocity=None,
-        decoder_on=False,
-        u_read_depth=None,
-        s_read_depth=None,
-        u0=None,
-        s0=None,
-    ):
-        if self.decoder_on:
-            pyro.module("time_decoder", self.decoder)
-        if self.latent_factor == "linear":
-            cell_code = pyro.sample(
-                "cell_code",
-                Normal(self.zero, self.one)
-                .expand((self.latent_factor_size,))
-                .to_event(1)
-                .mask(self.include_prior),
+    def sample_cell_gene_state(self, t, switching):
+        return (
+            pyro.sample(
+                "cell_gene_state",
+                Bernoulli(logits=t - switching),
+                infer={"enumerate": self.enumeration},
             )
-        else:
-            cell_code = None
-
-        if self.shared_time:
-            cell_time = pyro.sample(
-                "cell_time",
-                LogNormal(self.zero, self.one).mask(self.include_prior),
-            )
-
-        with gene_plate:
-            if self.latent_factor_operation == "selection":
-                cellgene_type = pyro.sample(
-                    "cellgene_type", Bernoulli(p_velocity)
-                )
-            else:
-                cellgene_type = None
-
-            if self.only_cell_times:
-                if self.decoder_on:
-                    t, _ = self.decoder(cell_time)
-                else:
-                    t = cell_time
-
-            elif self.shared_time:
-                t = pyro.sample(
-                    "latent_time",
-                    Normal(self.zero, self.one).mask(self.include_prior),
-                )
-                t = (
-                    cell_time * t_scale + t + gene_offset
-                    if self.t_scale_on and t_scale is not None
-                    else cell_time + t
-                )
-            else:
-                t = pyro.sample(
-                    "latent_time",
-                    LogNormal(self.zero, self.one).mask(self.include_prior),
-                )
-
-            state = (
-                pyro.sample(
-                    "cell_gene_state",
-                    Bernoulli(logits=t - switching),
-                    infer={"enumerate": "sequential"},
-                )
-                == self.zero
-            )
-            u0_vec = torch.where(state, u0, u_inf)
-            s0_vec = torch.where(state, s0, s_inf)
-            alpha_vec = torch.where(state, alpha, self.zero)
-
-            tau = softplus(torch.where(state, t - gene_offset, t - switching))
-
-            ut, st = mRNA(tau, u0_vec, s0_vec, alpha_vec, beta, gamma)
-
-            if self.latent_factor == "linear":
-                regressor_output = torch.einsum(
-                    "abc,cd->ad", cell_code, cell_codebook.squeeze()
-                )
-                regressor_u = softplus(
-                    regressor_output[..., : self.num_genes].squeeze()
-                    + u_pcs_mean
-                )
-                regressor_s = softplus(
-                    regressor_output[..., self.num_genes :].squeeze()
-                    + s_pcs_mean
-                )
-            if self.latent_factor_operation == "selection":
-                ut = torch.where(
-                    cellgene_type == self.one,
-                    ut * u_scale / s_scale,
-                    softplus(regressor_u),
-                )
-                st = torch.where(
-                    cellgene_type == self.one, st, softplus(regressor_s)
-                )
-            elif self.latent_factor_operation == "sum":
-                ut = ut * u_scale / s_scale + regressor_u
-                st = st + regressor_s
-            else:
-                ut = ut * u_scale / s_scale
-                st = st
-        return ut, st
-
-
-class VelocityModelAuto(AuxCellVelocityModel):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+            == self.zero
+        )
 
     def get_rna(
         self,
@@ -633,7 +338,8 @@ class VelocityModelAuto(AuxCellVelocityModel):
         s_inf: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Computes the unspliced (u) and spliced (s) RNA expression levels given the model parameters.
+        Computes the unspliced (u) and spliced (s) RNA expression levels given
+        the model parameters.
 
         Args:
             u_scale (torch.Tensor): Scaling factor for unspliced expression.
@@ -690,38 +396,12 @@ class VelocityModelAuto(AuxCellVelocityModel):
             ...            s_inf=torch.tensor([0.1132, 0.2100, 0.3750, 0.0999], device="cpu"),
             >>>        )
         """
-        if self.cell_specific_kinetics is None:
-            if (
-                self.guide_type != "auto"
-                and version.parse(pyro.__version__) > version.parse("1.8.1")
-                or self.guide_type == "auto"
-            ):
-                enum = "parallel"
-            elif (
-                self.guide_type != "auto"
-                and not pyro.__version__.startswith("1.8.1")
-                and pyro.__version__.startswith("1.6.0")
-            ):
-                enum = "sequential"
-
-            state = (
-                pyro.sample(
-                    "cell_gene_state",
-                    Bernoulli(logits=t - switching),
-                    infer={"enumerate": enum},
-                )
-                == self.zero
-            )
-            alpha_off = self.zero
-            u0_vec = torch.where(state, u0, u_inf)
-            s0_vec = torch.where(state, s0, s_inf)
-            alpha_vec = torch.where(state, alpha, alpha_off)
-            tau = softplus(torch.where(state, t - t0, t - switching))
-        else:
-            u0_vec = u0
-            s0_vec = s0
-            alpha_vec = alpha
-            tau = softplus(t - t0)
+        state = self.sample_cell_gene_state(t, switching)
+        alpha_off = self.zero
+        u0_vec = torch.where(state, u0, u_inf)
+        s0_vec = torch.where(state, s0, s_inf)
+        alpha_vec = torch.where(state, alpha, alpha_off)
+        tau = softplus(torch.where(state, t - t0, t - switching))
 
         ut, st = mRNA(tau, u0_vec, s0_vec, alpha_vec, beta, gamma)
         ut = ut * u_scale / s_scale
@@ -742,7 +422,8 @@ class VelocityModelAuto(AuxCellVelocityModel):
         time_info: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Defines the forward model, which computes the unspliced (u) and spliced (s) RNA expression levels given the observations and model parameters.
+        Defines the forward model, which computes the unspliced (u) and spliced
+        (s) RNA expression levels given the observations and model parameters.
 
         Args:
             u_obs (Optional[torch.Tensor], optional): Observed unspliced RNA expression. Default is None.
@@ -802,7 +483,6 @@ class VelocityModelAuto(AuxCellVelocityModel):
                     [11., 29., 10.,  2.],
                     [ 0.,  0.,  7.,  4.]]))
         """
-
         cell_plate, gene_plate = self.create_plates(
             u_obs,
             s_obs,
@@ -830,24 +510,16 @@ class VelocityModelAuto(AuxCellVelocityModel):
 
             t0 = pyro.sample("t0", Normal(self.zero, self.one))
 
-            if (self.likelihood == "Normal") or (self.guide_type == "auto"):
-                u_scale = self.u_scale
-                s_scale = self.one
-            else:
-                u_scale = s_scale = self.one
+            u_scale = self.u_scale
+            s_scale = self.one
 
-            if self.likelihood == "Normal":
-                s_scale = self.s_scale
-            if self.cell_specific_kinetics is None:
-                dt_switching = self.dt_switching
-                u_inf, s_inf = mRNA(dt_switching, u0, s0, alpha, beta, gamma)
-                u_inf = pyro.deterministic("u_inf", u_inf, event_dim=0)
-                s_inf = pyro.deterministic("s_inf", s_inf, event_dim=0)
-                switching = pyro.deterministic(
-                    "switching", dt_switching + t0, event_dim=0
-                )
-            else:
-                switching = u_inf = s_inf = None
+            dt_switching = self.dt_switching
+            u_inf, s_inf = mRNA(dt_switching, u0, s0, alpha, beta, gamma)
+            u_inf = pyro.deterministic("u_inf", u_inf, event_dim=0)
+            s_inf = pyro.deterministic("s_inf", s_inf, event_dim=0)
+            switching = pyro.deterministic(
+                "switching", dt_switching + t0, event_dim=0
+            )
 
         with cell_plate:
             t = pyro.sample(
@@ -857,43 +529,13 @@ class VelocityModelAuto(AuxCellVelocityModel):
 
         with cell_plate:
             u_cell_size_coef = ut_coef = s_cell_size_coef = st_coef = None
-            u_read_depth = s_read_depth = None
-            if self.correct_library_size and (self.likelihood != "Normal"):
-                if self.guide_type == "velocity_auto":
-                    u_read_depth = torch.exp(u_log_library)
-                    s_read_depth = torch.exp(s_log_library)
-                else:
-                    u_read_depth = pyro.sample(
-                        "u_read_depth",
-                        LogNormal(u_log_library, u_log_library_scale),
-                    )
-                    s_read_depth = pyro.sample(
-                        "s_read_depth",
-                        LogNormal(s_log_library, s_log_library_scale),
-                    )
-                    if self.correct_library_size == "cell_size_regress":
-                        u_cell_size_coef = pyro.sample(
-                            "u_cell_size_coef", Normal(self.zero, self.one)
-                        )
-                        ut_coef = pyro.sample(
-                            "ut_coef", Normal(self.zero, self.one)
-                        )
-                        s_cell_size_coef = pyro.sample(
-                            "s_cell_size_coef", Normal(self.zero, self.one)
-                        )
-                        st_coef = pyro.sample(
-                            "st_coef", Normal(self.zero, self.one)
-                        )
+            u_read_depth = pyro.sample(
+                "u_read_depth", LogNormal(u_log_library, u_log_library_scale)
+            )
+            s_read_depth = pyro.sample(
+                "s_read_depth", LogNormal(s_log_library, s_log_library_scale)
+            )
             with gene_plate:
-                if self.guide_type in [
-                    "auto_t0_constraint",
-                    "velocity_auto_t0_constraint",
-                ]:
-                    pyro.sample(
-                        "time_constraint",
-                        Bernoulli(logits=t - t0),
-                        obs=self.one,
-                    )
                 ut, st = self.get_rna(
                     u_scale,
                     s_scale,
