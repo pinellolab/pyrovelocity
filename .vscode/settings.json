@@ -1,38 +1,62 @@
 {
-  "cloudcode.autoDependencies": "on",
-  "workbench.iconTheme": "vscode-icons",
-  "workbench.colorTheme": "Catppuccin Mocha",
-  "search.exclude": {
-    "**/bazel-*/**": true,
-    "**/.devenv/**": true,
-    "**/.direnv/**": true,
-    "**/.hypothesis/**": true,
-    "**/.venv/**": true,
-    "**/.mypy_cache/**": true,
-    "**/.pytest_cache/**": true,
-    "**/.ruff_cache/**": true,
-    "**/.solid/**": true,
-    "**/dev/cluster/pyrovelocity/pyrovelocitydev/cue.mod/**": true
+  "[ipynb]": {
+    "editor.defaultFormatter": "charliermarsh.ruff"
   },
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "autoHide.autoHideAuxiliaryBar": false,
+  "autoHide.autoHidePanel": false,
+  "autoHide.autoHideSideBar": true,
+  "autoHide.hideOnOpen": false,
+  "cloudcode.autoDependencies": "on",
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "always",
+    "source.organizeImports": "always"
+  },
+  "editor.fontSize": 16,
+  "editor.formatOnSave": true,
+  "files.autoSave": "onFocusChange",
+  // "files.autoSave": "afterDelay",
+  // "files.autoSaveDelay": 1000,
   "files.watcherExclude": {
-    "**/bazel-*/**": true,
     "**/.devenv/**": true,
     "**/.direnv/**": true,
     "**/.hypothesis/**": true,
-    "**/.venv/**": true,
     "**/.mypy_cache/**": true,
     "**/.nox/**": true,
     "**/.pytest_cache/**": true,
     "**/.ruff_cache/**": true,
     "**/.solid/**": true,
+    "**/.venv/**": true,
+    "**/bazel-*/**": true,
+    "**/dev/cluster/pyrovelocity/pyrovelocitydev/cue.mod/**": true
+  },
+  "notebook.codeActionsOnSave": {
+    "notebook.source.fixAll": "explicit",
+    "notebook.source.organizeImports": "explicit"
+  },
+  "notebook.formatOnCellExecution": true,
+  "notebook.formatOnSave.enabled": true,
+  "search.exclude": {
+    "**/.devenv/**": true,
+    "**/.direnv/**": true,
+    "**/.hypothesis/**": true,
+    "**/.mypy_cache/**": true,
+    "**/.pytest_cache/**": true,
+    "**/.ruff_cache/**": true,
+    "**/.solid/**": true,
+    "**/.venv/**": true,
+    "**/bazel-*/**": true,
     "**/dev/cluster/pyrovelocity/pyrovelocitydev/cue.mod/**": true
   },
   // this is a workaround for 1000% CPU usage by
   // /Applications/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/@vscode/ripgrep/bin/rg
   // https://github.com/microsoft/vscode/issues/186279#issuecomment-1633159669
   "search.followSymlinks": false,
-  "terminal.integrated.scrollback": 100000,
+  "terminal.integrated.fontSize": 14,
   "terminal.integrated.persistentSessionScrollback": 100000,
-  "editor.fontSize": 16,
-  "terminal.integrated.fontSize": 14
+  "terminal.integrated.scrollback": 100000,
+  "workbench.colorTheme": "Catppuccin Mocha",
+  "workbench.iconTheme": "vscode-icons"
 }
