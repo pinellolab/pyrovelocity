@@ -1,9 +1,7 @@
 [tool.poetry]
 name = "pyrovelocity"
 version = "0.2.0b5"
-packages = [
-    { include = "pyrovelocity", from = "src" },
-]
+packages = [{ include = "pyrovelocity", from = "src" }]
 description = "A multivariate RNA Velocity model to estimate future cell states with uncertainty using probabilistic modeling with pyro."
 authors = ["pyrovelocity team"]
 license = "AGPL-3.0-only"
@@ -67,9 +65,9 @@ zstandard = "0.21.0"
 # scikit-misc = "0.1.4"
 
 # extras
-annoy = {version = "^1.17.3", optional = true }
+annoy = { version = "^1.17.3", optional = true }
 black = { version = ">=23.3.0", optional = true }
-coverage = {extras = ["toml"], version = ">=6.2", optional = true}
+coverage = { extras = ["toml"], version = ">=6.2", optional = true }
 darglint = { version = ">=1.8.1", optional = true }
 dparse = { version = ">=0.5.2", optional = true }
 dvc = { version = ">=3.0", optional = true }
@@ -80,15 +78,15 @@ flake8-bugbear = { version = ">=21.9.2", optional = true }
 flake8-docstrings = { version = ">=1.6.0", optional = true }
 flake8-rst-docstrings = { version = ">=0.2.5", optional = true }
 furo = { version = "2023.5.20", optional = true }
-hypothesis = {version = ">=6.71.0", optional = true }
-ipython = {version = ">=8.11.0", optional = true}
+hypothesis = { version = ">=6.71.0", optional = true }
+ipython = { version = ">=8.11.0", optional = true }
 isort = { version = ">=5.10.1", optional = true }
 # see https://jupyterlab-contrib.github.io/migrate_from_classical.html for extensions
 jupyterlab = { version = "4.0.9", optional = true }
 jupytext = { version = "1.16.0", optional = true }
 matplotlib-venn = { version = ">=0.11.9", optional = true }
 mypy = { version = ">=0.930", optional = true }
-myst-parser = {version = "2.0.0", optional = true}
+myst-parser = { version = "2.0.0", optional = true }
 nbsphinx = { version = "0.9.3", optional = true }
 pep8-naming = { version = ">=0.12.1", optional = true }
 poethepoet = { version = ">=0.16.0", optional = true, source = "pypi" }
@@ -111,7 +109,7 @@ sphinx-click = { version = "4.4.0", optional = true }
 sphinx-copybutton = { version = "0.5.2", optional = true }
 statannotations = { version = ">=0.5.0", optional = true }
 typeguard = { version = ">=2.13.3", optional = true }
-xdoctest = {extras = ["colors"], version = ">=0.15.10", optional = true }
+xdoctest = { extras = ["colors"], version = ">=0.15.10", optional = true }
 
 # Enable with make lock-pip-cpu
 # [[tool.poetry.source]]
@@ -213,9 +211,9 @@ dev = [
   "safety",
   "typeguard",
   "xdoctest",
- ]
+]
 
- docs = [
+docs = [
   "furo",
   "jupyterlab",
   "jupytext",
@@ -226,32 +224,20 @@ dev = [
   "sphinx-click",
   "sphinx-copybutton",
   "sphinx",
- ]
-
-plotting = [
-  "annoy",
-  "matplotlib-venn",
-  "statannotations",
 ]
 
- pipeline = [
-  "python-dotenv",
- ]
+plotting = ["annoy", "matplotlib-venn", "statannotations"]
+
+pipeline = ["python-dotenv"]
 
 
 [tool.conda-lock]
-channels = [
-    'nodefaults', 
-    'pytorch',
-    'nvidia',
-    'conda-forge', 
-    'bioconda', 
-]
+channels = ['nodefaults', 'pytorch', 'nvidia', 'conda-forge', 'bioconda']
 platforms = [
-    'linux-64',
-    # 'linux-aarch64',
-    # 'osx-arm64',
-    # 'osx-amd64'
+  'linux-64',
+  # 'linux-aarch64',
+  # 'osx-arm64',
+  # 'osx-amd64'
 ]
 conda_executor = "mamba"
 log_level = "INFO"
@@ -259,10 +245,10 @@ virtual_package_spec = "conda/virtual-packages.yml"
 
 [tool.conda-lock.dependencies]
 adjusttext = { source = "pypi" }
-dataclasses-json = {source = "pypi"}
-hydra-zen = {source = "pypi"}
+dataclasses-json = { source = "pypi" }
+hydra-zen = { source = "pypi" }
 pip = ">=23.2"
-poethepoet = {source = "pypi"}
+poethepoet = { source = "pypi" }
 
 [tool.poe.tasks.conda-lock]
 cmd = """
@@ -296,14 +282,16 @@ help = "Force install torch 1.13.1+cu111 on Linux and Windows."
 [tool.poetry.scripts]
 pyrovelocity = "pyrovelocity.flytezen.cli:main"
 
+# --cov=src/pyrovelocity/
+# --cov-report=term-missing
 [tool.pytest.ini_options]
-# addopts = "-rA --disable-warnings --xdoc --cov=src/pyrovelocity/ --cov-report=term-missing"
-addopts = "-rA --disable-warnings --cov=src/pyrovelocity/ --cov-report=term-missing"
+addopts = """ 
+-rA
+--disable-warnings
+--xdoc
+"""
 asyncio_mode = "strict"
-norecursedirs = [
-  "bazel-*",
-  ".direnv",
-]
+norecursedirs = ["bazel-*", ".direnv"]
 
 [tool.coverage.paths]
 source = ["src/pyrovelocity"]
@@ -321,6 +309,7 @@ omit = [
 
 [tool.coverage.report]
 show_missing = true
+exclude_lines = ["no cov", "if __name__ == .__main__.:", "if TYPE_CHECKING:"]
 
 [tool.docformatter]
 black = true
@@ -372,9 +361,15 @@ ignore = [
   # Allow implicitly concatenated strings on a single line
   "ISC001",
   # Ignore checks for possible passwords
-  "S105", "S106", "S107",
+  "S105",
+  "S106",
+  "S107",
   # Ignore complexity
-  "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
+  "C901",
+  "PLR0911",
+  "PLR0912",
+  "PLR0913",
+  "PLR0915",
 ]
 unfixable = [
   # Don't modify unused imports
@@ -393,12 +388,7 @@ ban-relative-imports = "all"
 
 [tool.pyright]
 include = ["src"]
-exclude = [
-       "**/node_modules",
-       "**/__pycache__",
-       "**/.hypothesis",
-       "**/docs",
-]
+exclude = ["**/node_modules", "**/__pycache__", "**/.hypothesis", "**/docs"]
 reportUnnecessaryTypeIgnoreComment = true
 reportUnnecessaryIsInstance = false
 
@@ -411,9 +401,7 @@ lines_after_imports = 2
 python_version = "3.10"
 
 [[tool.mypy.overrides]]
-module = [
-  ""
-]
+module = [""]
 ignore_missing_imports = true
 warn_unreachable = true
 pretty = true
