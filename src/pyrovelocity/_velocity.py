@@ -25,6 +25,7 @@ from scvi.module.base import PyroBaseModuleClass
 
 from pyrovelocity._trainer import VelocityTrainingMixin
 from pyrovelocity._velocity_module import VelocityModule
+from pyrovelocity.logging import configure_logging
 from pyrovelocity.plot import (
     compute_mean_vector_field,
     compute_volcano_data,
@@ -32,7 +33,7 @@ from pyrovelocity.plot import (
 )
 from pyrovelocity.utils import init_with_all_cells
 
-logger = logging.getLogger(__name__)
+logger = configure_logging(__name__)
 
 
 class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
@@ -91,9 +92,9 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         Examples:
             >>> import numpy as np
             >>> import anndata
-            >>> from pyrovelocity._velocity import PyroVelocity
-            >>> from pyrovelocity.utils import pretty_print_dict, print_anndata, generate_sample_data
+            >>> from pyrovelocity.utils import pretty_log_dict, print_anndata, generate_sample_data
             >>> from pyrovelocity.data import copy_raw_counts
+            >>> from pyrovelocity._velocity import PyroVelocity
             >>> # setup sample data
             >>> n_obs = 10
             >>> n_vars = 5
@@ -112,7 +113,9 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> posterior_samples = model.generate_posterior_samples(model.adata, num_samples=30)
             >>> print(posterior_samples.keys())
             >>> assert isinstance(posterior_samples, dict), f"Expected a dictionary, got {type(posterior_samples)}"
-            >>> pretty_print_dict(posterior_samples)
+            >>> posterior_samples_log = pretty_log_dict(posterior_samples)
+            >>> logger.debug(posterior_samples_log)
+            >>> # print(posterior_samples_log)
             >>> model.save_model('save_pyrovelocity_doctest_model', overwrite=True)
             >>> model = PyroVelocity.load_model('save_pyrovelocity_doctest_model', adata, use_gpu=False)
             >>> # train model with
@@ -121,7 +124,9 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> model.save_model('save_pyrovelocity_doctest_model', overwrite=True)
             >>> model = PyroVelocity.load_model('save_pyrovelocity_doctest_model', adata, use_gpu=False)
             >>> posterior_samples = model.generate_posterior_samples(model.adata, num_samples=30)
-            >>> pretty_print_dict(posterior_samples)
+            >>> posterior_samples_log = pretty_log_dict(posterior_samples)
+            >>> logger.debug(posterior_samples_log)
+            >>> # print(posterior_samples_log)
             >>> print(posterior_samples.keys())
             >>> # train model with
             >>> model = PyroVelocity(adata)
@@ -129,7 +134,9 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> model.save_model('save_pyrovelocity_doctest_model', overwrite=True)
             >>> model = PyroVelocity.load_model('save_pyrovelocity_doctest_model', adata, use_gpu=False)
             >>> posterior_samples = model.generate_posterior_samples(model.adata, num_samples=30)
-            >>> pretty_print_dict(posterior_samples)
+            >>> posterior_samples_log = pretty_log_dict(posterior_samples)
+            >>> logger.debug(posterior_samples_log)
+            >>> # print(posterior_samples_log)
             >>> print(posterior_samples.keys())
         """
         self.use_gpu = use_gpu
