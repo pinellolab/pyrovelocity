@@ -1,29 +1,20 @@
-from typing import Optional
-from typing import Tuple
-from typing import Union
+from typing import Optional, Tuple, Union
 
 import pyro
 import torch
 from beartype import beartype
-from jaxtyping import Float
-from jaxtyping import jaxtyped
+from jaxtyping import Float, jaxtyped
 from pyro import poutine
-from pyro.distributions import Bernoulli
-from pyro.distributions import LogNormal
-from pyro.distributions import Normal
-from pyro.distributions import Poisson
-from pyro.nn import PyroModule
-from pyro.nn import PyroSample
+from pyro.distributions import Bernoulli, LogNormal, Normal, Poisson
+from pyro.nn import PyroModule, PyroSample
 from pyro.primitives import plate
 from scvi.nn import Decoder
 
 # from torch.distributions import Bernoulli
-from torch.nn.functional import relu
-from torch.nn.functional import softplus
+from torch.nn.functional import relu, softplus
 
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.utils import mRNA
-
 
 logger = configure_logging("pyrovelocity._velocity_model")
 
@@ -138,7 +129,7 @@ class LogNormalModel(PyroModule):
         Returns:
             Tuple[plate, plate]: _description_
         """
-        logger.info(
+        logger.debug(
             f"Creating pyro (cell, gene) plates: ({self.num_cells}, {self.num_genes})"
         )
         cell_plate = pyro.plate(
