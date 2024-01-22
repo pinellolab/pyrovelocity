@@ -2,16 +2,14 @@ import dataclasses
 import inspect
 import sys
 from dataclasses import field
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    get_type_hints,
-)
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Type
+from typing import get_type_hints
 
 from mashumaro.mixins.json import DataClassJSONMixin
 from sklearn.linear_model import LogisticRegression
@@ -154,7 +152,7 @@ def infer_type_from_default_json(
         >>> infer_type_from_default_json(None, "example_none")  # Raises an exception
         Traceback (most recent call last):
         ...
-        pyrovelocity.flytezen.configuration.TypeInferenceError: Type for parameter 'example_none' with default value None cannot be inferred.
+        pyrovelocity.workflows.configuration.TypeInferenceError: Type for parameter 'example_none' with default value None cannot be inferred.
         Add this parameter to the custom_types dictionary.
     """
 
@@ -259,7 +257,7 @@ def create_dataclass_from_callable_json(
         ... )
         Traceback (most recent call last):
         ...
-        pyrovelocity.flytezen.configuration.TypeInferenceError: Type for parameter 'a' with no default value cannot be inferred.
+        pyrovelocity.workflows.configuration.TypeInferenceError: Type for parameter 'a' with no default value cannot be inferred.
         Add this parameter to the custom_types dictionary.
         >>> def example_func(a, b='hello', c: bool=False):
         ...     pass

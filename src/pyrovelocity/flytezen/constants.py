@@ -1,12 +1,10 @@
 import os
 
-from dulwich.repo import NotGitRepository
-from dulwich.repo import Repo
+from dulwich.repo import NotGitRepository, Repo
 
 from pyrovelocity.logging import configure_logging
 
-
-logger = configure_logging("pyrovelocity.flytezen.constants")
+logger = configure_logging("pyrovelocity.workflows.constants")
 
 
 def get_git_repo_root(path="."):

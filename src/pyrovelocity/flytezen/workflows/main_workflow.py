@@ -12,10 +12,10 @@ from mashumaro.mixins.json import DataClassJSONMixin
 from sklearn.datasets import load_wine
 from sklearn.linear_model import LogisticRegression
 
-from pyrovelocity.flytezen.configuration import create_dataclass_from_callable
 from pyrovelocity.logging import configure_logging
+from pyrovelocity.workflows.configuration import create_dataclass_from_callable
 
-logger = configure_logging("pyrovelocity.flytezen.workflows.main_workflow")
+logger = configure_logging("pyrovelocity.workflows.main_workflow")
 
 custom_types_defaults: Dict[str, Tuple[Type, Any]] = {
     "class_weight": (Optional[dict], None),

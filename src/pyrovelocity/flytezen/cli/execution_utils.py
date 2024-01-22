@@ -11,10 +11,15 @@ import time
 from dataclasses import dataclass
 from datetime import timedelta
 from textwrap import dedent
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Tuple
+from typing import Union
 
 from dataclasses_json import dataclass_json
-from dulwich.repo import NotGitRepository, Repo
+from dulwich.repo import NotGitRepository
+from dulwich.repo import Repo
 from flytekit import WorkflowExecutionPhase
 from flytekit.core.base_task import PythonTask
 from flytekit.core.workflow import WorkflowBase
@@ -22,8 +27,12 @@ from flytekit.exceptions.system import FlyteSystemException
 from flytekit.exceptions.user import FlyteTimeout
 from flytekit.remote import FlyteRemote
 from flytekit.remote.executions import FlyteWorkflowExecution
-from hydra.conf import HelpConf, HydraConf, JobConf
-from hydra_zen import ZenStore, builds, make_custom_builds_fn
+from hydra.conf import HelpConf
+from hydra.conf import HydraConf
+from hydra.conf import JobConf
+from hydra_zen import ZenStore
+from hydra_zen import builds
+from hydra_zen import make_custom_builds_fn
 
 
 @dataclass_json
@@ -461,7 +470,7 @@ def wait_for_workflow_completion(
 
 
 def generate_workflow_inputs(
-    workflow_import_path: str = "pyrovelocity.flytezen.workflows.main_workflow",
+    workflow_import_path: str = "pyrovelocity.workflows.main_workflow",
     workflow_name: str = "training_workflow",
 ) -> Dict[str, Any]:
     """
