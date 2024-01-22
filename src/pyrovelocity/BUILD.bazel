@@ -9,22 +9,23 @@ load("//bazel:python.bzl", "py_test_module_list", "xdoctest")
 
 # passing imports = [".."] to py_test is currently required to import the parent
 # package at the top-level of test modules even though the library dependency
-# should be sufficient to update sys.path. 
+# should be sufficient to update sys.path.
 # https://github.com/bazelbuild/rules_python/issues/1221
 
 xdoctest(
     files = glob(
-        include=["**/*.py"],
-        exclude=[
-            "flytezen/**",
+        include = ["**/*.py"],
+        exclude = [
+            "workflows/**",
             "tests/**",
-        ]
+        ],
     ),
-    deps = [":pyrovelocity"],
     imports = [".."],
+    deps = [":pyrovelocity"],
 )
 
 py_test_module_list(
+    size = "small",
     files = [
         "tests/test_api.py",
         "tests/test_compressedpickle.py",
@@ -36,25 +37,27 @@ py_test_module_list(
         "tests/test_pyrovelocity.py",
         "tests/test_trainer.py",
         "tests/test_utils.py",
+        "tests/test_velocity.py",
         "tests/test_velocity_guide.py",
         "tests/test_velocity_model.py",
         "tests/test_velocity_module.py",
-        "tests/test_velocity.py",
     ],
-    size = "small",
+    imports = [".."],
     tags = [""],
     deps = [":pyrovelocity"],
-    imports = [".."],
 )
 
 py_library(
     name = "pyrovelocity",
-    srcs = glob(["**/*.py"], exclude=["tests/**/*.py"]),
-    deps = all_requirements,
+    srcs = glob(
+        ["**/*.py"],
+        exclude = ["tests/**/*.py"],
+    ),
     visibility = [
         "//src/pyrovelocity:__pkg__",
         "//src/pyrovelocity:__subpackages__",
     ],
+    deps = all_requirements,
     # imports = [".."],
 )
 
