@@ -1,21 +1,27 @@
 import math
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Sequence
+from typing import Union
 
 import mlflow
 import numpy as np
 import pyro
 import scipy
 import torch
-from pyro.infer import Trace_ELBO, TraceEnum_ELBO
+from pyro.infer import Trace_ELBO
+from pyro.infer import TraceEnum_ELBO
 from pyro.infer.autoguide.guides import AutoGuideList
 from pyro.optim.clipped_adam import ClippedAdam
 from pyro.optim.optim import PyroOptim
 from scvi.dataloaders import DataSplitter
-from scvi.train import PyroTrainingPlan, TrainRunner
+from scvi.train import PyroTrainingPlan
+from scvi.train import TrainRunner
 
-from pyrovelocity.utils import _get_fn_args_from_batch
-
-from ._velocity_module import VelocityModule
+from pyrovelocity._velocity_module import VelocityModule
 
 
 class VelocityAdam(ClippedAdam):
@@ -95,7 +101,7 @@ class EnumTrainingPlan(PyroTrainingPlan):
         self.n_elem = self.module.num_genes * self.module.num_cells * 2
 
     def training_step(self, batch, batch_idx, optimizer_idx=0):
-        args, kwargs = _get_fn_args_from_batch(batch)
+        args, kwargs = self.module._get_fn_args_from_batch(batch)
         loss = self.svi.step(*args, **kwargs)
         return {
             "train_step_loss": loss,
@@ -115,7 +121,7 @@ class EnumTrainingPlan(PyroTrainingPlan):
         # self.log("elbo_train", elbo / n_elem, prog_bar=True, on_epoch=True)
 
     def validation_step(self, batch, batch_idx):
-        args, kwargs = _get_fn_args_from_batch(batch)
+        args, kwargs = self.pyro_velocity._get_fn_args_from_batch(batch)
         loss = self.svi.evaluate_loss(*args, **kwargs)
         return {
             "valid_step_loss": loss,
@@ -403,7 +409,7 @@ class VelocityTrainingMixin:
             n_batch = 0
             elbos = 0
             for tensor_dict in scdl:
-                args, kwargs = _get_fn_args_from_batch(tensor_dict)
+                args, kwargs = self.module._get_fn_args_from_batch(tensor_dict)
                 args = [a.to(device) if a is not None else a for a in args]
                 loss = svi.step(*args, **kwargs)
                 elbos += loss
