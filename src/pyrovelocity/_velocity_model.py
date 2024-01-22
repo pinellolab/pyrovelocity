@@ -5,6 +5,8 @@ from typing import Union
 import pyro
 import torch
 from beartype import beartype
+from jaxtyping import Float
+from jaxtyping import jaxtyped
 from pyro import poutine
 from pyro.distributions import Bernoulli
 from pyro.distributions import LogNormal
@@ -19,7 +21,22 @@ from scvi.nn import Decoder
 from torch.nn.functional import relu
 from torch.nn.functional import softplus
 
+from pyrovelocity.logging import configure_logging
 from pyrovelocity.utils import mRNA
+
+
+logger = configure_logging("pyrovelocity._velocity_model")
+
+RNAInputType = Union[
+    Float[torch.Tensor, ""],
+    Float[torch.Tensor, "num_genes"],
+    Float[torch.Tensor, "samples num_genes"],
+]
+
+RNAOutputType = Union[
+    Float[torch.Tensor, "num_cells num_genes"],
+    Float[torch.Tensor, "samples num_cells num_genes"],
+]
 
 
 class LogNormalModel(PyroModule):
@@ -39,11 +56,12 @@ class LogNormalModel(PyroModule):
 
     Example:
         >>> from pyrovelocity._velocity_model import LogNormalModel
-        >>> num_cells = 10
-        >>> num_genes = 20
+        >>> num_cells = 3
+        >>> num_genes = 4
         >>> likelihood = "Poisson"
         >>> plate_size = 2
         >>> model = LogNormalModel(num_cells, num_genes, likelihood, plate_size)
+        >>> logger.info(model)
         >>> assert model.num_cells == num_cells
         >>> assert model.num_genes == num_genes
         >>> assert model.likelihood == likelihood
@@ -59,6 +77,7 @@ class LogNormalModel(PyroModule):
         plate_size: int = 2,
         correct_library_size: Union[bool, str] = True,
     ) -> None:
+        logger.info("Initializing LogNormalModel")
         assert num_cells > 0 and num_genes > 0
         super().__init__()
         self.num_cells = num_cells
@@ -70,6 +89,19 @@ class LogNormalModel(PyroModule):
         self.register_buffer("one", torch.tensor(1.0))
         self.likelihood = likelihood
 
+    @beartype
+    def __repr__(self) -> str:
+        return (
+            f"\nLogNormalModel(\n"
+            f"\tnum_cells={self.num_cells}, \n"
+            f"\tnum_genes={self.num_genes}, \n"
+            f"\tlikelihood={self.likelihood}, \n"
+            f"\tplate_size={self.plate_size}, \n"
+            f"\tcorrect_library_size={self.correct_library_size}\n"
+            f")\n"
+        )
+
+    @beartype
     def create_plates(
         self,
         u_obs: Optional[torch.Tensor] = None,
@@ -106,6 +138,9 @@ class LogNormalModel(PyroModule):
         Returns:
             Tuple[plate, plate]: _description_
         """
+        logger.info(
+            f"Creating pyro (cell, gene) plates: ({self.num_cells}, {self.num_genes})"
+        )
         cell_plate = pyro.plate(
             "cells", self.num_cells, subsample=ind_x, dim=-2
         )
@@ -180,6 +215,7 @@ class LogNormalModel(PyroModule):
             .mask(False)
         )
 
+    @beartype
     def get_likelihood(
         self,
         ut: torch.Tensor,
@@ -217,17 +253,20 @@ class LogNormalModel(PyroModule):
 
         Example:
             >>> import torch
-            >>> from pyro.nn import PyroModule
+            >>> from pyrovelocity._velocity_model import LogNormalModel
             >>> num_cells = 10
             >>> num_genes = 20
             >>> likelihood = "Poisson"
             >>> plate_size = 2
             >>> model = LogNormalModel(num_cells, num_genes, likelihood, plate_size)
+            >>> logger.info(model)
             >>> ut = torch.rand(num_cells, num_genes)
             >>> st = torch.rand(num_cells, num_genes)
             >>> u_read_depth = torch.rand(num_cells, 1)
             >>> s_read_depth = torch.rand(num_cells, 1)
             >>> u_dist, s_dist = model.get_likelihood(ut, st, u_read_depth=u_read_depth, s_read_depth=s_read_depth)
+            >>> logger.info(f"u_dist: {u_dist}")
+            >>> logger.info(f"s_dist: {s_dist}")
             >>> assert isinstance(u_dist, torch.distributions.Poisson)
             >>> assert isinstance(s_dist, torch.distributions.Poisson)
         """
@@ -259,6 +298,55 @@ class LogNormalModel(PyroModule):
 
 
 class VelocityModelAuto(LogNormalModel):
+    """Automatically configured velocity model.
+
+    Args:
+        num_cells (int): _description_
+        num_genes (int): _description_
+        likelihood (str, optional): _description_. Defaults to "Poisson".
+        shared_time (bool, optional): _description_. Defaults to True.
+        t_scale_on (bool, optional): _description_. Defaults to False.
+        plate_size (int, optional): _description_. Defaults to 2.
+        latent_factor (str, optional): _description_. Defaults to "none".
+        latent_factor_size (int, optional): _description_. Defaults to 30.
+        latent_factor_operation (str, optional): _description_. Defaults to "selection".
+        include_prior (bool, optional): _description_. Defaults to False.
+        num_aux_cells (int, optional): _description_. Defaults to 100.
+        only_cell_times (bool, optional): _description_. Defaults to False.
+        decoder_on (bool, optional): _description_. Defaults to False.
+        add_offset (bool, optional): _description_. Defaults to False.
+        correct_library_size (Union[bool, str], optional): _description_. Defaults to True.
+        guide_type (str, optional): _description_. Defaults to "velocity".
+        cell_specific_kinetics (Optional[str], optional): _description_. Defaults to None.
+        kinetics_num (Optional[int], optional): _description_. Defaults to None.
+
+    Examples:
+        >>> import torch
+        >>> from pyrovelocity._velocity_model import VelocityModelAuto
+        >>> model = VelocityModelAuto(
+        ...             3,
+        ...             4,
+        ...             "Poisson",
+        ...             True,
+        ...             False,
+        ...             2,
+        ...             "none",
+        ...             latent_factor_operation="selection",
+        ...             latent_factor_size=10,
+        ...             include_prior=False,
+        ...             num_aux_cells=0,
+        ...             only_cell_times=True,
+        ...             decoder_on=False,
+        ...             add_offset=False,
+        ...             correct_library_size=True,
+        ...             guide_type="auto_t0_constraint",
+        ...             cell_specific_kinetics=None,
+        ...             **{}
+        ...         )
+        >>> logger.info(model)
+    """
+
+    @beartype
     def __init__(
         self,
         num_cells: int,
@@ -322,21 +410,47 @@ class VelocityModelAuto(LogNormalModel):
             == self.zero
         )
 
+    @beartype
+    def __repr__(self) -> str:
+        return (
+            f"\nVelocityModelAuto(\n"
+            f"\tnum_cells={self.num_cells}, \n"
+            f"\tnum_genes={self.num_genes}, \n"
+            f'\tlikelihood="{self.likelihood}", \n'
+            f"\tshared_time={self.shared_time}, \n"
+            f"\tt_scale_on={self.t_scale_on}, \n"
+            f"\tplate_size={self.plate_size}, \n"
+            f'\tlatent_factor="{self.latent_factor}", \n'
+            f"\tlatent_factor_size={self.latent_factor_size}, \n"
+            f'\tlatent_factor_operation="{self.latent_factor_operation}", \n'
+            f"\tinclude_prior={self.include_prior}, \n"
+            f"\tnum_aux_cells={self.num_aux_cells}, \n"
+            f"\tonly_cell_times={self.only_cell_times}, \n"
+            f"\tdecoder_on={self.decoder_on}, \n"
+            f"\tadd_offset={self.add_offset}, \n"
+            f"\tcorrect_library_size={self.correct_library_size}, \n"
+            f'\tguide_type="{self.guide_type}", \n'
+            f"\tcell_specific_kinetics={self.cell_specific_kinetics}, \n"
+            f"\tkinetics_num={self.k}\n"
+            f")\n"
+        )
+
+    @jaxtyped(typechecker=beartype)
     def get_rna(
         self,
-        u_scale: torch.Tensor,
-        s_scale: torch.Tensor,
-        alpha: torch.Tensor,
-        beta: torch.Tensor,
-        gamma: torch.Tensor,
-        t: torch.Tensor,
-        u0: torch.Tensor,
-        s0: torch.Tensor,
-        t0: torch.Tensor,
-        switching: Optional[torch.Tensor] = None,
-        u_inf: Optional[torch.Tensor] = None,
-        s_inf: Optional[torch.Tensor] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        u_scale: RNAInputType,
+        s_scale: RNAInputType,
+        alpha: RNAInputType,
+        beta: RNAInputType,
+        gamma: RNAInputType,
+        t: Float[torch.Tensor, "num_cells time"],
+        u0: Float[torch.Tensor, ""],
+        s0: Float[torch.Tensor, ""],
+        t0: RNAInputType,
+        switching: Optional[RNAInputType] = None,
+        u_inf: Optional[RNAInputType] = None,
+        s_inf: Optional[RNAInputType] = None,
+    ) -> Tuple[RNAOutputType, RNAOutputType]:
         """
         Computes the unspliced (u) and spliced (s) RNA expression levels given
         the model parameters.
@@ -357,6 +471,7 @@ class VelocityModelAuto(LogNormalModel):
 
         Returns:
             Tuple[torch.Tensor, torch.Tensor]: The unspliced (u) and spliced (s) RNA expression levels.
+
 
         Examples:
             >>> import torch
@@ -383,18 +498,20 @@ class VelocityModelAuto(LogNormalModel):
             ...         )
             >>> u, s = model.get_rna(
             ...            u_scale=torch.tensor([0.9793, 1.0567, 0.8610, 0.9304], device="cpu"),
-            ...            s_scale=torch.tensor(1.0),
+            ...            s_scale=torch.tensor(1.),
             ...            alpha=torch.tensor([0.4869, 1.5997, 1.3962, 0.5038], device="cpu"),
             ...            beta=torch.tensor([0.5403, 1.1192, 0.9912, 1.1783], device="cpu"),
             ...            gamma=torch.tensor([1.9612, 0.5533, 2.1050, 4.9345], device="cpu"),
             ...            t=torch.tensor([[0.4230], [0.5119], [0.2689]], device="cpu"),
-            ...            u0=torch.tensor(0.0),
-            ...            s0=torch.tensor(0.0),
+            ...            u0=torch.tensor(0.),
+            ...            s0=torch.tensor(0.),
             ...            t0=torch.tensor([-0.4867, 0.5581, -0.6957, 0.6028], device="cpu"),
             ...            switching=torch.tensor([1.1886, 1.1227, 0.6789, 4.1003], device="cpu"),
             ...            u_inf=torch.tensor([0.5367, 0.6695, 1.0479, 0.4206], device="cpu"),
             ...            s_inf=torch.tensor([0.1132, 0.2100, 0.3750, 0.0999], device="cpu"),
             >>>        )
+            >>> logger.info(f"u: {u}")
+            >>> logger.info(f"s: {s}")
         """
         state = self.sample_cell_gene_state(t, switching)
         alpha_off = self.zero
@@ -407,6 +524,7 @@ class VelocityModelAuto(LogNormalModel):
         ut = ut * u_scale / s_scale
         return ut, st
 
+    @beartype
     def forward(
         self,
         u_obs: Optional[torch.Tensor] = None,
