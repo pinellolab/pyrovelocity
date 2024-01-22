@@ -16,7 +16,7 @@ from torch.nn.functional import relu, softplus
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.utils import mRNA
 
-logger = configure_logging("pyrovelocity._velocity_model")
+logger = configure_logging(__name__)
 
 RNAInputType = Union[
     Float[torch.Tensor, ""],
