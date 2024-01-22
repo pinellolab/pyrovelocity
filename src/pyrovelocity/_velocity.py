@@ -30,7 +30,7 @@ from pyrovelocity.plot import (
     compute_volcano_data,
     vector_field_uncertainty,
 )
-from pyrovelocity.utils import _get_fn_args_from_batch, init_with_all_cells
+from pyrovelocity.utils import init_with_all_cells
 
 logger = logging.getLogger(__name__)
 
@@ -284,7 +284,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         with torch.no_grad(), pyro.poutine.mask(mask=False):
             posterior_samples = []
             for tensor in scdl:
-                args, kwargs = _get_fn_args_from_batch(tensor)
+                args, kwargs = self.module._get_fn_args_from_batch(tensor)
                 posterior_sample = {
                     k: v.cpu().numpy()
                     for k, v in predictive(*args, **kwargs).items()
