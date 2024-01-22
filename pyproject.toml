@@ -280,7 +280,7 @@ cmd = """
 help = "Force install torch 1.13.1+cu111 on Linux and Windows."
 
 [tool.poetry.scripts]
-pyrovelocity = "pyrovelocity.flytezen.cli:main"
+pyrovelocity = "pyrovelocity.workflows.cli:main"
 
 # --cov=src/pyrovelocity/
 # --cov-report=term-missing
