@@ -282,13 +282,17 @@ help = "Force install torch 1.13.1+cu111 on Linux and Windows."
 [tool.poetry.scripts]
 pyrovelocity = "pyrovelocity.workflows.cli:main"
 
-# --cov=src/pyrovelocity/
-# --cov-report=term-missing
+# Change log_level to "DEBUG" and consider redirecting output to a searchable
+# syntax-highlighted file to see all log messages, e.g.
+# $ pytest > test.log.py
 [tool.pytest.ini_options]
+log_level = "INFO"
 addopts = """ 
 -rA
+--xdoctest
 --disable-warnings
---xdoc
+--cov=src/pyrovelocity/
+--cov-report=term-missing
 """
 asyncio_mode = "strict"
 norecursedirs = ["bazel-*", ".direnv"]
