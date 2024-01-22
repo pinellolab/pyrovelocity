@@ -14,6 +14,7 @@ import pandas as pd
 import scvelo as scv
 import seaborn as sns
 import torch
+from beartype import beartype
 from pytorch_lightning.utilities import rank_zero_only
 from scipy.sparse import issparse
 from scvi.data import synthetic_iid
@@ -722,14 +723,22 @@ def print_attributes(obj):
     pprint(attributes(obj))
 
 
-def pretty_print_dict(d: dict):
+@beartype
+def pretty_log_dict(d: dict) -> str:
+    dict_as_string = ""
     for key, value in d.items():
         key_colored = colored(key, "green")
         value_lines = str(value).split("\n")
         value_colored = "\n".join(
             colored(line, "white") for line in value_lines
         )
-        print(f"{key_colored}:\n{value_colored}\n")
+        dict_as_string += f"{key_colored}:\n{value_colored}\n"
+    return dict_as_string
+
+
+@beartype
+def pretty_print_dict(d: dict):
+    print(pretty_log_dict(d))
 
 
 def filter_startswith_dict(dictionary_with_underscore_keys):
