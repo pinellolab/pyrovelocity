@@ -1,7 +1,13 @@
-from typing import Optional, Union
+from typing import Any
+from typing import Dict
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
+import torch
 from pyro import poutine
-from pyro.infer.autoguide import AutoLowRankMultivariateNormal, AutoNormal
+from pyro.infer.autoguide import AutoLowRankMultivariateNormal
+from pyro.infer.autoguide import AutoNormal
 from pyro.infer.autoguide.guides import AutoGuideList
 from scvi.module.base import PyroBaseModuleClass
 
@@ -194,3 +200,47 @@ class VelocityModule(PyroBaseModuleClass):
     @property
     def guide(self) -> AutoGuideList:
         return self._guide
+
+    @staticmethod
+    def _get_fn_args_from_batch(
+        tensor_dict: Dict[str, torch.Tensor]
+    ) -> Tuple[
+        Tuple[
+            torch.Tensor,
+            torch.Tensor,
+            torch.Tensor,
+            torch.Tensor,
+            torch.Tensor,
+            torch.Tensor,
+            torch.Tensor,
+            torch.Tensor,
+            torch.Tensor,
+            torch.Tensor,
+            torch.Tensor,
+        ],
+        Dict[Any, Any],
+    ]:
+        u_obs = tensor_dict["U"]
+        s_obs = tensor_dict["X"]
+        u_log_library = tensor_dict["u_lib_size"]
+        s_log_library = tensor_dict["s_lib_size"]
+        u_log_library_mean = tensor_dict["u_lib_size_mean"]
+        s_log_library_mean = tensor_dict["s_lib_size_mean"]
+        u_log_library_scale = tensor_dict["u_lib_size_scale"]
+        s_log_library_scale = tensor_dict["s_lib_size_scale"]
+        ind_x = tensor_dict["ind_x"].long().squeeze()
+        cell_state = tensor_dict.get("pyro_cell_state")
+        time_info = tensor_dict.get("time_info")
+        return (
+            u_obs,
+            s_obs,
+            u_log_library,
+            s_log_library,
+            u_log_library_mean,
+            s_log_library_mean,
+            u_log_library_scale,
+            s_log_library_scale,
+            ind_x,
+            cell_state,
+            time_info,
+        ), {}
