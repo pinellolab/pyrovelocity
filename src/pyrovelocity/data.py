@@ -1,25 +1,28 @@
 import os
 from pathlib import Path
-from typing import List
-from typing import Optional
+from typing import List, Optional, Tuple
+from urllib.parse import unquote
 
 import anndata
 import anndata._core.anndata
 import matplotlib.figure
 import matplotlib.pyplot as plt
 import numpy as np
+import requests
 import scanpy as sc
 import scvelo as scv
+import validators
 from beartype import beartype
 from scipy.sparse import issparse
 
 from pyrovelocity.cytotrace import cytotrace_sparse
 from pyrovelocity.logging import configure_logging
-from pyrovelocity.utils import ensure_numpy_array
-from pyrovelocity.utils import generate_sample_data
-from pyrovelocity.utils import print_anndata
-from pyrovelocity.utils import print_attributes
-
+from pyrovelocity.utils import (
+    ensure_numpy_array,
+    generate_sample_data,
+    print_anndata,
+    print_attributes,
+)
 
 logger = configure_logging(__name__)
 
@@ -34,7 +37,8 @@ def download_dataset(
     data_url: Optional[str] = None,
 ) -> Path:
     """
-    Downloads a dataset based on the specified parameters and returns the path to the downloaded data.
+    Downloads a dataset based on the specified parameters and returns the path
+    to the downloaded data.
 
     Args:
         data_set_name (str): Name of the dataset to download.
@@ -55,7 +59,6 @@ def download_dataset(
         ...   tmp / 'data/external',
         ...   tmp / 'data/external',
         ...   'simulate',
-        ...   'https://storage.googleapis.com/pyrovelocity/data/simulated_medium.h5ad',
         ... ) # xdoctest: +SKIP
         >>> pancreas_dataset = download_dataset(
         ...   'pancreas',
@@ -71,7 +74,7 @@ def download_dataset(
         ...   tmp / 'data/external',
         ...   tmp / 'data/external',
         ...   'scvelo',
-        ... ) # xdoctest: +SKIP
+        ... ) xdoctest: +SKIP
     """
     download_path = download_path_root / f"{download_file_name}.h5ad"
     data_path = data_external_path / f"{data_set_name}.h5ad"
@@ -83,8 +86,8 @@ def download_dataset(
 
     logger.info(
         f"\n\nVerifying {data_set_name} data:\n"
-        f"  temporarily downloaded to {download_path}\n"
-        f"  stored in {data_path}\n"
+        f"  data will be temporarily downloaded to {download_path}\n"
+        f"  and stored in {data_path}\n"
     )
 
     if data_path.is_file() and os.access(str(data_path), os.R_OK):
@@ -93,6 +96,14 @@ def download_dataset(
     else:
         logger.info(f"Attempting to download {data_set_name} data...")
         if data_url is not None:
+            logger.info(f"Validating URL {data_url}...")
+            is_valid_url, valid_url_message = validate_url_and_file(data_url)
+            if not is_valid_url:
+                raise ValueError(
+                    f"Invalid URL: {data_url}\n{valid_url_message}\n"
+                )
+            else:
+                logger.info(valid_url_message)
             try:
                 adata = sc.read(str(data_path), backup_url=data_url)
             except Exception as e:
@@ -136,10 +147,75 @@ def download_dataset(
         return data_path
 
 
+@beartype
+def validate_url_and_file(url: str) -> Tuple[bool, str]:
+    """
+    Validates a given URL format and checks if it leads to a .h5ad file larger
+    than 1MB.
+
+    This function first checks if the URL is valid using the
+    validators.url method. Then, it makes a HEAD request to the URL to fetch
+    headers without downloading the entire file. It checks the Content-Type and
+    Content-Disposition headers for the .h5ad file extension and the Content-
+    Length header to determine the file size.
+
+    Args:
+        url (str): The URL to validate and check the file type and size.
+
+    Returns:
+        tuple: A tuple containing a boolean and a validation message.
+               The boolean is True if the URL is valid, leads to a .h5ad file, and the file is larger than 1MB.
+               The message provides additional information about the validation.
+
+    Raises:
+        requests.RequestException: If an error occurs during the HEAD request.
+
+    Examples:
+        >>> is_valid, message = validate_url_and_file("https://storage.googleapis.com/pyrovelocity/data/pbmc5k.h5ad")
+        >>> logger.info(f"valid: {is_valid}\n{message}")
+
+        >>> is_valid, message = validate_url_and_file("http?/invalid.url/file.txt")
+        >>> logger.info(f"valid: {is_valid}\n{message}")
+
+        >>> is_valid, message = validate_url_and_file("https://invalid.url/file.txt")
+        >>> logger.info(f"valid: {is_valid}\n{message}")
+    """
+    if not validators.url(url):
+        return False, "Invalid URL format"
+
+    try:
+        response = requests.head(url, allow_redirects=True)
+        response.raise_for_status()
+
+        content_disposition = response.headers.get("Content-Disposition")
+        if content_disposition:
+            filename = content_disposition.split("filename=")[-1]
+            filename = unquote(filename).strip('"')
+        else:
+            filename = url.split("/")[-1]
+
+        if not filename.endswith(".h5ad"):
+            return False, "The file does not have an .h5ad extension"
+
+        content_length = response.headers.get("Content-Length")
+        if content_length and int(content_length) <= 1_000_000:
+            return False, "The file size is less than or equal to 1MB"
+        else:
+            content_length_mb = int(content_length) / 1_000_000
+
+        return (
+            True,
+            f"URL validated and file is an .h5ad file named {filename} with size {content_length_mb:.1f} MB",
+        )
+    except requests.RequestException as e:
+        return False, f"Error occurred: {e}"
+
+
 def copy_raw_counts(
     adata: anndata._core.anndata.AnnData,
 ) -> anndata._core.anndata.AnnData:
-    """Copy unspliced and spliced raw counts to adata.layers and adata.obs.
+    """
+    Copy unspliced and spliced raw counts to adata.layers and adata.obs.
 
     Args:
         adata (anndata._core.anndata.AnnData): AnnData object
@@ -277,9 +353,10 @@ def get_high_us_genes(
     spliced_layer="spliced",
 ):
     """
-    Function to select genes that have spliced and unspliced counts above a certain threshold. Genes of
-    which the maximum u and s count is above a set threshold are selected. Threshold varies per dataset
-    and influences the numbers of genes that are selected.
+    Function to select genes that have spliced and unspliced counts above a
+    certain threshold. Genes of which the maximum u and s count is above a set
+    threshold are selected. Threshold varies per dataset and influences the
+    numbers of genes that are selected.
 
     Parameters
     ----------
@@ -327,7 +404,8 @@ def load_data(
     count_thres: int = 0,
     thresh_histogram_path: str = None,
 ) -> anndata._core.anndata.AnnData:
-    """Preprocess data from scvelo.
+    """
+    Preprocess data from scvelo.
 
     Args:
         data (str, optional): data set name. Defaults to scvelo's "pancreas" data set.
@@ -515,7 +593,8 @@ def load_pbmc68k(
 def load_larry(
     file_path: str = "data/external/larry.h5ad",
 ) -> anndata._core.anndata.AnnData:
-    """In vitro Hemotopoiesis Larry datasets
+    """
+    In vitro Hematopoiesis LARRY datasets.
 
     Data from `CALEB WEINREB et al. (2020) <DOI: 10.1126/science.aaw3381>'
     https://figshare.com/ndownloader/articles/20780344/versions/1
