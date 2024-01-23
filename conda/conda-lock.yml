@@ -594,7 +594,7 @@ package:
   category: workflows
   optional: true
 - name: blas
-  version: '2.120'
+  version: '2.121'
   manager: conda
   platform: linux-64
   dependencies:
@@ -607,11 +607,11 @@ package:
     libgfortran5: '>=12.3.0'
     liblapack: 3.9.0
     liblapacke: 3.9.0
-    llvm-openmp: '>=17.0.5'
-  url: https://conda.anaconda.org/conda-forge/linux-64/blas-2.120-mkl.conda
+    llvm-openmp: '>=17.0.6'
+  url: https://conda.anaconda.org/conda-forge/linux-64/blas-2.121-mkl.conda
   hash:
-    md5: 9444330235a4828878cbe9c897ba0aa3
-    sha256: e2310fc7086d0af41c62e0d84f04591bf4c3b974ae80754c3650f37f07c667ab
+    md5: ec030371cfa243f4983fd67d7e29e51e
+    sha256: f80817e4e85f8936d4d467abc98e1841ff47ecf98af04e67dae7ee6655fc1218
   category: main
   optional: false
 - name: blas-devel
@@ -623,12 +623,12 @@ package:
     libcblas: 3.9.0
     liblapack: 3.9.0
     liblapacke: 3.9.0
-    mkl: '>=2023.2.0,<2024.0a0'
-    mkl-devel: 2023.2.*
-  url: https://conda.anaconda.org/conda-forge/linux-64/blas-devel-3.9.0-20_linux64_mkl.conda
+    mkl: '>=2024.0.0,<2025.0a0'
+    mkl-devel: 2024.0.*
+  url: https://conda.anaconda.org/conda-forge/linux-64/blas-devel-3.9.0-21_linux64_mkl.conda
   hash:
-    md5: 079d50df2338a3d47522d7e84c3dfbf6
-    sha256: 74a99c20b857a01c0e1bdb00c2aec4696cf895451278d9e24171b3eed7ba1d68
+    md5: 67684e493802a70fd14fcf4b8872ae4d
+    sha256: 2de64aa8b1716eb382b06a606fc3d86f296ed6d094ad4abdef62c078884ae105
   category: main
   optional: false
 - name: blinker
@@ -2334,11 +2334,11 @@ package:
   manager: conda
   platform: linux-64
   dependencies:
-    mkl: '>=2023.2.0,<2024.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/libblas-3.9.0-20_linux64_mkl.conda
+    mkl: '>=2024.0.0,<2025.0a0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/libblas-3.9.0-21_linux64_mkl.conda
   hash:
-    md5: 8bf521f6007b0b0eb91515a1165b5d85
-    sha256: 9e5f27fca79223a5d38ccdf4c468e798c3684ba01bdb6b4b44e61f2103a298eb
+    md5: f7b5c949cec73aa6a56f5b6a295f7301
+    sha256: ebdd80bbb4421370e071076ccb1224a1d8b0137364c8a12fa84740cd60121789
   category: main
   optional: false
 - name: libbrotlicommon
@@ -2385,10 +2385,10 @@ package:
   platform: linux-64
   dependencies:
     libblas: 3.9.0
-  url: https://conda.anaconda.org/conda-forge/linux-64/libcblas-3.9.0-20_linux64_mkl.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/libcblas-3.9.0-21_linux64_mkl.conda
   hash:
-    md5: 7a2972758a03adc92d856072c71c9170
-    sha256: 841b4d44e20e5207f4a74ca98176629ead5ba590384ed6b0fe3c8600248c9fef
+    md5: 0553cad80ef02be86c8e178eeecb6a34
+    sha256: 072f83a0d7b35efd48a5f17e973d584a8352b624cc7bc0fdb9c48ad39baf3984
   category: main
   optional: false
 - name: libcrc32c
@@ -2700,10 +2700,10 @@ package:
   platform: linux-64
   dependencies:
     libblas: 3.9.0
-  url: https://conda.anaconda.org/conda-forge/linux-64/liblapack-3.9.0-20_linux64_mkl.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/liblapack-3.9.0-21_linux64_mkl.conda
   hash:
-    md5: 4db0cd03efcdab535f6f066aca4cddbb
-    sha256: 21b4324dd65815f6b5a83c15f0b9a201434d0aa55eeecc37efce7ee70bbbf482
+    md5: 52837ab7fd5b43d3960c62e5c91958d6
+    sha256: 47408adf63bd831bbe1596e6571278e412793dd07182e4247ee548744b2abf9e
   category: main
   optional: false
 - name: liblapacke
@@ -2714,10 +2714,10 @@ package:
     libblas: 3.9.0
     libcblas: 3.9.0
     liblapack: 3.9.0
-  url: https://conda.anaconda.org/conda-forge/linux-64/liblapacke-3.9.0-20_linux64_mkl.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/liblapacke-3.9.0-21_linux64_mkl.conda
   hash:
-    md5: 3dea5e9be386b963d7f4368966e238b3
-    sha256: 0e6ece3ff4b2088d30b5836771e87440840c643be0ab885a2605be002d566a34
+    md5: 0d45f03de7143f324b37454af46feb26
+    sha256: 15486eece0c448ef3765d7f7d485257125808f0007bda2553c685b53cffe107f
   category: main
   optional: false
 - name: libllvm14
@@ -3104,17 +3104,17 @@ package:
   category: main
   optional: false
 - name: mako
-  version: 1.3.0
+  version: 1.3.1
   manager: conda
   platform: linux-64
   dependencies:
     importlib-metadata: ''
     markupsafe: '>=0.9.2'
     python: '>=3.6'
-  url: https://conda.anaconda.org/conda-forge/noarch/mako-1.3.0-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/mako-1.3.1-pyhd8ed1ab_0.conda
   hash:
-    md5: 92ca4a92d34ed6e8fa38d93c8552c346
-    sha256: b3c0353790ae5a5ebb54aa339661083a6234e5193e758668e62ba36c48dc3c94
+    md5: 17f2224c7c0b81e689b405db4e5340ff
+    sha256: aa5a6b36cd39d3f4c9271354a910b2b6d2c5704b71632d9116af11d65005980e
   category: main
   optional: false
 - name: markdown
@@ -3131,17 +3131,17 @@ package:
   category: main
   optional: false
 - name: markupsafe
-  version: 2.1.3
+  version: 2.1.4
   manager: conda
   platform: linux-64
   dependencies:
     libgcc-ng: '>=12'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.*
-  url: https://conda.anaconda.org/conda-forge/linux-64/markupsafe-2.1.3-py310h2372a71_1.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/markupsafe-2.1.4-py310h2372a71_0.conda
   hash:
-    md5: b74e07a054c479e45a83a83fc5be713c
-    sha256: ac46cc2f6d4bbeedcd2f508e43f43143a9286ced55730d8d97a3c91ceceb0d56
+    md5: 76cd8db42baacfc94aa4d3a2b8e9e453
+    sha256: 270d57657ff5cdc5bd8820ab1caf04ed4e7682605c85f4b7a4ff3f7b1c4beaef
   category: main
   optional: false
 - name: marshmallow
@@ -3224,41 +3224,41 @@ package:
   category: main
   optional: false
 - name: mkl
-  version: 2023.2.0
+  version: 2024.0.0
   manager: conda
   platform: linux-64
   dependencies:
     _openmp_mutex: '>=4.5'
-    llvm-openmp: '>=17.0.3'
+    llvm-openmp: '>=17.0.6'
     tbb: 2021.*
-  url: https://conda.anaconda.org/conda-forge/linux-64/mkl-2023.2.0-h84fe81f_50496.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/mkl-2024.0.0-ha957f24_49656.conda
   hash:
-    md5: 81d4a1a57d618adf0152db973d93b2ad
-    sha256: 046073737bf73153b0c39e343b197cdf0b7867d336962369407465a17ea5979a
+    md5: 32b4b50f2e0b846c696d2daa236ab4e1
+    sha256: e60413afe81f5345dc43bfc1befdd4221e1a2c37d41fa38102f96a7abb38209a
   category: main
   optional: false
 - name: mkl-devel
-  version: 2023.2.0
+  version: 2024.0.0
   manager: conda
   platform: linux-64
   dependencies:
-    mkl: 2023.2.0
-    mkl-include: 2023.2.0
-  url: https://conda.anaconda.org/conda-forge/linux-64/mkl-devel-2023.2.0-ha770c72_50496.conda
+    mkl: 2024.0.0
+    mkl-include: 2024.0.0
+  url: https://conda.anaconda.org/conda-forge/linux-64/mkl-devel-2024.0.0-ha770c72_49656.conda
   hash:
-    md5: 3b4c50e31ff098b18a450e4f5f860adf
-    sha256: ddd54fd21d6ac8eec97674db20a8752a7eadd60c9778eb1443e075196813037a
+    md5: 4df7bc0e1676c55f674264760c7d47be
+    sha256: bdb43c2b31c5c79b06318cceedd9f2ea76e6b264eea7585235d6e8b9093ef251
   category: main
   optional: false
 - name: mkl-include
-  version: 2023.2.0
+  version: 2024.0.0
   manager: conda
   platform: linux-64
   dependencies: {}
-  url: https://conda.anaconda.org/conda-forge/linux-64/mkl-include-2023.2.0-h84fe81f_50496.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/mkl-include-2024.0.0-ha957f24_49656.conda
   hash:
-    md5: 7af9fd0b2d7219f4a4200a34561340f6
-    sha256: da1720a3e065273e2456481b28abd64abc2396d221d87a02db5f14053be61a68
+    md5: adb5285a5f68b11acd8889593618886a
+    sha256: 0fcaeba8969201422036bd4ba762706d12a0314d23beb02d0310504c1e332576
   category: main
   optional: false
 - name: ml-collections
@@ -3484,15 +3484,15 @@ package:
   category: main
   optional: false
 - name: nest-asyncio
-  version: 1.5.9
+  version: 1.6.0
   manager: conda
   platform: linux-64
   dependencies:
     python: '>=3.5'
-  url: https://conda.anaconda.org/conda-forge/noarch/nest-asyncio-1.5.9-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/nest-asyncio-1.6.0-pyhd8ed1ab_0.conda
   hash:
-    md5: 6c59cb840d511a1a997998d55e68516c
-    sha256: 4f28afd67be5cabcc584fe51ce2dbefe15d6886c7a6bb862aae2e1f3d9239e5f
+    md5: 6598c056f64dc8800d40add25e4e2c34
+    sha256: 30db21d1f7e59b3408b831a7e0417b83b53ee6223afae56482c5f26da3ceb49a
   category: main
   optional: false
 - name: networkx
@@ -4567,6 +4567,19 @@ package:
     sha256: 889e3c1b84467b64046776db95dc4c5ea4dad5afaa5ec18ad811bd95c63286b0
   category: workflows
   optional: true
+- name: returns
+  version: 0.22.0
+  manager: conda
+  platform: linux-64
+  dependencies:
+    python: '>=3.8.1,<4.0'
+    typing_extensions: '>=4.0,<5.0'
+  url: https://conda.anaconda.org/conda-forge/noarch/returns-0.22.0-pyhd8ed1ab_0.conda
+  hash:
+    md5: a277d2a2100cf49620a7700b7ec2ff6a
+    sha256: df5bef67809d49ebd82255d7a25ca5aae0995473d1a4451a51375e51e2421062
+  category: main
+  optional: false
 - name: rich
   version: 12.6.0
   manager: conda
@@ -5256,10 +5269,10 @@ package:
     libnuma: '>=2.0.16,<3.0a0'
     libstdcxx-ng: '>=12'
     rdma-core: '>=49'
-  url: https://conda.anaconda.org/conda-forge/linux-64/ucx-1.15.0-h75e419f_2.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/ucx-1.15.0-h75e419f_3.conda
   hash:
-    md5: 5798de4587dc70fa6db81663e79f176a
-    sha256: 81fdea1a5ee5075bf4cbdc665b08d0e2ee9d3476f9d16acc58e2bbd913e9197b
+    md5: 5baf4efbca923cdf73490c62cc7de1e2
+    sha256: 7b5ccea54cac81bda2704e1c4cf06dba17dd683871e785fa11a1788ed289be9a
   category: main
   optional: false
 - name: umap-learn
@@ -5309,6 +5322,18 @@ package:
   hash:
     md5: bf61cfd2a7f212efba378167a07d4a6a
     sha256: 1cc0bab65a6ad0f5a8bd7657760a4fb4e670d30377f9dab88b792977cb3687e7
+  category: main
+  optional: false
+- name: validators
+  version: 0.22.0
+  manager: conda
+  platform: linux-64
+  dependencies:
+    python: '>=3.8'
+  url: https://conda.anaconda.org/conda-forge/noarch/validators-0.22.0-pyhd8ed1ab_0.conda
+  hash:
+    md5: 56435633ef70e7b92c54151599cbf757
+    sha256: f30699fd1a76cf3291e042167f8dc8dd28e00e08e49047a353304c7ad7bc279d
   category: main
   optional: false
 - name: websocket-client
