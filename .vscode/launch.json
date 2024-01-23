@@ -17,8 +17,8 @@
         // "execution_context=remote_dev",
         //
         // workflow example
-        "entity_config=main_workflow_training_workflow",
-        "entity_config.inputs._args_.0.logistic_regression.max_iter=1200"
+        "entity_config=main_workflow_training_workflow"
+        // "entity_config.inputs._args_.0.logistic_regression.max_iter=1200"
         //
         // task example
         // "entity_config=main_workflow_process_data",
