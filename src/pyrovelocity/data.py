@@ -31,8 +31,8 @@ logger = configure_logging(__name__)
 def download_dataset(
     data_set_name: str,
     download_file_name: str,
-    download_path_root: Path = Path("data/external"),
-    data_external_path: Path = Path("data/external"),
+    download_path_root: str = "data/external",
+    data_external_path: str = "data/external",
     source: Optional[str] = None,
     data_url: Optional[str] = None,
 ) -> Path:
@@ -56,28 +56,29 @@ def download_dataset(
         >>> simulate_medium_dataset = download_dataset(
         ...   'simulated_medium',
         ...   'simulated_medium',
-        ...   tmp / 'data/external',
-        ...   tmp / 'data/external',
+        ...   str(tmp) + 'data/external',
+        ...   str(tmp) + 'data/external',
         ...   'simulate',
         ... ) # xdoctest: +SKIP
         >>> pancreas_dataset = download_dataset(
         ...   'pancreas',
         ...   'endocrinogenesis_day15',
-        ...   tmp / 'data/Pancreas',
-        ...   tmp / 'data/external',
+        ...   str(tmp) + 'data/Pancreas',
+        ...   str(tmp) + 'data/external',
         ...   'scvelo',
         ...   'https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad',
         ... ) # xdoctest: +SKIP
         >>> pancreas_dataset = download_dataset(
         ...   'pancreas',
         ...   'pancreas',
-        ...   tmp / 'data/external',
-        ...   tmp / 'data/external',
+        ...   str(tmp) + 'data/external',
+        ...   str(tmp) + 'data/external',
         ...   'scvelo',
-        ... ) xdoctest: +SKIP
+        ... ) # xdoctest: +SKIP
     """
-    download_path = download_path_root / f"{download_file_name}.h5ad"
-    data_path = data_external_path / f"{data_set_name}.h5ad"
+    download_path = Path(download_path_root) / f"{download_file_name}.h5ad"
+    data_path = Path(data_external_path) / f"{data_set_name}.h5ad"
+    data_external_path = Path(data_external_path)
 
     logger.info(
         f"\n\nVerifying existence of path for downloaded data: {data_external_path}\n"
