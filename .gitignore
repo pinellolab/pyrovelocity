@@ -149,3 +149,9 @@ service-account-credentials.json
 requirements-bazel.txt
 requirements-darwin.txt
 requirements-linux.txt
+
+# mlflow
+mlruns
+
+# data
+data
