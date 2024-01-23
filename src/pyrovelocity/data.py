@@ -1,5 +1,7 @@
 import os
-from typing import List, Optional
+from pathlib import Path
+from typing import List
+from typing import Optional
 
 import anndata
 import anndata._core.anndata
@@ -8,10 +10,130 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scanpy as sc
 import scvelo as scv
+from beartype import beartype
 from scipy.sparse import issparse
 
 from pyrovelocity.cytotrace import cytotrace_sparse
-from pyrovelocity.utils import ensure_numpy_array, print_anndata
+from pyrovelocity.logging import configure_logging
+from pyrovelocity.utils import ensure_numpy_array
+from pyrovelocity.utils import generate_sample_data
+from pyrovelocity.utils import print_anndata
+from pyrovelocity.utils import print_attributes
+
+
+logger = configure_logging(__name__)
+
+
+@beartype
+def download_dataset(
+    data_set_name: str,
+    download_file_name: str,
+    download_path_root: Path = Path("data/external"),
+    data_external_path: Path = Path("data/external"),
+    source: Optional[str] = None,
+    data_url: Optional[str] = None,
+) -> Path:
+    """
+    Downloads a dataset based on the specified parameters and returns the path to the downloaded data.
+
+    Args:
+        data_set_name (str): Name of the dataset to download.
+        download_file_name (str): Name of the dataset to download.
+        download_path_root (Path): Path for downloading the dataset. Default is 'data/external'.
+        data_external_path (Path): Path where the downloaded data will be stored. Default is 'data/external'.
+        source (str): The source type of the dataset. Default is 'simulate'.
+        data_url (str): URL from where the dataset can be downloaded.
+
+    Returns:
+        Path: The path to the downloaded dataset file.
+
+    Examples:
+        >>> tmp = getfixture('tmp_path')
+        >>> simulate_medium_dataset = download_dataset(
+        ...   'simulated_medium',
+        ...   'simulated_medium',
+        ...   tmp / 'data/external',
+        ...   tmp / 'data/external',
+        ...   'simulate',
+        ...   'https://storage.googleapis.com/pyrovelocity/data/simulated_medium.h5ad',
+        ... ) # xdoctest: +SKIP
+        >>> pancreas_dataset = download_dataset(
+        ...   'pancreas',
+        ...   'endocrinogenesis_day15',
+        ...   tmp / 'data/Pancreas',
+        ...   tmp / 'data/external',
+        ...   'scvelo',
+        ...   'https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad',
+        ... ) # xdoctest: +SKIP
+        >>> pancreas_dataset = download_dataset(
+        ...   'pancreas',
+        ...   'pancreas',
+        ...   tmp / 'data/external',
+        ...   tmp / 'data/external',
+        ...   'scvelo',
+        ... ) # xdoctest: +SKIP
+    """
+    download_path = download_path_root / f"{download_file_name}.h5ad"
+    data_path = data_external_path / f"{data_set_name}.h5ad"
+
+    logger.info(
+        f"\n\nVerifying existence of path for downloaded data: {data_external_path}\n"
+    )
+    data_external_path.mkdir(parents=True, exist_ok=True)
+
+    logger.info(
+        f"\n\nVerifying {data_set_name} data:\n"
+        f"  temporarily downloaded to {download_path}\n"
+        f"  stored in {data_path}\n"
+    )
+
+    if data_path.is_file() and os.access(str(data_path), os.R_OK):
+        logger.info(f"{data_path} exists")
+        return data_path
+    else:
+        logger.info(f"Attempting to download {data_set_name} data...")
+        if data_url is not None:
+            try:
+                adata = sc.read(str(data_path), backup_url=data_url)
+            except Exception as e:
+                logger.warn(f"Failed to download from URL {data_url}: {e}")
+            else:
+                adata.write(str(data_path))
+                print_attributes(adata)
+                print_anndata(adata)
+                return data_path
+
+        if source == "scvelo":
+            logger.info(f"Downloading {data_set_name} data from scvelo...")
+            dl_method = getattr(scv.datasets, data_set_name)
+            adata = dl_method()
+            adata.write(str(data_path))
+        elif source == "simulate":
+            logger.info(f"Generating {data_set_name} data from simulation...")
+            adata = generate_sample_data(
+                n_obs=3000,
+                n_vars=1000,
+                noise_model="gillespie",
+                random_seed=99,
+            )
+            adata.write(str(data_path))
+
+        print_attributes(adata)
+        print_anndata(adata)
+
+        if download_path != data_path:
+            download_path.replace(data_path)
+            try:
+                download_path.rmdir()
+            except OSError as e:
+                logger.warn(f"{download_path} : {e.strerror}")
+
+        if data_path.is_file() and os.access(str(data_path), os.R_OK):
+            logger.info(f"successfully downloaded {data_path}")
+        else:
+            logger.warn(f"cannot find and read {data_path}")
+
+        return data_path
 
 
 def copy_raw_counts(
