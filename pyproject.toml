@@ -59,6 +59,7 @@ seaborn = "0.11.2"
 termcolor = "2.2.0"
 torch = "1.13.1"
 torchmetrics = "0.11.4"
+validators = "0.22.0"
 zstandard = "0.21.0"
 # removed from library at
 # cospar = { version = "0.1.9", source = "pypi" }
