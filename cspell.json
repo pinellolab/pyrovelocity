@@ -31,6 +31,7 @@
     "omegaconf",
     "optim",
     "pyrovelocity",
+    "scanpy",
     "scvelo",
     "typechecker",
     "uncondition",
