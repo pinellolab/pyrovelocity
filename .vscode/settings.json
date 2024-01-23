@@ -7,7 +7,7 @@
   },
   "autoHide.autoHideAuxiliaryBar": false,
   "autoHide.autoHidePanel": false,
-  "autoHide.autoHideSideBar": true,
+  "autoHide.autoHideSideBar": false,
   "autoHide.hideOnOpen": false,
   "cloudcode.autoDependencies": "on",
   "editor.codeActionsOnSave": {
