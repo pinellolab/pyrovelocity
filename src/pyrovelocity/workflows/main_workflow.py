@@ -33,7 +33,7 @@ DownloadDatasetInterface.__module__ = __name__
 
 @task(
     cache=True,
-    cache_version="0.2.0b6",
+    cache_version="0.2.0b7",
     retries=3,
     interruptible=True,
     timeout=timedelta(minutes=20),
