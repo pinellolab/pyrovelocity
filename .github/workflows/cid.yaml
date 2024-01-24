@@ -120,7 +120,7 @@ jobs:
 
       - name: Create Flyte config from YAML template
         id: yq-process
-        uses: mikefarah/yq@8af3e46fcb99fd38503974c2bc90094f5e07933f # ratchet:mikefarah/yq@master
+        uses: mikefarah/yq@33a3bb3bdfbf0ac5e6092e0314be70139c29ee19 # ratchet:mikefarah/yq@master
         with:
           cmd: "yq e \
             '.admin.endpoint = strenv(FLYTE_CLUSTER_ENDPOINT) | \
@@ -136,7 +136,7 @@ jobs:
 
       - name: Upload Flyte config as an artifact
         id: config-output
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # ratchet:actions/upload-artifact@v3
+        uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # ratchet:actions/upload-artifact@v4
         with:
           name: flyte-config
           path: ${{ secrets.FLYTECTL_CONFIG }}
@@ -214,7 +214,7 @@ jobs:
           ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}
           EOF
       - name: cache bazel
-        uses: actions/cache@e12d46a63a90f2fae62d114769bbf2a179198b5c # ratchet:actions/cache@v3
+        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # ratchet:actions/cache@v4
         with:
           path: |
             ~/.cache/bazel
@@ -223,7 +223,7 @@ jobs:
             ${{ runner.os }}-bazel-
       - name: cache requirements
         id: cache-requirements
-        uses: actions/cache@e12d46a63a90f2fae62d114769bbf2a179198b5c # ratchet:actions/cache@v3
+        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # ratchet:actions/cache@v4
         with:
           path: |
             requirements-bazel.txt
@@ -240,7 +240,7 @@ jobs:
           make meta-bazel test-bazel
           df -h
       - name: upload requirements artifact
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # ratchet:actions/upload-artifact@v3
+        uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # ratchet:actions/upload-artifact@v4
         with:
           name: requirements-bazel
           path: requirements-bazel.txt
@@ -420,7 +420,7 @@ jobs:
           echo "HYDRA_OUTPUTS_TAR=$TAR_FILENAME" >> $GITHUB_ENV
 
       - name: Upload config artifact
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # ratchet:actions/upload-artifact@v3
+        uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # ratchet:actions/upload-artifact@v4
         with:
           name: hydra-outputs
           path: ${{ env.HYDRA_OUTPUTS_TAR }}
@@ -447,7 +447,7 @@ jobs:
       - run: nix profile install .#releaseEnv
       - uses: cihelper/action-semanticrelease-poetry@66900ba780321bcdb974891ee82f945a25a870d7 # ratchet:cihelper/action-semanticrelease-poetry@v1
         id: semanticrelease
-      - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # ratchet:actions/upload-artifact@v3
+      - uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # ratchet:actions/upload-artifact@v4
         if: ${{ steps.semanticrelease.outputs.released == 'true' }}
         with:
           name: poetry-build
