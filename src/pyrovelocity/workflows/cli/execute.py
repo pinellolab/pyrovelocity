@@ -329,6 +329,7 @@ def main() -> None:
     store(generate_hydra_config())
 
     repo_name, git_branch, git_short_sha = git_info_to_workflow_version(logger)
+    git_branch_truncated = git_branch[:12]
 
     workflow_image = os.environ.get(
         "WORKFLOW_IMAGE",
@@ -342,7 +343,7 @@ def main() -> None:
         mode=local_shell_config,
         image="",
         tag="",
-        version=f"{repo_name}-{git_branch}-{git_short_sha}-local-{random_alphanumeric_suffix()}",
+        version=f"{repo_name}-{git_branch_truncated}-{git_short_sha}-local-{random_alphanumeric_suffix()}",
     )
 
     # Local Cluster Dev
@@ -350,7 +351,7 @@ def main() -> None:
         mode=local_cluster_dev_config,
         image=f"localhost:30000/{repo_name}",
         tag=git_branch,
-        version=f"{repo_name}-{git_branch}-{git_short_sha}-local-{random_alphanumeric_suffix()}",
+        version=f"{repo_name}-{git_branch_truncated}-{git_short_sha}-local-{random_alphanumeric_suffix()}",
     )
 
     # Local Cluster Prod
@@ -358,7 +359,7 @@ def main() -> None:
         mode=local_cluster_prod_config,
         image=f"localhost:30000/{repo_name}",
         tag=git_short_sha,
-        version=f"{repo_name}-{git_branch}-{git_short_sha}",
+        version=f"{repo_name}-{git_branch_truncated}-{git_short_sha}",
     )
 
     # Remote Dev
@@ -366,7 +367,7 @@ def main() -> None:
         mode=remote_dev_config,
         image=workflow_image,
         tag=git_branch,
-        version=f"{repo_name}-{git_branch}-{git_short_sha}-dev-{random_alphanumeric_suffix()}",
+        version=f"{repo_name}-{git_branch_truncated}-{git_short_sha}-dev-{random_alphanumeric_suffix()}",
     )
 
     # Remote Prod
@@ -374,7 +375,7 @@ def main() -> None:
         mode=remote_prod_config,
         image=workflow_image,
         tag=git_short_sha,
-        version=f"{repo_name}-{git_branch}-{git_short_sha}",
+        version=f"{repo_name}-{git_branch_truncated}-{git_short_sha}",
     )
 
     # define the execution_context store
