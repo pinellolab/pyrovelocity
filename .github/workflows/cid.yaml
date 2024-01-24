@@ -588,7 +588,7 @@ jobs:
       - name: Build
         run: make docs-build
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@a753861a5debcf57bf8b404356158c8e1e33150c # ratchet:actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@0252fc4ba7626f0298f0cf00902a25c6afc77fa8 # ratchet:actions/upload-pages-artifact@v3
         with:
           path: ./site
 
@@ -605,4 +605,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@de14547edc9944350dc0481aa5b7afb08e75f254 # ratchet:actions/deploy-pages@v2
+        uses: actions/deploy-pages@87c3283f01cd6fe19a0ab93a23b2f6fcba5a8e42 # ratchet:actions/deploy-pages@v4
