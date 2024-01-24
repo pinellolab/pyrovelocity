@@ -2,17 +2,15 @@
 
 ## [0.2.0-beta.7](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.6...v0.2.0-beta.7) (2024-01-24)
 
-
 ### Features
 
-* **workflows:** map over multiple data sets ([4c8cc01](https://github.com/pinellolab/pyrovelocity/commit/4c8cc016748916b6f7d161bad57b6969a1295b8d))
-
+- **workflows:** map over multiple data sets ([4c8cc01](https://github.com/pinellolab/pyrovelocity/commit/4c8cc016748916b6f7d161bad57b6969a1295b8d))
 
 ### Bug Fixes
 
-* **execute:** truncate git branch length in workflow version ([441f102](https://github.com/pinellolab/pyrovelocity/commit/441f102004dad2f45376b2092c115b2c82b86770))
-* **gha:** update download-artifact ([41d0119](https://github.com/pinellolab/pyrovelocity/commit/41d0119bd1f589e1e789446f2856e6b0a996b384))
-* **gha:** upgrade to node 20-based actions ([afd7f60](https://github.com/pinellolab/pyrovelocity/commit/afd7f60a747b0bddd87a34353572518419f2e2bb))
+- **execute:** truncate git branch length in workflow version ([441f102](https://github.com/pinellolab/pyrovelocity/commit/441f102004dad2f45376b2092c115b2c82b86770))
+- **gha:** update download-artifact ([41d0119](https://github.com/pinellolab/pyrovelocity/commit/41d0119bd1f589e1e789446f2856e6b0a996b384))
+- **gha:** upgrade to node 20-based actions ([afd7f60](https://github.com/pinellolab/pyrovelocity/commit/afd7f60a747b0bddd87a34353572518419f2e2bb))
 
 ## [0.2.0-beta.6](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.5...v0.2.0-beta.6) (2024-01-24)
 
