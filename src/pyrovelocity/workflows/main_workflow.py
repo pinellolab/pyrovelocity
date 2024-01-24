@@ -51,7 +51,7 @@ def download_data(download_dataset_args: DownloadDatasetInterface) -> FlyteFile:
 
 
 @workflow
-def training_workflow(
+def module_workflow(
     download_dataset_args: DownloadDatasetInterface = DownloadDatasetInterface(),
 ) -> FlyteFile:
     """
@@ -61,5 +61,29 @@ def training_workflow(
     return data
 
 
+@workflow
+def training_workflow() -> Tuple[FlyteFile, FlyteFile]:
+    """
+    Apply the module_workflow to all datasets.
+    """
+    simulated_data = module_workflow(
+        download_dataset_args=DownloadDatasetInterface(
+            data_set_name="simulated",
+            download_file_name="simulated",
+            source="simulate",
+        )
+    )
+
+    pancreas_data = module_workflow(
+        download_dataset_args=DownloadDatasetInterface(
+            data_set_name="pancreas",
+            download_file_name="pancreas",
+            source="scvelo",
+        )
+    )
+    return (simulated_data, pancreas_data)
+
+
 if __name__ == "__main__":
+    print(f"Running module_workflow() { module_workflow() }")
     print(f"Running training_workflow() { training_workflow() }")
