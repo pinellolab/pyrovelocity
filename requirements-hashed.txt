@@ -710,9 +710,9 @@ flax==0.6.9 ; python_version >= "3.10" and python_version < "3.11" \
 flyteidl==1.10.6 ; python_version >= "3.10" and python_version < "3.11" \
     --hash=sha256:00cdcb38b62e92d0180d00e6680baeff00819770f7d23ad82a2d9d6d60ab3619 \
     --hash=sha256:ec2c4e9726bac302d6f76aed3be662ff713eea31391294f8bd617abd6d134098
-flytekit==1.10.2 ; python_version >= "3.10" and python_version < "3.11" \
-    --hash=sha256:a0b1ce4849e134392242526fed89b2f8b76d18eb64040f401a267beb6ba5d5c5 \
-    --hash=sha256:ed83f26bcae45acbd9a65f2d1f72dbcd5f9d259d0a74d99cc8c811cdc3264898
+flytekit==1.10.3 ; python_version >= "3.10" and python_version < "3.11" \
+    --hash=sha256:807e3edb149ba2be0b0b997dbcb2989d6234fe920bbf59ab41a63696ad0e8f49 \
+    --hash=sha256:f3d68da538687d4a019d0ef05d8818d98cef3f46988c41a343e1f72adf9ed49c
 fonttools==4.39.3 ; python_version >= "3.10" and python_version < "3.11" \
     --hash=sha256:64c0c05c337f826183637570ac5ab49ee220eec66cf50248e8df527edfa95aeb \
     --hash=sha256:9234b9f57b74e31b192c3fc32ef1a40750a8fbc1cd9837a7b7bfc4ca4a5c51d7
