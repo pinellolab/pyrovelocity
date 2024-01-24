@@ -174,7 +174,7 @@ optional = true
 [tool.poetry.group.workflows.dependencies]
 dataclasses_json = "0.5.9"
 dulwich = "0.21.7"
-flytekit = "1.10.2"
+flytekit = "1.10.3"
 mashumaro = "3.10"
 pyperclip = "1.8.2"
 python-dotenv = "1.0.0"

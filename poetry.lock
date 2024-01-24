@@ -2370,17 +2370,17 @@ protoc-gen-swagger = "*"
 
 [[package]]
 name = "flytekit"
-version = "1.10.2"
+version = "1.10.3"
 description = "Flyte SDK for Python"
 optional = false
-python-versions = ">=3.8,<3.12"
+python-versions = "<3.13,>=3.8"
 files = [
-    {file = "flytekit-1.10.2-py3-none-any.whl", hash = "sha256:a0b1ce4849e134392242526fed89b2f8b76d18eb64040f401a267beb6ba5d5c5"},
-    {file = "flytekit-1.10.2.tar.gz", hash = "sha256:ed83f26bcae45acbd9a65f2d1f72dbcd5f9d259d0a74d99cc8c811cdc3264898"},
+    {file = "flytekit-1.10.3-py3-none-any.whl", hash = "sha256:f3d68da538687d4a019d0ef05d8818d98cef3f46988c41a343e1f72adf9ed49c"},
+    {file = "flytekit-1.10.3.tar.gz", hash = "sha256:807e3edb149ba2be0b0b997dbcb2989d6234fe920bbf59ab41a63696ad0e8f49"},
 ]
 
 [package.dependencies]
-adlfs = "*"
+adlfs = ">=2023.3.0,<=2023.9.2"
 click = ">=6.6,<9.0"
 cloudpickle = ">=2.0.0"
 cookiecutter = ">=1.7.3"
@@ -2391,7 +2391,7 @@ docker = ">=4.0.0,<7.0.0"
 docstring-parser = ">=0.9.0"
 flyteidl = ">=1.10.0"
 fsspec = ">=2023.3.0,<=2023.9.2"
-gcsfs = "*"
+gcsfs = ">=2023.3.0,<=2023.9.2"
 googleapis-common-protos = ">=1.57"
 grpcio = "*"
 grpcio-status = "*"
@@ -2403,17 +2403,15 @@ kubernetes = ">=12.0.1"
 marshmallow-enum = "*"
 marshmallow-jsonschema = ">=0.12.0"
 mashumaro = ">=3.9.1"
-numpy = "*"
-pandas = ">=1.0.0,<2.0.0"
 protobuf = "<4.25.0"
-pyarrow = ">=4.0.0"
+pyarrow = "*"
 python-json-logger = ">=2.0.0"
 pytimeparse = ">=1.1.8,<2.0.0"
 pyyaml = "<5.4.0 || >5.4.0,<5.4.1 || >5.4.1,<6.0.0 || >6.0.0"
 requests = ">=2.18.4,<3.0.0"
 rich = "*"
 rich-click = "*"
-s3fs = ">=0.6.0"
+s3fs = ">=2023.3.0,<=2023.9.2"
 statsd = ">=3.0.0,<4.0.0"
 typing-extensions = "*"
 urllib3 = ">=1.22,<2.0.0"
@@ -8943,4 +8941,4 @@ plotting = ["annoy", "matplotlib-venn", "statannotations"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10, <3.11"
-content-hash = "5eff0d26a4ea9591fe8dd964af52c527705a147638119c57172040db3bda18ab"
+content-hash = "c94efcd84ed920474af31fe140c993a9ff47a94a0fae11f1e585a4a762413d75"
