@@ -682,20 +682,21 @@ approve-prs: ## Approve github pull requests from bots: PR_ENTRIES="2-5 10 12-18
 		fi; \
 	done
 
-PREVIOUS_VERSION := 0.2.0b4
-NEXT_VERSION := 0.2.0b5
+PREVIOUS_VERSION := 0.2.0b5
+NEXT_VERSION := 0.2.0b6
 
 VERSION_FILES := \
 	conda/colab/construct.yaml \
 	containers/gpu.Dockerfile \
 	containers/pkg.Dockerfile \
 	docs/source/notebooks/pyrovelocity_colab_template.ipynb \
-	MODULE.bazel
+	MODULE.bazel \
+	src/pyrovelocity/workflows/main_workflow.py
 
 update-version: ## Update version in VERSION_FILES.
 	@for file in $(VERSION_FILES); do \
 		if [ -f $$file ]; then \
-			sed -i 's/$(PREVIOUS_VERSION)/$(NEXT_VERSION)/g' $$file; \
+			gsed -i 's/$(PREVIOUS_VERSION)/$(NEXT_VERSION)/g' $$file; \
 			echo "Updated $$file"; \
 		else \
 			echo "$$file does not exist"; \
