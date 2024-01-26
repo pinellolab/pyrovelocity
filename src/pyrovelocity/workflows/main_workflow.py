@@ -58,7 +58,7 @@ def download_data(download_dataset_args: DownloadDatasetInterface) -> FlyteFile:
     retries=3,
     interruptible=True,
     timeout=timedelta(minutes=20),
-    requests=Resources(cpu="4", mem="8Gi", ephemeral_storage="16Gi"),
+    requests=Resources(cpu="8", mem="30Gi", ephemeral_storage="16Gi"),
 )
 def preprocess_data(data: FlyteFile) -> FlyteFile:
     """
