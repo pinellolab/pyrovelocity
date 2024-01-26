@@ -56,7 +56,7 @@ def download_data(download_dataset_args: DownloadDatasetInterface) -> FlyteFile:
     cache=True,
     cache_version=cache_version,
     retries=3,
-    interruptible=True,
+    interruptible=False,
     timeout=timedelta(minutes=20),
     requests=Resources(cpu="8", mem="30Gi", ephemeral_storage="16Gi"),
 )
