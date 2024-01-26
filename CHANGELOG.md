@@ -2,20 +2,18 @@
 
 ## [0.2.0-beta.8](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.7...v0.2.0-beta.8) (2024-01-26)
 
-
 ### Features
 
-* **workflow:** add preprocess data tasks ([d4f5f89](https://github.com/pinellolab/pyrovelocity/commit/d4f5f89e384ab047ef31c8e476f516c93023d52c))
-
+- **workflow:** add preprocess data tasks ([d4f5f89](https://github.com/pinellolab/pyrovelocity/commit/d4f5f89e384ab047ef31c8e476f516c93023d52c))
 
 ### Bug Fixes
 
-* **_velocity:** update doctest imports for preprocess ([44db75b](https://github.com/pinellolab/pyrovelocity/commit/44db75bcbe4beb6799dcc7f3e8d501810ceb5018))
-* **api:** update doctest imports for preprocess ([8cc6683](https://github.com/pinellolab/pyrovelocity/commit/8cc66834465bd9e8a54930a95498bae4247bf6ef))
-* **cid:** update pages actions hashes ([c684dd4](https://github.com/pinellolab/pyrovelocity/commit/c684dd456bbceb7da29840fc49c6fc0f6cfb0021))
-* **make:** add update-ratchet target ([ea11b10](https://github.com/pinellolab/pyrovelocity/commit/ea11b10a7d44d2a99399845d765a430cab7e4b90))
-* **workflows:** disable spot for preprocess tasks ([fdd89f0](https://github.com/pinellolab/pyrovelocity/commit/fdd89f049bc19586384b4084f881b31330656d2d))
-* **workflows:** increase mem limit for preprocessing tasks ([c360594](https://github.com/pinellolab/pyrovelocity/commit/c3605944850cb03b3b50ea363103638e9cd53934))
+- **\_velocity:** update doctest imports for preprocess ([44db75b](https://github.com/pinellolab/pyrovelocity/commit/44db75bcbe4beb6799dcc7f3e8d501810ceb5018))
+- **api:** update doctest imports for preprocess ([8cc6683](https://github.com/pinellolab/pyrovelocity/commit/8cc66834465bd9e8a54930a95498bae4247bf6ef))
+- **cid:** update pages actions hashes ([c684dd4](https://github.com/pinellolab/pyrovelocity/commit/c684dd456bbceb7da29840fc49c6fc0f6cfb0021))
+- **make:** add update-ratchet target ([ea11b10](https://github.com/pinellolab/pyrovelocity/commit/ea11b10a7d44d2a99399845d765a430cab7e4b90))
+- **workflows:** disable spot for preprocess tasks ([fdd89f0](https://github.com/pinellolab/pyrovelocity/commit/fdd89f049bc19586384b4084f881b31330656d2d))
+- **workflows:** increase mem limit for preprocessing tasks ([c360594](https://github.com/pinellolab/pyrovelocity/commit/c3605944850cb03b3b50ea363103638e9cd53934))
 
 ## [0.2.0-beta.7](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.6...v0.2.0-beta.7) (2024-01-24)
 
