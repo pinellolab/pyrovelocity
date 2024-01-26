@@ -93,7 +93,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> import numpy as np
             >>> import anndata
             >>> from pyrovelocity.utils import pretty_log_dict, print_anndata, generate_sample_data
-            >>> from pyrovelocity.data import copy_raw_counts
+            >>> from pyrovelocity.preprocess import copy_raw_counts
             >>> from pyrovelocity._velocity import PyroVelocity
             >>> # setup sample data
             >>> n_obs = 10
