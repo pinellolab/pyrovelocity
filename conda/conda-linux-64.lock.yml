@@ -11,20 +11,12 @@ dependencies:
   - _libgcc_mutex=0.1=conda_forge
   - _openmp_mutex=4.5=2_kmp_llvm
   - absl-py=2.1.0=pyhd8ed1ab_0
-  - adal=1.2.7=pyhd8ed1ab_0
-  - adlfs=2023.10.0=pyhd8ed1ab_0
-  - aiobotocore=2.5.4=pyhd8ed1ab_0
-  - aiohttp=3.9.1=py310h2372a71_0
-  - aioitertools=0.11.0=pyhd8ed1ab_0
-  - aiosignal=1.3.1=pyhd8ed1ab_0
   - alembic=1.13.1=pyhd8ed1ab_1
   - anndata=0.8.0=pyhd8ed1ab_1
   - antlr-python-runtime=4.9.3=pyhd8ed1ab_1
   - aom=3.7.1=h59595ed_0
   - arpack=3.8.0=nompi_h0baa96a_101
-  - arrow=1.3.0=pyhd8ed1ab_0
   - astropy=5.2.2=py310h0a54255_0
-  - async-timeout=4.0.3=pyhd8ed1ab_0
   - attrs=23.2.0=pyh71513ae_0
   - aws-c-auth=0.7.5=h2acc10b_2
   - aws-c-cal=0.6.9=h0fad3b2_0
@@ -39,17 +31,11 @@ dependencies:
   - aws-checksums=0.1.17=h3e65c2a_4
   - aws-crt-cpp=0.24.4=h233f1e4_5
   - aws-sdk-cpp=1.11.182=h18c0b32_3
-  - azure-core=1.29.7=pyhd8ed1ab_0
-  - azure-datalake-store=0.0.51=pyh9f0ad1d_0
-  - azure-identity=1.15.0=pyhd8ed1ab_0
-  - azure-storage-blob=12.19.0=pyhd8ed1ab_0
   - bcrypt=4.1.2=py310hcb5633a_0
-  - binaryornot=0.4.4=py_1
   - blas=2.121=mkl
   - blas-devel=3.9.0=21_linux64_mkl
   - blinker=1.7.0=pyhd8ed1ab_0
   - blosc=1.21.5=h0f2a231_0
-  - botocore=1.31.17=pyhd8ed1ab_3
   - brotli=1.1.0=hd590300_1
   - brotli-bin=1.1.0=hd590300_1
   - brotli-python=1.1.0=py310hc6cd4ac_1
@@ -58,10 +44,8 @@ dependencies:
   - ca-certificates=2023.11.17=hbcca054_0
   - cached-property=1.5.2=hd8ed1ab_1
   - cached_property=1.5.2=pyha770c72_1
-  - cachetools=5.3.2=pyhd8ed1ab_0
   - certifi=2023.11.17=pyhd8ed1ab_0
   - cffi=1.16.0=py310h2fee648_0
-  - chardet=5.2.0=py310hff52083_1
   - charset-normalizer=3.3.2=pyhd8ed1ab_0
   - chex=0.1.85=pyhd8ed1ab_0
   - click=8.1.7=unix_pyh707e725_0
@@ -72,9 +56,7 @@ dependencies:
   - configparser=5.3.0=pyhd8ed1ab_0
   - contextlib2=21.6.0=pyhd8ed1ab_0
   - contourpy=1.2.0=py310hd41b1e2_0
-  - cookiecutter=2.5.0=pyhca7485f_0
-  - croniter=2.0.1=pyhd8ed1ab_0
-  - cryptography=41.0.7=py310hb8475ec_1
+  - cryptography=42.0.1=py310hb8475ec_0
   - cuda-cudart=11.7.99=0
   - cuda-cupti=11.7.101=0
   - cuda-libraries=11.7.1=0
@@ -85,50 +67,28 @@ dependencies:
   - cycler=0.12.1=pyhd8ed1ab_0
   - databricks-cli=0.18.0=pyhd8ed1ab_0
   - dataclasses=0.8=pyhc8e2a94_3
-  - dataclasses-json=0.5.7=pyhd8ed1ab_0
   - dav1d=1.2.1=hd590300_0
-  - dbus=1.13.6=h5008d03_3
-  - decorator=5.1.1=pyhd8ed1ab_0
   - desert=2022.9.22=pyhd8ed1ab_2
-  - diskcache=5.6.3=pyhd8ed1ab_0
   - docker-py=6.1.3=pyhd8ed1ab_0
   - docrep=0.3.2=pyh44b312d_0
-  - docstring_parser=0.15=pyhd8ed1ab_0
   - dulwich=0.21.7=py310h2372a71_0
   - entrypoints=0.4=pyhd8ed1ab_0
   - et_xmlfile=1.1.0=pyhd8ed1ab_0
   - etils=1.6.0=pyhd8ed1ab_1
   - exceptiongroup=1.2.0=pyhd8ed1ab_2
-  - expat=2.5.0=hcb278e6_1
   - flask=2.3.3=pyhd8ed1ab_0
-  - flax=0.7.5=pyhd8ed1ab_0
-  - flyteidl=1.10.6=pyhd8ed1ab_0
-  - flytekit=1.10.2=pyhd8ed1ab_0
+  - flax=0.8.0=pyhd8ed1ab_0
   - fonttools=4.47.2=py310h2372a71_0
   - freetype=2.12.1=h267a509_2
-  - frozenlist=1.4.1=py310h2372a71_0
-  - fsspec=2023.9.2=pyh1a96a4e_0
+  - fsspec=2023.12.2=pyhca7485f_0
   - future=0.18.3=pyhd8ed1ab_0
-  - gcsfs=2023.9.2=pyhd8ed1ab_0
-  - get-annotations=0.1.2=pyhd8ed1ab_0
-  - gettext=0.21.1=h27087fc_0
   - gflags=2.2.2=he1b5a44_1004
   - gitdb=4.0.11=pyhd8ed1ab_0
   - gitpython=3.1.41=pyhd8ed1ab_0
   - glog=0.6.0=h6f12383_0
   - glpk=5.0=h445213a_0
   - gmp=6.3.0=h59595ed_0
-  - google-api-core=2.15.0=pyhd8ed1ab_0
-  - google-auth=2.26.2=pyhca7485f_0
-  - google-auth-oauthlib=1.2.0=pyhd8ed1ab_0
-  - google-cloud-core=2.4.1=pyhd8ed1ab_0
-  - google-cloud-storage=2.14.0=pyhca7485f_0
-  - google-crc32c=1.1.2=py310hc5c09a0_5
-  - google-resumable-media=2.7.0=pyhd8ed1ab_0
-  - googleapis-common-protos=1.62.0=pyhd8ed1ab_0
   - greenlet=3.0.3=py310hc6cd4ac_0
-  - grpcio=1.58.2=py310h1b8f574_0
-  - grpcio-status=1.57.0=pyhd8ed1ab_0
   - gunicorn=20.1.0=py310hff52083_3
   - h5py=3.8.0=nompi_py310ha66b2ad_101
   - hdf5=1.14.0=nompi_hb72d44e_103
@@ -140,18 +100,12 @@ dependencies:
   - importlib_metadata=6.10.0=hd8ed1ab_0
   - importlib_resources=6.1.1=pyhd8ed1ab_0
   - iniconfig=2.0.0=pyhd8ed1ab_0
-  - isodate=0.6.1=pyhd8ed1ab_0
   - itsdangerous=2.1.2=pyhd8ed1ab_0
-  - jaraco.classes=3.3.0=pyhd8ed1ab_0
   - jax=0.4.23=pyhd8ed1ab_0
   - jaxlib=0.4.23=cpu_py310h9ed8a0c_0
   - jaxtyping=0.2.25=pyhd8ed1ab_0
-  - jeepney=0.8.0=pyhd8ed1ab_0
   - jinja2=3.1.3=pyhd8ed1ab_0
-  - jmespath=1.0.1=pyhd8ed1ab_0
   - joblib=1.3.2=pyhd8ed1ab_0
-  - jsonpickle=3.0.2=pyhd8ed1ab_1
-  - keyring=24.3.0=py310hff52083_0
   - keyutils=1.6.1=h166bdaf_0
   - kiwisolver=1.4.5=py310hd41b1e2_1
   - krb5=1.21.2=h659d440_0
@@ -180,12 +134,10 @@ dependencies:
   - libedit=3.1.20191231=he28a2e2_2
   - libev=4.33=hd590300_2
   - libevent=2.1.12=hf998b51_1
-  - libexpat=2.5.0=hcb278e6_1
   - libffi=3.4.2=h7f98852_5
   - libgcc-ng=13.2.0=h807b86a_3
   - libgfortran-ng=13.2.0=h69a702a_3
   - libgfortran5=13.2.0=ha4646dd_3
-  - libglib=2.78.3=h783c2da_0
   - libgoogle-cloud=2.12.0=h19a6dae_3
   - libgrpc=1.58.2=he06187c_0
   - libhwloc=2.9.3=default_h554bfaf_1009
@@ -219,38 +171,29 @@ dependencies:
   - lightning-utilities=0.10.1=pyhd8ed1ab_0
   - llvm-openmp=17.0.6=h4dfa4b3_0
   - llvmlite=0.41.1=py310h1b8f574_0
-  - loompy=3.0.6=py_0
   - lz4-c=1.9.4=hcb278e6_0
   - mako=1.3.1=pyhd8ed1ab_0
   - markdown=3.5.2=pyhd8ed1ab_0
   - markupsafe=2.1.4=py310h2372a71_0
   - marshmallow=3.19.0=pyhd8ed1ab_0
-  - marshmallow-enum=1.5.1=pyh9f0ad1d_3
-  - marshmallow-jsonschema=0.13.0=pyhd8ed1ab_0
   - mashumaro=3.10=pyhd8ed1ab_0
   - matplotlib-base=3.8.2=py310h62c0568_0
-  - mkl=2024.0.0=ha957f24_49656
-  - mkl-devel=2024.0.0=ha770c72_49656
-  - mkl-include=2024.0.0=ha957f24_49656
+  - mkl=2024.0.0=ha957f24_49657
+  - mkl-devel=2024.0.0=ha770c72_49657
+  - mkl-include=2024.0.0=ha957f24_49657
   - ml-collections=0.1.1=pyhd8ed1ab_0
   - ml_dtypes=0.3.2=py310hcc13569_0
   - mlflow=2.2.2=py310ha13cd29_0
-  - more-itertools=10.2.0=pyhd8ed1ab_0
-  - msal=1.26.0=pyhd8ed1ab_0
-  - msal_extensions=1.0.0=pyhd8ed1ab_0
   - msgpack-python=1.0.7=py310hd41b1e2_0
   - mudata=0.2.3=pyhd8ed1ab_0
-  - multidict=6.0.4=py310h2372a71_1
   - multipledispatch=0.6.0=py_0
   - munkres=1.1.4=pyh9f0ad1d_0
   - mypy_extensions=1.0.0=pyha770c72_0
   - natsort=8.4.0=pyhd8ed1ab_0
   - ncurses=6.4=h59595ed_2
   - nest-asyncio=1.6.0=pyhd8ed1ab_0
-  - networkx=3.2.1=pyhd8ed1ab_0
   - numba=0.58.1=py310h7dc5dd1_0
   - numpy=1.26.3=py310hb13e2d6_0
-  - numpy_groupies=0.10.2=pyhd8ed1ab_0
   - numpyro=0.13.2=pyhd8ed1ab_1
   - oauthlib=3.2.2=pyhd8ed1ab_0
   - omegaconf=2.3.0=pyhd8ed1ab_0
@@ -265,30 +208,22 @@ dependencies:
   - packaging=23.2=pyhd8ed1ab_0
   - pandas=1.5.3=py310h9b08913_1
   - paramiko=3.4.0=pyhd8ed1ab_0
-  - patsy=0.5.6=pyhd8ed1ab_0
-  - pcre2=10.42=hcad00b1_0
   - pillow=10.2.0=py310h01dd4db_0
   - pip=23.3.2=pyhd8ed1ab_0
   - platformdirs=4.1.0=pyhd8ed1ab_0
-  - pluggy=1.3.0=pyhd8ed1ab_0
+  - pluggy=1.4.0=pyhd8ed1ab_0
   - pooch=1.8.0=pyhd8ed1ab_0
-  - portalocker=2.8.2=py310hff52083_1
   - prometheus_client=0.19.0=pyhd8ed1ab_0
   - prometheus_flask_exporter=0.23.0=pyhd8ed1ab_0
   - protobuf=4.24.3=py310h620c231_1
-  - protoc-gen-swagger=0.1.0=pyhd8ed1ab_0
   - pthread-stubs=0.4=h36c2ea0_1001
   - pyarrow=11.0.0=py310h7f027b5_46_cpu
-  - pyasn1=0.5.1=pyhd8ed1ab_0
-  - pyasn1-modules=0.3.0=pyhd8ed1ab_0
   - pybind11-abi=4=hd8ed1ab_3
   - pycparser=2.21=pyhd8ed1ab_0
   - pyerfa=2.0.1.1=py310h1f7b6fc_0
   - pygments=2.17.2=pyhd8ed1ab_0
   - pyjwt=2.8.0=pyhd8ed1ab_0
   - pynacl=1.5.0=py310h2372a71_3
-  - pynndescent=0.5.11=pyhca7485f_0
-  - pyopenssl=23.3.0=pyhd8ed1ab_0
   - pyparsing=3.1.1=pyhd8ed1ab_0
   - pyperclip=1.8.2=pyhd8ed1ab_2
   - pyro-api=0.1.2=pyhd8ed1ab_0
@@ -299,17 +234,12 @@ dependencies:
   - python=3.10.13=hd12c33a_1_cpython
   - python-dateutil=2.8.2=pyhd8ed1ab_0
   - python-igraph=0.11.3=py310hd766dba_1
-  - python-json-logger=2.0.7=pyhd8ed1ab_0
-  - python-kubernetes=29.0.0=pyhd8ed1ab_0
-  - python-slugify=8.0.1=pyhd8ed1ab_2
   - python_abi=3.10=4_cp310
-  - pytimeparse=1.1.8=py_0
   - pytorch=1.13.1=py3.10_cuda11.7_cudnn8.5.0_0
   - pytorch-cuda=11.7=h778d358_5
   - pytorch-lightning=1.9.4=pyhd8ed1ab_1
   - pytorch-mutex=1.0=cuda
   - pytz=2022.7.1=pyhd8ed1ab_0
-  - pyu2f=0.1.5=pyhd8ed1ab_0
   - pywin32-on-windows=0.1.0=pyh1179c8e_3
   - pyyaml=6.0.1=py310h2372a71_1
   - querystring_parser=1.2.4=py_0
@@ -318,22 +248,13 @@ dependencies:
   - re2=2023.06.02=h2873b5e_0
   - readline=8.2=h8228510_1
   - requests=2.31.0=pyhd8ed1ab_0
-  - requests-oauthlib=1.3.1=pyhd8ed1ab_0
   - returns=0.22.0=pyhd8ed1ab_0
   - rich=12.6.0=pyhd8ed1ab_0
-  - rich-click=1.7.3=pyhd8ed1ab_0
-  - rsa=4.9=pyhd8ed1ab_0
   - s2n=1.3.56=h06160fa_0
-  - s3fs=2023.9.2=pyhd8ed1ab_0
-  - scanpy=1.9.6=pyhd8ed1ab_1
   - scikit-learn=1.4.0=py310h1fdf081_0
   - scipy=1.10.1=py310ha4c1d20_3
-  - scvelo=0.2.5=pyhd8ed1ab_0
   - scvi-tools=0.20.3=pyhd8ed1ab_1
-  - seaborn=0.11.2=hd8ed1ab_0
   - seaborn-base=0.11.2=pyhd8ed1ab_0
-  - secretstorage=3.3.3=py310hff52083_2
-  - session-info=1.0.0=pyhd8ed1ab_0
   - setuptools=69.0.3=pyhd8ed1ab_0
   - shap=0.44.0=cuda118py310he2121af_7
   - six=1.16.0=pyh6c4a22f_0
@@ -342,50 +263,124 @@ dependencies:
   - snappy=1.1.10=h9fff704_0
   - sqlalchemy=2.0.25=py310h2372a71_0
   - sqlparse=0.4.4=pyhd8ed1ab_0
-  - statsd=3.3.0=py_0
-  - statsmodels=0.14.1=py310h1f7b6fc_0
-  - stdlib-list=0.10.0=pyhd8ed1ab_0
-  - stringcase=1.2.0=py_0
   - svt-av1=1.8.0=h59595ed_0
   - tabulate=0.9.0=pyhd8ed1ab_1
-  - tbb=2021.11.0=h00ab1b0_0
+  - tbb=2021.11.0=h00ab1b0_1
   - tensorstore=0.1.44=py310h8ba0d1c_3
   - termcolor=2.2.0=pyhd8ed1ab_0
-  - text-unidecode=1.3=pyhd8ed1ab_1
   - texttable=1.7.0=pyhd8ed1ab_0
   - threadpoolctl=3.2.0=pyha21a80b_0
   - tk=8.6.13=noxft_h4845f30_101
   - tomli=2.0.1=pyhd8ed1ab_0
-  - toolz=0.12.0=pyhd8ed1ab_0
+  - toolz=0.12.1=pyhd8ed1ab_0
   - torchmetrics=0.11.4=pyhd8ed1ab_0
   - tqdm=4.66.1=pyhd8ed1ab_0
   - typeguard=2.13.3=pyhd8ed1ab_0
-  - types-python-dateutil=2.8.19.20240106=pyhd8ed1ab_0
   - typing-extensions=4.9.0=hd8ed1ab_0
   - typing_extensions=4.9.0=pyha770c72_0
   - typing_inspect=0.9.0=pyhd8ed1ab_0
   - tzdata=2023d=h0c530f3_0
   - ucx=1.15.0=h75e419f_3
-  - umap-learn=0.5.5=py310hff52083_0
   - unicodedata2=15.1.0=py310h2372a71_0
-  - urllib3=1.26.18=pyhd8ed1ab_0
+  - urllib3=2.1.0=pyhd8ed1ab_0
   - validators=0.22.0=pyhd8ed1ab_0
   - websocket-client=1.7.0=pyhd8ed1ab_0
   - werkzeug=3.0.1=pyhd8ed1ab_0
   - wheel=0.42.0=pyhd8ed1ab_0
-  - wrapt=1.16.0=py310h2372a71_0
   - xlrd=1.2.0=pyh9f0ad1d_1
   - xorg-libxau=1.0.11=hd590300_0
   - xorg-libxdmcp=1.1.3=h7f98852_0
   - xz=5.2.6=h166bdaf_0
   - yaml=0.2.5=h7f98852_2
-  - yarl=1.9.4=py310h2372a71_0
   - zipp=3.17.0=pyhd8ed1ab_0
   - zstandard=0.21.0=py310h1275a96_1
   - zstd=1.5.5=hfc55251_0
   - pip:
       - adjusttext === 0.7.3 --hash=sha256:b90e275a95b4d980cbbac7967914b8d66477c09bc346a0b3c9e2125bba664b06
+      - adlfs === 2023.9.0 --hash=sha256:e2cff62b8128578c6d1b9da1660ad4c8a5a8cb0d491bba416b529563c65dc5d2
+      - aiobotocore === 2.5.4 --hash=sha256:4b32218728ca3d0be83835b604603a0cd6c329066e884bb78149334267f92440
+      - aiohttp === 3.9.1 --hash=sha256:81b77f868814346662c96ab36b875d7814ebf82340d3284a31681085c051320f
+      - aioitertools === 0.11.0 --hash=sha256:04b95e3dab25b449def24d7df809411c10e62aab0cbe31a50ca4e68748c43394
+      - aiosignal === 1.3.1 --hash=sha256:f8376fb07dd1e86a584e4fcdec80b36b7f81aac666ebc724e2c090300dd83b17
       - antlr4-python3-runtime === 4.9.3 --hash=sha256:f224469b4168294902bb1efa80a8bf7855f24c99aef99cbefc1bcd3cce77881b
+      - arrow === 1.3.0 --hash=sha256:c728b120ebc00eb84e01882a6f5e7927a53960aa990ce7dd2b10f39005a67f80
+      - async-timeout === 4.0.3 --hash=sha256:7405140ff1230c310e51dc27b3145b9092d659ce68ff733fb0cefe3ee42be028
+      - azure-core === 1.29.7 --hash=sha256:95a7b41b4af102e5fcdfac9500fcc82ff86e936c7145a099b7848b9ac0501250
+      - azure-datalake-store === 0.0.53 --hash=sha256:a30c902a6e360aa47d7f69f086b426729784e71c536f330b691647a51dc42b2b
+      - azure-identity === 1.15.0 --hash=sha256:a14b1f01c7036f11f148f22cd8c16e05035293d714458d6b44ddf534d93eb912
+      - azure-storage-blob === 12.19.0 --hash=sha256:7bbc2c9c16678f7a420367fef6b172ba8730a7e66df7f4d7a55d5b3c8216615b
       - beartype === 0.16.4 --hash=sha256:64865952f9dff1e17f22684b3c7286fc79754553b47eaefeb1286224ae8c1bd9
+      - binaryornot === 0.4.4 --hash=sha256:b8b71173c917bddcd2c16070412e369c3ed7f0528926f70cac18a6c97fd563e4
+      - botocore === 1.31.17 --hash=sha256:6ac34a1d34aa3750e78b77b8596617e2bab938964694d651939dba2cbde2c12b
+      - cachetools === 5.3.2 --hash=sha256:861f35a13a451f94e301ce2bec7cac63e881232ccce7ed67fab9b5df4d3beaa1
+      - chardet === 5.2.0 --hash=sha256:e1cf59446890a00105fe7b7912492ea04b6e6f06d4b742b2c788469e34c82970
+      - cookiecutter === 2.5.0 --hash=sha256:8aa2f12ed11bc05628651e9dc4353a10571dd9908aaaaeec959a2b9ea465a5d2
+      - croniter === 2.0.1 --hash=sha256:4cb064ce2d8f695b3b078be36ff50115cf8ac306c10a7e8653ee2a5b534673d7
       - dataclasses-json === 0.5.9 --hash=sha256:1280542631df1c375b7bc92e5b86d39e06c44760d7e3571a537b3b8acabf2f0c
+      - decorator === 5.1.1 --hash=sha256:b8c3f85900b9dc423225913c5aace94729fe1fa9763b38939a95226f02d37186
+      - diskcache === 5.6.3 --hash=sha256:5e31b2d5fbad117cc363ebaf6b689474db18a1f6438bc82358b024abd4c2ca19
+      - docstring-parser === 0.15 --hash=sha256:d1679b86250d269d06a99670924d6bce45adc00b08069dae8c47d98e89b667a9
+      - flyteidl === 1.10.6 --hash=sha256:ec2c4e9726bac302d6f76aed3be662ff713eea31391294f8bd617abd6d134098
+      - flytekit === 1.10.3 --hash=sha256:f3d68da538687d4a019d0ef05d8818d98cef3f46988c41a343e1f72adf9ed49c
+      - frozenlist === 1.4.1 --hash=sha256:a9b2de4cf0cdd5bd2dee4c4f63a653c61d2408055ab77b151c1957f221cabf2a
+      - fsspec === 2023.9.2 --hash=sha256:603dbc52c75b84da501b9b2ec8c11e1f61c25984c4a0dda1f129ef391fbfc9b4
+      - gcsfs === 2023.9.2 --hash=sha256:b3e61d07b0ecf3e04627b0cc0df30ee728bc49e31d42de180815601041e62c1b
+      - google-api-core === 2.15.0 --hash=sha256:2aa56d2be495551e66bbff7f729b790546f87d5c90e74781aa77233bcb395a8a
+      - google-auth === 2.27.0 --hash=sha256:8e4bad367015430ff253fe49d500fdc3396c1a434db5740828c728e45bcce245
+      - google-auth-oauthlib === 1.2.0 --hash=sha256:297c1ce4cb13a99b5834c74a1fe03252e1e499716718b190f56bcb9c4abc4faf
+      - google-cloud-core === 2.4.1 --hash=sha256:a9e6a4422b9ac5c29f79a0ede9485473338e2ce78d91f2370c01e730eab22e61
+      - google-cloud-storage === 2.14.0 --hash=sha256:8641243bbf2a2042c16a6399551fbb13f062cbc9a2de38d6c0bb5426962e9dbd
+      - google-crc32c === 1.5.0 --hash=sha256:116a7c3c616dd14a3de8c64a965828b197e5f2d121fedd2f8c5585c547e87b02
+      - google-resumable-media === 2.7.0 --hash=sha256:79543cfe433b63fd81c0844b7803aba1bb8950b47bedf7d980c38fa123937e08
+      - googleapis-common-protos === 1.62.0 --hash=sha256:4750113612205514f9f6aa4cb00d523a94f3e8c06c5ad2fee466387dc4875f07
+      - grpcio === 1.60.0 --hash=sha256:43e636dc2ce9ece583b3e2ca41df5c983f4302eabc6d5f9cd04f0562ee8ec1ae
+      - grpcio-status === 1.60.0 --hash=sha256:7d383fa36e59c1e61d380d91350badd4d12ac56e4de2c2b831b050362c3c572e
       - hydra-zen === 0.10.0 --hash=sha256:78c3cddb8b7063317a3685edb570c209425988b8f5f08902e13b5e6ead46d9af
+      - isodate === 0.6.1 --hash=sha256:0751eece944162659049d35f4f549ed815792b38793f07cf73381c1c87cbed96
+      - jaraco.classes === 3.3.0 --hash=sha256:10afa92b6743f25c0cf5f37c6bb6e18e2c5bb84a16527ccfc0040ea377e7aaeb
+      - jeepney === 0.8.0 --hash=sha256:c0a454ad016ca575060802ee4d590dd912e35c122fa04e70306de3d076cce755
+      - jmespath === 1.0.1 --hash=sha256:02e2e4cc71b5bcab88332eebf907519190dd9e6e82107fa7f83b1003a6252980
+      - jsonpickle === 3.0.2 --hash=sha256:4a8442d97ca3f77978afa58068768dba7bff2dbabe79a9647bc3cdafd4ef019f
+      - keyring === 24.3.0 --hash=sha256:4446d35d636e6a10b8bce7caa66913dd9eca5fd222ca03a3d42c38608ac30836
+      - kubernetes === 29.0.0 --hash=sha256:ab8cb0e0576ccdfb71886366efb102c6a20f268d817be065ce7f9909c631e43e
+      - loompy === 3.0.7 --hash=sha256:b5cdf7b54734c6bed3a181d11947af70af2c6e0dcadc02fd0e871df232faa8f4
+      - marshmallow-enum === 1.5.1 --hash=sha256:57161ab3dbfde4f57adeb12090f39592e992b9c86d206d02f6bd03ebec60f072
+      - marshmallow-jsonschema === 0.13.0 --hash=sha256:2814f2afb94a6e01b3c0a5795b3dfb142b628763655f20378400af5c0a2307fb
+      - more-itertools === 10.2.0 --hash=sha256:686b06abe565edfab151cb8fd385a05651e1fdf8f0a14191e4439283421f8684
+      - msal === 1.26.0 --hash=sha256:be77ba6a8f49c9ff598bbcdc5dfcf1c9842f3044300109af738e8c3e371065b5
+      - msal-extensions === 1.1.0 --hash=sha256:01be9711b4c0b1a151450068eeb2c4f0997df3bba085ac299de3a66f585e382f
+      - multidict === 6.0.4 --hash=sha256:36c63aaa167f6c6b04ef2c85704e93af16c11d20de1d133e39de6a0e84582a93
+      - networkx === 3.2.1 --hash=sha256:f18c69adc97877c42332c170849c96cefa91881c99a7cb3e95b7c659ebdc1ec2
+      - numpy-groupies === 0.10.2 --hash=sha256:24a574ecdd58c0d669749b67ec31dab971d27e04037b402bbc4f6bedaa2623bc
+      - nvidia-cublas-cu11 === 11.10.3.66 --hash=sha256:d32e4d75f94ddfb93ea0a5dda08389bcc65d8916a25cb9f37ac89edaeed3bded
+      - nvidia-cuda-nvrtc-cu11 === 11.7.99 --hash=sha256:9f1562822ea264b7e34ed5930567e89242d266448e936b85bc97a3370feabb03
+      - nvidia-cuda-runtime-cu11 === 11.7.99 --hash=sha256:cc768314ae58d2641f07eac350f40f99dcb35719c4faff4bc458a7cd2b119e31
+      - nvidia-cudnn-cu11 === 8.5.0.96 --hash=sha256:402f40adfc6f418f9dae9ab402e773cfed9beae52333f6d86ae3107a1b9527e7
+      - patsy === 0.5.6 --hash=sha256:19056886fd8fa71863fa32f0eb090267f21fb74be00f19f5c70b2e9d76c883c6
+      - portalocker === 2.8.2 --hash=sha256:cfb86acc09b9aa7c3b43594e19be1345b9d16af3feb08bf92f23d4dce513a28e
+      - protoc-gen-swagger === 0.1.0 --hash=sha256:cdc043da538865f055a7f22b304a35085cef269dc33e2f3408b12d397e8d8b4b
+      - pyasn1 === 0.5.1 --hash=sha256:4439847c58d40b1d0a573d07e3856e95333f1976294494c325775aeca506eb58
+      - pyasn1-modules === 0.3.0 --hash=sha256:d3ccd6ed470d9ffbc716be08bd90efbd44d0734bc9303818f7336070984a162d
+      - pynndescent === 0.5.11 --hash=sha256:a628f4fc8a67757c8fa15613449ac513fd056258a55b4084e47c06640ec90a8d
+      - python-json-logger === 2.0.7 --hash=sha256:f380b826a991ebbe3de4d897aeec42760035ac760345e57b812938dc8b35e2bd
+      - python-slugify === 8.0.2 --hash=sha256:428ea9b00c977b8f6c097724398f190b2c18e2a6011094d1001285875ccacdbf
+      - pytimeparse === 1.1.8 --hash=sha256:04b7be6cc8bd9f5647a6325444926c3ac34ee6bc7e69da4367ba282f076036bd
+      - requests-oauthlib === 1.3.1 --hash=sha256:2577c501a2fb8d05a304c09d090d6e47c306fef15809d102b327cf8364bddab5
+      - rich-click === 1.7.3 --hash=sha256:bc4163d4e2a3361e21c4d72d300eca6eb8896dfc978667923cb1d4937b8769a3
+      - rsa === 4.9 --hash=sha256:90260d9058e514786967344d0ef75fa8727eed8a7d2e43ce9f4bcf1b536174f7
+      - s3fs === 2023.9.2 --hash=sha256:d0e0ad0267820f4e9ff16556e004e6759010e92378aebe2ac5d71419a6ff5387
+      - scanpy === 1.9.7 --hash=sha256:046af177640f5d00a240f47a384cb7e769f1707a9af4871d9437d230e3cfc028
+      - scikit-learn === 1.1.3 --hash=sha256:701181792a28c82fecae12adb5d15d0ecf57bffab7cf4bdbb52c7b3fd428d540
+      - scvelo === 0.3.1 --hash=sha256:e9160dbc048a031fff42c7368a6bda0580f700961422df10bed76bcd72986032
+      - seaborn === 0.13.2 --hash=sha256:636f8336facf092165e27924f223d3c62ca560b1f2bb5dff7ab7fad265361987
+      - secretstorage === 3.3.3 --hash=sha256:f356e6628222568e3af06f2eba8df495efa13b3b63081dafd4f7d9a7b7bc9f99
+      - session-info === 1.0.0 --hash=sha256:3cda5e03cca703f32ae2eadbd6bd80b6c21442cfb60e412c21cb8ad6d5cbb6b7
+      - statsd === 3.3.0 --hash=sha256:c610fb80347fca0ef62666d241bce64184bd7cc1efe582f9690e045c25535eaa
+      - statsmodels === 0.14.1 --hash=sha256:c0564d92cb05b219b4538ed09e77d96658a924a691255e1f7dd23ee338df441b
+      - stdlib-list === 0.10.0 --hash=sha256:b3a911bc441d03e0332dd1a9e7d0870ba3bb0a542a74d7524f54fb431256e214
+      - text-unidecode === 1.3 --hash=sha256:1311f10e8b895935241623731c2ba64f4c455287888b18189350b67134a822e8
+      - types-python-dateutil === 2.8.19.20240106 --hash=sha256:efbbdc54590d0f16152fa103c9879c7d4a00e82078f6e2cf01769042165acaa2
+      - umap-learn === 0.5.5 --hash=sha256:c54d607364413eade968b73ba07c8b3ea14412817f53cd07b6f720ac957293c4
+      - urllib3 === 1.26.18 --hash=sha256:34b97092d7e0a3a8cf7cd10e386f401b3737364026c45e622aa02903dffe0f07
+      - wrapt === 1.16.0 --hash=sha256:ac83a914ebaf589b69f7d0a1277602ff494e21f4c2f743313414378f8f50a4cf
+      - yarl === 1.9.4 --hash=sha256:357495293086c5b6d34ca9616a43d329317feab7917518bc97a08f9e55648455
