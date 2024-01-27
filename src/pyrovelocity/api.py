@@ -1,9 +1,13 @@
 """Model training API for Pyro-Velocity."""
+import os
+from pathlib import Path
 from typing import Dict, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
+import scanpy as sc
 from anndata._core.anndata import AnnData
+from beartype import beartype
 from numpy import ndarray
 from pyro import poutine
 from pyro.infer.autoguide import AutoNormal
@@ -11,16 +15,21 @@ from pyro.infer.autoguide.guides import AutoGuideList
 from sklearn.model_selection import train_test_split
 
 from pyrovelocity._velocity import PyroVelocity
+from pyrovelocity.logging import configure_logging
+from pyrovelocity.utils import print_anndata, print_attributes
+
+logger = configure_logging(__name__)
 
 
+@beartype
 def train_model(
-    adata: AnnData,
+    adata: str | AnnData,
     guide_type: str = "auto",
     model_type: str = "auto",
     svi_train: bool = False,  # svi_train alreadys turn off
     batch_size: int = -1,
     train_size: float = 1.0,
-    use_gpu: int = 0,
+    use_gpu: int | bool = False,
     likelihood: str = "Poisson",
     num_samples: int = 30,
     log_every: int = 100,
@@ -37,13 +46,13 @@ def train_model(
     cell_specific_kinetics: Optional[str] = None,
     kinetics_num: int = 2,
     loss_plot_path: str = "loss_plot.png",
-) -> Tuple[PyroVelocity, Dict[str, ndarray]]:
+) -> Tuple[AnnData, PyroVelocity, Dict[str, ndarray]]:
     """
     Train a PyroVelocity model to provide probabilistic estimates of RNA velocity
     for single-cell RNA sequencing data with quantified splice variants.
 
     Args:
-        adata (AnnData): An AnnData object containing the input data.
+        adata (str | AnnData): Path to a file that can be read to an AnnData object or an AnnData object.
         guide_type (str, optional): The type of guide function for the Pyro model. Default is "auto".
         model_type (str, optional): The type of Pyro model. Default is "auto".
         svi_train (bool, optional): Whether to use Stochastic Variational Inference for training. Default is False.
@@ -78,6 +87,22 @@ def train_model(
         >>> copy_raw_counts(adata)
         >>> model, posterior_samples = train_model(adata, use_gpu=False, seed=99, max_epochs=200, loss_plot_path="loss_plot_docs.png")
     """
+    if isinstance(adata, str):
+        adata_path = Path(adata)
+        if adata_path.suffix not in {".h5ad", ".loom"}:
+            raise ValueError(
+                f"The input file {adata_path}\n"
+                "must be either a .h5ad or .loom file."
+            )
+        if os.path.isfile(adata_path) and os.access(adata_path, os.R_OK):
+            logger.info(f"Reading input file: {adata_path}")
+            adata = sc.read(filename=adata_path, cache=True)
+        else:
+            raise ValueError(f"Cannot read input file: {adata_path}")
+
+    print_anndata(adata)
+    print_attributes(adata)
+
     PyroVelocity.setup_anndata(adata)
 
     model = PyroVelocity(
@@ -129,7 +154,7 @@ def train_model(
         posterior_samples = model.generate_posterior_samples(
             model.adata, num_samples=num_samples, batch_size=512
         )
-        return model, posterior_samples
+        return adata, model, posterior_samples
     else:
         if train_size >= 1:  ##support velocity_auto_depth
             if batch_size == -1:
@@ -171,7 +196,7 @@ def train_model(
 
             fig.savefig(loss_plot_path, facecolor="white", bbox_inches="tight")
 
-            return model, posterior_samples
+            return adata, model, posterior_samples
         else:  # train validation procedure
             if (
                 guide_type == "velocity_auto_depth"
