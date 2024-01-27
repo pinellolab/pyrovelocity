@@ -1,8 +1,15 @@
-from dataclasses import asdict, make_dataclass
+from dataclasses import asdict
+from dataclasses import make_dataclass
 from datetime import timedelta
-from typing import Any, Dict, NamedTuple, Tuple, Type
+from typing import Any
+from typing import Dict
+from typing import NamedTuple
+from typing import Tuple
+from typing import Type
 
-from flytekit import Resources, task, workflow
+from flytekit import Resources
+from flytekit import task
+from flytekit import workflow
 from flytekit.extras.accelerators import T4
 from flytekit.types.directory import FlyteDirectory
 from flytekit.types.file import FlyteFile
@@ -11,8 +18,10 @@ from mashumaro.mixins.json import DataClassJSONMixin
 from pyrovelocity.data import download_dataset
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.preprocess import preprocess_dataset
-from pyrovelocity.train import PyroVelocityTrainInterface, train_dataset
+from pyrovelocity.train import PyroVelocityTrainInterface
+from pyrovelocity.train import train_dataset
 from pyrovelocity.workflows.configuration import create_dataclass_from_callable
+
 
 logger = configure_logging(__name__)
 
@@ -159,19 +168,19 @@ def training_workflow() -> Tuple[FlyteFile, FlyteFile, FlyteFile, FlyteFile]:
         train_dataset_name="pancreas",
     )
 
-    pons_data = module_workflow(
-        download_dataset_args=DownloadDatasetInterface(
-            data_set_name="pons",
-        ),
-        train_dataset_name="pons",
-    )
+    # pons_data = module_workflow(
+    #     download_dataset_args=DownloadDatasetInterface(
+    #         data_set_name="pons",
+    #     ),
+    #     train_dataset_name="pons",
+    # )
 
-    pbmc68k_data = module_workflow(
-        download_dataset_args=DownloadDatasetInterface(
-            data_set_name="pbmc68k",
-        ),
-        train_dataset_name="pbmc68k",
-    )
+    # pbmc68k_data = module_workflow(
+    #     download_dataset_args=DownloadDatasetInterface(
+    #         data_set_name="pbmc68k",
+    #     ),
+    #     train_dataset_name="pbmc68k",
+    # )
 
     return (
         simulated_data,
