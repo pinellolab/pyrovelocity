@@ -1,15 +1,8 @@
-from dataclasses import asdict
-from dataclasses import make_dataclass
+from dataclasses import asdict, make_dataclass
 from datetime import timedelta
-from typing import Any
-from typing import Dict
-from typing import NamedTuple
-from typing import Tuple
-from typing import Type
+from typing import Any, Dict, NamedTuple, Tuple, Type
 
-from flytekit import Resources
-from flytekit import task
-from flytekit import workflow
+from flytekit import Resources, task, workflow
 from flytekit.extras.accelerators import T4
 from flytekit.types.directory import FlyteDirectory
 from flytekit.types.file import FlyteFile
@@ -18,10 +11,8 @@ from mashumaro.mixins.json import DataClassJSONMixin
 from pyrovelocity.data import download_dataset
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.preprocess import preprocess_dataset
-from pyrovelocity.train import PyroVelocityTrainInterface
-from pyrovelocity.train import train_dataset
+from pyrovelocity.train import PyroVelocityTrainInterface, train_dataset
 from pyrovelocity.workflows.configuration import create_dataclass_from_callable
-
 
 logger = configure_logging(__name__)
 
@@ -80,17 +71,13 @@ def preprocess_data(data: FlyteFile) -> FlyteFile:
     return FlyteFile(path=processed_dataset_path)
 
 
-training_outputs = NamedTuple(
-    "training_outputs",
-    [
-        ("trained_data_path", FlyteFile),
-        ("model_path", FlyteDirectory),
-        ("posterior_samples_path", FlyteFile),
-        ("pyrovelocity_data_path", FlyteFile),
-        ("metrics_path", FlyteFile),
-        ("run_info_path", FlyteFile),
-    ],
-)
+class TrainingOutputs(NamedTuple):
+    trained_data_path: FlyteFile
+    model_path: FlyteDirectory
+    posterior_samples_path: FlyteFile
+    pyrovelocity_data_path: FlyteFile
+    metrics_path: FlyteFile
+    run_info_path: FlyteFile
 
 
 @task(
@@ -103,7 +90,7 @@ training_outputs = NamedTuple(
     requests=Resources(cpu="8", mem="30Gi", ephemeral_storage="16Gi", gpu="1"),
     accelerator=T4,
 )
-def train_model(data_set_name: str, data: FlyteFile) -> training_outputs:
+def train_model(data_set_name: str, data: FlyteFile) -> TrainingOutputs:
     """
     Train model.
     """
@@ -122,7 +109,7 @@ def train_model(data_set_name: str, data: FlyteFile) -> training_outputs:
             use_gpu=True,
         ),
     )
-    return training_outputs(
+    return TrainingOutputs(
         trained_data_path=FlyteFile(path=trained_data_path),
         model_path=FlyteDirectory(path=model_path),
         posterior_samples_path=FlyteFile(path=posterior_samples_path),
