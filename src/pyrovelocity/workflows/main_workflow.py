@@ -1,15 +1,17 @@
 from dataclasses import asdict, make_dataclass
 from datetime import timedelta
-from typing import Any, Dict, Tuple, Type
+from typing import Any, Dict, NamedTuple, Tuple, Type
 
 from flytekit import Resources, task, workflow
 from flytekit.extras.accelerators import T4
+from flytekit.types.directory import FlyteDirectory
 from flytekit.types.file import FlyteFile
 from mashumaro.mixins.json import DataClassJSONMixin
 
 from pyrovelocity.data import download_dataset
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.preprocess import preprocess_dataset
+from pyrovelocity.train import PyroVelocityTrainInterface, train_dataset
 from pyrovelocity.workflows.configuration import create_dataclass_from_callable
 
 logger = configure_logging(__name__)
@@ -69,17 +71,72 @@ def preprocess_data(data: FlyteFile) -> FlyteFile:
     return FlyteFile(path=processed_dataset_path)
 
 
+training_outputs = NamedTuple(
+    "training_outputs",
+    [
+        ("trained_data_path", FlyteFile),
+        ("model_path", FlyteDirectory),
+        ("posterior_samples_path", FlyteFile),
+        ("pyrovelocity_data_path", FlyteFile),
+        ("metrics_path", FlyteFile),
+        ("run_info_path", FlyteFile),
+    ],
+)
+
+
+@task(
+    cache=True,
+    cache_version=cache_version,
+    retries=3,
+    interruptible=False,
+    timeout=timedelta(minutes=60),
+    container_image="{{.image.gpu.fqn}}:{{.image.gpu.version}}",
+    requests=Resources(cpu="8", mem="30Gi", ephemeral_storage="16Gi", gpu="1"),
+    accelerator=T4,
+)
+def train_model(data_set_name: str, data: FlyteFile) -> training_outputs:
+    """
+    Train model.
+    """
+    data_path = data.download()
+    (
+        trained_data_path,
+        model_path,
+        posterior_samples_path,
+        pyrovelocity_data_path,
+        metrics_path,
+        run_info_path,
+    ) = train_dataset(
+        data_set_name=data_set_name,
+        pyrovelocity_train_model_args=PyroVelocityTrainInterface(
+            adata=str(data_path),
+            use_gpu=True,
+        ),
+    )
+    return training_outputs(
+        trained_data_path=FlyteFile(path=trained_data_path),
+        model_path=FlyteDirectory(path=model_path),
+        posterior_samples_path=FlyteFile(path=posterior_samples_path),
+        pyrovelocity_data_path=FlyteFile(path=pyrovelocity_data_path),
+        metrics_path=FlyteFile(path=metrics_path),
+        run_info_path=FlyteFile(path=run_info_path),
+    )
+
+
 @workflow
 def module_workflow(
     download_dataset_args: DownloadDatasetInterface = DownloadDatasetInterface(),
+    train_data_set_name: str = "simulated",
 ) -> FlyteFile:
     """
     Put all of the steps together into a single workflow.
     """
     data = download_data(download_dataset_args=download_dataset_args)
     processed_data = preprocess_data(data=data)
-    # model = train_model(processed_data=processed_data)
-    return processed_data
+    model_outputs = train_model(
+        data_set_name=train_data_set_name, data=processed_data
+    )
+    return model_outputs
 
 
 @workflow
@@ -91,26 +148,31 @@ def training_workflow() -> Tuple[FlyteFile, FlyteFile, FlyteFile, FlyteFile]:
         download_dataset_args=DownloadDatasetInterface(
             data_set_name="simulated",
             source="simulate",
-        )
+        ),
+        train_data_set_name="simulated",
     )
 
     pancreas_data = module_workflow(
         download_dataset_args=DownloadDatasetInterface(
             data_set_name="pancreas",
-        )
+        ),
+        train_dataset_name="pancreas",
     )
 
     pons_data = module_workflow(
         download_dataset_args=DownloadDatasetInterface(
             data_set_name="pons",
-        )
+        ),
+        train_dataset_name="pons",
     )
 
     pbmc68k_data = module_workflow(
         download_dataset_args=DownloadDatasetInterface(
             data_set_name="pbmc68k",
-        )
+        ),
+        train_dataset_name="pbmc68k",
     )
+
     return (
         simulated_data,
         pancreas_data,
