@@ -37,6 +37,7 @@
     "omegaconf",
     "optim",
     "pbmc",
+    "postprocess",
     "pyrovelocity",
     "scanpy",
     "scvelo",
