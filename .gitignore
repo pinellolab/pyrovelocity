@@ -153,5 +153,6 @@ requirements-linux.txt
 # mlflow
 mlruns
 
-# data
+# output
 data
+models
