@@ -1,19 +1,21 @@
 import os
+from dataclasses import asdict
 from pathlib import Path
 from typing import List, Optional, Tuple
 
 import anndata
-import anndata._core.anndata
 import matplotlib.figure
 import matplotlib.pyplot as plt
 import numpy as np
 import scanpy as sc
 import scvelo as scv
+from anndata._core.anndata import AnnData
 from beartype import beartype
 from scipy.sparse import issparse
 
 import pyrovelocity.datasets
 from pyrovelocity.cytotrace import cytotrace_sparse
+from pyrovelocity.data import load_anndata_from_path
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.utils import (
     ensure_numpy_array,
@@ -26,100 +28,20 @@ logger = configure_logging(__name__)
 
 @beartype
 def preprocess_dataset(
-    data_path: str | Path = "data/external/simulated.h5ad",
-    process_args: dict = {"count_threshold": 0},
-    data_processed_path: str | Path = "data/processed",
-) -> Path:
-    """
-    Preprocess dataset.
-
-    Args:
-        data_path (str, optional): _description_. Defaults to "data/external/simulated.h5ad".
-        process_args (_type_, optional): _description_. Defaults to {"count_thres": 0}.
-        data_processed_path (str, optional): _description_. Defaults to "data/processed".
-
-    Returns:
-        Path: path to processed dataset.
-
-    Examples:
-        >>> from pyrovelocity.data import download_dataset, subset
-        >>> from pyrovelocity.preprocess import preprocess_dataset
-        >>> pancreas_path = download_dataset(
-        ...     data_set_name="pancreas",
-        ... ) # xdoctest: +SKIP
-        >>> preprocess_dataset(
-        ...     data_path=pancreas_path,
-        ... ) # xdoctest: +SKIP
-        >>> pbmc68k_path = download_dataset(
-        ...     data_set_name="pbmc68k",
-        ... ) # xdoctest: +SKIP
-        >>> _, subset_output_path = subset(
-        ...    file_path=pbmc68k_path,
-        ...    n_obs=1000,
-        ...    save_subset=True,
-        ... ) # xdoctest: +SKIP
-        >>> preprocessed_path = preprocess_dataset(
-        ...     data_path=subset_output_path
-        ... ) # xdoctest: +SKIP
-    """
-    data_set_name = Path(data_path).stem
-    processed_path = os.path.join(
-        data_processed_path, f"{data_set_name}_processed.h5ad"
-    )
-    thresh_histogram_path = os.path.join(
-        data_processed_path, f"{data_set_name}_thresh_histogram.pdf"
-    )
-    logger.info(
-        f"\n\nVerifying existence of path for:\n\n"
-        f"  processed data: {data_processed_path}\n"
-    )
-    Path(data_processed_path).mkdir(parents=True, exist_ok=True)
-
-    logger.info(
-        f"\n\nPreprocessing {data_set_name} data :\n\n"
-        f"  from external: {data_path}\n"
-        f"  to processed: {processed_path}\n"
-    )
-
-    if os.path.isfile(processed_path) and os.access(processed_path, os.R_OK):
-        logger.info(f"{processed_path} exists")
-        return Path(processed_path)
-    else:
-        logger.info(f"generating {processed_path} ...")
-        adata, output_processed_path = preprocess_data(
-            data_set_name=data_set_name,
-            data_path=data_path,
-            processed_path=processed_path,
-            thresh_histogram_path=thresh_histogram_path,
-            **process_args,
-        )
-        print_attributes(adata)
-
-        if os.path.isfile(processed_path) and os.access(
-            processed_path, os.R_OK
-        ):
-            logger.info(f"successfully generated {processed_path}")
-            return Path(processed_path)
-        else:
-            logger.error(f"cannot find and read {processed_path}")
-
-
-@beartype
-def preprocess_data(
     data_set_name: str,
-    adata: Optional[anndata._core.anndata.AnnData] = None,
-    data_path: Optional[str | Path] = None,
+    adata: str | AnnData,
+    data_processed_path: str | Path = "data/processed",
+    overwrite: bool = False,
     n_top_genes: int = 2000,
     min_shared_counts: int = 30,
-    processed_path: Optional[str] = None,
-    force: bool = False,
     process_cytotrace: bool = False,
     use_maximum_likelihood_subset: bool = False,
     count_threshold: int = 0,
     n_pcs: int = 30,
     n_neighbors: int = 30,
-    thresh_histogram_path: Optional[str] = None,
-) -> Tuple[anndata._core.anndata.AnnData, str | Path]:
+    default_velocity_mode: str = "dynamical",
+    vector_field_basis: str = "umap",
+) -> Tuple[AnnData, Path]:
     """
     Preprocess data.
 
@@ -132,98 +54,118 @@ def preprocess_data(
         processed_path (str, optional): path to read/write processed AnnData. Defaults to None.
 
     Returns:
-        anndata._core.anndata.AnnData: processed AnnData object
+        AnnData: processed AnnData object
     """
-    if processed_path is None:
-        processed_path = f"{data_set_name}_processed.h5ad"
+    if isinstance(adata, str):
+        data_path = adata
+        adata = load_anndata_from_path(data_path)
+    else:
+        data_path = "AnnData object"
+
+    processed_path = os.path.join(
+        data_processed_path, f"{data_set_name}_processed.h5ad"
+    )
+    count_threshold_histogram_path = os.path.join(
+        data_processed_path, f"{data_set_name}_thresh_histogram.pdf"
+    )
+    logger.info(
+        f"\n\nVerifying existence of path for:\n\n"
+        f"  processed data: {data_processed_path}\n"
+    )
+    Path(data_processed_path).mkdir(parents=True, exist_ok=True)
+
+    logger.info(
+        f"\n\nPreprocessing {data_set_name} data :\n\n"
+        f"  from: {data_path}\n"
+        f"  to processed: {processed_path}\n"
+    )
+
+    print_anndata(adata)
+
     if (
         os.path.isfile(processed_path)
         and os.access(processed_path, os.R_OK)
-        and (not force)
+        and not overwrite
     ):
-        return sc.read(
-            filename=processed_path, sparse=True, cache=True
-        ), processed_path
-    elif adata is not None:
-        pass
-    elif data_path is not None:
-        adata = sc.read(filename=data_path, sparse=True, cache=True)
-
-    if "raw_unspliced" not in adata.layers:
-        copy_raw_counts(adata)
-        print_anndata(adata)
-
-    if process_cytotrace:
-        print("Processing data with cytotrace ...")
-        cytotrace_sparse(adata, layer="spliced")
-
-    scv.pp.filter_and_normalize(
-        adata, min_shared_counts=min_shared_counts, n_top_genes=n_top_genes
-    )
-    plot_high_us_genes(
-        adata=adata,
-        thresh_histogram_path=thresh_histogram_path,
-        minlim_u=count_threshold,
-        minlim_s=count_threshold,
-        unspliced_layer="raw_unspliced",
-        spliced_layer="raw_spliced",
-    )
-    adata = get_high_us_genes(
-        adata,
-        minlim_u=count_threshold,
-        minlim_s=count_threshold,
-        unspliced_layer="raw_unspliced",
-        spliced_layer="raw_spliced",
-    )
-    scv.pp.moments(adata, n_pcs=n_pcs, n_neighbors=n_neighbors)
-    scv.tl.recover_dynamics(adata, n_jobs=-1, use_raw=False)
-
-    if "pbmc68k" in data_set_name:
-        scv.tl.velocity(adata, mode="stochastic", use_raw=False)
+        logger.info(f"{processed_path} exists")
+        return adata, Path(processed_path)
     else:
-        scv.tl.velocity(adata, mode="dynamical", use_raw=False)
+        logger.info(f"generating {processed_path} ...")
 
-    if ("X_umap" not in adata.obsm.keys()) or (data_set_name == "larry_tips"):
-        scv.tl.umap(adata)
-    if "leiden" not in adata.obs.keys():
-        sc.tl.leiden(adata)
-    if use_maximum_likelihood_subset:
-        top_genes = (
-            adata.var["fit_likelihood"].sort_values(ascending=False).index
+        if "raw_unspliced" not in adata.layers:
+            copy_raw_counts(adata)
+            print_anndata(adata)
+
+        # TODO: set True for pancreas data
+        if process_cytotrace:
+            print("Processing data with cytotrace ...")
+            cytotrace_sparse(adata, layer="spliced")
+
+        scv.pp.filter_and_normalize(
+            adata, min_shared_counts=min_shared_counts, n_top_genes=n_top_genes
         )
-        print(top_genes[:10])
-        adata = adata[:, top_genes[:3]].copy()
-    scv.tl.velocity_graph(adata, n_jobs=-1)
+        plot_high_us_genes(
+            adata=adata,
+            count_threshold_histogram_path=count_threshold_histogram_path,
+            minlim_u=count_threshold,
+            minlim_s=count_threshold,
+            unspliced_layer="raw_unspliced",
+            spliced_layer="raw_spliced",
+        )
+        adata = get_high_us_genes(
+            adata,
+            minlim_u=count_threshold,
+            minlim_s=count_threshold,
+            unspliced_layer="raw_unspliced",
+            spliced_layer="raw_spliced",
+        )
+        scv.pp.moments(adata, n_pcs=n_pcs, n_neighbors=n_neighbors)
+        scv.tl.recover_dynamics(adata, n_jobs=-1, use_raw=False)
 
-    if data_set_name in [
-        "larry",
-        "larry_mono",
-        "larry_neu",
-        "larry_multilineage",
-    ]:
-        scv.tl.velocity_embedding(adata, basis="emb")
-    else:
-        scv.tl.velocity_embedding(adata)
+        # TODO: use stochastic mode for pbmc68k data
+        scv.tl.velocity(adata, mode=default_velocity_mode, use_raw=False)
 
-    scv.tl.latent_time(adata)
+        # TODO: recompute umap for "larry_tips"
+        if "X_umap" not in adata.obsm.keys():
+            scv.tl.umap(adata)
+        if "leiden" not in adata.obs.keys():
+            sc.tl.leiden(adata)
+        if use_maximum_likelihood_subset:
+            top_genes = (
+                adata.var["fit_likelihood"].sort_values(ascending=False).index
+            )
+            print(top_genes[:10])
+            adata = adata[:, top_genes[:3]].copy()
+        scv.tl.velocity_graph(adata, n_jobs=-1)
 
-    print_anndata(adata)
-    adata.write(processed_path)
+        # TODO: larry data sets use "emb" as basis for velocity embedding
+        scv.tl.velocity_embedding(adata, basis=vector_field_basis)
 
-    return adata, processed_path
+        scv.tl.latent_time(adata)
+
+        print_anndata(adata)
+        adata.write(processed_path)
+
+        if os.path.isfile(processed_path) and os.access(
+            processed_path, os.R_OK
+        ):
+            logger.info(f"successfully generated {processed_path}")
+            return adata, Path(processed_path)
+        else:
+            logger.error(f"cannot find and read {processed_path}")
 
 
 def copy_raw_counts(
-    adata: anndata._core.anndata.AnnData,
-) -> anndata._core.anndata.AnnData:
+    adata: AnnData,
+) -> AnnData:
     """
     Copy unspliced and spliced raw counts to adata.layers and adata.obs.
 
     Args:
-        adata (anndata._core.anndata.AnnData): AnnData object
+        adata (AnnData): AnnData object
 
     Returns:
-        anndata._core.anndata.AnnData: AnnData object with raw counts.
+        AnnData: AnnData object with raw counts.
 
     Examples:
         >>> from pyrovelocity.utils import generate_sample_data
@@ -269,7 +211,7 @@ def get_thresh_histogram_title_from_path(path):
 
 def plot_high_us_genes(
     adata: anndata.AnnData,
-    thresh_histogram_path: str,
+    count_threshold_histogram_path: str,
     minlim_u: int = 3,
     minlim_s: int = 3,
     unspliced_layer: str = "unspliced",
@@ -296,7 +238,7 @@ def plot_high_us_genes(
     x = max_spliced
     y = max_unspliced
 
-    title = get_thresh_histogram_title_from_path(thresh_histogram_path)
+    title = get_thresh_histogram_title_from_path(count_threshold_histogram_path)
 
     colors = assign_colors(max_spliced, max_unspliced, minlim_s, minlim_u)
 
@@ -337,7 +279,7 @@ def plot_high_us_genes(
 
     for ext in ["", ".png"]:
         fig.savefig(
-            f"{thresh_histogram_path}{ext}",
+            f"{count_threshold_histogram_path}{ext}",
             facecolor=fig.get_facecolor(),
             bbox_inches="tight",
             edgecolor="none",
@@ -394,97 +336,184 @@ def get_high_us_genes(
     return adata
 
 
-# TODO: remove deprecated function
-def load_pbmc68k(
-    data: str = "pbmc68k",
-    count_threshold: int = 0,
-    thresh_histogram_path: str = None,
-) -> anndata._core.anndata.AnnData:
-    if data == "pbmc68k":
-        adata = pyrovelocity.datasets.pbmc68k()
-    elif os.path.isfile(data) and os.access(data, os.R_OK):
-        adata = sc.read(data)
-
-    print_anndata(adata)
-    if "raw_unspliced" not in adata.layers:
-        copy_raw_counts(adata)
-        print_anndata(adata)
-    # Integrated into pyrovelocity.datasets.pbmc68k()
-    # print("Removing duplicate cells and tSNE x-parity in pbmc68k data...")
-    # scv.pp.remove_duplicate_cells(adata)
-    # adata.obsm["X_tsne"][:, 0] *= -1
-    scv.pp.filter_and_normalize(adata, min_shared_counts=30, n_top_genes=2000)
-    plot_high_us_genes(
-        adata,
-        thresh_histogram_path,
-        minlim_u=count_threshold,
-        minlim_s=count_threshold,
-        unspliced_layer="raw_unspliced",
-        spliced_layer="raw_spliced",
-    )
-    adata = get_high_us_genes(
-        adata,
-        minlim_u=count_threshold,
-        minlim_s=count_threshold,
-        unspliced_layer="raw_unspliced",
-        spliced_layer="raw_spliced",
-    )
-    scv.pp.moments(adata)
-    scv.tl.velocity(adata, mode="stochastic")
-    scv.tl.recover_dynamics(adata, n_jobs=-1)
-
-    return adata
+# ------------------------------------------------------------------------------
 
 
 # TODO: remove deprecated function
-def load_data(
-    data: str = "pancreas",
-    processed_path: str = None,
-    count_threshold: int = 0,
-    thresh_histogram_path: str = None,
-) -> anndata._core.anndata.AnnData:
-    """
-    Preprocess data from scvelo.
+# def load_pbmc68k(
+#     data: str = "pbmc68k",
+#     count_threshold: int = 0,
+#     count_threshold_histogram_path: str = None,
+# ) -> AnnData:
+#     if data == "pbmc68k":
+#         adata = pyrovelocity.datasets.pbmc68k()
+#     elif os.path.isfile(data) and os.access(data, os.R_OK):
+#         adata = sc.read(data)
 
-    Args:
-        data (str, optional): data set name. Defaults to scvelo's "pancreas" data set.
-        top_n (int, optional): number of genes to retain. Defaults to 2000.
-        min_shared_counts (int, optional): minimum shared counts. Defaults to 30.
-        eps (float, optional): tolerance. Defaults to 1e-6.
-        force (bool, optional): force reprocessing. Defaults to False.
-        processed_path (str, optional): path to read/write processed AnnData. Defaults to None.
+#     print_anndata(adata)
+#     if "raw_unspliced" not in adata.layers:
+#         copy_raw_counts(adata)
+#         print_anndata(adata)
+#     # Integrated into pyrovelocity.datasets.pbmc68k()
+#     # print("Removing duplicate cells and tSNE x-parity in pbmc68k data...")
+#     # scv.pp.remove_duplicate_cells(adata)
+#     # adata.obsm["X_tsne"][:, 0] *= -1
+#     scv.pp.filter_and_normalize(adata, min_shared_counts=30, n_top_genes=2000)
+#     plot_high_us_genes(
+#         adata,
+#         count_threshold_histogram_path,
+#         minlim_u=count_threshold,
+#         minlim_s=count_threshold,
+#         unspliced_layer="raw_unspliced",
+#         spliced_layer="raw_spliced",
+#     )
+#     adata = get_high_us_genes(
+#         adata,
+#         minlim_u=count_threshold,
+#         minlim_s=count_threshold,
+#         unspliced_layer="raw_unspliced",
+#         spliced_layer="raw_spliced",
+#     )
+#     scv.pp.moments(adata)
+#     scv.tl.velocity(adata, mode="stochastic")
+#     scv.tl.recover_dynamics(adata, n_jobs=-1)
 
-    Returns:
-        anndata._core.anndata.AnnData: processed AnnData object
-    """
-    print("Dataset name:", data)
-    if data == "pancreas":
-        adata = pyrovelocity.datasets.pancreas()
-    elif data == "bonemarrow":
-        adata = pyrovelocity.datasets.bonemarrow()
-    elif data == "pbmc68k":
-        adata = pyrovelocity.datasets.pbmc68k()
-    elif data == "pons":
-        adata = pyrovelocity.datasets.pons()
-    elif data == "pbmc5k":
-        adata = pyrovelocity.datasets.pbmc5k()
-    elif data == "pbmc10k":
-        adata = pyrovelocity.datasets.pbmc10k()
-    elif data == "larry":
-        adata = pyrovelocity.datasets.larry()
-    elif data == "larry_mono":
-        adata = pyrovelocity.datasets.larry_mono()
-    elif data == "larry_neu":
-        adata = pyrovelocity.datasets.larry_neu()
-    elif data == "larry_multilineage":
-        adata = pyrovelocity.datasets.larry_multilineage()
-    elif data == "larry_tips":
-        adata = pyrovelocity.datasets.larry_tips()
-    elif data == "larry_cospar":
-        adata = pyrovelocity.datasets.larry_cospar()
-    elif data == "larry_cytotrace":
-        adata = pyrovelocity.datasets.larry_cytotrace()
-    elif data == "larry_dynamical":
-        adata = pyrovelocity.datasets.larry_dynamical()
-    print_anndata(adata)
-    return adata
+#     return adata
+
+
+# TODO: remove deprecated function
+# def load_data(
+#     data: str = "pancreas",
+#     processed_path: str = None,
+#     count_threshold: int = 0,
+#     count_threshold_histogram_path: str = None,
+# ) -> AnnData:
+#     """
+#     Preprocess data from scvelo.
+
+#     Args:
+#         data (str, optional): data set name. Defaults to scvelo's "pancreas" data set.
+#         top_n (int, optional): number of genes to retain. Defaults to 2000.
+#         min_shared_counts (int, optional): minimum shared counts. Defaults to 30.
+#         eps (float, optional): tolerance. Defaults to 1e-6.
+#         force (bool, optional): force reprocessing. Defaults to False.
+#         processed_path (str, optional): path to read/write processed AnnData. Defaults to None.
+
+#     Returns:
+#         AnnData: processed AnnData object
+#     """
+#     print("Dataset name:", data)
+#     if data == "pancreas":
+#         adata = pyrovelocity.datasets.pancreas()
+#     elif data == "bonemarrow":
+#         adata = pyrovelocity.datasets.bonemarrow()
+#     elif data == "pbmc68k":
+#         adata = pyrovelocity.datasets.pbmc68k()
+#     elif data == "pons":
+#         adata = pyrovelocity.datasets.pons()
+#     elif data == "pbmc5k":
+#         adata = pyrovelocity.datasets.pbmc5k()
+#     elif data == "pbmc10k":
+#         adata = pyrovelocity.datasets.pbmc10k()
+#     elif data == "larry":
+#         adata = pyrovelocity.datasets.larry()
+#     elif data == "larry_mono":
+#         adata = pyrovelocity.datasets.larry_mono()
+#     elif data == "larry_neu":
+#         adata = pyrovelocity.datasets.larry_neu()
+#     elif data == "larry_multilineage":
+#         adata = pyrovelocity.datasets.larry_multilineage()
+#     elif data == "larry_tips":
+#         adata = pyrovelocity.datasets.larry_tips()
+#     elif data == "larry_cospar":
+#         adata = pyrovelocity.datasets.larry_cospar()
+#     elif data == "larry_cytotrace":
+#         adata = pyrovelocity.datasets.larry_cytotrace()
+#     elif data == "larry_dynamical":
+#         adata = pyrovelocity.datasets.larry_dynamical()
+#     print_anndata(adata)
+#     return adata
+
+
+# TODO: remove deprecated function
+# @beartype
+# def preprocess_data(
+#     data_path: str | Path = "data/external/simulated.h5ad",
+#     # process_args: dict = {"count_threshold": 0},
+#     preprocess_data_args: PreprocessDataInterface = PreprocessDataInterface(),
+#     data_processed_path: str | Path = "data/processed",
+# ) -> Path:
+#     """
+#     Preprocess dataset.
+
+#     Args:
+#         data_path (str, optional): _description_. Defaults to "data/external/simulated.h5ad".
+#         process_args (_type_, optional): _description_. Defaults to {"count_thres": 0}.
+#         data_processed_path (str, optional): _description_. Defaults to "data/processed".
+
+#     Returns:
+#         Path: path to processed dataset.
+
+#     Examples:
+#         >>> from pyrovelocity.data import download_dataset, subset
+#         >>> from pyrovelocity.preprocess import preprocess_dataset
+#         >>> pancreas_path = download_dataset(
+#         ...     data_set_name="pancreas",
+#         ... ) # xdoctest: +SKIP
+#         >>> preprocess_dataset(
+#         ...     data_path=pancreas_path,
+#         ... ) # xdoctest: +SKIP
+#         >>> pbmc68k_path = download_dataset(
+#         ...     data_set_name="pbmc68k",
+#         ... ) # xdoctest: +SKIP
+#         >>> _, subset_output_path = subset(
+#         ...    file_path=pbmc68k_path,
+#         ...    n_obs=1000,
+#         ...    save_subset=True,
+#         ... ) # xdoctest: +SKIP
+#         >>> preprocessed_path = preprocess_dataset(
+#         ...     data_path=subset_output_path
+#         ... ) # xdoctest: +SKIP
+#     """
+#     data_set_name = Path(data_path).stem
+#     processed_path = os.path.join(
+#         data_processed_path, f"{data_set_name}_processed.h5ad"
+#     )
+#     count_threshold_histogram_path = os.path.join(
+#         data_processed_path, f"{data_set_name}_thresh_histogram.pdf"
+#     )
+#     logger.info(
+#         f"\n\nVerifying existence of path for:\n\n"
+#         f"  processed data: {data_processed_path}\n"
+#     )
+#     Path(data_processed_path).mkdir(parents=True, exist_ok=True)
+
+#     logger.info(
+#         f"\n\nPreprocessing {data_set_name} data :\n\n"
+#         f"  from external: {data_path}\n"
+#         f"  to processed: {processed_path}\n"
+#     )
+
+#     if os.path.isfile(processed_path) and os.access(processed_path, os.R_OK):
+#         logger.info(f"{processed_path} exists")
+#         return Path(processed_path)
+#     else:
+#         logger.info(f"generating {processed_path} ...")
+#         # adata, output_processed_path = preprocess_data(
+#         #     data_set_name=data_set_name,
+#         #     data_path=data_path,
+#         #     processed_path=processed_path,
+#         #     count_threshold_histogram_path=count_threshold_histogram_path,
+#         #     **process_args,
+#         # )
+#         adata = preprocess_data(**asdict(preprocess_data_args))
+#         adata.write(processed_path)
+#         print_attributes(adata)
+
+#         if os.path.isfile(processed_path) and os.access(
+#             processed_path, os.R_OK
+#         ):
+#             logger.info(f"successfully generated {processed_path}")
+#             return Path(processed_path)
+#         else:
+#             logger.error(f"cannot find and read {processed_path}")
