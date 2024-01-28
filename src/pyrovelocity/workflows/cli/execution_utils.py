@@ -8,18 +8,13 @@ import secrets
 import sys
 import threading
 import time
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, is_dataclass
 from datetime import timedelta
 from textwrap import dedent
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Tuple
-from typing import Union
+from typing import Any, Dict, List, Tuple, Union
 
 from dataclasses_json import dataclass_json
-from dulwich.repo import NotGitRepository
-from dulwich.repo import Repo
+from dulwich.repo import NotGitRepository, Repo
 from flytekit import WorkflowExecutionPhase
 from flytekit.core.base_task import PythonTask
 from flytekit.core.workflow import WorkflowBase
@@ -27,12 +22,8 @@ from flytekit.exceptions.system import FlyteSystemException
 from flytekit.exceptions.user import FlyteTimeout
 from flytekit.remote import FlyteRemote
 from flytekit.remote.executions import FlyteWorkflowExecution
-from hydra.conf import HelpConf
-from hydra.conf import HydraConf
-from hydra.conf import JobConf
-from hydra_zen import ZenStore
-from hydra_zen import builds
-from hydra_zen import make_custom_builds_fn
+from hydra.conf import HelpConf, HydraConf, JobConf
+from hydra_zen import ZenStore, builds, make_custom_builds_fn
 
 
 @dataclass_json
@@ -146,6 +137,8 @@ def generate_entity_inputs(
         # check if the type is a built-in type
         if isinstance(param_type, type) and param_type.__module__ == "builtins":
             inputs[name] = default
+        elif is_dataclass(default):
+            inputs[name] = fbuilds(param_type, **asdict(default))
         else:
             # dynamically import the type if it's not a built-in type
             type_module = importlib.import_module(param_type.__module__)
