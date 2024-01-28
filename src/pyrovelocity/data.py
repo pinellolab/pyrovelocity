@@ -29,6 +29,8 @@ def download_dataset(
     data_external_path: str = "data/external",
     source: str = "pyrovelocity",
     data_url: Optional[str] = None,
+    n_obs: Optional[int] = None,
+    n_vars: Optional[int] = None,
 ) -> Path:
     """
     Downloads a dataset based on the specified parameters and returns the path
@@ -41,6 +43,8 @@ def download_dataset(
         data_external_path (Path): Path where the downloaded data will be stored. Default is 'data/external'.
         source (str): The source type of the dataset. Default is 'pyrovelocity'.
         data_url (str): URL from where the dataset can be downloaded. Takes precedence over source.
+        n_obs (int): Number of observations to sample from the dataset. Defaults to None.
+        n_vars (int): Number of variables to sample from the dataset. Defaults to None.
 
     Returns:
         Path: The path to the downloaded dataset file.
@@ -51,11 +55,15 @@ def download_dataset(
         ...   'simulated',
         ...   str(tmp) + '/data/external',
         ...   'simulate',
+        ...   n_obs=100,
+        ...   n_vars=300,
         ... ) # xdoctest: +SKIP
         >>> simulated_dataset = download_dataset(
         ...   'simulated_path',
         ...   tmp / Path('data/external'),
         ...   'simulate',
+        ...   n_obs=100,
+        ...   n_vars=300,
         ... ) # xdoctest: +SKIP
         >>> pancreas_dataset = download_dataset(
         ...   data_set_name='pancreas_direct',
@@ -131,11 +139,24 @@ def download_dataset(
                 raise
             else:
                 adata = download_method(file_path=data_path)
+                if n_obs is not None and n_vars is not None:
+                    adata, _ = subset(adata=adata, n_obs=n_obs, n_vars=n_vars)
+                    adata.write(data_path)
+                elif n_obs is not None:
+                    adata, _ = subset(adata=adata, n_obs=n_obs)
+                    adata.write(data_path)
+                elif n_vars is not None:
+                    logger.warning("n_vars is ignored if n_obs is not provided")
+
         elif source == "simulate":
+            if n_obs is None or n_vars is None:
+                raise ValueError(
+                    f"n_obs and n_vars must be provided if source is 'simulate'"
+                )
             logger.info(f"Generating {data_set_name} data from simulation...")
             adata = generate_sample_data(
-                n_obs=3000,
-                n_vars=1000,
+                n_obs=n_obs,
+                n_vars=n_vars,
                 noise_model="gillespie",
                 random_seed=99,
             )
@@ -147,7 +168,7 @@ def download_dataset(
                 f"Please specify a valid source or URL that resolves to a .h5ad file."
             )
 
-        print_attributes(adata)
+        print_attributes(adata.copy())
         print_anndata(adata)
 
         if data_path.is_file() and os.access(str(data_path), os.R_OK):
@@ -227,6 +248,7 @@ def subset(
     file_path: Optional[str | Path] = None,
     adata: Optional[anndata._core.anndata.AnnData] = None,
     n_obs: int = 100,
+    n_vars: Optional[int] = None,
     save_subset: bool = False,
     output_path: Optional[str | Path] = None,
 ) -> Tuple[anndata._core.anndata.AnnData, str | Path | None]:
@@ -263,8 +285,21 @@ def subset(
             f"n_obs ({n_obs}) is greater than the number of observations in the dataset ({adata.n_obs})"
         )
         n_obs = adata.n_obs
+    logger.info(f"constructing data subset")
+    print_anndata(adata)
+
+    if n_vars is not None:
+        if n_vars > adata.n_vars:
+            logger.warning(
+                f"n_vars ({n_vars}) is greater than the number of variables in the dataset ({adata.n_vars})"
+            )
+            n_vars = adata.n_vars
+        selected_vars_indices = np.random.choice(adata.n_vars, n_vars)
+        logger.info(f"selected {n_vars} vars from {adata.n_vars}")
+        adata = adata[:, selected_vars_indices]
 
     selected_obs_indices = np.random.choice(adata.n_obs, n_obs)
+    logger.info(f"selected {n_obs} obs from {adata.n_obs}")
     adata = adata[selected_obs_indices]
     adata.obs_names_make_unique()
 
@@ -280,6 +315,7 @@ def subset(
         adata.write(output_path)
         logger.info(f"saved {n_obs} obs subset: {output_path}")
 
+    print_anndata(adata)
     return adata.copy(), output_path
 
 
