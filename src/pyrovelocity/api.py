@@ -15,6 +15,7 @@ from pyro.infer.autoguide.guides import AutoGuideList
 from sklearn.model_selection import train_test_split
 
 from pyrovelocity._velocity import PyroVelocity
+from pyrovelocity.data import load_anndata_from_path
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.utils import print_anndata, print_attributes
 
@@ -26,7 +27,7 @@ def train_model(
     adata: str | AnnData,
     guide_type: str = "auto",
     model_type: str = "auto",
-    svi_train: bool = False,  # svi_train alreadys turn off
+    svi_train: bool = False,
     batch_size: int = -1,
     train_size: float = 1.0,
     use_gpu: int | bool = False,
@@ -41,7 +42,7 @@ def train_model(
     max_epochs: int = 3000,
     include_prior: bool = True,
     library_size: bool = True,
-    offset: bool = False,
+    offset: bool = True,
     input_type: str = "raw",
     cell_specific_kinetics: Optional[str] = None,
     kinetics_num: int = 2,
@@ -88,17 +89,7 @@ def train_model(
         >>> _, model, posterior_samples = train_model(adata, use_gpu=False, seed=99, max_epochs=200, loss_plot_path="loss_plot_docs.png")
     """
     if isinstance(adata, str):
-        adata_path = Path(adata)
-        if adata_path.suffix not in {".h5ad", ".loom"}:
-            raise ValueError(
-                f"The input file {adata_path}\n"
-                "must be either a .h5ad or .loom file."
-            )
-        if os.path.isfile(adata_path) and os.access(adata_path, os.R_OK):
-            logger.info(f"Reading input file: {adata_path}")
-            adata = sc.read(filename=adata_path, cache=True)
-        else:
-            raise ValueError(f"Cannot read input file: {adata_path}")
+        adata = load_anndata_from_path(adata)
 
     print_anndata(adata)
     print_attributes(adata)
