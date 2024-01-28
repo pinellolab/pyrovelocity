@@ -1,45 +1,28 @@
 import json
 import os
 import uuid
-from dataclasses import asdict, make_dataclass
+from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple, Type
+from typing import Optional, Tuple
 
 import mlflow
 import torch
 from beartype import beartype
-from mashumaro.mixins.json import DataClassJSONMixin
 from mlflow import MlflowClient
 
 from pyrovelocity.api import train_model
+from pyrovelocity.interfaces import PyroVelocityTrainInterface
 from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.utils import print_anndata, print_attributes
-from pyrovelocity.workflows.configuration import create_dataclass_from_callable
 
 logger = configure_logging(__name__)
-
-pyrovelocity_train_types_defaults: Dict[str, Tuple[Type, Any]] = {
-    "adata": (str, "/data/processed/simulated_processed.h5ad"),
-}
-
-pyrovelocity_train_fields = create_dataclass_from_callable(
-    train_model,
-    pyrovelocity_train_types_defaults,
-)
-
-PyroVelocityTrainInterface = make_dataclass(
-    "PyroVelocityTrainInterface",
-    pyrovelocity_train_fields,
-    bases=(DataClassJSONMixin,),
-)
-PyroVelocityTrainInterface.__module__ = __name__
 
 
 @beartype
 def train_dataset(
     data_set_name: str = "simulated",
-    model_identifier: str = "model1",
+    model_identifier: str = "model2",
     pyrovelocity_train_model_args: Optional[PyroVelocityTrainInterface] = None,
     force: bool = False,
 ) -> Tuple[Path, Path, Path, Path, Path, Path]:
@@ -80,18 +63,20 @@ def train_dataset(
     data_model = f"{data_set_name}_{model_identifier}"
     model_dir = Path(f"models/{data_model}")
 
+    trained_data_path = model_dir / "trained.h5ad"
+    model_path = model_dir / "model"
+    posterior_samples_path = model_dir / "posterior_samples.pkl.zst"
+    metrics_path = model_dir / "metrics.json"
+    run_info_path = model_dir / "run_info.json"
+    loss_plot_path = model_dir / "ELBO.png"
+
     if pyrovelocity_train_model_args is None:
         processed_path = Path(f"data/processed/{data_set_name}_processed.h5ad")
         pyrovelocity_train_model_args = PyroVelocityTrainInterface(
             adata=str(processed_path)
         )
 
-    trained_data_path = model_dir / "trained.h5ad"
-    model_path = model_dir / "model"
-    posterior_samples_path = model_dir / "posterior_samples.pkl.zst"
-    pyrovelocity_data_path = model_dir / "pyrovelocity.pkl.zst"
-    metrics_path = model_dir / "metrics.json"
-    run_info_path = model_dir / "run_info.json"
+    pyrovelocity_train_model_args.loss_plot_path = str(loss_plot_path)
 
     logger.info(f"\n\nTraining: {data_model}\n\n")
 
@@ -117,14 +102,12 @@ def train_dataset(
     if (
         os.path.isfile(trained_data_path)
         and os.path.exists(model_path)
-        and os.path.isfile(pyrovelocity_data_path)
         and os.path.isfile(posterior_samples_path)
         and not force
     ):
         logger.info(
             f"\n{trained_data_path}\n"
             f"{model_path}\n"
-            f"{pyrovelocity_data_path}\n"
             f"{posterior_samples_path}\n"
             "all exist, set `force=True` to overwrite."
         )
@@ -132,9 +115,9 @@ def train_dataset(
             trained_data_path,
             model_path,
             posterior_samples_path,
-            pyrovelocity_data_path,
             metrics_path,
             run_info_path,
+            loss_plot_path,
         )
     else:
         logger.info(f"Training model: {data_model}")
@@ -158,10 +141,7 @@ def train_dataset(
 
             run_id = run.info.run_id
 
-        logger.info(
-            f"\nSaving pyrovelocity data: {pyrovelocity_data_path}\n"
-            f"Saving posterior samples: {posterior_samples_path}\n"
-        )
+        logger.info(f"Saving posterior samples: {posterior_samples_path}\n")
         CompressedPickle.save(
             posterior_samples_path,
             posterior_samples,
@@ -214,17 +194,17 @@ def train_dataset(
             f"{trained_data_path}\n"
             f"{model_path}\n"
             f"{posterior_samples_path}\n"
-            f"{pyrovelocity_data_path}\n"
             f"{metrics_path}\n"
             f"{run_info_path}\n"
+            f"{loss_plot_path}\n"
         )
         return (
             trained_data_path,
             model_path,
             posterior_samples_path,
-            pyrovelocity_data_path,
             metrics_path,
             run_info_path,
+            loss_plot_path,
         )
 
 
