@@ -9,6 +9,7 @@ import numpy as np
 import requests
 import scanpy as sc
 import validators
+from anndata._core.anndata import AnnData
 from beartype import beartype
 
 import pyrovelocity.datasets
@@ -280,3 +281,19 @@ def subset(
         logger.info(f"saved {n_obs} obs subset: {output_path}")
 
     return adata.copy(), output_path
+
+
+@beartype
+def load_anndata_from_path(adata_path: str | Path) -> AnnData:
+    adata_path = Path(adata_path)
+    if adata_path.suffix not in {".h5ad", ".loom"}:
+        raise ValueError(
+            f"The input file {adata_path}\n"
+            "must be either a .h5ad or .loom file."
+        )
+    if os.path.isfile(adata_path) and os.access(adata_path, os.R_OK):
+        logger.info(f"Reading input file: {adata_path}")
+        adata = sc.read(filename=adata_path, cache=True)
+        return adata
+    else:
+        raise ValueError(f"Cannot read input file: {adata_path}")
