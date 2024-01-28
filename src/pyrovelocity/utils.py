@@ -4,9 +4,8 @@ import pdb
 from inspect import getmembers
 from pprint import pprint
 from types import FunctionType
-from typing import Any, Dict, Tuple
+from typing import Tuple
 
-import anndata
 import colorlog
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,6 +13,7 @@ import pandas as pd
 import scvelo as scv
 import seaborn as sns
 import torch
+from anndata._core.anndata import AnnData
 from beartype import beartype
 from pytorch_lightning.utilities import rank_zero_only
 from scipy.sparse import issparse
@@ -766,10 +766,10 @@ def print_anndata(anndata_obj):
     displayed on a new line.
 
     Args:
-        anndata_obj (anndata.AnnData): The AnnData object to be printed.
+        anndata_obj (AnnData): The AnnData object to be printed.
 
     Raises:
-        AssertionError: If the input object is not an instance of anndata.AnnData.
+        AssertionError: If the input object is not an instance of AnnData.
 
     Examples:
         >>> import anndata
@@ -782,7 +782,7 @@ def print_anndata(anndata_obj):
         ...                     "S_score": np.random.rand(10),
         ...                     "G2M_score": np.random.rand(10)})
         >>> var = pd.DataFrame({"gene_name": [f"gene_{i}" for i in range(5)]})
-        >>> adata = anndata.AnnData(X, obs=obs, var=var)
+        >>> adata = AnnData(X, obs=obs, var=var)
         >>> print_anndata(adata)  # doctest: +NORMALIZE_WHITESPACE
         AnnData object with n_obs × n_vars = 10 × 5
             obs:
@@ -794,7 +794,7 @@ def print_anndata(anndata_obj):
                 gene_name,
     """
     assert isinstance(
-        anndata_obj, anndata.AnnData
+        anndata_obj, AnnData
     ), "Input object must be of type AnnData."
 
     def format_elements(elements):
@@ -830,7 +830,7 @@ def generate_sample_data(
     alpha_: float = 0,
     noise_model: str = "gillespie",
     random_seed: int = 0,
-) -> anndata.AnnData:
+) -> AnnData:
     """
     Generate synthetic single-cell RNA sequencing data with spliced and unspliced layers.
     If using the "iid" noise model, the data will be generated with scvi.data.synthetic_iid.
@@ -848,7 +848,7 @@ def generate_sample_data(
         random_seed (int, optional): Random seed for reproducibility. Default is 0.
 
     Returns:
-        anndata.AnnData: An AnnData object containing the generated synthetic data.
+        AnnData: An AnnData object containing the generated synthetic data.
 
     Raises:
         ValueError: If noise_model is not one of 'iid', 'gillespie', or 'normal'.
