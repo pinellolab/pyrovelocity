@@ -226,8 +226,12 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         """Latest scvi-tools interface"""
         setup_method_args = cls._get_setup_method_args(**locals())
 
-        adata.obs["u_lib_size"] = np.log(adata.obs["u_lib_size_raw"] + 1e-6)
-        adata.obs["s_lib_size"] = np.log(adata.obs["s_lib_size_raw"] + 1e-6)
+        adata.obs["u_lib_size"] = np.log(
+            adata.obs["u_lib_size_raw"].astype(float) + 1e-6
+        )
+        adata.obs["s_lib_size"] = np.log(
+            adata.obs["s_lib_size_raw"].astype(float) + 1e-6
+        )
 
         adata.obs["u_lib_size_mean"] = adata.obs["u_lib_size"].mean()
         adata.obs["s_lib_size_mean"] = adata.obs["s_lib_size"].mean()
