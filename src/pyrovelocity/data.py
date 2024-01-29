@@ -1,7 +1,8 @@
 import inspect
 import os
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
+from typing import Tuple
 from urllib.parse import unquote
 
 import anndata
@@ -14,11 +15,10 @@ from beartype import beartype
 
 import pyrovelocity.datasets
 from pyrovelocity.logging import configure_logging
-from pyrovelocity.utils import (
-    generate_sample_data,
-    print_anndata,
-    print_attributes,
-)
+from pyrovelocity.utils import generate_sample_data
+from pyrovelocity.utils import print_anndata
+from pyrovelocity.utils import print_attributes
+
 
 logger = configure_logging(__name__)
 
@@ -302,6 +302,7 @@ def subset(
     logger.info(f"selected {n_obs} obs from {adata.n_obs}")
     adata = adata[selected_obs_indices]
     adata.obs_names_make_unique()
+    adata.var_names_make_unique()
 
     if save_subset:
         if output_path is None and file_path is not None:
