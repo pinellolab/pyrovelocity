@@ -1,5 +1,4 @@
 import os
-from dataclasses import asdict
 from pathlib import Path
 from typing import List, Optional, Tuple
 
@@ -13,15 +12,10 @@ from anndata._core.anndata import AnnData
 from beartype import beartype
 from scipy.sparse import issparse
 
-import pyrovelocity.datasets
 from pyrovelocity.cytotrace import cytotrace_sparse
 from pyrovelocity.data import load_anndata_from_path
 from pyrovelocity.logging import configure_logging
-from pyrovelocity.utils import (
-    ensure_numpy_array,
-    print_anndata,
-    print_attributes,
-)
+from pyrovelocity.utils import ensure_numpy_array, print_anndata
 
 logger = configure_logging(__name__)
 
@@ -29,7 +23,7 @@ logger = configure_logging(__name__)
 @beartype
 def preprocess_dataset(
     data_set_name: str,
-    adata: str | AnnData,
+    adata: str | Path | AnnData,
     data_processed_path: str | Path = "data/processed",
     overwrite: bool = False,
     n_top_genes: int = 2000,
@@ -55,8 +49,23 @@ def preprocess_dataset(
 
     Returns:
         AnnData: processed AnnData object
+
+    Examples:
+        >>> from pyrovelocity.data import download_dataset # xdoctest: +SKIP
+        >>> tmp = getfixture('tmp_path') # xdoctest: +SKIP
+        >>> simulated_dataset_path = download_dataset(
+        ...   'simulated',
+        ...   str(tmp) + '/data/external',
+        ...   'simulate',
+        ...   n_obs=100,
+        ...   n_vars=300,
+        ... ) # xdoctest: +SKIP
+        >>> preprocess_dataset(
+        ...     data_set_name="simulated",
+        ...     adata=simulated_dataset_path,
+        ... ) # xdoctest: +SKIP
     """
-    if isinstance(adata, str):
+    if isinstance(adata, str | Path):
         data_path = adata
         adata = load_anndata_from_path(data_path)
     else:
@@ -96,7 +105,6 @@ def preprocess_dataset(
             copy_raw_counts(adata)
             print_anndata(adata)
 
-        # TODO: set True for pancreas data
         if process_cytotrace:
             print("Processing data with cytotrace ...")
             cytotrace_sparse(adata, layer="spliced")
@@ -122,7 +130,6 @@ def preprocess_dataset(
         scv.pp.moments(adata, n_pcs=n_pcs, n_neighbors=n_neighbors)
         scv.tl.recover_dynamics(adata, n_jobs=-1, use_raw=False)
 
-        # TODO: use stochastic mode for pbmc68k data
         scv.tl.velocity(adata, mode=default_velocity_mode, use_raw=False)
 
         # TODO: recompute umap for "larry_tips"
@@ -138,7 +145,6 @@ def preprocess_dataset(
             adata = adata[:, top_genes[:3]].copy()
         scv.tl.velocity_graph(adata, n_jobs=-1)
 
-        # TODO: larry data sets use "emb" as basis for velocity embedding
         scv.tl.velocity_embedding(adata, basis=vector_field_basis)
 
         scv.tl.latent_time(adata)
