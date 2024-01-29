@@ -1,25 +1,17 @@
 import math
-from typing import Any
-from typing import Callable
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Sequence
-from typing import Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
 import mlflow
 import numpy as np
 import pyro
 import scipy
 import torch
-from pyro.infer import Trace_ELBO
-from pyro.infer import TraceEnum_ELBO
+from pyro.infer import Trace_ELBO, TraceEnum_ELBO
 from pyro.infer.autoguide.guides import AutoGuideList
 from pyro.optim.clipped_adam import ClippedAdam
 from pyro.optim.optim import PyroOptim
 from scvi.dataloaders import DataSplitter
-from scvi.train import PyroTrainingPlan
-from scvi.train import TrainRunner
+from scvi.train import PyroTrainingPlan, TrainRunner
 
 from pyrovelocity._velocity_module import VelocityModule
 
@@ -240,24 +232,23 @@ class VelocityTrainingMixin:
 
         epsilon = 1e-6
 
+        log_u_library_size = np.log(
+            self.adata.obs.u_lib_size_raw.astype(float) + epsilon
+        )
+        log_s_library_size = np.log(
+            self.adata.obs.s_lib_size_raw.astype(float) + epsilon
+        )
         u_library = torch.tensor(
-            # np.array(self.adata.obs.u_lib_size, dtype="float32"), dtype=torch.float32
-            np.array(
-                np.log(self.adata.obs.u_lib_size_raw + epsilon), dtype="float32"
-            ),
+            np.array(log_u_library_size, dtype="float32"),
             dtype=torch.float32,
         ).to(device)
         s_library = torch.tensor(
-            # np.array(self.adata.obs.s_lib_size, dtype="float32"), dtype=torch.float32
-            np.array(
-                np.log(self.adata.obs.s_lib_size_raw + epsilon), dtype="float32"
-            ),
+            np.array(log_s_library_size, dtype="float32"),
             dtype=torch.float32,
         ).to(device)
         u_library_mean = (
             torch.tensor(
-                # np.array(self.adata.obs.u_lib_size_mean, dtype="float32"),
-                np.mean(np.log(self.adata.obs.u_lib_size_raw + epsilon)),
+                np.mean(log_u_library_size),
                 dtype=torch.float32,
             )
             .expand(u_library.shape)
@@ -265,8 +256,7 @@ class VelocityTrainingMixin:
         )
         s_library_mean = (
             torch.tensor(
-                # np.array(self.adata.obs.s_lib_size_mean, dtype="float32"),
-                np.mean(np.log(self.adata.obs.s_lib_size_raw + epsilon)),
+                np.mean(log_s_library_size),
                 dtype=torch.float32,
             )
             .expand(u_library.shape)
@@ -274,8 +264,7 @@ class VelocityTrainingMixin:
         )
         u_library_scale = (
             torch.tensor(
-                # np.array(self.adata.obs.u_lib_size_scale, dtype="float32"),
-                np.std(np.log(self.adata.obs.u_lib_size_raw + epsilon)),
+                np.std(log_u_library_size),
                 dtype=torch.float32,
             )
             .expand(u_library.shape)
@@ -283,8 +272,7 @@ class VelocityTrainingMixin:
         )
         s_library_scale = (
             torch.tensor(
-                # np.array(self.adata.obs.s_lib_size_scale, dtype="float32"),
-                np.std(np.log(self.adata.obs.s_lib_size_raw + epsilon)),
+                np.std(log_s_library_size),
                 dtype=torch.float32,
             )
             .expand(u_library.shape)
