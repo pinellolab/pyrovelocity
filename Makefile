@@ -581,9 +581,8 @@ cluster-stop: ## Stop latest container_image in current kube context (invert: st
 cluster-start: ## Start latest container_image in current kube context (invert: stop)
 	kubectl scale deployment/$(CLUSTER_DEV_INSTANCE_NAME) --replicas=1 -n $(CLUSTER_DEV_NAMESPACE)
 
-CLUSTER_DEV_POD_ID ?= $(shell kubectl get pods -n $(CLUSTER_DEV_NAMESPACE) -o jsonpath="{.items[0].metadata.name}")
-
-cluster-shell: ## Open shell in latest container_image in current kube context
+cluster-shell: ## Open shell in development pod running in current kube context
+	$(eval CLUSTER_DEV_POD_ID=$(shell kubectl get pods -n $(CLUSTER_DEV_NAMESPACE) -o jsonpath="{.items[0].metadata.name}"))
 	kubectl exec -it $(CLUSTER_DEV_POD_ID) -n $(CLUSTER_DEV_NAMESPACE) -- zsh
 
 cluster-terminate: ## Delete deployment for container_image in current kube context (invert: deploy)
