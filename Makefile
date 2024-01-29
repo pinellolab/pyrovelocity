@@ -576,10 +576,15 @@ cluster-deploy: ## Deploy latest container_image in current kube context (invert
 	skaffold deploy
 
 cluster-stop: ## Stop latest container_image in current kube context (invert: start)
-	kubectl scale deployment/$(CLUSTER_DEV_DEPLOYMENT_NAME) --replicas=0 -n $(CLUSTER_DEV_DEPLOYMENT_NAME)
+	kubectl scale deployment/$(CLUSTER_DEV_INSTANCE_NAME) --replicas=0 -n $(CLUSTER_DEV_NAMESPACE)
 
 cluster-start: ## Start latest container_image in current kube context (invert: stop)
-	kubectl scale deployment/$(CLUSTER_DEV_DEPLOYMENT_NAME) --replicas=1 -n $(CLUSTER_DEV_DEPLOYMENT_NAME)
+	kubectl scale deployment/$(CLUSTER_DEV_INSTANCE_NAME) --replicas=1 -n $(CLUSTER_DEV_NAMESPACE)
+
+CLUSTER_DEV_POD_ID ?= $(shell kubectl get pods -n $(CLUSTER_DEV_NAMESPACE) -o jsonpath="{.items[0].metadata.name}")
+
+cluster-shell: ## Open shell in latest container_image in current kube context
+	kubectl exec -it $(CLUSTER_DEV_POD_ID) -n $(CLUSTER_DEV_NAMESPACE) -- zsh
 
 cluster-terminate: ## Delete deployment for container_image in current kube context (invert: deploy)
 	kubectl delete -f cluster/resources/deployment.yaml
