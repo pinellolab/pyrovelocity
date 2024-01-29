@@ -25,7 +25,7 @@ Changelog = "https://github.com/pinellolab/pyrovelocity/releases"
 python = ">=3.10, <3.11"
 # required
 adjusttext = "0.7.3"
-anndata = "0.8.0"
+anndata = "0.10.5"
 astropy = "5.2.2"
 beartype = { version = "0.16.4", source = "pypi" }
 # pinning chex>=0.1.82 is to avoid 
@@ -44,21 +44,22 @@ jaxlib = "0.4.23"
 jaxtyping = "0.2.25"
 leidenalg = "0.9.1"
 marshmallow = "3.19.0"
-mlflow = "2.2.2"
+mlflow = "2.10.0"
 omegaconf = "2.3.0"
 pandas = "1.5.3"
-pyro-ppl = "1.8.3"
+pyro-ppl = "1.8.6"
 pytorch-lightning = "1.9.4"
 pyyaml = "6.0.1"
 returns = "0.22.0"
 rich = "12.6.0"
+scanpy = "1.9.8"
 scipy = "1.10.1"
 scvelo = { version = "0.3.1", source = "pypi" }
 scvi-tools = "0.20.3"
-seaborn = "0.11.2"
+seaborn = "0.13.2"
 termcolor = "2.2.0"
-torch = "1.13.1"
-torchmetrics = "0.11.4"
+torch = "2.1.2"
+torchmetrics = "1.2.1"
 validators = "0.22.0"
 zstandard = "0.21.0"
 # removed from library at
@@ -108,7 +109,7 @@ sphinx-autobuild = { version = ">=2021.3.14", optional = true }
 sphinx-autodoc-typehints = { version = "1.23.3", optional = true }
 sphinx-click = { version = "4.4.0", optional = true }
 sphinx-copybutton = { version = "0.5.2", optional = true }
-statannotations = { version = ">=0.5.0", optional = true }
+# statannotations = { version = ">=0.6.0", optional = true }
 typeguard = { version = ">=2.13.3", optional = true }
 xdoctest = { extras = ["colors"], version = ">=0.15.10", optional = true }
 
