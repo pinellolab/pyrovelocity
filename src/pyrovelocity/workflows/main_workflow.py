@@ -1,21 +1,24 @@
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
+from dataclasses import dataclass
 from datetime import timedelta
 
-from flytekit import Resources, task, workflow
+from flytekit import Resources
+from flytekit import task
+from flytekit import workflow
 from flytekit.extras.accelerators import T4
 from flytekit.types.directory import FlyteDirectory
 from flytekit.types.file import FlyteFile
 from mashumaro.mixins.json import DataClassJSONMixin
 
 from pyrovelocity.data import download_dataset
-from pyrovelocity.interfaces import (
-    DownloadDatasetInterface,
-    PreprocessDataInterface,
-    PyroVelocityTrainInterface,
-)
+from pyrovelocity.interfaces import DownloadDatasetInterface
+from pyrovelocity.interfaces import PreprocessDataInterface
+from pyrovelocity.interfaces import PyroVelocityTrainInterface
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.preprocess import preprocess_dataset
-from pyrovelocity.train import PyroVelocityTrainInterface, train_dataset
+from pyrovelocity.train import PyroVelocityTrainInterface
+from pyrovelocity.train import train_dataset
+
 
 logger = configure_logging(__name__)
 
@@ -64,6 +67,7 @@ def preprocess_data(
     """
     data_path = data.download()
     print(f"Flyte preprocess input data path: {data_path}")
+    preprocess_data_args.adata = str(data_path)
     _, processed_dataset_path = preprocess_dataset(
         **asdict(preprocess_data_args),
     )
@@ -90,6 +94,7 @@ def train_model(
     Train model.
     """
     data_path = data.download()
+    print(f"Flyte train model input data path: {data_path}")
     train_model_args.adata = str(data_path)
     (
         trained_data_path,
