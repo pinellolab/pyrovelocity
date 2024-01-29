@@ -58,5 +58,15 @@
   "terminal.integrated.persistentSessionScrollback": 100000,
   "terminal.integrated.scrollback": 100000,
   "workbench.colorTheme": "Catppuccin Mocha",
-  "workbench.iconTheme": "vscode-icons"
+  "workbench.iconTheme": "vscode-icons",
+  // Passing --no-cov to pytestArgs is required to respect breakpoints
+  // when debugging tests.
+  // https://github.com/microsoft/vscode-python/issues/693#issuecomment-367848085
+  "python.testing.pytestArgs": [
+    "-rA",
+    "--xdoc",
+    "--disable-warnings",
+    "-v",
+    "--no-cov"
+  ]
 }
