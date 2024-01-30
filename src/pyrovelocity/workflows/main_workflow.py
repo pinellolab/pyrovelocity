@@ -39,6 +39,7 @@ class TrainingOutputs(DataClassJSONMixin):
     interruptible=True,
     timeout=timedelta(minutes=20),
     requests=Resources(cpu="2", mem="4Gi", ephemeral_storage="16Gi"),
+    limits=Resources(cpu="8", mem="16Gi", ephemeral_storage="200Gi"),
 )
 def download_data(download_dataset_args: DownloadDatasetInterface) -> FlyteFile:
     """
@@ -54,7 +55,8 @@ def download_data(download_dataset_args: DownloadDatasetInterface) -> FlyteFile:
     retries=3,
     interruptible=False,
     timeout=timedelta(minutes=60),
-    requests=Resources(cpu="16", mem="60Gi", ephemeral_storage="16Gi"),
+    requests=Resources(cpu="8", mem="30Gi", ephemeral_storage="32Gi"),
+    limits=Resources(cpu="16", mem="60Gi", ephemeral_storage="200Gi"),
 )
 def preprocess_data(
     data: FlyteFile, preprocess_data_args: PreprocessDataInterface
@@ -78,7 +80,10 @@ def preprocess_data(
     interruptible=False,
     timeout=timedelta(minutes=120),
     container_image="{{.image.gpu.fqn}}:{{.image.gpu.version}}",
-    requests=Resources(cpu="16", mem="60Gi", ephemeral_storage="16Gi", gpu="1"),
+    requests=Resources(
+        cpu="16", mem="120Gi", ephemeral_storage="32Gi", gpu="1"
+    ),
+    limits=Resources(cpu="32", mem="200Gi", ephemeral_storage="150Gi", gpu="1"),
     accelerator=T4,
 )
 def train_model(
