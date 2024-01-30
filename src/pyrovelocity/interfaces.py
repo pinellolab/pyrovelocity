@@ -1,11 +1,14 @@
-from dataclasses import make_dataclass
+from dataclasses import dataclass, make_dataclass
 from typing import Any, Dict, Tuple, Type
 
+from flytekit.types.directory import FlyteDirectory
+from flytekit.types.file import FlyteFile
 from mashumaro.mixins.json import DataClassJSONMixin
 
-from pyrovelocity.api import train_model
+# from pyrovelocity.api import train_model
 from pyrovelocity.data import download_dataset
 from pyrovelocity.preprocess import preprocess_dataset
+from pyrovelocity.train import train_dataset
 from pyrovelocity.workflows.configuration import create_dataclass_from_callable
 
 # These can be used to override the default values of the dataclass
@@ -52,7 +55,7 @@ pyrovelocity_train_types_defaults: Dict[str, Tuple[Type, Any]] = {
 }
 
 pyrovelocity_train_fields = create_dataclass_from_callable(
-    train_model,
+    train_dataset,
     pyrovelocity_train_types_defaults,
 )
 
@@ -62,3 +65,13 @@ PyroVelocityTrainInterface = make_dataclass(
     bases=(DataClassJSONMixin,),
 )
 PyroVelocityTrainInterface.__module__ = __name__
+
+
+@dataclass
+class TrainingOutputs(DataClassJSONMixin):
+    trained_data_path: FlyteFile
+    model_path: FlyteDirectory
+    posterior_samples_path: FlyteFile
+    metrics_path: FlyteFile
+    run_info_path: FlyteFile
+    loss_plot_path: FlyteFile
