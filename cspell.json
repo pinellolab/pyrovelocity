@@ -9,6 +9,7 @@
     "arange",
     "astype",
     "autoguide",
+    "autolog",
     "beartype",
     "bonemarrow",
     "cellgene",
@@ -21,6 +22,7 @@
     "easyguide",
     "ELBO",
     "endocrinogenesis",
+    "facecolor",
     "flytekit",
     "getfixture",
     "getsizeof",
@@ -41,6 +43,7 @@
     "pyrovelocity",
     "scanpy",
     "scvelo",
+    "symlog",
     "todense",
     "tsne",
     "typechecker",
@@ -49,7 +52,10 @@
     "unipotent",
     "unspliced",
     "Unspliced",
-    "xdoctest"
+    "xdoctest",
+    "xlabel",
+    "ylabel",
+    "yscale"
   ],
   "ignoreWords": [],
   "import": []
