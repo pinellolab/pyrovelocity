@@ -2384,6 +2384,9 @@ pyzmq==25.1.2 ; python_version >= "3.10" and python_version < "3.11" \
 querystring-parser==1.2.4 ; python_version >= "3.10" and python_version < "3.11" \
     --hash=sha256:644fce1cffe0530453b43a83a38094dbe422ccba8c9b2f2a1c00280e14ca8a62 \
     --hash=sha256:d2fa90765eaf0de96c8b087872991a10238e89ba015ae59fedfed6bd61c242a0
+requests-mock==1.11.0 ; python_version >= "3.10" and python_version < "3.11" \
+    --hash=sha256:ef10b572b489a5f28e09b708697208c4a3b2b89ef80a9f01584340ea357ec3c4 \
+    --hash=sha256:f7fae383f228633f6bececebdab236c478ace2284d6292c6e7e2867b9ab74d15
 requests-oauthlib==1.3.1 ; python_version >= "3.10" and python_version < "3.11" \
     --hash=sha256:2577c501a2fb8d05a304c09d090d6e47c306fef15809d102b327cf8364bddab5 \
     --hash=sha256:75beac4a47881eeb94d5ea5d6ad31ef88856affe2332b9aafb52c6452ccf0d7a
