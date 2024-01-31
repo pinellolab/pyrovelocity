@@ -1,11 +1,7 @@
-import functools
 from dataclasses import asdict
 from datetime import timedelta
-from typing import Dict
 
-# from flytekit import map_task
 from flytekit import Resources, dynamic, task, workflow
-from flytekit.experimental import map_task
 from flytekit.extras.accelerators import T4
 from flytekit.types.directory import FlyteDirectory
 from flytekit.types.file import FlyteFile
@@ -128,43 +124,37 @@ def module_workflow(
 ) -> list[TrainingOutputs]:
     """
     The module workflow is applied to a single dataset together with a list of
-    models.
+    model configurations.
 
     There are three ways to execute the train_model() task, which impacts how
-    subsequent tasks are executed. The first two use the @workflow decorator
-    and the last requires the @dynamic decorator.
-
-
-    1. For independent parallel execution treating each data-model pairing as
-       requiring a separate workflow run, ensure the decorator is @workflow.
-       Note that individual tasks are easily re-run in this case. For this
-       reason, this is the preferred method during development, but since
-       @dynamic is required in order to dynamically determine resource
-       requirements, method three may be preferred in production. A single
-       model configuration is required in this case and a single set of training
-       outputs is produced.
+    subsequent tasks are executed. This can also be executed with the @workflow
+    decorator for a single model configuration
 
     ```python
     train_model_configuration: PyroVelocityTrainInterface = PyroVelocityTrainInterface(),
     ) -> TrainingOutputs:
+    ...
     model_outputs = train_model(
         data=processed_data,
         train_model_configuration=train_model_configuration,
     )
     ```
 
-    2. For map task-based execution, ensure the decorator is @workflow.
-       Note that individual tasks are not easily re-run in this case.
+    or for multiple model configurations using a map task
 
     ```python
+    import functools
+    from flytekit.experimental import map_task
+
     partial_train_model = functools.partial(train_model, data=processed_data)
     model_outputs = map_task(partial_train_model)(
         train_model_args=train_model_configurations,
     )
     ```
 
-    3. For dynamic workflow-based execution, ensure the decorator is @dynamic.
-       Note that individual tasks are not easily re-run in this case.
+    The dynamic workflow is preferred to support both mapping of tasks over
+    multiple model configurations and overriding resources from configuration
+    data.
     """
     data = download_data(download_dataset_args=download_dataset_args)
     processed_data = preprocess_data(
@@ -228,10 +218,11 @@ def training_workflow(
     ] = larry_configuration.training_resources,
 ) -> list[list[TrainingOutputs]]:
     """
-    Apply the module_workflow to all datasets.
+    Apply the module_workflow to a collection of datasets.
 
-    TODO: update interface extraction to support nested dataclasses to simplify
-    inputs to:
+    TODO: Update interface extraction to support nested dataclasses, which will
+    allow simplification of input arguments to:
+
     simulated_configuration: WorkflowConfiguration = simulated_configuration,
     """
     simulated = module_workflow(
