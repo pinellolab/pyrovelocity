@@ -40,6 +40,7 @@
     "optim",
     "pbmc",
     "postprocess",
+    "pyproject",
     "pyrovelocity",
     "scanpy",
     "scvelo",
