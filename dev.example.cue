@@ -20,6 +20,15 @@ values: {
 		"cloud.google.com/gke-accelerator": "nvidia-tesla-t4"
 		spot:                               "true"
 	}
+	// securityContext: {
+	// 	allowPrivilegeEscalation: true
+	// 	privileged:               true
+	// 	capabilities:
+	// 	{
+	// 		drop: [""]
+	// 		add: ["ALL"]
+	// 	}
+	// }
 	containerCommand: ["/bin/sh"]
 	containerCommandArgs: ["-c", "sleep 16h"]
 }
