@@ -77,7 +77,7 @@ def preprocess_data(
 
 
 @task(
-    cache=False,
+    cache=True,
     cache_version=cache_version,
     retries=3,
     interruptible=False,
