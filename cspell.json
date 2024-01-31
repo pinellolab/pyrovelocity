@@ -10,6 +10,7 @@
     "astype",
     "autoguide",
     "autolog",
+    "bazel",
     "beartype",
     "bonemarrow",
     "cellgene",
