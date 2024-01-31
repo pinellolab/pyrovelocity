@@ -6,6 +6,7 @@ import pytest
 from anndata import AnnData
 from hypothesis import given
 from hypothesis import strategies as st
+
 from pyrovelocity.utils import generate_sample_data
 
 
@@ -21,7 +22,7 @@ rate_strategy = st.floats(min_value=0.01, max_value=3.0)
 beta_gamma_strategy = st.tuples(
     st.floats(min_value=0.01, max_value=3.0),  # beta
     st.floats(min_value=0.01, max_value=3.0),  # gamma
-).filter(lambda x: x[1] > x[0])  # gamma requied to be larger than beta
+).filter(lambda x: x[1] > x[0])  # gamma required to be larger than beta
 noise_model_strategy = st.sampled_from(["iid", "normal"])
 random_seed_strategy = st.randoms()
 
@@ -83,11 +84,6 @@ def test_generate_sample_data(
     assert not (adata.X == adata2.X).all()
 
 
-@pytest.fixture
-def sample_data():
-    return generate_sample_data(random_seed=98)
-
-
 @pytest.mark.parametrize("n_obs, n_vars", [(100, 12), (50, 10), (200, 20)])
 @pytest.mark.parametrize("noise_model", ["iid", "gillespie", "normal"])
 def test_generate_sample_data_dimensions(n_obs, n_vars, noise_model):
@@ -97,13 +93,13 @@ def test_generate_sample_data_dimensions(n_obs, n_vars, noise_model):
     assert adata.shape == (n_obs, n_vars)
 
 
-def test_generate_sample_data_layers(sample_data):
-    assert "spliced" in sample_data.layers
-    assert "unspliced" in sample_data.layers
+def test_generate_sample_data_layers(default_sample_data):
+    assert "spliced" in default_sample_data.layers
+    assert "unspliced" in default_sample_data.layers
 
 
-def test_generate_sample_data_reproducibility(sample_data):
-    adata1 = sample_data
+def test_generate_sample_data_reproducibility(default_sample_data):
+    adata1 = default_sample_data
     adata2 = generate_sample_data(random_seed=98)
     assert (adata1.X == adata2.X).all()
     assert (adata1.layers["spliced"] == adata2.layers["spliced"]).all()
