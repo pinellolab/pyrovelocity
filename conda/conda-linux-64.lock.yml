@@ -14,7 +14,7 @@ dependencies:
   - alembic=1.13.1=pyhd8ed1ab_1
   - anndata=0.10.5=pyhd8ed1ab_0
   - antlr-python-runtime=4.9.3=pyhd8ed1ab_1
-  - aom=3.7.1=h59595ed_0
+  - aom=3.8.1=h59595ed_0
   - arpack=3.8.0=nompi_h0baa96a_101
   - array-api-compat=1.4.1=pyhd8ed1ab_0
   - astropy=5.2.2=py310h0a54255_0
@@ -56,7 +56,7 @@ dependencies:
   - configparser=5.3.0=pyhd8ed1ab_0
   - contextlib2=21.6.0=pyhd8ed1ab_0
   - contourpy=1.2.0=py310hd41b1e2_0
-  - cryptography=42.0.1=py310hb8475ec_0
+  - cryptography=42.0.2=py310hb8475ec_0
   - cuda-cudart=12.1.105=0
   - cuda-cupti=12.1.105=0
   - cuda-libraries=12.1.0=0
@@ -119,7 +119,7 @@ dependencies:
   - libabseil=20230802.1=cxx17_h59595ed_0
   - libaec=1.1.2=h59595ed_1
   - libarrow=13.0.0=hecbb4c5_13_cpu
-  - libavif16=1.0.3=hef5bec9_1
+  - libavif16=1.0.3=h1dcd450_2
   - libblas=3.9.0=16_linux64_mkl
   - libbrotlicommon=1.1.0=hd590300_1
   - libbrotlidec=1.1.0=hd590300_1
@@ -175,7 +175,7 @@ dependencies:
   - llvm-openmp=15.0.7=h0cdce71_0
   - llvmlite=0.41.1=py310h1b8f574_0
   - lz4-c=1.9.4=hcb278e6_0
-  - mako=1.3.1=pyhd8ed1ab_0
+  - mako=1.3.2=pyhd8ed1ab_0
   - markdown=3.5.2=pyhd8ed1ab_0
   - markupsafe=2.1.4=py310h2372a71_0
   - marshmallow=3.19.0=pyhd8ed1ab_0
@@ -204,7 +204,7 @@ dependencies:
   - omegaconf=2.3.0=pyhd8ed1ab_0
   - openjpeg=2.5.0=h488ebb8_3
   - openpyxl=3.1.2=py310h2372a71_1
-  - openssl=3.2.0=hd590300_1
+  - openssl=3.2.1=hd590300_0
   - opt-einsum=3.3.0=hd8ed1ab_2
   - opt_einsum=3.3.0=pyhc1e730c_2
   - optax=0.1.8=pyhd8ed1ab_0
@@ -216,7 +216,7 @@ dependencies:
   - patsy=0.5.6=pyhd8ed1ab_0
   - pillow=10.2.0=py310h01dd4db_0
   - pip=23.3.2=pyhd8ed1ab_0
-  - platformdirs=4.1.0=pyhd8ed1ab_0
+  - platformdirs=4.2.0=pyhd8ed1ab_0
   - pluggy=1.4.0=pyhd8ed1ab_0
   - pooch=1.8.0=pyhd8ed1ab_0
   - prometheus_client=0.19.0=pyhd8ed1ab_0
@@ -246,15 +246,16 @@ dependencies:
   - pytorch-cuda=12.1=ha16c6d3_5
   - pytorch-lightning=1.9.4=pyhd8ed1ab_1
   - pytorch-mutex=1.0=cuda
-  - pytz=2023.3.post1=pyhd8ed1ab_0
+  - pytz=2023.4=pyhd8ed1ab_0
   - pywin32-on-windows=0.1.0=pyh1179c8e_3
   - pyyaml=6.0.1=py310h2372a71_1
   - querystring_parser=1.2.4=py_0
   - rav1e=0.6.6=he8a937b_2
-  - rdma-core=49.0=hd3aeb46_2
+  - rdma-core=50.0=hd3aeb46_0
   - re2=2023.06.02=h2873b5e_0
   - readline=8.2=h8228510_1
   - requests=2.31.0=pyhd8ed1ab_0
+  - requests-mock=1.11.0=pyhd8ed1ab_0
   - returns=0.22.0=pyhd8ed1ab_0
   - rich=12.6.0=pyhd8ed1ab_0
   - s2n=1.3.56=h06160fa_0
@@ -295,7 +296,7 @@ dependencies:
   - ucx=1.15.0=h75e419f_3
   - umap-learn=0.5.5=py310hff52083_0
   - unicodedata2=15.1.0=py310h2372a71_0
-  - urllib3=2.1.0=pyhd8ed1ab_0
+  - urllib3=2.2.0=pyhd8ed1ab_0
   - validators=0.22.0=pyhd8ed1ab_0
   - websocket-client=1.7.0=pyhd8ed1ab_0
   - werkzeug=3.0.1=pyhd8ed1ab_0
