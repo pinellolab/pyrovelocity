@@ -1,20 +1,27 @@
-from typing import Optional, Tuple, Union
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 import pyro
 import torch
 from beartype import beartype
-from jaxtyping import Float, jaxtyped
+from jaxtyping import Float
+from jaxtyping import jaxtyped
 from pyro import poutine
-from pyro.distributions import Bernoulli, LogNormal, Normal, Poisson
-from pyro.nn import PyroModule, PyroSample
+from pyro.distributions import Bernoulli
+from pyro.distributions import LogNormal
+from pyro.distributions import Normal
+from pyro.distributions import Poisson
+from pyro.nn import PyroModule
+from pyro.nn import PyroSample
 from pyro.primitives import plate
 from scvi.nn import Decoder
-
-# from torch.distributions import Bernoulli
-from torch.nn.functional import relu, softplus
+from torch.nn.functional import relu
+from torch.nn.functional import softplus
 
 from pyrovelocity._transcription_dynamics import mRNA
 from pyrovelocity.logging import configure_logging
+
 
 logger = configure_logging(__name__)
 
@@ -68,6 +75,18 @@ class LogNormalModel(PyroModule):
         plate_size: int = 2,
         correct_library_size: Union[bool, str] = True,
     ) -> None:
+        """
+        Initialize the LogNormalModel.
+
+        TODO: make the likelihood parameter a sum type over supported distributions.
+
+        Args:
+            num_cells (int): number of cells.
+            num_genes (int): number of genes.
+            likelihood (str, optional): Type of likelihood to use. Defaults to "Poisson".
+            plate_size (int, optional): Number of plates. Defaults to 2.
+            correct_library_size (Union[bool, str], optional): Flag to control normalization by library size. Defaults to True.
+        """
         logger.info("Initializing LogNormalModel")
         assert num_cells > 0 and num_genes > 0
         super().__init__()
@@ -262,7 +281,11 @@ class LogNormalModel(PyroModule):
             >>> assert isinstance(s_dist, torch.distributions.Poisson)
         """
         if self.likelihood != "Poisson":
-            raise
+            likelihood_not_implemented_msg = (
+                "In the future, the likelihood will be referred to via a "
+                "member of a sum type over supported distributions"
+            )
+            raise NotImplementedError(likelihood_not_implemented_msg)
 
         if self.correct_library_size:
             ut = relu(ut) + self.one * 1e-6
