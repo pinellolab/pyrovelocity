@@ -13,8 +13,8 @@ from scvi.nn import Decoder
 # from torch.distributions import Bernoulli
 from torch.nn.functional import relu, softplus
 
+from pyrovelocity._transcription_dynamics import mRNA
 from pyrovelocity.logging import configure_logging
-from pyrovelocity.utils import mRNA
 
 logger = configure_logging(__name__)
 
