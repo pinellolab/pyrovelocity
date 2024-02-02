@@ -364,8 +364,6 @@ jobs:
       - name: Set nix variables
         run: |
           echo "NIX_IMAGE_SYSTEMS=x86_64-linux" >> $GITHUB_ENV
-      # - name: Setup tmate debug session
-      #   uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # ratchet:mxschmitt/action-tmate@v3
       - name: Build nix images
         run: |
           echo "Using Git Repository Name: $GIT_REPO_NAME"
