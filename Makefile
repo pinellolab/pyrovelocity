@@ -740,10 +740,6 @@ module-deps-graph: ## Generate module dependency graph with pydeps.
 	--no-show \
 	--show-dot \
 	--exclude \
-	pyrovelocity._velocity_model_* \
-	pyrovelocity._velocity_guide \
-	pyrovelocity.api \
-	pyrovelocity.config \
 	pyrovelocity.workflows.lrwine \
 	pyrovelocity.logging \
 	pyrovelocity.tests.* \
