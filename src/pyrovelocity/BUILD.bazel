@@ -34,6 +34,7 @@ py_test_module_list(
         "tests/test_plot.py",
         "tests/test_pyrovelocity.py",
         "tests/test_trainer.py",
+        "tests/test_transcription_dynamics.py",
         "tests/test_utils.py",
         "tests/test_velocity.py",
         "tests/test_velocity_model.py",
