@@ -541,8 +541,8 @@ class VelocityModelAuto(LogNormalModel):
     @beartype
     def forward(
         self,
-        u_obs: Optional[torch.Tensor] = None,
-        s_obs: Optional[torch.Tensor] = None,
+        u_obs: torch.Tensor,
+        s_obs: torch.Tensor,
         u_log_library: Optional[torch.Tensor] = None,
         s_log_library: Optional[torch.Tensor] = None,
         u_log_library_loc: Optional[torch.Tensor] = None,
