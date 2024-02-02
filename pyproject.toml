@@ -298,7 +298,7 @@ addopts = """
 --cov-report=term-missing
 """
 asyncio_mode = "strict"
-norecursedirs = ["bazel-*", ".direnv"]
+norecursedirs = ["bazel-*", ".direnv", "reproducibility"]
 
 [tool.coverage.paths]
 source = ["src/pyrovelocity"]
