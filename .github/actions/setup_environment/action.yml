@@ -24,7 +24,7 @@ runs:
         echo "install system dependencies"
         # sudo apt-get update
         # sudo apt-get install -y tree
-    - uses: r-lib/actions/setup-pandoc@e40ad904310fc92e96951c1b0d64f3de6cbe9e14 # ratchet:r-lib/actions/setup-pandoc@v2
+    - uses: r-lib/actions/setup-pandoc@55acd27e7b238c53bbe735b7a459c203a3b3d579 # ratchet:r-lib/actions/setup-pandoc@v2
       with:
         pandoc-version: "3.1.11"
     - name: Install Poetry
