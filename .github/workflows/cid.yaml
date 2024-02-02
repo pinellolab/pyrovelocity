@@ -339,6 +339,10 @@ jobs:
           extra-conf: |
             extra-platforms = aarch64-linux
       # - uses: DeterminateSystems/magic-nix-cache-action@8a218f9e264e9c3803c9a1ee1c30d8e4ab55be63 # ratchet:DeterminateSystems/magic-nix-cache-action@v2
+      - uses: cachix/cachix-action@18cf96c7c98e048e10a83abd92116114cd8504be # ratchet:cachix/cachix-action@v14
+        with:
+          name: "${{ vars.CACHIX_CACHE_NAME }}"
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
       - uses: rlespinasse/github-slug-action@102b1a064a9b145e56556e22b18b19c624538d94 # ratchet:rlespinasse/github-slug-action@v4
         with:
           prefix: CI_
@@ -356,8 +360,8 @@ jobs:
       - name: Set nix variables
         run: |
           echo "NIX_IMAGE_SYSTEMS=x86_64-linux" >> $GITHUB_ENV
-      - name: Setup tmate debug session
-        uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # ratchet:mxschmitt/action-tmate@v3
+      # - name: Setup tmate debug session
+      #   uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # ratchet:mxschmitt/action-tmate@v3
       - name: Build nix images
         run: |
           echo "Using Git Repository Name: $GIT_REPO_NAME"
