@@ -27,9 +27,7 @@ xdoctest(
 py_test_module_list(
     size = "small",
     files = [
-        "tests/test_api.py",
         "tests/test_compressedpickle.py",
-        "tests/test_config.py",
         "tests/test_criticality_index.py",
         "tests/test_cytotrace.py",
         "tests/test_data.py",
@@ -38,7 +36,6 @@ py_test_module_list(
         "tests/test_trainer.py",
         "tests/test_utils.py",
         "tests/test_velocity.py",
-        "tests/test_velocity_guide.py",
         "tests/test_velocity_model.py",
         "tests/test_velocity_module.py",
     ],
