@@ -1,8 +1,10 @@
 from typing import Tuple
 
 import torch
+from beartype import beartype
 
 
+@beartype
 def mRNA(
     tau: torch.Tensor,
     u0: torch.Tensor,
@@ -13,6 +15,9 @@ def mRNA(
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     """
     Computes the mRNA dynamics given the parameters and initial conditions.
+
+    `st_gamma_equals_beta` is taken from On the Mathematics of RNA Velocity I:
+    Theoretical Analysis: Equation (2.12) when gamma == beta
 
     Args:
         tau (torch.Tensor): Time points.
@@ -38,32 +43,19 @@ def mRNA(
     """
     expu, exps = torch.exp(-beta * tau), torch.exp(-gamma * tau)
 
-    # invalid values caused by below codes:
-    # gamma equals beta will raise inf, inf * 0 leads to nan
     expus = (alpha - u0 * beta) * inv(gamma - beta) * (exps - expu)
-    # solution 1: conditional zero filling
-    # solution 1 issue:AutoDelta map_estimate of alpha,beta,gamma,switching will become nan, thus u_inf/s_inf/ut/st all lead to nan
-    # expus = torch.where(torch.isclose(gamma, beta), expus.new_zeros(1), expus)
 
     ut = u0 * expu + alpha / beta * (1 - expu)
-    st = (
-        s0 * exps + alpha / gamma * (1 - exps) + expus
-    )  # remove expus is the most stable, does it theoretically make sense?
-
-    # solution 2: conditional analytical solution
-    # solution 2 issue:AutoDelta map_estimate of alpha,beta,gamma,switching will become nan, thus u_inf/s_inf/ut/st all lead to nan
-    # On the Mathematics of RNA Velocity I: Theoretical Analysis: Equation (2.12) when gamma == beta
-    st2 = (
+    st = s0 * exps + alpha / gamma * (1 - exps) + expus
+    st_gamma_equals_beta = (
         s0 * expu + alpha / beta * (1 - expu) - (alpha - beta * u0) * tau * expu
     )
-    ##st2 = s0 * expu + alpha / gamma * (1 - expu) - (alpha - gamma * u0) * tau * expu
-    st = torch.where(torch.isclose(gamma, beta), st2, st)
+    st = torch.where(torch.isclose(gamma, beta), st_gamma_equals_beta, st)
 
-    # solution 3: do not use AutoDelta and map_estimate? customize guide function?
-    # use solution 3 with st2
     return ut, st
 
 
+@beartype
 def inv(x: torch.Tensor) -> torch.Tensor:
     """
     Computes the element-wise reciprocal of a tensor.
