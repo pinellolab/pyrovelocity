@@ -13,10 +13,6 @@ repos:
     hooks:
       - id: ruff
         args: [--target-version, py37, --line-length, "80"]
-  - repo: https://github.com/commitizen-tools/commitizen
-    rev: v3.13.0
-    hooks:
-      - id: commitizen
   - repo: https://github.com/asottile/pyupgrade
     rev: v3.15.0
     hooks:
