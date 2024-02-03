@@ -35,7 +35,7 @@ from pyrovelocity.workflows.main_configuration import (
 
 logger = configure_logging(__name__)
 
-cache_version = "0.2.0b8"
+cache_version = "0.2.0b9"
 
 
 @task(
