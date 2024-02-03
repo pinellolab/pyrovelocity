@@ -309,9 +309,10 @@ source_pkgs = ["pyrovelocity"]
 branch = true
 parallel = true
 omit = [
-  "src/pyrovelocity/__init__.py",
+  "src/pyrovelocity/**/__init__.py",
   "src/pyrovelocity/__main__.py",
   "src/pyrovelocity/tests/**",
+  "src/pyrovelocity/workflows/**",
 ]
 
 [tool.coverage.report]
