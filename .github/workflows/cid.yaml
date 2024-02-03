@@ -247,6 +247,7 @@ jobs:
 
   test-nix:
     runs-on: ubuntu-latest
+    # runs-on: pinellolab-runners
     needs: [set-variables, config-workflows]
     if: ${{ needs.set-variables.outputs.skip_ci != 'true' && needs.set-variables.outputs.skip_tests != 'true' }}
     concurrency:
@@ -255,6 +256,17 @@ jobs:
     permissions:
       contents: read
     steps:
+      - name: maximize build space
+        # uses: easimon/maximize-build-space@fc881a613ad2a34aca9c9624518214ebc21dfc0c # ratchet:easimon/maximize-build-space@v10
+        uses: cameronraysmith/maximize-build-space@fdf0c06b18d92be98aa64cb68ae4ea4c9bc4794d # ratchet:cameronraysmith/maximize-build-space@print-usage
+        with:
+          root-reserve-mb: 37888
+          swap-size-mb: 1024
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-haskell: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
@@ -281,6 +293,11 @@ jobs:
       - run: nix flake check --impure --accept-flake-config
       - run: |
           ./scripts/flake pytest
+      - name: GC nix store
+        run: |
+          df -h
+          nix store gc
+          df -h
     # It is also possible to build the default package with a checkPhase
     # - run: |
     #     export NUMBA_CACHE_DIR=$(mktemp -d -p $RUNNER_TEMP numba-cache-XXXXX)
@@ -303,6 +320,7 @@ jobs:
 
   build-nix-images:
     runs-on: ubuntu-latest
+    # runs-on: pinellolab-runners
     needs: [set-variables]
     if: ${{ needs.set-variables.outputs.skip_ci != 'true' && ( contains(github.event.pull_request.labels.*.name, 'build-images') || contains(github.event.pull_request.labels.*.name, 'execute-workflow') || (github.event_name == 'workflow_dispatch' && inputs.run_build_images) || (github.event_name == 'workflow_dispatch' && inputs.run_execute_workflow) ) }}
     strategy:
@@ -325,19 +343,16 @@ jobs:
       name: release
       url: ${{ matrix.url }}
     steps:
-      - run: |
-          df -h
       - name: maximize build space
-        uses: easimon/maximize-build-space@fc881a613ad2a34aca9c9624518214ebc21dfc0c # ratchet:easimon/maximize-build-space@v10
+        # uses: easimon/maximize-build-space@fc881a613ad2a34aca9c9624518214ebc21dfc0c # ratchet:easimon/maximize-build-space@v10
+        uses: cameronraysmith/maximize-build-space@fdf0c06b18d92be98aa64cb68ae4ea4c9bc4794d # ratchet:cameronraysmith/maximize-build-space@print-usage
         with:
-          root-reserve-mb: 40960
-          swap-size-mb: 2048
+          root-reserve-mb: 37888
+          swap-size-mb: 1024
           remove-dotnet: "true"
           remove-android: "true"
           remove-codeql: "true"
           remove-docker-images: "true"
-      - run: |
-          df -h
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
@@ -348,7 +363,7 @@ jobs:
         with:
           extra-conf: |
             extra-platforms = aarch64-linux
-      - uses: DeterminateSystems/magic-nix-cache-action@eeabdb06718ac63a7021c6132129679a8e22d0c7 # ratchet:DeterminateSystems/magic-nix-cache-action@v3
+      # - uses: DeterminateSystems/magic-nix-cache-action@eeabdb06718ac63a7021c6132129679a8e22d0c7 # ratchet:DeterminateSystems/magic-nix-cache-action@v3
       - uses: cachix/cachix-action@18cf96c7c98e048e10a83abd92116114cd8504be # ratchet:cachix/cachix-action@v14
         with:
           name: "${{ vars.CACHIX_CACHE_NAME }}"
@@ -381,6 +396,11 @@ jobs:
           df -h
         env:
           GH_TOKEN: ${{ github.token }}
+      - name: GC nix store
+        run: |
+          df -h
+          nix store gc
+          df -h
 
   execute-workflow:
     needs: [config-workflows, build-nix-images, set-variables]
@@ -492,12 +512,15 @@ jobs:
       url: ${{ matrix.url }}
     steps:
       - name: maximize build space
-        uses: easimon/maximize-build-space@fc881a613ad2a34aca9c9624518214ebc21dfc0c # ratchet:easimon/maximize-build-space@v10
+        # uses: easimon/maximize-build-space@fc881a613ad2a34aca9c9624518214ebc21dfc0c # ratchet:easimon/maximize-build-space@v10
+        uses: cameronraysmith/maximize-build-space@fdf0c06b18d92be98aa64cb68ae4ea4c9bc4794d # ratchet:cameronraysmith/maximize-build-space@print-usage
         with:
-          root-reserve-mb: 38912
-          swap-size-mb: 4096
+          root-reserve-mb: 37888
+          swap-size-mb: 1024
           remove-dotnet: "true"
           remove-android: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
           ref: ${{ needs.release.outputs.git-head }}
@@ -508,7 +531,7 @@ jobs:
         with:
           extra-conf: |
             extra-platforms = aarch64-linux
-      - uses: DeterminateSystems/magic-nix-cache-action@eeabdb06718ac63a7021c6132129679a8e22d0c7 # ratchet:DeterminateSystems/magic-nix-cache-action@v3
+      # - uses: DeterminateSystems/magic-nix-cache-action@eeabdb06718ac63a7021c6132129679a8e22d0c7 # ratchet:DeterminateSystems/magic-nix-cache-action@v3
       - uses: cachix/cachix-action@18cf96c7c98e048e10a83abd92116114cd8504be # ratchet:cachix/cachix-action@v14
         with:
           name: "${{ vars.CACHIX_CACHE_NAME }}"
@@ -544,6 +567,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.release.outputs.version }}
+      - name: GC nix store
+        run: |
+          df -h
+          nix store gc
+          df -h
 
   publish-pypi:
     runs-on: ubuntu-latest
