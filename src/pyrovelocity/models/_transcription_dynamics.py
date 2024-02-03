@@ -5,7 +5,7 @@ from beartype import beartype
 
 
 @beartype
-def mRNA(
+def mrna_dynamics(
     tau: torch.Tensor,
     u0: torch.Tensor,
     s0: torch.Tensor,
@@ -38,7 +38,7 @@ def mRNA(
         >>> alpha = torch.tensor(0.5)
         >>> beta = torch.tensor(0.4)
         >>> gamma = torch.tensor(0.3)
-        >>> mRNA(tau, u0, s0, alpha, beta, gamma)
+        >>> mrna_dynamics(tau, u0, s0, alpha, beta, gamma)
         (tensor(1.1377), tensor(0.9269))
     """
     expu, exps = torch.exp(-beta * tau), torch.exp(-gamma * tau)

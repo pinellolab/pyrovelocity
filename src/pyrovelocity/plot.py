@@ -22,7 +22,7 @@ from scipy.stats import spearmanr
 from scvelo.plotting.velocity_embedding_grid import default_arrow
 
 from pyrovelocity.analyze import compute_mean_vector_field, compute_volcano_data
-from pyrovelocity.models._transcription_dynamics import mRNA
+from pyrovelocity.models import mrna_dynamics
 from pyrovelocity.utils import mse_loss_sum
 
 
@@ -41,7 +41,7 @@ def plot_evaluate_dynamic_orig(adata, gene="Cpe", velocity=None, ax=None):
     u0, s0 = adata.var.loc[gene, "fit_u0"], adata.var.loc[gene, "fit_s0"]
     # t = torch.tensor(adata[:, gene].layers['fit_t'][:, 0]).sort()[0]
     t = torch.tensor(adata[:, gene].layers["fit_t"][:, 0])
-    u_inf, s_inf = mRNA(t_, u0, s0, alpha, beta_scale, gamma)
+    u_inf, s_inf = mrna_dynamics(t_, u0, s0, alpha, beta_scale, gamma)
 
     state = (t < t_).int()
     tau = t * state + (t - t_) * (1 - state)
@@ -51,7 +51,7 @@ def plot_evaluate_dynamic_orig(adata, gene="Cpe", velocity=None, ax=None):
     alpha_ = 0
     alpha_vec = alpha * state + alpha_ * (1 - state)
 
-    ut, st = mRNA(tau, u0_vec, s0_vec, alpha_vec, beta_scale, gamma)
+    ut, st = mrna_dynamics(tau, u0_vec, s0_vec, alpha_vec, beta_scale, gamma)
     ut = ut * scaling + u0
     st = st + s0
 
@@ -156,7 +156,7 @@ def plot_dynamic_pyro(
 
     beta_scale = beta * scale
     u0, s0 = torch.tensor(0.0), torch.tensor(0.0)
-    u_inf, s_inf = mRNA(t_, u0, s0, alpha, beta_scale, gamma)
+    u_inf, s_inf = mrna_dynamics(t_, u0, s0, alpha, beta_scale, gamma)
 
     state = (t < t_).int()
     tau = t * state + (t - t_) * (1 - state)
@@ -165,7 +165,7 @@ def plot_dynamic_pyro(
 
     alpha_ = 0.0
     alpha_vec = alpha * state + alpha_ * (1 - state)
-    ut, st = mRNA(tau, u0_vec, s0_vec, alpha_vec, beta_scale, gamma)
+    ut, st = mrna_dynamics(tau, u0_vec, s0_vec, alpha_vec, beta_scale, gamma)
     ut = ut * scale + u0
     st = st + s0
     xnew = torch.linspace(
@@ -245,7 +245,7 @@ def plot_multigenes_dynamical(
     t = torch.linspace(0.0, t, 500)
     u0, s0 = torch.tensor(0.0), torch.tensor(0.0)
     # u0, s0 = pyro.param("u0"), pyro.param("s0")
-    u_inf, s_inf = mRNA(t_, u0, s0, alpha, beta, gamma)
+    u_inf, s_inf = mrna_dynamics(t_, u0, s0, alpha, beta, gamma)
     state = (t < t_).int()
     tau = t * state + (t - t_) * (1 - state)
 
@@ -256,7 +256,7 @@ def plot_multigenes_dynamical(
     s0_vec = s0 * state + s_inf * (1 - state)
     alpha_ = 0.0
     alpha_vec = alpha * state + alpha_ * (1 - state)
-    ut, st = mRNA(tau, u0_vec, s0_vec, alpha_vec, beta, gamma)
+    ut, st = mrna_dynamics(tau, u0_vec, s0_vec, alpha_vec, beta, gamma)
     if scale is None:
         ut = ut + u0
     else:

@@ -18,7 +18,7 @@ from termcolor import colored
 # from sklearn.decomposition import PCA
 # from torch.nn.functional import relu
 # from pyrovelocity.models._transcription_dynamics import inv
-# from pyrovelocity.models._transcription_dynamics import mRNA
+# from pyrovelocity.models import mrna_dynamics
 
 
 def mse_loss_sum(u_model, s_model, u_data, s_data):
@@ -522,8 +522,8 @@ def anndata_counts_to_df(adata):
 #         tau_[s_obs > 0].max(dim=0)[0],
 #         tau_,
 #     )
-#     ut, st = mRNA(tau, 0.0, 0.0, alpha, beta, gamma)
-#     ut_, st_ = mRNA(tau_, u_inf, s_inf, 0.0, beta, gamma)
+#     ut, st = mrna_dynamics(tau, 0.0, 0.0, alpha, beta, gamma)
+#     ut_, st_ = mrna_dynamics(tau_, u_inf, s_inf, 0.0, beta, gamma)
 
 #     u_scale_ = u_scale / scale
 #     state_on = ((ut - u_obs) / u_scale_) ** 2 + ((st - s_obs) / s_scale) ** 2
@@ -719,7 +719,7 @@ def anndata_counts_to_df(adata):
 #     return dx_ds
 
 
-# def ode_mRNA(tau, u0, s0, alpha, beta, gamma):
+# def ode_mrna_dynamics(tau, u0, s0, alpha, beta, gamma):
 #     """
 #     Solves the ODE system for mRNA dynamics.
 
@@ -743,7 +743,7 @@ def anndata_counts_to_df(adata):
 #         >>> alpha = torch.tensor(0.5)
 #         >>> beta = torch.tensor(0.4)
 #         >>> gamma = torch.tensor(0.3)
-#         >>> ode_mRNA(tau, u0, s0, alpha, beta, gamma)
+#         >>> ode_mrna_dynamics(tau, u0, s0, alpha, beta, gamma)
 #         (tensor(0.6703), tensor(0.4596))
 #     """
 #     dx_dt = functools.partial(velocity_dus_dt, alpha, beta, gamma)

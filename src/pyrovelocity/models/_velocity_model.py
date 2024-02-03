@@ -12,7 +12,7 @@ from scvi.nn import Decoder
 from torch.nn.functional import relu, softplus
 
 from pyrovelocity.logging import configure_logging
-from pyrovelocity.models._transcription_dynamics import mRNA
+from pyrovelocity.models._transcription_dynamics import mrna_dynamics
 
 logger = configure_logging(__name__)
 
@@ -525,7 +525,7 @@ class VelocityModelAuto(LogNormalModel):
         alpha_vec = torch.where(state, alpha, alpha_off)
         tau = softplus(torch.where(state, t - t0, t - switching))
 
-        ut, st = mRNA(tau, u0_vec, s0_vec, alpha_vec, beta, gamma)
+        ut, st = mrna_dynamics(tau, u0_vec, s0_vec, alpha_vec, beta, gamma)
         ut = ut * u_scale / s_scale
         return ut, st
 
@@ -637,7 +637,9 @@ class VelocityModelAuto(LogNormalModel):
             s_scale = self.one
 
             dt_switching = self.dt_switching
-            u_inf, s_inf = mRNA(dt_switching, u0, s0, alpha, beta, gamma)
+            u_inf, s_inf = mrna_dynamics(
+                dt_switching, u0, s0, alpha, beta, gamma
+            )
             u_inf = pyro.deterministic("u_inf", u_inf, event_dim=0)
             s_inf = pyro.deterministic("s_inf", s_inf, event_dim=0)
             switching = pyro.deterministic(

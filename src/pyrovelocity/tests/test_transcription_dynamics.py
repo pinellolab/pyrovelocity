@@ -4,7 +4,7 @@ import pytest
 import torch
 from beartype.roar import BeartypeCallHintParamViolation
 
-from pyrovelocity.models._transcription_dynamics import mRNA
+from pyrovelocity.models import mrna_dynamics
 
 
 def test_load__transcription_dynamics():
@@ -22,7 +22,7 @@ def test_mRNA_correct_output():
     beta = torch.tensor(0.4)
     gamma = torch.tensor(0.3)
     u_expected, s_expected = torch.tensor(1.1377), torch.tensor(0.9269)
-    u, s = mRNA(tau, u0, s0, alpha, beta, gamma)
+    u, s = mrna_dynamics(tau, u0, s0, alpha, beta, gamma)
     assert torch.isclose(u, u_expected, atol=1e-4, rtol=1e-4)
     assert torch.isclose(s, s_expected, atol=1e-4, rtol=1e-4)
 
@@ -31,7 +31,7 @@ def test_mRNA_correct_output():
 def test_mRNA_invalid_type_input(invalid_input):
     """Test the mRNA function with various invalid input types."""
     with pytest.raises(BeartypeCallHintParamViolation):
-        mRNA(
+        mrna_dynamics(
             invalid_input,
             invalid_input,
             invalid_input,
@@ -49,7 +49,7 @@ def test_mRNA_special_case_gamma_equals_beta():
     alpha = torch.tensor(0.5)
     beta = torch.tensor(0.4)
     gamma = torch.tensor(0.4)  # Same as beta
-    u, s = mRNA(tau, u0, s0, alpha, beta, gamma)
+    u, s = mrna_dynamics(tau, u0, s0, alpha, beta, gamma)
     assert u is not None
     assert s is not None
 
@@ -63,7 +63,7 @@ def test_mRNA_extreme_parameter_values(value):
     alpha = torch.tensor(value)
     beta = torch.tensor(value)
     gamma = torch.tensor(value)
-    u, s = mRNA(tau, u0, s0, alpha, beta, gamma)
+    u, s = mrna_dynamics(tau, u0, s0, alpha, beta, gamma)
     assert u is not None
     assert s is not None
     assert s is not None
