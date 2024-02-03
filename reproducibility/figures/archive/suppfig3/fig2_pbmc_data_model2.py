@@ -29,9 +29,9 @@ else:
     adata_sub.layers["raw_spliced"] = adata_all[:, adata_sub.var_names].layers[
         "spliced"
     ]
-    adata_sub.layers["raw_unspliced"] = adata_all[:, adata_sub.var_names].layers[
-        "unspliced"
-    ]
+    adata_sub.layers["raw_unspliced"] = adata_all[
+        :, adata_sub.var_names
+    ].layers["unspliced"]
     adata_sub.obs["u_lib_size_raw"] = np.array(
         adata_sub.layers["raw_unspliced"].sum(axis=-1), dtype=np.float32
     ).flatten()

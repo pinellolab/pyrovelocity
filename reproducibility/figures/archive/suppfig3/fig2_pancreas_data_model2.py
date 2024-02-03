@@ -50,7 +50,8 @@ def check_shared_time(adata_model_pos, adata):
         show=False,
         basis="umap",
         ax=ax[1],
-        title="pyro %.2f" % spearmanr(1 - adata.obs.cytotrace, adata.obs.cell_time)[0],
+        title="pyro %.2f"
+        % spearmanr(1 - adata.obs.cytotrace, adata.obs.cell_time)[0],
     )
     scv.pl.scatter(adata, color="1-Cytotrace", show=False, ax=ax[2])
     print(spearmanr(adata.obs.cytotrace, adata.obs.cell_time))

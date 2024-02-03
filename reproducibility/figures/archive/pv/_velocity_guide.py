@@ -87,10 +87,14 @@ class VelocityGuide(easyguide.EasyGuide):
             self, "u_inf_init"
         ):  # with initialization of steady-state
             self.u_inf = PyroParam(
-                self.u_inf_init.clone(), constraint=positive, event_dim=self.event_dim
+                self.u_inf_init.clone(),
+                constraint=positive,
+                event_dim=self.event_dim,
             )
             self.s_inf = PyroParam(
-                self.s_inf_init.clone(), constraint=positive, event_dim=self.event_dim
+                self.s_inf_init.clone(),
+                constraint=positive,
+                event_dim=self.event_dim,
             )
         else:
             self.u_inf = PyroParam(
@@ -159,7 +163,9 @@ class VelocityGuide(easyguide.EasyGuide):
                 return autoguide.init_to_value(
                     site,
                     values={
-                        site["name"]: pyro.subsample(self.cell_code_init, event_dim=1)
+                        site["name"]: pyro.subsample(
+                            self.cell_code_init, event_dim=1
+                        )
                     },
                 )
             if site["name"] == "cell_codebook":
@@ -205,7 +211,9 @@ class VelocityGuide(easyguide.EasyGuide):
                 print("guide init-------")
                 print(self.cell_time_init.shape)
                 print(
-                    pyro.subsample(self.cell_time_init, event_dim=self.event_dim).shape
+                    pyro.subsample(
+                        self.cell_time_init, event_dim=self.event_dim
+                    ).shape
                 )
                 print(self.event_dim)
                 return autoguide.init_to_value(
@@ -223,13 +231,20 @@ class VelocityGuide(easyguide.EasyGuide):
                 )
             if site["name"] == "genecellpair_type":
                 p_gene = self.alpha_init.new_ones(self.num_genes)
-                return autoguide.init_to_value(site, values={site["name"]: p_gene})
+                return autoguide.init_to_value(
+                    site, values={site["name"]: p_gene}
+                )
             if site["name"] == "p_velocity":
                 p_velocity = self.alpha_init.new_ones(self.num_genes)
-                return autoguide.init_to_value(site, values={site["name"]: p_velocity})
+                return autoguide.init_to_value(
+                    site, values={site["name"]: p_velocity}
+                )
             if hasattr(self, f"{site['name']}_init"):
                 return autoguide.init_to_value(
-                    site, values={site["name"]: getattr(self, f"{site['name']}_init")}
+                    site,
+                    values={
+                        site["name"]: getattr(self, f"{site['name']}_init")
+                    },
                 )
         return super().init(site)
 
@@ -247,7 +262,9 @@ class VelocityGuide(easyguide.EasyGuide):
         ind_x: Optional[torch.Tensor] = None,
     ):
         if self.plate_size == 2:
-            cell_plate = self.plate("cells", self.num_cells, subsample=ind_x, dim=-2)
+            cell_plate = self.plate(
+                "cells", self.num_cells, subsample=ind_x, dim=-2
+            )
             gene_plate = self.plate("genes", self.num_genes, dim=-1)
             if self.latent_factor == "linear":
                 decoder_weights = self.map_estimate("cell_codebook")
@@ -304,16 +321,23 @@ class VelocityGuide(easyguide.EasyGuide):
 
             if self.latent_factor == "linear":
                 cell_code_scale = pyro.param(
-                    "cell_code_scale", lambda: torch.tensor(0.1), constraint=positive
+                    "cell_code_scale",
+                    lambda: torch.tensor(0.1),
+                    constraint=positive,
                 ).to(u_obs.device)
                 with cell_plate:
                     cell_code_loc = (
-                        torch.cat((u_obs - u_pcs_mean, s_obs - s_pcs_mean), dim=-1)
+                        torch.cat(
+                            (u_obs - u_pcs_mean, s_obs - s_pcs_mean), dim=-1
+                        )
                         @ encoder_weights
                     )
-                    cell_code_loc = cell_code_loc.unsqueeze(-1).transpose(-1, -2)
+                    cell_code_loc = cell_code_loc.unsqueeze(-1).transpose(
+                        -1, -2
+                    )
                     cell_code = pyro.sample(
-                        "cell_code", Normal(cell_code_loc, cell_code_scale).to_event(1)
+                        "cell_code",
+                        Normal(cell_code_loc, cell_code_scale).to_event(1),
                     )
 
             with cell_plate, gene_plate, poutine.mask(
@@ -324,10 +348,12 @@ class VelocityGuide(easyguide.EasyGuide):
                         "abc,cd->ad", cell_code, decoder_weights.squeeze()
                     )
                     regressor_u = softplus(
-                        regressor_output[..., : self.num_genes].squeeze() + u_pcs_mean
+                        regressor_output[..., : self.num_genes].squeeze()
+                        + u_pcs_mean
                     )
                     regressor_s = softplus(
-                        regressor_output[..., self.num_genes :].squeeze() + s_pcs_mean
+                        regressor_output[..., self.num_genes :].squeeze()
+                        + s_pcs_mean
                     )
                 if self.latent_factor_operation == "sum":
                     u_obs = (u_obs - regressor_u).clamp(0.0)
@@ -346,7 +372,9 @@ class VelocityGuide(easyguide.EasyGuide):
                 ut_, st_ = mRNA(tau_, u_inf, s_inf, self.zero, beta, gamma)
                 std_u = u_scale / scale
                 state_on = ((ut - u_) / std_u) ** 2 + ((st - s_) / s_scale) ** 2
-                state_off = ((ut_ - u_) / std_u) ** 2 + ((st_ - s_) / s_scale) ** 2
+                state_off = ((ut_ - u_) / std_u) ** 2 + (
+                    (st_ - s_) / s_scale
+                ) ** 2
                 cell_gene_state_logits = state_on - state_off
                 # debug(cell_gene_state_logits)
                 state = (
@@ -409,13 +437,15 @@ class VelocityGuide(easyguide.EasyGuide):
             constraint=positive,
             event_dim=self.event_dim,
         ).to(u_obs.device)
-        switching = tau_inv(u_inf, s_inf, self.zero, self.zero, alpha, beta, gamma)
+        switching = tau_inv(
+            u_inf, s_inf, self.zero, self.zero, alpha, beta, gamma
+        )
         pyro.sample("switching", Delta(switching).to_event(1))
 
-        cell_plate = self.plate("cells", self.num_cells, subsample=ind_x, dim=-1)
-        with (
-            cell_plate
-        ):  # , poutine.mask(mask=pyro.subsample(self.mask.to(u_obs.device), event_dim=self.event_dim)):
+        cell_plate = self.plate(
+            "cells", self.num_cells, subsample=ind_x, dim=-1
+        )
+        with cell_plate:  # , poutine.mask(mask=pyro.subsample(self.mask.to(u_obs.device), event_dim=self.event_dim)):
             u_ = u_obs / scale
             s_ = s_obs
             tau = tau_inv(u_, s_, self.zero, self.zero, alpha, beta, gamma)
@@ -430,7 +460,9 @@ class VelocityGuide(easyguide.EasyGuide):
             state = (
                 pyro.sample(
                     "cell_gene_state",
-                    Bernoulli(logits=cell_gene_state_logits).to_event(self.event_dim),
+                    Bernoulli(logits=cell_gene_state_logits).to_event(
+                        self.event_dim
+                    ),
                 )
                 == self.zero
             )
@@ -479,7 +511,9 @@ class AuxCellVelocityGuide(VelocityGuide):
         s_log_library_scale: Optional[torch.Tensor] = None,
         ind_x: Optional[torch.Tensor] = None,
     ):
-        cell_plate = self.plate("cells", self.num_cells, subsample=ind_x, dim=-2)
+        cell_plate = self.plate(
+            "cells", self.num_cells, subsample=ind_x, dim=-2
+        )
         gene_plate = self.plate("genes", self.num_genes, dim=-1)
 
         with gene_plate:
@@ -694,7 +728,11 @@ class MultiKineticsGuide(VelocityGuide):
         #    n_hidden=128,
         # )
         self.time_encoder = TimeEncoder(
-            self.num_genes, n_output=1, activation_fn=nn.ELU, n_layers=2, var_eps=1e-6
+            self.num_genes,
+            n_output=1,
+            activation_fn=nn.ELU,
+            n_layers=2,
+            var_eps=1e-6,
         )
         self.k = 2
 
@@ -716,7 +754,9 @@ class MultiKineticsGuide(VelocityGuide):
         # pyro.module("infer_kinetics", self.infer_kinetics)
         # pyro.module("us_encoder", self.us_encoder)
         pyro.module("time_encoder", self.time_encoder)
-        cell_plate = self.plate("cells", self.num_cells, subsample=ind_x, dim=-2)
+        cell_plate = self.plate(
+            "cells", self.num_cells, subsample=ind_x, dim=-2
+        )
         gene_plate = self.plate("genes", self.num_genes, dim=-1)
         kinetics_plate = self.plate("kinetics", self.k, dim=-3)
         with kinetics_plate, gene_plate:
@@ -782,7 +822,9 @@ class MultiKineticsGuide(VelocityGuide):
         state_on = ((ut - u_) / std_u) ** 2 + ((st - s_) / s_scale) ** 2
         state_off = ((ut_ - u_) / std_u) ** 2 + ((st_ - s_) / s_scale) ** 2
         state_zero = ((ut - u0) / std_u) ** 2 + ((st - s0) / s_scale) ** 2
-        state_inf = ((ut_ - u_inf) / std_u) ** 2 + ((st_ - s_inf) / s_scale) ** 2
+        state_inf = ((ut_ - u_inf) / std_u) ** 2 + (
+            (st_ - s_inf) / s_scale
+        ) ** 2
         cell_gene_state_logits = torch.stack(
             [state_on, state_zero, state_off, state_inf], dim=-1
         ).argmin(-1)
@@ -895,7 +937,9 @@ class CellGuide(PyroModule):
         self.t_scale_on = t_scale_on
         if self.shared_time:
             if not (init_cell_time is None):
-                init_cell_time = init_cell_time.detach().clone().requires_grad_()
+                init_cell_time = (
+                    init_cell_time.detach().clone().requires_grad_()
+                )
                 self.cell_time_loc = PyroParam(init_cell_time, event_dim=0)
         self.cell_code_scale = PyroParam(
             torch.tensor(0.1), constraint=positive, event_dim=0
@@ -903,10 +947,14 @@ class CellGuide(PyroModule):
         self.zero = zero
         self.one = one
         self.u_loc = PyroParam(
-            torch.ones(self.num_cells, self.num_genes), constraint=positive, event_dim=0
+            torch.ones(self.num_cells, self.num_genes),
+            constraint=positive,
+            event_dim=0,
         )
         self.s_loc = PyroParam(
-            torch.ones(self.num_cells, self.num_genes), constraint=positive, event_dim=0
+            torch.ones(self.num_cells, self.num_genes),
+            constraint=positive,
+            event_dim=0,
         )
         self.likelihood = likelihood
         self.encoder = TimeEncoder(
@@ -956,7 +1004,8 @@ class CellGuide(PyroModule):
             )
             cell_code_loc = cell_code_loc.unsqueeze(-1).transpose(-1, -2)
             cell_code = pyro.sample(
-                "cell_code", Normal(cell_code_loc, self.cell_code_scale).to_event(1)
+                "cell_code",
+                Normal(cell_code_loc, self.cell_code_scale).to_event(1),
             )
         with gene_plate:
             if self.latent_factor == "linear":
@@ -964,10 +1013,12 @@ class CellGuide(PyroModule):
                     "abc,cd->ad", cell_code, decoder_weights.squeeze()
                 )
                 regressor_u = softplus(
-                    regressor_output[..., : self.num_genes].squeeze() + u_pcs_mean
+                    regressor_output[..., : self.num_genes].squeeze()
+                    + u_pcs_mean
                 )
                 regressor_s = softplus(
-                    regressor_output[..., self.num_genes :].squeeze() + s_pcs_mean
+                    regressor_output[..., self.num_genes :].squeeze()
+                    + s_pcs_mean
                 )
             if self.latent_factor_operation == "sum":
                 u_obs = u_obs - regressor_u
@@ -991,7 +1042,9 @@ class CellGuide(PyroModule):
             state_on = ((ut - u_) / std_u) ** 2 + ((st - s_) / s_scale) ** 2
             state_off = ((ut_ - u_) / std_u) ** 2 + ((st_ - s_) / s_scale) ** 2
             state_zero = ((ut - u0) / std_u) ** 2 + ((st - s0) / s_scale) ** 2
-            state_inf = ((ut_ - u_inf) / std_u) ** 2 + ((st_ - s_inf) / s_scale) ** 2
+            state_inf = ((ut_ - u_inf) / std_u) ** 2 + (
+                (st_ - s_inf) / s_scale
+            ) ** 2
             cell_gene_state_logits = torch.stack(
                 [state_on, state_zero, state_off, state_inf], dim=-1
             ).argmin(-1)
@@ -1025,7 +1078,9 @@ class CellGuide(PyroModule):
                 # cell_time_loc, u_read_depth_loc, u_read_depth_scale, s_read_depth_loc, s_read_depth_scale = self.encoder(t, u_log_library=u_log_library, s_log_library=s_log_library)
                 # u_read_depth = pyro.sample('u_read_depth', LogNormal(u_read_depth_loc, u_read_depth_scale))
                 # s_read_depth = pyro.sample('s_read_depth', LogNormal(s_read_depth_loc, s_read_depth_scale))
-                cell_time = pyro.sample("cell_time", Delta(cell_time_loc, event_dim=0))
+                cell_time = pyro.sample(
+                    "cell_time", Delta(cell_time_loc, event_dim=0)
+                )
 
                 # cell_time_dist = TransformedDistribution(
                 #            Normal(cell_time_loc, torch.sqrt(cell_time_scale)),
@@ -1072,7 +1127,9 @@ class CellGuide(PyroModule):
             if self.latent_factor_operation == "selection":
                 scale = u_scale / s_scale
                 std_u = u_scale / scale
-                velocity_error = ((ut - u_) / std_u) ** 2 + ((st - s_) / s_scale) ** 2
+                velocity_error = ((ut - u_) / std_u) ** 2 + (
+                    (st - s_) / s_scale
+                ) ** 2
                 pca_error = ((regressor_u / scale - u_) / std_u) ** 2 + (
                     (regressor_s - s_) / s_scale
                 ) ** 2
@@ -1200,7 +1257,9 @@ class TrajectoryGuide(VelocityGuide):
         s_log_library: Optional[torch.Tensor] = None,
         ind_x: Optional[torch.Tensor] = None,
     ):
-        cell_plate = self.plate("cells", self.num_cells, subsample=ind_x, dim=-2)
+        cell_plate = self.plate(
+            "cells", self.num_cells, subsample=ind_x, dim=-2
+        )
         aux_cell_plate = self.plate("aux_cells", self.num_aux_cells, dim=-2)
         gene_plate = self.plate("genes", self.num_genes, dim=-1)
 
@@ -1232,7 +1291,9 @@ class TrajectoryGuide(VelocityGuide):
                     == zero
                 )
                 alpha = torch.where(state_aux, alpha, zero)
-                u_loc, s_loc = mRNA(dt_aux[step], u_prev, s_prev, alpha, beta, gamma)
+                u_loc, s_loc = mRNA(
+                    dt_aux[step], u_prev, s_prev, alpha, beta, gamma
+                )
                 u_prev = u_loc + u_noise * torch.sqrt(2 * dt_aux[step])
                 s_prev = s_loc + s_noise * torch.sqrt(2 * dt_aux[step])
                 u_aux.append(u_prev)
@@ -1250,9 +1311,7 @@ class TrajectoryGuide(VelocityGuide):
                 (u_obs.reshape(u_obs.shape[0], 1, u_obs.shape[1]) - u_aux) ** 2
             ).sum() + (
                 (s_obs.reshape(s_obs.shape[0], 1, s_obs.shape[1]) - s_aux) ** 2
-            ).sum(
-                axis=-1
-            )
+            ).sum(axis=-1)
             order_stat = order_stat.reshape(u_obs.shape[0], 1, u_aux.shape[0])
             order = pyro.sample(
                 "order",
@@ -1265,8 +1324,12 @@ class TrajectoryGuide(VelocityGuide):
                 s_noise = self.map_estimate("s_noise")
                 u_prev = u_aux[..., order, :].squeeze()
                 s_prev = s_aux[..., order, :].squeeze()
-                u_loc_on, s_loc_on = mRNA(dt, u_prev, s_prev, alpha, beta, gamma)
-                u_loc_off, s_loc_off = mRNA(dt, u_prev, s_prev, zero, beta, gamma)
+                u_loc_on, s_loc_on = mRNA(
+                    dt, u_prev, s_prev, alpha, beta, gamma
+                )
+                u_loc_off, s_loc_off = mRNA(
+                    dt, u_prev, s_prev, zero, beta, gamma
+                )
                 u_on = u_loc_on + u_noise * torch.sqrt(2 * dt)
                 s_on = s_loc_on + s_noise * torch.sqrt(2 * dt)
                 u_off = u_loc_off + u_noise * torch.sqrt(2 * dt)
@@ -1299,7 +1362,9 @@ class DecoderTimeGuide(VelocityGuide):
     ):
         pyro.module("time_encoder", self.encoder)
         gene_plate = self.plate("genes", self.num_genes, dim=-1)
-        cell_plate = self.plate("cells", self.num_cells, subsample=ind_x, dim=-2)
+        cell_plate = self.plate(
+            "cells", self.num_cells, subsample=ind_x, dim=-2
+        )
         u_ = torch.log1p(u_obs)
         s_ = torch.log1p(s_obs)
         x = torch.hstack([u_, s_])
@@ -1441,7 +1506,9 @@ class AutoDeltaRNAVelocityGuide(autoguide.AutoDelta):
                 values={
                     key: value.to(f"cuda:{use_gpu}")
                     if key != "cell_time"
-                    else pyro.subsample(value.to(f"cuda:{use_gpu}"), event_dim=0)
+                    else pyro.subsample(
+                        value.to(f"cuda:{use_gpu}"), event_dim=0
+                    )
                     for key, value in initial_values.items()
                 }
             )
@@ -1498,11 +1565,16 @@ class LatentGuide(easyguide.EasyGuide):
         if site["name"] == "cell_code":
             return autoguide.init_to_value(
                 site,
-                values={site["name"]: pyro.subsample(self.cell_code_init, event_dim=1)},
+                values={
+                    site["name"]: pyro.subsample(
+                        self.cell_code_init, event_dim=1
+                    )
+                },
             )
         if hasattr(self, f"{site['name']}_init"):
             return autoguide.init_to_value(
-                site, values={site["name"]: getattr(self, f"{site['name']}_init")}
+                site,
+                values={site["name"]: getattr(self, f"{site['name']}_init")},
             )
         return super().init(site)
 
@@ -1527,9 +1599,13 @@ class LatentGuide(easyguide.EasyGuide):
 
             if self.inducing_point_size == 0:
                 cell_code_scale = pyro.param(
-                    "cell_code_scale", lambda: torch.tensor(0.1), constraint=positive
+                    "cell_code_scale",
+                    lambda: torch.tensor(0.1),
+                    constraint=positive,
                 ).to(u_obs.device)
-            cell_plate = self.plate("cells", self.num_cells, dim=-2, subsample=ind_x)
+            cell_plate = self.plate(
+                "cells", self.num_cells, dim=-2, subsample=ind_x
+            )
             with cell_plate:
                 cell_code_loc = (
                     torch.cat((u_obs - u_pcs_mean, s_obs - s_pcs_mean), dim=-1)
@@ -1564,7 +1640,10 @@ class LatentGuide(easyguide.EasyGuide):
                         self.inducing_point_size,
                         self.latent_factor_size,
                     )
-                    cell_code_loc, cell_code_scale = pyro.contrib.gp.util.conditional(
+                    (
+                        cell_code_loc,
+                        cell_code_scale,
+                    ) = pyro.contrib.gp.util.conditional(
                         cell_code_loc,
                         inducing_points,
                         kernel,
@@ -1575,15 +1654,24 @@ class LatentGuide(easyguide.EasyGuide):
                         self.latent_factor_size,
                         cell_plate.subsample_size,
                     )
-                    cell_code_loc = cell_code_loc.T.unsqueeze(-1).transpose(-1, -2)
-                    cell_code_scale = cell_code_scale.T.unsqueeze(-1).transpose(-1, -2)
+                    cell_code_loc = cell_code_loc.T.unsqueeze(-1).transpose(
+                        -1, -2
+                    )
+                    cell_code_scale = cell_code_scale.T.unsqueeze(-1).transpose(
+                        -1, -2
+                    )
                 else:
-                    cell_code_loc = cell_code_loc.unsqueeze(-1).transpose(-1, -2)
+                    cell_code_loc = cell_code_loc.unsqueeze(-1).transpose(
+                        -1, -2
+                    )
                 cell_code = pyro.sample(
-                    "cell_code", Normal(cell_code_loc, cell_code_scale).to_event(1)
+                    "cell_code",
+                    Normal(cell_code_loc, cell_code_scale).to_event(1),
                 )
         else:
-            cell_code = self.guide2(u_obs, s_obs, u_log_library, s_log_library, ind_x)
+            cell_code = self.guide2(
+                u_obs, s_obs, u_log_library, s_log_library, ind_x
+            )
         return cell_code
 
     def guide2(
@@ -1595,14 +1683,18 @@ class LatentGuide(easyguide.EasyGuide):
         ind_x: Optional[torch.Tensor] = None,
     ):
         """max plate = 1 only cell plate"""
-        cell_plate = self.plate("cells", self.num_cells, subsample=ind_x, dim=-1)
+        cell_plate = self.plate(
+            "cells", self.num_cells, subsample=ind_x, dim=-1
+        )
         decoder_weights = self.map_estimate("cell_codebook")
         encoder_weights = decoder_weights.T
         u_scale = self.map_estimate("u_scale")
         s_scale = self.map_estimate("s_scale")
         u_pcs_mean = self.map_estimate("u_pcs_mean")
         s_pcs_mean = self.map_estimate("s_pcs_mean")
-        cell_plate = self.plate("cells", self.num_cells, subsample=ind_x, dim=-1)
+        cell_plate = self.plate(
+            "cells", self.num_cells, subsample=ind_x, dim=-1
+        )
         # cell_code_scale = pyro.param("cell_code_scale", lambda: torch.ones(self.latent_factor_size) * 0.1, constraint=positive, event_dim=1).to(u_obs.device)
         cell_code_scale = pyro.param(
             "cell_code_scale", lambda: torch.tensor(0.1), constraint=positive

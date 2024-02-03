@@ -52,7 +52,7 @@ class VelocityModule(PyroBaseModuleClass):
         correct_library_size: Union[bool, str] = True,
         cell_specific_kinetics: Optional[str] = None,
         kinetics_num: Optional[int] = None,
-        **initial_values
+        **initial_values,
     ) -> None:
         super().__init__()
         self.num_cells = num_cells
@@ -89,7 +89,7 @@ class VelocityModule(PyroBaseModuleClass):
                 guide_type=self.guide_type,
                 cell_specific_kinetics=self.cell_specific_kinetics,
                 kinetics_num=kinetics_num,
-                **initial_values
+                **initial_values,
             )
         if self.model_type == "multikinetics_linear":
             self._model = MultiKineticsModelDirichletLinear(
@@ -111,7 +111,7 @@ class VelocityModule(PyroBaseModuleClass):
                 guide_type=self.guide_type,
                 cell_specific_kinetics=self.cell_specific_kinetics,
                 kinetics_num=kinetics_num,
-                **initial_values
+                **initial_values,
             )
 
         if self.model_type == "auto":
@@ -139,7 +139,7 @@ class VelocityModule(PyroBaseModuleClass):
                 correct_library_size=correct_library_size,
                 guide_type=self.guide_type,
                 cell_specific_kinetics=self.cell_specific_kinetics,
-                **initial_values
+                **initial_values,
             )
         if self.model_type == "traj":
             self._model = AuxTrajectoryModel(
@@ -147,10 +147,12 @@ class VelocityModule(PyroBaseModuleClass):
                 self.num_genes,
                 likelihood,
                 num_aux_cells=num_aux_cells,
-                **initial_values
+                **initial_values,
             )
         if self.model_type == "decoder_time":
-            self._model = DecoderTimeModel(self.num_cells, self.num_genes, likelihood)
+            self._model = DecoderTimeModel(
+                self.num_cells, self.num_genes, likelihood
+            )
         elif self.model_type in ["velocity", "velocity2"]:
             if self.num_aux_cells >= 0:
                 self._model = AuxCellVelocityModel(
@@ -170,7 +172,7 @@ class VelocityModule(PyroBaseModuleClass):
                     add_offset=add_offset,
                     correct_library_size=correct_library_size,
                     guide_type=self.guide_type,
-                    **initial_values
+                    **initial_values,
                 )
             else:
                 self._model = VelocityModel(
@@ -184,7 +186,7 @@ class VelocityModule(PyroBaseModuleClass):
                     latent_factor_operation=latent_factor_operation,
                     latent_factor_size=latent_factor_size,
                     include_prior=include_prior,
-                    **initial_values
+                    **initial_values,
                 )
         elif self.model_type == "latentfactor":
             self._model = LatentFactor(
@@ -206,7 +208,7 @@ class VelocityModule(PyroBaseModuleClass):
                 latent_factor_operation,
                 self.model_type,
                 self.plate_size,
-                **initial_values
+                **initial_values,
             )
         if guide_type == "autodelta":
             self._guide = AutoDeltaRNAVelocityGuide(
@@ -233,7 +235,7 @@ class VelocityModule(PyroBaseModuleClass):
                     self.plate_size,
                     self.only_cell_times,
                     add_offset,
-                    **initial_values
+                    **initial_values,
                 )
                 ##guide = AutoGuideList(self._model)
                 ##guide.append(AuxCellVelocityGuide(poutine.block(self._model, hide=["alpha", "beta", "gamma", "u_scale", "s_scale", "dt_switching", "cell_gene_state"]), likelihood, shared_time, t_scale_on, latent_factor, latent_factor_operation, self.model_type, self.plate_size, self.only_cell_times, add_offset, **initial_values))
@@ -249,7 +251,7 @@ class VelocityModule(PyroBaseModuleClass):
                     latent_factor_operation,
                     self.model_type,
                     self.plate_size,
-                    **initial_values
+                    **initial_values,
                 )
         elif guide_type == "decoder_time":
             self._guide = DecoderTimeGuide(self._model)
@@ -263,12 +265,14 @@ class VelocityModule(PyroBaseModuleClass):
                 latent_factor_operation,
                 self.model_type,
                 self.plate_size,
-                **initial_values
+                **initial_values,
             )
         elif (
             guide_type == "auto" or guide_type == "auto_t0_constraint"
         ):  # constraint on t0
-            guide = AutoGuideList(self._model, create_plates=self._model.create_plates)
+            guide = AutoGuideList(
+                self._model, create_plates=self._model.create_plates
+            )
             if correct_library_size:
                 if correct_library_size == "cell_size_regress":
                     guide.append(
@@ -309,7 +313,8 @@ class VelocityModule(PyroBaseModuleClass):
             else:
                 guide.append(
                     AutoNormal(
-                        poutine.block(self._model, expose=["cell_time"]), init_scale=0.1
+                        poutine.block(self._model, expose=["cell_time"]),
+                        init_scale=0.1,
                     )
                 )
             if add_offset:
@@ -354,7 +359,8 @@ class VelocityModule(PyroBaseModuleClass):
                 )
             self._guide = guide
         elif (
-            guide_type == "velocity_auto" or guide_type == "velocity_auto_t0_constraint"
+            guide_type == "velocity_auto"
+            or guide_type == "velocity_auto_t0_constraint"
         ):  # constraint on t0
             guide = VelocityAutoGuideList(
                 self._model, create_plates=self._model.create_plates
@@ -483,7 +489,7 @@ class VelocityModule(PyroBaseModuleClass):
                     self._model,
                     plate_size=plate_size,
                     inducing_point_size=inducing_point_size,
-                    **initial_values
+                    **initial_values,
                 )
         self._get_fn_args_from_batch = self._model._get_fn_args_from_batch
 
