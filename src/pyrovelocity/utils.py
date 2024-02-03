@@ -12,38 +12,12 @@ from beartype import beartype
 from scvi.data import synthetic_iid
 from termcolor import colored
 
-
 # import torch
 # from scipy.sparse import issparse
 # from sklearn.decomposition import PCA
 # from torch.nn.functional import relu
 # from pyrovelocity.models._transcription_dynamics import inv
 # from pyrovelocity.models import mrna_dynamics
-
-
-def mse_loss_sum(u_model, s_model, u_data, s_data):
-    """
-    Computes the mean squared error loss sum between the model and data.
-
-    Args:
-        u_model (torch.Tensor): Predicted values of u from the model.
-        s_model (torch.Tensor): Predicted values of s from the model.
-        u_data (torch.Tensor): True values of u from the data.
-        s_data (torch.Tensor): True values of s from the data.
-
-    Returns:
-        torch.Tensor: Mean squared error loss sum.
-
-    Examples:
-        >>> import torch
-        >>> u_model = torch.tensor([0.5, 0.6])
-        >>> s_model = torch.tensor([0.7, 0.8])
-        >>> u_data = torch.tensor([0.4, 0.5])
-        >>> s_data = torch.tensor([0.6, 0.7])
-        >>> mse_loss_sum(u_model, s_model, u_data, s_data)
-        tensor(0.0200)
-    """
-    return ((u_model - u_data) ** 2 + (s_model - s_data) ** 2).mean(0)
 
 
 def mae(pred_counts, true_counts):

@@ -23,7 +23,6 @@ from scvelo.plotting.velocity_embedding_grid import default_arrow
 
 from pyrovelocity.analyze import compute_mean_vector_field, compute_volcano_data
 from pyrovelocity.models import mrna_dynamics
-from pyrovelocity.utils import mse_loss_sum
 
 
 def plot_evaluate_dynamic_orig(adata, gene="Cpe", velocity=None, ax=None):
@@ -1876,3 +1875,28 @@ def align_trajectory_diff(
     print(results.shape)
     length_filter = np.sqrt((results[:, 2:4] ** 2).sum(1)) > length_cutoff
     return results[length_filter]
+
+
+def mse_loss_sum(u_model, s_model, u_data, s_data):
+    """
+    Computes the mean squared error loss sum between the model and data.
+
+    Args:
+        u_model (torch.Tensor): Predicted values of u from the model.
+        s_model (torch.Tensor): Predicted values of s from the model.
+        u_data (torch.Tensor): True values of u from the data.
+        s_data (torch.Tensor): True values of s from the data.
+
+    Returns:
+        torch.Tensor: Mean squared error loss sum.
+
+    Examples:
+        >>> import torch
+        >>> u_model = torch.tensor([0.5, 0.6])
+        >>> s_model = torch.tensor([0.7, 0.8])
+        >>> u_data = torch.tensor([0.4, 0.5])
+        >>> s_data = torch.tensor([0.6, 0.7])
+        >>> mse_loss_sum(u_model, s_model, u_data, s_data)
+        tensor(0.0200)
+    """
+    return ((u_model - u_data) ** 2 + (s_model - s_data) ** 2).mean(0)
