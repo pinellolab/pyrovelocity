@@ -331,9 +331,11 @@ jobs:
         include:
           - name: "pyrovelocity"
             url: "https://ghcr.io/pinellolab/pyrovelocity"
+            fqn: "ghcr.io/pinellolab/pyrovelocity"
             nixCommand: "nix run .#containerManifest --impure --accept-flake-config"
           - name: "pyrovelocitydev"
             url: "https://ghcr.io/pinellolab/pyrovelocitydev"
+            fqn: "ghcr.io/pinellolab/pyrovelocitydev"
             nixCommand: "nix run .#devcontainerManifest --impure --accept-flake-config"
     concurrency:
       group: bni-${{ matrix.name }}-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}-${{ needs.set-variables.outputs.mode }}
@@ -395,8 +397,15 @@ jobs:
           echo "Using Git Reference: $GIT_REF"
           echo "Using Git SHA: $GIT_SHA"
           echo "Using Git SHA Short: $GIT_SHA_SHORT"
+          FQN_GIT_SHA="${{ matrix.fqn }}:$GIT_SHA"
+          echo "Image FQN with Git SHA: $FQN_GIT_SHA"
           df -h
-          ${{ matrix.nixCommand }}
+          if docker manifest inspect "$FQN_GIT_SHA" > /dev/null 2>&1; then
+              echo "Image $FQN_GIT_SHA already exists. Skipping build."
+          else
+              echo "Image $FQN_GIT_SHA does not exist. Building."
+              ${{ matrix.nixCommand }}
+          fi
           df -h
         env:
           GH_TOKEN: ${{ github.token }}
