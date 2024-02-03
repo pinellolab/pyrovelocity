@@ -1,7 +1,7 @@
-# pyrovelocity.api
+# pyrovelocity.train
 
 ```{eval-rst}
-.. automodule:: pyrovelocity.api
+.. automodule:: pyrovelocity.train
    :members:
    :undoc-members:
    :show-inheritance:

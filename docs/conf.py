@@ -6,6 +6,7 @@ autodoc_mock_imports = [
     "cospar",
     "cytotrace",
     "h5py",
+    "jaxtyping",
     "matplotlib",
     "mpl_toolkits",
     "numpy",
@@ -20,6 +21,7 @@ autodoc_mock_imports = [
     "sklearn",
     "torch",
     "torchmetrics",
+    "umap",
 ]
 
 autodoc_default_options = {

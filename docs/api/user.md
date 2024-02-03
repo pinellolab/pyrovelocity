@@ -5,10 +5,14 @@
 maxdepth: 2
 ---
 
-user/api
 user/data
+user/train
+user/preprocess
+user/analyze
+user/datasets
 user/plot
 user/utils
+user/interfaces
 user/cytotrace
 ```
 

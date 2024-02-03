@@ -1,7 +1,7 @@
-# pyrovelocity.\_trainer
+# pyrovelocity.interfaces
 
 ```{eval-rst}
-.. automodule:: pyrovelocity._trainer
+.. automodule:: pyrovelocity.interfaces
    :members:
    :undoc-members:
    :show-inheritance:

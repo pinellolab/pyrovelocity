@@ -1,7 +1,7 @@
-# pyrovelocity.\_velocity
+# pyrovelocity.preprocess
 
 ```{eval-rst}
-.. automodule:: pyrovelocity._velocity
+.. automodule:: pyrovelocity.preprocess
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,14 +1,15 @@
-# Developer
+# Models
 
 ```{toctree}
 ---
 maxdepth: 2
 ---
 
-developer/velocity
-developer/trainer
-developer/velocity_module
-developer/velocity_model
+models/velocity_model
+models/velocity_module
+models/trainer
+models/velocity
+models/transcription_dynamics
 ```
 
 <!--
