@@ -1,27 +1,18 @@
-from typing import Optional
-from typing import Tuple
-from typing import Union
+from typing import Optional, Tuple, Union
 
 import pyro
 import torch
 from beartype import beartype
-from jaxtyping import Float
-from jaxtyping import jaxtyped
+from jaxtyping import Float, jaxtyped
 from pyro import poutine
-from pyro.distributions import Bernoulli
-from pyro.distributions import LogNormal
-from pyro.distributions import Normal
-from pyro.distributions import Poisson
-from pyro.nn import PyroModule
-from pyro.nn import PyroSample
+from pyro.distributions import Bernoulli, LogNormal, Normal, Poisson
+from pyro.nn import PyroModule, PyroSample
 from pyro.primitives import plate
 from scvi.nn import Decoder
-from torch.nn.functional import relu
-from torch.nn.functional import softplus
+from torch.nn.functional import relu, softplus
 
-from pyrovelocity._transcription_dynamics import mRNA
 from pyrovelocity.logging import configure_logging
-
+from pyrovelocity.models._transcription_dynamics import mRNA
 
 logger = configure_logging(__name__)
 
@@ -53,7 +44,7 @@ class LogNormalModel(PyroModule):
         plate_size (int): The size of the plate for the model, defaults to 2.
 
     Example:
-        >>> from pyrovelocity._velocity_model import LogNormalModel
+        >>> from pyrovelocity.models._velocity_model import LogNormalModel
         >>> num_cells = 3
         >>> num_genes = 4
         >>> likelihood = "Poisson"
@@ -263,7 +254,7 @@ class LogNormalModel(PyroModule):
 
         Example:
             >>> import torch
-            >>> from pyrovelocity._velocity_model import LogNormalModel
+            >>> from pyrovelocity.models._velocity_model import LogNormalModel
             >>> num_cells = 10
             >>> num_genes = 20
             >>> likelihood = "Poisson"
@@ -336,7 +327,7 @@ class VelocityModelAuto(LogNormalModel):
 
     Examples:
         >>> import torch
-        >>> from pyrovelocity._velocity_model import VelocityModelAuto
+        >>> from pyrovelocity.models._velocity_model import VelocityModelAuto
         >>> model = VelocityModelAuto(
         ...             3,
         ...             4,
@@ -489,7 +480,7 @@ class VelocityModelAuto(LogNormalModel):
 
         Examples:
             >>> import torch
-            >>> from pyrovelocity._velocity_model import VelocityModelAuto
+            >>> from pyrovelocity.models._velocity_model import VelocityModelAuto
             >>> model = VelocityModelAuto(
             ...             3,
             ...             4,
@@ -575,7 +566,7 @@ class VelocityModelAuto(LogNormalModel):
 
         Examples:
             >>> import torch
-            >>> from pyrovelocity._velocity_model import VelocityModelAuto
+            >>> from pyrovelocity.models._velocity_model import VelocityModelAuto
             >>> u_obs=torch.tensor(
             ...     [[33.,  1.,  7.,  1.],
             ...     [12., 30., 11.,  3.],

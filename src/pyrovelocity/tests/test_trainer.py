@@ -2,6 +2,6 @@
 
 
 def test_load__trainer():
-    from pyrovelocity import _trainer
+    from pyrovelocity.models import _trainer
 
     print(_trainer.__file__)

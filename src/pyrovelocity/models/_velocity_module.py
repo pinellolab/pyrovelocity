@@ -1,17 +1,12 @@
-from typing import Any
-from typing import Dict
-from typing import Optional
-from typing import Tuple
-from typing import Union
+from typing import Any, Dict, Optional, Tuple, Union
 
 import torch
 from pyro import poutine
-from pyro.infer.autoguide import AutoLowRankMultivariateNormal
-from pyro.infer.autoguide import AutoNormal
+from pyro.infer.autoguide import AutoLowRankMultivariateNormal, AutoNormal
 from pyro.infer.autoguide.guides import AutoGuideList
 from scvi.module.base import PyroBaseModuleClass
 
-from pyrovelocity._velocity_model import VelocityModelAuto
+from pyrovelocity.models._velocity_model import VelocityModelAuto
 
 
 class VelocityModule(PyroBaseModuleClass):
@@ -44,7 +39,7 @@ class VelocityModule(PyroBaseModuleClass):
 
     Examples:
         >>> from scvi.module.base import PyroBaseModuleClass
-        >>> from pyrovelocity._velocity_module import VelocityModule
+        >>> from pyrovelocity.models._velocity_module import VelocityModule
         >>> num_cells = 10
         >>> num_genes = 20
         >>> velocity_module1 = VelocityModule(
@@ -55,7 +50,7 @@ class VelocityModule(PyroBaseModuleClass):
         auto
         auto_t0_constraint
         >>> type(velocity_module1.model)
-        <class 'pyrovelocity._velocity_model.VelocityModelAuto'>
+        <class 'pyrovelocity.models._velocity_model.VelocityModelAuto'>
         >>> type(velocity_module1.guide)
         <class 'pyro.infer.autoguide.guides.AutoGuideList'>
         >>> velocity_module2 = VelocityModule(
@@ -66,7 +61,7 @@ class VelocityModule(PyroBaseModuleClass):
         auto
         auto
         >>> type(velocity_module2.model)
-        <class 'pyrovelocity._velocity_model.VelocityModelAuto'>
+        <class 'pyrovelocity.models._velocity_model.VelocityModelAuto'>
         >>> type(velocity_module2.guide)
         <class 'pyro.infer.autoguide.guides.AutoGuideList'>
     """

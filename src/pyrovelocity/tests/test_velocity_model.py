@@ -5,12 +5,12 @@ import torch
 from pyro.distributions import Poisson
 from pyro.nn import PyroModule
 
-from pyrovelocity._velocity_model import LogNormalModel
-from pyrovelocity._velocity_model import VelocityModelAuto
+from pyrovelocity.models._velocity_model import LogNormalModel
+from pyrovelocity.models._velocity_model import VelocityModelAuto
 
 
 def test_load__velocity_model():
-    from pyrovelocity import _velocity_model
+    from pyrovelocity.models import _velocity_model
 
     print(_velocity_model.__file__)
 

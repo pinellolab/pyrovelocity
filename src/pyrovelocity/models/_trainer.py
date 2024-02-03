@@ -1,19 +1,27 @@
 import math
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Sequence
+from typing import Union
 
 import mlflow
 import numpy as np
 import pyro
 import scipy
 import torch
-from pyro.infer import Trace_ELBO, TraceEnum_ELBO
+from pyro.infer import Trace_ELBO
+from pyro.infer import TraceEnum_ELBO
 from pyro.infer.autoguide.guides import AutoGuideList
 from pyro.optim.clipped_adam import ClippedAdam
 from pyro.optim.optim import PyroOptim
 from scvi.dataloaders import DataSplitter
-from scvi.train import PyroTrainingPlan, TrainRunner
+from scvi.train import PyroTrainingPlan
+from scvi.train import TrainRunner
 
-from pyrovelocity._velocity_module import VelocityModule
+from pyrovelocity.models._velocity_module import VelocityModule
 
 
 class VelocityAdam(ClippedAdam):

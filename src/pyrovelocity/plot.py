@@ -21,8 +21,8 @@ from scipy.sparse import issparse
 from scipy.stats import spearmanr
 from scvelo.plotting.velocity_embedding_grid import default_arrow
 
-from pyrovelocity._transcription_dynamics import mRNA
 from pyrovelocity.analyze import compute_mean_vector_field, compute_volcano_data
+from pyrovelocity.models._transcription_dynamics import mRNA
 from pyrovelocity.utils import mse_loss_sum
 
 

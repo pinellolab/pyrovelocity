@@ -12,12 +12,13 @@ from beartype import beartype
 from scvi.data import synthetic_iid
 from termcolor import colored
 
+
 # import torch
 # from scipy.sparse import issparse
 # from sklearn.decomposition import PCA
 # from torch.nn.functional import relu
-# from pyrovelocity._transcription_dynamics import inv
-# from pyrovelocity._transcription_dynamics import mRNA
+# from pyrovelocity.models._transcription_dynamics import inv
+# from pyrovelocity.models._transcription_dynamics import mRNA
 
 
 def mse_loss_sum(u_model, s_model, u_data, s_data):

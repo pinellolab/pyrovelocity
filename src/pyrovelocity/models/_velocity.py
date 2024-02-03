@@ -23,14 +23,14 @@ from scvi.model.base._utils import (
 )
 from scvi.module.base import PyroBaseModuleClass
 
-from pyrovelocity._trainer import VelocityTrainingMixin
-from pyrovelocity._velocity_module import VelocityModule
 from pyrovelocity.analyze import (
     compute_mean_vector_field,
     compute_volcano_data,
     vector_field_uncertainty,
 )
 from pyrovelocity.logging import configure_logging
+from pyrovelocity.models._trainer import VelocityTrainingMixin
+from pyrovelocity.models._velocity_module import VelocityModule
 
 # from pyrovelocity.utils import init_with_all_cells
 
@@ -95,7 +95,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> import anndata
             >>> from pyrovelocity.utils import pretty_log_dict, print_anndata, generate_sample_data
             >>> from pyrovelocity.preprocess import copy_raw_counts
-            >>> from pyrovelocity._velocity import PyroVelocity
+            >>> from pyrovelocity.models._velocity import PyroVelocity
             >>> # setup sample data
             >>> n_obs = 10
             >>> n_vars = 5
