@@ -7,16 +7,17 @@ import numpy as np
 import pandas as pd
 import scvelo as scv
 import seaborn as sns
-import torch
 from anndata._core.anndata import AnnData
 from beartype import beartype
-from scipy.sparse import issparse
 from scvi.data import synthetic_iid
-from sklearn.decomposition import PCA
 from termcolor import colored
-from torch.nn.functional import relu
 
-from pyrovelocity._transcription_dynamics import inv, mRNA
+# import torch
+# from scipy.sparse import issparse
+# from sklearn.decomposition import PCA
+# from torch.nn.functional import relu
+# from pyrovelocity._transcription_dynamics import inv
+# from pyrovelocity._transcription_dynamics import mRNA
 
 
 def mse_loss_sum(u_model, s_model, u_data, s_data):
@@ -366,273 +367,273 @@ def anndata_counts_to_df(adata):
 
 
 # TODO: remove unused functions
-def log(x):
-    """
-    Computes the element-wise natural logarithm of a tensor, while clipping
-    its values to avoid numerical instability.
+# def log(x):
+#     """
+#     Computes the element-wise natural logarithm of a tensor, while clipping
+#     its values to avoid numerical instability.
 
-    Args:
-        x (torch.Tensor): Input tensor.
+#     Args:
+#         x (torch.Tensor): Input tensor.
 
-    Returns:
-        torch.Tensor: Tensor with element-wise natural logarithm of x.
+#     Returns:
+#         torch.Tensor: Tensor with element-wise natural logarithm of x.
 
-    Examples:
-        >>> import torch
-        >>> x = torch.tensor([0.0001, 0.5, 0.9999])
-        >>> log(x)
-        tensor([-9.2103e+00, -6.9315e-01, -1.0002e-04])
-    """
-    eps = torch.finfo(x.dtype).eps
-    return torch.log(x.clamp(eps, 1 - eps))
-
-
-# TODO: remove unused functions
-def tau_inv(
-    u=None, s=None, u0=None, s0=None, alpha=None, beta=None, gamma=None
-):
-    """
-    Computes the inverse tau given the parameters and initial conditions.
-
-    Args:
-        u (torch.Tensor): Value of u.
-        s (torch.Tensor): Value of s.
-        u0 (torch.Tensor): Initial value of u.
-        s0 (torch.Tensor): Initial value of s.
-        alpha (torch.Tensor): Alpha parameter.
-        beta (torch.Tensor): Beta parameter.
-        gamma (torch.Tensor): Gamma parameter.
-
-    Returns:
-        torch.Tensor: Inverse tau.
-
-    Examples:
-        >>> import torch
-        >>> u = torch.tensor(0.6703)
-        >>> s = torch.tensor(0.4596)
-        >>> u0 = torch.tensor(1.0)
-        >>> s0 = torch.tensor(0.5)
-        >>> alpha = torch.tensor(0.5)
-        >>> beta = torch.tensor(0.4)
-        >>> gamma = torch.tensor(0.3)
-        >>> tau_inv(u, s, u0, s0, alpha, beta, gamma)
-        tensor(3.9736e-07)
-    """
-    beta_ = beta * inv(gamma - beta)
-    xinf = alpha / gamma - beta_ * (alpha / beta)
-    tau1 = (
-        -1.0 / gamma * log((s - beta_ * u - xinf) * inv(s0 - beta_ * u0 - xinf))
-    )
-
-    uinf = alpha / beta
-    tau2 = -1 / beta * log((u - uinf) * inv(u0 - uinf))
-    tau = torch.where(beta > gamma, tau1, tau2)
-    return relu(tau)
+#     Examples:
+#         >>> import torch
+#         >>> x = torch.tensor([0.0001, 0.5, 0.9999])
+#         >>> log(x)
+#         tensor([-9.2103e+00, -6.9315e-01, -1.0002e-04])
+#     """
+#     eps = torch.finfo(x.dtype).eps
+#     return torch.log(x.clamp(eps, 1 - eps))
 
 
 # TODO: remove unused functions
-def init_with_all_cells(
-    adata,
-    input_type="knn",
-    shared_time=True,
-    latent_factor="linear",
-    latent_factor_size=10,
-    plate_size=2,
-    num_aux_cells=200,
-    init_smooth=True,
-):
-    ## hard to use unsmoothed data for initialization
-    ## always initialize the model with smoothed data
-    if "Mu" in adata.layers and "Ms" in adata.layers and init_smooth:
-        u_obs = torch.tensor(adata.layers["Mu"], dtype=torch.float32)
-        s_obs = torch.tensor(adata.layers["Ms"], dtype=torch.float32)
-    elif "spliced" in adata.layers:
-        u_obs = torch.tensor(
-            adata.layers["unspliced"].toarray()
-            if issparse(adata.layers["unspliced"])
-            else adata.layers["unspliced"],
-            dtype=torch.float32,
-        )
-        s_obs = torch.tensor(
-            adata.layers["spliced"].toarray()
-            if issparse(adata.layers["spliced"])
-            else adata.layers["spliced"],
-            dtype=torch.float32,
-        )
-    else:
-        raise
+# def tau_inv(
+#     u=None, s=None, u0=None, s0=None, alpha=None, beta=None, gamma=None
+# ):
+#     """
+#     Computes the inverse tau given the parameters and initial conditions.
 
-    ub_u = torch.stack(
-        [torch.quantile(u[u > 0], 0.99) for u in torch.unbind(u_obs, axis=1)]
-    )
-    ub_s = torch.stack(
-        [torch.quantile(s[s > 0], 0.99) for s in torch.unbind(s_obs, axis=1)]
-    )
-    s_mask = (s_obs > 0) & (s_obs <= ub_s)
-    u_mask = (u_obs > 0) & (u_obs <= ub_u)
-    # include zeros
-    training_mask = s_mask & u_mask
+#     Args:
+#         u (torch.Tensor): Value of u.
+#         s (torch.Tensor): Value of s.
+#         u0 (torch.Tensor): Initial value of u.
+#         s0 (torch.Tensor): Initial value of s.
+#         alpha (torch.Tensor): Alpha parameter.
+#         beta (torch.Tensor): Beta parameter.
+#         gamma (torch.Tensor): Gamma parameter.
 
-    u_scale = torch.stack(
-        [u[u > 0].std() for u in torch.unbind(u_obs * training_mask, axis=1)]
-    )
-    s_scale = torch.stack(
-        [s[s > 0].std() for s in torch.unbind(s_obs * training_mask, axis=1)]
-    )
-    scale = u_scale / s_scale
+#     Returns:
+#         torch.Tensor: Inverse tau.
 
-    lb_steady_u = torch.stack(
-        [
-            torch.quantile(u[u > 0], 0.98)
-            for u in torch.unbind(u_obs * training_mask, axis=1)
-        ]
-    )
-    lb_steady_s = torch.stack(
-        [
-            torch.quantile(s[s > 0], 0.98)
-            for s in torch.unbind(s_obs * training_mask, axis=1)
-        ]
-    )
+#     Examples:
+#         >>> import torch
+#         >>> u = torch.tensor(0.6703)
+#         >>> s = torch.tensor(0.4596)
+#         >>> u0 = torch.tensor(1.0)
+#         >>> s0 = torch.tensor(0.5)
+#         >>> alpha = torch.tensor(0.5)
+#         >>> beta = torch.tensor(0.4)
+#         >>> gamma = torch.tensor(0.3)
+#         >>> tau_inv(u, s, u0, s0, alpha, beta, gamma)
+#         tensor(3.9736e-07)
+#     """
+#     beta_ = beta * inv(gamma - beta)
+#     xinf = alpha / gamma - beta_ * (alpha / beta)
+#     tau1 = (
+#         -1.0 / gamma * log((s - beta_ * u - xinf) * inv(s0 - beta_ * u0 - xinf))
+#     )
 
-    steady_u_mask = training_mask & (u_obs >= lb_steady_u)
-    steady_s_mask = training_mask & (s_obs >= lb_steady_s)
+#     uinf = alpha / beta
+#     tau2 = -1 / beta * log((u - uinf) * inv(u0 - uinf))
+#     tau = torch.where(beta > gamma, tau1, tau2)
+#     return relu(tau)
 
-    u_obs = u_obs / scale
-    u_inf = (u_obs * (steady_u_mask | steady_s_mask)).sum(dim=0) / (
-        steady_u_mask | steady_s_mask
-    ).sum(dim=0)
-    s_inf = (s_obs * steady_s_mask).sum(dim=0) / steady_s_mask.sum(dim=0)
 
-    gamma = (u_obs * steady_s_mask * s_obs).sum(axis=0) / (
-        (steady_s_mask * s_obs) ** 2
-    ).sum(axis=0) + 1e-6
-    gamma = torch.where(gamma < 0.05 / scale, gamma * 1.2, gamma)
-    gamma = torch.where(gamma > 1.5 / scale, gamma / 1.2, gamma)
-    alpha = gamma * s_inf
-    beta = alpha / u_inf
+# TODO: remove unused functions
+# def init_with_all_cells(
+#     adata,
+#     input_type="knn",
+#     shared_time=True,
+#     latent_factor="linear",
+#     latent_factor_size=10,
+#     plate_size=2,
+#     num_aux_cells=200,
+#     init_smooth=True,
+# ):
+#     ## hard to use unsmoothed data for initialization
+#     ## always initialize the model with smoothed data
+#     if "Mu" in adata.layers and "Ms" in adata.layers and init_smooth:
+#         u_obs = torch.tensor(adata.layers["Mu"], dtype=torch.float32)
+#         s_obs = torch.tensor(adata.layers["Ms"], dtype=torch.float32)
+#     elif "spliced" in adata.layers:
+#         u_obs = torch.tensor(
+#             adata.layers["unspliced"].toarray()
+#             if issparse(adata.layers["unspliced"])
+#             else adata.layers["unspliced"],
+#             dtype=torch.float32,
+#         )
+#         s_obs = torch.tensor(
+#             adata.layers["spliced"].toarray()
+#             if issparse(adata.layers["spliced"])
+#             else adata.layers["spliced"],
+#             dtype=torch.float32,
+#         )
+#     else:
+#         raise
 
-    switching = tau_inv(u_inf, s_inf, 0.0, 0.0, alpha, beta, gamma)
-    tau = tau_inv(u_obs, s_obs, 0.0, 0.0, alpha, beta, gamma)
-    tau = torch.where(tau >= switching, switching, tau)
-    tau_ = tau_inv(u_obs, s_obs, u_inf, s_inf, 0.0, beta, gamma)
-    tau_ = torch.where(
-        tau_ >= tau_[s_obs > 0].max(dim=0)[0],
-        tau_[s_obs > 0].max(dim=0)[0],
-        tau_,
-    )
-    ut, st = mRNA(tau, 0.0, 0.0, alpha, beta, gamma)
-    ut_, st_ = mRNA(tau_, u_inf, s_inf, 0.0, beta, gamma)
+#     ub_u = torch.stack(
+#         [torch.quantile(u[u > 0], 0.99) for u in torch.unbind(u_obs, axis=1)]
+#     )
+#     ub_s = torch.stack(
+#         [torch.quantile(s[s > 0], 0.99) for s in torch.unbind(s_obs, axis=1)]
+#     )
+#     s_mask = (s_obs > 0) & (s_obs <= ub_s)
+#     u_mask = (u_obs > 0) & (u_obs <= ub_u)
+#     # include zeros
+#     training_mask = s_mask & u_mask
 
-    u_scale_ = u_scale / scale
-    state_on = ((ut - u_obs) / u_scale_) ** 2 + ((st - s_obs) / s_scale) ** 2
-    state_off = ((ut_ - u_obs) / u_scale_) ** 2 + ((st_ - s_obs) / s_scale) ** 2
-    cell_gene_state_logits = state_on - state_off
-    cell_gene_state = cell_gene_state_logits < 0
-    t = torch.where(cell_gene_state_logits < 0, tau, tau_ + switching)
-    init_values = {
-        "alpha": alpha,
-        "beta": beta,
-        "gamma": gamma,
-        "switching": switching,
-        "latent_time": t,
-        "u_scale": u_scale,
-        "s_scale": s_scale,
-        "u_inf": u_inf,
-        "s_inf": s_inf,
-    }
-    if input_type == "knn":
-        init_values["mask"] = training_mask
+#     u_scale = torch.stack(
+#         [u[u > 0].std() for u in torch.unbind(u_obs * training_mask, axis=1)]
+#     )
+#     s_scale = torch.stack(
+#         [s[s > 0].std() for s in torch.unbind(s_obs * training_mask, axis=1)]
+#     )
+#     scale = u_scale / s_scale
 
-    init_values["cell_gene_state"] = cell_gene_state.int()
-    if latent_factor == "linear":
-        if "spliced" in adata.layers:
-            u_obs = torch.tensor(
-                adata.layers["unspliced"].toarray()
-                if issparse(adata.layers["unspliced"])
-                else adata.layers["unspliced"],
-                dtype=torch.float32,
-            )
-            s_obs = torch.tensor(
-                adata.layers["spliced"].toarray()
-                if issparse(adata.layers["spliced"])
-                else adata.layers["spliced"],
-                dtype=torch.float32,
-            )
-        test = np.hstack([u_obs, s_obs])
-        pca = PCA(n_components=latent_factor_size)
-        pca.fit(test)
-        X_train_pca = pca.transform(test)
-        init_values["cell_codebook"] = torch.tensor(pca.components_)
-        init_values["u_pcs_mean"] = torch.tensor(pca.mean_[: adata.shape[1]])
-        init_values["s_pcs_mean"] = torch.tensor(pca.mean_[adata.shape[1] :])
-        if plate_size == 2:
-            init_values["cell_code"] = (
-                torch.tensor(X_train_pca).unsqueeze(-1).transpose(-1, -2)
-            )
-        else:
-            init_values["cell_code"] = torch.tensor(X_train_pca)
+#     lb_steady_u = torch.stack(
+#         [
+#             torch.quantile(u[u > 0], 0.98)
+#             for u in torch.unbind(u_obs * training_mask, axis=1)
+#         ]
+#     )
+#     lb_steady_s = torch.stack(
+#         [
+#             torch.quantile(s[s > 0], 0.98)
+#             for s in torch.unbind(s_obs * training_mask, axis=1)
+#         ]
+#     )
 
-    if num_aux_cells > 0:
-        np.random.seed(99)
-        if "cytotrace" in adata.obs.columns:
-            order_aux = np.array_split(
-                np.sort(adata.obs["cytotrace"].values), 50
-            )
-            order_aux_list = []
-            for i in order_aux:
-                order_aux_list.append(
-                    np.random.choice(
-                        np.where(
-                            (adata.obs["cytotrace"].values > i[0])
-                            & (adata.obs["cytotrace"].values < i[-1])
-                        )[0]
-                    )
-                )
-            order_aux = np.array(order_aux_list)
-        else:
-            order_aux = np.argsort(
-                (adata.layers["spliced"].toarray() > 0).sum(axis=1)
-            )[::-1]
+#     steady_u_mask = training_mask & (u_obs >= lb_steady_u)
+#     steady_s_mask = training_mask & (s_obs >= lb_steady_s)
 
-        init_values["order_aux"] = torch.from_numpy(
-            order_aux[:num_aux_cells].copy()
-        )
+#     u_obs = u_obs / scale
+#     u_inf = (u_obs * (steady_u_mask | steady_s_mask)).sum(dim=0) / (
+#         steady_u_mask | steady_s_mask
+#     ).sum(dim=0)
+#     s_inf = (s_obs * steady_s_mask).sum(dim=0) / steady_s_mask.sum(dim=0)
 
-        if input_type == "raw":
-            u_obs = adata.layers["raw_unspliced"].toarray()
-            s_obs = adata.layers["raw_spliced"].toarray()
-        init_values["aux_u_obs"] = torch.tensor(
-            u_obs[order_aux][:num_aux_cells]
-        )
-        init_values["aux_s_obs"] = torch.tensor(
-            s_obs[order_aux][:num_aux_cells]
-        )
-        init_values["cell_gene_state_aux"] = cell_gene_state[:num_aux_cells]
-        init_values["latent_time_aux"] = t[:num_aux_cells]
+#     gamma = (u_obs * steady_s_mask * s_obs).sum(axis=0) / (
+#         (steady_s_mask * s_obs) ** 2
+#     ).sum(axis=0) + 1e-6
+#     gamma = torch.where(gamma < 0.05 / scale, gamma * 1.2, gamma)
+#     gamma = torch.where(gamma > 1.5 / scale, gamma / 1.2, gamma)
+#     alpha = gamma * s_inf
+#     beta = alpha / u_inf
 
-        if latent_factor == "linear":
-            init_values["cell_code_aux"] = (
-                torch.tensor(X_train_pca)
-                .unsqueeze(-1)
-                .transpose(-1, -2)[:num_aux_cells]
-            )
+#     switching = tau_inv(u_inf, s_inf, 0.0, 0.0, alpha, beta, gamma)
+#     tau = tau_inv(u_obs, s_obs, 0.0, 0.0, alpha, beta, gamma)
+#     tau = torch.where(tau >= switching, switching, tau)
+#     tau_ = tau_inv(u_obs, s_obs, u_inf, s_inf, 0.0, beta, gamma)
+#     tau_ = torch.where(
+#         tau_ >= tau_[s_obs > 0].max(dim=0)[0],
+#         tau_[s_obs > 0].max(dim=0)[0],
+#         tau_,
+#     )
+#     ut, st = mRNA(tau, 0.0, 0.0, alpha, beta, gamma)
+#     ut_, st_ = mRNA(tau_, u_inf, s_inf, 0.0, beta, gamma)
 
-    if shared_time:
-        cell_time = t.mean(dim=-1, keepdims=True)
-        init_values["cell_time"] = cell_time
-        init_values["latent_time"] = init_values["latent_time"] - cell_time
+#     u_scale_ = u_scale / scale
+#     state_on = ((ut - u_obs) / u_scale_) ** 2 + ((st - s_obs) / s_scale) ** 2
+#     state_off = ((ut_ - u_obs) / u_scale_) ** 2 + ((st_ - s_obs) / s_scale) ** 2
+#     cell_gene_state_logits = state_on - state_off
+#     cell_gene_state = cell_gene_state_logits < 0
+#     t = torch.where(cell_gene_state_logits < 0, tau, tau_ + switching)
+#     init_values = {
+#         "alpha": alpha,
+#         "beta": beta,
+#         "gamma": gamma,
+#         "switching": switching,
+#         "latent_time": t,
+#         "u_scale": u_scale,
+#         "s_scale": s_scale,
+#         "u_inf": u_inf,
+#         "s_inf": s_inf,
+#     }
+#     if input_type == "knn":
+#         init_values["mask"] = training_mask
 
-        if num_aux_cells > 0:
-            init_values["cell_time_aux"] = cell_time[:num_aux_cells]
-            init_values["latent_time_aux"] = (
-                init_values["latent_time_aux"] - init_values["cell_time_aux"]
-            )
+#     init_values["cell_gene_state"] = cell_gene_state.int()
+#     if latent_factor == "linear":
+#         if "spliced" in adata.layers:
+#             u_obs = torch.tensor(
+#                 adata.layers["unspliced"].toarray()
+#                 if issparse(adata.layers["unspliced"])
+#                 else adata.layers["unspliced"],
+#                 dtype=torch.float32,
+#             )
+#             s_obs = torch.tensor(
+#                 adata.layers["spliced"].toarray()
+#                 if issparse(adata.layers["spliced"])
+#                 else adata.layers["spliced"],
+#                 dtype=torch.float32,
+#             )
+#         test = np.hstack([u_obs, s_obs])
+#         pca = PCA(n_components=latent_factor_size)
+#         pca.fit(test)
+#         X_train_pca = pca.transform(test)
+#         init_values["cell_codebook"] = torch.tensor(pca.components_)
+#         init_values["u_pcs_mean"] = torch.tensor(pca.mean_[: adata.shape[1]])
+#         init_values["s_pcs_mean"] = torch.tensor(pca.mean_[adata.shape[1] :])
+#         if plate_size == 2:
+#             init_values["cell_code"] = (
+#                 torch.tensor(X_train_pca).unsqueeze(-1).transpose(-1, -2)
+#             )
+#         else:
+#             init_values["cell_code"] = torch.tensor(X_train_pca)
 
-    for key in init_values:
-        print(key, init_values[key].shape)
-        print(init_values[key].isnan().sum())
-        assert init_values[key].isnan().sum() == 0
-    return init_values
+#     if num_aux_cells > 0:
+#         np.random.seed(99)
+#         if "cytotrace" in adata.obs.columns:
+#             order_aux = np.array_split(
+#                 np.sort(adata.obs["cytotrace"].values), 50
+#             )
+#             order_aux_list = []
+#             for i in order_aux:
+#                 order_aux_list.append(
+#                     np.random.choice(
+#                         np.where(
+#                             (adata.obs["cytotrace"].values > i[0])
+#                             & (adata.obs["cytotrace"].values < i[-1])
+#                         )[0]
+#                     )
+#                 )
+#             order_aux = np.array(order_aux_list)
+#         else:
+#             order_aux = np.argsort(
+#                 (adata.layers["spliced"].toarray() > 0).sum(axis=1)
+#             )[::-1]
+
+#         init_values["order_aux"] = torch.from_numpy(
+#             order_aux[:num_aux_cells].copy()
+#         )
+
+#         if input_type == "raw":
+#             u_obs = adata.layers["raw_unspliced"].toarray()
+#             s_obs = adata.layers["raw_spliced"].toarray()
+#         init_values["aux_u_obs"] = torch.tensor(
+#             u_obs[order_aux][:num_aux_cells]
+#         )
+#         init_values["aux_s_obs"] = torch.tensor(
+#             s_obs[order_aux][:num_aux_cells]
+#         )
+#         init_values["cell_gene_state_aux"] = cell_gene_state[:num_aux_cells]
+#         init_values["latent_time_aux"] = t[:num_aux_cells]
+
+#         if latent_factor == "linear":
+#             init_values["cell_code_aux"] = (
+#                 torch.tensor(X_train_pca)
+#                 .unsqueeze(-1)
+#                 .transpose(-1, -2)[:num_aux_cells]
+#             )
+
+#     if shared_time:
+#         cell_time = t.mean(dim=-1, keepdims=True)
+#         init_values["cell_time"] = cell_time
+#         init_values["latent_time"] = init_values["latent_time"] - cell_time
+
+#         if num_aux_cells > 0:
+#             init_values["cell_time_aux"] = cell_time[:num_aux_cells]
+#             init_values["latent_time_aux"] = (
+#                 init_values["latent_time_aux"] - init_values["cell_time_aux"]
+#             )
+
+#     for key in init_values:
+#         print(key, init_values[key].shape)
+#         print(init_values[key].isnan().sum())
+#         assert init_values[key].isnan().sum() == 0
+#     return init_values
 
 
 # TODO: remove unused functions
@@ -844,6 +845,10 @@ def init_with_all_cells(
 #         "fatal",
 #         "critical",
 #     )
+#     for level in logging_levels:
+#         setattr(logger, level, rank_zero_only(getattr(logger, level)))
+
+#     return logger
 #     for level in logging_levels:
 #         setattr(logger, level, rank_zero_only(getattr(logger, level)))
 
