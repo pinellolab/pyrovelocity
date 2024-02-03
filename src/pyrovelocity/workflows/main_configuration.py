@@ -14,7 +14,6 @@ from pyrovelocity.logging import configure_logging
 logger = configure_logging(__name__)
 
 UNIFORM_MAX_EPOCHS = 2000
-# UNIFORM_MAX_EPOCHS = 300
 
 
 @dataclass
@@ -94,8 +93,6 @@ simulated_dataset_args = DownloadDatasetInterface(
     source="simulate",
     n_obs=3000,
     n_vars=2000,
-    # n_obs=200,
-    # n_vars=100,
 )
 simulated_preprocess_data_args = PreprocessDataInterface(
     data_set_name=f"{simulated_dataset_args.data_set_name}",
@@ -127,11 +124,14 @@ simulated_configuration = WorkflowConfiguration(
     training_resources=default_training_resources,
 )
 
+test_simulated_configuration = simulated_configuration
+test_simulated_configuration.download_dataset.n_obs = 200
+test_simulated_configuration.download_dataset.n_vars = 100
+test_simulated_configuration.training_configurations[0].max_epochs = 300
+test_simulated_configuration.training_configurations[1].max_epochs = 300
 
 pancreas_dataset_args = DownloadDatasetInterface(
     data_set_name="pancreas",
-    # n_obs=200,
-    # n_vars=500,
 )
 pancreas_preprocess_data_args = PreprocessDataInterface(
     data_set_name=f"{pancreas_dataset_args.data_set_name}",
@@ -163,6 +163,12 @@ pancreas_configuration = WorkflowConfiguration(
     # training_resources=testing_training_resources,
     training_resources=default_training_resources,
 )
+
+test_pancreas_configuration = pancreas_configuration
+test_pancreas_configuration.download_dataset.n_obs = 200
+test_pancreas_configuration.download_dataset.n_vars = 500
+test_pancreas_configuration.training_configurations[0].max_epochs = 300
+test_pancreas_configuration.training_configurations[1].max_epochs = 300
 
 pbmc68k_dataset_args = DownloadDatasetInterface(
     data_set_name="pbmc68k",

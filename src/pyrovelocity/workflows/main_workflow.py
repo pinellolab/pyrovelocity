@@ -26,6 +26,13 @@ from pyrovelocity.workflows.main_configuration import (
     simulated_configuration,
 )
 
+# from pyrovelocity.workflows.main_configuration import (
+#     test_pancreas_configuration as pancreas_configuration,
+# )
+# from pyrovelocity.workflows.main_configuration import (
+#     test_simulated_configuration as simulated_configuration,
+# )
+
 logger = configure_logging(__name__)
 
 cache_version = "0.2.0b8"
