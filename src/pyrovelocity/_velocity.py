@@ -25,13 +25,14 @@ from scvi.module.base import PyroBaseModuleClass
 
 from pyrovelocity._trainer import VelocityTrainingMixin
 from pyrovelocity._velocity_module import VelocityModule
-from pyrovelocity.logging import configure_logging
-from pyrovelocity.plot import (
+from pyrovelocity.analyze import (
     compute_mean_vector_field,
     compute_volcano_data,
     vector_field_uncertainty,
 )
-from pyrovelocity.utils import init_with_all_cells
+from pyrovelocity.logging import configure_logging
+
+# from pyrovelocity.utils import init_with_all_cells
 
 logger = configure_logging(__name__)
 
@@ -157,18 +158,19 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         self.input_type = input_type
 
         super().__init__(adata)
-        if init:
-            initial_values = init_with_all_cells(
-                self.adata,
-                input_type,
-                shared_time,
-                latent_factor,
-                latent_factor_size,
-                plate_size,
-                num_aux_cells=num_aux_cells,
-            )
-        else:
-            initial_values = {}
+        # if init:
+        #     initial_values = init_with_all_cells(
+        #         self.adata,
+        #         input_type,
+        #         shared_time,
+        #         latent_factor,
+        #         latent_factor_size,
+        #         plate_size,
+        #         num_aux_cells=num_aux_cells,
+        #     )
+        # else:
+        #     initial_values = {}
+        initial_values = {}
         logger.info(self.summary_stats)
         self.module = VelocityModule(
             self.summary_stats["n_cells"],
@@ -534,4 +536,5 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         pyro.get_param_store().load(
             os.path.join(dir_path, "param_store_test.pt"), map_location=device
         )
+        return model
         return model
