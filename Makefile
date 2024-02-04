@@ -268,8 +268,23 @@ NEW_IMAGE_TAG ?= $(GIT_REF)
 
 # Default bumps main to the checked out branch for dev purposes
 tag-images: ## Add tag to existing images, (default main --> branch, override with make -n tag_images NEW_IMAGE_TAG=latest).
+ifdef ARGS
+	$(eval EXISTING_IMAGE_TAG := $(word 1, $(ARGS)))
+	$(eval NEW_IMAGE_TAG := $(word 2, $(ARGS)))
+endif
 	crane tag $(WORKFLOW_IMAGE):$(EXISTING_IMAGE_TAG) $(NEW_IMAGE_TAG)
-	crane tag ghcr.io/$(GH_ORG)/$(GH_REPO):$(EXISTING_IMAGE_TAG) $(NEW_IMAGE_TAG)
+	crane tag $(DEVCONTAINER_IMAGE):$(EXISTING_IMAGE_TAG) $(NEW_IMAGE_TAG)
+
+build-scratch-image: ## Build and scratch image for ghcr.io (used to delete tags).
+ifdef ARGS
+	$(eval WORKFLOW_IMAGE := $(word 1, $(ARGS)))
+	$(eval NEW_IMAGE_TAG := $(word 2, $(ARGS)))
+endif
+	docker build \
+	--progress=plain \
+	-t $(WORKFLOW_IMAGE):$(NEW_IMAGE_TAG) \
+	-f containers/scratch.Dockerfile .
+	echo "Run: docker push $(WORKFLOW_IMAGE):$(NEW_IMAGE_TAG) to move tag/overwrite existing image"
 
 list-gcr-workflow-image-tags: ## List images in gcr.
 	gcloud container images list --repository=$(GCP_ARTIFACT_REGISTRY_PATH)                                                                                                                             │
