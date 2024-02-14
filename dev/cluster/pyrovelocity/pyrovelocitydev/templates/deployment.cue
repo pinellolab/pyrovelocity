@@ -15,11 +15,12 @@ import (
 		replicas: #config.replicas
 		selector: matchLabels: #config.selector.labels
 		strategy: {
-			rollingUpdate: {
-				maxSurge:       1
-				maxUnavailable: 1
-			}
-			type: "RollingUpdate"
+			// rollingUpdate: {
+			// 	maxSurge:       0
+			// 	maxUnavailable: 1
+			// }
+			// type: "RollingUpdate"
+			type: "Recreate"
 		}
 		template: {
 			metadata: {
