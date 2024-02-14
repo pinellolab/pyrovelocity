@@ -602,6 +602,13 @@ cluster-shell: ## Open shell in development pod running in current kube context
 	$(eval CLUSTER_DEV_POD_ID=$(shell kubectl get pods -n $(CLUSTER_DEV_NAMESPACE) -o jsonpath="{.items[0].metadata.name}"))
 	kubectl exec -it $(CLUSTER_DEV_POD_ID) -n $(CLUSTER_DEV_NAMESPACE) -- zsh
 
+CLUSTER_DEV_LOCAL_PORT ?= 8888
+CLUSTER_DEV_REMOTE_PORT ?= 8888
+
+cluster-port: ## Open shell in development pod running in current kube context
+	$(eval CLUSTER_DEV_POD_ID=$(shell kubectl get pods -n $(CLUSTER_DEV_NAMESPACE) -o jsonpath="{.items[0].metadata.name}"))
+	kubectl port-forward $(CLUSTER_DEV_POD_ID) $(CLUSTER_DEV_LOCAL_PORT):$(CLUSTER_DEV_REMOTE_PORT) -n $(CLUSTER_DEV_NAMESPACE) 
+
 cluster-terminate: ## Delete deployment for container_image in current kube context (invert: deploy)
 	kubectl delete -f cluster/resources/deployment.yaml
 
