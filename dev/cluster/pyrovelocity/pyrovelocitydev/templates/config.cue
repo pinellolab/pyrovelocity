@@ -20,12 +20,14 @@ import (
 	containerCommand: [...string]
 	containerCommandArgs: [...string]
 
-	#GPUQuantity: string & =~"^[1-8]$"
+	#GPUQuantity:              string & =~"^[1-8]$"
+	#EphemeralStorageQuantity: string & =~"^[1-9]\\d*(Mi|Gi)$"
 
 	#ExtendedResourceRequirement: {
-		cpu?:              timoniv1.#CPUQuantity
-		memory?:           timoniv1.#MemoryQuantity
-		"nvidia.com/gpu"?: #GPUQuantity
+		cpu?:                 timoniv1.#CPUQuantity
+		memory?:              timoniv1.#MemoryQuantity
+		"nvidia.com/gpu"?:    #GPUQuantity
+		"ephemeral-storage"?: #EphemeralStorageQuantity
 	}
 
 	#ExtendedResourceRequirements: {
@@ -35,9 +37,10 @@ import (
 
 	resources: #ExtendedResourceRequirements & {
 		limits: {
-			cpu:               *"32000m" | timoniv1.#CPUQuantity
-			memory:            *"64Gi" | timoniv1.#MemoryQuantity
-			"nvidia.com/gpu"?: *"1" | #GPUQuantity
+			cpu:                 *"32000m" | timoniv1.#CPUQuantity
+			memory:              *"64Gi" | timoniv1.#MemoryQuantity
+			"ephemeral-storage": *"240Gi" | #EphemeralStorageQuantity
+			"nvidia.com/gpu"?:   *"1" | #GPUQuantity
 		}
 		requests: {
 			cpu:    *"16000m" | timoniv1.#CPUQuantity
@@ -46,8 +49,9 @@ import (
 	}
 
 	nodeSelector: {
-		"cloud.google.com/gke-accelerator"?: *"nvidia-tesla-t4" | "nvidia-tesla-a100" | "nvidia-l4"
-		spot:                                *"false" | "true"
+		"cloud.google.com/gke-accelerator"?:  *"nvidia-tesla-t4" | "nvidia-tesla-a100" | "nvidia-l4"
+		"cloud.google.com/gke-provisioning"?: *"standard" | "spot"
+		// spot:                                *"false" | "true"
 	}
 
 	replicas: *1 | >=0 & <5
@@ -81,6 +85,20 @@ import (
 	}
 
 	message!: string
+
+	scaleTarget: {
+		apiVersion:  *"apps/v1" | string
+		kind:        *"Deployment" | string
+		name:        *metadata.name | string
+		minReplicas: *0 | int & >=0
+		maxReplicas: *replicas | int & >=minReplicas
+	}
+
+	job: {
+		backoffLimit:            *3 | int & >=0 & <=48
+		activeDeadlineSeconds:   *600 | int & >=0 & <=172800
+		ttlSecondsAfterFinished: *86400 | int & >=0 & <=172800
+	}
 }
 
 #Instance: {
@@ -90,7 +108,13 @@ import (
 		ns: #Namespace & {#config: config}
 		sa: #ServiceAccount & {#config: config}
 		pvc: #PVC & {#config: config}
-		deploy: #Deployment & {
+		// hpa: #HPA & {
+		// 	#config: config
+		// }
+		// deploy: #Deployment & {
+		// 	#config: config
+		// }
+		job: #Job & {
 			#config: config
 		}
 	}
