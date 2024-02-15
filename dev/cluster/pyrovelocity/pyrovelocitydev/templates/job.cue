@@ -34,7 +34,7 @@ import (
 						volumeMounts: [
 							{
 								mountPath: "/workspace"
-								name:      #config.metadata.name
+								name:      #config.persistence.name
 							},
 						]
 						resources:       #config.resources
@@ -43,9 +43,9 @@ import (
 				]
 				volumes: [
 					{
-						name: #config.metadata.name
+						name: #config.persistence.name
 						persistentVolumeClaim: {
-							claimName: #config.metadata.name
+							claimName: #config.persistence.name
 						}
 					},
 				]
