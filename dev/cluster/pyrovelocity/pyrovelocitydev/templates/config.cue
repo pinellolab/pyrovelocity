@@ -67,8 +67,9 @@ import (
 	}
 
 	persistence: {
+		name:         *metadata.name | string
 		enabled:      *true | bool
-		storageClass: *"standard" | string
+		storageClass: *"standard-rwo" | string
 		size:         *"500Gi" | string
 	}
 
