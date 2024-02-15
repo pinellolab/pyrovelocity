@@ -11,14 +11,21 @@ values: {
 			memory: "32Gi"
 		}
 		limits: {
-			cpu:              "30000m"
-			memory:           "116Gi"
-			"nvidia.com/gpu": "1"
+			cpu:                 "30000m"
+			memory:              "116Gi"
+			"nvidia.com/gpu":    "1"
+			"ephemeral-storage": "245Gi"
 		}
+	}
+	job: {
+		backoffLimit:            8
+		activeDeadlineSeconds:   14400
+		ttlSecondsAfterFinished: 172800
 	}
 	nodeSelector: {
 		"cloud.google.com/gke-accelerator": "nvidia-tesla-t4"
-		spot:                               "true"
+		// "cloud.google.com/gke-provisioning": "spot"
+		"cloud.google.com/gke-provisioning": "standard"
 	}
 	// securityContext: {
 	// 	allowPrivilegeEscalation: true
