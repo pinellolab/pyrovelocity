@@ -3,7 +3,7 @@ values: {
 	image: {
 		repository: "ghcr.io/pinellolab/pyrovelocitydev"
 		digest:     ""
-		tag:        "main"
+		tag:        "beta"
 	}
 	resources: {
 		requests: {
@@ -17,6 +17,10 @@ values: {
 			"ephemeral-storage": "245Gi"
 		}
 	}
+	persistence: {
+		name: "dev"
+		size: "100Gi"
+	}
 	job: {
 		backoffLimit:            8
 		activeDeadlineSeconds:   14400
@@ -24,8 +28,11 @@ values: {
 	}
 	nodeSelector: {
 		"cloud.google.com/gke-accelerator": "nvidia-tesla-t4"
-		// "cloud.google.com/gke-provisioning": "spot"
+		// "cloud.google.com/gke-accelerator": "nvidia-tesla-a100"
+		// "cloud.google.com/gke-accelerator": "nvidia-l4"
+
 		"cloud.google.com/gke-provisioning": "standard"
+		// "cloud.google.com/gke-provisioning": "spot"
 	}
 	// securityContext: {
 	// 	allowPrivilegeEscalation: true
