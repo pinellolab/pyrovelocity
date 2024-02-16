@@ -409,6 +409,8 @@ jobs:
           df -h
         env:
           GH_TOKEN: ${{ github.token }}
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_DATA: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}
       - name: GC nix store
         run: |
           df -h
