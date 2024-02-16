@@ -505,6 +505,7 @@
         };
 
         gcpProjectId = builtins.getEnv "GCP_PROJECT_ID";
+        gcpSaEncodedJson = builtins.getEnv "ENCODED_GAR_SA_CREDS";
 
         # aarch64-linux may be disabled for more rapid image builds during
         # development setting NIX_IMAGE_SYSTEMS="x86_64-linux".
@@ -573,8 +574,8 @@
             "us-central1-docker.pkg.dev" = {
               enable = true;
               repo = "${gcpProjectId}/${packageName}/${packageName}";
-              username = "_json_key";
-              password = builtins.getEnv "GOOGLE_APPLICATION_CREDENTIALS_DATA";
+              username = "_json_key_base64";
+              password = "${gcpSaEncodedJson}";
             };
           };
           version = builtins.getEnv "VERSION";
@@ -601,8 +602,8 @@
             "us-central1-docker.pkg.dev" = {
               enable = true;
               repo = "${gcpProjectId}/${packageName}/${packageName}dev";
-              username = "_json_key";
-              password = builtins.getEnv "GOOGLE_APPLICATION_CREDENTIALS_DATA";
+              username = "_json_key_base64";
+              password = "${gcpSaEncodedJson}";
             };
           };
           version = builtins.getEnv "VERSION";
