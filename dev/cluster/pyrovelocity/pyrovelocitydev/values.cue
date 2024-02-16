@@ -7,7 +7,7 @@ values: {
 	image: {
 		repository: "ghcr.io/pinellolab/pyrovelocitydev"
 		digest:     "" // "sha256:bbbbb"
-		tag:        "latest"
+		tag:        "" // "latest"
 	}
 	test: image: {
 		repository: "cgr.dev/chainguard/curl"
