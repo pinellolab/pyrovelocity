@@ -504,6 +504,8 @@
           };
         };
 
+        gcpProjectId = builtins.getEnv "GCP_PROJECT_ID";
+
         # aarch64-linux may be disabled for more rapid image builds during
         # development setting NIX_IMAGE_SYSTEMS="x86_64-linux".
         # Note the usage of `preferWheels` as well.
@@ -568,6 +570,12 @@
               username = builtins.getEnv "GITHUB_ACTOR";
               password = builtins.getEnv "GH_TOKEN";
             };
+            "us-central1-docker.pkg.dev" = {
+              enable = true;
+              repo = "${gcpProjectId}/${packageName}/${packageName}";
+              username = "_json_key";
+              password = builtins.getEnv "GOOGLE_APPLICATION_CREDENTIALS_DATA";
+            };
           };
           version = builtins.getEnv "VERSION";
           images = builtins.map (sys: self.packages.${sys}.containerImage) includedSystems;
@@ -589,6 +597,12 @@
               repo = "${gitHubOrg}/${packageName}dev";
               username = builtins.getEnv "GITHUB_ACTOR";
               password = builtins.getEnv "GH_TOKEN";
+            };
+            "us-central1-docker.pkg.dev" = {
+              enable = true;
+              repo = "${gcpProjectId}/${packageName}/${packageName}dev";
+              username = "_json_key";
+              password = builtins.getEnv "GOOGLE_APPLICATION_CREDENTIALS_DATA";
             };
           };
           version = builtins.getEnv "VERSION";
