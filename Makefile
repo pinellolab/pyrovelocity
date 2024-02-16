@@ -232,6 +232,8 @@ docker-login: ## Login to ghcr docker registry. Check regcreds in $HOME/.docker/
 	docker login ghcr.io -u $(GH_ORG) -p $(GITHUB_TOKEN)
 
 # gh secret set GOOGLE_APPLICATION_CREDENTIALS_DATA --repo="$(GH_REPO)" --body='$(shell cat $(GCP_GACD_PATH))'
+# gh secret set ENCODED_GAR_SA_CREDS --repo="$(GH_REPO)" --body='$(shell base64 --wrap=0 $(GAR_SA_CREDS_PATH))'
+# gh secret set ENCODED_GAR_SA_CREDS --repo="$GH_REPO" --body=$(base64 --wrap=0 $GAR_SA_CREDS_PATH)
 ghsecrets: ## Update github secrets for GH_REPO from ".env" file.
 	@echo "secrets before updates:"
 	@echo
