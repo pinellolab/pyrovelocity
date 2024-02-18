@@ -265,6 +265,10 @@ ghvars: ## Update github secrets for GH_REPO from ".env" file.
 	@echo
 	PAGER=cat gh variable list --repo=$(GH_REPO)
 
+#----------------
+##@ container ops
+#----------------
+
 EXISTING_IMAGE_TAG ?= main
 NEW_IMAGE_TAG ?= $(GIT_REF)
 
@@ -287,6 +291,12 @@ endif
 	-t $(WORKFLOW_IMAGE):$(NEW_IMAGE_TAG) \
 	-f containers/scratch.Dockerfile .
 	echo "Run: docker push $(WORKFLOW_IMAGE):$(NEW_IMAGE_TAG) to move tag/overwrite existing image"
+
+build-dyngen-image: ## Build dyngen image.
+	docker build \
+	--progress=plain \
+	-t dyngen:latest \
+	-f containers/dyngen.Dockerfile .
 
 list-gcr-workflow-image-tags: ## List images in gcr.
 	gcloud container images list --repository=$(GCP_ARTIFACT_REGISTRY_PATH)                                                                                                                             │
