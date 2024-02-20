@@ -341,6 +341,31 @@ def anndata_counts_to_df(adata):
     )
 
 
+@beartype
+def generate_public_api(module_name: str) -> List[str]:
+    """
+    Generates a list of names of functions and classes defined in a specified
+    module. This may be used, for example, to generate a candidate for the
+    public interface for a module or package.
+
+    Args:
+        module_name (str): The name of the module.
+
+    Returns:
+        List[str]: A list of names of functions and classes defined in the module.
+    """
+    module = importlib.import_module(module_name)
+    public_api: List[str] = [
+        name
+        for name, obj in inspect.getmembers(
+            module,
+            lambda obj: (inspect.isfunction(obj) or inspect.isclass(obj))
+            and obj.__module__ == module.__name__,
+        )
+    ]
+    return public_api
+
+
 # TODO: remove unused functions
 # def log(x):
 #     """
