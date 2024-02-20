@@ -17,6 +17,15 @@ from pyrovelocity.data import load_anndata_from_path
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.utils import ensure_numpy_array, print_anndata
 
+__all__ = [
+    "assign_colors",
+    "copy_raw_counts",
+    "get_high_us_genes",
+    "get_thresh_histogram_title_from_path",
+    "plot_high_us_genes",
+    "preprocess_dataset",
+]
+
 logger = configure_logging(__name__)
 
 
