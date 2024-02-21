@@ -140,6 +140,7 @@ multirun/
 
 # cluster
 *-kube.yaml
+*-sa.json
 docker-config.json
 *dev.cue
 
