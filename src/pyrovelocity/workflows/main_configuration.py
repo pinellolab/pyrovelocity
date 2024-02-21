@@ -80,12 +80,16 @@ class WorkflowConfiguration(DataClassJSONMixin):
 
 @dataclass
 class TrainingOutputs(DataClassJSONMixin):
+    data_model: str
+    data_model_path: str
     trained_data_path: FlyteFile
     model_path: FlyteDirectory
     posterior_samples_path: FlyteFile
     metrics_path: FlyteFile
     run_info_path: FlyteFile
     loss_plot_path: FlyteFile
+    cell_state: str
+    vector_field_basis: str
 
 
 simulated_dataset_args = DownloadDatasetInterface(
@@ -101,6 +105,7 @@ simulated_preprocess_data_args = PreprocessDataInterface(
 simulated_train_model1_args = PyroVelocityTrainInterface(
     adata=f"{simulated_preprocess_data_args.data_processed_path}/{simulated_dataset_args.data_set_name}_processed.h5ad",
     data_set_name=f"{simulated_dataset_args.data_set_name}",
+    cell_state="leiden",
     model_identifier="model1",
     guide_type="auto_t0_constraint",
     offset=False,
@@ -109,6 +114,7 @@ simulated_train_model1_args = PyroVelocityTrainInterface(
 simulated_train_model2_args = PyroVelocityTrainInterface(
     adata=f"{simulated_preprocess_data_args.data_processed_path}/{simulated_dataset_args.data_set_name}_processed.h5ad",
     data_set_name=f"{simulated_dataset_args.data_set_name}",
+    cell_state="leiden",
     model_identifier="model2",
     max_epochs=UNIFORM_MAX_EPOCHS,
 )
@@ -183,17 +189,19 @@ pbmc68k_preprocess_data_args = PreprocessDataInterface(
 pbmc68k_train_model1_args = PyroVelocityTrainInterface(
     adata=f"{pbmc68k_preprocess_data_args.data_processed_path}/{pbmc68k_dataset_args.data_set_name}_processed.h5ad",
     data_set_name=f"{pbmc68k_dataset_args.data_set_name}",
+    cell_state="celltype",
+    vector_field_basis="tsne",
     model_identifier="model1",
     guide_type="auto_t0_constraint",
     offset=False,
-    # cell_state="celltype",
     max_epochs=UNIFORM_MAX_EPOCHS,
 )
 pbmc68k_train_model2_args = PyroVelocityTrainInterface(
     adata=f"{pbmc68k_preprocess_data_args.data_processed_path}/{pbmc68k_dataset_args.data_set_name}_processed.h5ad",
     data_set_name=f"{pbmc68k_dataset_args.data_set_name}",
+    cell_state="celltype",
+    vector_field_basis="tsne",
     model_identifier="model2",
-    # cell_state="celltype",
     max_epochs=UNIFORM_MAX_EPOCHS,
 )
 
@@ -220,17 +228,17 @@ pons_preprocess_data_args = PreprocessDataInterface(
 pons_train_model1_args = PyroVelocityTrainInterface(
     adata=f"{pons_preprocess_data_args.data_processed_path}/{pons_dataset_args.data_set_name}_processed.h5ad",
     data_set_name=f"{pons_dataset_args.data_set_name}",
+    cell_state="celltype",
     model_identifier="model1",
     guide_type="auto_t0_constraint",
     offset=False,
-    # cell_state="celltype",
     max_epochs=UNIFORM_MAX_EPOCHS,
 )
 pons_train_model2_args = PyroVelocityTrainInterface(
     adata=f"{pons_preprocess_data_args.data_processed_path}/{pons_dataset_args.data_set_name}_processed.h5ad",
     data_set_name=f"{pons_dataset_args.data_set_name}",
+    cell_state="celltype",
     model_identifier="model2",
-    # cell_state="celltype",
     max_epochs=UNIFORM_MAX_EPOCHS,
 )
 
@@ -259,21 +267,23 @@ larry_preprocess_data_args = PreprocessDataInterface(
 larry_train_model1_args = PyroVelocityTrainInterface(
     adata=f"{larry_preprocess_data_args.data_processed_path}/{larry_dataset_args.data_set_name}_processed.h5ad",
     data_set_name=f"{larry_dataset_args.data_set_name}",
+    cell_state="state_info",
+    vector_field_basis="emb",
     model_identifier="model1",
     guide_type="auto_t0_constraint",
     # svi_train=True,
     batch_size=4000,
     offset=False,
-    # cell_state="state_info",
     max_epochs=UNIFORM_MAX_EPOCHS,
 )
 larry_train_model2_args = PyroVelocityTrainInterface(
     adata=f"{larry_preprocess_data_args.data_processed_path}/{larry_dataset_args.data_set_name}_processed.h5ad",
     data_set_name=f"{larry_dataset_args.data_set_name}",
+    cell_state="state_info",
+    vector_field_basis="emb",
     model_identifier="model2",
     # svi_train=True,
     batch_size=4000,
-    # cell_state="state_info",
     max_epochs=UNIFORM_MAX_EPOCHS,
 )
 
