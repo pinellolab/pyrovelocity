@@ -8,6 +8,12 @@ from pyrovelocity.preprocess import preprocess_dataset
 from pyrovelocity.train import train_dataset
 from pyrovelocity.workflows.configuration import create_dataclass_from_callable
 
+__all__ = [
+    "DownloadDatasetInterface",
+    "PreprocessDataInterface",
+    "PyroVelocityTrainInterface",
+]
+
 # These can be used to override the default values of the dataclass
 # but are generally only required if the callable interface lacks
 # complete and dataclass-compatible type annotations.
