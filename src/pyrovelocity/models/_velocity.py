@@ -96,6 +96,9 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> from pyrovelocity.utils import pretty_log_dict, print_anndata, generate_sample_data
             >>> from pyrovelocity.preprocess import copy_raw_counts
             >>> from pyrovelocity.models._velocity import PyroVelocity
+            >>> tmp = getfixture("tmp_path")
+            >>> doctest_model_path = str(tmp) + "/save_pyrovelocity_doctest_model"
+            >>> print(doctest_model_path)
             >>> # setup sample data
             >>> n_obs = 10
             >>> n_vars = 5
@@ -117,13 +120,13 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> posterior_samples_log = pretty_log_dict(posterior_samples)
             >>> logger.debug(posterior_samples_log)
             >>> # print(posterior_samples_log)
-            >>> model.save_model('save_pyrovelocity_doctest_model', overwrite=True)
-            >>> model = PyroVelocity.load_model('save_pyrovelocity_doctest_model', adata, use_gpu=False)
+            >>> model.save_model(doctest_model_path, overwrite=True)
+            >>> model = PyroVelocity.load_model(doctest_model_path, adata, use_gpu=False)
             >>> # train model with
             >>> model = PyroVelocity(adata)
             >>> model.train_faster(max_epochs=5, use_gpu=False)
-            >>> model.save_model('save_pyrovelocity_doctest_model', overwrite=True)
-            >>> model = PyroVelocity.load_model('save_pyrovelocity_doctest_model', adata, use_gpu=False)
+            >>> model.save_model(doctest_model_path, overwrite=True)
+            >>> model = PyroVelocity.load_model(doctest_model_path, adata, use_gpu=False)
             >>> posterior_samples = model.generate_posterior_samples(model.adata, num_samples=30)
             >>> posterior_samples_log = pretty_log_dict(posterior_samples)
             >>> logger.debug(posterior_samples_log)
@@ -132,8 +135,8 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> # train model with
             >>> model = PyroVelocity(adata)
             >>> model.train_faster_with_batch(batch_size=24, max_epochs=5, use_gpu=False)
-            >>> model.save_model('save_pyrovelocity_doctest_model', overwrite=True)
-            >>> model = PyroVelocity.load_model('save_pyrovelocity_doctest_model', adata, use_gpu=False)
+            >>> model.save_model(doctest_model_path, overwrite=True)
+            >>> model = PyroVelocity.load_model(doctest_model_path, adata, use_gpu=False)
             >>> posterior_samples = model.generate_posterior_samples(model.adata, num_samples=30)
             >>> posterior_samples_log = pretty_log_dict(posterior_samples)
             >>> logger.debug(posterior_samples_log)
