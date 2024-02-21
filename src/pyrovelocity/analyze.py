@@ -14,6 +14,14 @@ from pyrovelocity.cytotrace import compute_similarity2
 from pyrovelocity.utils import ensure_numpy_array
 
 
+__all__ = [
+    "compute_mean_vector_field",
+    "compute_volcano_data",
+    "mae_per_gene",
+    "vector_field_uncertainty",
+]
+
+
 def compute_mean_vector_field(
     posterior_samples,
     adata,
