@@ -27,6 +27,8 @@ def train_dataset(
     adata: str | AnnData,
     data_set_name: str = "simulated",
     model_identifier: str = "model2",
+    cell_state: str = "clusters",
+    vector_field_basis: str = "umap",
     guide_type: str = "auto",
     model_type: str = "auto",
     batch_size: int = -1,
@@ -46,7 +48,7 @@ def train_dataset(
     cell_specific_kinetics: Optional[str] = None,
     kinetics_num: int = 2,
     force: bool = False,
-) -> Tuple[Path, Path, Path, Path, Path, Path]:
+) -> Tuple[Path, Path, Path, Path, Path, Path, Path, str, str]:
     """
     Loads processed data, trains model, and saves model and posterior samples.
 
@@ -81,23 +83,28 @@ def train_dataset(
     ###########
 
     data_model = f"{data_set_name}_{model_identifier}"
-    model_dir = Path(f"models/{data_model}")
+    data_model_path = Path(f"models/{data_model}")
 
-    trained_data_path = model_dir / "trained.h5ad"
-    model_path = model_dir / "model"
-    posterior_samples_path = model_dir / "posterior_samples.pkl.zst"
-    metrics_path = model_dir / "metrics.json"
-    run_info_path = model_dir / "run_info.json"
-    loss_plot_path = model_dir / "ELBO.png"
+    trained_data_path = data_model_path / "trained.h5ad"
+    model_path = data_model_path / "model"
+    posterior_samples_path = data_model_path / "posterior_samples.pkl.zst"
+    metrics_path = data_model_path / "metrics.json"
+    run_info_path = data_model_path / "run_info.json"
+    loss_plot_path = data_model_path / "ELBO.png"
 
     logger.info(f"\n\nTraining: {data_model}\n\n")
 
     logger.info(
         f"\n\nVerifying existence of paths for:\n\n"
-        f"  model data: {model_dir}\n"
+        f"  model data: {data_model_path}\n"
     )
-    Path(model_dir).mkdir(parents=True, exist_ok=True)
+    Path(data_model_path).mkdir(parents=True, exist_ok=True)
 
+    logger.info(
+        f"\n\nMetadata associated with {data_model}:\n\n"
+        f"  cell state: {cell_state}\n"
+        f"  vector field basis: {vector_field_basis}\n"
+    )
     #############
     # train model
     #############
@@ -123,12 +130,16 @@ def train_dataset(
             "all exist, set `force=True` to overwrite."
         )
         return (
+            data_model,
+            data_model_path,
             trained_data_path,
             model_path,
             posterior_samples_path,
             metrics_path,
             run_info_path,
             loss_plot_path,
+            cell_state,
+            vector_field_basis,
         )
     else:
         logger.info(f"Training model: {data_model}")
@@ -229,6 +240,7 @@ def train_dataset(
 
         logger.info(
             f"\nReturning paths to saved data:\n\n"
+            f"{data_model_path}\n"
             f"{trained_data_path}\n"
             f"{model_path}\n"
             f"{posterior_samples_path}\n"
@@ -237,12 +249,16 @@ def train_dataset(
             f"{loss_plot_path}\n"
         )
         return (
+            data_model,
+            data_model_path,
             trained_data_path,
             model_path,
             posterior_samples_path,
             metrics_path,
             run_info_path,
             loss_plot_path,
+            cell_state,
+            vector_field_basis,
         )
 
 
