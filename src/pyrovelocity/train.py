@@ -2,7 +2,9 @@ import json
 import os
 import uuid
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Dict
+from typing import Optional
+from typing import Tuple
 
 import matplotlib.pyplot as plt
 import mlflow
@@ -17,7 +19,9 @@ from pyrovelocity.data import load_anndata_from_path
 from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models import PyroVelocity
-from pyrovelocity.utils import print_anndata, print_attributes
+from pyrovelocity.utils import print_anndata
+from pyrovelocity.utils import print_attributes
+
 
 logger = configure_logging(__name__)
 
@@ -27,8 +31,6 @@ def train_dataset(
     adata: str | AnnData,
     data_set_name: str = "simulated",
     model_identifier: str = "model2",
-    cell_state: str = "clusters",
-    vector_field_basis: str = "umap",
     guide_type: str = "auto",
     model_type: str = "auto",
     batch_size: int = -1,
@@ -48,7 +50,7 @@ def train_dataset(
     cell_specific_kinetics: Optional[str] = None,
     kinetics_num: int = 2,
     force: bool = False,
-) -> Tuple[Path, Path, Path, Path, Path, Path, Path, str, str]:
+) -> Tuple[str, str, Path, Path, Path, Path, Path, Path]:
     """
     Loads processed data, trains model, and saves model and posterior samples.
 
@@ -73,7 +75,7 @@ def train_dataset(
         force (bool, optional): Overwrite existing output. Defaults to False.
 
     Returns:
-        Tuple[Path, Path, Path, Path, Path, Path]: Paths to saved data.
+        Tuple[str, str, Path, Path, Path, Path, Path, Path]: Paths to saved data.
 
     Examples:
         >>> train_dataset() # xdoctest: +SKIP
@@ -100,11 +102,6 @@ def train_dataset(
     )
     Path(data_model_path).mkdir(parents=True, exist_ok=True)
 
-    logger.info(
-        f"\n\nMetadata associated with {data_model}:\n\n"
-        f"  cell state: {cell_state}\n"
-        f"  vector field basis: {vector_field_basis}\n"
-    )
     #############
     # train model
     #############
@@ -131,15 +128,15 @@ def train_dataset(
         )
         return (
             data_model,
-            data_model_path,
+            str(data_model_path),
             trained_data_path,
             model_path,
             posterior_samples_path,
             metrics_path,
             run_info_path,
             loss_plot_path,
-            cell_state,
-            vector_field_basis,
+            # cell_state,
+            # vector_field_basis,
         )
     else:
         logger.info(f"Training model: {data_model}")
@@ -225,7 +222,7 @@ def train_dataset(
 
             check_shared_time(posterior_samples, adata)
 
-        print_attributes(adata)
+        # print_attributes(adata)
         print_anndata(adata)
 
         ##################
@@ -250,15 +247,15 @@ def train_dataset(
         )
         return (
             data_model,
-            data_model_path,
+            str(data_model_path),
             trained_data_path,
             model_path,
             posterior_samples_path,
             metrics_path,
             run_info_path,
             loss_plot_path,
-            cell_state,
-            vector_field_basis,
+            # cell_state,
+            # vector_field_basis,
         )
 
 
