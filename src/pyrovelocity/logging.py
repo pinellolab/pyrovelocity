@@ -32,15 +32,18 @@ def configure_logging(logger_name: str = "pyrovelocity") -> logging.Logger:
         log_time_format="[%X]",
     )
     valid_log_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
-    log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+    log_level = os.getenv("PYROVELOCITY_LOG_LEVEL", "INFO").upper()
 
     if log_level not in valid_log_levels:
         log_level = "INFO"
 
     logging.basicConfig(
-        level=log_level,
+        level="INFO",
         format="%(name)s %(message)s",
         datefmt="[%X]",
         handlers=[rich_handler],
     )
-    return logging.getLogger(logger_name)
+    logger = logging.getLogger(logger_name)
+    logger.setLevel(log_level)
+
+    return logger
