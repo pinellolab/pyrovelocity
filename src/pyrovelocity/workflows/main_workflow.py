@@ -178,9 +178,8 @@ def postprocess_data(
 def module_workflow(
     download_dataset_args: DownloadDatasetInterface = DownloadDatasetInterface(),
     preprocess_data_args: PreprocessDataInterface = PreprocessDataInterface(),
-    train_model_configurations: list[PyroVelocityTrainInterface] = [
-        PyroVelocityTrainInterface()
-    ],
+    train_model_configuration_1: PyroVelocityTrainInterface = PyroVelocityTrainInterface(),
+    train_model_configuration_2: PyroVelocityTrainInterface = PyroVelocityTrainInterface(),
     postprocess_configuration: PostprocessConfiguration = PostprocessConfiguration(),
     train_model_resource_requests: ResourcesJSON = default_training_resource_requests,
     train_model_resource_limits: ResourcesJSON = default_training_resource_limits,
@@ -225,6 +224,11 @@ def module_workflow(
     processed_data = preprocess_data(
         data=data, preprocess_data_args=preprocess_data_args
     )
+
+    train_model_configurations = [
+        train_model_configuration_1,
+        train_model_configuration_2,
+    ]
 
     model_outputs: list[TrainingOutputs] = list()
     postprocessed_data: list[FlyteFile] = list()
@@ -300,10 +304,8 @@ def training_workflow(
     simulated = module_workflow(
         download_dataset_args=simulated_configuration.download_dataset,
         preprocess_data_args=simulated_configuration.preprocess_data,
-        train_model_configurations=[
-            simulated_configuration.training_configuration_1,
-            simulated_configuration.training_configuration_2,
-        ],
+        train_model_configuration_1=simulated_configuration.training_configuration_1,
+        train_model_configuration_2=simulated_configuration.training_configuration_2,
         postprocess_configuration=simulated_configuration.postprocess_configuration,
         train_model_resource_requests=simulated_configuration.training_resources_requests,
         train_model_resource_limits=simulated_configuration.training_resources_limits,
