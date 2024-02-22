@@ -44,6 +44,7 @@ def preprocess_dataset(
     n_neighbors: int = 30,
     default_velocity_mode: str = "dynamical",
     vector_field_basis: str = "umap",
+    cell_state: str = "clusters",
 ) -> Tuple[AnnData, Path]:
     """
     Preprocess data.
@@ -142,6 +143,8 @@ def preprocess_dataset(
         scv.tl.velocity(adata, mode=default_velocity_mode, use_raw=False)
 
         # TODO: recompute umap for "larry_tips"
+        # TODO: export QC plots, which will require use of the cell_state variable
+        logger.info(f"cell state variable: {cell_state}")
         if "X_umap" not in adata.obsm.keys():
             scv.tl.umap(adata)
         if "leiden" not in adata.obs.keys():
