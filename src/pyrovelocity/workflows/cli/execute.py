@@ -1,4 +1,5 @@
 import importlib
+import json
 import os
 import pathlib
 import sys
@@ -8,7 +9,7 @@ from dataclasses import dataclass, field
 import pyperclip
 import rich.syntax
 import rich.tree
-from dataclasses_json import dataclass_json
+from dataclasses_json import DataClassJsonMixin
 from dotenv import load_dotenv
 from flytekit.configuration import Config as FlyteConfig
 from flytekit.configuration import (
@@ -51,9 +52,8 @@ logger = configure_logging("pyrovelocity.workflows.cli.execute")
 builds = make_custom_builds_fn(populate_full_signature=True)
 
 
-@dataclass_json
 @dataclass
-class ExecutionContext:
+class ExecutionContext(DataClassJsonMixin):
     """
     Represents the execution configuration for a workflow.
 
@@ -84,10 +84,35 @@ class ExecutionContext:
 
 
 def handle_local_execution(exec_mode, execution_context, entity, entity_config):
+    """_summary_
+
+    see https://github.com/flyteorg/flytekit/blob/dc9d26bfd29d7a3482d1d56d66a806e8fbcba036/flytekit/clis/sdk_in_container/run.py#L477
+
+
+    Args:
+        exec_mode (_type_): _description_
+        execution_context (_type_): _description_
+        entity (_type_): _description_
+        entity_config (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     if exec_mode.local_config.mode == LocalMode.shell:
-        # https://github.com/flyteorg/flytekit/blob/dc9d26bfd29d7a3482d1d56d66a806e8fbcba036/flytekit/clis/sdk_in_container/run.py#L477
         output = entity(**entity_config.inputs)
-        logger.info(f"Output:\n\n{output}\n")
+
+        try:
+            logger.info(f"Output:\n\n{output}\n")
+        except Exception as e:
+            print(f"Failed to log info: {e}\nattempting to render as json")
+            try:
+                logger.info(f"Output:\n\n{json.dumps(output, indent=2)}\n")
+            except Exception as e:
+                print(
+                    f"Failed to log info due to an exception: {e}\nattempting to render as string"
+                )
+                print(f"Output:\n\n{output}\n")
+
         return True
 
     elif exec_mode.local_config.mode == LocalMode.cluster:
