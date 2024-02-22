@@ -1,3 +1,4 @@
+import dataclasses
 import importlib
 import inspect
 import logging
@@ -8,13 +9,22 @@ import secrets
 import sys
 import threading
 import time
-from dataclasses import asdict, dataclass, is_dataclass
+from dataclasses import asdict
+from dataclasses import dataclass
+from dataclasses import is_dataclass
 from datetime import timedelta
 from textwrap import dedent
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Tuple
+from typing import Union
+from typing import get_args
+from typing import get_origin
 
 from dataclasses_json import dataclass_json
-from dulwich.repo import NotGitRepository, Repo
+from dulwich.repo import NotGitRepository
+from dulwich.repo import Repo
 from flytekit import WorkflowExecutionPhase
 from flytekit.core.base_task import PythonTask
 from flytekit.core.workflow import WorkflowBase
@@ -22,8 +32,17 @@ from flytekit.exceptions.system import FlyteSystemException
 from flytekit.exceptions.user import FlyteTimeout
 from flytekit.remote import FlyteRemote
 from flytekit.remote.executions import FlyteWorkflowExecution
-from hydra.conf import HelpConf, HydraConf, JobConf
-from hydra_zen import ZenStore, builds, make_custom_builds_fn
+from hydra.conf import HelpConf
+from hydra.conf import HydraConf
+from hydra.conf import JobConf
+from hydra_zen import ZenStore
+from hydra_zen import builds
+from hydra_zen import make_custom_builds_fn
+
+from pyrovelocity.logging import configure_logging
+
+
+logger = configure_logging(__name__)
 
 
 @dataclass_json
@@ -130,20 +149,53 @@ def generate_entity_inputs(
     """
     inputs = {}
 
+    # TODO: add support for dataclasses with fields of list[DataClassName]
+    # def build_config_for_list(list_items, item_type):
+    #     configs = []
+    #     for item in list_items:
+    #         if is_dataclass(item):
+    #             item_config = {
+    #                 field.name: build_config(
+    #                     field.type, getattr(item, field.name)
+    #                 )
+    #                 for field in dataclasses.fields(item)
+    #             }
+    #             configs.append(fbuilds(item_type, **item_config))
+    #         else:
+    #             configs.append(item)
+    #     return configs
+
+    def build_config(param_type, value):
+        # if get_origin(param_type) is list:
+        #     item_type = get_args(param_type)[0]
+        #     return build_config_for_list(value, item_type)
+        if is_dataclass(value):
+            field_configs = {
+                field.name: build_config(field.type, getattr(value, field.name))
+                for field in dataclasses.fields(value)
+            }
+            return fbuilds(param_type, **field_configs)
+        else:
+            return value
+
     for name, param in inspect.signature(entity).parameters.items():
         param_type = param.annotation
         default = param.default
+        logger.debug(
+            f"Found parameter: {name}, Type: {param_type}, Default: {default}"
+        )
 
-        # check if the type is a built-in type
-        if isinstance(param_type, type) and param_type.__module__ == "builtins":
+        # if isinstance(default, list):
+        #     inputs[name] = build_config(param_type, default)
+        if is_dataclass(default):
+            inputs[name] = build_config(param_type, default)
+        elif (
+            isinstance(param_type, type) and param_type.__module__ == "builtins"
+        ):
             inputs[name] = default
-        elif is_dataclass(default):
-            inputs[name] = fbuilds(param_type, **asdict(default))
         else:
-            # dynamically import the type if it's not a built-in type
             type_module = importlib.import_module(param_type.__module__)
             custom_type = getattr(type_module, param_type.__name__)
-
             inputs[name] = fbuilds(custom_type)
 
     return inputs
