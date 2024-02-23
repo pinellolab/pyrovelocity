@@ -47,12 +47,13 @@ __all__ = [
 
 logger = configure_logging(__name__)
 
-cache_version = "0.2.0b9"
+CACHE_VERSION = "0.2.0b9"
+CACHE_FLAG = True
 
 
 @task(
-    cache=False,
-    cache_version=cache_version,
+    cache=CACHE_FLAG,
+    cache_version=CACHE_VERSION,
     retries=3,
     interruptible=True,
     timeout=timedelta(minutes=20),
@@ -68,8 +69,8 @@ def download_data(download_dataset_args: DownloadDatasetInterface) -> FlyteFile:
 
 
 @task(
-    cache=False,
-    cache_version=cache_version,
+    cache=CACHE_FLAG,
+    cache_version=CACHE_VERSION,
     retries=3,
     interruptible=False,
     timeout=timedelta(minutes=60),
@@ -92,8 +93,8 @@ def preprocess_data(
 
 
 @task(
-    cache=False,
-    cache_version=cache_version,
+    cache=CACHE_FLAG,
+    cache_version=CACHE_VERSION,
     retries=3,
     interruptible=False,
     timeout=timedelta(minutes=120),
@@ -137,8 +138,8 @@ def train_model(
 
 
 @task(
-    cache=False,
-    cache_version=cache_version,
+    cache=CACHE_FLAG,
+    cache_version=CACHE_VERSION,
     retries=3,
     interruptible=False,
     timeout=timedelta(minutes=120),
@@ -266,11 +267,6 @@ def training_workflow(
 ) -> list[list[FlyteFile]]:
     """
     Apply the module_workflow to a collection of datasets.
-
-    TODO: Update interface extraction to support nested dataclasses, which will
-    allow simplification of input arguments to:
-
-    simulated_configuration: WorkflowConfiguration = simulated_configuration,
     """
     simulated = module_workflow(
         download_dataset_args=simulated_configuration.download_dataset,
