@@ -79,13 +79,11 @@ large_training_resource_requests = ResourcesJSON(
     ephemeral_storage="50Gi",
 )
 
-large_training_resource_limits = (
-    ResourcesJSON(
-        cpu="32",
-        mem="200Gi",
-        gpu="1",
-        ephemeral_storage="200Gi",
-    ),
+large_training_resource_limits = ResourcesJSON(
+    cpu="32",
+    mem="200Gi",
+    gpu="1",
+    ephemeral_storage="200Gi",
 )
 
 default_resource_requests = ResourcesJSON(
@@ -95,13 +93,11 @@ default_resource_requests = ResourcesJSON(
     ephemeral_storage="50Gi",
 )
 
-default_resource_limits = (
-    ResourcesJSON(
-        cpu="16",
-        mem="60Gi",
-        gpu="0",
-        ephemeral_storage="200Gi",
-    ),
+default_resource_limits = ResourcesJSON(
+    cpu="16",
+    mem="60Gi",
+    gpu="0",
+    ephemeral_storage="200Gi",
 )
 
 large_resource_requests = ResourcesJSON(
