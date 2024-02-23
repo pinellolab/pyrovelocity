@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List
+from typing import Optional
+from typing import Tuple
 
 import anndata
 import matplotlib.figure
@@ -15,7 +17,9 @@ from scipy.sparse import issparse
 from pyrovelocity.cytotrace import cytotrace_sparse
 from pyrovelocity.data import load_anndata_from_path
 from pyrovelocity.logging import configure_logging
-from pyrovelocity.utils import ensure_numpy_array, print_anndata
+from pyrovelocity.utils import ensure_numpy_array
+from pyrovelocity.utils import print_anndata
+
 
 __all__ = [
     "assign_colors",
@@ -38,7 +42,10 @@ def preprocess_dataset(
     n_top_genes: int = 2000,
     min_shared_counts: int = 30,
     process_cytotrace: bool = False,
-    use_maximum_likelihood_subset: bool = False,
+    use_obs_subset: bool = False,
+    n_obs_subset: int = 300,
+    use_vars_subset: bool = False,
+    n_vars_subset: int = 200,
     count_threshold: int = 0,
     n_pcs: int = 30,
     n_neighbors: int = 30,
@@ -81,6 +88,32 @@ def preprocess_dataset(
     else:
         data_path = "AnnData object"
 
+    if use_obs_subset:
+        if n_obs_subset > adata.n_obs:
+            logger.warning(
+                f"n_obs_subset: {n_obs_subset} > adata.n_obs: {adata.n_obs}\n"
+                f"setting n_obs_subset to adata.n_obs: {adata.n_obs}"
+            )
+            n_obs_subset = adata.n_obs
+        else:
+            if n_obs_subset < 10:
+                logger.warning(
+                    f"n_obs_subset: {n_obs_subset} < 10\n"
+                    f"setting n_obs_subset to 10"
+                )
+                n_obs_subset = 10
+            logger.info(
+                f"extracting {n_obs_subset} observation subset from {adata.n_obs} observations\n"
+            )
+            adata = adata[
+                np.random.choice(
+                    adata.obs.index,
+                    size=n_obs_subset,
+                    replace=False,
+                ),
+                :,
+            ].copy()
+
     processed_path = os.path.join(
         data_processed_path, f"{data_set_name}_processed.h5ad"
     )
@@ -122,6 +155,12 @@ def preprocess_dataset(
         scv.pp.filter_and_normalize(
             adata, min_shared_counts=min_shared_counts, n_top_genes=n_top_genes
         )
+        if adata.n_vars < n_top_genes:
+            logger.warning(
+                f"adata.n_vars: {adata.n_vars} < n_top_genes: {n_top_genes}\n"
+                f"for data_set_name: {data_set_name} and min_shared_counts: {min_shared_counts}\n"
+            )
+
         plot_high_us_genes(
             adata=adata,
             count_threshold_histogram_path=count_threshold_histogram_path,
@@ -149,12 +188,24 @@ def preprocess_dataset(
             scv.tl.umap(adata)
         if "leiden" not in adata.obs.keys():
             sc.tl.leiden(adata)
-        if use_maximum_likelihood_subset:
+        if use_vars_subset:
             top_genes = (
                 adata.var["fit_likelihood"].sort_values(ascending=False).index
             )
             print(top_genes[:10])
-            adata = adata[:, top_genes[:3]].copy()
+            if n_vars_subset > adata.n_vars:
+                logger.warning(
+                    f"n_vars_subset: {n_vars_subset} > adata.n_vars: {adata.n_vars}\n"
+                    f"setting n_vars_subset to adata.n_vars: {adata.n_vars}"
+                )
+                n_vars_subset = adata.n_vars
+            if n_vars_subset > len(top_genes):
+                logger.warning(
+                    f"n_vars_subset: {n_vars_subset} > len(top_genes): {len(top_genes)}\n"
+                    f"setting n_vars_subset to len(top_genes): {len(top_genes)}"
+                )
+                n_vars_subset = len(top_genes)
+            adata = adata[:, top_genes[:n_vars_subset]].copy()
         scv.tl.velocity_graph(adata, n_jobs=-1)
 
         scv.tl.velocity_embedding(adata, basis=vector_field_basis)
@@ -531,6 +582,10 @@ def get_high_us_genes(
 #         if os.path.isfile(processed_path) and os.access(
 #             processed_path, os.R_OK
 #         ):
+#             logger.info(f"successfully generated {processed_path}")
+#             return Path(processed_path)
+#         else:
+#             logger.error(f"cannot find and read {processed_path}")
 #             logger.info(f"successfully generated {processed_path}")
 #             return Path(processed_path)
 #         else:
