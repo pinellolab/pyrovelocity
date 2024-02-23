@@ -291,6 +291,7 @@
             libgcc
             nix
             procps
+            time
             which
           ]
           ++ lib.optional (lib.elem system pkgs.shadow.meta.platforms) shadow;
