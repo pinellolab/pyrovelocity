@@ -526,8 +526,16 @@ catuin: ## !!Enable atuin in zshrc.!!
 		printf '\n%s\n' 'eval "$$(atuin init zsh)"' >> "${HOME}/.zshrc"; \
 	fi
 
+czshtime:
+	@if ! grep -q 'disable -r time' "${HOME}/.zshrc"; then \
+		printf '\n%s\n' 'disable -r time' >> "${HOME}/.zshrc"; \
+	fi	
+
 czsh: ## !!Enable zsh with command line info and searchable history.!!
 czsh: catuin cstarship cdirenv
+
+zsh-disable-time: ## Disable zsh time in prompt to surface gnutime binary.
+	disable -r time
 
 
 #-------------------------
