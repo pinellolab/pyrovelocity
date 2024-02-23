@@ -4,12 +4,10 @@ from pathlib import Path
 import pytest
 import requests_mock
 
-from pyrovelocity.data import (
-    download_dataset,
-    load_anndata_from_path,
-    subset,
-    validate_url_and_file,
-)
+from pyrovelocity.data import _validate_url_and_file
+from pyrovelocity.data import download_dataset
+from pyrovelocity.data import load_anndata_from_path
+from pyrovelocity.data import subset_anndata
 
 
 def test_load_data_module():
@@ -101,28 +99,28 @@ def mock_requests():
 
 def test_validate_valid_url(mock_requests):
     """Test validation of a valid URL leading to a .h5ad file."""
-    is_valid, message = validate_url_and_file(valid_h5ad_url)
+    is_valid, message = _validate_url_and_file(valid_h5ad_url)
     assert is_valid
     assert "URL validated and file is an .h5ad file" in message
 
 
 def test_validate_small_file_url(mock_requests):
     """Test validation of a URL leading to a .h5ad file but smaller than required size."""
-    is_valid, message = validate_url_and_file(small_h5ad_url)
+    is_valid, message = _validate_url_and_file(small_h5ad_url)
     assert not is_valid
     assert "The file size is less than or equal to 1MB" in message
 
 
 def test_validate_non_h5ad_url(mock_requests):
     """Test validation of a URL leading to a non-.h5ad file."""
-    is_valid, message = validate_url_and_file(non_h5ad_url)
+    is_valid, message = _validate_url_and_file(non_h5ad_url)
     assert not is_valid
     assert "The file does not have an .h5ad extension" in message
 
 
 def test_validate_invalid_url_format():
     """Test validation of an invalid URL format."""
-    is_valid, message = validate_url_and_file(invalid_url)
+    is_valid, message = _validate_url_and_file(invalid_url)
     assert not is_valid
     assert "Invalid URL format" in message
 
@@ -131,7 +129,7 @@ def test_subset_from_adata(default_sample_data):
     """Test deriving a data subset from an AnnData object."""
     n_obs = 50
     n_vars = 10
-    subset_adata, _ = subset(
+    subset_adata, _ = subset_anndata(
         adata=default_sample_data, n_obs=n_obs, n_vars=n_vars
     )
     assert subset_adata.n_obs == n_obs
@@ -141,21 +139,23 @@ def test_subset_from_adata(default_sample_data):
 def test_subset_from_file(default_sample_data_file):
     """Test deriving a data subset from a file."""
     n_obs = 50
-    subset_adata, _ = subset(file_path=default_sample_data_file, n_obs=n_obs)
+    subset_adata, _ = subset_anndata(
+        file_path=default_sample_data_file, n_obs=n_obs
+    )
     assert subset_adata.n_obs == n_obs
 
 
 def test_invalid_input():
     """Test handling of invalid inputs."""
     with pytest.raises(ValueError):
-        subset()  # No AnnData object or file path provided
+        subset_anndata()  # No AnnData object or file path provided
 
 
 def test_save_subset(default_sample_data, tmp_path):
     """Test saving the subset to a file."""
     n_obs = 50
     output_file = tmp_path / "subset_adata.h5ad"
-    _, output_path = subset(
+    _, output_path = subset_anndata(
         adata=default_sample_data,
         n_obs=n_obs,
         save_subset=True,
@@ -169,7 +169,7 @@ def test_subset_specific_n_obs_vars(default_sample_data):
     """Test deriving a data subset with specific n_obs and n_vars."""
     n_obs = 50
     n_vars = 10
-    subset_adata, _ = subset(
+    subset_adata, _ = subset_anndata(
         adata=default_sample_data, n_obs=n_obs, n_vars=n_vars
     )
     assert subset_adata.n_obs == n_obs
@@ -193,5 +193,7 @@ def test_invalid_file_extension(tmp_path):
 def test_nonexistent_file():
     """Test loading from a non-existent file."""
     nonexistent_file = Path("nonexistent_file.h5ad")
+    with pytest.raises(ValueError):
+        load_anndata_from_path(nonexistent_file)
     with pytest.raises(ValueError):
         load_anndata_from_path(nonexistent_file)

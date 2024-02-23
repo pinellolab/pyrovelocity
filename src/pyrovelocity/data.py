@@ -20,6 +20,8 @@ from pyrovelocity.utils import print_anndata
 from pyrovelocity.utils import print_attributes
 
 
+__all__ = ["download_dataset", "load_anndata_from_path", "subset_anndata"]
+
 logger = configure_logging(__name__)
 
 
@@ -104,7 +106,7 @@ def download_dataset(
         logger.info(f"Attempting to download {data_set_name} data...")
         if data_url is not None:
             logger.info(f"Validating URL {data_url}...")
-            is_valid_url, valid_url_message = validate_url_and_file(data_url)
+            is_valid_url, valid_url_message = _validate_url_and_file(data_url)
             if not is_valid_url:
                 raise ValueError(
                     f"Invalid URL: {data_url}\n{valid_url_message}\n"
@@ -140,10 +142,12 @@ def download_dataset(
             else:
                 adata = download_method(file_path=data_path)
                 if n_obs is not None and n_vars is not None:
-                    adata, _ = subset(adata=adata, n_obs=n_obs, n_vars=n_vars)
+                    adata, _ = subset_anndata(
+                        adata=adata, n_obs=n_obs, n_vars=n_vars
+                    )
                     adata.write(data_path)
                 elif n_obs is not None:
-                    adata, _ = subset(adata=adata, n_obs=n_obs)
+                    adata, _ = subset_anndata(adata=adata, n_obs=n_obs)
                     adata.write(data_path)
                 elif n_vars is not None:
                     logger.warning("n_vars is ignored if n_obs is not provided")
@@ -180,7 +184,7 @@ def download_dataset(
 
 
 @beartype
-def validate_url_and_file(url: str) -> Tuple[bool, str]:
+def _validate_url_and_file(url: str) -> Tuple[bool, str]:
     """
     Validates a given URL format and checks if it leads to a .h5ad file larger
     than 1MB.
@@ -244,7 +248,7 @@ def validate_url_and_file(url: str) -> Tuple[bool, str]:
 
 
 @beartype
-def subset(
+def subset_anndata(
     file_path: Optional[str | Path] = None,
     adata: Optional[anndata._core.anndata.AnnData] = None,
     n_obs: int = 100,
