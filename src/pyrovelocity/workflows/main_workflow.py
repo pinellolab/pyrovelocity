@@ -1,7 +1,5 @@
 from dataclasses import asdict
 from datetime import timedelta
-from typing import NamedTuple
-from typing import Tuple
 
 from flytekit import Resources
 from flytekit import dynamic
@@ -23,14 +21,18 @@ from pyrovelocity.workflows.main_configuration import PostprocessConfiguration
 from pyrovelocity.workflows.main_configuration import ResourcesJSON
 from pyrovelocity.workflows.main_configuration import TrainingOutputs
 from pyrovelocity.workflows.main_configuration import WorkflowConfiguration
-from pyrovelocity.workflows.main_configuration import default_resources
+from pyrovelocity.workflows.main_configuration import default_resource_limits
+from pyrovelocity.workflows.main_configuration import default_resource_requests
 from pyrovelocity.workflows.main_configuration import (
     default_training_resource_limits,
 )
 from pyrovelocity.workflows.main_configuration import (
     default_training_resource_requests,
 )
-from pyrovelocity.workflows.main_configuration import default_training_resources
+from pyrovelocity.workflows.main_configuration import larry_configuration
+from pyrovelocity.workflows.main_configuration import pancreas_configuration
+from pyrovelocity.workflows.main_configuration import pbmc68k_configuration
+from pyrovelocity.workflows.main_configuration import pons_configuration
 from pyrovelocity.workflows.main_configuration import simulated_configuration
 
 
@@ -39,16 +41,13 @@ __all__ = [
     "preprocess_data",
     "train_model",
     "postprocess_data",
+    "module_workflow",
+    "training_workflow",
 ]
 
 logger = configure_logging(__name__)
 
 cache_version = "0.2.0b9"
-
-# from pyrovelocity.workflows.main_configuration import larry_configuration
-# from pyrovelocity.workflows.main_configuration import pancreas_configuration
-# from pyrovelocity.workflows.main_configuration import pbmc68k_configuration
-# from pyrovelocity.workflows.main_configuration import pons_configuration
 
 
 @task(
@@ -183,8 +182,8 @@ def module_workflow(
     postprocess_configuration: PostprocessConfiguration = PostprocessConfiguration(),
     train_model_resource_requests: ResourcesJSON = default_training_resource_requests,
     train_model_resource_limits: ResourcesJSON = default_training_resource_limits,
-    postprocessing_resource_requests: ResourcesJSON = default_resources,
-    postprocessing_resource_limits: ResourcesJSON = default_resources,
+    postprocessing_resource_requests: ResourcesJSON = default_resource_requests,
+    postprocessing_resource_limits: ResourcesJSON = default_resource_limits,
 ) -> list[FlyteFile]:
     """
     The module workflow is applied to a single dataset together with a list of
@@ -260,38 +259,10 @@ def module_workflow(
 @workflow
 def training_workflow(
     simulated_configuration: WorkflowConfiguration = simulated_configuration,
-    # pancreas_dataset_configuration: DownloadDatasetInterface = pancreas_configuration.download_dataset,
-    # pancreas_preprocess_configuration: PreprocessDataInterface = pancreas_configuration.preprocess_data,
-    # pancreas_train_model_configurations: list[
-    #     PyroVelocityTrainInterface
-    # ] = pancreas_configuration.training_configurations,
-    # pancreas_train_model_resources: list[
-    #     ResourcesJSON
-    # ] = pancreas_configuration.training_resources,
-    # pbmc68k_dataset_configuration: DownloadDatasetInterface = pbmc68k_configuration.download_dataset,
-    # pbmc68k_preprocess_configuration: PreprocessDataInterface = pbmc68k_configuration.preprocess_data,
-    # pbmc68k_train_model_configurations: list[
-    #     PyroVelocityTrainInterface
-    # ] = pbmc68k_configuration.training_configurations,
-    # pbmc68k_train_model_resources: list[
-    #     ResourcesJSON
-    # ] = pbmc68k_configuration.training_resources,
-    # pons_dataset_configuration: DownloadDatasetInterface = pons_configuration.download_dataset,
-    # pons_preprocess_configuration: PreprocessDataInterface = pons_configuration.preprocess_data,
-    # pons_train_model_configurations: list[
-    #     PyroVelocityTrainInterface
-    # ] = pons_configuration.training_configurations,
-    # pons_train_model_resources: list[
-    #     ResourcesJSON
-    # ] = pons_configuration.training_resources,
-    # larry_dataset_configuration: DownloadDatasetInterface = larry_configuration.download_dataset,
-    # larry_preprocess_configuration: PreprocessDataInterface = larry_configuration.preprocess_data,
-    # larry_train_model_configurations: list[
-    #     PyroVelocityTrainInterface
-    # ] = larry_configuration.training_configurations,
-    # larry_train_model_resources: list[
-    #     ResourcesJSON
-    # ] = larry_configuration.training_resources,
+    pancreas_configuration: WorkflowConfiguration = pancreas_configuration,
+    pbmc68k_configuration: WorkflowConfiguration = pbmc68k_configuration,
+    pons_configuration: WorkflowConfiguration = pons_configuration,
+    larry_configuration: WorkflowConfiguration = larry_configuration,
 ) -> list[list[FlyteFile]]:
     """
     Apply the module_workflow to a collection of datasets.
@@ -312,52 +283,62 @@ def training_workflow(
         postprocessing_resource_requests=simulated_configuration.postprocessing_resources_requests,
         postprocessing_resource_limits=simulated_configuration.postprocessing_resources_limits,
     )
-    # simulated = module_workflow(
-    #     download_dataset_args=simulated_dataset_configuration,
-    #     preprocess_data_args=simulated_preprocess_configuration,
-    #     train_model_configurations=simulated_train_model_configurations,
-    #     train_model_resources=simulated_train_model_resources,
-    #     postprocess_model_resources=simulated_postprocess_model_resources,
-    #     number_posterior_samples=simulated_number_posterior_samples,
-    # )
 
-    return [simulated]
+    pancreas = module_workflow(
+        download_dataset_args=pancreas_configuration.download_dataset,
+        preprocess_data_args=pancreas_configuration.preprocess_data,
+        train_model_configuration_1=pancreas_configuration.training_configuration_1,
+        train_model_configuration_2=pancreas_configuration.training_configuration_2,
+        postprocess_configuration=pancreas_configuration.postprocess_configuration,
+        train_model_resource_requests=pancreas_configuration.training_resources_requests,
+        train_model_resource_limits=pancreas_configuration.training_resources_limits,
+        postprocessing_resource_requests=pancreas_configuration.postprocessing_resources_requests,
+        postprocessing_resource_limits=pancreas_configuration.postprocessing_resources_limits,
+    )
 
-    # pancreas = module_workflow(
-    #     download_dataset_args=pancreas_dataset_configuration,
-    #     preprocess_data_args=pancreas_preprocess_configuration,
-    #     train_model_configurations=pancreas_train_model_configurations,
-    #     train_model_resources=pancreas_train_model_resources,
-    # )
+    pbmc68k = module_workflow(
+        download_dataset_args=pbmc68k_configuration.download_dataset,
+        preprocess_data_args=pbmc68k_configuration.preprocess_data,
+        train_model_configuration_1=pbmc68k_configuration.training_configuration_1,
+        train_model_configuration_2=pbmc68k_configuration.training_configuration_2,
+        postprocess_configuration=pbmc68k_configuration.postprocess_configuration,
+        train_model_resource_requests=pbmc68k_configuration.training_resources_requests,
+        train_model_resource_limits=pbmc68k_configuration.training_resources_limits,
+        postprocessing_resource_requests=pbmc68k_configuration.postprocessing_resources_requests,
+        postprocessing_resource_limits=pbmc68k_configuration.postprocessing_resources_limits,
+    )
 
-    # pbmc68k = module_workflow(
-    #     download_dataset_args=pbmc68k_dataset_configuration,
-    #     preprocess_data_args=pbmc68k_preprocess_configuration,
-    #     train_model_configurations=pbmc68k_train_model_configurations,
-    #     train_model_resources=pbmc68k_train_model_resources,
-    # )
+    pons = module_workflow(
+        download_dataset_args=pons_configuration.download_dataset,
+        preprocess_data_args=pons_configuration.preprocess_data,
+        train_model_configuration_1=pons_configuration.training_configuration_1,
+        train_model_configuration_2=pons_configuration.training_configuration_2,
+        postprocess_configuration=pons_configuration.postprocess_configuration,
+        train_model_resource_requests=pons_configuration.training_resources_requests,
+        train_model_resource_limits=pons_configuration.training_resources_limits,
+        postprocessing_resource_requests=pons_configuration.postprocessing_resources_requests,
+        postprocessing_resource_limits=pons_configuration.postprocessing_resources_limits,
+    )
 
-    # pons = module_workflow(
-    #     download_dataset_args=pons_dataset_configuration,
-    #     preprocess_data_args=pons_preprocess_configuration,
-    #     train_model_configurations=pons_train_model_configurations,
-    #     train_model_resources=pons_train_model_resources,
-    # )
+    larry = module_workflow(
+        download_dataset_args=larry_configuration.download_dataset,
+        preprocess_data_args=larry_configuration.preprocess_data,
+        train_model_configuration_1=larry_configuration.training_configuration_1,
+        train_model_configuration_2=larry_configuration.training_configuration_2,
+        postprocess_configuration=larry_configuration.postprocess_configuration,
+        train_model_resource_requests=larry_configuration.training_resources_requests,
+        train_model_resource_limits=larry_configuration.training_resources_limits,
+        postprocessing_resource_requests=larry_configuration.postprocessing_resources_requests,
+        postprocessing_resource_limits=larry_configuration.postprocessing_resources_limits,
+    )
 
-    # larry = module_workflow(
-    #     download_dataset_args=larry_dataset_configuration,
-    #     preprocess_data_args=larry_preprocess_configuration,
-    #     train_model_configurations=larry_train_model_configurations,
-    #     train_model_resources=larry_train_model_resources,
-    # )
-
-    # return [
-    #     simulated,
-    #     pancreas,
-    #     pbmc68k,
-    #     pons,
-    #     larry,
-    # ]
+    return [
+        simulated,
+        pancreas,
+        pbmc68k,
+        pons,
+        larry,
+    ]
 
 
 if __name__ == "__main__":
