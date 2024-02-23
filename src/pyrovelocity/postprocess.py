@@ -65,6 +65,7 @@ def postprocess_dataset(
         ... ) # xdoctest: +SKIP
     """
 
+    Path(data_model_path).mkdir(parents=True, exist_ok=True)
     pyrovelocity_data_path = os.path.join(
         data_model_path, f"pyrovelocity.pkl.zst"
     )
