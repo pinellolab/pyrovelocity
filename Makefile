@@ -79,6 +79,12 @@ docs-serve:
 lock-poetry: ## Lock poetry dependencies.
 	poetry lock --no-update
 
+poetry-venv-local: ## Set poetry to use local virtualenvs. See `poetry.toml`.
+	poetry config --list
+	poetry config --local --list
+	poetry config --local virtualenvs.in-project true
+	poetry config --local --list
+
 PIP_REQUIREMENTS_NAME ?= requirements
 
 lock-pip: ## Export requirements.txt for pip.
