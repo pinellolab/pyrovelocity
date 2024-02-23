@@ -6,6 +6,7 @@ from flytekit import dynamic
 from flytekit import task
 from flytekit import workflow
 from flytekit.extras.accelerators import T4
+from flytekit.extras.accelerators import GPUAccelerator
 from flytekit.types.directory import FlyteDirectory
 from flytekit.types.file import FlyteFile
 
@@ -49,6 +50,7 @@ logger = configure_logging(__name__)
 
 CACHE_VERSION = "0.2.0b10-test00"
 CACHE_FLAG = True
+ACCELERATOR_TYPE: GPUAccelerator = T4
 
 
 @task(
@@ -101,7 +103,7 @@ def preprocess_data(
     container_image="{{.image.gpu.fqn}}:{{.image.gpu.version}}",
     requests=Resources(cpu="8", mem="30Gi", ephemeral_storage="50Gi", gpu="1"),
     limits=Resources(cpu="16", mem="60Gi", ephemeral_storage="200Gi", gpu="1"),
-    accelerator=T4,
+    accelerator=ACCELERATOR_TYPE,
 )
 def train_model(
     processed_data: FlyteFile,
