@@ -189,38 +189,22 @@ def module_workflow(
     postprocessing_resource_limits: ResourcesJSON = default_resource_limits,
 ) -> list[FlyteFile]:
     """
-    The module workflow is applied to a single dataset together with a list of
-    model configurations.
+    Apply the primary workflow to a single dataset with multiple model
+    configurations.
 
-    There are three ways to execute the train_model() task, which impacts how
-    subsequent tasks are executed. This can also be executed with the @workflow
-    decorator for a single model configuration
+    Args:
+        download_dataset_args (DownloadDatasetInterface, optional): Configuration for pyrovelocity.data.download_dataset. Defaults to DownloadDatasetInterface().
+        preprocess_data_args (PreprocessDataInterface, optional): Configuration for pyrovelocity.preprocess.preprocess_dataset. Defaults to PreprocessDataInterface().
+        train_model_configuration_1 (PyroVelocityTrainInterface, optional): Configuration for pyrovelocity.train.train_dataset. Defaults to PyroVelocityTrainInterface().
+        train_model_configuration_2 (PyroVelocityTrainInterface, optional): Configuration for pyrovelocity.train.train_dataset. Defaults to PyroVelocityTrainInterface().
+        postprocess_configuration (PostprocessConfiguration, optional): Configuration for pyrovelocity.postprocess.postprocess_dataset. Defaults to PostprocessConfiguration().
+        train_model_resource_requests (ResourcesJSON, optional): Configuration for flytekit.Resources. Defaults to default_training_resource_requests.
+        train_model_resource_limits (ResourcesJSON, optional): Configuration for flytekit.Resources. Defaults to default_training_resource_limits.
+        postprocessing_resource_requests (ResourcesJSON, optional): Configuration for flytekit.Resources. Defaults to default_resource_requests.
+        postprocessing_resource_limits (ResourcesJSON, optional): Configuration for flytekit.Resources. Defaults to default_resource_limits.
 
-    ```python
-    train_model_configuration: PyroVelocityTrainInterface = PyroVelocityTrainInterface(),
-    ) -> TrainingOutputs:
-    ...
-    model_outputs = train_model(
-        data=processed_data,
-        train_model_configuration=train_model_configuration,
-    )
-    ```
-
-    or for multiple model configurations using a map task
-
-    ```python
-    import functools
-    from flytekit.experimental import map_task
-
-    partial_train_model = functools.partial(train_model, data=processed_data)
-    model_outputs = map_task(partial_train_model)(
-        train_model_args=train_model_configurations,
-    )
-    ```
-
-    The dynamic workflow is preferred to support both mapping of tasks over
-    multiple model configurations and overriding resources from configuration
-    data.
+    Returns:
+        list[FlyteFile]: Workflow outputs as flytekit.types.file.FlyteFile objects.
     """
     data = download_data(download_dataset_args=download_dataset_args)
     processed_data = preprocess_data(
@@ -268,7 +252,8 @@ def training_workflow(
     larry_configuration: WorkflowConfiguration = larry_configuration,
 ) -> list[list[FlyteFile]]:
     """
-    Apply the module_workflow to a collection of datasets.
+    Apply the primary workflow to a collection of configurations given as
+    pyrovelocity.workflows.main_configuration.WorkflowConfiguration objects.
     """
     simulated = module_workflow(
         download_dataset_args=simulated_configuration.download_dataset,
@@ -340,5 +325,39 @@ def training_workflow(
 
 
 if __name__ == "__main__":
+    """
+    The module workflow is applied to a single dataset together with a list of
+    model configurations.
+
+    There are three ways to execute the train_model() task, which impacts how
+    subsequent tasks are executed. This can also be executed with the @workflow
+    decorator for a single model configuration
+
+    ```python
+    train_model_configuration: PyroVelocityTrainInterface = PyroVelocityTrainInterface(),
+    ) -> TrainingOutputs:
+    ...
+    model_outputs = train_model(
+        data=processed_data,
+        train_model_configuration=train_model_configuration,
+    )
+    ```
+
+    or for multiple model configurations using a map task
+
+    ```python
+    import functools
+    from flytekit.experimental import map_task
+
+    partial_train_model = functools.partial(train_model, data=processed_data)
+    model_outputs = map_task(partial_train_model)(
+        train_model_args=train_model_configurations,
+    )
+    ```
+
+    The dynamic workflow is preferred to support both mapping of tasks over
+    multiple model configurations and overriding resources from configuration
+    data.
+    """
     print(f"Running module_workflow() { module_workflow() }")
     print(f"Running training_workflow() { training_workflow() }")
