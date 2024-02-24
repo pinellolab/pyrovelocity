@@ -1,6 +1,6 @@
 {
   "lockFileVersion": 3,
-  "moduleFileHash": "497d959ca4134ac4043b94af3a5503940c09af58eb6b76f2eb3877eff0ab2de0",
+  "moduleFileHash": "2b445f096e52a86e9c3eb21413d2fcaf3f9102ebe3bbdac04f9ea37010d6e376",
   "flags": {
     "cmdRegistries": [
       "https://bcr.bazel.build/"
@@ -18,7 +18,7 @@
   "moduleDepGraph": {
     "<root>": {
       "name": "pyrovelocity",
-      "version": "0.2.0b9",
+      "version": "0.2.0b10",
       "key": "<root>",
       "repoName": "pyrovelocity",
       "executionPlatformsToRegister": [],
