@@ -152,9 +152,33 @@ def preprocess_dataset(
             print("Processing data with cytotrace ...")
             cytotrace_sparse(adata, layer="spliced")
 
-        scv.pp.filter_and_normalize(
-            adata, min_shared_counts=min_shared_counts, n_top_genes=n_top_genes
+        adata_tmp = scv.pp.filter_and_normalize(
+            adata,
+            min_shared_counts=min_shared_counts,
+            n_top_genes=n_top_genes,
+            copy=True,
         )
+        if adata_tmp.n_vars < n_obs_subset:
+            logger.warning(
+                f"adata.n_vars: {adata_tmp.n_vars} < n_obs_subset: {n_obs_subset}\n"
+                f"for data_set_name: {data_set_name} and min_shared_counts: {min_shared_counts}\n"
+                f"setting min_shared_counts to min of 5 and {min_shared_counts}\n"
+            )
+            min_shared_counts = min(5, min_shared_counts)
+            adata = scv.pp.filter_and_normalize(
+                adata,
+                min_shared_counts=min_shared_counts,
+                n_top_genes=n_top_genes,
+                copy=True,
+            )
+            logger.warning(
+                f"after updating min_shared_counts: {min_shared_counts},\n"
+                f"adata.n_vars: {adata.n_vars}\n"
+            )
+        else:
+            adata = adata_tmp.copy()
+        del adata_tmp
+
         if adata.n_vars < n_top_genes:
             logger.warning(
                 f"adata.n_vars: {adata.n_vars} < n_top_genes: {n_top_genes}\n"
@@ -176,8 +200,16 @@ def preprocess_dataset(
             unspliced_layer="raw_unspliced",
             spliced_layer="raw_spliced",
         )
+
+        if adata.n_vars <= n_pcs:
+            logger.warning(
+                f"adata.n_vars: {adata.n_vars} <= n_pcs: {n_pcs}\n"
+                f"setting n_pcs to adata.n_vars - 1: {adata.n_vars -1}"
+            )
+            n_pcs = adata.n_vars - 1
         if "X_pca" not in adata.obsm.keys():
-            sc.pp.pca(adata, n_comps=50)
+            sc.pp.pca(adata, n_comps=n_pcs)
+
         scv.pp.moments(adata, n_pcs=n_pcs, n_neighbors=n_neighbors)
         scv.tl.recover_dynamics(adata, n_jobs=-1, use_raw=False)
 
