@@ -48,7 +48,7 @@ __all__ = [
 
 logger = configure_logging(__name__)
 
-CACHE_VERSION = "0.2.0b10"
+CACHE_VERSION = "0.2.0b11-dev0"
 CACHE_FLAG = True
 ACCELERATOR_TYPE: GPUAccelerator = T4
 
