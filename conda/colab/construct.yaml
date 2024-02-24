@@ -74,9 +74,6 @@ specs:
   - cuda-nvtx=12.1.105=0
   - cuda-opencl=12.3.101=0
   - cuda-runtime=12.1.0=0
-  - cuda-version=11.8=h70ddcb2_2
-  - cudatoolkit=11.8.0=h4ba93d1_13
-  - cudnn=8.8.0.121=hcdd5f01_4
   - cycler=0.12.1=pyhd8ed1ab_0
   - databricks-cli=0.18.0=pyhd8ed1ab_0
   - dataclasses=0.8=pyhc8e2a94_3
