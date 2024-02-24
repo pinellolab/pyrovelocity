@@ -583,6 +583,8 @@ jobs:
           ${{ matrix.nixCommand }}
         env:
           GH_TOKEN: ${{ github.token }}
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          ENCODED_GAR_SA_CREDS: ${{ secrets.ENCODED_GAR_SA_CREDS }}
           VERSION: ${{ needs.release.outputs.version }}
       - name: GC nix store
         run: |
