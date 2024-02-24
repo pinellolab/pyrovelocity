@@ -176,6 +176,8 @@ def preprocess_dataset(
             unspliced_layer="raw_unspliced",
             spliced_layer="raw_spliced",
         )
+        if "X_pca" not in adata.obsm.keys():
+            sc.pp.pca(adata, n_comps=50)
         scv.pp.moments(adata, n_pcs=n_pcs, n_neighbors=n_neighbors)
         scv.tl.recover_dynamics(adata, n_jobs=-1, use_raw=False)
 
