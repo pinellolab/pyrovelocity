@@ -3,7 +3,7 @@
   "configurations": [
     {
       "name": "pyrovelocity debug",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "module": "pyrovelocity",
       "args": [
@@ -16,11 +16,11 @@
         // "execution_context=local_cluster_dev",
         // "execution_context=remote_dev",
         //
-        // workflow example
+        // workflows
         "entity_config=main_workflow_training_workflow"
-        // "entity_config.inputs._args_.0.logistic_regression.max_iter=1200"
+        // "entity_config.inputs._args_.0.simulated_configuration.preprocess_data.n_obs_subset=400"
         //
-        // task example
+        // tasks
         // "entity_config=main_workflow_process_data",
         // "entity_config.inputs._args_=[]",
         // "entity_config.inputs._args_.0.data.data=[[12.0, 0],[13.0, 1],[9.5, 2]]",
