@@ -87,6 +87,7 @@ class ExecutionContext(DataClassJsonMixin):
     project: str = "pyrovelocity"
     domain: str = "development"
     wait: bool = True
+    overwrite_cache: bool = False
 
 
 def handle_local_execution(exec_mode, execution_context, entity, entity_config):
@@ -226,6 +227,7 @@ def register_and_execute_workflow(
         version=execution_context.version,
         execution_name_prefix=execution_context.version,
         wait=False,
+        overwrite_cache=execution_context.overwrite_cache,
     )
     execution_url = remote.generate_console_url(execution)
 
