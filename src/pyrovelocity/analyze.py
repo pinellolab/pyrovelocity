@@ -11,6 +11,7 @@ from numpy import ndarray
 from sklearn.pipeline import Pipeline
 
 from pyrovelocity.cytotrace import compute_similarity2
+from pyrovelocity.logging import configure_logging
 from pyrovelocity.utils import ensure_numpy_array
 
 
@@ -21,6 +22,8 @@ __all__ = [
     "vector_field_uncertainty",
 ]
 
+logger = configure_logging(__name__)
+
 
 def compute_mean_vector_field(
     posterior_samples,
@@ -30,6 +33,7 @@ def compute_mean_vector_field(
     spliced="spliced_pyro",
     raw=False,
 ):
+    logger.info("Computing mean vector field")
     scv.pp.neighbors(adata, use_rep="pca")
 
     adata.var["velocity_genes"] = True
@@ -195,6 +199,7 @@ def vector_field_uncertainty(
 ) -> Tuple[ndarray, ndarray, ndarray]:
     """Run cosine similarity-based vector field across posterior samples"""
 
+    logger.info("Estimating vector field uncertainty")
     # fig, ax = plt.subplots(10, 3)
     # fig.set_size_inches(16, 36)
     # ax = ax.flatten()
