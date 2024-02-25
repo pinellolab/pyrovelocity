@@ -1628,26 +1628,6 @@ files = [
 ]
 
 [[package]]
-name = "desert"
-version = "2022.9.22"
-description = "Deserialize to objects while staying DRY"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "desert-2022.9.22-py3-none-any.whl", hash = "sha256:cad7b6f1936448d26bde403882ec6855786b4d24d38d0ed4400e505ac8c5591f"},
-    {file = "desert-2022.9.22.tar.gz", hash = "sha256:0f45e098915e16452a269a1da0bcbbf31df0af2173899f1c097fb2e3b0265d89"},
-]
-
-[package.dependencies]
-attrs = "*"
-marshmallow = ">=3.0"
-typing-inspect = "*"
-
-[package.extras]
-dev = ["black", "build", "bump2version", "check-manifest", "coverage", "cuvner", "docutils", "importlib-metadata", "isort", "marshmallow-enum", "marshmallow-union", "mypy", "pex", "pygments", "pylint", "pytest", "pytest-cov", "pytest-sphinx", "pytest-travis-fold", "readme-renderer", "towncrier", "tox", "twine", "versioneer", "wheel"]
-test = ["coverage", "cuvner", "importlib-metadata", "marshmallow-enum", "marshmallow-union", "pytest", "pytest-cov", "pytest-sphinx", "pytest-travis-fold", "tox"]
-
-[[package]]
 name = "dictdiffer"
 version = "0.9.0"
 description = "Dictdiffer is a library that helps you to diff and patch dictionaries."
@@ -9044,4 +9024,4 @@ plotting = ["annoy", "matplotlib-venn"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10, <3.11"
-content-hash = "ee75a28ba5ddc5ad51aa7a7b9673f52a054bbb339479967d17f0963b4272b408"
+content-hash = "44159b439714aa14c4a0714ad055681ec8a94d4fc06787d2e696b5a5ae6a7a02"
