@@ -27,7 +27,7 @@ class VelocityModule(PyroBaseModuleClass):
         latent_factor_size (int, optional): Size of the latent factor. Default is 10.
         inducing_point_size (int, optional): Inducing point size. Default is 0.
         include_prior (bool, optional): If True, include prior in the model. Default is False.
-        use_gpu (int, optional): GPU device index. Default is 0.
+        use_gpu (str, optional): Accelerator type. Default is "auto".
         num_aux_cells (int, optional): Number of auxiliary cells. Default is 0.
         only_cell_times (bool, optional): If True, only model cell times. Default is True.
         decoder_on (bool, optional): If True, use the decoder. Default is False.
@@ -81,7 +81,7 @@ class VelocityModule(PyroBaseModuleClass):
         latent_factor_size: int = 10,
         inducing_point_size: int = 0,
         include_prior: bool = False,
-        use_gpu: int = 0,
+        use_gpu: str = "auto",
         num_aux_cells: int = 0,
         only_cell_times: bool = True,
         decoder_on: bool = False,
