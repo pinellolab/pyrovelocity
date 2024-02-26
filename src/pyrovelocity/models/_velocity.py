@@ -1,4 +1,3 @@
-import logging
 import os
 import pickle
 import sys
@@ -14,7 +13,7 @@ from numpy import ndarray
 from scvi.data import AnnDataManager
 from scvi.data._constants import _SETUP_ARGS_KEY, _SETUP_METHOD_NAME
 from scvi.data.fields import LayerField, NumericalObsField
-from scvi.model._utils import parse_use_gpu_arg
+from scvi.model._utils import parse_device_args
 from scvi.model.base import BaseModelClass
 from scvi.model.base._utils import (
     _initialize_model,
@@ -31,8 +30,7 @@ from pyrovelocity.analyze import (
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models._trainer import VelocityTrainingMixin
 from pyrovelocity.models._velocity_module import VelocityModule
-
-# from pyrovelocity.utils import init_with_all_cells
+from pyrovelocity.utils import init_with_all_cells
 
 logger = configure_logging(__name__)
 
@@ -53,7 +51,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         inducing_point_size: int = 0,
         latent_factor_size: int = 0,
         include_prior: bool = False,
-        use_gpu: Union[bool, int] = 0,
+        use_gpu: str = "auto",
         init: bool = False,
         num_aux_cells: int = 0,
         only_cell_times: bool = True,
@@ -113,7 +111,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> PyroVelocity.setup_anndata(adata)
             >>> # train model
             >>> model = PyroVelocity(adata)
-            >>> model.train(max_epochs=5, use_gpu=False)
+            >>> model.train(max_epochs=5, train_size=0.8, valid_size=0.2, use_gpu="auto")
             >>> posterior_samples = model.generate_posterior_samples(model.adata, num_samples=30)
             >>> print(posterior_samples.keys())
             >>> assert isinstance(posterior_samples, dict), f"Expected a dictionary, got {type(posterior_samples)}"
@@ -121,12 +119,12 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> logger.debug(posterior_samples_log)
             >>> # print(posterior_samples_log)
             >>> model.save_model(doctest_model_path, overwrite=True)
-            >>> model = PyroVelocity.load_model(doctest_model_path, adata, use_gpu=False)
+            >>> model = PyroVelocity.load_model(doctest_model_path, adata, use_gpu="auto")
             >>> # train model with
             >>> model = PyroVelocity(adata)
-            >>> model.train_faster(max_epochs=5, use_gpu=False)
+            >>> model.train_faster(max_epochs=5, use_gpu="auto")
             >>> model.save_model(doctest_model_path, overwrite=True)
-            >>> model = PyroVelocity.load_model(doctest_model_path, adata, use_gpu=False)
+            >>> model = PyroVelocity.load_model(doctest_model_path, adata, use_gpu="auto")
             >>> posterior_samples = model.generate_posterior_samples(model.adata, num_samples=30)
             >>> posterior_samples_log = pretty_log_dict(posterior_samples)
             >>> logger.debug(posterior_samples_log)
@@ -134,9 +132,9 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> print(posterior_samples.keys())
             >>> # train model with
             >>> model = PyroVelocity(adata)
-            >>> model.train_faster_with_batch(batch_size=24, max_epochs=5, use_gpu=False)
+            >>> model.train_faster_with_batch(batch_size=24, max_epochs=5, use_gpu="auto")
             >>> model.save_model(doctest_model_path, overwrite=True)
-            >>> model = PyroVelocity.load_model(doctest_model_path, adata, use_gpu=False)
+            >>> model = PyroVelocity.load_model(doctest_model_path, adata, use_gpu="auto")
             >>> posterior_samples = model.generate_posterior_samples(model.adata, num_samples=30)
             >>> posterior_samples_log = pretty_log_dict(posterior_samples)
             >>> logger.debug(posterior_samples_log)
@@ -161,19 +159,18 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         self.input_type = input_type
 
         super().__init__(adata)
-        # if init:
-        #     initial_values = init_with_all_cells(
-        #         self.adata,
-        #         input_type,
-        #         shared_time,
-        #         latent_factor,
-        #         latent_factor_size,
-        #         plate_size,
-        #         num_aux_cells=num_aux_cells,
-        #     )
-        # else:
-        #     initial_values = {}
-        initial_values = {}
+        if init:
+            initial_values = init_with_all_cells(
+                self.adata,
+                input_type,
+                shared_time,
+                latent_factor,
+                latent_factor_size,
+                plate_size,
+                num_aux_cells=num_aux_cells,
+            )
+        else:
+            initial_values = {}
         logger.info(self.summary_stats)
         self.module = VelocityModule(
             self.summary_stats["n_cells"],
@@ -311,9 +308,8 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                 if k in [
                     "ut_norm",
                     "st_norm",
-                    # "cell_gene_state",
-                    "time_constraint",  # model 1 time constraint
-                ]:  # skip unused variables
+                    "time_constraint",
+                ]:
                     continue
 
                 if "aux" in k:
@@ -474,12 +470,20 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         cls,
         dir_path: str,
         adata: Optional[AnnData] = None,
-        use_gpu: Optional[Union[str, int, bool]] = None,
+        use_gpu: str = "auto",
         prefix: Optional[str] = None,
         backup_url: Optional[str] = None,
     ):
         load_adata = adata is None
-        _, _, device = parse_use_gpu_arg(use_gpu)
+        _accelerator, _devices, device = parse_device_args(
+            accelerator=use_gpu, return_device="torch"
+        )
+        logger.info(
+            f"Loading model with:\n"
+            f"\taccelerator: {_accelerator}\n"
+            f"\tdevices: {_devices}\n"
+            f"\tdevice: {device}\n"
+        )
 
         (
             attr_dict,
@@ -521,13 +525,14 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             logger.info("Preparing underlying module for load")
             try:
                 print("train 1---")
-                model.train(max_epochs=1, max_steps=1, use_gpu=use_gpu)
+                model.train(max_epochs=1, max_steps=1)
             except Exception:
                 model.train(
                     max_epochs=1,
                     max_steps=1,
-                    use_gpu=use_gpu,
                     batch_size=adata.shape[0],
+                    train_size=0.8,
+                    valid_size=0.2,
                 )
             model.module.load_state_dict(model_state_dict)
 
@@ -537,7 +542,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         model.module.eval()
         model._validate_anndata(adata)
         pyro.get_param_store().load(
-            os.path.join(dir_path, "param_store_test.pt"), map_location=device
+            os.path.join(dir_path, "param_store_test.pt"),
+            map_location=device,
         )
-        return model
         return model
