@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "pyrovelocity debug",
+      "name": "Pyrovelocity: Debug CLI",
       "type": "debugpy",
       "request": "launch",
       "module": "pyrovelocity",
@@ -29,6 +29,15 @@
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}",
       "preLaunchTask": "direnv allow"
+    },
+    {
+      "name": "Python: Debug Tests",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "purpose": ["debug-test"],
+      "console": "integratedTerminal",
+      "justMyCode": false
     }
   ]
 }
