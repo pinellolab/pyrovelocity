@@ -2,26 +2,22 @@ import json
 import os
 import uuid
 from pathlib import Path
-from typing import Dict
-from typing import Optional
-from typing import Tuple
+from typing import Dict, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import mlflow
 import numpy as np
-import torch
 from anndata._core.anndata import AnnData
 from beartype import beartype
 from mlflow import MlflowClient
 from numpy import ndarray
+from scvi.model._utils import parse_device_args
 
 from pyrovelocity.data import load_anndata_from_path
 from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models import PyroVelocity
 from pyrovelocity.utils import print_anndata
-from pyrovelocity.utils import print_attributes
-
 
 logger = configure_logging(__name__)
 
@@ -34,7 +30,7 @@ def train_dataset(
     guide_type: str = "auto",
     model_type: str = "auto",
     batch_size: int = -1,
-    use_gpu: int | bool = False,
+    use_gpu: str = "auto",
     likelihood: str = "Poisson",
     num_samples: int = 30,
     log_every: int = 100,
@@ -60,7 +56,6 @@ def train_dataset(
     Outputs:
         data:
             "models/{data_model}/trained.h5ad"
-            "models/{data_model}/pyrovelocity.pkl"
             "models/{data_model}/posterior_samples.pkl.zst"
         models:
             models/{data_model}/model/
@@ -69,21 +64,41 @@ def train_dataset(
             ├── param_store_test.pt
             └── var_names.csv
 
+    "models/{data_model}/pyrovelocity.pkl" is produced by `postprocess_dataset`.
+
+
     Args:
-        data_set_name (str, optional): Data set name. Defaults to "simulated".
-        model_identifier (str, optional): Model identifier. Defaults to "model1".
-        force (bool, optional): Overwrite existing output. Defaults to False.
+        adata (str | AnnData): _description_
+        data_set_name (str, optional): _description_. Defaults to "simulated".
+        model_identifier (str, optional): _description_. Defaults to "model2".
+        guide_type (str, optional): _description_. Defaults to "auto".
+        model_type (str, optional): _description_. Defaults to "auto".
+        batch_size (int, optional): _description_. Defaults to -1.
+        use_gpu (str, optional): _description_. Defaults to "auto".
+        likelihood (str, optional): _description_. Defaults to "Poisson".
+        num_samples (int, optional): _description_. Defaults to 30.
+        log_every (int, optional): _description_. Defaults to 100.
+        patient_improve (float, optional): _description_. Defaults to 1e-4.
+        patient_init (int, optional): _description_. Defaults to 45.
+        seed (int, optional): _description_. Defaults to 99.
+        learning_rate (float, optional): _description_. Defaults to 0.01.
+        max_epochs (int, optional): _description_. Defaults to 3000.
+        include_prior (bool, optional): _description_. Defaults to True.
+        library_size (bool, optional): _description_. Defaults to True.
+        offset (bool, optional): _description_. Defaults to True.
+        input_type (str, optional): _description_. Defaults to "raw".
+        cell_specific_kinetics (Optional[str], optional): _description_. Defaults to None.
+        kinetics_num (int, optional): _description_. Defaults to 2.
+        force (bool, optional): _description_. Defaults to False.
 
     Returns:
-        Tuple[str, str, Path, Path, Path, Path, Path, Path]: Paths to saved data.
+        Tuple[str, str, Path, Path, Path, Path, Path, Path]: _description_
 
     Examples:
         >>> train_dataset() # xdoctest: +SKIP
     """
-    ###########
-    # load data
-    ###########
 
+    # load data
     data_model = f"{data_set_name}_{model_identifier}"
     data_model_path = Path(f"models/{data_model}")
 
@@ -102,17 +117,16 @@ def train_dataset(
     )
     Path(data_model_path).mkdir(parents=True, exist_ok=True)
 
-    #############
     # train model
-    #############
-
-    if torch.cuda.is_available():
-        accelerators = list(range(torch.cuda.device_count()))
-        use_gpu = accelerators.pop()
-    else:
-        use_gpu = False
-
-    logger.info(f"GPU ID: {use_gpu}")
+    _accelerator, _devices, device = parse_device_args(
+        accelerator=use_gpu, return_device="torch"
+    )
+    logger.info(
+        f"Accelerator type specified as {use_gpu} resolves to:\n"
+        f"\taccelerator: {_accelerator}\n"
+        f"\tdevices: {_devices}\n"
+        f"\tdevice: {device}\n"
+    )
 
     if (
         os.path.isfile(trained_data_path)
@@ -135,8 +149,6 @@ def train_dataset(
             metrics_path,
             run_info_path,
             loss_plot_path,
-            # cell_state,
-            # vector_field_basis,
         )
     else:
         logger.info(f"Training model: {data_model}")
@@ -193,10 +205,7 @@ def train_dataset(
             posterior_samples,
         )
 
-        ##############
         # save metrics
-        ##############
-
         r = mlflow.get_run(run_id)
 
         Path(metrics_path).write_text(json.dumps(r.data.metrics, indent=4))
@@ -207,10 +216,7 @@ def train_dataset(
 
         log_run_info(r)
 
-        #############
         # postprocess
-        #############
-
         if "pancreas" in data_model:
             logger.info("checking shared time")
 
@@ -222,13 +228,9 @@ def train_dataset(
 
             check_shared_time(posterior_samples, adata)
 
-        # print_attributes(adata)
         print_anndata(adata)
 
-        ##################
         # save checkpoints
-        ##################
-
         logger.info(f"Saving trained data: {trained_data_path}")
         adata.write(trained_data_path)
 
@@ -254,8 +256,6 @@ def train_dataset(
             metrics_path,
             run_info_path,
             loss_plot_path,
-            # cell_state,
-            # vector_field_basis,
         )
 
 
@@ -265,7 +265,7 @@ def train_model(
     guide_type: str = "auto",
     model_type: str = "auto",
     batch_size: int = -1,
-    use_gpu: int | bool = False,
+    use_gpu: str = "auto",
     likelihood: str = "Poisson",
     num_samples: int = 30,
     log_every: int = 100,
@@ -328,13 +328,12 @@ def train_model(
         >>> print(loss_plot_path)
         >>> adata = generate_sample_data(random_seed=99)
         >>> copy_raw_counts(adata)
-        >>> _, model, posterior_samples = train_model(adata, use_gpu=False, seed=99, max_epochs=200, loss_plot_path=loss_plot_path)
+        >>> _, model, posterior_samples = train_model(adata, use_gpu="auto", seed=99, max_epochs=200, loss_plot_path=loss_plot_path)
     """
     if isinstance(adata, str):
         adata = load_anndata_from_path(adata)
 
     print_anndata(adata)
-    print_attributes(adata)
 
     PyroVelocity.setup_anndata(adata)
 
