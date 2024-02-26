@@ -1,4 +1,5 @@
 from dataclasses import make_dataclass
+from enum import Enum
 from typing import Any, Dict, Tuple, Type
 
 from mashumaro.mixins.json import DataClassJSONMixin
@@ -54,7 +55,7 @@ PreprocessDataInterface.__module__ = __name__
 
 pyrovelocity_train_types_defaults: Dict[str, Tuple[Type, Any]] = {
     "adata": (str, "data/processed/simulated_processed.h5ad"),
-    "use_gpu": (bool, False),
+    # "use_gpu": (str, "auto"),
 }
 
 pyrovelocity_train_fields = create_dataclass_from_callable(
@@ -68,3 +69,48 @@ PyroVelocityTrainInterface = make_dataclass(
     bases=(DataClassJSONMixin,),
 )
 PyroVelocityTrainInterface.__module__ = __name__
+
+
+class AcceleratorType(Enum):
+    """
+    Enumeration of accelerator types denoting a subset of the accelerators recognized
+    by PyTorch Lightning's AcceleratorRegistry.
+
+    See also:
+    - https://lightning.ai/docs/pytorch/2.1.4/extensions/accelerator.html
+    - https://github.com/Lightning-AI/pytorch-lightning/blob/2.1.4/src/lightning/pytorch/trainer/connectors/accelerator_connector.py#L209-L217
+
+    This enumeration supports validation of the selection of accelerator types for
+    computations, providing a straightforward way to specify the desired
+    computation device. It accounts for a subset of the available accelerators
+    as reported by `AcceleratorRegistry.available_accelerators()` from PyTorch
+    Lightning, specifically targeting 'cpu' and 'cuda' accelerators, while also
+    offering an 'auto' option for automatic selection.
+
+    It would be preferable to restrict this to subclasses of
+    `lightning.pytorch.accelerators.Accelerator`, but there is no such instance
+    that supporting the "auto" option, which lightning only references via a
+    string.
+    https://github.com/Lightning-AI/pytorch-lightning/blob/2.1.4/src/lightning/pytorch/accelerators/accelerator.py.
+
+    Members:
+    - AUTO: Represents an automatic choice of accelerator based on the system's
+            availability and configuration. This option is intended to provide
+            flexibility, allowing PyTorch Lightning to automatically select the
+            most appropriate accelerator: usually CPU vs CUDA.
+    - CPU: Specifies the use of the CPU for computations. This is a universal
+           option, available on all systems.
+           See https://github.com/Lightning-AI/pytorch-lightning/blob/2.1.4/src/lightning/pytorch/accelerators/cpu.py.
+    - CUDA: Specifies the use of NVIDIA CUDA-enabled GPUs for computations. This
+            option should be selected when intending to leverage GPU acceleration,
+            assuming CUDA-compatible hardware is available.
+            See https://github.com/Lightning-AI/pytorch-lightning/blob/2.1.4/src/lightning/pytorch/accelerators/cuda.py.
+
+    This enumeration does not cover all the accelerators available in
+    PyTorch Lightning, such as 'tpu' and 'mps'. It reflects options that are
+    tested with this library.
+    """
+
+    AUTO = "auto"
+    CPU = "cpu"
+    CUDA = "cuda"
