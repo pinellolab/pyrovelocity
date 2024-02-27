@@ -85,6 +85,10 @@ poetry-venv-local: ## Set poetry to use local virtualenvs. See `poetry.toml`.
 	poetry config --local virtualenvs.in-project true
 	poetry config --local --list
 
+get-source-hash: ## Get hash for branch source archive.
+	curl -sL https://github.com/$(GH_REPO)/archive/refs/heads/$(GIT_REF).tar.gz | openssl dgst -sha256
+	curl -sL https://github.com/$(GH_REPO)/archive/$(GIT_SHA).tar.gz | openssl dgst -sha256
+
 PIP_REQUIREMENTS_NAME ?= requirements
 
 lock-pip: ## Export requirements.txt for pip.
