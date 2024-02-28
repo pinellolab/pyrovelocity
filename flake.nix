@@ -344,6 +344,7 @@
             atuin
             bat
             bazelisk
+            pkgs_unstable.code-server
             pkgs_unstable.cue
             gawk
             gh
@@ -362,7 +363,6 @@
             man-db
             man-pages
             neovim
-            openvscode-server
             pandoc
             poetry
             poethepoet
