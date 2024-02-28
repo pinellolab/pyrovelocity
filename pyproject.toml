@@ -23,78 +23,79 @@ Changelog = "https://github.com/pinellolab/pyrovelocity/releases"
 
 [tool.poetry.dependencies]
 python = ">=3.10, <3.11"
-adjusttext = "0.7.3"
-anndata = "0.10.5"
-astropy = "5.2.2"
-beartype = { version = "0.16.4", source = "pypi" }
-# pinning chex>=0.1.82 is to avoid 
-# dm-tree = "0.1.8"
+adjusttext = ">=0.7.3"
+anndata = ">=0.10.5"
+astropy = ">=5.2.2"
+beartype = ">=0.16.4"
+# pinning chex>=0.1.82 may be required to avoid
+# dm-tree = ">=0.1.8"
 # whose build is broken on Darwin
 # https://github.com/NixOS/nixpkgs/blob/4e44fb9c2673c5b58c44deb7e05bcf312a5862cf/pkgs/development/python-modules/dm-tree/default.nix#L52
-chex = "0.1.85"
-click = "8.1.7"
-colorlog = "6.7.0"
-flax = "0.8.1"
-h5py = "3.8.0"
-jax = "0.4.23"
-jaxlib = "0.4.23"
-jaxtyping = "0.2.25"
-leidenalg = "0.9.1"
-mlflow = "2.10.0"
-pandas = "1.5.3"
-pyro-ppl = "1.8.6"
-lightning = "2.1.4"
-pytorch-lightning = "2.1.4"
-pyyaml = "6.0.1"
-returns = "0.22.0"
-rich = "12.6.0"
-scanpy = "1.9.8"
-scipy = "1.10.1"
-scvelo = { version = "0.3.1", source = "pypi" }
-scvi-tools = "1.1.1"
-seaborn = "0.13.2"
-termcolor = "2.2.0"
-torch = "2.1.2"
-torchmetrics = "1.2.1"
-validators = "0.22.0"
-zstandard = "0.21.0"
+chex = ">=0.1.7"
+click = ">=8.1.7"
+colorlog = ">=6.7.0"
+flax = ">=0.8.1"
+h5py = ">=3.8.0"
+jax = ">=0.4.23"
+jaxlib = ">=0.4.23"
+jaxtyping = ">=0.2.25"
+leidenalg = ">=0.9.1"
+mlflow = ">=2.10.0"
+pandas = ">=1.5.3"
+pyro-ppl = ">=1.8.6"
+lightning = ">=2.0.0"
+pytorch-lightning = ">=2.0.0"
+pyyaml = ">=6.0.1"
+returns = ">=0.22.0"
+rich = ">=12.6.0"
+scanpy = ">=1.9.8"
+scipy = ">=1.10.1"
+# scvelo = { version = ">=0.3.1", source = "pypi" }
+scvelo = ">=0.3.1"
+scvi-tools = ">=1.1.1"
+seaborn = ">=0.13.2"
+termcolor = ">=2.2.0"
+torch = ">=2.1.2"
+torchmetrics = ">=1.2.1"
+validators = ">=0.22.0"
+zstandard = ">=0.21.0"
 # removed from library at
-# cospar = { version = "0.1.9", source = "pypi" }
-# scikit-misc = "0.1.4"
+# cospar = { version = ">=0.1.9", source = "pypi" }
+# scikit-misc = ">=0.1.4"
 
 # extras
 annoy = { version = "^1.17.3", optional = true }
 black = { version = ">=23.3.0", optional = true }
 coverage = { extras = ["toml"], version = ">=6.2", optional = true }
 # darglint = { version = ">=1.8.1", optional = true }
-dataclasses-json = { version = "0.5.9", optional = true }
+dataclasses-json = { version = ">=0.5.7", optional = true }
 # dparse = { version = ">=0.5.2", optional = true }
 # dvc = { version = ">=3.0", optional = true }
 # dvc-gs = { version = ">=2.22.1", optional = true }
-dulwich = { version = "0.21.7", optional = true }
+dulwich = { version = ">=0.21.7", optional = true }
 # flake8 = { version = ">=4.0.1", optional = true }
 # flake8-bandit = { version = ">=2.1.2", optional = true, source = "pypi" }
 # flake8-bugbear = { version = ">=21.9.2", optional = true }
 # flake8-docstrings = { version = ">=1.6.0", optional = true }
 # flake8-rst-docstrings = { version = ">=0.2.5", optional = true }
-flytekit = { version = "1.10.3", optional = true, source = "pypi" }
-furo = { version = "2023.5.20", optional = true }
-hydra-core = { version = "1.3.2", optional = true }
-hydra-zen = { version = "0.10.0", optional = true }
+flytekit = { version = ">=1.10.2", optional = true }
+furo = { version = ">=2023.5.20", optional = true }
+hydra-core = { version = ">=1.3.2", optional = true }
+hydra-zen = { version = ">=0.10.0", optional = true }
 hypothesis = { version = ">=6.71.0", optional = true }
 ipython = { version = ">=8.11.0", optional = true }
 # isort = { version = ">=5.10.1", optional = true }
 # see https://jupyterlab-contrib.github.io/migrate_from_classical.html for extensions
-jupyterlab = { version = "4.0.9", optional = true }
-jupytext = { version = "1.16.0", optional = true }
-mashumaro = { version = "3.10", optional = true }
+jupyterlab = { version = ">=4.0.9", optional = true }
+jupytext = { version = ">=1.16.0", optional = true }
+mashumaro = { version = ">=3.10", optional = true }
 matplotlib-venn = { version = ">=0.11.9", optional = true }
 mypy = { version = ">=0.930", optional = true }
-myst-parser = { version = "2.0.0", optional = true }
-nbconvert = { version = "7.14.0", optional = true }
-nbformat = { version = "5.9.2", optional = true }
-nbsphinx = { version = "0.9.3", optional = true }
-omegaconf = { version = "2.3.0", optional = true }
+myst-parser = { version = ">=2.0.0", optional = true }
+nbconvert = { version = ">=7.14.0", optional = true }
+nbformat = { version = ">=5.9.2", optional = true }
+nbsphinx = { version = ">=0.9.3", optional = true }
+omegaconf = { version = ">=2.3.0", optional = true }
 papermill = { version = ">=2.4.0", optional = true }
 # pep8-naming = { version = ">=0.12.1", optional = true }
 poethepoet = { version = ">=0.16.0", optional = true, source = "pypi" }
@@ -102,20 +103,20 @@ pre-commit = { version = ">=2.16.0", optional = true }
 pre-commit-hooks = { version = ">=4.1.0", optional = true }
 pygments = { version = ">=2.15.0", optional = true }
 pytest = { version = ">=6.2.5", optional = true }
-pytest-asyncio = { version = "0.21.1", optional = true }
+pytest-asyncio = { version = ">=0.21.1", optional = true }
 pytest-cov = { version = ">=4.0.0", optional = true }
 pytest-mock = { version = ">=3.10.0", optional = true }
 python-dotenv = { version = ">=1.0.0", optional = true }
 # pyupgrade = { version = ">=2.29.1", optional = true }
 # pyvis = { version = ">=0.3.2", optional = true }
 rich-click = { version = ">=1.7.3", optional = true }
-ruff = { version = "0.1.5", optional = true }
+ruff = { version = ">=0.1.5", optional = true }
 # safety = { version = ">=1.10.3", optional = true }
-sphinx = { version = "7.0.1", optional = true }
+sphinx = { version = ">=7.0.1", optional = true }
 sphinx-autobuild = { version = ">=2021.3.14", optional = true }
-sphinx-autodoc-typehints = { version = "1.23.3", optional = true }
-sphinx-click = { version = "4.4.0", optional = true }
-sphinx-copybutton = { version = "0.5.2", optional = true }
+sphinx-autodoc-typehints = { version = ">=1.23.3", optional = true }
+sphinx-click = { version = ">=4.4.0", optional = true }
+sphinx-copybutton = { version = ">=0.5.2", optional = true }
 # statannotations = { version = ">=0.6.0", optional = true }
 # typeguard = { version = ">=2.13.3", optional = true }
 xdoctest = { extras = ["colors"], version = ">=0.15.10", optional = true }
@@ -131,23 +132,23 @@ xdoctest = { extras = ["colors"], version = ">=0.15.10", optional = true }
 
 # [tool.poetry.group.cpu.dependencies]
 # # requirements-cpu.txt
-# # torch==1.13.1+cpu ; python_version >= "3.10" and python_version < "3.11" and (sys_platform == "linux" or platform_system == "Linux")
-# # torch==1.13.1 ; python_version >= "3.10" and python_version < "3.11" and (sys_platform == "darwin" or platform_system == "Darwin")
+# # torch==1.13.1+cpu ; python_version >= ">=3.10" and python_version < "3.11" and (sys_platform == "linux" or platform_system == "Linux")
+# # torch==1.13.1 ; python_version >= ">=3.10" and python_version < "3.11" and (sys_platform == "darwin" or platform_system == "Darwin")
 # torch = [
-#   {platform = "linux", version = "1.13.1+cpu", source = "pytorch"},
-#   {platform = "darwin", version = "1.13.1", source = "pypi"},
+#   {platform = "linux", version = ">=1.13.1+cpu", source = "pytorch"},
+#   {platform = "darwin", version = ">=1.13.1", source = "pypi"},
 # ]
 
 [tool.poetry.group.lint]
 optional = true
 
 [tool.poetry.group.lint.dependencies]
-black = { version = "23.3.0", extras = ["jupyter"] }
-mypy = "1.5.1"
+black = { version = ">=23.3.0", extras = ["jupyter"] }
+mypy = ">=1.5.1"
 pre-commit = ">=2.16.0"
 pre-commit-hooks = ">=4.1.0"
-pyright = "1.1.347"
-ruff = "0.1.5"
+pyright = ">=1.1.347"
+ruff = ">=0.1.5"
 docformatter = { version = ">=1.7.5", extras = ["tomli"] }
 
 
@@ -156,51 +157,51 @@ optional = true
 
 [tool.poetry.group.test.dependencies]
 coverage = { version = ">=6.2", extras = ["toml"] }
-hypothesis = "6.72.1"
+hypothesis = ">=6.72.1"
 ipython = ">=8.11.0"
-poethepoet = "0.19.0"
+poethepoet = ">=0.19.0"
 pygments = ">=2.15.0"
-pytest = "7.3.1"
-pytest-asyncio = "0.21.1"
-pytest-cov = "4.0.0"
-pytest-mock = "3.10.0"
-requests-mock = "1.11.0"
-xdoctest = "1.1.1"
+pytest = ">=7.3.1"
+pytest-asyncio = ">=0.21.1"
+pytest-cov = ">=4.0.0"
+pytest-mock = ">=3.10.0"
+requests-mock = ">=1.11.0"
+xdoctest = ">=1.1.1"
 
 
 [tool.poetry.group.docs]
 optional = true
 
 [tool.poetry.group.docs.dependencies]
-furo = "2023.5.20"
-jupyterlab = "4.0.9"
-jupytext = "1.16.0"
-myst-parser = "2.0.0"
-nbsphinx = "0.9.3"
-sphinx-autobuild = "2021.3.14"
-sphinx-autodoc-typehints = "1.23.3"
-sphinx-click = "4.4.0"
-sphinx-copybutton = "0.5.2"
-sphinx = "7.0.1"
+furo = ">=2023.5.20"
+jupyterlab = ">=4.0.9"
+jupytext = ">=1.16.0"
+myst-parser = ">=2.0.0"
+nbsphinx = ">=0.9.3"
+sphinx-autobuild = ">=2021.3.14"
+sphinx-autodoc-typehints = ">=1.23.3"
+sphinx-click = ">=4.4.0"
+sphinx-copybutton = ">=0.5.2"
+sphinx = ">=7.0.1"
 
 [tool.poetry.group.workflows]
 optional = true
 
 [tool.poetry.group.workflows.dependencies]
-dataclasses-json = "0.5.9"
-dulwich = "0.21.7"
-flytekit = "1.10.3"
-hydra-core = "1.3.2"
-hydra-zen = "0.10.0"
-jupytext = "1.16.0"
-mashumaro = "3.10"
-nbconvert = "7.14.0"
-nbformat = "5.9.2"
-omegaconf = "2.3.0"
+dataclasses-json = ">=0.5.7"
+dulwich = ">=0.21.7"
+flytekit = ">=1.10.2"
+hydra-core = ">=1.3.2"
+hydra-zen = ">=0.10.0"
+jupytext = ">=1.16.0"
+mashumaro = ">=3.10"
+nbconvert = ">=7.14.0"
+nbformat = ">=5.9.2"
+omegaconf = ">=2.3.0"
 papermill = ">=2.4.0"
-pyperclip = "1.8.2"
-python-dotenv = "1.0.0"
-rich-click = "1.7.3"
+pyperclip = ">=1.8.2"
+python-dotenv = ">=1.0.0"
+rich-click = ">=1.7.3"
 
 [tool.poetry.extras]
 lint = [
@@ -274,9 +275,6 @@ log_level = "INFO"
 virtual_package_spec = "conda/virtual-packages.yml"
 
 [tool.conda-lock.dependencies]
-adjusttext = { source = "pypi" }
-dataclasses-json = { source = "pypi" }
-flytekit = { source = "pypi" }
 hydra-zen = { source = "pypi" }
 pip = ">=23.2"
 poethepoet = { source = "pypi" }
@@ -435,7 +433,7 @@ force_single_line = true
 lines_after_imports = 2
 
 [tool.mypy]
-python_version = "3.10"
+python_version = ">=3.10"
 
 [[tool.mypy.overrides]]
 module = [""]

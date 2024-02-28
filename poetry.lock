@@ -7961,4 +7961,4 @@ workflows = ["dataclasses-json", "dulwich", "flytekit", "hydra-core", "hydra-zen
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10, <3.11"
-content-hash = "3a975e01ef45a2a0acb63ccf7e308d84a77acb6db5b3ff144f1ccb2276676038"
+content-hash = "f597160930a3e07a00299a2bfd28b57293906d87cca0143b1be5e3b1415e06f7"
