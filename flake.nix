@@ -73,6 +73,7 @@
           marshmallow-jsonschema = ["setuptools"];
           numba = [pkgs.tbb_2021_8];
           session-info = ["setuptools"];
+          tensorstore = ["setuptools"];
           xdoctest = ["setuptools"];
         };
 
