@@ -1909,6 +1909,9 @@ pandas==1.5.3 ; python_version >= "3.10" and python_version < "3.11" \
 pandocfilters==1.5.0 ; python_version >= "3.10" and python_version < "3.11" \
     --hash=sha256:0b679503337d233b4339a817bfc8c50064e2eff681314376a47cb582305a7a38 \
     --hash=sha256:33aae3f25fd1a026079f5d27bdd52496f0e0803b3469282162bafdcbdf6ef14f
+papermill==2.5.0 ; python_version >= "3.10" and python_version < "3.11" \
+    --hash=sha256:c42303afb92e482a60ae1df2577be59a5b7a64c5cd52d37c74c7f74e36085708 \
+    --hash=sha256:ea7b70c0553f56fe91b0fa9cc5e17012cd699320a8b015373e7870c5e6086c72
 parso==0.8.3 ; python_version >= "3.10" and python_version < "3.11" \
     --hash=sha256:8c07be290bb59f03588915921e29e8a50002acaf2cdc5fa0e0114f91709fafa0 \
     --hash=sha256:c001d4636cd3aecdaf33cbb40aebb59b094be2a74c556778ef5576c175e19e75
@@ -2633,6 +2636,9 @@ sympy==1.12 ; python_version >= "3.10" and python_version < "3.11" \
 tabulate==0.9.0 ; python_version >= "3.10" and python_version < "3.11" \
     --hash=sha256:0095b12bf5966de529c0feb1fa08671671b3368eec77d7ef7ab114be2c068b3c \
     --hash=sha256:024ca478df22e9340661486f85298cff5f6dcdba14f3813e8830015b9ed1948f
+tenacity==8.2.3 ; python_version >= "3.10" and python_version < "3.11" \
+    --hash=sha256:5398ef0d78e63f40007c1fb4c0bff96e1911394d2fa8d194f77619c05ff6cc8a \
+    --hash=sha256:ce510e327a630c9e1beaf17d42e6ffacc88185044ad85cf74c0a8887c6a0f88c
 tensorstore==0.1.35 ; python_version >= "3.10" and python_version < "3.11" \
     --hash=sha256:04c383af4a17e238fffdda7abc06b66c8583554d523cd721f2011bbb7a715327 \
     --hash=sha256:216bf4c00ec4aabf699d2a54ee9311f2fb19a2a3a904d7abb2194572af2f8384 \
