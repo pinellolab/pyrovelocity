@@ -97,7 +97,7 @@
               then {
                 grpcio = super.grpcio.override {preferWheel = false;};
               }
-              else if pkgs.stdenv.isLinux
+              else if pkgs.stdenv.hostPlatform.system == "x86_64-linux"
               then {
                 torch = super.torch.overridePythonAttrs (attrs: {
                   nativeBuildInputs =
