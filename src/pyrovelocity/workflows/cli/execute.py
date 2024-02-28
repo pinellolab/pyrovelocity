@@ -408,7 +408,7 @@ def main() -> None:
         mode=remote_prod_config,
         image=workflow_image,
         tag=git_short_sha,
-        version=f"{repo_name}-{git_branch_truncated}-{git_short_sha}",
+        version=f"{repo_name}-{git_branch_truncated}-{git_short_sha}-{random_alphanumeric_suffix()}",
     )
 
     # define the execution_context store
