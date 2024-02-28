@@ -261,7 +261,8 @@
 
         gitHubOrg = "pinellolab";
         packageName = "pyrovelocity";
-        packageSrcPath = "/root/${packageName}/src";
+        packageRootDir = "/root/${packageName}";
+        packageSrcPath = "${packageRootDir}/src";
 
         mkPoetryEnvWithSource = packageName: src: groups:
           pkgs.poetry2nix.mkPoetryEnv (
@@ -490,15 +491,18 @@
         };
         devcontainerImageConfig = {
           name = "${packageName}dev";
-          # with mkDockerManifest, tags may be automatically generated from
-          # git metadata
           tag = "latest";
           created = "now";
 
-          # maxLayers <=127; defaults to 100
           maxLayers = 123;
 
           contents = devcontainerContents;
+          # runAsRoot = ''
+          #   #!${pkgs.runtimeShell}
+          #   export PATH=${pkgs.lib.makeBinPath [ pkgs.gnumake pkgs.openvscode-server ]}:/bin:/usr/bin:$PATH
+          #   cd ${packageRootDir}
+          #   make vscode-install-extensions
+          # '';
           config = makeContainerConfig {
             pkgs = pkgs;
             packageSrcPath = packageSrcPath;
