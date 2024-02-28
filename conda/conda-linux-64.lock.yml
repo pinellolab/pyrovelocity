@@ -14,6 +14,7 @@ dependencies:
   - alembic=1.13.1=pyhd8ed1ab_1
   - anndata=0.10.5=pyhd8ed1ab_0
   - annotated-types=0.6.0=pyhd8ed1ab_0
+  - ansiwrap=0.8.4=py_0
   - antlr-python-runtime=4.9.3=pyhd8ed1ab_1
   - anyio=3.7.1=pyhd8ed1ab_0
   - aom=3.8.1=h59595ed_0
@@ -21,24 +22,29 @@ dependencies:
   - array-api-compat=1.4.1=pyhd8ed1ab_0
   - arrow=1.3.0=pyhd8ed1ab_0
   - astropy=5.2.2=py310h0a54255_0
-  - aws-c-auth=0.7.16=ha03d3f0_5
+  - asttokens=2.4.1=pyhd8ed1ab_0
+  - attrs=23.2.0=pyh71513ae_0
+  - aws-c-auth=0.7.16=h79b3bcb_6
   - aws-c-cal=0.6.10=hb29e0c7_1
   - aws-c-common=0.9.13=hd590300_0
   - aws-c-compression=0.2.18=hecc5fa9_1
-  - aws-c-event-stream=0.4.2=h5e81bdb_3
-  - aws-c-http=0.8.1=h359bc3d_4
-  - aws-c-io=0.14.4=h90346a2_2
-  - aws-c-mqtt=0.10.2=ha8e6ef5_3
-  - aws-c-s3=0.5.1=h54412c4_6
+  - aws-c-event-stream=0.4.2=hf9b2f7b_4
+  - aws-c-http=0.8.1=h5d7533a_5
+  - aws-c-io=0.14.5=h50678d4_1
+  - aws-c-mqtt=0.10.2=hf479d2b_4
+  - aws-c-s3=0.5.1=h4ad9680_7
   - aws-c-sdkutils=0.1.15=hecc5fa9_1
   - aws-checksums=0.1.18=hecc5fa9_1
-  - aws-crt-cpp=0.26.2=he2a05a2_5
+  - aws-crt-cpp=0.26.2=hce0b5c7_6
   - aws-sdk-cpp=1.11.267=h5606698_1
   - backoff=2.2.1=pyhd8ed1ab_0
+  - backports.zoneinfo=0.2.1=py310hff52083_8
   - bcrypt=4.1.2=py310hcb5633a_0
   - beautifulsoup4=4.12.3=pyha770c72_0
+  - black=24.2.0=py310hff52083_0
   - blas=2.116=mkl
   - blas-devel=3.9.0=16_linux64_mkl
+  - bleach=6.1.0=pyhd8ed1ab_0
   - blessed=1.19.1=pyhe4f9e05_2
   - blinker=1.7.0=pyhd8ed1ab_0
   - blosc=1.21.5=h0f2a231_0
@@ -65,6 +71,7 @@ dependencies:
   - configparser=6.0.1=pyhd8ed1ab_0
   - contextlib2=21.6.0=pyhd8ed1ab_0
   - contourpy=1.2.0=py310hd41b1e2_0
+  - coverage=7.4.3=py310h2372a71_1
   - crashtest=0.4.1=pyhd8ed1ab_0
   - croniter=1.4.1=pyhd8ed1ab_0
   - cryptography=42.0.5=py310h75e40e8_0
@@ -84,7 +91,9 @@ dependencies:
   - dateutils=0.6.12=py_0
   - dav1d=1.2.1=hd590300_0
   - dbus=1.13.6=h5008d03_3
+  - decorator=5.1.1=pyhd8ed1ab_0
   - deepdiff=6.7.1=pyhd8ed1ab_0
+  - defusedxml=0.7.1=pyhd8ed1ab_0
   - distlib=0.3.8=pyhd8ed1ab_0
   - docker-py=7.0.0=pyhd8ed1ab_0
   - docrep=0.3.2=pyh44b312d_0
@@ -93,6 +102,7 @@ dependencies:
   - et_xmlfile=1.1.0=pyhd8ed1ab_0
   - etils=1.7.0=pyhd8ed1ab_0
   - exceptiongroup=1.2.0=pyhd8ed1ab_2
+  - executing=2.0.1=pyhd8ed1ab_0
   - expat=2.5.0=hcb278e6_1
   - fastapi=0.110.0=pyhd8ed1ab_0
   - filelock=3.13.1=pyhd8ed1ab_0
@@ -117,22 +127,31 @@ dependencies:
   - h5py=3.8.0=nompi_py310ha66b2ad_101
   - hdf5=1.14.0=nompi_hb72d44e_103
   - hydra-core=1.3.2=pyhd8ed1ab_0
+  - hypothesis=6.72.1=pyha770c72_0
   - icu=73.2=h59595ed_0
   - idna=3.6=pyhd8ed1ab_0
   - igraph=0.10.10=h153f77b_0
   - importlib-metadata=7.0.1=pyha770c72_0
   - importlib_metadata=7.0.1=hd8ed1ab_0
-  - importlib_resources=6.1.1=pyhd8ed1ab_0
+  - importlib_resources=6.1.2=pyhd8ed1ab_0
   - iniconfig=2.0.0=pyhd8ed1ab_0
   - inquirer=3.1.4=pyhd8ed1ab_0
+  - ipython=8.22.1=pyh707e725_0
   - itsdangerous=2.1.2=pyhd8ed1ab_0
   - jaraco.classes=3.3.1=pyhd8ed1ab_0
   - jax=0.4.23=pyhd8ed1ab_0
   - jaxlib=0.4.23=cuda118py310h22361d4_200
   - jaxtyping=0.2.25=pyhd8ed1ab_0
+  - jedi=0.19.1=pyhd8ed1ab_0
   - jeepney=0.8.0=pyhd8ed1ab_0
   - jinja2=3.1.3=pyhd8ed1ab_0
   - joblib=1.3.2=pyhd8ed1ab_0
+  - jsonschema=4.21.1=pyhd8ed1ab_0
+  - jsonschema-specifications=2023.12.1=pyhd8ed1ab_0
+  - jupyter_client=8.6.0=pyhd8ed1ab_0
+  - jupyter_core=5.7.1=py310hff52083_0
+  - jupyterlab_pygments=0.3.0=pyhd8ed1ab_1
+  - jupytext=1.16.0=pyhd8ed1ab_0
   - keyring=24.3.0=py310hff52083_0
   - keyutils=1.6.1=h166bdaf_0
   - kiwisolver=1.4.5=py310hd41b1e2_1
@@ -194,7 +213,7 @@ dependencies:
   - libparquet=15.0.0=h352af49_6_cpu
   - libpng=1.6.43=h2797004_0
   - libprotobuf=4.25.1=hf27288f_2
-  - libre2-11=2023.06.02=h7a70373_0
+  - libre2-11=2023.09.01=h7a70373_1
   - libsodium=1.0.18=h36c2ea0_1
   - libsqlite=3.45.1=h2797004_0
   - libssh2=1.11.0=h0841786_0
@@ -208,7 +227,7 @@ dependencies:
   - libxcrypt=4.4.36=hd590300_1
   - libxml2=2.12.5=h232c23b_0
   - libzlib=1.2.13=hd590300_5
-  - lightning=2.0.9=pyhd8ed1ab_0
+  - lightning=2.0.9.post0=pyhd8ed1ab_0
   - lightning-cloud=0.5.39=pyhd8ed1ab_0
   - lightning-utilities=0.10.1=pyhd8ed1ab_0
   - llvm-openmp=15.0.7=h0cdce71_0
@@ -216,9 +235,14 @@ dependencies:
   - lz4-c=1.9.4=hcb278e6_0
   - mako=1.3.2=pyhd8ed1ab_0
   - markdown=3.5.2=pyhd8ed1ab_0
+  - markdown-it-py=3.0.0=pyhd8ed1ab_0
   - markupsafe=2.1.5=py310h2372a71_0
   - mashumaro=3.10=pyhd8ed1ab_0
   - matplotlib-base=3.8.3=py310h62c0568_0
+  - matplotlib-inline=0.1.6=pyhd8ed1ab_0
+  - mdit-py-plugins=0.4.0=pyhd8ed1ab_0
+  - mdurl=0.1.2=pyhd8ed1ab_0
+  - mistune=3.0.2=pyhd8ed1ab_0
   - mkl=2022.1.0=h84fe81f_915
   - mkl-devel=2022.1.0=ha770c72_916
   - mkl-include=2022.1.0=h84fe81f_915
@@ -233,7 +257,13 @@ dependencies:
   - mudata=0.2.3=pyhd8ed1ab_0
   - multipledispatch=0.6.0=py_0
   - munkres=1.1.4=pyh9f0ad1d_0
+  - mypy_extensions=1.0.0=pyha770c72_0
   - natsort=8.4.0=pyhd8ed1ab_0
+  - nbclient=0.8.0=pyhd8ed1ab_0
+  - nbconvert=7.14.0=pyhd8ed1ab_0
+  - nbconvert-core=7.14.0=pyhd8ed1ab_0
+  - nbconvert-pandoc=7.14.0=pyhd8ed1ab_0
+  - nbformat=5.9.2=pyhd8ed1ab_0
   - nccl=2.20.3.1=h6103f9b_0
   - ncurses=6.4=h59595ed_2
   - nest-asyncio=1.6.0=pyhd8ed1ab_0
@@ -243,7 +273,7 @@ dependencies:
   - numpyro=0.13.2=pyhd8ed1ab_1
   - oauthlib=3.2.2=pyhd8ed1ab_0
   - omegaconf=2.3.0=pyhd8ed1ab_0
-  - openjpeg=2.5.0=h488ebb8_3
+  - openjpeg=2.5.1=h488ebb8_0
   - openpyxl=3.1.2=py310h2372a71_1
   - openssl=3.2.1=hd590300_0
   - opt-einsum=3.3.0=hd8ed1ab_2
@@ -255,25 +285,34 @@ dependencies:
   - orjson=3.9.15=py310hcb5633a_0
   - packaging=23.2=pyhd8ed1ab_0
   - pandas=1.5.3=py310h9b08913_1
+  - pandoc=3.1.12.1=ha770c72_0
+  - pandocfilters=1.5.0=pyhd8ed1ab_0
+  - papermill=2.4.0=pyhd8ed1ab_0
   - paramiko=3.4.0=pyhd8ed1ab_0
+  - parso=0.8.3=pyhd8ed1ab_0
+  - pathspec=0.12.1=pyhd8ed1ab_0
   - patsy=0.5.6=pyhd8ed1ab_0
   - pcre2=10.42=hcad00b1_0
   - pexpect=4.9.0=pyhd8ed1ab_0
+  - pickleshare=0.7.5=py_1003
   - pillow=10.2.0=py310h01dd4db_0
   - pip=24.0=pyhd8ed1ab_0
   - pkginfo=1.9.6=pyhd8ed1ab_0
+  - pkgutil-resolve-name=1.3.10=pyhd8ed1ab_1
   - platformdirs=4.2.0=pyhd8ed1ab_0
   - pluggy=1.4.0=pyhd8ed1ab_0
-  - poetry=1.8.0=linux_pyha804496_0
+  - poetry=1.8.1=linux_pyha804496_0
   - poetry-core=1.9.0=pyhd8ed1ab_0
   - poetry-plugin-export=1.6.0=pyhd8ed1ab_0
   - pooch=1.8.1=pyhd8ed1ab_0
   - prometheus_client=0.20.0=pyhd8ed1ab_0
   - prometheus_flask_exporter=0.23.0=pyhd8ed1ab_0
+  - prompt-toolkit=3.0.42=pyha770c72_0
   - protobuf=4.25.1=py310h620c231_0
   - psutil=5.9.8=py310h2372a71_0
   - pthread-stubs=0.4=h36c2ea0_1001
   - ptyprocess=0.7.0=pyhd3deb0d_0
+  - pure_eval=0.2.2=pyhd8ed1ab_0
   - pyarrow=15.0.0=py310hf9e7431_6_cpu
   - pybind11-abi=4=hd8ed1ab_3
   - pycparser=2.21=pyhd8ed1ab_0
@@ -290,11 +329,14 @@ dependencies:
   - pyro-api=0.1.2=pyhd8ed1ab_0
   - pyro-ppl=1.8.6=pyhd8ed1ab_0
   - pysocks=1.7.1=pyha2e5f31_6
-  - pytest=7.4.4=pyhd8ed1ab_0
+  - pytest=7.3.1=pyhd8ed1ab_0
   - pytest-asyncio=0.21.1=pyhd8ed1ab_0
+  - pytest-cov=4.0.0=pyhd8ed1ab_0
+  - pytest-mock=3.10.0=pyhd8ed1ab_0
   - python=3.10.13=hd12c33a_1_cpython
   - python-build=1.0.3=pyhd8ed1ab_0
   - python-dateutil=2.8.2=pyhd8ed1ab_0
+  - python-dotenv=1.0.0=pyhd8ed1ab_1
   - python-editor=1.0.4=py_0
   - python-fastjsonschema=2.19.1=pyhd8ed1ab_0
   - python-igraph=0.11.4=py310hd7113ba_0
@@ -308,19 +350,23 @@ dependencies:
   - pytz=2023.4=pyhd8ed1ab_0
   - pywin32-on-windows=0.1.0=pyh1179c8e_3
   - pyyaml=6.0.1=py310h2372a71_1
+  - pyzmq=25.1.2=py310h795f18f_0
   - querystring_parser=1.2.4=py_0
   - rapidfuzz=3.6.1=py310hc6cd4ac_0
   - rav1e=0.6.6=he8a937b_2
   - rdma-core=50.0=hd3aeb46_0
-  - re2=2023.06.02=h2873b5e_0
+  - re2=2023.09.01=h7f4b329_1
   - readchar=4.0.5=pyhd8ed1ab_0
   - readline=8.2=h8228510_1
+  - referencing=0.33.0=pyhd8ed1ab_0
   - requests=2.31.0=pyhd8ed1ab_0
   - requests-mock=1.11.0=pyhd8ed1ab_0
   - requests-toolbelt=1.0.0=pyhd8ed1ab_0
   - returns=0.22.0=pyhd8ed1ab_0
   - rich=12.6.0=pyhd8ed1ab_0
-  - s2n=1.4.4=h06160fa_0
+  - rich-click=1.7.3=pyhd8ed1ab_0
+  - rpds-py=0.18.0=py310hcb5633a_0
+  - s2n=1.4.5=h06160fa_0
   - scanpy=1.9.8=pyhd8ed1ab_0
   - scikit-learn=1.4.1.post1=py310h1fdf081_0
   - scipy=1.10.1=py310ha4c1d20_3
@@ -334,11 +380,13 @@ dependencies:
   - six=1.16.0=pyh6c4a22f_0
   - smmap=5.0.0=pyhd8ed1ab_0
   - snappy=1.1.10=h9fff704_0
-  - sniffio=1.3.0=pyhd8ed1ab_0
+  - sniffio=1.3.1=pyhd8ed1ab_0
+  - sortedcontainers=2.4.0=pyhd8ed1ab_0
   - soupsieve=2.5=pyhd8ed1ab_1
   - sparse=0.15.1=pyhd8ed1ab_1
   - sqlalchemy=2.0.27=py310h2372a71_0
   - sqlparse=0.4.4=pyhd8ed1ab_0
+  - stack_data=0.6.2=pyhd8ed1ab_0
   - starlette=0.36.3=pyhd8ed1ab_0
   - starsessions=1.3.0=pyhd8ed1ab_0
   - statsmodels=0.14.1=py310h1f7b6fc_0
@@ -347,16 +395,21 @@ dependencies:
   - sympy=1.12=pypyh9d50eac_103
   - tabulate=0.9.0=pyhd8ed1ab_1
   - tbb=2021.11.0=h00ab1b0_1
+  - tenacity=8.2.3=pyhd8ed1ab_0
   - tensorstore=0.1.51=py310h122cdbb_1
   - termcolor=2.2.0=pyhd8ed1ab_0
   - texttable=1.7.0=pyhd8ed1ab_0
+  - textwrap3=0.9.2=py_0
   - threadpoolctl=3.3.0=pyhc1e730c_0
+  - tinycss2=1.2.1=pyhd8ed1ab_0
   - tk=8.6.13=noxft_h4845f30_101
+  - toml=0.10.2=pyhd8ed1ab_0
   - tomli=2.0.1=pyhd8ed1ab_0
-  - tomlkit=0.12.3=pyha770c72_0
+  - tomlkit=0.12.4=pyha770c72_0
   - toolz=0.12.1=pyhd8ed1ab_0
   - torchmetrics=1.2.1=pyhd8ed1ab_0
   - torchtriton=2.1.0=py310
+  - tornado=6.4=py310h2372a71_0
   - tqdm=4.66.2=pyhd8ed1ab_0
   - traitlets=5.14.1=pyhd8ed1ab_0
   - trove-classifiers=2024.2.23=pyhd8ed1ab_0
@@ -373,16 +426,19 @@ dependencies:
   - validators=0.22.0=pyhd8ed1ab_0
   - virtualenv=20.25.1=pyhd8ed1ab_0
   - wcwidth=0.2.13=pyhd8ed1ab_0
+  - webencodings=0.5.1=pyhd8ed1ab_2
   - websocket-client=1.7.0=pyhd8ed1ab_0
   - websockets=12.0=py310h2372a71_0
   - werkzeug=3.0.1=pyhd8ed1ab_0
   - wheel=0.42.0=pyhd8ed1ab_0
   - xarray=2024.2.0=pyhd8ed1ab_0
+  - xdoctest=1.1.1=pyhd8ed1ab_0
   - xlrd=1.2.0=pyh9f0ad1d_1
   - xorg-libxau=1.0.11=hd590300_0
   - xorg-libxdmcp=1.1.3=h7f98852_0
   - xz=5.2.6=h166bdaf_0
   - yaml=0.2.5=h7f98852_2
+  - zeromq=4.3.5=h59595ed_0
   - zipp=3.17.0=pyhd8ed1ab_0
   - zstandard=0.21.0=py310h1275a96_1
   - zstd=1.5.5=hfc55251_0
@@ -395,53 +451,49 @@ dependencies:
       - aiosignal === 1.3.1 --hash=sha256:f8376fb07dd1e86a584e4fcdec80b36b7f81aac666ebc724e2c090300dd83b17
       - antlr4-python3-runtime === 4.9.3 --hash=sha256:f224469b4168294902bb1efa80a8bf7855f24c99aef99cbefc1bcd3cce77881b
       - async-timeout === 4.0.3 --hash=sha256:7405140ff1230c310e51dc27b3145b9092d659ce68ff733fb0cefe3ee42be028
-      - attrs === 23.2.0 --hash=sha256:99b87a485a5820b23b879f04c2305b44b951b502fd64be915879d77a7e8fc6f1
-      - azure-core === 1.29.7 --hash=sha256:95a7b41b4af102e5fcdfac9500fcc82ff86e936c7145a099b7848b9ac0501250
+      - azure-core === 1.30.0 --hash=sha256:3dae7962aad109610e68c9a7abb31d79720e1d982ddf61363038d175a5025e89
       - azure-datalake-store === 0.0.53 --hash=sha256:a30c902a6e360aa47d7f69f086b426729784e71c536f330b691647a51dc42b2b
       - azure-identity === 1.15.0 --hash=sha256:a14b1f01c7036f11f148f22cd8c16e05035293d714458d6b44ddf534d93eb912
       - azure-storage-blob === 12.19.0 --hash=sha256:7bbc2c9c16678f7a420367fef6b172ba8730a7e66df7f4d7a55d5b3c8216615b
       - beartype === 0.16.4 --hash=sha256:64865952f9dff1e17f22684b3c7286fc79754553b47eaefeb1286224ae8c1bd9
       - binaryornot === 0.4.4 --hash=sha256:b8b71173c917bddcd2c16070412e369c3ed7f0528926f70cac18a6c97fd563e4
       - botocore === 1.31.17 --hash=sha256:6ac34a1d34aa3750e78b77b8596617e2bab938964694d651939dba2cbde2c12b
-      - cachetools === 5.3.2 --hash=sha256:861f35a13a451f94e301ce2bec7cac63e881232ccce7ed67fab9b5df4d3beaa1
+      - cachetools === 5.3.3 --hash=sha256:0abad1021d3f8325b2fc1d2e9c8b9c9d57b04c3932657a72465447332c24d945
       - chardet === 5.2.0 --hash=sha256:e1cf59446890a00105fe7b7912492ea04b6e6f06d4b742b2c788469e34c82970
-      - cookiecutter === 2.5.0 --hash=sha256:8aa2f12ed11bc05628651e9dc4353a10571dd9908aaaaeec959a2b9ea465a5d2
-      - croniter === 2.0.1 --hash=sha256:4cb064ce2d8f695b3b078be36ff50115cf8ac306c10a7e8653ee2a5b534673d7
+      - cookiecutter === 2.6.0 --hash=sha256:a54a8e37995e4ed963b3e82831072d1ad4b005af736bb17b99c2cbd9d41b6e2d
       - dataclasses-json === 0.5.9 --hash=sha256:1280542631df1c375b7bc92e5b86d39e06c44760d7e3571a537b3b8acabf2f0c
-      - decorator === 5.1.1 --hash=sha256:b8c3f85900b9dc423225913c5aace94729fe1fa9763b38939a95226f02d37186
       - diskcache === 5.6.3 --hash=sha256:5e31b2d5fbad117cc363ebaf6b689474db18a1f6438bc82358b024abd4c2ca19
       - docker === 6.1.3 --hash=sha256:aecd2277b8bf8e506e484f6ab7aec39abe0038e29fa4a6d3ba86c3fe01844ed9
       - docstring-parser === 0.15 --hash=sha256:d1679b86250d269d06a99670924d6bce45adc00b08069dae8c47d98e89b667a9
-      - flyteidl === 1.10.6 --hash=sha256:ec2c4e9726bac302d6f76aed3be662ff713eea31391294f8bd617abd6d134098
+      - flyteidl === 1.10.7 --hash=sha256:2f56ed37ff63db7254a78561dbc92f8e53d9d943b5f44178e952509b215fe988
       - flytekit === 1.10.3 --hash=sha256:f3d68da538687d4a019d0ef05d8818d98cef3f46988c41a343e1f72adf9ed49c
       - frozenlist === 1.4.1 --hash=sha256:a9b2de4cf0cdd5bd2dee4c4f63a653c61d2408055ab77b151c1957f221cabf2a
       - fsspec === 2023.9.2 --hash=sha256:603dbc52c75b84da501b9b2ec8c11e1f61c25984c4a0dda1f129ef391fbfc9b4
       - gcsfs === 2023.9.2 --hash=sha256:b3e61d07b0ecf3e04627b0cc0df30ee728bc49e31d42de180815601041e62c1b
-      - google-api-core === 2.15.0 --hash=sha256:2aa56d2be495551e66bbff7f729b790546f87d5c90e74781aa77233bcb395a8a
-      - google-auth === 2.27.0 --hash=sha256:8e4bad367015430ff253fe49d500fdc3396c1a434db5740828c728e45bcce245
+      - google-api-core === 2.17.1 --hash=sha256:610c5b90092c360736baccf17bd3efbcb30dd380e7a6dc28a71059edb8bd0d8e
+      - google-auth === 2.28.1 --hash=sha256:25141e2d7a14bfcba945f5e9827f98092716e99482562f15306e5b026e21aa72
       - google-auth-oauthlib === 1.2.0 --hash=sha256:297c1ce4cb13a99b5834c74a1fe03252e1e499716718b190f56bcb9c4abc4faf
       - google-cloud-core === 2.4.1 --hash=sha256:a9e6a4422b9ac5c29f79a0ede9485473338e2ce78d91f2370c01e730eab22e61
       - google-cloud-storage === 2.14.0 --hash=sha256:8641243bbf2a2042c16a6399551fbb13f062cbc9a2de38d6c0bb5426962e9dbd
       - google-crc32c === 1.5.0 --hash=sha256:116a7c3c616dd14a3de8c64a965828b197e5f2d121fedd2f8c5585c547e87b02
       - google-resumable-media === 2.7.0 --hash=sha256:79543cfe433b63fd81c0844b7803aba1bb8950b47bedf7d980c38fa123937e08
       - googleapis-common-protos === 1.62.0 --hash=sha256:4750113612205514f9f6aa4cb00d523a94f3e8c06c5ad2fee466387dc4875f07
-      - grpcio === 1.60.0 --hash=sha256:43e636dc2ce9ece583b3e2ca41df5c983f4302eabc6d5f9cd04f0562ee8ec1ae
-      - grpcio-status === 1.60.0 --hash=sha256:7d383fa36e59c1e61d380d91350badd4d12ac56e4de2c2b831b050362c3c572e
+      - grpcio === 1.62.0 --hash=sha256:f4c04fe33039b35b97c02d2901a164bbbb2f21fb9c4e2a45a959f0b044c3512c
+      - grpcio-status === 1.62.0 --hash=sha256:3baac03fcd737310e67758c4082a188107f771d32855bce203331cd4c9aa687a
       - hydra-zen === 0.10.0 --hash=sha256:78c3cddb8b7063317a3685edb570c209425988b8f5f08902e13b5e6ead46d9af
       - isodate === 0.6.1 --hash=sha256:0751eece944162659049d35f4f549ed815792b38793f07cf73381c1c87cbed96
-      - jaraco.classes === 3.3.0 --hash=sha256:10afa92b6743f25c0cf5f37c6bb6e18e2c5bb84a16527ccfc0040ea377e7aaeb
+      - jaraco.classes === 3.3.1 --hash=sha256:86b534de565381f6b3c1c830d13f931d7be1a75f0081c57dff615578676e2206
       - jmespath === 1.0.1 --hash=sha256:02e2e4cc71b5bcab88332eebf907519190dd9e6e82107fa7f83b1003a6252980
-      - jsonpickle === 3.0.2 --hash=sha256:4a8442d97ca3f77978afa58068768dba7bff2dbabe79a9647bc3cdafd4ef019f
+      - jsonpickle === 3.0.3 --hash=sha256:e8d6dcc58f6722bea0321cd328fbda81c582461185688a535df02be0f699afb4
       - kubernetes === 29.0.0 --hash=sha256:ab8cb0e0576ccdfb71886366efb102c6a20f268d817be065ce7f9909c631e43e
       - lightning === 2.1.4 --hash=sha256:b6c72d5f4c10e510a9e5b7b0cf2fde0d545b663697eb8dbdefd056ca50d23563
       - loompy === 3.0.7 --hash=sha256:b5cdf7b54734c6bed3a181d11947af70af2c6e0dcadc02fd0e871df232faa8f4
       - marshmallow === 3.20.2 --hash=sha256:c21d4b98fee747c130e6bc8f45c4b3199ea66bc00c12ee1f639f0aeca034d5e9
       - marshmallow-enum === 1.5.1 --hash=sha256:57161ab3dbfde4f57adeb12090f39592e992b9c86d206d02f6bd03ebec60f072
       - marshmallow-jsonschema === 0.13.0 --hash=sha256:2814f2afb94a6e01b3c0a5795b3dfb142b628763655f20378400af5c0a2307fb
-      - msal === 1.26.0 --hash=sha256:be77ba6a8f49c9ff598bbcdc5dfcf1c9842f3044300109af738e8c3e371065b5
+      - msal === 1.27.0 --hash=sha256:572d07149b83e7343a85a3bcef8e581167b4ac76befcbbb6eef0c0e19643cdc0
       - msal-extensions === 1.1.0 --hash=sha256:01be9711b4c0b1a151450068eeb2c4f0997df3bba085ac299de3a66f585e382f
       - multidict === 6.0.4 --hash=sha256:36c63aaa167f6c6b04ef2c85704e93af16c11d20de1d133e39de6a0e84582a93
-      - mypy-extensions === 1.0.0 --hash=sha256:4392f6c0eb8a5668a69e23d168ffa70f0be9ccfd32b5cc2d26a34ae5b844552d
       - numpy-groupies === 0.10.2 --hash=sha256:24a574ecdd58c0d669749b67ec31dab971d27e04037b402bbc4f6bedaa2623bc
       - nvidia-cublas-cu12 === 12.1.3.1 --hash=sha256:ee53ccca76a6fc08fb9701aa95b6ceb242cdaab118c3bb152af4e579af792728
       - nvidia-cuda-cupti-cu12 === 12.1.105 --hash=sha256:e54fde3983165c624cb79254ae9818a456eb6e87a7fd4d56a2352c24ee542d7e
@@ -455,16 +507,17 @@ dependencies:
       - nvidia-nccl-cu12 === 2.18.1 --hash=sha256:1a6c4acefcbebfa6de320f412bf7866de856e786e0462326ba1bac40de0b5e71
       - nvidia-nvjitlink-cu12 === 12.3.101 --hash=sha256:64335a8088e2b9d196ae8665430bc6a2b7e6ef2eb877a9c735c804bd4ff6467c
       - nvidia-nvtx-cu12 === 12.1.105 --hash=sha256:dc21cf308ca5691e7c04d962e213f8a4aa9bbfa23d95412f452254c2caeb09e5
+      - pastel === 0.2.1 --hash=sha256:4349225fcdf6c2bb34d483e523475de5bb04a5c10ef711263452cb37d7dd4364
+      - poethepoet === 0.19.0 --hash=sha256:87038be589077e4b407050a9da644d9cd9e4076ccfc8abc7f855cf6870d5c6c2
       - portalocker === 2.8.2 --hash=sha256:cfb86acc09b9aa7c3b43594e19be1345b9d16af3feb08bf92f23d4dce513a28e
       - protobuf === 4.24.4 --hash=sha256:b493cb590960ff863743b9ff1452c413c2ee12b782f48beca77c8da3e2ffe9d9
-      - protoc-gen-swagger === 0.1.0 --hash=sha256:cdc043da538865f055a7f22b304a35085cef269dc33e2f3408b12d397e8d8b4b
+      - protoc-gen-openapiv2 === 0.0.1 --hash=sha256:18090c8be3877c438e7da0f7eb7cace45a9a210306bca4707708dbad367857be
       - pyasn1 === 0.5.1 --hash=sha256:4439847c58d40b1d0a573d07e3856e95333f1976294494c325775aeca506eb58
       - pyasn1-modules === 0.3.0 --hash=sha256:d3ccd6ed470d9ffbc716be08bd90efbd44d0734bc9303818f7336070984a162d
       - python-json-logger === 2.0.7 --hash=sha256:f380b826a991ebbe3de4d897aeec42760035ac760345e57b812938dc8b35e2bd
-      - python-slugify === 8.0.2 --hash=sha256:428ea9b00c977b8f6c097724398f190b2c18e2a6011094d1001285875ccacdbf
+      - python-slugify === 8.0.4 --hash=sha256:276540b79961052b66b7d116620b36518847f52d5fd9e3a70164fc8c50faa6b8
       - pytimeparse === 1.1.8 --hash=sha256:04b7be6cc8bd9f5647a6325444926c3ac34ee6bc7e69da4367ba282f076036bd
       - requests-oauthlib === 1.3.1 --hash=sha256:2577c501a2fb8d05a304c09d090d6e47c306fef15809d102b327cf8364bddab5
-      - rich-click === 1.7.3 --hash=sha256:bc4163d4e2a3361e21c4d72d300eca6eb8896dfc978667923cb1d4937b8769a3
       - rsa === 4.9 --hash=sha256:90260d9058e514786967344d0ef75fa8727eed8a7d2e43ce9f4bcf1b536174f7
       - s3fs === 2023.9.2 --hash=sha256:d0e0ad0267820f4e9ff16556e004e6759010e92378aebe2ac5d71419a6ff5387
       - scanpy === 1.9.7 --hash=sha256:046af177640f5d00a240f47a384cb7e769f1707a9af4871d9437d230e3cfc028
