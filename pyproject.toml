@@ -181,37 +181,15 @@ pyperclip = "1.8.2"
 python-dotenv = "1.0.0"
 
 [tool.poetry.extras]
-dev = [
-  "black",
-  "coverage",
-  "darglint",
-  "dparse",
-  "dvc-gs",
-  "dvc",
-  "flake8-bandit",
-  "flake8-bugbear",
-  "flake8-docstrings",
-  "flake8-rst-docstrings",
-  "flake8",
+lint = ["black", "mypy", "pyright", "ruff", "docformatter"]
+
+test = [
   "hypothesis",
-  "ipython",
-  "isort",
-  "jupyterlab",
-  "jupytext",
-  "mypy",
-  "pep8-naming",
   "poethepoet",
-  "pre-commit-hooks",
-  "pre-commit",
-  "Pygments",
-  "pytest-cov",
-  "pytest-mock",
   "pytest",
-  "pyupgrade",
-  "pyvis",
-  "ruff",
-  "safety",
-  "typeguard",
+  "pytest-asyncio",
+  "pytest-cov",
+  "requests-mock",
   "xdoctest",
 ]
 
@@ -230,7 +208,57 @@ docs = [
 
 plotting = ["annoy", "matplotlib-venn", "statannotations"]
 
-pipeline = ["python-dotenv"]
+workflows = [
+  "dataclasses-json",
+  "dulwich",
+  "flytekit",
+  "mashumaro",
+  "papermill",
+  "pyperclip",
+  "python-dotenv",
+  "rich-click",
+]
+
+all = [
+  # lint
+  "black",
+  "mypy",
+  "pyright",
+  "ruff",
+  "docformatter",
+  # test
+  "hypothesis",
+  "poethepoet",
+  "pytest",
+  "pytest-asyncio",
+  "pytest-cov",
+  "requests-mock",
+  "xdoctest",
+  # docs
+  "furo",
+  "jupyterlab",
+  "jupytext",
+  "myst-parser",
+  "nbsphinx",
+  "sphinx-autobuild",
+  "sphinx-autodoc-typehints",
+  "sphinx-click",
+  "sphinx-copybutton",
+  "sphinx",
+  # plotting 
+  "annoy",
+  "matplotlib-venn",
+  "statannotations",
+  # workflows
+  "dataclasses-json",
+  "dulwich",
+  "flytekit",
+  "mashumaro",
+  "papermill",
+  "pyperclip",
+  "python-dotenv",
+  "rich-click",
+]
 
 
 [tool.conda-lock]
