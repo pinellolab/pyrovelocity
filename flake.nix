@@ -73,7 +73,6 @@
           marshmallow-jsonschema = ["setuptools"];
           numba = [pkgs.tbb_2021_8];
           session-info = ["setuptools"];
-          tensorstore = ["setuptools"];
           xdoctest = ["setuptools"];
         };
 
@@ -223,6 +222,7 @@
               });
               pyarrow = super.pyarrow.override {preferWheel = true;};
               scipy = super.scipy.override {preferWheel = true;};
+              tensorstore = super.tensorstore.override {preferWheel = true;};
               yarl = super.yarl.override {preferWheel = true;};
               optax = super.optax.overridePythonAttrs (
                 _old: {
