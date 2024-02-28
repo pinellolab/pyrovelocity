@@ -241,39 +241,3 @@ def cli_execute_notebook(py_file_path: str, test_mode: bool):
 
 if __name__ == "__main__":
     cli()
-
-# TODO: remove deprecated approach requiring system calls
-# from plumbum.cmd import jupyter
-# @task(cache=CACHE_FLAG, cache_version=CACHE_VERSION)
-# def convert_ipynb_to_html_and_pdf(
-#     executed_ipynb_file_path: str
-# ) -> Tuple[str, str]:
-#     html_file_path = executed_ipynb_file_path.replace(".ipynb", ".html")
-#     pdf_file_path = executed_ipynb_file_path.replace(".ipynb", ".pdf")
-
-#     jupyter[
-#         "nbconvert",
-#         "--to",
-#         "html",
-#         executed_ipynb_file_path,
-#         "--output",
-#         html_file_path,
-#     ]()
-
-#     jupyter[
-#         "nbconvert",
-#         "--to",
-#         "pdf",
-#         executed_ipynb_file_path,
-#         "--output",
-#         pdf_file_path,
-#     ]()
-
-#     html_file = Path(html_file_path)
-#     pdf_file = Path(pdf_file_path)
-#     if not html_file.exists() or not pdf_file.exists():
-#         raise FileNotFoundError(
-#             "Conversion failed or output file does not exist."
-#         )
-
-#     return html_file_path, pdf_file_path
