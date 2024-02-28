@@ -34,6 +34,7 @@ beartype = { version = "0.16.4", source = "pypi" }
 chex = "0.1.85"
 click = "8.1.7"
 colorlog = "6.7.0"
+flax = "0.6.1"
 h5py = "3.8.0"
 jax = "0.4.23"
 jaxlib = "0.4.23"
