@@ -269,7 +269,7 @@ def git_info_to_workflow_version(
                 name.decode(): sha
                 for name, sha in repo.refs.as_dict(b"refs/heads").items()
             }
-            logger.info(f"Found branches:\n{branches}")
+            logger.debug(f"Found branches:\n{branches}")
             branch_name = None
             short_sha = None
             for name, sha in branches.items():
