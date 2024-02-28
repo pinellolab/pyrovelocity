@@ -375,7 +375,7 @@
             zellij
             zsh
           ]
-          ++ lib.optional (lib.elem system pkgs.nvitop.meta.platforms) nvitop;
+          ++ lib.optional (system == "x86_64-linux") nvitop;
 
         # The local path can be used instead of `builtins.fetchGit` applied to
         # the repository source url to be used in `packageGitRepoToContainer` to
