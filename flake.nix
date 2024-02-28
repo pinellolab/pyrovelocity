@@ -362,11 +362,13 @@
             man-pages
             neovim
             openvscode-server
+            pandoc
             poetry
             poethepoet
             ripgrep
             skaffold
             starship
+            texliveSmall
             pkgs_unstable.timoni
             tree
             yq-go
