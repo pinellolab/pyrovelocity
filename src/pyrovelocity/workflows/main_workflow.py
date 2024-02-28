@@ -1,36 +1,41 @@
 from dataclasses import asdict
 from datetime import timedelta
 
-from flytekit import Resources, dynamic, task, workflow
-from flytekit.extras.accelerators import T4, GPUAccelerator
+from flytekit import Resources
+from flytekit import dynamic
+from flytekit import task
+from flytekit import workflow
+from flytekit.extras.accelerators import T4
+from flytekit.extras.accelerators import GPUAccelerator
 from flytekit.types.directory import FlyteDirectory
 from flytekit.types.file import FlyteFile
 
 from pyrovelocity.data import download_dataset
-from pyrovelocity.interfaces import (
-    DownloadDatasetInterface,
-    PreprocessDataInterface,
-    PyroVelocityTrainInterface,
-)
+from pyrovelocity.interfaces import DownloadDatasetInterface
+from pyrovelocity.interfaces import PreprocessDataInterface
+from pyrovelocity.interfaces import PyroVelocityTrainInterface
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.postprocess import postprocess_dataset
 from pyrovelocity.preprocess import preprocess_dataset
 from pyrovelocity.train import train_dataset
+from pyrovelocity.workflows.main_configuration import PostprocessConfiguration
+from pyrovelocity.workflows.main_configuration import ResourcesJSON
+from pyrovelocity.workflows.main_configuration import TrainingOutputs
+from pyrovelocity.workflows.main_configuration import WorkflowConfiguration
+from pyrovelocity.workflows.main_configuration import default_resource_limits
+from pyrovelocity.workflows.main_configuration import default_resource_requests
 from pyrovelocity.workflows.main_configuration import (
-    PostprocessConfiguration,
-    ResourcesJSON,
-    TrainingOutputs,
-    WorkflowConfiguration,
-    default_resource_limits,
-    default_resource_requests,
     default_training_resource_limits,
-    default_training_resource_requests,
-    larry_configuration,
-    pancreas_configuration,
-    pbmc68k_configuration,
-    pons_configuration,
-    simulated_configuration,
 )
+from pyrovelocity.workflows.main_configuration import (
+    default_training_resource_requests,
+)
+from pyrovelocity.workflows.main_configuration import larry_configuration
+from pyrovelocity.workflows.main_configuration import pancreas_configuration
+from pyrovelocity.workflows.main_configuration import pbmc68k_configuration
+from pyrovelocity.workflows.main_configuration import pons_configuration
+from pyrovelocity.workflows.main_configuration import simulated_configuration
+
 
 __all__ = [
     "download_data",
@@ -43,7 +48,7 @@ __all__ = [
 
 logger = configure_logging(__name__)
 
-CACHE_VERSION = "0.2.0b11-dev2"
+CACHE_VERSION = "0.2.0b11-dev3"
 CACHE_FLAG = True
 ACCELERATOR_TYPE: GPUAccelerator = T4
 
