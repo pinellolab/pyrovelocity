@@ -80,6 +80,7 @@ dulwich = { version = ">=0.21.7", optional = true }
 # flake8-rst-docstrings = { version = ">=0.2.5", optional = true }
 flytekit = { version = ">=1.10.2", optional = true }
 furo = { version = ">=2023.5.20", optional = true }
+google-api-python-client = { version = ">=2.79.0", optional = true }
 hydra-core = { version = ">=1.3.2", optional = true }
 hydra-zen = { version = ">=0.10.0", optional = true }
 hypothesis = { version = ">=6.71.0", optional = true }
@@ -191,6 +192,7 @@ optional = true
 dataclasses-json = ">=0.5.7"
 dulwich = ">=0.21.7"
 flytekit = ">=1.10.2"
+google-api-python-client = ">=2.79.0"
 hydra-core = ">=1.3.2"
 hydra-zen = ">=0.10.0"
 jupytext = ">=1.16.0"
@@ -248,6 +250,7 @@ workflows = [
   "dataclasses-json",
   "dulwich",
   "flytekit",
+  "google-api-python-client",
   "hydra-core",
   "hydra-zen",
   "jupytext",
