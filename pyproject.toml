@@ -102,6 +102,7 @@ papermill = { version = ">=2.4.0", optional = true }
 poethepoet = { version = ">=0.16.0", optional = true, source = "pypi" }
 pre-commit = { version = ">=2.16.0", optional = true }
 pre-commit-hooks = { version = ">=4.1.0", optional = true }
+pydrive2 = { version = ">=1.19.0", extras = ["fsspec"], optional = true }
 pygments = { version = ">=2.15.0", optional = true }
 pytest = { version = ">=6.2.5", optional = true }
 pytest-asyncio = { version = ">=0.21.1", optional = true }
@@ -200,6 +201,7 @@ mashumaro = ">=3.10"
 nbconvert = ">=7.14.0"
 nbformat = ">=5.9.2"
 omegaconf = ">=2.3.0"
+pydrive2 = { version = ">=1.19.0", extras = ["fsspec"] }
 papermill = ">=2.4.0"
 pyperclip = ">=1.8.2"
 python-dotenv = ">=1.0.0"
@@ -259,6 +261,7 @@ workflows = [
   "nbformat",
   "omegaconf",
   "papermill",
+  "pydrive2",
   "pyperclip",
   "python-dotenv",
   "rich-click",
