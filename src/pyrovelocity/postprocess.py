@@ -2,12 +2,10 @@ import json
 import multiprocessing
 import os
 import uuid
-from logging import Logger
 from pathlib import Path
 
 import mlflow
 import scanpy as sc
-from anndata._core.anndata import AnnData
 from mlflow import MlflowClient
 
 from pyrovelocity.io.compressedpickle import CompressedPickle
@@ -67,7 +65,7 @@ def postprocess_dataset(
 
     Path(data_model_path).mkdir(parents=True, exist_ok=True)
     pyrovelocity_data_path = os.path.join(
-        data_model_path, f"pyrovelocity.pkl.zst"
+        data_model_path, "pyrovelocity.pkl.zst"
     )
 
     ncpus_use = min(23, max(1, round(multiprocessing.cpu_count() * 0.8)))
