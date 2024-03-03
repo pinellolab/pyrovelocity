@@ -155,7 +155,7 @@ def download_dataset(
         elif source == "simulate":
             if n_obs is None or n_vars is None:
                 raise ValueError(
-                    f"n_obs and n_vars must be provided if source is 'simulate'"
+                    "n_obs and n_vars must be provided if source is 'simulate'"
                 )
             logger.info(f"Generating {data_set_name} data from simulation...")
             adata = generate_sample_data(
@@ -289,7 +289,7 @@ def subset_anndata(
             f"n_obs ({n_obs}) is greater than the number of observations in the dataset ({adata.n_obs})"
         )
         n_obs = adata.n_obs
-    logger.info(f"constructing data subset")
+    logger.info("constructing data subset")
     print_anndata(adata)
 
     if n_vars is not None:
