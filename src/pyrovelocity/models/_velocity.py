@@ -30,7 +30,8 @@ from pyrovelocity.analyze import (
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models._trainer import VelocityTrainingMixin
 from pyrovelocity.models._velocity_module import VelocityModule
-from pyrovelocity.utils import init_with_all_cells
+
+# from pyrovelocity.utils import init_with_all_cells
 
 logger = configure_logging(__name__)
 
@@ -159,18 +160,18 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         self.input_type = input_type
 
         super().__init__(adata)
-        if init:
-            initial_values = init_with_all_cells(
-                self.adata,
-                input_type,
-                shared_time,
-                latent_factor,
-                latent_factor_size,
-                plate_size,
-                num_aux_cells=num_aux_cells,
-            )
-        else:
-            initial_values = {}
+        # if init:
+        #     initial_values = init_with_all_cells(
+        #         self.adata,
+        #         input_type,
+        #         shared_time,
+        #         latent_factor,
+        #         latent_factor_size,
+        #         plate_size,
+        #         num_aux_cells=num_aux_cells,
+        #     )
+        # else:
+        initial_values = {}
         logger.info(self.summary_stats)
         self.module = VelocityModule(
             self.summary_stats["n_cells"],
