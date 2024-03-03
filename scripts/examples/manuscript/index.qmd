@@ -1,0 +1,231 @@
+---
+title: "Notebook template"
+toc: true
+number-sections: true
+highlight-style: pygments
+csl: bibstyle.csl
+format:
+  nature-pdf:
+    natbibstyle: sn-nature
+    classoption: 
+      - lineno
+    cite-method: citeproc
+    keep-tex: true
+  html:
+    code-fold: true
+    html-math-method: katex
+  docx: default
+execute: 
+  cache: true
+  keep-ipynb: true
+author:
+  - name: Author One
+    affiliations:
+      - name: Harvard University
+        id: 1
+        department: Department of Government
+        address: 1737 Cambridge Street
+        city: Cambridge
+        state: MA
+        postal-code: 02138
+      - name: Harvard University
+        id: 2
+        department: Department of Statistics
+        address: 1 Oxford Street
+        city: Cambridge
+        state: MA
+        postal-code: 02138
+    attributes:
+      equal-contributor: true
+  - name: Author Two
+    affiliations:
+      - name: Yale University
+        id: 3
+        department: Department of Political Science
+        address: 115 Prospect Street
+        city: New Haven
+        state: CT
+        postal-code: 06511
+    email: corresponding@email.com
+    attributes:
+      equal-contributor: true
+      corresponding: true
+  - name: Author Three
+    affiliations:
+      - ref: 1
+abstract: |
+  The abstract serves both as a general introduction to the topic and as a
+  brief, non-technical summary of the main results and their implications.
+  Authors are advised to check the author instructions for the journal they are
+  submitting to for word limits and if structural elements like subheadings,
+  citations, or equations are permitted.
+keywords: [template, demo]
+bibliography: references.bib
+jupyter:
+  jupytext:
+    cell_metadata_filter: all
+    cell_metadata_json: true
+    notebook_metadata_filter: all
+    text_representation:
+      extension: .qmd
+      format_name: quarto
+      format_version: '1.0'
+      jupytext_version: 1.16.0
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+---
+
+# Summary {#sec-summary}
+
+Use this file as a template for creating new notebooks that can be rendered to
+pdf, html, and ipynb from the common source of truth in this markdown file. You
+can include citations using the [default pandoc citation syntax][pandoc-citation]
+`[@key01; @key02]` [@La_Manno2018-lj; @Qin2022-ls].
+
+# Dependencies {#sec-dependencies}
+
+Copies of this template will require the following dependencies:
+
+- [quarto-cli][quarto-pypi] or [quarto][quarto-conda]
+- [jupyter-cache][jupyter-cache-pypi]
+
+Its other dependencies are not specific to the purpose of the template.
+
+# Usage {#sec-usage}
+
+Install the \LaTeX template with:
+
+``` bash
+quarto add cameronraysmith/nature@natbib
+```
+
+This will add an [_extensions/](./_extensions/) subdirectory containing
+the template extension.
+
+Render the notebook with:
+
+``` bash
+quarto render index.qmd --to all -P TEST_MODE:False
+```
+
+With the current configuration in the YAML header
+this should produce
+
+- [index.pdf](./index.pdf)
+- [index.html](./index.html)
+- [index.ipynb](./index.ipynb)
+
+together with the 
+[index_files](./index_files/) and 
+[.jupyter_cache](./.jupyter_cache/) 
+subdirectories that contain the quarto output and the cache of the jupyter
+notebook execution. What follows are just a few example computations to
+illustrate notebook content. At least @sec-dependencies and @sec-usage can be
+deleted from any instance of this notebook.
+
+
+# Setup {#sec-setup}
+
+```{python}
+#| execution: {iopub.execute_input: '2024-02-28T00:03:22.418885Z', iopub.status.busy: '2024-02-28T00:03:22.418672Z', iopub.status.idle: '2024-02-28T00:03:22.700860Z', shell.execute_reply: '2024-02-28T00:03:22.700498Z'}
+#| lines_to_next_cell: 2
+#| slideshow: {slide_type: fragment}
+#| tags: []
+import os
+
+import matplotlib.pyplot as plt
+import numpy as np
+```
+
+## Parameters {#subsec-setup-parameters}
+
+The following cell defines parameters to be exposed to quarto or papermill
+execution using the `tags: [parameters]` in the cell below
+
+```{python}
+#| execution: {iopub.execute_input: '2024-02-28T00:03:22.715524Z', iopub.status.busy: '2024-02-28T00:03:22.715310Z', iopub.status.idle: '2024-02-28T00:03:22.718434Z', shell.execute_reply: '2024-02-28T00:03:22.717807Z'}
+#| slideshow: {slide_type: fragment}
+#| tags: [parameters]
+TEST_MODE = True
+print(f"Test mode: {TEST_MODE}") 
+```
+
+Parameters injected by quarto or papermill should appear above.
+
+## Functions {#subsec-setup-functions}
+
+Define functions to be used in the notebook.
+
+```{python}
+#| execution: {iopub.execute_input: '2024-02-28T00:03:22.744628Z', iopub.status.busy: '2024-02-28T00:03:22.744439Z', iopub.status.idle: '2024-02-28T00:03:22.746661Z', shell.execute_reply: '2024-02-28T00:03:22.746335Z'}
+#| slideshow: {slide_type: fragment}
+#| tags: []
+def plot_random_numbers(size=10):
+    plt.plot(np.random.rand(size))
+    plt.show()
+```
+
+This cell checks if the notebook is running in test mode. If it is, it will reduce the size of the data to be processed.
+
+```{python}
+#| execution: {iopub.execute_input: '2024-02-28T00:03:22.756996Z', iopub.status.busy: '2024-02-28T00:03:22.756828Z', iopub.status.idle: '2024-02-28T00:03:22.759487Z', shell.execute_reply: '2024-02-28T00:03:22.759002Z'}
+#| slideshow: {slide_type: fragment}
+#| tags: []
+print(f"Test mode: {TEST_MODE}")
+size = 5 if TEST_MODE else 10
+print(f"Size: {size}")
+```
+
+# Results {#sec-results}
+
+The results of the analysis are shown in @fig-random-numbers.
+
+```{python}
+#| label: fig-random-numbers 
+#| fig-cap: "Plot of samples from the uniform distribution."
+#| execution: {iopub.execute_input: '2024-02-28T00:03:22.775090Z', iopub.status.busy: '2024-02-28T00:03:22.774911Z', iopub.status.idle: '2024-02-28T00:03:22.854889Z', shell.execute_reply: '2024-02-28T00:03:22.854428Z'}
+#| slideshow: {slide_type: fragment}
+#| tags: []
+plot_random_numbers(size)
+```
+
+# Postprocessing {#sec-postprocessing}
+
+The notebook can also be converted to ipynb using
+
+``` bash
+quarto convert index.qmd
+```
+
+or vice-versa to markdown via
+
+``` bash
+quarto convert index.ipynb
+```
+
+figures should already be present in the [index_files/](./index_files/).
+You can always rerender the notebook to generate them
+
+``` bash
+quarto render index.qmd --to all
+```
+
+If you are concerned that the cache me be invalidated without being detected
+you can override it with
+
+``` bash
+quarto render index.qmd --to all --cache-refresh
+```
+
+# References
+
+:::{#refs}
+:::
+
+<!-- links -->
+[pandoc-citation]: https://pandoc.org/MANUAL.html#citation-syntax
+[quarto-pypi]: https://pypi.org/project/quarto-cli/
+[quarto-conda]: https://anaconda.org/conda-forge/quarto
+[jupyter-cache-pypi]: https://pypi.org/project/jupyter-cache/

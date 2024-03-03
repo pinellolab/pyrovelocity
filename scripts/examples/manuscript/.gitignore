@@ -1,0 +1,7 @@
+_extensions/
+.jupyter_cache/
+index_files/
+sn-*.bst
+sn-*.cls
+index.*
+!index.qmd
