@@ -11,10 +11,11 @@ pull_request_rules:
   - name: automatic merge
     conditions:
       - "#approved-reviews-by>=1"
-      - check-success=test-python (3.10)
+      - label!=work-in-progress
+      - check-success=test-python
       - check-success=test-nix
       - check-success=test-bazel
-      - label!=work-in-progress
+      - check-success=test-docs-build
     actions:
       queue:
         name: default
@@ -25,6 +26,7 @@ queue_rules:
     update_bot_account: pyrovelocity-bot
     merge_bot_account: pyrovelocity-bot
     conditions:
-      - check-success=test-python (3.10)
+      - check-success=test-python
       - check-success=test-nix
       - check-success=test-bazel
+      - check-success=test-docs-build
