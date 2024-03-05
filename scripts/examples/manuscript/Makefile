@@ -45,6 +45,9 @@ install-extensions: ## Install quarto extensions
 
 DOCUMENT_NAME ?= index
 
+install-tinytex: ## Install tinytex
+	quarto install tinytex
+
 render-latex: ## Render pdf format via LaTeX
 	quarto render $(DOCUMENT_NAME).qmd --to nature-pdf
 
