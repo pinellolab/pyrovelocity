@@ -541,7 +541,7 @@
                 # > src/pyrovelocity/train.py line 1564: 50991 Trace/BPT trap: 5
                 pytest \
                 -rA \
-                -k "not workflows and not git and not train_model" \
+                -k "not workflows and not git" \
                 --xdoc \
                 --no-cov \
                 --disable-warnings \
