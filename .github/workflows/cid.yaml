@@ -256,7 +256,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: maximize build space
+      - name: Maximize build space
         # uses: easimon/maximize-build-space@fc881a613ad2a34aca9c9624518214ebc21dfc0c # ratchet:easimon/maximize-build-space@v10
         uses: cameronraysmith/maximize-build-space@fdf0c06b18d92be98aa64cb68ae4ea4c9bc4794d # ratchet:cameronraysmith/maximize-build-space@print-usage
         with:
@@ -280,7 +280,7 @@ jobs:
       - uses: rlespinasse/github-slug-action@102b1a064a9b145e56556e22b18b19c624538d94 # ratchet:rlespinasse/github-slug-action@v4
         with:
           prefix: CI_
-      - name: set git variables
+      - name: Set git variables
         run: |
           echo "GIT_REPO_NAME=$CI_GITHUB_REPOSITORY_NAME_PART" >> $GITHUB_ENV
           echo "GIT_REF=$CI_GITHUB_REF_NAME" >> $GITHUB_ENV
@@ -291,12 +291,12 @@ jobs:
             echo "GIT_SHA=$CI_GITHUB_SHA" >> $GITHUB_ENV
             echo "GIT_SHA_SHORT=$CI_GITHUB_SHA_SHORT" >> $GITHUB_ENV
           fi
-      - name: check nix flake
+      - name: Check nix flake
         run: nix flake check --impure --accept-flake-config
       # ./scripts/flake can be used to enable the flake for testing
       # - run: |
       #     ./scripts/flake pytest
-      - name: test nix package
+      - name: Test nix package
         run: |
           set -euo pipefail
 
