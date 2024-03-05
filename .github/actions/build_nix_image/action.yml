@@ -34,6 +34,13 @@ runs:
       with:
         platforms: arm64
 
+    - name: Install Skopeo
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -yq skopeo
+        sudo apt-get clean
+
     - name: Install Nix
       uses: DeterminateSystems/nix-installer-action@e279ba56d8266c08a0e65738145aabb824f308ed # ratchet:DeterminateSystems/nix-installer-action@main
       with:
@@ -75,6 +82,8 @@ runs:
     - name: Build and Push Docker Image
       shell: bash
       run: |
+        set -euxo pipefail
+
         echo "Using Git Repository Name: $GIT_REPO_NAME"
         echo "Using Git Reference: $GIT_REF"
         echo "Using Git SHA: $GIT_SHA"
@@ -82,11 +91,17 @@ runs:
         FQN_GIT_SHA="${{ inputs.imageFQN }}:$GIT_SHA"
         echo "Image FQN with Git SHA: $FQN_GIT_SHA"
         df -h
-        if docker manifest inspect "$FQN_GIT_SHA" > /dev/null 2>&1; then
-            echo "Image $FQN_GIT_SHA already exists. Skipping build."
+        if SKOPEO_OUTPUT=$(skopeo inspect "docker://$FQN_GIT_SHA" 2>&1); then
+          echo "Image $FQN_GIT_SHA already exists. Skipping build."
         else
+          if echo "$SKOPEO_OUTPUT" | grep -q 'manifest unknown'; then
             echo "Image $FQN_GIT_SHA does not exist. Building."
             ${{ inputs.nixCommand }}
+          else
+            echo "Failed to inspect image with error: $SKOPEO_OUTPUT"
+            exit 1
+          fi
+        fi
         df -h
       env:
         GH_TOKEN: ${{ github.token }}
