@@ -12,6 +12,7 @@ format:
     cite-method: citeproc
     keep-tex: true
   html:
+    mainfont: Latin Modern Roman
     code-fold: true
     html-math-method: katex
   docx: default
