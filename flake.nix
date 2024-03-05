@@ -354,7 +354,6 @@
             ripgrep
             skaffold
             starship
-            texliveSmall
             pkgs_unstable.timoni
             tree
             yq-go
