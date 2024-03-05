@@ -296,7 +296,6 @@ jobs:
       # ./scripts/flake can be used to enable the flake for testing
       # - run: |
       #     ./scripts/flake pytest
-      # TODO: build default package with checkPhase (fix train_model doctest)
       - name: test nix package
         run: |
           set -euo pipefail
