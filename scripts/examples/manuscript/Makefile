@@ -36,8 +36,18 @@ help-targets: ## Print commands for all targets matching a given pattern. eval "
 #-----------------
 
 install-extensions: ## Install quarto extensions
-	quarto add cameronraysmith/nature@citeproc
-	cp _extensions/cameronraysmith/nature/csl/springer-basic-brackets-no-et-al.csl bibstyle.csl
+	@if [ ! -d "_extensions/cameronraysmith/nature" ]; then \
+		quarto add --no-prompt cameronraysmith/nature@citeproc; \
+	fi
+	@if [ ! -f "bibstyle.csl" ]; then \
+		cp _extensions/cameronraysmith/nature/csl/springer-basic-brackets-no-et-al.csl bibstyle.csl; \
+	fi
+	@echo "Extensions installed"
+
+list-texlive-packages: ## List installed TeX Live packages
+	$(eval TEXLIVE_TEXMF_PATH=$(shell find /nix/store -type d -name '*-texlive-combined-*-texmfdist' -print -quit))
+	@echo "TeX Live texmf distribution path: $(TEXLIVE_TEXMF_PATH)"
+	@ls -alh $(TEXLIVE_TEXMF_PATH)/tex/latex
 
 #-----------------
 ##@ render article
@@ -45,16 +55,24 @@ install-extensions: ## Install quarto extensions
 
 DOCUMENT_NAME ?= index
 
-install-tinytex: ## Install tinytex
-	quarto install tinytex
+check-environment: ## Check quarto environment
+	echo "QUARTO_PYTHON: $$QUARTO_PYTHON"
+	quarto check install
+	quarto check jupyter
+
+install-tinytex: ## Install tinytex (requires non-hermetic environment)
+	quarto install --no-prompt tinytex
 
 render-latex: ## Render pdf format via LaTeX
+render-latex: install-extensions
 	quarto render $(DOCUMENT_NAME).qmd --to nature-pdf
 
 render: ## Render all article formats including docx, html, ipynb, pdf, and tex
+render: install-extensions
 	quarto render $(DOCUMENT_NAME).qmd --to all
 
 render-refresh: ## (EXAMPLE) Render with parameter specification and cache refresh
+render-refresh: install-extensions
 	quarto render index.qmd --to all -P TEST_MODE:False --cache-refresh
 
 clean: ## Clean compilation artifacts
