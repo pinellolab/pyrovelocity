@@ -342,6 +342,14 @@ re: ## Reload direnv.
 al: ## Enable direnv.
 	direnv allow
 
+nix-default: ## Build default nix derivation.
+	nix build .#default \
+	--accept-flake-config \
+	--impure \
+	--fallback \
+	--keep-going \
+	--print-build-logs
+
 devshell-info: ## Print devshell info.
 	nix build .#devShells.$(shell nix eval --impure --expr 'builtins.currentSystem').default --impure
 	nix path-info --recursive ./result
