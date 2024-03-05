@@ -1,7 +1,8 @@
 import inspect
 import os
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
+from typing import Tuple
 from urllib.parse import unquote
 
 import anndata
@@ -14,11 +15,9 @@ from beartype import beartype
 
 import pyrovelocity.datasets
 from pyrovelocity.logging import configure_logging
-from pyrovelocity.utils import (
-    generate_sample_data,
-    print_anndata,
-    print_attributes,
-)
+from pyrovelocity.utils import generate_sample_data
+from pyrovelocity.utils import print_anndata
+
 
 __all__ = ["download_dataset", "load_anndata_from_path", "subset_anndata"]
 
@@ -86,6 +85,7 @@ def download_dataset(
             ...
         AttributeError
     """
+    adata = None
     data_path = Path(data_external_path) / f"{data_set_name}.h5ad"
     data_external_path = Path(data_external_path)
 
@@ -172,12 +172,16 @@ def download_dataset(
                 f"Please specify a valid source or URL that resolves to a .h5ad file."
             )
 
-        print_anndata(adata)
-
-        if data_path.is_file() and os.access(str(data_path), os.R_OK):
-            logger.info(f"successfully downloaded {data_path}")
+        if adata:
+            print_anndata(adata)
+            if data_path.is_file() and os.access(str(data_path), os.R_OK):
+                logger.info(f"Successfully downloaded {data_path}")
+            else:
+                logger.error(f"Cannot find and read {data_path}")
         else:
-            logger.error(f"cannot find and read {data_path}")
+            logger.error(
+                f"No data available for {data_set_name} due to errors during download or processing."
+            )
 
         return data_path
 
