@@ -292,6 +292,9 @@ jobs:
             echo "GIT_SHA_SHORT=$CI_GITHUB_SHA_SHORT" >> $GITHUB_ENV
           fi
       - run: nix flake check --impure --accept-flake-config
+      # TODO: build default package with checkPhase (fix train_model doctest)
+      # - run: |
+      #     nix build . --accept-flake-config --impure --fallback --keep-going --print-build-logs
       - run: |
           ./scripts/flake pytest
       - name: GC nix store
@@ -299,12 +302,6 @@ jobs:
           df -h
           nix store gc
           df -h
-    # It is also possible to build the default package with a checkPhase
-    # - run: |
-    #     export NUMBA_CACHE_DIR=$(mktemp -d -p $RUNNER_TEMP numba-cache-XXXXX)
-    #     chmod 777 $NUMBA_CACHE_DIR
-    #     echo "NUMBA_CACHE_DIR: $NUMBA_CACHE_DIR"
-    #     nix build . --accept-flake-config --impure
 
   build-docker-images:
     needs: [set-variables]
