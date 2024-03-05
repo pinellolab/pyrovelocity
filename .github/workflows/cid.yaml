@@ -280,7 +280,7 @@ jobs:
       - uses: rlespinasse/github-slug-action@102b1a064a9b145e56556e22b18b19c624538d94 # ratchet:rlespinasse/github-slug-action@v4
         with:
           prefix: CI_
-      - name: Set git variables
+      - name: set git variables
         run: |
           echo "GIT_REPO_NAME=$CI_GITHUB_REPOSITORY_NAME_PART" >> $GITHUB_ENV
           echo "GIT_REF=$CI_GITHUB_REF_NAME" >> $GITHUB_ENV
@@ -291,12 +291,14 @@ jobs:
             echo "GIT_SHA=$CI_GITHUB_SHA" >> $GITHUB_ENV
             echo "GIT_SHA_SHORT=$CI_GITHUB_SHA_SHORT" >> $GITHUB_ENV
           fi
-      - run: nix flake check --impure --accept-flake-config
+      - name: check nix flake
+        run: nix flake check --impure --accept-flake-config
       # ./scripts/flake can be used to enable the flake for testing
       # - run: |
       #     ./scripts/flake pytest
       # TODO: build default package with checkPhase (fix train_model doctest)
-      - run: |
+      - name: test nix package
+        run: |
           set -euo pipefail
 
           df -h
