@@ -292,15 +292,20 @@ jobs:
             echo "GIT_SHA_SHORT=$CI_GITHUB_SHA_SHORT" >> $GITHUB_ENV
           fi
       - run: nix flake check --impure --accept-flake-config
-      # TODO: build default package with checkPhase (fix train_model doctest)
+      # ./scripts/flake can be used to enable the flake for testing
       # - run: |
-      #     nix build . --accept-flake-config --impure --fallback --keep-going --print-build-logs
+      #     ./scripts/flake pytest
+      # TODO: build default package with checkPhase (fix train_model doctest)
       - run: |
-          ./scripts/flake pytest
-      - name: GC nix store
-        run: |
+          set -euo pipefail
+
           df -h
-          nix store gc
+          nix build .#default \
+          --accept-flake-config \
+          --impure \
+          --fallback \
+          --keep-going \
+          --print-build-logs
           df -h
 
   build-docker-images:
