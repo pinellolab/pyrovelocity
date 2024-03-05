@@ -30,6 +30,20 @@ HELP_TARGETS_PATTERN ?= test
 help-targets: ## Print commands for all targets matching a given pattern. eval "$(make help-targets HELP_TARGETS_PATTERN=test | sed 's/\x1b\[[0-9;]*m//g')"
 	@make help-sort | awk '{print $$1}' | grep '$(HELP_TARGETS_PATTERN)' | xargs -I {} printf "printf '___\n\n{}:\n\n'\nmake -n {}\nprintf '\n'\n"
 
+# catch-all pattern rule
+#
+# This rule matches any targets that are not explicitly defined in this
+# Makefile. It prevents 'make' from failing due to unrecognized targets, which
+# is particularly useful when passing arguments or targets to sub-Makefiles. The
+# '@:' command is a no-op, indicating that nothing should be done for these
+# targets within this Makefile.
+#
+# Used by targets specifying:
+#  - HYDRA_OVERRIDES
+#  - MANUSCRIPT_PASSTHROUGH
+%:
+	@:
+
 #-------------------------
 ##@ primary python package
 #-------------------------
@@ -166,12 +180,9 @@ run_help: ## Print hydra help for execute script.
 	poetry run pyrovelocity --help
 
 # Capture additional arguments to pass to hydra-zen cli
-# converting them to make do-nothing targets
 # supports passing hydra overrides as ARGS, e.g.:
 #   make run HYDRA_OVERRIDES="entity_config.inputs.logistic_regression.max_iter=2000 execution_context=local_shell"
 HYDRA_OVERRIDES = $(filter-out $@,$(MAKECMDGOALS))
-%:
-	@:
 
 .PHONY: run
 run: ## Run registered workflow in remote dev mode. (default)
