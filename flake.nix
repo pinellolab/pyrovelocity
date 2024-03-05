@@ -350,6 +350,7 @@
             pandoc
             poetry
             poethepoet
+            pkgs_unstable.quarto
             ripgrep
             skaffold
             starship
