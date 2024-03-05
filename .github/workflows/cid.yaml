@@ -65,6 +65,7 @@ jobs:
       skip_ci: ${{ steps.set-variables.outputs.skip_ci }}
       skip_tests: ${{ steps.set-variables.outputs.skip_tests }}
       mode: ${{ steps.set-variables.outputs.mode }}
+      checkout_ref: ${{ steps.set-variables.outputs.checkout_ref }}
 
     steps:
       - name: Set action variables
@@ -93,6 +94,9 @@ jobs:
             if ${{ contains(github.event.pull_request.labels.*.name, 'workflow-mode-dev') }}; then
               MODE="dev"
             fi
+            CHECKOUT_REF="${{ github.event.pull_request.head.ref }}"
+          else
+            CHECKOUT_REF="${{ github.ref }}"
           fi
 
           echo "DEBUG=$DEBUG"
@@ -104,6 +108,7 @@ jobs:
           echo "MODE=$MODE" >> $GITHUB_OUTPUT
           echo "SKIP_CI=$SKIP_CI" >> $GITHUB_OUTPUT
           echo "SKIP_TESTS=$SKIP_TESTS" >> $GITHUB_OUTPUT
+          echo "CHECKOUT_REF=$CHECKOUT_REF" >> $GITHUB_OUTPUT
 
   config-workflows:
     needs: [set-variables]
@@ -116,7 +121,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
+          ref: ${{ needs.set-variables.outputs.checkout_ref }}
 
       - name: Create Flyte config from YAML template
         id: yq-process
@@ -162,7 +167,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
+          ref: ${{ needs.set-variables.outputs.checkout_ref }}
 
       - name: Setup environment
         uses: ./.github/actions/setup_environment
@@ -207,7 +212,7 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
+          ref: ${{ needs.set-variables.outputs.checkout_ref }}
       - name: setup gcp credentials
         run: |
           cat > service-account-credentials.json << EOF
@@ -270,7 +275,7 @@ jobs:
           remove-docker-images: "true"
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
+          ref: ${{ needs.set-variables.outputs.checkout_ref }}
       - uses: DeterminateSystems/nix-installer-action@e279ba56d8266c08a0e65738145aabb824f308ed # ratchet:DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@eeabdb06718ac63a7021c6132129679a8e22d0c7 # ratchet:DeterminateSystems/magic-nix-cache-action@v3
       # - uses: cachix/cachix-action@18cf96c7c98e048e10a83abd92116114cd8504be # ratchet:cachix/cachix-action@v14
@@ -322,106 +327,186 @@ jobs:
       debug_enabled: ${{ needs.set-variables.outputs.debug }}
       mode: ${{ needs.set-variables.outputs.mode }}
 
-  build-nix-images:
+  build-pyrovelocity-image:
     runs-on: ubuntu-latest
-    # runs-on: pinellolab-runners
     needs: [set-variables]
     if: ${{ needs.set-variables.outputs.skip_ci != 'true' && ( contains(github.event.pull_request.labels.*.name, 'build-images') || contains(github.event.pull_request.labels.*.name, 'execute-workflow') || (github.event_name == 'workflow_dispatch' && inputs.run_build_images) || (github.event_name == 'workflow_dispatch' && inputs.run_execute_workflow) ) }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: "pyrovelocity"
-            url: "https://ghcr.io/pinellolab/pyrovelocity"
-            fqn: "ghcr.io/pinellolab/pyrovelocity"
-            nixCommand: "nix run .#containerManifest --impure --accept-flake-config"
-          - name: "pyrovelocitydev"
-            url: "https://ghcr.io/pinellolab/pyrovelocitydev"
-            fqn: "ghcr.io/pinellolab/pyrovelocitydev"
-            nixCommand: "nix run .#devcontainerManifest --impure --accept-flake-config"
     concurrency:
-      group: bni-${{ matrix.name }}-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}-${{ needs.set-variables.outputs.mode }}
+      group: bpi--${{ github.workflow }}-${{ github.ref }}-${{ github.sha }}
       cancel-in-progress: true
     permissions:
       contents: read
       packages: write
     environment:
-      name: release
-      url: ${{ matrix.url }}
+      name: development
+      url: "https://ghcr.io/pinellolab/pyrovelocity"
     steps:
-      - name: maximize build space
+      - name: Maximize build space
         # uses: easimon/maximize-build-space@fc881a613ad2a34aca9c9624518214ebc21dfc0c # ratchet:easimon/maximize-build-space@v10
         uses: cameronraysmith/maximize-build-space@fdf0c06b18d92be98aa64cb68ae4ea4c9bc4794d # ratchet:cameronraysmith/maximize-build-space@print-usage
         with:
           build-mount-path: /nix
-          build-mount-path-ownership: root:root
+          build-mount-path-ownership: "root:root"
           root-reserve-mb: 34816
           swap-size-mb: 1024
           remove-dotnet: "true"
           remove-android: "true"
           remove-codeql: "true"
           remove-docker-images: "true"
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+
+      - name: Setup build environment
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
-      - uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # ratchet:docker/setup-qemu-action@v3
+          ref: ${{ needs.set-variables.outputs.checkout_ref }}
+
+      - name: Build pyrovelocity image
+        uses: ./.github/actions/build_nix_image
         with:
-          platforms: arm64
-      - uses: DeterminateSystems/nix-installer-action@e279ba56d8266c08a0e65738145aabb824f308ed # ratchet:DeterminateSystems/nix-installer-action@main
+          triggerEventName: ${{ github.event_name }}
+          imageName: "pyrovelocity"
+          imageFQN: "ghcr.io/pinellolab/pyrovelocity"
+          nixCommand: "nix run .#containerManifest --impure --accept-flake-config"
+          gcpProjectId: ${{ secrets.GCP_PROJECT_ID }}
+          encodedGARCredentials: ${{ secrets.ENCODED_GAR_SA_CREDS }}
+
+  build-pyrovelocitydev-image:
+    runs-on: ubuntu-latest
+    needs: [set-variables]
+    if: ${{ needs.set-variables.outputs.skip_ci != 'true' && ( contains(github.event.pull_request.labels.*.name, 'build-images') || contains(github.event.pull_request.labels.*.name, 'execute-workflow') || (github.event_name == 'workflow_dispatch' && inputs.run_build_images) || (github.event_name == 'workflow_dispatch' && inputs.run_execute_workflow) ) }}
+    concurrency:
+      group: bpdi--${{ github.workflow }}-${{ github.ref }}-${{ github.sha }}
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      packages: write
+    environment:
+      name: development
+      url: "https://ghcr.io/pinellolab/pyrovelocitydev"
+    steps:
+      - name: Maximize build space
+        # uses: easimon/maximize-build-space@fc881a613ad2a34aca9c9624518214ebc21dfc0c # ratchet:easimon/maximize-build-space@v10
+        uses: cameronraysmith/maximize-build-space@fdf0c06b18d92be98aa64cb68ae4ea4c9bc4794d # ratchet:cameronraysmith/maximize-build-space@print-usage
         with:
-          extra-conf: |
-            extra-platforms = aarch64-linux
-      - uses: DeterminateSystems/magic-nix-cache-action@eeabdb06718ac63a7021c6132129679a8e22d0c7 # ratchet:DeterminateSystems/magic-nix-cache-action@v3
-      # - uses: cachix/cachix-action@18cf96c7c98e048e10a83abd92116114cd8504be # ratchet:cachix/cachix-action@v14
-      #   with:
-      #     name: "${{ vars.CACHIX_CACHE_NAME }}"
-      #     authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
-      - uses: rlespinasse/github-slug-action@102b1a064a9b145e56556e22b18b19c624538d94 # ratchet:rlespinasse/github-slug-action@v4
+          build-mount-path: /nix
+          build-mount-path-ownership: "root:root"
+          root-reserve-mb: 34816
+          swap-size-mb: 1024
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+
+      - name: Setup build environment
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
-          prefix: CI_
-      - name: Set git variables
-        run: |
-          echo "GIT_REPO_NAME=$CI_GITHUB_REPOSITORY_NAME_PART" >> $GITHUB_ENV
-          echo "GIT_REF=$CI_GITHUB_REF_NAME" >> $GITHUB_ENV
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            echo "GIT_SHA=$CI_GITHUB_EVENT_PULL_REQUEST_HEAD_SHA" >> $GITHUB_ENV
-            echo "GIT_SHA_SHORT=$CI_GITHUB_EVENT_PULL_REQUEST_HEAD_SHA_SHORT" >> $GITHUB_ENV
-          else
-            echo "GIT_SHA=$CI_GITHUB_SHA" >> $GITHUB_ENV
-            echo "GIT_SHA_SHORT=$CI_GITHUB_SHA_SHORT" >> $GITHUB_ENV
-          fi
-      - name: Set nix variables
-        run: |
-          echo "NIX_IMAGE_SYSTEMS=x86_64-linux" >> $GITHUB_ENV
-      - name: Build nix images
-        run: |
-          echo "Using Git Repository Name: $GIT_REPO_NAME"
-          echo "Using Git Reference: $GIT_REF"
-          echo "Using Git SHA: $GIT_SHA"
-          echo "Using Git SHA Short: $GIT_SHA_SHORT"
-          FQN_GIT_SHA="${{ matrix.fqn }}:$GIT_SHA"
-          echo "Image FQN with Git SHA: $FQN_GIT_SHA"
-          df -h
-          if docker manifest inspect "$FQN_GIT_SHA" > /dev/null 2>&1; then
-              echo "Image $FQN_GIT_SHA already exists. Skipping build."
-          else
-              echo "Image $FQN_GIT_SHA does not exist. Building."
-              ${{ matrix.nixCommand }}
-          fi
-          df -h
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          ENCODED_GAR_SA_CREDS: ${{ secrets.ENCODED_GAR_SA_CREDS }}
-      - name: GC nix store
-        run: |
-          df -h
-          nix store gc
-          df -h
+          ref: ${{ needs.set-variables.outputs.checkout_ref }}
+
+      - name: Build pyrovelocitydev image
+        uses: ./.github/actions/build_nix_image
+        with:
+          triggerEventName: ${{ github.event_name }}
+          imageName: "pyrovelocitydev"
+          imageFQN: "ghcr.io/pinellolab/pyrovelocitydev"
+          nixCommand: "nix run .#devcontainerManifest --impure --accept-flake-config"
+          gcpProjectId: ${{ secrets.GCP_PROJECT_ID }}
+          encodedGARCredentials: ${{ secrets.ENCODED_GAR_SA_CREDS }}
+
+  # TODO: Remove matrix in favor of the build_nix_images composite action
+  # build-nix-images:
+  #   runs-on: ubuntu-latest
+  #   needs: [set-variables]
+  #   if: ${{ needs.set-variables.outputs.skip_ci != 'true' && ( contains(github.event.pull_request.labels.*.name, 'build-images') || contains(github.event.pull_request.labels.*.name, 'execute-workflow') || (github.event_name == 'workflow_dispatch' && inputs.run_build_images) || (github.event_name == 'workflow_dispatch' && inputs.run_execute_workflow) ) }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       include:
+  #         - name: "pyrovelocity"
+  #           url: "https://ghcr.io/pinellolab/pyrovelocity"
+  #           fqn: "ghcr.io/pinellolab/pyrovelocity"
+  #           nixCommand: "nix run .#containerManifest --impure --accept-flake-config"
+  #         - name: "pyrovelocitydev"
+  #           url: "https://ghcr.io/pinellolab/pyrovelocitydev"
+  #           fqn: "ghcr.io/pinellolab/pyrovelocitydev"
+  #           nixCommand: "nix run .#devcontainerManifest --impure --accept-flake-config"
+  #   concurrency:
+  #     group: bni-${{ matrix.name }}-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}-${{ needs.set-variables.outputs.mode }}
+  #     cancel-in-progress: true
+  #   permissions:
+  #     contents: read
+  #     packages: write
+  #   environment:
+  #     name: release
+  #     url: ${{ matrix.url }}
+  #   steps:
+  #     - name: maximize build space
+  #       # uses: easimon/maximize-build-space@fc881a613ad2a34aca9c9624518214ebc21dfc0c # ratchet:easimon/maximize-build-space@v10
+  #       uses: cameronraysmith/maximize-build-space@fdf0c06b18d92be98aa64cb68ae4ea4c9bc4794d # ratchet:cameronraysmith/maximize-build-space@print-usage
+  #       with:
+  #         build-mount-path: /nix
+  #         build-mount-path-ownership: root:root
+  #         root-reserve-mb: 34816
+  #         swap-size-mb: 1024
+  #         remove-dotnet: "true"
+  #         remove-android: "true"
+  #         remove-codeql: "true"
+  #         remove-docker-images: "true"
+  #     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+  #       with:
+  #         ref: ${{ needs.set-variables.outputs.checkout_ref }}
+  #     - uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # ratchet:docker/setup-qemu-action@v3
+  #       with:
+  #         platforms: arm64
+  #     - uses: DeterminateSystems/nix-installer-action@e279ba56d8266c08a0e65738145aabb824f308ed # ratchet:DeterminateSystems/nix-installer-action@main
+  #       with:
+  #         extra-conf: |
+  #           extra-platforms = aarch64-linux
+  #     - uses: DeterminateSystems/magic-nix-cache-action@eeabdb06718ac63a7021c6132129679a8e22d0c7 # ratchet:DeterminateSystems/magic-nix-cache-action@v3
+  #     # - uses: cachix/cachix-action@18cf96c7c98e048e10a83abd92116114cd8504be # ratchet:cachix/cachix-action@v14
+  #     #   with:
+  #     #     name: "${{ vars.CACHIX_CACHE_NAME }}"
+  #     #     authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+  #     - uses: rlespinasse/github-slug-action@102b1a064a9b145e56556e22b18b19c624538d94 # ratchet:rlespinasse/github-slug-action@v4
+  #       with:
+  #         prefix: CI_
+  #     - name: Set git variables
+  #       run: |
+  #         echo "GIT_REPO_NAME=$CI_GITHUB_REPOSITORY_NAME_PART" >> $GITHUB_ENV
+  #         echo "GIT_REF=$CI_GITHUB_REF_NAME" >> $GITHUB_ENV
+  #         if [ "${{ github.event_name }}" == "pull_request" ]; then
+  #           echo "GIT_SHA=$CI_GITHUB_EVENT_PULL_REQUEST_HEAD_SHA" >> $GITHUB_ENV
+  #           echo "GIT_SHA_SHORT=$CI_GITHUB_EVENT_PULL_REQUEST_HEAD_SHA_SHORT" >> $GITHUB_ENV
+  #         else
+  #           echo "GIT_SHA=$CI_GITHUB_SHA" >> $GITHUB_ENV
+  #           echo "GIT_SHA_SHORT=$CI_GITHUB_SHA_SHORT" >> $GITHUB_ENV
+  #         fi
+  #     - name: Set nix variables
+  #       run: |
+  #         echo "NIX_IMAGE_SYSTEMS=x86_64-linux" >> $GITHUB_ENV
+  #     - name: Build nix images
+  #       run: |
+  #         echo "Using Git Repository Name: $GIT_REPO_NAME"
+  #         echo "Using Git Reference: $GIT_REF"
+  #         echo "Using Git SHA: $GIT_SHA"
+  #         echo "Using Git SHA Short: $GIT_SHA_SHORT"
+  #         FQN_GIT_SHA="${{ matrix.fqn }}:$GIT_SHA"
+  #         echo "Image FQN with Git SHA: $FQN_GIT_SHA"
+  #         df -h
+  #         if docker manifest inspect "$FQN_GIT_SHA" > /dev/null 2>&1; then
+  #             echo "Image $FQN_GIT_SHA already exists. Skipping build."
+  #         else
+  #             echo "Image $FQN_GIT_SHA does not exist. Building."
+  #             ${{ matrix.nixCommand }}
+  #         fi
+  #         df -h
+  #       env:
+  #         GH_TOKEN: ${{ github.token }}
+  #         GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  #         ENCODED_GAR_SA_CREDS: ${{ secrets.ENCODED_GAR_SA_CREDS }}
 
   execute-workflow:
-    needs: [config-workflows, build-nix-images, set-variables]
+    # needs: [config-workflows, build-nix-images, set-variables]
     # needs: [config-workflows, set-variables]
+    needs: [config-workflows, build-pyrovelocity-image, set-variables]
     if: ${{ needs.set-variables.outputs.skip_ci != 'true' && (contains(github.event.pull_request.labels.*.name, 'execute-workflow') || (github.event_name == 'workflow_dispatch' && inputs.run_execute_workflow)) }}
     runs-on: ubuntu-latest
     concurrency:
@@ -439,7 +524,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
+          ref: ${{ needs.set-variables.outputs.checkout_ref }}
 
       - name: Setup environment
         uses: ./.github/actions/setup_environment
@@ -492,7 +577,7 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
+          ref: ${{ needs.set-variables.outputs.checkout_ref }}
       - uses: DeterminateSystems/nix-installer-action@e279ba56d8266c08a0e65738145aabb824f308ed # ratchet:DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@eeabdb06718ac63a7021c6132129679a8e22d0c7 # ratchet:DeterminateSystems/magic-nix-cache-action@v3
       - run: nix profile install .#releaseEnv
@@ -623,7 +708,7 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
+          ref: ${{ needs.set-variables.outputs.checkout_ref }}
       - name: Setup environment
         uses: ./.github/actions/setup_environment
         with:
