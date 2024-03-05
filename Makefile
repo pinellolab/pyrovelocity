@@ -344,7 +344,7 @@ nix-lint: ## Lint nix files.
 
 NIX_DERIVATION_PATH ?= $(shell which python)
 
-closure-size: ## Print nix closure size for a given path. make -n NIX_DERIVATION_PATH=$(shell which python)
+closure-size: ## Print nix closure size for a given path. make -n closure-size NIX_DERIVATION_PATH=$(which python)
 	nix path-info -Sh $(NIX_DERIVATION_PATH)
 
 re: ## Reload direnv.
@@ -420,6 +420,19 @@ digest: ## Print image digest from tag. make digest DEVCONTAINER_IMAGE=
 	@echo
 	docker inspect --format='{{index .RepoDigests 0}}' $(DEVCONTAINER_IMAGE)
 	@echo
+
+
+#---------------------
+##@ notebooks examples
+#---------------------
+
+MANUSCRIPT_SUBDIR = scripts/examples/manuscript
+MANUSCRIPT_PASSTHROUGH = $(filter-out $@,$(MAKECMDGOALS))
+
+.PHONY: notebooks-manuscript
+notebooks-manuscript: ## Invoke target in MANUSCRIPT_SUBDIR's Makefile.
+	$(MAKE) -C $(MANUSCRIPT_SUBDIR) $(MANUSCRIPT_PASSTHROUGH)
+
 
 #----------------
 ##@ vscode server
