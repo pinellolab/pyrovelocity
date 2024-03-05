@@ -515,11 +515,14 @@
         devShells = {
           default = pkgs.mkShell {
             name = packageName;
-            buildInputs = with pkgs;
+            nativeBuildInputs = with pkgs;
               [
                 (mkPoetryEnvWithSource packageName ./src ["test" "docs" "workflows"])
               ]
               ++ devPackages;
+            shellHook = ''
+              export QUARTO_PYTHON=${pkgs.python310}/bin/python
+            '';
           };
         };
 
