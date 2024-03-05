@@ -1,8 +1,7 @@
 import inspect
 import os
 from pathlib import Path
-from typing import Optional
-from typing import Tuple
+from typing import Optional, Tuple
 from urllib.parse import unquote
 
 import anndata
@@ -15,10 +14,11 @@ from beartype import beartype
 
 import pyrovelocity.datasets
 from pyrovelocity.logging import configure_logging
-from pyrovelocity.utils import generate_sample_data
-from pyrovelocity.utils import print_anndata
-from pyrovelocity.utils import print_attributes
-
+from pyrovelocity.utils import (
+    generate_sample_data,
+    print_anndata,
+    print_attributes,
+)
 
 __all__ = ["download_dataset", "load_anndata_from_path", "subset_anndata"]
 
@@ -172,7 +172,6 @@ def download_dataset(
                 f"Please specify a valid source or URL that resolves to a .h5ad file."
             )
 
-        print_attributes(adata.copy())
         print_anndata(adata)
 
         if data_path.is_file() and os.access(str(data_path), os.R_OK):
