@@ -218,8 +218,6 @@
         );
 
         appBuildInputs = with pkgs; [
-          cacert
-          openssl
         ];
         mkPoetryAttrs = {
           projectDir = ./.;
@@ -531,14 +529,13 @@
               buildInputs = appBuildInputs;
               checkInputs = appBuildInputs;
               nativeCheckInputs = appBuildInputs;
+
               preCheck = ''
                 set -euo pipefail
 
                 mkdir -p $TMPDIR/numba_cache
                 export NUMBA_CACHE_DIR=$TMPDIR/numba_cache
                 echo "NUMBA_CACHE_DIR: $NUMBA_CACHE_DIR"
-
-                export SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
               '';
 
               checkPhase = ''
