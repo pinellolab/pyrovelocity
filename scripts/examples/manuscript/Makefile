@@ -63,4 +63,4 @@ clean: ## Clean compilation artifacts
 clean-all: ## Clean all files including output files
 clean-all: clean
 	rm $(DOCUMENT_NAME).{docx,html,ipynb,pdf,tex} || true
-	rm -r $(DOCUMENT_NAME)_files/
+	rm -rf $(DOCUMENT_NAME)_files/
