@@ -1,5 +1,6 @@
 _extensions/
 .jupyter_cache/
+.quarto/
 index_files/
 sn-*.bst
 sn-*.cls
