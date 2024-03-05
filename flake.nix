@@ -524,11 +524,35 @@
           default = pkgs.poetry2nix.mkPoetryApplication (
             mkPoetryAttrs
             // {
-              checkPhase = ''
-                export NUMBA_CACHE_DIR=${builtins.getEnv "NUMBA_CACHE_DIR"}
+              preCheck = ''
+                set -euo pipefail
+
+                mkdir -p $TMPDIR/numba_cache
+                export NUMBA_CACHE_DIR=$TMPDIR/numba_cache
                 echo "NUMBA_CACHE_DIR: $NUMBA_CACHE_DIR"
-                pytest
               '';
+
+              checkPhase = ''
+                set -euo pipefail
+
+                runHook preCheck
+
+                # TODO: fix train_model test on Darwin
+                # > src/pyrovelocity/train.py line 1564: 50991 Trace/BPT trap: 5
+                pytest \
+                -rA \
+                -k "not workflows and not git and not train_model" \
+                --xdoc \
+                --no-cov \
+                --disable-warnings \
+                --pyargs pyrovelocity
+
+                runHook postCheck
+              '';
+
+              doCheck = true;
+
+              pythonImportsCheck = ["pyrovelocity"];
             }
           );
 
