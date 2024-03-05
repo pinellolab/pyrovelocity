@@ -67,9 +67,13 @@ render-latex: ## Render pdf format via LaTeX
 render-latex: install-extensions
 	quarto render $(DOCUMENT_NAME).qmd --to nature-pdf
 
-render: ## Render all article formats including docx, html, ipynb, pdf, and tex
+render: ## Render all formats declared in header.
 render: install-extensions
 	quarto render $(DOCUMENT_NAME).qmd --to all
+
+render-existing: ## Render all formats without executing code blocks.
+render-existing: install-extensions
+	quarto render $(DOCUMENT_NAME).qmd --to all --no-execute
 
 render-refresh: ## (EXAMPLE) Render with parameter specification and cache refresh
 render-refresh: install-extensions
