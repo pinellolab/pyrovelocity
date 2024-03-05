@@ -426,6 +426,7 @@
           containerPackages,
           cmd ? [],
           entrypoint ? [],
+          extraEnv ? [],
         }: {
           # Use default empty Entrypoint to completely defer to Cmd for flexible override
           Entrypoint = entrypoint;
@@ -433,21 +434,23 @@
           Cmd = cmd;
           User = "root";
           WorkingDir = "/root";
-          Env = [
-            "PATH=${pkgs.lib.makeBinPath containerPackages}:/root/.nix-profile/bin"
-            "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-            "NIX_PAGER=cat"
-            "USER=root"
-            "HOME=/root"
-            "GIT_REPO_NAME=${builtins.getEnv "GIT_REPO_NAME"}"
-            "GIT_REF=${builtins.getEnv "GIT_REF"}"
-            "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
-            "GIT_SHA_SHORT=${builtins.getEnv "GIT_SHA_SHORT"}"
-            "PYTHONPATH=${packageSrcPath}:${pkgs.lib.strings.makeSearchPathOutput "" "lib/python3.10/site-packages" pythonPackages}"
-            "LD_LIBRARY_PATH=/usr/local/nvidia/lib64"
-            "NVIDIA_DRIVER_CAPABILITIES='compute,utility'"
-            "NVIDIA_VISIBLE_DEVICES=all"
-          ];
+          Env =
+            [
+              "PATH=${pkgs.lib.makeBinPath containerPackages}:/root/.nix-profile/bin"
+              "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+              "NIX_PAGER=cat"
+              "USER=root"
+              "HOME=/root"
+              "GIT_REPO_NAME=${builtins.getEnv "GIT_REPO_NAME"}"
+              "GIT_REF=${builtins.getEnv "GIT_REF"}"
+              "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
+              "GIT_SHA_SHORT=${builtins.getEnv "GIT_SHA_SHORT"}"
+              "PYTHONPATH=${packageSrcPath}:${pkgs.lib.strings.makeSearchPathOutput "" "lib/python3.10/site-packages" pythonPackages}"
+              "LD_LIBRARY_PATH=/usr/local/nvidia/lib64"
+              "NVIDIA_DRIVER_CAPABILITIES='compute,utility'"
+              "NVIDIA_VISIBLE_DEVICES=all"
+            ]
+            ++ extraEnv;
         };
         containerCmd = [
           "${pkgs.bashInteractive}/bin/bash"
@@ -493,6 +496,9 @@
             pythonPackages = devpythonPackages;
             containerPackages = sysPackages ++ devPackages ++ devpythonPackages;
             cmd = devcontainerCmd;
+            extraEnv = [
+              "QUARTO_PYTHON=${pkgs.python310}/bin/python"
+            ];
           };
         };
 
