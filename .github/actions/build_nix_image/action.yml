@@ -107,3 +107,12 @@ runs:
         GH_TOKEN: ${{ github.token }}
         GCP_PROJECT_ID: ${{ inputs.gcpProjectId }}
         ENCODED_GAR_SA_CREDS: ${{ inputs.encodedGARCredentials }}
+
+    - name: Clean Nix Store
+      shell: bash
+      run: |
+        set -euxo pipefail
+
+        df -h
+        nix store gc
+        df -h
