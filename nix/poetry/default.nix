@@ -73,19 +73,36 @@ in
           });
         }
         else {};
+
       nvidiaPostFixup = ''
         rm -r $out/${self.python.sitePackages}/nvidia/{__pycache__,__init__.py}
       '';
+
+      nvidiaPackagesPostFixup = name:
+        super.${name}.overridePythonAttrs (old: {
+          postFixup = old.postFixup or "" + nvidiaPostFixup;
+        });
+
+      nvidiaCudaPostFixupOnlyPackages =
+        pkgs.lib.genAttrs [
+          "nvidia-cublas-cu12"
+          "nvidia-cufft-cu12"
+          "nvidia-curand-cu12"
+          "nvidia-cuda-cupti-cu12"
+          "nvidia-cuda-nvrtc-cu12"
+          "nvidia-cuda-runtime-cu12"
+          "nvidia-nccl-cu12"
+          "nvidia-nvtx-cu12"
+        ]
+        nvidiaPackagesPostFixup;
     in
       buildInputsOverrides
+      // nvidiaCudaPostFixupOnlyPackages
       // {
         h5py = super.h5py.override {preferWheel = true;};
         hydra-core = super.hydra-core.override {preferWheel = true;};
         hydra-joblib-launcher = super.hydra-joblib-launcher.override {preferWheel = true;};
         mkdocs-material = super.mkdocs-material.override {preferWheel = false;};
-        nvidia-cublas-cu12 = super.nvidia-cublas-cu12.overridePythonAttrs (_: {
-          postFixup = nvidiaPostFixup;
-        });
         nvidia-cudnn-cu12 = super.nvidia-cudnn-cu12.overridePythonAttrs (old: {
           nativeBuildInputs = old.nativeBuildInputs or [] ++ [pkgs.autoPatchelfHook];
           propagatedBuildInputs =
@@ -95,12 +112,6 @@ in
               self.nvidia-cublas-cu12
               pkgs_unstable.cudaPackages_12_1.cudnn
             ];
-          postFixup = nvidiaPostFixup;
-        });
-        nvidia-cufft-cu12 = super.nvidia-cufft-cu12.overridePythonAttrs (_: {
-          postFixup = nvidiaPostFixup;
-        });
-        nvidia-curand-cu12 = super.nvidia-curand-cu12.overridePythonAttrs (_: {
           postFixup = nvidiaPostFixup;
         });
         nvidia-cusparse-cu12 = super.nvidia-cusparse-cu12.overridePythonAttrs (old: {
@@ -123,21 +134,6 @@ in
               pkgs_unstable.cudaPackages_12_1.libcublas
               pkgs_unstable.cudaPackages_12_1.libcusparse
             ];
-          postFixup = nvidiaPostFixup;
-        });
-        nvidia-cuda-cupti-cu12 = super.nvidia-cuda-cupti-cu12.overridePythonAttrs (_: {
-          postFixup = nvidiaPostFixup;
-        });
-        nvidia-cuda-nvrtc-cu12 = super.nvidia-cuda-nvrtc-cu12.overridePythonAttrs (_: {
-          postFixup = nvidiaPostFixup;
-        });
-        nvidia-cuda-runtime-cu12 = super.nvidia-cuda-runtime-cu12.overridePythonAttrs (_: {
-          postFixup = nvidiaPostFixup;
-        });
-        nvidia-nccl-cu12 = super.nvidia-nccl-cu12.overridePythonAttrs (_: {
-          postFixup = nvidiaPostFixup;
-        });
-        nvidia-nvtx-cu12 = super.nvidia-nvtx-cu12.overridePythonAttrs (_: {
           postFixup = nvidiaPostFixup;
         });
         pyarrow = super.pyarrow.override {preferWheel = true;};
