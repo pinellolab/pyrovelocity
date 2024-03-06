@@ -497,6 +497,11 @@ jobs:
           name: poetry-build
           path: ./dist
 
+  # TODO: use composite action ./.github/actions/build_nix_image for image build
+  # steps within matrix. This requires optionally passing
+  # needs.release.outputs.version to set the VERSION environment variable inside
+  # the composite action and forcing the build to run even if one with the same
+  # GIT_SHA tag already exists
   publish-release-images:
     runs-on: ubuntu-latest
     needs: [set-variables, release]
@@ -571,21 +576,20 @@ jobs:
           echo "NIX_IMAGE_SYSTEMS=x86_64-linux" >> $GITHUB_ENV
       - name: Build nix images
         run: |
+          set -euxo pipefail
+
           echo "Using Git Repository Name: $GIT_REPO_NAME"
           echo "Using Git Reference: $GIT_REF"
           echo "Using Git SHA: $GIT_SHA"
           echo "Using Git SHA Short: $GIT_SHA_SHORT"
+          df -h
           ${{ matrix.nixCommand }}
+          df -h
         env:
           GH_TOKEN: ${{ github.token }}
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           ENCODED_GAR_SA_CREDS: ${{ secrets.ENCODED_GAR_SA_CREDS }}
           VERSION: ${{ needs.release.outputs.version }}
-      - name: GC nix store
-        run: |
-          df -h
-          nix store gc
-          df -h
 
   publish-pypi:
     runs-on: ubuntu-latest
