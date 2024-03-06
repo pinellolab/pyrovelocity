@@ -497,6 +497,23 @@ jobs:
           name: poetry-build
           path: ./dist
 
+  publish-nix-flake:
+    runs-on: ubuntu-latest
+    needs: [set-variables, release]
+    if: ${{ needs.release.outputs.released == 'true' }}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+        with:
+          ref: ${{ needs.release.outputs.git-head }}
+      - uses: DeterminateSystems/nix-installer-action@e279ba56d8266c08a0e65738145aabb824f308ed # ratchet:DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/flakehub-push@d079d466e04c6b982eb532ed852b1505fe81434f # ratchet:DeterminateSystems/flakehub-push@main
+        with:
+          visibility: unlisted
+          tag: ${{ needs.release.outputs.version }}
+
   # TODO: use composite action ./.github/actions/build_nix_image for image build
   # steps within matrix. This requires optionally passing
   # needs.release.outputs.version to set the VERSION environment variable inside
