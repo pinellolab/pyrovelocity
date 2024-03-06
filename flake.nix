@@ -109,87 +109,9 @@
             }
           );
 
-        sysPackages = with pkgs;
-          [
-            bashInteractive
-            coreutils
-            cacert
-            direnv
-            file
-            findutils
-            gnutar
-            gzip
-            less
-            libgcc
-            nix
-            procps
-            time
-            which
-          ]
-          ++ lib.optional (lib.elem system pkgs.shadow.meta.platforms) shadow;
-
-        tex = pkgs.texlive.combine {
-          inherit
-            (pkgs.texlive)
-            scheme-small
-            algorithm2e
-            algorithmicx
-            algorithms
-            algpseudocodex
-            apacite
-            appendix
-            caption
-            multirow
-            ncctools
-            rsfs
-            sttools
-            threeparttable
-            vruler
-            wrapfig
-            xurl
-            ;
-        };
-
-        devPackages = with pkgs;
-          [
-            atuin
-            bat
-            bazelisk
-            pkgs_unstable.cue
-            gawk
-            gh
-            git
-            gnugrep
-            gnumake
-            gnused
-            gnupg
-            helix
-            htop
-            jqp
-            pkgs_unstable.k9s
-            kubectl
-            kubectx
-            lazygit
-            lmodern
-            man-db
-            man-pages
-            neovim
-            openvscode-server
-            pandoc
-            poetry
-            poethepoet
-            pkgs_unstable.quarto
-            ripgrep
-            skaffold
-            starship
-            tex
-            pkgs_unstable.timoni
-            tree
-            yq-go
-            zellij
-            zsh
-          ]
-          ++ lib.optional (system == "x86_64-linux") nvitop;
+        defaultPackages = import ./nix/pkgs {inherit pkgs pkgs_unstable;};
+        sysPackages = defaultPackages.sysPackages;
+        devPackages = defaultPackages.devPackages;
 
         containerImageConfigs = import ./nix/containers {inherit pkgs mkPoetryEnvWithSource gitHubOrg packageName sysPackages devPackages;};
 
