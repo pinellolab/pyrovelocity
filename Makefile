@@ -541,7 +541,7 @@ setup-dev: install-direnv install-nix
 	@. /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh && \
 	nix profile install nixpkgs#cachix && \
 	echo "trusted-users = root $$USER" | sudo tee -a /etc/nix/nix.conf && sudo pkill nix-daemon && \
-	cachix use devenv
+	cachix use pyrovelocity
 
 .PHONY: devshell
 devshell: ## Enter nix devshell. See use_flake in `direnv stdlib`.
