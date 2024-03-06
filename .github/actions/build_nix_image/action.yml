@@ -114,5 +114,7 @@ runs:
         set -euxo pipefail
 
         df -h
-        nix store gc
+        nix develop .#devCore --impure --accept-flake-config
+        nix store gc --dry-run
+        nix store gc --max 5G
         df -h
