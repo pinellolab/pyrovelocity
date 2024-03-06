@@ -111,6 +111,7 @@
 
         defaultPackages = import ./nix/pkgs {inherit pkgs pkgs_unstable;};
         sysPackages = defaultPackages.sysPackages;
+        coreDevPackages = defaultPackages.coreDevPackages;
         devPackages = defaultPackages.devPackages;
 
         containerImageConfigs = import ./nix/containers {inherit pkgs mkPoetryEnvWithSource gitHubOrg packageName sysPackages devPackages;};
@@ -142,6 +143,14 @@
             shellHook = ''
               export QUARTO_PYTHON=${pkgs.python310}/bin/python
             '';
+          };
+          devCore = pkgs.mkShell {
+            name = packageName;
+            nativeBuildInputs = with pkgs;
+              [
+                (mkPoetryEnvWithSource packageName ./src ["test" "docs" "workflows"])
+              ]
+              ++ coreDevPackages;
           };
         };
 
