@@ -64,7 +64,7 @@
           overlays = [inputs.poetry2nix.overlays.default];
         };
 
-        poetry2nixOverrides = import ./nix-config/pkgs/poetryOverrides.nix {inherit pkgs pkgs_unstable self;};
+        poetry2nixOverrides = import ./nix/poetry {inherit pkgs pkgs_unstable self;};
 
         appBuildInputs = with pkgs; [
         ];
