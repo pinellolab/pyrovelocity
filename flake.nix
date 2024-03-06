@@ -5,26 +5,33 @@
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     systems.url = "github:nix-systems/default";
     flake-parts.url = "github:hercules-ci/flake-parts";
-    # flake-utils.url = github:numtide/flake-utils;
+    flake-utils.url = github:numtide/flake-utils;
     poetry2nix = {
       # url = github:nix-community/poetry2nix;
       url = github:cameronraysmith/poetry2nix/patch;
       inputs = {
         nixpkgs.follows = "nixpkgs";
-        # flake-utils.follows = "flake-utils";
+        flake-utils.follows = "flake-utils";
+        systems.follows = "systems";
       };
     };
     flocken = {
       url = "github:mirkolenz/flocken/v2";
       inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.systems.follows = "systems";
     };
   };
 
   nixConfig = {
     extra-trusted-public-keys = [
+      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+      "poetry2nix.cachix.org-1:2EWcWDlH12X9H76hfi5KlVtHgOtLa1Xeb7KjTjaV/R8="
       "pyrovelocity.cachix.org-1:+aX2YY45ZywieTsD2CnXLedN8RfKuRl6vL7+rLTCgnc="
     ];
     extra-substituters = [
+      "https://nix-community.cachix.org"
+      "https://poetry2nix.cachix.org"
       "https://pyrovelocity.cachix.org"
     ];
   };
@@ -64,7 +71,13 @@
           overlays = [inputs.poetry2nix.overlays.default];
         };
 
-        poetry2nixOverrides = import ./nix/poetry {inherit pkgs pkgs_unstable self;};
+        poetry2nixOverrides = import ./nix/poetry {
+          inherit
+            pkgs
+            pkgs_unstable
+            self
+            ;
+        };
 
         appBuildInputs = with pkgs; [
         ];
@@ -109,12 +122,27 @@
             }
           );
 
-        defaultPackages = import ./nix/pkgs {inherit pkgs pkgs_unstable;};
+        defaultPackages = import ./nix/pkgs {
+          inherit
+            system
+            pkgs
+            pkgs_unstable
+            ;
+        };
         sysPackages = defaultPackages.sysPackages;
         coreDevPackages = defaultPackages.coreDevPackages;
         devPackages = defaultPackages.devPackages;
 
-        containerImageConfigs = import ./nix/containers {inherit pkgs mkPoetryEnvWithSource gitHubOrg packageName sysPackages devPackages;};
+        containerImageConfigs = import ./nix/containers {
+          inherit
+            pkgs
+            mkPoetryEnvWithSource
+            gitHubOrg
+            packageName
+            sysPackages
+            devPackages
+            ;
+        };
 
         gcpProjectId = builtins.getEnv "GCP_PROJECT_ID";
         gcpSaEncodedJson = builtins.getEnv "ENCODED_GAR_SA_CREDS";
@@ -122,7 +150,12 @@
         # aarch64-linux may be disabled for more rapid image builds during
         # development setting NIX_IMAGE_SYSTEMS="x86_64-linux".
         # Note the usage of `preferWheels` as well.
-        # images = with self.packages; [x86_64-linux.devcontainerImage aarch64-linux.devcontainerImage];
+        # NIX_IMAGE_SYSTEMS="x86_64-linux aarch64-linux"
+        # will expand similar to the following:
+        # images = with self.packages; [
+        #   x86_64-linux.devcontainerImage
+        #   aarch64-linux.devcontainerImage
+        # ];
         includedSystems = let
           envVar = builtins.getEnv "NIX_IMAGE_SYSTEMS";
         in
@@ -199,11 +232,19 @@
             paths = with pkgs; [poetry python310];
           };
 
-          containerImage = pkgs.dockerTools.buildLayeredImage containerImageConfigs.containerImageConfig;
-          containerStream = pkgs.dockerTools.streamLayeredImage containerImageConfigs.containerImageConfig;
+          containerImage =
+            pkgs.dockerTools.buildLayeredImage
+            containerImageConfigs.containerImageConfig;
+          containerStream =
+            pkgs.dockerTools.streamLayeredImage
+            containerImageConfigs.containerImageConfig;
 
-          devcontainerImage = pkgs.dockerTools.buildLayeredImage containerImageConfigs.devcontainerImageConfig;
-          devcontainerStream = pkgs.dockerTools.streamLayeredImage containerImageConfigs.devcontainerImageConfig;
+          devcontainerImage =
+            pkgs.dockerTools.buildLayeredImage
+            containerImageConfigs.devcontainerImageConfig;
+          devcontainerStream =
+            pkgs.dockerTools.streamLayeredImage
+            containerImageConfigs.devcontainerImageConfig;
         };
 
         legacyPackages.containerManifest = inputs.flocken.legacyPackages.${system}.mkDockerManifest {
@@ -231,7 +272,11 @@
           };
           version = builtins.getEnv "VERSION";
           images = builtins.map (sys: self.packages.${sys}.containerImage) includedSystems;
-          tags = [(builtins.getEnv "GIT_SHA_SHORT") (builtins.getEnv "GIT_SHA") (builtins.getEnv "GIT_REF")];
+          tags = [
+            (builtins.getEnv "GIT_SHA_SHORT")
+            (builtins.getEnv "GIT_SHA")
+            (builtins.getEnv "GIT_REF")
+          ];
         };
 
         legacyPackages.devcontainerManifest = inputs.flocken.legacyPackages.${system}.mkDockerManifest {
@@ -259,7 +304,11 @@
           };
           version = builtins.getEnv "VERSION";
           images = builtins.map (sys: self.packages.${sys}.devcontainerImage) includedSystems;
-          tags = [(builtins.getEnv "GIT_SHA_SHORT") (builtins.getEnv "GIT_SHA") (builtins.getEnv "GIT_REF")];
+          tags = [
+            (builtins.getEnv "GIT_SHA_SHORT")
+            (builtins.getEnv "GIT_SHA")
+            (builtins.getEnv "GIT_REF")
+          ];
         };
       };
     };
