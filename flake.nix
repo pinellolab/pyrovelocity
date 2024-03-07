@@ -8,7 +8,7 @@
     flake-utils.url = github:numtide/flake-utils;
     poetry2nix = {
       # url = github:nix-community/poetry2nix;
-      url = github:cameronraysmith/poetry2nix/patch;
+      url = github:cameronraysmith/poetry2nix/llvmlite-static;
       inputs = {
         nixpkgs.follows = "nixpkgs";
         flake-utils.follows = "flake-utils";
@@ -85,10 +85,10 @@
           projectDir = ./.;
           overrides = poetry2nixOverrides;
           python = pkgs.python310;
-          # aarch64 cross-compilation on x86_64 may be intolerably slow if
-          # preferWheels is disabled. If all of the individual contributors to
-          # this are identified, it may be possible to use the library-specific
-          # overrides above and disable the global usage of wheels
+          # aarch64 cross-compilation on x86_64 may be unusable if preferWheels
+          # is disabled. If all of the individually contributing packages were
+          # identified, it may be possible to use the library-specific overrides
+          # in ./nix/poetry and disable the global usage of wheels
           preferWheels = true;
           checkGroups = ["test"];
           extras = [];
