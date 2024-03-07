@@ -8,7 +8,7 @@ channels:
   - bioconda
   - nodefaults
 specs:
-  - python=3.10
+  - python=3.11.8=hab00c5b_0_cpython
   - conda
   - mamba # mamba is not needed but recommended
 
@@ -415,7 +415,6 @@ specs:
   - pytest-asyncio=0.23.5=pyhd8ed1ab_0
   - pytest-cov=4.1.0=pyhd8ed1ab_0
   - pytest-mock=3.12.0=pyhd8ed1ab_0
-  - python=3.11.8=hab00c5b_0_cpython
   - python-build=1.1.1=pyhd8ed1ab_0
   - python-dateutil=2.9.0=pyhd8ed1ab_0
   - python-dotenv=1.0.1=pyhd8ed1ab_0
