@@ -154,8 +154,13 @@ jobs:
       group: test-python-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}-${{ needs.set-variables.outputs.mode }}
       cancel-in-progress: true
     strategy:
+      fail-fast: false
       matrix:
-        python_version: ["3.10"]
+        include:
+          - python_version: "3.10"
+            continue-on-error: false
+          - python_version: "3.11"
+            continue-on-error: true
 
     steps:
       - name: Check Variables
@@ -174,12 +179,14 @@ jobs:
         with:
           python_version: ${{ matrix.python_version }}
           debug_enabled: ${{ needs.set-variables.outputs.debug }}
+        continue-on-error: ${{ matrix.continue-on-error }}
 
       - name: Download Flyte config
         uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # ratchet:actions/download-artifact@v4
         with:
           name: flyte-config
           path: .flyte/
+        continue-on-error: ${{ matrix.continue-on-error }}
 
       - name: "Setup tmate debug session"
         uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # ratchet:mxschmitt/action-tmate@v3
@@ -188,10 +195,12 @@ jobs:
       - name: Lint and typecheck
         run: |
           make lint-check
+        continue-on-error: ${{ matrix.continue-on-error }}
 
       - name: Run tests
         run: |
           make test-cov-xml
+        continue-on-error: ${{ matrix.continue-on-error }}
 
       - name: Upload coverage
         uses: codecov/codecov-action@e0b68c6749509c5f83f984dd99a76a1c1a231044 # ratchet:codecov/codecov-action@v4
@@ -199,6 +208,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
           verbose: true
+        continue-on-error: ${{ matrix.continue-on-error }}
 
   test-bazel:
     runs-on: ubuntu-latest
