@@ -6,6 +6,7 @@ on:
       - main
       - beta
     paths-ignore:
+      - ".github/workflows/colab.yml"
       - "conda/**"
       - "docs/**"
       - "scripts/**"
@@ -17,6 +18,7 @@ on:
   pull_request:
     types: [opened, synchronize, labeled, reopened]
     paths-ignore:
+      - ".github/workflows/colab.yml"
       - "conda/**"
       - "docs/**"
       - "scripts/**"
