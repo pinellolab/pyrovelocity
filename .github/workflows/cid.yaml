@@ -151,7 +151,7 @@ jobs:
     needs: [set-variables, config-workflows]
     if: ${{ needs.set-variables.outputs.skip_ci != 'true' && needs.set-variables.outputs.skip_tests != 'true' }}
     concurrency:
-      group: test-python-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}-${{ needs.set-variables.outputs.mode }}
+      group: test-python-${{ matrix.python_version }}-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}-${{ needs.set-variables.outputs.mode }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
