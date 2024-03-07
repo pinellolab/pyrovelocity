@@ -2501,23 +2501,24 @@ packaging = "*"
 
 [[package]]
 name = "hydra-zen"
-version = "0.10.0"
+version = "0.12.1"
 description = "Configurable, reproducible, and scalable workflows in Python, via Hydra"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "hydra_zen-0.10.0-py3-none-any.whl", hash = "sha256:78c3cddb8b7063317a3685edb570c209425988b8f5f08902e13b5e6ead46d9af"},
-    {file = "hydra_zen-0.10.0.tar.gz", hash = "sha256:7f9006be601efb07cefd5a88ec6135194edbf27dced73b6d620269a0274f44a3"},
+    {file = "hydra_zen-0.12.1-py3-none-any.whl", hash = "sha256:23ad9df648f0db1747c15cc4c90c8e46be2809099493b5d00dcc6e49979d2545"},
+    {file = "hydra_zen-0.12.1.tar.gz", hash = "sha256:e27979c16505a654918c8c36cc190cc61ded14054a4d84efd65c0b83e7078050"},
 ]
 
 [package.dependencies]
-hydra-core = ">=1.1.0"
-typing-extensions = ">=4.1.0"
+hydra-core = ">=1.2.0"
+omegaconf = ">=2.2.1"
+typing-extensions = ">=4.1.0,<4.6.0 || >4.6.0"
 
 [package.extras]
 beartype = ["beartype (>=0.8.0)"]
-pydantic = ["pydantic (>=1.8.2)"]
-test = ["hypothesis (>=6.28.0)", "pytest (>=3.8)"]
+pydantic = ["pydantic (>=1.8.2,<2.0.0)"]
+test = ["hypothesis (>=6.28.0)", "pytest (>=3.8)", "pytest-trio (>=0.8.0)"]
 
 [[package]]
 name = "hypothesis"
@@ -8054,4 +8055,4 @@ workflows = ["dataclasses-json", "dulwich", "flytekit", "google-api-python-clien
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10, <3.12"
-content-hash = "ccd786279de478b4a9c23fdddfd74a4a31bda697ffc8952025f6e85f685ed545"
+content-hash = "2438320586680f3f00dcfbfda31dd6803c4f0e99479547aacba4cde976636f1c"
