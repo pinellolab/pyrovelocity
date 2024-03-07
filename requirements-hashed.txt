@@ -1061,9 +1061,9 @@ httplib2==0.22.0 ; python_version >= "3.10" and python_version < "3.12" \
 hydra-core==1.3.2 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:8a878ed67216997c3e9d88a8e72e7b4767e81af37afb4ea3334b269a4390a824 \
     --hash=sha256:fa0238a9e31df3373b35b0bfb672c34cc92718d21f81311d8996a16de1141d8b
-hydra-zen==0.10.0 ; python_version >= "3.10" and python_version < "3.12" \
-    --hash=sha256:78c3cddb8b7063317a3685edb570c209425988b8f5f08902e13b5e6ead46d9af \
-    --hash=sha256:7f9006be601efb07cefd5a88ec6135194edbf27dced73b6d620269a0274f44a3
+hydra-zen==0.12.1 ; python_version >= "3.10" and python_version < "3.12" \
+    --hash=sha256:23ad9df648f0db1747c15cc4c90c8e46be2809099493b5d00dcc6e49979d2545 \
+    --hash=sha256:e27979c16505a654918c8c36cc190cc61ded14054a4d84efd65c0b83e7078050
 hypothesis==6.72.1 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:1901688aac1fc8d78d5431c4a1d48cc50940e247dd8b6ebc3d4167ef31204e10 \
     --hash=sha256:2fd2c9640ea4b64d06fafc8d9aa8e9cbae365879d109a859afd37dda5c1ffb55
