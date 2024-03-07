@@ -70,7 +70,7 @@ jobs:
           set -x
           mkdir -p scripts/
           conda list
-          CONDA_SOLVER=libmamba CONDA_VERBOSITY=1 CONDA_OVERRIDE_CUDA="11.8" constructor conda/colab/ --output-dir=scripts/
+          CONDA_SOLVER=libmamba CONDA_VERBOSITY=1 CONDA_OVERRIDE_CUDA="12.2" constructor conda/colab/ --output-dir=scripts/
       - name: "Authenticate to Google Cloud"
         uses: "google-github-actions/auth@55bd3a7c6e2ae7cf1877fd1ccb9d54c0503c457c" # ratchet:google-github-actions/auth@v2
         with:
