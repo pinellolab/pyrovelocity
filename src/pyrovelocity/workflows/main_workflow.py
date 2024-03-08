@@ -193,15 +193,24 @@ def module_workflow(
     configurations.
 
     Args:
-        download_dataset_args (DownloadDatasetInterface, optional): Configuration for pyrovelocity.data.download_dataset. Defaults to DownloadDatasetInterface().
-        preprocess_data_args (PreprocessDataInterface, optional): Configuration for pyrovelocity.preprocess.preprocess_dataset. Defaults to PreprocessDataInterface().
-        train_model_configuration_1 (PyroVelocityTrainInterface, optional): Configuration for pyrovelocity.train.train_dataset. Defaults to PyroVelocityTrainInterface().
-        train_model_configuration_2 (PyroVelocityTrainInterface, optional): Configuration for pyrovelocity.train.train_dataset. Defaults to PyroVelocityTrainInterface().
-        postprocess_configuration (PostprocessConfiguration, optional): Configuration for pyrovelocity.postprocess.postprocess_dataset. Defaults to PostprocessConfiguration().
-        train_model_resource_requests (ResourcesJSON, optional): Configuration for flytekit.Resources. Defaults to default_training_resource_requests.
-        train_model_resource_limits (ResourcesJSON, optional): Configuration for flytekit.Resources. Defaults to default_training_resource_limits.
-        postprocessing_resource_requests (ResourcesJSON, optional): Configuration for flytekit.Resources. Defaults to default_resource_requests.
-        postprocessing_resource_limits (ResourcesJSON, optional): Configuration for flytekit.Resources. Defaults to default_resource_limits.
+        download_dataset_args (DownloadDatasetInterface, optional): Configuration for
+            pyrovelocity.data.download_dataset. Defaults to DownloadDatasetInterface().
+        preprocess_data_args (PreprocessDataInterface, optional): Configuration for
+            pyrovelocity.preprocess.preprocess_dataset. Defaults to PreprocessDataInterface().
+        train_model_configuration_1 (PyroVelocityTrainInterface, optional): Configuration
+            for pyrovelocity.train.train_dataset. Defaults to PyroVelocityTrainInterface().
+        train_model_configuration_2 (PyroVelocityTrainInterface, optional): Configuration
+            for pyrovelocity.train.train_dataset. Defaults to PyroVelocityTrainInterface().
+        postprocess_configuration (PostprocessConfiguration, optional): Configuration for
+            pyrovelocity.postprocess.postprocess_dataset. Defaults to PostprocessConfiguration().
+        train_model_resource_requests (ResourcesJSON, optional): Configuration for
+            flytekit.Resources. Defaults to default_training_resource_requests.
+        train_model_resource_limits (ResourcesJSON, optional): Configuration for
+            flytekit.Resources. Defaults to default_training_resource_limits.
+        postprocessing_resource_requests (ResourcesJSON, optional): Configuration for
+            flytekit.Resources. Defaults to default_resource_requests.
+        postprocessing_resource_limits (ResourcesJSON, optional): Configuration for
+            flytekit.Resources. Defaults to default_resource_limits.
 
     Returns:
         list[FlyteFile]: Workflow outputs as flytekit.types.file.FlyteFile objects.
@@ -216,8 +225,8 @@ def module_workflow(
         train_model_configuration_2,
     ]
 
-    model_outputs: list[TrainingOutputs] = list()
-    postprocessed_data: list[FlyteFile] = list()
+    model_outputs: list[TrainingOutputs] = []
+    postprocessed_data: list[FlyteFile] = []
     for train_model_configuration in train_model_configurations:
         model_output = train_model(
             processed_data=processed_data,
@@ -226,7 +235,6 @@ def module_workflow(
             requests=Resources(**asdict(train_model_resource_requests)),
             limits=Resources(**asdict(train_model_resource_limits)),
         )
-        print(model_output)
         model_outputs.append(model_output)
 
         postprocessed_dataset = postprocess_data(
