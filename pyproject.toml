@@ -52,7 +52,7 @@ llvmlite = { version = ">=0.41.1", python = "<3.12" }
 #   { version = ">=0.42.0", python = ">=3.12" },
 # ]
 mlflow = ">=2.10.0"
-pandas = ">=1.5.3"
+pandas = ">=2.0.0"
 pyro-ppl = ">=1.8.6"
 lightning = ">=2.0.0"
 pytorch-lightning = ">=2.0.0"
