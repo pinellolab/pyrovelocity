@@ -156,8 +156,10 @@ def preprocess_dataset(
             adata,
             min_shared_counts=min_shared_counts,
             n_top_genes=n_top_genes,
+            log=False,
             copy=True,
         )
+        sc.pp.log1p(adata_tmp)
         if adata_tmp.n_vars < n_obs_subset:
             logger.warning(
                 f"adata.n_vars: {adata_tmp.n_vars} < n_obs_subset: {n_obs_subset}\n"
@@ -169,8 +171,10 @@ def preprocess_dataset(
                 adata,
                 min_shared_counts=min_shared_counts,
                 n_top_genes=n_top_genes,
+                log=False,
                 copy=True,
             )
+            sc.pp.log1p(adata)
             logger.warning(
                 f"after updating min_shared_counts: {min_shared_counts},\n"
                 f"adata.n_vars: {adata.n_vars}\n"
