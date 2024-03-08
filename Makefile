@@ -206,18 +206,21 @@ run-async: ## Run registered workflow (async).
 run-check-image: ## Check workflow image exists.
 	crane ls $(WORKFLOW_IMAGE) | grep "$(GIT_REF)\|$(GIT_SHA)\|$(GIT_SHA_SHORT)"
 
-clean-simulated: ## Clean simulated data and models.
-	rm data/external/simulated.h5ad || true
-	rm data/processed/simulated_* || true 
-	rm -r models/simulated_model* || true 
+TEST_DATASET_NAME ?= simulated
 
-clear-local-cache: ## Clear local cache db from ~/.flyte/local-cache/cache.db.
+workflow-clean-outputs: ## Clean testing dataset and model outputs. make workflow-clean-outputs TEST_DATASET_NAME=simulated.
+	rm data/external/$(TEST_DATASET_NAME).h5ad || true
+	rm data/processed/$(TEST_DATASET_NAME)_* || true
+	rm -r models/$(TEST_DATASET_NAME)_model* || true
+
+workflow-clear-cache: ## Clear local cache db from ~/.flyte/local-cache/cache.db.
 	pyflyte local-cache clear
 
-refresh-local-test: ## Refresh local test execution.
-	$(MAKE) clean-simulated
-	$(MAKE) clear-local-cache
+workflow-refresh-test: ## Refresh local test execution.
+	$(MAKE) workflow-clean-outputs
+	$(MAKE) workflow-clear-cache
 	$(MAKE) run-local
+
 
 #---------
 ##@ github
