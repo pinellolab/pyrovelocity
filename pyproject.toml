@@ -309,6 +309,7 @@ log_level = "INFO"
 virtual_package_spec = "conda/virtual-packages.yml"
 
 [tool.conda-lock.dependencies]
+python = ">=3.10, <3.11"
 pip = ">=23.2"
 poethepoet = { source = "pypi" }
 
