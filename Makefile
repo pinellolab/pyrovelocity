@@ -176,7 +176,7 @@ cache-requirements-bazel: ## Cache bazel python requirements as OS specific requ
 ##@ workflow execution
 #---------------------
 
-run_help: ## Print hydra help for execute script.
+run-help: ## Print hydra help for execute script.
 	poetry run pyrovelocity --help
 
 # Capture additional arguments to pass to hydra-zen cli
@@ -205,6 +205,19 @@ run-async: ## Run registered workflow (async).
 
 run-check-image: ## Check workflow image exists.
 	crane ls $(WORKFLOW_IMAGE) | grep "$(GIT_REF)\|$(GIT_SHA)\|$(GIT_SHA_SHORT)"
+
+clean-simulated: ## Clean simulated data and models.
+	rm data/external/simulated.h5ad || true
+	rm data/processed/simulated_* || true 
+	rm -r models/simulated_model* || true 
+
+clear-local-cache: ## Clear local cache db from ~/.flyte/local-cache/cache.db.
+	pyflyte local-cache clear
+
+refresh-local-test: ## Refresh local test execution.
+	$(MAKE) clean-simulated
+	$(MAKE) clear-local-cache
+	$(MAKE) run-local
 
 #---------
 ##@ github
