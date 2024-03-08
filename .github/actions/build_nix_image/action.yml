@@ -115,6 +115,6 @@ runs:
 
         df -h
         nix develop .#devCore --impure --accept-flake-config
-        nix store gc --dry-run
-        nix store gc --max 5G
+        nix store gc --dry-run --debug
+        nix store gc --max 3G --debug
         df -h
