@@ -1710,33 +1710,33 @@ testing = ["black[jupyter] (==23.7.0)", "clu", "clu (<=0.0.9)", "einops", "gymna
 
 [[package]]
 name = "flyteidl"
-version = "1.10.6"
+version = "1.10.7"
 description = "IDL for Flyte Platform"
 optional = false
-python-versions = "*"
+python-versions = "<3.13,>=3.8"
 files = [
-    {file = "flyteidl-1.10.6-py3-none-any.whl", hash = "sha256:ec2c4e9726bac302d6f76aed3be662ff713eea31391294f8bd617abd6d134098"},
-    {file = "flyteidl-1.10.6.tar.gz", hash = "sha256:00cdcb38b62e92d0180d00e6680baeff00819770f7d23ad82a2d9d6d60ab3619"},
+    {file = "flyteidl-1.10.7-py3-none-any.whl", hash = "sha256:2f56ed37ff63db7254a78561dbc92f8e53d9d943b5f44178e952509b215fe988"},
+    {file = "flyteidl-1.10.7.tar.gz", hash = "sha256:39cc0ed9be2ce41b324d18d5861f6eb0cad029b838d7e3694cc9c541aaca8148"},
 ]
 
 [package.dependencies]
 googleapis-common-protos = "*"
 protobuf = ">=4.21.1,<5.0.0"
-protoc-gen-swagger = "*"
+protoc-gen-openapiv2 = "*"
 
 [[package]]
 name = "flytekit"
-version = "1.10.3"
+version = "1.10.7"
 description = "Flyte SDK for Python"
 optional = false
 python-versions = "<3.13,>=3.8"
 files = [
-    {file = "flytekit-1.10.3-py3-none-any.whl", hash = "sha256:f3d68da538687d4a019d0ef05d8818d98cef3f46988c41a343e1f72adf9ed49c"},
-    {file = "flytekit-1.10.3.tar.gz", hash = "sha256:807e3edb149ba2be0b0b997dbcb2989d6234fe920bbf59ab41a63696ad0e8f49"},
+    {file = "flytekit-1.10.7-py3-none-any.whl", hash = "sha256:054514f8cb98969cfd320567975139a9d07ffb16ec69d24324dd2f0ca07ea32d"},
+    {file = "flytekit-1.10.7.tar.gz", hash = "sha256:cce6d104045a86ee1c24ce30f7f0a80a8e59b9d151466d432667cf55109b7248"},
 ]
 
 [package.dependencies]
-adlfs = ">=2023.3.0,<=2023.9.2"
+adlfs = ">=2023.3.0"
 click = ">=6.6,<9.0"
 cloudpickle = ">=2.0.0"
 cookiecutter = ">=1.7.3"
@@ -1745,21 +1745,21 @@ dataclasses-json = ">=0.5.2,<0.5.12"
 diskcache = ">=5.2.1"
 docker = ">=4.0.0,<7.0.0"
 docstring-parser = ">=0.9.0"
-flyteidl = ">=1.10.0"
-fsspec = ">=2023.3.0,<=2023.9.2"
-gcsfs = ">=2023.3.0,<=2023.9.2"
+flyteidl = ">=1.10.7"
+fsspec = ">=2023.3.0"
+gcsfs = ">=2023.3.0"
 googleapis-common-protos = ">=1.57"
 grpcio = "*"
 grpcio-status = "*"
 importlib-metadata = "*"
+isodate = "*"
 joblib = "*"
 jsonpickle = "*"
 keyring = ">=18.0.1"
-kubernetes = ">=12.0.1"
 marshmallow-enum = "*"
 marshmallow-jsonschema = ">=0.12.0"
 mashumaro = ">=3.9.1"
-protobuf = "<4.25.0"
+protobuf = "!=4.25.0"
 pyarrow = "*"
 python-json-logger = ">=2.0.0"
 pytimeparse = ">=1.1.8,<2.0.0"
@@ -1767,7 +1767,7 @@ pyyaml = "<5.4.0 || >5.4.0,<5.4.1 || >5.4.1,<6.0.0 || >6.0.0"
 requests = ">=2.18.4,<3.0.0"
 rich = "*"
 rich-click = "*"
-s3fs = ">=2023.3.0,<=2023.9.2"
+s3fs = ">=2023.3.0"
 statsd = ">=3.0.0,<4.0.0"
 typing-extensions = "*"
 urllib3 = ">=1.22,<2.0.0"
@@ -3413,32 +3413,6 @@ files = [
     {file = "kiwisolver-1.4.4-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:36dafec3d6d6088d34e2de6b85f9d8e2324eb734162fba59d2ba9ed7a2043d5b"},
     {file = "kiwisolver-1.4.4.tar.gz", hash = "sha256:d41997519fcba4a1e46eb4a2fe31bc12f0ff957b2b81bac28db24744f333e955"},
 ]
-
-[[package]]
-name = "kubernetes"
-version = "29.0.0"
-description = "Kubernetes python client"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "kubernetes-29.0.0-py2.py3-none-any.whl", hash = "sha256:ab8cb0e0576ccdfb71886366efb102c6a20f268d817be065ce7f9909c631e43e"},
-    {file = "kubernetes-29.0.0.tar.gz", hash = "sha256:c4812e227ae74d07d53c88293e564e54b850452715a59a927e7e1bc6b9a60459"},
-]
-
-[package.dependencies]
-certifi = ">=14.05.14"
-google-auth = ">=1.0.1"
-oauthlib = ">=3.2.2"
-python-dateutil = ">=2.5.3"
-pyyaml = ">=5.4.1"
-requests = "*"
-requests-oauthlib = "*"
-six = ">=1.9.0"
-urllib3 = ">=1.24.2"
-websocket-client = ">=0.32.0,<0.40.0 || >0.40.0,<0.41.dev0 || >=0.43.dev0"
-
-[package.extras]
-adal = ["adal (>=1.0.2)"]
 
 [[package]]
 name = "leidenalg"
@@ -5366,17 +5340,19 @@ files = [
 ]
 
 [[package]]
-name = "protoc-gen-swagger"
-version = "0.1.0"
-description = "A python package for swagger annotation proto files."
+name = "protoc-gen-openapiv2"
+version = "0.0.1"
+description = "Provides the missing pieces for gRPC Gateway."
 optional = false
-python-versions = "*"
+python-versions = ">=3.6"
 files = [
-    {file = "protoc_gen_swagger-0.1.0-py2.py3-none-any.whl", hash = "sha256:cdc043da538865f055a7f22b304a35085cef269dc33e2f3408b12d397e8d8b4b"},
+    {file = "protoc-gen-openapiv2-0.0.1.tar.gz", hash = "sha256:6f79188d842c13177c9c0558845442c340b43011bf67dfef1dfc3bc067506409"},
+    {file = "protoc_gen_openapiv2-0.0.1-py3-none-any.whl", hash = "sha256:18090c8be3877c438e7da0f7eb7cace45a9a210306bca4707708dbad367857be"},
 ]
 
 [package.dependencies]
-protobuf = ">=3.0.0"
+googleapis-common-protos = "*"
+protobuf = ">=4.21.0"
 
 [[package]]
 name = "psutil"
@@ -8055,4 +8031,4 @@ workflows = ["dataclasses-json", "dulwich", "flytekit", "google-api-python-clien
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10, <3.12"
-content-hash = "2438320586680f3f00dcfbfda31dd6803c4f0e99479547aacba4cde976636f1c"
+content-hash = "b69884d1994bc0d1dd4da7844bff14a6fdd88168241030733c1243da3317684a"
