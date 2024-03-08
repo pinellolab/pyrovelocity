@@ -699,12 +699,12 @@ flask==2.2.3 ; python_version >= "3.10" and python_version < "3.12" \
 flax==0.8.1 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:8cf9ef11859eef252470377556a8cc48db287fc6647407ab34f1fc01461925dd \
     --hash=sha256:ce3d99e9b4c0d2e4d9fc28bc56cced8ba953adfd695aabd24f096b4c8a7e2f92
-flyteidl==1.10.6 ; python_version >= "3.10" and python_version < "3.12" \
-    --hash=sha256:00cdcb38b62e92d0180d00e6680baeff00819770f7d23ad82a2d9d6d60ab3619 \
-    --hash=sha256:ec2c4e9726bac302d6f76aed3be662ff713eea31391294f8bd617abd6d134098
-flytekit==1.10.3 ; python_version >= "3.10" and python_version < "3.12" \
-    --hash=sha256:807e3edb149ba2be0b0b997dbcb2989d6234fe920bbf59ab41a63696ad0e8f49 \
-    --hash=sha256:f3d68da538687d4a019d0ef05d8818d98cef3f46988c41a343e1f72adf9ed49c
+flyteidl==1.10.7 ; python_version >= "3.10" and python_version < "3.12" \
+    --hash=sha256:2f56ed37ff63db7254a78561dbc92f8e53d9d943b5f44178e952509b215fe988 \
+    --hash=sha256:39cc0ed9be2ce41b324d18d5861f6eb0cad029b838d7e3694cc9c541aaca8148
+flytekit==1.10.7 ; python_version >= "3.10" and python_version < "3.12" \
+    --hash=sha256:054514f8cb98969cfd320567975139a9d07ffb16ec69d24324dd2f0ca07ea32d \
+    --hash=sha256:cce6d104045a86ee1c24ce30f7f0a80a8e59b9d151466d432667cf55109b7248
 fonttools==4.39.3 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:64c0c05c337f826183637570ac5ab49ee220eec66cf50248e8df527edfa95aeb \
     --hash=sha256:9234b9f57b74e31b192c3fc32ef1a40750a8fbc1cd9837a7b7bfc4ca4a5c51d7
@@ -1311,9 +1311,6 @@ kiwisolver==1.4.4 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:f6cb459eea32a4e2cf18ba5fcece2dbdf496384413bc1bae15583f19e567f3b2 \
     --hash=sha256:f8ad8285b01b0d4695102546b342b493b3ccc6781fc28c8c6a1bb63e95d22f09 \
     --hash=sha256:f9f39e2f049db33a908319cf46624a569b36983c7c78318e9726a4cb8923b26c
-kubernetes==29.0.0 ; python_version >= "3.10" and python_version < "3.12" \
-    --hash=sha256:ab8cb0e0576ccdfb71886366efb102c6a20f268d817be065ce7f9909c631e43e \
-    --hash=sha256:c4812e227ae74d07d53c88293e564e54b850452715a59a927e7e1bc6b9a60459
 leidenalg==0.9.1 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:0e156e5d505af9164ca854819e69331b869efbd34b9b3b6be86950e3e1efbdd0 \
     --hash=sha256:118778b83e0ab5441b252467544d9ac70385f63cf9b1af4e776e1e9aaa4b9c45 \
@@ -2045,8 +2042,9 @@ protobuf==4.24.4 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:bffa46ad9612e6779d0e51ae586fde768339b791a50610d85eb162daeb23661e \
     --hash=sha256:dbbed8a56e56cee8d9d522ce844a1379a72a70f453bde6243e3c86c30c2a3d46 \
     --hash=sha256:ec9912d5cb6714a5710e28e592ee1093d68c5ebfeda61983b3f40331da0b1ebb
-protoc-gen-swagger==0.1.0 ; python_version >= "3.10" and python_version < "3.12" \
-    --hash=sha256:cdc043da538865f055a7f22b304a35085cef269dc33e2f3408b12d397e8d8b4b
+protoc-gen-openapiv2==0.0.1 ; python_version >= "3.10" and python_version < "3.12" \
+    --hash=sha256:18090c8be3877c438e7da0f7eb7cace45a9a210306bca4707708dbad367857be \
+    --hash=sha256:6f79188d842c13177c9c0558845442c340b43011bf67dfef1dfc3bc067506409
 psutil==5.9.5 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:104a5cc0e31baa2bcf67900be36acde157756b9c44017b86b2c049f11957887d \
     --hash=sha256:3c6f686f4225553615612f6d9bc21f1c0e305f75d7d8454f9b46e901778e7217 \
