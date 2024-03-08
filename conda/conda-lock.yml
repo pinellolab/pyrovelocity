@@ -312,15 +312,15 @@ package:
   category: main
   optional: false
 - name: array-api-compat
-  version: 1.4.1
+  version: '1.5'
   manager: conda
   platform: linux-64
   dependencies:
     python: '>=3.8'
-  url: https://conda.anaconda.org/conda-forge/noarch/array-api-compat-1.4.1-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/array-api-compat-1.5-pyhd8ed1ab_0.conda
   hash:
-    md5: adfa5bcaa427c1aae88572ac0d08c4c2
-    sha256: 5af8f09ca354c8e9975a03bc4c60435851949667fe36a430624a52cfdb1e19cb
+    md5: d2492af55f083c42e9c8366bbd632465
+    sha256: 59cf65e66a436efbc50d51a6cfe80f7571e608d71ce3a92e132285e927ca9462
   category: main
   optional: false
 - name: arrow
@@ -1206,6 +1206,19 @@ package:
     sha256: 53917daaac7a0cb7a4a35b65777a42e49030584631cccadc766b47c538078c14
   category: main
   optional: false
+- name: comm
+  version: 0.2.1
+  manager: conda
+  platform: linux-64
+  dependencies:
+    python: '>=3.6'
+    traitlets: '>=5.3'
+  url: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.1-pyhd8ed1ab_0.conda
+  hash:
+    md5: f4385072f4909bc974f6675a36e76796
+    sha256: bd90a200e6f7092a89f02c4800729a4a6d2b2de49d70a9706aeb083a635308c1
+  category: workflows
+  optional: true
 - name: contextlib2
   version: 21.6.0
   manager: conda
@@ -1582,10 +1595,10 @@ package:
     libstdcxx-ng: '>=12'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.*
-  url: https://conda.anaconda.org/conda-forge/linux-64/dm-tree-0.1.8-py310ha8c1f0e_3.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/dm-tree-0.1.8-py310ha8c1f0e_4.conda
   hash:
-    md5: b737f653cd29d73525efa10d137239d4
-    sha256: 88e3c98b84dfea106c0d2216634ceabccc632a4b7e4f52e770d378633aded924
+    md5: d099355e8706f6c981147baec066269a
+    sha256: a7e4f5565856370a75247100f87f9b4afefdb7f0eeced4709ad31f9676af65ac
   category: main
   optional: false
 - name: docker-py
@@ -2640,6 +2653,23 @@ package:
     sha256: 7740505317669f094c881537a643ed26977e209510965164d84942799c997d42
   category: test
   optional: true
+- name: ipywidgets
+  version: 8.1.2
+  manager: conda
+  platform: linux-64
+  dependencies:
+    comm: '>=0.1.3'
+    ipython: '>=6.1.0'
+    jupyterlab_widgets: '>=3.0.10,<3.1.0'
+    python: '>=3.7'
+    traitlets: '>=4.3.1'
+    widgetsnbextension: '>=4.0.10,<4.1.0'
+  url: https://conda.anaconda.org/conda-forge/noarch/ipywidgets-8.1.2-pyhd8ed1ab_0.conda
+  hash:
+    md5: 67f86478c78637f68c1f3858973021f2
+    sha256: 0be846f1374faa2d9b6f5e100187d56afa9268221f7c7815265f30aa008da8ca
+  category: workflows
+  optional: true
 - name: isodate
   version: 0.6.1
   manager: conda
@@ -2890,6 +2920,18 @@ package:
   hash:
     md5: afcd1b53bcac8844540358e33f33d28f
     sha256: 4aa622bbcf97e44cd1adf0100b7ff71b7e20268f043bdf6feae4d16152f1f242
+  category: workflows
+  optional: true
+- name: jupyterlab_widgets
+  version: 3.0.10
+  manager: conda
+  platform: linux-64
+  dependencies:
+    python: '>=3.7'
+  url: https://conda.anaconda.org/conda-forge/noarch/jupyterlab_widgets-3.0.10-pyhd8ed1ab_0.conda
+  hash:
+    md5: 16b73b2c4ff7dda8bbecf88aadfe2027
+    sha256: 7c14d0b377ddd2e21f23d2f55fbd827aca726860e504a131b67ef936aef2b8c4
   category: workflows
   optional: true
 - name: jupytext
@@ -4426,7 +4468,7 @@ package:
   category: main
   optional: false
 - name: mlflow
-  version: 2.11.0
+  version: 2.11.1
   manager: conda
   platform: linux-64
   dependencies:
@@ -4438,7 +4480,7 @@ package:
     jinja2: <4,>=2.11
     markdown: <4,>=3.3
     matplotlib-base: <4
-    mlflow-ui: 2.11.0
+    mlflow-ui: 2.11.1
     numpy: <2
     pandas: <3
     prometheus_flask_exporter: <1
@@ -4448,14 +4490,14 @@ package:
     scikit-learn: <2
     scipy: <2
     sqlalchemy: '>=1.4.0,<3'
-  url: https://conda.anaconda.org/conda-forge/linux-64/mlflow-2.11.0-hff52083_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/mlflow-2.11.1-hff52083_1.conda
   hash:
-    md5: d7331a0f55eebb83bc300ebfaff1e0af
-    sha256: bf6dbe62db5048f439dec02ebbb2a73398f80d98e66e244dd83d3014f746eca4
+    md5: 226cce5fb0635d08297d7f75805328d6
+    sha256: 7423e5357ba301f5b2492a26382f3a6fe52d2d792b99c84f17ada7464317d076
   category: main
   optional: false
 - name: mlflow-skinny
-  version: 2.11.0
+  version: 2.11.1
   manager: conda
   platform: linux-64
   dependencies:
@@ -4472,27 +4514,27 @@ package:
     pyyaml: '>=5.1,<7'
     requests: '>=2.17.3,<3'
     sqlparse: '>=0.4.0,<1'
-  url: https://conda.anaconda.org/conda-forge/linux-64/mlflow-skinny-2.11.0-py310hff52083_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/mlflow-skinny-2.11.1-py310hff52083_1.conda
   hash:
-    md5: bde90797c2146649ec1dde4ff4878ae0
-    sha256: abad0002677b781cefb720d7e922e966f1cfdabd78ff3386ba59fbcdfdda857d
+    md5: 983b953ee0ceaf2e883e05d299ff123c
+    sha256: 4fb817273c7b8ac3920f73f889355d1b72e95cb81d4e8ade4dc1193b46ae8ed7
   category: main
   optional: false
 - name: mlflow-ui
-  version: 2.11.0
+  version: 2.11.1
   manager: conda
   platform: linux-64
   dependencies:
     flask: <4
     gunicorn: <22
-    mlflow-skinny: 2.11.0
+    mlflow-skinny: 2.11.1
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.*
     querystring_parser: <2
-  url: https://conda.anaconda.org/conda-forge/linux-64/mlflow-ui-2.11.0-py310hff52083_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/mlflow-ui-2.11.1-py310hff52083_1.conda
   hash:
-    md5: b4d60b32ab549e14f4520050d66e3e0c
-    sha256: 9137352796cc3d061e612e74a778d2fcf78d9aec97a0b63203fe6975b22d65ea
+    md5: 3affecbf07af71f3711cdbcb9a77e0d7
+    sha256: 4703c95ea8c0478c5d632bc2085c3997509592279fb2388154a7b71db4818d8f
   category: main
   optional: false
 - name: more-itertools
@@ -7504,6 +7546,18 @@ package:
     sha256: 80be0ccc815ce22f80c141013302839b0ed938a2edb50b846cf48d8a8c1cfa01
   category: main
   optional: false
+- name: widgetsnbextension
+  version: 4.0.10
+  manager: conda
+  platform: linux-64
+  dependencies:
+    python: '>=3.7'
+  url: https://conda.anaconda.org/conda-forge/noarch/widgetsnbextension-4.0.10-pyhd8ed1ab_0.conda
+  hash:
+    md5: 521f489e3babeddeec638c2add7e9e64
+    sha256: 981b06c76a1a86bb84be09522768be0458274926b22f4b0225dfcdd30a6593e0
+  category: workflows
+  optional: true
 - name: wrapt
   version: 1.16.0
   manager: conda
