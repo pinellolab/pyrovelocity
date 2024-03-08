@@ -50,6 +50,7 @@ logger = configure_logging(__name__)
 
 CACHE_VERSION = "0.2.0b11-dev7"
 CACHE_FLAG = True
+SIMULATED_ONLY = False
 ACCELERATOR_TYPE: GPUAccelerator = T4
 
 
@@ -260,9 +261,11 @@ def training_workflow(
     larry_configuration: WorkflowConfiguration = larry_configuration,
 ) -> list[list[FlyteFile]]:
     """
-    Apply the primary workflow to a collection of configurations given as
-    pyrovelocity.workflows.main_configuration.WorkflowConfiguration objects.
+    Apply the primary workflow to a collection of configurations.
+    Conditionally executes configurations based on the SIMULATED_ONLY flag.
     """
+    results = []
+
     simulated = module_workflow(
         download_dataset_args=simulated_configuration.download_dataset,
         preprocess_data_args=simulated_configuration.preprocess_data,
@@ -274,62 +277,31 @@ def training_workflow(
         postprocessing_resource_requests=simulated_configuration.postprocessing_resources_requests,
         postprocessing_resource_limits=simulated_configuration.postprocessing_resources_limits,
     )
+    results.append(simulated)
 
-    pancreas = module_workflow(
-        download_dataset_args=pancreas_configuration.download_dataset,
-        preprocess_data_args=pancreas_configuration.preprocess_data,
-        train_model_configuration_1=pancreas_configuration.training_configuration_1,
-        train_model_configuration_2=pancreas_configuration.training_configuration_2,
-        postprocess_configuration=pancreas_configuration.postprocess_configuration,
-        train_model_resource_requests=pancreas_configuration.training_resources_requests,
-        train_model_resource_limits=pancreas_configuration.training_resources_limits,
-        postprocessing_resource_requests=pancreas_configuration.postprocessing_resources_requests,
-        postprocessing_resource_limits=pancreas_configuration.postprocessing_resources_limits,
-    )
+    if not SIMULATED_ONLY:
+        configurations = [
+            (pancreas_configuration, "pancreas"),
+            (pbmc68k_configuration, "pbmc68k"),
+            (pons_configuration, "pons"),
+            (larry_configuration, "larry"),
+        ]
 
-    pbmc68k = module_workflow(
-        download_dataset_args=pbmc68k_configuration.download_dataset,
-        preprocess_data_args=pbmc68k_configuration.preprocess_data,
-        train_model_configuration_1=pbmc68k_configuration.training_configuration_1,
-        train_model_configuration_2=pbmc68k_configuration.training_configuration_2,
-        postprocess_configuration=pbmc68k_configuration.postprocess_configuration,
-        train_model_resource_requests=pbmc68k_configuration.training_resources_requests,
-        train_model_resource_limits=pbmc68k_configuration.training_resources_limits,
-        postprocessing_resource_requests=pbmc68k_configuration.postprocessing_resources_requests,
-        postprocessing_resource_limits=pbmc68k_configuration.postprocessing_resources_limits,
-    )
+        for config, _ in configurations:
+            result = module_workflow(
+                download_dataset_args=config.download_dataset,
+                preprocess_data_args=config.preprocess_data,
+                train_model_configuration_1=config.training_configuration_1,
+                train_model_configuration_2=config.training_configuration_2,
+                postprocess_configuration=config.postprocess_configuration,
+                train_model_resource_requests=config.training_resources_requests,
+                train_model_resource_limits=config.training_resources_limits,
+                postprocessing_resource_requests=config.postprocessing_resources_requests,
+                postprocessing_resource_limits=config.postprocessing_resources_limits,
+            )
+            results.append(result)
 
-    pons = module_workflow(
-        download_dataset_args=pons_configuration.download_dataset,
-        preprocess_data_args=pons_configuration.preprocess_data,
-        train_model_configuration_1=pons_configuration.training_configuration_1,
-        train_model_configuration_2=pons_configuration.training_configuration_2,
-        postprocess_configuration=pons_configuration.postprocess_configuration,
-        train_model_resource_requests=pons_configuration.training_resources_requests,
-        train_model_resource_limits=pons_configuration.training_resources_limits,
-        postprocessing_resource_requests=pons_configuration.postprocessing_resources_requests,
-        postprocessing_resource_limits=pons_configuration.postprocessing_resources_limits,
-    )
-
-    larry = module_workflow(
-        download_dataset_args=larry_configuration.download_dataset,
-        preprocess_data_args=larry_configuration.preprocess_data,
-        train_model_configuration_1=larry_configuration.training_configuration_1,
-        train_model_configuration_2=larry_configuration.training_configuration_2,
-        postprocess_configuration=larry_configuration.postprocess_configuration,
-        train_model_resource_requests=larry_configuration.training_resources_requests,
-        train_model_resource_limits=larry_configuration.training_resources_limits,
-        postprocessing_resource_requests=larry_configuration.postprocessing_resources_requests,
-        postprocessing_resource_limits=larry_configuration.postprocessing_resources_limits,
-    )
-
-    return [
-        simulated,
-        pancreas,
-        pbmc68k,
-        pons,
-        larry,
-    ]
+    return results
 
 
 if __name__ == "__main__":
