@@ -13,8 +13,9 @@ on:
       - "**.md"
       - "*"
       - "!pyproject.toml"
+      - "!poetry.lock"
       - "!flake.nix"
-      - "!*.lock"
+      - "!flake.lock"
   pull_request:
     types: [opened, synchronize, labeled, reopened]
     paths-ignore:
@@ -25,8 +26,9 @@ on:
       - "**.md"
       - "*"
       - "!pyproject.toml"
+      - "!poetry.lock"
       - "!flake.nix"
-      - "!*.lock"
+      - "!flake.lock"
 
   workflow_dispatch:
     inputs:
