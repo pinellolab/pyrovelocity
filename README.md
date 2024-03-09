@@ -2,7 +2,8 @@
 
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/_static/logo.png" alt="Pyro-Velocity logo" width="300" role="img">
+<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/520-sum/docs/_static/logo.png" alt="Pyro-Velocity logo" width="300" role="img">
+<!-- <img src="./docs/_static/logo.png" alt="Pyro-Velocity logo" width="300" role="img"> -->
 
 |         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
