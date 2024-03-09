@@ -7,6 +7,7 @@ autodoc_mock_imports = [
     "cytotrace",
     "h5py",
     "jaxtyping",
+    "mashumaro",
     "matplotlib",
     "mpl_toolkits",
     "numpy",
@@ -52,7 +53,12 @@ templates_path = ["_templates"]
 source_suffix = [".md", ".rst"]
 master_doc = "index"
 language = "en"
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = [
+    "_build",
+    "Thumbs.db",
+    ".DS_Store",
+    "source/notebooks/*colab*.ipynb",
+]
 pygments_style = "sphinx"
 todo_include_todos = False
 
