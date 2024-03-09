@@ -64,8 +64,9 @@ todo_include_todos = False
 
 # HTML
 html_theme = "furo"
-html_title = "pyrovelocity"
+html_title = "Pyro-Velocity"
 html_logo = "_static/logo.png"
+html_favicon = "_static/logo/favicon.ico"
 html_static_path = ["_static"]
 html_theme_options = {
     "footer_icons": [
