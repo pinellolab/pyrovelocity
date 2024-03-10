@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+
+import importlib.util
+import subprocess
+import sys
+
+
+def is_module_available(module_name: str):
+    return importlib.util.find_spec(module_name) is not None
+
+
+def install_package(package_name: str):
+    """
+    Install a package using pip. This is similar to cell magic
+    `!pip install package_name`, but in python code for compatibility
+    outside jupyter.
+
+    Args:
+        package_name (str): Name of the package to install.
+    """
+    process = subprocess.Popen(
+        ["pip", "install", "-q", package_name],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    for line in process.stdout:
+        print(line, end="")
+    for line in process.stderr:
+        print(line, end="")
+    process.wait()
+
+
+def setup_condacolab():
+    if is_module_available("condacolab"):
+        try:
+            import condacolab
+
+            condacolab.check()
+        except (ImportError, AssertionError):
+            print("condacolab is not successfully installed")
+            sys.exit(1)
+    else:
+        print("Installing condacolab...")
+        install_package("condacolab")
+        try:
+            import condacolab
+
+            condacolab.install_mambaforge()
+            print(
+                "\nThe kernel needs to restart in order to use condacolab.\n"
+                "Please run this cell again.\n"
+            )
+            sys.exit(1)
+        except (ImportError, AssertionError):
+            print("Failed to install condacolab properly.")
+            sys.exit(1)
+
+def install_condacolab():
+    import os
+
+    IN_COLAB = is_module_available("google.colab")
+
+    if IN_COLAB:
+        colab_release_tag = os.getenv("COLAB_RELEASE_TAG", None)
+        print(f"Google Colab release: {colab_release_tag}")
+        setup_condacolab()
+    else:
+        print("This notebook is probably not running in Google Colab")
+        
+if __name__ == "__main__":
+    install_condacolab()

@@ -1,0 +1,159 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+PACKAGE_NAME="pyrovelocity"
+PACKAGE_VERSION="0.2.0b11.dev1"
+CONDA_BUILD_STRING="pyhff70e4c"
+CONDA_BUILD_NUMBER="0"
+CONDA_CHANNEL_LABEL="pyrovelocity_dev"
+VERBOSE=0
+USE_COLOR=true
+
+display_help() {
+    cat << EOF
+
+./conda installs a package from conda-forge using mamba or conda.
+
+Usage: ./conda [options]
+
+Options:
+  -n, --name             Set the package name (default: $PACKAGE_NAME)
+  -v, --version          Set the package version (default: $PACKAGE_VERSION)
+  -b, --build-string     Set the Conda build string (default: $CONDA_BUILD_STRING)
+  -u, --build-number     Set the Conda build number (default: $CONDA_BUILD_NUMBER)
+  -l, --label            Set the Conda channel label (default: $CONDA_CHANNEL_LABEL)
+  --verbose              Enable verbose output
+  --no-color             Disable colored output
+  -h, --help             Display this help message and exit
+
+Example:
+
+    ./conda \\
+    --name pyrovelocity \\
+    --version 0.2.0b11.dev1 \\
+    --build-string pyhff70e4c \\
+    --build-number 0 \\
+    --label pyrovelocity_dev
+
+EOF
+}
+
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -n|--name) PACKAGE_NAME="$2"; shift ;;
+        -v|--version) PACKAGE_VERSION="$2"; shift ;;
+        -b|--build-string) CONDA_BUILD_STRING="$2"; shift ;;
+        -u|--build-number) CONDA_BUILD_NUMBER="$2"; shift ;;
+        -l|--label) CONDA_CHANNEL_LABEL="$2"; shift ;;
+        --verbose) VERBOSE=1 ;;
+        --no-color) USE_COLOR=false ;;
+        -h|--help)
+            display_help
+            exit 0
+            ;;
+        *) echo "Unknown parameter passed: $1"; display_help; exit 1 ;;
+    esac
+    shift
+done
+
+if [ "$VERBOSE" -eq 1 ]; then
+    set -x
+fi
+
+PACKAGE_SPEC="conda-forge/label/\
+$CONDA_CHANNEL_LABEL::\
+$PACKAGE_NAME=$PACKAGE_VERSION=$CONDA_BUILD_STRING"_"$CONDA_BUILD_NUMBER"
+
+BLUE="\033[0;34;1m"
+BOLD="\033[1m"
+NO_COLOR="\033[0m"
+if [ "$USE_COLOR" = false ]; then
+    BLUE=""
+    BOLD=""
+    NO_COLOR=""
+fi
+
+print_with_color() {
+    local format=$1
+    shift
+    if [ "$USE_COLOR" = true ]; then
+        printf "$format" "$@"
+    else
+        printf "$(echo "$format" | sed 's/\x1b\[[0-9;]*m//g')" "$@"
+    fi
+}
+
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+package_is_installed() {
+    local manager="$1"
+    local version_spec_regex="\
+${PACKAGE_NAME}.*${PACKAGE_VERSION}.*\
+${CONDA_BUILD_STRING}_${CONDA_BUILD_NUMBER}"
+    if $manager list | grep -E "$version_spec_regex" > /dev/null; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+install_package() {
+    local manager="$1"
+    printf "Using manager ${BLUE}'%s'${NO_COLOR}...\n" "$manager"
+    printf "\n\
+    Checking if\n\n\
+    ${BOLD}%s${NO_COLOR}\n\
+    is installed...\n" "$PACKAGE_SPEC"
+    if package_is_installed "$manager"; then
+        printf "\n\
+        Package ${BLUE}'%s'${NO_COLOR}\n\
+        with version ${BLUE}'%s'${NO_COLOR}\n\
+        is already installed.\n" "$PACKAGE_NAME" "$PACKAGE_VERSION"
+    else
+        printf "\n\
+        Installing ${BLUE}'%s'${NO_COLOR}\n\
+        from conda-forge using ${BLUE}'%s'${NO_COLOR}...\n"\
+        "$PACKAGE_NAME" "$manager"
+        set -x
+        $manager install "$PACKAGE_SPEC" > "${PACKAGE_NAME}_install.log" 2>&1
+        { set +x; } 2>/dev/null
+    fi
+}
+
+printf "Checking for package managers...\n"
+
+if command_exists mamba; then
+    manager="mamba"
+elif command_exists conda; then
+    manager="conda"
+else
+    printf "\n\
+    Neither ${BOLD}mamba${NO_COLOR} nor ${BOLD}conda${NO_COLOR} is available.\n\
+    Please install mamba or conda and try again.\n\
+    Installation ${BOLD}failed${NO_COLOR}.\n"
+    exit 1
+fi
+
+install_package "$manager"
+
+printf "\nInstallation ${BOLD}complete${NO_COLOR}.\n\n"
+
+print_with_color "\n\
+Installed ${BLUE}conda${NO_COLOR} packages\
+ containing ${BOLD}'%s'${NO_COLOR}:\n" "$PACKAGE_NAME"
+$manager list | grep "$PACKAGE_NAME"
+print_with_color "\n\
+Installed ${BLUE}pip${NO_COLOR} packages\
+ containing ${BOLD}'%s'${NO_COLOR}:\n" "$PACKAGE_NAME"
+pip list | grep "$PACKAGE_NAME"
+
+print_with_color "\n\
+If ${BOLD}conda <-> pip${NO_COLOR} versions are not consistent,\n\
+the package may function as expected, but the\n\
+${BOLD}python${NO_COLOR} package source likely contains a\n\
+different ${BOLD}version string${NO_COLOR} from that used in\n\
+building the ${BOLD}conda${NO_COLOR} package.\n"
