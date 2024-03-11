@@ -264,42 +264,32 @@ def training_workflow(
     Apply the primary workflow to a collection of configurations.
     Conditionally executes configurations based on the SIMULATED_ONLY flag.
     """
+    configurations = [
+        (simulated_configuration, "simulated"),
+    ]
     results = []
 
-    simulated = module_workflow(
-        download_dataset_args=simulated_configuration.download_dataset,
-        preprocess_data_args=simulated_configuration.preprocess_data,
-        train_model_configuration_1=simulated_configuration.training_configuration_1,
-        train_model_configuration_2=simulated_configuration.training_configuration_2,
-        postprocess_configuration=simulated_configuration.postprocess_configuration,
-        train_model_resource_requests=simulated_configuration.training_resources_requests,
-        train_model_resource_limits=simulated_configuration.training_resources_limits,
-        postprocessing_resource_requests=simulated_configuration.postprocessing_resources_requests,
-        postprocessing_resource_limits=simulated_configuration.postprocessing_resources_limits,
-    )
-    results.append(simulated)
-
     if not SIMULATED_ONLY:
-        configurations = [
+        configurations + [
             (pancreas_configuration, "pancreas"),
             (pbmc68k_configuration, "pbmc68k"),
             (pons_configuration, "pons"),
             (larry_configuration, "larry"),
         ]
 
-        for config, _ in configurations:
-            result = module_workflow(
-                download_dataset_args=config.download_dataset,
-                preprocess_data_args=config.preprocess_data,
-                train_model_configuration_1=config.training_configuration_1,
-                train_model_configuration_2=config.training_configuration_2,
-                postprocess_configuration=config.postprocess_configuration,
-                train_model_resource_requests=config.training_resources_requests,
-                train_model_resource_limits=config.training_resources_limits,
-                postprocessing_resource_requests=config.postprocessing_resources_requests,
-                postprocessing_resource_limits=config.postprocessing_resources_limits,
-            )
-            results.append(result)
+    for config, _ in configurations:
+        result = module_workflow(
+            download_dataset_args=config.download_dataset,
+            preprocess_data_args=config.preprocess_data,
+            train_model_configuration_1=config.training_configuration_1,
+            train_model_configuration_2=config.training_configuration_2,
+            postprocess_configuration=config.postprocess_configuration,
+            train_model_resource_requests=config.training_resources_requests,
+            train_model_resource_limits=config.training_resources_limits,
+            postprocessing_resource_requests=config.postprocessing_resources_requests,
+            postprocessing_resource_limits=config.postprocessing_resources_limits,
+        )
+        results.append(result)
 
     return results
 
