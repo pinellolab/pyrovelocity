@@ -4,6 +4,9 @@ from typing import Any
 import zstandard as zstd
 
 
+__all__ = ["CompressedPickle"]
+
+
 class CompressedPickle:
     """
     A class for reading and writing zstandard-compressed pickle files.
