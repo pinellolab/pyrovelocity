@@ -1,6 +1,10 @@
 from dataclasses import make_dataclass
 from enum import Enum
-from typing import Any, Dict, Tuple, Type
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Dict
+from typing import Tuple
+from typing import Type
 
 from mashumaro.mixins.json import DataClassJSONMixin
 
@@ -9,11 +13,33 @@ from pyrovelocity.preprocess import preprocess_dataset
 from pyrovelocity.train import train_dataset
 from pyrovelocity.workflows.configuration import create_dataclass_from_callable
 
+
 __all__ = [
     "DownloadDatasetInterface",
     "PreprocessDataInterface",
     "PyroVelocityTrainInterface",
 ]
+
+if TYPE_CHECKING:
+    # The following is not executed at runtime and is only intended to prevent
+    # interpretation of dataclasses as variables
+    #
+    #   (variable) DownloadDatasetInterface: type
+    #
+    # in favor of interpreting dataclasses as
+    #
+    #   (class) DownloadDatasetInterface
+    #
+    # in IDEs that support type hinting/checking.
+    class DownloadDatasetInterface(DataClassJSONMixin):
+        pass
+
+    class PreprocessDataInterface(DataClassJSONMixin):
+        pass
+
+    class PyroVelocityTrainInterface(DataClassJSONMixin):
+        pass
+
 
 # These can be used to override the default values of the dataclass
 # but are generally only required if the callable interface lacks
