@@ -17,6 +17,7 @@ from pyrovelocity.interfaces import PyroVelocityTrainInterface
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.postprocess import postprocess_dataset
 from pyrovelocity.preprocess import preprocess_dataset
+from pyrovelocity.summarize import summarize_dataset
 from pyrovelocity.train import train_dataset
 from pyrovelocity.workflows.main_configuration import PostprocessConfiguration
 from pyrovelocity.workflows.main_configuration import ResourcesJSON
@@ -42,6 +43,7 @@ __all__ = [
     "preprocess_data",
     "train_model",
     "postprocess_data",
+    "summarize_data",
     "module_workflow",
     "training_workflow",
 ]
@@ -177,6 +179,41 @@ def postprocess_data(
     return FlyteFile(path=postprocessed_data_path)
 
 
+@task(
+    cache=CACHE_FLAG,
+    cache_version=CACHE_VERSION,
+    retries=3,
+    interruptible=False,
+    timeout=timedelta(minutes=120),
+    requests=Resources(cpu="8", mem="30Gi", ephemeral_storage="50Gi"),
+    limits=Resources(cpu="16", mem="60Gi", ephemeral_storage="200Gi"),
+)
+def summarize_data(
+    preprocess_data_args: PreprocessDataInterface,
+    postprocessed_data: FlyteFile,
+    training_outputs: TrainingOutputs,
+) -> FlyteDirectory:
+    trained_data_path = training_outputs.trained_data_path.download()
+    model_path = training_outputs.model_path.download()
+    postprocessed_data_path = postprocessed_data.download()
+
+    print(
+        f"\npostprocessed_data_path: {postprocessed_data_path}\n"
+        f"trained_data_path: {trained_data_path}\n",
+        f"model_path: {model_path}\n",
+    )
+
+    summarized_data_path = summarize_dataset(
+        data_model=training_outputs.data_model,
+        model_path=model_path,
+        trained_data_path=trained_data_path,
+        postprocessed_data_path=postprocessed_data_path,
+        cell_state=preprocess_data_args.cell_state,
+        vector_field_basis=preprocess_data_args.vector_field_basis,
+    )
+    return FlyteDirectory(path=summarized_data_path)
+
+
 @dynamic
 def module_workflow(
     download_dataset_args: DownloadDatasetInterface = DownloadDatasetInterface(),
@@ -188,7 +225,9 @@ def module_workflow(
     train_model_resource_limits: ResourcesJSON = default_training_resource_limits,
     postprocessing_resource_requests: ResourcesJSON = default_resource_requests,
     postprocessing_resource_limits: ResourcesJSON = default_resource_limits,
-) -> list[FlyteFile]:
+    summarizing_resource_requests: ResourcesJSON = default_resource_requests,
+    summarizing_resource_limits: ResourcesJSON = default_resource_limits,
+) -> list[FlyteDirectory]:
     """
     Apply the primary workflow to a single dataset with multiple model
     configurations.
@@ -212,6 +251,10 @@ def module_workflow(
             flytekit.Resources. Defaults to default_resource_requests.
         postprocessing_resource_limits (ResourcesJSON, optional): Configuration for
             flytekit.Resources. Defaults to default_resource_limits.
+        summarizing_resource_requests (ResourcesJSON, optional): Configuration for
+            flytekit.Resources. Defaults to default_resource_requests.
+        summarizing_resource_limits (ResourcesJSON, optional): Configuration for
+            flytekit.Resources. Defaults to default_resource_limits.
 
     Returns:
         list[FlyteFile]: Workflow outputs as flytekit.types.file.FlyteFile objects.
@@ -227,7 +270,7 @@ def module_workflow(
     ]
 
     model_outputs: list[TrainingOutputs] = []
-    postprocessed_data: list[FlyteFile] = []
+    dataset_summaries: list[FlyteDirectory] = []
     for train_model_configuration in train_model_configurations:
         model_output = train_model(
             processed_data=processed_data,
@@ -247,9 +290,18 @@ def module_workflow(
             requests=Resources(**asdict(postprocessing_resource_requests)),
             limits=Resources(**asdict(postprocessing_resource_limits)),
         )
-        postprocessed_data.append(postprocessed_dataset)
 
-    return postprocessed_data
+        dataset_summary = summarize_data(
+            preprocess_data_args=preprocess_data_args,
+            postprocessed_data=postprocessed_dataset,
+            training_outputs=model_output,
+        ).with_overrides(
+            requests=Resources(**asdict(summarizing_resource_requests)),
+            limits=Resources(**asdict(summarizing_resource_limits)),
+        )
+        dataset_summaries.append(dataset_summary)
+
+    return dataset_summaries
 
 
 @workflow
@@ -259,7 +311,7 @@ def training_workflow(
     pbmc68k_configuration: WorkflowConfiguration = pbmc68k_configuration,
     pons_configuration: WorkflowConfiguration = pons_configuration,
     larry_configuration: WorkflowConfiguration = larry_configuration,
-) -> list[list[FlyteFile]]:
+) -> list[list[FlyteDirectory]]:
     """
     Apply the primary workflow to a collection of configurations.
     Conditionally executes configurations based on the SIMULATED_ONLY flag.
@@ -288,9 +340,12 @@ def training_workflow(
             train_model_resource_limits=config.training_resources_limits,
             postprocessing_resource_requests=config.postprocessing_resources_requests,
             postprocessing_resource_limits=config.postprocessing_resources_limits,
+            summarizing_resource_requests=config.summarizing_resources_requests,
+            summarizing_resource_limits=config.summarizing_resources_limits,
         )
         results.append(result)
 
+    print(results)
     return results
 
 
