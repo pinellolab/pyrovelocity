@@ -7,6 +7,7 @@ import sklearn
 import umap
 from anndata import AnnData
 from astropy.stats import rayleightest
+from beartype import beartype
 from numpy import ndarray
 from sklearn.pipeline import Pipeline
 
@@ -48,7 +49,8 @@ def compute_mean_vector_field(
             ut = posterior_samples["ut"]
             st = posterior_samples["st"]
         adata.layers["spliced_pyro"] = st.mean(0).squeeze()
-        # if ('u_scale' in posterior_samples) and ('s_scale' in posterior_samples): # TODO: two scale for Normal distribution
+        # if ('u_scale' in posterior_samples) and ('s_scale' in posterior_samples)
+        # TODO: two scale for Normal distribution
         if (
             "u_scale" in posterior_samples
         ):  # only one scale for Poisson distribution
@@ -278,3 +280,87 @@ def mae_per_gene(pred_counts: ndarray, true_counts: ndarray) -> ndarray:
     error = np.abs(true_counts - pred_counts).sum(-2)
     total = np.clip(true_counts.sum(-2), 1, np.inf)
     return -np.array(error / total)
+
+
+@beartype
+def pareto_frontier_genes(
+    volcano_data: pd.DataFrame, num_genes: int, max_iters: int = 2000
+) -> list[str]:
+    """
+    Identify genes on the Pareto frontier of a volcano plot with respect to MAE
+    and time correlation.
+
+    Args:
+        volcano_data (pd.DataFrame): DataFrame containing MAE and time correlation
+        num_genes (int): Number of genes to return.
+        max_iters (int, optional): Maximum number of iterations. Defaults to 2000.
+
+    Returns:
+        list[str]: List of gene indices from volcano_data.
+    """
+    volcano_data = volcano_data.loc[
+        ~volcano_data.index.str.contains(("^Rpl|^Rps"), case=False)
+    ]
+    pareto_frontier = pd.DataFrame()
+
+    if len(volcano_data) < num_genes:
+        logger.info(
+            f"\nWarning: Not enough genes in the input data.\n"
+            f"Only {len(volcano_data)} genes were found,\n"
+            f"but {num_genes} were requested.\n"
+            "Attempting to return as many as possible.\n"
+        )
+
+    pareto_frontier_rows = []
+
+    counter = 0
+
+    while (
+        len(pareto_frontier_rows) < num_genes
+        and len(volcano_data) > 0
+        and counter < max_iters
+    ):
+        counter += 1
+        sorted_data = volcano_data.sort_values(
+            by=["mean_mae", "time_correlation"], ascending=[False, False]
+        )
+        pareto_frontier_current = [sorted_data.iloc[[0]]]
+
+        for i in range(1, len(sorted_data)):
+            if (
+                sorted_data["time_correlation"].iloc[i]
+                >= pareto_frontier_current[-1]["time_correlation"].iloc[0]
+            ):
+                pareto_frontier_current.append(sorted_data.iloc[[i]])
+        pareto_frontier_indices = [
+            pf.index[0] for pf in pareto_frontier_current
+        ]
+        volcano_data = volcano_data.drop(pareto_frontier_indices)
+        pareto_frontier_rows.extend(pareto_frontier_current)
+
+        logger.info(
+            f"\nFound {len(pareto_frontier_current)} genes on the current Pareto frontier:\n\n"
+            f"  {pareto_frontier_indices}\n\n"
+            f"Genes identified thus far: {len(pareto_frontier_rows)}.\n"
+            f"Number of iterations: {counter}.\n"
+            f"Number of genes remaining: {len(volcano_data)}.\n\n"
+        )
+        if counter >= max_iters:
+            logger.warning(
+                f"\nWarning: Maximum number of iterations reached ({max_iters}).\n"
+                f"Returning {len(pareto_frontier)} genes found so far.\n\n"
+            )
+
+    pareto_frontier = pd.concat(
+        pareto_frontier_rows[:num_genes]
+    ).drop_duplicates()
+    pareto_frontier = pareto_frontier.sort_values(
+        by="time_correlation", ascending=False
+    )
+
+    gene_indices = pareto_frontier.index.tolist()
+    logger.info(
+        f"\nFound {len(pareto_frontier)} genes on the Pareto frontier for {num_genes} requested:\n\n"
+        f"  {gene_indices}\n\n"
+    )
+    return gene_indices
