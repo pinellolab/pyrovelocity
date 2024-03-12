@@ -24,7 +24,7 @@ logger = configure_logging(__name__)
 TESTING_FLAG: bool = True
 
 if TESTING_FLAG:
-    NUMBER_POSTERIOR_SAMPLES: int = 3
+    NUMBER_POSTERIOR_SAMPLES: int = 4
     MAX_EPOCHS: int = 300
     SUBSET_OBS: bool = True
     SUBSET_VARS: bool = True
