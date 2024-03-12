@@ -133,6 +133,8 @@ class WorkflowConfiguration(DataClassJSONMixin):
     training_resources_limits: ResourcesJSON
     postprocessing_resources_requests: ResourcesJSON
     postprocessing_resources_limits: ResourcesJSON
+    summarizing_resources_requests: ResourcesJSON
+    summarizing_resources_limits: ResourcesJSON
 
 
 @dataclass
@@ -187,6 +189,8 @@ simulated_configuration = WorkflowConfiguration(
     training_resources_limits=default_training_resource_limits,
     postprocessing_resources_requests=default_resource_requests,
     postprocessing_resources_limits=default_resource_limits,
+    summarizing_resources_requests=default_resource_requests,
+    summarizing_resources_limits=default_resource_limits,
 )
 
 pancreas_dataset_args = DownloadDatasetInterface(
@@ -226,6 +230,8 @@ pancreas_configuration = WorkflowConfiguration(
     training_resources_limits=default_training_resource_limits,
     postprocessing_resources_requests=default_resource_requests,
     postprocessing_resources_limits=default_resource_limits,
+    summarizing_resources_requests=default_resource_requests,
+    summarizing_resources_limits=default_resource_limits,
 )
 
 pbmc68k_dataset_args = DownloadDatasetInterface(
@@ -267,6 +273,8 @@ pbmc68k_configuration = WorkflowConfiguration(
     training_resources_limits=large_training_resource_limits,
     postprocessing_resources_requests=large_resource_requests,
     postprocessing_resources_limits=large_resource_limits,
+    summarizing_resources_requests=large_resource_requests,
+    summarizing_resources_limits=large_resource_limits,
 )
 
 
@@ -307,6 +315,8 @@ pons_configuration = WorkflowConfiguration(
     training_resources_limits=default_training_resource_limits,
     postprocessing_resources_requests=default_resource_requests,
     postprocessing_resources_limits=default_resource_limits,
+    summarizing_resources_requests=default_resource_requests,
+    summarizing_resources_limits=default_resource_limits,
 )
 
 
@@ -352,6 +362,8 @@ larry_configuration = WorkflowConfiguration(
     training_resources_limits=large_training_resource_limits,
     postprocessing_resources_requests=large_resource_requests,
     postprocessing_resources_limits=large_resource_limits,
+    summarizing_resources_requests=large_resource_requests,
+    summarizing_resources_limits=large_resource_limits,
 )
 
 
