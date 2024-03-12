@@ -48,6 +48,7 @@
     atuin
     bat
     bazelisk
+    pkgs_unstable.btop
     pkgs_unstable.cue
     gawk
     gh
