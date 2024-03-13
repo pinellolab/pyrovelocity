@@ -3,6 +3,7 @@ import multiprocessing
 import os
 import uuid
 from pathlib import Path
+from typing import Tuple
 
 import mlflow
 import scanpy as sc
@@ -24,14 +25,13 @@ logger = configure_logging(__name__)
 def postprocess_dataset(
     data_model: str,
     data_model_path: str | Path,
-    processed_data_path: str | Path,
     trained_data_path: str | Path,
     model_path: str | Path,
     posterior_samples_path: str | Path,
     metrics_path: str | Path,
     vector_field_basis: str,
     number_posterior_samples: int,
-) -> str:
+) -> Tuple[Path, Path]:
     """
     Postprocess dataset computing vector field uncertainty for a given set of posterior samples.
 
@@ -53,7 +53,6 @@ def postprocess_dataset(
         >>> postprocess_dataset(
         ...     "simulated_model1",
         ...     "models/simulated_model1",
-        ...     "data/processed/simulated_processed.h5ad",
         ...     "models/simulated_model1/trained.h5ad",
         ...     "models/simulated_model1/model",
         ...     "models/simulated_model1/posterior_samples.pkl.zst",
@@ -67,14 +66,15 @@ def postprocess_dataset(
     pyrovelocity_data_path = os.path.join(
         data_model_path, "pyrovelocity.pkl.zst"
     )
+    postprocessed_data_path = os.path.join(
+        data_model_path, "postprocessed.h5ad"
+    )
 
     ncpus_use = min(23, max(1, round(multiprocessing.cpu_count() * 0.8)))
     print("ncpus_use:", ncpus_use)
 
-    # logger.info(f"Loading trained data: {trained_data_path}")
-    # adata = sc.read(trained_data_path)
-    logger.info(f"Loading processed data: {processed_data_path}")
-    adata = sc.read(processed_data_path)
+    logger.info(f"Loading trained data: {trained_data_path}")
+    adata = sc.read(trained_data_path)
     print_anndata(adata)
 
     logger.info(f"Loading posterior samples: {posterior_samples_path}")
@@ -130,7 +130,6 @@ def postprocess_dataset(
             )
             print(f"Active run_id: {run.info.run_id}")
 
-            # pretty_print_dict(posterior_samples)
             pretty_print_dict(
                 {key: value.shape for key, value in posterior_samples.items()}
             )
@@ -158,14 +157,14 @@ def postprocess_dataset(
         logger.info(f"Saving pyrovelocity data: {pyrovelocity_data_path}")
         CompressedPickle.save(pyrovelocity_data_path, pyrovelocity_data)
 
-        logger.info(f"Saving trained data: {trained_data_path}")
-        adata.write(trained_data_path)
+        logger.info(f"Saving postprocessed data: {postprocessed_data_path}")
+        adata.write(postprocessed_data_path)
 
         r = mlflow.get_run(run_id)
         _update_json(r, metrics_path)
         _print_logged_info(r)
 
-    return str(pyrovelocity_data_path)
+    return (pyrovelocity_data_path, postprocessed_data_path)
 
 
 def _update_json(r: mlflow.entities.run.Run, metrics_path: str) -> None:
