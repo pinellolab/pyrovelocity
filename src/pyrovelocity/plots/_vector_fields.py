@@ -218,8 +218,8 @@ def plot_vector_field_uncertain(
     else:
         colormap = cm.winter
 
-    print(adata.shape)
-    print(embeds_radian_or_magnitude.shape)
+    # print(adata.shape)
+    # print(embeds_radian_or_magnitude.shape)
 
     if uncertain_measure == "angle":
         adata.obs["uncertain"] = get_posterior_sample_angle_uncertainty(
@@ -386,7 +386,7 @@ def project_grid_points(
     X_grid = np.vstack([i.flat for i in meshes_tuple]).T
 
     n_neighbors = int(emb.shape[0] / 50)
-    print(n_neighbors)
+    # print(n_neighbors)
     # nn = NearestNeighbors(n_neighbors=30, n_jobs=-1)
     nn = NearestNeighbors(n_neighbors=n_neighbors, n_jobs=-1)
     nn.fit(emb)
@@ -402,7 +402,7 @@ def project_grid_points(
         V_grid = (velocity_emb[:, :2][neighs] * weight[:, :, None, None]).sum(
             1
         ) / np.maximum(1, p_mass)[:, None, None]
-    print(V_grid.shape)
+    # print(V_grid.shape)
 
     p_mass_min *= np.percentile(p_mass, 99) / 100
     if autoscale:
@@ -450,7 +450,7 @@ def plot_arrow_examples(
         p_mass_min=p_mass_min,
         density=density,
     )
-    print(X_grid.shape, V_grid.shape, uncertain.shape)
+    # print(X_grid.shape, V_grid.shape, uncertain.shape)
     norm = Normalize()
     norm.autoscale(uncertain)
     colormap = cm.inferno
@@ -459,7 +459,7 @@ def plot_arrow_examples(
         index : (index + num_total - num_certain)
     ]
     hl, hw, hal = default_arrow(arrow_size)
-    print(hl, hw, hal)
+    # print(hl, hw, hal)
     quiver_kwargs = {"angles": "xy", "scale_units": "xy"}
     # quiver_kwargs = {"angles": "xy", "scale_units": "width"}
     quiver_kwargs = {"width": 0.002, "zorder": 0}
