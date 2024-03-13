@@ -322,7 +322,10 @@ def generate_sample_data(
     return adata
 
 
-def anndata_counts_to_df(adata):
+@beartype
+def anndata_counts_to_df(
+    adata: AnnData,
+) -> Tuple[pd.DataFrame, int, int, float, float]:
     spliced_df = pd.DataFrame(
         ensure_numpy_array(adata.layers["raw_spliced"]),
         index=list(adata.obs_names),
@@ -351,6 +354,14 @@ def anndata_counts_to_df(adata):
     max_spliced = adata.layers["raw_spliced"].max()
     max_unspliced = adata.layers["raw_unspliced"].max()
 
+    logger.warning(
+        f"Type of df is {type(df)}\n"
+        f"Type of total_obs is {type(total_obs)}\n"
+        f"Type of total_var is {type(total_var)}\n"
+        f"Type of max_spliced is {type(max_spliced)}\n"
+        f"Type of max_unspliced is {type(max_unspliced)}\n"
+    )
+
     return (
         df,
         total_obs,
@@ -358,6 +369,24 @@ def anndata_counts_to_df(adata):
         max_spliced,
         max_unspliced,
     )
+
+
+@beartype
+def save_anndata_counts_to_dataframe(
+    adata: AnnData,
+    dataframe_path: os.PathLike | str,
+) -> Path:
+    logger.info(f"Saving AnnData object to dataframe: {dataframe_path}")
+    df_tuple = anndata_counts_to_df(adata)
+
+    CompressedPickle.save(dataframe_path, df_tuple)
+
+    if not os.path.isfile(dataframe_path) or not os.access(
+        dataframe_path, os.R_OK
+    ):
+        raise FileNotFoundError(f"Failed to create readable {dataframe_path}")
+
+    return Path(dataframe_path)
 
 
 @beartype
