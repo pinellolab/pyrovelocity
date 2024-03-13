@@ -2,7 +2,10 @@ import os
 import pickle
 import sys
 from statistics import harmonic_mean
-from typing import Dict, Optional, Sequence, Union
+from typing import Dict
+from typing import Optional
+from typing import Sequence
+from typing import Union
 
 import mlflow
 import numpy as np
@@ -11,25 +14,24 @@ import torch
 from anndata import AnnData
 from numpy import ndarray
 from scvi.data import AnnDataManager
-from scvi.data._constants import _SETUP_ARGS_KEY, _SETUP_METHOD_NAME
-from scvi.data.fields import LayerField, NumericalObsField
+from scvi.data._constants import _SETUP_ARGS_KEY
+from scvi.data._constants import _SETUP_METHOD_NAME
+from scvi.data.fields import LayerField
+from scvi.data.fields import NumericalObsField
 from scvi.model._utils import parse_device_args
 from scvi.model.base import BaseModelClass
-from scvi.model.base._utils import (
-    _initialize_model,
-    _load_saved_files,
-    _validate_var_names,
-)
+from scvi.model.base._utils import _initialize_model
+from scvi.model.base._utils import _load_saved_files
+from scvi.model.base._utils import _validate_var_names
 from scvi.module.base import PyroBaseModuleClass
 
-from pyrovelocity.analyze import (
-    compute_mean_vector_field,
-    compute_volcano_data,
-    vector_field_uncertainty,
-)
+from pyrovelocity.analyze import compute_mean_vector_field
+from pyrovelocity.analyze import compute_volcano_data
+from pyrovelocity.analyze import vector_field_uncertainty
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models._trainer import VelocityTrainingMixin
 from pyrovelocity.models._velocity_module import VelocityModule
+
 
 # from pyrovelocity.utils import init_with_all_cells
 
@@ -202,7 +204,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         RNA velocity Pyro model with parameters:
         """
         self.init_params_ = self._get_init_params(locals())
-        logger.info("The model has been initialized")
+        logger.info("Model initialized")
 
     def train(self, **kwargs):
         """
@@ -334,7 +336,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                         axis=-2,
                     )
 
-                print(k, "before", sys.getsizeof(samples[k]))
+                logger.debug(k, "before", sys.getsizeof(samples[k]))
         self.num_samples = num_samples
         return samples
 
@@ -418,7 +420,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         ] = vector_field_posterior_mean
         posterior_samples["fdri"] = fdri
         posterior_samples["embeds_magnitude"] = embeds_magnitude
-        print(embeds_radian.shape)
+        # print(embeds_radian.shape)
         posterior_samples["embeds_angle"] = embeds_radian
         posterior_samples["ut_mean"] = posterior_samples["ut"].mean(0).squeeze()
         posterior_samples["st_mean"] = posterior_samples["st"].mean(0).squeeze()
@@ -449,7 +451,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         with open(pyrovelocity_data_path, "wb") as f:
             pickle.dump(posterior_samples, f)
         for k in posterior_samples:
-            print(k, "after", sys.getsizeof(posterior_samples[k]))
+            logger.debug(k, "after", sys.getsizeof(posterior_samples[k]))
 
     def save_model(
         self,
@@ -480,7 +482,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             accelerator=use_gpu, return_device="torch"
         )
         logger.info(
-            f"Loading model with:\n"
+            f"\nLoading model with:\n"
             f"\taccelerator: {_accelerator}\n"
             f"\tdevices: {_devices}\n"
             f"\tdevice: {device}\n"
@@ -510,11 +512,11 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         )
 
         model = _initialize_model(cls, adata, attr_dict)
-        print("---------initialize-------")
+        # print("---------initialize-------")
 
         for attr, val in attr_dict.items():
             setattr(model, attr, val)
-        print("setattr")
+        # print("setattr")
 
         pyro.clear_param_store()
         old_history = model.history_
@@ -525,7 +527,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                 raise err
             logger.info("Preparing underlying module for load")
             try:
-                print("train 1---")
+                # print("train 1---")
                 model.train(max_epochs=1, max_steps=1)
             except Exception:
                 model.train(
@@ -538,7 +540,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             model.module.load_state_dict(model_state_dict)
 
         model.history_ = old_history
-        print("load finished.")
+        # print("load finished.")
         model.to_device(device)
         model.module.eval()
         model._validate_anndata(adata)
