@@ -21,8 +21,6 @@ def plot_parameter_posterior_distributions(
     fig, ax = plt.subplots(3, 1)
     fig.set_size_inches(18, 12)
     for index, kinetics in enumerate(["alpha", "beta", "gamma"]):
-        # print(posterior_samples[kinetics].squeeze().shape)
-        # print(np.isin(adata.var_names, list(geneset)).sum())
         df = pd.DataFrame(
             np.log(
                 posterior_samples[kinetics].squeeze()[
@@ -33,10 +31,24 @@ def plot_parameter_posterior_distributions(
         )
         df = df.apply(lambda x: x - x.mean())
         df_long = df.melt(var_name="index", value_name="value")
-        # print(df_long.head())
+        logger.debug(df_long.head())
         df_long["index"] = pd.Categorical(
             df_long["index"], categories=geneset, ordered=True
         )
+
+        can_cast_all = (
+            df_long["index"].astype(str).apply(lambda x: x.isdigit()).all()
+        )
+        if can_cast_all:
+            df_long["index"] = (
+                df_long["index"].astype(str).apply(lambda x: f"g_{int(x)}")
+            )
+            logger.warning(
+                f"Converted integer index to string 'g_int' for {kinetics}"
+            )
+        else:
+            pass
+
         ax1 = sns.violinplot(
             x="index",
             y="value",
