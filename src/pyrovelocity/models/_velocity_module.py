@@ -1,12 +1,21 @@
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any
+from typing import Dict
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 import torch
 from pyro import poutine
-from pyro.infer.autoguide import AutoLowRankMultivariateNormal, AutoNormal
+from pyro.infer.autoguide import AutoLowRankMultivariateNormal
+from pyro.infer.autoguide import AutoNormal
 from pyro.infer.autoguide.guides import AutoGuideList
 from scvi.module.base import PyroBaseModuleClass
 
+from pyrovelocity.logging import configure_logging
 from pyrovelocity.models._velocity_model import VelocityModelAuto
+
+
+logger = configure_logging(__name__)
 
 
 class VelocityModule(PyroBaseModuleClass):
@@ -100,9 +109,9 @@ class VelocityModule(PyroBaseModuleClass):
         self.plate_size = plate_size
         self.num_aux_cells = num_aux_cells
         self.only_cell_times = only_cell_times
-        print("-----------")
-        print(self.model_type)
-        print(self.guide_type)
+        logger.info(
+            f"Model type: {self.model_type}, Guide type: {self.guide_type}"
+        )
 
         self.cell_specific_kinetics = cell_specific_kinetics
 
