@@ -129,7 +129,7 @@ jobs:
 
       - name: Create Flyte config from YAML template
         id: yq-process
-        uses: mikefarah/yq@6e21c9f77f362317a9e338e2e72b1bc2ec0262a6 # ratchet:mikefarah/yq@master
+        uses: mikefarah/yq@76a0da3937c59b54401a2cea562d66be2767261a # ratchet:mikefarah/yq@master
         with:
           cmd: "yq e \
             '.admin.endpoint = strenv(FLYTE_CLUSTER_ENDPOINT) | \
@@ -186,7 +186,7 @@ jobs:
         continue-on-error: ${{ matrix.continue-on-error }}
 
       - name: Download Flyte config
-        uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # ratchet:actions/download-artifact@v4
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # ratchet:actions/download-artifact@v4
         with:
           name: flyte-config
           path: .flyte/
@@ -207,7 +207,7 @@ jobs:
         continue-on-error: ${{ matrix.continue-on-error }}
 
       - name: Upload coverage
-        uses: codecov/codecov-action@e0b68c6749509c5f83f984dd99a76a1c1a231044 # ratchet:codecov/codecov-action@v4
+        uses: codecov/codecov-action@54bcd8715eee62d40e33596ef5e8f0f48dbbccab # ratchet:codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
@@ -233,7 +233,7 @@ jobs:
           ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}
           EOF
       - name: cache bazel
-        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # ratchet:actions/cache@v4
+        uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # ratchet:actions/cache@v4
         with:
           path: |
             ~/.cache/bazel
@@ -242,7 +242,7 @@ jobs:
             ${{ runner.os }}-bazel-
       - name: cache requirements
         id: cache-requirements
-        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # ratchet:actions/cache@v4
+        uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # ratchet:actions/cache@v4
         with:
           path: |
             requirements-bazel.txt
@@ -259,7 +259,7 @@ jobs:
           make meta-bazel test-bazel
           df -h
       - name: upload requirements artifact
-        uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # ratchet:actions/upload-artifact@v4
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # ratchet:actions/upload-artifact@v4
         with:
           name: requirements-bazel
           path: requirements-bazel.txt
@@ -290,8 +290,8 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
           ref: ${{ needs.set-variables.outputs.checkout_ref }}
-      - uses: DeterminateSystems/nix-installer-action@e279ba56d8266c08a0e65738145aabb824f308ed # ratchet:DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@eeabdb06718ac63a7021c6132129679a8e22d0c7 # ratchet:DeterminateSystems/magic-nix-cache-action@v3
+      - uses: DeterminateSystems/nix-installer-action@de22e16c4711fca50c816cc9081563429d1cf563 # ratchet:DeterminateSystems/nix-installer-action@v10
+      - uses: DeterminateSystems/magic-nix-cache-action@fc6aaceb40b9845a02b91e059ec147e78d1b4e41 # ratchet:DeterminateSystems/magic-nix-cache-action@v4
       # - uses: cachix/cachix-action@18cf96c7c98e048e10a83abd92116114cd8504be # ratchet:cachix/cachix-action@v14
       #   with:
       #     name: "${{ vars.CACHIX_CACHE_NAME }}"
@@ -461,7 +461,7 @@ jobs:
           debug_enabled: ${{ needs.set-variables.outputs.debug }}
 
       - name: Download Flyte config
-        uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # ratchet:actions/download-artifact@v4
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # ratchet:actions/download-artifact@v4
         with:
           name: flyte-config
           path: .flyte/
@@ -484,7 +484,7 @@ jobs:
           echo "HYDRA_OUTPUTS_TAR=$TAR_FILENAME" >> $GITHUB_ENV
 
       - name: Upload config artifact
-        uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # ratchet:actions/upload-artifact@v4
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # ratchet:actions/upload-artifact@v4
         with:
           name: hydra-outputs
           path: ${{ env.HYDRA_OUTPUTS_TAR }}
@@ -506,12 +506,12 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
         with:
           ref: ${{ needs.set-variables.outputs.checkout_ref }}
-      - uses: DeterminateSystems/nix-installer-action@e279ba56d8266c08a0e65738145aabb824f308ed # ratchet:DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@eeabdb06718ac63a7021c6132129679a8e22d0c7 # ratchet:DeterminateSystems/magic-nix-cache-action@v3
+      - uses: DeterminateSystems/nix-installer-action@de22e16c4711fca50c816cc9081563429d1cf563 # ratchet:DeterminateSystems/nix-installer-action@v10
+      - uses: DeterminateSystems/magic-nix-cache-action@fc6aaceb40b9845a02b91e059ec147e78d1b4e41 # ratchet:DeterminateSystems/magic-nix-cache-action@v4
       - run: nix profile install .#releaseEnv
       - uses: cihelper/action-semanticrelease-poetry@66900ba780321bcdb974891ee82f945a25a870d7 # ratchet:cihelper/action-semanticrelease-poetry@v1
         id: semanticrelease
-      - uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # ratchet:actions/upload-artifact@v4
+      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # ratchet:actions/upload-artifact@v4
         if: ${{ steps.semanticrelease.outputs.released == 'true' }}
         with:
           name: poetry-build
@@ -529,8 +529,8 @@ jobs:
         with:
           ref: ${{ needs.release.outputs.git-head }}
           # ref: refs/tags/v0.2.0-beta.10
-      - uses: DeterminateSystems/nix-installer-action@e279ba56d8266c08a0e65738145aabb824f308ed # ratchet:DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/flakehub-push@d079d466e04c6b982eb532ed852b1505fe81434f # ratchet:DeterminateSystems/flakehub-push@main
+      - uses: DeterminateSystems/nix-installer-action@de22e16c4711fca50c816cc9081563429d1cf563 # ratchet:DeterminateSystems/nix-installer-action@v10
+      - uses: DeterminateSystems/flakehub-push@038c6a99bcaa71486db5a82a84e018a7f2550b0d # ratchet:DeterminateSystems/flakehub-push@main
         with:
           visibility: public
           tag: ${{ needs.release.outputs.version }}
@@ -583,11 +583,11 @@ jobs:
       - uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # ratchet:docker/setup-qemu-action@v3
         with:
           platforms: arm64
-      - uses: DeterminateSystems/nix-installer-action@e279ba56d8266c08a0e65738145aabb824f308ed # ratchet:DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/nix-installer-action@de22e16c4711fca50c816cc9081563429d1cf563 # ratchet:DeterminateSystems/nix-installer-action@v10
         with:
           extra-conf: |
             extra-platforms = aarch64-linux
-      - uses: DeterminateSystems/magic-nix-cache-action@eeabdb06718ac63a7021c6132129679a8e22d0c7 # ratchet:DeterminateSystems/magic-nix-cache-action@v3
+      - uses: DeterminateSystems/magic-nix-cache-action@fc6aaceb40b9845a02b91e059ec147e78d1b4e41 # ratchet:DeterminateSystems/magic-nix-cache-action@v4
       # - uses: cachix/cachix-action@18cf96c7c98e048e10a83abd92116114cd8504be # ratchet:cachix/cachix-action@v14
       #   with:
       #     name: "${{ vars.CACHIX_CACHE_NAME }}"
@@ -640,11 +640,11 @@ jobs:
       name: release
       url: https://pypi.org/project/pyrovelocity/${{needs.release.outputs.version}}/
     steps:
-      - uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # ratchet:actions/download-artifact@v4
+      - uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # ratchet:actions/download-artifact@v4
         with:
           name: poetry-build
           path: ./dist
-      - uses: pypa/gh-action-pypi-publish@2f6f737ca5f74c637829c0f5c3acd0e29ea5e8bf # ratchet:pypa/gh-action-pypi-publish@release/v1
+      - uses: pypa/gh-action-pypi-publish@81e9d935c883d0b210363ab89cf05f3894778450 # ratchet:pypa/gh-action-pypi-publish@release/v1
 
   test-docs-build:
     runs-on: ubuntu-latest
@@ -691,7 +691,7 @@ jobs:
       - name: Build
         run: make docs-build
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@0252fc4ba7626f0298f0cf00902a25c6afc77fa8 # ratchet:actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # ratchet:actions/upload-pages-artifact@v3
         with:
           path: ./site
 
@@ -708,4 +708,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@87c3283f01cd6fe19a0ab93a23b2f6fcba5a8e42 # ratchet:actions/deploy-pages@v4
+        uses: actions/deploy-pages@decdde0ac072f6dcbe43649d82d9c635fff5b4e4 # ratchet:actions/deploy-pages@v4
