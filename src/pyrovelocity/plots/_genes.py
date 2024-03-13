@@ -5,9 +5,12 @@ from adjustText import adjust_text
 from matplotlib import gridspec
 
 from pyrovelocity.analyze import compute_volcano_data
+from pyrovelocity.logging import configure_logging
 
 
 __all__ = ["plot_gene_ranking"]
+
+logger = configure_logging(__name__)
 
 
 def plot_gene_ranking(
@@ -189,7 +192,7 @@ def is_adjust_text_compatible():
         adjust_text([test_text], autoalign="y")
         return True
     except Exception as e:
-        print(
+        logger.warning(
             f"adjust_text may not be compatible with the current backend: {e}"
         )
         return False
