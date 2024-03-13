@@ -83,6 +83,9 @@ lint-check: ## Run linter in check mode
 typecheck: ## Run typechecker
 	poetry run pyright
 	
+docs-clean: ## Clean documentation
+	rm -rf site
+
 docs-build: ## Build documentation
 	poetry run sphinx-build docs site
 
