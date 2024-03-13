@@ -70,6 +70,7 @@ def download_data(download_dataset_args: DownloadDatasetInterface) -> FlyteFile:
     Download external data.
     """
     dataset_path = download_dataset(**asdict(download_dataset_args))
+    print(f"\nFlyte download data path: {dataset_path}\n")
     return FlyteFile(path=dataset_path)
 
 
@@ -89,11 +90,13 @@ def preprocess_data(
     Download external data.
     """
     data_path = data.download()
-    print(f"Flyte preprocess input data path: {data_path}")
+    print(f"\nFlyte preprocess input data path: {data_path}\n")
     preprocess_data_args.adata = str(data_path)
     _, processed_dataset_path = preprocess_dataset(
         **asdict(preprocess_data_args),
     )
+
+    print(f"\nFlyte preprocess output data path: {processed_dataset_path}\n")
     return FlyteFile(path=processed_dataset_path)
 
 
@@ -116,7 +119,7 @@ def train_model(
     Train model.
     """
     processed_data_path = processed_data.download()
-    print(f"Flyte train model input data path: {processed_data_path}")
+    print(f"\nFlyte train model input data path: {processed_data_path}\n")
     train_model_configuration.adata = str(processed_data_path)
     (
         data_model,
@@ -130,6 +133,19 @@ def train_model(
     ) = train_dataset(
         **asdict(train_model_configuration),
     )
+
+    print(
+        f"\nFlyte train model outputs:\n"
+        f"\tdata model: {data_model}\n"
+        f"\tdata model path: {data_model_path}\n"
+        f"\ttrained data path: {trained_data_path}\n"
+        f"\tmodel path: {model_path}\n"
+        f"\tposterior samples path: {posterior_samples_path}\n"
+        f"\tmetrics path: {metrics_path}\n"
+        f"\trun info path: {run_info_path}\n"
+        f"\tloss plot path: {loss_plot_path}\n\n"
+    )
+
     return TrainingOutputs(
         data_model=data_model,
         data_model_path=data_model_path,
@@ -176,6 +192,10 @@ def postprocess_data(
         number_posterior_samples=postprocess_configuration.number_posterior_samples,
     )
 
+    print(
+        f"\npostprocessed_data_path: {postprocessed_data_path}\n\n",
+    )
+
     return FlyteFile(path=postprocessed_data_path)
 
 
@@ -200,7 +220,7 @@ def summarize_data(
     print(
         f"\npostprocessed_data_path: {postprocessed_data_path}\n"
         f"trained_data_path: {trained_data_path}\n",
-        f"model_path: {model_path}\n",
+        f"model_path: {model_path}\n\n",
     )
 
     summarized_data_path = summarize_dataset(
@@ -210,6 +230,9 @@ def summarize_data(
         postprocessed_data_path=postprocessed_data_path,
         cell_state=preprocess_data_args.cell_state,
         vector_field_basis=preprocess_data_args.vector_field_basis,
+    )
+    print(
+        f"\nsummarized_data_path: {summarized_data_path}\n\n",
     )
     return FlyteDirectory(path=summarized_data_path)
 
@@ -345,7 +368,6 @@ def training_workflow(
         )
         results.append(result)
 
-    print(results)
     return results
 
 
