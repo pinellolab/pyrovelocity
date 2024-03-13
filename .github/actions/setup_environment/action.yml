@@ -24,7 +24,7 @@ runs:
         echo "install system dependencies"
         # sudo apt-get update
         # sudo apt-get install -y tree
-    - uses: r-lib/actions/setup-pandoc@55acd27e7b238c53bbe735b7a459c203a3b3d579 # ratchet:r-lib/actions/setup-pandoc@v2
+    - uses: r-lib/actions/setup-pandoc@0ed4cdf40958ef43a6b33b9792e07ac76c3239e3 # ratchet:r-lib/actions/setup-pandoc@v2
       with:
         pandoc-version: "3.1.11"
     - name: Install Poetry
@@ -36,7 +36,7 @@ runs:
         installer-parallel: true
     - name: Load cached venv
       id: cached-poetry-dependencies
-      uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # ratchet:actions/cache@v4
+      uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # ratchet:actions/cache@v4
       with:
         path: .venv
         key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
