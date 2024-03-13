@@ -115,6 +115,17 @@ def cluster_violin_plots(
     name = list(adata.obs[cluster_key])
     names += name
 
+    can_cast_all = all(name.isdigit() for name in names)
+
+    if can_cast_all:
+        processed_names = [f"c_{int(name)}" for name in names]
+        order = [f"c_{int_name}" for int_name in order]
+        logger.warning(
+            "Converted integer index to string 'c_int' for cluster names"
+        )
+    else:
+        processed_names = names
+
     # print(posterior_samples["pca_vector_field_posterior_samples"].shape)
     # print(posterior_samples["embeds_angle"].shape)
     time_cov_list = np.hstack(time_cov_list)
@@ -132,7 +143,7 @@ def cluster_violin_plots(
             r"$CoV({\mathrm{magnitude}}_{pca})$": pca_mag_cov_list,
             r"$Std({\mathrm{angle}}_{umap})$": umap_angle_std_list,
             r"$CoV({\mathrm{magnitude}}_{umap})$": umap_mag_cov_list,
-            "dataset": names,
+            "dataset": processed_names,
         }
     )
 
@@ -163,11 +174,12 @@ def cluster_violin_plots(
                 r"$\log(CoV({\mathrm{magnitude}}_{pca}))$": log_pca_mag_cov_list,
                 r"$CircStd({\mathrm{angle}}_{umap})$": umap_angle_uncertain_list,
                 r"$\log(CoV({\mathrm{magnitude}}_{umap}))$": log_umap_mag_cov_list,
-                "dataset": names,
+                "dataset": processed_names,
             }
         )
 
-    logger.info(metrics_df.head())
+    logger.debug(metrics_df.head())
+    metrics_df["dataset"] = metrics_df["dataset"].astype("category")
     parameters = {"axes.labelsize": 25, "axes.titlesize": 35}
     plt.rcParams.update(parameters)
     fig, ax = plt.subplots(6, 1)
