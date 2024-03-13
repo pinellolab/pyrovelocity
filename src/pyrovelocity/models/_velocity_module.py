@@ -55,9 +55,6 @@ class VelocityModule(PyroBaseModuleClass):
         ...     num_cells, num_genes, model_type="auto",
         ...     guide_type="auto_t0_constraint", add_offset=False
         ... )
-        -----------
-        auto
-        auto_t0_constraint
         >>> type(velocity_module1.model)
         <class 'pyrovelocity.models._velocity_model.VelocityModelAuto'>
         >>> type(velocity_module1.guide)
@@ -66,9 +63,6 @@ class VelocityModule(PyroBaseModuleClass):
         ...     num_cells, num_genes, model_type="auto",
         ...     guide_type="auto", add_offset=True
         ... )
-        -----------
-        auto
-        auto
         >>> type(velocity_module2.model)
         <class 'pyrovelocity.models._velocity_model.VelocityModelAuto'>
         >>> type(velocity_module2.guide)
