@@ -43,8 +43,8 @@ def cluster_violin_plots(
     pca_angle_uncertain_list = []
     umap_angle_uncertain_list = []
     names = []
-    print(adata)
-    print(adata.obs[cluster_key])
+    # print(adata)
+    # print(adata.obs[cluster_key])
     fig_name = str(fig_name)
 
     # get cluster order
@@ -54,13 +54,13 @@ def cluster_violin_plots(
         adata_cluster = adata[adata.obs[cluster_key] == cluster]
         cluster_time = adata_cluster.obs["velocity_pseudotime"].mean()
         cluster_time_list.append(cluster_time)
-    print(cluster_time_list)
+    # print(cluster_time_list)
     sorted_cluster_id = sorted(
         range(len(cluster_time_list)),
         key=lambda k: cluster_time_list[k],
         reverse=False,
     )
-    order = clusters[sorted_cluster_id]
+    order = [str(category) for category in clusters[sorted_cluster_id]]
 
     umap_cell_angles = posterior_samples["embeds_angle"] / np.pi * 180
     # umap_cell_cirsvar = circvar(umap_cell_angles, axis=0)
@@ -100,7 +100,7 @@ def cluster_violin_plots(
         umap_cell_magnitudes_std / umap_cell_magnitudes_mean
     )
 
-    print(posterior_samples.keys())
+    # print(posterior_samples.keys())
     cell_magnitudes = posterior_samples["original_spaces_embeds_magnitude"]
     cell_magnitudes_mean = cell_magnitudes.mean(axis=-2)
     cell_magnitudes_std = cell_magnitudes.std(axis=-2)
@@ -115,8 +115,8 @@ def cluster_violin_plots(
     name = list(adata.obs[cluster_key])
     names += name
 
-    print(posterior_samples["pca_vector_field_posterior_samples"].shape)
-    print(posterior_samples["embeds_angle"].shape)
+    # print(posterior_samples["pca_vector_field_posterior_samples"].shape)
+    # print(posterior_samples["embeds_angle"].shape)
     time_cov_list = np.hstack(time_cov_list)
     mag_cov_list = np.hstack(mag_cov_list)
     pca_mag_cov_list = np.hstack(pca_mag_cov_list)
@@ -145,8 +145,8 @@ def cluster_violin_plots(
             min_values[key] = 0
         else:
             min_values[key] = q1 - (q3 - q1) * 1.5
-    print(max_values)
-    print(min_values)
+    # print(max_values)
+    # print(min_values)
 
     if "log" in fig_name:
         log_time_cov_list = np.log(time_cov_list)
