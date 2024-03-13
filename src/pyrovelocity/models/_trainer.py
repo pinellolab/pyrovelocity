@@ -1,21 +1,30 @@
 import math
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Sequence
+from typing import Union
 
 import mlflow
 import numpy as np
 import pyro
 import scipy
 import torch
-from pyro.infer import Trace_ELBO, TraceEnum_ELBO
+from pyro.infer import Trace_ELBO
+from pyro.infer import TraceEnum_ELBO
 from pyro.infer.autoguide.guides import AutoGuideList
 from pyro.optim.clipped_adam import ClippedAdam
 from pyro.optim.optim import PyroOptim
 from scvi.dataloaders import DataSplitter
 from scvi.model._utils import parse_device_args
-from scvi.train import PyroTrainingPlan, TrainRunner
+from scvi.train import PyroTrainingPlan
+from scvi.train import TrainRunner
 
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models._velocity_module import VelocityModule
+
 
 logger = configure_logging(__name__)
 
@@ -227,10 +236,10 @@ class VelocityTrainingMixin:
             accelerator=use_gpu, return_device="torch"
         )
         logger.info(
-            f"Loading model with:\n"
+            f"\nLoading model with:\n"
             f"\taccelerator: {_accelerator}\n"
             f"\tdevices: {_devices}\n"
-            f"\tdevice: {device}\n"
+            f"\tdevice: {device}\n\n"
         )
 
         pyro.clear_param_store()
@@ -238,7 +247,7 @@ class VelocityTrainingMixin:
         pyro.enable_validation(True)
         optim = VelocityClippedAdam({"lr": lr, "lrd": 0.1 ** (1 / max_epochs)})
         self.module._model = self.module._model.to(device)
-        print("TraceEnum")
+        # print("TraceEnum")
         svi = pyro.infer.SVI(
             self.module._model,
             self.module._guide,
@@ -313,9 +322,9 @@ class VelocityTrainingMixin:
             .to(device)
         )
 
-        print(u_library_scale.shape)
-        print(u.shape)
-        print(u_library.shape)
+        # print(u_library_scale.shape)
+        # print(u.shape)
+        # print(u_library.shape)
         if "pyro_cell_state" in self.adata.obs.columns:
             cell_state = torch.tensor(
                 np.array(self.adata.obs.pyro_cell_state, dtype="float32"),
@@ -363,7 +372,7 @@ class VelocityTrainingMixin:
                 ((step + 1) % log_every == 0) and ((step + 1) < max_epochs)
             ):
                 mlflow.log_metric("-ELBO", -elbos, step=step + 1)
-                print(
+                logger.info(
                     f"step {step + 1: >4d} loss = {elbos:0.6g} patience = {patience}"
                 )
             if step > log_every:
@@ -376,7 +385,9 @@ class VelocityTrainingMixin:
             losses.append(elbos)
         mlflow.log_metric("-ELBO", -elbos, step=step + 1)
         mlflow.log_metric("real_epochs", step + 1)
-        print(f"step {step + 1: >4d} loss = {elbos:0.6g} patience = {patience}")
+        logger.info(
+            f"step {step + 1: >4d} loss = {elbos:0.6g} patience = {patience}"
+        )
         return losses
 
     def train_faster_with_batch(
@@ -399,10 +410,10 @@ class VelocityTrainingMixin:
             accelerator=use_gpu, return_device="torch"
         )
         logger.info(
-            f"Loading model with:\n"
+            f"\nLoading model with:\n"
             f"\taccelerator: {_accelerator}\n"
             f"\tdevices: {_devices}\n"
-            f"\tdevice: {device}\n"
+            f"\tdevice: {device}\n\n"
         )
 
         pyro.clear_param_store()
@@ -447,7 +458,7 @@ class VelocityTrainingMixin:
                 ((step + 1) % log_every == 0) and ((step + 1) < max_epochs)
             ):
                 mlflow.log_metric("-ELBO", -elbos, step=step + 1)
-                print(
+                logger.info(
                     f"step {step + 1: >4d} loss = {elbos:0.6g} patience = {patience}"
                 )
             if step > log_every:
@@ -460,5 +471,7 @@ class VelocityTrainingMixin:
             losses.append(elbos)
         mlflow.log_metric("-ELBO", -elbos, step=step + 1)
         mlflow.log_metric("real_epochs", step + 1)
-        print(f"step {step: >4d} loss = {elbos:0.6g} patience = {patience}")
+        logger.info(
+            f"step {step: >4d} loss = {elbos:0.6g} patience = {patience}"
+        )
         return losses
