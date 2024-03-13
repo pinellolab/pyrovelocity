@@ -18,7 +18,7 @@ from pyrovelocity.plots import posterior_curve
 from pyrovelocity.plots import rainbowplot
 from pyrovelocity.plots import summarize_fig2_part1
 from pyrovelocity.plots import summarize_fig2_part2
-from pyrovelocity.utils import anndata_counts_to_df
+from pyrovelocity.utils import save_anndata_counts_to_dataframe
 
 
 logger = configure_logging(__name__)
@@ -83,7 +83,7 @@ def summarize_dataset(
     )
     Path(posterior_phase_portraits_path).mkdir(parents=True, exist_ok=True)
 
-    dataframe_path = Path(f"data/processed/{data_model}_dataframe.pkl.zst")
+    dataframe_path = data_model_reports_path / f"{data_model}_dataframe.pkl.zst"
     volcano_plot = data_model_reports_path / "volcano.pdf"
     rainbow_plot = data_model_reports_path / "rainbow.pdf"
     vector_field_plot = data_model_reports_path / "vector_field.pdf"
@@ -122,7 +122,7 @@ def summarize_dataset(
 
     logger.info(f"Loading pyrovelocity data: {postprocessed_data_path}")
     posterior_samples = CompressedPickle.load(postprocessed_data_path)
-    print(posterior_samples.keys())
+    # print(posterior_samples.keys())
 
     fig, ax = plt.subplots(5, 6)
     fig.set_size_inches(26, 24)
@@ -168,13 +168,13 @@ def summarize_dataset(
         ax[sample].set_ylim(-0.5, 4)
         if sample == 28:
             ax[sample].legend(loc="best", bbox_to_anchor=(0.5, 0.0, 0.5, 0.5))
-        print((t0_sample.flatten() > cell_time_sample.flatten().max()).sum())
-        print((t0_sample.flatten() < switching_sample.flatten().max()).sum())
-        print((t0_sample.flatten() > switching_sample.flatten().max()).sum())
-        for gene in adata.var_names[
-            t0_sample.flatten() > cell_time_sample.flatten().max()
-        ]:
-            print(gene)
+        # print((t0_sample.flatten() > cell_time_sample.flatten().max()).sum())
+        # print((t0_sample.flatten() < switching_sample.flatten().max()).sum())
+        # print((t0_sample.flatten() > switching_sample.flatten().max()).sum())
+        # for gene in adata.var_names[
+        #     t0_sample.flatten() > cell_time_sample.flatten().max()
+        # ]:
+        #     print(gene)
     ax[-1].hist(t0_sample.flatten(), bins=200, color="red", alpha=0.3)
     ax[-1].hist(cell_time_sample.flatten(), bins=500, color="blue", alpha=0.3)
 
@@ -205,30 +205,11 @@ def summarize_dataset(
     )
     # extrapolate_prediction_trace(data_model_conf, adata, grid_time_points=5)
 
-    ##################
-    # save dataframe
-    ##################
+    # ##################
+    # # save dataframe
+    # ##################
 
-    logger.info(f"Saving AnnData object to dataframe: {dataframe_path}")
-    (
-        df,
-        total_obs,
-        total_var,
-        max_spliced,
-        max_unspliced,
-    ) = anndata_counts_to_df(adata)
-
-    CompressedPickle.save(
-        dataframe_path,
-        (
-            df,
-            total_obs,
-            total_var,
-            max_spliced,
-            max_unspliced,
-        ),
-    )
-    print(posterior_samples.keys())
+    save_anndata_counts_to_dataframe(adata, dataframe_path)
 
     ##################
     # generate figures
