@@ -1,7 +1,7 @@
-# pyrovelocity.plot
+# pyrovelocity.plots.\_genes
 
 ```{eval-rst}
-.. automodule:: pyrovelocity.plot
+.. automodule:: pyrovelocity.plots._genes
    :members:
    :undoc-members:
    :show-inheritance:

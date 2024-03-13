@@ -10,4 +10,5 @@ maxdepth: 4
 
 user.md
 models.md
+plots.md
 ```
