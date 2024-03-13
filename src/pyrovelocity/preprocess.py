@@ -149,7 +149,7 @@ def preprocess_dataset(
             print_anndata(adata)
 
         if process_cytotrace:
-            print("Processing data with cytotrace ...")
+            logger.info("processing data with cytotrace ...")
             cytotrace_sparse(adata, layer="spliced")
 
         adata_tmp = scv.pp.filter_and_normalize(
@@ -230,7 +230,8 @@ def preprocess_dataset(
             top_genes = (
                 adata.var["fit_likelihood"].sort_values(ascending=False).index
             )
-            print(top_genes[:10])
+            top_30_genes_list = top_genes[:30].tolist()
+            logger.info(f"\nTop 30 genes:\n{top_30_genes_list}\n\n")
             if n_vars_subset > adata.n_vars:
                 logger.warning(
                     f"n_vars_subset: {n_vars_subset} > adata.n_vars: {adata.n_vars}\n"
@@ -280,21 +281,32 @@ def copy_raw_counts(
         >>> copy_raw_counts(adata)
     """
     adata.layers["raw_unspliced"] = adata.layers["unspliced"]
-    print("'raw_unspliced', raw unspliced counts (adata.layers)")
+    logger.info(
+        "'raw_unspliced' key added raw unspliced counts to adata.layers"
+    )
     adata.layers["raw_spliced"] = adata.layers["spliced"]
-    print("'raw_spliced', raw spliced counts (adata.layers)")
-    adata.obs["u_lib_size_raw"] = (
+    logger.info(
+        "'raw_spliced' key added raw spliced counts added to adata.layers"
+    )
+    u_lib_size_raw = (
         adata.layers["raw_unspliced"].toarray().sum(-1)
         if issparse(adata.layers["raw_unspliced"])
         else adata.layers["raw_unspliced"].sum(-1)
     )
-    print("'u_lib_size_raw', unspliced library size (adata.obs)")
-    adata.obs["s_lib_size_raw"] = (
+    adata.obs["u_lib_size_raw"] = u_lib_size_raw
+    logger.info(
+        f"'u_lib_size_raw' key added unspliced library size to adata.obs, total: {u_lib_size_raw.sum()}"
+    )
+
+    s_lib_size_raw = (
         adata.layers["raw_spliced"].toarray().sum(-1)
         if issparse(adata.layers["raw_spliced"])
         else adata.layers["raw_spliced"].sum(-1)
     )
-    print("'s_lib_size_raw', spliced library size (adata.obs)")
+    adata.obs["s_lib_size_raw"] = s_lib_size_raw
+    logger.info(
+        f"'s_lib_size_raw' key added spliced library size to adata.obs, total: {s_lib_size_raw.sum()}"
+    )
     return adata
 
 
@@ -424,7 +436,7 @@ def get_high_us_genes(
     spliced_layer: `str` (default: 'spliced')
         Name of layer that contains the spliced counts.
     """
-    print("adata.shape before filtering:", adata.shape)
+    logger.info(f"adata.shape before filtering: {adata.shape}")
     from scipy import sparse
 
     # test if layers are not sparse but dense
@@ -439,7 +451,7 @@ def get_high_us_genes(
     adata = adata[:, us_genes]
     for layer in [unspliced_layer, spliced_layer]:
         adata.layers[layer] = sparse.csr_matrix(adata.layers[layer])
-    print("adata.shape after filtering:", adata.shape)
+    logger.info(f"adata.shape after filtering: {adata.shape}")
     return adata
 
 
