@@ -21,8 +21,8 @@ def plot_parameter_posterior_distributions(
     fig, ax = plt.subplots(3, 1)
     fig.set_size_inches(18, 12)
     for index, kinetics in enumerate(["alpha", "beta", "gamma"]):
-        print(posterior_samples[kinetics].squeeze().shape)
-        print(np.isin(adata.var_names, list(geneset)).sum())
+        # print(posterior_samples[kinetics].squeeze().shape)
+        # print(np.isin(adata.var_names, list(geneset)).sum())
         df = pd.DataFrame(
             np.log(
                 posterior_samples[kinetics].squeeze()[
@@ -33,7 +33,7 @@ def plot_parameter_posterior_distributions(
         )
         df = df.apply(lambda x: x - x.mean())
         df_long = df.melt(var_name="index", value_name="value")
-        print(df_long.head())
+        # print(df_long.head())
         df_long["index"] = pd.Categorical(
             df_long["index"], categories=geneset, ordered=True
         )
