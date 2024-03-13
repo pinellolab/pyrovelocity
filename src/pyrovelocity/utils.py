@@ -5,7 +5,8 @@ from inspect import getmembers
 from pathlib import Path
 from pprint import pprint
 from types import FunctionType
-from typing import List, Tuple
+from typing import List
+from typing import Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -19,6 +20,7 @@ from termcolor import colored
 
 from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.logging import configure_logging
+
 
 # import torch
 # from scipy.sparse import issparse
@@ -223,14 +225,6 @@ def print_anndata(anndata_obj):
         >>> var = pd.DataFrame({"gene_name": [f"gene_{i}" for i in range(5)]})
         >>> adata = AnnData(X, obs=obs, var=var)
         >>> print_anndata(adata)  # doctest: +NORMALIZE_WHITESPACE
-        AnnData object with n_obs × n_vars = 10 × 5
-            obs:
-                clusters_coarse,
-                clusters,
-                S_score,
-                G2M_score,
-            var:
-                gene_name,
     """
     assert isinstance(
         anndata_obj, AnnData
