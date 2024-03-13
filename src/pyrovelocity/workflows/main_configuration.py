@@ -15,6 +15,8 @@ __all__ = [
     "ResourcesJSON",
     "PostprocessConfiguration",
     "TrainingOutputs",
+    "PostprocessOutputs",
+    "SummarizeOutputs",
     "WorkflowConfiguration",
 ]
 
@@ -147,6 +149,18 @@ class TrainingOutputs(DataClassJSONMixin):
     metrics_path: FlyteFile
     run_info_path: FlyteFile
     loss_plot_path: FlyteFile
+
+
+@dataclass
+class PostprocessOutputs(DataClassJSONMixin):
+    pyrovelocity_data: FlyteFile
+    postprocessed_data: FlyteFile
+
+
+@dataclass
+class SummarizeOutputs(DataClassJSONMixin):
+    data_model_reports: FlyteDirectory
+    dataframe: FlyteFile
 
 
 simulated_dataset_args = DownloadDatasetInterface(
