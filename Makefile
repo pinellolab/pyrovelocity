@@ -828,7 +828,7 @@ GHA_WORKFLOWS := \
 	.github/workflows/colab.yml \
 	.github/workflows/labeler.yml
 
-ratchet = docker run -it --rm -v "${PWD}:${PWD}" -w "${PWD}" ghcr.io/sethvargo/ratchet:0.5.1 $1
+ratchet = docker run -it --rm -v "${PWD}:${PWD}" -w "${PWD}" ghcr.io/sethvargo/ratchet:0.7.0 $1
 
 ratchet-pin: ## Pin all workflow versions to hash values. (requires docker).
 	$(foreach workflow,$(GHA_WORKFLOWS),$(call ratchet,pin $(workflow));)
