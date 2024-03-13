@@ -1,9 +1,11 @@
 import importlib
 import inspect
+import os
 from inspect import getmembers
+from pathlib import Path
 from pprint import pprint
 from types import FunctionType
-from typing import List
+from typing import List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,6 +17,8 @@ from beartype import beartype
 from scvi.data import synthetic_iid
 from termcolor import colored
 
+from pyrovelocity.io.compressedpickle import CompressedPickle
+from pyrovelocity.logging import configure_logging
 
 # import torch
 # from scipy.sparse import issparse
@@ -36,7 +40,10 @@ __all__ = [
     "pretty_print_dict",
     "print_anndata",
     "print_attributes",
+    "save_anndata_counts_to_dataframe",
 ]
+
+logger = configure_logging(__name__)
 
 
 def mae(pred_counts, true_counts):
@@ -123,7 +130,7 @@ def mae_evaluate(posterior_samples, adata):
     df = pd.DataFrame({"MAE": maes_list, "label": labels})
     sns.boxplot(x="label", y="MAE", data=df, ax=ax)
     ax.tick_params(axis="x", rotation=90)
-    print(df.groupby("label").mean())
+    # print(df.groupby("label").mean())
     return df
 
 
@@ -154,12 +161,15 @@ def print_attributes(obj):
 
 @beartype
 def pretty_log_dict(d: dict) -> str:
-    dict_as_string = ""
+    dict_as_string = "\n"
     for key, value in d.items():
-        key_colored = colored(key, "green")
+        # key_colored = colored(key, "green")
+        key_colored = key
         value_lines = str(value).split("\n")
         value_colored = "\n".join(
-            colored(line, "white") for line in value_lines
+            # colored(line, "white") for line in value_lines
+            line
+            for line in value_lines
         )
         dict_as_string += f"{key_colored}:\n{value_colored}\n"
     return dict_as_string
@@ -167,7 +177,7 @@ def pretty_log_dict(d: dict) -> str:
 
 @beartype
 def pretty_print_dict(d: dict):
-    print(pretty_log_dict(d))
+    logger.info(pretty_log_dict(d))
 
 
 def filter_startswith_dict(dictionary_with_underscore_keys):
@@ -230,9 +240,9 @@ def print_anndata(anndata_obj):
         formatted = "\n".join([f"        {elem}," for elem in elements])
         return formatted
 
-    print(
-        f"AnnData object with n_obs × n_vars = {anndata_obj.n_obs} × {anndata_obj.n_vars}"
-    )
+    anndata_string = [
+        f"\nAnnData object with n_obs × n_vars = {anndata_obj.n_obs} × {anndata_obj.n_vars}"
+    ]
 
     properties = {
         "obs": anndata_obj.obs.columns,
@@ -247,7 +257,11 @@ def print_anndata(anndata_obj):
 
     for prop_name, elements in properties.items():
         if len(elements) > 0:
-            print(f"    {prop_name}:\n{format_elements(elements)}")
+            anndata_string.append(
+                f"    {prop_name}:\n{format_elements(elements)}"
+            )
+
+    logger.info("\n".join(anndata_string))
 
 
 def generate_sample_data(
