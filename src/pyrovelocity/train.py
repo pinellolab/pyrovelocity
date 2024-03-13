@@ -2,7 +2,9 @@ import json
 import os
 import uuid
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Dict
+from typing import Optional
+from typing import Tuple
 
 import matplotlib.pyplot as plt
 import mlflow
@@ -18,6 +20,7 @@ from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models import PyroVelocity
 from pyrovelocity.utils import print_anndata
+
 
 logger = configure_logging(__name__)
 
@@ -333,6 +336,7 @@ def train_model(
     if isinstance(adata, str):
         adata = load_anndata_from_path(adata)
 
+    logger.info(f"AnnData object prior to model training")
     print_anndata(adata)
 
     PyroVelocity.setup_anndata(adata)
@@ -389,6 +393,8 @@ def train_model(
 
     fig.savefig(loss_plot_path, facecolor="white", bbox_inches="tight")
 
+    logger.info(f"AnnData object after model training")
+    print_anndata(adata)
     return adata, model, posterior_samples
 
 
