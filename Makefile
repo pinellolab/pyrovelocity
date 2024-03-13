@@ -212,6 +212,7 @@ workflow-clean-outputs: ## Clean testing dataset and model outputs. make workflo
 	rm data/external/$(TEST_DATASET_NAME).h5ad || true
 	rm data/processed/$(TEST_DATASET_NAME)_* || true
 	rm -r models/$(TEST_DATASET_NAME)_model* || true
+	rm -r reports/$(TEST_DATASET_NAME)_model* || true
 
 workflow-clear-cache: ## Clear local cache db from ~/.flyte/local-cache/cache.db.
 	pyflyte local-cache clear
