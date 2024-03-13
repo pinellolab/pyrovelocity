@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,19 +22,22 @@ from pyrovelocity.plots import summarize_fig2_part2
 from pyrovelocity.utils import save_anndata_counts_to_dataframe
 
 
+__all__ = ["summarize_dataset"]
+
 logger = configure_logging(__name__)
 
 
 @beartype
 def summarize_dataset(
     data_model: str,
+    data_model_path: str | Path,
     model_path: str | Path,
-    trained_data_path: str | Path,
+    pyrovelocity_data_path: str | Path,
     postprocessed_data_path: str | Path,
     cell_state: str,
     vector_field_basis: str,
     reports_path: str | Path = "reports",
-) -> Path:
+) -> Tuple[Path, Path]:
     """
     Construct summary plots for each data set and model.
 
@@ -42,10 +46,10 @@ def summarize_dataset(
             e.g. simulated_model1
         model_path (str | Path): path to the model,
             e.g. models/simulated_model1/model
-        trained_data_path (str | Path): path to the trained data,
-            e.g. models/simulated_model1/trained.h5ad
-        postprocessed_data_path (str | Path): path to the pyrovelocity data,
+        pyrovelocity_data_path (str | Path): path to the pyrovelocity data,
             e.g. models/simulated_model1/pyrovelocity.pkl.zst
+        postprocessed_data_path (str | Path): path to the trained data,
+            e.g. models/simulated_model1/postprocessed.h5ad
         cell_state (str): string containing the cell state identifier,
             e.g. cell_type
         vector_field_basis (str): string containing the vector field basis
@@ -61,9 +65,10 @@ def summarize_dataset(
         >>> tmp = getfixture("tmp_path") # xdoctest: +SKIP
         >>> summarize_dataset(
         ...     "simulated_model1",
+        ...     "models/simulated_model1",
         ...     "models/simulated_model1/model",
-        ...     "models/simulated_model1/trained.h5ad",
         ...     "models/simulated_model1/pyrovelocity.pkl.zst",
+        ...     "models/simulated_model1/postprocessed.h5ad",
         ...     "leiden",
         ...     "umap",
         ... ) # xdoctest: +SKIP
@@ -77,13 +82,14 @@ def summarize_dataset(
         f"  reports: {data_model_reports_path}\n"
     )
 
+    Path(data_model_path).mkdir(parents=True, exist_ok=True)
     Path(data_model_reports_path).mkdir(parents=True, exist_ok=True)
     posterior_phase_portraits_path = Path(data_model_reports_path) / Path(
         "posterior_phase_portraits"
     )
     Path(posterior_phase_portraits_path).mkdir(parents=True, exist_ok=True)
 
-    dataframe_path = data_model_reports_path / f"{data_model}_dataframe.pkl.zst"
+    dataframe_path = Path(data_model_path) / f"{data_model}_dataframe.pkl.zst"
     volcano_plot = data_model_reports_path / "volcano.pdf"
     rainbow_plot = data_model_reports_path / "rainbow.pdf"
     vector_field_plot = data_model_reports_path / "vector_field.pdf"
@@ -113,17 +119,18 @@ def summarize_dataset(
             + "\nAll output files exist"
         )
         logger.warn("Remove output files if you want to regenerate them.")
-        return data_model_reports_path
+        return (data_model_reports_path, dataframe_path)
 
-    logger.info(f"Loading trained data: {trained_data_path}")
-    adata = scv.read(trained_data_path)
+    logger.info(f"Loading trained data: {postprocessed_data_path}")
+    adata = scv.read(postprocessed_data_path)
     # gene_mapping = {"1100001G20Rik": "Wfdc21"}
     # adata = rename_anndata_genes(adata, gene_mapping)
 
-    logger.info(f"Loading pyrovelocity data: {postprocessed_data_path}")
-    posterior_samples = CompressedPickle.load(postprocessed_data_path)
+    logger.info(f"Loading pyrovelocity data: {pyrovelocity_data_path}")
+    posterior_samples = CompressedPickle.load(pyrovelocity_data_path)
     # print(posterior_samples.keys())
 
+    logger.info("Constructing t0 selection plot")
     fig, ax = plt.subplots(5, 6)
     fig.set_size_inches(26, 24)
     ax = ax.flatten()
@@ -186,6 +193,9 @@ def summarize_dataset(
         dpi=300,
     )
 
+    logger.info(
+        "Extrapolating prediction samples for predictive posterior plots"
+    )
     (
         grid_time_samples_ut,
         grid_time_samples_st,
@@ -275,6 +285,7 @@ def summarize_dataset(
     if os.path.isfile(shared_time_plot):
         logger.info(f"{shared_time_plot} exists")
     else:
+        logger.info(f"Generating figure: {shared_time_plot}")
         fig, ax = plt.subplots(1, 3)
         fig.set_size_inches(9.2, 2.6)
         ax = ax.flatten()
@@ -319,9 +330,10 @@ def summarize_dataset(
     number_of_marker_genes = min(
         max(int(len(volcano_data) * 0.1), 4), 20, len(volcano_data)
     )
-    print(f"Searching for {number_of_marker_genes} marker genes")
+    logger.info(f"Searching for {number_of_marker_genes} marker genes")
     geneset = pareto_frontier_genes(volcano_data, number_of_marker_genes)
 
+    logger.info("Generating posterior phase portraits")
     posterior_curve(
         adata,
         posterior_samples,
@@ -433,4 +445,4 @@ def summarize_dataset(
                 dpi=300,
             )
 
-    return data_model_reports_path
+    return (data_model_reports_path, dataframe_path)
