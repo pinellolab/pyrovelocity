@@ -24,16 +24,14 @@ def plot_posterior_time(
         sns.set_context("paper", font_scale=1)
         matplotlib.rcParams.update({"font.size": 7})
         plt.figure()
-        test_hist = plt.hist(
-            posterior_samples["cell_time"].mean(0), bins=100, label="test"
-        )
+        plt.hist(posterior_samples["cell_time"].mean(0), bins=100, label="test")
         plt.xlabel("mean of cell time")
         plt.ylabel("frequency")
         plt.title("Histogram of cell time posterior samples")
         plt.legend()
     pos_mean_time = posterior_samples["cell_time"].mean(0)
-    # scale to 0-1?
     adata.obs["cell_time"] = pos_mean_time / pos_mean_time.max()
+
     if ax is None:
         fig, ax = plt.subplots(1, 1)
         fig.set_size_inches(2.36, 2)
@@ -47,8 +45,6 @@ def plot_posterior_time(
         linewidth=0,
     )
     set_colorbar(im, ax, labelsize=5, fig=fig, position=position)
-    # ax.arrow(-19, -6, 0, 5, length_includes_head=True,
-    #         head_width=1, head_length=1, color='black')
     ax.axis("off")
     if "cytotrace" in adata.obs.columns:
         ax.set_title(
