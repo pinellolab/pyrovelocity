@@ -1,4 +1,14 @@
+from matplotlib.ticker import MaxNLocator
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+
+from pyrovelocity.logging import configure_logging
+
+__all__ = ["set_colorbar"]
+
+logger = configure_logging(__name__)
+
+from matplotlib import colorbar
 
 
 def set_colorbar(
@@ -10,9 +20,6 @@ def set_colorbar(
     position="right",
     rainbow=False,
 ):
-    from matplotlib.ticker import MaxNLocator
-    from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-
     if position == "right" and (not rainbow):
         cax = inset_axes(ax, width="2%", height="30%", loc=4, borderpad=0)
         cb = fig.colorbar(smp, orientation=orientation, cax=cax)
@@ -22,8 +29,19 @@ def set_colorbar(
         cb = fig.colorbar(smp, cax=cax, orientation=orientation, shrink=0.4)
 
     cb.ax.tick_params(labelsize=labelsize)
-    cb.set_alpha(1)
-    cb.draw_all()
+
+    # TODO: remove cb.draw_all()
+    #
+    # MatplotlibDeprecationWarning: The draw_all function was deprecated in
+    # Matplotlib 3.6 and will be removed two minor releases later. Use
+    # fig.draw_without_rendering() instead. cbar.draw_all()
+    #
+    # draw_all is not required with cb.solids.set_alpha(1)
+    # https://matplotlib.org/stable/api/colorbar_api.html#matplotlib.colorbar.Colorbar.set_alpha
+    cb.solids.set_alpha(1)
+    # cb.set_alpha(1)
+    # cb.draw_all()
+
     cb.locator = MaxNLocator(nbins=2, integer=True)
 
     if position == "left":
