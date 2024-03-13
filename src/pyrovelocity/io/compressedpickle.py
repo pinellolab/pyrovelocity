@@ -1,4 +1,6 @@
+import os
 import pickle
+from pathlib import Path
 from typing import Any
 
 import zstandard as zstd
@@ -21,7 +23,7 @@ class CompressedPickle:
     """
 
     @staticmethod
-    def save(file_path: str, obj: Any) -> None:
+    def save(file_path: os.PathLike | str, obj: Any) -> None:
         """
         Save the given object to a zstandard-compressed pickle file.
 
@@ -34,13 +36,16 @@ class CompressedPickle:
         >>> test_data = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})
         >>> CompressedPickle.save('test_data.pkl.zst', test_data)
         """
-        with open(file_path, "wb") as f:
+        file_path = Path(file_path)
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        with file_path.open("wb") as f:
             compression_context = zstd.ZstdCompressor(level=3)
             with compression_context.stream_writer(f) as compressor:
                 pickle.dump(obj, compressor)
 
     @staticmethod
-    def load(file_path: str) -> Any:
+    def load(file_path: os.PathLike | str) -> Any:
         """
         Load an object from a zstandard-compressed pickle file.
 
