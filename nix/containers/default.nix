@@ -72,8 +72,8 @@
     # the rev can be omitted transiently in development to track the HEAD
     # of a ref but doing so requires `--impure` image builds (this may
     # already be required for other reasons, e.g. `builtins.getEnv`)
-    # rev = builtins.getEnv "GIT_SHA";
-    rev = "7f37d369baf6d5775f3c4b13b69208adbb93535e";
+    rev = builtins.getEnv "GIT_SHA";
+    # rev = "7f37d369baf6d5775f3c4b13b69208adbb93535e";
   };
 
   # The `chmod -R` command to make the root user's home directory writable
