@@ -201,7 +201,7 @@ def postprocess_data(
 
 
 @task(
-    cache=False,
+    cache=CACHE_FLAG,
     cache_version=CACHE_VERSION,
     retries=3,
     interruptible=False,
