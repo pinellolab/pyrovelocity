@@ -2,6 +2,8 @@ import importlib
 import inspect
 import os
 from inspect import getmembers
+from numbers import Integral
+from numbers import Real
 from pathlib import Path
 from pprint import pprint
 from types import FunctionType
@@ -333,7 +335,7 @@ def generate_sample_data(
 @beartype
 def anndata_counts_to_df(
     adata: AnnData,
-) -> Tuple[pd.DataFrame, int, int, float, float]:
+) -> Tuple[pd.DataFrame, Integral, Integral, Real, Real]:
     spliced_df = pd.DataFrame(
         ensure_numpy_array(adata.layers["raw_spliced"]),
         index=list(adata.obs_names),
