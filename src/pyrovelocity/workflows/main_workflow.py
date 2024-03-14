@@ -352,7 +352,7 @@ def training_workflow(
     results = []
 
     if not SIMULATED_ONLY:
-        configurations + [
+        configurations += [
             (pancreas_configuration, "pancreas"),
             (pbmc68k_configuration, "pbmc68k"),
             (pons_configuration, "pons"),
