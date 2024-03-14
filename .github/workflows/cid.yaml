@@ -532,7 +532,7 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@de22e16c4711fca50c816cc9081563429d1cf563 # ratchet:DeterminateSystems/nix-installer-action@v10
       - uses: DeterminateSystems/flakehub-push@038c6a99bcaa71486db5a82a84e018a7f2550b0d # ratchet:DeterminateSystems/flakehub-push@main
         with:
-          visibility: public
+          visibility: unlisted
           tag: ${{ needs.release.outputs.version }}
           # tag: v0.2.0-beta.10
 
@@ -629,6 +629,16 @@ jobs:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           ENCODED_GAR_SA_CREDS: ${{ secrets.ENCODED_GAR_SA_CREDS }}
           VERSION: ${{ needs.release.outputs.version }}
+      - name: Clean Nix Store
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          df -h
+          nix develop .#devCore --impure --accept-flake-config
+          nix store gc --dry-run --debug
+          nix store gc --max 3G --debug
+          df -h
 
   publish-pypi:
     runs-on: ubuntu-latest
