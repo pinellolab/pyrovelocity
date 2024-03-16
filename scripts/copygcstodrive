@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+display_help() {
+    cat << EOF
+Usage: $0 [options]
+
+copygcstodrive streams and unarchives .tar.gz files from a Google Cloud Storage bucket
+to a Google Drive folder. The following parameters can be set via command-line arguments:
+
+Options:
+  -h, --help             Display this help message and exit
+  -e, --execution-id ID  Specify the execution ID to use (default: local)
+  -j, --jobs N           Number of parallel jobs to run (default: 1, sequential execution)
+  -v, --verbose          Enable verbose output
+  -d, --dry-run          Perform a dry run without actual file transfer
+  -p, --project NAME     Set the project name (default: pyrovelocity)
+  -r, --reports PATH     Set the reports path (default: reports)
+
+Example:
+  $0 --execution-id local --jobs 4 --project project_name --reports reports_path
+
+
+EOF
+}
+
+EXECUTION_ID="local"
+DRY_RUN=false
+JOBS=1
+VERBOSE=false
+PROJECT="pyrovelocity"
+REPORTS_PATH="reports"
+RCLONE_GCS_CONFIG="${PROJECT}gcs"
+RCLONE_DRIVE_CONFIG="${PROJECT}drive"
+
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help) display_help; exit 0 ;;
+        -e|--execution-id) EXECUTION_ID="$2"; shift ;;
+        -j|--jobs) JOBS="$2"; shift ;;
+        -p|--project) PROJECT="$2"; shift ;;
+        -r|--reports) REPORTS_PATH="$2"; shift ;;
+        -v|--verbose) VERBOSE=true ;;
+        -d|--dry-run) DRY_RUN=true ;;
+        *) echo "Unknown parameter passed: $1"; exit 1 ;;
+    esac
+    shift
+done
+
+extract_and_upload() {
+    local filename="$1"
+    local source="$2"
+    local destination="$3"
+    local tempdir
+    tempdir=$(mktemp -d)
+    echo ""
+    echo "Using tempdir: $tempdir"
+    echo ""
+    trap '[ -n "$tempdir" ] && rm -rf "$tempdir"' EXIT
+
+    local file_stem
+    file_stem="${filename}" 
+    while [[ "$file_stem" == *.* ]]; do
+        file_stem="${file_stem%.*}"
+    done
+
+    echo "Transferring $filename to $destination/$file_stem..."
+    rclone cat "${source}${filename}" | tar -xz -C "$tempdir"
+    rclone copy --transfers=20 "$tempdir/" "${destination}/${file_stem}/" -P
+}
+
+SOURCE="${RCLONE_GCS_CONFIG}:${PROJECT}/${REPORTS_PATH}/${EXECUTION_ID}/"
+DESTINATION="${RCLONE_DRIVE_CONFIG}:${PROJECT}/${REPORTS_PATH}/${EXECUTION_ID}"
+
+checkForDependencies() {
+    type rclone &>/dev/null || { echo "rclone is required but not installed. Exiting."; exit 1; }
+    if [ "$JOBS" -gt 1 ]; then
+        type parallel &>/dev/null || { echo "GNU parallel is required for parallel execution but not installed. Exiting."; exit 1; }
+    fi
+
+    if ! [[ "$JOBS" =~ ^[0-9]+$ ]] || [ "$JOBS" -lt 1 ]; then
+        echo "Error: -j, --jobs must be an integer greater than 0."
+        exit 1
+    fi
+}
+
+run() {
+    if [ "$DRY_RUN" = true ]; then
+        echo "Performing a dry run..."
+        echo "Source: $SOURCE"
+        echo "Destination: $DESTINATION"
+        return
+    fi
+
+    [ "$VERBOSE" = true ] && set -x
+
+    rclone mkdir "$DESTINATION" || { echo "Failed to create destination directory."; exit 1; }
+    FILES=$(rclone lsf "$SOURCE" | grep '\.tar\.gz$')
+
+    if [ "$JOBS" -eq 1 ]; then
+        for filename in $FILES; do
+            extract_and_upload "$filename" "$SOURCE" "$DESTINATION"
+        done
+    else
+        export -f extract_and_upload
+        export SOURCE DESTINATION
+        echo "$FILES" | parallel -j "$JOBS" --will-cite extract_and_upload {} "$SOURCE" "$DESTINATION"
+    fi
+}
+
+checkForDependencies
+run
+echo "All files have been processed and uploaded."
