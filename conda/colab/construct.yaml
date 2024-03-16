@@ -24,7 +24,7 @@ specs:
   - adjusttext=1.0.4=pyhd8ed1ab_0
   - adlfs=2024.2.0=pyhd8ed1ab_1
   - aiobotocore=2.12.1=pyhd8ed1ab_0
-  - aiohttp=3.9.3=py310h2372a71_0
+  - aiohttp=3.9.3=py310h2372a71_1
   - aioitertools=0.11.0=pyhd8ed1ab_0
   - aiosignal=1.3.1=pyhd8ed1ab_0
   - alembic=1.13.1=pyhd8ed1ab_1
@@ -49,7 +49,7 @@ specs:
   - aws-c-compression=0.2.18=h4466546_2
   - aws-c-event-stream=0.4.2=he635cd5_6
   - aws-c-http=0.8.1=hbfc29b2_7
-  - aws-c-io=0.14.6=h9e7f0e3_0
+  - aws-c-io=0.14.6=h6b388c4_1
   - aws-c-mqtt=0.10.3=hffff1cc_2
   - aws-c-s3=0.5.2=h4893938_2
   - aws-c-sdkutils=0.1.15=h4466546_2
@@ -101,7 +101,7 @@ specs:
   - contextlib2=21.6.0=pyhd8ed1ab_0
   - contourpy=1.2.0=py310hd41b1e2_0
   - cookiecutter=2.6.0=pyhca7485f_0
-  - coverage=7.4.3=py310h2372a71_1
+  - coverage=7.4.4=py310h2372a71_0
   - crashtest=0.4.1=pyhd8ed1ab_0
   - croniter=1.4.1=pyhd8ed1ab_0
   - cryptography=42.0.5=py310h75e40e8_0
@@ -128,7 +128,7 @@ specs:
   - dm-tree=0.1.8=py310ha8c1f0e_4
   - docker-py=6.1.3=pyhd8ed1ab_0
   - docrep=0.3.2=pyh44b312d_0
-  - docstring_parser=0.15=pyhd8ed1ab_0
+  - docstring_parser=0.16=pyhd8ed1ab_0
   - dulwich=0.21.7=py310h2372a71_0
   - entrypoints=0.4=pyhd8ed1ab_0
   - et_xmlfile=1.1.0=pyhd8ed1ab_0
@@ -186,7 +186,7 @@ specs:
   - httplib2=0.22.0=pyhd8ed1ab_0
   - hydra-core=1.3.2=pyhd8ed1ab_0
   - hydra-zen=0.12.1=pyhd8ed1ab_0
-  - hypothesis=6.99.5=pyha770c72_0
+  - hypothesis=6.99.6=pyha770c72_0
   - icu=73.2=h59595ed_0
   - idna=3.6=pyhd8ed1ab_0
   - igraph=0.10.10=h153f77b_0
@@ -233,7 +233,7 @@ specs:
   - libarrow-flight-sql=15.0.1=h757c851_2_cpu
   - libarrow-gandiva=15.0.1=hb016d2e_2_cpu
   - libarrow-substrait=15.0.1=h757c851_2_cpu
-  - libavif16=1.0.4=h1dcd450_1
+  - libavif16=1.0.4=hd9d6309_2
   - libblas=3.9.0=16_linux64_mkl
   - libbrotlicommon=1.1.0=hd590300_1
   - libbrotlidec=1.1.0=hd590300_1
@@ -303,7 +303,7 @@ specs:
   - loompy=3.0.6=py_0
   - lz4-c=1.9.4=hcb278e6_0
   - mako=1.3.2=pyhd8ed1ab_0
-  - markdown=3.5.2=pyhd8ed1ab_0
+  - markdown=3.6=pyhd8ed1ab_0
   - markdown-it-py=3.0.0=pyhd8ed1ab_0
   - markupsafe=2.1.5=py310h2372a71_0
   - marshmallow=3.21.1=pyhd8ed1ab_0
@@ -340,7 +340,7 @@ specs:
   - nbconvert=7.16.2=pyhd8ed1ab_0
   - nbconvert-core=7.16.2=pyhd8ed1ab_0
   - nbconvert-pandoc=7.16.2=pyhd8ed1ab_0
-  - nbformat=5.10.2=pyhd8ed1ab_0
+  - nbformat=5.10.3=pyhd8ed1ab_0
   - nccl=2.20.5.1=h6103f9b_0
   - ncurses=6.4=h59595ed_2
   - nest-asyncio=1.6.0=pyhd8ed1ab_0
@@ -382,7 +382,7 @@ specs:
   - pluggy=1.4.0=pyhd8ed1ab_0
   - poetry=1.8.2=linux_pyha804496_0
   - poetry-core=1.9.0=pyhd8ed1ab_0
-  - poetry-plugin-export=1.6.0=pyhd8ed1ab_0
+  - poetry-plugin-export=1.7.0=pyhd8ed1ab_0
   - portalocker=2.8.2=py310hff52083_1
   - prometheus_client=0.20.0=pyhd8ed1ab_0
   - prometheus_flask_exporter=0.23.0=pyhd8ed1ab_0
@@ -458,9 +458,9 @@ specs:
   - rich-click=1.7.4=pyhd8ed1ab_0
   - rpds-py=0.18.0=py310hcb5633a_0
   - rsa=4.9=pyhd8ed1ab_0
-  - s2n=1.4.6=h06160fa_0
+  - s2n=1.4.7=h06160fa_0
   - s3fs=2024.2.0=pyhd8ed1ab_0
-  - s3transfer=0.10.0=pyhd8ed1ab_0
+  - s3transfer=0.10.1=pyhd8ed1ab_0
   - scanpy=1.9.8=pyhd8ed1ab_0
   - scikit-learn=1.1.3=py310h0c3af53_1
   - scipy=1.12.0=py310hb13e2d6_2
@@ -488,11 +488,11 @@ specs:
   - statsmodels=0.14.1=py310h1f7b6fc_0
   - stdlib-list=0.10.0=pyhd8ed1ab_0
   - stringcase=1.2.0=py_0
-  - svt-av1=1.8.0=h59595ed_0
+  - svt-av1=2.0.0=h59595ed_0
   - sympy=1.12=pypyh9d50eac_103
   - tbb=2021.11.0=h00ab1b0_1
   - tenacity=8.2.3=pyhd8ed1ab_0
-  - tensorstore=0.1.54=py310h3c30d94_4
+  - tensorstore=0.1.55=py310h3c30d94_0
   - termcolor=2.4.0=pyhd8ed1ab_0
   - text-unidecode=1.3=pyhd8ed1ab_1
   - texttable=1.7.0=pyhd8ed1ab_0
@@ -511,7 +511,7 @@ specs:
   - traitlets=5.14.2=pyhd8ed1ab_0
   - trove-classifiers=2024.3.3=pyhd8ed1ab_0
   - typeguard=2.13.3=pyhd8ed1ab_0
-  - types-python-dateutil=2.8.19.20240311=pyhd8ed1ab_0
+  - types-python-dateutil=2.9.0.20240315=pyhd8ed1ab_0
   - typing-extensions=4.10.0=hd8ed1ab_0
   - typing_extensions=4.10.0=pyha770c72_0
   - typing_inspect=0.9.0=pyhd8ed1ab_0
