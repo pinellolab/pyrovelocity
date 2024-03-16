@@ -797,8 +797,8 @@ approve-prs: ## Approve github pull requests from bots: PR_ENTRIES="2-5 10 12-18
 		fi; \
 	done
 
-PREVIOUS_VERSION := 0.2.0b10
-NEXT_VERSION := 0.2.0b11
+PREVIOUS_VERSION := 0.2.0b11
+NEXT_VERSION := 0.2.0b12
 
 VERSION_FILES := \
 	conda/colab/construct.yaml \
@@ -806,6 +806,7 @@ VERSION_FILES := \
 	containers/pkg.Dockerfile \
 	docs/source/notebooks/pyrovelocity_colab_template.ipynb \
 	MODULE.bazel \
+	scripts/conda \
 	src/pyrovelocity/workflows/main_workflow.py
 
 update-version: ## Update version in VERSION_FILES.
