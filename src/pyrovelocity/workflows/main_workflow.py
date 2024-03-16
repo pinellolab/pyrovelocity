@@ -24,6 +24,9 @@ from pyrovelocity.postprocess import postprocess_dataset
 from pyrovelocity.preprocess import preprocess_dataset
 from pyrovelocity.summarize import summarize_dataset
 from pyrovelocity.train import train_dataset
+from pyrovelocity.workflows.main_configuration import (
+    PYROVELOCITY_SIMULATED_ONLY,
+)
 from pyrovelocity.workflows.main_configuration import PostprocessConfiguration
 from pyrovelocity.workflows.main_configuration import PostprocessOutputs
 from pyrovelocity.workflows.main_configuration import ResourcesJSON
@@ -60,7 +63,6 @@ logger = configure_logging(__name__)
 
 CACHE_VERSION = "0.2.0b11"
 CACHE_FLAG = True
-SIMULATED_ONLY = False
 ACCELERATOR_TYPE: GPUAccelerator = T4
 
 
@@ -309,6 +311,7 @@ def module_workflow(
     postprocessing_resource_limits: ResourcesJSON = default_resource_limits,
     summarizing_resource_requests: ResourcesJSON = default_resource_requests,
     summarizing_resource_limits: ResourcesJSON = default_resource_limits,
+    upload_results: bool = True,
 ) -> list[SummarizeOutputs]:
     """
     Apply the primary workflow to a single dataset with multiple model
@@ -381,10 +384,11 @@ def module_workflow(
             limits=Resources(**asdict(summarizing_resource_limits)),
         )
 
-        archive_url = upload_summary(
-            summarize_outputs=dataset_summary,
-            training_outputs=model_output,
-        )
+        if upload_results:
+            upload_summary(
+                summarize_outputs=dataset_summary,
+                training_outputs=model_output,
+            )
 
         dataset_summaries.append(dataset_summary)
 
@@ -401,14 +405,14 @@ def training_workflow(
 ) -> list[list[SummarizeOutputs]]:
     """
     Apply the primary workflow to a collection of configurations.
-    Conditionally executes configurations based on the SIMULATED_ONLY flag.
+    Conditionally executes configurations based on the value of PYROVELOCITY_SIMULATED_ONLY.
     """
+    results = []
     configurations = [
         (simulated_configuration, "simulated"),
     ]
-    results = []
 
-    if not SIMULATED_ONLY:
+    if not PYROVELOCITY_SIMULATED_ONLY:
         configurations += [
             (pancreas_configuration, "pancreas"),
             (pbmc68k_configuration, "pbmc68k"),
@@ -429,6 +433,7 @@ def training_workflow(
             postprocessing_resource_limits=config.postprocessing_resources_limits,
             summarizing_resource_requests=config.summarizing_resources_requests,
             summarizing_resource_limits=config.summarizing_resources_limits,
+            upload_results=config.upload_results,
         )
         results.append(result)
 
