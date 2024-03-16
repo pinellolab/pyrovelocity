@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-script_source="https://raw.githubusercontent.com/pinellolab/pyrovelocity/520-sum/scripts"
+script_source="https://raw.githubusercontent.com/pinellolab/pyrovelocity/beta/scripts"
 
 curl --proto '=https' --tlsv1.2 -sSf "$script_source/condacolab" | python -
 curl --proto '=https' --tlsv1.2 -sSf -L "$script_source/conda" | bash
