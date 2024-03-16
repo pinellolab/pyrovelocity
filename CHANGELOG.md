@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.2.0-beta.12](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.11...v0.2.0-beta.12) (2024-03-16)
+
+
+### Features
+
+* **env:** add pyrovelocity-specific env vars ([6dfa69c](https://github.com/pinellolab/pyrovelocity/commit/6dfa69cc84878be201166c9231c5f800d601288a))
+* **scripts:** copy gcs archives to drive ([a4eb5f5](https://github.com/pinellolab/pyrovelocity/commit/a4eb5f57b640204e0e4a7f45aa5ba55cca33190e))
+* **workflows:** add upload summary task ([8693728](https://github.com/pinellolab/pyrovelocity/commit/8693728a701dcfde70d32ef3878ce9c36a17892e))
+* **workflows:** expose testing and upload flags as environment variables ([9ed24f8](https://github.com/pinellolab/pyrovelocity/commit/9ed24f82f96e5dfbcf56194f56394f56e467d53d))
+* **workflows:** use upload_results fields from each WorkflowConfiguration ([fbf4ea3](https://github.com/pinellolab/pyrovelocity/commit/fbf4ea3d0ab388b274262b2ff46532011ef29330))
+
+
+### Bug Fixes
+
+* **cid:** add note on `use-gha-cache` ([6f79f33](https://github.com/pinellolab/pyrovelocity/commit/6f79f3323892eb432b8bb2e60fc4c1fb3d513cc0))
+* **cid:** disable `use-gha-cache` ([db6bcda](https://github.com/pinellolab/pyrovelocity/commit/db6bcdade27ed8050bcb05d9136aa066ad91814b))
+* **docs:** change feature branch to beta ([e113dcd](https://github.com/pinellolab/pyrovelocity/commit/e113dcd4efeb9ff8ff1068f9c024b80931631efa))
+* **gcs:** return file url from upload_file_* ([7d5698e](https://github.com/pinellolab/pyrovelocity/commit/7d5698e670d6a6ec9071d964368ebfd010261d16))
+* **readme:** change feature branch to beta ([3ce409a](https://github.com/pinellolab/pyrovelocity/commit/3ce409a7a957ff11d881b7716e2bb32d2d1284dd))
+* **scripts:** get colab scripts from beta branch ([15a219b](https://github.com/pinellolab/pyrovelocity/commit/15a219b4c7036265f8896964e0f1bcfb7e16279c))
+
 ## [0.2.0-beta.11](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.10...v0.2.0-beta.11) (2024-03-14)
 
 ### Features
