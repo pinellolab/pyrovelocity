@@ -1,6 +1,8 @@
+import os
 from dataclasses import dataclass
 from dataclasses import field
 
+from beartype import beartype
 from flytekit.types.directory import FlyteDirectory
 from flytekit.types.file import FlyteFile
 from mashumaro.mixins.json import DataClassJSONMixin
@@ -23,9 +25,40 @@ __all__ = [
 
 logger = configure_logging(__name__)
 
-TESTING_FLAG: bool = True
 
-if TESTING_FLAG:
+@beartype
+def str_to_bool(value: str, default: bool = False) -> bool:
+    """
+    Convert strings that could be interpreted as booleans to a boolean value,
+    with a default fallback.
+
+    Args:
+        value (str): input string
+        default (bool, optional): Defaults to False.
+
+    Returns:
+        bool: boolean interpretation of the input string
+    """
+    if value.lower() in ("true", "t", "1", "yes", "y"):
+        return True
+    elif value.lower() in ("false", "f", "0", "no", "n"):
+        return False
+    else:
+        return default
+
+
+PYROVELOCITY_TESTING_FLAG = str_to_bool(
+    os.getenv("PYROVELOCITY_TESTING_FLAG", "False")
+)
+PYROVELOCITY_SIMULATED_ONLY = str_to_bool(
+    os.getenv("PYROVELOCITY_SIMULATED_ONLY", "False")
+)
+PYROVELOCITY_UPLOAD_RESULTS = str_to_bool(
+    os.getenv("PYROVELOCITY_UPLOAD_RESULTS", "True")
+)
+
+
+if PYROVELOCITY_TESTING_FLAG:
     NUMBER_POSTERIOR_SAMPLES: int = 4
     MAX_EPOCHS: int = 300
     SUBSET_OBS: bool = True
@@ -137,6 +170,7 @@ class WorkflowConfiguration(DataClassJSONMixin):
     postprocessing_resources_limits: ResourcesJSON
     summarizing_resources_requests: ResourcesJSON
     summarizing_resources_limits: ResourcesJSON
+    upload_results: bool = PYROVELOCITY_UPLOAD_RESULTS
 
 
 @dataclass
