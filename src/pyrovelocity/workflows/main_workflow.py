@@ -2,6 +2,7 @@ from dataclasses import asdict
 from datetime import timedelta
 
 from flytekit import Resources
+from flytekit import current_context
 from flytekit import dynamic
 from flytekit import task
 from flytekit import workflow
@@ -9,11 +10,15 @@ from flytekit.extras.accelerators import T4
 from flytekit.extras.accelerators import GPUAccelerator
 from flytekit.types.directory import FlyteDirectory
 from flytekit.types.file import FlyteFile
+from returns.result import Failure
+from returns.result import Success
 
 from pyrovelocity.data import download_dataset
 from pyrovelocity.interfaces import DownloadDatasetInterface
 from pyrovelocity.interfaces import PreprocessDataInterface
 from pyrovelocity.interfaces import PyroVelocityTrainInterface
+from pyrovelocity.io.archive import create_tarball_from_filtered_dir
+from pyrovelocity.io.gcs import upload_file_concurrently
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.postprocess import postprocess_dataset
 from pyrovelocity.preprocess import preprocess_dataset
@@ -46,6 +51,7 @@ __all__ = [
     "train_model",
     "postprocess_data",
     "summarize_data",
+    "upload_summary",
     "module_workflow",
     "training_workflow",
 ]
@@ -245,6 +251,51 @@ def summarize_data(
     )
 
 
+@task(
+    cache=CACHE_FLAG,
+    cache_version=CACHE_VERSION,
+    retries=3,
+    interruptible=True,
+    timeout=timedelta(minutes=20),
+    requests=Resources(cpu="2", mem="4Gi", ephemeral_storage="16Gi"),
+    limits=Resources(cpu="8", mem="16Gi", ephemeral_storage="200Gi"),
+)
+def upload_summary(
+    summarize_outputs: SummarizeOutputs, training_outputs: TrainingOutputs
+) -> FlyteFile:
+    data_model_reports = summarize_outputs.data_model_reports
+    reports_path = data_model_reports.download()
+    data_model = training_outputs.data_model
+
+    ctx = current_context()
+    execution_id = ctx.execution_id.name
+    archive_name = f"archive_{data_model}_{execution_id}.tar.gz"
+
+    print(f"\nCreating tarball\n{archive_name}\nfrom {reports_path}...\n\n")
+
+    create_tarball_from_filtered_dir(
+        reports_path,
+        archive_name,
+    )
+
+    upload_result = upload_file_concurrently(
+        f"pyrovelocity/reports/{execution_id}",
+        archive_name,
+        archive_name,
+    )
+    if isinstance(upload_result, Success):
+        file_url = upload_result.unwrap()
+        print(f"\nUpload successful.\nFile URL: {file_url}\n\n")
+        return FlyteFile(path=archive_name)
+    elif isinstance(upload_result, Failure):
+        error = upload_result.failure()
+        print(
+            f"\nUpload of {archive_name} failed with exception: {error}\n"
+            f"Returning empty file.\n\n"
+        )
+        return FlyteFile(path="")
+
+
 @dynamic
 def module_workflow(
     download_dataset_args: DownloadDatasetInterface = DownloadDatasetInterface(),
@@ -329,6 +380,12 @@ def module_workflow(
             requests=Resources(**asdict(summarizing_resource_requests)),
             limits=Resources(**asdict(summarizing_resource_limits)),
         )
+
+        archive_url = upload_summary(
+            summarize_outputs=dataset_summary,
+            training_outputs=model_output,
+        )
+
         dataset_summaries.append(dataset_summary)
 
     return dataset_summaries
