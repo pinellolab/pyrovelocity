@@ -80,7 +80,7 @@ def upload_file_concurrently(
     destination_blob_name: str,
     chunk_size: int = 32 * 1024 * 1024,
     workers: int = 8,
-) -> Result[None, Exception]:
+) -> Result[str, Exception]:
     """
     Upload a single file, in chunks, concurrently in a process pool.
 
@@ -106,10 +106,9 @@ def upload_file_concurrently(
             source_filename, blob, chunk_size=chunk_size, max_workers=workers
         )
 
-        logger.info(
-            f"File {source_filename} uploaded to {destination_blob_name}."
-        )
-        return Success(None)
+        file_url = f"https://storage.googleapis.com/{bucket_name}/{destination_blob_name}"
+        logger.info(f"File {source_filename} uploaded to:\n{file_url}")
+        return Success(file_url)
     except Exception as e:
         logger.error(
             f"Failed to upload file {source_filename} due to exception: {e}"
