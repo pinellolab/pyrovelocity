@@ -57,7 +57,7 @@ exclude_patterns = [
     "_build",
     "Thumbs.db",
     ".DS_Store",
-    "source/notebooks/*colab*.ipynb",
+    "source/notebooks/*template*.ipynb",
 ]
 pygments_style = "sphinx"
 todo_include_todos = False
