@@ -119,7 +119,9 @@ install_package() {
         from conda-forge using ${BLUE}'%s'${NO_COLOR}...\n"\
         "$PACKAGE_NAME" "$manager"
         set -x
-        $manager install "$PACKAGE_SPEC" > "${PACKAGE_NAME}_install.log" 2>&1
+        $manager install \
+        -c pytorch -c nvidia -c conda-forge \
+        pytorch::pytorch "$PACKAGE_SPEC" > "${PACKAGE_NAME}_install.log" 2>&1
         { set +x; } 2>/dev/null
     fi
 }
