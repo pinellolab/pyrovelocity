@@ -135,6 +135,20 @@ default_resource_limits = ResourcesJSON(
     ephemeral_storage="200Gi",
 )
 
+medium_resource_requests = ResourcesJSON(
+    cpu="16",
+    mem="60Gi",
+    gpu="0",
+    ephemeral_storage="50Gi",
+)
+
+medium_resource_limits = ResourcesJSON(
+    cpu="32",
+    mem="120Gi",
+    gpu="0",
+    ephemeral_storage="200Gi",
+)
+
 large_resource_requests = ResourcesJSON(
     cpu="16",
     mem="120Gi",
@@ -276,8 +290,8 @@ pancreas_configuration = WorkflowConfiguration(
     postprocess_configuration=pancreas_postprocess_configuration,
     training_resources_requests=default_training_resource_requests,
     training_resources_limits=default_training_resource_limits,
-    postprocessing_resources_requests=default_resource_requests,
-    postprocessing_resources_limits=default_resource_limits,
+    postprocessing_resources_requests=medium_resource_requests,
+    postprocessing_resources_limits=medium_resource_limits,
     summarizing_resources_requests=default_resource_requests,
     summarizing_resources_limits=default_resource_limits,
 )
@@ -361,8 +375,8 @@ pons_configuration = WorkflowConfiguration(
     postprocess_configuration=pons_postprocess_configuration,
     training_resources_requests=default_training_resource_requests,
     training_resources_limits=default_training_resource_limits,
-    postprocessing_resources_requests=default_resource_requests,
-    postprocessing_resources_limits=default_resource_limits,
+    postprocessing_resources_requests=medium_resource_requests,
+    postprocessing_resources_limits=medium_resource_limits,
     summarizing_resources_requests=default_resource_requests,
     summarizing_resources_limits=default_resource_limits,
 )
