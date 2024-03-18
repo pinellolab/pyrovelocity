@@ -1,0 +1,256 @@
+---
+title: Pyrovelocity PyPI user notebook template
+toc: true
+number-sections: true
+highlight-style: pygments
+csl: bibstyle.csl
+format:
+  nature-pdf:
+    natbibstyle: sn-nature
+    # classoption:
+    #   - lineno
+    cite-method: citeproc
+    keep-tex: true
+  html:
+    mainfont: Latin Modern Roman
+    code-fold: false
+    html-math-method: katex
+  docx: default
+execute: 
+  eval: true
+  warning: false
+  error: false
+  cache: true
+  keep-ipynb: true
+author:
+  - name: Pyrovelocity Team
+abstract: |
+  This notebook demonstrates how to run pyrovelocity in a Jupyter notebook.
+  It attempts to support both Google Colab and local Jupyter environments.
+keywords: [single-cell genomics, probabilistic modeling, dynamical systems]
+bibliography: references.bib
+jupyter:
+  jupytext:
+    cell_metadata_filter: all
+    cell_metadata_json: true
+    notebook_metadata_filter: all
+    text_representation:
+      extension: .qmd
+      format_name: quarto
+      format_version: '1.0'
+      jupytext_version: 1.16.0
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+  language_info:
+    name: python
+  rise:
+    scroll: true
+    theme: black
+  toc-autonumbering: true
+  toc-showcode: false
+  toc-showmarkdowntxt: false
+---
+
+<a target="_blank" href="https://colab.research.google.com/github/pinellolab/pyrovelocity/blob/530-nbwf/docs/source/notebooks/pyrovelocity_pypi_user_template.ipynb">
+  <img 
+    src="https://colab.research.google.com/assets/colab-badge.svg" 
+    alt="Open In Colab"
+    width="109" height="20"/>
+</a> <a target="_blank" href="https://nbviewer.jupyter.org/github/pinellolab/pyrovelocity/blob/530-nbwf/docs/source/notebooks/pyrovelocity_pypi_user_template.ipynb">
+  <img 
+    src="https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.png"
+    alt="Render with nbviewer" 
+    width="109" height="20"/>
+</a>
+
+## Setup environment
+
+Installation should take less than **5 minutes**. 
+It involves checking if the notebook is running in colab, in which case it is certain that you will need to install or reinstall pyrovelocity.
+Otherwise, it is assumed that the user will have installed pyrovelocity in the kernel environment.
+
+The simplest way to complete it is to run the `Setup environment` section, wait for the kernel to restart, and then run the same section again:
+
+- **fold** this `Setup environment` section above
+- **click the play button** underneath the section name to run the whole section for the first time (installs condacolab)
+- **wait** for the kernel to restart 
+  - **ignore** expected notice in bottom left of Colab UI
+    - `Your session crashed for an unknown reason. View runtime logs`
+  - **ignore** `SystemExit` output in the `Install condacolab` subsection below
+- **refold** the `Setup environment` section (`SystemExit` / kernel restart will unfold it)
+- **proceed to Analysis** below
+
+Otherwise, the cells below can be executed manually.
+In either case, this section can be folded away after installation is complete.
+
+If you need to edit the **version number**, please see below.
+
+### Install pyrovelocity
+
+This first stage will download and install [pyrovelocity](https://github.com/pinellolab/pyrovelocity). This usually takes less than **4 minutes**. The runtime will then automatically restart. After this you can execute "Run all" to complete installation or proceed linearly below if you have added additional content you do not want to run all at once.
+
+#### Define functions to manage installation of python libraries
+
+```{python}
+# | code-fold: true
+import importlib.util
+import subprocess
+import sys
+
+
+def is_module_available(module_name: str):
+    return importlib.util.find_spec(module_name) is not None
+
+
+def install_package(package_name: str):
+    """
+    Install a package using pip. This is similar to cell magic
+    `!pip install package_name`, but in python code for compatibility
+    outside jupyter.
+
+    Args:
+        package_name (str): Name of the package to install.
+    """
+    process = subprocess.Popen(
+        ["pip", "install", "-q", package_name],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    for line in process.stdout:
+        print(line, end="")
+    for line in process.stderr:
+        print(line, end="")
+    process.wait()
+
+def setup_pyrovelocity():
+    if is_module_available("pyrovelocity"):
+        try:
+            import pyrovelocity
+        except (ImportError, AssertionError):
+            print("pyrovelocity is not successfully installed")
+            sys.exit()
+    else:
+        print("Installing pyrovelocity...")
+        install_package("pyrovelocity==0.2.0b12")
+        try:
+            import pyrovelocity
+
+            print(
+                "\nThe kernel needs to restart in order to use pyrovelocity.\n"
+                "Please run this cell again.\n"
+            )
+            sys.exit()
+        except (ImportError, AssertionError):
+            print("Failed to install pyrovelocity properly.")
+            sys.exit()
+```
+
+#### Install pyrovelocity
+
+```{python}
+# | code-fold: true
+import os
+
+IN_COLAB = is_module_available("google.colab")
+
+if IN_COLAB:
+    colab_release_tag = os.getenv("COLAB_RELEASE_TAG", None)
+    print(f"Google Colab release: {colab_release_tag}")
+    setup_pyrovelocity()
+else:
+    print("This notebook is probably not running in Google Colab")
+```
+
+### Check installation
+
+If installation was successful, the following commands should print the location of the `__init__.py` file for the pyrovelocity package and the currently installed version.
+
+```{python}
+import pyrovelocity
+print(pyrovelocity.__file__)
+print(pyrovelocity.__version__)
+```
+
+This is the same for the pyro package in case there was an issue with pyrovelocity install that did not affect another package.
+
+```{python}
+# | code-fold: true
+import pyro
+print(pyro.__file__)
+print(pyro.__version__)
+```
+
+Please refer to the [docs](https://pinellolab.github.io/pyrovelocity) for tutorials and usage information.
+
+## Analysis
+
+```{python}
+help(pyrovelocity) # ?pyrovelocity # to open in side panel tab for reference
+```
+
+Before we start, we will set an environment variables to ensure our first execution occurs in a lightweight test mode with a subset of observations, variables, training epochs, and posterior samples.
+
+```{python}
+import os
+os.environ["PYROVELOCITY_TESTING_FLAG"] = "True"
+```
+
+After an initial review, we can set the environment variable to `False` to run the full analysis.
+
+The library supports execution via a sequence of workflow tasks. The approximate outline of these involves accessing external data, preprocessing, model training, postprocessing, and summarization.
+
+We import these tasks and execute them in the subsections below.
+
+```{python}
+from dataclasses import asdict
+
+from pyrovelocity.workflows.main_workflow import (
+  download_data,
+  preprocess_data,
+  train_model,
+  postprocess_data,
+  summarize_data
+)
+```
+
+To execute each task requires a single `WorkflowConfiguration` object, which is an instance of a python datclass. In this notebook we illustrate execution with the standard pancreatic endocrinogenesis data set [@Bastidas-Ponce2019-lf]. First we import the configuration dataclass
+
+```{python}
+from pyrovelocity.workflows.main_configuration import pancreas_configuration
+```
+
+We can review the configuration dataclass by writing it to a yaml file or printing the dictionary representation to the console.
+
+```{python}
+import yaml
+from pyrovelocity.utils import pretty_print_dict
+pancreas_configuration_dict = pancreas_configuration.to_dict()
+
+with open("pancreas_configuration.yaml", "w") as yaml_file:
+    yaml.dump(pancreas_configuration_dict, yaml_file, sort_keys=False, default_flow_style=False, allow_unicode=True)
+pretty_print_dict(pancreas_configuration_dict)
+```
+
+Feel free to open the [pancreas_configuration.yaml](./pancreas_configuration.yaml) file to review the configuration settings. The resource requests and limits will be irrelevant for this example of local execution, but are utilized during execution of distributed containerized workflows.
+
+### Download data
+
+To download data, we simply
+
+```{python}
+pretty_print_dict(pancreas_configuration.download_dataset.to_dict())
+data = download_data(download_dataset_args=pancreas_configuration.download_dataset)
+```
+
+### Preprocess data
+
+```{python}
+pretty_print_dict(pancreas_configuration.preprocess_data.to_dict())
+processed_data = preprocess_data(
+  data=data,
+  preprocess_data_args=pancreas_configuration.preprocess_data,
+)
+```
