@@ -20,40 +20,41 @@ execute:
   cache: true
   keep-ipynb: true
 author:
-  - name: Author One
-    affiliations:
-      - name: Harvard University
-        id: 1
-        department: Department of Government
-        address: 1737 Cambridge Street
-        city: Cambridge
-        state: MA
-        postal-code: 02138
-      - name: Harvard University
-        id: 2
-        department: Department of Statistics
-        address: 1 Oxford Street
-        city: Cambridge
-        state: MA
-        postal-code: 02138
-    attributes:
-      equal-contributor: true
-  - name: Author Two
-    affiliations:
-      - name: Yale University
-        id: 3
-        department: Department of Political Science
-        address: 115 Prospect Street
-        city: New Haven
-        state: CT
-        postal-code: 06511
-    email: corresponding@email.com
-    attributes:
-      equal-contributor: true
-      corresponding: true
-  - name: Author Three
-    affiliations:
-      - ref: 1
+  - name: Pyrovelocity Authors
+  # - name: Qian Qin
+  #   affiliations:
+  #     - name: Broad Institute of MIT and Harvard
+  #       department: Broad Institute of MIT and Harvard
+  #       id: 1
+  #       city: Cambridge
+  #       state: MA
+  #   email: qqin@broadinstitute.org
+  #   attributes:
+  #     equal-contributor: true
+  # - name: Cameron Smith
+  #   affiliations:
+  #     - ref: 1
+  #     - name: Harvard Medical School
+  #       id: 2
+  #       department: Department of Pathology
+  #       city: Boston
+  #       state: MA
+  #     - name: Massachusetts General Hospital
+  #       id: 3
+  #       department: Molecular Pathology Unit, Center for Cancer Research
+  #       city: Boston
+  #       state: MA
+  #   email: cameron.smith@mgh.harvard.edu
+  #   attributes:
+  #     equal-contributor: true
+  # - name: Luca Pinello
+  #   affiliations:
+  #     - ref: 1
+  #     - ref: 2
+  #     - ref: 3
+  #   email: lpinello@mgh.harvard.edu
+  #   attributes:
+  #     corresponding: true
 abstract: |
   The abstract serves both as a general introduction to the topic and as a
   brief, non-technical summary of the main results and their implications.
