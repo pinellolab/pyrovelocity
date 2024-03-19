@@ -54,48 +54,62 @@ def train_dataset(
     Loads processed data, trains model, and saves model and posterior samples.
 
     Inputs:
-        "data/processed/{data_set_name}_processed.h5ad"
+        data/processed/{data_set_name}_processed.h5ad
 
     Outputs:
-        data:
-            "models/{data_model}/trained.h5ad"
-            "models/{data_model}/posterior_samples.pkl.zst"
-        models:
-            models/{data_model}/model/
+        models/{data_model}/
+        ├── trained.h5ad
+        ├── posterior_samples.pkl.zst
+        └── model/
             ├── attr.pkl
             ├── model_params.pt
             ├── param_store_test.pt
             └── var_names.csv
 
-    "models/{data_model}/pyrovelocity.pkl" is produced by `postprocess_dataset`.
+    The file `models/{data_model}/pyrovelocity.pkl` used in
+    `pyrovelocity.summarize.summarize_dataset` is produced by
+    `pyrovelocity.postprocess.postprocess_dataset`.
 
 
     Args:
-        adata (str | AnnData): _description_
-        data_set_name (str, optional): _description_. Defaults to "simulated".
-        model_identifier (str, optional): _description_. Defaults to "model2".
-        guide_type (str, optional): _description_. Defaults to "auto".
-        model_type (str, optional): _description_. Defaults to "auto".
-        batch_size (int, optional): _description_. Defaults to -1.
-        use_gpu (str, optional): _description_. Defaults to "auto".
-        likelihood (str, optional): _description_. Defaults to "Poisson".
-        num_samples (int, optional): _description_. Defaults to 30.
-        log_every (int, optional): _description_. Defaults to 100.
-        patient_improve (float, optional): _description_. Defaults to 1e-4.
-        patient_init (int, optional): _description_. Defaults to 45.
-        seed (int, optional): _description_. Defaults to 99.
-        learning_rate (float, optional): _description_. Defaults to 0.01.
-        max_epochs (int, optional): _description_. Defaults to 3000.
-        include_prior (bool, optional): _description_. Defaults to True.
-        library_size (bool, optional): _description_. Defaults to True.
-        offset (bool, optional): _description_. Defaults to True.
-        input_type (str, optional): _description_. Defaults to "raw".
-        cell_specific_kinetics (Optional[str], optional): _description_. Defaults to None.
-        kinetics_num (int, optional): _description_. Defaults to 2.
-        force (bool, optional): _description_. Defaults to False.
+        adata (str | AnnData):
+            Path to a file that can be read to an AnnData object or an AnnData object.
+        data_set_name (str, optional): Name of the dataset. Default is "simulated".
+        model_identifier (str, optional): Identifier for the model. Default is "model2".
+        guide_type (str, optional):
+            The type of guide function for the Pyro model. Default is "auto".
+        model_type (str, optional): The type of Pyro model. Default is "auto".
+        batch_size (int, optional):
+            Batch size for training. Default is -1, which indicates using the full dataset.
+        use_gpu (int, optional):
+            Whether to use GPU for training. Default is 0, which indicates not using GPU.
+        likelihood (str, optional):
+            Likelihood function for the Pyro model. Default is "Poisson".
+        num_samples (int, optional): Number of posterior samples. Default is 30.
+        log_every (int, optional): Frequency of logging progress. Default is 100.
+        patient_improve (float, optional):
+            Minimum improvement in training loss for early stopping. Default is 5e-4.
+        patient_init (int, optional):
+            Number of initial training epochs before early stopping is enabled. Default is 30.
+        seed (int, optional): Random seed for reproducibility. Default is 99.
+        learning_rate (float, optional): Learning rate for the optimizer. Default is 0.01.
+        max_epochs (int, optional): Maximum number of training epochs. Default is 3000.
+        include_prior (bool, optional):
+            Whether to include prior information in the model. Default is True.
+        library_size (bool, optional): Whether to correct for library size. Default is True.
+        offset (bool, optional): Whether to add an offset to the model. Default is False.
+        input_type (str, optional): Type of input data. Default is "raw".
+        cell_specific_kinetics (Optional[str], optional):
+            Name of the attribute containing cell-specific kinetics information. Default is None.
+        kinetics_num (int, optional): Number of kinetics parameters. Default is 2.
+        force (bool, optional): Whether to overwrite existing files. Default is False.
 
     Returns:
-        Tuple[str, str, Path, Path, Path, Path, Path, Path]: _description_
+        Tuple[str, str, Path, Path, Path, Path, Path, Path]:
+            Tuple containing the name of the data model, the path to the model
+            directory, the path to the trained data, the path to the model, the
+            path to the posterior samples, the path to the metrics, the path to
+            the run info, and the path to the loss plot.
 
     Examples:
         >>> train_dataset() # xdoctest: +SKIP
