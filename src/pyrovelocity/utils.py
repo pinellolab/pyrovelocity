@@ -7,18 +7,23 @@ from numbers import Real
 from pathlib import Path
 from pprint import pprint
 from types import FunctionType
+from types import ModuleType
+from typing import Callable
 from typing import List
 from typing import Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import rich.syntax
+import rich.tree
 import scvelo as scv
 import seaborn as sns
+import yaml
 from anndata._core.anndata import AnnData
 from beartype import beartype
+from flytekit.core.local_cache import LocalTaskCache
 from scvi.data import synthetic_iid
-from termcolor import colored
 
 from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.logging import configure_logging
@@ -34,6 +39,7 @@ from pyrovelocity.logging import configure_logging
 __all__ = [
     "anndata_counts_to_df",
     "attributes",
+    "clear_local_cache",
     "ensure_numpy_array",
     "filter_startswith_dict",
     "generate_public_api",
@@ -44,6 +50,7 @@ __all__ = [
     "pretty_print_dict",
     "print_anndata",
     "print_attributes",
+    "print_config_tree",
     "save_anndata_counts_to_dataframe",
     "str_to_bool",
 ]
@@ -183,6 +190,42 @@ def pretty_log_dict(d: dict) -> str:
 @beartype
 def pretty_print_dict(d: dict):
     logger.info(pretty_log_dict(d))
+
+
+@beartype
+def print_config_tree(
+    config: dict,
+    name: str = "",
+    theme: str = "nord-darker",
+    max_width: int = 148,
+):
+    config_yaml = yaml.dump(config, default_flow_style=False)
+    tree = rich.tree.Tree(name, style="dim", guide_style="dim")
+    tree.add(rich.syntax.Syntax(config_yaml, "yaml", theme=theme))
+
+    console = rich.console.Console(width=max_width)
+    console.print(tree)
+
+
+@beartype
+def print_docstring(
+    obj: Callable | ModuleType,
+    theme: str = "nord-darker",
+):
+    docstring = inspect.getdoc(obj)
+    if docstring is None:
+        rich.print("[bold red]No docstring found for this object.[/bold red]")
+        return
+    syntax_highlighted_docstring = rich.syntax.Syntax(
+        docstring, "python", theme=theme, line_numbers=False
+    )
+    rich.print(syntax_highlighted_docstring)
+
+
+@beartype
+def clear_local_cache():
+    LocalTaskCache.clear()
+
 
 @beartype
 def str_to_bool(value: str | bool, default: bool = False) -> bool:
