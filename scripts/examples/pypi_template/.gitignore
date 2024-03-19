@@ -11,3 +11,7 @@ index.*
 *.html
 *.ipynb
 *.tex
+
+/data/
+/models/
+/reports/
