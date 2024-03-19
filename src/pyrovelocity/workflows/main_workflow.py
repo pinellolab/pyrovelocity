@@ -1,3 +1,4 @@
+import os
 from dataclasses import asdict
 from datetime import timedelta
 
@@ -24,6 +25,7 @@ from pyrovelocity.postprocess import postprocess_dataset
 from pyrovelocity.preprocess import preprocess_dataset
 from pyrovelocity.summarize import summarize_dataset
 from pyrovelocity.train import train_dataset
+from pyrovelocity.utils import str_to_bool
 from pyrovelocity.workflows.main_configuration import (
     PYROVELOCITY_SIMULATED_ONLY,
 )
@@ -62,12 +64,14 @@ __all__ = [
 logger = configure_logging(__name__)
 
 CACHE_VERSION = "0.2.0b12"
-CACHE_FLAG = True
+PYROVELOCITY_CACHE_FLAG = str_to_bool(
+    os.getenv("PYROVELOCITY_CACHE_FLAG", "True")
+)
 ACCELERATOR_TYPE: GPUAccelerator = T4
 
 
 @task(
-    cache=CACHE_FLAG,
+    cache=PYROVELOCITY_CACHE_FLAG,
     cache_version=CACHE_VERSION,
     retries=3,
     interruptible=True,
@@ -85,7 +89,7 @@ def download_data(download_dataset_args: DownloadDatasetInterface) -> FlyteFile:
 
 
 @task(
-    cache=CACHE_FLAG,
+    cache=PYROVELOCITY_CACHE_FLAG,
     cache_version=CACHE_VERSION,
     retries=3,
     interruptible=False,
@@ -111,7 +115,7 @@ def preprocess_data(
 
 
 @task(
-    cache=CACHE_FLAG,
+    cache=PYROVELOCITY_CACHE_FLAG,
     cache_version=CACHE_VERSION,
     retries=3,
     interruptible=False,
@@ -169,7 +173,7 @@ def train_model(
 
 
 @task(
-    cache=CACHE_FLAG,
+    cache=PYROVELOCITY_CACHE_FLAG,
     cache_version=CACHE_VERSION,
     retries=3,
     interruptible=False,
@@ -209,7 +213,7 @@ def postprocess_data(
 
 
 @task(
-    cache=CACHE_FLAG,
+    cache=PYROVELOCITY_CACHE_FLAG,
     cache_version=CACHE_VERSION,
     retries=3,
     interruptible=False,
@@ -254,7 +258,7 @@ def summarize_data(
 
 
 @task(
-    cache=CACHE_FLAG,
+    cache=PYROVELOCITY_CACHE_FLAG,
     cache_version=CACHE_VERSION,
     retries=3,
     interruptible=True,
