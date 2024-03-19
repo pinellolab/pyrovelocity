@@ -4,6 +4,7 @@ toc: true
 number-sections: true
 highlight-style: pygments
 csl: bibstyle.csl
+lightbox: auto
 format:
   nature-pdf:
     natbibstyle: sn-nature
@@ -26,7 +27,7 @@ author:
   - name: Pyrovelocity Team
 abstract: |
   This notebook demonstrates how to run pyrovelocity in a Jupyter notebook.
-  It attempts to support both Google Colab and local Jupyter environments.
+  It attempts to support both Google Colab and local or remote Jupyter kernel servers.
 keywords: [single-cell genomics, probabilistic modeling, dynamical systems]
 bibliography: references.bib
 jupyter:
@@ -37,7 +38,7 @@ jupyter:
     text_representation:
       extension: .qmd
       format_name: quarto
-      format_version: '1.0'
+      format_version: 1.0
       jupytext_version: 1.16.0
   kernelspec:
     display_name: Python 3
@@ -74,18 +75,18 @@ Otherwise, it is assumed that the user will have installed pyrovelocity in the k
 The simplest way to complete it is to run the `Setup environment` section, wait for the kernel to restart, and then run the same section again:
 
 - **fold** this `Setup environment` section above
-- **click the play button** underneath the section name to run the whole section for the first time (installs condacolab)
+- **click the play button** underneath the section name to run the whole section for the first time
 - **wait** for the kernel to restart 
   - **ignore** expected notice in bottom left of Colab UI
     - `Your session crashed for an unknown reason. View runtime logs`
-  - **ignore** `SystemExit` output in the `Install condacolab` subsection below
+  - **ignore** `SystemExit` output in the `Install pyrovelocity` subsection below
 - **refold** the `Setup environment` section (`SystemExit` / kernel restart will unfold it)
 - **proceed to Analysis** below
 
 Otherwise, the cells below can be executed manually.
 In either case, this section can be folded away after installation is complete.
 
-If you need to edit the **version number**, please see below.
+If you need to edit the **version number**, please see the setting in the `setup_pyrovelocity` function below.
 
 ### Install pyrovelocity
 
@@ -94,7 +95,7 @@ This first stage will download and install [pyrovelocity](https://github.com/pin
 #### Define functions to manage installation of python libraries
 
 ```{python}
-# | code-fold: true
+#| code-fold: true
 import importlib.util
 import subprocess
 import sys
@@ -151,7 +152,7 @@ def setup_pyrovelocity():
 #### Install pyrovelocity
 
 ```{python}
-# | code-fold: true
+#| code-fold: true
 import os
 
 IN_COLAB = is_module_available("google.colab")
@@ -169,6 +170,8 @@ else:
 If installation was successful, the following commands should print the location of the `__init__.py` file for the pyrovelocity package and the currently installed version.
 
 ```{python}
+#| output: false
+
 import pyrovelocity
 print(pyrovelocity.__file__)
 print(pyrovelocity.__version__)
@@ -177,7 +180,9 @@ print(pyrovelocity.__version__)
 This is the same for the pyro package in case there was an issue with pyrovelocity install that did not affect another package.
 
 ```{python}
-# | code-fold: true
+#| code-fold: true
+#| output: false
+
 import pyro
 print(pyro.__file__)
 print(pyro.__version__)
@@ -191,7 +196,7 @@ Please refer to the [docs](https://pinellolab.github.io/pyrovelocity) for tutori
 help(pyrovelocity) # ?pyrovelocity # to open in side panel tab for reference
 ```
 
-Before we start, we will set an environment variables to ensure our first execution occurs in a lightweight test mode with a subset of observations, variables, training epochs, and posterior samples.
+Before we start, we will set environment variables to ensure our first execution occurs in a lightweight test mode with a subset of observations, variables, training epochs, and posterior samples.
 
 ```{python}
 import os
@@ -205,14 +210,24 @@ The library supports execution via a sequence of workflow tasks. The approximate
 We import these tasks and execute them in the subsections below.
 
 ```{python}
-from dataclasses import asdict
+from importlib import reload
+import yaml
 
+import pyrovelocity.utils
+reload(pyrovelocity.utils)
+from pyrovelocity.utils import (
+  print_config_tree,
+  print_docstring,
+)
+
+import pyrovelocity.workflows.main_workflow
+reload(pyrovelocity.workflows.main_workflow)
 from pyrovelocity.workflows.main_workflow import (
   download_data,
   preprocess_data,
   train_model,
   postprocess_data,
-  summarize_data
+  summarize_data,
 )
 ```
 
@@ -225,32 +240,169 @@ from pyrovelocity.workflows.main_configuration import pancreas_configuration
 We can review the configuration dataclass by writing it to a yaml file or printing the dictionary representation to the console.
 
 ```{python}
-import yaml
-from pyrovelocity.utils import pretty_print_dict
 pancreas_configuration_dict = pancreas_configuration.to_dict()
+print_config_tree(pancreas_configuration_dict, "pancreas configuration")
 
 with open("pancreas_configuration.yaml", "w") as yaml_file:
     yaml.dump(pancreas_configuration_dict, yaml_file, sort_keys=False, default_flow_style=False, allow_unicode=True)
-pretty_print_dict(pancreas_configuration_dict)
 ```
 
-Feel free to open the [pancreas_configuration.yaml](./pancreas_configuration.yaml) file to review the configuration settings. The resource requests and limits will be irrelevant for this example of local execution, but are utilized during execution of distributed containerized workflows.
+Feel free to open the [pancreas_configuration.yaml](./pancreas_configuration.yaml) file to review the configuration settings. We will reprint the part of that configuration relevant to the execution of each task below. The resource requests and limits sections at the bottom will be irrelevant for this example of local execution. The resource specifications are utilized during local or remote cluster-based execution of distributed containerized workflows.
 
 ### Download data
 
-To download data, we simply
+To download data, we provide the `download_data` task function with the `download_dataset` attribute of the `pancreas_configuration` object.
 
 ```{python}
-pretty_print_dict(pancreas_configuration.download_dataset.to_dict())
+print_config_tree(pancreas_configuration.download_dataset.to_dict(), "download dataset")
+```
+
+This configuration primarily specifies the location to store the data and the data set name that is mapped to a source URL in the `pyrovelocity.utils.datasets` module. The other parameters can be used to specify a custom source URL or to filter the observations and variables to a subset of the full data set; however, since we are working with a natively supported data set we do not need to specify those here.
+
+::: {.callout-note collapse=true title="Local caching"}
+During local execution, all of the functions imported from the `pyrovelocity.workflows.main_workflow` module will cache their results. This means that if you run the same task function with the same arguments, it will not recompute the result, but just establish the presence of a cache hit. This is useful for avoiding redundant computation, but if you want to re-execute the function for testing, experimentation or other purposes. To avoid this, you can use the `pyrovelocity.utils.clear_local_cache` function to clear the cache. If you add the following block of code, the cache will be cleared whenever it is executed:
+
+```python
+from pyrovelocity.utils import clear_local_cache
+
+clear_local_cache()
+```
+
+You can also disable the cache setting the `PYROVELOCITY_CACHE_FLAG` environment variable to `False`. For example, you can add the following block of code to the notebook to disable the cache for all task functions:
+
+```python
+import os
+os.environ["PYROVELOCITY_CACHE_FLAG"] = "False"
+```
+
+For reference, during local execution, the cache is managed with a sqlite database by the [diskcache](https://grantjenks.com/docs/diskcache/) library via [flytekit](https://docs.flyte.org/).
+:::
+
+```{python}
 data = download_data(download_dataset_args=pancreas_configuration.download_dataset)
 ```
 
+
 ### Preprocess data
 
+The preprocess data task is executed with the `preprocess_data` function. The `preprocess_data` function takes the `FlyteFile` object, here named `data` above, from `download_data` task function and the `preprocess_data` attribute of the `pancreas_configuration` object as arguments.
+
 ```{python}
-pretty_print_dict(pancreas_configuration.preprocess_data.to_dict())
+print_config_tree(pancreas_configuration.preprocess_data.to_dict(), "preprocess data")
+```
+
+The components of the preprocess data configuration are determined by the components of the `pyrovelocity.preprocess.preprocess_dataset` function whose documentation can be accessed via `help` or `?` in the notebook
+
+```{python}
+print_docstring(pyrovelocity.preprocess.preprocess_dataset)
+```
+
+Recall that the output of the `preprocess_data` function below will be cached and should rerun almost instantaneously if you re-execute the cell multiple times.
+
+```{python}
 processed_data = preprocess_data(
   data=data,
   preprocess_data_args=pancreas_configuration.preprocess_data,
 )
+```
+
+### Train model
+
+The train model task is executed with the `train_model` function. The `train_model` task function takes the `FlyteFile` object, here named `processed_data` above, from `preprocess_data` task function and one of the `PyrovelocityTrainInterface` objects such as is found in the `training_configuration_2` attribute of the `pancreas_configuration` object as arguments.
+
+The configuration is given by
+
+```{python}
+print_config_tree(pancreas_configuration.training_configuration_2.to_dict(), "train model 2")
+```
+
+The `PyrovelocityTrainInterface` is a configuration for the `pyrovelocity.train.train_dataset` function whose documentation we print below.
+
+```{python}
+print_docstring(pyrovelocity.train.train_dataset)
+```
+
+Finally, we execute the `train_model` task function 
+
+```{python}
+model_output = train_model(
+  processed_data=processed_data,
+  train_model_configuration=pancreas_configuration.training_configuration_2,
+)
+```
+
+This produces the `model_output` object, which is an instance of the `TrainingOutputs` dataclass.
+
+```{python}
+print_config_tree(model_output.to_dict(), "model output")
+```
+
+Due to caching, the paths to the model outputs will involve temporary folders, but the relevant outputs are also available in the `models` folder next to the notebook.
+
+### Postprocess data
+
+The postprocess data task is executed with the `postprocess_data` function. The `postprocess_data` function takes the preprocess data configuration, the training outputs, here named `model_output` above, from the `train_model` task function and the `postprocess_configuration` attribute of the `pancreas_configuration` object as arguments.
+
+```{python}
+print_config_tree(pancreas_configuration.postprocess_configuration.to_dict(), "postprocess data")
+```
+
+The configuration required to postprocess the data are determined by the components of the `pyrovelocity.postprocess.postprocess_dataset` function interface whose documentation can be accessed via `help` or `?` in the notebook
+
+```{python}
+print_docstring(pyrovelocity.postprocess.postprocess_dataset)
+```
+
+We execute the `postprocess_data` task function with the inputs described above.
+
+```{python}
+postprocessing_outputs = postprocess_data(
+  preprocess_data_args=pancreas_configuration.preprocess_data,
+  training_outputs=model_output,
+  postprocess_configuration=pancreas_configuration.postprocess_configuration,
+)
+```
+
+## Results
+
+Now we have what is required to construct a summary of the results. The `summarize_data` task function takes the preprocessing configuration, `postprocessing_outputs` object and the `model_outputs` and generates a suite of plots summarizing the results.
+
+```{python}
+#| output: false
+dataset_summary = summarize_data(
+  preprocess_data_args=pancreas_configuration.preprocess_data,
+  postprocessing_outputs=postprocessing_outputs,
+  training_outputs=model_output,
+)
+```
+
+The dataset summary contains
+
+```{python}
+print_config_tree(dataset_summary.to_dict(), "dataset summary")
+```
+
+### Vector fields
+
+
+@fig-vector-fields-uncertainty shows a low-dimensional representation of the RNA velocity vector fields with uncertainty estimates for shared time and angle. The latter quantity is estimated in PCA space. The base magnitude uncertainty is also shown but may not be interpretable.
+
+```{python}
+#| label: fig-vector-fields-uncertainty
+#| echo: false
+#| fig-cap: "Vector fields with uncertainty"
+
+from IPython.display import Image, display
+
+display(Image(filename=f"{dataset_summary.data_model_reports.path}/fig2_part1_plot.pdf.png"))
+```
+
+A standard vector field plot with cluster annotations is shown in @fig-vector-field. 
+
+```{python}
+#| label: fig-vector-field
+#| echo: false
+#| fig-cap: "Vector field"
+
+display(Image(filename=f"{dataset_summary.data_model_reports.path}/vector_field.pdf.png"))
 ```
