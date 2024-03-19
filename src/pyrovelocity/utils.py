@@ -45,6 +45,7 @@ __all__ = [
     "print_anndata",
     "print_attributes",
     "save_anndata_counts_to_dataframe",
+    "str_to_bool",
 ]
 
 logger = configure_logging(__name__)
@@ -182,6 +183,28 @@ def pretty_log_dict(d: dict) -> str:
 @beartype
 def pretty_print_dict(d: dict):
     logger.info(pretty_log_dict(d))
+
+@beartype
+def str_to_bool(value: str | bool, default: bool = False) -> bool:
+    """
+    Convert strings that could be interpreted as booleans to a boolean value,
+    with a default fallback.
+
+    Args:
+        value (str | bool): input string or boolean value.
+        default (bool, optional): Defaults to False.
+
+    Returns:
+        bool: boolean interpretation of the input string
+    """
+    if isinstance(value, bool):
+        return value
+    if value.lower() in ("true", "t", "1", "yes", "y"):
+        return True
+    elif value.lower() in ("false", "f", "0", "no", "n"):
+        return False
+    else:
+        return default
 
 
 def filter_startswith_dict(dictionary_with_underscore_keys):

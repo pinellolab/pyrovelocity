@@ -11,6 +11,7 @@ from pyrovelocity.interfaces import DownloadDatasetInterface
 from pyrovelocity.interfaces import PreprocessDataInterface
 from pyrovelocity.interfaces import PyroVelocityTrainInterface
 from pyrovelocity.logging import configure_logging
+from pyrovelocity.utils import str_to_bool
 
 
 __all__ = [
@@ -24,27 +25,6 @@ __all__ = [
 
 
 logger = configure_logging(__name__)
-
-
-@beartype
-def str_to_bool(value: str, default: bool = False) -> bool:
-    """
-    Convert strings that could be interpreted as booleans to a boolean value,
-    with a default fallback.
-
-    Args:
-        value (str): input string
-        default (bool, optional): Defaults to False.
-
-    Returns:
-        bool: boolean interpretation of the input string
-    """
-    if value.lower() in ("true", "t", "1", "yes", "y"):
-        return True
-    elif value.lower() in ("false", "f", "0", "no", "n"):
-        return False
-    else:
-        return default
 
 
 PYROVELOCITY_TESTING_FLAG = str_to_bool(
