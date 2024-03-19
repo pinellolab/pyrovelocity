@@ -59,10 +59,21 @@ def preprocess_dataset(
     Args:
         data_set_name (str): name of data set.
         adata (AnnData, optional): AnnData object containing the data set to preprocess.
-        data_path (str | Path, optional): path to data set. Defaults to None.
+        data_processed_path (str | Path, optional): path to processed data. Defaults to "data/processed".
+        overwrite (bool, optional): overwrite existing processed data. Defaults to False.
         n_top_genes (int, optional): number of genes to retain. Defaults to 2000.
         min_shared_counts (int, optional): minimum shared counts. Defaults to 30.
-        processed_path (str, optional): path to read/write processed AnnData. Defaults to None.
+        process_cytotrace (bool, optional): process data with cytotrace. Defaults to False.
+        use_obs_subset (bool, optional): use observation subset. Defaults to False.
+        n_obs_subset (int, optional): number of observations to subset. Defaults to 300.
+        use_vars_subset (bool, optional): use variable subset. Defaults to False.
+        n_vars_subset (int, optional): number of variables to subset. Defaults to 200.
+        count_threshold (int, optional): count threshold. Defaults to 0.
+        n_pcs (int, optional): number of principal components. Defaults to 30.
+        n_neighbors (int, optional): number of neighbors. Defaults to 30.
+        default_velocity_mode (str, optional): default velocity mode. Defaults to "dynamical".
+        vector_field_basis (str, optional): vector field basis. Defaults to "umap".
+        cell_state (str, optional): Name of the cell state/cluster variable. Defaults to "clusters".
 
     Returns:
         AnnData: processed AnnData object
