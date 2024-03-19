@@ -156,6 +156,6 @@ requirements-linux.txt
 mlruns
 
 # output
-data
+/data/
 /models/
 /reports/
