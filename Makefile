@@ -220,6 +220,10 @@ workflow-clean-outputs: ## Clean testing dataset and model outputs. make workflo
 workflow-clear-cache: ## Clear local cache db from ~/.flyte/local-cache/cache.db.
 	pyflyte local-cache clear
 
+workflow-clean: ## Clean local cache db and testing dataset and model outputs.
+	$(MAKE) workflow-clean-outputs
+	$(MAKE) workflow-clear-cache
+
 workflow-refresh-test: ## Refresh local test execution.
 	$(MAKE) workflow-clean-outputs
 	$(MAKE) workflow-clear-cache
