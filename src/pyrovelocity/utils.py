@@ -1,6 +1,7 @@
 import importlib
 import inspect
 import os
+import sys
 from inspect import getmembers
 from numbers import Integral
 from numbers import Real
@@ -488,6 +489,16 @@ def generate_public_api(module_name: str) -> List[str]:
         )
     ]
     return public_api
+
+
+class SuppressOutput:
+    def __enter__(self):
+        self._original_stdout = sys.stdout
+        sys.stdout = open(os.devnull, "w")
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        sys.stdout.close()
+        sys.stdout = self._original_stdout
 
 
 # TODO: remove unused functions
