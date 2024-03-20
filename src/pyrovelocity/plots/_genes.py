@@ -3,6 +3,8 @@ import numpy as np
 import seaborn as sns
 from adjustText import adjust_text
 from matplotlib import gridspec
+from matplotlib.patches import ArrowStyle
+from matplotlib.patches import ConnectionStyle
 
 from pyrovelocity.analyze import compute_volcano_data
 from pyrovelocity.logging import configure_logging
@@ -22,7 +24,6 @@ def plot_gene_ranking(
     assemble=False,
     data="correlation",
     negative=False,
-    adjust_text_bool=False,
     show_marginal_histograms=False,
 ) -> None:
     if selected_genes is not None:
@@ -59,9 +60,6 @@ def plot_gene_ranking(
             )
 
             fig = plt.figure(figsize=(10, 10))
-            # ax_scatter = plt.subplot2grid((3, 3), (1, 0), colspan=2, rowspan=2)
-            # ax_hist_x = plt.subplot2grid((3, 3), (0, 0), colspan=2)
-            # ax_hist_y = plt.subplot2grid((3, 3), (1, 2), rowspan=2)
             gs = gridspec.GridSpec(
                 3, 3, width_ratios=[2, 2, 1], height_ratios=[1, 2, 2]
             )
@@ -121,48 +119,37 @@ def plot_gene_ranking(
                 color="red",
                 marker="*",
             )
-            texts.append(
-                ax.text(
-                    volcano_data.loc[g, :].time_correlation,
-                    volcano_data.loc[g, :].mean_mae,
-                    g,
-                    fontsize=defaultfontsize - 2,
-                    color="black",
-                    ha="center",
-                    va="center",
-                )
+            new_text = ax.text(
+                volcano_data.loc[g, :].time_correlation,
+                volcano_data.loc[g, :].mean_mae,
+                g,
+                fontsize=defaultfontsize - 1,
+                color="black",
+                ha="center",
+                va="center",
             )
-            if not assemble and adjust_text_compatible:
-                # TODO: remove unused code in plot_gene_ranking
-                # if i % 2 == 0:
-                #     offset = 10 + i * 5
-                # else:
-                #     offset = -10 - i * 5
-                # if i % 2 == 0:
-                #     offset_y = -10 + i * 5
-                # else:
-                #     offset_y = -10 + i * 5
-                if not adjust_text_bool:
-                    adjust_text(
-                        texts,
-                        arrowprops=dict(arrowstyle="-", color="red", alpha=0.5),
-                        ha="center",
-                        va="bottom",
-                        ax=ax,
-                    )
-                else:
-                    adjust_text(
-                        texts,
-                        precision=0.001,
-                        expand_text=(1.01, 1.05),
-                        expand_points=(1.01, 1.05),
-                        force_text=(0.01, 0.25),
-                        force_points=(0.01, 0.25),
-                        arrowprops=dict(
-                            arrowstyle="-", color="blue", alpha=0.6
-                        ),
-                        ax=ax,
-                    )
+            texts.append(new_text)
+        # TODO: remove ha, va to update adjustText from 0.7.3 to >1.0.0
+        if not assemble and adjust_text_compatible:
+            adjust_text(
+                texts,
+                expand=(1.5, 2.5),
+                force_text=(0.3, 0.5),
+                force_static=(0.2, 0.4),
+                ax=ax,
+                expand_axes=True,
+                arrowprops=dict(
+                    arrowstyle=ArrowStyle.CurveFilledB(
+                        head_length=2,
+                        head_width=1.5,
+                    ),
+                    color="0.5",
+                    alpha=0.3,
+                    connectionstyle=ConnectionStyle.Arc3(rad=0.05),
+                    shrinkA=1,
+                    shrinkB=2,
+                ),
+            )
     else:
         sns.scatterplot(
             x="switching",
