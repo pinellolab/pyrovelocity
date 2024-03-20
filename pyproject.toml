@@ -24,7 +24,7 @@ Changelog = "https://github.com/pinellolab/pyrovelocity/releases"
 
 [tool.poetry.dependencies]
 python = ">=3.10, <3.12"
-adjusttext = ">=0.7.3"
+adjusttext = ">=1.1.1"
 anndata = ">=0.10.5"
 astropy = ">=5.2.2"
 beartype = ">=0.16.4"

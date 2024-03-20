@@ -1,5 +1,5 @@
 absl-py==1.4.0 ; python_version >= "3.10" and python_version < "3.12"
-adjusttext==0.7.3 ; python_version >= "3.10" and python_version < "3.12"
+adjusttext==1.1.1 ; python_version >= "3.10" and python_version < "3.12"
 adlfs==2023.8.0 ; python_version >= "3.10" and python_version < "3.12"
 aiobotocore==2.5.4 ; python_version >= "3.10" and python_version < "3.12"
 aiohttp==3.9.0b0 ; python_version >= "3.10" and python_version < "3.12"

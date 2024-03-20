@@ -1,8 +1,9 @@
 absl-py==1.4.0 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:0d3fe606adfa4f7db64792dd4c7aee4ee0c38ab75dfd353b7a83ed3e957fcb47 \
     --hash=sha256:d2c244d01048ba476e7c080bd2c6df5e141d211de80223460d5b3b8a2a58433d
-adjusttext==0.7.3 ; python_version >= "3.10" and python_version < "3.12" \
-    --hash=sha256:b90e275a95b4d980cbbac7967914b8d66477c09bc346a0b3c9e2125bba664b06
+adjusttext==1.1.1 ; python_version >= "3.10" and python_version < "3.12" \
+    --hash=sha256:ad2285f4239cd6c172508d772b026a133806deed9779977dfbeadcf233454938 \
+    --hash=sha256:e2c0975ef2c642478e60f4c03c5e9afbdeda7764336907ef69a9205bfa2d9896
 adlfs==2023.8.0 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:07e804f6df4593acfcaf01025b162e30ac13e523d3570279c98b2d91a18026d9 \
     --hash=sha256:3eb248a3c2a30b419f1147bd7676d156b5219f96ef7f11d47166afd2a3bdb07e
