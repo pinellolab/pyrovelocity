@@ -11,7 +11,8 @@ index.*
 *.html
 *.ipynb
 *.tex
-
+*.*.md
+*_configuration.yaml
 /data/
 /models/
 /reports/
