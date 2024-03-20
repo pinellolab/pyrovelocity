@@ -13,22 +13,27 @@ format:
     cite-method: citeproc
     keep-tex: true
   html:
-    mainfont: Latin Modern Roman
+    mainfont: Latin Modern Sans
     code-fold: false
     html-math-method: katex
+    embed-resources: true
   docx: default
+  ipynb: default
+format-links: false
 execute: 
   eval: true
   warning: false
   error: false
   cache: true
   keep-ipynb: true
+  keep-md: true
 author:
   - name: Pyrovelocity Team
+    email: team@pyrovelocity.net
 abstract: |
   This notebook demonstrates how to run pyrovelocity in a Jupyter notebook.
   It attempts to support both Google Colab and local or remote Jupyter kernel servers.
-keywords: [single-cell genomics, probabilistic modeling, dynamical systems]
+keywords: [single-cell transcriptomics, probabilistic modeling, dynamical systems, RNA velocity]
 bibliography: references.bib
 jupyter:
   jupytext:
@@ -95,6 +100,7 @@ This first stage will download and install [pyrovelocity](https://github.com/pin
 #### Define functions to manage installation of python libraries
 
 ```{python}
+#| label: install-package-helpers
 #| code-fold: true
 import importlib.util
 import subprocess
@@ -152,6 +158,7 @@ def setup_pyrovelocity():
 #### Install pyrovelocity
 
 ```{python}
+#| label: install-pyrovelocity-colab
 #| code-fold: true
 import os
 
@@ -170,6 +177,7 @@ else:
 If installation was successful, the following commands should print the location of the `__init__.py` file for the pyrovelocity package and the currently installed version.
 
 ```{python}
+#| label: check-pyrovelocity-installation
 #| output: false
 
 import pyrovelocity
@@ -180,6 +188,7 @@ print(pyrovelocity.__version__)
 This is the same for the pyro package in case there was an issue with pyrovelocity install that did not affect another package.
 
 ```{python}
+#| label: check-pyro-installation
 #| code-fold: true
 #| output: false
 
@@ -193,14 +202,21 @@ Please refer to the [docs](https://pinellolab.github.io/pyrovelocity) for tutori
 ## Analysis
 
 ```{python}
+#| label: print-pyrovelocity-docstring
 help(pyrovelocity) # ?pyrovelocity # to open in side panel tab for reference
 ```
 
-Before we start, we will set environment variables to ensure our first execution occurs in a lightweight test mode with a subset of observations, variables, training epochs, and posterior samples.
+Before we start, we will adjust a few environment variables to ensure our first execution occurs in a lightweight test mode with a subset of observations, variables, training epochs, and posterior samples. We will also set a few log levels. Feel free to adjust these to `ERROR`, `DEBUG`, etc as needed.
 
 ```{python}
+#| label: set-pyrovelocity-testing-flag
 import os
 os.environ["PYROVELOCITY_TESTING_FLAG"] = "True"
+os.environ["PYROVELOCITY_LOG_LEVEL"] = "INFO" 
+
+import logging
+logging.getLogger("jax").setLevel(logging.ERROR)
+logging.getLogger("root").setLevel(logging.ERROR)
 ```
 
 After an initial review, we can set the environment variable to `False` to run the full analysis.
@@ -210,36 +226,38 @@ The library supports execution via a sequence of workflow tasks. The approximate
 We import these tasks and execute them in the subsections below.
 
 ```{python}
+#| label: import-notebook-dependencies
 from importlib import reload
+
 import yaml
+from IPython.display import Image
+# from IPython.display import display
 
 import pyrovelocity.utils
-reload(pyrovelocity.utils)
-from pyrovelocity.utils import (
-  print_config_tree,
-  print_docstring,
-)
-
 import pyrovelocity.workflows.main_workflow
+reload(pyrovelocity.utils)
 reload(pyrovelocity.workflows.main_workflow)
-from pyrovelocity.workflows.main_workflow import (
-  download_data,
-  preprocess_data,
-  train_model,
-  postprocess_data,
-  summarize_data,
-)
+
+from pyrovelocity.utils import print_config_tree
+from pyrovelocity.utils import print_docstring
+from pyrovelocity.workflows.main_workflow import download_data
+from pyrovelocity.workflows.main_workflow import postprocess_data
+from pyrovelocity.workflows.main_workflow import preprocess_data
+from pyrovelocity.workflows.main_workflow import summarize_data
+from pyrovelocity.workflows.main_workflow import train_model
 ```
 
 To execute each task requires a single `WorkflowConfiguration` object, which is an instance of a python datclass. In this notebook we illustrate execution with the standard pancreatic endocrinogenesis data set [@Bastidas-Ponce2019-lf]. First we import the configuration dataclass
 
 ```{python}
+#| label: import-pancreas-configuration
 from pyrovelocity.workflows.main_configuration import pancreas_configuration
 ```
 
 We can review the configuration dataclass by writing it to a yaml file or printing the dictionary representation to the console.
 
 ```{python}
+#| label: print-and-save-pancreas-configuration
 pancreas_configuration_dict = pancreas_configuration.to_dict()
 print_config_tree(pancreas_configuration_dict, "pancreas configuration")
 
@@ -254,6 +272,7 @@ Feel free to open the [pancreas_configuration.yaml](./pancreas_configuration.yam
 To download data, we provide the `download_data` task function with the `download_dataset` attribute of the `pancreas_configuration` object.
 
 ```{python}
+#| label: print-download-dataset-configuration
 print_config_tree(pancreas_configuration.download_dataset.to_dict(), "download dataset")
 ```
 
@@ -279,6 +298,7 @@ For reference, during local execution, the cache is managed with a sqlite databa
 :::
 
 ```{python}
+#| label: execute-download-data-task
 data = download_data(download_dataset_args=pancreas_configuration.download_dataset)
 ```
 
@@ -288,18 +308,21 @@ data = download_data(download_dataset_args=pancreas_configuration.download_datas
 The preprocess data task is executed with the `preprocess_data` function. The `preprocess_data` function takes the `FlyteFile` object, here named `data` above, from `download_data` task function and the `preprocess_data` attribute of the `pancreas_configuration` object as arguments.
 
 ```{python}
+#| label: print-preprocess-data-configuration
 print_config_tree(pancreas_configuration.preprocess_data.to_dict(), "preprocess data")
 ```
 
 The components of the preprocess data configuration are determined by the components of the `pyrovelocity.preprocess.preprocess_dataset` function whose documentation can be accessed via `help` or `?` in the notebook
 
 ```{python}
+#| label: print-preprocess-data-docstring
 print_docstring(pyrovelocity.preprocess.preprocess_dataset)
 ```
 
 Recall that the output of the `preprocess_data` function below will be cached and should rerun almost instantaneously if you re-execute the cell multiple times.
 
 ```{python}
+#| label: execute-preprocess-data-task
 processed_data = preprocess_data(
   data=data,
   preprocess_data_args=pancreas_configuration.preprocess_data,
@@ -313,18 +336,21 @@ The train model task is executed with the `train_model` function. The `train_mod
 The configuration is given by
 
 ```{python}
+#| label: print-train-model-configuration
 print_config_tree(pancreas_configuration.training_configuration_2.to_dict(), "train model 2")
 ```
 
 The `PyrovelocityTrainInterface` is a configuration for the `pyrovelocity.train.train_dataset` function whose documentation we print below.
 
 ```{python}
+#| label: print-train-model-docstring
 print_docstring(pyrovelocity.train.train_dataset)
 ```
 
 Finally, we execute the `train_model` task function 
 
 ```{python}
+#| label: execute-train-model-task
 model_output = train_model(
   processed_data=processed_data,
   train_model_configuration=pancreas_configuration.training_configuration_2,
@@ -334,6 +360,7 @@ model_output = train_model(
 This produces the `model_output` object, which is an instance of the `TrainingOutputs` dataclass.
 
 ```{python}
+#| label: print-model-output
 print_config_tree(model_output.to_dict(), "model output")
 ```
 
@@ -344,23 +371,30 @@ Due to caching, the paths to the model outputs will involve temporary folders, b
 The postprocess data task is executed with the `postprocess_data` function. The `postprocess_data` function takes the preprocess data configuration, the training outputs, here named `model_output` above, from the `train_model` task function and the `postprocess_configuration` attribute of the `pancreas_configuration` object as arguments.
 
 ```{python}
+#| label: print-postprocess-data-configuration
 print_config_tree(pancreas_configuration.postprocess_configuration.to_dict(), "postprocess data")
 ```
 
 The configuration required to postprocess the data are determined by the components of the `pyrovelocity.postprocess.postprocess_dataset` function interface whose documentation can be accessed via `help` or `?` in the notebook
 
 ```{python}
+#| label: print-postprocess-data-docstring
 print_docstring(pyrovelocity.postprocess.postprocess_dataset)
 ```
 
 We execute the `postprocess_data` task function with the inputs described above.
 
 ```{python}
-postprocessing_outputs = postprocess_data(
-  preprocess_data_args=pancreas_configuration.preprocess_data,
-  training_outputs=model_output,
-  postprocess_configuration=pancreas_configuration.postprocess_configuration,
-)
+#| label: execute-postprocess-data-task
+#| output: false 
+from pyrovelocity.utils import SuppressOutput 
+
+with SuppressOutput():
+  postprocessing_outputs = postprocess_data(
+    preprocess_data_args=pancreas_configuration.preprocess_data,
+    training_outputs=model_output,
+    postprocess_configuration=pancreas_configuration.postprocess_configuration,
+  )
 ```
 
 ## Results
@@ -368,6 +402,7 @@ postprocessing_outputs = postprocess_data(
 Now we have what is required to construct a summary of the results. The `summarize_data` task function takes the preprocessing configuration, `postprocessing_outputs` object and the `model_outputs` and generates a suite of plots summarizing the results.
 
 ```{python}
+#| label: execute-summarize-data-task
 #| output: false
 dataset_summary = summarize_data(
   preprocess_data_args=pancreas_configuration.preprocess_data,
@@ -379,30 +414,110 @@ dataset_summary = summarize_data(
 The dataset summary contains
 
 ```{python}
+#| label: print-dataset-summary
 print_config_tree(dataset_summary.to_dict(), "dataset summary")
 ```
 
-### Vector fields
 
-
-@fig-vector-fields-uncertainty shows a low-dimensional representation of the RNA velocity vector fields with uncertainty estimates for shared time and angle. The latter quantity is estimated in PCA space. The base magnitude uncertainty is also shown but may not be interpretable.
-
+### Data set review 
 ```{python}
-#| label: fig-vector-fields-uncertainty
+#| label: import-ipython-display
 #| echo: false
-#| fig-cap: "Vector fields with uncertainty"
-
 from IPython.display import Image, display
-
-display(Image(filename=f"{dataset_summary.data_model_reports.path}/fig2_part1_plot.pdf.png"))
 ```
 
-A standard vector field plot with cluster annotations is shown in @fig-vector-field. 
+The maximum values of the unspliced and spliced count data for each gene across cells is shown in @fig-raw-counts.
 
+<!-- ![Maximum spliced and unsliced transcript counts data for each gene across all cells with marginal histograms.](data/processed/pancreas_thresh_histogram.pdf.png){#fig-raw-counts} -->
+```{python}
+#| label: fig-raw-counts
+#| echo: false
+#| fig-cap: "Maximum spliced and unsliced transcript counts data for each gene across all cells with marginal histograms."
+display(Image(filename=f"data/processed/pancreas_thresh_histogram.pdf.png"))
+```
+
+
+### Cell state transformation vector field estimates
+
+A vector field estimate of cell state transformation probability derived from RNA velocity estimates with cluster annotations is shown in @fig-vector-field. 
+
+<!-- ![Vector field](reports/pancreas_model2/vector_field.pdf.png){#fig-vector-field} -->
 ```{python}
 #| label: fig-vector-field
 #| echo: false
-#| fig-cap: "Vector field"
-
+#| fig-cap: "Vector field" 
 display(Image(filename=f"{dataset_summary.data_model_reports.path}/vector_field.pdf.png"))
 ```
+
+#### Vector field uncertainty estimates
+
+@fig-vector-fields-uncertainty shows a low-dimensional representation of the RNA velocity vector fields with uncertainty estimates for shared time and angle. The latter quantity is estimated in PCA space. The base magnitude uncertainty is also shown but may not be interpretable.
+
+<!-- ![Vector fields with uncertainty estimates](reports/pancreas_model2/fig2_part1_plot.pdf.png){#fig-vector-fields-uncertainty} -->
+```{python}
+#| label: fig-vector-fields-uncertainty
+#| echo: false
+#| fig-cap: "Vector fields with uncertainty estimates."
+display(Image(filename=f"{dataset_summary.data_model_reports.path}/fig2_part1_plot.pdf.png"))
+```
+
+
+### Gene selection
+
+A *volcano plot* adapted for probabilistic inference of RNA velocity is shown in @fig-volcano. This plot shows the mean absolute error versus shared time correlation for each gene.
+
+<!-- ![RNA velocity volcano plot showing mean absolute error versus shared time correlation for each gene](reports/pancreas_model2/volcano.pdf.png){#fig-volcano} -->
+```{python}
+#| label: fig-volcano
+#| echo: false
+#| fig-cap: "RNA velocity volcano plot showing mean absolute error versus shared time correlation for each gene."
+display(Image(filename=f"{dataset_summary.data_model_reports.path}/volcano.pdf.png"))
+```
+
+#### Splice state phase portraits
+
+@fig-rainbow shows the splice state phase portraits, estimated expression levels over shared time, and shared time correlation for a subset of selected genes.
+
+<!-- ![Splice state phase portraits, estimated expression levels over shared time, and shared time correlation for a subset of selected genes](reports/pancreas_model2/rainbow.pdf.png){#fig-rainbow} -->
+```{python}
+#| label: fig-rainbow
+#| echo: false
+#| fig-cap: "Splice state phase portraits, estimated expression levels over shared time, and shared time correlation for a subset of selected genes."
+display(Image(filename=f"{dataset_summary.data_model_reports.path}/rainbow.pdf.png"))
+```
+
+#### Summary
+
+A summary of the gene selection results is shown in @fig-gene-selection-summary.
+
+<!-- ![Summary of gene selection results](reports/pancreas_model2/fig2_part2_plot.pdf.png){#fig-gene-selection-summary} -->
+```{python}
+#| label: fig-gene-selection-summary
+#| echo: false
+#| fig-cap: "Summary of gene selection results."
+display(Image(filename=f"{dataset_summary.data_model_reports.path}/fig2_part2_plot.pdf.png"))
+```
+
+
+### Uncertainty estimation
+
+#### Parameter estimates
+
+Estimates for parameter uncertainties for a subset of genes are shown in @fig-parameter-uncertainty.
+
+<!-- ![Centered parameter uncertainties for a subset of genes](reports/pancreas_model2/parameter_uncertainties.pdf.png){#fig-parameter-uncertainty} -->
+```{python}
+#| label: fig-parameter-uncertainty
+#| echo: false
+#| fig-cap: "Centered parameter uncertainties for a subset of genes."
+display(Image(filename=f"{dataset_summary.data_model_reports.path}/parameter_uncertainties.pdf.png"))
+```
+
+<!-- 
+TODO: save png copy of shared time plot
+#### Shared time
+
+@fig-shared-time-uncertainty shows the uncertainty in the shared time estimates for each gene.
+
+![Uncertainty in the shared time estimates for each gene](reports/pancreas_model2/shared_time.pdf){#fig-shared-time-uncertainty} 
+-->
