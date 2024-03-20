@@ -70,8 +70,10 @@ def postprocess_dataset(
         data_model_path, "postprocessed.h5ad"
     )
 
-    ncpus_use = min(23, max(1, round(multiprocessing.cpu_count() * 0.8)))
-    print("ncpus_use:", ncpus_use)
+    number_of_cpus_to_use = min(
+        23, max(1, round(multiprocessing.cpu_count() * 0.8))
+    )
+    logger.info(f"using {number_of_cpus_to_use} cpus")
 
     logger.info(f"Loading trained data: {trained_data_path}")
     adata = sc.read(trained_data_path)
@@ -144,7 +146,7 @@ def postprocess_dataset(
                     adata,
                     posterior_samples,
                     vector_field_basis=vector_field_basis,
-                    ncpus_use=ncpus_use,
+                    ncpus_use=number_of_cpus_to_use,
                 )
             )
             logger.info(
@@ -162,7 +164,8 @@ def postprocess_dataset(
 
         r = mlflow.get_run(run_id)
         _update_json(r, metrics_path)
-        _print_logged_info(r)
+        mlflow_log_message = _generate_string_from_logged_info(r)
+        logger.info(mlflow_log_message)
 
     return (pyrovelocity_data_path, postprocessed_data_path)
 
@@ -181,16 +184,16 @@ def _update_json(r: mlflow.entities.run.Run, metrics_path: str) -> None:
         json.dump(existing_data, file, indent=4)
 
 
-def _print_logged_info(r: mlflow.entities.run.Run) -> None:
+def _generate_string_from_logged_info(r: mlflow.entities.run.Run) -> None:
     tags = {k: v for k, v in r.data.tags.items() if not k.startswith("mlflow.")}
     artifacts = [
         f.path for f in MlflowClient().list_artifacts(r.info.run_id, "model")
     ]
-    print(f"run_id: {r.info.run_id}")
-    print(f"artifacts: {artifacts}")
-    print(f"params: {r.data.params}")
-    print(f"metrics: {r.data.metrics}")
-    print(f"tags: {tags}")
-    print(f"params: {r.data.params}")
-    print(f"metrics: {r.data.metrics}")
-    print(f"tags: {tags}")
+
+    return (
+        f"\nrun_id: {r.info.run_id},\n"
+        f"artifacts: {artifacts},\n"
+        f"params: {r.data.params},\n"
+        f"metrics: {r.data.metrics},\n"
+        f"tags: {tags}\n\n"
+    )
