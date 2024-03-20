@@ -1,3 +1,4 @@
+import anndata
 import matplotlib.pyplot as plt
 
 from pyrovelocity.logging import configure_logging
@@ -13,7 +14,14 @@ __all__ = ["summarize_fig2_part2"]
 
 
 def summarize_fig2_part2(
-    adata, posterior_samples, plot_name="", basis="", cell_state="", fig=None
+    adata: anndata.AnnData,
+    posterior_samples,
+    plot_name: str = "",
+    basis: str = "",
+    cell_state: str = "",
+    fig=None,
+    show_marginal_histograms: bool = False,
+    selected_genes=None,
 ):
     if fig is None:
         fig = plt.figure(figsize=(9.5, 5))
@@ -30,7 +38,12 @@ def summarize_fig2_part2(
             basis=basis,
         )
         volcano_data, _ = plot_gene_ranking(
-            [posterior_samples], [adata], ax=ax[1], time_correlation_with="st"
+            [posterior_samples],
+            [adata],
+            ax=ax[1],
+            time_correlation_with="st",
+            selected_genes=selected_genes,
+            show_marginal_histograms=show_marginal_histograms,
         )
         _ = rainbowplot(
             volcano_data,
