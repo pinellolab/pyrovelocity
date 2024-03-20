@@ -79,8 +79,14 @@ clean: ## Clean compilation artifacts
 
 clean-all: ## Clean all files including output files
 clean-all: clean
-	rm $(DOCUMENT_NAME).{tex,pdf,html,docx} || true
-	rm -r $(DOCUMENT_NAME)_files/
+	rm $(DOCUMENT_NAME).{tex,docx,ipynb,html,pdf,docx.md,html.md,ipynb.md,pdf.md} || true
+	rm -r $(DOCUMENT_NAME)_files/ || true
+
+refresh-workflow-execution: ## Refresh workflow execution environment by removing the caches and output files
+refresh-workflow-execution: clean-all
+	pyflyte local-cache clear
+	rm -rf ./.jupyter_cache/ || true
+	rm -rf ./data/ ./models/ ./reports/ || true
 
 #-------
 ##@ regenerate preview
