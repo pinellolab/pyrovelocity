@@ -130,68 +130,71 @@ def summarize_dataset(
     posterior_samples = CompressedPickle.load(pyrovelocity_data_path)
     # print(posterior_samples.keys())
 
-    logger.info("Constructing t0 selection plot")
-    fig, ax = plt.subplots(5, 6)
-    fig.set_size_inches(26, 24)
-    ax = ax.flatten()
-
-    posterior_samples_keys_to_check = ["t0", "switching", "cell_time"]
-
-    num_samples_list = [
-        posterior_samples[key].shape[0]
-        for key in posterior_samples_keys_to_check
-    ]
-    assert (
-        len(set(num_samples_list)) == 1
-    ), f"The number of samples is not equal across keys: {posterior_samples_keys_to_check}"
-
-    num_samples = num_samples_list[0]
-
-    for sample in range(num_samples):
-        t0_sample = posterior_samples["t0"][sample]
-        switching_sample = posterior_samples["switching"][sample]
-        cell_time_sample = posterior_samples["cell_time"][sample]
-        ax[sample].scatter(
-            t0_sample.flatten(),
-            2 * np.ones(t0_sample.shape[-1]),
-            s=1,
-            c="red",
-            label="t0",
+    if os.path.isfile(t0_selection_plot):
+        logger.info(
+            f"\nt0_selection plot exists: {t0_selection_plot}\n"
+            f"Remove output file if you want to regenerate it.\n\n"
         )
-        ax[sample].scatter(
-            switching_sample.flatten(),
-            3 * np.ones(t0_sample.shape[-1]),
-            s=1,
-            c="purple",
-            label="switching",
-        )
-        ax[sample].scatter(
-            cell_time_sample.flatten(),
-            np.ones(cell_time_sample.shape[0]),
-            s=1,
-            c="blue",
-            label="shared time",
-        )
-        ax[sample].set_ylim(-0.5, 4)
-        if sample == 28:
-            ax[sample].legend(loc="best", bbox_to_anchor=(0.5, 0.0, 0.5, 0.5))
-        # print((t0_sample.flatten() > cell_time_sample.flatten().max()).sum())
-        # print((t0_sample.flatten() < switching_sample.flatten().max()).sum())
-        # print((t0_sample.flatten() > switching_sample.flatten().max()).sum())
-        # for gene in adata.var_names[
-        #     t0_sample.flatten() > cell_time_sample.flatten().max()
-        # ]:
-        #     print(gene)
-    ax[-1].hist(t0_sample.flatten(), bins=200, color="red", alpha=0.3)
-    ax[-1].hist(cell_time_sample.flatten(), bins=500, color="blue", alpha=0.3)
+    else:
+        logger.info("Constructing t0 selection plot")
+        fig, ax = plt.subplots(5, 6)
+        fig.set_size_inches(26, 24)
+        ax = ax.flatten()
 
-    fig.savefig(
-        t0_selection_plot,
-        facecolor=fig.get_facecolor(),
-        bbox_inches="tight",
-        edgecolor="none",
-        dpi=300,
-    )
+        posterior_samples_keys_to_check = ["t0", "switching", "cell_time"]
+
+        num_samples_list = [
+            posterior_samples[key].shape[0]
+            for key in posterior_samples_keys_to_check
+        ]
+        assert (
+            len(set(num_samples_list)) == 1
+        ), f"The number of samples is not equal across keys: {posterior_samples_keys_to_check}"
+
+        num_samples = num_samples_list[0]
+
+        for sample in range(num_samples):
+            t0_sample = posterior_samples["t0"][sample]
+            switching_sample = posterior_samples["switching"][sample]
+            cell_time_sample = posterior_samples["cell_time"][sample]
+            ax[sample].scatter(
+                t0_sample.flatten(),
+                2 * np.ones(t0_sample.shape[-1]),
+                s=1,
+                c="red",
+                label="t0",
+            )
+            ax[sample].scatter(
+                switching_sample.flatten(),
+                3 * np.ones(t0_sample.shape[-1]),
+                s=1,
+                c="purple",
+                label="switching",
+            )
+            ax[sample].scatter(
+                cell_time_sample.flatten(),
+                np.ones(cell_time_sample.shape[0]),
+                s=1,
+                c="blue",
+                label="shared time",
+            )
+            ax[sample].set_ylim(-0.5, 4)
+            if sample == 28:
+                ax[sample].legend(
+                    loc="best", bbox_to_anchor=(0.5, 0.0, 0.5, 0.5)
+                )
+        ax[-1].hist(t0_sample.flatten(), bins=200, color="red", alpha=0.3)
+        ax[-1].hist(
+            cell_time_sample.flatten(), bins=500, color="blue", alpha=0.3
+        )
+
+        fig.savefig(
+            t0_selection_plot,
+            facecolor=fig.get_facecolor(),
+            bbox_inches="tight",
+            edgecolor="none",
+            dpi=300,
+        )
 
     logger.info(
         "Extrapolating prediction samples for predictive posterior plots"
@@ -243,20 +246,6 @@ def summarize_dataset(
             posterior_samples["vector_field_posterior_mean"],
             cell_type,
             fig2_part1_plot,
-        )
-
-    # gene selection
-    if os.path.isfile(fig2_part2_plot):
-        logger.info(f"{fig2_part2_plot} exists")
-    else:
-        logger.info(f"Generating figure: {fig2_part2_plot}")
-        summarize_fig2_part2(
-            adata,
-            posterior_samples,
-            basis=vector_field_basis,
-            cell_state=cell_type,
-            plot_name=fig2_part2_plot,
-            fig=None,
         )
 
     # cluster violin plots
@@ -333,24 +322,31 @@ def summarize_dataset(
     logger.info(f"Searching for {number_of_marker_genes} marker genes")
     geneset = pareto_frontier_genes(volcano_data, number_of_marker_genes)
 
-    logger.info("Generating posterior phase portraits")
-    posterior_curve(
-        adata,
-        posterior_samples,
-        grid_time_samples_ut,
-        grid_time_samples_st,
-        grid_time_samples_u0,
-        grid_time_samples_s0,
-        grid_time_samples_uinf,
-        grid_time_samples_sinf,
-        grid_time_samples_uscale,
-        grid_time_samples_state,
-        grid_time_samples_t0,
-        grid_time_samples_dt_switching,
-        geneset,
-        data_model,
-        posterior_phase_portraits_path,
-    )
+    if len(os.listdir(posterior_phase_portraits_path)) > 0:
+        logger.info(
+            f"\nFiles exist in posterior phase portraits path:\n"
+            f"{posterior_phase_portraits_path}\n"
+            f"Remove output files if you want to regenerate them.\n\n"
+        )
+    else:
+        logger.info("Generating posterior phase portraits")
+        posterior_curve(
+            adata,
+            posterior_samples,
+            grid_time_samples_ut,
+            grid_time_samples_st,
+            grid_time_samples_u0,
+            grid_time_samples_s0,
+            grid_time_samples_uinf,
+            grid_time_samples_sinf,
+            grid_time_samples_uscale,
+            grid_time_samples_state,
+            grid_time_samples_t0,
+            grid_time_samples_dt_switching,
+            geneset,
+            data_model,
+            posterior_phase_portraits_path,
+        )
 
     # volcano plot
     if os.path.isfile(volcano_plot):
@@ -375,6 +371,22 @@ def summarize_dataset(
                 edgecolor="none",
                 dpi=300,
             )
+
+    # gene selection
+    if os.path.isfile(fig2_part2_plot):
+        logger.info(f"{fig2_part2_plot} exists")
+    else:
+        logger.info(f"Generating figure: {fig2_part2_plot}")
+        summarize_fig2_part2(
+            adata,
+            posterior_samples,
+            basis=vector_field_basis,
+            cell_state=cell_type,
+            plot_name=fig2_part2_plot,
+            fig=None,
+            selected_genes=geneset,
+            show_marginal_histograms=False,
+        )
 
     # parameter uncertainty
     if os.path.isfile(parameter_uncertainty_plot_path):
