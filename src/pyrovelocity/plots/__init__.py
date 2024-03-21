@@ -1,3 +1,4 @@
+from pyrovelocity.plots._experimental import plot_t0_selection
 from pyrovelocity.plots._genes import plot_gene_ranking
 from pyrovelocity.plots._parameters import (
     plot_parameter_posterior_distributions,
@@ -9,6 +10,7 @@ from pyrovelocity.plots._predictive import posterior_curve
 from pyrovelocity.plots._rainbow import rainbowplot
 from pyrovelocity.plots._summary import summarize_fig2_part2
 from pyrovelocity.plots._time import plot_posterior_time
+from pyrovelocity.plots._time import plot_shared_time_uncertainty
 from pyrovelocity.plots._uncertainty import cluster_violin_plots
 from pyrovelocity.plots._uncertainty import (
     get_posterior_sample_angle_uncertainty,
@@ -24,7 +26,9 @@ __all__ = [
     "plot_gene_ranking",
     "plot_parameter_posterior_distributions",
     "plot_posterior_time",
+    "plot_shared_time_uncertainty",
     "plot_state_uncertainty",
+    "plot_t0_selection",
     "posterior_curve",
     "rainbowplot",
     "summarize_fig2_part1",
