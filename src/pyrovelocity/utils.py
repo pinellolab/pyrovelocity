@@ -1,5 +1,7 @@
+import contextlib
 import importlib
 import inspect
+import io
 import os
 import sys
 from inspect import getmembers
@@ -43,6 +45,7 @@ __all__ = [
     "filter_startswith_dict",
     "generate_public_api",
     "generate_sample_data",
+    "internal_help",
     "mae",
     "mae_evaluate",
     "pretty_log_dict",
@@ -492,6 +495,28 @@ class SuppressOutput:
     def __exit__(self, exc_type, exc_val, exc_tb):
         sys.stdout.close()
         sys.stdout = self._original_stdout
+
+
+def internal_help(obj: Callable | ModuleType):
+    """Generate help text for a callable or module.
+
+    Args:
+        obj (Callable | ModuleType): The object to generate help text for.
+    """
+    captured_output = io.StringIO()
+    with contextlib.redirect_stdout(captured_output):
+        help(obj)
+
+    help_text = captured_output.getvalue()
+    lines = help_text.split("\n")
+
+    processed_lines = []
+    for line in lines:
+        if line.startswith("FILE"):
+            break
+        processed_lines.append(line)
+
+    print("\n".join(processed_lines))
 
 
 # TODO: remove unused functions
