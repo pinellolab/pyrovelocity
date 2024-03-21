@@ -227,6 +227,7 @@ workflow-clean: ## Clean local cache db and testing dataset and model outputs.
 workflow-refresh-test: ## Refresh local test execution.
 	$(MAKE) workflow-clean-outputs
 	$(MAKE) workflow-clear-cache
+	env | grep PYROVELOCITY_
 	$(MAKE) run-local
 
 
