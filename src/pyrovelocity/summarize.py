@@ -219,23 +219,16 @@ def summarize_dataset(
     ##################
 
     # vector field summary plot
-    cell_type = cell_state
-
     if os.path.isfile(vector_field_summary_plot):
         logger.info(f"{vector_field_summary_plot} exists")
     else:
         logger.info(f"Generating figure: {vector_field_summary_plot}")
         plot_vector_field_summary(
-            adata,
-            posterior_samples["vector_field_posterior_samples"],
-            posterior_samples["cell_time"],
-            posterior_samples["original_spaces_embeds_magnitude"],
-            posterior_samples["pca_embeds_angle"],
-            posterior_samples["embeds_angle"],
-            vector_field_basis,
-            posterior_samples["vector_field_posterior_mean"],
-            cell_type,
-            vector_field_summary_plot,
+            adata=adata,
+            posterior_samples=posterior_samples,
+            vector_field_basis=vector_field_basis,
+            plot_name=vector_field_summary_plot,
+            cell_state=cell_state,
         )
 
     # shared time plot
@@ -310,6 +303,7 @@ def summarize_dataset(
                 edgecolor="none",
                 dpi=300,
             )
+        plt.close(fig)
 
     # gene selection summary plot
     if os.path.isfile(gene_selection_summary_plot):
@@ -320,7 +314,7 @@ def summarize_dataset(
             adata=adata,
             posterior_samples=posterior_samples,
             basis=vector_field_basis,
-            cell_state=cell_type,
+            cell_state=cell_state,
             plot_name=gene_selection_summary_plot,
             selected_genes=putative_marker_genes,
             show_marginal_histograms=False,
@@ -361,6 +355,7 @@ def summarize_dataset(
                 edgecolor="none",
                 dpi=300,
             )
+        plt.close(fig)
 
     # mean vector field plot
     if os.path.isfile(vector_field_plot):
@@ -393,5 +388,6 @@ def summarize_dataset(
                 edgecolor="none",
                 dpi=300,
             )
+        plt.close(fig)
 
     return (data_model_reports_path, dataframe_path)
