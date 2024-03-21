@@ -17,6 +17,7 @@ import pyrovelocity.analyze
 import pyrovelocity.cytotrace
 import pyrovelocity.data
 import pyrovelocity.datasets
+import pyrovelocity.help
 import pyrovelocity.interfaces
 import pyrovelocity.io
 import pyrovelocity.logging
@@ -45,6 +46,7 @@ __all__ = [
     "cytotrace",
     "data",
     "datasets",
+    "help",
     "interfaces",
     "io",
     "logging",
