@@ -444,6 +444,7 @@ def anndata_counts_to_df(
     )
 
 
+# TODO: migrate to parquet
 @beartype
 def save_anndata_counts_to_dataframe(
     adata: AnnData,
