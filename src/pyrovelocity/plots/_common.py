@@ -1,14 +1,18 @@
+import matplotlib
 from matplotlib.ticker import MaxNLocator
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from pyrovelocity.logging import configure_logging
 
-__all__ = ["set_colorbar"]
+
+__all__ = ["set_colorbar", "set_font_size"]
 
 logger = configure_logging(__name__)
 
-from matplotlib import colorbar
+
+def set_font_size(size: int):
+    matplotlib.rcParams.update({"font.size": size})
 
 
 def set_colorbar(
