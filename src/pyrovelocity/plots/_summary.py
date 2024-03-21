@@ -73,4 +73,6 @@ def plot_gene_selection_summary(
             dpi=300,
         )
 
+    plt.close(fig)
+
     return fig
