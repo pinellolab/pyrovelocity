@@ -73,9 +73,11 @@ jupyter:
 
 ## Setup environment
 
+### Overview
+
 Installation should take less than **5 minutes**. 
 It involves checking if the notebook is running in colab, in which case it is certain that you will need to install or reinstall pyrovelocity.
-Otherwise, it is assumed that the user will have installed pyrovelocity in the kernel environment.
+Otherwise, it is assumed that the user will have installed pyrovelocity in the same environment in which the jupyter kernel is running.
 
 The simplest way to complete it is to run the `Setup environment` section, wait for the kernel to restart, and then run the same section again:
 
@@ -93,7 +95,7 @@ In either case, this section can be folded away after installation is complete.
 
 If you need to edit the **version number**, please see the setting in the `setup_pyrovelocity` function below.
 
-### Install pyrovelocity
+### Install library
 
 This first stage will download and install [pyrovelocity](https://github.com/pinellolab/pyrovelocity). This usually takes less than **4 minutes**. The runtime will then automatically restart. After this you can execute "Run all" to complete installation or proceed linearly below if you have added additional content you do not want to run all at once.
 
@@ -141,7 +143,7 @@ def setup_pyrovelocity():
             sys.exit()
     else:
         print("Installing pyrovelocity...")
-        install_package("pyrovelocity==0.2.0b12")
+        install_package("pyrovelocity[workflows] @ git+https://github.com/pinellolab/pyrovelocity.git@530-nbwf")
         try:
             import pyrovelocity
 
@@ -181,7 +183,8 @@ If installation was successful, the following commands should print the location
 #| output: false
 
 import pyrovelocity
-print(pyrovelocity.__file__)
+if IN_COLAB:
+  print(pyrovelocity.__file__)
 print(pyrovelocity.__version__)
 ```
 
@@ -193,7 +196,8 @@ This is the same for the pyro package in case there was an issue with pyroveloci
 #| output: false
 
 import pyro
-print(pyro.__file__)
+if IN_COLAB:
+  print(pyro.__file__)
 print(pyro.__version__)
 ```
 
@@ -202,8 +206,8 @@ Please refer to the [docs](https://pinellolab.github.io/pyrovelocity) for tutori
 ## Analysis
 
 ```{python}
-#| label: print-pyrovelocity-docstring
-help(pyrovelocity) # ?pyrovelocity # to open in side panel tab for reference
+#| label: print-pyrovelocity-docstring-1
+pyrovelocity.help.internal_help(pyrovelocity) # ?pyrovelocity # to open in side panel tab for reference
 ```
 
 Before we start, we will adjust a few environment variables to ensure our first execution occurs in a lightweight test mode with a subset of observations, variables, training epochs, and posterior samples. We will also set a few log levels. Feel free to adjust these to `ERROR`, `DEBUG`, etc as needed.
@@ -422,17 +426,17 @@ print_config_tree(dataset_summary.to_dict(), "dataset summary")
 ### Data set review 
 ```{python}
 #| label: import-ipython-display
-#| echo: false
+#| echo: true
 from IPython.display import Image, display
 ```
 
 The maximum values of the unspliced and spliced count data for each gene across cells is shown in @fig-raw-counts.
 
-<!-- ![Maximum spliced and unsliced transcript counts data for each gene across all cells with marginal histograms.](data/processed/pancreas_thresh_histogram.pdf.png){#fig-raw-counts} -->
 ```{python}
 #| label: fig-raw-counts
-#| echo: false
+#| echo: true
 #| fig-cap: "Maximum spliced and unsliced transcript counts data for each gene across all cells with marginal histograms."
+ 
 display(Image(filename=f"data/processed/pancreas_thresh_histogram.pdf.png"))
 ```
 
@@ -441,11 +445,11 @@ display(Image(filename=f"data/processed/pancreas_thresh_histogram.pdf.png"))
 
 A vector field estimate of cell state transformation probability derived from RNA velocity estimates with cluster annotations is shown in @fig-vector-field. 
 
-<!-- ![Vector field](reports/pancreas_model2/vector_field.pdf.png){#fig-vector-field} -->
 ```{python}
 #| label: fig-vector-field
-#| echo: false
+#| echo: true
 #| fig-cap: "Vector field" 
+ 
 display(Image(filename=f"{dataset_summary.data_model_reports.path}/vector_field.pdf.png"))
 ```
 
@@ -453,24 +457,23 @@ display(Image(filename=f"{dataset_summary.data_model_reports.path}/vector_field.
 
 @fig-vector-fields-uncertainty shows a low-dimensional representation of the RNA velocity vector fields with uncertainty estimates for shared time and angle. The latter quantity is estimated in PCA space. The base magnitude uncertainty is also shown but may not be interpretable.
 
-<!-- ![Vector fields with uncertainty estimates](reports/pancreas_model2/fig2_part1_plot.pdf.png){#fig-vector-fields-uncertainty} -->
 ```{python}
 #| label: fig-vector-fields-uncertainty
-#| echo: false
+#| echo: true
 #| fig-cap: "Vector fields with uncertainty estimates."
+ 
 display(Image(filename=f"{dataset_summary.data_model_reports.path}/fig2_part1_plot.pdf.png"))
 ```
-
 
 ### Gene selection
 
 A *volcano plot* adapted for probabilistic inference of RNA velocity is shown in @fig-volcano. This plot shows the mean absolute error versus shared time correlation for each gene.
 
-<!-- ![RNA velocity volcano plot showing mean absolute error versus shared time correlation for each gene](reports/pancreas_model2/volcano.pdf.png){#fig-volcano} -->
 ```{python}
 #| label: fig-volcano
-#| echo: false
+#| echo: true
 #| fig-cap: "RNA velocity volcano plot showing mean absolute error versus shared time correlation for each gene."
+ 
 display(Image(filename=f"{dataset_summary.data_model_reports.path}/volcano.pdf.png"))
 ```
 
@@ -478,11 +481,11 @@ display(Image(filename=f"{dataset_summary.data_model_reports.path}/volcano.pdf.p
 
 @fig-rainbow shows the splice state phase portraits, estimated expression levels over shared time, and shared time correlation for a subset of selected genes.
 
-<!-- ![Splice state phase portraits, estimated expression levels over shared time, and shared time correlation for a subset of selected genes](reports/pancreas_model2/rainbow.pdf.png){#fig-rainbow} -->
 ```{python}
 #| label: fig-rainbow
-#| echo: false
+#| echo: true
 #| fig-cap: "Splice state phase portraits, estimated expression levels over shared time, and shared time correlation for a subset of selected genes."
+ 
 display(Image(filename=f"{dataset_summary.data_model_reports.path}/rainbow.pdf.png"))
 ```
 
@@ -490,14 +493,13 @@ display(Image(filename=f"{dataset_summary.data_model_reports.path}/rainbow.pdf.p
 
 A summary of the gene selection results is shown in @fig-gene-selection-summary.
 
-<!-- ![Summary of gene selection results](reports/pancreas_model2/fig2_part2_plot.pdf.png){#fig-gene-selection-summary} -->
 ```{python}
 #| label: fig-gene-selection-summary
-#| echo: false
+#| echo: true
 #| fig-cap: "Summary of gene selection results."
+ 
 display(Image(filename=f"{dataset_summary.data_model_reports.path}/fig2_part2_plot.pdf.png"))
 ```
-
 
 ### Uncertainty estimation
 
@@ -505,19 +507,76 @@ display(Image(filename=f"{dataset_summary.data_model_reports.path}/fig2_part2_pl
 
 Estimates for parameter uncertainties for a subset of genes are shown in @fig-parameter-uncertainty.
 
-<!-- ![Centered parameter uncertainties for a subset of genes](reports/pancreas_model2/parameter_uncertainties.pdf.png){#fig-parameter-uncertainty} -->
+
 ```{python}
 #| label: fig-parameter-uncertainty
-#| echo: false
+#| echo: true
 #| fig-cap: "Centered parameter uncertainties for a subset of genes."
+ 
 display(Image(filename=f"{dataset_summary.data_model_reports.path}/parameter_uncertainties.pdf.png"))
 ```
 
-<!-- 
-TODO: save png copy of shared time plot
 #### Shared time
 
-@fig-shared-time-uncertainty shows the uncertainty in the shared time estimates for each gene.
+@fig-shared-time-uncertainty shows the distribution of coefficients of variation together with the mean and standard deviation (uncertainty) of the shared time for each cell. A kernel density estimate in the shared time uncertainty plot highlights the 90th percentile of the shared time standard deviation.
 
-![Uncertainty in the shared time estimates for each gene](reports/pancreas_model2/shared_time.pdf){#fig-shared-time-uncertainty} 
--->
+```{python}
+#| label: fig-shared-time-uncertainty
+#| echo: true
+#| fig-cap: "Distribution of shared time coefficients of variation together with standard deviation (uncertainty) and mean per cell."
+ 
+display(Image(filename=f"{dataset_summary.data_model_reports.path}/shared_time.pdf.png"))
+```
+
+
+## Experimentation
+
+After having reviewed results that are currently computed systematically, we can also load the data and experiment.
+
+Here we will load the data and posterior samples, perform the analysis used to generate the volcano plot for gene selection, and then regenerate the plot of phase portraits, temporal evolution, and shared time correlation. It would be straightforward, and perhaps preferable in some cases, to extract all the relevant parameters from the configuration dataclass object we referenced in each section above, but we will intentionally hard-code values to be concrete. Of course, feel free to generalize these as might suit your use case.
+
+To load the posterior samples and postprocessed data
+
+```{python}
+#| label: load-posterior-samples
+import pyrovelocity as pv
+import scanpy as sc
+
+logger = pv.logging.configure_logging("pyrovelocity.user_notebook")
+
+posterior_samples = pv.io.CompressedPickle.load("models/pancreas_model2/pyrovelocity.pkl.zst")
+adata = sc.read("models/pancreas_model2/postprocessed.h5ad")
+```
+
+to generate the marker genes
+
+```{python}
+#| label: generate-marker-genes
+volcano_data = posterior_samples["gene_ranking"] 
+putative_marker_genes = pv.analyze.pareto_frontier_genes(volcano_data=volcano_data, num_genes=6)
+```
+
+In @fig-manually-generated-rainbowplot we show the manually generated marker gene phase portraits, temporal evolution, and shared time correlation.
+
+```{python}
+#| label: fig-manually-generated-rainbowplot
+#| echo: true
+#| fig-cap: "Manually generated rainbow plot." 
+with SuppressOutput():
+  pv.plots.rainbowplot(
+      volcano_data=volcano_data,
+      adata=adata,
+      posterior_samples=posterior_samples,
+      genes=putative_marker_genes,
+      data=["st", "ut"],
+      basis="umap",
+      cell_state="clusters",
+  )
+```
+
+The best place to review the approach to generating the above plots is in [the source code for the `pyrovelocity.summarize` module](https://github.com/pinellolab/pyrovelocity/tree/beta/src/pyrovelocity/summarize.py) or in the [docs](https://github.io/pinellolab/pyrovelocity). Additional links are shown in the help below.
+
+```{python}
+#| label: print-pyrovelocity-docstring-2
+pv.help.internal_help(pv)
+```
