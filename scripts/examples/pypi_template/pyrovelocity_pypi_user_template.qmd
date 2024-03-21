@@ -365,13 +365,13 @@ processed_data = preprocess_data(
 
 ### Train model
 
-The train model task is executed with the `train_model` function. The `train_model` task function takes the `FlyteFile` object, here named `processed_data` above, from `preprocess_data` task function and one of the `PyrovelocityTrainInterface` objects such as is found in the `training_configuration_2` attribute of the `pancreas_configuration` object as arguments.
+The train model task is executed with the `train_model` function. The `train_model` task function takes the `FlyteFile` object, here named `processed_data` above, from `preprocess_data` task function and one of the `PyrovelocityTrainInterface` objects such as is found in the `training_configuration_1` attribute of the `pancreas_configuration` object as arguments.
 
 The configuration is given by
 
 ```{python}
 #| label: print-train-model-configuration
-print_config_tree(pancreas_configuration.training_configuration_2.to_dict(), "train model 2")
+print_config_tree(pancreas_configuration.training_configuration_1.to_dict(), "train model 1")
 ```
 
 The `PyrovelocityTrainInterface` is a configuration for the `pyrovelocity.train.train_dataset` function whose documentation we print below.
@@ -387,7 +387,7 @@ Finally, we execute the `train_model` task function
 #| label: execute-train-model-task
 model_output = train_model(
   processed_data=processed_data,
-  train_model_configuration=pancreas_configuration.training_configuration_2,
+  train_model_configuration=pancreas_configuration.training_configuration_1,
 )
 ```
 
@@ -591,8 +591,8 @@ import scanpy as sc
 
 logger = pv.logging.configure_logging("pyrovelocity.user_notebook")
 
-posterior_samples = pv.io.CompressedPickle.load("models/pancreas_model2/pyrovelocity.pkl.zst")
-adata = sc.read("models/pancreas_model2/postprocessed.h5ad")
+posterior_samples = pv.io.CompressedPickle.load("models/pancreas_model1/pyrovelocity.pkl.zst")
+adata = sc.read("models/pancreas_model1/postprocessed.h5ad")
 ```
 
 to generate the marker genes
@@ -629,3 +629,163 @@ The best place to review the approach to generating the above plots is in [the s
 #| label: print-pyrovelocity-docstring-2
 pv.utils.internal_help(pv)
 ```
+
+## Training and postprocessing for an alternative model
+
+In this section we will train and show the results of an alternative model. This time we will proceed quickly through the analysis with less discussion of the various configuration settings and associated task functions.
+
+### Train model
+
+We will now use the `training_configuration_2` attribute of the `pancreas_configuration` object to train the model.
+
+```{python}
+#| label: print-train-model-configuration-2
+print_config_tree(pancreas_configuration.training_configuration_2.to_dict(), "train model 2")
+```
+
+Re-execute the `train_model` task function with this new configuration.
+
+```{python}
+#| label: execute-train-model-task-2
+model_output_2 = train_model(
+  processed_data=processed_data,
+  train_model_configuration=pancreas_configuration.training_configuration_2,
+)
+```
+
+This produces the `model_output_2`.
+
+```{python}
+#| label: print-model-output-2
+print_config_tree(model_output_2.to_dict(), "model output 2")
+```
+
+### Postprocess data
+
+The postprocess data task is executed with the `postprocess_data` function. 
+
+```{python}
+#| label: execute-postprocess-data-task-2
+#| output: false 
+from pyrovelocity.utils import SuppressOutput 
+
+with SuppressOutput():
+  postprocessing_outputs_2 = postprocess_data(
+    preprocess_data_args=pancreas_configuration.preprocess_data,
+    training_outputs=model_output_2,
+    postprocess_configuration=pancreas_configuration.postprocess_configuration,
+  )
+```
+
+## Alternative model results
+
+Now we have what is required to construct a summary of the results.
+
+```{python}
+#| label: execute-summarize-data-task-2
+#| output: false
+dataset_summary_2 = summarize_data(
+  preprocess_data_args=pancreas_configuration.preprocess_data,
+  postprocessing_outputs=postprocessing_outputs_2,
+  training_outputs=model_output_2,
+)
+```
+
+The dataset summary contains
+
+```{python}
+#| label: print-dataset-summary-2
+print_config_tree(dataset_summary_2.to_dict(), "dataset summary")
+```
+
+
+### Cell state transformation vector field estimates
+
+A vector field estimate of cell state transformation probability derived from RNA velocity estimates with cluster annotations is shown in @fig-vector-field-2. 
+
+```{python}
+#| label: fig-vector-field-2
+#| echo: true
+#| fig-cap: "Vector field" 
+ 
+display(Image(filename=f"{dataset_summary_2.data_model_reports.path}/vector_field.pdf.png"))
+```
+
+#### Vector field uncertainty estimates
+
+@fig-vector-fields-uncertainty-2 shows a low-dimensional representation of the RNA velocity vector fields with uncertainty estimates for shared time and angle. The latter quantity is estimated in PCA space. The base magnitude uncertainty is also shown but may not be interpretable.
+
+```{python}
+#| label: fig-vector-fields-uncertainty-2
+#| echo: true
+#| fig-cap: "Vector fields with uncertainty estimates."
+ 
+display(Image(filename=f"{dataset_summary_2.data_model_reports.path}/vector_field_summary_plot.pdf.png"))
+```
+
+### Gene selection
+
+A *volcano plot* adapted for probabilistic inference of RNA velocity is shown in @fig-volcano-2. This plot shows the mean absolute error versus shared time correlation for each gene.
+
+```{python}
+#| label: fig-volcano-2
+#| echo: true
+#| fig-cap: "RNA velocity volcano plot showing mean absolute error versus shared time correlation for each gene."
+ 
+display(Image(filename=f"{dataset_summary_2.data_model_reports.path}/volcano.pdf.png"))
+```
+
+#### Splice state phase portraits
+
+@fig-rainbow-2 shows the splice state phase portraits, estimated expression levels over shared time, and shared time correlation for a subset of selected genes.
+
+```{python}
+#| label: fig-rainbow-2
+#| echo: true
+#| fig-cap: "Splice state phase portraits, estimated expression levels over shared time, and shared time correlation for a subset of selected genes."
+ 
+display(Image(filename=f"{dataset_summary_2.data_model_reports.path}/gene_selection_rainbow_plot.pdf.png"))
+```
+
+#### Summary
+
+A summary of the gene selection results is shown in @fig-gene-selection-summary-2.
+
+```{python}
+#| label: fig-gene-selection-summary-2
+#| echo: true
+#| fig-cap: "Summary of gene selection results."
+ 
+display(Image(filename=f"{dataset_summary_2.data_model_reports.path}/gene_selection_summary_plot.pdf.png"))
+```
+
+### Uncertainty estimation
+
+#### Parameter estimates
+
+Estimates for parameter uncertainties for a subset of genes are shown in @fig-parameter-uncertainty-2.
+
+
+```{python}
+#| label: fig-parameter-uncertainty-2
+#| echo: true
+#| fig-cap: "Centered parameter uncertainties for a subset of genes."
+ 
+display(Image(filename=f"{dataset_summary_2.data_model_reports.path}/parameter_uncertainties.pdf.png"))
+```
+
+#### Shared time
+
+@fig-shared-time-uncertainty-2 shows the distribution of coefficients of variation together with the mean and standard deviation (uncertainty) of the shared time for each cell. A kernel density estimate in the shared time uncertainty plot highlights the 90th percentile of the shared time standard deviation.
+
+```{python}
+#| label: fig-shared-time-uncertainty-2
+#| echo: true
+#| fig-cap: "Distribution of shared time coefficients of variation together with standard deviation (uncertainty) and mean per cell."
+ 
+display(Image(filename=f"{dataset_summary_2.data_model_reports.path}/shared_time.pdf.png"))
+```
+
+## Summary
+
+In this notebook we have demonstrated how to install pyrovelocity and execute a comprehensive workflow to perform a probabilistic analysis of RNA velocity in a single-cell transcriptomics data set in a Jupyter notebook. We default to data downsampled in this case by about a factor of 10 to allow for swift execution to illustrate the analysis workflow. In particular, we have shown how to download data, preprocess it, train a model, postprocess the results, and summarize the data with a compendium of plots. We have also shown how to experiment with the data and posterior samples to generate new plots, and how to train, postprocess, and summarize the results of an alternative model. This information should be sufficient to see how to get started applying pyrovelocity to your own data. We will discuss approaches to model comparison, criticism, and selection in a separate notebook. Please do not hesitate to reach out in [the discussions board on github](https://github.com/pinellolab/pyrovelocity/discussions) if you run into problems using the library.
