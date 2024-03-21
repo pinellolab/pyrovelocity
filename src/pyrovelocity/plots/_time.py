@@ -132,4 +132,6 @@ def plot_shared_time_uncertainty(
             dpi=300,
         )
 
+    plt.close(fig)
+
     return fig
