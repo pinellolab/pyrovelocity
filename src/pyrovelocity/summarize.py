@@ -16,9 +16,9 @@ from pyrovelocity.plots import extrapolate_prediction_sample_predictive
 from pyrovelocity.plots import plot_gene_ranking
 from pyrovelocity.plots import plot_parameter_posterior_distributions
 from pyrovelocity.plots import plot_shared_time_uncertainty
+from pyrovelocity.plots import plot_vector_field_summary
 from pyrovelocity.plots import posterior_curve
 from pyrovelocity.plots import rainbowplot
-from pyrovelocity.plots import summarize_fig2_part1
 from pyrovelocity.plots import summarize_fig2_part2
 from pyrovelocity.utils import save_anndata_counts_to_dataframe
 
@@ -113,6 +113,7 @@ def summarize_dataset(
         rainbow_plot,
         vector_field_plot,
         shared_time_plot,
+        vector_field_summary_plot,
         parameter_uncertainty_plot_path,
     ]
 
@@ -201,7 +202,7 @@ def summarize_dataset(
         logger.info(f"{vector_field_summary_plot} exists")
     else:
         logger.info(f"Generating figure: {vector_field_summary_plot}")
-        summarize_fig2_part1(
+        plot_vector_field_summary(
             adata,
             posterior_samples["vector_field_posterior_samples"],
             posterior_samples["cell_time"],

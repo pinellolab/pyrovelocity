@@ -14,7 +14,6 @@ from pyrovelocity.plots._uncertainty import (
     get_posterior_sample_angle_uncertainty,
 )
 
-
 # from pyrovelocity.plot import plot_vector_field_uncertain
 # from pyrovelocity.plot import plot_gene_ranking
 # from pyrovelocity.plot import plot_posterior_time
@@ -25,14 +24,14 @@ logger = configure_logging(__name__)
 
 
 __all__ = [
-    "summarize_fig2_part1",
+    "plot_vector_field_summary",
     "plot_vector_field_uncertain",
     "plot_mean_vector_field",
     "plot_arrow_examples",
 ]
 
 
-def summarize_fig2_part1(
+def plot_vector_field_summary(
     adata,
     posterior_vector_field,
     posterior_time,

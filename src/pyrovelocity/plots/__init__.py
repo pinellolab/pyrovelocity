@@ -16,7 +16,7 @@ from pyrovelocity.plots._uncertainty import (
     get_posterior_sample_angle_uncertainty,
 )
 from pyrovelocity.plots._uncertainty import plot_state_uncertainty
-from pyrovelocity.plots._vector_fields import summarize_fig2_part1
+from pyrovelocity.plots._vector_fields import plot_vector_field_summary
 
 
 __all__ = [
@@ -31,6 +31,6 @@ __all__ = [
     "plot_t0_selection",
     "posterior_curve",
     "rainbowplot",
-    "summarize_fig2_part1",
+    "plot_vector_field_summary",
     "summarize_fig2_part2",
 ]
