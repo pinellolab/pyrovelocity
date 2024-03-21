@@ -283,44 +283,49 @@ def summarize_dataset(
     else:
         logger.info(f"Generating figure: {shared_time_plot}")
         fig, ax = plt.subplots(1, 3)
-        fig.set_size_inches(9.2, 2.6)
+        fig.set_size_inches(10, 3)
         ax = ax.flatten()
-        ax_cb = scv.pl.scatter(
+        ax[0].hist(cell_time_std / cell_time_mean, bins=100)
+        ax[0].set_title("histogram of shared time CoV")
+        ax_st = scv.pl.scatter(
             adata,
             c="shared_time_mean",
-            ax=ax[0],
-            show=False,
-            cmap="inferno",
-            fontsize=7,
-            colorbar=True,
-        )
-        ax_cb = scv.pl.scatter(
-            adata,
-            c="shared_time_uncertain",
             ax=ax[1],
             show=False,
             cmap="inferno",
-            fontsize=7,
+            fontsize=12,
             colorbar=True,
         )
+        ax_cv = scv.pl.scatter(
+            adata,
+            c="shared_time_uncertain",
+            ax=ax[2],
+            show=False,
+            cmap="inferno",
+            fontsize=12,
+            colorbar=True,
+            title="shared time uncertainty",
+        )
+        ax_cv.set_xlabel("density estimate over 90th %")
         select = adata.obs["shared_time_uncertain"] > np.quantile(
             adata.obs["shared_time_uncertain"], 0.9
         )
         sns.kdeplot(
             x=adata.obsm[f"X_{vector_field_basis}"][:, 0][select],
             y=adata.obsm[f"X_{vector_field_basis}"][:, 1][select],
-            ax=ax[1],
+            ax=ax[2],
             levels=3,
             fill=False,
         )
-        ax[2].hist(cell_time_std / cell_time_mean, bins=100)
-        fig.savefig(
-            shared_time_plot,
-            facecolor=fig.get_facecolor(),
-            bbox_inches="tight",
-            edgecolor="none",
-            dpi=300,
-        )
+        fig.tight_layout()
+        for ext in ["", ".png"]:
+            fig.savefig(
+                f"{shared_time_plot}{ext}",
+                facecolor=fig.get_facecolor(),
+                bbox_inches="tight",
+                edgecolor="none",
+                dpi=300,
+            )
 
     volcano_data = posterior_samples["gene_ranking"]
     number_of_marker_genes = min(
