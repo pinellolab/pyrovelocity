@@ -102,12 +102,14 @@ def summarize_dataset(
     gene_selection_summary_plot = (
         data_model_reports_path / "gene_selection_summary_plot.pdf"
     )
-    violin_clusters_lin = data_model_reports_path / "violin_clusters_lin.pdf"
-    violin_clusters_log = data_model_reports_path / "violin_clusters_log.pdf"
-    parameter_uncertainty_plot_path = (
+    parameter_uncertainty_plot = (
         data_model_reports_path / "parameter_uncertainties.pdf"
     )
+
+    # experimental plots
     t0_selection_plot = data_model_reports_path / "t0_selection.png"
+    violin_clusters_lin = data_model_reports_path / "violin_clusters_lin.pdf"
+    violin_clusters_log = data_model_reports_path / "violin_clusters_log.pdf"
 
     output_filenames = [
         dataframe_path,
@@ -117,11 +119,13 @@ def summarize_dataset(
         shared_time_plot,
         vector_field_summary_plot,
         gene_selection_summary_plot,
-        parameter_uncertainty_plot_path,
+        parameter_uncertainty_plot,
     ]
 
     experimental_filenames = [
         t0_selection_plot,
+        violin_clusters_lin,
+        violin_clusters_log,
     ]
 
     if enable_experimental_plots:
@@ -152,6 +156,7 @@ def summarize_dataset(
     posterior_samples = CompressedPickle.load(pyrovelocity_data_path)
 
     if enable_experimental_plots:
+        # t0 selection plot
         if os.path.isfile(t0_selection_plot):
             logger.info(
                 f"\nt0_selection plot exists: {t0_selection_plot}\n"
@@ -165,6 +170,23 @@ def summarize_dataset(
                 posterior_samples=posterior_samples,
                 t0_selection_plot=t0_selection_plot,
             )
+
+        # cluster violin plots
+        if os.path.isfile(violin_clusters_log):
+            logger.info(f"{violin_clusters_log} exists")
+        else:
+            logger.info(f"Generating figure: {violin_clusters_log}")
+            for fig_name in [violin_clusters_lin, violin_clusters_log]:
+                cluster_violin_plots(
+                    data_model,
+                    adata=adata,
+                    posterior_samples=posterior_samples,
+                    cluster_key=cell_state,
+                    violin_flag=True,
+                    pairs=None,
+                    show_outlier=False,
+                    fig_name=fig_name,
+                )
 
     logger.info(
         "Extrapolating prediction samples for predictive posterior plots"
@@ -218,23 +240,6 @@ def summarize_dataset(
             vector_field_summary_plot,
         )
 
-    # cluster violin plots
-    if os.path.isfile(violin_clusters_log):
-        logger.info(f"{violin_clusters_log} exists")
-    else:
-        logger.info(f"Generating figure: {violin_clusters_log}")
-        for fig_name in [violin_clusters_lin, violin_clusters_log]:
-            cluster_violin_plots(
-                data_model,
-                adata=adata,
-                posterior_samples=posterior_samples,
-                cluster_key=cell_state,
-                violin_flag=True,
-                pairs=None,
-                show_outlier=False,
-                fig_name=fig_name,
-            )
-
     # shared time plot
     if os.path.isfile(shared_time_plot):
         logger.info(f"{shared_time_plot} exists")
@@ -253,7 +258,9 @@ def summarize_dataset(
         max(int(len(volcano_data) * 0.1), 4), 20, len(volcano_data)
     )
     logger.info(f"Searching for {number_of_marker_genes} marker genes")
-    geneset = pareto_frontier_genes(volcano_data, number_of_marker_genes)
+    putative_marker_genes = pareto_frontier_genes(
+        volcano_data, number_of_marker_genes
+    )
 
     if phase_portraits_exist:
         logger.info(
@@ -276,7 +283,7 @@ def summarize_dataset(
             grid_time_samples_state,
             grid_time_samples_t0,
             grid_time_samples_dt_switching,
-            geneset,
+            putative_marker_genes,
             data_model,
             posterior_phase_portraits_path,
         )
@@ -290,7 +297,7 @@ def summarize_dataset(
         volcano_data, fig = plot_gene_ranking(
             posterior_samples=[posterior_samples],
             adata=[adata],
-            selected_genes=geneset,
+            selected_genes=putative_marker_genes,
             time_correlation_with="st",
             show_marginal_histograms=True,
         )
@@ -316,20 +323,20 @@ def summarize_dataset(
             basis=vector_field_basis,
             cell_state=cell_type,
             plot_name=gene_selection_summary_plot,
-            selected_genes=geneset,
+            selected_genes=putative_marker_genes,
             show_marginal_histograms=False,
         )
 
     # parameter uncertainty
-    if os.path.isfile(parameter_uncertainty_plot_path):
-        logger.info(f"{parameter_uncertainty_plot_path} exists")
+    if os.path.isfile(parameter_uncertainty_plot):
+        logger.info(f"{parameter_uncertainty_plot} exists")
     else:
-        logger.info(f"Generating figure: {parameter_uncertainty_plot_path}")
+        logger.info(f"Generating figure: {parameter_uncertainty_plot}")
         plot_parameter_posterior_distributions(
             posterior_samples=posterior_samples,
             adata=adata,
-            geneset=geneset,
-            parameter_uncertainty_plot_path=parameter_uncertainty_plot_path,
+            geneset=putative_marker_genes,
+            parameter_uncertainty_plot=parameter_uncertainty_plot,
         )
 
     # rainbow plot
@@ -342,7 +349,7 @@ def summarize_dataset(
             volcano_data=volcano_data,
             adata=adata,
             posterior_samples=posterior_samples,
-            genes=geneset,
+            genes=putative_marker_genes,
             data=["st", "ut"],
             basis=vector_field_basis,
             cell_state=cell_state,
