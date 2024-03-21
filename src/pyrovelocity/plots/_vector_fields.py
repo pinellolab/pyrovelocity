@@ -1,10 +1,16 @@
+from os import PathLike
+from typing import Dict
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scvelo as scv
 import seaborn as sns
+from anndata import AnnData
+from beartype import beartype
 from matplotlib import cm
 from matplotlib.colors import Normalize
+from matplotlib.figure import FigureBase
 from matplotlib.ticker import MaxNLocator
 from scvelo.plotting.velocity_embedding_grid import default_arrow
 
@@ -13,6 +19,7 @@ from pyrovelocity.logging import configure_logging
 from pyrovelocity.plots._uncertainty import (
     get_posterior_sample_angle_uncertainty,
 )
+
 
 # from pyrovelocity.plot import plot_vector_field_uncertain
 # from pyrovelocity.plot import plot_gene_ranking
@@ -31,18 +38,21 @@ __all__ = [
 ]
 
 
+@beartype
 def plot_vector_field_summary(
-    adata,
-    posterior_vector_field,
-    posterior_time,
-    cell_magnitudes,
-    pca_embeds_angle,
-    embed_radians,
-    embedding,
-    embed_mean,
-    cluster="cell_type",
-    plot_name="test",
-):
+    adata: AnnData,
+    posterior_samples: Dict[str, np.ndarray],
+    vector_field_basis: str,
+    plot_name: PathLike | str,
+    cell_state: str = "cell_type",
+) -> FigureBase:
+    # posterior_vector_field = posterior_samples["vector_field_posterior_samples"]
+    posterior_time = posterior_samples["cell_time"]
+    cell_magnitudes = posterior_samples["original_spaces_embeds_magnitude"]
+    pca_embeds_angle = posterior_samples["pca_embeds_angle"]
+    # embed_radians = posterior_samples["embeds_angle"]
+    embed_mean = posterior_samples["vector_field_posterior_mean"]
+
     dot_size = 3.5
     font_size = 6.5
     scale = 0.35
@@ -53,9 +63,9 @@ def plot_vector_field_summary(
     density = 0.4
     ress = pd.DataFrame(
         {
-            "cell_type": adata.obs[cluster].values,
-            "X1": adata.obsm[f"X_{embedding}"][:, 0],
-            "X2": adata.obsm[f"X_{embedding}"][:, 1],
+            "cell_type": adata.obs[cell_state].values,
+            "X1": adata.obsm[f"X_{vector_field_basis}"][:, 0],
+            "X2": adata.obsm[f"X_{vector_field_basis}"][:, 1],
         }
     )
     fig = plt.figure(figsize=(9.6, 2), constrained_layout=False)
@@ -101,13 +111,18 @@ def plot_vector_field_summary(
         linewidth=1,
     )
     scv.pl.velocity_embedding_grid(
-        adata, basis=embedding, fontsize=font_size, ax=ax[1], title="", **kwargs
+        adata,
+        basis=vector_field_basis,
+        fontsize=font_size,
+        ax=ax[1],
+        title="",
+        **kwargs,
     )
     ax[1].set_title("Scvelo\n", fontsize=7)
     scv.pl.velocity_embedding_grid(
         adata,
         fontsize=font_size,
-        basis=embedding,
+        basis=vector_field_basis,
         title="",
         ax=ax[2],
         vkey="velocity_pyro",
@@ -129,7 +144,7 @@ def plot_vector_field_summary(
         ax=ax[3],
         cbar=True,
         fig=fig,
-        basis=embedding,
+        basis=vector_field_basis,
         scale=scale,
         arrow_size=arrow,
         p_mass_min=1,
@@ -151,7 +166,7 @@ def plot_vector_field_summary(
         ax=ax[4],
         cbar=True,
         fig=fig,
-        basis=embedding,
+        basis=vector_field_basis,
         scale=scale,
         arrow_size=arrow,
         p_mass_min=1,
@@ -170,7 +185,7 @@ def plot_vector_field_summary(
         ax=ax[5],
         cbar=True,
         fig=fig,
-        basis=embedding,
+        basis=vector_field_basis,
         scale=scale,
         arrow_size=arrow,
         p_mass_min=1,
@@ -189,6 +204,8 @@ def plot_vector_field_summary(
             edgecolor="none",
             dpi=300,
         )
+    plt.close(fig)
+    return fig
 
 
 def plot_vector_field_uncertain(
