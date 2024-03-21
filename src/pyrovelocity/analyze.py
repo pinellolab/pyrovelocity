@@ -288,8 +288,10 @@ def mae_per_gene(pred_counts: ndarray, true_counts: ndarray) -> ndarray:
 
 @beartype
 def pareto_frontier_genes(
-    volcano_data: pd.DataFrame, num_genes: int, max_iters: int = 2000
-) -> list[str]:
+    volcano_data: pd.DataFrame,
+    num_genes: int,
+    max_iters: int = 2000,
+) -> List[str]:
     """
     Identify genes on the Pareto frontier of a volcano plot with respect to MAE
     and time correlation.
@@ -300,7 +302,7 @@ def pareto_frontier_genes(
         max_iters (int, optional): Maximum number of iterations. Defaults to 2000.
 
     Returns:
-        list[str]: List of gene indices from volcano_data.
+        List[str]: List of gene indices from volcano_data.
     """
     volcano_data = volcano_data.loc[
         ~volcano_data.index.str.contains(("^Rpl|^Rps"), case=False)
