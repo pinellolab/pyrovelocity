@@ -90,7 +90,9 @@ def summarize_dataset(
 
     dataframe_path = Path(data_model_path) / f"{data_model}_dataframe.pkl.zst"
     volcano_plot = data_model_reports_path / "volcano.pdf"
-    rainbow_plot = data_model_reports_path / "rainbow.pdf"
+    gene_selection_rainbow_plot = (
+        data_model_reports_path / "gene_selection_rainbow_plot.pdf"
+    )
     vector_field_plot = data_model_reports_path / "vector_field.pdf"
     shared_time_plot = data_model_reports_path / "shared_time.pdf"
     vector_field_summary_plot = (
@@ -111,7 +113,7 @@ def summarize_dataset(
     output_filenames = [
         dataframe_path,
         volcano_plot,
-        rainbow_plot,
+        gene_selection_rainbow_plot,
         vector_field_plot,
         shared_time_plot,
         vector_field_summary_plot,
@@ -301,10 +303,10 @@ def summarize_dataset(
         )
 
     # rainbow plot for gene selection review
-    if os.path.isfile(rainbow_plot):
-        logger.info(f"{rainbow_plot} exists")
+    if os.path.isfile(gene_selection_rainbow_plot):
+        logger.info(f"{gene_selection_rainbow_plot} exists")
     else:
-        logger.info(f"Generating figure: {rainbow_plot}")
+        logger.info(f"Generating figure: {gene_selection_rainbow_plot}")
         fig = rainbowplot(
             volcano_data=volcano_data,
             adata=adata,
@@ -317,7 +319,7 @@ def summarize_dataset(
 
         for ext in ["", ".png"]:
             fig.savefig(
-                f"{rainbow_plot}{ext}",
+                f"{gene_selection_rainbow_plot}{ext}",
                 facecolor=fig.get_facecolor(),
                 bbox_inches="tight",
                 edgecolor="none",
