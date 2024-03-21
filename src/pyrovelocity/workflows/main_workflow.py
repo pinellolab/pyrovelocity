@@ -64,6 +64,7 @@ __all__ = [
 logger = configure_logging(__name__)
 
 CACHE_VERSION = "0.2.0b12"
+SUMMARIZE_CACHE_VERSION = "0.2.0b13.dev0"
 PYROVELOCITY_CACHE_FLAG = str_to_bool(
     os.getenv("PYROVELOCITY_CACHE_FLAG", "True")
 )
@@ -214,7 +215,7 @@ def postprocess_data(
 
 @task(
     cache=PYROVELOCITY_CACHE_FLAG,
-    cache_version=CACHE_VERSION,
+    cache_version=SUMMARIZE_CACHE_VERSION,
     retries=3,
     interruptible=False,
     timeout=timedelta(minutes=120),
@@ -259,7 +260,7 @@ def summarize_data(
 
 @task(
     cache=PYROVELOCITY_CACHE_FLAG,
-    cache_version=CACHE_VERSION,
+    cache_version=SUMMARIZE_CACHE_VERSION,
     retries=3,
     interruptible=True,
     timeout=timedelta(minutes=20),
