@@ -99,7 +99,9 @@ def summarize_dataset(
     vector_field_summary_plot = (
         data_model_reports_path / "vector_field_summary_plot.pdf"
     )
-    fig2_part2_plot = data_model_reports_path / "fig2_part2_plot.pdf"
+    gene_selection_summary_plot = (
+        data_model_reports_path / "gene_selection_summary_plot.pdf"
+    )
     violin_clusters_lin = data_model_reports_path / "violin_clusters_lin.pdf"
     violin_clusters_log = data_model_reports_path / "violin_clusters_log.pdf"
     parameter_uncertainty_plot_path = (
@@ -303,16 +305,16 @@ def summarize_dataset(
             )
 
     # gene selection
-    if os.path.isfile(fig2_part2_plot):
-        logger.info(f"{fig2_part2_plot} exists")
+    if os.path.isfile(gene_selection_summary_plot):
+        logger.info(f"{gene_selection_summary_plot} exists")
     else:
-        logger.info(f"Generating figure: {fig2_part2_plot}")
+        logger.info(f"Generating figure: {gene_selection_summary_plot}")
         summarize_fig2_part2(
             adata=adata,
             posterior_samples=posterior_samples,
             basis=vector_field_basis,
             cell_state=cell_type,
-            plot_name=fig2_part2_plot,
+            plot_name=gene_selection_summary_plot,
             selected_genes=geneset,
             show_marginal_histograms=False,
         )
