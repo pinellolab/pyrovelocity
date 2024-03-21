@@ -1,8 +1,15 @@
+from os import PathLike
+from typing import Dict
+from typing import List
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pyro
 import torch
+from anndata import AnnData
+from beartype import beartype
+from matplotlib.figure import FigureBase
 from pyro.infer import Predictive
 from pyro.infer import infer_discrete
 
@@ -15,26 +22,42 @@ __all__ = ["posterior_curve", "extrapolate_prediction_sample_predictive"]
 logger = configure_logging(__name__)
 
 
+@beartype
 def posterior_curve(
-    adata,
-    posterior_samples,
-    grid_time_samples_ut,
-    grid_time_samples_st,
-    grid_time_samples_u0,
-    grid_time_samples_s0,
-    grid_time_samples_uinf,
-    grid_time_samples_sinf,
-    grid_time_samples_uscale,
-    grid_time_samples_state,
-    grid_time_samples_t0,
-    grid_time_samples_dt_switching,
-    gene_set,
-    data_model,
-    directory,
-):
-    # grid_cell_time = np.linspace(-50, 50, 500)
+    adata: AnnData,
+    posterior_samples: Dict[str, np.ndarray],
+    gene_set: List[str],
+    data_model: str,
+    model_path: PathLike | str,
+    output_directory: PathLike | str,
+) -> List[FigureBase]:
     grid_cell_time = posterior_samples["cell_time"]
 
+    logger.info(
+        "Extrapolating prediction samples for predictive posterior plots"
+    )
+
+    (
+        grid_time_samples_ut,
+        grid_time_samples_st,
+        grid_time_samples_u0,
+        grid_time_samples_s0,
+        grid_time_samples_uinf,
+        grid_time_samples_sinf,
+        grid_time_samples_uscale,
+        grid_time_samples_state,
+        grid_time_samples_t0,
+        grid_time_samples_dt_switching,
+    ) = extrapolate_prediction_sample_predictive(
+        grid_cell_time,
+        model_path,
+        adata,
+        grid_time_points=500,
+    )
+
+    logger.info("Plotting posterior predictive phase portraits")
+
+    output_fig_objects = []
     for figi, gene in enumerate(gene_set):
         (index,) = np.where(adata.var_names == gene)
         # print(adata.shape, index, posterior_samples["st_mean"].shape)
@@ -254,12 +277,16 @@ def posterior_curve(
             fig.colorbar(im, ax=ax[sample])
         fig.tight_layout()
         fig.savefig(
-            f"{directory}/{data_model}_{gene}.png",
+            f"{output_directory}/{data_model}_{gene}.png",
             facecolor=fig.get_facecolor(),
             bbox_inches="tight",
             edgecolor="none",
             dpi=300,
         )
+        output_fig_objects.append(fig)
+        plt.close(fig)
+
+    return output_fig_objects
 
 
 def extrapolate_prediction_sample_predictive(

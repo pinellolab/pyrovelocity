@@ -10,7 +10,6 @@ from pyrovelocity.analyze import pareto_frontier_genes
 from pyrovelocity.io import CompressedPickle
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.plots import cluster_violin_plots
-from pyrovelocity.plots import extrapolate_prediction_sample_predictive
 from pyrovelocity.plots import plot_gene_ranking
 from pyrovelocity.plots import plot_gene_selection_summary
 from pyrovelocity.plots import plot_parameter_posterior_distributions
@@ -186,28 +185,6 @@ def summarize_dataset(
                     fig_name=fig_name,
                 )
 
-    logger.info(
-        "Extrapolating prediction samples for predictive posterior plots"
-    )
-    (
-        grid_time_samples_ut,
-        grid_time_samples_st,
-        grid_time_samples_u0,
-        grid_time_samples_s0,
-        grid_time_samples_uinf,
-        grid_time_samples_sinf,
-        grid_time_samples_uscale,
-        grid_time_samples_state,
-        grid_time_samples_t0,
-        grid_time_samples_dt_switching,
-    ) = extrapolate_prediction_sample_predictive(
-        posterior_samples["cell_time"],
-        model_path,
-        adata,
-        grid_time_points=500,
-    )
-    # extrapolate_prediction_trace(data_model_conf, adata, grid_time_points=5)
-
     # ##################
     # save dataframe
     # ##################
@@ -261,23 +238,14 @@ def summarize_dataset(
             f"Remove this directory or all its files if you want to regenerate them.\n\n"
         )
     else:
-        logger.info("Generating posterior phase portraits")
+        logger.info("Generating posterior predictive phase portrait plots")
         posterior_curve(
-            adata,
-            posterior_samples,
-            grid_time_samples_ut,
-            grid_time_samples_st,
-            grid_time_samples_u0,
-            grid_time_samples_s0,
-            grid_time_samples_uinf,
-            grid_time_samples_sinf,
-            grid_time_samples_uscale,
-            grid_time_samples_state,
-            grid_time_samples_t0,
-            grid_time_samples_dt_switching,
-            putative_marker_genes,
-            data_model,
-            posterior_phase_portraits_path,
+            adata=adata,
+            posterior_samples=posterior_samples,
+            gene_set=putative_marker_genes,
+            data_model=data_model,
+            model_path=model_path,
+            output_directory=posterior_phase_portraits_path,
         )
 
     # volcano plot
