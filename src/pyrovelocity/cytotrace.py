@@ -1,3 +1,27 @@
+from time import time
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+# Cell
+import scvelo as scv
+from numpy import ndarray
+from scipy.stats import mannwhitneyu
+from scipy.stats import rankdata
+
+
+##from scanorama import correct_scanpy
+scv.logging.verbosity = 3
+scv.settings.presenter_view = True
+scv.set_figure_params("scvelo")
+np.random.seed(99)
+
+# Cell
+from scipy.sparse import csr_matrix
+from scipy.sparse import issparse
+
+
 __all__ = [
     "census_normalize",
     "remove_zero_mvg",
@@ -23,25 +47,12 @@ __all__ = [
     "run_cytotrace",
 ]
 
-from time import time
 
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-
-# Cell
-import scvelo as scv
-from numpy import ndarray
-from scipy.stats import mannwhitneyu, rankdata
-
-##from scanorama import correct_scanpy
-scv.logging.verbosity = 3
-scv.settings.presenter_view = True
-scv.set_figure_params("scvelo")
-np.random.seed(99)
-
-# Cell
-from scipy.sparse import csr_matrix, issparse
+# TODO: refactor to subpackage exposing a minimal public interface
+# TODO: migrate all justifiably eager imports to the tops of new modules
+# TODO: enable runtime type-checking
+# TODO: remove unused comments and print statements
+# TODO: add unit tests
 
 
 def census_normalize(mat, count):
@@ -145,23 +156,23 @@ def convert_to_markov(sim):
 # http://xrm.phys.northwestern.edu/research/pdf_papers/1997/bro_chemometrics_1997.pdf
 # matlab reference: https://www.mathworks.com/matlabcentral/mlc-downloads/downloads/submissions/3388/versions/1/previews/fnnls.m/index.html
 
-from numpy import (
-    abs,
-    arange,
-    argmax,
-    finfo,
-    float64,
-    int64,
-    min,
-    newaxis,
-    nonzero,
-    sum,
-    zeros,
-)
+from numpy import abs
+from numpy import arange
+from numpy import argmax
+from numpy import finfo
+from numpy import float64
+from numpy import int64
+from numpy import min
+from numpy import newaxis
+from numpy import nonzero
+from numpy import sum
+from numpy import zeros
 from scipy.linalg import solve
+
 
 nu = newaxis
 import numpy as np
+
 
 # machine epsilon
 eps = finfo(float64).eps
@@ -552,7 +563,7 @@ def cytotrace_sparse(
     gcs = census_X[np.argsort(corrs)[::-1][:top_n_features], :].mean(axis=0).A1
 
     if not skip_regress:
-        print("regress...")
+        # print("regress...")
         # from scipy.optimize import lsq_linear
         # # slow as well
         # sol = lsq_linear(csr_matrix(markov), gcs, bounds=(0, np.inf), lsmr_tol='auto', verbose=1)    # from 1997...
@@ -563,12 +574,12 @@ def cytotrace_sparse(
         coef, err = nnls(markov, gcs)  # from 1987...
         gcs = np.dot(markov, coef)
 
-    print(markov.shape, gcs.shape)
+    # print(markov.shape, gcs.shape)
     gcs = diffused(markov, gcs)
     rank = rankdata(gcs)
     scores = rank / gcs.shape[0]
 
-    print(gcs)
+    # print(gcs)
     adata.obs["gcs"] = np.nan
     adata.obs.iloc[cells_selected, adata.obs.columns.get_loc("gcs")] = gcs
 
