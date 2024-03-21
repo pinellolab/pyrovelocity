@@ -29,7 +29,7 @@ def posterior_curve(
     grid_time_samples_t0,
     grid_time_samples_dt_switching,
     gene_set,
-    dataset,
+    data_model,
     directory,
 ):
     # grid_cell_time = np.linspace(-50, 50, 500)
@@ -254,7 +254,7 @@ def posterior_curve(
             fig.colorbar(im, ax=ax[sample])
         fig.tight_layout()
         fig.savefig(
-            f"{directory}/fig{dataset}_{gene}_test.png",
+            f"{directory}/{data_model}_{gene}.png",
             facecolor=fig.get_facecolor(),
             bbox_inches="tight",
             edgecolor="none",
