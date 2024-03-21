@@ -1,8 +1,14 @@
-import anndata
+from os import PathLike
+from typing import Dict
+from typing import List
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from anndata import AnnData
+from beartype import beartype
+from matplotlib.figure import FigureBase
 
 from pyrovelocity.logging import configure_logging
 
@@ -12,12 +18,13 @@ __all__ = ["plot_parameter_posterior_distributions"]
 logger = configure_logging(__name__)
 
 
+@beartype
 def plot_parameter_posterior_distributions(
-    posterior_samples,
-    adata: anndata.AnnData,
-    geneset,
-    parameter_uncertainty_plot_path: str,
-):
+    posterior_samples: Dict[str, np.ndarray],
+    adata: AnnData,
+    geneset: List[str],
+    parameter_uncertainty_plot: PathLike | str,
+) -> FigureBase:
     fig, ax = plt.subplots(3, 1)
     fig.set_size_inches(18, 12)
     for index, kinetics in enumerate(["alpha", "beta", "gamma"]):
@@ -63,9 +70,11 @@ def plot_parameter_posterior_distributions(
     )
     for ext in ["", ".png"]:
         fig.savefig(
-            f"{parameter_uncertainty_plot_path}{ext}",
+            f"{parameter_uncertainty_plot}{ext}",
             facecolor=fig.get_facecolor(),
             bbox_inches="tight",
             edgecolor="none",
             dpi=300,
         )
+    plt.close(fig)
+    return fig
