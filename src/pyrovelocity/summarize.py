@@ -3,9 +3,7 @@ from pathlib import Path
 from typing import Tuple
 
 import matplotlib.pyplot as plt
-import numpy as np
 import scvelo as scv
-import seaborn as sns
 from beartype import beartype
 
 from pyrovelocity.analyze import pareto_frontier_genes
@@ -171,7 +169,7 @@ def summarize_dataset(
                 t0_selection_plot=t0_selection_plot,
             )
 
-        # cluster violin plots
+        # cluster-specific uncertainty metric violin plots
         if os.path.isfile(violin_clusters_log):
             logger.info(f"{violin_clusters_log} exists")
         else:
@@ -211,7 +209,7 @@ def summarize_dataset(
     # extrapolate_prediction_trace(data_model_conf, adata, grid_time_points=5)
 
     # ##################
-    # # save dataframe
+    # save dataframe
     # ##################
 
     save_anndata_counts_to_dataframe(adata, dataframe_path)
@@ -220,7 +218,7 @@ def summarize_dataset(
     # generate figures
     ##################
 
-    # vector fields
+    # vector field summary plot
     cell_type = cell_state
 
     if os.path.isfile(vector_field_summary_plot):
@@ -262,6 +260,7 @@ def summarize_dataset(
         volcano_data, number_of_marker_genes
     )
 
+    # phase portraint predictive plots
     if phase_portraits_exist:
         logger.info(
             f"\nFiles exist in posterior phase portraits path:\n"
@@ -312,7 +311,7 @@ def summarize_dataset(
                 dpi=300,
             )
 
-    # gene selection
+    # gene selection summary plot
     if os.path.isfile(gene_selection_summary_plot):
         logger.info(f"{gene_selection_summary_plot} exists")
     else:
@@ -327,7 +326,7 @@ def summarize_dataset(
             show_marginal_histograms=False,
         )
 
-    # parameter uncertainty
+    # parameter uncertainty plot
     if os.path.isfile(parameter_uncertainty_plot):
         logger.info(f"{parameter_uncertainty_plot} exists")
     else:
@@ -339,8 +338,7 @@ def summarize_dataset(
             parameter_uncertainty_plot=parameter_uncertainty_plot,
         )
 
-    # rainbow plot
-
+    # rainbow plot for gene selection review
     if os.path.isfile(rainbow_plot):
         logger.info(f"{rainbow_plot} exists")
     else:
