@@ -11,8 +11,13 @@ from typing import Tuple
 from typing import Type
 from typing import get_type_hints
 
+from flytekit.core.local_cache import LocalTaskCache
 from mashumaro.mixins.json import DataClassJSONMixin
 from sklearn.linear_model import LogisticRegression
+
+
+def clear_local_cache():
+    LocalTaskCache.clear()
 
 
 def infer_type_from_default(value: Any) -> Type:

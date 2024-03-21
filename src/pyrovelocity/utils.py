@@ -23,7 +23,6 @@ import seaborn as sns
 import yaml
 from anndata._core.anndata import AnnData
 from beartype import beartype
-from flytekit.core.local_cache import LocalTaskCache
 from scvi.data import synthetic_iid
 
 from pyrovelocity.io.compressedpickle import CompressedPickle
@@ -40,7 +39,6 @@ from pyrovelocity.logging import configure_logging
 __all__ = [
     "anndata_counts_to_df",
     "attributes",
-    "clear_local_cache",
     "ensure_numpy_array",
     "filter_startswith_dict",
     "generate_public_api",
@@ -221,11 +219,6 @@ def print_docstring(
         docstring, "python", theme=theme, line_numbers=False
     )
     rich.print(syntax_highlighted_docstring)
-
-
-@beartype
-def clear_local_cache():
-    LocalTaskCache.clear()
 
 
 @beartype
