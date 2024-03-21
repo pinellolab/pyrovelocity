@@ -111,6 +111,23 @@ def plot_gene_ranking(
         legend=False,
         alpha=0.3,
     )
+
+    x_min, x_max = (
+        volcano_data["time_correlation"].min(),
+        volcano_data["time_correlation"].max(),
+    )
+    y_min, y_max = (
+        volcano_data["mean_mae"].min(),
+        volcano_data["mean_mae"].max(),
+    )
+
+    padding = 0.1
+    x_range = (x_max - x_min) * padding
+    y_range = (y_max - y_min) * padding
+
+    ax.set_xlim(x_min - x_range, x_max + x_range)
+    ax.set_ylim(y_min - y_range, y_max + y_range)
+
     ax.set_title(plot_title, fontsize=defaultfontsize)
     ax.set_xlabel(
         "shared time correlation\nwith spliced expression",
