@@ -96,7 +96,9 @@ def summarize_dataset(
     rainbow_plot = data_model_reports_path / "rainbow.pdf"
     vector_field_plot = data_model_reports_path / "vector_field.pdf"
     shared_time_plot = data_model_reports_path / "shared_time.pdf"
-    fig2_part1_plot = data_model_reports_path / "fig2_part1_plot.pdf"
+    vector_field_summary_plot = (
+        data_model_reports_path / "vector_field_summary_plot.pdf"
+    )
     fig2_part2_plot = data_model_reports_path / "fig2_part2_plot.pdf"
     violin_clusters_lin = data_model_reports_path / "violin_clusters_lin.pdf"
     violin_clusters_log = data_model_reports_path / "violin_clusters_log.pdf"
@@ -195,10 +197,10 @@ def summarize_dataset(
     # vector fields
     cell_type = cell_state
 
-    if os.path.isfile(fig2_part1_plot):
-        logger.info(f"{fig2_part1_plot} exists")
+    if os.path.isfile(vector_field_summary_plot):
+        logger.info(f"{vector_field_summary_plot} exists")
     else:
-        logger.info(f"Generating figure: {fig2_part1_plot}")
+        logger.info(f"Generating figure: {vector_field_summary_plot}")
         summarize_fig2_part1(
             adata,
             posterior_samples["vector_field_posterior_samples"],
@@ -209,7 +211,7 @@ def summarize_dataset(
             vector_field_basis,
             posterior_samples["vector_field_posterior_mean"],
             cell_type,
-            fig2_part1_plot,
+            vector_field_summary_plot,
         )
 
     # cluster violin plots
