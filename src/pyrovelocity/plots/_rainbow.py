@@ -18,6 +18,7 @@ from pandas import DataFrame
 from pandas import Index
 
 from pyrovelocity.plots._common import set_colorbar
+from pyrovelocity.plots._common import set_font_size
 
 
 __all__ = ["rainbowplot", "us_rainbowplot"]
@@ -143,10 +144,6 @@ def adjust_subfigure(subfig):
     )
 
     sns.despine()
-
-
-def set_font_size(size: int):
-    matplotlib.rcParams.update({"font.size": size})
 
 
 @beartype
