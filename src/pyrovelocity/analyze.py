@@ -1,3 +1,6 @@
+from typing import Dict
+from typing import List
+from typing import Optional
 from typing import Tuple
 
 import numpy as np
@@ -120,13 +123,14 @@ def compute_mean_vector_field(
     scv.tl.velocity_embedding(adata, vkey="velocity_pyro", basis=basis)
 
 
+@beartype
 def compute_volcano_data(
-    posterior_samples,
-    adata,
-    time_correlation_with="s",
-    selected_genes=None,
-    negative=False,
-) -> None:
+    posterior_samples: List[Dict[str, ndarray]],
+    adata: List[AnnData],
+    time_correlation_with: str = "s",
+    selected_genes: Optional[List[str]] = None,
+    negative: bool = False,
+) -> Tuple[pd.DataFrame, List[str]]:
     assert isinstance(posterior_samples, (tuple, list))
     assert isinstance(adata, (tuple, list))
     assert "s" in posterior_samples[0]
@@ -182,7 +186,7 @@ def compute_volcano_data(
             .head(300)
             .sort_values("time_correlation", ascending=negative)
             .head(4)
-            .index
+            .index.tolist()
         )
     else:
         genes = selected_genes
