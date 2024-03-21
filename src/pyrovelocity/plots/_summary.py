@@ -18,11 +18,11 @@ from pyrovelocity.plots._time import plot_posterior_time
 logger = configure_logging(__name__)
 
 
-__all__ = ["summarize_fig2_part2"]
+__all__ = ["plot_gene_selection_summary"]
 
 
 @beartype
-def summarize_fig2_part2(
+def plot_gene_selection_summary(
     adata: AnnData,
     posterior_samples: Dict[str, ndarray],
     plot_name: str | Path = "",

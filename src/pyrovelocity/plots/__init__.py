@@ -8,7 +8,7 @@ from pyrovelocity.plots._predictive import (
 )
 from pyrovelocity.plots._predictive import posterior_curve
 from pyrovelocity.plots._rainbow import rainbowplot
-from pyrovelocity.plots._summary import summarize_fig2_part2
+from pyrovelocity.plots._summary import plot_gene_selection_summary
 from pyrovelocity.plots._time import plot_posterior_time
 from pyrovelocity.plots._time import plot_shared_time_uncertainty
 from pyrovelocity.plots._uncertainty import cluster_violin_plots
@@ -32,5 +32,5 @@ __all__ = [
     "posterior_curve",
     "rainbowplot",
     "plot_vector_field_summary",
-    "summarize_fig2_part2",
+    "plot_gene_selection_summary",
 ]
