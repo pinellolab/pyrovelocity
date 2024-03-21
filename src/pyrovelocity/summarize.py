@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from typing import Tuple
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import scvelo as scv
@@ -285,6 +286,7 @@ def summarize_dataset(
         fig, ax = plt.subplots(1, 3)
         fig.set_size_inches(10, 3)
         ax = ax.flatten()
+        matplotlib.rcParams.update({"font.size": 7})
         ax[0].hist(cell_time_std / cell_time_mean, bins=100)
         ax[0].set_title("histogram of shared time CoV")
         ax_st = scv.pl.scatter(
