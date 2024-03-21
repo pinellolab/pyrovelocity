@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 from typing import Tuple
 
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import scvelo as scv
@@ -16,6 +15,7 @@ from pyrovelocity.plots import cluster_violin_plots
 from pyrovelocity.plots import extrapolate_prediction_sample_predictive
 from pyrovelocity.plots import plot_gene_ranking
 from pyrovelocity.plots import plot_parameter_posterior_distributions
+from pyrovelocity.plots import plot_shared_time_uncertainty
 from pyrovelocity.plots import posterior_curve
 from pyrovelocity.plots import rainbowplot
 from pyrovelocity.plots import summarize_fig2_part1
@@ -38,6 +38,7 @@ def summarize_dataset(
     cell_state: str,
     vector_field_basis: str,
     reports_path: str | Path = "reports",
+    enable_experimental_plots: bool = False,
 ) -> Tuple[Path, Path]:
     """
     Construct summary plots for each data set and model.
@@ -111,8 +112,15 @@ def summarize_dataset(
         vector_field_plot,
         shared_time_plot,
         parameter_uncertainty_plot_path,
+    ]
+
+    experimental_filenames = [
         t0_selection_plot,
     ]
+
+    if enable_experimental_plots:
+        output_filenames.extend(experimental_filenames)
+
     if os.path.exists(posterior_phase_portraits_path):
         phase_portraits_exist = (
             len(os.listdir(posterior_phase_portraits_path)) > 0
@@ -136,73 +144,21 @@ def summarize_dataset(
 
     logger.info(f"Loading pyrovelocity data: {pyrovelocity_data_path}")
     posterior_samples = CompressedPickle.load(pyrovelocity_data_path)
-    # print(posterior_samples.keys())
 
-    if os.path.isfile(t0_selection_plot):
-        logger.info(
-            f"\nt0_selection plot exists: {t0_selection_plot}\n"
-            f"Remove output file if you want to regenerate it.\n\n"
-        )
-    else:
-        logger.info("Constructing t0 selection plot")
-        fig, ax = plt.subplots(5, 6)
-        fig.set_size_inches(26, 24)
-        ax = ax.flatten()
-
-        posterior_samples_keys_to_check = ["t0", "switching", "cell_time"]
-
-        num_samples_list = [
-            posterior_samples[key].shape[0]
-            for key in posterior_samples_keys_to_check
-        ]
-        assert (
-            len(set(num_samples_list)) == 1
-        ), f"The number of samples is not equal across keys: {posterior_samples_keys_to_check}"
-
-        num_samples = num_samples_list[0]
-
-        for sample in range(num_samples):
-            t0_sample = posterior_samples["t0"][sample]
-            switching_sample = posterior_samples["switching"][sample]
-            cell_time_sample = posterior_samples["cell_time"][sample]
-            ax[sample].scatter(
-                t0_sample.flatten(),
-                2 * np.ones(t0_sample.shape[-1]),
-                s=1,
-                c="red",
-                label="t0",
+    if enable_experimental_plots:
+        if os.path.isfile(t0_selection_plot):
+            logger.info(
+                f"\nt0_selection plot exists: {t0_selection_plot}\n"
+                f"Remove output file if you want to regenerate it.\n\n"
             )
-            ax[sample].scatter(
-                switching_sample.flatten(),
-                3 * np.ones(t0_sample.shape[-1]),
-                s=1,
-                c="purple",
-                label="switching",
-            )
-            ax[sample].scatter(
-                cell_time_sample.flatten(),
-                np.ones(cell_time_sample.shape[0]),
-                s=1,
-                c="blue",
-                label="shared time",
-            )
-            ax[sample].set_ylim(-0.5, 4)
-            if sample == 28:
-                ax[sample].legend(
-                    loc="best", bbox_to_anchor=(0.5, 0.0, 0.5, 0.5)
-                )
-        ax[-1].hist(t0_sample.flatten(), bins=200, color="red", alpha=0.3)
-        ax[-1].hist(
-            cell_time_sample.flatten(), bins=500, color="blue", alpha=0.3
-        )
+        else:
+            logger.info("Constructing t0 selection plot")
+            from pyrovelocity.plots import plot_t0_selection
 
-        fig.savefig(
-            t0_selection_plot,
-            facecolor=fig.get_facecolor(),
-            bbox_inches="tight",
-            edgecolor="none",
-            dpi=300,
-        )
+            plot_t0_selection(
+                posterior_samples=posterior_samples,
+                t0_selection_plot=t0_selection_plot,
+            )
 
     logger.info(
         "Extrapolating prediction samples for predictive posterior plots"
@@ -274,60 +230,17 @@ def summarize_dataset(
             )
 
     # shared time plot
-    cell_time_mean = posterior_samples["cell_time"].mean(0).flatten()
-    cell_time_std = posterior_samples["cell_time"].std(0).flatten()
-    adata.obs["shared_time_uncertain"] = cell_time_std
-    adata.obs["shared_time_mean"] = cell_time_mean
-
     if os.path.isfile(shared_time_plot):
         logger.info(f"{shared_time_plot} exists")
     else:
         logger.info(f"Generating figure: {shared_time_plot}")
-        fig, ax = plt.subplots(1, 3)
-        fig.set_size_inches(10, 3)
-        ax = ax.flatten()
-        matplotlib.rcParams.update({"font.size": 7})
-        ax[0].hist(cell_time_std / cell_time_mean, bins=100)
-        ax[0].set_title("histogram of shared time CoV")
-        ax_st = scv.pl.scatter(
-            adata,
-            c="shared_time_mean",
-            ax=ax[1],
-            show=False,
-            cmap="inferno",
-            fontsize=12,
-            colorbar=True,
+
+        plot_shared_time_uncertainty(
+            posterior_samples=posterior_samples,
+            adata=adata,
+            vector_field_basis=vector_field_basis,
+            shared_time_plot=shared_time_plot,
         )
-        ax_cv = scv.pl.scatter(
-            adata,
-            c="shared_time_uncertain",
-            ax=ax[2],
-            show=False,
-            cmap="inferno",
-            fontsize=12,
-            colorbar=True,
-            title="shared time uncertainty",
-        )
-        ax_cv.set_xlabel("density estimate over 90th %")
-        select = adata.obs["shared_time_uncertain"] > np.quantile(
-            adata.obs["shared_time_uncertain"], 0.9
-        )
-        sns.kdeplot(
-            x=adata.obsm[f"X_{vector_field_basis}"][:, 0][select],
-            y=adata.obsm[f"X_{vector_field_basis}"][:, 1][select],
-            ax=ax[2],
-            levels=3,
-            fill=False,
-        )
-        fig.tight_layout()
-        for ext in ["", ".png"]:
-            fig.savefig(
-                f"{shared_time_plot}{ext}",
-                facecolor=fig.get_facecolor(),
-                bbox_inches="tight",
-                edgecolor="none",
-                dpi=300,
-            )
 
     volcano_data = posterior_samples["gene_ranking"]
     number_of_marker_genes = min(
