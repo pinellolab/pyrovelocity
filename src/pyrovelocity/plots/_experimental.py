@@ -1,3 +1,92 @@
+from os import PathLike
+from typing import Dict
+
+import numpy as np
+from beartype import beartype
+from matplotlib import pyplot as plt
+from matplotlib.figure import FigureBase
+
+from pyrovelocity.logging import configure_logging
+
+
+logger = configure_logging(__name__)
+
+__all__ = ["plot_t0_selection"]
+
+
+@beartype
+def plot_t0_selection(
+    posterior_samples: Dict[str, np.ndarray],
+    t0_selection_plot: PathLike | str,
+) -> FigureBase:
+    """
+    Plot the t0, switching time, and cell time posterior samples.
+
+    Args:
+        posterior_samples (Dict[str, np.ndarray]): Dictionary of posterior samples.
+        t0_selection_plot (PathLike | str): Path to save the plot.
+
+    Returns:
+        FigureBase: Matplotlib figure object.
+    """
+    fig, ax = plt.subplots(5, 6)
+    fig.set_size_inches(26, 24)
+    ax = ax.flatten()
+
+    posterior_samples_keys_to_check = ["t0", "switching", "cell_time"]
+
+    num_samples_list = [
+        posterior_samples[key].shape[0]
+        for key in posterior_samples_keys_to_check
+    ]
+    assert (
+        len(set(num_samples_list)) == 1
+    ), f"The number of samples is not equal across keys: {posterior_samples_keys_to_check}"
+
+    num_samples = num_samples_list[0]
+
+    for sample in range(num_samples):
+        t0_sample = posterior_samples["t0"][sample]
+        switching_sample = posterior_samples["switching"][sample]
+        cell_time_sample = posterior_samples["cell_time"][sample]
+        ax[sample].scatter(
+            t0_sample.flatten(),
+            2 * np.ones(t0_sample.shape[-1]),
+            s=1,
+            c="red",
+            label="t0",
+        )
+        ax[sample].scatter(
+            switching_sample.flatten(),
+            3 * np.ones(t0_sample.shape[-1]),
+            s=1,
+            c="purple",
+            label="switching",
+        )
+        ax[sample].scatter(
+            cell_time_sample.flatten(),
+            np.ones(cell_time_sample.shape[0]),
+            s=1,
+            c="blue",
+            label="shared time",
+        )
+        ax[sample].set_ylim(-0.5, 4)
+        if sample == 28:
+            ax[sample].legend(loc="best", bbox_to_anchor=(0.5, 0.0, 0.5, 0.5))
+    ax[-1].hist(t0_sample.flatten(), bins=200, color="red", alpha=0.3)
+    ax[-1].hist(cell_time_sample.flatten(), bins=500, color="blue", alpha=0.3)
+
+    fig.savefig(
+        t0_selection_plot,
+        facecolor=fig.get_facecolor(),
+        bbox_inches="tight",
+        edgecolor="none",
+        dpi=300,
+    )
+
+    return fig
+
+
 # from typing import Dict
 # from typing import List
 
