@@ -71,7 +71,17 @@ jupyter:
     width="109" height="20"/>
 </a>
 
+```{python}
+#| label: blank-cell-01
+print("This cell is intentionally left blank.") 
+``` 
+
 ## Setup environment
+
+```{python}
+#| label: blank-cell-02
+print("This cell is intentionally left blank.") 
+``` 
 
 ### Overview
 
