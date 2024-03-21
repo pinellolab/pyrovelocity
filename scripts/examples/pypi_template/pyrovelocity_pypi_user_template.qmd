@@ -73,6 +73,8 @@ jupyter:
 
 ```{python}
 #| label: blank-cell-01
+#| code-fold: true
+#| output: false
 print("This cell is intentionally left blank.") 
 ``` 
 
@@ -80,13 +82,19 @@ print("This cell is intentionally left blank.")
 
 ```{python}
 #| label: blank-cell-02
+#| code-fold: true
+#| output: false
 print("This cell is intentionally left blank.") 
 ``` 
 
 ### Overview
 
-Installation should take less than **5 minutes**. 
-It involves checking if the notebook is running in colab, in which case it is certain that you will need to install or reinstall pyrovelocity.
+Installation should take less than **10 minutes**. If you are running in [Google Colab][colab-more-memory], then even when running with the `PYROVELOCITY_TESTING_FLAG` set to `True`,
+if you have [access to *High-RAM* or *T4 GPU* runtimes][colab-more-memory] this can significantly speed up even this testing of the notebook.
+For a complete analysis with `PYROVELOCITY_TESTING_FLAG` disabled, at least *High-RAM* or *T4 GPU* runtimes are essentially required to execute in a reasonable
+amount of time.
+
+This section involves checking if the notebook is running in colab, in which case it is certain that you will need to install or reinstall pyrovelocity.
 Otherwise, it is assumed that the user will have installed pyrovelocity in the same environment in which the jupyter kernel is running.
 
 The simplest way to complete it is to run the `Setup environment` section, wait for the kernel to restart, and then run the same section again:
@@ -104,6 +112,8 @@ Otherwise, the cells below can be executed manually.
 In either case, this section can be folded away after installation is complete.
 
 If you need to edit the **version number**, please see the setting in the `setup_pyrovelocity` function below.
+
+[colab-more-memory]: https://colab.research.google.com/notebooks/pro.ipynb#scrollTo=65MSuHKqNeBZ
 
 ### Install library
 
@@ -180,6 +190,9 @@ if IN_COLAB:
     colab_release_tag = os.getenv("COLAB_RELEASE_TAG", None)
     print(f"Google Colab release: {colab_release_tag}")
     setup_pyrovelocity()
+
+    from google.colab import output
+    output.enable_custom_widget_manager()
 else:
     print("This notebook is probably not running in Google Colab")
 ```
@@ -198,7 +211,9 @@ if IN_COLAB:
 print(pyrovelocity.__version__)
 ```
 
-This is the same for the pyro package in case there was an issue with pyrovelocity install that did not affect another package.
+Please refer to the [docs](https://pinellolab.github.io/pyrovelocity) for tutorials and usage information.
+
+In case there is an issue with `pyrovelocity` installation, the above output should be analogous to that shown below for the pyro package.
 
 ```{python}
 #| label: check-pyro-installation
@@ -211,13 +226,12 @@ if IN_COLAB:
 print(pyro.__version__)
 ```
 
-Please refer to the [docs](https://pinellolab.github.io/pyrovelocity) for tutorials and usage information.
 
 ## Analysis
 
 ```{python}
 #| label: print-pyrovelocity-docstring-1
-pyrovelocity.help.internal_help(pyrovelocity) # ?pyrovelocity # to open in side panel tab for reference
+pyrovelocity.utils.internal_help(pyrovelocity) # ?pyrovelocity # to open in side panel tab for reference
 ```
 
 Before we start, we will adjust a few environment variables to ensure our first execution occurs in a lightweight test mode with a subset of observations, variables, training epochs, and posterior samples. We will also set a few log levels. Feel free to adjust these to `ERROR`, `DEBUG`, etc as needed.
@@ -241,17 +255,10 @@ We import these tasks and execute them in the subsections below.
 
 ```{python}
 #| label: import-notebook-dependencies
-from importlib import reload
-
 import yaml
-from IPython.display import Image
-# from IPython.display import display
 
 import pyrovelocity.utils
 import pyrovelocity.workflows.main_workflow
-reload(pyrovelocity.utils)
-reload(pyrovelocity.workflows.main_workflow)
-
 from pyrovelocity.utils import print_config_tree
 from pyrovelocity.utils import print_docstring
 from pyrovelocity.workflows.main_workflow import download_data
@@ -260,6 +267,19 @@ from pyrovelocity.workflows.main_workflow import preprocess_data
 from pyrovelocity.workflows.main_workflow import summarize_data
 from pyrovelocity.workflows.main_workflow import train_model
 ```
+
+::: {#nte-reload-modules .callout-note collapse=true title="Reload modules when installing in editable mode"}
+If you install the package in editable mode with `pip install -e` for development purposes, you may find it helpful to use
+
+```python
+from importlib import reload
+
+reload(pyrovelocity.utils)
+reload(pyrovelocity.workflows.main_workflow)
+```
+
+We leave this out of this notebook since it is intended as a usage example.
+:::
 
 To execute each task requires a single `WorkflowConfiguration` object, which is an instance of a python datclass. In this notebook we illustrate execution with the standard pancreatic endocrinogenesis data set [@Bastidas-Ponce2019-lf]. First we import the configuration dataclass
 
@@ -292,7 +312,7 @@ print_config_tree(pancreas_configuration.download_dataset.to_dict(), "download d
 
 This configuration primarily specifies the location to store the data and the data set name that is mapped to a source URL in the `pyrovelocity.utils.datasets` module. The other parameters can be used to specify a custom source URL or to filter the observations and variables to a subset of the full data set; however, since we are working with a natively supported data set we do not need to specify those here.
 
-::: {.callout-note collapse=true title="Local caching"}
+::: {#nte-local-caching .callout-note collapse=true title="Local caching"}
 During local execution, all of the functions imported from the `pyrovelocity.workflows.main_workflow` module will cache their results. This means that if you run the same task function with the same arguments, it will not recompute the result, but just establish the presence of a cache hit. This is useful for avoiding redundant computation, but if you want to re-execute the function for testing, experimentation or other purposes. To avoid this, you can use the `pyrovelocity.utils.clear_local_cache` function to clear the cache. If you add the following block of code, the cache will be cleared whenever it is executed:
 
 ```python
@@ -398,6 +418,13 @@ print_docstring(pyrovelocity.postprocess.postprocess_dataset)
 
 We execute the `postprocess_data` task function with the inputs described above.
 
+::: {#nte-suppressoutput .callout-note collapse=true title="Ignore or remove SuppressOutput"}
+You can safely remove and dedent code executed in the context of `SuppressOutput` in a notebook execution environment.
+
+The `SuppressOutput` context manager is used to suppress some of the output of the function calls placed in its context. This is purely used as a work-around for compatibility with multiple output formats such as html and pdf and it will be removed in the future. It is not necessary for the execution of the `postprocess_data` function in general or for execution in a notebook in particular.
+:::
+
+
 ```{python}
 #| label: execute-postprocess-data-task
 #| output: false 
@@ -418,12 +445,25 @@ Now we have what is required to construct a summary of the results. The `summari
 ```{python}
 #| label: execute-summarize-data-task
 #| output: false
-dataset_summary = summarize_data(
-  preprocess_data_args=pancreas_configuration.preprocess_data,
-  postprocessing_outputs=postprocessing_outputs,
-  training_outputs=model_output,
-)
+from IPython.utils import io
+
+with io.capture_output() as captured:
+  dataset_summary = summarize_data(
+    preprocess_data_args=pancreas_configuration.preprocess_data,
+    postprocessing_outputs=postprocessing_outputs,
+    training_outputs=model_output,
+  )
 ```
+
+::: {#nte-find-figures .callout-note collapse=true title="Path to figure files generated by summarize_data"}
+The call to `summarize_data` generates a large number of plots which are saved to the `dataset_summary.data_model_reports.path`. This currently resolves to a subfolder of `./reports`. The name of the subfolder joins the data set name with the name of the model type. We capture the plot outputs to prevent them from generating a very long cell output. We review several of the plots in @sec-data-set-review. The remaining plots are available in the `dataset_summary.data_model_reports.path` folder. If you cannot locate it in the file browser, you can execute 
+
+```python
+print(dataset_summary.data_model_reports.path)
+```
+
+after the cell containing the call to summarize_data completes to verify the path where the plots are located.
+:::
 
 The dataset summary contains
 
@@ -433,7 +473,7 @@ print_config_tree(dataset_summary.to_dict(), "dataset summary")
 ```
 
 
-### Data set review 
+### Data set review {#sec-data-set-review}
 ```{python}
 #| label: import-ipython-display
 #| echo: true
@@ -472,7 +512,7 @@ display(Image(filename=f"{dataset_summary.data_model_reports.path}/vector_field.
 #| echo: true
 #| fig-cap: "Vector fields with uncertainty estimates."
  
-display(Image(filename=f"{dataset_summary.data_model_reports.path}/fig2_part1_plot.pdf.png"))
+display(Image(filename=f"{dataset_summary.data_model_reports.path}/vector_field_summary_plot.pdf.png"))
 ```
 
 ### Gene selection
@@ -496,7 +536,7 @@ display(Image(filename=f"{dataset_summary.data_model_reports.path}/volcano.pdf.p
 #| echo: true
 #| fig-cap: "Splice state phase portraits, estimated expression levels over shared time, and shared time correlation for a subset of selected genes."
  
-display(Image(filename=f"{dataset_summary.data_model_reports.path}/rainbow.pdf.png"))
+display(Image(filename=f"{dataset_summary.data_model_reports.path}/gene_selection_rainbow_plot.pdf.png"))
 ```
 
 #### Summary
@@ -508,7 +548,7 @@ A summary of the gene selection results is shown in @fig-gene-selection-summary.
 #| echo: true
 #| fig-cap: "Summary of gene selection results."
  
-display(Image(filename=f"{dataset_summary.data_model_reports.path}/fig2_part2_plot.pdf.png"))
+display(Image(filename=f"{dataset_summary.data_model_reports.path}/gene_selection_summary_plot.pdf.png"))
 ```
 
 ### Uncertainty estimation
@@ -571,7 +611,7 @@ In @fig-manually-generated-rainbowplot we show the manually generated marker gen
 ```{python}
 #| label: fig-manually-generated-rainbowplot
 #| echo: true
-#| fig-cap: "Manually generated rainbow plot." 
+#| fig-cap: "Manually generated phase portrait, temporal dynamics, and shared time correlation rainbow plot." 
 with SuppressOutput():
   pv.plots.rainbowplot(
       volcano_data=volcano_data,
@@ -584,9 +624,11 @@ with SuppressOutput():
   )
 ```
 
+See @nte-suppressoutput if you need to know what `SuppressOutput` is doing.
+
 The best place to review the approach to generating the above plots is in [the source code for the `pyrovelocity.summarize` module](https://github.com/pinellolab/pyrovelocity/tree/beta/src/pyrovelocity/summarize.py) or in the [docs](https://github.io/pinellolab/pyrovelocity). Additional links are shown in the help below.
 
 ```{python}
 #| label: print-pyrovelocity-docstring-2
-pv.help.internal_help(pv)
+pv.utils.internal_help(pv)
 ```
