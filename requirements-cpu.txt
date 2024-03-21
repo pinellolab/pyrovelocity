@@ -1,7 +1,7 @@
 --extra-index-url https://download.pytorch.org/whl/cpu
 
 absl-py==1.4.0 ; python_version >= "3.10" and python_version < "3.12"
-adjusttext==0.7.3 ; python_version >= "3.10" and python_version < "3.12"
+adjusttext==1.1.1 ; python_version >= "3.10" and python_version < "3.12"
 adlfs==2023.8.0 ; python_version >= "3.10" and python_version < "3.12"
 aiobotocore==2.5.4 ; python_version >= "3.10" and python_version < "3.12"
 aiohttp==3.9.0b0 ; python_version >= "3.10" and python_version < "3.12"
@@ -89,11 +89,11 @@ google-api-core==2.11.0 ; python_version >= "3.10" and python_version < "3.12"
 google-api-python-client==2.119.0 ; python_version >= "3.10" and python_version < "3.12"
 google-auth-httplib2==0.2.0 ; python_version >= "3.10" and python_version < "3.12"
 google-auth-oauthlib==1.0.0 ; python_version >= "3.10" and python_version < "3.12"
-google-auth==2.17.3 ; python_version >= "3.10" and python_version < "3.12"
+google-auth==2.28.2 ; python_version >= "3.10" and python_version < "3.12"
 google-cloud-core==2.3.2 ; python_version >= "3.10" and python_version < "3.12"
-google-cloud-storage==2.8.0 ; python_version >= "3.10" and python_version < "3.12"
+google-cloud-storage==2.14.0 ; python_version >= "3.10" and python_version < "3.12"
 google-crc32c==1.5.0 ; python_version >= "3.10" and python_version < "3.12"
-google-resumable-media==2.4.1 ; python_version >= "3.10" and python_version < "3.12"
+google-resumable-media==2.7.0 ; python_version >= "3.10" and python_version < "3.12"
 googleapis-common-protos==1.59.0 ; python_version >= "3.10" and python_version < "3.12"
 greenlet==2.0.2 ; python_version >= "3.10" and python_version < "3.12" and (platform_machine == "aarch64" or platform_machine == "ppc64le" or platform_machine == "x86_64" or platform_machine == "amd64" or platform_machine == "AMD64" or platform_machine == "win32" or platform_machine == "WIN32")
 grpcio-status==1.60.0 ; python_version >= "3.10" and python_version < "3.12"
