@@ -112,7 +112,14 @@ def summarize_dataset(
         parameter_uncertainty_plot_path,
         t0_selection_plot,
     ]
-    if all(os.path.isfile(f) for f in output_filenames):
+    if os.path.exists(posterior_phase_portraits_path):
+        phase_portraits_exist = (
+            len(os.listdir(posterior_phase_portraits_path)) > 0
+        )
+    if (
+        all(os.path.isfile(f) for f in output_filenames)
+        and phase_portraits_exist
+    ):
         logger.info(
             "\n\t"
             + "\n\t".join(str(f) for f in output_filenames)
@@ -322,11 +329,11 @@ def summarize_dataset(
     logger.info(f"Searching for {number_of_marker_genes} marker genes")
     geneset = pareto_frontier_genes(volcano_data, number_of_marker_genes)
 
-    if len(os.listdir(posterior_phase_portraits_path)) > 0:
+    if phase_portraits_exist:
         logger.info(
             f"\nFiles exist in posterior phase portraits path:\n"
             f"{posterior_phase_portraits_path}\n"
-            f"Remove output files if you want to regenerate them.\n\n"
+            f"Remove this directory or all its files if you want to regenerate them.\n\n"
         )
     else:
         logger.info("Generating posterior phase portraits")
@@ -355,8 +362,8 @@ def summarize_dataset(
         logger.info(f"Generating figure: {volcano_plot}")
 
         volcano_data, fig = plot_gene_ranking(
-            [posterior_samples],
-            [adata],
+            posterior_samples=[posterior_samples],
+            adata=[adata],
             selected_genes=geneset,
             time_correlation_with="st",
             show_marginal_histograms=True,
@@ -378,12 +385,11 @@ def summarize_dataset(
     else:
         logger.info(f"Generating figure: {fig2_part2_plot}")
         summarize_fig2_part2(
-            adata,
-            posterior_samples,
+            adata=adata,
+            posterior_samples=posterior_samples,
             basis=vector_field_basis,
             cell_state=cell_type,
             plot_name=fig2_part2_plot,
-            fig=None,
             selected_genes=geneset,
             show_marginal_histograms=False,
         )
