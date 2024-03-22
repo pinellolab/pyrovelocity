@@ -89,14 +89,39 @@ print("This cell is intentionally left blank.")
 
 ### Overview
 
-Installation should take less than **10 minutes**. If you are running in [Google Colab][colab-more-memory], then even when running with the `PYROVELOCITY_TESTING_FLAG` set to `True`,
-if you have [access to *High-RAM* or *T4 GPU* runtimes][colab-more-memory] this can significantly speed up even this testing of the notebook.
+Installation should take less than **10 minutes**. 
+
+::: {#nte-installation .callout-note collapse=true title="Installing pyrovelocity"}
+If you are running on a local or remote Jupyter server outside of Google Colab, we assume you have already installed pyrovelocity in the same environment in which the Jupyter kernel is running. If you have not, ensure you are in a virtual environment with python 3.10 active (we recommend [pyenv][pyenv] or [miniforge][miniforge]), and then you can install the development version from github with
+
+
+```bash
+pip install pyrovelocity[workflows] @ git+https://github.com/pinellolab/pyrovelocity.git@beta
+```
+
+or a recent release from PyPI
+
+```bash
+pip install pyrovelocity[workflows]==0.2.0b12
+```
+
+We also support installation from the anaconda conda-forge channel
+
+```bash
+mamba install \
+  -c pytorch -c nvidia -c conda-forge \
+  pytorch::pytorch conda-forge/label/pyrovelocity_dev::pyrovelocity
+```
+
+We do not use this option here because we find in Google Colab installation via anaconda takes about twice as long as from PyPI.
+:::
+
+With respect to resource requirements, this notebook should be able to be run on any modern laptop. By default, the data are downsampled to 300 observations and training epochs truncated to 300 by setting the `PYROVELOCITY_TESTING_FLAG` to `True`. If you are running in [Google Colab][colab-more-memory], then even in this testing mode, 
+if you have [access to *High-RAM* or *T4 GPU* runtimes][colab-more-memory] this can significantly speed up library installation and execution.
 For a complete analysis with `PYROVELOCITY_TESTING_FLAG` disabled, at least *High-RAM* or *T4 GPU* runtimes are essentially required to execute in a reasonable
-amount of time.
+amount of time. In this case, if you do not have a subscription to Google Colab Pro, running on a laptop should be sufficient for the data set we analyze here.
 
-This section involves checking if the notebook is running in colab, in which case it is certain that you will need to install or reinstall pyrovelocity.
-Otherwise, it is assumed that the user will have installed pyrovelocity in the same environment in which the jupyter kernel is running.
-
+The following section involves checking if the notebook is running in colab, in which case it is certain that you will need to install or reinstall pyrovelocity.
 The simplest way to complete it is to run the `Setup environment` section, wait for the kernel to restart, and then run the same section again:
 
 - **fold** this `Setup environment` section above
@@ -111,9 +136,11 @@ The simplest way to complete it is to run the `Setup environment` section, wait 
 Otherwise, the cells below can be executed manually.
 In either case, this section can be folded away after installation is complete.
 
-If you need to edit the **version number**, please see the setting in the `setup_pyrovelocity` function below.
+If you need to edit the **version number**, please see the argument passed to `install_package` in the `setup_pyrovelocity` function below.
 
 [colab-more-memory]: https://colab.research.google.com/notebooks/pro.ipynb#scrollTo=65MSuHKqNeBZ
+[pyenv]: https://github.com/pyenv/pyenv
+[miniforge]: https://github.com/conda-forge/miniforge?tab=readme-ov-file#whats-the-difference-between-mambaforge-and-miniforge
 
 ### Install library
 
@@ -181,6 +208,7 @@ def setup_pyrovelocity():
 
 ```{python}
 #| label: install-pyrovelocity-colab
+#| output: false
 #| code-fold: true
 import os
 
@@ -203,7 +231,7 @@ If installation was successful, the following commands should print the location
 
 ```{python}
 #| label: check-pyrovelocity-installation
-#| output: false
+#| output: true
 
 import pyrovelocity
 if IN_COLAB:
@@ -226,15 +254,18 @@ if IN_COLAB:
 print(pyro.__version__)
 ```
 
-
-## Analysis
+You can find links to pyrovelocity documentation and source code in the help below.
 
 ```{python}
 #| label: print-pyrovelocity-docstring-1
 pyrovelocity.utils.internal_help(pyrovelocity) # ?pyrovelocity # to open in side panel tab for reference
 ```
 
-Before we start, we will adjust a few environment variables to ensure our first execution occurs in a lightweight test mode with a subset of observations, variables, training epochs, and posterior samples. We will also set a few log levels. Feel free to adjust these to `ERROR`, `DEBUG`, etc as needed.
+
+## Analysis
+
+In this section we demonstrate how to run a comprehensive analysis from accessing data to plotting results.
+
 
 ```{python}
 #| label: set-pyrovelocity-testing-flag
@@ -247,7 +278,9 @@ logging.getLogger("jax").setLevel(logging.ERROR)
 logging.getLogger("root").setLevel(logging.ERROR)
 ```
 
-After an initial review, we can set the environment variable to `False` to run the full analysis.
+Before we start, we set a few environment variables to ensure our first execution occurs in a lightweight test mode with a subset of observations, variables, training epochs, and posterior samples. We also set a few log levels. Feel free to adjust these to `ERROR`, `DEBUG`, etc as needed.
+
+After an initial review, we can set the `PYROVELOCITY_TESTING_FLAG` environment variable to `False` to run the full analysis.
 
 The library supports execution via a sequence of workflow tasks. The approximate outline of these involves accessing external data, preprocessing, model training, postprocessing, and summarization.
 
@@ -281,7 +314,7 @@ reload(pyrovelocity.workflows.main_workflow)
 We leave this out of this notebook since it is intended as a usage example.
 :::
 
-To execute each task requires a single `WorkflowConfiguration` object, which is an instance of a python datclass. In this notebook we illustrate execution with the standard pancreatic endocrinogenesis data set [@Bastidas-Ponce2019-lf]. First we import the configuration dataclass
+To execute each task requires a single `WorkflowConfiguration` object, which is an instance of a python dataclass. In this notebook we illustrate execution with the standard pancreatic endocrinogenesis data set [@Bastidas-Ponce2019-lf]. First we import the configuration dataclass
 
 ```{python}
 #| label: import-pancreas-configuration
@@ -299,7 +332,7 @@ with open("pancreas_configuration.yaml", "w") as yaml_file:
     yaml.dump(pancreas_configuration_dict, yaml_file, sort_keys=False, default_flow_style=False, allow_unicode=True)
 ```
 
-Feel free to open the [pancreas_configuration.yaml](./pancreas_configuration.yaml) file to review the configuration settings. We will reprint the part of that configuration relevant to the execution of each task below. The resource requests and limits sections at the bottom will be irrelevant for this example of local execution. The resource specifications are utilized during local or remote cluster-based execution of distributed containerized workflows.
+Feel free to open the [pancreas_configuration.yaml](./pancreas_configuration.yaml) file to review the configuration settings. We will reprint the part of that configuration relevant to the execution of each task below. The resource requests and limits sections will be irrelevant for this example of local execution. The resource specifications are utilized during local or remote cluster-based execution of distributed containerized workflows.
 
 ### Download data
 
@@ -471,8 +504,10 @@ print_config_tree(dataset_summary.to_dict(), "dataset summary")
 
 
 ### Data set review {#sec-data-set-review}
+
 ```{python}
 #| label: import-ipython-display
+#| code-fold: true
 #| echo: true
 from IPython.display import Image, display
 ```
@@ -481,6 +516,7 @@ The maximum values of the unspliced and spliced count data for each gene across 
 
 ```{python}
 #| label: fig-raw-counts
+#| code-fold: true
 #| echo: true
 #| fig-cap: "Maximum spliced and unsliced transcript counts data for each gene across all cells with marginal histograms."
  
@@ -494,6 +530,7 @@ A vector field estimate of cell state transformation probability derived from RN
 
 ```{python}
 #| label: fig-vector-field
+#| code-fold: true
 #| echo: true
 #| fig-cap: "Vector field" 
  
@@ -506,6 +543,7 @@ display(Image(filename=f"{dataset_summary.data_model_reports.path}/vector_field.
 
 ```{python}
 #| label: fig-vector-fields-uncertainty
+#| code-fold: true
 #| echo: true
 #| fig-cap: "Vector fields with uncertainty estimates."
  
@@ -518,6 +556,7 @@ A *volcano plot* adapted for probabilistic inference of RNA velocity is shown in
 
 ```{python}
 #| label: fig-volcano
+#| code-fold: true
 #| echo: true
 #| fig-cap: "RNA velocity volcano plot showing mean absolute error versus shared time correlation for each gene."
  
@@ -530,6 +569,7 @@ display(Image(filename=f"{dataset_summary.data_model_reports.path}/volcano.pdf.p
 
 ```{python}
 #| label: fig-rainbow
+#| code-fold: true
 #| echo: true
 #| fig-cap: "Splice state phase portraits, estimated expression levels over shared time, and shared time correlation for a subset of selected genes."
  
@@ -542,6 +582,7 @@ A summary of the gene selection results is shown in @fig-gene-selection-summary.
 
 ```{python}
 #| label: fig-gene-selection-summary
+#| code-fold: true
 #| echo: true
 #| fig-cap: "Summary of gene selection results."
  
@@ -557,6 +598,7 @@ Estimates for parameter uncertainties for a subset of genes are shown in @fig-pa
 
 ```{python}
 #| label: fig-parameter-uncertainty
+#| code-fold: true
 #| echo: true
 #| fig-cap: "Centered parameter uncertainties for a subset of genes."
  
@@ -569,6 +611,7 @@ display(Image(filename=f"{dataset_summary.data_model_reports.path}/parameter_unc
 
 ```{python}
 #| label: fig-shared-time-uncertainty
+#| code-fold: true
 #| echo: true
 #| fig-cap: "Distribution of shared time coefficients of variation together with standard deviation (uncertainty) and mean per cell."
  
@@ -705,6 +748,7 @@ A vector field estimate of cell state transformation probability derived from RN
 
 ```{python}
 #| label: fig-vector-field-2
+#| code-fold: true
 #| echo: true
 #| fig-cap: "Vector field" 
  
@@ -717,6 +761,7 @@ display(Image(filename=f"{dataset_summary_2.data_model_reports.path}/vector_fiel
 
 ```{python}
 #| label: fig-vector-fields-uncertainty-2
+#| code-fold: true
 #| echo: true
 #| fig-cap: "Vector fields with uncertainty estimates."
  
@@ -729,6 +774,7 @@ A *volcano plot* adapted for probabilistic inference of RNA velocity is shown in
 
 ```{python}
 #| label: fig-volcano-2
+#| code-fold: true
 #| echo: true
 #| fig-cap: "RNA velocity volcano plot showing mean absolute error versus shared time correlation for each gene."
  
@@ -741,6 +787,7 @@ display(Image(filename=f"{dataset_summary_2.data_model_reports.path}/volcano.pdf
 
 ```{python}
 #| label: fig-rainbow-2
+#| code-fold: true
 #| echo: true
 #| fig-cap: "Splice state phase portraits, estimated expression levels over shared time, and shared time correlation for a subset of selected genes."
  
@@ -753,6 +800,7 @@ A summary of the gene selection results is shown in @fig-gene-selection-summary-
 
 ```{python}
 #| label: fig-gene-selection-summary-2
+#| code-fold: true
 #| echo: true
 #| fig-cap: "Summary of gene selection results."
  
@@ -768,6 +816,7 @@ Estimates for parameter uncertainties for a subset of genes are shown in @fig-pa
 
 ```{python}
 #| label: fig-parameter-uncertainty-2
+#| code-fold: true
 #| echo: true
 #| fig-cap: "Centered parameter uncertainties for a subset of genes."
  
@@ -780,6 +829,7 @@ display(Image(filename=f"{dataset_summary_2.data_model_reports.path}/parameter_u
 
 ```{python}
 #| label: fig-shared-time-uncertainty-2
+#| code-fold: true
 #| echo: true
 #| fig-cap: "Distribution of shared time coefficients of variation together with standard deviation (uncertainty) and mean per cell."
  
@@ -788,4 +838,4 @@ display(Image(filename=f"{dataset_summary_2.data_model_reports.path}/shared_time
 
 ## Summary
 
-In this notebook we have demonstrated how to install pyrovelocity and execute a comprehensive workflow to perform a probabilistic analysis of RNA velocity in a single-cell transcriptomics data set in a Jupyter notebook. We default to data downsampled in this case by about a factor of 10 to allow for swift execution to illustrate the analysis workflow. In particular, we have shown how to download data, preprocess it, train a model, postprocess the results, and summarize the data with a compendium of plots. We have also shown how to experiment with the data and posterior samples to generate new plots, and how to train, postprocess, and summarize the results of an alternative model. This information should be sufficient to see how to get started applying pyrovelocity to your own data. We will discuss approaches to model comparison, criticism, and selection in a separate notebook. Please do not hesitate to reach out in [the discussions board on github](https://github.com/pinellolab/pyrovelocity/discussions) if you run into problems using the library.
+In this notebook we have demonstrated how to install pyrovelocity and execute a comprehensive workflow to perform a probabilistic analysis of RNA velocity for a single-cell transcriptomics data set in a Jupyter notebook. We default to data downsampled in this case by about a factor of 10 to allow for swift execution to illustrate the analysis workflow. In particular, we have shown how to download data, preprocess it, train a model, postprocess the results, and summarize the data with a compendium of plots. We have also shown how to experiment with the data and posterior samples to generate new plots, and how to train, postprocess, and summarize the results for an alternative model. This information should be sufficient to see how to get started applying pyrovelocity to your own data. We will discuss approaches to model comparison, criticism, and selection in a separate notebook. Please do not hesitate to reach out in [the discussions board on github](https://github.com/pinellolab/pyrovelocity/discussions) if you run into any problems using the library.
