@@ -40,8 +40,9 @@ author = "Qian Qin"
 copyright = "2022, Pinello Lab"
 extensions = [
     "myst_parser",
-    "sphinx.ext.autodoc",
     "nbsphinx",
+    "sphinx_markdown_builder",
+    "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
