@@ -6,13 +6,33 @@ execute:
   warning: false
   error: false
 
-back-to-top-navigation: true
+filters:
+  - interlinks
+
+interlinks:
+  fast: true
+  sources:
+    python:
+      url: https://docs.python.org/3/
+    pyro:
+      url: https://docs.pyro.ai/en/stable/
+    torch:
+      url: https://pytorch.org/docs/stable/
+    scvi:
+      url: https://docs.scvi-tools.org/en/stable/
+    anndata:
+      url: https://anndata.readthedocs.io/en/latest/
+    scanpy:
+      url: https://scanpy.readthedocs.io/en/stable/
+    scvelo:
+      url: https://scvelo.readthedocs.io/en/stable/
 
 website:
   title: "Pyro-Velocity"
   site-url: https://pinellolab.github.io/pyrovelocity
   description: "A probabilistic framework for multi-modal transcriptomics"
   favicon: _static/logo/favicon.ico
+  back-to-top-navigation: true
 
   page-footer:
     border: false
@@ -36,78 +56,92 @@ website:
             url: https://github.com/pinellolab/pyrovelocity/discussions/new/choose
           - text: "Create an issue"
             url: https://github.com/pinellolab/pyrovelocity/issues/new/choose
+    left:
+      - sidebar:introduction
+      - sidebar:documentation
+      - sidebar:about
 
   sidebar:
-    style: "floating"
-    contents:
-      - text: "Introduction"
-        href: introduction.qmd
-      - section: "Concepts"
-        contents:
-          - text: "Overview"
-            href: concepts/overview.qmd
-          - text: "Multi-modal transcriptomics"
-            href: concepts/multimodaltranscriptomics.qmd
-          - text: "Dynamical systems theory"
-            href: concepts/dynamicalsystems.qmd
-          - text: "Probabilistic inference"
-            href: concepts/probabilisticinference.qmd
-          - text: "Models of gene expression"
-            href: concepts/geneexpression.qmd
-      - section: "Guides"
-        contents:
-          - text: "Data Access"
-            href: guides/data.qmd
-          - text: "Preprocessing"
-            href: guides/preprocessing.qmd
-          - text: "Inference"
-            href: guides/inference.qmd
-          - text: "Postprocessing"
-            href: guides/postprocessing.qmd
-          - text: "Model summary"
-            href: guides/summarization.qmd
-      - section: "Tutorials"
-        contents:
-          - section: "Analysis templates"
-            contents:
-              - text: "PyPI"
-                href: templates/pypi.qmd
-              - text: "Conda"
-                href: templates/conda.qmd
-          - text: "Pancreatic endocrinogenesis"
-            href: tutorials/pancreas.qmd
-          - text: "Pons development"
-            href: tutorials/pons.qmd
-          - section: "Blood physiology"
-            contents:
-              - text: "68k PBMCs"
-                href: tutorials/pbmc68k.qmd
-              - text: "10k PBMCs"
-                href: tutorials/pbmc10k.qmd
-              - text: "5k PBMCs"
-                href: tutorials/pbmc5k.qmd
-          - text: "Mouse hematopoiesis"
-            href: tutorials/mousehematopoiesis.qmd
-          - text: "Lineage tracing"
-            href: tutorials/lineagetracing.qmd
-      - section: "Reference"
-        contents:
-          - text: "Models"
-            href: reference/models.qmd
-          - text: "Plots"
-            href: reference/plots.qmd
-          - text: "Tasks"
-            href: reference/tasks.qmd
-          - text: "Workflows"
-            href: reference/workflows.qmd
-      - section: "About"
-        contents:
-          - text: "Changelog"
-            href: about/changelog.qmd
-          - text: "Contributing"
-            href: about/contributing.qmd
-          - text: "Credits"
-            href: about/credits.qmd
+    - id: ""
+    - id: introduction
+      title: "Introduction"
+      contents:
+        - text: "Getting Started"
+          href: introduction.qmd
+    - id: documentation
+      title: "Documentation"
+      style: "floating"
+      contents:
+        - section: "Concepts"
+          contents:
+            - text: "Overview"
+              href: concepts/overview.qmd
+            - text: "Multi-modal transcriptomics"
+              href: concepts/multimodaltranscriptomics.qmd
+            - text: "Dynamical systems theory"
+              href: concepts/dynamicalsystems.qmd
+            - text: "Probabilistic inference"
+              href: concepts/probabilisticinference.qmd
+            - text: "Models of gene expression"
+              href: concepts/geneexpression.qmd
+        - section: "Guides"
+          contents:
+            - text: "Data Access"
+              href: guides/data.qmd
+            - text: "Preprocessing"
+              href: guides/preprocessing.qmd
+            - text: "Inference"
+              href: guides/inference.qmd
+            - text: "Postprocessing"
+              href: guides/postprocessing.qmd
+            - text: "Model summary"
+              href: guides/summarization.qmd
+        - section: "Tutorials"
+          contents:
+            - section: "Analysis templates"
+              contents:
+                - text: "PyPI"
+                  href: templates/pypi.qmd
+                - text: "Conda"
+                  href: templates/conda.qmd
+            - text: "Pancreatic endocrinogenesis"
+              href: tutorials/pancreas.qmd
+            - text: "Pons development"
+              href: tutorials/pons.qmd
+            - section: "Blood physiology"
+              contents:
+                - text: "68k PBMCs"
+                  href: tutorials/pbmc68k.qmd
+                - text: "10k PBMCs"
+                  href: tutorials/pbmc10k.qmd
+                - text: "5k PBMCs"
+                  href: tutorials/pbmc5k.qmd
+            - text: "Mouse hematopoiesis"
+              href: tutorials/mousehematopoiesis.qmd
+            - text: "Lineage tracing"
+              href: tutorials/lineagetracing.qmd
+        - section: "Reference"
+          contents:
+            - text: "Overview"
+              href: reference/index.qmd
+            - text: "Models"
+              href: reference/models.qmd
+            - text: "Plots"
+              href: reference/plots.qmd
+            - text: "Tasks"
+              href: reference/tasks.qmd
+            - text: "Workflows"
+              href: reference/workflows.qmd
+    - id: about
+      title: "About"
+      style: "floating"
+      contents:
+        - text: "Changelog"
+          href: about/changelog.qmd
+        - text: "Contributing"
+          href: about/contributing.qmd
+        - text: "Credits"
+          href: about/credits.qmd
 
 format:
   html:
@@ -117,3 +151,33 @@ format:
     include-in-header: include.html
     css: styles.css
     toc: true
+
+quartodoc:
+  parser: google
+  package: pyrovelocity
+  title: Reference
+  sidebar: reference/_sidbar.yml
+  render_interlinks: true
+  options:
+    signature_name: full
+  sections:
+    - title: Models
+      desc: "Model definitions and usage"
+      contents:
+        - kind: page
+          path: models
+          summary:
+            name: Model classes
+            desc: Multiple model definitions are supported.
+          contents:
+            - name: PyroVelocity
+              package: pyrovelocity.models
+              members:
+                - __init__
+                - train
+                - generate_posterior_samples
+                - compute_statistics_from_posterior_samples
+                - save_model
+                - load_model
+            - name: mrna_dynamics
+              package: pyrovelocity.models
