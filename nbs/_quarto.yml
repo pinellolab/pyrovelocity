@@ -18,6 +18,8 @@ interlinks:
       url: https://docs.pyro.ai/en/stable/
     torch:
       url: https://pytorch.org/docs/stable/
+    numpy:
+      url: https://numpy.org/doc/stable/
     scvi:
       url: https://docs.scvi-tools.org/en/stable/
     anndata:
