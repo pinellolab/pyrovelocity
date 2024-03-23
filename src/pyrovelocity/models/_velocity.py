@@ -35,6 +35,9 @@ from pyrovelocity.models._velocity_module import VelocityModule
 
 # from pyrovelocity.utils import init_with_all_cells
 
+__all__ = ["PyroVelocity"]
+
+
 logger = configure_logging(__name__)
 
 
