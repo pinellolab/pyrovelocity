@@ -102,7 +102,7 @@ nbs-render: ## Render notebooks
 	quarto render nbs
 
 nbs-serve: ## Serve notebooks
-	quarto preview nbs
+	quarto preview nbs --no-browser
 
 lock-poetry: ## Lock poetry dependencies.
 	poetry lock --no-update
