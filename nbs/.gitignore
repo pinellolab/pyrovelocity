@@ -1,2 +1,6 @@
 /.quarto/
+/_inv/
 /_site/
+/reference/
+objects.json
+objects.txt
