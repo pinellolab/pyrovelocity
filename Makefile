@@ -93,6 +93,17 @@ docs-serve: ## Serve documentation
 docs-serve:
 	poetry run sphinx-autobuild docs site --open-browser
 
+nbs-build: ## Build notebooks
+	quartodoc build --verbose --config nbs/_quarto.yml
+	cd nbs && quartodoc interlinks
+
+nbs-render: ## Render notebooks
+	$(MAKE) nbs-build
+	quarto render nbs
+
+nbs-serve: ## Serve notebooks
+	quarto preview nbs
+
 lock-poetry: ## Lock poetry dependencies.
 	poetry lock --no-update
 
