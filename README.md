@@ -8,12 +8,39 @@
     role="img">
 <!-- <img src="./docs/_static/logo.png" alt="Pyro-Velocity logo" width="300" role="img"> -->
 
-|         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CI/CD   | [![CID](https://github.com/pinellolab/pyrovelocity/actions/workflows/cid.yaml/badge.svg?branch=master)](https://github.com/pinellolab/pyrovelocity/actions/workflows/cid.yaml) [![CML](https://github.com/pinellolab/pyrovelocity/actions/workflows/cml.yml/badge.svg)](https://github.com/pinellolab/pyrovelocity/actions/workflows/cml.yml) [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/pinellolab/pyrovelocity/main.svg)](https://results.pre-commit.ci/latest/github/pinellolab/pyrovelocity/master) |
-| Docs    | [![Cloudflare Pages](https://img.shields.io/badge/Docs-pages-F38020?style=flat&logo=cloudflare&labelColor=black)](https://docs.pyrovelocity.net) [![GitHub Pages](https://img.shields.io/github/deployments/pinellolab/pyrovelocity/github-pages?logo=github&label=Docs)](https://pinellolab.github.io/pyrovelocity) [![Preprint](https://img.shields.io/badge/doi-10.1101/2022.09.12.507691v2-B31B1B)](https://doi.org/10.1101/2022.09.12.507691)                                                                               |
-| Package | [![PyPI - Version](https://img.shields.io/pypi/v/pyrovelocity.svg?logo=pypi&label=PyPI&logoColor=gold)](https://pypi.org/project/pyrovelocity/) [![Anaconda badge](https://anaconda.org/conda-forge/pyrovelocity/badges/version.svg)](https://anaconda.org/conda-forge/pyrovelocity) [![Docker iamge](https://img.shields.io/badge/docker-image-blue?logo=docker)](https://github.com/pinellolab/pyrovelocity/pkgs/container/pyrovelocity)                                                                                       |
-| Meta    | [![codecov](https://codecov.io/gh/pinellolab/pyrovelocity/branch/main/graph/badge.svg)](https://codecov.io/gh/pinellolab/pyrovelocity) [![code style - Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![License - MIT](https://img.shields.io/badge/license-AGPL%203-purple)](https://spdx.org/licenses/) [![Tuple](https://img.shields.io/badge/Tuple%20❤️%20OSS-5A67D8?logo=tuple)](https://tuple.app/github-badge)                                                        |
+|         |                                                                                                                                                                        |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CI/CD   | [![CID][cid-badge]][cid-link] [![CML][cml-badge]][cml-link] [![pre-commit.ci status][precommit-badge]][precommit-link]                                                 |
+| Docs    | [![Cloudflare Pages][cloudflare-badge]][cloudflare-link] [![GitHub Pages][gh-pages-badge]][gh-pages-link] [![Preprint][preprint-badge]][preprint-link]                 |
+| Package | [![PyPI - Version][pypi-badge]][pypi-link] [![Anaconda badge][anaconda-badge]][anaconda-link] [![Docker image][docker-badge]][docker-link]                             |
+| Meta    | [![codecov][codecov-badge]][codecov-link] [![code style][black-badge]][black-link] [![License - MIT][license-badge]][license-link] [![Tuple][tuple-badge]][tuple-link] |
+
+[cid-badge]: https://github.com/pinellolab/pyrovelocity/actions/workflows/cid.yaml/badge.svg?branch=master
+[cid-link]: https://github.com/pinellolab/pyrovelocity/actions/workflows/cid.yaml
+[cml-badge]: https://github.com/pinellolab/pyrovelocity/actions/workflows/cml.yml/badge.svg
+[cml-link]: https://github.com/pinellolab/pyrovelocity/actions/workflows/cml.yml
+[precommit-badge]: https://results.pre-commit.ci/badge/github/pinellolab/pyrovelocity/main.svg
+[precommit-link]: https://results.pre-commit.ci/latest/github/pinellolab/pyrovelocity/master
+[cloudflare-badge]: https://img.shields.io/badge/Docs-pages-F38020?style=flat&logo=cloudflare&labelColor=black
+[cloudflare-link]: https://docs.pyrovelocity.net
+[gh-pages-badge]: https://img.shields.io/github/deployments/pinellolab/pyrovelocity/github-pages?logo=github&label=Docs
+[gh-pages-link]: https://pinellolab.github.io/pyrovelocity
+[preprint-badge]: https://img.shields.io/badge/doi-10.1101/2022.09.12.507691v2-B31B1B
+[preprint-link]: https://doi.org/10.1101/2022.09.12.507691
+[pypi-badge]: https://img.shields.io/pypi/v/pyrovelocity.svg?logo=pypi&label=PyPI&logoColor=gold
+[pypi-link]: https://pypi.org/project/pyrovelocity/
+[anaconda-badge]: https://anaconda.org/conda-forge/pyrovelocity/badges/version.svg
+[anaconda-link]: https://anaconda.org/conda-forge/pyrovelocity
+[docker-badge]: https://img.shields.io/badge/docker-image-blue?logo=docker
+[docker-link]: https://github.com/pinellolab/pyrovelocity/pkgs/container/pyrovelocity
+[codecov-badge]: https://codecov.io/gh/pinellolab/pyrovelocity/branch/main/graph/badge.svg
+[codecov-link]: https://codecov.io/gh/pinellolab/pyrovelocity
+[black-badge]: https://img.shields.io/badge/code%20style-black-000000.svg
+[black-link]: https://github.com/psf/black
+[license-badge]: https://img.shields.io/badge/license-AGPL%203-purple
+[license-link]: https://spdx.org/licenses/
+[tuple-badge]: https://img.shields.io/badge/Tuple%20❤️%20OSS-5A67D8?logo=tuple
+[tuple-link]: https://tuple.app/github-badge
 
 </div>
 
