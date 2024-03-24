@@ -1,8 +1,11 @@
 # Pyro-Velocity
 
-<div align="center">
-
-<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/beta/docs/_static/logo.png" alt="Pyro-Velocity logo" width="300" role="img">
+<div style="display: flex; flex-direction: column; align-items: center;">
+<img
+    src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/beta/docs/_static/logo.png"
+    alt="Pyro-Velocity logo"
+    style="width: 300px; max-width: 90%; height: auto;"
+    role="img">
 <!-- <img src="./docs/_static/logo.png" alt="Pyro-Velocity logo" width="300" role="img"> -->
 
 |         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -32,7 +35,13 @@ cell fate choice and developmental trajectory dynamics.
 - Multivariate denoised gene expression and velocity prediction
 
 <!-- ![Velocity workflow comparison](docs/source/readme_figure1.png) -->
-<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/source/readme_figure1.png" alt="Velocity workflow comparison">
+<div style="display: flex; flex-direction: column; align-items: center;">
+<img
+    src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/source/readme_figure1.png"
+    alt="Velocity workflow comparison"
+    style="width: 700px; max-width: 100%; height: auto;"
+    role="img">
+</div>
 
 ## Installation
 
@@ -275,7 +284,15 @@ biology underlying these cells.
 **Vector field with uncertainty**
 
 <!-- ![PBMC vector field uncertainty](docs/source/readme_figure2.png) -->
-<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure2.png" alt="PBMC vector field uncertainty">
+<!-- <img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure2.png" alt="PBMC vector field uncertainty"> -->
+
+<div style="display: flex; flex-direction: column; align-items: center;">
+<img
+    src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure2.png"
+    alt="PBMC vector field uncertainty"
+    style="width: 700px; max-width: 100%; height: auto;"
+    role="img">
+</div>
 
 These 6 plots from left to right show: 1. cell types, 2. stream plot of
 Pyro-velocity vector field based on the posterior mean of 30 posterior
@@ -309,7 +326,14 @@ Delta, and Epsilon cells.
 **Vector field with uncertainty**
 
 <!-- ![Pancreas vector field uncertainty](docs/source/readme_figure3.png) -->
-<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure3.png" alt="Pancreas vector field uncertainty">
+<!-- <img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure3.png" alt="Pancreas vector field uncertainty"> -->
+<div style="display: flex; flex-direction: column; align-items: center;">
+<img
+    src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure3.png"
+    alt="Pancreas vector field uncertainty"
+    style="width: 700px; max-width: 100%; height: auto;"
+    role="img">
+</div>
 
 These 6 plots from left to right are showing the same analyses presented
 as in the example above.
@@ -317,7 +341,14 @@ as in the example above.
 **Shared time with uncertainty**
 
 <!-- ![Pancreas shared time uncertainty](docs/source/readme_figure4.png) -->
-<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/source/readme_figure4.png" alt="Pancreas vector field uncertainty">
+<!-- <img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/source/readme_figure4.png" alt="Pancreas vector field uncertainty"> -->
+<div style="display: flex; flex-direction: column; align-items: center;">
+<img
+    src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/master/docs/source/readme_figure4.png"
+    alt="Pancreas vector field uncertainty"
+    style="width: 700px; max-width: 100%; height: auto;"
+    role="img">
+</div>
 
 The left figure shows the average of 30 posterior samples for the cell
 shared time, the title of the figure shows the Spearman\'s correlation
@@ -335,14 +366,28 @@ genes using Pearson\'s correlation between denoised spliced expression
 and the posterior mean of the recovered shared time across cells.
 
 <!-- ![Pancreas Volcano plot for gene selection](docs/source/readme_figure6.png) -->
-<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure6.png" alt="Pancreas Volcano plot for gene selection">
+<!-- <img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure6.png" alt="Pancreas Volcano plot for gene selection"> -->
+<div style="display: flex; flex-direction: column; align-items: center;">
+<img
+    src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure6.png"
+    alt="Pancreas Volcano plot for gene selection"
+    style="width: 700px; max-width: 100%; height: auto;"
+    role="img">
+</div>
 
 For the selected genes, it is possible to explore in depth their
 dynamic, using phase portraits, rainbow plots, and UMAP rendering of
 denoised splicing gene expression across cells.
 
 <!-- ![Pancreas vector field uncertainty](docs/source/readme_figure7.png) -->
-<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure7.png" alt="Pancreas vector field uncertainty">
+<!-- <img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure7.png" alt="Pancreas vector field uncertainty"> -->
+<div style="display: flex; flex-direction: column; align-items: center;">
+<img
+    src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure7.png"
+    alt="Pancreas vector field uncertainty"
+    style="width: 700px; max-width: 100%; height: auto;"
+    role="img">
+</div>
 
 The full example can be reproduced using the
 [Pancreas](https://github.com/pinellolab/pyrovelocity/blob/master/docs/source/notebooks/pancreas.ipynb)
@@ -363,7 +408,14 @@ Below we show the main output generated by Pyro-Velocity analysis.
 **Vector field with uncertainty**
 
 <!-- ![LARRY vector field uncertainty](docs/source/readme_figure8.png) -->
-<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure8.png" alt="LARRY vector field uncertainty">
+<!-- <img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure8.png" alt="LARRY vector field uncertainty"> -->
+<div style="display: flex; flex-direction: column; align-items: center;">
+<img
+    src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure8.png"
+    alt="LARRY vector field uncertainty"
+    style="width: 700px; max-width: 100%; height: auto;"
+    role="img">
+</div>
 
 These 5 plots from left to right shows: 1) Cell types, 2) Clone
 progression vector field by using centroid of cells belonging to the
@@ -382,7 +434,14 @@ state-of-the-art method specifically designed for predicting fate
 potency based on LARRY data.
 
 <!-- ![Pancreas shared time uncertainty](docs/source/readme_figure9.png) -->
-<img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure9.png" alt="Pancreas shared time uncertainty">
+<!-- <img src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure9.png" alt="Pancreas shared time uncertainty"> -->
+<div style="display: flex; flex-direction: column; align-items: center;">
+<img
+    src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/main/docs/source/readme_figure9.png"
+    alt="Pancreas shared time uncertainty"
+    style="width: 700px; max-width: 100%; height: auto;"
+    role="img">
+</div>
 
 The leftmost figure shows the Cospar fate potency score, the middle
 figure shows the average of 30 posterior samples from Pyro-Velocity
