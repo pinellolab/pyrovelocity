@@ -1,5 +1,7 @@
 # Introduction
 
+Pyro-Velocity is a Bayesian, generative, and multivariate RNA velocity model to estimate uncertainty in predictions of future cell states from minimal models approximating splicing dynamics.
+
 ## Features
 
 - Probabilistic modeling of RNA velocity
