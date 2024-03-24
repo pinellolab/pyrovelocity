@@ -12,6 +12,7 @@ import numpy as np
 import pyro
 import torch
 from anndata import AnnData
+from beartype import beartype
 from numpy import ndarray
 from scvi.data import AnnDataManager
 from scvi.data._constants import _SETUP_ARGS_KEY
@@ -33,8 +34,6 @@ from pyrovelocity.models._trainer import VelocityTrainingMixin
 from pyrovelocity.models._velocity_module import VelocityModule
 
 
-# from pyrovelocity.utils import init_with_all_cells
-
 __all__ = ["PyroVelocity"]
 
 
@@ -42,6 +41,63 @@ logger = configure_logging(__name__)
 
 
 class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
+    """
+    PyroVelocity is a class for constructing and training a Pyro model for
+    probabilistic RNA velocity estimation. This model leverages the
+    probabilistic programming language Pyro to estimate the parameters of models
+    for the dynamics of RNA transcription, splicing, and degradation, providing
+    the opportunity for insight into cellular states and associated state
+    transitions. It makes use of AnnData, scvi-tools, and other scverse
+    ecosystem libraries.
+
+    Public methods include training the model with various configurations,
+    generating posterior samples for further analysis, and saving/loading the
+    model for reproducibility and further analysis.
+
+    Attributes:
+        use_gpu (str): Whether and which GPU to use.
+        cell_specific_kinetics (Optional[str]): Type of cell-specific kinetics.
+        k (Optional[int]): Number of kinetics.
+        layers (List[str]): List of layers in the dataset.
+        input_type (str): Type of input data.
+        module (VelocityModule):
+            The Pyro module used for the velocity estimation model.
+        num_cells (int): Number of cells in the dataset.
+        num_samples (int): Number of posterior samples to generate.
+        _model_summary_string (str): Summary string for the model.
+        init_params_ (Dict[str, Any]): Initial parameters for the model.
+
+    For usage examples, including training the model and generating posterior
+    samples, refer to the individual method docstrings.
+    """
+
+    """
+    The `Methods` section is not supported by all documentation generators but
+    is provided detached from the class docstring for reference. Please
+    see the docstrings for each method for more details. This list may ignore
+    unused or private methods.
+
+    Methods:
+        train:
+            Trains the PyroVelocity model using the provided data and configuration.
+        setup_anndata: 
+            Set up AnnData object for compatibility with the scvi-tools
+            model training interface.
+        generate_posterior_samples:
+            Generates posterior samples for the given data using the trained
+            PyroVelocity model.
+        compute_statistics_from_posterior_samples:
+            Estimate statistics from posterior samples and add them to the
+            `posterior_samples` dictionary.
+        save_pyrovelocity_data:
+            Saves the PyroVelocity data to a pickle file.
+        save_model:
+            Saves the Pyro-Velocity model to a directory.
+        load_model:
+            Load the model from a directory with the same structure as that produced
+            by the save method.
+    """
+
     def __init__(
         self,
         adata: AnnData,
@@ -95,14 +151,22 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             kinetics_num (Optional[int], optional): Number of kinetics. Defaults to None.
 
         Examples:
+            >>> # import necessary libraries
             >>> import numpy as np
             >>> import anndata
             >>> from pyrovelocity.utils import pretty_log_dict, print_anndata, generate_sample_data
             >>> from pyrovelocity.preprocess import copy_raw_counts
             >>> from pyrovelocity.models._velocity import PyroVelocity
-            >>> tmp = getfixture("tmp_path")
+            ...
+            >>> # define fixtures
+            >>> try:
+            >>>     tmp = getfixture("tmp_path")
+            >>> except NameError:
+            >>>     import tempfile
+            >>>     tmp = tempfile.TemporaryDirectory().name
             >>> doctest_model_path = str(tmp) + "/save_pyrovelocity_doctest_model"
             >>> print(doctest_model_path)
+            ...
             >>> # setup sample data
             >>> n_obs = 10
             >>> n_vars = 5
@@ -115,37 +179,39 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> print(adata.obs['u_lib_size_raw'])
             >>> print(adata.obs['s_lib_size_raw'])
             >>> PyroVelocity.setup_anndata(adata)
-            >>> # train model
+            ...
+            >>> # train model with macroscopic validation set
             >>> model = PyroVelocity(adata)
             >>> model.train(max_epochs=5, train_size=0.8, valid_size=0.2, use_gpu="auto")
             >>> posterior_samples = model.generate_posterior_samples(model.adata, num_samples=30)
             >>> print(posterior_samples.keys())
             >>> assert isinstance(posterior_samples, dict), f"Expected a dictionary, got {type(posterior_samples)}"
             >>> posterior_samples_log = pretty_log_dict(posterior_samples)
-            >>> logger.debug(posterior_samples_log)
-            >>> # print(posterior_samples_log)
             >>> model.save_model(doctest_model_path, overwrite=True)
             >>> model = PyroVelocity.load_model(doctest_model_path, adata, use_gpu="auto")
-            >>> # train model with
+            ...
+            >>> # train model with default parameters
             >>> model = PyroVelocity(adata)
             >>> model.train_faster(max_epochs=5, use_gpu="auto")
             >>> model.save_model(doctest_model_path, overwrite=True)
             >>> model = PyroVelocity.load_model(doctest_model_path, adata, use_gpu="auto")
             >>> posterior_samples = model.generate_posterior_samples(model.adata, num_samples=30)
             >>> posterior_samples_log = pretty_log_dict(posterior_samples)
-            >>> logger.debug(posterior_samples_log)
-            >>> # print(posterior_samples_log)
             >>> print(posterior_samples.keys())
-            >>> # train model with
+            ...
+            >>> # train model with specified batch size
             >>> model = PyroVelocity(adata)
             >>> model.train_faster_with_batch(batch_size=24, max_epochs=5, use_gpu="auto")
             >>> model.save_model(doctest_model_path, overwrite=True)
             >>> model = PyroVelocity.load_model(doctest_model_path, adata, use_gpu="auto")
             >>> posterior_samples = model.generate_posterior_samples(model.adata, num_samples=30)
             >>> posterior_samples_log = pretty_log_dict(posterior_samples)
-            >>> logger.debug(posterior_samples_log)
-            >>> # print(posterior_samples_log)
             >>> print(posterior_samples.keys())
+            ...
+            >>> # If running from an interactive session, the temporary directory
+            >>> # can be inspected to review the saved model files. When run as a
+            >>> # doctest it is automatically cleaned up after the test completes.
+            >>> print(f"Output located in {doctest_model_path}")
         """
         self.use_gpu = use_gpu
         self.cell_specific_kinetics = cell_specific_kinetics
@@ -165,6 +231,8 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         self.input_type = input_type
 
         super().__init__(adata)
+        # TODO: remove unused code
+        # from pyrovelocity.utils import init_with_all_cells
         # if init:
         #     initial_values = init_with_all_cells(
         #         self.adata,
@@ -231,7 +299,13 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
 
     @classmethod
     def setup_anndata(cls, adata: AnnData, *args, **kwargs):
-        """Latest scvi-tools interface"""
+        """
+        Set up AnnData object for compatibility with the scvi-tools
+        model training interface.
+
+        Args:
+            adata (AnnData): Anndata object to be used in model training.
+        """
         setup_method_args = cls._get_setup_method_args(**locals())
 
         adata.obs["u_lib_size"] = np.log(
@@ -272,8 +346,8 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         num_samples: int = 100,
     ) -> Dict[str, ndarray]:
         """
-        If the guide uses sequential enumeration, computes the posterior samples for
-        the given data using the trained PyroVelocity model.
+        Generates posterior samples for the given data using the trained
+        PyroVelocity model.
 
         The method generates posterior samples by running the trained model on the
         provided data and returns a dictionary containing samples for each parameter.
@@ -348,12 +422,50 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
 
     def compute_statistics_from_posterior_samples(
         self,
-        adata,
-        posterior_samples,
-        vector_field_basis,
-        ncpus_use,
-    ):
-        """reduce posterior samples by precomputing metrics."""
+        adata: AnnData,
+        posterior_samples: Dict[str, ndarray],
+        vector_field_basis: str = "umap",
+        ncpus_use: int = 1,
+    ) -> Dict[str, ndarray]:
+        """
+        Estimate statistics from posterior samples and add them to the
+        `posterior_samples` dictionary. The names of the statistics incorporated into
+        the dictionary are:
+
+        - `gene_ranking`
+        - `original_spaces_embeds_magnitude`
+        - `genes`
+        - `vector_field_posterior_samples`
+        - `vector_field_posterior_mean`
+        - `fdri`
+        - `embeds_magnitude`
+        - `embeds_angle`
+        - `ut_mean`
+        - `st_mean`
+        - `pca_vector_field_posterior_samples`
+        - `pca_embeds_angle`
+        - `pca_fdri`
+
+        The following data are removed from the `posterior_samples` dictionary:
+
+        - `u`
+        - `s`
+        - `ut`
+        - `st`
+
+        Each of these sets requires further documentation.
+
+        Args:
+            adata (AnnData): Anndata object containing the data for which posterior samples
+                were computed.
+            posterior_samples (Dict[str, ndarray]): Dictionary containing the posterior samples
+                for each parameter.
+            vector_field_basis (str, optional): Basis for the vector field. Defaults to "umap".
+            ncpus_use (int, optional): Number of CPUs to use for computation. Defaults to 1.
+
+        Returns:
+            Dict[str, ndarray]: Dictionary containing the posterior samples with added statistics.
+        """
         if ("u_scale" in posterior_samples) and (
             "s_scale" in posterior_samples
         ):
@@ -423,7 +535,6 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         ] = vector_field_posterior_mean
         posterior_samples["fdri"] = fdri
         posterior_samples["embeds_magnitude"] = embeds_magnitude
-        # print(embeds_radian.shape)
         posterior_samples["embeds_angle"] = embeds_radian
         posterior_samples["ut_mean"] = posterior_samples["ut"].mean(0).squeeze()
         posterior_samples["st_mean"] = posterior_samples["st"].mean(0).squeeze()
@@ -450,7 +561,19 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         del posterior_samples["st"]
         return posterior_samples
 
-    def save_pyrovelocity_data(self, posterior_samples, pyrovelocity_data_path):
+    @beartype
+    def save_pyrovelocity_data(
+        self,
+        posterior_samples: Dict[str, ndarray],
+        pyrovelocity_data_path: os.PathLike | str,
+    ):
+        """
+        Save the PyroVelocity data to a pickle file.
+
+        Args:
+            posterior_samples (Dict[str, ndarray]): Dictionary containing the posterior samples
+            pyrovelocity_data_path (os.PathLike | str): Path to save the PyroVelocity data.
+        """
         with open(pyrovelocity_data_path, "wb") as f:
             pickle.dump(posterior_samples, f)
         for k in posterior_samples:
@@ -464,6 +587,19 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         save_anndata: bool = False,
         **anndata_write_kwargs,
     ) -> None:
+        """
+        Save the Pyro-Velocity model to a directory.
+
+        Dispatches to the `save` method of the inherited `BaseModelClass` which
+        calls `torch.save` on a model state dictionary, variable names, and user
+        attributes.
+
+        Args:
+            dir_path (str): Path to the directory where the model will be saved.
+            prefix (Optional[str], optional): Prefix to add to the saved files. Defaults to None.
+            overwrite (bool, optional): Whether to overwrite existing files. Defaults to True.
+            save_anndata (bool, optional): Whether to save the AnnData object. Defaults to False.
+        """
         super().save(
             dir_path, prefix, overwrite, save_anndata, **anndata_write_kwargs
         )
@@ -479,7 +615,24 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         use_gpu: str = "auto",
         prefix: Optional[str] = None,
         backup_url: Optional[str] = None,
-    ):
+    ) -> BaseModelClass:
+        """
+        Load the model from a directory with the same structure as that produced
+        by the save method.
+
+        Args:
+            dir_path (str): Path to the directory where the model is saved.
+            adata (Optional[AnnData], optional): Anndata object to load into the model. Defaults to None.
+            use_gpu (str, optional): Whether and which GPU to use. Defaults to "auto".
+            prefix (Optional[str], optional): Prefix to add to the saved files. Defaults to None.
+            backup_url (Optional[str], optional): URL to download the model from. Defaults to None.
+
+        Raises:
+            RuntimeError: If the model is not an instance of PyroBaseModuleClass.
+
+        Returns:
+            PyroVelocity: The loaded PyroVelocity model.
+        """
         load_adata = adata is None
         _accelerator, _devices, device = parse_device_args(
             accelerator=use_gpu, return_device="torch"
@@ -515,11 +668,9 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         )
 
         model = _initialize_model(cls, adata, attr_dict)
-        # print("---------initialize-------")
 
         for attr, val in attr_dict.items():
             setattr(model, attr, val)
-        # print("setattr")
 
         pyro.clear_param_store()
         old_history = model.history_
@@ -528,9 +679,10 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         except RuntimeError as err:
             if not isinstance(model.module, PyroBaseModuleClass):
                 raise err
-            logger.info("Preparing underlying module for load")
+            logger.info(
+                "Preparing underlying `PyroBaseModuleClass` module for load"
+            )
             try:
-                # print("train 1---")
                 model.train(max_epochs=1, max_steps=1)
             except Exception:
                 model.train(
@@ -543,7 +695,6 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             model.module.load_state_dict(model_state_dict)
 
         model.history_ = old_history
-        # print("load finished.")
         model.to_device(device)
         model.module.eval()
         model._validate_anndata(adata)
