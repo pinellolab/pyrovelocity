@@ -9,6 +9,6 @@ wget ${QUARTO_URL}
 tar zxf ${QUARTO_FILE} 
 
 poetry install --with docs,workflows --sync
-quartodoc build --verbose --config nbs/_quarto.yml
-cd nbs && quartodoc interlinks
+poetry run quartodoc build --verbose --config nbs/_quarto.yml
+cd nbs && poetry run quartodoc interlinks
 ./quarto-${QUARTO_VERSION}/bin/quarto render nbs
