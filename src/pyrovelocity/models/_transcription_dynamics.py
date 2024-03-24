@@ -2,33 +2,39 @@ from typing import Tuple
 
 import torch
 from beartype import beartype
+from torch import Tensor
 
 
 @beartype
 def mrna_dynamics(
-    tau: torch.Tensor,
-    u0: torch.Tensor,
-    s0: torch.Tensor,
-    alpha: torch.Tensor,
-    beta: torch.Tensor,
-    gamma: torch.Tensor,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+    tau: Tensor,
+    u0: Tensor,
+    s0: Tensor,
+    alpha: Tensor,
+    beta: Tensor,
+    gamma: Tensor,
+) -> Tuple[Tensor, Tensor]:
     """
-    Computes the mRNA dynamics given the parameters and initial conditions.
+    Computes the mRNA dynamics given temporal coordinate, parameter values, and
+    initial conditions.
 
-    `st_gamma_equals_beta` is taken from On the Mathematics of RNA Velocity I:
-    Theoretical Analysis: Equation (2.12) when gamma == beta
+    `st_gamma_equals_beta` for the case where the gamma parameter is equal
+    to the beta parameter is taken from Equation 2.12 of
+
+    > Li T, Shi J, Wu Y, Zhou P. On the mathematics of RNA velocity I:
+    Theoretical analysis. CSIAM Transactions on Applied Mathematics. 2021;2:
+    1–55. doi:[10.4208/csiam-am.so-2020-0001](https://doi.org/10.4208/csiam-am.so-2020-0001)
 
     Args:
-        tau (torch.Tensor): Time points.
-        u0 (torch.Tensor): Initial value of u.
-        s0 (torch.Tensor): Initial value of s.
-        alpha (torch.Tensor): Alpha parameter.
-        beta (torch.Tensor): Beta parameter.
-        gamma (torch.Tensor): Gamma parameter.
+        tau (Tensor): Time points.
+        u0 (Tensor): Initial value of u.
+        s0 (Tensor): Initial value of s.
+        alpha (Tensor): Alpha parameter.
+        beta (Tensor): Beta parameter.
+        gamma (Tensor): Gamma parameter.
 
     Returns:
-        Tuple[torch.Tensor, torch.Tensor]: Tuple containing the final values of u and s.
+        Tuple[Tensor, Tensor]: Tuple containing the final values of u and s.
 
     Examples:
         >>> import torch
@@ -56,15 +62,15 @@ def mrna_dynamics(
 
 
 @beartype
-def inv(x: torch.Tensor) -> torch.Tensor:
+def inv(x: Tensor) -> Tensor:
     """
     Computes the element-wise reciprocal of a tensor.
 
     Args:
-        x (torch.Tensor): Input tensor.
+        x (Tensor): Input tensor.
 
     Returns:
-        torch.Tensor: Tensor with element-wise reciprocal of x.
+        Tensor: Tensor with element-wise reciprocal of x.
 
     Examples:
         >>> import torch
