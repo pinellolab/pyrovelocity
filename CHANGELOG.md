@@ -632,3 +632,19 @@
 - **setup_environment:** add pandoc ([2901217](https://github.com/pinellolab/pyrovelocity/commit/2901217360ab53c3abc1b421ad17ae841c6914b6))
 - **vscode:** update font sizes ([4ea8f6e](https://github.com/pinellolab/pyrovelocity/commit/4ea8f6eb8d60a88f974969f07a140e018d36503d))
 - **vscode:** update settings for devcontainer ([3113bef](https://github.com/pinellolab/pyrovelocity/commit/3113bef4a40666a5c1b125f9a1f02b91ce7c6310))
+
+## 0.1.3 (2023-09-05)
+
+- See [0.1.3](https://github.com/pinellolab/pyrovelocity/releases/tag/v0.1.3)
+
+## 0.1.2 (2023-04-16)
+
+- See [0.1.2](https://github.com/pinellolab/pyrovelocity/releases/tag/v0.1.2)
+
+## 0.1.1 (2023-02-16)
+
+- See [0.1.1](https://github.com/pinellolab/pyrovelocity/releases/tag/v0.1.1)
+
+## 0.1.0 (2022-09-05)
+
+- See [0.1.0](https://github.com/pinellolab/pyrovelocity/releases/tag/0.1.0)
