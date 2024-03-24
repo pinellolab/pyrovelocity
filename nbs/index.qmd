@@ -27,7 +27,7 @@ about:
 |         |                                                                                                                                                                        |
 | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | CI/CD   | [![CID][cid-badge]][cid-link] [![CML][cml-badge]][cml-link] [![pre-commit.ci status][precommit-badge]][precommit-link]                                                 |
-| Docs    | [![Cloudflare Pages][cloudflare-badge]][cloudflare-link] [![GitHub Pages][gh-pages-badge]][gh-pages-link] [![Preprint][preprint-badge]][preprint-link]                 |
+| Docs    | [![Cloudflare Pages][cloudflare-badge]][cloudflare-link] [![Preprint][preprint-badge]][preprint-link]                 |
 | Package | [![PyPI - Version][pypi-badge]][pypi-link] [![Anaconda badge][anaconda-badge]][anaconda-link] [![Docker image][docker-badge]][docker-link]                             |
 | Meta    | [![codecov][codecov-badge]][codecov-link] [![code style][black-badge]][black-link] [![License - MIT][license-badge]][license-link] [![Tuple][tuple-badge]][tuple-link] |
 
@@ -39,8 +39,6 @@ about:
 [precommit-link]: https://results.pre-commit.ci/latest/github/pinellolab/pyrovelocity/master
 [cloudflare-badge]: https://img.shields.io/badge/Docs-pages-F38020?style=flat&logo=cloudflare&labelColor=black
 [cloudflare-link]: https://docs.pyrovelocity.net
-[gh-pages-badge]: https://img.shields.io/github/deployments/pinellolab/pyrovelocity/github-pages?logo=github&label=Docs
-[gh-pages-link]: https://pinellolab.github.io/pyrovelocity
 [preprint-badge]: https://img.shields.io/badge/doi-10.1101/2022.09.12.507691v2-B31B1B
 [preprint-link]: https://doi.org/10.1101/2022.09.12.507691
 [pypi-badge]: https://img.shields.io/pypi/v/pyrovelocity.svg?logo=pypi&label=PyPI&logoColor=gold
