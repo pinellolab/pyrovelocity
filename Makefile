@@ -117,7 +117,7 @@ get-source-hash: ## Get hash for branch source archive.
 	curl -sL https://github.com/$(GH_REPO)/archive/refs/heads/$(GIT_REF).tar.gz | openssl dgst -sha256
 	curl -sL https://github.com/$(GH_REPO)/archive/$(GIT_SHA).tar.gz | openssl dgst -sha256
 
-PIP_REQUIREMENTS_NAME ?= requirements
+PIP_REQUIREMENTS_NAME ?= requirements-main
 
 lock-pip: ## Export requirements.txt for pip.
 lock-pip:
