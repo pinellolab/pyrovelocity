@@ -7,6 +7,8 @@
     style="width: 300px; max-width: 90%; height: auto;"
     role="img">
 
+𝒫robabilistic modeling of RNA velocity ⬱
+
 |         |                                                                                                                                                                        |
 | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | CI/CD   | [![CID][cid-badge]][cid-link] [![CML][cml-badge]][cml-link] [![pre-commit.ci status][precommit-badge]][precommit-link]                                                 |
