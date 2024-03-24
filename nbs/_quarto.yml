@@ -16,20 +16,22 @@ interlinks:
   sources:
     python:
       url: https://docs.python.org/3/
-    pyro:
-      url: https://docs.pyro.ai/en/stable/
-    torch:
-      url: https://pytorch.org/docs/stable/
-    numpy:
-      url: https://numpy.org/doc/stable/
-    scvi:
-      url: https://docs.scvi-tools.org/en/stable/
     anndata:
       url: https://anndata.readthedocs.io/en/latest/
+    matplotlib:
+      url: https://matplotlib.org/stable/
+    numpy:
+      url: https://numpy.org/doc/stable/
+    pyro:
+      url: https://docs.pyro.ai/en/stable/
     scanpy:
       url: https://scanpy.readthedocs.io/en/stable/
     scvelo:
       url: https://scvelo.readthedocs.io/en/stable/
+    scvi:
+      url: https://docs.scvi-tools.org/en/stable/
+    torch:
+      url: https://pytorch.org/docs/stable/
 
 website:
   title: "Pyro-Velocity"
@@ -132,16 +134,16 @@ website:
               href: reference/models.qmd
             - text: "Plots"
               href: reference/plots.qmd
-            - text: "Tasks"
-              href: reference/tasks.qmd
-            - text: "Workflows"
-              href: reference/workflows.qmd
+            # - text: "Tasks"
+            #   href: reference/tasks.qmd
+            # - text: "Workflows"
+            #   href: reference/workflows.qmd
     - id: about
       title: "About"
       style: "floating"
       contents:
         - text: "Changelog"
-          href: about/changelog.qmd
+          href: about/changelog.md
         - text: "Contributing"
           href: about/contributing.qmd
         - text: "Credits"
@@ -166,16 +168,16 @@ quartodoc:
     signature_name: full
   sections:
     - title: Models
-      desc: "Model definitions and usage"
+      desc: Model definitions and usage
       contents:
         - kind: page
           path: models
+          package: pyrovelocity.models
           summary:
-            name: Model classes
-            desc: Multiple model definitions are supported.
+            name: Models
+            desc: The models package hosts the suite of probabilistic models supported by Pyro-Velocity.
           contents:
             - name: PyroVelocity
-              package: pyrovelocity.models
               members:
                 - __init__
                 - train
@@ -184,4 +186,26 @@ quartodoc:
                 - save_model
                 - load_model
             - name: mrna_dynamics
-              package: pyrovelocity.models
+    - title: Plots
+      desc: Plotting functions and utilities
+      contents:
+        - kind: page
+          path: plots
+          package: pyrovelocity.plots
+          summary:
+            name: Plots
+            desc: The plots package hosts plotting functions supported by Pyro-Velocity.
+          contents:
+            - name: cluster_violin_plots
+            - name: extrapolate_prediction_sample_predictive
+            - name: get_posterior_sample_angle_uncertainty
+            - name: plot_gene_ranking
+            - name: plot_parameter_posterior_distributions
+            - name: plot_posterior_time
+            - name: plot_shared_time_uncertainty
+            - name: plot_state_uncertainty
+            - name: plot_t0_selection
+            - name: posterior_curve
+            - name: rainbowplot
+            - name: plot_vector_field_summary
+            - name: plot_gene_selection_summary
