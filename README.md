@@ -65,7 +65,12 @@ Please review the [Contributing Guide](https://docs.pyrovelocity.net/about/contr
 
 ## Community 🏘
 
-If you would like to apply Pyro-Velocity in your research, have an idea for a new feature, have a problem using the library, or just want to chat, please feel free to [start a discussion](https://github.com/pinellolab/pyrovelocity/discussions). If you have a feature request or issue using Pyro-Velocity that will require making changes to the code in this repository, please [file an issue](https://github.com/pinellolab/pyrovelocity/issues) containing a [GitHub permananent link](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-a-permanent-link-to-a-code-snippet) to the location that you think is causing a problem or will require changes and provide a [minimal reproducible example](https://en.wikipedia.org/wiki/Minimal_reproducible_example). Such issues will be reviewed!
+If you would like to apply Pyro-Velocity in your research, have an idea for a new feature, have a problem using the library, or just want to chat, please feel free to [start a discussion](https://github.com/pinellolab/pyrovelocity/discussions).
+
+If you have a feature request or issue using Pyro-Velocity that may require making changes to the code in this repository, please [file an issue](https://github.com/pinellolab/pyrovelocity/issues) containing
+
+- a [GitHub permananent link](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-a-permanent-link-to-a-code-snippet) to the location that you think is causing a problem or will require changes, and
+- provide a [minimal reproducible example](https://en.wikipedia.org/wiki/Minimal_reproducible_example).
 
 ## License ⚖️
 
