@@ -96,6 +96,8 @@ website:
       title: "Guides"
       style: "floating"
       contents:
+        - text: "Installation"
+          href: guides/installation.qmd
         - text: "Data Access"
           href: guides/data.qmd
         - text: "Preprocessing"
@@ -110,6 +112,10 @@ website:
       title: "Tutorials"
       style: "floating"
       contents:
+        - section: "Introduction"
+          contents:
+            - text: "Getting Started"
+              href: tutorials/introduction.qmd
         - section: "Analysis templates"
           contents:
             - text: "PyPI"
@@ -154,6 +160,10 @@ website:
       contents:
         - section: "Tutorials"
           contents:
+            - section: "Introduction"
+              contents:
+                - text: "Getting Started"
+                  href: tutorials/introduction.qmd
             - section: "Analysis templates"
               contents:
                 - text: "PyPI"
@@ -180,6 +190,8 @@ website:
                   href: tutorials/lineagetracing.qmd
         - section: "Guides"
           contents:
+            - text: "Installation"
+              href: guides/installation.qmd
             - text: "Data Access"
               href: guides/data.qmd
             - text: "Preprocessing"
