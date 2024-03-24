@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+set -euxo pipefail
+
+QUARTO_VERSION="1.4.551"
+QUARTO_FILE="quarto-${QUARTO_VERSION}-linux-amd64.deb"
+QUARTO_URL="https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO_VERSION}/${QUARTO_FILE}"
+DEBIAN_FRONTEND=noninteractive
+
+sudo apt-get update 
+
+if ! command -v aria2c &> /dev/null; then
+    echo "aria2c could not be found, installing aria2..."
+    sudo apt-get -y install aria2
+fi
+
+aria2c \       
+-x 8 \
+-s 8 \
+-k 1M \
+${QUARTO_URL}
+
+sudo apt-get -y install ./${QUARTO_FILE}
+rm ${QUARTO_FILE}
+
+poetry install --with docs,workflows --sync
+make nbs-render
