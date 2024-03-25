@@ -1,0 +1,104 @@
+download_dataset:
+  data_set_name: pancreas
+  data_external_path: data/external
+  source: pyrovelocity
+  data_url: null
+  n_obs: null
+  n_vars: null
+preprocess_data:
+  data_set_name: pancreas
+  adata: data/external/pancreas.h5ad
+  data_processed_path: data/processed
+  overwrite: false
+  n_top_genes: 2000
+  min_shared_counts: 30
+  process_cytotrace: true
+  use_obs_subset: true
+  n_obs_subset: 300
+  use_vars_subset: true
+  n_vars_subset: 200
+  count_threshold: 0
+  n_pcs: 30
+  n_neighbors: 30
+  default_velocity_mode: dynamical
+  vector_field_basis: umap
+  cell_state: clusters
+training_configuration_1:
+  adata: data/processed/pancreas_processed.h5ad
+  data_set_name: pancreas
+  model_identifier: model1
+  guide_type: auto_t0_constraint
+  model_type: auto
+  batch_size: -1
+  use_gpu: auto
+  likelihood: Poisson
+  num_samples: 30
+  log_every: 100
+  patient_improve: 0.0001
+  patient_init: 45
+  seed: 99
+  learning_rate: 0.01
+  max_epochs: 300
+  include_prior: true
+  library_size: true
+  offset: false
+  input_type: raw
+  cell_specific_kinetics: null
+  kinetics_num: 2
+  force: false
+training_configuration_2:
+  adata: data/processed/pancreas_processed.h5ad
+  data_set_name: pancreas
+  model_identifier: model2
+  guide_type: auto
+  model_type: auto
+  batch_size: -1
+  use_gpu: auto
+  likelihood: Poisson
+  num_samples: 30
+  log_every: 100
+  patient_improve: 0.0001
+  patient_init: 45
+  seed: 99
+  learning_rate: 0.01
+  max_epochs: 300
+  include_prior: true
+  library_size: true
+  offset: true
+  input_type: raw
+  cell_specific_kinetics: null
+  kinetics_num: 2
+  force: false
+postprocess_configuration:
+  number_posterior_samples: 4
+training_resources_requests:
+  cpu: '8'
+  mem: 30Gi
+  gpu: '1'
+  ephemeral_storage: 50Gi
+training_resources_limits:
+  cpu: '16'
+  mem: 60Gi
+  gpu: '1'
+  ephemeral_storage: 200Gi
+postprocessing_resources_requests:
+  cpu: '16'
+  mem: 60Gi
+  gpu: '0'
+  ephemeral_storage: 50Gi
+postprocessing_resources_limits:
+  cpu: '32'
+  mem: 120Gi
+  gpu: '0'
+  ephemeral_storage: 200Gi
+summarizing_resources_requests:
+  cpu: '8'
+  mem: 30Gi
+  gpu: '0'
+  ephemeral_storage: 50Gi
+summarizing_resources_limits:
+  cpu: '16'
+  mem: 60Gi
+  gpu: '0'
+  ephemeral_storage: 200Gi
+upload_results: false
