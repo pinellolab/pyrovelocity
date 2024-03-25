@@ -47,7 +47,9 @@
 
 ---
 
-Pyro-Velocity is a Bayesian, generative, and multivariate RNA velocity model to estimate uncertainty in predictions of future cell states using minimal models approximating transcription and splicing dynamics applied to multi-modal single-cell omics data.
+[Pyro-Velocity](https://docs.pyrovelocity.net) is a library for probabilistic inference in minimal models approximating gene expression dynamics from, possibly multimodal, single-cell sequencing data.
+It provides posterior estimates of gene expression parameters, predictive estimates of gene expression states, and local estimates of cell state transition probabilities.
+It can be used as a component in frameworks that attempt to retain the ability to propagate uncertainty in predicting: distributions over cell fates from subpopulations of cell states, response to cell state perturbations, or candidate genes or gene modules that correlate with determination of specific cell fates.
 
 ---
 
@@ -65,12 +67,14 @@ Please review the [Contributing Guide](https://docs.pyrovelocity.net/about/contr
 
 ## Community 🏘
 
-If you would like to apply Pyro-Velocity in your research, have an idea for a new feature, have a problem using the library, or just want to chat, please feel free to [start a discussion](https://github.com/pinellolab/pyrovelocity/discussions).
+If you would like to apply [Pyro-Velocity](https://docs.pyrovelocity.net) in your research, have an idea for a new feature, have a problem using the library, or just want to chat, please feel free to [start a discussion](https://github.com/pinellolab/pyrovelocity/discussions).
 
-If you have a feature request or issue using Pyro-Velocity that may require making changes to the code in this repository, please [file an issue](https://github.com/pinellolab/pyrovelocity/issues) containing
+If you have a feature request or issue using Pyro-Velocity that may require making changes to the contents of this repository, please [file an issue](https://github.com/pinellolab/pyrovelocity/issues) containing
 
-- a [GitHub permananent link](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-a-permanent-link-to-a-code-snippet) to the location that you think is causing a problem or will require changes, and
-- provide a [minimal reproducible example](https://en.wikipedia.org/wiki/Minimal_reproducible_example).
+- a [GitHub permananent link](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-a-permanent-link-to-a-code-snippet) to the location in the repository you think is causing a problem or will require changes, and
+- provide a [minimal reproducible example](https://en.wikipedia.org/wiki/Minimal_reproducible_example) of the problem or proposed improvement.
+
+We are always interested in discussions and issues that can help to improve the [Documentation](https://docs.pyrovelocity.net).
 
 ## License ⚖️
 

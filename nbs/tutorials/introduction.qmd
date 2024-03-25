@@ -1,6 +1,8 @@
 # Introduction
 
-Pyro-Velocity is a Bayesian, generative, and multivariate RNA velocity model to estimate uncertainty in predictions of future cell states from minimal models approximating splicing dynamics.
+[Pyro-Velocity](https://docs.pyrovelocity.net) is a library for probabilistic inference in minimal models approximating gene expression dynamics from, possibly multimodal, single-cell sequencing data.
+It provides posterior estimates of gene expression parameters, predictive estimates of gene expression states, and local estimates of cell state transition probabilities.
+It can be used as a component in frameworks that attempt to retain the ability to propagate uncertainty in predicting: distributions over cell fates from subpopulations of cell states, response to cell state perturbations, or candidate genes or gene modules that correlate with determination of specific cell fates.
 
 ## Features
 
