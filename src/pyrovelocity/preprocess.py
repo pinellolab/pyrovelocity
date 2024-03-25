@@ -415,7 +415,7 @@ def plot_high_us_genes(
             edgecolor="none",
             dpi=300,
         )
-
+    plt.close(fig)
     return fig
 
 
