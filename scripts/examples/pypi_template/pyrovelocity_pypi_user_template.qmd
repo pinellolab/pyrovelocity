@@ -1,5 +1,5 @@
 ---
-title: Pyrovelocity PyPI user notebook template
+title: Pyrovelocity Notebook Usage Example
 toc: true
 number-sections: true
 highlight-style: pygments
@@ -21,6 +21,7 @@ format:
   ipynb: default
 format-links: false
 execute: 
+  freeze: true
   eval: true
   warning: false
   error: false
@@ -31,8 +32,12 @@ author:
   - name: Pyrovelocity Team
     email: team@pyrovelocity.net
 abstract: |
-  This notebook demonstrates how to run pyrovelocity in a Jupyter notebook.
-  It attempts to support both Google Colab and local or remote Jupyter kernel servers.
+  This notebook demonstrates how to run Pyro-Velocity in a Jupyter notebook on
+  downsampled data. The results are not expected to be meaningful, but the
+  notebook demonstrates the usage workflow with both a short execution time and
+  using limited resources. It attempts to support both Google Colab and local or
+  remote Jupyter kernel servers. Links to a blank copy of the notebook are 
+  provided below.
 keywords: [single-cell transcriptomics, probabilistic modeling, dynamical systems, RNA velocity]
 bibliography: references.bib
 jupyter:
@@ -86,6 +91,17 @@ print("This cell is intentionally left blank.")
 #| output: false
 print("This cell is intentionally left blank.") 
 ``` 
+
+::: {#nte-blank-cells .callout-note collapse=true title="Blank cells"}
+There are a number of cells in this notebook with
+
+```python
+print("This cell is intentionally left blank.") 
+``` 
+
+These can be safely ignored or removed. 
+They are exclusively used for compatibility with Google Colab's section folding logic.
+:::
 
 ### Overview
 
@@ -623,6 +639,14 @@ display(Image(filename=f"{dataset_summary.data_model_reports.path}/shared_time.p
 
 After having reviewed results that are currently computed systematically, we can also load the data and experiment.
 
+
+```{python}
+#| label: blank-cell-03
+#| code-fold: true
+#| output: false
+print("This cell is intentionally left blank.") 
+``` 
+
 Here we will load the data and posterior samples, perform the analysis used to generate the volcano plot for gene selection, and then regenerate the plot of phase portraits, temporal evolution, and shared time correlation. It would be straightforward, and perhaps preferable in some cases, to extract all the relevant parameters from the configuration dataclass object we referenced in each section above, but we will intentionally hard-code values to be concrete. Of course, feel free to generalize these as might suit your use case.
 
 To load the posterior samples and postprocessed data
@@ -676,6 +700,13 @@ pv.utils.internal_help(pv)
 ## Training and postprocessing for an alternative model
 
 In this section we will train and show the results of an alternative model. This time we will proceed quickly through the analysis with less discussion of the various configuration settings and associated task functions.
+
+```{python}
+#| label: blank-cell-04
+#| code-fold: true
+#| output: false
+print("This cell is intentionally left blank.") 
+``` 
 
 ### Train model
 
