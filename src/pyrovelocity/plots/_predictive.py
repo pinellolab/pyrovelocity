@@ -290,14 +290,21 @@ def posterior_curve(
 
 
 def extrapolate_prediction_sample_predictive(
-    posterior_time, data_model_path, adata, grid_time_points=1000
+    posterior_time,
+    data_model_path,
+    adata,
+    grid_time_points=1000,
+    use_gpu="cpu",
 ):
-    # data_model_path = data_model_conf.model_path
     PyroVelocity.setup_anndata(adata)
     model = PyroVelocity(
         adata, add_offset=False, guide_type="auto_t0_constraint"
     )
-    model = model.load_model(data_model_path, adata, use_gpu="auto")
+    model = model.load_model(
+        dir_path=data_model_path,
+        adata=adata,
+        use_gpu=use_gpu,
+    )
     print(data_model_path)
 
     scdl = model._make_data_loader(adata=adata, indices=None, batch_size=1000)
