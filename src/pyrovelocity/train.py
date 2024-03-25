@@ -406,6 +406,7 @@ def train_model(
     )
 
     fig.savefig(loss_plot_path, facecolor="white", bbox_inches="tight")
+    plt.close(fig)
 
     logger.info(f"AnnData object after model training")
     print_anndata(adata)
