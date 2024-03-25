@@ -2,6 +2,8 @@ exclude: |
   (?x)^(
     conda/recipe/meta.yaml|
     conda/conda-lock.yml|
+    nbs/_freeze/.*|
+    nbs/templates/user_example/.*\.yaml|
     reproducibility/figures/models/.*|
     reproducibility/figures/config.yaml|
     .git/COMMIT_EDITMSG|
