@@ -1,8 +1,6 @@
 # Introduction
 
-[Pyro-Velocity](https://docs.pyrovelocity.net) is a library for probabilistic inference in minimal models approximating gene expression dynamics from, possibly multimodal, single-cell sequencing data.
-It provides posterior estimates of gene expression parameters, predictive estimates of gene expression states, and local estimates of cell state transition probabilities.
-It can be used as a component in frameworks that attempt to retain the ability to propagate uncertainty in predicting: distributions over cell fates from subpopulations of cell states, response to cell state perturbations, or candidate genes or gene modules that correlate with determination of specific cell fates.
+`Pyro-Velocity` is a Bayesian, generative, and multivariate RNA velocity model to estimate uncertainty in predictions of future cell states from minimal models approximating splicing dynamics. This approach models raw sequencing counts with synchronized cell time across all expressed genes to provide quantifiable information on cell fate choice and developmental trajectory dynamics.
 
 ## Features
 
@@ -437,4 +435,4 @@ jupyter notebook.
 If you are having an issue using pyrovelocity, please feel free to [start a discussion](https://github.com/pinellolab/pyrovelocity/discussions)
 or [file an issue](https://github.com/pinellolab/pyrovelocity/issues) containing a [MRE](https://en.wikipedia.org/wiki/Minimal_reproducible_example).
 
-Also see [contributing](../about/contributing.qmd).
+Also see [contributing](https://github.com/pinellolab/pyrovelocity/blob/main/docs/contributing.md).
