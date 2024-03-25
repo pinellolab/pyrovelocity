@@ -1,6 +1,6 @@
 ---
 title: Pyro-Velocity
-description: "Probabilistic modeling of RNA velocity"
+description: "𝒫robabilistic modeling of RNA velocity ⬱"
 format:
   html:
     toc: false
