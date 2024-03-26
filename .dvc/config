@@ -4,4 +4,4 @@
 [hydra]
     enabled = False
 ['remote "gcs"']
-    url = gs://pyrovelocity/dvcstore
+    url = gs://pyrovelocity/cas
