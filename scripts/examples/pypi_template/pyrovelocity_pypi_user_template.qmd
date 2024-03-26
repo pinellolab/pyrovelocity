@@ -64,12 +64,12 @@ jupyter:
   toc-showmarkdowntxt: false
 ---
 
-<a target="_blank" href="https://colab.research.google.com/github/pinellolab/pyrovelocity/blob/530-nbwf/docs/source/notebooks/pyrovelocity_pypi_user_template.ipynb">
+<a target="_blank" href="https://colab.research.google.com/github/pinellolab/pyrovelocity/blob/beta/docs/source/notebooks/pyrovelocity_pypi_user_template.ipynb">
   <img 
     src="https://colab.research.google.com/assets/colab-badge.svg" 
     alt="Open In Colab"
     width="109" height="20"/>
-</a> <a target="_blank" href="https://nbviewer.jupyter.org/github/pinellolab/pyrovelocity/blob/530-nbwf/docs/source/notebooks/pyrovelocity_pypi_user_template.ipynb">
+</a> <a target="_blank" href="https://nbviewer.jupyter.org/github/pinellolab/pyrovelocity/blob/beta/docs/source/notebooks/pyrovelocity_pypi_user_template.ipynb">
   <img 
     src="https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.png"
     alt="Render with nbviewer" 
@@ -206,7 +206,7 @@ def setup_pyrovelocity():
             sys.exit()
     else:
         print("Installing pyrovelocity...")
-        install_package("pyrovelocity[workflows] @ git+https://github.com/pinellolab/pyrovelocity.git@530-nbwf")
+        install_package("pyrovelocity[workflows] @ git+https://github.com/pinellolab/pyrovelocity.git@beta")
         try:
             import pyrovelocity
 

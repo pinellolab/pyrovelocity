@@ -201,7 +201,7 @@ def setup_pyrovelocity():
             sys.exit()
     else:
         print("Installing pyrovelocity...")
-        install_package("pyrovelocity[workflows] @ git+https://github.com/pinellolab/pyrovelocity.git@530-nbwf")
+        install_package("pyrovelocity[workflows] @ git+https://github.com/pinellolab/pyrovelocity.git@beta")
         try:
             import pyrovelocity
 
