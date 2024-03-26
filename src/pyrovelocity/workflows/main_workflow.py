@@ -63,6 +63,8 @@ __all__ = [
 
 logger = configure_logging(__name__)
 
+# TODO: Migrate cache versioning to CalVer ( https://calver.org/ ) to avoid
+# potential for confusion with an intent to update the cache with every release.
 CACHE_VERSION = "0.2.0b12"
 SUMMARIZE_CACHE_VERSION = "0.2.0b13.dev0"
 PYROVELOCITY_CACHE_FLAG = str_to_bool(
