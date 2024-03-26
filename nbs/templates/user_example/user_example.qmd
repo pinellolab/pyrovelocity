@@ -64,15 +64,10 @@ jupyter:
   toc-showmarkdowntxt: false
 ---
 
-<a target="_blank" href="https://colab.research.google.com/github/pinellolab/pyrovelocity/blob/530-nbwf/scripts/notebooks/user_example.ipynb">
+<a target="_blank" href="https://colab.research.google.com/drive/1uWTZgL5lURxoXWPjtT9IJBIJyGVVDiPg">
   <img 
     src="https://colab.research.google.com/assets/colab-badge.svg" 
     alt="Open In Colab"
-    width="109" height="20"/>
-</a> <a target="_blank" href="https://nbviewer.jupyter.org/github/pinellolab/pyrovelocity/blob/530-nbwf/scripts/notebooks/user_example.ipynb">
-  <img 
-    src="https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.png"
-    alt="Render with nbviewer" 
     width="109" height="20"/>
 </a>
 
