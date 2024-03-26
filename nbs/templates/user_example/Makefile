@@ -42,8 +42,20 @@ render-latex: ## Render the article via LaTeX
 render: ## Render all article formats including pdf, html, and docx
 	quarto render $(DOCUMENT_NAME).qmd --to all
 
-sync-nb: ## Sync the notebook to the scripts directory
-	cp $(DOCUMENT_NAME).ipynb ../../../scripts/notebooks/$(DOCUMENT_NAME).ipynb
+sync-nb: ## Sync the notebook to google drive
+	@echo "Syncing $(DOCUMENT_NAME).ipynb to pyrovelocitydrive:pyrovelocity/notebooks"
+	cp ../../_site/templates/$(DOCUMENT_NAME)/$(DOCUMENT_NAME).ipynb pyrovelocity_$(DOCUMENT_NAME).ipynb
+	rclone copy pyrovelocity_$(DOCUMENT_NAME).ipynb pyrovelocitydrive:pyrovelocity/notebooks
+	@$(eval DRIVE_LINK=$(shell rclone link pyrovelocitydrive:pyrovelocity/notebooks/pyrovelocity_$(DOCUMENT_NAME).ipynb))
+	@echo ""
+	@echo "Google Drive Link: "
+	@echo $(DRIVE_LINK)
+	@$(eval COLAB_LINK=$(shell echo $(DRIVE_LINK) | awk -F'=' '{print "https://colab.research.google.com/drive/" $$2}'))
+	@echo ""
+	@echo "Google Colab Link: "
+	@echo $(COLAB_LINK)
+	@echo
+	rm -f pyrovelocity_$(DOCUMENT_NAME).ipynb
 
 clean: ## Clean compilation artifacts
 	rm sn-*.{bst,cls} || true
