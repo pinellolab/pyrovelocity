@@ -8,6 +8,12 @@ QUARTO_URL="https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO
 wget ${QUARTO_URL}
 tar zxf ${QUARTO_FILE} 
 
+set +x
+echo "$GOOGLE_APPLICATION_CREDENTIALS_DATA" > /tmp/sa.json
+set -x
+pipx install dvc[gs]
+dvc pull --force --allow-missing --verbose
+
 poetry install --with docs,workflows --sync
 poetry run quartodoc build --verbose --config nbs/_quarto.yml
 (cd nbs && poetry run quartodoc interlinks)
