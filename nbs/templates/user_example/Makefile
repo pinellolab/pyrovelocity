@@ -42,6 +42,11 @@ render-latex: ## Render the article via LaTeX
 render: ## Render all article formats including pdf, html, and docx
 	quarto render $(DOCUMENT_NAME).qmd --to all
 
+update-freeze: ## Update the hash for the _freeze directory
+	dvc status
+	dvc add ../../_freeze -v
+	dvc status
+
 sync-nb: ## Sync the notebook to google drive
 	@echo "Syncing $(DOCUMENT_NAME).ipynb to pyrovelocitydrive:pyrovelocity/notebooks"
 	cp ../../_site/templates/$(DOCUMENT_NAME)/$(DOCUMENT_NAME).ipynb pyrovelocity_$(DOCUMENT_NAME).ipynb
@@ -56,6 +61,12 @@ sync-nb: ## Sync the notebook to google drive
 	@echo $(COLAB_LINK)
 	@echo
 	rm -f pyrovelocity_$(DOCUMENT_NAME).ipynb
+
+sync: ## Sync notebook _freeze data and ipynb to CAS and google drive
+	$(MAKE) render
+	$(MAKE) update-freeze
+	dvc push
+	$(MAKE) sync-nb
 
 clean: ## Clean compilation artifacts
 	rm sn-*.{bst,cls} || true
