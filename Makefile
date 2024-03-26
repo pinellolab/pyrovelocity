@@ -462,12 +462,19 @@ digest: ## Print image digest from tag. make digest DEVCONTAINER_IMAGE=
 ##@ notebooks examples
 #---------------------
 
+MAKE_PASSTHROUGH = $(filter-out $@,$(MAKECMDGOALS))
+
+NOTEBOOK_SUBDIR = nbs/templates/user_example
+
+.PHONY: render-notebook
+render-notebook: ## Invoke target in NOTEBOOK_SUBDIR's Makefile.
+	$(MAKE) -C $(NOTEBOOK_SUBDIR) $(MAKE_PASSTHROUGH)
+
 MANUSCRIPT_SUBDIR = scripts/examples/manuscript
-MANUSCRIPT_PASSTHROUGH = $(filter-out $@,$(MAKECMDGOALS))
 
 .PHONY: notebooks-manuscript
-notebooks-manuscript: ## Invoke target in MANUSCRIPT_SUBDIR's Makefile.
-	$(MAKE) -C $(MANUSCRIPT_SUBDIR) $(MANUSCRIPT_PASSTHROUGH)
+render-manuscript: ## Invoke target in MANUSCRIPT_SUBDIR's Makefile.
+	$(MAKE) -C $(MANUSCRIPT_SUBDIR) $(MAKE_PASSTHROUGH)
 
 
 #----------------
