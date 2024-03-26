@@ -21,7 +21,7 @@
 [cml-badge]: https://github.com/pinellolab/pyrovelocity/actions/workflows/cml.yml/badge.svg
 [cml-link]: https://github.com/pinellolab/pyrovelocity/actions/workflows/cml.yml
 [precommit-badge]: https://results.pre-commit.ci/badge/github/pinellolab/pyrovelocity/main.svg
-[precommit-link]: https://results.pre-commit.ci/latest/github/pinellolab/pyrovelocity/master
+[precommit-link]: https://results.pre-commit.ci/latest/github/pinellolab/pyrovelocity/main
 [cloudflare-badge]: https://img.shields.io/badge/Docs-pages-F38020?style=flat&logo=cloudflare&labelColor=black
 [cloudflare-link]: https://docs.pyrovelocity.net
 [gh-pages-badge]: https://img.shields.io/github/deployments/pinellolab/pyrovelocity/github-pages?logo=github&label=Docs
