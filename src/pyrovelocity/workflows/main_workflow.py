@@ -24,7 +24,7 @@ from pyrovelocity.postprocess import postprocess_dataset
 from pyrovelocity.summarize import summarize_dataset
 from pyrovelocity.tasks.data import download_dataset
 from pyrovelocity.tasks.preprocess import preprocess_dataset
-from pyrovelocity.train import train_dataset
+from pyrovelocity.tasks.train import train_dataset
 from pyrovelocity.utils import str_to_bool
 from pyrovelocity.workflows.main_configuration import (
     PYROVELOCITY_SIMULATED_ONLY,

@@ -24,7 +24,6 @@ import pyrovelocity.plots
 import pyrovelocity.postprocess
 import pyrovelocity.summarize
 import pyrovelocity.tasks
-import pyrovelocity.train
 import pyrovelocity.utils
 
 
@@ -56,7 +55,6 @@ __all__ = [
     "summarize",
     "tasks",
     #     "tests",
-    "train",
     "utils",
     #     "workflows",
 ]

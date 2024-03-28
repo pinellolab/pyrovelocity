@@ -337,7 +337,7 @@ def train_model(
         Tuple[PyroVelocity, Dict[str, ndarray]]: A tuple containing the trained PyroVelocity model and a dictionary of posterior samples.
 
     Examples:
-        >>> from pyrovelocity.train import train_model
+        >>> from pyrovelocity.tasks.train import train_model
         >>> from pyrovelocity.utils import generate_sample_data
         >>> from pyrovelocity.tasks.preprocess import copy_raw_counts
         >>> tmp = getfixture("tmp_path")
