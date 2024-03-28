@@ -14,7 +14,7 @@ from beartype import beartype
 from numpy import ndarray
 from sklearn.pipeline import Pipeline
 
-from pyrovelocity.cytotrace import compute_similarity2
+from pyrovelocity.analysis.cytotrace import compute_similarity2
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.utils import ensure_numpy_array
 

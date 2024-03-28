@@ -1,4 +1,4 @@
-"""Tests for `pyrovelocity.cytotrace` module."""
+"""Tests for `pyrovelocity.analysis.cytotrace` module."""
 
 
 def test_load_cytotrace():
