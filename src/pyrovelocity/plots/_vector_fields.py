@@ -21,12 +21,6 @@ from pyrovelocity.plots._uncertainty import (
 )
 
 
-# from pyrovelocity.plot import plot_vector_field_uncertain
-# from pyrovelocity.plot import plot_gene_ranking
-# from pyrovelocity.plot import plot_posterior_time
-# from pyrovelocity.plot import rainbowplot
-
-
 logger = configure_logging(__name__)
 
 

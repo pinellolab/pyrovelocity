@@ -24,7 +24,6 @@ import pyrovelocity.utils
 
 
 # import pyrovelocity.interfaces
-# import pyrovelocity.plot
 # import pyrovelocity.tests
 # import pyrovelocity.workflows
 
@@ -43,7 +42,6 @@ __all__ = [
     "logging",
     "metrics",
     "models",
-    #     "plot",
     "plots",
     "tasks",
     #     "tests",
