@@ -1,1 +1,2 @@
 docs -linguist-documentation
+Makefile linguist-detectable=false
