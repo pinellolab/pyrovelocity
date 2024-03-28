@@ -13,7 +13,7 @@ import validators
 from anndata._core.anndata import AnnData
 from beartype import beartype
 
-import pyrovelocity.datasets
+import pyrovelocity.io.datasets
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.utils import generate_sample_data
 from pyrovelocity.utils import print_anndata
@@ -122,14 +122,16 @@ def download_dataset(
                 f"Downloading {data_set_name} data with pyrovelocity..."
             )
             try:
-                download_method = getattr(pyrovelocity.datasets, data_set_name)
+                download_method = getattr(
+                    pyrovelocity.io.datasets, data_set_name
+                )
             except AttributeError:
                 available_datasets = [
                     name
                     for name, func in inspect.getmembers(
-                        pyrovelocity.datasets, inspect.isfunction
+                        pyrovelocity.io.datasets, inspect.isfunction
                     )
-                    if func.__module__ == pyrovelocity.datasets.__name__
+                    if func.__module__ == pyrovelocity.io.datasets.__name__
                 ]
                 error_message = (
                     f"Dataset '{data_set_name}' not found in pyrovelocity.datasets. "

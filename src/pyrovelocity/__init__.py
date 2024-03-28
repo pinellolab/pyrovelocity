@@ -14,7 +14,6 @@ issues: https://github.com/pinellolab/pyrovelocity/issues
 from importlib import metadata
 
 import pyrovelocity.analysis
-import pyrovelocity.datasets
 import pyrovelocity.io
 import pyrovelocity.logging
 import pyrovelocity.metrics
@@ -39,7 +38,6 @@ del metadata
 
 __all__ = [
     "analysis",
-    "datasets",
     #     "interfaces",
     "io",
     "logging",
