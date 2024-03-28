@@ -22,7 +22,6 @@ import pyrovelocity.metrics
 import pyrovelocity.models
 import pyrovelocity.plots
 import pyrovelocity.postprocess
-import pyrovelocity.preprocess
 import pyrovelocity.summarize
 import pyrovelocity.tasks
 import pyrovelocity.train
@@ -54,7 +53,6 @@ __all__ = [
     #     "plot",
     "plots",
     "postprocess",
-    "preprocess",
     "summarize",
     "tasks",
     #     "tests",

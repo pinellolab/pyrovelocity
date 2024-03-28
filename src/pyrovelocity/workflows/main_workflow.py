@@ -21,9 +21,9 @@ from pyrovelocity.io.archive import create_tarball_from_filtered_dir
 from pyrovelocity.io.gcs import upload_file_concurrently
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.postprocess import postprocess_dataset
-from pyrovelocity.preprocess import preprocess_dataset
 from pyrovelocity.summarize import summarize_dataset
 from pyrovelocity.tasks.data import download_dataset
+from pyrovelocity.tasks.preprocess import preprocess_dataset
 from pyrovelocity.train import train_dataset
 from pyrovelocity.utils import str_to_bool
 from pyrovelocity.workflows.main_configuration import (
@@ -326,9 +326,9 @@ def module_workflow(
 
     Args:
         download_dataset_args (DownloadDatasetInterface, optional): Configuration for
-            pyrovelocity.data.download_dataset. Defaults to DownloadDatasetInterface().
+            pyrovelocity.tasks.data.download_dataset. Defaults to DownloadDatasetInterface().
         preprocess_data_args (PreprocessDataInterface, optional): Configuration for
-            pyrovelocity.preprocess.preprocess_dataset. Defaults to PreprocessDataInterface().
+            pyrovelocity.tasks.preprocess.preprocess_dataset. Defaults to PreprocessDataInterface().
         train_model_configuration_1 (PyroVelocityTrainInterface, optional): Configuration
             for pyrovelocity.train.train_dataset. Defaults to PyroVelocityTrainInterface().
         train_model_configuration_2 (PyroVelocityTrainInterface, optional): Configuration

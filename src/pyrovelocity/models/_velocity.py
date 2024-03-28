@@ -155,7 +155,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             >>> import numpy as np
             >>> import anndata
             >>> from pyrovelocity.utils import pretty_log_dict, print_anndata, generate_sample_data
-            >>> from pyrovelocity.preprocess import copy_raw_counts
+            >>> from pyrovelocity.tasks.preprocess import copy_raw_counts
             >>> from pyrovelocity.models._velocity import PyroVelocity
             ...
             >>> # define fixtures

@@ -339,7 +339,7 @@ def train_model(
     Examples:
         >>> from pyrovelocity.train import train_model
         >>> from pyrovelocity.utils import generate_sample_data
-        >>> from pyrovelocity.preprocess import copy_raw_counts
+        >>> from pyrovelocity.tasks.preprocess import copy_raw_counts
         >>> tmp = getfixture("tmp_path")
         >>> loss_plot_path = str(tmp) + "/loss_plot_docs.png"
         >>> print(loss_plot_path)
