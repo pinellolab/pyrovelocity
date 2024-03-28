@@ -8,8 +8,8 @@ from typing import Type
 
 from mashumaro.mixins.json import DataClassJSONMixin
 
-from pyrovelocity.data import download_dataset
 from pyrovelocity.preprocess import preprocess_dataset
+from pyrovelocity.tasks.data import download_dataset
 from pyrovelocity.train import train_dataset
 from pyrovelocity.workflows.configuration import create_dataclass_from_callable
 

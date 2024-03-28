@@ -15,7 +15,6 @@ from importlib import metadata
 
 import pyrovelocity.analyze
 import pyrovelocity.cytotrace
-import pyrovelocity.data
 import pyrovelocity.datasets
 import pyrovelocity.io
 import pyrovelocity.logging
@@ -25,6 +24,7 @@ import pyrovelocity.plots
 import pyrovelocity.postprocess
 import pyrovelocity.preprocess
 import pyrovelocity.summarize
+import pyrovelocity.tasks
 import pyrovelocity.train
 import pyrovelocity.utils
 
@@ -45,7 +45,6 @@ del metadata
 __all__ = [
     "analyze",
     "cytotrace",
-    "data",
     "datasets",
     #     "interfaces",
     "io",
@@ -57,6 +56,7 @@ __all__ = [
     "postprocess",
     "preprocess",
     "summarize",
+    "tasks",
     #     "tests",
     "train",
     "utils",

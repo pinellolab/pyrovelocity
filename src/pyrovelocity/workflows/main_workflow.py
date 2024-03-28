@@ -14,7 +14,6 @@ from flytekit.types.file import FlyteFile
 from returns.result import Failure
 from returns.result import Success
 
-from pyrovelocity.data import download_dataset
 from pyrovelocity.interfaces import DownloadDatasetInterface
 from pyrovelocity.interfaces import PreprocessDataInterface
 from pyrovelocity.interfaces import PyroVelocityTrainInterface
@@ -24,6 +23,7 @@ from pyrovelocity.logging import configure_logging
 from pyrovelocity.postprocess import postprocess_dataset
 from pyrovelocity.preprocess import preprocess_dataset
 from pyrovelocity.summarize import summarize_dataset
+from pyrovelocity.tasks.data import download_dataset
 from pyrovelocity.train import train_dataset
 from pyrovelocity.utils import str_to_bool
 from pyrovelocity.workflows.main_configuration import (

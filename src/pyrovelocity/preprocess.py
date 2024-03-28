@@ -15,8 +15,8 @@ from beartype import beartype
 from scipy.sparse import issparse
 
 from pyrovelocity.cytotrace import cytotrace_sparse
-from pyrovelocity.data import load_anndata_from_path
 from pyrovelocity.logging import configure_logging
+from pyrovelocity.tasks.data import load_anndata_from_path
 from pyrovelocity.utils import ensure_numpy_array
 from pyrovelocity.utils import print_anndata
 
