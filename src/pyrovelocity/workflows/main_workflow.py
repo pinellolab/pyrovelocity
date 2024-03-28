@@ -20,10 +20,10 @@ from pyrovelocity.interfaces import PyroVelocityTrainInterface
 from pyrovelocity.io.archive import create_tarball_from_filtered_dir
 from pyrovelocity.io.gcs import upload_file_concurrently
 from pyrovelocity.logging import configure_logging
-from pyrovelocity.summarize import summarize_dataset
 from pyrovelocity.tasks.data import download_dataset
 from pyrovelocity.tasks.postprocess import postprocess_dataset
 from pyrovelocity.tasks.preprocess import preprocess_dataset
+from pyrovelocity.tasks.summarize import summarize_dataset
 from pyrovelocity.tasks.train import train_dataset
 from pyrovelocity.utils import str_to_bool
 from pyrovelocity.workflows.main_configuration import (

@@ -60,7 +60,7 @@ def summarize_dataset(
             e.g. reports/simulated_model1
 
     Examples:
-        >>> from pyrovelocity.summarize import summarize_dataset # xdoctest: +SKIP
+        >>> from pyrovelocity.tasks.summarize import summarize_dataset # xdoctest: +SKIP
         >>> tmp = getfixture("tmp_path") # xdoctest: +SKIP
         >>> summarize_dataset(
         ...     "simulated_model1",

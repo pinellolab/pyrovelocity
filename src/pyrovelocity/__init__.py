@@ -21,7 +21,6 @@ import pyrovelocity.logging
 import pyrovelocity.metrics
 import pyrovelocity.models
 import pyrovelocity.plots
-import pyrovelocity.summarize
 import pyrovelocity.tasks
 import pyrovelocity.utils
 
@@ -50,7 +49,6 @@ __all__ = [
     "models",
     #     "plot",
     "plots",
-    "summarize",
     "tasks",
     #     "tests",
     "utils",
