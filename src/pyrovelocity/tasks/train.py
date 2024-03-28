@@ -67,8 +67,8 @@ def train_dataset(
             └── var_names.csv
 
     The file `models/{data_model}/pyrovelocity.pkl` used in
-    `pyrovelocity.summarize.summarize_dataset` is produced by
-    `pyrovelocity.postprocess.postprocess_dataset`.
+    `pyrovelocity.tasks.summarize.summarize_dataset` is produced by
+    `pyrovelocity.tasks.postprocess.postprocess_dataset`.
 
 
     Args:

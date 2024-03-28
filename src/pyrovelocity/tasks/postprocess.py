@@ -48,7 +48,7 @@ def postprocess_dataset(
         str: path to the pyrovelocity output data
 
     Examples:
-        >>> from pyrovelocity.postprocess import postprocess_dataset # xdoctest: +SKIP
+        >>> from pyrovelocity.tasks.postprocess import postprocess_dataset # xdoctest: +SKIP
         >>> tmp = getfixture("tmp_path") # xdoctest: +SKIP
         >>> postprocess_dataset(
         ...     "simulated_model1",
