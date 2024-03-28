@@ -17,7 +17,7 @@ from matplotlib.patches import ConnectionStyle
 from numpy import ndarray
 from pandas import DataFrame
 
-from pyrovelocity.analyze import compute_volcano_data
+from pyrovelocity.analysis.analyze import compute_volcano_data
 from pyrovelocity.logging import configure_logging
 
 

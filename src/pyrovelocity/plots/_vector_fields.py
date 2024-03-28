@@ -14,7 +14,7 @@ from matplotlib.figure import FigureBase
 from matplotlib.ticker import MaxNLocator
 from scvelo.plotting.velocity_embedding_grid import default_arrow
 
-from pyrovelocity.analyze import compute_mean_vector_field
+from pyrovelocity.analysis.analyze import compute_mean_vector_field
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.plots._uncertainty import (
     get_posterior_sample_angle_uncertainty,

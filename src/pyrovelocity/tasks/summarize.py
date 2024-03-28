@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import scvelo as scv
 from beartype import beartype
 
-from pyrovelocity.analyze import pareto_frontier_genes
+from pyrovelocity.analysis.analyze import pareto_frontier_genes
 from pyrovelocity.io import CompressedPickle
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.plots import cluster_violin_plots

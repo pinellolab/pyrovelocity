@@ -13,7 +13,7 @@ issues: https://github.com/pinellolab/pyrovelocity/issues
 
 from importlib import metadata
 
-import pyrovelocity.analyze
+import pyrovelocity.analysis
 import pyrovelocity.cytotrace
 import pyrovelocity.datasets
 import pyrovelocity.io
@@ -39,7 +39,7 @@ except metadata.PackageNotFoundError:
 del metadata
 
 __all__ = [
-    "analyze",
+    "analysis",
     "cytotrace",
     "datasets",
     #     "interfaces",

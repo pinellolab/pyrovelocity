@@ -26,9 +26,9 @@ from scvi.model.base._utils import _load_saved_files
 from scvi.model.base._utils import _validate_var_names
 from scvi.module.base import PyroBaseModuleClass
 
-from pyrovelocity.analyze import compute_mean_vector_field
-from pyrovelocity.analyze import compute_volcano_data
-from pyrovelocity.analyze import vector_field_uncertainty
+from pyrovelocity.analysis.analyze import compute_mean_vector_field
+from pyrovelocity.analysis.analyze import compute_volcano_data
+from pyrovelocity.analysis.analyze import vector_field_uncertainty
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models._trainer import VelocityTrainingMixin
 from pyrovelocity.models._velocity_module import VelocityModule
