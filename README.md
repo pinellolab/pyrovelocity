@@ -9,11 +9,11 @@
 
 𝒫robabilistic modeling of RNA velocity ⬱
 
-|         |                                                                                                                                                           |
-| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CI/CD   | [![CID][cid-badge]][cid-link] [![codecov][codecov-badge]][codecov-link] [![pre-commit.ci status][precommit-badge]][precommit-link]                        |
-| Docs    | [![Cloudflare Pages][cloudflare-badge]][cloudflare-link] [![Preprint][preprint-badge]][preprint-link]                                                     |
-| Package | [![PyPI - Version][pypi-badge]][pypi-link] [![Conda-forge badge][conda-forge-badge]][anaconda-link] [![Docker image][docker-badge]][docker-link]          |
+|         |                                                                                                                                                                                                                                                                          |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| CI/CD   | [![CID][cid-badge]][cid-link] [![codecov][codecov-badge]][codecov-link] [![pre-commit.ci status][precommit-badge]][precommit-link]                                                                                                                                       |
+| Docs    | [![Cloudflare Pages][cloudflare-badge]][cloudflare-link] [![Preprint][preprint-badge]][preprint-link]                                                                                                                                                                    |
+| Package | [![PyPI - Version][pypi-badge]][pypi-link] [![Conda-forge badge][conda-forge-badge]][anaconda-link] [![Docker image][docker-badge]][docker-link]                                                                                                                         |
 | Meta    | [![pyro-ppl-badge]][pyro-ppl-link] [![flyte-badge]][flyte-link] [![hydra-zen-badge]][hydra-zen-link] [![scvi-tools-badge]][scvi-tools-link] [![code style][black-badge]][black-link] [![License - MIT][license-badge]][license-link] [![Tuple][tuple-badge]][tuple-link] |
 
 [cid-badge]: https://github.com/pinellolab/pyrovelocity/actions/workflows/cid.yaml/badge.svg?branch=master
@@ -48,18 +48,6 @@
 [tuple-link]: https://tuple.app/github-badge
 
 </div>
-
-<!--
-[anaconda-badge]: https://anaconda.org/conda-forge/pyrovelocity/badges/version.svg?style=flat&color=F26722
-
-[![GitHub Pages][gh-pages-badge]][gh-pages-link]
-[gh-pages-badge]: https://img.shields.io/github/deployments/pinellolab/pyrovelocity/github-pages?logo=github&label=Docs
-[gh-pages-link]: https://pinellolab.github.io/pyrovelocity
-
-[![CML][cml-badge]][cml-link]
-[cml-badge]: https://github.com/pinellolab/pyrovelocity/actions/workflows/cml.yml/badge.svg
-[cml-link]: https://github.com/pinellolab/pyrovelocity/actions/workflows/cml.yml
--->
 
 ---
 
