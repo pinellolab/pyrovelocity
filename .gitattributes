@@ -1,2 +1,4 @@
-docs -linguist-documentation
+docs/ linguist-documentation=true
+nbs/ linguist-documentation=true
 Makefile linguist-detectable=false
+reproducibility/ linguist-detectable=false
