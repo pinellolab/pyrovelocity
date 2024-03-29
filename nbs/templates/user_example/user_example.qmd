@@ -394,7 +394,7 @@ The components of the preprocess data configuration are determined by the compon
 
 ```{python}
 #| label: print-preprocess-data-docstring
-print_docstring(pyrovelocity.preprocess.preprocess_dataset)
+print_docstring(pyrovelocity.tasks.preprocess.preprocess_dataset)
 ```
 
 Recall that the output of the `preprocess_data` function below will be cached and should rerun almost instantaneously if you re-execute the cell multiple times.
@@ -418,11 +418,11 @@ The configuration is given by
 print_config_tree(pancreas_configuration.training_configuration_1.to_dict(), "train model 1")
 ```
 
-The `PyrovelocityTrainInterface` is a configuration for the `pyrovelocity.train.train_dataset` function whose documentation we print below.
+The `PyrovelocityTrainInterface` is a configuration for the `pyrovelocity.tasks.train.train_dataset` function whose documentation we print below.
 
 ```{python}
 #| label: print-train-model-docstring
-print_docstring(pyrovelocity.train.train_dataset)
+print_docstring(pyrovelocity.tasks.train.train_dataset)
 ```
 
 Finally, we execute the `train_model` task function 
@@ -453,11 +453,11 @@ The postprocess data task is executed with the `postprocess_data` function. The 
 print_config_tree(pancreas_configuration.postprocess_configuration.to_dict(), "postprocess data")
 ```
 
-The configuration required to postprocess the data are determined by the components of the `pyrovelocity.postprocess.postprocess_dataset` function interface whose documentation can be accessed via `help` or `?` in the notebook
+The configuration required to postprocess the data are determined by the components of the `pyrovelocity.tasks.postprocess.postprocess_dataset` function interface whose documentation can be accessed via `help` or `?` in the notebook
 
 ```{python}
 #| label: print-postprocess-data-docstring
-print_docstring(pyrovelocity.postprocess.postprocess_dataset)
+print_docstring(pyrovelocity.tasks.postprocess.postprocess_dataset)
 ```
 
 We execute the `postprocess_data` task function with the inputs described above.
@@ -662,7 +662,7 @@ to generate the marker genes
 ```{python}
 #| label: generate-marker-genes
 volcano_data = posterior_samples["gene_ranking"] 
-putative_marker_genes = pv.analyze.pareto_frontier_genes(volcano_data=volcano_data, num_genes=6)
+putative_marker_genes = pv.analysis.analyze.pareto_frontier_genes(volcano_data=volcano_data, num_genes=6)
 ```
 
 In @fig-manually-generated-rainbowplot we show the manually generated marker gene phase portraits, temporal evolution, and shared time correlation.
@@ -685,7 +685,7 @@ with SuppressOutput():
 
 See @nte-suppressoutput if you need to know what `SuppressOutput` is doing.
 
-The best place to review the approach to generating the above plots is in [the source code for the `pyrovelocity.summarize` module](https://github.com/pinellolab/pyrovelocity/tree/beta/src/pyrovelocity/summarize.py) or in the [docs](https://github.io/pinellolab/pyrovelocity). Additional links are shown in the help below.
+The best place to review the approach to generating the above plots is in [the source code for the `pyrovelocity.tasks.summarize` module](https://github.com/pinellolab/pyrovelocity/tree/beta/src/pyrovelocity/tasks/summarize.py) or in the [docs](https://github.io/pinellolab/pyrovelocity). Additional links are shown in the help below.
 
 ```{python}
 #| label: print-pyrovelocity-docstring-2
