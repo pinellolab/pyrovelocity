@@ -1,7 +1,7 @@
-# pyrovelocity.datasets
+# pyrovelocity.io.datasets
 
 ```{eval-rst}
-.. automodule:: pyrovelocity.datasets
+.. automodule:: pyrovelocity.io.datasets
    :members:
    :undoc-members:
    :show-inheritance:
