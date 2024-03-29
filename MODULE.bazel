@@ -4,7 +4,7 @@ pyrovelocity MODULE
 
 module(
     name = "pyrovelocity",
-    version = "0.2.0b13",
+    version = "0.2.0b14",
     compatibility_level = 1,
 )
 
