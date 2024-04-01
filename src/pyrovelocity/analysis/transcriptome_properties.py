@@ -1,6 +1,9 @@
 from typing import TYPE_CHECKING
 
+import ibis
 import numpy as np
+import polars as pl
+import pyarrow as pa
 from beartype import beartype
 from beartype.typing import Any
 from beartype.typing import Dict
@@ -13,9 +16,6 @@ from pyrovelocity.logging import configure_logging
 logger = configure_logging(__name__)
 
 try:
-    import ibis
-    import polars as pl
-    import pyarrow as pa
     from pyensembl import EnsemblRelease
 except ImportError:
     logger.warning(
