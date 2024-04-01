@@ -1,17 +1,3 @@
-try:
-    import ibis
-    import polars as pl
-    import pyarrow as pa
-    from pyensembl import EnsemblRelease
-except ImportError:
-    raise ImportError(
-        "Additional dependencies are required for generating "
-        "the transcriptome properties database."
-        "Please install them via the bioinformatics extra: "
-        "`pip install pyrovelocity[bioinformatics]`."
-        "Alternatively, you may be able to use a previously generated database."
-    )
-
 import numpy as np
 from beartype import beartype
 from beartype.typing import Any
@@ -22,11 +8,25 @@ from beartype.typing import Optional
 from pyrovelocity.logging import configure_logging
 
 
+logger = configure_logging(__name__)
+
+try:
+    import ibis
+    import polars as pl
+    import pyarrow as pa
+    from pyensembl import EnsemblRelease
+except ImportError:
+    logger.warning(
+        "Additional dependencies are required for generating "
+        "the transcriptome properties database.\n"
+        "Please install them via the bioinformatics extra: "
+        "`pip install pyrovelocity[bioinformatics]`.\n"
+        "Alternatively, you may be able to use a previously generated database."
+    )
+
 __all__ = [
     "generate_gene_length_polyA_db_for_species",
 ]
-
-logger = configure_logging(__name__)
 
 
 @beartype
