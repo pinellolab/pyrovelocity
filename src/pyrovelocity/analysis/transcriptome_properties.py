@@ -1,3 +1,4 @@
+from os import PathLike
 from typing import TYPE_CHECKING
 
 import ibis
@@ -32,8 +33,6 @@ __all__ = [
 
 if TYPE_CHECKING:
     from pyensembl import EnsemblRelease
-else:
-    EnsemblRelease = Any
 
 
 @beartype
@@ -359,7 +358,7 @@ def polars_to_pyarrow(
 def save_gene_data_to_db(
     gene_data: List[Dict[str, Any]],
     species: str,
-    db_path: str,
+    db_path: PathLike | str,
     save_sequences: bool = False,
 ) -> None:
     """
@@ -395,7 +394,7 @@ def save_gene_data_to_db(
 @beartype
 def save_parameters_to_db(
     species: str,
-    db_path: str,
+    db_path: PathLike | str,
     min_length: int,
     max_length: int,
     polyA_threshold_length: int,
@@ -441,7 +440,7 @@ def save_parameters_to_db(
 def process_and_save_histograms_to_db(
     sequences: List[Dict[str, Any]],
     species: str,
-    db_path: str,
+    db_path: PathLike | str,
     min_length: int,
     max_length: int,
 ) -> None:
@@ -489,7 +488,7 @@ def process_and_save_histograms_to_db(
 def generate_gene_length_polyA_db_for_species(
     species: str = "homo_sapiens",
     ensembl_release_version: int = 110,
-    db_path: str = "gene_length_polyA_motifs.ddb",
+    db_path: PathLike | str = "gene_length_polyA_motifs.ddb",
     num_genes: Optional[int] = 100,
     min_length: int = 5,
     max_length: int = 50,
@@ -520,16 +519,24 @@ def generate_gene_length_polyA_db_for_species(
 
     Examples:
         >>> # xdoctest: +SKIP
+        ...
         >>> # define fixtures
+        >>> from pyrovelocity.analysis.transcriptome_properties import (
+        ...    generate_gene_length_polyA_db_for_species
+        >>> )
+        >>> from pathlib import Path
+        >>> tmpdir = None
         >>> try:
         >>>     tmp = getfixture("tmp_path")
         >>> except NameError:
         >>>     import tempfile
-        >>>     tmp = tempfile.TemporaryDirectory().name
+        >>>     tmpdir = tempfile.TemporaryDirectory()
+        >>>     tmp = tmpdir.name
         >>> ensembl_release_version = 110
         >>> db_name = f"test_gene_length_polyA_motifs_ensembl_{ensembl_release_version}.ddb"
-        >>> db_path = str(tmp) + "/" + db_name
+        >>> db_path = Path(tmp) / db_name
         >>> print(db_path)
+        ...
         >>> # generate transcriptome properties database for multiple species
         >>> species_list = ["homo_sapiens", "mus_musculus"]
         >>> for species in species_list:
@@ -539,6 +546,8 @@ def generate_gene_length_polyA_db_for_species(
         ...         db_path=db_path,
         ...         num_genes=50,
         >>>     )
+        >>> if tmpdir is not None:
+        >>>     tmpdir.cleanup()
     """
     logger.info(
         f"Processing {species} data for Ensembl release "
