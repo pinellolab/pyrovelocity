@@ -371,6 +371,7 @@ pyrovelocity-notebooks = "pyrovelocity.workflows.notebooks:cli"
 [tool.pytest.ini_options]
 log_level = "INFO"
 addopts = """ 
+-m "not pyensembl"
 -rA
 --xdoctest
 --disable-warnings
@@ -379,6 +380,7 @@ addopts = """
 """
 asyncio_mode = "strict"
 norecursedirs = ["bazel-*", ".direnv", "reproducibility", "scripts"]
+markers = ["pyensembl: Tests that require pyensembl to run."]
 
 [tool.coverage.paths]
 source = ["src/pyrovelocity"]
