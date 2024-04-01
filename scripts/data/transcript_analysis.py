@@ -1,23 +1,37 @@
-import ibis
+try:
+    import ibis
+    import polars as pl
+    import pyarrow as pa
+    from pyensembl import EnsemblRelease
+except ImportError:
+    raise ImportError(
+        "Additional dependencies are required for generating "
+        "the transcriptome properties database."
+        "Please install them via the bioinformatics extra: "
+        "`pip install pyrovelocity[bioinformatics]`."
+    )
+
 import numpy as np
-import polars as pl
-import pyarrow as pa
 from beartype import beartype
 from beartype.typing import Any
 from beartype.typing import Dict
 from beartype.typing import List
 from beartype.typing import Optional
-from pyensembl import EnsemblRelease
 
 from pyrovelocity.logging import configure_logging
 
+
+__all__ = [
+    "generate_gene_length_polyA_db_for_species",
+]
 
 logger = configure_logging(__name__)
 
 
 @beartype
 def extract_canonical_transcripts(
-    ensembl_data: EnsemblRelease, num_genes: Optional[int] = None
+    ensembl_data: EnsemblRelease,
+    num_genes: Optional[int] = None,
 ) -> Dict[str, Dict[str, Any]]:
     """
     Simulate SQL query to filter for high-quality transcripts and select one per gene.
@@ -84,6 +98,8 @@ def load_transcript_sequences(
     Args:
         species: The species name (default is "homo_sapiens").
         ensembl_release_version: The Ensembl release version number.
+        polyA_threshold_length:
+            The minimum length of polyA motifs to include in the summary count.
         num_genes: Number of genes. Defaults to None, which means All.
             Primarily used for testing.
         use_canonical: Flag to indicate exclusive usage of canonical transcripts.
@@ -198,6 +214,7 @@ def list_polyN_subsequence_lengths_in_range(
         sequence: The DNA sequence to analyze.
         min_length: The minimum repeat length to consider.
         max_length: The maximum repeat length to consider.
+        nucleotide: The nucleotide to consider for repeat patterns.
 
     Returns:
         Lengths of found repeats.
@@ -238,7 +255,6 @@ def calculate_histograms(
         gene_data: A list containing gene information including transcript sequences.
         min_length: The minimum length of polyA sequences to consider.
         max_length: The maximum length of polyA sequences to consider.
-        hist_bins: The bins to use for histogram calculation.
 
     Returns:
         A list of dictionaries, each representing histogram data for a gene.
@@ -319,6 +335,8 @@ def polars_to_pyarrow(
 ) -> pa.Table:
     """
     Convert a Polars DataFrame to a PyArrow Table.
+    This wrapper function only exists for type-checking purposes.
+    Otherwise, this could just be executed in-line.
 
     Args:
         df: The Polars DataFrame to convert.
@@ -337,12 +355,16 @@ def save_gene_data_to_db(
     save_sequences: bool = False,
 ) -> None:
     """
-    Save gene information including gene length and count of long polyA sequences to DuckDB.
+    Save gene information including gene length and count of long polyA
+    sequences to database.
 
     Args:
         gene_data: A list of dictionaries containing gene information.
         species: The species name for database naming.
-        db_path: Path to the DuckDB database file.
+        db_path: Path to the database file.
+        save_sequences:
+            Flag to indicate whether to save sequences to the database.
+            Default is False.
     """
 
     if save_sequences:
@@ -369,21 +391,25 @@ def save_parameters_to_db(
     min_length: int,
     max_length: int,
     polyA_threshold_length: int,
+    ensembl_release_version: int,
 ) -> None:
     """
-    Save histogram calculation parameters to a DuckDB database.
+    Save histogram calculation parameters to database.
 
     Args:
         species: The species name, used for database naming.
-        db_path: Path to the DuckDB database file.
+        db_path: Path to the database file.
         min_length: The minimum length of polyA sequences considered.
         max_length: The maximum length of polyA sequences considered.
-        polyA_threshold_length: The threshold length for counting long polyA sequences.
+        polyA_threshold_length:
+            The threshold length for counting long polyA sequences.
+        ensembl_release_version: The Ensembl release version.
     """
     parameters = {
         "species": species,
         "min_length": min_length,
         "max_length": max_length,
+        "ensembl_release_version": ensembl_release_version,
         "polyA_threshold_length": polyA_threshold_length,
     }
     df_parameters = pl.DataFrame([parameters])
@@ -413,12 +439,12 @@ def process_and_save_histograms_to_db(
 ) -> None:
     """
     Process sequences to generate histograms and cumulative histograms,
-    and save them into DuckDB database as tables.
+    and save them into database as tables.
 
     Args:
         sequences: Loaded sequences and their metadata.
         species: The species name for database naming.
-        db_path: Path to the DuckDB database file.
+        db_path: Path to the database file.
         min_length: Minimum length of polyA sequences to consider.
         max_length: Maximum length of polyA sequences to consider.
         hist_bins: Binning information for histogram calculation.
@@ -452,7 +478,7 @@ def process_and_save_histograms_to_db(
     )
 
 
-def process_species(
+def generate_gene_length_polyA_db_for_species(
     species: str = "homo_sapiens",
     ensembl_release_version: int = 110,
     db_path: str = "gene_length_polyA_motifs.ddb",
@@ -463,13 +489,54 @@ def process_species(
 ) -> None:
     """
     Main function to orchestrate loading of sequences, calculation of histograms,
-    and saving data to DuckDB database.
+    and saving data to the database.
+
+    The database should only need to be regenerated when updating to a new
+    Ensembl release or modifying parameters. The procedure used to generate the
+    database is nearly equivalent to that shown in the Examples below except
+    that num_genes is set to None in order to include all genes that meet
+    the transcript quality selection criteria associated to Ensembl canonical
+    or MANE transcript flags.
 
     Args:
         species: Species name.
-        ensembl_release_version: Version of Ensembl release to use for sequence loading.
-        db_path: Path to the DuckDB database file.
+        ensembl_release_version:
+            Version of Ensembl release to use for sequence loading.
+        db_path: Path to the database file.
+        num_genes: Number of genes. Defaults to 100. Uses all genes if None.
+        min_length: Minimum length to include in polyN histogram.
+        max_length: Maximum length to include in polyN histogram.
+        polyA_threshold_length:
+            Minimum length to include in summary of number of polyA motifs in
+            each transcript.
+
+    Examples:
+        >>> # xdoctest: +SKIP
+        >>> # define fixtures
+        >>> try:
+        >>>     tmp = getfixture("tmp_path")
+        >>> except NameError:
+        >>>     import tempfile
+        >>>     tmp = tempfile.TemporaryDirectory().name
+        >>> ensembl_release_version = 110
+        >>> db_name = f"test_gene_length_polyA_motifs_ensembl_{ensembl_release_version}.ddb"
+        >>> db_path = str(tmp) + "/" + db_name
+        >>> print(db_path)
+        >>> # generate transcriptome properties database for multiple species
+        >>> species_list = ["homo_sapiens", "mus_musculus"]
+        >>> for species in species_list:
+        >>>     generate_gene_length_polyA_db_for_species(
+        ...         species=species,
+        ...         ensembl_release_version=ensembl_release_version,
+        ...         db_path=db_path,
+        ...         num_genes=50,
+        >>>     )
     """
+    logger.info(
+        f"Processing {species} data for Ensembl release "
+        f"{ensembl_release_version} and saving to\n"
+        f"\t{db_path}\n\n"
+    )
 
     sequences = load_transcript_sequences(
         species=species,
@@ -495,25 +562,5 @@ def process_species(
         min_length=min_length,
         max_length=max_length,
         polyA_threshold_length=polyA_threshold_length,
+        ensembl_release_version=ensembl_release_version,
     )
-
-
-def main():
-    species_list = ["homo_sapiens", "mus_musculus"]
-    ensembl_release_version = 110
-    db_path = "gene_length_polyA_motifs.ddb"
-
-    for species in species_list:
-        logger.info(
-            f"Processing {species} data for Ensembl release {ensembl_release_version}...\n\n"
-        )
-        process_species(
-            species=species,
-            ensembl_release_version=ensembl_release_version,
-            db_path=db_path,
-            num_genes=None,
-        )
-
-
-if __name__ == "__main__":
-    main()
