@@ -120,6 +120,11 @@ ENV/
 *.h5ad
 .nox/
 
+# data
+*.db
+*.ddb
+*.wal
+
 # nix
 result
 .devenv
