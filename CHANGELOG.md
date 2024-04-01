@@ -2,13 +2,12 @@
 
 ## [0.2.0-beta.14](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.13...v0.2.0-beta.14) (2024-03-29)
 
-
 ### Bug Fixes
 
-* **bazel:** update test module list ([f9a38aa](https://github.com/pinellolab/pyrovelocity/commit/f9a38aa2be311cd256d7fbd7c54375b351a5616b))
-* **docs:** update badges ([0a84010](https://github.com/pinellolab/pyrovelocity/commit/0a8401094953488ad4e77cd46bb3acf860c11953))
-* **gitattributes:** linguist ignore Makefiles ([508bddd](https://github.com/pinellolab/pyrovelocity/commit/508bddd45cd7361f6f4bd4c7e239800a23924a99))
-* **gitattributes:** linguist ignore nbs and reproducibility ([7c4f28d](https://github.com/pinellolab/pyrovelocity/commit/7c4f28d5d0eb1a6d449fac93a2b97928ed9be007))
+- **bazel:** update test module list ([f9a38aa](https://github.com/pinellolab/pyrovelocity/commit/f9a38aa2be311cd256d7fbd7c54375b351a5616b))
+- **docs:** update badges ([0a84010](https://github.com/pinellolab/pyrovelocity/commit/0a8401094953488ad4e77cd46bb3acf860c11953))
+- **gitattributes:** linguist ignore Makefiles ([508bddd](https://github.com/pinellolab/pyrovelocity/commit/508bddd45cd7361f6f4bd4c7e239800a23924a99))
+- **gitattributes:** linguist ignore nbs and reproducibility ([7c4f28d](https://github.com/pinellolab/pyrovelocity/commit/7c4f28d5d0eb1a6d449fac93a2b97928ed9be007))
 
 ## [0.2.0-beta.13](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.12...v0.2.0-beta.13) (2024-03-26)
 
