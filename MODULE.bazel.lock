@@ -3544,7 +3544,7 @@
       "os:osx,arch:aarch64": {
         "bzlTransitiveDigest": "pO1vx26DfYYJbtV5qhe9OIGKvpMqwMLIeM8AOVhad2c=",
         "accumulatedFileDigests": {
-          "@@//:requirements-bazel.txt": "a17fa565b7b70685c0f369bca22cb5702ea03ffdf4d1d5e3d9b82435ed90ade2"
+          "@@//:requirements-bazel.txt": "61230cf9c38e838dd3eda6755326ce5d93e3425f67fbb5793d8b3ec7b0bf09d3"
         },
         "envVariables": {},
         "generatedRepoSpecs": {
@@ -3867,6 +3867,35 @@
               "group_deps": []
             }
           },
+          "pip_310_astroid": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_astroid",
+              "requirement": "astroid==2.15.8 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:1aa149fc5c6589e3d0ece885b4491acd80af4f087baafa3fb5203b113e68cd3c     --hash=sha256:6c107453dffee9055899705de3c9ead36e74119cee151e5a9aaf7f0b0e020a6a",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
           "pip_310_pynndescent": {
             "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
             "ruleClassName": "whl_library",
@@ -4047,6 +4076,35 @@
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_nodeenv",
               "requirement": "nodeenv==1.7.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:27083a7b96a25f2f5e1d8cb4b6317ee8aeda3bdd121394e5ac54e498028a042e     --hash=sha256:e0e7f7dfb85fc5394c6fe1e8fa98131a2473e04311a45afb6508f7cf1836fa2b",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_pyarrow_hotfix": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_pyarrow_hotfix",
+              "requirement": "pyarrow-hotfix==0.6 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:79d3e030f7ff890d408a100ac16d6f00b14d44a502d7897cd9fc3e3a534e9945     --hash=sha256:dcc9ae2d220dff0083be6a9aa8e0cdee5182ad358d4931fce825c545e5c89178",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -4534,6 +4592,35 @@
               "group_deps": []
             }
           },
+          "pip_310_lazy_object_proxy": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_lazy_object_proxy",
+              "requirement": "lazy-object-proxy==1.10.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:009e6bb1f1935a62889ddc8541514b6a9e1fcf302667dcb049a0be5c8f613e56     --hash=sha256:02c83f957782cbbe8136bee26416686a6ae998c7b6191711a04da776dc9e47d4     --hash=sha256:0aefc7591920bbd360d57ea03c995cebc204b424524a5bd78406f6e1b8b2a5d8     --hash=sha256:127a789c75151db6af398b8972178afe6bda7d6f68730c057fbbc2e96b08d282     --hash=sha256:18dd842b49456aaa9a7cf535b04ca4571a302ff72ed8740d06b5adcd41fe0757     --hash=sha256:217138197c170a2a74ca0e05bddcd5f1796c735c37d0eee33e43259b192aa424     --hash=sha256:2297f08f08a2bb0d32a4265e98a006643cd7233fb7983032bd61ac7a02956b3b     --hash=sha256:2fc0a92c02fa1ca1e84fc60fa258458e5bf89d90a1ddaeb8ed9cc3147f417255     --hash=sha256:30b339b2a743c5288405aa79a69e706a06e02958eab31859f7f3c04980853b70     --hash=sha256:366c32fe5355ef5fc8a232c5436f4cc66e9d3e8967c01fb2e6302fd6627e3d94     --hash=sha256:3ad54b9ddbe20ae9f7c1b29e52f123120772b06dbb18ec6be9101369d63a4074     --hash=sha256:5ad9e6ed739285919aa9661a5bbed0aaf410aa60231373c5579c6b4801bd883c     --hash=sha256:5faf03a7d8942bb4476e3b62fd0f4cf94eaf4618e304a19865abf89a35c0bbee     --hash=sha256:75fc59fc450050b1b3c203c35020bc41bd2695ed692a392924c6ce180c6f1dc9     --hash=sha256:76a095cfe6045c7d0ca77db9934e8f7b71b14645f0094ffcd842349ada5c5fb9     --hash=sha256:78247b6d45f43a52ef35c25b5581459e85117225408a4128a3daf8bf9648ac69     --hash=sha256:782e2c9b2aab1708ffb07d4bf377d12901d7a1d99e5e410d648d892f8967ab1f     --hash=sha256:7ab7004cf2e59f7c2e4345604a3e6ea0d92ac44e1c2375527d56492014e690c3     --hash=sha256:80b39d3a151309efc8cc48675918891b865bdf742a8616a337cb0090791a0de9     --hash=sha256:80fa48bd89c8f2f456fc0765c11c23bf5af827febacd2f523ca5bc1893fcc09d     --hash=sha256:855e068b0358ab916454464a884779c7ffa312b8925c6f7401e952dcf3b89977     --hash=sha256:92f09ff65ecff3108e56526f9e2481b8116c0b9e1425325e13245abfd79bdb1b     --hash=sha256:952c81d415b9b80ea261d2372d2a4a2332a3890c2b83e0535f263ddfe43f0d43     --hash=sha256:9a3a87cf1e133e5b1994144c12ca4aa3d9698517fe1e2ca82977781b16955658     --hash=sha256:9e4ed0518a14dd26092614412936920ad081a424bdcb54cc13349a8e2c6d106a     --hash=sha256:a899b10e17743683b293a729d3a11f2f399e8a90c73b089e29f5d0fe3509f0dd     --hash=sha256:b1f711e2c6dcd4edd372cf5dec5c5a30d23bba06ee012093267b3376c079ec83     --hash=sha256:b4f87d4ed9064b2628da63830986c3d2dca7501e6018347798313fcf028e2fd4     --hash=sha256:cb73507defd385b7705c599a94474b1d5222a508e502553ef94114a143ec6696     --hash=sha256:dc0d2fc424e54c70c4bc06787e4072c4f3b1aa2f897dfdc34ce1013cf3ceef05     --hash=sha256:e221060b701e2aa2ea991542900dd13907a5c90fa80e199dbf5a03359019e7a3     --hash=sha256:e271058822765ad5e3bca7f05f2ace0de58a3f4e62045a8c90a0dfd2f8ad8cc6     --hash=sha256:e2adb09778797da09d2b5ebdbceebf7dd32e2c96f79da9052b2e87b6ea495895     --hash=sha256:e333e2324307a7b5d86adfa835bb500ee70bfcd1447384a822e96495796b0ca4     --hash=sha256:e98c8af98d5707dcdecc9ab0863c0ea6e88545d42ca7c3feffb6b4d1e370c7ba     --hash=sha256:edb45bb8278574710e68a6b021599a10ce730d156e5b254941754a9cc0b17d03     --hash=sha256:fec03caabbc6b59ea4a638bee5fce7117be8e99a4103d9d5ad77f15d6f81020c",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
           "pip_310_numpyro": {
             "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
             "ruleClassName": "whl_library",
@@ -4656,6 +4743,64 @@
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_jsonschema",
               "requirement": "jsonschema[format-nongpl]==4.17.3 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:0f864437ab8b6076ba6707453ef8f98a6a0d512a80e93f8abdb676f737ecb60d     --hash=sha256:a870ad254da1a8ca84b6a2905cac29d265f805acc57af304784962a2aa6508f6",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_pylint": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_pylint",
+              "requirement": "pylint==2.17.7 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:27a8d4c7ddc8c2f8c18aa0050148f89ffc09838142193fdbe98f172781a3ff87     --hash=sha256:f4fcac7ae74cfe36bc8451e931d8438e4a476c20314b1101c458ad0f05191fad",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_atpublic": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_atpublic",
+              "requirement": "atpublic==4.1.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:d1c8cd931af7461f6d18bc6063383e8654d9e9ef19d58ee6dc01e8515bbf55df     --hash=sha256:df90de1162b1a941ee486f484691dc7c33123ee638ea5d6ca604061306e0fdde",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -5207,6 +5352,35 @@
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_leidenalg",
               "requirement": "leidenalg==0.9.1 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:0e156e5d505af9164ca854819e69331b869efbd34b9b3b6be86950e3e1efbdd0     --hash=sha256:118778b83e0ab5441b252467544d9ac70385f63cf9b1af4e776e1e9aaa4b9c45     --hash=sha256:1325a8a5bb9e664e2d5e8d0c4d77294734518799874be685c72ac981e920db65     --hash=sha256:16e7be487b359640f2a24bb83a222b3186ca84d7665e506957ee4a6e0ca619a6     --hash=sha256:1786c51cd5a662b9ccd6d43df4b9740377c29fb56325597d8d0e33b82d47cd71     --hash=sha256:18f5e8038b919b681e3696c5079450df58f27f847a0672829bf52fade7a73429     --hash=sha256:1b1b3d09a429a557b5c0e661251ac877f6e409a0276cde9ff8c4a0fa438054ee     --hash=sha256:22771a47bd17049c070a5fcca43452e120d705c6c59c62118f2bb39e79f5649c     --hash=sha256:229c1450688118bce2a16dd696ae1cccd9c68e55542393a3a1bcd377c14d126c     --hash=sha256:23b0f6d8117c9507c6f3cd1a712808f737a749dae39a26ef4f3bcafcc35cfa53     --hash=sha256:241251abda73c35aaf5c678164588968c231b3ff1ef8ea209ca00dc96acb1855     --hash=sha256:28d6610d9e81453ae13a71077f0a71ad32afc1cbfdbd3415db60bb12210acb6c     --hash=sha256:3653abc9cc74ead7ec29a710bd8ca737867ee71fdc98cb108c396011727b2339     --hash=sha256:36a208752583b1baad2403ddf69454c18aebb7a8dcfdedaa7216a35edbf5cd70     --hash=sha256:387d79284f1804c5dd54e6735549f5cf1b617d80090a3ac02119f6c8120e0858     --hash=sha256:3914654677510213231fd2092f51778faa84dd74814626158dfa5bceaf8b4952     --hash=sha256:4648ce7e0d964195ce27524be254313ed84999b1f22638bc82081e1509511da9     --hash=sha256:497f77c1b58dc3ff2a017c8123a9e4001301cba43179fdf48f97a9b6dc5eb155     --hash=sha256:4e624bf5144daddc879c425542ce78fa9d04489bf321964a4de943b0ff8287ff     --hash=sha256:4ebd212194fdc286d1c196ccf916edb1643cd456e1027d0ac84f34281ba78643     --hash=sha256:54b4a68ccd412c3d37f231a6931b9619cbd6e63247535879ec6c0834fc19b7d9     --hash=sha256:5daad6061947b474726f01aae1a8b6f30c310488c5d0cd704b6e2e8d07f669bb     --hash=sha256:5edc7dc49983a452d67c8d81f71640ccf8f55037bf407b408b08d330646d6006     --hash=sha256:683ccb6b1fb6abf6b41b295cbddad0837973378b1add9aab8241f9da3741b735     --hash=sha256:68964376c7faaf4e2693c17f5f40f610dbb17e9f177444d652e5e602df18a96a     --hash=sha256:6b865ea877f9bae998201c058eb43ea764405e8e81da74e6550d17f9de3cc9d3     --hash=sha256:706f74dc2977e527eb809ead1a62b15d438a95fd615c0eebb185efa97ea1f9fb     --hash=sha256:726a65fe5ecff8cad6c926622893a3b902c14b56fad7bb11e6bb544fc8582247     --hash=sha256:7e5cfe3b6f80f32b90f55f35c68d4a990b0489b1282cf3fabac8cda4988975f3     --hash=sha256:80719d68ad279edc2ce2177680d4f228cad263be34f4572cc48c647a7651f191     --hash=sha256:887b17ead6f270a3f94b8d4b2f81066f77036133f53f1bb547cbd64cce07c015     --hash=sha256:8cd26aa6d907d4615cb7b5e0d46035c5f3b56f3a6ce1ba4ae212db0601fc95ac     --hash=sha256:8ee235d2756498ac55d5cd8eaf9e75f86a387950b6fcba4c5cd3970428732dcb     --hash=sha256:8ef1ca6fd0e14a6a093fbd2b8e22b7346c885c8edae7c25c5a7490febaf501a1     --hash=sha256:9c66c0d53172b58d46b39df753144d5e9b663662aebb066d48816c774b5e77fa     --hash=sha256:adc26c986cedfb3174b6a90d9435d75cdd013a1fa147b5ac2a071c8c68bb91cf     --hash=sha256:ba97bdfda32ed661042f235cbfd251411f5ea3a36cda109b8e47a543ba44bb1a     --hash=sha256:bfc03a6053fdc5705d9a38360d3b4c7f6c21b69ed6af3d6e95f1f028a6299e97     --hash=sha256:c4da689ae3d2ddb5bcde2c7e205a8892d8e08a11b6287362e51d64cf599f2161     --hash=sha256:d1fab585aaa3769ee7d42364ab7d52d757e50fc156166c87383ecfa2d59f1a27     --hash=sha256:d21186ed9cf09c52bafe8250921d83f96ab8f2e92e55d9dd44b030084669896f     --hash=sha256:d512592af7143e301f5d960d13d864948c86fe15bc90b21c63e73ba69ac848cd     --hash=sha256:d5cbdb93d7e57998619a9688e9c07259343d0c7036e08c0c6058a3a125ab19bc     --hash=sha256:d61256c3cb4ad08e54ed4d5d98a9d8badeefcf86fb4f69dff703ecc0af9c4d38     --hash=sha256:d78061038a3e6b0d6508de3f2dabd3c1d77b00ab04c86b68a0a499b229288eff     --hash=sha256:d8683d56d9cb780ab05f49d49eb32af74e67414837fbeb5f8ac1b0e91bb9424a     --hash=sha256:e02e38c29275f876999e9db062c7e6b7b176eb58b1666fccdbfc95ab6916736c     --hash=sha256:ee18061fdc555940ea9b3cd7b7b9d37d5e6c10c864187b952b5918c1b69aa678     --hash=sha256:ee8d3ffaa527c00d546fb8cea0119432a44d3b340d08b41887ad4444b2b537f8     --hash=sha256:f31e08f8249fc7147851006f2766537deab829da423ebbd7e6edf74ddcee0ab6     --hash=sha256:fdf19824ed967ba29de8b0ed0450deadf3df2c6a412a0deb53f6a3b0b7641fd1     --hash=sha256:fe2cec1a7f16c5c9650a87459cf882239de324edcbe3865fc9df5e48b3b5dfd9",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_duckdb_engine": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_duckdb_engine",
+              "requirement": "duckdb-engine==0.11.2 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:40644334a0af02bdb50bbd8c57e4bd29441e7bf9bd21b565848645bae318e533     --hash=sha256:786a9a14b56297d8b98ec6213dce79f0bdb44129bf5faa5792e0fa24f290e7a0",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -5964,12 +6138,70 @@
               "group_deps": []
             }
           },
+          "pip_310_sqlalchemy_views": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_sqlalchemy_views",
+              "requirement": "sqlalchemy-views==0.3.2 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:53a376efc8badbbd6d2d360f0d03fc70f1f5ee7748cf169506ea8a6e4f20326c     --hash=sha256:c396416939bc4459c71f15c0279b72c9eb1f92fe022afe7fa74ed3adeef76e3b",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
           "pip_310_opt_einsum": {
             "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
             "ruleClassName": "whl_library",
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_opt_einsum",
               "requirement": "opt-einsum==3.3.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:2455e59e3947d3c275477df7f5205b30635e266fe6dc300e3d9f9646bfcea147     --hash=sha256:59f6475f77bbc37dcf7cd748519c0ec60722e91e63ca114e68821c0c54a46549",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_bidict": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_bidict",
+              "requirement": "bidict==0.23.1 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:03069d763bc387bbd20e7d49914e75fc4132a41937fa3405417e1a5a2d006d71     --hash=sha256:5dae8d4d79b552a71cbabc7deb25dfe8ce710b17ff41711e13010ead2abfc3e5",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -6202,6 +6434,35 @@
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_cfgv",
               "requirement": "cfgv==3.3.1 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:c6a0883f3917a037485059700b9e75da2464e6c27051014ad85ba6aaa5884426     --hash=sha256:f5a830efb9ce7a445376bb66ec94c638a9787422f96264c98edc6bdeed8ab736",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_isort": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_isort",
+              "requirement": "isort==5.13.2 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:48fdfcb9face5d58a4f6dde2e72a1fb8dcaf8ab26f95ab49fab84c2ddefb0109     --hash=sha256:8ca5e72a8d85860d5a3fa69b8745237f2939afe12dbf656afbcb47fe72d947a6",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -6463,6 +6724,35 @@
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_hypothesis",
               "requirement": "hypothesis==6.72.1 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:1901688aac1fc8d78d5431c4a1d48cc50940e247dd8b6ebc3d4167ef31204e10     --hash=sha256:2fd2c9640ea4b64d06fafc8d9aa8e9cbae365879d109a859afd37dda5c1ffb55",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_ibis_framework": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_ibis_framework",
+              "requirement": "ibis-framework[duckdb]==8.0.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:20e74a0cdbd5fc03c96955fdb80ad4cc6d16518c28339e24a2b0f930bc40eeb6     --hash=sha256:9f54678ec58a8654338e31cc0b0960f2555d245c6a6249cc7748e5fd8f3a70fb",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -7013,7 +7303,7 @@
             "ruleClassName": "whl_library",
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_pyarrow",
-              "requirement": "pyarrow==11.0.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:1cbcfcbb0e74b4d94f0b7dde447b835a01bc1d16510edb8bb7d6224b9bf5bafc     --hash=sha256:25aa11c443b934078bfd60ed63e4e2d42461682b5ac10f67275ea21e60e6042c     --hash=sha256:2d53ba72917fdb71e3584ffc23ee4fcc487218f8ff29dd6df3a34c5c48fe8c06     --hash=sha256:2d942c690ff24a08b07cb3df818f542a90e4d359381fbff71b8f2aea5bf58841     --hash=sha256:2f51dc7ca940fdf17893227edb46b6784d37522ce08d21afc56466898cb213b2     --hash=sha256:362a7c881b32dc6b0eccf83411a97acba2774c10edcec715ccaab5ebf3bb0835     --hash=sha256:3e99be85973592051e46412accea31828da324531a060bd4585046a74ba45854     --hash=sha256:40bb42afa1053c35c749befbe72f6429b7b5f45710e85059cdd534553ebcf4f2     --hash=sha256:410624da0708c37e6a27eba321a72f29d277091c8f8d23f72c92bada4092eb5e     --hash=sha256:41a1451dd895c0b2964b83d91019e46f15b5564c7ecd5dcb812dadd3f05acc97     --hash=sha256:5461c57dbdb211a632a48facb9b39bbeb8a7905ec95d768078525283caef5f6d     --hash=sha256:69309be84dcc36422574d19c7d3a30a7ea43804f12552356d1ab2a82a713c418     --hash=sha256:7c28b5f248e08dea3b3e0c828b91945f431f4202f1a9fe84d1012a761324e1ba     --hash=sha256:8f40be0d7381112a398b93c45a7e69f60261e7b0269cc324e9f739ce272f4f70     --hash=sha256:a37bc81f6c9435da3c9c1e767324ac3064ffbe110c4e460660c43e144be4ed85     --hash=sha256:aaee8f79d2a120bf3e032d6d64ad20b3af6f56241b0ffc38d201aebfee879d00     --hash=sha256:ad42bb24fc44c48f74f0d8c72a9af16ba9a01a2ccda5739a517aa860fa7e3d56     --hash=sha256:ad7c53def8dbbc810282ad308cc46a523ec81e653e60a91c609c2233ae407689     --hash=sha256:becc2344be80e5dce4e1b80b7c650d2fc2061b9eb339045035a1baa34d5b8f1c     --hash=sha256:caad867121f182d0d3e1a0d36f197df604655d0b466f1bc9bafa903aa95083e4     --hash=sha256:ccbf29a0dadfcdd97632b4f7cca20a966bb552853ba254e874c66934931b9841     --hash=sha256:da93340fbf6f4e2a62815064383605b7ffa3e9eeb320ec839995b1660d69f89b     --hash=sha256:e217d001e6389b20a6759392a5ec49d670757af80101ee6b5f2c8ff0172e02ca     --hash=sha256:f010ce497ca1b0f17a8243df3048055c0d18dcadbcc70895d5baf8921f753de5     --hash=sha256:f12932e5a6feb5c58192209af1d2607d488cb1d404fbc038ac12ada60327fa34",
+              "requirement": "pyarrow==14.0.2 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:059bd8f12a70519e46cd64e1ba40e97eae55e0cbe1695edd95384653d7626b23     --hash=sha256:06ff1264fe4448e8d02073f5ce45a9f934c0f3db0a04460d0b01ff28befc3696     --hash=sha256:1e6987c5274fb87d66bb36816afb6f65707546b3c45c44c28e3c4133c010a881     --hash=sha256:209bac546942b0d8edc8debda248364f7f668e4aad4741bae58e67d40e5fcf75     --hash=sha256:20e003a23a13da963f43e2b432483fdd8c38dc8882cd145f09f21792e1cf22a1     --hash=sha256:22a768987a16bb46220cef490c56c671993fbee8fd0475febac0b3e16b00a10e     --hash=sha256:2cc61593c8e66194c7cdfae594503e91b926a228fba40b5cf25cc593563bcd07     --hash=sha256:2dbba05e98f247f17e64303eb876f4a80fcd32f73c7e9ad975a83834d81f3fda     --hash=sha256:32356bfb58b36059773f49e4e214996888eeea3a08893e7dbde44753799b2a02     --hash=sha256:36cef6ba12b499d864d1def3e990f97949e0b79400d08b7cf74504ffbd3eb025     --hash=sha256:37c233ddbce0c67a76c0985612fef27c0c92aef9413cf5aa56952f359fcb7379     --hash=sha256:3c0fa3bfdb0305ffe09810f9d3e2e50a2787e3a07063001dcd7adae0cee3601a     --hash=sha256:3f16111f9ab27e60b391c5f6d197510e3ad6654e73857b4e394861fc79c37200     --hash=sha256:52809ee69d4dbf2241c0e4366d949ba035cbcf48409bf404f071f624ed313a2b     --hash=sha256:5c1da70d668af5620b8ba0a23f229030a4cd6c5f24a616a146f30d2386fec422     --hash=sha256:63ac901baec9369d6aae1cbe6cca11178fb018a8d45068aaf5bb54f94804a866     --hash=sha256:64df2bf1ef2ef14cee531e2dfe03dd924017650ffaa6f9513d7a1bb291e59c15     --hash=sha256:66e986dc859712acb0bd45601229021f3ffcdfc49044b64c6d071aaf4fa49e98     --hash=sha256:6dd4f4b472ccf4042f1eab77e6c8bce574543f54d2135c7e396f413046397d5a     --hash=sha256:75ee0efe7a87a687ae303d63037d08a48ef9ea0127064df18267252cfe2e9541     --hash=sha256:76fc257559404ea5f1306ea9a3ff0541bf996ff3f7b9209fc517b5e83811fa8e     --hash=sha256:78ea56f62fb7c0ae8ecb9afdd7893e3a7dbeb0b04106f5c08dbb23f9c0157591     --hash=sha256:87482af32e5a0c0cce2d12eb3c039dd1d853bd905b04f3f953f147c7a196915b     --hash=sha256:87e879323f256cb04267bb365add7208f302df942eb943c93a9dfeb8f44840b1     --hash=sha256:a01d0052d2a294a5f56cc1862933014e696aa08cc7b620e8c0cce5a5d362e976     --hash=sha256:a25eb2421a58e861f6ca91f43339d215476f4fe159eca603c55950c14f378cc5     --hash=sha256:a51fee3a7db4d37f8cda3ea96f32530620d43b0489d169b285d774da48ca9785     --hash=sha256:a898d134d00b1eca04998e9d286e19653f9d0fcb99587310cd10270907452a6b     --hash=sha256:b0c4a18e00f3a32398a7f31da47fefcd7a927545b396e1f15d0c85c2f2c778cd     --hash=sha256:ba9fe808596c5dbd08b3aeffe901e5f81095baaa28e7d5118e01354c64f22807     --hash=sha256:c65bf4fd06584f058420238bc47a316e80dda01ec0dfb3044594128a6c2db794     --hash=sha256:c87824a5ac52be210d32906c715f4ed7053d0180c1060ae3ff9b7e560f53f944     --hash=sha256:e354fba8490de258be7687f341bc04aba181fc8aa1f71e4584f9890d9cb2dec2     --hash=sha256:e4b123ad0f6add92de898214d404e488167b87b5dd86e9a434126bc2b7a5578d     --hash=sha256:f7d029f20ef56673a9730766023459ece397a05001f4e4d13805111d7c2108c0     --hash=sha256:fc0de7575e841f1595ac07e5bc631084fd06ca8b03c0f2ecece733d23cd5102a",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -7072,6 +7362,35 @@
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_contourpy",
               "requirement": "contourpy==1.0.7 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:031154ed61f7328ad7f97662e48660a150ef84ee1bc8876b6472af88bf5a9b98     --hash=sha256:0f9d350b639db6c2c233d92c7f213d94d2e444d8e8fc5ca44c9706cf72193772     --hash=sha256:130230b7e49825c98edf0b428b7aa1125503d91732735ef897786fe5452b1ec2     --hash=sha256:152fd8f730c31fd67fe0ffebe1df38ab6a669403da93df218801a893645c6ccc     --hash=sha256:1c71fdd8f1c0f84ffd58fca37d00ca4ebaa9e502fb49825484da075ac0b0b803     --hash=sha256:24847601071f740837aefb730e01bd169fbcaa610209779a78db7ebb6e6a7051     --hash=sha256:2e9ebb4425fc1b658e13bace354c48a933b842d53c458f02c86f371cecbedecc     --hash=sha256:30676ca45084ee61e9c3da589042c24a57592e375d4b138bd84d8709893a1ba4     --hash=sha256:31a55dccc8426e71817e3fe09b37d6d48ae40aae4ecbc8c7ad59d6893569c436     --hash=sha256:366a0cf0fc079af5204801786ad7a1c007714ee3909e364dbac1729f5b0849e5     --hash=sha256:38e2e577f0f092b8e6774459317c05a69935a1755ecfb621c0a98f0e3c09c9a5     --hash=sha256:3c184ad2433635f216645fdf0493011a4667e8d46b34082f5a3de702b6ec42e3     --hash=sha256:3caea6365b13119626ee996711ab63e0c9d7496f65641f4459c60a009a1f3e80     --hash=sha256:3e927b3868bd1e12acee7cc8f3747d815b4ab3e445a28d2e5373a7f4a6e76ba1     --hash=sha256:4ee3ee247f795a69e53cd91d927146fb16c4e803c7ac86c84104940c7d2cabf0     --hash=sha256:54d43960d809c4c12508a60b66cb936e7ed57d51fb5e30b513934a4a23874fae     --hash=sha256:57119b0116e3f408acbdccf9eb6ef19d7fe7baf0d1e9aaa5381489bc1aa56556     --hash=sha256:58569c491e7f7e874f11519ef46737cea1d6eda1b514e4eb5ac7dab6aa864d02     --hash=sha256:5a011cf354107b47c58ea932d13b04d93c6d1d69b8b6dce885e642531f847566     --hash=sha256:5caeacc68642e5f19d707471890f037a13007feba8427eb7f2a60811a1fc1350     --hash=sha256:5dd34c1ae752515318224cba7fc62b53130c45ac6a1040c8b7c1a223c46e8967     --hash=sha256:60835badb5ed5f4e194a6f21c09283dd6e007664a86101431bf870d9e86266c4     --hash=sha256:62398c80ef57589bdbe1eb8537127321c1abcfdf8c5f14f479dbbe27d0322e66     --hash=sha256:6381fa66866b0ea35e15d197fc06ac3840a9b2643a6475c8fff267db8b9f1e69     --hash=sha256:64757f6460fc55d7e16ed4f1de193f362104285c667c112b50a804d482777edd     --hash=sha256:69f8ff4db108815addd900a74df665e135dbbd6547a8a69333a68e1f6e368ac2     --hash=sha256:6c180d89a28787e4b73b07e9b0e2dac7741261dbdca95f2b489c4f8f887dd810     --hash=sha256:71b0bf0c30d432278793d2141362ac853859e87de0a7dee24a1cea35231f0d50     --hash=sha256:769eef00437edf115e24d87f8926955f00f7704bede656ce605097584f9966dc     --hash=sha256:7f6979d20ee5693a1057ab53e043adffa1e7418d734c1532e2d9e915b08d8ec2     --hash=sha256:87f4d8941a9564cda3f7fa6a6cd9b32ec575830780677932abdec7bcb61717b0     --hash=sha256:89ba9bb365446a22411f0673abf6ee1fea3b2cf47b37533b970904880ceb72f3     --hash=sha256:8acf74b5d383414401926c1598ed77825cd530ac7b463ebc2e4f46638f56cce6     --hash=sha256:9056c5310eb1daa33fc234ef39ebfb8c8e2533f088bbf0bc7350f70a29bde1ac     --hash=sha256:95c3acddf921944f241b6773b767f1cbce71d03307270e2d769fd584d5d1092d     --hash=sha256:9e20e5a1908e18aaa60d9077a6d8753090e3f85ca25da6e25d30dc0a9e84c2c6     --hash=sha256:a1e97b86f73715e8670ef45292d7cc033548266f07d54e2183ecb3c87598888f     --hash=sha256:a877ada905f7d69b2a31796c4b66e31a8068b37aa9b78832d41c82fc3e056ddd     --hash=sha256:a9d7587d2fdc820cc9177139b56795c39fb8560f540bba9ceea215f1f66e1566     --hash=sha256:abf298af1e7ad44eeb93501e40eb5a67abbf93b5d90e468d01fc0c4451971afa     --hash=sha256:ae90d5a8590e5310c32a7630b4b8618cef7563cebf649011da80874d0aa8f414     --hash=sha256:b6d0f9e1d39dbfb3977f9dd79f156c86eb03e57a7face96f199e02b18e58d32a     --hash=sha256:b8d587cc39057d0afd4166083d289bdeff221ac6d3ee5046aef2d480dc4b503c     --hash=sha256:c5210e5d5117e9aec8c47d9156d1d3835570dd909a899171b9535cb4a3f32693     --hash=sha256:cc331c13902d0f50845099434cd936d49d7a2ca76cb654b39691974cb1e4812d     --hash=sha256:ce41676b3d0dd16dbcfabcc1dc46090aaf4688fd6e819ef343dbda5a57ef0161     --hash=sha256:d8165a088d31798b59e91117d1f5fc3df8168d8b48c4acc10fc0df0d0bdbcc5e     --hash=sha256:e7281244c99fd7c6f27c1c6bfafba878517b0b62925a09b586d88ce750a016d2     --hash=sha256:e96a08b62bb8de960d3a6afbc5ed8421bf1a2d9c85cc4ea73f4bc81b4910500f     --hash=sha256:ed33433fc3820263a6368e532f19ddb4c5990855e4886088ad84fd7c4e561c71     --hash=sha256:efb8f6d08ca7998cf59eaf50c9d60717f29a1a0a09caa46460d33b2924839dbd     --hash=sha256:efe99298ba37e37787f6a2ea868265465410822f7bea163edcc1bd3903354ea9     --hash=sha256:f99e9486bf1bb979d95d5cffed40689cb595abb2b841f2991fc894b3452290e8     --hash=sha256:fc1464c97579da9f3ab16763c32e5c5d5bb5fa1ec7ce509a4ca6108b61b84fab     --hash=sha256:fd7dc0e6812b799a34f6d12fcb1000539098c249c8da54f3566c6a6461d0dbad",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_dill": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_dill",
+              "requirement": "dill==0.3.8 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:3ebe3c479ad625c4553aca177444d89b486b1d84982eeacded644afc0cf797ca     --hash=sha256:c36ca9ffb54365bdd2f8eb3eff7d2a21237f8452b57ace88b1ac615b7e815bd7",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -7362,6 +7681,35 @@
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_entrypoints",
               "requirement": "entrypoints==0.4 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:b706eddaa9218a19ebcd67b56818f05bb27589b1ca9e8d797b74affad4ccacd4     --hash=sha256:f174b5ff827504fd3cd97cc3f8649f3693f51538c7e4bdf3ef002c8429d42f9f",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_mccabe": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_mccabe",
+              "requirement": "mccabe==0.7.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:348e0240c33b60bbdf4e523192ef919f28cb2c3d7d5c7794f74009290f236325     --hash=sha256:6c2d30ab6be0e4a46919781807b4f0d834ebdd6c6e3dca0bda5a15f863427b6e",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -7994,6 +8342,64 @@
               "group_deps": []
             }
           },
+          "pip_310_parsy": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_parsy",
+              "requirement": "parsy==2.1 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:8f18e7b11985e7802e7e3ecbd8291c6ca243d29820b1186e4c84605db4efffa0     --hash=sha256:fd5dd18d7b0b61f8275ee88665f430a20c02cf5a82d88557f35330530186d7ac",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_simplejson": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_simplejson",
+              "requirement": "simplejson==3.19.2 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:0405984f3ec1d3f8777c4adc33eac7ab7a3e629f3b1c05fdded63acc7cf01137     --hash=sha256:0436a70d8eb42bea4fe1a1c32d371d9bb3b62c637969cb33970ad624d5a3336a     --hash=sha256:061e81ea2d62671fa9dea2c2bfbc1eec2617ae7651e366c7b4a2baf0a8c72cae     --hash=sha256:064300a4ea17d1cd9ea1706aa0590dcb3be81112aac30233823ee494f02cb78a     --hash=sha256:08889f2f597ae965284d7b52a5c3928653a9406d88c93e3161180f0abc2433ba     --hash=sha256:0a48679310e1dd5c9f03481799311a65d343748fe86850b7fb41df4e2c00c087     --hash=sha256:0b0a3eb6dd39cce23801a50c01a0976971498da49bc8a0590ce311492b82c44b     --hash=sha256:0d2d5119b1d7a1ed286b8af37357116072fc96700bce3bec5bb81b2e7057ab41     --hash=sha256:0d551dc931638e2102b8549836a1632e6e7cf620af3d093a7456aa642bff601d     --hash=sha256:1018bd0d70ce85f165185d2227c71e3b1e446186f9fa9f971b69eee223e1e3cd     --hash=sha256:11c39fbc4280d7420684494373b7c5904fa72a2b48ef543a56c2d412999c9e5d     --hash=sha256:11cc3afd8160d44582543838b7e4f9aa5e97865322844b75d51bf4e0e413bb3e     --hash=sha256:1537b3dd62d8aae644f3518c407aa8469e3fd0f179cdf86c5992792713ed717a     --hash=sha256:16ca9c90da4b1f50f089e14485db8c20cbfff2d55424062791a7392b5a9b3ff9     --hash=sha256:176a1b524a3bd3314ed47029a86d02d5a95cc0bee15bd3063a1e1ec62b947de6     --hash=sha256:18955c1da6fc39d957adfa346f75226246b6569e096ac9e40f67d102278c3bcb     --hash=sha256:1bb5b50dc6dd671eb46a605a3e2eb98deb4a9af787a08fcdddabe5d824bb9664     --hash=sha256:1c768e7584c45094dca4b334af361e43b0aaa4844c04945ac7d43379eeda9bc2     --hash=sha256:1dd4f692304854352c3e396e9b5f0a9c9e666868dd0bdc784e2ac4c93092d87b     --hash=sha256:25785d038281cd106c0d91a68b9930049b6464288cea59ba95b35ee37c2d23a5     --hash=sha256:287e39ba24e141b046812c880f4619d0ca9e617235d74abc27267194fc0c7835     --hash=sha256:2c1467d939932901a97ba4f979e8f2642415fcf02ea12f53a4e3206c9c03bc17     --hash=sha256:2c433a412e96afb9a3ce36fa96c8e61a757af53e9c9192c97392f72871e18e69     --hash=sha256:2d022b14d7758bfb98405672953fe5c202ea8a9ccf9f6713c5bd0718eba286fd     --hash=sha256:2f98d918f7f3aaf4b91f2b08c0c92b1774aea113334f7cde4fe40e777114dbe6     --hash=sha256:2fc697be37585eded0c8581c4788fcfac0e3f84ca635b73a5bf360e28c8ea1a2     --hash=sha256:3194cd0d2c959062b94094c0a9f8780ffd38417a5322450a0db0ca1a23e7fbd2     --hash=sha256:332c848f02d71a649272b3f1feccacb7e4f7e6de4a2e6dc70a32645326f3d428     --hash=sha256:346820ae96aa90c7d52653539a57766f10f33dd4be609206c001432b59ddf89f     --hash=sha256:3471e95110dcaf901db16063b2e40fb394f8a9e99b3fe9ee3acc6f6ef72183a2     --hash=sha256:3848427b65e31bea2c11f521b6fc7a3145d6e501a1038529da2391aff5970f2f     --hash=sha256:39b6d79f5cbfa3eb63a869639cfacf7c41d753c64f7801efc72692c1b2637ac7     --hash=sha256:3e74355cb47e0cd399ead3477e29e2f50e1540952c22fb3504dda0184fc9819f     --hash=sha256:3f39bb1f6e620f3e158c8b2eaf1b3e3e54408baca96a02fe891794705e788637     --hash=sha256:40847f617287a38623507d08cbcb75d51cf9d4f9551dd6321df40215128325a3     --hash=sha256:4280e460e51f86ad76dc456acdbfa9513bdf329556ffc8c49e0200878ca57816     --hash=sha256:445a96543948c011a3a47c8e0f9d61e9785df2544ea5be5ab3bc2be4bd8a2565     --hash=sha256:4969d974d9db826a2c07671273e6b27bc48e940738d768fa8f33b577f0978378     --hash=sha256:49aaf4546f6023c44d7e7136be84a03a4237f0b2b5fb2b17c3e3770a758fc1a0     --hash=sha256:49e0e3faf3070abdf71a5c80a97c1afc059b4f45a5aa62de0c2ca0444b51669b     --hash=sha256:49f9da0d6cd17b600a178439d7d2d57c5ef01f816b1e0e875e8e8b3b42db2693     --hash=sha256:4a8c3cc4f9dfc33220246760358c8265dad6e1104f25f0077bbca692d616d358     --hash=sha256:4d36081c0b1c12ea0ed62c202046dca11438bee48dd5240b7c8de8da62c620e9     --hash=sha256:4edcd0bf70087b244ba77038db23cd98a1ace2f91b4a3ecef22036314d77ac23     --hash=sha256:554313db34d63eac3b3f42986aa9efddd1a481169c12b7be1e7512edebff8eaf     --hash=sha256:5675e9d8eeef0aa06093c1ff898413ade042d73dc920a03e8cea2fb68f62445a     --hash=sha256:60848ab779195b72382841fc3fa4f71698a98d9589b0a081a9399904487b5832     --hash=sha256:66e5dc13bfb17cd6ee764fc96ccafd6e405daa846a42baab81f4c60e15650414     --hash=sha256:6779105d2fcb7fcf794a6a2a233787f6bbd4731227333a072d8513b252ed374f     --hash=sha256:6ad331349b0b9ca6da86064a3599c425c7a21cd41616e175ddba0866da32df48     --hash=sha256:6f0a0b41dd05eefab547576bed0cf066595f3b20b083956b1405a6f17d1be6ad     --hash=sha256:73a8a4653f2e809049999d63530180d7b5a344b23a793502413ad1ecea9a0290     --hash=sha256:778331444917108fa8441f59af45886270d33ce8a23bfc4f9b192c0b2ecef1b3     --hash=sha256:7cb98be113911cb0ad09e5523d0e2a926c09a465c9abb0784c9269efe4f95917     --hash=sha256:7d74beca677623481810c7052926365d5f07393c72cbf62d6cce29991b676402     --hash=sha256:7f2398361508c560d0bf1773af19e9fe644e218f2a814a02210ac2c97ad70db0     --hash=sha256:8434dcdd347459f9fd9c526117c01fe7ca7b016b6008dddc3c13471098f4f0dc     --hash=sha256:8a390e56a7963e3946ff2049ee1eb218380e87c8a0e7608f7f8790ba19390867     --hash=sha256:92c4a4a2b1f4846cd4364855cbac83efc48ff5a7d7c06ba014c792dd96483f6f     --hash=sha256:9300aee2a8b5992d0f4293d88deb59c218989833e3396c824b69ba330d04a589     --hash=sha256:9453419ea2ab9b21d925d0fd7e3a132a178a191881fab4169b6f96e118cc25bb     --hash=sha256:9652e59c022e62a5b58a6f9948b104e5bb96d3b06940c6482588176f40f4914b     --hash=sha256:972a7833d4a1fcf7a711c939e315721a88b988553fc770a5b6a5a64bd6ebeba3     --hash=sha256:9c1a4393242e321e344213a90a1e3bf35d2f624aa8b8f6174d43e3c6b0e8f6eb     --hash=sha256:9e038c615b3906df4c3be8db16b3e24821d26c55177638ea47b3f8f73615111c     --hash=sha256:9e4c166f743bb42c5fcc60760fb1c3623e8fda94f6619534217b083e08644b46     --hash=sha256:9eb117db8d7ed733a7317c4215c35993b815bf6aeab67523f1f11e108c040672     --hash=sha256:9eb442a2442ce417801c912df68e1f6ccfcd41577ae7274953ab3ad24ef7d82c     --hash=sha256:a3cd18e03b0ee54ea4319cdcce48357719ea487b53f92a469ba8ca8e39df285e     --hash=sha256:a8617625369d2d03766413bff9e64310feafc9fc4f0ad2b902136f1a5cd8c6b0     --hash=sha256:a970a2e6d5281d56cacf3dc82081c95c1f4da5a559e52469287457811db6a79b     --hash=sha256:aad7405c033d32c751d98d3a65801e2797ae77fac284a539f6c3a3e13005edc4     --hash=sha256:adcb3332979cbc941b8fff07181f06d2b608625edc0a4d8bc3ffc0be414ad0c4     --hash=sha256:af9c7e6669c4d0ad7362f79cb2ab6784d71147503e62b57e3d95c4a0f222c01c     --hash=sha256:b01fda3e95d07a6148702a641e5e293b6da7863f8bc9b967f62db9461330562c     --hash=sha256:b8d940fd28eb34a7084877747a60873956893e377f15a32ad445fe66c972c3b8     --hash=sha256:bccb3e88ec26ffa90f72229f983d3a5d1155e41a1171190fa723d4135523585b     --hash=sha256:bcedf4cae0d47839fee7de344f96b5694ca53c786f28b5f773d4f0b265a159eb     --hash=sha256:be893258d5b68dd3a8cba8deb35dc6411db844a9d35268a8d3793b9d9a256f80     --hash=sha256:c0521e0f07cb56415fdb3aae0bbd8701eb31a9dfef47bb57206075a0584ab2a2     --hash=sha256:c594642d6b13d225e10df5c16ee15b3398e21a35ecd6aee824f107a625690374     --hash=sha256:c87c22bd6a987aca976e3d3e23806d17f65426191db36d40da4ae16a6a494cbc     --hash=sha256:c9ac1c2678abf9270e7228133e5b77c6c3c930ad33a3c1dfbdd76ff2c33b7b50     --hash=sha256:d0e5ffc763678d48ecc8da836f2ae2dd1b6eb2d27a48671066f91694e575173c     --hash=sha256:d0f402e787e6e7ee7876c8b05e2fe6464820d9f35ba3f172e95b5f8b699f6c7f     --hash=sha256:d222a9ed082cd9f38b58923775152003765016342a12f08f8c123bf893461f28     --hash=sha256:d94245caa3c61f760c4ce4953cfa76e7739b6f2cbfc94cc46fff6c050c2390c5     --hash=sha256:de9a2792612ec6def556d1dc621fd6b2073aff015d64fba9f3e53349ad292734     --hash=sha256:e2f5a398b5e77bb01b23d92872255e1bcb3c0c719a3be40b8df146570fe7781a     --hash=sha256:e8dd53a8706b15bc0e34f00e6150fbefb35d2fd9235d095b4f83b3c5ed4fa11d     --hash=sha256:e9eb3cff1b7d71aa50c89a0536f469cb8d6dcdd585d8f14fb8500d822f3bdee4     --hash=sha256:ed628c1431100b0b65387419551e822987396bee3c088a15d68446d92f554e0c     --hash=sha256:ef7938a78447174e2616be223f496ddccdbf7854f7bf2ce716dbccd958cc7d13     --hash=sha256:f1c70249b15e4ce1a7d5340c97670a95f305ca79f376887759b43bb33288c973     --hash=sha256:f3c7363a8cb8c5238878ec96c5eb0fc5ca2cb11fc0c7d2379863d342c6ee367a     --hash=sha256:fbbcc6b0639aa09b9649f36f1bcb347b19403fe44109948392fbb5ea69e48c3e     --hash=sha256:febffa5b1eda6622d44b245b0685aff6fb555ce0ed734e2d7b1c3acd018a2cff     --hash=sha256:ff836cd4041e16003549449cc0a5e372f6b6f871eb89007ab0ee18fb2800fded",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
           "pip_310_google_crc32c": {
             "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
             "ruleClassName": "whl_library",
@@ -8058,6 +8464,35 @@
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_orbax_checkpoint",
               "requirement": "orbax-checkpoint==0.5.3 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:1572904cbbfe8513927e0d80f80b730e0ef2f680332d3c2810d8443532938b45     --hash=sha256:82acdf18acb1e294396dd583634d3b1bd005bbb81f3de650740384c465d735c3",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_gtfparse": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_gtfparse",
+              "requirement": "gtfparse==2.5.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:9fea54811cd87f597a110a49dc1b1b6a3325ffb7d1f36ecc62c32d14d3eb9493     --hash=sha256:ccc9e9e77b7bdd90dda0e41da864714cb40b6b0c64ecc1d8a131e11497357140",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -8748,6 +9183,35 @@
               "group_deps": []
             }
           },
+          "pip_310_memoized_property": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_memoized_property",
+              "requirement": "memoized-property==1.0.3 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:4be4d0209944b9b9b678dae9d7e312249fe2e6fb8bdc9bdaa1da4de324f0fcf5",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
           "pip_310_flask": {
             "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
             "ruleClassName": "whl_library",
@@ -8899,6 +9363,35 @@
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_azure_core",
               "requirement": "azure-core==1.29.6 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:13b485252ecd9384ae624894fe51cfa6220966207264c360beada239f88b738a     --hash=sha256:604a005bce6a49ba661bb7b2be84a9b169047e52fcfcd0a4e4770affab4178f7",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_serializable": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_serializable",
+              "requirement": "serializable==0.4.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:28987f54a381a994f59870a2010d083ab5e872f579cc09ca4a1fa562da32026d     --hash=sha256:ce756a8e9a2e1ccee4c1ddbb4f33a677c4132c68220abd79ed7db4b56c9b787c",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -9444,12 +9937,70 @@
               "group_deps": []
             }
           },
+          "pip_310_datacache": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_datacache",
+              "requirement": "datacache==1.4.1 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:a334747a2b849d7e4aa09aff3bc338ee10a97f02e5fe0237b6bb9254b4779635     --hash=sha256:acfdbdc550c7e0971b42ec0575cec2245ec4ace1cdfb9e931852db157e5b6c67",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
           "pip_310_jsonpointer": {
             "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
             "ruleClassName": "whl_library",
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_jsonpointer",
               "requirement": "jsonpointer==2.4 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:15d51bba20eea3165644553647711d150376234112651b4f1811022aecad7d7a     --hash=sha256:585cee82b70211fa9e6043b7bb89db6e1aa49524340dde8ad6b63206ea689d88",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_tinytimer": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_tinytimer",
+              "requirement": "tinytimer==0.0.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:6ad13c8f01ab6094e58081a5367ffc4c5831f2d6b29034d2434d8ae106308fa5",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -9566,6 +10117,35 @@
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_mpmath",
               "requirement": "mpmath==1.3.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:7a28eb2a9774d00c7bc92411c19a89209d5da7c4c9a9e227be8330a23a25b91f     --hash=sha256:a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_appdirs": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_appdirs",
+              "requirement": "appdirs==1.4.4 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41     --hash=sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -10088,6 +10668,35 @@
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_importlib_metadata",
               "requirement": "importlib-metadata==6.6.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:43dd286a2cd8995d5eaef7fee2066340423b818ed3fd70adf0bad5f1fac53fed     --hash=sha256:92501cdf9cc66ebd3e612f1b4f0c0765dfa42f0fa38ffb319b6bd84dd675d705",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_typechecks": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_typechecks",
+              "requirement": "typechecks==0.1.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:7d801a6018f60d2a10aa3debc3af65f590c96c455de67159f39b9b183107c83b",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -10981,6 +11590,35 @@
               "group_deps": []
             }
           },
+          "pip_310_pyensembl": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_pyensembl",
+              "requirement": "pyensembl==2.3.12 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:86e9c8dd962a6dde36a8d8611ca9acb0a55574a75919c80dbe7daea265cbee2b     --hash=sha256:bfa3de35a47fe85afa5f8ff39fddd86e2cca6c14c238029c1525b3d3aa8bb089",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
           "pip_310_typeguard": {
             "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
             "ruleClassName": "whl_library",
@@ -11491,6 +12129,9 @@
                 "anyio": [
                   "3.10"
                 ],
+                "appdirs": [
+                  "3.10"
+                ],
                 "appnope": [
                   "3.10"
                 ],
@@ -11506,6 +12147,9 @@
                 "arrow": [
                   "3.10"
                 ],
+                "astroid": [
+                  "3.10"
+                ],
                 "astropy": [
                   "3.10"
                 ],
@@ -11516,6 +12160,9 @@
                   "3.10"
                 ],
                 "async_timeout": [
+                  "3.10"
+                ],
+                "atpublic": [
                   "3.10"
                 ],
                 "attrs": [
@@ -11543,6 +12190,9 @@
                   "3.10"
                 ],
                 "beautifulsoup4": [
+                  "3.10"
+                ],
+                "bidict": [
                   "3.10"
                 ],
                 "binaryornot": [
@@ -11620,6 +12270,9 @@
                 "databricks_cli": [
                   "3.10"
                 ],
+                "datacache": [
+                  "3.10"
+                ],
                 "dataclasses_json": [
                   "3.10"
                 ],
@@ -11630,6 +12283,9 @@
                   "3.10"
                 ],
                 "defusedxml": [
+                  "3.10"
+                ],
+                "dill": [
                   "3.10"
                 ],
                 "diskcache": [
@@ -11648,6 +12304,12 @@
                   "3.10"
                 ],
                 "docutils": [
+                  "3.10"
+                ],
+                "duckdb": [
+                  "3.10"
+                ],
+                "duckdb_engine": [
                   "3.10"
                 ],
                 "dulwich": [
@@ -11746,6 +12408,9 @@
                 "grpcio_status": [
                   "3.10"
                 ],
+                "gtfparse": [
+                  "3.10"
+                ],
                 "gunicorn": [
                   "3.10"
                 ],
@@ -11762,6 +12427,9 @@
                   "3.10"
                 ],
                 "hypothesis": [
+                  "3.10"
+                ],
+                "ibis_framework": [
                   "3.10"
                 ],
                 "identify": [
@@ -11798,6 +12466,9 @@
                   "3.10"
                 ],
                 "isoduration": [
+                  "3.10"
+                ],
+                "isort": [
                   "3.10"
                 ],
                 "itsdangerous": [
@@ -11881,6 +12552,9 @@
                 "kiwisolver": [
                   "3.10"
                 ],
+                "lazy_object_proxy": [
+                  "3.10"
+                ],
                 "leidenalg": [
                   "3.10"
                 ],
@@ -11929,10 +12603,16 @@
                 "matplotlib_inline": [
                   "3.10"
                 ],
+                "mccabe": [
+                  "3.10"
+                ],
                 "mdit_py_plugins": [
                   "3.10"
                 ],
                 "mdurl": [
+                  "3.10"
+                ],
+                "memoized_property": [
                   "3.10"
                 ],
                 "mistune": [
@@ -11945,6 +12625,9 @@
                   "3.10"
                 ],
                 "mlflow": [
+                  "3.10"
+                ],
+                "mock": [
                   "3.10"
                 ],
                 "more_itertools": [
@@ -12052,6 +12735,9 @@
                 "parso": [
                   "3.10"
                 ],
+                "parsy": [
+                  "3.10"
+                ],
                 "pastel": [
                   "3.10"
                 ],
@@ -12082,6 +12768,9 @@
                 "poethepoet": [
                   "3.10"
                 ],
+                "polars": [
+                  "3.10"
+                ],
                 "portalocker": [
                   "3.10"
                 ],
@@ -12089,6 +12778,9 @@
                   "3.10"
                 ],
                 "pre_commit_hooks": [
+                  "3.10"
+                ],
+                "progressbar33": [
                   "3.10"
                 ],
                 "prometheus_client": [
@@ -12115,6 +12807,9 @@
                 "pyarrow": [
                   "3.10"
                 ],
+                "pyarrow_hotfix": [
+                  "3.10"
+                ],
                 "pyasn1": [
                   "3.10"
                 ],
@@ -12130,6 +12825,9 @@
                 "pydantic_core": [
                   "3.10"
                 ],
+                "pyensembl": [
+                  "3.10"
+                ],
                 "pyerfa": [
                   "3.10"
                 ],
@@ -12137,6 +12835,9 @@
                   "3.10"
                 ],
                 "pyjwt": [
+                  "3.10"
+                ],
+                "pylint": [
                   "3.10"
                 ],
                 "pynndescent": [
@@ -12262,10 +12963,16 @@
                 "send2trash": [
                   "3.10"
                 ],
+                "serializable": [
+                  "3.10"
+                ],
                 "session_info": [
                   "3.10"
                 ],
                 "setuptools": [
+                  "3.10"
+                ],
+                "simplejson": [
                   "3.10"
                 ],
                 "six": [
@@ -12331,6 +13038,12 @@
                 "sqlalchemy": [
                   "3.10"
                 ],
+                "sqlalchemy_views": [
+                  "3.10"
+                ],
+                "sqlglot": [
+                  "3.10"
+                ],
                 "sqlparse": [
                   "3.10"
                 ],
@@ -12376,10 +13089,16 @@
                 "tinycss2": [
                   "3.10"
                 ],
+                "tinytimer": [
+                  "3.10"
+                ],
                 "toml": [
                   "3.10"
                 ],
                 "tomli": [
+                  "3.10"
+                ],
+                "tomlkit": [
                   "3.10"
                 ],
                 "toolz": [
@@ -12398,6 +13117,9 @@
                   "3.10"
                 ],
                 "traitlets": [
+                  "3.10"
+                ],
+                "typechecks": [
                   "3.10"
                 ],
                 "typeguard": [
@@ -12566,6 +13288,35 @@
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_nbsphinx",
               "requirement": "nbsphinx==0.9.3 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:6e805e9627f4a358bd5720d5cbf8bf48853989c79af557afd91a5f22e163029f     --hash=sha256:ec339c8691b688f8676104a367a4b8cf3ea01fd089dc28d24dec22d563b11562",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_sqlglot": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_sqlglot",
+              "requirement": "sqlglot==20.11.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:658509272da15e90dd1c59d9ca5281d7bff2e87121f87e6f9e6541067a057c9c     --hash=sha256:79a1510ffad1f1e4c5915751f0ed978c099e7e83cd4010ecbd471c00331b6902",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -13314,6 +14065,35 @@
               "group_deps": []
             }
           },
+          "pip_310_tomlkit": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_tomlkit",
+              "requirement": "tomlkit==0.12.4 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:5cd82d48a3dd89dee1f9d64420aa20ae65cfbd00668d6f094d7578a78efbb77b     --hash=sha256:7ca1cfc12232806517a8515047ba66a19369e71edf2439d0f5824f91032b6cc3",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
           "pip_310_markupsafe": {
             "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
             "ruleClassName": "whl_library",
@@ -13488,6 +14268,35 @@
               "group_deps": []
             }
           },
+          "pip_310_polars": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_polars",
+              "requirement": "polars==0.20.17 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:097101954dc4a02401cb323379816c37641908f7e15c01682c0477ff87de3b52     --hash=sha256:22d21d57b235d6a2dc117776e50a9decaac93f01785e767ccbce49141bf889b8     --hash=sha256:7034594f05c29504410eb4f3da004668813911824217d4ddea8f95798b66f31b     --hash=sha256:931e22000806209466568c9aadd011087507a841e36543ee593e0eb6aead1198     --hash=sha256:a9dd52800b1379393ad179ffd9407b02d418bac3f26727ba59c9f20977a3726a     --hash=sha256:ad9050c4dd594e66312f4e240479c6fa2893ea970ce09eb9d47043d48330138f",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
           "pip_310_more_itertools": {
             "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
             "ruleClassName": "whl_library",
@@ -13581,6 +14390,35 @@
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_myst_parser",
               "requirement": "myst-parser==2.0.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:7c36344ae39c8e740dad7fdabf5aa6fc4897a813083c6cc9990044eb93656b14     --hash=sha256:ea929a67a6a0b1683cdbe19b8d2e724cd7643f8aa3e7bb18dd65beac3483bead",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_progressbar33": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_progressbar33",
+              "requirement": "progressbar33==2.4 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:51fe0d9b3b4023db2f983eeccdfc8c9846b84db8443b9bee002c7f58f4376eff",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -14161,6 +14999,64 @@
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_absl_py",
               "requirement": "absl-py==1.4.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:0d3fe606adfa4f7db64792dd4c7aee4ee0c38ab75dfd353b7a83ed3e957fcb47     --hash=sha256:d2c244d01048ba476e7c080bd2c6df5e141d211de80223460d5b3b8a2a58433d",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_duckdb": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_duckdb",
+              "requirement": "duckdb==0.10.1 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:097aa9b6d5c9f5d3ed8c35b16020a67731d04befc35f6b89ccb5db9d5f1489c4     --hash=sha256:0ac172788e3d8e410e009e3699016a4d7f17b4c7cde20f98856fca1fea79d247     --hash=sha256:0d14d00560832592cbac2817847b649bd1d573f125d064518afb6eec5b02e15a     --hash=sha256:0d5b6daa9bb54a635e371798994caa08f26d2f145ebcbc989e16b0a0104e84fb     --hash=sha256:11c0bf253c96079c6139e8a0880300d80f4dc9f21a8c5c239d2ebc060b227d46     --hash=sha256:13d81752763f14203a53981f32bd09731900eb6fda4048fbc532eae5e7bf30e5     --hash=sha256:1ace20383fb0ba06229e060a6bb0bcfd48a4582a02e43f05991720504508eb59     --hash=sha256:1f786b4402b9c31461ea0520d919e2166df4f9e6e21fd3c7bb0035fa985b5dfe     --hash=sha256:21858225b8a5c5dead128f62e4e88facdcbfdce098e18cbcd86a6cd8f48fb2b3     --hash=sha256:28857b0d595c229827cc3631ae9b74ff52d11614435aa715e09d8629d2e1b609     --hash=sha256:2e6e01e2499e07873b09316bf4d6808f712c57034fa24c255565c4f92386e8e3     --hash=sha256:30aa9dbbfc1f9607249fc148af9e6d6fd253fdc2f4c9924d4957d6a535558b4f     --hash=sha256:32e52c6e939a4bada220803e6bde6fc0ce870da5662a33cabdd3be14824183a6     --hash=sha256:33f99c2e9e4060464673912312b4ec91060d66638756592c9484c62824ff4e85     --hash=sha256:343795d13ec3d8cd06c250225a05fd3c348c3ed49cccdde01addd46cb50f3559     --hash=sha256:40dd55ea9c31abc69e5a8299f16c877e0b1950fd9a311c117efb4dd3c0dc8458     --hash=sha256:48d84577216010ee407913bad9dc47af4cbc65e479c91e130f7bd909a32caefe     --hash=sha256:525efad4e6caff80d0f6a51d466470839146e3880da36d4544fee7ff842e7e20     --hash=sha256:52af2a078340b2e1b57958477ebc1be07786d3ad5796777e87d4f453e0477b4c     --hash=sha256:5aad3e085c33253c689205b5ea3c5d9d54117c1249276c90d495cb85d9adce76     --hash=sha256:5c3b3a18a58eebabb426beafc2f7da01d59805d660fc909e5e143b6db04d881a     --hash=sha256:5c563b565ea68cfebe9c4078646503b3d38930218f9c3c278277d58952873771     --hash=sha256:67d2996c3372a0f7d8f41f1c49e00ecdb26f83cdd9132b76730224ad68b1f1e3     --hash=sha256:698a8d1d48b150d344d8aa6dbc30a22ea30fb14ff2b15c90004fc9fcb0b3a3e9     --hash=sha256:6c68b1ef88b8cce185381ec69f437d20059c30623375bab41ac07a1104acdb57     --hash=sha256:6d85645136fc25026978b5db81869e8a120cfb60e1645a29a0f6dd155be9e59e     --hash=sha256:6e2e10582db74b99051e718279c1be204c98a63a5b6aa4e09226b7249e414146     --hash=sha256:6e65f00294c3b8576ae651e91e732ea1cefc4aada89c307fb02f49231fd11e1f     --hash=sha256:7791a0aa2cea972a612d31d4a289c81c5d00181328ed4f7642907f68f8b1fb9f     --hash=sha256:7fb98dbbdbf8048b07223dc6e7401333bb4e83681dde4cded2d239051ea102b5     --hash=sha256:88cdc0c2501dd7a65b1df2a76d7624b93d9b6d27febd2ee80b7e5643a0b40bcb     --hash=sha256:8bf46d55685906729998eca70ee751934e0425d86863148e658277526c54282e     --hash=sha256:910be5005de7427c5231a7200027e0adb951e048c612b895340effcd3e660d5a     --hash=sha256:af8382280f24273a535e08b80e9383ad739c66e22855ce68716dfbaeaf8910b9     --hash=sha256:b025afa30fcdcede094386e7c519e6964d26de5ad95f4e04a2a0a713676d4465     --hash=sha256:b3c52b08c773e52484542300339ebf295e3c9b12d5d7d49b2567e252c16205a7     --hash=sha256:b450aa2b3e0eb1fc0f7ad276bd1e4a5a03b1a4def6c45366af17557de2cafbdf     --hash=sha256:b5a14a80ad09d65c270d16761b04ea6b074811cdfde6b5e4db1a8b0184125d1b     --hash=sha256:bce024b69bae426b0739c470803f7b44261bdc0c0700ea7c41dff5f2d70ca4f3     --hash=sha256:d6a88358d86a8ce689fdd4136514aebedf958e910361156a0bb0e53dc3c55f7d     --hash=sha256:d7c1b3538bb9c2b49f48b26f092444525b22186efa4e77ba070603ed4a348a66     --hash=sha256:dcc60833bb1a1fb2c33b052cf793fef48f681c565d982acff6ac7a86369794da     --hash=sha256:f566f615278844ea240c9a3497c0ef201331628f78e0f9f4d64f72f82210e750     --hash=sha256:f754c20d3b963574da58b0d22029681b79c63f2e32060f10b687f41b7bba54d7     --hash=sha256:f90738310a76bd1618acbc7345175582d36b6907cb0ed07841a3d800dea189d6     --hash=sha256:fa08173f68e678793dfe6aab6490ac753204ca7935beb8dbde778dbe593552d8     --hash=sha256:fdbe4173729043b2fd949be83135b035820bb2faf64648500563b16f3f6f02ee",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_mock": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_mock",
+              "requirement": "mock==5.1.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:18c694e5ae8a208cdb3d2c20a993ca1a7b0efa258c247a1e565150f477f83744     --hash=sha256:5e96aad5ccda4718e0a229ed94b2024df75cc2d55575ba5762d31f5767b8767d",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
