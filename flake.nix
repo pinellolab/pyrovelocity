@@ -213,6 +213,7 @@
                 pytest \
                 -rA \
                 -k "not workflows and not git" \
+                -m "not pyensembl" \
                 --xdoc \
                 --no-cov \
                 --disable-warnings \
