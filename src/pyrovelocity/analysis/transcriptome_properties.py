@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import numpy as np
 from beartype import beartype
 from beartype.typing import Any
@@ -28,10 +30,15 @@ __all__ = [
     "generate_gene_length_polyA_db_for_species",
 ]
 
+if TYPE_CHECKING:
+    from pyensembl import EnsemblRelease
+else:
+    EnsemblRelease = Any
+
 
 @beartype
 def extract_canonical_transcripts(
-    ensembl_data: EnsemblRelease,
+    ensembl_data: "EnsemblRelease",
     num_genes: Optional[int] = None,
 ) -> Dict[str, Dict[str, Any]]:
     """
