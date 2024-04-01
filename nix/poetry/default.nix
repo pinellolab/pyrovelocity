@@ -10,8 +10,11 @@
     hydra-joblib-launcher = ["setuptools"];
     hydra-zen = ["setuptools"];
     marshmallow-jsonschema = ["setuptools"];
+    memoized-property = ["setuptools"];
     numba = [pkgs.tbb_2021_8];
     session-info = ["setuptools"];
+    tinytimer = ["setuptools"];
+    typechecks = ["setuptools"];
     xdoctest = ["setuptools"];
   };
 in
@@ -140,6 +143,13 @@ in
         scipy = super.scipy.override {preferWheel = true;};
         tensorstore = super.tensorstore.override {preferWheel = true;};
         yarl = super.yarl.override {preferWheel = true;};
+        gtfparse = super.gtfparse.overridePythonAttrs (
+          _old: {
+            postInstall = ''
+              rm -f $out/lib/python3.10/site-packages/requirements.txt
+            '';
+          }
+        );
         optax = super.optax.overridePythonAttrs (
           _old: {
             postInstall = ''
