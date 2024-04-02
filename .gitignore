@@ -160,6 +160,9 @@ requirements-linux.txt
 # mlflow
 mlruns
 
+# ensembl
+.ensembl
+
 # output
 /data/
 /models/
