@@ -1,6 +1,7 @@
 from os import PathLike
 from typing import TYPE_CHECKING
 
+import appdirs
 import ibis
 import numpy as np
 import polars as pl
@@ -11,6 +12,7 @@ from beartype.typing import Dict
 from beartype.typing import List
 from beartype.typing import Optional
 
+from pyrovelocity.io.ensembl_batch import fetch_gene_sequences_batch
 from pyrovelocity.logging import configure_logging
 
 
@@ -90,7 +92,6 @@ def load_transcript_sequences(
     polyA_threshold_length: int = 15,
     max_length: int = 50,
     num_genes: Optional[int] = None,
-    use_canonical: bool = True,
 ) -> List[Dict[str, Any]]:
     """
     Load transcript sequences for each gene for the specified species and
@@ -109,91 +110,98 @@ def load_transcript_sequences(
             The minimum length of polyA motifs to include in the summary count.
         num_genes: Number of genes. Defaults to None, which means All.
             Primarily used for testing.
-        use_canonical: Flag to indicate exclusive usage of canonical transcripts.
 
     Returns:
         A list of dictionaries with gene information and transcript sequences.
     """
+    ensembl_data = EnsemblRelease(release=110, species="homo_sapiens")
     ensembl_data = EnsemblRelease(
         release=ensembl_release_version, species=species
     )
     ensembl_data.download()
     ensembl_data.index()
 
-    canonical_transcripts = {}
-    if use_canonical:
-        canonical_transcripts = extract_canonical_transcripts(
-            ensembl_data, num_genes
-        )
-        logger.info(
-            f"Using canonical transcripts identified for "
-            f"{len(canonical_transcripts)} genes\n\n"
-        )
+    canonical_transcripts = extract_canonical_transcripts(
+        ensembl_data, num_genes
+    )
+    logger.info(
+        f"Using canonical transcripts identified for "
+        f"{len(canonical_transcripts)} genes\n\n"
+    )
+
+    transcript_ids = [
+        item["transcript_id"] for item in canonical_transcripts.values()
+    ]
+    genomic_sequences_path = fetch_gene_sequences_batch(
+        gene_id_list=transcript_ids,
+        parquet_file_name=f"genomic_sequences_{species}",
+        query_batch_size=10,
+    )
+    genomic_sequences_table = ibis.read_parquet(genomic_sequences_path)
 
     gene_data = []
     processed_genes = 0
 
-    genes_to_process = (
-        canonical_transcripts.keys()
-        if use_canonical
-        else (gene.name for gene in ensembl_data.genes())
-    )
+    genes_to_process = canonical_transcripts.keys()
 
     for gene_name in genes_to_process:
         if num_genes is not None and processed_genes >= num_genes:
             break
 
         try:
-            if use_canonical:
-                transcript_id = canonical_transcripts[gene_name][
-                    "transcript_id"
-                ]
-                transcript = ensembl_data.transcript_by_id(transcript_id)
-                gene = ensembl_data.gene_by_id(
-                    canonical_transcripts[gene_name]["gene_id"]
-                )
-                seq = transcript.sequence if transcript else None
-                exon_length = (
-                    sum(len(exon) for exon in transcript.exons)
-                    if transcript and transcript.exons
-                    else 0
-                )
-                transcript_seqs = [seq] if seq else []
-            else:
-                gene = ensembl_data.gene_by_name(gene_name)
-                transcript_seqs = [
-                    transcript.sequence
-                    for transcript in gene.transcripts
-                    if transcript.sequence
-                ]
-                exon_length = 0
+            transcript_id = canonical_transcripts[gene_name]["transcript_id"]
+            transcript = ensembl_data.transcript_by_id(transcript_id)
+            gene = ensembl_data.gene_by_id(
+                canonical_transcripts[gene_name]["gene_id"]
+            )
 
-            gene_length = gene.end - gene.start + 1
-            polyA_counts = [
-                length
-                for seq in transcript_seqs
-                for length in list_polyN_subsequence_lengths_in_range(
-                    seq, polyA_threshold_length, max_length
-                )
-            ]
+            genomic_sequence_query_result = (
+                genomic_sequences_table.select(["seq"])
+                .filter(genomic_sequences_table["id"].isin([transcript_id]))
+                .execute()
+            )
+            genomic_sequence = genomic_sequence_query_result["seq"].iloc[0]
+
+            polyA_counts = list_polyN_subsequence_lengths_in_range(
+                genomic_sequence, polyA_threshold_length, max_length
+            )
             polyA_count_above_threshold = sum(
                 count >= polyA_threshold_length for count in polyA_counts
             )
 
-            intron_length = gene_length - exon_length
-            intron_fraction = intron_length / gene_length
+            polyA_counts_cdna = list_polyN_subsequence_lengths_in_range(
+                transcript.sequence, polyA_threshold_length, max_length
+            )
+            polyA_count_above_threshold_cdna = sum(
+                count >= polyA_threshold_length for count in polyA_counts_cdna
+            )
+            polyA_count_intronic = (
+                polyA_count_above_threshold - polyA_count_above_threshold_cdna
+            )
+
+            # gene_length = gene.end - gene.start + 1
+            # intron_length = gene_length - exon_length
+            # intron_fraction = intron_length / gene_length
+            cdna_length = len(transcript.sequence)
+            intron_length = gene.length - cdna_length
+            intron_fraction = intron_length / gene.length
 
             gene_data.append(
                 {
                     "gene_name": gene_name,
-                    "transcript_id": transcript.id if use_canonical else "All",
-                    "gene_length": gene_length,
-                    "coding_length": exon_length,
+                    "transcript_id": transcript.id,
+                    "gene_length": gene.length,
+                    "transcript_cdna_length": cdna_length,
+                    "transcript_cds_length": len(transcript.coding_sequence),
                     "intron_length": intron_length,
                     "intron_fraction": intron_fraction,
-                    f"polyA_count_above_{polyA_threshold_length}": polyA_count_above_threshold,
-                    "num_transcripts": len(transcript_seqs),
-                    "sequences": transcript_seqs,
+                    f"polyA_count_genomic_{polyA_threshold_length}": polyA_count_above_threshold,
+                    f"polyA_count_cdna_{polyA_threshold_length}": polyA_count_above_threshold_cdna,
+                    f"polyA_count_intronic_{polyA_threshold_length}": polyA_count_intronic,
+                    "number_transcripts": len(gene.transcripts),
+                    # "sequences": genomic_sequence,
+                    "genomic_sequence": genomic_sequence,
+                    "transcript_sequence": transcript.sequence,
                     "species": species,
                 }
             )
@@ -269,13 +277,9 @@ def calculate_histograms(
     hist_data = []
     hist_bins = np.append(np.arange(min_length, max_length + 1) - 0.5, np.inf)
     for gene in gene_data:
-        all_repeats = [
-            repeat_length
-            for seq in gene["sequences"]
-            for repeat_length in list_polyN_subsequence_lengths_in_range(
-                seq, min_length, max_length
-            )
-        ]
+        all_repeats = list_polyN_subsequence_lengths_in_range(
+            gene["genomic_sequence"], min_length, max_length
+        )
         hist, _ = (
             np.histogram(all_repeats, bins=hist_bins)
             if all_repeats
@@ -378,7 +382,7 @@ def save_gene_data_to_db(
         gene_data_for_db = gene_data
     else:
         gene_data_for_db = [
-            {k: v for k, v in gene.items() if k != "sequences"}
+            {k: v for k, v in gene.items() if "sequence" not in k}
             for gene in gene_data
         ]
     df_gene_data = pl.DataFrame(gene_data_for_db)
@@ -438,7 +442,7 @@ def save_parameters_to_db(
 
 @beartype
 def process_and_save_histograms_to_db(
-    sequences: List[Dict[str, Any]],
+    gene_data: List[Dict[str, Any]],
     species: str,
     db_path: PathLike | str,
     min_length: int,
@@ -449,7 +453,7 @@ def process_and_save_histograms_to_db(
     and save them into database as tables.
 
     Args:
-        sequences: Loaded sequences and their metadata.
+        gene_data: Loaded sequences and their metadata.
         species: The species name for database naming.
         db_path: Path to the database file.
         min_length: Minimum length of polyA sequences to consider.
@@ -457,7 +461,7 @@ def process_and_save_histograms_to_db(
         hist_bins: Binning information for histogram calculation.
     """
     hist_data = calculate_histograms(
-        sequences,
+        gene_data,
         min_length,
         max_length,
     )
@@ -488,7 +492,8 @@ def process_and_save_histograms_to_db(
 def generate_gene_length_polyA_db_for_species(
     species: str = "homo_sapiens",
     ensembl_release_version: int = 110,
-    db_path: PathLike | str = "gene_length_polyA_motifs.ddb",
+    db_path: PathLike | str = appdirs.user_cache_dir("pyrovelocity")
+    + "/gene_length_polyA_motifs.ddb",
     num_genes: Optional[int] = 100,
     min_length: int = 5,
     max_length: int = 50,
@@ -518,9 +523,8 @@ def generate_gene_length_polyA_db_for_species(
             each transcript.
 
     Examples:
-        >>> # xdoctest: +SKIP
-        ...
         >>> # define fixtures
+        >>> import appdirs
         >>> from pyrovelocity.analysis.transcriptome_properties import (
         ...    generate_gene_length_polyA_db_for_species
         >>> )
@@ -535,6 +539,7 @@ def generate_gene_length_polyA_db_for_species(
         >>> ensembl_release_version = 110
         >>> db_name = f"test_gene_length_polyA_motifs_ensembl_{ensembl_release_version}.ddb"
         >>> db_path = Path(tmp) / db_name
+        >>> db_path = appdirs.user_cache_dir("pyrovelocity") + f"/{db_name}"
         >>> print(db_path)
         ...
         >>> # generate transcriptome properties database for multiple species
@@ -555,19 +560,19 @@ def generate_gene_length_polyA_db_for_species(
         f"\t{db_path}\n\n"
     )
 
-    sequences = load_transcript_sequences(
+    gene_data = load_transcript_sequences(
         species=species,
         ensembl_release_version=ensembl_release_version,
         polyA_threshold_length=polyA_threshold_length,
         num_genes=num_genes,
     )
     save_gene_data_to_db(
-        gene_data=sequences,
+        gene_data=gene_data,
         species=species,
         db_path=db_path,
     )
     process_and_save_histograms_to_db(
-        sequences=sequences,
+        gene_data=gene_data,
         species=species,
         db_path=db_path,
         min_length=min_length,
