@@ -27,6 +27,7 @@ python = ">=3.10, <3.12"
 adjusttext = ">=1.1.1"
 anndata = ">=0.10.5"
 anyio = ">=4.3.0"
+appdirs = ">=1.4.4"
 astropy = ">=5.2.2"
 beartype = ">=0.16.4"
 # pinning chex>=0.1.82 may be required to avoid

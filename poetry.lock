@@ -9134,4 +9134,4 @@ workflows = ["dataclasses-json", "dulwich", "flytekit", "google-api-python-clien
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10, <3.12"
-content-hash = "94252b94ec03c762af9ddb12c8892ce0374c2028be084af09010c69b51e87117"
+content-hash = "1a869211fa4aa8a2227b51ff64bb2b86ba6a5b7e541556a56b0540f7601672c4"
