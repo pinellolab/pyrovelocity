@@ -1455,6 +1455,25 @@ files = [
 ]
 
 [[package]]
+name = "diffrax"
+version = "0.5.0"
+description = "GPU+autodiff-capable ODE/SDE/CDE solvers written in JAX."
+optional = false
+python-versions = "~=3.9"
+files = [
+    {file = "diffrax-0.5.0-py3-none-any.whl", hash = "sha256:58b526490fae982fdc9ca2a1138d5dc20300060618fe0060b017d95ce9c84036"},
+    {file = "diffrax-0.5.0.tar.gz", hash = "sha256:2e66701b545798818af34a9132887b354c93b5b47e133c9986e23a7cf600a937"},
+]
+
+[package.dependencies]
+equinox = ">=0.11.2"
+jax = ">=0.4.18"
+jaxtyping = ">=0.2.24"
+lineax = ">=0.0.4"
+optimistix = ">=0.0.6"
+typing-extensions = ">=4.5.0"
+
+[[package]]
 name = "dill"
 version = "0.3.8"
 description = "serialize all of Python"
@@ -1734,6 +1753,22 @@ files = [
     {file = "entrypoints-0.4-py3-none-any.whl", hash = "sha256:f174b5ff827504fd3cd97cc3f8649f3693f51538c7e4bdf3ef002c8429d42f9f"},
     {file = "entrypoints-0.4.tar.gz", hash = "sha256:b706eddaa9218a19ebcd67b56818f05bb27589b1ca9e8d797b74affad4ccacd4"},
 ]
+
+[[package]]
+name = "equinox"
+version = "0.11.3"
+description = "Elegant easy-to-use neural networks in JAX."
+optional = false
+python-versions = "~=3.9"
+files = [
+    {file = "equinox-0.11.3-py3-none-any.whl", hash = "sha256:04cf3faaf2b977ff1f7f89b7bf69c4e825d084c0bf59c6ccc19adba320d4b4a1"},
+    {file = "equinox-0.11.3.tar.gz", hash = "sha256:a1273cc28c60d3131ac596f8a0f5c7dd384729e6cddae86e7be05f026880e8e0"},
+]
+
+[package.dependencies]
+jax = ">=0.4.13"
+jaxtyping = ">=0.2.20"
+typing-extensions = ">=4.5.0"
 
 [[package]]
 name = "etils"
@@ -3965,6 +4000,23 @@ test = ["coverage (==6.5.0)"]
 typing = ["mypy (>=1.0.0)"]
 
 [[package]]
+name = "lineax"
+version = "0.0.4"
+description = "Linear solvers in JAX and Equinox."
+optional = false
+python-versions = "~=3.9"
+files = [
+    {file = "lineax-0.0.4-py3-none-any.whl", hash = "sha256:284ae4b6fff3f291cefa675d5cc059b9338d5ee740df0585b92d534b59213248"},
+    {file = "lineax-0.0.4.tar.gz", hash = "sha256:e68f1eba2f352122fdce9adc0556684f31eb8364b1a00acee484dd6e44a34e5e"},
+]
+
+[package.dependencies]
+equinox = ">=0.11.0"
+jax = ">=0.4.13"
+jaxtyping = ">=0.2.20"
+typing-extensions = ">=4.5.0"
+
+[[package]]
 name = "livereload"
 version = "2.6.3"
 description = "Python LiveReload is an awesome tool for web developers"
@@ -5332,6 +5384,24 @@ chex = ">=0.1.5"
 jax = ">=0.1.55"
 jaxlib = ">=0.1.37"
 numpy = ">=1.18.0"
+
+[[package]]
+name = "optimistix"
+version = "0.0.6"
+description = "Nonlinear optimisation in JAX and Equinox."
+optional = false
+python-versions = "~=3.9"
+files = [
+    {file = "optimistix-0.0.6-py3-none-any.whl", hash = "sha256:a269a5f63a54abd9eb630d093bd87cd15539a5520e97d828bb6651b2b9d88085"},
+    {file = "optimistix-0.0.6.tar.gz", hash = "sha256:a9dab1052a9579769d7967f420018adf13aa9650d11198a018209dd0ac0b441a"},
+]
+
+[package.dependencies]
+equinox = ">=0.11.1"
+jax = ">=0.4.18"
+jaxtyping = ">=0.2.23"
+lineax = ">=0.0.4"
+typing-extensions = ">=4.5.0"
 
 [[package]]
 name = "orbax-checkpoint"
@@ -9134,4 +9204,4 @@ workflows = ["dataclasses-json", "dulwich", "flytekit", "google-api-python-clien
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10, <3.12"
-content-hash = "564c6ee00241160522669b627d1552275a1ce5c196d3cadc35a3c119ade0930d"
+content-hash = "f2a60409f8ce6e6cf87695ef6fb2e55394effae649bfc920564f885476e51be9"
