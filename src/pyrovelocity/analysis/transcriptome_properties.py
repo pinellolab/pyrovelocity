@@ -37,6 +37,8 @@ __all__ = [
 if TYPE_CHECKING:
     from pyensembl import EnsemblRelease
 
+DEFAULT_USER_CACHE_DIR = appdirs.user_cache_dir("pyrovelocity")
+
 
 @beartype
 def extract_canonical_transcripts(
@@ -44,10 +46,12 @@ def extract_canonical_transcripts(
     num_genes: Optional[int] = None,
 ) -> Dict[str, Dict[str, Any]]:
     """
-    Simulate SQL query to filter for high-quality transcripts and select one per gene.
+    Simulate SQL query to filter for high-quality transcripts and select one per
+    gene.
 
     Args:
-        ensembl_data: An instance of EnsemblRelease containing gene and transcript data.
+        ensembl_data:
+            An instance of EnsemblRelease containing gene and transcript data.
         num_genes: Number of genes to process, for testing purposes.
 
     Returns:
@@ -95,6 +99,7 @@ def load_transcript_sequences(
     max_length: int = 50,
     num_genes: Optional[int] = None,
     query_batch_size: int = 50,
+    genomic_sequences_table_file_name_prefix: str = "genomic_sequences",
 ) -> List[Dict[str, Any]]:
     """
     Load transcript sequences for each gene for the specified species and
@@ -137,7 +142,7 @@ def load_transcript_sequences(
     ]
     genomic_sequences_path = fetch_gene_sequences_batch(
         gene_id_list=transcript_ids,
-        parquet_file_name=f"genomic_sequences_{species}",
+        parquet_file_name=f"{genomic_sequences_table_file_name_prefix}_{species}",
         query_batch_size=query_batch_size,
     )
     genomic_sequences_table = ibis.read_parquet(genomic_sequences_path)
@@ -153,7 +158,8 @@ def load_transcript_sequences(
     missing_transcript_ids = set(transcript_ids) - set(transcript_ids_filtered)
     if missing_transcript_ids:
         logger.warning(
-            "The following transcript_ids were not found in the genomic sequences and will be excluded: "
+            "The following transcript_ids were not found "
+            "in the genomic sequences and will be excluded: "
             f"{', '.join(missing_transcript_ids)}"
         )
 
@@ -214,9 +220,15 @@ def load_transcript_sequences(
                     "intron_length": intron_length,
                     "intron_fraction": intron_fraction,
                     "polyA_counts_genomic_list": polyA_counts,
-                    f"polyA_count_genomic_{polyA_threshold_length}": polyA_count_above_threshold,
-                    f"polyA_count_cdna_{polyA_threshold_length}": polyA_count_above_threshold_cdna,
-                    f"polyA_count_intronic_{polyA_threshold_length}": polyA_count_intronic,
+                    f"polyA_count_genomic_{polyA_threshold_length}": (
+                        polyA_count_above_threshold
+                    ),
+                    f"polyA_count_cdna_{polyA_threshold_length}": (
+                        polyA_count_above_threshold_cdna
+                    ),
+                    f"polyA_count_intronic_{polyA_threshold_length}": (
+                        polyA_count_intronic
+                    ),
                     "number_transcripts": len(gene.transcripts),
                     "genomic_sequence": genomic_sequence,
                     "transcript_sequence": transcript.sequence,
@@ -255,7 +267,9 @@ def list_polyN_subsequence_lengths_in_range(
     Examples:
         >>> list_polyN_subsequence_lengths_in_range("AAAATTTTCCCCGGG", 2, 4)
         [4]
-        >>> list_polyN_subsequence_lengths_in_range("AAAATTTTACCCCAAAGGGAA", 2, 4)
+        >>> list_polyN_subsequence_lengths_in_range(
+        ...     "AAAATTTTACCCCAAAGGGAA", 2, 4
+        >>> )
         [4, 3, 2]
     """
     lengths = []
@@ -285,7 +299,8 @@ def calculate_histograms(
     Calculate histograms for each gene based on its transcript sequences.
 
     Args:
-        gene_data: A list containing gene information including transcript sequences.
+        gene_data:
+            A list containing gene information including transcript sequences.
         min_length: The minimum length of polyA sequences to consider.
         max_length: The maximum length of polyA sequences to consider.
 
@@ -321,16 +336,19 @@ def generate_cumulative_histograms(
     max_length: int,
 ) -> List[Dict[str, Any]]:
     """
-    Generate cumulative histograms where each bin represents the total number of sequences
-    of that length or greater, using a direct approach with reversed cumulative sums.
+    Generate cumulative histograms where each bin represents the total number of
+    sequences of that length or greater, using a direct approach with reversed
+    cumulative sums.
 
     Args:
-        hist_data: Histogram data for each gene, with bins keyed by 'bin_{length}'.
+        hist_data:
+            Histogram data for each gene, with bins keyed by 'bin_{length}'.
         min_length: The minimum length of sequences considered.
         max_length: The maximum length of sequences considered.
 
     Returns:
-        A list of dictionaries, each representing the cumulative histogram data for a gene.
+        A list of dictionaries, each representing the cumulative histogram data
+        for a gene.
     """
     cum_hist_data = []
     for gene_hist in hist_data:
@@ -380,7 +398,7 @@ def save_gene_data_to_db(
     species: str,
     db_path: PathLike | str,
     save_sequences: bool = False,
-    table_path: Optional[PathLike | str] = None,
+    table_path_file_prefix: Optional[PathLike | str] = None,
 ) -> None:
     """
     Save gene information including gene length and count of long polyA
@@ -411,11 +429,16 @@ def save_gene_data_to_db(
     table_gene_data: pa.Table = df_gene_data.to_arrow()
 
     con = ibis.duckdb.connect(db_path)
+    logger.info(f"Saving gene data for {species} to database:\n{db_path}\n\n")
     con.create_table(
         f"{species}_gene_data", obj=table_gene_data, overwrite=True
     )
 
-    if table_path is not None:
+    if table_path_file_prefix is not None:
+        table_path = f"{table_path_file_prefix}_{species}_gene_data.parquet"
+        logger.info(
+            f"Saving gene data table for {species} to:\n{table_path}\n\n"
+        )
         pq.write_table(
             table=table_gene_data,
             where=table_path,
@@ -519,8 +542,11 @@ def process_and_save_histograms_to_db(
 def generate_gene_length_polyA_db_for_species(
     species: str = "homo_sapiens",
     ensembl_release_version: int = 110,
-    db_path: PathLike | str = appdirs.user_cache_dir("pyrovelocity")
+    db_path: PathLike | str = DEFAULT_USER_CACHE_DIR
     + "/gene_length_polyA_motifs.ddb",
+    table_path_file_prefix: PathLike | str = DEFAULT_USER_CACHE_DIR
+    + f"/gene_length_polyA_motifs",
+    genomic_sequences_table_file_name_prefix: str = "genomic_sequences",
     num_genes: Optional[int] = 100,
     min_length: int = 5,
     max_length: int = 50,
@@ -566,10 +592,29 @@ def generate_gene_length_polyA_db_for_species(
         >>>     tmpdir = tempfile.TemporaryDirectory()
         >>>     tmp = tmpdir.name
         >>> ensembl_release_version = 110
-        >>> db_name = f"test_gene_length_polyA_motifs_ensembl_{ensembl_release_version}.ddb"
-        >>> db_path = Path(tmp) / db_name
+        ...
+        >>> db_name = (
+        ...     "test_gene_length_polyA_motifs_ensembl_"
+        ...     f"{ensembl_release_version}.ddb"
+        >>> )
+        >>> # Overwriting db_path is intentional.
+        >>> # The first is a usage example and the second for testing.
         >>> db_path = appdirs.user_cache_dir("pyrovelocity") + f"/{db_name}"
-        >>> print(db_path)
+        >>> db_path = Path(tmp) / db_name
+        >>> print(f"Database path: {db_path}")
+        ...
+        >>> table_path_file_prefix_name = (
+        ...     "test_gene_length_polyA_motifs_ensembl_"
+        ...     f"{ensembl_release_version}"
+        >>> )
+        >>> # Overwriting table_path_file_prefix is intentional.
+        >>> # The first is a usage example and the second for testing.
+        >>> table_path_file_prefix = (
+        ...     appdirs.user_cache_dir("pyrovelocity") +
+        ...     f"/{table_path_file_prefix_name}"
+        >>> )
+        >>> table_path_file_prefix = Path(tmp) / table_path_file_prefix_name
+        >>> print(f"Table path prefix: {table_path_file_prefix}")
         ...
         >>> # generate transcriptome properties database for multiple species
         >>> species_list = ["homo_sapiens", "mus_musculus"]
@@ -578,6 +623,10 @@ def generate_gene_length_polyA_db_for_species(
         ...         species=species,
         ...         ensembl_release_version=ensembl_release_version,
         ...         db_path=db_path,
+        ...         table_path_file_prefix=table_path_file_prefix,
+        ...         genomic_sequences_table_file_name_prefix=(
+        ...             "test_genomic_sequences"
+        ...         ),
         ...         num_genes=50,
         ...         query_batch_size=10,
         >>>     )
@@ -609,13 +658,15 @@ def generate_gene_length_polyA_db_for_species(
         polyA_threshold_length=polyA_threshold_length,
         num_genes=num_genes,
         query_batch_size=query_batch_size,
+        genomic_sequences_table_file_name_prefix=(
+            genomic_sequences_table_file_name_prefix
+        ),
     )
     save_gene_data_to_db(
         gene_data=gene_data,
         species=species,
         db_path=db_path,
-        table_path=appdirs.user_cache_dir("pyrovelocity")
-        + f"/gene_length_polyA_motifs_{species}_gene_data.parquet",
+        table_path_file_prefix=table_path_file_prefix,
     )
     process_and_save_histograms_to_db(
         gene_data=gene_data,
