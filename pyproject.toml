@@ -28,6 +28,7 @@ adjusttext = ">=1.1.1"
 anndata = ">=0.10.5"
 anyio = ">=4.3.0"
 appdirs = ">=1.4.4"
+arviz = ">=0.17.1"
 astropy = ">=5.2.2"
 beartype = ">=0.16.4"
 # pinning chex>=0.1.82 may be required to avoid
@@ -40,6 +41,7 @@ colorlog = ">=6.7.0"
 diffrax = ">=0.5.0"
 diskcache = ">=5.6.1"
 duckdb = ">=0.10.1"
+einops = ">=0.7.0"
 flax = ">=0.8.1"
 frozenlist = { version = ">=1.1.1", python = "<3.12" }
 # frozenlist = [
@@ -59,6 +61,7 @@ llvmlite = { version = ">=0.41.1", python = "<3.12" }
 #   { version = ">=0.42.0", python = ">=3.12" },
 # ]
 mlflow = ">=2.10.0"
+numpyro = ">=0.14.0"
 pandas = ">=2.0.0"
 plumbum = ">=1.8.2"
 polars = ">=0.20.17"
