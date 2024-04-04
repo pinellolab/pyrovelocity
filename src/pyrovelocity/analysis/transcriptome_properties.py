@@ -6,6 +6,7 @@ import ibis
 import numpy as np
 import polars as pl
 import pyarrow as pa
+import pyarrow.parquet as pq
 from beartype import beartype
 from beartype.typing import Any
 from beartype.typing import Dict
@@ -379,6 +380,7 @@ def save_gene_data_to_db(
     species: str,
     db_path: PathLike | str,
     save_sequences: bool = False,
+    table_path: Optional[PathLike | str] = None,
 ) -> None:
     """
     Save gene information including gene length and count of long polyA
@@ -406,12 +408,18 @@ def save_gene_data_to_db(
         ]
     df_gene_data = pl.DataFrame(gene_data_for_db)
 
-    table_gene_data = df_gene_data.to_arrow()
+    table_gene_data: pa.Table = df_gene_data.to_arrow()
 
     con = ibis.duckdb.connect(db_path)
     con.create_table(
         f"{species}_gene_data", obj=table_gene_data, overwrite=True
     )
+
+    if table_path is not None:
+        pq.write_table(
+            table=table_gene_data,
+            where=table_path,
+        )
 
 
 @beartype
@@ -606,6 +614,8 @@ def generate_gene_length_polyA_db_for_species(
         gene_data=gene_data,
         species=species,
         db_path=db_path,
+        table_path=appdirs.user_cache_dir("pyrovelocity")
+        + f"/gene_length_polyA_motifs_{species}_gene_data.parquet",
     )
     process_and_save_histograms_to_db(
         gene_data=gene_data,
