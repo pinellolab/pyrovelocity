@@ -1,11 +1,9 @@
 import os
-import shutil
 from typing import List
 
 import appdirs
 from beartype import beartype
 from plumbum import local
-from plumbum.cmd import aria2c
 
 from pyrovelocity.logging import configure_logging
 
@@ -15,7 +13,8 @@ logger = configure_logging(__name__)
 
 def is_aria2c_installed() -> bool:
     """Check if aria2c is installed."""
-    return shutil.which("aria2c") is not None
+    aria2c = local.get("aria2c", None)
+    return aria2c is not None
 
 
 @beartype
@@ -23,6 +22,7 @@ def download_with_aria2c(urls: List[str], cache_dir: str):
     """
     Use aria2c to download files in parallel.
     """
+    aria2c = local["aria2c"]
     aria2c_cmd = aria2c[
         "-x",
         "16",
