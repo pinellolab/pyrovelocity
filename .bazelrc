@@ -9,6 +9,7 @@ import %workspace%/.aspect/bazelrc/bazel7.bazelrc
 
 build --verbose_failures
 build --experimental_ui_max_stdouterr_bytes=-1
+build --noexperimental_python_import_all_repositories
 build --config=cache
 build:cache --remote_cache=https://storage.googleapis.com/pyrovelocity/build
 build:cache --remote_upload_local_results=true
