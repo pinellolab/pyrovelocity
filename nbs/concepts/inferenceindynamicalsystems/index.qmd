@@ -1,0 +1,115 @@
+---
+title: Probabilistic inference in dynamical systems
+toc: true
+number-sections: true
+highlight-style: pygments
+csl: ../../bibstyle.csl
+lightbox: auto
+format:
+#   nature-pdf:
+#     natbibstyle: sn-nature
+#     # classoption:
+#     #   - lineno
+#     cite-method: citeproc
+#     keep-tex: true
+  html:
+    html-math-method: mathjax
+    include-in-header: ../../mathjax.html
+#     mainfont: Latin Modern Sans
+#     code-fold: false
+#     embed-resources: true
+#   docx: default
+  ipynb: default
+format-links: [ipynb]
+execute: 
+  freeze: true
+  eval: true
+  warning: false
+  error: false
+  cache: true
+  # keep-ipynb: true
+  # keep-md: true
+author:
+  - name: Pyrovelocity Team
+    email: team@pyrovelocity.net
+abstract: |
+  This notebook provides a discussion and demonstration of one way to proceed in
+  performing probabilistic inference in dynamical systems. In particular we prepare 
+  and simulate a deterministic dynamical system and then perform probabilistic 
+  inference on the latent variables of the system. This illustrates how to combine
+  these two approaches, which is essential for understanding Pyro-Velocity.
+keywords: [single-cell transcriptomics, probabilistic modeling, dynamical systems, RNA velocity]
+bibliography: ../../references.bib
+jupyter:
+  jupytext:
+    cell_metadata_filter: all
+    cell_metadata_json: true
+    notebook_metadata_filter: all
+    text_representation:
+      extension: .qmd
+      format_name: quarto
+      format_version: 1.0
+      jupytext_version: 1.16.0
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+  language_info:
+    name: python
+  rise:
+    scroll: true
+    theme: black
+  toc-autonumbering: true
+  toc-showcode: false
+  toc-showmarkdowntxt: false
+---
+
+## Model
+
+### Description
+
+Here we describe the model we will use to demonstrate probabilistic 
+inference in dynamical systems. We begin with a candidate 
+[effective theory](https://en.wikipedia.org/wiki/Effective_theory) 
+[@Wells2012-qf;@Alon2019-ah] of gene transcription and splicing following 
+[@Zeisel2011-nz;@La_Manno2018-lj;@Bergen2020-pj] for the model and 
+[@Cantwell2002-dv] for the presentation of the analysis. In particular we show in 
+@tbl-transcription-splicing-degradation the variables and parameters of the model
+together with their units and rough order of magnitude estimates for their values 
+[@Phillips2012-mi].
+
+| Symbol   | Description                 | Units                         | $O(-)$ Estimate | Discussion                                                                          |
+|----------|-----------------------------|-------------------------------|-----------------|-------------------------------------------------------------------------------------|
+| $u$      | Concentration of pre-mRNA   | molecules/cell                | $10^0 - 10^4$   | Wide range reflecting low to high gene expression levels.                           |
+| $s$      | Concentration of mRNA       | molecules/cell                | $10^0 - 10^5$   | Similar to $u$; depends on gene expression and stability of mRNA.                   |
+| $t$      | Time                        | seconds ($s$) to hours ($hr$) | $10s$ - $24hr$  | Depends on the duration of the experimental observation.                            |
+| $\alpha$ | Production rate of pre-mRNA | molecules/(cell·hr)           | $1 - 10^3$      | Based on variable gene transcription rates.                                         |
+| $\beta$  | Splicing rate of pre-mRNA   | $hr^{-1}$                     | $0.1 - 1$       | Pre-mRNA to mRNA splicing rates, assuming rapid processing within the nucleus.      |
+| $\gamma$ | Degradation rate of mRNA    | $hr^{-1}$                     | $0.1 - 1$       | mRNA half-lives can vary widely, but many are in the range of a few hours to a day. |
+
+: Variables and parameters of the transcription-splicing-degradation model of [@Zeisel2011-nz]. {#tbl-transcription-splicing-degradation}
+
+Given the state variables representing concentrations of pre-mRNA, $u$, 
+and mRNA, $s$, we have the following ordinary differential equations 
+
+\begin{align}
+\frac{du}{dt} & = \alpha - \beta u  \label{eq-dudt} \\
+\frac{ds}{dt} & = \beta u - \gamma s  \label{eq-dsdt}
+\end{align}
+
+\eqref{eq-dudt} and \eqref{eq-dsdt} are usually presented with 
+the concept that the parameter $\alpha$ could better account for the external 
+inputs to the regulation of transcription of the gene if it were allowed to be 
+a function of time, $\alpha(t)$. We will return to this point later, but 
+for now we will assume that $\alpha$ and other parameters are constant.
+
+### Dimensional analysis
+
+It is common to perform a dimensional analysis of the model to ensure the
+units of the variables and parameters are consistent and reduce the total number
+of parameters by the number of dimensions. Intuitively, this folds or maps parameters
+to equivalence classes of similar dynamics.  For reference, the procedure
+we outline is also commonly referred to as Buckingham's $\Pi$ theorem.
+
+@tbl-transcription-splicing-degradation together with (\ref{eq-dudt}-\ref{eq-dsdt})
+contain essentially all the information we require to get started.
