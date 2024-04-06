@@ -125,7 +125,11 @@ contain essentially all the information we require to get started. The dimension
 
 : Variables and parameters of the transcription-splicing-degradation model together with their fundamental units and their relations to dimensionless parameters. {#tbl-parameter-dimensions}
 
-Note that molecules are dimensionless numbers while cells have units associated to their volume (i.e. the cube of a distance or length $L^3$). Usually we would just write volume but we retain cell to associate to the object that determines the relevant volume in this case. The dimensionless parameters are defined in @tbl-dimensionless-parameters.
+Note that molecules are dimensionless numbers while cells have units associated 
+to their volume (i.e. the cube of a distance or length $L^3$). Usually we would 
+just write volume but we retain cell to associate to the object that determines 
+the relevant volume in this case. The dimensionless parameters are defined in 
+@tbl-dimensionless-parameters.
 
 | Dimensionless Variables and Parameters | Definition                     | Intuitive Description                                      |
 |-------------------------|--------------------------------|------------------------------------------------------------|
@@ -135,7 +139,11 @@ Note that molecules are dimensionless numbers while cells have units associated 
 
 : Dimensionless Parameters, definitions, and intuitive Descriptions {#tbl-dimensionless-parameters}
 
-Combining variables and parameters we have six and we have two fundamental dimensions (time and length) we can eliminate to arrive at four essential variables and parameters. To derive these, we begin declaring the equations in python using [sympy](https://www.sympy.org/) and substitute the dimensionless variables and parameters to obtain the dimensionless equations.
+Combining variables and parameters we have six and we have two fundamental 
+dimensions (time and length) we can eliminate to arrive at four essential 
+variables and parameters. To derive these, we begin declaring the equations 
+in python using [sympy](https://www.sympy.org/) and substitute the 
+dimensionless variables and parameters to obtain the dimensionless equations.
 
 ```{python}
 # | label: transcription-splicing-degradation-equations
@@ -222,4 +230,157 @@ We see that we correctly arrive at the equivalent dimensionless system of equati
 \frac{ds^{\ast}}{dt^{\ast}} & = u^{\ast} - \gamma^{\ast} s^{\ast}  \label{eq-dsstardtstar}
 \end{align}
 
-in \eqref{eq-dustardtstar} and \eqref{eq-dsstardtstar}, which contains the $6 - 2 = 4$ variables and parameters: $u^{\ast}, s^{\ast}, t^{\ast}, \gamma^{\ast}$. It is trivial to solve this system analytically, but in more general cases this will not be possible. We can now proceed to simulate the system to characterize the possible solution sets and then perform probabilistic inference on the latent variables.
+in \eqref{eq-dustardtstar} and \eqref{eq-dsstardtstar}, which contains the 
+$6 - 2 = 4$ variables and parameters: $u^{\ast}, s^{\ast}, t^{\ast}, \gamma^{\ast}$. 
+
+We'll solve the dimensionless system analytically, focusing on what can be 
+understood about the system's dynamics.
+Given generic initial conditions $u^{\ast}(0) = u^{\ast}_0$ and $s^{\ast}(0) = s^{\ast}_0$, the 
+first equation
+
+$$
+\frac{du^{\ast}}{dt^{\ast}} = 1 - u^{\ast},
+$$
+
+can be solved using separation of variables
+
+$$
+u^{\ast}(t^{\ast}) = C_1 e^{-t^{\ast}} + 1.
+$$
+
+$C_1$ is the constant determined by initial conditions, which can be shown to be $C_1 = u^{\ast}_0 - 1$, giving us
+
+$$
+u^{\ast}(t^{\ast}) = (u^{\ast}_0 - 1) e^{-t^{\ast}} + 1.
+$$
+
+This equation describes how the concentration of pre-mRNA, in units of the 
+characteristic concentration scale given by $\alpha/\beta$, evolves over the 
+timescale characterized by the splicing rate. The term $e^{-t^{\ast}}$ 
+indicates that any deviation of $u^{\ast}$ from its steady state $1$ decays 
+exponentially over time.
+
+Now, we substitute the expression for $u^{\ast}(t^{\ast})$ into the 
+differential equation for mRNA concentration
+
+$$
+\frac{ds^{\ast}}{dt^{\ast}} = u^{\ast} - \gamma^{\ast} s^{\ast}
+$$
+
+which gives
+
+$$
+\frac{ds^{\ast}}{dt^{\ast}} = [(u^{\ast}_0 - 1) e^{-t^{\ast}} + 1] - \gamma^{\ast} s^{\ast}
+$$
+
+This equation is a non-homogeneous first-order linear ODE for $s^{\ast}$. 
+To solve it, we can use an integrating factor $e^{\gamma^{\ast} t^{\ast}}$, 
+which gives
+
+$$
+e^{\gamma^{\ast} t^{\ast}} \frac{ds^{\ast}}{dt^{\ast}} + \gamma^{\ast} e^{\gamma^{\ast} t^{\ast}} s^{\ast} = (u^{\ast}_0 - 1) e^{(\gamma^{\ast}-1) t^{\ast}} + e^{\gamma^{\ast} t^{\ast}}
+$$
+
+Integrating both sides with respect to $t^{\ast}$ yields $s^{\ast}(t^{\ast})$
+
+$$
+s^{\ast}(t^{\ast}) = C_2 e^{-\gamma^{\ast} t^{\ast}} + \frac{u^{\ast}_0 - 1}{\gamma^{\ast} - 1} e^{-t^{\ast}} + \frac{1}{\gamma^{\ast}}
+$$
+
+where $C_2$ is another integration constant determined by initial conditions.
+Incorporating the initial condition  $s^{\ast}(0) = s^{\ast}_0$ into the solution for $s^{\ast}(t^{\ast})$ to determine $C_2$
+
+$$
+C_2 = s^{\ast}_0 - \frac{u^{\ast}_0 - 1}{\gamma^{\ast} - 1} - \frac{1}{\gamma^{\ast}}.
+$$
+
+With $C_2$ determined, we define
+
+$$
+\xi = \frac{u^{\ast}_0 - 1}{\gamma^{\ast} - 1},
+$$
+
+so that the complete solutions for the dimensionless system are given by
+
+\begin{align}
+u^{\ast}(t^{\ast}) & = \underbrace{1}_{\text{Steady State}} + \underbrace{(u^{\ast}_0 - 1) e^{-t^{\ast}}}_{\text{Transient Component}},  \label{eq-ustar-dimless} \\
+s^{\ast}(t^{\ast}) & = \underbrace{\frac{1}{\gamma^{\ast}}}_{\text{Steady State}} + \underbrace{\left( s^{\ast}_0 - \xi - \frac{1}{\gamma^{\ast}} \right) e^{-\gamma^{\ast} t^{\ast}} + \xi e^{-t^{\ast}}}_{\text{Transient Components}}.  \label{eq-sstar-dimless}
+\end{align}
+
+The **pre-mRNA dynamics** $u^{\ast}(t^{\ast})$ \eqref{eq-ustar-dimless} quickly 
+settles to its steady state value of 1, regardless of the initial concentration, 
+reflecting the balance between transcription and splicing rates. Note again that this
+does not refer to an arbitrary value of $1$ but rather represents the equivalence
+class of ratios $\alpha/\beta$.
+
+The **mRNA dynamics** $s^{\ast}(t^{\ast})$ \eqref{eq-sstar-dimless} reveals a 
+slightly more complicated balance of forces. The first transient term shows an exponential 
+decay influenced by $\gamma^{\ast}$, the degradation rate relative to the splicing rate. 
+The second transient term reflects how the 
+initial deviation in pre-mRNA concentration from its steady state affects mRNA 
+levels over time. The steady state of $s^{\ast}$ simply reflects the balance
+of the splicing rate, which is the only source of mRNA production in this model,
+and the degradation rate also given, just as in the case of the pre-mRNA, in units of 
+the transcription rate relative to the splicing rate. 
+
+The analytical solutions to the dimensionless system reveal how the pre-mRNA 
+and mRNA concentrations evolve over time towards their steady states. The 
+exponential terms highlight the system's inherent timescales: $u^{\ast}$ relaxes 
+to its steady state independently, while $s^{\ast}$’s dynamics are coupled to 
+both $u^{\ast}$ and its own degradation rate. While this system is extremely
+simplified relative to well-known biology, as a stylized model it still
+indicates the interplay among transcription, splicing, and degradation rates.
+
+While it is trivial to solve this system analytically, in more general cases this
+ will not be possible. 
+So we will proceed to simulate the system to characterize the possible solution 
+sets and then perform probabilistic inference on the latent variables.
+
+## Data
+
+If we are just given samples of pre-mRNA and mRNA counts without additional
+information about their sampling times, we can describe the data set 
+$\mathcal{D}$ consisting of pre-mRNA and mRNA counts for a number 
+of genes $G$ across a number of cells $N$
+
+$$
+\mathcal{D} = \left\{ (u_{ij}, s_{ij}) \mid i \in \{1, \ldots, G\}, j \in \{1, \ldots, N\} \right\}
+$$
+
+where
+
+- $u_{ij}$ represents the count of pre-mRNA for gene $i$ in cell $j$,
+- $s_{ij}$ represents the count of mRNA for the same gene $i$ in the same cell $j$,
+- $G$ is the total number of genes in the study,
+- $N$ is the total number of cells sampled.
+
+Roughly speaking, the inference problem involves
+
+1. **Normalization**: Transforming the observed counts $u_{ij}$ and $s_{ij}$ to 
+   their dimensionless counterparts $u^{\ast}_{ij}$ and $s^{\ast}_{ij}$ using 
+   any reasonable concentration scale $U_0$.
+2. **Model Fitting**: Applying statistical methods to estimate the latent variables 
+   $\Theta = \left( \gamma^{\ast}, u^{\ast}_0, s^{\ast}_0, t^{\ast} \right)$ that best 
+   fit the observed data.
+3. **Evaluation**: Assessing the fit of the model and the estimated parameters'
+   biological plausibility and consistency across different genes and cells.
+
+This representation of the dataset and the associated objective of 
+statistical learning provides a solid foundation for applying probabilistic
+modeling techniques to calibrate an inference procedure andevaluate the 
+plausibility of this model in such a manner that we can eventually compare 
+multiple candidate models to one another.
+
+## Simulation
+
+We will primarily focus on simulating the system, since this will generalize
+to more complicated models. However, we will confirm our simulations for this
+first and simplest model recapitulate its analytical solution derived above.
+
+
+
+
+## Inference
+
+Now that we have illustrated how to simulate the system, we can proceed to
+define a probabilistic model and perform inference on its latent variables.
