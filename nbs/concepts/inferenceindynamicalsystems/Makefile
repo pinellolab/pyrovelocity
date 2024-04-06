@@ -34,6 +34,8 @@ help-targets: ## Print commands for all targets matching a given pattern. eval "
 ##@ render article
 #-----------------
 
+DOCUMENT_PATH ?= concepts/inferenceindynamicalsystems
+DOCUMENT_TITLE ?= inferenceindynamicalsystems
 DOCUMENT_NAME ?= index
 
 render-latex: ## Render the article via LaTeX
@@ -49,9 +51,10 @@ update-freeze: ## Update the hash for the _freeze directory
 
 sync-nb: ## Sync the notebook to google drive
 	@echo "Syncing $(DOCUMENT_NAME).ipynb to pyrovelocitydrive:pyrovelocity/notebooks"
-	cp ../../_site/templates/$(DOCUMENT_NAME)/$(DOCUMENT_NAME).ipynb pyrovelocity_$(DOCUMENT_NAME).ipynb
-	rclone copy pyrovelocity_$(DOCUMENT_NAME).ipynb pyrovelocitydrive:pyrovelocity/notebooks
-	@$(eval DRIVE_LINK=$(shell rclone link pyrovelocitydrive:pyrovelocity/notebooks/pyrovelocity_$(DOCUMENT_NAME).ipynb))
+	cp ../../_site/$(DOCUMENT_PATH)/$(DOCUMENT_NAME).ipynb pyrovelocity_$(DOCUMENT_TITLE).ipynb
+	rclone copy pyrovelocity_$(DOCUMENT_TITLE).ipynb pyrovelocitydrive:pyrovelocity/notebooks
+	@sleep 3
+	@$(eval DRIVE_LINK=$(shell rclone link pyrovelocitydrive:pyrovelocity/notebooks/pyrovelocity_$(DOCUMENT_TITLE).ipynb))
 	@echo ""
 	@echo "Google Drive Link: "
 	@echo $(DRIVE_LINK)
@@ -60,7 +63,7 @@ sync-nb: ## Sync the notebook to google drive
 	@echo "Google Colab Link: "
 	@echo $(COLAB_LINK)
 	@echo
-	rm -f pyrovelocity_$(DOCUMENT_NAME).ipynb
+	rm -f pyrovelocity_$(DOCUMENT_TITLE).ipynb
 
 sync: ## Sync notebook _freeze data and ipynb to CAS and google drive
 	$(MAKE) render
