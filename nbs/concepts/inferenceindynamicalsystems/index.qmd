@@ -112,4 +112,114 @@ to equivalence classes of similar dynamics.  For reference, the procedure
 we outline is also commonly referred to as Buckingham's $\Pi$ theorem.
 
 @tbl-transcription-splicing-degradation together with (\ref{eq-dudt}-\ref{eq-dsdt})
-contain essentially all the information we require to get started.
+contain essentially all the information we require to get started. The dimensions of the variables and parameters together with dimensionless ones are provided in @tbl-parameter-dimensions.
+
+| Dimensioned Parameter | Relation to Rescaling Parameters | Fundamental Units        |
+|-----------------------|--------------------------------------|--------------------------|
+| Production Rate ($\alpha$) | $\alpha = U_0 \beta$             | molecules/(cell·time)    |
+| Splicing Rate ($\beta$)    | Reference Scale for $t^*$        | $1/\text{time}$        |
+| Degradation Rate ($\gamma$)| $\gamma = \gamma^* \beta$        | $1/\text{time}$        |
+| Pre-mRNA Concentration ($u$)| $u = u^* U_0$                    | molecules/cell           |
+| mRNA Concentration ($s$)    | $s = s^* U_0$                    | molecules/cell           |
+| Time ($t$)                  | $t = t^* / \beta$                | time                     |
+
+: Variables and parameters of the transcription-splicing-degradation model together with their fundamental units and their relations to dimensionless parameters. {#tbl-parameter-dimensions}
+
+Note that molecules are dimensionless numbers while cells have units associated to their volume (i.e. the cube of a distance or length $L^3$). Usually we would just write volume but we retain cell to associate to the object that determines the relevant volume in this case. The dimensionless parameters are defined in @tbl-dimensionless-parameters.
+
+| Dimensionless Variables and Parameters | Definition                     | Intuitive Description                                      |
+|-------------------------|--------------------------------|------------------------------------------------------------|
+| $u^{\ast}$ , $s^{\ast}$ | $u / U_0$, $s / U_0$             | Characteristic Scale of (pre-)mRNA concentration based on the balance between production and splicing rates. |
+| $t^*$                 | $\beta t$                    | Characteristic time scale relative to the splicing rate. |
+| $\gamma^*$            | $\gamma / \beta$             | Relative degradation rate, comparing the degradation rate of mRNA to the splicing rate, indicating the stability or turnover rate of mRNA relative to its production/splicing. |
+
+: Dimensionless Parameters, definitions, and intuitive Descriptions {#tbl-dimensionless-parameters}
+
+Combining variables and parameters we have six and we have two fundamental dimensions (time and length) we can eliminate to arrive at four essential variables and parameters. To derive these, we begin declaring the equations in python using [sympy](https://www.sympy.org/) and substitute the dimensionless variables and parameters to obtain the dimensionless equations.
+
+```{python}
+# | label: transcription-splicing-degradation-equations
+from sympy import (
+    diff,
+    Eq,
+    Function,
+    init_printing,
+    solve,
+    symbols,
+)
+from IPython.display import display
+
+init_printing(use_latex=True)
+
+alpha, beta, gamma, gamma_star = symbols("alpha beta gamma gamma_star")
+U0, T0 = symbols("U0 T0")
+t, t_star = symbols(
+    "t t_star",
+)
+
+u = Function("u")(t)
+s = Function("s")(t)
+u_star = Function("u_star")(t_star)
+s_star = Function("s_star")(t_star)
+
+du_dt = Eq(diff(u, t), alpha - beta * u)
+ds_dt = Eq(diff(s, t), beta * u - gamma * s)
+display(du_dt)
+display(ds_dt)
+```
+
+and define dimensionelss variables and parameters as
+
+```{python}
+# | label: transcription-splicing-degradation-dimensionless
+U0_eq = Eq(U0, alpha / beta)
+T0_eq = Eq(T0, 1 / beta)
+
+u_dimless = Eq(u_star, u / U0)
+s_dimless = Eq(s_star, s / U0)
+t_dimless = Eq(t_star, beta * t)
+```
+
+Now we change the variables in the equations to the dimensionless ones
+
+```{python}
+du_dt_dimless = Eq(
+    beta * diff(u_star * alpha / beta, t_star),
+    du_dt.rhs.subs(
+        {
+            u: u_star * alpha / beta,
+            s: s_star * alpha / beta,
+            t: t_star / beta,
+            gamma: gamma_star * beta,
+        }
+    ),
+).simplify()
+du_dt_dimless
+```
+
+and
+
+```{python}
+ds_dt_dimless = Eq(
+    beta * diff(s_star * alpha / beta, t_star),
+    ds_dt.rhs.subs(
+        {
+            u: u_star * alpha / beta,
+            s: s_star * alpha / beta,
+            t: t_star / beta,
+            gamma: gamma_star * beta,
+        }
+    ),
+).simplify()
+
+ds_dt_dimless
+```
+
+We see that we correctly arrive at the equivalent dimensionless system of equations
+
+\begin{align}
+\frac{du^{\ast}}{dt^{\ast}} & = 1 - u^{\ast}  \label{eq-dustardtstar} \\
+\frac{ds^{\ast}}{dt^{\ast}} & = u^{\ast} - \gamma^{\ast} s^{\ast}  \label{eq-dsstardtstar}
+\end{align}
+
+in \eqref{eq-dustardtstar} and \eqref{eq-dsstardtstar}, which contains the $6 - 2 = 4$ variables and parameters: $u^{\ast}, s^{\ast}, t^{\ast}, \gamma^{\ast}$. It is trivial to solve this system analytically, but in more general cases this will not be possible. We can now proceed to simulate the system to characterize the possible solution sets and then perform probabilistic inference on the latent variables.
