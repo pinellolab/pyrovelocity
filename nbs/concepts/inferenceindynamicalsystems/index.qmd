@@ -146,7 +146,8 @@ in python using [sympy](https://www.sympy.org/) and substitute the
 dimensionless variables and parameters to obtain the dimensionless equations.
 
 ```{python}
-# | label: transcription-splicing-degradation-equations
+#| label: transcription-splicing-degradation-equations
+#| code-fold: true
 from sympy import (
     diff,
     Eq,
@@ -191,6 +192,7 @@ t_dimless = Eq(t_star, beta * t)
 Now we change the variables in the equations to the dimensionless ones
 
 ```{python}
+#| code-fold: true
 du_dt_dimless = Eq(
     beta * diff(u_star * alpha / beta, t_star),
     du_dt.rhs.subs(
@@ -208,6 +210,7 @@ du_dt_dimless
 and
 
 ```{python}
+# | code-fold: true
 ds_dt_dimless = Eq(
     beta * diff(s_star * alpha / beta, t_star),
     ds_dt.rhs.subs(
@@ -377,7 +380,49 @@ We will primarily focus on simulating the system, since this will generalize
 to more complicated models. However, we will confirm our simulations for this
 first and simplest model recapitulate its analytical solution derived above.
 
+As a simple example, we will simulate the system for a single set of initial
+conditions and parameters.
 
+```{python}
+# | label: transcription-splicing-degradation-simulation
+from pyrovelocity.models import solve_transcription_splicing_model
+from jax import numpy as jnp
+
+ts0 = jnp.linspace(0, 4, 40)
+ts1 = jnp.linspace(4 + (10 - 4) / 20, 10, 20)
+ts = jnp.concatenate([ts0, ts1])
+initial_state = jnp.array([0.5, 0.5])
+params = (0.5,)
+
+solution = solve_transcription_splicing_model(ts, initial_state, params)
+```
+
+We can visualize the results of the simulation by plotting the pre-mRNA and mRNA
+concentrations over time as shown in @fig-transcription-splicing-degradation-plot-simulation-trajectory-1,
+
+```{python}
+# | label: fig-transcription-splicing-degradation-plot-simulation-trajectory-1
+# | code-fold: true
+from pyrovelocity.plots import plot_deterministic_simulation_trajectories
+
+plot_deterministic_simulation_trajectories(
+    solution,
+    title_prefix="TSD Model",
+)
+```
+
+and the phase portrait in @fig-transcription-splicing-degradation-plot-simulation-phase-portrait-1.
+
+```{python}
+# | label: fig-transcription-splicing-degradation-plot-simulation-phase-portrait-1
+# | code-fold: true
+from pyrovelocity.plots import plot_deterministic_simulation_phase_portrait
+
+plot_deterministic_simulation_phase_portrait(
+    solution,
+    title_prefix="TSD Model",
+)
+```
 
 
 ## Inference
