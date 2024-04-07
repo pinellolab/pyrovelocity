@@ -1,5 +1,4 @@
 import logging
-from typing import Any
 from typing import Tuple
 
 import jax
@@ -91,6 +90,8 @@ def solve_transcription_splicing_model_impl(
         ts (TimeArrayType): array of time points
         initial_state (StateType): initial state vector
         params (ParamsType): Tuple of scalar parameter(s).
+        time_step (float): time step for the solver.
+        model (ModelType): model function.
 
     Returns:
         Solution: diffrax Solution object.
@@ -122,6 +123,8 @@ def solve_transcription_splicing_model(
     model: ModelType = dstate_dt_dimless,
 ) -> Solution:
     """
+    Solve the transcription-splicing model.
+
     This is a mirror of the `solve_transcription_splicing_model_impl` function
     with type-checking disabled for JIT compilation. This function should be
     removed when JIT compilation is enabled for the type-checked function.
@@ -130,6 +133,8 @@ def solve_transcription_splicing_model(
         ts (TimeArrayType): array of time points
         initial_state (StateType): initial state vector
         params (ParamsType): Tuple of scalar parameter(s).
+        time_step (float): time step for the solver.
+        model (ModelType): model function.
 
     Returns:
         Solution: diffrax Solution object.
