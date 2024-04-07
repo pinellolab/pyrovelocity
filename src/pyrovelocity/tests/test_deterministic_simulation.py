@@ -169,8 +169,8 @@ def test_analytical_solution_dstate_dt_dimless_basic():
     )
 
     assert analytical_solution.shape == (
-        2,
         100,
+        2,
     ), "Unexpected shape of the analytical solution."
 
 
@@ -185,14 +185,14 @@ def test_solve_transcription_splicing_model_analytical_basic():
     )
 
     expected_output = initial_state
-    output = solution.ys[:, 0]
+    output = solution.ys[0, :]
     assert jnp.allclose(
         output,
         expected_output,
     ), f"Expected {expected_output}, got {output}"
 
     expected_output = jnp.array([1.0, 2.0])
-    output = solution.ys[:, -1]
+    output = solution.ys[-1, :]
     assert jnp.allclose(
         output,
         expected_output,
@@ -206,8 +206,8 @@ def test_solve_transcription_splicing_model_analytical_basic():
         100,
     ), f"Expected ts shape to be (100,), got {solution.ts.shape}"
     assert solution.ys.shape == (
-        2,
         100,
+        2,
     ), f"Expected ys shape to be (2, 100), got {solution.ys.shape}"
     assert (
         solution.result == diffrax.RESULTS.successful
