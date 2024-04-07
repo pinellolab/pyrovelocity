@@ -142,6 +142,20 @@ def solve_transcription_splicing_model(
 
     Returns:
         Solution: diffrax Solution object.
+
+    Examples:
+        >>> from pyrovelocity.models import solve_transcription_splicing_model
+        >>> from jax import numpy as jnp
+        >>> ts0 = jnp.linspace(0, 4, 40)
+        >>> ts1 = jnp.linspace(4 + (10 - 4) / 20, 10, 20)
+        >>> ts = jnp.concatenate([ts0, ts1])
+        >>> initial_state = jnp.array([0.1, 0.1])
+        >>> params = (0.99,)
+        >>> solution = solve_transcription_splicing_model(
+        ...     ts,
+        ...     initial_state,
+        ...     params,
+        >>> )
     """
     term = ODETerm(model)
     t0 = ts[0]
@@ -209,16 +223,18 @@ def analytical_solution_dstate_dt_dimless(
     """
     (gamma_star,) = params
     u_star_0, s_star_0 = initial_state
+    t_star_0 = ts[0]
+    elapsed_ts = ts - t_star_0
 
     xi = calculate_xi(u_star_0, gamma_star)
 
-    u_star = 1 + (u_star_0 - 1) * jnp.exp(-ts)
+    u_star = 1 + (u_star_0 - 1) * jnp.exp(-elapsed_ts)
     s_star = (1 / gamma_star) + (
-        (s_star_0 - xi - (1 / gamma_star)) * jnp.exp(-gamma_star * ts)
-        + xi * jnp.exp(-ts)
+        (s_star_0 - xi - (1 / gamma_star)) * jnp.exp(-gamma_star * elapsed_ts)
+        + xi * jnp.exp(-elapsed_ts)
     )
 
-    return jnp.stack([u_star, s_star])
+    return jnp.stack([u_star, s_star]).T
 
 
 @jaxtyped(typechecker=beartype)
@@ -238,6 +254,20 @@ def solve_transcription_splicing_model_analytical(
 
     Returns:
         Solution: A Diffrax Solution object containing the analytical solutions.
+
+    Examples:
+        >>> from pyrovelocity.models import solve_transcription_splicing_model_analytical
+        >>> from jax import numpy as jnp
+        >>> ts0 = jnp.linspace(0, 4, 40)
+        >>> ts1 = jnp.linspace(4 + (10 - 4) / 20, 10, 20)
+        >>> ts = jnp.concatenate([ts0, ts1])
+        >>> initial_state = jnp.array([0.1, 0.1])
+        >>> params = (0.99,)
+        >>> analytical_solution = solve_transcription_splicing_model_analytical(
+        ...     ts,
+        ...     initial_state,
+        ...     params,
+        >>> )
     """
 
     ys = analytical_solution_dstate_dt_dimless(
