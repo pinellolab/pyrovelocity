@@ -1,3 +1,9 @@
+from pyrovelocity.plots._dynamics import (
+    plot_deterministic_simulation_phase_portrait,
+)
+from pyrovelocity.plots._dynamics import (
+    plot_deterministic_simulation_trajectories,
+)
 from pyrovelocity.plots._experimental import plot_t0_selection
 from pyrovelocity.plots._genes import plot_gene_ranking
 from pyrovelocity.plots._parameters import (
@@ -23,6 +29,8 @@ __all__ = [
     "cluster_violin_plots",
     "extrapolate_prediction_sample_predictive",
     "get_posterior_sample_angle_uncertainty",
+    "plot_deterministic_simulation_phase_portrait",
+    "plot_deterministic_simulation_trajectories",
     "plot_gene_ranking",
     "plot_parameter_posterior_distributions",
     "plot_posterior_time",
