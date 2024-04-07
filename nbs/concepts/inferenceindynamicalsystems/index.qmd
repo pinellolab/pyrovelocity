@@ -78,16 +78,16 @@ inference in dynamical systems. We begin with a candidate
 together with their units and rough order of magnitude estimates for their values 
 [@Phillips2012-mi].
 
-| Symbol   | Description                 | Units                         | $O(-)$ Estimate | Discussion                                                                          |
-|----------|-----------------------------|-------------------------------|-----------------|-------------------------------------------------------------------------------------|
-| $u$      | Concentration of pre-mRNA   | molecules/cell                | $10^0 - 10^4$   | Wide range reflecting low to high gene expression levels.                           |
-| $s$      | Concentration of mRNA       | molecules/cell                | $10^0 - 10^5$   | Similar to $u$; depends on gene expression and stability of mRNA.                   |
-| $t$      | Time                        | seconds ($s$) to hours ($hr$) | $10s$ - $24hr$  | Depends on the duration of the experimental observation.                            |
-| $\alpha$ | Production rate of pre-mRNA | molecules/(cell·hr)           | $1 - 10^3$      | Based on variable gene transcription rates.                                         |
-| $\beta$  | Splicing rate of pre-mRNA   | $hr^{-1}$                     | $0.1 - 1$       | Pre-mRNA to mRNA splicing rates, assuming rapid processing within the nucleus.      |
-| $\gamma$ | Degradation rate of mRNA    | $hr^{-1}$                     | $0.1 - 1$       | mRNA half-lives can vary widely, but many are in the range of a few hours to a day. |
+| Symbol   | Description                 | Units                         | $O(-)$ Estimate | Note                                                                          |
+| -------- | --------------------------- | ----------------------------- | --------------- | ----------------------------------------------------------------------------- |
+| $u$      | Number of pre-mRNA          | molecules/cell                | $10^0 - 10^4$   | Wide range accounts for low to high gene expression levels.                   |
+| $s$      | Number of mRNA              | molecules/cell                | $10^0 - 10^5$   | Similar to $u$; depends on gene expression and stability of mRNA.             |
+| $t$      | Time                        | seconds ($s$) to hours ($hr$) | $5s$ - $48hr$   | Depends on the duration of the experimental observation.                      |
+| $\alpha$ | Production rate of pre-mRNA | molecules/(cell·hr)           | $10^0 - 10^3$      | Many transcripts are produced at rates in the range or 1 to 1000 per hour.    |
+| $\beta$  | Splicing rate of pre-mRNA   | $hr^{-1}$                     | $10^{-1} - 10^2$  | Many Pre-mRNA to mRNA splicing rates are in the range of 1 minute to 6 hours. |
+| $\gamma$ | Degradation rate of mRNA    | $hr^{-1}$                     | $10^{-2} - 10^0$     | Many mRNA half-lives are in the range of a half-hour to a day.                |
 
-: Variables and parameters of the transcription-splicing-degradation model of [@Zeisel2011-nz]. {#tbl-transcription-splicing-degradation}
+: Variables and parameters of the transcription-splicing-degradation model of [@Zeisel2011-nz] with order of magnitude estimates for ranges based on [@Phillips2012-mi] or references therein. {#tbl-transcription-splicing-degradation}
 
 Given the state variables representing concentrations of pre-mRNA, $u$, 
 and mRNA, $s$, we have the following ordinary differential equations 
@@ -114,32 +114,44 @@ we outline is also commonly referred to as Buckingham's $\Pi$ theorem.
 @tbl-transcription-splicing-degradation together with (\ref{eq-dudt}-\ref{eq-dsdt})
 contain essentially all the information we require to get started. The dimensions of the variables and parameters together with dimensionless ones are provided in @tbl-parameter-dimensions.
 
-| Dimensioned Parameter | Relation to Rescaling Parameters | Fundamental Units        |
-|-----------------------|--------------------------------------|--------------------------|
-| Production Rate ($\alpha$) | $\alpha = U_0 \beta$             | molecules/(cell·time)    |
-| Splicing Rate ($\beta$)    | Reference Scale for $t^*$        | $1/\text{time}$        |
-| Degradation Rate ($\gamma$)| $\gamma = \gamma^* \beta$        | $1/\text{time}$        |
-| Pre-mRNA Concentration ($u$)| $u = u^* U_0$                    | molecules/cell           |
-| mRNA Concentration ($s$)    | $s = s^* U_0$                    | molecules/cell           |
-| Time ($t$)                  | $t = t^* / \beta$                | time                     |
+| Dimensioned Parameter        | Relation to Rescaling Parameters | Fundamental Units     |
+| ---------------------------- | -------------------------------- | --------------------- |
+| Production Rate ($\alpha$)   | $\alpha = U_0 \beta$             | molecules/(cell·time) |
+| Splicing Rate ($\beta$)      | Reference Scale for $t^*$        | $1/\text{time}$       |
+| Degradation Rate ($\gamma$)  | $\gamma = \gamma^* \beta$        | $1/\text{time}$       |
+| Pre-mRNA Concentration ($u$) | $u = u^* U_0$                    | molecules/cell        |
+| mRNA Concentration ($s$)     | $s = s^* U_0$                    | molecules/cell        |
+| Time ($t$)                   | $t = t^* / \beta$                | time                  |
 
 : Variables and parameters of the transcription-splicing-degradation model together with their fundamental units and their relations to dimensionless parameters. {#tbl-parameter-dimensions}
 
 Note that molecules are dimensionless numbers while cells have units associated 
 to their volume (i.e. the cube of a distance or length $L^3$). Usually we would 
-just write volume but we retain cell to associate to the object that determines 
+just write volume but we retain "cell" to associate to the object that determines 
 the relevant volume in this case. The dimensionless parameters are defined in 
 @tbl-dimensionless-parameters.
 
-| Dimensionless Variables and Parameters | Definition                     | Intuitive Description                                      |
-|-------------------------|--------------------------------|------------------------------------------------------------|
-| $u^{\ast}$ , $s^{\ast}$ | $u / U_0$, $s / U_0$             | Characteristic Scale of (pre-)mRNA concentration based on the balance between production and splicing rates. |
-| $t^*$                 | $\beta t$                    | Characteristic time scale relative to the splicing rate. |
-| $\gamma^*$            | $\gamma / \beta$             | Relative degradation rate, comparing the degradation rate of mRNA to the splicing rate, indicating the stability or turnover rate of mRNA relative to its production/splicing. |
+| Dimensionless Variables and Parameters | Definition           | Description                                                                                                                                                                    |
+| -------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| $u^{\ast}$ , $s^{\ast}$                | $u / U_0$, $s / U_0$ | Characteristic scale of (pre-)mRNA concentration based on the balance between production and splicing rates.                                                                   |
+| $t^*$                                  | $\beta t$            | Characteristic time scale relative to the splicing rate.                                                                                                                       |
+| $\gamma^*$                             | $\gamma / \beta$     | Relative degradation rate, comparing the degradation rate of mRNA to the splicing rate, indicating the stability or turnover rate of mRNA relative to its production/splicing. |
 
 : Dimensionless Parameters, definitions, and intuitive Descriptions {#tbl-dimensionless-parameters}
 
-Combining variables and parameters we have six and we have two fundamental 
+Given our previously defined parameter range for the splicing rate $\beta$, 
+we can interpret the dimensionless parameter $t^{\ast}$ according to @tbl-dimensionless-time-interpretation.
+
+| $\beta$ (hr$^{-1}$) | 1 unit of $t^*$ (hr) | 10 units of $t^*$ (hr) | 100 units of $t^*$ (hr) | 1 unit of $t^{\ast}$ | 10 units of $t^{\ast}$ | 100 units of $t^{\ast}$ |
+|---------------------|----------------------|------------------------|-------------------------|----------------------|------------------------|-------------------------|
+| $10^{-1}$           | 10                   | 100                    | 1000                    | 1                    | 10                     | 100                     |
+| $10^0$              | 1                    | 10                     | 100                     | 1                    | 10                     | 100                     |
+| $10^1$              | 0.1                  | 1                      | 10                      | 1                    | 10                     | 100                     |
+| $10^2$              | 0.01                 | 0.1                    | 1                       | 1                    | 10                     | 100                     |
+
+: This table interprets the dimensionless time $t^{\ast}$ across various splicing rates $\beta$ (hr$^{-1}$), demonstrating how real time and expected splicing events scale with changes in $\beta$. Each unit of $t^{\ast}$ represents a normalized measure of time relative to the splicing rate, with the final three columns indicating the **expected number of splicing events per molecule of pre-mRNA** for 1, 10, and 100 units of $t^{\ast}$ is indeed the meaning of time units for this scaling rule. These columns confirm that the dimensionless time directly reflects the expected splicing activity, endowing otherwise meaningless or difficult to interpret numbers into a universally applicable framework based on scales intrinsic to a given instance of the model. {#tbl-dimensionless-time-interpretation}
+
+Combining variables and parameters gives six total. We have two fundamental 
 dimensions (time and length) we can eliminate to arrive at four essential 
 variables and parameters. To derive these, we begin declaring the equations 
 in python using [sympy](https://www.sympy.org/) and substitute the 
@@ -300,15 +312,17 @@ $$
 With $C_2$ determined, we define
 
 $$
-\xi = \frac{u^{\ast}_0 - 1}{\gamma^{\ast} - 1},
+\xi = \frac{u^{\ast}_0 - 1}{\gamma^{\ast} - 1}.
 $$
 
-so that the complete solutions for the dimensionless system are given by
+Then the complete solutions for the dimensionless system are given by
 
 \begin{align}
 u^{\ast}(t^{\ast}) & = \underbrace{1}_{\text{Steady State}} + \underbrace{(u^{\ast}_0 - 1) e^{-t^{\ast}}}_{\text{Transient Component}},  \label{eq-ustar-dimless} \\
 s^{\ast}(t^{\ast}) & = \underbrace{\frac{1}{\gamma^{\ast}}}_{\text{Steady State}} + \underbrace{\left( s^{\ast}_0 - \xi - \frac{1}{\gamma^{\ast}} \right) e^{-\gamma^{\ast} t^{\ast}} + \xi e^{-t^{\ast}}}_{\text{Transient Components}}.  \label{eq-sstar-dimless}
 \end{align}
+
+Note we can restore an arbitrary initial timepoint putting $t^{\ast} \rightarrow t^{\ast} - t^{\ast}_0$.
 
 The **pre-mRNA dynamics** $u^{\ast}(t^{\ast})$ \eqref{eq-ustar-dimless} quickly 
 settles to its steady state value of 1, regardless of the initial concentration, 
@@ -384,17 +398,47 @@ As a simple example, we will simulate the system for a single set of initial
 conditions and parameters.
 
 ```{python}
+# | echo: false
+# | output: false
+%load_ext autoreload
+%autoreload 2
+```
+
+
+```{python}
 # | label: transcription-splicing-degradation-simulation
 from pyrovelocity.models import solve_transcription_splicing_model
+from pyrovelocity.models import solve_transcription_splicing_model_analytical
+from pyrovelocity.logging import configure_logging
 from jax import numpy as jnp
 
-ts0 = jnp.linspace(0, 4, 40)
-ts1 = jnp.linspace(4 + (10 - 4) / 20, 10, 20)
-ts = jnp.concatenate([ts0, ts1])
-initial_state = jnp.array([0.5, 0.5])
-params = (0.5,)
+logger = configure_logging("nbs")
 
-solution = solve_transcription_splicing_model(ts, initial_state, params)
+ts0 = jnp.linspace(0.1, 4.0, 40)
+ts1 = jnp.linspace(4.0 + (10.0 - 4.0) / 20, 10.0, 20)
+ts = jnp.concatenate([ts0, ts1])
+initial_state = jnp.array([0.1, 0.1])
+params = (0.99,)
+
+solution = solve_transcription_splicing_model(
+    ts,
+    initial_state,
+    params,
+)
+analytical_solution = solve_transcription_splicing_model_analytical(
+    ts,
+    initial_state,
+    params,
+)
+
+logger.info(
+    f"\nTrajectory preview times:\n{solution.ts[:3]}\n"
+    f"\nSimulated trajectory values:\n{solution.ys[:5]}\n"
+    f"\nAnalytical trajectory values:\n{analytical_solution.ys[:5]}\n\n"
+    f"\nTrajectory preview times:\n{solution.ts[-3:]}\n"
+    f"\nSimulated trajectory values:\n{solution.ys[-3:]}\n"
+    f"\nAnalytical trajectory values:\n{analytical_solution.ys[-3:]}\n\n"
+)
 ```
 
 We can visualize the results of the simulation by plotting the pre-mRNA and mRNA
@@ -403,23 +447,39 @@ concentrations over time as shown in @fig-transcription-splicing-degradation-plo
 ```{python}
 # | label: fig-transcription-splicing-degradation-plot-simulation-trajectory-1
 # | code-fold: true
+# | fig-cap: Simulated trajectories of pre-mRNA and mRNA concentrations over time for the transcription-splicing-degradation model.
 from pyrovelocity.plots import plot_deterministic_simulation_trajectories
 
 plot_deterministic_simulation_trajectories(
-    solution,
-    title_prefix="TSD Model",
+    solution=solution,
+    title_prefix="TSD Model Simulated",
 )
 ```
 
-and the phase portrait in @fig-transcription-splicing-degradation-plot-simulation-phase-portrait-1.
+We see that if we plot the analytical solution, we get the same result as shown in @fig-transcription-splicing-degradation-plot-analytical-trajectory-1.
+
+```{python}
+# | label: fig-transcription-splicing-degradation-plot-analytical-trajectory-1
+# | code-fold: true
+# | fig-cap: Analytical trajectories of pre-mRNA and mRNA concentrations over time for the transcription-splicing-degradation model.
+from pyrovelocity.plots import plot_deterministic_simulation_trajectories
+
+plot_deterministic_simulation_trajectories(
+    solution=analytical_solution,
+    title_prefix="TSD Model Analytical",
+)
+```
+
+and the phase portraits as shown in @fig-transcription-splicing-degradation-plot-simulation-phase-portrait-1.
 
 ```{python}
 # | label: fig-transcription-splicing-degradation-plot-simulation-phase-portrait-1
 # | code-fold: true
+# | fig-cap: Phase portrait of the transcription-splicing-degradation model.
 from pyrovelocity.plots import plot_deterministic_simulation_phase_portrait
 
 plot_deterministic_simulation_phase_portrait(
-    solution,
+    solution=solution,
     title_prefix="TSD Model",
 )
 ```
