@@ -1,6 +1,7 @@
 import logging
 from typing import Tuple
 
+import diffrax
 import jax
 import jax.numpy as jnp
 from beartype import beartype
@@ -18,7 +19,10 @@ from jaxtyping import jaxtyped
 from pyrovelocity.logging import configure_logging
 
 
-__all__ = ["solve_transcription_splicing_model"]
+__all__ = [
+    "solve_transcription_splicing_model",
+    "solve_transcription_splicing_model_analytical",
+]
 
 logging.getLogger("jax").setLevel(logging.ERROR)
 logger = configure_logging(__name__)
@@ -164,3 +168,95 @@ solve_transcription_splicing_model = jax.jit(
     solve_transcription_splicing_model,
     static_argnames=["model"],
 )
+
+
+@jaxtyped(typechecker=beartype)
+def calculate_xi(
+    initial_u_star: Float[ArrayLike, ""],
+    gamma_star: Float[ArrayLike, ""],
+):
+    """
+    Calculate the Xi parameter for the analytical solution.
+
+    Args:
+        initial_u_star (float): The initial value of u_star.
+        gamma_star (float): The gamma_star parameter.
+
+    Returns:
+        A float representing the value of Xi.
+    """
+    return (initial_u_star - 1) / (gamma_star - 1)
+
+
+@jaxtyped(typechecker=beartype)
+def analytical_solution_dstate_dt_dimless(
+    ts: TimeArrayType,
+    initial_state: StateType,
+    params: ParamsType,
+) -> PyTree[ArrayLike, "num_vars"]:
+    """
+    Compute the analytical solution for the dimensionless transcription-splicing
+    model.
+
+    Args:
+        ts (TimeArrayType): Array of time points. initial_state (StateType):
+        Initial state vector [u_star_0, s_star_0]. params (ParamsType): Tuple
+        containing a single parameter (gamma_star).
+
+    Returns:
+        PyTree[ArrayLike, "num_vars"]:
+            A PyTree containing the solution arrays for u_star and s_star.
+    """
+    (gamma_star,) = params
+    u_star_0, s_star_0 = initial_state
+
+    xi = calculate_xi(u_star_0, gamma_star)
+
+    u_star = 1 + (u_star_0 - 1) * jnp.exp(-ts)
+    s_star = (1 / gamma_star) + (
+        (s_star_0 - xi - (1 / gamma_star)) * jnp.exp(-gamma_star * ts)
+        + xi * jnp.exp(-ts)
+    )
+
+    return jnp.stack([u_star, s_star])
+
+
+@jaxtyped(typechecker=beartype)
+def solve_transcription_splicing_model_analytical(
+    ts: TimeArrayType,
+    initial_state: StateType,
+    params: ParamsType,
+) -> Solution:
+    """
+    Computes the solutions using the analytical approach and wraps the result in
+    a Diffrax Solution object.
+
+    Args:
+        ts: The time points at which to evaluate the solution.
+        initial_state: The initial conditions for the system.
+        params: The parameters of the model.
+
+    Returns:
+        Solution: A Diffrax Solution object containing the analytical solutions.
+    """
+
+    ys = analytical_solution_dstate_dt_dimless(
+        ts,
+        initial_state,
+        params,
+    )
+
+    solution = Solution(
+        t0=ts[0],
+        t1=ts[-1],
+        ts=ts,
+        ys=ys,
+        interpolation=None,
+        stats={},
+        result=diffrax.RESULTS.successful,
+        solver_state=None,
+        controller_state=None,
+        made_jump=None,
+    )
+
+    return solution
