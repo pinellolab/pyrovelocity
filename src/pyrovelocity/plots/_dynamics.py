@@ -1,4 +1,10 @@
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
+import scienceplots
+from beartype import beartype
+from beartype.typing import List
+from diffrax import Solution
+from matplotlib import colors
 
 __all__ = [
     "plot_deterministic_simulation_phase_portrait",
@@ -6,102 +12,128 @@ __all__ = [
 ]
 
 
-def plot_deterministic_simulation_trajectories(solution, title_prefix=""):
-    ts = solution.ts
+@beartype
+def plot_deterministic_simulation_trajectories(
+    solution: Solution,
+    state_labels: List[str] = [r"$u^{\ast}$", r"$s^{\ast}$"],
+    xlabel: str = r"$t^{\ast}$",
+    ylabel: str = r"fraction of $u^{\ast}_{ss}$",
+    title_prefix: str = "",
+):
+    times = solution.ts
+    logarithmizable_times = jnp.where(times <= 1e-4, 1e-2, times)
     unspliced, spliced = solution.ys[:, 0], solution.ys[:, 1]
 
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    with plt.style.context("science"):
+        fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
-    # linear scale
-    axes[0].plot(
-        ts,
-        unspliced,
-        "o-",
-        label=r"$u^{\ast}$",
-        color="blue",
-        markersize=5,
-        linewidth=1.5,
-        alpha=0.5,
-    )
-    axes[0].plot(
-        ts,
-        spliced,
-        "o-",
-        label=r"$s^{\ast}$",
-        color="green",
-        markersize=5,
-        linewidth=1.5,
-        alpha=0.5,
-    )
-    axes[0].set_xlabel("Time")
-    axes[0].set_ylabel("Concentration")
-    axes[0].set_title(f"{title_prefix} Temporal Trajectories (Linear Scale)")
-    axes[0].legend()
+        cmap = plt.get_cmap("BrBG")
+        color_brown = cmap(0.05)
+        color_blue_green = cmap(0.95)
 
-    # log scale
-    axes[1].plot(
-        ts,
-        unspliced,
-        "o-",
-        label=r"$u^{\ast}$",
-        color="blue",
-        markersize=5,
-        linewidth=1.5,
-        alpha=0.5,
-    )
-    axes[1].plot(
-        ts,
-        spliced,
-        "o-",
-        label=r"$s^{\ast}$",
-        color="green",
-        markersize=5,
-        linewidth=1.5,
-        alpha=0.5,
-    )
-    axes[1].set_xscale("log")
-    axes[1].set_yscale("log")
-    axes[1].set_xlabel("Time")
-    axes[1].set_ylabel("Concentration")
-    axes[1].set_title(f"{title_prefix} Temporal Trajectories (Log Scale)")
-    axes[1].legend()
+        # linear scale
+        axes[0].plot(
+            times,
+            unspliced,
+            "o-",
+            label=state_labels[0],
+            color=color_brown,
+            markersize=5,
+            linewidth=1.5,
+            alpha=0.5,
+        )
+        axes[0].plot(
+            times,
+            spliced,
+            "o-",
+            label=state_labels[1],
+            color=color_blue_green,
+            markersize=5,
+            linewidth=1.5,
+            alpha=0.5,
+        )
+        axes[0].set_xlabel(xlabel)
+        axes[0].set_ylabel(ylabel)
+        axes[0].set_title(
+            f"{title_prefix} Temporal Trajectories (Linear Scale)"
+        )
+        axes[0].legend()
 
-    plt.tight_layout()
-    plt.show()
+        # log scale
+        axes[1].plot(
+            logarithmizable_times,
+            unspliced,
+            "o-",
+            label=state_labels[0],
+            color=color_brown,
+            markersize=5,
+            linewidth=1.5,
+            alpha=0.5,
+        )
+        axes[1].plot(
+            logarithmizable_times,
+            spliced,
+            "o-",
+            label=state_labels[1],
+            color=color_blue_green,
+            markersize=5,
+            linewidth=1.5,
+            alpha=0.5,
+        )
+        axes[1].set_xscale("log")
+        axes[1].set_yscale("log")
+        axes[1].set_xlabel(xlabel)
+        axes[1].set_ylabel(ylabel)
+        axes[1].set_title(f"{title_prefix} Temporal Trajectories (Log Scale)")
+        axes[1].legend()
+
+        plt.tight_layout()
+        plt.show()
 
 
-def plot_deterministic_simulation_phase_portrait(solution, title_prefix=""):
+@beartype
+def plot_deterministic_simulation_phase_portrait(
+    solution: Solution,
+    xlabel: str = r"$s^{\ast}$",
+    ylabel: str = r"$u^{\ast}$",
+    zlabel: str = r"$t^{\ast}$",
+    title_prefix: str = "",
+):
+    times = solution.ts
+    logarithmizable_times = jnp.where(times <= 1e-4, 1e-2, times)
+
     unspliced, spliced = solution.ys[:, 0], solution.ys[:, 1]
-    norm_time = solution.ts
 
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    with plt.style.context("science"):
+        fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
-    # linear scale
-    sc = axes[0].scatter(
-        spliced,
-        unspliced,
-        c=norm_time,
-        cmap="viridis",
-        label="Phase Portrait",
-    )
-    axes[0].set_xlabel(r"$s^{\ast}$")
-    axes[0].set_ylabel(r"$u^{\ast}$")
-    axes[0].set_title(f"{title_prefix} Phase Portrait (Linear Scale)")
-    plt.colorbar(sc, ax=axes[0], label="Time")
+        # linear scale
+        sc_linear = axes[0].scatter(
+            spliced,
+            unspliced,
+            c=times,
+            cmap="BrBG",
+            label="Phase Portrait",
+        )
+        axes[0].set_xlabel(xlabel)
+        axes[0].set_ylabel(ylabel)
+        axes[0].set_title(f"{title_prefix} Phase Portrait (Linear Scale)")
+        plt.colorbar(sc_linear, ax=axes[0], label=zlabel)
 
-    # log scale
-    axes[1].scatter(
-        spliced,
-        unspliced,
-        c=norm_time,
-        cmap="viridis",
-        label="Phase Portrait",
-    )
-    axes[1].set_xscale("log")
-    axes[1].set_yscale("log")
-    axes[1].set_xlabel(r"$s^{\ast}$")
-    axes[1].set_ylabel(r"$u^{\ast}$")
-    axes[1].set_title(f"{title_prefix} Phase Portrait (Log Scale)")
-    plt.colorbar(sc, ax=axes[1], label="Time")
-    plt.tight_layout()
-    plt.show()
+        # log scale
+        sc_log = axes[1].scatter(
+            spliced,
+            unspliced,
+            c=logarithmizable_times,
+            cmap="BrBG",
+            norm=colors.LogNorm(),
+            label="Phase Portrait",
+        )
+        axes[1].set_xscale("log")
+        axes[1].set_yscale("log")
+        axes[1].set_xlabel(xlabel)
+        axes[1].set_ylabel(ylabel)
+        axes[1].set_title(f"{title_prefix} Phase Portrait (Log Scale)")
+        plt.colorbar(sc_log, ax=axes[1], label=zlabel)
+        plt.tight_layout()
+        plt.show()
