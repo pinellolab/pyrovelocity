@@ -6,6 +6,7 @@ from beartype.typing import List
 from diffrax import Solution
 from matplotlib import colors
 
+
 __all__ = [
     "plot_deterministic_simulation_phase_portrait",
     "plot_deterministic_simulation_trajectories",
@@ -19,15 +20,22 @@ def plot_deterministic_simulation_trajectories(
     xlabel: str = r"$t^{\ast}$",
     ylabel: str = r"fraction of $u^{\ast}_{ss}$",
     title_prefix: str = "",
+    colormap_name: str = "cividis",
 ):
     times = solution.ts
     logarithmizable_times = jnp.where(times <= 1e-4, 1e-2, times)
     unspliced, spliced = solution.ys[:, 0], solution.ys[:, 1]
+    logarithmizable_unspliced = jnp.where(
+        jnp.abs(unspliced) <= 3e-8, 1e-8, jnp.abs(unspliced)
+    )
+    logarithmizable_spliced = jnp.where(
+        jnp.abs(spliced) <= 3e-8, 1e-8, jnp.abs(spliced)
+    )
 
     with plt.style.context("science"):
         fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
-        cmap = plt.get_cmap("BrBG")
+        cmap = plt.get_cmap(colormap_name)
         color_brown = cmap(0.05)
         color_blue_green = cmap(0.95)
 
@@ -62,7 +70,7 @@ def plot_deterministic_simulation_trajectories(
         # log scale
         axes[1].plot(
             logarithmizable_times,
-            unspliced,
+            logarithmizable_unspliced,
             "o-",
             label=state_labels[0],
             color=color_brown,
@@ -72,7 +80,7 @@ def plot_deterministic_simulation_trajectories(
         )
         axes[1].plot(
             logarithmizable_times,
-            spliced,
+            logarithmizable_spliced,
             "o-",
             label=state_labels[1],
             color=color_blue_green,
@@ -98,6 +106,7 @@ def plot_deterministic_simulation_phase_portrait(
     ylabel: str = r"$u^{\ast}$",
     zlabel: str = r"$t^{\ast}$",
     title_prefix: str = "",
+    colormap_name: str = "cividis",
 ):
     times = solution.ts
     logarithmizable_times = jnp.where(times <= 1e-4, 1e-2, times)
@@ -112,7 +121,7 @@ def plot_deterministic_simulation_phase_portrait(
             spliced,
             unspliced,
             c=times,
-            cmap="BrBG",
+            cmap=colormap_name,
             label="Phase Portrait",
         )
         axes[0].set_xlabel(xlabel)
@@ -125,7 +134,7 @@ def plot_deterministic_simulation_phase_portrait(
             spliced,
             unspliced,
             c=logarithmizable_times,
-            cmap="BrBG",
+            cmap=colormap_name,
             norm=colors.LogNorm(),
             label="Phase Portrait",
         )
