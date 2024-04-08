@@ -226,13 +226,22 @@ def analytical_solution_dstate_dt_dimless(
     t_star_0 = ts[0]
     elapsed_ts = ts - t_star_0
 
-    xi = calculate_xi(u_star_0, gamma_star)
-
     u_star = 1 + (u_star_0 - 1) * jnp.exp(-elapsed_ts)
-    s_star = (1 / gamma_star) + (
-        (s_star_0 - xi - (1 / gamma_star)) * jnp.exp(-gamma_star * elapsed_ts)
-        + xi * jnp.exp(-elapsed_ts)
-    )
+
+    if jnp.isclose(gamma_star, 1.0):
+        s_star = (
+            1
+            + (s_star_0 - 1) * jnp.exp(-elapsed_ts)
+            + (u_star_0 - 1) * elapsed_ts * jnp.exp(-elapsed_ts)
+        )
+    else:
+        xi = calculate_xi(u_star_0, gamma_star)
+
+        s_star = (1 / gamma_star) + (
+            (s_star_0 - xi - (1 / gamma_star))
+            * jnp.exp(-gamma_star * elapsed_ts)
+            + xi * jnp.exp(-elapsed_ts)
+        )
 
     return jnp.stack([u_star, s_star]).T
 
