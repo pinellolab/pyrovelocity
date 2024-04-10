@@ -1375,6 +1375,26 @@ files = [
 ]
 
 [[package]]
+name = "daft"
+version = "0.1.2"
+description = "PGM rendering at its finest"
+optional = false
+python-versions = "*"
+files = [
+    {file = "daft-0.1.2-py3-none-any.whl", hash = "sha256:8771c8f109e07d08f90eff11adcf722831cc7db0605cf6dd9dcde524082cf74f"},
+    {file = "daft-0.1.2.tar.gz", hash = "sha256:3e77e0389ca539a5741a906bcdcaae462b68261d06b960b0c04498b695d312e5"},
+]
+
+[package.dependencies]
+matplotlib = "*"
+numpy = "*"
+setuptools = "*"
+
+[package.extras]
+docs = ["jupytext", "myst-nb", "sphinx"]
+test = ["pytest"]
+
+[[package]]
 name = "databricks-cli"
 version = "0.17.6"
 description = "A command line interface for Databricks"
@@ -9319,4 +9339,4 @@ workflows = ["dataclasses-json", "dulwich", "flytekit", "google-api-python-clien
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10, <3.12"
-content-hash = "e2d77f7b13272f5bdc4ad66df0901dc73f72560ffaa0f12806d6ca020dfd1b90"
+content-hash = "b820343ca97b004cf257492eb2f4e539445c3b7f124581ce110f81c00d20ff9d"

@@ -576,6 +576,9 @@ cryptography==40.0.2 ; python_version >= "3.10" and python_version < "3.12" \
 cycler==0.11.0 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:3a27e95f763a428a739d2add979fa7494c912a32c17c4c38c4d5f082cad165a3 \
     --hash=sha256:9c87405839a19696e837b3b818fed3f5f69f16f1eec1a1ad77e043dcea9c772f
+daft==0.1.2 ; python_version >= "3.10" and python_version < "3.12" \
+    --hash=sha256:3e77e0389ca539a5741a906bcdcaae462b68261d06b960b0c04498b695d312e5 \
+    --hash=sha256:8771c8f109e07d08f90eff11adcf722831cc7db0605cf6dd9dcde524082cf74f
 databricks-cli==0.17.6 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:7fea8b4e47ac38bd4eaad8a76e38a6916419df930ad1c615a6b43feb427672c4 \
     --hash=sha256:99c8fef80ef3215a36c09f594e7788e59bf9990792b4697d8daece754abe1660
