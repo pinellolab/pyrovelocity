@@ -138,7 +138,9 @@ referred to as the
 [@Cantwell2002-dv].
 
 @tbl-transcription-splicing-degradation together with (\ref{eq-dudt}-\ref{eq-dsdt})
-contain essentially all the information we require to get started. The dimensions of the variables and parameters together with dimensionless ones are provided in @tbl-parameter-dimensions.
+contain essentially all the information we require to get started. 
+The dimensions of the variables and parameters together with dimensionless 
+ones are provided in @tbl-parameter-dimensions.
 
 | Dimensioned Parameter        | Relation to Rescaling Parameters | Fundamental Units     |
 | ---------------------------- | -------------------------------- | --------------------- |
@@ -149,7 +151,9 @@ contain essentially all the information we require to get started. The dimension
 | mRNA Concentration ($s$)     | $s = s^* U_0$                    | molecules/cell        |
 | Time ($t$)                   | $t = t^* / \beta$                | time                  |
 
-: Variables and parameters of the transcription-splicing-degradation model together with their fundamental units and their relations to dimensionless parameters. {#tbl-parameter-dimensions}
+: Variables and parameters of the transcription-splicing-degradation model 
+together with their fundamental units and their relations to dimensionless 
+parameters. {#tbl-parameter-dimensions}
 
 Note that molecules are dimensionless numbers while cells have units associated 
 to their volume (i.e. the cube of a distance or length $L^3$). Usually we would 
@@ -163,7 +167,8 @@ the relevant volume in this case. The dimensionless parameters are defined in
 | $t^*$                                  | $\beta t$            | Characteristic time scale relative to the splicing rate.                                                                                                                       |
 | $\gamma^*$                             | $\gamma / \beta$     | Relative degradation rate, comparing the degradation rate of mRNA to the splicing rate, indicating the stability or turnover rate of mRNA relative to its production/splicing. |
 
-: Dimensionless Parameters, definitions, and intuitive Descriptions {#tbl-dimensionless-parameters}
+: Dimensionless Parameters, definitions, and intuitive Descriptions 
+{#tbl-dimensionless-parameters}
 
 Given our previously defined parameter range for the splicing rate $\beta$, 
 we can interpret the dimensionless parameter $t^{\ast}$ according to @tbl-dimensionless-time-interpretation.
@@ -175,7 +180,17 @@ we can interpret the dimensionless parameter $t^{\ast}$ according to @tbl-dimens
 | $10^1$              | 0.1                  | 1                      | 10                      | 1                    | 10                     | 100                     |
 | $10^2$              | 0.01                 | 0.1                    | 1                       | 1                    | 10                     | 100                     |
 
-: This table interprets the dimensionless time $t^{\ast}$ across various splicing rates $\beta$ (hr$^{-1}$), demonstrating how real time and expected splicing events scale with changes in $\beta$. Each unit of $t^{\ast}$ represents a normalized measure of time relative to the splicing rate, with the final three columns indicating the **expected number of splicing events per molecule of pre-mRNA** for 1, 10, and 100 units of $t^{\ast}$ is indeed the meaning of time units for this scaling rule. These columns confirm that the dimensionless time directly reflects the expected splicing activity, endowing otherwise meaningless or difficult to interpret numbers into a universally applicable framework based on scales intrinsic to a given instance of the model. {#tbl-dimensionless-time-interpretation}
+: This table interprets the dimensionless time $t^{\ast}$ across various
+splicing rates $\beta$ (hr$^{-1}$), demonstrating how real time and expected
+splicing events scale with changes in $\beta$. Each unit of $t^{\ast}$
+represents a normalized measure of time relative to the splicing rate, with the
+final three columns indicating the **expected number of splicing events per
+molecule of pre-mRNA** for 1, 10, and 100 units of $t^{\ast}$ is indeed the
+meaning of time units for this scaling rule. These columns confirm that the
+dimensionless time directly reflects the expected splicing activity, endowing
+otherwise meaningless or difficult to interpret numbers into a universally
+applicable framework based on scales intrinsic to a given instance of the model.
+{#tbl-dimensionless-time-interpretation}
 
 Combining variables and parameters gives six total. We have two fundamental 
 dimensions (time and length) we can eliminate to arrive at four essential 
@@ -266,11 +281,13 @@ ds_dt_dimless = Eq(
 ds_dt_dimless
 ```
 
-We see that we correctly arrive at the equivalent dimensionless system of equations
+We see that we correctly arrive at the equivalent dimensionless system of 
+equations
 
 \begin{align}
 \frac{du^{\ast}}{dt^{\ast}} & = 1 - u^{\ast}  \label{eq-dustardtstar}, \\
-\frac{ds^{\ast}}{dt^{\ast}} & = u^{\ast} - \gamma^{\ast} s^{\ast},  \label{eq-dsstardtstar}
+\frac{ds^{\ast}}{dt^{\ast}} & = u^{\ast} - \gamma^{\ast} s^{\ast},  
+  \label{eq-dsstardtstar}
 \end{align}
 
 in \eqref{eq-dustardtstar} and \eqref{eq-dsstardtstar}, which contains the 
@@ -278,9 +295,9 @@ $6 - 2 = 4$ variables and parameters: $u^{\ast}, s^{\ast}, t^{\ast}, \gamma^{\as
 
 We'll solve the dimensionless system analytically, focusing on what can be 
 understood about the system's dynamics.
-Given specific initial conditions $u^{\ast}(0) = u^{\ast}_0$ and $s^{\ast}(0) = s^{\ast}_0$, which
-we restore to arbitrary $t^{\ast}_0$ at the end of the derivation, the 
-first equation
+Given specific initial conditions $u^{\ast}(0) = u^{\ast}_0$ and 
+$s^{\ast}(0) = s^{\ast}_0$, which we restore to arbitrary $t^{\ast}_0$ 
+at the end of the derivation, the first equation
 
 $$
 \frac{du^{\ast}}{dt^{\ast}} = 1 - u^{\ast},
@@ -301,9 +318,9 @@ $$
 
 This equation describes how the concentration of pre-mRNA, in units of the 
 characteristic concentration scale, $U_0 = \alpha/\beta$, evolves over the 
-timescale characterized by the inverse of the splicing rate, $1/\beta$. The term $e^{-t^{\ast}}$ 
-indicates that any deviation of $u^{\ast}$ from its steady state $1$ decays 
-exponentially over time.
+timescale characterized by the inverse of the splicing rate, $1/\beta$. 
+The term $e^{-t^{\ast}}$ indicates that any deviation of $u^{\ast}$ from 
+its steady state $1$ decays exponentially over time.
 
 Now, we substitute the expression for $u^{\ast}(t^{\ast})$ into the 
 differential equation for mRNA concentration
@@ -315,7 +332,8 @@ $$
 which gives
 
 $$
-\frac{ds^{\ast}}{dt^{\ast}} = [(u^{\ast}_0 - 1) e^{-t^{\ast}} + 1] - \gamma^{\ast} s^{\ast}
+\frac{ds^{\ast}}{dt^{\ast}} = [(u^{\ast}_0 - 1) e^{-t^{\ast}} + 1] - 
+  \gamma^{\ast} s^{\ast}
 $$
 
 This equation is a non-homogeneous first-order linear ODE for $s^{\ast}$. 
@@ -323,20 +341,27 @@ To solve it, we can use an integrating factor $e^{\gamma^{\ast} t^{\ast}}$,
 which gives
 
 $$
-e^{\gamma^{\ast} t^{\ast}} \frac{ds^{\ast}}{dt^{\ast}} + \gamma^{\ast} e^{\gamma^{\ast} t^{\ast}} s^{\ast} = (u^{\ast}_0 - 1) e^{(\gamma^{\ast}-1) t^{\ast}} + e^{\gamma^{\ast} t^{\ast}}
+e^{\gamma^{\ast} t^{\ast}} \frac{ds^{\ast}}{dt^{\ast}} + 
+  \gamma^{\ast} e^{\gamma^{\ast} t^{\ast}} s^{\ast} = 
+  (u^{\ast}_0 - 1) e^{(\gamma^{\ast}-1) t^{\ast}} + 
+  e^{\gamma^{\ast} t^{\ast}}
 $$
 
 Integrating both sides with respect to $t^{\ast}$ yields $s^{\ast}(t^{\ast})$
 
 $$
-s^{\ast}(t^{\ast}) = C_2 e^{-\gamma^{\ast} t^{\ast}} + \frac{u^{\ast}_0 - 1}{\gamma^{\ast} - 1} e^{-t^{\ast}} + \frac{1}{\gamma^{\ast}}
+s^{\ast}(t^{\ast}) = C_2 e^{-\gamma^{\ast} t^{\ast}} + 
+  \frac{u^{\ast}_0 - 1}{\gamma^{\ast} - 1} e^{-t^{\ast}} + 
+  \frac{1}{\gamma^{\ast}}
 $$
 
-where $C_2$ is another integration constant determined by initial conditions.
-Incorporating the initial condition  $s^{\ast}(0) = s^{\ast}_0$ into the solution for $s^{\ast}(t^{\ast})$ to determine $C_2$
+where $C_2$ is another integration constant determined by initial conditions. 
+Incorporating the initial condition  $s^{\ast}(0) = s^{\ast}_0$ into the 
+solution for $s^{\ast}(t^{\ast})$ to determine $C_2$
 
 $$
-C_2 = s^{\ast}_0 - \frac{u^{\ast}_0 - 1}{\gamma^{\ast} - 1} - \frac{1}{\gamma^{\ast}}.
+C_2 = s^{\ast}_0 - \frac{u^{\ast}_0 - 1}{\gamma^{\ast} - 1} - 
+  \frac{1}{\gamma^{\ast}}.
 $$
 
 With $C_2$ determined, we define
@@ -345,11 +370,17 @@ $$
 \xi = \frac{u^{\ast}_0 - 1}{\gamma^{\ast} - 1}.
 $$
 
-The complete solutions for the dimensionless system for $\gamma^{\ast} \neq 1$ are then given by
+The complete solutions for the dimensionless system for $\gamma^{\ast} \neq 1$ 
+are then given by
 
 \begin{align}
-u^{\ast}(t^{\ast}) & = \underbrace{1}_{\text{Steady State}} + \underbrace{(u^{\ast}_0 - 1) e^{-t^{\ast}}}_{\text{Transient Component}},  \label{eq-ustar-dimless} \\
-s^{\ast}(t^{\ast}) & = \underbrace{\frac{1}{\gamma^{\ast}}}_{\text{Steady State}} + \underbrace{\left( s^{\ast}_0 - \xi - \frac{1}{\gamma^{\ast}} \right) e^{-\gamma^{\ast} t^{\ast}} + \xi e^{-t^{\ast}}}_{\text{Transient Components}}.  \label{eq-sstar-dimless}
+u^{\ast}(t^{\ast}) & = \underbrace{1}_{\text{Steady State}} + 
+  \underbrace{(u^{\ast}_0 - 1) e^{-t^{\ast}}}_{\text{Transient Component}}, 
+  \label{eq-ustar-dimless} \\
+s^{\ast}(t^{\ast}) & = \underbrace{\frac{1}{\gamma^{\ast}}}_{\text{Steady State}} + 
+  \underbrace{\left( s^{\ast}_0 - \xi - \frac{1}{\gamma^{\ast}} \right) 
+  e^{-\gamma^{\ast} t^{\ast}} + \xi e^{-t^{\ast}}}_{\text{Transient Components}}.  
+  \label{eq-sstar-dimless}
 \end{align}
 
 For the case $\gamma^{\ast} = 1$, we can solve \eqref{eq-dustardtstar} and 
@@ -357,7 +388,8 @@ For the case $\gamma^{\ast} = 1$, we can solve \eqref{eq-dustardtstar} and
 and $s^{\ast}$ is then given by
 
 $$
-s^{\ast}(t^{\ast}) = 1 + (s^{\ast}_0 - 1) e^{-t^{\ast}} + (u^{\ast}_0 - 1) t^{\ast} e^{-t^{\ast}}.
+s^{\ast}(t^{\ast}) = 1 + (s^{\ast}_0 - 1) e^{-t^{\ast}} + 
+  (u^{\ast}_0 - 1) t^{\ast} e^{-t^{\ast}}.
 $$
 
 Note we can restore an arbitrary initial timepoint putting 
@@ -397,17 +429,19 @@ sets and then perform probabilistic inference on the latent variables.
 
 ## Data
 
-If we are just given samples of pre-mRNA and mRNA counts without additional
-information about their sampling times, we can describe the data set 
+If we are given samples of pre-mRNA and mRNA counts along with
+the sampling time of each cell, we can describe the data set 
 $\mathcal{D}$ consisting of pre-mRNA and mRNA counts for a number 
 of genes $G$ across a number of cells $N$
 
-$$
-\mathcal{D} = \left\{ (u_{ij}, s_{ij}) \mid i \in \{1, \ldots, G\}, j \in \{1, \ldots, N\} \right\}
-$$
+\begin{align}
+\mathcal{D} = \left\{ (t_j, u_{ij}, s_{ij}) \mid 
+  i \in \{1, \ldots, G\}, j \in \{1, \ldots, N\} \right\} \label{eq-dataset},
+\end{align}
 
 where
 
+- $t_j$ represents the sampling time for cell $j$,
 - $u_{ij}$ represents the count of pre-mRNA for gene $i$ in cell $j$,
 - $s_{ij}$ represents the count of mRNA for the same gene $i$ in the same cell $j$,
 - $G$ is the total number of genes in the study,
@@ -417,16 +451,21 @@ Roughly speaking, the inference problem involves
 
 1. **Normalization**: Transforming the observed counts $u_{ij}$ and $s_{ij}$ to 
    their dimensionless counterparts $u^{\ast}_{ij}$ and $s^{\ast}_{ij}$ using 
-   any reasonable concentration scale $U_0$.
-2. **Model Fitting**: Applying statistical methods to estimate the latent variables 
-   $\Theta = \left( \gamma^{\ast}, u^{\ast}_0, s^{\ast}_0, t^{\ast} \right)$ that best 
-   fit the observed data.
+   a reasonable concentration scale $U_0$.
+2. **Model Fitting**: Applying statistical methods to estimate the latent 
+   variables 
+   $\Theta = \left( \gamma^{\ast}, u^{\ast}_0, s^{\ast}_0 \right)$ 
+   that best fit the observed data.
 3. **Evaluation**: Assessing the fit of the model and the estimated parameters'
    biological plausibility and consistency across different genes and cells.
 
+We will return later to the alternative version of this problem where $t_j$ 
+are not observed and must be inferred along with the latent variables 
+$\Theta = \left( \gamma^{\ast}, u^{\ast}_0, s^{\ast}_0, t^{\ast} \right)$.
+
 This representation of the dataset and the associated objective of 
 statistical learning provides a solid foundation for applying probabilistic
-modeling techniques to calibrate an inference procedure andevaluate the 
+modeling techniques to calibrate an inference procedure and evaluate the 
 plausibility of this model in such a manner that we can eventually compare 
 multiple candidate models to one another.
 
@@ -490,7 +529,8 @@ logger.info(
 ```
 
 We can visualize the results of the simulation by plotting the pre-mRNA and mRNA
-concentrations over time as shown in @fig-transcription-splicing-degradation-plot-simulation-trajectory-1,
+concentrations over time as shown in 
+@fig-transcription-splicing-degradation-plot-simulation-trajectory-1,
 
 ```{python}
 # | label: fig-transcription-splicing-degradation-plot-simulation-trajectory-1
@@ -505,7 +545,9 @@ plot_deterministic_simulation_trajectories(
 )
 ```
 
-We see that if we plot the analytical solution, we get the same result as shown in @fig-transcription-splicing-degradation-plot-analytical-trajectory-1 to within the expected error of the numerical simulation ($O(10^{-5} - 10^{-8})$).
+We see that if we plot the analytical solution, we get the same result as shown 
+in @fig-transcription-splicing-degradation-plot-analytical-trajectory-1 to 
+within the expected error of the numerical simulation ($O(10^{-5} - 10^{-8})$).
 
 ```{python}
 # | label: fig-transcription-splicing-degradation-plot-analytical-trajectory-1
@@ -520,7 +562,10 @@ plot_deterministic_simulation_trajectories(
 )
 ```
 
-The same simulated trajectories from @fig-transcription-splicing-degradation-plot-simulation-trajectory-1 are shown in the phase space given by $u^{\ast} \otimes s^{\ast}$ in @fig-transcription-splicing-degradation-plot-simulation-phase-portrait-1.
+The same simulated trajectories from 
+@fig-transcription-splicing-degradation-plot-simulation-trajectory-1 are shown 
+in the phase space given by $u^{\ast} \otimes s^{\ast}$ in 
+@fig-transcription-splicing-degradation-plot-simulation-phase-portrait-1.
 
 ```{python}
 # | label: fig-transcription-splicing-degradation-plot-simulation-phase-portrait-1
@@ -538,5 +583,181 @@ plot_deterministic_simulation_phase_portrait(
 
 ## Inference
 
-Now that we have illustrated how to simulate the system, we can proceed to
-define a probabilistic model and perform inference on its latent variables.
+Now that we have illustrated how to simulate a prototypical system, we can
+proceed to define a probabilistic model and perform inference on its latent
+variables given data like \eqref{eq-dataset}. In general we should consider multiple
+models with different assumptions and levels of complexity, but for now we will
+focus on one of the simpler models to illustrate the process. In particular, in
+most cases, when performing inference on the latent variables of a dynamical
+system, we assume that the observation time points are fixed or otherwise
+observed. We will begin with this assumption and then proceed to discuss how to
+relax it.
+
+In the case where we can indeed estimate analytical solutions to the system, we
+can consider a model with the structure proposed in 
+(\ref{eq-init-conds-priors-gene}--\ref{eq-s-obs-cell}) where, given a number of 
+genes $G$ and cells $N$, for each
+$(i,j) \in \{1, \ldots, G\} \otimes \{1, \ldots, N\}$ we have
+
+\begin{align}
+    u^{\ast}_{0i}, s^{\ast}_{0i} &\sim 
+      \text{LogNormal}(\mu_{0}, \sigma_{0}^2), 
+      \label{eq-init-conds-priors-gene} \\
+
+    \gamma^{\ast}_i &\sim 
+      \text{LogNormal}(\mu_{\gamma}, \sigma_{\gamma}^2),
+      \label{eq-gamma-prior-gene} \\
+
+    \sigma_{ui}, \sigma_{si} &\sim 
+      \text{HalfNormal}(\mu_{\sigma}, \sigma_{\sigma}^2),
+      \label{eq-noise-std-priors-gene} \\
+
+    u^{\ast}_{ij} &= 
+      1 + (u^{\ast}_{0i} - 1) \cdot e^{-t^{\ast}_j},
+      \label{eq-u-star-model-cell} \\
+
+    s^{\ast}_{ij} &= 
+      \begin{cases}
+        \frac{1}{\gamma^{\ast}_i} + 
+        \left( s^{\ast}_{0i} - \xi_i - \frac{1}{\gamma^{\ast}_i} \right) \cdot e^{-\gamma^{\ast}_i t^{\ast}_j} + 
+        \xi_i \cdot e^{-t^{\ast}_j},& \gamma^{\ast}_i \neq 1 \\
+
+        1 + (s^{\ast}_{0i} - 1) e^{-t^{\ast}_j} + 
+          (u^{\ast}_{0i} - 1) t^{\ast}_j e^{-t^{\ast}_j},& \gamma^{\ast}_i = 1 \\
+      \end{cases}, \label{eq-s-star-model-cell} \\
+
+    \hat{u}^{\ast}_{ij} &\sim \text{Normal}(u^{\ast}_{ij}, \sigma_{ui}^2), 
+    \label{eq-u-obs-cell} \\
+
+    \hat{s}^{\ast}_{ij} &\sim \text{Normal}(s^{\ast}_{ij}, \sigma_{si}^2). 
+    \label{eq-s-obs-cell}
+\end{align}
+
+The model description in (\ref{eq-init-conds-priors-gene}--\ref{eq-s-obs-cell}) 
+can be associated to the plate diagram in 
+@fig-transcription-splicing-degradation-graphical-model-1.
+
+```{python}
+# | label: fig-transcription-splicing-degradation-graphical-model-1
+# | code-fold: true
+# | fig-cap: Graphical model for the transcription-splicing-degradation model.
+import daft
+import matplotlib.pyplot as mpl
+
+mpl.rcParams["font.family"] = "serif"
+mpl.rcParams["font.size"] = 16
+mpl.rcParams["text.usetex"] = True
+
+pgm = daft.PGM(line_width=1.2)
+
+# hyperparameters
+pgm.add_node("mu_init", r"$\mu_{0}$", 0.5, 6, fixed=True)
+pgm.add_node("sigma_init", r"$\sigma_{0}^2$", 1.5, 6, fixed=True)
+pgm.add_node("mu_gamma", r"$\mu_{\gamma}$", 2.5, 6, fixed=True)
+pgm.add_node("sigma_gamma", r"$\sigma_{\gamma}^2$", 3.5, 6, fixed=True)
+pgm.add_node("mu_sigma", r"$\mu_{\sigma}$", 4.5, 6, fixed=True)
+pgm.add_node("sigma_sigma", r"$\sigma_{\sigma}^2$", 5.5, 6, fixed=True)
+
+# latent variables for gene-specific parameters
+pgm.add_node("u_star_0i", r"$u^{\ast}_{0i}$", 1, 5)
+pgm.add_node("s_star_0i", r"$s^{\ast}_{0i}$", 2, 5)
+pgm.add_node("gamma_star_i", r"$\gamma^{\ast}_i$", 3, 5)
+pgm.add_node("sigma_ui", r"$\sigma_{ui}$", 4, 5)
+pgm.add_node("sigma_si", r"$\sigma_{si}$", 5, 5)
+
+# latent variables for cell-specific outcomes
+pgm.add_node(
+    "u_star_ij",
+    r"$u^{\ast}_{ij}$",
+    2,
+    4,
+    scale=1.0,
+    shape="rectangle",
+)
+pgm.add_node(
+    "s_star_ij",
+    r"$s^{\ast}_{ij}$",
+    4,
+    4,
+    scale=1.0,
+    shape="rectangle",
+)
+
+# observed data
+pgm.add_node(
+    "t_star_j",
+    r"$t^{\ast}_j$",
+    6.0,
+    3.25,
+    observed=True,
+    shape="rectangle",
+)
+pgm.add_node(
+    "u_obs_ij",
+    r"$\hat{u}^{\ast}_{ij}$",
+    2,
+    2.5,
+    scale=1.0,
+    observed=True,
+)
+pgm.add_node(
+    "s_obs_ij",
+    r"$\hat{s}^{\ast}_{ij}$",
+    4,
+    2.5,
+    scale=1.0,
+    observed=True,
+)
+
+# edges
+edge_params = {"head_length": 0.3, "head_width": 0.25, "lw": 0.7}
+pgm.add_edge("mu_init", "u_star_0i", plot_params=edge_params)
+pgm.add_edge("sigma_init", "u_star_0i", plot_params=edge_params)
+pgm.add_edge("mu_init", "s_star_0i", plot_params=edge_params)
+pgm.add_edge("sigma_init", "s_star_0i", plot_params=edge_params)
+pgm.add_edge("mu_gamma", "gamma_star_i", plot_params=edge_params)
+pgm.add_edge("sigma_gamma", "gamma_star_i", plot_params=edge_params)
+pgm.add_edge("mu_sigma", "sigma_ui", plot_params=edge_params)
+pgm.add_edge("sigma_sigma", "sigma_ui", plot_params=edge_params)
+pgm.add_edge("mu_sigma", "sigma_si", plot_params=edge_params)
+pgm.add_edge("sigma_sigma", "sigma_si", plot_params=edge_params)
+
+pgm.add_edge("u_star_0i", "u_star_ij", plot_params=edge_params)
+pgm.add_edge("s_star_0i", "s_star_ij", plot_params=edge_params)
+pgm.add_edge("u_star_0i", "s_star_ij", plot_params=edge_params)
+pgm.add_edge("gamma_star_i", "s_star_ij", plot_params=edge_params)
+
+pgm.add_edge("u_star_ij", "u_obs_ij", plot_params=edge_params)
+pgm.add_edge("s_star_ij", "s_obs_ij", plot_params=edge_params)
+pgm.add_edge("sigma_ui", "u_obs_ij", plot_params=edge_params)
+pgm.add_edge("sigma_si", "s_obs_ij", plot_params=edge_params)
+
+pgm.add_edge("t_star_j", "u_star_ij", plot_params=edge_params)
+pgm.add_edge("t_star_j", "s_star_ij", plot_params=edge_params)
+
+# plates
+pgm.add_plate([0.5, 1.2, 5, 4.4], label=r"$i \in \{1, \ldots, G\}$", shift=-0.1)
+pgm.add_plate(
+    [1.0, 1.8, 5.5, 2.75], label=r"$j \in \{1, \ldots, N\}$", shift=-0.1
+)
+
+pgm.render()
+```
+
+Of course, in general, we will not have access to the analytical solutions, so
+we will need to simulate the system and then perform inference on the latent
+variables as suggested in (\ref{eq-init-conds-priors-num}--\ref{eq-s-obs-num}).
+
+\begin{align}
+    u^{\ast}_0, s^{\ast}_0 &\sim \text{LogNormal}(\mu_{0}, \sigma_{0}^2) \label{eq-init-conds-priors-num}, \\
+    \gamma^{\ast} &\sim \text{LogNormal}(\mu_{\gamma}, \sigma_{\gamma}^2) \label{eq-gamma-prior-num}, \\
+    \sigma_u, \sigma_s &\sim \text{HalfNormal}(\mu_{\sigma}, \sigma_{\sigma}^2) \label{eq-noise-std-priors-num}, \\
+    (u^{\ast}, s^{\ast}) &= \text{NumericalSolver}\left(\frac{du^{\ast}}{dt^{\ast}}, \frac{ds^{\ast}}{dt^{\ast}}, u^{\ast}_0, s^{\ast}_0, \gamma^{\ast}, t^{\ast}\right) \label{eq-numerical-solution}, \\
+    \hat{u}^{\ast} &\sim \text{Normal}(u^{\ast}, \sigma_u^2) \label{eq-u-obs-num}, \\
+    \hat{s}^{\ast} &\sim \text{Normal}(s^{\ast}, \sigma_s^2) \label{eq-s-obs-num}.
+\end{align}
+
+Where $\frac{du^{\ast}}{dt^{\ast}}$ and $\frac{ds^{\ast}}{dt^{\ast}}$, 
+are given by (\ref{eq-dustardtstar}-\ref{eq-dsstardtstar}) and noting that 
+we suppress the indices from 
+(\ref{eq-init-conds-priors-gene}--\ref{eq-s-obs-cell}) for brevity.
