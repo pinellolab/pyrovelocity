@@ -1,0 +1,62 @@
+# This style is adapted from the SciencePlots library
+# https://github.com/garrettj403/SciencePlots/blob/master/scienceplots/styles/science.mplstyle
+# last update SHA-1: 0064c84dfce1b9b420783331fb674d310e921e36
+#
+# See the default matplotlibrc file
+# https://matplotlib.org/stable/users/explain/customizing.html#the-default-matplotlibrc-file
+
+# color cycle: blue, green, yellow, red, violet, gray
+axes.prop_cycle : cycler('color', ['0C5DA5', '00B945', 'FF9500', 'FF2C00', '845B97', '474747', '9e9e9e'])
+
+# Set default figure size
+figure.figsize : 3.5, 2.625
+
+# Font sizes
+axes.titlesize : large
+# default: medium
+axes.labelsize : large
+xtick.labelsize : medium
+ytick.labelsize : medium
+
+# Set x axis
+xtick.direction : in
+xtick.major.size : 3
+xtick.major.width : 0.5
+xtick.minor.size : 1.5
+xtick.minor.width : 0.5
+xtick.minor.visible : True
+xtick.top : True
+
+# Set y axis
+ytick.direction : in
+ytick.major.size : 3
+ytick.major.width : 0.5
+ytick.minor.size : 1.5
+ytick.minor.width : 0.5
+ytick.minor.visible : True
+ytick.right : True
+
+# Set line widths
+axes.linewidth : 0.5
+grid.linewidth : 0.5
+# default: 1.5
+lines.linewidth : 1.0
+
+# Remove legend frame
+legend.frameon : False
+
+# Always save as 'tight'
+savefig.bbox : tight
+savefig.pad_inches : 0.05
+
+# Use serif fonts
+# font.serif : Latin Modern Roman, Computer Modern Roman, DejaVu Serif
+font.sans-serif : Latin Modern Sans, Computer Modern Sans Serif, DejaVu Sans
+# font.family : serif
+font.family: sans-serif
+# default: dejavusans or dejavuserif
+mathtext.fontset : cm
+
+# Use LaTeX for math formatting
+text.usetex : True
+text.latex.preamble : \usepackage{amsmath} \usepackage{amssymb}
