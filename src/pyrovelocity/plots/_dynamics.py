@@ -1,6 +1,5 @@
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
-import scienceplots
 from beartype import beartype
 from beartype.typing import List
 from diffrax import Solution
@@ -32,7 +31,7 @@ def plot_deterministic_simulation_trajectories(
         jnp.abs(spliced) <= 3e-8, 1e-8, jnp.abs(spliced)
     )
 
-    with plt.style.context("science"):
+    with plt.style.context(["pyrovelocity.styles.common"]):
         fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
         cmap = plt.get_cmap(colormap_name)
@@ -113,7 +112,7 @@ def plot_deterministic_simulation_phase_portrait(
 
     unspliced, spliced = solution.ys[:, 0], solution.ys[:, 1]
 
-    with plt.style.context("science"):
+    with plt.style.context(["pyrovelocity.styles.common"]):
         fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
         # linear scale
