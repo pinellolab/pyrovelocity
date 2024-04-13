@@ -77,12 +77,14 @@ def deterministic_transcription_splicing_probabilistic_model(
         init_cond = initial_conditions[gene_index]
         rate = gamma[gene_index]
         t = times[cell_index, :]
-        solution = solve_transcription_splicing_model(t, init_cond, (rate,))
-        u_pred, s_pred = solution.ys[:, 0], solution.ys[:, 1]
-        return u_pred, s_pred
+        solution = solve_transcription_splicing_model(
+            t,
+            init_cond,
+            (rate,),
+        )
+        return solution.ys
 
-    # mapping of numerical integration over genes and cells
-    u_pred, s_pred = jax.vmap(
+    predictions = jax.vmap(
         jax.vmap(
             model_solver,
             in_axes=(0, None),
@@ -93,20 +95,24 @@ def deterministic_transcription_splicing_probabilistic_model(
         jnp.arange(num_cells),
     )
 
-    # observations and likelihood
-    for g in range(num_genes):
-        for c in range(num_cells):
-            with numpyro.plate(f"gene_{g}_cell_{c}_obs", num_timepoints):
-                numpyro.sample(
-                    f"u_obs_gene_{g}_cell_{c}",
-                    dist.Normal(u_pred[g, c], sigma[0]),
-                    obs=data[g, c, :, 0],
-                )
-                numpyro.sample(
-                    f"s_obs_gene_{g}_cell_{c}",
-                    dist.Normal(s_pred[g, c], sigma[1]),
-                    obs=data[g, c, :, 1],
-                )
+    logger.info(
+        f"\nPredictions Shape: {predictions.shape}\n"
+        f"Data Shape: {data.shape}\n\n"
+    )
+    sigma_expanded = sigma.reshape(1, 1, 1, 2)
+
+    # with
+    # numpyro.plate("gene_plate", num_genes, dim=-3),
+    # numpyro.plate("cell_plate", num_cells, dim=-2),
+    # numpyro.plate("time_plate", num_timepoints, dim=-1):
+    numpyro.sample(
+        "observations",
+        dist.Normal(
+            predictions,
+            sigma_expanded,
+        ),
+        obs=data,
+    )
 
 
 @beartype
