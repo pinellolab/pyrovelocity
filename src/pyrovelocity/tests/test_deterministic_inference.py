@@ -24,32 +24,40 @@ logger = configure_logging(__name__)
 @pytest.fixture
 def setup_data():
     return generate_test_data_for_deterministic_model_inference(
+        num_genes=1,
         num_cells=3,
-        num_genes=2,
         num_timepoints=4,
         num_modalities=2,
     )
 
 
 def test_priors(setup_data):
-    times, data, _, _, _, _ = setup_data
+    (
+        times,
+        data,
+        num_genes,
+        num_cells,
+        num_timepoints,
+        num_modalities,
+    ) = setup_data
     rng_key = jax.random.PRNGKey(0)
-    rng_key, rng_key_ = jax.random.split(rng_key)
 
     def model():
         deterministic_transcription_splicing_probabilistic_model(times, data)
 
     predictive = Predictive(model, num_samples=500)
-    prior_samples = predictive(rng_key_)
+    prior_samples = predictive(rng_key)
 
     assert "initial_conditions" in prior_samples
-    assert "rate_params" in prior_samples
-    assert "noise_std" in prior_samples
+    assert "gamma" in prior_samples
+    assert "sigma" in prior_samples
 
     u0_samples, s0_samples = (
         prior_samples["initial_conditions"][:, :, 0],
         prior_samples["initial_conditions"][:, :, 1],
     )
+    assert u0_samples.shape == (500, num_cells)
+    assert s0_samples.shape == (500, num_cells)
     assert jnp.all(
         u0_samples > 0
     ), "All initial u0 values should be positive (LogNormal)"
@@ -57,46 +65,58 @@ def test_priors(setup_data):
         s0_samples > 0
     ), "All initial s0 values should be positive (LogNormal)"
 
-    gamma_samples = prior_samples["rate_params"]
+    gamma_samples = prior_samples["gamma"]
+    assert gamma_samples.shape == (500, num_cells)
     assert jnp.all(
         gamma_samples > 0
     ), "All gamma values should be positive (LogNormal)"
 
-    sigma_u_samples, sigma_s_samples = (
-        prior_samples["noise_std"][:, 0],
-        prior_samples["noise_std"][:, 1],
-    )
+    sigma_samples = prior_samples["sigma"]
+    assert sigma_samples.shape == (500, num_modalities)
     assert jnp.all(
-        sigma_u_samples > 0
-    ), "All sigma_u values should be positive (HalfNormal)"
-    assert jnp.all(
-        sigma_s_samples > 0
-    ), "All sigma_s values should be positive (HalfNormal)"
+        sigma_samples > 0
+    ), "All sigma values should be positive (HalfNormal)"
 
 
 def test_ode_solution(setup_data):
-    times, data, _, _, num_timepoints, _ = setup_data
+    (
+        times,
+        data,
+        num_genes,
+        num_cells,
+        num_timepoints,
+        num_modalities,
+    ) = setup_data
     rng_key = jax.random.PRNGKey(0)
-    rng_key, rng_key_ = jax.random.split(rng_key)
 
     def model():
         deterministic_transcription_splicing_probabilistic_model(times, data)
 
     predictive = Predictive(model, num_samples=10)
-    samples = predictive(rng_key_)
+    samples = predictive(rng_key)
 
-    # expected shapes: (num_samples, num_timepoints)
-    u_pred = samples["u_obs_0_0"]
-    s_pred = samples["s_obs_0_0"]
+    observations = samples["observations"]
+    assert observations.shape == (
+        10,
+        num_genes,
+        num_cells,
+        num_timepoints,
+        num_modalities,
+    )
+    assert jnp.all(
+        jnp.isfinite(observations)
+    ), "Observations contain non-finite values"
 
-    assert u_pred.shape == (
-        10,
-        num_timepoints,
-    ), f"Expected shape (10, {num_timepoints}), got {u_pred.shape}"
-    assert s_pred.shape == (
-        10,
-        num_timepoints,
-    ), f"Expected shape (10, {num_timepoints}), got {s_pred.shape}"
+    u_pred = observations[..., 0]
+    s_pred = observations[..., 1]
+    assert u_pred.shape == (10, num_genes, num_cells, num_timepoints)
+    assert s_pred.shape == (10, num_genes, num_cells, num_timepoints)
+    assert jnp.all(
+        jnp.isfinite(u_pred)
+    ), "u predictions contain non-finite values"
+    assert jnp.all(
+        jnp.isfinite(s_pred)
+    ), "s predictions contain non-finite values"
 
 
 def test_model_sampling_statements_prior_predictive(setup_data):
