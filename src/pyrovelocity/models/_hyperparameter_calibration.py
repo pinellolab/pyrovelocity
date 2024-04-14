@@ -84,7 +84,7 @@ def solve_for_lognormal_sigma_given_threshold_and_tail_mass(
         >>> solve_for_lognormal_sigma_given_threshold_and_tail_mass(
         ...     0.0, 1.5, tail_mass=0.05, upper=True
         >>> )
-        1.0
+        0.2465052825762025
 
         Solve for sigma to achieve a lower tail probability of 0.05 below a
         threshold of 1.5 with mu=3.0:
@@ -92,7 +92,7 @@ def solve_for_lognormal_sigma_given_threshold_and_tail_mass(
         >>> solve_for_lognormal_sigma_given_threshold_and_tail_mass(
         ...     3.0, 1.5, tail_mass=0.05, upper=False
         >>> )
-        1.5773652131590963
+        1.5773652131591058
     """
 
     func_to_solve = lambda sigma: (
