@@ -480,6 +480,7 @@ conditions and parameters.
 
 ```{python}
 # | label: transcription-splicing-degradation-simulation
+# | code-fold: true
 import diffrax
 from pyrovelocity.models import solve_transcription_splicing_model
 from pyrovelocity.models import solve_transcription_splicing_model_analytical
@@ -596,8 +597,9 @@ relax it.
 In the case where we can indeed estimate analytical solutions to the system, we
 can consider a model with the structure proposed in 
 (\ref{eq-init-conds-priors-gene}--\ref{eq-s-obs-cell}) where, given a number of 
-genes $G$ and cells $N$, for each
-$(i,j) \in \{1, \ldots, G\} \otimes \{1, \ldots, N\}$ we have
+genes $G$ and cells $N$ that are measured at $K_j$ distinct times, then for each
+$(i,j,k) \in \{1, \ldots, G\} \otimes \{1, \ldots, N\} \otimes \{1, \ldots, K_j\}$ 
+we have
 
 \begin{align}
     u^{\ast}_{0i}, s^{\ast}_{0i} &\sim 
@@ -612,24 +614,24 @@ $(i,j) \in \{1, \ldots, G\} \otimes \{1, \ldots, N\}$ we have
       \text{HalfNormal}(\mu_{\sigma}, \sigma_{\sigma}^2),
       \label{eq-noise-std-priors-gene} \\
 
-    u^{\ast}_{ij} &= 
-      1 + (u^{\ast}_{0i} - 1) \cdot e^{-t^{\ast}_j},
+    {u^{\ast}}^{k}_{ij} &= 
+      1 + (u^{\ast}_{0i} - 1) \cdot e^{-{t^{\ast}}^k_j},
       \label{eq-u-star-model-cell} \\
 
-    s^{\ast}_{ij} &= 
+    {s^{\ast}}^{k}_{ij} &= 
       \begin{cases}
         \frac{1}{\gamma^{\ast}_i} + 
-        \left( s^{\ast}_{0i} - \xi_i - \frac{1}{\gamma^{\ast}_i} \right) \cdot e^{-\gamma^{\ast}_i t^{\ast}_j} + 
-        \xi_i \cdot e^{-t^{\ast}_j},& \gamma^{\ast}_i \neq 1 \\
+        \left( s^{\ast}_{0i} - \xi_i - \frac{1}{\gamma^{\ast}_i} \right) \cdot e^{-\gamma^{\ast}_i {t^{\ast}}^k_j} + 
+        \xi_i \cdot e^{-{t^{\ast}}^k_j},& \gamma^{\ast}_i \neq 1 \\
 
-        1 + (s^{\ast}_{0i} - 1) e^{-t^{\ast}_j} + 
-          (u^{\ast}_{0i} - 1) t^{\ast}_j e^{-t^{\ast}_j},& \gamma^{\ast}_i = 1 \\
+        1 + (s^{\ast}_{0i} - 1) e^{-{t^{\ast}}^k_j} + 
+          (u^{\ast}_{0i} - 1) {t^{\ast}}^k_j e^{-{t^{\ast}}^k_j},& \gamma^{\ast}_i = 1 \\
       \end{cases}, \label{eq-s-star-model-cell} \\
 
-    \hat{u}^{\ast}_{ij} &\sim \text{Normal}(u^{\ast}_{ij}, \sigma_{ui}^2), 
+    \hat{u}^{\ast}{}^k_{ij} &\sim \text{Normal}({u^{\ast}}^k_{ij}, \sigma_{ui}^2), 
     \label{eq-u-obs-cell} \\
 
-    \hat{s}^{\ast}_{ij} &\sim \text{Normal}(s^{\ast}_{ij}, \sigma_{si}^2). 
+    \hat{s}^{\ast}{}^k_{ij} &\sim \text{Normal}({s^{\ast}}^k_{ij}, \sigma_{si}^2). 
     \label{eq-s-obs-cell}
 \end{align}
 
@@ -642,11 +644,156 @@ can be associated to the plate diagram in
 # | code-fold: true
 # | fig-cap: Graphical model for the transcription-splicing-degradation model.
 import daft
-import matplotlib.pyplot as mpl
+import matplotlib.pyplot as plt
 
-mpl.rcParams["font.family"] = "serif"
-mpl.rcParams["font.size"] = 16
-mpl.rcParams["text.usetex"] = True
+plt.rcParams["font.family"] = "serif"
+plt.rcParams["font.size"] = 16
+plt.rcParams["text.usetex"] = True
+
+pgm = daft.PGM(line_width=1.2)
+
+# hyperparameters
+pgm.add_node("mu_init", r"$\mu_{0}$", 0.5, 6, fixed=True)
+pgm.add_node("sigma_init", r"$\sigma_{0}^2$", 1.5, 6, fixed=True)
+pgm.add_node("mu_gamma", r"$\mu_{\gamma}$", 2.5, 6, fixed=True)
+pgm.add_node("sigma_gamma", r"$\sigma_{\gamma}^2$", 3.5, 6, fixed=True)
+pgm.add_node("mu_sigma", r"$\mu_{\sigma}$", 4.5, 6, fixed=True)
+pgm.add_node("sigma_sigma", r"$\sigma_{\sigma}^2$", 5.5, 6, fixed=True)
+
+# latent variables for gene-specific parameters
+pgm.add_node("u_star_0i", r"$u^{\ast}_{0i}$", 1, 5)
+pgm.add_node("s_star_0i", r"$s^{\ast}_{0i}$", 2, 5)
+pgm.add_node("gamma_star_i", r"$\gamma^{\ast}_i$", 3, 5)
+pgm.add_node("sigma_ui", r"$\sigma_{ui}$", 4, 5)
+pgm.add_node("sigma_si", r"$\sigma_{si}$", 5, 5)
+
+# latent variables for cell-specific outcomes
+pgm.add_node(
+    "u_star_ij",
+    r"${u^{\ast}}^k_{ij}$",
+    2,
+    3.8,
+    scale=1.0,
+    shape="rectangle",
+)
+pgm.add_node(
+    "s_star_ij",
+    r"${s^{\ast}}^k_{ij}$",
+    4,
+    3.8,
+    scale=1.0,
+    shape="rectangle",
+)
+
+# observed data
+pgm.add_node(
+    "t_star_j",
+    r"${t^{\ast}}^k_j$",
+    5.9,
+    3.1,
+    observed=True,
+    shape="rectangle",
+)
+pgm.add_node(
+    "u_obs_ij",
+    r"$\hat{u}^{\ast}{}^{k}_{ij}$",
+    2,
+    2.4,
+    scale=1.0,
+    observed=True,
+)
+pgm.add_node(
+    "s_obs_ij",
+    r"$\hat{s}^{\ast}{}^{k}_{ij}$",
+    4,
+    2.4,
+    scale=1.0,
+    observed=True,
+)
+
+# edges
+edge_params = {"head_length": 0.3, "head_width": 0.25, "lw": 0.7}
+pgm.add_edge("mu_init", "u_star_0i", plot_params=edge_params)
+pgm.add_edge("sigma_init", "u_star_0i", plot_params=edge_params)
+pgm.add_edge("mu_init", "s_star_0i", plot_params=edge_params)
+pgm.add_edge("sigma_init", "s_star_0i", plot_params=edge_params)
+pgm.add_edge("mu_gamma", "gamma_star_i", plot_params=edge_params)
+pgm.add_edge("sigma_gamma", "gamma_star_i", plot_params=edge_params)
+pgm.add_edge("mu_sigma", "sigma_ui", plot_params=edge_params)
+pgm.add_edge("sigma_sigma", "sigma_ui", plot_params=edge_params)
+pgm.add_edge("mu_sigma", "sigma_si", plot_params=edge_params)
+pgm.add_edge("sigma_sigma", "sigma_si", plot_params=edge_params)
+
+pgm.add_edge("u_star_0i", "u_star_ij", plot_params=edge_params)
+pgm.add_edge("s_star_0i", "s_star_ij", plot_params=edge_params)
+pgm.add_edge("u_star_0i", "s_star_ij", plot_params=edge_params)
+pgm.add_edge("gamma_star_i", "s_star_ij", plot_params=edge_params)
+
+pgm.add_edge("u_star_ij", "u_obs_ij", plot_params=edge_params)
+pgm.add_edge("s_star_ij", "s_obs_ij", plot_params=edge_params)
+pgm.add_edge("sigma_ui", "u_obs_ij", plot_params=edge_params)
+pgm.add_edge("sigma_si", "s_obs_ij", plot_params=edge_params)
+
+pgm.add_edge("t_star_j", "u_star_ij", plot_params=edge_params)
+pgm.add_edge("t_star_j", "s_star_ij", plot_params=edge_params)
+
+# plates
+pgm.add_plate(
+    [0.4, 1.0, 5, 4.5],
+    label=r"$i \in \{1, \ldots, G\}$",
+    shift=-0.1,
+    fontsize=12,
+)
+pgm.add_plate(
+    [0.8, 1.4, 5.9, 3.2],
+    label=r"$j \in \{1, \ldots, N\}$",
+    shift=-0.1,
+    fontsize=12,
+)
+pgm.add_plate(
+    [1.2, 1.8, 5.2, 2.5],
+    label=r"$k \in \{1, \ldots, K_j\}$",
+    shift=-0.1,
+    fontsize=12,
+)
+
+pgm.render()
+```
+
+Of course, in general, we will not have access to the analytical solutions, so
+we will need to simulate the system and then perform inference on the latent
+variables as suggested in (\ref{eq-init-conds-priors-num}--\ref{eq-s-obs-num}).
+
+\begin{align}
+    u^{\ast}_0, s^{\ast}_0 &\sim \text{LogNormal}(\mu_{0}, \sigma_{0}^2) \label{eq-init-conds-priors-num}, \\
+    \gamma^{\ast} &\sim \text{LogNormal}(\mu_{\gamma}, \sigma_{\gamma}^2) \label{eq-gamma-prior-num}, \\
+    \sigma_u, \sigma_s &\sim \text{HalfNormal}(\mu_{\sigma}, \sigma_{\sigma}^2) \label{eq-noise-std-priors-num}, \\
+    (u^{\ast}, s^{\ast}) &= \text{NumericalSolver}\left(\frac{du^{\ast}}{dt^{\ast}}, \frac{ds^{\ast}}{dt^{\ast}}, u^{\ast}_0, s^{\ast}_0, \gamma^{\ast}, t^{\ast}\right) \label{eq-numerical-solution}, \\
+    \hat{u}^{\ast} &\sim \text{Normal}(u^{\ast}, \sigma_u^2) \label{eq-u-obs-num}, \\
+    \hat{s}^{\ast} &\sim \text{Normal}(s^{\ast}, \sigma_s^2) \label{eq-s-obs-num}.
+\end{align}
+
+Where $\frac{du^{\ast}}{dt^{\ast}}$ and $\frac{ds^{\ast}}{dt^{\ast}}$, 
+are given by (\ref{eq-dustardtstar}-\ref{eq-dsstardtstar}) and noting that 
+we suppress the indices from 
+(\ref{eq-init-conds-priors-gene}--\ref{eq-s-obs-cell}) for brevity.
+
+If, for example, we only observe one time point for each cell, 
+then @fig-transcription-splicing-degradation-graphical-model-1 and its 
+associated description in (\ref{eq-init-conds-priors-gene}--\ref{eq-s-obs-cell}) 
+reduces to the graphical model in 
+@fig-transcription-splicing-degradation-graphical-model-2.
+
+```{python}
+# | label: fig-transcription-splicing-degradation-graphical-model-2
+# | code-fold: true
+# | fig-cap: Graphical model for the transcription-splicing-degradation model observed at a single time point.
+import daft
+import matplotlib.pyplot as plt
+
+plt.rcParams["font.family"] = "serif"
+plt.rcParams["font.size"] = 16
+plt.rcParams["text.usetex"] = True
 
 pgm = daft.PGM(line_width=1.2)
 
@@ -736,28 +883,18 @@ pgm.add_edge("t_star_j", "u_star_ij", plot_params=edge_params)
 pgm.add_edge("t_star_j", "s_star_ij", plot_params=edge_params)
 
 # plates
-pgm.add_plate([0.5, 1.2, 5, 4.4], label=r"$i \in \{1, \ldots, G\}$", shift=-0.1)
 pgm.add_plate(
-    [1.0, 1.8, 5.5, 2.75], label=r"$j \in \{1, \ldots, N\}$", shift=-0.1
+    [0.5, 1.2, 5, 4.4],
+    label=r"$i \in \{1, \ldots, G\}$",
+    shift=-0.1,
+    fontsize=12,
+)
+pgm.add_plate(
+    [1.0, 1.8, 5.5, 2.75],
+    label=r"$j \in \{1, \ldots, N\}$",
+    shift=-0.1,
+    fontsize=12,
 )
 
 pgm.render()
 ```
-
-Of course, in general, we will not have access to the analytical solutions, so
-we will need to simulate the system and then perform inference on the latent
-variables as suggested in (\ref{eq-init-conds-priors-num}--\ref{eq-s-obs-num}).
-
-\begin{align}
-    u^{\ast}_0, s^{\ast}_0 &\sim \text{LogNormal}(\mu_{0}, \sigma_{0}^2) \label{eq-init-conds-priors-num}, \\
-    \gamma^{\ast} &\sim \text{LogNormal}(\mu_{\gamma}, \sigma_{\gamma}^2) \label{eq-gamma-prior-num}, \\
-    \sigma_u, \sigma_s &\sim \text{HalfNormal}(\mu_{\sigma}, \sigma_{\sigma}^2) \label{eq-noise-std-priors-num}, \\
-    (u^{\ast}, s^{\ast}) &= \text{NumericalSolver}\left(\frac{du^{\ast}}{dt^{\ast}}, \frac{ds^{\ast}}{dt^{\ast}}, u^{\ast}_0, s^{\ast}_0, \gamma^{\ast}, t^{\ast}\right) \label{eq-numerical-solution}, \\
-    \hat{u}^{\ast} &\sim \text{Normal}(u^{\ast}, \sigma_u^2) \label{eq-u-obs-num}, \\
-    \hat{s}^{\ast} &\sim \text{Normal}(s^{\ast}, \sigma_s^2) \label{eq-s-obs-num}.
-\end{align}
-
-Where $\frac{du^{\ast}}{dt^{\ast}}$ and $\frac{ds^{\ast}}{dt^{\ast}}$, 
-are given by (\ref{eq-dustardtstar}-\ref{eq-dsstardtstar}) and noting that 
-we suppress the indices from 
-(\ref{eq-init-conds-priors-gene}--\ref{eq-s-obs-cell}) for brevity.
