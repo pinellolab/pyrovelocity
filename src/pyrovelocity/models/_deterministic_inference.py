@@ -1,11 +1,15 @@
 import arviz as az
 import jax
 import jax.numpy as jnp
+import numpy as np
 import numpyro
 import numpyro.distributions as dist
 import xarray as xr
 from arviz import InferenceData
 from beartype import beartype
+from beartype.typing import Dict
+from beartype.typing import List
+from beartype.typing import Optional
 from beartype.typing import Tuple
 from jaxtyping import ArrayLike
 from jaxtyping import Float
@@ -24,7 +28,8 @@ from pyrovelocity.models._deterministic_simulation import (
 __all__ = [
     "deterministic_transcription_splicing_probabilistic_model",
     "generate_test_data_for_deterministic_model_inference",
-    "generate_prior_predictive_samples",
+    "generate_prior_inference_data",
+    "generate_posterior_inference_data",
 ]
 
 logger = configure_logging(__name__)
@@ -59,12 +64,12 @@ def deterministic_transcription_splicing_probabilistic_model(
     # priors
     initial_conditions = numpyro.sample(
         "initial_conditions",
-        dist.LogNormal(loc=jnp.log(1.0), scale=0.1),
+        dist.LogNormal(loc=jnp.log(0.23), scale=0.9),
         sample_shape=(num_genes, num_modalities),
     )
     gamma = numpyro.sample(
         "gamma",
-        dist.LogNormal(loc=jnp.log(2.0), scale=0.5),
+        dist.LogNormal(loc=jnp.log(1.13), scale=0.35),
         sample_shape=(num_genes,),
     )
     sigma = numpyro.sample(
@@ -101,10 +106,6 @@ def deterministic_transcription_splicing_probabilistic_model(
     )
     sigma_expanded = sigma.reshape(1, 1, 1, 2)
 
-    # with
-    # numpyro.plate("gene_plate", num_genes, dim=-3),
-    # numpyro.plate("cell_plate", num_cells, dim=-2),
-    # numpyro.plate("time_plate", num_timepoints, dim=-1):
     numpyro.sample(
         "observations",
         dist.Normal(
@@ -124,8 +125,8 @@ def generate_test_data_for_deterministic_model_inference(
     log_time_start: float = -1,
     log_time_end: float = 1,
     noise_levels: Tuple[float, float] = (0.05, 0.05),
-    initial_conditions_params: Tuple[float, float] = (1.0, 0.1),
-    gamma_params: Tuple[float, float] = (2.0, 0.5),
+    initial_conditions_params: Tuple[float, float] = (0.23, 0.9),
+    gamma_params: Tuple[float, float] = (1.13, 0.35),
 ) -> Tuple[
     TimeTensor,
     MultiModalTranscriptomeTensor,
@@ -222,10 +223,9 @@ def generate_test_data_for_deterministic_model_inference(
         rng_key=rng_key_,
     )
 
-    # Preparing for vectorized ODE solving
     def model_solver(ts, init_cond, rate):
         solution = solve_transcription_splicing_model(
-            ts=ts.reshape(-1),  # Flatten the time array for all cells
+            ts=ts.reshape(-1),
             initial_state=init_cond,
             params=(rate,),
         ).ys
@@ -234,7 +234,6 @@ def generate_test_data_for_deterministic_model_inference(
             num_cells, num_timepoints, num_modalities
         )
 
-    # Compute the ODE solutions for all genes
     solutions = jax.vmap(
         model_solver,
         in_axes=(None, 0, 0),
@@ -244,7 +243,6 @@ def generate_test_data_for_deterministic_model_inference(
         gamma,
     )
 
-    # Adding observational noise
     noisy_solutions = solutions + jax.random.normal(
         rng_key_, solutions.shape
     ) * jnp.array(noise_levels)
@@ -263,67 +261,171 @@ def generate_test_data_for_deterministic_model_inference(
 
 
 @beartype
-def generate_prior_predictive_samples(
+def create_inference_data_labels(
+    num_genes: int,
+    num_cells: int,
+    num_timepoints: int,
+    modalities: List[str],
+) -> Tuple[
+    Dict[str, ArrayLike],
+    Dict[str, List[str]],
+]:
+    """
+    Creates labels for dimensions and coordinates for ArviZ InferenceData
+    structures used here in probabilistic inference reporting with `numpyro` and
+    `arviz`.
+
+    Args:
+    num_genes (int): Number of genes.
+    num_cells (int): Number of cells.
+    num_timepoints (int): Number of timepoints.
+    modalities (List[str]): List of modalities (e.g., ["pre-mRNA", "mRNA"]).
+
+    Returns:
+    Tuple[Dict[str, np.ndarray], Dict[str, List[str]]]:
+        A tuple containing two dictionaries, one for coordinates and one for
+        dimensions suitable for ArviZ InferenceData construction.
+    """
+    idata_coords = {
+        "genes": np.arange(num_genes),
+        "cells": np.arange(num_cells),
+        "timepoints": np.arange(num_timepoints),
+        "modalities": modalities,
+    }
+
+    idata_dims = {
+        "initial_conditions": ["cells", "modalities"],
+        "gamma": ["cells"],
+        "sigma": ["modalities"],
+        "observations": ["genes", "cells", "timepoints", "modalities"],
+    }
+
+    return idata_coords, idata_dims
+
+
+@beartype
+def generate_prior_inference_data(
     times: TimeTensor,
     data: MultiModalTranscriptomeTensor,
+    num_chains: int,
     num_samples: int,
-    num_cells: int,
     num_genes: int,
+    num_cells: int,
     num_timepoints: int,
+    num_modalities: int,
 ) -> InferenceData:
     """
-    Generate samples from the prior predictive distribution of the deterministic
+    Generate samples from the prior predictive distribution based on the deterministic
     transcription-splicing model.
 
     Args:
-        times (TimeTensor): Array of time points for each cell.
-        data (MultiModalTranscriptomeTensor): Observed data tensor with dimensions
-            [num_cells, num_genes, num_timepoints, num_modalities].
-        num_samples (Integer): Number of prior samples to generate.
-        num_cells (Integer): Number of cells in the data.
-        num_genes (Integer): Number of genes in the data.
-        num_timepoints (Integer): Number of timepoints per cell.
+        times (TimeTensor): Time points for each cell, shape (num_cells, num_timepoints).
+        data (MultiModalTranscriptomeTensor): Actual observed data to include for comparison.
+        num_samples (int): Number of prior samples to generate.
+        num_cells (int): Number of cells.
+        num_genes (int): Number of genes.
+        num_timepoints (int): Number of timepoints per cell.
+        num_modalities (int): Number of modalities (e.g., types of measurements like mRNA, protein levels).
 
     Returns:
-        az.InferenceData: An ArviZ InferenceData object containing the prior samples.
+        InferenceData: An ArviZ InferenceData object containing the generated prior samples
+                       and the actual observed data for comparison.
     """
-    # Prepare the model function from the stored module
     model = deterministic_transcription_splicing_probabilistic_model
-
-    # Setup the Predictive object for prior sampling
     rng_key = jax.random.PRNGKey(0)
-    predictive = Predictive(model, num_samples=num_samples)
 
-    # Generate prior predictive samples
+    predictive = Predictive(
+        model,
+        num_samples=num_chains * num_samples,
+        batch_ndims=1,
+        parallel=False,
+    )
     prior_predictions = predictive(rng_key, times=times, data=data)
 
-    # Construct the InferenceData object
+    coords, dims = create_inference_data_labels(
+        num_genes,
+        num_cells,
+        num_timepoints,
+        ["pre-mRNA", "mRNA"],
+    )
+
     idata = az.from_numpyro(
         posterior=None,
         prior=prior_predictions,
-        coords={
-            "cell": jnp.arange(num_cells),
-            "gene": jnp.arange(num_genes),
-            "timepoint": jnp.arange(num_timepoints),
-        },
-        dims={
-            "u_obs": ["cell", "gene", "timepoint"],
-            "s_obs": ["cell", "gene", "timepoint"],
+        coords=coords,
+        dims=dims,
+        posterior_predictive={
+            "observations": prior_predictions["observations"]
         },
     )
 
-    # Optionally, add observed data for diagnostics and comparison
     observed_data = xr.Dataset(
         {
-            "u_obs": (["cell", "gene", "timepoint"], data[..., 0]),
-            "s_obs": (["cell", "gene", "timepoint"], data[..., 1]),
-        },
-        coords={
-            "cell": jnp.arange(num_cells),
-            "gene": jnp.arange(num_genes),
-            "timepoint": jnp.arange(num_timepoints),
-        },
+            "observations": (
+                ["genes", "cells", "timepoints", "modalities"],
+                data,
+            ),
+        }
     )
+
     idata.add_groups({"observed_data": observed_data})
+
+    return idata
+
+
+def generate_posterior_inference_data(
+    times: TimeTensor,
+    data: MultiModalTranscriptomeTensor,
+    num_chains: int,
+    num_samples: int,
+    num_genes: int,
+    num_cells: int,
+    num_timepoints: int,
+    num_modalities: int,
+    num_warmup: int = 500,
+) -> InferenceData:
+    model = deterministic_transcription_splicing_probabilistic_model
+    rng_key = jax.random.PRNGKey(0)
+
+    prior_predictive = Predictive(
+        model,
+        num_samples=num_chains * num_samples,
+        batch_ndims=1,
+        parallel=False,
+    )
+    prior_predictions = prior_predictive(rng_key, times=times, data=data)
+
+    kernel = NUTS(model)
+    mcmc = MCMC(
+        kernel,
+        num_warmup=num_warmup,
+        num_samples=num_samples,
+        num_chains=num_chains,
+        progress_bar=True,
+    )
+
+    mcmc.run(rng_key, times=times, data=data)
+    mcmc.print_summary()
+
+    posterior_samples = mcmc.get_samples()
+    posterior_predictive = Predictive(model, posterior_samples)
+    rng_key, _ = jax.random.split(rng_key)
+    posterior_predictions = posterior_predictive(
+        rng_key, times=times, data=data
+    )
+
+    coords, dims = create_inference_data_labels(
+        num_genes,
+        num_cells,
+        num_timepoints,
+        ["pre-mRNA", "mRNA"],
+    )
+    idata = az.from_numpyro(
+        mcmc,
+        prior=prior_predictions,
+        posterior_predictive=posterior_predictions,
+        coords=coords,
+        dims=dims,
+    )
 
     return idata
