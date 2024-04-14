@@ -2792,9 +2792,6 @@ s3fs==2023.5.0 ; python_version >= "3.10" and python_version < "3.12" \
 scanpy==1.9.8 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:2ab1790d2b82eadb0cf8d487f468beac7a8f6a3a8fd7112d1ae989f8c52a4353 \
     --hash=sha256:abcca12dfe6975146277b6a76841e2328e07c6a9f518d234ba6a889b26b456dc
-scienceplots==2.1.1 ; python_version >= "3.10" and python_version < "3.12" \
-    --hash=sha256:2e64d2e93b4f98702f30145dbb70d238f5dc315e227fec331489631232dfc9e0 \
-    --hash=sha256:d8d197e3410f87ebdad0b9c265eaab596094fb082d97123e835f6bc32800ab54
 scikit-learn==1.1.3 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:23fb9e74b813cc2528b5167d82ed08950b11106ccf50297161875e45152fb311 \
     --hash=sha256:250da993701da88bf475e7c5746abf1285ea0ae47e4d0917cd13afd6600bb162 \
