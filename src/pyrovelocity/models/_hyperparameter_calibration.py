@@ -62,6 +62,7 @@ def solve_for_lognormal_sigma_given_threshold_and_tail_mass(
     threshold: float,
     tail_mass: float = 0.05,
     upper: bool = True,
+    sigma_guess: float = 0.1,
 ) -> float:
     """
     Solve for sigma of a lognormal distribution to achieve a specified tail
@@ -93,7 +94,6 @@ def solve_for_lognormal_sigma_given_threshold_and_tail_mass(
         >>> )
         1.5773652131590963
     """
-    sigma_guess = 1.0
 
     func_to_solve = lambda sigma: (
         lognormal_tail_probability(
