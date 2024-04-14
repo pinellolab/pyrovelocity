@@ -8,6 +8,7 @@ from beartype.typing import Tuple
 from numpyro.infer import MCMC
 from numpyro.infer import NUTS
 from numpyro.infer import Predictive
+from returns.result import Success
 
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models import (
@@ -22,13 +23,14 @@ from pyrovelocity.models._deterministic_inference import (
 from pyrovelocity.models._deterministic_inference import (
     generate_test_data_for_deterministic_model_inference,
 )
+from pyrovelocity.models._deterministic_inference import save_inference_plots
 
 
 logger = configure_logging(__name__)
 
 
 @pytest.fixture
-def setup_data():
+def setup_observational_data():
     return generate_test_data_for_deterministic_model_inference(
         num_genes=1,
         num_cells=3,
@@ -40,7 +42,7 @@ def setup_data():
 @beartype
 @pytest.fixture
 def setup_prior_inference_data(
-    setup_data
+    setup_observational_data
 ) -> Tuple[
     InferenceData,
     int,
@@ -53,7 +55,7 @@ def setup_prior_inference_data(
         num_cells,
         num_timepoints,
         num_modalities,
-    ) = setup_data
+    ) = setup_observational_data
 
     num_chains = 1
     num_samples = 10
@@ -72,7 +74,16 @@ def setup_prior_inference_data(
     return idata, num_chains, num_samples
 
 
-def test_priors(setup_data):
+@beartype
+@pytest.fixture
+def setup_posterior_inference_data(
+    setup_observational_data
+) -> Tuple[
+    InferenceData,
+    int,
+    int,
+    int,
+]:
     (
         times,
         data,
@@ -80,7 +91,36 @@ def test_priors(setup_data):
         num_cells,
         num_timepoints,
         num_modalities,
-    ) = setup_data
+    ) = setup_observational_data
+
+    num_chains = 1
+    num_samples = 10
+    num_warmup = 5
+
+    idata_posterior = generate_posterior_inference_data(
+        times=times,
+        data=data,
+        num_chains=num_chains,
+        num_samples=num_samples,
+        num_genes=num_genes,
+        num_cells=num_cells,
+        num_timepoints=num_timepoints,
+        num_modalities=num_modalities,
+        num_warmup=num_warmup,
+    )
+
+    return idata_posterior, num_chains, num_samples, num_warmup
+
+
+def test_priors(setup_observational_data):
+    (
+        times,
+        data,
+        num_genes,
+        num_cells,
+        num_timepoints,
+        num_modalities,
+    ) = setup_observational_data
     rng_key = jax.random.PRNGKey(0)
 
     def model():
@@ -97,8 +137,8 @@ def test_priors(setup_data):
         prior_samples["initial_conditions"][:, :, 0],
         prior_samples["initial_conditions"][:, :, 1],
     )
-    assert u0_samples.shape == (500, num_cells)
-    assert s0_samples.shape == (500, num_cells)
+    assert u0_samples.shape == (500, num_genes)
+    assert s0_samples.shape == (500, num_genes)
     assert jnp.all(
         u0_samples > 0
     ), "All initial u0 values should be positive (LogNormal)"
@@ -107,7 +147,7 @@ def test_priors(setup_data):
     ), "All initial s0 values should be positive (LogNormal)"
 
     gamma_samples = prior_samples["gamma"]
-    assert gamma_samples.shape == (500, num_cells)
+    assert gamma_samples.shape == (500, num_genes)
     assert jnp.all(
         gamma_samples > 0
     ), "All gamma values should be positive (LogNormal)"
@@ -119,7 +159,7 @@ def test_priors(setup_data):
     ), "All sigma values should be positive (HalfNormal)"
 
 
-def test_ode_solution(setup_data):
+def test_ode_solution(setup_observational_data):
     (
         times,
         data,
@@ -127,7 +167,7 @@ def test_ode_solution(setup_data):
         num_cells,
         num_timepoints,
         num_modalities,
-    ) = setup_data
+    ) = setup_observational_data
     rng_key = jax.random.PRNGKey(0)
 
     def model():
@@ -160,7 +200,7 @@ def test_ode_solution(setup_data):
     ), "s predictions contain non-finite values"
 
 
-def test_model_sampling_statements_prior_predictive(setup_data):
+def test_model_sampling_statements_prior_predictive(setup_observational_data):
     (
         times,
         data,
@@ -168,7 +208,7 @@ def test_model_sampling_statements_prior_predictive(setup_data):
         num_cells,
         num_timepoints,
         num_modalities,
-    ) = setup_data
+    ) = setup_observational_data
     rng_key = jax.random.PRNGKey(0)
     rng_key, rng_key_ = jax.random.split(rng_key)
 
@@ -190,7 +230,9 @@ def test_model_sampling_statements_prior_predictive(setup_data):
     ), "Shape of prior predictive observations incorrect."
 
 
-def test_model_sampling_statements_posterior_predictive(setup_data):
+def test_model_sampling_statements_posterior_predictive(
+    setup_observational_data
+):
     (
         times,
         data,
@@ -198,7 +240,7 @@ def test_model_sampling_statements_posterior_predictive(setup_data):
         num_cells,
         num_timepoints,
         num_modalities,
-    ) = setup_data
+    ) = setup_observational_data
     rng_key = jax.random.PRNGKey(0)
     rng_key, rng_key_ = jax.random.split(rng_key)
 
@@ -228,7 +270,7 @@ def test_model_sampling_statements_posterior_predictive(setup_data):
 
 
 def test_generate_prior_inference_data(
-    setup_data,
+    setup_observational_data,
     setup_prior_inference_data,
 ):
     (
@@ -238,35 +280,35 @@ def test_generate_prior_inference_data(
         num_cells,
         num_timepoints,
         num_modalities,
-    ) = setup_data
+    ) = setup_observational_data
 
     (
-        idata,
+        idata_prior,
         num_chains,
         num_samples,
     ) = setup_prior_inference_data
 
     assert isinstance(
-        idata, az.InferenceData
+        idata_prior, az.InferenceData
     ), "Output should be an ArviZ InferenceData object"
 
     assert (
-        idata.prior.coords["cells"].size == num_cells
+        idata_prior.prior.coords["cells"].size == num_cells
     ), "Cell coordinate should match num_cells"
 
     assert (
-        idata.prior.coords["genes"].size == num_genes
+        idata_prior.prior.coords["genes"].size == num_genes
     ), "Gene coordinate should match num_genes"
 
     assert (
-        idata.prior.coords["timepoints"].size == num_timepoints
+        idata_prior.prior.coords["timepoints"].size == num_timepoints
     ), "Timepoint coordinate should match num_timepoints"
 
     assert (
-        "observations" in idata.prior
+        "observations" in idata_prior.prior
     ), "Observations variable should be part of the prior group"
 
-    assert idata.prior["observations"].shape == (
+    assert idata_prior.prior["observations"].shape == (
         num_chains,
         num_samples,
         num_genes,
@@ -275,20 +317,20 @@ def test_generate_prior_inference_data(
         num_modalities,
     ), "Shape of observations should match"
 
-    assert idata.prior["initial_conditions"].shape == (
+    assert idata_prior.prior["initial_conditions"].shape == (
         num_chains,
         num_samples,
-        num_cells,
+        num_genes,
         num_modalities,
     ), "Shape of initial_conditions should match"
 
-    assert idata.prior["gamma"].shape == (
+    assert idata_prior.prior["gamma"].shape == (
         num_chains,
         num_samples,
-        num_cells,
+        num_genes,
     ), "Shape of gamma should match"
 
-    assert idata.prior["sigma"].shape == (
+    assert idata_prior.prior["sigma"].shape == (
         num_chains,
         num_samples,
         num_modalities,
@@ -296,7 +338,8 @@ def test_generate_prior_inference_data(
 
 
 def test_generate_posterior_inference_data(
-    setup_data,
+    setup_observational_data,
+    setup_posterior_inference_data,
 ):
     (
         times,
@@ -305,23 +348,14 @@ def test_generate_posterior_inference_data(
         num_cells,
         num_timepoints,
         num_modalities,
-    ) = setup_data
+    ) = setup_observational_data
 
-    num_chains = 1
-    num_samples = 10
-    num_warmup = 5
-
-    idata_posterior = generate_posterior_inference_data(
-        times=times,
-        data=data,
-        num_chains=num_chains,
-        num_samples=num_samples,
-        num_genes=num_genes,
-        num_cells=num_cells,
-        num_timepoints=num_timepoints,
-        num_modalities=num_modalities,
-        num_warmup=num_warmup,
-    )
+    (
+        idata_posterior,
+        num_chains,
+        num_samples,
+        num_warmup,
+    ) = setup_posterior_inference_data
 
     assert isinstance(
         idata_posterior, az.InferenceData
@@ -361,14 +395,14 @@ def test_generate_posterior_inference_data(
     assert idata_posterior.prior["initial_conditions"].shape == (
         num_chains,
         num_samples,
-        num_cells,
+        num_genes,
         num_modalities,
     ), "Shape of initial_conditions should be correct"
 
     assert idata_posterior.prior["gamma"].shape == (
         num_chains,
         num_samples,
-        num_cells,
+        num_genes,
     ), "Shape of gamma should be correct"
 
     assert idata_posterior.prior["sigma"].shape == (
@@ -376,3 +410,85 @@ def test_generate_posterior_inference_data(
         num_samples,
         num_modalities,
     ), "Shape of sigma should be correct"
+
+
+def test_generate_inference_data_plots(
+    setup_observational_data,
+    setup_prior_inference_data,
+    setup_posterior_inference_data,
+    tmp_path,
+):
+    (
+        times,
+        data,
+        num_genes,
+        num_cells,
+        num_timepoints,
+        num_modalities,
+    ) = setup_observational_data
+
+    (
+        idata_prior,
+        num_chains,
+        num_samples,
+    ) = setup_prior_inference_data
+
+    (
+        idata_posterior,
+        num_chains,
+        num_samples,
+        num_warmup,
+    ) = setup_posterior_inference_data
+
+    data.shape
+    idata_prior.prior["observations"].shape
+    idata_posterior.posterior_predictive["observations"].shape
+
+    output_dir = tmp_path / "output_plots"
+    logger.info(
+        f"\nTest inference data plots will be saved to:\n" f"{output_dir}\n\n"
+    )
+
+    # Call the plotting function
+    result = save_inference_plots(
+        idata_prior=idata_prior,
+        idata_posterior=idata_posterior,
+        output_dir=output_dir,
+    )
+
+    # Assert that the result is a success
+    assert isinstance(result, Success)
+    assert result.unwrap() is True
+
+    # Expected files
+    expected_files = [
+        "prior_predictive_checks.png",
+        "prior_predictive_checks.pdf",
+        "posterior_predictive_checks.png",
+        "posterior_predictive_checks.pdf",
+        "prior_initial_conditions.png",
+        "prior_initial_conditions.pdf",
+        "posterior_initial_conditions.png",
+        "posterior_initial_conditions.pdf",
+        "forest_initial_conditions.png",
+        "forest_initial_conditions.pdf",
+        "prior_gamma.png",
+        "prior_gamma.pdf",
+        "posterior_gamma.png",
+        "posterior_gamma.pdf",
+        "forest_gamma.png",
+        "forest_gamma.pdf",
+        "prior_sigma.png",
+        "prior_sigma.pdf",
+        "posterior_sigma.png",
+        "posterior_sigma.pdf",
+        "forest_sigma.png",
+        "forest_sigma.pdf",
+        "trace_plots.png",
+        "trace_plots.pdf",
+    ]
+
+    # Check that each expected file has been created
+    for filename in expected_files:
+        file_path = output_dir / filename
+        assert file_path.exists(), f"File {filename} does not exist."
