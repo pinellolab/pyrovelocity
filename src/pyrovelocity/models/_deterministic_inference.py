@@ -1,6 +1,10 @@
+import os
+from os import PathLike
+
 import arviz as az
 import jax
 import jax.numpy as jnp
+import matplotlib.pyplot as plt
 import numpy as np
 import numpyro
 import numpyro.distributions as dist
@@ -9,15 +13,17 @@ from arviz import InferenceData
 from beartype import beartype
 from beartype.typing import Dict
 from beartype.typing import List
-from beartype.typing import Optional
+from beartype.typing import Literal
 from beartype.typing import Tuple
 from jaxtyping import ArrayLike
 from jaxtyping import Float
-from jaxtyping import Integer
 from jaxtyping import jaxtyped
 from numpyro.infer import MCMC
 from numpyro.infer import NUTS
 from numpyro.infer import Predictive
+from returns.result import Result
+from returns.result import Success
+from returns.result import safe
 
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models._deterministic_simulation import (
@@ -30,6 +36,7 @@ __all__ = [
     "generate_test_data_for_deterministic_model_inference",
     "generate_prior_inference_data",
     "generate_posterior_inference_data",
+    "save_inference_plots",
 ]
 
 logger = configure_logging(__name__)
@@ -59,7 +66,7 @@ def deterministic_transcription_splicing_probabilistic_model(
     times: TimeTensor,
     data: MultiModalTranscriptomeTensor,
 ):
-    num_cells, num_genes, num_timepoints, num_modalities = data.shape
+    num_genes, num_cells, num_timepoints, num_modalities = data.shape
 
     # priors
     initial_conditions = numpyro.sample(
@@ -71,11 +78,6 @@ def deterministic_transcription_splicing_probabilistic_model(
         "gamma",
         dist.LogNormal(loc=jnp.log(1.13), scale=0.35),
         sample_shape=(num_genes,),
-    )
-    sigma = numpyro.sample(
-        "sigma",
-        dist.HalfNormal(scale=1.0),
-        sample_shape=(num_modalities,),
     )
 
     def model_solver(gene_index, cell_index):
@@ -89,22 +91,35 @@ def deterministic_transcription_splicing_probabilistic_model(
         )
         return solution.ys
 
+    # predictions = jax.vmap(
+    #     jax.vmap(
+    #         model_solver,
+    #         in_axes=(0, None),
+    #     ),
+    #     in_axes=(None, 0),
+    # )(
+    #     jnp.arange(num_genes),
+    #     jnp.arange(num_cells),
+    # )
     predictions = jax.vmap(
-        jax.vmap(
-            model_solver,
-            in_axes=(0, None),
-        ),
-        in_axes=(None, 0),
-    )(
-        jnp.arange(num_genes),
-        jnp.arange(num_cells),
-    )
+        lambda g: jax.vmap(
+            lambda c: model_solver(g, c),
+            in_axes=0,
+        )(jnp.arange(num_cells)),
+        in_axes=0,
+    )(jnp.arange(num_genes))
 
     logger.info(
         f"\nPredictions Shape: {predictions.shape}\n"
         f"Data Shape: {data.shape}\n\n"
     )
-    sigma_expanded = sigma.reshape(1, 1, 1, 2)
+
+    sigma = numpyro.sample(
+        "sigma",
+        dist.HalfNormal(scale=1.0),
+        sample_shape=(num_modalities,),
+    )
+    sigma_expanded = sigma.reshape(1, 1, 1, num_modalities)
 
     numpyro.sample(
         "observations",
@@ -146,9 +161,12 @@ def generate_test_data_for_deterministic_model_inference(
         num_modalities (Integer): Number of modalities
         log_time_start (float): Log-space start for time points.
         log_time_end (float): Log-space end for time points.
-        noise_levels (Tuple[float, float]): Standard deviations for observational noise on each modality.
-        initial_conditions_params (Tuple[float, float]): Parameters (mean, std) for log-normal initial conditions.
-        gamma_params (Tuple[float, float]): Parameters (mean, std) for log-normal gamma distribution.
+        noise_levels (Tuple[float, float]):
+            Standard deviations for observational noise on each modality.
+        initial_conditions_params (Tuple[float, float]):
+            Parameters (mean, std) for log-normal initial conditions.
+        gamma_params (Tuple[float, float]):
+            Parameters (mean, std) for log-normal gamma distribution.
 
 
     Returns:
@@ -294,8 +312,8 @@ def create_inference_data_labels(
     }
 
     idata_dims = {
-        "initial_conditions": ["cells", "modalities"],
-        "gamma": ["cells"],
+        "initial_conditions": ["genes", "modalities"],
+        "gamma": ["genes"],
         "sigma": ["modalities"],
         "observations": ["genes", "cells", "timepoints", "modalities"],
     }
@@ -315,21 +333,25 @@ def generate_prior_inference_data(
     num_modalities: int,
 ) -> InferenceData:
     """
-    Generate samples from the prior predictive distribution based on the deterministic
-    transcription-splicing model.
+    Generate samples from the prior predictive distribution based on the
+    deterministic transcription-splicing model.
 
     Args:
-        times (TimeTensor): Time points for each cell, shape (num_cells, num_timepoints).
-        data (MultiModalTranscriptomeTensor): Actual observed data to include for comparison.
+        times (TimeTensor):
+            Time points for each cell, shape (num_cells, num_timepoints).
+        data (MultiModalTranscriptomeTensor):
+            Actual observed data to include for comparison.
         num_samples (int): Number of prior samples to generate.
         num_cells (int): Number of cells.
         num_genes (int): Number of genes.
         num_timepoints (int): Number of timepoints per cell.
-        num_modalities (int): Number of modalities (e.g., types of measurements like mRNA, protein levels).
+        num_modalities (int):
+            Number of modalities (e.g., types of measurements).
 
     Returns:
-        InferenceData: An ArviZ InferenceData object containing the generated prior samples
-                       and the actual observed data for comparison.
+        InferenceData:
+            An ArviZ InferenceData object containing the generated prior samples
+            and the actual observed data for comparison.
     """
     model = deterministic_transcription_splicing_probabilistic_model
     rng_key = jax.random.PRNGKey(0)
@@ -342,11 +364,14 @@ def generate_prior_inference_data(
     )
     prior_predictions = predictive(rng_key, times=times, data=data)
 
+    modality_labels = ["pre-mRNA", "mRNA"]
+    assert len(modality_labels) == num_modalities
+
     coords, dims = create_inference_data_labels(
-        num_genes,
-        num_cells,
-        num_timepoints,
-        ["pre-mRNA", "mRNA"],
+        num_genes=num_genes,
+        num_cells=num_cells,
+        num_timepoints=num_timepoints,
+        modalities=modality_labels,
     )
 
     idata = az.from_numpyro(
@@ -414,14 +439,17 @@ def generate_posterior_inference_data(
         rng_key, times=times, data=data
     )
 
+    modality_labels = ["pre-mRNA", "mRNA"]
+    assert len(modality_labels) == num_modalities
+
     coords, dims = create_inference_data_labels(
-        num_genes,
-        num_cells,
-        num_timepoints,
-        ["pre-mRNA", "mRNA"],
+        num_genes=num_genes,
+        num_cells=num_cells,
+        num_timepoints=num_timepoints,
+        modalities=modality_labels,
     )
     idata = az.from_numpyro(
-        mcmc,
+        posterior=mcmc,
         prior=prior_predictions,
         posterior_predictive=posterior_predictions,
         coords=coords,
@@ -429,3 +457,75 @@ def generate_posterior_inference_data(
     )
 
     return idata
+
+
+@beartype
+def save_inference_plots(
+    idata_prior: InferenceData,
+    idata_posterior: InferenceData,
+    output_dir: PathLike | str,
+) -> Result[Literal[True], Exception]:
+    """
+    Generate and save plots for both prior and posterior inference data.
+
+    Args:
+    idata_prior (arviz.InferenceData): Inference data from prior predictive checks.
+    idata_posterior (arviz.InferenceData): Inference data from posterior predictive checks.
+    output_dir (str): Directory path where plots will be saved.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+
+    light_gray = "#bcbcbc"
+
+    with plt.style.context(["pyrovelocity.styles.common"]):
+        az.plot_ppc(idata_posterior, group="prior")
+        plt.savefig(f"{output_dir}/prior_predictive_checks.png")
+        plt.savefig(f"{output_dir}/prior_predictive_checks.pdf")
+        plt.close()
+
+        az.plot_ppc(idata_posterior, group="posterior")
+        plt.savefig(f"{output_dir}/posterior_predictive_checks.png")
+        plt.savefig(f"{output_dir}/posterior_predictive_checks.pdf")
+        plt.close()
+
+        variables = ["initial_conditions", "gamma", "sigma"]
+
+        for var in variables:
+            az.plot_posterior(
+                idata_prior,
+                var_names=[var],
+                group="prior",
+                kind="hist",
+                color=light_gray,
+                round_to=2,
+            )
+            plt.savefig(f"{output_dir}/prior_{var}.png")
+            plt.savefig(f"{output_dir}/prior_{var}.pdf")
+            plt.close()
+
+            az.plot_posterior(
+                idata_posterior,
+                var_names=[var],
+                group="posterior",
+                kind="hist",
+                color=light_gray,
+                round_to=2,
+            )
+            plt.savefig(f"{output_dir}/posterior_{var}.png")
+            plt.savefig(f"{output_dir}/posterior_{var}.pdf")
+            plt.close()
+
+            az.plot_forest(idata_posterior, var_names=[var])
+            plt.savefig(f"{output_dir}/forest_{var}.png")
+            plt.savefig(f"{output_dir}/forest_{var}.pdf")
+            plt.close()
+
+        az.plot_trace(
+            idata_posterior,
+            rug=True,
+        )
+        plt.savefig(f"{output_dir}/trace_plots.png")
+        plt.savefig(f"{output_dir}/trace_plots.pdf")
+        plt.close()
+
+    return Success(True)
