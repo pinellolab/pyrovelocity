@@ -1,5 +1,7 @@
 import os
+import shutil
 from os import PathLike
+from pathlib import Path
 
 import arviz as az
 import jax
@@ -21,9 +23,9 @@ from jaxtyping import jaxtyped
 from numpyro.infer import MCMC
 from numpyro.infer import NUTS
 from numpyro.infer import Predictive
+from returns.result import Failure
 from returns.result import Result
 from returns.result import Success
-from returns.result import safe
 
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models._deterministic_simulation import (
@@ -91,16 +93,6 @@ def deterministic_transcription_splicing_probabilistic_model(
         )
         return solution.ys
 
-    # predictions = jax.vmap(
-    #     jax.vmap(
-    #         model_solver,
-    #         in_axes=(0, None),
-    #     ),
-    #     in_axes=(None, 0),
-    # )(
-    #     jnp.arange(num_genes),
-    #     jnp.arange(num_cells),
-    # )
     predictions = jax.vmap(
         lambda g: jax.vmap(
             lambda c: model_solver(g, c),
@@ -114,6 +106,7 @@ def deterministic_transcription_splicing_probabilistic_model(
         f"Data Shape: {data.shape}\n\n"
     )
 
+    # likelihood
     sigma = numpyro.sample(
         "sigma",
         dist.HalfNormal(scale=1.0),
@@ -469,63 +462,62 @@ def save_inference_plots(
     Generate and save plots for both prior and posterior inference data.
 
     Args:
-    idata_prior (arviz.InferenceData): Inference data from prior predictive checks.
-    idata_posterior (arviz.InferenceData): Inference data from posterior predictive checks.
-    output_dir (str): Directory path where plots will be saved.
+        idata_prior (arviz.InferenceData):
+            Inference data from prior predictive checks.
+        idata_posterior (arviz.InferenceData):
+            Inference data from posterior predictive checks.
+        output_dir (str): Directory path where plots will be saved.
     """
-    os.makedirs(output_dir, exist_ok=True)
 
-    light_gray = "#bcbcbc"
+    try:
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        light_gray = "#bcbcbc"
 
-    with plt.style.context(["pyrovelocity.styles.common"]):
-        az.plot_ppc(idata_posterior, group="prior")
-        plt.savefig(f"{output_dir}/prior_predictive_checks.png")
-        plt.savefig(f"{output_dir}/prior_predictive_checks.pdf")
-        plt.close()
-
-        az.plot_ppc(idata_posterior, group="posterior")
-        plt.savefig(f"{output_dir}/posterior_predictive_checks.png")
-        plt.savefig(f"{output_dir}/posterior_predictive_checks.pdf")
-        plt.close()
-
-        variables = ["initial_conditions", "gamma", "sigma"]
-
-        for var in variables:
-            az.plot_posterior(
-                idata_prior,
-                var_names=[var],
-                group="prior",
-                kind="hist",
-                color=light_gray,
-                round_to=2,
-            )
-            plt.savefig(f"{output_dir}/prior_{var}.png")
-            plt.savefig(f"{output_dir}/prior_{var}.pdf")
+        def save_figure(name: str):
+            for ext in ["png", "pdf"]:
+                plt.savefig(output_dir / f"{name}.{ext}")
             plt.close()
 
-            az.plot_posterior(
-                idata_posterior,
-                var_names=[var],
-                group="posterior",
-                kind="hist",
-                color=light_gray,
-                round_to=2,
-            )
-            plt.savefig(f"{output_dir}/posterior_{var}.png")
-            plt.savefig(f"{output_dir}/posterior_{var}.pdf")
-            plt.close()
+        with plt.style.context("pyrovelocity.styles.common"):
+            if not shutil.which("latex"):
+                plt.rc("text", usetex=False)
 
-            az.plot_forest(idata_posterior, var_names=[var])
-            plt.savefig(f"{output_dir}/forest_{var}.png")
-            plt.savefig(f"{output_dir}/forest_{var}.pdf")
-            plt.close()
+            az.plot_ppc(idata_posterior, group="prior")
+            save_figure("prior_predictive_checks")
 
-        az.plot_trace(
-            idata_posterior,
-            rug=True,
-        )
-        plt.savefig(f"{output_dir}/trace_plots.png")
-        plt.savefig(f"{output_dir}/trace_plots.pdf")
-        plt.close()
+            az.plot_ppc(idata_posterior, group="posterior")
+            save_figure("posterior_predictive_checks")
 
-    return Success(True)
+            variables = ["initial_conditions", "gamma", "sigma"]
+            for var in variables:
+                az.plot_posterior(
+                    idata_prior,
+                    var_names=[var],
+                    group="prior",
+                    kind="hist",
+                    color=light_gray,
+                    round_to=2,
+                )
+                save_figure(f"prior_{var}")
+
+                az.plot_posterior(
+                    idata_posterior,
+                    var_names=[var],
+                    group="posterior",
+                    kind="hist",
+                    color=light_gray,
+                    round_to=2,
+                )
+                save_figure(f"posterior_{var}")
+
+                az.plot_forest(idata_posterior, var_names=[var])
+                save_figure(f"forest_{var}")
+
+            az.plot_trace(idata_posterior, rug=True)
+            save_figure("trace_plots")
+
+        return Success(True)
+
+    except Exception as e:
+        return Failure(e)

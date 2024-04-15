@@ -449,18 +449,15 @@ def test_generate_inference_data_plots(
         f"\nTest inference data plots will be saved to:\n" f"{output_dir}\n\n"
     )
 
-    # Call the plotting function
     result = save_inference_plots(
         idata_prior=idata_prior,
         idata_posterior=idata_posterior,
         output_dir=output_dir,
     )
 
-    # Assert that the result is a success
-    assert isinstance(result, Success)
-    assert result.unwrap() is True
+    assert isinstance(result, Success), "The result should be a Success type."
+    assert result.unwrap() is True, "The result should unwrap to True."
 
-    # Expected files
     expected_files = [
         "prior_predictive_checks.png",
         "prior_predictive_checks.pdf",
@@ -488,7 +485,6 @@ def test_generate_inference_data_plots(
         "trace_plots.pdf",
     ]
 
-    # Check that each expected file has been created
     for filename in expected_files:
         file_path = output_dir / filename
         assert file_path.exists(), f"File {filename} does not exist."
