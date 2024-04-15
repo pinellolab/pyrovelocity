@@ -3544,7 +3544,7 @@
       "os:osx,arch:aarch64": {
         "bzlTransitiveDigest": "pO1vx26DfYYJbtV5qhe9OIGKvpMqwMLIeM8AOVhad2c=",
         "accumulatedFileDigests": {
-          "@@//:requirements-bazel.txt": "8ca4eeb95062095d39d1438c9b42f668afca0726fd4e075d0c82665076023cb9"
+          "@@//:requirements-bazel.txt": "8919a027fb8e5f25075dc1de2d87d35b4b66426851765886a324fc5043f3e3c7"
         },
         "envVariables": {},
         "generatedRepoSpecs": {
@@ -3670,6 +3670,35 @@
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_einops",
               "requirement": "einops==0.7.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:0f3096f26b914f465f6ff3c66f5478f9a5e380bb367ffc6493a68143fbbf1fd1     --hash=sha256:b2b04ad6081a3b227080c9bf5e3ace7160357ff03043cd66cc5b2319eb7031d1",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_daft": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_daft",
+              "requirement": "daft==0.1.2 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:3e77e0389ca539a5741a906bcdcaae462b68261d06b960b0c04498b695d312e5     --hash=sha256:8771c8f109e07d08f90eff11adcf722831cc7db0605cf6dd9dcde524082cf74f",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -8460,6 +8489,9 @@
                   "3.10"
                 ],
                 "cycler": [
+                  "3.10"
+                ],
+                "daft": [
                   "3.10"
                 ],
                 "databricks_cli": [
