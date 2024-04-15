@@ -1,6 +1,7 @@
 import arviz as az
 import jax
 import jax.numpy as jnp
+import numpy as np
 import pytest
 from arviz import InferenceData
 from beartype import beartype
@@ -9,6 +10,7 @@ from numpyro.infer import MCMC
 from numpyro.infer import NUTS
 from numpyro.infer import Predictive
 from returns.result import Success
+from xarray import Dataset
 
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models import (
@@ -22,6 +24,9 @@ from pyrovelocity.models._deterministic_inference import (
 )
 from pyrovelocity.models._deterministic_inference import (
     generate_test_data_for_deterministic_model_inference,
+)
+from pyrovelocity.models._deterministic_inference import (
+    print_inference_data_structure,
 )
 from pyrovelocity.models._deterministic_inference import save_inference_plots
 
@@ -488,3 +493,35 @@ def test_generate_inference_data_plots(
     for filename in expected_files:
         file_path = output_dir / filename
         assert file_path.exists(), f"File {filename} does not exist."
+
+
+@pytest.fixture
+def simple_inference_data():
+    """Create a simple InferenceData object for testing."""
+    data = np.random.rand(10, 3)
+    dataset = Dataset({"parameter": (("draw", "chain"), data)})
+    return az.InferenceData(posterior=dataset)
+
+
+def test_print_inference_data_structure(simple_inference_data):
+    """Test that the structure description is correct for a simple case."""
+    expected_output = (
+        "Overview of InferenceData structure:\n"
+        "\nGroup: posterior\n"
+        "  Variables and their dimensions:\n"
+        "  parameter: (draw=10, chain=3)\n"
+    )
+    actual_output = print_inference_data_structure(simple_inference_data)
+    assert (
+        actual_output == expected_output
+    ), "Output structure description did not match expected."
+
+
+def test_empty_inference_data():
+    """Test that the function handles an empty InferenceData object gracefully."""
+    empty_idata = az.InferenceData()
+    expected_output = "Overview of InferenceData structure:\n"
+    actual_output = print_inference_data_structure(empty_idata)
+    assert (
+        actual_output == expected_output
+    ), "Output should be gracefully handled for empty InferenceData."
