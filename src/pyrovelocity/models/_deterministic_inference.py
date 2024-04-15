@@ -101,7 +101,7 @@ def deterministic_transcription_splicing_probabilistic_model(
         in_axes=0,
     )(jnp.arange(num_genes))
 
-    logger.info(
+    logger.debug(
         f"\nPredictions Shape: {predictions.shape}\n"
         f"Data Shape: {data.shape}\n\n"
     )
@@ -388,6 +388,9 @@ def generate_prior_inference_data(
 
     idata.add_groups({"observed_data": observed_data})
 
+    structure_description = print_inference_data_structure(idata)
+    logger.info(structure_description)
+
     return idata
 
 
@@ -448,6 +451,9 @@ def generate_posterior_inference_data(
         coords=coords,
         dims=dims,
     )
+
+    structure_description = print_inference_data_structure(idata)
+    logger.info(structure_description)
 
     return idata
 
@@ -521,3 +527,31 @@ def save_inference_plots(
 
     except Exception as e:
         return Failure(e)
+
+
+@beartype
+def print_inference_data_structure(idata: InferenceData) -> str:
+    """
+    Generates a formatted string describing the structure of an InferenceData
+    object, including the dimensions and sizes of variables in each group.
+
+    Args:
+        idata (InferenceData): The InferenceData object to describe.
+
+    Returns:
+        str: A formatted string with the complete structure description.
+    """
+    groups = idata.groups()
+    info_lines = ["Overview of InferenceData structure:"]
+    for group in groups:
+        data_group = getattr(idata, group)
+        info_lines.append(f"\nGroup: {group}")
+        info_lines.append("  Variables and their dimensions:")
+        for var_name, data_array in data_group.data_vars.items():
+            dims_info = ", ".join(
+                [f"{dim}={data_group[dim].size}" for dim in data_array.dims]
+            )
+            info_lines.append(f"  {var_name}: ({dims_info})")
+        info_lines.append("")
+
+    return "\n".join(info_lines).strip() + "\n"
