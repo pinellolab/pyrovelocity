@@ -445,10 +445,6 @@ def test_generate_inference_data_plots(
         num_warmup,
     ) = setup_posterior_inference_data
 
-    data.shape
-    idata_prior.prior["observations"].shape
-    idata_posterior.posterior_predictive["observations"].shape
-
     output_dir = tmp_path / "output_plots"
     logger.info(
         f"\nTest inference data plots will be saved to:\n" f"{output_dir}\n\n"
