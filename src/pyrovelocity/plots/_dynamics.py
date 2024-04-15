@@ -1,10 +1,11 @@
+import shutil
+
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 from beartype import beartype
 from beartype.typing import List
 from diffrax import Solution
 from matplotlib import colors
-
 
 __all__ = [
     "plot_deterministic_simulation_phase_portrait",
@@ -32,6 +33,11 @@ def plot_deterministic_simulation_trajectories(
     )
 
     with plt.style.context(["pyrovelocity.styles.common"]):
+        if not shutil.which("latex"):
+            plt.rc(
+                "text",
+                usetex=False,
+            )
         fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
         cmap = plt.get_cmap(colormap_name)
@@ -113,6 +119,11 @@ def plot_deterministic_simulation_phase_portrait(
     unspliced, spliced = solution.ys[:, 0], solution.ys[:, 1]
 
     with plt.style.context(["pyrovelocity.styles.common"]):
+        if not shutil.which("latex"):
+            plt.rc(
+                "text",
+                usetex=False,
+            )
         fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
         # linear scale
