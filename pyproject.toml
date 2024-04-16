@@ -550,6 +550,25 @@ show_column_numbers = true
 # show_error_codes = true
 show_error_context = true
 
+[tool.pydeps]
+max_bacon = 3
+cluster = true
+max_cluster_size = 10
+min_cluster_size = 2
+keep_target_cluster = true
+rankdir = "TB"
+no_show = true
+show_dot = true
+start_color = 15
+rmprefix = "pyrovelocity."
+exclude = [
+  "pyrovelocity.workflows.configuration",
+  "pyrovelocity.logging",
+  "pyrovelocity.__main__",
+  "pyrovelocity.tests.*",
+  "pyrovelocity.workflows.cli",
+]
+
 [build-system]
 requires = ["poetry-core>=1.6.0"]
 build-backend = "poetry.core.masonry.api"

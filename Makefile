@@ -875,13 +875,19 @@ module-deps-graph: ## Generate module dependency graph with pydeps.
 	--rankdir TB \
 	--no-show \
 	--show-dot \
+	--start-color 15 \
 	--exclude \
-	pyrovelocity.io \
 	pyrovelocity.workflows.configuration \
 	pyrovelocity.logging \
+	pyrovelocity.__main__ \
 	pyrovelocity.tests.* \
 	pyrovelocity.workflows.cli \
-	--rmprefix pyrovelocity.
+	--rmprefix pyrovelocity. \
+	> pyrovelocity.dot
+	gsed -i 's/Helvetica/"Latin Modern Sans"/g' pyrovelocity.dot
+	gsed -i 's/fontsize=10/fontsize=16/g' pyrovelocity.dot
+	gsed -i '/label = pyrovelocity/d' pyrovelocity.dot
+	dot -Tsvg pyrovelocity.dot -o pyrovelocity.svg 
 	svg2pdf pyrovelocity.svg pyrovelocity.pdf
 
 make-storage-bucket: ## Create storage bucket.
