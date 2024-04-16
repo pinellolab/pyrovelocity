@@ -167,3 +167,9 @@ mlruns
 /data/
 /models/
 /reports/
+
+# scratch
+scratch.*
+
+# graphviz
+*.dot
