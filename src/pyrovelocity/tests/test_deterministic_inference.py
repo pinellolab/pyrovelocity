@@ -36,11 +36,26 @@ logger = configure_logging(__name__)
 
 @pytest.fixture
 def setup_observational_data():
-    return generate_test_data_for_deterministic_model_inference(
+    (
+        times,
+        data,
+        num_genes,
+        num_cells,
+        num_timepoints,
+        num_modalities,
+    ) = generate_test_data_for_deterministic_model_inference(
         num_genes=1,
         num_cells=3,
         num_timepoints=4,
         num_modalities=2,
+    )
+    return (
+        times,
+        data,
+        num_genes,
+        num_cells,
+        num_timepoints,
+        num_modalities,
     )
 
 
@@ -65,7 +80,7 @@ def setup_prior_inference_data(
     num_chains = 1
     num_samples = 10
 
-    idata = generate_prior_inference_data(
+    idata_prior = generate_prior_inference_data(
         times=times,
         data=data,
         num_chains=num_chains,
@@ -76,7 +91,7 @@ def setup_prior_inference_data(
         num_modalities=num_modalities,
     )
 
-    return idata, num_chains, num_samples
+    return idata_prior, num_chains, num_samples
 
 
 @beartype
