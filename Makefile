@@ -805,7 +805,8 @@ set-git-env: ## Set git environment variables.
 	@echo ""
 
 tree: ## Print directory tree.
-	tree -a --dirsfirst -L 4 -I ".git|.direnv|*pycache*|*ruff_cache*|*pytest_cache*|outputs|multirun|conf|scripts|site|*venv*|.coverage"
+	tree -a --dirsfirst -L 4 -I ".git|.direnv|*pycache*|*ruff_cache*|*pytest_cache*|outputs|multirun|\
+	conf|scripts|site|*venv*|.coverage|bazel-*|.quarto|.hypothesis|.ensembl|mlruns|data|models|reports"
 
 approve-prs: ## Approve github pull requests from bots: PR_ENTRIES="2-5 10 12-18"
 	for entry in $(PR_ENTRIES); do \
