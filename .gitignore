@@ -173,3 +173,6 @@ scratch.*
 
 # graphviz
 *.dot
+
+# uml
+.uml
