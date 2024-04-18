@@ -348,6 +348,7 @@ def generate_prior_inference_data(
     """
     model = deterministic_transcription_splicing_probabilistic_model
     rng_key = jax.random.PRNGKey(0)
+    rng_key, rng_key_ = jax.random.split(rng_key)
 
     predictive = Predictive(
         model,
@@ -355,7 +356,7 @@ def generate_prior_inference_data(
         batch_ndims=1,
         parallel=False,
     )
-    prior_predictions = predictive(rng_key, times=times, data=data)
+    prior_predictions = predictive(rng_key_, times=times, data=data)
 
     modality_labels = ["pre-mRNA", "mRNA"]
     assert len(modality_labels) == num_modalities
@@ -407,6 +408,7 @@ def generate_posterior_inference_data(
 ) -> InferenceData:
     model = deterministic_transcription_splicing_probabilistic_model
     rng_key = jax.random.PRNGKey(0)
+    rng_key, rng_key_ = jax.random.split(rng_key)
 
     prior_predictive = Predictive(
         model,
@@ -414,7 +416,7 @@ def generate_posterior_inference_data(
         batch_ndims=1,
         parallel=False,
     )
-    prior_predictions = prior_predictive(rng_key, times=times, data=data)
+    prior_predictions = prior_predictive(rng_key_, times=times, data=data)
 
     kernel = NUTS(model)
     mcmc = MCMC(
@@ -425,14 +427,13 @@ def generate_posterior_inference_data(
         progress_bar=True,
     )
 
-    mcmc.run(rng_key, times=times, data=data)
+    mcmc.run(rng_key_, times=times, data=data)
     mcmc.print_summary()
 
     posterior_samples = mcmc.get_samples()
     posterior_predictive = Predictive(model, posterior_samples)
-    rng_key, _ = jax.random.split(rng_key)
     posterior_predictions = posterior_predictive(
-        rng_key, times=times, data=data
+        rng_key_, times=times, data=data
     )
 
     modality_labels = ["pre-mRNA", "mRNA"]
