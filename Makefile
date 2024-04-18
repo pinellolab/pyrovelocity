@@ -792,7 +792,7 @@ install-crane: ## Install crane. Check docs before execution: https://github.com
 #-----------------------------
 
 UML_SRC_DIR := src/pyrovelocity
-UML_SUBPACKAGES := $(shell find $(UML_SRC_DIR) -type d | grep -v '__pycache__')
+UML_SUBPACKAGES := $(shell find $(UML_SRC_DIR) -type d -mindepth 0 -maxdepth 1 | grep -v '__pycache__')
 UML_SVG_DIR := .uml/svg
 UML_PDF_DIR := .uml/pdf
 UML_PLANTUML_SERVER := http://localhost:7865/svg/
@@ -817,13 +817,24 @@ uml-diagrams: $(UML_SUBPACKAGES) ## Generate diagrams
 
 $(UML_SUBPACKAGES): | $(UML_SVG_DIR) $(UML_PDF_DIR)
 	@echo "Processing package: $@"
-	@-py2puml $@ $(subst /,.,$(subst src/,,$@)) | curl -X POST --data-binary @- $(UML_PLANTUML_SERVER) --output $(UML_SVG_DIR)/$(notdir $@).svg
-	@if [ -s $(UML_SVG_DIR)/$(notdir $@).svg ]; then \
-		echo "Converting $(UML_SVG_DIR)/$(notdir $@).svg to PDF..."; \
-		svg2pdf $(UML_SVG_DIR)/$(notdir $@).svg $(UML_PDF_DIR)/$(notdir $@).pdf; \
-	else \
-		echo "SVG generation failed for $@, skipping PDF conversion..."; \
-	fi
+	@-pyreverse \
+		--output puml \
+		--output-directory $(UML_SVG_DIR) \
+		--project $(notdir $@) \
+		--no-standalone \
+		--max-color-depth 3 \
+		--colorized \
+		$@
+	@echo "Generating SVG and PDF from PUML files for package: $(notdir $@)..."
+	@for puml_file in $(UML_SVG_DIR)/classes_$(notdir $@).puml $(UML_SVG_DIR)/packages_$(notdir $@).puml; do \
+		curl -X POST --data-binary @$${puml_file} $(UML_PLANTUML_SERVER) --output $${puml_file%.puml}.svg; \
+		if [ -s $${puml_file%.puml}.svg ]; then \
+			echo "Converting $${puml_file%.puml}.svg to PDF..."; \
+			svg2pdf $${puml_file%.puml}.svg $(UML_PDF_DIR)/$$(basename $${puml_file%.puml}).pdf; \
+		else \
+			echo "SVG generation failed for $${puml_file}, skipping PDF conversion..."; \
+		fi; \
+	done
 
 uml-clean: ## Clean up generated files
 	@echo "Cleaning up files..."
@@ -832,6 +843,18 @@ uml-clean: ## Clean up generated files
 	@docker rm $(UML_DOCKER_CONTAINER_NAME) || true
 
 .PHONY: uml-all uml-check-server uml-stop-server uml-diagrams $(UML_SUBPACKAGES) uml-clean
+
+# draft using py2puml 
+# $(UML_SUBPACKAGES): | $(UML_SVG_DIR) $(UML_PDF_DIR)
+# 	@echo "Processing package: $@"
+# 	@-py2puml $@ $(subst /,.,$(subst src/,,$@)) | curl -X POST --data-binary @- $(UML_PLANTUML_SERVER) --output $(UML_SVG_DIR)/$(notdir $@).svg
+# 	@if [ -s $(UML_SVG_DIR)/$(notdir $@).svg ]; then \
+# 		echo "Converting $(UML_SVG_DIR)/$(notdir $@).svg to PDF..."; \
+# 		svg2pdf $(UML_SVG_DIR)/$(notdir $@).svg $(UML_PDF_DIR)/$(notdir $@).pdf; \
+# 	else \
+# 		echo "SVG generation failed for $@, skipping PDF conversion..."; \
+# 	fi
+
 
 #------------
 ##@ utilities
