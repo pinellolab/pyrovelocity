@@ -787,6 +787,52 @@ install-crane: ## Install crane. Check docs before execution: https://github.com
 		echo "Crane installed successfully to /usr/local/bin/crane" \
 	)
 
+#-----------------------------
+##@ generate architecture docs
+#-----------------------------
+
+UML_SRC_DIR := src/pyrovelocity
+UML_SUBPACKAGES := $(shell find $(UML_SRC_DIR) -type d | grep -v '__pycache__')
+UML_SVG_DIR := .uml/svg
+UML_PDF_DIR := .uml/pdf
+UML_PLANTUML_SERVER := http://localhost:7865/svg/
+UML_DOCKER_CONTAINER_NAME := plantumlserver
+
+uml-all: uml-check-server $(UML_PDF_DIR) $(UML_SVG_DIR) uml-diagrams uml-stop-server
+
+uml-check-server: ## Check if PlantUML Server is running or start it
+	@echo "Checking for running PlantUML Server..."
+	@docker ps | grep -q $(UML_DOCKER_CONTAINER_NAME) || docker run -d --rm -p 7865:8080 --name $(UML_DOCKER_CONTAINER_NAME) plantuml/plantuml-server:jetty
+
+uml-stop-server: ## Stop PlantUML Server
+	@echo "Stopping PlantUML Server..."
+	@docker stop $(UML_DOCKER_CONTAINER_NAME)
+
+$(UML_SVG_DIR) $(UML_PDF_DIR): ## Create directories for SVG and PDF files
+	@echo "Creating directories $(UML_SVG_DIR) and $(UML_PDF_DIR)..."
+	@mkdir -p $@
+
+uml-diagrams: $(UML_SUBPACKAGES) ## Generate diagrams
+	@echo "Diagrams have been generated."
+
+$(UML_SUBPACKAGES): | $(UML_SVG_DIR) $(UML_PDF_DIR)
+	@echo "Processing package: $@"
+	@-py2puml $@ $(subst /,.,$(subst src/,,$@)) | curl -X POST --data-binary @- $(UML_PLANTUML_SERVER) --output $(UML_SVG_DIR)/$(notdir $@).svg
+	@if [ -s $(UML_SVG_DIR)/$(notdir $@).svg ]; then \
+		echo "Converting $(UML_SVG_DIR)/$(notdir $@).svg to PDF..."; \
+		svg2pdf $(UML_SVG_DIR)/$(notdir $@).svg $(UML_PDF_DIR)/$(notdir $@).pdf; \
+	else \
+		echo "SVG generation failed for $@, skipping PDF conversion..."; \
+	fi
+
+uml-clean: ## Clean up generated files
+	@echo "Cleaning up files..."
+	@rm -rf $(UML_SVG_DIR) $(UML_PDF_DIR)
+	@docker stop $(UML_DOCKER_CONTAINER_NAME) || true
+	@docker rm $(UML_DOCKER_CONTAINER_NAME) || true
+
+.PHONY: uml-all uml-check-server uml-stop-server uml-diagrams $(UML_SUBPACKAGES) uml-clean
+
 #------------
 ##@ utilities
 #------------
