@@ -13,9 +13,11 @@ import numpyro.distributions as dist
 import xarray as xr
 from arviz import InferenceData
 from beartype import beartype
+from beartype.typing import Callable
 from beartype.typing import Dict
 from beartype.typing import List
 from beartype.typing import Literal
+from beartype.typing import Optional
 from beartype.typing import Tuple
 from jaxtyping import ArrayLike
 from jaxtyping import Float
@@ -278,6 +280,7 @@ def create_inference_data_labels(
     num_genes: int,
     num_cells: int,
     num_timepoints: int,
+    times: TimeTensor,
     modalities: List[str],
 ) -> Tuple[
     Dict[str, ArrayLike],
@@ -302,18 +305,83 @@ def create_inference_data_labels(
     idata_coords = {
         "genes": np.arange(num_genes),
         "cells": np.arange(num_cells),
-        "timepoints": np.arange(num_timepoints),
+        "timepoints": np.arange(
+            num_timepoints
+        ),  # represents number of timepoints per cell
         "modalities": modalities,
     }
 
     idata_dims = {
-        "initial_conditions": ["genes", "modalities"],
+        "initial_conditions": [
+            "genes",
+            "modalities",
+        ],
         "gamma": ["genes"],
         "sigma": ["modalities"],
-        "observations": ["genes", "cells", "timepoints", "modalities"],
+        "times": [
+            "cells",
+            "timepoints",
+        ],  # represents observed timepoints for each cell
+        "observations": [
+            "genes",
+            "cells",
+            "timepoints",
+            "modalities",
+        ],
     }
 
     return idata_coords, idata_dims
+
+
+@beartype
+def generate_predictive_samples(
+    model: Callable,
+    times: TimeTensor,
+    data: MultiModalTranscriptomeTensor,
+    num_chains: int = 1,
+    num_samples: Optional[int] = None,
+    posterior_samples: Optional[Dict[str, ArrayLike]] = None,
+    observation_flag: bool = False,
+    rng_key: ArrayLike = jax.random.PRNGKey(0),
+) -> Dict[str, ArrayLike]:
+    """
+    Creates a predictive model to generate predictive samples.
+
+    The value of the num_samples argument used internal to
+    `numpyro.infer.Predictive` will be inferred from the shape of the
+    posterior_samples and this will override the num_samples argument.
+
+    Args:
+        model (Callable): The model function to use for predictions.
+        times (TimeTensor): Time points for each cell, used as an input to the model.
+        data (MultiModalTranscriptomeTensor): The data tensor to compare against the model.
+        num_chains (int): Number of MCMC chains to run.
+        num_samples (Optional[int]): Number of samples to generate per chain.
+        posterior_samples (Optional[Dict[str, ArrayLike]]): Samples from the posterior distribution.
+        observation_flag (bool): Flag to determine if data should be observed.
+        rng_key (ArrayLike): Jax pseudo-random number generator key.
+
+    Returns:
+        Dict[str, ArrayLike]: A dictionary of predictions from the model.
+    """
+    rng_key, rng_key_ = jax.random.split(rng_key)
+
+    predictive = Predictive(
+        model=model,
+        posterior_samples=posterior_samples,
+        num_samples=num_chains * num_samples if num_samples else None,
+        batch_ndims=1,
+        parallel=False,
+    )
+
+    predictions = predictive(
+        rng_key_,
+        times=times,
+        data=data,
+        observation_flag=observation_flag,
+    )
+
+    return predictions
 
 
 @beartype
@@ -350,19 +418,15 @@ def generate_prior_inference_data(
     """
     model = deterministic_transcription_splicing_probabilistic_model
     rng_key = jax.random.PRNGKey(0)
-    rng_key, rng_key_ = jax.random.split(rng_key)
 
-    predictive = Predictive(
-        model,
-        num_samples=num_chains * num_samples,
-        batch_ndims=1,
-        parallel=False,
-    )
-    prior_predictions = predictive(
-        rng_key_,
+    prior_predictions = generate_predictive_samples(
+        model=model,
         times=times,
         data=data,
+        num_chains=num_chains,
+        num_samples=num_samples,
         observation_flag=False,
+        rng_key=rng_key,
     )
 
     modality_labels = ["pre-mRNA", "mRNA"]
@@ -372,6 +436,7 @@ def generate_prior_inference_data(
         num_genes=num_genes,
         num_cells=num_cells,
         num_timepoints=num_timepoints,
+        times=times,
         modalities=modality_labels,
     )
 
@@ -397,7 +462,7 @@ def generate_prior_inference_data(
     idata.add_groups({"observed_data": observed_data})
 
     structure_description = print_inference_data_structure(idata)
-    logger.info(structure_description)
+    logger.info(f"\nPrior Inference Data:\n" + structure_description)
 
     return idata
 
@@ -415,19 +480,15 @@ def generate_posterior_inference_data(
 ) -> InferenceData:
     model = deterministic_transcription_splicing_probabilistic_model
     rng_key = jax.random.PRNGKey(0)
-    rng_key, rng_key_ = jax.random.split(rng_key)
 
-    prior_predictive = Predictive(
-        model,
-        num_samples=num_chains * num_samples,
-        batch_ndims=1,
-        parallel=False,
-    )
-    prior_predictions = prior_predictive(
-        rng_key_,
+    prior_predictions = generate_predictive_samples(
+        model=model,
         times=times,
         data=data,
+        num_chains=num_chains,
+        num_samples=num_samples,
         observation_flag=False,
+        rng_key=rng_key,
     )
 
     kernel = NUTS(model)
@@ -439,18 +500,21 @@ def generate_posterior_inference_data(
         progress_bar=True,
     )
 
+    rng_key, rng_key_ = jax.random.split(rng_key)
     mcmc.run(rng_key_, times=times, data=data)
     mcmc.print_summary()
 
     posterior_samples = mcmc.get_samples(group_by_chain=False)
 
-    rng_key, rng_key_ = jax.random.split(rng_key)
-    posterior_predictive = Predictive(model, posterior_samples)
-    posterior_predictions = posterior_predictive(
-        rng_key_,
+    posterior_predictions = generate_predictive_samples(
+        model=model,
         times=times,
         data=data,
+        num_chains=num_chains,
+        num_samples=None,
+        posterior_samples=posterior_samples,
         observation_flag=False,
+        rng_key=rng_key,
     )
 
     modality_labels = ["pre-mRNA", "mRNA"]
@@ -460,6 +524,7 @@ def generate_posterior_inference_data(
         num_genes=num_genes,
         num_cells=num_cells,
         num_timepoints=num_timepoints,
+        times=times,
         modalities=modality_labels,
     )
     idata = az.from_numpyro(
@@ -471,9 +536,16 @@ def generate_posterior_inference_data(
     )
 
     structure_description = print_inference_data_structure(idata)
-    logger.info(structure_description)
+    logger.info(f"\nPosterior Inference Data:\n" + structure_description)
 
     return idata
+
+
+@beartype
+def save_figure(name: str, output_dir: PathLike):
+    for ext in ["png", "pdf"]:
+        plt.savefig(output_dir / f"{name}.{ext}")
+    plt.close()
 
 
 @beartype
@@ -498,20 +570,21 @@ def save_inference_plots(
         output_dir.mkdir(parents=True, exist_ok=True)
         light_gray = "#bcbcbc"
 
-        def save_figure(name: str):
-            for ext in ["png", "pdf"]:
-                plt.savefig(output_dir / f"{name}.{ext}")
-            plt.close()
-
         with plt.style.context("pyrovelocity.styles.common"):
             if not shutil.which("latex"):
                 plt.rc("text", usetex=False)
 
             az.plot_ppc(idata_posterior, group="prior")
-            save_figure("prior_predictive_checks")
+            save_figure(
+                name="prior_predictive_checks",
+                output_dir=output_dir,
+            )
 
             az.plot_ppc(idata_posterior, group="posterior")
-            save_figure("posterior_predictive_checks")
+            save_figure(
+                name="posterior_predictive_checks",
+                output_dir=output_dir,
+            )
 
             variables = ["initial_conditions", "gamma", "sigma"]
             for var in variables:
@@ -523,7 +596,10 @@ def save_inference_plots(
                     color=light_gray,
                     round_to=2,
                 )
-                save_figure(f"prior_{var}")
+                save_figure(
+                    name=f"prior_{var}",
+                    output_dir=output_dir,
+                )
 
                 az.plot_posterior(
                     idata_posterior,
@@ -533,13 +609,28 @@ def save_inference_plots(
                     color=light_gray,
                     round_to=2,
                 )
-                save_figure(f"posterior_{var}")
+                save_figure(
+                    name=f"posterior_{var}",
+                    output_dir=output_dir,
+                )
 
                 az.plot_forest(idata_posterior, var_names=[var])
-                save_figure(f"forest_{var}")
+                save_figure(
+                    name=f"forest_{var}",
+                    output_dir=output_dir,
+                )
 
             az.plot_trace(idata_posterior, rug=True)
-            save_figure("trace_plots")
+            save_figure(
+                name="trace_plots",
+                output_dir=output_dir,
+            )
+
+            plot_sample_trajectories(idata_posterior, output_dir)
+            save_figure(
+                name="sample_trajectories",
+                output_dir=output_dir,
+            )
 
         return Success(True)
 
