@@ -560,7 +560,7 @@ def print_inference_data_structure(idata: InferenceData) -> str:
         str: A formatted string with the complete structure description.
     """
     groups = idata.groups()
-    info_lines = ["Overview of InferenceData structure:"]
+    info_lines = ["\nOverview of InferenceData structure:"]
     for group in groups:
         data_group = getattr(idata, group)
         info_lines.append(f"\nGroup: {group}")
