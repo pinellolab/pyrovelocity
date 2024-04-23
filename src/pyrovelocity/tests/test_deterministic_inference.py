@@ -6,9 +6,11 @@ import pytest
 from arviz import InferenceData
 from beartype import beartype
 from beartype.typing import Tuple
+from matplotlib.figure import Figure
 from numpyro.infer import MCMC
 from numpyro.infer import NUTS
 from numpyro.infer import Predictive
+from returns.pipeline import is_successful
 from returns.result import Success
 from xarray import Dataset
 
@@ -24,6 +26,9 @@ from pyrovelocity.models._deterministic_inference import (
 )
 from pyrovelocity.models._deterministic_inference import (
     generate_test_data_for_deterministic_model_inference,
+)
+from pyrovelocity.models._deterministic_inference import (
+    plot_sample_trajectories,
 )
 from pyrovelocity.models._deterministic_inference import (
     print_inference_data_structure,
@@ -44,7 +49,7 @@ def setup_observational_data():
         num_timepoints,
         num_modalities,
     ) = generate_test_data_for_deterministic_model_inference(
-        num_genes=1,
+        num_genes=2,
         num_cells=3,
         num_timepoints=4,
         num_modalities=2,
@@ -504,6 +509,37 @@ def test_generate_inference_data_plots(
     for filename in expected_files:
         file_path = output_dir / filename
         assert file_path.exists(), f"File {filename} does not exist."
+
+    pattern_checks = {
+        "sample_trajectories_*.png": False,
+        "sample_trajectories_*.pdf": False,
+    }
+
+    for pattern in pattern_checks.keys():
+        files = list(output_dir.glob(pattern))
+        assert len(files) > 0, f"No files match the pattern {pattern}"
+        pattern_checks[pattern] = True
+
+    for pattern, found in pattern_checks.items():
+        assert found, f"No files found for the pattern {pattern}"
+
+
+def test_plot_sample_trajectories(
+    setup_posterior_inference_data,
+):
+    idata_posterior, _, _, _ = setup_posterior_inference_data
+
+    result = plot_sample_trajectories(
+        idata=idata_posterior,
+    )
+    if is_successful(result):
+        figs = result.unwrap()
+
+        assert isinstance(figs, list) and all(
+            isinstance(fig, Figure) for fig in figs
+        ), "All elements should be matplotlib Figure instances."
+        for fig in figs:
+            assert len(fig.axes[0].lines) > 0, "Each plot should contain lines."
 
 
 @pytest.fixture
