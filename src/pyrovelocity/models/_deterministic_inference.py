@@ -85,6 +85,31 @@ def deterministic_transcription_splicing_probabilistic_model(
         sample_shape=(num_genes,),
     )
 
+    # This could be a deterministic site,
+    #
+    # numpyro.deterministic("times", times)
+    #
+    # but then it would not be recorded with
+    # is_observed=True in the posterior samples.
+    # This property is used by ArviZ to extract
+    # observed_data.
+    #
+    numpyro.sample(
+        "times",
+        dist.Delta(times),
+        obs=times,
+    )
+    #
+    # When times becomes a latent random variable
+    # as opposed to an observed deterministic one,
+    # then it can be sampled, e.g.,
+    #
+    # times = numpyro.sample(
+    #     "times",
+    #     dist.Uniform(low=0, high=1),
+    #     sample_shape=(num_cells, num_timepoints),
+    # )
+
     def model_solver(gene_index, cell_index):
         init_cond = initial_conditions[gene_index]
         rate = gamma[gene_index]
