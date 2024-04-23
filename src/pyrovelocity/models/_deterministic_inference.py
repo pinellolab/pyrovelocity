@@ -22,9 +22,11 @@ from beartype.typing import Tuple
 from jaxtyping import ArrayLike
 from jaxtyping import Float
 from jaxtyping import jaxtyped
+from matplotlib.figure import Figure
 from numpyro.infer import MCMC
 from numpyro.infer import NUTS
 from numpyro.infer import Predictive
+from returns.pipeline import is_successful
 from returns.result import Failure
 from returns.result import Result
 from returns.result import Success
@@ -40,6 +42,7 @@ __all__ = [
     "generate_test_data_for_deterministic_model_inference",
     "generate_prior_inference_data",
     "generate_posterior_inference_data",
+    "plot_sample_trajectories",
     "save_inference_plots",
 ]
 
@@ -316,6 +319,9 @@ def create_inference_data_labels(
     structures used here in probabilistic inference reporting with `numpyro` and
     `arviz`.
 
+    Note that `timepoints` represents the number of timepoints per cell, and
+    `times` represents the values of the observed timepoints for each cell.
+
     Args:
     num_genes (int): Number of genes.
     num_cells (int): Number of cells.
@@ -330,9 +336,7 @@ def create_inference_data_labels(
     idata_coords = {
         "genes": np.arange(num_genes),
         "cells": np.arange(num_cells),
-        "timepoints": np.arange(
-            num_timepoints
-        ),  # represents number of timepoints per cell
+        "timepoints": np.arange(num_timepoints),
         "modalities": modalities,
     }
 
@@ -346,7 +350,7 @@ def create_inference_data_labels(
         "times": [
             "cells",
             "timepoints",
-        ],  # represents observed timepoints for each cell
+        ],
         "observations": [
             "genes",
             "cells",
@@ -471,12 +475,17 @@ def generate_prior_inference_data(
         coords=coords,
         dims=dims,
         posterior_predictive={
-            "observations": prior_predictions["observations"]
+            "observations": prior_predictions["observations"],
+            "times": prior_predictions["times"],
         },
     )
 
     observed_data = xr.Dataset(
         {
+            "times": (
+                ["cells", "timepoints"],
+                times,
+            ),
             "observations": (
                 ["genes", "cells", "timepoints", "modalities"],
                 data,
@@ -487,7 +496,7 @@ def generate_prior_inference_data(
     idata.add_groups({"observed_data": observed_data})
 
     structure_description = print_inference_data_structure(idata)
-    logger.info(f"\nPrior Inference Data:\n" + structure_description)
+    logger.info(f"\nPrior Inference Data\n\n" + structure_description)
 
     return idata
 
@@ -561,16 +570,40 @@ def generate_posterior_inference_data(
     )
 
     structure_description = print_inference_data_structure(idata)
-    logger.info(f"\nPosterior Inference Data:\n" + structure_description)
+    logger.info(f"\nPosterior Inference Data\n\n" + structure_description)
 
     return idata
 
 
 @beartype
-def save_figure(name: str, output_dir: PathLike):
+def save_figure(
+    name: str,
+    output_dir: PathLike,
+):
     for ext in ["png", "pdf"]:
         plt.savefig(output_dir / f"{name}.{ext}")
     plt.close()
+
+
+@beartype
+def save_figure_object(
+    fig: Figure,
+    name: str,
+    output_dir: PathLike,
+):
+    """
+    Saves a matplotlib figure to disk.
+
+    Args:
+        fig (Figure): The figure to save.
+        name (str): Base filename to use for saving the figure.
+        output_dir (PathLike): Directory path where the figure will be saved.
+    """
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for ext in ["png", "pdf"]:
+        fig.savefig(output_dir / f"{name}.{ext}")
+    plt.close(fig)
 
 
 @beartype
@@ -651,13 +684,109 @@ def save_inference_plots(
                 output_dir=output_dir,
             )
 
-            plot_sample_trajectories(idata_posterior, output_dir)
-            save_figure(
-                name="sample_trajectories",
-                output_dir=output_dir,
-            )
+            result = plot_sample_trajectories(idata_posterior)
+            if is_successful(result):
+                for idx, fig in enumerate(result.unwrap()):
+                    save_figure_object(
+                        fig=fig,
+                        name=f"sample_trajectories_{idx}",
+                        output_dir=output_dir,
+                    )
 
         return Success(True)
+
+    except Exception as e:
+        return Failure(e)
+
+
+@beartype
+def plot_sample_trajectories(
+    idata: InferenceData,
+    trajectories_index: int | slice = slice(None),
+    num_trajectories: int = 5,
+) -> Result[List[Figure], Exception]:
+    """
+    Plots sample trajectories over time for all genes, modality, and cell
+    combinations.
+
+    Args:
+        idata (InferenceData):
+            The posterior predictive data containing simulations.
+        trajectories_index (int | slice):
+            Index for the specific trajectories to plot.
+        num_trajectories (int):
+            Number of random trajectories to plot for clarity.
+
+    Returns:
+        Result[List[Figure], Exception]:
+            Success containing a list of Figure objects if plots are created
+            without errors, otherwise the error wrapped in a Failure.
+    """
+    try:
+        figs = []
+        genes = idata.observed_data.observations.coords["genes"].values
+        for gene_index in genes:
+            fig, ax = plt.subplots(figsize=(12, 8))
+
+            observed_data = idata.observed_data.observations.sel(
+                genes=gene_index
+            ).values
+            observed_times = idata.observed_data.times.values
+
+            for modality_index, modality in enumerate(
+                idata.observed_data.observations.coords["modalities"].values
+            ):
+                for cell_index in range(observed_data.shape[0]):
+                    ax.plot(
+                        observed_times[cell_index],
+                        observed_data[cell_index, :, modality_index],
+                        "o-",
+                        label=f"Observed - Cell {cell_index}, {modality}",
+                        marker=".",
+                        ms=12,
+                    )
+
+            sample_y = idata.posterior_predictive.observations.sel(
+                chain=0, draw=trajectories_index, genes=gene_index
+            ).values
+
+            if num_trajectories > sample_y.shape[0]:
+                logger.warning(
+                    f"\nRequested number of trajectories ({num_trajectories}) "
+                    f"exceeds available samples ({sample_y.shape[0]}).\n"
+                    f"Adjusting to maximum available.\n"
+                )
+                num_trajectories = sample_y.shape[0]
+            indices_to_plot = np.random.choice(
+                sample_y.shape[0], num_trajectories, replace=False
+            )
+            for idx in indices_to_plot:
+                for cell_index in range(sample_y.shape[1]):
+                    for modality_index, modality in enumerate(
+                        idata.posterior_predictive.observations.coords[
+                            "modalities"
+                        ].values
+                    ):
+                        ax.plot(
+                            observed_times[cell_index],
+                            sample_y[idx, cell_index, :, modality_index],
+                            alpha=0.4,
+                            color="red" if modality == "pre-mRNA" else "blue",
+                            label=f"Predicted - Cell {cell_index}, {modality}"
+                            if idx == indices_to_plot[0]
+                            else "_nolegend_",
+                        )
+
+            ax.set_xlabel("Time")
+            ax.set_ylabel("Expression")
+            ax.set_title(
+                f"Gene {gene_index} - Observed and Predicted Trajectories"
+            )
+            ax.legend()
+            ax.grid(True)
+            figs.append(fig)
+
+        return Success(figs)
 
     except Exception as e:
         return Failure(e)
