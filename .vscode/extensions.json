@@ -1,11 +1,12 @@
 {
   // https://go.microsoft.com/fwlink/?LinkId=827846
   "recommendations": [
+    "alefragnani.project-manager",
     "BazelBuild.vscode-bazel",
     "Catppuccin.catppuccin-vsc",
-    "alefragnani.project-manager",
     "charliermarsh.ruff",
     "christian-kohler.path-intellisense",
+    "cweijan.vscode-database-client2",
     "donjayamanne.python-extension-pack",
     "eamodio.gitlens",
     "github.vscode-github-actions",
@@ -18,6 +19,8 @@
     "ms-toolsai.jupyter",
     "ms-vsliveshare.vsliveshare",
     "njzy.stats-bar",
+    "patbenatar.advanced-new-file",
+    "quarto.quarto",
     "rangav.vscode-thunder-client",
     "redhat.vscode-yaml",
     "sleistner.vscode-fileutils",
@@ -26,7 +29,6 @@
     "tamasfe.even-better-toml",
     "vscode-icons-team.vscode-icons",
     "vscodevim.vim",
-    "patbenatar.advanced-new-file",
     "richie5um2.vscode-sort-json"
   ]
 }
