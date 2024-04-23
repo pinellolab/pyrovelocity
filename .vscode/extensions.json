@@ -3,11 +3,11 @@
   "recommendations": [
     "BazelBuild.vscode-bazel",
     "Catppuccin.catppuccin-vsc",
+    "alefragnani.project-manager",
     "charliermarsh.ruff",
     "christian-kohler.path-intellisense",
     "donjayamanne.python-extension-pack",
     "eamodio.gitlens",
-    "felipecaputo.git-project-manager",
     "github.vscode-github-actions",
     "GitHub.vscode-pull-request-github",
     "googlecloudtools.cloudcode",
