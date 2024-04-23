@@ -69,7 +69,7 @@ MultiModalTranscriptomeTensor = Float[
 def deterministic_transcription_splicing_probabilistic_model(
     times: TimeTensor,
     data: MultiModalTranscriptomeTensor,
-    observation_flag: bool = True,
+    data_observation_flag: bool = True,
 ):
     num_genes, num_cells, num_timepoints, num_modalities = data.shape
 
@@ -124,7 +124,7 @@ def deterministic_transcription_splicing_probabilistic_model(
             loc=predictions,
             scale=sigma_expanded,
         ),
-        obs=data if observation_flag else None,
+        obs=data if data_observation_flag else None,
     )
 
 
@@ -341,7 +341,7 @@ def generate_predictive_samples(
     num_chains: int = 1,
     num_samples: Optional[int] = None,
     posterior_samples: Optional[Dict[str, ArrayLike]] = None,
-    observation_flag: bool = False,
+    data_observation_flag: bool = False,
     rng_key: ArrayLike = jax.random.PRNGKey(0),
 ) -> Dict[str, ArrayLike]:
     """
@@ -358,7 +358,7 @@ def generate_predictive_samples(
         num_chains (int): Number of MCMC chains to run.
         num_samples (Optional[int]): Number of samples to generate per chain.
         posterior_samples (Optional[Dict[str, ArrayLike]]): Samples from the posterior distribution.
-        observation_flag (bool): Flag to determine if data should be observed.
+        data_observation_flag (bool): Flag to determine if data should be observed.
         rng_key (ArrayLike): Jax pseudo-random number generator key.
 
     Returns:
@@ -378,7 +378,7 @@ def generate_predictive_samples(
         rng_key_,
         times=times,
         data=data,
-        observation_flag=observation_flag,
+        data_observation_flag=data_observation_flag,
     )
 
     return predictions
@@ -425,7 +425,7 @@ def generate_prior_inference_data(
         data=data,
         num_chains=num_chains,
         num_samples=num_samples,
-        observation_flag=False,
+        data_observation_flag=False,
         rng_key=rng_key,
     )
 
@@ -487,7 +487,7 @@ def generate_posterior_inference_data(
         data=data,
         num_chains=num_chains,
         num_samples=num_samples,
-        observation_flag=False,
+        data_observation_flag=False,
         rng_key=rng_key,
     )
 
@@ -513,7 +513,7 @@ def generate_posterior_inference_data(
         num_chains=num_chains,
         num_samples=None,
         posterior_samples=posterior_samples,
-        observation_flag=False,
+        data_observation_flag=False,
         rng_key=rng_key,
     )
 
