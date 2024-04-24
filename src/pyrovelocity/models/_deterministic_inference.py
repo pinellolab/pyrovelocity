@@ -14,6 +14,7 @@ import xarray as xr
 from arviz import InferenceData
 from beartype import beartype
 from beartype.typing import Any, Callable, Dict, List, Literal, Optional, Tuple
+from einops import rearrange
 from jaxtyping import ArrayLike, Float, jaxtyped
 from matplotlib.figure import Figure
 from numpyro.infer import MCMC, NUTS, Predictive
@@ -60,50 +61,68 @@ MultiModalTranscriptomeTensor = Float[
 
 
 @beartype
-def solve_model_for_all_genes_cells(
+def solve_model_for_each_gene(
     initial_conditions: jnp.ndarray,
     gamma: jnp.ndarray,
     times: jnp.ndarray,
     num_genes: int,
-    num_cells: int,
-) -> jnp.ndarray:
+) -> ArrayLike:
     """
-    Solve the determnistic transcription-splicing model for all genes and
-    cells.
+    Solve the deterministic transcription-splicing model for all genes across
+    a unified time vector.
 
     Args:
         initial_conditions (jnp.ndarray):
             Initial conditions for each gene and modality.
         gamma (jnp.ndarray): Decay rates for each gene.
-        times (jnp.ndarray): Time points for each cell.
+        times (jnp.ndarray): Unified time points for the model.
         num_genes (int): Total number of genes.
-        num_cells (int): Total number of cells.
 
     Returns:
         jnp.ndarray:
-            The model's predictions across all genes, cells, and timepoints.
+            The model's predictions across all genes and the unified timepoints.
     """
 
-    def model_solver(
-        gene_index: int,
-        cell_index: int,
-    ) -> Any:
+    def model_solver(gene_index: int) -> jnp.ndarray:
         init_cond = initial_conditions[gene_index]
         rate = gamma[gene_index]
-        t = times[cell_index, :]
         return solve_transcription_splicing_model(
-            t,
+            times,
             init_cond,
             (rate,),
         ).ys
 
-    return jax.vmap(
-        lambda g: jax.vmap(
-            lambda c: model_solver(g, c),
-            in_axes=0,
-        )(jnp.arange(num_cells)),
-        in_axes=0,
-    )(jnp.arange(num_genes))
+    return jax.vmap(model_solver)(jnp.arange(num_genes))
+
+
+@beartype
+def sort_times_over_all_cells(
+    times: TimeTensor,
+) -> Tuple[jnp.ndarray, jnp.ndarray]:
+    """
+    Generates a unified sorted time vector from the provided times matrix.
+
+    If the times were not unique, it may be necessary to use jnp.unique;
+
+    all_times = jnp.unique(flat_times[sorted_indices])
+
+    however, we assume that the times are unique here.
+
+    Args:
+        times (jnp.ndarray): Time matrix with shape (num_cells, num_timepoints).
+
+    Returns:
+        Tuple of:
+            - all_times (jnp.ndarray): Unified sorted time vector.
+            - time_indices (jnp.ndarray): Indices to sort the original times.
+    """
+    flat_times = times.flatten()
+    sorted_indices = jnp.argsort(flat_times)
+    all_times = flat_times[sorted_indices]
+
+    time_indices = jnp.searchsorted(all_times, times)
+
+    return all_times, time_indices
 
 
 @jaxtyped(typechecker=beartype)
@@ -113,6 +132,8 @@ def deterministic_transcription_splicing_probabilistic_model(
     data_observation_flag: bool = True,
 ):
     num_genes, num_cells, num_timepoints, num_modalities = data.shape
+
+    all_times, time_indices = sort_times_over_all_cells(times)
 
     # priors
     initial_conditions = numpyro.sample(
@@ -151,16 +172,27 @@ def deterministic_transcription_splicing_probabilistic_model(
     #     sample_shape=(num_cells, num_timepoints),
     # )
 
-    predictions = solve_model_for_all_genes_cells(
+    predictions = solve_model_for_each_gene(
         initial_conditions=initial_conditions,
         gamma=gamma,
-        times=times,
-        num_cells=num_cells,
+        times=all_times,
         num_genes=num_genes,
     )
 
+    predictions_reordered = predictions[:, time_indices.ravel()]
+
+    predictions_rearranged = rearrange(
+        predictions_reordered,
+        "genes (cells timepoints) modalities -> genes cells timepoints modalities",
+        cells=num_cells,
+        timepoints=num_timepoints,
+        genes=num_genes,
+    )
+
     logger.debug(
-        f"\nPredictions Shape: {predictions.shape}\n"
+        f"\nPredictions shape: {predictions.shape}\n"
+        f"\nReordered predictions shape: {predictions_reordered.shape}\n"
+        f"\nRearranged predictions shape: {predictions_rearranged.shape}\n"
         f"Data Shape: {data.shape}\n\n"
     )
 
@@ -172,11 +204,11 @@ def deterministic_transcription_splicing_probabilistic_model(
     )
     sigma_expanded = sigma.reshape(1, 1, 1, num_modalities)
 
+    log_predictions = jnp.log(predictions_rearranged)
     numpyro.sample(
         "observations",
-        dist.TruncatedNormal(
-            low=0.001,
-            loc=predictions,
+        dist.LogNormal(
+            loc=log_predictions,
             scale=sigma_expanded,
         ),
         obs=data if data_observation_flag else None,
@@ -192,7 +224,7 @@ def generate_test_data_for_deterministic_model_inference(
     log_time_start: float = -1,
     log_time_end: float = 1,
     noise_levels: Tuple[float, float] = (0.05, 0.05),
-    initial_conditions_params: Tuple[float, float] = (0.23, 0.9),
+    initial_conditions_params: Tuple[float, float] = (0.1, 0.1),
     gamma_params: Tuple[float, float] = (1.13, 0.35),
 ) -> Tuple[
     TimeTensor,
@@ -261,6 +293,9 @@ def generate_test_data_for_deterministic_model_inference(
     row_order = jnp.argsort(time_indices[:, 0])
     # Each row is sorted
     # The rows are sorted by the first column
+    # The dimensions are 'cells timepoints' or
+    # 'num_cells num_timepoints'
+    # which is '3 4' in the following example
     # Array([[ 0,  2,  4, 10],
     #        [ 1,  5,  8, 11],
     #        [ 3,  6,  7,  9]], dtype=int32)
@@ -313,9 +348,10 @@ def generate_test_data_for_deterministic_model_inference(
         gamma,
     )
 
-    noisy_solutions = solutions + jax.random.normal(
-        rng_key_, solutions.shape
-    ) * jnp.array(noise_levels)
+    noise = jax.random.normal(rng_key_, solutions.shape) * (
+        solutions * jnp.array(noise_levels).reshape(1, 1, 1, num_modalities)
+    )
+    noisy_solutions = solutions + noise
 
     logger.info(f"Generated test data tensor shape: {noisy_solutions.shape}")
     logger.info(f"Generated test time array shape: {times.shape}")
@@ -556,7 +592,10 @@ def generate_posterior_inference_data(
         rng_key=rng_key,
     )
 
-    kernel = NUTS(model)
+    kernel = NUTS(
+        model,
+        init_strategy=numpyro.infer.init_to_feasible,
+    )
     mcmc = MCMC(
         kernel,
         num_warmup=num_warmup,
@@ -802,10 +841,14 @@ def plot_sample_trajectories(
                         ].values
                     ):
                         ax.plot(
+                            # observed_times,
+                            # sample_y[idx, :, :, modality_index],
                             observed_times[cell_index],
                             sample_y[idx, cell_index, :, modality_index],
-                            alpha=0.2,
+                            alpha=0.3,
                             color="gray" if modality == "pre-mRNA" else "green",
+                            marker="2",
+                            ms=12,
                             # label=f"Predicted - Cell {cell_index}, {modality}"
                             # if idx == indices_to_plot[0]
                             # else "_nolegend_",
