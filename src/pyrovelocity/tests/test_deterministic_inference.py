@@ -6,10 +6,9 @@ import pytest
 from arviz import InferenceData
 from beartype import beartype
 from beartype.typing import Tuple
+from einops import rearrange, repeat
 from matplotlib.figure import Figure
-from numpyro.infer import MCMC
-from numpyro.infer import NUTS
-from numpyro.infer import Predictive
+from numpyro.infer import MCMC, NUTS, Predictive
 from returns.pipeline import is_successful
 from returns.result import Success
 from xarray import Dataset
@@ -20,21 +19,13 @@ from pyrovelocity.models import (
 )
 from pyrovelocity.models._deterministic_inference import (
     generate_posterior_inference_data,
-)
-from pyrovelocity.models._deterministic_inference import (
     generate_prior_inference_data,
-)
-from pyrovelocity.models._deterministic_inference import (
     generate_test_data_for_deterministic_model_inference,
-)
-from pyrovelocity.models._deterministic_inference import (
     plot_sample_trajectories,
-)
-from pyrovelocity.models._deterministic_inference import (
     print_inference_data_structure,
+    save_inference_plots,
+    solve_model_for_all_genes_cells,
 )
-from pyrovelocity.models._deterministic_inference import save_inference_plots
-
 
 logger = configure_logging(__name__)
 
@@ -53,6 +44,10 @@ def setup_observational_data():
         num_cells=3,
         num_timepoints=4,
         num_modalities=2,
+        # num_genes=1,
+        # num_cells=3,
+        # num_timepoints=1,
+        # num_modalities=2,
     )
     return (
         times,
@@ -135,6 +130,71 @@ def setup_posterior_inference_data(
     )
 
     return idata_posterior, num_chains, num_samples, num_warmup
+
+
+@pytest.fixture
+def model_parameters():
+    num_genes = 2
+    num_cells = 3
+    num_timepoints = 4
+    num_modalities = 2
+
+    initial_conditions = repeat(
+        jnp.array([0.1]),
+        "m -> g (repeat m)",
+        g=num_genes,
+        repeat=num_modalities,
+    )
+    gamma = repeat(
+        jnp.array([1]),
+        "g -> (repeat g)",
+        repeat=num_genes,
+    )
+
+    times = rearrange(
+        jnp.logspace(-1, 1, num_cells * num_timepoints),
+        "(t c) -> c t",
+        c=num_cells,
+    )
+
+    return initial_conditions, gamma, times, num_genes, num_cells
+
+
+def test_solve_model_for_all_genes_cells_shapes(model_parameters):
+    initial_conditions, gamma, times, num_genes, num_cells = model_parameters
+    # (num_genes, num_cells, num_timepoints, num_modalities)
+    expected_shape = (
+        num_genes,
+        num_cells,
+        times.shape[1],
+        initial_conditions.shape[1],
+    )
+
+    predictions = solve_model_for_all_genes_cells(
+        initial_conditions=initial_conditions,
+        gamma=gamma,
+        times=times,
+        num_cells=num_cells,
+        num_genes=num_genes,
+    )
+
+    assert (
+        predictions.shape == expected_shape
+    ), f"Predictions shape should be {expected_shape} but got {predictions.shape}"
+
+
+def test_solve_model_for_all_genes_cells_content(model_parameters):
+    initial_conditions, gamma, times, num_genes, num_cells = model_parameters
+
+    predictions = solve_model_for_all_genes_cells(
+        initial_conditions, gamma, times, num_cells, num_genes
+    )
+
+    assert jnp.isfinite(
+        predictions
+    ).all(), "All predictions should be finite values"
+
+    assert jnp.all((predictions >= 0)), "Predictions should be greater than 0"
 
 
 def test_priors(setup_observational_data):
