@@ -2,6 +2,7 @@ import arviz as az
 import jax
 import jax.numpy as jnp
 import numpy as np
+import numpyro
 import pytest
 from arviz import InferenceData
 from beartype import beartype
@@ -24,7 +25,8 @@ from pyrovelocity.models._deterministic_inference import (
     plot_sample_trajectories,
     print_inference_data_structure,
     save_inference_plots,
-    solve_model_for_all_genes_cells,
+    solve_model_for_each_gene,
+    sort_times_over_all_cells,
 )
 
 logger = configure_logging(__name__)
@@ -44,10 +46,11 @@ def setup_observational_data():
         num_cells=3,
         num_timepoints=4,
         num_modalities=2,
-        # num_genes=1,
-        # num_cells=3,
+        # num_genes=2,
+        # num_cells=10,
         # num_timepoints=1,
         # num_modalities=2,
+        noise_levels=(0.001, 0.001),
     )
     return (
         times,
@@ -160,21 +163,36 @@ def model_parameters():
     return initial_conditions, gamma, times, num_genes, num_cells
 
 
+def test_sort_times_over_all_cells(model_parameters):
+    initial_conditions, gamma, times, num_genes, num_cells = model_parameters
+
+    all_times, time_indices = sort_times_over_all_cells(times)
+
+    assert (
+        all_times.shape == (num_cells * times.shape[1],),
+        "All times should have the same shape as times",
+    )
+    assert (
+        all_times[time_indices] == times,
+        "All times of time indices should be equivalent to times",
+    )
+
+
 def test_solve_model_for_all_genes_cells_shapes(model_parameters):
     initial_conditions, gamma, times, num_genes, num_cells = model_parameters
+    all_times, time_indices = sort_times_over_all_cells(times)
+
     # (num_genes, num_cells, num_timepoints, num_modalities)
     expected_shape = (
         num_genes,
-        num_cells,
-        times.shape[1],
+        num_cells * times.shape[1],
         initial_conditions.shape[1],
     )
 
-    predictions = solve_model_for_all_genes_cells(
+    predictions = solve_model_for_each_gene(
         initial_conditions=initial_conditions,
         gamma=gamma,
-        times=times,
-        num_cells=num_cells,
+        times=all_times,
         num_genes=num_genes,
     )
 
@@ -182,19 +200,11 @@ def test_solve_model_for_all_genes_cells_shapes(model_parameters):
         predictions.shape == expected_shape
     ), f"Predictions shape should be {expected_shape} but got {predictions.shape}"
 
-
-def test_solve_model_for_all_genes_cells_content(model_parameters):
-    initial_conditions, gamma, times, num_genes, num_cells = model_parameters
-
-    predictions = solve_model_for_all_genes_cells(
-        initial_conditions, gamma, times, num_cells, num_genes
-    )
-
     assert jnp.isfinite(
         predictions
     ).all(), "All predictions should be finite values"
 
-    assert jnp.all((predictions >= 0)), "Predictions should be greater than 0"
+    assert jnp.all(predictions >= 0), "Predictions should be greater than 0"
 
 
 def test_priors(setup_observational_data):
@@ -329,7 +339,10 @@ def test_model_sampling_statements_posterior_predictive(
     rng_key = jax.random.PRNGKey(0)
     rng_key, rng_key_ = jax.random.split(rng_key)
 
-    nuts_kernel = NUTS(deterministic_transcription_splicing_probabilistic_model)
+    nuts_kernel = NUTS(
+        deterministic_transcription_splicing_probabilistic_model,
+        init_strategy=numpyro.infer.init_to_feasible,
+    )
     mcmc = MCMC(nuts_kernel, num_warmup=50, num_samples=50, num_chains=1)
     mcmc.run(rng_key_, times=times, data=data)
 
