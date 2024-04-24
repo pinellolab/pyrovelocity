@@ -13,29 +13,17 @@ import numpyro.distributions as dist
 import xarray as xr
 from arviz import InferenceData
 from beartype import beartype
-from beartype.typing import Callable
-from beartype.typing import Dict
-from beartype.typing import List
-from beartype.typing import Literal
-from beartype.typing import Optional
-from beartype.typing import Tuple
-from jaxtyping import ArrayLike
-from jaxtyping import Float
-from jaxtyping import jaxtyped
+from beartype.typing import Any, Callable, Dict, List, Literal, Optional, Tuple
+from jaxtyping import ArrayLike, Float, jaxtyped
 from matplotlib.figure import Figure
-from numpyro.infer import MCMC
-from numpyro.infer import NUTS
-from numpyro.infer import Predictive
+from numpyro.infer import MCMC, NUTS, Predictive
 from returns.pipeline import is_successful
-from returns.result import Failure
-from returns.result import Result
-from returns.result import Success
+from returns.result import Failure, Result, Success
 
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models._deterministic_simulation import (
     solve_transcription_splicing_model,
 )
-
 
 __all__ = [
     "deterministic_transcription_splicing_probabilistic_model",
@@ -66,6 +54,53 @@ MultiModalTranscriptomeTensor = Float[
      number_of_timepoints \
      number_of_modalities",
 ]
+
+
+@beartype
+def solve_model_for_all_genes_cells(
+    initial_conditions: jnp.ndarray,
+    gamma: jnp.ndarray,
+    times: jnp.ndarray,
+    num_genes: int,
+    num_cells: int,
+) -> jnp.ndarray:
+    """
+    Solve the determnistic transcription-splicing model for all genes and
+    cells.
+
+    Args:
+        initial_conditions (jnp.ndarray):
+            Initial conditions for each gene and modality.
+        gamma (jnp.ndarray): Decay rates for each gene.
+        times (jnp.ndarray): Time points for each cell.
+        num_genes (int): Total number of genes.
+        num_cells (int): Total number of cells.
+
+    Returns:
+        jnp.ndarray:
+            The model's predictions across all genes, cells, and timepoints.
+    """
+
+    def model_solver(
+        gene_index: int,
+        cell_index: int,
+    ) -> Any:
+        init_cond = initial_conditions[gene_index]
+        rate = gamma[gene_index]
+        t = times[cell_index, :]
+        return solve_transcription_splicing_model(
+            t,
+            init_cond,
+            (rate,),
+        ).ys
+
+    return jax.vmap(
+        lambda g: jax.vmap(
+            lambda c: model_solver(g, c),
+            in_axes=0,
+        )(jnp.arange(num_cells)),
+        in_axes=0,
+    )(jnp.arange(num_genes))
 
 
 @jaxtyped(typechecker=beartype)
@@ -113,24 +148,34 @@ def deterministic_transcription_splicing_probabilistic_model(
     #     sample_shape=(num_cells, num_timepoints),
     # )
 
-    def model_solver(gene_index, cell_index):
-        init_cond = initial_conditions[gene_index]
-        rate = gamma[gene_index]
-        t = times[cell_index, :]
-        solution = solve_transcription_splicing_model(
-            t,
-            init_cond,
-            (rate,),
-        )
-        return solution.ys
+    # TODO: refactor to solve_model_for_all_genes_cells
+    # def model_solver(gene_index, cell_index):
+    #     init_cond = initial_conditions[gene_index]
+    #     rate = gamma[gene_index]
+    #     t = times[cell_index, :]
+    #     solution = solve_transcription_splicing_model(
+    #         t,
+    #         init_cond,
+    #         (rate,),
+    #     )
+    #     return solution.ys
 
-    predictions = jax.vmap(
-        lambda g: jax.vmap(
-            lambda c: model_solver(g, c),
-            in_axes=0,
-        )(jnp.arange(num_cells)),
-        in_axes=0,
-    )(jnp.arange(num_genes))
+    # predictions = jax.vmap(
+    #     lambda g: jax.vmap(
+    #         lambda c: model_solver(g, c),
+    #         in_axes=0,
+    #     )(jnp.arange(num_cells)),
+    #     in_axes=0,
+    # )(jnp.arange(num_genes))
+    # TODO: end refactor
+
+    predictions = solve_model_for_all_genes_cells(
+        initial_conditions=initial_conditions,
+        gamma=gamma,
+        times=times,
+        num_cells=num_cells,
+        num_genes=num_genes,
+    )
 
     logger.debug(
         f"\nPredictions Shape: {predictions.shape}\n"
