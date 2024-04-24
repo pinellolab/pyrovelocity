@@ -703,7 +703,7 @@ def save_inference_plots(
 def plot_sample_trajectories(
     idata: InferenceData,
     trajectories_index: int | slice = slice(None),
-    num_trajectories: int = 5,
+    num_trajectories: int = 100,
 ) -> Result[List[Figure], Exception]:
     """
     Plots sample trajectories over time for all genes, modality, and cell
@@ -740,8 +740,11 @@ def plot_sample_trajectories(
                     ax.plot(
                         observed_times[cell_index],
                         observed_data[cell_index, :, modality_index],
-                        "o-",
-                        label=f"Observed - Cell {cell_index}, {modality}",
+                        # label=f"Observed - Cell {cell_index}, {modality}",
+                        label=f"{modality}"
+                        if cell_index == 0
+                        else "_nolegend_",
+                        color="gray" if modality == "pre-mRNA" else "green",
                         marker=".",
                         ms=12,
                     )
@@ -770,11 +773,11 @@ def plot_sample_trajectories(
                         ax.plot(
                             observed_times[cell_index],
                             sample_y[idx, cell_index, :, modality_index],
-                            alpha=0.4,
-                            color="red" if modality == "pre-mRNA" else "blue",
-                            label=f"Predicted - Cell {cell_index}, {modality}"
-                            if idx == indices_to_plot[0]
-                            else "_nolegend_",
+                            alpha=0.2,
+                            color="gray" if modality == "pre-mRNA" else "green",
+                            # label=f"Predicted - Cell {cell_index}, {modality}"
+                            # if idx == indices_to_plot[0]
+                            # else "_nolegend_",
                         )
 
             ax.set_xlabel("Time")
