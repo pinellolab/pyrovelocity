@@ -148,27 +148,6 @@ def deterministic_transcription_splicing_probabilistic_model(
     #     sample_shape=(num_cells, num_timepoints),
     # )
 
-    # TODO: refactor to solve_model_for_all_genes_cells
-    # def model_solver(gene_index, cell_index):
-    #     init_cond = initial_conditions[gene_index]
-    #     rate = gamma[gene_index]
-    #     t = times[cell_index, :]
-    #     solution = solve_transcription_splicing_model(
-    #         t,
-    #         init_cond,
-    #         (rate,),
-    #     )
-    #     return solution.ys
-
-    # predictions = jax.vmap(
-    #     lambda g: jax.vmap(
-    #         lambda c: model_solver(g, c),
-    #         in_axes=0,
-    #     )(jnp.arange(num_cells)),
-    #     in_axes=0,
-    # )(jnp.arange(num_genes))
-    # TODO: end refactor
-
     predictions = solve_model_for_all_genes_cells(
         initial_conditions=initial_conditions,
         gamma=gamma,
@@ -427,12 +406,16 @@ def generate_predictive_samples(
 
     Args:
         model (Callable): The model function to use for predictions.
-        times (TimeTensor): Time points for each cell, used as an input to the model.
-        data (MultiModalTranscriptomeTensor): The data tensor to compare against the model.
+        times (TimeTensor):
+            Time points for each cell, used as an input to the model.
+        data (MultiModalTranscriptomeTensor):
+            The data tensor to compare against the model.
         num_chains (int): Number of MCMC chains to run.
         num_samples (Optional[int]): Number of samples to generate per chain.
-        posterior_samples (Optional[Dict[str, ArrayLike]]): Samples from the posterior distribution.
-        data_observation_flag (bool): Flag to determine if data should be observed.
+        posterior_samples (Optional[Dict[str, ArrayLike]]):
+            Samples from the posterior distribution.
+        data_observation_flag (bool):
+            Flag to determine if data should be observed.
         rng_key (ArrayLike): Jax pseudo-random number generator key.
 
     Returns:
