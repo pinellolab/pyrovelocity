@@ -36,19 +36,22 @@ __all__ = [
 
 logger = configure_logging(__name__)
 
+# Timepoints refers to timepoints per cell
 TimeTensor = Float[
     ArrayLike,
-    # Cells | Timepoints per cell
-    # ------|---------------------
-    # 60    | 1
+    # Cells | Timepoints |
+    # ------|------------|
+    # 3     | 4          |
+    # 10    | 1          |
     "number_of_cells \
      number_of_timepoints",
 ]
 MultiModalTranscriptomeTensor = Float[
     ArrayLike,
-    # Genes | Cells | Timepoints per cell| Modalities
-    # ------|-------|--------------------|-------------------
-    # 1     | 60    | 1                  | 2
+    # Genes | Cells | Timepoints | Modalities |
+    # ------|-------|------------|------------|
+    # 2     | 3     | 4          | 2          |
+    # 1     | 10    | 1          | 2          |
     "number_of_genes \
      number_of_cells \
      number_of_timepoints \
