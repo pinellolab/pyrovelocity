@@ -24,6 +24,7 @@ from beartype.typing import (
 )
 from einops import rearrange
 from jaxtyping import ArrayLike, Float, jaxtyped
+from matplotlib.axes import Axes
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
 from numpyro.infer import MCMC, NUTS, Predictive
@@ -784,6 +785,52 @@ def save_inference_plots(
 
 
 @beartype
+def plot_trajectory_with_percentiles(
+    ax: Axes,
+    times: ArrayLike,
+    data: ArrayLike,
+    sample_data: ArrayLike,
+    modality: str,
+    modality_color: str,
+    percentile_interval_widths: List[float],
+    color_map_indices: ArrayLike,
+    percentiles_color_maps: Dict[str, Colormap],
+    samples_transparency: float,
+    label: str,
+    cell_index: int = 0,
+):
+    """
+    Helper function to plot trajectories and percentile bands.
+    """
+    ax.plot(
+        times,
+        data,
+        label=label,
+        color=modality_color,
+        marker=".",
+        ms=12,
+    )
+
+    for i, percentile in enumerate(percentile_interval_widths):
+        color = percentiles_color_maps[modality](color_map_indices[i])
+        pct_lower = np.percentile(sample_data, 50 - percentile / 2, axis=0)
+        pct_upper = np.percentile(sample_data, 50 + percentile / 2, axis=0)
+        poly_label = (
+            f"{round(50-percentile/2)} - {round(50+percentile/2)}%"
+            if cell_index == 0
+            else "_nolegend_"
+        )
+        ax.fill_between(
+            times,
+            pct_lower,
+            pct_upper,
+            color=color,
+            alpha=samples_transparency,
+            label=poly_label,
+        )
+
+
+@beartype
 def plot_sample_trajectories_with_percentiles(
     idata: InferenceData,
     trajectories_index: int | slice = slice(None),
@@ -839,7 +886,8 @@ def plot_sample_trajectories_with_percentiles(
             chain=0, draw=trajectories_index, genes=gene_index
         ).values
 
-        if observed_times.shape[1] == 1:
+        observed_times_shape = observed_times.shape
+        if observed_times_shape[1] == 1:
             observed_times = rearrange(observed_times, "c t -> (c t)")
             observed_data = rearrange(observed_data, "c t m -> (c t) m")
             sample_data = rearrange(sample_data, "s c t m -> s (c t) m")
@@ -847,44 +895,40 @@ def plot_sample_trajectories_with_percentiles(
         for modality_index, modality in enumerate(
             idata.observed_data.observations.coords["modalities"].values
         ):
-            lines = ax.plot(
-                observed_times,
-                observed_data[..., modality_index],
-                label=modality,
-                color=modality_line_colors.get(modality, "blue"),
-                marker=".",
-                ms=12,
-            )
-            ax.legend(
-                [lines[0]],
-                [modality],
-            )
-
-            for i, percentile in enumerate(
-                percentile_interval_widths,
-            ):
-                color = percentiles_color_maps[modality](color_map_indices[i])
-
-                pct_lower = np.percentile(
-                    sample_data[:, ..., modality_index],
-                    50 - percentile / 2,
-                    axis=0,
-                )
-                pct_upper = np.percentile(
-                    sample_data[:, ..., modality_index],
-                    50 + percentile / 2,
-                    axis=0,
-                )
-                poly_label = (
-                    f"{round(50-percentile/2)} - {round(50+percentile/2)}%"
-                )
-                ax.fill_between(
-                    observed_times,
-                    pct_lower,
-                    pct_upper,
-                    color=color,
-                    alpha=samples_transparency,
-                    label=poly_label if modality_index == 0 else "_nolegend_",
+            modality_color = modality_line_colors.get(modality, "blue")
+            if observed_times_shape[1] > 1:
+                for cell_index in range(observed_times.shape[0]):
+                    times = observed_times[cell_index]
+                    data = observed_data[cell_index, ..., modality_index]
+                    samples = sample_data[:, cell_index, ..., modality_index]
+                    label = f"{modality}" if cell_index == 0 else "_nolegend_"
+                    plot_trajectory_with_percentiles(
+                        ax=ax,
+                        times=times,
+                        data=data,
+                        sample_data=samples,
+                        modality=modality,
+                        modality_color=modality_color,
+                        percentile_interval_widths=percentile_interval_widths,
+                        color_map_indices=color_map_indices,
+                        percentiles_color_maps=percentiles_color_maps,
+                        samples_transparency=samples_transparency,
+                        label=label,
+                        cell_index=cell_index,
+                    )
+            else:
+                plot_trajectory_with_percentiles(
+                    ax=ax,
+                    times=observed_times,
+                    data=observed_data[..., modality_index],
+                    sample_data=sample_data[..., modality_index],
+                    modality=modality,
+                    modality_color=modality_color,
+                    percentile_interval_widths=percentile_interval_widths,
+                    color_map_indices=color_map_indices,
+                    percentiles_color_maps=percentiles_color_maps,
+                    samples_transparency=samples_transparency,
+                    label=modality,
                 )
 
         ax.set_xlabel("Time")
