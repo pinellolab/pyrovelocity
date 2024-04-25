@@ -5,13 +5,10 @@ import numpy as np
 import numpyro
 import pytest
 from arviz import InferenceData
-from beartype import beartype
 from beartype.typing import Tuple
 from einops import rearrange, repeat
 from matplotlib.figure import Figure
 from numpyro.infer import MCMC, NUTS, Predictive
-from returns.pipeline import is_successful
-from returns.result import Success
 from xarray import Dataset
 
 from pyrovelocity.logging import configure_logging
@@ -33,8 +30,16 @@ from pyrovelocity.models._deterministic_inference import (
 logger = configure_logging(__name__)
 
 
-@pytest.fixture
-def setup_observational_data():
+@pytest.fixture(
+    params=[
+        {"num_cells": 3, "num_timepoints": 4},
+        {"num_cells": 10, "num_timepoints": 1},
+    ],
+    scope="module",
+)
+def setup_observational_data(request):
+    num_cells = request.param.get("num_cells", 3)
+    num_timepoints = request.param.get("num_timepoints", 4)
     (
         times,
         data,
@@ -43,13 +48,9 @@ def setup_observational_data():
         num_timepoints,
         num_modalities,
     ) = generate_test_data_for_deterministic_model_inference(
-        # num_genes=2,
-        # num_cells=3,
-        # num_timepoints=4,
-        # num_modalities=2,
         num_genes=2,
-        num_cells=10,
-        num_timepoints=1,
+        num_cells=num_cells,
+        num_timepoints=num_timepoints,
         num_modalities=2,
         noise_levels=(0.001, 0.001),
     )
@@ -63,7 +64,6 @@ def setup_observational_data():
     )
 
 
-@beartype
 @pytest.fixture
 def setup_prior_inference_data(
     setup_observational_data
@@ -98,7 +98,6 @@ def setup_prior_inference_data(
     return idata_prior, num_chains, num_samples
 
 
-@beartype
 @pytest.fixture
 def setup_posterior_inference_data(
     setup_observational_data
@@ -603,7 +602,8 @@ def test_generate_inference_data_plots(
         num_warmup,
     ) = setup_posterior_inference_data
 
-    output_dir = tmp_path / "output_plots"
+    config_id = f"cells_{num_cells}_timepoints_{num_timepoints}"
+    output_dir = tmp_path / config_id
     logger.info(
         f"\nTest inference data plots will be saved to:\n" f"{output_dir}\n\n"
     )
