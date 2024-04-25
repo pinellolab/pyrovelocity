@@ -27,21 +27,30 @@ xdoctest(
 py_test_module_list(
     size = "small",
     files = [
-        "tests/test_compressedpickle.py",
-        "tests/test_criticality_index.py",
         "tests/test_cytotrace.py",
-        "tests/test_data.py",
-        "tests/test_deterministic_inference.py",
-        "tests/test_deterministic_simulation.py",
         "tests/test_plots.py",
         "tests/test_preprocess.py",
         "tests/test_pyrovelocity.py",
         "tests/test_trainer.py",
+        "tests/test_velocity.py",
+        "tests/test_velocity_module.py",
+    ],
+    imports = [".."],
+    tags = [""],
+    deps = [":pyrovelocity"],
+)
+
+py_test_module_list(
+    size = "medium",
+    files = [
+        "tests/test_compressedpickle.py",
+        "tests/test_criticality_index.py",
+        "tests/test_data.py",
+        "tests/test_deterministic_inference.py",
+        "tests/test_deterministic_simulation.py",
         "tests/test_transcription_dynamics.py",
         "tests/test_utils.py",
-        "tests/test_velocity.py",
         "tests/test_velocity_model.py",
-        "tests/test_velocity_module.py",
     ],
     imports = [".."],
     tags = [""],
