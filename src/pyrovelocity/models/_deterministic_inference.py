@@ -819,22 +819,22 @@ def plot_sample_trajectories(
                         ms=12,
                     )
 
-            sample_y = idata.posterior_predictive.observations.sel(
+            sample_data = idata.posterior_predictive.observations.sel(
                 chain=0, draw=trajectories_index, genes=gene_index
             ).values
 
-            if num_trajectories > sample_y.shape[0]:
+            if num_trajectories > sample_data.shape[0]:
                 logger.warning(
                     f"\nRequested number of trajectories ({num_trajectories}) "
-                    f"exceeds available samples ({sample_y.shape[0]}).\n"
+                    f"exceeds available samples ({sample_data.shape[0]}).\n"
                     f"Adjusting to maximum available.\n"
                 )
-                num_trajectories = sample_y.shape[0]
+                num_trajectories = sample_data.shape[0]
             indices_to_plot = np.random.choice(
-                sample_y.shape[0], num_trajectories, replace=False
+                sample_data.shape[0], num_trajectories, replace=False
             )
             for idx in indices_to_plot:
-                for cell_index in range(sample_y.shape[1]):
+                for cell_index in range(sample_data.shape[1]):
                     for modality_index, modality in enumerate(
                         idata.posterior_predictive.observations.coords[
                             "modalities"
@@ -842,9 +842,9 @@ def plot_sample_trajectories(
                     ):
                         ax.plot(
                             # observed_times,
-                            # sample_y[idx, :, :, modality_index],
+                            # sample_data[idx, :, :, modality_index],
                             observed_times[cell_index],
-                            sample_y[idx, cell_index, :, modality_index],
+                            sample_data[idx, cell_index, :, modality_index],
                             alpha=0.3,
                             color="gray" if modality == "pre-mRNA" else "green",
                             marker="2",
