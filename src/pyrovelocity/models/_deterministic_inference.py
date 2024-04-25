@@ -681,7 +681,7 @@ def save_inference_plots(
     idata_prior: InferenceData,
     idata_posterior: InferenceData,
     output_dir: PathLike | str,
-) -> Result[Literal[True], Exception]:
+) -> bool:
     """
     Generate and save plots for both prior and posterior inference data.
 
@@ -693,79 +693,85 @@ def save_inference_plots(
         output_dir (str): Directory path where plots will be saved.
     """
 
-    try:
-        output_dir = Path(output_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
-        light_gray = "#bcbcbc"
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    light_gray = "#bcbcbc"
 
-        with plt.style.context("pyrovelocity.styles.common"):
-            if not shutil.which("latex"):
-                plt.rc("text", usetex=False)
+    with plt.style.context("pyrovelocity.styles.common"):
+        if not shutil.which("latex"):
+            plt.rc("text", usetex=False)
 
-            az.plot_ppc(idata_posterior, group="prior")
+        az.plot_ppc(idata_posterior, group="prior")
+        save_figure(
+            name="prior_predictive_checks",
+            output_dir=output_dir,
+        )
+
+        az.plot_ppc(idata_posterior, group="posterior")
+        save_figure(
+            name="posterior_predictive_checks",
+            output_dir=output_dir,
+        )
+
+        variables = ["initial_conditions", "gamma", "sigma"]
+        for var in variables:
+            az.plot_posterior(
+                idata_prior,
+                var_names=[var],
+                group="prior",
+                kind="hist",
+                color=light_gray,
+                round_to=2,
+            )
             save_figure(
-                name="prior_predictive_checks",
+                name=f"prior_{var}",
                 output_dir=output_dir,
             )
 
-            az.plot_ppc(idata_posterior, group="posterior")
+            az.plot_posterior(
+                idata_posterior,
+                var_names=[var],
+                group="posterior",
+                kind="hist",
+                color=light_gray,
+                round_to=2,
+            )
             save_figure(
-                name="posterior_predictive_checks",
+                name=f"posterior_{var}",
                 output_dir=output_dir,
             )
 
-            variables = ["initial_conditions", "gamma", "sigma"]
-            for var in variables:
-                az.plot_posterior(
-                    idata_prior,
-                    var_names=[var],
-                    group="prior",
-                    kind="hist",
-                    color=light_gray,
-                    round_to=2,
-                )
-                save_figure(
-                    name=f"prior_{var}",
-                    output_dir=output_dir,
-                )
-
-                az.plot_posterior(
-                    idata_posterior,
-                    var_names=[var],
-                    group="posterior",
-                    kind="hist",
-                    color=light_gray,
-                    round_to=2,
-                )
-                save_figure(
-                    name=f"posterior_{var}",
-                    output_dir=output_dir,
-                )
-
-                az.plot_forest(idata_posterior, var_names=[var])
-                save_figure(
-                    name=f"forest_{var}",
-                    output_dir=output_dir,
-                )
-
-            az.plot_trace(idata_posterior, rug=True)
+            az.plot_forest(idata_posterior, var_names=[var])
             save_figure(
-                name="trace_plots",
+                name=f"forest_{var}",
                 output_dir=output_dir,
             )
 
-            figs = plot_sample_trajectories(idata_posterior)
-            for idx, fig in enumerate(figs):
-                save_figure_object(
-                    fig=fig,
-                    name=f"sample_trajectories_{idx}",
-                    output_dir=output_dir,
-                )
+        az.plot_trace(idata_posterior, rug=True)
+        save_figure(
+            name="trace_plots",
+            output_dir=output_dir,
+        )
 
-        return Success(True)
+        figs = plot_sample_trajectories(idata_posterior)
+        for idx, fig in enumerate(figs):
+            save_figure_object(
+                fig=fig,
+                name=f"sample_trajectories_{idx}",
+                output_dir=output_dir,
+            )
 
-    except Exception as e:
-        return Failure(e)
+        figs = plot_sample_trajectories_with_percentiles(idata_posterior)
+        for idx, fig in enumerate(figs):
+            save_figure_object(
+                fig=fig,
+                name=f"sample_trajectories_percentiles_{idx}",
+                output_dir=output_dir,
+            )
+
+    return True
+
+
 
 
 @beartype

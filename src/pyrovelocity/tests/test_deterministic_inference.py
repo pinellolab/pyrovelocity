@@ -549,8 +549,8 @@ def test_generate_inference_data_plots(
         output_dir=output_dir,
     )
 
-    assert isinstance(result, Success), "The result should be a Success type."
-    assert result.unwrap() is True, "The result should unwrap to True."
+    assert isinstance(result, bool), "The result should be a bool."
+    assert result == True, "The result should be True."
 
     expected_files = [
         "prior_predictive_checks.png",
