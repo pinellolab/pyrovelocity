@@ -1,0 +1,13 @@
+/*-- scss:defaults --*/
+@import url("https://lalten.github.io/lmweb/style/latinmodern-sans.css");
+@import url("https://lalten.github.io/lmweb/style/latinmodern-roman.css");
+
+// fonts
+$font-family-sans-serif: "Latin Modern Sans", sans-serif;
+$font-family-serif: "Latin Modern Roman", serif;
+$presentation-heading-font: $font-family-sans-serif;
+
+/*-- scss:rules --*/
+.reveal .slides > section > section {
+  text-align: left;
+}

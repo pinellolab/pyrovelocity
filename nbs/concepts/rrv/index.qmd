@@ -1,0 +1,45 @@
+---
+title: \'Renormalizing\' effective theories for gene expression velocities over differentiation states
+title-slide-attributes: 
+  # credit: https://github.com/ddatsko/3d-ising-model/
+  data-background-image: https://user-images.githubusercontent.com/35429810/116011574-72395b00-a62e-11eb-847b-26cf5034d64c.gif
+  data-background-position: center
+  data-background-size: contain
+  data-background-opacity: "0.4"
+toc: true
+number-sections: true
+highlight-style: pygments
+csl: ../../bibstyle.csl
+lightbox: auto
+bibliography: ../../references.bib
+format: 
+  revealjs:
+    slide-number: true
+    width: 1600
+    height: 900
+    logo: "../../_static/logo.png"
+    theme: ["theme/custom.scss", night]
+editor: source
+filters:
+  - include-code-files
+---
+
+# Simulation ⇄ Inference {
+    data-background-image="https://upload.wikimedia.org/wikipedia/commons/b/b2/Ising_Criticality2.gif"
+    data-background-size="contain"
+    data-background-opacity="0.3"
+  }
+
+## Simulation
+
+- Simulation is the process of generating data from a model [@Wells2012-qf;@Alon2019-ah].
+- Inside the model, we may generate (intermediate) data from other models.
+- We can generate samples of our observables by executing all nested models.
+
+## Inference
+
+- Inference is the process of estimating the parameters of a model given data.
+- This is done by computing the posterior distribution of the parameters given the data.
+- Inside the model, we may estimate the parameters of other models.
+
+# References
