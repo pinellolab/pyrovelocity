@@ -754,14 +754,13 @@ def save_inference_plots(
                 output_dir=output_dir,
             )
 
-            result = plot_sample_trajectories(idata_posterior)
-            if is_successful(result):
-                for idx, fig in enumerate(result.unwrap()):
-                    save_figure_object(
-                        fig=fig,
-                        name=f"sample_trajectories_{idx}",
-                        output_dir=output_dir,
-                    )
+            figs = plot_sample_trajectories(idata_posterior)
+            for idx, fig in enumerate(figs):
+                save_figure_object(
+                    fig=fig,
+                    name=f"sample_trajectories_{idx}",
+                    output_dir=output_dir,
+                )
 
         return Success(True)
 
@@ -774,7 +773,7 @@ def plot_sample_trajectories(
     idata: InferenceData,
     trajectories_index: int | slice = slice(None),
     num_trajectories: int = 100,
-) -> Result[List[Figure], Exception]:
+) -> List[Figure]:
     """
     Plots sample trajectories over time for all genes, modality, and cell
     combinations.
@@ -792,81 +791,67 @@ def plot_sample_trajectories(
             Success containing a list of Figure objects if plots are created
             without errors, otherwise the error wrapped in a Failure.
     """
-    try:
-        figs = []
-        genes = idata.observed_data.observations.coords["genes"].values
-        for gene_index in genes:
-            fig, ax = plt.subplots(figsize=(12, 8))
+    figs = []
+    genes = idata.observed_data.observations.coords["genes"].values
+    for gene_index in genes:
+        fig, ax = plt.subplots(figsize=(12, 8))
 
-            observed_data = idata.observed_data.observations.sel(
-                genes=gene_index
-            ).values
-            observed_times = idata.observed_data.times.values
+        observed_data = idata.observed_data.observations.sel(
+            genes=gene_index
+        ).values
+        observed_times = idata.observed_data.times.values
 
-            for modality_index, modality in enumerate(
-                idata.observed_data.observations.coords["modalities"].values
-            ):
-                for cell_index in range(observed_data.shape[0]):
+        for modality_index, modality in enumerate(
+            idata.observed_data.observations.coords["modalities"].values
+        ):
+            for cell_index in range(observed_data.shape[0]):
+                ax.plot(
+                    observed_times[cell_index],
+                    observed_data[cell_index, :, modality_index],
+                    label=f"{modality}" if cell_index == 0 else "_nolegend_",
+                    color="gray" if modality == "pre-mRNA" else "green",
+                    marker=".",
+                    ms=12,
+                )
+
+        sample_data = idata.posterior_predictive.observations.sel(
+            chain=0, draw=trajectories_index, genes=gene_index
+        ).values
+
+        if num_trajectories > sample_data.shape[0]:
+            logger.warning(
+                f"\nRequested number of trajectories ({num_trajectories}) "
+                f"exceeds available samples ({sample_data.shape[0]}).\n"
+                f"Adjusting to maximum available.\n"
+            )
+            num_trajectories = sample_data.shape[0]
+        indices_to_plot = np.random.choice(
+            sample_data.shape[0], num_trajectories, replace=False
+        )
+        for idx in indices_to_plot:
+            for cell_index in range(sample_data.shape[1]):
+                for modality_index, modality in enumerate(
+                    idata.posterior_predictive.observations.coords[
+                        "modalities"
+                    ].values
+                ):
                     ax.plot(
                         observed_times[cell_index],
-                        observed_data[cell_index, :, modality_index],
-                        # label=f"Observed - Cell {cell_index}, {modality}",
-                        label=f"{modality}"
-                        if cell_index == 0
-                        else "_nolegend_",
+                        sample_data[idx, cell_index, :, modality_index],
+                        alpha=0.3,
                         color="gray" if modality == "pre-mRNA" else "green",
-                        marker=".",
+                        marker="2",
                         ms=12,
                     )
 
-            sample_data = idata.posterior_predictive.observations.sel(
-                chain=0, draw=trajectories_index, genes=gene_index
-            ).values
+        ax.set_xlabel("Time")
+        ax.set_ylabel("Expression")
+        ax.set_title(f"Gene {gene_index} - Observed and Predicted Trajectories")
+        ax.legend()
+        ax.grid(True)
+        figs.append(fig)
 
-            if num_trajectories > sample_data.shape[0]:
-                logger.warning(
-                    f"\nRequested number of trajectories ({num_trajectories}) "
-                    f"exceeds available samples ({sample_data.shape[0]}).\n"
-                    f"Adjusting to maximum available.\n"
-                )
-                num_trajectories = sample_data.shape[0]
-            indices_to_plot = np.random.choice(
-                sample_data.shape[0], num_trajectories, replace=False
-            )
-            for idx in indices_to_plot:
-                for cell_index in range(sample_data.shape[1]):
-                    for modality_index, modality in enumerate(
-                        idata.posterior_predictive.observations.coords[
-                            "modalities"
-                        ].values
-                    ):
-                        ax.plot(
-                            # observed_times,
-                            # sample_data[idx, :, :, modality_index],
-                            observed_times[cell_index],
-                            sample_data[idx, cell_index, :, modality_index],
-                            alpha=0.3,
-                            color="gray" if modality == "pre-mRNA" else "green",
-                            marker="2",
-                            ms=12,
-                            # label=f"Predicted - Cell {cell_index}, {modality}"
-                            # if idx == indices_to_plot[0]
-                            # else "_nolegend_",
-                        )
-
-            ax.set_xlabel("Time")
-            ax.set_ylabel("Expression")
-            ax.set_title(
-                f"Gene {gene_index} - Observed and Predicted Trajectories"
-            )
-            ax.legend()
-            ax.grid(True)
-            figs.append(fig)
-
-        return Success(figs)
-
-    except Exception as e:
-        return Failure(e)
+    return figs
 
 
 @beartype

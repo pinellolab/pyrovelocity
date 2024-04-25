@@ -602,17 +602,15 @@ def test_plot_sample_trajectories(
 ):
     idata_posterior, _, _, _ = setup_posterior_inference_data
 
-    result = plot_sample_trajectories(
+    figs = plot_sample_trajectories(
         idata=idata_posterior,
     )
-    if is_successful(result):
-        figs = result.unwrap()
 
-        assert isinstance(figs, list) and all(
-            isinstance(fig, Figure) for fig in figs
-        ), "All elements should be matplotlib Figure instances."
-        for fig in figs:
-            assert len(fig.axes[0].lines) > 0, "Each plot should contain lines."
+    assert isinstance(figs, list) and all(
+        isinstance(fig, Figure) for fig in figs
+    ), "All elements should be matplotlib Figure instances."
+    for fig in figs:
+        assert len(fig.axes[0].lines) > 0, "Each plot should contain lines."
 
 
 @pytest.fixture
