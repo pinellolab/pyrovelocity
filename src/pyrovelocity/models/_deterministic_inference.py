@@ -13,11 +13,21 @@ import numpyro.distributions as dist
 import xarray as xr
 from arviz import InferenceData
 from beartype import beartype
-from beartype.typing import Any, Callable, Dict, List, Literal, Optional, Tuple
+from beartype.typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+)
 from einops import rearrange
 from jaxtyping import ArrayLike, Float, jaxtyped
+from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
 from numpyro.infer import MCMC, NUTS, Predictive
+from returns.io import IOResultE
 from returns.pipeline import is_successful
 from returns.result import Failure, Result, Success
 
@@ -32,6 +42,7 @@ __all__ = [
     "generate_prior_inference_data",
     "generate_posterior_inference_data",
     "plot_sample_trajectories",
+    "plot_sample_trajectories_with_percentiles",
     "save_inference_plots",
 ]
 
@@ -772,6 +783,120 @@ def save_inference_plots(
     return True
 
 
+@beartype
+def plot_sample_trajectories_with_percentiles(
+    idata: InferenceData,
+    trajectories_index: int | slice = slice(None),
+    num_percentile_intervals: int = 5,
+    modality_line_colors: Dict[str, str] = {
+        "pre-mRNA": "gray",
+        "mRNA": "green",
+    },
+    percentiles_color_maps: Dict[str, Colormap] = {
+        "pre-mRNA": plt.cm.Greys,
+        "mRNA": plt.cm.Greens,
+    },
+    samples_transparency: float = 0.4,
+) -> List[Figure]:
+    """
+    Plots sample trajectories over time for all genes, modality, and cell
+    combinations, including percentile bands.
+
+    Args:
+        idata (InferenceData):
+            The posterior predictive data containing simulations.
+        trajectories_index (int | slice):
+            Index for the specific trajectories to plot.
+        num_percentile_intervals (int):
+            Number of percentile intervals to plot.
+        modality_line_colors (Dict[str, str]):
+            Color mapping for modalities.
+
+    Returns:
+        List[Figure]:
+            A list of matplotlib Figure objects containing the plots.
+    """
+    figs = []
+    genes = idata.observed_data.observations.coords["genes"].values
+    percentile_interval_widths = list(
+        np.linspace(
+            start=0,
+            stop=100,
+            num=2 + num_percentile_intervals,
+        )
+    )[1:-1][::-1]
+    color_map_indices = np.linspace(0.2, 1, num_percentile_intervals)
+
+    for gene_index in genes:
+        fig, ax = plt.subplots(figsize=(12, 8))
+
+        observed_data = idata.observed_data.observations.sel(
+            genes=gene_index
+        ).values
+        observed_times = idata.observed_data.times.values
+
+        sample_data = idata.posterior_predictive.observations.sel(
+            chain=0, draw=trajectories_index, genes=gene_index
+        ).values
+
+        if observed_times.shape[1] == 1:
+            observed_times = rearrange(observed_times, "c t -> (c t)")
+            observed_data = rearrange(observed_data, "c t m -> (c t) m")
+            sample_data = rearrange(sample_data, "s c t m -> s (c t) m")
+
+        for modality_index, modality in enumerate(
+            idata.observed_data.observations.coords["modalities"].values
+        ):
+            lines = ax.plot(
+                observed_times,
+                observed_data[..., modality_index],
+                label=modality,
+                color=modality_line_colors.get(modality, "blue"),
+                marker=".",
+                ms=12,
+            )
+            ax.legend(
+                [lines[0]],
+                [modality],
+            )
+
+            for i, percentile in enumerate(
+                percentile_interval_widths,
+            ):
+                color = percentiles_color_maps[modality](color_map_indices[i])
+
+                pct_lower = np.percentile(
+                    sample_data[:, ..., modality_index],
+                    50 - percentile / 2,
+                    axis=0,
+                )
+                pct_upper = np.percentile(
+                    sample_data[:, ..., modality_index],
+                    50 + percentile / 2,
+                    axis=0,
+                )
+                poly_label = (
+                    f"{round(50-percentile/2)} - {round(50+percentile/2)}%"
+                )
+                ax.fill_between(
+                    observed_times,
+                    pct_lower,
+                    pct_upper,
+                    color=color,
+                    alpha=samples_transparency,
+                    label=poly_label if modality_index == 0 else "_nolegend_",
+                )
+
+        ax.set_xlabel("Time")
+        ax.set_ylabel("Expression")
+        ax.set_title(
+            f"Gene {gene_index} - Observed and Predicted Trajectories with Percentiles"
+        )
+        ax.legend()
+        ax.grid(True)
+        figs.append(fig)
+
+    return figs
 
 
 @beartype

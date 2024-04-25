@@ -23,6 +23,7 @@ from pyrovelocity.models._deterministic_inference import (
     generate_prior_inference_data,
     generate_test_data_for_deterministic_model_inference,
     plot_sample_trajectories,
+    plot_sample_trajectories_with_percentiles,
     print_inference_data_structure,
     save_inference_plots,
     solve_model_for_each_gene,
@@ -42,14 +43,14 @@ def setup_observational_data():
         num_timepoints,
         num_modalities,
     ) = generate_test_data_for_deterministic_model_inference(
-        num_genes=2,
-        num_cells=3,
-        num_timepoints=4,
-        num_modalities=2,
         # num_genes=2,
-        # num_cells=10,
-        # num_timepoints=1,
+        # num_cells=3,
+        # num_timepoints=4,
         # num_modalities=2,
+        num_genes=2,
+        num_cells=10,
+        num_timepoints=1,
+        num_modalities=2,
         noise_levels=(0.001, 0.001),
     )
     return (
@@ -205,6 +206,38 @@ def test_solve_model_for_all_genes_cells_shapes(model_parameters):
     ).all(), "All predictions should be finite values"
 
     assert jnp.all(predictions >= 0), "Predictions should be greater than 0"
+
+
+@pytest.fixture
+def simple_inference_data():
+    """Create a simple InferenceData object for testing."""
+    data = np.random.rand(10, 3)
+    dataset = Dataset({"parameter": (("draw", "chain"), data)})
+    return az.InferenceData(posterior=dataset)
+
+
+def test_print_inference_data_structure(simple_inference_data):
+    """Test that the structure description is correct for a simple case."""
+    expected_output = (
+        "Overview of InferenceData structure:\n"
+        "\nGroup: posterior\n"
+        "  Variables and their dimensions:\n"
+        "  parameter: (draw=10, chain=3)\n"
+    )
+    actual_output = print_inference_data_structure(simple_inference_data)
+    assert (
+        actual_output == expected_output
+    ), "Output structure description did not match expected."
+
+
+def test_print_empty_inference_data():
+    """Test that the function handles an empty InferenceData object gracefully."""
+    empty_idata = az.InferenceData()
+    expected_output = "Overview of InferenceData structure:\n"
+    actual_output = print_inference_data_structure(empty_idata)
+    assert (
+        actual_output == expected_output
+    ), "Output should be gracefully handled for empty InferenceData."
 
 
 def test_priors(setup_observational_data):
@@ -510,6 +543,38 @@ def test_generate_posterior_inference_data(
     ), "Shape of sigma should be correct"
 
 
+def test_plot_sample_trajectories(
+    setup_posterior_inference_data,
+):
+    idata_posterior, _, _, _ = setup_posterior_inference_data
+
+    figs = plot_sample_trajectories(
+        idata=idata_posterior,
+    )
+
+    assert isinstance(figs, list) and all(
+        isinstance(fig, Figure) for fig in figs
+    ), "All elements should be matplotlib Figure instances."
+    for fig in figs:
+        assert len(fig.axes[0].lines) > 0, "Each plot should contain lines."
+
+
+def test_plot_sample_trajectories_with_percentiles(
+    setup_posterior_inference_data,
+):
+    idata_posterior, _, _, _ = setup_posterior_inference_data
+
+    figs = plot_sample_trajectories_with_percentiles(
+        idata=idata_posterior,
+    )
+
+    assert isinstance(figs, list) and all(
+        isinstance(fig, Figure) for fig in figs
+    ), "All elements should be matplotlib Figure instances."
+    for fig in figs:
+        assert len(fig.axes[0].lines) > 0, "Each plot should contain lines."
+
+
 def test_generate_inference_data_plots(
     setup_observational_data,
     setup_prior_inference_data,
@@ -595,51 +660,3 @@ def test_generate_inference_data_plots(
 
     for pattern, found in pattern_checks.items():
         assert found, f"No files found for the pattern {pattern}"
-
-
-def test_plot_sample_trajectories(
-    setup_posterior_inference_data,
-):
-    idata_posterior, _, _, _ = setup_posterior_inference_data
-
-    figs = plot_sample_trajectories(
-        idata=idata_posterior,
-    )
-
-    assert isinstance(figs, list) and all(
-        isinstance(fig, Figure) for fig in figs
-    ), "All elements should be matplotlib Figure instances."
-    for fig in figs:
-        assert len(fig.axes[0].lines) > 0, "Each plot should contain lines."
-
-
-@pytest.fixture
-def simple_inference_data():
-    """Create a simple InferenceData object for testing."""
-    data = np.random.rand(10, 3)
-    dataset = Dataset({"parameter": (("draw", "chain"), data)})
-    return az.InferenceData(posterior=dataset)
-
-
-def test_print_inference_data_structure(simple_inference_data):
-    """Test that the structure description is correct for a simple case."""
-    expected_output = (
-        "Overview of InferenceData structure:\n"
-        "\nGroup: posterior\n"
-        "  Variables and their dimensions:\n"
-        "  parameter: (draw=10, chain=3)\n"
-    )
-    actual_output = print_inference_data_structure(simple_inference_data)
-    assert (
-        actual_output == expected_output
-    ), "Output structure description did not match expected."
-
-
-def test_empty_inference_data():
-    """Test that the function handles an empty InferenceData object gracefully."""
-    empty_idata = az.InferenceData()
-    expected_output = "Overview of InferenceData structure:\n"
-    actual_output = print_inference_data_structure(empty_idata)
-    assert (
-        actual_output == expected_output
-    ), "Output should be gracefully handled for empty InferenceData."
