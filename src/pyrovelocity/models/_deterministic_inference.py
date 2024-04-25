@@ -773,6 +773,8 @@ def plot_sample_trajectories(
     idata: InferenceData,
     trajectories_index: int | slice = slice(None),
     num_trajectories: int = 100,
+    color_map: Dict[str, str] = {"pre-mRNA": "gray", "mRNA": "green"},
+    samples_transparency: float = 0.3,
 ) -> List[Figure]:
     """
     Plots sample trajectories over time for all genes, modality, and cell
@@ -793,6 +795,7 @@ def plot_sample_trajectories(
     """
     figs = []
     genes = idata.observed_data.observations.coords["genes"].values
+
     for gene_index in genes:
         fig, ax = plt.subplots(figsize=(12, 8))
 
@@ -801,48 +804,50 @@ def plot_sample_trajectories(
         ).values
         observed_times = idata.observed_data.times.values
 
-        for modality_index, modality in enumerate(
-            idata.observed_data.observations.coords["modalities"].values
-        ):
-            for cell_index in range(observed_data.shape[0]):
-                ax.plot(
-                    observed_times[cell_index],
-                    observed_data[cell_index, :, modality_index],
-                    label=f"{modality}" if cell_index == 0 else "_nolegend_",
-                    color="gray" if modality == "pre-mRNA" else "green",
-                    marker=".",
-                    ms=12,
-                )
-
         sample_data = idata.posterior_predictive.observations.sel(
             chain=0, draw=trajectories_index, genes=gene_index
         ).values
 
-        if num_trajectories > sample_data.shape[0]:
-            logger.warning(
-                f"\nRequested number of trajectories ({num_trajectories}) "
-                f"exceeds available samples ({sample_data.shape[0]}).\n"
-                f"Adjusting to maximum available.\n"
+        if observed_times.shape[1] == 1:
+            observed_times = rearrange(observed_times, "c t -> (c t)")
+            observed_data = rearrange(observed_data, "c t m -> (c t) m")
+            sample_data = rearrange(sample_data, "s c t m -> s (c t) m")
+
+        for modality_index, modality in enumerate(
+            idata.observed_data.observations.coords["modalities"].values
+        ):
+            lines = ax.plot(
+                observed_times,
+                observed_data[..., modality_index],
+                label=modality,
+                color=color_map.get(modality, "blue"),
+                marker=".",
+                ms=12,
             )
-            num_trajectories = sample_data.shape[0]
-        indices_to_plot = np.random.choice(
-            sample_data.shape[0], num_trajectories, replace=False
-        )
-        for idx in indices_to_plot:
-            for cell_index in range(sample_data.shape[1]):
-                for modality_index, modality in enumerate(
-                    idata.posterior_predictive.observations.coords[
-                        "modalities"
-                    ].values
-                ):
-                    ax.plot(
-                        observed_times[cell_index],
-                        sample_data[idx, cell_index, :, modality_index],
-                        alpha=0.3,
-                        color="gray" if modality == "pre-mRNA" else "green",
-                        marker="2",
-                        ms=12,
-                    )
+            ax.legend(
+                [lines[0]],
+                [modality],
+            )
+
+            if num_trajectories > sample_data.shape[0]:
+                logger.warning(
+                    f"\nRequested number of trajectories ({num_trajectories}) "
+                    f"exceeds available samples ({sample_data.shape[0]}).\n"
+                    "Adjusting to maximum available.\n"
+                )
+                num_trajectories = sample_data.shape[0]
+            else:
+                sample_data = sample_data[slice(0, num_trajectories)]
+
+            for idx in range(num_trajectories):
+                ax.plot(
+                    observed_times,
+                    sample_data[idx, ..., modality_index],
+                    alpha=samples_transparency,
+                    color=color_map.get(modality, "blue"),
+                    marker="2",
+                    ms=12,
+                )
 
         ax.set_xlabel("Time")
         ax.set_ylabel("Expression")
