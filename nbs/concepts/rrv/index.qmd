@@ -7,11 +7,18 @@ title-slide-attributes:
   data-background-size: contain
   data-background-opacity: "0.4"
 toc: true
+toc-depth: 1
 number-sections: true
 highlight-style: pygments
 csl: ../../bibstyle.csl
 lightbox: auto
 bibliography: ../../references.bib
+execute: 
+  freeze: true
+  eval: true
+  warning: false
+  error: false
+  cache: true
 format: 
   revealjs:
     slide-number: true
@@ -24,7 +31,805 @@ filters:
   - include-code-files
 ---
 
-# Simulation ⇄ Inference {
+# Splice census from bulk to single-cell RNA-seq
+
+## Simplistic cartoon of gene expression
+
+![](https://www.nature.com/scitable/content/ne0000/ne0000/ne0000/ne0000/14711098/U2CP3-1_SynthesisDegredati_ksm.jpg){.r-stretch fig-align="center"}
+
+[@Alberts2014-kt]
+
+## Splicing mechanism
+
+![](https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs41580-022-00545-z/MediaObjects/41580_2022_545_Fig1_HTML.png){fig-align="center" height="760"}
+
+[@Marasco2023-yb]
+
+## (Pre‐)mRNA response profile classification
+
+![](https://www.embopress.org/cms/10.1038/msb.2011.62/asset/329a576a-84a0-47c0-9bfc-125e6ab740b6/assets/graphic/msb201162-fig-0001-m.jpg){fig-align="center"}
+
+[@Zeisel2011-nz]
+
+## (Pre‐)mRNA stimulus‐induced response profiles
+
+![](https://www.embopress.org/cms/10.1038/msb.2011.62/asset/042557d4-dbc2-472a-a685-94666dcb90a1/assets/graphic/msb201162-fig-0003-m.jpg){fig-align="center" height="720"}
+
+[@Zeisel2011-nz]
+
+## Single-cell RNA velocity
+
+![](https://www.embopress.org/cms/10.15252/msb.202110282/asset/36cba1b7-8d35-491f-b2bd-a543103be834/assets/graphic/msb202110282-fig-0001-m.png){fig-align="center" height="720"}
+
+[@La_Manno2018-lj;@Bergen2021-qz]
+
+# Deterministic modeling of gene expression
+
+## Variables {.center}
+
+| Symbol   | Description                 | Units                         | $O(-)$ Estimate  | Note                                                                          |
+| -------- | --------------------------- | ----------------------------- | ---------------- | ----------------------------------------------------------------------------- |
+| $u$      | Number of pre-mRNA          | molecules/cell                | $10^0 - 10^4$    | Wide range accounts for low to high gene expression levels.                   |
+| $s$      | Number of mRNA              | molecules/cell                | $10^0 - 10^5$    | Similar to $u$; depends on gene expression and stability of mRNA.             |
+| $t$      | Time                        | seconds ($s$) to hours ($hr$) | $5s$ - $48hr$    | Depends on the duration of the experimental observation.                      |
+
+
+## Parameters {.center}
+
+| Symbol   | Description                 | Units                         | $O(-)$ Estimate  | Note                                                                          |
+| -------- | --------------------------- | ----------------------------- | ---------------- | ----------------------------------------------------------------------------- |
+| $\alpha$ | Production rate of pre-mRNA | molecules/(cell·hr)           | $10^0 - 10^3$    | Many transcripts are produced at rates in the range or 1 to 1000 per hour.    |
+| $\beta$  | Splicing rate of pre-mRNA   | $hr^{-1}$                     | $10^{-1} - 10^2$ | Many Pre-mRNA to mRNA splicing rates are in the range of 1 minute to 6 hours. |
+| $\gamma$ | Degradation rate of mRNA    | $hr^{-1}$                     | $10^{-2} - 10^0$ | Many mRNA half-lives are in the range of a half-hour to a day.                |
+
+## Dynamics {.center}
+
+Given state variables representing concentrations of pre-mRNA, $u$, 
+and mRNA, $s$, we have the following ordinary differential equations 
+taken from [@Zeisel2011-nz],  
+
+\begin{align}
+\frac{du}{dt} & = \alpha - \beta u  \label{eq-dudt}, \\
+\frac{ds}{dt} & = \beta u - \gamma s  \label{eq-dsdt},
+\end{align}
+
+These are 
+usually presented with the concept that the parameter $\alpha$ could better 
+account for the external inputs to the regulation of transcription of the gene 
+if it were allowed to be a function of time, $\alpha(t)$.
+
+
+## Dimensional analysis
+
+| Dimensioned Parameter        | Relation to Rescaling Parameters | Fundamental Units     |
+| ---------------------------- | -------------------------------- | --------------------- |
+| Production Rate ($\alpha$)   | $\alpha = U_0 \beta$             | molecules/(cell·time) |
+| Splicing Rate ($\beta$)      | Reference Scale for $t^*$        | $1/\text{time}$       |
+| Degradation Rate ($\gamma$)  | $\gamma = \gamma^* \beta$        | $1/\text{time}$       |
+| Pre-mRNA Concentration ($u$) | $u = u^* U_0$                    | molecules/cell        |
+| mRNA Concentration ($s$)     | $s = s^* U_0$                    | molecules/cell        |
+| Time ($t$)                   | $t = t^* / \beta$                | time                  |
+
+## Dimensionless variables and parameters
+
+| Dimensionless Variables and Parameters | Definition           | Description                                                                                                                                                                    |
+| -------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| $u^{\ast}$ , $s^{\ast}$                | $u / U_0$, $s / U_0$ | Characteristic scale of (pre-)mRNA concentration based on the balance between production and splicing rates.                                                                   |
+| $t^*$                                  | $\beta t$            | Characteristic time scale relative to the splicing rate.                                                                                                                       |
+| $\gamma^*$                             | $\gamma / \beta$     | Relative degradation rate, comparing the degradation rate of mRNA to the splicing rate, indicating the stability or turnover rate of mRNA relative to its production/splicing. |
+
+## Interpreting dimensionless parameters
+
+| $\beta$ (hr$^{-1}$) | 1 unit of $t^*$ (hr) | 10 units of $t^*$ (hr) | 100 units of $t^*$ (hr) | 1 unit of $t^{\ast}$ | 10 units of $t^{\ast}$ | 100 units of $t^{\ast}$ |
+| ------------------- | -------------------- | ---------------------- | ----------------------- | -------------------- | ---------------------- | ----------------------- |
+| $10^{-1}$           | 10                   | 100                    | 1000                    | 1                    | 10                     | 100                     |
+| $10^0$              | 1                    | 10                     | 100                     | 1                    | 10                     | 100                     |
+| $10^1$              | 0.1                  | 1                      | 10                      | 1                    | 10                     | 100                     |
+| $10^2$              | 0.01                 | 0.1                    | 1                       | 1                    | 10                     | 100                     |
+
+## Dimensionless dynamics
+
+The system of equations redefined in terms of $U_0 = \frac{\alpha}{\beta}$ and $\beta$ as the reference scale for time,
+
+| Dimensionless | Definition           |
+| -------------------------------------- | -------------------- |
+| $u^{\ast}$ , $s^{\ast}$                | $u / U_0$, $s / U_0$ |
+| $t^*$                                  | $\beta t$            |
+| $\gamma^*$                             | $\gamma / \beta$     |
+
+is given by
+
+\begin{align}
+\frac{du^{\ast}}{dt^{\ast}} & = 1 - u^{\ast}  \label{eq-dustardtstar}, \\
+\frac{ds^{\ast}}{dt^{\ast}} & = u^{\ast} - \gamma^{\ast} s^{\ast},  
+  \label{eq-dsstardtstar}
+\end{align}
+
+containing the 
+$6 - 2 = 4$ variables and parameters: $u^{\ast}, s^{\ast}, t^{\ast}, \gamma^{\ast}$. 
+
+[@Zeisel2011-nz;@Cantwell2002-dv]
+
+## Analytical solution
+
+The complete solutions for the dimensionless system for $\gamma^{\ast} \neq 1$ and 
+$\xi = \frac{u^{\ast}_0 - 1}{\gamma^{\ast} - 1}$
+are then given by
+
+\begin{align}
+u^{\ast}(t^{\ast}) & = \underbrace{1}_{\text{Steady State}} + 
+  \underbrace{(u^{\ast}_0 - 1) e^{-t^{\ast}}}_{\text{Transient Component}}, 
+  \label{eq-ustar-dimless} \\
+s^{\ast}(t^{\ast}) & = \underbrace{\frac{1}{\gamma^{\ast}}}_{\text{Steady State}} + 
+  \underbrace{\left( s^{\ast}_0 - \xi - \frac{1}{\gamma^{\ast}} \right) 
+  e^{-\gamma^{\ast} t^{\ast}} + \xi e^{-t^{\ast}}}_{\text{Transient Components}}.  
+  \label{eq-sstar-dimless}
+\end{align}
+
+For the case $\gamma^{\ast} = 1$, we find $u^{\ast}$ is unchanged
+and $s^{\ast}$ is then given by
+
+$$
+s^{\ast}(t^{\ast}) = 1 + (s^{\ast}_0 - 1) e^{-t^{\ast}} + 
+  (u^{\ast}_0 - 1) t^{\ast} e^{-t^{\ast}}.
+$$
+
+Note we can restore an arbitrary initial timepoint putting 
+$t^{\ast} \rightarrow \Delta t = t^{\ast} - t^{\ast}_0$.
+
+## Simulation
+
+```{python}
+# | label: transcription-splicing-degradation-simulation
+# | code-fold: true
+import diffrax
+from pyrovelocity.models import solve_transcription_splicing_model
+from pyrovelocity.models import solve_transcription_splicing_model_analytical
+from pyrovelocity.logging import configure_logging
+from jax import numpy as jnp
+
+logger = configure_logging("nbs")
+
+ts0 = jnp.linspace(0.1, 4.0, 40)
+ts1 = jnp.linspace(4.0 + (10.0 - 4.0) / 20, 10.0, 20)
+ts = jnp.concatenate([ts0, ts1])
+initial_state = jnp.array([0.1, 0.1])
+params = (1.00,)
+colormap_name = "RdBu"
+
+solution = solve_transcription_splicing_model(
+    ts,
+    initial_state,
+    params,
+)
+analytical_solution = solve_transcription_splicing_model_analytical(
+    ts,
+    initial_state,
+    params,
+)
+analytical_simulation_error = diffrax.Solution(
+    t0=ts[0],
+    t1=ts[-1],
+    ts=ts,
+    ys=analytical_solution.ys - solution.ys,
+    interpolation=None,
+    stats={},
+    result=diffrax.RESULTS.successful,
+    solver_state=None,
+    controller_state=None,
+    made_jump=None,
+)
+
+logger.info(
+    f"\nTrajectory preview times:\n{solution.ts[:3]}\n"
+    f"\nSimulated trajectory values:\n{solution.ys[:3]}\n"
+    f"\nAnalytical trajectory values:\n{analytical_solution.ys[:3]}\n\n"
+    f"\nTrajectory preview times:\n{solution.ts[-3:]}\n"
+    f"\nSimulated trajectory values:\n{solution.ys[-3:]}\n"
+    f"\nAnalytical trajectory values:\n{analytical_solution.ys[-3:]}\n\n"
+)
+```
+
+
+## Visualization {.center}
+
+```{python}
+# | label: fig-transcription-splicing-degradation-plot-simulation-trajectory-1
+# | code-fold: true
+# | fig-cap: Simulated trajectories of pre-mRNA and mRNA concentrations over time for the transcription-splicing-degradation model.
+from pyrovelocity.plots import plot_deterministic_simulation_trajectories
+
+plot_deterministic_simulation_trajectories(
+    solution=solution,
+    title_prefix="TSD Model Simulated",
+    colormap_name=colormap_name,
+)
+```
+
+## Error analysis {.center}
+
+```{python}
+# | label: fig-transcription-splicing-degradation-plot-analytical-trajectory-1
+# | code-fold: true
+# | fig-cap: Absolute error in analytical vs simulated trajectories of pre-mRNA and mRNA concentrations over time for the transcription-splicing-degradation model.
+from pyrovelocity.plots import plot_deterministic_simulation_trajectories
+
+plot_deterministic_simulation_trajectories(
+    solution=analytical_simulation_error,
+    title_prefix="Analytical-Simulation Error",
+    colormap_name=colormap_name,
+)
+```
+
+## Phase space {.center}
+
+```{python}
+# | label: fig-transcription-splicing-degradation-plot-simulation-phase-portrait-1
+# | code-fold: true
+# | fig-cap: Phase portrait of the transcription-splicing-degradation model.
+from pyrovelocity.plots import plot_deterministic_simulation_phase_portrait
+
+plot_deterministic_simulation_phase_portrait(
+    solution=solution,
+    title_prefix="TSD Model",
+    colormap_name=colormap_name,
+)
+```
+
+# Probabilistic inference in dynamical systems
+
+## Data description
+
+If we are given samples of pre-mRNA and mRNA counts along with
+the sampling time of each cell, we can describe the data set 
+$\mathcal{D}$ consisting of pre-mRNA and mRNA counts for a number 
+of genes $G$ across a number of cells $N$
+
+\begin{align}
+\mathcal{D} = \left\{ (t_j, u_{ij}, s_{ij}) \mid 
+  i \in \{1, \ldots, G\}, j \in \{1, \ldots, N\} \right\} \label{eq-dataset},
+\end{align}
+
+where
+
+- $t_j$ represents the sampling time for cell $j$,
+- $u_{ij}$ represents the count of pre-mRNA for gene $i$ in cell $j$,
+- $s_{ij}$ represents the count of mRNA for the same gene $i$ in the same cell $j$,
+- $G$ is the total number of genes in the study,
+- $N$ is the total number of cells sampled.
+
+If we were able to observe each cell $j$ at multiple timepoints, we could add
+another index $k \in {1, ..., K_j}$.
+
+## Inference problem
+
+Roughly speaking, the inference problem involves
+
+1. **Normalization**: Transforming the observed counts $u_{ij}$ and $s_{ij}$ to 
+   their dimensionless counterparts $u^{\ast}_{ij}$ and $s^{\ast}_{ij}$ using 
+   a reasonable concentration scale $U_0$.
+2. **Model Fitting**: Applying statistical methods to estimate the latent 
+   variables 
+   $\Theta = \left( \gamma^{\ast}, u^{\ast}_0, s^{\ast}_0 \right)$ 
+   that best fit the observed data.
+3. **Evaluation**: Assessing the fit of the model and the estimated parameters'
+   biological plausibility and consistency across different genes and cells.
+
+We will return later to the alternative version of this problem where $t_j$ 
+are not observed and must be inferred along with the latent variables 
+$\Theta = \left( \gamma^{\ast}, u^{\ast}_0, s^{\ast}_0, t^{\ast} \right)$.
+
+## Model formulation
+
+given a number of 
+genes $G$ and cells $N$ that are measured at $K_j$ distinct times, then for each
+$(i,j,k) \in \{1, \ldots, G\} \otimes \{1, \ldots, N\} \otimes \{1, \ldots, K_j\}$ 
+we have
+
+\begin{align}
+    u^{\ast}_{0i}, s^{\ast}_{0i} &\sim 
+      \text{LogNormal}(\mu_{0}, \sigma_{0}^2), 
+      \label{eq-init-conds-priors-gene} \\
+
+    \gamma^{\ast}_i &\sim 
+      \text{LogNormal}(\mu_{\gamma}, \sigma_{\gamma}^2),
+      \label{eq-gamma-prior-gene} \\
+
+    \sigma_{ui}, \sigma_{si} &\sim 
+      \text{HalfNormal}(\mu_{\sigma}, \sigma_{\sigma}^2),
+      \label{eq-noise-std-priors-gene} \\
+
+    {u^{\ast}}^{k}_{ij} &= 
+      1 + (u^{\ast}_{0i} - 1) \cdot e^{-{t^{\ast}}^k_j},
+      \label{eq-u-star-model-cell} \\
+
+    {s^{\ast}}^{k}_{ij} &= 
+      \begin{cases}
+        \frac{1}{\gamma^{\ast}_i} + 
+        \left( s^{\ast}_{0i} - \xi_i - \frac{1}{\gamma^{\ast}_i} \right) \cdot e^{-\gamma^{\ast}_i {t^{\ast}}^k_j} + 
+        \xi_i \cdot e^{-{t^{\ast}}^k_j},& \gamma^{\ast}_i \neq 1 \\
+
+        1 + (s^{\ast}_{0i} - 1) e^{-{t^{\ast}}^k_j} + 
+          (u^{\ast}_{0i} - 1) {t^{\ast}}^k_j e^{-{t^{\ast}}^k_j},& \gamma^{\ast}_i = 1 \\
+      \end{cases}, \label{eq-s-star-model-cell} \\
+
+    \hat{u}^{\ast}{}^k_{ij} &\sim \text{Normal}({u^{\ast}}^k_{ij}, \sigma_{ui}^2), 
+    \label{eq-u-obs-cell} \\
+
+    \hat{s}^{\ast}{}^k_{ij} &\sim \text{Normal}({s^{\ast}}^k_{ij}, \sigma_{si}^2). 
+    \label{eq-s-obs-cell}
+\end{align}
+
+## Graphical model
+
+```{python}
+# | label: fig-transcription-splicing-degradation-graphical-model-1
+# | code-fold: true
+# | fig-cap: Graphical representation of the transcription-splicing-degradation inference model.
+import daft
+import matplotlib.pyplot as plt
+
+plt.rcParams["font.family"] = "serif"
+plt.rcParams["font.size"] = 16
+plt.rcParams["text.usetex"] = True
+
+pgm = daft.PGM(line_width=1.2, dpi=85)
+
+# hyperparameters
+pgm.add_node("mu_init", r"$\mu_{0}$", 0.5, 6, fixed=True)
+pgm.add_node("sigma_init", r"$\sigma_{0}^2$", 1.5, 6, fixed=True)
+pgm.add_node("mu_gamma", r"$\mu_{\gamma}$", 2.5, 6, fixed=True)
+pgm.add_node("sigma_gamma", r"$\sigma_{\gamma}^2$", 3.5, 6, fixed=True)
+pgm.add_node("mu_sigma", r"$\mu_{\sigma}$", 4.5, 6, fixed=True)
+pgm.add_node("sigma_sigma", r"$\sigma_{\sigma}^2$", 5.5, 6, fixed=True)
+
+# latent variables for gene-specific parameters
+pgm.add_node("u_star_0i", r"$u^{\ast}_{0i}$", 1, 5)
+pgm.add_node("s_star_0i", r"$s^{\ast}_{0i}$", 2, 5)
+pgm.add_node("gamma_star_i", r"$\gamma^{\ast}_i$", 3, 5)
+pgm.add_node("sigma_ui", r"$\sigma_{ui}$", 4, 5)
+pgm.add_node("sigma_si", r"$\sigma_{si}$", 5, 5)
+
+# latent variables for cell-specific outcomes
+pgm.add_node(
+    "u_star_ij",
+    r"${u^{\ast}}^k_{ij}$",
+    2,
+    3.8,
+    scale=1.0,
+    shape="rectangle",
+)
+pgm.add_node(
+    "s_star_ij",
+    r"${s^{\ast}}^k_{ij}$",
+    4,
+    3.8,
+    scale=1.0,
+    shape="rectangle",
+)
+
+# observed data
+pgm.add_node(
+    "t_star_j",
+    r"${t^{\ast}}^k_j$",
+    5.9,
+    3.1,
+    observed=True,
+    shape="rectangle",
+)
+pgm.add_node(
+    "u_obs_ij",
+    r"$\hat{u}^{\ast}{}^{k}_{ij}$",
+    2,
+    2.4,
+    scale=1.0,
+    observed=True,
+)
+pgm.add_node(
+    "s_obs_ij",
+    r"$\hat{s}^{\ast}{}^{k}_{ij}$",
+    4,
+    2.4,
+    scale=1.0,
+    observed=True,
+)
+
+# edges
+edge_params = {"head_length": 0.3, "head_width": 0.25, "lw": 0.7}
+pgm.add_edge("mu_init", "u_star_0i", plot_params=edge_params)
+pgm.add_edge("sigma_init", "u_star_0i", plot_params=edge_params)
+pgm.add_edge("mu_init", "s_star_0i", plot_params=edge_params)
+pgm.add_edge("sigma_init", "s_star_0i", plot_params=edge_params)
+pgm.add_edge("mu_gamma", "gamma_star_i", plot_params=edge_params)
+pgm.add_edge("sigma_gamma", "gamma_star_i", plot_params=edge_params)
+pgm.add_edge("mu_sigma", "sigma_ui", plot_params=edge_params)
+pgm.add_edge("sigma_sigma", "sigma_ui", plot_params=edge_params)
+pgm.add_edge("mu_sigma", "sigma_si", plot_params=edge_params)
+pgm.add_edge("sigma_sigma", "sigma_si", plot_params=edge_params)
+
+pgm.add_edge("u_star_0i", "u_star_ij", plot_params=edge_params)
+pgm.add_edge("s_star_0i", "s_star_ij", plot_params=edge_params)
+pgm.add_edge("u_star_0i", "s_star_ij", plot_params=edge_params)
+pgm.add_edge("gamma_star_i", "s_star_ij", plot_params=edge_params)
+
+pgm.add_edge("u_star_ij", "u_obs_ij", plot_params=edge_params)
+pgm.add_edge("s_star_ij", "s_obs_ij", plot_params=edge_params)
+pgm.add_edge("sigma_ui", "u_obs_ij", plot_params=edge_params)
+pgm.add_edge("sigma_si", "s_obs_ij", plot_params=edge_params)
+
+pgm.add_edge("t_star_j", "u_star_ij", plot_params=edge_params)
+pgm.add_edge("t_star_j", "s_star_ij", plot_params=edge_params)
+
+# plates
+pgm.add_plate(
+    [0.4, 1.0, 5, 4.5],
+    label=r"$i \in \{1, \ldots, G\}$",
+    shift=-0.1,
+    fontsize=12,
+)
+pgm.add_plate(
+    [0.8, 1.4, 5.9, 3.2],
+    label=r"$j \in \{1, \ldots, N\}$",
+    shift=-0.1,
+    fontsize=12,
+)
+pgm.add_plate(
+    [1.2, 1.8, 5.2, 2.5],
+    label=r"$k \in \{1, \ldots, K_j\}$",
+    shift=-0.1,
+    fontsize=12,
+)
+
+pgm.render()
+```
+
+## Relaxing the assumption of analytical tractability
+
+In general, we will not have access to the analytical solutions, so
+we will need to simulate the system and then perform inference on the latent
+variables
+
+\begin{align}
+    u^{\ast}_0, s^{\ast}_0 &\sim \text{LogNormal}(\mu_{0}, \sigma_{0}^2) \label{eq-init-conds-priors-num}, \\
+    \gamma^{\ast} &\sim \text{LogNormal}(\mu_{\gamma}, \sigma_{\gamma}^2) \label{eq-gamma-prior-num}, \\
+    \sigma_u, \sigma_s &\sim \text{HalfNormal}(\mu_{\sigma}, \sigma_{\sigma}^2) \label{eq-noise-std-priors-num}, \\
+    (u^{\ast}, s^{\ast}) &= \text{NumericalSolver}\left(\frac{du^{\ast}}{dt^{\ast}}, \frac{ds^{\ast}}{dt^{\ast}}, u^{\ast}_0, s^{\ast}_0, \gamma^{\ast}, t^{\ast}\right) \label{eq-numerical-solution}, \\
+    \hat{u}^{\ast} &\sim \text{Normal}(u^{\ast}, \sigma_u^2) \label{eq-u-obs-num}, \\
+    \hat{s}^{\ast} &\sim \text{Normal}(s^{\ast}, \sigma_s^2) \label{eq-s-obs-num}.
+\end{align}
+
+Where $\frac{du^{\ast}}{dt^{\ast}}$ and $\frac{ds^{\ast}}{dt^{\ast}}$ 
+are given and
+we suppress the indices from the previous model for brevity.
+
+## Relaxing the assumption of access to time series data
+
+If we only observe one time point for each cell, 
+then the model reduces to the graphical model in 
+@fig-transcription-splicing-degradation-graphical-model-2.
+
+```{python}
+# | label: fig-transcription-splicing-degradation-graphical-model-2
+# | code-fold: true
+# | fig-cap: Graphical model for the transcription-splicing-degradation model observed at a single time point.
+import daft
+import matplotlib.pyplot as plt
+
+plt.rcParams["font.family"] = "serif"
+plt.rcParams["font.size"] = 16
+plt.rcParams["text.usetex"] = True
+
+pgm = daft.PGM(line_width=1.2, dpi=80)
+
+# hyperparameters
+pgm.add_node("mu_init", r"$\mu_{0}$", 0.5, 6, fixed=True)
+pgm.add_node("sigma_init", r"$\sigma_{0}^2$", 1.5, 6, fixed=True)
+pgm.add_node("mu_gamma", r"$\mu_{\gamma}$", 2.5, 6, fixed=True)
+pgm.add_node("sigma_gamma", r"$\sigma_{\gamma}^2$", 3.5, 6, fixed=True)
+pgm.add_node("mu_sigma", r"$\mu_{\sigma}$", 4.5, 6, fixed=True)
+pgm.add_node("sigma_sigma", r"$\sigma_{\sigma}^2$", 5.5, 6, fixed=True)
+
+# latent variables for gene-specific parameters
+pgm.add_node("u_star_0i", r"$u^{\ast}_{0i}$", 1, 5)
+pgm.add_node("s_star_0i", r"$s^{\ast}_{0i}$", 2, 5)
+pgm.add_node("gamma_star_i", r"$\gamma^{\ast}_i$", 3, 5)
+pgm.add_node("sigma_ui", r"$\sigma_{ui}$", 4, 5)
+pgm.add_node("sigma_si", r"$\sigma_{si}$", 5, 5)
+
+# latent variables for cell-specific outcomes
+pgm.add_node(
+    "u_star_ij",
+    r"$u^{\ast}_{ij}$",
+    2,
+    4,
+    scale=1.0,
+    shape="rectangle",
+)
+pgm.add_node(
+    "s_star_ij",
+    r"$s^{\ast}_{ij}$",
+    4,
+    4,
+    scale=1.0,
+    shape="rectangle",
+)
+
+# observed data
+pgm.add_node(
+    "t_star_j",
+    r"$t^{\ast}_j$",
+    6.0,
+    3.25,
+    observed=True,
+    shape="rectangle",
+)
+pgm.add_node(
+    "u_obs_ij",
+    r"$\hat{u}^{\ast}_{ij}$",
+    2,
+    2.5,
+    scale=1.0,
+    observed=True,
+)
+pgm.add_node(
+    "s_obs_ij",
+    r"$\hat{s}^{\ast}_{ij}$",
+    4,
+    2.5,
+    scale=1.0,
+    observed=True,
+)
+
+# edges
+edge_params = {"head_length": 0.3, "head_width": 0.25, "lw": 0.7}
+pgm.add_edge("mu_init", "u_star_0i", plot_params=edge_params)
+pgm.add_edge("sigma_init", "u_star_0i", plot_params=edge_params)
+pgm.add_edge("mu_init", "s_star_0i", plot_params=edge_params)
+pgm.add_edge("sigma_init", "s_star_0i", plot_params=edge_params)
+pgm.add_edge("mu_gamma", "gamma_star_i", plot_params=edge_params)
+pgm.add_edge("sigma_gamma", "gamma_star_i", plot_params=edge_params)
+pgm.add_edge("mu_sigma", "sigma_ui", plot_params=edge_params)
+pgm.add_edge("sigma_sigma", "sigma_ui", plot_params=edge_params)
+pgm.add_edge("mu_sigma", "sigma_si", plot_params=edge_params)
+pgm.add_edge("sigma_sigma", "sigma_si", plot_params=edge_params)
+
+pgm.add_edge("u_star_0i", "u_star_ij", plot_params=edge_params)
+pgm.add_edge("s_star_0i", "s_star_ij", plot_params=edge_params)
+pgm.add_edge("u_star_0i", "s_star_ij", plot_params=edge_params)
+pgm.add_edge("gamma_star_i", "s_star_ij", plot_params=edge_params)
+
+pgm.add_edge("u_star_ij", "u_obs_ij", plot_params=edge_params)
+pgm.add_edge("s_star_ij", "s_obs_ij", plot_params=edge_params)
+pgm.add_edge("sigma_ui", "u_obs_ij", plot_params=edge_params)
+pgm.add_edge("sigma_si", "s_obs_ij", plot_params=edge_params)
+
+pgm.add_edge("t_star_j", "u_star_ij", plot_params=edge_params)
+pgm.add_edge("t_star_j", "s_star_ij", plot_params=edge_params)
+
+# plates
+pgm.add_plate(
+    [0.5, 1.2, 5, 4.4],
+    label=r"$i \in \{1, \ldots, G\}$",
+    shift=-0.1,
+    fontsize=12,
+)
+pgm.add_plate(
+    [1.0, 1.8, 5.5, 2.75],
+    label=r"$j \in \{1, \ldots, N\}$",
+    shift=-0.1,
+    fontsize=12,
+)
+
+pgm.render()
+```
+
+
+## HMC Inference
+
+Now we can set up some sample data and perform inference on the latent variables
+
+```{python}
+# | label: fig-generate-test-data-for-deterministic-model-inference
+# | code-fold: true
+# | fig-cap: Test data
+# | output: false
+
+from pyrovelocity.models._deterministic_inference import (
+    generate_posterior_inference_data,
+    generate_prior_inference_data,
+    generate_test_data_for_deterministic_model_inference,
+    plot_sample_phase_portraits,
+    plot_sample_trajectories,
+    plot_sample_trajectories_with_percentiles,
+    print_inference_data_structure,
+)
+
+(
+    times,
+    data,
+    num_genes,
+    num_cells,
+    num_timepoints,
+    num_modalities,
+) = generate_test_data_for_deterministic_model_inference(
+    num_genes=1,
+    num_cells=20,
+    num_timepoints=1,
+    num_modalities=2,
+    noise_levels=(0.001, 0.001),
+)
+
+num_chains = 1
+num_samples = 10
+num_warmup = 10
+
+idata_prior = generate_prior_inference_data(
+    times=times,
+    data=data,
+    num_chains=num_chains,
+    num_samples=num_samples,
+    num_genes=num_genes,
+    num_cells=num_cells,
+    num_timepoints=num_timepoints,
+    num_modalities=num_modalities,
+)
+
+idata_posterior = generate_posterior_inference_data(
+    times=times,
+    data=data,
+    num_chains=num_chains,
+    num_samples=num_samples,
+    num_genes=num_genes,
+    num_cells=num_cells,
+    num_timepoints=num_timepoints,
+    num_modalities=num_modalities,
+    num_warmup=num_warmup,
+)
+```
+
+```{python}
+# | label: show-inference-data-structure
+idata_posterior
+```
+
+## Prior distributions {.center}
+
+```{python}
+# | label: fig-transcription-splicing-degradation-prior
+# | code-fold: true
+# | fig-cap:
+# |   - Initial concentratiosn
+# |   - Degradation vs splicing rate
+# |   - Observational noise levels
+# | layout-ncol: 3
+import arviz as az
+import shutil
+
+light_gray = "#bcbcbc"
+variables = ["initial_conditions", "gamma", "sigma"]
+with plt.style.context("pyrovelocity.styles.common"):
+    if not shutil.which("latex"):
+        plt.rc("text", usetex=False)
+    for var in variables:
+        az.plot_posterior(
+            idata_prior,
+            var_names=[var],
+            group="prior",
+            kind="hist",
+            color=light_gray,
+            round_to=2,
+        )
+```
+
+## Posterior distributions {.center}
+
+```{python}
+# | label: fig-transcription-splicing-degradation-posterior
+# | code-fold: true
+# | fig-cap:
+# |   - Initial concentratiosn
+# |   - Degradation vs splicing rate
+# |   - Observational noise levels
+# | layout-ncol: 3
+with plt.style.context("pyrovelocity.styles.common"):
+    if not shutil.which("latex"):
+        plt.rc("text", usetex=False)
+    for var in variables:
+        az.plot_posterior(
+            idata_posterior,
+            var_names=[var],
+            group="posterior",
+            kind="hist",
+            color=light_gray,
+            round_to=2,
+        )
+```
+
+## Posterior predictive trajectories
+
+```{python}
+# | label: fig-transcription-splicing-degradation-posterior-predictive-trajectories
+# | code-fold: true
+# | fig-cap: Posterior predictive trajectories for the transcription-splicing-degradation model.
+# | warnings: false
+with plt.style.context("pyrovelocity.styles.common"):
+    if not shutil.which("latex"):
+        plt.rc("text", usetex=False)
+    figs = plot_sample_trajectories(
+        idata=idata_posterior,
+    )
+    for fig in figs:
+        fig.show()
+```
+
+## Posterior predictive phase portraits {.center}
+
+```{python}
+# | label: fig-transcription-splicing-degradation-posterior-predictive-phase-portraits
+# | code-fold: true
+# | fig-cap: Posterior predictive phase portraits for the transcription-splicing-degradation model.
+with plt.style.context("pyrovelocity.styles.common"):
+    if not shutil.which("latex"):
+        plt.rc("text", usetex=False)
+    figs = plot_sample_phase_portraits(
+        idata=idata_posterior,
+        colormap_name="RdBu",
+    )
+    for fig in figs:
+        fig.show()
+```
+
+
+## Posterior predictive percentile bands
+
+```{python}
+# | label: fig-transcription-splicing-degradation-posterior-predictive
+# | code-fold: true
+# | fig-cap: Posterior predictive distribution for the transcription-splicing-degradation model.
+with plt.style.context("pyrovelocity.styles.common"):
+    if not shutil.which("latex"):
+        plt.rc("text", usetex=False)
+    figs = plot_sample_trajectories_with_percentiles(
+        idata=idata_posterior,
+    )
+    for fig in figs:
+        fig.show()
+```
+
+
+# Coarse-graining and renormalization {
+    data-background-image="https://upload.wikimedia.org/wikipedia/commons/b/b2/Ising_Criticality2.gif"
+    data-background-size="contain"
+    data-background-opacity="0.3"
+  }
+
+## Mathematical example
+
+{{< video https://www.youtube.com/embed/9vFbyHNz-8g?start=591 
+    width="100%"
+    height="85%"
+>}}
+
+[@Fisher1998-lm]
+
+# References
+
+<!-- :::: {.columns}
+
+::: {.column .fragment}
+
+- Content on the left
+
+:::
+
+::: {.column .fragment}
+- Content on the right
+
+:::
+
+:::: -->
+
+<!-- # Simulation ⇄ Inference {
     data-background-image="https://upload.wikimedia.org/wikipedia/commons/b/b2/Ising_Criticality2.gif"
     data-background-size="contain"
     data-background-opacity="0.3"
@@ -40,6 +845,4 @@ filters:
 
 - Inference is the process of estimating the parameters of a model given data.
 - This is done by computing the posterior distribution of the parameters given the data.
-- Inside the model, we may estimate the parameters of other models.
-
-# References
+- Inside the model, we may estimate the parameters of other models. -->
