@@ -7,6 +7,7 @@ import pytest
 from arviz import InferenceData
 from beartype.typing import Tuple
 from einops import rearrange, repeat
+from matplotlib.collections import PathCollection
 from matplotlib.figure import Figure
 from numpyro.infer import MCMC, NUTS, Predictive
 from xarray import Dataset
@@ -19,6 +20,7 @@ from pyrovelocity.models._deterministic_inference import (
     generate_posterior_inference_data,
     generate_prior_inference_data,
     generate_test_data_for_deterministic_model_inference,
+    plot_sample_phase_portraits,
     plot_sample_trajectories,
     plot_sample_trajectories_with_percentiles,
     print_inference_data_structure,
@@ -118,7 +120,7 @@ def setup_posterior_inference_data(
 
     num_chains = 1
     num_samples = 10
-    num_warmup = 5
+    num_warmup = 10
 
     idata_posterior = generate_posterior_inference_data(
         times=times,
@@ -166,7 +168,7 @@ def model_parameters():
 def test_sort_times_over_all_cells(model_parameters):
     initial_conditions, gamma, times, num_genes, num_cells = model_parameters
 
-    all_times, time_indices = sort_times_over_all_cells(times)
+    all_times, time_indices, _ = sort_times_over_all_cells(times)
 
     assert (
         all_times.shape == (num_cells * times.shape[1],),
@@ -180,7 +182,7 @@ def test_sort_times_over_all_cells(model_parameters):
 
 def test_solve_model_for_all_genes_cells_shapes(model_parameters):
     initial_conditions, gamma, times, num_genes, num_cells = model_parameters
-    all_times, time_indices = sort_times_over_all_cells(times)
+    all_times, time_indices, _ = sort_times_over_all_cells(times)
 
     # (num_genes, num_cells, num_timepoints, num_modalities)
     expected_shape = (
@@ -574,6 +576,28 @@ def test_plot_sample_trajectories_with_percentiles(
         assert len(fig.axes[0].lines) > 0, "Each plot should contain lines."
 
 
+def test_plot_sample_phase_portraits(
+    setup_posterior_inference_data,
+):
+    idata_posterior, _, _, _ = setup_posterior_inference_data
+
+    figs = plot_sample_phase_portraits(
+        idata=idata_posterior,
+        colormap_name="RdBu",
+    )
+
+    assert isinstance(figs, list) and all(
+        isinstance(fig, Figure) for fig in figs
+    ), "All elements should be matplotlib Figure instances."
+
+    for fig in figs:
+        has_points = any(
+            isinstance(collection, PathCollection)
+            for collection in fig.axes[0].collections
+        )
+        assert has_points, "Each plot should contain points."
+
+
 def test_generate_inference_data_plots(
     setup_observational_data,
     setup_prior_inference_data,
@@ -649,6 +673,10 @@ def test_generate_inference_data_plots(
         assert file_path.exists(), f"File {filename} does not exist."
 
     pattern_checks = {
+        "sample_phase_portraits_*.png": False,
+        "sample_phase_portraits_*.pdf": False,
+        "sample_trajectories_percentiles_*.png": False,
+        "sample_trajectories_percentiles_*.pdf": False,
         "sample_trajectories_*.png": False,
         "sample_trajectories_*.pdf": False,
     }
