@@ -850,12 +850,20 @@ def plot_sample_phase_portraits(
             if scale == "log":
                 ax.set_xscale("log")
                 ax.set_yscale("log")
+                colorbar_norm = colors.LogNorm(
+                    vmin=sorted_flat_times.min(), vmax=sorted_flat_times.max()
+                )
+            else:
+                colorbar_norm = colors.Normalize(
+                    vmin=sorted_flat_times.min(), vmax=sorted_flat_times.max()
+                )
 
             sc = ax.scatter(
                 mRNA_obs,
                 pre_mRNA_obs,
                 c=sorted_flat_times,
                 cmap=colormap_name,
+                norm=colorbar_norm,
                 label="Observed",
                 marker=".",
                 s=12**2,
@@ -889,7 +897,7 @@ def plot_sample_phase_portraits(
                     pre_mRNA_samples,
                     c=sorted_flat_times,
                     cmap=colormap_name,
-                    norm=colors.LogNorm(),
+                    norm=colorbar_norm,
                     label="Sampled" if draw_index == 0 else "_nolegend_",
                     alpha=0.3,
                     marker="2",
