@@ -1,4 +1,3 @@
-import os
 import shutil
 from os import PathLike
 from pathlib import Path
@@ -14,23 +13,19 @@ import xarray as xr
 from arviz import InferenceData
 from beartype import beartype
 from beartype.typing import (
-    Any,
     Callable,
     Dict,
     List,
-    Literal,
     Optional,
     Tuple,
 )
 from einops import rearrange
 from jaxtyping import ArrayLike, Float, jaxtyped
+from matplotlib import colors
 from matplotlib.axes import Axes
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
 from numpyro.infer import MCMC, NUTS, Predictive
-from returns.io import IOResultE
-from returns.pipeline import is_successful
-from returns.result import Failure, Result, Success
 
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models._deterministic_simulation import (
@@ -42,6 +37,7 @@ __all__ = [
     "generate_test_data_for_deterministic_model_inference",
     "generate_prior_inference_data",
     "generate_posterior_inference_data",
+    "plot_sample_phase_portraits",
     "plot_sample_trajectories",
     "plot_sample_trajectories_with_percentiles",
     "save_inference_plots",
@@ -790,7 +786,139 @@ def save_inference_plots(
                 output_dir=output_dir,
             )
 
+        figs = plot_sample_phase_portraits(
+            idata_posterior,
+            colormap_name="RdBu",
+        )
+        for idx, fig in enumerate(figs):
+            save_figure_object(
+                fig=fig,
+                name=f"sample_phase_portraits_{idx}",
+                output_dir=output_dir,
+            )
+
     return True
+
+
+@beartype
+def plot_sample_phase_portraits(
+    idata: InferenceData,
+    trajectories_index: int | slice = slice(None),
+    colormap_name: str = "cividis",
+) -> List[Figure]:
+    """
+    Plots the phase portrait of mRNA (x-axis) vs pre-mRNA (y-axis) for all genes.
+
+    Args:
+        idata (InferenceData):
+            The posterior predictive data containing simulations.
+        trajectories_index (int | slice):
+            Index for the specific trajectories to plot.
+        colormap_name (str):
+            Name of the matplotlib color map to use for the time color bar.
+
+    Returns:
+        List[Figure]:
+            A list of matplotlib Figure objects containing the plots.
+    """
+    figs = []
+    genes = idata.observed_data.observations.coords["genes"].values
+
+    for gene_index in genes:
+        fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+        observed_data = idata.observed_data.observations.sel(genes=gene_index)
+        sample_data = idata.posterior_predictive.observations.sel(
+            chain=0, draw=trajectories_index, genes=gene_index
+        )
+
+        observed_times = idata.observed_data.times.values
+
+        (
+            sorted_flat_times,
+            sorted_to_original_indices,
+            original_to_sorted_indices,
+        ) = sort_times_over_all_cells(jnp.array(observed_times))
+
+        mRNA_obs = rearrange(
+            observed_data.sel(modalities="mRNA").values, "c t -> (c t)"
+        )[original_to_sorted_indices.ravel()]
+        pre_mRNA_obs = rearrange(
+            observed_data.sel(modalities="pre-mRNA").values, "c t -> (c t)"
+        )[original_to_sorted_indices.ravel()]
+
+        for ax, scale in zip(axes, ["linear", "log"]):
+            if scale == "log":
+                ax.set_xscale("log")
+                ax.set_yscale("log")
+
+            sc = ax.scatter(
+                mRNA_obs,
+                pre_mRNA_obs,
+                c=sorted_flat_times,
+                cmap=colormap_name,
+                label="Observed",
+                marker=".",
+                s=12**2,
+                edgecolor="none",
+                alpha=1,
+            )
+            ax.plot(
+                mRNA_obs,
+                pre_mRNA_obs,
+                "k-",
+                label="Observed Trajectory",
+                alpha=0.6,
+            )
+
+            for draw_index in range(sample_data.sizes["draw"]):
+                mRNA_samples = rearrange(
+                    sample_data.isel(draw=draw_index)
+                    .sel(modalities="mRNA")
+                    .values,
+                    "c t -> (c t)",
+                )[original_to_sorted_indices.ravel()]
+                pre_mRNA_samples = rearrange(
+                    sample_data.isel(draw=draw_index)
+                    .sel(modalities="pre-mRNA")
+                    .values,
+                    "c t -> (c t)",
+                )[original_to_sorted_indices.ravel()]
+
+                ax.scatter(
+                    mRNA_samples,
+                    pre_mRNA_samples,
+                    c=sorted_flat_times,
+                    cmap=colormap_name,
+                    norm=colors.LogNorm(),
+                    label="Sampled" if draw_index == 0 else "_nolegend_",
+                    alpha=0.3,
+                    marker="2",
+                    s=6**2,
+                    edgecolor="none",
+                )
+                ax.plot(
+                    mRNA_samples,
+                    pre_mRNA_samples,
+                    "gray",
+                    label="Sampled Trajectory"
+                    if draw_index == 0
+                    else "_nolegend_",
+                    alpha=0.3,
+                )
+
+            ax.set_xlabel("mRNA Expression")
+            ax.set_ylabel("pre-mRNA Expression")
+            ax.set_title(
+                f"Gene {gene_index} - Phase Portrait ({scale.capitalize()} Scale)"
+            )
+
+            plt.colorbar(sc, ax=ax, label="Time")
+
+        plt.tight_layout()
+        figs.append(fig)
+        plt.show()
+
+    return figs
 
 
 @beartype
