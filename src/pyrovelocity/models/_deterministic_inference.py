@@ -843,7 +843,7 @@ def plot_sample_trajectories_with_percentiles(
         "pre-mRNA": plt.cm.Greys,
         "mRNA": plt.cm.Greens,
     },
-    samples_transparency: float = 0.4,
+    samples_transparency: float = 0.2,
 ) -> List[Figure]:
     """
     Plots sample trajectories over time for all genes, modality, and cell
@@ -898,22 +898,22 @@ def plot_sample_trajectories_with_percentiles(
             modality_color = modality_line_colors.get(modality, "blue")
             if observed_times_shape[1] > 1:
                 for cell_index in range(observed_times.shape[0]):
-                    times = observed_times[cell_index]
-                    data = observed_data[cell_index, ..., modality_index]
-                    samples = sample_data[:, cell_index, ..., modality_index]
-                    label = f"{modality}" if cell_index == 0 else "_nolegend_"
                     plot_trajectory_with_percentiles(
                         ax=ax,
-                        times=times,
-                        data=data,
-                        sample_data=samples,
+                        times=observed_times[cell_index],
+                        data=observed_data[cell_index, ..., modality_index],
+                        sample_data=sample_data[
+                            :, cell_index, ..., modality_index
+                        ],
                         modality=modality,
                         modality_color=modality_color,
                         percentile_interval_widths=percentile_interval_widths,
                         color_map_indices=color_map_indices,
                         percentiles_color_maps=percentiles_color_maps,
                         samples_transparency=samples_transparency,
-                        label=label,
+                        label=f"{modality}"
+                        if cell_index == 0
+                        else "_nolegend_",
                         cell_index=cell_index,
                     )
             else:
