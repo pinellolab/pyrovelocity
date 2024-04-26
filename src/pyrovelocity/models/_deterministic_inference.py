@@ -110,7 +110,7 @@ def solve_model_for_each_gene(
 @beartype
 def sort_times_over_all_cells(
     times: TimeTensor,
-) -> Tuple[jnp.ndarray, jnp.ndarray]:
+) -> Tuple[ArrayLike, ArrayLike, ArrayLike]:
     """
     Generates a unified sorted time vector from the provided times matrix.
 
@@ -125,16 +125,25 @@ def sort_times_over_all_cells(
 
     Returns:
         Tuple of:
-            - all_times (jnp.ndarray): Unified sorted time vector.
-            - time_indices (jnp.ndarray): Indices to sort the original times.
+            - sorted_flat_times (jnp.ndarray): Unified sorted time vector.
+            - sorted_to_original_indices (jnp.ndarray):
+                Indices mapping the positions from the sorted times back to
+                their original positions in the matrix.
+            - original_to_sorted_indices (jnp.ndarray):
+                Permutation indices used to sort the original times into
+                sorted_flat_times.
     """
     flat_times = times.flatten()
-    sorted_indices = jnp.argsort(flat_times)
-    all_times = flat_times[sorted_indices]
+    original_to_sorted_indices = jnp.argsort(flat_times)
+    sorted_flat_times = flat_times[original_to_sorted_indices]
 
-    time_indices = jnp.searchsorted(all_times, times)
+    sorted_to_original_indices = jnp.searchsorted(sorted_flat_times, times)
 
-    return all_times, time_indices
+    return (
+        sorted_flat_times,
+        sorted_to_original_indices,
+        original_to_sorted_indices,
+    )
 
 
 @jaxtyped(typechecker=beartype)
@@ -145,7 +154,7 @@ def deterministic_transcription_splicing_probabilistic_model(
 ):
     num_genes, num_cells, num_timepoints, num_modalities = data.shape
 
-    all_times, time_indices = sort_times_over_all_cells(times)
+    all_times, time_indices, _ = sort_times_over_all_cells(times)
 
     # priors
     initial_conditions = numpyro.sample(
