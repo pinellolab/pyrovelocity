@@ -898,3 +898,156 @@ pgm.add_plate(
 
 pgm.render()
 ```
+
+Now we can set up some sample data and perform inference on the latent variables
+
+```{python}
+# | label: fig-generate-test-data-for-deterministic-model-inference
+# | code-fold: true
+# | fig-cap: Test data
+
+import arviz as az
+from pyrovelocity.models._deterministic_inference import (
+    generate_posterior_inference_data,
+    generate_prior_inference_data,
+    generate_test_data_for_deterministic_model_inference,
+    plot_sample_phase_portraits,
+    plot_sample_trajectories,
+    plot_sample_trajectories_with_percentiles,
+    print_inference_data_structure,
+)
+
+(
+    times,
+    data,
+    num_genes,
+    num_cells,
+    num_timepoints,
+    num_modalities,
+) = generate_test_data_for_deterministic_model_inference(
+    num_genes=1,
+    num_cells=20,
+    num_timepoints=1,
+    num_modalities=2,
+    noise_levels=(0.001, 0.001),
+)
+
+num_chains = 1
+num_samples = 10
+num_warmup = 10
+
+idata_prior = generate_prior_inference_data(
+    times=times,
+    data=data,
+    num_chains=num_chains,
+    num_samples=num_samples,
+    num_genes=num_genes,
+    num_cells=num_cells,
+    num_timepoints=num_timepoints,
+    num_modalities=num_modalities,
+)
+
+idata_posterior = generate_posterior_inference_data(
+    times=times,
+    data=data,
+    num_chains=num_chains,
+    num_samples=num_samples,
+    num_genes=num_genes,
+    num_cells=num_cells,
+    num_timepoints=num_timepoints,
+    num_modalities=num_modalities,
+    num_warmup=num_warmup,
+)
+```
+
+We can plot the prior 
+
+```{python}
+# | label: fig-transcription-splicing-degradation-prior
+# | code-fold: true
+# | fig-cap: Prior distributions for the transcription-splicing-degradation model.
+light_gray = "#bcbcbc"
+variables = ["initial_conditions", "gamma", "sigma"]
+for var in variables:
+    az.plot_posterior(
+        idata_prior,
+        var_names=[var],
+        group="prior",
+        kind="hist",
+        color=light_gray,
+        round_to=2,
+    )
+```
+
+and posterior distributions for the latent variables
+
+```{python}
+# | label: fig-transcription-splicing-degradation-posterior
+# | code-fold: true
+# | fig-cap: Posterior distributions for the transcription-splicing-degradation model.
+light_gray = "#bcbcbc"
+variables = ["initial_conditions", "gamma", "sigma"]
+for var in variables:
+    az.plot_posterior(
+        idata_posterior,
+        var_names=[var],
+        group="posterior",
+        kind="hist",
+        color=light_gray,
+        round_to=2,
+    )
+```
+
+
+We can plot posterior predictive trajectories
+
+```{python}
+# | label: fig-transcription-splicing-degradation-posterior-predictive-trajectories
+# | code-fold: true
+# | fig-cap: Posterior predictive trajectories for the transcription-splicing-degradation model.
+figs = plot_sample_trajectories(
+    idata=idata_posterior,
+)
+for fig in figs:
+    fig.show()
+```
+
+trajectories in the phase portrait space
+
+```{python}
+# | label: fig-transcription-splicing-degradation-posterior-predictive-phase-portraits
+# | code-fold: true
+# | fig-cap: Posterior predictive phase portraits for the transcription-splicing-degradation model.
+figs = plot_sample_phase_portraits(
+    idata=idata_posterior,
+    colormap_name="RdBu",
+)
+for fig in figs:
+    fig.show()
+```
+
+as well as estimates for the distribution of the pre-mRNA and mRNA
+
+```{python}
+# | label: fig-transcription-splicing-degradation-posterior-predictive
+# | code-fold: true
+# | fig-cap: Posterior predictive distribution for the transcription-splicing-degradation model.
+figs = plot_sample_trajectories_with_percentiles(
+    idata=idata_posterior,
+)
+for fig in figs:
+    fig.show()
+```
+
+we can also plot the prior predictive distribution
+
+```{python}
+# | label: fig-transcription-splicing-degradation-prior-predictive
+# | code-fold: true
+# | fig-cap: Prior predictive distribution for the transcription-splicing-degradation model.
+figs = plot_sample_trajectories_with_percentiles(
+    idata=idata_posterior,
+)
+for fig in figs:
+    fig.show()
+```
