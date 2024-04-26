@@ -1150,7 +1150,7 @@ def plot_sample_trajectories(
             )
 
             if num_trajectories > sample_data.shape[0]:
-                logger.warning(
+                logger.debug(
                     f"\nRequested number of trajectories ({num_trajectories}) "
                     f"exceeds available samples ({sample_data.shape[0]}).\n"
                     "Adjusting to maximum available.\n"
