@@ -42,13 +42,13 @@ runs:
         sudo apt-get clean
 
     - name: Install Nix
-      uses: DeterminateSystems/nix-installer-action@de22e16c4711fca50c816cc9081563429d1cf563 # ratchet:DeterminateSystems/nix-installer-action@v10
+      uses: DeterminateSystems/nix-installer-action@7993355175c2765e5733dae74f3e0786fe0e5c4f # ratchet:DeterminateSystems/nix-installer-action@v12
       with:
         extra-conf: |
           extra-platforms = aarch64-linux
 
     - name: Setup Local Nix Cache
-      uses: DeterminateSystems/magic-nix-cache-action@fc6aaceb40b9845a02b91e059ec147e78d1b4e41 # ratchet:DeterminateSystems/magic-nix-cache-action@v4
+      uses: DeterminateSystems/magic-nix-cache-action@b46e247b898aa56e6d2d2e728dc6df6c84fdb738 # ratchet:DeterminateSystems/magic-nix-cache-action@v7
 
     # - name: Setup Remote Nix Cache
     #   uses: cachix/cachix-action@18cf96c7c98e048e10a83abd92116114cd8504be # ratchet:cachix/cachix-action@v14
@@ -57,7 +57,7 @@ runs:
     #     authToken: "${{ inputs.cachixAuthToken }}"
 
     - name: Set GitHub CI Slug Variables
-      uses: rlespinasse/github-slug-action@102b1a064a9b145e56556e22b18b19c624538d94 # ratchet:rlespinasse/github-slug-action@v4
+      uses: rlespinasse/github-slug-action@797d68864753cbceedc271349d402da4590e6302 # ratchet:rlespinasse/github-slug-action@v4
       with:
         prefix: CI_
 
