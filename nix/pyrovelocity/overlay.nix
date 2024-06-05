@@ -31,7 +31,7 @@ in {
     inherit poetry2nixOverrides;
   };
 
-  # pyrovelocityDevEnv310 = mkPoetryDevEnv self.python310;
-  # pyrovelocityDevEnv311 = mkPoetryDevEnv self.python311;
-  # pyrovelocityDevEnv312 = mkPoetryDevEnv self.python312;
+  pyrovelocityDevEnv310 = mkPoetryDevEnv self.python310;
+  pyrovelocityDevEnv311 = mkPoetryDevEnv self.python311;
+  pyrovelocityDevEnv312 = mkPoetryDevEnv self.python312;
 }
