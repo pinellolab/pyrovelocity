@@ -2,6 +2,7 @@
   poetry2nix,
   lib,
   stdenv,
+  cudaPackages_12_1,
   tbb_2021_11,
 }:
 poetry2nix.overrides.withDefaults (
@@ -113,7 +114,7 @@ poetry2nix.overrides.withDefaults (
           or []
           ++ [
             self.nvidia-cublas-cu12
-            self.cudaPackages_12_1.cudnn
+            cudaPackages_12_1.cudnn
           ];
         postFixup = nvidiaPostFixup;
       });
@@ -123,7 +124,7 @@ poetry2nix.overrides.withDefaults (
           or []
           ++ [
             self.nvidia-nvjitlink-cu12
-            self.cudaPackages_12_1.libnvjitlink
+            cudaPackages_12_1.libnvjitlink
           ];
         postFixup = nvidiaPostFixup;
       });
@@ -134,8 +135,8 @@ poetry2nix.overrides.withDefaults (
           ++ [
             self.nvidia-cublas-cu12
             self.nvidia-cusparse-cu12
-            self.cudaPackages_12_1.libcublas
-            self.cudaPackages_12_1.libcusparse
+            cudaPackages_12_1.libcublas
+            cudaPackages_12_1.libcusparse
           ];
         postFixup = nvidiaPostFixup;
       });

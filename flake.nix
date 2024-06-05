@@ -53,7 +53,16 @@
         config,
         ...
       }: let
-        poetry2nixOverrides = import ./nix/poetry {inherit (pkgs) poetry2nix lib stdenv tbb_2021_11;};
+        poetry2nixOverrides = import ./nix/poetry {
+          inherit
+            (pkgs)
+            poetry2nix
+            lib
+            stdenv
+            cudaPackages_12_1
+            tbb_2021_11
+            ;
+        };
 
         appBuildInputs = with pkgs; [
         ];
