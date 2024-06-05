@@ -324,7 +324,6 @@ jobs:
           nix build .#default \
           --accept-flake-config \
           --impure \
-
           --fallback \
           --keep-going \
           --print-build-logs
