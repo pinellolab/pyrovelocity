@@ -123,13 +123,13 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # ratchet:actions/checkout@v4
         with:
           ref: ${{ needs.set-variables.outputs.checkout_ref }}
 
       - name: Create Flyte config from YAML template
         id: yq-process
-        uses: mikefarah/yq@76a0da3937c59b54401a2cea562d66be2767261a # ratchet:mikefarah/yq@master
+        uses: mikefarah/yq@4cc646b16b481a305c45e5eafa920c03c77565ea # ratchet:mikefarah/yq@master
         with:
           cmd: "yq e \
             '.admin.endpoint = strenv(FLYTE_CLUSTER_ENDPOINT) | \
@@ -142,14 +142,13 @@ jobs:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           GCP_STORAGE_SCOPES: ${{ secrets.GCP_STORAGE_SCOPES }}
           GCP_STORAGE_CONTAINER: ${{ secrets.GCP_STORAGE_CONTAINER }}
-
       - name: Upload Flyte config as an artifact
         id: config-output
-        uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # ratchet:actions/upload-artifact@v4
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # ratchet:actions/upload-artifact@v4
         with:
           name: flyte-config
-          path: ${{ secrets.FLYTECTL_CONFIG }}
 
+          path: ${{ secrets.FLYTECTL_CONFIG }}
   test-python:
     runs-on: ubuntu-latest
     needs: [set-variables, config-workflows]
@@ -165,55 +164,54 @@ jobs:
             continue-on-error: false
           - python_version: "3.11"
             continue-on-error: true
-
     steps:
       - name: Check Variables
         run: |
           echo "SKIP_CI=${{ needs.set-variables.outputs.skip_ci }}"
           echo "SKIP_TESTS=${{ needs.set-variables.outputs.skip_tests }}"
+
           echo "DEBUG=${{ needs.set-variables.outputs.debug }}"
           echo "MODE=${{ needs.set-variables.outputs.mode }}"
       - name: Checkout code
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # ratchet:actions/checkout@v4
         with:
           ref: ${{ needs.set-variables.outputs.checkout_ref }}
-
       - name: Setup environment
         uses: ./.github/actions/setup_environment
         with:
           python_version: ${{ matrix.python_version }}
           debug_enabled: ${{ needs.set-variables.outputs.debug }}
-        continue-on-error: ${{ matrix.continue-on-error }}
 
+        continue-on-error: ${{ matrix.continue-on-error }}
       - name: Download Flyte config
-        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # ratchet:actions/download-artifact@v4
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # ratchet:actions/download-artifact@v4
         with:
           name: flyte-config
           path: .flyte/
-        continue-on-error: ${{ matrix.continue-on-error }}
 
+        continue-on-error: ${{ matrix.continue-on-error }}
       - name: "Setup tmate debug session"
         uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # ratchet:mxschmitt/action-tmate@v3
         if: ${{ inputs.debug_enabled }}
-
       - name: Lint and typecheck
         run: |
+
           make lint-check
         continue-on-error: ${{ matrix.continue-on-error }}
-
       - name: Run tests
+
         run: |
           make test-cov-xml
         continue-on-error: ${{ matrix.continue-on-error }}
-
       - name: Upload coverage
-        uses: codecov/codecov-action@54bcd8715eee62d40e33596ef5e8f0f48dbbccab # ratchet:codecov/codecov-action@v4
+
+        uses: codecov/codecov-action@125fc84a9a348dbcf27191600683ec096ec9021c # ratchet:codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
+
           verbose: true
         continue-on-error: ${{ matrix.continue-on-error }}
-
   test-bazel:
     runs-on: ubuntu-latest
     needs: [set-variables, config-workflows]
@@ -224,7 +222,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # ratchet:actions/checkout@v4
         with:
           ref: ${{ needs.set-variables.outputs.checkout_ref }}
       - name: setup gcp credentials
@@ -233,7 +231,7 @@ jobs:
           ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}
           EOF
       - name: cache bazel
-        uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # ratchet:actions/cache@v4
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # ratchet:actions/cache@v4
         with:
           path: |
             ~/.cache/bazel
@@ -242,7 +240,7 @@ jobs:
             ${{ runner.os }}-bazel-
       - name: cache requirements
         id: cache-requirements
-        uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # ratchet:actions/cache@v4
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # ratchet:actions/cache@v4
         with:
           path: |
             requirements-bazel.txt
@@ -259,16 +257,16 @@ jobs:
           make meta-bazel test-bazel
           df -h
       - name: upload requirements artifact
-        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # ratchet:actions/upload-artifact@v4
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # ratchet:actions/upload-artifact@v4
         with:
           name: requirements-bazel
           path: requirements-bazel.txt
-
   test-nix:
     runs-on: ubuntu-latest
     # runs-on: pinellolab-runners
     needs: [set-variables, config-workflows]
     if: ${{ needs.set-variables.outputs.skip_ci != 'true' && needs.set-variables.outputs.skip_tests != 'true' }}
+
     concurrency:
       group: test-nix-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}-${{ needs.set-variables.outputs.mode }}
       cancel-in-progress: true
@@ -287,11 +285,11 @@ jobs:
           remove-android: "true"
           remove-codeql: "true"
           remove-docker-images: "true"
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # ratchet:actions/checkout@v4
         with:
           ref: ${{ needs.set-variables.outputs.checkout_ref }}
-      - uses: DeterminateSystems/nix-installer-action@de22e16c4711fca50c816cc9081563429d1cf563 # ratchet:DeterminateSystems/nix-installer-action@v10
-      - uses: DeterminateSystems/magic-nix-cache-action@fc6aaceb40b9845a02b91e059ec147e78d1b4e41 # ratchet:DeterminateSystems/magic-nix-cache-action@v4
+      - uses: DeterminateSystems/nix-installer-action@7993355175c2765e5733dae74f3e0786fe0e5c4f # ratchet:DeterminateSystems/nix-installer-action@v12
+      - uses: DeterminateSystems/magic-nix-cache-action@b46e247b898aa56e6d2d2e728dc6df6c84fdb738 # ratchet:DeterminateSystems/magic-nix-cache-action@v7
         # Toggling use-gha-cache can help resolve `Nix daemon disconnected unexpectedly`.
         with:
           use-gha-cache: false
@@ -299,7 +297,7 @@ jobs:
       #   with:
       #     name: "${{ vars.CACHIX_CACHE_NAME }}"
       #     authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
-      - uses: rlespinasse/github-slug-action@102b1a064a9b145e56556e22b18b19c624538d94 # ratchet:rlespinasse/github-slug-action@v4
+      - uses: rlespinasse/github-slug-action@797d68864753cbceedc271349d402da4590e6302 # ratchet:rlespinasse/github-slug-action@v4
         with:
           prefix: CI_
       - name: Set git variables
@@ -326,15 +324,16 @@ jobs:
           nix build .#default \
           --accept-flake-config \
           --impure \
+
           --fallback \
           --keep-going \
           --print-build-logs
           df -h
-
   build-docker-images:
     needs: [set-variables]
     if: ${{ needs.set-variables.outputs.skip_ci != 'true' && needs.set-variables.outputs.mode != 'dev' && (contains(github.event.pull_request.labels.*.name, 'build-images') || contains(github.event.pull_request.labels.*.name, 'execute-workflow') || (github.event_name == 'workflow_dispatch' && inputs.run_build_images)) }}
     uses: ./.github/workflows/build-images.yaml
+
     # concurrency:
     #   group: bi-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}-${{ needs.set-variables.outputs.mode }}
     #   cancel-in-progress: true
@@ -343,11 +342,11 @@ jobs:
     with:
       debug_enabled: ${{ needs.set-variables.outputs.debug }}
       mode: ${{ needs.set-variables.outputs.mode }}
-
   build-pyrovelocity-image:
     runs-on: ubuntu-latest
     needs: [set-variables]
     if: ${{ needs.set-variables.outputs.skip_ci != 'true' && ( contains(github.event.pull_request.labels.*.name, 'build-images') || contains(github.event.pull_request.labels.*.name, 'execute-workflow') || (github.event_name == 'workflow_dispatch' && inputs.run_build_images) || (github.event_name == 'workflow_dispatch' && inputs.run_execute_workflow) ) }}
+
     concurrency:
       group: bpi-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}-${{ needs.set-variables.outputs.mode }}
       cancel-in-progress: true
@@ -371,13 +370,11 @@ jobs:
           remove-android: "true"
           remove-codeql: "true"
           remove-docker-images: "true"
-
       - name: Setup build environment
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # ratchet:actions/checkout@v4
         if: ${{ needs.set-variables.outputs.mode != 'dev' }}
         with:
           ref: ${{ needs.set-variables.outputs.checkout_ref }}
-
       - name: Build pyrovelocity image
         uses: ./.github/actions/build_nix_image
         if: ${{ needs.set-variables.outputs.mode != 'dev' }}
@@ -388,11 +385,11 @@ jobs:
           nixCommand: "nix run .#containerManifest --impure --accept-flake-config"
           gcpProjectId: ${{ secrets.GCP_PROJECT_ID }}
           encodedGARCredentials: ${{ secrets.ENCODED_GAR_SA_CREDS }}
-
   build-pyrovelocitydev-image:
     runs-on: ubuntu-latest
     needs: [set-variables]
     if: ${{ needs.set-variables.outputs.skip_ci != 'true' && ( contains(github.event.pull_request.labels.*.name, 'build-images') || contains(github.event.pull_request.labels.*.name, 'execute-workflow') || (github.event_name == 'workflow_dispatch' && inputs.run_build_images) || (github.event_name == 'workflow_dispatch' && inputs.run_execute_workflow) ) }}
+
     # concurrency:
     #   group: bdpi-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}-${{ needs.set-variables.outputs.mode }}
     #   cancel-in-progress: true
@@ -416,13 +413,11 @@ jobs:
           remove-android: "true"
           remove-codeql: "true"
           remove-docker-images: "true"
-
       - name: Setup build environment
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # ratchet:actions/checkout@v4
         if: ${{ needs.set-variables.outputs.mode != 'dev' }}
         with:
           ref: ${{ needs.set-variables.outputs.checkout_ref }}
-
       - name: Build pyrovelocitydev image
         uses: ./.github/actions/build_nix_image
         if: ${{ needs.set-variables.outputs.mode != 'dev' }}
@@ -433,11 +428,11 @@ jobs:
           nixCommand: "nix run .#devcontainerManifest --impure --accept-flake-config"
           gcpProjectId: ${{ secrets.GCP_PROJECT_ID }}
           encodedGARCredentials: ${{ secrets.ENCODED_GAR_SA_CREDS }}
-
   execute-workflow:
     # needs: [config-workflows, build-nix-images, set-variables]
     # needs: [config-workflows, set-variables]
     needs: [config-workflows, build-pyrovelocity-image, set-variables]
+
     if: ${{ needs.set-variables.outputs.skip_ci != 'true' && (contains(github.event.pull_request.labels.*.name, 'execute-workflow') || (github.event_name == 'workflow_dispatch' && inputs.run_execute_workflow)) }}
     runs-on: ubuntu-latest
     concurrency:
@@ -450,30 +445,28 @@ jobs:
       FLYTECTL_CONFIG: ${{ secrets.FLYTECTL_CONFIG }}
       FLYTE_OAUTH_CLIENT_SECRET: ${{ secrets.FLYTE_OAUTH_CLIENT_SECRET }}
       WORKFLOW_IMAGE: ${{ vars.WORKFLOW_IMAGE }}
-
     steps:
       - name: Checkout code
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # ratchet:actions/checkout@v4
         with:
           ref: ${{ needs.set-variables.outputs.checkout_ref }}
-
       - name: Setup environment
         uses: ./.github/actions/setup_environment
         with:
           python_version: ${{ matrix.python_version }}
-          debug_enabled: ${{ needs.set-variables.outputs.debug }}
 
+          debug_enabled: ${{ needs.set-variables.outputs.debug }}
       - name: Download Flyte config
-        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # ratchet:actions/download-artifact@v4
+        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # ratchet:actions/download-artifact@v4
         with:
           name: flyte-config
-          path: .flyte/
 
+          path: .flyte/
       - name: Setup tmate debug session
         if: ${{ inputs.debug_enabled == 'true' }}
         uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # ratchet:mxschmitt/action-tmate@v3
-
       - name: Execute workflow
+
         id: execute
         run: |
           make run-${{ needs.set-variables.outputs.mode }}
@@ -482,20 +475,21 @@ jobs:
         id: save-hydra-outputs
         run: |
           TAR_FILENAME="hydra_outputs_${GITHUB_SHA_SHORT}.tar.gz"
+
           tar -czf $TAR_FILENAME ./outputs/
           tar -tzf $TAR_FILENAME
           echo "HYDRA_OUTPUTS_TAR=$TAR_FILENAME" >> $GITHUB_ENV
-
       - name: Upload config artifact
-        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # ratchet:actions/upload-artifact@v4
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # ratchet:actions/upload-artifact@v4
         with:
           name: hydra-outputs
-          path: ${{ env.HYDRA_OUTPUTS_TAR }}
 
+          path: ${{ env.HYDRA_OUTPUTS_TAR }}
   release:
     runs-on: ubuntu-latest
     needs: [test-python, test-nix, test-bazel]
     if: ${{ github.repository_owner == 'pinellolab' && github.event_name == 'push' }}
+
     environment:
       name: release
       url: https://github.com/pinellolab/pyrovelocity/releases/tag/${{ steps.semanticrelease.outputs.git-tag }}
@@ -506,43 +500,43 @@ jobs:
       released: ${{ steps.semanticrelease.outputs.released }}
       git-head: ${{ steps.semanticrelease.outputs.git-head }}
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # ratchet:actions/checkout@v4
         with:
           ref: ${{ needs.set-variables.outputs.checkout_ref }}
-      - uses: DeterminateSystems/nix-installer-action@de22e16c4711fca50c816cc9081563429d1cf563 # ratchet:DeterminateSystems/nix-installer-action@v10
-      - uses: DeterminateSystems/magic-nix-cache-action@fc6aaceb40b9845a02b91e059ec147e78d1b4e41 # ratchet:DeterminateSystems/magic-nix-cache-action@v4
+      - uses: DeterminateSystems/nix-installer-action@7993355175c2765e5733dae74f3e0786fe0e5c4f # ratchet:DeterminateSystems/nix-installer-action@v12
+      - uses: DeterminateSystems/magic-nix-cache-action@b46e247b898aa56e6d2d2e728dc6df6c84fdb738 # ratchet:DeterminateSystems/magic-nix-cache-action@v7
       - run: nix profile install .#releaseEnv
       - uses: cihelper/action-semanticrelease-poetry@66900ba780321bcdb974891ee82f945a25a870d7 # ratchet:cihelper/action-semanticrelease-poetry@v1
         id: semanticrelease
-      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # ratchet:actions/upload-artifact@v4
+      - uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # ratchet:actions/upload-artifact@v4
         if: ${{ steps.semanticrelease.outputs.released == 'true' }}
         with:
           name: poetry-build
           path: ./dist
-
   publish-nix-flake:
     runs-on: ubuntu-latest
     needs: [set-variables, release]
     if: ${{ needs.release.outputs.released == 'true' }}
+
     permissions:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # ratchet:actions/checkout@v4
         with:
           ref: ${{ needs.release.outputs.git-head }}
           # ref: refs/tags/v0.2.0-beta.10
-      - uses: DeterminateSystems/nix-installer-action@de22e16c4711fca50c816cc9081563429d1cf563 # ratchet:DeterminateSystems/nix-installer-action@v10
-      - uses: DeterminateSystems/flakehub-push@038c6a99bcaa71486db5a82a84e018a7f2550b0d # ratchet:DeterminateSystems/flakehub-push@main
+      - uses: DeterminateSystems/nix-installer-action@7993355175c2765e5733dae74f3e0786fe0e5c4f # ratchet:DeterminateSystems/nix-installer-action@v12
+      - uses: DeterminateSystems/flakehub-push@150c971996b1d14eaba6790102041234f606379f # ratchet:DeterminateSystems/flakehub-push@main
         with:
           visibility: unlisted
           tag: ${{ needs.release.outputs.version }}
           # tag: v0.2.0-beta.10
-
   # TODO: use composite action ./.github/actions/build_nix_image for image build
   # steps within matrix. This requires optionally passing
   # needs.release.outputs.version to set the VERSION environment variable inside
   # the composite action and forcing the build to run even if one with the same
+
   # GIT_SHA tag already exists
   publish-release-images:
     runs-on: ubuntu-latest
@@ -580,22 +574,22 @@ jobs:
           remove-android: "true"
           remove-codeql: "true"
           remove-docker-images: "true"
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # ratchet:actions/checkout@v4
         with:
           ref: ${{ needs.release.outputs.git-head }}
       - uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # ratchet:docker/setup-qemu-action@v3
         with:
           platforms: arm64
-      - uses: DeterminateSystems/nix-installer-action@de22e16c4711fca50c816cc9081563429d1cf563 # ratchet:DeterminateSystems/nix-installer-action@v10
+      - uses: DeterminateSystems/nix-installer-action@7993355175c2765e5733dae74f3e0786fe0e5c4f # ratchet:DeterminateSystems/nix-installer-action@v12
         with:
           extra-conf: |
             extra-platforms = aarch64-linux
-      - uses: DeterminateSystems/magic-nix-cache-action@fc6aaceb40b9845a02b91e059ec147e78d1b4e41 # ratchet:DeterminateSystems/magic-nix-cache-action@v4
+      - uses: DeterminateSystems/magic-nix-cache-action@b46e247b898aa56e6d2d2e728dc6df6c84fdb738 # ratchet:DeterminateSystems/magic-nix-cache-action@v7
       # - uses: cachix/cachix-action@18cf96c7c98e048e10a83abd92116114cd8504be # ratchet:cachix/cachix-action@v14
       #   with:
       #     name: "${{ vars.CACHIX_CACHE_NAME }}"
       #     authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
-      - uses: rlespinasse/github-slug-action@102b1a064a9b145e56556e22b18b19c624538d94 # ratchet:rlespinasse/github-slug-action@v4
+      - uses: rlespinasse/github-slug-action@797d68864753cbceedc271349d402da4590e6302 # ratchet:rlespinasse/github-slug-action@v4
         with:
           prefix: CI_
       - name: Set git variables
@@ -623,6 +617,7 @@ jobs:
           echo "Using Git Repository Name: $GIT_REPO_NAME"
           echo "Using Git Reference: $GIT_REF"
           echo "Using Git SHA: $GIT_SHA"
+
           echo "Using Git SHA Short: $GIT_SHA_SHORT"
           df -h
           ${{ matrix.nixCommand }}
@@ -639,12 +634,13 @@ jobs:
 
           df -h
           nix develop .#devCore --impure --accept-flake-config
+
           nix store gc --dry-run --debug
           nix store gc --max 3G --debug
           df -h
-
   publish-pypi:
     runs-on: ubuntu-latest
+
     needs: release
     if: ${{ needs.release.outputs.released == 'true' }}
     permissions:
@@ -653,14 +649,14 @@ jobs:
       name: release
       url: https://pypi.org/project/pyrovelocity/${{needs.release.outputs.version}}/
     steps:
-      - uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # ratchet:actions/download-artifact@v4
+      - uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # ratchet:actions/download-artifact@v4
         with:
           name: poetry-build
           path: ./dist
       - uses: pypa/gh-action-pypi-publish@81e9d935c883d0b210363ab89cf05f3894778450 # ratchet:pypa/gh-action-pypi-publish@release/v1
-
   test-docs-build:
     runs-on: ubuntu-latest
+
     needs: set-variables
     if: ${{ needs.set-variables.outputs.skip_ci != 'true' && needs.set-variables.outputs.skip_tests != 'true' }}
     strategy:
@@ -670,7 +666,7 @@ jobs:
       contents: read
       pages: read
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # ratchet:actions/checkout@v4
         with:
           ref: ${{ needs.set-variables.outputs.checkout_ref }}
       - name: Setup environment
@@ -680,9 +676,9 @@ jobs:
           debug_enabled: ${{ needs.set-variables.outputs.debug }}
       - name: Build
         run: make docs-build
-
   build-release-docs:
     runs-on: ubuntu-latest
+
     needs: [set-variables, release]
     if: ${{ needs.release.outputs.released == 'true' }}
     strategy:
@@ -693,7 +689,7 @@ jobs:
       pages: read
     environment: github-pages
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # ratchet:actions/checkout@v4
         with:
           ref: ${{ needs.release.outputs.git-head }}
       - name: Setup environment
@@ -707,9 +703,9 @@ jobs:
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # ratchet:actions/upload-pages-artifact@v3
         with:
           path: ./site
-
   publish-docs:
     runs-on: ubuntu-latest
+
     needs: [build-release-docs, release]
     if: ${{ needs.release.outputs.released == 'true' }}
     permissions:
@@ -721,4 +717,5 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@decdde0ac072f6dcbe43649d82d9c635fff5b4e4 # ratchet:actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # ratchet:actions/deploy-pages@v4
+
