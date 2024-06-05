@@ -2,14 +2,16 @@ import dataclasses
 import inspect
 import sys
 from dataclasses import field
-from typing import Any
-from typing import Callable
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Type
-from typing import get_type_hints
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    get_type_hints,
+)
 
 from flytekit.core.local_cache import LocalTaskCache
 from mashumaro.mixins.json import DataClassJSONMixin
@@ -85,7 +87,7 @@ def create_dataclass_from_callable(
                                     random_state=None,
                                     solver='lbfgs',
                                     max_iter=2000,
-                                    multi_class='auto',
+                                    multi_class='deprecated',
                                     verbose=0,
                                     warm_start=False,
                                     n_jobs=None,
