@@ -170,14 +170,13 @@ def test_sort_times_over_all_cells(model_parameters):
 
     all_times, time_indices, _ = sort_times_over_all_cells(times)
 
-    assert (
-        all_times.shape == (num_cells * times.shape[1],),
-        "All times should have the same shape as times",
-    )
-    assert (
-        all_times[time_indices] == times,
-        "All times of time indices should be equivalent to times",
-    )
+    assert all_times.shape == (
+        num_cells * times.shape[1],
+    ), "All times should have the same shape as times"
+
+    assert np.array_equal(
+        all_times[time_indices], times
+    ), "All times of time indices should be equivalent to times"
 
 
 def test_solve_model_for_all_genes_cells_shapes(model_parameters):
@@ -633,7 +632,6 @@ def test_generate_inference_data_plots(
     )
 
     result = save_inference_plots(
-        idata_prior=idata_prior,
         idata_posterior=idata_posterior,
         output_dir=output_dir,
     )
