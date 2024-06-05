@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import shutil
 from os import PathLike
 from pathlib import Path
@@ -16,6 +18,7 @@ from beartype.typing import (
     Callable,
     Dict,
     List,
+    Literal,
     Optional,
     Tuple,
 )
@@ -695,7 +698,6 @@ def save_figure_object(
 
 @beartype
 def save_inference_plots(
-    idata_prior: InferenceData,
     idata_posterior: InferenceData,
     output_dir: PathLike | str,
 ) -> bool:
@@ -703,8 +705,6 @@ def save_inference_plots(
     Generate and save plots for both prior and posterior inference data.
 
     Args:
-        idata_prior (arviz.InferenceData):
-            Inference data from prior predictive checks.
         idata_posterior (arviz.InferenceData):
             Inference data from posterior predictive checks.
         output_dir (str): Directory path where plots will be saved.
@@ -733,7 +733,7 @@ def save_inference_plots(
         variables = ["initial_conditions", "gamma", "sigma"]
         for var in variables:
             az.plot_posterior(
-                idata_prior,
+                idata_posterior,
                 var_names=[var],
                 group="prior",
                 kind="hist",
@@ -1088,6 +1088,57 @@ def plot_sample_trajectories_with_percentiles(
     return figs
 
 
+"""
+Convert interfaces to use Sum type following upgrade to
+python >=3.11 and expression >=5
+
+from expression import case, tag, tagged_union
+
+@tagged_union
+class InferenceStage:
+    tag: Literal["posterior", "prior"] = tag()
+
+    posterior: Literal[True] = case()
+    prior: Literal[True] = case()
+
+    @staticmethod
+    def Posterior() -> InferenceStage:
+        return InferenceStage(posterior=True)
+
+    @staticmethod
+    def Prior() -> InferenceStage:
+        return InferenceStage(prior=True)
+
+
+@beartype
+def plot_sample_trajectories(
+    idata: InferenceData,
+    inference_stage: InferenceStage = InferenceStage.Posterior(),
+    trajectories_index: int | slice = slice(None),
+    num_trajectories: int = 100,
+    color_map: Dict[str, str] = {"pre-mRNA": "gray", "mRNA": "green"},
+    samples_transparency: float = 0.3,
+) -> List[Figure]:
+    ...
+    genes = idata.observed_data.observations.coords["genes"].values
+
+    for gene_index in genes:
+        ...
+
+        match inference_stage:
+            case InferenceStage(tag="posterior"):
+                sample_data = idata.posterior_predictive.observations.sel(
+                    chain=0, draw=trajectories_index, genes=gene_index
+                ).values
+            case InferenceStage(tag="prior"):
+                sample_data = idata.prior_predictive.observations.sel(
+                    chain=0, draw=trajectories_index, genes=gene_index
+            7    ).values
+
+    # inference_stage: InferenceStage = InferenceStage.Posterior(),
+"""
+
+
 @beartype
 def plot_sample_trajectories(
     idata: InferenceData,
@@ -1102,7 +1153,7 @@ def plot_sample_trajectories(
 
     Args:
         idata (InferenceData):
-            The posterior predictive data containing simulations.
+            The inference data object containing the observational and predictive data.
         trajectories_index (int | slice):
             Index for the specific trajectories to plot.
         num_trajectories (int):
