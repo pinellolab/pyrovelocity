@@ -28,6 +28,7 @@ poetry2nix.overrides.withDefaults (
         hydra-joblib-launcher = ["setuptools"];
         hydra-zen = ["setuptools"];
         marshmallow-jsonschema = ["setuptools"];
+        matplotlib-venn = ["setuptools"];
         memoized-property = ["setuptools"];
         numba = [tbb_2021_11];
         session-info = ["setuptools"];
@@ -149,6 +150,8 @@ poetry2nix.overrides.withDefaults (
         _old: {
           postInstall = ''
             rm -f $out/lib/python3.10/site-packages/requirements.txt
+            rm -f $out/lib/python3.11/site-packages/requirements.txt
+            rm -f $out/lib/python3.12/site-packages/requirements.txt
           '';
         }
       );
@@ -157,6 +160,10 @@ poetry2nix.overrides.withDefaults (
           postInstall = ''
             rm -f $out/lib/python3.10/site-packages/docs/conf.py
             rm -fr $out/lib/python3.10/site-packages/docs/__pycache__
+            rm -f $out/lib/python3.11/site-packages/docs/conf.py
+            rm -fr $out/lib/python3.11/site-packages/docs/__pycache__
+            rm -f $out/lib/python3.12/site-packages/docs/conf.py
+            rm -fr $out/lib/python3.12/site-packages/docs/__pycache__
           '';
         }
       );
