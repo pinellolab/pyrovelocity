@@ -10,7 +10,6 @@
     };
     poetry2nix = {
       url = github:nix-community/poetry2nix;
-      # url = github:cameronraysmith/poetry2nix/llvmlite-static;
       inputs = {
         nixpkgs.follows = "nixpkgs";
         flake-utils.follows = "flake-utils";
@@ -119,6 +118,19 @@
         coreDevPackages = defaultPackages.coreDevPackages;
         devPackages = defaultPackages.devPackages;
 
+        mkDevShell = env:
+          pkgs.mkShell {
+            name = "${packageName}-${env.python.version}";
+            nativeBuildInputs = with pkgs;
+              [
+                env
+              ]
+              ++ devPackages;
+            shellHook = ''
+              export QUARTO_PYTHON=${pkgs.python310}/bin/python
+            '';
+          };
+
         containerImageConfigs = import ./nix/containers {
           inherit
             pkgs
@@ -152,26 +164,12 @@
       in {
         formatter = pkgs.alejandra;
 
-        devShells = {
-          default = pkgs.mkShell {
-            name = packageName;
-            nativeBuildInputs = with pkgs;
-              [
-                (mkPoetryEnvWithSource packageName ./src ["test" "docs" "workflows"])
-              ]
-              ++ devPackages;
-            shellHook = ''
-              export QUARTO_PYTHON=${pkgs.python310}/bin/python
-            '';
-          };
-          devCore = pkgs.mkShell {
-            name = packageName;
-            nativeBuildInputs = with pkgs;
-              [
-                (mkPoetryEnvWithSource packageName ./src ["test" "docs" "workflows"])
-              ]
-              ++ coreDevPackages;
-          };
+        devShells = rec {
+          pyrovelocity310 = mkDevShell pkgs.pyrovelocityDevEnv310;
+          pyrovelocity311 = mkDevShell pkgs.pyrovelocityDevEnv311;
+          pyrovelocity312 = mkDevShell pkgs.pyrovelocityDevEnv312;
+
+          default = pyrovelocity310;
         };
 
         _module.args.pkgs = import inputs.nixpkgs {
