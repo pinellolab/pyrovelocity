@@ -5,6 +5,7 @@
   packageName,
   sysPackages,
   devPackages,
+  extraSysPackages,
 }: let
   packageRootDir = "/root/${packageName}";
   packageSrcPath = "${packageRootDir}/src";
@@ -184,7 +185,7 @@ in {
       pkgs = pkgs;
       packageSrcPath = packageSrcPath;
       pythonPackages = devpythonPackages;
-      containerPackages = sysPackages ++ devPackages ++ devpythonPackages;
+      containerPackages = sysPackages ++ extraSysPackages ++ devPackages ++ devpythonPackages;
       cmd = devcontainerCmd;
       extraEnv = [
         "QUARTO_PYTHON=${pkgs.python310}/bin/python"

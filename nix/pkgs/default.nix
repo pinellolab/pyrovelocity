@@ -1,7 +1,6 @@
 {
   system,
   pkgs,
-  pkgs_unstable,
 }: let
   tex = pkgs.texlive.combine {
     inherit
@@ -25,6 +24,36 @@
       ;
   };
 
+  extraSysPackages = with pkgs; [
+    atuin
+    bat
+    btop
+    gawk
+    gh
+    git
+    gnugrep
+    gnumake
+    gnused
+    gnupg
+    helix
+    htop
+    jqp
+    kubectl
+    kubectx
+    k9s
+    lazygit
+    lmodern
+    man-db
+    man-pages
+    neovim
+    openvscode-server
+    ripgrep
+    skaffold
+    starship
+    zellij
+    zsh
+  ];
+
   sysPackages = with pkgs;
     [
       bashInteractive
@@ -45,49 +74,23 @@
     ++ pkgs.lib.optional (pkgs.lib.elem system pkgs.shadow.meta.platforms) shadow;
 
   coreDevPackages = with pkgs; [
-    atuin
-    bat
     bazelisk
-    pkgs_unstable.btop
-    pkgs_unstable.cue
-    gawk
-    gh
-    git
-    gnugrep
-    gnumake
-    gnused
-    gnupg
-    helix
-    htop
-    jqp
-    pkgs_unstable.k9s
-    kubectl
-    kubectx
-    lazygit
-    lmodern
-    man-db
-    man-pages
-    neovim
+    cue
     poetry
     poethepoet
-    ripgrep
-    skaffold
-    starship
-    pkgs_unstable.timoni
+    timoni
     tree
     yq-go
-    zellij
-    zsh
   ];
 
   extDevPackages = with pkgs; [
-    openvscode-server
     pandoc
-    pkgs_unstable.quarto
+    quarto
     tex
   ];
 in {
   sysPackages = sysPackages;
+  extraSysPackages = extraSysPackages;
   coreDevPackages = coreDevPackages;
   devPackages = coreDevPackages ++ extDevPackages ++ pkgs.lib.optional (system == "x86_64-linux") pkgs.nvitop;
 }
