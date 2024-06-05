@@ -59,6 +59,7 @@
             poetry2nix
             lib
             stdenv
+            autoPatchelfHook
             cudaPackages_12_1
             tbb_2021_11
             ;

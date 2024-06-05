@@ -2,6 +2,7 @@
   poetry2nix,
   lib,
   stdenv,
+  autoPatchelfHook,
   cudaPackages_12_1,
   tbb_2021_11,
 }:
@@ -47,7 +48,7 @@ poetry2nix.overrides.withDefaults (
             attrs.nativeBuildInputs
             or []
             ++ [
-              self.autoPatchelfHook
+              autoPatchelfHook
             ];
           buildInputs =
             attrs.buildInputs
@@ -108,7 +109,7 @@ poetry2nix.overrides.withDefaults (
       hydra-joblib-launcher = super.hydra-joblib-launcher.override {preferWheel = true;};
       mkdocs-material = super.mkdocs-material.override {preferWheel = false;};
       nvidia-cudnn-cu12 = super.nvidia-cudnn-cu12.overridePythonAttrs (old: {
-        nativeBuildInputs = old.nativeBuildInputs or [] ++ [self.autoPatchelfHook];
+        nativeBuildInputs = old.nativeBuildInputs or [] ++ [autoPatchelfHook];
         propagatedBuildInputs =
           old.propagatedBuildInputs
           or []
