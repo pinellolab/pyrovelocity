@@ -9,7 +9,7 @@ poetry2nix.mkPoetryApplication {
   groups = [];
   checkGroups = ["test"];
   projectDir = gitignoreSource ../../.;
-  src = gitignoreSource ../../src;
+  src = gitignoreSource ../../.;
   extras = [];
   overrides = poetry2nixOverrides;
   preferWheels = true;
