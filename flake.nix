@@ -1,14 +1,16 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
-    nixpkgs-2305.url = "github:NixOS/nixpkgs/nixos-23.05";
-    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     systems.url = "github:nix-systems/default";
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-utils.url = github:numtide/flake-utils;
+    gitignore = {
+      url = "github:hercules-ci/gitignore.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     poetry2nix = {
-      # url = github:nix-community/poetry2nix;
-      url = github:cameronraysmith/poetry2nix/llvmlite-static;
+      url = github:nix-community/poetry2nix;
+      # url = github:cameronraysmith/poetry2nix/llvmlite-static;
       inputs = {
         nixpkgs.follows = "nixpkgs";
         flake-utils.follows = "flake-utils";
@@ -46,38 +48,12 @@
 
       perSystem = {
         self',
+        pkgs,
         system,
+        config,
         ...
       }: let
-        pkgs = import inputs.nixpkgs {
-          inherit system;
-          config = {
-            allowUnfree = true;
-          };
-          overlays = [inputs.poetry2nix.overlays.default];
-        };
-        pkgs_2305 = import inputs.nixpkgs-2305 {
-          inherit system;
-          config = {
-            allowUnfree = true;
-          };
-          overlays = [inputs.poetry2nix.overlays.default];
-        };
-        pkgs_unstable = import inputs.nixpkgs-unstable {
-          inherit system;
-          config = {
-            allowUnfree = true;
-          };
-          overlays = [inputs.poetry2nix.overlays.default];
-        };
-
-        poetry2nixOverrides = import ./nix/poetry {
-          inherit
-            pkgs
-            pkgs_unstable
-            self
-            ;
-        };
+        poetry2nixOverrides = import ./nix/poetry {inherit (pkgs) poetry2nix lib stdenv tbb_2021_11;};
 
         appBuildInputs = with pkgs; [
         ];
@@ -126,10 +102,10 @@
           inherit
             system
             pkgs
-            pkgs_unstable
             ;
         };
         sysPackages = defaultPackages.sysPackages;
+        extraSysPackages = defaultPackages.extraSysPackages;
         coreDevPackages = defaultPackages.coreDevPackages;
         devPackages = defaultPackages.devPackages;
 
@@ -141,6 +117,7 @@
             packageName
             sysPackages
             devPackages
+            extraSysPackages
             ;
         };
 
@@ -187,46 +164,24 @@
           };
         };
 
+        _module.args.pkgs = import inputs.nixpkgs {
+          inherit system;
+          config = {
+            allowUnfree = true;
+          };
+          overlays = [
+            inputs.gitignore.overlay
+            inputs.poetry2nix.overlays.default
+            (import ./nix/pyrovelocity/overlay.nix {
+              inherit poetry2nixOverrides;
+            })
+          ];
+        };
+
         packages = {
-          default = pkgs.poetry2nix.mkPoetryApplication (
-            mkPoetryAttrs
-            // {
-              buildInputs = appBuildInputs;
-              checkInputs = appBuildInputs;
-              nativeCheckInputs = appBuildInputs;
+          inherit (pkgs) pyrovelocity310 pyrovelocity311 pyrovelocity312;
 
-              preCheck = ''
-                set -euo pipefail
-
-                mkdir -p $TMPDIR/numba_cache
-                export NUMBA_CACHE_DIR=$TMPDIR/numba_cache
-                echo "NUMBA_CACHE_DIR: $NUMBA_CACHE_DIR"
-              '';
-
-              checkPhase = ''
-                set -euo pipefail
-
-                runHook preCheck
-
-                # TODO: fix train_model test on Darwin
-                # > src/pyrovelocity/train.py line 1564: 50991 Trace/BPT trap: 5
-                pytest \
-                -rA \
-                -k "not workflows and not git" \
-                -m "not pyensembl" \
-                --xdoc \
-                --no-cov \
-                --disable-warnings \
-                --pyargs pyrovelocity
-
-                runHook postCheck
-              '';
-
-              doCheck = true;
-
-              pythonImportsCheck = ["pyrovelocity"];
-            }
-          );
+          default = pkgs.pyrovelocity310;
 
           releaseEnv = pkgs.buildEnv {
             name = "release-env";
