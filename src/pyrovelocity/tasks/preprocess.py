@@ -1,8 +1,6 @@
 import os
 from pathlib import Path
-from typing import List
-from typing import Optional
-from typing import Tuple
+from typing import List, Optional, Tuple
 
 import anndata
 import matplotlib.figure
@@ -17,9 +15,7 @@ from scipy.sparse import issparse
 from pyrovelocity.analysis.cytotrace import cytotrace_sparse
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.tasks.data import load_anndata_from_path
-from pyrovelocity.utils import ensure_numpy_array
-from pyrovelocity.utils import print_anndata
-
+from pyrovelocity.utils import ensure_numpy_array, print_anndata
 
 __all__ = [
     "assign_colors",
@@ -223,9 +219,21 @@ def preprocess_dataset(
             )
             n_pcs = adata.n_vars - 1
         if "X_pca" not in adata.obsm.keys():
-            sc.pp.pca(adata, n_comps=n_pcs)
+            sc.pp.pca(
+                adata,
+                svd_solver="arpack",
+            )
 
-        scv.pp.moments(adata, n_pcs=n_pcs, n_neighbors=n_neighbors)
+        sc.pp.neighbors(
+            adata=adata,
+            n_neighbors=n_neighbors,
+            n_pcs=n_pcs,
+        )
+        scv.pp.moments(
+            data=adata,
+            n_pcs=n_pcs,
+            n_neighbors=n_neighbors,
+        )
         scv.tl.recover_dynamics(adata, n_jobs=-1, use_raw=False)
 
         scv.tl.velocity(adata, mode=default_velocity_mode, use_raw=False)
