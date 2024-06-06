@@ -3544,7 +3544,7 @@
       "os:osx,arch:aarch64": {
         "bzlTransitiveDigest": "pO1vx26DfYYJbtV5qhe9OIGKvpMqwMLIeM8AOVhad2c=",
         "accumulatedFileDigests": {
-          "@@//:requirements-bazel.txt": "8919a027fb8e5f25075dc1de2d87d35b4b66426851765886a324fc5043f3e3c7"
+          "@@//:requirements-bazel.txt": "d79bb04804535079d9ff4885aeaa4dcdf12d06c78cfd764eff07de1be4af66c3"
         },
         "envVariables": {},
         "generatedRepoSpecs": {
@@ -5525,7 +5525,7 @@
             "ruleClassName": "whl_library",
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_mlflow",
-              "requirement": "mlflow==2.10.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:7d9740c67c3762467a5c024c2b3035a8621e6689070b09a6912de61fa6d07e7a     --hash=sha256:9a97abceae240b9831080a16afc3eb668b339b9ca4382fb3bd6a7a2fc7bd0951",
+              "requirement": "mlflow==2.13.1 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:403b235a0a06cbfb5eb0038d8d946c0f97a24d579ba1247e4a2c5c03830843d4     --hash=sha256:ece1b0baef69da5ff03e4687009417481790544ec64a3821bdcc1cc1513b12d3",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -5554,7 +5554,7 @@
             "ruleClassName": "whl_library",
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_scanpy",
-              "requirement": "scanpy==1.9.8 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:2ab1790d2b82eadb0cf8d487f468beac7a8f6a3a8fd7112d1ae989f8c52a4353     --hash=sha256:abcca12dfe6975146277b6a76841e2328e07c6a9f518d234ba6a889b26b456dc",
+              "requirement": "scanpy==1.10.1 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:399c6a0fc9c8b85500cfab87f79daf8684782a6bb5303eb680c0ac99da14e4d8     --hash=sha256:4a9194d94985dee41d914fc9438f0b502dfacf54796d0501e06a5978d709c7f6",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -6390,6 +6390,35 @@
               "group_deps": []
             }
           },
+          "pip_310_opentelemetry_api": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_opentelemetry_api",
+              "requirement": "opentelemetry-api==1.25.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:757fa1aa020a0f8fa139f8959e53dec2051cc26b832e76fa839a6d76ecefd737     --hash=sha256:77c4985f62f2614e42ce77ee4c9da5fa5f0bc1e1821085e9a47533a9323ae869",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
           "pip_310_stack_data": {
             "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
             "ruleClassName": "whl_library",
@@ -6743,7 +6772,7 @@
             "ruleClassName": "whl_library",
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_scvelo",
-              "requirement": "scvelo==0.3.1 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:3a41a73b29e091268c40f08dc57a63eab5dfc2bd8a57e564cf1a6aca5e4d5d22     --hash=sha256:e9160dbc048a031fff42c7368a6bda0580f700961422df10bed76bcd72986032",
+              "requirement": "scvelo==0.3.2 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:4b536f722bedf1f6300fbfc7e79b7368796728d39203854743e83c4cd2250a0a     --hash=sha256:eab08941b04e5cf1c72584c0dc6055b63a05b36e2dfa0b77220df9e5f3f0f86b",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -7347,6 +7376,35 @@
               "group_deps": []
             }
           },
+          "pip_310_graphene": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_graphene",
+              "requirement": "graphene==3.3 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:529bf40c2a698954217d3713c6041d69d3f719ad0080857d7ee31327112446b0     --hash=sha256:bb3810be33b54cb3e6969506671eb72319e8d7ba0d5ca9c8066472f75bf35a38",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
           "pip_310_jsonpickle": {
             "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
             "ruleClassName": "whl_library",
@@ -7555,7 +7613,7 @@
             "ruleClassName": "whl_library",
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_scikit_learn",
-              "requirement": "scikit-learn==1.1.3 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:23fb9e74b813cc2528b5167d82ed08950b11106ccf50297161875e45152fb311     --hash=sha256:250da993701da88bf475e7c5746abf1285ea0ae47e4d0917cd13afd6600bb162     --hash=sha256:28b2bd6a1419acd522ff45d282c8ba23dbccb5338802ab0ee12baa4ade0aba4c     --hash=sha256:2ee2c649f2231b68511aabb0dc827edd8936aad682acc6263c34aed11bc95dac     --hash=sha256:30e27721adc308e8fd9f419f43068e43490005f911edf4476a9e585059fa8a83     --hash=sha256:38814f66285318f2e241305cca545eaa9b4126c65aa5dd78c69371f235f78e2b     --hash=sha256:4d3a19166d4e1cdfcab975c68f471e046ce01e74c42a9a33fa89a14c2fcedf60     --hash=sha256:5699cded6c0685426433c7e5afe0fecad80ec831ec7fa264940e50c796775cc5     --hash=sha256:6785b8a3093329bf90ac01801be5525551728ae73edb11baa175df660820add4     --hash=sha256:6d1c1394e38a3319ace620381f6f23cc807d8780e9915c152449a86fc8f1db21     --hash=sha256:701181792a28c82fecae12adb5d15d0ecf57bffab7cf4bdbb52c7b3fd428d540     --hash=sha256:748f2bd632d6993e8918d43f1a26c380aeda4e122a88840d4c3a9af99d4239fe     --hash=sha256:8e9dd76c7274055d1acf4526b8efb16a3531c26dcda714a0c16da99bf9d41900     --hash=sha256:bef51978a51ec19977700fe7b86aecea49c825884f3811756b74a3b152bb4e35     --hash=sha256:cd55c6fbef7608dbce1f22baf289dfcc6eb323247daa3c3542f73d389c724786     --hash=sha256:da5a2e95fef9805b1750e4abda4e834bf8835d26fc709a391543b53feee7bd0e     --hash=sha256:ee47f68d973cee7009f06edb956f2f5588a0f230f24a2a70175fd0ecf36e2653     --hash=sha256:f4931f2a6c06e02c6c17a05f8ae397e2545965bc7a0a6cb38c8cd7d4fba8624d     --hash=sha256:f5644663987ee221f5d1f47a593271b966c271c236fe05634e6bdc06041b5a2b     --hash=sha256:f5d4231af7199531e77da1b78a4cc6b3d960a00b1ec672578ac818aae2b9c35d     --hash=sha256:fd3ee69d36d42a7dcbb17e355a5653af5fd241a7dfd9133080b3dde8d9e2aafb",
+              "requirement": "scikit-learn==1.5.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:057b991ac64b3e75c9c04b5f9395eaf19a6179244c089afdebaad98264bff37c     --hash=sha256:118a8d229a41158c9f90093e46b3737120a165181a1b58c03461447aa4657415     --hash=sha256:12e40ac48555e6b551f0a0a5743cc94cc5a765c9513fe708e01f0aa001da2801     --hash=sha256:174beb56e3e881c90424e21f576fa69c4ffcf5174632a79ab4461c4c960315ac     --hash=sha256:1b94d6440603752b27842eda97f6395f570941857456c606eb1d638efdb38184     --hash=sha256:1f77547165c00625551e5c250cefa3f03f2fc92c5e18668abd90bfc4be2e0bff     --hash=sha256:261fe334ca48f09ed64b8fae13f9b46cc43ac5f580c4a605cbb0a517456c8f71     --hash=sha256:2a65af2d8a6cce4e163a7951a4cfbfa7fceb2d5c013a4b593686c7f16445cf9d     --hash=sha256:2c75ea812cd83b1385bbfa94ae971f0d80adb338a9523f6bbcb5e0b0381151d4     --hash=sha256:40fb7d4a9a2db07e6e0cae4dc7bdbb8fada17043bac24104d8165e10e4cff1a2     --hash=sha256:460806030c666addee1f074788b3978329a5bfdc9b7d63e7aad3f6d45c67a210     --hash=sha256:47132440050b1c5beb95f8ba0b2402bbd9057ce96ec0ba86f2f445dd4f34df67     --hash=sha256:4c0c56c3005f2ec1db3787aeaabefa96256580678cec783986836fc64f8ff622     --hash=sha256:789e3db01c750ed6d496fa2db7d50637857b451e57bcae863bff707c1247bef7     --hash=sha256:855fc5fa8ed9e4f08291203af3d3e5fbdc4737bd617a371559aaa2088166046e     --hash=sha256:a03b09f9f7f09ffe8c5efffe2e9de1196c696d811be6798ad5eddf323c6f4d40     --hash=sha256:a3a10e1d9e834e84d05e468ec501a356226338778769317ee0b84043c0d8fb06     --hash=sha256:a90c5da84829a0b9b4bf00daf62754b2be741e66b5946911f5bdfaa869fcedd6     --hash=sha256:d82c2e573f0f2f2f0be897e7a31fcf4e73869247738ab8c3ce7245549af58ab8     --hash=sha256:df8ccabbf583315f13160a4bb06037bde99ea7d8211a69787a6b7c5d4ebb6fc3     --hash=sha256:f405c4dae288f5f6553b10c4ac9ea7754d5180ec11e296464adb5d6ac68b6ef5",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -8338,6 +8396,9 @@
                 "alembic": [
                   "3.10"
                 ],
+                "aniso8601": [
+                  "3.10"
+                ],
                 "anndata": [
                   "3.10"
                 ],
@@ -8494,9 +8555,6 @@
                 "daft": [
                   "3.10"
                 ],
-                "databricks_cli": [
-                  "3.10"
-                ],
                 "datacache": [
                   "3.10"
                 ],
@@ -8510,6 +8568,9 @@
                   "3.10"
                 ],
                 "defusedxml": [
+                  "3.10"
+                ],
+                "deprecated": [
                   "3.10"
                 ],
                 "diffrax": [
@@ -8633,6 +8694,15 @@
                   "3.10"
                 ],
                 "googleapis_common_protos": [
+                  "3.10"
+                ],
+                "graphene": [
+                  "3.10"
+                ],
+                "graphql_core": [
+                  "3.10"
+                ],
+                "graphql_relay": [
                   "3.10"
                 ],
                 "griffe": [
@@ -8803,6 +8873,9 @@
                 "lazy_object_proxy": [
                   "3.10"
                 ],
+                "legacy_api_wrap": [
+                  "3.10"
+                ],
                 "leidenalg": [
                   "3.10"
                 ],
@@ -8957,6 +9030,15 @@
                   "3.10"
                 ],
                 "omegaconf": [
+                  "3.10"
+                ],
+                "opentelemetry_api": [
+                  "3.10"
+                ],
+                "opentelemetry_sdk": [
+                  "3.10"
+                ],
+                "opentelemetry_semantic_conventions": [
                   "3.10"
                 ],
                 "opt_einsum": [
@@ -10226,7 +10308,7 @@
             "ruleClassName": "whl_library",
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_matplotlib",
-              "requirement": "matplotlib==3.7.1 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:08308bae9e91aca1ec6fd6dda66237eef9f6294ddb17f0d0b3c863169bf82353     --hash=sha256:14645aad967684e92fc349493fa10c08a6da514b3d03a5931a1bac26e6792bd1     --hash=sha256:21e9cff1a58d42e74d01153360de92b326708fb205250150018a52c70f43c290     --hash=sha256:28506a03bd7f3fe59cd3cd4ceb2a8d8a2b1db41afede01f66c42561b9be7b4b7     --hash=sha256:2bf092f9210e105f414a043b92af583c98f50050559616930d884387d0772aba     --hash=sha256:3032884084f541163f295db8a6536e0abb0db464008fadca6c98aaf84ccf4717     --hash=sha256:3a2cb34336110e0ed8bb4f650e817eed61fa064acbefeb3591f1b33e3a84fd96     --hash=sha256:3ba2af245e36990facf67fde840a760128ddd71210b2ab6406e640188d69d136     --hash=sha256:3d7bc90727351fb841e4d8ae620d2d86d8ed92b50473cd2b42ce9186104ecbba     --hash=sha256:438196cdf5dc8d39b50a45cb6e3f6274edbcf2254f85fa9b895bf85851c3a613     --hash=sha256:46a561d23b91f30bccfd25429c3c706afe7d73a5cc64ef2dfaf2b2ac47c1a5dc     --hash=sha256:4cf327e98ecf08fcbb82685acaf1939d3338548620ab8dfa02828706402c34de     --hash=sha256:4f99e1b234c30c1e9714610eb0c6d2f11809c9c78c984a613ae539ea2ad2eb4b     --hash=sha256:544764ba51900da4639c0f983b323d288f94f65f4024dc40ecb1542d74dc0500     --hash=sha256:56d94989191de3fcc4e002f93f7f1be5da476385dde410ddafbb70686acf00ea     --hash=sha256:57bfb8c8ea253be947ccb2bc2d1bb3862c2bccc662ad1b4626e1f5e004557042     --hash=sha256:617f14ae9d53292ece33f45cba8503494ee199a75b44de7717964f70637a36aa     --hash=sha256:6eb88d87cb2c49af00d3bbc33a003f89fd9f78d318848da029383bfc08ecfbfb     --hash=sha256:75d4725d70b7c03e082bbb8a34639ede17f333d7247f56caceb3801cb6ff703d     --hash=sha256:770a205966d641627fd5cf9d3cb4b6280a716522cd36b8b284a8eb1581310f61     --hash=sha256:7b73305f25eab4541bd7ee0b96d87e53ae9c9f1823be5659b806cd85786fe882     --hash=sha256:7c9a4b2da6fac77bcc41b1ea95fadb314e92508bf5493ceff058e727e7ecf5b0     --hash=sha256:81a6b377ea444336538638d31fdb39af6be1a043ca5e343fe18d0f17e098770b     --hash=sha256:83111e6388dec67822e2534e13b243cc644c7494a4bb60584edbff91585a83c6     --hash=sha256:8704726d33e9aa8a6d5215044b8d00804561971163563e6e6591f9dcf64340cc     --hash=sha256:89768d84187f31717349c6bfadc0e0d8c321e8eb34522acec8a67b1236a66332     --hash=sha256:8bf26ade3ff0f27668989d98c8435ce9327d24cffb7f07d24ef609e33d582439     --hash=sha256:8c587963b85ce41e0a8af53b9b2de8dddbf5ece4c34553f7bd9d066148dc719c     --hash=sha256:95cbc13c1fc6844ab8812a525bbc237fa1470863ff3dace7352e910519e194b1     --hash=sha256:97cc368a7268141afb5690760921765ed34867ffb9655dd325ed207af85c7529     --hash=sha256:a867bf73a7eb808ef2afbca03bcdb785dae09595fbe550e1bab0cd023eba3de0     --hash=sha256:b867e2f952ed592237a1828f027d332d8ee219ad722345b79a001f49df0936eb     --hash=sha256:c0bd19c72ae53e6ab979f0ac6a3fafceb02d2ecafa023c5cca47acd934d10be7     --hash=sha256:ce463ce590f3825b52e9fe5c19a3c6a69fd7675a39d589e8b5fbe772272b3a24     --hash=sha256:cf0e4f727534b7b1457898c4f4ae838af1ef87c359b76dcd5330fa31893a3ac7     --hash=sha256:def58098f96a05f90af7e92fd127d21a287068202aa43b2a93476170ebd99e87     --hash=sha256:e99bc9e65901bb9a7ce5e7bb24af03675cbd7c70b30ac670aa263240635999a4     --hash=sha256:eb7d248c34a341cd4c31a06fd34d64306624c8cd8d0def7abb08792a5abfd556     --hash=sha256:f67bfdb83a8232cb7a92b869f9355d677bce24485c460b19d01970b64b2ed476     --hash=sha256:f883a22a56a84dba3b588696a2b8a1ab0d2c3d41be53264115c71b0a942d8fdb     --hash=sha256:fbdeeb58c0cf0595efe89c05c224e0a502d1aa6a8696e68a73c3efc6bc354304",
+              "requirement": "matplotlib==3.9.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:063af8587fceeac13b0936c42a2b6c732c2ab1c98d38abc3337e430e1ff75e38     --hash=sha256:06a478f0d67636554fa78558cfbcd7b9dba85b51f5c3b5a0c9be49010cf5f321     --hash=sha256:0a490715b3b9984fa609116481b22178348c1a220a4499cda79132000a79b4db     --hash=sha256:0fc51eaa5262553868461c083d9adadb11a6017315f3a757fc45ec6ec5f02888     --hash=sha256:13beb4840317d45ffd4183a778685e215939be7b08616f431c7795276e067463     --hash=sha256:290d304e59be2b33ef5c2d768d0237f5bd132986bdcc66f80bc9bcc300066a03     --hash=sha256:2bcee1dffaf60fe7656183ac2190bd630842ff87b3153afb3e384d966b57fe56     --hash=sha256:2e7f03e5cbbfacdd48c8ea394d365d91ee8f3cae7e6ec611409927b5ed997ee4     --hash=sha256:3f988bafb0fa39d1074ddd5bacd958c853e11def40800c5824556eb630f94d3b     --hash=sha256:52146fc3bd7813cc784562cb93a15788be0b2875c4655e2cc6ea646bfa30344b     --hash=sha256:550cdda3adbd596078cca7d13ed50b77879104e2e46392dcd7c75259d8f00e85     --hash=sha256:616fabf4981a3b3c5a15cd95eba359c8489c4e20e03717aea42866d8d0465956     --hash=sha256:76cce0f31b351e3551d1f3779420cf8f6ec0d4a8cf9c0237a3b549fd28eb4abb     --hash=sha256:7ff2e239c26be4f24bfa45860c20ffccd118d270c5b5d081fa4ea409b5469fcd     --hash=sha256:8146ce83cbc5dc71c223a74a1996d446cd35cfb6a04b683e1446b7e6c73603b7     --hash=sha256:81c40af649d19c85f8073e25e5806926986806fa6d54be506fbf02aef47d5a89     --hash=sha256:9a2fa6d899e17ddca6d6526cf6e7ba677738bf2a6a9590d702c277204a7c6152     --hash=sha256:a5be985db2596d761cdf0c2eaf52396f26e6a64ab46bd8cd810c48972349d1be     --hash=sha256:af4001b7cae70f7eaacfb063db605280058246de590fa7874f00f62259f2df7e     --hash=sha256:bd4f2831168afac55b881db82a7730992aa41c4f007f1913465fb182d6fb20c0     --hash=sha256:bdd1ecbe268eb3e7653e04f451635f0fb0f77f07fd070242b44c076c9106da84     --hash=sha256:c53aeb514ccbbcbab55a27f912d79ea30ab21ee0531ee2c09f13800efb272674     --hash=sha256:c79f3a585f1368da6049318bdf1f85568d8d04b2e89fc24b7e02cc9b62017382     --hash=sha256:cd53c79fd02f1c1808d2cfc87dd3cf4dbc63c5244a58ee7944497107469c8d8a     --hash=sha256:d38e85a1a6d732f645f1403ce5e6727fd9418cd4574521d5803d3d94911038e5     --hash=sha256:d91a4ffc587bacf5c4ce4ecfe4bcd23a4b675e76315f2866e588686cc97fccdf     --hash=sha256:e6d29ea6c19e34b30fb7d88b7081f869a03014f66fe06d62cc77d5a6ea88ed7a     --hash=sha256:eaf3978060a106fab40c328778b148f590e27f6fa3cd15a19d6892575bce387d     --hash=sha256:fe428e191ea016bb278758c8ee82a8129c51d81d8c4bc0846c09e7e8e9057241",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -10459,35 +10541,6 @@
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_pluggy",
               "requirement": "pluggy==1.0.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:4224373bacce55f955a878bf9cfa763c1e360858e330072059e10bad68531159     --hash=sha256:74134bbf457f031a36d68416e1509f34bd5ccc019f0bcc952c7b909d06b37bd3",
-              "repo": "pip_310",
-              "repo_prefix": "pip_310_",
-              "whl_patches": {},
-              "experimental_target_platforms": [
-                "all"
-              ],
-              "python_interpreter": "",
-              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
-              "quiet": true,
-              "timeout": 600,
-              "isolated": true,
-              "extra_pip_args": [
-                "--extra-index-url",
-                "https://download.pytorch.org/whl/cpu"
-              ],
-              "download_only": false,
-              "pip_data_exclude": [],
-              "enable_implicit_namespace_pkgs": false,
-              "environment": {},
-              "group_name": "",
-              "group_deps": []
-            }
-          },
-          "pip_310_databricks_cli": {
-            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
-            "ruleClassName": "whl_library",
-            "attributes": {
-              "name": "rules_python~0.29.0~pip~pip_310_databricks_cli",
-              "requirement": "databricks-cli==0.17.6 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:7fea8b4e47ac38bd4eaad8a76e38a6916419df930ad1c615a6b43feb427672c4     --hash=sha256:99c8fef80ef3215a36c09f594e7788e59bf9990792b4697d8daece754abe1660",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -10894,6 +10947,35 @@
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_itsdangerous",
               "requirement": "itsdangerous==2.1.2 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:2c2349112351b88699d8d4b6b075022c0808887cb7ad10069318a8b0bc88db44     --hash=sha256:5dbbc68b317e5e42f327f9021763545dc3fc3bfe22e6deb96aaf1fc38874156a",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_opentelemetry_sdk": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_opentelemetry_sdk",
+              "requirement": "opentelemetry-sdk==1.25.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:ce7fc319c57707ef5bf8b74fb9f8ebdb8bfafbe11898410e0d2a761d08a98ec7     --hash=sha256:d97ff7ec4b351692e9d5a15af570c693b8715ad78b8aafbec5c7100fe966b4c9",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -11584,6 +11666,35 @@
               "group_deps": []
             }
           },
+          "pip_310_opentelemetry_semantic_conventions": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_opentelemetry_semantic_conventions",
+              "requirement": "opentelemetry-semantic-conventions==0.46b0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:6daef4ef9fa51d51855d9f8e0ccd3a1bd59e0e545abe99ac6203804e36ab3e07     --hash=sha256:fbc982ecbb6a6e90869b15c1673be90bd18c8a56ff1cffc0864e38e2edffaefa",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
           "pip_310_returns": {
             "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
             "ruleClassName": "whl_library",
@@ -11976,6 +12087,35 @@
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_pytorch_lightning",
               "requirement": "pytorch-lightning==2.1.4 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:85d9c8c12bab30c5d9aa45041a399d1c72343fd244421c0344420a6d189dad98     --hash=sha256:f685f2a4862f951b2dbe47ba91945406ffca6be4c8e967b870e86e3b04b15649",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_graphql_relay": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_graphql_relay",
+              "requirement": "graphql-relay==3.2.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:1ff1c51298356e481a0be009ccdff249832ce53f30559c1338f22a0e0d17250c     --hash=sha256:c9b22bd28b170ba1fe674c74384a8ff30a76c8e26f88ac3aa1584dd3179953e5",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -12579,6 +12719,35 @@
               "group_deps": []
             }
           },
+          "pip_310_deprecated": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_deprecated",
+              "requirement": "deprecated==1.2.14 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:6fac8b097794a90302bdbb17b9b815e732d3c4720583ff1b198499d78470466c     --hash=sha256:e5323eb936458dccc2582dc6f9c322c852a775a27065ff2b0c4970b9d53d01b3",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
           "pip_310_entrypoints": {
             "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
             "ruleClassName": "whl_library",
@@ -12985,6 +13154,35 @@
               "group_deps": []
             }
           },
+          "pip_310_aniso8601": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_aniso8601",
+              "requirement": "aniso8601==9.0.1 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:1d2b7ef82963909e93c4f24ce48d4de9e66009a21bf1c1e1c85bdd0812fe412f     --hash=sha256:72e3117667eedf66951bb2d93f4296a56b94b078a8a95905a052611fb3f1b973",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
           "pip_310_colorlog": {
             "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
             "ruleClassName": "whl_library",
@@ -13281,6 +13479,35 @@
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_soupsieve",
               "requirement": "soupsieve==2.4.1 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:1c1bfee6819544a3447586c889157365a27e10d88cde3ad3da0cf0ddf646feb8     --hash=sha256:89d12b2d5dfcd2c9e8c22326da9d9aa9cb3dfab0a83a024f05704076ee8d35ea",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_legacy_api_wrap": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_legacy_api_wrap",
+              "requirement": "legacy-api-wrap==1.4 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:92dfa274cedb26d6e6f70fac85c856fbdcc05058066656d76a665fb4bf11b785     --hash=sha256:bf81b8ee432d80e7203aa079c26fc3a0f228d158db808868f10c2e36a8f64dbd",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
@@ -15572,6 +15799,35 @@
             "attributes": {
               "name": "rules_python~0.29.0~pip~pip_310_cookiecutter",
               "requirement": "cookiecutter==2.5.0 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:8aa2f12ed11bc05628651e9dc4353a10571dd9908aaaaeec959a2b9ea465a5d2     --hash=sha256:e61e9034748e3f41b8bd2c11f00d030784b48711c4d5c42363c50989a65331ec",
+              "repo": "pip_310",
+              "repo_prefix": "pip_310_",
+              "whl_patches": {},
+              "experimental_target_platforms": [
+                "all"
+              ],
+              "python_interpreter": "",
+              "python_interpreter_target": "@@rules_python~0.29.0~python~python_3_10_host//:python",
+              "quiet": true,
+              "timeout": 600,
+              "isolated": true,
+              "extra_pip_args": [
+                "--extra-index-url",
+                "https://download.pytorch.org/whl/cpu"
+              ],
+              "download_only": false,
+              "pip_data_exclude": [],
+              "enable_implicit_namespace_pkgs": false,
+              "environment": {},
+              "group_name": "",
+              "group_deps": []
+            }
+          },
+          "pip_310_graphql_core": {
+            "bzlFile": "@@rules_python~0.29.0//python/pip_install:pip_repository.bzl",
+            "ruleClassName": "whl_library",
+            "attributes": {
+              "name": "rules_python~0.29.0~pip~pip_310_graphql_core",
+              "requirement": "graphql-core==3.2.3 ; python_version >= \"3.10\" and python_version < \"3.12\"     --hash=sha256:06d2aad0ac723e35b1cb47885d3e5c45e956a53bc1b209a9fc5369007fe46676     --hash=sha256:5766780452bd5ec8ba133f8bf287dc92713e3868ddd83aee4faab9fc3e303dc3",
               "repo": "pip_310",
               "repo_prefix": "pip_310_",
               "whl_patches": {},
