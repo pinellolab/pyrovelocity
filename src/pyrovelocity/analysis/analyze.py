@@ -1,10 +1,8 @@
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
+import scanpy as sc
 import scvelo as scv
 import sklearn
 import umap
@@ -17,7 +15,6 @@ from sklearn.pipeline import Pipeline
 from pyrovelocity.analysis.cytotrace import compute_similarity2
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.utils import ensure_numpy_array
-
 
 __all__ = [
     "compute_mean_vector_field",
@@ -38,7 +35,13 @@ def compute_mean_vector_field(
     raw=False,
 ):
     logger.info("Computing mean vector field")
-    scv.pp.neighbors(adata, use_rep="pca")
+    # scv.pp.neighbors(adata, use_rep="pca")
+    if "X_pca" not in adata.obsm.keys():
+        sc.pp.pca(
+            data=adata,
+            svd_solver="arpack",
+        )
+    sc.pp.neighbors(adata=adata, n_neighbors=30, use_rep="X_pca")
 
     adata.var["velocity_genes"] = True
 
@@ -246,9 +249,16 @@ def vector_field_uncertainty(
         adata.obsm["X_umap1"] = umap_orig
         joint_pcs = pipelines.steps[0][1].transform(expression[0])
         adata.obsm["X_pyropca"] = joint_pcs
-        scv.pp.neighbors(adata, use_rep="pyropca")
+        # scv.pp.neighbors(adata, use_rep="pyropca")
+        sc.pp.neighbors(adata=adata, n_neighbors=30, use_rep="X_pyropca")
     else:
-        scv.pp.neighbors(adata, use_rep="pca")
+        # scv.pp.neighbors(adata, use_rep="pca")
+        if "X_pca" not in adata.obsm.keys():
+            sc.pp.pca(
+                data=adata,
+                svd_solver="arpack",
+            )
+        sc.pp.neighbors(adata=adata, n_neighbors=30, use_rep="X_pca")
 
     assert len(posterior_samples["st"].shape) == 3
     adata.var["velocity_genes"] = True
@@ -257,7 +267,10 @@ def vector_field_uncertainty(
         adata.layers["velocity_pyro"] = velocity_samples[sample]
 
         if basis == "pca":
-            scv.pp.pca(adata)
+            sc.pp.pca(
+                data=adata,
+                svd_solver="arpack",
+            )
             scv.tl.velocity_embedding(
                 adata,
                 vkey="velocity_pyro",
