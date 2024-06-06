@@ -5265,13 +5265,13 @@ fast = ["numba"]
 
 [[package]]
 name = "numpyro"
-version = "0.14.0"
+version = "0.15.0"
 description = "Pyro PPL on NumPy"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "numpyro-0.14.0-py3-none-any.whl", hash = "sha256:1aef9b30e263f4dc4c829d0f8ce6d0640b030d33b32c2b6e1ed20be5f7c12478"},
-    {file = "numpyro-0.14.0.tar.gz", hash = "sha256:3e43eaa9c843473d7ae939c183e10db14e23bb42b0ad1de90ae15a451176de48"},
+    {file = "numpyro-0.15.0-py3-none-any.whl", hash = "sha256:9a2d9970702092160b7e3b601ec47ccf255ab70b1a1e14bda76e4e52259d1cfd"},
+    {file = "numpyro-0.15.0.tar.gz", hash = "sha256:e16c9f47cc31e2aa259584a0b6c944312081d33ca92406022632ad584b0e600d"},
 ]
 
 [package.dependencies]
@@ -9388,4 +9388,4 @@ workflows = ["dataclasses-json", "dulwich", "flytekit", "google-api-python-clien
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10, <3.12"
-content-hash = "c2664cfd1b6a1488fdeb9ff11ab35794d408a715bad210f3cb0e019f51d4e5e8"
+content-hash = "4e383eeef77d283ca960f2d23e376a94ec02a6afa81018e06e08bd94154e747f"
