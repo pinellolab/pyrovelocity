@@ -742,20 +742,6 @@ files = [
 ]
 
 [[package]]
-name = "binaryornot"
-version = "0.4.4"
-description = "Ultra-lightweight pure Python package to check if a file is binary or text."
-optional = false
-python-versions = "*"
-files = [
-    {file = "binaryornot-0.4.4-py2.py3-none-any.whl", hash = "sha256:b8b71173c917bddcd2c16070412e369c3ed7f0528926f70cac18a6c97fd563e4"},
-    {file = "binaryornot-0.4.4.tar.gz", hash = "sha256:359501dfc9d40632edc9fac890e19542db1a287bbcfa58175b66658392018061"},
-]
-
-[package.dependencies]
-chardet = ">=3.0.2"
-
-[[package]]
 name = "black"
 version = "23.3.0"
 description = "The uncompromising code formatter."
@@ -949,17 +935,6 @@ python-versions = ">=3.6.1"
 files = [
     {file = "cfgv-3.3.1-py2.py3-none-any.whl", hash = "sha256:c6a0883f3917a037485059700b9e75da2464e6c27051014ad85ba6aaa5884426"},
     {file = "cfgv-3.3.1.tar.gz", hash = "sha256:f5a830efb9ce7a445376bb66ec94c638a9787422f96264c98edc6bdeed8ab736"},
-]
-
-[[package]]
-name = "chardet"
-version = "5.2.0"
-description = "Universal encoding detector for Python 3"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "chardet-5.2.0-py3-none-any.whl", hash = "sha256:e1cf59446890a00105fe7b7912492ea04b6e6f06d4b742b2c788469e34c82970"},
-    {file = "chardet-5.2.0.tar.gz", hash = "sha256:1b3b6ff479a8c414bc3fa2c0852995695c4a026dcd6d0633b2dd092ca39c1cf7"},
 ]
 
 [[package]]
@@ -1233,27 +1208,6 @@ docs = ["furo", "sphinx-copybutton"]
 mypy = ["contourpy[bokeh]", "docutils-stubs", "mypy (==0.991)", "types-Pillow"]
 test = ["Pillow", "matplotlib", "pytest"]
 test-no-images = ["pytest"]
-
-[[package]]
-name = "cookiecutter"
-version = "2.5.0"
-description = "A command-line utility that creates projects from project templates, e.g. creating a Python package project from a Python package project template."
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "cookiecutter-2.5.0-py3-none-any.whl", hash = "sha256:8aa2f12ed11bc05628651e9dc4353a10571dd9908aaaaeec959a2b9ea465a5d2"},
-    {file = "cookiecutter-2.5.0.tar.gz", hash = "sha256:e61e9034748e3f41b8bd2c11f00d030784b48711c4d5c42363c50989a65331ec"},
-]
-
-[package.dependencies]
-arrow = "*"
-binaryornot = ">=0.4.4"
-click = ">=7.0,<9.0.0"
-Jinja2 = ">=2.7,<4.0.0"
-python-slugify = ">=4.0.0"
-pyyaml = ">=5.3.1"
-requests = ">=2.23.0"
-rich = "*"
 
 [[package]]
 name = "coverage"
@@ -1985,42 +1939,41 @@ testing = ["black[jupyter] (==23.7.0)", "clu", "clu (<=0.0.9)", "einops", "gymna
 
 [[package]]
 name = "flyteidl"
-version = "1.10.7"
+version = "1.12.0"
 description = "IDL for Flyte Platform"
 optional = false
 python-versions = "<3.13,>=3.8"
 files = [
-    {file = "flyteidl-1.10.7-py3-none-any.whl", hash = "sha256:2f56ed37ff63db7254a78561dbc92f8e53d9d943b5f44178e952509b215fe988"},
-    {file = "flyteidl-1.10.7.tar.gz", hash = "sha256:39cc0ed9be2ce41b324d18d5861f6eb0cad029b838d7e3694cc9c541aaca8148"},
+    {file = "flyteidl-1.12.0-py3-none-any.whl", hash = "sha256:700904d9bbb3d0fedd3d2eec096acad30587806a86a52d38ff834ca74f4fb4e8"},
+    {file = "flyteidl-1.12.0.tar.gz", hash = "sha256:1651e67b54b26879ec0ab84f320ec45315fcfec6a9811d2cb9f465505a57e6b8"},
 ]
 
 [package.dependencies]
 googleapis-common-protos = "*"
-protobuf = ">=4.21.1,<5.0.0"
+protobuf = ">=4.21.1"
 protoc-gen-openapiv2 = "*"
 
 [[package]]
 name = "flytekit"
-version = "1.10.7"
+version = "1.12.2"
 description = "Flyte SDK for Python"
 optional = false
 python-versions = "<3.13,>=3.8"
 files = [
-    {file = "flytekit-1.10.7-py3-none-any.whl", hash = "sha256:054514f8cb98969cfd320567975139a9d07ffb16ec69d24324dd2f0ca07ea32d"},
-    {file = "flytekit-1.10.7.tar.gz", hash = "sha256:cce6d104045a86ee1c24ce30f7f0a80a8e59b9d151466d432667cf55109b7248"},
+    {file = "flytekit-1.12.2-py3-none-any.whl", hash = "sha256:46e32b326aac7e8f241821b8c557d7025d12ee45b3c4fe183c245bc600b4392a"},
+    {file = "flytekit-1.12.2.tar.gz", hash = "sha256:c2eeec3fd52b8ebfc0ee63e7da584c2f9d0a15d0d37aa085a2385fd1a2d3f18f"},
 ]
 
 [package.dependencies]
 adlfs = ">=2023.3.0"
 click = ">=6.6,<9.0"
 cloudpickle = ">=2.0.0"
-cookiecutter = ">=1.7.3"
 croniter = ">=0.3.20,<4.0.0"
 dataclasses-json = ">=0.5.2,<0.5.12"
 diskcache = ">=5.2.1"
 docker = ">=4.0.0,<7.0.0"
 docstring-parser = ">=0.9.0"
-flyteidl = ">=1.10.7"
+flyteidl = ">=1.11.0b1"
 fsspec = ">=2023.3.0"
 gcsfs = ">=2023.3.0"
 googleapis-common-protos = ">=1.57"
@@ -2028,24 +1981,28 @@ grpcio = "*"
 grpcio-status = "*"
 importlib-metadata = "*"
 isodate = "*"
+jinja2 = "*"
 joblib = "*"
+jsonlines = "*"
 jsonpickle = "*"
 keyring = ">=18.0.1"
+markdown-it-py = "*"
 marshmallow-enum = "*"
 marshmallow-jsonschema = ">=0.12.0"
-mashumaro = ">=3.9.1"
+mashumaro = ">=3.11"
 protobuf = "!=4.25.0"
 pyarrow = "*"
+pygments = "*"
 python-json-logger = ">=2.0.0"
 pytimeparse = ">=1.1.8,<2.0.0"
 pyyaml = "<5.4.0 || >5.4.0,<5.4.1 || >5.4.1,<6.0.0 || >6.0.0"
-requests = ">=2.18.4,<3.0.0"
+requests = ">=2.18.4,<2.32.0 || >2.32.0,<2.32.1 || >2.32.1,<2.32.2 || >2.32.2,<2.32.3 || >2.32.3,<3.0.0"
 rich = "*"
 rich-click = "*"
-s3fs = ">=2023.3.0"
+s3fs = ">=2023.3.0,<2024.3.1 || >2024.3.1"
 statsd = ">=3.0.0,<4.0.0"
 typing-extensions = "*"
-urllib3 = ">=1.22,<2.0.0"
+urllib3 = ">=1.22,<3.0.0"
 
 [[package]]
 name = "fonttools"
@@ -3519,6 +3476,20 @@ files = [
 dev = ["hypothesis"]
 
 [[package]]
+name = "jsonlines"
+version = "4.0.0"
+description = "Library with helpers for the jsonlines file format"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "jsonlines-4.0.0-py3-none-any.whl", hash = "sha256:185b334ff2ca5a91362993f42e83588a360cf95ce4b71a73548502bda52a7c55"},
+    {file = "jsonlines-4.0.0.tar.gz", hash = "sha256:0c6d2c09117550c089995247f605ae4cf77dd1533041d366351f6f298822ea74"},
+]
+
+[package.dependencies]
+attrs = ">=19.2.0"
+
+[[package]]
 name = "jsonpickle"
 version = "3.0.1"
 description = "Python library for serializing any arbitrary object graph into JSON"
@@ -4396,13 +4367,13 @@ union = ["marshmallow-union"]
 
 [[package]]
 name = "mashumaro"
-version = "3.10"
-description = "Fast serialization library on top of dataclasses"
+version = "3.13"
+description = "Fast and well tested serialization library"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "mashumaro-3.10-py3-none-any.whl", hash = "sha256:d2c0fd5e7878987629d41f4986d9b0903d362a92eeb299b7d88b87eb113f4f48"},
-    {file = "mashumaro-3.10.tar.gz", hash = "sha256:0248a5c8574aa6cd20696621502d38a7ea66af3d6d93c5d03f93b33298edc878"},
+    {file = "mashumaro-3.13-py3-none-any.whl", hash = "sha256:59457aebb90e85b8b195e5ccc2d46b608f2709bedb679f9d19a952f9bb1fb6ec"},
+    {file = "mashumaro-3.13.tar.gz", hash = "sha256:636c31afe39d991efe4cad269fef0c8ba408d87581118784d2a47924c2073faa"},
 ]
 
 [package.dependencies]
@@ -6853,23 +6824,6 @@ files = [
 ]
 
 [[package]]
-name = "python-slugify"
-version = "8.0.1"
-description = "A Python slugify application that also handles Unicode"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "python-slugify-8.0.1.tar.gz", hash = "sha256:ce0d46ddb668b3be82f4ed5e503dbc33dd815d83e2eb6824211310d3fb172a27"},
-    {file = "python_slugify-8.0.1-py2.py3-none-any.whl", hash = "sha256:70ca6ea68fe63ecc8fa4fcf00ae651fc8a5d02d93dcd12ae6d4fc7ca46c4d395"},
-]
-
-[package.dependencies]
-text-unidecode = ">=1.3"
-
-[package.extras]
-unidecode = ["Unidecode (>=1.1.1)"]
-
-[[package]]
 name = "pytimeparse"
 version = "1.1.8"
 description = "Time expression parser"
@@ -8495,17 +8449,6 @@ test = ["pre-commit", "pytest (>=7.0)", "pytest-timeout"]
 typing = ["mypy (>=1.6,<2.0)", "traitlets (>=5.11.1)"]
 
 [[package]]
-name = "text-unidecode"
-version = "1.3"
-description = "The most basic Text::Unidecode port"
-optional = false
-python-versions = "*"
-files = [
-    {file = "text-unidecode-1.3.tar.gz", hash = "sha256:bad6603bb14d279193107714b288be206cac565dfa49aa5b105294dd5c4aab93"},
-    {file = "text_unidecode-1.3-py2.py3-none-any.whl", hash = "sha256:1311f10e8b895935241623731c2ba64f4c455287888b18189350b67134a822e8"},
-]
-
-[[package]]
 name = "texttable"
 version = "1.6.7"
 description = "module to create simple ASCII tables"
@@ -9445,4 +9388,4 @@ workflows = ["dataclasses-json", "dulwich", "flytekit", "google-api-python-clien
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10, <3.12"
-content-hash = "ff177ef15e368d2fc88b27b600b985fd7f9a78398e5a779e37c03ba5bab251b3"
+content-hash = "d19a01e7f11036f4a93c2f862cffe0badef298e168cbe78424cf4e06fa5aafd4"
