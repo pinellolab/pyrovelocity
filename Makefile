@@ -68,9 +68,14 @@ precommit-run: ## Run pre-commit hooks
 	pre-commit run -a
 
 precommit-install:
-	pre-commit install -t pre-commit
-	pre-commit install -t post-commit
-	pre-commit install -t post-checkout
+	poetry run pre-commit install -t pre-commit
+	poetry run pre-commit install -t post-commit
+	poetry run pre-commit install -t post-checkout
+
+precommit-uninstall:
+	poetry run pre-commit uninstall -t pre-commit
+	poetry run pre-commit uninstall -t post-commit
+	poetry run pre-commit uninstall -t post-checkout
 
 lint: ## Run linter
 	poetry run ruff format .
@@ -792,7 +797,7 @@ install-crane: ## Install crane. Check docs before execution: https://github.com
 #-----------------------------
 
 UML_SRC_DIR := src/pyrovelocity
-UML_SUBPACKAGES := $(shell find $(UML_SRC_DIR) -type d -mindepth 0 -maxdepth 1 | grep -v '__pycache__')
+UML_SUBPACKAGES := $(shell find $(UML_SRC_DIR) -mindepth 0 -maxdepth 1 -type d | grep -v '__pycache__')
 UML_SVG_DIR := .uml/svg
 UML_PDF_DIR := .uml/pdf
 UML_PLANTUML_SERVER := http://localhost:7865/svg/
