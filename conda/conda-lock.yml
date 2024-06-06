@@ -5,9 +5,9 @@
 # available, unless you explicitly update the lock file.
 #
 # Install this environment as "YOURENV" with:
-#     conda-lock install -n YOURENV --file conda-lock.yml
+#     conda-lock install -n YOURENV conda-lock.yml
 # This lock contains optional dependency categories test, workflows. Include them in the installed environment with:
-#     conda-lock install -e test -e workflows -n YOURENV --file conda-lock.yml
+#     conda-lock install -e test -e workflows -n YOURENV conda-lock.yml
 # To update a single package to the latest version compatible with the version constraints in the source:
 #     conda-lock lock  --lockfile conda-lock.yml --update PACKAGE
 # To re-solve the entire environment, e.g. after changing a version constraint in the source file:
@@ -15,7 +15,7 @@
 version: 1
 metadata:
   content_hash:
-    linux-64: 19b5246d5b6d76b88495213cb26c2b561f0b4130f379ec32df18e09b28bd0c13
+    linux-64: e5720a305b10340113f28ee2c9aca02c34b00a5f8e9033a50521455ef2426ac8
   channels:
   - url: pytorch
     used_env_vars: []
@@ -276,7 +276,7 @@ package:
   category: workflows
   optional: true
 - name: anyio
-  version: 4.3.0
+  version: 4.4.0
   manager: conda
   platform: linux-64
   dependencies:
@@ -285,10 +285,10 @@ package:
     python: '>=3.8'
     sniffio: '>=1.1'
     typing_extensions: '>=4.1'
-  url: https://conda.anaconda.org/conda-forge/noarch/anyio-4.3.0-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/anyio-4.4.0-pyhd8ed1ab_0.conda
   hash:
-    md5: ac95aa8ed65adfdde51132595c79aade
-    sha256: 86aca4a31c09f9b4dbdb332cd9a6a7dbab62ca734d3f832651c0ab59c6a7f52e
+    md5: 1fa97c6e8db1f82c64ff17a5efc4ae8e
+    sha256: 84ac9429812495f12939ab4994f2634f7cacd254f6234a0c2c0243daed15a7ee
   category: main
   optional: false
 - name: aom
@@ -3031,10 +3031,10 @@ package:
     numpy: '>=1.19,<3'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.*
-  url: https://conda.anaconda.org/conda-forge/linux-64/h5py-3.11.0-nompi_py310hf054cd7_101.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/h5py-3.11.0-nompi_py310hf054cd7_102.conda
   hash:
-    md5: d738837950c673a0452d3bbf557af39a
-    sha256: 1775845b38fd031c813b7532abcde47c31a60851b536aaed8d35147ba28361d8
+    md5: f74f9a0a4d713f5eec89917883f4ae7e
+    sha256: 5f7a00f4c13adacde260a918153057f3fd0221e8528357bb83627a643f148a4c
   category: main
   optional: false
 - name: harfbuzz
@@ -3189,7 +3189,7 @@ package:
   category: main
   optional: false
 - name: hypothesis
-  version: 6.103.0
+  version: 6.103.1
   manager: conda
   platform: linux-64
   dependencies:
@@ -3200,10 +3200,10 @@ package:
     python: '>=3.8'
     setuptools: ''
     sortedcontainers: '>=2.1.0,<3.0.0'
-  url: https://conda.anaconda.org/conda-forge/noarch/hypothesis-6.103.0-pyha770c72_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/hypothesis-6.103.1-pyha770c72_0.conda
   hash:
-    md5: 9671b3686b77ec463f50490d31ac01f1
-    sha256: e1ca77158ac3d2fff7bcaec4a7ce0d5ff4bdbbf0d268f07dde01a789106a9b93
+    md5: 87e908d03466db19eeea69251f0bccc2
+    sha256: 601ba49238db5db6d9f56f9e58917bf47ad6a9002381b40acfb4034ae9efb2b8
   category: test
   optional: true
 - name: ibis-framework
@@ -5210,16 +5210,16 @@ package:
   category: main
   optional: false
 - name: marshmallow
-  version: 3.21.2
+  version: 3.21.3
   manager: conda
   platform: linux-64
   dependencies:
     packaging: '>=17.0'
     python: '>=3.8'
-  url: https://conda.anaconda.org/conda-forge/noarch/marshmallow-3.21.2-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/marshmallow-3.21.3-pyhd8ed1ab_0.conda
   hash:
-    md5: 017ed0a7764c528f7ae560bc475a31fe
-    sha256: abca3f0a0a30c730110d719cbcd664766442a8df4a432f0548209b30158effce
+    md5: 2c99be9dade8ab821e0fd279c9895120
+    sha256: 5ba59198142d2b630e8b7b858a7cacaf37bc0dc18577d4c182a13191c0a1221a
   category: workflows
   optional: true
 - name: marshmallow-enum
@@ -5385,7 +5385,7 @@ package:
   category: main
   optional: false
 - name: mlflow
-  version: 2.13.0
+  version: 2.13.1
   manager: conda
   platform: linux-64
   dependencies:
@@ -5397,7 +5397,7 @@ package:
     jinja2: <4,>=2.11
     markdown: <4,>=3.3
     matplotlib-base: <4
-    mlflow-ui: 2.13.0
+    mlflow-ui: 2.13.1
     numpy: <2
     pandas: <3
     prometheus_flask_exporter: <1
@@ -5407,14 +5407,14 @@ package:
     scikit-learn: <2
     scipy: <2
     sqlalchemy: '>=1.4.0,<3'
-  url: https://conda.anaconda.org/conda-forge/linux-64/mlflow-2.13.0-hff52083_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/mlflow-2.13.1-hff52083_0.conda
   hash:
-    md5: 4caa0467331447d96e585af3ab4863af
-    sha256: ea2ae025e267fe2dbd2c914c03a2fc23cc3771f49d582272010e70e6b69ccfe5
+    md5: 62df329019cae5d89961e5e06a684a35
+    sha256: f8436adfe8f9043b1e2f88fbc455f2d463f53a919d9be90ddcd0eec08194fc80
   category: main
   optional: false
 - name: mlflow-skinny
-  version: 2.13.0
+  version: 2.13.1
   manager: conda
   platform: linux-64
   dependencies:
@@ -5434,27 +5434,27 @@ package:
     pyyaml: '>=5.1,<7'
     requests: '>=2.17.3,<3'
     sqlparse: '>=0.4.0,<1'
-  url: https://conda.anaconda.org/conda-forge/linux-64/mlflow-skinny-2.13.0-py310hff52083_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/mlflow-skinny-2.13.1-py310hff52083_0.conda
   hash:
-    md5: 44b0ea3d8f9b6b8209542895753f6276
-    sha256: 2eccb47485ee45842a88f891dc3169b13f1b3e8048b42759ccdf9539c91844aa
+    md5: a0695a09774b11ecfa6be42b1f7bd9a7
+    sha256: e9d4b85439f05678b6f738d1c45aaa1e4602666f972fc43e0b309bde46104071
   category: main
   optional: false
 - name: mlflow-ui
-  version: 2.13.0
+  version: 2.13.1
   manager: conda
   platform: linux-64
   dependencies:
     flask: <4
     gunicorn: <22
-    mlflow-skinny: 2.13.0
+    mlflow-skinny: 2.13.1
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.*
     querystring_parser: <2
-  url: https://conda.anaconda.org/conda-forge/linux-64/mlflow-ui-2.13.0-py310hff52083_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/mlflow-ui-2.13.1-py310hff52083_0.conda
   hash:
-    md5: 13c788538f299b06d7630f3fb8f04db0
-    sha256: 1fa5af03a1e83e4906bbad6cebd03680d9c86da41ee8ddf17722913efd18106a
+    md5: f7f3e82a0ba62e268f96d1fcc8aa9f70
+    sha256: 1edcbb934cf9737a1ae0bc0d802a499c5dd14e80baf9750f7bfc826a674973d2
   category: main
   optional: false
 - name: more-itertools
