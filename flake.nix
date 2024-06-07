@@ -221,12 +221,12 @@
             branch = false;
           };
           registries = {
-            "ghcr.io" = {
-              enable = true;
-              repo = "${gitHubOrg}/${packageName}";
-              username = builtins.getEnv "GITHUB_ACTOR";
-              password = builtins.getEnv "GH_TOKEN";
-            };
+            # "ghcr.io" = {
+            #   enable = true;
+            #   repo = "${gitHubOrg}/${packageName}";
+            #   username = builtins.getEnv "GITHUB_ACTOR";
+            #   password = builtins.getEnv "GH_TOKEN";
+            # };
             "us-central1-docker.pkg.dev" = {
               enable = true;
               repo = "${gcpProjectId}/${packageName}/${packageName}";
@@ -253,12 +253,12 @@
             branch = false;
           };
           registries = {
-            "ghcr.io" = {
-              enable = true;
-              repo = "${gitHubOrg}/${packageName}dev";
-              username = builtins.getEnv "GITHUB_ACTOR";
-              password = builtins.getEnv "GH_TOKEN";
-            };
+            # "ghcr.io" = {
+            #   enable = true;
+            #   repo = "${gitHubOrg}/${packageName}dev";
+            #   username = builtins.getEnv "GITHUB_ACTOR";
+            #   password = builtins.getEnv "GH_TOKEN";
+            # };
             "us-central1-docker.pkg.dev" = {
               enable = true;
               repo = "${gcpProjectId}/${packageName}/${packageName}dev";
