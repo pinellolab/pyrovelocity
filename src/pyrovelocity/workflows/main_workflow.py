@@ -2,21 +2,17 @@ import os
 from dataclasses import asdict
 from datetime import timedelta
 
-from flytekit import Resources
-from flytekit import current_context
-from flytekit import dynamic
-from flytekit import task
-from flytekit import workflow
-from flytekit.extras.accelerators import T4
-from flytekit.extras.accelerators import GPUAccelerator
+from flytekit import Resources, current_context, dynamic, task, workflow
+from flytekit.extras.accelerators import T4, GPUAccelerator
 from flytekit.types.directory import FlyteDirectory
 from flytekit.types.file import FlyteFile
-from returns.result import Failure
-from returns.result import Success
+from returns.result import Failure, Success
 
-from pyrovelocity.interfaces import DownloadDatasetInterface
-from pyrovelocity.interfaces import PreprocessDataInterface
-from pyrovelocity.interfaces import PyroVelocityTrainInterface
+from pyrovelocity.interfaces import (
+    DownloadDatasetInterface,
+    PreprocessDataInterface,
+    PyroVelocityTrainInterface,
+)
 from pyrovelocity.io.archive import create_tarball_from_filtered_dir
 from pyrovelocity.io.gcs import upload_file_concurrently
 from pyrovelocity.logging import configure_logging
@@ -28,27 +24,22 @@ from pyrovelocity.tasks.train import train_dataset
 from pyrovelocity.utils import str_to_bool
 from pyrovelocity.workflows.main_configuration import (
     PYROVELOCITY_SIMULATED_ONLY,
-)
-from pyrovelocity.workflows.main_configuration import PostprocessConfiguration
-from pyrovelocity.workflows.main_configuration import PostprocessOutputs
-from pyrovelocity.workflows.main_configuration import ResourcesJSON
-from pyrovelocity.workflows.main_configuration import SummarizeOutputs
-from pyrovelocity.workflows.main_configuration import TrainingOutputs
-from pyrovelocity.workflows.main_configuration import WorkflowConfiguration
-from pyrovelocity.workflows.main_configuration import default_resource_limits
-from pyrovelocity.workflows.main_configuration import default_resource_requests
-from pyrovelocity.workflows.main_configuration import (
+    PostprocessConfiguration,
+    PostprocessOutputs,
+    ResourcesJSON,
+    SummarizeOutputs,
+    TrainingOutputs,
+    WorkflowConfiguration,
+    default_resource_limits,
+    default_resource_requests,
     default_training_resource_limits,
-)
-from pyrovelocity.workflows.main_configuration import (
     default_training_resource_requests,
+    larry_configuration,
+    pancreas_configuration,
+    pbmc68k_configuration,
+    pons_configuration,
+    simulated_configuration,
 )
-from pyrovelocity.workflows.main_configuration import larry_configuration
-from pyrovelocity.workflows.main_configuration import pancreas_configuration
-from pyrovelocity.workflows.main_configuration import pbmc68k_configuration
-from pyrovelocity.workflows.main_configuration import pons_configuration
-from pyrovelocity.workflows.main_configuration import simulated_configuration
-
 
 __all__ = [
     "download_data",
@@ -402,7 +393,7 @@ def module_workflow(
     return dataset_summaries
 
 
-@workflow
+@dynamic
 def training_workflow(
     simulated_configuration: WorkflowConfiguration = simulated_configuration,
     pancreas_configuration: WorkflowConfiguration = pancreas_configuration,
