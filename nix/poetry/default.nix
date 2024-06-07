@@ -55,11 +55,11 @@ poetry2nix.overrides.withDefaults (
             attrs.buildInputs
             or []
             ++ [
-              self.nvidia-cudnn-cu12
-              self.nvidia-cuda-nvrtc-cu12
-              self.nvidia-cuda-runtime-cu12
               self.nvidia-cublas-cu12
               self.nvidia-cuda-cupti-cu12
+              self.nvidia-cuda-nvrtc-cu12
+              self.nvidia-cuda-runtime-cu12
+              self.nvidia-cudnn-cu12
               self.nvidia-cufft-cu12
               self.nvidia-curand-cu12
               self.nvidia-cusolver-cu12
@@ -70,11 +70,17 @@ poetry2nix.overrides.withDefaults (
             ];
           postInstall = ''
             addAutoPatchelfSearchPath "${self.nvidia-cublas-cu12}/${self.python.sitePackages}/nvidia/cublas/lib"
-            addAutoPatchelfSearchPath "${self.nvidia-cudnn-cu12}/${self.python.sitePackages}/nvidia/cudnn/lib"
+            addAutoPatchelfSearchPath "${self.nvidia-cuda-cupti-cu12}/${self.python.sitePackages}/nvidia/cuda_cupti/lib"
             addAutoPatchelfSearchPath "${self.nvidia-cuda-nvrtc-cu12}/${self.python.sitePackages}/nvidia/cuda_nvrtc/lib"
-            addAutoPatchelfSearchPath "${self.nvidia-cusparse-cu12}/${self.python.sitePackages}/nvidia/cusparse/lib"
+            addAutoPatchelfSearchPath "${self.nvidia-cuda-runtime-cu12}/${self.python.sitePackages}/nvidia/cuda_runtime/lib"
+            addAutoPatchelfSearchPath "${self.nvidia-cudnn-cu12}/${self.python.sitePackages}/nvidia/cudnn/lib"
+            addAutoPatchelfSearchPath "${self.nvidia-cufft-cu12}/${self.python.sitePackages}/nvidia/cufft/lib"
+            addAutoPatchelfSearchPath "${self.nvidia-curand-cu12}/${self.python.sitePackages}/nvidia/curand/lib"
             addAutoPatchelfSearchPath "${self.nvidia-cusolver-cu12}/${self.python.sitePackages}/nvidia/cusolver/lib"
+            addAutoPatchelfSearchPath "${self.nvidia-cusparse-cu12}/${self.python.sitePackages}/nvidia/cusparse/lib"
+            addAutoPatchelfSearchPath "${self.nvidia-nccl-cu12}/${self.python.sitePackages}/nvidia/nccl/lib"
             addAutoPatchelfSearchPath "${self.nvidia-nvjitlink-cu12}/${self.python.sitePackages}/nvidia/nvjitlink/lib"
+            addAutoPatchelfSearchPath "${self.nvidia-nvtx-cu12}/${self.python.sitePackages}/nvidia/nvtx/lib"
           '';
         });
       }
