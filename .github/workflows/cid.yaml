@@ -289,14 +289,14 @@ jobs:
         with:
           ref: ${{ needs.set-variables.outputs.checkout_ref }}
       - uses: DeterminateSystems/nix-installer-action@7993355175c2765e5733dae74f3e0786fe0e5c4f # ratchet:DeterminateSystems/nix-installer-action@v12
-      - uses: DeterminateSystems/magic-nix-cache-action@b46e247b898aa56e6d2d2e728dc6df6c84fdb738 # ratchet:DeterminateSystems/magic-nix-cache-action@v7
-        # Toggling use-gha-cache can help resolve `Nix daemon disconnected unexpectedly`.
-        with:
-          use-gha-cache: false
-      # - uses: cachix/cachix-action@ad2ddac53f961de1989924296a1f236fcfbaa4fc # ratchet:cachix/cachix-action@v15
+      # - uses: DeterminateSystems/magic-nix-cache-action@b46e247b898aa56e6d2d2e728dc6df6c84fdb738 # ratchet:DeterminateSystems/magic-nix-cache-action@v7
+      #   # Toggling use-gha-cache can help resolve `Nix daemon disconnected unexpectedly`.
       #   with:
-      #     name: "${{ vars.CACHIX_CACHE_NAME }}"
-      #     authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+      #     use-gha-cache: false
+      - uses: cachix/cachix-action@ad2ddac53f961de1989924296a1f236fcfbaa4fc # ratchet:cachix/cachix-action@v15
+        with:
+          name: "${{ vars.CACHIX_CACHE_NAME }}"
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
       - uses: rlespinasse/github-slug-action@797d68864753cbceedc271349d402da4590e6302 # ratchet:rlespinasse/github-slug-action@v4
         with:
           prefix: CI_
@@ -507,7 +507,11 @@ jobs:
         with:
           ref: ${{ needs.set-variables.outputs.checkout_ref }}
       - uses: DeterminateSystems/nix-installer-action@7993355175c2765e5733dae74f3e0786fe0e5c4f # ratchet:DeterminateSystems/nix-installer-action@v12
-      - uses: DeterminateSystems/magic-nix-cache-action@b46e247b898aa56e6d2d2e728dc6df6c84fdb738 # ratchet:DeterminateSystems/magic-nix-cache-action@v7
+      # - uses: DeterminateSystems/magic-nix-cache-action@b46e247b898aa56e6d2d2e728dc6df6c84fdb738 # ratchet:DeterminateSystems/magic-nix-cache-action@v7
+      - uses: cachix/cachix-action@ad2ddac53f961de1989924296a1f236fcfbaa4fc # ratchet:cachix/cachix-action@v15
+        with:
+          name: "${{ vars.CACHIX_CACHE_NAME }}"
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
       - run: nix profile install .#releaseEnv
       - uses: cihelper/action-semanticrelease-poetry@66900ba780321bcdb974891ee82f945a25a870d7 # ratchet:cihelper/action-semanticrelease-poetry@v1
         id: semanticrelease
