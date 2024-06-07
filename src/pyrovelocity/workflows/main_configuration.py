@@ -1,18 +1,18 @@
 import os
-from dataclasses import dataclass
-from dataclasses import field
+from dataclasses import dataclass, field
 
 from beartype import beartype
 from flytekit.types.directory import FlyteDirectory
 from flytekit.types.file import FlyteFile
 from mashumaro.mixins.json import DataClassJSONMixin
 
-from pyrovelocity.interfaces import DownloadDatasetInterface
-from pyrovelocity.interfaces import PreprocessDataInterface
-from pyrovelocity.interfaces import PyroVelocityTrainInterface
+from pyrovelocity.interfaces import (
+    DownloadDatasetInterface,
+    PreprocessDataInterface,
+    PyroVelocityTrainInterface,
+)
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.utils import str_to_bool
-
 
 __all__ = [
     "ResourcesJSON",
@@ -28,13 +28,13 @@ logger = configure_logging(__name__)
 
 
 PYROVELOCITY_TESTING_FLAG = str_to_bool(
-    os.getenv("PYROVELOCITY_TESTING_FLAG", "False")
+    os.getenv("PYROVELOCITY_TESTING_FLAG", "True")
 )
 PYROVELOCITY_SIMULATED_ONLY = str_to_bool(
-    os.getenv("PYROVELOCITY_SIMULATED_ONLY", "False")
+    os.getenv("PYROVELOCITY_SIMULATED_ONLY", "True")
 )
 PYROVELOCITY_UPLOAD_RESULTS = str_to_bool(
-    os.getenv("PYROVELOCITY_UPLOAD_RESULTS", "True")
+    os.getenv("PYROVELOCITY_UPLOAD_RESULTS", "False")
 )
 
 
