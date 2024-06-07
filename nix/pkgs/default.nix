@@ -28,6 +28,7 @@
     atuin
     bat
     btop
+    curl
     gawk
     gh
     git
@@ -50,6 +51,7 @@
     ripgrep
     skaffold
     starship
+    wget
     zellij
     zsh
   ];
