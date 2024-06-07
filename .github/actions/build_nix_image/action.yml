@@ -19,12 +19,12 @@ inputs:
   encodedGARCredentials:
     description: "Base64 encoded Google Artifact Registry Service Account credentials"
     required: true
-  # cachixCacheName:
-  #   description: "Name of the Cachix cache"
-  #   required: false
-  # cachixAuthToken:
-  #   description: "Cachix authentication token"
-  #   required: false
+  cachixCacheName:
+    description: "Name of the Cachix cache"
+    required: false
+  cachixAuthToken:
+    description: "Cachix authentication token"
+    required: false
 
 runs:
   using: "composite"
@@ -47,14 +47,14 @@ runs:
         extra-conf: |
           extra-platforms = aarch64-linux
 
-    - name: Setup Local Nix Cache
-      uses: DeterminateSystems/magic-nix-cache-action@b46e247b898aa56e6d2d2e728dc6df6c84fdb738 # ratchet:DeterminateSystems/magic-nix-cache-action@v7
+    # - name: Setup Local Nix Cache
+    #   uses: DeterminateSystems/magic-nix-cache-action@b46e247b898aa56e6d2d2e728dc6df6c84fdb738 # ratchet:DeterminateSystems/magic-nix-cache-action@v7
 
-    # - name: Setup Remote Nix Cache
-    #   uses: cachix/cachix-action@18cf96c7c98e048e10a83abd92116114cd8504be # ratchet:cachix/cachix-action@v14
-    #   with:
-    #     name: "${{ inputs.cachixCacheName }}"
-    #     authToken: "${{ inputs.cachixAuthToken }}"
+    - name: Setup Remote Nix Cache
+      uses: cachix/cachix-action@ad2ddac53f961de1989924296a1f236fcfbaa4fc # ratchet:cachix/cachix-action@v15
+      with:
+        name: "${{ inputs.cachixCacheName }}"
+        authToken: "${{ inputs.cachixAuthToken }}"
 
     - name: Set GitHub CI Slug Variables
       uses: rlespinasse/github-slug-action@797d68864753cbceedc271349d402da4590e6302 # ratchet:rlespinasse/github-slug-action@v4
