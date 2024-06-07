@@ -363,7 +363,7 @@ jobs:
         with:
           build-mount-path: /nix
           build-mount-path-ownership: "root:root"
-          root-reserve-mb: 38912
+          root-reserve-mb: 34816
           swap-size-mb: 1024
           remove-dotnet: "true"
           remove-android: "true"
@@ -391,9 +391,9 @@ jobs:
     needs: [set-variables]
     if: ${{ needs.set-variables.outputs.skip_ci != 'true' && ( contains(github.event.pull_request.labels.*.name, 'build-images') || contains(github.event.pull_request.labels.*.name, 'execute-workflow') || (github.event_name == 'workflow_dispatch' && inputs.run_build_images) || (github.event_name == 'workflow_dispatch' && inputs.run_execute_workflow) ) }}
 
-    # concurrency:
-    #   group: bdpi-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}-${{ needs.set-variables.outputs.mode }}
-    #   cancel-in-progress: true
+    concurrency:
+      group: bpdi-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}-${{ needs.set-variables.outputs.mode }}
+      cancel-in-progress: true
     permissions:
       contents: read
       packages: write
@@ -408,7 +408,7 @@ jobs:
         with:
           build-mount-path: /nix
           build-mount-path-ownership: "root:root"
-          root-reserve-mb: 38912
+          root-reserve-mb: 34816
           swap-size-mb: 1024
           remove-dotnet: "true"
           remove-android: "true"
@@ -587,11 +587,11 @@ jobs:
         with:
           extra-conf: |
             extra-platforms = aarch64-linux
-      - uses: DeterminateSystems/magic-nix-cache-action@b46e247b898aa56e6d2d2e728dc6df6c84fdb738 # ratchet:DeterminateSystems/magic-nix-cache-action@v7
-      # - uses: cachix/cachix-action@ad2ddac53f961de1989924296a1f236fcfbaa4fc # ratchet:cachix/cachix-action@v15
-      #   with:
-      #     name: "${{ vars.CACHIX_CACHE_NAME }}"
-      #     authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+      # - uses: DeterminateSystems/magic-nix-cache-action@b46e247b898aa56e6d2d2e728dc6df6c84fdb738 # ratchet:DeterminateSystems/magic-nix-cache-action@v7
+      - uses: cachix/cachix-action@ad2ddac53f961de1989924296a1f236fcfbaa4fc # ratchet:cachix/cachix-action@v15
+        with:
+          name: "${{ vars.CACHIX_CACHE_NAME }}"
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
       - uses: rlespinasse/github-slug-action@797d68864753cbceedc271349d402da4590e6302 # ratchet:rlespinasse/github-slug-action@v4
         with:
           prefix: CI_
@@ -636,10 +636,7 @@ jobs:
           set -euxo pipefail
 
           df -h
-          nix develop --impure --accept-flake-config
-
           nix store gc --dry-run --debug
-          nix store gc --max 3G --debug
           df -h
   publish-pypi:
     runs-on: ubuntu-latest
