@@ -636,15 +636,18 @@ cluster-config: ## Set kube context for cluster in CLUSTER_DEV_CONFIG.
 	$(eval CLUSTER_DEV_CONTEXT_NAME=$(shell kubectl config view --kubeconfig='$(CLUSTER_DEV_CONFIG)' -o jsonpath='{.contexts[0].name}'))
 	kubectl config use-context --kubeconfig=$(CLUSTER_DEV_CONFIG) $(CLUSTER_DEV_CONTEXT_NAME)
 
-CLUSTER_DEV_MODULE_PATH ?=./dev/cluster/pyrovelocity/pyrovelocitydev
+# CLUSTER_DEV_INSTANCE_NAME ?= dev
+# CUE_DEV_VALUES ?= dev.cue
+# CLUSTER_DEV_MODULE_PATH ?=./dev/cluster/pyrovelocity/pyrovelocitydev
+CLUSTER_DEV_INSTANCE_NAME ?= pyrovelocitydev
+# CLUSTER_DEV_INSTANCE_NAME ?= nixbuild
+CLUSTER_DEV_MODULE_PATH ?=./dev/cluster/pyrovelocity/$(CLUSTER_DEV_INSTANCE_NAME)
+CUE_DEV_VALUES ?= $(CLUSTER_DEV_MODULE_PATH).cue
 
 cluster-dev-lint: ## Lint dev module.
 	cue fmt dev.cue dev.example.cue
 	cue fmt $(CLUSTER_DEV_MODULE_PATH)/...
 	timoni mod vet $(CLUSTER_DEV_MODULE_PATH)
-
-CLUSTER_DEV_INSTANCE_NAME ?= dev
-CUE_DEV_VALUES ?= dev.cue
 
 cluster-dev-render: ## Render dev package yaml.
 	timoni build $(CLUSTER_DEV_INSTANCE_NAME) $(CLUSTER_DEV_MODULE_PATH) \
