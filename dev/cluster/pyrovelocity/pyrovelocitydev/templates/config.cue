@@ -112,12 +112,12 @@ import (
 		// hpa: #HPA & {
 		// 	#config: config
 		// }
-		// deploy: #Deployment & {
-		// 	#config: config
-		// }
-		job: #Job & {
+		deploy: #Deployment & {
 			#config: config
 		}
+		// job: #Job & {
+		// 	#config: config
+		// }
 	}
 
 	tests: {
