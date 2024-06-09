@@ -28,6 +28,9 @@
 
     mkdir -p $out/tmp
     mkdir -p $out/root
+
+    mkdir -p $out/lib64
+    ln -sf ${pkgs.glibc}/lib/ld-linux-x86-64.so.2 $out/lib64/ld-linux-x86-64.so.2
   '';
 
   rcRoot = pkgs.runCommand "rcRoot" {} ''
