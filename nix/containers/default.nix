@@ -89,11 +89,13 @@
     chmod -R 755 $out/root
   '';
 
+  pythonPackageEnv = mkPoetryEnvWithSource packageName packageSrcPath ["workflows"];
   pythonPackages = [
-    (mkPoetryEnvWithSource packageName packageSrcPath ["workflows"])
+    pythonPackageEnv
   ];
+  devpythonPackageEnv = mkPoetryEnvWithSource packageName packageSrcPath ["test" "docs" "workflows"];
   devpythonPackages = [
-    (mkPoetryEnvWithSource packageName packageSrcPath ["test" "docs" "workflows"])
+    devpythonPackageEnv
   ];
 
   devcontainerContents = [
@@ -112,6 +114,7 @@
   makeContainerConfig = {
     pkgs,
     packageSrcPath,
+    pythonPackageEnv,
     pythonPackages,
     containerPackages,
     cmd ? [],
@@ -136,7 +139,7 @@
         "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
         "GIT_SHA_SHORT=${builtins.getEnv "GIT_SHA_SHORT"}"
         "PYTHONPATH=${packageSrcPath}:${pkgs.lib.strings.makeSearchPathOutput "" "lib/python3.10/site-packages" pythonPackages}"
-        "LD_LIBRARY_PATH=/usr/local/nvidia/lib64"
+        "LD_LIBRARY_PATH=${pythonPackageEnv}/lib:/usr/local/nvidia/lib64"
         "NVIDIA_DRIVER_CAPABILITIES='compute,utility'"
         "NVIDIA_VISIBLE_DEVICES=all"
       ]
@@ -162,6 +165,7 @@ in {
     config = makeContainerConfig {
       pkgs = pkgs;
       packageSrcPath = packageSrcPath;
+      pythonPackageEnv = pythonPackageEnv;
       pythonPackages = pythonPackages;
       containerPackages = sysPackages ++ pythonPackages;
       cmd = containerCmd;
@@ -184,6 +188,7 @@ in {
     config = makeContainerConfig {
       pkgs = pkgs;
       packageSrcPath = packageSrcPath;
+      pythonPackageEnv = devpythonPackageEnv;
       pythonPackages = devpythonPackages;
       containerPackages = sysPackages ++ extraSysPackages ++ devPackages ++ devpythonPackages;
       cmd = devcontainerCmd;
