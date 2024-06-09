@@ -142,6 +142,9 @@
         "LD_LIBRARY_PATH=${pythonPackageEnv}/lib:/usr/local/nvidia/lib64"
         "NVIDIA_DRIVER_CAPABILITIES='compute,utility'"
         "NVIDIA_VISIBLE_DEVICES=all"
+        "LANG=en_US.UTF-8"
+        "LC_ALL=en_US.UTF-8"
+        "LC_CTYPE=en_US.UTF-8"
       ]
       ++ extraEnv;
   };
