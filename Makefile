@@ -560,6 +560,7 @@ jupyter-local: ## Run jupyter lab locally. See make -n setup_dev.
 	SHELL=zsh \
 	jupyter lab \
 	--ServerApp.terminado_settings="shell_command=['zsh']" \
+	--ServerApp.token='' \
 	--allow-root \
 	--ip=0.0.0.0 ./
 
