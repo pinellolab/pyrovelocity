@@ -11,15 +11,18 @@ values: {
 			memory: "16Gi"
 		}
 		limits: {
-			cpu:                 "12000m"
-			memory:              "32Gi"
-			"nvidia.com/gpu":    "1"
+			cpu:    "12000m"
+			memory: "32Gi"
+			// "nvidia.com/gpu":    "1"
 			"ephemeral-storage": "35Gi"
 		}
 	}
 	persistence: {
-		name: "dev"
-		size: "100Gi"
+		name:         "dev0"
+		size:         "100Gi"
+		storageClass: "nfs"
+		accessMode:   "ReadWriteMany"
+		// storageClass: "standard-rwo"
 	}
 	job: {
 		backoffLimit:            8
@@ -27,7 +30,7 @@ values: {
 		ttlSecondsAfterFinished: 172800
 	}
 	nodeSelector: {
-		"cloud.google.com/gke-accelerator": "nvidia-tesla-t4"
+		// "cloud.google.com/gke-accelerator": "nvidia-tesla-t4"
 		// "cloud.google.com/gke-accelerator": "nvidia-tesla-a100"
 		// "cloud.google.com/gke-accelerator": "nvidia-l4"
 
