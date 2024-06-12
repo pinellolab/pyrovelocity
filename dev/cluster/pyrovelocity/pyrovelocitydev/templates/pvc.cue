@@ -19,6 +19,6 @@ import (
 	spec: corev1.#PersistentVolumeClaimSpec & {
 		storageClassName: #config.persistence.storageClass
 		resources: requests: storage: #config.persistence.size
-		accessModes: ["ReadWriteOnce"]
+		accessModes: [#config.persistence.accessMode]
 	}
 }

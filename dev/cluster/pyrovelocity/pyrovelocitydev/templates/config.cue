@@ -70,6 +70,7 @@ import (
 		name:         *metadata.name | string
 		enabled:      *true | bool
 		storageClass: *"standard-rwo" | string
+		accessMode:   *"ReadWriteOnce" | string
 		size:         *"500Gi" | string
 	}
 
