@@ -47,6 +47,7 @@
 
       perSystem = {
         self',
+        inputs',
         pkgs,
         system,
         config,
@@ -145,7 +146,6 @@
         };
 
         gcpProjectId = builtins.getEnv "GCP_PROJECT_ID";
-        gcpSaEncodedJson = builtins.getEnv "ENCODED_GAR_SA_CREDS";
 
         # aarch64-linux may be disabled for more rapid image builds during
         # development setting NIX_IMAGE_SYSTEMS="x86_64-linux".
@@ -212,68 +212,70 @@
             containerImageConfigs.devcontainerImageConfig;
         };
 
-        legacyPackages.containerManifest = inputs.flocken.legacyPackages.${system}.mkDockerManifest {
-          github = {
-            enable = true;
-            enableRegistry = false;
-            token = builtins.getEnv "GH_TOKEN";
-          };
-          autoTags = {
-            branch = false;
-          };
-          registries = {
-            # "ghcr.io" = {
-            #   enable = true;
-            #   repo = "${gitHubOrg}/${packageName}";
-            #   username = builtins.getEnv "GITHUB_ACTOR";
-            #   password = builtins.getEnv "GH_TOKEN";
-            # };
-            "us-central1-docker.pkg.dev" = {
+        legacyPackages = {
+          containerManifest = inputs'.flocken.legacyPackages.mkDockerManifest {
+            github = {
               enable = true;
-              repo = "${gcpProjectId}/${packageName}/${packageName}";
-              username = "_json_key_base64";
-              password = "${gcpSaEncodedJson}";
+              enableRegistry = false;
+              token = "$GH_TOKEN";
             };
+            autoTags = {
+              branch = false;
+            };
+            registries = {
+              # "ghcr.io" = {
+              #   enable = true;
+              #   repo = "${gitHubOrg}/${packageName}";
+              #   username = builtins.getEnv "GITHUB_ACTOR";
+              #   password = "$GH_TOKEN";
+              # };
+              "us-central1-docker.pkg.dev" = {
+                enable = true;
+                repo = "${gcpProjectId}/${packageName}/${packageName}";
+                username = "_json_key_base64";
+                password = "$ENCODED_GAR_SA_CREDS";
+              };
+            };
+            version = builtins.getEnv "VERSION";
+            images = builtins.map (sys: self.packages.${sys}.containerImage) includedSystems;
+            tags = [
+              (builtins.getEnv "GIT_SHA_SHORT")
+              (builtins.getEnv "GIT_SHA")
+              (builtins.getEnv "GIT_REF")
+            ];
           };
-          version = builtins.getEnv "VERSION";
-          images = builtins.map (sys: self.packages.${sys}.containerImage) includedSystems;
-          tags = [
-            (builtins.getEnv "GIT_SHA_SHORT")
-            (builtins.getEnv "GIT_SHA")
-            (builtins.getEnv "GIT_REF")
-          ];
-        };
 
-        legacyPackages.devcontainerManifest = inputs.flocken.legacyPackages.${system}.mkDockerManifest {
-          github = {
-            enable = true;
-            enableRegistry = false;
-            token = builtins.getEnv "GH_TOKEN";
-          };
-          autoTags = {
-            branch = false;
-          };
-          registries = {
-            # "ghcr.io" = {
-            #   enable = true;
-            #   repo = "${gitHubOrg}/${packageName}dev";
-            #   username = builtins.getEnv "GITHUB_ACTOR";
-            #   password = builtins.getEnv "GH_TOKEN";
-            # };
-            "us-central1-docker.pkg.dev" = {
+          devcontainerManifest = inputs'.flocken.legacyPackages.mkDockerManifest {
+            github = {
               enable = true;
-              repo = "${gcpProjectId}/${packageName}/${packageName}dev";
-              username = "_json_key_base64";
-              password = "${gcpSaEncodedJson}";
+              enableRegistry = false;
+              token = "$GH_TOKEN";
             };
+            autoTags = {
+              branch = false;
+            };
+            registries = {
+              # "ghcr.io" = {
+              #   enable = true;
+              #   repo = "${gitHubOrg}/${packageName}dev";
+              #   username = builtins.getEnv "GITHUB_ACTOR";
+              #   password = "$GH_TOKEN";
+              # };
+              "us-central1-docker.pkg.dev" = {
+                enable = true;
+                repo = "${gcpProjectId}/${packageName}/${packageName}dev";
+                username = "_json_key_base64";
+                password = "$ENCODED_GAR_SA_CREDS";
+              };
+            };
+            version = builtins.getEnv "VERSION";
+            images = builtins.map (sys: self.packages.${sys}.devcontainerImage) includedSystems;
+            tags = [
+              (builtins.getEnv "GIT_SHA_SHORT")
+              (builtins.getEnv "GIT_SHA")
+              (builtins.getEnv "GIT_REF")
+            ];
           };
-          version = builtins.getEnv "VERSION";
-          images = builtins.map (sys: self.packages.${sys}.devcontainerImage) includedSystems;
-          tags = [
-            (builtins.getEnv "GIT_SHA_SHORT")
-            (builtins.getEnv "GIT_SHA")
-            (builtins.getEnv "GIT_REF")
-          ];
         };
       };
     };
