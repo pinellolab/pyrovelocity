@@ -22,6 +22,13 @@
       inputs.flake-parts.follows = "flake-parts";
       inputs.systems.follows = "systems";
     };
+    nixpod = {
+      url = "github:cameronraysmith/nixpod";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.flocken.follows = "flocken";
+      inputs.systems.follows = "systems";
+    };
   };
 
   nixConfig = {
@@ -59,6 +66,7 @@
             poetry2nix
             lib
             stdenv
+            writeText
             autoPatchelfHook
             cudaPackages_12_1
             tbb_2021_11
@@ -145,6 +153,8 @@
             ;
         };
 
+        buildMultiUserNixImage = import ("${inputs.nixpod.outPath}" + "/containers/nix.nix");
+
         gcpProjectId = builtins.getEnv "GCP_PROJECT_ID";
 
         # aarch64-linux may be disabled for more rapid image builds during
@@ -183,6 +193,7 @@
             inputs.poetry2nix.overlays.default
             (import ./nix/pyrovelocity/overlay.nix {
               inherit poetry2nixOverrides;
+              inherit (pkgs) stdenv;
             })
           ];
         };
@@ -200,16 +211,17 @@
           containerImage =
             pkgs.dockerTools.buildLayeredImage
             containerImageConfigs.containerImageConfig;
-          containerStream =
-            pkgs.dockerTools.streamLayeredImage
-            containerImageConfigs.containerImageConfig;
 
           devcontainerImage =
             pkgs.dockerTools.buildLayeredImage
             containerImageConfigs.devcontainerImageConfig;
-          devcontainerStream =
-            pkgs.dockerTools.streamLayeredImage
-            containerImageConfigs.devcontainerImageConfig;
+
+          codeImage = import ./nix/containers/code.nix {
+            inherit pkgs devPackages buildMultiUserNixImage;
+            sudoImage = inputs'.nixpod.packages.sudoImage;
+            homeActivationPackage = inputs'.nixpod.legacyPackages.homeConfigurations.jovyan.activationPackage;
+            pythonPackageEnv = pkgs.pyrovelocityDevEnv310;
+          };
         };
 
         legacyPackages = {
@@ -270,6 +282,32 @@
             };
             version = builtins.getEnv "VERSION";
             images = builtins.map (sys: self.packages.${sys}.devcontainerImage) includedSystems;
+            tags = [
+              (builtins.getEnv "GIT_SHA_SHORT")
+              (builtins.getEnv "GIT_SHA")
+              (builtins.getEnv "GIT_REF")
+            ];
+          };
+
+          codeImageManifest = inputs'.flocken.legacyPackages.mkDockerManifest {
+            github = {
+              enable = true;
+              enableRegistry = false;
+              token = "$GH_TOKEN";
+            };
+            autoTags = {
+              branch = false;
+            };
+            registries = {
+              "us-central1-docker.pkg.dev" = {
+                enable = true;
+                repo = "${gcpProjectId}/${packageName}/${packageName}code";
+                username = "_json_key_base64";
+                password = "$ENCODED_GAR_SA_CREDS";
+              };
+            };
+            version = builtins.getEnv "VERSION";
+            images = builtins.map (sys: self.packages.${sys}.codeImage) includedSystems;
             tags = [
               (builtins.getEnv "GIT_SHA_SHORT")
               (builtins.getEnv "GIT_SHA")
