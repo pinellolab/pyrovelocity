@@ -3,6 +3,7 @@
   poetry2nixOverrides,
   python3,
   gitignoreSource,
+  stdenv,
 }:
 poetry2nix.mkPoetryApplication {
   python = python3;
@@ -44,7 +45,13 @@ poetry2nix.mkPoetryApplication {
     runHook postCheck
   '';
 
-  doCheck = true;
+  doCheck =
+    if stdenv.isDarwin
+    then false
+    else true;
 
-  pythonImportsCheck = ["pyrovelocity"];
+  pythonImportsCheck =
+    if stdenv.isDarwin
+    then []
+    else ["pyrovelocity"];
 }

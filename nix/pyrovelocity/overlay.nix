@@ -1,4 +1,8 @@
-{poetry2nixOverrides, ...}: self: super: let
+{
+  poetry2nixOverrides,
+  stdenv,
+  ...
+}: self: super: let
   mkPoetryEnv = {
     groups,
     python,
@@ -20,15 +24,15 @@
 in {
   pyrovelocity310 = self.callPackage ./pyrovelocity.nix {
     python3 = self.python310;
-    inherit poetry2nixOverrides;
+    inherit poetry2nixOverrides stdenv;
   };
   pyrovelocity311 = self.callPackage ./pyrovelocity.nix {
     python3 = self.python311;
-    inherit poetry2nixOverrides;
+    inherit poetry2nixOverrides stdenv;
   };
   pyrovelocity312 = self.callPackage ./pyrovelocity.nix {
     python3 = self.python312;
-    inherit poetry2nixOverrides;
+    inherit poetry2nixOverrides stdenv;
   };
   quarto = self.callPackage ../quarto {};
 
