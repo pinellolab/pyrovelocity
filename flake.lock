@@ -53,9 +53,15 @@
     },
     "flocken": {
       "inputs": {
-        "flake-parts": ["flake-parts"],
-        "nixpkgs": ["nixpkgs"],
-        "systems": ["systems"]
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "systems": [
+          "systems"
+        ]
       },
       "locked": {
         "lastModified": 1704105102,
@@ -74,7 +80,9 @@
     },
     "gitignore": {
       "inputs": {
-        "nixpkgs": ["nixpkgs"]
+        "nixpkgs": [
+          "nixpkgs"
+        ]
       },
       "locked": {
         "lastModified": 1709087332,
@@ -92,7 +100,10 @@
     },
     "home-manager": {
       "inputs": {
-        "nixpkgs": ["nixpod", "nixpkgs"]
+        "nixpkgs": [
+          "nixpod",
+          "nixpkgs"
+        ]
       },
       "locked": {
         "lastModified": 1718526747,
@@ -110,7 +121,10 @@
     },
     "nix-github-actions": {
       "inputs": {
-        "nixpkgs": ["poetry2nix", "nixpkgs"]
+        "nixpkgs": [
+          "poetry2nix",
+          "nixpkgs"
+        ]
       },
       "locked": {
         "lastModified": 1703863825,
@@ -128,7 +142,10 @@
     },
     "nix-index-database": {
       "inputs": {
-        "nixpkgs": ["nixpod", "nixpkgs"]
+        "nixpkgs": [
+          "nixpod",
+          "nixpkgs"
+        ]
       },
       "locked": {
         "lastModified": 1719111455,
@@ -190,20 +207,28 @@
     "nixpod": {
       "inputs": {
         "catppuccin": "catppuccin",
-        "flake-parts": ["flake-parts"],
-        "flocken": ["flocken"],
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "flocken": [
+          "flocken"
+        ],
         "home-manager": "home-manager",
         "nix-index-database": "nix-index-database",
         "nixos-flake": "nixos-flake",
-        "nixpkgs": ["nixpkgs"],
-        "systems": ["systems"]
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "systems": [
+          "systems"
+        ]
       },
       "locked": {
-        "lastModified": 1719445905,
-        "narHash": "sha256-lVDbbzGOJy52uf+y9GBk8N7OYxgaLsHCzN7BsF+ZXGw=",
+        "lastModified": 1719505800,
+        "narHash": "sha256-EhoMiC5S41OBlUAM7SLhmgHkxi0rI2A4Egz9Z8ZfPPU=",
         "owner": "cameronraysmith",
         "repo": "nixpod",
-        "rev": "a883285233ac73e93eb061b929680e3ac01e2d4e",
+        "rev": "7def26d934c13b88e39ae7471065f4794dbfc45b",
         "type": "github"
       },
       "original": {
@@ -214,10 +239,16 @@
     },
     "poetry2nix": {
       "inputs": {
-        "flake-utils": ["flake-utils"],
+        "flake-utils": [
+          "flake-utils"
+        ],
         "nix-github-actions": "nix-github-actions",
-        "nixpkgs": ["nixpkgs"],
-        "systems": ["systems"],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "systems": [
+          "systems"
+        ],
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
@@ -278,7 +309,10 @@
     },
     "treefmt-nix": {
       "inputs": {
-        "nixpkgs": ["poetry2nix", "nixpkgs"]
+        "nixpkgs": [
+          "poetry2nix",
+          "nixpkgs"
+        ]
       },
       "locked": {
         "lastModified": 1718522839,
