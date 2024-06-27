@@ -222,6 +222,13 @@
             homeActivationPackage = inputs'.nixpod.legacyPackages.homeConfigurations.jovyan.activationPackage;
             pythonPackageEnv = pkgs.pyrovelocityDevEnv310;
           };
+
+          jupyterImage = import ./nix/containers/jupyter.nix {
+            inherit pkgs devPackages buildMultiUserNixImage;
+            sudoImage = inputs'.nixpod.packages.sudoImage;
+            homeActivationPackage = inputs'.nixpod.legacyPackages.homeConfigurations.jovyan.activationPackage;
+            pythonPackageEnv = pkgs.pyrovelocityDevEnv310;
+          };
         };
 
         legacyPackages = {
@@ -308,6 +315,32 @@
             };
             version = builtins.getEnv "VERSION";
             images = builtins.map (sys: self.packages.${sys}.codeImage) includedSystems;
+            tags = [
+              (builtins.getEnv "GIT_SHA_SHORT")
+              (builtins.getEnv "GIT_SHA")
+              (builtins.getEnv "GIT_REF")
+            ];
+          };
+
+          jupyterImageManifest = inputs'.flocken.legacyPackages.mkDockerManifest {
+            github = {
+              enable = true;
+              enableRegistry = false;
+              token = "$GH_TOKEN";
+            };
+            autoTags = {
+              branch = false;
+            };
+            registries = {
+              "us-central1-docker.pkg.dev" = {
+                enable = true;
+                repo = "${gcpProjectId}/${packageName}/${packageName}jupyter";
+                username = "_json_key_base64";
+                password = "$ENCODED_GAR_SA_CREDS";
+              };
+            };
+            version = builtins.getEnv "VERSION";
+            images = builtins.map (sys: self.packages.${sys}.jupyterImage) includedSystems;
             tags = [
               (builtins.getEnv "GIT_SHA_SHORT")
               (builtins.getEnv "GIT_SHA")
