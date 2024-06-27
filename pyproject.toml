@@ -146,7 +146,7 @@ omegaconf = { version = ">=2.3.0", optional = true }
 # orjson =  { version = ">=3.9.15", optional = true }
 papermill = { version = ">=2.4.0", optional = true }
 # pep8-naming = { version = ">=0.12.1", optional = true }
-poethepoet = { version = ">=0.16.0", optional = true, source = "pypi" }
+# poethepoet = { version = ">=0.16.0", optional = true, source = "pypi" }
 pre-commit = { version = ">=2.16.0", optional = true }
 pre-commit-hooks = { version = ">=4.1.0", optional = true }
 pyensembl = { version = ">=2.3.12", optional = true }
@@ -211,7 +211,7 @@ optional = true
 coverage = { version = ">=6.2", extras = ["toml"] }
 hypothesis = ">=6.72.1"
 ipython = ">=8.11.0"
-poethepoet = ">=0.19.0"
+# poethepoet = ">=0.19.0"
 pygments = ">=2.15.0"
 pytest = ">=7.3.1"
 pytest-asyncio = ">=0.21.1"
@@ -287,7 +287,7 @@ test = [
   "coverage",
   "hypothesis",
   "ipython",
-  "poethepoet",
+  # "poethepoet",
   "pygments",
   "pytest",
   "pytest-asyncio",
@@ -355,7 +355,7 @@ virtual_package_spec = "conda/virtual-packages.yml"
 [tool.conda-lock.dependencies]
 python = ">=3.10, <3.11"
 pip = ">=23.2"
-poethepoet = { source = "pypi" }
+# poethepoet = { source = "pypi" }
 
 [tool.poe.tasks.conda-lock]
 # This assumes conda-lock has been installed
