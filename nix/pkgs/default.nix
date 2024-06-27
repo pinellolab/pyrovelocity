@@ -13,11 +13,14 @@
       apacite
       appendix
       caption
+      cm-super
+      dvipng
       multirow
       ncctools
       rsfs
       sttools
       threeparttable
+      type1cm
       vruler
       wrapfig
       xurl
