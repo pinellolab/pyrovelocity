@@ -13,6 +13,9 @@ inputs:
   nixCommand:
     description: "Nix command to build the image"
     required: true
+  releaseVersion:
+    description: "Release version"
+    required: true
   gcpProjectId:
     description: "Google Cloud Project ID"
     required: true
@@ -69,6 +72,15 @@ runs:
         if [ "${{ inputs.triggerEventName }}" == "pull_request" ]; then
           echo "GIT_SHA=$CI_GITHUB_EVENT_PULL_REQUEST_HEAD_SHA" >> $GITHUB_ENV
           echo "GIT_SHA_SHORT=$CI_GITHUB_EVENT_PULL_REQUEST_HEAD_SHA_SHORT" >> $GITHUB_ENV
+        elif [ -n "${{ inputs.releaseVersion }}" ]; then
+          tag_base="${{ inputs.releaseVersion }}"
+          tag="v$tag_base"
+
+          sha=$(git rev-parse "$tag")
+          short_sha=$(git rev-parse --short "$tag")
+
+          echo "GIT_SHA=$sha" >> $GITHUB_ENV
+          echo "GIT_SHA_SHORT=$short_sha" >> $GITHUB_ENV
         else
           echo "GIT_SHA=$CI_GITHUB_SHA" >> $GITHUB_ENV
           echo "GIT_SHA_SHORT=$CI_GITHUB_SHA_SHORT" >> $GITHUB_ENV
@@ -91,17 +103,26 @@ runs:
         FQN_GIT_SHA="${{ inputs.imageFQN }}:$GIT_SHA"
         echo "Image FQN with Git SHA: $FQN_GIT_SHA"
         df -h
-        if SKOPEO_OUTPUT=$(skopeo inspect "docker://$FQN_GIT_SHA" 2>&1); then
-          echo "Image $FQN_GIT_SHA already exists. Skipping build."
-        else
-          if echo "$SKOPEO_OUTPUT" | grep -q 'manifest unknown'; then
-            echo "Image $FQN_GIT_SHA does not exist. Building."
-            ${{ inputs.nixCommand }}
-          else
-            echo "Failed to inspect image with error: $SKOPEO_OUTPUT"
-            exit 1
-          fi
-        fi
+
+        # This section currently doesn't account for the case where
+        # a new image is being pushed to a repository for the first time.
+        # As a workaround, when creating new images from this action,
+        # the follwing four commented lines can be toggled with those below
+        # them.
+        echo "Image $FQN_GIT_SHA does not exist. Building."
+        ${{ inputs.nixCommand }}
+        # if SKOPEO_OUTPUT=$(skopeo inspect "docker://$FQN_GIT_SHA" 2>&1); then
+        #   echo "Image $FQN_GIT_SHA already exists. Skipping build."
+        # else
+        #   if echo "$SKOPEO_OUTPUT" | grep -q 'manifest unknown'; then
+        #     echo "Image $FQN_GIT_SHA does not exist. Building."
+        #     ${{ inputs.nixCommand }}
+        #   else
+        #     echo "Failed to inspect image with error: $SKOPEO_OUTPUT"
+        #     exit 1
+        #   fi
+        # fi
+
         df -h
       env:
         GH_TOKEN: ${{ github.token }}
