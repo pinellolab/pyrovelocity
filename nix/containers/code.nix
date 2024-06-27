@@ -113,7 +113,7 @@
 in
   buildMultiUserNixImage {
     inherit pkgs storeOwner;
-    name = "pyrovelocityjupyter";
+    name = "pyrovelocitycode";
     tag = "latest";
     maxLayers = 121;
     fromImage = sudoImage;
