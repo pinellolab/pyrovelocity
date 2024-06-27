@@ -2,6 +2,7 @@
   poetry2nix,
   lib,
   stdenv,
+  writeText,
   autoPatchelfHook,
   cudaPackages_12_1,
   tbb_2021_11,
@@ -161,6 +162,30 @@ poetry2nix.overrides.withDefaults (
           '';
         }
       );
+      # matplotlib = super.matplotlib.overridePythonAttrs (
+      #   old:
+      #   let
+      #     disable-macos-fonts = writeText "disable-macos-fonts.patch" ''
+      #       --- a/lib/matplotlib/font_manager.py
+      #       +++ b/lib/matplotlib/font_manager.py
+      #       @@ -289,7 +289,6 @@
+      #                 else:
+      #                     installed_fonts = _get_fontconfig_fonts()
+      #                     if sys.platform == 'darwin':
+      #       -                installed_fonts += _get_macos_fonts()
+      #                         fontpaths = [*X11FontDirectories, *OSXFontDirectories]
+      #                     else:
+      #                         fontpaths = X11FontDirectories
+      #     '';
+      #   in
+      #   {
+      #     preferWheel = false;
+      #     patches = old.patches or [ ] ++ [
+      #       # ./disable_macos_fonts.patch
+      #       disable-macos-fonts
+      #     ];
+      #   }
+      # );
       optax = super.optax.overridePythonAttrs (
         _old: {
           postInstall = ''
