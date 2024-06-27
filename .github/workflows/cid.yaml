@@ -653,6 +653,12 @@ jobs:
           - name: "pyrovelocitydev"
             url: "https://ghcr.io/pinellolab/pyrovelocitydev"
             nixCommand: "nix run .#devcontainerManifest --impure --accept-flake-config"
+          - name: "pyrovelocitycode"
+            url: "https://ghcr.io/pinellolab/pyrovelocitycode"
+            nixCommand: "nix run .#codeImageManifest --impure --accept-flake-config"
+          - name: "pyrovelocityjupyter"
+            url: "https://ghcr.io/pinellolab/pyrovelocityjupyter"
+            nixCommand: "nix run .#jupyterImageManifest --impure --accept-flake-config"
     concurrency:
       group: bri-${{ matrix.name }}-${{ github.workflow }}-${{ github.ref }}-${{ github.sha }}
       cancel-in-progress: true
