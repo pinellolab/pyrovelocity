@@ -376,6 +376,11 @@ up: ## Update nix flake lock file.
 	nix flake update --impure --accept-flake-config
 	nix flake check --impure --accept-flake-config
 
+UPDATE_FLAKE_INPUT ?= nixpod
+
+upone: ## Update the nix flake lock file for a single flake input
+	nix flake lock --update-input $(UPDATE_FLAKE_INPUT)
+
 dup: ## Debug update nix flake lock file.
 	nix flake update --impure --accept-flake-config
 	nix flake check --show-trace --print-build-logs --impure --accept-flake-config
