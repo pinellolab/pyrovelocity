@@ -43,7 +43,6 @@
     kubectx
     k9s
     lazygit
-    lmodern
     man-db
     man-pages
     neovim
@@ -68,8 +67,10 @@
       gzip
       less
       libgcc
+      lmodern
       nix
       procps
+      tex
       time
       which
     ]
@@ -85,7 +86,8 @@
     yq-go
   ];
 
-  extDevPackages = with pkgs; [
+  extraDevPackages = with pkgs; [
+    lmodern
     pandoc
     quarto
     tex
@@ -94,5 +96,5 @@ in {
   sysPackages = sysPackages;
   extraSysPackages = extraSysPackages;
   coreDevPackages = coreDevPackages;
-  devPackages = coreDevPackages ++ extDevPackages ++ pkgs.lib.optional (system == "x86_64-linux") pkgs.nvitop;
+  devPackages = coreDevPackages ++ extraDevPackages ++ pkgs.lib.optional (system == "x86_64-linux") pkgs.nvitop;
 }
