@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0-beta.16](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.15...v0.2.0-beta.16) (2024-06-28)
+
+
+### Bug Fixes
+
+* **cid:** use release tag to index release commit ([b5ee22b](https://github.com/pinellolab/pyrovelocity/commit/b5ee22bdec01060c7a4a4393f29dc47ca5231598))
+
 ## [0.2.0-beta.15](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.14...v0.2.0-beta.15) (2024-06-28)
 
 
