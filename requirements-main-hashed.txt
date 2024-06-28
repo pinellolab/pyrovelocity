@@ -2107,9 +2107,6 @@ parso==0.8.3 ; python_version >= "3.10" and python_version < "3.12" \
 parsy==2.1 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:8f18e7b11985e7802e7e3ecbd8291c6ca243d29820b1186e4c84605db4efffa0 \
     --hash=sha256:fd5dd18d7b0b61f8275ee88665f430a20c02cf5a82d88557f35330530186d7ac
-pastel==0.2.1 ; python_version >= "3.10" and python_version < "3.12" \
-    --hash=sha256:4349225fcdf6c2bb34d483e523475de5bb04a5c10ef711263452cb37d7dd4364 \
-    --hash=sha256:e6581ac04e973cac858828c6202c1e1e81fee1dc7de7683f3e1ffe0bfd8a573d
 pathspec==0.11.1 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:2798de800fa92780e33acca925945e9a19a133b715067cf165b8866c15a31687 \
     --hash=sha256:d8af70af76652554bd134c22b3e8a1cc46ed7d91edcdd721ef1a0c51a84a5293
@@ -2201,9 +2198,6 @@ plum-dispatch==2.3.2 ; python_version >= "3.10" and python_version < "3.12" \
 plumbum==1.8.2 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:3ad9e5f56c6ec98f6f7988f7ea8b52159662ea9e915868d369dbccbfca0e367e \
     --hash=sha256:9e6dc032f4af952665f32f3206567bc23b7858b1413611afe603a3f8ad9bfd75
-poethepoet==0.19.0 ; python_version >= "3.10" and python_version < "3.12" \
-    --hash=sha256:87038be589077e4b407050a9da644d9cd9e4076ccfc8abc7f855cf6870d5c6c2 \
-    --hash=sha256:897eb85ec15876d79befc7d19d4c80ce7c8b214d1bb0dcfec640abd81616bfed
 polars==0.20.17 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:097101954dc4a02401cb323379816c37641908f7e15c01682c0477ff87de3b52 \
     --hash=sha256:22d21d57b235d6a2dc117776e50a9decaac93f01785e767ccbce49141bf889b8 \
@@ -3157,7 +3151,7 @@ tinytimer==0.0.0 ; python_version >= "3.10" and python_version < "3.12" \
 toml==0.10.2 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b \
     --hash=sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f
-tomli==2.0.1 ; python_version >= "3.10" and python_version < "3.12" \
+tomli==2.0.1 ; python_version >= "3.10" and python_full_version <= "3.11.0a6" \
     --hash=sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc \
     --hash=sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f
 tomlkit==0.12.4 ; python_version >= "3.10" and python_version < "3.12" \
