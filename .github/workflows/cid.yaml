@@ -389,7 +389,7 @@ jobs:
           triggerEventName: ${{ github.event_name }}
           imageName: "${{ matrix.image }}"
           imageFQN: "ghcr.io/pinellolab/${{ matrix.image }}"
-          nixCommand: "nix run .#${{ matrix.image }}Manifest --impure --accept-flake-config --print-build-logs --show-trace"
+          nixCommand: "nix run .#${{ matrix.image }}Manifest --impure --accept-flake-config --show-trace"
           releaseVersion: ""
           gcpProjectId: ${{ secrets.GCP_PROJECT_ID }}
           encodedGARCredentials: ${{ secrets.ENCODED_GAR_SA_CREDS }}
@@ -553,7 +553,7 @@ jobs:
           triggerEventName: ${{ github.event_name }}
           imageName: "${{ matrix.image }}"
           imageFQN: "ghcr.io/pinellolab/${{ matrix.image }}"
-          nixCommand: "nix run .#${{ matrix.image }}Manifest --impure --accept-flake-config --print-build-logs --show-trace"
+          nixCommand: "nix run .#${{ matrix.image }}Manifest --impure --accept-flake-config --show-trace"
           releaseVersion: ${{ needs.release.outputs.version }}
           gcpProjectId: ${{ secrets.GCP_PROJECT_ID }}
           encodedGARCredentials: ${{ secrets.ENCODED_GAR_SA_CREDS }}
