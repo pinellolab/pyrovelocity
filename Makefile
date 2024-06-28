@@ -904,8 +904,8 @@ approve-prs: ## Approve github pull requests from bots: PR_ENTRIES="2-5 10 12-18
 		fi; \
 	done
 
-PREVIOUS_VERSION := 0.2.0b13
-NEXT_VERSION := 0.2.0b14
+PREVIOUS_VERSION := 0.2.0b14
+NEXT_VERSION := 0.2.0b15
 
 VERSION_FILES := \
 	pyproject.toml \
@@ -920,7 +920,7 @@ VERSION_FILES := \
 update-version: ## Update version in VERSION_FILES.
 	@for file in $(VERSION_FILES); do \
 		if [ -f $$file ]; then \
-			gsed -i 's/$(PREVIOUS_VERSION)/$(NEXT_VERSION)/g' $$file; \
+			sed -i 's/$(PREVIOUS_VERSION)/$(NEXT_VERSION)/g' $$file; \
 			echo "Updated $$file"; \
 		else \
 			echo "$$file does not exist"; \

@@ -1,15 +1,26 @@
 name: pyrovelocity
 services:
   jupyter:
-    image: "${DEVCONTAINER_IMAGE:-ghcr.io/pinellolab/pyrovelocitydev:beta}"
+    image: "${DEVCONTAINER_IMAGE:-us-central1-docker.pkg.dev/pyro-284215/pyrovelocity/pyrovelocityjupyter:beta}"
     platform: linux/amd64
-    command: jupyter lab --ServerApp.terminado_settings="shell_command=['zsh']" --allow-root --ip=0.0.0.0 /root/pyrovelocity
+    command: ""
     ports:
       - "8888:8888"
     tty: true
     stdin_open: true
     restart: "no"
     volumes:
-      - ${PWD}:/root/pyrovelocity
-    environment:
-      - SHELL=zsh
+      - ${PWD}:/home/jovyan/pyrovelocity
+    environment: []
+  code-server:
+    image: "${DEVCONTAINER_IMAGE:-us-central1-docker.pkg.dev/pyro-284215/pyrovelocity/pyrovelocitycode:beta}"
+    platform: linux/amd64
+    command: ""
+    ports:
+      - "3000:8888"
+    tty: true
+    stdin_open: true
+    restart: "no"
+    volumes:
+      - ${PWD}:/home/jovyan/pyrovelocity
+    environment: []
