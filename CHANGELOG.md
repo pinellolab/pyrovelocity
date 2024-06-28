@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.0-beta.17](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.16...v0.2.0-beta.17) (2024-06-28)
+
+
+### Bug Fixes
+
+* **pre-commit:** ignore changelog ([a65e750](https://github.com/pinellolab/pyrovelocity/commit/a65e7500cab8494af56aa360bdae1ef41a8157c5))
+* **tests:** importing config from jax.config is deprecated ([7a11ab4](https://github.com/pinellolab/pyrovelocity/commit/7a11ab4eb9bc6d0809458dee70ce8c03d5cc7e42)), closes [/jax.readthedocs.io/en/latest/changelog.html#jax-0-4-25-feb-26-2024](https://github.com/pinellolab//jax.readthedocs.io/en/latest/changelog.html/issues/jax-0-4-25-feb-26-2024)
+
 ## [0.2.0-beta.16](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.15...v0.2.0-beta.16) (2024-06-28)
 
 
