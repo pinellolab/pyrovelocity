@@ -1,26 +1,19 @@
 import diffrax
+import jax
 from diffrax import Solution
 from jax import numpy as jnp
-from jax.config import config
 
 from pyrovelocity.models._deterministic_simulation import (
     analytical_solution_dstate_dt_dimless,
-)
-from pyrovelocity.models._deterministic_simulation import calculate_xi
-from pyrovelocity.models._deterministic_simulation import dstate_dt_dimensioned
-from pyrovelocity.models._deterministic_simulation import dstate_dt_dimless
-from pyrovelocity.models._deterministic_simulation import (
+    calculate_xi,
+    dstate_dt_dimensioned,
+    dstate_dt_dimless,
     solve_transcription_splicing_model,
-)
-from pyrovelocity.models._deterministic_simulation import (
     solve_transcription_splicing_model_analytical,
-)
-from pyrovelocity.models._deterministic_simulation import (
     solve_transcription_splicing_model_impl,
 )
 
-
-config.update("jax_debug_nans", True)
+jax.config.update("jax_debug_nans", True)
 
 
 def test_dstate_dt_dimless_basic():
