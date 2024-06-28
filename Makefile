@@ -904,8 +904,8 @@ approve-prs: ## Approve github pull requests from bots: PR_ENTRIES="2-5 10 12-18
 		fi; \
 	done
 
-PREVIOUS_VERSION := 0.2.0b15
-NEXT_VERSION := 0.2.0b16
+PREVIOUS_VERSION := 0.2.0b16
+NEXT_VERSION := 0.2.0b17
 
 VERSION_FILES := \
 	pyproject.toml \
