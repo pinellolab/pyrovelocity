@@ -61,7 +61,8 @@ SUMMARIZE_CACHE_VERSION = "0.2.0b13.dev0"
 PYROVELOCITY_CACHE_FLAG = str_to_bool(
     os.getenv("PYROVELOCITY_CACHE_FLAG", "True")
 )
-ACCELERATOR_TYPE: GPUAccelerator = T4
+L4 = GPUAccelerator("nvidia-l4")
+ACCELERATOR_TYPE: GPUAccelerator = L4
 
 
 @task(
