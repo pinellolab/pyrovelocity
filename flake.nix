@@ -232,7 +232,7 @@
         };
 
         legacyPackages = {
-          containerManifest = inputs'.flocken.legacyPackages.mkDockerManifest {
+          pyrovelocityManifest = inputs'.flocken.legacyPackages.mkDockerManifest {
             github = {
               enable = true;
               enableRegistry = false;
@@ -264,7 +264,7 @@
             ];
           };
 
-          devcontainerManifest = inputs'.flocken.legacyPackages.mkDockerManifest {
+          pyrovelocitydevManifest = inputs'.flocken.legacyPackages.mkDockerManifest {
             github = {
               enable = true;
               enableRegistry = false;
@@ -296,7 +296,7 @@
             ];
           };
 
-          codeImageManifest = inputs'.flocken.legacyPackages.mkDockerManifest {
+          pyrovelocitycodeManifest = inputs'.flocken.legacyPackages.mkDockerManifest {
             github = {
               enable = true;
               enableRegistry = false;
@@ -322,7 +322,7 @@
             ];
           };
 
-          jupyterImageManifest = inputs'.flocken.legacyPackages.mkDockerManifest {
+          pyrovelocityjupyterManifest = inputs'.flocken.legacyPackages.mkDockerManifest {
             github = {
               enable = true;
               enableRegistry = false;
