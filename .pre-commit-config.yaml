@@ -6,6 +6,7 @@ exclude: |
     nbs/templates/user_example/.*\.yaml|
     reproducibility/figures/models/.*|
     reproducibility/figures/config.yaml|
+    CHANGELOG.md|
     .git/COMMIT_EDITMSG|
     dev
   )$
