@@ -1,0 +1,72 @@
+name: Conda
+on:
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: "Run with tmate.io debugging enabled"
+        required: true
+        type: boolean
+        default: false
+  push:
+    paths:
+      - "conda/rattler/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+jobs:
+  environment:
+    name: ${{ matrix.os }}, ${{ matrix.target-platform }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target-platform: linux-64
+        #   - os: ubuntu-latest
+        #     target-platform: linux-aarch64
+        #   - os: windows-latest
+        #     target-platform: win-64
+        #   - os: macos-latest
+        #     target-platform: osx-64
+        #   - os: macos-14
+        #     target-platform: osx-arm64
+    env:
+      PYTHONUNBUFFERED: True
+    steps:
+      - name: maximize build space
+        # uses: easimon/maximize-build-space@fc881a613ad2a34aca9c9624518214ebc21dfc0c # ratchet:easimon/maximize-build-space@v10
+        uses: cameronraysmith/maximize-build-space@fdf0c06b18d92be98aa64cb68ae4ea4c9bc4794d # ratchet:cameronraysmith/maximize-build-space@print-usage
+        with:
+          root-reserve-mb: 30720
+          swap-size-mb: 2048
+          remove-dotnet: "true"
+          remove-android: "true"
+          remove-codeql: "true"
+          remove-docker-images: "true"
+      - name: "Print github context"
+        run: |
+          echo "EVENT_NAME:" "$GITHUB_EVENT_NAME"
+          echo "       REF:" "$GITHUB_REF"
+          echo "  HEAD_REF:" "$GITHUB_HEAD_REF"
+          echo "  BASE_REF:" "$GITHUB_BASE_REF"
+          echo "       SHA:" "$GITHUB_SHA"
+      - name: Retrieve source code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - name: "Setup tmate debug session"
+        uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # ratchet:mxschmitt/action-tmate@v3
+        if: ${{ inputs.debug_enabled }}
+      - name: Build conda package
+        uses: prefix-dev/rattler-build-action@0056f4275580a8f9194ea4dad19fc8abfdd08805 # ratchet:prefix-dev/rattler-build-action@v0
+        with:
+          recipe-path: "conda/rattler/recipe.yaml"
+          artifact-name: package-${{ matrix.target-platform }}
+          build-args: --target-platform ${{ matrix.target-platform }}${{ matrix.target-platform == 'linux-aarch64' && ' --no-test' || '' }}
