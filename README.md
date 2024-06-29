@@ -1,11 +1,13 @@
 # Pyro-Velocity
 
 <div align="center" style="margin-left: auto; margin-right: auto; max-width: 540px; overflow-x: auto;">
+<a href="https://docs.pyrovelocity.net">
 <img
     src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/beta/docs/_static/logo.png"
     alt="Pyro-Velocity logo"
-    style="width: 300px; max-width: 90%; height: auto;"
+    style="width: 300px; max-width: 90%; height: auto; max-height: 350px;"
     role="img">
+</a>
 
 𝒫robabilistic modeling of RNA velocity ⬱
 
