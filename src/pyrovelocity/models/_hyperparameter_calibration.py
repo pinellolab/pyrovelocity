@@ -5,7 +5,6 @@ from scipy.optimize import fsolve
 
 from pyrovelocity.logging import configure_logging
 
-
 __all__ = [
     "lognormal_tail_probability",
     "solve_for_lognormal_sigma_given_threshold_and_tail_mass",
@@ -40,13 +39,13 @@ def lognormal_tail_probability(
         lognormal distribution with mu=0 and sigma=1:
 
         >>> lognormal_tail_probability(0.0, 1.0, 0.5, upper=True)
-        0.7558914042144173
+        0.7558914...
 
         Calculate the lower tail probability below a threshold of 0.5 for a
         lognormal distribution with mu=0 and sigma=1:
 
         >>> lognormal_tail_probability(0.0, 1.0, 0.5, upper=False)
-        0.24410859578558275
+        0.2441085...
     """
     from scipy.stats import lognorm
 
@@ -84,7 +83,7 @@ def solve_for_lognormal_sigma_given_threshold_and_tail_mass(
         >>> solve_for_lognormal_sigma_given_threshold_and_tail_mass(
         ...     0.0, 1.5, tail_mass=0.05, upper=True
         >>> )
-        0.2465052825762025
+        0.2465052...
 
         Solve for sigma to achieve a lower tail probability of 0.05 below a
         threshold of 1.5 with mu=3.0:
@@ -92,7 +91,7 @@ def solve_for_lognormal_sigma_given_threshold_and_tail_mass(
         >>> solve_for_lognormal_sigma_given_threshold_and_tail_mass(
         ...     3.0, 1.5, tail_mass=0.05, upper=False
         >>> )
-        1.5773652131591058
+        1.5773652...
     """
 
     func_to_solve = lambda sigma: (
@@ -138,7 +137,7 @@ def solve_for_lognormal_mu_given_threshold_and_tail_mass(
         >>> solve_for_lognormal_mu_given_threshold_and_tail_mass(
         ...     0.25, 1.5, tail_mass=0.05, upper=True
         >>> )
-        -0.005748298629703815
+        -0.0057482...
 
         Solve for mu to achieve a lower tail probability of 0.05 below a
         threshold of 1.5 with sigma=0.25:
@@ -146,7 +145,7 @@ def solve_for_lognormal_mu_given_threshold_and_tail_mass(
         >>> solve_for_lognormal_mu_given_threshold_and_tail_mass(
         ...     0.25, 1.5, tail_mass=0.05, upper=False
         >>> )
-        0.8166785148460509
+        0.8166785...
     """
     mu_guess = np.log(1.0)
 
