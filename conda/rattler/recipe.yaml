@@ -3,11 +3,11 @@ schema_version: 1
 
 context:
   name: pyrovelocity
-  version: 0.2.0b17
+  version: 0.2.0b18
   gitorg: pinellolab
-  gittag: v0.2.0-beta.17
+  gittag: v0.2.0-beta.18
   gitref: beta
-  gitrev: c696f8ba5cd4c555566bb7ee47d3a5d7a23281d9
+  gitrev: 16cfb6713b5e0109df4e055fbf2dd0c12a33cbe6
 
 package:
   name: ${{ name|lower }}
@@ -21,7 +21,7 @@ source:
   # url: https://github.com/{{ gitorg }}/{{ name }}/archive/{{ gitrev }}.tar.gz
   # sha256: 5edfd07ed970e6834c40043c94025e495a80e590bb2146f4f2cc0350abc23355
   url: https://pypi.io/packages/source/${{ name[0] }}/${{ name }}/${{ name }}-${{ version }}.tar.gz
-  sha256: e8f03940cd4c3c393d827c64833ed98cb79800c76e447c090d2eb2ee1bcc59df
+  sha256: 441ca271eb50cdfbb6c74029e0828878f4809005d8e06c3f282c1e5b437348f3
 
 build:
   number: 0
@@ -81,7 +81,7 @@ requirements:
     - scvelo >=0.3.1
     # this upper bound should be removed
     # when it is removed as a constraint
-    # derived from 
+    # derived from
     # noarch/scvelo-0.3.2-pyhd8ed1ab_1.conda
     - scikit-learn <1.2.0
     - scvi-tools >=1.1.1
