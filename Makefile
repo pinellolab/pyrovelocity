@@ -145,6 +145,9 @@ lock-pip-cpu: lock-poetry
 lock-conda: ## Export environment yaml and lock files for conda. (see pyproject.toml).
 	poe conda-lock
 
+build-conda: ## Build conda package from recipe.yaml.
+	rattler-build build --recipe conda/rattler/recipe.yaml
+
 lock-bazel: ## Export requirements-bazel.txt for bazel.
 	touch requirements-bazel.txt
 	bazel run //:requirements.update
