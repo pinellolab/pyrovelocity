@@ -11,8 +11,8 @@ values: {
 			memory: "8Gi"
 		}
 		limits: {
-			cpu:                 "4000m"
-			memory:              "15Gi"
+			cpu:    "4000m"
+			memory: "15Gi"
 			// "nvidia.com/gpu":    "0"
 			"ephemeral-storage": "35Gi"
 		}
