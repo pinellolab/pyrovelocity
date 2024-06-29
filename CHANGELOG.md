@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0-beta.19](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.18...v0.2.0-beta.19) (2024-06-29)
+
+
+### Bug Fixes
+
+* **models:** use ellipsis matching in xdoctests ([505a255](https://github.com/pinellolab/pyrovelocity/commit/505a2555fdd9ce78b09985c199ee8b05ab33da6b))
+
 ## [0.2.0-beta.18](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.17...v0.2.0-beta.18) (2024-06-29)
 
 
