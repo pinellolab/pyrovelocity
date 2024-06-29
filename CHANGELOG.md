@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.0-beta.18](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.17...v0.2.0-beta.18) (2024-06-29)
+
+
+### Bug Fixes
+
+* **models:** import xarray.DataArray for type-checking ([057022a](https://github.com/pinellolab/pyrovelocity/commit/057022a4907cd3d8d9df38a184b29471c1f74102))
+* **pyproject:** update beartype `0.16.4` -> `0.18.5` ([ae3f37c](https://github.com/pinellolab/pyrovelocity/commit/ae3f37c96d874a87b1ac37da8b37fae9e643936c))
+
 ## [0.2.0-beta.17](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.16...v0.2.0-beta.17) (2024-06-28)
 
 
