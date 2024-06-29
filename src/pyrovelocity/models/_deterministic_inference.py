@@ -29,6 +29,7 @@ from matplotlib.axes import Axes
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
 from numpyro.infer import MCMC, NUTS, Predictive
+from xarray import DataArray  # type-checking
 
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models._deterministic_simulation import (
