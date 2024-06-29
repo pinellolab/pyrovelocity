@@ -8,6 +8,7 @@ on:
     paths-ignore:
       - ".github/workflows/colab.yml"
       - "conda/**"
+      - "dev/**"
       - "docs/**"
       - "scripts/**"
       - "**.md"
@@ -21,6 +22,7 @@ on:
     paths-ignore:
       - ".github/workflows/colab.yml"
       - "conda/**"
+      - "dev/**"
       - "docs/**"
       - "scripts/**"
       - "**.md"
