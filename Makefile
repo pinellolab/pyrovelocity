@@ -313,6 +313,7 @@ ghsecrets: ## Update github secrets for GH_REPO from ".env" file.
 	gh secret set GCP_STORAGE_SCOPES --repo="$(GH_REPO)" --body="$(GCP_STORAGE_SCOPES)"
 	gh secret set GCP_STORAGE_CONTAINER --repo="$(GH_REPO)" --body="$(GCP_STORAGE_CONTAINER)"
 	gh secret set GCP_ARTIFACT_REGISTRY_PATH --repo="$(GH_REPO)" --body="$(GCP_ARTIFACT_REGISTRY_PATH)"
+	gh secret set ARTIFACT_REGISTRY_PASSWORD --repo="$(GH_REPO)" --body="$(ARTIFACT_REGISTRY_PASSWORD)"
 	@echo
 	@echo secrets after updates:
 	@echo
