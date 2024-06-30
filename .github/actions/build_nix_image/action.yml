@@ -22,6 +22,9 @@ inputs:
   encodedGARCredentials:
     description: "Base64 encoded Google Artifact Registry Service Account credentials"
     required: true
+  artifactRegistryPassword:
+    description: "artifact registry password"
+    required: true
   cachixCacheName:
     description: "Name of the Cachix cache"
     required: false
@@ -128,6 +131,7 @@ runs:
         GH_TOKEN: ${{ github.token }}
         GCP_PROJECT_ID: ${{ inputs.gcpProjectId }}
         ENCODED_GAR_SA_CREDS: ${{ inputs.encodedGARCredentials }}
+        ARTIFACT_REGISTRY_PASSWORD: ${{ inputs.artifactRegistryPassword }}
         VERSION: ${{ inputs.releaseVersion }}
 
     - name: Clean Nix Store
