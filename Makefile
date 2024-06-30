@@ -314,6 +314,7 @@ ghsecrets: ## Update github secrets for GH_REPO from ".env" file.
 	gh secret set GCP_STORAGE_CONTAINER --repo="$(GH_REPO)" --body="$(GCP_STORAGE_CONTAINER)"
 	gh secret set GCP_ARTIFACT_REGISTRY_PATH --repo="$(GH_REPO)" --body="$(GCP_ARTIFACT_REGISTRY_PATH)"
 	gh secret set ARTIFACT_REGISTRY_PASSWORD --repo="$(GH_REPO)" --body="$(ARTIFACT_REGISTRY_PASSWORD)"
+	gh secret set NIX_PRIVATE_KEY --repo="$(GH_REPO)" --body="$(NIX_PRIVATE_KEY)"
 	@echo
 	@echo secrets after updates:
 	@echo
@@ -326,6 +327,7 @@ ghvars: ## Update github secrets for GH_REPO from ".env" file.
 	@echo
 	gh variable set WORKFLOW_IMAGE --repo="$(GH_REPO)" --body="$(WORKFLOW_IMAGE)"
 	gh variable set CACHIX_CACHE_NAME --repo="$(GH_REPO)" --body="$(CACHIX_CACHE_NAME)"
+	gh variable set NIX_SUBSTITUTER --repo="$(GH_REPO)" --body="$(NIX_SUBSTITUTER)"
 	@echo
 	@echo variables after updates:
 	@echo
