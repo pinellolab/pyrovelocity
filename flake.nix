@@ -248,12 +248,18 @@
               #   username = builtins.getEnv "GITHUB_ACTOR";
               #   password = "$GH_TOKEN";
               # };
-              "us-central1-docker.pkg.dev" = {
+              "cr.cluster.pyrovelocity.net" = {
                 enable = true;
-                repo = "${gcpProjectId}/${packageName}/${packageName}";
-                username = "_json_key_base64";
-                password = "$ENCODED_GAR_SA_CREDS";
+                repo = "${packageName}/${packageName}";
+                username = "admin";
+                password = "$ARTIFACT_REGISTRY_PASSWORD";
               };
+              # "us-central1-docker.pkg.dev" = {
+              #   enable = true;
+              #   repo = "${gcpProjectId}/${packageName}/${packageName}";
+              #   username = "_json_key_base64";
+              #   password = "$ENCODED_GAR_SA_CREDS";
+              # };
             };
             version = builtins.getEnv "VERSION";
             images = builtins.map (sys: self.packages.${sys}.containerImage) includedSystems;
@@ -280,12 +286,18 @@
               #   username = builtins.getEnv "GITHUB_ACTOR";
               #   password = "$GH_TOKEN";
               # };
-              "us-central1-docker.pkg.dev" = {
+              "cr.cluster.pyrovelocity.net" = {
                 enable = true;
-                repo = "${gcpProjectId}/${packageName}/${packageName}dev";
-                username = "_json_key_base64";
-                password = "$ENCODED_GAR_SA_CREDS";
+                repo = "${packageName}/${packageName}dev";
+                username = "admin";
+                password = "$ARTIFACT_REGISTRY_PASSWORD";
               };
+              # "us-central1-docker.pkg.dev" = {
+              #   enable = true;
+              #   repo = "${gcpProjectId}/${packageName}/${packageName}dev";
+              #   username = "_json_key_base64";
+              #   password = "$ENCODED_GAR_SA_CREDS";
+              # };
             };
             version = builtins.getEnv "VERSION";
             images = builtins.map (sys: self.packages.${sys}.devcontainerImage) includedSystems;
@@ -306,12 +318,18 @@
               branch = false;
             };
             registries = {
-              "us-central1-docker.pkg.dev" = {
+              "cr.cluster.pyrovelocity.net" = {
                 enable = true;
-                repo = "${gcpProjectId}/${packageName}/${packageName}code";
-                username = "_json_key_base64";
-                password = "$ENCODED_GAR_SA_CREDS";
+                repo = "${packageName}/${packageName}code";
+                username = "admin";
+                password = "$ARTIFACT_REGISTRY_PASSWORD";
               };
+              # "us-central1-docker.pkg.dev" = {
+              #   enable = true;
+              #   repo = "${gcpProjectId}/${packageName}/${packageName}code";
+              #   username = "_json_key_base64";
+              #   password = "$ENCODED_GAR_SA_CREDS";
+              # };
             };
             version = builtins.getEnv "VERSION";
             images = builtins.map (sys: self.packages.${sys}.codeImage) includedSystems;
@@ -332,12 +350,18 @@
               branch = false;
             };
             registries = {
-              "us-central1-docker.pkg.dev" = {
+              "cr.cluster.pyrovelocity.net" = {
                 enable = true;
-                repo = "${gcpProjectId}/${packageName}/${packageName}jupyter";
-                username = "_json_key_base64";
-                password = "$ENCODED_GAR_SA_CREDS";
+                repo = "${packageName}/${packageName}jupyter";
+                username = "admin";
+                password = "$ARTIFACT_REGISTRY_PASSWORD";
               };
+              # "us-central1-docker.pkg.dev" = {
+              #   enable = true;
+              #   repo = "${gcpProjectId}/${packageName}/${packageName}jupyter";
+              #   username = "_json_key_base64";
+              #   password = "$ENCODED_GAR_SA_CREDS";
+              # };
             };
             version = builtins.getEnv "VERSION";
             images = builtins.map (sys: self.packages.${sys}.jupyterImage) includedSystems;
