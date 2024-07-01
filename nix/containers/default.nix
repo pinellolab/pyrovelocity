@@ -164,7 +164,7 @@
     tag = "latest";
     # created = "now";
 
-    maxLayers = 121;
+    maxLayers = 118;
 
     contents = devcontainerContents;
     config = makeContainerConfig {
@@ -181,7 +181,7 @@
     tag = "latest";
     # created = "now";
 
-    maxLayers = 121;
+    maxLayers = 118;
 
     contents = devcontainerContents;
     # runAsRoot = ''
@@ -208,7 +208,7 @@ in rec {
   containerImage = pkgs.dockerTools.buildLayeredImageWithNixDb {
     name = "${packageName}";
     tag = "latest";
-    maxLayers = 122;
+    maxLayers = 121;
     fromImage = baseContainerImage;
     contents = [packageGitRepoToContainer];
     config = {
@@ -223,7 +223,7 @@ in rec {
   devcontainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb {
     name = "${packageName}dev";
     tag = "latest";
-    maxLayers = 122;
+    maxLayers = 121;
     fromImage = baseDevContainerImage;
     contents = [packageGitRepoToContainer];
     config = {
