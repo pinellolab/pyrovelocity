@@ -141,7 +141,7 @@
             '';
           };
 
-        containerImageConfigs = import ./nix/containers {
+        containerImages = import ./nix/containers {
           inherit
             pkgs
             mkPoetryEnvWithSource
@@ -208,13 +208,11 @@
             paths = with pkgs; [poetry python310];
           };
 
-          containerImage =
-            pkgs.dockerTools.buildLayeredImage
-            containerImageConfigs.containerImageConfig;
+          baseContainerImage = containerImages.baseContainerImage;
+          containerImage = containerImages.containerImage;
 
-          devcontainerImage =
-            pkgs.dockerTools.buildLayeredImage
-            containerImageConfigs.devcontainerImageConfig;
+          baseDevContainerImage = containerImages.baseDevContainerImage;
+          devcontainerImage = containerImages.devcontainerImage;
 
           codeImage = import ./nix/containers/code.nix {
             inherit pkgs devPackages buildMultiUserNixImage;
