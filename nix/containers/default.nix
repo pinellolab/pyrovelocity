@@ -111,7 +111,7 @@
     })
     customNixConf
     rcRoot
-    packageGitRepoToContainer
+    # packageGitRepoToContainer
   ];
 
   makeContainerConfig = {
@@ -137,10 +137,10 @@
         "NIX_PAGER=cat"
         "USER=root"
         "HOME=/root"
-        "GIT_REPO_NAME=${builtins.getEnv "GIT_REPO_NAME"}"
-        "GIT_REF=${builtins.getEnv "GIT_REF"}"
-        "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
-        "GIT_SHA_SHORT=${builtins.getEnv "GIT_SHA_SHORT"}"
+        # "GIT_REPO_NAME=${builtins.getEnv "GIT_REPO_NAME"}"
+        # "GIT_REF=${builtins.getEnv "GIT_REF"}"
+        # "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
+        # "GIT_SHA_SHORT=${builtins.getEnv "GIT_SHA_SHORT"}"
         "PYTHONPATH=${packageSrcPath}:${pkgs.lib.strings.makeSearchPathOutput "" "lib/python3.10/site-packages" pythonPackages}"
         "LD_LIBRARY_PATH=${pythonPackageEnv}/lib:/usr/local/nvidia/lib64"
         "NVIDIA_DRIVER_CAPABILITIES='compute,utility'"
@@ -159,9 +159,8 @@
     "-c"
     "${pkgs.zsh}/bin/zsh"
   ];
-in {
   containerImageConfig = {
-    name = "${packageName}";
+    name = "base-${packageName}";
     tag = "latest";
     # created = "now";
 
@@ -178,7 +177,7 @@ in {
     };
   };
   devcontainerImageConfig = {
-    name = "${packageName}dev";
+    name = "base-${packageName}dev";
     tag = "latest";
     # created = "now";
 
@@ -200,6 +199,39 @@ in {
       cmd = devcontainerCmd;
       extraEnv = [
         "QUARTO_PYTHON=${pkgs.python310}/bin/python"
+      ];
+    };
+  };
+in rec {
+  baseContainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb containerImageConfig;
+  baseDevContainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb devcontainerImageConfig;
+  containerImage = pkgs.dockerTools.buildLayeredImageWithNixDb {
+    name = "${packageName}";
+    tag = "latest";
+    maxLayers = 122;
+    fromImage = baseContainerImage;
+    contents = [packageGitRepoToContainer];
+    config = {
+      Env = [
+        "GIT_REPO_NAME=${builtins.getEnv "GIT_REPO_NAME"}"
+        "GIT_REF=${builtins.getEnv "GIT_REF"}"
+        "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
+        "GIT_SHA_SHORT=${builtins.getEnv "GIT_SHA_SHORT"}"
+      ];
+    };
+  };
+  devcontainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb {
+    name = "${packageName}dev";
+    tag = "latest";
+    maxLayers = 122;
+    fromImage = baseDevContainerImage;
+    contents = [packageGitRepoToContainer];
+    config = {
+      Env = [
+        "GIT_REPO_NAME=${builtins.getEnv "GIT_REPO_NAME"}"
+        "GIT_REF=${builtins.getEnv "GIT_REF"}"
+        "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
+        "GIT_SHA_SHORT=${builtins.getEnv "GIT_SHA_SHORT"}"
       ];
     };
   };
