@@ -312,6 +312,7 @@ jobs:
           substituters: "${{ vars.NIX_SUBSTITUTER }}"
           secret_keys: "${{ secrets.NIX_PRIVATE_KEY }}"
           use_nixcached: true
+          nixcached_upload_options: --jobs 8
       - uses: rlespinasse/github-slug-action@797d68864753cbceedc271349d402da4590e6302 # ratchet:rlespinasse/github-slug-action@v4
         with:
           prefix: CI_
@@ -504,6 +505,7 @@ jobs:
           substituters: "${{ vars.NIX_SUBSTITUTER }}"
           secret_keys: "${{ secrets.NIX_PRIVATE_KEY }}"
           use_nixcached: true
+          nixcached_upload_options: --jobs 8
       - run: nix profile install .#releaseEnv
       - uses: cihelper/action-semanticrelease-poetry@66900ba780321bcdb974891ee82f945a25a870d7 # ratchet:cihelper/action-semanticrelease-poetry@v1
         id: semanticrelease
