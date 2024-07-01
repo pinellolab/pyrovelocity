@@ -65,24 +65,24 @@ runs:
     # - name: Setup Local Nix Cache
     #   uses: DeterminateSystems/magic-nix-cache-action@b46e247b898aa56e6d2d2e728dc6df6c84fdb738 # ratchet:DeterminateSystems/magic-nix-cache-action@v7
 
-    - name: Setup Remote Nix Cache
-      uses: cachix/cachix-action@ad2ddac53f961de1989924296a1f236fcfbaa4fc # ratchet:cachix/cachix-action@v15
+    # - name: Setup Remote Nix Cache
+    #   uses: cachix/cachix-action@ad2ddac53f961de1989924296a1f236fcfbaa4fc # ratchet:cachix/cachix-action@v15
+    #   with:
+    #     name: "${{ inputs.cachixCacheName }}"
+    #     authToken: "${{ inputs.cachixAuthToken }}"
+
+    - name: "Authenticate to Google Cloud"
+      uses: "google-github-actions/auth@55bd3a7c6e2ae7cf1877fd1ccb9d54c0503c457c" # ratchet:google-github-actions/auth@v2
       with:
-        name: "${{ inputs.cachixCacheName }}"
-        authToken: "${{ inputs.cachixAuthToken }}"
+        credentials_json: "${{ inputs.gacd }}"
 
-    # - name: "Authenticate to Google Cloud"
-    #   uses: "google-github-actions/auth@55bd3a7c6e2ae7cf1877fd1ccb9d54c0503c457c" # ratchet:google-github-actions/auth@v2
-    #   with:
-    #     credentials_json: "${{ inputs.gacd }}"
-
-    # - name: Set up cache
-    #   uses: zombiezen/setup-nix-cache-action@78efa9db5802d6a141bc42681edf000bf7f31a08 # ratchet:zombiezen/setup-nix-cache-action@v0
-    #   with:
-    #     substituters: "${{ inputs.nixSubstituterName }}"
-    #     secret_keys: "${{ inputs.nixPrivateKey }}"
-    #     use_nixcached: true
-    #     nixcached_upload_options: --jobs 8 --debug
+    - name: Set up cache
+      uses: zombiezen/setup-nix-cache-action@78efa9db5802d6a141bc42681edf000bf7f31a08 # ratchet:zombiezen/setup-nix-cache-action@v0
+      with:
+        substituters: "${{ inputs.nixSubstituterName }}"
+        secret_keys: "${{ inputs.nixPrivateKey }}"
+        use_nixcached: true
+        nixcached_upload_options: --jobs 8 --debug
 
     - name: Set GitHub CI Slug Variables
       uses: rlespinasse/github-slug-action@797d68864753cbceedc271349d402da4590e6302 # ratchet:rlespinasse/github-slug-action@v4
