@@ -163,9 +163,9 @@ in {
   containerImageConfig = {
     name = "${packageName}";
     tag = "latest";
-    created = "now";
+    # created = "now";
 
-    maxLayers = 123;
+    maxLayers = 121;
 
     contents = devcontainerContents;
     config = makeContainerConfig {
@@ -180,9 +180,9 @@ in {
   devcontainerImageConfig = {
     name = "${packageName}dev";
     tag = "latest";
-    created = "now";
+    # created = "now";
 
-    maxLayers = 123;
+    maxLayers = 121;
 
     contents = devcontainerContents;
     # runAsRoot = ''
