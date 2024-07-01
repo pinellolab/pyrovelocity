@@ -80,7 +80,7 @@ runs:
       uses: zombiezen/setup-nix-cache-action@78efa9db5802d6a141bc42681edf000bf7f31a08 # ratchet:zombiezen/setup-nix-cache-action@v0
       with:
         substituters: "${{ inputs.nixSubstituterName }}"
-        secret_keys: "${{ inputs.nixPrivateKey }}"
+        # secret_keys: "${{ inputs.nixPrivateKey }}"
         use_nixcached: true
         nixcached_upload_options: --jobs 8 --debug
 
