@@ -386,7 +386,7 @@ jobs:
           build-mount-path: /nix
           build-mount-path-ownership: "root:root"
           root-reserve-mb: 34816
-          swap-size-mb: 4096
+          swap-size-mb: 5120
           remove-dotnet: "true"
           remove-android: "true"
           remove-codeql: "true"
@@ -410,8 +410,8 @@ jobs:
           gcpProjectId: ${{ secrets.GCP_PROJECT_ID }}
           encodedGARCredentials: ${{ secrets.ENCODED_GAR_SA_CREDS }}
           artifactRegistryPassword: ${{ secrets.ARTIFACT_REGISTRY_PASSWORD }}
-          # nixSubstituterName: ${{ vars.NIX_SUBSTITUTER }}
-          nixSubstituterName: ${{ vars.S3_NIX_SUBSTITUTER }}
+          nixSubstituterName: ${{ vars.NIX_SUBSTITUTER }}
+          # nixSubstituterName: ${{ vars.S3_NIX_SUBSTITUTER }}
           nixPrivateKey: ${{ secrets.NIX_PRIVATE_KEY }}
           gacd: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}
           gcsHmacAccessID: ${{ secrets.GCS_HMAC_ACCESS_ID }}
