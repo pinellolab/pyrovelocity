@@ -83,14 +83,14 @@ runs:
         credentials_json: "${{ inputs.gacd }}"
 
     - name: Set up cache
-      uses: zombiezen/setup-nix-cache-action@78efa9db5802d6a141bc42681edf000bf7f31a08 # ratchet:zombiezen/setup-nix-cache-action@v0
+      uses: zombiezen/setup-nix-cache-action@cacc7abf0a6636b0ef45ec2ae055a9734cdd4122 # ratchet:zombiezen/setup-nix-cache-action@main
       with:
         substituters: "${{ inputs.nixSubstituterName }}"
         secret_keys: "${{ inputs.nixPrivateKey }}"
-        aws_access_key_id: "${{ inputs.gcsHmacAccessID }}"
-        aws_secret_access_key: "${{ inputs.gcsHmacSecretAccessKey }}"
-        use_nixcached: false
-        # nixcached_upload_options: --jobs 8 --debug
+        use_nixcached: true
+        nixcached_upload_options: --jobs 8 --debug
+        # aws_access_key_id: "${{ inputs.gcsHmacAccessID }}"
+        # aws_secret_access_key: "${{ inputs.gcsHmacSecretAccessKey }}"
 
     - name: Set GitHub CI Slug Variables
       uses: rlespinasse/github-slug-action@797d68864753cbceedc271349d402da4590e6302 # ratchet:rlespinasse/github-slug-action@v4
