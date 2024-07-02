@@ -34,6 +34,12 @@ inputs:
   gacd:
     description: "Google Application Credentials Data"
     required: false
+  gcsHmacAccessID:
+    description: "Google Cloud Storage HMAC Access ID"
+    required: false
+  gcsHmacSecretAccessKey:
+    description: "Google Cloud Storage HMAC Secret Access Key"
+    required: false
   cachixCacheName:
     description: "Name of the Cachix cache"
     required: false
@@ -81,8 +87,10 @@ runs:
       with:
         substituters: "${{ inputs.nixSubstituterName }}"
         secret_keys: "${{ inputs.nixPrivateKey }}"
-        use_nixcached: true
-        nixcached_upload_options: --jobs 8 --debug
+        aws_access_key_id: "${{ inputs.gcsHmacAccessID }}"
+        aws_secret_access_key: "${{ inputs.gcsHmacSecretAccessKey }}"
+        use_nixcached: false
+        # nixcached_upload_options: --jobs 8 --debug
 
     - name: Set GitHub CI Slug Variables
       uses: rlespinasse/github-slug-action@797d68864753cbceedc271349d402da4590e6302 # ratchet:rlespinasse/github-slug-action@v4
