@@ -6,9 +6,9 @@ import (
 )
 
 #Config: {
-	kubeVersion!:                                 string
+	kubeVersion!: string
 	clusterVersion: timoniv1.#SemVer & {#Version: kubeVersion, #Minimum: "1.20.0"}
-	moduleVersion!:                           string
+	moduleVersion!: string
 	metadata: timoniv1.#Metadata & {#Version: moduleVersion}
 	metadata: labels:       timoniv1.#Labels
 	metadata: annotations?: timoniv1.#Annotations
@@ -70,6 +70,7 @@ import (
 		name:         *metadata.name | string
 		enabled:      *true | bool
 		storageClass: *"standard-rwo" | string
+		accessMode:   *"ReadWriteOnce" | corev1.#PersistentVolumeAccessMode
 		size:         *"500Gi" | string
 	}
 
@@ -106,7 +107,7 @@ import (
 	config: #Config
 
 	objects: {
-		// ns: #Namespace & {#config: config}
+		ns: #Namespace & {#config: config}
 		sa: #ServiceAccount & {#config: config}
 		pvc: #PVC & {#config: config}
 		// hpa: #HPA & {
@@ -120,6 +121,5 @@ import (
 		// }
 	}
 
-	tests: {
-	}
+	tests: {}
 }

@@ -1,7 +1,7 @@
 values: {
 	replicas: 1
 	image: {
-		repository: "ghcr.io/cameronraysmith/debnix"
+		repository: "ghcr.io/cameronraysmith/nixpod"
 		digest:     ""
 		tag:        "latest"
 	}
@@ -11,15 +11,17 @@ values: {
 			memory: "8Gi"
 		}
 		limits: {
-			cpu:    "4000m"
-			memory: "15Gi"
+			cpu:    "12000m"
+			memory: "32Gi"
 			// "nvidia.com/gpu":    "0"
 			"ephemeral-storage": "35Gi"
 		}
 	}
 	persistence: {
-		name: "nixbuild0"
-		size: "100Gi"
+		name:         "nixbuild0"
+		size:         "100Gi"
+		storageClass: "ceph-filesystem"
+		accessMode:   "ReadWriteMany"
 	}
 	job: {
 		backoffLimit:            8
@@ -31,8 +33,8 @@ values: {
 		// "cloud.google.com/gke-accelerator": "nvidia-tesla-a100"
 		// "cloud.google.com/gke-accelerator": "nvidia-l4"
 
-		"cloud.google.com/gke-provisioning": "standard"
-		// "cloud.google.com/gke-provisioning": "spot"
+		// "cloud.google.com/gke-provisioning": "standard"
+		"cloud.google.com/gke-provisioning": "spot"
 	}
 	securityContext: {
 		allowPrivilegeEscalation: true
