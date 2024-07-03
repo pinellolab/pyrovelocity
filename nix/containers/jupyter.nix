@@ -118,7 +118,7 @@ in
       "NB_USER=${username}"
       "NB_UID=1000"
       "NB_PREFIX=/"
-      "LD_LIBRARY_PATH=${pythonPackageEnv}/lib:${pkgs.gcc}/lib:/usr/local/nvidia/lib64"
+      "LD_LIBRARY_PATH=${pythonPackageEnv}/lib:${pkgs.libgcc}/lib:/usr/local/nvidia/lib64"
       "NVIDIA_DRIVER_CAPABILITIES='compute,utility'"
       "NVIDIA_VISIBLE_DEVICES=all"
       "QUARTO_PYTHON=${pythonPackageEnv}/bin/python"
