@@ -199,11 +199,11 @@
         "systems": ["systems"]
       },
       "locked": {
-        "lastModified": 1719505800,
-        "narHash": "sha256-EhoMiC5S41OBlUAM7SLhmgHkxi0rI2A4Egz9Z8ZfPPU=",
+        "lastModified": 1719974171,
+        "narHash": "sha256-ccdZq6r1rAKq9KWiya9x/sZSLLKv5yxQQMrFCd8923A=",
         "owner": "cameronraysmith",
         "repo": "nixpod",
-        "rev": "7def26d934c13b88e39ae7471065f4794dbfc45b",
+        "rev": "13190c50500ae7df4de79ab74d93cdda0b69b3ca",
         "type": "github"
       },
       "original": {
