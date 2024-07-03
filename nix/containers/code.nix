@@ -43,7 +43,7 @@
       "ms-azuretools.vscode-docker"
       "ms-kubernetes-tools.vscode-kubernetes-tools"
       "ms-toolsai.jupyter"
-      "ms-vsliveshare.vsliveshare"
+      "nefrob.vscode-just-syntax"
       "njzy.stats-bar"
       "patbenatar.advanced-new-file"
       "rangav.vscode-thunder-client"
