@@ -72,6 +72,15 @@
     mkdir -p $out/etc/services.d/jupyterlab
     ln -s ${jupyterServerScript} $out/etc/services.d/jupyterlab/run
   '';
+  atuinDaemonScript = pkgs.writeScript "atuin-daemon" ''
+    #!/command/with-contenv ${pkgs.bashInteractive}/bin/bash
+    printf "running atuin daemon\n\n"
+    exec ${pkgs.atuin}/bin/atuin daemon
+  '';
+  atuinDaemonService = pkgs.runCommand "atuin-daemon" {} ''
+    mkdir -p $out/etc/services.d/atuindaemon
+    ln -s ${atuinDaemonScript} $out/etc/services.d/atuindaemon/run
+  '';
 in
   buildMultiUserNixImage {
     inherit pkgs storeOwner;
@@ -90,6 +99,7 @@ in
       ++ devPackages;
     extraContents = [
       activateUserHomeService
+      atuinDaemonService
       jupyterServerService
       homeActivationPackage
     ];
