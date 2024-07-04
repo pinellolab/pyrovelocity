@@ -7,12 +7,12 @@ values: {
 	}
 	resources: {
 		requests: {
-			cpu:    "2000m"
-			memory: "8Gi"
+			cpu:    "12000m"
+			memory: "24Gi"
 		}
 		limits: {
-			cpu:    "12000m"
-			memory: "32Gi"
+			cpu:    "24000m"
+			memory: "36Gi"
 			// "nvidia.com/gpu":    "0"
 			"ephemeral-storage": "35Gi"
 		}
