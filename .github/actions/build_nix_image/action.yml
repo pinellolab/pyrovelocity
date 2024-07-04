@@ -156,6 +156,11 @@ runs:
         #   fi
         # fi
 
+        echo "Memory and swap:"
+        sudo free
+        echo
+        sudo swapon --show
+        echo
         df -h
       env:
         GH_TOKEN: ${{ github.token }}
