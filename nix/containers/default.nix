@@ -165,7 +165,7 @@
     # created = "now";
 
     maxLayers = 118;
-    compressor = "zstd";
+    compressor = "none";
 
     contents = devcontainerContents;
     config = makeContainerConfig {
@@ -183,7 +183,7 @@
     # created = "now";
 
     maxLayers = 118;
-    compressor = "zstd";
+    compressor = "none";
 
     contents = devcontainerContents;
     # runAsRoot = ''
