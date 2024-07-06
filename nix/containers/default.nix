@@ -165,6 +165,7 @@
     # created = "now";
 
     maxLayers = 118;
+    compressor = "zstd";
 
     contents = devcontainerContents;
     config = makeContainerConfig {
@@ -182,6 +183,7 @@
     # created = "now";
 
     maxLayers = 118;
+    compressor = "zstd";
 
     contents = devcontainerContents;
     # runAsRoot = ''
@@ -209,6 +211,7 @@ in rec {
     name = "${packageName}";
     tag = "latest";
     maxLayers = 121;
+    compressor = "zstd";
     fromImage = baseContainerImage;
     contents = [packageGitRepoToContainer];
     config = {
@@ -224,6 +227,7 @@ in rec {
     name = "${packageName}dev";
     tag = "latest";
     maxLayers = 121;
+    compressor = "zstd";
     fromImage = baseDevContainerImage;
     contents = [packageGitRepoToContainer];
     config = {
