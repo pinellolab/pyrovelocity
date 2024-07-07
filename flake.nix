@@ -208,10 +208,8 @@
             paths = with pkgs; [poetry python310];
           };
 
-          baseContainerImage = containerImages.baseContainerImage;
           containerImage = containerImages.containerImage;
 
-          baseDevContainerImage = containerImages.baseDevContainerImage;
           devcontainerImage = containerImages.devcontainerImage;
 
           codeImage = import ./nix/containers/code.nix {

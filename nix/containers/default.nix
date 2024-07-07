@@ -137,10 +137,6 @@
         "NIX_PAGER=cat"
         "USER=root"
         "HOME=/root"
-        # "GIT_REPO_NAME=${builtins.getEnv "GIT_REPO_NAME"}"
-        # "GIT_REF=${builtins.getEnv "GIT_REF"}"
-        # "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
-        # "GIT_SHA_SHORT=${builtins.getEnv "GIT_SHA_SHORT"}"
         "PYTHONPATH=${packageSrcPath}:${pkgs.lib.strings.makeSearchPathOutput "" "lib/python3.10/site-packages" pythonPackages}"
         "LD_LIBRARY_PATH=${pythonPackageEnv}/lib:/usr/local/nvidia/lib64"
         "NVIDIA_DRIVER_CAPABILITIES='compute,utility'"
@@ -159,7 +155,7 @@
     "-c"
     "${pkgs.zsh}/bin/zsh"
   ];
-  containerImageConfig = {
+  baseContainerImageConfig = {
     name = "base-${packageName}";
     tag = "latest";
     # created = "now";
@@ -177,7 +173,7 @@
       cmd = containerCmd;
     };
   };
-  devcontainerImageConfig = {
+  baseDevcontainerImageConfig = {
     name = "base-${packageName}dev";
     tag = "latest";
     # created = "now";
@@ -204,18 +200,22 @@
       ];
     };
   };
-in rec {
-  baseContainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb containerImageConfig;
-  baseDevContainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb devcontainerImageConfig;
-  containerImage = pkgs.dockerTools.buildLayeredImageWithNixDb {
+  containerImageConfig = {
     name = "${packageName}";
     tag = "latest";
+
     maxLayers = 121;
     compressor = "zstd";
-    fromImage = baseContainerImage;
-    contents = [packageGitRepoToContainer];
-    config = {
-      Env = [
+
+    contents = devcontainerContents ++ [packageGitRepoToContainer];
+    config = makeContainerConfig {
+      pkgs = pkgs;
+      packageSrcPath = packageSrcPath;
+      pythonPackageEnv = pythonPackageEnv;
+      pythonPackages = pythonPackages;
+      containerPackages = sysPackages ++ pythonPackages;
+      cmd = containerCmd;
+      extraEnv = [
         "GIT_REPO_NAME=${builtins.getEnv "GIT_REPO_NAME"}"
         "GIT_REF=${builtins.getEnv "GIT_REF"}"
         "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
@@ -223,15 +223,23 @@ in rec {
       ];
     };
   };
-  devcontainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb {
+  devcontainerImageConfig = {
     name = "${packageName}dev";
     tag = "latest";
+
     maxLayers = 121;
     compressor = "zstd";
-    fromImage = baseDevContainerImage;
-    contents = [packageGitRepoToContainer];
-    config = {
-      Env = [
+
+    contents = devcontainerContents ++ [packageGitRepoToContainer];
+    config = makeContainerConfig {
+      pkgs = pkgs;
+      packageSrcPath = packageSrcPath;
+      pythonPackageEnv = devpythonPackageEnv;
+      pythonPackages = devpythonPackages;
+      containerPackages = sysPackages ++ extraSysPackages ++ devPackages ++ devpythonPackages;
+      cmd = devcontainerCmd;
+      extraEnv = [
+        "QUARTO_PYTHON=${pkgs.python310}/bin/python"
         "GIT_REPO_NAME=${builtins.getEnv "GIT_REPO_NAME"}"
         "GIT_REF=${builtins.getEnv "GIT_REF"}"
         "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
@@ -239,4 +247,41 @@ in rec {
       ];
     };
   };
+in rec {
+  baseContainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb baseContainerImageConfig;
+  baseDevContainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb baseDevcontainerImageConfig;
+  containerImage = pkgs.dockerTools.buildLayeredImageWithNixDb containerImageConfig;
+  devcontainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb devcontainerImageConfig;
+  # containerImage = pkgs.dockerTools.buildLayeredImageWithNixDb {
+  #   name = "${packageName}";
+  #   tag = "latest";
+  #   maxLayers = 121;
+  #   compressor = "zstd";
+  #   fromImage = baseContainerImage;
+  #   contents = [packageGitRepoToContainer];
+  #   config = {
+  #     Env = [
+  #       "GIT_REPO_NAME=${builtins.getEnv "GIT_REPO_NAME"}"
+  #       "GIT_REF=${builtins.getEnv "GIT_REF"}"
+  #       "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
+  #       "GIT_SHA_SHORT=${builtins.getEnv "GIT_SHA_SHORT"}"
+  #     ];
+  #   };
+  # };
+  # devcontainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb {
+  #   name = "${packageName}dev";
+  #   tag = "latest";
+  #   maxLayers = 121;
+  #   compressor = "zstd";
+  #   fromImage = baseDevContainerImage;
+  #   contents = [packageGitRepoToContainer];
+  #   config = {
+  #     Env = [
+  #       "GIT_REPO_NAME=${builtins.getEnv "GIT_REPO_NAME"}"
+  #       "GIT_REF=${builtins.getEnv "GIT_REF"}"
+  #       "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
+  #       "GIT_SHA_SHORT=${builtins.getEnv "GIT_SHA_SHORT"}"
+  #     ];
+  #   };
+  # };
 }
