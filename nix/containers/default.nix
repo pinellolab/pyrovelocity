@@ -205,7 +205,7 @@
     tag = "latest";
 
     maxLayers = 121;
-    compressor = "zstd";
+    compressor = "none";
 
     contents = devcontainerContents ++ [packageGitRepoToContainer];
     config = makeContainerConfig {
@@ -228,7 +228,7 @@
     tag = "latest";
 
     maxLayers = 121;
-    compressor = "zstd";
+    compressor = "none";
 
     contents = devcontainerContents ++ [packageGitRepoToContainer];
     config = makeContainerConfig {

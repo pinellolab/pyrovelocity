@@ -88,6 +88,7 @@ in
     tag = "latest";
     maxLayers = 121;
     fromImage = sudoImage;
+    compressor = "none";
     extraPkgs = with pkgs;
       [
         ps
