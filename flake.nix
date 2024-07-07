@@ -314,6 +314,12 @@
               branch = false;
             };
             registries = {
+              # "ghcr.io" = {
+              #   enable = true;
+              #   repo = "${gitHubOrg}/${packageName}code";
+              #   username = builtins.getEnv "GITHUB_ACTOR";
+              #   password = "$GH_TOKEN";
+              # };
               "cr.cluster.pyrovelocity.net" = {
                 enable = true;
                 repo = "${packageName}/${packageName}code";
@@ -346,6 +352,12 @@
               branch = false;
             };
             registries = {
+              # "ghcr.io" = {
+              #   enable = true;
+              #   repo = "${gitHubOrg}/${packageName}jupyter";
+              #   username = builtins.getEnv "GITHUB_ACTOR";
+              #   password = "$GH_TOKEN";
+              # };
               "cr.cluster.pyrovelocity.net" = {
                 enable = true;
                 repo = "${packageName}/${packageName}jupyter";
