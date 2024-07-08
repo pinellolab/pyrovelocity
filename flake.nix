@@ -238,24 +238,24 @@
               branch = false;
             };
             registries = {
-              # "ghcr.io" = {
-              #   enable = true;
-              #   repo = "${gitHubOrg}/${packageName}";
-              #   username = builtins.getEnv "GITHUB_ACTOR";
-              #   password = "$GH_TOKEN";
-              # };
-              "cr.cluster.pyrovelocity.net" = {
+              "ghcr.io" = {
                 enable = true;
-                repo = "${packageName}/${packageName}";
-                username = "admin";
-                password = "$ARTIFACT_REGISTRY_PASSWORD";
+                repo = "${gitHubOrg}/${packageName}";
+                username = builtins.getEnv "GITHUB_ACTOR";
+                password = "$GH_TOKEN";
               };
-              # "us-central1-docker.pkg.dev" = {
+              # "cr.cluster.pyrovelocity.net" = {
               #   enable = true;
-              #   repo = "${gcpProjectId}/${packageName}/${packageName}";
-              #   username = "_json_key_base64";
-              #   password = "$ENCODED_GAR_SA_CREDS";
+              #   repo = "${packageName}/${packageName}";
+              #   username = "admin";
+              #   password = "$ARTIFACT_REGISTRY_PASSWORD";
               # };
+              "us-central1-docker.pkg.dev" = {
+                enable = true;
+                repo = "${gcpProjectId}/${packageName}/${packageName}";
+                username = "_json_key_base64";
+                password = "$ENCODED_GAR_SA_CREDS";
+              };
             };
             version = builtins.getEnv "VERSION";
             images = builtins.map (sys: self.packages.${sys}.containerImage) includedSystems;
@@ -276,24 +276,24 @@
               branch = false;
             };
             registries = {
-              # "ghcr.io" = {
-              #   enable = true;
-              #   repo = "${gitHubOrg}/${packageName}dev";
-              #   username = builtins.getEnv "GITHUB_ACTOR";
-              #   password = "$GH_TOKEN";
-              # };
-              "cr.cluster.pyrovelocity.net" = {
+              "ghcr.io" = {
                 enable = true;
-                repo = "${packageName}/${packageName}dev";
-                username = "admin";
-                password = "$ARTIFACT_REGISTRY_PASSWORD";
+                repo = "${gitHubOrg}/${packageName}dev";
+                username = builtins.getEnv "GITHUB_ACTOR";
+                password = "$GH_TOKEN";
               };
-              # "us-central1-docker.pkg.dev" = {
+              # "cr.cluster.pyrovelocity.net" = {
               #   enable = true;
-              #   repo = "${gcpProjectId}/${packageName}/${packageName}dev";
-              #   username = "_json_key_base64";
-              #   password = "$ENCODED_GAR_SA_CREDS";
+              #   repo = "${packageName}/${packageName}dev";
+              #   username = "admin";
+              #   password = "$ARTIFACT_REGISTRY_PASSWORD";
               # };
+              "us-central1-docker.pkg.dev" = {
+                enable = true;
+                repo = "${gcpProjectId}/${packageName}/${packageName}dev";
+                username = "_json_key_base64";
+                password = "$ENCODED_GAR_SA_CREDS";
+              };
             };
             version = builtins.getEnv "VERSION";
             images = builtins.map (sys: self.packages.${sys}.devcontainerImage) includedSystems;
@@ -314,24 +314,24 @@
               branch = false;
             };
             registries = {
-              # "ghcr.io" = {
-              #   enable = true;
-              #   repo = "${gitHubOrg}/${packageName}code";
-              #   username = builtins.getEnv "GITHUB_ACTOR";
-              #   password = "$GH_TOKEN";
-              # };
-              "cr.cluster.pyrovelocity.net" = {
+              "ghcr.io" = {
                 enable = true;
-                repo = "${packageName}/${packageName}code";
-                username = "admin";
-                password = "$ARTIFACT_REGISTRY_PASSWORD";
+                repo = "${gitHubOrg}/${packageName}code";
+                username = builtins.getEnv "GITHUB_ACTOR";
+                password = "$GH_TOKEN";
               };
-              # "us-central1-docker.pkg.dev" = {
+              # "cr.cluster.pyrovelocity.net" = {
               #   enable = true;
-              #   repo = "${gcpProjectId}/${packageName}/${packageName}code";
-              #   username = "_json_key_base64";
-              #   password = "$ENCODED_GAR_SA_CREDS";
+              #   repo = "${packageName}/${packageName}code";
+              #   username = "admin";
+              #   password = "$ARTIFACT_REGISTRY_PASSWORD";
               # };
+              "us-central1-docker.pkg.dev" = {
+                enable = true;
+                repo = "${gcpProjectId}/${packageName}/${packageName}code";
+                username = "_json_key_base64";
+                password = "$ENCODED_GAR_SA_CREDS";
+              };
             };
             version = builtins.getEnv "VERSION";
             images = builtins.map (sys: self.packages.${sys}.codeImage) includedSystems;
@@ -352,24 +352,24 @@
               branch = false;
             };
             registries = {
-              # "ghcr.io" = {
-              #   enable = true;
-              #   repo = "${gitHubOrg}/${packageName}jupyter";
-              #   username = builtins.getEnv "GITHUB_ACTOR";
-              #   password = "$GH_TOKEN";
-              # };
-              "cr.cluster.pyrovelocity.net" = {
+              "ghcr.io" = {
                 enable = true;
-                repo = "${packageName}/${packageName}jupyter";
-                username = "admin";
-                password = "$ARTIFACT_REGISTRY_PASSWORD";
+                repo = "${gitHubOrg}/${packageName}jupyter";
+                username = builtins.getEnv "GITHUB_ACTOR";
+                password = "$GH_TOKEN";
               };
-              # "us-central1-docker.pkg.dev" = {
+              # "cr.cluster.pyrovelocity.net" = {
               #   enable = true;
-              #   repo = "${gcpProjectId}/${packageName}/${packageName}jupyter";
-              #   username = "_json_key_base64";
-              #   password = "$ENCODED_GAR_SA_CREDS";
+              #   repo = "${packageName}/${packageName}jupyter";
+              #   username = "admin";
+              #   password = "$ARTIFACT_REGISTRY_PASSWORD";
               # };
+              "us-central1-docker.pkg.dev" = {
+                enable = true;
+                repo = "${gcpProjectId}/${packageName}/${packageName}jupyter";
+                username = "_json_key_base64";
+                password = "$ENCODED_GAR_SA_CREDS";
+              };
             };
             version = builtins.getEnv "VERSION";
             images = builtins.map (sys: self.packages.${sys}.jupyterImage) includedSystems;
