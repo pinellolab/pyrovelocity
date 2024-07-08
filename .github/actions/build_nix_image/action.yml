@@ -7,9 +7,6 @@ inputs:
   imageName:
     description: "Name of the Docker image"
     required: true
-  imageFQN:
-    description: "Fully Qualified Name of the Docker image"
-    required: true
   nixCommand:
     description: "Nix command to build the image"
     required: true
@@ -55,14 +52,7 @@ runs:
       with:
         platforms: arm64
 
-    - name: Install Skopeo
-      shell: bash
-      run: |
-        sudo apt-get update
-        sudo apt-get install -yq skopeo
-        sudo apt-get clean
-
-    - name: Install Nix
+    - name: Install nix
       uses: DeterminateSystems/nix-installer-action@7993355175c2765e5733dae74f3e0786fe0e5c4f # ratchet:DeterminateSystems/nix-installer-action@v12
       with:
         extra-conf: |
@@ -71,7 +61,7 @@ runs:
     # - name: Setup Local Nix Cache
     #   uses: DeterminateSystems/magic-nix-cache-action@b46e247b898aa56e6d2d2e728dc6df6c84fdb738 # ratchet:DeterminateSystems/magic-nix-cache-action@v7
 
-    - name: Setup Remote Nix Cache
+    - name: Setup hosted nix cache
       uses: cachix/cachix-action@ad2ddac53f961de1989924296a1f236fcfbaa4fc # ratchet:cachix/cachix-action@v15
       with:
         name: "${{ inputs.cachixCacheName }}"
@@ -82,7 +72,7 @@ runs:
     #   with:
     #     credentials_json: "${{ inputs.gacd }}"
 
-    # - name: Set up cache
+    # - name: Setup cache
     #   uses: zombiezen/setup-nix-cache-action@cacc7abf0a6636b0ef45ec2ae055a9734cdd4122 # ratchet:zombiezen/setup-nix-cache-action@main
     #   with:
     #     substituters: "${{ inputs.nixSubstituterName }}"
@@ -92,7 +82,7 @@ runs:
     #     # aws_access_key_id: "${{ inputs.gcsHmacAccessID }}"
     #     # aws_secret_access_key: "${{ inputs.gcsHmacSecretAccessKey }}"
 
-    - name: Set GitHub CI Slug Variables
+    - name: Set CI slug variables
       uses: rlespinasse/github-slug-action@797d68864753cbceedc271349d402da4590e6302 # ratchet:rlespinasse/github-slug-action@v4
       with:
         prefix: CI_
@@ -133,34 +123,13 @@ runs:
         echo "Using Git Reference: $GIT_REF"
         echo "Using Git SHA: $GIT_SHA"
         echo "Using Git SHA Short: $GIT_SHA_SHORT"
-        FQN_GIT_SHA="${{ inputs.imageFQN }}:$GIT_SHA"
-        echo "Image FQN with Git SHA: $FQN_GIT_SHA"
         df -h
 
-        # This section currently doesn't account for the case where
-        # a new image is being pushed to a repository for the first time.
-        # As a workaround, when creating new images from this action,
-        # the follwing four commented lines can be toggled with those below
-        # them.
-        echo "Image $FQN_GIT_SHA does not exist. Building."
         ${{ inputs.nixCommand }}
-        # if SKOPEO_OUTPUT=$(skopeo inspect "docker://$FQN_GIT_SHA" 2>&1); then
-        #   echo "Image $FQN_GIT_SHA already exists. Skipping build."
-        # else
-        #   if echo "$SKOPEO_OUTPUT" | grep -q 'manifest unknown'; then
-        #     echo "Image $FQN_GIT_SHA does not exist. Building."
-        #     ${{ inputs.nixCommand }}
-        #   else
-        #     echo "Failed to inspect image with error: $SKOPEO_OUTPUT"
-        #     exit 1
-        #   fi
-        # fi
 
         echo "Memory and swap:"
         sudo free
-        echo
         sudo swapon --show
-        echo
         df -h
       env:
         GH_TOKEN: ${{ github.token }}
@@ -168,12 +137,3 @@ runs:
         ENCODED_GAR_SA_CREDS: ${{ inputs.encodedGARCredentials }}
         ARTIFACT_REGISTRY_PASSWORD: ${{ inputs.artifactRegistryPassword }}
         VERSION: ${{ inputs.releaseVersion }}
-
-    - name: Clean Nix Store
-      shell: bash
-      run: |
-        set -euxo pipefail
-
-        df -h
-        nix store gc --dry-run --debug
-        df -h
