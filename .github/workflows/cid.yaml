@@ -386,7 +386,7 @@ jobs:
           build-mount-path: /nix
           build-mount-path-ownership: "root:root"
           root-reserve-mb: 34816
-          swap-size-mb: 5120
+          swap-size-mb: 10240
           remove-dotnet: "true"
           remove-android: "true"
           remove-codeql: "true"
@@ -566,9 +566,9 @@ jobs:
         uses: cameronraysmith/maximize-build-space@fdf0c06b18d92be98aa64cb68ae4ea4c9bc4794d # ratchet:cameronraysmith/maximize-build-space@print-usage
         with:
           build-mount-path: /nix
-          build-mount-path-ownership: root:root
+          build-mount-path-ownership: "root:root"
           root-reserve-mb: 34816
-          swap-size-mb: 5120
+          swap-size-mb: 10240
           remove-dotnet: "true"
           remove-android: "true"
           remove-codeql: "true"
