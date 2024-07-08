@@ -17,7 +17,7 @@
       };
     };
     flocken = {
-      url = "github:mirkolenz/flocken/v2";
+      url = "github:cameronraysmith/flocken/crane-tag";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
       inputs.systems.follows = "systems";
