@@ -279,6 +279,7 @@ def train_dataset(
 @beartype
 def train_model(
     adata: str | AnnData,
+    atac_layer: Optional[str] = None,
     guide_type: str = "auto",
     model_type: str = "auto",
     batch_size: int = -1,
@@ -305,6 +306,7 @@ def train_model(
 
     Args:
         adata (str | AnnData): Path to a file that can be read to an AnnData object or an AnnData object.
+        atac_layer (Optional[str], optional): Name of AnnData layer that contains atac data, if present.
         guide_type (str, optional): The type of guide function for the Pyro model. Default is "auto".
         model_type (str, optional): The type of Pyro model. Default is "auto".
         batch_size (int, optional): Batch size for training. Default is -1, which indicates using the full dataset.
@@ -347,6 +349,11 @@ def train_model(
         >>> copy_raw_counts(adata)
         >>> _, model, posterior_samples = train_model(adata, use_gpu="auto", seed=99, max_epochs=200, loss_plot_path=loss_plot_path)
     """
+
+    if atac_layer:
+        logger.info(
+            "Multiome model not yet implemented. Proceeding without atac data."
+        )
     if isinstance(adata, str):
         adata = load_anndata_from_path(adata)
 
