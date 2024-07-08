@@ -100,6 +100,8 @@
 
         gitHubOrg = "pinellolab";
         packageName = "pyrovelocity";
+        version = builtins.getEnv "VERSION";
+        isVersionNonEmpty = builtins.isString version && builtins.stringLength version > 0;
 
         mkPoetryEnvWithSource = packageName: src: groups:
           pkgs.poetry2nix.mkPoetryEnv (
@@ -229,6 +231,7 @@
 
         legacyPackages = {
           pyrovelocityManifest = inputs'.flocken.legacyPackages.mkDockerManifest {
+            inherit version;
             github = {
               enable = true;
               enableRegistry = false;
@@ -239,7 +242,7 @@
             };
             registries = {
               "ghcr.io" = {
-                enable = true;
+                enable = isVersionNonEmpty;
                 repo = "${gitHubOrg}/${packageName}";
                 username = builtins.getEnv "GITHUB_ACTOR";
                 password = "$GH_TOKEN";
@@ -257,7 +260,6 @@
                 password = "$ENCODED_GAR_SA_CREDS";
               };
             };
-            version = builtins.getEnv "VERSION";
             images = builtins.map (sys: self.packages.${sys}.containerImage) includedSystems;
             tags = [
               (builtins.getEnv "GIT_SHA_SHORT")
@@ -268,6 +270,7 @@
           };
 
           pyrovelocitydevManifest = inputs'.flocken.legacyPackages.mkDockerManifest {
+            inherit version;
             github = {
               enable = true;
               enableRegistry = false;
@@ -278,7 +281,7 @@
             };
             registries = {
               "ghcr.io" = {
-                enable = true;
+                enable = isVersionNonEmpty;
                 repo = "${gitHubOrg}/${packageName}dev";
                 username = builtins.getEnv "GITHUB_ACTOR";
                 password = "$GH_TOKEN";
@@ -296,7 +299,6 @@
                 password = "$ENCODED_GAR_SA_CREDS";
               };
             };
-            version = builtins.getEnv "VERSION";
             images = builtins.map (sys: self.packages.${sys}.devcontainerImage) includedSystems;
             tags = [
               (builtins.getEnv "GIT_SHA_SHORT")
@@ -307,6 +309,7 @@
           };
 
           pyrovelocitycodeManifest = inputs'.flocken.legacyPackages.mkDockerManifest {
+            inherit version;
             github = {
               enable = true;
               enableRegistry = false;
@@ -317,7 +320,7 @@
             };
             registries = {
               "ghcr.io" = {
-                enable = true;
+                enable = isVersionNonEmpty;
                 repo = "${gitHubOrg}/${packageName}code";
                 username = builtins.getEnv "GITHUB_ACTOR";
                 password = "$GH_TOKEN";
@@ -335,7 +338,6 @@
                 password = "$ENCODED_GAR_SA_CREDS";
               };
             };
-            version = builtins.getEnv "VERSION";
             images = builtins.map (sys: self.packages.${sys}.codeImage) includedSystems;
             tags = [
               (builtins.getEnv "GIT_SHA_SHORT")
@@ -346,6 +348,7 @@
           };
 
           pyrovelocityjupyterManifest = inputs'.flocken.legacyPackages.mkDockerManifest {
+            inherit version;
             github = {
               enable = true;
               enableRegistry = false;
@@ -356,7 +359,7 @@
             };
             registries = {
               "ghcr.io" = {
-                enable = true;
+                enable = isVersionNonEmpty;
                 repo = "${gitHubOrg}/${packageName}jupyter";
                 username = builtins.getEnv "GITHUB_ACTOR";
                 password = "$GH_TOKEN";
@@ -374,7 +377,6 @@
                 password = "$ENCODED_GAR_SA_CREDS";
               };
             };
-            version = builtins.getEnv "VERSION";
             images = builtins.map (sys: self.packages.${sys}.jupyterImage) includedSystems;
             tags = [
               (builtins.getEnv "GIT_SHA_SHORT")
