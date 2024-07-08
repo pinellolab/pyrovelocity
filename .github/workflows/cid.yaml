@@ -60,8 +60,11 @@ defaults:
     shell: bash
 
 permissions:
-  actions: write
   contents: read
+  packages: write
+  attestations: write
+  actions: write
+  id-token: write
 
 jobs:
   set-variables:
