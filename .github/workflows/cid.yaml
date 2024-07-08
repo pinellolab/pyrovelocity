@@ -389,7 +389,7 @@ jobs:
           build-mount-path: /nix
           build-mount-path-ownership: "root:root"
           root-reserve-mb: 34816
-          swap-size-mb: 10240
+          swap-size-mb: 2048
           remove-dotnet: "true"
           remove-android: "true"
           remove-codeql: "true"
@@ -571,7 +571,7 @@ jobs:
           build-mount-path: /nix
           build-mount-path-ownership: "root:root"
           root-reserve-mb: 34816
-          swap-size-mb: 10240
+          swap-size-mb: 2048
           remove-dotnet: "true"
           remove-android: "true"
           remove-codeql: "true"
