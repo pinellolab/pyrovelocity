@@ -260,9 +260,10 @@
             version = builtins.getEnv "VERSION";
             images = builtins.map (sys: self.packages.${sys}.containerImage) includedSystems;
             tags = [
-              # (builtins.getEnv "GIT_SHA_SHORT")
+              (builtins.getEnv "GIT_SHA_SHORT")
               (builtins.getEnv "GIT_SHA")
-              # (builtins.getEnv "GIT_REF")
+              (builtins.getEnv "GIT_REF")
+              "dev"
             ];
           };
 
@@ -298,9 +299,10 @@
             version = builtins.getEnv "VERSION";
             images = builtins.map (sys: self.packages.${sys}.devcontainerImage) includedSystems;
             tags = [
-              # (builtins.getEnv "GIT_SHA_SHORT")
+              (builtins.getEnv "GIT_SHA_SHORT")
               (builtins.getEnv "GIT_SHA")
-              # (builtins.getEnv "GIT_REF")
+              (builtins.getEnv "GIT_REF")
+              "dev"
             ];
           };
 
@@ -336,9 +338,10 @@
             version = builtins.getEnv "VERSION";
             images = builtins.map (sys: self.packages.${sys}.codeImage) includedSystems;
             tags = [
-              # (builtins.getEnv "GIT_SHA_SHORT")
+              (builtins.getEnv "GIT_SHA_SHORT")
               (builtins.getEnv "GIT_SHA")
-              # (builtins.getEnv "GIT_REF")
+              (builtins.getEnv "GIT_REF")
+              "dev"
             ];
           };
 
@@ -374,9 +377,10 @@
             version = builtins.getEnv "VERSION";
             images = builtins.map (sys: self.packages.${sys}.jupyterImage) includedSystems;
             tags = [
-              # (builtins.getEnv "GIT_SHA_SHORT")
+              (builtins.getEnv "GIT_SHA_SHORT")
               (builtins.getEnv "GIT_SHA")
-              # (builtins.getEnv "GIT_REF")
+              (builtins.getEnv "GIT_REF")
+              "dev"
             ];
           };
         };
