@@ -81,6 +81,7 @@
 
   coreDevPackages = with pkgs; [
     bazelisk
+    bazel-buildtools
     cue
     poetry
     poethepoet
