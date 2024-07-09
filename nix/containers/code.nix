@@ -91,6 +91,8 @@
       "gitlens.showWelcomeOnInstall": false,
       "gitlens.showWhatsNewAfterUpgrades": false,
       "python.terminal.activateEnvironment": false,
+      "terminal.integrated.persistentSessionScrollback": 100000,
+      "terminal.integrated.scrollback": 100000,
       "update.showReleaseNotes": false,
       "workbench.iconTheme": "vscode-icons",
       "workbench.colorTheme": "Catppuccin Macchiato",
