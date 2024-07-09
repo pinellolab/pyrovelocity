@@ -34,7 +34,9 @@
       "charliermarsh.ruff"
       "christian-kohler.path-intellisense"
       "cweijan.vscode-database-client2"
-      "donjayamanne.python-extension-pack"
+      "ms-python.python"
+      "njpwerner.autodocstring"
+      "KevinRose.vsc-python-indent"
       "eamodio.gitlens"
       "github.vscode-github-actions"
       "GitHub.vscode-pull-request-github"
@@ -43,7 +45,6 @@
       "ms-azuretools.vscode-docker"
       "ms-kubernetes-tools.vscode-kubernetes-tools"
       "ms-toolsai.jupyter"
-      "nefrob.vscode-just-syntax"
       "njzy.stats-bar"
       "patbenatar.advanced-new-file"
       "rangav.vscode-thunder-client"
@@ -58,7 +59,8 @@
     )
 
     printf "Listing currently installed extensions...\n\n"
-    code-server --list-extensions --show-versions
+    installed_extensions=$(code-server --list-extensions --show-versions)
+    echo "$installed_extensions"
     echo ""
 
     install_command="code-server"
@@ -67,6 +69,16 @@
     done
 
     eval "''${install_command} --force"
+
+    if echo "$installed_extensions" | ${pkgs.gnugrep}/bin/grep -q "nefrob.vscode-just-syntax"; then
+        printf "vscode-just-syntax is already installed.\n"
+    else
+        printf "vscode-just-syntax is not installed. Proceeding with installation...\n"
+        tmpdir=$(mktemp -d) && \
+        curl --proto '=https' --tlsv1.2 -sSfL -o "$tmpdir/vscode-just-syntax-0.3.0.vsix" https://github.com/nefrob/vscode-just/releases/download/0.3.0/vscode-just-syntax-0.3.0.vsix && \
+        code-server --install-extension "$tmpdir/vscode-just-syntax-0.3.0.vsix" && \
+        rm -r "$tmpdir"
+    fi
 
     printf "Listing extensions after installation...\n\n"
     code-server --list-extensions --show-versions
@@ -78,6 +90,7 @@
     ${pkgs.jq}/bin/jq '{
       "gitlens.showWelcomeOnInstall": false,
       "gitlens.showWhatsNewAfterUpgrades": false,
+      "python.terminal.activateEnvironment": false,
       "update.showReleaseNotes": false,
       "workbench.iconTheme": "vscode-icons",
       "workbench.colorTheme": "Catppuccin Macchiato",
@@ -92,7 +105,7 @@
   codeServerScript = pkgs.writeScript "code-service-run" ''
     #!/command/with-contenv ${pkgs.bashInteractive}/bin/bash
     printf "code environment\n\n"
-    export SHELL=zsh
+    export SHELL=${pkgs.zsh}/bin/zsh
     printenv | sort
     printf "====================\n\n"
     printf "Starting code-server with NB_PREFIX=''${NB_PREFIX}\n\n"
