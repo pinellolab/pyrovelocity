@@ -55,7 +55,6 @@
   // https://github.com/microsoft/vscode/issues/186279#issuecomment-1633159669
   "search.followSymlinks": false,
   "terminal.integrated.fontSize": 14,
-  "terminal.integrated.persistentSessionScrollback": 100000,
   "terminal.integrated.scrollback": 100000,
   "workbench.colorTheme": "Catppuccin Mocha",
   "workbench.iconTheme": "vscode-icons",
