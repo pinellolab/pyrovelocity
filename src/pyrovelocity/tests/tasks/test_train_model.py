@@ -1,8 +1,8 @@
 """Tests for `pyrovelocity._train_model` task."""
 
+from pyrovelocity.tasks.preprocess import copy_raw_counts
 from pyrovelocity.tasks.train import train_model
 from pyrovelocity.utils import generate_sample_data
-from pyrovelocity.tasks.preprocess import copy_raw_counts
 
 
 def test_train_model(tmp_path):
@@ -12,7 +12,7 @@ def test_train_model(tmp_path):
     copy_raw_counts(adata)
     _, model, posterior_samples = train_model(
         adata,
-        atac_layer="atac",
+        adata_atac=None,
         use_gpu="auto",
         seed=99,
         max_epochs=200,

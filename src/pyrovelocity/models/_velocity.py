@@ -2,10 +2,7 @@ import os
 import pickle
 import sys
 from statistics import harmonic_mean
-from typing import Dict
-from typing import Optional
-from typing import Sequence
-from typing import Union
+from typing import Dict, Optional, Sequence, Union
 
 import mlflow
 import numpy as np
@@ -15,24 +12,25 @@ from anndata import AnnData
 from beartype import beartype
 from numpy import ndarray
 from scvi.data import AnnDataManager
-from scvi.data._constants import _SETUP_ARGS_KEY
-from scvi.data._constants import _SETUP_METHOD_NAME
-from scvi.data.fields import LayerField
-from scvi.data.fields import NumericalObsField
+from scvi.data._constants import _SETUP_ARGS_KEY, _SETUP_METHOD_NAME
+from scvi.data.fields import LayerField, NumericalObsField
 from scvi.model._utils import parse_device_args
 from scvi.model.base import BaseModelClass
-from scvi.model.base._utils import _initialize_model
-from scvi.model.base._utils import _load_saved_files
-from scvi.model.base._utils import _validate_var_names
+from scvi.model.base._utils import (
+    _initialize_model,
+    _load_saved_files,
+    _validate_var_names,
+)
 from scvi.module.base import PyroBaseModuleClass
 
-from pyrovelocity.analysis.analyze import compute_mean_vector_field
-from pyrovelocity.analysis.analyze import compute_volcano_data
-from pyrovelocity.analysis.analyze import vector_field_uncertainty
+from pyrovelocity.analysis.analyze import (
+    compute_mean_vector_field,
+    compute_volcano_data,
+    vector_field_uncertainty,
+)
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models._trainer import VelocityTrainingMixin
 from pyrovelocity.models._velocity_module import VelocityModule
-
 
 __all__ = ["PyroVelocity"]
 
@@ -101,6 +99,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
     def __init__(
         self,
         adata: AnnData,
+        adata_atac: Optional[AnnData] = None,
         input_type: str = "raw",
         shared_time: bool = True,
         model_type: str = "auto",
@@ -128,6 +127,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
 
         Args:
             adata (AnnData): An AnnData object containing the gene expression data.
+            adata_atac (Optional[AnnData], optional) An AnnData object containing atac data.
             input_type (str, optional): Type of input data. Can be "raw", "knn", or "raw_cpm". Defaults to "raw".
             shared_time (bool, optional): Whether to use shared time. Defaults to True.
             model_type (str, optional): Type of model to use. Defaults to "auto".
