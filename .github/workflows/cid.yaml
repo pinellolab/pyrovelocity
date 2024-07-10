@@ -461,6 +461,8 @@ jobs:
       - run: nix profile install .#releaseEnv
       - uses: cihelper/action-semanticrelease-poetry@66900ba780321bcdb974891ee82f945a25a870d7 # ratchet:cihelper/action-semanticrelease-poetry@v1
         id: semanticrelease
+        with:
+          github-token: ${{ secrets.FAST_FORWARD_PAT }}
       - uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # ratchet:actions/upload-artifact@v4
         if: ${{ steps.semanticrelease.outputs.released == 'true' }}
         with:
