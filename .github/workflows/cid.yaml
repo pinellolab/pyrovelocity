@@ -75,6 +75,7 @@ jobs:
       skip_tests: ${{ steps.set-variables.outputs.skip_tests }}
       mode: ${{ steps.set-variables.outputs.mode }}
       checkout_ref: ${{ steps.set-variables.outputs.checkout_ref }}
+      checkout_rev: ${{ steps.set-variables.outputs.checkout_rev }}
 
     steps:
       - name: Set action variables
