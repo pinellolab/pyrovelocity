@@ -127,7 +127,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
 
         Args:
             adata (AnnData): An AnnData object containing the gene expression data.
-            adata_atac (Optional[AnnData], optional) An AnnData object containing atac data.
+            adata_atac (Optional[AnnData], optional): An AnnData object containing atac data.
             input_type (str, optional): Type of input data. Can be "raw", "knn", or "raw_cpm". Defaults to "raw".
             shared_time (bool, optional): Whether to use shared time. Defaults to True.
             model_type (str, optional): Type of model to use. Defaults to "auto".
