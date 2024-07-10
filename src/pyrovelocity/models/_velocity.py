@@ -332,9 +332,15 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             NumericalObsField("s_lib_size_scale", "s_lib_size_scale"),
             NumericalObsField("ind_x", "ind_x"),
         ]
+        
+        if adata_atac:
+            adata.layers['atac'] = adata_atac.X
+            anndata_fields += [LayerField('atac', 'atac')]
+        
         adata_manager = AnnDataManager(
             fields=anndata_fields, setup_method_args=setup_method_args
         )
+            
         adata_manager.register_fields(adata, **kwargs)
         cls.register_manager(adata_manager)
 
