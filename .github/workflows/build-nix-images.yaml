@@ -64,14 +64,14 @@ jobs:
   build:
     runs-on: pinellolab-runners
     steps:
-      - name: Cache argo CLI
-        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # ratchet:actions/cache@v4
-        with:
-          path: /usr/local/bin/argo
-          key: argo-${{ env.ARGO_VERSION }}
+      # - name: Cache argo CLI
+      #   uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # ratchet:actions/cache@v4
+      #   with:
+      #     path: /usr/local/bin/argo
+      #     key: argo-${{ env.ARGO_VERSION }}
       - name: Install argo CLI
         run: |
-          if [ ! -f /usr/local/bin/argo ] || [ "$(/usr/local/bin/argo version --short)" != "${{ env.ARGO_VERSION }}" ]; then
+          if [ ! -f /usr/local/bin/argo ]; then
             echo "Installing Argo CLI"
             cd $HOME
             sudo apt-get update && sudo apt-get install -y curl
