@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.2.0-beta.21](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.20...v0.2.0-beta.21) (2024-07-10)
+
+
+### Features
+
+* **argo:** add nix image build Workflow resource ([8c2179b](https://github.com/pinellolab/pyrovelocity/commit/8c2179b125773ac6861e2aa66b7d24a5a2762964))
+* **github:** add reusable workflow to build nix images ([33ab84f](https://github.com/pinellolab/pyrovelocity/commit/33ab84f4abbb9fd3b2595144a49803a5f48eb028))
+
+
+### Bug Fixes
+
+* **build-nix-images:** cache argo cli ([416acc8](https://github.com/pinellolab/pyrovelocity/commit/416acc8aa4464075ef7f234440f2d2275fa8a897))
+* **build-nix-images:** disable cache ([d85c34b](https://github.com/pinellolab/pyrovelocity/commit/d85c34bd1043f613ce85e08067e6b958ab8eb9f8))
+* **build-nix-images:** pin actions cache to v4 hash ([9dfcd8d](https://github.com/pinellolab/pyrovelocity/commit/9dfcd8d42bfe905afa0fcaf46dd1a1d7b9a4e607))
+* **build-nix-images:** preserve JSON list-formatted images argument ([c6dec80](https://github.com/pinellolab/pyrovelocity/commit/c6dec80303437945053229ca0902ab30ccb5616d))
+* **build-nix-images:** skip build in dev mode ([12ba002](https://github.com/pinellolab/pyrovelocity/commit/12ba002aca593d31b2a50580a2127a3eb206aeec))
+* **cid:** disable containerfile image builds ([850afe8](https://github.com/pinellolab/pyrovelocity/commit/850afe8d728628fb620cbd145e499ba9077e09d5))
+* **cid:** enable reusable workflow to build nix images ([dc224bd](https://github.com/pinellolab/pyrovelocity/commit/dc224bdc7cdd0f6a994571b367aefc844ca409fe))
+* **cid:** include checkout_rev in set-variables outputs ([e477c5b](https://github.com/pinellolab/pyrovelocity/commit/e477c5b8a436de73e839938dbbedad38c2f5ad14))
+* **cid:** migrate build-images reusable action usage to source ([221c073](https://github.com/pinellolab/pyrovelocity/commit/221c0733d316d2ce6538085c82fa3e58a2a45c10))
+* **cid:** only test workflow image build by default ([59daeb5](https://github.com/pinellolab/pyrovelocity/commit/59daeb538f0e482c105507f47fc62e1066549306))
+* **cid:** pass mode to build-nix-images workflow ([5c9ebf8](https://github.com/pinellolab/pyrovelocity/commit/5c9ebf88894cd4b512a91cbc968afbb6acf1e196))
+* **cid:** reenable all image builds ([3af29eb](https://github.com/pinellolab/pyrovelocity/commit/3af29eb38adba0290f6a9050f6a529ae3b68240c))
+* **cid:** reenable cachix for release job ([0513507](https://github.com/pinellolab/pyrovelocity/commit/051350790260d79140ae9862d5be2edbd87fbc83))
+* **cid:** set semantic release token variable ([a9bacf3](https://github.com/pinellolab/pyrovelocity/commit/a9bacf3f0deef25349c9728e7852d91a6b919f50))
+* **cid:** use `github.ref_name` in all concurrency group keys ([cf2641f](https://github.com/pinellolab/pyrovelocity/commit/cf2641ff702cd92be0a1772d420dcb74cd85a1b7))
+* **containers:** set default scrollback ([43172b7](https://github.com/pinellolab/pyrovelocity/commit/43172b72531474b8e9640498b465835909892873))
+* **containers:** update code extensions ([257c5d7](https://github.com/pinellolab/pyrovelocity/commit/257c5d786ba3cb565f92898d0910c8c1c88a8000))
+* **containers:** update SHELL path ([50b2a79](https://github.com/pinellolab/pyrovelocity/commit/50b2a795da53189cc1a38614fbacd9f24b8f6dd3))
+* **flake:** reenable upstream flocken ([9150817](https://github.com/pinellolab/pyrovelocity/commit/9150817c584eaf80811b8e71362615323d6bc9b5))
+* **make:** add commands to set fast forward variables ([1e43b30](https://github.com/pinellolab/pyrovelocity/commit/1e43b3068eb59908ef8732360b0f3a0331a4e677))
+* **mergify:** remove conditions from queue_rules ([fecedff](https://github.com/pinellolab/pyrovelocity/commit/fecedfff0f749f0dc230c935e203ef0311cba205))
+* **pkgs:** add bazel-buildtools to coreDevPackages ([b6e5708](https://github.com/pinellolab/pyrovelocity/commit/b6e57081f03bb78d55f1fd060b57afa7b165990f))
+* **pr-merge:** declare explicit github actor and pat ([ad09bc9](https://github.com/pinellolab/pyrovelocity/commit/ad09bc9b5218426db4879cbfe8008239fe0fe2a5))
+* **vscode:** disable python-environment-manager ([14e6cba](https://github.com/pinellolab/pyrovelocity/commit/14e6cbae2d940db804e5ed257cad0f69e6f534da))
+* **vscode:** remove unavailable workspace setting ([af62669](https://github.com/pinellolab/pyrovelocity/commit/af62669a7143f728d56dcf04a21ac8fe151468e9))
+
 ## [0.2.0-beta.20](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.19...v0.2.0-beta.20) (2024-07-08)
 
 
