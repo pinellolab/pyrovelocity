@@ -79,18 +79,19 @@ jobs:
         if: ${{ inputs.debug_enabled == 'true' }}
         uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # ratchet:mxschmitt/action-tmate@v3
       - name: build
+        env:
+          CI_GITHUB_SHA: ${{ inputs.revision }}
         run: |
-          echo "Building images: ${{ inputs.images }}"
-          echo "CI_GITHUB_SHA: ${{ inputs.revision }}"
-          CI_GITHUB_SHA="${{ inputs.revision }}"
+          echo "Building images: '${{ inputs.images }}'"
           CI_GITHUB_SHA_SHORT="${CI_GITHUB_SHA:0:7}"
+          echo "CI_GITHUB_SHA: $CI_GITHUB_SHA"
           echo "CI_GITHUB_SHA_SHORT: $CI_GITHUB_SHA_SHORT"
           echo "Branch: ${{ inputs.branch }}"
           echo "Version: ${{ inputs.version }}"
 
           argo submit .argo/nix.yaml \
             --generate-name="pyrovelocity-nix-${CI_GITHUB_SHA_SHORT}-" \
-            -p images="${{ inputs.images }}" \
+            -p images='${{ inputs.images }}' \
             -p version="${{ inputs.version }}" \
             -p branch="${{ inputs.branch }}" \
             -p gitShaShort="${CI_GITHUB_SHA_SHORT}" \
