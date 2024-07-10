@@ -367,6 +367,7 @@ jobs:
       images: '["pyrovelocity"]'
       branch: ${{ needs.set-variables.outputs.checkout_ref }}
       revision: ${{ needs.set-variables.outputs.checkout_rev }}
+      mode: ${{ needs.set-variables.outputs.mode }}
 
   execute-workflow:
     needs: [config-workflows, build-nix-images, set-variables]
@@ -499,6 +500,7 @@ jobs:
       images: '["pyrovelocity","pyrovelocitydev","pyrovelocitycode","pyrovelocityjupyter"]'
       branch: ${{ needs.set-variables.outputs.checkout_ref }}
       revision: ${{ needs.release.outputs.git-head }}
+      mode: "prod"
 
   publish-pypi:
     runs-on: ubuntu-latest
