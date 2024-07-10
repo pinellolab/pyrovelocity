@@ -25,8 +25,3 @@ queue_rules:
     update_method: rebase
     update_bot_account: pyrovelocity-bot
     merge_bot_account: pyrovelocity-bot
-    conditions:
-      - check-success=test-python
-      - check-success=test-nix
-      - check-success=test-bazel
-      - check-success=test-docs-build
