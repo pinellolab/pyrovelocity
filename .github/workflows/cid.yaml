@@ -307,21 +307,21 @@ jobs:
       #   # Toggling use-gha-cache can help resolve `Nix daemon disconnected unexpectedly`.
       #   with:
       #     use-gha-cache: false
-      # - uses: cachix/cachix-action@ad2ddac53f961de1989924296a1f236fcfbaa4fc # ratchet:cachix/cachix-action@v15
+      - uses: cachix/cachix-action@ad2ddac53f961de1989924296a1f236fcfbaa4fc # ratchet:cachix/cachix-action@v15
+        with:
+          name: "${{ vars.CACHIX_CACHE_NAME }}"
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+      # - name: "Authenticate to Google Cloud"
+      #   uses: "google-github-actions/auth@55bd3a7c6e2ae7cf1877fd1ccb9d54c0503c457c" # ratchet:google-github-actions/auth@v2
       #   with:
-      #     name: "${{ vars.CACHIX_CACHE_NAME }}"
-      #     authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
-      - name: "Authenticate to Google Cloud"
-        uses: "google-github-actions/auth@55bd3a7c6e2ae7cf1877fd1ccb9d54c0503c457c" # ratchet:google-github-actions/auth@v2
-        with:
-          credentials_json: "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}"
-      - name: Set up remote cache
-        uses: zombiezen/setup-nix-cache-action@78efa9db5802d6a141bc42681edf000bf7f31a08 # ratchet:zombiezen/setup-nix-cache-action@v0
-        with:
-          substituters: "${{ vars.NIX_SUBSTITUTER }}"
-          secret_keys: "${{ secrets.NIX_PRIVATE_KEY }}"
-          use_nixcached: true
-          nixcached_upload_options: --jobs 8
+      #     credentials_json: "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}"
+      # - name: Set up remote cache
+      #   uses: zombiezen/setup-nix-cache-action@78efa9db5802d6a141bc42681edf000bf7f31a08 # ratchet:zombiezen/setup-nix-cache-action@v0
+      #   with:
+      #     substituters: "${{ vars.NIX_SUBSTITUTER }}"
+      #     secret_keys: "${{ secrets.NIX_PRIVATE_KEY }}"
+      #     use_nixcached: true
+      #     nixcached_upload_options: --jobs 8
       - uses: rlespinasse/github-slug-action@797d68864753cbceedc271349d402da4590e6302 # ratchet:rlespinasse/github-slug-action@v4
         with:
           prefix: CI_
@@ -364,14 +364,11 @@ jobs:
     with:
       debug_enabled: ${{ needs.set-variables.outputs.debug }}
       version: ""
-      # images: '["pyrovelocity","pyrovelocitydev","pyrovelocitycode","pyrovelocityjupyter"]'
-      images: '["pyrovelocity","pyrovelocitycode"]'
+      images: '["pyrovelocity"]'
       branch: ${{ needs.set-variables.outputs.checkout_ref }}
       revision: ${{ needs.set-variables.outputs.checkout_rev }}
 
   execute-workflow:
-    # needs: [config-workflows, build-nix-images, set-variables]
-    # needs: [config-workflows, set-variables]
     needs: [config-workflows, build-nix-images, set-variables]
 
     if: ${{ needs.set-variables.outputs.skip_ci != 'true' && (contains(github.event.pull_request.labels.*.name, 'execute-workflow') || (github.event_name == 'workflow_dispatch' && inputs.run_execute_workflow)) }}
