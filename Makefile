@@ -317,6 +317,7 @@ ghsecrets: ## Update github secrets for GH_REPO from ".env" file.
 	gh secret set NIX_PRIVATE_KEY --repo="$(GH_REPO)" --body="$(NIX_PRIVATE_KEY)"
 	gh secret set GCS_HMAC_ACCESS_ID --repo="$(GH_REPO)" --body="$(GCS_HMAC_ACCESS_ID)"
 	gh secret set GCS_HMAC_SECRET_ACCESS_KEY --repo="$(GH_REPO)" --body="$(GCS_HMAC_SECRET_ACCESS_KEY)"
+	gh secret set FAST_FORWARD_PAT --repo="$(GH_REPO)" --body="$(FAST_FORWARD_PAT)"
 	@echo
 	@echo secrets after updates:
 	@echo
@@ -331,6 +332,7 @@ ghvars: ## Update github secrets for GH_REPO from ".env" file.
 	gh variable set CACHIX_CACHE_NAME --repo="$(GH_REPO)" --body="$(CACHIX_CACHE_NAME)"
 	gh variable set NIX_SUBSTITUTER --repo="$(GH_REPO)" --body="$(NIX_SUBSTITUTER)"
 	gh variable set S3_NIX_SUBSTITUTER --repo="$(GH_REPO)" --body="$(S3_NIX_SUBSTITUTER)"
+	gh variable set FAST_FORWARD_ACTOR --repo="$(GH_REPO)" --body="$(FAST_FORWARD_ACTOR)"
 	@echo
 	@echo variables after updates:
 	@echo
