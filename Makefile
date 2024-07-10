@@ -654,8 +654,8 @@ cluster-config: ## Set kube context for cluster in CLUSTER_DEV_CONFIG.
 # CLUSTER_DEV_INSTANCE_NAME ?= dev
 # CUE_DEV_VALUES ?= dev.cue
 # CLUSTER_DEV_MODULE_PATH ?=./dev/cluster/pyrovelocity/pyrovelocitydev
-CLUSTER_DEV_INSTANCE_NAME ?= pyrovelocitydev
-# CLUSTER_DEV_INSTANCE_NAME ?= nixbuild
+# CLUSTER_DEV_INSTANCE_NAME ?= pyrovelocitydev
+CLUSTER_DEV_INSTANCE_NAME ?= nixbuild
 CLUSTER_DEV_MODULE_PATH ?=./dev/cluster/pyrovelocity/$(CLUSTER_DEV_INSTANCE_NAME)
 CUE_DEV_VALUES ?= $(CLUSTER_DEV_MODULE_PATH).cue
 
@@ -913,9 +913,8 @@ approve-prs: ## Approve github pull requests from bots: PR_ENTRIES="2-5 10 12-18
 		fi; \
 	done
 
-PREVIOUS_VERSION := 0.2.0b18
-NEXT_VERSION := 0.2.0b19
-
+PREVIOUS_VERSION := 0.2.0b20
+NEXT_VERSION := 0.2.0b21
 VERSION_FILES := \
 	pyproject.toml \
 	conda/colab/construct.yaml \
