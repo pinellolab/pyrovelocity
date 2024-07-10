@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  namespace: argo
+spec:
+  entrypoint: main
+  serviceAccountName: argo-server
+  arguments:
+    parameters:
+      - name: appName
+        value: pyrovelocity
+      - name: gitUrlNoProtocol
+        value: github.com/pinellolab
+      - name: images
+      - name: version
+      - name: branch
+      - name: gitShaShort
+      - name: gitSha
+
+  templates:
+    - name: main
+      steps:
+        - - name: publish-pyrovelocity-image
+            templateRef:
+              name: nix-workflow-template
+              template: main
+              clusterScope: true
+            arguments:
+              parameters:
+                - name: appName
+                  value: "{{workflow.parameters.appName}}"
+                - name: gitUrlNoProtocol
+                  value: "{{workflow.parameters.gitUrlNoProtocol}}"
+                - name: imageName
+                  value: "{{item}}"
+                - name: version
+                  value: "{{workflow.parameters.version}}"
+                - name: branch
+                  value: "{{workflow.parameters.branch}}"
+                - name: gitShaShort
+                  value: "{{workflow.parameters.gitShaShort}}"
+                - name: gitSha
+                  value: "{{workflow.parameters.gitSha}}"
+            withParam: "{{workflow.parameters.images}}"
