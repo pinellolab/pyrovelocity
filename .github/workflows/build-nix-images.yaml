@@ -24,6 +24,14 @@ on:
         description: "Git revision from which to build the container image"
         required: true
         type: string
+      mode:
+        description: "Container build mode ('dev' uses branch name image tags and 'prod' uses short sha.)"
+        required: true
+        type: choice
+        default: "dev"
+        options:
+          - dev
+          - prod
   workflow_call:
     inputs:
       debug_enabled:
@@ -47,6 +55,11 @@ on:
         description: "Git revision from which to build the container image"
         required: true
         type: string
+      mode:
+        description: "Container build mode ('dev' skips and 'prod' builds.)"
+        required: true
+        type: string
+        default: "dev"
 
 env:
   ARGO_NAMESPACE: argo
@@ -70,6 +83,7 @@ jobs:
       #     path: /usr/local/bin/argo
       #     key: argo-${{ env.ARGO_VERSION }}
       - name: Install argo CLI
+        if: ${{ inputs.mode != 'dev' }}
         run: |
           if [ ! -f /usr/local/bin/argo ]; then
             echo "Installing Argo CLI"
@@ -89,6 +103,7 @@ jobs:
         if: ${{ inputs.debug_enabled == 'true' }}
         uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # ratchet:mxschmitt/action-tmate@v3
       - name: Build images
+        if: ${{ inputs.mode != 'dev' }}
         env:
           CI_GITHUB_SHA: ${{ inputs.revision }}
         run: |
