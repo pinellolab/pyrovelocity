@@ -364,7 +364,8 @@ jobs:
     with:
       debug_enabled: ${{ needs.set-variables.outputs.debug }}
       version: ""
-      images: '["pyrovelocity","pyrovelocitydev","pyrovelocitycode","pyrovelocityjupyter"]'
+      # images: '["pyrovelocity","pyrovelocitydev","pyrovelocitycode","pyrovelocityjupyter"]'
+      images: '["pyrovelocity","pyrovelocitycode"]'
       branch: ${{ needs.set-variables.outputs.checkout_ref }}
       revision: ${{ needs.set-variables.outputs.checkout_rev }}
 
