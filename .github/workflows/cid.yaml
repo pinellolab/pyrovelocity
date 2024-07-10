@@ -166,7 +166,7 @@ jobs:
     needs: [set-variables, config-workflows]
     if: ${{ needs.set-variables.outputs.skip_ci != 'true' && needs.set-variables.outputs.skip_tests != 'true' }}
     concurrency:
-      group: test-python-${{ matrix.python_version }}-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}-${{ needs.set-variables.outputs.mode }}
+      group: test-python-${{ matrix.python_version }}-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref_name }}-${{ needs.set-variables.outputs.mode }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -230,7 +230,7 @@ jobs:
     needs: [set-variables, config-workflows]
     if: ${{ needs.set-variables.outputs.skip_ci != 'true' && needs.set-variables.outputs.skip_tests != 'true' }}
     concurrency:
-      group: test-bazel-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}-${{ needs.set-variables.outputs.mode }}
+      group: test-bazel-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref_name }}-${{ needs.set-variables.outputs.mode }}
       cancel-in-progress: true
     permissions:
       contents: read
@@ -282,7 +282,7 @@ jobs:
     if: ${{ needs.set-variables.outputs.skip_ci != 'true' && needs.set-variables.outputs.skip_tests != 'true' }}
 
     concurrency:
-      group: test-nix-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}-${{ needs.set-variables.outputs.mode }}
+      group: test-nix-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref_name }}-${{ needs.set-variables.outputs.mode }}
       cancel-in-progress: true
     permissions:
       contents: read
@@ -364,7 +364,7 @@ jobs:
     with:
       debug_enabled: ${{ needs.set-variables.outputs.debug }}
       version: ""
-      images: '["pyrovelocity","pyrovelocitydev","pyrovelocitycode","pyrovelocityjupyter"]'
+      images: '["pyrovelocity"]'
       branch: ${{ needs.set-variables.outputs.checkout_ref }}
       revision: ${{ needs.set-variables.outputs.checkout_rev }}
 
@@ -374,7 +374,7 @@ jobs:
     if: ${{ needs.set-variables.outputs.skip_ci != 'true' && (contains(github.event.pull_request.labels.*.name, 'execute-workflow') || (github.event_name == 'workflow_dispatch' && inputs.run_execute_workflow)) }}
     runs-on: ubuntu-latest
     concurrency:
-      group: ef-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}-${{ needs.set-variables.outputs.mode }}
+      group: ef-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref_name }}-${{ needs.set-variables.outputs.mode }}
       cancel-in-progress: true
     strategy:
       matrix:
