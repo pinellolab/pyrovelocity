@@ -354,19 +354,6 @@ jobs:
           --print-build-logs
           df -h
 
-  # build-docker-images:
-  #   needs: [set-variables]
-  #   if: ${{ needs.set-variables.outputs.skip_ci != 'true' && needs.set-variables.outputs.mode != 'dev' && (contains(github.event.pull_request.labels.*.name, 'build-images') || contains(github.event.pull_request.labels.*.name, 'execute-workflow') || (github.event_name == 'workflow_dispatch' && inputs.run_build_images)) }}
-  #   uses: ./.github/workflows/build-images.yaml
-  #   # concurrency:
-  #   #   group: bi-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}-${{ needs.set-variables.outputs.mode }}
-  #   #   cancel-in-progress: true
-  #   secrets:
-  #     GCP_ARTIFACT_REGISTRY_PATH: ${{ secrets.GCP_ARTIFACT_REGISTRY_PATH }}
-  #   with:
-  #     debug_enabled: ${{ needs.set-variables.outputs.debug }}
-  #     mode: ${{ needs.set-variables.outputs.mode }}
-
   build-nix-images:
     needs: [set-variables]
     if: ${{ needs.set-variables.outputs.skip_ci != 'true' && ( contains(github.event.pull_request.labels.*.name, 'build-images') || contains(github.event.pull_request.labels.*.name, 'execute-workflow') || (github.event_name == 'workflow_dispatch' && inputs.run_build_images) || (github.event_name == 'workflow_dispatch' && inputs.run_execute_workflow) ) }}
