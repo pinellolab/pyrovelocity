@@ -1,0 +1,98 @@
+name: Build nix images
+
+on:
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: "Run with tmate.io debugging enabled"
+        required: true
+        type: boolean
+        default: false
+      version:
+        description: "Version of the container image"
+        required: true
+        type: string
+      images:
+        description: "List of images to build"
+        required: true
+        type: string
+      branch:
+        description: "Git branch from which to build the container image"
+        required: true
+        type: string
+      revision:
+        description: "Git revision from which to build the container image"
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      debug_enabled:
+        description: "Run with tmate.io debugging enabled"
+        required: true
+        type: string
+        default: "false"
+      version:
+        description: "Version of the container image"
+        required: true
+        type: string
+      images:
+        description: 'Stringified list ''["i1", "i2", ...]'' of image names to build'
+        required: true
+        type: string
+      branch:
+        description: "Git branch from which to build the container image"
+        required: true
+        type: string
+      revision:
+        description: "Git revision from which to build the container image"
+        required: true
+        type: string
+
+env:
+  ARGO_NAMESPACE: argo
+  ARGO_VERSION: v3.5.8
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  build:
+    runs-on: pinellolab-runners
+    steps:
+      - name: Setup Runner for Argo
+        run: |
+          cd $HOME
+          sudo apt-get update && sudo apt-get install -y curl
+          curl -sLO https://github.com/argoproj/argo-workflows/releases/download/${ARGO_VERSION}/argo-linux-amd64.gz
+          gunzip argo-linux-amd64.gz
+          chmod +x argo-linux-amd64
+          sudo mv ./argo-linux-amd64 /usr/local/bin/argo
+          argo version
+      - name: Check out repository code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # ratchet:actions/checkout@v4
+      - name: Setup tmate debug session
+        if: ${{ inputs.debug_enabled == 'true' }}
+        uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # ratchet:mxschmitt/action-tmate@v3
+      - name: build
+        run: |
+          echo "Building images: ${{ inputs.images }}"
+          echo "CI_GITHUB_SHA: ${{ inputs.revision }}"
+          CI_GITHUB_SHA="${{ inputs.revision }}"
+          CI_GITHUB_SHA_SHORT="${CI_GITHUB_SHA:0:7}"
+          echo "CI_GITHUB_SHA_SHORT: $CI_GITHUB_SHA_SHORT"
+          echo "Branch: ${{ inputs.branch }}"
+          echo "Version: ${{ inputs.version }}"
+
+          argo submit .argo/nix.yaml \
+            --generate-name="pyrovelocity-nix-${CI_GITHUB_SHA_SHORT}-" \
+            -p images="${{ inputs.images }}" \
+            -p version="${{ inputs.version }}" \
+            -p branch="${{ inputs.branch }}" \
+            -p gitShaShort="${CI_GITHUB_SHA_SHORT}" \
+            -p gitSha="${CI_GITHUB_SHA}" \
+            --wait --log
