@@ -158,7 +158,6 @@
   baseContainerImageConfig = {
     name = "base-${packageName}";
     tag = "latest";
-    # created = "now";
 
     maxLayers = 118;
     compressor = "none";
@@ -176,18 +175,11 @@
   baseDevcontainerImageConfig = {
     name = "base-${packageName}dev";
     tag = "latest";
-    # created = "now";
 
     maxLayers = 118;
     compressor = "none";
 
     contents = devcontainerContents;
-    # runAsRoot = ''
-    #   #!${pkgs.runtimeShell}
-    #   export PATH=${pkgs.lib.makeBinPath [ pkgs.gnumake pkgs.openvscode-server ]}:/bin:/usr/bin:$PATH
-    #   cd ${packageRootDir}
-    #   make vscode-install-extensions
-    # '';
     config = makeContainerConfig {
       pkgs = pkgs;
       packageSrcPath = packageSrcPath;
@@ -205,7 +197,7 @@
     tag = "latest";
 
     maxLayers = 121;
-    compressor = "none";
+    compressor = "zstd";
 
     contents = devcontainerContents ++ [packageGitRepoToContainer];
     config = makeContainerConfig {
@@ -228,7 +220,7 @@
     tag = "latest";
 
     maxLayers = 121;
-    compressor = "none";
+    compressor = "zstd";
 
     contents = devcontainerContents ++ [packageGitRepoToContainer];
     config = makeContainerConfig {
