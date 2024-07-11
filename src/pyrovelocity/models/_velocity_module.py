@@ -334,7 +334,7 @@ class MultiVelocityModule(PyroBaseModuleClass):
 
         self.cell_specific_kinetics = cell_specific_kinetics
 
-        self._model = VelocityModelAuto(
+        self._model = MultiVelocityModelAuto(
             self.num_cells,
             self.num_genes,
             likelihood,
