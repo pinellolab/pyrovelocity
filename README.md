@@ -5,7 +5,7 @@
 <img
     src="https://raw.githubusercontent.com/pinellolab/pyrovelocity/beta/docs/_static/logo.png"
     alt="Pyro-Velocity logo"
-    style="width: 300px; max-width: 90%; height: auto; max-height: 350px;"
+    style="width: 300px; max-width: 60%; height: auto; max-height: 350px;"
     role="img">
 </a>
 
