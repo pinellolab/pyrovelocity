@@ -16,9 +16,18 @@ spec:
       - name: branch
       - name: gitShaShort
       - name: gitSha
+      - name: provisioningMode
+        value: standard # standard | spot
 
   templates:
     - name: main
+      retryStrategy:
+        limit: "3"
+        retryPolicy: "OnFailure"
+        backoff:
+          duration: "20s"
+          factor: "2"
+          maxDuration: "2m"
       steps:
         - - name: publish-pyrovelocity-image
             templateRef:
@@ -41,4 +50,6 @@ spec:
                   value: "{{workflow.parameters.gitShaShort}}"
                 - name: gitSha
                   value: "{{workflow.parameters.gitSha}}"
+                - name: provisioningMode
+                  value: "{{workflow.parameters.provisioningMode}}"
             withParam: "{{workflow.parameters.images}}"
