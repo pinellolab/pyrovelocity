@@ -242,38 +242,38 @@
 in rec {
   baseContainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb baseContainerImageConfig;
   baseDevContainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb baseDevcontainerImageConfig;
-  containerImage = pkgs.dockerTools.buildLayeredImageWithNixDb containerImageConfig;
-  devcontainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb devcontainerImageConfig;
-  # containerImage = pkgs.dockerTools.buildLayeredImageWithNixDb {
-  #   name = "${packageName}";
-  #   tag = "latest";
-  #   maxLayers = 121;
-  #   compressor = "zstd";
-  #   fromImage = baseContainerImage;
-  #   contents = [packageGitRepoToContainer];
-  #   config = {
-  #     Env = [
-  #       "GIT_REPO_NAME=${builtins.getEnv "GIT_REPO_NAME"}"
-  #       "GIT_REF=${builtins.getEnv "GIT_REF"}"
-  #       "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
-  #       "GIT_SHA_SHORT=${builtins.getEnv "GIT_SHA_SHORT"}"
-  #     ];
-  #   };
-  # };
-  # devcontainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb {
-  #   name = "${packageName}dev";
-  #   tag = "latest";
-  #   maxLayers = 121;
-  #   compressor = "zstd";
-  #   fromImage = baseDevContainerImage;
-  #   contents = [packageGitRepoToContainer];
-  #   config = {
-  #     Env = [
-  #       "GIT_REPO_NAME=${builtins.getEnv "GIT_REPO_NAME"}"
-  #       "GIT_REF=${builtins.getEnv "GIT_REF"}"
-  #       "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
-  #       "GIT_SHA_SHORT=${builtins.getEnv "GIT_SHA_SHORT"}"
-  #     ];
-  #   };
-  # };
+  # containerImage = pkgs.dockerTools.buildLayeredImageWithNixDb containerImageConfig;
+  # devcontainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb devcontainerImageConfig;
+  containerImage = pkgs.dockerTools.buildLayeredImageWithNixDb {
+    name = "${packageName}";
+    tag = "latest";
+    maxLayers = 121;
+    compressor = "zstd";
+    fromImage = baseContainerImage;
+    contents = [packageGitRepoToContainer];
+    config = {
+      Env = [
+        "GIT_REPO_NAME=${builtins.getEnv "GIT_REPO_NAME"}"
+        "GIT_REF=${builtins.getEnv "GIT_REF"}"
+        "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
+        "GIT_SHA_SHORT=${builtins.getEnv "GIT_SHA_SHORT"}"
+      ];
+    };
+  };
+  devcontainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb {
+    name = "${packageName}dev";
+    tag = "latest";
+    maxLayers = 121;
+    compressor = "zstd";
+    fromImage = baseDevContainerImage;
+    contents = [packageGitRepoToContainer];
+    config = {
+      Env = [
+        "GIT_REPO_NAME=${builtins.getEnv "GIT_REPO_NAME"}"
+        "GIT_REF=${builtins.getEnv "GIT_REF"}"
+        "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
+        "GIT_SHA_SHORT=${builtins.getEnv "GIT_SHA_SHORT"}"
+      ];
+    };
+  };
 }
