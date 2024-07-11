@@ -320,7 +320,7 @@
             };
             registries = {
               "ghcr.io" = {
-                enable = isVersionNonEmpty;
+                enable = false;
                 repo = "${gitHubOrg}/${packageName}code";
                 username = builtins.getEnv "GITHUB_ACTOR";
                 password = "$GH_TOKEN";
@@ -359,7 +359,7 @@
             };
             registries = {
               "ghcr.io" = {
-                enable = isVersionNonEmpty;
+                enable = false;
                 repo = "${gitHubOrg}/${packageName}jupyter";
                 username = builtins.getEnv "GITHUB_ACTOR";
                 password = "$GH_TOKEN";
