@@ -242,38 +242,47 @@
 in rec {
   baseContainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb baseContainerImageConfig;
   baseDevContainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb baseDevcontainerImageConfig;
-  containerImage = pkgs.dockerTools.buildLayeredImageWithNixDb containerImageConfig;
-  devcontainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb devcontainerImageConfig;
-  # containerImage = pkgs.dockerTools.buildLayeredImageWithNixDb {
-  #   name = "${packageName}";
-  #   tag = "latest";
-  #   maxLayers = 121;
-  #   compressor = "zstd";
-  #   fromImage = baseContainerImage;
-  #   contents = [packageGitRepoToContainer];
-  #   config = {
-  #     Env = [
-  #       "GIT_REPO_NAME=${builtins.getEnv "GIT_REPO_NAME"}"
-  #       "GIT_REF=${builtins.getEnv "GIT_REF"}"
-  #       "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
-  #       "GIT_SHA_SHORT=${builtins.getEnv "GIT_SHA_SHORT"}"
-  #     ];
-  #   };
-  # };
-  # devcontainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb {
-  #   name = "${packageName}dev";
-  #   tag = "latest";
-  #   maxLayers = 121;
-  #   compressor = "zstd";
-  #   fromImage = baseDevContainerImage;
-  #   contents = [packageGitRepoToContainer];
-  #   config = {
-  #     Env = [
-  #       "GIT_REPO_NAME=${builtins.getEnv "GIT_REPO_NAME"}"
-  #       "GIT_REF=${builtins.getEnv "GIT_REF"}"
-  #       "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
-  #       "GIT_SHA_SHORT=${builtins.getEnv "GIT_SHA_SHORT"}"
-  #     ];
-  #   };
-  # };
+  # It is possible to build the container images directly, with
+  #
+  # containerImage = pkgs.dockerTools.buildLayeredImageWithNixDb containerImageConfig;
+  # devcontainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb devcontainerImageConfig;
+  #
+  # but it is more efficient to layer the source code, which
+  # contains environmental impurities, on top of a base image
+  # to allow for better caching when only the source code
+  # but not the dependencies have changed. This currently results in
+  # a 5 minute versus 20 minute build time for the zstandard
+  # compressed image tarball.
+  containerImage = pkgs.dockerTools.buildLayeredImageWithNixDb {
+    name = "${packageName}";
+    tag = "latest";
+    maxLayers = 121;
+    compressor = "zstd";
+    fromImage = baseContainerImage;
+    contents = [packageGitRepoToContainer];
+    config = {
+      Env = [
+        "GIT_REPO_NAME=${builtins.getEnv "GIT_REPO_NAME"}"
+        "GIT_REF=${builtins.getEnv "GIT_REF"}"
+        "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
+        "GIT_SHA_SHORT=${builtins.getEnv "GIT_SHA_SHORT"}"
+      ];
+    };
+  };
+  devcontainerImage = pkgs.dockerTools.buildLayeredImageWithNixDb {
+    name = "${packageName}dev";
+    tag = "latest";
+    maxLayers = 121;
+    compressor = "zstd";
+    fromImage = baseDevContainerImage;
+    contents = [packageGitRepoToContainer];
+    config = {
+      Env = [
+        "GIT_REPO_NAME=${builtins.getEnv "GIT_REPO_NAME"}"
+        "GIT_REF=${builtins.getEnv "GIT_REF"}"
+        "GIT_SHA=${builtins.getEnv "GIT_SHA"}"
+        "GIT_SHA_SHORT=${builtins.getEnv "GIT_SHA_SHORT"}"
+      ];
+    };
+  };
 }
