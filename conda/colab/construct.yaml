@@ -1,5 +1,5 @@
 name: pyrovelocity-colab
-version: 0.2.0b21
+version: 0.2.0b22
 
 channels:
   - pytorch
