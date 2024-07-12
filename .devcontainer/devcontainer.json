@@ -15,7 +15,12 @@
         "Catppuccin.catppuccin-vsc",
         "jnoortheen.nix-ide",
         "tamasfe.even-better-toml",
-        "donjayamanne.python-extension-pack",
+        // "donjayamanne.python-extension-pack",
+        // "wholroyd.jinja"
+        // "batisteo.vscode-django"
+        "ms-python.python",
+        "njpwerner.autodocstring",
+        "KevinRose.vsc-python-indent",
         "charliermarsh.ruff",
         "redhat.vscode-yaml",
         "ms-kubernetes-tools.vscode-kubernetes-tools",
