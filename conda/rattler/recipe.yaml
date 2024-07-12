@@ -3,11 +3,11 @@ schema_version: 1
 
 context:
   name: pyrovelocity
-  version: 0.2.0b21
+  version: 0.2.0b22
   # gitorg: pinellolab
-  # gittag: v0.2.0-beta.19
+  # gittag: v0.2.0-beta.22
   # gitref: beta
-  # gitrev: f0a6fe01472a28a5789625d801fca4afe530c2b2
+  # gitrev: 1aefc6f0d093ae8d69ec4252785017a00af5206f
 
 package:
   name: ${{ name|lower }}
@@ -21,7 +21,7 @@ source:
   # url: https://github.com/{{ gitorg }}/{{ name }}/archive/{{ gitrev }}.tar.gz
   # sha256: 5edfd07ed970e6834c40043c94025e495a80e590bb2146f4f2cc0350abc23355
   url: https://pypi.io/packages/source/${{ name[0] }}/${{ name }}/${{ name }}-${{ version }}.tar.gz
-  sha256: dd686722f24276dd5b7d91c0d84e82120cbd07ff3d8d9099897bf9aaa9125aa8
+  sha256: dbd71585ea6269951f0e8db476965b82cf3c3166c00a9e9c07f472d68b564acd
 
 build:
   number: 0
