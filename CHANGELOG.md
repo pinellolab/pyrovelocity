@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.2.0-beta.22](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.21...v0.2.0-beta.22) (2024-07-12)
+
+
+### Bug Fixes
+
+* **argo:** set provisioning mode and retry strategy ([e4165ef](https://github.com/pinellolab/pyrovelocity/commit/e4165ef4c3d82d376578b298d7018d7d5cb7311b))
+* **cid:** disable building dev image ([5a2e678](https://github.com/pinellolab/pyrovelocity/commit/5a2e678546e3f52913596a65fbd7b811b4f3a04f))
+* **cid:** disable publishing dev image ([e1e4e19](https://github.com/pinellolab/pyrovelocity/commit/e1e4e19ce3f81fadf0266947fbd88569c3dc6d64))
+* **cid:** set build and publish image values for release ([88b24c2](https://github.com/pinellolab/pyrovelocity/commit/88b24c2e17b7ac54f66aa9ddeb19ef4f2efd792c))
+* **code:** reenable layer compression ([3af073c](https://github.com/pinellolab/pyrovelocity/commit/3af073c4c0ef072828800576c5fa2afabed71144))
+* **containers:** disable top-level source layer ([5832044](https://github.com/pinellolab/pyrovelocity/commit/5832044f71aecfc32cae140d2c53f5d569ee0857))
+* **containers:** note build time difference with surface-level source layer composition ([79bc2b8](https://github.com/pinellolab/pyrovelocity/commit/79bc2b8a561e1b98fb36ec837916061d06078eb5))
+* **containers:** reenable layer compression ([3535fa4](https://github.com/pinellolab/pyrovelocity/commit/3535fa4013788350c68bda27dee5cf7358c0942c))
+* **containers:** reenable top-level source layer ([fc929c8](https://github.com/pinellolab/pyrovelocity/commit/fc929c8b39cbb8c866bb57f5abcdb426e41f1de0))
+* **devcontainer:** sync extensions ([3c8bada](https://github.com/pinellolab/pyrovelocity/commit/3c8badad7c4c0ebff84bd504f03e2deb0c3f108b))
+* **flake:** disable server image push to ghcr ([c97fb9b](https://github.com/pinellolab/pyrovelocity/commit/c97fb9bf5ee82f77d363c2b971118d93399fc0a9))
+* **jupyter:** reenable layer compression ([28e9edf](https://github.com/pinellolab/pyrovelocity/commit/28e9edf03a5dce801abe48c812e7779e9dff0891))
+
 ## [0.2.0-beta.21](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0-beta.20...v0.2.0-beta.21) (2024-07-10)
 
 
