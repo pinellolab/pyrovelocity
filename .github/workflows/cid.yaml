@@ -481,13 +481,11 @@ jobs:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # ratchet:actions/checkout@v4
         with:
           ref: ${{ needs.release.outputs.git-tag }}
-          # ref: refs/tags/v0.2.0-beta.10
       - uses: DeterminateSystems/nix-installer-action@7993355175c2765e5733dae74f3e0786fe0e5c4f # ratchet:DeterminateSystems/nix-installer-action@v12
       - uses: DeterminateSystems/flakehub-push@150c971996b1d14eaba6790102041234f606379f # ratchet:DeterminateSystems/flakehub-push@main
         with:
           visibility: unlisted
           tag: ${{ needs.release.outputs.version }}
-          # tag: v0.2.0-beta.10
 
   publish-release-images:
     needs: [set-variables, release]
