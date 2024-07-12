@@ -281,7 +281,7 @@
             };
             registries = {
               "ghcr.io" = {
-                enable = isVersionNonEmpty;
+                enable = false;
                 repo = "${gitHubOrg}/${packageName}dev";
                 username = builtins.getEnv "GITHUB_ACTOR";
                 password = "$GH_TOKEN";
