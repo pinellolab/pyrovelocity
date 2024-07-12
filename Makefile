@@ -452,9 +452,7 @@ devcontainer: devcontainer-script
 
 # The default value for DEVCONTAINER_IMAGE FQN can be completely overriden to
 # support specification of tags or digests (see .example.env and create .env)
-DEVCONTAINER_IMAGE ?= ghcr.io/pinellolab/pyrovelocitydev
-# DEVCONTAINER_IMAGE=ghcr.io/pinellolab/pyrovelocitydev:main
-# DEVCONTAINER_IMAGE=ghcr.io/pinellolab/pyrovelocitydev@sha256:
+DEVCONTAINER_IMAGE ?= us-central1-docker.pkg.dev/pyro-284215/pyrovelocity/pyrovelocitydev
 
 drundc: ## Run devcontainer. make drundc DEVCONTAINER_IMAGE=
 	docker run --rm -it $(DEVCONTAINER_IMAGE)
@@ -535,7 +533,7 @@ vscode-server: ## Run vscode server.
 #-----------------
 
 .PHONY: jupyter
-jupyter: ## Run jupyter lab in devcontainer. make jupyter DEVCONTAINER_IMAGE=ghcr.io/pinellolab/pyrovelocitydev@sha256:
+jupyter: ## Run jupyter lab in devcontainer. make jupyter DEVCONTAINER_IMAGE=us-central1-docker.pkg.dev/pyro-284215/pyrovelocity/pyrovelocitydev@sha256:
 	@echo "Attempting to start jupyter lab in"
 	@echo
 	@echo "DEVCONTAINER_IMAGE: $(DEVCONTAINER_IMAGE)"

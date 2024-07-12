@@ -5,7 +5,7 @@ package main
 values: {
 	message: "pyrovelocitydev"
 	image: {
-		repository: "ghcr.io/pinellolab/pyrovelocitydev"
+		repository: "us-central1-docker.pkg.dev/pyro-284215/pyrovelocity/pyrovelocitydev"
 		digest:     "" // "sha256:bbbbb"
 		tag:        "" // "latest"
 	}
