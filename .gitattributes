@@ -4,3 +4,4 @@ docs/** linguist-documentation=true
 Makefile linguist-detectable=false
 nbs/** linguist-documentation=true
 reproducibility/** linguist-detectable=false
+scripts/** linguist-detectable=false
