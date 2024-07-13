@@ -155,7 +155,7 @@ jobs:
           GCP_STORAGE_CONTAINER: ${{ secrets.GCP_STORAGE_CONTAINER }}
       - name: Upload Flyte config as an artifact
         id: config-output
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # ratchet:actions/upload-artifact@v4
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4
         with:
           name: flyte-config
 
@@ -270,7 +270,7 @@ jobs:
           make meta-bazel test-bazel
           df -h
       - name: upload requirements artifact
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # ratchet:actions/upload-artifact@v4
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4
         with:
           name: requirements-bazel
           path: requirements-bazel.txt
@@ -419,7 +419,7 @@ jobs:
           tar -tzf $TAR_FILENAME
           echo "HYDRA_OUTPUTS_TAR=$TAR_FILENAME" >> $GITHUB_ENV
       - name: Upload config artifact
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # ratchet:actions/upload-artifact@v4
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4
         with:
           name: hydra-outputs
 
@@ -463,7 +463,7 @@ jobs:
         id: semanticrelease
         with:
           github-token: ${{ secrets.FAST_FORWARD_PAT }}
-      - uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # ratchet:actions/upload-artifact@v4
+      - uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4
         if: ${{ steps.semanticrelease.outputs.released == 'true' }}
         with:
           name: poetry-build
