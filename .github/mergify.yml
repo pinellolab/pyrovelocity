@@ -12,10 +12,10 @@ pull_request_rules:
     conditions:
       - "#approved-reviews-by>=1"
       - label!=work-in-progress
-      - check-success=test-python
+      - check-success=test-python (3.10, false)
       - check-success=test-nix
       - check-success=test-bazel
-      - check-success=test-docs-build
+      - check-success=test-docs-build (3.10)
     actions:
       queue:
         name: default
