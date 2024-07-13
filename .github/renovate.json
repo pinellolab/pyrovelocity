@@ -7,5 +7,11 @@
     ":semanticCommitTypeAll(chore)",
     ":semanticCommitScope(deps)"
   ],
-  "labels": ["dependencies"]
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "enabled": false,
+      "matchManagers": ["pip_requirements"]
+    }
+  ]
 }
