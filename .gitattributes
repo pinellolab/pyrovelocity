@@ -1,6 +1,6 @@
-docs/ linguist-documentation=true
-nbs/ linguist-documentation=true
+dev/cluster/pyrovelocity/nixbuild/cue.mod/** linguist-vendored=true
+dev/cluster/pyrovelocity/pyrovelocitydev/cue.mod/** linguist-vendored=true
+docs/** linguist-documentation=true
 Makefile linguist-detectable=false
-reproducibility/ linguist-detectable=false
-dev/cluster/pyrovelocity/nixbuild/cue.mod/ linguist-vendored=true
-dev/cluster/pyrovelocity/pyrovelocitydev/cue.mod/ linguist-vendored=true
+nbs/** linguist-documentation=true
+reproducibility/** linguist-detectable=false
