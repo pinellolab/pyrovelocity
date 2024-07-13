@@ -140,7 +140,7 @@ jobs:
 
       - name: Create Flyte config from YAML template
         id: yq-process
-        uses: mikefarah/yq@4cc646b16b481a305c45e5eafa920c03c77565ea # ratchet:mikefarah/yq@master
+        uses: mikefarah/yq@ef6fb92e7f314e7f0ef49da4385458271203119a # ratchet:mikefarah/yq@master
         with:
           cmd: "yq e \
             '.admin.endpoint = strenv(FLYTE_CLUSTER_ENDPOINT) | \
