@@ -15,7 +15,7 @@ runs:
   steps:
     - name: Set up Python
       id: setup-python
-      uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # ratchet:actions/setup-python@v5
+      uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f # v5
       with:
         python-version: ${{ inputs.python_version }}
     - name: Install system dependencies
