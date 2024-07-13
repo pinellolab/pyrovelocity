@@ -517,7 +517,7 @@ jobs:
         with:
           name: poetry-build
           path: ./dist
-      - uses: pypa/gh-action-pypi-publish@81e9d935c883d0b210363ab89cf05f3894778450 # ratchet:pypa/gh-action-pypi-publish@release/v1
+      - uses: pypa/gh-action-pypi-publish@fb9fc6a4e67ca27a7a76b17bbf90be83c2d3c716 # ratchet:pypa/gh-action-pypi-publish@release/v1
 
   test-docs-build:
     runs-on: ubuntu-latest
