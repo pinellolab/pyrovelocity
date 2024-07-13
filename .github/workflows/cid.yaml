@@ -217,7 +217,7 @@ jobs:
         continue-on-error: ${{ matrix.continue-on-error }}
       - name: Upload coverage
 
-        uses: codecov/codecov-action@125fc84a9a348dbcf27191600683ec096ec9021c # ratchet:codecov/codecov-action@v4
+        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
