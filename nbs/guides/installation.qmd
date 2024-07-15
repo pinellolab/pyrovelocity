@@ -19,6 +19,22 @@ environment, please see [Contributing](../about/contributing.qmd).
 Users who are having difficulty with system-level dependencies may also
 benefit from consulting the [contributing documentation](../about/contributing.qmd).
 
+::: {#nte-versions .callout-important collapse=true title="Installation or usage errors and version constraints"}
+If you have any issue with errors being raised during installation or usage
+please check carefully that the version your package manager has installed is equivalent
+to or newer than the one listed in the
+[poetry.lock](https://github.com/pinellolab/pyrovelocity/blob/main/poetry.lock)
+file in the repository.
+We aim to support all latest stable versions of third-party dependencies
+by lifting lower bounds on version constraints in the 
+[pyproject.toml](https://github.com/pinellolab/pyrovelocity/blob/main/pyproject.toml) file.
+This means that we generally do not support any older versions of dependencies
+but consider any version more recent than the lower bound to be supported or a bug 
+in pyrovelocity if attempting to use it produces an error.
+Sometimes we are forced to delay support for a new version of a dependency
+if it has been released released to PyPI but not yet to [conda-forge](https://conda-forge.org/packages/).
+:::
+
 ::: {.panel-tabset}
 
 ## PyPI
