@@ -11,6 +11,13 @@ create a branch, make changes, ensure the code is linted and the tests pass, add
 where relevant, and submit a pull request. At this point the continuous integration
 workflows will run and we will engage a more detailed discussion in reviewing the changes.
 
+::: {#nte-contributing .callout-note collapse=true title="Current state of the repository"}
+Please note that pyrovelocity is still in the early stages of development.
+The current state of the documentation and repository are not complete
+with respect to the procedures for contributing outlined here; however,
+we plan to respect them as we continue to develop the project.
+:::
+
 ## Types of Contributions
 
 ### Report Bugs
@@ -167,8 +174,7 @@ Before you submit a pull request, check that it meets these guidelines:
 1. The pull request should include [pytest](https://docs.pytest.org/) tests and, 
    where relevant, [xdoctest](https://github.com/Erotemic/xdoctest) 
    [doctests](https://docs.python.org/3/library/doctest.html).
-2. If the pull request adds functionality, the 
-3. [Google-style docstrings](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html)
-   and [docs](https://github.com/pinellolab/pyrovelocity/tree/main/nbs) should be updated.
-5. The pull request should pass the CI execution for the primary supported python version (currently Python 3.10).
-
+1. If the pull request adds or significantly modifies functionality, the relevant
+   [Google-style docstrings](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html)
+   and [docs](https://github.com/pinellolab/pyrovelocity/tree/main/nbs) should likely be updated.
+1. The pull request should pass the CI execution for the primary supported python version (currently Python 3.10).
