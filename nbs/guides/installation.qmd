@@ -49,6 +49,7 @@ version, create a virtual environment, and install pyrovelocity from a blank dir
 echo "3.10" > .python-version
 uv python install
 uv venv -p 3.10
+source .venv/bin/activate
 uv pip install pyrovelocity
 ```
 
