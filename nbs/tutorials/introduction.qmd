@@ -23,7 +23,11 @@ It can be used as a component in frameworks that attempt to retain the ability t
 
 ## Installation
 
-### Quick start
+For end-user oriented (i.e. not for development but rather execution)
+installation please see the [installation guide](../guides/installation.qmd).
+For development installation please see the [contributing guide](../about/contributing.qmd).
+
+<!-- ### Quick start
 
 See `make | grep codespace`, run `make codespace_create code`, or
 
@@ -72,7 +76,7 @@ from a python interpreter.
 
 ### User
 
-Please see the [documentation](https://pyrovelocity.readthedocs.io/en/latest/installation.html).
+Please see the [documentation](https://pyrovelocity.readthedocs.io/en/latest/installation.html). -->
 
 ## Quick start
 
