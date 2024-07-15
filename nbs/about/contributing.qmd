@@ -130,28 +130,54 @@ Please do not hesitate to reach out if you need help setting up a development en
    "
    ```
 
-Using [nix](https://github.com/NixOS/nix), [home-manager](https://github.com/nix-community/home-manager), and [nixpkgs](https://github.com/NixOS/nixpkgs) [dockerTools](https://nixos.org/manual/nixpkgs/stable/#sec-pkgs-dockerTools), [nixpod](https://ghcr.io/cameronraysmith/nixpod) provides a containerized or containerizable drop-in user configuration on any platform where the [nix](https://github.com/NixOS/nix) package manager is already, or can be, [installed](https://nix.dev/install-nix.html). This is intended to include, but is not limited to, scenarios like those involving [kubernetes ephemeral containers](https://kubernetes.io/docs/concepts/workloads/pods/ephemeral-containers/) via images like [netshoot](https://github.com/nicolaka/netshoot), which might be used for debugging purposes adjacent to otherwise minimal container images. See the [github packages associated to this repository](https://github.com/cameronraysmith?tab=packages&repo_name=nixpod) for the containers currently built in the [nixpod CID](https://github.com/cameronraysmith/nixpod/blob/main/.github/workflows/cid.yaml).
-
-This repository originally contained a [nix flake](https://zero-to-nix.com/concepts/flakes) that essentially integrated a few parts of [srid/nixos-config](https://github.com/srid/nixos-config) into [juspay/nix-dev-home](https://github.com/juspay/nix-dev-home). These were merged upstream in [juspay/nix-dev-home#7](https://github.com/juspay/nix-dev-home/pull/7), so you might want to look there.
-
 ### Nix
 
-The instructions above only cover python dependencies.
+If you do not know what [nix](https://nixos.org/) is and are interested in using this section, 
+please see [this video for a brief introduction to nix flakes](https://youtu.be/JCeYq72Sko0?si=adRGX0YYm1Ejmd4N&t=96).
+
+One of the reasons you might be interested is that the instructions above only cover python dependencies.
 We use the [nix](https://github.com/NixOS/nix) package manager with a [nix flake](https://nix.dev/concepts/flakes) to manage both system 
 dependencies and python dependencies together in a reproducible manner.
-The nix flake integrates with [direnv](https://github.com/direnv/direnv) and provides a devlopment shell that can be activated with 
+This requires referencing the lock files in [flake.lock](https://github.com/pinellolab/pyrovelocity/blob/main/flake.lock)
+and [poetry.lock](https://github.com/pinellolab/pyrovelocity/blob/main/poetry.lock) with the bridge provided by 
+[poetry2nix](https://github.com/nix-community/poetry2nix).
+At present there isn't really another python package management system with a sufficiently
+detailed lock file to ensure that the python dependencies are reproducibly installable in concert with
+the system-level dependencies. Please see the rejected [PEP 665](https://peps.python.org/pep-0665/) 
+and other discussions that reference it as this may change in the near future.
+Taken together, this is why we currently use poetry to manage python dependencies in development environments.
+
+Before proceeding ensure you have deactivated any virtual 
+environments created with python-ecosystem tools.
+The nix flake integrates with [direnv](https://github.com/direnv/direnv) and provides a
+[nix devlopment shell](https://github.com/pinellolab/pyrovelocity/blob/v0.2.0/flake.nix#L185) 
+that can be activated with 
 
 ```bash
 direnv allow
 ```
 
-if you have [nix](https://nix.dev/install-nix.html) and direnv installed.
+if you have [nix](https://nix.dev/install-nix.html) and [direnv](https://github.com/direnv/direnv/tree/v2.34.0#basic-installation) installed.
+Please note this will require at least 10GB of free hard disk space to build and activate the environment.
+However, if your disk is within 50GB of being full, you may encounter a slow build process.
+Since you will need to enable the usage of nix flakes, you should either install
+the nix package manager with the 
+[Determinate Systems nix installer](https://github.com/DeterminateSystems/nix-installer/tree/v0.20.1?tab=readme-ov-file#installation-differences)
+or update your `/etc/nix/nix.conf` or other active nix configuration to enable 
+the `nix-command` and `flakes` features.
+
+```nix
+experimental-features = nix-command flakes
+```
+
+These features are not really "experimental" in any usual sense of the term
+so you should not be concerned about enabling them.
 
 ### Container image
 
 We provide a relatively minimal [OCI image](https://github.com/opencontainers/image-spec)
 built with [nix](#nix) and [dockerTools](https://nixos.org/manual/nixpkgs/stable/#sec-pkgs-dockerTools).
-It only supports linux x86-64, but can be run with rosetta on macOS.
+It only supports linux x86-64, but can be run via rosetta emulation on macOS.
 
 For example if you have a tool that provides a container runtime like nerdctl, podman, or docker installed
 
