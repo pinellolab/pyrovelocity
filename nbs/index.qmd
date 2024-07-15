@@ -34,7 +34,7 @@ about:
 
 [bear-badge]: https://raw.githubusercontent.com/beartype/beartype-assets/main/badge/bear-ified.svg
 [bear-link]: https://beartype.readthedocs.io
-[cid-badge]: https://github.com/pinellolab/pyrovelocity/actions/workflows/cid.yaml/badge.svg?branch=master
+[cid-badge]: https://github.com/pinellolab/pyrovelocity/actions/workflows/cid.yaml/badge.svg?branch=main
 [cid-link]: https://github.com/pinellolab/pyrovelocity/actions/workflows/cid.yaml
 [precommit-badge]: https://results.pre-commit.ci/badge/github/pinellolab/pyrovelocity/main.svg
 [precommit-link]: https://results.pre-commit.ci/latest/github/pinellolab/pyrovelocity/main
