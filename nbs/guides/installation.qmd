@@ -3,7 +3,7 @@ title: Installation
 ---
 
 
-::: {#nte-blank-cells .callout-note collapse=true title="Architecture and accelerator support"}
+::: {#nte-architecture .callout-note collapse=true title="Architecture and accelerator support"}
 If you would like to test pyrovelocity without requiring a GPU you should be
 able to install it on any platform. However, if you would like to apply it to
 data sets larger than $O(10^3)$ cells, you will need a GPU.
