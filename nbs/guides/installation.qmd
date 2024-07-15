@@ -2,6 +2,91 @@
 title: Installation
 ---
 
+
+::: {#nte-blank-cells .callout-note collapse=true title="Architecture and accelerator support"}
+If you would like to test pyrovelocity without requiring a GPU you should be
+able to install it on any platform. However, if you would like to apply it to
+data sets larger than $O(10^3)$ cells, you will need a GPU.
+In this case, we can only support amd64 Linux systems with a CUDA compatible GPU.
+If you are having issues scaling pyrovelocity please do not hesitate to reach out to us.
+:::
+
+The latest [release of pyrovelocity](https://github.com/pinellolab/pyrovelocity/releases)
+is [available on PyPI](https://pypi.org/project/pyrovelocity/) and 
+[conda-forge](https://anaconda.org/conda-forge/pyrovelocity).
+The instructions below are intended for users. To setup a development 
+environment, please see [Contributing](../about/contributing.qmd).
+Users who are having difficulty with system-level dependencies may also
+benefit from consulting the [contributing documentation](../about/contributing.qmd).
+
+::: {.panel-tabset}
+
 ## PyPI
 
+We recommend creating a dedicated virtual environment to install and execute pyrovelocity.
+One of the easiest ways to do this is with [uv](https://github.com/astral-sh/uv/tree/0.2.24?tab=readme-ov-file#getting-started).
+After following the [Getting Started instructions from the uv repository](https://github.com/astral-sh/uv/tree/0.2.24?tab=readme-ov-file#getting-started)
+to install the uv CLI for your platform, you can install a supported python
+version, create a virtual environment, and install pyrovelocity from a blank directory with the following commands
+
+```bash
+echo "3.10" > .python-version
+uv python install
+uv venv -p 3.10
+uv pip install pyrovelocity
+```
+
+Of course, if you have already prepared and activated a virtual environment
+with a supported python version you can also install pyrovelocity directly
+from [PyPI](https://pypi.org/project/pyrovelocity/) with pip.
+
+```bash
+pip install pyrovelocity
+```
+
 ## Anaconda
+
+If you would like to install pyrovelocity from [conda-forge](https://anaconda.org/conda-forge/pyrovelocity)
+we strongly recommend using [pixi](https://prefix.dev/channels/conda-forge/packages/pyrovelocity)
+or [micromamba](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html).
+Installation with the `conda` command will take an unreasonable amount of time and is not recommended.
+
+::: {.panel-tabset}
+
+### pixi
+
+`pixi` will not automatically respect the user limit parameters you can
+review via `ulimit -a`.
+In particular `ulimit -n` should be set to 10000 or greater
+
+```bash
+ulimit -n 10000
+```
+
+After following the instructions to install [pixi](https://prefix.dev/channels/conda-forge/packages/pyrovelocity),
+you can install pyrovelocity with the following commands
+
+```bash
+pixi init
+pixi install pyrovelocity
+```
+
+You can then run `pixi shell` to enter a shell with the environment containing pyrovelocity.
+
+
+### micromamba
+
+After following the instructions to install [micromamba](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html),
+you can create a virtual environment, activate it, and install pyrovelocity with the following commands
+
+```bash
+alias mm=micromamba
+mm create -n pyrovelocity python=3.10
+mm activate pyrovelocity
+mm install -c conda-forge pyrovelocity
+```
+
+:::
+
+
+:::
