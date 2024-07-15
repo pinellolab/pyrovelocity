@@ -150,7 +150,7 @@ Taken together, this is why we currently use poetry to manage python dependencie
 Before proceeding ensure you have deactivated any virtual 
 environments created with python-ecosystem tools.
 The nix flake integrates with [direnv](https://github.com/direnv/direnv) and provides a
-[nix devlopment shell](https://github.com/pinellolab/pyrovelocity/blob/v0.2.0/flake.nix#L185) 
+[nix development shell](https://github.com/pinellolab/pyrovelocity/blob/v0.2.0/flake.nix#L185) 
 that can be activated with 
 
 ```bash
