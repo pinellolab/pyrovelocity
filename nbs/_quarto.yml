@@ -240,8 +240,8 @@ website:
 format:
   html:
     theme:
-      light: [flatly, clight.scss]
       dark: [darkly, cdark.scss]
+      light: [cosmo, clight.scss]
     include-in-header: include.html
     css: styles.css
     toc: true
