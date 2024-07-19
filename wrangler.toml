@@ -1,0 +1,9 @@
+name = "pyrovelocity"
+pages_build_output_dir = "nbs/_site"
+compatibility_date = "2024-03-24"
+
+[vars]
+GOOGLE_APPLICATION_CREDENTIALS = "/tmp/sa.json"
+
+[env.production.vars]
+GOOGLE_APPLICATION_CREDENTIALS = "/tmp/sa.json"
