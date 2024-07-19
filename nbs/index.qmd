@@ -14,8 +14,14 @@ about:
       href: guides/installation.qmd
     - icon: book
       href: tutorials/introduction.qmd
-    - icon: github
-      text: GitHub
+    - icon: lightbulb
+      text: Usage
+      href: templates/user_example/user_example.qmd
+    - icon: box-arrow-in-right
+      text: Contributing
+      href: about/contributing.qmd
+    - icon: code-slash
+      text: Source
       href: https://github.com/pinellolab/pyrovelocity
 ---
 
