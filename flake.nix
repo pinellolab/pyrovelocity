@@ -138,7 +138,6 @@
               ]
               ++ devPackages;
             shellHook = ''
-              export QUARTO_PYTHON=${pkgs.python310}/bin/python
               export LD_LIBRARY_PATH=${env}/lib:/usr/local/nvidia/lib64
             '';
           };
