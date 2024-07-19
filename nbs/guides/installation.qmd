@@ -107,3 +107,9 @@ mm install -c conda-forge pyrovelocity
 
 
 :::
+
+After the installation has completed successfully you may like to see
+
+- [Introduction](/tutorials/introduction.qmd) for a brief overview
+- [Usage](/templates/user_example/user_example.qmd) for a complete usage example 
+- [Contributing](/about/contributing.qmd) for information on how to setup a development environment

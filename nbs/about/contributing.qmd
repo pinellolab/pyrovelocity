@@ -18,6 +18,12 @@ with respect to the procedures for contributing outlined here; however,
 we plan to respect them as we continue to develop the project.
 :::
 
+See
+
+- [Installation](/guides/installation.qmd) for installation instructions
+- [Introduction](/tutorials/introduction.qmd) for a brief overview
+- [Usage](/templates/user_example/user_example.qmd) for a detailed usage example
+
 ## Types of Contributions
 
 ### Report Bugs

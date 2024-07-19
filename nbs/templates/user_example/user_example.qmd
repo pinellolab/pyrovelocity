@@ -865,3 +865,9 @@ display(Image(filename=f"{dataset_summary_2.data_model_reports.path}/shared_time
 ## Summary
 
 In this notebook we have demonstrated how to install pyrovelocity and execute a comprehensive workflow to perform a probabilistic analysis of RNA velocity for a single-cell transcriptomics data set in a Jupyter notebook. We default to data downsampled in this case by about a factor of 10 to allow for swift execution to illustrate the analysis workflow. In particular, we have shown how to download data, preprocess it, train a model, postprocess the results, and summarize the data with a compendium of plots. We have also shown how to experiment with the data and posterior samples to generate new plots, and how to train, postprocess, and summarize the results for an alternative model. This information should be sufficient to see how to get started applying pyrovelocity to your own data. We will discuss approaches to model comparison, criticism, and selection in a separate notebook. Please do not hesitate to reach out in [the discussions board on github](https://github.com/pinellolab/pyrovelocity/discussions) if you run into any problems using the library.
+
+See
+
+- [Installation](/guides/installation.qmd) for installation instructions
+- [Introduction](/tutorials/introduction.qmd) for a brief overview
+- [Contributing](/about/contributing.qmd) for information on how to setup a development environment

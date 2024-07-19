@@ -4,6 +4,14 @@
 It provides posterior estimates of gene expression parameters, predictive estimates of gene expression states, and local estimates of cell state transition probabilities.
 It can be used as a component in frameworks that attempt to retain the ability to propagate uncertainty in predicting: distributions over cell fates from subpopulations of cell states, response to cell state perturbations, or candidate genes or gene modules that correlate with determination of specific cell fates.
 
+This document provides a brief overview of what Pyro-Velocity is and how it can be used.
+See
+
+- [Installation](/guides/installation.qmd) for installation instructions or
+- [Usage](/templates/user_example/user_example.qmd) for a complete usage example
+- [Contributing](/about/contributing.qmd) for information on how to setup a development environment
+
+
 ## Features
 
 - Probabilistic modeling of RNA velocity

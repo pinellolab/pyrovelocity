@@ -38,7 +38,8 @@ website:
   site-url: https://pinellolab.github.io/pyrovelocity
   description: "A probabilistic framework for multi-modal transcriptomics"
   favicon: _static/logo/favicon.ico
-  back-to-top-navigation: true
+  back-to-top-navigation: false
+  page-navigation: true
 
   page-footer:
     border: false
