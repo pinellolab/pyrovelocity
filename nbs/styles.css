@@ -13,3 +13,13 @@ body {
   font-size: 1.7rem;
   margin: 0.4rem;
 }
+@media (max-width: 415px) {
+  #quarto-search {
+    display: none;
+  }
+}
+@media (min-width: 415px) {
+  #quarto-search {
+    display: block;
+  }
+}
