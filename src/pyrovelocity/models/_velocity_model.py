@@ -168,10 +168,6 @@ class LogNormalModel(PyroModule):
         return self._pyrosample_helper(1.0)
 
     @PyroSample
-    def sigma_c(self):
-        return self._pyrosample_helper(0.1)
-
-    @PyroSample
     def u_scale(self):
         return self._pyrosample_helper(0.1)
 
@@ -342,7 +338,7 @@ class LogNormalModel(PyroModule):
         ut_coef: None = None,
         s_cell_size_coef: None = None,
         st_coef: None = None,
-    ) -> Tuple[Poisson, Poisson]:
+    ) -> Tuple[LogNormal, Poisson, Poisson]:
         """
         Compute the likelihood of the given count data.
 
@@ -410,7 +406,7 @@ class LogNormalModel(PyroModule):
             ut = ut + self.one * 1e-6
             st = st + self.one * 1e-6
 
-        c_dist = Normal(ct, sigma=sigma_c)
+        c_dist = LogNormal(ct, sigma_c)
         u_dist = Poisson(ut)
         s_dist = Poisson(st)
         
@@ -724,7 +720,7 @@ class VelocityModelAuto(LogNormalModel):
                     [ 0.,  0.,  7.,  4.]]))
         """
         cell_plate, gene_plate = self.create_plates(
-            _obs,
+            u_obs,
             s_obs,
             u_log_library,
             s_log_library,
@@ -809,7 +805,6 @@ class VelocityModelAuto(LogNormalModel):
                 u = pyro.sample("u", u_dist, obs=u_obs)
                 s = pyro.sample("s", s_dist, obs=s_obs)
         return u, s
-
 
 class MultiVelocityModelAuto(LogNormalModel):
     """Automatically configured MULTIOME velocity model.
@@ -910,29 +905,6 @@ class MultiVelocityModelAuto(LogNormalModel):
         self.correct_library_size = correct_library_size
         if self.decoder_on:
             self.decoder = Decoder(1, self.num_genes, n_layers=2)
-
-        self.enumeration = "parallel"
-        # self.set_enumeration_strategy()
-
-    def sample_cell_gene_chromatin_state(self, t, switching):
-        return (
-            pyro.sample(
-                "cell_gene_chromatin_state",
-                Bernoulli(logits=t - switching),
-                infer={"enumerate": self.enumeration},
-            )
-            == self.zero
-        )
-
-    def sample_cell_gene_state(self, t, switching, state_c):
-        return (
-            pyro.sample(
-                "cell_gene_state",
-                Bernoulli(logits=t - switching),
-                infer={"enumerate": self.enumeration},
-            )
-            == self.zero
-        )
 
     @beartype
     def __repr__(self) -> str:
@@ -1062,9 +1034,9 @@ class MultiVelocityModelAuto(LogNormalModel):
         ind_x: Optional[torch.Tensor] = None,
         cell_state: Optional[torch.Tensor] = None,
         time_info: Optional[torch.Tensor] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
-        Defines the forward model, which computes the unspliced (u) and spliced
+        Defines the forward model, which computes the chromatin state (c), unspliced (u) and spliced
         (s) RNA expression levels given the observations and model parameters.
 
         Args:
@@ -1082,7 +1054,7 @@ class MultiVelocityModelAuto(LogNormalModel):
             time_info (Optional[torch.Tensor], optional): Time information for the cells. Default is None.
 
         Returns:
-            Tuple[torch.Tensor, torch.Tensor]: The unspliced (u) and spliced (s) RNA expression levels.
+            Tuple[torch.Tensor, torch.Tensor, torch.Tensor]: The chromatin state (c), unspliced (u) and spliced (s) RNA expression levels.
 
         Examples:
             >>> import torch
@@ -1153,46 +1125,24 @@ class MultiVelocityModelAuto(LogNormalModel):
             alpha = self.alpha
             gamma = self.gamma
             beta = self.beta
-            sigma_c = self.sigma_c
+            alpha_off = self.zero
 
-            if self.add_offset:
-                u0 = pyro.sample("u_offset", LogNormal(self.zero, self.one))
-                s0 = pyro.sample("s_offset", LogNormal(self.zero, self.one))
-                c0 = pyro.sample("c_offset", LogNormal(self.zero, self.one))
-            else:
-                s0 = u0 = c0 = self.zero
-
-            t0_c = pyro.sample("t0_c", Normal(self.zero, self.one))
-            t0 = t0_c + self.delay
+            t0_1 = pyro.sample("t0_1", Normal(self.zero, self.one*10))
+            dt_1 = pyro.sample("dt_1", LogNormal(self.one*20, self.one*10))
+            dt_2 = pyro.sample("dt_2", LogNormal(self.one*20, self.one*10))
+            dt_3 = pyro.sample("dt_3", LogNormal(self.one*20, self.one*10))
 
             u_scale = self.u_scale
             s_scale = self.one
 
-            dt_switching_c = self.dt_switching_c
-            dt_switching = self.dt_switching
-            
-            c_inf, u_inf, s_inf = atac_mrna_dynamics(
-                dt_switching_c, dt_switching, c0, u0, s0, alpha_c, alpha, beta, gamma
-            )
-            c_inf = pyro.deterministic("c_inf", c_inf, event_dim=0)
-            u_inf = pyro.deterministic("u_inf", u_inf, event_dim=0)
-            s_inf = pyro.deterministic("s_inf", s_inf, event_dim=0)
-            
-            switching_c = pyro.deterministic(
-                "switching_c", dt_switching_c + t0, event_dim=0
-            )
-            
-            switching = pyro.deterministic(
-                "switching", dt_switching + t0, event_dim=0
-            )
-
         with cell_plate:
             t = pyro.sample(
                 "cell_time",
-                LogNormal(self.zero, self.one).mask(self.include_prior),
+                LogNormal(self.zero, self.one*50).mask(self.include_prior),
             )
 
         with cell_plate:
+            
             u_cell_size_coef = ut_coef = s_cell_size_coef = st_coef = None
             u_read_depth = pyro.sample(
                 "u_read_depth", LogNormal(u_log_library, u_log_library_scale)
@@ -1200,25 +1150,26 @@ class MultiVelocityModelAuto(LogNormalModel):
             s_read_depth = pyro.sample(
                 "s_read_depth", LogNormal(s_log_library, s_log_library_scale)
             )
+            
+            sigma_c = pyro.sample(
+                "sigma_c", LogNormal(0.2,0.2)
+            )
+            
+            ct, ut, st = self.get_atac_rna(
+                u_scale,
+                s_scale,
+                t,                                           # cells, 1
+                t0_1,
+                dt_1,
+                dt_2,
+                dt_3,
+                alpha_c,                          
+                alpha,
+                alpha_off,
+                beta,
+                gamma)
+                    
             with gene_plate:
-                ct, ut, st = self.get_atac_rna(
-                    u_scale,
-                    s_scale,
-                    alpha_c,
-                    alpha,
-                    beta,
-                    gamma,
-                    t,
-                    c0,
-                    u0,
-                    s0,
-                    t0,
-                    switching_c,
-                    switching,
-                    c_inf,
-                    u_inf,
-                    s_inf,
-                )
                 c_dist, u_dist, s_dist = self.get_likelihood_multiome(
                     ct,
                     ut,
