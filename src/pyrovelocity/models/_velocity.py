@@ -324,7 +324,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         return
 
     @classmethod
-    def setup_anndata(cls, adata: AnnData, *args, **kwargs):
+    def setup_anndata(cls, adata: AnnData, adata_atac = None, *args, **kwargs):
         """
         Set up AnnData object for compatibility with the scvi-tools
         model training interface.
@@ -362,6 +362,8 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         if adata_atac:
             adata.layers['atac'] = adata_atac.X
             anndata_fields += [LayerField('atac', 'atac')]
+        else:
+            adata.uns['atac'] = None
         
         adata_manager = AnnDataManager(
             fields=anndata_fields, setup_method_args=setup_method_args
