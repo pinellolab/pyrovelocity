@@ -336,7 +336,7 @@ class VelocityTrainingMixin:
         losses = []
         patience = patient_init
         
-        if not self.adata.layers['atac']:
+        if not self.adata.uns['atac']:
         
             for step in range(max_epochs):
                 if cell_state is None:
