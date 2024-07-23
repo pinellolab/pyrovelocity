@@ -1,0 +1,48 @@
+---
+title: Interactive results review
+---
+
+When testing or prototyping it is helpful to review the results of a workflow
+execution interactively. This is relatively straightforward when working with locally
+executed workflows as demonstrated in
+[Usage](/templates/user_example/user_example.qmd).
+In this guide we illustrate working with the results 
+of workflows that have been executed remotely. In this particular case, GitHub 
+OAuth access is required to the endpoint associated to the workflow execution.
+Given this access, setup the remote client,
+
+```{python}
+from flytekit.remote.remote import FlyteRemote
+from flytekit.configuration import Config
+
+remote = FlyteRemote(
+    Config.for_endpoint("flyte.cluster.pyrovelocity.net"),
+)
+```
+
+login to the UI and copy the URI of the workflow or task whose outputs you want to review, and provide this to the `get` method of the remote client,
+
+```{python}
+workflow_outputs = remote.get(
+    "flyte://v1/pyrovelocity/development/pyrovelocity-argo-nix-bui-5c9ebf8-dev-1hk-d5805de62e8044f79d4/f26c1pjy-0-dn0-0-dn7/o"
+)
+```
+
+This will not download the results but will provide a summary of the outputs. 
+
+```{python}
+from omegaconf import OmegaConf
+from flytekit.interaction.string_literals import literal_map_string_repr
+
+outputs_dict = literal_map_string_repr(workflow_outputs.literals)
+outputs_dictconfig = OmegaConf.create(outputs_dict)
+print(OmegaConf.to_yaml(outputs_dictconfig))
+```
+
+To download the desired results use
+
+```{python}
+from pyrovelocity.io.gcs import download_blob_from_uri
+
+download_blob_from_uri(outputs_dictconfig.o0.dataframe.path)
+```
