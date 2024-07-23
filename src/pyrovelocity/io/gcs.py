@@ -1,22 +1,34 @@
 from pathlib import Path
+from urllib.parse import urlparse
 
 from beartype import beartype
-from google.cloud.storage import Client
-from google.cloud.storage import transfer_manager
-from returns.result import Failure
-from returns.result import Result
-from returns.result import Success
+from google.cloud.storage import Client, transfer_manager
+from google.cloud.storage.blob import Blob
+from returns.result import Failure, Result, Success
 
 from pyrovelocity.logging import configure_logging
 
-
 __all__ = [
     "download_bucket",
+    "download_blob_from_uri",
     "upload_file_concurrently",
     "upload_directory",
 ]
 
 logger = configure_logging(__name__)
+
+
+@beartype
+def download_blob_from_uri(
+    blob_uri: str,
+):
+    client = Client()
+    parsed_blob_uri = urlparse(blob_uri)
+    blob_path = Path(parsed_blob_uri.path)
+    blob_filename = blob_path.name
+    blob = Blob.from_string(blob_uri, client)
+    blob.download_to_filename(f"./{blob_filename}")
+    print(f"Downloaded {blob_uri} to {blob_filename}.")
 
 
 @beartype
@@ -71,6 +83,26 @@ def download_bucket(
             f"Failed to download files from {bucket_name} to {destination_directory}."
         )
         return Failure(e)
+
+
+def download_blob_concurrently(
+    bucket_name: str,
+    blob_name: str,
+    filename: str | Path,
+    chunk_size: int = 32 * 1024 * 1024,
+    workers: int = 8,
+):
+    """Download a single file in chunks, concurrently in a process pool."""
+
+    storage_client = Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(blob_name)
+
+    transfer_manager.download_chunks_concurrently(
+        blob, filename, chunk_size=chunk_size, max_workers=workers
+    )
+
+    print(f"Downloaded {blob_name} to {filename}.")
 
 
 @beartype
