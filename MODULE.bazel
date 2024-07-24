@@ -8,15 +8,15 @@ module(
     compatibility_level = 1,
 )
 
-bazel_dep(name = "aspect_bazel_lib", version = "2.4.2")
+bazel_dep(name = "aspect_bazel_lib", version = "2.7.9")
 
-# bazel_dep(name = "aspect_rules_py", version = "0.5.0")
-bazel_dep(name = "rules_python", version = "0.29.0")
+# bazel_dep(name = "aspect_rules_py", version = "0.7.4")
+bazel_dep(name = "rules_python", dev_dependency = True, version = "0.29.0")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(
     configure_coverage_tool = True,
-    python_version = "3.10",
+    python_version = "3.11",
     is_default = True,
 )
 # python.toolchain(
@@ -43,7 +43,7 @@ pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(
     experimental_target_platforms = ["all"],
     hub_name = "pip",
-    python_version = "3.10",
+    python_version = "3.11",
     requirements_lock = "//:requirements-bazel.txt",
 )
 use_repo(pip, "pip")
