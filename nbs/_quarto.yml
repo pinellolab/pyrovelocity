@@ -128,7 +128,7 @@ website:
         - text: "Model summary"
           href: guides/summarization.qmd
         - text: "Interactive review"
-          href: guides/interactive.qmd
+          href: guides/interactive/interactive.qmd
     - id: tutorials
       title: "Tutorials"
       style: "floating"
@@ -220,7 +220,7 @@ website:
             - text: "Model summary"
               href: guides/summarization.qmd
             - text: "Interactive review"
-              href: guides/interactive.qmd
+              href: guides/interactive/interactive.qmd
         - section: "Concepts"
           contents:
             - text: "Overview"
