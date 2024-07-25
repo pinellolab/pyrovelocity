@@ -23,7 +23,29 @@ logger = configure_logging(__name__)
 def download_blob_from_uri(
     blob_uri: str,
     concurrent: bool = False,
-):
+) -> str:
+    """Download a single file from a GCS bucket.
+
+    Args:
+        blob_uri (str): The URI of the GCS blob.
+        concurrent (bool, optional): Whether to download the file using
+            concurrent chunks. Defaults to False.
+
+    Example:
+        >>> tmp = getfixture("tmp_path")
+        >>> import os
+        >>> from pathlib import Path
+        >>> os.chdir(tmp)
+        >>> blob_uri = (
+        ...     "gs://gcp-public-data-landsat/LC08/01/044/034/"
+        ...     "LC08_L1GT_044034_20130330_20170310_01_T2/"
+        ...     "LC08_L1GT_044034_20130330_20170310_01_T2_MTL.txt"
+        ... )
+        >>> blob_filename = download_blob_from_uri(blob_uri)
+        >>> print(Path(tmp)/Path(blob_filename))
+        >>> blob_filename = download_blob_from_uri(blob_uri)
+        >>> print(Path(tmp)/Path(blob_filename))
+    """
     client = Client()
     parsed_blob_uri = urlparse(blob_uri)
     if not parsed_blob_uri.scheme == "gs":
@@ -32,12 +54,21 @@ def download_blob_from_uri(
         )
     blob_path = Path(parsed_blob_uri.path)
     blob_filename = blob_path.name
-    blob = Blob.from_string(blob_uri, client)
-    if concurrent:
-        download_blob_concurrently(blob, blob_filename)
+
+    if not Path(blob_filename).exists():
+        blob = Blob.from_string(blob_uri, client)
+        if concurrent:
+            download_blob_concurrently(blob, blob_filename)
+        else:
+            blob.download_to_filename(f"./{blob_filename}")
+        logger.info(f"Downloaded {blob_filename} from {blob_uri}.")
     else:
-        blob.download_to_filename(f"./{blob_filename}")
-    print(f"Downloaded {blob_uri} to {blob_filename}.")
+        logger.info(
+            f"\nFile {blob_filename} already exists.\n"
+            "The hash of the requested file has not been checked.\n"
+            "Delete and re-run to download again.\n\n"
+        )
+    return blob_filename
 
 
 @beartype
@@ -60,7 +91,7 @@ def download_bucket_from_uri(
     destination_directory: str | Path = "",
     workers: int = 8,
     max_results: int = 1000,
-) -> Result[None, Exception]:
+) -> Result[str, Exception]:
     """
     Download all of the blobs in a bucket, concurrently in a process pool.
 
@@ -72,6 +103,30 @@ def download_bucket_from_uri(
 
     Adapted from:
     https://github.com/googleapis/python-storage/blob/v2.14.0/samples/snippets/storage_transfer_manager_download_bucket.py
+
+    Args:
+        bucket_uri (str): The URI of the GCS bucket.
+        destination_directory (Union[str, Path]): The directory to save the files.
+        workers (int): The maximum number of processes to use for the operation.
+        max_results (int): The maximum number of results to return.
+
+    Returns:
+        Result[str, Exception]: A Result object encapsulating success or failure.
+
+    Examples:
+        >>> tmp = getfixture("tmp_path")
+        >>> bucket_uri = (
+                "gs://gcp-public-data-landsat/LC08/01/044/034/"
+                "LC08_L1GT_044034_20130330_20170310_01_T2/"
+                "LC08_L1GT_044034_20130330_20170310_01_T2_MTL.txt"
+            )
+        >>> local_path = download_bucket_from_uri(
+                bucket_uri=bucket_uri,
+                destination_directory=tmp,
+            )
+        >>> print("Output:")
+        >>> print(type(local_path))
+        >>> print(local_path)
     """
 
     try:
@@ -105,9 +160,9 @@ def download_bucket_from_uri(
                 )
             else:
                 logger.info(
-                    f"Downloaded {name} to {destination_directory + '/' + name}"
+                    f"Downloaded {name} to {Path(destination_directory)/Path(name)}"
                 )
-        return Success(None)
+        return Success(name)
 
     except Exception as e:
         logger.error(
