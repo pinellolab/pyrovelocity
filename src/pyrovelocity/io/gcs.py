@@ -32,6 +32,8 @@ def download_blob_from_uri(
             concurrent chunks. Defaults to False.
 
     Example:
+        >>> # xdoctest: +SKIP
+        >>> # requires google credentials
         >>> tmp = getfixture("tmp_path")
         >>> import os
         >>> from pathlib import Path
@@ -114,6 +116,8 @@ def download_bucket_from_uri(
         Result[str, Exception]: A Result object encapsulating success or failure.
 
     Examples:
+        >>> # xdoctest: +SKIP
+        >>> # requires google credentials
         >>> tmp = getfixture("tmp_path")
         >>> bucket_uri = (
                 "gs://gcp-public-data-landsat/LC08/01/044/034/"
