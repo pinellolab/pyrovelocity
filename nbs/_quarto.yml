@@ -1,8 +1,29 @@
 project:
   type: website
   output-dir: _site
+  # type: docusaurus
+  # output-dir: ../mdx
   preview:
     port: 7562
+
+format:
+  # docusaurus-md:
+  #   html-math-method: mathjax
+  # gfm:
+  #   html-math-method:
+  #     method: mathjax
+  html:
+    theme:
+      dark: [darkly, cdark.scss]
+      light: [cosmo, clight.scss]
+    include-in-header: include.html
+    css: styles.css
+    grid:
+      sidebar-width: 300px
+      body-width: 900px
+      margin-width: 300px
+      gutter-width: 1.5rem
+    toc: true
 
 execute:
   warning: false
@@ -65,21 +86,15 @@ website:
         #   - text: "Create an issue"
         #     url: https://github.com/pinellolab/pyrovelocity/issues/new/choose
     left:
-      # - sidebar:introduction
+      - sidebar:documentation
       - sidebar:tutorials
       - sidebar:guides
       - sidebar:concepts
       - sidebar:reference
-      - sidebar:documentation
       - sidebar:about
 
   sidebar:
     - id: ""
-    # - id: introduction
-    #   title: "Introduction"
-    #   contents:
-    #     - text: "Getting Started"
-    #       href: introduction.qmd
     - id: concepts
       title: "Concepts"
       style: "floating"
@@ -112,6 +127,8 @@ website:
           href: guides/postprocessing.qmd
         - text: "Model summary"
           href: guides/summarization.qmd
+        - text: "Interactive review"
+          href: guides/interactive.qmd
     - id: tutorials
       title: "Tutorials"
       style: "floating"
@@ -202,6 +219,8 @@ website:
               href: guides/postprocessing.qmd
             - text: "Model summary"
               href: guides/summarization.qmd
+            - text: "Interactive review"
+              href: guides/interactive.qmd
         - section: "Concepts"
           contents:
             - text: "Overview"
@@ -238,20 +257,6 @@ website:
           href: about/contributing.qmd
         - text: "Credits"
           href: about/credits.qmd
-
-format:
-  html:
-    theme:
-      dark: [darkly, cdark.scss]
-      light: [cosmo, clight.scss]
-    include-in-header: include.html
-    css: styles.css
-    grid:
-      sidebar-width: 300px
-      body-width: 900px
-      margin-width: 300px
-      gutter-width: 1.5rem
-    toc: true
 
 quartodoc:
   parser: google
