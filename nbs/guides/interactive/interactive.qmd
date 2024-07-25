@@ -1,6 +1,29 @@
 ---
 title: Interactive results review
+execute: 
+  freeze: true
+  eval: true
+  warning: false
+  error: false
+  cache: true
+toc: true
+number-sections: true
+highlight-style: pygments
+csl: bibstyle.csl
+lightbox: auto
+format:
+  html:
+    html-math-method: katex
+  ipynb: default
 ---
+
+```{python}
+#| label: enable-autoreload
+#| code-fold: true
+#| output: false
+%load_ext autoreload
+%autoreload 2 
+``` 
 
 When testing or prototyping it is helpful to review the results of a workflow
 execution interactively. This is relatively straightforward when working with locally
@@ -12,6 +35,7 @@ OAuth access is required to the endpoint associated to the workflow execution.
 Given this access, setup the remote client,
 
 ```{python}
+#| label: instantiate-remote-client
 from flytekit.remote.remote import FlyteRemote
 from flytekit.configuration import Config
 
@@ -23,14 +47,16 @@ remote = FlyteRemote(
 login to the UI and copy the URI of the workflow or task whose outputs you want to review, and provide this to the `get` method of the remote client,
 
 ```{python}
+#| label: get-remote-outputs
 workflow_outputs = remote.get(
-    "flyte://v1/pyrovelocity/development/pyrovelocity-argo-nix-bui-5c9ebf8-dev-1hk-d5805de62e8044f79d4/f26c1pjy-0-dn0-0-dn7/o"
+    "flyte://v1/pyrovelocity/development/pyrovelocity-argo-nix-bui-5c9ebf8-dev-1hk-d5805de62e8044f79d4/f26c1pjy-0-dn0-0-dn6/o"
 )
 ```
 
 This will not download the results but will provide a summary of the outputs. 
 
 ```{python}
+#| label: create-outputs-dict
 from omegaconf import OmegaConf
 from flytekit.interaction.string_literals import literal_map_string_repr
 
@@ -42,7 +68,13 @@ print(OmegaConf.to_yaml(outputs_dictconfig))
 To download the desired results use
 
 ```{python}
+#| label: download-outputs
 from pyrovelocity.io.gcs import download_blob_from_uri
 
-download_blob_from_uri(outputs_dictconfig.o0.dataframe.path)
+pyrovelocity_data = download_blob_from_uri(
+    outputs_dictconfig.o0.pyrovelocity_data.path
+)
+postprocessed_data = download_blob_from_uri(
+    outputs_dictconfig.o0.postprocessed_data.path
+)
 ```
