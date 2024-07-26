@@ -253,6 +253,7 @@ def get_cell_parameters(
     dt_3: Tensor,
     alpha: Tensor,
     alpha_off: Tensor,
+    k: Tensor,
 ) -> Tuple[Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor]:
     """
     Gets the ODE parameters for each cell, by first assign each gene in each cell to a state 
@@ -267,6 +268,7 @@ def get_cell_parameters(
         dt_3 (Tensor): Time gap since transcription start for transcription stopping for each gene.
         alpha (Tensor): The transcription rate of each gene in the on state.
         alpha_off (Tensor): The transcription rate of each gene in the off state.
+        k (Tensor): The activation state of each gene in each state.
 
     Returns:
     Tuple[Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor]: Tuple containing the state of each cell (state),
@@ -285,8 +287,9 @@ def get_cell_parameters(
         >>> dt_3 = torch.tensor((50.0, 70.0))
         >>> alpha = torch.tensor((0.5, 0.3))
         >>> alpha_off = torch.tensor(0.0)
+        >>> k = torch.tensor((1.0, 1.0),(1.0,1.0))
         >>> get_cell_parameters(
-            t, t0_1, dt_1, dt_2, dt_3, alpha, alpha_off
+            t, t0_1, dt_1, dt_2, dt_3, alpha, alpha_off,k
             )
         (tensor([[0, 0],
             [2, 2],
@@ -313,6 +316,7 @@ def get_cell_parameters(
     t0_4 = torch.where(~boolean, t0_2 + dt_3, t0_2 + dt_2)
     state = ((t0_1 <= t).int() + (t0_2 <= t).int() + (t0_3 <= t).int() + (t0_4 <= t).int())  # cells, genes
     n_genes = state.shape[1]
+    state = state * (1-1*k) 
     
     t0_state = torch.stack([torch.zeros_like(t0_1), t0_1, t0_2, t0_3, t0_4], dim=1)  # genes, states
     t0_vec = t0_state[torch.arange(n_genes).unsqueeze(1), state.T].T  # cells, genes
