@@ -17,9 +17,10 @@ def test_get_cell_parameters():
     dt_3 = torch.tensor((50.0, 70.0))
     alpha = torch.tensor((0.5, 0.3))
     alpha_off = torch.tensor(0.0)
+    k = torch.tensor((1.0, 1.0),(1.0,1.0))
     
     output = get_cell_parameters(
-        t, t0_1, dt_1, dt_2, dt_3, alpha, alpha_off
+        t, t0_1, dt_1, dt_2, dt_3, alpha, alpha_off,k
         )
 
     correct_output = (torch.tensor([[0, 0],
