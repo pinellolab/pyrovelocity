@@ -218,17 +218,26 @@ def get_initial_states(
          [0.0000, 0.0000],
          [9.1791, 4.7921]]))
     """
-    
+
     n_genes = t0_state.shape[0]
-    c0_state = torch.zeros(n_genes, 5)
-    u0_state = torch.zeros(n_genes, 5)
-    s0_state = torch.zeros(n_genes, 5)
+    c0_state_list = [torch.zeros(n_genes),torch.zeros(n_genes)]
+    u0_state_list = [torch.zeros(n_genes),torch.zeros(n_genes)]
+    s0_state_list = [torch.zeros(n_genes),torch.zeros(n_genes)]
     dt_state = t0_state - torch.stack([torch.zeros((2)), torch.zeros((2)),
                                     t0_state[:,1], t0_state[:,2], t0_state[:,3]], dim = 1)                          # genes, states
-    for i in range(1,4):
-        c0_state[:,i+1], u0_state[:,i+1], s0_state[:,i+1] = atac_mrna_dynamics(
-        dt_state[:,i+1], c0_state[:,i], u0_state[:,i], s0_state[:,i], k_c_state[:,i],
-        alpha_c, alpha_state[:,i], beta, gamma)
+    for i in range(1, 4):
+        c0_i, u0_i, s0_i = atac_mrna_dynamics(
+            dt_state[:, i+1], c0_state_list[-1], u0_state_list[-1], s0_state_list[-1], k_c_state[:, i],
+            alpha_c, alpha_state[:, i], beta, gamma
+        )
+        c0_state_list += [c0_i] 
+        u0_state_list += [u0_i]
+        s0_state_list += [s0_i]
+    
+    c0_state = torch.stack(c0_state_list, dim = 1)
+    u0_state = torch.stack(u0_state_list, dim = 1)
+    s0_state = torch.stack(s0_state_list, dim = 1)
+    
     c0_vec = c0_state[torch.arange(n_genes).unsqueeze(1), state.T].T                     # cells, genes
     u0_vec = u0_state[torch.arange(n_genes).unsqueeze(1), state.T].T                     # cells, genes
     s0_vec = s0_state[torch.arange(n_genes).unsqueeze(1), state.T].T                     # cells, genes
@@ -302,27 +311,31 @@ def get_cell_parameters(
     boolean = dt_2 >= dt_3 # True means chromatin starts closing, before transcription stops.
     t0_3 = torch.where(boolean, t0_2 + dt_3, t0_2 + dt_2)
     t0_4 = torch.where(~boolean, t0_2 + dt_3, t0_2 + dt_2)
-    state = ((t0_1 <= t)*1 +  (t0_2 <= t)*1 + (t0_3 <= t)*1 + (t0_4 <= t)*1)                # cells, genes
+    state = ((t0_1 <= t).int() + (t0_2 <= t).int() + (t0_3 <= t).int() + (t0_4 <= t).int())  # cells, genes
     n_genes = state.shape[1]
     
-    # Calculate time for each gene in each cell:
-    t0_state = torch.stack([torch.zeros((2)), t0_1, t0_2, t0_3, t0_4], dim = 1)             # genes, states
-    t0_vec = t0_state[torch.arange(n_genes).unsqueeze(1), state.T].T                        # cells, genes
-    tau_vec = t - t0_vec                                                                    # cells, genes
+    t0_state = torch.stack([torch.zeros_like(t0_1), t0_1, t0_2, t0_3, t0_4], dim=1)  # genes, states
+    t0_vec = t0_state[torch.arange(n_genes).unsqueeze(1), state.T].T  # cells, genes
+    tau_vec = t - t0_vec  # cells, genes
     
-    # Calculate the transcription rate and chromatin state for each gene in each cell.
-    alpha_state = torch.stack([torch.ones((2))*alpha_off,
-                            torch.ones((2))*alpha_off,
-                            alpha,
-                            torch.where(boolean, alpha, alpha_off),
-                            torch.ones((2))*alpha_off], dim = 1)                                     # genes, states
-    k_c_state = torch.stack([torch.zeros((2)),
-                            torch.ones((2)),
-                            torch.ones((2)),
-                            torch.where(boolean, 0,1),
-                            torch.zeros((2))], dim = 1)                                     # genes, states
-    alpha_vec = alpha_state[torch.arange(n_genes).unsqueeze(1), state.T].T                  # cells, genes
-    k_c_vec = k_c_state[torch.arange(n_genes).unsqueeze(1), state.T].T                      # cells, genes
+    alpha_state = torch.stack([
+        torch.ones_like(t0_1) * alpha_off,
+        torch.ones_like(t0_1) * alpha_off,
+        torch.ones_like(t0_1) * alpha,
+        torch.where(boolean, torch.ones_like(t0_1) * alpha, torch.ones_like(t0_1) * alpha_off),
+        torch.ones_like(t0_1) * alpha_off
+    ], dim=1)  # genes, states
+
+    k_c_state = torch.stack([
+        torch.zeros_like(t0_1),
+        torch.ones_like(t0_1),
+        torch.ones_like(t0_1),
+        torch.where(boolean, torch.zeros_like(t0_1), torch.ones_like(t0_1)),
+        torch.zeros_like(t0_1)
+    ], dim=1)  # genes, states
+
+    alpha_vec = alpha_state[torch.arange(n_genes).unsqueeze(1), state.T].T  # cells, genes
+    k_c_vec = k_c_state[torch.arange(n_genes).unsqueeze(1), state.T].T  # cells, genes
     
     return state, k_c_state, alpha_state, t0_state, k_c_vec, alpha_vec, tau_vec
 
