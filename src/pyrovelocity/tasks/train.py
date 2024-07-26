@@ -347,20 +347,17 @@ def train_model(
         >>> _, model, posterior_samples = train_model(adata, use_gpu="auto", seed=99, max_epochs=200, loss_plot_path=loss_plot_path)
     """
 
-    if adata_atac:
-        logger.info(
-            "Multiome model not yet implemented. Proceeding without atac data."
-        )
     if isinstance(adata, str):
         adata = load_anndata_from_path(adata)
 
     logger.info(f"AnnData object prior to model training")
     print_anndata(adata)
 
-    PyroVelocity.setup_anndata(adata)
+    PyroVelocity.setup_anndata(adata, adata_atac = adata_atac)
 
     model = PyroVelocity(
         adata,
+        adata_atac = adata_atac,
         likelihood=likelihood,
         model_type=model_type,
         guide_type=guide_type,
