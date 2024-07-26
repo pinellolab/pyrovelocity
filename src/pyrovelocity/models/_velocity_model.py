@@ -412,9 +412,6 @@ class LogNormalModel(PyroModule):
         
         return c_dist, u_dist, s_dist
 
-
-
-
 class VelocityModelAuto(LogNormalModel):
     """Automatically configured velocity model.
 
@@ -905,6 +902,50 @@ class MultiVelocityModelAuto(LogNormalModel):
         self.correct_library_size = correct_library_size
         if self.decoder_on:
             self.decoder = Decoder(1, self.num_genes, n_layers=2)
+        self.enumeration = "parallel"
+            
+    @beartype
+    def create_plates(
+        self,
+        c_obs: Optional[torch.Tensor] = None,
+        u_obs: Optional[torch.Tensor] = None,
+        s_obs: Optional[torch.Tensor] = None,
+        u_log_library: Optional[torch.Tensor] = None,
+        s_log_library: Optional[torch.Tensor] = None,
+        u_log_library_loc: Optional[torch.Tensor] = None,
+        s_log_library_loc: Optional[torch.Tensor] = None,
+        u_log_library_scale: Optional[torch.Tensor] = None,
+        s_log_library_scale: Optional[torch.Tensor] = None,
+        ind_x: Optional[torch.Tensor] = None,
+        cell_state: Optional[torch.Tensor] = None,
+        time_info: Optional[torch.Tensor] = None,
+    ) -> Tuple[plate, plate]:
+        # Call the parent class method
+        cell_plate, gene_plate = super().create_plates(
+            u_obs=u_obs,
+            s_obs=s_obs,
+            u_log_library=u_log_library,
+            s_log_library=s_log_library,
+            u_log_library_loc=u_log_library_loc,
+            s_log_library_loc=s_log_library_loc,
+            u_log_library_scale=u_log_library_scale,
+            s_log_library_scale=s_log_library_scale,
+            ind_x=ind_x,
+            cell_state=cell_state,
+            time_info=time_info,
+        )
+        # You can add any additional logic here if needed
+        return cell_plate, gene_plate
+    
+    def sample_cell_gene_state(self, t, switching):
+        return (
+        pyro.sample(
+            "cell_gene_state",
+            Bernoulli(logits=t - switching),
+            infer={"enumerate": self.enumeration},
+        )
+        == self.zero
+        )
 
     @beartype
     def __repr__(self) -> str:
@@ -1004,14 +1045,16 @@ class MultiVelocityModelAuto(LogNormalModel):
                 [4.3359, 2.3326]]))
         """
         
+        k = self.sample_cell_gene_state(t, t0_1)    
+        
         state, k_c_state, alpha_state, t0_state, k_c_vec, alpha_vec, tau_vec = get_cell_parameters(
-        t, t0_1, dt_1, dt_2, dt_3, alpha, alpha_off
-    )
-
+        t, t0_1, dt_1, dt_2, dt_3, alpha, alpha_off,k,
+        )
+        
         c0_vec, u0_vec, s0_vec = get_initial_states(
             t0_state, k_c_state, alpha_c, alpha_state, beta, gamma, state
             )
-
+        
         ct, ut, st = atac_mrna_dynamics(
             tau_vec, c0_vec, u0_vec, s0_vec, k_c_vec, alpha_c, alpha_vec, beta, gamma
         ) 
@@ -1022,9 +1065,9 @@ class MultiVelocityModelAuto(LogNormalModel):
     @beartype
     def forward(
         self,
+        c_obs: torch.Tensor,
         u_obs: torch.Tensor,
         s_obs: torch.Tensor,
-        c_obs: torch.Tensor,
         u_log_library: Optional[torch.Tensor] = None,
         s_log_library: Optional[torch.Tensor] = None,
         u_log_library_loc: Optional[torch.Tensor] = None,
@@ -1121,10 +1164,10 @@ class MultiVelocityModelAuto(LogNormalModel):
 
         with gene_plate, poutine.mask(mask=self.include_prior):
             
-            alpha_c = self.alpha_c
-            alpha = self.alpha
-            gamma = self.gamma
-            beta = self.beta
+            alpha_c = pyro.sample("alpha_c", LogNormal(self.one, self.one))
+            alpha = pyro.sample("alpha", LogNormal(self.one*20, self.one*10))
+            gamma = pyro.sample("gamma", LogNormal(self.one*20, self.one*10))
+            beta = pyro.sample("beta", LogNormal(self.one*20, self.one*10))
             alpha_off = self.zero
 
             t0_1 = pyro.sample("t0_1", Normal(self.zero, self.one*10))
@@ -1147,6 +1190,7 @@ class MultiVelocityModelAuto(LogNormalModel):
             u_read_depth = pyro.sample(
                 "u_read_depth", LogNormal(u_log_library, u_log_library_scale)
             )
+            
             s_read_depth = pyro.sample(
                 "s_read_depth", LogNormal(s_log_library, s_log_library_scale)
             )
