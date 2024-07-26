@@ -12,7 +12,7 @@ from pyro.infer.autoguide.guides import AutoGuideList
 from scvi.module.base import PyroBaseModuleClass
 
 from pyrovelocity.logging import configure_logging
-from pyrovelocity.models._velocity_model import VelocityModelAuto
+from pyrovelocity.models._velocity_model import VelocityModelAuto, MultiVelocityModelAuto
 
 
 logger = configure_logging(__name__)
@@ -331,7 +331,7 @@ class MultiVelocityModule(PyroBaseModuleClass):
         logger.info(
             f"Model type: {self.model_type}, Guide type: {self.guide_type}"
         )
-
+        
         self.cell_specific_kinetics = cell_specific_kinetics
 
         self._model = MultiVelocityModelAuto(
@@ -380,9 +380,6 @@ class MultiVelocityModule(PyroBaseModuleClass):
                     poutine.block(
                         self._model,
                         expose=[
-                            "alpha",
-                            "beta",
-                            "gamma",
                             "dt_switching",
                             "t0",
                             "u_scale",
@@ -401,9 +398,6 @@ class MultiVelocityModule(PyroBaseModuleClass):
                     poutine.block(
                         self._model,
                         expose=[
-                            "alpha",
-                            "beta",
-                            "gamma",
                             "dt_switching",
                             "t0",
                             "u_scale",
