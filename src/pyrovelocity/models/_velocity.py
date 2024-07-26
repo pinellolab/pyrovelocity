@@ -290,7 +290,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                 num_aux_cells=num_aux_cells,
                 only_cell_times=only_cell_times,
                 decoder_on=decoder_on,
-                add_offset=add_offset,
+                add_offset=False,
                 correct_library_size=correct_library_size,
                 cell_specific_kinetics=cell_specific_kinetics,
                 kinetics_num=self.k,
@@ -362,6 +362,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         if adata_atac:
             adata.layers['atac'] = adata_atac.X
             anndata_fields += [LayerField('atac', 'atac')]
+            adata.uns['atac'] = True
         else:
             adata.uns['atac'] = None
         
