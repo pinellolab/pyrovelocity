@@ -389,7 +389,7 @@ class VelocityTrainingMixin:
                 
         else:
             
-            atac = torch.tensor(
+            c = torch.tensor(
             np.array(
                 self.adata.layers["atac"].toarray(), dtype="float32"
             )
@@ -403,9 +403,9 @@ class VelocityTrainingMixin:
                 if cell_state is None:
                     elbos = (
                         svi.step(
+                            c,
                             u,
                             s,
-                            atac,
                             u_library.reshape(-1, 1),
                             s_library.reshape(-1, 1),
                             u_library_mean.reshape(-1, 1),
@@ -420,9 +420,9 @@ class VelocityTrainingMixin:
                 else:
                     elbos = (
                         svi.step(
+                            c,
                             u,
                             s,
-                            atac,
                             u_library.reshape(-1, 1),
                             s_library.reshape(-1, 1),
                             u_library_mean.reshape(-1, 1),
