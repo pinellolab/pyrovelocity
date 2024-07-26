@@ -361,10 +361,6 @@ def train_model(
     if isinstance(adata, str):
 =======
 
-    if adata_atac:
-        logger.info(
-            "Multiome model not yet implemented. Proceeding without atac data."
-        )
     if isinstance(adata, str):
 >>>>>>> 9d2f67d (added atac_layer argument to train_model tasks and made tests for it)
         adata = load_anndata_from_path(adata)
@@ -372,10 +368,11 @@ def train_model(
     logger.info(f"AnnData object prior to model training")
     print_anndata(adata)
 
-    PyroVelocity.setup_anndata(adata)
+    PyroVelocity.setup_anndata(adata, adata_atac = adata_atac)
 
     model = PyroVelocity(
         adata,
+        adata_atac = adata_atac,
         likelihood=likelihood,
         model_type=model_type,
         guide_type=guide_type,
