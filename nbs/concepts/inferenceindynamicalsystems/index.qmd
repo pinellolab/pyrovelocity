@@ -2,7 +2,7 @@
 title: Probabilistic inference in dynamical systems
 toc: true
 number-sections: true
-highlight-style: pygments
+highlight-style: gruvbox
 csl: ../../bibstyle.csl
 lightbox: auto
 format:

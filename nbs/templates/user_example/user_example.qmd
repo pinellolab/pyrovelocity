@@ -1,8 +1,8 @@
 ---
-title: Pyrovelocity Notebook Usage Example
+title: End-to-end notebook usage example
 toc: true
 number-sections: true
-highlight-style: pygments
+highlight-style: gruvbox
 csl: bibstyle.csl
 lightbox: auto
 format:
@@ -29,10 +29,10 @@ execute:
   # keep-ipynb: true
   # keep-md: true
 author:
-  - name: Pyrovelocity Team
+  - name: Pyro&thinsp;-Velocity team
     email: team@pyrovelocity.net
 abstract: |
-  This notebook demonstrates how to run Pyro-Velocity in a Jupyter notebook on
+  This notebook demonstrates how to run Pyro&thinsp;-Velocity in a Jupyter notebook on
   downsampled data. The results are not expected to be meaningful, but the
   notebook demonstrates the usage workflow with both a short execution time and
   using limited resources. It attempts to support both Google Colab and local or
