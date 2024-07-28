@@ -1,0 +1,314 @@
+project:
+  type: website
+  output-dir: _site
+  # type: docusaurus
+  # output-dir: ../mdx
+  # type: default
+  # output-dir: ../md
+  preview:
+    port: 7562
+
+format:
+  # docusaurus-md:
+  #   html-math-method: mathjax
+  # gfm:
+  #   html-math-method:
+  #     method: mathjax
+  html:
+    theme:
+      dark: [darkly, cdark.scss]
+      light: [cosmo, clight.scss]
+    include-in-header: include.html
+    css: styles.css
+    grid:
+      sidebar-width: 300px
+      body-width: 900px
+      margin-width: 300px
+      gutter-width: 1.5rem
+    toc: true
+
+execute:
+  warning: false
+  error: false
+  # freeze: true
+
+filters:
+  - interlinks
+
+interlinks:
+  fast: true
+  sources:
+    python:
+      url: https://docs.python.org/3/
+    anndata:
+      url: https://anndata.readthedocs.io/en/latest/
+    matplotlib:
+      url: https://matplotlib.org/stable/
+    numpy:
+      url: https://numpy.org/doc/stable/
+    pyro:
+      url: https://docs.pyro.ai/en/stable/
+    scanpy:
+      url: https://scanpy.readthedocs.io/en/stable/
+    scvelo:
+      url: https://scvelo.readthedocs.io/en/stable/
+    scvi:
+      url: https://docs.scvi-tools.org/en/stable/
+    torch:
+      url: https://pytorch.org/docs/stable/
+
+website:
+  title: "Pyro-Velocity"
+  site-url: https://pinellolab.github.io/pyrovelocity
+  description: "A probabilistic framework for multi-modal transcriptomics"
+  favicon: _static/logo/favicon.ico
+  back-to-top-navigation: false
+  page-navigation: true
+
+  page-footer:
+    border: false
+    left: ""
+    right:
+      - icon: github
+        href: https://github.com/pinellolab/pyrovelocity
+
+  search:
+    type: overlay
+
+  navbar:
+    background: primary
+    logo: _static/logo.png
+    tools:
+      - icon: github
+        url: https://github.com/pinellolab/pyrovelocity
+        # menu:
+        #   - text: "Repository"
+        #     url: https://github.com/pinellolab/pyrovelocity
+        #   - text: "Start a discussion"
+        #     url: https://github.com/pinellolab/pyrovelocity/discussions/new/choose
+        #   - text: "Create an issue"
+        #     url: https://github.com/pinellolab/pyrovelocity/issues/new/choose
+    left:
+      - sidebar:documentation
+      - sidebar:tutorials
+      - sidebar:guides
+      - sidebar:concepts
+      - sidebar:reference
+      - sidebar:about
+
+  sidebar:
+    - id: ""
+    - id: concepts
+      title: "Concepts"
+      style: "floating"
+      contents:
+        - text: "Overview"
+          href: concepts/overview.qmd
+        - text: "Multi-modal transcriptomics"
+          href: concepts/multimodaltranscriptomics.qmd
+        - text: "Dynamical systems theory"
+          href: concepts/dynamicalsystems.qmd
+        - text: "Probabilistic inference"
+          href: concepts/probabilisticinference.qmd
+        - text: "Models of gene expression"
+          href: concepts/geneexpression.qmd
+        - text: "Inference in dynamical systems"
+          href: concepts/inferenceindynamicalsystems/index.qmd
+    - id: guides
+      title: "Guides"
+      style: "floating"
+      contents:
+        - text: "Installation"
+          href: guides/installation.qmd
+        - text: "Data Access"
+          href: guides/data.qmd
+        - text: "Preprocessing"
+          href: guides/preprocessing.qmd
+        - text: "Inference"
+          href: guides/inference.qmd
+        - text: "Postprocessing"
+          href: guides/postprocessing.qmd
+        - text: "Model summary"
+          href: guides/summarization.qmd
+        - text: "Interactive review"
+          href: guides/interactive/interactive.qmd
+    - id: tutorials
+      title: "Tutorials"
+      style: "floating"
+      contents:
+        - section: "Introduction"
+          contents:
+            - text: "Getting Started"
+              href: tutorials/introduction.qmd
+            - text: "Usage example"
+              href: templates/user_example/user_example.qmd
+            - text: "v0.1.3 Getting Started"
+              href: tutorials/introduction_v013.qmd
+        - section: "Data sets"
+          contents:
+            - text: "Pancreatic endocrinogenesis"
+              href: tutorials/pancreas.qmd
+            - text: "Pons development"
+              href: tutorials/pons.qmd
+            - section: "Blood physiology"
+              contents:
+                - text: "68k PBMCs"
+                  href: tutorials/pbmc68k.qmd
+                - text: "10k PBMCs"
+                  href: tutorials/pbmc10k.qmd
+                - text: "5k PBMCs"
+                  href: tutorials/pbmc5k.qmd
+            - text: "Mouse hematopoiesis"
+              href: tutorials/mousehematopoiesis.qmd
+            - text: "Lineage tracing"
+              href: tutorials/lineagetracing.qmd
+    - id: reference
+      title: "Reference"
+      style: "floating"
+      contents:
+        - text: "Overview"
+          href: reference/index.qmd
+        - text: "Models"
+          href: reference/models.qmd
+        - text: "Plots"
+          href: reference/plots.qmd
+        # - text: "Tasks"
+        #   href: reference/tasks.qmd
+        # - text: "Workflows"
+        #   href: reference/workflows.qmd
+    - id: documentation
+      title: "Contents"
+      style: "floating"
+      contents:
+        - section: "Tutorials"
+          contents:
+            - section: "Introduction"
+              contents:
+                - text: "Getting Started"
+                  href: tutorials/introduction.qmd
+                - text: "Usage example"
+                  href: templates/user_example/user_example.qmd
+                - text: "v0.1.3 Getting Started"
+                  href: tutorials/introduction_v013.qmd
+            - section: "Data sets"
+              contents:
+                - text: "Pancreatic endocrinogenesis"
+                  href: tutorials/pancreas.qmd
+                - text: "Pons development"
+                  href: tutorials/pons.qmd
+                - section: "Blood physiology"
+                  contents:
+                    - text: "68k PBMCs"
+                      href: tutorials/pbmc68k.qmd
+                    - text: "10k PBMCs"
+                      href: tutorials/pbmc10k.qmd
+                    - text: "5k PBMCs"
+                      href: tutorials/pbmc5k.qmd
+                - text: "Mouse hematopoiesis"
+                  href: tutorials/mousehematopoiesis.qmd
+                - text: "Lineage tracing"
+                  href: tutorials/lineagetracing.qmd
+        - section: "Guides"
+          contents:
+            - text: "Installation"
+              href: guides/installation.qmd
+            - text: "Data Access"
+              href: guides/data.qmd
+            - text: "Preprocessing"
+              href: guides/preprocessing.qmd
+            - text: "Inference"
+              href: guides/inference.qmd
+            - text: "Postprocessing"
+              href: guides/postprocessing.qmd
+            - text: "Model summary"
+              href: guides/summarization.qmd
+            - text: "Interactive review"
+              href: guides/interactive/interactive.qmd
+        - section: "Concepts"
+          contents:
+            - text: "Overview"
+              href: concepts/overview.qmd
+            - text: "Multi-modal transcriptomics"
+              href: concepts/multimodaltranscriptomics.qmd
+            - text: "Dynamical systems theory"
+              href: concepts/dynamicalsystems.qmd
+            - text: "Probabilistic inference"
+              href: concepts/probabilisticinference.qmd
+            - text: "Models of gene expression"
+              href: concepts/geneexpression.qmd
+            - text: "Inference in dynamical systems"
+              href: concepts/inferenceindynamicalsystems/index.qmd
+        - section: "Reference"
+          contents:
+            - text: "Overview"
+              href: reference/index.qmd
+            - text: "Models"
+              href: reference/models.qmd
+            - text: "Plots"
+              href: reference/plots.qmd
+            # - text: "Tasks"
+            #   href: reference/tasks.qmd
+            # - text: "Workflows"
+            #   href: reference/workflows.qmd
+    - id: about
+      title: "About"
+      style: "floating"
+      contents:
+        - text: "Changelog"
+          href: about/changelog.md
+        - text: "Contributing"
+          href: about/contributing.qmd
+        - text: "Credits"
+          href: about/credits.qmd
+
+quartodoc:
+  parser: google
+  package: pyrovelocity
+  title: Reference
+  sidebar: reference/_sidbar.yml
+  render_interlinks: true
+  options:
+    signature_name: full
+  sections:
+    - title: Models
+      desc: Model definitions and usage
+      contents:
+        - kind: page
+          path: models
+          package: pyrovelocity.models
+          summary:
+            name: Models
+            desc: The models package hosts the suite of probabilistic models supported by Pyro-Velocity.
+          contents:
+            - name: PyroVelocity
+              members:
+                - __init__
+                - train
+                - generate_posterior_samples
+                - compute_statistics_from_posterior_samples
+                - save_model
+                - load_model
+            - name: mrna_dynamics
+    - title: Plots
+      desc: Plotting functions and utilities
+      contents:
+        - kind: page
+          path: plots
+          package: pyrovelocity.plots
+          summary:
+            name: Plots
+            desc: The plots package hosts plotting functions supported by Pyro-Velocity.
+          contents:
+            - name: cluster_violin_plots
+            - name: extrapolate_prediction_sample_predictive
+            - name: get_posterior_sample_angle_uncertainty
+            - name: plot_gene_ranking
+            - name: plot_parameter_posterior_distributions
+            - name: plot_posterior_time
+            - name: plot_shared_time_uncertainty
+            - name: plot_state_uncertainty
+            - name: plot_t0_selection
+            - name: posterior_curve
+            - name: rainbowplot
+            - name: plot_vector_field_summary
+            - name: plot_gene_selection_summary

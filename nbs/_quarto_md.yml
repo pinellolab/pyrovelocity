@@ -1,0 +1,90 @@
+project:
+  type: default
+  output-dir: ../md
+
+format:
+  commonmark:
+    html-math-method:
+      method: mathjax
+
+execute:
+  warning: false
+  error: false
+  freeze: true
+
+filters:
+  - interlinks
+
+interlinks:
+  fast: true
+  sources:
+    python:
+      url: https://docs.python.org/3/
+    anndata:
+      url: https://anndata.readthedocs.io/en/latest/
+    matplotlib:
+      url: https://matplotlib.org/stable/
+    numpy:
+      url: https://numpy.org/doc/stable/
+    pyro:
+      url: https://docs.pyro.ai/en/stable/
+    scanpy:
+      url: https://scanpy.readthedocs.io/en/stable/
+    scvelo:
+      url: https://scvelo.readthedocs.io/en/stable/
+    scvi:
+      url: https://docs.scvi-tools.org/en/stable/
+    torch:
+      url: https://pytorch.org/docs/stable/
+
+quartodoc:
+  parser: google
+  package: pyrovelocity
+  title: Reference
+  sidebar: reference/_sidbar.yml
+  render_interlinks: true
+  options:
+    signature_name: full
+  sections:
+    - title: Models
+      desc: Model definitions and usage
+      contents:
+        - kind: page
+          path: models
+          package: pyrovelocity.models
+          summary:
+            name: Models
+            desc: The models package hosts the suite of probabilistic models supported by Pyro-Velocity.
+          contents:
+            - name: PyroVelocity
+              members:
+                - __init__
+                - train
+                - generate_posterior_samples
+                - compute_statistics_from_posterior_samples
+                - save_model
+                - load_model
+            - name: mrna_dynamics
+    - title: Plots
+      desc: Plotting functions and utilities
+      contents:
+        - kind: page
+          path: plots
+          package: pyrovelocity.plots
+          summary:
+            name: Plots
+            desc: The plots package hosts plotting functions supported by Pyro-Velocity.
+          contents:
+            - name: cluster_violin_plots
+            - name: extrapolate_prediction_sample_predictive
+            - name: get_posterior_sample_angle_uncertainty
+            - name: plot_gene_ranking
+            - name: plot_parameter_posterior_distributions
+            - name: plot_posterior_time
+            - name: plot_shared_time_uncertainty
+            - name: plot_state_uncertainty
+            - name: plot_t0_selection
+            - name: posterior_curve
+            - name: rainbowplot
+            - name: plot_vector_field_summary
+            - name: plot_gene_selection_summary
