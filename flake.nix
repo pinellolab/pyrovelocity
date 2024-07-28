@@ -182,7 +182,7 @@
           pyrovelocity311 = mkDevShell pkgs.pyrovelocityDevEnv311;
           pyrovelocity312 = mkDevShell pkgs.pyrovelocityDevEnv312;
 
-          default = pyrovelocity310;
+          default = pyrovelocity311;
         };
 
         _module.args.pkgs = import inputs.nixpkgs {
