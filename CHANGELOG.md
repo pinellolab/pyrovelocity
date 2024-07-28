@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.2.1-beta.1](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0...v0.2.1-beta.1) (2024-07-28)
+
+
+### Bug Fixes
+
+* **bazelignore:** local venv ([e5fa894](https://github.com/pinellolab/pyrovelocity/commit/e5fa894037c123b9a8a4d47c253b4e9c82d80968))
+* **bazelversion:** 7.0.2 -> 7.2.1 ([d1a2ebe](https://github.com/pinellolab/pyrovelocity/commit/d1a2ebe840c42dd9f38d03fdfd55710baf81376e))
+* **cid:** include MODULE.bazel in requirements cache key ([9ec2174](https://github.com/pinellolab/pyrovelocity/commit/9ec2174379a09da915884c4d636910b2a6ebc515))
+* **cid:** reenable bazel cache restore-keys ([809370d](https://github.com/pinellolab/pyrovelocity/commit/809370d123ef1422299b6a60dd56eb0267e9696f))
+* **gcs:** add function to download blob from uri ([c20b5d1](https://github.com/pinellolab/pyrovelocity/commit/c20b5d1d1246fabb579a8fd0ba8f83d5079467af))
+* **gcs:** add function to download path from uri ([10f71d2](https://github.com/pinellolab/pyrovelocity/commit/10f71d2d7d109efaafddfad12f2d6af665b4444a))
+* **io:** skip doctests that require gcp credentials ([455e941](https://github.com/pinellolab/pyrovelocity/commit/455e9417d11d0903c1435fe7acb98b8a15e23746))
+* **nbs:** add interactive review to guides contents ([7e33abf](https://github.com/pinellolab/pyrovelocity/commit/7e33abf2f46c967df8c58cfb0fbb5d8067fbb05d))
+* **nbs:** auto-hide navigation ([4d94b0b](https://github.com/pinellolab/pyrovelocity/commit/4d94b0bf73eb210a20a37996a9aff7feb80a87fd))
+* **nbs:** flesh out interactive review ([a827c71](https://github.com/pinellolab/pyrovelocity/commit/a827c71269712c5bef9f129c15d93bf492fe4fc0))
+* **nbs:** move interactive guide to subfolder ([eb6419a](https://github.com/pinellolab/pyrovelocity/commit/eb6419ae26c43ae3712c74e969461fd52f20bf75))
+* **nbs:** move interactive review to 2nd guide ([873a0f6](https://github.com/pinellolab/pyrovelocity/commit/873a0f6b9f492546309433bf484f99af5aae74f3))
+* **nbs:** pygments -> gruvbox syntax highlighting ([ee9b6dc](https://github.com/pinellolab/pyrovelocity/commit/ee9b6dcac97e65fc6da1801ef4bc1aec4c44e88b))
+* **nbs:** separate md, mdx, and site configs ([9c0f193](https://github.com/pinellolab/pyrovelocity/commit/9c0f193475692647479ea49ea1d8f9f51bee7b0f))
+* **nbs:** update dark css ([261cdcf](https://github.com/pinellolab/pyrovelocity/commit/261cdcfda7677a6ff4ec780f3af635ec4f1de35d))
+* **utils:** use shape of ArrayLike in pretty printing dicts ([918378c](https://github.com/pinellolab/pyrovelocity/commit/918378c67b5e2a2da222ca64e51a4b962956c3d7))
+
 ## [0.2.0](https://github.com/pinellolab/pyrovelocity/compare/v0.1.3...v0.2.0) (2024-07-12)
 
 
