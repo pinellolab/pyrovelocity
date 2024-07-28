@@ -7,7 +7,7 @@ sn-*.cls
 index.*
 !index.qmd
 *.docx
-*.pdf
+*.pdf*
 *.html
 *.tex
 *.zst
