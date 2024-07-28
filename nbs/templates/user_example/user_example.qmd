@@ -13,7 +13,8 @@ format:
 #     cite-method: citeproc
 #     keep-tex: true
   html:
-    html-math-method: katex
+    html-math-method: mathjax
+    include-in-header: ../../mathjax.html
 #     mainfont: Latin Modern Sans
 #     code-fold: false
 #     embed-resources: true
@@ -95,7 +96,7 @@ print("This cell is intentionally left blank.")
 ``` 
 
 These can be safely ignored or removed. 
-They are exclusively used for compatibility with Google Colab's section folding logic.
+They are exclusively used for compatibility with Google Colab\'s section folding logic.
 :::
 
 ### Overview
