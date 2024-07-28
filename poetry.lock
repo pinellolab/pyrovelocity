@@ -2117,25 +2117,25 @@ files = [
 
 [[package]]
 name = "fsspec"
-version = "2023.5.0"
+version = "2024.6.1"
 description = "File-system specification"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "fsspec-2023.5.0-py3-none-any.whl", hash = "sha256:51a4ad01a5bb66fcc58036e288c0d53d3975a0df2a5dc59a93b59bade0391f2a"},
-    {file = "fsspec-2023.5.0.tar.gz", hash = "sha256:b3b56e00fb93ea321bc9e5d9cf6f8522a0198b20eb24e02774d329e9c6fb84ce"},
+    {file = "fsspec-2024.6.1-py3-none-any.whl", hash = "sha256:3cb443f8bcd2efb31295a5b9fdb02aee81d8452c80d28f97a6d0959e6cee101e"},
+    {file = "fsspec-2024.6.1.tar.gz", hash = "sha256:fad7d7e209dd4c1208e3bbfda706620e0da5142bebbd9c384afb95b07e798e49"},
 ]
 
 [package.dependencies]
 aiohttp = {version = "<4.0.0a0 || >4.0.0a0,<4.0.0a1 || >4.0.0a1", optional = true, markers = "extra == \"http\""}
-requests = {version = "*", optional = true, markers = "extra == \"http\""}
 
 [package.extras]
 abfs = ["adlfs"]
 adl = ["adlfs"]
 arrow = ["pyarrow (>=1)"]
 dask = ["dask", "distributed"]
-devel = ["pytest", "pytest-cov"]
+dev = ["pre-commit", "ruff"]
+doc = ["numpydoc", "sphinx", "sphinx-design", "sphinx-rtd-theme", "yarl"]
 dropbox = ["dropbox", "dropboxdrivefs", "requests"]
 full = ["adlfs", "aiohttp (!=4.0.0a0,!=4.0.0a1)", "dask", "distributed", "dropbox", "dropboxdrivefs", "fusepy", "gcsfs", "libarchive-c", "ocifs", "panel", "paramiko", "pyarrow (>=1)", "pygit2", "requests", "s3fs", "smbprotocol", "tqdm"]
 fuse = ["fusepy"]
@@ -2145,13 +2145,16 @@ github = ["requests"]
 gs = ["gcsfs"]
 gui = ["panel"]
 hdfs = ["pyarrow (>=1)"]
-http = ["aiohttp (!=4.0.0a0,!=4.0.0a1)", "requests"]
+http = ["aiohttp (!=4.0.0a0,!=4.0.0a1)"]
 libarchive = ["libarchive-c"]
 oci = ["ocifs"]
 s3 = ["s3fs"]
 sftp = ["paramiko"]
 smb = ["smbprotocol"]
 ssh = ["paramiko"]
+test = ["aiohttp (!=4.0.0a0,!=4.0.0a1)", "numpy", "pytest", "pytest-asyncio (!=0.22.0)", "pytest-benchmark", "pytest-cov", "pytest-mock", "pytest-recording", "pytest-rerunfailures", "requests"]
+test-downstream = ["aiobotocore (>=2.5.4,<3.0.0)", "dask-expr", "dask[dataframe,test]", "moto[server] (>4,<5)", "pytest-timeout", "xarray"]
+test-full = ["adlfs", "aiohttp (!=4.0.0a0,!=4.0.0a1)", "cloudpickle", "dask", "distributed", "dropbox", "dropboxdrivefs", "fastparquet", "fusepy", "gcsfs", "jinja2", "kerchunk", "libarchive-c", "lz4", "notebook", "numpy", "ocifs", "pandas", "panel", "paramiko", "pyarrow", "pyarrow (>=1)", "pyftpdlib", "pygit2", "pytest", "pytest-asyncio (!=0.22.0)", "pytest-benchmark", "pytest-cov", "pytest-mock", "pytest-recording", "pytest-rerunfailures", "python-snappy", "requests", "smbprotocol", "tqdm", "urllib3", "zarr", "zstandard"]
 tqdm = ["tqdm"]
 
 [[package]]
@@ -2173,19 +2176,19 @@ sphinx-basic-ng = "*"
 
 [[package]]
 name = "gcsfs"
-version = "2023.5.0"
+version = "2024.6.1"
 description = "Convenient Filesystem interface over GCS"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "gcsfs-2023.5.0-py2.py3-none-any.whl", hash = "sha256:4f2ebc41814de3f566f85dec208704cf19823b9d04a55fd12b3142aef9046525"},
-    {file = "gcsfs-2023.5.0.tar.gz", hash = "sha256:02a815e1cf28197ab4f57335e89dc5df8744a065c7c956d42692b50a9e8f1625"},
+    {file = "gcsfs-2024.6.1-py2.py3-none-any.whl", hash = "sha256:13fd18095425e54e248870594fd155812723966b1bda3b102b3a5c44ec436a03"},
+    {file = "gcsfs-2024.6.1.tar.gz", hash = "sha256:e8858c7a893b2265e9bfce2fe270a024a2e348c74c23528801db388fc0224ed7"},
 ]
 
 [package.dependencies]
 aiohttp = "<4.0.0a0 || >4.0.0a0,<4.0.0a1 || >4.0.0a1"
 decorator = ">4.1.2"
-fsspec = "2023.5.0"
+fsspec = "2024.6.1"
 google-auth = ">=1.2"
 google-auth-oauthlib = "*"
 google-cloud-storage = "*"
@@ -7334,23 +7337,23 @@ files = [
 
 [[package]]
 name = "s3fs"
-version = "2023.5.0"
+version = "2024.6.1"
 description = "Convenient Filesystem interface over S3"
 optional = false
-python-versions = ">= 3.8"
+python-versions = ">=3.8"
 files = [
-    {file = "s3fs-2023.5.0-py3-none-any.whl", hash = "sha256:0d82c4fa43d1214117f56b239c3e03c9a2886f41c31000c1c967ac6030d20362"},
-    {file = "s3fs-2023.5.0.tar.gz", hash = "sha256:106b5d9a1000e6af413f918156ba4b96789ac832b7e08c99d186eb08164e6981"},
+    {file = "s3fs-2024.6.1-py3-none-any.whl", hash = "sha256:ecd20863437409eec1cbfff0b7df5e9772cf7c1926008efab2e17e46f6d52c63"},
+    {file = "s3fs-2024.6.1.tar.gz", hash = "sha256:6c2106d6c34fbfbb88e3d20c6f3572896d5ee3d3512896696301c21a3c541bea"},
 ]
 
 [package.dependencies]
-aiobotocore = ">=2.5.0,<2.6.0"
+aiobotocore = ">=2.5.4,<3.0.0"
 aiohttp = "<4.0.0a0 || >4.0.0a0,<4.0.0a1 || >4.0.0a1"
-fsspec = "2023.5.0"
+fsspec = "==2024.6.1.*"
 
 [package.extras]
-awscli = ["aiobotocore[awscli] (>=2.5.0,<2.6.0)"]
-boto3 = ["aiobotocore[boto3] (>=2.5.0,<2.6.0)"]
+awscli = ["aiobotocore[awscli] (>=2.5.4,<3.0.0)"]
+boto3 = ["aiobotocore[boto3] (>=2.5.4,<3.0.0)"]
 
 [[package]]
 name = "scanpy"
@@ -7493,21 +7496,19 @@ test = ["asv", "gmpy2", "hypothesis", "mpmath", "pooch", "pytest", "pytest-cov",
 
 [[package]]
 name = "scvelo"
-version = "0.3.2"
+version = "0.3.3.dev6+g3fbce6f"
 description = "RNA velocity generalized through dynamical modeling"
 optional = false
 python-versions = ">=3.8"
-files = [
-    {file = "scvelo-0.3.2-py3-none-any.whl", hash = "sha256:4b536f722bedf1f6300fbfc7e79b7368796728d39203854743e83c4cd2250a0a"},
-    {file = "scvelo-0.3.2.tar.gz", hash = "sha256:eab08941b04e5cf1c72584c0dc6055b63a05b36e2dfa0b77220df9e5f3f0f86b"},
-]
+files = []
+develop = false
 
 [package.dependencies]
 anndata = ">=0.7.5"
 loompy = ">=2.0.12"
 matplotlib = ">=3.3.0"
 numba = ">=0.41.0"
-numpy = ">=1.17"
+numpy = ">=1.17,<2.0.0"
 pandas = ">=1.1.1,<1.4.0 || >1.4.0"
 scanpy = ">=1.5"
 scikit-learn = ">=0.21.2"
@@ -7521,6 +7522,12 @@ hnswlib = ["hnswlib", "pybind11"]
 louvain = ["igraph", "louvain"]
 test = ["pytest", "pytest-cov"]
 vi = ["scvi-tools (>=0.20.1)"]
+
+[package.source]
+type = "git"
+url = "https://github.com/theislab/scvelo.git"
+reference = "3fbce6ff6d644a44911091f498efa0c69f6b85b0"
+resolved_reference = "3fbce6ff6d644a44911091f498efa0c69f6b85b0"
 
 [[package]]
 name = "scvi-tools"
@@ -9348,4 +9355,4 @@ workflows = ["dataclasses-json", "dulwich", "flytekit", "google-api-python-clien
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10, <3.12"
-content-hash = "d8bc392bee7cf231ab3c52dac7804d8c70278ec125a4df7d95db5d29b02190a6"
+content-hash = "7b2804944e6c7590193d82fdf765146fd146288cd3aa6af8111e12a16a51cddb"
