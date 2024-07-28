@@ -3,6 +3,8 @@ project:
   output-dir: _site
   # type: docusaurus
   # output-dir: ../mdx
+  # type: default
+  # output-dir: ../md
   preview:
     port: 7562
 
@@ -28,6 +30,7 @@ format:
 execute:
   warning: false
   error: false
+  # freeze: true
 
 filters:
   - interlinks
@@ -55,7 +58,7 @@ interlinks:
       url: https://pytorch.org/docs/stable/
 
 website:
-  title: "Pyro-Velocity"
+  title: "Pyro&thinsp;-Velocity"
   site-url: https://pinellolab.github.io/pyrovelocity
   description: "A probabilistic framework for multi-modal transcriptomics"
   favicon: _static/logo/favicon.ico
@@ -117,6 +120,8 @@ website:
       contents:
         - text: "Installation"
           href: guides/installation.qmd
+        - text: "Interactive review"
+          href: guides/interactive/interactive.qmd
         - text: "Data Access"
           href: guides/data.qmd
         - text: "Preprocessing"
@@ -127,8 +132,6 @@ website:
           href: guides/postprocessing.qmd
         - text: "Model summary"
           href: guides/summarization.qmd
-        - text: "Interactive review"
-          href: guides/interactive/interactive.qmd
     - id: tutorials
       title: "Tutorials"
       style: "floating"
@@ -209,6 +212,8 @@ website:
           contents:
             - text: "Installation"
               href: guides/installation.qmd
+            - text: "Interactive review"
+              href: guides/interactive/interactive.qmd
             - text: "Data Access"
               href: guides/data.qmd
             - text: "Preprocessing"
@@ -219,8 +224,6 @@ website:
               href: guides/postprocessing.qmd
             - text: "Model summary"
               href: guides/summarization.qmd
-            - text: "Interactive review"
-              href: guides/interactive/interactive.qmd
         - section: "Concepts"
           contents:
             - text: "Overview"
