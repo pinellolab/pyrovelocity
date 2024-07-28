@@ -294,7 +294,7 @@ in \eqref{eq-dustardtstar} and \eqref{eq-dsstardtstar}, which contains the
 $6 - 2 = 4$ variables and parameters: $u^{\ast}, s^{\ast}, t^{\ast}, \gamma^{\ast}$. 
 
 We'll solve the dimensionless system analytically, focusing on what can be 
-understood about the system's dynamics.
+understood about the system\'s dynamics.
 Given specific initial conditions $u^{\ast}(0) = u^{\ast}_0$ and 
 $s^{\ast}(0) = s^{\ast}_0$, which we restore to arbitrary $t^{\ast}_0$ 
 at the end of the derivation, the first equation
@@ -416,7 +416,7 @@ rate relative to the splicing rate.
 
 The analytical solutions to the dimensionless system reveal how the pre-mRNA 
 and mRNA concentrations evolve over time towards their steady states. The 
-exponential terms highlight the system's inherent timescales: $u^{\ast}$ relaxes 
+exponential terms highlight the system\'s inherent timescales: $u^{\ast}$ relaxes 
 to its steady state independently, while $s^{\ast}$’s dynamics are coupled to 
 both $u^{\ast}$ and its own degradation rate. While this system is extremely
 simplified relative to well-known biology, as a stylized model it still
