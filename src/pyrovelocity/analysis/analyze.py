@@ -80,7 +80,11 @@ def compute_mean_vector_field(
                     - posterior_samples["st"] * posterior_samples["gamma"]
                 ).mean(0)
         scv.tl.velocity_graph(
-            adata, vkey="velocity_pyro", xkey="spliced_pyro", n_jobs=n_jobs
+            adata,
+            vkey="velocity_pyro",
+            xkey="spliced_pyro",
+            n_jobs=n_jobs,
+            show_progress_bar=False,
         )
     elif spliced in ["Ms"]:
         ut = adata.layers["Mu"]
@@ -100,7 +104,11 @@ def compute_mean_vector_field(
                 - posterior_samples["st"] * posterior_samples["gamma"]
             ).mean(0)
         scv.tl.velocity_graph(
-            adata, vkey="velocity_pyro", xkey="Ms", n_jobs=n_jobs
+            adata,
+            vkey="velocity_pyro",
+            xkey="Ms",
+            n_jobs=n_jobs,
+            show_progress_bar=False,
         )
     elif spliced in ["spliced"]:
         ut = adata.layers["unspliced"]
@@ -120,7 +128,11 @@ def compute_mean_vector_field(
                 - posterior_samples["st"] * posterior_samples["gamma"]
             ).mean(0)
         scv.tl.velocity_graph(
-            adata, vkey="velocity_pyro", xkey="spliced", n_jobs=n_jobs
+            adata,
+            vkey="velocity_pyro",
+            xkey="spliced",
+            n_jobs=n_jobs,
+            show_progress_bar=False,
         )
 
     scv.tl.velocity_embedding(adata, vkey="velocity_pyro", basis=basis)
@@ -279,7 +291,11 @@ def vector_field_uncertainty(
             )
         else:
             scv.tl.velocity_graph(
-                adata, vkey="velocity_pyro", xkey="spliced_pyro", n_jobs=n_jobs
+                adata,
+                vkey="velocity_pyro",
+                xkey="spliced_pyro",
+                n_jobs=n_jobs,
+                show_progress_bar=False,
             )
             scv.tl.velocity_embedding(adata, vkey="velocity_pyro", basis=basis)
         v_map_all.append(adata.obsm[f"velocity_pyro_{basis}"])
