@@ -1,5 +1,5 @@
 name: pyrovelocity-colab
-version: 0.2.0
+version: 0.2.1b1
 
 channels:
   - pytorch
@@ -33,7 +33,7 @@ specs:
   - ansicolors=1.1.8=pyhd8ed1ab_0
   - antlr-python-runtime=4.9.3=pyhd8ed1ab_1
   - anyio=4.4.0=pyhd8ed1ab_0
-  - aom=3.9.1=hac33072_0
+  - aom=3.9.1=hac330.2.1b1
   - appdirs=1.4.4=pyh9f0ad1d_0
   - arpack=3.9.1=nompi_h77f6705_101
   - array-api-compat=1.7.1=pyhd8ed1ab_0
@@ -179,7 +179,7 @@ specs:
   - google-api-core=2.19.1=pyhd8ed1ab_0
   - google-api-python-client=2.135.0=pyhd8ed1ab_0
   - google-auth=2.30.0=pyhff2d567_0
-  - google-auth-httplib2=0.2.0=pyhd8ed1ab_0
+  - google-auth-httplib2=0.2.1b1=pyhd8ed1ab_0
   - google-auth-oauthlib=1.2.0=pyhd8ed1ab_0
   - google-cloud-core=2.4.1=pyhd8ed1ab_0
   - google-cloud-storage=2.17.0=pyhff2d567_0
@@ -229,7 +229,7 @@ specs:
   - itsdangerous=2.2.0=pyhd8ed1ab_0
   - jaraco.classes=3.4.0=pyhd8ed1ab_1
   - jax=0.4.26=pyhd8ed1ab_0
-  - jaxlib=0.4.25=cuda118py310hffa3fc0_200
+  - jaxlib=0.4.25=cuda118py310hffa3fc0.2.1b1
   - jaxtyping=0.2.30=pyhd8ed1ab_0
   - jedi=0.19.1=pyhd8ed1ab_0
   - jeepney=0.8.0=pyhd8ed1ab_0
@@ -541,7 +541,7 @@ specs:
   - statsmodels=0.14.2=py310h261611a_0
   - stdlib-list=0.10.0=pyhd8ed1ab_0
   - stringcase=1.2.0=py_0
-  - svt-av1=2.1.0=hac33072_0
+  - svt-av1=2.1.0=hac330.2.1b1
   - sympy=1.12.1=pypyh2585a3b_103
   - tbb=2021.12.0=h297d8ca_1
   - tenacity=8.4.2=pyhd8ed1ab_0
