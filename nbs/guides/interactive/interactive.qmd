@@ -8,8 +8,8 @@ execute:
   cache: true
 toc: true
 number-sections: true
-highlight-style: pygments
-csl: bibstyle.csl
+highlight-style: gruvbox
+csl: ../../bibstyle.csl
 lightbox: auto
 format:
   html:
@@ -23,13 +23,28 @@ format:
 #| output: false
 %load_ext autoreload
 %autoreload 2 
+from IPython.display import Image, display
 ``` 
+
+## Get results
+
+::: {#wrn-simulated-data .callout-warning collapse=true title="Simulated Data"}
+In this notebook we illustrate how to download and review results using
+unrealistic simulated data. Therefore, nothing in this notebook should be taken
+to represent the results of applying the model to real data.
+:::
+
+
+### Setup remote connection
 
 When testing or prototyping it is helpful to review the results of a workflow
 execution interactively. This is relatively straightforward when working with locally
 executed workflows as demonstrated in
 [Usage](/templates/user_example/user_example.qmd).
-In this guide we illustrate working with the results 
+However it is increasingly the case that the data set sizes and model training
+resources will not be available or accessible locally, we would like to be able to interactively review results even when they have been computed in a remote cluster with sufficient resources.
+
+In this guide we therefore illustrate working with the results 
 of workflows that have been executed remotely. In this particular case, GitHub 
 OAuth access is required to the endpoint associated to the workflow execution.
 Given this access, setup the remote client,
@@ -44,11 +59,16 @@ remote = FlyteRemote(
 )
 ```
 
-login to the UI and copy the URI of the workflow or task whose outputs you want to review, and provide this to the `get` method of the remote client,
+### Identify results of interest
+
+Login to the UI and copy the URI of the workflow or task whose inputs and outputs you want to review, and provide these to the `get` method of the remote client,
 
 ```{python}
-#| label: get-remote-outputs
-workflow_outputs = remote.get(
+# | label: get-workflow-io
+workflow_inputs = remote.get(
+    "flyte://v1/pyrovelocity/development/pyrovelocity-argo-nix-bui-5c9ebf8-dev-1hk-d5805de62e8044f79d4/f26c1pjy-0-dn0/i"
+)
+postprocessing_outputs = remote.get(
     "flyte://v1/pyrovelocity/development/pyrovelocity-argo-nix-bui-5c9ebf8-dev-1hk-d5805de62e8044f79d4/f26c1pjy-0-dn0-0-dn6/o"
 )
 ```
@@ -56,16 +76,23 @@ workflow_outputs = remote.get(
 This will not download the results but will provide a summary of the outputs. 
 
 ```{python}
-#| label: create-outputs-dict
+# | label: create-outputs-dict
 from omegaconf import OmegaConf
 from flytekit.interaction.string_literals import literal_map_string_repr
+from pyrovelocity.utils import print_config_tree
 
-outputs_dict = literal_map_string_repr(workflow_outputs.literals)
+inputs_dict = literal_map_string_repr(workflow_inputs.literals)
+inputs_dictconfig = OmegaConf.create(inputs_dict)
+print_config_tree(inputs_dict)
+
+outputs_dict = literal_map_string_repr(postprocessing_outputs.literals)
 outputs_dictconfig = OmegaConf.create(outputs_dict)
-print(OmegaConf.to_yaml(outputs_dictconfig))
+print_config_tree(outputs_dict)
 ```
 
-To download the desired results use
+### Download results
+
+Download the results you would like to review,
 
 ```{python}
 #| label: download-outputs
@@ -78,3 +105,80 @@ postprocessed_data = download_blob_from_uri(
     outputs_dictconfig.o0.postprocessed_data.path
 )
 ```
+
+
+## Analyze results
+
+### Load data
+
+In this example, we load the postprocessed data from the downloaded file,
+
+```{python}
+# | label: load-postprocessed-data
+import scanpy as sc
+from pyrovelocity.utils import print_anndata
+
+adata = sc.read(postprocessed_data)
+print_anndata(adata)
+```
+
+as well as the posterior samples,
+
+```{python}
+# | label: load-posterior-samples
+from pyrovelocity.utils import pretty_print_dict
+from pyrovelocity.io import CompressedPickle
+
+posterior_samples = CompressedPickle.load(pyrovelocity_data)
+pretty_print_dict(posterior_samples)
+```
+
+### Extract results of interest
+
+In this case, we extract the gene selection data by cooptimizing MAE and correlation between spliced expression levels and estimates of temporal ordering
+
+```{python}
+# | label: extract-gene-selection
+from pyrovelocity.analysis.analyze import pareto_frontier_genes
+
+volcano_data = posterior_samples["gene_ranking"]
+number_of_marker_genes = min(
+    max(int(len(volcano_data) * 0.1), 4), 6, len(volcano_data)
+)
+putative_marker_genes = pareto_frontier_genes(
+    volcano_data, number_of_marker_genes
+)
+```
+
+### Generate plots
+
+Here we re-generate the gene selection summary plot.
+
+```{python}
+# | label: generate-gene-selection-summary-plot
+# | output: false
+from pyrovelocity.plots import plot_gene_selection_summary
+
+vector_field_basis = inputs_dictconfig.preprocess_data_args.vector_field_basis
+cell_state = inputs_dictconfig.preprocess_data_args.cell_state
+
+plot_gene_selection_summary(
+    adata=adata,
+    posterior_samples=posterior_samples,
+    basis=vector_field_basis,
+    cell_state=cell_state,
+    plot_name="gene_selection_summary_plot.pdf",
+    selected_genes=putative_marker_genes,
+    show_marginal_histograms=False,
+)
+```
+
+```{python}
+# | label: show-gene-selection-summary-plot
+# | code-fold: true
+# | output: true
+display(Image(filename=f"gene_selection_summary_plot.pdf.png"))
+```
+
+Of course, you can generate any plot of interest relevant to the loaded data.
+See the [plots package source](https://github.com/pinellolab/pyrovelocity/tree/main/src/pyrovelocity/plots), [plots API reference](../../reference/plots.qmd), and the guide for the [workflow summarization task](https://github.com/pinellolab/pyrovelocity/blob/main/src/pyrovelocity/tasks/summarize.py) for ideas regarding built-in or custom plots.
