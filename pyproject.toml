@@ -52,6 +52,7 @@ frozenlist = { version = ">=1.1.1", python = "<3.12" }
 #   { version = ">=1.4.1", python = ">=3.12" },
 # ]
 fsspec = ">=2024.3.0"
+greenlet = ">=3.0.3"
 httpx = ">=0.27.0"
 h5py = ">=3.9.0"
 ibis-framework = { extras = ["duckdb"], version = ">=8.0.0" }
@@ -131,7 +132,7 @@ dulwich = { version = ">=0.21.7", optional = true }
 # flake8-bugbear = { version = ">=21.9.2", optional = true }
 # flake8-docstrings = { version = ">=1.6.0", optional = true }
 # flake8-rst-docstrings = { version = ">=0.2.5", optional = true }
-flytekit = { version = ">=1.12.0", optional = true }
+flytekit = { version = ">=1.13.0", optional = true }
 furo = { version = ">=2023.5.20", optional = true }
 google-api-python-client = { version = ">=2.79.0", optional = true }
 hydra-core = { version = ">=1.3.2", optional = true }
@@ -254,7 +255,7 @@ optional = true
 [tool.poetry.group.workflows.dependencies]
 dataclasses-json = ">=0.5.7"
 dulwich = ">=0.21.7"
-flytekit = ">=1.10.7"
+flytekit = ">=1.13.0"
 google-api-python-client = ">=2.79.0"
 google-cloud-storage = ">=2.14.0"
 hydra-core = ">=1.3.2"
