@@ -238,7 +238,7 @@ def preprocess_dataset(
             adata,
             n_jobs=-1,
             use_raw=False,
-            show_progress_bar=False,
+            # show_progress_bar=False,
         )
 
         scv.tl.velocity(adata, mode=default_velocity_mode, use_raw=False)
@@ -269,7 +269,11 @@ def preprocess_dataset(
                 )
                 n_vars_subset = len(top_genes)
             adata = adata[:, top_genes[:n_vars_subset]].copy()
-        scv.tl.velocity_graph(adata, n_jobs=-1, show_progress_bar=False)
+        scv.tl.velocity_graph(
+            adata,
+            n_jobs=-1,
+            # show_progress_bar=False,
+        )
 
         scv.tl.velocity_embedding(adata, basis=vector_field_basis)
 
