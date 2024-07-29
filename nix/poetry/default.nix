@@ -112,6 +112,8 @@ poetry2nix.overrides.withDefaults (
     buildInputsOverrides
     // nvidiaCudaPostFixupOnlyPackages
     // {
+      dm-tree = super.dm-tree.override {preferWheel = true;};
+      duckdb = super.duckdb.override {preferWheel = true;};
       h5py = super.h5py.override {preferWheel = true;};
       hydra-core = super.hydra-core.override {preferWheel = true;};
       hydra-joblib-launcher = super.hydra-joblib-launcher.override {preferWheel = true;};
@@ -150,6 +152,7 @@ poetry2nix.overrides.withDefaults (
         postFixup = nvidiaPostFixup;
       });
       pyarrow = super.pyarrow.override {preferWheel = true;};
+      scikit-learn = super.scikit-learn.override {preferWheel = true;};
       scipy = super.scipy.override {preferWheel = true;};
       tensorstore = super.tensorstore.override {preferWheel = true;};
       yarl = super.yarl.override {preferWheel = true;};
