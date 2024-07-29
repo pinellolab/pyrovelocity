@@ -15,7 +15,7 @@
 version: 1
 metadata:
   content_hash:
-    linux-64: 30008aa1c5bfaa3ed2283dfb0271431a562c84e4098edbf050c199a6fe03f044
+    linux-64: 72f9db29f4c38dbcd3f74ae9425ec546e9b68fe9fe99081af6c7efea9c91711e
   channels:
   - url: pytorch
     used_env_vars: []
@@ -403,15 +403,15 @@ package:
   category: main
   optional: false
 - name: astropy-iers-data
-  version: 0.2024.7.22.0.34.13
+  version: 0.2024.7.29.0.32.7
   manager: conda
   platform: linux-64
   dependencies:
     python: '>=3.8'
-  url: https://conda.anaconda.org/conda-forge/noarch/astropy-iers-data-0.2024.7.22.0.34.13-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/astropy-iers-data-0.2024.7.29.0.32.7-pyhd8ed1ab_0.conda
   hash:
-    md5: f98ea1067de6d2e995e3a2344f66b36a
-    sha256: 4a26b4616d74093f0b2c4a1b08090e4ce79da41c2ea2b8dfc3be6280699e810e
+    md5: 9a65ce157593fb6cf35d06fc71bc802a
+    sha256: c68135cb542dc85d1bf2dc8ee568dd39960241bf9fcb24eb0ad41ec1cacb40e8
   category: main
   optional: false
 - name: asttokens
