@@ -15,7 +15,7 @@
 version: 1
 metadata:
   content_hash:
-    linux-64: 72f9db29f4c38dbcd3f74ae9425ec546e9b68fe9fe99081af6c7efea9c91711e
+    linux-64: e94fe3ef0eec1d1cd4f302abd1efe0db145c621a8aff87f3ebdcc3319c3bc360
   channels:
   - url: pytorch
     used_env_vars: []
@@ -6182,14 +6182,14 @@ package:
   category: main
   optional: false
 - name: pandoc
-  version: 3.2.1
+  version: '3.3'
   manager: conda
   platform: linux-64
   dependencies: {}
-  url: https://conda.anaconda.org/conda-forge/linux-64/pandoc-3.2.1-ha770c72_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/pandoc-3.3-ha770c72_0.conda
   hash:
-    md5: b39b12d3809e4042f832b76192e0e7e8
-    sha256: 130bcefaeeb55ed68ea4403d45b21105390292a2e3167779da099e241d713109
+    md5: 0a3af8b93ba501c6ba020deacc9df841
+    sha256: 0a9591992ada40a6dd2a3f37bfe51cd01956e54b1fa9204f2bd92b31148cb55e
   category: workflows
   optional: true
 - name: pandocfilters
