@@ -137,7 +137,7 @@
         "NIX_PAGER=cat"
         "USER=root"
         "HOME=/root"
-        "PYTHONPATH=${packageSrcPath}:${pkgs.lib.strings.makeSearchPathOutput "" "lib/python3.10/site-packages" pythonPackages}"
+        "PYTHONPATH=${packageSrcPath}:${pkgs.lib.strings.makeSearchPathOutput "" "lib/python3.11/site-packages" pythonPackages}"
         "LD_LIBRARY_PATH=${pythonPackageEnv}/lib:/usr/local/nvidia/lib64"
         "NVIDIA_DRIVER_CAPABILITIES='compute,utility'"
         "NVIDIA_VISIBLE_DEVICES=all"
@@ -188,7 +188,7 @@
       containerPackages = sysPackages ++ extraSysPackages ++ devPackages ++ devpythonPackages;
       cmd = devcontainerCmd;
       extraEnv = [
-        "QUARTO_PYTHON=${pkgs.python310}/bin/python"
+        "QUARTO_PYTHON=${pkgs.python311}/bin/python"
       ];
     };
   };
@@ -231,7 +231,7 @@
       containerPackages = sysPackages ++ extraSysPackages ++ devPackages ++ devpythonPackages;
       cmd = devcontainerCmd;
       extraEnv = [
-        "QUARTO_PYTHON=${pkgs.python310}/bin/python"
+        "QUARTO_PYTHON=${pkgs.python311}/bin/python"
         "GIT_REPO_NAME=${builtins.getEnv "GIT_REPO_NAME"}"
         "GIT_REF=${builtins.getEnv "GIT_REF"}"
         "GIT_SHA=${builtins.getEnv "GIT_SHA"}"

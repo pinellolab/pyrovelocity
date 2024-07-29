@@ -218,14 +218,14 @@
             inherit pkgs devPackages buildMultiUserNixImage;
             sudoImage = inputs'.nixpod.packages.sudoImage;
             homeActivationPackage = inputs'.nixpod.legacyPackages.homeConfigurations.jovyan.activationPackage;
-            pythonPackageEnv = pkgs.pyrovelocityDevEnv310;
+            pythonPackageEnv = pkgs.pyrovelocityDevEnv311;
           };
 
           jupyterImage = import ./nix/containers/jupyter.nix {
             inherit pkgs devPackages buildMultiUserNixImage;
             sudoImage = inputs'.nixpod.packages.sudoImage;
             homeActivationPackage = inputs'.nixpod.legacyPackages.homeConfigurations.jovyan.activationPackage;
-            pythonPackageEnv = pkgs.pyrovelocityDevEnv310;
+            pythonPackageEnv = pkgs.pyrovelocityDevEnv311;
           };
         };
 
