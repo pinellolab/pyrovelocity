@@ -15,15 +15,15 @@ classifiers = [
   "License :: OSI Approved :: GNU Affero General Public License v3",
   "Natural Language :: English",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
 ]
 
 [tool.poetry.urls]
 Changelog = "https://github.com/pinellolab/pyrovelocity/releases"
 
 [tool.poetry.dependencies]
-python = ">=3.10, <3.12"
+python = ">=3.11, <3.13"
 adjusttext = ">=1.1.1"
 anndata = ">=0.10.5"
 anyio = ">=4.3.0"
@@ -77,6 +77,7 @@ pandas = ">=2.0.0"
 plumbum = ">=1.8.2"
 polars = ">=0.20.17"
 pyarrow = ">=14.0.2"
+pydantic = ">=2.8.0"
 pyro-ppl = ">=1.9.1"
 lightning = ">=2.0.0"
 pytorch-lightning = ">=2.0.0"
@@ -361,7 +362,7 @@ log_level = "INFO"
 virtual_package_spec = "conda/virtual-packages.yml"
 
 [tool.conda-lock.dependencies]
-python = ">=3.10, <3.11"
+python = ">=3.11, <3.13"
 pip = ">=23.2"
 # poethepoet = { source = "pypi" }
 
@@ -559,7 +560,7 @@ force_single_line = true
 lines_after_imports = 2
 
 [tool.mypy]
-python_version = ">=3.10"
+python_version = ">=3.11"
 
 [[tool.mypy.overrides]]
 module = [""]
