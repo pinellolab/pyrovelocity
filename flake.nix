@@ -78,7 +78,7 @@
         mkPoetryAttrs = {
           projectDir = ./.;
           overrides = poetry2nixOverrides;
-          python = pkgs.python310;
+          python = pkgs.python311;
           # aarch64 cross-compilation on x86_64 may be unusable if preferWheels
           # is disabled. If all of the individually contributing packages were
           # identified, it may be possible to use the library-specific overrides
@@ -93,7 +93,7 @@
           // {
             extraPackages = ps:
               with pkgs; [
-                python310Packages.pip
+                python311Packages.pip
               ];
           }
         );
@@ -110,7 +110,7 @@
               groups = groups;
               extraPackages = ps:
                 with pkgs; [
-                  python310Packages.pip
+                  python311Packages.pip
                 ];
               editablePackageSources = {
                 ${packageName} = src;
@@ -203,11 +203,11 @@
         packages = {
           inherit (pkgs) pyrovelocity310 pyrovelocity311 pyrovelocity312;
 
-          default = pkgs.pyrovelocity310;
+          default = pkgs.pyrovelocity311;
 
           releaseEnv = pkgs.buildEnv {
             name = "release-env";
-            paths = with pkgs; [poetry python310];
+            paths = with pkgs; [poetry python311];
           };
 
           containerImage = containerImages.containerImage;
