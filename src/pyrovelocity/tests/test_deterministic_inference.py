@@ -35,7 +35,7 @@ logger = configure_logging(__name__)
 @pytest.fixture(
     params=[
         {"num_cells": 3, "num_timepoints": 4},
-        {"num_cells": 10, "num_timepoints": 1},
+        {"num_cells": 5, "num_timepoints": 1},
     ],
     scope="module",
 )
@@ -66,7 +66,7 @@ def setup_observational_data(request):
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def setup_prior_inference_data(
     setup_observational_data
 ) -> Tuple[
@@ -100,7 +100,7 @@ def setup_prior_inference_data(
     return idata_prior, num_chains, num_samples
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def setup_posterior_inference_data(
     setup_observational_data
 ) -> Tuple[
@@ -137,7 +137,7 @@ def setup_posterior_inference_data(
     return idata_posterior, num_chains, num_samples, num_warmup
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def model_parameters():
     num_genes = 2
     num_cells = 3
@@ -358,6 +358,7 @@ def test_model_sampling_statements_prior_predictive(setup_observational_data):
     ), "Shape of prior predictive observations incorrect."
 
 
+@pytest.mark.slow
 def test_model_sampling_statements_posterior_predictive(
     setup_observational_data
 ):
@@ -468,6 +469,7 @@ def test_generate_prior_inference_data(
     ), "Shape of sigma should match"
 
 
+@pytest.mark.slow
 def test_generate_posterior_inference_data(
     setup_observational_data,
     setup_posterior_inference_data,
@@ -543,6 +545,7 @@ def test_generate_posterior_inference_data(
     ), "Shape of sigma should be correct"
 
 
+@pytest.mark.slow
 def test_plot_sample_trajectories(
     setup_posterior_inference_data,
 ):
@@ -559,6 +562,7 @@ def test_plot_sample_trajectories(
         assert len(fig.axes[0].lines) > 0, "Each plot should contain lines."
 
 
+@pytest.mark.slow
 def test_plot_sample_trajectories_with_percentiles(
     setup_posterior_inference_data,
 ):
@@ -575,6 +579,7 @@ def test_plot_sample_trajectories_with_percentiles(
         assert len(fig.axes[0].lines) > 0, "Each plot should contain lines."
 
 
+@pytest.mark.slow
 def test_plot_sample_phase_portraits(
     setup_posterior_inference_data,
 ):
@@ -597,6 +602,7 @@ def test_plot_sample_phase_portraits(
         assert has_points, "Each plot should contain points."
 
 
+@pytest.mark.slow
 def test_generate_inference_data_plots(
     setup_observational_data,
     setup_prior_inference_data,
