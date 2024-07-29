@@ -49,7 +49,6 @@ __all__ = [
     "summarize_data",
     "upload_summary",
     "map_model_configurations_over_data_set",
-    "map_workflow_over_data_sets",
     "training_workflow",
 ]
 
@@ -394,7 +393,7 @@ def map_model_configurations_over_data_set(
 
 
 @dynamic
-def map_workflow_over_data_sets(
+def training_workflow(
     simulated_configuration: WorkflowConfiguration = simulated_configuration,
     pancreas_configuration: WorkflowConfiguration = pancreas_configuration,
     pbmc68k_configuration: WorkflowConfiguration = pbmc68k_configuration,
@@ -436,23 +435,6 @@ def map_workflow_over_data_sets(
         results.append(result)
 
     return results
-
-
-@workflow
-def training_workflow(
-    simulated_configuration: WorkflowConfiguration = simulated_configuration,
-    pancreas_configuration: WorkflowConfiguration = pancreas_configuration,
-    pbmc68k_configuration: WorkflowConfiguration = pbmc68k_configuration,
-    pons_configuration: WorkflowConfiguration = pons_configuration,
-    larry_configuration: WorkflowConfiguration = larry_configuration,
-) -> list[list[SummarizeOutputs]]:
-    return map_workflow_over_data_sets(
-        simulated_configuration=simulated_configuration,
-        pancreas_configuration=pancreas_configuration,
-        pbmc68k_configuration=pbmc68k_configuration,
-        pons_configuration=pons_configuration,
-        larry_configuration=larry_configuration,
-    )
 
 
 if __name__ == "__main__":
