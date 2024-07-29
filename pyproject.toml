@@ -408,12 +408,13 @@ pyrovelocity-notebooks = "pyrovelocity.workflows.notebooks:cli"
 [tool.pytest.ini_options]
 log_level = "INFO"
 addopts = """ 
--m "not pyensembl"
+-m "not slow and not pyensembl"
 -rA
 --xdoctest
 --disable-warnings
 --cov=src/pyrovelocity/
 --cov-report=term-missing
+--durations=0
 """
 asyncio_mode = "strict"
 norecursedirs = ["bazel-*", ".direnv", "reproducibility", "scripts"]
