@@ -23,7 +23,7 @@ from pyrovelocity.tasks.summarize import summarize_dataset
 from pyrovelocity.tasks.train import train_dataset
 from pyrovelocity.utils import str_to_bool
 from pyrovelocity.workflows.main_configuration import (
-    PYROVELOCITY_SIMULATED_ONLY,
+    PYROVELOCITY_DATA_SUBSET,
     PostprocessConfiguration,
     PostprocessOutputs,
     ResourcesJSON,
@@ -48,19 +48,20 @@ __all__ = [
     "postprocess_data",
     "summarize_data",
     "upload_summary",
-    "module_workflow",
+    "map_model_configurations_over_data_set",
+    "map_workflow_over_data_sets",
     "training_workflow",
 ]
 
 logger = configure_logging(__name__)
 
-CACHE_VERSION = "2024.6.27"
-SUMMARIZE_CACHE_VERSION = "2024.6.27"
+CACHE_VERSION = "2024.7.28"
+SUMMARIZE_CACHE_VERSION = "2024.7.28"
 PYROVELOCITY_CACHE_FLAG = str_to_bool(
     os.getenv("PYROVELOCITY_CACHE_FLAG", "True")
 )
 L4 = GPUAccelerator("nvidia-l4")
-ACCELERATOR_TYPE: GPUAccelerator = L4
+ACCELERATOR_TYPE: GPUAccelerator = T4
 
 
 @task(
@@ -296,7 +297,7 @@ def upload_summary(
 
 
 @dynamic
-def module_workflow(
+def map_model_configurations_over_data_set(
     download_dataset_args: DownloadDatasetInterface = DownloadDatasetInterface(),
     preprocess_data_args: PreprocessDataInterface = PreprocessDataInterface(),
     train_model_configuration_1: PyroVelocityTrainInterface = PyroVelocityTrainInterface(),
@@ -393,7 +394,7 @@ def module_workflow(
 
 
 @dynamic
-def training_workflow(
+def map_workflow_over_data_sets(
     simulated_configuration: WorkflowConfiguration = simulated_configuration,
     pancreas_configuration: WorkflowConfiguration = pancreas_configuration,
     pbmc68k_configuration: WorkflowConfiguration = pbmc68k_configuration,
@@ -402,23 +403,23 @@ def training_workflow(
 ) -> list[list[SummarizeOutputs]]:
     """
     Apply the primary workflow to a collection of configurations.
-    Conditionally executes configurations based on the value of PYROVELOCITY_SIMULATED_ONLY.
+    Conditionally executes configurations based on the value of PYROVELOCITY_DATA_SUBSET.
     """
     results = []
     configurations = [
         (simulated_configuration, "simulated"),
+        (pancreas_configuration, "pancreas"),
     ]
 
-    if not PYROVELOCITY_SIMULATED_ONLY:
+    if not PYROVELOCITY_DATA_SUBSET:
         configurations += [
-            (pancreas_configuration, "pancreas"),
             (pbmc68k_configuration, "pbmc68k"),
             (pons_configuration, "pons"),
             (larry_configuration, "larry"),
         ]
 
     for config, _ in configurations:
-        result = module_workflow(
+        result = map_model_configurations_over_data_set(
             download_dataset_args=config.download_dataset,
             preprocess_data_args=config.preprocess_data,
             train_model_configuration_1=config.training_configuration_1,
@@ -435,6 +436,23 @@ def training_workflow(
         results.append(result)
 
     return results
+
+
+@workflow
+def training_workflow(
+    simulated_configuration: WorkflowConfiguration = simulated_configuration,
+    pancreas_configuration: WorkflowConfiguration = pancreas_configuration,
+    pbmc68k_configuration: WorkflowConfiguration = pbmc68k_configuration,
+    pons_configuration: WorkflowConfiguration = pons_configuration,
+    larry_configuration: WorkflowConfiguration = larry_configuration,
+) -> list[list[SummarizeOutputs]]:
+    return map_workflow_over_data_sets(
+        simulated_configuration=simulated_configuration,
+        pancreas_configuration=pancreas_configuration,
+        pbmc68k_configuration=pbmc68k_configuration,
+        pons_configuration=pons_configuration,
+        larry_configuration=larry_configuration,
+    )
 
 
 if __name__ == "__main__":
@@ -472,5 +490,4 @@ if __name__ == "__main__":
     multiple model configurations and overriding resources from configuration
     data.
     """
-    print(f"Running module_workflow() { module_workflow() }")
     print(f"Running training_workflow() { training_workflow() }")

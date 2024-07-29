@@ -30,8 +30,8 @@ logger = configure_logging(__name__)
 PYROVELOCITY_TESTING_FLAG = str_to_bool(
     os.getenv("PYROVELOCITY_TESTING_FLAG", "True")
 )
-PYROVELOCITY_SIMULATED_ONLY = str_to_bool(
-    os.getenv("PYROVELOCITY_SIMULATED_ONLY", "True")
+PYROVELOCITY_DATA_SUBSET = str_to_bool(
+    os.getenv("PYROVELOCITY_DATA_SUBSET", "True")
 )
 PYROVELOCITY_UPLOAD_RESULTS = str_to_bool(
     os.getenv("PYROVELOCITY_UPLOAD_RESULTS", "False")
