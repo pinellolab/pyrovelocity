@@ -271,8 +271,8 @@ class VelocityTrainingMixin:
             if scipy.sparse.issparse(self.adata.layers["raw_spliced"])
             else self.adata.layers["raw_spliced"],
             dtype=torch.float32,
-        ).to(device)
-
+        ).to(device)            
+        
         epsilon = 1e-6
 
         log_u_library_size = np.log(
@@ -335,60 +335,127 @@ class VelocityTrainingMixin:
 
         losses = []
         patience = patient_init
-        for step in range(max_epochs):
-            if cell_state is None:
-                elbos = (
-                    svi.step(
-                        u,
-                        s,
-                        u_library.reshape(-1, 1),
-                        s_library.reshape(-1, 1),
-                        u_library_mean.reshape(-1, 1),
-                        s_library_mean.reshape(-1, 1),
-                        u_library_scale.reshape(-1, 1),
-                        s_library_scale.reshape(-1, 1),
-                        None,
-                        None,
+        
+        if not self.adata.uns['atac']:
+        
+            for step in range(max_epochs):
+                if cell_state is None:
+                    elbos = (
+                        svi.step(
+                            u,
+                            s,
+                            u_library.reshape(-1, 1),
+                            s_library.reshape(-1, 1),
+                            u_library_mean.reshape(-1, 1),
+                            s_library_mean.reshape(-1, 1),
+                            u_library_scale.reshape(-1, 1),
+                            s_library_scale.reshape(-1, 1),
+                            None,
+                            None,
+                        )
+                        / normalizer
                     )
-                    / normalizer
-                )
-            else:
-                elbos = (
-                    svi.step(
-                        u,
-                        s,
-                        u_library.reshape(-1, 1),
-                        s_library.reshape(-1, 1),
-                        u_library_mean.reshape(-1, 1),
-                        s_library_mean.reshape(-1, 1),
-                        u_library_scale.reshape(-1, 1),
-                        s_library_scale.reshape(-1, 1),
-                        None,
-                        cell_state.reshape(-1, 1),
-                    )
-                    / normalizer
-                )
-            if (step == 0) or (
-                ((step + 1) % log_every == 0) and ((step + 1) < max_epochs)
-            ):
-                mlflow.log_metric("-ELBO", -elbos, step=step + 1)
-                logger.info(
-                    f"step {step + 1: >4d} loss = {elbos:0.6g} patience = {patience}"
-                )
-            if step > log_every:
-                if (losses[-1] - elbos) < losses[-1] * patient_improve:
-                    patience -= 1
                 else:
-                    patience = patient_init
-            if patience <= 0:
-                break
-            losses.append(elbos)
+                    elbos = (
+                        svi.step(
+                            u,
+                            s,
+                            u_library.reshape(-1, 1),
+                            s_library.reshape(-1, 1),
+                            u_library_mean.reshape(-1, 1),
+                            s_library_mean.reshape(-1, 1),
+                            u_library_scale.reshape(-1, 1),
+                            s_library_scale.reshape(-1, 1),
+                            None,
+                            cell_state.reshape(-1, 1),
+                        )
+                        / normalizer
+                    )
+                if (step == 0) or (
+                    ((step + 1) % log_every == 0) and ((step + 1) < max_epochs)
+                ):
+                    mlflow.log_metric("-ELBO", -elbos, step=step + 1)
+                    logger.info(
+                        f"step {step + 1: >4d} loss = {elbos:0.6g} patience = {patience}"
+                    )
+                if step > log_every:
+                    if (losses[-1] - elbos) < losses[-1] * patient_improve:
+                        patience -= 1
+                    else:
+                        patience = patient_init
+                if patience <= 0:
+                    break
+                losses.append(elbos)
+                
+        else:
+            
+            c = torch.tensor(
+            np.array(
+                self.adata.layers["atac"].toarray(), dtype="float32"
+            )
+            if scipy.sparse.issparse(self.adata.layers["atac"])
+            else self.adata.layers["atac"],
+            dtype=torch.float32,
+        ).to(device) 
+            
+            
+            for step in range(max_epochs):
+                if cell_state is None:
+                    elbos = (
+                        svi.step(
+                            c,
+                            u,
+                            s,
+                            u_library.reshape(-1, 1),
+                            s_library.reshape(-1, 1),
+                            u_library_mean.reshape(-1, 1),
+                            s_library_mean.reshape(-1, 1),
+                            u_library_scale.reshape(-1, 1),
+                            s_library_scale.reshape(-1, 1),
+                            None,
+                            None,
+                        )
+                        / normalizer
+                    )
+                else:
+                    elbos = (
+                        svi.step(
+                            c,
+                            u,
+                            s,
+                            u_library.reshape(-1, 1),
+                            s_library.reshape(-1, 1),
+                            u_library_mean.reshape(-1, 1),
+                            s_library_mean.reshape(-1, 1),
+                            u_library_scale.reshape(-1, 1),
+                            s_library_scale.reshape(-1, 1),
+                            None,
+                            cell_state.reshape(-1, 1),
+                        )
+                        / normalizer
+                    )
+                if (step == 0) or (
+                    ((step + 1) % log_every == 0) and ((step + 1) < max_epochs)
+                ):
+                    mlflow.log_metric("-ELBO", -elbos, step=step + 1)
+                    logger.info(
+                        f"step {step + 1: >4d} loss = {elbos:0.6g} patience = {patience}"
+                    )
+                if step > log_every:
+                    if (losses[-1] - elbos) < losses[-1] * patient_improve:
+                        patience -= 1
+                    else:
+                        patience = patient_init
+                if patience <= 0:
+                    break
+                losses.append(elbos)
+                
         mlflow.log_metric("-ELBO", -elbos, step=step + 1)
         mlflow.log_metric("real_epochs", step + 1)
         logger.info(
             f"step {step + 1: >4d} loss = {elbos:0.6g} patience = {patience}"
         )
-        return losses
+        return losses        
 
     def train_faster_with_batch(
         self,

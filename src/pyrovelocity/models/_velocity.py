@@ -2,10 +2,7 @@ import os
 import pickle
 import sys
 from statistics import harmonic_mean
-from typing import Dict
-from typing import Optional
-from typing import Sequence
-from typing import Union
+from typing import Dict, Optional, Sequence, Union
 
 import mlflow
 import numpy as np
@@ -15,24 +12,25 @@ from anndata import AnnData
 from beartype import beartype
 from numpy import ndarray
 from scvi.data import AnnDataManager
-from scvi.data._constants import _SETUP_ARGS_KEY
-from scvi.data._constants import _SETUP_METHOD_NAME
-from scvi.data.fields import LayerField
-from scvi.data.fields import NumericalObsField
+from scvi.data._constants import _SETUP_ARGS_KEY, _SETUP_METHOD_NAME
+from scvi.data.fields import LayerField, NumericalObsField
 from scvi.model._utils import parse_device_args
 from scvi.model.base import BaseModelClass
-from scvi.model.base._utils import _initialize_model
-from scvi.model.base._utils import _load_saved_files
-from scvi.model.base._utils import _validate_var_names
+from scvi.model.base._utils import (
+    _initialize_model,
+    _load_saved_files,
+    _validate_var_names,
+)
 from scvi.module.base import PyroBaseModuleClass
 
-from pyrovelocity.analysis.analyze import compute_mean_vector_field
-from pyrovelocity.analysis.analyze import compute_volcano_data
-from pyrovelocity.analysis.analyze import vector_field_uncertainty
+from pyrovelocity.analysis.analyze import (
+    compute_mean_vector_field,
+    compute_volcano_data,
+    vector_field_uncertainty,
+)
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models._trainer import VelocityTrainingMixin
-from pyrovelocity.models._velocity_module import VelocityModule
-
+from pyrovelocity.models._velocity_module import VelocityModule, MultiVelocityModule
 
 __all__ = ["PyroVelocity"]
 
@@ -101,6 +99,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
     def __init__(
         self,
         adata: AnnData,
+        adata_atac: Optional[AnnData] = None,
         input_type: str = "raw",
         shared_time: bool = True,
         model_type: str = "auto",
@@ -128,6 +127,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
 
         Args:
             adata (AnnData): An AnnData object containing the gene expression data.
+            adata_atac (Optional[AnnData], optional): An AnnData object containing atac data.
             input_type (str, optional): Type of input data. Can be "raw", "knn", or "raw_cpm". Defaults to "raw".
             shared_time (bool, optional): Whether to use shared time. Defaults to True.
             model_type (str, optional): Type of model to use. Defaults to "auto".
@@ -246,30 +246,56 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         # else:
         initial_values = {}
         logger.info(self.summary_stats)
-        self.module = VelocityModule(
-            self.summary_stats["n_cells"],
-            self.summary_stats["n_vars"],
-            model_type=model_type,
-            guide_type=guide_type,
-            likelihood=likelihood,
-            shared_time=shared_time,
-            t_scale_on=t_scale_on,
-            plate_size=plate_size,
-            latent_factor=latent_factor,
-            latent_factor_operation=latent_factor_operation,
-            latent_factor_size=latent_factor_size,
-            inducing_point_size=inducing_point_size,
-            include_prior=include_prior,
-            use_gpu=use_gpu,
-            num_aux_cells=num_aux_cells,
-            only_cell_times=only_cell_times,
-            decoder_on=decoder_on,
-            add_offset=add_offset,
-            correct_library_size=correct_library_size,
-            cell_specific_kinetics=cell_specific_kinetics,
-            kinetics_num=self.k,
-            **initial_values,
-        )
+        if not adata_atac:
+            self.module = VelocityModule(
+                self.summary_stats["n_cells"],
+                self.summary_stats["n_vars"],
+                model_type=model_type,
+                guide_type=guide_type,
+                likelihood=likelihood,
+                shared_time=shared_time,
+                t_scale_on=t_scale_on,
+                plate_size=plate_size,
+                latent_factor=latent_factor,
+                latent_factor_operation=latent_factor_operation,
+                latent_factor_size=latent_factor_size,
+                inducing_point_size=inducing_point_size,
+                include_prior=include_prior,
+                use_gpu=use_gpu,
+                num_aux_cells=num_aux_cells,
+                only_cell_times=only_cell_times,
+                decoder_on=decoder_on,
+                add_offset=add_offset,
+                correct_library_size=correct_library_size,
+                cell_specific_kinetics=cell_specific_kinetics,
+                kinetics_num=self.k,
+                **initial_values,
+            )
+        else:
+                self.module = MultiVelocityModule(
+                self.summary_stats["n_cells"],
+                self.summary_stats["n_vars"],
+                model_type=model_type,
+                guide_type=guide_type,
+                likelihood=likelihood,
+                shared_time=shared_time,
+                t_scale_on=t_scale_on,
+                plate_size=plate_size,
+                latent_factor=latent_factor,
+                latent_factor_operation=latent_factor_operation,
+                latent_factor_size=latent_factor_size,
+                inducing_point_size=inducing_point_size,
+                include_prior=include_prior,
+                use_gpu=use_gpu,
+                num_aux_cells=num_aux_cells,
+                only_cell_times=only_cell_times,
+                decoder_on=decoder_on,
+                add_offset=False,
+                correct_library_size=correct_library_size,
+                cell_specific_kinetics=cell_specific_kinetics,
+                kinetics_num=self.k,
+                **initial_values,
+            )
         self.num_cells = self.module.num_cells
         self._model_summary_string = """
         RNA velocity Pyro model with parameters:
@@ -298,7 +324,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         return
 
     @classmethod
-    def setup_anndata(cls, adata: AnnData, *args, **kwargs):
+    def setup_anndata(cls, adata: AnnData, adata_atac = None, *args, **kwargs):
         """
         Set up AnnData object for compatibility with the scvi-tools
         model training interface.
@@ -332,9 +358,18 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             NumericalObsField("s_lib_size_scale", "s_lib_size_scale"),
             NumericalObsField("ind_x", "ind_x"),
         ]
+        
+        if adata_atac:
+            adata.layers['atac'] = adata_atac.X
+            anndata_fields += [LayerField('atac', 'atac')]
+            adata.uns['atac'] = True
+        else:
+            adata.uns['atac'] = None
+        
         adata_manager = AnnDataManager(
             fields=anndata_fields, setup_method_args=setup_method_args
         )
+            
         adata_manager.register_fields(adata, **kwargs)
         cls.register_manager(adata_manager)
 

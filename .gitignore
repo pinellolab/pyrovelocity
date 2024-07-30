@@ -1,5 +1,6 @@
 #
 /archive/
+example_notebooks/*
 
 #
 .DS_Store
