@@ -148,7 +148,7 @@ website:
         - section: "Data sets"
           contents:
             - text: "Pancreatic endocrinogenesis"
-              href: tutorials/pancreas.qmd
+              href: tutorials/pancreas/pancreas.qmd
             - text: "Pons development"
               href: tutorials/pons.qmd
             - section: "Blood physiology"
@@ -194,7 +194,7 @@ website:
             - section: "Data sets"
               contents:
                 - text: "Pancreatic endocrinogenesis"
-                  href: tutorials/pancreas.qmd
+                  href: tutorials/pancreas/pancreas.qmd
                 - text: "Pons development"
                   href: tutorials/pons.qmd
                 - section: "Blood physiology"
