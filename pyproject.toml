@@ -33,7 +33,7 @@ appdirs = ">=1.4.4"
 # dlopen an undeclared or broken shared library
 # on Darwin
 arviz = ">=0.17.1"
-astropy = ">=5.2.2"
+astropy = ">=6.1.2"
 beartype = ">=0.18.5"
 # pinning chex>=0.1.82 may be required to avoid
 # dm-tree = ">=0.1.8"
