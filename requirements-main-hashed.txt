@@ -747,6 +747,9 @@ etils[epath,epy]==1.7.0 ; python_version >= "3.11" and python_version < "3.13" \
 executing==1.2.0 ; python_version >= "3.11" and python_version < "3.13" \
     --hash=sha256:0314a69e37426e3608aada02473b4161d4caf5a4b244d1d0c48072b8fee7bacc \
     --hash=sha256:19da64c18d2d851112f09c287f8d3dbbdf725ab0e569077efb6cdcbd3497c107
+expression==5.0.2 ; python_version >= "3.11" and python_version < "3.13" \
+    --hash=sha256:2b54eeccb6247d86f598a3ce1a4e1efc56e4c7ca901f622d8203919d4106e147 \
+    --hash=sha256:37019851b0794820c1167b185d6be4a22111604f3bab221f4136e429e5d9b57f
 fastjsonschema==2.19.1 ; python_version >= "3.11" and python_version < "3.13" \
     --hash=sha256:3672b47bc94178c9f23dbb654bf47440155d4db9df5f7bc47643315f9c405cd0 \
     --hash=sha256:e3126a94bdc4623d3de4485f8d468a12f02a67921315ddc87836d6e456dc789d
