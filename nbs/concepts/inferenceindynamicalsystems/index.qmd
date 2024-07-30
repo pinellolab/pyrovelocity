@@ -19,7 +19,7 @@ format:
 #     code-fold: false
 #     embed-resources: true
 #   docx: default
-  ipynb: default
+#  ipynb: default
 format-links: [ipynb]
 execute: 
   freeze: true
