@@ -15,7 +15,7 @@
 version: 1
 metadata:
   content_hash:
-    linux-64: 06410f647bb1724d25cae06550ec47f027640673932c5f4d4e84716e1c5711c3
+    linux-64: 683a6d5d43f1158ed1d95215094befcbdf2e02a3fbe7fec739876ef4514c0925
   channels:
   - url: pytorch
     used_env_vars: []
@@ -2085,6 +2085,19 @@ package:
     sha256: 89916c536ae5b85bb8bf0cfa27d751e274ea0911f04e4a928744735c14ef5155
   category: main
   optional: false
+- name: expression
+  version: 5.0.2
+  manager: conda
+  platform: linux-64
+  dependencies:
+    python: '>=3.11,<4.0'
+    typing-extensions: '>=4.1.1,<5.0.0'
+  url: https://conda.anaconda.org/conda-forge/noarch/expression-5.0.2-pyhd8ed1ab_0.conda
+  hash:
+    md5: 5db135aab8c32c49380d51f26ffcc853
+    sha256: b109c0165813e55019a497a7902012f4eea7f08531c8d2e0b66275ecd5d82275
+  category: main
+  optional: false
 - name: fastapi
   version: 0.111.1
   manager: conda
@@ -3702,7 +3715,7 @@ package:
   category: workflows
   optional: true
 - name: jupytext
-  version: 1.16.3
+  version: 1.16.4
   manager: conda
   platform: linux-64
   dependencies:
@@ -3713,10 +3726,10 @@ package:
     python: '>=3.8'
     pyyaml: ''
     tomli: ''
-  url: https://conda.anaconda.org/conda-forge/noarch/jupytext-1.16.3-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/jupytext-1.16.4-pyh80e38bb_0.conda
   hash:
-    md5: cd2b5f8c56bd2f7e890ff06da3700cf6
-    sha256: d6a7214f4fe83103f23ff076a4ff5e32428e3709b4a426bfe3bfbab3b881b99f
+    md5: 1df7fd1594a7f2f6496ff23834a099bf
+    sha256: e0e904bcc18a3b31dc79b05f98a3fd46c9e52b27e7942856f767f0c0b815ae15
   category: workflows
   optional: true
 - name: kernel-headers_linux-64
@@ -7494,7 +7507,7 @@ package:
   category: main
   optional: false
 - name: rapidfuzz
-  version: 3.9.4
+  version: 3.9.5
   manager: conda
   platform: linux-64
   dependencies:
@@ -7504,10 +7517,10 @@ package:
     numpy: ''
     python: '>=3.11,<3.12.0a0'
     python_abi: 3.11.*
-  url: https://conda.anaconda.org/conda-forge/linux-64/rapidfuzz-3.9.4-py311hf86e51f_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/rapidfuzz-3.9.5-py311hf86e51f_0.conda
   hash:
-    md5: 79a96223ab77f9e21ed48a8b026ff120
-    sha256: 87b3d10fb72e2d9977df93afce849af92673a2216397a79066552a33ac353cf5
+    md5: 8f232f393a676b5c76a5c4a6ba57a948
+    sha256: 5823e043f057394540b952bccfd97ae2eaa5b3c945119328ab940369e9ef1baf
   category: main
   optional: false
 - name: rav1e
@@ -8840,7 +8853,7 @@ package:
   category: main
   optional: false
 - name: xarray
-  version: 2024.6.0
+  version: 2024.7.0
   manager: conda
   platform: linux-64
   dependencies:
@@ -8848,10 +8861,10 @@ package:
     packaging: '>=23.1'
     pandas: '>=2.0'
     python: '>=3.9'
-  url: https://conda.anaconda.org/conda-forge/noarch/xarray-2024.6.0-pyhd8ed1ab_1.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/xarray-2024.7.0-pyhd8ed1ab_0.conda
   hash:
-    md5: a6775bba72ade3fd777ccac04902202c
-    sha256: 782aaa095b246f18c2486826d2a71d886b2b4b99c08378f2bfda5d61877e509b
+    md5: a7d4ff4bf1502eaba3fbbaeba66969ec
+    sha256: c8a0c70bb3402b29a9eebb1e41c5d28e9215bb14abea0c986d4d89026aa1ce42
   category: main
   optional: false
 - name: xarray-einstats
