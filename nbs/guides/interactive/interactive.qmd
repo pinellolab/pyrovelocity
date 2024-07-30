@@ -115,6 +115,7 @@ In this example, we load the postprocessed data from the downloaded file,
 
 ```{python}
 # | label: load-postprocessed-data
+# | output: true
 import scanpy as sc
 from pyrovelocity.utils import print_anndata
 
@@ -126,6 +127,7 @@ as well as the posterior samples,
 
 ```{python}
 # | label: load-posterior-samples
+# | output: true
 from pyrovelocity.utils import pretty_print_dict
 from pyrovelocity.io import CompressedPickle
 
