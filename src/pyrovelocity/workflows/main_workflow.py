@@ -89,6 +89,7 @@ def download_data(download_dataset_args: DownloadDatasetInterface) -> FlyteFile:
     timeout=timedelta(minutes=60),
     requests=Resources(cpu="8", mem="30Gi", ephemeral_storage="32Gi"),
     limits=Resources(cpu="16", mem="60Gi", ephemeral_storage="200Gi"),
+    enable_deck=True,
 )
 def preprocess_data(
     data: FlyteFile, preprocess_data_args: PreprocessDataInterface
@@ -117,6 +118,7 @@ def preprocess_data(
     requests=Resources(cpu="8", mem="30Gi", ephemeral_storage="50Gi", gpu="1"),
     limits=Resources(cpu="16", mem="60Gi", ephemeral_storage="200Gi", gpu="1"),
     accelerator=ACCELERATOR_TYPE,
+    enable_deck=True,
 )
 def train_model(
     processed_data: FlyteFile,
@@ -173,6 +175,7 @@ def train_model(
     timeout=timedelta(minutes=120),
     requests=Resources(cpu="8", mem="30Gi", ephemeral_storage="50Gi"),
     limits=Resources(cpu="16", mem="60Gi", ephemeral_storage="200Gi"),
+    enable_deck=True,
 )
 def postprocess_data(
     preprocess_data_args: PreprocessDataInterface,
@@ -213,6 +216,7 @@ def postprocess_data(
     timeout=timedelta(minutes=120),
     requests=Resources(cpu="8", mem="30Gi", ephemeral_storage="50Gi"),
     limits=Resources(cpu="16", mem="60Gi", ephemeral_storage="200Gi"),
+    enable_deck=True,
 )
 def summarize_data(
     preprocess_data_args: PreprocessDataInterface,
