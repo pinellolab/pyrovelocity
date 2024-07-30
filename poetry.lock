@@ -1775,6 +1775,24 @@ files = [
 tests = ["asttokens", "littleutils", "pytest", "rich"]
 
 [[package]]
+name = "expression"
+version = "5.0.2"
+description = "Practical functional programming for Python 3.11+"
+optional = false
+python-versions = ">=3.11,<4"
+files = [
+    {file = "expression-5.0.2-py3-none-any.whl", hash = "sha256:2b54eeccb6247d86f598a3ce1a4e1efc56e4c7ca901f622d8203919d4106e147"},
+    {file = "expression-5.0.2.tar.gz", hash = "sha256:37019851b0794820c1167b185d6be4a22111604f3bab221f4136e429e5d9b57f"},
+]
+
+[package.dependencies]
+typing-extensions = ">=4.1.1,<5.0.0"
+
+[package.extras]
+all = ["pydantic (>=2.0.0,<3.0.0)"]
+pydantic = ["pydantic (>=2.0.0,<3.0.0)"]
+
+[[package]]
 name = "fastjsonschema"
 version = "2.19.1"
 description = "Fastest Python implementation of JSON schema"
@@ -9209,4 +9227,4 @@ workflows = ["dataclasses-json", "dulwich", "flytekit", "google-api-python-clien
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "cd46bfbb2a88be244ecf774a3e3b420560fb5346225c690299a84e5965b80a94"
+content-hash = "6b6607a6a7a4015ae490ffc00bb4785ebcbc5e6a01cad6966926558c7a6cb552"
