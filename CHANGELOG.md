@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.3.0-beta.1](https://github.com/pinellolab/pyrovelocity/compare/v0.2.1-beta.1...v0.3.0-beta.1) (2024-07-30)
+
+
+### Features
+
+* **flake:** make python 3.11 default devshell ([c7ed17b](https://github.com/pinellolab/pyrovelocity/commit/c7ed17bdcdfe6c0422c026daf9c629b07828de10))
+* **workflows:** enable decks ([d89a638](https://github.com/pinellolab/pyrovelocity/commit/d89a6389e186d5edf4eeb6298499e17429851dbf))
+
+
+### Bug Fixes
+
+* **analyze:** disable progress bar ([44e7e41](https://github.com/pinellolab/pyrovelocity/commit/44e7e41c5eea6a888ad74dddd3cc33a712b35a77))
+* **cid:** set python versions to 3.11 ([ef7a62e](https://github.com/pinellolab/pyrovelocity/commit/ef7a62efccfebb9f624ae8e45973cb0858908aee))
+* **flake:** python310 -> python311 ([c5b609c](https://github.com/pinellolab/pyrovelocity/commit/c5b609c8d669608c57b4b6312bc826a9a476b4aa))
+* **nbs:** disable ipynb ([79a74df](https://github.com/pinellolab/pyrovelocity/commit/79a74df72a4025d830a1a04af8257285ce5a6630))
+* **nbs:** escape apostrophes ([420872c](https://github.com/pinellolab/pyrovelocity/commit/420872c1cccb88031bdd2d652324c123ac43f71c))
+* **nbs:** indicate explicit output ([6628265](https://github.com/pinellolab/pyrovelocity/commit/66282659928d03d5d7dcd7c2481e59e26a272adc))
+* **nbs:** set default syntax highlighter ([f30c2b3](https://github.com/pinellolab/pyrovelocity/commit/f30c2b33480f1fcbee4715e823497eef963809c3))
+* **nbs:** sync freeze ([810286e](https://github.com/pinellolab/pyrovelocity/commit/810286e1b261b31a70425378993b96af2e047689))
+* **nbs:** use mathjax ([81f4808](https://github.com/pinellolab/pyrovelocity/commit/81f48081205c9c747c85c230725b088e87eb01cc))
+* **nix:** explicit preferwheel for deps ([06320e5](https://github.com/pinellolab/pyrovelocity/commit/06320e513b5bf4e481f5511509da089bf64d23c1))
+* **nix:** make 3.11 default python in container images ([4e95dbd](https://github.com/pinellolab/pyrovelocity/commit/4e95dbdff31859df93f0bb57848e6a1664c7ffdd))
+* **pre-commit:** remove pyupgrade ([e3780dd](https://github.com/pinellolab/pyrovelocity/commit/e3780ddc2fd485489e8e38319153708510a6d953))
+* **preprocess:** disable progress bar ([d3a5770](https://github.com/pinellolab/pyrovelocity/commit/d3a5770459af00dd1f24b66d9f8bb2319caa9c03))
+* **preprocess:** remove unsupported kwarg ([db44ae1](https://github.com/pinellolab/pyrovelocity/commit/db44ae1478c78688fc99b0c99d0a087ddf5416bd))
+* **pyproject:** disable slow tests and print durations ([05e6507](https://github.com/pinellolab/pyrovelocity/commit/05e650746dfc155a2b99febad793d0c0aefa3a59))
+* **pyproject:** flytekit 1.13 ([6ad23e7](https://github.com/pinellolab/pyrovelocity/commit/6ad23e78b32847695b39b6d22c4ad99c016a7d0b))
+* **pyproject:** shift python version bounds to 3.11 and 3.12 ([fe1d4a8](https://github.com/pinellolab/pyrovelocity/commit/fe1d4a813365677e65927e7f6e6f36f17efe8284))
+* **scripts:** update nbs build ([fe20d09](https://github.com/pinellolab/pyrovelocity/commit/fe20d092c39e700b6e9a8d01731afa53fc261a8f))
+* **tests:** mark slow tests in determinstic inference module ([d3a5254](https://github.com/pinellolab/pyrovelocity/commit/d3a5254ad07f80cf159dfcdb3a13985cbda89652))
+* **workflows:** remove top-level wrapper workflow ([0ac37df](https://github.com/pinellolab/pyrovelocity/commit/0ac37df74b9a372eaa07da50635eef8255cf305b))
+
 ## [0.2.1-beta.1](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0...v0.2.1-beta.1) (2024-07-28)
 
 
