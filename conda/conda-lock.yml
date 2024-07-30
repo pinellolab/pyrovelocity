@@ -15,7 +15,7 @@
 version: 1
 metadata:
   content_hash:
-    linux-64: e94fe3ef0eec1d1cd4f302abd1efe0db145c621a8aff87f3ebdcc3319c3bc360
+    linux-64: 06410f647bb1724d25cae06550ec47f027640673932c5f4d4e84716e1c5711c3
   channels:
   - url: pytorch
     used_env_vars: []
@@ -5779,13 +5779,13 @@ package:
   platform: linux-64
   dependencies:
     __glibc: '>=2.17,<3.0.a0'
-    cuda-version: '>=12.0,<13'
+    cuda-version: '>=12.0,<13.0a0'
     libgcc-ng: '>=12'
     libstdcxx-ng: '>=12'
-  url: https://conda.anaconda.org/conda-forge/linux-64/nccl-2.22.3.1-hbc370b7_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/nccl-2.22.3.1-hbc370b7_1.conda
   hash:
-    md5: 9d1d6bb3c54c7879fcc37959a3c983ba
-    sha256: f8b91945e3e62018bcb6ab1412c7c32f8ee72f67fb192c65921b2843290a55dd
+    md5: 94e562f042ae010fc77326d28079c48c
+    sha256: 3a9656272cbe6f74973be4c5a610a731c2be0baaa7769544be996e147c3de36b
   category: main
   optional: false
 - name: ncurses
@@ -8267,15 +8267,15 @@ package:
   category: main
   optional: false
 - name: tenacity
-  version: 8.5.0
+  version: 9.0.0
   manager: conda
   platform: linux-64
   dependencies:
     python: '>=3.8'
-  url: https://conda.anaconda.org/conda-forge/noarch/tenacity-8.5.0-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/tenacity-9.0.0-pyhd8ed1ab_0.conda
   hash:
-    md5: 354cbc1244395cabbaec2617906d3a27
-    sha256: 6da0893b9c64ee862518a9a654f5c133edd0236db19cb2877117275f22b8f955
+    md5: 42af51ad3b654ece73572628ad2882ae
+    sha256: 0d33171e1d303b57867f0cfcffb8a35031700acb3c52b1862064d8f4e1085538
   category: workflows
   optional: true
 - name: tensorstore
