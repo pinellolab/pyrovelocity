@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 from urllib.parse import urlparse
 
 from beartype import beartype
@@ -23,6 +24,7 @@ logger = configure_logging(__name__)
 def download_blob_from_uri(
     blob_uri: str,
     concurrent: bool = False,
+    download_filename_prefix: Optional[str] = None,
 ) -> str:
     """Download a single file from a GCS bucket.
 
@@ -55,7 +57,10 @@ def download_blob_from_uri(
             f"URI scheme must be 'gs', not {parsed_blob_uri.scheme}."
         )
     blob_path = Path(parsed_blob_uri.path)
-    blob_filename = blob_path.name
+    if download_filename_prefix:
+        blob_filename = f"{download_filename_prefix}_{blob_path.name}"
+    else:
+        blob_filename = blob_path.name
 
     if not Path(blob_filename).exists():
         blob = Blob.from_string(blob_uri, client)
