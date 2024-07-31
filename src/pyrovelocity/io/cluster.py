@@ -34,6 +34,21 @@ def get_remote_task_results(
     Returns:
         Tuple[DictConfig, DictConfig]: Autocompletable inputs and outputs of
             the remote task execution.
+
+    Example:
+        >>> # xdoctest: +REQUIRES(env:NETWORK_ACCESS==true)
+        >>> from pyrovelocity.io.cluster import get_remote_task_results
+        ...
+        >>> execution_id = "pyrovelocity-2021-09-01-16-00-00-000000-utc"
+        >>> task_id = "f26c1pjy-0-dn1-0-dn6"
+        ...
+        >>> (
+        ...     model1_postprocessing_inputs,
+        ...     model1_postprocessing_outputs,
+        ... ) = get_remote_task_results(
+        ...     execution_id=execution_id,
+        ...     task_id=task_id,
+        ... )
     """
     remote = FlyteRemote(
         Config.for_endpoint(endpoint=endpoint),
