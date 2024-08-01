@@ -84,7 +84,7 @@
           # identified, it may be possible to use the library-specific overrides
           # in ./nix/poetry and disable the global usage of wheels
           preferWheels = true;
-          checkGroups = ["test"];
+          checkGroups = ["test" "workflows"];
           extras = [];
         };
 
