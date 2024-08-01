@@ -9,7 +9,7 @@ execute:
 toc: true
 number-sections: true
 highlight-style: gruvbox
-csl: ../../bibstyle.csl
+csl: ../../../bibstyle.csl
 lightbox: auto
 format:
   html:
@@ -46,11 +46,13 @@ to represent the results of applying the model to real data.
 # | label: get-workflow-io
 from pyrovelocity.io.cluster import get_remote_task_results
 
+execution_id = "pyrovelocity-py311-defaul-fe20d09-dev-pzh-17b5092261c84e8695a"
+
 (
     model1_postprocessing_inputs,
     model1_postprocessing_outputs,
 ) = get_remote_task_results(
-    execution_id="pyrovelocity-py311-defaul-fe20d09-dev-pzh-17b5092261c84e8695a",
+    execution_id=execution_id,
     task_id="f26c1pjy-0-dn1-0-dn3",
 )
 
@@ -58,7 +60,7 @@ from pyrovelocity.io.cluster import get_remote_task_results
     model2_postprocessing_inputs,
     model2_postprocessing_outputs,
 ) = get_remote_task_results(
-    execution_id="pyrovelocity-py311-defaul-fe20d09-dev-pzh-17b5092261c84e8695a",
+    execution_id=execution_id,
     task_id="f26c1pjy-0-dn1-0-dn6",
 )
 ```
