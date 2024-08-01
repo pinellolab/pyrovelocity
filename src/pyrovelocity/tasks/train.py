@@ -2,9 +2,7 @@ import json
 import os
 import uuid
 from pathlib import Path
-from typing import Dict
-from typing import Optional
-from typing import Tuple
+from typing import Dict, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import mlflow
@@ -20,7 +18,6 @@ from pyrovelocity.logging import configure_logging
 from pyrovelocity.models import PyroVelocity
 from pyrovelocity.tasks.data import load_anndata_from_path
 from pyrovelocity.utils import print_anndata
-
 
 logger = configure_logging(__name__)
 

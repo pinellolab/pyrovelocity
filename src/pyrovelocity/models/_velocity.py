@@ -2,10 +2,7 @@ import os
 import pickle
 import sys
 from statistics import harmonic_mean
-from typing import Dict
-from typing import Optional
-from typing import Sequence
-from typing import Union
+from typing import Dict, Optional, Sequence, Union
 
 import mlflow
 import numpy as np
@@ -15,24 +12,25 @@ from anndata import AnnData
 from beartype import beartype
 from numpy import ndarray
 from scvi.data import AnnDataManager
-from scvi.data._constants import _SETUP_ARGS_KEY
-from scvi.data._constants import _SETUP_METHOD_NAME
-from scvi.data.fields import LayerField
-from scvi.data.fields import NumericalObsField
+from scvi.data._constants import _SETUP_ARGS_KEY, _SETUP_METHOD_NAME
+from scvi.data.fields import LayerField, NumericalObsField
 from scvi.model._utils import parse_device_args
 from scvi.model.base import BaseModelClass
-from scvi.model.base._utils import _initialize_model
-from scvi.model.base._utils import _load_saved_files
-from scvi.model.base._utils import _validate_var_names
+from scvi.model.base._utils import (
+    _initialize_model,
+    _load_saved_files,
+    _validate_var_names,
+)
 from scvi.module.base import PyroBaseModuleClass
 
-from pyrovelocity.analysis.analyze import compute_mean_vector_field
-from pyrovelocity.analysis.analyze import compute_volcano_data
-from pyrovelocity.analysis.analyze import vector_field_uncertainty
+from pyrovelocity.analysis.analyze import (
+    compute_mean_vector_field,
+    compute_volcano_data,
+    vector_field_uncertainty,
+)
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models._trainer import VelocityTrainingMixin
 from pyrovelocity.models._velocity_module import VelocityModule
-
 
 __all__ = ["PyroVelocity"]
 
