@@ -145,10 +145,10 @@ website:
               href: templates/user_example/user_example.qmd
             - text: "v0.1.3 Getting Started"
               href: tutorials/introduction_v013.qmd
-        - section: "Data sets"
+        - section: "Preprocessing"
           contents:
             - text: "Pancreatic endocrinogenesis"
-              href: tutorials/pancreas/pancreas.qmd
+              href: tutorials/pancreas/preprocessing/pancreas.qmd
             - text: "Pons development"
               href: tutorials/pons.qmd
             - section: "Blood physiology"
@@ -163,6 +163,10 @@ website:
               href: tutorials/mousehematopoiesis.qmd
             - text: "Lineage tracing"
               href: tutorials/lineagetracing.qmd
+        - section: "Results"
+          contents:
+            - text: "Pancreatic endocrinogenesis"
+              href: tutorials/pancreas/results/pancreas.qmd
     - id: reference
       title: "Reference"
       style: "floating"
@@ -191,10 +195,10 @@ website:
                   href: templates/user_example/user_example.qmd
                 - text: "v0.1.3 Getting Started"
                   href: tutorials/introduction_v013.qmd
-            - section: "Data sets"
+            - section: "Preprocessing"
               contents:
                 - text: "Pancreatic endocrinogenesis"
-                  href: tutorials/pancreas/pancreas.qmd
+                  href: tutorials/pancreas/preprocessing/pancreas.qmd
                 - text: "Pons development"
                   href: tutorials/pons.qmd
                 - section: "Blood physiology"
@@ -209,6 +213,10 @@ website:
                   href: tutorials/mousehematopoiesis.qmd
                 - text: "Lineage tracing"
                   href: tutorials/lineagetracing.qmd
+            - section: "Results"
+              contents:
+                - text: "Pancreatic endocrinogenesis"
+                  href: tutorials/pancreas/results/pancreas.qmd
         - section: "Guides"
           contents:
             - text: "Installation"
