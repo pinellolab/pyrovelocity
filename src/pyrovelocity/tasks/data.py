@@ -1,8 +1,7 @@
 import inspect
 import os
 from pathlib import Path
-from typing import Optional
-from typing import Tuple
+from typing import Optional, Tuple
 from urllib.parse import unquote
 
 import anndata
@@ -15,9 +14,7 @@ from beartype import beartype
 
 import pyrovelocity.io.datasets
 from pyrovelocity.logging import configure_logging
-from pyrovelocity.utils import generate_sample_data
-from pyrovelocity.utils import print_anndata
-
+from pyrovelocity.utils import generate_sample_data, print_anndata
 
 __all__ = ["download_dataset", "load_anndata_from_path", "subset_anndata"]
 
@@ -27,7 +24,7 @@ logger = configure_logging(__name__)
 @beartype
 def download_dataset(
     data_set_name: str,
-    data_external_path: str = "data/external",
+    data_external_path: str | Path = "data/external",
     source: str = "pyrovelocity",
     data_url: Optional[str] = None,
     n_obs: Optional[int] = None,
