@@ -12,10 +12,7 @@ from mlflow import MlflowClient
 from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models._velocity import PyroVelocity
-from pyrovelocity.utils import mae_evaluate
-from pyrovelocity.utils import pretty_print_dict
-from pyrovelocity.utils import print_anndata
-
+from pyrovelocity.utils import mae_evaluate, pretty_print_dict, print_anndata
 
 __all__ = ["postprocess_dataset"]
 
@@ -48,8 +45,9 @@ def postprocess_dataset(
         str: path to the pyrovelocity output data
 
     Examples:
-        >>> from pyrovelocity.tasks.postprocess import postprocess_dataset # xdoctest: +SKIP
-        >>> tmp = getfixture("tmp_path") # xdoctest: +SKIP
+        >>> # xdoctest: +SKIP
+        >>> from pyrovelocity.tasks.postprocess import postprocess_dataset
+        >>> tmp = getfixture("tmp_path")
         >>> postprocess_dataset(
         ...     "simulated_model1",
         ...     "models/simulated_model1",
@@ -59,7 +57,7 @@ def postprocess_dataset(
         ...     "models/simulated_model1/metrics.json",
         ...     "leiden",
         ...     3,
-        ... ) # xdoctest: +SKIP
+        ... )
     """
 
     Path(data_model_path).mkdir(parents=True, exist_ok=True)
