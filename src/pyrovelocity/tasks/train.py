@@ -24,9 +24,10 @@ logger = configure_logging(__name__)
 
 @beartype
 def train_dataset(
-    adata: str | AnnData,
+    adata: str | Path | AnnData,
     data_set_name: str = "simulated",
     model_identifier: str = "model2",
+    models_path: str | Path = "models",
     guide_type: str = "auto",
     model_type: str = "auto",
     batch_size: int = -1,
@@ -73,6 +74,7 @@ def train_dataset(
             Path to a file that can be read to an AnnData object or an AnnData object.
         data_set_name (str, optional): Name of the dataset. Default is "simulated".
         model_identifier (str, optional): Identifier for the model. Default is "model2".
+        models_path (str | Path, optional): Path to the models directory. Default is "models".
         guide_type (str, optional):
             The type of guide function for the Pyro model. Default is "auto".
         model_type (str, optional): The type of Pyro model. Default is "auto".
@@ -114,7 +116,7 @@ def train_dataset(
 
     # load data
     data_model = f"{data_set_name}_{model_identifier}"
-    data_model_path = Path(f"models/{data_model}")
+    data_model_path = Path(f"{models_path}/{data_model}")
 
     trained_data_path = data_model_path / "trained.h5ad"
     model_path = data_model_path / "model"
@@ -274,7 +276,7 @@ def train_dataset(
 
 @beartype
 def train_model(
-    adata: str | AnnData,
+    adata: str | Path | AnnData,
     guide_type: str = "auto",
     model_type: str = "auto",
     batch_size: int = -1,
@@ -343,7 +345,7 @@ def train_model(
         >>> copy_raw_counts(adata)
         >>> _, model, posterior_samples = train_model(adata, use_gpu="auto", seed=99, max_epochs=200, loss_plot_path=loss_plot_path)
     """
-    if isinstance(adata, str):
+    if isinstance(adata, str | Path):
         adata = load_anndata_from_path(adata)
 
     logger.info(f"AnnData object prior to model training")
