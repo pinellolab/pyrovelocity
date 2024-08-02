@@ -11,9 +11,5 @@ def test_load_preprocess():
 
 
 @pytest.mark.slow
-def test_preprocess_dataset(simulated_dataset_path, tmp_tasks_dir):
-    preprocess_dataset(
-        data_set_name="simulated",
-        adata=simulated_dataset_path,
-        data_processed_path=tmp_tasks_dir / "data/processed",
-    )
+def test_preprocess_dataset(preprocess_dataset_output):
+    return preprocess_dataset_output
