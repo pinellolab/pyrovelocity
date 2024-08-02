@@ -167,10 +167,9 @@ def train_dataset(
     else:
         logger.info(f"Training model: {data_model}")
 
-        # UPDATE: v2.1.1 12/26/2022 autolog only supports pytorch lightning
-        # mlflow.pytorch.autolog(log_every_n_epoch=200, log_models=False, silent=False)
         with mlflow.start_run(
-            run_name=f"{data_model}-{uuid.uuid4().hex[:7]}"
+            run_name=f"{data_model}-{uuid.uuid4().hex[:7]}",
+            nested=True,
         ) as run:
             mlflow.set_tag(
                 "mlflow.runName", f"{data_model}-{run.info.run_id[:7]}"
