@@ -1,14 +1,16 @@
-"""Tests for `pyrovelocity.data` module."""
+"""Tests for `pyrovelocity.tasks.data` module."""
 import logging
 from pathlib import Path
 
 import pytest
 import requests_mock
 
-from pyrovelocity.tasks.data import _validate_url_and_file
-from pyrovelocity.tasks.data import download_dataset
-from pyrovelocity.tasks.data import load_anndata_from_path
-from pyrovelocity.tasks.data import subset_anndata
+from pyrovelocity.tasks.data import (
+    _validate_url_and_file,
+    download_dataset,
+    load_anndata_from_path,
+    subset_anndata,
+)
 
 
 def test_load_data_module():
