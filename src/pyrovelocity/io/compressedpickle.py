@@ -1,10 +1,9 @@
-import os
 import pickle
+from os import PathLike
 from pathlib import Path
 from typing import Any
 
 import zstandard as zstd
-
 
 __all__ = ["CompressedPickle"]
 
@@ -15,15 +14,17 @@ class CompressedPickle:
 
     Examples:
     >>> import pandas as pd
+    >>> tmp = getfixture("tmp_path")
+    >>> test_data_path = tmp / "test_data.pkl.zst"
     >>> test_data = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})
-    >>> CompressedPickle.save('test_data.pkl.zst', test_data)
-    >>> loaded_data = CompressedPickle.load('test_data.pkl.zst')
+    >>> CompressedPickle.save(test_data_path, test_data)
+    >>> loaded_data = CompressedPickle.load(test_data_path)
     >>> loaded_data.equals(test_data)
     True
     """
 
     @staticmethod
-    def save(file_path: os.PathLike | str, obj: Any) -> None:
+    def save(file_path: PathLike | str, obj: Any) -> None:
         """
         Save the given object to a zstandard-compressed pickle file.
 
@@ -33,8 +34,10 @@ class CompressedPickle:
 
         Examples:
         >>> import pandas as pd
+        >>> tmp = getfixture("tmp_path")
+        >>> test_data_path = tmp / "test_data.pkl.zst"
         >>> test_data = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})
-        >>> CompressedPickle.save('test_data.pkl.zst', test_data)
+        >>> CompressedPickle.save(test_data_path, test_data)
         """
         file_path = Path(file_path)
         file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -45,7 +48,7 @@ class CompressedPickle:
                 pickle.dump(obj, compressor)
 
     @staticmethod
-    def load(file_path: os.PathLike | str) -> Any:
+    def load(file_path: PathLike | str) -> Any:
         """
         Load an object from a zstandard-compressed pickle file.
 
@@ -57,9 +60,11 @@ class CompressedPickle:
 
         Examples:
         >>> import pandas as pd
+        >>> tmp = getfixture("tmp_path")
+        >>> test_data_path = tmp / "test_data.pkl.zst"
         >>> test_data = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})
-        >>> CompressedPickle.save('test_data.pkl.zst', test_data)
-        >>> loaded_data = CompressedPickle.load('test_data.pkl.zst')
+        >>> CompressedPickle.save(test_data_path, test_data)
+        >>> loaded_data = CompressedPickle.load(test_data_path)
         >>> loaded_data.equals(test_data)
         True
         """
