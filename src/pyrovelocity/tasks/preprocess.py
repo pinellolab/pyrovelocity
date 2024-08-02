@@ -75,19 +75,20 @@ def preprocess_dataset(
         AnnData: processed AnnData object
 
     Examples:
-        >>> from pyrovelocity.data import download_dataset # xdoctest: +SKIP
-        >>> tmp = getfixture('tmp_path') # xdoctest: +SKIP
+        >>> # xdoctest: +SKIP
+        >>> from pyrovelocity.data import download_dataset
+        >>> tmp = getfixture('tmp_path')
         >>> simulated_dataset_path = download_dataset(
         ...   'simulated',
         ...   str(tmp) + '/data/external',
         ...   'simulate',
         ...   n_obs=100,
         ...   n_vars=300,
-        ... ) # xdoctest: +SKIP
+        ... )
         >>> preprocess_dataset(
         ...     data_set_name="simulated",
         ...     adata=simulated_dataset_path,
-        ... ) # xdoctest: +SKIP
+        ... )
     """
     if isinstance(adata, str | Path):
         data_path = adata
