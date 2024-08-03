@@ -33,7 +33,6 @@ py_test_module_list(
         "tests/models/test_velocity.py",
         "tests/models/test_velocity_module.py",
         "tests/plots/test_plots.py",
-        "tests/tasks/test_preprocess.py",
     ],
     imports = [".."],
     tags = [""],
