@@ -7,15 +7,14 @@ from pyrovelocity.plots import plot_vector_field_summary
 
 @pytest.mark.slow
 def test_model2_plot_vector_field_summary(
-    postprocess_dataset_output,
+    postprocessed_model2_data,
+    posterior_samples_model2,
     tmp_data_dir,
 ):
-    posterior_samples = CompressedPickle.load(postprocess_dataset_output[0])
-    adata = sc.read(postprocess_dataset_output[1])
     vector_field_summary_plot = tmp_data_dir / "vector_field_summary_plot.pdf"
     plot_vector_field_summary(
-        adata=adata,
-        posterior_samples=posterior_samples,
+        adata=postprocessed_model2_data,
+        posterior_samples=posterior_samples_model2,
         vector_field_basis="umap",
         plot_name=vector_field_summary_plot,
         cell_state="leiden",
@@ -24,16 +23,14 @@ def test_model2_plot_vector_field_summary(
 
 @pytest.mark.slow
 def test_model1_plot_vector_field_summary(
-    postprocess_dataset_model1_output,
+    postprocessed_model1_data,
+    posterior_samples_model1,
     tmp_data_dir,
 ):
-    postprocess_dataset_output = postprocess_dataset_model1_output
-    posterior_samples = CompressedPickle.load(postprocess_dataset_output[0])
-    adata = sc.read(postprocess_dataset_output[1])
     vector_field_summary_plot = tmp_data_dir / "vector_field_summary_plot.pdf"
     plot_vector_field_summary(
-        adata=adata,
-        posterior_samples=posterior_samples,
+        adata=postprocessed_model1_data,
+        posterior_samples=posterior_samples_model1,
         vector_field_basis="umap",
         plot_name=vector_field_summary_plot,
         cell_state="leiden",
