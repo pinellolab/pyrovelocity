@@ -1,6 +1,6 @@
 from os import PathLike
-from typing import Dict
-from typing import List
+from pathlib import Path
+from typing import Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,12 +10,10 @@ import torch
 from anndata import AnnData
 from beartype import beartype
 from matplotlib.figure import FigureBase
-from pyro.infer import Predictive
-from pyro.infer import infer_discrete
+from pyro.infer import Predictive, infer_discrete
 
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models import PyroVelocity
-
 
 __all__ = ["posterior_curve", "extrapolate_prediction_sample_predictive"]
 
@@ -54,6 +52,8 @@ def posterior_curve(
         adata,
         grid_time_points=500,
     )
+
+    Path(output_directory).mkdir(parents=True, exist_ok=True)
 
     logger.info("Plotting posterior predictive phase portraits")
 
