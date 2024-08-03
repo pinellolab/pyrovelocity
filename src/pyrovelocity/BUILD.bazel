@@ -58,6 +58,20 @@ py_test_module_list(
     deps = [":pyrovelocity"],
 )
 
+py_test_module_list(
+    size = "large",
+    files = [
+        "tests/plots/test_vector_fields.py",
+        "tests/tasks/test_postprocess.py",
+        "tests/tasks/test_preprocess.py",
+        "tests/tasks/test_summarize.py",
+        "tests/tasks/test_train.py",
+    ],
+    imports = [".."],
+    tags = [""],
+    deps = [":pyrovelocity"],
+)
+
 py_library(
     name = "pyrovelocity",
     srcs = glob(
