@@ -1,5 +1,8 @@
 import pytest
+import scanpy as sc
 
+from pyrovelocity.analysis.analyze import pareto_frontier_genes
+from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.tasks.data import download_dataset
 from pyrovelocity.tasks.postprocess import postprocess_dataset
 from pyrovelocity.tasks.preprocess import preprocess_dataset
@@ -127,4 +130,40 @@ def summarize_dataset_model1_output(
         cell_state="leiden",
         vector_field_basis="umap",
         reports_path=tmp_data_dir / "reports",
+    )
+
+
+@pytest.fixture
+def postprocessed_model2_data(postprocess_dataset_output):
+    return sc.read(postprocess_dataset_output[1])
+
+
+@pytest.fixture
+def postprocessed_model1_data(postprocess_dataset_model1_output):
+    return sc.read(postprocess_dataset_model1_output[1])
+
+
+@pytest.fixture
+def posterior_samples_model2(postprocess_dataset_output):
+    return CompressedPickle.load(postprocess_dataset_output[0])
+
+
+@pytest.fixture
+def putative_model2_marker_genes(posterior_samples_model2):
+    return pareto_frontier_genes(
+        volcano_data=posterior_samples_model2["gene_ranking"],
+        num_genes=3,
+    )
+
+
+@pytest.fixture
+def posterior_samples_model1(postprocess_dataset_model1_output):
+    return CompressedPickle.load(postprocess_dataset_model1_output[0])
+
+
+@pytest.fixture
+def putative_model1_marker_genes(posterior_samples_model1):
+    return pareto_frontier_genes(
+        volcano_data=posterior_samples_model1["gene_ranking"],
+        num_genes=3,
     )
