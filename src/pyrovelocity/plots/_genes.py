@@ -1,7 +1,5 @@
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,14 +10,12 @@ from beartype import beartype
 from matplotlib import gridspec
 from matplotlib.axes import Axes
 from matplotlib.figure import FigureBase
-from matplotlib.patches import ArrowStyle
-from matplotlib.patches import ConnectionStyle
+from matplotlib.patches import ArrowStyle, ConnectionStyle
 from numpy import ndarray
 from pandas import DataFrame
 
 from pyrovelocity.analysis.analyze import compute_volcano_data
 from pyrovelocity.logging import configure_logging
-
 
 __all__ = ["plot_gene_ranking"]
 
@@ -36,6 +32,8 @@ def plot_gene_ranking(
     assemble: bool = False,
     negative: bool = False,
     show_marginal_histograms: bool = False,
+    save_volcano_plot: bool = False,
+    volcano_plot_path: str | Path = "volcano.pdf",
 ) -> Tuple[DataFrame, Optional[FigureBase]]:
     if selected_genes is not None:
         assert isinstance(selected_genes, (tuple, list))
@@ -177,6 +175,18 @@ def plot_gene_ranking(
                 shrinkB=2,
             ),
         )
+
+    if save_volcano_plot:
+        fig.subplots_adjust(wspace=0.1, hspace=0.1)
+        for ext in ["", ".png"]:
+            fig.savefig(
+                f"{volcano_plot_path}{ext}",
+                facecolor=fig.get_facecolor(),
+                bbox_inches="tight",
+                edgecolor="none",
+                dpi=300,
+            )
+        plt.close(fig)
 
     return volcano_data, fig
 
