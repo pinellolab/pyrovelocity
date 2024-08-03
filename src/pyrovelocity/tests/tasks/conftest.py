@@ -50,5 +50,24 @@ def postprocess_dataset_output(train_dataset_output, tmp_tasks_dir):
     return postprocess_dataset(
         *train_dataset_output[:6],
         vector_field_basis="umap",
-        number_posterior_samples=3,
+        number_posterior_samples=4,
+    )
+
+
+@pytest.fixture
+def summarize_dataset_output(
+    train_dataset_output,
+    postprocess_dataset_output,
+    tmp_tasks_dir,
+):
+    return summarize_dataset(
+        *train_dataset_output[:2],
+        model_path=train_dataset_output[3],
+        pyrovelocity_data_path=postprocess_dataset_output[0],
+        postprocessed_data_path=postprocess_dataset_output[1],
+        cell_state="leiden",
+        vector_field_basis="umap",
+        reports_path=tmp_tasks_dir / "reports",
+    )
+
     )
