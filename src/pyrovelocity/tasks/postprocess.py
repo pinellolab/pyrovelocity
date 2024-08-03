@@ -49,14 +49,14 @@ def postprocess_dataset(
         >>> from pyrovelocity.tasks.postprocess import postprocess_dataset
         >>> tmp = getfixture("tmp_path")
         >>> postprocess_dataset(
-        ...     "simulated_model1",
-        ...     "models/simulated_model1",
-        ...     "models/simulated_model1/trained.h5ad",
-        ...     "models/simulated_model1/model",
-        ...     "models/simulated_model1/posterior_samples.pkl.zst",
-        ...     "models/simulated_model1/metrics.json",
-        ...     "leiden",
-        ...     3,
+        ...     data_model="simulated_model1",
+        ...     data_model_path=tmp / "models/simulated_model1",
+        ...     trained_data_path=tmp / "models/simulated_model1/trained.h5ad",
+        ...     model_path=tmp / "models/simulated_model1/model",
+        ...     posterior_samples_path=tmp / "models/simulated_model1/posterior_samples.pkl.zst",
+        ...     metrics_path=tmp / "models/simulated_model1/metrics.json",
+        ...     vector_field_basis="leiden",
+        ...     number_posterior_samples=3,
         ... )
     """
 
@@ -123,7 +123,8 @@ def postprocess_dataset(
         # mlflow v2.1.1 12/26/2022 autolog only supports pytorch lightning
         # mlflow.pytorch.autolog(log_every_n_epoch=200, log_models=False, silent=False)
         with mlflow.start_run(
-            run_name=f"{data_model}-{uuid.uuid4().hex[:7]}"
+            run_name=f"{data_model}-{uuid.uuid4().hex[:7]}",
+            nested=True,
         ) as run:
             mlflow.set_tag(
                 "mlflow.runName", f"{data_model}-{run.info.run_id[:7]}"
