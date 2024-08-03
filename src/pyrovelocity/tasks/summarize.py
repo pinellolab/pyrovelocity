@@ -267,18 +267,9 @@ def summarize_dataset(
             selected_genes=putative_marker_genes,
             time_correlation_with="st",
             show_marginal_histograms=True,
+            save_volcano_plot=True,
+            volcano_plot_path=volcano_plot,
         )
-
-        fig.subplots_adjust(wspace=0.1, hspace=0.1)
-        for ext in ["", ".png"]:
-            fig.savefig(
-                f"{volcano_plot}{ext}",
-                facecolor=fig.get_facecolor(),
-                bbox_inches="tight",
-                edgecolor="none",
-                dpi=300,
-            )
-        plt.close(fig)
 
     # gene selection summary plot
     if os.path.isfile(gene_selection_summary_plot):
