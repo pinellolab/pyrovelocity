@@ -12,3 +12,8 @@ def test_load_postprocess():
 @pytest.mark.slow
 def test_postprocess_dataset(postprocess_dataset_output):
     return postprocess_dataset_output
+
+
+@pytest.mark.slow
+def test_postprocess_dataset_model1(postprocess_dataset_model1_output):
+    return postprocess_dataset_model1_output
