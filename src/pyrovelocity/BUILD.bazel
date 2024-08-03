@@ -49,6 +49,7 @@ py_test_module_list(
         "tests/models/test_deterministic_simulation.py",
         "tests/models/test_transcription_dynamics.py",
         "tests/models/test_velocity_model.py",
+        "tests/plots/test_genes.py",
         "tests/plots/test_predictive.py",
         "tests/plots/test_time.py",
         "tests/plots/test_vector_fields.py",
