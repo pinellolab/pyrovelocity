@@ -1,6 +1,7 @@
 import pytest
 
 from pyrovelocity.tasks.data import download_dataset
+from pyrovelocity.tasks.postprocess import postprocess_dataset
 from pyrovelocity.tasks.preprocess import preprocess_dataset
 from pyrovelocity.tasks.train import train_dataset
 
@@ -41,4 +42,13 @@ def train_dataset_output(preprocess_dataset_output, tmp_tasks_dir):
         adata=preprocessed_dataset_path,
         models_path=tmp_tasks_dir / "models",
         max_epochs=200,
+    )
+
+
+@pytest.fixture
+def postprocess_dataset_output(train_dataset_output, tmp_tasks_dir):
+    return postprocess_dataset(
+        *train_dataset_output[:6],
+        vector_field_basis="umap",
+        number_posterior_samples=3,
     )
