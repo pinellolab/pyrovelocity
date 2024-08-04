@@ -29,16 +29,34 @@ def default_sample_data_file(default_sample_data, tmp_path):
     return file_path
 
 
-@pytest.fixture
-def tmp_data_dir(tmp_path):
+def integration_fixture_scope(fixture_name, config):
+    if config.getoption("--cached-integration-fixtures", None):
+        return "session"
+    return "session"
+
+
+@pytest.fixture(scope=integration_fixture_scope)
+def tmp_data_dir(tmp_path_factory):
+    integration_tests_dir = tmp_path_factory.mktemp("integration")
     print(
-        f"\nTemporary test data directory:\n\n",
-        f"{tmp_path}\n",
+        f"\nTemporary integration tests directory:\n\n",
+        f"{integration_tests_dir}\n",
     )
-    return tmp_path
+    return integration_tests_dir
 
 
-@pytest.fixture
+@pytest.fixture(scope=integration_fixture_scope)
+def tmp_unit_reports_dir(tmp_data_dir):
+    unit_reports_dir = tmp_data_dir / "unit_reports"
+    unit_reports_dir.mkdir(parents=True, exist_ok=True)
+    print(
+        f"\nTemporary unit reports directory:\n\n",
+        f"{unit_reports_dir}\n",
+    )
+    return unit_reports_dir
+
+
+@pytest.fixture(scope=integration_fixture_scope)
 def simulated_dataset_path(tmp_data_dir):
     return download_dataset(
         data_set_name="simulated",
@@ -49,7 +67,7 @@ def simulated_dataset_path(tmp_data_dir):
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope=integration_fixture_scope)
 def preprocess_dataset_output(simulated_dataset_path, tmp_data_dir):
     return preprocess_dataset(
         data_set_name="simulated",
@@ -58,7 +76,7 @@ def preprocess_dataset_output(simulated_dataset_path, tmp_data_dir):
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope=integration_fixture_scope)
 def train_dataset_output(preprocess_dataset_output, tmp_data_dir):
     _, preprocessed_dataset_path = preprocess_dataset_output
     return train_dataset(
@@ -68,7 +86,20 @@ def train_dataset_output(preprocess_dataset_output, tmp_data_dir):
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope=integration_fixture_scope)
+def data_model2_reports_path(train_dataset_output, tmp_unit_reports_dir):
+    unit_reports_data_model2_path = (
+        tmp_unit_reports_dir / train_dataset_output[0]
+    )
+    unit_reports_data_model2_path.mkdir(parents=True, exist_ok=True)
+    print(
+        f"\nTemporary data model reports directory:\n\n",
+        f"{unit_reports_data_model2_path}\n",
+    )
+    return unit_reports_data_model2_path
+
+
+@pytest.fixture(scope=integration_fixture_scope)
 def postprocess_dataset_output(train_dataset_output):
     return postprocess_dataset(
         *train_dataset_output[:6],
@@ -77,7 +108,7 @@ def postprocess_dataset_output(train_dataset_output):
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope=integration_fixture_scope)
 def summarize_dataset_output(
     train_dataset_output,
     postprocess_dataset_output,
@@ -94,7 +125,7 @@ def summarize_dataset_output(
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope=integration_fixture_scope)
 def train_dataset_model1_output(preprocess_dataset_output, tmp_data_dir):
     _, preprocessed_dataset_path = preprocess_dataset_output
     return train_dataset(
@@ -107,7 +138,20 @@ def train_dataset_model1_output(preprocess_dataset_output, tmp_data_dir):
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope=integration_fixture_scope)
+def data_model1_reports_path(train_dataset_model1_output, tmp_unit_reports_dir):
+    unit_reports_data_model1_path = (
+        tmp_unit_reports_dir / train_dataset_model1_output[0]
+    )
+    unit_reports_data_model1_path.mkdir(parents=True, exist_ok=True)
+    print(
+        f"\nTemporary data model 1 unit reports directory:\n\n",
+        f"{unit_reports_data_model1_path}\n",
+    )
+    return unit_reports_data_model1_path
+
+
+@pytest.fixture(scope=integration_fixture_scope)
 def postprocess_dataset_model1_output(train_dataset_model1_output):
     return postprocess_dataset(
         *train_dataset_model1_output[:6],
@@ -116,7 +160,7 @@ def postprocess_dataset_model1_output(train_dataset_model1_output):
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope=integration_fixture_scope)
 def summarize_dataset_model1_output(
     train_dataset_model1_output,
     postprocess_dataset_model1_output,
@@ -133,22 +177,22 @@ def summarize_dataset_model1_output(
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope=integration_fixture_scope)
 def postprocessed_model2_data(postprocess_dataset_output):
     return sc.read(postprocess_dataset_output[1])
 
 
-@pytest.fixture
+@pytest.fixture(scope=integration_fixture_scope)
 def postprocessed_model1_data(postprocess_dataset_model1_output):
     return sc.read(postprocess_dataset_model1_output[1])
 
 
-@pytest.fixture
+@pytest.fixture(scope=integration_fixture_scope)
 def posterior_samples_model2(postprocess_dataset_output):
     return CompressedPickle.load(postprocess_dataset_output[0])
 
 
-@pytest.fixture
+@pytest.fixture(scope=integration_fixture_scope)
 def putative_model2_marker_genes(posterior_samples_model2):
     return pareto_frontier_genes(
         volcano_data=posterior_samples_model2["gene_ranking"],
@@ -156,12 +200,12 @@ def putative_model2_marker_genes(posterior_samples_model2):
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope=integration_fixture_scope)
 def posterior_samples_model1(postprocess_dataset_model1_output):
     return CompressedPickle.load(postprocess_dataset_model1_output[0])
 
 
-@pytest.fixture
+@pytest.fixture(scope=integration_fixture_scope)
 def putative_model1_marker_genes(posterior_samples_model1):
     return pareto_frontier_genes(
         volcano_data=posterior_samples_model1["gene_ranking"],
