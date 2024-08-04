@@ -11,5 +11,6 @@ def test_load_preprocess():
 
 
 @pytest.mark.slow
+@pytest.mark.integration
 def test_preprocess_dataset(preprocess_dataset_output):
     return preprocess_dataset_output

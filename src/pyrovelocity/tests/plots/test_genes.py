@@ -4,6 +4,7 @@ from pyrovelocity.plots import plot_gene_ranking
 
 
 @pytest.mark.slow
+@pytest.mark.integration
 def test_model2_plot_gene_ranking(
     postprocessed_model2_data,
     posterior_samples_model2,
@@ -22,6 +23,7 @@ def test_model2_plot_gene_ranking(
 
 
 @pytest.mark.slow
+@pytest.mark.integration
 def test_model1_plot_gene_ranking(
     postprocessed_model1_data,
     posterior_samples_model1,

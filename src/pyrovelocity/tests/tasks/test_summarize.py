@@ -11,10 +11,12 @@ def test_load_summarize():
 
 
 @pytest.mark.slow
+@pytest.mark.integration
 def test_summarize_dataset(summarize_dataset_output):
     return summarize_dataset_output
 
 
 @pytest.mark.slow
+@pytest.mark.integration
 def test_summarize_dataset_model1(summarize_dataset_model1_output):
     return summarize_dataset_model1_output

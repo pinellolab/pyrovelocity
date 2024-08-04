@@ -4,6 +4,7 @@ from pyrovelocity.plots import posterior_curve
 
 
 @pytest.mark.slow
+@pytest.mark.integration
 def test_model2_plot_posterior_predictive(
     postprocessed_model2_data,
     posterior_samples_model2,
@@ -22,12 +23,14 @@ def test_model2_plot_posterior_predictive(
 
 
 @pytest.mark.slow
+@pytest.mark.integration
 def test_model1_plot_posterior_predictive(
     postprocessed_model1_data,
     posterior_samples_model1,
     putative_model1_marker_genes,
     train_dataset_model1_output,
-    data_model1_reports_path):
+    data_model1_reports_path,
+):
     posterior_curve(
         adata=postprocessed_model1_data,
         posterior_samples=posterior_samples_model1,
