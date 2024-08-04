@@ -1,8 +1,6 @@
-from typing import Dict
-from typing import List
-from typing import Optional
+from pathlib import Path
+from typing import Dict, List, Optional
 
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -11,15 +9,11 @@ import seaborn as sns
 from anndata import AnnData
 from beartype import beartype
 from matplotlib import ticker
-from matplotlib.figure import Figure
-from matplotlib.figure import FigureBase
+from matplotlib.figure import Figure, FigureBase
 from numpy import ndarray
-from pandas import DataFrame
-from pandas import Index
+from pandas import DataFrame, Index
 
-from pyrovelocity.plots._common import set_colorbar
-from pyrovelocity.plots._common import set_font_size
-
+from pyrovelocity.plots._common import set_colorbar, set_font_size
 
 __all__ = ["rainbowplot", "us_rainbowplot"]
 
@@ -38,6 +32,8 @@ def rainbowplot(
     add_line: bool = True,
     negative_correlation: bool = False,
     scvelo_colors: bool = False,
+    save_plot: bool = False,
+    rainbow_plot_path: str | Path = "rainbow.pdf",
 ) -> FigureBase:
     set_font_size(7)
 
@@ -93,6 +89,17 @@ def rainbowplot(
         hspace=0.5,
         wspace=0.5,  # left=0.15, right=0.4, top=0.92, bottom=0.12
     )
+
+    if save_plot:
+        for ext in ["", ".png"]:
+            fig.savefig(
+                f"{rainbow_plot_path}{ext}",
+                facecolor=fig.get_facecolor(),
+                bbox_inches="tight",
+                edgecolor="none",
+                dpi=300,
+            )
+        plt.close(fig)
     return fig
 
 
