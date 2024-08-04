@@ -311,17 +311,9 @@ def summarize_dataset(
             data=["st", "ut"],
             basis=vector_field_basis,
             cell_state=cell_state,
+            save_plot=True,
+            rainbow_plot_path=gene_selection_rainbow_plot,
         )
-
-        for ext in ["", ".png"]:
-            fig.savefig(
-                f"{gene_selection_rainbow_plot}{ext}",
-                facecolor=fig.get_facecolor(),
-                bbox_inches="tight",
-                edgecolor="none",
-                dpi=300,
-            )
-        plt.close(fig)
 
     # mean vector field plot
     if os.path.isfile(vector_field_plot):
