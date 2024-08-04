@@ -52,6 +52,7 @@ py_test_module_list(
         "tests/plots/test_genes.py",
         "tests/plots/test_posteriors.py",
         "tests/plots/test_predictive.py",
+        "tests/plots/test_rainbow.py",
         "tests/plots/test_summary.py",
         "tests/plots/test_time.py",
         "tests/plots/test_vector_fields.py",
