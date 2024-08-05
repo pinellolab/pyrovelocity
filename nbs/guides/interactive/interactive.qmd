@@ -154,6 +154,8 @@ putative_marker_genes = pareto_frontier_genes(
 
 ### Generate plots
 
+#### Gene selection summary plot
+
 Here we re-generate the gene selection summary plot.
 
 ```{python}
@@ -180,6 +182,40 @@ plot_gene_selection_summary(
 # | code-fold: true
 # | output: true
 display(Image(filename=f"gene_selection_summary_plot.pdf.png"))
+```
+
+#### Phase portraits from custom gene list
+
+One of the primary applications of interactive review may be to explore
+specific genes of interest. Here we generate phase portraits for a randomly
+selected list of genes.
+
+```{python}
+# | label: generate-phase-portraits-from-gene-list
+# | output: false
+from pyrovelocity.plots import rainbowplot
+
+vector_field_basis = inputs_dictconfig.preprocess_data_args.vector_field_basis
+cell_state = inputs_dictconfig.preprocess_data_args.cell_state
+
+rainbowplot(
+    volcano_data=volcano_data,
+    adata=adata,
+    posterior_samples=posterior_samples,
+    genes=["1839", "927", "15"],
+    data=["st", "ut"],
+    basis=vector_field_basis,
+    cell_state=cell_state,
+    save_plot=True,
+    rainbow_plot_path="gene_selection_rainbow_plot.pdf",
+)
+```
+
+```{python}
+# | label: show-phase-portraits-from-gene-list
+# | code-fold: true
+# | output: true
+display(Image(filename=f"gene_selection_rainbow_plot.pdf.png"))
 ```
 
 Of course, you can generate any plot of interest relevant to the loaded data.
