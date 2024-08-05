@@ -5,12 +5,9 @@ from pathlib import Path
 from beartype import beartype
 from fsspec import AbstractFileSystem
 from fsspec.implementations.local import LocalFileSystem
-from returns.result import Failure
-from returns.result import Result
-from returns.result import Success
+from returns.result import Failure, Result, Success
 
 from pyrovelocity.logging import configure_logging
-
 
 __all__ = ["create_tarball_from_filtered_dir"]
 
@@ -21,7 +18,7 @@ logger = configure_logging(__name__)
 def create_tarball_from_filtered_dir(
     src_dir: Path | str,
     output_filename: Path | str,
-    extensions: tuple[str, ...] = (".png", ".pdf"),
+    extensions: tuple[str, ...] = (".png", ".pdf", ".csv"),
 ) -> Result[None, Exception]:
     """
     Creates a gzipped tarball of files with specific extensions under the given
