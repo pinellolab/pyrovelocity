@@ -5,6 +5,7 @@ from typing import Tuple
 import matplotlib.pyplot as plt
 import scvelo as scv
 from beartype import beartype
+from pandas import DataFrame
 
 from pyrovelocity.analysis.analyze import pareto_frontier_genes
 from pyrovelocity.io import CompressedPickle
@@ -200,7 +201,7 @@ def summarize_dataset(
     # ##################
 
     save_anndata_counts_to_dataframe(adata, dataframe_path)
-    gene_parameter_posteriors_path = (
+    gene_parameter_posteriors_path: Path = (
         data_model_reports_path / "gene_parameter_posteriors.csv"
     )
     save_parameter_posterior_mean_dataframe(
@@ -208,6 +209,10 @@ def summarize_dataset(
         posterior_samples,
         gene_parameter_posteriors_path,
     )
+
+    gene_ranking_path: Path = data_model_reports_path / "gene_ranking.csv"
+    volcano_data: DataFrame = posterior_samples["gene_ranking"]
+    volcano_data.to_csv(gene_ranking_path)
 
     ##################
     # generate figures
@@ -239,13 +244,13 @@ def summarize_dataset(
             shared_time_plot=shared_time_plot,
         )
 
-    volcano_data = posterior_samples["gene_ranking"]
     number_of_marker_genes = min(
         max(int(len(volcano_data) * 0.1), 4), 20, len(volcano_data)
     )
     logger.info(f"Searching for {number_of_marker_genes} marker genes")
     putative_marker_genes = pareto_frontier_genes(
-        volcano_data, number_of_marker_genes
+        volcano_data=volcano_data,
+        num_genes=number_of_marker_genes,
     )
 
     # phase portraint predictive plots
