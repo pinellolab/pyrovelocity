@@ -359,7 +359,7 @@ jobs:
     if: ${{ needs.set-variables.outputs.skip_ci != 'true' && ( contains(github.event.pull_request.labels.*.name, 'build-images') || contains(github.event.pull_request.labels.*.name, 'execute-workflow') || (github.event_name == 'workflow_dispatch' && inputs.run_build_images) || (github.event_name == 'workflow_dispatch' && inputs.run_execute_workflow) ) }}
     uses: ./.github/workflows/build-nix-images.yaml
     concurrency:
-      group: bni-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref_name }}-${{ needs.set-variables.outputs.mode }}
+      group: bni-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref_name }}-${{ needs.set-variables.outputs.mode }}-${{ github.sha }}
       cancel-in-progress: true
     with:
       debug_enabled: ${{ needs.set-variables.outputs.debug }}
@@ -375,7 +375,7 @@ jobs:
     if: ${{ needs.set-variables.outputs.skip_ci != 'true' && (contains(github.event.pull_request.labels.*.name, 'execute-workflow') || (github.event_name == 'workflow_dispatch' && inputs.run_execute_workflow)) }}
     runs-on: ubuntu-latest
     concurrency:
-      group: ef-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref_name }}-${{ needs.set-variables.outputs.mode }}
+      group: ef-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref_name }}-${{ needs.set-variables.outputs.mode }}-${{ github.sha }}
       cancel-in-progress: true
     strategy:
       matrix:
