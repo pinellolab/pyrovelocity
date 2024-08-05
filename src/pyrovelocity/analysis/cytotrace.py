@@ -3,13 +3,9 @@ from time import time
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
-# Cell
 import scvelo as scv
 from numpy import ndarray
-from scipy.stats import mannwhitneyu
-from scipy.stats import rankdata
-
+from scipy.stats import mannwhitneyu, rankdata
 
 ##from scanorama import correct_scanpy
 scv.logging.verbosity = 3
@@ -17,10 +13,7 @@ scv.settings.presenter_view = True
 scv.set_figure_params("scvelo")
 np.random.seed(99)
 
-# Cell
-from scipy.sparse import csr_matrix
-from scipy.sparse import issparse
-
+from scipy.sparse import csr_matrix, issparse
 
 __all__ = [
     "census_normalize",
@@ -70,7 +63,6 @@ def census_normalize(mat, count):
         return np.log2(x + 1)
 
 
-# Cell
 def remove_zero_mvg(mat):
     "remove cells not expressing any of the top 1000 variable genes"
     # gene x cell
@@ -84,7 +76,6 @@ def remove_zero_mvg(mat):
     ]  # in case less than 1000 genes
 
 
-# Cell
 def compute_similarity2(O: ndarray, P: ndarray) -> ndarray:
     "Compute pearson correlation between two matrices O and P using einstein summation"
     (n, t) = O.shape  # n traces of t samples
@@ -105,7 +96,6 @@ def compute_similarity2(O: ndarray, P: ndarray) -> ndarray:
     return cov / np.sqrt(tmp)
 
 
-# Cell
 # adapt from https://github.com/ikizhvatov/efficient-columnwise-correlation/blob/master/columnwise_corrcoef_perf.py
 def compute_similarity1(A):
     "Compute pairwise correlation of all columns in matrices A"
@@ -118,7 +108,6 @@ def compute_similarity1(A):
     return cov / np.sqrt(np.einsum("m,t->mt", varP, varP, optimize="optimal"))
 
 
-# Cell
 def compute_gcs(mat, count, top_n_genes=200):
     "Compute gene set enrichment scores by correlating gene count and gene expression"
     corrs = compute_similarity2(mat.T, count.reshape(-1, 1))[0, :]
@@ -128,7 +117,6 @@ def compute_gcs(mat, count, top_n_genes=200):
     return gcs
 
 
-# Cell
 def convert_to_markov(sim):
     """Convert the Pearson correlation to Markov matrix
 
@@ -152,27 +140,26 @@ def convert_to_markov(sim):
     return Ds
 
 
-# Cell
 # http://xrm.phys.northwestern.edu/research/pdf_papers/1997/bro_chemometrics_1997.pdf
 # matlab reference: https://www.mathworks.com/matlabcentral/mlc-downloads/downloads/submissions/3388/versions/1/previews/fnnls.m/index.html
 
-from numpy import abs
-from numpy import arange
-from numpy import argmax
-from numpy import finfo
-from numpy import float64
-from numpy import int64
-from numpy import min
-from numpy import newaxis
-from numpy import nonzero
-from numpy import sum
-from numpy import zeros
+from numpy import (
+    abs,
+    arange,
+    argmax,
+    finfo,
+    float64,
+    int64,
+    min,
+    newaxis,
+    nonzero,
+    sum,
+    zeros,
+)
 from scipy.linalg import solve
-
 
 nu = newaxis
 import numpy as np
-
 
 # machine epsilon
 eps = finfo(float64).eps
@@ -259,7 +246,6 @@ def FNNLSa(XtX, Xty, tol=None):
     return x, w
 
 
-# Cell
 def regressed(markov, gcs, solver="fnnls"):
     """solve markov @ weight = gcs problems,
 
@@ -318,7 +304,6 @@ def regressed(markov, gcs, solver="fnnls"):
     return np.dot(markov, coef)
 
 
-# Cell
 def diffused(markov, gcs, ALPHA=0.9):
     """Compute diffusion process"""
     v_prev = np.copy(gcs)
@@ -334,7 +319,6 @@ def diffused(markov, gcs, ALPHA=0.9):
     return v_curr
 
 
-# Cell
 from scipy.sparse import issparse
 
 
@@ -616,7 +600,6 @@ def cytotrace_sparse(
     }
 
 
-# Cell
 def cytotrace(
     adata, layer="all", cell_count=10, solver="nnls", top_n_genes=200
 ):
@@ -758,7 +741,6 @@ def visualize(adata, metrics, name="test"):
     fig.savefig(f"{name}_figure.pdf")
 
 
-# Cell
 def batch_cytotrace(mvg_batch, gcs_batch, solver="jfnnls"):
     corr_batch = compute_similarity1(mvg_batch)
     markov_batch = convert_to_markov(corr_batch)
@@ -771,7 +753,6 @@ def batch_cytotrace(mvg_batch, gcs_batch, solver="jfnnls"):
     return gcs_batch
 
 
-# Cell
 from scipy.sparse import issparse
 
 
@@ -928,9 +909,6 @@ def compare_cytotrace_ncores(
     ] = counts  # used for re-rank when integrating multiple-samples
 
 
-# Cell
-
-
 def cytotrace_ncore(
     adata,
     layer="all",
@@ -1056,7 +1034,6 @@ def cytotrace_ncore(
     ] = corrs
 
 
-# Cell
 def align_diffrate(
     adatas, labels, field="condition", type="A", outfield="cytotrace", ax=None
 ):
@@ -1111,7 +1088,6 @@ def align_diffrate(
     ax.legend()
 
 
-# Cell
 def plot_multiadata(adatas):
     for a in adatas:
         print(a.obs.age[0])
@@ -1169,7 +1145,6 @@ def plot_multiadata(adatas):
         )
 
 
-# Cell
 # https://stackoverflow.com/questions/15408371/cumulative-distribution-plots-python
 def cumulative_boxplot():
     data = adata_copy[adata_copy.obs.age == "A",].obs.n_counts
