@@ -9,7 +9,7 @@ from numbers import Integral, Real
 from pathlib import Path
 from pprint import pprint
 from types import FunctionType, ModuleType
-from typing import Callable, List, Tuple
+from typing import Callable, Dict, List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,6 +21,7 @@ import seaborn as sns
 import yaml
 from anndata._core.anndata import AnnData
 from beartype import beartype
+from einops import EinopsError, reduce
 from jaxtyping import ArrayLike
 from scvi.data import synthetic_iid
 
@@ -460,6 +461,42 @@ def save_anndata_counts_to_dataframe(
         raise FileNotFoundError(f"Failed to create readable {dataframe_path}")
 
     return Path(dataframe_path)
+
+
+@beartype
+def save_parameter_posterior_mean_dataframe(
+    adata: AnnData,
+    input_dict: Dict[str, np.ndarray | list],
+    dataframe_path: os.PathLike | str,
+) -> pd.DataFrame:
+    logger.info(
+        f"\nSaving gene parameter posteriors to file:\n{dataframe_path}\n\n"
+    )
+    output_dict = {}
+    for key, value in input_dict.items():
+        try:
+            value = np.array(object=value, dtype=float)
+            output_dict[key] = reduce(value, "n 1 g -> g", "mean")
+        except (EinopsError, ValueError, TypeError):
+            logger.debug(
+                f"Skipping key '{key}': value does not match expected shape (n, 1, g)"
+            )
+
+    gene_parameter_posteriors = pd.DataFrame(
+        {
+            "genes": adata.var_names.values,
+            **output_dict,
+        }
+    )
+
+    gene_parameter_posteriors.to_csv(dataframe_path)
+
+    if not os.path.isfile(dataframe_path) or not os.access(
+        dataframe_path, os.R_OK
+    ):
+        raise FileNotFoundError(f"Failed to create readable {dataframe_path}")
+
+    return gene_parameter_posteriors
 
 
 @beartype
