@@ -390,18 +390,8 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                 ]:
                     continue
 
-                if "aux" in k:
+                if posterior_samples[0][k].shape[-2] == 1:
                     samples[k] = posterior_samples[0][k]
-                elif posterior_samples[0][k].shape[-2] == 1:
-                    samples[k] = posterior_samples[0][k]
-                    if k == "kinetics_prob":
-                        samples[k] = np.concatenate(
-                            [
-                                posterior_samples[j][k]
-                                for j in range(len(posterior_samples))
-                            ],
-                            axis=-3,
-                        )
                 else:
                     samples[k] = np.concatenate(
                         [
@@ -410,6 +400,27 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
                         ],
                         axis=-2,
                     )
+
+                # if "aux" in k:
+                #     samples[k] = posterior_samples[0][k]
+                # elif posterior_samples[0][k].shape[-2] == 1:
+                #     samples[k] = posterior_samples[0][k]
+                #     if k == "kinetics_prob":
+                #         samples[k] = np.concatenate(
+                #             [
+                #                 posterior_samples[j][k]
+                #                 for j in range(len(posterior_samples))
+                #             ],
+                #             axis=-3,
+                #         )
+                # else:
+                #     samples[k] = np.concatenate(
+                #         [
+                #             posterior_samples[j][k]
+                #             for j in range(len(posterior_samples))
+                #         ],
+                #         axis=-2,
+                #     )
 
                 logger.debug(k, "before", sys.getsizeof(samples[k]))
         self.num_samples = num_samples
