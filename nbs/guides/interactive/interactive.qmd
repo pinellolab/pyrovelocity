@@ -184,3 +184,27 @@ display(Image(filename=f"gene_selection_summary_plot.pdf.png"))
 
 Of course, you can generate any plot of interest relevant to the loaded data.
 See the [plots package source](https://github.com/pinellolab/pyrovelocity/tree/main/src/pyrovelocity/plots), [plots API reference](../../reference/plots.qmd), and the guide for the [workflow summarization task](https://github.com/pinellolab/pyrovelocity/blob/main/src/pyrovelocity/tasks/summarize.py) for ideas regarding built-in or custom plots.
+
+### Save data files
+
+We may also want to write data tables to review. Here we save the parameter
+posterior distribution table
+
+```{python}
+# | label: save-parameter-posterior-mean-dataframe
+from pyrovelocity.utils import save_parameter_posterior_mean_dataframe
+
+save_parameter_posterior_mean_dataframe(
+    adata=adata,
+    input_dict=posterior_samples,
+    dataframe_path="gene_parameter_posterior_mean.csv",
+)
+```
+
+and the gene selection table
+
+```{python}
+# | label: save-gene-selection-table
+posterior_samples["gene_ranking"].to_csv("gene_ranking.csv")
+posterior_samples["gene_ranking"]
+```
