@@ -69,7 +69,10 @@ llvmlite = { version = ">=0.41.1", python = "<3.12" }
 #   { version = ">=0.41.1", python = "<3.12" },
 #   { version = ">=0.42.0", python = ">=3.12" },
 # ]
-matplotlib = ">=3.9.1"
+# Temporarily pin yanked matplotlib 3.9.1
+# https://github.com/matplotlib/matplotlib/issues/28551
+# for usage with pip installs
+matplotlib = "==3.9.1"
 mlflow = ">=2.13.0"
 numpyro = ">=0.15.0"
 pandas = ">=2.0.0"
@@ -411,7 +414,7 @@ pyrovelocity-notebooks = "pyrovelocity.workflows.notebooks:cli"
 [tool.pytest.ini_options]
 log_level = "INFO"
 addopts = """ 
--m "not slow and not pyensembl"
+-m "not pyensembl"
 -rA
 --xdoctest
 --disable-warnings
