@@ -277,8 +277,9 @@ def upload_summary(
     print(f"\nCreating tarball\n{archive_name}\nfrom {reports_path}...\n\n")
 
     create_tarball_from_filtered_dir(
-        reports_path,
-        archive_name,
+        src_dir=reports_path,
+        output_filename=archive_name,
+        extensions=(".png", ".pdf", ".csv"),
     )
 
     upload_result = upload_file_concurrently(
