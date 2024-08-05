@@ -255,7 +255,7 @@ def summarize_data(
 
 
 @task(
-    cache=PYROVELOCITY_CACHE_FLAG,
+    cache=False,
     cache_version=SUMMARIZE_CACHE_VERSION,
     retries=3,
     interruptible=True,
