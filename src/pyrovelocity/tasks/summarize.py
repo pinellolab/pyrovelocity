@@ -19,7 +19,10 @@ from pyrovelocity.plots import (
     posterior_curve,
     rainbowplot,
 )
-from pyrovelocity.utils import save_anndata_counts_to_dataframe
+from pyrovelocity.utils import (
+    save_anndata_counts_to_dataframe,
+    save_parameter_posterior_mean_dataframe,
+)
 
 __all__ = ["summarize_dataset"]
 
@@ -193,10 +196,18 @@ def summarize_dataset(
                 )
 
     # ##################
-    # save dataframe
+    # save dataframes
     # ##################
 
     save_anndata_counts_to_dataframe(adata, dataframe_path)
+    gene_parameter_posteriors_path = (
+        data_model_reports_path / "gene_parameter_posteriors.csv"
+    )
+    save_parameter_posterior_mean_dataframe(
+        adata,
+        posterior_samples,
+        gene_parameter_posteriors_path,
+    )
 
     ##################
     # generate figures
