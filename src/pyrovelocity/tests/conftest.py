@@ -1,7 +1,7 @@
 import pytest
 import scanpy as sc
 
-from pyrovelocity.analysis.analyze import pareto_frontier_genes
+from pyrovelocity.analysis.analyze import top_mae_genes
 from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.tasks.data import download_dataset
 from pyrovelocity.tasks.postprocess import postprocess_dataset
@@ -194,7 +194,7 @@ def posterior_samples_model2(postprocess_dataset_output):
 
 @pytest.fixture(scope=integration_fixture_scope)
 def putative_model2_marker_genes(posterior_samples_model2):
-    return pareto_frontier_genes(
+    return top_mae_genes(
         volcano_data=posterior_samples_model2["gene_ranking"],
         num_genes=3,
     )
@@ -207,7 +207,7 @@ def posterior_samples_model1(postprocess_dataset_model1_output):
 
 @pytest.fixture(scope=integration_fixture_scope)
 def putative_model1_marker_genes(posterior_samples_model1):
-    return pareto_frontier_genes(
+    return top_mae_genes(
         volcano_data=posterior_samples_model1["gene_ranking"],
         num_genes=3,
     )
