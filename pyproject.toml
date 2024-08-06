@@ -413,8 +413,11 @@ pyrovelocity-notebooks = "pyrovelocity.workflows.notebooks:cli"
 # $ pytest > test.log.py
 [tool.pytest.ini_options]
 log_level = "INFO"
+# We exclude markers associated with slow tests by default
+# but run them in CI with the make target `test-cov-xml`
+# which overrides this behavior.
 addopts = """ 
--m "not pyensembl"
+-m "not slow and not pyensembl"
 -rA
 --xdoctest
 --disable-warnings
