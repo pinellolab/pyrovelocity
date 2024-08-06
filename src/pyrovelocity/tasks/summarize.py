@@ -7,7 +7,7 @@ import scvelo as scv
 from beartype import beartype
 from pandas import DataFrame
 
-from pyrovelocity.analysis.analyze import pareto_frontier_genes
+from pyrovelocity.analysis.analyze import top_mae_genes
 from pyrovelocity.io import CompressedPickle
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.plots import (
@@ -248,7 +248,7 @@ def summarize_dataset(
         max(int(len(volcano_data) * 0.1), 4), 20, len(volcano_data)
     )
     logger.info(f"Searching for {number_of_marker_genes} marker genes")
-    putative_marker_genes = pareto_frontier_genes(
+    putative_marker_genes = top_mae_genes(
         volcano_data=volcano_data,
         num_genes=number_of_marker_genes,
     )
