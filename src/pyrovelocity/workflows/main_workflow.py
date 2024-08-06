@@ -55,7 +55,7 @@ __all__ = [
 logger = configure_logging(__name__)
 
 CACHE_VERSION = "2024.8.5"
-SUMMARIZE_CACHE_VERSION = "2024.8.5"
+SUMMARIZE_CACHE_VERSION = "2024.8.5.1"
 PYROVELOCITY_CACHE_FLAG = str_to_bool(
     os.getenv("PYROVELOCITY_CACHE_FLAG", "True")
 )
@@ -255,7 +255,7 @@ def summarize_data(
 
 
 @task(
-    cache=False,
+    cache=True,
     cache_version=SUMMARIZE_CACHE_VERSION,
     retries=3,
     interruptible=True,
