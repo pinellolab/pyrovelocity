@@ -214,6 +214,9 @@ def summarize_dataset(
     volcano_data: DataFrame = posterior_samples["gene_ranking"]
     volcano_data.to_csv(gene_ranking_path)
 
+    if "model1" in data_model:
+        posterior_samples.pop("t0", None)
+
     ##################
     # generate figures
     ##################
