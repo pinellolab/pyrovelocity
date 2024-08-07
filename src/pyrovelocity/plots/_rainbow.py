@@ -67,7 +67,7 @@ def rainbowplot(
     else:
         colors = setup_colors(adata, cell_state)
 
-    st, ut = get_posterior_samples(data, posterior_samples)
+    st, ut = get_posterior_samples_mean(data, posterior_samples)
 
     for n, gene in enumerate(genes):
         ress = get_data(gene, st, ut, adata, cell_state, posterior_samples)
@@ -78,11 +78,11 @@ def rainbowplot(
             ax4 = ax[n, 3]
 
         if n == 0:
-            ax1.set_title("Rainbow plot", fontsize=7)
+            ax1.set_title("Predictive dynamics", fontsize=7)
             ax2.set_title("Phase portrait", fontsize=7)
-            ax3.set_title("Denoised spliced", fontsize=7)
+            ax3.set_title("Predictive spliced", fontsize=7)
             if show_data:
-                ax4.set_title("Spliced data", fontsize=7)
+                ax4.set_title("Log spliced data", fontsize=7)
 
         plot_gene(ax1, ress, colors, add_line)
         scatterplot(ax2, ress, colors)
@@ -92,7 +92,7 @@ def rainbowplot(
             adata.obsm[f"X_{basis}"][:, 1],
             s=3,
             c=st[:, index].flatten(),
-            cmap="RdBu_r",
+            cmap="cividis",
         )
         set_colorbar(im, ax3, labelsize=5, fig=fig, rainbow=True)
         ax3.axis("off")
@@ -101,10 +101,8 @@ def rainbowplot(
                 adata.obsm[f"X_{basis}"][:, 0],
                 adata.obsm[f"X_{basis}"][:, 1],
                 s=3,
-                c=ensure_numpy_array(
-                    adata.layers["spliced"][:, index]
-                ).flatten(),
-                cmap="RdBu_r",
+                c=ensure_numpy_array(adata.X[:, index]).flatten(),
+                cmap="cividis",
             )
             set_colorbar(im, ax4, labelsize=5, fig=fig, rainbow=True)
             ax4.axis("off")
@@ -147,7 +145,7 @@ def scatter_gene(ax, adata, st, gene, basis):
         adata.obsm[f"X_{basis}"][:, 1],
         s=3,
         c=st[:, index].flatten(),
-        cmap="RdBu_r",
+        cmap="cividis",
     )
 
 
@@ -219,7 +217,7 @@ def setup_colors(adata, cell_state):
     )
 
 
-def get_posterior_samples(data, posterior_samples):
+def get_posterior_samples_mean(data, posterior_samples):
     if (data[0] in posterior_samples) and (data[1] in posterior_samples):
         st = posterior_samples[data[0]].mean(0).squeeze()
         ut = posterior_samples[data[1]].mean(0).squeeze()
@@ -271,7 +269,7 @@ def plot_gene(ax1, ress, colors, add_line):
 
 def set_labels(ax1, ax2, ax3, gene, ngenes, ress, n):
     if n == 0:
-        ax3.set_title("Denoised spliced", fontsize=7)
+        ax3.set_title("Predictive spliced", fontsize=7)
     if n == ngenes - 1:
         ax1.set_xlabel("shared time", fontsize=7)
         ax1.set_ylabel("expression", fontsize=7)
