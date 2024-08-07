@@ -46,7 +46,10 @@ to represent the results of applying the model to real data.
 # | label: get-workflow-io
 from pyrovelocity.io.cluster import get_remote_task_results
 
-execution_id = "pyrovelocity-py311-defaul-fe20d09-dev-pzh-17b5092261c84e8695a"
+# execution_id = "pyrovelocity-py311-defaul-fe20d09-dev-pzh-17b5092261c84e8695a"  # downsampled
+execution_id = (
+    "pyrovelocity-595-gsmc-feaa936-dev-vf0-264734a284ac493fa39"  # complete
+)
 
 (
     model1_postprocessing_inputs,
@@ -61,7 +64,7 @@ execution_id = "pyrovelocity-py311-defaul-fe20d09-dev-pzh-17b5092261c84e8695a"
     model2_postprocessing_outputs,
 ) = get_remote_task_results(
     execution_id=execution_id,
-    task_id="f26c1pjy-0-dn1-0-dn6",
+    task_id="f26c1pjy-0-dn1-0-dn7",
 )
 ```
 
@@ -119,48 +122,95 @@ pretty_print_dict(posterior_samples)
 
 #### Extract results of interest
 
+We decompose the correlation of each gene's expression level with the
+cell time estimates into eight equally-spaced bins and select the top 3% of genes with respect to the mean absolute error between the predictive sample mean and
+the observed expression level.
+
 ```{python}
 # | label: model1-extract-gene-selection
-from pyrovelocity.analysis.analyze import pareto_frontier_genes
+from pyrovelocity.analysis.analyze import top_mae_genes
 
 volcano_data = posterior_samples["gene_ranking"]
 number_of_marker_genes = min(
     max(int(len(volcano_data) * 0.1), 4), 6, len(volcano_data)
 )
-putative_marker_genes = pareto_frontier_genes(
-    volcano_data, number_of_marker_genes
+putative_marker_genes = top_mae_genes(
+    volcano_data,
+    mae_top_percentile=3,
+    min_genes_per_bin=3,
 )
 ```
 
 #### Generate plots
 
-```{python}
-# | label: model1-generate-gene-selection-summary-plot
-# | output: false
-from pyrovelocity.plots import plot_gene_selection_summary
+We generate several summary plots below for two distinct model classes 
+in order to support comparative model evaluation, which is among few
+options for selecting effective models that are not designed to be
+microscopically valid.
 
-vector_field_basis = model1_postprocessing_inputs.preprocess_data_args.vector_field_basis
+Here we plot the gene selection statistics highlighting genes of interest
+based upon them.
+
+```{python}
+# | label: model1-generate-gene-selection-plot
+# | output: false
+from pyrovelocity.plots import plot_gene_ranking
+
+vector_field_basis = (
+    model1_postprocessing_inputs.preprocess_data_args.vector_field_basis
+)
 cell_state = model1_postprocessing_inputs.preprocess_data_args.cell_state
 
-plot_gene_selection_summary(
+plot_gene_ranking(
+    posterior_samples=[posterior_samples],
+    adata=[adata],
+    selected_genes=putative_marker_genes,
+    time_correlation_with="st",
+    show_marginal_histograms=True,
+    save_volcano_plot=True,
+    volcano_plot_path="model1_volcano_plot.pdf",
+)
+```
+```{python}
+# | label: model1-show-gene-selection-plot
+# | code-fold: true
+# | output: true
+display(Image(filename=f"model1_volcano_plot.pdf.png"))
+```
+
+We can attempt to attribute the statistics to underlying features plotting 
+phase portraits, predictive expression, and log-transformed expression of
+the proposed marker genes
+
+```{python}
+# | label: model1-generate-rainbow-plot
+# | output: false
+from pyrovelocity.plots import rainbowplot
+
+rainbowplot(
+    volcano_data=volcano_data,
     adata=adata,
     posterior_samples=posterior_samples,
+    genes=putative_marker_genes,
+    data=["st", "ut"],
     basis=vector_field_basis,
     cell_state=cell_state,
-    plot_name="gene_selection_summary_plot.pdf",
-    selected_genes=putative_marker_genes,
-    show_marginal_histograms=False,
+    save_plot=True,
+    rainbow_plot_path="model1_rainbow_plot.pdf",
 )
 ```
 
 ```{python}
-# | label: model1-show-gene-selection-summary-plot
+# | label: model1-show-rainbow-plot
 # | code-fold: true
 # | output: true
-display(Image(filename=f"gene_selection_summary_plot.pdf.png"))
+display(Image(filename=f"model1_rainbow_plot.pdf.png"))
 ```
 
+
 ### Model 2
+
+We provide a comparable analysis for the second model below.
 
 #### Load data
 
@@ -188,41 +238,73 @@ pretty_print_dict(posterior_samples)
 
 ```{python}
 # | label: model2-extract-gene-selection
-from pyrovelocity.analysis.analyze import pareto_frontier_genes
+from pyrovelocity.analysis.analyze import top_mae_genes
 
 volcano_data = posterior_samples["gene_ranking"]
 number_of_marker_genes = min(
     max(int(len(volcano_data) * 0.1), 4), 6, len(volcano_data)
 )
-putative_marker_genes = pareto_frontier_genes(
-    volcano_data, number_of_marker_genes
+putative_marker_genes = top_mae_genes(
+    volcano_data,
+    mae_top_percentile=3,
+    min_genes_per_bin=3,
 )
 ```
 
 #### Generate plots
 
 ```{python}
-# | label: model2-generate-gene-selection-summary-plot
+# | label: model2-generate-gene-selection-plot
 # | output: false
-from pyrovelocity.plots import plot_gene_selection_summary
+from pyrovelocity.plots import plot_gene_ranking
 
-vector_field_basis = model2_postprocessing_inputs.preprocess_data_args.vector_field_basis
+vector_field_basis = (
+    model2_postprocessing_inputs.preprocess_data_args.vector_field_basis
+)
 cell_state = model2_postprocessing_inputs.preprocess_data_args.cell_state
 
-plot_gene_selection_summary(
+plot_gene_ranking(
+    posterior_samples=[posterior_samples],
+    adata=[adata],
+    selected_genes=putative_marker_genes,
+    time_correlation_with="st",
+    show_marginal_histograms=True,
+    save_volcano_plot=True,
+    volcano_plot_path="model2_volcano_plot.pdf",
+)
+```
+```{python}
+# | label: model2-show-gene-selection-plot
+# | code-fold: true
+# | output: true
+display(Image(filename=f"model2_volcano_plot.pdf.png"))
+```
+
+
+Plot phase portraits, predictive expression, and log-transformed expression of
+all proposed marker genes
+
+```{python}
+# | label: model2-generate-rainbow-plot
+# | output: false
+from pyrovelocity.plots import rainbowplot
+
+rainbowplot(
+    volcano_data=volcano_data,
     adata=adata,
     posterior_samples=posterior_samples,
+    genes=putative_marker_genes,
+    data=["st", "ut"],
     basis=vector_field_basis,
     cell_state=cell_state,
-    plot_name="gene_selection_summary_plot.pdf",
-    selected_genes=putative_marker_genes,
-    show_marginal_histograms=False,
+    save_plot=True,
+    rainbow_plot_path="model2_rainbow_plot.pdf",
 )
 ```
 
 ```{python}
-# | label: model2-show-gene-selection-summary-plot
+# | label: model2-show-rainbow-plot
 # | code-fold: true
 # | output: true
-display(Image(filename=f"gene_selection_summary_plot.pdf.png"))
+display(Image(filename=f"model2_rainbow_plot.pdf.png"))
 ```
