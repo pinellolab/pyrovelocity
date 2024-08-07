@@ -244,13 +244,11 @@ def summarize_dataset(
             shared_time_plot=shared_time_plot,
         )
 
-    number_of_marker_genes = min(
-        max(int(len(volcano_data) * 0.1), 4), 20, len(volcano_data)
-    )
-    logger.info(f"Searching for {number_of_marker_genes} marker genes")
+    logger.info(f"Searching for marker genes")
     putative_marker_genes = top_mae_genes(
         volcano_data=volcano_data,
-        num_genes=number_of_marker_genes,
+        mae_top_percentile=3,
+        min_genes_per_bin=3,
     )
 
     # phase portraint predictive plots
