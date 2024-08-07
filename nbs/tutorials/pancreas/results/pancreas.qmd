@@ -207,6 +207,32 @@ rainbowplot(
 display(Image(filename=f"model1_rainbow_plot.pdf.png"))
 ```
 
+It is somewhat difficult to compare the parameter posteriors on a common scale
+but we plot their posterior distributions below.
+
+
+```{python}
+# | label: model1-generate-parameter-posterior-plot
+# | output: false
+from pyrovelocity.plots import plot_parameter_posterior_distributions
+
+posterior_samples.pop("t0", None)
+
+plot_parameter_posterior_distributions(
+    posterior_samples=posterior_samples,
+    adata=adata,
+    geneset=putative_marker_genes,
+    parameter_uncertainty_plot="model1_parameter_uncertainty_plot.pdf",
+)
+```
+
+```{python}
+# | label: model1-show-parameter-posterior-plot
+# | code-fold: true
+# | output: true
+display(Image(filename=f"model1_parameter_uncertainty_plot.pdf.png"))
+```
+
 
 ### Model 2
 
@@ -280,7 +306,6 @@ plot_gene_ranking(
 display(Image(filename=f"model2_volcano_plot.pdf.png"))
 ```
 
-
 Plot phase portraits, predictive expression, and log-transformed expression of
 all proposed marker genes
 
@@ -307,4 +332,26 @@ rainbowplot(
 # | code-fold: true
 # | output: true
 display(Image(filename=f"model2_rainbow_plot.pdf.png"))
+```
+
+Finally, we plot the parameter posteriors for the second model.
+
+```{python}
+# | label: model2-generate-parameter-posterior-plot
+# | output: false
+from pyrovelocity.plots import plot_parameter_posterior_distributions
+
+plot_parameter_posterior_distributions(
+    posterior_samples=posterior_samples,
+    adata=adata,
+    geneset=putative_marker_genes,
+    parameter_uncertainty_plot="model2_parameter_uncertainty_plot.pdf",
+)
+```
+
+```{python}
+# | label: model2-show-parameter-posterior-plot
+# | code-fold: true
+# | output: true
+display(Image(filename=f"model2_parameter_uncertainty_plot.pdf.png"))
 ```
