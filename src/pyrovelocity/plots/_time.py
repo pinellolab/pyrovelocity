@@ -11,9 +11,7 @@ from beartype import beartype
 from matplotlib.figure import FigureBase
 from scipy.stats import spearmanr
 
-from pyrovelocity.plots._common import set_colorbar
-from pyrovelocity.plots._common import set_font_size
-
+from pyrovelocity.plots._common import set_colorbar, set_font_size
 
 __all__ = [
     "plot_posterior_time",
@@ -53,7 +51,7 @@ def plot_posterior_time(
         s=s,
         alpha=0.4,
         c=adata.obs["cell_time"],
-        cmap="inferno",
+        cmap="cividis",
         linewidth=0,
     )
     set_colorbar(im, ax, labelsize=5, fig=fig, position=position)
