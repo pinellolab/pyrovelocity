@@ -27,7 +27,6 @@ def plot_gene_selection_summary(
     cell_state: str = "",
     show_marginal_histograms: bool = False,
     selected_genes: Optional[List[str]] = None,
-    number_of_genes: int = 4,
 ) -> FigureBase:
     fig = plt.figure(figsize=(9.5, 5))
     subfigs = fig.subfigures(1, 2, wspace=0.0, hspace=0, width_ratios=[1.8, 4])
@@ -52,14 +51,14 @@ def plot_gene_selection_summary(
     )
 
     _ = rainbowplot(
-        volcano_data,
-        adata,
-        posterior_samples,
-        subfigs[1],
+        volcano_data=volcano_data,
+        adata=adata,
+        posterior_samples=posterior_samples,
+        fig=subfigs[1],
+        genes=selected_genes[:2] + selected_genes[-2:],
         data=["st", "ut"],
         basis=basis,
         cell_state=cell_state,
-        num_genes=number_of_genes,
         show_data=False,
     )
     for ext in ["", ".png"]:
