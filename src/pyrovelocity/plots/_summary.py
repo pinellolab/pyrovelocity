@@ -1,7 +1,5 @@
 from pathlib import Path
-from typing import Dict
-from typing import List
-from typing import Optional
+from typing import Dict, List, Optional
 
 import matplotlib.pyplot as plt
 from anndata import AnnData
@@ -13,7 +11,6 @@ from pyrovelocity.logging import configure_logging
 from pyrovelocity.plots._genes import plot_gene_ranking
 from pyrovelocity.plots._rainbow import rainbowplot
 from pyrovelocity.plots._time import plot_posterior_time
-
 
 logger = configure_logging(__name__)
 
@@ -63,6 +60,7 @@ def plot_gene_selection_summary(
         basis=basis,
         cell_state=cell_state,
         num_genes=number_of_genes,
+        show_data=False,
     )
     for ext in ["", ".png"]:
         fig.savefig(
