@@ -14,6 +14,7 @@ from numpy import ndarray
 from pandas import DataFrame, Index
 
 from pyrovelocity.plots._common import set_colorbar, set_font_size
+from pyrovelocity.utils import ensure_numpy_array
 
 __all__ = ["rainbowplot", "us_rainbowplot"]
 
@@ -100,7 +101,9 @@ def rainbowplot(
                 adata.obsm[f"X_{basis}"][:, 0],
                 adata.obsm[f"X_{basis}"][:, 1],
                 s=3,
-                c=adata.layers["spliced"][:, index].flatten(),
+                c=ensure_numpy_array(
+                    adata.layers["spliced"][:, index]
+                ).flatten(),
                 cmap="RdBu_r",
             )
             set_colorbar(im, ax4, labelsize=5, fig=fig, rainbow=True)
