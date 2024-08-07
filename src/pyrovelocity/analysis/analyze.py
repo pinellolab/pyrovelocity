@@ -318,24 +318,57 @@ def mae_per_gene(pred_counts: ndarray, true_counts: ndarray) -> ndarray:
 @beartype
 def top_mae_genes(
     volcano_data: pd.DataFrame,
-    num_genes: int,
+    mae_top_percentile: int | float = 10.0,
+    min_genes_per_bin: int = 2,
 ) -> List[str]:
     """
-    Identify top N genes based on Mean Absolute Error (MAE), excluding ribosomal genes,
-    and sort the final output by time correlation.
+    Identify top genes based on Mean Absolute Error (MAE) percentile, excluding ribosomal genes,
+    divided into 8 bins according to time correlation, and sorted by time correlation.
 
     Args:
         volcano_data (pd.DataFrame): DataFrame containing MAE and time correlation
-        num_genes (int): Number of genes to return.
+        mae_top_percentile (float): Percentile threshold for selecting top MAE genes (0-100)
+        min_genes_per_bin (int): Minimum number of genes to select from each bin
 
     Returns:
         List[str]: List of gene indices from volcano_data, sorted by time correlation.
     """
+    if not 0 < mae_top_percentile <= 100:
+        raise ValueError("mae_top_percentile must be between 0 and 100")
+    if min_genes_per_bin < 0:
+        raise ValueError("min_genes_per_bin must be non-negative")
+
     filtered_data = volcano_data[
         ~volcano_data.index.str.contains(("^Rpl|^Rps"), case=False)
     ]
 
-    top_genes = filtered_data.nlargest(num_genes, "mean_mae")
+    filtered_data["time_corr_bin"] = pd.cut(
+        filtered_data["time_correlation"],
+        bins=np.linspace(-1, 1, 9),
+        labels=range(8),
+    )
+
+    selected_genes = []
+
+    for bin_num in range(8):
+        bin_data = filtered_data[filtered_data["time_corr_bin"] == bin_num]
+
+        if bin_data.empty:
+            logger.warning(f"No genes found in time correlation bin {bin_num}")
+            continue
+
+        mae_threshold = bin_data["mean_mae"].quantile(
+            1 - mae_top_percentile / 100
+        )
+
+        top_genes_in_bin = bin_data[bin_data["mean_mae"] >= mae_threshold]
+
+        if len(top_genes_in_bin) < min_genes_per_bin:
+            top_genes_in_bin = bin_data.nlargest(min_genes_per_bin, "mean_mae")
+
+        selected_genes.append(top_genes_in_bin)
+
+    top_genes = pd.concat(selected_genes)
 
     top_genes_sorted = top_genes.sort_values(
         by="time_correlation", ascending=False
@@ -344,16 +377,11 @@ def top_mae_genes(
     gene_indices = top_genes_sorted.index.tolist()
 
     logger.info(
-        f"\nSelected top {len(gene_indices)} genes based on MAE, sorted by time correlation:\n\n"
+        f"\nSelected {len(gene_indices)} genes based on top {mae_top_percentile}% MAE "
+        f"from 8 time correlation bins, with a minimum of {min_genes_per_bin} genes per bin, "
+        f"sorted by time correlation:\n\n"
         f"  {gene_indices}\n\n"
     )
-
-    if len(gene_indices) < num_genes:
-        logger.info(
-            f"Warning: Only {len(gene_indices)} genes were found,\n"
-            f"but {num_genes} were requested.\n"
-            "Returning all available genes.\n"
-        )
 
     return gene_indices
 
