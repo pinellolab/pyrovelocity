@@ -196,7 +196,6 @@ def posterior_samples_model2(postprocess_dataset_output):
 def putative_model2_marker_genes(posterior_samples_model2):
     return top_mae_genes(
         volcano_data=posterior_samples_model2["gene_ranking"],
-        num_genes=3,
     )
 
 
@@ -209,5 +208,4 @@ def posterior_samples_model1(postprocess_dataset_model1_output):
 def putative_model1_marker_genes(posterior_samples_model1):
     return top_mae_genes(
         volcano_data=posterior_samples_model1["gene_ranking"],
-        num_genes=3,
     )
