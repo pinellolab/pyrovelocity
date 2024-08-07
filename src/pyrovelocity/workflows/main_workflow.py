@@ -55,7 +55,7 @@ __all__ = [
 logger = configure_logging(__name__)
 
 CACHE_VERSION = "2024.8.5"
-SUMMARIZE_CACHE_VERSION = "2024.8.5.1"
+SUMMARIZE_CACHE_VERSION = "2024.8.5.2"
 PYROVELOCITY_CACHE_FLAG = str_to_bool(
     os.getenv("PYROVELOCITY_CACHE_FLAG", "True")
 )
