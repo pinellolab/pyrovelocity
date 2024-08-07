@@ -1,6 +1,5 @@
 from os import PathLike
-from typing import Dict
-from typing import List
+from typing import Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,7 +10,6 @@ from beartype import beartype
 from matplotlib.figure import FigureBase
 
 from pyrovelocity.logging import configure_logging
-
 
 __all__ = ["plot_parameter_posterior_distributions"]
 
@@ -25,18 +23,31 @@ def plot_parameter_posterior_distributions(
     geneset: List[str],
     parameter_uncertainty_plot: PathLike | str,
 ) -> FigureBase:
-    fig, ax = plt.subplots(3, 1)
-    fig.set_size_inches(18, 12)
-    for index, kinetics in enumerate(["alpha", "beta", "gamma"]):
+    parameter_names = [
+        "alpha",
+        "beta",
+        "gamma",
+        "u_offset",
+        "s_offset",
+        "t0",
+    ]
+    parameters = [
+        parameter
+        for parameter in parameter_names
+        if parameter in posterior_samples.keys()
+    ]
+    fig, ax = plt.subplots(len(parameters), 1)
+    fig.set_size_inches(18, len(parameters) * 4)
+    for index, parameter in enumerate(parameters):
         df = pd.DataFrame(
             np.log(
-                posterior_samples[kinetics].squeeze()[
+                posterior_samples[parameter].squeeze()[
                     :, np.isin(adata.var_names, list(geneset))
                 ],
             ),
             columns=adata.var_names[np.isin(adata.var_names, list(geneset))],
         )
-        df = df.apply(lambda x: x - x.mean())
+        # df = df.apply(lambda x: x - x.mean())
         df_long = df.melt(var_name="index", value_name="value")
         logger.debug(df_long.head())
         df_long["index"] = pd.Categorical(
@@ -51,7 +62,7 @@ def plot_parameter_posterior_distributions(
                 df_long["index"].astype(str).apply(lambda x: f"g_{int(x)}")
             )
             logger.warning(
-                f"Converted integer index to string 'g_int' for {kinetics}"
+                f"Converted integer index to string 'g_int' for {parameter}"
             )
         else:
             pass
@@ -63,8 +74,9 @@ def plot_parameter_posterior_distributions(
             ax=ax[index],
         )
         ax1.set_xticklabels(ax1.get_xticklabels(), rotation=30, ha="right")
-        ax1.set_ylabel(kinetics)
+        ax1.set_ylabel(parameter)
         ax1.set_xlabel("")
+
     fig.subplots_adjust(
         hspace=0.4, wspace=0.45, left=0.08, right=0.95, top=0.9, bottom=0.15
     )
