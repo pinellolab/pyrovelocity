@@ -34,7 +34,7 @@ COPY . /root
 # development
 RUN pip install --no-deps -e .
 # distribution
-# RUN pip install pyrovelocity==0.3.0b1
+# RUN pip install pyrovelocity==0.3.0b2
 
 ARG tag
 ENV FLYTE_INTERNAL_IMAGE $tag
