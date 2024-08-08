@@ -22,15 +22,15 @@ def plot_parameter_posterior_distributions(
     adata: AnnData,
     geneset: List[str],
     parameter_uncertainty_plot: PathLike | str,
-) -> FigureBase:
-    parameter_names = [
+    parameter_names: List[str] = [
         "alpha",
         "beta",
         "gamma",
         "u_offset",
         "s_offset",
         "t0",
-    ]
+    ],
+) -> FigureBase:
     parameters = [
         parameter
         for parameter in parameter_names
