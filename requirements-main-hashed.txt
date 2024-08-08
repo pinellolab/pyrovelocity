@@ -99,6 +99,9 @@ alabaster==0.7.13 ; python_version >= "3.11" and python_version < "3.13" \
 alembic==1.10.4 ; python_version >= "3.11" and python_version < "3.13" \
     --hash=sha256:295b54bbb92c4008ab6a7dcd1e227e668416d6f84b98b3c4446a2bc6214a556b \
     --hash=sha256:43942c3d4bf2620c466b91c0f4fca136fe51ae972394a0cc8b90810d664e4f5c
+altair==5.3.0 ; python_version >= "3.11" and python_version < "3.13" \
+    --hash=sha256:5a268b1a0983b23d8f9129f819f956174aa7aea2719ed55a52eba9979b9f6675 \
+    --hash=sha256:7084a1dab4d83c5e7e5246b92dc1b4451a6c68fd057f3716ee9d315c8980e59a
 aniso8601==9.0.1 ; python_version >= "3.11" and python_version < "3.13" \
     --hash=sha256:1d2b7ef82963909e93c4f24ce48d4de9e66009a21bf1c1e1c85bdd0812fe412f \
     --hash=sha256:72e3117667eedf66951bb2d93f4296a56b94b078a8a95905a052611fb3f1b973
