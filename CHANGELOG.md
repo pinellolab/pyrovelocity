@@ -1,5 +1,70 @@
 # Changelog
 
+## [0.3.0-beta.2](https://github.com/pinellolab/pyrovelocity/compare/v0.3.0-beta.1...v0.3.0-beta.2) (2024-08-08)
+
+
+### Features
+
+* **analyze:** add function to extract top mae genes ([508f1ba](https://github.com/pinellolab/pyrovelocity/commit/508f1ba43e741c54c2ae91d7c3c2ede79dbf281c))
+* **io:** add cluster module ([b98ca30](https://github.com/pinellolab/pyrovelocity/commit/b98ca30b974e0966e2da6ccae6a73740e0689ccf))
+* **nbs:** add support for model comparison to pancreas notebook ([7cb5f77](https://github.com/pinellolab/pyrovelocity/commit/7cb5f7726d7fb1962d4e2358d8b0cd09d5cf2a08))
+* **nbs:** initialize downsampled pancreas tutorial ([f7a0006](https://github.com/pinellolab/pyrovelocity/commit/f7a000676a6623cb432f34475eb6dd4e3f9bc355))
+* **plots:** add normalized data to rainbow plot ([7ddc5f0](https://github.com/pinellolab/pyrovelocity/commit/7ddc5f0079a584ba940500cdd4a3a10159e388e2))
+* **plots:** add option to plot log spliced data to rainbow plot ([6226003](https://github.com/pinellolab/pyrovelocity/commit/62260033cc906944fc9a76b80d1b6860de38cc7a))
+* **summarize:** save gene ranking table to csv ([98f5bd6](https://github.com/pinellolab/pyrovelocity/commit/98f5bd64949b3076632fa915ef031ac0c8f5a255))
+* **tasks:** save parameter posterior means to dataframe ([90813c6](https://github.com/pinellolab/pyrovelocity/commit/90813c6010a479c394441f6213379b29eb201e3c))
+* **utils:** add function to save parameter posterior means to dataframe ([d3e4537](https://github.com/pinellolab/pyrovelocity/commit/d3e4537e29cd7e433393950b92757d64be57a9ee))
+
+
+### Bug Fixes
+
+* **analysis:** get top mae genes by correlation bin ([be165a7](https://github.com/pinellolab/pyrovelocity/commit/be165a7b654e7981d09f7cbd02d336802cc0c9b9))
+* **analysis:** remove cell marker comments ([1b70c45](https://github.com/pinellolab/pyrovelocity/commit/1b70c45d11cb7e7363f7c185bb74403624ac98f3))
+* **bazel:** add marker to args ([63e0c5b](https://github.com/pinellolab/pyrovelocity/commit/63e0c5bea85bc9048c521df0048cdef044a719e4))
+* **bazel:** migrate tests <5 min to size medium ([404025f](https://github.com/pinellolab/pyrovelocity/commit/404025f351b50407fb3aa7aab6e03ad45c04a112))
+* **bazel:** remove small/large duplicate test module ([547af88](https://github.com/pinellolab/pyrovelocity/commit/547af88ad63de302883ffb057b7959a51d9b2b3d))
+* **cid:** set sha-specific concurrency groups for workflow execution ([30ad7ce](https://github.com/pinellolab/pyrovelocity/commit/30ad7cea16a8f78cbddaec3ef4caf914f132c048))
+* **io:** add doctest for get_remote_task_results ([f4d8e7f](https://github.com/pinellolab/pyrovelocity/commit/f4d8e7f99ac2128a044c0679e5adf98115791fac))
+* **io:** allow specification of a download filename prefix ([d0d5439](https://github.com/pinellolab/pyrovelocity/commit/d0d5439ff927f2db41d33a8cd8002e97735193d0))
+* **io:** include csv files in default model summary archive ([8b7c809](https://github.com/pinellolab/pyrovelocity/commit/8b7c8093605cefd41c3fe6ca0ec505a3bd453ab0))
+* **io:** use tmp dir fixture for compressedpickle doctests ([f678036](https://github.com/pinellolab/pyrovelocity/commit/f67803665aeba31f9b75189df551a8a1de9d7ba0))
+* **make:** run slow tests with test-cov-xml target ([bc58fed](https://github.com/pinellolab/pyrovelocity/commit/bc58fedd6ac3ea954bc4fcdd4834e79eff396233))
+* **models:** remove unused branching in generate_posterior_samples method ([4a924e3](https://github.com/pinellolab/pyrovelocity/commit/4a924e3814644748855b03c5da4c86918d569988))
+* **nbs:** add parameter posterior estimates to pancreas results ([65246de](https://github.com/pinellolab/pyrovelocity/commit/65246defbcb8ed6eb70ec2dc6bc8fe02269f1ea1))
+* **nbs:** add stub for preprocessing notebook ([cf23251](https://github.com/pinellolab/pyrovelocity/commit/cf232510a0d520ac69aa3cb8ff0e8eaefa64e74d))
+* **nbs:** separate references to preprocessing and results ([afc6bc9](https://github.com/pinellolab/pyrovelocity/commit/afc6bc9ac7cbe16e4a8309da4e86a348a7a39f7c))
+* **nbs:** use subdirectory for pancreas tutorial ([94427a8](https://github.com/pinellolab/pyrovelocity/commit/94427a8f0ec8fdded75c32d211b2f0415ea6cbe0))
+* **nix:** add workflows to check groups ([be3645e](https://github.com/pinellolab/pyrovelocity/commit/be3645e2c1cd5b3c1b3b5399bb0bf62ced978538))
+* **plots:** add option to save gene ranking plot ([50a71cf](https://github.com/pinellolab/pyrovelocity/commit/50a71cfc41e1491751aabdf5fb42bf97fd1c5118))
+* **plots:** add option to save rainbow plot ([ffdd829](https://github.com/pinellolab/pyrovelocity/commit/ffdd8290008363c89e6bb97e4644e3d4ab42847a))
+* **plots:** default to highest and lowest shared time correlation genes in summary plot ([d5aae5c](https://github.com/pinellolab/pyrovelocity/commit/d5aae5c9749b458c2966c325d66f3223614ae5a6))
+* **plots:** disable normalized data on summary plot ([443ac27](https://github.com/pinellolab/pyrovelocity/commit/443ac277a267fbe89f391789ae9b8613fb5cd207))
+* **plots:** enable offset parameters in posterior distribution plots ([fe25b4c](https://github.com/pinellolab/pyrovelocity/commit/fe25b4c8b3bb19ed6a1f90a23aae92dfd9cf8368))
+* **plots:** ensure data is a dense array before flattening ([feaa936](https://github.com/pinellolab/pyrovelocity/commit/feaa936fea2b1fc2e2357ae06dc7b1de1cfea976))
+* **plots:** ensure path for posterior predictive phase portraits ([68493c2](https://github.com/pinellolab/pyrovelocity/commit/68493c29641be15947ecf40a9e3e4a8ad58edaaa))
+* **plots:** make parameter names an argument of posterior plot function ([c2c35f5](https://github.com/pinellolab/pyrovelocity/commit/c2c35f5aa8c5b9058104d3ffb347c1edfcdc164c))
+* **plots:** use cividis in plot posterior time ([68c90ef](https://github.com/pinellolab/pyrovelocity/commit/68c90efd496f4f0176cf5015878ebeed7babaf87))
+* **pyproject:** note intention to exclude markers associated with slow tests ([057af3d](https://github.com/pinellolab/pyrovelocity/commit/057af3db2246c0dbd4e7de7f3f594a41d281bbd6))
+* **pyproject:** temporarily pin yanked matplotlib 3.9.1 ([2dedb66](https://github.com/pinellolab/pyrovelocity/commit/2dedb66c514f88ac104e59093ade454c180b056e))
+* **summarize:** pareto_frontier_genes -> top_mae_genes ([d5c3896](https://github.com/pinellolab/pyrovelocity/commit/d5c3896d26b035bb01f34549da1b27c9628c892a))
+* **summarize:** use mae percentiles and min genes per bin in marker gene selection ([0dfef1e](https://github.com/pinellolab/pyrovelocity/commit/0dfef1ebc7386f634921e10da333f37da7c31f3a))
+* **tasks:** declare skip preprocess doctest once ([49be02f](https://github.com/pinellolab/pyrovelocity/commit/49be02fb92401324b69daf0236b10b580ac3e3e4))
+* **tasks:** download_dataset accepts Path type ([846d5a7](https://github.com/pinellolab/pyrovelocity/commit/846d5a704419e1a39cb1a25a82962187bfef3519))
+* **tasks:** enable nested mlflow runs ([fcbbede](https://github.com/pinellolab/pyrovelocity/commit/fcbbede9705f8fd45d3b675db4f13bbe3d8810a1))
+* **tasks:** enable Path objects where applicable ([4096175](https://github.com/pinellolab/pyrovelocity/commit/4096175250a9bd9630525b6aa652d27de2ae364e))
+* **tasks:** remove ad hoc modification of posterior samples ([7738f5c](https://github.com/pinellolab/pyrovelocity/commit/7738f5c658c0ec89e82924fc6b004fe7f5e49c50))
+* **tasks:** remove manual figure write ([29de76b](https://github.com/pinellolab/pyrovelocity/commit/29de76b16ba717a551ec79ad88498869b7747dc6))
+* **tasks:** remove redundant logic to save rainbow plot in summarize task ([591e759](https://github.com/pinellolab/pyrovelocity/commit/591e759ad51c79c44ee37755425731c385b2c193))
+* **tasks:** remove unused t0 from model1 posterior samples ([583f786](https://github.com/pinellolab/pyrovelocity/commit/583f7869e62145e718a9447da8d4b2820d349a68))
+* **tasks:** skip postprocess dataset xdoctest ([d8a8fc1](https://github.com/pinellolab/pyrovelocity/commit/d8a8fc11fe93c106a324bde3ded62c8008d94982))
+* **tasks:** update args and examples for summarize dataset ([4a51e02](https://github.com/pinellolab/pyrovelocity/commit/4a51e023b769521c60fe6e76d7c67cf16342b40d))
+* **tests:** add in-memory fixtures used by plotting modules ([41176ff](https://github.com/pinellolab/pyrovelocity/commit/41176ff5ba9e08c7d8409569ed8ac218b9188d7b))
+* **tests:** remove gene number specification ([32008d6](https://github.com/pinellolab/pyrovelocity/commit/32008d695da7252ad0d3f85c01aeacd616ad6b1a))
+* **workflows:** disable flyte decks causing type error ([5ca26ff](https://github.com/pinellolab/pyrovelocity/commit/5ca26ff361e3e240ff612fed577b1c2190abaeb4))
+* **workflows:** disable upload summary cache ([c8b8548](https://github.com/pinellolab/pyrovelocity/commit/c8b8548144588f46ad61c10f1664a1f2d94c6777))
+* **workflows:** explicitly include csv in model summary archive ([22de101](https://github.com/pinellolab/pyrovelocity/commit/22de101e062d7a1e337dc9d36ce42d8a87d479b5))
+* **workflows:** toggle data subset flag on ([ceb7524](https://github.com/pinellolab/pyrovelocity/commit/ceb7524f5dbc42332c4d44af23d5641b3c6c46d7))
+
 ## [0.3.0-beta.1](https://github.com/pinellolab/pyrovelocity/compare/v0.2.1-beta.1...v0.3.0-beta.1) (2024-07-30)
 
 
