@@ -8300,6 +8300,43 @@ files = [
 ]
 
 [[package]]
+name = "tiledb"
+version = "0.31.1"
+description = "Pythonic interface to the TileDB array storage manager"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "tiledb-0.31.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:816b715893f657876ac67490ea300e233febcf6cc2b71743339d1930700b7bfa"},
+    {file = "tiledb-0.31.1-cp310-cp310-macosx_11_0_x86_64.whl", hash = "sha256:6a5b6730f2476fdd5dd958648aee43b6d3fddcd755f25a293210327bf354eb24"},
+    {file = "tiledb-0.31.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:298b5ec9a71fef2be96895fdbceec42310a3679c44b4e149d409e2c1f7ef26c7"},
+    {file = "tiledb-0.31.1-cp310-cp310-win_amd64.whl", hash = "sha256:7a7b0741f3765097db43d5f69a62b13eea7f664237b6aedb7f37abd140bb7188"},
+    {file = "tiledb-0.31.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:fe1f321bd4ab0bbb9e3c216e1ae26c5dad7b62307f568dabe93dade25714d8a4"},
+    {file = "tiledb-0.31.1-cp311-cp311-macosx_11_0_x86_64.whl", hash = "sha256:061adc8c5734ab21634ea88a2e59b7e25ce256913fd2e4a9745ba4015c2af09d"},
+    {file = "tiledb-0.31.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4dbf5429d6c2dba29de3844c8096c92f14e961c39305b2a854f13b2ed926e57c"},
+    {file = "tiledb-0.31.1-cp311-cp311-win_amd64.whl", hash = "sha256:cc263960a1497915fcd1ea7a206656cde4445754e81017b64ebc2db310fa1890"},
+    {file = "tiledb-0.31.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:1e9a5f0a692a5282f95861378645fb9ca3823e1e6e3271e694165ce41e3fdf53"},
+    {file = "tiledb-0.31.1-cp312-cp312-macosx_11_0_x86_64.whl", hash = "sha256:77a8e8b29b2ed5c3bc1128c0018791c9e46fcd3ca8f1f73b0795d709e287ab8c"},
+    {file = "tiledb-0.31.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0cf1fffad7e660e97499ed3dbf4b82e59c5ed827735ec04ee70cb2415cd862d8"},
+    {file = "tiledb-0.31.1-cp312-cp312-win_amd64.whl", hash = "sha256:630a3b9a1bb8c03643820af437e4fc0c7438d6bcccc61b71cba9b25c648c3ea2"},
+    {file = "tiledb-0.31.1-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:25c14d8843e02756157bc2b8952eba330762832fb9b7f9a0b94ef092169e4546"},
+    {file = "tiledb-0.31.1-cp38-cp38-macosx_11_0_x86_64.whl", hash = "sha256:3292061570a37daab28a58a9714f8ddf4872f7973a517dea10e7d165162d3cb5"},
+    {file = "tiledb-0.31.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3af777b39948e5dc35a96183cdbb3f350d4b81206b426957d0380ce84cfebfe5"},
+    {file = "tiledb-0.31.1-cp38-cp38-win_amd64.whl", hash = "sha256:cbce4457b599cdbef2f9ac75735dc74e635fc674c908d6582f0d8b6fcb4993c6"},
+    {file = "tiledb-0.31.1-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:073cf6f2d9e010f0d72c41327de64e71835711e45e5ac633814923652575c770"},
+    {file = "tiledb-0.31.1-cp39-cp39-macosx_11_0_x86_64.whl", hash = "sha256:ede19e1c51298389560e20105a2385d5a8024eb97fd86d997f96c95cb1e599ce"},
+    {file = "tiledb-0.31.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:56918177527fe43dcd00a4db7f7ceac02b71edd114d54ce8a2647f077e40802c"},
+    {file = "tiledb-0.31.1-cp39-cp39-win_amd64.whl", hash = "sha256:d019800f9f2166792d868ec485b781f1ab902342bf188cb24a3f235cd7cc7c13"},
+    {file = "tiledb-0.31.1.tar.gz", hash = "sha256:7b9ddd32c4c7437111764645d8a042d603102a813c8b89addaf9a15bd40dd939"},
+]
+
+[package.dependencies]
+numpy = {version = ">=1.25", markers = "python_version >= \"3.9\""}
+
+[package.extras]
+doc = ["Sphinx", "breathe", "jinja2 (==3.0.0)", "sphinx-rtd-theme (==2.0.0)"]
+test = ["hypothesis", "pandas", "psutil", "pyarrow", "pytest"]
+
+[[package]]
 name = "tinycss2"
 version = "1.2.1"
 description = "A tiny CSS parser"
@@ -9251,4 +9288,4 @@ workflows = ["dataclasses-json", "dulwich", "flytekit", "google-api-python-clien
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "41b4ca410e3ed0b169375a548dbc8e3d231ec78134eb7cb73fe3de437cc4f4f4"
+content-hash = "daf05cb3147407d6383bb6a0fff15e7e478f6bd6dd8e65a16d30fcbfd0db1043"
