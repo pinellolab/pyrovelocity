@@ -15,7 +15,7 @@
 version: 1
 metadata:
   content_hash:
-    linux-64: 372f1ed8422c026a9a4e974480059c816a6e68b2132e1ae2e8a3a1dcdc0d5686
+    linux-64: e318ad2ba0b2694333c67d30e9b4bc201389c1087e6aac3cf862eddb13197ee0
   channels:
   - url: pytorch
     used_env_vars: []
@@ -714,6 +714,22 @@ package:
     sha256: 1adc2ed55fe36e466f36106568cb05cce4f8f21391bb7acddf64d08a69d6eec2
   category: workflows
   optional: true
+- name: azure-core-cpp
+  version: 1.13.0
+  manager: conda
+  platform: linux-64
+  dependencies:
+    __glibc: '>=2.17,<3.0.a0'
+    libcurl: '>=8.8.0,<9.0a0'
+    libgcc-ng: '>=12'
+    libstdcxx-ng: '>=12'
+    openssl: '>=3.3.1,<4.0a0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/azure-core-cpp-1.13.0-h935415a_0.conda
+  hash:
+    md5: debd1677c2fea41eb2233a260f48a298
+    sha256: b7e0a22295db2e1955f89c69cefc32810309b3af66df986d9fb75d89f98a80f7
+  category: main
+  optional: false
 - name: azure-datalake-store
   version: 0.0.51
   manager: conda
@@ -746,6 +762,22 @@ package:
     sha256: d57802f1f3b96c57d867cfb0b782c103936fb62fa9da3c456ebe17a202b045fc
   category: workflows
   optional: true
+- name: azure-identity-cpp
+  version: 1.8.0
+  manager: conda
+  platform: linux-64
+  dependencies:
+    __glibc: '>=2.17,<3.0.a0'
+    azure-core-cpp: '>=1.13.0,<1.13.1.0a0'
+    libgcc-ng: '>=12'
+    libstdcxx-ng: '>=12'
+    openssl: '>=3.3.1,<4.0a0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/azure-identity-cpp-1.8.0-hd126650_2.conda
+  hash:
+    md5: 36df3cf05459de5d0a41c77c4329634b
+    sha256: f85452eca3ae0e156b1d1a321a1a9f4f58d44ff45236c0d8602ab96aaad3c6ba
+  category: main
+  optional: false
 - name: azure-storage-blob
   version: 12.22.0
   manager: conda
@@ -762,6 +794,39 @@ package:
     sha256: d3c6aaad90d45f7af6adab3da7f6831f0b3e9cd9e3076826f12b5afe7f66b701
   category: workflows
   optional: true
+- name: azure-storage-blobs-cpp
+  version: 12.12.0
+  manager: conda
+  platform: linux-64
+  dependencies:
+    __glibc: '>=2.17,<3.0.a0'
+    azure-core-cpp: '>=1.13.0,<1.13.1.0a0'
+    azure-storage-common-cpp: '>=12.7.0,<12.7.1.0a0'
+    libgcc-ng: '>=12'
+    libstdcxx-ng: '>=12'
+  url: https://conda.anaconda.org/conda-forge/linux-64/azure-storage-blobs-cpp-12.12.0-hd2e3451_0.conda
+  hash:
+    md5: 61f1c193452f0daa582f39634627ea33
+    sha256: 69a0f5c2a08a1a40524b343060debb8d92295e2cc5805c3db56dad7a41246a93
+  category: main
+  optional: false
+- name: azure-storage-common-cpp
+  version: 12.7.0
+  manager: conda
+  platform: linux-64
+  dependencies:
+    __glibc: '>=2.17,<3.0.a0'
+    azure-core-cpp: '>=1.13.0,<1.13.1.0a0'
+    libgcc-ng: '>=12'
+    libstdcxx-ng: '>=12'
+    libxml2: '>=2.12.7,<3.0a0'
+    openssl: '>=3.3.1,<4.0a0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/azure-storage-common-cpp-12.7.0-h10ac4d7_1.conda
+  hash:
+    md5: ab6d507ad16dbe2157920451d662e4a1
+    sha256: 1030fa54497a73eb78c509d451f25701e2e781dc182e7647f55719f1e1f9bee8
+  category: main
+  optional: false
 - name: backoff
   version: 2.2.1
   manager: conda
@@ -2276,6 +2341,20 @@ package:
     sha256: ce4f39020f3a768b34ad32d19514d8ee29b3351fd89fd4d6f5e33223dc4f67b3
   category: workflows
   optional: true
+- name: fmt
+  version: 11.0.2
+  manager: conda
+  platform: linux-64
+  dependencies:
+    __glibc: '>=2.17,<3.0.a0'
+    libgcc-ng: '>=12'
+    libstdcxx-ng: '>=12'
+  url: https://conda.anaconda.org/conda-forge/linux-64/fmt-11.0.2-h434a139_0.conda
+  hash:
+    md5: 995f7e13598497691c1dc476d889bc04
+    sha256: c620e2ab084948985ae9b8848d841f603e8055655513340e04b6cf129099b5ca
+  category: main
+  optional: false
 - name: font-ttf-dejavu-sans-mono
   version: '2.37'
   manager: conda
@@ -8086,6 +8165,21 @@ package:
     sha256: 69717fb862bff834197f2aa627f64b38221d91ec6be435968b71f72998e2f5fa
   category: main
   optional: false
+- name: spdlog
+  version: 1.14.1
+  manager: conda
+  platform: linux-64
+  dependencies:
+    __glibc: '>=2.17,<3.0.a0'
+    fmt: '>=11.0.1,<12.0a0'
+    libgcc-ng: '>=12'
+    libstdcxx-ng: '>=12'
+  url: https://conda.anaconda.org/conda-forge/linux-64/spdlog-1.14.1-hed91bc2_1.conda
+  hash:
+    md5: 909188c8979846bac8e586908cf1ca6a
+    sha256: 0c604fe3f78ddb2b612841722bd9b5db24d0484e30ced89fac78c0a3f524dfd6
+  category: main
+  optional: false
 - name: sqlalchemy
   version: 2.0.32
   manager: conda
@@ -8357,6 +8451,57 @@ package:
   hash:
     md5: df68d78237980a159bd7149f33c0e8fd
     sha256: 45e402941f6bed094022c5726a2ca494e6224b85180d2367fb6ddd9aea68079d
+  category: main
+  optional: false
+- name: tiledb
+  version: 2.25.0
+  manager: conda
+  platform: linux-64
+  dependencies:
+    __glibc: '>=2.17,<3.0.a0'
+    aws-crt-cpp: '>=0.27.3,<0.27.4.0a0'
+    aws-sdk-cpp: '>=1.11.379,<1.11.380.0a0'
+    azure-core-cpp: '>=1.13.0,<1.13.1.0a0'
+    azure-identity-cpp: '>=1.8.0,<1.8.1.0a0'
+    azure-storage-blobs-cpp: '>=12.12.0,<12.12.1.0a0'
+    azure-storage-common-cpp: '>=12.7.0,<12.7.1.0a0'
+    bzip2: '>=1.0.8,<2.0a0'
+    fmt: '>=11.0.2,<12.0a0'
+    libabseil: '>=20240116.2,<20240117.0a0'
+    libcurl: '>=8.9.1,<9.0a0'
+    libgcc-ng: '>=12'
+    libgoogle-cloud: '>=2.26.0,<2.27.0a0'
+    libgoogle-cloud-storage: '>=2.26.0,<2.27.0a0'
+    libstdcxx-ng: '>=12'
+    libwebp-base: '>=1.4.0,<2.0a0'
+    libzlib: '>=1.3.1,<2.0a0'
+    lz4-c: '>=1.9.3,<1.10.0a0'
+    openssl: '>=3.3.1,<4.0a0'
+    spdlog: '>=1.14.1,<1.15.0a0'
+    zstd: '>=1.5.6,<1.6.0a0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/tiledb-2.25.0-hf86781e_5.conda
+  hash:
+    md5: 6e7569c2102b01711f42fca472dcfaac
+    sha256: bbec8077a362e3af094ecb78c433a1c639aaeb02b6e9ee7d4c4db11df6a3d66d
+  category: main
+  optional: false
+- name: tiledb-py
+  version: 0.31.1
+  manager: conda
+  platform: linux-64
+  dependencies:
+    __glibc: '>=2.17,<3.0.a0'
+    libgcc-ng: '>=12'
+    libstdcxx-ng: '>=12'
+    numpy: '>=1.23.5,<2.0a0'
+    packaging: ''
+    python: '>=3.11,<3.12.0a0'
+    python_abi: 3.11.*
+    tiledb: '>=2.25.0,<2.26.0a0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/tiledb-py-0.31.1-py311hd51cee5_0.conda
+  hash:
+    md5: c55163462d37c2bdd6afb28c0fcd869c
+    sha256: ff04c8226fab3e9b687cd116a9675d571cf8d0e9a7d51b21efc45f5ceb242830
   category: main
   optional: false
 - name: tinycss2
