@@ -26,3 +26,28 @@ format:
 from IPython.display import Image, display
 ``` 
 
+# Download data
+
+```{python}
+# | label: download-data
+import polars as pl
+import altair as alt
+
+alt.data_transformers.enable("vegafusion")
+
+flights = pl.read_parquet(
+    "https://vegafusion-datasets.s3.amazonaws.com/vega/flights_1m.parquet"
+)
+```
+
+# Make plots
+
+```{python}
+# | label: make-plots
+delay_hist = (
+    alt.Chart(flights)
+    .mark_bar()
+    .encode(alt.X("delay", bin=alt.Bin(maxbins=30)), alt.Y("count()"))
+)
+delay_hist
+```
