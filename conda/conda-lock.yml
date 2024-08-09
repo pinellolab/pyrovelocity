@@ -15,7 +15,7 @@
 version: 1
 metadata:
   content_hash:
-    linux-64: 3d790ad23049b76a377df48f28e7bcf003ce7b2cbb13c5b49db585568a87898e
+    linux-64: f9dba1835ab4cb9f57240640ea2e1e430c3e9eae946251fe3b48667414acbdb4
   channels:
   - url: pytorch
     used_env_vars: []
@@ -222,39 +222,6 @@ package:
   hash:
     md5: 349c74f4f918e28bc0d3c5aa4bc3487b
     sha256: e0ee5efa2583c44991b92db49f5bf552c7152a46750fd8b982aa98e2498769cc
-  category: main
-  optional: false
-- name: altair-all
-  version: 5.3.0
-  manager: conda
-  platform: linux-64
-  dependencies:
-    altair: 5.3.0
-    altair_tiles: '>=0.3.0'
-    pyarrow: '>=11'
-    python: ''
-    vegafusion: '>=1.6.6'
-    vegafusion-python-embed: ''
-    vl-convert-python: '>=1.3.0'
-  url: https://conda.anaconda.org/conda-forge/noarch/altair-all-5.3.0-pyhd8ed1ab_0.conda
-  hash:
-    md5: 627e99f8b21efe60ecb6b2a6233b864f
-    sha256: 52e777c13e7ed5a21deef6b5819380b1c1582fd8a25124c26502fa630f672665
-  category: main
-  optional: false
-- name: altair_tiles
-  version: 0.3.0
-  manager: conda
-  platform: linux-64
-  dependencies:
-    altair: ''
-    mercantile: ''
-    python: '>=3.8'
-    xyzservices: ''
-  url: https://conda.anaconda.org/conda-forge/noarch/altair_tiles-0.3.0-pyhd8ed1ab_0.conda
-  hash:
-    md5: 9ca668f79c5f15812e699913f0a01a4e
-    sha256: 57bf7362fa06239e0a07265001cae01b01251258368dd5fc7d8319b106ace19a
   category: main
   optional: false
 - name: aniso8601
@@ -5502,20 +5469,6 @@ package:
     sha256: 64073dfb6bb429d52fff30891877b48c7ec0f89625b1bf844905b66a81cce6e1
   category: main
   optional: false
-- name: mercantile
-  version: 1.2.1
-  manager: conda
-  platform: linux-64
-  dependencies:
-    click: '>=3.0'
-    python: '>=3.6'
-    setuptools: ''
-  url: https://conda.anaconda.org/conda-forge/noarch/mercantile-1.2.1-pyhd8ed1ab_0.tar.bz2
-  hash:
-    md5: aa20d014b5bd1924727dd86467648a27
-    sha256: 372275c3b0b0e5028cd25a87a23b23311b3412e556f8ee1768473e7634fb94ea
-  category: main
-  optional: false
 - name: mistune
   version: 3.0.2
   manager: conda
@@ -9348,18 +9301,6 @@ package:
   hash:
     md5: f08fb5c89edfc4aadee1c81d4cfb1fa1
     sha256: 6fe74a8fd84ab0dc25e4dc3e0c22388dd8accb212897a208b14fe5d4fbb8fc2f
-  category: main
-  optional: false
-- name: xyzservices
-  version: 2024.6.0
-  manager: conda
-  platform: linux-64
-  dependencies:
-    python: '>=3.8'
-  url: https://conda.anaconda.org/conda-forge/noarch/xyzservices-2024.6.0-pyhd8ed1ab_0.conda
-  hash:
-    md5: de631703d59e40af41c56c4b4e2928ab
-    sha256: da2e54cb68776e62a708cb6d5f026229d8405ff4cfd8a2446f7d386f07ebc5c1
   category: main
   optional: false
 - name: xz
