@@ -1,0 +1,17 @@
+_extensions/
+.jupyter_cache/
+.quarto/
+/*_files/
+sn-*.bst
+sn-*.cls
+index.*
+!index.qmd
+*.docx
+*.pdf*
+*.html
+*.tex
+*.zst
+*.*.md
+/data/
+/models/
+/reports/
