@@ -126,7 +126,7 @@ website:
         - text: "Data Access"
           href: guides/data.qmd
         - text: "Preprocessing"
-          href: guides/preprocessing.qmd
+          href: guides/preprocessing/preprocessing.qmd
         - text: "Inference"
           href: guides/inference.qmd
         - text: "Postprocessing"
@@ -226,7 +226,7 @@ website:
             - text: "Data Access"
               href: guides/data.qmd
             - text: "Preprocessing"
-              href: guides/preprocessing.qmd
+              href: guides/preprocessing/preprocessing.qmd
             - text: "Inference"
               href: guides/inference.qmd
             - text: "Postprocessing"
