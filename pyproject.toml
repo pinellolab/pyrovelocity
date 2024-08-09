@@ -25,7 +25,7 @@ Changelog = "https://github.com/pinellolab/pyrovelocity/releases"
 [tool.poetry.dependencies]
 python = ">=3.11, <3.13"
 adjusttext = ">=1.1.1"
-altair = { extras = ["all"], version = ">=5.3.0" }
+altair = ">=5.3.0"
 anndata = ">=0.10.5"
 anyio = ">=4.3.0"
 appdirs = ">=1.4.4"
@@ -106,6 +106,9 @@ torch = { version = ">=2.1.2", python = "<3.12" }
 torchmetrics = ">=1.2.1"
 trio = ">=0.26.0"
 validators = ">=0.33.0"
+vegafusion = ">=1.6.9"
+vegafusion-python-embed = ">=1.6.9"
+vl-convert-python = ">=1.6.0"
 zstandard = ">=0.23.0"
 # removed from library at
 # cospar = { version = ">=0.1.9", source = "pypi" }
@@ -359,7 +362,6 @@ virtual_package_spec = "conda/virtual-packages.yml"
 [tool.conda-lock.dependencies]
 python = ">=3.11, <3.12"
 pip = ">=23.2"
-altair-all = ">=5.3.0"
 # jax "<0.4.27" required
 # when using conda-lock
 # due to https://github.com/google/jax/issues/21116
