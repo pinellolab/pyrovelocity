@@ -46,9 +46,9 @@ to install the uv CLI for your platform, you can install a supported python
 version, create a virtual environment, and install pyrovelocity from a blank directory with the following commands
 
 ```bash
-echo "3.10" > .python-version
+echo "3.11" > .python-version
 uv python install
-uv venv -p 3.10
+uv venv -p 3.11
 source .venv/bin/activate
 uv pip install pyrovelocity
 ```
@@ -98,7 +98,7 @@ you can create a virtual environment, activate it, and install pyrovelocity with
 
 ```bash
 alias mm=micromamba
-mm create -n pyrovelocity python=3.10
+mm create -n pyrovelocity python=3.11
 mm activate pyrovelocity
 mm install -c conda-forge pyrovelocity
 ```
