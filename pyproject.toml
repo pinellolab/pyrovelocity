@@ -362,6 +362,7 @@ virtual_package_spec = "conda/virtual-packages.yml"
 [tool.conda-lock.dependencies]
 python = ">=3.11, <3.12"
 pip = ">=23.2"
+fmt = ">=10.2.1,<11.0"
 # jax "<0.4.27" required
 # when using conda-lock
 # due to https://github.com/google/jax/issues/21116
