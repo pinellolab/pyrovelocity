@@ -1,0 +1,28 @@
+---
+title: Preprocessing
+execute: 
+  freeze: true
+  eval: true
+  warning: false
+  error: false
+  cache: true
+toc: true
+number-sections: true
+highlight-style: gruvbox
+csl: ../../bibstyle.csl
+lightbox: auto
+format:
+  html:
+    html-math-method: katex
+  ipynb: default
+---
+
+```{python}
+#| label: enable-autoreload
+#| code-fold: true
+#| output: false
+%load_ext autoreload
+%autoreload 2 
+from IPython.display import Image, display
+``` 
+
