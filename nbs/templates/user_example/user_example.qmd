@@ -104,7 +104,7 @@ They are exclusively used for compatibility with Google Colab\'s section folding
 Installation should take less than **10 minutes**. 
 
 ::: {#nte-installation .callout-note collapse=true title="Installing pyrovelocity"}
-If you are running on a local or remote Jupyter server outside of Google Colab, we assume you have already installed pyrovelocity in the same environment in which the Jupyter kernel is running. If you have not, ensure you are in a virtual environment with python 3.10 active (we recommend [pyenv][pyenv] or [miniforge][miniforge]), and then you can install the development version from github with
+If you are running on a local or remote Jupyter server outside of Google Colab, we assume you have already installed pyrovelocity in the same environment in which the Jupyter kernel is running. If you have not, ensure you are in a virtual environment with python 3.11 active (we recommend [pyenv][pyenv] or [miniforge][miniforge]), and then you can install the development version from github with
 
 
 ```bash
