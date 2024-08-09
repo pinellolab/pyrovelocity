@@ -1,4 +1,5 @@
 import contextlib
+import difflib
 import importlib
 import inspect
 import io
@@ -9,7 +10,6 @@ from numbers import Integral, Real
 from pathlib import Path
 from pprint import pprint
 from types import FunctionType, ModuleType
-from typing import Callable, Dict, List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,6 +21,7 @@ import seaborn as sns
 import yaml
 from anndata._core.anndata import AnnData
 from beartype import beartype
+from beartype.typing import Callable, Dict, List, Tuple
 from einops import EinopsError, reduce
 from jaxtyping import ArrayLike
 from scvi.data import synthetic_iid
@@ -210,6 +211,42 @@ def print_config_tree(
 
 
 @beartype
+def print_string_diff(
+    text1: str,
+    text2: str,
+    diff_title: str = "Diff",
+    theme: str = "nord-darker",
+    max_width: int = 148,
+    diff_context_lines: int = 3,
+):
+    console = rich.console.Console(width=max_width)
+
+    diff = list(
+        difflib.unified_diff(
+            text1.splitlines(keepends=True),
+            text2.splitlines(keepends=True),
+            lineterm="",
+            n=diff_context_lines,
+        )
+    )
+
+    diff_text = "".join(diff)
+
+    syntax = rich.syntax.Syntax(diff_text, "diff", theme=theme, word_wrap=True)
+
+    panel = rich.panel.Panel(
+        syntax,
+        title=diff_title,
+        border_style="grey62",
+        padding=(1, 1),
+        expand=False,
+        box=rich.box.ROUNDED,
+    )
+
+    console.print(panel)
+
+
+@beartype
 def print_docstring(
     obj: Callable | ModuleType,
     theme: str = "nord-darker",
@@ -263,7 +300,17 @@ def filter_startswith_dict(dictionary_with_underscore_keys):
     }
 
 
-def print_anndata(anndata_obj):
+@beartype
+def print_anndata(
+    anndata_obj: AnnData,
+):
+    logger.info(anndata_string(anndata_obj))
+
+
+@beartype
+def anndata_string(
+    anndata_obj: AnnData,
+) -> str:
     """
     Print a formatted representation of an AnnData object.
 
@@ -320,7 +367,7 @@ def print_anndata(anndata_obj):
                 f"    {prop_name}:\n{format_elements(elements)}"
             )
 
-    logger.info("\n".join(anndata_string))
+    return "\n".join(anndata_string)
 
 
 def generate_sample_data(
