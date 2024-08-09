@@ -97,6 +97,7 @@ seaborn = ">=0.13.2"
 statsmodels = ">=0.14.2"
 sympy = ">=1.12"
 termcolor = ">=2.2.0"
+tiledb = ">=0.31.1"
 torch = { version = ">=2.1.2", python = "<3.12" }
 # torch = [
 #   { version = ">=2.1.2", python = "<3.12" },
