@@ -236,13 +236,17 @@ def preprocess_dataset(
             n_neighbors=n_neighbors,
         )
         scv.tl.recover_dynamics(
-            adata,
+            data=adata,
             n_jobs=-1,
             use_raw=False,
             # show_progress_bar=False,
         )
 
-        scv.tl.velocity(adata, mode=default_velocity_mode, use_raw=False)
+        scv.tl.velocity(
+            data=adata,
+            mode=default_velocity_mode,
+            use_raw=False,
+        )
 
         # TODO: recompute umap for "larry_tips"
         # TODO: export QC plots, which will require use of the cell_state variable
@@ -252,10 +256,10 @@ def preprocess_dataset(
         if "leiden" not in adata.obs.keys():
             sc.tl.leiden(adata)
         if use_vars_subset:
-            top_genes = (
+            likelihood_sorted_genes = (
                 adata.var["fit_likelihood"].sort_values(ascending=False).index
             )
-            top_30_genes_list = top_genes[:30].tolist()
+            top_30_genes_list = likelihood_sorted_genes[:30].tolist()
             logger.info(f"\nTop 30 genes:\n{top_30_genes_list}\n\n")
             if n_vars_subset > adata.n_vars:
                 logger.warning(
@@ -263,15 +267,15 @@ def preprocess_dataset(
                     f"setting n_vars_subset to adata.n_vars: {adata.n_vars}"
                 )
                 n_vars_subset = adata.n_vars
-            if n_vars_subset > len(top_genes):
+            if n_vars_subset > len(likelihood_sorted_genes):
                 logger.warning(
-                    f"n_vars_subset: {n_vars_subset} > len(top_genes): {len(top_genes)}\n"
-                    f"setting n_vars_subset to len(top_genes): {len(top_genes)}"
+                    f"n_vars_subset: {n_vars_subset} > len(likelihood_sorted_genes): {len(likelihood_sorted_genes)}\n"
+                    f"setting n_vars_subset to len(likelihood_sorted_genes): {len(likelihood_sorted_genes)}"
                 )
-                n_vars_subset = len(top_genes)
-            adata = adata[:, top_genes[:n_vars_subset]].copy()
+                n_vars_subset = len(likelihood_sorted_genes)
+            adata = adata[:, likelihood_sorted_genes[:n_vars_subset]].copy()
         scv.tl.velocity_graph(
-            adata,
+            data=adata,
             n_jobs=-1,
             # show_progress_bar=False,
         )
@@ -438,12 +442,12 @@ def plot_high_us_genes(
 
 
 def get_high_us_genes(
-    adata,
-    minlim_u=0,
-    minlim_s=0,
-    unspliced_layer="unspliced",
-    spliced_layer="spliced",
-):
+    adata: AnnData,
+    minlim_u: int = 0,
+    minlim_s: int = 0,
+    unspliced_layer: str = "unspliced",
+    spliced_layer: str = "spliced",
+) -> AnnData:
     """
     Function to select genes that have spliced and unspliced counts above a
     certain threshold. Genes of which the maximum u and s count is above a set
