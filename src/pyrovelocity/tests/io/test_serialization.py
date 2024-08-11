@@ -1,6 +1,7 @@
 import tempfile
 
 import numpy as np
+import pandas as pd
 import pytest
 from anndata import AnnData
 from scipy import sparse
@@ -67,8 +68,8 @@ def test_serialize_large_anndata():
 
 def test_deserialize_invalid_data():
     invalid_data = {
-        # "X": [[1, 2], [3, 4]],
-        "obs": {},
+        "X": [[1, 2], [3, 4]],
+        # "obs": {},
         "var": {},
         "uns": {},
         "obsm": {},
@@ -81,7 +82,11 @@ def test_deserialize_invalid_data():
 
 
 def test_save_load_empty_anndata(tmp_path):
-    empty_adata = AnnData(X=np.empty((0, 0)))
+    empty_adata = AnnData(
+        X=np.empty((0, 0)),
+        obs=pd.DataFrame(index=[]),
+        var=pd.DataFrame(index=[]),
+    )
     file_path = tmp_path / "empty_adata.json"
     save_anndata_to_json(empty_adata, file_path)
     loaded_adata = load_anndata_from_json(file_path)

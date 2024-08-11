@@ -35,37 +35,43 @@ def serialize_anndata(adata: AnnData | AnnDataRaw) -> Dict[str, Any]:
         adata = adata.to_adata()
 
     serialized = {
-        "X": ensure_numpy_array(adata.X).tolist(),
         "shape": adata.shape,
+        "obs": adata.obs.reset_index().to_dict(orient="list"),
         "var": adata.var.reset_index().to_dict(orient="list"),
     }
 
-    serialized.update(
-        {
-            "obs": adata.obs.reset_index().to_dict(orient="list"),
-            "uns": adata.uns,
-            "obsm": {
-                key: ensure_numpy_array(value).tolist()
-                for key, value in adata.obsm.items()
-            },
-            "varm": {
-                key: ensure_numpy_array(value).tolist()
-                for key, value in adata.varm.items()
-            },
-            "layers": {
-                key: ensure_numpy_array(value).tolist()
-                for key, value in adata.layers.items()
-            },
-            "obsp": {
-                key: ensure_numpy_array(value).tolist()
-                for key, value in adata.obsp.items()
-            },
-            "varp": {
-                key: ensure_numpy_array(value).tolist()
-                for key, value in adata.varp.items()
-            },
+    if adata.X is not None:
+        X = ensure_numpy_array(adata.X)
+        serialized["X"] = X.tolist() if X.size > 0 else [[], []]
+
+    if adata.layers:
+        serialized["layers"] = {
+            key: ensure_numpy_array(value)
+            for key, value in adata.layers.items()
         }
-    )
+
+    if adata.obsm:
+        serialized["obsm"] = {
+            key: ensure_numpy_array(value) for key, value in adata.obsm.items()
+        }
+
+    if adata.varm:
+        serialized["varm"] = {
+            key: ensure_numpy_array(value) for key, value in adata.varm.items()
+        }
+
+    if adata.obsp:
+        serialized["obsp"] = {
+            key: ensure_numpy_array(value) for key, value in adata.obsp.items()
+        }
+
+    if adata.varp:
+        serialized["varp"] = {
+            key: ensure_numpy_array(value) for key, value in adata.varp.items()
+        }
+
+    if adata.uns:
+        serialized["uns"] = adata.uns
 
     if adata.raw is not None:
         serialized["raw"] = serialize_anndata(adata.raw)
@@ -84,45 +90,51 @@ def deserialize_anndata(data: Dict[str, Any]) -> AnnData | AnnDataRaw:
     Returns:
         Reconstructed AnnData object
     """
-    if not all(key in data for key in ["X", "shape", "var"]):
+    if not all(key in data for key in ["obs", "var", "shape"]):
         raise ValueError("Invalid data format: missing required keys")
 
     adata_dict = {
-        "X": np.array(data["X"]).reshape(data["shape"]),
         "var": pd.DataFrame(data["var"]).set_index("index")
         if "index" in data["var"]
         else pd.DataFrame(index=range(data["shape"][1])),
+        "obs": pd.DataFrame(data["obs"]).set_index("index")
+        if "index" in data["obs"]
+        else pd.DataFrame(index=range(data["shape"][0])),
     }
 
-    if "obs" in data:
-        adata_dict.update(
-            {
-                "obs": pd.DataFrame(data["obs"]).set_index("index")
-                if "index" in data["obs"]
-                else pd.DataFrame(index=range(data["shape"][0])),
-                "uns": data.get("uns", {}),
-                "obsm": {
-                    key: np.array(value)
-                    for key, value in data.get("obsm", {}).items()
-                },
-                "varm": {
-                    key: np.array(value)
-                    for key, value in data.get("varm", {}).items()
-                },
-                "layers": {
-                    key: np.array(value)
-                    for key, value in data.get("layers", {}).items()
-                },
-                "obsp": {
-                    key: np.array(value)
-                    for key, value in data.get("obsp", {}).items()
-                },
-                "varp": {
-                    key: np.array(value)
-                    for key, value in data.get("varp", {}).items()
-                },
-            }
-        )
+    if "X" in data:
+        X = np.array(data["X"])
+        if X.size == 0:
+            X = X.reshape(data["shape"])
+        adata_dict["X"] = X
+
+    if "layers" in data:
+        adata_dict["layers"] = {
+            key: np.array(value) for key, value in data["layers"].items()
+        }
+
+    if "obsm" in data:
+        adata_dict["obsm"] = {
+            key: np.array(value) for key, value in data["obsm"].items()
+        }
+
+    if "varm" in data:
+        adata_dict["varm"] = {
+            key: np.array(value) for key, value in data["varm"].items()
+        }
+
+    if "obsp" in data:
+        adata_dict["obsp"] = {
+            key: np.array(value) for key, value in data["obsp"].items()
+        }
+
+    if "varp" in data:
+        adata_dict["varp"] = {
+            key: np.array(value) for key, value in data["varp"].items()
+        }
+
+    if "uns" in data:
+        adata_dict["uns"] = data["uns"]
 
     adata = AnnData(**adata_dict)
 
