@@ -1,7 +1,7 @@
 ---
 title: Preprocessing
 execute: 
-  freeze: true
+  freeze: false
   eval: true
   warning: false
   error: false
@@ -26,28 +26,520 @@ format:
 from IPython.display import Image, display
 ``` 
 
-# Download data
+## Download data
+
+::: {#wrn-downsampled-data .callout-warning collapse=true title="Downsampled Data"}
+In this notebook we illustrate how to download and review results using
+unrealistic downsampled data. Therefore, this notebook should not be taken
+to represent the results of applying the model to real data.
+:::
+
+We download an example data set to be used for illustration of the 
+preprocessing steps.
+
+::: {#wrn-mutable-data .callout-warning collapse=true title="Mutable objects"}
+Ideally we would work with immutable data structures to avoid losing
+information about how a given data object has been transformed. However,
+the usual object-oriented approach relies on repeated mutation of the
+same object. The only defense against confusion we have here is to review 
+the updated properties of the underlying object after applying effectful
+methods or functions that have the ability to mutate an object's state in
+any way. This is why we use the `pyrovelocity.utils.anndata_string` function
+after each step that may mutate the data object. Of course, without hashing
+each subcomponent we will still not be able to verify that pre-existing
+components of the object were not modified but at least we can verify
+the relationship between added and removed components this way.
+:::
 
 ```{python}
 # | label: download-data
-import polars as pl
-import altair as alt
+from pyrovelocity.tasks.data import download_dataset
+from pyrovelocity.tasks.data import load_anndata_from_path
+from pyrovelocity.utils import anndata_string, print_string_diff
 
-alt.data_transformers.enable("vegafusion")
+dataset_path = download_dataset(data_set_name="pancreas")
+adata = load_anndata_from_path(dataset_path)
+initial_data_state_representation = anndata_string(adata)
+print(initial_data_state_representation)
+```
 
-flights = pl.read_parquet(
-    "https://vegafusion-datasets.s3.amazonaws.com/vega/flights_1m.parquet"
+## Preprocessing steps
+
+### Subset data
+
+We will eventually scale up the analysis to the full data set, but it is
+helpful to run experiments on downsampled data to speed up iteration
+prior to running on the full data set. Here we downsample the data to
+300 observations and 200 variables. Some steps may benefit from even
+further downsampling but this is often a good starting point.
+
+```{python}
+# | label: subset-data
+import os
+import numpy as np
+from pyrovelocity.utils import str_to_bool
+
+PYROVELOCITY_DATA_SUBSET = str_to_bool(
+    os.getenv("PYROVELOCITY_DATA_SUBSET", "True")
+)
+
+if PYROVELOCITY_DATA_SUBSET:
+    adata = adata[
+        np.random.choice(
+            adata.obs.index,
+            size=300,
+            replace=False,
+        ),
+        :,
+    ].copy()
+subset_anndata_representation = anndata_string(adata)
+print_string_diff(
+    text1=initial_data_state_representation,
+    text2=subset_anndata_representation,
+    diff_title="Downsampled data diff",
 )
 ```
 
-# Make plots
+You can save the downsampled data for later use, but for small data sets
+less than $O(10^4)$ observations it is not too expensive to reload the
+full data set if the identity of the random sample does not need to be reproducible.
+
+We will make use of the raw count data in constructing a probabilistic model
+of the spliced and unspliced read or molecule counts. The most commonly used
+preprocessing methods overwrite this information with normalized or transformed
+versions so we always begin by saving a copy of the count data.
+
+### Save count data
 
 ```{python}
-# | label: make-plots
-delay_hist = (
-    alt.Chart(flights)
-    .mark_bar()
-    .encode(alt.X("delay", bin=alt.Bin(maxbins=30)), alt.Y("count()"))
+# | label: save-count-data
+from pyrovelocity.tasks.preprocess import copy_raw_counts
+
+copy_raw_counts(adata)
+copied_raw_counts_representation = anndata_string(adata)
+print_string_diff(
+    text1=subset_anndata_representation,
+    text2=copied_raw_counts_representation,
+    diff_title="Copy raw counts diff",
 )
-delay_hist
+```
+
+### Pre-filtration QC
+
+```{python}
+# | label: pre-filtration-quality-control-metrics
+import scanpy as sc
+
+adata.var["mt"] = adata.var_names.str.startswith("MT-" or "Mt-" or "mt-")
+adata.var["ribo"] = adata.var_names.str.startswith(
+    "RPS" or "Rps" or "rps" or "RPL" or "Rpl" or "rpl"
+)
+
+sc.pp.calculate_qc_metrics(
+    adata=adata,
+    qc_vars=["mt", "ribo"],
+    percent_top=None,
+    log1p=False,
+    inplace=True,
+)
+qc_metrics_representation = anndata_string(adata)
+print_string_diff(
+    text1=copied_raw_counts_representation,
+    text2=qc_metrics_representation,
+    diff_title="Quality control metrics diff",
+)
+```
+
+```{python}
+# | label: pre-filtration-plot-genes-by-counts
+import seaborn as sns
+import pandas as pd
+
+numeric_obs = adata.obs.copy()
+numeric_obs["n_genes_by_counts"] = pd.to_numeric(
+    numeric_obs["n_genes_by_counts"],
+    errors="coerce",
+)
+qc_counts = sns.jointplot(
+    data=numeric_obs,
+    x="total_counts",
+    y="n_genes_by_counts",
+    color="#ff6a14",
+    marginal_ticks=True,
+    kind="scatter",
+    alpha=0.4,
+)
+qc_counts.plot_joint(
+    sns.kdeplot,
+    color="gray",
+    alpha=0.6,
+)
+qc_counts.set_axis_labels(
+    xlabel="Total counts in cell",
+    ylabel="Number of genes >=1 count in cell",
+)
+```
+
+### Compute cytotrace statistics 
+
+For some data sets we apply cytotrace as a proxy for progression through 
+lineage-specific differentiation.
+
+```{python}
+# | label: cytotrace
+from pyrovelocity.analysis.cytotrace import cytotrace_sparse
+
+cytotrace_sparse(adata, layer="spliced")
+cytotrace_representation = anndata_string(adata)
+print_string_diff(
+    text1=copied_raw_counts_representation,
+    text2=cytotrace_representation,
+    diff_title="Cytotrace diff",
+)
+```
+
+### Filter and normalize data
+
+Next we use the preprocessing functions built-in to the scvelo package to 
+filter genes that have at least a given minimum number of counts, 
+
+```{python}
+# | label: filter-genes-by-counts
+import scvelo as scv
+
+scv.pp.filter_genes(
+    adata,
+    min_shared_counts=30,
+)
+filter_genes_representation = anndata_string(adata)
+print_string_diff(
+    text1=cytotrace_representation,
+    text2=filter_genes_representation,
+    diff_title="Filter genes diff",
+)
+```
+
+normalize the data, 
+
+```{python}
+# | label: normalize-per-cell
+scv.pp.normalize_per_cell(adata)
+normalize_representation = anndata_string(adata)
+print_string_diff(
+    text1=filter_genes_representation,
+    text2=normalize_representation,
+    diff_title="Normalize per cell diff",
+)
+```
+
+and filter the genes by their degree of dispersion. 
+
+```{python}
+# | label: filter-genes-by-dispersion
+scv.pp.filter_genes_dispersion(
+    adata,
+    n_top_genes=2000,
+)
+filter_dispersion_representation = anndata_string(adata)
+print_string_diff(
+    text1=normalize_representation,
+    text2=filter_dispersion_representation,
+    diff_title="Filter dispersion diff",
+)
+```
+
+Aside from the observation-level subsampling these operations are destructive 
+and so you would need to reload the data to recover its original state after
+attempting to apply them.
+
+Finally we use the scanpy package to log-transform the data.
+Note again we've retained the count data and are only doing this as it is
+expected by a variety of downstream analysis tools.
+
+```{python}
+# | label: log-transform-data-matrix
+import scanpy as sc
+
+sc.pp.log1p(adata)
+preprocessed_data_state_representation = anndata_string(adata)
+print_string_diff(
+    text1=filter_dispersion_representation,
+    text2=preprocessed_data_state_representation,
+    diff_title="Log transform diff",
+)
+```
+
+Having executed this series of functions we've added or updated the following
+components relative to the initial data state
+
+```{python}
+# | label: print-data-state-summary
+print_string_diff(
+    text1=initial_data_state_representation,
+    text2=preprocessed_data_state_representation,
+    diff_title="Filtration and normalization summary diff",
+    diff_context_lines=5,
+)
+```
+
+### Compute nearest neighbors graph
+
+We do not make direct use of nearest neighbor graphs, and some data sets
+come with one precomputed, but we recompute the graph
+for cross-compatability with other tools that may require it.
+
+```{python}
+# | label: compute-nearest-neighbors-graph
+sc.pp.neighbors(
+    adata=adata,
+    n_pcs=30,
+    n_neighbors=30,
+)
+nearest_neighbors_representation = anndata_string(adata)
+print_string_diff(
+    text1=preprocessed_data_state_representation,
+    text2=nearest_neighbors_representation,
+    diff_title="Nearest neighbors diff",
+)
+```
+
+The nearest neighbor graph is used in particular for nearest-neighbor-based 
+averaging of gene expression
+
+```{python}
+# | label: compute-nearest-neighbor-averages
+scv.pp.moments(
+    data=adata,
+    n_pcs=30,
+    n_neighbors=30,
+)
+nearest_neighbor_averaged_representation = anndata_string(adata)
+print_string_diff(
+    text1=nearest_neighbors_representation,
+    text2=nearest_neighbor_averaged_representation,
+    diff_title="Nearest neighbor averaged diff",
+)
+```
+
+### Estimate expression dynamics
+
+We compute the estimates of the expression dynamics parameters using the EM-based
+maximum-likelihood algorithm from the scvelo package
+
+```{python}
+# | label: compute-em-ml-velocity
+scv.tl.recover_dynamics(
+    data=adata,
+    n_jobs=-1,
+    use_raw=False,
+)
+em_ml_dynamics_representation = anndata_string(adata)
+print_string_diff(
+    text1=nearest_neighbor_averaged_representation,
+    text2=em_ml_dynamics_representation,
+    diff_title="EM ML dynamics diff",
+)
+```
+
+and use these to estimate the gene-specific velocities.
+
+```{python}
+# | label: compute-gene-specific-velocities
+scv.tl.velocity(
+    data=adata,
+    mode="dynamical",
+    use_raw=False,
+)
+em_ml_velocities_representation = anndata_string(adata)
+print_string_diff(
+    text1=em_ml_dynamics_representation,
+    text2=em_ml_velocities_representation,
+    diff_title="EM ML velocities diff",
+)
+```
+
+### Compute leiden clusters
+
+We add leiden clustering to the data set for algorithms that work with 
+unlabeled clusters.
+
+```{python}
+# | label: leiden-clustering
+sc.tl.leiden(adata=adata)
+leiden_representation = anndata_string(adata)
+print_string_diff(
+    text1=em_ml_velocities_representation,
+    text2=leiden_representation,
+    diff_title="Leiden clustering diff",
+)
+```
+
+### Subset genes
+
+We also subset the genes to a smaller number to enable faster illustration of
+model training and inference even on laptops with significantly limited resources.
+
+```{python}
+# | label: subset-genes
+likelihood_sorted_genes = (
+    adata.var["fit_likelihood"].sort_values(ascending=False).index
+)
+
+if PYROVELOCITY_DATA_SUBSET:
+    adata = adata[:, likelihood_sorted_genes[:200]].copy()
+
+subset_genes_representation = anndata_string(adata)
+print_string_diff(
+    text1=leiden_representation,
+    text2=subset_genes_representation,
+    diff_title="Subset genes diff",
+)
+```
+
+
+### Compute velocity graph
+
+We compute the velocity graph based on cosine similarity of the gene-specific velocities
+estimated by the scvelo package.
+
+```{python}
+# | label: compute-velocity-graph
+scv.tl.velocity_graph(
+    data=adata,
+    n_jobs=-1,
+)
+velocity_graph_representation = anndata_string(adata)
+print_string_diff(
+    text1=subset_genes_representation,
+    text2=velocity_graph_representation,
+    diff_title="Velocity graph diff",
+)
+```
+
+### Compute velocity embedding
+
+We compute the velocity embedding using the velocity graph and the gene-specific velocities.
+
+```{python}
+# | label: compute-velocity-embedding
+scv.tl.velocity_embedding(
+    data=adata,
+    basis="umap",
+)
+velocity_embedding_representation = anndata_string(adata)
+print_string_diff(
+    text1=velocity_graph_representation,
+    text2=velocity_embedding_representation,
+    diff_title="Velocity embedding diff",
+)
+```
+
+### Compute gene-wise latent time
+
+We compute the gene-specific latent time estimated by the scvelo package.
+
+```{python}
+# | label: compute-latent-time
+scv.tl.latent_time(
+    data=adata,
+)
+latent_time_representation = anndata_string(adata)
+print_string_diff(
+    text1=velocity_embedding_representation,
+    text2=latent_time_representation,
+    diff_title="Latent time diff",
+)
+```
+
+### Summarize preprocessing
+
+We can finally summarize the changes induced by the preprocessing steps 
+applied to the data set.
+
+```{python}
+# | label: summarize-preprocessing
+print_string_diff(
+    text1=initial_data_state_representation,
+    text2=latent_time_representation,
+    diff_title="Preprocessing summary diff",
+    diff_context_lines=5,
+)
+```
+
+## Plots
+
+### Data quality
+
+We plot the two-dimensional density of genes with greater than or equal to one count in a given cell versus the total counts in that cell for the data set.
+
+```{python}
+# | label: post-filtration-quality-control-metrics
+sc.pp.calculate_qc_metrics(
+    adata=adata,
+    qc_vars=["mt", "ribo"],
+    layer="raw_spliced",
+    percent_top=None,
+    log1p=False,
+    inplace=True,
+)
+qc_metrics_representation = anndata_string(adata)
+print_string_diff(
+    text1=latent_time_representation,
+    text2=qc_metrics_representation,
+    diff_title="Quality control metrics diff",
+)
+```
+
+```{python}
+# | label: post-filtration-plot-genes-by-counts
+import seaborn as sns
+import pandas as pd
+
+numeric_obs = adata.obs.copy()
+numeric_obs["n_genes_by_counts"] = pd.to_numeric(
+    numeric_obs["n_genes_by_counts"],
+    errors="coerce",
+)
+qc_counts = sns.jointplot(
+    data=numeric_obs,
+    x="total_counts",
+    y="n_genes_by_counts",
+    color="#ff6a14",
+    marginal_ticks=True,
+    kind="scatter",
+    alpha=0.4,
+)
+qc_counts.plot_joint(
+    sns.kdeplot,
+    color="gray",
+    alpha=0.6,
+)
+qc_counts.set_axis_labels(
+    xlabel="Total counts in cell",
+    ylabel="Number of genes >=1 count in cell",
+)
+```
+
+### Splice state
+
+We can plot the raw data to ensure we have a general understanding of its
+sparsity, which may be associated with quality.
+We can also plot the raw spliced and unspliced counts.
+
+```{python}
+# | label: plot-raw-data
+from pyrovelocity.plots import plot_spliced_unspliced_histogram
+
+chart = plot_spliced_unspliced_histogram(
+    adata=adata,
+    spliced_layer="raw_spliced",
+    unspliced_layer="raw_unspliced",
+    min_count=3,
+    max_count=200,
+    title="",
+    plot_width=700,
+    plot_height=700,
+)
+chart.save("us_histogram.pdf")
+chart
 ```
