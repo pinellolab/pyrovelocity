@@ -6,19 +6,25 @@ import anndata
 import matplotlib.figure
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import scanpy as sc
 import scvelo as scv
+import seaborn as sns
 from anndata._core.anndata import AnnData
 from beartype import beartype
 from scipy.sparse import issparse
 
 from pyrovelocity.analysis.cytotrace import cytotrace_sparse
 from pyrovelocity.logging import configure_logging
+from pyrovelocity.plots._count_histograms import (
+    plot_spliced_unspliced_histogram,
+)
 from pyrovelocity.tasks.data import load_anndata_from_path
 from pyrovelocity.utils import ensure_numpy_array, print_anndata
 
 __all__ = [
     "assign_colors",
+    "compute_and_plot_qc",
     "copy_raw_counts",
     "get_high_us_genes",
     "get_thresh_histogram_title_from_path",
@@ -123,7 +129,7 @@ def preprocess_dataset(
                 :,
             ].copy()
 
-    reports_processed_path = Path(reports_processed_path / data_set_name)
+    reports_processed_path = Path(reports_processed_path) / data_set_name
     logger.info(
         f"\n\nVerifying existence of path for:\n\n"
         f"  preprocessing reports: {reports_processed_path}\n"
@@ -148,6 +154,11 @@ def preprocess_dataset(
     )
 
     print_anndata(adata)
+    compute_and_plot_qc(
+        adata=adata,
+        qc_plots_path=reports_processed_path,
+    )
+    print_anndata(adata)
 
     if (
         os.path.isfile(processed_path)
@@ -162,6 +173,23 @@ def preprocess_dataset(
         if "raw_unspliced" not in adata.layers:
             copy_raw_counts(adata)
             print_anndata(adata)
+
+        splice_state_histogram = plot_spliced_unspliced_histogram(
+            adata=adata,
+            spliced_layer="raw_spliced",
+            unspliced_layer="raw_unspliced",
+            min_count=3,
+            max_count=200,
+        )
+        splice_state_histogram.save(
+            reports_processed_path / "splice_state_histogram.pdf"
+        )
+        splice_state_histogram.save(
+            reports_processed_path / "splice_state_histogram.png"
+        )
+        splice_state_histogram.save(
+            reports_processed_path / "splice_state_histogram.html"
+        )
 
         if process_cytotrace:
             logger.info("processing data with cytotrace ...")
@@ -301,6 +329,118 @@ def preprocess_dataset(
             return adata, Path(processed_path)
         else:
             logger.error(f"cannot find and read {processed_path}")
+
+
+@beartype
+def compute_and_plot_qc(
+    adata: AnnData,
+    qc_plots_path: str | Path,
+) -> Tuple[str, str, str]:
+    """
+    Compute and plot quality control metrics.
+
+    Args:
+        adata (str | Path | AnnData): AnnData object
+        qc_plots_path (str | Path): path to save quality control plots
+
+    Returns:
+        Tuple[str, str, str]:
+            paths to mitochondrial counts,
+            ribosomal counts, and counts in observations plots
+    """
+    mitochondrial_counts_plot_path = os.path.join(
+        qc_plots_path,
+        "mitochondrial_counts_histogram.pdf",
+    )
+    ribosomal_counts_plot_path = os.path.join(
+        qc_plots_path,
+        "ribosomal_counts_histogram.pdf",
+    )
+    counts_in_obs_plot_path = os.path.join(
+        qc_plots_path,
+        "counts_in_obs.pdf",
+    )
+
+    adata.var["mt"] = adata.var_names.str.startswith(("MT-", "Mt-", "mt-"))
+    adata.var["ribo"] = adata.var_names.str.startswith(
+        ("RPS", "Rps", "rps", "RPL", "Rpl", "rpl")
+    )
+
+    sc.pp.calculate_qc_metrics(
+        adata=adata,
+        qc_vars=["mt", "ribo"],
+        percent_top=None,
+        log1p=False,
+        inplace=True,
+    )
+
+    ax = sns.histplot(
+        adata.obs,
+        x="pct_counts_mt",
+        color="#ff6a14",
+    )
+    ax.set_xlabel("mitochondrial counts (%)")
+    fig = ax.get_figure()
+    for ext in ["", ".png"]:
+        fig.savefig(
+            f"{mitochondrial_counts_plot_path}{ext}",
+            facecolor=fig.get_facecolor(),
+            bbox_inches="tight",
+            edgecolor="none",
+            dpi=300,
+        )
+
+    ax = sns.histplot(
+        adata.obs,
+        x="pct_counts_ribo",
+        color="#ff6a14",
+    )
+    ax.set_xlabel("ribosomal counts (%)")
+    fig = ax.get_figure()
+    for ext in ["", ".png"]:
+        fig.savefig(
+            f"{ribosomal_counts_plot_path}{ext}",
+            facecolor=fig.get_facecolor(),
+            bbox_inches="tight",
+            edgecolor="none",
+            dpi=300,
+        )
+
+    numeric_obs = adata.obs.copy()
+    numeric_obs["n_genes_by_counts"] = pd.to_numeric(
+        numeric_obs["n_genes_by_counts"],
+        errors="coerce",
+    )
+    fig = sns.jointplot(
+        data=numeric_obs,
+        x="total_counts",
+        y="n_genes_by_counts",
+        color="#ff6a14",
+        marginal_ticks=True,
+        kind="scatter",
+        alpha=0.4,
+    )
+    fig.plot_joint(
+        sns.kdeplot,
+        color="gray",
+        alpha=0.6,
+    )
+    fig.set_axis_labels(
+        xlabel="Total counts in cell",
+        ylabel="Number of genes >=1 count in cell",
+    )
+    for ext in ["", ".png"]:
+        fig.savefig(
+            f"{counts_in_obs_plot_path}{ext}",
+            bbox_inches="tight",
+            edgecolor="none",
+            dpi=300,
+        )
+    return (
+        mitochondrial_counts_plot_path,
+        ribosomal_counts_plot_path,
+        counts_in_obs_plot_path,
+    )
 
 
 def copy_raw_counts(
