@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.3.0-beta.3](https://github.com/pinellolab/pyrovelocity/compare/v0.3.0-beta.2...v0.3.0-beta.3) (2024-08-13)
+
+
+### Features
+
+* **io:** add (de)serialization functions ([6699308](https://github.com/pinellolab/pyrovelocity/commit/669930850933b7dfe4cf2c6b987855867abf2d76))
+* **plots:** add interactive count histogram plot ([68f3e16](https://github.com/pinellolab/pyrovelocity/commit/68f3e164443fc9bc5144e4140da5f767965d8c75))
+* **tasks:** add qc plots to preprocessing task ([5b40254](https://github.com/pinellolab/pyrovelocity/commit/5b402541e9399a6e8c5c9939453e62d1ede3a4a6))
+* **utils:** construct anndata string diff ([411defe](https://github.com/pinellolab/pyrovelocity/commit/411defe628c6b83b5b747f999d7982c4e97cfeb6))
+
+
+### Bug Fixes
+
+* **conda:** transiently pin scipy <1.14.0 ([f8f4e49](https://github.com/pinellolab/pyrovelocity/commit/f8f4e4930357a3ea640cd4272c6c131c2ff87c98))
+* **io:** update required fields for serialization ([73e4b86](https://github.com/pinellolab/pyrovelocity/commit/73e4b86079742a8a58366dc949b0919a939ea960))
+* **nbs:** plot mitochondrial and ribosomal percentage histograms in preprocessing guide ([a9cde59](https://github.com/pinellolab/pyrovelocity/commit/a9cde59f08697849b541a815c4f16e06d4e7e838))
+* **nbs:** update path to preprocessing notebook ([682e9a3](https://github.com/pinellolab/pyrovelocity/commit/682e9a3f6d62c4a6c6c163324255181b35c9e638))
+* **pyproject:** pin conda-lock fmt <11.0 for libmambapy ([d78a8f8](https://github.com/pinellolab/pyrovelocity/commit/d78a8f8169dfd113b268518dc8520a0f557c4da3))
+* **tests:** set tmp path to preprocessing reports ([1cfd403](https://github.com/pinellolab/pyrovelocity/commit/1cfd4032ef7dff21a62307017f01b74de1f75730))
+
 ## [0.3.0-beta.2](https://github.com/pinellolab/pyrovelocity/compare/v0.3.0-beta.1...v0.3.0-beta.2) (2024-08-08)
 
 
