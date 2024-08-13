@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0-beta.4](https://github.com/pinellolab/pyrovelocity/compare/v0.3.0-beta.3...v0.3.0-beta.4) (2024-08-13)
+
+
+### Bug Fixes
+
+* **tests:** use importlib resources to refer to fixture data ([7175c79](https://github.com/pinellolab/pyrovelocity/commit/7175c792220743c85442d0dc8a77cd32881d3923))
+
 ## [0.3.0-beta.3](https://github.com/pinellolab/pyrovelocity/compare/v0.3.0-beta.2...v0.3.0-beta.3) (2024-08-13)
 
 
