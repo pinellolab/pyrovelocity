@@ -92,6 +92,7 @@ if PYROVELOCITY_DATA_SUBSET:
         ),
         :,
     ].copy()
+
 subset_anndata_representation = anndata_string(adata)
 print_string_diff(
     text1=initial_data_state_representation,
@@ -126,13 +127,16 @@ print_string_diff(
 
 ### Pre-filtration QC
 
+Prior to filtering any genes or cells we compute the quality control metrics 
+including the percentage of mitochondrial and ribosomal counts in each cell.
+
 ```{python}
 # | label: pre-filtration-quality-control-metrics
 import scanpy as sc
 
-adata.var["mt"] = adata.var_names.str.startswith("MT-" or "Mt-" or "mt-")
+adata.var["mt"] = adata.var_names.str.startswith(("MT-", "Mt-", "mt-"))
 adata.var["ribo"] = adata.var_names.str.startswith(
-    "RPS" or "Rps" or "rps" or "RPL" or "Rpl" or "rpl"
+    ("RPS", "Rps", "rps", "RPL", "Rpl", "rpl")
 )
 
 sc.pp.calculate_qc_metrics(
@@ -149,6 +153,33 @@ print_string_diff(
     diff_title="Quality control metrics diff",
 )
 ```
+
+We plot the percentage of mitochondrial and ribosomal counts in each cell
+
+```{python}
+# | label: pre-filtration-plot-mitochondrial
+import seaborn as sns
+
+ax = sns.histplot(
+    adata.obs,
+    x="pct_counts_mt",
+    color="#ff6a14",
+)
+ax.set_xlabel("mitochondrial counts (%)")
+```
+
+```{python}
+# | label: pre-filtration-plot-ribosomal
+ax = sns.histplot(
+    adata.obs,
+    x="pct_counts_ribo",
+    color="#ff6a14",
+)
+ax.set_xlabel("ribosomal counts (%)")
+```
+
+as well as the number of genes with at least one count in each cell and the
+total counts in each cell.
 
 ```{python}
 # | label: pre-filtration-plot-genes-by-counts
@@ -536,9 +567,6 @@ chart = plot_spliced_unspliced_histogram(
     unspliced_layer="raw_unspliced",
     min_count=3,
     max_count=200,
-    title="",
-    plot_width=700,
-    plot_height=700,
 )
 chart.save("us_histogram.pdf")
 chart
