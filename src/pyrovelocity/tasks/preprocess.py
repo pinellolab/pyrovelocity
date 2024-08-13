@@ -34,6 +34,7 @@ def preprocess_dataset(
     data_set_name: str,
     adata: str | Path | AnnData,
     data_processed_path: str | Path = "data/processed",
+    reports_processed_path: str | Path = "reports/processed",
     overwrite: bool = False,
     n_top_genes: int = 2000,
     min_shared_counts: int = 30,
@@ -122,11 +123,17 @@ def preprocess_dataset(
                 :,
             ].copy()
 
+    reports_processed_path = Path(reports_processed_path / data_set_name)
+    logger.info(
+        f"\n\nVerifying existence of path for:\n\n"
+        f"  preprocessing reports: {reports_processed_path}\n"
+    )
+    reports_processed_path.mkdir(parents=True, exist_ok=True)
     processed_path = os.path.join(
         data_processed_path, f"{data_set_name}_processed.h5ad"
     )
     count_threshold_histogram_path = os.path.join(
-        data_processed_path, f"{data_set_name}_thresh_histogram.pdf"
+        reports_processed_path, f"count_thresholded_histogram.pdf"
     )
     logger.info(
         f"\n\nVerifying existence of path for:\n\n"
