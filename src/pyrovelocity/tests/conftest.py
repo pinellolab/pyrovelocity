@@ -73,6 +73,7 @@ def preprocess_dataset_output(simulated_dataset_path, tmp_data_dir):
         data_set_name="simulated",
         adata=simulated_dataset_path,
         data_processed_path=tmp_data_dir / "data/processed",
+        reports_processed_path=tmp_data_dir / "reports/processed",
     )
 
 
