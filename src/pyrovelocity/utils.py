@@ -178,7 +178,7 @@ def pretty_log_dict(d: dict) -> str:
         # key_colored = colored(key, "green")
         key_colored = key
         if isinstance(value, ArrayLike):
-            value_colored = f"{value.shape}"
+            value_colored = f"{value.shape} {value.dtype}"
         else:
             value_lines = str(value).split("\n")
             value_colored = "\n".join(
