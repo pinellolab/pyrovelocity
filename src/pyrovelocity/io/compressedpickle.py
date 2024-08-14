@@ -1,11 +1,18 @@
 import pickle
 from os import PathLike
 from pathlib import Path
-from typing import Any
 
+import numpy as np
 import zstandard as zstd
+from beartype.typing import Any, Dict
+from sparse import COO
+
+from pyrovelocity.io.sparsity import densify_arrays, sparsify_arrays
+from pyrovelocity.logging import configure_logging
 
 __all__ = ["CompressedPickle"]
+
+logger = configure_logging(__name__)
 
 
 class CompressedPickle:
@@ -24,7 +31,11 @@ class CompressedPickle:
     """
 
     @staticmethod
-    def save(file_path: PathLike | str, obj: Any) -> None:
+    def save(
+        file_path: PathLike | str,
+        obj: Any,
+        sparsify: bool = True,
+    ) -> Path:
         """
         Save the given object to a zstandard-compressed pickle file.
 
@@ -42,13 +53,31 @@ class CompressedPickle:
         file_path = Path(file_path)
         file_path.parent.mkdir(parents=True, exist_ok=True)
 
+        if sparsify:
+            if isinstance(obj, Dict) and all(
+                isinstance(v, (np.ndarray, COO)) for v in obj.values()
+            ):
+                obj = sparsify_arrays(obj)
+            else:
+                logger.warning(
+                    """
+                    The object is not a dictionary of numpy arrays or COO objects.
+                    It cannot be automatically sparsified.
+                    """
+                )
+
         with file_path.open("wb") as f:
             compression_context = zstd.ZstdCompressor(level=3)
             with compression_context.stream_writer(f) as compressor:
                 pickle.dump(obj, compressor)
 
+        return file_path
+
     @staticmethod
-    def load(file_path: PathLike | str) -> Any:
+    def load(
+        file_path: PathLike | str,
+        densify: bool = True,
+    ) -> Any:
         """
         Load an object from a zstandard-compressed pickle file.
 
@@ -72,4 +101,17 @@ class CompressedPickle:
             decompression_context = zstd.ZstdDecompressor()
             with decompression_context.stream_reader(f) as decompressor:
                 obj = pickle.load(decompressor)
+
+        if densify:
+            if isinstance(obj, Dict) and all(
+                isinstance(v, (np.ndarray, COO)) for v in obj.values()
+            ):
+                obj = densify_arrays(obj)
+            else:
+                logger.warning(
+                    """
+                    The object is not a dictionary of numpy arrays or COO objects.
+                    It cannot be automatically densified.
+                    """
+                )
         return obj
