@@ -1897,13 +1897,13 @@ testing = ["black[jupyter] (==23.7.0)", "clu", "clu (<=0.0.9)", "einops", "gymna
 
 [[package]]
 name = "flyteidl"
-version = "1.12.0"
+version = "1.13.1"
 description = "IDL for Flyte Platform"
 optional = false
 python-versions = "<3.13,>=3.8"
 files = [
-    {file = "flyteidl-1.12.0-py3-none-any.whl", hash = "sha256:700904d9bbb3d0fedd3d2eec096acad30587806a86a52d38ff834ca74f4fb4e8"},
-    {file = "flyteidl-1.12.0.tar.gz", hash = "sha256:1651e67b54b26879ec0ab84f320ec45315fcfec6a9811d2cb9f465505a57e6b8"},
+    {file = "flyteidl-1.13.1-py3-none-any.whl", hash = "sha256:3513ea129eaabc492ba56656a3817c2b62f67bd170aa8d58ff44e9673c0a947b"},
+    {file = "flyteidl-1.13.1.tar.gz", hash = "sha256:8983475d059839a1987824b2218a131d8076d38c841c630d0a144ba860e2c667"},
 ]
 
 [package.dependencies]
@@ -1913,13 +1913,13 @@ protoc-gen-openapiv2 = "*"
 
 [[package]]
 name = "flytekit"
-version = "1.13.0"
+version = "1.13.3"
 description = "Flyte SDK for Python"
 optional = false
 python-versions = "<3.13,>=3.8"
 files = [
-    {file = "flytekit-1.13.0-py3-none-any.whl", hash = "sha256:54fc93fef453184cdd5386fa9221946b0edf5d7dedb13c52c1f5238a1be6d5e5"},
-    {file = "flytekit-1.13.0.tar.gz", hash = "sha256:dc7e9ff884e113ffe6fc0b13f281b45b9f4c4375933dc7aade5f88b867a9c750"},
+    {file = "flytekit-1.13.3-py3-none-any.whl", hash = "sha256:fa3ceaf528256900e99238c15f27eb301d57d869396bcffec0fdb422eb999e8b"},
+    {file = "flytekit-1.13.3.tar.gz", hash = "sha256:c25ccf7494efa10cf5eb65a709b514de839ffdb355f18f9682ff04adf62a02a4"},
 ]
 
 [package.dependencies]
@@ -1931,15 +1931,13 @@ dataclasses-json = ">=0.5.2,<0.5.12"
 diskcache = ">=5.2.1"
 docker = ">=4.0.0"
 docstring-parser = ">=0.9.0"
-flyteidl = ">=1.12.0"
+flyteidl = ">=1.13.1"
 fsspec = ">=2023.3.0"
 gcsfs = ">=2023.3.0"
 googleapis-common-protos = ">=1.57"
 grpcio = "*"
 grpcio-status = "*"
 importlib-metadata = "*"
-isodate = "*"
-jinja2 = "*"
 joblib = "*"
 jsonlines = "*"
 jsonpickle = "*"
@@ -1949,7 +1947,6 @@ marshmallow-enum = "*"
 marshmallow-jsonschema = ">=0.12.0"
 mashumaro = ">=3.11"
 protobuf = "!=4.25.0"
-pyarrow = "*"
 pygments = "*"
 python-json-logger = ">=2.0.0"
 pytimeparse = ">=1.1.8"
@@ -9372,4 +9369,4 @@ workflows = ["dataclasses-json", "dulwich", "flytekit", "google-api-python-clien
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "f848a05585ac10dd24e3543b4c15734c9090c6c5ea1b1fb2d9dfbea089855478"
+content-hash = "6515b417ac411b998d0da76e7e48dd3cfe992e991736061e2db358568d373bd5"
