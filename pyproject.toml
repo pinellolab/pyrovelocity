@@ -6,11 +6,11 @@ description = "A multivariate RNA Velocity model to estimate future cell states 
 authors = ["pyrovelocity team"]
 license = "AGPL-3.0-only"
 readme = "README.md"
-homepage = "https://github.com/pinellolab/pyrovelocity"
+homepage = "https://docs.pyrovelocity.net"
 repository = "https://github.com/pinellolab/pyrovelocity"
-documentation = "https://pyrovelocity.readthedocs.io"
+documentation = "https://docs.pyrovelocity.net"
 classifiers = [
-  "Development Status :: 2 - Pre-Alpha",
+  "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
   "License :: OSI Approved :: GNU Affero General Public License v3",
   "Natural Language :: English",
