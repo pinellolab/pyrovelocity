@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.0-beta.5](https://github.com/pinellolab/pyrovelocity/compare/v0.3.0-beta.4...v0.3.0-beta.5) (2024-08-14)
+
+
+### Features
+
+* **io:** add module to sparsify/densify array dictionaries ([c1f15fc](https://github.com/pinellolab/pyrovelocity/commit/c1f15fc66aa7ef8d2f1f8ea6476293e8f972fdf3))
+* **io:** sparsify array dictionaries by default ([e11412e](https://github.com/pinellolab/pyrovelocity/commit/e11412e764e3ec0b8bbd631012438a890d337e14))
+* **utils:** log array data type with shape ([eb769b5](https://github.com/pinellolab/pyrovelocity/commit/eb769b5110b7cb938e8d02b6348b2cf957255306))
+
 ## [0.3.0-beta.4](https://github.com/pinellolab/pyrovelocity/compare/v0.3.0-beta.3...v0.3.0-beta.4) (2024-08-13)
 
 
