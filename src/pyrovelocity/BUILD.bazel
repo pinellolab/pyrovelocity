@@ -28,6 +28,7 @@ py_test_module_list(
     size = "small",
     files = [
         "tests/analysis/test_cytotrace.py",
+        "tests/io/test_sparsity.py",
         "tests/models/test_pyrovelocity.py",
         "tests/models/test_trainer.py",
         "tests/models/test_velocity.py",
