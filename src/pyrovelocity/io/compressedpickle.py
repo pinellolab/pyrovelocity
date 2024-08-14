@@ -15,6 +15,7 @@ __all__ = ["CompressedPickle"]
 logger = configure_logging(__name__)
 
 
+# TODO: Handle sparsification when values are not exclusively arrays
 class CompressedPickle:
     """
     A class for reading and writing zstandard-compressed pickle files.
