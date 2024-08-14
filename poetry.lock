@@ -7731,6 +7731,28 @@ files = [
 ]
 
 [[package]]
+name = "sparse"
+version = "0.15.4"
+description = "Sparse n-dimensional arrays for the PyData ecosystem"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "sparse-0.15.4-py2.py3-none-any.whl", hash = "sha256:76ec76fee2aee82a84eb97155dd530a9644e3b1fdea2406bc4b454698b36d938"},
+    {file = "sparse-0.15.4.tar.gz", hash = "sha256:d4b1c57d24ff0f64f2fd5b5a95b49b7fb84ed207a26d7d58ce2764dcc5c72b84"},
+]
+
+[package.dependencies]
+numba = ">=0.49"
+numpy = ">=1.17"
+scipy = ">=0.19"
+
+[package.extras]
+all = ["matrepr", "sparse[docs,tox]"]
+docs = ["sphinx", "sphinx-rtd-theme"]
+tests = ["dask[array]", "pre-commit", "pytest (>=3.5)", "pytest-cov"]
+tox = ["sparse[tests]", "tox"]
+
+[[package]]
 name = "sphinx"
 version = "7.0.1"
 description = "Python documentation generator"
@@ -9339,4 +9361,4 @@ workflows = ["dataclasses-json", "dulwich", "flytekit", "google-api-python-clien
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "2d5590f5490ec41b09e64e3ab9025ccf52047780aed66702ea1b106ca98cf229"
+content-hash = "0bfa6477bedcc7a6a1d4e73918d7811b62ae285701883087f3848eb5361c71a8"
