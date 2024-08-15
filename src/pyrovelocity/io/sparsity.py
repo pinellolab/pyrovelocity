@@ -76,7 +76,7 @@ def analyze_sparsification(
 @beartype
 def sparsify_arrays(
     data_dict: Dict[str, np.ndarray | COO],
-    density_threshold: float = 0.5,
+    density_threshold: float = 0.6,
 ) -> Dict[str, np.ndarray | COO]:
     candidates = analyze_sparsification(data_dict, density_threshold)
     result = {}
