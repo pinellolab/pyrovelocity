@@ -287,9 +287,9 @@ def upload_summary(
     )
 
     upload_result = upload_file_concurrently(
-        f"pyrovelocity/reports/{execution_id}",
-        archive_name,
-        archive_name,
+        bucket_name=f"pyrovelocity/reports/{execution_id}",
+        source_filename=archive_name,
+        destination_blob_name=archive_name,
     )
     if isinstance(upload_result, Success):
         file_url = upload_result.unwrap()
