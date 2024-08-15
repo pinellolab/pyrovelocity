@@ -122,3 +122,92 @@ def combine_json_files(
     except Exception as e:
         return Failure(e)
 
+
+@beartype
+def add_duration_to_run_info(
+    file_path: Path | str = "metrics.json"
+) -> Result[None, Exception]:
+    """
+    Load a JSON file containing run information, add a duration field,
+    and overwrite the file with the updated information.
+
+    The duration is calculated as the difference between 'end_time' and 'start_time',
+    and is added as a new field in the format "HH:MM:SS".
+
+    Args:
+        file_path (Path | str): Path to the JSON file. Defaults to "metrics.json".
+
+    Returns:
+        Result[None, Exception]: A Result object containing None if successful,
+                                 or an Exception if an error occurred.
+
+    Examples:
+        >>> import tempfile
+        >>> from pathlib import Path
+        >>> # Create a temporary JSON file
+        >>> with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as temp_file:
+        ...     json.dump({
+        ...         "start_time": 1723744878851,
+        ...         "end_time": 1723744887595,
+        ...         "other_field": "value"
+        ...     }, temp_file)
+        ...     temp_file_path = Path(temp_file.name)
+        >>> # Test the function
+        >>> result = add_duration_to_run_info(temp_file_path)
+        >>> print(f"Result: {result}")
+        Result: <Success: None>
+        >>> # Verify the file was updated correctly
+        >>> with open(temp_file_path, 'r') as f:
+        ...     updated_data = json.load(f)
+        >>> print(f"Duration added: {updated_data['duration']}")
+        Duration added: 00:00:08
+        >>> assert 'duration' in updated_data
+        >>> assert updated_data['duration'] == "00:00:08"
+        >>> assert updated_data['other_field'] == "value"
+        >>> # Clean up
+        >>> temp_file_path.unlink()
+
+        >>> # Test with non-existent file
+        >>> result = add_duration_to_run_info("non_existent.json")
+        >>> print(f"Result: {result}")
+        Result: <Failure: ...
+
+        >>> # Test with invalid JSON
+        >>> with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as temp_file:
+        ...     temp_file.write("Invalid JSON")
+        ...     temp_file_path = Path(temp_file.name)
+        >>> result = add_duration_to_run_info(temp_file_path)
+        >>> print(f"Result: {result}")
+        Result: <Failure: ...
+        >>> # Clean up
+        >>> temp_file_path.unlink()
+    """
+    file_path = Path(file_path)
+
+    try:
+        with file_path.open("r") as file:
+            data: Dict[str, Any] = json.load(file)
+
+        start_time = data.get("start_time")
+        end_time = data.get("end_time")
+
+        if start_time is not None and end_time is not None:
+            duration = timedelta(milliseconds=end_time - start_time)
+            hours, remainder = divmod(duration.seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+
+            data["duration"] = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+        else:
+            return Failure(
+                ValueError(
+                    "Unable to calculate duration. Start time or end time is missing."
+                )
+            )
+
+        with file_path.open("w") as file:
+            json.dump(data, file, indent=2)
+
+        return Success(None)
+
+    except Exception as e:
+        return Failure(e)
