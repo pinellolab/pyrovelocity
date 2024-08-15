@@ -79,7 +79,7 @@ def preprocess_dataset_output(simulated_dataset_path, tmp_data_dir):
 
 @pytest.fixture(scope=integration_fixture_scope)
 def train_dataset_output(preprocess_dataset_output, tmp_data_dir):
-    _, preprocessed_dataset_path = preprocess_dataset_output
+    _, preprocessed_dataset_path, _ = preprocess_dataset_output
     return train_dataset(
         adata=preprocessed_dataset_path,
         models_path=tmp_data_dir / "models",
@@ -128,7 +128,7 @@ def summarize_dataset_output(
 
 @pytest.fixture(scope=integration_fixture_scope)
 def train_dataset_model1_output(preprocess_dataset_output, tmp_data_dir):
-    _, preprocessed_dataset_path = preprocess_dataset_output
+    _, preprocessed_dataset_path, _ = preprocess_dataset_output
     return train_dataset(
         adata=preprocessed_dataset_path,
         model_identifier="model1",
