@@ -60,8 +60,13 @@ __all__ = [
 
 logger = configure_logging(__name__)
 
-CACHE_VERSION = "2024.8.14"
-SUMMARIZE_CACHE_VERSION = "2024.8.14.0"
+CACHE_VERSION = "2024.8.15"
+DOWNLOAD_CACHE_VERSION = f"{CACHE_VERSION}.0"
+PREPROCESS_CACHE_VERSION = f"{CACHE_VERSION}.0"
+TRAIN_CACHE_VERSION = f"{CACHE_VERSION}.0"
+POSTPROCESS_CACHE_VERSION = f"{CACHE_VERSION}.0"
+SUMMARIZE_CACHE_VERSION = f"{CACHE_VERSION}.0"
+UPLOAD_CACHE_VERSION = f"{CACHE_VERSION}.0"
 PYROVELOCITY_CACHE_FLAG = str_to_bool(
     os.getenv("PYROVELOCITY_CACHE_FLAG", "True")
 )
@@ -71,7 +76,7 @@ ACCELERATOR_TYPE: GPUAccelerator = T4
 
 @task(
     cache=PYROVELOCITY_CACHE_FLAG,
-    cache_version=CACHE_VERSION,
+    cache_version=DOWNLOAD_CACHE_VERSION,
     retries=3,
     interruptible=True,
     timeout=timedelta(minutes=20),
@@ -89,7 +94,7 @@ def download_data(download_dataset_args: DownloadDatasetInterface) -> FlyteFile:
 
 @task(
     cache=PYROVELOCITY_CACHE_FLAG,
-    cache_version=CACHE_VERSION,
+    cache_version=PREPROCESS_CACHE_VERSION,
     retries=3,
     interruptible=False,
     timeout=timedelta(minutes=60),
@@ -119,7 +124,7 @@ def preprocess_data(
 
 @task(
     cache=PYROVELOCITY_CACHE_FLAG,
-    cache_version=CACHE_VERSION,
+    cache_version=TRAIN_CACHE_VERSION,
     retries=3,
     interruptible=False,
     timeout=timedelta(minutes=120),
@@ -181,7 +186,7 @@ def train_model(
 
 @task(
     cache=PYROVELOCITY_CACHE_FLAG,
-    cache_version=CACHE_VERSION,
+    cache_version=POSTPROCESS_CACHE_VERSION,
     retries=3,
     interruptible=False,
     timeout=timedelta(minutes=120),
@@ -309,7 +314,7 @@ def summarize_data(
 
 @task(
     cache=PYROVELOCITY_CACHE_FLAG,
-    cache_version=SUMMARIZE_CACHE_VERSION,
+    cache_version=UPLOAD_CACHE_VERSION,
     retries=3,
     interruptible=True,
     timeout=timedelta(minutes=20),
