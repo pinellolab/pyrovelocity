@@ -17,6 +17,7 @@ from pyrovelocity.utils import str_to_bool
 __all__ = [
     "ResourcesJSON",
     "PostprocessConfiguration",
+    "PreprocessOutputs",
     "TrainingOutputs",
     "PostprocessOutputs",
     "SummarizeOutputs",
@@ -165,6 +166,12 @@ class WorkflowConfiguration(DataClassJSONMixin):
     summarizing_resources_requests: ResourcesJSON
     summarizing_resources_limits: ResourcesJSON
     upload_results: bool = PYROVELOCITY_UPLOAD_RESULTS
+
+
+@dataclass
+class PreprocessOutputs(DataClassJSONMixin):
+    processed_data: FlyteFile
+    processed_reports: FlyteDirectory
 
 
 @dataclass
