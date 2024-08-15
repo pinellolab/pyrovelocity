@@ -1,19 +1,13 @@
 from dataclasses import make_dataclass
 from enum import Enum
-from typing import TYPE_CHECKING
-from typing import Any
-from typing import Dict
-from typing import Optional
-from typing import Tuple
-from typing import Type
 
+from beartype.typing import TYPE_CHECKING, Any, Dict, Tuple, Type
 from mashumaro.mixins.json import DataClassJSONMixin
 
 from pyrovelocity.tasks.data import download_dataset
 from pyrovelocity.tasks.preprocess import preprocess_dataset
 from pyrovelocity.tasks.train import train_dataset
 from pyrovelocity.workflows.configuration import create_dataclass_from_callable
-
 
 __all__ = [
     "DownloadDatasetInterface",
@@ -66,6 +60,7 @@ DownloadDatasetInterface.__module__ = __name__
 preprocess_data_types_defaults: Dict[str, Tuple[Type, Any]] = {
     "adata": (str, "data/external/simulated.h5ad"),
     "data_processed_path": (str, "data/processed"),
+    "reports_processed_path": (str, "reports/processed"),
 }
 
 preprocess_data_fields = create_dataclass_from_callable(
@@ -82,6 +77,7 @@ PreprocessDataInterface.__module__ = __name__
 
 pyrovelocity_train_types_defaults: Dict[str, Tuple[Type, Any]] = {
     "adata": (str, "data/processed/simulated_processed.h5ad"),
+    "models_path": (str, "models"),
     # "use_gpu": (str, "auto"),
 }
 
