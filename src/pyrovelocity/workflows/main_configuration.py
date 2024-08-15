@@ -32,7 +32,7 @@ PYROVELOCITY_TESTING_FLAG = str_to_bool(
     os.getenv("PYROVELOCITY_TESTING_FLAG", "False")
 )
 PYROVELOCITY_DATA_SUBSET = str_to_bool(
-    os.getenv("PYROVELOCITY_DATA_SUBSET", "True")
+    os.getenv("PYROVELOCITY_DATA_SUBSET", "False")
 )
 PYROVELOCITY_UPLOAD_RESULTS = str_to_bool(
     os.getenv("PYROVELOCITY_UPLOAD_RESULTS", "True")
