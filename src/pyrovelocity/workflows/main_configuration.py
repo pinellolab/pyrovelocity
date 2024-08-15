@@ -184,18 +184,25 @@ class TrainingOutputs(DataClassJSONMixin):
     metrics_path: FlyteFile
     run_info_path: FlyteFile
     loss_plot_path: FlyteFile
+    loss_csv_path: FlyteFile
 
 
 @dataclass
 class PostprocessOutputs(DataClassJSONMixin):
     pyrovelocity_data: FlyteFile
     postprocessed_data: FlyteFile
+    metrics_path: FlyteFile
 
 
 @dataclass
 class SummarizeOutputs(DataClassJSONMixin):
     data_model_reports: FlyteDirectory
     dataframe: FlyteFile
+    run_metrics_path: FlyteFile
+    run_info_path: FlyteFile
+    loss_plot_path: FlyteFile
+    loss_csv_path: FlyteFile
+    combined_metrics_path: FlyteFile
 
 
 simulated_dataset_args = DownloadDatasetInterface(
