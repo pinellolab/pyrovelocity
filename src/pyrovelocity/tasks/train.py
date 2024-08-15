@@ -7,6 +7,7 @@ from typing import Dict, Optional, Tuple
 import matplotlib.pyplot as plt
 import mlflow
 import numpy as np
+import polars as pl
 from anndata._core.anndata import AnnData
 from beartype import beartype
 from matplotlib.ticker import ScalarFormatter, SymmetricalLogLocator
@@ -48,7 +49,7 @@ def train_dataset(
     cell_specific_kinetics: Optional[str] = None,
     kinetics_num: int = 2,
     force: bool = False,
-) -> Tuple[str, str, Path, Path, Path, Path, Path, Path]:
+) -> Tuple[str, str, Path, Path, Path, Path, Path, Path, Path]:
     """
     Loads processed data, trains model, and saves model and posterior samples.
 
@@ -125,6 +126,7 @@ def train_dataset(
     metrics_path = data_model_path / "metrics.json"
     run_info_path = data_model_path / "run_info.json"
     loss_plot_path = data_model_path / "ELBO.png"
+    loss_csv_path = loss_plot_path.with_suffix(".csv")
 
     logger.info(f"\n\nTraining: {data_model}\n\n")
 
@@ -166,6 +168,7 @@ def train_dataset(
             metrics_path,
             run_info_path,
             loss_plot_path,
+            loss_csv_path,
         )
     else:
         logger.info(f"Training model: {data_model}")
@@ -208,7 +211,8 @@ def train_dataset(
                 input_type=input_type,
                 cell_specific_kinetics=cell_specific_kinetics,
                 kinetics_num=kinetics_num,
-                loss_plot_path=str(loss_plot_path),
+                loss_plot_path=loss_plot_path,
+                loss_csv_path=loss_csv_path,
             )
 
             logger.info("Data attributes after model training")
@@ -262,6 +266,7 @@ def train_dataset(
             f"{metrics_path}\n"
             f"{run_info_path}\n"
             f"{loss_plot_path}\n"
+            f"{loss_csv_path}\n"
         )
         return (
             data_model,
@@ -272,6 +277,7 @@ def train_dataset(
             metrics_path,
             run_info_path,
             loss_plot_path,
+            loss_csv_path,
         )
 
 
@@ -296,7 +302,8 @@ def train_model(
     input_type: str = "raw",
     cell_specific_kinetics: Optional[str] = None,
     kinetics_num: int = 2,
-    loss_plot_path: str = "loss_plot.png",
+    loss_plot_path: str | Path = "loss_plot.png",
+    loss_csv_path: str | Path = "loss_plot.png.csv",
 ) -> Tuple[AnnData, PyroVelocity, Dict[str, ndarray]]:
     """
     Train a PyroVelocity model to provide probabilistic estimates of RNA velocity
@@ -393,9 +400,21 @@ def train_model(
         )
     fig, ax = plt.subplots()
     fig.set_size_inches(2.5, 1.5)
+
+    numpy_losses_range = np.arange(len(losses))
+    numpy_negative_elbo = -np.array(losses)
+
+    df = pl.DataFrame(
+        {
+            "Epoch": numpy_losses_range,
+            "-ELBO": numpy_negative_elbo,
+        }
+    )
+    df.write_csv(loss_csv_path)
+
     ax.scatter(
-        np.arange(len(losses)),
-        -np.array(losses),
+        numpy_losses_range,
+        numpy_negative_elbo,
         label="train",
         alpha=0.25,
     )
@@ -409,7 +428,11 @@ def train_model(
 
     logger.info(f"AnnData object after model training")
     print_anndata(adata)
-    return adata, model, posterior_samples
+    return (
+        adata,
+        model,
+        posterior_samples,
+    )
 
 
 def set_loss_plot_axes(ax):
