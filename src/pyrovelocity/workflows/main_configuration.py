@@ -205,6 +205,14 @@ class SummarizeOutputs(DataClassJSONMixin):
     combined_metrics_path: FlyteFile
 
 
+@dataclass
+class CombinedMetricsOutputs(DataClassJSONMixin):
+    json_metrics: FlyteFile
+    latex_metrics: FlyteFile
+    html_metrics: FlyteFile
+    md_metrics: FlyteFile
+
+
 simulated_dataset_args = DownloadDatasetInterface(
     data_set_name="simulated",
     source="simulate",
