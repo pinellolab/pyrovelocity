@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.3.0-beta.6](https://github.com/pinellolab/pyrovelocity/compare/v0.3.0-beta.5...v0.3.0-beta.6) (2024-08-15)
+
+
+### Features
+
+* **workflows:** use PreprocessOutputs dataclass ([1e5a223](https://github.com/pinellolab/pyrovelocity/commit/1e5a223399418737c3beb6b43903bbea8fd5b9b8))
+
+
+### Bug Fixes
+
+* **io:** increase default sparsify threshold ([6ba43a1](https://github.com/pinellolab/pyrovelocity/commit/6ba43a175f9d80115e145b5c8d6bde1c761f897c))
+* **tasks:** include preprocessing reports directory in outputs ([aee79a1](https://github.com/pinellolab/pyrovelocity/commit/aee79a18c631a8abe418c26a980f47a418d863fb))
+* **tests:** account for updated postprocessing outputs interface ([ed6a81f](https://github.com/pinellolab/pyrovelocity/commit/ed6a81f4b5af11b208171e7ddba2cbd7977b7da1))
+* **workflows:** add PreprocessOutputs dataclass ([4fed2dd](https://github.com/pinellolab/pyrovelocity/commit/4fed2dd8bd1046c165d1dbc451828696193b6cb6))
+
 ## [0.3.0-beta.5](https://github.com/pinellolab/pyrovelocity/compare/v0.3.0-beta.4...v0.3.0-beta.5) (2024-08-14)
 
 
