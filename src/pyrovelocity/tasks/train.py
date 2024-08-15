@@ -9,6 +9,7 @@ import mlflow
 import numpy as np
 from anndata._core.anndata import AnnData
 from beartype import beartype
+from matplotlib.ticker import ScalarFormatter, SymmetricalLogLocator
 from mlflow import MlflowClient
 from numpy import ndarray
 from scvi.model._utils import parse_device_args
@@ -415,6 +416,13 @@ def set_loss_plot_axes(ax):
     ax.set_yscale("symlog")
     ax.set_xlabel("Epochs")
     ax.set_ylabel("-ELBO")
+
+    locator = SymmetricalLogLocator(base=10, linthresh=1, subs=[1.0])
+    ax.yaxis.set_major_locator(locator)
+
+    formatter = ScalarFormatter()
+    formatter.set_scientific(False)
+    ax.yaxis.set_major_formatter(formatter)
 
 
 def log_run_info(r: mlflow.entities.run.Run) -> None:
