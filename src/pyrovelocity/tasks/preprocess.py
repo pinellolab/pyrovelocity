@@ -55,7 +55,7 @@ def preprocess_dataset(
     default_velocity_mode: str = "dynamical",
     vector_field_basis: str = "umap",
     cell_state: str = "clusters",
-) -> Tuple[AnnData, Path]:
+) -> Tuple[AnnData, Path, Path]:
     """
     Preprocess data.
 
@@ -166,7 +166,7 @@ def preprocess_dataset(
         and not overwrite
     ):
         logger.info(f"{processed_path} exists")
-        return adata, Path(processed_path)
+        return adata, Path(processed_path), reports_processed_path
     else:
         logger.info(f"generating {processed_path} ...")
 
@@ -326,7 +326,7 @@ def preprocess_dataset(
             processed_path, os.R_OK
         ):
             logger.info(f"successfully generated {processed_path}")
-            return adata, Path(processed_path)
+            return adata, Path(processed_path), reports_processed_path
         else:
             logger.error(f"cannot find and read {processed_path}")
 
