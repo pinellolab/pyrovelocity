@@ -84,7 +84,7 @@ def larry_neu(
     In vitro hematopoiesis LARRY dataset.
 
     Subset of Data from `Weinreb et al. (2020) <DOI: 10.1126/science.aaw3381>'
-    consisting of unipotent neutrophils.
+    consisting of unipotent neutrophil precursors and neutrophils.
 
     https://figshare.com/ndownloader/files/37028575
 
@@ -104,7 +104,7 @@ def larry_mono(
     """
     In vitro hematopoiesis LARRY dataset
     Subset of Data from `Weinreb et al. (2020) <DOI: 10.1126/science.aaw3381>'
-    consisting of unipotent monocytes.
+    consisting of unipotent monocyte precursors and monocytes.
 
     https://figshare.com/ndownloader/files/37028572
 
