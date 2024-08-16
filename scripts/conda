@@ -3,7 +3,7 @@
 set -euo pipefail
 
 PACKAGE_NAME="pyrovelocity"
-PACKAGE_VERSION="0.3.0b7"
+PACKAGE_VERSION="0.3.0"
 CONDA_BUILD_STRING="pyhff70e4c"
 CONDA_BUILD_NUMBER="0"
 # CONDA_CHANNEL_LABEL="pyrovelocity_dev"
@@ -32,7 +32,7 @@ Example:
 
     ./conda \\
     --name pyrovelocity \\
-    --version 0.3.0b7.dev1 \\
+    --version 0.3.0.dev1 \\
     --build-string pyhff70e4c \\
     --build-number 0 \\
     --label pyrovelocity_dev
