@@ -3,7 +3,7 @@ Pyro-Velocity
 
 Pyro-Velocity is a python package for probabilistic modeling of RNA velocity.
 
-docs: https://pyrovelocity.readthedocs.io
+docs: https://docs.pyrovelocity.net
 source: https://github.com/pinellolab/pyrovelocity
 PyPI package: https://pypi.org/project/pyrovelocity
 Conda package: https://anaconda.org/conda-forge/pyrovelocity
@@ -21,7 +21,6 @@ import pyrovelocity.models
 import pyrovelocity.plots
 import pyrovelocity.tasks
 import pyrovelocity.utils
-
 
 # import pyrovelocity.interfaces
 # import pyrovelocity.tests
