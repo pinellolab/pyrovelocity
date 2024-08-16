@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.3.0-beta.7](https://github.com/pinellolab/pyrovelocity/compare/v0.3.0-beta.6...v0.3.0-beta.7) (2024-08-16)
+
+
+### Features
+
+* **io:** add function to add duration to run info formatted json files ([86cc9d7](https://github.com/pinellolab/pyrovelocity/commit/86cc9d75ead3db52944d2ad470daed42cca9d5d1))
+* **io:** add function to copy a list of files to a target directory ([eb0b9f9](https://github.com/pinellolab/pyrovelocity/commit/eb0b9f9698597eebea4f8e4fe068a765c9e58028))
+* **io:** add module to combine json files ([678c95d](https://github.com/pinellolab/pyrovelocity/commit/678c95db9a861ba4eb9cd33220e432598fa806d9))
+* **io:** generate model comparison tables ([9582ab2](https://github.com/pinellolab/pyrovelocity/commit/9582ab2b077ea88c60fd009bd260f14c9a4851c8))
+* **tasks:** save loss data to csv ([15c1dc9](https://github.com/pinellolab/pyrovelocity/commit/15c1dc91dce9e77854ce376e2f3f80dc63cb90d3))
+* **workflows:** add task to collect metrics for all data sets and models ([b242f80](https://github.com/pinellolab/pyrovelocity/commit/b242f80f40ef8581c059916f2cff310919c109cf))
+* **workflows:** track model metrics with results summary ([98f269f](https://github.com/pinellolab/pyrovelocity/commit/98f269fd27f1590e3c612ae88f5cfd1ed3eac00b))
+* **workflows:** update task interfaces to track metrics ([02f4897](https://github.com/pinellolab/pyrovelocity/commit/02f48970bc6170190b94b6a04421ac50ff7bf5dd))
+
+
+### Bug Fixes
+
+* **interfaces:** resolve str | Path union to str ([93d1422](https://github.com/pinellolab/pyrovelocity/commit/93d1422eb38b1b5ed82f6027a078c1d184ee2e05))
+* **scripts:** include json, html, md, tex in uploads ([a157b27](https://github.com/pinellolab/pyrovelocity/commit/a157b270c28b453f3a51e199aeff271ef5509bf3))
+* **tasks:** update ticks on loss plot axes ([350499f](https://github.com/pinellolab/pyrovelocity/commit/350499f2c3f3e93b0d4dcf48acdead40d9f603a1))
+* **workflows:** add CombinedMetricsOutputs dataclass ([c6f3e3c](https://github.com/pinellolab/pyrovelocity/commit/c6f3e3ccc767914f3676b1752e44bdd8e53a4d9c))
+* **workflows:** toggle data subset to default false ([55ac13a](https://github.com/pinellolab/pyrovelocity/commit/55ac13a0807f2abd9ac907a1e6f4d6be6eab7a3c))
+
 ## [0.3.0-beta.6](https://github.com/pinellolab/pyrovelocity/compare/v0.3.0-beta.5...v0.3.0-beta.6) (2024-08-15)
 
 
