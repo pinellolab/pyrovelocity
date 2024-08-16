@@ -94,6 +94,7 @@ def larry_neu(
     url = "https://figshare.com/ndownloader/files/37028575"
     adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
     adata = adata[adata.obs.state_info != "Centroid", :]
+    adata.write(file_path)
     return adata
 
 
@@ -114,6 +115,7 @@ def larry_mono(
     url = "https://figshare.com/ndownloader/files/37028572"
     adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
     adata = adata[adata.obs.state_info != "Centroid", :]
+    adata.write(file_path)
     return adata
 
 
@@ -187,6 +189,7 @@ def larry_tips(
     adata = larry()
     adata = adata[adata.obs["time_info"] == 6.0]
     adata = adata[adata.obs["state_info"] != "Undifferentiated"]
+    adata.write(file_path)
     return adata
 
 
@@ -205,6 +208,7 @@ def larry_multilineage(
     adata_larry_mono = larry_mono()
     adata_larry_neu = larry_neu()
     adata = adata_larry_mono.concatenate(adata_larry_neu)
+    adata.write(file_path)
     return adata
 
 
@@ -273,4 +277,5 @@ def pbmc68k(
     adata = scv.datasets.pbmc68k(file_path=file_path)
     scv.pp.remove_duplicate_cells(adata)
     adata.obsm["X_tsne"][:, 0] *= -1
+    adata.write(file_path)
     return adata
