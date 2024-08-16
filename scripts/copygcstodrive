@@ -71,6 +71,15 @@ extract_and_upload() {
     rclone copy --transfers=20 "$tempdir/" "${destination}/${file_stem}/" -P
 }
 
+copy_file() {
+    local filename="$1"
+    local source="$2"
+    local destination="$3"
+    
+    echo "Copying $filename to $destination..."
+    rclone copy "${source}${filename}" "${destination}/" -P
+}
+
 SOURCE="${RCLONE_GCS_CONFIG}:${PROJECT}/${REPORTS_PATH}/${EXECUTION_ID}/"
 DESTINATION="${RCLONE_DRIVE_CONFIG}:${PROJECT}/${REPORTS_PATH}/${EXECUTION_ID}"
 
@@ -97,16 +106,21 @@ run() {
     [ "$VERBOSE" = true ] && set -x
 
     rclone mkdir "$DESTINATION" || { echo "Failed to create destination directory."; exit 1; }
-    FILES=$(rclone lsf "$SOURCE" | grep '\.tar\.gz$')
+    TAR_FILES=$(rclone lsf "$SOURCE" | grep '\.tar\.gz$')
+    OTHER_FILES=$(rclone lsf "$SOURCE" | grep -E '\.(json|html|tex|md)$')
 
     if [ "$JOBS" -eq 1 ]; then
-        for filename in $FILES; do
+        for filename in $TAR_FILES; do
             extract_and_upload "$filename" "$SOURCE" "$DESTINATION"
         done
+        for filename in $OTHER_FILES; do
+            copy_file "$filename" "$SOURCE" "$DESTINATION"
+        done
     else
-        export -f extract_and_upload
+        export -f extract_and_upload copy_file
         export SOURCE DESTINATION
-        echo "$FILES" | parallel -j "$JOBS" --will-cite extract_and_upload {} "$SOURCE" "$DESTINATION"
+        echo "$TAR_FILES" | parallel -j "$JOBS" --will-cite extract_and_upload {} "$SOURCE" "$DESTINATION"
+        echo "$OTHER_FILES" | parallel -j "$JOBS" --will-cite copy_file {} "$SOURCE" "$DESTINATION"
     fi
 }
 
