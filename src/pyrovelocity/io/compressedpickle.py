@@ -1,11 +1,17 @@
+import os
 import pickle
 from os import PathLike
 from pathlib import Path
 
 import numpy as np
-import zstandard as zstd
+from beartype import beartype
 from beartype.typing import Any, Dict
 from sparse import COO
+from zstandard import (
+    ZstdCompressionParameters,
+    ZstdCompressor,
+    ZstdDecompressor,
+)
 
 from pyrovelocity.io.sparsity import densify_arrays, sparsify_arrays
 from pyrovelocity.logging import configure_logging
@@ -13,6 +19,35 @@ from pyrovelocity.logging import configure_logging
 __all__ = ["CompressedPickle"]
 
 logger = configure_logging(__name__)
+
+
+@beartype
+def get_cpu_count() -> int:
+    """
+    Safely determine the number of CPUs in the system.
+    Falls back to a default value if it can't be determined.
+    """
+    try:
+        return os.cpu_count() or 1
+    except NotImplementedError:
+        return 1
+
+
+@beartype
+def get_optimal_thread_count(cpu_count: int) -> int:
+    """
+    Determine the optimal number of threads based on CPU count.
+    """
+    if cpu_count <= 2:
+        return cpu_count
+    elif cpu_count <= 8:
+        return cpu_count - 1
+    else:
+        return cpu_count - 2
+
+
+CPU_COUNT = get_cpu_count()
+COMPRESSION_THREADS = get_optimal_thread_count(CPU_COUNT)
 
 
 # TODO: Handle sparsification when values are not exclusively arrays
@@ -67,8 +102,15 @@ class CompressedPickle:
                     """
                 )
 
+        compression_params = ZstdCompressionParameters(
+            compression_level=9,
+            threads=COMPRESSION_THREADS,
+        )
+
         with file_path.open("wb") as f:
-            compression_context = zstd.ZstdCompressor(level=3)
+            compression_context = ZstdCompressor(
+                compression_params=compression_params
+            )
             with compression_context.stream_writer(f) as compressor:
                 pickle.dump(obj, compressor)
 
@@ -99,7 +141,7 @@ class CompressedPickle:
         True
         """
         with open(file_path, "rb") as f:
-            decompression_context = zstd.ZstdDecompressor()
+            decompression_context = ZstdDecompressor()
             with decompression_context.stream_reader(f) as decompressor:
                 obj = pickle.load(decompressor)
 
