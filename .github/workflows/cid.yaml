@@ -413,7 +413,7 @@ jobs:
       - name: Create config tarball
         id: save-hydra-outputs
         run: |
-          TAR_FILENAME="hydra_outputs_${GITHUB_SHA_SHORT}.tar.gz"
+          TAR_FILENAME="hydra_outputs_${{ needs.set-variables.outputs.checkout_rev }}.tar.gz"
 
           tar -czf $TAR_FILENAME ./outputs/
           tar -tzf $TAR_FILENAME
@@ -422,7 +422,6 @@ jobs:
         uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4
         with:
           name: hydra-outputs
-
           path: ${{ env.HYDRA_OUTPUTS_TAR }}
 
   release:
