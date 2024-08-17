@@ -588,9 +588,9 @@ def training_workflow(
     if not PYROVELOCITY_DATA_SUBSET:
         configurations += [
             (pancreas_configuration, "pancreas"),
-            (pbmc5k_configuration, "pbmc5k"),
+            # (pbmc5k_configuration, "pbmc5k"),
             # (pbmc68k_configuration, "pbmc68k"),
-            # (pons_configuration, "pons"),
+            (pons_configuration, "pons"),
             # (larry_configuration, "larry"),
             (larry_neu_configuration, "larry_neu"),
             (larry_mono_configuration, "larry_mono"),
