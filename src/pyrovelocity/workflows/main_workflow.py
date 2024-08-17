@@ -50,6 +50,7 @@ from pyrovelocity.workflows.main_configuration import (
     default_training_resource_requests,
     larry_configuration,
     larry_mono_configuration,
+    larry_multilineage_configuration,
     larry_neu_configuration,
     pancreas_configuration,
     pbmc68k_configuration,
@@ -572,6 +573,7 @@ def training_workflow(
     larry_configuration: WorkflowConfiguration = larry_configuration,
     larry_neu_configuration: WorkflowConfiguration = larry_neu_configuration,
     larry_mono_configuration: WorkflowConfiguration = larry_mono_configuration,
+    larry_multilineage_configuration: WorkflowConfiguration = larry_multilineage_configuration,
 ) -> list[list[SummarizeOutputs]]:
     """
     Apply the primary workflow to a collection of configurations.
@@ -579,17 +581,18 @@ def training_workflow(
     """
     results = []
     configurations = [
-        (simulated_configuration, "simulated"),
+        # (simulated_configuration, "simulated"),
     ]
 
     if not PYROVELOCITY_DATA_SUBSET:
         configurations += [
-            (pancreas_configuration, "pancreas"),
+            # (pancreas_configuration, "pancreas"),
             # (pbmc68k_configuration, "pbmc68k"),
             # (pons_configuration, "pons"),
             # (larry_configuration, "larry"),
             (larry_neu_configuration, "larry_neu"),
             (larry_mono_configuration, "larry_mono"),
+            (larry_multilineage_configuration, "larry_multilineage"),
         ]
 
     for config, _ in configurations:
