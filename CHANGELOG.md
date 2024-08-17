@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.4.0-beta.1](https://github.com/pinellolab/pyrovelocity/compare/v0.3.0...v0.4.0-beta.1) (2024-08-17)
+
+
+### Features
+
+* **workflows:** add larry monocyte precursor configuration ([168af3e](https://github.com/pinellolab/pyrovelocity/commit/168af3e08b7d3b158bbbc17511b38c1df0c91bf1))
+* **workflows:** add larry multilineage configuration ([0232207](https://github.com/pinellolab/pyrovelocity/commit/0232207d604cf650f2925044e0672b3ff36f5dab))
+* **workflows:** add larry neutrophil precursor configuration ([055d1e0](https://github.com/pinellolab/pyrovelocity/commit/055d1e09ed53eb9f3c09eca0fe6b4f5654e61970))
+* **workflows:** enable execution for larry monocyte precursor data ([8464429](https://github.com/pinellolab/pyrovelocity/commit/8464429942771de1393bcb43546a60e49ba5ca07))
+* **workflows:** enable execution for larry multilineage data ([d0321ca](https://github.com/pinellolab/pyrovelocity/commit/d0321ca83665c8b3c7d3e403f259f37e9ee29448))
+* **workflows:** enable execution for larry neutrophil precursor data ([441d9e9](https://github.com/pinellolab/pyrovelocity/commit/441d9e9984ab94b281c1331c36e104a82e2c8064))
+
+
+### Bug Fixes
+
+* **cid:** set hydra outputs artifact name from set-variables outputs ([32e400f](https://github.com/pinellolab/pyrovelocity/commit/32e400f2d8b7853cd285ca7ce1d30203efc959ef))
+* **io:** increase default compression level for posterior samples ([160f857](https://github.com/pinellolab/pyrovelocity/commit/160f857302431d11a781f2846ccdfc3e31865690))
+* **io:** write data sets modified on download ([560e31f](https://github.com/pinellolab/pyrovelocity/commit/560e31f9d6da0db03be3defd89b88e754e82789b))
+* **workflows:** import cache flag from constants ([784f276](https://github.com/pinellolab/pyrovelocity/commit/784f2760a10c2868ae676e1e0fe0d1daae4814e4))
+* **workflows:** import contants in configuration ([0741330](https://github.com/pinellolab/pyrovelocity/commit/074133007319c7f06ae17c610c395a3c93f26a2e))
+* **workflows:** import contants in workflow ([121381c](https://github.com/pinellolab/pyrovelocity/commit/121381c7fda5f2791bfd2bd2c9c80c4faaa968ca))
+* **workflows:** load dotenv in constants ([13a5313](https://github.com/pinellolab/pyrovelocity/commit/13a53134912d4bb60064f63e7a86b65d103566cc))
+* **workflows:** log env from constants ([d2ca2fc](https://github.com/pinellolab/pyrovelocity/commit/d2ca2fc8a49cd5f8cad29f095bd1ae44be521c5a))
+* **workflows:** log warnings when cluster config files not found ([e40270f](https://github.com/pinellolab/pyrovelocity/commit/e40270f98e142bc1383cb261d953757bb44f9198))
+* **workflows:** reenable simulated and pancreas data ([cc59182](https://github.com/pinellolab/pyrovelocity/commit/cc5918294ea6bf8500d51ced63f1f073b8662df5))
+* **workflows:** use overwrite cache variable to set default value ([610d7cc](https://github.com/pinellolab/pyrovelocity/commit/610d7cce5806425eea6265914bfc5ba4f2d875fc))
+
 ## [0.3.0](https://github.com/pinellolab/pyrovelocity/compare/v0.2.0...v0.3.0) (2024-08-16)
 
 
