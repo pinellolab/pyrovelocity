@@ -45,6 +45,7 @@ from pyrovelocity.workflows.cli.execution_utils import (
 )
 from pyrovelocity.workflows.constants import (
     LOCAL_CLUSTER_CONFIG_FILE_PATH,
+    PYROVELOCITY_OVERWRITE_CACHE,
     REMOTE_CLUSTER_CONFIG_FILE_PATH,
 )
 
@@ -83,7 +84,7 @@ class ExecutionContext(DataClassJsonMixin):
     project: str = "pyrovelocity"
     domain: str = "development"
     wait: bool = True
-    overwrite_cache: bool = False
+    overwrite_cache: bool = PYROVELOCITY_OVERWRITE_CACHE
 
 
 def handle_local_execution(exec_mode, execution_context, entity, entity_config):
