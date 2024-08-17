@@ -66,7 +66,6 @@ if repo_root:
         )
         logger.warning(remote_cluster_config_file_not_found_message)
         REMOTE_CLUSTER_CONFIG_FILE_PATH = LOCAL_CLUSTER_CONFIG_FILE_PATH
-        # raise FileNotFoundError(remote_cluster_config_file_not_found_message)
 
     if not os.path.isfile(LOCAL_CLUSTER_CONFIG_FILE_PATH):
         local_cluster_config_file_not_found_message = (
@@ -74,7 +73,7 @@ if repo_root:
             f"{LOCAL_CLUSTER_CONFIG_FILE_PATH}\n\n"
             f"Check that you have not deleted this file from the repository.\n\n"
         )
-        raise FileNotFoundError(local_cluster_config_file_not_found_message)
+        logger.warning(local_cluster_config_file_not_found_message)
 
     logger.debug(
         f"Remote cluster config file path: {REMOTE_CLUSTER_CONFIG_FILE_PATH}"
