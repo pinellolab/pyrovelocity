@@ -17,7 +17,7 @@ PYROVELOCITY_UPLOAD_RESULTS = str_to_bool(
     os.getenv("PYROVELOCITY_UPLOAD_RESULTS", "True")
 )
 PYROVELOCITY_OVERWRITE_CACHE = str_to_bool(
-    os.getenv("PYROVELOCITY_OVERWRITE_CACHE", "False")
+    os.getenv("PYROVELOCITY_OVERWRITE_CACHE", "True")
 )
 
 
