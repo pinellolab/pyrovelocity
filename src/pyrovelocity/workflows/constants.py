@@ -1,11 +1,14 @@
 import os
 
+from dotenv import load_dotenv
 from dulwich.repo import NotGitRepository, Repo
 
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.utils import str_to_bool
 
 logger = configure_logging("pyrovelocity.workflows.constants")
+
+load_dotenv()
 
 PYROVELOCITY_TESTING_FLAG = str_to_bool(
     os.getenv("PYROVELOCITY_TESTING_FLAG", "False")
