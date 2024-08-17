@@ -1,5 +1,4 @@
 import json
-import os
 from dataclasses import asdict
 from datetime import timedelta
 from pathlib import Path
@@ -56,6 +55,7 @@ from pyrovelocity.workflows.main_configuration import (
     larry_multilineage_configuration,
     larry_neu_configuration,
     pancreas_configuration,
+    pbmc5k_configuration,
     pbmc68k_configuration,
     pons_configuration,
     simulated_configuration,
@@ -568,6 +568,7 @@ def combine_all_metrics(
 def training_workflow(
     simulated_configuration: WorkflowConfiguration = simulated_configuration,
     pancreas_configuration: WorkflowConfiguration = pancreas_configuration,
+    pbmc5k_configuration: WorkflowConfiguration = pbmc5k_configuration,
     pbmc68k_configuration: WorkflowConfiguration = pbmc68k_configuration,
     pons_configuration: WorkflowConfiguration = pons_configuration,
     larry_configuration: WorkflowConfiguration = larry_configuration,
@@ -587,6 +588,7 @@ def training_workflow(
     if not PYROVELOCITY_DATA_SUBSET:
         configurations += [
             (pancreas_configuration, "pancreas"),
+            (pbmc5k_configuration, "pbmc5k"),
             # (pbmc68k_configuration, "pbmc68k"),
             # (pons_configuration, "pons"),
             # (larry_configuration, "larry"),
