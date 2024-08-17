@@ -46,6 +46,7 @@ from pyrovelocity.workflows.main_configuration import (
     SummarizeOutputs,
     TrainingOutputs,
     WorkflowConfiguration,
+    bonemarrow_configuration,
     default_resource_limits,
     default_resource_requests,
     default_training_resource_limits,
@@ -569,6 +570,7 @@ def combine_all_metrics(
 def training_workflow(
     simulated_configuration: WorkflowConfiguration = simulated_configuration,
     pancreas_configuration: WorkflowConfiguration = pancreas_configuration,
+    bonemarrow_configuration: WorkflowConfiguration = bonemarrow_configuration,
     pbmc5k_configuration: WorkflowConfiguration = pbmc5k_configuration,
     pbmc10k_configuration: WorkflowConfiguration = pbmc10k_configuration,
     pbmc68k_configuration: WorkflowConfiguration = pbmc68k_configuration,
@@ -590,8 +592,9 @@ def training_workflow(
     if not PYROVELOCITY_DATA_SUBSET:
         configurations += [
             (pancreas_configuration, "pancreas"),
+            (bonemarrow_configuration, "bonemarrow"),
             # (pbmc5k_configuration, "pbmc5k"),
-            (pbmc10k_configuration, "pbmc10k"),
+            # (pbmc10k_configuration, "pbmc10k"),
             # (pbmc68k_configuration, "pbmc68k"),
             # (pons_configuration, "pons"),
             # (larry_configuration, "larry"),
