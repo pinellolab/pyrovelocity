@@ -459,6 +459,48 @@ larry_mono_configuration = WorkflowConfiguration(
     summarizing_resources_limits=default_resource_limits,
 )
 
+larry_multilineage_dataset_args = DownloadDatasetInterface(
+    data_set_name="larry_multilineage",
+)
+larry_multilineage_preprocess_data_args = PreprocessDataInterface(
+    data_set_name=f"{larry_multilineage_dataset_args.data_set_name}",
+    adata=f"{larry_multilineage_dataset_args.data_external_path}/{larry_multilineage_dataset_args.data_set_name}.h5ad",
+    use_obs_subset=SUBSET_OBS,
+    use_vars_subset=SUBSET_VARS,
+    cell_state="state_info",
+    vector_field_basis="emb",
+)
+larry_multilineage_train_model1_args = PyroVelocityTrainInterface(
+    adata=f"{larry_multilineage_preprocess_data_args.data_processed_path}/{larry_multilineage_dataset_args.data_set_name}_processed.h5ad",
+    data_set_name=f"{larry_multilineage_dataset_args.data_set_name}",
+    model_identifier="model1",
+    guide_type="auto_t0_constraint",
+    offset=False,
+    max_epochs=MAX_EPOCHS,
+)
+larry_multilineage_train_model2_args = PyroVelocityTrainInterface(
+    adata=f"{larry_multilineage_preprocess_data_args.data_processed_path}/{larry_multilineage_dataset_args.data_set_name}_processed.h5ad",
+    data_set_name=f"{larry_multilineage_dataset_args.data_set_name}",
+    model_identifier="model2",
+    max_epochs=MAX_EPOCHS,
+)
+larry_multilineage_postprocess_configuration = PostprocessConfiguration(
+    number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
+)
+larry_multilineage_configuration = WorkflowConfiguration(
+    download_dataset=larry_multilineage_dataset_args,
+    preprocess_data=larry_multilineage_preprocess_data_args,
+    training_configuration_1=larry_multilineage_train_model1_args,
+    training_configuration_2=larry_multilineage_train_model2_args,
+    postprocess_configuration=larry_multilineage_postprocess_configuration,
+    training_resources_requests=default_training_resource_requests,
+    training_resources_limits=default_training_resource_limits,
+    postprocessing_resources_requests=medium_resource_requests,
+    postprocessing_resources_limits=medium_resource_limits,
+    summarizing_resources_requests=default_resource_requests,
+    summarizing_resources_limits=default_resource_limits,
+)
+
 larry_dataset_args = DownloadDatasetInterface(
     data_set_name="larry",
 )
