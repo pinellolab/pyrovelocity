@@ -34,7 +34,10 @@ from pyrovelocity.tasks.preprocess import preprocess_dataset
 from pyrovelocity.tasks.summarize import summarize_dataset
 from pyrovelocity.tasks.train import train_dataset
 from pyrovelocity.utils import str_to_bool
-from pyrovelocity.workflows.constants import PYROVELOCITY_DATA_SUBSET
+from pyrovelocity.workflows.constants import (
+    PYROVELOCITY_CACHE_FLAG,
+    PYROVELOCITY_DATA_SUBSET,
+)
 from pyrovelocity.workflows.main_configuration import (
     CombinedMetricsOutputs,
     PostprocessConfiguration,
@@ -79,9 +82,6 @@ POSTPROCESS_CACHE_VERSION = f"{CACHE_VERSION}.0"
 SUMMARIZE_CACHE_VERSION = f"{CACHE_VERSION}.0"
 UPLOAD_CACHE_VERSION = f"{CACHE_VERSION}.0"
 COMBINE_METRICS_CACHE_VERSION = f"{CACHE_VERSION}.0"
-PYROVELOCITY_CACHE_FLAG = str_to_bool(
-    os.getenv("PYROVELOCITY_CACHE_FLAG", "True")
-)
 L4 = GPUAccelerator("nvidia-l4")
 ACCELERATOR_TYPE: GPUAccelerator = T4
 
