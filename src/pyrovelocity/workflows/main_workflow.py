@@ -581,12 +581,12 @@ def training_workflow(
     """
     results = []
     configurations = [
-        # (simulated_configuration, "simulated"),
+        (simulated_configuration, "simulated"),
     ]
 
     if not PYROVELOCITY_DATA_SUBSET:
         configurations += [
-            # (pancreas_configuration, "pancreas"),
+            (pancreas_configuration, "pancreas"),
             # (pbmc68k_configuration, "pbmc68k"),
             # (pons_configuration, "pons"),
             # (larry_configuration, "larry"),
