@@ -34,8 +34,8 @@ from pyrovelocity.tasks.preprocess import preprocess_dataset
 from pyrovelocity.tasks.summarize import summarize_dataset
 from pyrovelocity.tasks.train import train_dataset
 from pyrovelocity.utils import str_to_bool
+from pyrovelocity.workflows.constants import PYROVELOCITY_DATA_SUBSET
 from pyrovelocity.workflows.main_configuration import (
-    PYROVELOCITY_DATA_SUBSET,
     CombinedMetricsOutputs,
     PostprocessConfiguration,
     PostprocessOutputs,
