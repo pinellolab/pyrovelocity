@@ -393,10 +393,16 @@ def main() -> None:
     )
 
     # Remote Dev
+    # The "dev" tag is always applied to the
+    # most recently built image. In cases where multiple
+    # developers are building images, it may be necessary
+    # to switch to the "git_branch" tag, which can then
+    # be reused in a feature-branch-specific manner.
     remote_dev_execution_context = ExecutionContextConf(
         mode=remote_dev_config,
         image=workflow_image,
-        tag=git_branch,
+        # tag=git_branch,
+        tag="dev",
         version=f"{repo_name}-{git_branch_truncated}-{git_short_sha}-dev-{random_alphanumeric_suffix()}",
     )
 
