@@ -1,0 +1,39 @@
+name: Manuscript
+on:
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: "Run with tmate.io debugging enabled"
+        required: true
+        type: boolean
+        default: false
+  push:
+    paths:
+      - "reproducibility/manuscript/**"
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+      - name: Setup dvc
+        uses: iterative/setup-dvc@68c55926a8ce27c2d4fcf7db61149ee64cf4eeb9 # v1
+        with:
+          version: "3.53.2"
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@c1b50d36cf3c22b3dc7e530bd1b36634e824e545 # v2
+        with:
+          tinytex: true
+      - name: Render
+        run: |
+          make -C reproducibility/manuscript render
+      - name: Upload artifacts
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4
+        with:
+          name: quarto-output-${{ github.ref_name }}-${{ github.sha }}
+          path: "${{ github.workspace }}/reproducibility/manuscript/manuscript.*"
