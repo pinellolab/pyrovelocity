@@ -4,7 +4,7 @@ from datetime import timedelta
 from pathlib import Path
 
 from beartype.typing import List
-from flytekit import Resources, current_context, dynamic, task, workflow
+from flytekit import Resources, current_context, dynamic, task
 from flytekit.extras.accelerators import T4, GPUAccelerator
 from flytekit.types.directory import FlyteDirectory
 from flytekit.types.file import FlyteFile
@@ -32,7 +32,6 @@ from pyrovelocity.tasks.postprocess import postprocess_dataset
 from pyrovelocity.tasks.preprocess import preprocess_dataset
 from pyrovelocity.tasks.summarize import summarize_dataset
 from pyrovelocity.tasks.train import train_dataset
-from pyrovelocity.utils import str_to_bool
 from pyrovelocity.workflows.constants import (
     PYROVELOCITY_CACHE_FLAG,
     PYROVELOCITY_DATA_SUBSET,
