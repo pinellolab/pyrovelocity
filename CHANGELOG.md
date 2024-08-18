@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.4.0-beta.2](https://github.com/pinellolab/pyrovelocity/compare/v0.4.0-beta.1...v0.4.0-beta.2) (2024-08-18)
+
+
+### Features
+
+* **workflows:** add human bone marrow configuration ([fdda157](https://github.com/pinellolab/pyrovelocity/commit/fdda15754583ee3420bf33f3c197f01d33dfd966))
+* **workflows:** add pbmc10k configuration ([a36ad8e](https://github.com/pinellolab/pyrovelocity/commit/a36ad8ec724442c2fc40a61af042bd9425253d54))
+* **workflows:** add pbmc5k configuration ([c11cd9c](https://github.com/pinellolab/pyrovelocity/commit/c11cd9cb8e8d41fd60f4eec6ae7df57e8a27b631))
+* **workflows:** enable execution for human bone marrow data ([c118a5c](https://github.com/pinellolab/pyrovelocity/commit/c118a5cc2b368c0a28ddabadf5793891bf868257))
+* **workflows:** enable execution for pbmc10k data ([43e0658](https://github.com/pinellolab/pyrovelocity/commit/43e065844ab84ad3eb4842b420705529d136a68b))
+* **workflows:** enable execution for pbmc5k data ([db73f75](https://github.com/pinellolab/pyrovelocity/commit/db73f7551191964048321ac2815a9e5c4b002be2))
+* **workflows:** enable execution for pons data ([3b2ef4b](https://github.com/pinellolab/pyrovelocity/commit/3b2ef4bbdb42fce654f89a610a8e1662753cbc29))
+
+
+### Bug Fixes
+
+* **workflows:** set dev mode to use dev image tag ([8e2037c](https://github.com/pinellolab/pyrovelocity/commit/8e2037caba6c6433ba7d132ee04083f41ad9c7bc))
+
 ## [0.4.0-beta.1](https://github.com/pinellolab/pyrovelocity/compare/v0.3.0...v0.4.0-beta.1) (2024-08-17)
 
 
