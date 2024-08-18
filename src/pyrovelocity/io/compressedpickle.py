@@ -103,7 +103,7 @@ class CompressedPickle:
                 )
 
         compression_params = ZstdCompressionParameters(
-            compression_level=9,
+            compression_level=3,
             threads=COMPRESSION_THREADS,
         )
 
