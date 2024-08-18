@@ -9,6 +9,7 @@ on:
         default: false
   push:
     paths:
+      - ".github/workflows/manuscript.yaml"
       - "reproducibility/manuscript/**"
 
 defaults:
