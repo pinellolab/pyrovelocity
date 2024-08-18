@@ -82,8 +82,8 @@ PREPROCESS_CACHE_VERSION = f"{CACHE_VERSION}.0"
 TRAIN_CACHE_VERSION = f"{CACHE_VERSION}.0"
 POSTPROCESS_CACHE_VERSION = f"{CACHE_VERSION}.0"
 SUMMARIZE_CACHE_VERSION = f"{CACHE_VERSION}.0"
-UPLOAD_CACHE_VERSION = f"{CACHE_VERSION}.1"
-COMBINE_METRICS_CACHE_VERSION = f"{CACHE_VERSION}.1"
+UPLOAD_CACHE_VERSION = f"{CACHE_VERSION}.2"
+COMBINE_METRICS_CACHE_VERSION = f"{CACHE_VERSION}.2"
 L4 = GPUAccelerator("nvidia-l4")
 ACCELERATOR_TYPE: GPUAccelerator = T4
 
@@ -593,10 +593,10 @@ def training_workflow(
         configurations += [
             (pancreas_configuration, "pancreas"),
             (bonemarrow_configuration, "bonemarrow"),
-            # (pbmc5k_configuration, "pbmc5k"),
-            # (pbmc10k_configuration, "pbmc10k"),
+            (pbmc5k_configuration, "pbmc5k"),
+            (pbmc10k_configuration, "pbmc10k"),
             # (pbmc68k_configuration, "pbmc68k"),
-            # (pons_configuration, "pons"),
+            (pons_configuration, "pons"),
             # (larry_configuration, "larry"),
             (larry_neu_configuration, "larry_neu"),
             (larry_mono_configuration, "larry_mono"),
