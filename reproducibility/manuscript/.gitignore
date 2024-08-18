@@ -1,0 +1,16 @@
+.Rproj.user
+.Rhistory
+.Rdata
+.httr-oauth
+.DS_Store
+/template_files/
+/manuscript_files/
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+/*.bst
+/*.cls
+manuscript.*
+!manuscript.qmd
+/figures
