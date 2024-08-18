@@ -29,6 +29,9 @@ jobs:
         uses: quarto-dev/quarto-actions/setup@c1b50d36cf3c22b3dc7e530bd1b36634e824e545 # v2
         with:
           tinytex: true
+      - name: Setup tmate debug session
+        if: ${{ inputs.debug_enabled == 'true' }}
+        uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # v3
       - name: Render
         run: |
           make -C reproducibility/manuscript render
