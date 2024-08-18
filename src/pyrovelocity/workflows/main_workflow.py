@@ -595,7 +595,7 @@ def training_workflow(
             (bonemarrow_configuration, "bonemarrow"),
             (pbmc5k_configuration, "pbmc5k"),
             (pbmc10k_configuration, "pbmc10k"),
-            # (pbmc68k_configuration, "pbmc68k"),
+            (pbmc68k_configuration, "pbmc68k"),
             (pons_configuration, "pons"),
             # (larry_configuration, "larry"),
             (larry_neu_configuration, "larry_neu"),
