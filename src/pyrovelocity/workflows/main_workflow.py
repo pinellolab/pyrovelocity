@@ -596,7 +596,7 @@ def training_workflow(
             (pbmc10k_configuration, "pbmc10k"),
             (pbmc68k_configuration, "pbmc68k"),
             (pons_configuration, "pons"),
-            # (larry_configuration, "larry"),
+            (larry_configuration, "larry"),
             (larry_neu_configuration, "larry_neu"),
             (larry_mono_configuration, "larry_mono"),
             (larry_multilineage_configuration, "larry_multilineage"),
