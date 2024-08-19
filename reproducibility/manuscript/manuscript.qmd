@@ -1,5 +1,5 @@
 ---
-title: Quarto Template for Springer Nature
+title: "Pyro-Velocity: Probabilistic RNA Velocity inference from single-cell data"
 format:
   nature-pdf:
     # journal.cite-style is included in the tex file but ignored by pandoc if 
@@ -15,58 +15,97 @@ format:
     code-fold: true
     html-math-method: mathjax
   docx: default
-# The `csl` style will be used with LaTeX-based rendering of`nature-pdf`
-# if cite-method is `citeproc`. This is also the default if cite-method
-# is not specified.
-#
-# If attempting to render this extension template in an end-user project,
-# where you have executed a command like
-# $ quarto add sciexp/quarto-springer-nature-template
-# you will need to modify the csl path to point to the correct location, e.g.
-# csl: _extensions/sciexp/nature/csl/springer-basic-author-date.csl
-# where `sciexp` will be used as the namespace for the extension.
-# see: https://quarto.org/docs/extensions/distributing.html#github-distribution
 csl: _extensions/sciexp/nature/csl/springer-basic-brackets-no-et-al.csl
 author:
-  - name: Author One
+  - name: Qian Qin
     affiliations:
-      - name: Harvard University
+      - name: Massachusetts General Hospital Research Institute, Charlestown, MA
         id: 1
-        department: Department of Government
-        address: 1737 Cambridge Street
-        city: Cambridge
+        department: Molecular Pathology Unit
+        city: Charlestown
         state: MA
-        postal-code: 02138
-      - name: Harvard University
+        postal-code: 02129
+      - name: Harvard Medical School, Charlestown, MA
         id: 2
-        department: Department of Statistics
-        address: 1 Oxford Street
+        department: Massachusetts General Hospital Cancer Center
+        city: Charlestown
+        state: MA
+        postal-code: 02129
+      - name: Massachusetts General Hospital, Boston, MA
+        id: 3
+        department: Center for Regenerative Medicine
+        city: Boston
+        state: MA
+        postal-code: 02114
+      - name: Harvard University, Cambridge, MA
+        id: 4
+        department: Harvard Stem Cell Institute
         city: Cambridge
         state: MA
-        postal-code: 02138
-    attributes:
-      equal-contributor: true
-  - name: Author Two
+        postal-code: 02139
+      - name: Cambridge, MA
+        id: 5
+        department: Broad Institute of MIT and Harvard
+        city: Cambridge
+        state: MA
+        postal-code: 02142
+    # attributes:
+    #   equal-contributor: true
+  - name: Eli Bingham
     affiliations:
-      - name: Yale University
-        id: 3
-        department: Department of Political Science
-        address: 115 Prospect Street
-        city: New Haven
-        state: CT
-        postal-code: 06511
-    email: corresponding@email.com
+      - ref: 5
+      - name: Cambridge, MA
+        id: 7
+        department: Basis Research Institute
+        city: Cambridge
+        state: MA
+        postal-code: 02142
+  - name: Gioele La Manno
+    affiliations:
+      - name: Laboratory of Neurodevelopmental Systems Biology, Lausanne, Switzerland
+        id: 6
+        department: Brain and Mind Institute, School of Life Sciences, École Polytechnique Fédérale de Lausanne (EPFL)
+        city: Lausanne
+        state: Switzerland
+        postal-code: 1015
+    email: gioele.lamanno@epfl.ch
     attributes:
-      equal-contributor: true
       corresponding: true
-  - name: Author Three
+  - name: David M. Langenau
     affiliations:
       - ref: 1
+      - ref: 2
+      - ref: 3
+      - ref: 4
+    email: dlangenau@mgh.harvard.edu
+    attributes:
+      corresponding: true
+  - name: Luca Pinello
+    affiliations:
+      - ref: 1
+      - ref: 2
+      - ref: 5
+    email: lpinello@mgh.harvard.edu
+    attributes:
+      corresponding: true
 abstract: |
-  The abstract serves both as a general introduction to the topic and as a brief, non-technical summary of the main results and their implications. Authors are advised to check the author instructions for the journal they are submitting to for word limits and if structural elements like subheadings, citations, or equations are permitted.
-keywords: [template, demo]
-bibliography: bibliography.bib  
+  Single-cell RNA Velocity has dramatically advanced our ability to model cellular differentiation and cell fate decisions. However, current preprocessing choices and model assumptions often lead to errors in assigning developmental trajectories. Here, we develop, Pyro-Velocity, a Bayesian, generative, and multivariate RNA Velocity model to estimate the uncertainty of cell future states. This approach models raw sequencing counts with the synchronized cell time across all expressed genes to provide quantifiable and improved information on cell fate choices and developmental trajectory dynamics.
+keywords: [RNA velocity, single-cell RNA sequencing, probabilistic generative modeling, cell fate, developmental trajectory inference]
+bibliography: bibliography.bib
+crossref:
+  custom:
+    - kind: float
+      key: suppfig
+      latex-env: suppfig
+      reference-prefix: Figure S
+      space-before-numbering: false
+      latex-list-of-description: Supplementary Figure
 ---
+
+# Main text {#sec-main}
+
+RNA Velocity is a powerful computational framework to estimate the time derivative of gene expression [@La_Manno2018-lj;@Svensson2018-vk;@Qiu2022-dj;@Bergen2020-pj]. @fig-conceptual-model. @fig-model-results. @suppfig-graphical-models.
+
 
 # Introduction {#sec-intro}
 
@@ -93,15 +132,20 @@ For complete information on cross referencing with Quarto, see <https://quarto.o
 
 Quarto formats citations and references automatically using the bibliography records in your .bib file. For a single citation use [@greenwade93]. For multiple citations use [@greenwade93;@knuth1984texbook]. If using an author-date-based citation style, then for a citation in parentheses use `[@greenwade93]` and for a text citation use `@greenwade93`. You can drop the author using `[-@greenwade93]`. If the tex output is to be included in a submission to a preprint server or publisher, the default citation method, `citeproc`, may not always produce bibliographies compatible with the provided `bst` styles. In this case, you can set `cite-method: natbib`. See <https://quarto.org/docs/authoring/footnotes-and-citations.html#sec-biblatex>. In this case, you may either restrict usage to the default bracketed key citation formats supported by pandoc, such as [@greenwade93] or [@greenwade93;@knuth1984texbook]. Or, use a CSL file, several of which are vendored in [_extensions/nature/csl](./_extensions/nature/csl/). The advantage of the latter is that references will be consistent across html, docx, and pdf outputs. See <https://pandoc.org/MANUAL.html#citation-syntax> for additional details on pandoc citation styles.
 
-# Tables and Figures
+# Figures
 
-To include figures, you can use Quarto syntax.
+![Pyro-Velocity is a fully generative Bayesian method with uncertainty estimation of velocity vector fields and shared latent time, based on raw counts and without ad-hoc preprocessing steps. a. Schematic comparing current RNA Velocity and Pyro-Velocity workflows. Both methods take in input spliced and unspliced read count tables and output RNA velocity vector fields and latent (shared) time. Previous methods require ad-hoc preprocessing steps, including the arbitrary selection of top variable genes, number of principal components, and kNN-pooling to impute both spliced and unspliced expression within the PCA-reduced spliced expression space. In addition, manually tuned ad-hoc postprocessing steps are used to compute the final vector field and latent time based on aggregation and smoothing of the independent velocity estimates for each gene which can dramatically change the velocity estimates. In contrast, Pyro-Velocity is a fully generative and probabilistic model that uses raw read counts. Our model requires minimal preprocessing and postprocessing steps and outputs a common shared time based on all the genes without additional aggregation steps. It also provides uncertainty estimation based on posterior samples. b. The main outputs of the Pyro-Velocity framework. Visualization of single gene expression across inferred developmental cell order using rainbow plots (right panel).](figures/fig.pdf){#fig-conceptual-model}
+
+![Pyro-Velocity outperforms other RNA-velocity methods and accurately predicts cell lineage trajectories. a,b. RNA Velocity model comparisons from fully mature peripheral blood mononuclear cells (PBMCs, t-SNE embedded plots, a) or E15.5 mouse pancreas (UMAP embedded plots, b-c).  From left to right in panels a and b: 1. Cells colored by cell type; 2. Stream plot of velocity vector field defined by scVelo; 3. Stream plot of the posterior mean vector field from Pyro-Velocity; 4. Pyro-Velocity visualization of cell dynamics for 3 arbitrarily selected single cells; 5. Single-cell vector field uncertainty where each cell is colored based on the scaled angular standard deviation to visualize uncertainty based on n=30 iterated, posterior samples depicted as arrows noted throughout our analysis; 6. Averaged vector field uncertainty where each vector is colored by the averaged vector field uncertainty. The scaled angular standard deviation range is [0 360], where 0 corresponds to the highest confidence for a single direction, 360 corresponds to the highest uncertainty, and no directionality preference based on 30 posterior samples (4-6). Vectors were projected into the UMAP space using the scVelo API based on cosine similarity-derived transition matrix. c. UMAP embedded cells colored by the average cell shared time across 30 posterior samples. The Spearman’s correlation between Pyro-Velocity and Cytotrace is provided. d. Pyro-Velocity automatic gene selection and ranking for predicting important genes involved in pancreas development. e. Phase portraits of posterior samples average spliced and unspliced gene expression (left), rainbow plots showing denoised spliced gene expression (middle), and gene expression within UMAP embedded space.  Single dots correspond to individual cells (left, right) or vertical lines (middle). Cell type annotation coloring is the same as in panel b.](figures/fig.pdf){#fig-model-results}
+
+![Pyro-Velocity accurately predicts cell fate choices and lineage trajectory in human LARRY barcoded hematopoietic cells. Systematic benchmarking of cell fate prediction methods - predicting uni-lineage cell fates (a-b, Model 1), bifurcated lineages (c, Model 2), or all lineages together (d, Model 2). Panels from left to right show on the same SPRING embedding: 1. Cell types; 2. Clonal progression vector field derived based on the observed clonal barcodes (Methods); 3. scVelo recovered vector field; 4. Pyro-Velocity single cell level vector field uncertainty (angular standard deviation from 30 posterior samples); 5. Pyro-Velocity recovered vector field; vectors are colored by the averaged vector field uncertainty; 6. Clonal fate potency score using Cospar24; 7. scVelo recovered latent time; 8. Pyro-Velocity inference of posterior mean shared time per cell. Cosine similarity and Spearman’s correlation for the different methods with the clonal progression and fate potency are reported in the titles.](figures/fig.pdf){#fig-lineage-tracing}
+
+# Supplementary Figures
+
+![Graphical representations detail the generative process of the Pyro-Velocity models and highlight their differences. a. Pyro-Velocity Model 1. Each rectangle represents one data dimension (e.g., gene or cell). The arrows represent the directed hierarchical dependency among random variables. The white circles correspond to the modeled random variables. The probability distributions of these variables are denoted on the right legend. The gray circles correspond to intermediate results computed from random variables. In this model, the kinetics random variables for the cell shared time and gene are modeled with two constraints: 1. the shared time is strictly larger than the gene-specific activation time $t_{0}^{(0)}$, 2. the gene expression in the activate state starts with the initial condition $(u_{0}=0,\,s_{0}=0)$, as in previous methods[@La_Manno2018-lj;@Bergen2020-pj] (Methods). b. Pyro-Velocity Model 2. This figure follows the same graphical convention as in a. In this model $t_{0}^{(0)}$ is independent from the shared time, thus allowing a time lag for the gene activation phase. In addition, a positive starting basal gene expression level $(u_{0},\,s_{0})$ different than $(u_{0}=0,\,s_{0}=0)$ is allowed. (Methods). c. Schematic illustrating how the constraints proposed in Model 1 (left) and Model 2 (right) are reflected in the modeling of individual gene expression. The x-axis corresponds to the shared time, the y-axis corresponds to the posterior mean of the spliced expression level, the vertical lines with arrows show the start and end time of the observed cell sampling, t0 represents the gene-specific activation time $t_{0}^{(0)}$, the red lines highlight the differences for the potential gene-specific time lag when $t_{0}^{(0)} > {\min}\!⁡(t)$, and the initial spliced gene expression. The same differences can also be illustrated for the unspliced gene expression profiles (not shown).](figures/fig.pdf){#suppfig-graphical-models}
 
 ![An example figure (an empty plot)](figures/fig.pdf){#fig-plot}
 
-For both figures and tables, you can use LaTeX syntax if you need additional customizability. 
-
-For example, to use footnotes within a table, you may want to use LaTeX.
 
 \begin{table}[h]
 \caption{LaTeX caption text}\label{tbl-data}%
