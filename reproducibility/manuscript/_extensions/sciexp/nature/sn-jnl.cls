@@ -256,25 +256,49 @@
 %
 \else%
 %% For single column used smallcond design trim and page size %%
+% \RequirePackage[%
+%     reversemp,
+%     paperwidth=210mm,
+%     paperheight=297mm,
+%     top={26mm},
+%     headheight={5.5pt},
+%     headsep={5.6mm},
+%     text={31pc,194.25mm},
+%     marginparsep=5mm,
+%     marginparwidth=12mm,
+%     bindingoffset=6mm,
+%     footskip=10mm]{geometry}
+% %
+%     \setlength\maxdepth{0pt}%
+%     \setlength\columnsep{5mm}%
+%     \setlength{\marginparsep}{5mm}%
+%     \setlength{\marginparwidth}{12mm}%
+%     \setlength\footnotesep{5.75\p@}%
+%     \setlength{\skip\footins}{8\p@ \@plus 4\p@ \@minus 0\p@}%
 \RequirePackage[%
     reversemp,
     paperwidth=210mm,
     paperheight=297mm,
-    top={26mm},
-    headheight={5.5pt},
-    headsep={5.6mm},
-    text={31pc,194.25mm},
-    marginparsep=5mm,
-    marginparwidth=12mm,
-    bindingoffset=6mm,
-    footskip=10mm]{geometry}
+    top=20mm,
+    left=20mm,
+    right=20mm,
+    bottom=20mm,
+    headheight=12pt,
+    headsep=3mm,
+    marginparsep=3mm,
+    marginparwidth=8mm,
+    bindingoffset=3mm,
+    footskip=8mm,
+    includeheadfoot
+]{geometry}
+
+    \setlength\maxdepth{0pt}
+    \setlength\columnsep{5mm}
+    \setlength{\marginparsep}{3mm}
+    \setlength{\marginparwidth}{8mm}
+    \setlength\footnotesep{5.75\p@}
+    \setlength{\skip\footins}{8\p@ \@plus 4\p@ \@minus 0\p@}
 %
-    \setlength\maxdepth{0pt}%
-    \setlength\columnsep{5mm}%
-    \setlength{\marginparsep}{5mm}%
-    \setlength{\marginparwidth}{12mm}%
-    \setlength\footnotesep{5.75\p@}%
-    \setlength{\skip\footins}{8\p@ \@plus 4\p@ \@minus 0\p@}%
 %
 \renewcommand\footnoterule{%
   \kern3\p@%
@@ -724,6 +748,7 @@
 
 %% Article Header Definition
 \renewcommand{\@maketitle}{\newpage\null%
+    % \if@remarkboxon\vbox to 0pt{\vspace*{-78pt}\hspace*{-18pt}\FMremark}\else\vskip21pt\fi%%\par%
     \if@remarkboxon\vbox to 0pt{\vspace*{-78pt}\hspace*{-18pt}\FMremark}\else\vskip21pt\fi%%\par%
     \hsize\textwidth\parindent0pt%%%\vskip7pt%
     %% Aritle Type
