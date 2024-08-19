@@ -143,6 +143,7 @@ Quarto formats citations and references automatically using the bibliography rec
 :::{#refs}
 :::
 
+\FloatBarrier
 \newpage
 
 # Figures
@@ -153,6 +154,7 @@ Quarto formats citations and references automatically using the bibliography rec
 
 ![Pyro-Velocity accurately predicts cell fate choices and lineage trajectory in human LARRY barcoded hematopoietic cells. Systematic benchmarking of cell fate prediction methods - predicting uni-lineage cell fates (a-b, Model 1), bifurcated lineages (c, Model 2), or all lineages together (d, Model 2). Panels from left to right show on the same SPRING embedding: 1. Cell types; 2. Clonal progression vector field derived based on the observed clonal barcodes (Methods); 3. scVelo recovered vector field; 4. Pyro-Velocity single cell level vector field uncertainty (angular standard deviation from 30 posterior samples); 5. Pyro-Velocity recovered vector field; vectors are colored by the averaged vector field uncertainty; 6. Clonal fate potency score using Cospar24; 7. scVelo recovered latent time; 8. Pyro-Velocity inference of posterior mean shared time per cell. Cosine similarity and Spearman’s correlation for the different methods with the clonal progression and fate potency are reported in the titles.](figures/fig.pdf){#fig-lineage-tracing}
 
+\FloatBarrier
 \newpage
 
 # Supplementary Figures
@@ -180,8 +182,8 @@ row 3    & data 7   & data 8  & data 9\footnotemark[2]  \\
 \footnotetext[2]{Example for a second table footnote. This is an example of table footnote.}
 \end{table} -->
 
+\FloatBarrier
 \newpage
 
-# Appendix {.appendix}
+# Supporting Information {.appendix}
 
-{{< lipsum 5 >}}
