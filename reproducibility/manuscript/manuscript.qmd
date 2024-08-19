@@ -6,11 +6,14 @@ format:
     # cite-method is not `natbib`.
     journal:
       cite-style: sn-nature
+    classoption: 
+      - lineno
     # `citeproc` is the pandoc default. Set `cite-method: natbib` if required
     # to use the bst styles from the upstream template.
     cite-method: citeproc
     keep-tex: true
     equal-margins: false
+    include-in-header: header.tex
   html:
     code-fold: true
     html-math-method: mathjax
@@ -102,6 +105,8 @@ crossref:
       latex-list-of-description: Supplementary Figure
 ---
 
+\newpage
+
 # Main text {#sec-main}
 
 RNA Velocity is a powerful computational framework to estimate the time derivative of gene expression [@La_Manno2018-lj;@Svensson2018-vk;@Qiu2022-dj;@Bergen2020-pj]. @fig-conceptual-model. @fig-model-results. @suppfig-graphical-models.
@@ -132,6 +137,14 @@ For complete information on cross referencing with Quarto, see <https://quarto.o
 
 Quarto formats citations and references automatically using the bibliography records in your .bib file. For a single citation use [@greenwade93]. For multiple citations use [@greenwade93;@knuth1984texbook]. If using an author-date-based citation style, then for a citation in parentheses use `[@greenwade93]` and for a text citation use `@greenwade93`. You can drop the author using `[-@greenwade93]`. If the tex output is to be included in a submission to a preprint server or publisher, the default citation method, `citeproc`, may not always produce bibliographies compatible with the provided `bst` styles. In this case, you can set `cite-method: natbib`. See <https://quarto.org/docs/authoring/footnotes-and-citations.html#sec-biblatex>. In this case, you may either restrict usage to the default bracketed key citation formats supported by pandoc, such as [@greenwade93] or [@greenwade93;@knuth1984texbook]. Or, use a CSL file, several of which are vendored in [_extensions/nature/csl](./_extensions/nature/csl/). The advantage of the latter is that references will be consistent across html, docx, and pdf outputs. See <https://pandoc.org/MANUAL.html#citation-syntax> for additional details on pandoc citation styles.
 
+\newpage
+
+# References
+:::{#refs}
+:::
+
+\newpage
+
 # Figures
 
 ![Pyro-Velocity is a fully generative Bayesian method with uncertainty estimation of velocity vector fields and shared latent time, based on raw counts and without ad-hoc preprocessing steps. a. Schematic comparing current RNA Velocity and Pyro-Velocity workflows. Both methods take in input spliced and unspliced read count tables and output RNA velocity vector fields and latent (shared) time. Previous methods require ad-hoc preprocessing steps, including the arbitrary selection of top variable genes, number of principal components, and kNN-pooling to impute both spliced and unspliced expression within the PCA-reduced spliced expression space. In addition, manually tuned ad-hoc postprocessing steps are used to compute the final vector field and latent time based on aggregation and smoothing of the independent velocity estimates for each gene which can dramatically change the velocity estimates. In contrast, Pyro-Velocity is a fully generative and probabilistic model that uses raw read counts. Our model requires minimal preprocessing and postprocessing steps and outputs a common shared time based on all the genes without additional aggregation steps. It also provides uncertainty estimation based on posterior samples. b. The main outputs of the Pyro-Velocity framework. Visualization of single gene expression across inferred developmental cell order using rainbow plots (right panel).](figures/fig.pdf){#fig-conceptual-model}
@@ -140,14 +153,18 @@ Quarto formats citations and references automatically using the bibliography rec
 
 ![Pyro-Velocity accurately predicts cell fate choices and lineage trajectory in human LARRY barcoded hematopoietic cells. Systematic benchmarking of cell fate prediction methods - predicting uni-lineage cell fates (a-b, Model 1), bifurcated lineages (c, Model 2), or all lineages together (d, Model 2). Panels from left to right show on the same SPRING embedding: 1. Cell types; 2. Clonal progression vector field derived based on the observed clonal barcodes (Methods); 3. scVelo recovered vector field; 4. Pyro-Velocity single cell level vector field uncertainty (angular standard deviation from 30 posterior samples); 5. Pyro-Velocity recovered vector field; vectors are colored by the averaged vector field uncertainty; 6. Clonal fate potency score using Cospar24; 7. scVelo recovered latent time; 8. Pyro-Velocity inference of posterior mean shared time per cell. Cosine similarity and Spearman’s correlation for the different methods with the clonal progression and fate potency are reported in the titles.](figures/fig.pdf){#fig-lineage-tracing}
 
+\newpage
+
 # Supplementary Figures
 
 ![Graphical representations detail the generative process of the Pyro-Velocity models and highlight their differences. a. Pyro-Velocity Model 1. Each rectangle represents one data dimension (e.g., gene or cell). The arrows represent the directed hierarchical dependency among random variables. The white circles correspond to the modeled random variables. The probability distributions of these variables are denoted on the right legend. The gray circles correspond to intermediate results computed from random variables. In this model, the kinetics random variables for the cell shared time and gene are modeled with two constraints: 1. the shared time is strictly larger than the gene-specific activation time $t_{0}^{(0)}$, 2. the gene expression in the activate state starts with the initial condition $(u_{0}=0,\,s_{0}=0)$, as in previous methods[@La_Manno2018-lj;@Bergen2020-pj] (Methods). b. Pyro-Velocity Model 2. This figure follows the same graphical convention as in a. In this model $t_{0}^{(0)}$ is independent from the shared time, thus allowing a time lag for the gene activation phase. In addition, a positive starting basal gene expression level $(u_{0},\,s_{0})$ different than $(u_{0}=0,\,s_{0}=0)$ is allowed. (Methods). c. Schematic illustrating how the constraints proposed in Model 1 (left) and Model 2 (right) are reflected in the modeling of individual gene expression. The x-axis corresponds to the shared time, the y-axis corresponds to the posterior mean of the spliced expression level, the vertical lines with arrows show the start and end time of the observed cell sampling, t0 represents the gene-specific activation time $t_{0}^{(0)}$, the red lines highlight the differences for the potential gene-specific time lag when $t_{0}^{(0)} > {\min}\!⁡(t)$, and the initial spliced gene expression. The same differences can also be illustrated for the unspliced gene expression profiles (not shown).](figures/fig.pdf){#suppfig-graphical-models}
 
+![Extended version of @fig-model-results for evaluating Pyro-Velocity (Model 1) and scVelo on the PBMC and pancreas datasets. a. Left figure shows the scVelo vector field using the default user options, right figure shows the evaluation of the scVelo vector field using different combinations of user options within Epsilon cells. b. Pyro-Velocity additional single cell level uncertainty diagnostic plots on the fully mature PBMC dataset, from left to right: 1. standard deviation of posterior samples of shared time, 2. Rayleigh test of posterior samples of the vector field (the title reports false discovery rate after p-value correction for multiple tests across cells), 3. transcriptional state uncertainty of predicted raw read count per cell. The contour lines show the top 10% of the most uncertain cells. c. For the pancreas dataset, the figures show from left to right: UMAP rendering of 1. Cytotrace, 2. scVelo latent time, 3. Posterior mean of Pyro-Velocity shared time averaged across 30 posterior samples, 4. Top 50 markers overlapping between Pyro-Velocity and scVelo (Methods, Supplementary Table 1-2), 5. The same uncertainty diagnostic plots per cell as in b. d. The same plot as Fig. 2d. e. Selection of the top negatively correlated genes with the cell shared time based on the posterior mean on denoised spliced expression and negative mean absolute error of gene expression prediction (Methods). f. Phase portraits, rainbow plots, and UMAP rendering of posterior mean of gene expression for the genes selected in e.](figures/fig.pdf){#suppfig-model-results}
+
 ![An example figure (an empty plot)](figures/fig.pdf){#fig-plot}
 
 
-\begin{table}[h]
+<!-- \begin{table}[h]
 \caption{LaTeX caption text}\label{tbl-data}%
 \begin{tabular}{@{}llll@{}}
 \toprule
@@ -161,12 +178,9 @@ row 3    & data 7   & data 8  & data 9\footnotemark[2]  \\
 \footnotetext{Source: This is an example of table footnote. This is an example of table footnote.}
 \footnotetext[1]{Example for a first table footnote. This is an example of table footnote.}
 \footnotetext[2]{Example for a second table footnote. This is an example of table footnote.}
-\end{table}
+\end{table} -->
 
-# References
-<!-- the pattern below controls the placement of the references -->
-:::{#refs}
-:::
+\newpage
 
 # Appendix {.appendix}
 
