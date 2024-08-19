@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.4.0-beta.3](https://github.com/pinellolab/pyrovelocity/compare/v0.4.0-beta.2...v0.4.0-beta.3) (2024-08-19)
+
+
+### Features
+
+* **workflows:** enable larry data model selection ([57d27d3](https://github.com/pinellolab/pyrovelocity/commit/57d27d3ec993a3c9785f164210ee847e7cc10e9f))
+* **workflows:** enable pbmc68k model selection ([8a6c997](https://github.com/pinellolab/pyrovelocity/commit/8a6c9972589c14d2191a9cf83ceeb577e1d30303))
+
+
+### Bug Fixes
+
+* **cid:** ignore push to reproducibility directory ([d2bcf68](https://github.com/pinellolab/pyrovelocity/commit/d2bcf688eaa78a9ae240f32063eb57bab3cc3e85))
+* **dvc:** specify ignored subdirectory ([9359211](https://github.com/pinellolab/pyrovelocity/commit/93592119b08d4bb8539b895564d4b050b41408e1))
+* **workflows:** increase timeouts for long-running tasks ([cda7d32](https://github.com/pinellolab/pyrovelocity/commit/cda7d320f6358d771bea806df4f53b5b8d4f736e))
+* **workflows:** remove unused imports ([21ac5df](https://github.com/pinellolab/pyrovelocity/commit/21ac5df53d04a2211a3014ec648edd99671a3a5c))
+
 ## [0.4.0-beta.2](https://github.com/pinellolab/pyrovelocity/compare/v0.4.0-beta.1...v0.4.0-beta.2) (2024-08-18)
 
 
