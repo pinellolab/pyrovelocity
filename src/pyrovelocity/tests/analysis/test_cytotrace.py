@@ -108,7 +108,7 @@ def test_diffused():
     assert result.shape == gcs.shape
 
 
-def test_cytotrace_sparse(small_anndata, monkeypatch):
+def test_cytotrace_sparse(small_anndata):
     result = cytotrace.cytotrace_sparse(small_anndata, layer="raw")
 
     assert isinstance(result, dict)
@@ -123,7 +123,7 @@ def test_cytotrace_sparse(small_anndata, monkeypatch):
     assert "cytotrace_corrs" in small_anndata.var.columns
 
 
-def test_cytotrace_sparse_skipregress(small_anndata, monkeypatch):
+def test_cytotrace_sparse_skipregress(small_anndata):
     result = cytotrace.cytotrace_sparse(
         small_anndata, layer="raw", skip_regress=True
     )
