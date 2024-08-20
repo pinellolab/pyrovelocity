@@ -91,6 +91,28 @@ clean-all: clean
 	rm -r $(DOCUMENT_NAME)_files/
 
 #-------
+##@ track changes
+#-------
+
+TEX_FILE = v2
+COMPARISON_SHA1 = a12bbe5
+
+cache-tex: ## Cache the tex file
+	cp $(DOCUMENT_NAME).tex $(TEX_FILE).tex
+
+# run as make latexdiff COMPARISON_SHA1="commit-hash"
+# to diff with a different commit
+# see: https://gitlab.com/git-latexdiff/git-latexdiff
+latexdiff:
+	git-latexdiff \
+	--ignore-latex-errors \
+	--latexmk \
+	--ignore-makefile \
+	--ln-untracked \
+	--output $(TEX_FILE)-$(COMPARISON_SHA1)-diff.pdf \
+	--main $(TEX_FILE).tex $(COMPARISON_SHA1) HEAD
+
+#-------
 ##@ regenerate preview
 #-------
 
