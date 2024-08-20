@@ -19,6 +19,8 @@ format:
     html-math-method: mathjax
   docx:
     reference-doc: styles.docx
+filters:
+  - authors-block
 csl: _extensions/sciexp/nature/csl/springer-basic-brackets-no-et-al.csl
 author:
   - name: Qian Qin
