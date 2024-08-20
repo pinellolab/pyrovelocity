@@ -1,6 +1,5 @@
 """Tests for `pyrovelocity.analysis.cytotrace` module."""
 
-
 import numpy as np
 import pandas as pd
 import pytest
@@ -111,6 +110,23 @@ def test_diffused():
 
 def test_cytotrace_sparse(small_anndata, monkeypatch):
     result = cytotrace.cytotrace_sparse(small_anndata, layer="raw")
+
+    assert isinstance(result, dict)
+    assert "CytoTRACE" in result
+    assert "GCS" in result
+    assert "cytoGenes" in result
+
+    assert "gcs" in small_anndata.obs.columns
+    assert "cytotrace" in small_anndata.obs.columns
+    assert "counts" in small_anndata.obs.columns
+    assert "cytotrace" in small_anndata.var.columns
+    assert "cytotrace_corrs" in small_anndata.var.columns
+
+
+def test_cytotrace_sparse_skipregress(small_anndata, monkeypatch):
+    result = cytotrace.cytotrace_sparse(
+        small_anndata, layer="raw", skip_regress=True
+    )
 
     assert isinstance(result, dict)
     assert "CytoTRACE" in result
