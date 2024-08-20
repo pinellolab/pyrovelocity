@@ -99,6 +99,8 @@ COMPARISON_SHA1 = a12bbe5
 
 cache-tex: ## Cache the tex file
 	cp $(DOCUMENT_NAME).tex $(TEX_FILE).tex
+	git add $(TEX_FILE).tex
+	git commit -m "chore(manuscript): update $(TEX_FILE) diff file"
 
 # run as make latexdiff COMPARISON_SHA1="commit-hash"
 # to diff with a different commit
