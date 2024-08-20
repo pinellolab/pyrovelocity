@@ -501,6 +501,34 @@ differential equations proposed in velocyto [@La_Manno2018-lj] and scVelo
   &= \beta_g u\left(\tau^{\left(k_{cg}\right)}\right)-\gamma_g s\left(\tau^{\left(k_{cg}\right)}\right). \label{eq-dsdt}
 \end{align}
 
+## Cospar {#sec-methods-cospar}
+
+We computed the
+[Cospar `v0.1.9`](https://github.com/AllonKleinLab/cospar/releases/tag/v0.1.9) 
+[@Wang2022-xb] fate potency score for the above processed multi-fate LARRY dataset, 
+and selected the subset of the fate potency scores for evaluating bi-fate and 
+uni-fate datasets. We used the following function calls to achieve this
+
+```python
+cospar.tmap.infer_Tmap_from_multitime_clones(
+  adata_orig=adata, 
+  compute_new=True,
+  clonal_time_points=[2,4,6], 
+  later_time_point=6,
+  smooth_array=[20,15,10],
+  sparsity_threshold=0.2, 
+  max_iter_N=3
+)
+cospar.pl.fate_potency(
+  adata=adata, 
+  used_Tmap='transition_map',
+  map_backward=True,
+  method='norm-sum',
+  color_bar=True,
+  fate_count=True
+)
+```
+
 ## Cytotrace model {#sec-methods-cytotrace}
 
 We implemented Cytotrace in Python based on the R version [@Gulati2020-xq] for
