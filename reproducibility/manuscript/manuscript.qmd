@@ -3,6 +3,8 @@ title: |
   Pyro&thinsp;-Velocity: Probabilistic RNA Velocity inference from single-cell data
 toc: true
 toc-title: Contents
+# Use of `\nameref{sec-methods}` etc. to refer to sections by name.
+# is only compatible with LaTeX outputs
 number-sections: true
 format:
   nature-pdf:
