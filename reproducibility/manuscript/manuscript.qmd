@@ -501,12 +501,33 @@ differential equations proposed in velocyto [@La_Manno2018-lj] and scVelo
   &= \beta_g u\left(\tau^{\left(k_{cg}\right)}\right)-\gamma_g s\left(\tau^{\left(k_{cg}\right)}\right). \label{eq-dsdt}
 \end{align}
 
+## Cell fate uncertainty estimation {#sec-methods-fate-uncertainty}
+
+Pyro&thinsp;-Velocity evaluates cell fate uncertainty using four statistics. The
+first is the uncertainty of shared time, which is evaluated using the standard
+deviation of posterior samples of $t_c$ for each cell. The second statistic is
+the angular standard deviation [@Berens2009-fu] across posterior samples of the
+velocity-based vector field. The value of this statistic was mapped linearly to
+the range $[0, 360]$ for interpretability. The third statistic is the Rayleigh
+test [@The-Astropy-Collaboration2022-aw] for posterior samples of the
+velocity-based vector fields for each cell, whose p-values have been corrected
+for multiple tests using Benjamini-Hochberg FDR methods; if FDR is less than
+$0.05$, the cell is considered to have one statistically significant future
+direction. The second and third circular statistics were implemented using the
+Astropy package (`v5.1`) [@The-Astropy-Collaboration2022-aw]. The last statistic
+is state uncertainty which evaluates the mean Euclidean distance between
+posterior mean and posterior samples of the raw read count prediction for each
+cell
+\begin{align*}
+\frac{1}{N} \sum_{i} \sqrt{\sum_{g} \left(x_{icg} - \frac{1}{N}\sum_i x_{icg}\right)^2}.
+\end{align*}
+
 ## Cospar {#sec-methods-cospar}
 
 We computed the
-[Cospar `v0.1.9`](https://github.com/AllonKleinLab/cospar/releases/tag/v0.1.9) 
-[@Wang2022-xb] fate potency score for the above processed multi-fate LARRY dataset, 
-and selected the subset of the fate potency scores for evaluating bi-fate and 
+[Cospar `v0.1.9`](https://github.com/AllonKleinLab/cospar/releases/tag/v0.1.9)
+[@Wang2022-xb] fate potency score for the above processed multi-fate LARRY dataset,
+and selected the subset of the fate potency scores for evaluating bi-fate and
 uni-fate datasets. We used the following function calls to achieve this
 
 ```python
@@ -533,7 +554,7 @@ cospar.pl.fate_potency(
 
 We implemented Cytotrace in Python based on the R version [@Gulati2020-xq] for
 benchmarking Pyro&thinsp;-Velocity and scVelo’s shared (latent) time prediction in the
-Python environment. This implementation is available in the 
+Python environment. This implementation is available in the
 [Pyro&thinsp;-Velocity GitHub repository](https://github.com/pinellolab/pyrovelocity/blob/main/src/pyrovelocity/analysis/cytotrace.py).
 
 ## Model evaluation and selection {#sec-methods-model-selection}
