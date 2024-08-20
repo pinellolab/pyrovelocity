@@ -25,7 +25,7 @@ format:
     cite-method: citeproc
     filters:
       - authors-block
-csl: _extensions/sciexp/nature/csl/springer-basic-brackets-no-et-al.csl
+csl: _extensions/sciexp/nature/csl/springer-mathphys-brackets.csl
 affiliations:
   - name: Massachusetts General Hospital Research Institute, Charlestown, MA
     id: 1
@@ -177,31 +177,34 @@ latent random variables. Each parameter is assigned a prior distribution, and
 the model is then conditioned on the raw data (both spliced and unspliced
 molecule raw counts) to estimate posterior probability distributions and to
 enable uncertainty estimation of velocity. Central to the Pyro-Velocity model is
-a shared latent time (t): a global latent variable placing each cell at a
+a *shared latent time* $(t)$: a global latent variable placing each cell at a
 particular instant of the modeled dynamical process. From this latent time, the
 expectation of spliced and unspliced RNA levels for each gene can be computed
-knowing gene-specific kinetics parameters (transcriptional (), splicing (), and
-degradation rates () and two gene-specific switching times (t0k), and
-gene-specific transcriptional state k) and integrating the RNA velocity
-differential equations analogously to what proposed in the dynamical RNA
-velocity model by Bergen et al.4,9. However, we innovate the structure and
-formulation of the latent time given that our model is set to jointly fit the
-entire raw data matrix, not individual genes. We approach the task of estimating
-the posterior distribution by restricting the search within a family of a
+knowing gene-specific kinetics parameters (transcriptional $(\alpha)$, splicing
+$(\beta)$, and degradation rates ($\gamma$) and two gene-specific switching
+times $(t_{0}^{k})$, and gene-specific transcriptional state $k$) and
+integrating the RNA velocity differential equations analogously to what proposed
+in the dynamical RNA velocity model by Bergen et al.
+[@Bergen2020-pj;@Li2021-qa]. However, we innovate the structure and formulation
+of the latent time given that our model is set to jointly fit the entire raw
+data matrix, not individual genes. We approach the task of estimating the
+posterior distribution by restricting the search within a family of a
 variational distribution approximating the true posterior, and taking advantage
 of the automatic differentiation variational inference (ADVI) capabilities of
-Pyro8,10 (Fig. 1a, Methods). Notably, our generative Bayesian model enables to
-sample from the posterior distributions of the latent and dependent variables,
-allowing uncertainty estimation of phase portraits, high dimensional velocity
-vector field, and shared latent time. Around this model, we built several
+Pyro [@Bingham2018-id;@Kucukelbir2016-bk] ([@fig-model]a,
+\nameref{sec-methods}). Notably, our generative Bayesian model enables to sample
+from the posterior distributions of the latent and dependent variables, allowing
+uncertainty estimation of phase portraits, high dimensional velocity vector
+field, and shared latent time. Around this model, we built several
 visualizations to assess uncertainty and functions to recover putative cell fate
 priming genes and to investigate how the denoised gene expression recapitulates
-known cell-type annotations and their developmental order (Fig. 1b, Methods).
-Although several RNA velocity methods11–15 have been recently proposed, and many
-of them have not been peer-reviewed, here we showcase the advantages and
-innovations of Pyro-Velocity by comparing it with the current state-of-the-art
-dynamical RNA velocity model proposed by Bergen et al.4, and implemented in
-scVelo.
+known cell-type annotations and their developmental order ([@fig-model]b,
+\nameref{sec-methods}). Although several RNA velocity methods
+[@Gayoso2024-fz;@Gorin2022-il;@Gu2022-rh;@Cui2022-em;@Gao2022-jq] have been
+recently proposed, and many of them have not been peer-reviewed, here we
+showcase the advantages and innovations of Pyro-Velocity by comparing it with
+the current state-of-the-art dynamical RNA velocity model proposed by Bergen et
+al. [@Bergen2020-pj], and implemented in scVelo.
 
 # Methods {#sec-methods}
 
