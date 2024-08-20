@@ -1,31 +1,30 @@
 ---
 title: |
   Pyro&thinsp;-Velocity: Probabilistic RNA Velocity inference from single-cell data
-number-sections: true
-toc: true
-toc-title: Contents
 format:
   nature-pdf:
     # journal.cite-style is included in the tex file but ignored by pandoc if 
     # cite-method is not `natbib`.
     journal:
-      cite-style: sn-nature
+      cite-style: sn-mathphys-num
     classoption: 
       - lineno
-    # `citeproc` is the pandoc default. Set `cite-method: natbib` if required
-    # to use the bst styles from the upstream template.
     cite-method: natbib
+    link-citations: true
+    toc: true
+    toc-title: Contents
+    number-sections: true
     keep-tex: true
     equal-margins: false
     include-in-header: header.tex
-    link-citations: true
   html:
     code-fold: true
     html-math-method: mathjax
   docx:
     reference-doc: styles.docx
-# filters:
-#   - authors-block
+    cite-method: citeproc
+    filters:
+      - authors-block
 csl: _extensions/sciexp/nature/csl/springer-basic-brackets-no-et-al.csl
 affiliations:
   - name: Massachusetts General Hospital Research Institute, Charlestown, MA
