@@ -307,7 +307,9 @@ correlation for the different methods with the clonal progression and fate
 potency are reported in the titles.
 :::
 
+
 \FloatBarrier
+\clearpage
 {{< pagebreak >}}
 
 # Supplementary Figures
