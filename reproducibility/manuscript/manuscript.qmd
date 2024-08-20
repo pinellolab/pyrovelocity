@@ -1,5 +1,8 @@
 ---
 title: "Pyro&thinsp;-Velocity: Probabilistic RNA Velocity inference from single-cell data"
+number-sections: true
+toc: true
+toc-title: Contents
 format:
   nature-pdf:
     # journal.cite-style is included in the tex file but ignored by pandoc if 
@@ -117,12 +120,24 @@ crossref:
       latex-list-of-description: Supplementary Figure
 ---
 
-\newpage
+{{< pagebreak >}}
 
 # Main text {#sec-main}
 
 RNA Velocity is a powerful computational framework to estimate the time derivative of gene expression [@La_Manno2018-lj;@Svensson2018-vk;@Qiu2022-dj;@Bergen2020-pj]. The framework has been used to study developmental cell lineage trajectories over a broad spectrum of biological processes, such as  haematopoiesis [@Qiu2022-dj], pancreas development [@Bastidas-Ponce2019-lf], and neural progenitors differentiation [@Bergen2020-pj]. Yet, recent state-of-the-art RNA Velocity approaches such as velocyto and scVelo [@La_Manno2018-lj] have several limitations. First, they may predict developmental trajectories that do not exist in nature, as it has been shown in the analysis of fully mature blood cells [@Zheng2017-bz;@Bergen2021-qz]. Second, data preprocessing steps (e.g., selection of top variable genes, dimensionality reduction) affect velocity estimates that are difficult to characterize and might lead to artifactual predictions. In addition, non-linear spliced and unspliced imputation procedures could distort phase portrait geometry and recovered trajectories ([@fig-model]a). Third, most RNA velocity algorithms perform estimates independently for each gene, and therefore cannot exploit the natural interdependence of gene expression. Fourth, a unified description of the temporal relation between cells can only be assigned based on postprocessing steps that aggregate heuristically the gene-wise fits into a shared latent time ([@fig-model]a). Finally, current RNA velocity frameworks only output point estimates of the velocity vector field and do not provide uncertainty estimation. Importantly, the absence of statistical confidence estimates increases false discoveries as it leaves users without a way to evaluate the robustness of the methods’ outputs. To overcome these limitations, we developed a probabilistic generative model, named *Pyro&thinsp;-Velocity*, that estimates RNA dynamics and infers cell trajectories using Pyro [@Bingham2018-id], a robust and efficient probabilistic programming language.
 
+Pyro-Velocity recasts the velocity estimation problem into a latent variable posterior probability inference (Methods) [@sec-methods]. The proposed model is generative and fully Bayesian, with the different parameters considered as latent random variables. Each parameter is assigned a prior distribution, and the model is then conditioned on the raw data (both spliced and unspliced molecule raw counts) to estimate posterior probability distributions and to enable uncertainty estimation of velocity. Central to the Pyro-Velocity model is a shared latent time (t): a global latent variable placing each cell at a particular instant of the modeled dynamical process. From this latent time, the expectation of spliced and unspliced RNA levels for each gene can be computed knowing gene-specific kinetics parameters (transcriptional (), splicing (), and degradation rates () and two gene-specific switching times (t0k), and gene-specific transcriptional state k) and integrating the RNA velocity differential equations analogously to what proposed in the dynamical RNA velocity model by Bergen et al.4,9. However, we innovate the structure and formulation of the latent time given that our model is set to jointly fit the entire raw data matrix, not individual genes. We approach the task of estimating the posterior distribution by restricting the search within a family of a variational distribution approximating the true posterior, and taking advantage of the automatic differentiation variational inference (ADVI) capabilities of  Pyro8,10 (Fig. 1a, Methods). Notably, our generative Bayesian model enables to sample from the posterior distributions of the latent and dependent variables, allowing uncertainty estimation of phase portraits, high dimensional velocity vector field, and shared latent time. Around this model, we built several visualizations to assess uncertainty and functions to recover putative cell fate priming genes and to investigate how the denoised gene expression recapitulates known cell-type annotations and their developmental order (Fig. 1b, Methods). Although several RNA velocity methods11–15 have been recently proposed, and many of them have not been peer-reviewed, here we showcase the advantages and innovations of Pyro-Velocity by comparing it with the current state-of-the-art dynamical RNA velocity model proposed by Bergen et al.4, and implemented in scVelo.
+
+# Methods {#sec-methods}
+
+## Model formulation {#sec-model}
+
+We assume the dynamical gene expression is determined by the RNA splicing process, and infer the unspliced and spliced gene expression level from the differential equations proposed in velocyto [@La_Manno2018-lj] and scVelo [@Bergen2020-pj]
+
+\begin{align}
+\frac{d u\left(\tau^{\left(k_{cg}\right)}\right)}{d \tau^{\left(k_{cg}\right)}} &= \alpha^{\left(k_{cg}\right)}-\beta_g u\left(\tau^{\left(k_{cg}\right)}\right), \label{eq-dudt}\\
+\frac{d s\left(\tau^{\left(k_{cg}\right)}\right)}{d \tau^{\left(k_{cg}\right)}} &= \beta_g u\left(\tau^{\left(k_{cg}\right)}\right)-\gamma_g s\left(\tau^{\left(k_{cg}\right)}\right). \label{eq-dsdt}
+\end{align}
 
 # Introduction {#sec-intro}
 
@@ -161,11 +176,7 @@ Quarto formats citations and references automatically using the bibliography rec
 # Figures
 
 ::: {#fig-model}
-
 ![](figures/fig.pdf)
-
-\label{fig-model-inputs} 
-\label{fig-model-outputs}
 
 Pyro-Velocity is a fully generative Bayesian method with uncertainty estimation of velocity vector fields and shared latent time, based on raw counts and without ad-hoc preprocessing steps. a. Schematic comparing current RNA Velocity and Pyro-Velocity workflows. Both methods take in input spliced and unspliced read count tables and output RNA velocity vector fields and latent (shared) time. Previous methods require ad-hoc preprocessing steps, including the arbitrary selection of top variable genes, number of principal components, and kNN-pooling to impute both spliced and unspliced expression within the PCA-reduced spliced expression space. In addition, manually tuned ad-hoc postprocessing steps are used to compute the final vector field and latent time based on aggregation and smoothing of the independent velocity estimates for each gene which can dramatically change the velocity estimates. In contrast, Pyro-Velocity is a fully generative and probabilistic model that uses raw read counts. Our model requires minimal preprocessing and postprocessing steps and outputs a common shared time based on all the genes without additional aggregation steps. It also provides uncertainty estimation based on posterior samples. b. The main outputs of the Pyro-Velocity framework. Visualization of single gene expression across inferred developmental cell order using rainbow plots (right panel).
 :::
