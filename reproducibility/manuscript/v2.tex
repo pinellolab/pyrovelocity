@@ -477,6 +477,64 @@ first quantitative benchmark of RNA velocity-based cell fate trajectory
 inference and provides an exciting new framework for continued
 optimization of multi-fate predictions in the future.
 
+In conclusion, Pyro-Velocity provides the first probabilistic,
+interpretable, end-to-end Bayesian inference framework for RNA Velocity
+that learns cell dynamics and recovers cell fate from multimodal raw
+read counts. This approach provides uncertainty estimations of cell fate
+trajectories and novel visualization approaches to mitigate false
+discoveries. Pyro-Velocity recovered shared time and vector fields that
+are recapitulated in true developmental order and outperformed
+state-of-the-art methods like Cytotrace and scVelo
+(Supplementary Figure~\ref{suppfig-lineage-tracing}a).
+
+\section{Software availability}\label{software-availability}
+
+We developed our Pyro-Velocity models with Pyro (version 1.6.0)
+probabilistic programming language and PyTorch (version 1.8.1).
+Pyro-Velocity source code is available at
+\url{https://github.com/pinellolab/pyrovelocity}. The version of
+Pyro-Velocity (v0.1.0) used to generate the results presented in this
+manuscript has been deposited on Zenodo:
+\url{https://zenodo.org/record/7072876\#.Yx-2e-zMLxg}.
+
+\section{Data availability}\label{data-availability}
+
+All the data presented in this manuscript were collected from previously
+published studies. The fully mature PBMC, pancreas datasets are
+downloaded and loaded through the scVelo using
+\texttt{scvelo.datasets.pancreas()}, and
+\texttt{scvelo.datasets.pbmc68k()}. The LARRY inDrop sequencing data was
+processed by the LARRY authors using dropEst \citep{Petukhov2018-nr} and
+velocyto. This dataset can be accessed at
+\url{https://figshare.com/articles/dataset/larry_invitro_adata_sub_raw_h5ad/20780344}.
+
+\section{Acknowledgments}\label{acknowledgments}
+
+This project has been made possible in part by grant number 2022-249212
+from the Chan Zuckerberg Initiative DAF, an advised fund of Silicon
+Valley Community Foundation. L.P. received support from the U.S. NIH
+(R35 HG010717) and Silicon Valley Community Foundation (2022-249212).
+D.M.L is supported by R01CA226926, R01 CA215118, R01CA154923, R24
+OD031955, CureSearch Acceleration Initiative, and the MGH Scholars
+Award. We thank the Pinello and Langenau labs members for helpful
+discussions.
+
+\section{Author contributions}\label{author-contributions}
+
+L.P., Q.Q., and E.B. conceived the work. Q.Q. and E.B created the
+software. Q.Q. analyzed the data, and prepared the figures and tables.
+L.P and D.L. supervised the project. L.P., D.L., E.B., G.L.M helped in
+designing experiments and analyses. All the authors contributed to the
+writing of the manuscript.
+
+\section{Competing financial interests
+statement}\label{competing-financial-interests-statement}
+
+L.P. has financial interests in Edilytics, Inc., Excelsior Genomics, and
+SeQure Dx, Inc.~L.P.'s interests were reviewed and are managed by
+Massachusetts General Hospital and Partners HealthCare in accordance
+with their conflict of interest policies.
+
 \section{Methods}\label{sec-methods}
 
 \subsection{Model formulation}\label{sec-model}
@@ -568,8 +626,8 @@ directionality preference based on 30 posterior samples (4-6). Vectors
 were projected into the UMAP space using the scVelo API based on cosine
 similarity-derived transition matrix. c.~UMAP embedded cells colored by
 the average cell shared time across 30 posterior samples. The Spearman's
-correlation between Pyro -Velocity and Cytotrace is provided.
-d.~Pyro -Velocity automatic gene selection and ranking for predicting
+correlation between Pyro -Velocity and Cytotrace is provided. d.
+Pyro -Velocity automatic gene selection and ranking for predicting
 important genes involved in pancreas development. e. Phase portraits of
 posterior samples average spliced and unspliced gene expression (left),
 rainbow plots showing denoised spliced gene expression (middle), and
@@ -700,7 +758,7 @@ e.}
 Fig.~\ref{fig-model-results}, Pyro -Velocity (Model 2) outperforms
 scVelo on PBMC and pancreas datasets. Same format as in
 Fig.~\ref{fig-model-results} and
-Supplementary Figure~\ref{suppfig-model-results}}
+Supplementary Figure~\ref{suppfig-model-results}.}
 
 \end{suppfig}%
 
@@ -754,7 +812,7 @@ Pyro -Velocity Model 2, b. uni-fate Neutrophil lineage analysis with
 Pyro -Velocity Model 2, c.~Neutrophil and Monocyte bi-fate lineage
 analysis with Pyro -Velocity Model 1, and d.~multi-fate lineage analysis
 with Pyro -Velocity Model 1. The panel descriptions are the same as in
-Fig.~\ref{fig-lineage-tracing}}
+Fig.~\ref{fig-lineage-tracing}.}
 
 \end{suppfig}%
 
