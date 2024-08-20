@@ -501,6 +501,39 @@ differential equations proposed in velocyto [@La_Manno2018-lj] and scVelo
   &= \beta_g u\left(\tau^{\left(k_{cg}\right)}\right)-\gamma_g s\left(\tau^{\left(k_{cg}\right)}\right). \label{eq-dsdt}
 \end{align}
 
+## Trajectory inference {#sec-methods-trajectory-inference}
+
+### Velocity vector field
+
+The velocity-based vector fields were generated using the scVelo function call
+
+```python
+scvelo.tl.velocity_graph(adata)
+scvelo.tl.velocity_embedding(
+  adata, 
+  vkey='velocity',
+  basis='embed',
+)
+```
+
+We used the default options for projecting the vector fields from scVelo models.
+Unlike scVelo, Pyro-Velocity uses statistics derived from posterior samples of
+the denoised spliced gene expression and posterior samples of the velocity
+estimation for building the cell state transition matrix estimates using cosine
+similarity. Pyro-Velocity uses the same projection method as scVelo for
+projecting the transition matrix into the two-dimensional vector field on the
+user-provided embedding space.
+
+### Clonal progression vector field
+
+No method exists for projecting clonal cell fates from the LARRY data and
+associated subsets thereof into a vector field. Thus, we designed a strategy for
+projecting clonal progression vector fields. Given cells sharing the same LARRY
+barcode, we considered the vectors connecting the embedding centroid of cells at
+consecutive time points and then leveraged Gaussian smoothing of nearest
+centroid directions to represent the clonal progression vector field informed by
+LARRY barcodes on a regular grid over the cell manifold.
+
 ## Cell fate uncertainty estimation {#sec-methods-fate-uncertainty}
 
 Pyro&thinsp;-Velocity evaluates cell fate uncertainty using four statistics. The
