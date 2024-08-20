@@ -68,6 +68,46 @@
 \fi
 \makeatother
 
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{241,243,245}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.40,0.45,0.13}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\BuiltInTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.13,0.47,0.30}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{\textit{#1}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{\textit{#1}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\ExtensionTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.28,0.35,0.67}{#1}}
+\newcommand{\ImportTok}[1]{\textcolor[rgb]{0.00,0.46,0.62}{#1}}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.13,0.47,0.30}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.13,0.47,0.30}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.07,0.07,0.07}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.13,0.47,0.30}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{\textit{#1}}}
 
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}\usepackage{longtable,booktabs,array}
@@ -116,6 +156,7 @@
 \raggedbottom
 \usepackage{nameref}
 \usepackage{placeins}
+\usepackage{framed}
 \allowdisplaybreaks
 \makeatletter
 \@ifpackageloaded{float}{}{\usepackage{float}}
@@ -609,7 +650,7 @@ titles.}
 
 \section{Methods}\label{sec-methods}
 
-\subsection{Model formulation}\label{sec-model}
+\subsection{Model formulation}\label{sec-methods-model}
 
 We assume the dynamical gene expression is determined by the RNA
 splicing process, and infer the unspliced and spliced gene expression
@@ -621,7 +662,48 @@ level from the differential equations proposed in velocyto
   &= \beta_g u\left(\tau^{\left(k_{cg}\right)}\right)-\gamma_g s\left(\tau^{\left(k_{cg}\right)}\right). \label{eq-dsdt}
 \end{align}
 
-\subsection{Model evaluation and selection}\label{sec-model-selection}
+\subsection{Cospar}\label{sec-methods-cospar}
+
+We computed the
+\href{https://github.com/AllonKleinLab/cospar/releases/tag/v0.1.9}{Cospar
+\texttt{v0.1.9}} \citep{Wang2022-xb} fate potency score for the above
+processed multi-fate LARRY dataset, and selected the subset of the fate
+potency scores for evaluating bi-fate and uni-fate datasets. We used the
+following function calls to achieve this
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{cospar.tmap.infer\_Tmap\_from\_multitime\_clones(}
+\NormalTok{  adata\_orig}\OperatorTok{=}\NormalTok{adata, }
+\NormalTok{  compute\_new}\OperatorTok{=}\VariableTok{True}\NormalTok{,}
+\NormalTok{  clonal\_time\_points}\OperatorTok{=}\NormalTok{[}\DecValTok{2}\NormalTok{,}\DecValTok{4}\NormalTok{,}\DecValTok{6}\NormalTok{], }
+\NormalTok{  later\_time\_point}\OperatorTok{=}\DecValTok{6}\NormalTok{,}
+\NormalTok{  smooth\_array}\OperatorTok{=}\NormalTok{[}\DecValTok{20}\NormalTok{,}\DecValTok{15}\NormalTok{,}\DecValTok{10}\NormalTok{],}
+\NormalTok{  sparsity\_threshold}\OperatorTok{=}\FloatTok{0.2}\NormalTok{, }
+\NormalTok{  max\_iter\_N}\OperatorTok{=}\DecValTok{3}
+\NormalTok{)}
+\NormalTok{cospar.pl.fate\_potency(}
+\NormalTok{  adata}\OperatorTok{=}\NormalTok{adata, }
+\NormalTok{  used\_Tmap}\OperatorTok{=}\StringTok{\textquotesingle{}transition\_map\textquotesingle{}}\NormalTok{,}
+\NormalTok{  map\_backward}\OperatorTok{=}\VariableTok{True}\NormalTok{,}
+\NormalTok{  method}\OperatorTok{=}\StringTok{\textquotesingle{}norm{-}sum\textquotesingle{}}\NormalTok{,}
+\NormalTok{  color\_bar}\OperatorTok{=}\VariableTok{True}\NormalTok{,}
+\NormalTok{  fate\_count}\OperatorTok{=}\VariableTok{True}
+\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Cytotrace model}\label{sec-methods-cytotrace}
+
+We implemented Cytotrace in Python based on the R version
+\citep{Gulati2020-xq} for benchmarking Pyro -Velocity and scVelo's
+shared (latent) time prediction in the Python environment. This
+implementation is available in the
+\href{https://github.com/pinellolab/pyrovelocity/blob/main/src/pyrovelocity/analysis/cytotrace.py}{Pyro -Velocity
+GitHub repository}.
+
+\subsection{Model evaluation and
+selection}\label{sec-methods-model-selection}
 
 Pyro -Velocity provides two model formulations as described above. Users
 can compare their predictive performance to decide which of the two
