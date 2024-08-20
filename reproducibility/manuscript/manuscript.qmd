@@ -17,7 +17,8 @@ format:
   html:
     code-fold: true
     html-math-method: mathjax
-  docx: default
+  docx:
+    reference-doc: styles.docx
 csl: _extensions/sciexp/nature/csl/springer-basic-brackets-no-et-al.csl
 author:
   - name: Qian Qin
