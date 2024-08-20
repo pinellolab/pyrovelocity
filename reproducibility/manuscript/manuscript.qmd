@@ -19,61 +19,69 @@ format:
     html-math-method: mathjax
   docx:
     reference-doc: styles.docx
-filters:
-  - authors-block
+# filters:
+#   - authors-block
 csl: _extensions/sciexp/nature/csl/springer-basic-brackets-no-et-al.csl
-author:
+affiliations:
+  - name: Massachusetts General Hospital Research Institute, Charlestown, MA
+    id: 1
+    department: Molecular Pathology Unit
+    city: Charlestown
+    state: MA
+    postal-code: 02129
+  - name: Harvard Medical School, Charlestown, MA
+    id: 2
+    department: Massachusetts General Hospital Cancer Center
+    city: Charlestown
+    state: MA
+    postal-code: 02129
+  - name: Massachusetts General Hospital, Boston, MA
+    id: 3
+    department: Center for Regenerative Medicine
+    city: Boston
+    state: MA
+    postal-code: 02114
+  - name: Harvard University, Cambridge, MA
+    id: 4
+    department: Harvard Stem Cell Institute
+    city: Cambridge
+    state: MA
+    postal-code: 02139
+  - name: Cambridge, MA
+    id: 5
+    department: Broad Institute of MIT and Harvard
+    city: Cambridge
+    state: MA
+    postal-code: 02142
+  - name: Laboratory of Neurodevelopmental Systems Biology, Lausanne, Switzerland
+    id: 6
+    department: Brain and Mind Institute, School of Life Sciences, École Polytechnique Fédérale de Lausanne (EPFL)
+    city: Lausanne
+    state: Switzerland
+    postal-code: 1015
+  - name: Cambridge, MA
+    id: 7
+    department: Basis Research Institute
+    city: Cambridge
+    state: MA
+    postal-code: 02142
+authors:
   - name: Qian Qin
     affiliations:
-      - name: Massachusetts General Hospital Research Institute, Charlestown, MA
-        id: 1
-        department: Molecular Pathology Unit
-        city: Charlestown
-        state: MA
-        postal-code: 02129
-      - name: Harvard Medical School, Charlestown, MA
-        id: 2
-        department: Massachusetts General Hospital Cancer Center
-        city: Charlestown
-        state: MA
-        postal-code: 02129
-      - name: Massachusetts General Hospital, Boston, MA
-        id: 3
-        department: Center for Regenerative Medicine
-        city: Boston
-        state: MA
-        postal-code: 02114
-      - name: Harvard University, Cambridge, MA
-        id: 4
-        department: Harvard Stem Cell Institute
-        city: Cambridge
-        state: MA
-        postal-code: 02139
-      - name: Cambridge, MA
-        id: 5
-        department: Broad Institute of MIT and Harvard
-        city: Cambridge
-        state: MA
-        postal-code: 02142
+      - ref: 1
+      - ref: 2
+      - ref: 3
+      - ref: 4
+      - ref: 5
     # attributes:
     #   equal-contributor: true
   - name: Eli Bingham
     affiliations:
       - ref: 5
-      - name: Cambridge, MA
-        id: 7
-        department: Basis Research Institute
-        city: Cambridge
-        state: MA
-        postal-code: 02142
+      - ref: 7
   - name: Gioele La Manno
     affiliations:
-      - name: Laboratory of Neurodevelopmental Systems Biology, Lausanne, Switzerland
-        id: 6
-        department: Brain and Mind Institute, School of Life Sciences, École Polytechnique Fédérale de Lausanne (EPFL)
-        city: Lausanne
-        state: Switzerland
-        postal-code: 1015
+      - ref: 6
     email: gioele.lamanno@epfl.ch
     attributes:
       corresponding: true
