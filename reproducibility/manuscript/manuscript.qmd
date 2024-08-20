@@ -488,7 +488,7 @@ fate potency are reported in the titles.
 
 # Methods {#sec-methods}
 
-## Model formulation {#sec-model}
+## Model formulation {#sec-methods-model}
 
 We assume the dynamical gene expression is determined by the RNA splicing
 process, and infer the unspliced and spliced gene expression level from the
@@ -501,7 +501,14 @@ differential equations proposed in velocyto [@La_Manno2018-lj] and scVelo
   &= \beta_g u\left(\tau^{\left(k_{cg}\right)}\right)-\gamma_g s\left(\tau^{\left(k_{cg}\right)}\right). \label{eq-dsdt}
 \end{align}
 
-## Model evaluation and selection {#sec-model-selection}
+## Cytotrace model {#sec-methods-cytotrace}
+
+We implemented Cytotrace in Python based on the R version [@Gulati2020-xq] for
+benchmarking Pyro&thinsp;-Velocity and scVelo’s shared (latent) time prediction in the
+Python environment. This implementation is available in the 
+[Pyro&thinsp;-Velocity GitHub repository](https://github.com/pinellolab/pyrovelocity/blob/main/src/pyrovelocity/analysis/cytotrace.py).
+
+## Model evaluation and selection {#sec-methods-model-selection}
 
 Pyro&thinsp;-Velocity provides two model formulations as described above.
 Users can compare their predictive performance to decide which of the two models
