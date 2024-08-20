@@ -43,7 +43,7 @@
 \makeatother
 \usepackage{xcolor}
 \setlength{\emergencystretch}{3em} % prevent overfull lines
-\setcounter{secnumdepth}{5}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
 % Make \paragraph and \subparagraph free-standing
 \makeatletter
 \ifx\paragraph\undefined\else
@@ -120,9 +120,9 @@
 \makeatletter
 \@ifpackageloaded{float}{}{\usepackage{float}}
 \floatstyle{plain}
-\@ifundefined{c@chapter}{\newfloat{suppfig}{h}{losuppfig}}{\newfloat{suppfig}{h}{losuppfig}[chapter]}
-\floatname{suppfig}{Supplementary Figure}
-\newcommand*\listofsuppfigs{\listof{suppfig}{List of Supplementary Figures}}
+\@ifundefined{c@chapter}{\newfloat{suppfig}{h}{loextfig}}{\newfloat{suppfig}{h}{loextfig}[chapter]}
+\floatname{suppfig}{Extended Data Fig.}
+\newcommand*\listofsuppfigs{\listof{suppfig}{List of Extended Data Figures}}
 \makeatother
 \makeatletter
 \@ifpackageloaded{caption}{}{\usepackage{caption}}
@@ -236,7 +236,8 @@ generative modeling,  cell fate,  developmental trajectory inference}
 
 \newpage{}
 
-\section{Main text}\label{sec-main}
+\section*{Main text}\label{sec-main}
+\addcontentsline{toc}{section}{Main text}
 
 RNA Velocity is a powerful computational framework to estimate the time
 derivative of gene expression
@@ -271,44 +272,44 @@ that estimates RNA dynamics and infers cell trajectories using Pyro
 language.
 
 Pyro -Velocity recasts the velocity estimation problem into a latent
-variable posterior probability inference (Sec.~\ref{sec-methods}). The
-proposed model is generative and fully Bayesian, with the different
-parameters considered as latent random variables. Each parameter is
-assigned a prior distribution, and the model is then conditioned on the
-raw data (both spliced and unspliced molecule raw counts) to estimate
-posterior probability distributions and to enable uncertainty estimation
-of velocity. Central to the Pyro -Velocity model is a \emph{shared
-latent time} \((t)\): a global latent variable placing each cell at a
-particular instant of the modeled dynamical process. From this latent
-time, the expectation of spliced and unspliced RNA levels for each gene
-can be computed knowing gene-specific kinetics parameters
-(transcriptional \((\alpha)\), splicing \((\beta)\), and degradation
-rates (\(\gamma\)) and two gene-specific switching times
-\((t_{0}^{k})\), and gene-specific transcriptional state \(k\)) and
-integrating the RNA velocity differential equations analogously to what
-proposed in the dynamical RNA velocity model by Bergen et al.
-\citep{Bergen2020-pj, Li2021-qa}. However, we innovate the structure and
-formulation of the latent time given that our model is set to jointly
-fit the entire raw data matrix, not individual genes. We approach the
-task of estimating the posterior distribution by restricting the search
-within a family of a variational distribution approximating the true
-posterior, and taking advantage of the automatic differentiation
-variational inference (ADVI) capabilities of Pyro
-\citep{Bingham2018-id, Kucukelbir2016-bk} (Fig.~\ref{fig-model}a,
-Sec.~\ref{sec-methods}). Notably, our generative Bayesian model enables
-to sample from the posterior distributions of the latent and dependent
-variables, allowing uncertainty estimation of phase portraits, high
-dimensional velocity vector field, and shared latent time. Around this
-model, we built several visualizations to assess uncertainty and
-functions to recover putative cell fate priming genes and to investigate
-how the denoised gene expression recapitulates known cell-type
-annotations and their developmental order (Fig.~\ref{fig-model}b,
-Sec.~\ref{sec-methods}). Although several RNA velocity methods
+variable posterior probability inference
+(\hyperref[sec-methods]{Methods}). The proposed model is generative and
+fully Bayesian, with the different parameters considered as latent
+random variables. Each parameter is assigned a prior distribution, and
+the model is then conditioned on the raw data (both spliced and
+unspliced molecule raw counts) to estimate posterior probability
+distributions and to enable uncertainty estimation of velocity. Central
+to the Pyro -Velocity model is a \emph{shared latent time} \((t)\): a
+global latent variable placing each cell at a particular instant of the
+modeled dynamical process. From this latent time, the expectation of
+spliced and unspliced RNA levels for each gene can be computed knowing
+gene-specific kinetics parameters (transcriptional \((\alpha)\),
+splicing \((\beta)\), and degradation rates (\(\gamma\)) and two
+gene-specific switching times \((t_{0}^{k})\), and gene-specific
+transcriptional state \(k\)) and integrating the RNA velocity
+differential equations analogously to what proposed in the dynamical RNA
+velocity model by Bergen et al. \citep{Bergen2020-pj, Li2021-qa}.
+However, we innovate the structure and formulation of the latent time
+given that our model is set to jointly fit the entire raw data matrix,
+not individual genes. We approach the task of estimating the posterior
+distribution by restricting the search within a family of a variational
+distribution approximating the true posterior, and taking advantage of
+the automatic differentiation variational inference (ADVI) capabilities
+of Pyro \citep{Bingham2018-id, Kucukelbir2016-bk}
+(Fig.~\ref{fig-model}a, \hyperref[sec-methods]{Methods}). Notably, our
+generative Bayesian model enables to sample from the posterior
+distributions of the latent and dependent variables, allowing
+uncertainty estimation of phase portraits, high dimensional velocity
+vector field, and shared latent time. Around this model, we built
+several visualizations to assess uncertainty and functions to recover
+putative cell fate priming genes and to investigate how the denoised
+gene expression recapitulates known cell-type annotations and their
+developmental order (Fig.~\ref{fig-model}b,
+\hyperref[sec-methods]{Methods}). Although several RNA velocity methods
 \citep{Gayoso2024-fz, Gorin2022-il, Gu2022-rh, Cui2022-em, Gao2022-jq}
-have been recently proposed, and many of them have not been
-peer-reviewed, here we showcase the advantages and innovations of
-Pyro -Velocity by comparing it with the current state-of-the-art
-dynamical RNA velocity model proposed by Bergen et al.
+have been recently proposed, here we showcase the advantages and
+innovations of Pyro -Velocity by comparing it with the current
+state-of-the-art dynamical RNA velocity model proposed by Bergen et al.
 \citep{Bergen2020-pj}, and implemented in scVelo.
 
 One major biological hurdle for current formulations of RNA Velocity
@@ -347,7 +348,7 @@ models have qualitatively comparable vector fields, the results
 generated by scVelo were greatly influenced by gene selection,
 neighboring cell number for gene expression smoothing, and cannot
 provide confidence assessment of lineage directionality
-(Supplementary Figure~\ref{suppfig-model-results}a). In addition,
+(Extended Data Fig.~\ref{extfig-model-results}a). In addition,
 Pyro -Velocity uncertainty visualizations uncovered that differentiated
 cells had a larger vector field uncertainty than stem and progenitor
 cells, as would be expected for terminally differentiated cell states
@@ -369,9 +370,9 @@ and corresponding denoised spliced expression per cell
 (Fig.~\ref{fig-model-results}d, Methods). This procedure successfully
 recovered key developmental genes that are activated (or repressed)
 during endocrinogenesis (Fig.~\ref{fig-model-results}d-e,
-Supplementary Figure~\ref{suppfig-model-results}). Among the top
-positively correlated genes identified by Pyro -Velocity, endocrine Beta
-cells expressed insulin 1 and 2 (Ins1, Ins2) and Nnat, which is a key
+Extended Data Fig.~\ref{extfig-model-results}). Among the top positively
+correlated genes identified by Pyro -Velocity, endocrine Beta cells
+expressed insulin 1 and 2 (Ins1, Ins2) and Nnat, which is a key
 regulator Beta cell insulin generation \citep{Millership2018-vd} and
 Ppp1r1a which is a marker of Beta cells \citep{Jiang2013-pt}. The
 ranking procedure proposed by scVelo failed to identify Ins1, Ins2,
@@ -387,7 +388,7 @@ investigate the inferred cell order based on known annotations. Further,
 UMAP embedding of cells colored based on denoised gene expression
 confirmed the cell fate markers' smooth and progressive activation (or
 repression) towards endocrine cells (Fig.~\ref{fig-model-results}e,
-Supplementary Figure~\ref{suppfig-model-results}).
+Extended Data Fig.~\ref{extfig-model-results}).
 
 Ground truth velocity is not a quantity we can easily assess. Therefore,
 no robust and quantitative benchmarking of RNA velocity methods has been
@@ -413,21 +414,21 @@ quantitatively assess the agreement between observed and predicted
 fates, we considered two metrics: 1. average cosine similarity (cs)
 between vectors from the RNA Velocity vector field and the clonal
 progression vector field, i.e., a vector field derived directly from the
-lineage data (Sec.~\ref{sec-methods}), 2. Spearman's correlation
-\((\rho)\) between cell latent (shared) time and fate potency scores
-derived from Cytotrace and Cospar. Cospar, our gold standard, is a
-state-of-the-art method designed explicitly for predicting fate potency
-based on LARRY data, while Cytotrace leverages only transcriptomic data.
-We selected cell state changes associated with monocyte and neutrophil
-lineages because both lineages have the largest numbers of cells in the
-scRNA sequencing data set and well-known cell fate trajectories
-\citep{Petukhov2018-nr}. As expected, the Pyro -Velocity vector field
-accurately predicted cell state trajectories from hematopoietic
-progenitor cells into mature monocytes or neutrophils and had high
-cosine similarity between the inferred vector field and clonal
-progression vector field assigned by LARRY (monocytes \(cs=0.49\),
-neutrophils \(cs=0.38\)). High Spearman's correlation was also seen
-between shared latent time and Cospar fate potency (monocytes
+lineage data (\hyperref[sec-methods]{Methods}), 2. Spearman's
+correlation \((\rho)\) between cell latent (shared) time and fate
+potency scores derived from Cytotrace and Cospar. Cospar, our gold
+standard, is a state-of-the-art method designed explicitly for
+predicting fate potency based on LARRY data, while Cytotrace leverages
+only transcriptomic data. We selected cell state changes associated with
+monocyte and neutrophil lineages because both lineages have the largest
+numbers of cells in the scRNA sequencing data set and well-known cell
+fate trajectories \citep{Petukhov2018-nr}. As expected, the
+Pyro -Velocity vector field accurately predicted cell state trajectories
+from hematopoietic progenitor cells into mature monocytes or neutrophils
+and had high cosine similarity between the inferred vector field and
+clonal progression vector field assigned by LARRY (monocytes
+\(cs=0.49\), neutrophils \(cs=0.38\)). High Spearman's correlation was
+also seen between shared latent time and Cospar fate potency (monocytes
 \(\rho=0.60\), neutrophils \(\rho=0.74\)) or shared latent time with
 Cytotrace fate potency (monocytes \(\rho=0.925\), neutrophils
 \(\rho=0.925\)). By contrast, scVelo generated vector fields with
@@ -438,14 +439,14 @@ non-significantly correlated (\(\rho=-0.07\), neutrophils). A similar
 low correlation was observed for scVelo and Cytotrace fate potency
 scores (monocytes \(\rho=0.309\), neutrophils \(\rho=0.751\))
 (Fig.~\ref{fig-lineage-tracing}a-b,
-Supplementary Figure~\ref{suppfig-lineage-tracing}c).
+Extended Data Fig.~\ref{extfig-lineage-tracing}c).
 
 Next, we evaluated the ability of the Pyro -Velocity models to recover
 bi-fate or multi-fate trajectories by considering clones belonging to
 monocyte and neutrophil lineages or using the entire dataset. Not
 surprisingly, both methods showed their limitations, given that they are
 not designed to model and capture multiple fate trajectories
-(Supplementary Figure~\ref{suppfig-lineage-tracing-2}c-d). The recovered
+(Extended Data Fig.~\ref{extfig-lineage-tracing-2}c-d). The recovered
 vector fields and cell latent (shared) time show inconsistent directions
 for both methods. However, Pyro -Velocity identified higher uncertainty
 for some of the problematic regions. Furthermore, we discovered that
@@ -453,8 +454,8 @@ vector field and shared time estimation could be significantly improved
 by extending the original kinetic model by allowing each gene a time lag
 for the transcriptional activation and a baseline expression level
 potentially different than 0 (Pyro -Velocity Model 2,
-Sec.~\ref{sec-methods}) (Fig.~\ref{fig-lineage-tracing}c,d,
-Supplementary Figure~\ref{suppfig-graphical-models}b,c). This extended
+\hyperref[sec-methods]{Methods}) (Fig.~\ref{fig-lineage-tracing}c,d,
+Extended Data Fig.~\ref{extfig-graphical-models}b,c). This extended
 model recapitulated a vector field consistent with the clonal
 progression vector field for most branches with some spurious
 predictions within the intermediate cell state between stem cells and
@@ -468,94 +469,27 @@ and also improved the correlation with Cytotrace fate potency (bi-fate
 \(\rho=0.931\), multi-fate \(\rho=0.614\)). Remarkably, the shared time
 per cell from Pyro -Velocity also outperformed Cytotrace for
 developmental order prediction
-(Supplementary Figure~\ref{suppfig-lineage-tracing}a,c). Importantly,
-this extended model retained its ability to accurately identify cell
-lineage trajectories and shared time for all the other datasets analyzed
-above (Supplementary Figure~\ref{suppfig-model-2-result}). Taken
-together, our approach using LARRY barcoded datasets established the
-first quantitative benchmark of RNA velocity-based cell fate trajectory
+(Extended Data Fig.~\ref{extfig-lineage-tracing}a,c). Importantly, this
+extended model retained its ability to accurately identify cell lineage
+trajectories and shared time for all the other datasets analyzed above
+(Extended Data Fig.~\ref{extfig-model-2-result}). Taken together, our
+approach using LARRY barcoded datasets established the first
+quantitative benchmark of RNA velocity-based cell fate trajectory
 inference and provides an exciting new framework for continued
 optimization of multi-fate predictions in the future.
 
-In conclusion, Pyro-Velocity provides the first probabilistic,
+In conclusion, Pyro -Velocity provides the first probabilistic,
 interpretable, end-to-end Bayesian inference framework for RNA Velocity
 that learns cell dynamics and recovers cell fate from multimodal raw
 read counts. This approach provides uncertainty estimations of cell fate
 trajectories and novel visualization approaches to mitigate false
-discoveries. Pyro-Velocity recovered shared time and vector fields that
+discoveries. Pyro -Velocity recovered shared time and vector fields that
 are recapitulated in true developmental order and outperformed
 state-of-the-art methods like Cytotrace and scVelo
-(Supplementary Figure~\ref{suppfig-lineage-tracing}a).
+(Extended Data Fig.~\ref{extfig-lineage-tracing}a).
 
-\section{Software availability}\label{software-availability}
-
-We developed our Pyro-Velocity models with Pyro (version 1.6.0)
-probabilistic programming language and PyTorch (version 1.8.1).
-Pyro-Velocity source code is available at
-\url{https://github.com/pinellolab/pyrovelocity}. The version of
-Pyro-Velocity (v0.1.0) used to generate the results presented in this
-manuscript has been deposited on Zenodo:
-\url{https://zenodo.org/record/7072876\#.Yx-2e-zMLxg}.
-
-\section{Data availability}\label{data-availability}
-
-All the data presented in this manuscript were collected from previously
-published studies. The fully mature PBMC, pancreas datasets are
-downloaded and loaded through the scVelo using
-\texttt{scvelo.datasets.pancreas()}, and
-\texttt{scvelo.datasets.pbmc68k()}. The LARRY inDrop sequencing data was
-processed by the LARRY authors using dropEst \citep{Petukhov2018-nr} and
-velocyto. This dataset can be accessed at
-\url{https://figshare.com/articles/dataset/larry_invitro_adata_sub_raw_h5ad/20780344}.
-
-\section{Acknowledgments}\label{acknowledgments}
-
-This project has been made possible in part by grant number 2022-249212
-from the Chan Zuckerberg Initiative DAF, an advised fund of Silicon
-Valley Community Foundation. L.P. received support from the U.S. NIH
-(R35 HG010717) and Silicon Valley Community Foundation (2022-249212).
-D.M.L is supported by R01CA226926, R01 CA215118, R01CA154923, R24
-OD031955, CureSearch Acceleration Initiative, and the MGH Scholars
-Award. We thank the Pinello and Langenau labs members for helpful
-discussions.
-
-\section{Author contributions}\label{author-contributions}
-
-L.P., Q.Q., and E.B. conceived the work. Q.Q. and E.B created the
-software. Q.Q. analyzed the data, and prepared the figures and tables.
-L.P and D.L. supervised the project. L.P., D.L., E.B., G.L.M helped in
-designing experiments and analyses. All the authors contributed to the
-writing of the manuscript.
-
-\section{Competing financial interests
-statement}\label{competing-financial-interests-statement}
-
-L.P. has financial interests in Edilytics, Inc., Excelsior Genomics, and
-SeQure Dx, Inc.~L.P.'s interests were reviewed and are managed by
-Massachusetts General Hospital and Partners HealthCare in accordance
-with their conflict of interest policies.
-
-\section{Methods}\label{sec-methods}
-
-\subsection{Model formulation}\label{sec-model}
-
-We assume the dynamical gene expression is determined by the RNA
-splicing process, and infer the unspliced and spliced gene expression
-level from the differential equations proposed in velocyto
-\citep{La_Manno2018-lj} and scVelo \citep{Bergen2020-pj}
-
-\begin{align}
-\frac{d u\left(\tau^{\left(k_{cg}\right)}\right)}{d \tau^{\left(k_{cg}\right)}}
-  &= \alpha^{\left(k_{cg}\right)}-\beta_g u\left(\tau^{\left(k_{cg}\right)}\right), \label{eq-dudt}\\
-\frac{d s\left(\tau^{\left(k_{cg}\right)}\right)}{d \tau^{\left(k_{cg}\right)}}
-  &= \beta_g u\left(\tau^{\left(k_{cg}\right)}\right)-\gamma_g s\left(\tau^{\left(k_{cg}\right)}\right). \label{eq-dsdt}
-\end{align}
-
-\newpage{}
-
-\onecolumn
-
-\section{References}\label{references}
+\section*{References}\label{references}
+\addcontentsline{toc}{section}{References}
 
 \renewcommand{\bibsection}{}
 \bibliography{bibliography.bib}
@@ -563,6 +497,8 @@ level from the differential equations proposed in velocyto
 \FloatBarrier
 
 \newpage{}
+
+\onecolumn
 
 \section{Figures}\label{figures}
 
@@ -669,7 +605,106 @@ titles.}
 
 \newpage{}
 
-\section{Supplementary Figures}\label{supplementary-figures}
+\twocolumn
+
+\section{Methods}\label{sec-methods}
+
+\subsection{Model formulation}\label{sec-model}
+
+We assume the dynamical gene expression is determined by the RNA
+splicing process, and infer the unspliced and spliced gene expression
+level from the differential equations proposed in velocyto
+\citep{La_Manno2018-lj} and scVelo \citep{Bergen2020-pj} \begin{align}
+\frac{d u\left(\tau^{\left(k_{cg}\right)}\right)}{d \tau^{\left(k_{cg}\right)}}
+  &= \alpha^{\left(k_{cg}\right)}-\beta_g u\left(\tau^{\left(k_{cg}\right)}\right), \label{eq-dudt}\\
+\frac{d s\left(\tau^{\left(k_{cg}\right)}\right)}{d \tau^{\left(k_{cg}\right)}}
+  &= \beta_g u\left(\tau^{\left(k_{cg}\right)}\right)-\gamma_g s\left(\tau^{\left(k_{cg}\right)}\right). \label{eq-dsdt}
+\end{align}
+
+\subsection{Model evaluation and selection}\label{sec-model-selection}
+
+Pyro -Velocity provides two model formulations as described above. Users
+can compare their predictive performance to decide which of the two
+models to use for a given dataset. Namely, the mean absolute errors of
+posterior samples prediction of spliced and unspliced raw read counts
+\(x_{icg}\) from its observation \(\tilde{X}_{cg}\) per gene and cell
+combinations \begin{align*}
+\frac{1}{N_i N_c N_g} \sum_{i=1}^{N_i} \sum_{c=1}^{N_c} \sum_{g=1}^{N_g} |x_{icg} - \tilde{X}_{cg}|,
+\end{align*} where \(i\) is the posterior sample index, \(N_i\) is the
+posterior sample number, \(N_c\) is the cell number, \(N_g\) is the gene
+number. Then it is possible to evaluate the cell fate inference
+performance of the models based on two metrics:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  the consistency between the velocity vector field and the \emph{clonal
+  progression vector field} using grid-based cosine similarity; 2.
+  Spearman's correlation of velocity-based shared (latent) time with
+  Cospar fate potency and the silver standard Cytotrace score. Both
+  metrics are implemented in scipy.
+\end{enumerate}
+
+\section{Data availability}\label{data-availability}
+
+All the data presented in this manuscript were collected from previously
+published studies. The fully mature PBMC, pancreas datasets are
+downloaded and loaded through the scVelo using
+\texttt{scvelo.datasets.pancreas()}, and
+\texttt{scvelo.datasets.pbmc68k()}. The LARRY inDrop sequencing data was
+processed by the LARRY authors using dropEst \citep{Petukhov2018-nr} and
+velocyto. This dataset can be accessed at
+\url{https://figshare.com/articles/dataset/larry_invitro_adata_sub_raw_h5ad/20780344}.
+
+\section{Code availability}\label{code-availability}
+
+We developed our Pyro -Velocity models with Pyro (version 1.6.0)
+probabilistic programming language and PyTorch (version 1.8.1).
+Pyro -Velocity source code is available at
+\url{https://github.com/pinellolab/pyrovelocity}. The version of
+Pyro -Velocity (v0.1.0) used to generate the results presented in this
+manuscript has been deposited on Zenodo:
+\url{https://zenodo.org/record/7072876\#.Yx-2e-zMLxg}.
+
+\section*{Acknowledgments}\label{acknowledgments}
+\addcontentsline{toc}{section}{Acknowledgments}
+
+This project has been made possible in part by grant number 2022-249212
+from the Chan Zuckerberg Initiative DAF, an advised fund of Silicon
+Valley Community Foundation. L.P. received support from the U.S. NIH
+(R35 HG010717) and Silicon Valley Community Foundation (2022-249212).
+D.M.L is supported by R01CA226926, R01 CA215118, R01CA154923, R24
+OD031955, CureSearch Acceleration Initiative, and the MGH Scholars
+Award. We thank the Pinello and Langenau labs members for helpful
+discussions.
+
+\section*{Author contributions}\label{author-contributions}
+\addcontentsline{toc}{section}{Author contributions}
+
+L.P., Q.Q., and E.B. conceived the work. Q.Q. and E.B created the
+software. Q.Q. analyzed the data, and prepared the figures and tables.
+L.P and D.L. supervised the project. L.P., D.L., E.B., G.L.M helped in
+designing experiments and analyses. All the authors contributed to the
+writing of the manuscript.
+
+\section*{Competing financial interests
+statement}\label{competing-financial-interests-statement}
+\addcontentsline{toc}{section}{Competing financial interests statement}
+
+L.P. has financial interests in Edilytics, Inc., Excelsior Genomics, and
+SeQure Dx, Inc.~L.P.'s interests were reviewed and are managed by
+Massachusetts General Hospital and Partners HealthCare in accordance
+with their conflict of interest policies.
+
+\FloatBarrier
+\clearpage
+
+\newpage{}
+
+\onecolumn
+
+\section{Extended Data Figures}\label{extended-data-figures}
 
 \begin{suppfig}
 
@@ -679,12 +714,12 @@ titles.}
 
 }
 
-\caption{\label{suppfig-graphical-models}Graphical representations
-detail the generative process of the Pyro -Velocity models and highlight
-their differences. a. Pyro -Velocity Model 1. Each rectangle represents
-one data dimension (e.g., gene or cell). The arrows represent the
-directed hierarchical dependency among random variables. The white
-circles correspond to the modeled random variables. The probability
+\caption{\label{extfig-graphical-models}Graphical representations detail
+the generative process of the Pyro -Velocity models and highlight their
+differences. a. Pyro -Velocity Model 1. Each rectangle represents one
+data dimension (e.g., gene or cell). The arrows represent the directed
+hierarchical dependency among random variables. The white circles
+correspond to the modeled random variables. The probability
 distributions of these variables are denoted on the right legend. The
 gray circles correspond to intermediate results computed from random
 variables. In this model, the kinetics random variables for the cell
@@ -719,7 +754,7 @@ illustrated for the unspliced gene expression profiles (not shown).}
 
 }
 
-\caption{\label{suppfig-model-results}Extended version of
+\caption{\label{extfig-model-results}Extended version of
 Fig.~\ref{fig-model-results} for evaluating Pyro -Velocity (Model 1) and
 scVelo on the PBMC and pancreas datasets. a. Left figure shows the
 scVelo vector field using the default user options, right figure shows
@@ -754,11 +789,11 @@ e.}
 
 }
 
-\caption{\label{suppfig-model-2-result}Extension of
+\caption{\label{extfig-model-2-result}Extension of
 Fig.~\ref{fig-model-results}, Pyro -Velocity (Model 2) outperforms
 scVelo on PBMC and pancreas datasets. Same format as in
 Fig.~\ref{fig-model-results} and
-Supplementary Figure~\ref{suppfig-model-results}.}
+Extended Data Fig.~\ref{extfig-model-results}.}
 
 \end{suppfig}%
 
@@ -770,7 +805,7 @@ Supplementary Figure~\ref{suppfig-model-results}.}
 
 }
 
-\caption{\label{suppfig-lineage-tracing}Extension of
+\caption{\label{extfig-lineage-tracing}Extension of
 Fig.~\ref{fig-lineage-tracing}, Pyro -Velocity (Model 1 for uni-fate
 data, Model 2 for bi-fate and multi-fate data) outperforms Cytotrace on
 scRNA-seq datasets with lineage barcoding information (LARRY dataset).
@@ -804,7 +839,7 @@ expression level for the selected genes in e.}
 
 }
 
-\caption{\label{suppfig-lineage-tracing-2}Extension of
+\caption{\label{extfig-lineage-tracing-2}Extension of
 Fig.~\ref{fig-lineage-tracing} presenting an extended comparison of
 Pyro -Velocity and scVelo on scRNA-seq datasets with lineage barcoding
 information (LARRY dataset). a. uni-fate Monocyte lineage analysis with
@@ -816,24 +851,7 @@ Fig.~\ref{fig-lineage-tracing}.}
 
 \end{suppfig}%
 
-\begin{suppfig}
 
-\centering{
-
-\includegraphics{figures/fig.pdf}
-
-}
-
-\caption{\label{suppfig-plot}An example figure (an empty plot)}
-
-\end{suppfig}%
-
-\FloatBarrier
-
-\newpage{}
-
-
-\renewcommand\refname{Supporting Information}
 
 
 
