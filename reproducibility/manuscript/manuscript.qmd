@@ -1,5 +1,5 @@
 ---
-title: "Pyro-Velocity: Probabilistic RNA Velocity inference from single-cell data"
+title: "Pyro&thinsp;-Velocity: Probabilistic RNA Velocity inference from single-cell data"
 format:
   nature-pdf:
     # journal.cite-style is included in the tex file but ignored by pandoc if 
@@ -107,11 +107,12 @@ abstract: |
 keywords: [RNA velocity, single-cell RNA sequencing, probabilistic generative modeling, cell fate, developmental trajectory inference]
 bibliography: bibliography.bib
 crossref:
+  fig-prefix: Fig.
   custom:
     - kind: float
       key: suppfig
       latex-env: suppfig
-      reference-prefix: Figure S
+      reference-prefix: Fig. S
       space-before-numbering: false
       latex-list-of-description: Supplementary Figure
 ---
@@ -120,9 +121,7 @@ crossref:
 
 # Main text {#sec-main}
 
-RNA Velocity is a powerful computational framework to estimate the time derivative of gene expression [@La_Manno2018-lj;@Svensson2018-vk;@Qiu2022-dj;@Bergen2020-pj]. The framework has been used to study developmental cell lineage trajectories over a broad spectrum of biological processes, such as  haematopoiesis [@Qiu2022-dj], pancreas development [@Bastidas-Ponce2019-lf], and neural progenitors differentiation [@Bergen2020-pj]. Yet, recent state-of-the-art RNA Velocity approaches such as velocyto and scVelo [@La_Manno2018-lj] have several limitations. First, they may predict developmental trajectories that do not exist in nature, as it has been shown in the analysis of fully mature blood cells [@Zheng2017-bz;@Bergen2021-qz]. Second, data preprocessing steps (e.g., selection of top variable genes, dimensionality reduction) affect velocity estimates that are difficult to characterize and might lead to artefactual predictions. In addition, non-linear spliced and unspliced imputation procedures could distort phase portrait geometry and recovered trajectories (Fig. 1a). Third, most RNA velocity algorithms perform estimates independently for each gene, and therefore cannot exploit the natural interdependence of gene expression. Fourth, a unified description of the temporal relation between cells can only be assigned based on postprocessing steps that aggregate heuristically the gene-wise fits into a shared latent time (Fig. 1a). Finally, current RNA velocity frameworks only output point estimates of the velocity vector field and do not provide uncertainty estimation. Importantly, the absence of statistical confidence estimates increases false discoveries as it leaves users without a way to evaluate the robustness of the methods’ outputs. To overcome these limitations, we developed a probabilistic generative model, named Pyro-Velocity, that estimates RNA dynamics and infers cell trajectories using Pyro8, a robust and efficient probabilistic programming language.
-
-@fig-conceptual-model. @fig-model-results. @suppfig-graphical-models.
+RNA Velocity is a powerful computational framework to estimate the time derivative of gene expression [@La_Manno2018-lj;@Svensson2018-vk;@Qiu2022-dj;@Bergen2020-pj]. The framework has been used to study developmental cell lineage trajectories over a broad spectrum of biological processes, such as  haematopoiesis [@Qiu2022-dj], pancreas development [@Bastidas-Ponce2019-lf], and neural progenitors differentiation [@Bergen2020-pj]. Yet, recent state-of-the-art RNA Velocity approaches such as velocyto and scVelo [@La_Manno2018-lj] have several limitations. First, they may predict developmental trajectories that do not exist in nature, as it has been shown in the analysis of fully mature blood cells [@Zheng2017-bz;@Bergen2021-qz]. Second, data preprocessing steps (e.g., selection of top variable genes, dimensionality reduction) affect velocity estimates that are difficult to characterize and might lead to artifactual predictions. In addition, non-linear spliced and unspliced imputation procedures could distort phase portrait geometry and recovered trajectories ([@fig-model]a). Third, most RNA velocity algorithms perform estimates independently for each gene, and therefore cannot exploit the natural interdependence of gene expression. Fourth, a unified description of the temporal relation between cells can only be assigned based on postprocessing steps that aggregate heuristically the gene-wise fits into a shared latent time ([@fig-model]a). Finally, current RNA velocity frameworks only output point estimates of the velocity vector field and do not provide uncertainty estimation. Importantly, the absence of statistical confidence estimates increases false discoveries as it leaves users without a way to evaluate the robustness of the methods’ outputs. To overcome these limitations, we developed a probabilistic generative model, named *Pyro&thinsp;-Velocity*, that estimates RNA dynamics and infers cell trajectories using Pyro [@Bingham2018-id], a robust and efficient probabilistic programming language.
 
 
 # Introduction {#sec-intro}
@@ -150,25 +149,33 @@ For complete information on cross referencing with Quarto, see <https://quarto.o
 
 Quarto formats citations and references automatically using the bibliography records in your .bib file. For a single citation use [@greenwade93]. For multiple citations use [@greenwade93;@knuth1984texbook]. If using an author-date-based citation style, then for a citation in parentheses use `[@greenwade93]` and for a text citation use `@greenwade93`. You can drop the author using `[-@greenwade93]`. If the tex output is to be included in a submission to a preprint server or publisher, the default citation method, `citeproc`, may not always produce bibliographies compatible with the provided `bst` styles. In this case, you can set `cite-method: natbib`. See <https://quarto.org/docs/authoring/footnotes-and-citations.html#sec-biblatex>. In this case, you may either restrict usage to the default bracketed key citation formats supported by pandoc, such as [@greenwade93] or [@greenwade93;@knuth1984texbook]. Or, use a CSL file, several of which are vendored in [_extensions/nature/csl](./_extensions/nature/csl/). The advantage of the latter is that references will be consistent across html, docx, and pdf outputs. See <https://pandoc.org/MANUAL.html#citation-syntax> for additional details on pandoc citation styles.
 
-\newpage
+{{< pagebreak >}}
 
 # References
 :::{#refs}
 :::
 
 \FloatBarrier
-\newpage
+{{< pagebreak >}}
 
 # Figures
 
-![Pyro-Velocity is a fully generative Bayesian method with uncertainty estimation of velocity vector fields and shared latent time, based on raw counts and without ad-hoc preprocessing steps. a. Schematic comparing current RNA Velocity and Pyro-Velocity workflows. Both methods take in input spliced and unspliced read count tables and output RNA velocity vector fields and latent (shared) time. Previous methods require ad-hoc preprocessing steps, including the arbitrary selection of top variable genes, number of principal components, and kNN-pooling to impute both spliced and unspliced expression within the PCA-reduced spliced expression space. In addition, manually tuned ad-hoc postprocessing steps are used to compute the final vector field and latent time based on aggregation and smoothing of the independent velocity estimates for each gene which can dramatically change the velocity estimates. In contrast, Pyro-Velocity is a fully generative and probabilistic model that uses raw read counts. Our model requires minimal preprocessing and postprocessing steps and outputs a common shared time based on all the genes without additional aggregation steps. It also provides uncertainty estimation based on posterior samples. b. The main outputs of the Pyro-Velocity framework. Visualization of single gene expression across inferred developmental cell order using rainbow plots (right panel).](figures/fig.pdf){#fig-conceptual-model}
+::: {#fig-model}
+
+![](figures/fig.pdf)
+
+\label{fig-model-inputs} 
+\label{fig-model-outputs}
+
+Pyro-Velocity is a fully generative Bayesian method with uncertainty estimation of velocity vector fields and shared latent time, based on raw counts and without ad-hoc preprocessing steps. a. Schematic comparing current RNA Velocity and Pyro-Velocity workflows. Both methods take in input spliced and unspliced read count tables and output RNA velocity vector fields and latent (shared) time. Previous methods require ad-hoc preprocessing steps, including the arbitrary selection of top variable genes, number of principal components, and kNN-pooling to impute both spliced and unspliced expression within the PCA-reduced spliced expression space. In addition, manually tuned ad-hoc postprocessing steps are used to compute the final vector field and latent time based on aggregation and smoothing of the independent velocity estimates for each gene which can dramatically change the velocity estimates. In contrast, Pyro-Velocity is a fully generative and probabilistic model that uses raw read counts. Our model requires minimal preprocessing and postprocessing steps and outputs a common shared time based on all the genes without additional aggregation steps. It also provides uncertainty estimation based on posterior samples. b. The main outputs of the Pyro-Velocity framework. Visualization of single gene expression across inferred developmental cell order using rainbow plots (right panel).
+:::
 
 ![Pyro-Velocity outperforms other RNA-velocity methods and accurately predicts cell lineage trajectories. a,b. RNA Velocity model comparisons from fully mature peripheral blood mononuclear cells (PBMCs, t-SNE embedded plots, a) or E15.5 mouse pancreas (UMAP embedded plots, b-c).  From left to right in panels a and b: 1. Cells colored by cell type; 2. Stream plot of velocity vector field defined by scVelo; 3. Stream plot of the posterior mean vector field from Pyro-Velocity; 4. Pyro-Velocity visualization of cell dynamics for 3 arbitrarily selected single cells; 5. Single-cell vector field uncertainty where each cell is colored based on the scaled angular standard deviation to visualize uncertainty based on n=30 iterated, posterior samples depicted as arrows noted throughout our analysis; 6. Averaged vector field uncertainty where each vector is colored by the averaged vector field uncertainty. The scaled angular standard deviation range is [0 360], where 0 corresponds to the highest confidence for a single direction, 360 corresponds to the highest uncertainty, and no directionality preference based on 30 posterior samples (4-6). Vectors were projected into the UMAP space using the scVelo API based on cosine similarity-derived transition matrix. c. UMAP embedded cells colored by the average cell shared time across 30 posterior samples. The Spearman’s correlation between Pyro-Velocity and Cytotrace is provided. d. Pyro-Velocity automatic gene selection and ranking for predicting important genes involved in pancreas development. e. Phase portraits of posterior samples average spliced and unspliced gene expression (left), rainbow plots showing denoised spliced gene expression (middle), and gene expression within UMAP embedded space.  Single dots correspond to individual cells (left, right) or vertical lines (middle). Cell type annotation coloring is the same as in panel b.](figures/fig.pdf){#fig-model-results}
 
 ![Pyro-Velocity accurately predicts cell fate choices and lineage trajectory in human LARRY barcoded hematopoietic cells. Systematic benchmarking of cell fate prediction methods - predicting uni-lineage cell fates (a-b, Model 1), bifurcated lineages (c, Model 2), or all lineages together (d, Model 2). Panels from left to right show on the same SPRING embedding: 1. Cell types; 2. Clonal progression vector field derived based on the observed clonal barcodes (Methods); 3. scVelo recovered vector field; 4. Pyro-Velocity single cell level vector field uncertainty (angular standard deviation from 30 posterior samples); 5. Pyro-Velocity recovered vector field; vectors are colored by the averaged vector field uncertainty; 6. Clonal fate potency score using Cospar [@Wang2022-xb]; 7. scVelo recovered latent time; 8. Pyro-Velocity inference of posterior mean shared time per cell. Cosine similarity and Spearman’s correlation for the different methods with the clonal progression and fate potency are reported in the titles.](figures/fig.pdf){#fig-lineage-tracing}
 
 \FloatBarrier
-\newpage
+{{< pagebreak >}}
 
 # Supplementary Figures
 
@@ -202,7 +209,7 @@ row 3    & data 7   & data 8  & data 9\footnotemark[2]  \\
 \end{table} -->
 
 \FloatBarrier
-\newpage
+{{< pagebreak >}}
 
 # Supporting Information {.appendix}
 
