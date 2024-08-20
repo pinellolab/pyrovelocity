@@ -156,7 +156,6 @@
 \raggedbottom
 \usepackage{nameref}
 \usepackage{placeins}
-\usepackage{framed}
 \allowdisplaybreaks
 \makeatletter
 \@ifpackageloaded{float}{}{\usepackage{float}}
@@ -661,6 +660,29 @@ level from the differential equations proposed in velocyto
 \frac{d s\left(\tau^{\left(k_{cg}\right)}\right)}{d \tau^{\left(k_{cg}\right)}}
   &= \beta_g u\left(\tau^{\left(k_{cg}\right)}\right)-\gamma_g s\left(\tau^{\left(k_{cg}\right)}\right). \label{eq-dsdt}
 \end{align}
+
+\subsection{Cell fate uncertainty
+estimation}\label{sec-methods-fate-uncertainty}
+
+Pyro -Velocity evaluates cell fate uncertainty using four statistics.
+The first is the uncertainty of shared time, which is evaluated using
+the standard deviation of posterior samples of \(t_c\) for each cell.
+The second statistic is the angular standard deviation
+\citep{Berens2009-fu} across posterior samples of the velocity-based
+vector field. The value of this statistic was mapped linearly to the
+range \([0, 360]\) for interpretability. The third statistic is the
+Rayleigh test \citep{The-Astropy-Collaboration2022-aw} for posterior
+samples of the velocity-based vector fields for each cell, whose
+p-values have been corrected for multiple tests using Benjamini-Hochberg
+FDR methods; if FDR is less than \(0.05\), the cell is considered to
+have one statistically significant future direction. The second and
+third circular statistics were implemented using the Astropy package
+(\texttt{v5.1}) \citep{The-Astropy-Collaboration2022-aw}. The last
+statistic is state uncertainty which evaluates the mean Euclidean
+distance between posterior mean and posterior samples of the raw read
+count prediction for each cell \begin{align*}
+\frac{1}{N} \sum_{i} \sqrt{\sum_{g} \left(x_{icg} - \frac{1}{N}\sum_i x_{icg}\right)^2}.
+\end{align*}
 
 \subsection{Cospar}\label{sec-methods-cospar}
 
