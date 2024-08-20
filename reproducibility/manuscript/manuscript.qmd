@@ -352,6 +352,38 @@ correlation was observed for scVelo and Cytotrace fate potency scores (monocytes
 $\rho=0.309$, neutrophils $\rho=0.751$) ([@fig-lineage-tracing]a-b,
 [@suppfig-lineage-tracing]c).
 
+Next, we evaluated the ability of the Pyro&thinsp;-Velocity models to recover
+bi-fate or multi-fate trajectories by considering clones belonging to monocyte
+and neutrophil lineages or using the entire dataset. Not surprisingly, both
+methods showed their limitations, given that they are not designed to model and
+capture multiple fate trajectories ([@suppfig-lineage-tracing-2]c-d). The
+recovered vector fields and cell latent (shared) time show inconsistent
+directions for both methods. However, Pyro&thinsp;-Velocity identified higher
+uncertainty for some of the problematic regions. Furthermore, we discovered that
+vector field and shared time estimation could be significantly improved by
+extending the original kinetic model by allowing each gene a time lag for the
+transcriptional activation and a baseline expression level potentially different
+than 0 (Pyro&thinsp;-Velocity Model 2, [@sec-methods])
+([@fig-lineage-tracing]c,d, [@suppfig-graphical-models]b,c). This extended model
+recapitulated a vector field consistent with the clonal progression vector field
+for most branches with some spurious predictions within the intermediate cell
+state between stem cells and Megakaryocytes and most terminal Neutrophils
+(bi-fate cosine similarity: $0.62$, multi-fate cosine similarity: $0.63$).
+However, the proposed uncertainty estimation accurately flagged these
+subpopulations to warn users of potential false discoveries. Notably, this
+extended model significantly improved the correlation of cell shared time with
+the clonal fate potency (bi-fate $\rho=0.65$, multi-fate $\rho=0.74$) and also
+improved the correlation with Cytotrace fate potency (bi-fate $\rho=0.931$,
+multi-fate $\rho=0.614$). Remarkably, the shared time per cell from
+Pyro&thinsp;-Velocity also outperformed Cytotrace for developmental order
+prediction ([@suppfig-lineage-tracing]a,c). Importantly, this extended model
+retained its ability to accurately identify cell lineage trajectories and shared
+time for all the other datasets analyzed above ([@suppfig-model-2-result]).
+Taken together, our approach using LARRY barcoded datasets established the first
+quantitative benchmark of RNA velocity-based cell fate trajectory inference and
+provides an exciting new framework for continued optimization of multi-fate
+predictions in the future.
+
 # Methods {#sec-methods}
 
 ## Model formulation {#sec-model}
