@@ -384,6 +384,50 @@ quantitative benchmark of RNA velocity-based cell fate trajectory inference and
 provides an exciting new framework for continued optimization of multi-fate
 predictions in the future.
 
+In conclusion, Pyro-Velocity provides the first probabilistic, interpretable,
+end-to-end Bayesian inference framework for RNA Velocity that learns cell
+dynamics and recovers cell fate from multimodal raw read counts.  This approach
+provides uncertainty estimations of cell fate trajectories and novel
+visualization approaches to mitigate false discoveries. Pyro-Velocity recovered
+shared time and vector fields that are recapitulated in true developmental order
+and outperformed state-of-the-art methods like Cytotrace and scVelo
+([@suppfig-lineage-tracing]a).
+
+# Software availability
+
+We developed our Pyro-Velocity models with Pyro (version 1.6.0) probabilistic
+programming language and PyTorch (version 1.8.1). Pyro-Velocity source code is
+available at <https://github.com/pinellolab/pyrovelocity>. The version of
+Pyro-Velocity (v0.1.0) used to generate the results presented in this manuscript
+has been deposited on Zenodo: <https://zenodo.org/record/7072876#.Yx-2e-zMLxg>.
+
+# Data availability
+
+All the data presented in this manuscript were collected from previously
+published studies. The fully mature PBMC, pancreas datasets are downloaded and
+loaded through the scVelo using `scvelo.datasets.pancreas()`, and
+`scvelo.datasets.pbmc68k()`. The LARRY inDrop sequencing data was processed by
+the LARRY authors using dropEst [@Petukhov2018-nr] and velocyto. This dataset
+can be accessed at
+<https://figshare.com/articles/dataset/larry_invitro_adata_sub_raw_h5ad/20780344>.
+
+# Acknowledgments
+
+This project has been made possible in part by grant number 2022-249212 from
+the Chan Zuckerberg Initiative DAF, an advised fund of Silicon Valley Community
+Foundation. L.P. received support from the U.S. NIH (R35 HG010717) and Silicon
+Valley Community Foundation (2022-249212). D.M.L is supported by R01CA226926,
+R01 CA215118, R01CA154923, R24 OD031955, CureSearch Acceleration Initiative, and
+the MGH Scholars Award. We thank the Pinello and Langenau labs members for
+helpful discussions.
+
+# Author contributions
+
+L.P., Q.Q., and E.B. conceived the work. Q.Q. and E.B created the software. Q.Q.
+analyzed the data, and prepared the figures and tables. L.P and D.L. supervised
+the project.  L.P., D.L., E.B., G.L.M helped in designing experiments and
+analyses.  All the authors contributed to the writing of the manuscript.
+
 # Methods {#sec-methods}
 
 ## Model formulation {#sec-model}
