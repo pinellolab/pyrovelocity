@@ -1,6 +1,9 @@
 ---
 title: |
   Pyro&thinsp;-Velocity: Probabilistic RNA Velocity inference from single-cell data
+toc: true
+toc-title: Contents
+number-sections: true
 format:
   nature-pdf:
     # journal.cite-style is included in the tex file but ignored by pandoc if 
@@ -11,66 +14,93 @@ format:
       - lineno
     cite-method: natbib
     link-citations: true
-    toc: true
-    toc-title: Contents
-    number-sections: true
     keep-tex: true
     equal-margins: false
     include-in-header: header.tex
+    affiliations:
+      - name: Massachusetts General Hospital Research Institute, Charlestown, MA
+        id: 1
+        department: Molecular Pathology Unit
+        city: Charlestown
+        state: MA
+        postal-code: 02129
+      - name: Harvard Medical School, Charlestown, MA
+        id: 2
+        department: Massachusetts General Hospital Cancer Center
+        city: Charlestown
+        state: MA
+        postal-code: 02129
+      - name: Massachusetts General Hospital, Boston, MA
+        id: 3
+        department: Center for Regenerative Medicine
+        city: Boston
+        state: MA
+        postal-code: 02114
+      - name: Harvard University, Cambridge, MA
+        id: 4
+        department: Harvard Stem Cell Institute
+        city: Cambridge
+        state: MA
+        postal-code: 02139
+      - name: Cambridge, MA
+        id: 5
+        department: Broad Institute of MIT and Harvard
+        city: Cambridge
+        state: MA
+        postal-code: 02142
+      - name: Laboratory of Neurodevelopmental Systems Biology, Lausanne, Switzerland
+        id: 6
+        department: |
+          Brain and Mind Institute, School of Life Sciences, 
+          École Polytechnique Fédérale de Lausanne (EPFL)
+        city: Lausanne
+        state: Switzerland
+        postal-code: 1015
+      - name: Cambridge, MA
+        id: 7
+        department: Basis Research Institute
+        city: Cambridge
+        state: MA
+        postal-code: 02142
   html:
     code-fold: true
     html-math-method: mathjax
+    affiliations:
+      - name: Molecular Pathology Unit, Massachusetts General Hospital Research Institute, Charlestown, MA
+        id: 1
+      - name: Massachusetts General Hospital Cancer Center, Harvard Medical School, Charlestown, MA
+        id: 2
+      - name: Center for Regenerative Medicine, Massachusetts General Hospital, Boston, MA
+        id: 3
+      - name: Harvard Stem Cell Institute, Harvard University, Cambridge, MA
+        id: 4
+      - name: Broad Institute of MIT and Harvard, Cambridge, MA
+        id: 5
+      - name: Laboratory of Neurodevelopmental Systems Biology, Brain and Mind Institute, School of Life Sciences, École Polytechnique Fédérale de Lausanne (EPFL), Lausanne, Switzerland
+        id: 6
+      - name: Basis Research Institute, Cambridge, MA
+        id: 7
   docx:
     reference-doc: styles.docx
     cite-method: citeproc
     filters:
       - authors-block
+    affiliations:
+      - name: Molecular Pathology Unit, Massachusetts General Hospital Research Institute, Charlestown, MA
+        id: 1
+      - name: Massachusetts General Hospital Cancer Center, Harvard Medical School, Charlestown, MA
+        id: 2
+      - name: Center for Regenerative Medicine, Massachusetts General Hospital, Boston, MA
+        id: 3
+      - name: Harvard Stem Cell Institute, Harvard University, Cambridge, MA
+        id: 4
+      - name: Broad Institute of MIT and Harvard, Cambridge, MA
+        id: 5
+      - name: Laboratory of Neurodevelopmental Systems Biology, Brain and Mind Institute, School of Life Sciences, École Polytechnique Fédérale de Lausanne (EPFL), Lausanne, Switzerland
+        id: 6
+      - name: Basis Research Institute, Cambridge, MA
+        id: 7
 csl: _extensions/sciexp/nature/csl/springer-mathphys-brackets.csl
-affiliations:
-  - name: Massachusetts General Hospital Research Institute, Charlestown, MA
-    id: 1
-    department: Molecular Pathology Unit
-    city: Charlestown
-    state: MA
-    postal-code: 02129
-  - name: Harvard Medical School, Charlestown, MA
-    id: 2
-    department: Massachusetts General Hospital Cancer Center
-    city: Charlestown
-    state: MA
-    postal-code: 02129
-  - name: Massachusetts General Hospital, Boston, MA
-    id: 3
-    department: Center for Regenerative Medicine
-    city: Boston
-    state: MA
-    postal-code: 02114
-  - name: Harvard University, Cambridge, MA
-    id: 4
-    department: Harvard Stem Cell Institute
-    city: Cambridge
-    state: MA
-    postal-code: 02139
-  - name: Cambridge, MA
-    id: 5
-    department: Broad Institute of MIT and Harvard
-    city: Cambridge
-    state: MA
-    postal-code: 02142
-  - name: Laboratory of Neurodevelopmental Systems Biology, Lausanne, Switzerland
-    id: 6
-    department: |
-      Brain and Mind Institute, School of Life Sciences, 
-      École Polytechnique Fédérale de Lausanne (EPFL)
-    city: Lausanne
-    state: Switzerland
-    postal-code: 1015
-  - name: Cambridge, MA
-    id: 7
-    department: Basis Research Institute
-    city: Cambridge
-    state: MA
-    postal-code: 02142
 authors:
   - name: Qian Qin
     affiliations:
@@ -128,6 +158,7 @@ keywords: [
 bibliography: bibliography.bib
 crossref:
   fig-prefix: Fig.
+  sec-prefix: Sec.
   custom:
     - kind: float
       key: suppfig
@@ -171,7 +202,7 @@ RNA dynamics and infers cell trajectories using Pyro [@Bingham2018-id], a robust
 and efficient probabilistic programming language.
 
 Pyro-Velocity recasts the velocity estimation problem into a latent variable
-posterior probability inference (\nameref{sec-methods}). The proposed model is
+posterior probability inference (@sec-methods). The proposed model is
 generative and fully Bayesian, with the different parameters considered as
 latent random variables. Each parameter is assigned a prior distribution, and
 the model is then conditioned on the raw data (both spliced and unspliced
@@ -192,14 +223,14 @@ posterior distribution by restricting the search within a family of a
 variational distribution approximating the true posterior, and taking advantage
 of the automatic differentiation variational inference (ADVI) capabilities of
 Pyro [@Bingham2018-id;@Kucukelbir2016-bk] ([@fig-model]a,
-\nameref{sec-methods}). Notably, our generative Bayesian model enables to sample
+@sec-methods). Notably, our generative Bayesian model enables to sample
 from the posterior distributions of the latent and dependent variables, allowing
 uncertainty estimation of phase portraits, high dimensional velocity vector
 field, and shared latent time. Around this model, we built several
 visualizations to assess uncertainty and functions to recover putative cell fate
 priming genes and to investigate how the denoised gene expression recapitulates
 known cell-type annotations and their developmental order ([@fig-model]b,
-\nameref{sec-methods}). Although several RNA velocity methods
+@sec-methods). Although several RNA velocity methods
 [@Gayoso2024-fz;@Gorin2022-il;@Gu2022-rh;@Cui2022-em;@Gao2022-jq] have been
 recently proposed, and many of them have not been peer-reviewed, here we
 showcase the advantages and innovations of Pyro-Velocity by comparing it with
