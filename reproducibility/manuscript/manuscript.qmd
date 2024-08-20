@@ -165,8 +165,9 @@ crossref:
     - kind: float
       key: suppfig
       latex-env: suppfig
-      reference-prefix: Fig. S
-      space-before-numbering: false
+      reference-prefix: Supplementary Fig.
+      caption-prefix: Supplementary Figure
+      space-before-numbering: true
       latex-list-of-description: Supplementary Figure
 ---
 
