@@ -749,13 +749,14 @@
 %% Article Header Definition
 \renewcommand{\@maketitle}{\newpage\null%
     % \if@remarkboxon\vbox to 0pt{\vspace*{-78pt}\hspace*{-18pt}\FMremark}\else\vskip21pt\fi%%\par%
-    \if@remarkboxon\vbox to 0pt{\vspace*{-78pt}\hspace*{-18pt}\FMremark}\else\vskip21pt\fi%%\par%
+    \if@remarkboxon\vbox to 0pt{\vspace*{-78pt}\hspace*{-18pt}\FMremark}\else\vskip0pt\fi%%\par%
     \hsize\textwidth\parindent0pt%%%\vskip7pt%
     %% Aritle Type
     {\hbox to \textwidth{{\Artcatfont\ArtType\hfill}\par}}
     %% Aritle Title
     \ifx\@title\empty\else%
-        \removelastskip\vskip20pt\nointerlineskip%
+        % \removelastskip\vskip20pt\nointerlineskip%
+        \removelastskip\vskip0pt\nointerlineskip%
         {\Titlefont\@title\par}
         %\addcontentsline{toc}{chapter}{\@title}% for bookmarks
     \fi%
