@@ -2,6 +2,7 @@
 title: |
   Pyro&thinsp;-Velocity: Probabilistic RNA Velocity inference from single-cell data
 toc: true
+toc-depth: 2
 toc-title: Contents
 # Use of `\nameref{sec-methods}` versus [Methods](#sec-methods) or [@sec-methods]
 # to refer to sections by name is only compatible with LaTeX outputs
@@ -501,6 +502,38 @@ differential equations proposed in velocyto [@La_Manno2018-lj] and scVelo
   &= \beta_g u\left(\tau^{\left(k_{cg}\right)}\right)-\gamma_g s\left(\tau^{\left(k_{cg}\right)}\right). \label{eq-dsdt}
 \end{align}
 
+## Posterior prediction {#sec-methods-posterior-prediction}
+
+To benchmark Pyro&thinsp;-Velocity performance in predicting cell fate, we
+generated the posterior samples measurement
+$x_{cg}=\left(u\left(\tau^{(k_{cg})}\right),
+s\left(\tau^{(k_{cg})}\right)\right)$ or $x_{cg}=\left(u_{cg}, s_{cg} \right)$,
+$t_c$, $\beta_g$, $\gamma_g$ from the same single cell RNA-seq using $N=30$
+Monte Carlo samples from the posterior predictive distribution following
+$p(x_{cg} \vert \theta, \psi) p(\theta, \psi) \approx p(x_{cg} \vert \theta,
+\psi) q_{\phi}(\theta, \psi)$. $x_{cg}$ can be posterior samples of either
+denoised gene expression (used for phase portraits and vector field-based
+trajectory inference) or raw read counts (used for gene selection). Then we
+calculated the posterior samples of RNA velocity as
+$v_{cg}=\frac{ds(\tau^{(k_{cg})})}{d \tau^{(k{cg})}}$ based on posterior samples
+measurement of denoised gene expression $x_{cg}$ and $\beta_{g}$, $\gamma_{g}$.
+
+## Prioritization of cell fate markers {#sec-methods-fate-markers}
+
+We prioritize the cell fate markers using two metrics: First, the Pearson
+correlation between each gene's posterior mean of the denoised spliced
+expression and posterior mean of the shared time; Second, the negative mean
+absolute errors of each gene's observed spliced, and unspliced read counts with
+posterior predictive samples of spliced and unspliced raw read counts, i.e.
+$\frac{1}{N n_c} \sum_i \sum_c (x_{icg}-\tilde{X}_{cg})$, where $N$ is the
+posterior sample number that is set to $30$, $i$ is the posterior sample index,
+and $n_c$ is the cell number. We first select the top $300$ genes with the
+highest negative mean absolute errors and then rank the $300$ genes based on the
+most positively correlated genes and the least negatively correlated genes. We
+use the same strategy for scVelo to rank the markers by the model likelihood to
+get the top 300 genes and then prioritize these genes by Pearson's correlation
+between scVelo latent time and normalized expression.
+
 ## Single-cell data preprocessing {#sec-methods-preprocessing}
 
 We used scanpy and scVelo to handle the data input and output; thus, both h5ad
@@ -513,12 +546,14 @@ dynamical genes NKG7, IGHM, and GNLY with the best likelihoods. The pancreas
 dataset was processed with scVelo using the following options
 
 ```python
-scv.pp.filter_and_normalize(
+import scvelo
+
+scvelo.pp.filter_and_normalize(
   adata=adata,
   min_shared_counts=30, 
   n_top_genes=2000,
 )
-scv.pp.moments(
+scvelo.pp.moments(
   adata,
   n_pcs=30,
   n_neighbors=30,
@@ -541,12 +576,12 @@ using the same options as the pancreas dataset; the rest of the uni-fate and
 bi-fate datasets were processed using the following parameters
 
 ```python
-scv.pp.filter_and_normalize(
+scvelo.pp.filter_and_normalize(
   adata=adata,
   n_top_genes=2000,
   min_shared_counts=20,
 )
-scv.pp.moments(adata)
+scvelo.pp.moments(adata)
 ```
 
 ## scVelo model {#sec-methods-scvelo}
@@ -572,7 +607,7 @@ followed the notebook proposed by the original authors
 <https://scvelo.readthedocs.io/perspectives/Perspectives/>, i.e., we used the
 stochastic RNA velocity model implemented in scVelo with the top three
 likelihood genes. The latent time from scVelo was computed using their provided
-function 
+function
 
 ```python
 scvelo.tl.latent_time(
