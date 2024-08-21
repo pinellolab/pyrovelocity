@@ -26,7 +26,7 @@ PYROVELOCITY_DATA_SUBSET = str_to_bool(
 # Overwrite the cache of processed data sets when True.
 # Defaults to False if not set.
 PYROVELOCITY_OVERWRITE_CACHE = str_to_bool(
-    os.getenv("PYROVELOCITY_OVERWRITE_CACHE", "True")
+    os.getenv("PYROVELOCITY_OVERWRITE_CACHE", "False")
 )
 
 # Use the cache of processed data sets when True.
