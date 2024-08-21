@@ -14,7 +14,7 @@ load_dotenv()
 # data set for testing purposes prior to model training when True.
 # Defaults to False if not set.
 PYROVELOCITY_TESTING_FLAG = str_to_bool(
-    os.getenv("PYROVELOCITY_TESTING_FLAG", "False")
+    os.getenv("PYROVELOCITY_TESTING_FLAG", "True")
 )
 
 # Uses only a subset of the list of supported data sets when True.
