@@ -14,7 +14,7 @@ load_dotenv()
 # data set for testing purposes prior to model training when True.
 # Defaults to False if not set.
 PYROVELOCITY_TESTING_FLAG = str_to_bool(
-    os.getenv("PYROVELOCITY_TESTING_FLAG", "True")
+    os.getenv("PYROVELOCITY_TESTING_FLAG", "False")
 )
 
 # Uses only a subset of the list of supported data sets when True.
@@ -26,7 +26,7 @@ PYROVELOCITY_DATA_SUBSET = str_to_bool(
 # Overwrite the cache of processed data sets when True.
 # Defaults to False if not set.
 PYROVELOCITY_OVERWRITE_CACHE = str_to_bool(
-    os.getenv("PYROVELOCITY_OVERWRITE_CACHE", "False")
+    os.getenv("PYROVELOCITY_OVERWRITE_CACHE", "True")
 )
 
 # Use the cache of processed data sets when True.
