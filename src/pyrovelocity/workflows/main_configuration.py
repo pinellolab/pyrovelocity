@@ -157,6 +157,7 @@ class WorkflowConfiguration(DataClassJSONMixin):
     postprocessing_resources_limits: ResourcesJSON
     summarizing_resources_requests: ResourcesJSON
     summarizing_resources_limits: ResourcesJSON
+    accelerator_type: str = "nvidia-tesla-t4"
     upload_results: bool = PYROVELOCITY_UPLOAD_RESULTS
 
 
@@ -659,6 +660,7 @@ larry_train_model2_args = PyroVelocityTrainInterface(
 larry_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
 )
+larry_accelerator_type = "nvidia-tesla-a100"
 larry_configuration = WorkflowConfiguration(
     download_dataset=larry_dataset_args,
     preprocess_data=larry_preprocess_data_args,
@@ -671,6 +673,7 @@ larry_configuration = WorkflowConfiguration(
     postprocessing_resources_limits=large_resource_limits,
     summarizing_resources_requests=large_resource_requests,
     summarizing_resources_limits=large_resource_limits,
+    accelerator_type=larry_accelerator_type,
 )
 
 
