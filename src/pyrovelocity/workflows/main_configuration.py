@@ -645,7 +645,7 @@ larry_train_model1_args = PyroVelocityTrainInterface(
     model_identifier="model1",
     guide_type="auto_t0_constraint",
     # svi_train=True,
-    batch_size=4000,
+    # batch_size=4000,
     offset=False,
     max_epochs=MAX_EPOCHS,
 )
@@ -654,7 +654,7 @@ larry_train_model2_args = PyroVelocityTrainInterface(
     data_set_name=f"{larry_dataset_args.data_set_name}",
     model_identifier="model2",
     # svi_train=True,
-    batch_size=4000,
+    # batch_size=4000,
     max_epochs=MAX_EPOCHS,
 )
 larry_postprocess_configuration = PostprocessConfiguration(
