@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.4.0-beta.4](https://github.com/pinellolab/pyrovelocity/compare/v0.4.0-beta.3...v0.4.0-beta.4) (2024-08-21)
+
+
+### Features
+
+* **workflows:** add accelerator_type to WorkflowConfiguration ([d306c48](https://github.com/pinellolab/pyrovelocity/commit/d306c484b56a23a3d5ac12103d583926bb343c5b))
+* **workflows:** use WorkflowConfiguration accelerator_type to override train_model accelerator ([1978a25](https://github.com/pinellolab/pyrovelocity/commit/1978a2507160da94ce6bfca999b5ab8953c95876))
+
+
+### Bug Fixes
+
+* **io:** expose density threshold parameter in CompressedPickle.save ([c8b0cf3](https://github.com/pinellolab/pyrovelocity/commit/c8b0cf388b3086e3142fb9f2e461eade9bdef396))
+* **nix:** update ctan packages ([028fa53](https://github.com/pinellolab/pyrovelocity/commit/028fa53c94b438f1c2ece323906924d3979528b3))
+* **sparsity:** decrease default density threshold to 0.3 ([9d8eee1](https://github.com/pinellolab/pyrovelocity/commit/9d8eee163453e6f5543b6229f7291d61677d7466))
+* **workflow:** remove manual definition of L4 GPUAccelerator ([7d0da7e](https://github.com/pinellolab/pyrovelocity/commit/7d0da7ecbd6eebf0ec9d40cb298590656ba4c2e8))
+* **workflows:** add extra large training resource requests and limits ([468bc6b](https://github.com/pinellolab/pyrovelocity/commit/468bc6b94e2dc71045232046da63154ba933a572))
+* **workflows:** remove unused training arguments ([5598ef6](https://github.com/pinellolab/pyrovelocity/commit/5598ef6edd962c6eb7815fb3f6519a4e465d8260))
+* **workflows:** reset constants to default values ([70dc44e](https://github.com/pinellolab/pyrovelocity/commit/70dc44e65ddd148c8c7ac4d4e5d40c9f43c907a8))
+* **workflows:** reset training configurations list ([4f4bb3a](https://github.com/pinellolab/pyrovelocity/commit/4f4bb3abf4cff6ea93cca4cdd682b64277db9750))
+
 ## [0.4.0-beta.3](https://github.com/pinellolab/pyrovelocity/compare/v0.4.0-beta.2...v0.4.0-beta.3) (2024-08-19)
 
 
