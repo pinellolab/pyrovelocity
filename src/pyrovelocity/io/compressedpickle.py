@@ -71,6 +71,7 @@ class CompressedPickle:
         file_path: PathLike | str,
         obj: Any,
         sparsify: bool = True,
+        density_threshold: float = 0.3,
     ) -> Path:
         """
         Save the given object to a zstandard-compressed pickle file.
@@ -93,7 +94,10 @@ class CompressedPickle:
             if isinstance(obj, Dict) and all(
                 isinstance(v, (np.ndarray, COO)) for v in obj.values()
             ):
-                obj = sparsify_arrays(obj)
+                obj = sparsify_arrays(
+                    data_dict=obj,
+                    density_threshold=density_threshold,
+                )
             else:
                 logger.warning(
                     """
