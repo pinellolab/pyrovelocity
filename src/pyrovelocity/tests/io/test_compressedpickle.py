@@ -97,7 +97,11 @@ def sparse_dict():
 
 
 def test_save_load_sparse_dict(test_file, sparse_dict):
-    CompressedPickle.save(test_file, sparse_dict)
+    CompressedPickle.save(
+        file_path=test_file,
+        obj=sparse_dict,
+        density_threshold=0.5,
+    )
     loaded_dict = CompressedPickle.load(test_file)
 
     assert isinstance(loaded_dict["dense"], np.ndarray)
@@ -112,7 +116,11 @@ def test_save_load_sparse_dict(test_file, sparse_dict):
 
 
 def test_save_load_sparse_dict_without_densify(test_file, sparse_dict):
-    CompressedPickle.save(test_file, sparse_dict)
+    CompressedPickle.save(
+        file_path=test_file,
+        obj=sparse_dict,
+        density_threshold=0.5,
+    )
     loaded_dict = CompressedPickle.load(test_file, densify=False)
 
     assert isinstance(loaded_dict["dense"], np.ndarray)
