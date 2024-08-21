@@ -83,7 +83,7 @@ POSTPROCESS_CACHE_VERSION = f"{CACHE_VERSION}.0"
 SUMMARIZE_CACHE_VERSION = f"{CACHE_VERSION}.0"
 UPLOAD_CACHE_VERSION = f"{CACHE_VERSION}.3"
 COMBINE_METRICS_CACHE_VERSION = f"{CACHE_VERSION}.3"
-ACCELERATOR_TYPE: GPUAccelerator = T4
+DEFAULT_ACCELERATOR_TYPE: GPUAccelerator = T4
 
 
 @task(
@@ -143,7 +143,7 @@ def preprocess_data(
     container_image="{{.image.gpu.fqn}}:{{.image.gpu.version}}",
     requests=Resources(cpu="8", mem="30Gi", ephemeral_storage="50Gi", gpu="1"),
     limits=Resources(cpu="16", mem="60Gi", ephemeral_storage="200Gi", gpu="1"),
-    accelerator=ACCELERATOR_TYPE,
+    accelerator=DEFAULT_ACCELERATOR_TYPE,
     enable_deck=False,
 )
 def train_model(
