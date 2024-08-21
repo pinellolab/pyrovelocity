@@ -407,7 +407,7 @@ methods like Cytotrace and scVelo ([@extfig-lineage-tracing]a).
 # Figures
 
 ::: {#fig-model}
-![](figures/fig.pdf)
+![](figures/v2/Figure1.pdf)
 
 Pyro&thinsp;-Velocity is a fully generative Bayesian method with uncertainty
 estimation of velocity vector fields and shared latent time, based on raw counts
@@ -778,7 +778,7 @@ policies.
 # Extended Data Figures
 
 ::: {#extfig-graphical-models}
-![](figures/fig.pdf)
+![](figures/v2/Supplementary-Figure1.pdf)
 
 Graphical representations detail the generative process of the
 Pyro&thinsp;-Velocity models and highlight their differences. a.
