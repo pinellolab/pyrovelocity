@@ -20,7 +20,7 @@ PYROVELOCITY_TESTING_FLAG = str_to_bool(
 # Uses only a subset of the list of supported data sets when True.
 # Defaults to False if not set.
 PYROVELOCITY_DATA_SUBSET = str_to_bool(
-    os.getenv("PYROVELOCITY_DATA_SUBSET", "False")
+    os.getenv("PYROVELOCITY_DATA_SUBSET", "True")
 )
 
 # Overwrite the cache of processed data sets when True.
