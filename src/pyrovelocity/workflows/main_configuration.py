@@ -94,6 +94,20 @@ large_training_resource_limits = ResourcesJSON(
     ephemeral_storage="200Gi",
 )
 
+extra_large_training_resource_requests = ResourcesJSON(
+    cpu="20",
+    mem="160Gi",
+    gpu="1",
+    ephemeral_storage="100Gi",
+)
+
+extra_large_training_resource_limits = ResourcesJSON(
+    cpu="46",
+    mem="250Gi",
+    gpu="1",
+    ephemeral_storage="400Gi",
+)
+
 default_resource_requests = ResourcesJSON(
     cpu="8",
     mem="30Gi",
@@ -667,8 +681,8 @@ larry_configuration = WorkflowConfiguration(
     training_configuration_1=larry_train_model1_args,
     training_configuration_2=larry_train_model2_args,
     postprocess_configuration=larry_postprocess_configuration,
-    training_resources_requests=large_training_resource_requests,
-    training_resources_limits=large_training_resource_limits,
+    training_resources_requests=extra_large_training_resource_requests,
+    training_resources_limits=extra_large_training_resource_limits,
     postprocessing_resources_requests=large_resource_requests,
     postprocessing_resources_limits=large_resource_limits,
     summarizing_resources_requests=large_resource_requests,
