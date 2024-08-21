@@ -560,12 +560,12 @@
 \if@corauemail%
    \g@addto@macro\corrauthemail{%
    \setcounter{footnote}{0}%
-   \textcolor{blue}{#1};\ %
+   \textcolor{NavyBlue}{#1};\ %
    }%
 \else%
    \g@addto@macro\authemail{%
    \setcounter{footnote}{0}%
-   \textcolor{blue}{#1};\ %
+   \textcolor{NavyBlue}{#1};\ %
    }%
 \fi}
 
