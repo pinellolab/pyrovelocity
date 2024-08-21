@@ -10,18 +10,34 @@ logger = configure_logging("pyrovelocity.workflows.constants")
 
 load_dotenv()
 
+# Extract a subset of observations and variables from each
+# data set for testing purposes prior to model training when True.
+# Defaults to False if not set.
 PYROVELOCITY_TESTING_FLAG = str_to_bool(
     os.getenv("PYROVELOCITY_TESTING_FLAG", "False")
 )
+
+# Uses only a subset of the list of supported data sets when True.
+# Defaults to False if not set.
 PYROVELOCITY_DATA_SUBSET = str_to_bool(
     os.getenv("PYROVELOCITY_DATA_SUBSET", "False")
 )
+
+# Overwrite the cache of processed data sets when True.
+# Defaults to False if not set.
 PYROVELOCITY_OVERWRITE_CACHE = str_to_bool(
     os.getenv("PYROVELOCITY_OVERWRITE_CACHE", "False")
 )
+
+# Use the cache of processed data sets when True.
+# Defaults to True if not set.
 PYROVELOCITY_CACHE_FLAG = str_to_bool(
     os.getenv("PYROVELOCITY_CACHE_FLAG", "True")
 )
+
+# Upload summary results of the workflow to human-readable
+# object storage path when True.
+# Defaults to True if not set.
 PYROVELOCITY_UPLOAD_RESULTS = str_to_bool(
     os.getenv("PYROVELOCITY_UPLOAD_RESULTS", "True")
 )
