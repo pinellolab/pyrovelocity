@@ -389,6 +389,7 @@ def map_model_configurations_over_data_set(
     postprocessing_resource_limits: ResourcesJSON = default_resource_limits,
     summarizing_resource_requests: ResourcesJSON = default_resource_requests,
     summarizing_resource_limits: ResourcesJSON = default_resource_limits,
+    accelerator_type: str = "nvidia-tesla-t4",
     upload_results: bool = True,
 ) -> list[SummarizeOutputs]:
     """
@@ -441,6 +442,7 @@ def map_model_configurations_over_data_set(
         ).with_overrides(
             requests=Resources(**asdict(train_model_resource_requests)),
             limits=Resources(**asdict(train_model_resource_limits)),
+            accelerator=GPUAccelerator(accelerator_type),
         )
         model_outputs.append(model_output)
 
@@ -614,6 +616,7 @@ def training_workflow(
             postprocessing_resource_limits=config.postprocessing_resources_limits,
             summarizing_resource_requests=config.summarizing_resources_requests,
             summarizing_resource_limits=config.summarizing_resources_limits,
+            accelerator_type=config.accelerator_type,
             upload_results=config.upload_results,
         )
         results.append(result)
