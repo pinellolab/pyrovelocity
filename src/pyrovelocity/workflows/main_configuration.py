@@ -653,13 +653,13 @@ larry_preprocess_data_args = PreprocessDataInterface(
     cell_state="state_info",
     vector_field_basis="emb",
 )
+# To train the model with batching, set the batch_size argument
+# e.g., batch_size=4000.
 larry_train_model1_args = PyroVelocityTrainInterface(
     adata=f"{larry_preprocess_data_args.data_processed_path}/{larry_dataset_args.data_set_name}_processed.h5ad",
     data_set_name=f"{larry_dataset_args.data_set_name}",
     model_identifier="model1",
     guide_type="auto_t0_constraint",
-    # svi_train=True,
-    # batch_size=4000,
     offset=False,
     max_epochs=MAX_EPOCHS,
 )
@@ -667,8 +667,6 @@ larry_train_model2_args = PyroVelocityTrainInterface(
     adata=f"{larry_preprocess_data_args.data_processed_path}/{larry_dataset_args.data_set_name}_processed.h5ad",
     data_set_name=f"{larry_dataset_args.data_set_name}",
     model_identifier="model2",
-    # svi_train=True,
-    # batch_size=4000,
     max_epochs=MAX_EPOCHS,
 )
 larry_postprocess_configuration = PostprocessConfiguration(
