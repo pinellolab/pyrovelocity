@@ -15,8 +15,14 @@
       caption
       cm-super
       dvipng
+      framed
+      git-latexdiff
+      latexdiff
+      latexmk
+      latexpand
       multirow
       ncctools
+      placeins
       rsfs
       sttools
       threeparttable
