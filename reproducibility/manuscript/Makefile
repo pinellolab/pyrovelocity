@@ -95,7 +95,7 @@ clean-all: clean
 #-------
 
 TEX_FILE = v2
-COMPARISON_SHA1 = a12bbe5
+COMPARISON_SHA1 = 92e8462
 
 copy-tex: ## Copy temporary tex file artifact to git-tracked file
 	cp $(DOCUMENT_NAME).tex $(TEX_FILE).tex
