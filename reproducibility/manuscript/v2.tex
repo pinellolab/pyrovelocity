@@ -252,7 +252,7 @@ Neurodevelopmental Systems Biology, Lausanne, Switzerland}}
 
 % abstract 
 
-\abstract{Single-cell RNA Velocity has dramatically advanced our ability
+\abstract{Single-cell RNA velocity has dramatically advanced our ability
 to model cellular differentiation and cell fate decisions. However,
 current preprocessing choices and model assumptions often lead to errors
 in assigning developmental trajectories. Here, we develop,
@@ -284,7 +284,7 @@ generative modeling,  cell fate,  developmental trajectory inference}
 \section*{Main text}\label{sec-main}
 \addcontentsline{toc}{section}{Main text}
 
-RNA Velocity is a powerful computational framework to estimate the time
+RNA velocity is a powerful computational framework to estimate the time
 derivative of gene expression
 \citep{La_Manno2018-lj, Svensson2018-vk, Qiu2022-dj, Bergen2020-pj}. The
 framework has been used to study developmental cell lineage trajectories
@@ -664,10 +664,159 @@ splicing process, and infer the unspliced and spliced gene expression
 level from the differential equations proposed in velocyto
 \citep{La_Manno2018-lj} and scVelo \citep{Bergen2020-pj} \begin{align}
 \frac{d u\left(\tau^{\left(k_{cg}\right)}\right)}{d \tau^{\left(k_{cg}\right)}}
-  &= \alpha^{\left(k_{cg}\right)}-\beta_g u\left(\tau^{\left(k_{cg}\right)}\right), \label{eq-dudt}\\
+  &= \alpha^{\left(k_{cg}\right)}-\beta_g u\left(\tau^{\left(k_{cg}\right)}\right),
+   \label{eq-dudt}\\
 \frac{d s\left(\tau^{\left(k_{cg}\right)}\right)}{d \tau^{\left(k_{cg}\right)}}
-  &= \beta_g u\left(\tau^{\left(k_{cg}\right)}\right)-\gamma_g s\left(\tau^{\left(k_{cg}\right)}\right). \label{eq-dsdt}
+  &= \beta_g u\left(\tau^{\left(k_{cg}\right)}\right)
+  -\gamma_g s\left(\tau^{\left(k_{cg}\right)}\right). \label{eq-dsdt}
+\end{align} In the equation, the subscript \(c\) is the cell dimension,
+\(g\) is the gene dimension,
+\(\left( u\left( \tau^{(k_{cg})} \right), s\left( \tau^{(k_{cg})} \right) \right)\)
+are the unspliced and spliced expression functions given the change of
+time per cell and gene. \(\tau_{cg}\) represents the displacement of
+time per cell and gene with \begin{align}
+ \tau^{(k_{cg})} &= \operatorname{softplus} \left( t_{c} - {t_{0}^{(k_{cg})}}_g \right) \\
+ & = \log( 1 + \exp (t_c - {t_{0}^{(k_{cg})}}_g)), 
+\end{align} in which \(t_c\) is the shared time per cell,
+\({t_{0}^{(kcg)}}_g\) is the gene-specific switching time. Each cell and
+gene combination has its transcriptional state
+\(k_{cg} \in \{ 0, 1 \}\), where \(0\) indicates the activation state
+and \(1\) indicates the expression state. Each gene has two switching
+times for representing activation and repression: \({t_{0}^{(0)}}_g\) is
+the first switching time corresponding to when the gene expression
+starts to be activated, \({t_0^{(1)}}_g\) is the second switching time
+corresponding to when the gene expression starts to be repressed. We
+note that \(\alpha^{(1)}\) is shared for all the genes, while
+\({\alpha^{(0)}}_g\) is learned independently for each gene.
+
+The analytic solution of the differential equations to predict spliced
+and unspliced gene expression given their parameters is derived by the
+authors of scVelo and a theoretical RNA velocity study
+\citep{Bergen2020-pj, Li2021-qa} and given in Eqs.
+\ref{eq-solution-u}-\ref{eq-solution-s2}. \begin{align}
+u\left(\tau^{\left(k_{c g}\right)}\right) 
+  &= u_0^{\left(k_{c g}\right)}{ }_g e^{-\beta_g \tau^{\left(k_{c g}\right)}} 
+  \nonumber \\
+&\hskip -24pt + \frac{\alpha^{\left(k_{c g}\right)}}
+  {\beta_g}\left(1-e^{-\beta_g \tau^{\left(k_{c g}\right)}}\right) 
+  \label{eq-solution-u}\\
+s\left(\tau^{\left(k_{c g}\right)}\right) 
+  &= s_0^{\left(k_{c g}\right)} e^{-\gamma_g \tau^{\left(k_{c g}\right)}} 
+  \nonumber \\
+  &\hskip -24pt + \frac{\alpha^{\left(k_{c g}\right)}}{\gamma_g}
+    \left(1-e^{-\gamma_g \tau^{\left(k_{c g}\right)}}\right) 
+    \nonumber\\
+  &\hskip -24pt + \frac{\alpha^{\left(k_{c g}\right)}-\beta_g u_0^{\left(k_{c g}\right)}}
+    {\gamma_g-\beta_g}\left(e^{-\gamma_g \tau^{\left(k_{c g}\right)}}
+    -e^{-\beta_g \tau^{\left(k_{c g}\right)}}\right), 
+    \nonumber \\
+  &\qquad \beta \neq \gamma \label{eq-solution-s} \\
+s\left(\tau^{\left(k_{c g}\right)}\right) 
+  &= {s_0^{\left(k_{c g}\right)}}_g e^{-\beta_g \tau^{\left(k_{c g}\right)}} \nonumber \\
+  &\hskip -24pt +\frac{\alpha^{\left(k_{c g}\right)}}{\beta_g}
+  \left(1-e^{-\beta_g \tau^{(k c g)}}\right) 
+  \nonumber \\
+  &\hskip -24pt -\left(\alpha^{\left(k_{c g}\right)}
+  -\beta_g u_0^{\left(k_{c g}\right)}{ }_g\right) \tau^{\left(k_{c g}\right)} 
+  e^{-\beta_g \tau^{\left(k_{c g}\right)}}, \nonumber \\
+  &\qquad \beta = \gamma \label{eq-solution-s2}
 \end{align}
+
+To simplify these equations, consider the case when \(k_{cg} = 0\) and
+\(\beta_g \neq \gamma_g\). Then, \begin{align}
+u\left(\tau^{(0)}\right) &= {u_0^{(0)}}_g e^{-\beta_g \tau^{(0)}} \nonumber \\
+  & \hskip -24pt + \frac{{\alpha^{(0)}}_g}{\beta_g}\left(1-e^{-\beta_g \tau^{(0)}}\right), 
+  \label{eq-sol-usimp} \\
+s\left(\tau^{(0)}\right) &= s_0^{(0)}{ }_g e^{-\gamma_g \tau^{(0)}} \nonumber \\
+  & \hskip -24pt +\frac{{\alpha^{(0)}}_g}{\gamma_g}\left(1-e^{-\gamma_g \tau^{(0)}}\right) 
+  \nonumber\\
+  & \hskip -24pt +\frac{{\alpha^{(0)}}_g-\beta_g {u_0^{(0)}}_g}{\gamma_g-\beta_g}
+  \left(e^{-\gamma_g \tau^{(0)}}-e^{-\beta_g \tau^{(0)}}\right). \label{eq-sol-ssimp}
+\end{align} When \(k_{cg} = 0\) and \(\beta_g = \gamma_g\), then
+\(u\left(\tau^{(0)}\right)\) has the same solution, and
+\(s\left(\tau^{(0)}\right)\) becomes \begin{align}
+s\left(\tau^{(0)}\right) &= s_0^{(0)}{ }_g e^{-\gamma_g \tau^{(0)}} \nonumber \\
+  & \hskip -24pt +\frac{{\alpha^{(0)}}_g}{\gamma_g}
+    \left(1-e^{-\gamma_g \tau^{(0)}}\right) \nonumber\\
+  & \hskip -24pt - \left( {\alpha^{(0)}}_g-\beta_g {u_0^{(0)}}_g \right) 
+    \tau^{(0)} e^{-\beta_g \tau^{(0)}}. \label{eq-sol-ssimp2}
+\end{align} When \(k_{cg} = 1\) and \(\beta_g \neq \gamma_g\), then
+\begin{align}
+u\left(\tau^{(1)}\right) &=u_0^{(1)} g^{e^{-\beta_g \tau^{(1)}}}, \\
+s\left(\tau^{(1)}\right) &=s_0^{(1)} e^{-\gamma_g \tau^{(1)}} \nonumber \\
+  & \hskip -24pt +\frac{-\beta_g u_0^{(1)}}{\gamma_g-\beta_g}
+  \left(e^{-\gamma_g \tau^{(1)}}-e^{-\beta_g \tau^{(1)}}\right).
+\end{align} When \(k_{cg} = 1\) and \(\beta_g = \gamma_g\), then
+\(u\left(\tau^{(1)}\right)\) has the same solution, and
+\(s\left(\tau^{(1)}\right)\) becomes \begin{align}
+s\left(\tau^{(1)}\right)=s_0^{(1)}{ }_g e^{-\gamma_g \tau^{(1)}}
+  +\beta_g u_0^{(1)}{ }_g \tau^{(1)} e^{-\beta_g \tau^{(1)}}.
+\end{align}
+
+\subsection{Variational inference}\label{sec-methods-inference}
+
+Given observations
+\(\tilde{X}_{cg} = \left( u_{cg}^{obs}, s_{cg}^{obs} \right)\), we would
+like to compute the posterior distribution over the random variables
+\begin{align}
+\theta &= \left( t_{c}, \eta_{c}^{(u)}, \eta_{c}^{(s)} \right), \\
+\phi &= \left( {t_{0}^{(0)}}_g, \Delta \text{switching}_{g}, {\alpha^{(0)}}_{g}, \beta_{g}, \gamma_{g} \right),
+\end{align} but exact Bayesian inference is intractable in this model.
+We use Pyro to automatically integrate out the local discrete latent
+variables \(k\), which is defined as the cell and gene transcriptional
+state (see above), and approximate the posterior over the remaining
+latent variables using variational inference
+\citep{Bingham2018-id, Kucukelbir2016-bk}, which converts intractable
+integrals into optimization problems that can be solved with
+off-the-shelf tools. In variational inference, we maximize a tractable
+bound (the evidence lower bound (ELBO)) on the Kullback-Leibler (KL)
+divergence
+\[\text{KL}\left( q_{\phi}(\theta, \psi) \mathrel{\Vert} p(\theta, \psi \vert \tilde{X}_{cg}) \right)\]
+between a parametric family of tractable probability distributions q and
+the intractable true posterior \begin{align}
+\varphi^* &= \operatorname{argmax}_{\varphi} \text{ELBO} \nonumber \\
+&= \operatorname{argmax}_{\varphi} \bigg\{ E_{q_{\varphi}} \bigg[ \log \left(p\left(\tilde{X}_{c g}, \theta, \psi \right) \right) \nonumber\\
+&\qquad\qquad\qquad\qquad -\log \left(q_{\varphi}(\theta, \psi)\right) \bigg] \bigg\}
+\end{align} We approximate our model's posterior distribution
+\(p( \theta, \psi \vert
+\tilde{X})\) with a tractable family of probability distributions
+\(q_{\psi}(\theta, \phi) = q_{\phi_1}(\theta) q_{\phi_2}(\psi)\), where
+\(q_{\phi_1}(\theta)\) is a product of independent univariate Gaussian
+distributions with learnable location and scale parameters and
+\(q_{\phi_2}(\psi)\) is a multivariate Gaussian distribution with a
+learnable location parameter and a learnable low-rank covariance matrix.
+We solve the resulting stochastic optimization problem using a version
+of Automatic Differentiation Variational Inference (ADVI)
+\citep{Kucukelbir2016-bk}: we obtain gradient estimates by
+differentiating a Monte Carlo estimate of the ELBO and update the
+variational parameters using stochastic gradient ascent. Our
+implementation and experiments use generic variational families and
+Monte Carlo ELBO and gradient estimators provided by Pyro
+\citep{Bingham2018-id}, an open source library for probabilistic machine
+learning, and a version built into Pyro of the adaptive stochastic
+gradient ascent algorithm Adam augmented with gradient clipping to
+enhance numerical stability during training.
+
+\subsection{Model training}\label{sec-methods-training}
+
+For the pancreas, PBMC, and uni-fate and bi-fate LARRY single-cell data,
+since the data dimension is relatively small, we run Model 1 and Model 2
+with a minimum of 100 epochs and a maximum of 4000 epochs. For each
+epoch, we input spliced and unspliced read counts from all the cells and
+determine the convergence condition with an early stopping strategy in
+which the patience is set to 45 and consumes one patience if the minimal
+ELBO improvement of training data per epoch is lower than \(10^{-4}\) of
+previous loss. The learning rate is set to be \(10^{-2}\) with a decay
+rate of \(0.11/4000\) per epoch. For the multi-fate LARRY dataset, since
+this is a large dataset with over \(4 \times
+10^4\) cells, we use mini batches of cells to train Model 1 and Model 2
+with a minimum of 100 epochs and a maximum of 1000 epochs. Specifically,
+the batch size was set to 4000 cells for both models with an early
+stopping patience 45 and consume one patience if the minimal ELBO
+improvement of training data per epoch lower than \(10^{-3}\) of
+previous loss. The learning rate is set to be \(10^{-2}\) with a decay
+rate of \(0.11/1000\) per epoch. All models were trained on a machine
+with an NVIDIA A100 GPU and the CentOS 7 operating system.
 
 \subsection{Posterior
 prediction}\label{sec-methods-posterior-prediction}
