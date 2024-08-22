@@ -42,7 +42,7 @@ jobs:
         run: |
           make -C reproducibility/manuscript render
       - name: Compute diff
-        if: ${{ inputs.diff_enabled == 'true' }}
+        # if: ${{ inputs.diff_enabled == 'true' }}
         continue-on-error: true
         uses: xu-cheng/texlive-action@3586544d56723b23ab69aec1e9d73e7220d9c313 # v2
         with:
