@@ -97,8 +97,11 @@ clean-all: clean
 TEX_FILE = v2
 COMPARISON_SHA1 = a12bbe5
 
-cache-tex: ## Cache the tex file
+copy-tex: ## Copy temporary tex file artifact to git-tracked file
 	cp $(DOCUMENT_NAME).tex $(TEX_FILE).tex
+
+cache-tex: ## Cache the tex file
+cache-tex: copy-tex
 	git add $(TEX_FILE).tex
 	git commit -m "chore(manuscript): update $(TEX_FILE) diff file"
 
