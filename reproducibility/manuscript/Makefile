@@ -114,6 +114,7 @@ latexdiff:
 	--latexmk \
 	--xelatex \
 	--bibtex \
+	--no-view \
 	--ignore-makefile \
 	--ln-untracked \
 	--output $(TEX_FILE)-$(COMPARISON_SHA1)-diff.pdf \
