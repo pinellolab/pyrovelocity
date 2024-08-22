@@ -112,6 +112,8 @@ latexdiff:
 	git-latexdiff \
 	--ignore-latex-errors \
 	--latexmk \
+	--xelatex \
+	--bibtex \
 	--ignore-makefile \
 	--ln-untracked \
 	--output $(TEX_FILE)-$(COMPARISON_SHA1)-diff.pdf \
