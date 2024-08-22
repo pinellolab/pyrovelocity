@@ -7,6 +7,11 @@ on:
         required: true
         type: boolean
         default: false
+      diff_enabled:
+        description: "Compute document changes with latexdiff"
+        required: true
+        type: boolean
+        default: true
   push:
     paths:
       - ".github/workflows/manuscript.yaml"
@@ -36,8 +41,19 @@ jobs:
       - name: Render
         run: |
           make -C reproducibility/manuscript render
+      - name: Compute diff
+        if: ${{ inputs.diff_enabled == 'true' }}
+        continue-on-error: true
+        uses: xu-cheng/texlive-action@3586544d56723b23ab69aec1e9d73e7220d9c313 # v2
+        with:
+          scheme: full
+          run: |
+            apk add make
+            make -C reproducibility/manuscript latexdiff
       - name: Upload artifacts
         uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4
         with:
-          name: quarto-output-${{ github.ref_name }}-${{ github.sha }}
-          path: "${{ github.workspace }}/reproducibility/manuscript/manuscript.*"
+          name: manuscript-${{ github.ref_name }}-${{ github.sha }}
+          path: |
+            "${{ github.workspace }}/reproducibility/manuscript/manuscript.*"
+            "${{ github.workspace }}/reproducibility/manuscript/*diff*"
