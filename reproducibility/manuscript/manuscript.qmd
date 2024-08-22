@@ -596,13 +596,97 @@ s\left(\tau^{(1)}\right)=s_0^{(1)}{ }_g e^{-\gamma_g \tau^{(1)}}
   +\beta_g u_0^{(1)}{ }_g \tau^{(1)} e^{-\beta_g \tau^{(1)}}.
 \end{align}
 
+We use these solutions to formulate an end-to-end probabilistic generative model 
+that relates prior distributions on kinetic parameters to a distribution on pairs 
+of observed unspliced and spliced read count matrices
+
+\begin{align}
+\alpha^{(0)}{ }_g &\sim \operatorname{LogNormal}(0,1), \\
+\beta_g &\sim \operatorname{LogNormal}(0,1), \\
+\gamma_g &\sim \operatorname{LogNormal}(0,1), \\
+&\hskip -18pt \Delta \text { switching }_g \sim \operatorname{LogNormal}(0,1), \\
+t_0^{\left(k_{c g}\right)} &= \left\{
+  \begin{array}{l}
+    t_0^{(0)}{ }_g \sim \operatorname{Normal}(0,1), k_{c g}=0 \\
+    t_0^{(1)}{ }_g=t_0^{(0)}{ }_g+\Delta \text { switching }_g, \\
+    \quad k_{c g}=1
+  \end{array}\right. \\
+t_c &\sim \operatorname{LogNormal}(0,1), \\
+k_{c g} &\sim \text{Bernoulli} \left( \text{logits}= t_c-t_0^{(1)} \right), \\
+\tau^{\left(k_{c g}\right)} 
+  &= \operatorname{softplus}\left(t_c-t_0^{\left(k_{c g}\right)}{ }_g\right), \\
+u_{c g} 
+ &= \text { Measurement }_u \left( u\left(\tau^{\left(k_{c g}\right)}\right) ; 
+                                   u_{c g}^{obs}\right), \\
+s_{c g} 
+  &= \text { Measurement }_s \left( s\left(\tau^{(k_{c g})}\right) ; 
+                                    s_{c g}^{obs}\right).
+\end{align}
+$u\left(\tau^{\left(k_{c g}\right)}\right)$ and $s\left(\tau^{(k_{c g})}\right)$ are
+are called the denoised gene expression calculated from the velocity analytic
+solution input with the kinetics random variables. $u_{cg}$ and $s_{cg}$ are the spliced
+and unspliced read count sampled from the Poisson models. $u_{cg}^{obs}$ and $s_{cg}^{obs}$ are
+the observed spliced and unspliced read count tables. The generative process
+
+$\text{Measurement}(\cdot)$ for observed unspliced read counts given denoised unspliced
+gene transcript expression level $u\left(\tau^{(k_{cg})}\right)$ 
+(and identical for observed spliced read counts) models the expected number of observed 
+reads for a given gene in a given cell as the number of transcripts times the ratio of 
+the cell's total reads to total transcripts
+\begin{align}
+u_c^{\hat{obs}} &= \sum_g u_{c g}^{obs}, \\
+\hat{u}_c &= \sum_g u\left( \tau^{(k_{c g})}\right), \\
+\eta_c^{(u)} &\sim \operatorname{Normal}\left(
+    u_c^{\hat{obs}_c}, 
+    \operatorname{std} \left(u_c^{\hat{obs}}\right)
+  \right), \\
+\mu_{c g}^{(u)} &= \log \left(u\left(\tau^k{ }_{c g}\right)\right)
+  +\log \left(\eta_c^{(u)}\right)-\log \left(\hat{u}_c\right), \\
+u_{c g}^{obs} &\sim 
+  \operatorname{Poisson}\left(\lambda=\exp \left(\mu_{c g}^{(u)}\right)\right).
+\end{align} 
+
+For the first Pyro-Velocity model (Model 1), we constrain the shared time to be strictly
+larger than $t_{0}^{(0)}$ by introducing auxiliary random variables 
+$$
+\text{t\_constraint}_{cg} 
+  \sim \text{Bernoulli} \left( \text{logits} = t_c - {t_{0}^{(0)}}_g \right),
+$$
+and setting their values to $1$, and we set the initial condition per gene to be
+\begin{align}
+\left( {u_{0}^{(k_{cg})}}_g , {s_{0}^{(k_{cg})}}_g \right) &= \left\{
+  \begin{array}{l}
+    (0,0), k_{c g}=0 \\
+    \bigg( {u \left( \Delta \text { switching }_g \right)}_g,\\
+           \quad {s \left( \Delta \text { switching }_g \right)}_g \bigg), \\
+           \quad k_{c g}=1
+  \end{array}\right.
+\end{align}
+For the extended Pyro&thinsp;-Velocity model (Model 2), we remove the shared
+time constraint $\text{t\_constraint}_{cg}$, thus allowing a time lag per gene
+that might be caused by delayed gene activation and set the initial condition
+per gene as random variables that are strictly positive $\left({u_{0}^{(0)}}_g,
+{s_{0}^{(0)}}_g\right)$, which allow genes having a basal expression level before gene
+activation. Then, we compute the gene expression at the second switching time as
+\begin{align}
+({u_{0}^{(1)}}_g, {s_{0}^{(1)}}_g) &= 
+  \bigg( {u \left( \Delta \text { switching }_g \right)}_g, \nonumber \\
+& \qquad {s \left( \Delta \text { switching }_g \right)}_g \bigg),
+\end{align}
+which shares the same initial condition $\left({u_{0}^{(0)}}_g, {s_{0}^{(0)}}_g\right)$ where
+\begin{align}
+{u_{0}^{(0)}}_g &\sim \operatorname{LogNormal}(0,1),\\
+{s_{0}^{(0)}}_g &\sim \operatorname{LogNormal}(0,1).
+\end{align}
+
 ## Variational inference {#sec-methods-inference}
 
 Given observations $\tilde{X}_{cg} = \left( u_{cg}^{obs}, s_{cg}^{obs} \right)$,
 we would like to compute the posterior distribution over the random variables
 \begin{align}
 \theta &= \left( t_{c}, \eta_{c}^{(u)}, \eta_{c}^{(s)} \right), \\
-\phi &= \left( {t_{0}^{(0)}}_g, \Delta \text{switching}_{g}, {\alpha^{(0)}}_{g}, \beta_{g}, \gamma_{g} \right),
+\phi &= \left( {t_{0}^{(0)}}_g, \Delta \text{switching}_{g}, 
+          {\alpha^{(0)}}_{g}, \beta_{g}, \gamma_{g} \right),
 \end{align}
 but exact Bayesian inference is intractable in this model. We use Pyro to
 automatically integrate out the local discrete latent variables $k$, which is
@@ -612,15 +696,19 @@ the posterior over the remaining latent variables using variational inference
 optimization problems that can be solved with off-the-shelf tools. In
 variational inference, we maximize a tractable bound (the evidence lower bound
 (ELBO)) on the Kullback-Leibler (KL) divergence
-$$\text{KL}\left( q_{\phi}(\theta, \psi) \mathrel{\Vert} p(\theta, \psi \vert \tilde{X}_{cg}) \right)$$
+$$
+\text{KL}\left( q_{\phi}(\theta, \psi) \mathrel{\Vert} 
+  p(\theta, \psi \vert \tilde{X}_{cg}) \right)
+$$
 between a parametric family of tractable probability distributions q and the
 intractable true posterior
 \begin{align}
 \varphi^* &= \operatorname{argmax}_{\varphi} \text{ELBO} \nonumber \\
-&= \operatorname{argmax}_{\varphi} \bigg\{ E_{q_{\varphi}} \bigg[ \log \left(p\left(\tilde{X}_{c g}, \theta, \psi \right) \right) \nonumber\\
+&= \operatorname{argmax}_{\varphi} \bigg\{ E_{q_{\varphi}} 
+     \bigg[ \log \left(p\left(\tilde{X}_{c g}, \theta, \psi \right) \right) \nonumber\\
 &\qquad\qquad\qquad\qquad -\log \left(q_{\varphi}(\theta, \psi)\right) \bigg] \bigg\}
 \end{align}
-We approximate our model’s posterior distribution $p( \theta, \psi \vert
+We approximate our model's posterior distribution $p( \theta, \psi \vert
 \tilde{X})$ with a tractable family of probability distributions
 $q_{\psi}(\theta, \phi) = q_{\phi_1}(\theta) q_{\phi_2}(\psi)$, where
 $q_{\phi_1}(\theta)$ is a product of independent univariate Gaussian
@@ -635,7 +723,7 @@ implementation and experiments use generic variational families and Monte Carlo
 ELBO and gradient estimators provided by Pyro [@Bingham2018-id], an open source
 library for probabilistic machine learning, and a version built into Pyro of the
 adaptive stochastic gradient ascent algorithm Adam augmented with gradient
-clipping to enhance numerical stability during training.  
+clipping to enhance numerical stability during training.
 
 ## Model training {#sec-methods-training}
 
@@ -854,9 +942,11 @@ cospar.pl.fate_potency(
 ## Cytotrace model {#sec-methods-cytotrace}
 
 We implemented Cytotrace in Python based on the R version [@Gulati2020-xq] for
-benchmarking Pyro&thinsp;-Velocity and scVelo’s shared (latent) time prediction in the
+benchmarking Pyro&thinsp;-Velocity and scVelo's shared (latent) time prediction in the
 Python environment. This implementation is available in the
-[Pyro&thinsp;-Velocity GitHub repository](https://github.com/pinellolab/pyrovelocity/blob/main/src/pyrovelocity/analysis/cytotrace.py).
+[Pyro&thinsp;-Velocity GitHub repository][cytotrace].
+
+[cytotrace]: https://github.com/pinellolab/pyrovelocity/blob/main/src/pyrovelocity/analysis/cytotrace.py
 
 ## Model evaluation and selection {#sec-methods-model-selection}
 
@@ -866,14 +956,15 @@ to use for a given dataset. Namely, the mean absolute errors of posterior
 samples prediction of spliced and unspliced raw read counts $x_{icg}$ from its
 observation $\tilde{X}_{cg}$ per gene and cell combinations
 \begin{align*}
-\frac{1}{N_i N_c N_g} \sum_{i=1}^{N_i} \sum_{c=1}^{N_c} \sum_{g=1}^{N_g} |x_{icg} - \tilde{X}_{cg}|,
+\frac{1}{N_i N_c N_g} \sum_{i=1}^{N_i} \sum_{c=1}^{N_c} \sum_{g=1}^{N_g} 
+  \vert x_{icg} - \tilde{X}_{cg} \vert,
 \end{align*}
 where $i$ is the posterior sample index, $N_i$ is the posterior sample number,
 $N_c$ is the cell number, $N_g$ is the gene number. Then it is possible to
 evaluate the cell fate inference performance of the models based on two metrics:
 
 1. the consistency between the velocity vector field and the *clonal progression
-vector field* using grid-based cosine similarity; 2. Spearman’s correlation of
+vector field* using grid-based cosine similarity; 2. Spearman's correlation of
 velocity-based shared (latent) time with Cospar fate potency and the silver
 standard Cytotrace score. Both metrics are implemented in scipy.
 
@@ -919,7 +1010,7 @@ analyses.  All the authors contributed to the writing of the manuscript.
 # Competing financial interests statement {.unnumbered}
 
 L.P. has financial interests in Edilytics, Inc., Excelsior Genomics, and SeQure
-Dx, Inc. L.P.’s interests were reviewed and are managed by Massachusetts General
+Dx, Inc. L.P.'s interests were reviewed and are managed by Massachusetts General
 Hospital and Partners HealthCare in accordance with their conflict of interest
 policies.
 
@@ -946,44 +1037,46 @@ shared time and gene are modeled with two constraints: 1. the shared time is
 strictly larger than the gene-specific activation time $t_{0}^{(0)}$, 2. the
 gene expression in the activate state starts with the initial condition
 $(u_{0}=0,\,s_{0}=0)$, as in previous methods[@La_Manno2018-lj;@Bergen2020-pj]
-([Methods](#sec-methods)). **b**, Pyro&thinsp;-Velocity Model 2. This figure follows the same
-graphical convention as in **a**, In this model $t_{0}^{(0)}$ is independent from
-the shared time, thus allowing a time lag for the gene activation phase. In
-addition, a positive starting basal gene expression level $(u_{0},\,s_{0})$
-different than $(u_{0}=0,\,s_{0}=0)$ is allowed. ([Methods](#sec-methods)). **c**, Schematic
-illustrating how the constraints proposed in Model 1 (left) and Model 2 (right)
-are reflected in the modeling of individual gene expression. The x-axis
-corresponds to the shared time, the y-axis corresponds to the posterior mean of
-the spliced expression level, the vertical lines with arrows show the start and
-end time of the observed cell sampling, t0 represents the gene-specific
-activation time $t_{0}^{(0)}$, the red lines highlight the differences for the
-potential gene-specific time lag when $t_{0}^{(0)} > {\min}\!⁡(t)$, and the
-initial spliced gene expression. The same differences can also be illustrated
-for the unspliced gene expression profiles (not shown).
+([Methods](#sec-methods)). **b**, Pyro&thinsp;-Velocity Model 2. This figure
+follows the same graphical convention as in **a**, In this model $t_{0}^{(0)}$
+is independent from the shared time, thus allowing a time lag for the gene
+activation phase. In addition, a positive starting basal gene expression level
+$(u_{0},\,s_{0})$ different than $(u_{0}=0,\,s_{0}=0)$ is allowed.
+([Methods](#sec-methods)). **c**, Schematic illustrating how the constraints
+proposed in Model 1 (left) and Model 2 (right) are reflected in the modeling of
+individual gene expression. The x-axis corresponds to the shared time, the
+y-axis corresponds to the posterior mean of the spliced expression level, the
+vertical lines with arrows show the start and end time of the observed cell
+sampling, t0 represents the gene-specific activation time $t_{0}^{(0)}$, the red
+lines highlight the differences for the potential gene-specific time lag when
+$t_{0}^{(0)} > {\min}\!⁡(t)$, and the initial spliced gene expression. The same
+differences can also be illustrated for the unspliced gene expression profiles
+(not shown).
 :::
 
 ::: {#extfig-model-results}
 ![](figures/v2/Supplementary-Figure2.png)
 
 Extended version of @fig-model-results for evaluating Pyro&thinsp;-Velocity
-(Model 1) and scVelo on the PBMC and pancreas datasets. **a**, Left figure shows the
-scVelo vector field using the default user options, right figure shows the
+(Model 1) and scVelo on the PBMC and pancreas datasets. **a**, Left figure shows
+the scVelo vector field using the default user options, right figure shows the
 evaluation of the scVelo vector field using different combinations of user
-options within Epsilon cells. **b**, Pyro&thinsp;-Velocity additional single cell
-level uncertainty diagnostic plots on the fully mature PBMC dataset, from left
-to right: 1. standard deviation of posterior samples of shared time, 2. Rayleigh
-test of posterior samples of the vector field (the title reports false discovery
-rate after p-value correction for multiple tests across cells), 3.
+options within Epsilon cells. **b**, Pyro&thinsp;-Velocity additional single
+cell level uncertainty diagnostic plots on the fully mature PBMC dataset, from
+left to right: 1. standard deviation of posterior samples of shared time, 2.
+Rayleigh test of posterior samples of the vector field (the title reports false
+discovery rate after p-value correction for multiple tests across cells), 3.
 transcriptional state uncertainty of predicted raw read count per cell. The
-contour lines show the top 10% of the most uncertain cells. **c**, For the pancreas
-dataset, the figures show from left to right: UMAP rendering of 1. Cytotrace, 2.
-scVelo latent time, 3. Posterior mean of Pyro&thinsp;-Velocity shared time
-averaged across 30 posterior samples, 4. Top 50 markers overlapping between
-Pyro&thinsp;-Velocity and scVelo ([Methods](#sec-methods), Supplementary Table 1-2), 5. The same
-uncertainty diagnostic plots per cell as in **b**. **d**, The same plot as [@fig-model-results]d, e.
-Selection of the top negatively correlated genes with the cell shared time based
-on the posterior mean on denoised spliced expression and negative mean absolute
-error of gene expression prediction ([Methods](#sec-methods)). **f**, Phase portraits, rainbow
+contour lines show the top 10% of the most uncertain cells. **c**, For the
+pancreas dataset, the figures show from left to right: UMAP rendering of 1.
+Cytotrace, 2. scVelo latent time, 3. Posterior mean of Pyro&thinsp;-Velocity
+shared time averaged across 30 posterior samples, 4. Top 50 markers overlapping
+between Pyro&thinsp;-Velocity and scVelo ([Methods](#sec-methods), Supplementary
+Table 1-2), 5. The same uncertainty diagnostic plots per cell as in **b**.
+**d**, The same plot as [@fig-model-results]d, e. Selection of the top
+negatively correlated genes with the cell shared time based on the posterior
+mean on denoised spliced expression and negative mean absolute error of gene
+expression prediction ([Methods](#sec-methods)). **f**, Phase portraits, rainbow
 plots, and UMAP rendering of posterior mean of gene expression for the genes
 selected in **e**.
 :::
@@ -1001,8 +1094,8 @@ scVelo on PBMC and pancreas datasets. Same format as in @fig-model-results and
 
 Extension of @fig-lineage-tracing, Pyro&thinsp;-Velocity (Model 1 for uni-fate
 data, Model 2 for bi-fate and multi-fate data) outperforms Cytotrace on
-scRNA-seq datasets with lineage barcoding information (LARRY dataset). **a**, SPRING
-embedding rendering of Cytotrace scores, the title reports the Spearman's
+scRNA-seq datasets with lineage barcoding information (LARRY dataset). **a**,
+SPRING embedding rendering of Cytotrace scores, the title reports the Spearman's
 correlation between the Cytotrace and Cospar fate potency scores, **b**,
 Pyro&thinsp;-Velocity additional single cell level uncertainty diagnostic plots
 based on the multi-fate LARRY dataset, from left to right: 1. Standard deviation
@@ -1010,15 +1103,16 @@ of posterior samples of shared time per cell, 2. Rayleigh test of posterior
 samples of vector field per cell (the title reports the false discovery rate
 after p-value correction for multiple tests across cells), 3. Transcriptional
 state uncertainty of predicted raw read count per cell. The contour lines show
-the top 10% of the most uncertain cells ([Methods](#sec-methods)), **c**, Pairwise Spearman's
-correlation between Cytotrace/Cospar fate potency scores and velocity methods
-for the four different benchmarking datasets selected based on the lineage
-barcoding information from LARRY data, **d**, SPRING embedding rendering of
-posterior mean of shared time across 30 posterior samples, the title shows the
-Spearman's correlation of mean shared time with Cytotrace. **e**, Selection of the
-top positively correlated genes with the cell shared time based on the posterior
-mean of spliced expression. **f**, Phase portraits, rainbow plots, and UMAP
-rendering with splicing gene expression level for the selected genes in **e**.
+the top 10% of the most uncertain cells ([Methods](#sec-methods)), **c**,
+Pairwise Spearman's correlation between Cytotrace/Cospar fate potency scores and
+velocity methods for the four different benchmarking datasets selected based on
+the lineage barcoding information from LARRY data, **d**, SPRING embedding
+rendering of posterior mean of shared time across 30 posterior samples, the
+title shows the Spearman's correlation of mean shared time with Cytotrace.
+**e**, Selection of the top positively correlated genes with the cell shared
+time based on the posterior mean of spliced expression. **f**, Phase portraits,
+rainbow plots, and UMAP rendering with splicing gene expression level for the
+genes selected in **e**.
 :::
 
 ::: {#extfig-lineage-tracing-2}
