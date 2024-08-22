@@ -61,3 +61,4 @@ jobs:
             reproducibility/manuscript/manuscript.*
             reproducibility/manuscript/v2*.*
             reproducibility/manuscript/*.bib
+            reproducibility/manuscript/*.dvc
