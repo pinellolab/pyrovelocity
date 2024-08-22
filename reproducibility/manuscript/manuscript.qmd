@@ -435,7 +435,7 @@ using rainbow plots (right panel).
 :::
 
 ::: {#fig-model-results}
-![](figures/fig.pdf)
+![](figures/v2/Figure2.png)
 
 Pyro&thinsp;-Velocity outperforms other RNA-velocity methods and accurately
 predicts cell lineage trajectories. **a,b**, RNA Velocity model comparisons from
@@ -466,7 +466,7 @@ in **b**.
 :::
 
 ::: {#fig-lineage-tracing}
-![](figures/fig.pdf)
+![](figures/v2/Figure3.png)
 
 Pyro&thinsp;-Velocity accurately predicts cell fate choices and lineage
 trajectory in human LARRY barcoded hematopoietic cells. Systematic benchmarking
@@ -813,7 +813,7 @@ for the unspliced gene expression profiles (not shown).
 :::
 
 ::: {#extfig-model-results}
-![](figures/fig.pdf)
+![](figures/v2/Supplementary-Figure2.png)
 
 Extended version of @fig-model-results for evaluating Pyro&thinsp;-Velocity
 (Model 1) and scVelo on the PBMC and pancreas datasets. **a**, Left figure shows the
@@ -839,7 +839,7 @@ selected in **e**.
 :::
 
 ::: {#extfig-model-2-result}
-![](figures/fig.pdf)
+![](figures/v2/Supplementary-Figure3.png)
 
 Extension of @fig-model-results, Pyro&thinsp;-Velocity (Model 2) outperforms
 scVelo on PBMC and pancreas datasets. Same format as in @fig-model-results and
@@ -847,7 +847,7 @@ scVelo on PBMC and pancreas datasets. Same format as in @fig-model-results and
 :::
 
 ::: {#extfig-lineage-tracing}
-![](figures/fig.pdf)
+![](figures/v2/Supplementary-Figure4.png)
 
 Extension of @fig-lineage-tracing, Pyro&thinsp;-Velocity (Model 1 for uni-fate
 data, Model 2 for bi-fate and multi-fate data) outperforms Cytotrace on
@@ -872,7 +872,7 @@ rendering with splicing gene expression level for the selected genes in **e**.
 :::
 
 ::: {#extfig-lineage-tracing-2}
-![](figures/fig.pdf)
+![](figures/v2/Supplementary-Figure5.png)
 
 Extension of [@fig-lineage-tracing] presenting an extended comparison of
 Pyro&thinsp;-Velocity and scVelo on scRNA-seq datasets with lineage barcoding
