@@ -34,6 +34,21 @@ jobs:
         uses: iterative/setup-dvc@68c55926a8ce27c2d4fcf7db61149ee64cf4eeb9 # v1
         with:
           version: "3.53.2"
+      - name: Download figures
+        run: |
+          make -C reproducibility/manuscript figures-download
+      - name: Compute diff
+        # if: ${{ inputs.diff_enabled == 'true' }}
+        continue-on-error: false
+        uses: xu-cheng/texlive-action@3586544d56723b23ab69aec1e9d73e7220d9c313 # v2
+        with:
+          scheme: full
+          run: |
+            apk add make
+            git config --global --add safe.directory "${{ github.workspace }}/**"
+            git config --global --add safe.directory "${{ github.workspace }}"
+            git config --global --add safe.directory "${{ github.workspace }}/.git"
+            make -C reproducibility/manuscript latexdiff
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@c1b50d36cf3c22b3dc7e530bd1b36634e824e545 # v2
         with:
@@ -44,16 +59,6 @@ jobs:
       - name: Render
         run: |
           make -C reproducibility/manuscript render
-      - name: Compute diff
-        # if: ${{ inputs.diff_enabled == 'true' }}
-        continue-on-error: true
-        uses: xu-cheng/texlive-action@3586544d56723b23ab69aec1e9d73e7220d9c313 # v2
-        with:
-          scheme: full
-          run: |
-            apk add make
-            git config --global --add safe.directory "${{ github.workspace }}"
-            make -C reproducibility/manuscript latexdiff
       - name: Upload artifacts
         uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4
         with:
