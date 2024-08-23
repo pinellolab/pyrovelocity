@@ -308,6 +308,7 @@ def print_anndata(
 @beartype
 def anndata_string(
     anndata_obj: AnnData,
+    max_categories: int = 10,
 ) -> str:
     """
     Print a formatted representation of an AnnData object.
@@ -328,21 +329,61 @@ def anndata_string(
         >>> import pandas as pd
         >>> np.random.seed(42)
         >>> X = np.random.randn(10, 5)
-        >>> obs = pd.DataFrame({"clusters_coarse": np.random.randint(0, 2, 10),
-        ...                     "clusters": np.random.randint(0, 2, 10),
-        ...                     "S_score": np.random.rand(10),
-        ...                     "G2M_score": np.random.rand(10)})
+        >>> obs = pd.DataFrame(
+        ...    {"clusters_coarse": np.random.randint(0, 3, 10),
+        ...     "clusters": pd.Categorical(["A", "B", "A", "C", "B", "C", "A", "B", "C", "A"]),
+        ...     "condition": pd.Categorical(["control", "treatment", "control", "treatment", "control",
+        ...                                  "treatment", "control", "treatment", "control", "treatment"]),
+        ...     "S_score": np.random.rand(10),
+        ...     "G2M_score": np.random.rand(10)
+        ... })
         >>> var = pd.DataFrame({"gene_name": [f"gene_{i}" for i in range(5)]})
         >>> adata = AnnData(X, obs=obs, var=var)
+        >>> adata.uns['small_array'] = np.array([1, 2, 3])
+        >>> adata.uns['sparse_matrix'] = sparse.csr_matrix(([1, 2, 3], ([0, 1, 2], [1, 2, 0])), shape=(3, 3))
+        >>> adata.uns['dictionary'] = {'key1': 'value1', 'key2': 'value2'}
+        >>> adata.uns['dataframe'] = pd.DataFrame({'A': np.random.rand(10), 'B': np.random.rand(10)})
         >>> print_anndata(adata)  # doctest: +NORMALIZE_WHITESPACE
     """
     assert isinstance(
         anndata_obj, AnnData
     ), "Input object must be of type AnnData."
 
-    def format_elements(elements):
-        formatted = "\n".join([f"        {elem}," for elem in elements])
-        return formatted
+    @beartype
+    def format_elements(elements, prop_name: str) -> str:
+        formatted = []
+        for elem in elements:
+            elem_str = f"        {elem},"
+            if prop_name in ["obs", "var"]:
+                df = getattr(anndata_obj, prop_name)
+                elem_type = df[elem].dtype
+                elem_str += f" {elem_type},"
+                if pd.api.types.is_categorical_dtype(df[elem]):
+                    num_categories = len(df[elem].cat.categories)
+                    elem_str += f" {num_categories},"
+                    if num_categories < max_categories:
+                        categories = ", ".join(
+                            map(str, df[elem].cat.categories)
+                        )
+                        elem_str += f" [{categories}],"
+                else:
+                    num_distinct = df[elem].nunique()
+                    elem_str += f" {num_distinct},"
+            elif prop_name in ["uns", "obsm", "varm", "layers", "obsp", "varp"]:
+                obj = getattr(anndata_obj, prop_name)[elem]
+                if isinstance(obj, NDArrayOrSPMatrix):
+                    obj_type = type(obj).__name__
+                    obj_shape = " x ".join(map(str, obj.shape))
+                    elem_str += f" {obj_type}, {obj_shape},"
+                elif isinstance(obj, pd.DataFrame):
+                    obj_type = type(obj).__name__
+                    obj_shape = " x ".join(map(str, obj.shape))
+                    elem_str += f" {obj_type}, {obj_shape},"
+                else:
+                    obj_type = type(obj).__name__
+                    elem_str += f" {obj_type},"
+            formatted.append(elem_str)
+        return "\n".join(formatted)
 
     anndata_string = [
         f"\nAnnData object with n_obs × n_vars = {anndata_obj.n_obs} × {anndata_obj.n_vars}"
@@ -362,7 +403,7 @@ def anndata_string(
     for prop_name, elements in properties.items():
         if len(elements) > 0:
             anndata_string.append(
-                f"    {prop_name}:\n{format_elements(elements)}"
+                f"    {prop_name}:\n{format_elements(elements, prop_name)}"
             )
 
     return "\n".join(anndata_string)
