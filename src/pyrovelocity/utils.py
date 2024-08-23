@@ -21,9 +21,10 @@ import seaborn as sns
 import yaml
 from anndata._core.anndata import AnnData
 from beartype import beartype
-from beartype.typing import Callable, Dict, List, Tuple
+from beartype.typing import Callable, Dict, List, Tuple, TypeAlias
 from einops import EinopsError, reduce
 from jaxtyping import ArrayLike
+from scipy import sparse
 from scvi.data import synthetic_iid
 
 from pyrovelocity.io.compressedpickle import CompressedPickle
@@ -56,6 +57,10 @@ __all__ = [
 ]
 
 logger = configure_logging(__name__)
+
+SPMatrix: TypeAlias = sparse.spmatrix
+NDArray: TypeAlias = np.ndarray
+NDArrayOrSPMatrix: TypeAlias = NDArray | SPMatrix
 
 
 def mae(pred_counts, true_counts):
