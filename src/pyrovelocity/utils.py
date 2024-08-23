@@ -30,13 +30,6 @@ from scvi.data import synthetic_iid
 from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.logging import configure_logging
 
-# import torch
-# from scipy.sparse import issparse
-# from sklearn.decomposition import PCA
-# from torch.nn.functional import relu
-# from pyrovelocity.models._transcription_dynamics import inv
-# from pyrovelocity.models import mrna_dynamics
-
 __all__ = [
     "anndata_counts_to_df",
     "attributes",
