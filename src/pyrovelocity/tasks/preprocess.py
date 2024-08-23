@@ -22,6 +22,10 @@ from pyrovelocity.plots._count_histograms import (
 from pyrovelocity.tasks.data import load_anndata_from_path
 from pyrovelocity.utils import ensure_numpy_array, print_anndata
 
+from scipy.sparse import csr_matrix
+from scipy.sparse import issparse
+import warnings
+
 __all__ = [
     "assign_colors",
     "compute_and_plot_qc",
@@ -29,7 +33,7 @@ __all__ = [
     "get_high_us_genes",
     "get_thresh_histogram_title_from_path",
     "plot_high_us_genes",
-    "preprocess_dataset",
+    "preprocess_dataset"
 ]
 
 logger = configure_logging(__name__)
@@ -634,6 +638,225 @@ def get_high_us_genes(
     logger.info(f"adata.shape after filtering: {adata.shape}")
     return adata
 
+@beartype
+def compute_metacells(
+    adata_rna: AnnData,
+    adata_atac: AnnData,
+    latent_key: str,
+    celltype_key: Optional[str] = None,
+    n_neighbors: int = 10,
+    n_neighbors_metacell: int = 5,
+    resolution: int = 50,   
+    verbose: bool = True,
+    merge_knn_graph: bool = True,
+    merge_umap: bool = True,
+    umap_key: Optional[str] = None
+) -> Tuple[AnnData, AnnData]:
+    """
+    Computes metacells, using low-level clustering in a given a latent-space. By default, includes
+    summing up RNA counts, ATAC counts and optionally includes averaging UMAP coordinates and computing
+    a new knn-graph for meta-cells. If a celltype key is provided, metacells are named by their most 
+    frequent celltype label.
+
+    Args:
+        adata_rna (AnnData): AnnData object with RNA counts.
+        adata_atac (AnnData): AnnData object with ATAC counts.
+        latent_key (str): Name of latent space key in .obsm slot in adata_rna, e.g. X_pca.
+        celltype_key (Optional[str] optional): Name of cell type key in .obs column in adata_rna.
+        n_neighbors (int, optional): Number of nearest neighbors to use in initial knn-graph used 
+        for metacell construction. Defaults to 10.
+        n_neighbors_metacell (int, optional): Number of nearest neighbors to use in new knn-graph
+        for metacells. Defaults to 5.
+        resolution (int, optional): Resolution at which to do leiden clustering for metacells.
+        Defaults to 50. 
+        verbose (bool, optional): Whether to print out progress and make diagnostic plots 
+        of metacell computations. Defaults to True.
+        merge_knn_graph (bool, optional): Whether to produce a new knn graph for metacells.
+        merge_umap (bool, optional): Whether to produce a umap embedding for metacells from the previous embedding of cells.
+        If no previous embedding is present it will be recomputed for the original anndata object.
+        umap_key (str, optional): Key of UMAP embedding in adata_rna.obsm
+    Returns:
+        Tuple[AnnData, AnnData]: Tuple containing two anndata objects containing RNA and ATAC counts for metacells.
+
+    Examples:
+        >>> from pyrovelocity.tests.synthetic_AnnData import synthetic_AnnData
+        >>> adata_rna = synthetic_AnnData(seed = 1)
+        >>> adata_atac = synthetic_AnnData(seed = 2)
+        >>> sc.tl.pca(adata_rna, n_comps=3)
+        >>> compute_metacells(adata_rna, adata_atac,
+                  latent_key = 'X_pca',
+                  resolution = 1,
+                  celltype_key = 'cell_type')
+    """
+    
+    # Check input makes sense:
+    if len(adata_rna.obs_names) != len(adata_atac.obs_names):
+        raise ValueError("RNA and ATAC data do not contain the same cells number of cells.")
+    if (adata_rna.obs_names != adata_atac.obs_names).all():
+        raise ValueError("RNA and ATAC data do not contain the same cells in obs_names.")
+
+    if not isinstance(adata_rna.X, csr_matrix):
+        adata_rna.X = csr_matrix(adata_rna.X)
+    if not isinstance(adata_atac.X, csr_matrix):
+        adata_atac.X = csr_matrix(adata_atac.X)
+    
+    # Define functions for all processing steps:
+    
+    @beartype
+    def merge_RNA(
+    adata_rna: AnnData,
+    cluster_key: str,
+    celltype_key: Optional[str] = None,
+    verbose: bool = True,
+    )-> AnnData:
+
+        if verbose:
+            print('merging RNA counts')
+        
+        X = np.concatenate([np.sum(adata_rna.X[adata_rna.obs[cluster_key] == c,:], axis = 0) for c in np.unique(adata_rna.obs[cluster_key])], axis = 0)
+        print(X.shape)
+        adata_meta = sc.AnnData(X  = np.array(X))
+        adata_meta.obs['n_cells'] = [np.sum(adata_rna.obs[cluster_key] == c) for c in np.unique(adata_rna.obs[cluster_key])]
+        if celltype_key:
+            adata_meta.obs[celltype_key] = [adata_rna[adata_rna.obs[cluster_key] == c,:].obs[celltype_key].mode()[0] for c in np.unique(adata_rna.obs[cluster_key])]
+        adata_meta.obs['RNA counts'] = np.sum(adata_meta.X, axis = 1)
+        
+        if verbose:
+            print('Mean RNA counts per cell before: ', np.mean(adata_rna.obs['RNA counts']))
+            print('Mean RNA counts per cell after: ', np.mean(adata_meta.obs['RNA counts']))
+            plt.hist(adata_rna.obs['RNA counts'], bins = 10, label = 'single cells', alpha = 0.5)
+            plt.hist(adata_meta.obs['RNA counts'],bins = 20, label = 'meta cells', alpha = 0.5)
+            plt.xlabel('Total Counts')
+            plt.ylabel('Occurences')
+            plt.legend()
+            plt.show()
+            
+        return adata_meta
+
+    @beartype
+    def merge_UMAP(
+    adata_rna: AnnData,
+    adata_meta: AnnData,
+    cluster_key: str,
+    umap_key: str = 'X_umap',
+    verbose: bool = True,
+    )-> AnnData:
+
+        if verbose:
+            print('merging UMAP')
+        
+        adata_meta.obsm[umap_key] = np.concatenate([np.expand_dims(np.mean(adata_rna.obsm[umap_key][adata_rna.obs[cluster_key] == c,:], axis = 0), axis = -1) for c in np.unique(adata_rna.obs[cluster_key])], axis = 1).T
+            
+        return adata_meta
+
+    @beartype
+    def merge_ATAC(
+    adata_atac: AnnData,
+    cluster_key: str,
+    celltype_key: Optional[str] = None,
+    verbose: bool = True
+    )-> AnnData:
+
+        if verbose:
+                print('merging ATAC counts')
+        
+        X = np.concatenate([np.sum(adata_atac.X[adata_rna.obs[cluster_key] == c,:], axis = 0) for c in np.unique(adata_atac.obs[cluster_key])], axis = 0)
+        adata_atac_meta = sc.AnnData(X  = np.array(X))
+        adata_atac_meta.obs['n_cells'] = [np.sum(adata_atac.obs[cluster_key] == c) for c in np.unique(adata_atac.obs[cluster_key])]
+        if celltype_key:
+            adata_atac_meta.obs[celltype_key] = [adata_atac[adata_atac.obs[cluster_key] == c,:].obs[celltype_key].mode()[0] for c in np.unique(adata_atac.obs[cluster_key])]
+        adata_atac_meta.obs['ATAC counts'] = np.sum(adata_atac_meta.X, axis = 1)
+        
+        if verbose:
+            print('Mean ATAC counts per cell before: ', np.mean(adata_atac.obs['ATAC counts']))
+            print('Mean ATAC counts per cell after: ', np.mean(adata_atac_meta.obs['ATAC counts']))
+            plt.hist(adata_atac.obs['ATAC counts'], bins = 10, label = 'single cells', alpha = 0.5)
+            plt.hist(adata_atac_meta.obs['ATAC counts'],bins = 20, label = 'meta cells', alpha = 0.5)
+            plt.xlabel('Total Counts')
+            plt.ylabel('Occurences')
+            plt.legend()
+            plt.show()
+            
+        return adata_atac_meta
+
+    @beartype
+    def merge_knn(
+    adata_rna: AnnData,
+    adata_meta: AnnData,
+    cluster_key: str,
+    n_neighbors: int = 6,
+    verbose: bool = True
+    ) -> AnnData:
+            
+        if verbose:
+            print('merging knn graph')
+            
+        distance_matrix = (adata_rna.obsp['distances'].toarray() != 0)*1
+        clusters = adata_rna.obs[cluster_key]
+        for c in np.unique(clusters):
+            subset = np.array(clusters == c)
+            distance_matrix = np.concatenate([distance_matrix[~subset,:], np.expand_dims(np.sum(distance_matrix[subset,:], axis = 0), axis = 0)], axis = 0)
+            distance_matrix = np.concatenate([distance_matrix[:,~subset], np.expand_dims(np.sum(distance_matrix[:,subset], axis = 1), axis = 1)], axis = 1)
+            clusters = np.concatenate([clusters[~subset], np.expand_dims(np.array((c)), axis = 0)])
+        adata_meta.obsm['N_cn'] = np.stack([np.argsort(-1*distance_matrix[i,:])[:n_neighbors+1] for i in range(len(distance_matrix[:,0]))], axis = 0)
+
+        return adata_meta
+    
+    # Run through the metacell construction:
+    adata_atac = adata_atac[adata_rna.obs_names,:]
+    if celltype_key:
+        adata_atac.obs[celltype_key] = adata_rna.obs[celltype_key]
+    adata_rna.obs['RNA counts'] = np.sum(adata_rna.X, axis = 1)
+    adata_atac.obs['ATAC counts'] = np.sum(adata_atac.X, axis = 1)
+    
+    if verbose:
+        print('low resolution clustering cells')
+    sc.pp.neighbors(adata_rna, use_rep=latent_key, n_neighbors=n_neighbors)
+    cluster_key = "leiden"   
+    sc.tl.leiden(adata_rna, key_added=cluster_key, resolution=resolution)
+    adata_atac.obs[cluster_key] = adata_rna.obs[cluster_key]
+    
+    if verbose:
+        print('total number of cells', len(adata_rna.obs_names))
+        print('total number of meta-cells', len(np.unique(adata_rna.obs[cluster_key])))
+        print('minimum cells/meta-cell', np.min(adata_rna.obs[cluster_key].value_counts()))
+        print('average cells/meta-cell', np.round(np.mean(adata_rna.obs[cluster_key].value_counts()),1))
+        print('maximum cells/meta_cell', np.max(adata_rna.obs[cluster_key].value_counts()))
+        plt.hist(adata_rna.obs[cluster_key].value_counts(), bins = 10)
+        plt.xlabel('cells per meta-cell')
+        plt.ylabel('number of meta-cells')
+    
+    adata_meta = merge_RNA(adata_rna, verbose = verbose,
+              cluster_key = cluster_key, celltype_key = celltype_key)    
+    
+    if merge_umap:
+        if not umap_key:
+            sc.tl.umap(adata_rna)
+            umap_key = 'X_umap'
+        elif umap_key not in adata_rna.obsm:
+            warnings.warn("Umap_key not found in AnnData. Computing with sc.tl.umap()...", category=UserWarning)
+            sc.tl.umap(adata_rna)
+            umap_key = 'X_umap'
+        adata_meta = merge_UMAP(adata_rna, adata_meta, umap_key = umap_key,verbose = verbose, cluster_key = cluster_key)
+    
+    adata_atac_meta = merge_ATAC(adata_atac, verbose = verbose,
+              cluster_key = cluster_key, celltype_key = celltype_key)
+    
+    adata_meta.obs['ATAC counts'] = adata_atac_meta.obs['ATAC counts']
+    
+    if merge_knn_graph:
+        
+        adata_meta = merge_knn(
+        adata_rna,
+        adata_meta,
+        cluster_key = cluster_key,
+        n_neighbors = n_neighbors_metacell,
+        verbose = True)
+        
+    if verbose:
+        print('Done.')
+    
+    return adata_meta, adata_atac_meta
 
 # ------------------------------------------------------------------------------
 
