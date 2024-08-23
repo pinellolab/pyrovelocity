@@ -91,7 +91,8 @@ def plot_shared_time_uncertainty(
     ax[0].hist(cell_time_std / cell_time_mean, bins=100)
     ax[0].set_title("histogram of shared time CoV")
     ax_st = scv.pl.scatter(
-        adata,
+        adata=adata,
+        basis=vector_field_basis,
         c="shared_time_mean",
         ax=ax[1],
         show=False,
@@ -100,7 +101,8 @@ def plot_shared_time_uncertainty(
         colorbar=True,
     )
     ax_cv = scv.pl.scatter(
-        adata,
+        adata=adata,
+        basis=vector_field_basis,
         c="shared_time_std",
         ax=ax[2],
         show=False,
