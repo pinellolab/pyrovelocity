@@ -20,13 +20,12 @@ from pyrovelocity.plots._uncertainty import (
     get_posterior_sample_angle_uncertainty,
 )
 
-
 logger = configure_logging(__name__)
 
 
 __all__ = [
     "plot_vector_field_summary",
-    "plot_vector_field_uncertain",
+    "plot_vector_field_uncertainty",
     "plot_mean_vector_field",
     "plot_arrow_examples",
 ]
@@ -131,7 +130,7 @@ def plot_vector_field_summary(
     cell_time_std = posterior_time.std(0).flatten()
     cell_time_cov = cell_time_std / cell_time_mean
 
-    plot_vector_field_uncertain(
+    plot_vector_field_uncertainty(
         adata,
         embed_mean,
         cell_time_std,
@@ -153,7 +152,7 @@ def plot_vector_field_summary(
     cell_magnitudes_mean = cell_magnitudes.mean(axis=-2)
     cell_magnitudes_std = cell_magnitudes.std(axis=-2)
     cell_magnitudes_cov = cell_magnitudes_std / cell_magnitudes_mean
-    plot_vector_field_uncertain(
+    plot_vector_field_uncertainty(
         adata,
         embed_mean,
         cell_magnitudes_cov,
@@ -172,7 +171,7 @@ def plot_vector_field_summary(
         cmax=None,
     )
 
-    plot_vector_field_uncertain(
+    plot_vector_field_uncertainty(
         adata,
         embed_mean,
         pca_angles_std,
@@ -202,7 +201,7 @@ def plot_vector_field_summary(
     return fig
 
 
-def plot_vector_field_uncertain(
+def plot_vector_field_uncertainty(
     adata,
     embed_mean,
     embeds_radian_or_magnitude,

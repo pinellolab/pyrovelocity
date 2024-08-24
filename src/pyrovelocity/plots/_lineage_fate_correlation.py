@@ -13,13 +13,15 @@ from scipy.stats import spearmanr
 
 from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.logging import configure_logging
-from pyrovelocity.plots import (
+from pyrovelocity.plots._time import plot_posterior_time
+from pyrovelocity.plots._trajectory import (
     align_trajectory_diff,
     get_clone_trajectory,
-    get_posterior_sample_angle_uncertainty,
-    plot_posterior_time,
-    plot_vector_field_uncertain,
 )
+from pyrovelocity.plots._uncertainty import (
+    get_posterior_sample_angle_uncertainty,
+)
+from pyrovelocity.plots._vector_fields import plot_vector_field_uncertainty
 
 __all__ = ["plot_lineage_fate_correlation"]
 
@@ -132,7 +134,7 @@ def plot_lineage_fate_correlation(
     cell_time_cov = cell_time_std / cell_time_mean
     print(cell_time_cov)
 
-    plot_vector_field_uncertain(
+    plot_vector_field_uncertainty(
         adata_pyrovelocity,
         embed_mean,
         cell_time_cov,
@@ -159,7 +161,7 @@ def plot_lineage_fate_correlation(
     cell_magnitudes_cov = cell_magnitudes_std / cell_magnitudes_mean
     print(cell_magnitudes_cov)
 
-    plot_vector_field_uncertain(
+    plot_vector_field_uncertainty(
         adata_pyrovelocity,
         embed_mean,
         cell_magnitudes_cov,
@@ -185,7 +187,7 @@ def plot_lineage_fate_correlation(
     pca_angles_std = get_posterior_sample_angle_uncertainty(pca_cell_angles)
     print(pca_angles_std)
 
-    plot_vector_field_uncertain(
+    plot_vector_field_uncertainty(
         adata_pyrovelocity,
         embed_mean,
         pca_angles_std,
