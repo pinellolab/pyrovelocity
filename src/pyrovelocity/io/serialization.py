@@ -225,6 +225,8 @@ class NumpyEncoder(json.JSONEncoder):
             return obj.to_dict(orient="list")
         if isinstance(obj, pd.Series):
             return obj.to_dict()
+        elif isinstance(obj, np.bool_):
+            return bool(obj)
         return super().default(obj)
 
 
