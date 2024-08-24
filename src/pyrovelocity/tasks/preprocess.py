@@ -19,8 +19,11 @@ from pyrovelocity.logging import configure_logging
 from pyrovelocity.plots._count_histograms import (
     plot_spliced_unspliced_histogram,
 )
-from pyrovelocity.tasks.data import load_anndata_from_path
-from pyrovelocity.utils import ensure_numpy_array, print_anndata
+from pyrovelocity.utils import (
+    ensure_numpy_array,
+    load_anndata_from_path,
+    print_anndata,
+)
 
 __all__ = [
     "assign_colors",

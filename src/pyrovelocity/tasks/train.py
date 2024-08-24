@@ -18,8 +18,7 @@ from scvi.model._utils import parse_device_args
 from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models import PyroVelocity
-from pyrovelocity.tasks.data import load_anndata_from_path
-from pyrovelocity.utils import print_anndata
+from pyrovelocity.utils import load_anndata_from_path, print_anndata
 
 logger = configure_logging(__name__)
 

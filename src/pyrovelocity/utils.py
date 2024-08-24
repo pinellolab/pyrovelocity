@@ -16,6 +16,7 @@ import numpy as np
 import pandas as pd
 import rich.syntax
 import rich.tree
+import scanpy as sc
 import scvelo as scv
 import seaborn as sns
 import yaml
@@ -38,6 +39,7 @@ __all__ = [
     "generate_public_api",
     "generate_sample_data",
     "internal_help",
+    "load_anndata_from_path",
     "mae",
     "mae_evaluate",
     "pretty_log_dict",
@@ -640,6 +642,22 @@ def internal_help(obj: Callable | ModuleType):
         processed_lines.append(line)
 
     print("\n".join(processed_lines))
+
+
+@beartype
+def load_anndata_from_path(adata_path: str | Path) -> AnnData:
+    adata_path = Path(adata_path)
+    if adata_path.suffix not in {".h5ad", ".loom"}:
+        raise ValueError(
+            f"The input file {adata_path}\n"
+            "must be either a .h5ad or .loom file."
+        )
+    if os.path.isfile(adata_path) and os.access(adata_path, os.R_OK):
+        logger.info(f"Reading input file: {adata_path}")
+        adata = sc.read(filename=adata_path, cache=True)
+        return adata
+    else:
+        raise ValueError(f"Cannot read input file: {adata_path}")
 
 
 # TODO: remove unused functions

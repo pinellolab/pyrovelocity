@@ -8,8 +8,8 @@ import requests_mock
 from pyrovelocity.tasks.data import (
     _validate_url_and_file,
     download_dataset,
-    load_anndata_from_path,
 )
+from pyrovelocity.utils import load_anndata_from_path
 
 
 def test_load_data_module():

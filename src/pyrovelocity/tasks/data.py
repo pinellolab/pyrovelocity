@@ -7,7 +7,6 @@ from urllib.parse import unquote
 import requests
 import scanpy as sc
 import validators
-from anndata._core.anndata import AnnData
 from beartype import beartype
 
 import pyrovelocity.io.datasets
@@ -15,7 +14,9 @@ from pyrovelocity.io.subset_data import subset_anndata
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.utils import generate_sample_data, print_anndata
 
-__all__ = ["download_dataset", "load_anndata_from_path"]
+__all__ = [
+    "download_dataset",
+]
 
 logger = configure_logging(__name__)
 
@@ -246,19 +247,3 @@ def _validate_url_and_file(url: str) -> Tuple[bool, str]:
         )
     except requests.RequestException as e:
         return False, f"Error occurred: {e}"
-
-
-@beartype
-def load_anndata_from_path(adata_path: str | Path) -> AnnData:
-    adata_path = Path(adata_path)
-    if adata_path.suffix not in {".h5ad", ".loom"}:
-        raise ValueError(
-            f"The input file {adata_path}\n"
-            "must be either a .h5ad or .loom file."
-        )
-    if os.path.isfile(adata_path) and os.access(adata_path, os.R_OK):
-        logger.info(f"Reading input file: {adata_path}")
-        adata = sc.read(filename=adata_path, cache=True)
-        return adata
-    else:
-        raise ValueError(f"Cannot read input file: {adata_path}")
