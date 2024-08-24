@@ -4,8 +4,6 @@ from pathlib import Path
 from typing import Optional, Tuple
 from urllib.parse import unquote
 
-import anndata
-import numpy as np
 import requests
 import scanpy as sc
 import validators
@@ -13,10 +11,11 @@ from anndata._core.anndata import AnnData
 from beartype import beartype
 
 import pyrovelocity.io.datasets
+from pyrovelocity.io.subset_data import subset_anndata
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.utils import generate_sample_data, print_anndata
 
-__all__ = ["download_dataset", "load_anndata_from_path", "subset_anndata"]
+__all__ = ["download_dataset", "load_anndata_from_path"]
 
 logger = configure_logging(__name__)
 
@@ -247,83 +246,6 @@ def _validate_url_and_file(url: str) -> Tuple[bool, str]:
         )
     except requests.RequestException as e:
         return False, f"Error occurred: {e}"
-
-
-@beartype
-def subset_anndata(
-    file_path: Optional[str | Path] = None,
-    adata: Optional[anndata._core.anndata.AnnData] = None,
-    n_obs: int = 100,
-    n_vars: Optional[int] = None,
-    save_subset: bool = False,
-    output_path: Optional[str | Path] = None,
-) -> Tuple[anndata._core.anndata.AnnData, str | Path | None]:
-    """
-    Randomly sample observations from a dataset given by file path or AnnData object.
-
-    Args:
-        file_path (str): Path to a .h5ad file containing a dataset. Takes precedence over adata.
-        adata (AnnData): AnnData object. If None, file_path must be provided.
-        n_obs (int): Number of observations to sample. Defaults to 100.
-        save_subset (bool): If True, save the subset to a file. Defaults to False.
-        output_path (str): Path to save the subset. Defaults to None.
-
-    Raises:
-        ValueError: If neither file_path nor adata is provided.
-
-    Returns:
-        AnnData: Subset of the dataset.
-
-    Examples:
-        >>> data_path = download_dataset(data_set_name="pancreas") # xdoctest: +SKIP
-        >>> adata = subset(file_path=data_path, n_obs=100, save_subset=True) # xdoctest: +SKIP
-        >>> print_anndata(adata) # xdoctest: +SKIP
-        >>> print_attributes(adata) # xdoctest: +SKIP
-    """
-    if file_path is not None:
-        file_path = Path(file_path)
-        adata = sc.read(file_path, cache=True)
-    if adata is None:
-        raise ValueError("Either file_path or adata must be provided")
-
-    if n_obs > adata.n_obs:
-        logger.warning(
-            f"n_obs ({n_obs}) is greater than the number of observations in the dataset ({adata.n_obs})"
-        )
-        n_obs = adata.n_obs
-    logger.info("constructing data subset")
-    print_anndata(adata)
-
-    if n_vars is not None:
-        if n_vars > adata.n_vars:
-            logger.warning(
-                f"n_vars ({n_vars}) is greater than the number of variables in the dataset ({adata.n_vars})"
-            )
-            n_vars = adata.n_vars
-        selected_vars_indices = np.random.choice(adata.n_vars, n_vars)
-        logger.info(f"selected {n_vars} vars from {adata.n_vars}")
-        adata = adata[:, selected_vars_indices]
-
-    selected_obs_indices = np.random.choice(adata.n_obs, n_obs)
-    logger.info(f"selected {n_obs} obs from {adata.n_obs}")
-    adata = adata[selected_obs_indices]
-    adata.obs_names_make_unique()
-    adata.var_names_make_unique()
-
-    if save_subset:
-        if output_path is None and file_path is not None:
-            output_path = file_path.parent / Path(
-                file_path.stem + f"_{n_obs}obs" + file_path.suffix
-            )
-        if output_path is None:
-            raise ValueError(
-                "output_path must be provided if save_subset is True and file_path is None"
-            )
-        adata.write(output_path)
-        logger.info(f"saved {n_obs} obs subset: {output_path}")
-
-    print_anndata(adata)
-    return adata.copy(), output_path
 
 
 @beartype
