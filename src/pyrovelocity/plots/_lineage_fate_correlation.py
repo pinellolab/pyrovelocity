@@ -5,6 +5,7 @@ import pandas as pd
 import scvelo as scv
 import seaborn as sns
 from anndata import AnnData
+from beartype import beartype
 from beartype.typing import Dict
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -28,6 +29,7 @@ __all__ = ["plot_lineage_fate_correlation"]
 logger = configure_logging(__name__)
 
 
+@beartype
 def plot_lineage_fate_correlation(
     posterior_samples_path: str | Path,
     adata_pyrovelocity: str | Path,
