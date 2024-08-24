@@ -7,6 +7,9 @@ from pyrovelocity.plots._dynamics import (
 )
 from pyrovelocity.plots._experimental import plot_t0_selection
 from pyrovelocity.plots._genes import plot_gene_ranking
+from pyrovelocity.plots._lineage_fate_correlation import (
+    plot_lineage_fate_correlation,
+)
 from pyrovelocity.plots._parameters import (
     plot_parameter_posterior_distributions,
 )
@@ -34,6 +37,7 @@ __all__ = [
     "plot_deterministic_simulation_phase_portrait",
     "plot_deterministic_simulation_trajectories",
     "plot_gene_ranking",
+    "plot_lineage_fate_correlation",
     "plot_parameter_posterior_distributions",
     "plot_posterior_time",
     "plot_shared_time_uncertainty",
