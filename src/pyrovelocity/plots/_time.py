@@ -27,6 +27,7 @@ def plot_posterior_time(
     basis="umap",
     addition=True,
     position="left",
+    cmap="cividis",
     s=3,
 ):
     if addition:
@@ -51,7 +52,7 @@ def plot_posterior_time(
         s=s,
         alpha=0.4,
         c=adata.obs["cell_time"],
-        cmap="cividis",
+        cmap=cmap,
         linewidth=0,
     )
     set_colorbar(im, ax, labelsize=5, fig=fig, position=position)
