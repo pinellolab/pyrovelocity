@@ -38,11 +38,12 @@ def plot_lineage_fate_correlation(
     adata_cospar: str | Path | AnnData,
     ax: Axes | np.ndarray,
     fig: Figure,
-    # state_color_dict: Dict,
-    ylabel: str = "Unipotent Monocyte lineage",
+    state_color_dict: Dict,
+    ylabel: str = "Monocyte lineage",
     dotsize: int = 3,
     scale: float = 0.35,
     arrow: float = 3.5,
+    lineage_fate_correlation_path: str | Path = "lineage_fate_correlation.pdf",
 ):
     """
     Plot lineage fate correlation with shared latent time estimates.
@@ -136,23 +137,26 @@ def plot_lineage_fate_correlation(
         {
             "X": adata_pyrovelocity.obsm["X_emb"][:, 0],
             "Y": adata_pyrovelocity.obsm["X_emb"][:, 1],
-            "celltype": adata_pyrovelocity.obs.state_info,
+            "cell_type": adata_pyrovelocity.obs.state_info,
         }
     )
     sns.scatterplot(
-        data=res,
         x="X",
         y="Y",
-        hue="celltype",
-        # palette=state_color_dict,
-        ax=ax[0],
-        s=dotsize,
+        data=res,
         alpha=0.90,
+        s=dotsize,
         linewidth=0,
+        edgecolor="none",
+        hue="cell_type",
+        palette=state_color_dict,
+        ax=ax[0],
         legend=False,
     )
+    ax[0].axis("off")
     ax[0].set_title("Cell types", fontsize=7)
     ax[0].set_ylabel(ylabel, fontsize=7)
+
     scv.pl.velocity_embedding_grid(
         adata_input_clone,
         scale=scale,
@@ -198,50 +202,49 @@ def plot_lineage_fate_correlation(
     plot_vector_field_uncertainty(
         adata_pyrovelocity,
         embed_mean,
-        cell_time_cov,
+        cell_time_std,
         ax=ax[3],
         cbar=True,
         fig=fig,
         basis="emb",
         scale=scale,
-        p_mass_min=1,
-        density=density,
         arrow_size=arrow,
-        only_grid=False,
+        p_mass_min=1,
         autoscale=True,
+        density=density,
+        only_grid=False,
         uncertain_measure="shared time",
         cmap="winter",
+        cmax=None,
     )
-    ax[3].set_title(
-        "Pyro-Velocity cosine similarity: %.2f" % pyro_cos_mean, fontsize=7
-    )
+    ax[3].set_title("Shared time uncertainty", fontsize=7)
 
-    cell_magnitudes = posterior_samples["original_spaces_embeds_magnitude"]
-    cell_magnitudes_mean = cell_magnitudes.mean(axis=-2)
-    cell_magnitudes_std = cell_magnitudes.std(axis=-2)
-    cell_magnitudes_cov = cell_magnitudes_std / cell_magnitudes_mean
-    print(cell_magnitudes_cov)
+    # cell_magnitudes = posterior_samples["original_spaces_embeds_magnitude"]
+    # cell_magnitudes_mean = cell_magnitudes.mean(axis=-2)
+    # cell_magnitudes_std = cell_magnitudes.std(axis=-2)
+    # cell_magnitudes_cov = cell_magnitudes_std / cell_magnitudes_mean
+    # print(cell_magnitudes_cov)
 
-    plot_vector_field_uncertainty(
-        adata_pyrovelocity,
-        embed_mean,
-        cell_magnitudes_cov,
-        ax=ax[4],
-        cbar=True,
-        fig=fig,
-        basis="emb",
-        scale=scale,
-        p_mass_min=1,
-        density=density,
-        arrow_size=arrow,
-        only_grid=False,
-        autoscale=True,
-        uncertain_measure="base magnitude",
-        cmap="summer",
-    )
-    ax[4].set_title(
-        "Pyro-Velocity cosine similarity: %.2f" % pyro_cos_mean, fontsize=7
-    )
+    # plot_vector_field_uncertainty(
+    #     adata_pyrovelocity,
+    #     embed_mean,
+    #     cell_magnitudes_cov,
+    #     ax=ax[4],
+    #     cbar=True,
+    #     fig=fig,
+    #     basis="emb",
+    #     scale=scale,
+    #     p_mass_min=1,
+    #     density=density,
+    #     arrow_size=arrow,
+    #     only_grid=False,
+    #     autoscale=True,
+    #     uncertain_measure="base magnitude",
+    #     cmap="summer",
+    # )
+    # ax[4].set_title(
+    #     "Pyro-Velocity cosine similarity: %.2f" % pyro_cos_mean, fontsize=7
+    # )
 
     pca_angles = posterior_samples["pca_embeds_angle"]
     pca_cell_angles = pca_angles / np.pi * 180
@@ -252,21 +255,21 @@ def plot_lineage_fate_correlation(
         adata_pyrovelocity,
         embed_mean,
         pca_angles_std,
-        ax=ax[5],
+        ax=ax[4],
         cbar=True,
         fig=fig,
         basis="emb",
         scale=scale,
-        p_mass_min=1,
-        density=density,
         arrow_size=arrow,
-        only_grid=False,
+        p_mass_min=1,
         autoscale=True,
-        uncertain_measure="base magnitude",
+        density=density,
+        only_grid=False,
+        uncertain_measure="PCA angle",
         cmap="inferno",
-        cmax=360,
+        cmax=None,
     )
-    ax[5].set_title(
+    ax[4].set_title(
         "Pyro-Velocity cosine similarity: %.2f" % pyro_cos_mean, fontsize=7
     )
 
@@ -289,10 +292,10 @@ def plot_lineage_fate_correlation(
         color="fate_potency_transition_map",
         cmap="inferno_r",
         show=False,
-        ax=ax[6],
+        ax=ax[5],
         s=dotsize,
     )
-    ax[6].set_title("Clonal fate potency", fontsize=7)
+    ax[5].set_title("Clonal fate potency", fontsize=7)
     gold_standard = adata_cospar_obs_subset.obs.fate_potency_transition_map
     select = ~np.isnan(gold_standard)
     scv.pl.scatter(
@@ -301,11 +304,11 @@ def plot_lineage_fate_correlation(
         basis="emb",
         s=dotsize,
         cmap="inferno",
-        ax=ax[7],
+        ax=ax[6],
         show=False,
         fontsize=7,
     )
-    ax[7].set_title(
+    ax[6].set_title(
         "Scvelo latent time\ncorrelation: %.2f"
         % spearmanr(
             -gold_standard[select], adata_scvelo.obs.latent_time.values[select]
@@ -315,13 +318,14 @@ def plot_lineage_fate_correlation(
     plot_posterior_time(
         posterior_samples,
         adata_pyrovelocity,
-        ax=ax[8],
+        ax=ax[7],
         basis="emb",
         fig=fig,
         addition=False,
         position="right",
+        cmap="inferno",
     )
-    ax[8].set_title(
+    ax[7].set_title(
         "Pyro-Velocity shared time\ncorrelation: %.2f"
         % spearmanr(
             -gold_standard[select],
@@ -332,7 +336,7 @@ def plot_lineage_fate_correlation(
 
     for ext in ["", ".png"]:
         fig.savefig(
-            f"lineage_fate_correlation.pdf{ext}",
+            fname=f"{lineage_fate_correlation_path}{ext}",
             facecolor=fig.get_facecolor(),
             bbox_inches="tight",
             edgecolor="none",
