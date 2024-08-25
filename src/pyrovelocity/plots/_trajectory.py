@@ -1,15 +1,19 @@
-import anndata
 import numpy as np
+from anndata import AnnData
+from beartype import beartype
+from beartype.typing import List, Optional
 from scipy.sparse import issparse
 
 
+@beartype
 def get_clone_trajectory(
-    adata,
-    average_start_point=True,
-    global_traj=True,
-    times=[2, 4, 6],
-    clone_num=None,
-):
+    adata: AnnData,
+    # clone_adata: AnnData,
+    average_start_point: bool = True,
+    global_traj: bool = True,
+    times: List[int] = [2, 4, 6],
+    clone_num: Optional[int] = None,
+) -> AnnData:
     if not average_start_point:
         adata.obsm["clone_vector_emb"] = np.zeros((adata.shape[0], 2))
 
@@ -73,7 +77,7 @@ def get_clone_trajectory(
                         and time6.shape[0] > 0
                     ):
                         continue
-                    adata_new = anndata.AnnData(
+                    adata_new = AnnData(
                         np.vstack(
                             [
                                 adata_w[time2].X.toarray().mean(axis=0),
@@ -149,7 +153,7 @@ def get_clone_trajectory(
                         ]
                     )
                     centroids.append(adata_new)
-                    clone_new = anndata.AnnData(
+                    clone_new = AnnData(
                         np.vstack(
                             [
                                 clone_adata_w[time2].X.toarray().mean(axis=0),
@@ -179,7 +183,7 @@ def get_clone_trajectory(
         if clone_num is None:
             clone_num = adata.obsm["X_clone"].shape[1]
         for j in range(clone_num):
-            print(j)
+            # print(j)
             adata.obs["clonei"] = 0
             # print('----------aa------')
             if issparse(adata.obsm["X_clone"]):
@@ -230,7 +234,7 @@ def get_clone_trajectory(
                         consecutive == 0
                     ):  # Must be consecutive time points
                         # print('centroid:', consecutive, times_index)
-                        adata_new = anndata.AnnData(
+                        adata_new = AnnData(
                             np.vstack(
                                 [
                                     np.array(
@@ -321,7 +325,7 @@ def get_clone_trajectory(
                     time6 = np.where(
                         (adata.obs.time == 6) & (adata.obs.clonei == 1)
                     )[0]
-                    adata_new = anndata.AnnData(
+                    adata_new = AnnData(
                         np.vstack(
                             [
                                 adata[time2].X.toarray().mean(axis=0),
@@ -398,7 +402,7 @@ def get_clone_trajectory(
                     )
 
                     # print(adata_new.obsm['velocity_umap'])
-                    clone_new = anndata.AnnData(
+                    clone_new = AnnData(
                         np.vstack(
                             [
                                 clone_adata[time2].X.toarray().mean(axis=0),
