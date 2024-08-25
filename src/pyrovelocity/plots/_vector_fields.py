@@ -313,21 +313,24 @@ def plot_vector_field_uncertainty(
     ax.set_title(f"Averaged\n {uncertain_measure} uncertainty ", fontsize=7)
     ax.axis("off")
     if cbar:
+        # from mpl_toolkits.axes_grid1 import make_axes_locatable
         # divider = make_axes_locatable(ax)
-        # cax = divider.append_axes('bottom', size='5%', pad=0.1)
+        # cax = divider.append_axes("bottom", size="5%", pad=0.1)
         # cbar = fig.colorbar(im, cax=cax, orientation="horizontal", shrink=0.6)
-        ### cbar.ax.set_xticks([0, 180, 360], [0, 180, 360])
-        ##fig.colorbar(im, ax=ax, shrink=0.6, location='bottom')
+        ## cbar.ax.set_xticks([0, 180, 360], [0, 180, 360])
+        ## fig.colorbar(im, ax=ax, shrink=0.6, location='bottom')
+
         pos = ax.get_position()
-        cbar_ax = fig.add_axes(
-            [pos.x0 + 0.05, pos.y0 - 0.02, pos.width * 0.6, pos.height / 17]
+        cax = fig.add_axes(
+            [pos.x0 + 0.05, pos.y0 - 0.04, pos.width * 0.6, pos.height / 17]
         )
+
         cbar = fig.colorbar(
-            im, cax=cbar_ax, orientation="horizontal"
+            im, cax=cax, orientation="horizontal"
         )  # fraction=0.046, pad=0.04
         cbar.ax.tick_params(axis="x", labelsize=5.5)
         cbar.ax.locator = MaxNLocator(nbins=2, integer=True)
-    # cbar.ax.set_xlabel(f"{uncertain_measure} uncertainty", fontsize=7)
+        # cbar.ax.set_xlabel(f"{uncertain_measure} uncertainty", fontsize=7)
 
 
 def plot_mean_vector_field(
