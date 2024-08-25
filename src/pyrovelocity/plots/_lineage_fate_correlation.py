@@ -341,4 +341,5 @@ def plot_lineage_fate_correlation(
             bbox_inches="tight",
             edgecolor="none",
             dpi=300,
+            transparent=False,
         )
