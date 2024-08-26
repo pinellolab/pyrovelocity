@@ -565,7 +565,6 @@ Now, we describe the priors for the initial conditions, noting that this is the 
     (0, 0) & \text{Model 1} \\
     (\text{LogNormal}(0, 1), \text{LogNormal}(0, 1)) & \text{Model 2}
   \end{cases}
-
   u^{(0)}_{cg}, s^{(0)}_{cg} &= \begin{cases}
     \hat{u}^{(0)}_{cg}, \hat{s}^{(0)}_{cg} & \text{if } k_{cg} = 0 \\
     \textrm{ODESolve}\Big( \hat{u}^{(0)}_{cg}, \hat{s}^{(0)}_{cg}, \alpha^{(0)}_g, \beta_g, \gamma_g; \ T_0=0, T_1=\Delta \textrm{switching}_g \Big) & \text{if } k_{cg} = 1
