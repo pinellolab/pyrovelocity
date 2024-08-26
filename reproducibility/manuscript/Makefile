@@ -108,15 +108,16 @@ cache-tex: copy-tex
 # run as make latexdiff COMPARISON_SHA1="commit-hash"
 # to diff with a different commit
 # see: https://gitlab.com/git-latexdiff/git-latexdiff
-#	--bibtex
 latexdiff:
 	git-latexdiff \
 	--ignore-latex-errors \
 	--latexmk \
 	--xelatex \
+	--bibtex \
 	--no-view \
 	--ignore-makefile \
 	--ln-untracked \
+	--cleanup none \
 	--output $(TEX_FILE)-$(COMPARISON_SHA1)-diff.pdf \
 	--main $(TEX_FILE).tex $(COMPARISON_SHA1) HEAD
 
