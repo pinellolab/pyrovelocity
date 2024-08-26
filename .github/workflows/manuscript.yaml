@@ -63,3 +63,4 @@ jobs:
             reproducibility/manuscript/*.bib
             reproducibility/manuscript/*.dvc
             reproducibility/manuscript/*.log
+            /tmp/git-latexdiff.*/new/reproducibility/manuscript/*.log
