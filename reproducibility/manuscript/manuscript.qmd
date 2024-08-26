@@ -497,35 +497,89 @@ fate potency are reported in the titles.
 
 We assume the dynamical gene expression is determined by the RNA splicing
 process, and infer the unspliced and spliced gene expression level from the
-differential equations proposed in velocyto [@La_Manno2018-lj] and scVelo
+ordinary differential equation (ODEs) proposed in velocyto [@La_Manno2018-lj] and scVelo
 [@Bergen2020-pj]
 \begin{align}
-\frac{d u\left(\tau^{\left(k_{cg}\right)}\right)}{d \tau^{\left(k_{cg}\right)}}
-  &= \alpha^{\left(k_{cg}\right)}-\beta_g u\left(\tau^{\left(k_{cg}\right)}\right),
-   \label{eq-dudt}\\
-\frac{d s\left(\tau^{\left(k_{cg}\right)}\right)}{d \tau^{\left(k_{cg}\right)}}
-  &= \beta_g u\left(\tau^{\left(k_{cg}\right)}\right)
-  -\gamma_g s\left(\tau^{\left(k_{cg}\right)}\right). \label{eq-dsdt}
+\frac{du}{dt} &= \alpha(t) - \beta u, \quad u(0) = u_0 \label{eq-dudt}\\
+   \frac{ds}{dt} &= \beta u - \gamma s, \quad s(0) = s_0, \label{eq-dsdt}
+\end{align}
+where $u(t), s(t)$ are the unspliced and spliced expression levels of a gene at time $t$ under a transcription rate $\alpha(t)$ with possible temporal dependence, splicing rate $\beta$, and degradation rate $\gamma$. We specify this model to a setting that depends on cell $c$ and gene $g$ as follows:
+\begin{align}
+\frac{du_{cg}}{dt} &= \alpha_{cg}(t) - \beta_{g} u_{cg}, \quad u_{cg}(0) = u_{cg}^{(0)} \label{eq-dudt}\\
+   \frac{ds_{cg}}{dt} &= \beta_{g} u_{cg} - \gamma_{g} s_{cg}, \quad s_{cg}(0) = s_{cg}^{(0)}, \label{eq-dsdt}.
 \end{align}
 In the equation, the subscript $c$ is the cell dimension, $g$ is the gene dimension,
-$\left( u\left( \tau^{(k_{cg})} \right), s\left( \tau^{(k_{cg})} \right) \right)$ 
+$\left( u_{cg}(t), s_{cg}(t) \right)$ 
 are the unspliced and spliced expression functions given the
-change of time per cell and gene. $\tau_{cg}$ represents the displacement of time per
+change of time per cell and gene.
+We restrict attention to piecewise-constant $\alpha_{cg}(t)$ to capture gene-specific activation and repression. We take special care to model a gene- and cell-specific switching time that marks a single transition from activation to repression by introducing a Bernoulli variable $k_{cg}$ to model unknown activation state. We assume our cell-by-gene data-matrix arrive as observations of Poisson-counts related to the solution of the above ODEs at unknown times $\tau_{cg}$, which is modeled as a relationship between an unknown latent time shared across each cell, $t_c$, and unknown gene-specific time-offsets $t_{0,g}$ where all read counts for a single cell occurred at an unknown, but shared latent time $t_c$. These relative times are also used to parametrize the Bernoulli process for $k_{cg}$. 
+Importantly, we recognize that the initial conditions are in fact unknown. 
+
+We propose and study two models: Model 1 assumes that spliced and unspliced concentrations are both 0 at time 0; Model 2 considers these initial conditions as unknowns with a log-Normal prior distribution. In general, the solution space of ODEs becomes much richer when considered over a domain of initial conditions (as opposed to a single point); indeed, this affords Model 2 much greater expressivity. For clarity, we first present the generative framework for both models, then provide further interpretation and intuition. 
+
+First, we introduce the generative model that describes the various unobserved times:
+\begin{align}
+  % unit lognormal t_c
+  t_c &\sim \text{LogNormal}(0, 1) \\
+  % gene-specific t_0
+  t^{(0)}_{0,g} &\sim \text{LogNormal}(0, 1) \\
+  % switching time
+  \Delta \textrm{switching}_g &\sim \text{LogNormal}(0, 1) \\
+  % gene-specific t_1
+  t^{(1)}_{0,g} &= t^{(0)}_{0,g} + \Delta \textrm{switching}_g \\
+  %cell-gene-specific activation state
+  k_{cg} &\sim \text{Bernoulli}(\textrm{logits}=t_c - t^{(1)}_{0,g}) \\
+  % cell-gene-specific latent time
+  \tau_{cg} &= \text{softplus}(t_c - t^{(k_{cg})}_{0,g}).
+\end{align}
+Here, $\tau_{cg}$ represents the displacement of time per
 cell and gene with 
 \begin{align}
- \tau^{(k_{cg})} &= \operatorname{softplus} \left( t_{c} - {t_{0}^{(k_{cg})}}_g \right) \\
- & = \log( 1 + \exp (t_c - {t_{0}^{(k_{cg})}}_g)), 
+ textrm{softplus}(t) :=  \log( 1 + e^t).
 \end{align}
-in which $t_c$ is the shared time per cell, ${t_{0}^{(kcg)}}_g$ is the
+Recall that $t_c$ is the shared time per cell, $t^{(k_{cg})}_{0,g}$ is the
 gene-specific switching time. Each cell and gene combination has its
 transcriptional state $k_{cg} \in \{ 0, 1 \}$, where $0$ indicates the
 activation state and $1$ indicates the expression state. Each gene has two
-switching times for representing activation and repression: ${t_{0}^{(0)}}_g$ is
+switching times for representing activation and repression: $t^{(0)}_{0,g}$ is
 the first switching time corresponding to when the gene expression starts to be
-activated, ${t_0^{(1)}}_g$  is the second switching time corresponding to when
-the gene expression starts to be repressed. We note that $\alpha^{(1)}$ is
-shared for all the genes, while ${\alpha^{(0)}}_g$ is learned independently for
-each gene. 
+activated, $t^{(1)}_{0,g}$  is the second switching time corresponding to when
+the gene expression starts to be repressed.
+
+Next we introduce the priors for the splicing parameters (where the activation rate $\alpha$ depends on the activation state $k_{cg}$ from above):
+\begin{align}
+  \alpha^{(0)}_g &\sim \text{LogNormal}(0, 1) \\
+  \beta_g &\sim \text{LogNormal}(0, 1) \\
+  \gamma_g &\sim \text{LogNormal}(0, 1) \\
+  \alpha_{cg} = \begin{cases}
+    \alpha^{(0)}_g & \text{if } k_{cg} = 0 \\
+    0 & \text{if } k_{cg} = 1
+  \end{cases}
+\end{align}
+\textbf{Note that $\alpha^{(1)}$ is shared for all the genes, while ${\alpha^{(0)}}_g$ is learned independently for
+each gene. MATT: this was in the old text, but I think $\alpha^{(1)}$ is no longer used based on conversations with Alvin?}
+
+Now, we describe the priors for the initial conditions, noting that this is the only difference between Model 1 and Model 2:
+\begin{align}
+  \hat{u}^{(0)}_{cg}, \hat{s}^{(0)}_{cg} &\sim \begin{cases}
+    (0, 0) & \text{Model 1} \\
+    (\text{LogNormal}(0, 1), \text{LogNormal}(0, 1)) & \text{Model 2}
+  \end{cases}
+
+  u^{(0)}_{cg}, s^{(0)}_{cg} &= \begin{cases}
+    \hat{u}^{(0)}_{cg}, \hat{s}^{(0)}_{cg} & \text{if } k_{cg} = 0 \\
+    \textrm{ODESolve}\Big( \hat{u}^{(0)}_{cg}, \hat{s}^{(0)}_{cg}, \alpha^{(0)}_g, \beta_g, \gamma_g; \ T_0=0, T_1=\Delta \textrm{switching}_g \Big) & \text{if } k_{cg} = 1
+  \end{cases}
+\end{align}
+
+Finally, we describe the ODE solution at time $\tau_{cg}$, and the observation model at those times that give rise to the observed counts:
+\begin{align}
+  \hat{u}_{cg}, \hat{s}_{cg} &= \textrm{ODESolve}\Big( u^{(0)}_{cg}, s^{(0)}_{cg}, \alpha_{cg}, \beta_g, \gamma_g; \ T_0=0, T_1=\tau_{cg} \Big) \\
+  u_{cg} &\sim \text{Poisson}(\hat{u}_{cg}) \\
+  s_{cg} &\sim \text{Poisson}(\hat{s}_{cg})
+\end{align}
+
+
 
 The analytic solution of the differential equations to predict
 spliced and unspliced gene expression given their parameters is derived by the
