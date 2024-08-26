@@ -219,29 +219,19 @@ def plot_vector_field_uncertainty(
     uncertain_measure="angle",
     cmap="winter",
     cmax=0.305,
+    color_vector_field_by_measure=False,
+    dot_size=1,
+    show_titles: bool = True,
 ):
-    if cmap == "inferno":
-        colormap = cm.inferno
-    elif cmap == "summer":
-        colormap = cm.summer
-    else:
-        colormap = cm.winter
-
-    # print(adata.shape)
-    # print(embeds_radian_or_magnitude.shape)
-
     if uncertain_measure == "angle":
         adata.obs["uncertain"] = get_posterior_sample_angle_uncertainty(
             embeds_radian_or_magnitude / np.pi * 180
         )
+    elif uncertain_measure in ["base magnitude", "shared time", "PCA angle"]:
+        adata.obs["uncertain"] = embeds_radian_or_magnitude
     else:
         adata.obs["uncertain"] = embeds_radian_or_magnitude.std(axis=0)
 
-    if uncertain_measure in ["base magnitude", "shared time", "PCA angle"]:
-        adata.obs["uncertain"] = embeds_radian_or_magnitude
-
-    dot_size = 1
-    # plt.rcParams["image.cmap"] = "winter"
     if ax is None:
         ax = fig.subplots(1, 2)
     if isinstance(ax, list) and len(ax) == 2:
@@ -263,57 +253,87 @@ def plot_vector_field_uncertainty(
                 edgecolors="face",
             )
             ax[0].axis("off")
-            ax[0].set_title(
-                f"Single-cell\n {uncertain_measure} uncertainty ", fontsize=7
-            )
+            if show_titles:
+                ax[0].set_title(
+                    f"Single-cell\n {uncertain_measure} uncertainty ",
+                    fontsize=7,
+                )
             ax = ax[1]
 
-    X_grid, V_grid, uncertain = project_grid_points(
-        adata.obsm[f"X_{basis}"],
-        embed_mean,
-        adata.obs["uncertain"].values,
-        p_mass_min=p_mass_min,
-        autoscale=autoscale,
-        density=density,
-    )
+    if color_vector_field_by_measure:
+        X_grid, V_grid, uncertain = project_grid_points(
+            adata.obsm[f"X_{basis}"],
+            embed_mean,
+            adata.obs["uncertain"].values,
+            p_mass_min=p_mass_min,
+            autoscale=autoscale,
+            density=density,
+        )
 
-    # scale = None
-    hl, hw, hal = default_arrow(arrow_size)
-    quiver_kwargs = {"angles": "xy", "scale_units": "xy"}
-    # quiver_kwargs = {"angles": "xy", "scale_units": "width"}
-    quiver_kwargs.update({"width": 0.001, "headlength": hl / 2})
-    quiver_kwargs.update({"headwidth": hw / 2, "headaxislength": hal / 2})
-    quiver_kwargs.update({"linewidth": 1, "zorder": 3})
-    norm = Normalize()
-    norm.autoscale(uncertain)
-    ax.scatter(
-        adata.obsm[f"X_{basis}"][:, 0],
-        adata.obsm[f"X_{basis}"][:, 1],
-        s=1,
-        linewidth=0,
-        color="gray",
-        alpha=0.22,
-    )
-    im = ax.quiver(
-        X_grid[:, 0],
-        X_grid[:, 1],
-        V_grid[:, 0],
-        V_grid[:, 1],
-        uncertain,
-        norm=None,
-        cmap=cmap,
-        edgecolors="face",
-        scale=scale,
-        clim=(
-            np.percentile(uncertain, 5),
-            np.percentile(uncertain, 95) if cmax is None else cmax,
-        ),
-        **quiver_kwargs,
-    )
-    ax.set_title(f"Averaged\n {uncertain_measure} uncertainty ", fontsize=7)
-    ax.axis("off")
+        hl, hw, hal = default_arrow(arrow_size)
+        quiver_kwargs = {"angles": "xy", "scale_units": "xy"}
+        quiver_kwargs.update({"width": 0.001, "headlength": hl / 2})
+        quiver_kwargs.update({"headwidth": hw / 2, "headaxislength": hal / 2})
+        quiver_kwargs.update({"linewidth": 1, "zorder": 3})
+        norm = Normalize()
+        norm.autoscale(uncertain)
+        ax.scatter(
+            adata.obsm[f"X_{basis}"][:, 0],
+            adata.obsm[f"X_{basis}"][:, 1],
+            s=1,
+            linewidth=0,
+            color="gray",
+            alpha=0.22,
+        )
+        im = ax.quiver(
+            X_grid[:, 0],
+            X_grid[:, 1],
+            V_grid[:, 0],
+            V_grid[:, 1],
+            uncertain,
+            norm=None,
+            cmap=cmap,
+            edgecolors="face",
+            scale=scale,
+            clim=(
+                np.percentile(uncertain, 5),
+                np.percentile(uncertain, 95) if cmax is None else cmax,
+            ),
+            **quiver_kwargs,
+        )
+        if show_titles:
+            ax.set_title(
+                f"Averaged\n {uncertain_measure} uncertainty ", fontsize=7
+            )
+        ax.axis("off")
+    else:
+        order = np.argsort(adata.obs["uncertain"].values)
+        ordered_uncertainty_measure = adata.obs["uncertain"].values[order]
+        im = ax.scatter(
+            adata.obsm[f"X_{basis}"][:, 0][order],
+            adata.obsm[f"X_{basis}"][:, 1][order],
+            # c=colormap(norm(adata.obs["uncertain"].values[order])),
+            c=ordered_uncertainty_measure,
+            cmap=cmap,
+            norm=None,
+            vmin=0
+            if "angle" in uncertain_measure
+            else np.percentile(ordered_uncertainty_measure, 5),
+            vmax=360
+            if "angle" in uncertain_measure
+            else np.percentile(ordered_uncertainty_measure, 95),
+            s=dot_size,
+            linewidth=1,
+            edgecolors="face",
+        )
+        ax.axis("off")
+        if show_titles:
+            ax.set_title(
+                f"Single-cell\n {uncertain_measure} uncertainty ", fontsize=7
+            )
     if cbar:
         # from mpl_toolkits.axes_grid1 import make_axes_locatable
+
         # divider = make_axes_locatable(ax)
         # cax = divider.append_axes("bottom", size="5%", pad=0.1)
         # cbar = fig.colorbar(im, cax=cax, orientation="horizontal", shrink=0.6)
@@ -322,7 +342,7 @@ def plot_vector_field_uncertainty(
 
         pos = ax.get_position()
         cax = fig.add_axes(
-            [pos.x0 + 0.05, pos.y0 - 0.04, pos.width * 0.6, pos.height / 17]
+            [pos.x0 + 0.05, pos.y0 - 0.05, pos.width * 0.6, pos.height / 17]
         )
 
         cbar = fig.colorbar(
