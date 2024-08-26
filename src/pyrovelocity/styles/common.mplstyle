@@ -59,4 +59,5 @@ mathtext.fontset : cm
 
 # Use LaTeX for math formatting
 text.usetex : True
-text.latex.preamble : \usepackage{amsmath} \usepackage{amssymb}
+text.latex.preamble : \usepackage{amsmath} \usepackage{amssymb} \usepackage[utf8]{inputenc} \usepackage{textcomp}
+text.latex.unicode : True
