@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import matplotlib
 import numpy as np
 import pandas as pd
 import scvelo as scv
@@ -47,6 +48,8 @@ def plot_lineage_fate_correlation(
     save_plot: bool = True,
     show_colorbars: bool = False,
     show_titles: bool = False,
+    default_fontsize: int = 7,
+    default_title_padding: int = 2,
 ):
     """
     Plot lineage fate correlation with shared latent time estimates.
@@ -158,13 +161,21 @@ def plot_lineage_fate_correlation(
     )
     ax[0].axis("off")
     if show_titles:
-        ax[0].set_title("Cell types", fontsize=7)
+        ax[0].set_title(
+            "Cell types",
+            fontsize=default_fontsize,
+            pad=default_title_padding,
+        )
     else:
-        ax[0].set_title("", fontsize=7)
-    ax[0].set_ylabel(ylabel, fontsize=7)
+        ax[0].set_title(
+            "",
+            fontsize=default_fontsize,
+            pad=default_title_padding,
+        )
+    ax[0].set_ylabel(ylabel, fontsize=default_fontsize)
 
     scv.pl.velocity_embedding_grid(
-        adata_input_clone,
+        adata=adata_input_clone,
         scale=scale,
         autoscale=True,
         show=False,
@@ -175,14 +186,21 @@ def plot_lineage_fate_correlation(
         vkey="clone_vector",
         basis="emb",
         ax=ax[1],
-        title="Clonal progression" if show_titles else "",
+        title="",
         color="gray",
         arrow_color="black",
-        fontsize=7,
+        fontsize=default_fontsize,
     )
+    ax[1].axis("off")
+    if show_titles:
+        ax[1].set_title(
+            "Clonal progression",
+            fontsize=default_fontsize,
+            pad=default_title_padding,
+        )
 
     scv.pl.velocity_embedding_grid(
-        adata_scvelo,
+        adata=adata_scvelo,
         show=False,
         s=dotsize,
         density=density,
@@ -193,13 +211,24 @@ def plot_lineage_fate_correlation(
         basis="emb",
         ax=ax[2],
         title="",
-        fontsize=7,
+        fontsize=default_fontsize,
         color="gray",
         arrow_color="black",
     )
+    ax[2].axis("off")
     if show_titles:
         ax[2].set_title(
-            "scVelo cosine similarity: %.2f" % scvelo_cos_mean, fontsize=7
+            # "scVelo cosine similarity: %.2f" % scvelo_cos_mean, fontsize=default_fontsize
+            f"scVelo ({scvelo_cos_mean:.2f})",
+            fontsize=default_fontsize,
+            pad=default_title_padding,
+        )
+    else:
+        ax[2].set_title(
+            # f""
+            f"({scvelo_cos_mean:.2f})",
+            fontsize=default_fontsize,
+            pad=default_title_padding,
         )
 
     scv.pl.velocity_embedding_grid(
@@ -215,13 +244,26 @@ def plot_lineage_fate_correlation(
         linewidth=1,
         ax=ax[3],
         title="",
-        fontsize=7,
+        fontsize=default_fontsize,
         color="gray",
         arrow_color="black",
     )
+    ax[3].axis("off")
     if show_titles:
         ax[3].set_title(
-            "Pyro-Velocity cosine similarity: %.2f" % pyro_cos_mean, fontsize=7
+            # "Pyro-Velocity cosine similarity: %.2f" % pyro_cos_mean, fontsize=default_fontsize
+            rf"Pyro\thinspace-Velocity ({pyro_cos_mean:.2f})"
+            if matplotlib.rcParams["text.usetex"]
+            else f"Pyro\u2009-Velocity ({pyro_cos_mean:.2f})",
+            fontsize=default_fontsize,
+            pad=default_title_padding,
+        )
+    else:
+        ax[3].set_title(
+            # f""
+            f"({pyro_cos_mean:.2f})",
+            fontsize=default_fontsize,
+            pad=default_title_padding,
         )
 
     pca_angles = posterior_samples["pca_embeds_angle"]
@@ -250,7 +292,13 @@ def plot_lineage_fate_correlation(
         show_titles=show_titles,
     )
     if show_titles:
-        ax[4].set_title("Pyro-Velocity angle uncertainty", fontsize=7)
+        ax[4].set_title(
+            r"Pyro\thinspace-Velocity angle $\sigma$"
+            if matplotlib.rcParams["text.usetex"]
+            else "Pyro\u2009-Velocity angle σ",
+            fontsize=default_fontsize,
+            pad=default_title_padding,
+        )
 
     # The obs names in adata_pyrovelocity have a "-N" suffix that
     # is not present in the adata_cospar obs Index.
@@ -268,7 +316,7 @@ def plot_lineage_fate_correlation(
     scv.pl.scatter(
         adata=adata_cospar_obs_subset,
         basis="emb",
-        fontsize=7,
+        fontsize=default_fontsize,
         color="fate_potency_transition_map",
         cmap="inferno_r",
         show=False,
@@ -277,10 +325,20 @@ def plot_lineage_fate_correlation(
         colorbar=show_colorbars,
         title="",
     )
+    ax[5].axis("off")
     if show_titles:
-        ax[5].set_title("Clonal fate potency", fontsize=7)
+        # ax[5].set_title("Clonal fate potency", fontsize=default_fontsize)
+        ax[5].set_title(
+            "Fate potency",
+            fontsize=default_fontsize,
+            pad=default_title_padding,
+        )
     gold_standard = adata_cospar_obs_subset.obs.fate_potency_transition_map
     select = ~np.isnan(gold_standard)
+    scvelo_latent_time_correlation = spearmanr(
+        -gold_standard[select],
+        adata_scvelo.obs.latent_time.values[select],
+    )[0]
     scv.pl.scatter(
         adata=adata_scvelo,
         c="latent_time",
@@ -289,20 +347,31 @@ def plot_lineage_fate_correlation(
         cmap="inferno",
         ax=ax[6],
         show=False,
-        fontsize=7,
+        fontsize=default_fontsize,
         colorbar=show_colorbars,
         title="",
     )
+    ax[6].axis("off")
     if show_titles:
         ax[6].set_title(
-            "Scvelo latent time\ncorrelation: %.2f"
-            % spearmanr(
-                -gold_standard[select],
-                adata_scvelo.obs.latent_time.values[select],
-            )[0],
-            fontsize=7,
+            # f"scVelo latent time\ncorrelation: {scvelo_latent_time_correlation:.2f}"
+            # f"scVelo latent time ({scvelo_latent_time_correlation:.2f})",
+            f"scVelo time ({scvelo_latent_time_correlation:.2f})",
+            fontsize=default_fontsize,
+            pad=default_title_padding,
+        )
+    else:
+        ax[6].set_title(
+            # f"scVelo latent time\ncorrelation: {scvelo_latent_time_correlation:.2f}"
+            f"({scvelo_latent_time_correlation:.2f})",
+            fontsize=default_fontsize,
+            pad=default_title_padding,
         )
 
+    pyrovelocity_shared_time_correlation = spearmanr(
+        -gold_standard[select],
+        posterior_samples["cell_time"].mean(0).flatten()[select],
+    )[0]
     plot_posterior_time(
         posterior_samples,
         adata_pyrovelocity,
@@ -318,12 +387,20 @@ def plot_lineage_fate_correlation(
     )
     if show_titles:
         ax[7].set_title(
-            "Pyro-Velocity shared time\ncorrelation: %.2f"
-            % spearmanr(
-                -gold_standard[select],
-                posterior_samples["cell_time"].mean(0).flatten()[select],
-            )[0],
-            fontsize=7,
+            # f"Pyro-Velocity shared time\ncorrelation: {pyrovelocity_shared_time_correlation:.2f}"
+            # f"Pyro-Velocity shared time ({pyrovelocity_shared_time_correlation:.2f})",
+            rf"Pyro\thinspace-Velocity time ({pyrovelocity_shared_time_correlation:.2f})"
+            if matplotlib.rcParams["text.usetex"]
+            else f"Pyro\u2009-Velocity time ({pyrovelocity_shared_time_correlation:.2f})",
+            fontsize=default_fontsize,
+            pad=default_title_padding,
+        )
+    else:
+        ax[7].set_title(
+            # f""
+            f"({pyrovelocity_shared_time_correlation:.2f})",
+            fontsize=default_fontsize,
+            pad=default_title_padding,
         )
 
     if save_plot:
@@ -360,7 +437,7 @@ def plot_lineage_fate_correlation(
     #     cmap="winter",
     #     cmax=None,
     # )
-    # ax[3].set_title("Shared time uncertainty", fontsize=7)
+    # ax[3].set_title("Shared time uncertainty", fontsize=default_fontsize)
 
     # cell_magnitudes = posterior_samples["original_spaces_embeds_magnitude"]
     # cell_magnitudes_mean = cell_magnitudes.mean(axis=-2)
@@ -386,5 +463,5 @@ def plot_lineage_fate_correlation(
     #     cmap="summer",
     # )
     # ax[4].set_title(
-    #     "Pyro-Velocity cosine similarity: %.2f" % pyro_cos_mean, fontsize=7
+    #     "Pyro-Velocity cosine similarity: %.2f" % pyro_cos_mean, fontsize=default_fontsize
     # )
