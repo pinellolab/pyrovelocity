@@ -57,10 +57,12 @@ jobs:
         uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4
         with:
           name: manuscript-${{ github.ref_name }}-${{ github.sha }}
+          # Include
+          # /tmp/git-latexdiff.*/new/reproducibility/manuscript/*.log
+          # to capture latexdiff log file
           path: |
             reproducibility/manuscript/manuscript.*
             reproducibility/manuscript/v2*.*
             reproducibility/manuscript/*.bib
             reproducibility/manuscript/*.dvc
             reproducibility/manuscript/*.log
-            /tmp/git-latexdiff.*/new/reproducibility/manuscript/*.log
