@@ -29,6 +29,8 @@ def plot_posterior_time(
     position="left",
     cmap="cividis",
     s=3,
+    show_colorbar=True,
+    show_titles=True,
 ):
     if addition:
         sns.set_style("white")
@@ -38,7 +40,8 @@ def plot_posterior_time(
         plt.hist(posterior_samples["cell_time"].mean(0), bins=100, label="test")
         plt.xlabel("mean of cell time")
         plt.ylabel("frequency")
-        plt.title("Histogram of cell time posterior samples")
+        if show_titles:
+            plt.title("Histogram of cell time posterior samples")
         plt.legend()
     pos_mean_time = posterior_samples["cell_time"].mean(0)
     adata.obs["cell_time"] = pos_mean_time / pos_mean_time.max()
@@ -55,21 +58,23 @@ def plot_posterior_time(
         cmap=cmap,
         linewidth=0,
     )
-    set_colorbar(im, ax, labelsize=5, fig=fig, position=position)
+    if show_colorbar:
+        set_colorbar(im, ax, labelsize=5, fig=fig, position=position)
     ax.axis("off")
-    if "cytotrace" in adata.obs.columns:
-        ax.set_title(
-            "Pyro-Velocity shared time\ncorrelation with Cytotrace: %.2f"
-            % (
-                spearmanr(
-                    adata.obs["cell_time"].values,
-                    1 - adata.obs.cytotrace.values,
-                )[0]
-            ),
-            fontsize=7,
-        )
-    else:
-        ax.set_title("Pyro-Velocity shared time\n", fontsize=7)
+    if show_titles:
+        if "cytotrace" in adata.obs.columns:
+            ax.set_title(
+                "Pyro-Velocity shared time\ncorrelation with Cytotrace: %.2f"
+                % (
+                    spearmanr(
+                        adata.obs["cell_time"].values,
+                        1 - adata.obs.cytotrace.values,
+                    )[0]
+                ),
+                fontsize=7,
+            )
+        else:
+            ax.set_title("Pyro-Velocity shared time\n", fontsize=7)
 
 
 @beartype
