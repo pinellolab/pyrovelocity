@@ -1,9 +1,11 @@
 from pathlib import Path
 
+import matplotlib
 import matplotlib.pyplot as plt
 
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.plots import plot_lineage_fate_correlation
+from pyrovelocity.styles import configure_matplotlib_style
 from pyrovelocity.styles.colors import LARRY_CELL_TYPE_COLORS
 from pyrovelocity.utils import load_anndata_from_path
 from pyrovelocity.workflows.main_configuration import (
@@ -15,9 +17,12 @@ from pyrovelocity.workflows.main_configuration import (
 
 logger = configure_logging(__name__)
 
+configure_matplotlib_style()
+
 
 def estimate_time_lineage_fate_correlation(
     reports_path: str | Path = "reports",
+    model_identifier: str = "model2",
 ):
     configurations = [
         larry_mono_configuration,
@@ -34,27 +39,20 @@ def estimate_time_lineage_fate_correlation(
         figsize=(width, height),
         constrained_layout=True,
     )
-    all_axes = fig.subplots(len(configurations), 8)
-    for ax in all_axes.flat:
-        ax.set_aspect("equal", adjustable="box")
-    # fig.subplots_adjust(
-    #     left=0.01,
-    #     bottom=0.3,
-    #     # bottom=0.1,
-    #     right=0.99,
-    #     top=0.95,
-    #     # top=0.15,
-    #     hspace=0.4,
-    #     # hspace=0.2,
-    #     wspace=0.2,
-    # )
+    all_axes = fig.subplots(
+        len(configurations),
+        8,
+        gridspec_kw={
+            "hspace": 0.01,
+            "wspace": 0.1,
+        },
+    )
 
-    model_name = "model2"
     adata_cospar = load_anndata_from_path(f"data/external/larry_cospar.h5ad")
 
     for i, config in enumerate(configurations):
         data_set_name = config.download_dataset.data_set_name
-        data_set_model_pairing = f"{data_set_name}_{model_name}"
+        data_set_model_pairing = f"{data_set_name}_{model_identifier}"
         model_path = f"models/{data_set_model_pairing}"
 
         adata_pyrovelocity = load_anndata_from_path(
@@ -79,12 +77,21 @@ def estimate_time_lineage_fate_correlation(
             state_color_dict=LARRY_CELL_TYPE_COLORS,
             lineage_fate_correlation_path=plot_path,
             ylabel=f"{data_set_name}",
+            # show_titles=True,
+            show_colorbars=False,
             show_titles=True if i == 0 else False,
-            show_colorbars=True if i == (len(configurations) - 1) else False,
+            # show_colorbars=True
+            # if i == (len(configurations) - 1)
+            # else False,
+            default_fontsize=10 if matplotlib.rcParams["text.usetex"] else 9,
         )
 
+    for ax in all_axes.flat:
+        ax.set_aspect("equal", adjustable="box")
+
     combined_plot_path = (
-        Path(reports_path) / "combined_time_fate_correlation.pdf"
+        Path(reports_path)
+        / f"combined_time_fate_correlation_{model_identifier}.pdf"
     )
     for ext in ["", ".png"]:
         fig.savefig(
@@ -96,3 +103,18 @@ def estimate_time_lineage_fate_correlation(
             transparent=False,
         )
     plt.close(fig)
+
+
+# Manual adjustment of the layout
+#
+# fig.subplots_adjust(
+#     left=0.01,
+#     bottom=0.3,
+#     # bottom=0.1,
+#     right=0.99,
+#     top=0.95,
+#     # top=0.15,
+#     hspace=0.4,
+#     # hspace=0.2,
+#     wspace=0.2,
+# )
