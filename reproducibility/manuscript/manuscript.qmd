@@ -506,7 +506,7 @@ ordinary differential equation (ODEs) proposed in velocyto [@La_Manno2018-lj] an
 where $u(t), s(t)$ are the unspliced and spliced expression levels of a gene at time $t$ under a transcription rate $\alpha(t)$ with possible temporal dependence, splicing rate $\beta$, and degradation rate $\gamma$. We specify this model to a setting that depends on cell $c$ and gene $g$ as follows:
 \begin{align}
 \frac{du_{cg}}{dt} &= \alpha_{cg}(t) - \beta_{g} u_{cg}, \quad u_{cg}(0) = u_{cg}^{(0)} \label{eq-dudt}\\
-   \frac{ds_{cg}}{dt} &= \beta_{g} u_{cg} - \gamma_{g} s_{cg}, \quad s_{cg}(0) = s_{cg}^{(0)}, \label{eq-dsdt}.
+   \frac{ds_{cg}}{dt} &= \beta_{g} u_{cg} - \gamma_{g} s_{cg}, \quad s_{cg}(0) = s_{cg}^{(0)} \label{eq-dsdt}.
 \end{align}
 In the equation, the subscript $c$ is the cell dimension, $g$ is the gene dimension,
 $\left( u_{cg}(t), s_{cg}(t) \right)$ 
@@ -543,8 +543,12 @@ transcriptional state $k_{cg} \in \{ 0, 1 \}$, where $0$ indicates the
 activation state and $1$ indicates the expression state. Each gene has two
 switching times for representing activation and repression: $t^{(0)}_{0,g}$ is
 the first switching time corresponding to when the gene expression starts to be
-activated, $t^{(1)}_{0,g}$  is the second switching time corresponding to when
-the gene expression starts to be repressed.
+activated, $t^{(1)}_{0,g}$ is the second switching time corresponding to when
+the gene expression starts to be repressed, and is determined by the first
+switching time and the gene-specific switching time $\Delta \text{switching}_g$.
+The cell-gene-specific activation state $k_{cg}$ is a Bernoulli random variable
+with logits equal to the difference between the cell's shared time $t_c$ and the time $t^{(1)}_{0,g}$ when the gene expression starts to be repressed.
+
 
 Next we introduce the priors for the splicing parameters (where the activation rate $\alpha$ depends on the activation state $k_{cg}$ from above):
 \begin{align}
@@ -564,16 +568,20 @@ Now, we describe the priors for the initial conditions, noting that this is the 
   \hat{u}^{(0)}_{cg}, \hat{s}^{(0)}_{cg} &\sim \begin{cases}
     (0, 0) & \text{Model 1} \\
     (\text{LogNormal}(0, 1), \text{LogNormal}(0, 1)) & \text{Model 2}
-  \end{cases}
+  \end{cases} \\
   u^{(0)}_{cg}, s^{(0)}_{cg} &= \begin{cases}
     \hat{u}^{(0)}_{cg}, \hat{s}^{(0)}_{cg} & \text{if } k_{cg} = 0 \\
     \textrm{ODESolve}\Big( \hat{u}^{(0)}_{cg}, \hat{s}^{(0)}_{cg}, \alpha^{(0)}_g, \beta_g, \gamma_g; \ T_0=0, T_1=\Delta \textrm{switching}_g \Big) & \text{if } k_{cg} = 1
   \end{cases}
 \end{align}
 
-Finally, we describe the ODE solution at time $\tau_{cg}$, and the observation model at those times that give rise to the observed counts:
+We define the ODE solution at time $\tau_{cg}$ as:
+\begin{equation}
+    \hat{u}_{cg}, \hat{s}_{cg} = \text{ODESolve}\Big( u^{(0)}_{cg}, s^{(0)}_{cg}, \alpha_{cg}, \beta_g, \gamma_g; \ T_0=0, T_1=\tau_{cg} \Big).
+\end{equation}
+
+Next, we define the observation model that gives rise to the observed counts as:
 \begin{align}
-  \hat{u}_{cg}, \hat{s}_{cg} &= \text{ODESolve}\Big( u^{(0)}_{cg}, s^{(0)}_{cg}, \alpha_{cg}, \beta_g, \gamma_g; \ T_0=0, T_1=\tau_{cg} \Big) \\
   \mu^{(u)}_c &= \sum_{g=1}^G {u}^{\text{(obs)}}_{cg}, \quad \mu^{(s)}_c = \sum_{g=1}^G {s}^{\text{(obs)}}_{cg} \\
   \sigma^{(u)}_c &= \sqrt{\frac{1}{G} \sum_{g=1}^G \left( u_{cg}^{\text{(obs)}} - \mu^{(u)}_c \right)^2} \\
   \sigma^{(s)}_c &= \sqrt{\frac{1}{G} \sum_{g=1}^G \left( s_{cg}^{\text{(obs)}} - \mu^{(s)}_c \right)^2} \\
@@ -588,7 +596,7 @@ Finally, we describe the ODE solution at time $\tau_{cg}$, and the observation m
 Here, we use ${u}^{\text{(obs)}}_{cg}, {s}^{\text{(obs)}}_{cg}$ to denote the observed unspliced and spliced counts
 for cell $c$ and gene $g$. We use $\hat{u}^{\text{(obs)}}_{cg}, \hat{s}^{\text{(obs)}}_{cg}$ to
 denote our generative model's prediction of these unspliced and spliced expression levels.
-The generative process for modeling these observed read counts given denoised gene transcript expression level $\hat{u}_cg, \hat{s}_cg$ considers the expected number of observed reads for a given gene in a given cell as the number of transcripts times the ratio of the cell's total reads to total transcripts.
+The generative process for modeling these observed read counts given denoised gene transcript expression level $\hat{u}_{cg}, \hat{s}_{cg}$ considers the expected number of observed reads for a given gene in a given cell as the number of transcripts times the ratio of the cell's total reads to total transcripts.
 \textbf{Improve descriptions of how noise is modeled in the observation model.}
 
 \textbf{Need to update the analytic solutions, but first need to confirm the above is correct. Also, I recommend pushing all of the below analytic solutions to the appendix.}
