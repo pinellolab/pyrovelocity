@@ -10,24 +10,49 @@ logger = configure_logging("pyrovelocity.workflows.constants")
 
 load_dotenv()
 
-# Extract a subset of observations and variables from each
-# data set for testing purposes prior to model training when True.
+# Demo mode switches to the following settings:
+#
+#   PYROVELOCITY_TESTING_FLAG=True
+#   PYROVELOCITY_DATA_SUBSET=True
+#   PYROVELOCITY_UPLOAD_RESULTS=False
+#   PYROVELOCITY_OVERWRITE_CACHE=True
+#
 # Defaults to False if not set.
-PYROVELOCITY_TESTING_FLAG = str_to_bool(
-    os.getenv("PYROVELOCITY_TESTING_FLAG", "False")
+PYROVELOCITY_DEMO_FLAG = str_to_bool(
+    os.getenv("PYROVELOCITY_DEMO_FLAG", "False")
 )
 
-# Uses only a subset of the list of supported data sets when True.
-# Defaults to False if not set.
-PYROVELOCITY_DATA_SUBSET = str_to_bool(
-    os.getenv("PYROVELOCITY_DATA_SUBSET", "False")
-)
+if PYROVELOCITY_DEMO_FLAG:
+    PYROVELOCITY_TESTING_FLAG = True
+    PYROVELOCITY_DATA_SUBSET = True
+    PYROVELOCITY_UPLOAD_RESULTS = False
+    PYROVELOCITY_OVERWRITE_CACHE = True
+else:
+    # Extract a subset of observations and variables from each
+    # data set for testing purposes prior to model training when True.
+    # Defaults to False if not set.
+    PYROVELOCITY_TESTING_FLAG = str_to_bool(
+        os.getenv("PYROVELOCITY_TESTING_FLAG", "False")
+    )
 
-# Overwrite the cache of processed data sets when True.
-# Defaults to False if not set.
-PYROVELOCITY_OVERWRITE_CACHE = str_to_bool(
-    os.getenv("PYROVELOCITY_OVERWRITE_CACHE", "False")
-)
+    # Uses only a subset of the list of supported data sets when True.
+    # Defaults to False if not set.
+    PYROVELOCITY_DATA_SUBSET = str_to_bool(
+        os.getenv("PYROVELOCITY_DATA_SUBSET", "False")
+    )
+
+    # Overwrite the cache of processed data sets when True.
+    # Defaults to False if not set.
+    PYROVELOCITY_OVERWRITE_CACHE = str_to_bool(
+        os.getenv("PYROVELOCITY_OVERWRITE_CACHE", "False")
+    )
+
+    # Upload summary results of the workflow to human-readable
+    # object storage path when True.
+    # Defaults to True if not set.
+    PYROVELOCITY_UPLOAD_RESULTS = str_to_bool(
+        os.getenv("PYROVELOCITY_UPLOAD_RESULTS", "True")
+    )
 
 # Use the cache of processed data sets when True.
 # Defaults to True if not set.
@@ -35,12 +60,6 @@ PYROVELOCITY_CACHE_FLAG = str_to_bool(
     os.getenv("PYROVELOCITY_CACHE_FLAG", "True")
 )
 
-# Upload summary results of the workflow to human-readable
-# object storage path when True.
-# Defaults to True if not set.
-PYROVELOCITY_UPLOAD_RESULTS = str_to_bool(
-    os.getenv("PYROVELOCITY_UPLOAD_RESULTS", "True")
-)
 
 logger.info(
     f"\nPYROVELOCITY_TESTING_FLAG: {PYROVELOCITY_TESTING_FLAG}\n"
