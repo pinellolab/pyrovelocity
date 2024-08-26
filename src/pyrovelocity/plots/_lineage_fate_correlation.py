@@ -44,6 +44,9 @@ def plot_lineage_fate_correlation(
     scale: float = 0.35,
     arrow: float = 3.5,
     lineage_fate_correlation_path: str | Path = "lineage_fate_correlation.pdf",
+    save_plot: bool = True,
+    show_colorbars: bool = False,
+    show_titles: bool = False,
 ):
     """
     Plot lineage fate correlation with shared latent time estimates.
@@ -154,7 +157,10 @@ def plot_lineage_fate_correlation(
         legend=False,
     )
     ax[0].axis("off")
-    ax[0].set_title("Cell types", fontsize=7)
+    if show_titles:
+        ax[0].set_title("Cell types", fontsize=7)
+    else:
+        ax[0].set_title("", fontsize=7)
     ax[0].set_ylabel(ylabel, fontsize=7)
 
     scv.pl.velocity_embedding_grid(
@@ -169,7 +175,7 @@ def plot_lineage_fate_correlation(
         vkey="clone_vector",
         basis="emb",
         ax=ax[1],
-        title="Clonal progression",
+        title="Clonal progression" if show_titles else "",
         color="gray",
         arrow_color="black",
         fontsize=7,
@@ -186,25 +192,49 @@ def plot_lineage_fate_correlation(
         linewidth=1,
         basis="emb",
         ax=ax[2],
-        title="Scvelo",
+        title="",
         fontsize=7,
         color="gray",
         arrow_color="black",
     )
-    ax[2].set_title(
-        "scVelo cosine similarity: %.2f" % scvelo_cos_mean, fontsize=7
+    if show_titles:
+        ax[2].set_title(
+            "scVelo cosine similarity: %.2f" % scvelo_cos_mean, fontsize=7
+        )
+
+    scv.pl.velocity_embedding_grid(
+        adata=adata_pyrovelocity,
+        basis="emb",
+        vkey="velocity_pyro",
+        show=False,
+        s=dotsize,
+        density=density,
+        scale=scale,
+        autoscale=True,
+        arrow_size=arrow,
+        linewidth=1,
+        ax=ax[3],
+        title="",
+        fontsize=7,
+        color="gray",
+        arrow_color="black",
     )
-    cell_time_mean = posterior_samples["cell_time"].mean(0).flatten()
-    cell_time_std = posterior_samples["cell_time"].std(0).flatten()
-    cell_time_cov = cell_time_std / cell_time_mean
-    print(cell_time_cov)
+    if show_titles:
+        ax[3].set_title(
+            "Pyro-Velocity cosine similarity: %.2f" % pyro_cos_mean, fontsize=7
+        )
+
+    pca_angles = posterior_samples["pca_embeds_angle"]
+    pca_cell_angles = pca_angles / np.pi * 180
+    pca_angles_std = get_posterior_sample_angle_uncertainty(pca_cell_angles)
+    print(pca_angles_std)
 
     plot_vector_field_uncertainty(
         adata_pyrovelocity,
         embed_mean,
-        cell_time_std,
-        ax=ax[3],
-        cbar=True,
+        pca_angles_std,
+        ax=ax[4],
+        cbar=show_colorbars,
         fig=fig,
         basis="emb",
         scale=scale,
@@ -213,11 +243,124 @@ def plot_lineage_fate_correlation(
         autoscale=True,
         density=density,
         only_grid=False,
-        uncertain_measure="shared time",
+        uncertain_measure="PCA angle",
         cmap="winter",
         cmax=None,
+        color_vector_field_by_measure=False,
+        show_titles=show_titles,
     )
-    ax[3].set_title("Shared time uncertainty", fontsize=7)
+    if show_titles:
+        ax[4].set_title("Pyro-Velocity angle uncertainty", fontsize=7)
+
+    # The obs names in adata_pyrovelocity have a "-N" suffix that
+    # is not present in the adata_cospar obs Index.
+    patched_adata_pyrovelocity_obs_names = (
+        adata_pyrovelocity.obs_names.str.replace(
+            r"-\d",
+            "",
+            regex=True,
+        )
+    )
+    adata_cospar_obs_subset = adata_cospar[
+        patched_adata_pyrovelocity_obs_names, :
+    ]
+    scatter_dotsize_factor = 3
+    scv.pl.scatter(
+        adata=adata_cospar_obs_subset,
+        basis="emb",
+        fontsize=7,
+        color="fate_potency_transition_map",
+        cmap="inferno_r",
+        show=False,
+        ax=ax[5],
+        s=dotsize * scatter_dotsize_factor,
+        colorbar=show_colorbars,
+        title="",
+    )
+    if show_titles:
+        ax[5].set_title("Clonal fate potency", fontsize=7)
+    gold_standard = adata_cospar_obs_subset.obs.fate_potency_transition_map
+    select = ~np.isnan(gold_standard)
+    scv.pl.scatter(
+        adata=adata_scvelo,
+        c="latent_time",
+        basis="emb",
+        s=dotsize * scatter_dotsize_factor,
+        cmap="inferno",
+        ax=ax[6],
+        show=False,
+        fontsize=7,
+        colorbar=show_colorbars,
+        title="",
+    )
+    if show_titles:
+        ax[6].set_title(
+            "Scvelo latent time\ncorrelation: %.2f"
+            % spearmanr(
+                -gold_standard[select],
+                adata_scvelo.obs.latent_time.values[select],
+            )[0],
+            fontsize=7,
+        )
+
+    plot_posterior_time(
+        posterior_samples,
+        adata_pyrovelocity,
+        ax=ax[7],
+        basis="emb",
+        fig=fig,
+        addition=False,
+        position="right",
+        cmap="inferno",
+        s=dotsize,
+        show_colorbar=show_colorbars,
+        show_titles=show_titles,
+    )
+    if show_titles:
+        ax[7].set_title(
+            "Pyro-Velocity shared time\ncorrelation: %.2f"
+            % spearmanr(
+                -gold_standard[select],
+                posterior_samples["cell_time"].mean(0).flatten()[select],
+            )[0],
+            fontsize=7,
+        )
+
+    if save_plot:
+        for ext in ["", ".png"]:
+            fig.savefig(
+                fname=f"{lineage_fate_correlation_path}{ext}",
+                facecolor=fig.get_facecolor(),
+                bbox_inches="tight",
+                edgecolor="none",
+                dpi=300,
+                transparent=False,
+            )
+
+    # cell_time_mean = posterior_samples["cell_time"].mean(0).flatten()
+    # cell_time_std = posterior_samples["cell_time"].std(0).flatten()
+    # cell_time_cov = cell_time_std / cell_time_mean
+    # print(cell_time_cov)
+
+    # plot_vector_field_uncertainty(
+    #     adata_pyrovelocity,
+    #     embed_mean,
+    #     cell_time_std,
+    #     ax=ax[3],
+    #     cbar=True,
+    #     fig=fig,
+    #     basis="emb",
+    #     scale=scale,
+    #     arrow_size=arrow,
+    #     p_mass_min=1,
+    #     autoscale=True,
+    #     density=density,
+    #     only_grid=False,
+    #     uncertain_measure="shared time",
+    #     cmap="winter",
+    #     cmax=None,
+    # )
+    # ax[3].set_title("Shared time uncertainty", fontsize=7)
 
     # cell_magnitudes = posterior_samples["original_spaces_embeds_magnitude"]
     # cell_magnitudes_mean = cell_magnitudes.mean(axis=-2)
@@ -245,101 +388,3 @@ def plot_lineage_fate_correlation(
     # ax[4].set_title(
     #     "Pyro-Velocity cosine similarity: %.2f" % pyro_cos_mean, fontsize=7
     # )
-
-    pca_angles = posterior_samples["pca_embeds_angle"]
-    pca_cell_angles = pca_angles / np.pi * 180
-    pca_angles_std = get_posterior_sample_angle_uncertainty(pca_cell_angles)
-    print(pca_angles_std)
-
-    plot_vector_field_uncertainty(
-        adata_pyrovelocity,
-        embed_mean,
-        pca_angles_std,
-        ax=ax[4],
-        cbar=True,
-        fig=fig,
-        basis="emb",
-        scale=scale,
-        arrow_size=arrow,
-        p_mass_min=1,
-        autoscale=True,
-        density=density,
-        only_grid=False,
-        uncertain_measure="PCA angle",
-        cmap="inferno",
-        cmax=None,
-    )
-    ax[4].set_title(
-        "Pyro-Velocity cosine similarity: %.2f" % pyro_cos_mean, fontsize=7
-    )
-
-    # The obs names in adata_pyrovelocity have a "-N" suffix that
-    # is not present in the adata_cospar obs Index.
-    patched_adata_pyrovelocity_obs_names = (
-        adata_pyrovelocity.obs_names.str.replace(
-            r"-\d",
-            "",
-            regex=True,
-        )
-    )
-    adata_cospar_obs_subset = adata_cospar[
-        patched_adata_pyrovelocity_obs_names, :
-    ]
-    scv.pl.scatter(
-        adata=adata_cospar_obs_subset,
-        basis="emb",
-        fontsize=7,
-        color="fate_potency_transition_map",
-        cmap="inferno_r",
-        show=False,
-        ax=ax[5],
-        s=dotsize,
-    )
-    ax[5].set_title("Clonal fate potency", fontsize=7)
-    gold_standard = adata_cospar_obs_subset.obs.fate_potency_transition_map
-    select = ~np.isnan(gold_standard)
-    scv.pl.scatter(
-        adata_scvelo,
-        c="latent_time",
-        basis="emb",
-        s=dotsize,
-        cmap="inferno",
-        ax=ax[6],
-        show=False,
-        fontsize=7,
-    )
-    ax[6].set_title(
-        "Scvelo latent time\ncorrelation: %.2f"
-        % spearmanr(
-            -gold_standard[select], adata_scvelo.obs.latent_time.values[select]
-        )[0],
-        fontsize=7,
-    )
-    plot_posterior_time(
-        posterior_samples,
-        adata_pyrovelocity,
-        ax=ax[7],
-        basis="emb",
-        fig=fig,
-        addition=False,
-        position="right",
-        cmap="inferno",
-    )
-    ax[7].set_title(
-        "Pyro-Velocity shared time\ncorrelation: %.2f"
-        % spearmanr(
-            -gold_standard[select],
-            posterior_samples["cell_time"].mean(0).flatten()[select],
-        )[0],
-        fontsize=7,
-    )
-
-    for ext in ["", ".png"]:
-        fig.savefig(
-            fname=f"{lineage_fate_correlation_path}{ext}",
-            facecolor=fig.get_facecolor(),
-            bbox_inches="tight",
-            edgecolor="none",
-            dpi=300,
-            transparent=False,
-        )
