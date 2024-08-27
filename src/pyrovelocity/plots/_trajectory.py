@@ -12,6 +12,7 @@ def get_clone_trajectory(
     times: List[int] = [2, 4, 6],
     clone_num: Optional[int] = None,
 ) -> AnnData:
+    adata = adata.copy()
     if not average_start_point:
         adata.obsm["clone_vector_emb"] = np.zeros((adata.shape[0], 2))
 
