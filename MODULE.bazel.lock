@@ -585,7 +585,7 @@
     "@@rules_python~//python/extensions:pip.bzl%pip": {
       "os:osx,arch:aarch64": {
         "bzlTransitiveDigest": "Jt+duCAKrnU5xF3PFiPS7QkYjrCdUhqdPafeYppB9kE=",
-        "usagesDigest": "Z4dCjRhz/8yHQAyENSJZ2Zl0ejUdFftcgby1j0p9iOc=",
+        "usagesDigest": "+mPt+51LDygYXlUADj8qBGMURsoM8IkmXKMInJSe3j0=",
         "recordedFileInputs": {
           "@@//requirements-bazel.txt": "67857422abb923ffa1f9a8f3203cb46cc8fc8917ed1308ebde70ca06c93ffb3b"
         },
@@ -12730,7 +12730,7 @@
     "@@rules_python~//python/extensions:python.bzl%python": {
       "general": {
         "bzlTransitiveDigest": "oBPNwJABN+p6JSbMsW8KKLF4oq8ao8WyZfH4DbDfSlQ=",
-        "usagesDigest": "ACNUWsQXrnB8+KRLWeGigAW5SiBdkL9G7elMltNDNlI=",
+        "usagesDigest": "BDif4V0L8PiD6HjjVru23tQ+ww6vYTpaKrnJR7zWy4A=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {
