@@ -7,7 +7,7 @@ import scvelo as scv
 import seaborn as sns
 from anndata import AnnData
 from beartype import beartype
-from beartype.typing import Dict
+from beartype.typing import Dict, List
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from scipy.spatial import distance
@@ -37,7 +37,7 @@ def plot_lineage_fate_correlation(
     adata_pyrovelocity: str | Path | AnnData,
     adata_scvelo: str | Path | AnnData,
     adata_cospar: str | Path | AnnData,
-    ax: Axes | np.ndarray,
+    ax: List[Axes] | np.ndarray,
     fig: Figure,
     state_color_dict: Dict,
     ylabel: str = "Monocyte lineage",
