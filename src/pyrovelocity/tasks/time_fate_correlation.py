@@ -33,23 +33,21 @@ def estimate_time_lineage_fate_correlation(
 
     n_rows = len(configurations)
     n_cols = 8
-    width = 12
-    height = width * (n_rows / n_cols)
-    fig = plt.figure(
-        figsize=(width, height),
-        constrained_layout=True,
-    )
-    all_axes = fig.subplots(
-        len(configurations),
-        8,
-        gridspec_kw={
-            "hspace": 0.01,
-            "wspace": 0.1,
-        },
+    width = 14
+    height = width * (n_rows / n_cols) + 1
+
+    fig = plt.figure(figsize=(width, height))
+
+    gs = fig.add_gridspec(
+        n_rows + 1,
+        n_cols + 1,
+        width_ratios=[0.02] + [1] * n_cols,
+        height_ratios=[1] * n_rows + [0.2],
     )
 
     adata_cospar = load_anndata_from_path(f"data/external/larry_cospar.h5ad")
 
+    all_axes = []
     for i, config in enumerate(configurations):
         data_set_name = config.download_dataset.data_set_name
         data_set_model_pairing = f"{data_set_name}_{model_identifier}"
@@ -65,7 +63,8 @@ def estimate_time_lineage_fate_correlation(
             f"data/processed/{data_set_name}_processed.h5ad"
         )
 
-        axes = all_axes[i] if len(configurations) > 1 else all_axes
+        axes = [fig.add_subplot(gs[i, j + 1]) for j in range(n_cols)]
+        all_axes.append(axes)
 
         plot_lineage_fate_correlation(
             posterior_samples_path=f"{model_path}/pyrovelocity.pkl.zst",
@@ -76,18 +75,71 @@ def estimate_time_lineage_fate_correlation(
             fig=fig,
             state_color_dict=LARRY_CELL_TYPE_COLORS,
             lineage_fate_correlation_path=plot_path,
-            ylabel=f"{data_set_name}",
-            # show_titles=True,
-            show_colorbars=False,
+            ylabel="",
             show_titles=True if i == 0 else False,
-            # show_colorbars=True
-            # if i == (len(configurations) - 1)
-            # else False,
+            show_colorbars=False,
             default_fontsize=10 if matplotlib.rcParams["text.usetex"] else 9,
         )
 
-    for ax in all_axes.flat:
-        ax.set_aspect("equal", adjustable="box")
+    for row_axes in all_axes:
+        for ax in row_axes:
+            ax.set_aspect("equal", adjustable="box")
+
+    row_labels = ["a", "b", "c", "d"]
+    vertical_texts = [
+        "Monocytes",
+        "Neutrophils",
+        "Multilineage",
+        "All lineages",
+    ]
+
+    for i, (label, vtext) in enumerate(zip(row_labels, vertical_texts)):
+        label_ax = fig.add_subplot(gs[i, 0])
+        label_ax.axis("off")
+
+        label_ax.text(
+            0.5,
+            1,
+            rf"\textbf{{{label}}}"
+            if matplotlib.rcParams["text.usetex"]
+            else f"{label}",
+            fontweight="bold",
+            fontsize=12,
+            ha="center",
+            va="top",
+        )
+
+        label_ax.text(
+            0.5,
+            0.5,
+            vtext,
+            rotation=90,
+            fontsize=12,
+            ha="center",
+            va="center",
+        )
+
+    legend_ax = fig.add_subplot(gs[-1, 1:3])
+    legend_ax.axis("off")
+
+    handles, labels = all_axes[-1][0].get_legend_handles_labels()
+    legend_ax.legend(
+        handles=handles,
+        labels=labels,
+        loc="lower left",
+        bbox_to_anchor=(0.00, -0.2),
+        ncol=5,
+        fancybox=True,
+        prop={"size": 12},
+        fontsize=12,
+        frameon=False,
+        markerscale=4,
+    )
+
+    fig.tight_layout()
+    fig.subplots_adjust(
+        left=0.05, right=0.98, top=0.98, bottom=0.08, wspace=0.1, hspace=0.2
+    )
 
     combined_plot_path = (
         Path(reports_path)
@@ -103,18 +155,3 @@ def estimate_time_lineage_fate_correlation(
             transparent=False,
         )
     plt.close(fig)
-
-
-# Manual adjustment of the layout
-#
-# fig.subplots_adjust(
-#     left=0.01,
-#     bottom=0.3,
-#     # bottom=0.1,
-#     right=0.99,
-#     top=0.95,
-#     # top=0.15,
-#     hspace=0.4,
-#     # hspace=0.2,
-#     wspace=0.2,
-# )
