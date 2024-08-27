@@ -2,6 +2,7 @@ from pathlib import Path
 
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.plots import plot_lineage_fate_correlation
@@ -32,7 +33,7 @@ def estimate_time_lineage_fate_correlation(
     ]
 
     n_rows = len(configurations)
-    n_cols = 8
+    n_cols = 7
     width = 14
     height = width * (n_rows / n_cols) + 1
 
@@ -71,7 +72,7 @@ def estimate_time_lineage_fate_correlation(
             adata_pyrovelocity=adata_pyrovelocity,
             adata_scvelo=adata_dynamical,
             adata_cospar=adata_cospar,
-            ax=axes,
+            all_axes=axes,
             fig=fig,
             state_color_dict=LARRY_CELL_TYPE_COLORS,
             lineage_fate_correlation_path=plot_path,
@@ -142,6 +143,31 @@ def estimate_time_lineage_fate_correlation(
     fig.subplots_adjust(
         left=0.05, right=0.98, top=0.98, bottom=0.08, wspace=0.1, hspace=0.2
     )
+
+    add_colorbar_axes = all_axes[-1][-3:]
+    add_colorbar_artists = [ax.collections[0] for ax in add_colorbar_axes]
+    cbar_axes = []
+    for i, im in enumerate(add_colorbar_artists):
+        cbar_ax = fig.add_subplot(gs[-1, -3 + i])
+        cbar = fig.colorbar(im, cax=cbar_ax, orientation="horizontal")
+        cbar.locator = MaxNLocator(nbins=2)
+        cbar.update_ticks()
+        cbar_ax.xaxis.set_ticks_position("bottom")
+        cbar_ax.xaxis.set_label_position("bottom")
+        cbar_axes.append(cbar_ax)
+
+    for i, cbar_ax in enumerate(cbar_axes):
+        ax_pos = add_colorbar_axes[i].get_position()
+        cbar_width = ax_pos.width * 0.7
+        cbar_height = 0.015
+        cbar_ax.set_position(
+            [
+                ax_pos.x0 + (ax_pos.width - cbar_width),
+                0.12,
+                cbar_width,
+                cbar_height,
+            ]
+        )
 
     combined_plot_path = (
         Path(reports_path)
