@@ -20,6 +20,7 @@ from pyrovelocity.plots import (
     posterior_curve,
     rainbowplot,
 )
+from pyrovelocity.styles.colors import LARRY_CELL_TYPE_COLORS
 from pyrovelocity.utils import (
     save_anndata_counts_to_dataframe,
     save_parameter_posterior_mean_dataframe,
@@ -229,6 +230,9 @@ def summarize_dataset(
             vector_field_basis=vector_field_basis,
             plot_name=vector_field_summary_plot,
             cell_state=cell_state,
+            state_color_dict=LARRY_CELL_TYPE_COLORS
+            if "larry" in data_model
+            else None,
         )
 
     # shared time plot
@@ -238,8 +242,8 @@ def summarize_dataset(
         logger.info(f"Generating figure: {shared_time_plot}")
 
         plot_shared_time_uncertainty(
-            posterior_samples=posterior_samples,
             adata=adata,
+            posterior_samples=posterior_samples,
             vector_field_basis=vector_field_basis,
             shared_time_plot=shared_time_plot,
         )
