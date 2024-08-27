@@ -31,6 +31,7 @@ def plot_posterior_time(
     s=3,
     show_colorbar=True,
     show_titles=True,
+    alpha=1,
 ):
     if addition:
         sns.set_style("white")
@@ -53,7 +54,7 @@ def plot_posterior_time(
         adata.obsm[f"X_{basis}"][:, 0],
         adata.obsm[f"X_{basis}"][:, 1],
         s=s,
-        alpha=0.4,
+        alpha=alpha,
         c=adata.obs["cell_time"],
         cmap=cmap,
         linewidth=0,
@@ -79,8 +80,8 @@ def plot_posterior_time(
 
 @beartype
 def plot_shared_time_uncertainty(
-    posterior_samples: Dict[str, np.ndarray],
     adata: AnnData,
+    posterior_samples: Dict[str, np.ndarray],
     vector_field_basis: str,
     shared_time_plot: PathLike | str,
 ) -> FigureBase:
@@ -102,7 +103,7 @@ def plot_shared_time_uncertainty(
         c="shared_time_mean",
         ax=ax[1],
         show=False,
-        cmap="inferno",
+        cmap="winter",
         fontsize=12,
         colorbar=True,
     )
