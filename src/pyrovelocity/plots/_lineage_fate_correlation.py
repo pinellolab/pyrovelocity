@@ -7,7 +7,7 @@ import scvelo as scv
 import seaborn as sns
 from anndata import AnnData
 from beartype import beartype
-from beartype.typing import Dict, List
+from beartype.typing import Dict, List, Tuple
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from scipy.spatial import distance
@@ -37,7 +37,7 @@ def plot_lineage_fate_correlation(
     adata_pyrovelocity: str | Path | AnnData,
     adata_scvelo: str | Path | AnnData,
     adata_cospar: str | Path | AnnData,
-    ax: List[Axes] | np.ndarray,
+    all_axes: List[Axes] | np.ndarray,
     fig: Figure,
     state_color_dict: Dict,
     ylabel: str = "Monocyte lineage",
@@ -50,7 +50,8 @@ def plot_lineage_fate_correlation(
     show_titles: bool = False,
     default_fontsize: int = 7,
     default_title_padding: int = 2,
-):
+    include_uncertainty_measures: bool = False,
+) -> List[Axes] | np.ndarray:
     """
     Plot lineage fate correlation with shared latent time estimates.
 
@@ -137,7 +138,15 @@ def plot_lineage_fate_correlation(
     )
     scvelo_cos_mean = scvelo_cos.mean()
     pyro_cos_mean = pyro_cos.mean()
-    print(scvelo_cos_mean, pyro_cos_mean)
+    logger.info(
+        f"\nscVelo cosine similarity: {scvelo_cos_mean:.2f}\n"
+        f"Pyro-Velocity cosine similarity: {pyro_cos_mean:.2f}\n\n"
+    )
+
+    current_axis_index = 0
+
+    # SHIFT AXIS INDEX
+    ax, current_axis_index = get_next_axis(all_axes, current_axis_index)
 
     res = pd.DataFrame(
         {
@@ -156,25 +165,27 @@ def plot_lineage_fate_correlation(
         edgecolor="none",
         hue="cell_type",
         palette=state_color_dict,
-        ax=ax[0],
+        ax=ax,
         legend="brief",
     )
-    ax[0].get_legend().remove()
-    ax[0].axis("off")
+    ax.get_legend().remove()
+    ax.axis("off")
     if show_titles:
-        ax[0].set_title(
+        ax.set_title(
             "Cell types",
             fontsize=default_fontsize,
             pad=default_title_padding,
         )
     else:
-        ax[0].set_title(
+        ax.set_title(
             "",
             fontsize=default_fontsize,
             pad=default_title_padding,
         )
-    ax[0].set_ylabel(ylabel, fontsize=default_fontsize)
+    ax.set_ylabel(ylabel, fontsize=default_fontsize)
 
+    # SHIFT AXIS INDEX
+    ax, current_axis_index = get_next_axis(all_axes, current_axis_index)
     scv.pl.velocity_embedding_grid(
         adata=adata_input_clone,
         scale=scale,
@@ -186,20 +197,22 @@ def plot_lineage_fate_correlation(
         linewidth=1,
         vkey="clone_vector",
         basis="emb",
-        ax=ax[1],
+        ax=ax,
         title="",
         color="gray",
         arrow_color="black",
         fontsize=default_fontsize,
     )
-    ax[1].axis("off")
+    ax.axis("off")
     if show_titles:
-        ax[1].set_title(
+        ax.set_title(
             "Clonal progression",
             fontsize=default_fontsize,
             pad=default_title_padding,
         )
 
+    # SHIFT AXIS INDEX
+    ax, current_axis_index = get_next_axis(all_axes, current_axis_index)
     scv.pl.velocity_embedding_grid(
         adata=adata_scvelo,
         show=False,
@@ -210,28 +223,30 @@ def plot_lineage_fate_correlation(
         arrow_size=arrow,
         linewidth=1,
         basis="emb",
-        ax=ax[2],
+        ax=ax,
         title="",
         fontsize=default_fontsize,
         color="gray",
         arrow_color="black",
     )
-    ax[2].axis("off")
+    ax.axis("off")
     if show_titles:
-        ax[2].set_title(
+        ax.set_title(
             # "scVelo cosine similarity: %.2f" % scvelo_cos_mean, fontsize=default_fontsize
             f"scVelo ({scvelo_cos_mean:.2f})",
             fontsize=default_fontsize,
             pad=default_title_padding,
         )
     else:
-        ax[2].set_title(
+        ax.set_title(
             # f""
             f"({scvelo_cos_mean:.2f})",
             fontsize=default_fontsize,
             pad=default_title_padding,
         )
 
+    # SHIFT AXIS INDEX
+    ax, current_axis_index = get_next_axis(all_axes, current_axis_index)
     scv.pl.velocity_embedding_grid(
         adata=adata_pyrovelocity,
         basis="emb",
@@ -243,15 +258,15 @@ def plot_lineage_fate_correlation(
         autoscale=True,
         arrow_size=arrow,
         linewidth=1,
-        ax=ax[3],
+        ax=ax,
         title="",
         fontsize=default_fontsize,
         color="gray",
         arrow_color="black",
     )
-    ax[3].axis("off")
+    ax.axis("off")
     if show_titles:
-        ax[3].set_title(
+        ax.set_title(
             # "Pyro-Velocity cosine similarity: %.2f" % pyro_cos_mean, fontsize=default_fontsize
             rf"Pyro\thinspace-Velocity ({pyro_cos_mean:.2f})"
             if matplotlib.rcParams["text.usetex"]
@@ -260,46 +275,52 @@ def plot_lineage_fate_correlation(
             pad=default_title_padding,
         )
     else:
-        ax[3].set_title(
+        ax.set_title(
             # f""
             f"({pyro_cos_mean:.2f})",
             fontsize=default_fontsize,
             pad=default_title_padding,
         )
 
-    pca_angles = posterior_samples["pca_embeds_angle"]
-    pca_cell_angles = pca_angles / np.pi * 180
-    pca_angles_std = get_posterior_sample_angle_uncertainty(pca_cell_angles)
-    print(pca_angles_std)
-
-    plot_vector_field_uncertainty(
-        adata_pyrovelocity,
-        embed_mean,
-        pca_angles_std,
-        ax=ax[4],
-        cbar=show_colorbars,
-        fig=fig,
-        basis="emb",
-        scale=scale,
-        arrow_size=arrow,
-        p_mass_min=1,
-        autoscale=True,
-        density=density,
-        only_grid=False,
-        uncertain_measure="PCA angle",
-        cmap="winter",
-        cmax=None,
-        color_vector_field_by_measure=False,
-        show_titles=show_titles,
-    )
-    if show_titles:
-        ax[4].set_title(
-            r"Pyro\thinspace-Velocity angle $\sigma$"
-            if matplotlib.rcParams["text.usetex"]
-            else "Pyro\u2009-Velocity angle σ",
-            fontsize=default_fontsize,
-            pad=default_title_padding,
+    if include_uncertainty_measures:
+        pca_angles = posterior_samples["pca_embeds_angle"]
+        pca_cell_angles = pca_angles / np.pi * 180
+        pca_angles_std = get_posterior_sample_angle_uncertainty(pca_cell_angles)
+        logger.info(
+            f"\nPCA angle uncertainty: {pca_angles_std.mean():.2f}"
+            f"± {pca_angles_std.std():.2f}\n\n"
         )
+
+        # SHIFT AXIS INDEX
+        ax, current_axis_index = get_next_axis(all_axes, current_axis_index)
+        plot_vector_field_uncertainty(
+            adata_pyrovelocity,
+            embed_mean,
+            pca_angles_std,
+            ax=ax,
+            cbar=show_colorbars,
+            fig=fig,
+            basis="emb",
+            scale=scale,
+            arrow_size=arrow,
+            p_mass_min=1,
+            autoscale=True,
+            density=density,
+            only_grid=False,
+            uncertain_measure="PCA angle",
+            cmap="winter",
+            cmax=None,
+            color_vector_field_by_measure=False,
+            show_titles=show_titles,
+        )
+        if show_titles:
+            ax.set_title(
+                r"Pyro\thinspace-Velocity angle $\sigma$"
+                if matplotlib.rcParams["text.usetex"]
+                else "Pyro\u2009-Velocity angle σ",
+                fontsize=default_fontsize,
+                pad=default_title_padding,
+            )
 
     # The obs names in adata_pyrovelocity have a "-N" suffix that
     # is not present in the adata_cospar obs Index.
@@ -314,6 +335,8 @@ def plot_lineage_fate_correlation(
         patched_adata_pyrovelocity_obs_names, :
     ]
     scatter_dotsize_factor = 3
+    # SHIFT AXIS INDEX
+    ax, current_axis_index = get_next_axis(all_axes, current_axis_index)
     scv.pl.scatter(
         adata=adata_cospar_obs_subset,
         basis="emb",
@@ -321,15 +344,15 @@ def plot_lineage_fate_correlation(
         color="fate_potency_transition_map",
         cmap="inferno_r",
         show=False,
-        ax=ax[5],
+        ax=ax,
         s=dotsize * scatter_dotsize_factor,
         colorbar=show_colorbars,
         title="",
     )
-    ax[5].axis("off")
+    ax.axis("off")
     if show_titles:
-        # ax[5].set_title("Clonal fate potency", fontsize=default_fontsize)
-        ax[5].set_title(
+        # ax.set_title("Clonal fate potency", fontsize=default_fontsize)
+        ax.set_title(
             "Fate potency",
             fontsize=default_fontsize,
             pad=default_title_padding,
@@ -340,21 +363,24 @@ def plot_lineage_fate_correlation(
         -gold_standard[select],
         adata_scvelo.obs.latent_time.values[select],
     )[0]
+
+    # SHIFT AXIS INDEX
+    ax, current_axis_index = get_next_axis(all_axes, current_axis_index)
     scv.pl.scatter(
         adata=adata_scvelo,
         c="latent_time",
         basis="emb",
         s=dotsize * scatter_dotsize_factor,
         cmap="inferno",
-        ax=ax[6],
+        ax=ax,
         show=False,
         fontsize=default_fontsize,
         colorbar=show_colorbars,
         title="",
     )
-    ax[6].axis("off")
+    ax.axis("off")
     if show_titles:
-        ax[6].set_title(
+        ax.set_title(
             # f"scVelo latent time\ncorrelation: {scvelo_latent_time_correlation:.2f}"
             # f"scVelo latent time ({scvelo_latent_time_correlation:.2f})",
             f"scVelo time ({scvelo_latent_time_correlation:.2f})",
@@ -362,7 +388,7 @@ def plot_lineage_fate_correlation(
             pad=default_title_padding,
         )
     else:
-        ax[6].set_title(
+        ax.set_title(
             # f"scVelo latent time\ncorrelation: {scvelo_latent_time_correlation:.2f}"
             f"({scvelo_latent_time_correlation:.2f})",
             fontsize=default_fontsize,
@@ -373,21 +399,23 @@ def plot_lineage_fate_correlation(
         -gold_standard[select],
         posterior_samples["cell_time"].mean(0).flatten()[select],
     )[0]
+    # SHIFT AXIS INDEX
+    ax, current_axis_index = get_next_axis(all_axes, current_axis_index)
     plot_posterior_time(
         posterior_samples,
         adata_pyrovelocity,
-        ax=ax[7],
+        ax=ax,
         basis="emb",
         fig=fig,
         addition=False,
         position="right",
-        cmap="inferno",
+        cmap="winter",
         s=dotsize,
         show_colorbar=show_colorbars,
         show_titles=show_titles,
     )
     if show_titles:
-        ax[7].set_title(
+        ax.set_title(
             # f"Pyro-Velocity shared time\ncorrelation: {pyrovelocity_shared_time_correlation:.2f}"
             # f"Pyro-Velocity shared time ({pyrovelocity_shared_time_correlation:.2f})",
             rf"Pyro\thinspace-Velocity time ({pyrovelocity_shared_time_correlation:.2f})"
@@ -397,7 +425,7 @@ def plot_lineage_fate_correlation(
             pad=default_title_padding,
         )
     else:
-        ax[7].set_title(
+        ax.set_title(
             # f""
             f"({pyrovelocity_shared_time_correlation:.2f})",
             fontsize=default_fontsize,
@@ -414,6 +442,26 @@ def plot_lineage_fate_correlation(
                 dpi=300,
                 transparent=False,
             )
+
+    return all_axes
+
+
+@beartype
+def get_next_axis(
+    axes: List[Axes] | np.ndarray,
+    current_index: int = 0,
+) -> Tuple[Axes, int]:
+    return axes[current_index], current_index + 1
+
+    # import ipdb
+
+    # ipdb.set_trace()
+    # colorbar_axes = [
+    #     ax[5].images[0],
+    #     ax[6].collections[0],
+    #     ax[7].collections[0],
+    # ]
+    # return colorbar_axes
 
     # cell_time_mean = posterior_samples["cell_time"].mean(0).flatten()
     # cell_time_std = posterior_samples["cell_time"].std(0).flatten()
