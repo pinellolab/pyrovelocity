@@ -157,8 +157,9 @@ def plot_lineage_fate_correlation(
         hue="cell_type",
         palette=state_color_dict,
         ax=ax[0],
-        legend=False,
+        legend="brief",
     )
+    ax[0].get_legend().remove()
     ax[0].axis("off")
     if show_titles:
         ax[0].set_title(
