@@ -127,13 +127,15 @@ def estimate_time_lineage_fate_correlation(
         handles=handles,
         labels=labels,
         loc="lower left",
-        bbox_to_anchor=(0.00, -0.2),
+        bbox_to_anchor=(-0.1, -0.2),
         ncol=5,
         fancybox=True,
         prop={"size": 12},
         fontsize=12,
         frameon=False,
         markerscale=4,
+        columnspacing=0.7,
+        handletextpad=0.1,
     )
 
     fig.tight_layout()
