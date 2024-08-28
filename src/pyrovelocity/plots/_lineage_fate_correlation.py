@@ -35,7 +35,6 @@ logger = configure_logging(__name__)
 def plot_lineage_fate_correlation(
     posterior_samples_path: str | Path | AnnData,
     adata_pyrovelocity: str | Path | AnnData,
-    adata_scvelo: str | Path | AnnData,
     adata_cospar: str | Path | AnnData,
     all_axes: List[Axes] | np.ndarray,
     fig: Figure,
@@ -110,11 +109,10 @@ def plot_lineage_fate_correlation(
 
     if isinstance(adata_pyrovelocity, str | Path):
         adata_pyrovelocity = load_anndata_from_path(adata_pyrovelocity)
-    if isinstance(adata_scvelo, str | Path):
-        adata_scvelo = load_anndata_from_path(adata_scvelo)
     if isinstance(adata_cospar, str | Path):
         adata_cospar = load_anndata_from_path(adata_cospar)
 
+    adata_scvelo = adata_pyrovelocity.copy()
     adata_input_clone = get_clone_trajectory(adata_scvelo)
     adata_input_clone.obsm["clone_vector_emb"][
         np.isnan(adata_input_clone.obsm["clone_vector_emb"])
