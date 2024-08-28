@@ -23,7 +23,7 @@ from pyrovelocity.io.archive import (
 )
 from pyrovelocity.io.datasets import larry_cospar
 from pyrovelocity.io.gcs import upload_file_concurrently
-from pyrovelocity.io.json import (
+from pyrovelocity.io.metrics import (
     add_duration_to_run_info,
     combine_json_files,
     generate_and_save_metric_tables,
