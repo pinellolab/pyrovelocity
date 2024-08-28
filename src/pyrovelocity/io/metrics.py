@@ -372,6 +372,7 @@ def wrap_latex_table(table_content: str) -> str:
     latex_document = r"""
 \documentclass[border=2pt]{standalone}
 \usepackage{booktabs}
+\renewcommand{\familydefault}{\sfdefault}
 
 \begin{document}
 
