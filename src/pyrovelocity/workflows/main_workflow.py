@@ -26,7 +26,7 @@ from pyrovelocity.io.gcs import upload_file_concurrently
 from pyrovelocity.io.json import (
     add_duration_to_run_info,
     combine_json_files,
-    generate_tables,
+    generate_and_save_metric_tables,
     load_json,
 )
 from pyrovelocity.logging import configure_logging
@@ -643,31 +643,14 @@ def combine_all_metrics(
     with json_metrics_file.open("w") as f:
         json.dump(combined_metrics, f, indent=2)
 
-    latex_table, html_table, markdown_table, _ = generate_tables(
-        combined_metrics
+    files_to_upload = generate_and_save_metric_tables(
+        json_data=combined_metrics,
+        output_dir=Path("."),
     )
-
-    latex_metrics_file = Path("combined_metrics_table.tex")
-    with latex_metrics_file.open("w") as f:
-        f.write(latex_table)
-
-    html_metrics_file = Path("combined_metrics_table.html")
-    with html_metrics_file.open("w") as f:
-        f.write(html_table)
-
-    md_metrics_file = Path("combined_metrics_table.md")
-    with md_metrics_file.open("w") as f:
-        f.write(markdown_table)
 
     ctx = current_context()
     execution_id = ctx.execution_id.name
 
-    files_to_upload = [
-        json_metrics_file,
-        latex_metrics_file,
-        html_metrics_file,
-        md_metrics_file,
-    ]
     attempted_upload_results = []
 
     for file in files_to_upload:
@@ -681,10 +664,16 @@ def combine_all_metrics(
     if all(isinstance(result, Success) for result in attempted_upload_results):
         print("\nAll uploads successful.")
         return CombinedMetricsOutputs(
-            json_metrics=FlyteFile(path=str(json_metrics_file)),
-            latex_metrics=FlyteFile(path=str(latex_metrics_file)),
-            html_metrics=FlyteFile(path=str(html_metrics_file)),
-            md_metrics=FlyteFile(path=str(md_metrics_file)),
+            metrics_json=FlyteFile(path=str(files_to_upload[0])),
+            metrics_html=FlyteFile(path=str(files_to_upload[1])),
+            metrics_latex=FlyteFile(path=str(files_to_upload[2])),
+            metrics_md=FlyteFile(path=str(files_to_upload[3])),
+            elbo_html=FlyteFile(path=str(files_to_upload[4])),
+            elbo_latex=FlyteFile(path=str(files_to_upload[5])),
+            elbo_md=FlyteFile(path=str(files_to_upload[6])),
+            mae_html=FlyteFile(path=str(files_to_upload[7])),
+            mae_latex=FlyteFile(path=str(files_to_upload[8])),
+            mae_md=FlyteFile(path=str(files_to_upload[9])),
         )
     else:
         print("\nOne or more uploads failed.")
@@ -695,10 +684,16 @@ def combine_all_metrics(
         ]
         print(f"Failed uploads: {', '.join(failed_uploads)}")
         return CombinedMetricsOutputs(
-            json_metrics=FlyteFile(path=""),
-            latex_metrics=FlyteFile(path=""),
-            html_metrics=FlyteFile(path=""),
-            md_metrics=FlyteFile(path=""),
+            metrics_json=FlyteFile(path=""),
+            metrics_latex=FlyteFile(path=""),
+            metrics_html=FlyteFile(path=""),
+            metrics_md=FlyteFile(path=""),
+            elbo_html=FlyteFile(path=""),
+            elbo_latex=FlyteFile(path=""),
+            elbo_md=FlyteFile(path=""),
+            mae_html=FlyteFile(path=""),
+            mae_latex=FlyteFile(path=""),
+            mae_md=FlyteFile(path=""),
         )
 
 
