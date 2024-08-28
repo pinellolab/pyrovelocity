@@ -217,10 +217,16 @@ class SummarizeOutputs(DataClassJSONMixin):
 
 @dataclass
 class CombinedMetricsOutputs(DataClassJSONMixin):
-    json_metrics: FlyteFile
-    latex_metrics: FlyteFile
-    html_metrics: FlyteFile
-    md_metrics: FlyteFile
+    metrics_json: FlyteFile
+    metrics_latex: FlyteFile
+    metrics_html: FlyteFile
+    metrics_md: FlyteFile
+    elbo_latex: FlyteFile
+    elbo_html: FlyteFile
+    elbo_md: FlyteFile
+    mae_latex: FlyteFile
+    mae_html: FlyteFile
+    mae_md: FlyteFile
 
 
 simulated_dataset_args = DownloadDatasetInterface(
