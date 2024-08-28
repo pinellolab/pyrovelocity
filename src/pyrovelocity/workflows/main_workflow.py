@@ -585,12 +585,13 @@ def combine_time_lineage_fate_correlation(
     attempted_upload_results = []
 
     for file in time_lineage_fate_correlation_plots:
-        upload_result = upload_file_concurrently(
-            bucket_name=f"pyrovelocity/reports/{execution_id}",
-            source_filename=file,
-            destination_blob_name=str(file),
-        )
-        attempted_upload_results.append(upload_result)
+        for ext in ["", ".png"]:
+            upload_result = upload_file_concurrently(
+                bucket_name=f"pyrovelocity/reports/{execution_id}",
+                source_filename=f"{file}{ext}",
+                destination_blob_name=f"{file}{ext}",
+            )
+            attempted_upload_results.append(upload_result)
 
     if all(isinstance(result, Success) for result in attempted_upload_results):
         logger.info("\nAll time lineage fate correlation uploads successful.")
