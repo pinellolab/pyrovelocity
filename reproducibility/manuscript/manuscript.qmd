@@ -510,8 +510,8 @@ where $u(t), s(t)$ are the unspliced and spliced expression levels of a gene at 
 \begin{equation}
     \label{eq-rna-cg}
 \begin{aligned}
-\frac{du_{cg}}{dt} &= \alpha_{cg}(t) - \beta_{g} u_{cg}, \quad u_{cg}(0) = u_{cg}^{(0)} \\
-   \frac{ds_{cg}}{dt} &= \beta_{g} u_{cg} - \gamma_{g} s_{cg}, \quad s_{cg}(0) = s_{cg}^{(0)}.
+\frac{du_{cg}}{dt} &= \alpha_{cg}(t) - \beta_{g} u_{cg}, \quad u_{cg}(0) = u_{cg}^{(0)} \label{eq-du-cg} \\
+   \frac{ds_{cg}}{dt} &= \beta_{g} u_{cg} - \gamma_{g} s_{cg}, \quad s_{cg}(0) = s_{cg}^{(0)} \label{eq-ds-cg} .
 \end{aligned}
 \end{equation}
 In the equation, the subscript $c$ is the cell dimension, $g$ is the gene dimension,
@@ -581,6 +581,7 @@ Now, we describe the priors for the initial conditions, noting that this is the 
 
 We define the ODE solution at time $\tau_{cg}$ as:
 \begin{equation}
+  \label{eq-ODE-solve}
     \hat{u}_{cg}, \hat{s}_{cg} = \text{ODESolve}\Big( u^{(0)}_{cg}, s^{(0)}_{cg}, \alpha_{cg}, \beta_g, \gamma_g; \ T_0=0, T_1=\tau_{cg} \Big).
 \end{equation}
 
@@ -594,8 +595,8 @@ Next, we define the observation model that gives rise to the observed counts as:
   \hat{\mu}^{(u)}_c &= \sum_{g=1}^G \hat{u}_{cg}, \quad \hat{\mu}^{(s)}_c = \sum_{g=1}^G \hat{s}_{cg} \\
   \lambda^{(u)}_{cg} &= \log(\hat{u}_{cg}) + \log(\eta^{(u)}_{c}) - \log(\hat{\mu}^{(u)}_c) \\
   \lambda^{(s)}_{cg} &= \log(\hat{s}_{cg}) + \log(\eta^{(s)}_{c}) - \log(\hat{\mu}^{(s)}_c) \\
-  \hat{u}^{\text{(obs)}}_{cg} &\sim \text{Poisson}\Big(\exp (\lambda^{(u)}_{cg})\Big) \\
-  \hat{s}^{\text{(obs)}}_{cg} &\sim \text{Poisson}\Big(\exp (\lambda^{(s)}_{cg})\Big)
+  \hat{u}^{\text{(obs)}}_{cg} &\sim \text{Poisson}\Big(\exp (\lambda^{(u)}_{cg})\Big)   \label{eq-u-hat-obs} \\
+  \hat{s}^{\text{(obs)}}_{cg} &\sim \text{Poisson}\Big(\exp (\lambda^{(s)}_{cg})\Big) \label{eq-s-hat-obs}
 \end{align}
 Here, we use ${u}^{\text{(obs)}}_{cg}, {s}^{\text{(obs)}}_{cg}$ to denote the observed unspliced and spliced counts
 for cell $c$ and gene $g$. We use $\hat{u}^{\text{(obs)}}_{cg}, \hat{s}^{\text{(obs)}}_{cg}$ to
@@ -620,12 +621,12 @@ These solutions are the essential building block used to compute all cell-gene-s
 
 ## Variational inference {#sec-methods-inference}
 
-Given observations $\tilde{X}_{cg} = \left( u_{cg}^{obs}, s_{cg}^{obs} \right)$,
-we would like to compute the posterior distribution over the random variables
+Given observations $\tilde{X}_{cg} = \left( u_{cg}^{\text{(obs)}}, s_{cg}^{\text{(obs)}} \right)$ over cells $1 \dots C$ and genes $1 \dots G$,
+we would like to compute the posterior distribution over the random variables $\theta := \left( \theta_1, \ \dots, \theta_C \right)$ and $\psi := \left( \psi_1, \ \dots, \psi_G \right)$, where
 \begin{align}
-\theta &= \left( t_{c}, \eta_{c}^{(u)}, \eta_{c}^{(s)} \right), \\
-\phi &= \left( {t_{0}^{(0)}}_g, \Delta \text{switching}_{g}, 
-          {\alpha^{(0)}}_{g}, \beta_{g}, \gamma_{g} \right),
+\theta_c &= \left( t_{c}, \eta_{c}^{(u)}, \eta_{c}^{(s)} \right), \\
+\phi_g &= \left( {t_{0,g}^{(0)}}, \Delta \text{switching}_{g}, 
+          \alpha^{(0)}_{g}, \beta_{g}, \gamma_{g} \right),
 \end{align}
 but exact Bayesian inference is intractable in this model. We use Pyro to
 automatically integrate out the local discrete latent variables $k$, which is
@@ -686,18 +687,20 @@ machine with an NVIDIA A100 GPU and the CentOS 7 operating system.
 ## Posterior prediction {#sec-methods-posterior-prediction}
 
 To benchmark Pyro&thinsp;-Velocity performance in predicting cell fate, we
-generated the posterior samples measurement
-$x_{cg}=\left(u\left(\tau^{(k_{cg})}\right),
-s\left(\tau^{(k_{cg})}\right)\right)$ or $x_{cg}=\left(u_{cg}, s_{cg} \right)$,
-$t_c$, $\beta_g$, $\gamma_g$ from the same single cell RNA-seq using $N=30$
-Monte Carlo samples from the posterior predictive distribution following
-$p(x_{cg} \vert \theta, \psi) p(\theta, \psi) \approx p(x_{cg} \vert \theta,
-\psi) q_{\phi}(\theta, \psi)$. $x_{cg}$ can be posterior samples of either
-denoised gene expression (used for phase portraits and vector field-based
-trajectory inference) or raw read counts (used for gene selection). Then we
-calculated the posterior samples of RNA velocity as
-$v_{cg}=\frac{ds(\tau^{(k_{cg})})}{d \tau^{(k{cg})}}$ based on posterior samples
-measurement of denoised gene expression $x_{cg}$ and $\beta_{g}$, $\gamma_{g}$.
+generated posterior samples of quantitites of interest in the model.
+In particular, we focus on posterior samples of $i)$ spliced and unspliced gene expression across all cells and genes, defined in Eq. \ref{eq-ODE-solve} and denoted by
+$X_{cg}=\left(u_{cg}, s_{cg} \right)$ (used for phase portraits and vector-field-based
+trajectory inference),
+$ii)$ read counts, defined in Eqs. \ref{eq-u-hat-obs} and \ref{eq-s-hat-obs} and denoted by
+$\hat{X}^{\text{(obs)}}_{cg}=\left(\hat{u}^{\text{(obs)}}_{cg}, \hat{s}^{\text{(obs)}}_{cg} \right)$
+(used for gene selection),
+and
+$iii)$ RNA velocity, defined in Eq. \ref{eq-ds-cg} as the time derivative of the spliced expression, denoted by
+$v_{cg}=\frac{ds_{cg}}{d t}(X_{cg})$.
+We generate 30 Monte Carlo samples from the posterior predictive distribution
+$X, \hat{X}^{(\text{obs})}, v \sim p(X, \hat{X}^{(\text{obs})}, v \vert \theta, \psi) p(\theta, \psi) \approx q_{\phi}(\theta, \psi)$ 
+by sampling the posterior distribution of $\theta$, $\psi$ using the trained model.
+We use these samples to compute statistics on the posterior predictive distribution of our quantities of interest; these statistics are used to evaluate the model's performance and uncertainty in predicting cell fate.
 
 ## Prioritization of cell fate markers {#sec-methods-fate-markers}
 
@@ -706,9 +709,7 @@ correlation between each gene's posterior mean of the denoised spliced
 expression and posterior mean of the shared time; Second, the negative mean
 absolute errors of each gene's observed spliced, and unspliced read counts with
 posterior predictive samples of spliced and unspliced raw read counts, i.e.
-$\frac{1}{N n_c} \sum_i \sum_c (x_{icg}-\tilde{X}_{cg})$, where $N$ is the
-posterior sample number that is set to $30$, $i$ is the posterior sample index,
-and $n_c$ is the cell number. We first select the top $300$ genes with the
+$\mathcal{E}_g = \frac{1}{NC} \sum_{i=1}^N \sum_{c=1}^{C} \vert \tilde{X}_{cg} - \hat{X}_{cg}^{(\text{obs}), (i)} \vert$, where we use $N=30$ Monte Carlo samples. We first select the top $300$ genes with the
 highest negative mean absolute errors and then rank the $300$ genes based on the
 most positively correlated genes and the least negatively correlated genes. We
 use the same strategy for scVelo to rank the markers by the model likelihood to
@@ -847,8 +848,9 @@ is state uncertainty which evaluates the mean Euclidean distance between
 posterior mean and posterior samples of the raw read count prediction for each
 cell
 \begin{align*}
-\frac{1}{N} \sum_{i} \sqrt{\sum_{g} \left(x_{icg} - \frac{1}{N}\sum_i x_{icg}\right)^2}.
+\mathcal{U}_c = \frac{1}{N} \sum_{i=1}^N \sqrt{\sum_{g=1}^G \left(\hat{X}^{\text{(obs)},(i)}_{cg} - \frac{1}{N}\sum_{i=1}^N \hat{X}^{\text{(obs)},(i)}_{cg}\right)^2}
 \end{align*}
+with $N=30$ Monte Carlo samples.
 
 ## Cospar {#sec-methods-cospar}
 
@@ -895,11 +897,11 @@ to use for a given dataset. Namely, the mean absolute errors of posterior
 samples prediction of spliced and unspliced raw read counts $x_{icg}$ from its
 observation $\tilde{X}_{cg}$ per gene and cell combinations
 \begin{align*}
-\frac{1}{N_i N_c N_g} \sum_{i=1}^{N_i} \sum_{c=1}^{N_c} \sum_{g=1}^{N_g} 
-  \vert x_{icg} - \tilde{X}_{cg} \vert,
+\frac{1}{N C G} \sum_{i=1}^{N} \sum_{c=1}^{C} \sum_{g=1}^{G} 
+  \vert X^{\text{(obs), (i)}}_{cg} - \tilde{X}_{cg} \vert,
 \end{align*}
-where $i$ is the posterior sample index, $N_i$ is the posterior sample number,
-$N_c$ is the cell number, $N_g$ is the gene number. Then it is possible to
+where $i$ is the posterior sample index, $N$ is the posterior sample number,
+$C$ is the cell number, $G$ is the gene number. Then it is possible to
 evaluate the cell fate inference performance of the models based on two metrics:
 
 1. the consistency between the velocity vector field and the *clonal progression
