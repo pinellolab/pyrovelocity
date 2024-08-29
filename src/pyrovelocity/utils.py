@@ -1,6 +1,5 @@
 import contextlib
 import difflib
-import hashlib
 import importlib
 import inspect
 import io
@@ -30,6 +29,7 @@ from scipy import sparse
 from scvi.data import synthetic_iid
 
 from pyrovelocity.io.compressedpickle import CompressedPickle
+from pyrovelocity.io.hash import hash_file
 from pyrovelocity.logging import configure_logging
 
 __all__ = [
@@ -39,7 +39,6 @@ __all__ = [
     "filter_startswith_dict",
     "generate_public_api",
     "generate_sample_data",
-    "hash_file",
     "internal_help",
     "load_anndata_from_path",
     "mae",
@@ -665,21 +664,6 @@ def load_anndata_from_path(adata_path: str | Path) -> AnnData:
         return adata
     else:
         raise ValueError(f"Cannot read input file: {adata_path}")
-
-
-@beartype
-def hash_file(
-    file_path: str | Path,
-    chunk_size: int = 8192,
-):
-    sha256_hash = hashlib.sha256()
-    file_path = Path(file_path)
-
-    with file_path.open("rb") as f:
-        for byte_block in iter(lambda: f.read(chunk_size), b""):
-            sha256_hash.update(byte_block)
-
-    return sha256_hash.hexdigest()
 
 
 # TODO: remove unused functions
