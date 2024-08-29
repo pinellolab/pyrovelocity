@@ -13,6 +13,7 @@ from zstandard import (
     ZstdDecompressor,
 )
 
+from pyrovelocity.io.hash import hash_file
 from pyrovelocity.io.sparsity import densify_arrays, sparsify_arrays
 from pyrovelocity.logging import configure_logging
 
@@ -118,6 +119,7 @@ class CompressedPickle:
             with compression_context.stream_writer(f) as compressor:
                 pickle.dump(obj, compressor)
 
+        _log_hash(file_path)
         return file_path
 
     @staticmethod
@@ -161,4 +163,15 @@ class CompressedPickle:
                     It cannot be automatically densified.
                     """
                 )
+        _log_hash(file_path)
         return obj
+
+
+@beartype
+def _log_hash(file_path: str | Path) -> str:
+    file_hash = hash_file(file_path=file_path)
+    logger.info(
+        f"\nSuccessfully read or created file: {file_path}\n"
+        f"SHA-256 hash: {file_hash}\n"
+    )
+    return file_hash
