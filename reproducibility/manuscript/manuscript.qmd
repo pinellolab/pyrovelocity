@@ -501,18 +501,18 @@ ordinary differential equation (ODEs) proposed in velocyto [@La_Manno2018-lj] an
 [@Bergen2020-pj]
 \begin{equation}
   \label{eq-rna}
-\begin{align}
+\begin{aligned}
 \frac{du}{dt} &= \alpha(t) - \beta u, \quad u(0) = u_0 \\
    \frac{ds}{dt} &= \beta u - \gamma s, \quad s(0) = s_0,
-\end{align}
+\end{aligned}
 \end{equation}
 where $u(t), s(t)$ are the unspliced and spliced expression levels of a gene at time $t$ under a transcription rate $\alpha(t)$ with possible temporal dependence, splicing rate $\beta$, and degradation rate $\gamma$. We specify this model to a setting that depends on cell $c$ and gene $g$ as follows:
 \begin{equation}
     \label{eq-rna-cg}
-\begin{align}
+\begin{aligned}
 \frac{du_{cg}}{dt} &= \alpha_{cg}(t) - \beta_{g} u_{cg}, \quad u_{cg}(0) = u_{cg}^{(0)} \\
    \frac{ds_{cg}}{dt} &= \beta_{g} u_{cg} - \gamma_{g} s_{cg}, \quad s_{cg}(0) = s_{cg}^{(0)}.
-\end{align}
+\end{aligned}
 \end{equation}
 In the equation, the subscript $c$ is the cell dimension, $g$ is the gene dimension,
 $\left( u_{cg}(t), s_{cg}(t) \right)$ 
@@ -608,13 +608,13 @@ For brevity, we present the solution under constant transcription rate $\alpha(t
 First, let $C = u_0 - \frac{\alpha}{\beta}$. Then, the solution to the ODE in Eq. \ref{eq-rna} is:
 \begin{equation}
 \label{eq-rna-solution}
-\begin{align}
+\begin{aligned}
   u(t) &= \frac{\alpha}{\beta} + C e^{-\beta t} \\
   s(t) &= \begin{cases}
     \frac{\alpha}{\gamma} + \frac{\beta}{\gamma - \beta} C e^{-\beta t} + \Big(s_0 - \frac{\alpha}{\gamma} - \frac{\beta}{\gamma - \beta} C\Big) e^{-\gamma t} & \text{if } \beta \neq \gamma \\
     \frac{\alpha}{\beta} + \Big(s_0 - \frac{\alpha}{\beta} + \beta C t\Big) e^{-\beta t} & \text{if } \beta = \gamma.
   \end{cases}
-\end{align}
+\end{aligned}
 \end{equation}
 These solutions are the essential building block used to compute all cell-gene-specific ODE solutions for the unspliced and spliced expression levels in the generative model.
 
