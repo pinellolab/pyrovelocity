@@ -5,6 +5,29 @@ import scanpy as sc
 import scvelo as scv
 from beartype import beartype
 
+from pyrovelocity.logging import configure_logging
+from pyrovelocity.utils import hash_file
+
+__all__ = [
+    "pbmc5k",
+    "pbmc10k",
+    "pons",
+    "larry",
+    "larry_neu",
+    "larry_mono",
+    "larry_cospar",
+    "larry_cytotrace",
+    "larry_dynamical",
+    "larry_tips",
+    "larry_multilineage",
+    "pancreas",
+    "bonemarrow",
+    "pbmc68k",
+]
+
+
+logger = configure_logging(__name__)
+
 
 @beartype
 def pbmc5k(
@@ -20,6 +43,7 @@ def pbmc5k(
     """
     url = "https://storage.googleapis.com/pyrovelocity/data/pbmc5k.h5ad"
     adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+    _log_hash(file_path)
     return adata
 
 
@@ -37,6 +61,7 @@ def pbmc10k(
     """
     url = "https://storage.googleapis.com/pyrovelocity/data/pbmc10k.h5ad"
     adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+    _log_hash(file_path)
     return adata
 
 
@@ -55,6 +80,7 @@ def pons(
     """
     url = "https://storage.googleapis.com/pyrovelocity/data/oligo_lite.h5ad"
     adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+    _log_hash(file_path)
     return adata
 
 
@@ -73,6 +99,7 @@ def larry(
     """
     url = "https://figshare.com/ndownloader/files/37028569"
     adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+    _log_hash(file_path)
     return adata
 
 
@@ -95,6 +122,7 @@ def larry_neu(
     adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
     adata = adata[adata.obs.state_info != "Centroid", :]
     adata.write(file_path)
+    _log_hash(file_path)
     return adata
 
 
@@ -116,6 +144,7 @@ def larry_mono(
     adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
     adata = adata[adata.obs.state_info != "Centroid", :]
     adata.write(file_path)
+    _log_hash(file_path)
     return adata
 
 
@@ -133,6 +162,7 @@ def larry_cospar(
     """
     url = "https://storage.googleapis.com/pyrovelocity/data/larry_cospar.h5ad"
     adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+    _log_hash(file_path)
     return adata
 
 
@@ -152,6 +182,7 @@ def larry_cytotrace(
         "https://storage.googleapis.com/pyrovelocity/data/larry_cytotrace.h5ad"
     )
     adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+    _log_hash(file_path)
     return adata
 
 
@@ -171,6 +202,7 @@ def larry_dynamical(
         "https://storage.googleapis.com/pyrovelocity/data/larry_dynamical.h5ad"
     )
     adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+    _log_hash(file_path)
     return adata
 
 
@@ -190,6 +222,7 @@ def larry_tips(
     adata = adata[adata.obs["time_info"] == 6.0]
     adata = adata[adata.obs["state_info"] != "Undifferentiated"]
     adata.write(file_path)
+    _log_hash(file_path)
     return adata
 
 
@@ -209,6 +242,7 @@ def larry_multilineage(
     adata_larry_neu = larry_neu()
     adata = adata_larry_mono.concatenate(adata_larry_neu)
     adata.write(file_path)
+    _log_hash(file_path)
     return adata
 
 
@@ -231,6 +265,7 @@ def pancreas(
         Returns `AnnData` object
     """
     adata = scv.datasets.pancreas(file_path=file_path)
+    _log_hash(file_path)
     return adata
 
 
@@ -253,6 +288,7 @@ def bonemarrow(
         Returns `AnnData` object
     """
     adata = scv.datasets.bonemarrow(file_path=file_path)
+    _log_hash(file_path)
     return adata
 
 
@@ -278,4 +314,15 @@ def pbmc68k(
     scv.pp.remove_duplicate_cells(adata)
     adata.obsm["X_tsne"][:, 0] *= -1
     adata.write(file_path)
+    _log_hash(file_path)
     return adata
+
+
+@beartype
+def _log_hash(file_path: str | Path) -> str:
+    adata_hash = hash_file(file_path=file_path)
+    logger.info(
+        f"\nSuccessfully read or created file: {file_path}\n"
+        f"SHA-256 hash: {adata_hash}\n"
+    )
+    return adata_hash
