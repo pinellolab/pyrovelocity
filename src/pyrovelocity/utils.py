@@ -657,6 +657,11 @@ def load_anndata_from_path(adata_path: str | Path) -> AnnData:
     if os.path.isfile(adata_path) and os.access(adata_path, os.R_OK):
         logger.info(f"Reading input file: {adata_path}")
         adata = sc.read(filename=adata_path, cache=True)
+        adata_hash = hash_file(adata_path)
+        logger.info(
+            f"\nSuccessfully read input file: {adata_path}\n"
+            f"SHA-256 hash: {adata_hash}"
+        )
         return adata
     else:
         raise ValueError(f"Cannot read input file: {adata_path}")
