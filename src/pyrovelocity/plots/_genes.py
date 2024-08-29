@@ -23,15 +23,14 @@ __all__ = ["plot_gene_ranking"]
 logger = configure_logging(__name__)
 
 
-ajusttext_warn = adjustText.logger.warn
+if hasattr(adjustText, "logger"):
+    ajusttext_warn = adjustText.logger.warn
 
+    def filter_adjusttext_matplotlib_warn(message, *args, **kwargs):
+        if "Looks like you are using an old matplotlib version" not in message:
+            ajusttext_warn(message, *args, **kwargs)
 
-def filter_adjusttext_matplotlib_warn(message, *args, **kwargs):
-    if "Looks like you are using an old matplotlib version" not in message:
-        ajusttext_warn(message, *args, **kwargs)
-
-
-adjustText.logger.warn = filter_adjusttext_matplotlib_warn
+    adjustText.logger.warn = filter_adjusttext_matplotlib_warn
 
 
 @beartype
