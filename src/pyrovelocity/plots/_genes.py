@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+import adjustText
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -20,6 +21,17 @@ from pyrovelocity.logging import configure_logging
 __all__ = ["plot_gene_ranking"]
 
 logger = configure_logging(__name__)
+
+
+ajusttext_warn = adjustText.logger.warn
+
+
+def filter_adjusttext_matplotlib_warn(message, *args, **kwargs):
+    if "Looks like you are using an old matplotlib version" not in message:
+        ajusttext_warn(message, *args, **kwargs)
+
+
+adjustText.logger.warn = filter_adjusttext_matplotlib_warn
 
 
 @beartype
