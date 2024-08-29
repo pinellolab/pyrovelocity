@@ -135,7 +135,7 @@ class VelocityModelAuto(LogNormalModel):
             self.decoder = Decoder(1, self.num_genes, n_layers=2)
 
         self.enumeration = "parallel"
-        # self.set_enumeration_strategy()
+        # self.set_enumeration_strategy()    
 
     @beartype
     def __repr__(self) -> str:
