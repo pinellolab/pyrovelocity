@@ -5,8 +5,8 @@ import scanpy as sc
 import scvelo as scv
 from beartype import beartype
 
+from pyrovelocity.io.hash import hash_file
 from pyrovelocity.logging import configure_logging
-from pyrovelocity.utils import hash_file
 
 __all__ = [
     "pbmc5k",
