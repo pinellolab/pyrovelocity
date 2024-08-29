@@ -499,21 +499,27 @@ We assume the dynamical gene expression is determined by the RNA splicing
 process, and infer the unspliced and spliced gene expression level from the
 ordinary differential equation (ODEs) proposed in velocyto [@La_Manno2018-lj] and scVelo
 [@Bergen2020-pj]
+\begin{equation}
+  \label{eq-rna}
 \begin{align}
-\frac{du}{dt} &= \alpha(t) - \beta u, \quad u(0) = u_0 \label{eq-dudt}\\
-   \frac{ds}{dt} &= \beta u - \gamma s, \quad s(0) = s_0, \label{eq-dsdt}
+\frac{du}{dt} &= \alpha(t) - \beta u, \quad u(0) = u_0 \\
+   \frac{ds}{dt} &= \beta u - \gamma s, \quad s(0) = s_0,
 \end{align}
+\end{equation}
 where $u(t), s(t)$ are the unspliced and spliced expression levels of a gene at time $t$ under a transcription rate $\alpha(t)$ with possible temporal dependence, splicing rate $\beta$, and degradation rate $\gamma$. We specify this model to a setting that depends on cell $c$ and gene $g$ as follows:
+\begin{equation}
+    \label{eq-rna-cg}
 \begin{align}
-\frac{du_{cg}}{dt} &= \alpha_{cg}(t) - \beta_{g} u_{cg}, \quad u_{cg}(0) = u_{cg}^{(0)} \label{eq-dudt}\\
-   \frac{ds_{cg}}{dt} &= \beta_{g} u_{cg} - \gamma_{g} s_{cg}, \quad s_{cg}(0) = s_{cg}^{(0)} \label{eq-dsdt}.
+\frac{du_{cg}}{dt} &= \alpha_{cg}(t) - \beta_{g} u_{cg}, \quad u_{cg}(0) = u_{cg}^{(0)} \\
+   \frac{ds_{cg}}{dt} &= \beta_{g} u_{cg} - \gamma_{g} s_{cg}, \quad s_{cg}(0) = s_{cg}^{(0)}.
 \end{align}
+\end{equation}
 In the equation, the subscript $c$ is the cell dimension, $g$ is the gene dimension,
 $\left( u_{cg}(t), s_{cg}(t) \right)$ 
 are the unspliced and spliced expression functions given the
 change of time per cell and gene.
-We restrict attention to piecewise-constant $\alpha_{cg}(t)$ to capture gene-specific activation and repression. We take special care to model a gene- and cell-specific switching time that marks a single transition from activation to repression by introducing a Bernoulli variable $k_{cg}$ to model unknown activation state. We assume our cell-by-gene data-matrix arrive as observations of Poisson-counts related to the solution of the above ODEs at unknown times $\tau_{cg}$, which is modeled as a relationship between an unknown latent time shared across each cell, $t_c$, and unknown gene-specific time-offsets $t_{0,g}$ where all read counts for a single cell occurred at an unknown, but shared latent time $t_c$. These relative times are also used to parametrize the Bernoulli process for $k_{cg}$. 
-Importantly, we recognize that the initial conditions are in fact unknown. 
+We restrict attention to piecewise-constant $\alpha_{cg}(t)$ to capture gene-specific activation and repression. We take special care to model a gene- and cell-specific switching time that marks a single transition from activation to repression by introducing a Bernoulli variable $k_{cg}$ to model unknown transcription state. We assume our cell-by-gene data-matrix arrive as observations of Poisson-counts related to the solution of the above ODEs at unknown times, which is modeled as a relationship between an unknown latent time shared across each cell, $t_c$, and unknown gene-specific time-offsets $t_{0,g}$ where all read counts for a single cell occurred at an unknown, but shared latent time $t_c$. These relative times are also used to parametrize the Bernoulli process for $k_{cg}$. 
+Importantly, we recognize that the initial conditions are, in fact, unknown.
 
 We propose and study two models: Model 1 assumes that spliced and unspliced concentrations are both 0 at time 0; Model 2 considers these initial conditions as unknowns with a log-Normal prior distribution. In general, the solution space of ODEs becomes much richer when considered over a domain of initial conditions (as opposed to a single point); indeed, this affords Model 2 much greater expressivity. For clarity, we first present the generative framework for both models, then provide further interpretation and intuition. 
 
@@ -557,11 +563,9 @@ Next we introduce the priors for the splicing parameters (where the activation r
   \gamma_g &\sim \text{LogNormal}(0, 1) \\
   \alpha_{cg} &= \begin{cases}
     \alpha^{(0)}_g & \text{if } k_{cg} = 0 \\
-    0 & \text{if } k_{cg} = 1
+    0 & \text{if } k_{cg} = 1.
   \end{cases}
 \end{align}
-\textbf{Note that $\alpha^{(1)}$ is shared for all the genes, while ${\alpha^{(0)}}_g$ is learned independently for
-each gene. MATT: this was in the old text, but I think $\alpha^{(1)}$ is no longer used based on conversations with Alvin?}
 
 Now, we describe the priors for the initial conditions, noting that this is the only difference between Model 1 and Model 2:
 \begin{align}
@@ -597,78 +601,22 @@ Here, we use ${u}^{\text{(obs)}}_{cg}, {s}^{\text{(obs)}}_{cg}$ to denote the ob
 for cell $c$ and gene $g$. We use $\hat{u}^{\text{(obs)}}_{cg}, \hat{s}^{\text{(obs)}}_{cg}$ to
 denote our generative model's prediction of these unspliced and spliced expression levels.
 The generative process for modeling these observed read counts given denoised gene transcript expression level $\hat{u}_{cg}, \hat{s}_{cg}$ considers the expected number of observed reads for a given gene in a given cell as the number of transcripts times the ratio of the cell's total reads to total transcripts.
-\textbf{Improve descriptions of how noise is modeled in the observation model.}
 
-\textbf{Need to update the analytic solutions, but first need to confirm the above is correct. Also, I recommend pushing all of the below analytic solutions to the appendix.}
-The analytic solution of the differential equations to predict
-spliced and unspliced gene expression given their parameters is derived by the
-authors of scVelo and a theoretical RNA velocity study
-[@Bergen2020-pj;@Li2021-qa] and given in
-Eqs. \ref{eq-solution-u}-\ref{eq-solution-s2}.
+The linear ODE in Eq. \ref{eq-rna} has an analytic solution under the assumption that the transcription rate $\alpha(t)$ is piece-wise constant, and is derived by the authors of scVelo and a theoretical RNA velocity study
+[@Bergen2020-pj;@Li2021-qa].
+For brevity, we present the solution under constant transcription rate $\alpha(t) = \alpha_0$, and note that this can be combined to assemble the solution in the piece-wise constant case.
+First, let $C = u_0 - \frac{\alpha}{\beta}$. Then, the solution to the ODE in Eq. \ref{eq-rna} is:
+\begin{equation}
+\label{eq-rna-solution}
 \begin{align}
-u\left(\tau^{\left(k_{c g}\right)}\right) 
-  &= u_0^{\left(k_{c g}\right)}{ }_g e^{-\beta_g \tau^{\left(k_{c g}\right)}} 
-  \nonumber \\
-&\hskip -24pt + \frac{\alpha^{\left(k_{c g}\right)}}
-  {\beta_g}\left(1-e^{-\beta_g \tau^{\left(k_{c g}\right)}}\right) 
-  \label{eq-solution-u}\\
-s\left(\tau^{\left(k_{c g}\right)}\right) 
-  &= s_0^{\left(k_{c g}\right)} e^{-\gamma_g \tau^{\left(k_{c g}\right)}} 
-  \nonumber \\
-  &\hskip -24pt + \frac{\alpha^{\left(k_{c g}\right)}}{\gamma_g}
-    \left(1-e^{-\gamma_g \tau^{\left(k_{c g}\right)}}\right) 
-    \nonumber\\
-  &\hskip -24pt + \frac{\alpha^{\left(k_{c g}\right)}-\beta_g u_0^{\left(k_{c g}\right)}}
-    {\gamma_g-\beta_g}\left(e^{-\gamma_g \tau^{\left(k_{c g}\right)}}
-    -e^{-\beta_g \tau^{\left(k_{c g}\right)}}\right), 
-    \nonumber \\
-  &\qquad \beta \neq \gamma \label{eq-solution-s} \\
-s\left(\tau^{\left(k_{c g}\right)}\right) 
-  &= {s_0^{\left(k_{c g}\right)}}_g e^{-\beta_g \tau^{\left(k_{c g}\right)}} \nonumber \\
-  &\hskip -24pt +\frac{\alpha^{\left(k_{c g}\right)}}{\beta_g}
-  \left(1-e^{-\beta_g \tau^{(k c g)}}\right) 
-  \nonumber \\
-  &\hskip -24pt -\left(\alpha^{\left(k_{c g}\right)}
-  -\beta_g u_0^{\left(k_{c g}\right)}{ }_g\right) \tau^{\left(k_{c g}\right)} 
-  e^{-\beta_g \tau^{\left(k_{c g}\right)}}, \nonumber \\
-  &\qquad \beta = \gamma \label{eq-solution-s2}
+  u(t) &= \frac{\alpha}{\beta} + C e^{-\beta t} \\
+  s(t) &= \begin{cases}
+    \frac{\alpha}{\gamma} + \frac{\beta}{\gamma - \beta} C e^{-\beta t} + \Big(s_0 - \frac{\alpha}{\gamma} - \frac{\beta}{\gamma - \beta} C\Big) e^{-\gamma t} & \text{if } \beta \neq \gamma \\
+    \frac{\alpha}{\beta} + \Big(s_0 - \frac{\alpha}{\beta} + \beta C t\Big) e^{-\beta t} & \text{if } \beta = \gamma.
+  \end{cases}
 \end{align}
-
-To simplify these equations, consider the case when $k_{cg} = 0$ and 
-$\beta_g \neq \gamma_g$. Then, 
-\begin{align}
-u\left(\tau^{(0)}\right) &= {u_0^{(0)}}_g e^{-\beta_g \tau^{(0)}} \nonumber \\
-  & \hskip -24pt + \frac{{\alpha^{(0)}}_g}{\beta_g}\left(1-e^{-\beta_g \tau^{(0)}}\right), 
-  \label{eq-sol-usimp} \\
-s\left(\tau^{(0)}\right) &= s_0^{(0)}{ }_g e^{-\gamma_g \tau^{(0)}} \nonumber \\
-  & \hskip -24pt +\frac{{\alpha^{(0)}}_g}{\gamma_g}\left(1-e^{-\gamma_g \tau^{(0)}}\right) 
-  \nonumber\\
-  & \hskip -24pt +\frac{{\alpha^{(0)}}_g-\beta_g {u_0^{(0)}}_g}{\gamma_g-\beta_g}
-  \left(e^{-\gamma_g \tau^{(0)}}-e^{-\beta_g \tau^{(0)}}\right). \label{eq-sol-ssimp}
-\end{align}
-When $k_{cg} = 0$ and $\beta_g = \gamma_g$, then $u\left(\tau^{(0)}\right)$ 
-has the same solution, and $s\left(\tau^{(0)}\right)$ becomes
-\begin{align}
-s\left(\tau^{(0)}\right) &= s_0^{(0)}{ }_g e^{-\gamma_g \tau^{(0)}} \nonumber \\
-  & \hskip -24pt +\frac{{\alpha^{(0)}}_g}{\gamma_g}
-    \left(1-e^{-\gamma_g \tau^{(0)}}\right) \nonumber\\
-  & \hskip -24pt - \left( {\alpha^{(0)}}_g-\beta_g {u_0^{(0)}}_g \right) 
-    \tau^{(0)} e^{-\beta_g \tau^{(0)}}. \label{eq-sol-ssimp2}
-\end{align}
-When $k_{cg} = 1$ and $\beta_g \neq \gamma_g$, then
-\begin{align}
-u\left(\tau^{(1)}\right) &=u_0^{(1)} g^{e^{-\beta_g \tau^{(1)}}}, \\
-s\left(\tau^{(1)}\right) &=s_0^{(1)} e^{-\gamma_g \tau^{(1)}} \nonumber \\
-  & \hskip -24pt +\frac{-\beta_g u_0^{(1)}}{\gamma_g-\beta_g}
-  \left(e^{-\gamma_g \tau^{(1)}}-e^{-\beta_g \tau^{(1)}}\right).
-\end{align}
-When $k_{cg} = 1$ and $\beta_g = \gamma_g$, then $u\left(\tau^{(1)}\right)$ 
-has the same solution, and $s\left(\tau^{(1)}\right)$ becomes
-\begin{align}
-s\left(\tau^{(1)}\right)=s_0^{(1)}{ }_g e^{-\gamma_g \tau^{(1)}}
-  +\beta_g u_0^{(1)}{ }_g \tau^{(1)} e^{-\beta_g \tau^{(1)}}.
-\end{align}
-
+\end{equation}
+These solutions are the essential building block used to compute all cell-gene-specific ODE solutions for the unspliced and spliced expression levels in the generative model.
 
 ## Variational inference {#sec-methods-inference}
 
