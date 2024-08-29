@@ -182,7 +182,7 @@ def _add_legend(fig: Figure, gs: GridSpec, all_axes: List[List[Axes]]) -> None:
         labels=labels,
         loc="lower left",
         bbox_to_anchor=(-0.1, -0.2),
-        ncol=5,
+        ncol=4,
         fancybox=True,
         prop={"size": 12},
         fontsize=12,
