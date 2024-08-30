@@ -86,17 +86,36 @@ def plot_shared_time_uncertainty(
     shared_time_plot: PathLike | str,
 ) -> FigureBase:
     cell_time_mean = posterior_samples["cell_time"].mean(0).flatten()
-    cell_time_std = posterior_samples["cell_time"].std(0).flatten()
+    cell_time_mean_max = cell_time_mean.max()
+    cell_times = posterior_samples["cell_time"] / cell_time_mean_max
+    cell_time_mean = cell_times.mean(0).flatten()
+    cell_time_std = cell_times.std(0).flatten()
+    cell_time_cv = cell_time_std / cell_time_mean
     adata.obs["shared_time_std"] = cell_time_std
     adata.obs["shared_time_mean"] = cell_time_mean
+    adata.obs["shared_time_cv"] = cell_time_cv
+
+    cv_string = (
+        r"shared time $\left.\sigma \right/ \mu$"
+        if matplotlib.rcParams["text.usetex"]
+        else "shared time σ/μ"
+    )
+    mean_string = (
+        r"shared time $\mu$"
+        if matplotlib.rcParams["text.usetex"]
+        else "shared time μ"
+    )
 
     set_font_size(7)
-    fig, ax = plt.subplots(1, 3)
-    fig.set_size_inches(10, 3)
+    fig, ax = plt.subplots(2, 2)
+    fig.set_size_inches(6, 6)
     ax = ax.flatten()
 
-    ax[0].hist(cell_time_std / cell_time_mean, bins=100)
-    ax[0].set_title("histogram of shared time CoV")
+    ax[0].hist(cell_time_mean, bins=100)
+    ax[0].set_title(mean_string)
+    ax[2].hist(cell_time_cv, bins=100)
+    ax[2].set_title(cv_string)
+
     ax_st = scv.pl.scatter(
         adata=adata,
         basis=vector_field_basis,
@@ -107,28 +126,31 @@ def plot_shared_time_uncertainty(
         fontsize=12,
         colorbar=True,
     )
+    ax[1].axis("off")
+    ax_st.set_title(mean_string)
+
     ax_cv = scv.pl.scatter(
         adata=adata,
         basis=vector_field_basis,
-        c="shared_time_std",
-        ax=ax[2],
+        c="shared_time_cv",
+        ax=ax[3],
         show=False,
         cmap="winter",
         fontsize=12,
         colorbar=True,
-        title="shared time standard deviation",
     )
-    ax_cv.set_xlabel("density estimate over 90th %")
-    select = adata.obs["shared_time_std"] > np.quantile(
-        adata.obs["shared_time_std"], 0.9
-    )
-    sns.kdeplot(
-        x=adata.obsm[f"X_{vector_field_basis}"][:, 0][select],
-        y=adata.obsm[f"X_{vector_field_basis}"][:, 1][select],
-        ax=ax[2],
-        levels=3,
-        fill=False,
-    )
+    ax[3].axis("off")
+    ax_cv.set_title(cv_string)
+    # select = adata.obs["shared_time_cv"] > np.quantile(
+    #     adata.obs["shared_time_cv"], 0.9
+    # )
+    # sns.kdeplot(
+    #     x=adata.obsm[f"X_{vector_field_basis}"][:, 0][select],
+    #     y=adata.obsm[f"X_{vector_field_basis}"][:, 1][select],
+    #     ax=ax[2],
+    #     levels=3,
+    #     fill=False,
+    # )
     fig.tight_layout()
     for ext in ["", ".png"]:
         fig.savefig(
