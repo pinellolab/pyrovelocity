@@ -1,8 +1,8 @@
 import os
-import pickle
 from os import PathLike
 from pathlib import Path
 
+import dill as pickle
 import numpy as np
 from beartype import beartype
 from beartype.typing import Any, Dict
@@ -119,7 +119,7 @@ class CompressedPickle:
             with compression_context.stream_writer(f) as compressor:
                 pickle.dump(obj, compressor)
 
-        _log_hash(file_path)
+        _log_hash(file_path=file_path, mode="saved")
         return file_path
 
     @staticmethod
@@ -163,15 +163,15 @@ class CompressedPickle:
                     It cannot be automatically densified.
                     """
                 )
-        _log_hash(file_path)
+        _log_hash(file_path=file_path, mode="loaded")
         return obj
 
 
 @beartype
-def _log_hash(file_path: str | Path) -> str:
+def _log_hash(file_path: str | Path, mode: str = "loaded or saved") -> str:
     file_hash = hash_file(file_path=file_path)
     logger.info(
-        f"\nSuccessfully read or created file: {file_path}\n"
+        f"\nSuccessfully {mode} file: {file_path}\n"
         f"SHA-256 hash: {file_hash}\n"
     )
     return file_hash
