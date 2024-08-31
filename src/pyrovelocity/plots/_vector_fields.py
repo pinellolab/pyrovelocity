@@ -182,14 +182,17 @@ def plot_vector_field_summary(
     pca_cell_angles = pca_embeds_angle / np.pi * 180
     pca_angles_std = get_posterior_sample_angle_uncertainty(pca_cell_angles)
 
-    # cell_time_mean = posterior_time.mean(0).flatten()
-    cell_time_std = posterior_time.std(0).flatten()
-    # cell_time_cov = cell_time_std / cell_time_mean
+    cell_time_mean = posterior_time.mean(0).flatten()
+    cell_time_mean_max = cell_time_mean.max()
+    cell_times = posterior_time / cell_time_mean_max
+    cell_time_mean = cell_times.mean(0).flatten()
+    cell_time_std = cell_times.std(0).flatten()
+    cell_time_cov = cell_time_std / cell_time_mean
 
     plot_vector_field_uncertainty(
         adata,
         embed_mean,
-        cell_time_std,
+        cell_time_cov,
         ax=ax[4],
         cbar=False,
         fig=fig,
@@ -206,9 +209,9 @@ def plot_vector_field_summary(
         show_titles=False,
     )
     ax[4].set_title(
-        r"shared time $\sigma$"
+        r"shared time $\left.\sigma \right/ \mu$"
         if matplotlib.rcParams["text.usetex"]
-        else "shared time σ",
+        else "shared time σ/μ",
         fontsize=default_fontsize,
         pad=default_title_padding,
     )
@@ -417,10 +420,12 @@ def plot_vector_field_uncertainty(
             norm=None,
             vmin=0
             if "angle" in uncertain_measure
-            else np.percentile(ordered_uncertainty_measure, 5),
+            # else np.percentile(ordered_uncertainty_measure, 0.1),
+            else min(ordered_uncertainty_measure),
             vmax=360
             if "angle" in uncertain_measure
-            else np.percentile(ordered_uncertainty_measure, 95),
+            # else np.percentile(ordered_uncertainty_measure, 99.9),
+            else max(ordered_uncertainty_measure),
             s=dot_size,
             linewidth=1,
             edgecolors="face",
@@ -433,14 +438,6 @@ def plot_vector_field_uncertainty(
                 fontsize=default_fontsize,
             )
     if cbar:
-        # from mpl_toolkits.axes_grid1 import make_axes_locatable
-
-        # divider = make_axes_locatable(ax)
-        # cax = divider.append_axes("bottom", size="5%", pad=0.1)
-        # cbar = fig.colorbar(im, cax=cax, orientation="horizontal", shrink=0.6)
-        ## cbar.ax.set_xticks([0, 180, 360], [0, 180, 360])
-        ## fig.colorbar(im, ax=ax, shrink=0.6, location='bottom')
-
         pos = ax.get_position()
         cax = fig.add_axes(
             [pos.x0 + 0.05, pos.y0 - 0.05, pos.width * 0.6, pos.height / 17]
