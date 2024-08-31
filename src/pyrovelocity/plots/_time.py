@@ -8,7 +8,10 @@ import scvelo as scv
 import seaborn as sns
 from anndata import AnnData
 from beartype import beartype
-from matplotlib.figure import FigureBase
+from beartype.typing import Optional
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure, FigureBase
+from matplotlib.ticker import MaxNLocator
 from scipy.stats import spearmanr
 
 from pyrovelocity.plots._common import set_colorbar, set_font_size
@@ -84,6 +87,9 @@ def plot_shared_time_uncertainty(
     posterior_samples: Dict[str, np.ndarray],
     vector_field_basis: str,
     shared_time_plot: PathLike | str,
+    dotsize: Optional[int] = None,
+    default_font_size: int = 12,
+    duplicate_title: bool = False,
 ) -> FigureBase:
     cell_time_mean = posterior_samples["cell_time"].mean(0).flatten()
     cell_time_mean_max = cell_time_mean.max()
@@ -106,41 +112,55 @@ def plot_shared_time_uncertainty(
         else "shared time μ"
     )
 
-    set_font_size(7)
-    fig, ax = plt.subplots(2, 2)
-    fig.set_size_inches(6, 6)
-    ax = ax.flatten()
+    fig = plt.figure(figsize=(6, 6))
+    gs = fig.add_gridspec(
+        nrows=3,
+        ncols=2,
+        width_ratios=[0.5, 0.5],
+        height_ratios=[0.45, 0.45, 0.05],
+    )
 
-    ax[0].hist(cell_time_mean, bins=100)
-    ax[0].set_title(mean_string)
-    ax[2].hist(cell_time_cv, bins=100)
-    ax[2].set_title(cv_string)
+    ax1 = fig.add_subplot(gs[0, 0])
+    ax1.hist(cell_time_mean, bins=100)
+    ax1.set_title(mean_string)
 
+    ax2 = fig.add_subplot(gs[0, 1])
+    ax2.hist(cell_time_cv, bins=100)
+    ax2.set_title(cv_string)
+
+    ax3 = fig.add_subplot(gs[1, 0])
     ax_st = scv.pl.scatter(
         adata=adata,
         basis=vector_field_basis,
         c="shared_time_mean",
-        ax=ax[1],
+        ax=ax3,
         show=False,
         cmap="winter",
-        fontsize=12,
-        colorbar=True,
+        fontsize=default_font_size,
+        colorbar=False,
+        s=dotsize,
+        title="",
     )
-    ax[1].axis("off")
-    ax_st.set_title(mean_string)
+    ax3.axis("off")
+    if duplicate_title:
+        ax_st.set_title(mean_string)
 
+    ax4 = fig.add_subplot(gs[1, 1])
     ax_cv = scv.pl.scatter(
         adata=adata,
         basis=vector_field_basis,
         c="shared_time_cv",
-        ax=ax[3],
+        ax=ax4,
         show=False,
         cmap="winter",
-        fontsize=12,
-        colorbar=True,
+        fontsize=default_font_size,
+        colorbar=False,
+        s=dotsize,
+        title="",
     )
-    ax[3].axis("off")
-    ax_cv.set_title(cv_string)
+    ax4.axis("off")
+    if duplicate_title:
+        ax_cv.set_title(cv_string)
     # select = adata.obs["shared_time_cv"] > np.quantile(
     #     adata.obs["shared_time_cv"], 0.9
     # )
@@ -151,7 +171,15 @@ def plot_shared_time_uncertainty(
     #     levels=3,
     #     fill=False,
     # )
+    # for ax in [ax1, ax2, ax3, ax4]:
+    #     ax.set_aspect("equal", adjustable="box")
     fig.tight_layout()
+
+    cbar_ax3 = fig.add_subplot(gs[2, 0])
+    _add_colorbar(fig=fig, ax=ax3, cbar_ax=cbar_ax3)
+    cbar_ax4 = fig.add_subplot(gs[2, 1])
+    _add_colorbar(fig=fig, ax=ax4, cbar_ax=cbar_ax4)
+
     for ext in ["", ".png"]:
         fig.savefig(
             f"{shared_time_plot}{ext}",
@@ -164,3 +192,30 @@ def plot_shared_time_uncertainty(
     plt.close(fig)
 
     return fig
+
+
+@beartype
+def _add_colorbar(
+    fig: Figure,
+    ax: Axes,
+    cbar_ax: Axes,
+    cbar_width_fraction: float = 0.6,
+    cbar_height: float = 0.02,
+) -> Axes:
+    im = ax.collections[0]
+    cbar = fig.colorbar(mappable=im, cax=cbar_ax, orientation="horizontal")
+    cbar.locator = MaxNLocator(nbins=2)
+    cbar.update_ticks()
+    cbar_ax.xaxis.set_ticks_position("bottom")
+    cbar_ax.xaxis.set_label_position("bottom")
+    ax3_pos = ax.get_position()
+    cbar_width = ax3_pos.width * cbar_width_fraction
+    cbar_ax.set_position(
+        [
+            ax3_pos.x0 + (ax3_pos.width - cbar_width),
+            ax3_pos.y0 - cbar_height,
+            cbar_width,
+            cbar_height,
+        ]
+    )
+    return cbar_ax
