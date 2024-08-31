@@ -100,7 +100,7 @@ class CompressedPickle:
                     density_threshold=density_threshold,
                 )
             else:
-                logger.warning(
+                logger.debug(
                     """
                     The object is not a dictionary of numpy arrays or COO objects.
                     It cannot be automatically sparsified.
@@ -157,7 +157,7 @@ class CompressedPickle:
             ):
                 obj = densify_arrays(obj)
             else:
-                logger.warning(
+                logger.debug(
                     """
                     The object is not a dictionary of numpy arrays or COO objects.
                     It cannot be automatically densified.
