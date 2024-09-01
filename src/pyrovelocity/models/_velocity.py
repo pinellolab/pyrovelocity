@@ -526,6 +526,8 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         posterior_samples["embeds_angle"] = embeds_radian
         posterior_samples["ut_mean"] = posterior_samples["ut"].mean(0).squeeze()
         posterior_samples["st_mean"] = posterior_samples["st"].mean(0).squeeze()
+        posterior_samples["ut_std"] = posterior_samples["ut"].std(0).squeeze()
+        posterior_samples["st_std"] = posterior_samples["st"].std(0).squeeze()
 
         (
             pca_vector_field_posterior_samples,
