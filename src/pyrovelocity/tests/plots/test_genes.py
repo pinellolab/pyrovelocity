@@ -12,8 +12,8 @@ def test_model2_plot_gene_ranking(
     data_model2_reports_path,
 ):
     plot_gene_ranking(
-        posterior_samples=[posterior_samples_model2],
-        adata=[postprocessed_model2_data],
+        posterior_samples=posterior_samples_model2,
+        adata=postprocessed_model2_data,
         selected_genes=putative_model2_marker_genes,
         time_correlation_with="st",
         show_marginal_histograms=True,
@@ -31,8 +31,8 @@ def test_model1_plot_gene_ranking(
     data_model1_reports_path,
 ):
     plot_gene_ranking(
-        posterior_samples=[posterior_samples_model1],
-        adata=[postprocessed_model1_data],
+        posterior_samples=posterior_samples_model1,
+        adata=postprocessed_model1_data,
         selected_genes=putative_model1_marker_genes,
         time_correlation_with="st",
         show_marginal_histograms=True,

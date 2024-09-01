@@ -503,7 +503,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         ]
 
         gene_ranking, genes = compute_volcano_data(
-            [posterior_samples], [adata], time_correlation_with="st"
+            posterior_samples, adata, time_correlation_with="st"
         )
         gene_ranking = (
             gene_ranking.sort_values("mean_mae", ascending=False)

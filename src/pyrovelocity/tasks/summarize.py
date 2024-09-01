@@ -280,8 +280,8 @@ def summarize_dataset(
         logger.info(f"Generating figure: {volcano_plot}")
 
         volcano_data, fig = plot_gene_ranking(
-            posterior_samples=[posterior_samples],
-            adata=[adata],
+            posterior_samples=posterior_samples,
+            adata=adata,
             selected_genes=putative_marker_genes,
             time_correlation_with="st",
             show_marginal_histograms=True,

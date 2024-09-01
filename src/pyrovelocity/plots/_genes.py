@@ -11,6 +11,7 @@ from beartype import beartype
 from matplotlib import gridspec
 from matplotlib.axes import Axes
 from matplotlib.figure import FigureBase
+from matplotlib.gridspec import GridSpec
 from matplotlib.patches import ArrowStyle, ConnectionStyle
 from numpy import ndarray
 from pandas import DataFrame
@@ -35,9 +36,12 @@ if hasattr(adjustText, "logger"):
 
 @beartype
 def plot_gene_ranking(
-    posterior_samples: List[Dict[str, ndarray]],
-    adata: List[AnnData],
+    # posterior_samples: List[Dict[str, ndarray]],
+    posterior_samples: Dict[str, ndarray],
+    # adata: List[AnnData],
+    adata: AnnData,
     ax: Optional[Axes] = None,
+    gs: Optional[GridSpec] = None,
     time_correlation_with: str = "s",
     selected_genes: Optional[List[str]] = None,
     assemble: bool = False,
@@ -49,9 +53,9 @@ def plot_gene_ranking(
     if selected_genes is not None:
         assert isinstance(selected_genes, (tuple, list))
         assert isinstance(selected_genes[0], str)
-        volcano_data = posterior_samples[0]["gene_ranking"]
+        volcano_data = posterior_samples["gene_ranking"]
         genes = selected_genes
-    elif "u" in posterior_samples[0]:
+    elif "u" in posterior_samples:
         volcano_data, genes = compute_volcano_data(
             posterior_samples,
             adata,
@@ -60,8 +64,8 @@ def plot_gene_ranking(
             negative,
         )
     else:
-        volcano_data = posterior_samples[0]["gene_ranking"]
-        genes = posterior_samples[0]["genes"]
+        volcano_data = posterior_samples["gene_ranking"]
+        genes = posterior_samples["genes"]
 
     adjust_text_compatible = is_adjust_text_compatible()
     fig = None
