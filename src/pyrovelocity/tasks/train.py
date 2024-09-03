@@ -355,14 +355,8 @@ def train_model(
         >>> copy_raw_counts(adata)
         >>> _, model, posterior_samples = train_model(adata, use_gpu="auto", seed=99, max_epochs=200, loss_plot_path=loss_plot_path)
     """
-<<<<<<< HEAD
+    
     if isinstance(adata, str | Path):
-||||||| parent of 9d2f67d (added atac_layer argument to train_model tasks and made tests for it)
-    if isinstance(adata, str):
-=======
-
-    if isinstance(adata, str):
->>>>>>> 9d2f67d (added atac_layer argument to train_model tasks and made tests for it)
         adata = load_anndata_from_path(adata)
 
     logger.info(f"AnnData object prior to model training")
