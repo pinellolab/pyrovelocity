@@ -510,8 +510,8 @@ where $u(t), s(t)$ are the unspliced and spliced expression levels of a gene at 
 \begin{equation}
     \label{eq-rna-cg}
 \begin{aligned}
-\frac{du_{cg}}{dt} &= \alpha_{cg}(t) - \beta_{g} u_{cg}, \quad u_{cg}(0) = u_{cg}^{(0)} \label{eq-du-cg} \\
-   \frac{ds_{cg}}{dt} &= \beta_{g} u_{cg} - \gamma_{g} s_{cg}, \quad s_{cg}(0) = s_{cg}^{(0)} \label{eq-ds-cg} .
+\frac{du_{cg}}{dt} &= \alpha_{cg}(t) - \beta_{g} u_{cg}, \quad u_{cg}(0) = u_{cg}^{(0)} \\
+   \frac{ds_{cg}}{dt} &= \beta_{g} u_{cg} - \gamma_{g} s_{cg}, \quad s_{cg}(0) = s_{cg}^{(0)} .
 \end{aligned}
 \end{equation}
 In the equation, the subscript $c$ is the cell dimension, $g$ is the gene dimension,
