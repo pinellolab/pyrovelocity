@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 from beartype import beartype
 from torch import Tensor
+import numpy as np
 
 @beartype
 def regulatory_function_1(u: Tensor,
