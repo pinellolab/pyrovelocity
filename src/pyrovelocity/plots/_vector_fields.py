@@ -12,6 +12,7 @@ from beartype.typing import Dict, List, Optional, Tuple
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
 from matplotlib.figure import FigureBase
+from matplotlib.gridspec import SubplotSpec
 from matplotlib.ticker import MaxNLocator
 from scvelo.plotting.velocity_embedding_grid import default_arrow
 
@@ -36,23 +37,41 @@ configure_matplotlib_style()
 
 @beartype
 def create_vector_field_summary_layout(
-    fig_width: int | float = 12,
-    fig_height: int | float = 2.5,
-) -> Tuple[FigureBase, List[Axes], List[Axes]]:
-    fig = plt.figure(figsize=(fig_width, fig_height))
-    gs = fig.add_gridspec(
-        2,
-        6,
-        width_ratios=[1] * 6,
-        height_ratios=[6, 1],
-    )
+    fig: Optional[FigureBase] = None,
+    gs: Optional[SubplotSpec] = None,
+    fig_width: int | float = 7.5,
+    fig_height: int | float = 1.08,
+) -> Tuple[FigureBase, List[Axes], Axes, List[Axes]]:
+    if fig is None:
+        fig = plt.figure(
+            figsize=(fig_width, fig_height),
+        )
+    if gs is None:
+        gsi = fig.add_gridspec(
+            nrows=2,
+            ncols=6,
+            width_ratios=[1] * 6,
+            height_ratios=[10, 1],
+            wspace=0.1,
+            hspace=0.0,
+        )
+    else:
+        gsi = gs.subgridspec(
+            nrows=2,
+            ncols=6,
+            width_ratios=[1] * 6,
+            height_ratios=[10, 1],
+            wspace=0.1,
+            hspace=0.0,
+        )
+    main_axes = [fig.add_subplot(gsi[0, i]) for i in range(6)]
+    legend_axes = fig.add_subplot(gsi[1, :3])
+    colorbar_axes = [fig.add_subplot(gsi[1, i]) for i in range(3, 6)]
+    all_axes = main_axes + [legend_axes] + colorbar_axes
+    for ax in all_axes:
+        ax.set_label("vector_field")
 
-    main_axes = [fig.add_subplot(gs[0, i]) for i in range(6)]
-    bottom_axes = [fig.add_subplot(gs[1, i]) for i in range(6)]
-    for ax in bottom_axes:
-        ax.axis("off")
-
-    return fig, main_axes, bottom_axes
+    return fig, main_axes, legend_axes, colorbar_axes
 
 
 @beartype
@@ -60,15 +79,19 @@ def plot_vector_field_summary(
     adata: AnnData,
     posterior_samples: Dict[str, np.ndarray],
     vector_field_basis: str,
-    plot_name: PathLike | str,
+    plot_name: Optional[PathLike | str] = None,
     cell_state: str = "cell_type",
     state_color_dict: Optional[Dict[str, str]] = None,
-    default_fontsize: int = 12 if matplotlib.rcParams["text.usetex"] else 9,
+    fig: Optional[FigureBase] = None,
+    gs: Optional[SubplotSpec] = None,
+    default_fontsize: int = 7 if matplotlib.rcParams["text.usetex"] else 6,
     default_title_padding: int = 2,
-    dotsize: int | float = 3,
+    dotsize: int | float = 1,
     scale: float = 0.35,
-    arrow_size: float = 3.6,
+    arrow_size: float = 3,
     density: float = 0.4,
+    save_fig: bool = False,
+    linewidth: float = 0.5,
 ) -> FigureBase:
     posterior_time = posterior_samples["cell_time"]
     pca_embeds_angle = posterior_samples["pca_embeds_angle"]
@@ -77,8 +100,9 @@ def plot_vector_field_summary(
     (
         fig,
         ax,
-        bottom_axes,
-    ) = create_vector_field_summary_layout()
+        legend_axes,
+        colorbar_axes,
+    ) = create_vector_field_summary_layout(fig=fig, gs=gs)
 
     ress = pd.DataFrame(
         {
@@ -102,6 +126,8 @@ def plot_vector_field_summary(
         legend="brief",
     )
     ax[0].get_legend().remove()
+    ax[0].set_xticklabels([])
+    ax[0].set_xlabel("")
     ax[0].axis("off")
     ax[0].set_title(
         "Cell types",
@@ -123,9 +149,11 @@ def plot_vector_field_summary(
         scale=scale,
         frameon=False,
         density=density,
-        arrow_size=3,
-        linewidth=1,
+        arrow_size=arrow_size,
+        linewidth=linewidth,
     )
+    ax[1].set_xticklabels([])
+    ax[1].set_xlabel("")
     ax[1].axis("off")
     ax[1].set_title(
         "scVelo",
@@ -147,9 +175,11 @@ def plot_vector_field_summary(
         scale=scale,
         frameon=False,
         density=density,
-        arrow_size=3,
-        linewidth=1,
+        arrow_size=arrow_size,
+        linewidth=linewidth,
     )
+    ax[2].set_xticklabels([])
+    ax[2].set_xlabel("")
     ax[2].axis("off")
     ax[2].set_title(
         rf"Pyro\thinspace-Velocity"
@@ -174,7 +204,9 @@ def plot_vector_field_summary(
         alpha=1,
     )
     ax[3].set_title(
-        "shared time",
+        r"shared time $\hat{\mu}(t)$"
+        if matplotlib.rcParams["text.usetex"]
+        else "shared time μ",
         fontsize=default_fontsize,
         pad=default_title_padding,
     )
@@ -209,7 +241,7 @@ def plot_vector_field_summary(
         show_titles=False,
     )
     ax[4].set_title(
-        r"shared time $\left.\sigma \right/ \mu$"
+        r"shared time $\left.\hat{\sigma}(t) \right/ \hat{\mu}(t)$"
         if matplotlib.rcParams["text.usetex"]
         else "shared time σ/μ",
         fontsize=default_fontsize,
@@ -236,7 +268,7 @@ def plot_vector_field_summary(
         show_titles=False,
     )
     ax[5].set_title(
-        r"PCA angle $\sigma$"
+        r"PCA angle $\hat{\sigma}$"
         if matplotlib.rcParams["text.usetex"]
         else "PCA angle σ",
         fontsize=default_fontsize,
@@ -244,28 +276,28 @@ def plot_vector_field_summary(
     )
 
     handles, labels = ax[0].get_legend_handles_labels()
-    bottom_axes[0].legend(
+    legend_axes.legend(
         handles=handles,
         labels=labels,
-        loc="lower left",
-        bbox_to_anchor=(-0.1, -0.2),
-        ncol=4,
+        loc="upper left",
+        bbox_to_anchor=(-0.05, 2.0),
+        # bbox_transform=bottom_axes[0].transAxes,
+        bbox_transform=legend_axes.transAxes,
+        ncol=5,
         frameon=False,
         fancybox=True,
-        markerscale=4,
-        columnspacing=0.7,
-        handletextpad=0.1,
+        markerscale=3,
+        columnspacing=0.05,
+        handletextpad=-0.5,
+        fontsize=default_fontsize * 0.9,
     )
+    legend_axes.axis("off")
 
     for axi in ax:
         axi.set_aspect("equal", adjustable="box")
 
-    fig.tight_layout()
-    fig.subplots_adjust(
-        left=0.05, right=0.98, top=0.98, bottom=0.08, wspace=0.1, hspace=0.2
-    )
-
-    for axi, cax in zip(ax[3:], bottom_axes[3:]):
+    for axi, cax in zip(ax[3:], colorbar_axes):
+        ax_pos = axi.get_position()
         cax.axis("on")
         cbar = fig.colorbar(
             mappable=axi.collections[0],
@@ -274,29 +306,33 @@ def plot_vector_field_summary(
         )
         cbar.locator = MaxNLocator(nbins=2)
         cbar.update_ticks()
-        ax_pos = axi.get_position()
-        cbar_width = ax_pos.width * 0.6
-        cbar_height = 0.05
         cax.xaxis.set_ticks_position("bottom")
         cax.xaxis.set_label_position("bottom")
-        cax.set_position(
-            [
-                ax_pos.x0 + (ax_pos.width - cbar_width),
-                0.25,
-                cbar_width,
-                cbar_height,
-            ]
-        )
+        cax.xaxis.set_tick_params(labelsize=default_fontsize * 0.8)
+        # TODO: support colorbar with width specified as a fraction of the axis width
+        # cbar_width = ax_pos.width * 0.6
+        # cbar_height = ax_pos.height * 0.10
+        # cax.set_position(
+        #     [
+        #         ax_pos.x0 + (ax_pos.width - cbar_width),
+        #         ax_pos.y0 - cbar_height * 1.05,
+        #         cbar_width,
+        #         cbar_height,
+        #     ]
+        # )
 
-    for ext in ["", ".png"]:
-        fig.savefig(
-            f"{plot_name}{ext}",
-            facecolor=fig.get_facecolor(),
-            bbox_inches="tight",
-            edgecolor="none",
-            dpi=300,
-        )
-    plt.close(fig)
+    if save_fig:
+        fig.tight_layout()
+
+        for ext in ["", ".png"]:
+            fig.savefig(
+                f"{plot_name}{ext}",
+                facecolor=fig.get_facecolor(),
+                bbox_inches="tight",
+                edgecolor="none",
+                dpi=300,
+            )
+        plt.close(fig)
     return fig
 
 
@@ -319,7 +355,7 @@ def plot_vector_field_uncertainty(
     cmap="winter",
     cmax=0.305,
     color_vector_field_by_measure=False,
-    dot_size=1,
+    dotsize=1,
     show_titles: bool = True,
     default_fontsize: int = 7,
 ):
@@ -336,21 +372,18 @@ def plot_vector_field_uncertainty(
         ax = fig.subplots(1, 2)
     if isinstance(ax, list) and len(ax) == 2:
         if not only_grid:
-            # norm = Normalize()
-            # norm.autoscale(adata.obs["uncertain"])
             order = np.argsort(adata.obs["uncertain"].values)
             im = ax[0].scatter(
                 adata.obsm[f"X_{basis}"][:, 0][order],
                 adata.obsm[f"X_{basis}"][:, 1][order],
-                # c=colormap(norm(adata.obs["uncertain"].values[order])),
                 c=adata.obs["uncertain"].values[order],
                 cmap=cmap,
                 norm=None,
                 vmin=np.percentile(uncertain, 5),
                 vmax=np.percentile(uncertain, 95),
-                s=dot_size,
+                s=dotsize,
                 linewidth=1,
-                edgecolors="face",
+                edgecolors="none",
             )
             ax[0].axis("off")
             if show_titles:
@@ -414,7 +447,6 @@ def plot_vector_field_uncertainty(
         im = ax.scatter(
             adata.obsm[f"X_{basis}"][:, 0][order],
             adata.obsm[f"X_{basis}"][:, 1][order],
-            # c=colormap(norm(adata.obs["uncertain"].values[order])),
             c=ordered_uncertainty_measure,
             cmap=cmap,
             norm=None,
@@ -426,9 +458,9 @@ def plot_vector_field_uncertainty(
             if "angle" in uncertain_measure
             # else np.percentile(ordered_uncertainty_measure, 99.9),
             else max(ordered_uncertainty_measure),
-            s=dot_size,
+            s=dotsize,
             linewidth=1,
-            edgecolors="face",
+            edgecolors="none",
         )
         ax.axis("off")
         if show_titles:
@@ -446,7 +478,7 @@ def plot_vector_field_uncertainty(
         cbar = fig.colorbar(
             im, cax=cax, orientation="horizontal"
         )  # fraction=0.046, pad=0.04
-        cbar.ax.tick_params(axis="x", labelsize=5.5)
+        cbar.ax.tick_params(axis="x", labelsize=default_fontsize * 0.8)
         cbar.ax.locator = MaxNLocator(nbins=2, integer=True)
         # cbar.ax.set_xlabel(f"{uncertain_measure} uncertainty", fontsize=default_fontsize)
 
@@ -485,7 +517,6 @@ def plot_mean_vector_field(
     return adata.obsm[f"velocity_pyro_{basis}"]
 
 
-# def project_grid_points(emb, velocity_emb, uncertain=None, p_mass_min=3.5, density=0.3):
 def project_grid_points(
     emb,
     velocity_emb,
@@ -505,8 +536,6 @@ def project_grid_points(
 
     for dim_i in range(2):
         m, M = np.min(emb[:, dim_i]), np.max(emb[:, dim_i])
-        # m = m - .025 * np.abs(M - m)
-        # M = M + .025 * np.abs(M - m)
         m = m - 0.01 * np.abs(M - m)
         M = M + 0.01 * np.abs(M - m)
         gr = np.linspace(m, M, int(grid_num))
@@ -516,8 +545,6 @@ def project_grid_points(
     X_grid = np.vstack([i.flat for i in meshes_tuple]).T
 
     n_neighbors = int(emb.shape[0] / 50)
-    # print(n_neighbors)
-    # nn = NearestNeighbors(n_neighbors=30, n_jobs=-1)
     nn = NearestNeighbors(n_neighbors=n_neighbors, n_jobs=-1)
     nn.fit(emb)
     dists, neighs = nn.kneighbors(X_grid)
@@ -532,7 +559,6 @@ def project_grid_points(
         V_grid = (velocity_emb[:, :2][neighs] * weight[:, :, None, None]).sum(
             1
         ) / np.maximum(1, p_mass)[:, None, None]
-    # print(V_grid.shape)
 
     p_mass_min *= np.percentile(p_mass, 99) / 100
     if autoscale:
