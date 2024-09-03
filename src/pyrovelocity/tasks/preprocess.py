@@ -721,6 +721,11 @@ def compute_metacells(
             adata_meta.obs[celltype_key] = [adata_rna[adata_rna.obs[cluster_key] == c,:].obs[celltype_key].mode()[0] for c in np.unique(adata_rna.obs[cluster_key])]
         adata_meta.obs['RNA counts'] = np.sum(adata_meta.X, axis = 1)
         
+        if 'unspliced' in adata_rna.layers:
+            adata_meta.layers['unspliced'] = np.concatenate([np.sum(adata_rna.layers['unspliced'][adata_rna.obs[cluster_key] == c,:], axis = 0) for c in np.unique(adata_rna.obs[cluster_key])], axis = 0)
+        if 'spliced' in adata_rna.layers:
+            adata_meta.layers['spliced'] = np.concatenate([np.sum(adata_rna.layers['spliced'][adata_rna.obs[cluster_key] == c,:], axis = 0) for c in np.unique(adata_rna.obs[cluster_key])], axis = 0)                
+        
         if verbose:
             print('Mean RNA counts per cell before: ', np.mean(adata_rna.obs['RNA counts']))
             print('Mean RNA counts per cell after: ', np.mean(adata_meta.obs['RNA counts']))
