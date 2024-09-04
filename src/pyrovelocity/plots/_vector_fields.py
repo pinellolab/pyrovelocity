@@ -85,13 +85,14 @@ def plot_vector_field_summary(
     fig: Optional[FigureBase] = None,
     gs: Optional[SubplotSpec] = None,
     default_fontsize: int = 7 if matplotlib.rcParams["text.usetex"] else 6,
-    default_title_padding: int = 2,
+    default_title_padding: int = 5,
     dotsize: int | float = 1,
     scale: float = 0.35,
     arrow_size: float = 3,
     density: float = 0.4,
     save_fig: bool = False,
     linewidth: float = 0.5,
+    title_background_color: str = "#F0F0F0",
 ) -> FigureBase:
     posterior_time = posterior_samples["cell_time"]
     pca_embeds_angle = posterior_samples["pca_embeds_angle"]
@@ -187,72 +188,17 @@ def plot_vector_field_summary(
         else f"Pyro\u2009-Velocity",
         fontsize=default_fontsize,
         pad=default_title_padding,
-    )
-
-    plot_posterior_time(
-        posterior_samples,
-        adata,
-        ax=ax[3],
-        basis=vector_field_basis,
-        fig=fig,
-        addition=False,
-        position="right",
-        cmap="winter",
-        s=dotsize,
-        show_colorbar=False,
-        show_titles=False,
-        alpha=1,
-    )
-    ax[3].set_title(
-        r"shared time $\hat{\mu}(t)$"
-        if matplotlib.rcParams["text.usetex"]
-        else "shared time μ",
-        fontsize=default_fontsize,
-        pad=default_title_padding,
+        backgroundcolor=title_background_color,
     )
 
     pca_cell_angles = pca_embeds_angle / np.pi * 180
     pca_angles_std = get_posterior_sample_angle_uncertainty(pca_cell_angles)
 
-    cell_time_mean = posterior_time.mean(0).flatten()
-    cell_time_mean_max = cell_time_mean.max()
-    cell_times = posterior_time / cell_time_mean_max
-    cell_time_mean = cell_times.mean(0).flatten()
-    cell_time_std = cell_times.std(0).flatten()
-    cell_time_cov = cell_time_std / cell_time_mean
-
     plot_vector_field_uncertainty(
-        adata,
-        embed_mean,
-        cell_time_cov,
-        ax=ax[4],
-        cbar=False,
-        fig=fig,
-        basis=vector_field_basis,
-        scale=scale,
-        arrow_size=arrow_size,
-        p_mass_min=1,
-        autoscale=True,
-        density=density,
-        only_grid=False,
-        uncertain_measure="shared time",
-        cmap="winter",
-        cmax=None,
-        show_titles=False,
-    )
-    ax[4].set_title(
-        r"shared time $\left.\hat{\sigma}(t) \right/ \hat{\mu}(t)$"
-        if matplotlib.rcParams["text.usetex"]
-        else "shared time σ/μ",
-        fontsize=default_fontsize,
-        pad=default_title_padding,
-    )
-
-    plot_vector_field_uncertainty(
-        adata,
-        embed_mean,
-        pca_angles_std,
-        ax=ax[5],
+        adata=adata,
+        embed_mean=embed_mean,
+        embeds_radian_or_magnitude=pca_angles_std,
+        ax=ax[3],
         cbar=False,
         fig=fig,
         basis=vector_field_basis,
@@ -267,12 +213,72 @@ def plot_vector_field_summary(
         cmax=None,
         show_titles=False,
     )
-    ax[5].set_title(
-        r"PCA angle $\hat{\sigma}$"
+    ax[3].set_title(
+        r"PCA angle uncertainty"
         if matplotlib.rcParams["text.usetex"]
         else "PCA angle σ",
         fontsize=default_fontsize,
         pad=default_title_padding,
+        backgroundcolor=title_background_color,
+    )
+
+    plot_posterior_time(
+        posterior_samples,
+        adata,
+        ax=ax[4],
+        basis=vector_field_basis,
+        fig=fig,
+        addition=False,
+        position="right",
+        cmap="winter",
+        s=dotsize,
+        show_colorbar=False,
+        show_titles=False,
+        alpha=1,
+    )
+    ax[4].set_title(
+        r"Shared time mean"
+        # r"shared time $\hat{\mu}(t)$"
+        if matplotlib.rcParams["text.usetex"]
+        else "Shared time μ",
+        fontsize=default_fontsize,
+        pad=default_title_padding,
+        backgroundcolor=title_background_color,
+    )
+
+    cell_time_mean = posterior_time.mean(0).flatten()
+    cell_time_mean_max = cell_time_mean.max()
+    cell_times = posterior_time / cell_time_mean_max
+    cell_time_mean = cell_times.mean(0).flatten()
+    cell_time_std = cell_times.std(0).flatten()
+    cell_time_cov = cell_time_std / cell_time_mean
+
+    plot_vector_field_uncertainty(
+        adata,
+        embed_mean,
+        cell_time_cov,
+        ax=ax[5],
+        cbar=False,
+        fig=fig,
+        basis=vector_field_basis,
+        scale=scale,
+        arrow_size=arrow_size,
+        p_mass_min=1,
+        autoscale=True,
+        density=density,
+        only_grid=False,
+        uncertain_measure="shared time",
+        cmap="winter",
+        cmax=None,
+        show_titles=False,
+    )
+    ax[5].set_title(
+        r"Shared time uncertainty"
+        if matplotlib.rcParams["text.usetex"]
+        else "shared time σ/μ",
+        fontsize=default_fontsize,
+        pad=default_title_padding,
+        backgroundcolor=title_background_color,
     )
 
     handles, labels = ax[0].get_legend_handles_labels()
@@ -296,7 +302,22 @@ def plot_vector_field_summary(
     for axi in ax:
         axi.set_aspect("equal", adjustable="box")
 
-    for axi, cax in zip(ax[3:], colorbar_axes):
+    colorbar_labels = [
+        r"$\hat{\sigma}$",
+        r"$\mu(t)$",
+        r"$\left.\hat{\sigma}(t) \right/ \hat{\mu}(t)$",
+    ]
+    colorbar_ticks = [
+        [0, 360],
+        [0, 1],
+        [],
+    ]
+    for axi, cax, clabel, cticks in zip(
+        ax[3:],
+        colorbar_axes,
+        colorbar_labels,
+        colorbar_ticks,
+    ):
         ax_pos = axi.get_position()
         cax.axis("on")
         cbar = fig.colorbar(
@@ -304,11 +325,19 @@ def plot_vector_field_summary(
             cax=cax,
             orientation="horizontal",
         )
-        cbar.locator = MaxNLocator(nbins=2)
-        cbar.update_ticks()
+
+        if len(cticks) > 0:
+            vmin, vmax = axi.collections[0].get_clim()
+            cbar.set_ticks([vmin, vmax])
+            cbar.set_ticklabels([rf"{cticks[0]}", rf"{cticks[1]}"])
+        else:
+            cbar.locator = MaxNLocator(nbins=3)
+            cbar.update_ticks()
+
         cax.xaxis.set_ticks_position("bottom")
         cax.xaxis.set_label_position("bottom")
         cax.xaxis.set_tick_params(labelsize=default_fontsize * 0.8)
+        # cbar.set_label(label=clabel, fontsize=default_fontsize, labelpad=0)
         # TODO: support colorbar with width specified as a fraction of the axis width
         # cbar_width = ax_pos.width * 0.6
         # cbar_height = ax_pos.height * 0.10
