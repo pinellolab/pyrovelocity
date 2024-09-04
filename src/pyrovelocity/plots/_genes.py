@@ -73,9 +73,10 @@ def plot_gene_ranking(
 
     defaultdotsize = 3
     plot_title = (
-        r"$-$MAE vs $\rho(\hat{s},t)$"
-        if matplotlib.rcParams["text.usetex"]
-        else "-MAE vs ρ(s,t)"
+        r"Mean absolute error vs spliced correlation with shared time"
+        # r"$-$MAE vs $\rho(\hat{s},t)$"
+        # if matplotlib.rcParams["text.usetex"]
+        # else "-MAE vs ρ(s,t)"
     )
 
     if show_marginal_histograms:
