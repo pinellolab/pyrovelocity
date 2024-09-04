@@ -9,6 +9,7 @@ import seaborn as sns
 from anndata import AnnData
 from beartype import beartype
 from beartype.typing import Optional
+from matplotlib import ticker
 from matplotlib.figure import FigureBase
 from matplotlib.gridspec import SubplotSpec
 
@@ -41,6 +42,17 @@ DEFAULT_PARAMETER_LABEL_MAPPINGS = {
 }
 
 
+def construct_log_string(x, base):
+    if x <= 0:
+        return "0"
+    # print(x)
+    log_val = int(np.round(np.log(x) / np.log(base)))
+    if base == np.e:
+        return rf"$e^{{{log_val}}}$"
+    else:
+        return rf"${base}^{{{log_val}}}$"
+
+
 @beartype
 def plot_parameter_posterior_distributions(
     posterior_samples: Dict[str, np.ndarray],
@@ -53,6 +65,7 @@ def plot_parameter_posterior_distributions(
     save_plot: bool = False,
     parameter_uncertainty_plot: PathLike | str = "parameter_uncertainty.pdf",
     default_fontsize: int = 7,
+    log_base=10,
 ) -> Optional[FigureBase]:
     if isinstance(parameter_names, list):
         parameter_names = {param: param for param in parameter_names}
@@ -62,11 +75,14 @@ def plot_parameter_posterior_distributions(
         for parameter in parameter_names.keys()
         if parameter in posterior_samples.keys()
     ]
-    main_title = r"Density estimates from $\log$-posterior samples"
-    if len(parameters) > 3:
+    main_title = (
+        r"Parameter density estimates from $\log_{10}$-posterior samples"
+    )
+    if "s_offset" in parameters:
         nrows = (len(parameters) + 1) // 2
         ncols = 2
     else:
+        "t0" in parameters and parameters.remove("t0")
         nrows = len(parameters)
         ncols = 1
     if gs is None:
@@ -77,6 +93,8 @@ def plot_parameter_posterior_distributions(
             nrows=nrows + 1,
             ncols=ncols,
             height_ratios=[0.1] + [1] * nrows,
+            # hspace=0.0,
+            # wspace=0.0,
         )
         title_ax = fig.add_subplot(sgs[0, :])
         title_ax.axis("off")
@@ -102,11 +120,11 @@ def plot_parameter_posterior_distributions(
             ax1 = ax[index]
         ax1.set_label("parameter_posteriors")
         df = pd.DataFrame(
-            np.log(
-                posterior_samples[parameter].squeeze()[
-                    :, np.isin(adata.var_names, list(geneset))
-                ],
-            ),
+            # np.log(
+            posterior_samples[parameter].squeeze()[
+                :, np.isin(adata.var_names, list(geneset))
+            ],
+            # ),
             columns=adata.var_names[np.isin(adata.var_names, list(geneset))],
         )
         df_long = df.melt(var_name="index", value_name="value")
@@ -142,9 +160,19 @@ def plot_parameter_posterior_distributions(
                 whis_width=0.75,
                 color=".8",
             ),
+            log_scale=log_base,
         )
-
-        ax1.tick_params(axis="both", which="major", labelsize=default_fontsize)
+        ax1.yaxis.set_major_formatter(
+            ticker.FuncFormatter(lambda x, _: construct_log_string(x, log_base))
+        )
+        ax1.yaxis.set_tick_params(labelsize=default_fontsize)
+        ax1.yaxis.set_minor_locator(
+            ticker.LogLocator(base=log_base, subs="all", numticks=20)
+        )
+        ax1.yaxis.set_minor_formatter(ticker.NullFormatter())
+        ax1.tick_params(
+            axis="both", which="major", labelsize=default_fontsize - 3
+        )
         ax1.tick_params(axis="x", which="minor", bottom=False, top=False)
 
         if row < nrows:
