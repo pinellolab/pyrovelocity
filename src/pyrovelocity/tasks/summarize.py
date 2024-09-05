@@ -144,10 +144,7 @@ def summarize_dataset(
         phase_portraits_exist = (
             len(os.listdir(posterior_phase_portraits_path)) > 0
         )
-    if (
-        all(os.path.isfile(f) for f in output_filenames)
-        and phase_portraits_exist
-    ):
+    if all(os.path.isfile(f) for f in output_filenames):
         logger.info(
             "\n\t"
             + "\n\t".join(str(f) for f in output_filenames)
@@ -187,7 +184,7 @@ def summarize_dataset(
             logger.info(f"Generating figure: {violin_clusters_log}")
             for fig_name in [violin_clusters_lin, violin_clusters_log]:
                 cluster_violin_plots(
-                    data_model,
+                    data_model=data_model,
                     adata=adata,
                     posterior_samples=posterior_samples,
                     cluster_key=cell_state,
@@ -196,6 +193,24 @@ def summarize_dataset(
                     show_outlier=False,
                     fig_name=fig_name,
                 )
+
+        # phase portraint predictive plots
+        if phase_portraits_exist:
+            logger.info(
+                f"\nFiles exist in posterior phase portraits path:\n"
+                f"{posterior_phase_portraits_path}\n"
+                f"Remove this directory or all its files if you want to regenerate them.\n\n"
+            )
+        else:
+            logger.info("Generating posterior predictive phase portrait plots")
+            posterior_curve(
+                adata=adata,
+                posterior_samples=posterior_samples,
+                gene_set=putative_marker_genes,
+                data_model=data_model,
+                model_path=model_path,
+                output_directory=posterior_phase_portraits_path,
+            )
 
     # ##################
     # save dataframes
@@ -248,6 +263,7 @@ def summarize_dataset(
             shared_time_plot=shared_time_plot,
         )
 
+    # extract putative marker genes
     logger.info(f"Searching for marker genes")
     putative_marker_genes = top_mae_genes(
         volcano_data=volcano_data,
@@ -255,31 +271,13 @@ def summarize_dataset(
         min_genes_per_bin=3,
     )
 
-    # phase portraint predictive plots
-    if phase_portraits_exist:
-        logger.info(
-            f"\nFiles exist in posterior phase portraits path:\n"
-            f"{posterior_phase_portraits_path}\n"
-            f"Remove this directory or all its files if you want to regenerate them.\n\n"
-        )
-    else:
-        logger.info("Generating posterior predictive phase portrait plots")
-        posterior_curve(
-            adata=adata,
-            posterior_samples=posterior_samples,
-            gene_set=putative_marker_genes,
-            data_model=data_model,
-            model_path=model_path,
-            output_directory=posterior_phase_portraits_path,
-        )
-
     # volcano plot
     if os.path.isfile(volcano_plot):
         logger.info(f"{volcano_plot} exists")
     else:
         logger.info(f"Generating figure: {volcano_plot}")
 
-        volcano_data, fig = plot_gene_ranking(
+        plot_gene_ranking(
             posterior_samples=posterior_samples,
             adata=adata,
             selected_genes=putative_marker_genes,
@@ -287,21 +285,6 @@ def summarize_dataset(
             show_marginal_histograms=True,
             save_volcano_plot=True,
             volcano_plot_path=volcano_plot,
-        )
-
-    # gene selection summary plot
-    if os.path.isfile(gene_selection_summary_plot):
-        logger.info(f"{gene_selection_summary_plot} exists")
-    else:
-        logger.info(f"Generating figure: {gene_selection_summary_plot}")
-        plot_gene_selection_summary(
-            adata=adata,
-            posterior_samples=posterior_samples,
-            basis=vector_field_basis,
-            cell_state=cell_state,
-            plot_name=gene_selection_summary_plot,
-            selected_genes=putative_marker_genes,
-            show_marginal_histograms=False,
         )
 
     # parameter uncertainty plot
@@ -331,6 +314,21 @@ def summarize_dataset(
             cell_state=cell_state,
             save_plot=True,
             rainbow_plot_path=gene_selection_rainbow_plot,
+        )
+
+    # gene selection summary plot
+    if os.path.isfile(gene_selection_summary_plot):
+        logger.info(f"{gene_selection_summary_plot} exists")
+    else:
+        logger.info(f"Generating figure: {gene_selection_summary_plot}")
+        plot_gene_selection_summary(
+            adata=adata,
+            posterior_samples=posterior_samples,
+            basis=vector_field_basis,
+            cell_state=cell_state,
+            plot_name=gene_selection_summary_plot,
+            selected_genes=putative_marker_genes,
+            show_marginal_histograms=False,
         )
 
     # mean vector field plot
