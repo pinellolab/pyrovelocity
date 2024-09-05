@@ -39,8 +39,8 @@ def regulatory_function_1(u: Tensor,
     x = l3(x)
     
     output = torch.sigmoid(x)
-    beta = output[:,0]
-    gamma = output[:,1]
-    alphas = output[:,2]
+    beta = output[...,0].T
+    gamma = output[...,1].T
+    alphas = output[...,2].T
     
     return alphas, beta, gamma
