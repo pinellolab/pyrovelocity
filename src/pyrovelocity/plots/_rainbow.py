@@ -43,8 +43,9 @@ def rainbowplot_module(
     show_data: bool = True,
     rainbow_plot_path: str = "rainbow.pdf",
     dotsize: int = 1,
+    default_fontsize: int = 7,
 ) -> Tuple[Figure, Dict[str, Axes]]:
-    set_font_size(7)
+    set_font_size(default_fontsize)
 
     if genes is None:
         genes = get_genes(volcano_data, num_genes, negative_correlation)
