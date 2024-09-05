@@ -12,9 +12,10 @@ from beartype import beartype
 from numpy import ndarray
 from scvi.data import AnnDataManager
 from scvi.data._constants import _SETUP_ARGS_KEY, _SETUP_METHOD_NAME
-from scvi.data.fields import LayerField, NumericalObsField
+from scvi.data.fields import LayerField, NumericalObsField, CategoricalObsField, ObsmField
 from scvi.model._utils import parse_device_args
 from scvi.model.base import BaseModelClass
+from scvi import REGISTRY_KEYS
 from scvi.model.base._utils import (
     _initialize_model,
     _load_saved_files,
@@ -28,14 +29,14 @@ from pyrovelocity.analysis.analyze import (
     vector_field_uncertainty,
 )
 from pyrovelocity.logging import configure_logging
-from pyrovelocity.models._trainer import VelocityTrainingMixin
+from scvi.model.base import PyroSviTrainMixin
 from pyrovelocity.models.knn_model._velocity_module import VelocityModule, MultiVelocityModule
 
 __all__ = ["PyroVelocity"]
 
 logger = configure_logging(__name__)
 
-class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
+class PyroVelocity(PyroSviTrainMixin, BaseModelClass):
     """
     PyroVelocity is a class for constructing and training a Pyro model for
     probabilistic RNA velocity estimation. This model leverages the
@@ -300,20 +301,40 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         self.init_params_ = self._get_init_params(locals())
         logger.info("Model initialized")
 
-    def train(self, **kwargs):
+    def train(
+        self,
+        max_epochs: int = 500,
+        batch_size: int = 1000,
+        train_size: float = 1,
+        lr: float = 0.01,
+        **kwargs,
+    ):
         """
-        Trains the PyroVelocity model using the provided data and configuration.
+        Training function for the model.
 
-        The method leverages the Pyro library to train the model using the underlying
-        data. It relies on the `VelocityTrainingMixin` to define the training logic.
-
-        Args:
-
-            **kwargs : dict, optional
-                Additional keyword arguments to be passed to the underlying train method
-                provided by the `VelocityTrainingMixin`.
+        Parameters
+        ----------
+        max_epochs
+            Number of passes through the dataset. If `None`, defaults to
+            ``np.min([round((20000 / n_cells) * 400), 400])``
+        train_size
+            Size of training set in the range [0.0, 1.0].
+        batch_size
+            Minibatch size to use during training. If `None`, no minibatching occurs and all
+            data is copied to device (e.g., GPU).
+        lr
+            Optimiser learning rate (default optimiser is :class:`~pyro.optim.ClippedAdam`).
+            Specifying optimiser via plan_kwargs overrides this choice of lr.
+        kwargs
+            Other arguments to :py:meth:`scvi.model.base.PyroSviTrainMixin().train` method
         """
-        pyro.enable_validation(True)
+        
+        self.max_epochs = max_epochs
+        kwargs["max_epochs"] = max_epochs
+        kwargs["batch_size"] = batch_size
+        kwargs["train_size"] = train_size
+        kwargs["lr"] = lr
+
         super().train(**kwargs)
 
     def enum_parallel_predict(self):
@@ -336,7 +357,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         anndata_fields = [
             LayerField("U", "raw_unspliced", is_count_data=True),
             LayerField("X", "raw_spliced", is_count_data=True),
-            CategoricalObsField(REGISTRY_KEYS.BATCH_KEY, batch_key)
+            CategoricalObsField(REGISTRY_KEYS.BATCH_KEY, batch_key),
             NumericalObsField("ind_x", "ind_x"),
         ]
         
@@ -348,7 +369,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             adata.uns['atac'] = None
             
         if 'N_cn' in adata.obsm:
-            anndata_fields += [LayerField('N_cn', 'N_cn')]
+            anndata_fields += [ObsmField('N_cn', 'N_cn')]
         
         adata_manager = AnnDataManager(
             fields=anndata_fields, setup_method_args=setup_method_args
