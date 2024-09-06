@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import anndata
@@ -43,7 +44,10 @@ def pbmc5k(
     """
     url = "https://storage.googleapis.com/pyrovelocity/data/pbmc5k.h5ad"
     adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
-    _log_hash(file_path)
+    expected_hash = (
+        "349028bdf7992f5b196a3c4efd7a83cebdf0624d3d42a712628967dad608ad35"
+    )
+    _check_hash(file_path, expected_hash)
     return adata
 
 
@@ -61,7 +65,10 @@ def pbmc10k(
     """
     url = "https://storage.googleapis.com/pyrovelocity/data/pbmc10k.h5ad"
     adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
-    _log_hash(file_path)
+    expected_hash = (
+        "267d1d2710251a68413fcb82fa03f9bcfe8fe33a6bae05117603da983ebe2c5b"
+    )
+    _check_hash(file_path, expected_hash)
     return adata
 
 
@@ -80,7 +87,10 @@ def pons(
     """
     url = "https://storage.googleapis.com/pyrovelocity/data/oligo_lite.h5ad"
     adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
-    _log_hash(file_path)
+    expected_hash = (
+        "d3a3286a6f33c307aca20bcbb127abb6ac52dbf6c968ee24df6ed9584b857de0"
+    )
+    _check_hash(file_path, expected_hash)
     return adata
 
 
@@ -99,7 +109,10 @@ def larry(
     """
     url = "https://figshare.com/ndownloader/files/37028569"
     adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
-    _log_hash(file_path)
+    expected_hash = (
+        "7f567427f591e85678580ebaa8b1e59aae51e9be63864a68ef9e905a0cbe8575"
+    )
+    _check_hash(file_path, expected_hash)
     return adata
 
 
@@ -122,7 +135,10 @@ def larry_neu(
     adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
     adata = adata[adata.obs.state_info != "Centroid", :]
     adata.write(file_path)
-    _log_hash(file_path)
+    expected_hash = (
+        "384784699c10e192677c006bb407aaedbdf3e3c66f1ca1f4d8d1284ddf8fa436"
+    )
+    _check_hash(file_path, expected_hash)
     return adata
 
 
@@ -144,7 +160,10 @@ def larry_mono(
     adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
     adata = adata[adata.obs.state_info != "Centroid", :]
     adata.write(file_path)
-    _log_hash(file_path)
+    expected_hash = (
+        "75e59aa7f0d47d2d013dc7444f89a858363110ba32d7a576ac3dc819cac0afa8"
+    )
+    _check_hash(file_path, expected_hash)
     return adata
 
 
@@ -162,7 +181,10 @@ def larry_cospar(
     """
     url = "https://storage.googleapis.com/pyrovelocity/data/larry_cospar.h5ad"
     adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
-    _log_hash(file_path)
+    expected_hash = (
+        "cdf2ff25c4e3222122beeff2da65539ba7541f4426547f4622813874fd9be070"
+    )
+    _check_hash(file_path, expected_hash)
     return adata
 
 
@@ -182,7 +204,10 @@ def larry_cytotrace(
         "https://storage.googleapis.com/pyrovelocity/data/larry_cytotrace.h5ad"
     )
     adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
-    _log_hash(file_path)
+    expected_hash = (
+        "fdaa99408f93c52d993cd47bf7997f5c01f7cb88be1824864075c67afb04b625"
+    )
+    _check_hash(file_path, expected_hash)
     return adata
 
 
@@ -202,7 +227,10 @@ def larry_dynamical(
         "https://storage.googleapis.com/pyrovelocity/data/larry_dynamical.h5ad"
     )
     adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
-    _log_hash(file_path)
+    expected_hash = (
+        "d3808463203f3d0a8fd1eb76ac723d8e6ab939223eb528434c3e38926a460863"
+    )
+    _check_hash(file_path, expected_hash)
     return adata
 
 
@@ -222,7 +250,10 @@ def larry_tips(
     adata = adata[adata.obs["time_info"] == 6.0]
     adata = adata[adata.obs["state_info"] != "Undifferentiated"]
     adata.write(file_path)
-    _log_hash(file_path)
+    expected_hash = (
+        "e04e9d0b82651d170c93aaa9a1a0f764c91a986d8ae97d9401b4ee6c496f492c"
+    )
+    _check_hash(file_path, expected_hash)
     return adata
 
 
@@ -242,7 +273,10 @@ def larry_multilineage(
     adata_larry_neu = larry_neu()
     adata = adata_larry_mono.concatenate(adata_larry_neu)
     adata.write(file_path)
-    _log_hash(file_path)
+    expected_hash = (
+        "9add35ae4f736aa5e11d076eadb3b1d842dbc88102047f029bd7fa0929f46be0"
+    )
+    _check_hash(file_path, expected_hash)
     return adata
 
 
@@ -265,7 +299,10 @@ def pancreas(
         Returns `AnnData` object
     """
     adata = scv.datasets.pancreas(file_path=file_path)
-    _log_hash(file_path)
+    expected_hash = (
+        "9e3e459eca00ba06b496ec80def32941b5b2889918720e3e7aa6ffb811fbe7c6"
+    )
+    _check_hash(file_path, expected_hash)
     return adata
 
 
@@ -288,7 +325,10 @@ def bonemarrow(
         Returns `AnnData` object
     """
     adata = scv.datasets.bonemarrow(file_path=file_path)
-    _log_hash(file_path)
+    expected_hash = (
+        "12222efe4a9dd5916fa279860a2a4fdec383bd2e0db0249a1cd18c549c4a4c2c"
+    )
+    _check_hash(file_path, expected_hash)
     return adata
 
 
@@ -310,12 +350,31 @@ def pbmc68k(
     Returns:
         Returns `AnnData` object
     """
-    adata = scv.datasets.pbmc68k(file_path=file_path)
-    scv.pp.remove_duplicate_cells(adata)
-    adata.obsm["X_tsne"][:, 0] *= -1
-    adata.write(file_path)
-    _log_hash(file_path)
+    if os.path.isfile(file_path):
+        adata = scv.datasets.pbmc68k(file_path=file_path)
+    else:
+        adata = scv.datasets.pbmc68k(file_path=file_path)
+        scv.pp.remove_duplicate_cells(adata)
+        adata.obsm["X_tsne"][:, 0] *= -1
+        adata.write(file_path)
+    expected_hash = (
+        "c6ce6ca3dac3b97012d12c7a5e5ec1953bbd2ad5535538b0ef549f54d9276f0b"
+    )
+    _check_hash(file_path, expected_hash)
     return adata
+
+
+@beartype
+def _check_hash(file_path: str | Path, expected_hash: str) -> None:
+    actual_hash = _log_hash(file_path)
+    if actual_hash != expected_hash:
+        logger.error(
+            f"\nHash mismatch for {file_path}.\n"
+            f"Expected: {expected_hash}\n"
+            f"Actual: {actual_hash}"
+        )
+    else:
+        logger.info(f"\nHash check passed: {file_path}")
 
 
 @beartype
