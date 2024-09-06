@@ -103,24 +103,36 @@ def rainbowplot_module(
 def create_rainbow_figure(
     number_of_genes: int,
     show_data: bool,
-    st_std: bool = False,
+    st_std: bool = True,
 ) -> Tuple[Figure, Dict[str, Axes]]:
     subplot_height = 0.9
-    horizontal_panels = 5 if show_data else 4
+    horizontal_panels = 6 if show_data else 5
     subplot_width = 1.5 * subplot_height * horizontal_panels
 
     fig = plt.figure(figsize=(subplot_width, subplot_height * number_of_genes))
-    gs = GridSpec(number_of_genes, horizontal_panels, figure=fig)
+    gs = GridSpec(
+        nrows=number_of_genes,
+        ncols=horizontal_panels,
+        figure=fig,
+        width_ratios=[
+            0.21,
+            [1] * (horizontal_panels - 1),
+        ],
+        wspace=0.2,
+        hspace=0.2,
+    )
 
     axes_dict = {}
     for n in range(number_of_genes):
-        axes_dict[f"phase_{n}"] = fig.add_subplot(gs[n, 0])
-        axes_dict[f"dynamics_{n}"] = fig.add_subplot(gs[n, 1])
-        axes_dict[f"predictive_{n}"] = fig.add_subplot(gs[n, 2])
+        axes_dict[f"gene_{n}"] = fig.add_subplot(gs[n, 0])
+        axes_dict[f"gene_{n}"].axis("off")
+        axes_dict[f"phase_{n}"] = fig.add_subplot(gs[n, 1])
+        axes_dict[f"dynamics_{n}"] = fig.add_subplot(gs[n, 2])
+        axes_dict[f"predictive_{n}"] = fig.add_subplot(gs[n, 3])
         if show_data:
-            axes_dict[f"data_{n}"] = fig.add_subplot(gs[n, 3])
+            axes_dict[f"data_{n}"] = fig.add_subplot(gs[n, 4])
         if st_std:
-            axes_dict[f"cv_{n}"] = fig.add_subplot(gs[n, 4])
+            axes_dict[f"cv_{n}"] = fig.add_subplot(gs[n, 5])
 
     return fig, axes_dict
 
