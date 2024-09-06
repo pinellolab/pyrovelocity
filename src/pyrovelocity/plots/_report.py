@@ -59,6 +59,7 @@ def plot_report(
     selected_genes: List[str],
     vector_field_basis: str = "emb",
     cell_state: str = "state_info",
+    state_color_dict: Optional[Dict[str, str]] = None,
     report_file_path: Path | str = "example_plot_report.pdf",
     figure_file_path: Path | str = "example_report_figure.dill.zst",
 ) -> FigureBase:
@@ -118,6 +119,7 @@ def plot_report(
     ...     selected_genes=selected_genes,
     ...     vector_field_basis=vector_field_basis,
     ...     cell_state=cell_state,
+    ...     state_color_dict=LARRY_CELL_TYPE_COLORS,
     ...     report_file_path="example_plot_report.pdf",
     ... )
     """
@@ -150,9 +152,9 @@ def plot_report(
     plot_vector_field_summary(
         adata=adata,
         posterior_samples=posterior_samples,
-        vector_field_basis="emb",
-        cell_state="state_info",
-        state_color_dict=LARRY_CELL_TYPE_COLORS,
+        vector_field_basis=vector_field_basis,
+        cell_state=cell_state,
+        state_color_dict=state_color_dict,
         fig=fig,
         gs=gs[0, :],
         default_fontsize=7,
