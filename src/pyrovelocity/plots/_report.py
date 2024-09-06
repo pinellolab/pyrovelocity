@@ -57,10 +57,10 @@ def plot_report(
     volcano_data: DataFrame,
     putative_marker_genes: List[str],
     selected_genes: List[str],
-    figure_file_path: Path | str = "example_report_figure.dill.zst",
     vector_field_basis: str = "emb",
     cell_state: str = "state_info",
     report_file_path: Path | str = "example_plot_report.pdf",
+    figure_file_path: Path | str = "example_report_figure.dill.zst",
 ) -> FigureBase:
     """
     Plot a report figure with multiple subplots and serialize the Figure object.
@@ -128,6 +128,24 @@ def plot_report(
         "width_ratios": [0.5, 0.25, 0.25],
     }
 
+    selected_genes_in_adata = list(
+        set(selected_genes).intersection(adata.var.index)
+    )
+
+    while len(selected_genes_in_adata) < 6:
+        for gene in putative_marker_genes:
+            if gene not in selected_genes_in_adata and gene in adata.var.index:
+                selected_genes_in_adata.append(gene)
+                if len(selected_genes_in_adata) == 6:
+                    break
+
+    extended_putative_marker_genes = list(
+        set(putative_marker_genes + selected_genes_in_adata)
+    )
+
+    selected_genes = selected_genes_in_adata
+    putative_marker_genes = extended_putative_marker_genes
+
     fig, axes, gs = create_main_figure(width, height, layout)
     plot_vector_field_summary(
         adata=adata,
@@ -181,6 +199,7 @@ def plot_report(
     add_panel_label(fig, "d", x_col1, 0.57)
 
     fig.savefig(report_file_path, format="pdf")
+    fig.savefig(f"{report_file_path}.png", format="png")
     CompressedPickle.save(figure_file_path, fig)
 
     return fig
