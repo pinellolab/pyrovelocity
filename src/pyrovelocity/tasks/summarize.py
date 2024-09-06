@@ -4,7 +4,9 @@ from typing import Tuple
 
 import matplotlib.pyplot as plt
 import scvelo as scv
+from anndata import AnnData
 from beartype import beartype
+from beartype.typing import List
 from pandas import DataFrame
 
 from pyrovelocity.analysis.analyze import top_mae_genes
@@ -284,7 +286,8 @@ def summarize_dataset(
         plot_gene_ranking(
             posterior_samples=posterior_samples,
             adata=adata,
-            selected_genes=putative_marker_genes,
+            putative_marker_genes=putative_marker_genes,
+            selected_genes=selected_genes,
             time_correlation_with="st",
             show_marginal_histograms=True,
             save_volcano_plot=True,
@@ -301,6 +304,7 @@ def summarize_dataset(
             posterior_samples=posterior_samples,
             adata=adata,
             geneset=putative_marker_genes,
+            save_plot=True,
             parameter_uncertainty_plot=parameter_uncertainty_plot,
         )
 
@@ -348,6 +352,7 @@ def summarize_dataset(
     else:
         logger.info(f"Generating figure: {vector_field_plot}")
         fig, ax = plt.subplots()
+        ax.axis("off")
 
         scv.pl.velocity_embedding_grid(
             adata,
@@ -355,7 +360,8 @@ def summarize_dataset(
             color=cell_state,
             title="",
             vkey="velocity_pyro",
-            linewidth=1,
+            s=1,
+            linewidth=0.5,
             ax=ax,
             show=False,
             legend_loc="right margin",
