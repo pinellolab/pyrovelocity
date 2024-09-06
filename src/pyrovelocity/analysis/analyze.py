@@ -337,6 +337,7 @@ def top_mae_genes(
     mae_top_percentile: int | float = 10.0,
     min_genes_per_bin: int = 2,
     max_genes_per_bin: Optional[int] = None,
+    gene_name_filter: str = "^Act|^Rpl|^Rps",
 ) -> List[str]:
     """
     Identify top genes based on Mean Absolute Error (MAE) percentile, excluding ribosomal genes,
@@ -361,7 +362,7 @@ def top_mae_genes(
         )
 
     filtered_data = volcano_data[
-        ~volcano_data.index.str.contains(("^Rpl|^Rps"), case=False)
+        ~volcano_data.index.str.contains((gene_name_filter), case=False)
     ]
 
     filtered_data["time_corr_bin"] = pd.cut(
