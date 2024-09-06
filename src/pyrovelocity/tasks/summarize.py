@@ -272,6 +272,7 @@ def summarize_dataset(
         volcano_data=volcano_data,
         mae_top_percentile=3,
         min_genes_per_bin=3,
+        max_genes_per_bin=5,
     )
 
     # volcano plot
