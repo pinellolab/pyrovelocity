@@ -159,12 +159,18 @@ class PostprocessConfiguration(DataClassJSONMixin):
 
 
 @dataclass
+class SummarizeConfiguration(DataClassJSONMixin):
+    selected_genes: list[str] = field(default_factory=lambda: [""])
+
+
+@dataclass
 class WorkflowConfiguration(DataClassJSONMixin):
     download_dataset: DownloadDatasetInterface
     preprocess_data: PreprocessDataInterface
     training_configuration_1: PyroVelocityTrainInterface
     training_configuration_2: PyroVelocityTrainInterface
     postprocess_configuration: PostprocessConfiguration
+    summarize_configuration: SummarizeConfiguration
     training_resources_requests: ResourcesJSON
     training_resources_limits: ResourcesJSON
     postprocessing_resources_requests: ResourcesJSON
@@ -259,12 +265,23 @@ simulated_train_model2_args = PyroVelocityTrainInterface(
 simulated_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
 )
+simulated_summary_configuration = SummarizeConfiguration(
+    selected_genes=[
+        "150",
+        "366",
+        "1853",
+        "1157",
+        "804",
+        "360",
+    ]
+)
 simulated_configuration = WorkflowConfiguration(
     download_dataset=simulated_dataset_args,
     preprocess_data=simulated_preprocess_data_args,
     training_configuration_1=simulated_train_model1_args,
     training_configuration_2=simulated_train_model2_args,
     postprocess_configuration=simulated_postprocess_configuration,
+    summary_configuration=simulated_summary_configuration,
     training_resources_requests=default_training_resource_requests,
     training_resources_limits=default_training_resource_limits,
     postprocessing_resources_requests=default_resource_requests,
@@ -300,12 +317,23 @@ pancreas_train_model2_args = PyroVelocityTrainInterface(
 pancreas_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
 )
+pancreas_summary_configuration = SummarizeConfiguration(
+    selected_genes=[
+        "Cpe",
+        "Ins2",
+        "Cck",
+        "Ttr",
+        "Krt7",
+        "Spp1",
+    ]
+)
 pancreas_configuration = WorkflowConfiguration(
     download_dataset=pancreas_dataset_args,
     preprocess_data=pancreas_preprocess_data_args,
     training_configuration_1=pancreas_train_model1_args,
     training_configuration_2=pancreas_train_model2_args,
     postprocess_configuration=pancreas_postprocess_configuration,
+    summarize_configuration=pancreas_summary_configuration,
     training_resources_requests=default_training_resource_requests,
     training_resources_limits=default_training_resource_limits,
     postprocessing_resources_requests=medium_resource_requests,
@@ -341,12 +369,23 @@ bonemarrow_train_model2_args = PyroVelocityTrainInterface(
 bonemarrow_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
 )
+bonemarrow_summary_configuration = SummarizeConfiguration(
+    selected_genes=[
+        "ELANE",
+        "HDAC7",
+        "CITED2",
+        "SLC40A1",
+        "VPREB1",
+        "MYB",
+    ]
+)
 bonemarrow_configuration = WorkflowConfiguration(
     download_dataset=bonemarrow_dataset_args,
     preprocess_data=bonemarrow_preprocess_data_args,
     training_configuration_1=bonemarrow_train_model1_args,
     training_configuration_2=bonemarrow_train_model2_args,
     postprocess_configuration=bonemarrow_postprocess_configuration,
+    summarize_configuration=bonemarrow_summary_configuration,
     training_resources_requests=default_training_resource_requests,
     training_resources_limits=default_training_resource_limits,
     postprocessing_resources_requests=medium_resource_requests,
@@ -383,12 +422,23 @@ pbmc5k_train_model2_args = PyroVelocityTrainInterface(
 pbmc5k_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
 )
+pbmc5k_summary_configuration = SummarizeConfiguration(
+    selected_genes=[
+        "LYZ",
+        "S100A9",
+        "IGHM",
+        "HLA-DQA1",
+        "MS4A1",
+        "IL32",
+    ]
+)
 pbmc5k_configuration = WorkflowConfiguration(
     download_dataset=pbmc5k_dataset_args,
     preprocess_data=pbmc5k_preprocess_data_args,
     training_configuration_1=pbmc5k_train_model1_args,
     training_configuration_2=pbmc5k_train_model2_args,
     postprocess_configuration=pbmc5k_postprocess_configuration,
+    summarize_configuration=pbmc5k_summary_configuration,
     training_resources_requests=large_training_resource_requests,
     training_resources_limits=large_training_resource_limits,
     postprocessing_resources_requests=large_resource_requests,
@@ -425,12 +475,23 @@ pbmc10k_train_model2_args = PyroVelocityTrainInterface(
 pbmc10k_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
 )
+pbmc10k_summary_configuration = SummarizeConfiguration(
+    selected_genes=[
+        "LYZ",
+        "S100A9",
+        "IGHM",
+        "HLA-DQA1",
+        "MS4A1",
+        "IL32",
+    ]
+)
 pbmc10k_configuration = WorkflowConfiguration(
     download_dataset=pbmc10k_dataset_args,
     preprocess_data=pbmc10k_preprocess_data_args,
     training_configuration_1=pbmc10k_train_model1_args,
     training_configuration_2=pbmc10k_train_model2_args,
     postprocess_configuration=pbmc10k_postprocess_configuration,
+    summarize_configuration=pbmc10k_summary_configuration,
     training_resources_requests=large_training_resource_requests,
     training_resources_limits=large_training_resource_limits,
     postprocessing_resources_requests=large_resource_requests,
@@ -469,12 +530,23 @@ pbmc68k_train_model2_args = PyroVelocityTrainInterface(
 pbmc68k_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
 )
+pbmc68k_summary_configuration = SummarizeConfiguration(
+    selected_genes=[
+        "TPT1",
+        "EEF1A1",
+        "LTB",
+        "GNLY",
+        "TMSB4X",
+        "FTL",
+    ]
+)
 pbmc68k_configuration = WorkflowConfiguration(
     download_dataset=pbmc68k_dataset_args,
     preprocess_data=pbmc68k_preprocess_data_args,
     training_configuration_1=pbmc68k_train_model1_args,
     training_configuration_2=pbmc68k_train_model2_args,
     postprocess_configuration=pbmc68k_postprocess_configuration,
+    summarize_configuration=pbmc68k_summary_configuration,
     training_resources_requests=large_training_resource_requests,
     training_resources_limits=large_training_resource_limits,
     postprocessing_resources_requests=large_resource_requests,
@@ -511,12 +583,23 @@ pons_train_model2_args = PyroVelocityTrainInterface(
 pons_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
 )
+pons_summary_configuration = SummarizeConfiguration(
+    selected_genes=[
+        "Mag",
+        "Cldn11",
+        "Cntn1",
+        "Marcks",
+        "Tubb4a",
+        "Mbp",
+    ]
+)
 pons_configuration = WorkflowConfiguration(
     download_dataset=pons_dataset_args,
     preprocess_data=pons_preprocess_data_args,
     training_configuration_1=pons_train_model1_args,
     training_configuration_2=pons_train_model2_args,
     postprocess_configuration=pons_postprocess_configuration,
+    summarize_configuration=pons_summary_configuration,
     training_resources_requests=default_training_resource_requests,
     training_resources_limits=default_training_resource_limits,
     postprocessing_resources_requests=medium_resource_requests,
@@ -553,12 +636,23 @@ larry_neu_train_model2_args = PyroVelocityTrainInterface(
 larry_neu_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
 )
+larry_neu_summary_configuration = SummarizeConfiguration(
+    selected_genes=[
+        "S100a8",
+        "S100a9",
+        "Ngp",
+        "Lilrb4",
+        "Mpp1",
+        "Srgn",
+    ]
+)
 larry_neu_configuration = WorkflowConfiguration(
     download_dataset=larry_neu_dataset_args,
     preprocess_data=larry_neu_preprocess_data_args,
     training_configuration_1=larry_neu_train_model1_args,
     training_configuration_2=larry_neu_train_model2_args,
     postprocess_configuration=larry_neu_postprocess_configuration,
+    summarize_configuration=larry_neu_summary_configuration,
     training_resources_requests=default_training_resource_requests,
     training_resources_limits=default_training_resource_limits,
     postprocessing_resources_requests=medium_resource_requests,
@@ -595,12 +689,23 @@ larry_mono_train_model2_args = PyroVelocityTrainInterface(
 larry_mono_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
 )
+larry_mono_summary_configuration = SummarizeConfiguration(
+    selected_genes=[
+        "Vim",
+        "Fcer1g",
+        "Fth1",
+        "Ctsc",
+        "Itm2b",
+        "Sell",
+    ]
+)
 larry_mono_configuration = WorkflowConfiguration(
     download_dataset=larry_mono_dataset_args,
     preprocess_data=larry_mono_preprocess_data_args,
     training_configuration_1=larry_mono_train_model1_args,
     training_configuration_2=larry_mono_train_model2_args,
     postprocess_configuration=larry_mono_postprocess_configuration,
+    summarize_configuration=larry_mono_summary_configuration,
     training_resources_requests=default_training_resource_requests,
     training_resources_limits=default_training_resource_limits,
     postprocessing_resources_requests=medium_resource_requests,
@@ -637,12 +742,23 @@ larry_multilineage_train_model2_args = PyroVelocityTrainInterface(
 larry_multilineage_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
 )
+larry_multilineage_summary_configuration = SummarizeConfiguration(
+    selected_genes=[
+        "Itgb2",
+        "S100a9",
+        "Fcer1g",
+        "Lilrb4",
+        "Vim",
+        "Serbp1",
+    ]
+)
 larry_multilineage_configuration = WorkflowConfiguration(
     download_dataset=larry_multilineage_dataset_args,
     preprocess_data=larry_multilineage_preprocess_data_args,
     training_configuration_1=larry_multilineage_train_model1_args,
     training_configuration_2=larry_multilineage_train_model2_args,
     postprocess_configuration=larry_multilineage_postprocess_configuration,
+    summarize_configuration=larry_multilineage_summary_configuration,
     training_resources_requests=default_training_resource_requests,
     training_resources_limits=default_training_resource_limits,
     postprocessing_resources_requests=medium_resource_requests,
@@ -681,6 +797,16 @@ larry_train_model2_args = PyroVelocityTrainInterface(
 larry_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
 )
+larry_summary_configuration = SummarizeConfiguration(
+    selected_genes=[
+        "Itgb2",
+        "S100a8",
+        "Lyz2",
+        "Fcer1g",
+        "Csf2rb",
+        "Ms4a3",
+    ]
+)
 larry_accelerator_type = "nvidia-tesla-a100"
 larry_configuration = WorkflowConfiguration(
     download_dataset=larry_dataset_args,
@@ -688,6 +814,7 @@ larry_configuration = WorkflowConfiguration(
     training_configuration_1=larry_train_model1_args,
     training_configuration_2=larry_train_model2_args,
     postprocess_configuration=larry_postprocess_configuration,
+    summarize_configuration=larry_summary_configuration,
     training_resources_requests=extra_large_training_resource_requests,
     training_resources_limits=extra_large_training_resource_limits,
     postprocessing_resources_requests=large_resource_requests,
