@@ -743,11 +743,7 @@ def training_workflow(
     ]
 
     configurations = [
-        (larry_mono_configuration, "larry_mono"),
-        (larry_neu_configuration, "larry_neu"),
-        (larry_multilineage_configuration, "larry_multilineage"),
-        (larry_configuration, "larry"),
-        # (simulated_configuration, "simulated"),
+        (simulated_configuration, "simulated"),
     ]
 
     if not PYROVELOCITY_DATA_SUBSET:
