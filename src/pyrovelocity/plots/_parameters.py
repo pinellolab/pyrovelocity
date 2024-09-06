@@ -158,7 +158,7 @@ def plot_parameter_posterior_distributions(
             inner_kws=dict(
                 box_width=1.5,
                 whis_width=0.75,
-                color=".8",
+                color="1",
             ),
             log_scale=log_base,
         )
