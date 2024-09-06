@@ -116,7 +116,7 @@ def create_rainbow_figure(
         figure=fig,
         width_ratios=[
             0.21,
-            [1] * (horizontal_panels - 1),
+            *([1] * (horizontal_panels - 1)),
         ],
         wspace=0.2,
         hspace=0.2,
