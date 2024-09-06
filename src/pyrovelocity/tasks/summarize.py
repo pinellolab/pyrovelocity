@@ -15,10 +15,12 @@ from pyrovelocity.plots import (
     plot_gene_ranking,
     plot_gene_selection_summary,
     plot_parameter_posterior_distributions,
+    plot_report,
     plot_shared_time_uncertainty,
     plot_vector_field_summary,
     posterior_curve,
     rainbowplot,
+    save_subfigures,
 )
 from pyrovelocity.styles.colors import LARRY_CELL_TYPE_COLORS
 from pyrovelocity.utils import (
