@@ -132,9 +132,18 @@ def larry_neu(
         Returns `AnnData` object
     """
     url = "https://figshare.com/ndownloader/files/37028575"
-    adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
-    adata = adata[adata.obs.state_info != "Centroid", :]
-    adata.write(file_path)
+
+    if os.path.isfile(file_path):
+        adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+    else:
+        adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+        premodification_hash = (
+            "ae4113834a1318168c92715887173d27bf88c57ccbd715e69481b13cf2539b92"
+        )
+        _check_hash(file_path, premodification_hash)
+        adata = adata[adata.obs.state_info != "Centroid", :]
+        adata.write(file_path)
+
     expected_hash = (
         "384784699c10e192677c006bb407aaedbdf3e3c66f1ca1f4d8d1284ddf8fa436"
     )
@@ -157,9 +166,18 @@ def larry_mono(
         Returns `AnnData` object
     """
     url = "https://figshare.com/ndownloader/files/37028572"
-    adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
-    adata = adata[adata.obs.state_info != "Centroid", :]
-    adata.write(file_path)
+
+    if os.path.isfile(file_path):
+        adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+    else:
+        adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+        premodification_hash = (
+            "b880b7f72f0ccc8b11ca63c53d340983a6d478e214d4960a529d6e02a9ccd597"
+        )
+        _check_hash(file_path, premodification_hash)
+        adata = adata[adata.obs.state_info != "Centroid", :]
+        adata.write(file_path)
+
     expected_hash = (
         "75e59aa7f0d47d2d013dc7444f89a858363110ba32d7a576ac3dc819cac0afa8"
     )
@@ -269,10 +287,13 @@ def larry_multilineage(
     Returns:
         Returns `AnnData` object
     """
-    adata_larry_mono = larry_mono()
-    adata_larry_neu = larry_neu()
-    adata = adata_larry_mono.concatenate(adata_larry_neu)
-    adata.write(file_path)
+    if os.path.isfile(file_path):
+        adata = sc.read(file_path, sparse=True, cache=True)
+    else:
+        adata_larry_mono = larry_mono()
+        adata_larry_neu = larry_neu()
+        adata = adata_larry_mono.concatenate(adata_larry_neu)
+        adata.write(file_path)
     expected_hash = (
         "9add35ae4f736aa5e11d076eadb3b1d842dbc88102047f029bd7fa0929f46be0"
     )
@@ -354,6 +375,10 @@ def pbmc68k(
         adata = scv.datasets.pbmc68k(file_path=file_path)
     else:
         adata = scv.datasets.pbmc68k(file_path=file_path)
+        premodification_hash = (
+            "c93b1ccad909b6a41539a57975737bd946ea1becce066c250aca129d8dfa26fb"
+        )
+        _check_hash(file_path, premodification_hash)
         scv.pp.remove_duplicate_cells(adata)
         adata.obsm["X_tsne"][:, 0] *= -1
         adata.write(file_path)
