@@ -334,6 +334,9 @@ def summarize_dataset(
             selected_genes=selected_genes,
             vector_field_basis=vector_field_basis,
             cell_state=cell_state,
+            state_color_dict=LARRY_CELL_TYPE_COLORS
+            if "larry" in data_model
+            else None,
             report_file_path=gene_selection_summary_plot,
             figure_file_path=f"{gene_selection_summary_plot}.dill.zst",
         )
