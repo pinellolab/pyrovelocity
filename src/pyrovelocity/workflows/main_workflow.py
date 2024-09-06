@@ -52,6 +52,7 @@ from pyrovelocity.workflows.main_configuration import (
     PostprocessOutputs,
     PreprocessOutputs,
     ResourcesJSON,
+    SummarizeConfiguration,
     SummarizeOutputs,
     TrainingOutputs,
     WorkflowConfiguration,
@@ -263,6 +264,7 @@ def summarize_data(
     preprocess_data_args: PreprocessDataInterface,
     postprocessing_outputs: PostprocessOutputs,
     training_outputs: TrainingOutputs,
+    summarize_configuration: SummarizeConfiguration,
 ) -> SummarizeOutputs:
     model_path = training_outputs.model_path.download()
     pyrovelocity_data_path = postprocessing_outputs.pyrovelocity_data.download()
@@ -288,6 +290,7 @@ def summarize_data(
         postprocessed_data_path=postprocessed_data_path,
         cell_state=preprocess_data_args.cell_state,
         vector_field_basis=preprocess_data_args.vector_field_basis,
+        selected_genes=summarize_configuration.selected_genes,
     )
     print(
         f"\ndata_model_reports_path: {data_model_reports_path}\n",
@@ -397,6 +400,7 @@ def map_model_configurations_over_data_set(
     train_model_configuration_1: PyroVelocityTrainInterface = PyroVelocityTrainInterface(),
     train_model_configuration_2: PyroVelocityTrainInterface = PyroVelocityTrainInterface(),
     postprocess_configuration: PostprocessConfiguration = PostprocessConfiguration(),
+    summarize_configuration: SummarizeConfiguration = SummarizeConfiguration(),
     train_model_resource_requests: ResourcesJSON = default_training_resource_requests,
     train_model_resource_limits: ResourcesJSON = default_training_resource_limits,
     postprocessing_resource_requests: ResourcesJSON = default_resource_requests,
@@ -471,6 +475,7 @@ def map_model_configurations_over_data_set(
             preprocess_data_args=preprocess_data_args,
             postprocessing_outputs=postprocessing_output,
             training_outputs=training_output,
+            summarize_configuration=summarize_configuration,
         ).with_overrides(
             requests=Resources(**asdict(summarizing_resource_requests)),
             limits=Resources(**asdict(summarizing_resource_limits)),
@@ -753,6 +758,7 @@ def training_workflow(
             train_model_configuration_1=config.training_configuration_1,
             train_model_configuration_2=config.training_configuration_2,
             postprocess_configuration=config.postprocess_configuration,
+            summarize_configuration=config.summarize_configuration,
             train_model_resource_requests=config.training_resources_requests,
             train_model_resource_limits=config.training_resources_limits,
             postprocessing_resource_requests=config.postprocessing_resources_requests,
