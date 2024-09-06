@@ -42,8 +42,8 @@ def plot_gene_ranking(
     ax: Optional[Axes] = None,
     gs: Optional[GridSpec | SubplotSpec] = None,
     time_correlation_with: str = "s",
-    selected_genes: Optional[List[str]] = None,
-    rainbow_genes: List[str] = [""],
+    putative_marker_genes: Optional[List[str]] = None,
+    selected_genes: List[str] = [""],
     assemble: bool = False,
     negative: bool = False,
     show_marginal_histograms: bool = False,
@@ -52,17 +52,17 @@ def plot_gene_ranking(
     defaultfontsize=7,
     show_xy_labels: bool = False,
 ) -> Tuple[DataFrame, Optional[FigureBase]]:
-    if selected_genes is not None:
-        assert isinstance(selected_genes, (tuple, list))
-        assert isinstance(selected_genes[0], str)
+    if putative_marker_genes is not None:
+        assert isinstance(putative_marker_genes, (tuple, list))
+        assert isinstance(putative_marker_genes[0], str)
         volcano_data = posterior_samples["gene_ranking"]
-        genes = selected_genes
+        genes = putative_marker_genes
     elif "u" in posterior_samples:
         volcano_data, genes = compute_volcano_data(
             posterior_samples,
             adata,
             time_correlation_with,
-            selected_genes,
+            putative_marker_genes,
             negative,
         )
     else:
@@ -214,7 +214,7 @@ def plot_gene_ranking(
             volcano_data.loc[g, :].time_correlation,
             volcano_data.loc[g, :].mean_mae,
             s=15,
-            color=dark_orange if g in rainbow_genes else light_orange,
+            color=dark_orange if g in selected_genes else light_orange,
             marker="*",
         )
         new_text = ax.text(
