@@ -10,7 +10,6 @@ from matplotlib.gridspec import GridSpec
 from numpy.typing import NDArray
 from pandas import DataFrame
 
-from pyrovelocity.analysis.analyze import top_mae_genes
 from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.plots._genes import plot_gene_ranking
 from pyrovelocity.plots._parameters import (
@@ -20,7 +19,6 @@ from pyrovelocity.plots._rainbow import rainbowplot_module as rainbowplot
 from pyrovelocity.plots._vector_fields import plot_vector_field_summary
 from pyrovelocity.styles import configure_matplotlib_style
 from pyrovelocity.styles.colors import LARRY_CELL_TYPE_COLORS
-from pyrovelocity.utils import load_anndata_from_path
 
 configure_matplotlib_style()
 
@@ -92,6 +90,10 @@ def plot_report(
 
     Examples:
     >>> # xdoctest: +SKIP
+    >>> from pyrovelocity.analysis.analyze import top_mae_genes
+    >>> from pyrovelocity.plots import plot_report
+    >>> from pyrovelocity.utils import load_anndata_from_path
+    ...
     >>> adata = load_anndata_from_path("models/larry_model2/postprocessed.h5ad")
     >>> posterior_samples = CompressedPickle.load(
     ...     "models/larry_model2/pyrovelocity.pkl.zst"
@@ -107,6 +109,7 @@ def plot_report(
     >>> rainbow_genes = putative_marker_genes[:6]
     >>> rainbow_genes = ["Cyp11a1", "Csf2rb", "Osbpl8", "Lgals1", "Cmtm7", "Runx1"]
     >>> putative_marker_genes = list(set(putative_marker_genes + rainbow_genes))
+    ...
     >>> plot_report(
     ...     adata=adata,
     ...     posterior_samples=posterior_samples,
