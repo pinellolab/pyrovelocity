@@ -90,9 +90,9 @@ CACHE_VERSION = "2024.8.15"
 DOWNLOAD_CACHE_VERSION = f"{CACHE_VERSION}.0"
 PREPROCESS_CACHE_VERSION = f"{CACHE_VERSION}.0"
 TRAIN_CACHE_VERSION = f"{CACHE_VERSION}.0"
-POSTPROCESS_CACHE_VERSION = f"{CACHE_VERSION}.0"
-SUMMARIZE_CACHE_VERSION = f"{CACHE_VERSION}.1"
-UPLOAD_CACHE_VERSION = f"{CACHE_VERSION}.5"
+POSTPROCESS_CACHE_VERSION = f"{CACHE_VERSION}.1"
+SUMMARIZE_CACHE_VERSION = f"{CACHE_VERSION}.2"
+UPLOAD_CACHE_VERSION = f"{CACHE_VERSION}.6"
 LINEAGE_FATE_CORRELATION_CACHE_VERSION = f"{CACHE_VERSION}.5"
 COMBINE_METRICS_CACHE_VERSION = f"{CACHE_VERSION}.5"
 DEFAULT_ACCELERATOR_TYPE: GPUAccelerator = T4
@@ -743,7 +743,11 @@ def training_workflow(
     ]
 
     configurations = [
-        (simulated_configuration, "simulated"),
+        (larry_mono_configuration, "larry_mono"),
+        (larry_neu_configuration, "larry_neu"),
+        (larry_multilineage_configuration, "larry_multilineage"),
+        (larry_configuration, "larry"),
+        # (simulated_configuration, "simulated"),
     ]
 
     if not PYROVELOCITY_DATA_SUBSET:
