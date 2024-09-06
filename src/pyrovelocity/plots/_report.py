@@ -56,7 +56,7 @@ def plot_report(
     posterior_samples: Dict[str, NDArray[Any]],
     volcano_data: DataFrame,
     putative_marker_genes: List[str],
-    rainbow_genes: List[str],
+    selected_genes: List[str],
     figure_file_path: Path | str = "example_report_figure.dill.zst",
     vector_field_basis: str = "emb",
     cell_state: str = "state_info",
@@ -80,8 +80,8 @@ def plot_report(
             Cell state identifier. Defaults to "state_info".
         putative_marker_genes (List[str], optional):
             List of putative marker genes. Defaults to putative_marker_genes.
-        rainbow_genes (List[str], optional):
-            List of genes to be included in report figure. Defaults to rainbow_genes.
+        selected_genes (List[str], optional):
+            List of genes to be included in report figure. Defaults to selected_genes.
         report_file_path (Path | str, optional):
             File to save report figure. Defaults to "example_plot_report.pdf".
 
@@ -106,16 +106,16 @@ def plot_report(
     ...     mae_top_percentile=3,
     ...     min_genes_per_bin=3,
     ... )
-    >>> rainbow_genes = putative_marker_genes[:6]
-    >>> rainbow_genes = ["Cyp11a1", "Csf2rb", "Osbpl8", "Lgals1", "Cmtm7", "Runx1"]
-    >>> putative_marker_genes = list(set(putative_marker_genes + rainbow_genes))
+    >>> selected_genes = putative_marker_genes[:6]
+    >>> selected_genes = ["Cyp11a1", "Csf2rb", "Osbpl8", "Lgals1", "Cmtm7", "Runx1"]
+    >>> putative_marker_genes = list(set(putative_marker_genes + selected_genes))
     ...
     >>> plot_report(
     ...     adata=adata,
     ...     posterior_samples=posterior_samples,
     ...     volcano_data=volcano_data,
     ...     putative_marker_genes=putative_marker_genes,
-    ...     rainbow_genes=rainbow_genes,
+    ...     selected_genes=selected_genes,
     ...     vector_field_basis=vector_field_basis,
     ...     cell_state=cell_state,
     ...     report_file_path="example_plot_report.pdf",
@@ -145,8 +145,8 @@ def plot_report(
         adata=adata,
         fig=fig,
         gs=gs[1, 0],
-        selected_genes=putative_marker_genes,
-        rainbow_genes=rainbow_genes,
+        putative_marker_genes=putative_marker_genes,
+        selected_genes=selected_genes,
         time_correlation_with="st",
         show_marginal_histograms=False,
     )
@@ -154,7 +154,7 @@ def plot_report(
     plot_parameter_posterior_distributions(
         posterior_samples=posterior_samples,
         adata=adata,
-        geneset=rainbow_genes,
+        geneset=selected_genes,
         fig=fig,
         gs=gs[1, 1:],
     )
@@ -163,7 +163,7 @@ def plot_report(
         volcano_data=volcano_data,
         adata=adata,
         posterior_samples=posterior_samples,
-        genes=rainbow_genes,
+        genes=selected_genes,
         data=["st", "ut"],
         basis=vector_field_basis,
         cell_state=cell_state,
