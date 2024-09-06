@@ -19,9 +19,9 @@ from pyrovelocity.plots import (
     plot_shared_time_uncertainty,
     plot_vector_field_summary,
     posterior_curve,
-    rainbowplot,
     save_subfigures,
 )
+from pyrovelocity.plots._rainbow import rainbowplot_module as rainbowplot
 from pyrovelocity.styles.colors import LARRY_CELL_TYPE_COLORS
 from pyrovelocity.utils import (
     save_anndata_counts_to_dataframe,
@@ -44,6 +44,7 @@ def summarize_dataset(
     vector_field_basis: str,
     reports_path: str | Path = "reports",
     enable_experimental_plots: bool = False,
+    selected_genes: list[str] = [""],
 ) -> Tuple[Path, Path]:
     """
     Construct summary plots for each data set and model.
@@ -287,6 +288,7 @@ def summarize_dataset(
             show_marginal_histograms=True,
             save_volcano_plot=True,
             volcano_plot_path=volcano_plot,
+            show_xy_labels=True,
         )
 
     # parameter uncertainty plot
@@ -323,14 +325,17 @@ def summarize_dataset(
         logger.info(f"{gene_selection_summary_plot} exists")
     else:
         logger.info(f"Generating figure: {gene_selection_summary_plot}")
-        plot_gene_selection_summary(
+
+        plot_report(
             adata=adata,
             posterior_samples=posterior_samples,
-            basis=vector_field_basis,
+            volcano_data=volcano_data,
+            putative_marker_genes=putative_marker_genes,
+            selected_genes=selected_genes,
+            vector_field_basis=vector_field_basis,
             cell_state=cell_state,
-            plot_name=gene_selection_summary_plot,
-            selected_genes=putative_marker_genes,
-            show_marginal_histograms=False,
+            report_file_path=gene_selection_summary_plot,
+            figure_file_path=f"{gene_selection_summary_plot}.dill.zst",
         )
 
     # mean vector field plot
