@@ -336,6 +336,7 @@ def top_mae_genes(
     volcano_data: pd.DataFrame,
     mae_top_percentile: int | float = 10.0,
     min_genes_per_bin: int = 2,
+    max_genes_per_bin: Optional[int] = None,
 ) -> List[str]:
     """
     Identify top genes based on Mean Absolute Error (MAE) percentile, excluding ribosomal genes,
@@ -345,6 +346,7 @@ def top_mae_genes(
         volcano_data (pd.DataFrame): DataFrame containing MAE and time correlation
         mae_top_percentile (float): Percentile threshold for selecting top MAE genes (0-100)
         min_genes_per_bin (int): Minimum number of genes to select from each bin
+        max_genes_per_bin (Optional[int]): Maximum number of genes to select from each bin
 
     Returns:
         List[str]: List of gene indices from volcano_data, sorted by time correlation.
@@ -353,6 +355,10 @@ def top_mae_genes(
         raise ValueError("mae_top_percentile must be between 0 and 100")
     if min_genes_per_bin < 0:
         raise ValueError("min_genes_per_bin must be non-negative")
+    if max_genes_per_bin is not None and max_genes_per_bin < min_genes_per_bin:
+        raise ValueError(
+            "max_genes_per_bin must be greater than or equal to min_genes_per_bin"
+        )
 
     filtered_data = volcano_data[
         ~volcano_data.index.str.contains(("^Rpl|^Rps"), case=False)
@@ -381,6 +387,13 @@ def top_mae_genes(
 
         if len(top_genes_in_bin) < min_genes_per_bin:
             top_genes_in_bin = bin_data.nlargest(min_genes_per_bin, "mean_mae")
+        elif (
+            max_genes_per_bin is not None
+            and len(top_genes_in_bin) > max_genes_per_bin
+        ):
+            top_genes_in_bin = top_genes_in_bin.nlargest(
+                max_genes_per_bin, "mean_mae"
+            )
 
         selected_genes.append(top_genes_in_bin)
 
@@ -394,7 +407,8 @@ def top_mae_genes(
 
     logger.info(
         f"\nSelected {len(gene_indices)} genes based on top {mae_top_percentile}% MAE "
-        f"from 8 time correlation bins, with a minimum of {min_genes_per_bin} genes per bin, "
+        f"from 8 time correlation bins, with a minimum of {min_genes_per_bin} genes per bin"
+        f"{f' and a maximum of {max_genes_per_bin} genes per bin' if max_genes_per_bin else ''}, "
         f"sorted by time correlation:\n\n"
         f"  {gene_indices}\n\n"
     )
