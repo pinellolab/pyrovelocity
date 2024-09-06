@@ -10,6 +10,7 @@ from pyro.infer.autoguide import AutoLowRankMultivariateNormal
 from pyro.infer.autoguide import AutoNormal
 from pyro.infer.autoguide.guides import AutoGuideList
 from scvi.module.base import PyroBaseModuleClass
+from scvi import REGISTRY_KEYS
 
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models.knn_model._velocity_model import VelocityModelAuto
@@ -73,6 +74,7 @@ class VelocityModule(PyroBaseModuleClass):
         self,
         num_cells: int,
         num_genes: int,
+        n_batch: int,
         model_type: str = "auto",
         guide_type: str = "velocity_auto",
         likelihood: str = "Poisson",
@@ -97,6 +99,7 @@ class VelocityModule(PyroBaseModuleClass):
         super().__init__()
         self.num_cells = num_cells
         self.num_genes = num_genes
+        self.n_batch = n_batch
         self.model_type = model_type
         self.guide_type = guide_type
         self._model = None
@@ -112,21 +115,7 @@ class VelocityModule(PyroBaseModuleClass):
         self._model = VelocityModelAuto(
             self.num_cells,
             self.num_genes,
-            likelihood,
-            shared_time,
-            t_scale_on,
-            self.plate_size,
-            latent_factor,
-            latent_factor_operation=latent_factor_operation,
-            latent_factor_size=latent_factor_size,
-            include_prior=include_prior,
-            num_aux_cells=num_aux_cells,
-            only_cell_times=self.only_cell_times,
-            decoder_on=decoder_on,
-            add_offset=add_offset,
-            correct_library_size=correct_library_size,
-            guide_type=self.guide_type,
-            cell_specific_kinetics=self.cell_specific_kinetics,
+            self.n_batch,
             **initial_values,
         )
 
@@ -138,7 +127,7 @@ class VelocityModule(PyroBaseModuleClass):
                 poutine.block(
                     self._model,
                     expose=[
-                        "cell_time",
+                        "Tmax",
                         "u_read_depth",
                         "s_read_depth",
                         "kinetics_prob",
@@ -154,8 +143,7 @@ class VelocityModule(PyroBaseModuleClass):
                 AutoLowRankMultivariateNormal(
                     poutine.block(
                         self._model,
-                        expose=[
-                            "dt_switching",
+                        expose=["detection_y_c",
                         ],
                     ),
                     rank=10,
@@ -168,7 +156,6 @@ class VelocityModule(PyroBaseModuleClass):
                     poutine.block(
                         self._model,
                         expose=[
-                            "alpha",
                             "beta",
                             "gamma",
                             "dt_switching",
@@ -201,12 +188,6 @@ class VelocityModule(PyroBaseModuleClass):
             torch.Tensor,
             torch.Tensor,
             torch.Tensor,
-            torch.Tensor,
-            torch.Tensor,
-            torch.Tensor,
-            torch.Tensor,
-            torch.Tensor,
-            torch.Tensor,
         ],
         Dict[Any, Any],
     ]:
@@ -214,10 +195,13 @@ class VelocityModule(PyroBaseModuleClass):
         s_obs = tensor_dict["X"]
         N_cn = tensor_dict["N_cn"]
         ind_x = tensor_dict["ind_x"].long().squeeze()
+        batch_index = tensor_dict[REGISTRY_KEYS.BATCH_KEY]
         return (
             u_obs,
             s_obs,
-            N_cn
+            N_cn,
+            ind_x,
+            batch_index
         ), {}
         
 class MultiVelocityModule(PyroBaseModuleClass):
@@ -299,6 +283,7 @@ class MultiVelocityModule(PyroBaseModuleClass):
         super().__init__()
         self.num_cells = num_cells
         self.num_genes = num_genes
+        self.n_genes = num_genes
         self.model_type = model_type
         self.guide_type = guide_type
         self._model = None
@@ -340,11 +325,8 @@ class MultiVelocityModule(PyroBaseModuleClass):
                 poutine.block(
                     self._model,
                     expose=[
-                        "cell_time",
-                        "u_read_depth",
-                        "s_read_depth",
-                        "kinetics_prob",
-                        "kinetics_weights",
+                        "Tmax",
+                        't_c_loc'
                     ],
                 ),
                 init_scale=0.1,
@@ -357,7 +339,8 @@ class MultiVelocityModule(PyroBaseModuleClass):
                     poutine.block(
                         self._model,
                         expose=[
-                            "dt_switching",
+                            "Tmax",
+                            
                         ],
                     ),
                     rank=10,
@@ -370,13 +353,7 @@ class MultiVelocityModule(PyroBaseModuleClass):
                     poutine.block(
                         self._model,
                         expose=[
-                            "alpha",
-                            "beta",
-                            "gamma",
-                            "dt_switching",
-                            "t0",
-                            "u_scale",
-                            "s_scale",
+                            "Tmax",
                         ],
                     ),
                     rank=10,

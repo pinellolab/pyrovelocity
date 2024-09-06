@@ -9,7 +9,9 @@ from pyro import poutine
 from pyro.distributions import Bernoulli, LogNormal, Normal, Poisson
 from pyro.nn import PyroModule, PyroSample
 from pyro.primitives import plate
+import pyro.distributions as dist
 from scvi.nn import Decoder
+from scvi.nn import one_hot
 from torch.nn.functional import relu, softplus
 from torch import Tensor
 
@@ -36,6 +38,43 @@ __all__ = [
     "VelocityModelAuto",
     "MultiVelocityModelAuto",
 ]
+
+def G_a(mu, sd):
+    """
+    Converts mean and standard deviation for a Gamma distribution into the shape parameter.
+
+    Parameters
+    ----------
+    mu
+        The mean of the Gamma distribution.
+    sd
+        The standard deviation of the Gamma distribution.
+
+    Returns
+    -------
+    Float
+        The shape parameter of the Gamma distribution.
+    """
+    return mu**2/sd**2
+
+def G_b(mu, sd):
+    """
+    Converts mean and standard deviation for a Gamma distribution into the scale parameter.
+
+    Parameters
+    ----------
+    mu
+        The mean of the Gamma distribution.
+    sd
+        The standard deviation of the Gamma distribution.
+
+    Returns
+    -------
+    Float
+        The scale parameter of the Gamma distribution.
+    """
+    
+    return mu/sd**2
 
 class VelocityModelAuto(PyroModule):
     """Automatically configured velocity model.
@@ -119,13 +158,18 @@ class VelocityModelAuto(PyroModule):
         Tmax_prior={"mean": 50., "sd": 50.},
         **initial_values,
     ) -> None:
+        
+        super().__init__()
+        
         assert num_cells > 0 and num_genes > 0
-        super().__init__(num_cells, num_genes, likelihood, plate_size)
         self.num_aux_cells = num_aux_cells
         self.only_cell_times = only_cell_times
         self.guide_type = guide_type
         self.cell_specific_kinetics = cell_specific_kinetics
         self.k = kinetics_num
+        self.num_cells = num_cells
+        self.num_genes = num_genes
+        self.n_genes = num_genes
 
         self.mask = initial_values.get(
             "mask", torch.ones(self.num_cells, self.num_genes).bool()
@@ -247,7 +291,36 @@ class VelocityModelAuto(PyroModule):
         )
         
         self.register_buffer("one", torch.tensor(1.))
+        self.register_buffer("ones", torch.ones((1, 1)))
 
+    @beartype
+    def create_plates(self,
+            u_obs: torch.Tensor,
+            s_obs: torch.Tensor,
+            N_cn: torch.Tensor,
+            ind_x: torch.Tensor,
+            batch_index: torch.Tensor):
+        """
+        Creates a Pyro plate for observations.
+
+        Parameters
+        ----------
+        u_obs
+            Unspliced count data.
+        s_obs
+            Spliced count data.
+        ind_x
+            Index tensor to subsample.
+        batch_index 
+            Index tensor indicating batch assignments.
+
+        Returns
+        -------
+        Pyro.plate
+            A Pyro plate representing the observations in the dataset.
+        """
+            
+        return pyro.plate("obs_plate", size=self.n_obs, dim=-3, subsample=ind_x)
 
     @beartype
     def __repr__(self) -> str:
@@ -283,8 +356,9 @@ class VelocityModelAuto(PyroModule):
         
         batch_size = len(ind_x)
         obs2sample = one_hot(batch_index, self.n_batch)        
-        obs_plate = self.create_plates(u_obs, s_obs, ind_x, batch_index)
-        k = N_cn.shape[1]   
+        obs_plate = self.create_plates(u_obs, s_obs, N_cn, ind_x, batch_index)
+        k = N_cn.shape[1]
+        N_cn = N_cn.long()   
         
         # ============= Expression Model =============== #
         T_max = pyro.sample('Tmax', dist.Gamma(G_a(self.Tmax_mean, self.Tmax_sd), G_b(self.Tmax_mean, self.Tmax_sd)))
@@ -298,11 +372,12 @@ class VelocityModelAuto(PyroModule):
         delta_cn = T_c.unsqueeze(-1) - T_c[N_cn, :]
 
         # Counts in each cell:
-        mu0_cg = pyro.sample('mu0_cg', dist.Gamma(self.one*5.0, self.one*1.0).expand([batch_size, n_genes, 2]))
+        with obs_plate:
+            mu0_cg = pyro.sample('mu0_cg', dist.Gamma(self.one*5.0, self.one*1.0).expand([batch_size, self.n_genes, 2]))
 
         # Weight of each nearest neighbor:    
-        wdash0_nc = pyro.sample('wdash0_nc', dist.Gamma(self.one*0.1, self.one*10.0).expand([1,batch_size]))
-        wdash5_nc = pyro.sample('wdash_nc', dist.Gamma(self.one*10.0, self.one*10.0).expand([k-1,batch_size]))
+        wdash0_nc = pyro.sample('wdash0_nc', dist.Gamma(self.one*0.1, self.one*10.0).expand([1,batch_size]).to_event(2))
+        wdash5_nc = pyro.sample('wdash_nc', dist.Gamma(self.one*10.0, self.one*10.0).expand([k-1,batch_size]).to_event(2))
         wdash_nc = torch.concat([wdash0_nc, wdash5_nc], axis = 0)
         w_nc = wdash_nc/torch.sum(wdash_nc, axis = 0)
 
@@ -313,7 +388,8 @@ class VelocityModelAuto(PyroModule):
         
         # Initial conditions and predicted counts need to match up:
         with obs_plate:
-            pyro.sample("data_target", dist.Gamma(muhat_cg, self.one, obs=mu0_cg))
+            pyro.sample("constrain", dist.Normal(muhat_cg, self.one*torch.abs(muhat_cg)*0.2),
+                                                obs=mu0_cg)
         
         # ============= Measurement Model =============== #
         # Cell specific relative detection efficiency with hierarchical prior across batches:
@@ -392,5 +468,5 @@ class VelocityModelAuto(PyroModule):
         
         # =====================DATA likelihood ======================= #
         with obs_plate:
-            pyro.sample("data_target", dist.Poisson(rate = mu,
-                                                    obs=torch.stack([u_obs, s_obs], axis = 2)))
+            pyro.sample("data_target", dist.Poisson(rate = mu),
+                                                    obs=torch.stack([u_obs, s_obs], axis = 2))
