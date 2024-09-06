@@ -130,20 +130,26 @@ def plot_report(
         "width_ratios": [0.5, 0.25, 0.25],
     }
 
-    selected_genes_in_adata = list(
-        set(selected_genes).intersection(adata.var.index)
-    )
+    selected_genes_in_adata = [
+        gene for gene in selected_genes if gene in adata.var.index
+    ]
 
-    while len(selected_genes_in_adata) < 6:
-        for gene in putative_marker_genes:
-            if gene not in selected_genes_in_adata and gene in adata.var.index:
-                selected_genes_in_adata.append(gene)
-                if len(selected_genes_in_adata) == 6:
-                    break
+    additional_genes = [
+        gene
+        for gene in putative_marker_genes
+        if gene not in selected_genes_in_adata and gene in adata.var.index
+    ]
 
-    extended_putative_marker_genes = list(
-        set(putative_marker_genes + selected_genes_in_adata)
-    )
+    while len(selected_genes_in_adata) < 6 and additional_genes:
+        selected_genes_in_adata.append(additional_genes.pop(0))
+
+    extended_putative_marker_genes = selected_genes_in_adata.copy()
+    for gene in putative_marker_genes:
+        if (
+            gene not in extended_putative_marker_genes
+            and gene in adata.var.index
+        ):
+            extended_putative_marker_genes.append(gene)
 
     selected_genes = selected_genes_in_adata
     putative_marker_genes = extended_putative_marker_genes
