@@ -372,6 +372,7 @@ def upload_summary(
             ".json",
             ".pdf",
             ".png",
+            ".dill.zst",
         ),
     )
 
