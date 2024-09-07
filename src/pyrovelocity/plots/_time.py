@@ -35,6 +35,7 @@ def plot_posterior_time(
     show_colorbar=True,
     show_titles=True,
     alpha=1,
+    plot_individual_obs=False,
 ):
     if addition:
         sns.set_style("white")
@@ -53,15 +54,28 @@ def plot_posterior_time(
     if ax is None:
         fig, ax = plt.subplots(1, 1)
         fig.set_size_inches(2.36, 2)
-    im = ax.scatter(
-        adata.obsm[f"X_{basis}"][:, 0],
-        adata.obsm[f"X_{basis}"][:, 1],
-        s=s,
-        alpha=alpha,
-        c=adata.obs["cell_time"],
-        cmap=cmap,
-        linewidth=0,
-    )
+    if plot_individual_obs:
+        im = ax.scatter(
+            adata.obsm[f"X_{basis}"][:, 0],
+            adata.obsm[f"X_{basis}"][:, 1],
+            s=s,
+            alpha=alpha,
+            c=adata.obs["cell_time"],
+            cmap=cmap,
+            linewidth=0,
+        )
+    else:
+        im = ax.hexbin(
+            x=adata.obsm[f"X_{basis}"][:, 0],
+            y=adata.obsm[f"X_{basis}"][:, 1],
+            C=adata.obs["cell_time"],
+            gridsize=100,
+            cmap=cmap,
+            alpha=alpha,
+            linewidths=0,
+            edgecolors="none",
+            reduce_C_function=np.mean,  # This will average cell_time values in each hexagon
+        )
     if show_colorbar:
         set_colorbar(im, ax, labelsize=5, fig=fig, position=position)
     ax.axis("off")
