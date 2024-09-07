@@ -2,9 +2,9 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import adjustText
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas
 import seaborn as sns
 from adjustText import adjust_text
 from anndata import AnnData
@@ -51,6 +51,7 @@ def plot_gene_ranking(
     volcano_plot_path: str | Path = "volcano.pdf",
     defaultfontsize=7,
     show_xy_labels: bool = False,
+    truncate_lower_mae_percentile: float = 0,
 ) -> Tuple[DataFrame, Optional[FigureBase]]:
     if putative_marker_genes is not None:
         assert isinstance(putative_marker_genes, (tuple, list))
@@ -68,6 +69,30 @@ def plot_gene_ranking(
     else:
         volcano_data = posterior_samples["gene_ranking"]
         genes = posterior_samples["genes"]
+
+    if truncate_lower_mae_percentile > 0:
+        genes_to_preserve = set(putative_marker_genes or []) | set(
+            selected_genes
+        )
+
+        preserved_genes_data = volcano_data[
+            volcano_data.index.isin(genes_to_preserve)
+        ]
+        other_genes_data = volcano_data[
+            ~volcano_data.index.isin(genes_to_preserve)
+        ]
+
+        mae_threshold = np.percentile(
+            other_genes_data["mean_mae"],
+            truncate_lower_mae_percentile,
+        )
+        filtered_other_genes = other_genes_data[
+            other_genes_data["mean_mae"] >= mae_threshold
+        ]
+
+        volcano_data = pandas.concat(
+            [preserved_genes_data, filtered_other_genes]
+        )
 
     adjust_text_compatible = is_adjust_text_compatible()
 
