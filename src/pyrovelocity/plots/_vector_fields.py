@@ -23,6 +23,7 @@ from pyrovelocity.plots._uncertainty import (
     get_posterior_sample_angle_uncertainty,
 )
 from pyrovelocity.styles import configure_matplotlib_style
+from pyrovelocity.utils import quartile_coefficient_of_dispersion
 
 __all__ = [
     "plot_vector_field_summary",
@@ -249,14 +250,16 @@ def plot_vector_field_summary(
     cell_time_mean = posterior_time.mean(0).flatten()
     cell_time_mean_max = cell_time_mean.max()
     cell_times = posterior_time / cell_time_mean_max
-    cell_time_mean = cell_times.mean(0).flatten()
-    cell_time_std = cell_times.std(0).flatten()
-    cell_time_cov = cell_time_std / cell_time_mean
+    # cell_time_mean = cell_times.mean(0).flatten()
+    # cell_time_std = cell_times.std(0).flatten()
+    # cell_time_cov = cell_time_std / cell_time_mean
+    cell_time_qcd = quartile_coefficient_of_dispersion(cell_times).flatten()
 
     plot_vector_field_uncertainty(
-        adata,
-        embed_mean,
-        cell_time_cov,
+        adata=adata,
+        embed_mean=embed_mean,
+        # embeds_radian_or_magnitude=cell_time_cov,
+        embeds_radian_or_magnitude=cell_time_qcd,
         ax=ax[5],
         cbar=False,
         fig=fig,
