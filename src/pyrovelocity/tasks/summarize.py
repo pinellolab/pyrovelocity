@@ -272,9 +272,9 @@ def summarize_dataset(
     logger.info(f"Searching for marker genes")
     putative_marker_genes = top_mae_genes(
         volcano_data=volcano_data,
-        mae_top_percentile=3,
+        mae_top_percentile=100 * 24 / len(volcano_data),
         min_genes_per_bin=3,
-        max_genes_per_bin=5,
+        max_genes_per_bin=4,
     )
 
     # volcano plot
