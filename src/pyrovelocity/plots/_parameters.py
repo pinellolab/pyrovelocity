@@ -66,7 +66,7 @@ def plot_parameter_posterior_distributions(
     parameter_uncertainty_plot: PathLike | str = "parameter_uncertainty.pdf",
     default_fontsize: int = 7,
     log_base=10,
-    boxplot: bool = True,
+    boxplot: bool = False,
 ) -> Optional[FigureBase]:
     if isinstance(parameter_names, list):
         parameter_names = {param: param for param in parameter_names}
@@ -173,8 +173,6 @@ def plot_parameter_posterior_distributions(
                 ax=ax1,
                 inner="box",
                 inner_kws=dict(
-                    # box_width=1.5,
-                    # whis_width=0.75,
                     box_width=3.5,
                     whis_width=1.75,
                     color="0",
