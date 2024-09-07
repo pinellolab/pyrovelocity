@@ -173,7 +173,7 @@ def plot_parameter_posterior_distributions(
                 ax=ax1,
                 inner="box",
                 inner_kws=dict(
-                    box_width=3.5,
+                    box_width=10,
                     whis_width=1.75,
                     color="0",
                 ),
