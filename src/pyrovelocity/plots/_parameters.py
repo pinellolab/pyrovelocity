@@ -66,6 +66,7 @@ def plot_parameter_posterior_distributions(
     parameter_uncertainty_plot: PathLike | str = "parameter_uncertainty.pdf",
     default_fontsize: int = 7,
     log_base=10,
+    boxplot: bool = True,
 ) -> Optional[FigureBase]:
     if isinstance(parameter_names, list):
         parameter_names = {param: param for param in parameter_names}
@@ -147,21 +148,39 @@ def plot_parameter_posterior_distributions(
             pass
 
         dark_orange = "#ff6a14"
-        sns.violinplot(
-            x="index",
-            y="value",
-            color=dark_orange,
-            linewidth=0,
-            data=df_long,
-            ax=ax1,
-            inner="box",
-            inner_kws=dict(
-                box_width=1.5,
-                whis_width=0.75,
-                color="1",
-            ),
-            log_scale=log_base,
-        )
+        light_orange = "#ffb343"
+        if boxplot:
+            sns.boxenplot(
+                data=df_long,
+                x="index",
+                y="value",
+                color=dark_orange,
+                linecolor=light_orange,
+                linewidth=0,
+                ax=ax1,
+                width_method="exponential",
+                k_depth="full",
+                showfliers=False,
+                log_scale=log_base,
+            )
+        else:
+            sns.violinplot(
+                x="index",
+                y="value",
+                color=dark_orange,
+                linewidth=0,
+                data=df_long,
+                ax=ax1,
+                inner="box",
+                inner_kws=dict(
+                    # box_width=1.5,
+                    # whis_width=0.75,
+                    box_width=3.5,
+                    whis_width=1.75,
+                    color="0",
+                ),
+                log_scale=log_base,
+            )
         ax1.yaxis.set_major_formatter(
             ticker.FuncFormatter(lambda x, _: construct_log_string(x, log_base))
         )
