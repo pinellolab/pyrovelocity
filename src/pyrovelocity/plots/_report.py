@@ -94,12 +94,14 @@ def plot_report(
     >>> from pyrovelocity.analysis.analyze import top_mae_genes
     >>> from pyrovelocity.plots import plot_report
     >>> from pyrovelocity.utils import load_anndata_from_path
+    >>> from pyrovelocity.io.compressedpickle import CompressedPickle
+    >>> from pyrovelocity.styles.colors import LARRY_CELL_TYPE_COLORS
     ...
     >>> adata = load_anndata_from_path("models/larry_model2/postprocessed.h5ad")
     >>> posterior_samples = CompressedPickle.load(
     ...     "models/larry_model2/pyrovelocity.pkl.zst"
     ... )
-    >>> volcano_data: DataFrame = posterior_samples["gene_ranking"]
+    >>> volcano_data = posterior_samples["gene_ranking"]
     >>> vector_field_basis = "emb"
     >>> cell_state = "state_info"
     >>> putative_marker_genes = top_mae_genes(
