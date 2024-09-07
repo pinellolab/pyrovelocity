@@ -390,6 +390,7 @@ def plot_vector_field_uncertainty(
     dotsize=1,
     show_titles: bool = True,
     default_fontsize: int = 7,
+    plot_individual_obs: bool = False,
 ):
     if uncertain_measure == "angle":
         adata.obs["uncertain"] = get_posterior_sample_angle_uncertainty(
@@ -476,24 +477,42 @@ def plot_vector_field_uncertainty(
     else:
         order = np.argsort(adata.obs["uncertain"].values)
         ordered_uncertainty_measure = adata.obs["uncertain"].values[order]
-        im = ax.scatter(
-            adata.obsm[f"X_{basis}"][:, 0][order],
-            adata.obsm[f"X_{basis}"][:, 1][order],
-            c=ordered_uncertainty_measure,
-            cmap=cmap,
-            norm=None,
-            vmin=0
-            if "angle" in uncertain_measure
-            # else np.percentile(ordered_uncertainty_measure, 0.1),
-            else min(ordered_uncertainty_measure),
-            vmax=360
-            if "angle" in uncertain_measure
-            # else np.percentile(ordered_uncertainty_measure, 99.9),
-            else max(ordered_uncertainty_measure),
-            s=dotsize,
-            linewidth=1,
-            edgecolors="none",
-        )
+        if plot_individual_obs:
+            im = ax.scatter(
+                adata.obsm[f"X_{basis}"][:, 0][order],
+                adata.obsm[f"X_{basis}"][:, 1][order],
+                c=ordered_uncertainty_measure,
+                cmap=cmap,
+                norm=None,
+                vmin=0
+                if "angle" in uncertain_measure
+                # else np.percentile(ordered_uncertainty_measure, 0.1),
+                else min(ordered_uncertainty_measure),
+                vmax=360
+                if "angle" in uncertain_measure
+                # else np.percentile(ordered_uncertainty_measure, 99.9),
+                else max(ordered_uncertainty_measure),
+                s=dotsize,
+                linewidth=1,
+                edgecolors="none",
+            )
+        else:
+            im = ax.hexbin(
+                adata.obsm[f"X_{basis}"][:, 0][order],
+                adata.obsm[f"X_{basis}"][:, 1][order],
+                C=ordered_uncertainty_measure,
+                gridsize=100,
+                cmap=cmap,
+                vmin=0
+                if "angle" in uncertain_measure
+                else min(ordered_uncertainty_measure),
+                vmax=360
+                if "angle" in uncertain_measure
+                else max(ordered_uncertainty_measure),
+                linewidths=0,
+                edgecolors="none",
+            )
+
         ax.axis("off")
         if show_titles:
             ax.set_title(
