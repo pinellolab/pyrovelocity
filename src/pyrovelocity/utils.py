@@ -48,6 +48,7 @@ __all__ = [
     "print_anndata",
     "print_attributes",
     "print_config_tree",
+    "quartile_coefficient_of_dispersion",
     "save_anndata_counts_to_dataframe",
     "str_to_bool",
 ]
@@ -664,6 +665,13 @@ def load_anndata_from_path(adata_path: str | Path) -> AnnData:
         return adata
     else:
         raise ValueError(f"Cannot read input file: {adata_path}")
+
+
+@beartype
+def quartile_coefficient_of_dispersion(data: NDArray) -> NDArray:
+    q1 = np.percentile(data, 25, axis=0)
+    q3 = np.percentile(data, 75, axis=0)
+    return (q3 - q1) / (q3 + q1)
 
 
 # TODO: remove unused functions
