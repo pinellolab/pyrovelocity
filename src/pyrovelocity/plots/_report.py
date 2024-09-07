@@ -209,7 +209,15 @@ def plot_report(
     add_panel_label(fig, "d", x_col1, 0.57)
 
     fig.savefig(report_file_path, format="pdf")
-    fig.savefig(f"{report_file_path}.png", format="png")
+    fig.savefig(
+        f"{report_file_path}.png",
+        facecolor=fig.get_facecolor(),
+        bbox_inches="tight",
+        edgecolor="none",
+        dpi=300,
+        format="png",
+    )
+
     CompressedPickle.save(figure_file_path, fig)
 
     return fig
