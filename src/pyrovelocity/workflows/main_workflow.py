@@ -91,8 +91,8 @@ DOWNLOAD_CACHE_VERSION = f"{CACHE_VERSION}.0"
 PREPROCESS_CACHE_VERSION = f"{CACHE_VERSION}.0"
 TRAIN_CACHE_VERSION = f"{CACHE_VERSION}.0"
 POSTPROCESS_CACHE_VERSION = f"{CACHE_VERSION}.2"
-SUMMARIZE_CACHE_VERSION = f"{CACHE_VERSION}.2"
-UPLOAD_CACHE_VERSION = f"{CACHE_VERSION}.6"
+SUMMARIZE_CACHE_VERSION = f"{CACHE_VERSION}.3"
+UPLOAD_CACHE_VERSION = f"{CACHE_VERSION}.7"
 LINEAGE_FATE_CORRELATION_CACHE_VERSION = f"{CACHE_VERSION}.5"
 COMBINE_METRICS_CACHE_VERSION = f"{CACHE_VERSION}.5"
 DEFAULT_ACCELERATOR_TYPE: GPUAccelerator = T4
@@ -730,9 +730,9 @@ def training_workflow(
     ]
 
     developmental_configurations = [
-        (bonemarrow_configuration, "bonemarrow"),
+        # (bonemarrow_configuration, "bonemarrow"),
         (pancreas_configuration, "pancreas"),
-        (pons_configuration, "pons"),
+        # (pons_configuration, "pons"),
     ]
 
     lineage_traced_results = []
@@ -744,13 +744,13 @@ def training_workflow(
     ]
 
     configurations = [
-        (simulated_configuration, "simulated"),
+        # (simulated_configuration, "simulated"),
     ]
 
     if not PYROVELOCITY_DATA_SUBSET:
-        configurations += stationary_configurations
+        # configurations += stationary_configurations
         configurations += developmental_configurations
-        configurations += lineage_traced_configurations
+        # configurations += lineage_traced_configurations
 
     for config, data_set_name in configurations:
         result = map_model_configurations_over_data_set(
