@@ -56,6 +56,7 @@
   "search.followSymlinks": false,
   "terminal.integrated.fontSize": 14,
   "terminal.integrated.scrollback": 100000,
+  "python.terminal.activateEnvironment": false,
   "workbench.colorTheme": "Catppuccin Mocha",
   "workbench.iconTheme": "vscode-icons",
   // Passing --no-cov to pytestArgs is required to respect breakpoints

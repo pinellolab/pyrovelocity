@@ -284,6 +284,7 @@ def train_dataset(
 @beartype
 def train_model(
     adata: str | Path | AnnData,
+    adata_atac: Optional[AnnData] = None,
     guide_type: str = "auto",
     model_type: str = "auto",
     batch_size: int = -1,
@@ -311,6 +312,7 @@ def train_model(
 
     Args:
         adata (str | AnnData): Path to a file that can be read to an AnnData object or an AnnData object.
+        adata_atac (Optional[AnnData], optional): An anndata object with atac data, matching the default adata input with RNA data.
         guide_type (str, optional): The type of guide function for the Pyro model. Default is "auto".
         model_type (str, optional): The type of Pyro model. Default is "auto".
         batch_size (int, optional): Batch size for training. Default is -1, which indicates using the full dataset.
@@ -353,16 +355,18 @@ def train_model(
         >>> copy_raw_counts(adata)
         >>> _, model, posterior_samples = train_model(adata, use_gpu="auto", seed=99, max_epochs=200, loss_plot_path=loss_plot_path)
     """
+    
     if isinstance(adata, str | Path):
         adata = load_anndata_from_path(adata)
 
     logger.info(f"AnnData object prior to model training")
     print_anndata(adata)
 
-    PyroVelocity.setup_anndata(adata)
+    PyroVelocity.setup_anndata(adata, adata_atac = adata_atac)
 
     model = PyroVelocity(
         adata,
+        adata_atac = adata_atac,
         likelihood=likelihood,
         model_type=model_type,
         guide_type=guide_type,

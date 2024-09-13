@@ -3,7 +3,6 @@ import pickle
 import sys
 from statistics import harmonic_mean
 from typing import Dict, Optional, Sequence, Union
-
 import mlflow
 import numpy as np
 import pyro
@@ -13,9 +12,11 @@ from beartype import beartype
 from numpy import ndarray
 from scvi.data import AnnDataManager
 from scvi.data._constants import _SETUP_ARGS_KEY, _SETUP_METHOD_NAME
-from scvi.data.fields import LayerField, NumericalObsField
+from scvi.data.fields import LayerField, NumericalObsField, CategoricalObsField, ObsmField
 from scvi.model._utils import parse_device_args
-from scvi.model.base import BaseModelClass
+from scvi.model.base import BaseModelClass, PyroSampleMixin
+from scvi import REGISTRY_KEYS
+from datetime import date
 from scvi.model.base._utils import (
     _initialize_model,
     _load_saved_files,
@@ -29,16 +30,14 @@ from pyrovelocity.analysis.analyze import (
     vector_field_uncertainty,
 )
 from pyrovelocity.logging import configure_logging
-from pyrovelocity.models._trainer import VelocityTrainingMixin
-from pyrovelocity.models._velocity_module import VelocityModule, MultiVelocityModule
+from scvi.model.base import PyroSviTrainMixin
+from pyrovelocity.models.knn_model._velocity_module import VelocityModule, MultiVelocityModule
 
 __all__ = ["PyroVelocity"]
 
-
 logger = configure_logging(__name__)
 
-
-class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
+class PyroVelocity(PyroSviTrainMixin, BaseModelClass, PyroSampleMixin):
     """
     PyroVelocity is a class for constructing and training a Pyro model for
     probabilistic RNA velocity estimation. This model leverages the
@@ -250,25 +249,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             self.module = VelocityModule(
                 self.summary_stats["n_cells"],
                 self.summary_stats["n_vars"],
-                model_type=model_type,
-                guide_type=guide_type,
-                likelihood=likelihood,
-                shared_time=shared_time,
-                t_scale_on=t_scale_on,
-                plate_size=plate_size,
-                latent_factor=latent_factor,
-                latent_factor_operation=latent_factor_operation,
-                latent_factor_size=latent_factor_size,
-                inducing_point_size=inducing_point_size,
-                include_prior=include_prior,
-                use_gpu=use_gpu,
-                num_aux_cells=num_aux_cells,
-                only_cell_times=only_cell_times,
-                decoder_on=decoder_on,
-                add_offset=add_offset,
-                correct_library_size=correct_library_size,
-                cell_specific_kinetics=cell_specific_kinetics,
-                kinetics_num=self.k,
+                self.summary_stats["n_batch"],
                 **initial_values,
             )
         else:
@@ -303,20 +284,40 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         self.init_params_ = self._get_init_params(locals())
         logger.info("Model initialized")
 
-    def train(self, **kwargs):
+    def train(
+        self,
+        max_epochs: int = 500,
+        batch_size: int = 1000,
+        train_size: float = 1,
+        lr: float = 0.01,
+        **kwargs,
+    ):
         """
-        Trains the PyroVelocity model using the provided data and configuration.
+        Training function for the model.
 
-        The method leverages the Pyro library to train the model using the underlying
-        data. It relies on the `VelocityTrainingMixin` to define the training logic.
-
-        Args:
-
-            **kwargs : dict, optional
-                Additional keyword arguments to be passed to the underlying train method
-                provided by the `VelocityTrainingMixin`.
+        Parameters
+        ----------
+        max_epochs
+            Number of passes through the dataset. If `None`, defaults to
+            ``np.min([round((20000 / n_cells) * 400), 400])``
+        train_size
+            Size of training set in the range [0.0, 1.0].
+        batch_size
+            Minibatch size to use during training. If `None`, no minibatching occurs and all
+            data is copied to device (e.g., GPU).
+        lr
+            Optimiser learning rate (default optimiser is :class:`~pyro.optim.ClippedAdam`).
+            Specifying optimiser via plan_kwargs overrides this choice of lr.
+        kwargs
+            Other arguments to :py:meth:`scvi.model.base.PyroSviTrainMixin().train` method
         """
-        pyro.enable_validation(True)
+        
+        self.max_epochs = max_epochs
+        kwargs["max_epochs"] = max_epochs
+        kwargs["batch_size"] = batch_size
+        kwargs["train_size"] = train_size
+        kwargs["lr"] = lr
+
         super().train(**kwargs)
 
     def enum_parallel_predict(self):
@@ -324,7 +325,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         return
 
     @classmethod
-    def setup_anndata(cls, adata: AnnData, adata_atac = None, *args, **kwargs):
+    def setup_anndata(cls, adata: AnnData, adata_atac = None, batch_key = None, *args, **kwargs):
         """
         Set up AnnData object for compatibility with the scvi-tools
         model training interface.
@@ -333,30 +334,15 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             adata (AnnData): Anndata object to be used in model training.
         """
         setup_method_args = cls._get_setup_method_args(**locals())
-
-        adata.obs["u_lib_size"] = np.log(
-            adata.obs["u_lib_size_raw"].astype(float) + 1e-6
-        )
-        adata.obs["s_lib_size"] = np.log(
-            adata.obs["s_lib_size_raw"].astype(float) + 1e-6
-        )
-
-        adata.obs["u_lib_size_mean"] = adata.obs["u_lib_size"].mean()
-        adata.obs["s_lib_size_mean"] = adata.obs["s_lib_size"].mean()
-        adata.obs["u_lib_size_scale"] = adata.obs["u_lib_size"].std()
-        adata.obs["s_lib_size_scale"] = adata.obs["s_lib_size"].std()
+        
         adata.obs["ind_x"] = np.arange(adata.n_obs).astype("int64")
 
         anndata_fields = [
             LayerField("U", "raw_unspliced", is_count_data=True),
             LayerField("X", "raw_spliced", is_count_data=True),
-            NumericalObsField("u_lib_size", "u_lib_size"),
-            NumericalObsField("s_lib_size", "s_lib_size"),
-            NumericalObsField("u_lib_size_mean", "u_lib_size_mean"),
-            NumericalObsField("s_lib_size_mean", "s_lib_size_mean"),
-            NumericalObsField("u_lib_size_scale", "u_lib_size_scale"),
-            NumericalObsField("s_lib_size_scale", "s_lib_size_scale"),
+            CategoricalObsField(REGISTRY_KEYS.BATCH_KEY, batch_key),
             NumericalObsField("ind_x", "ind_x"),
+            NumericalObsField("M_c", "n_cells")
         ]
         
         if adata_atac:
@@ -365,6 +351,9 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             adata.uns['atac'] = True
         else:
             adata.uns['atac'] = None
+            
+        if 'N_cn' in adata.obsm:
+            anndata_fields += [ObsmField('N_cn', 'N_cn')]
         
         adata_manager = AnnDataManager(
             fields=anndata_fields, setup_method_args=setup_method_args
@@ -373,74 +362,104 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         adata_manager.register_fields(adata, **kwargs)
         cls.register_manager(adata_manager)
 
-    def generate_posterior_samples(
+    def _export2adata(self, samples):
+        r"""
+        Export key model variables and samples
+
+        Parameters
+        ----------
+        samples
+            Dictionary with posterior mean, 5%/95% quantiles, SD, samples, generated by ``.sample_posterior()``
+
+        Returns
+        -------
+        Dict
+            Updated dictionary with additional details is saved to ``adata.uns['mod']``.
+        """
+        # add factor filter and samples of all parameters to unstructured data
+        results = {
+            "model_name": str(self.module.__class__.__name__),
+            "date": str(date.today()),
+            "var_names": self.adata.var_names.tolist(),
+            "obs_names": self.adata.obs_names.tolist(),
+            "post_sample_means": samples["post_sample_means"],
+            "post_sample_stds": samples["post_sample_stds"],
+            "post_sample_q05": samples["post_sample_q05"],
+            "post_sample_q95": samples["post_sample_q95"],
+        }
+
+        return results
+
+    def export_posterior(
         self,
-        adata: Optional[AnnData] = None,
-        indices: Optional[Sequence[int]] = None,
-        batch_size: Optional[int] = None,
-        num_samples: int = 100,
-    ) -> Dict[str, ndarray]:
+        adata,
+        sample_kwargs = {"num_samples": 30, "batch_size" : None,
+                         'return_samples': True},
+        export_slot: str = "mod",
+        full_velocity_posterior = False,
+        normalize = True):
         """
-        Generates posterior samples for the given data using the trained
-        PyroVelocity model.
-
-        The method generates posterior samples by running the trained model on the
-        provided data and returns a dictionary containing samples for each parameter.
-
-        Args:
-            adata (AnnData, optional): Anndata object containing the data for which posterior samples
-                are to be computed. If not provided, the anndata used to initialize the model will be used.
-            indices (Sequence[int], optional): Indices of cells in `adata` for which the posterior
-                samples are to be computed.
-            batch_size (int, optional): The size of the mini-batches used during computation.
-                If not provided, the entire dataset will be used.
-            num_samples (int, default: 100): The number of posterior samples to compute for each parameter.
-
-        Returns:
-            Dict[str, ndarray]: A dictionary containing the posterior samples for each parameter.
+        Summarises posterior distribution and exports results to anndata object. Also computes RNAvelocity (based on posterior of rates) and normalized counts (based on posterior of technical variables).
+        
+        - **adata.obs:** Latent time, sequencing depth constant.
+        
+        - **adata.var:** transcription/splicing/degredation rates, switch on and off times.
+        
+        - **adata.uns:** Posterior of all parameters ('mean', 'sd', 'q05', 'q95' and optionally all samples), model name, date.
+        
+        - **adata.layers:** ``velocity`` (expected gradient of spliced counts), ``velocity_sd`` (uncertainty in this gradient), ``spliced_norm``, ``unspliced_norm`` (normalized counts).
+        
+        - **adata.uns:** If ``return_samples: True`` and ``full_velocity_posterior = True`` full posterior distribution for velocity is saved in ``adata.uns['velocity_posterior']``. 
+        
+        Parameters
+        ----------
+        adata
+            AnnData object where results should be saved.
+        sample_kwargs
+            Optionally a dictionary of arguments for self.sample_posterior, namely:
+            
+            - **num_sample:s** Number of samples to use (Default = 1000).
+            - **batch_size:** Data batch size (keep low enough to fit on GPU, default 2048).
+            - **use_gpu:** Use gpu for generating samples.
+            - **return_samples:** Export all posterior samples (Otherwise just summary statistics).
+        export_slot
+            adata.uns slot where to export results.
+        full_velocity_posterior
+            Whether to save full posterior of velocity (only possible if "return_samples: True").
+        normalize
+            Whether to compute normalized spliced and unspliced counts based on posterior of technical variables.
+        Returns
+        -------
+        AnnData
+            AnnData object with posterior added in adata.obs, adata.var and adata.uns.
+        
         """
-        self.module.eval()
-        predictive = self.module.create_predictive(
-            model=pyro.poutine.uncondition(self.module.model),
-            num_samples=num_samples,
-        )
+        
+        if sample_kwargs['batch_size'] == None:
+            sample_kwargs['batch_size'] = adata.n_obs
 
-        scdl = self._make_data_loader(
-            adata=adata, indices=indices, batch_size=batch_size
-        )
+        # generate samples from posterior distributions for all parameters
+        # and compute mean, 5%/95% quantiles and standard deviation
+        self.samples = self.sample_posterior(**sample_kwargs)
 
-        with torch.no_grad(), pyro.poutine.mask(mask=False):
-            posterior_samples = []
-            for tensor in scdl:
-                args, kwargs = self.module._get_fn_args_from_batch(tensor)
-                posterior_sample = {
-                    k: v.cpu().numpy()
-                    for k, v in predictive(*args, **kwargs).items()
-                }
-                posterior_samples.append(posterior_sample)
-            samples = {}
-            for k in posterior_samples[0].keys():
-                if k in [
-                    "ut_norm",
-                    "st_norm",
-                    "time_constraint",
-                ]:
-                    continue
+        # export posterior distribution summary for all parameters and
+        # annotation (model, date, var, obs and cell type names) to anndata object
+        adata.uns[export_slot] = self._export2adata(self.samples)
 
-                if posterior_samples[0][k].shape[-2] == 1:
-                    samples[k] = posterior_samples[0][k]
-                else:
-                    samples[k] = np.concatenate(
-                        [
-                            posterior_samples[j][k]
-                            for j in range(len(posterior_samples))
-                        ],
-                        axis=-2,
-                    )
+        if sample_kwargs['return_samples']:
+            print('Warning: Saving ALL posterior samples. Specify "return_samples: False" to save just summary statistics.')
+            adata.uns[export_slot]['post_samples'] = self.samples['posterior_samples']
 
-                logger.debug(k, "before", sys.getsizeof(samples[k]))
-        self.num_samples = num_samples
-        return samples
+        adata.obs['Time (hours)'] = self.samples['post_sample_means']['T_c'].flatten() - np.min(self.samples['post_sample_means']['T_c'].flatten())
+        adata.obs['Time Uncertainty (sd)'] = self.samples['post_sample_stds']['T_c'].flatten()
+        
+#         adata.layers['spliced mean'] = self.samples['post_sample_means']['mu_expression'][...,1]
+#         adata.layers['velocity'] = torch.tensor(self.samples['post_sample_means']['beta_g']) * \
+#         self.samples['post_sample_means']['mu_expression'][...,0] - \
+#         torch.tensor(self.samples['post_sample_means']['gamma_g']) * \
+#         self.samples['post_sample_means']['mu_expression'][...,1]
+
+        return adata
 
     def get_mlflow_logs(self):
         return
