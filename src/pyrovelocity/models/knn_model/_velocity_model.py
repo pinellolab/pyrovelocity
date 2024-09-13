@@ -207,10 +207,16 @@ class VelocityModelAuto(PyroModule):
         self.detection_gi_prior = detection_gi_prior
         self.detection_i_prior = detection_i_prior
         
-        self.l1 = PyroModule[torch.nn.Linear](self.n_vars, 10)
-        self.l2 = PyroModule[torch.nn.Linear](10, self.n_vars)
-        self.l3 = PyroModule[torch.nn.Linear](10, self.n_vars)
-        self.l4 = PyroModule[torch.nn.Linear](10, self.n_vars)
+        h1 = 10
+        h2 = 10
+        self.l1 = []
+        self.l2 = []
+        self.l3 = []
+        for i in range(self.n_vars):
+            self.l1 += [PyroModule[torch.nn.Linear](2, h1)]
+            self.l2 += [PyroModule[torch.nn.Linear](h1, h2)]
+            self.l3 += [PyroModule[torch.nn.Linear](h2, 3)]
+            
         self.dropout = torch.nn.Dropout(p=0.1)
         
         
@@ -431,23 +437,24 @@ class VelocityModelAuto(PyroModule):
         beta0_g = pyro.sample('beta0_g', dist.Gamma(self.one, self.one/2.0).expand([1,self.n_vars]).to_event(2))
         gamma0_g = pyro.sample('gamma0_g', dist.Gamma(self.one, self.one).expand([1,self.n_vars]).to_event(2))
         
-        x = self.l1(torch.log(mu[...,1]))
-        x = self.dropout(x)
-        x = F.leaky_relu(x)
-        
-        # x = torch.concat([x_u, x_s], axis = -1)
-        
-        x_alpha = self.l2(x)
-        x_alpha = F.leaky_relu(x_alpha)
-        alpha = torch.sigmoid(x_alpha)*alpha0_g
-        
-        x_beta = self.l3(x)
-        x_beta = F.leaky_relu(x_beta)
-        beta = torch.sigmoid(x_beta)*beta0_g
-        
-        x_gamma = self.l4(x)
-        x_gamma = F.leaky_relu(x_gamma)
-        gamma = torch.sigmoid(x_gamma)*gamma0_g
+        print('mu', mu.shape)
+        betas = []
+        alphas = []
+        gammas = []
+        for i in range(self.n_vars):
+            x = self.l1[i](mu[:,i,...])
+            x = F.leaky_relu(x)
+            x = self.l2[i](x)
+            x = F.leaky_relu(x)
+            x = self.l3[i](x)
+            output = torch.sigmoid(x)
+            betas += [output[:,0]]
+            gammas += [output[:,1]]
+            alphas += [output[:,2]]
+
+        alphas = torch.concat(alphas, axis = -1) * alpha0_g
+        beta =  torch.concat(betas, axis = -1) * beta0_g
+        gamma = torch.concat(gammas, axis = -1) * gamma0_g
         
         pyro.deterministic('alpha', alpha)
         pyro.deterministic('beta', beta)
