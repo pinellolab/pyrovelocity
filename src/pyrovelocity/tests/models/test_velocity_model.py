@@ -136,8 +136,6 @@ class TestVelocityModelAuto:
         s_obs = torch.rand(3, 4)
         u_log_library = torch.tensor([[3.7377], [4.0254], [2.7081]])
         s_log_library = torch.tensor([[3.6376], [3.9512], [2.3979]])
-        u_log_library_loc = torch.tensor([[3.4904], [3.4904], [3.4904]])
-        s_log_library_loc = torch.tensor([[3.3289], [3.3289], [3.3289]])
         u_log_library_scale = torch.tensor([[0.6926], [0.6926], [0.6926]])
         s_log_library_scale = torch.tensor([[0.8214], [0.8214], [0.8214]])
         ind_x = torch.tensor([2, 0, 1])
@@ -147,8 +145,6 @@ class TestVelocityModelAuto:
             s_obs=s_obs,
             u_log_library=u_log_library,
             s_log_library=s_log_library,
-            u_log_library_loc=u_log_library_loc,
-            s_log_library_loc=s_log_library_loc,
             u_log_library_scale=u_log_library_scale,
             s_log_library_scale=s_log_library_scale,
             ind_x=ind_x,
