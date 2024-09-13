@@ -149,6 +149,11 @@ def plot_parameter_posterior_distributions(
 
         dark_orange = "#ff6a14"
         light_orange = "#ffb343"
+        df_long_medians = df_long.groupby("index")["value"].median()
+        for i, median in enumerate(df_long_medians):
+            ax1.hlines(
+                median, i - 0.4, i + 0.4, color=dark_orange, linewidth=1.5
+            )
         if boxplot:
             sns.boxenplot(
                 data=df_long,
@@ -173,8 +178,8 @@ def plot_parameter_posterior_distributions(
                 ax=ax1,
                 inner="box",
                 inner_kws=dict(
-                    box_width=10,
-                    whis_width=1.75,
+                    box_width=1.5,
+                    whis_width=0.75,
                     color="0",
                 ),
                 log_scale=log_base,
