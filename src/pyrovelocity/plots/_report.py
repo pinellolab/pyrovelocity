@@ -57,9 +57,10 @@ def plot_report(
     volcano_data: DataFrame,
     putative_marker_genes: List[str],
     selected_genes: List[str],
-    vector_field_basis: str = "emb",
-    cell_state: str = "state_info",
+    vector_field_basis: str = "umap",
+    cell_state: str = "clusters",
     state_color_dict: Optional[Dict[str, str]] = None,
+    boxplot: bool = False,
     report_file_path: Path | str = "example_plot_report.pdf",
     figure_file_path: Path | str = "example_report_figure.dill.zst",
 ) -> FigureBase:
@@ -185,6 +186,7 @@ def plot_report(
         geneset=selected_genes,
         fig=fig,
         gs=gs[1, 1:],
+        boxplot=boxplot,
     )
 
     rainbowplot(
