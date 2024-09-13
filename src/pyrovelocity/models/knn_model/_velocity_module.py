@@ -194,12 +194,14 @@ class VelocityModule(PyroBaseModuleClass):
         u_obs = tensor_dict["U"]
         s_obs = tensor_dict["X"]
         N_cn = tensor_dict["N_cn"]
+        M_c = tensor_dict["M_c"]
         ind_x = tensor_dict["ind_x"].long().squeeze()
         batch_index = tensor_dict[REGISTRY_KEYS.BATCH_KEY]
         return (
             u_obs,
             s_obs,
             N_cn,
+            M_c,
             ind_x,
             batch_index
         ), {}
