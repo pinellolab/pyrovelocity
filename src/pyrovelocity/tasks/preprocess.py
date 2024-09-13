@@ -716,6 +716,7 @@ def compute_metacells(
         X = np.concatenate([np.sum(adata_rna.X[adata_rna.obs[cluster_key] == c,:], axis = 0) for c in np.unique(adata_rna.obs[cluster_key])], axis = 0)
         print(X.shape)
         adata_meta = sc.AnnData(X  = np.array(X))
+        adata_meta.var = adata_rna.var
         adata_meta.obs['n_cells'] = [np.sum(adata_rna.obs[cluster_key] == c) for c in np.unique(adata_rna.obs[cluster_key])]
         if celltype_key:
             adata_meta.obs[celltype_key] = [adata_rna[adata_rna.obs[cluster_key] == c,:].obs[celltype_key].mode()[0] for c in np.unique(adata_rna.obs[cluster_key])]
@@ -769,6 +770,7 @@ def compute_metacells(
         
         X = np.concatenate([np.sum(adata_atac.X[adata_rna.obs[cluster_key] == c,:], axis = 0) for c in np.unique(adata_atac.obs[cluster_key])], axis = 0)
         adata_atac_meta = sc.AnnData(X  = np.array(X))
+        adata_atac_meta.var = adata_atac.var
         adata_atac_meta.obs['n_cells'] = [np.sum(adata_atac.obs[cluster_key] == c) for c in np.unique(adata_atac.obs[cluster_key])]
         if celltype_key:
             adata_atac_meta.obs[celltype_key] = [adata_atac[adata_atac.obs[cluster_key] == c,:].obs[celltype_key].mode()[0] for c in np.unique(adata_atac.obs[cluster_key])]
