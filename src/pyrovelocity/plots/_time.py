@@ -15,6 +15,7 @@ from matplotlib.ticker import MaxNLocator
 from scipy.stats import spearmanr
 
 from pyrovelocity.plots._common import set_colorbar, set_font_size
+from pyrovelocity.utils import quartile_coefficient_of_dispersion
 
 __all__ = [
     "plot_posterior_time",
@@ -104,6 +105,7 @@ def plot_shared_time_uncertainty(
     dotsize: Optional[int] = None,
     default_font_size: int = 12,
     duplicate_title: bool = False,
+    plot_individual_obs: bool = False,
 ) -> FigureBase:
     cell_time_mean = posterior_samples["cell_time"].mean(0).flatten()
     cell_time_mean_max = cell_time_mean.max()
@@ -111,20 +113,23 @@ def plot_shared_time_uncertainty(
     cell_time_mean = cell_times.mean(0).flatten()
     cell_time_std = cell_times.std(0).flatten()
     cell_time_cv = cell_time_std / cell_time_mean
+    cell_time_qcd = quartile_coefficient_of_dispersion(cell_times).flatten()
     adata.obs["shared_time_std"] = cell_time_std
     adata.obs["shared_time_mean"] = cell_time_mean
     adata.obs["shared_time_cv"] = cell_time_cv
+    adata.obs["shared_time_qcd"] = cell_time_qcd
 
-    cv_string = (
-        r"shared time $\left.\sigma \right/ \mu$"
-        if matplotlib.rcParams["text.usetex"]
-        else "shared time σ/μ"
-    )
     mean_string = (
         r"shared time $\mu$"
         if matplotlib.rcParams["text.usetex"]
         else "shared time μ"
     )
+    cv_string = (
+        r"shared time $\left.\sigma \right/ \mu$"
+        if matplotlib.rcParams["text.usetex"]
+        else "shared time σ/μ"
+    )
+    qcd_string = f"shared time QCD"
 
     fig = plt.figure(figsize=(6, 6))
     gs = fig.add_gridspec(
@@ -139,42 +144,71 @@ def plot_shared_time_uncertainty(
     ax1.set_title(mean_string)
 
     ax2 = fig.add_subplot(gs[0, 1])
-    ax2.hist(cell_time_cv, bins=100)
-    ax2.set_title(cv_string)
+    ax2.hist(cell_time_qcd, bins=100)
+    ax2.set_title(qcd_string)
 
     ax3 = fig.add_subplot(gs[1, 0])
-    ax_st = scv.pl.scatter(
-        adata=adata,
-        basis=vector_field_basis,
-        c="shared_time_mean",
-        ax=ax3,
-        show=False,
-        cmap="winter",
-        fontsize=default_font_size,
-        colorbar=False,
-        s=dotsize,
-        title="",
-    )
+    if plot_individual_obs:
+        scv.pl.scatter(
+            adata=adata,
+            basis=vector_field_basis,
+            c="shared_time_mean",
+            ax=ax3,
+            show=False,
+            cmap="winter",
+            fontsize=default_font_size,
+            colorbar=False,
+            s=dotsize,
+            title="",
+        )
+    else:
+        im3 = ax3.hexbin(
+            x=adata.obsm[f"X_{vector_field_basis}"][:, 0],
+            y=adata.obsm[f"X_{vector_field_basis}"][:, 1],
+            C=adata.obs["shared_time_mean"],
+            gridsize=100,
+            cmap="winter",
+            linewidths=0,
+            edgecolors="none",
+            vmin=min(cell_time_mean),
+            vmax=max(cell_time_mean),
+            reduce_C_function=np.mean,
+        )
     ax3.axis("off")
     if duplicate_title:
-        ax_st.set_title(mean_string)
+        ax3.set_title(mean_string)
 
     ax4 = fig.add_subplot(gs[1, 1])
-    ax_cv = scv.pl.scatter(
-        adata=adata,
-        basis=vector_field_basis,
-        c="shared_time_cv",
-        ax=ax4,
-        show=False,
-        cmap="winter",
-        fontsize=default_font_size,
-        colorbar=False,
-        s=dotsize,
-        title="",
-    )
+    if plot_individual_obs:
+        scv.pl.scatter(
+            adata=adata,
+            basis=vector_field_basis,
+            c="shared_time_cv",
+            ax=ax4,
+            show=False,
+            cmap="winter",
+            fontsize=default_font_size,
+            colorbar=False,
+            s=dotsize,
+            title="",
+        )
+    else:
+        im4 = ax4.hexbin(
+            x=adata.obsm[f"X_{vector_field_basis}"][:, 0],
+            y=adata.obsm[f"X_{vector_field_basis}"][:, 1],
+            # C=adata.obs["shared_time_cv"],
+            C=adata.obs["shared_time_qcd"],
+            gridsize=100,
+            cmap="winter",
+            linewidths=0,
+            edgecolors="none",
+            vmin=min(cell_time_qcd),
+            vmax=max(cell_time_qcd),
+            reduce_C_function=np.mean,
+        )
     ax4.axis("off")
     if duplicate_title:
-        ax_cv.set_title(cv_string)
+        ax4.set_title(qcd_string)
     # select = adata.obs["shared_time_cv"] > np.quantile(
     #     adata.obs["shared_time_cv"], 0.9
     # )
