@@ -14,6 +14,7 @@ from scvi.nn import Decoder
 from scvi.nn import one_hot
 from torch.nn.functional import relu, softplus
 from torch import Tensor
+import torch.nn.functional as F
 
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models._transcription_dynamics import mrna_dynamics, atac_mrna_dynamics, get_initial_states, get_cell_parameters
@@ -155,7 +156,7 @@ class VelocityModelAuto(PyroModule):
         detection_gi_prior={"mean": 1, "alpha": 200},
         gene_add_alpha_hyp_prior={"alpha": 9.0, "beta": 3.0},
         gene_add_mean_hyp_prior={"alpha": 1.0, "beta": 100.0},
-        Tmax_prior={"mean": 50., "sd": 50.},
+        Tmax_prior={"mean": 50., "sd": 20.},
         **initial_values,
     ) -> None:
         
@@ -205,6 +206,13 @@ class VelocityModelAuto(PyroModule):
         self.s_overdispersion_factor_hyp_prior = s_overdispersion_factor_hyp_prior
         self.detection_gi_prior = detection_gi_prior
         self.detection_i_prior = detection_i_prior
+        
+        self.l1 = PyroModule[torch.nn.Linear](self.n_vars, 10)
+        self.l2 = PyroModule[torch.nn.Linear](10, self.n_vars)
+        self.l3 = PyroModule[torch.nn.Linear](10, self.n_vars)
+        self.l4 = PyroModule[torch.nn.Linear](10, self.n_vars)
+        self.dropout = torch.nn.Dropout(p=0.1)
+        
         
         self.register_buffer(
             "s_overdispersion_factor_alpha_mean",
@@ -298,6 +306,7 @@ class VelocityModelAuto(PyroModule):
             u_obs: torch.Tensor,
             s_obs: torch.Tensor,
             N_cn: torch.Tensor,
+            M_c: torch.Tensor,
             ind_x: torch.Tensor,
             batch_index: torch.Tensor):
         """
@@ -336,6 +345,7 @@ class VelocityModelAuto(PyroModule):
                 u_obs: torch.Tensor,
                 s_obs: torch.Tensor,
                 N_cn: torch.Tensor,
+                M_c: torch.Tensor,
                 ind_x: torch.Tensor,
                 batch_index: torch.Tensor):
         """
@@ -356,9 +366,10 @@ class VelocityModelAuto(PyroModule):
         
         batch_size = len(ind_x)
         obs2sample = one_hot(batch_index, self.n_batch)        
-        obs_plate = self.create_plates(u_obs, s_obs, N_cn, ind_x, batch_index)
         k = N_cn.shape[1]
-        N_cn = N_cn.long()   
+        N_cn = N_cn.long()
+        M_c = M_c.long().unsqueeze(-1) 
+        obs_plate = self.create_plates(u_obs, s_obs, N_cn, M_c, ind_x, batch_index)
         
         # ============= Expression Model =============== #
         T_max = pyro.sample('Tmax', dist.Gamma(G_a(self.Tmax_mean, self.Tmax_sd), G_b(self.Tmax_mean, self.Tmax_sd)))
@@ -368,30 +379,17 @@ class VelocityModelAuto(PyroModule):
             t_c = pyro.sample('t_c', dist.Normal(t_c_loc, t_c_scale).expand([batch_size, 1, 1]))
             T_c = pyro.deterministic('T_c', t_c*T_max)
         
-        # Time difference between neighbors:
-        delta_cn = T_c.unsqueeze(-1) - T_c[N_cn, :]
-
+        # Time difference between neighbors (previously: T_c.unsqueeze(-1) - T_c[N_cn, :]):
+        with obs_plate:
+            delta_cn = pyro.sample('delta_cn', dist.Gamma(self.one, self.one).expand([batch_size, k, 1]))
+        
         # Counts in each cell:
-        with obs_plate:
-            mu0_cg = pyro.sample('mu0_cg', dist.Gamma(self.one*5.0, self.one*1.0).expand([batch_size, self.n_genes, 2]))
+        # with obs_plate:
+        #     mu0_cg = pyro.sample('mu0_cg', dist.Gamma(self.one*5.0, self.one*1.0).expand([batch_size, self.n_genes, 2]))
 
-        # Weight of each nearest neighbor:    
-        wdash0_nc = pyro.sample('wdash0_nc', dist.Gamma(self.one*0.1, self.one*10.0).expand([1,batch_size]).to_event(2))
-        wdash5_nc = pyro.sample('wdash_nc', dist.Gamma(self.one*10.0, self.one*10.0).expand([k-1,batch_size]).to_event(2))
-        wdash_nc = torch.concat([wdash0_nc, wdash5_nc], axis = 0)
-        w_nc = wdash_nc/torch.sum(wdash_nc, axis = 0)
-
-        # Predicted counts from each neighbor:
-        y = (mu0_cg[...,0], mu0_cg[...,1])
-        dy_cn = torch.stack(vector_field_1(0.0,y,[regulatory_function_1]), axis = -1)[N_cn,...]
-        muhat_cg = torch.stack(y, axis = -1) + torch.sum((w_nc.T.unsqueeze(-1).unsqueeze(-1) * delta_cn * dy_cn), axis = 1)/k      
+        mu0_cg = pyro.deterministic('mu0_cg', torch.stack([u_obs, s_obs], axis = 2)/M_c)
         
-        # Initial conditions and predicted counts need to match up:
-        with obs_plate:
-            pyro.sample("constrain", dist.Normal(muhat_cg, self.one*torch.abs(muhat_cg)*0.2),
-                                                obs=mu0_cg)
-        
-        # ============= Measurement Model =============== #
+                # ============= Measurement Model =============== #
         # Cell specific relative detection efficiency with hierarchical prior across batches:
         detection_mean_y_e = pyro.sample(
             "detection_mean_y_e",
@@ -413,60 +411,68 @@ class VelocityModelAuto(PyroModule):
                 "detection_y_c",
                 dist.Gamma(detection_hyp_prior_alpha.unsqueeze(dim=-1), beta.unsqueeze(dim=-1)),
             )  # (self.n_obs, 1)        
-        
-        # Global relative detection efficiency between spliced and unspliced counts
-        detection_y_i = pyro.sample(
-            "detection_y_i",
-            dist.Gamma(
-                self.ones * self.detection_i_prior_alpha,
-                self.ones * self.detection_i_prior_alpha,
-            )
-            .expand([1, 1, 2]).to_event(3)
-        )
-        
-        # Gene specific relative detection efficiency between spliced and unspliced counts
-        detection_y_gi = pyro.sample(
-            "detection_y_gi",
-            dist.Gamma(
-                self.ones * self.detection_gi_prior_alpha,
-                self.ones * self.detection_gi_prior_alpha,
-            )
-            .expand([1, self.n_vars, 2])
-            .to_event(3),
-        )
-        
-        # Gene-specific additive component (Ambient RNA/ "Soup") #
-        s_g_gene_add_alpha_hyp = pyro.sample(
-            "s_g_gene_add_alpha_hyp",
-            dist.Gamma(self.gene_add_alpha_hyp_prior_alpha, self.gene_add_alpha_hyp_prior_beta).expand([2]).to_event(1),
-        )
-        s_g_gene_add_mean = pyro.sample(
-            "s_g_gene_add_mean",
-            dist.Gamma(
-                self.gene_add_mean_hyp_prior_alpha,
-                self.gene_add_mean_hyp_prior_beta,
-            )
-            .expand([self.n_batch, 1, 2])
-            .to_event(3),
-        ) 
-        s_g_gene_add_alpha_e_inv = pyro.sample(
-            "s_g_gene_add_alpha_e_inv",
-            dist.Exponential(s_g_gene_add_alpha_hyp).expand([self.n_batch, 1, 2]).to_event(3),
-        )
-        s_g_gene_add_alpha_e = self.ones / s_g_gene_add_alpha_e_inv.pow(2)
-        s_g_gene_add = pyro.sample(
-            "s_g_gene_add",
-            dist.Gamma(s_g_gene_add_alpha_e, s_g_gene_add_alpha_e / s_g_gene_add_mean)
-            .expand([self.n_batch, self.n_vars, 2])
-            .to_event(3),
-        )  
 
         # =====================Expected observed expression ======================= #
         with obs_plate:
-            mu = pyro.deterministic('mu', (mu0_cg + torch.einsum('cbi,bgi->cgi', obs2sample.unsqueeze(dim=-1), s_g_gene_add)) * \
-        detection_y_c * detection_y_i * detection_y_gi)
+            mu = pyro.deterministic('mu', (self.one*10**(-5) + mu0_cg * detection_y_c))
+        
+        # Weight of each nearest neighbor:    
+        wdash0_nc = pyro.sample('wdash0_nc', dist.Gamma(self.one*0.000001, self.one*1000000.0).expand([1,batch_size]).to_event(2))
+        wdash5_nc = pyro.sample('wdash5_nc', dist.Gamma(self.one*0.1, self.one*0.1).expand([k-1,batch_size]).to_event(2))
+        wdash_nc = pyro.deterministic('wdash_nc',torch.concat([wdash0_nc, wdash5_nc], axis = 0))
+        w_nc = pyro.deterministic('w_nc', wdash_nc/torch.sum(wdash_nc, axis = 0))
+        
+        # Vector field:
+
+        # x_u = self.l1(torch.log(mu[...,0]))
+        # x_u = F.leaky_relu(x_u)
+        
+        alpha0_g = pyro.sample('alpha0_g', dist.Gamma(self.one, self.one).expand([1,self.n_vars]).to_event(2))
+        beta0_g = pyro.sample('beta0_g', dist.Gamma(self.one, self.one/2.0).expand([1,self.n_vars]).to_event(2))
+        gamma0_g = pyro.sample('gamma0_g', dist.Gamma(self.one, self.one).expand([1,self.n_vars]).to_event(2))
+        
+        x = self.l1(torch.log(mu[...,1]))
+        x = self.dropout(x)
+        x = F.leaky_relu(x)
+        
+        # x = torch.concat([x_u, x_s], axis = -1)
+        
+        x_alpha = self.l2(x)
+        x_alpha = F.leaky_relu(x_alpha)
+        alpha = torch.sigmoid(x_alpha)*alpha0_g
+        
+        x_beta = self.l3(x)
+        x_beta = F.leaky_relu(x_beta)
+        beta = torch.sigmoid(x_beta)*beta0_g
+        
+        x_gamma = self.l4(x)
+        x_gamma = F.leaky_relu(x_gamma)
+        gamma = torch.sigmoid(x_gamma)*gamma0_g
+        
+        pyro.deterministic('alpha', alpha)
+        pyro.deterministic('beta', beta)
+        pyro.deterministic('gamma', gamma)
+        
+        # print('alpha', alpha.shape)
+        # print('beta', beta.shape)
+        # print('gamma', gamma.shape)
+        
+        du = alpha - beta*mu[...,0]
+        ds = beta*mu[...,0] - gamma*mu[...,1]
+        dy = du, ds 
+
+        # Predicted counts from each neighbor:
+        y = (mu[...,0], mu[...,1])
+        # dy = vector_field_1(0.0,y,[regulatory_function_1])
+        velocity = pyro.deterministic('velocity', dy[1])
+        dy_cn = pyro.deterministic('dy_cn', torch.stack(dy, axis = -1)[N_cn,...])
+        muhat_cg = pyro.deterministic('muhat_cg', (torch.stack(y, axis = -1) + torch.sum((w_nc.T.unsqueeze(-1).unsqueeze(-1) * delta_cn.unsqueeze(-1) * dy_cn), axis = 1)/k))      
         
         # =====================DATA likelihood ======================= #
         with obs_plate:
-            pyro.sample("data_target", dist.Poisson(rate = mu),
-                                                    obs=torch.stack([u_obs, s_obs], axis = 2))
+            # pyro.sample("data_target", dist.Poisson(rate = mu),
+            #                                         obs=torch.stack([u_obs, s_obs], axis = 2))
+            pyro.sample("constrain", dist.Normal(muhat_cg, 0.01), obs=mu)
+        
+        # print('MAE', torch.sum((torch.abs(muhat_cg - mu))))    
+        # print('1', torch.sum((mu - torch.stack([u_obs, s_obs], axis = 2))**2))
