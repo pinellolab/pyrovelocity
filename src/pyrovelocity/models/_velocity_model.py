@@ -167,10 +167,12 @@ class LogNormalModel(PyroModule):
     def s_scale(self):
         return self._pyrosample_helper(0.1)
 
+    # TODO: remove unused
     @PyroSample
     def u_inf(self):
         return self._pyrosample_helper(0.1)
 
+    # TODO: remove unused
     @PyroSample
     def s_inf(self):
         return self._pyrosample_helper(0.1)
@@ -179,14 +181,17 @@ class LogNormalModel(PyroModule):
     def dt_switching(self):
         return self._pyrosample_helper(1.0)
 
+    # TODO: remove unused
     @PyroSample
     def gene_offset(self):
         return Normal(self.zero, self.one)
 
+    # TODO: remove unused
     @PyroSample
     def t_scale(self):
         return Normal(self.zero, self.one * 0.1)
 
+    # TODO: remove unused
     @PyroSample
     def latent_time(self):
         if self.shared_time & self.plate_size == 2:
@@ -198,6 +203,7 @@ class LogNormalModel(PyroModule):
                 .to_event(1)
             )
 
+    # TODO: remove unused
     @PyroSample
     def cell_time(self):
         if self.plate_size == 2 and self.shared_time:
@@ -208,12 +214,13 @@ class LogNormalModel(PyroModule):
     def _pyrosample_helper(self, scale: float):
         if self.plate_size == 2:
             return LogNormal(self.zero, self.one * scale)
-        return (
-            LogNormal(self.zero, self.one * 0.1)
-            .expand((self.num_genes,))
-            .to_event(1)
-            .mask(False)
-        )
+        else:
+            return (
+                LogNormal(self.zero, self.one * 0.1)
+                .expand((self.num_genes,))
+                .to_event(1)
+                .mask(False)
+            )
 
     @beartype
     def get_likelihood(
