@@ -8,7 +8,7 @@ import scvelo as scv
 import seaborn as sns
 from anndata import AnnData
 from beartype import beartype
-from beartype.typing import Dict, List, Optional, Tuple
+from beartype.typing import Any, Dict, List, Optional, Tuple
 from matplotlib.axes import Axes
 from matplotlib.colors import Normalize
 from matplotlib.figure import FigureBase
@@ -23,7 +23,7 @@ from pyrovelocity.plots._uncertainty import (
     get_posterior_sample_angle_uncertainty,
 )
 from pyrovelocity.styles import configure_matplotlib_style
-from pyrovelocity.utils import quartile_coefficient_of_dispersion
+from pyrovelocity.utils import quartile_coefficient_of_dispersion, setup_colors
 
 __all__ = [
     "plot_vector_field_summary",
@@ -82,7 +82,7 @@ def plot_vector_field_summary(
     vector_field_basis: str,
     plot_name: Optional[PathLike | str] = None,
     cell_state: str = "cell_type",
-    state_color_dict: Optional[Dict[str, str]] = None,
+    state_color_dict: Optional[Dict[str, Any]] = None,
     fig: Optional[FigureBase] = None,
     gs: Optional[SubplotSpec] = None,
     default_fontsize: int = 7 if matplotlib.rcParams["text.usetex"] else 6,
@@ -113,6 +113,9 @@ def plot_vector_field_summary(
             "X2": adata.obsm[f"X_{vector_field_basis}"][:, 1],
         }
     )
+
+    if state_color_dict is None:
+        state_color_dict = setup_colors(adata, cell_state)
 
     sns.scatterplot(
         x="X1",
