@@ -19,7 +19,7 @@ from numpy.typing import NDArray
 from pandas import DataFrame, Index
 
 from pyrovelocity.plots._common import set_colorbar, set_font_size
-from pyrovelocity.utils import ensure_numpy_array
+from pyrovelocity.utils import ensure_numpy_array, setup_colors
 
 __all__ = ["rainbowplot", "us_rainbowplot"]
 
@@ -57,7 +57,7 @@ def rainbowplot_module(
         axes_dict = create_rainbow_axes(gs, number_of_genes, show_data)
 
     if state_info_colors:
-        colors = setup_state_info_colors(adata, cell_state)
+        colors = setup_state_info_colors(adata, cell_state, basis)
     else:
         colors = setup_colors(adata, cell_state)
 
@@ -672,7 +672,12 @@ def get_genes(
     )
 
 
-def setup_state_info_colors(adata, cell_state, basis):
+@beartype
+def setup_state_info_colors(
+    adata: AnnData,
+    cell_state: str,
+    basis: str,
+):
     scv.pl.scatter(
         adata,
         basis=basis,
@@ -687,14 +692,15 @@ def setup_state_info_colors(adata, cell_state, basis):
     )
 
 
-def setup_colors(adata, cell_state):
-    clusters = adata.obs.loc[:, cell_state]
-    return dict(
-        zip(
-            clusters.cat.categories,
-            sns.color_palette("deep", clusters.cat.categories.shape[0]),
-        )
-    )
+# TODO: remove following refactor to utils
+# def setup_colors(adata, cell_state):
+#     clusters = adata.obs.loc[:, cell_state]
+#     return dict(
+#         zip(
+#             clusters.cat.categories,
+#             sns.color_palette("deep", clusters.cat.categories.shape[0]),
+#         )
+#     )
 
 
 def get_posterior_samples_mean(data, posterior_samples) -> NDArray[Any]:

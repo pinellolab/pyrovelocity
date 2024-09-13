@@ -674,6 +674,21 @@ def quartile_coefficient_of_dispersion(data: NDArray) -> NDArray:
     return (q3 - q1) / (q3 + q1)
 
 
+@beartype
+def setup_colors(
+    adata: AnnData,
+    cell_state: str,
+) -> Dict[str, Tuple[float, float, float]]:
+    clusters = adata.obs.loc[:, cell_state]
+    color_dict = dict(
+        zip(
+            clusters.cat.categories,
+            sns.color_palette("deep", clusters.cat.categories.shape[0]),
+        )
+    )
+    return color_dict
+
+
 # TODO: remove unused functions
 # def log(x):
 #     """
