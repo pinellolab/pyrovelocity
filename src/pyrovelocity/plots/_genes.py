@@ -3,17 +3,19 @@ from typing import Dict, List, Optional, Tuple
 
 import adjustText
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
 import pandas
 import seaborn as sns
 from adjustText import adjust_text
 from anndata import AnnData
 from beartype import beartype
+from beartype.typing import Any, Callable
 from matplotlib.axes import Axes
 from matplotlib.figure import FigureBase
 from matplotlib.gridspec import GridSpec, SubplotSpec
 from matplotlib.patches import ArrowStyle, ConnectionStyle
-from numpy import ndarray
+from numpy.typing import NDArray
 from pandas import DataFrame
 
 from pyrovelocity.analysis.analyze import compute_volcano_data
@@ -36,11 +38,11 @@ if hasattr(adjustText, "logger"):
 
 @beartype
 def plot_gene_ranking(
-    posterior_samples: Dict[str, ndarray],
+    posterior_samples: Dict[str, NDArray[Any] | DataFrame],
     adata: AnnData,
     fig: Optional[FigureBase] = None,
     ax: Optional[Axes] = None,
-    gs: Optional[GridSpec | SubplotSpec] = None,
+    gs: Optional[SubplotSpec] = None,
     time_correlation_with: str = "s",
     putative_marker_genes: Optional[List[str]] = None,
     selected_genes: List[str] = [""],
@@ -51,12 +53,10 @@ def plot_gene_ranking(
     volcano_plot_path: str | Path = "volcano.pdf",
     defaultfontsize=7,
     show_xy_labels: bool = False,
-    truncate_lower_mae_percentile: float = 0,
+    truncate_lower_mae_percentile: float = 0.0,
 ) -> Tuple[DataFrame, Optional[FigureBase]]:
     if putative_marker_genes is not None:
-        assert isinstance(putative_marker_genes, (tuple, list))
-        assert isinstance(putative_marker_genes[0], str)
-        volcano_data = posterior_samples["gene_ranking"]
+        volcano_data: DataFrame = posterior_samples["gene_ranking"]
         genes = putative_marker_genes
     elif "u" in posterior_samples:
         volcano_data, genes = compute_volcano_data(
@@ -67,33 +67,16 @@ def plot_gene_ranking(
             negative,
         )
     else:
-        volcano_data = posterior_samples["gene_ranking"]
+        volcano_data: DataFrame = posterior_samples["gene_ranking"]
         genes = posterior_samples["genes"]
 
-    if truncate_lower_mae_percentile > 0:
-        genes_to_preserve = set(putative_marker_genes or []) | set(
-            selected_genes
-        )
-
-        preserved_genes_data = volcano_data[
-            volcano_data.index.isin(genes_to_preserve)
-        ]
-        other_genes_data = volcano_data[
-            ~volcano_data.index.isin(genes_to_preserve)
-        ]
-
-        mae_threshold = np.percentile(
-            other_genes_data["mean_mae"],
-            truncate_lower_mae_percentile,
-        )
-        filtered_other_genes = other_genes_data[
-            other_genes_data["mean_mae"] >= mae_threshold
-        ]
-
-        volcano_data = pandas.concat(
-            [preserved_genes_data, filtered_other_genes]
-        )
-
+    volcano_data["percentile"] = volcano_data["mean_mae"].rank(
+        pct=True, ascending=False
+    )
+    volcano_data["inverted_percentile"] = 1 - volcano_data["percentile"]
+    volcano_mask = (
+        volcano_data["inverted_percentile"] >= truncate_lower_mae_percentile
+    )
     adjust_text_compatible = is_adjust_text_compatible()
 
     defaultdotsize = 3
@@ -109,7 +92,10 @@ def plot_gene_ranking(
             volcano_data["time_correlation"], bins="auto", density=False
         )
         mean_mae_hist, mean_mae_bins = np.histogram(
-            volcano_data["mean_mae"], bins="auto", density=False
+            # a=volcano_data["mean_mae"],
+            a=volcano_data[volcano_mask]["inverted_percentile"],
+            bins="auto",
+            density=False,
         )
 
         if gs is None:
@@ -190,9 +176,10 @@ def plot_gene_ranking(
     ax.set_label("gene_selection")
     sns.scatterplot(
         x="time_correlation",
-        y="mean_mae",
+        # y="mean_mae",
+        y="inverted_percentile",
         hue="selected genes",
-        data=volcano_data,
+        data=volcano_data[volcano_mask],
         s=defaultdotsize,
         linewidth=0,
         ax=ax,
@@ -204,10 +191,11 @@ def plot_gene_ranking(
         volcano_data["time_correlation"].min(),
         volcano_data["time_correlation"].max(),
     )
-    y_min, y_max = (
-        volcano_data["mean_mae"].min(),
-        volcano_data["mean_mae"].max(),
-    )
+    # y_min, y_max = (
+    #     volcano_data["mean_mae"].min(),
+    #     volcano_data["mean_mae"].max(),
+    # )
+    y_min, y_max = truncate_lower_mae_percentile, 1.0
 
     padding = 0.1
     x_range = (x_max - x_min) * padding
@@ -220,12 +208,21 @@ def plot_gene_ranking(
     ax.set_ylabel("")
     if show_xy_labels:
         ax.set_xlabel(
-            "shared time correlation\nwith spliced expression",
+            "shared time correlation with spliced expression",
             fontsize=defaultfontsize,
         )
-        ax.set_ylabel("negative mean\nabsolute error", fontsize=defaultfontsize)
+        # ax.set_ylabel("negative mean\nabsolute error", fontsize=defaultfontsize)
+        ax.set_ylabel(
+            "mean absolute error percentile", fontsize=defaultfontsize
+        )
     else:
-        ax.set_yticklabels([])
+        # ax.set_yticklabels([], fontsize=defaultfontsize)
+        ax.yaxis.set_major_formatter(
+            ticker.FuncFormatter(
+                percentile_formatter(truncate_lower_mae_percentile)
+            )
+        )
+        ax.tick_params(axis="y", direction="in", pad=-12)
     sns.despine()
     ax.tick_params(labelsize=defaultfontsize - 1)
     ax.tick_params(axis="x", top=False, which="both")
@@ -237,14 +234,14 @@ def plot_gene_ranking(
     for i, g in enumerate(genes):
         ax.scatter(
             volcano_data.loc[g, :].time_correlation,
-            volcano_data.loc[g, :].mean_mae,
+            volcano_data.loc[g, :].inverted_percentile,
             s=15,
             color=dark_orange if g in selected_genes else light_orange,
             marker="*",
         )
         new_text = ax.text(
             volcano_data.loc[g, :].time_correlation,
-            volcano_data.loc[g, :].mean_mae,
+            volcano_data.loc[g, :].inverted_percentile,
             g,
             fontsize=defaultfontsize - 1,
             color="black",
@@ -287,6 +284,19 @@ def plot_gene_ranking(
         plt.close(fig)
 
     return volcano_data, fig
+
+
+@beartype
+def percentile_formatter(
+    lower_percentile: float, upper_percentile: float = 1.0
+) -> Callable:
+    def custom_formatter(x, pos):
+        if abs(x - lower_percentile) < 1e-6 or abs(x - upper_percentile) < 1e-6:
+            return f"{round(abs(1-x),2):.1f}"
+        else:
+            return ""
+
+    return custom_formatter
 
 
 def is_adjust_text_compatible():
