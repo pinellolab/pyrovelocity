@@ -9,7 +9,10 @@ import umap
 from anndata import AnnData
 from astropy.stats import rayleightest
 from beartype import beartype
+from beartype.typing import Any
 from numpy import ndarray
+from numpy.typing import NDArray
+from pandas import DataFrame
 from sklearn.pipeline import Pipeline
 
 from pyrovelocity.analysis.cytotrace import compute_similarity2
@@ -141,7 +144,7 @@ def compute_mean_vector_field(
 @beartype
 def compute_volcano_data(
     # posterior_samples: List[Dict[str, ndarray]],
-    posterior_samples: Dict[str, ndarray],
+    posterior_samples: Dict[str, NDArray[Any] | DataFrame],
     # adata: List[AnnData],
     adata: AnnData,
     time_correlation_with: str = "s",
