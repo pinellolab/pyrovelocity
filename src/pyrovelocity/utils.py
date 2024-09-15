@@ -177,18 +177,13 @@ def print_attributes(obj):
 def pretty_log_dict(d: dict) -> str:
     dict_as_string = "\n"
     for key, value in d.items():
-        # key_colored = colored(key, "green")
         key_colored = key
         if isinstance(value, ArrayLike):
             value_colored = f"{value.shape} {value.dtype}"
         else:
             value_lines = str(value).split("\n")
-            value_colored = "\n".join(
-                # colored(line, "white") for line in value_lines
-                line
-                for line in value_lines
-            )
-        dict_as_string += f"{key_colored}:\n{value_colored}\n"
+            value_colored = "\n".join(line for line in value_lines)
+        dict_as_string += f"{key_colored}:\n{type(value)}\n{value_colored}\n\n"
     return dict_as_string
 
 
