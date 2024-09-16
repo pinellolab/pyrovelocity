@@ -92,8 +92,8 @@ def plot_gene_ranking(
             volcano_data["time_correlation"], bins="auto", density=False
         )
         mean_mae_hist, mean_mae_bins = np.histogram(
-            # a=volcano_data["mean_mae"],
-            a=volcano_data[volcano_mask]["inverted_percentile"],
+            a=volcano_data["mean_mae"],
+            # a=volcano_data[volcano_mask]["inverted_percentile"],
             bins="auto",
             density=False,
         )
@@ -176,8 +176,8 @@ def plot_gene_ranking(
     ax.set_label("gene_selection")
     sns.scatterplot(
         x="time_correlation",
-        # y="mean_mae",
-        y="inverted_percentile",
+        y="mean_mae",
+        # y="inverted_percentile",
         hue="selected genes",
         data=volcano_data[volcano_mask],
         s=defaultdotsize,
@@ -191,11 +191,11 @@ def plot_gene_ranking(
         volcano_data["time_correlation"].min(),
         volcano_data["time_correlation"].max(),
     )
-    # y_min, y_max = (
-    #     volcano_data["mean_mae"].min(),
-    #     volcano_data["mean_mae"].max(),
-    # )
-    y_min, y_max = truncate_lower_mae_percentile, 1.0
+    y_min, y_max = (
+        volcano_data["mean_mae"].min(),
+        volcano_data["mean_mae"].max(),
+    )
+    # y_min, y_max = truncate_lower_mae_percentile, 1.0
 
     padding = 0.1
     x_range = (x_max - x_min) * padding
@@ -206,27 +206,34 @@ def plot_gene_ranking(
 
     ax.set_xlabel("")
     ax.set_ylabel("")
+
+    ax.tick_params(labelsize=defaultfontsize - 1)
+    ax.tick_params(axis="x", top=False, which="both")
+    ax.tick_params(axis="y", right=False, which="both")
+
     if show_xy_labels:
         ax.set_xlabel(
             "shared time correlation with spliced expression",
             fontsize=defaultfontsize,
         )
-        # ax.set_ylabel("negative mean\nabsolute error", fontsize=defaultfontsize)
-        ax.set_ylabel(
-            "mean absolute error percentile", fontsize=defaultfontsize
-        )
+        ax.set_ylabel("negative mean absolute error", fontsize=defaultfontsize)
+        # ax.set_ylabel(
+        #     "mean absolute error percentile", fontsize=defaultfontsize
+        # )
     else:
-        # ax.set_yticklabels([], fontsize=defaultfontsize)
-        ax.yaxis.set_major_formatter(
-            ticker.FuncFormatter(
-                percentile_formatter(truncate_lower_mae_percentile)
-            )
+        yticks = ax.get_yticks()
+        logger.info(
+            f"\nyticks: {yticks}\n",
         )
-        ax.tick_params(axis="y", direction="in", pad=-12)
+        ax.set_yticklabels([], fontsize=defaultfontsize)
+        ax.tick_params(axis="y", direction="in", pad=-20, labelsize=4)
+        # ax.yaxis.set_major_formatter(
+        #     ticker.FuncFormatter(
+        #         percentile_formatter(truncate_lower_mae_percentile)
+        #     )
+        # )
+
     sns.despine()
-    ax.tick_params(labelsize=defaultfontsize - 1)
-    ax.tick_params(axis="x", top=False, which="both")
-    ax.tick_params(axis="y", right=False, which="both")
 
     texts = []
     light_orange = "#ffb343"
@@ -234,14 +241,16 @@ def plot_gene_ranking(
     for i, g in enumerate(genes):
         ax.scatter(
             volcano_data.loc[g, :].time_correlation,
-            volcano_data.loc[g, :].inverted_percentile,
+            # volcano_data.loc[g, :].inverted_percentile,
+            volcano_data.loc[g, :].mean_mae,
             s=15,
             color=dark_orange if g in selected_genes else light_orange,
             marker="*",
         )
         new_text = ax.text(
             volcano_data.loc[g, :].time_correlation,
-            volcano_data.loc[g, :].inverted_percentile,
+            # volcano_data.loc[g, :].inverted_percentile,
+            volcano_data.loc[g, :].mean_mae,
             g,
             fontsize=defaultfontsize - 1,
             color="black",
