@@ -321,19 +321,6 @@ def extrapolate_prediction_sample_predictive(
         u_log_library_scale = tensor_dict["u_lib_size_scale"]
         s_log_library_scale = tensor_dict["s_lib_size_scale"]
         ind_x = tensor_dict["ind_x"].long().squeeze()
-        # dummy_obs = (
-        #     torch.tensor(u_obs).to("cuda:0"),
-        #     torch.tensor(s_obs).to("cuda:0"),
-        #     torch.tensor(u_log_library).to("cuda:0"),
-        #     torch.tensor(s_log_library).to("cuda:0"),
-        #     torch.tensor(u_log_library_mean).to("cuda:0"),
-        #     torch.tensor(s_log_library_mean).to("cuda:0"),
-        #     torch.tensor(u_log_library_scale).to("cuda:0"),
-        #     torch.tensor(s_log_library_scale).to("cuda:0"),
-        #     torch.tensor(ind_x).to("cuda:0"),
-        #     None,
-        #     None,
-        # )
         dummy_obs = (
             torch.tensor(u_obs),
             torch.tensor(s_obs),
