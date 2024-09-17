@@ -1,9 +1,11 @@
 from typing import List
 
+import numpy as np
 import pandas as pd
 import pytest
 
 from pyrovelocity.analysis.analyze import (
+    mae_per_gene,
     pareto_frontier_genes,
     top_mae_genes,
 )
@@ -50,6 +52,48 @@ def sample_volcano_data_with_ribosomal() -> pd.DataFrame:
             "Gene9",
             "Gene10",
         ],
+    )
+
+
+@pytest.mark.parametrize("xp", [np])
+def test_mae_per_gene_basic(xp):
+    true_counts = xp.array(
+        [
+            [1, 2, 3],
+            [1, 2, 3],
+            [1, 2, 3],
+            [1, 2, 3],
+        ]
+    )
+    pred_counts = xp.array(
+        [
+            [1.1, 2.2, 3.3],
+            [1.1, 2.2, 3.3],
+            [1.1, 2.2, 3.3],
+            [1.1, 2.2, 3.3],
+        ]
+    )
+    mae = mae_per_gene(pred_counts, true_counts)
+    assert xp.allclose(mae, xp.array([-0.1, -0.1, -0.1]), rtol=1e-2, atol=1e-2)
+
+
+@pytest.mark.parametrize("xp", [np])
+def test_mae_per_gene_zero_counts(xp):
+    true_counts = xp.array(
+        [
+            [10, 15, 0],
+            [20, 25, 0],
+        ]
+    )
+    pred_counts = xp.array(
+        [
+            [12, 14, 0],
+            [18, 26, 0],
+        ]
+    )
+    mae = mae_per_gene(pred_counts, true_counts)
+    assert xp.allclose(
+        mae, xp.array([-0.133, -0.05, -0.0]), rtol=1e-2, atol=1e-2
     )
 
 
