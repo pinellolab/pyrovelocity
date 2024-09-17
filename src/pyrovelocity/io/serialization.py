@@ -9,7 +9,12 @@ from beartype import beartype
 from beartype.typing import Any, Dict
 from scipy import sparse
 
-from pyrovelocity.utils import ensure_numpy_array
+from pyrovelocity.utils import (
+    configure_logging,
+    ensure_numpy_array,
+    pretty_log_dict,
+    pretty_print_dict,
+)
 
 __all__ = [
     "serialize_anndata",
@@ -18,6 +23,8 @@ __all__ = [
     "load_anndata_from_json",
     "create_sample_anndata",
 ]
+
+logger = configure_logging(__name__)
 
 
 @beartype
@@ -75,6 +82,11 @@ def serialize_anndata(adata: AnnData | AnnDataRaw) -> Dict[str, Any]:
 
     if adata.raw is not None:
         serialized["raw"] = serialize_anndata(adata.raw)
+
+    logger.debug(
+        "\nSerializing AnnData object from dictionary:\n\n"
+        f"{pretty_log_dict(serialized)}\n\n"
+    )
 
     return serialized
 
