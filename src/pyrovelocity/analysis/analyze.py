@@ -143,24 +143,18 @@ def compute_mean_vector_field(
 
 @beartype
 def compute_volcano_data(
-    # posterior_samples: List[Dict[str, ndarray]],
     posterior_samples: Dict[str, NDArray[Any] | DataFrame],
-    # adata: List[AnnData],
     adata: AnnData,
     time_correlation_with: str = "s",
     selected_genes: Optional[List[str]] = None,
     negative: bool = False,
 ) -> Tuple[pd.DataFrame, List[str]]:
-    # assert isinstance(posterior_samples, (tuple, list))
-    # assert isinstance(adata, (tuple, list))
     assert "s" in posterior_samples
     assert "alpha" in posterior_samples
 
     maes_list = []
     cors = []
     genes = []
-    # labels = []
-    # switching = []
 
     for sample in range(posterior_samples["alpha"].shape[0]):
         maes_list.append(
@@ -175,27 +169,10 @@ def compute_volcano_data(
         )
         cors.append(df_genes_cors[0])
         genes.append(adata.var_names.values)
-        # labels.append([f"Poisson_{label}"] * len(adata.var_names.values))
-    # for p, ad, label in zip(posterior_samples, adata, ["train", "valid"]):
-    #     for sample in range(p["alpha"].shape[0]):
-    #         maes_list.append(
-    #             mae_per_gene(
-    #                 p["s"][sample].squeeze(),
-    #                 ensure_numpy_array(ad.layers["raw_spliced"]),
-    #             )
-    #         )
-    #         df_genes_cors = compute_similarity2(
-    #             p[time_correlation_with][sample].squeeze(),
-    #             p["cell_time"][sample].squeeze().reshape(-1, 1),
-    #         )
-    #         cors.append(df_genes_cors[0])
-    #         genes.append(ad.var_names.values)
-    #         labels.append([f"Poisson_{label}"] * len(ad.var_names.values))
 
     volcano_data = pd.DataFrame(
         {
             "mean_mae": np.hstack(maes_list),
-            # "label": np.hstack(labels),
             "time_correlation": np.hstack(cors),
             "genes": np.hstack(genes),
         }
