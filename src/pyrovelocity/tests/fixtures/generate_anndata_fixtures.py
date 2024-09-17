@@ -13,10 +13,16 @@ from anndata import AnnData
 
 from pyrovelocity.io.datasets import pancreas
 from pyrovelocity.io.serialization import (
+    load_anndata_from_json,
     save_anndata_to_json,
 )
 from pyrovelocity.tasks.preprocess import preprocess_dataset
-from pyrovelocity.utils import configure_logging, print_anndata
+from pyrovelocity.utils import (
+    anndata_string,
+    configure_logging,
+    print_anndata,
+    print_string_diff,
+)
 from pyrovelocity.workflows.main_configuration import (
     pancreas_summary_configuration,
 )
@@ -68,11 +74,27 @@ def generate_pancreas_fixture_data(
         set(adata.var_names[:n_vars].tolist() + selected_genes_in_adata)
     )
     adata = adata[:, genes_to_keep]
+    preprocessed_anndata_string = anndata_string(adata)
 
     print_anndata(adata)
     save_anndata_to_json(adata, output_path)
 
     logger.info(f"Test fixture saved to {output_path}")
+
+    try:
+        logger.info("Attempting to load the serialized AnnData object...")
+        loaded_adata = load_anndata_from_json(output_path)
+        loaded_anndata_string = anndata_string(loaded_adata)
+        logger.info("Successfully loaded the serialized AnnData object.")
+        print_string_diff(
+            text1=preprocessed_anndata_string,
+            text2=loaded_anndata_string,
+            diff_title="Preprocessed vs Loaded AnnData",
+        )
+        print_anndata(loaded_adata)
+    except Exception as e:
+        logger.error(f"Error loading serialized AnnData object: {str(e)}")
+
     return output_path
 
 
