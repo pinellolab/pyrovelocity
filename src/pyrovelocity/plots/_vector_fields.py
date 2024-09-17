@@ -94,6 +94,7 @@ def plot_vector_field_summary(
     save_fig: bool = False,
     linewidth: float = 0.5,
     title_background_color: str = "#F0F0F0",
+    force_complete_angular_scale: bool = False,
 ) -> FigureBase:
     posterior_time = posterior_samples["cell_time"]
     pca_embeds_angle = posterior_samples["pca_embeds_angle"]
@@ -216,6 +217,7 @@ def plot_vector_field_summary(
         cmap="inferno",
         cmax=None,
         show_titles=False,
+        force_complete_angular_scale=force_complete_angular_scale,
     )
     ax[3].set_title(
         r"PCA angle uncertainty"
@@ -314,7 +316,7 @@ def plot_vector_field_summary(
         r"$\left.\hat{\sigma}(t) \right/ \hat{\mu}(t)$",
     ]
     colorbar_ticks = [
-        [0, 360],
+        [0, 360] if force_complete_angular_scale else [],
         [0, 1],
         [],
     ]
@@ -394,6 +396,7 @@ def plot_vector_field_uncertainty(
     show_titles: bool = True,
     default_fontsize: int = 7,
     plot_individual_obs: bool = False,
+    force_complete_angular_scale: bool = False,
 ):
     if uncertain_measure == "angle":
         adata.obs["uncertain"] = get_posterior_sample_angle_uncertainty(
@@ -489,11 +492,9 @@ def plot_vector_field_uncertainty(
                 norm=None,
                 vmin=0
                 if "angle" in uncertain_measure
-                # else np.percentile(ordered_uncertainty_measure, 0.1),
                 else min(ordered_uncertainty_measure),
                 vmax=360
-                if "angle" in uncertain_measure
-                # else np.percentile(ordered_uncertainty_measure, 99.9),
+                if force_complete_angular_scale
                 else max(ordered_uncertainty_measure),
                 s=dotsize,
                 linewidth=1,
@@ -510,7 +511,7 @@ def plot_vector_field_uncertainty(
                 if "angle" in uncertain_measure
                 else min(ordered_uncertainty_measure),
                 vmax=360
-                if "angle" in uncertain_measure
+                if force_complete_angular_scale
                 else max(ordered_uncertainty_measure),
                 linewidths=0,
                 edgecolors="none",
