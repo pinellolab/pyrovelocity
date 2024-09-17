@@ -125,6 +125,25 @@ def test_serialize_deserialize_with_complex_uns():
     )
 
 
+def test_serialize_deserialize_with_nested_numpy_array_in_uns(sample_adata):
+    adata = sample_adata.copy()
+    adata.uns["numpy_array"] = np.array([1, 2, 3])
+    adata.uns["nested_dict"] = {"array": np.array([4, 5, 6])}
+
+    serialized = serialize_anndata(adata)
+    deserialized = deserialize_anndata(serialized)
+
+    assert isinstance(deserialized.uns["numpy_array"], np.ndarray)
+    assert np.array_equal(
+        adata.uns["numpy_array"], deserialized.uns["numpy_array"]
+    )
+    assert isinstance(deserialized.uns["nested_dict"]["array"], np.ndarray)
+    assert np.array_equal(
+        adata.uns["nested_dict"]["array"],
+        deserialized.uns["nested_dict"]["array"],
+    )
+
+
 def test_load_anndata_from_nonexistent_file():
     with pytest.raises(FileNotFoundError):
         load_anndata_from_json("nonexistent_file.json")
