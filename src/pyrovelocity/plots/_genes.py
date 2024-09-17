@@ -54,17 +54,18 @@ def plot_gene_ranking(
     defaultfontsize=7,
     show_xy_labels: bool = False,
     truncate_lower_mae_percentile: float = 0.0,
+    recompute_volcano_data: bool = False,
 ) -> Tuple[DataFrame, Optional[FigureBase]]:
     if putative_marker_genes is not None:
         volcano_data: DataFrame = posterior_samples["gene_ranking"]
         genes = putative_marker_genes
-    elif "u" in posterior_samples:
+    elif "u" in posterior_samples or recompute_volcano_data:
         volcano_data, genes = compute_volcano_data(
-            posterior_samples,
-            adata,
-            time_correlation_with,
-            putative_marker_genes,
-            negative,
+            posterior_samples=posterior_samples,
+            adata=adata,
+            time_correlation_with=time_correlation_with,
+            selected_genes=putative_marker_genes,
+            negative=negative,
         )
     else:
         volcano_data: DataFrame = posterior_samples["gene_ranking"]
