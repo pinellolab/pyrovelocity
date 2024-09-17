@@ -10,6 +10,7 @@ from anndata import AnnData
 from astropy.stats import rayleightest
 from beartype import beartype
 from beartype.typing import Any
+from jaxtyping import Array, Num, jaxtyped
 from numpy import ndarray
 from numpy.typing import NDArray
 from pandas import DataFrame
@@ -304,11 +305,11 @@ def vector_field_uncertainty(
     return v_map_all, embeds_radian, fdri
 
 
-@beartype
+@jaxtyped(typechecker=beartype)
 def mae_per_gene(
-    pred_counts: NDArray[np.number],
-    true_counts: NDArray[np.number],
-) -> NDArray[np.number]:
+    pred_counts: NDArray[np.number] | Num[Array, "obs vars"],
+    true_counts: NDArray[np.number] | Num[Array, "obs vars"],
+) -> NDArray[np.number] | Num[Array, "vars"]:
     """
     Computes mean absolute error (MAE) between predictive samples and true counts.
 
@@ -316,7 +317,7 @@ def mae_per_gene(
     consistency with the convention that higher values should indicate
     better performance in visualizations.
 
-    TODO: convert to jax
+    TODO: use jax and deprecate numpy
 
     ```python
     import jax.numpy as jnp
@@ -331,16 +332,21 @@ def mae_per_gene(
     ```
 
     Args:
-        pred_counts (NDArray[np.number]): Predicted counts for all observations.
-        true_counts (NDArray[np.number]): Observed counts for all observations.
+        pred_counts (NDArray[np.number] | Num[Array, "obs vars"]):
+            Predicted counts for all observations.
+        true_counts (NDArray[np.number] | Num[Array, "obs vars"]):
+            Observed counts for all observations.
 
     Returns:
-        NDArray[np.number]: Negative mean absolute error for each gene.
+        NDArray[np.number] | Num[Array, "vars"]: Negative mean absolute error for each gene.
 
     Example:
-        >>> import numpy as np
         >>> from pyrovelocity.analysis.analyze import mae_per_gene
-        >>> true_counts = np.array(
+        >>> import numpy as np
+        >>> xp = np
+        >>> # import jax.numpy as jnp
+        >>> # xp = jnp
+        >>> true_counts = xp.array(
         ...     [
         ...         [1, 2, 3],
         ...         [1, 2, 3],
@@ -348,7 +354,7 @@ def mae_per_gene(
         ...         [1, 2, 3],
         ...     ]
         ... )
-        >>> pred_counts = np.array(
+        >>> pred_counts = xp.array(
         ...     [
         ...         [1.1, 2.2, 3.3],
         ...         [1.1, 2.2, 3.3],
@@ -356,26 +362,41 @@ def mae_per_gene(
         ...         [1.1, 2.2, 3.3],
         ...     ]
         ... )
-        >>> mae_per_gene(pred_counts, true_counts)
-        array([-0.1, -0.1, -0.1])
-        >>> true_counts = np.array(
+        >>> mae = mae_per_gene(pred_counts, true_counts)
+        >>> print(mae)
+        >>> result = xp.allclose(
+        ...     mae, xp.array([-0.1, -0.1, -0.1]), rtol=1e-2, atol=1e-2
+        ... )
+        >>> print(result.item() if hasattr(result, 'item') else result)
+        True
+        >>> true_counts = xp.array(
         ...     [
-        ...         [10, 15],
-        ...         [20, 25],
+        ...         [10, 15, 0],
+        ...         [20, 25, 0],
         ...     ]
         ... )
-        >>> pred_counts = np.array(
+        >>> pred_counts = xp.array(
         ...     [
-        ...         [12, 14],
-        ...         [18, 26],
+        ...         [12, 14, 0],
+        ...         [18, 26, 0],
         ...     ]
         ... )
-        >>> mae_per_gene(pred_counts, true_counts)
-        array([-0.133..., -0.05... ])
+        >>> mae = mae_per_gene(pred_counts, true_counts)
+        >>> print(mae)
+        >>> result = xp.allclose(
+        ...     mae, xp.array([-0.133, -0.05, -0.]), rtol=1e-2, atol=1e-2
+        ... )
+        >>> print(result.item() if hasattr(result, 'item') else result)
+        True
     """
-    total_true_counts = np.maximum(true_counts.sum(axis=0), 1)
-    mae = np.abs(true_counts - pred_counts).sum(axis=0) / total_true_counts
-    return -mae
+    xp = np
+    mean_true_counts = xp.mean(true_counts, axis=0)
+    absolute_errors = xp.abs(true_counts - pred_counts)
+    mae = xp.mean(absolute_errors, axis=0)
+
+    normalized_mae = xp.nan_to_num(mae / mean_true_counts, nan=0.0, posinf=0.0)
+
+    return -normalized_mae
 
 
 @beartype
