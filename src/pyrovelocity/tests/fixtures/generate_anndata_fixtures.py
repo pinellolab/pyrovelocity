@@ -10,6 +10,8 @@ It is used to generate test fixture data.
 from pathlib import Path
 
 from anndata import AnnData
+from beartype import beartype
+from beartype.typing import List, Union
 
 from pyrovelocity.io.datasets import pancreas
 from pyrovelocity.io.serialization import (
@@ -32,6 +34,7 @@ __all__ = ["generate_pancreas_fixture_data"]
 logger = configure_logging(__name__)
 
 
+@beartype
 def generate_pancreas_fixture_data(
     output_path: str
     | Path = "src/pyrovelocity/tests/data/preprocessed_pancreas.json",
@@ -40,6 +43,10 @@ def generate_pancreas_fixture_data(
 ) -> Path:
     """
     Generate a test fixture for the pancreas dataset.
+
+    Note that the selected_genes are not enforced in the preprocess_dataset
+    function. This is to prefer higher quality genes over the selected_genes
+    in generating the test fixture data.
 
     Args:
         output_path: Path to save the JSON fixture.
@@ -60,17 +67,18 @@ def generate_pancreas_fixture_data(
         process_cytotrace=True,
     )
 
-    selected_genes = pancreas_summary_configuration.selected_genes
-    selected_genes_in_adata = [
+    selected_genes: List[str] = pancreas_summary_configuration.selected_genes
+    selected_genes_in_adata: List[str] = [
         gene for gene in selected_genes if gene in adata.var_names
     ]
     if len(selected_genes_in_adata) < len(selected_genes):
         logger.warning(
-            f"Warning: Some selected genes are not in the downsampled data:",
-            f"{set(selected_genes) - set(selected_genes_in_adata)}",
+            f"\nSome selected genes are not in the downsampled data:\n"
+            f"selected_genes: {selected_genes}\n"
+            f"selected_genes_in_adata: {selected_genes_in_adata}\n"
         )
 
-    genes_to_keep = list(
+    genes_to_keep: List[str] = list(
         set(adata.var_names[:n_vars].tolist() + selected_genes_in_adata)
     )
     adata = adata[:, genes_to_keep]
