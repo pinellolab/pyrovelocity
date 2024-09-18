@@ -147,8 +147,29 @@ def deserialize_anndata(data: Dict[str, Any]) -> AnnData | AnnDataRaw:
 
     if "uns" in data:
         adata_dict["uns"] = data["uns"]
+        for key in [
+            "clusters_coarse_colors",
+            "clusters_colors",
+            "day_colors",
+            "velocity_graph",
+            "velocity_graph_neg",
+        ]:
+            if key in adata_dict["uns"] and isinstance(
+                adata_dict["uns"][key], list
+            ):
+                adata_dict["uns"][key] = np.array(adata_dict["uns"][key])
 
     adata = AnnData(**adata_dict)
+
+    category_columns = ["clusters", "clusters_coarse", "leiden"]
+    for col in category_columns:
+        if col in adata.obs.columns:
+            adata.obs[col] = adata.obs[col].astype("category")
+
+    if "highly_variable_genes" in adata.var.columns:
+        adata.var["highly_variable_genes"] = adata.var[
+            "highly_variable_genes"
+        ].astype("category")
 
     if "raw" in data:
         raw_data = deserialize_anndata(data["raw"])
