@@ -58,6 +58,7 @@ def preprocess_dataset(
     default_velocity_mode: str = "dynamical",
     vector_field_basis: str = "umap",
     cell_state: str = "clusters",
+    selected_genes: List[str] = [""],
 ) -> Tuple[AnnData, Path, Path]:
     """
     Preprocess data.
@@ -80,6 +81,7 @@ def preprocess_dataset(
         default_velocity_mode (str, optional): default velocity mode. Defaults to "dynamical".
         vector_field_basis (str, optional): vector field basis. Defaults to "umap".
         cell_state (str, optional): Name of the cell state/cluster variable. Defaults to "clusters".
+        selected_genes (Optional[List[str]], optional): List of genes to preserve during preprocessing. Defaults to None.
 
     Returns:
         AnnData: processed AnnData object
@@ -105,6 +107,14 @@ def preprocess_dataset(
         adata = load_anndata_from_path(data_path)
     else:
         data_path = "AnnData object"
+
+    if selected_genes and selected_genes != [""]:
+        missing_genes = set(selected_genes) - set(adata.var_names)
+        if missing_genes:
+            logger.warning(
+                f"The following selected genes are missing from the AnnData object: "
+                f"{missing_genes}"
+            )
 
     if use_obs_subset:
         if n_obs_subset > adata.n_obs:
@@ -169,6 +179,11 @@ def preprocess_dataset(
         and not overwrite
     ):
         logger.info(f"{processed_path} exists")
+        adata = load_anndata_from_path(processed_path)
+        logger.info(
+            f"loaded precomputed preprocessed data from {processed_path}"
+        )
+        print_anndata(adata)
         return adata, Path(processed_path), reports_processed_path
     else:
         logger.info(f"generating {processed_path} ...")
@@ -198,6 +213,15 @@ def preprocess_dataset(
             logger.info("processing data with cytotrace ...")
             cytotrace_sparse(adata, layer="spliced")
 
+        # TODO: clarify usage of selected_genes
+        # It is possible to pass selected_genes to filter_and_normalize by
+        # including the parameter
+        #
+        # retain_genes=selected_genes
+        #
+        # This is not done here because then the resulting genes would not
+        # necessarily pass the standard filters. However, it is confusing to
+        # have the selected_genes parameter of this function ignored here.
         adata_tmp = scv.pp.filter_and_normalize(
             adata,
             min_shared_counts=min_shared_counts,
@@ -311,7 +335,31 @@ def preprocess_dataset(
                     f"setting n_vars_subset to len(likelihood_sorted_genes): {len(likelihood_sorted_genes)}"
                 )
                 n_vars_subset = len(likelihood_sorted_genes)
-            adata = adata[:, likelihood_sorted_genes[:n_vars_subset]].copy()
+
+            # TODO: clarify usage of selected_genes
+            if selected_genes and selected_genes != [""]:
+                selected_genes_set = set(selected_genes)
+                likelihood_sorted_genes_set = set(
+                    likelihood_sorted_genes[:n_vars_subset]
+                )
+                additional_genes = (
+                    selected_genes_set - likelihood_sorted_genes_set
+                )
+
+                if additional_genes:
+                    n_vars_subset = min(
+                        n_vars_subset + len(additional_genes), adata.n_vars
+                    )
+                    logger.info(
+                        f"Including {len(additional_genes)} additional selected genes. New n_vars_subset: {n_vars_subset}"
+                    )
+
+                final_gene_list = list(
+                    likelihood_sorted_genes[:n_vars_subset]
+                ) + list(additional_genes)
+                adata = adata[:, final_gene_list].copy()
+            else:
+                adata = adata[:, likelihood_sorted_genes[:n_vars_subset]].copy()
         scv.tl.velocity_graph(
             data=adata,
             n_jobs=-1,
@@ -320,7 +368,8 @@ def preprocess_dataset(
 
         scv.tl.velocity_embedding(adata, basis=vector_field_basis)
 
-        scv.tl.latent_time(adata)
+        if n_obs_subset is None or n_obs_subset > 100:
+            scv.tl.latent_time(adata)
 
         print_anndata(adata)
         adata.write(processed_path)
