@@ -6,7 +6,7 @@ from pyrovelocity.io.serialization import load_anndata_from_json
 
 
 @pytest.fixture
-def adata_preprocessed():
+def adata_preprocessed_3_4():
     fixture_file_path = (
         files("pyrovelocity.tests.data") / "preprocessed_3_4.json"
     )
