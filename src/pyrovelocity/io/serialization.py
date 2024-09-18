@@ -9,6 +9,7 @@ from beartype import beartype
 from beartype.typing import Any, Dict
 from scipy import sparse
 
+from pyrovelocity.io.hash import hash_file
 from pyrovelocity.utils import (
     configure_logging,
     ensure_numpy_array,
@@ -185,31 +186,71 @@ def deserialize_anndata(data: Dict[str, Any]) -> AnnData | AnnDataRaw:
 def save_anndata_to_json(
     adata: AnnData,
     filename: str | Path,
-) -> None:
+    expected_hash: str | None = None,
+) -> str:
     """
     Save an AnnData object to a JSON file.
 
     Args:
         adata: AnnData object to save
         filename: Name of the JSON file to save to
+        expected_hash: Optional hash to validate against
+
+    Returns:
+        SHA-256 hash of the saved file
     """
+    filename = Path(filename)
     adata_dict = serialize_anndata(adata)
-    with open(filename, "w") as f:
+
+    with filename.open("w") as f:
         json.dump(adata_dict, f, indent=4, cls=NumpyEncoder)
+
+    file_hash = hash_file(filename)
+    logger.info(f"\nSaved file: {filename}\nSHA-256 hash: {file_hash}\n")
+
+    if expected_hash is not None:
+        if file_hash == expected_hash:
+            logger.info("Hash validation succeeded.")
+        else:
+            logger.warning(
+                f"\nHash mismatch.\n"
+                f"Expected: {expected_hash},\n"
+                f"Actual: {file_hash}\n\n"
+            )
+
+    return file_hash
 
 
 @beartype
-def load_anndata_from_json(filename: str | Path) -> AnnData:
+def load_anndata_from_json(
+    filename: str | Path,
+    expected_hash: str | None = None,
+) -> AnnData:
     """
     Load an AnnData object from a JSON file.
 
     Args:
         filename: Name of the JSON file to load from
+        expected_hash: Optional hash to validate against
 
     Returns:
         Reconstructed AnnData object
     """
-    with open(filename, "r") as f:
+    filename = Path(filename)
+    file_hash = hash_file(filename)
+    logger.info(f"\nLoading file: {filename}\nSHA-256 hash: {file_hash}\n\n")
+
+    if expected_hash is not None:
+        if file_hash == expected_hash:
+            logger.info("Hash validation succeeded.")
+        else:
+            logger.warning(
+                f"\nHash mismatch.\n"
+                f"Expected: {expected_hash}\n"
+                f"Actual: {file_hash}\n\n"
+            )
+
+    with filename.open("r") as f:
         adata_dict = json.load(f)
     return deserialize_anndata(adata_dict)
 
