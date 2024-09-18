@@ -7,6 +7,8 @@ This script should not be executed by pytest.
 It is used to generate test fixture data.
 """
 
+import shutil
+import tempfile
 from pathlib import Path
 
 from anndata import AnnData
@@ -18,10 +20,13 @@ from pyrovelocity.io.serialization import (
     load_anndata_from_json,
     save_anndata_to_json,
 )
+from pyrovelocity.tasks.postprocess import postprocess_dataset
 from pyrovelocity.tasks.preprocess import preprocess_dataset
+from pyrovelocity.tasks.train import train_dataset
 from pyrovelocity.utils import (
     anndata_string,
     configure_logging,
+    load_anndata_from_path,
     print_anndata,
     print_string_diff,
 )
@@ -106,5 +111,114 @@ def generate_pancreas_fixture_data(
     return output_path
 
 
+@beartype
+def generate_postprocessed_pancreas_fixture_data(
+    input_path: str
+    | Path = "src/pyrovelocity/tests/data/preprocessed_pancreas_50_7.json",
+    trained_output_path: str
+    | Path = "src/pyrovelocity/tests/data/trained_pancreas_50_7.json",
+    postprocessed_output_path: str
+    | Path = "src/pyrovelocity/tests/data/postprocessed_pancreas_50_7.json",
+    max_epochs: int = 10,
+    retain_temp_files: bool = False,
+    retain_dir: str
+    | Path = "src/pyrovelocity/tests/data/train_postprocess_artifacts",
+) -> tuple[Path, Path]:
+    """
+    Generate trained and postprocessed test fixtures for the pancreas dataset.
+
+    Args:
+        input_path: Path to load the preprocessed JSON fixture.
+        trained_output_path: Path to save the trained JSON fixture.
+        postprocessed_output_path: Path to save the postprocessed JSON fixture.
+        max_epochs: Number of epochs to train the model.
+        retain_temp_files: If True, copy temporary files to retain_dir.
+        retain_dir: Directory to copy temporary files to if retain_temp_files is True.
+
+    Returns:
+        Tuple of paths to the saved trained and postprocessed JSON fixtures.
+    """
+    input_path = Path(input_path)
+    trained_output_path = Path(trained_output_path)
+    postprocessed_output_path = Path(postprocessed_output_path)
+
+    adata = load_anndata_from_json(input_path)
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        models_path = Path(tmp_dir) / "models"
+        logger.info(f"Using temporary directory: {models_path}")
+
+        result = train_dataset(
+            adata=adata,
+            data_set_name="pancreas",
+            model_identifier="model2",
+            models_path=models_path,
+            max_epochs=max_epochs,
+            force=True,
+        )
+
+        (
+            data_model,
+            data_model_path,
+            trained_data_path,
+            model_path,
+            posterior_samples_path,
+            metrics_path,
+            run_info_path,
+            loss_plot_path,
+            loss_csv_path,
+        ) = result
+
+        trained_adata = load_anndata_from_path(trained_data_path)
+
+        (
+            pyrovelocity_data_path,
+            postprocessed_data_path,
+        ) = postprocess_dataset(
+            data_model=data_model,
+            data_model_path=data_model_path,
+            trained_data_path=trained_data_path,
+            model_path=model_path,
+            posterior_samples_path=posterior_samples_path,
+            metrics_path=metrics_path,
+            vector_field_basis="umap",
+            number_posterior_samples=4,
+        )
+
+        postprocessed_adata = load_anndata_from_path(postprocessed_data_path)
+
+        if retain_temp_files:
+            retain_dir = Path(retain_dir)
+            retain_dir.mkdir(parents=True, exist_ok=True)
+            logger.info(f"Copying temporary files to {retain_dir}")
+            shutil.copytree(tmp_dir, retain_dir, dirs_exist_ok=True)
+
+    preprocessed_anndata_string = anndata_string(adata)
+    trained_anndata_string = anndata_string(trained_adata)
+    postprocessed_anndata_string = anndata_string(postprocessed_adata)
+
+    print_string_diff(
+        text1=preprocessed_anndata_string,
+        text2=trained_anndata_string,
+        diff_title="Preprocessed vs Trained AnnData",
+    )
+    print_string_diff(
+        text1=trained_anndata_string,
+        text2=postprocessed_anndata_string,
+        diff_title="Trained vs Postprocessed AnnData",
+    )
+    print_anndata(postprocessed_adata)
+
+    save_anndata_to_json(trained_adata, trained_output_path)
+    logger.info(f"Trained test fixture saved to {trained_output_path}")
+    save_anndata_to_json(postprocessed_adata, postprocessed_output_path)
+    logger.info(
+        f"Postprocessed test fixture saved to {postprocessed_output_path}"
+    )
+
+    return trained_output_path, postprocessed_output_path
+
+
 if __name__ == "__main__":
     generate_pancreas_fixture_data()
+    generate_postprocessed_pancreas_fixture_data()
