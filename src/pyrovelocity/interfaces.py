@@ -1,4 +1,4 @@
-from dataclasses import make_dataclass
+from dataclasses import field, make_dataclass
 from enum import Enum
 
 from beartype.typing import TYPE_CHECKING, Any, Dict, Tuple, Type
@@ -61,6 +61,7 @@ preprocess_data_types_defaults: Dict[str, Tuple[Type, Any]] = {
     "adata": (str, "data/external/simulated.h5ad"),
     "data_processed_path": (str, "data/processed"),
     "reports_processed_path": (str, "reports/processed"),
+    "selected_genes": (list[str], field(default_factory=lambda: [""])),
 }
 
 preprocess_data_fields = create_dataclass_from_callable(
