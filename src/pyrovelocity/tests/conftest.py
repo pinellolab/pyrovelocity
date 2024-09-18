@@ -1,14 +1,25 @@
+from importlib.resources import files
+
 import pytest
 import scanpy as sc
 
 from pyrovelocity.analysis.analyze import top_mae_genes
 from pyrovelocity.io.compressedpickle import CompressedPickle
+from pyrovelocity.io.serialization import load_anndata_from_json
 from pyrovelocity.tasks.data import download_dataset
 from pyrovelocity.tasks.postprocess import postprocess_dataset
 from pyrovelocity.tasks.preprocess import preprocess_dataset
 from pyrovelocity.tasks.summarize import summarize_dataset
 from pyrovelocity.tasks.train import train_dataset
 from pyrovelocity.utils import generate_sample_data
+
+
+@pytest.fixture
+def adata_preprocessed_pancreas_50_7():
+    fixture_file_path = (
+        files("pyrovelocity.tests.data") / "preprocessed_pancreas_50_7.json"
+    )
+    return load_anndata_from_json(fixture_file_path)
 
 
 @pytest.fixture

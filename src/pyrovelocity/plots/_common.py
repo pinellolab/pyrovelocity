@@ -5,7 +5,6 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from pyrovelocity.logging import configure_logging
 
-
 __all__ = ["set_colorbar", "set_font_size"]
 
 logger = configure_logging(__name__)
@@ -23,6 +22,7 @@ def set_colorbar(
     fig=None,
     position="right",
     rainbow=False,
+    axes_label=None,
 ):
     if position == "right" and (not rainbow):
         cax = inset_axes(ax, width="2%", height="30%", loc=4, borderpad=0)
@@ -31,6 +31,8 @@ def set_colorbar(
         divider = make_axes_locatable(ax)
         cax = divider.append_axes(position, size="8%", pad=0.08)
         cb = fig.colorbar(smp, cax=cax, orientation=orientation, shrink=0.4)
+    if axes_label:
+        cax.set_label(axes_label)
 
     cb.ax.tick_params(labelsize=labelsize)
 

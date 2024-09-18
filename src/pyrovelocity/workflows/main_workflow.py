@@ -3,11 +3,13 @@ from dataclasses import asdict
 from datetime import timedelta
 from pathlib import Path
 
+import matplotlib
 from beartype.typing import List
 from flytekit import Resources, current_context, dynamic, task
 from flytekit.extras.accelerators import T4, GPUAccelerator
 from flytekit.types.directory import FlyteDirectory
 from flytekit.types.file import FlyteFile
+from matplotlib import pyplot as plt
 from returns.result import Failure, Success
 
 from pyrovelocity.interfaces import (
@@ -19,18 +21,26 @@ from pyrovelocity.io.archive import (
     copy_files_to_directory,
     create_tarball_from_filtered_dir,
 )
+from pyrovelocity.io.datasets import larry_cospar
 from pyrovelocity.io.gcs import upload_file_concurrently
-from pyrovelocity.io.json import (
+from pyrovelocity.io.metrics import (
     add_duration_to_run_info,
     combine_json_files,
-    generate_tables,
+    generate_and_save_metric_tables,
     load_json,
 )
 from pyrovelocity.logging import configure_logging
+from pyrovelocity.plots import (
+    plot_lineage_fate_correlation,
+)
+from pyrovelocity.styles.colors import LARRY_CELL_TYPE_COLORS
 from pyrovelocity.tasks.data import download_dataset
 from pyrovelocity.tasks.postprocess import postprocess_dataset
 from pyrovelocity.tasks.preprocess import preprocess_dataset
 from pyrovelocity.tasks.summarize import summarize_dataset
+from pyrovelocity.tasks.time_fate_correlation import (
+    configure_time_lineage_fate_plot,
+)
 from pyrovelocity.tasks.train import train_dataset
 from pyrovelocity.workflows.constants import (
     PYROVELOCITY_CACHE_FLAG,
@@ -42,6 +52,7 @@ from pyrovelocity.workflows.main_configuration import (
     PostprocessOutputs,
     PreprocessOutputs,
     ResourcesJSON,
+    SummarizeConfiguration,
     SummarizeOutputs,
     TrainingOutputs,
     WorkflowConfiguration,
@@ -79,10 +90,11 @@ CACHE_VERSION = "2024.8.15"
 DOWNLOAD_CACHE_VERSION = f"{CACHE_VERSION}.0"
 PREPROCESS_CACHE_VERSION = f"{CACHE_VERSION}.0"
 TRAIN_CACHE_VERSION = f"{CACHE_VERSION}.0"
-POSTPROCESS_CACHE_VERSION = f"{CACHE_VERSION}.0"
-SUMMARIZE_CACHE_VERSION = f"{CACHE_VERSION}.0"
-UPLOAD_CACHE_VERSION = f"{CACHE_VERSION}.4"
-COMBINE_METRICS_CACHE_VERSION = f"{CACHE_VERSION}.4"
+POSTPROCESS_CACHE_VERSION = f"{CACHE_VERSION}.2"
+SUMMARIZE_CACHE_VERSION = f"{CACHE_VERSION}.3"
+UPLOAD_CACHE_VERSION = f"{CACHE_VERSION}.7"
+LINEAGE_FATE_CORRELATION_CACHE_VERSION = f"{CACHE_VERSION}.5"
+COMBINE_METRICS_CACHE_VERSION = f"{CACHE_VERSION}.5"
 DEFAULT_ACCELERATOR_TYPE: GPUAccelerator = T4
 
 
@@ -252,6 +264,7 @@ def summarize_data(
     preprocess_data_args: PreprocessDataInterface,
     postprocessing_outputs: PostprocessOutputs,
     training_outputs: TrainingOutputs,
+    summarize_configuration: SummarizeConfiguration,
 ) -> SummarizeOutputs:
     model_path = training_outputs.model_path.download()
     pyrovelocity_data_path = postprocessing_outputs.pyrovelocity_data.download()
@@ -277,6 +290,7 @@ def summarize_data(
         postprocessed_data_path=postprocessed_data_path,
         cell_state=preprocess_data_args.cell_state,
         vector_field_basis=preprocess_data_args.vector_field_basis,
+        selected_genes=summarize_configuration.selected_genes,
     )
     print(
         f"\ndata_model_reports_path: {data_model_reports_path}\n",
@@ -314,6 +328,7 @@ def summarize_data(
         )
 
     return SummarizeOutputs(
+        data_model=str(training_outputs.data_model),
         data_model_reports=FlyteDirectory(path=str(data_model_reports_path)),
         dataframe=FlyteFile(path=str(dataframe_path)),
         run_metrics_path=FlyteFile(path=str(metrics_path)),
@@ -321,6 +336,8 @@ def summarize_data(
         loss_plot_path=FlyteFile(path=str(loss_plot_path)),
         loss_csv_path=FlyteFile(path=str(loss_csv_path)),
         combined_metrics_path=FlyteFile(path=str(combined_metrics_path)),
+        pyrovelocity_data=FlyteFile(path=str(pyrovelocity_data_path)),
+        postprocessed_data=FlyteFile(path=str(postprocessed_data_path)),
     )
 
 
@@ -355,6 +372,7 @@ def upload_summary(
             ".json",
             ".pdf",
             ".png",
+            ".dill.zst",
         ),
     )
 
@@ -383,6 +401,7 @@ def map_model_configurations_over_data_set(
     train_model_configuration_1: PyroVelocityTrainInterface = PyroVelocityTrainInterface(),
     train_model_configuration_2: PyroVelocityTrainInterface = PyroVelocityTrainInterface(),
     postprocess_configuration: PostprocessConfiguration = PostprocessConfiguration(),
+    summarize_configuration: SummarizeConfiguration = SummarizeConfiguration(),
     train_model_resource_requests: ResourcesJSON = default_training_resource_requests,
     train_model_resource_limits: ResourcesJSON = default_training_resource_limits,
     postprocessing_resource_requests: ResourcesJSON = default_resource_requests,
@@ -433,10 +452,9 @@ def map_model_configurations_over_data_set(
         train_model_configuration_2,
     ]
 
-    model_outputs: list[TrainingOutputs] = []
-    dataset_summaries: list[SummarizeOutputs] = []
+    model_outputs: list[SummarizeOutputs] = []
     for train_model_configuration in train_model_configurations:
-        model_output = train_model(
+        training_output = train_model(
             preprocess_outputs=processed_outputs,
             train_model_configuration=train_model_configuration,
         ).with_overrides(
@@ -444,21 +462,21 @@ def map_model_configurations_over_data_set(
             limits=Resources(**asdict(train_model_resource_limits)),
             accelerator=GPUAccelerator(accelerator_type),
         )
-        model_outputs.append(model_output)
 
-        postprocessing_outputs = postprocess_data(
+        postprocessing_output = postprocess_data(
             preprocess_data_args=preprocess_data_args,
-            training_outputs=model_output,
+            training_outputs=training_output,
             postprocess_configuration=postprocess_configuration,
         ).with_overrides(
             requests=Resources(**asdict(postprocessing_resource_requests)),
             limits=Resources(**asdict(postprocessing_resource_limits)),
         )
 
-        dataset_summary = summarize_data(
+        summarize_output = summarize_data(
             preprocess_data_args=preprocess_data_args,
-            postprocessing_outputs=postprocessing_outputs,
-            training_outputs=model_output,
+            postprocessing_outputs=postprocessing_output,
+            training_outputs=training_output,
+            summarize_configuration=summarize_configuration,
         ).with_overrides(
             requests=Resources(**asdict(summarizing_resource_requests)),
             limits=Resources(**asdict(summarizing_resource_limits)),
@@ -466,13 +484,137 @@ def map_model_configurations_over_data_set(
 
         if upload_results:
             upload_summary(
-                summarize_outputs=dataset_summary,
-                training_outputs=model_output,
+                training_outputs=training_output,
+                summarize_outputs=summarize_output,
             )
 
-        dataset_summaries.append(dataset_summary)
+        model_outputs.append(summarize_output)
 
-    return dataset_summaries
+    return model_outputs
+
+
+@task(
+    cache=PYROVELOCITY_CACHE_FLAG,
+    cache_version=LINEAGE_FATE_CORRELATION_CACHE_VERSION,
+    retries=3,
+    interruptible=False,
+    timeout=timedelta(minutes=120),
+    requests=Resources(cpu="8", mem="30Gi", ephemeral_storage="100Gi"),
+    limits=Resources(cpu="16", mem="100Gi", ephemeral_storage="500Gi"),
+    enable_deck=False,
+)
+def combine_time_lineage_fate_correlation(
+    results: List[List[SummarizeOutputs]],
+) -> List[FlyteFile]:
+    print(results)
+    model_ordered_results = list(map(list, zip(*results)))
+    print(model_ordered_results)
+    time_lineage_fate_correlation_plots = []
+
+    for model_results in model_ordered_results:
+        print(model_results)
+        n_rows = len(model_results)
+        n_cols = 7
+        width = 14
+        height = width * (n_rows / n_cols) + 1
+
+        fig = plt.figure(figsize=(width, height))
+
+        gs = fig.add_gridspec(
+            n_rows + 1,
+            n_cols + 1,
+            width_ratios=[0.02] + [1] * n_cols,
+            height_ratios=[1] * n_rows + [0.2],
+        )
+
+        adata_cospar = larry_cospar()
+
+        all_axes = []
+        for i, model_output in enumerate(model_results):
+            data_set_model_pairing = model_output.data_model
+
+            postprocessed_data_path = model_output.postprocessed_data.download()
+
+            posterior_samples_path = model_output.pyrovelocity_data.download()
+
+            plot_path = Path(
+                f"time_fate_correlation_{data_set_model_pairing}.pdf"
+            )
+
+            axes = [fig.add_subplot(gs[i, j + 1]) for j in range(n_cols)]
+            all_axes.append(axes)
+
+            plot_lineage_fate_correlation(
+                posterior_samples_path=posterior_samples_path,
+                adata_pyrovelocity=postprocessed_data_path,
+                adata_cospar=adata_cospar,
+                all_axes=axes,
+                fig=fig,
+                state_color_dict=LARRY_CELL_TYPE_COLORS,
+                lineage_fate_correlation_path=plot_path,
+                save_plot=False,
+                ylabel="",
+                show_titles=True if i == 0 else False,
+                show_colorbars=False,
+                default_fontsize=12
+                if matplotlib.rcParams["text.usetex"]
+                else 9,
+            )
+
+        time_lineage_fate_correlation_plot = configure_time_lineage_fate_plot(
+            fig=fig,
+            gs=gs,
+            all_axes=all_axes,
+            row_labels=[
+                "a",
+                "b",
+                "c",
+                "d",
+            ][:n_rows],
+            vertical_texts=[
+                "Monocytes",
+                "Neutrophils",
+                "Multilineage",
+                "All lineages",
+            ][:n_rows],
+            reports_path=Path("."),
+            model_identifier=data_set_model_pairing,
+        )
+
+        time_lineage_fate_correlation_plots.append(
+            time_lineage_fate_correlation_plot
+        )
+
+    ctx = current_context()
+    execution_id = ctx.execution_id.name
+
+    attempted_upload_results = []
+
+    for file in time_lineage_fate_correlation_plots:
+        for ext in ["", ".png"]:
+            upload_result = upload_file_concurrently(
+                bucket_name=f"pyrovelocity/reports/{execution_id}",
+                source_filename=f"{file}{ext}",
+                destination_blob_name=f"{file}{ext}",
+            )
+            attempted_upload_results.append(upload_result)
+
+    if all(isinstance(result, Success) for result in attempted_upload_results):
+        logger.info("\nAll time lineage fate correlation uploads successful.")
+    else:
+        logger.error(
+            "\nOne or more time lineage fate correlation uploads failed."
+        )
+        failed_uploads = [
+            str(file)
+            for file, result in zip(
+                time_lineage_fate_correlation_plots, attempted_upload_results
+            )
+            if isinstance(result, Failure)
+        ]
+        logger.info(f"Failed uploads: {', '.join(failed_uploads)}")
+
+    return [FlyteFile(path=str(x)) for x in time_lineage_fate_correlation_plots]
 
 
 @task(
@@ -507,32 +649,15 @@ def combine_all_metrics(
     with json_metrics_file.open("w") as f:
         json.dump(combined_metrics, f, indent=2)
 
-    latex_table, html_table, markdown_table, _ = generate_tables(
-        combined_metrics
+    files_to_upload = generate_and_save_metric_tables(
+        json_data=combined_metrics,
+        output_dir=Path("."),
     )
-
-    latex_metrics_file = Path("combined_metrics_table.tex")
-    with latex_metrics_file.open("w") as f:
-        f.write(latex_table)
-
-    html_metrics_file = Path("combined_metrics_table.html")
-    with html_metrics_file.open("w") as f:
-        f.write(html_table)
-
-    md_metrics_file = Path("combined_metrics_table.md")
-    with md_metrics_file.open("w") as f:
-        f.write(markdown_table)
 
     ctx = current_context()
     execution_id = ctx.execution_id.name
 
-    files_to_upload = [
-        json_metrics_file,
-        latex_metrics_file,
-        html_metrics_file,
-        md_metrics_file,
-    ]
-    upload_results = []
+    attempted_upload_results = []
 
     for file in files_to_upload:
         upload_result = upload_file_concurrently(
@@ -540,29 +665,41 @@ def combine_all_metrics(
             source_filename=file,
             destination_blob_name=str(file),
         )
-        upload_results.append(upload_result)
+        attempted_upload_results.append(upload_result)
 
-    if all(isinstance(result, Success) for result in upload_results):
+    if all(isinstance(result, Success) for result in attempted_upload_results):
         print("\nAll uploads successful.")
         return CombinedMetricsOutputs(
-            json_metrics=FlyteFile(path=str(json_metrics_file)),
-            latex_metrics=FlyteFile(path=str(latex_metrics_file)),
-            html_metrics=FlyteFile(path=str(html_metrics_file)),
-            md_metrics=FlyteFile(path=str(md_metrics_file)),
+            metrics_json=FlyteFile(path=str(files_to_upload[0])),
+            metrics_html=FlyteFile(path=str(files_to_upload[1])),
+            metrics_latex=FlyteFile(path=str(files_to_upload[2])),
+            metrics_md=FlyteFile(path=str(files_to_upload[3])),
+            elbo_html=FlyteFile(path=str(files_to_upload[4])),
+            elbo_latex=FlyteFile(path=str(files_to_upload[5])),
+            elbo_md=FlyteFile(path=str(files_to_upload[6])),
+            mae_html=FlyteFile(path=str(files_to_upload[7])),
+            mae_latex=FlyteFile(path=str(files_to_upload[8])),
+            mae_md=FlyteFile(path=str(files_to_upload[9])),
         )
     else:
         print("\nOne or more uploads failed.")
         failed_uploads = [
             str(file)
-            for file, result in zip(files_to_upload, upload_results)
+            for file, result in zip(files_to_upload, attempted_upload_results)
             if isinstance(result, Failure)
         ]
         print(f"Failed uploads: {', '.join(failed_uploads)}")
         return CombinedMetricsOutputs(
-            json_metrics=FlyteFile(path=""),
-            latex_metrics=FlyteFile(path=""),
-            html_metrics=FlyteFile(path=""),
-            md_metrics=FlyteFile(path=""),
+            metrics_json=FlyteFile(path=""),
+            metrics_latex=FlyteFile(path=""),
+            metrics_html=FlyteFile(path=""),
+            metrics_md=FlyteFile(path=""),
+            elbo_html=FlyteFile(path=""),
+            elbo_latex=FlyteFile(path=""),
+            elbo_md=FlyteFile(path=""),
+            mae_html=FlyteFile(path=""),
+            mae_latex=FlyteFile(path=""),
+            mae_md=FlyteFile(path=""),
         )
 
 
@@ -585,31 +722,44 @@ def training_workflow(
     Conditionally executes configurations based on the value of PYROVELOCITY_DATA_SUBSET.
     """
     results = []
+
+    stationary_configurations = [
+        (pbmc5k_configuration, "pbmc5k"),
+        (pbmc10k_configuration, "pbmc10k"),
+        (pbmc68k_configuration, "pbmc68k"),
+    ]
+
+    developmental_configurations = [
+        # (bonemarrow_configuration, "bonemarrow"),
+        (pancreas_configuration, "pancreas"),
+        # (pons_configuration, "pons"),
+    ]
+
+    lineage_traced_results = []
+    lineage_traced_configurations = [
+        (larry_mono_configuration, "larry_mono"),
+        (larry_neu_configuration, "larry_neu"),
+        (larry_multilineage_configuration, "larry_multilineage"),
+        (larry_configuration, "larry"),
+    ]
+
     configurations = [
-        (simulated_configuration, "simulated"),
+        # (simulated_configuration, "simulated"),
     ]
 
     if not PYROVELOCITY_DATA_SUBSET:
-        configurations += [
-            (pancreas_configuration, "pancreas"),
-            (bonemarrow_configuration, "bonemarrow"),
-            (pbmc5k_configuration, "pbmc5k"),
-            (pbmc10k_configuration, "pbmc10k"),
-            (pbmc68k_configuration, "pbmc68k"),
-            (pons_configuration, "pons"),
-            (larry_configuration, "larry"),
-            (larry_neu_configuration, "larry_neu"),
-            (larry_mono_configuration, "larry_mono"),
-            (larry_multilineage_configuration, "larry_multilineage"),
-        ]
+        # configurations += stationary_configurations
+        configurations += developmental_configurations
+        # configurations += lineage_traced_configurations
 
-    for config, _ in configurations:
+    for config, data_set_name in configurations:
         result = map_model_configurations_over_data_set(
             download_dataset_args=config.download_dataset,
             preprocess_data_args=config.preprocess_data,
             train_model_configuration_1=config.training_configuration_1,
             train_model_configuration_2=config.training_configuration_2,
             postprocess_configuration=config.postprocess_configuration,
+            summarize_configuration=config.summarize_configuration,
             train_model_resource_requests=config.training_resources_requests,
             train_model_resource_limits=config.training_resources_limits,
             postprocessing_resource_requests=config.postprocessing_resources_requests,
@@ -619,9 +769,14 @@ def training_workflow(
             accelerator_type=config.accelerator_type,
             upload_results=config.upload_results,
         )
+        if "larry" in data_set_name:
+            lineage_traced_results.append(result)
         results.append(result)
 
     combine_all_metrics(results=results)
+
+    if len(lineage_traced_results) > 0:
+        combine_time_lineage_fate_correlation(results=lineage_traced_results)
 
     return results
 

@@ -14,7 +14,9 @@ load("//bazel:python.bzl", "py_test_module_list", "xdoctest")
 
 xdoctest(
     files = glob(
-        include = ["**/*.py"],
+        include = [
+            "**/*.py",
+        ],
         exclude = [
             "workflows/**",
             "tests/**",
@@ -81,9 +83,12 @@ py_test_module_list(
 py_library(
     name = "pyrovelocity",
     srcs = glob(
-        ["**/*.py"],
+        [
+            "**/*.py",
+        ],
         exclude = ["tests/**/*.py"],
     ),
+    data = ["styles/common.mplstyle"],
     visibility = [
         "//src/pyrovelocity:__pkg__",
         "//src/pyrovelocity:__subpackages__",

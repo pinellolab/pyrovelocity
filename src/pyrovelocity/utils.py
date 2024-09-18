@@ -16,25 +16,21 @@ import numpy as np
 import pandas as pd
 import rich.syntax
 import rich.tree
+import scanpy as sc
 import scvelo as scv
 import seaborn as sns
 import yaml
 from anndata._core.anndata import AnnData
 from beartype import beartype
-from beartype.typing import Callable, Dict, List, Tuple
+from beartype.typing import Callable, Dict, List, Tuple, TypeAlias
 from einops import EinopsError, reduce
 from jaxtyping import ArrayLike
+from scipy import sparse
 from scvi.data import synthetic_iid
 
 from pyrovelocity.io.compressedpickle import CompressedPickle
+from pyrovelocity.io.hash import hash_file
 from pyrovelocity.logging import configure_logging
-
-# import torch
-# from scipy.sparse import issparse
-# from sklearn.decomposition import PCA
-# from torch.nn.functional import relu
-# from pyrovelocity.models._transcription_dynamics import inv
-# from pyrovelocity.models import mrna_dynamics
 
 __all__ = [
     "anndata_counts_to_df",
@@ -44,6 +40,7 @@ __all__ = [
     "generate_public_api",
     "generate_sample_data",
     "internal_help",
+    "load_anndata_from_path",
     "mae",
     "mae_evaluate",
     "pretty_log_dict",
@@ -51,11 +48,16 @@ __all__ = [
     "print_anndata",
     "print_attributes",
     "print_config_tree",
+    "quartile_coefficient_of_dispersion",
     "save_anndata_counts_to_dataframe",
     "str_to_bool",
 ]
 
 logger = configure_logging(__name__)
+
+SPMatrix: TypeAlias = sparse.spmatrix
+NDArray: TypeAlias = np.ndarray
+NDArrayOrSPMatrix: TypeAlias = NDArray | SPMatrix
 
 
 def mae(pred_counts, true_counts):
@@ -175,18 +177,13 @@ def print_attributes(obj):
 def pretty_log_dict(d: dict) -> str:
     dict_as_string = "\n"
     for key, value in d.items():
-        # key_colored = colored(key, "green")
         key_colored = key
         if isinstance(value, ArrayLike):
             value_colored = f"{value.shape} {value.dtype}"
         else:
             value_lines = str(value).split("\n")
-            value_colored = "\n".join(
-                # colored(line, "white") for line in value_lines
-                line
-                for line in value_lines
-            )
-        dict_as_string += f"{key_colored}:\n{value_colored}\n"
+            value_colored = "\n".join(line for line in value_lines)
+        dict_as_string += f"{key_colored}:\n{type(value)}\n{value_colored}\n\n"
     return dict_as_string
 
 
@@ -310,6 +307,7 @@ def print_anndata(
 @beartype
 def anndata_string(
     anndata_obj: AnnData,
+    max_categories: int = 10,
 ) -> str:
     """
     Print a formatted representation of an AnnData object.
@@ -330,21 +328,61 @@ def anndata_string(
         >>> import pandas as pd
         >>> np.random.seed(42)
         >>> X = np.random.randn(10, 5)
-        >>> obs = pd.DataFrame({"clusters_coarse": np.random.randint(0, 2, 10),
-        ...                     "clusters": np.random.randint(0, 2, 10),
-        ...                     "S_score": np.random.rand(10),
-        ...                     "G2M_score": np.random.rand(10)})
+        >>> obs = pd.DataFrame(
+        ...    {"clusters_coarse": np.random.randint(0, 3, 10),
+        ...     "clusters": pd.Categorical(["A", "B", "A", "C", "B", "C", "A", "B", "C", "A"]),
+        ...     "condition": pd.Categorical(["control", "treatment", "control", "treatment", "control",
+        ...                                  "treatment", "control", "treatment", "control", "treatment"]),
+        ...     "S_score": np.random.rand(10),
+        ...     "G2M_score": np.random.rand(10)
+        ... })
         >>> var = pd.DataFrame({"gene_name": [f"gene_{i}" for i in range(5)]})
         >>> adata = AnnData(X, obs=obs, var=var)
+        >>> adata.uns['small_array'] = np.array([1, 2, 3])
+        >>> adata.uns['sparse_matrix'] = sparse.csr_matrix(([1, 2, 3], ([0, 1, 2], [1, 2, 0])), shape=(3, 3))
+        >>> adata.uns['dictionary'] = {'key1': 'value1', 'key2': 'value2'}
+        >>> adata.uns['dataframe'] = pd.DataFrame({'A': np.random.rand(10), 'B': np.random.rand(10)})
         >>> print_anndata(adata)  # doctest: +NORMALIZE_WHITESPACE
     """
     assert isinstance(
         anndata_obj, AnnData
     ), "Input object must be of type AnnData."
 
-    def format_elements(elements):
-        formatted = "\n".join([f"        {elem}," for elem in elements])
-        return formatted
+    @beartype
+    def format_elements(elements, prop_name: str) -> str:
+        formatted = []
+        for elem in elements:
+            elem_str = f"        {elem},"
+            if prop_name in ["obs", "var"]:
+                df = getattr(anndata_obj, prop_name)
+                elem_type = df[elem].dtype
+                elem_str += f" {elem_type},"
+                if pd.api.types.is_categorical_dtype(df[elem]):
+                    num_categories = len(df[elem].cat.categories)
+                    elem_str += f" {num_categories},"
+                    if num_categories < max_categories:
+                        categories = ", ".join(
+                            map(str, df[elem].cat.categories)
+                        )
+                        elem_str += f" [{categories}],"
+                else:
+                    num_distinct = df[elem].nunique()
+                    elem_str += f" {num_distinct},"
+            elif prop_name in ["uns", "obsm", "varm", "layers", "obsp", "varp"]:
+                obj = getattr(anndata_obj, prop_name)[elem]
+                if isinstance(obj, NDArrayOrSPMatrix):
+                    obj_type = type(obj).__name__
+                    obj_shape = " x ".join(map(str, obj.shape))
+                    elem_str += f" {obj_type}, {obj_shape},"
+                elif isinstance(obj, pd.DataFrame):
+                    obj_type = type(obj).__name__
+                    obj_shape = " x ".join(map(str, obj.shape))
+                    elem_str += f" {obj_type}, {obj_shape},"
+                else:
+                    obj_type = type(obj).__name__
+                    elem_str += f" {obj_type},"
+            formatted.append(elem_str)
+        return "\n".join(formatted)
 
     anndata_string = [
         f"\nAnnData object with n_obs × n_vars = {anndata_obj.n_obs} × {anndata_obj.n_vars}"
@@ -364,7 +402,7 @@ def anndata_string(
     for prop_name, elements in properties.items():
         if len(elements) > 0:
             anndata_string.append(
-                f"    {prop_name}:\n{format_elements(elements)}"
+                f"    {prop_name}:\n{format_elements(elements, prop_name)}"
             )
 
     return "\n".join(anndata_string)
@@ -601,6 +639,49 @@ def internal_help(obj: Callable | ModuleType):
         processed_lines.append(line)
 
     print("\n".join(processed_lines))
+
+
+@beartype
+def load_anndata_from_path(adata_path: str | Path) -> AnnData:
+    adata_path = Path(adata_path)
+    if adata_path.suffix not in {".h5ad", ".loom"}:
+        raise ValueError(
+            f"The input file {adata_path}\n"
+            "must be either a .h5ad or .loom file."
+        )
+    if os.path.isfile(adata_path) and os.access(adata_path, os.R_OK):
+        logger.info(f"Reading input file: {adata_path}")
+        adata = sc.read(filename=adata_path, cache=True)
+        adata_hash = hash_file(adata_path)
+        logger.info(
+            f"\nSuccessfully read input file: {adata_path}\n"
+            f"SHA-256 hash: {adata_hash}"
+        )
+        return adata
+    else:
+        raise ValueError(f"Cannot read input file: {adata_path}")
+
+
+@beartype
+def quartile_coefficient_of_dispersion(data: NDArray) -> NDArray:
+    q1 = np.percentile(data, 25, axis=0)
+    q3 = np.percentile(data, 75, axis=0)
+    return (q3 - q1) / (q3 + q1)
+
+
+@beartype
+def setup_colors(
+    adata: AnnData,
+    cell_state: str,
+) -> Dict[str, Tuple[float, float, float]]:
+    clusters = adata.obs.loc[:, cell_state]
+    color_dict = dict(
+        zip(
+            clusters.cat.categories,
+            sns.color_palette("deep", clusters.cat.categories.shape[0]),
+        )
+    )
+    return color_dict
 
 
 # TODO: remove unused functions

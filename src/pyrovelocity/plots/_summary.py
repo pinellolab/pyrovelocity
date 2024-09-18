@@ -42,8 +42,8 @@ def plot_gene_selection_summary(
     )
 
     volcano_data, _ = plot_gene_ranking(
-        posterior_samples=[posterior_samples],
-        adata=[adata],
+        posterior_samples=posterior_samples,
+        adata=adata,
         ax=ax[1],
         time_correlation_with="st",
         selected_genes=selected_genes,

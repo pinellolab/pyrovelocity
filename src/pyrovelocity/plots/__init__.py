@@ -7,6 +7,9 @@ from pyrovelocity.plots._dynamics import (
 )
 from pyrovelocity.plots._experimental import plot_t0_selection
 from pyrovelocity.plots._genes import plot_gene_ranking
+from pyrovelocity.plots._lineage_fate_correlation import (
+    plot_lineage_fate_correlation,
+)
 from pyrovelocity.plots._parameters import (
     plot_parameter_posterior_distributions,
 )
@@ -15,6 +18,7 @@ from pyrovelocity.plots._predictive import (
     posterior_curve,
 )
 from pyrovelocity.plots._rainbow import rainbowplot
+from pyrovelocity.plots._report import plot_report, save_subfigures
 from pyrovelocity.plots._summary import plot_gene_selection_summary
 from pyrovelocity.plots._time import (
     plot_posterior_time,
@@ -34,8 +38,10 @@ __all__ = [
     "plot_deterministic_simulation_phase_portrait",
     "plot_deterministic_simulation_trajectories",
     "plot_gene_ranking",
+    "plot_lineage_fate_correlation",
     "plot_parameter_posterior_distributions",
     "plot_posterior_time",
+    "plot_report",
     "plot_shared_time_uncertainty",
     "plot_spliced_unspliced_histogram",
     "plot_state_uncertainty",
@@ -44,4 +50,5 @@ __all__ = [
     "rainbowplot",
     "plot_vector_field_summary",
     "plot_gene_selection_summary",
+    "save_subfigures",
 ]

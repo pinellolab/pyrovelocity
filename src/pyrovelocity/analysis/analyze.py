@@ -9,7 +9,11 @@ import umap
 from anndata import AnnData
 from astropy.stats import rayleightest
 from beartype import beartype
+from beartype.typing import Any
+from jaxtyping import Array, Num, jaxtyped
 from numpy import ndarray
+from numpy.typing import NDArray
+from pandas import DataFrame
 from sklearn.pipeline import Pipeline
 
 from pyrovelocity.analysis.cytotrace import compute_similarity2
@@ -140,43 +144,36 @@ def compute_mean_vector_field(
 
 @beartype
 def compute_volcano_data(
-    posterior_samples: List[Dict[str, ndarray]],
-    adata: List[AnnData],
+    posterior_samples: Dict[str, NDArray[Any] | DataFrame],
+    adata: AnnData,
     time_correlation_with: str = "s",
     selected_genes: Optional[List[str]] = None,
     negative: bool = False,
 ) -> Tuple[pd.DataFrame, List[str]]:
-    assert isinstance(posterior_samples, (tuple, list))
-    assert isinstance(adata, (tuple, list))
-    assert "s" in posterior_samples[0]
-    assert "alpha" in posterior_samples[0]
+    assert "s" in posterior_samples
+    assert "alpha" in posterior_samples
 
     maes_list = []
     cors = []
     genes = []
-    labels = []
-    switching = []
-    for p, ad, label in zip(posterior_samples, adata, ["train", "valid"]):
-        print(label)
-        for sample in range(p["alpha"].shape[0]):
-            maes_list.append(
-                mae_per_gene(
-                    p["s"][sample].squeeze(),
-                    ensure_numpy_array(ad.layers["raw_spliced"]),
-                )
+
+    for sample in range(posterior_samples["alpha"].shape[0]):
+        maes_list.append(
+            mae_per_gene(
+                posterior_samples["s"][sample].squeeze(),
+                ensure_numpy_array(adata.layers["raw_spliced"]),
             )
-            df_genes_cors = compute_similarity2(
-                p[time_correlation_with][sample].squeeze(),
-                p["cell_time"][sample].squeeze().reshape(-1, 1),
-            )
-            cors.append(df_genes_cors[0])
-            genes.append(ad.var_names.values)
-            labels.append([f"Poisson_{label}"] * len(ad.var_names.values))
+        )
+        df_genes_cors = compute_similarity2(
+            posterior_samples[time_correlation_with][sample].squeeze(),
+            posterior_samples["cell_time"][sample].squeeze().reshape(-1, 1),
+        )
+        cors.append(df_genes_cors[0])
+        genes.append(adata.var_names.values)
 
     volcano_data = pd.DataFrame(
         {
             "mean_mae": np.hstack(maes_list),
-            "label": np.hstack(labels),
             "time_correlation": np.hstack(cors),
             "genes": np.hstack(genes),
         }
@@ -308,11 +305,98 @@ def vector_field_uncertainty(
     return v_map_all, embeds_radian, fdri
 
 
-def mae_per_gene(pred_counts: ndarray, true_counts: ndarray) -> ndarray:
-    """Computes mean average error between counts and predicted probabilities."""
-    error = np.abs(true_counts - pred_counts).sum(-2)
-    total = np.clip(true_counts.sum(-2), 1, np.inf)
-    return -np.array(error / total)
+@jaxtyped(typechecker=beartype)
+def mae_per_gene(
+    pred_counts: NDArray[np.number] | Num[Array, "obs vars"],
+    true_counts: NDArray[np.number] | Num[Array, "obs vars"],
+) -> NDArray[np.number] | Num[Array, "vars"]:
+    """
+    Computes mean absolute error (MAE) between predictive samples and true counts.
+
+    The function returns the negative of the normalized MAE for
+    consistency with the convention that higher values should indicate
+    better performance in visualizations.
+
+    TODO: use jax and deprecate numpy
+
+    ```python
+    import jax.numpy as jnp
+    from jaxtyping import Array, Num, jaxtyped
+
+    @jaxtyped(typechecker=beartype)
+    def mae_per_gene(
+        pred_counts: Num[Array, "obs vars"],
+        true_counts: Num[Array, "obs vars"],
+    ) -> Num[Array, "vars"]:
+        pass
+    ```
+
+    Args:
+        pred_counts (NDArray[np.number] | Num[Array, "obs vars"]):
+            Predicted counts for all observations.
+        true_counts (NDArray[np.number] | Num[Array, "obs vars"]):
+            Observed counts for all observations.
+
+    Returns:
+        NDArray[np.number] | Num[Array, "vars"]: Negative mean absolute error for each gene.
+
+    Example:
+        >>> from pyrovelocity.analysis.analyze import mae_per_gene
+        >>> import numpy as np
+        >>> xp = np
+        >>> # import jax.numpy as jnp
+        >>> # xp = jnp
+        >>> true_counts = xp.array(
+        ...     [
+        ...         [1, 2, 3],
+        ...         [1, 2, 3],
+        ...         [1, 2, 3],
+        ...         [1, 2, 3],
+        ...     ]
+        ... )
+        >>> pred_counts = xp.array(
+        ...     [
+        ...         [1.1, 2.2, 3.3],
+        ...         [1.1, 2.2, 3.3],
+        ...         [1.1, 2.2, 3.3],
+        ...         [1.1, 2.2, 3.3],
+        ...     ]
+        ... )
+        >>> mae = mae_per_gene(pred_counts, true_counts)
+        >>> print(mae)
+        >>> result = xp.allclose(
+        ...     mae, xp.array([-0.1, -0.1, -0.1]), rtol=1e-2, atol=1e-2
+        ... )
+        >>> print(result.item() if hasattr(result, 'item') else result)
+        True
+        >>> true_counts = xp.array(
+        ...     [
+        ...         [10, 15, 0],
+        ...         [20, 25, 0],
+        ...     ]
+        ... )
+        >>> pred_counts = xp.array(
+        ...     [
+        ...         [12, 14, 0],
+        ...         [18, 26, 0],
+        ...     ]
+        ... )
+        >>> mae = mae_per_gene(pred_counts, true_counts)
+        >>> print(mae)
+        >>> result = xp.allclose(
+        ...     mae, xp.array([-0.133, -0.05, -0.]), rtol=1e-2, atol=1e-2
+        ... )
+        >>> print(result.item() if hasattr(result, 'item') else result)
+        True
+    """
+    xp = np
+    mean_true_counts = xp.mean(true_counts, axis=0)
+    absolute_errors = xp.abs(true_counts - pred_counts)
+    mae = xp.mean(absolute_errors, axis=0)
+
+    normalized_mae = xp.nan_to_num(mae / mean_true_counts, nan=0.0, posinf=0.0)
+
+    return -normalized_mae
 
 
 @beartype
@@ -320,6 +404,8 @@ def top_mae_genes(
     volcano_data: pd.DataFrame,
     mae_top_percentile: int | float = 10.0,
     min_genes_per_bin: int = 2,
+    max_genes_per_bin: Optional[int] = None,
+    gene_name_filter: str = "^Act|^Rpl|^Rps",
 ) -> List[str]:
     """
     Identify top genes based on Mean Absolute Error (MAE) percentile, excluding ribosomal genes,
@@ -329,6 +415,7 @@ def top_mae_genes(
         volcano_data (pd.DataFrame): DataFrame containing MAE and time correlation
         mae_top_percentile (float): Percentile threshold for selecting top MAE genes (0-100)
         min_genes_per_bin (int): Minimum number of genes to select from each bin
+        max_genes_per_bin (Optional[int]): Maximum number of genes to select from each bin
 
     Returns:
         List[str]: List of gene indices from volcano_data, sorted by time correlation.
@@ -337,9 +424,13 @@ def top_mae_genes(
         raise ValueError("mae_top_percentile must be between 0 and 100")
     if min_genes_per_bin < 0:
         raise ValueError("min_genes_per_bin must be non-negative")
+    if max_genes_per_bin is not None and max_genes_per_bin < min_genes_per_bin:
+        raise ValueError(
+            "max_genes_per_bin must be greater than or equal to min_genes_per_bin"
+        )
 
     filtered_data = volcano_data[
-        ~volcano_data.index.str.contains(("^Rpl|^Rps"), case=False)
+        ~volcano_data.index.str.contains((gene_name_filter), case=False)
     ]
 
     filtered_data["time_corr_bin"] = pd.cut(
@@ -365,6 +456,13 @@ def top_mae_genes(
 
         if len(top_genes_in_bin) < min_genes_per_bin:
             top_genes_in_bin = bin_data.nlargest(min_genes_per_bin, "mean_mae")
+        elif (
+            max_genes_per_bin is not None
+            and len(top_genes_in_bin) > max_genes_per_bin
+        ):
+            top_genes_in_bin = top_genes_in_bin.nlargest(
+                max_genes_per_bin, "mean_mae"
+            )
 
         selected_genes.append(top_genes_in_bin)
 
@@ -378,7 +476,8 @@ def top_mae_genes(
 
     logger.info(
         f"\nSelected {len(gene_indices)} genes based on top {mae_top_percentile}% MAE "
-        f"from 8 time correlation bins, with a minimum of {min_genes_per_bin} genes per bin, "
+        f"from 8 time correlation bins, with a minimum of {min_genes_per_bin} genes per bin"
+        f"{f' and a maximum of {max_genes_per_bin} genes per bin' if max_genes_per_bin else ''}, "
         f"sorted by time correlation:\n\n"
         f"  {gene_indices}\n\n"
     )

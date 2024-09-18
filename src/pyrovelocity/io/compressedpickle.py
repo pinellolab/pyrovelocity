@@ -1,8 +1,8 @@
 import os
-import pickle
 from os import PathLike
 from pathlib import Path
 
+import dill as pickle
 import numpy as np
 from beartype import beartype
 from beartype.typing import Any, Dict
@@ -13,6 +13,7 @@ from zstandard import (
     ZstdDecompressor,
 )
 
+from pyrovelocity.io.hash import hash_file
 from pyrovelocity.io.sparsity import densify_arrays, sparsify_arrays
 from pyrovelocity.logging import configure_logging
 
@@ -99,7 +100,7 @@ class CompressedPickle:
                     density_threshold=density_threshold,
                 )
             else:
-                logger.warning(
+                logger.debug(
                     """
                     The object is not a dictionary of numpy arrays or COO objects.
                     It cannot be automatically sparsified.
@@ -118,6 +119,7 @@ class CompressedPickle:
             with compression_context.stream_writer(f) as compressor:
                 pickle.dump(obj, compressor)
 
+        _log_hash(file_path=file_path, mode="saved")
         return file_path
 
     @staticmethod
@@ -155,10 +157,21 @@ class CompressedPickle:
             ):
                 obj = densify_arrays(obj)
             else:
-                logger.warning(
+                logger.debug(
                     """
                     The object is not a dictionary of numpy arrays or COO objects.
                     It cannot be automatically densified.
                     """
                 )
+        _log_hash(file_path=file_path, mode="loaded")
         return obj
+
+
+@beartype
+def _log_hash(file_path: str | Path, mode: str = "loaded or saved") -> str:
+    file_hash = hash_file(file_path=file_path)
+    logger.info(
+        f"\nSuccessfully {mode} file: {file_path}\n"
+        f"SHA-256 hash: {file_hash}\n"
+    )
+    return file_hash

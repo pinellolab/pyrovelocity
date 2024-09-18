@@ -5,8 +5,10 @@ import torch
 from pyro.distributions import Poisson
 from pyro.nn import PyroModule
 
-from pyrovelocity.models._velocity_model import LogNormalModel
-from pyrovelocity.models._velocity_model import VelocityModelAuto
+from pyrovelocity.models._velocity_model import (
+    LogNormalModel,
+    VelocityModelAuto,
+)
 
 
 def test_load__velocity_model():
@@ -76,7 +78,7 @@ class TestVelocityModelAuto:
             decoder_on=False,
             add_offset=False,
             correct_library_size=True,
-            guide_type="velocity",
+            guide_type="auto",
             cell_specific_kinetics=None,
             kinetics_num=None,
         )
@@ -95,6 +97,38 @@ class TestVelocityModelAuto:
         cell_plate, gene_plate = velocity_model_auto.create_plates()
         assert cell_plate.size == 3
         assert gene_plate.size == 4
+
+    def test_get_rna(self, velocity_model_auto):
+        u_scale = torch.rand(4)
+        s_scale = torch.rand(4)
+        alpha = torch.rand(4)
+        beta = torch.rand(4)
+        gamma = torch.rand(4)
+        t = torch.rand(3, 1)
+        u0 = torch.zeros(4)
+        s0 = torch.zeros(4)
+        t0 = torch.zeros(4)
+        switching = torch.rand(4)
+        u_inf = torch.rand(4)
+        s_inf = torch.rand(4)
+
+        u, s = velocity_model_auto.get_rna(
+            u_scale,
+            s_scale,
+            alpha,
+            beta,
+            gamma,
+            t,
+            u0,
+            s0,
+            t0,
+            switching,
+            u_inf,
+            s_inf,
+        )
+
+        assert u.shape == (3, 4)
+        assert s.shape == (3, 4)
 
     def test_forward_method(self, velocity_model_auto):
         """Test the forward method"""
@@ -122,3 +156,23 @@ class TestVelocityModelAuto:
 
         assert u.shape == (3, 4)
         assert s.shape == (3, 4)
+
+    @pytest.mark.parametrize("add_offset", [True, False])
+    def test_add_offset(self, add_offset):
+        model = VelocityModelAuto(
+            num_cells=100,
+            num_genes=50,
+            likelihood="Poisson",
+            add_offset=add_offset,
+        )
+        assert model.add_offset == add_offset
+
+    @pytest.mark.parametrize("guide_type", ["auto", "auto_t0_constraint"])
+    def test_guide_type(self, guide_type):
+        model = VelocityModelAuto(
+            num_cells=100,
+            num_genes=50,
+            likelihood="Poisson",
+            guide_type=guide_type,
+        )
+        assert model.guide_type == guide_type

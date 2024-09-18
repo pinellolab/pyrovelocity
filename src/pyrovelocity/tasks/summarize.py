@@ -4,7 +4,9 @@ from typing import Tuple
 
 import matplotlib.pyplot as plt
 import scvelo as scv
+from anndata import AnnData
 from beartype import beartype
+from beartype.typing import List
 from pandas import DataFrame
 
 from pyrovelocity.analysis.analyze import top_mae_genes
@@ -15,11 +17,14 @@ from pyrovelocity.plots import (
     plot_gene_ranking,
     plot_gene_selection_summary,
     plot_parameter_posterior_distributions,
+    plot_report,
     plot_shared_time_uncertainty,
     plot_vector_field_summary,
     posterior_curve,
-    rainbowplot,
+    save_subfigures,
 )
+from pyrovelocity.plots._rainbow import rainbowplot_module as rainbowplot
+from pyrovelocity.styles.colors import LARRY_CELL_TYPE_COLORS
 from pyrovelocity.utils import (
     save_anndata_counts_to_dataframe,
     save_parameter_posterior_mean_dataframe,
@@ -41,6 +46,7 @@ def summarize_dataset(
     vector_field_basis: str,
     reports_path: str | Path = "reports",
     enable_experimental_plots: bool = False,
+    selected_genes: list[str] = [""],
 ) -> Tuple[Path, Path]:
     """
     Construct summary plots for each data set and model.
@@ -143,10 +149,7 @@ def summarize_dataset(
         phase_portraits_exist = (
             len(os.listdir(posterior_phase_portraits_path)) > 0
         )
-    if (
-        all(os.path.isfile(f) for f in output_filenames)
-        and phase_portraits_exist
-    ):
+    if all(os.path.isfile(f) for f in output_filenames):
         logger.info(
             "\n\t"
             + "\n\t".join(str(f) for f in output_filenames)
@@ -186,7 +189,7 @@ def summarize_dataset(
             logger.info(f"Generating figure: {violin_clusters_log}")
             for fig_name in [violin_clusters_lin, violin_clusters_log]:
                 cluster_violin_plots(
-                    data_model,
+                    data_model=data_model,
                     adata=adata,
                     posterior_samples=posterior_samples,
                     cluster_key=cell_state,
@@ -195,6 +198,24 @@ def summarize_dataset(
                     show_outlier=False,
                     fig_name=fig_name,
                 )
+
+        # phase portraint predictive plots
+        if phase_portraits_exist:
+            logger.info(
+                f"\nFiles exist in posterior phase portraits path:\n"
+                f"{posterior_phase_portraits_path}\n"
+                f"Remove this directory or all its files if you want to regenerate them.\n\n"
+            )
+        else:
+            logger.info("Generating posterior predictive phase portrait plots")
+            posterior_curve(
+                adata=adata,
+                posterior_samples=posterior_samples,
+                gene_set=putative_marker_genes,
+                data_model=data_model,
+                model_path=model_path,
+                output_directory=posterior_phase_portraits_path,
+            )
 
     # ##################
     # save dataframes
@@ -229,6 +250,9 @@ def summarize_dataset(
             vector_field_basis=vector_field_basis,
             plot_name=vector_field_summary_plot,
             cell_state=cell_state,
+            state_color_dict=LARRY_CELL_TYPE_COLORS
+            if "larry" in data_model
+            else None,
         )
 
     # shared time plot
@@ -238,36 +262,20 @@ def summarize_dataset(
         logger.info(f"Generating figure: {shared_time_plot}")
 
         plot_shared_time_uncertainty(
-            posterior_samples=posterior_samples,
             adata=adata,
+            posterior_samples=posterior_samples,
             vector_field_basis=vector_field_basis,
             shared_time_plot=shared_time_plot,
         )
 
+    # extract putative marker genes
     logger.info(f"Searching for marker genes")
     putative_marker_genes = top_mae_genes(
         volcano_data=volcano_data,
-        mae_top_percentile=3,
+        mae_top_percentile=100 * 24 / len(volcano_data),
         min_genes_per_bin=3,
+        max_genes_per_bin=4,
     )
-
-    # phase portraint predictive plots
-    if phase_portraits_exist:
-        logger.info(
-            f"\nFiles exist in posterior phase portraits path:\n"
-            f"{posterior_phase_portraits_path}\n"
-            f"Remove this directory or all its files if you want to regenerate them.\n\n"
-        )
-    else:
-        logger.info("Generating posterior predictive phase portrait plots")
-        posterior_curve(
-            adata=adata,
-            posterior_samples=posterior_samples,
-            gene_set=putative_marker_genes,
-            data_model=data_model,
-            model_path=model_path,
-            output_directory=posterior_phase_portraits_path,
-        )
 
     # volcano plot
     if os.path.isfile(volcano_plot):
@@ -275,29 +283,16 @@ def summarize_dataset(
     else:
         logger.info(f"Generating figure: {volcano_plot}")
 
-        volcano_data, fig = plot_gene_ranking(
-            posterior_samples=[posterior_samples],
-            adata=[adata],
-            selected_genes=putative_marker_genes,
+        plot_gene_ranking(
+            posterior_samples=posterior_samples,
+            adata=adata,
+            putative_marker_genes=putative_marker_genes,
+            selected_genes=selected_genes,
             time_correlation_with="st",
             show_marginal_histograms=True,
             save_volcano_plot=True,
             volcano_plot_path=volcano_plot,
-        )
-
-    # gene selection summary plot
-    if os.path.isfile(gene_selection_summary_plot):
-        logger.info(f"{gene_selection_summary_plot} exists")
-    else:
-        logger.info(f"Generating figure: {gene_selection_summary_plot}")
-        plot_gene_selection_summary(
-            adata=adata,
-            posterior_samples=posterior_samples,
-            basis=vector_field_basis,
-            cell_state=cell_state,
-            plot_name=gene_selection_summary_plot,
-            selected_genes=putative_marker_genes,
-            show_marginal_histograms=False,
+            show_xy_labels=True,
         )
 
     # parameter uncertainty plot
@@ -309,6 +304,7 @@ def summarize_dataset(
             posterior_samples=posterior_samples,
             adata=adata,
             geneset=putative_marker_genes,
+            save_plot=True,
             parameter_uncertainty_plot=parameter_uncertainty_plot,
         )
 
@@ -329,12 +325,34 @@ def summarize_dataset(
             rainbow_plot_path=gene_selection_rainbow_plot,
         )
 
+    # gene selection summary plot
+    if os.path.isfile(gene_selection_summary_plot):
+        logger.info(f"{gene_selection_summary_plot} exists")
+    else:
+        logger.info(f"Generating figure: {gene_selection_summary_plot}")
+
+        plot_report(
+            adata=adata,
+            posterior_samples=posterior_samples,
+            volcano_data=volcano_data,
+            putative_marker_genes=putative_marker_genes,
+            selected_genes=selected_genes,
+            vector_field_basis=vector_field_basis,
+            cell_state=cell_state,
+            state_color_dict=LARRY_CELL_TYPE_COLORS
+            if "larry" in data_model
+            else None,
+            report_file_path=gene_selection_summary_plot,
+            figure_file_path=f"{gene_selection_summary_plot}.dill.zst",
+        )
+
     # mean vector field plot
     if os.path.isfile(vector_field_plot):
         logger.info(f"{vector_field_plot} exists")
     else:
         logger.info(f"Generating figure: {vector_field_plot}")
         fig, ax = plt.subplots()
+        ax.axis("off")
 
         scv.pl.velocity_embedding_grid(
             adata,
@@ -342,7 +360,8 @@ def summarize_dataset(
             color=cell_state,
             title="",
             vkey="velocity_pyro",
-            linewidth=1,
+            s=1,
+            linewidth=0.5,
             ax=ax,
             show=False,
             legend_loc="right margin",
