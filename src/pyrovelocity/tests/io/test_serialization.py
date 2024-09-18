@@ -7,6 +7,7 @@ import pytest
 from anndata import AnnData
 from scipy import sparse
 
+from pyrovelocity.io.hash import hash_file
 from pyrovelocity.io.serialization import (
     create_sample_anndata,
     deserialize_anndata,
@@ -102,6 +103,55 @@ def test_save_load_anndata_json(sample_adata, tmp_path, mock_hash_file, caplog):
     assert (
         sample_adata.uns == loaded_adata.uns
     ), "Mismatch in uns dictionary after loading"
+
+
+@pytest.fixture
+def expected_hash(sample_adata, tmp_path):
+    """Generate expected hash for a sample AnnData object."""
+    file_path = tmp_path / "temp_adata.json"
+    save_anndata_to_json(sample_adata, file_path)
+    return hash_file(file_path)
+
+
+def test_save_load_anndata_json_with_hash(
+    sample_adata, tmp_path, expected_hash, caplog
+):
+    """Test saving and loading AnnData object to/from JSON with hash validation."""
+    file_path = tmp_path / "test_adata.json"
+
+    saved_hash = save_anndata_to_json(
+        sample_adata, file_path, expected_hash=expected_hash
+    )
+    assert saved_hash == expected_hash
+    assert "Hash validation succeeded" in caplog.text
+
+    caplog.clear()
+
+    loaded_adata = load_anndata_from_json(
+        file_path, expected_hash=expected_hash
+    )
+    assert "Hash validation succeeded" in caplog.text
+
+    assert np.allclose(sample_adata.X, loaded_adata.X)
+    assert sample_adata.obs.equals(loaded_adata.obs)
+    assert sample_adata.var.equals(loaded_adata.var)
+
+
+def test_save_load_anndata_json_with_incorrect_hash(
+    sample_adata, tmp_path, expected_hash, caplog
+):
+    """Test saving and loading AnnData object to/from JSON with incorrect hash."""
+    file_path = tmp_path / "test_adata.json"
+    incorrect_hash = "incorrect_hash_value"
+    assert incorrect_hash != expected_hash
+
+    save_anndata_to_json(sample_adata, file_path, expected_hash=incorrect_hash)
+    assert "Hash mismatch" in caplog.text
+
+    caplog.clear()
+
+    load_anndata_from_json(file_path, expected_hash=incorrect_hash)
+    assert "Hash mismatch" in caplog.text
 
 
 def test_serialize_large_anndata():
