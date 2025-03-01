@@ -107,43 +107,49 @@
     enableSSH = true;
   };
 
-  dvcWithGoogleAuth = (dvcPackage.overrideAttrs (oldAttrs: {
-    buildInputs = oldAttrs.buildInputs ++ (with pkgs.python312Packages; [
-      dvc-gs
-      gcsfs
-      dvc-objects
-      aiohttp
-      crcmod
-      decorator
-      fsspec
-      google-auth
-      google-auth-oauthlib
-      google-cloud-storage
-      requests
-      ujson
-    ]);
-  })).overridePythonAttrs (oldAttrs: {
-    dependencies = oldAttrs.dependencies ++ (with pkgs.python312Packages; [
-      dvc-gs
-      gcsfs
-      dvc-objects
-      aiohttp
-      crcmod
-      decorator
-      fsspec
-      google-auth
-      google-auth-oauthlib
-      google-cloud-storage
-      requests
-      ujson
-    ]);
-    pythonImportsCheck = [
-      "dvc"
-      "dvc.api"
-      "dvc_gs"
-      "google.auth"
-    ];
-  });
+  dvcWithGoogleAuth =
+    (dvcPackage.overrideAttrs (oldAttrs: {
+      buildInputs =
+        oldAttrs.buildInputs
+        ++ (with pkgs.python312Packages; [
+          dvc-gs
+          gcsfs
+          dvc-objects
+          aiohttp
+          crcmod
+          decorator
+          fsspec
+          google-auth
+          google-auth-oauthlib
+          google-cloud-storage
+          requests
+          ujson
+        ]);
+    }))
+    .overridePythonAttrs (oldAttrs: {
+      dependencies =
+        oldAttrs.dependencies
+        ++ (with pkgs.python312Packages; [
+          dvc-gs
+          gcsfs
+          dvc-objects
+          aiohttp
+          crcmod
+          decorator
+          fsspec
+          google-auth
+          google-auth-oauthlib
+          google-cloud-storage
+          requests
+          ujson
+        ]);
+      pythonImportsCheck = [
+        "dvc"
+        "dvc.api"
+        "dvc_gs"
+        "google.auth"
+      ];
+    });
 
   extraDevPackages = with pkgs; [
     lmodern
@@ -152,7 +158,7 @@
     # nixpkgs which may override the versions installed by poetry2nix so we
     # disable this here and manually set QUARTO_PYTHON in our devShell or other
     # derivations
-    (quarto.override { python3 = null; })
+    (quarto.override {python3 = null;})
     tex
     yarn-berry
   ];
