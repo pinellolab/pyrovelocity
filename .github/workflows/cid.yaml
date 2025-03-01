@@ -341,7 +341,9 @@ jobs:
             echo "GIT_SHA_SHORT=$CI_GITHUB_SHA_SHORT" >> $GITHUB_ENV
           fi
       - name: Check nix flake
-        run: nix flake check --impure --accept-flake-config
+        run: |
+          nix-channel --update
+          nix flake check --impure --accept-flake-config
       # ./scripts/flake can be used to enable the flake for testing
       # - run: |
       #     ./scripts/flake pytest
@@ -350,6 +352,7 @@ jobs:
           set -euo pipefail
 
           df -h
+          nix-channel --update
           nix build .#default \
           --accept-flake-config \
           --impure \
