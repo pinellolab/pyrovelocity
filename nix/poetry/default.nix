@@ -41,7 +41,7 @@ poetry2nix.overrides.withDefaults (
     conditionalOverrides =
       if stdenv.isDarwin
       then {
-        grpcio = super.grpcio.override {preferWheel = false;};
+        grpcio = super.grpcio.override {preferWheel = true;};
       }
       else if stdenv.hostPlatform.system == "x86_64-linux"
       then {
