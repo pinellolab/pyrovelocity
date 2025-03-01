@@ -96,11 +96,61 @@
     yq-go
   ];
 
+  # TODO: all dvc packages are disabled due to
+  # https://github.com/NixOS/nixpkgs/issues/338146
+  dvcPackage = pkgs.python312Packages.dvc;
+
+  dvcWithOptionalRemotes = pkgs.dvc.override {
+    enableGoogle = true;
+    enableAWS = true;
+    enableAzure = true;
+    enableSSH = true;
+  };
+
+  dvcWithGoogleAuth = (dvcPackage.overrideAttrs (oldAttrs: {
+    buildInputs = oldAttrs.buildInputs ++ (with pkgs.python312Packages; [
+      dvc-gs
+      gcsfs
+      dvc-objects
+      aiohttp
+      crcmod
+      decorator
+      fsspec
+      google-auth
+      google-auth-oauthlib
+      google-cloud-storage
+      requests
+      ujson
+    ]);
+  })).overridePythonAttrs (oldAttrs: {
+    dependencies = oldAttrs.dependencies ++ (with pkgs.python312Packages; [
+      dvc-gs
+      gcsfs
+      dvc-objects
+      aiohttp
+      crcmod
+      decorator
+      fsspec
+      google-auth
+      google-auth-oauthlib
+      google-cloud-storage
+      requests
+      ujson
+    ]);
+    pythonImportsCheck = [
+      "dvc"
+      "dvc.api"
+      "dvc_gs"
+      "google.auth"
+    ];
+  });
+
   extraDevPackages = with pkgs; [
     lmodern
     pandoc
     quarto
     tex
+    yarn-berry
   ];
 in {
   sysPackages = sysPackages;
