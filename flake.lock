@@ -104,20 +104,20 @@
     "home-manager": {
       "inputs": {
         "nixpkgs": [
-          "nixpod",
           "nixpkgs"
         ]
       },
       "locked": {
-        "lastModified": 1740579671,
-        "narHash": "sha256-Dwt/3KknOQ4bgFG5YjqDT7oWRy27rPpDjAi2P0ok1zw=",
+        "lastModified": 1739757849,
+        "narHash": "sha256-Gs076ot1YuAAsYVcyidLKUMIc4ooOaRGO0PqTY7sBzA=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "53c587d263f94aaf6a281745923c76bbec62bcf3",
+        "rev": "9d3d080aec2a35e05a15cedd281c2384767c2cfe",
         "type": "github"
       },
       "original": {
         "owner": "nix-community",
+        "ref": "release-24.11",
         "repo": "home-manager",
         "type": "github"
       }
@@ -232,7 +232,9 @@
         "flocken": [
           "flocken"
         ],
-        "home-manager": "home-manager",
+        "home-manager": [
+          "home-manager"
+        ],
         "nix-index-database": "nix-index-database",
         "nixos-flake": "nixos-flake",
         "nixpkgs": [
@@ -290,6 +292,7 @@
         "flake-utils": "flake-utils",
         "flocken": "flocken",
         "gitignore": "gitignore",
+        "home-manager": "home-manager",
         "nixpkgs": "nixpkgs",
         "nixpod": "nixpod",
         "poetry2nix": "poetry2nix",
