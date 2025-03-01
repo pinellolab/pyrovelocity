@@ -15,7 +15,7 @@ runs:
   steps:
     - name: Set up Python
       id: setup-python
-      uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f # v5
+      uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # ratchet:actions/setup-python@v5.4.0
       with:
         python-version: ${{ inputs.python_version }}
     - name: Install system dependencies
@@ -24,11 +24,11 @@ runs:
         echo "install system dependencies"
         # sudo apt-get update
         # sudo apt-get install -y tree
-    - uses: r-lib/actions/setup-pandoc@0ed4cdf40958ef43a6b33b9792e07ac76c3239e3 # ratchet:r-lib/actions/setup-pandoc@v2
+    - uses: r-lib/actions/setup-pandoc@14a7e741c1cb130261263aa1593718ba42cf443b # ratchet:r-lib/actions/setup-pandoc@v2
       with:
         pandoc-version: "3.1.11"
     - name: Install Poetry
-      uses: snok/install-poetry@93ada01c735cc8a383ce0ce2ae205a21c415379b # ratchet:snok/install-poetry@v1
+      uses: snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a # ratchet:snok/install-poetry@v1
       with:
         version: 1.7.1
         virtualenvs-create: true
@@ -36,7 +36,7 @@ runs:
         installer-parallel: true
     - name: Load cached venv
       id: cached-poetry-dependencies
-      uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4
+      uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # ratchet:actions/cache@v4.2.2
       with:
         path: .venv
         key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
@@ -48,5 +48,5 @@ runs:
       shell: bash
       run: poetry install --with docs,lint,test,workflows --no-interaction
     - name: "Setup tmate debug session"
-      uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # ratchet:mxschmitt/action-tmate@v3
+      uses: mxschmitt/action-tmate@e5c7151931ca95bad1c6f4190c730ecf8c7dde48 # ratchet:mxschmitt/action-tmate@v3
       if: ${{ inputs.debug_enabled == 'true' }}
