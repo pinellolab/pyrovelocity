@@ -6,3 +6,4 @@ providers:
         path: projects/{{ get_env(name="GCP_PROJECT_ID", default="pyro-284215") }}
         keys:
           KUBECONFIG: ==
+          CACHIX_AUTH_TOKEN: ==
