@@ -23,11 +23,18 @@
       inputs.flake-parts.follows = "flake-parts";
       inputs.systems.follows = "systems";
     };
+    home-manager = {
+      url = "github:nix-community/home-manager/release-24.11";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+      };
+    };
     nixpod = {
       url = "github:cameronraysmith/nixpod";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
       inputs.flocken.follows = "flocken";
+      inputs.home-manager.follows = "home-manager";
       inputs.systems.follows = "systems";
     };
   };
