@@ -19,7 +19,7 @@
   mkPoetryDevEnv = python:
     mkPoetryEnv {
       inherit python;
-      groups = ["workflows" "docs" "test"];
+      groups = ["main" "workflows" "docs" "test"];
     };
 in {
   pyrovelocity310 = self.callPackage ./pyrovelocity.nix {

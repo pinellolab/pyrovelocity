@@ -7,7 +7,7 @@
 }:
 poetry2nix.mkPoetryApplication {
   python = python3;
-  groups = [];
+  groups = ["main"];
   checkGroups = ["test" "workflows"];
   projectDir = gitignoreSource ../../.;
   src = gitignoreSource ../../.;
