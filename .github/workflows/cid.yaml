@@ -138,13 +138,13 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # ratchet:actions/checkout@v4.2.2
         with:
           ref: ${{ needs.set-variables.outputs.checkout_ref }}
 
       - name: Create Flyte config from YAML template
         id: yq-process
-        uses: mikefarah/yq@ef6fb92e7f314e7f0ef49da4385458271203119a # ratchet:mikefarah/yq@master
+        uses: mikefarah/yq@d74e70104f379475810a3bf2e20d80732f0cf6dc # ratchet:mikefarah/yq@master
         with:
           cmd: "yq e \
             '.admin.endpoint = strenv(FLYTE_CLUSTER_ENDPOINT) | \
@@ -159,7 +159,7 @@ jobs:
           GCP_STORAGE_CONTAINER: ${{ secrets.GCP_STORAGE_CONTAINER }}
       - name: Upload Flyte config as an artifact
         id: config-output
-        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # ratchet:actions/upload-artifact@v4.6.1
         with:
           name: flyte-config
 
@@ -189,7 +189,7 @@ jobs:
           echo "DEBUG=${{ needs.set-variables.outputs.debug }}"
           echo "MODE=${{ needs.set-variables.outputs.mode }}"
       - name: Checkout code
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # ratchet:actions/checkout@v4.2.2
         with:
           ref: ${{ needs.set-variables.outputs.checkout_ref }}
       - name: Setup environment
@@ -200,14 +200,14 @@ jobs:
 
         continue-on-error: ${{ matrix.continue-on-error }}
       - name: Download Flyte config
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
+        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # ratchet:actions/download-artifact@v4.1.9
         with:
           name: flyte-config
           path: .flyte/
 
         continue-on-error: ${{ matrix.continue-on-error }}
       - name: "Setup tmate debug session"
-        uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # ratchet:mxschmitt/action-tmate@v3
+        uses: mxschmitt/action-tmate@e5c7151931ca95bad1c6f4190c730ecf8c7dde48 # ratchet:mxschmitt/action-tmate@v3
         if: ${{ inputs.debug_enabled }}
       - name: Lint and typecheck
         run: |
@@ -221,7 +221,7 @@ jobs:
         continue-on-error: ${{ matrix.continue-on-error }}
       - name: Upload coverage
 
-        uses: codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673 # v4
+        uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # ratchet:codecov/codecov-action@v5.4.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
@@ -239,7 +239,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # ratchet:actions/checkout@v4.2.2
         with:
           ref: ${{ needs.set-variables.outputs.checkout_ref }}
       - name: setup gcp credentials
@@ -248,7 +248,7 @@ jobs:
           ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}
           EOF
       - name: cache bazel
-        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # ratchet:actions/cache@v4
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # ratchet:actions/cache@v4
         with:
           path: |
             ~/.cache/bazel
@@ -257,7 +257,7 @@ jobs:
             ${{ runner.os }}-bazel-
       - name: cache requirements
         id: cache-requirements
-        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # ratchet:actions/cache@v4
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # ratchet:actions/cache@v4
         with:
           path: |
             requirements-bazel.txt
@@ -274,7 +274,7 @@ jobs:
           make meta-bazel test-bazel
           df -h
       - name: upload requirements artifact
-        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # ratchet:actions/upload-artifact@v4.6.1
         with:
           name: requirements-bazel
           path: requirements-bazel.txt
@@ -303,10 +303,10 @@ jobs:
           remove-android: "true"
           remove-codeql: "true"
           remove-docker-images: "true"
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # ratchet:actions/checkout@v4.2.2
         with:
           ref: ${{ needs.set-variables.outputs.checkout_ref }}
-      - uses: DeterminateSystems/nix-installer-action@7993355175c2765e5733dae74f3e0786fe0e5c4f # ratchet:DeterminateSystems/nix-installer-action@v12
+      - uses: DeterminateSystems/nix-installer-action@e50d5f73bfe71c2dd0aa4218de8f4afa59f8f81d # ratchet:DeterminateSystems/nix-installer-action@v16
       # - uses: DeterminateSystems/magic-nix-cache-action@b46e247b898aa56e6d2d2e728dc6df6c84fdb738 # ratchet:DeterminateSystems/magic-nix-cache-action@v7
       #   # Toggling use-gha-cache can help resolve `Nix daemon disconnected unexpectedly`.
       #   with:
@@ -326,7 +326,7 @@ jobs:
       #     secret_keys: "${{ secrets.NIX_PRIVATE_KEY }}"
       #     use_nixcached: true
       #     nixcached_upload_options: --jobs 8
-      - uses: rlespinasse/github-slug-action@797d68864753cbceedc271349d402da4590e6302 # ratchet:rlespinasse/github-slug-action@v4
+      - uses: rlespinasse/github-slug-action@aba9f8db6ef36e0733227a62673d6592b1f430ea # ratchet:rlespinasse/github-slug-action@v5
         with:
           prefix: CI_
       - name: Set git variables
@@ -390,7 +390,7 @@ jobs:
       WORKFLOW_IMAGE: ${{ vars.WORKFLOW_IMAGE }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # ratchet:actions/checkout@v4.2.2
         with:
           ref: ${{ needs.set-variables.outputs.checkout_ref }}
       - name: Setup environment
@@ -400,14 +400,14 @@ jobs:
 
           debug_enabled: ${{ needs.set-variables.outputs.debug }}
       - name: Download Flyte config
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
+        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # ratchet:actions/download-artifact@v4.1.9
         with:
           name: flyte-config
 
           path: .flyte/
       - name: Setup tmate debug session
         if: ${{ inputs.debug_enabled == 'true' }}
-        uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # ratchet:mxschmitt/action-tmate@v3
+        uses: mxschmitt/action-tmate@e5c7151931ca95bad1c6f4190c730ecf8c7dde48 # ratchet:mxschmitt/action-tmate@v3
       - name: Execute workflow
 
         id: execute
@@ -423,7 +423,7 @@ jobs:
           tar -tzf $TAR_FILENAME
           echo "HYDRA_OUTPUTS_TAR=$TAR_FILENAME" >> $GITHUB_ENV
       - name: Upload config artifact
-        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # ratchet:actions/upload-artifact@v4.6.1
         with:
           name: hydra-outputs
           path: ${{ env.HYDRA_OUTPUTS_TAR }}
@@ -443,10 +443,10 @@ jobs:
       git-head: ${{ steps.semanticrelease.outputs.git-head }}
       git-tag: ${{ steps.semanticrelease.outputs.git-tag }}
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # ratchet:actions/checkout@v4.2.2
         with:
           ref: ${{ needs.set-variables.outputs.checkout_ref }}
-      - uses: DeterminateSystems/nix-installer-action@7993355175c2765e5733dae74f3e0786fe0e5c4f # ratchet:DeterminateSystems/nix-installer-action@v12
+      - uses: DeterminateSystems/nix-installer-action@e50d5f73bfe71c2dd0aa4218de8f4afa59f8f81d # ratchet:DeterminateSystems/nix-installer-action@v16
       # - uses: DeterminateSystems/magic-nix-cache-action@b46e247b898aa56e6d2d2e728dc6df6c84fdb738 # ratchet:DeterminateSystems/magic-nix-cache-action@v7
       - uses: cachix/cachix-action@ad2ddac53f961de1989924296a1f236fcfbaa4fc # ratchet:cachix/cachix-action@v15
         with:
@@ -466,7 +466,7 @@ jobs:
         id: semanticrelease
         with:
           github-token: ${{ secrets.FAST_FORWARD_PAT }}
-      - uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4
+      - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # ratchet:actions/upload-artifact@v4.6.1
         if: ${{ steps.semanticrelease.outputs.released == 'true' }}
         with:
           name: poetry-build
@@ -484,8 +484,8 @@ jobs:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
         with:
           ref: ${{ needs.release.outputs.git-tag }}
-      - uses: DeterminateSystems/nix-installer-action@7993355175c2765e5733dae74f3e0786fe0e5c4f # ratchet:DeterminateSystems/nix-installer-action@v12
-      - uses: DeterminateSystems/flakehub-push@d3b4b64eb6ff61361ac7a7ac146eb443c86921a2 # ratchet:DeterminateSystems/flakehub-push@main
+      - uses: DeterminateSystems/nix-installer-action@e50d5f73bfe71c2dd0aa4218de8f4afa59f8f81d # ratchet:DeterminateSystems/nix-installer-action@v16
+      - uses: DeterminateSystems/flakehub-push@c96c7bfc42e46f90c84030706c00b62b8c0f1ef4 # ratchet:DeterminateSystems/flakehub-push@main
         with:
           visibility: unlisted
           tag: ${{ needs.release.outputs.version }}
@@ -516,15 +516,13 @@ jobs:
       name: release
       url: https://pypi.org/project/pyrovelocity/${{needs.release.outputs.version}}/
     steps:
-      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
+      - uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # ratchet:actions/download-artifact@v4.1.9
         with:
           name: poetry-build
           path: ./dist
-      - uses: pypa/gh-action-pypi-publish@fb9fc6a4e67ca27a7a76b17bbf90be83c2d3c716 # ratchet:pypa/gh-action-pypi-publish@release/v1
-
+      - uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc # ratchet:pypa/gh-action-pypi-publish@release/v1
   test-docs-build:
     runs-on: ubuntu-latest
-
     needs: set-variables
     if: ${{ needs.set-variables.outputs.skip_ci != 'true' && needs.set-variables.outputs.skip_tests != 'true' }}
     strategy:
@@ -534,7 +532,7 @@ jobs:
       contents: read
       pages: read
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # ratchet:actions/checkout@v4.2.2
         with:
           ref: ${{ needs.set-variables.outputs.checkout_ref }}
       - name: Setup environment
@@ -558,7 +556,7 @@ jobs:
       pages: read
     environment: github-pages
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # ratchet:actions/checkout@v4.2.2
         with:
           ref: ${{ needs.release.outputs.git-tag }}
       - name: Setup environment
