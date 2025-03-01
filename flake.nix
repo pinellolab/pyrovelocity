@@ -202,35 +202,34 @@
         };
 
         packages = {
-          inherit (pkgs) pyrovelocity310 pyrovelocity311 pyrovelocity312;
+            inherit (pkgs) pyrovelocity310 pyrovelocity311 pyrovelocity312;
 
-          default = pkgs.pyrovelocity311;
+            default = pkgs.pyrovelocity311;
 
-          releaseEnv = pkgs.buildEnv {
-            name = "release-env";
-            paths = with pkgs; [poetry python311];
-          };
-
+            releaseEnv = pkgs.buildEnv {
+              name = "release-env";
+              paths = with pkgs; [poetry python311];
+            };
+          } 
+          // lib.optionalAttrs pkgs.stdenv.isLinux {
           containerImage = containerImages.containerImage;
-
           devcontainerImage = containerImages.devcontainerImage;
-
           codeImage = import ./nix/containers/code.nix {
             inherit pkgs devPackages buildMultiUserNixImage;
             sudoImage = inputs'.nixpod.packages.sudoImage;
             homeActivationPackage = inputs'.nixpod.legacyPackages.homeConfigurations.jovyan.activationPackage;
             pythonPackageEnv = pkgs.pyrovelocityDevEnv311;
           };
-
           jupyterImage = import ./nix/containers/jupyter.nix {
             inherit pkgs devPackages buildMultiUserNixImage;
             sudoImage = inputs'.nixpod.packages.sudoImage;
             homeActivationPackage = inputs'.nixpod.legacyPackages.homeConfigurations.jovyan.activationPackage;
             pythonPackageEnv = pkgs.pyrovelocityDevEnv311;
           };
-        };
+          };
 
-        legacyPackages = {
+        legacyPackages = 
+          lib.optionalAttrs pkgs.stdenv.isLinux {
           pyrovelocityManifest = inputs'.flocken.legacyPackages.mkDockerManifest {
             inherit version;
             github = {
@@ -261,7 +260,8 @@
                 password = "$ENCODED_GAR_SA_CREDS";
               };
             };
-            imageFiles = builtins.map (sys: self.packages.${sys}.containerImage) includedSystems;
+            imageFiles = builtins.map (sys: self.packages.${sys}.containerImage) 
+              (builtins.filter (s: lib.strings.hasPrefix "linux" s) includedSystems);
             tags = [
               (builtins.getEnv "GIT_SHA_SHORT")
               (builtins.getEnv "GIT_SHA")
