@@ -56,6 +56,7 @@
         self',
         inputs',
         pkgs,
+        lib,
         system,
         config,
         ...
@@ -164,7 +165,7 @@
         # Note the usage of `preferWheels` as well.
         # NIX_IMAGE_SYSTEMS="x86_64-linux aarch64-linux"
         # will expand similar to the following:
-        # images = with self.packages; [
+        # imageFiles = with self.packages; [
         #   x86_64-linux.devcontainerImage
         #   aarch64-linux.devcontainerImage
         # ];
@@ -234,7 +235,7 @@
             inherit version;
             github = {
               enable = true;
-              enableRegistry = false;
+              enableRegistry = true;
               token = "$GH_TOKEN";
             };
             autoTags = {
@@ -242,10 +243,10 @@
             };
             registries = {
               "ghcr.io" = {
-                enable = isVersionNonEmpty;
-                repo = "${gitHubOrg}/${packageName}";
-                username = builtins.getEnv "GITHUB_ACTOR";
-                password = "$GH_TOKEN";
+                enable = lib.mkForce isVersionNonEmpty;
+                repo = lib.mkForce "${gitHubOrg}/${packageName}";
+                # username = builtins.getEnv "GITHUB_ACTOR";
+                # password = "$GH_TOKEN";
               };
               # "cr.cluster.pyrovelocity.net" = {
               #   enable = true;
@@ -260,7 +261,7 @@
                 password = "$ENCODED_GAR_SA_CREDS";
               };
             };
-            images = builtins.map (sys: self.packages.${sys}.containerImage) includedSystems;
+            imageFiles = builtins.map (sys: self.packages.${sys}.containerImage) includedSystems;
             tags = [
               (builtins.getEnv "GIT_SHA_SHORT")
               (builtins.getEnv "GIT_SHA")
@@ -273,7 +274,7 @@
             inherit version;
             github = {
               enable = true;
-              enableRegistry = false;
+              enableRegistry = true;
               token = "$GH_TOKEN";
             };
             autoTags = {
@@ -281,10 +282,10 @@
             };
             registries = {
               "ghcr.io" = {
-                enable = false;
-                repo = "${gitHubOrg}/${packageName}dev";
-                username = builtins.getEnv "GITHUB_ACTOR";
-                password = "$GH_TOKEN";
+                enable = lib.mkForce false;
+                repo = lib.mkForce "${gitHubOrg}/${packageName}dev";
+                # username = builtins.getEnv "GITHUB_ACTOR";
+                # password = "$GH_TOKEN";
               };
               # "cr.cluster.pyrovelocity.net" = {
               #   enable = true;
@@ -299,7 +300,7 @@
                 password = "$ENCODED_GAR_SA_CREDS";
               };
             };
-            images = builtins.map (sys: self.packages.${sys}.devcontainerImage) includedSystems;
+            imageFiles = builtins.map (sys: self.packages.${sys}.devcontainerImage) includedSystems;
             tags = [
               (builtins.getEnv "GIT_SHA_SHORT")
               (builtins.getEnv "GIT_SHA")
@@ -312,7 +313,7 @@
             inherit version;
             github = {
               enable = true;
-              enableRegistry = false;
+              enableRegistry = true;
               token = "$GH_TOKEN";
             };
             autoTags = {
@@ -320,10 +321,10 @@
             };
             registries = {
               "ghcr.io" = {
-                enable = false;
-                repo = "${gitHubOrg}/${packageName}code";
-                username = builtins.getEnv "GITHUB_ACTOR";
-                password = "$GH_TOKEN";
+                enable = lib.mkForce false;
+                repo = lib.mkForce "${gitHubOrg}/${packageName}code";
+                # username = builtins.getEnv "GITHUB_ACTOR";
+                # password = "$GH_TOKEN";
               };
               # "cr.cluster.pyrovelocity.net" = {
               #   enable = true;
@@ -338,7 +339,7 @@
                 password = "$ENCODED_GAR_SA_CREDS";
               };
             };
-            images = builtins.map (sys: self.packages.${sys}.codeImage) includedSystems;
+            imageFiles = builtins.map (sys: self.packages.${sys}.codeImage) includedSystems;
             tags = [
               (builtins.getEnv "GIT_SHA_SHORT")
               (builtins.getEnv "GIT_SHA")
@@ -351,7 +352,7 @@
             inherit version;
             github = {
               enable = true;
-              enableRegistry = false;
+              enableRegistry = true;
               token = "$GH_TOKEN";
             };
             autoTags = {
@@ -359,10 +360,10 @@
             };
             registries = {
               "ghcr.io" = {
-                enable = false;
-                repo = "${gitHubOrg}/${packageName}jupyter";
-                username = builtins.getEnv "GITHUB_ACTOR";
-                password = "$GH_TOKEN";
+                enable = lib.mkForce false;
+                repo = lib.mkForce "${gitHubOrg}/${packageName}jupyter";
+                # username = builtins.getEnv "GITHUB_ACTOR";
+                # password = "$GH_TOKEN";
               };
               # "cr.cluster.pyrovelocity.net" = {
               #   enable = true;
@@ -377,7 +378,7 @@
                 password = "$ENCODED_GAR_SA_CREDS";
               };
             };
-            images = builtins.map (sys: self.packages.${sys}.jupyterImage) includedSystems;
+            imageFiles = builtins.map (sys: self.packages.${sys}.jupyterImage) includedSystems;
             tags = [
               (builtins.getEnv "GIT_SHA_SHORT")
               (builtins.getEnv "GIT_SHA")
