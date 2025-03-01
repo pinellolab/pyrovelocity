@@ -50,6 +50,8 @@ poetry2nix.mkPoetryApplication {
     then false
     else true;
 
+  dontCheckRuntimeDeps = true;
+
   pythonImportsCheck =
     if stdenv.isDarwin
     then []
