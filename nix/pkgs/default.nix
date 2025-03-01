@@ -148,7 +148,11 @@
   extraDevPackages = with pkgs; [
     lmodern
     pandoc
-    quarto
+    # the default derivation attempts to install jupyter and ipython from
+    # nixpkgs which may override the versions installed by poetry2nix so we
+    # disable this here and manually set QUARTO_PYTHON in our devShell or other
+    # derivations
+    (quarto.override { python3 = null; })
     tex
     yarn-berry
   ];
