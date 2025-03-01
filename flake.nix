@@ -88,10 +88,6 @@
           projectDir = ./.;
           overrides = poetry2nixOverrides;
           python = pkgs.python311;
-          # aarch64 cross-compilation on x86_64 may be unusable if preferWheels
-          # is disabled. If all of the individually contributing packages were
-          # identified, it may be possible to use the library-specific overrides
-          # in ./nix/poetry and disable the global usage of wheels
           preferWheels = true;
           checkGroups = ["test" "workflows"];
           extras = [];
