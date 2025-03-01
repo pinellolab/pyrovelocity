@@ -34,7 +34,7 @@ in {
     python3 = self.python312;
     inherit poetry2nixOverrides stdenv;
   };
-  quarto = self.callPackage ../quarto {};
+  # quarto = self.callPackage ../quarto {};
 
   pyrovelocityDevEnv310 = mkPoetryDevEnv self.python310;
   pyrovelocityDevEnv311 = mkPoetryDevEnv self.python311;
