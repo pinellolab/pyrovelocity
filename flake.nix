@@ -246,12 +246,12 @@
               branch = false;
             };
             registries = {
-              "ghcr.io" = {
-                enable = lib.mkForce isVersionNonEmpty;
-                repo = lib.mkForce "${gitHubOrg}/${packageName}";
-                # username = builtins.getEnv "GITHUB_ACTOR";
-                # password = "$GH_TOKEN";
-              };
+              # "ghcr.io" = {
+              #   enable = lib.mkForce isVersionNonEmpty;
+              #   repo = lib.mkForce "${gitHubOrg}/${packageName}";
+              #   username = lib.mkForce (builtins.getEnv "GITHUB_ACTOR");
+              #   password = lib.mkForce "$GH_TOKEN";
+              # };
               # "cr.cluster.pyrovelocity.net" = {
               #   enable = true;
               #   repo = "${packageName}/${packageName}";
@@ -286,10 +286,10 @@
             };
             registries = {
               "ghcr.io" = {
-                enable = lib.mkForce false;
+                enable = false;
                 repo = lib.mkForce "${gitHubOrg}/${packageName}dev";
-                # username = builtins.getEnv "GITHUB_ACTOR";
-                # password = "$GH_TOKEN";
+                username = lib.mkForce (builtins.getEnv "GITHUB_ACTOR");
+                password = lib.mkForce "$GH_TOKEN";
               };
               # "cr.cluster.pyrovelocity.net" = {
               #   enable = true;
@@ -324,12 +324,12 @@
               branch = false;
             };
             registries = {
-              "ghcr.io" = {
-                enable = lib.mkForce false;
-                repo = lib.mkForce "${gitHubOrg}/${packageName}code";
-                # username = builtins.getEnv "GITHUB_ACTOR";
-                # password = "$GH_TOKEN";
-              };
+              # "ghcr.io" = {
+              #   enable = lib.mkForce false;
+              #   repo = lib.mkForce "${gitHubOrg}/${packageName}code";
+              #   username = lib.mkForce (builtins.getEnv "GITHUB_ACTOR");
+              #   password = lib.mkForce "$GH_TOKEN";
+              # };
               # "cr.cluster.pyrovelocity.net" = {
               #   enable = true;
               #   repo = "${packageName}/${packageName}code";
@@ -363,12 +363,12 @@
               branch = false;
             };
             registries = {
-              "ghcr.io" = {
-                enable = lib.mkForce false;
-                repo = lib.mkForce "${gitHubOrg}/${packageName}jupyter";
-                # username = builtins.getEnv "GITHUB_ACTOR";
-                # password = "$GH_TOKEN";
-              };
+              # "ghcr.io" = {
+              #   enable = lib.mkForce false;
+              #   repo = lib.mkForce "${gitHubOrg}/${packageName}jupyter";
+              #   username = lib.mkForce (builtins.getEnv "GITHUB_ACTOR");
+              #   password = lib.mkForce "$GH_TOKEN";
+              # };
               # "cr.cluster.pyrovelocity.net" = {
               #   enable = true;
               #   repo = "${packageName}/${packageName}jupyter";
