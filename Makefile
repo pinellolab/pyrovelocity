@@ -309,6 +309,8 @@ ghsecrets: ## Update github secrets for GH_REPO from ".env" file.
 	gh secret set FLYTECTL_CONFIG --repo="$(GH_REPO)" --body="$(FLYTECTL_CONFIG)"
 	gh secret set CODECOV_TOKEN --repo="$(GH_REPO)" --body="$(CODECOV_TOKEN)"
 	gh secret set CACHIX_AUTH_TOKEN --repo="$(GH_REPO)" --body="$(CACHIX_AUTH_TOKEN)"
+	gh secret set CLOUDFLARE_ACCOUNT_ID --repo="$(GH_REPO)" --body="$(CLOUDFLARE_ACCOUNT_ID)"
+	gh secret set CLOUDFLARE_API_TOKEN --repo="$(GH_REPO)" --body="$(CLOUDFLARE_API_TOKEN)"
 	gh secret set GCP_PROJECT_ID --repo="$(GH_REPO)" --body="$(GCP_PROJECT_ID)"
 	gh secret set GCP_STORAGE_SCOPES --repo="$(GH_REPO)" --body="$(GCP_STORAGE_SCOPES)"
 	gh secret set GCP_STORAGE_CONTAINER --repo="$(GH_REPO)" --body="$(GCP_STORAGE_CONTAINER)"
@@ -953,7 +955,7 @@ ratchet-pin: ## Pin all workflow versions to hash values. (requires docker).
 ratchet-unpin: ## Unpin hashed workflow versions to semantic values. (requires docker).
 	$(foreach workflow,$(GHA_WORKFLOWS),$(call ratchet,unpin $(workflow));)
 
-ratchet-update: ## Unpin hashed workflow versions to semantic values. (requires docker).
+ratchet-update: ## Update hashed workflow versions given semantic values. (requires docker).
 	$(foreach workflow,$(GHA_WORKFLOWS),$(call ratchet,update $(workflow));)
 
 module-deps-graph: ## Generate module dependency graph with pydeps.
