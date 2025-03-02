@@ -57,15 +57,15 @@ jobs:
           echo "  BASE_REF:" "$GITHUB_BASE_REF"
           echo "       SHA:" "$GITHUB_SHA"
       - name: Retrieve source code
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # ratchet:actions/checkout@v4.2.2
         with:
           fetch-depth: 0
           ref: ${{ github.sha }}
       - name: "Setup tmate debug session"
-        uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # ratchet:mxschmitt/action-tmate@v3
+        uses: mxschmitt/action-tmate@e5c7151931ca95bad1c6f4190c730ecf8c7dde48 # ratchet:mxschmitt/action-tmate@v3
         if: ${{ inputs.debug_enabled }}
       - name: Build conda package
-        uses: prefix-dev/rattler-build-action@0056f4275580a8f9194ea4dad19fc8abfdd08805 # ratchet:prefix-dev/rattler-build-action@v0
+        uses: prefix-dev/rattler-build-action@6f0cd2ff475379a6da7221b22894613bb26a65ab # ratchet:prefix-dev/rattler-build-action@v0
         with:
           recipe-path: "conda/rattler/recipe.yaml"
           artifact-name: package-${{ matrix.target-platform }}
