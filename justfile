@@ -173,17 +173,17 @@ check-secrets:
 get-kubeconfig:
   @teller run -s -- printenv KUBECONFIG > dev-kubeconfig.yaml
 
-# Setup docs for building and deploying
-docs-setup:
+# Build docs
+docs-build:
   dvc pull --force --allow-missing --verbose
   quartodoc build --verbose --config nbs/_quarto.yml
   (cd nbs && quartodoc interlinks)
   quarto render nbs
 
 # Run docs locally
-docs-dev: docs-setup
+docs-dev: docs-build
   yarn dlx wrangler pages dev nbs/_site
 
 # Deploy docs
-docs-deploy: docs-setup
+docs-deploy: docs-build
   yarn dlx wrangler pages deploy nbs/_site
