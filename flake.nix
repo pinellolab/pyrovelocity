@@ -265,9 +265,7 @@
                 password = "$ENCODED_GAR_SA_CREDS";
               };
             };
-            imageFiles =
-              builtins.map (sys: self.packages.${sys}.containerImage)
-              (builtins.filter (s: lib.strings.hasPrefix "linux" s) includedSystems);
+            imageFiles = builtins.map (sys: self.packages.${sys}.containerImage) includedSystems;
             tags = [
               (builtins.getEnv "GIT_SHA_SHORT")
               (builtins.getEnv "GIT_SHA")
