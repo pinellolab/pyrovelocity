@@ -71,8 +71,9 @@ instance/
 # Scrapy stuff:
 .scrapy
 
-# Sphinx documentation
+# Documentation
 docs/_build/
+.luarc.json
 
 # PyBuilder
 target/
@@ -178,4 +179,5 @@ scratch.*
 .uml
 
 # scratch
-.scratch
+*scratch*
+.*rules*
