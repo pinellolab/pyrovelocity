@@ -152,6 +152,7 @@
     });
 
   extraDevPackages = with pkgs; [
+    just
     lmodern
     pandoc
     # the default derivation attempts to install jupyter and ipython from
