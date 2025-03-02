@@ -85,3 +85,6 @@
 - name: dev-mode
   description: Do not rebuild images and use branch name instead of git short SHA for image tags
   color: 2085aa
+- name: docs-preview
+  description: Build and publish docs previews on PRs
+  color: fbca04
