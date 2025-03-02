@@ -557,8 +557,10 @@ jobs:
         if: ${{ inputs.debug_enabled }}
       - name: Build docs
         run: |
+          df -h
           nix-channel --update
           nix develop --accept-flake-config -c just docs-build
+          df -h
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@392082e81ffbcb9ebdde27400634aa004b35ea37 # ratchet:cloudflare/wrangler-action@v3
         with:
