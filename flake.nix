@@ -50,6 +50,7 @@
       "https://poetry2nix.cachix.org"
       "https://pyrovelocity.cachix.org"
     ];
+    download-buffer-size = 524288000; # 500 MiB (1024 * 1024 * 500)
   };
 
   outputs = inputs @ {
