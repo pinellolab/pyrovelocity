@@ -554,9 +554,11 @@ jobs:
           version: "3.59.1"
       - name: "Setup tmate debug session"
         uses: mxschmitt/action-tmate@e5c7151931ca95bad1c6f4190c730ecf8c7dde48 # ratchet:mxschmitt/action-tmate@v3
-        # if: ${{ inputs.debug_enabled }}
+        if: ${{ inputs.debug_enabled }}
       - name: Build docs
-        run: nix develop -c just docs-build
+        run: |
+          nix-channel --update
+          nix develop --accept-flake-config -c just docs-build
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@392082e81ffbcb9ebdde27400634aa004b35ea37 # ratchet:cloudflare/wrangler-action@v3
         with:
