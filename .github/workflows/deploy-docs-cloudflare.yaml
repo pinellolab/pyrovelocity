@@ -1,0 +1,87 @@
+name: Deploy docs to Cloudflare
+
+on:
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: "Run with tmate.io debugging enabled"
+        required: true
+        type: boolean
+        default: false
+      branch:
+        description: "Git branch or ref to checkout"
+        required: true
+        type: string
+      revision:
+        description: "Git revision to checkout"
+        required: true
+        type: string
+
+  workflow_call:
+    inputs:
+      debug_enabled:
+        description: "Run with tmate.io debugging enabled"
+        required: true
+        type: string
+        default: "false"
+      branch:
+        description: "Git branch or ref to checkout"
+        required: true
+        type: string
+      revision:
+        description: "Git revision to checkout"
+        required: true
+        type: string
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # ratchet:actions/checkout@v4.2.2
+        with:
+          ref: ${{ inputs.branch }}
+
+      - uses: DeterminateSystems/nix-installer-action@e50d5f73bfe71c2dd0aa4218de8f4afa59f8f81d # ratchet:DeterminateSystems/nix-installer-action@v16
+
+      - uses: cachix/cachix-action@ad2ddac53f961de1989924296a1f236fcfbaa4fc # ratchet:cachix/cachix-action@v15
+        with:
+          name: "${{ vars.CACHIX_CACHE_NAME }}"
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+
+      - name: Authenticate to Google Cloud
+        uses: "google-github-actions/auth@6fc4af4b145ae7821d527454aa9bd537d1f2dc5f" # ratchet:google-github-actions/auth@v2
+        with:
+          credentials_json: "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}"
+
+      - name: Setup dvc
+        uses: iterative/setup-dvc@180d52394bc746fb0bb5ca8e9e1a7a49a151742e # ratchet:iterative/setup-dvc@v1
+        with:
+          version: "3.59.1"
+
+      - name: "Setup tmate debug session"
+        uses: mxschmitt/action-tmate@e5c7151931ca95bad1c6f4190c730ecf8c7dde48 # ratchet:mxschmitt/action-tmate@v3
+        if: ${{ inputs.debug_enabled == 'true' }}
+
+      - name: Build docs
+        run: |
+          df -h
+          nix-channel --update
+          nix develop --accept-flake-config -c just docs-build
+          df -h
+
+      - name: Deploy to Cloudflare
+        id: deployment
+        uses: cloudflare/wrangler-action@392082e81ffbcb9ebdde27400634aa004b35ea37 # ratchet:cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
