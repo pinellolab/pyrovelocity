@@ -524,7 +524,7 @@ jobs:
           name: poetry-build
           path: ./dist
       - uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc # ratchet:pypa/gh-action-pypi-publish@release/v1
-  test-docs-build:
+  test-docs-sphinx:
     runs-on: ubuntu-latest
     needs: set-variables
     if: ${{ needs.set-variables.outputs.skip_ci != 'true' && needs.set-variables.outputs.skip_tests != 'true' }}
@@ -546,7 +546,7 @@ jobs:
       - name: Build
         run: make docs-build
 
-  build-release-docs:
+  build-docs-sphinx:
     runs-on: ubuntu-latest
 
     needs: [set-variables, release]
@@ -574,10 +574,10 @@ jobs:
         with:
           path: ./site
 
-  publish-docs:
+  publish-docs-github:
     runs-on: ubuntu-latest
 
-    needs: [build-release-docs, release]
+    needs: [build-docs-sphinx, release]
     if: ${{ needs.release.outputs.released == 'true' }}
     permissions:
       id-token: write
