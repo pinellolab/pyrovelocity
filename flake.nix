@@ -239,7 +239,7 @@
             inherit version;
             github = {
               enable = true;
-              enableRegistry = true;
+              enableRegistry = false;
               token = "$GH_TOKEN";
             };
             autoTags = {
@@ -278,7 +278,7 @@
             inherit version;
             github = {
               enable = true;
-              enableRegistry = true;
+              enableRegistry = false;
               token = "$GH_TOKEN";
             };
             autoTags = {
@@ -317,7 +317,7 @@
             inherit version;
             github = {
               enable = true;
-              enableRegistry = true;
+              enableRegistry = false;
               token = "$GH_TOKEN";
             };
             autoTags = {
@@ -356,7 +356,7 @@
             inherit version;
             github = {
               enable = true;
-              enableRegistry = true;
+              enableRegistry = false;
               token = "$GH_TOKEN";
             };
             autoTags = {
