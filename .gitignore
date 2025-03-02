@@ -73,6 +73,7 @@ instance/
 
 # Documentation
 docs/_build/
+node_modules/
 .luarc.json
 
 # PyBuilder
