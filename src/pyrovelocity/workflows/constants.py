@@ -19,7 +19,7 @@ load_dotenv()
 #
 # Defaults to False if not set.
 PYROVELOCITY_DEMO_FLAG = str_to_bool(
-    os.getenv("PYROVELOCITY_DEMO_FLAG", "False")
+    os.getenv("PYROVELOCITY_DEMO_FLAG", "True")
 )
 
 if PYROVELOCITY_DEMO_FLAG:
