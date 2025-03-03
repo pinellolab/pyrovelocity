@@ -92,11 +92,11 @@
     chmod -R 755 $out/root
   '';
 
-  pythonPackageEnv = mkPoetryEnvWithSource packageName packageSrcPath ["workflows"];
+  pythonPackageEnv = mkPoetryEnvWithSource packageName packageSrcPath ["main" "workflows"];
   pythonPackages = [
     pythonPackageEnv
   ];
-  devpythonPackageEnv = mkPoetryEnvWithSource packageName packageSrcPath ["test" "docs" "workflows"];
+  devpythonPackageEnv = mkPoetryEnvWithSource packageName packageSrcPath ["main" "test" "docs" "workflows"];
   devpythonPackages = [
     devpythonPackageEnv
   ];
