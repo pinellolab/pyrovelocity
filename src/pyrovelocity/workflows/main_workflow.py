@@ -744,7 +744,7 @@ def training_workflow(
     ]
 
     configurations = [
-        # (simulated_configuration, "simulated"),
+        (simulated_configuration, "simulated"),
     ]
 
     if not PYROVELOCITY_DATA_SUBSET:
