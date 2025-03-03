@@ -239,7 +239,7 @@
             inherit version;
             github = {
               enable = false;
-              enableRegistry = false;
+              enableRegistry = isVersionNonEmpty;
               token = "$GH_TOKEN";
             };
             autoTags = {
@@ -247,10 +247,7 @@
             };
             registries = {
               # "ghcr.io" = {
-              #   enable = lib.mkForce isVersionNonEmpty;
               #   repo = lib.mkForce "${gitHubOrg}/${packageName}";
-              #   username = lib.mkForce (builtins.getEnv "GITHUB_ACTOR");
-              #   password = lib.mkForce "$GH_TOKEN";
               # };
               # "cr.cluster.pyrovelocity.net" = {
               #   enable = true;
@@ -285,12 +282,9 @@
               branch = false;
             };
             registries = {
-              "ghcr.io" = {
-                enable = false;
-                repo = lib.mkForce "${gitHubOrg}/${packageName}dev";
-                username = lib.mkForce (builtins.getEnv "GITHUB_ACTOR");
-                password = lib.mkForce "$GH_TOKEN";
-              };
+              # "ghcr.io" = {
+              #   repo = lib.mkForce "${gitHubOrg}/${packageName}dev";
+              # };
               # "cr.cluster.pyrovelocity.net" = {
               #   enable = true;
               #   repo = "${packageName}/${packageName}dev";
@@ -325,10 +319,7 @@
             };
             registries = {
               # "ghcr.io" = {
-              #   enable = lib.mkForce false;
               #   repo = lib.mkForce "${gitHubOrg}/${packageName}code";
-              #   username = lib.mkForce (builtins.getEnv "GITHUB_ACTOR");
-              #   password = lib.mkForce "$GH_TOKEN";
               # };
               # "cr.cluster.pyrovelocity.net" = {
               #   enable = true;
@@ -364,10 +355,7 @@
             };
             registries = {
               # "ghcr.io" = {
-              #   enable = lib.mkForce false;
               #   repo = lib.mkForce "${gitHubOrg}/${packageName}jupyter";
-              #   username = lib.mkForce (builtins.getEnv "GITHUB_ACTOR");
-              #   password = lib.mkForce "$GH_TOKEN";
               # };
               # "cr.cluster.pyrovelocity.net" = {
               #   enable = true;
