@@ -26,6 +26,7 @@ eggs/
 .eggs/
 lib/
 lib64/
+output/
 parts/
 sdist/
 var/
@@ -182,3 +183,5 @@ scratch.*
 # scratch
 *scratch*
 .*rules*
+
+/.luarc.json
