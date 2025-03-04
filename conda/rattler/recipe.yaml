@@ -30,7 +30,7 @@ requirements:
   host:
     - python >=3.11,<3.12
     - pip
-    - poetry-core >=1.6.0
+    - poetry-core >=1.6.0,<2
   run:
     - python >=3.11,<3.12
     - adjusttext >=1.1.1
