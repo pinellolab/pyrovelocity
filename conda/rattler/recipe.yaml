@@ -44,6 +44,7 @@ requirements:
     - click >=8.1.7
     - colorlog >=6.7.0
     - daft >=0.1.2
+    - dill >=0.3.8
     - diffrax >=0.5.0
     - diskcache >=5.6.1
     - duckdb >=1.0.0
