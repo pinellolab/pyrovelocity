@@ -314,7 +314,7 @@ def preprocess_dataset(
         # TODO: export QC plots, which will require use of the cell_state variable
         logger.info(f"cell state variable: {cell_state}")
         if "X_umap" not in adata.obsm.keys():
-            scv.tl.umap(adata)
+            sc.tl.umap(adata)
         if "leiden" not in adata.obs.keys():
             sc.tl.leiden(adata)
         if use_vars_subset:
