@@ -93,12 +93,17 @@ def serialize_anndata(adata: AnnData | AnnDataRaw) -> Dict[str, Any]:
 
 
 @beartype
-def deserialize_anndata(data: Dict[str, Any]) -> AnnData | AnnDataRaw:
+def deserialize_anndata(
+    data: Dict[str, Any],
+    sparse_layers: bool = False,
+) -> AnnData | AnnDataRaw:
     """
     Deserialize a dictionary to an AnnData object.
 
     Args:
         data: Dictionary representation of an AnnData object
+        sparse_layers: If True, store layers as sparse matrices (csr_matrix)
+                      instead of dense numpy arrays
 
     Returns:
         Reconstructed AnnData object
@@ -122,9 +127,15 @@ def deserialize_anndata(data: Dict[str, Any]) -> AnnData | AnnDataRaw:
         adata_dict["X"] = X
 
     if "layers" in data:
-        adata_dict["layers"] = {
-            key: np.array(value) for key, value in data["layers"].items()
-        }
+        if sparse_layers:
+            adata_dict["layers"] = {
+                key: sparse.csr_matrix(np.array(value))
+                for key, value in data["layers"].items()
+            }
+        else:
+            adata_dict["layers"] = {
+                key: np.array(value) for key, value in data["layers"].items()
+            }
 
     if "obsm" in data:
         adata_dict["obsm"] = {
@@ -225,6 +236,7 @@ def save_anndata_to_json(
 def load_anndata_from_json(
     filename: str | Path,
     expected_hash: str | None = None,
+    sparse_layers: bool = False,
 ) -> AnnData:
     """
     Load an AnnData object from a JSON file.
@@ -232,6 +244,7 @@ def load_anndata_from_json(
     Args:
         filename: Name of the JSON file to load from
         expected_hash: Optional hash to validate against
+        sparse_layers: If True, store layers as sparse matrices
 
     Returns:
         Reconstructed AnnData object
@@ -252,7 +265,7 @@ def load_anndata_from_json(
 
     with filename.open("r") as f:
         adata_dict = json.load(f)
-    return deserialize_anndata(adata_dict)
+    return deserialize_anndata(adata_dict, sparse_layers=sparse_layers)
 
 
 @beartype
