@@ -3,6 +3,7 @@ import os
 import random
 from os import PathLike
 from pathlib import Path
+from typing import Any, Union
 
 import anyio
 import appdirs
@@ -11,17 +12,12 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 from anyio import Semaphore
 from beartype import beartype
-from beartype.typing import Dict
-from beartype.typing import List
-from beartype.typing import Optional
+from beartype.typing import Dict, List, Optional
 from diskcache import Cache
 from httpx import AsyncClient
-from returns.result import Failure
-from returns.result import Result
-from returns.result import Success
+from returns.result import Failure, Result, Success
 
 from pyrovelocity.logging import configure_logging
-
 
 __all__ = ["fetch_gene_sequences_batch"]
 
@@ -29,7 +25,8 @@ logger = configure_logging(__name__)
 
 CONCURRENCY_LIMIT = 15
 
-BatchResult = List[Result[dict, str]]
+# TODO: migrate Result from returns to expression
+BatchResult = List[Any]
 
 
 @beartype
