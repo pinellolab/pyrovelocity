@@ -34,6 +34,8 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+.ruff_cache/
+.dvc/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -74,8 +76,11 @@ instance/
 
 # Documentation
 docs/_build/
-node_modules/
 .luarc.json
+
+# Typescript
+.yarn/
+node_modules/
 
 # PyBuilder
 target/
