@@ -309,6 +309,110 @@ def test_roundtrip_with_all_attributes(tmp_path, mock_hash_file):
     ), "Expected hash_file to be called twice"
 
 
+def test_deserialize_with_sparse_layers(sample_adata, tmp_path):
+    """Test deserialization with sparse layers."""
+    file_path = tmp_path / "sparse_layers_test.json"
+    save_anndata_to_json(sample_adata, file_path)
+
+    sparse_loaded_adata = load_anndata_from_json(file_path, sparse_layers=True)
+
+    for layer_key in sparse_loaded_adata.layers:
+        assert sparse.issparse(
+            sparse_loaded_adata.layers[layer_key]
+        ), f"Expected layer '{layer_key}' to be sparse when sparse_layers=True"
+
+    for layer_key in sample_adata.layers:
+        assert np.allclose(
+            sample_adata.layers[layer_key],
+            sparse_loaded_adata.layers[layer_key].toarray(),
+        ), f"Mismatch in layer '{layer_key}' data when using sparse_layers=True"
+
+    dense_loaded_adata = load_anndata_from_json(file_path)
+
+    for layer_key in dense_loaded_adata.layers:
+        assert not sparse.issparse(
+            dense_loaded_adata.layers[layer_key]
+        ), f"Expected layer '{layer_key}' to be dense when sparse_layers=False"
+
+
+def test_load_anndata_from_json_passes_sparse_layers(sample_adata, tmp_path):
+    """Test that load_anndata_from_json correctly passes sparse_layers to deserialize_anndata."""
+    file_path = tmp_path / "sparse_param_test.json"
+    save_anndata_to_json(sample_adata, file_path)
+
+    with patch(
+        "pyrovelocity.io.serialization.deserialize_anndata"
+    ) as mock_deserialize:
+        mock_deserialize.return_value = sample_adata.copy()
+
+        load_anndata_from_json(file_path, sparse_layers=True)
+        mock_deserialize.assert_called_once()
+        assert mock_deserialize.call_args[1]["sparse_layers"] is True
+
+        mock_deserialize.reset_mock()
+
+        load_anndata_from_json(file_path)
+        mock_deserialize.assert_called_once()
+        assert mock_deserialize.call_args[1]["sparse_layers"] is False
+
+
+def test_deserialize_anndata_sparse_layers_direct():
+    """Test that deserialize_anndata correctly handles the sparse_layers parameter directly."""
+    data = {
+        "shape": [5, 4],
+        "obs": {"index": ["cell1", "cell2", "cell3", "cell4", "cell5"]},
+        "var": {"index": ["gene1", "gene2", "gene3", "gene4"]},
+        "X": [
+            [1, 2, 3, 4],
+            [5, 6, 7, 8],
+            [9, 10, 11, 12],
+            [13, 14, 15, 16],
+            [17, 18, 19, 20],
+        ],
+        "layers": {
+            "spliced": [
+                [1, 2, 3, 4],
+                [5, 6, 7, 8],
+                [9, 10, 11, 12],
+                [13, 14, 15, 16],
+                [17, 18, 19, 20],
+            ],
+            "unspliced": [
+                [0.1, 0.2, 0.3, 0.4],
+                [0.5, 0.6, 0.7, 0.8],
+                [0.9, 1.0, 1.1, 1.2],
+                [1.3, 1.4, 1.5, 1.6],
+                [1.7, 1.8, 1.9, 2.0],
+            ],
+        },
+    }
+
+    sparse_adata = deserialize_anndata(data, sparse_layers=True)
+
+    for layer_key in sparse_adata.layers:
+        assert sparse.issparse(
+            sparse_adata.layers[layer_key]
+        ), f"Expected layer '{layer_key}' to be sparse when sparse_layers=True"
+
+    dense_adata = deserialize_anndata(data, sparse_layers=False)
+
+    for layer_key in dense_adata.layers:
+        assert not sparse.issparse(
+            dense_adata.layers[layer_key]
+        ), f"Expected layer '{layer_key}' to be dense when sparse_layers=False"
+
+    for layer_key in sparse_adata.layers:
+        sparse_data = (
+            sparse_adata.layers[layer_key].toarray()
+            if sparse.issparse(sparse_adata.layers[layer_key])
+            else sparse_adata.layers[layer_key]
+        )
+        dense_data = dense_adata.layers[layer_key]
+        assert np.allclose(
+            sparse_data, dense_data
+        ), f"Data mismatch in layer '{layer_key}' between sparse and dense formats"
+
+
 def test_handle_corrupted_json(tmp_path):
     """Test handling of corrupted JSON files."""
     file_path = tmp_path / "corrupted.json"
