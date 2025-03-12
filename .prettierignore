@@ -1,0 +1,13 @@
+app/**
+conda/**
+dev/**
+docs/**
+nbs/**
+reproducibility/**
+scripts/**
+**/*.html
+**/*.lock
+**/*.md
+**/*.pkl
+**/*.toml
+**/*.zst
