@@ -33,6 +33,7 @@ def test_preprocess_dataset(preprocess_dataset_output):
 
 
 @pytest.mark.integration
+@pytest.mark.network
 def test_preprocess_dataset_pancreas(tmp_path):
     from pyrovelocity.io.datasets import pancreas
 
