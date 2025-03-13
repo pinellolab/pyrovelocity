@@ -416,18 +416,43 @@ def top_mae_genes(
         mae_top_percentile (float): Percentile threshold for selecting top MAE genes (0-100)
         min_genes_per_bin (int): Minimum number of genes to select from each bin
         max_genes_per_bin (Optional[int]): Maximum number of genes to select from each bin
+        gene_name_filter (str): Regular expression pattern for filtering out genes
 
     Returns:
         List[str]: List of gene indices from volcano_data, sorted by time correlation.
     """
+    # invalid min_genes_per_bin
+    if min_genes_per_bin < 1:
+        raise ValueError("min_genes_per_bin must be at least 1")
+
+    # mae_top_percentile is calculated dynamically
+    if (
+        isinstance(mae_top_percentile, (int, float))
+        and mae_top_percentile > 100
+    ):
+        logger.warning(
+            f"mae_top_percentile ({mae_top_percentile}) exceeds 100. Setting to 100."
+        )
+        mae_top_percentile = 100.0
+
     if not 0 < mae_top_percentile <= 100:
         raise ValueError("mae_top_percentile must be between 0 and 100")
-    if min_genes_per_bin < 0:
-        raise ValueError("min_genes_per_bin must be non-negative")
-    if max_genes_per_bin is not None and max_genes_per_bin < min_genes_per_bin:
-        raise ValueError(
-            "max_genes_per_bin must be greater than or equal to min_genes_per_bin"
+
+    # empty DataFrame
+    if volcano_data.empty:
+        logger.warning(
+            "Empty DataFrame provided to top_mae_genes. Returning empty list."
         )
+        return []
+
+    # small datasets - fewer than 8*min_genes_per_bin genes, return all genes
+    if len(volcano_data) < 8 * min_genes_per_bin:
+        logger.warning(
+            f"Dataset contains only {len(volcano_data)} genes, which is fewer than "
+            f"the minimum required for binning (8*{min_genes_per_bin}={8*min_genes_per_bin}). "
+            f"Returning all genes."
+        )
+        return list(volcano_data.index)
 
     filtered_data = volcano_data[
         ~volcano_data.index.str.contains((gene_name_filter), case=False)
@@ -465,6 +490,10 @@ def top_mae_genes(
             )
 
         selected_genes.append(top_genes_in_bin)
+
+    if not selected_genes:
+        logger.warning("No genes selected. Returning empty list.")
+        return []
 
     top_genes = pd.concat(selected_genes)
 
