@@ -81,6 +81,12 @@ jobs:
           nix develop --accept-flake-config -c just docs-build
           df -h
 
+      - name: Setup Yarn
+        uses: threeal/setup-yarn-action@ec8c075e62bc497968de40011c2b766f5e8f1ac5 # ratchet:threeal/setup-yarn-action@v2.0.0
+        with:
+          version: "4.5.0"
+          cache: true
+
       - name: Deploy to Cloudflare
         id: deployment
         uses: cloudflare/wrangler-action@392082e81ffbcb9ebdde27400634aa004b35ea37 # ratchet:cloudflare/wrangler-action@v3
