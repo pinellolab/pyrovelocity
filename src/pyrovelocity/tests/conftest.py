@@ -23,6 +23,52 @@ def adata_preprocessed_pancreas_50_7():
 
 
 @pytest.fixture
+def adata_trained_pancreas_50_7():
+    fixture_file_path = (
+        files("pyrovelocity.tests.data") / "trained_pancreas_50_7.json"
+    )
+    return load_anndata_from_json(fixture_file_path)
+
+
+@pytest.fixture
+def adata_postprocessed_pancreas_50_7():
+    fixture_file_path = (
+        files("pyrovelocity.tests.data") / "postprocessed_pancreas_50_7.json"
+    )
+    return load_anndata_from_json(fixture_file_path)
+
+
+@pytest.fixture
+def pancreas_model2_path():
+    return files("pyrovelocity.tests.data") / "models" / "pancreas_model2"
+
+
+@pytest.fixture
+def pancreas_model2_posterior_samples_path(pancreas_model2_path):
+    return pancreas_model2_path / "posterior_samples.pkl.zst"
+
+
+@pytest.fixture
+def pancreas_model2_pyrovelocity_data_path(pancreas_model2_path):
+    return pancreas_model2_path / "pyrovelocity.pkl.zst"
+
+
+@pytest.fixture
+def pancreas_model2_model_path(pancreas_model2_path):
+    return pancreas_model2_path / "model"
+
+
+@pytest.fixture
+def pancreas_model2_metrics_path(pancreas_model2_path):
+    return pancreas_model2_path / "metrics.json"
+
+
+@pytest.fixture
+def pancreas_model2_run_info_path(pancreas_model2_path):
+    return pancreas_model2_path / "run_info.json"
+
+
+@pytest.fixture
 def default_sample_data():
     """Default sample data from `pyrovelocity.utils.generate_sample_data`.
 
