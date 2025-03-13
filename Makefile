@@ -61,8 +61,8 @@ test-bazel-debug: ## Run tests with Bazel in debug mode. See .aspect/bazelrc/deb
 test-bazel-nodocs: ## Run tests with Bazel excluding doctests.
 	bazel test //src/... -- -//src/pyrovelocity:xdoctest
 
-test-cov-xml: ## Run tests (including slow ones) with coverage
-	poetry run pytest --cov-report=xml -m "not pyensembl"
+test-cov-xml: ## Run tests with coverage
+	poetry run pytest --cov-report=xml
 
 precommit-run: ## Run pre-commit hooks
 	pre-commit run -a
