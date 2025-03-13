@@ -481,7 +481,7 @@ jobs:
       - uses: cihelper/action-semanticrelease-poetry@66900ba780321bcdb974891ee82f945a25a870d7 # ratchet:cihelper/action-semanticrelease-poetry@v1
         id: semanticrelease
         with:
-          github-token: ${{ secrets.FAST_FORWARD_PAT }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # ratchet:actions/upload-artifact@v4.6.1
         if: ${{ steps.semanticrelease.outputs.released == 'true' }}
         with:
