@@ -1,3 +1,6 @@
+import os
+import tempfile
+import uuid
 from importlib.resources import files
 
 import pytest
@@ -279,3 +282,86 @@ def putative_model1_marker_genes(posterior_samples_model1):
     return top_mae_genes(
         volcano_data=posterior_samples_model1["gene_ranking"],
     )
+
+
+# General-purpose fixtures for temporary file handling
+@pytest.fixture
+def temp_file_path():
+    """Create a unique temporary file path for each test.
+
+    This fixture provides a unique file path (not an actual file) for tests
+    that need to write and read files. The path is automatically cleaned up
+    after the test completes.
+
+    Returns:
+        str: A unique temporary file path
+    """
+    # Create a unique filename using uuid to avoid conflicts in parallel testing
+    unique_filename = f"test_data_{uuid.uuid4().hex}"
+    temp_dir = tempfile.gettempdir()
+    file_path = os.path.join(temp_dir, unique_filename)
+
+    yield file_path
+
+    # Clean up after the test
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+
+@pytest.fixture
+def temp_compressed_pickle_path():
+    """Create a unique temporary file path for compressed pickle files.
+
+    This fixture provides a unique file path with the .pkl.zst extension
+    for tests that need to work with CompressedPickle. The path is
+    automatically cleaned up after the test completes.
+
+    Returns:
+        str: A unique temporary file path with .pkl.zst extension
+    """
+    # Create a unique filename using uuid to avoid conflicts in parallel testing
+    unique_filename = f"test_data_{uuid.uuid4().hex}.pkl.zst"
+    temp_dir = tempfile.gettempdir()
+    file_path = os.path.join(temp_dir, unique_filename)
+
+    yield file_path
+
+    # Clean up after the test
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+
+@pytest.fixture
+def save_and_load_helper():
+    """Helper function to save and load data with CompressedPickle.
+
+    This fixture provides a function that handles both saving and loading
+    data with CompressedPickle, making tests more concise and reliable.
+
+    Returns:
+        function: A function that saves and loads data
+    """
+
+    def _save_and_load(data, file_path, **kwargs):
+        """Save data to a file and load it back.
+
+        Args:
+            data: The data to save
+            file_path: The path to save the data to
+            **kwargs: Additional arguments to pass to CompressedPickle.save
+                      and CompressedPickle.load
+
+        Returns:
+            The loaded data
+        """
+        save_kwargs = {
+            k: v
+            for k, v in kwargs.items()
+            if k in ["sparsify", "density_threshold"]
+        }
+        load_kwargs = {k: v for k, v in kwargs.items() if k in ["densify"]}
+
+        CompressedPickle.save(file_path=file_path, obj=data, **save_kwargs)
+        return CompressedPickle.load(file_path=file_path, **load_kwargs)
+
+    return _save_and_load
