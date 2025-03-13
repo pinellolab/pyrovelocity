@@ -3,92 +3,33 @@ import os
 import numpy as np
 import pandas as pd
 import pytest
+from scipy import sparse
 from sparse import COO
 
 from pyrovelocity.io.compressedpickle import CompressedPickle
 
 
-@pytest.fixture(scope="module")
-def test_data():
+@pytest.fixture
+def test_dataframe():
+    """Create a simple pandas DataFrame for testing."""
     return pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
 
 
-@pytest.fixture(scope="module")
-def test_file():
-    return "test_data.pkl.zst"
+@pytest.fixture
+def test_dict():
+    """Create a dictionary with numpy arrays for testing."""
+    return {"a": np.arange(5), "b": np.linspace(0, 1, 5)}
 
 
-def test_save(test_data, test_file):
-    CompressedPickle.save(test_file, test_data)
-    assert os.path.exists(test_file)
-
-
-def test_load(test_data, test_file):
-    loaded_data = CompressedPickle.load(test_file)
-    assert loaded_data.equals(test_data)
-
-
-def compare_dicts(dict1, dict2):
-    if dict1.keys() != dict2.keys():
-        return False
-
-    for key in dict1:
-        if isinstance(dict1[key], np.ndarray):
-            if not np.array_equal(dict1[key], dict2[key]):
-                return False
-        elif dict1[key] != dict2[key]:
-            return False
-
-    return True
-
-
-def test_save_load_dict(test_file):
-    test_dict = {"a": np.arange(5), "b": np.linspace(0, 1, 5)}
-    CompressedPickle.save(test_file, test_dict)
-    loaded_dict = CompressedPickle.load(test_file)
-    assert compare_dicts(test_dict, loaded_dict)
-
-
-def compare_complex_objects(obj1, obj2):
-    if len(obj1) != len(obj2):
-        return False
-
-    for item1, item2 in zip(obj1, obj2):
-        if isinstance(item1, dict) and isinstance(item2, dict):
-            if not compare_dicts(item1, item2):
-                return False
-        elif isinstance(item1, np.ndarray) and isinstance(item2, np.ndarray):
-            if not np.array_equal(item1, item2):
-                return False
-        elif item1 != item2:
-            return False
-
-    return True
-
-
-def test_save_load_complex_object(test_file):
-    test_obj = [{"a": np.array([1, 2, 3]), "b": 1.5}, (4, "test", [1, 2])]
-    CompressedPickle.save(test_file, test_obj)
-    loaded_obj = CompressedPickle.load(test_file)
-    assert compare_complex_objects(test_obj, loaded_obj)
-
-
-def test_load_non_existent_file():
-    with pytest.raises(FileNotFoundError):
-        CompressedPickle.load("non_existent.pkl.zst")
-
-
-@pytest.fixture(scope="module", autouse=True)
-def cleanup(request, test_file):
-    def delete_test_file():
-        if os.path.exists(test_file):
-            os.remove(test_file)
-
-    request.addfinalizer(delete_test_file)
+@pytest.fixture
+def test_complex_object():
+    """Create a complex nested object for testing."""
+    return [{"a": np.array([1, 2, 3]), "b": 1.5}, (4, "test", [1, 2])]
 
 
 @pytest.fixture
 def sparse_dict():
+    """Create a dictionary with arrays of varying sparsity for testing."""
     return {
         "dense": np.array([[1, 2], [3, 4]]),
         "sparse": np.array([[1, 0], [0, 2]]),
@@ -96,18 +37,82 @@ def sparse_dict():
     }
 
 
-def test_save_load_sparse_dict(test_file, sparse_dict):
-    CompressedPickle.save(
-        file_path=test_file,
-        obj=sparse_dict,
-        density_threshold=0.5,
-    )
-    loaded_dict = CompressedPickle.load(test_file)
+@pytest.fixture
+def mixed_dict():
+    """Create a dictionary with both numpy arrays and sparse arrays."""
+    return {
+        "dense": np.array([[1, 2], [3, 4]]),
+        "sparse": COO.from_numpy(np.array([[1, 0], [0, 2]])),
+        "very_sparse": COO.from_numpy(np.array([[0, 1], [0, 0]])),
+        "non_array": "test string",
+    }
 
+
+def test_save_and_load_dataframe(
+    test_dataframe, temp_compressed_pickle_path, save_and_load_helper
+):
+    """Test saving and loading a pandas DataFrame."""
+    loaded_data = save_and_load_helper(
+        test_dataframe, temp_compressed_pickle_path
+    )
+    assert loaded_data.equals(test_dataframe)
+
+
+def test_save_and_load_dict(
+    test_dict, temp_compressed_pickle_path, save_and_load_helper
+):
+    """Test saving and loading a dictionary with numpy arrays."""
+    loaded_dict = save_and_load_helper(test_dict, temp_compressed_pickle_path)
+
+    # Verify keys match
+    assert loaded_dict.keys() == test_dict.keys()
+
+    # Verify array contents match
+    for key in test_dict:
+        assert np.array_equal(loaded_dict[key], test_dict[key])
+
+
+def test_save_and_load_complex_object(
+    test_complex_object, temp_compressed_pickle_path, save_and_load_helper
+):
+    """Test saving and loading a complex nested object."""
+    loaded_obj = save_and_load_helper(
+        test_complex_object, temp_compressed_pickle_path
+    )
+
+    # Verify structure
+    assert len(loaded_obj) == len(test_complex_object)
+
+    # Verify first item (dictionary)
+    assert loaded_obj[0].keys() == test_complex_object[0].keys()
+    assert np.array_equal(loaded_obj[0]["a"], test_complex_object[0]["a"])
+    assert loaded_obj[0]["b"] == test_complex_object[0]["b"]
+
+    # Verify second item (tuple)
+    assert loaded_obj[1] == test_complex_object[1]
+
+
+def test_load_non_existent_file():
+    """Test that loading a non-existent file raises FileNotFoundError."""
+    with pytest.raises(FileNotFoundError):
+        CompressedPickle.load("non_existent_file.pkl.zst")
+
+
+def test_save_and_load_sparse_dict(
+    sparse_dict, temp_compressed_pickle_path, save_and_load_helper
+):
+    """Test saving and loading a dictionary with arrays of varying sparsity."""
+    # Use sparsification with a threshold that will convert some arrays to sparse format
+    loaded_dict = save_and_load_helper(
+        sparse_dict, temp_compressed_pickle_path, density_threshold=0.5
+    )
+
+    # Verify all arrays are loaded as dense numpy arrays by default
     assert isinstance(loaded_dict["dense"], np.ndarray)
     assert isinstance(loaded_dict["sparse"], np.ndarray)
     assert isinstance(loaded_dict["very_sparse"], np.ndarray)
 
+    # Verify contents match
     assert np.array_equal(loaded_dict["dense"], sparse_dict["dense"])
     assert np.array_equal(loaded_dict["sparse"], sparse_dict["sparse"])
     assert np.array_equal(
@@ -115,18 +120,24 @@ def test_save_load_sparse_dict(test_file, sparse_dict):
     )
 
 
-def test_save_load_sparse_dict_without_densify(test_file, sparse_dict):
-    CompressedPickle.save(
-        file_path=test_file,
-        obj=sparse_dict,
+def test_save_and_load_sparse_dict_without_densify(
+    sparse_dict, temp_compressed_pickle_path, save_and_load_helper
+):
+    """Test saving and loading a dictionary with arrays, keeping sparse arrays sparse."""
+    # Use sparsification with a threshold and load without densifying
+    loaded_dict = save_and_load_helper(
+        sparse_dict,
+        temp_compressed_pickle_path,
         density_threshold=0.5,
+        densify=False,
     )
-    loaded_dict = CompressedPickle.load(test_file, densify=False)
 
+    # Verify dense arrays remain dense, sparse arrays are loaded as sparse
     assert isinstance(loaded_dict["dense"], np.ndarray)
     assert isinstance(loaded_dict["sparse"], COO)
     assert isinstance(loaded_dict["very_sparse"], COO)
 
+    # Verify contents match
     assert np.array_equal(loaded_dict["dense"], sparse_dict["dense"])
     assert np.array_equal(
         loaded_dict["sparse"].todense(), sparse_dict["sparse"]
@@ -136,44 +147,40 @@ def test_save_load_sparse_dict_without_densify(test_file, sparse_dict):
     )
 
 
-def test_save_without_sparsify(test_file, sparse_dict):
-    CompressedPickle.save(test_file, sparse_dict, sparsify=False)
-    loaded_dict = CompressedPickle.load(test_file)
+def test_save_without_sparsify(
+    sparse_dict, temp_compressed_pickle_path, save_and_load_helper
+):
+    """Test saving without sparsification."""
+    loaded_dict = save_and_load_helper(
+        sparse_dict, temp_compressed_pickle_path, sparsify=False
+    )
 
+    # Verify all arrays remain dense
     assert all(isinstance(arr, np.ndarray) for arr in loaded_dict.values())
+
+    # Verify contents match
     assert all(
         np.array_equal(loaded_dict[key], sparse_dict[key])
         for key in sparse_dict
     )
 
 
-# TODO: Handle sparsification when values are not exclusively arrays
-def test_save_load_mixed_dict(test_file):
-    mixed_dict = {
-        "dense": np.array([[1, 2], [3, 4]]),
-        "sparse": COO.from_numpy(np.array([[1, 0], [0, 2]])),
-        "very_sparse": COO.from_numpy(np.array([[0, 1], [0, 0]])),
-        "non_array": "test string",
-    }
+def test_save_and_load_mixed_dict(
+    mixed_dict, temp_compressed_pickle_path, save_and_load_helper
+):
+    """Test saving and loading a dictionary with both numpy and sparse arrays."""
+    loaded_dict = save_and_load_helper(mixed_dict, temp_compressed_pickle_path)
 
-    CompressedPickle.save(test_file, mixed_dict)
-    loaded_dict = CompressedPickle.load(test_file)
-
+    # Verify types
     assert isinstance(loaded_dict["dense"], np.ndarray)
-    # assert isinstance(loaded_dict["sparse"], np.ndarray)
-    # assert isinstance(loaded_dict["very_sparse"], np.ndarray)
     assert isinstance(loaded_dict["sparse"], COO)
     assert isinstance(loaded_dict["very_sparse"], COO)
     assert isinstance(loaded_dict["non_array"], str)
 
+    # Verify contents
     assert np.array_equal(loaded_dict["dense"], mixed_dict["dense"])
-    # assert np.array_equal(loaded_dict["sparse"], mixed_dict["sparse"].todense())
-    # assert np.array_equal(
-    #     loaded_dict["very_sparse"], mixed_dict["very_sparse"].todense()
-    # )
     assert np.array_equal(
-        loaded_dict["sparse"].todense(),
-        mixed_dict["sparse"].todense(),
+        loaded_dict["sparse"].todense(), mixed_dict["sparse"].todense()
     )
     assert np.array_equal(
         loaded_dict["very_sparse"].todense(),
@@ -182,10 +189,18 @@ def test_save_load_mixed_dict(test_file):
     assert loaded_dict["non_array"] == mixed_dict["non_array"]
 
 
-def test_save_load_non_dict(test_file):
+def test_save_and_load_non_dict(
+    temp_compressed_pickle_path, save_and_load_helper
+):
+    """Test saving and loading a non-dictionary object."""
     non_dict_obj = np.array([[1, 2], [3, 4]])
-    CompressedPickle.save(test_file, non_dict_obj)
-    loaded_obj = CompressedPickle.load(test_file)
+    loaded_obj = save_and_load_helper(non_dict_obj, temp_compressed_pickle_path)
 
     assert isinstance(loaded_obj, np.ndarray)
     assert np.array_equal(loaded_obj, non_dict_obj)
+
+
+def test_file_exists_after_save(test_dataframe, temp_compressed_pickle_path):
+    """Test that the file exists after saving."""
+    CompressedPickle.save(temp_compressed_pickle_path, test_dataframe)
+    assert os.path.exists(temp_compressed_pickle_path)
