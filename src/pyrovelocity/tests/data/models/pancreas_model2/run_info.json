@@ -1,0 +1,12 @@
+{
+    "artifact_uri": "mlflow-artifacts:/1a741690552b410eb9c7ba642cf21e2d/cb9c41c668b94853b8b4fa196816bd45/artifacts",
+    "end_time": 1741809025600,
+    "experiment_id": "0",
+    "lifecycle_stage": "active",
+    "run_id": "cb9c41c668b94853b8b4fa196816bd45",
+    "run_name": "pancreas_model2-cb9c41c",
+    "run_uuid": "cb9c41c668b94853b8b4fa196816bd45",
+    "start_time": 1741809024171,
+    "status": "FINISHED",
+    "user_id": "cameronraysmith"
+}
