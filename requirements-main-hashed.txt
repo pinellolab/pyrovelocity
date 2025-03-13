@@ -747,6 +747,9 @@ equinox==0.11.3 ; python_version >= "3.11" and python_version < "3.13" \
 etils[epath,epy]==1.7.0 ; python_version >= "3.11" and python_version < "3.13" \
     --hash=sha256:61af8f7c242171de15e22e5da02d527cb9e677d11f8bcafe18fcc3548eee3e60 \
     --hash=sha256:97b68fd25e185683215286ef3a54e38199b6245f5fe8be6bedc1189be4256350
+execnet==2.1.1 ; python_version >= "3.11" and python_version < "3.13" \
+    --hash=sha256:26dee51f1b80cebd6d0ca8e74dd8745419761d3bef34163928cbebbdc4749fdc \
+    --hash=sha256:5189b52c6121c24feae288166ab41b32549c7e2348652736540b9e6e7d4e72e3
 executing==1.2.0 ; python_version >= "3.11" and python_version < "3.13" \
     --hash=sha256:0314a69e37426e3608aada02473b4161d4caf5a4b244d1d0c48072b8fee7bacc \
     --hash=sha256:19da64c18d2d851112f09c287f8d3dbbdf725ab0e569077efb6cdcbd3497c107
@@ -2476,6 +2479,9 @@ pytest-cov==4.0.0 ; python_version >= "3.11" and python_version < "3.13" \
 pytest-mock==3.10.0 ; python_version >= "3.11" and python_version < "3.13" \
     --hash=sha256:f4c973eeae0282963eb293eb173ce91b091a79c1334455acfac9ddee8a1c784b \
     --hash=sha256:fbbdb085ef7c252a326fd8cdcac0aa3b1333d8811f131bdcc701002e1be7ed4f
+pytest-xdist==3.6.1 ; python_version >= "3.11" and python_version < "3.13" \
+    --hash=sha256:9ed4adfb68a016610848639bb7e02c9352d5d9f03d04809919e2dafc3be4cca7 \
+    --hash=sha256:ead156a4db231eec769737f57668ef58a2084a34b2e55c4a8fa20d861107300d
 pytest==7.3.1 ; python_version >= "3.11" and python_version < "3.13" \
     --hash=sha256:3799fa815351fea3a5e96ac7e503a96fa51cc9942c3753cda7651b93c1cfa362 \
     --hash=sha256:434afafd78b1d78ed0addf160ad2b77a30d35d4bdf8af234fe621919d9ed15e3
