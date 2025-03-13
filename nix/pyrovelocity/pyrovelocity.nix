@@ -36,7 +36,7 @@ poetry2nix.mkPoetryApplication {
     pytest \
     -rA \
     -k "not workflows and not git" \
-    -m "not pyensembl" \
+    -m "not pyensembl and not network and not slow" \
     --xdoc \
     --no-cov \
     --disable-warnings \
