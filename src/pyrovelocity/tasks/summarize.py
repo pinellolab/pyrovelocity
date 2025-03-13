@@ -253,6 +253,7 @@ def summarize_dataset(
             state_color_dict=LARRY_CELL_TYPE_COLORS
             if "larry" in data_model
             else None,
+            save_fig=False,
         )
 
     # shared time plot
