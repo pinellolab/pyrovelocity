@@ -15,7 +15,7 @@
 version: 1
 metadata:
   content_hash:
-    linux-64: 6977fdd936420076f7a15d04e9adb2496a11cc0519ea79ed1dbe94009aad176a
+    linux-64: 6cf30f9161735744abb78de3fc9a663f3f359a35e935e9e015242c19919602b4
   channels:
   - url: pytorch
     used_env_vars: []
@@ -2065,6 +2065,18 @@ package:
     sha256: cbde2c64ec317118fc06b223c5fd87c8a680255e7348dd60e7b292d2e103e701
   category: main
   optional: false
+- name: execnet
+  version: 2.1.1
+  manager: conda
+  platform: linux-64
+  dependencies:
+    python: '>=3.9'
+  url: https://conda.anaconda.org/conda-forge/noarch/execnet-2.1.1-pyhd8ed1ab_1.conda
+  hash:
+    md5: a71efeae2c160f6789900ba2631a2c90
+    sha256: 9abc6c128cd40733e9b24284d0462e084d4aff6afe614f0754aa8533ebe505e4
+  category: test
+  optional: true
 - name: executing
   version: 2.1.0
   manager: conda
@@ -7047,6 +7059,20 @@ package:
     sha256: b3f3070b4bacf9160fe357a05292d419f3124e023312ff2f7d519ed1094c8b14
   category: test
   optional: true
+- name: pytest-xdist
+  version: 3.6.1
+  manager: conda
+  platform: linux-64
+  dependencies:
+    execnet: '>=2.1'
+    pytest: '>=7.0.0'
+    python: '>=3.9'
+  url: https://conda.anaconda.org/conda-forge/noarch/pytest-xdist-3.6.1-pyhd8ed1ab_1.conda
+  hash:
+    md5: 59aad4fb37cabc0bacc73cf344612ddd
+    sha256: fb35da93084d653b86918c200abb2f0b88aceb3b0526c6aaa21b844f565ae237
+  category: test
+  optional: true
 - name: python
   version: 3.11.11
   manager: conda
@@ -8775,7 +8801,7 @@ package:
   category: main
   optional: false
 - name: xorg-libsm
-  version: 1.2.5
+  version: 1.2.6
   manager: conda
   platform: linux-64
   dependencies:
@@ -8783,10 +8809,10 @@ package:
     libgcc: '>=13'
     libuuid: '>=2.38.1,<3.0a0'
     xorg-libice: '>=1.1.2,<2.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/xorg-libsm-1.2.5-he73a12e_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/xorg-libsm-1.2.6-he73a12e_0.conda
   hash:
-    md5: 4c3e9fab69804ec6077697922d70c6e2
-    sha256: 760f43df6c2ce8cbbbcb8f2f3b7fc0f306716c011e28d1d340f3dfa8ccf29185
+    md5: 1c74ff8c35dcadf952a16f752ca5aa49
+    sha256: 277841c43a39f738927145930ff963c5ce4c4dacf66637a3d95d802a64173250
   category: main
   optional: false
 - name: xorg-libx11
