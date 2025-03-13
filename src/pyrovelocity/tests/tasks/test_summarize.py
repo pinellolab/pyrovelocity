@@ -26,6 +26,7 @@ def test_summarize_dataset_model1(summarize_dataset_model1_output):
     return summarize_dataset_model1_output
 
 
+@pytest.mark.slow
 @pytest.mark.integration
 def test_summarize_dataset_pancreas(
     adata_postprocessed_pancreas_50_7,
