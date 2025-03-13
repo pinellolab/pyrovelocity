@@ -55,6 +55,18 @@ def sample_volcano_data_with_ribosomal() -> pd.DataFrame:
     )
 
 
+@pytest.fixture
+def small_volcano_data() -> pd.DataFrame:
+    """A small dataset with fewer than 8*min_genes_per_bin genes."""
+    return pd.DataFrame(
+        {
+            "mean_mae": [0.1, 0.2, 0.3, 0.4, 0.5],
+            "time_correlation": [-0.9, -0.6, -0.3, 0, 0.3],
+        },
+        index=[f"Gene{i}" for i in range(1, 6)],
+    )
+
+
 @pytest.mark.parametrize("xp", [np])
 def test_mae_per_gene_basic(xp):
     true_counts = xp.array(
@@ -207,17 +219,60 @@ def test_top_mae_genes_percentile_threshold(sample_volcano_data):
     assert len(result_10) <= len(result_50)
 
 
+def test_top_mae_genes_small_dataset(small_volcano_data):
+    """Test that top_mae_genes returns all genes for a small dataset."""
+    result = top_mae_genes(
+        small_volcano_data, mae_top_percentile=10, min_genes_per_bin=1
+    )
+    assert len(result) == len(small_volcano_data)
+    assert set(result) == set(small_volcano_data.index)
+
+
+def test_top_mae_genes_percentile_capping():
+    """Test that mae_top_percentile is capped at 100 if it exceeds that value."""
+    df = pd.DataFrame(
+        {
+            "mean_mae": [0.1, 0.2, 0.3],
+            "time_correlation": [-0.9, 0, 0.9],
+        },
+        index=["Gene1", "Gene2", "Gene3"],
+    )
+    # This would have raised an error before, but now should be capped at 100
+    result = top_mae_genes(df, mae_top_percentile=200, min_genes_per_bin=1)
+    # With percentile=100, all genes should be included
+    assert len(result) == len(df)
+
+
 def test_top_mae_genes_invalid_percentile():
-    with pytest.raises(ValueError):
-        top_mae_genes(
-            pd.DataFrame(), mae_top_percentile=101, min_genes_per_bin=1
-        )
+    """Test that an error is still raised for invalid percentiles <= 0."""
     with pytest.raises(ValueError):
         top_mae_genes(pd.DataFrame(), mae_top_percentile=0, min_genes_per_bin=1)
+    with pytest.raises(ValueError):
+        top_mae_genes(
+            pd.DataFrame(), mae_top_percentile=-10, min_genes_per_bin=1
+        )
 
 
 def test_top_mae_genes_invalid_min_genes():
+    """Test that an error is raised for invalid min_genes_per_bin values."""
+    # Use a non-empty DataFrame to avoid the empty DataFrame check
+    df = pd.DataFrame(
+        {
+            "mean_mae": [0.1, 0.2, 0.3],
+            "time_correlation": [-0.9, 0, 0.9],
+        },
+        index=["Gene1", "Gene2", "Gene3"],
+    )
     with pytest.raises(ValueError):
-        top_mae_genes(
-            pd.DataFrame(), mae_top_percentile=50, min_genes_per_bin=-1
-        )
+        top_mae_genes(df, mae_top_percentile=50, min_genes_per_bin=-1)
+    with pytest.raises(ValueError):
+        top_mae_genes(df, mae_top_percentile=50, min_genes_per_bin=0)
+
+
+def test_top_mae_genes_empty_dataframe():
+    """Test that an empty list is returned for an empty DataFrame."""
+    result = top_mae_genes(
+        pd.DataFrame(), mae_top_percentile=50, min_genes_per_bin=1
+    )
+    assert isinstance(result, list)
+    assert len(result) == 0
