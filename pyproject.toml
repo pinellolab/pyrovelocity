@@ -431,7 +431,7 @@ log_level = "INFO"
 # --pdb
 # --pdbcls=IPython.terminal.debugger:Pdb
 addopts = """ 
--m "not slow and not pyensembl"
+-m "not slow and not pyensembl and not network"
 -rA
 --xdoctest
 --disable-warnings
@@ -445,6 +445,7 @@ markers = [
   "pyensembl: Tests that require pyensembl to run.",
   "slow: Tests that are slow and should be run separately.",
   "integration: Tests that use many library components.",
+  "network: Tests that use network resources.",
 ]
 
 [tool.coverage.paths]
