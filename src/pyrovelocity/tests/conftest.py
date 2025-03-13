@@ -54,6 +54,18 @@ def pancreas_model2_pyrovelocity_data_path(pancreas_model2_path):
 
 
 @pytest.fixture
+def pancreas_model2_pyrovelocity_data(pancreas_model2_pyrovelocity_data_path):
+    return CompressedPickle.load(pancreas_model2_pyrovelocity_data_path)
+
+
+@pytest.fixture
+def pancreas_model2_putative_marker_genes(pancreas_model2_pyrovelocity_data):
+    return top_mae_genes(
+        volcano_data=pancreas_model2_pyrovelocity_data["gene_ranking"],
+    )
+
+
+@pytest.fixture
 def pancreas_model2_model_path(pancreas_model2_path):
     return pancreas_model2_path / "model"
 
