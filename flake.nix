@@ -274,7 +274,7 @@
           pyrovelocitydevManifest = inputs'.flocken.legacyPackages.mkDockerManifest {
             inherit version;
             github = {
-              enable = true;
+              enable = false;
               enableRegistry = false;
               token = "$GH_TOKEN";
             };
@@ -310,7 +310,7 @@
           pyrovelocitycodeManifest = inputs'.flocken.legacyPackages.mkDockerManifest {
             inherit version;
             github = {
-              enable = true;
+              enable = false;
               enableRegistry = false;
               token = "$GH_TOKEN";
             };
@@ -346,7 +346,7 @@
           pyrovelocityjupyterManifest = inputs'.flocken.legacyPackages.mkDockerManifest {
             inherit version;
             github = {
-              enable = true;
+              enable = false;
               enableRegistry = false;
               token = "$GH_TOKEN";
             };
