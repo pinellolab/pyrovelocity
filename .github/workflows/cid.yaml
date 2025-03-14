@@ -566,7 +566,7 @@ jobs:
       cancel-in-progress: true
     with:
       debug_enabled: "false"
-      branch: ${{ needs.release.outputs.git-tag }}
+      branch: ${{ needs.set-variables.outputs.checkout_ref }}
       revision: ${{ needs.release.outputs.git-head }}
     secrets: inherit
 
