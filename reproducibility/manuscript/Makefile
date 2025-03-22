@@ -109,6 +109,8 @@ cache-tex: copy-tex
 # to diff with a different commit
 # see: https://gitlab.com/git-latexdiff/git-latexdiff
 # Set `--cleanup none` to keep the tmp files including the latex log
+# Run `mkdir -p ./reproducibility/manuscript/build` and
+# set `--tmpdirprefix ./reproducibility/manuscript/build` to use a local build directory
 latexdiff:
 	git-latexdiff \
 	--ignore-latex-errors \
