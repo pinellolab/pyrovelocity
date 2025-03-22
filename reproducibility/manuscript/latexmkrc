@@ -1,0 +1,28 @@
+#!/usr/bin/env perl
+
+# use xelatex
+$pdflatex = 'xelatex -interaction=nonstopmode -shell-escape %O %S';
+$pdf_mode = 1;  # generate PDF using pdflatex which is redirected to xelatex
+$dvi_mode = 0;  # don't generate DVI
+$postscript_mode = 0;  # don't generate postscript
+
+# use bibtex when the bbl file is missing
+$bibtex_use = 2;  
+
+# rerun XeLaTeX
+$max_repeat = 5;
+
+# process bibliography even if .bbl exists
+$force_mode = 1;
+
+# show progress
+$silent = 0;
+$verbose = 1;
+
+# add all bbl and run.xml to the list of generated files
+push @generated_exts, 'bbl';
+push @generated_exts, 'run.xml';
+
+# add search dirs for bibtex and other tools
+ensure_path( 'BIBINPUTS', '.' );
+ensure_path( 'TEXINPUTS', '.' ); 
