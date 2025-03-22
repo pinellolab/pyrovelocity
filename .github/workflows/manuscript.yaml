@@ -29,20 +29,20 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Check out repository
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # ratchet:actions/checkout@v4.2.2
         with:
           fetch-depth: 0
       - name: Setup dvc
-        uses: iterative/setup-dvc@68c55926a8ce27c2d4fcf7db61149ee64cf4eeb9 # v1
+        uses: iterative/setup-dvc@180d52394bc746fb0bb5ca8e9e1a7a49a151742e # ratchet:iterative/setup-dvc@v1
         with:
-          version: "3.53.2"
+          version: "3.59.1"
       - name: Set up Quarto
-        uses: quarto-dev/quarto-actions/setup@c1b50d36cf3c22b3dc7e530bd1b36634e824e545 # v2
+        uses: quarto-dev/quarto-actions/setup@9e48da27e184aa238fcb49f5db75469626d43adb # ratchet:quarto-dev/quarto-actions/setup@v2.1.9
         with:
           tinytex: true
       - name: Setup tmate debug session
         if: ${{ inputs.debug_enabled == 'true' }}
-        uses: mxschmitt/action-tmate@a283f9441d2d96eb62436dc46d7014f5d357ac22 # v3
+        uses: mxschmitt/action-tmate@e5c7151931ca95bad1c6f4190c730ecf8c7dde48 # ratchet:mxschmitt/action-tmate@v3.19
       - name: Render
         run: |
           make -C reproducibility/manuscript render
@@ -54,7 +54,7 @@ jobs:
           tlmgr install git-latexdiff latexdiff latexpand
           make -C reproducibility/manuscript latexdiff
       - name: Upload artifacts
-        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # ratchet:actions/upload-artifact@v4.6.2
         with:
           name: manuscript-${{ github.ref_name }}-${{ github.sha }}
           # Include
