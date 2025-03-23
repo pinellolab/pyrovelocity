@@ -411,7 +411,7 @@ methods like Cytotrace and scVelo ([@extfig-lineage-tracing]a).
 # Figures
 
 ::: {#fig-model}
-![](figures/v2/Figure1.pdf)
+![](figures/v2/Figure1.pdf){width=98%}
 
 Pyro&thinsp;-Velocity is a fully generative Bayesian method with uncertainty
 estimation of velocity vector fields and shared latent time, based on raw counts
@@ -435,7 +435,7 @@ using rainbow plots (right panel).
 :::
 
 ::: {#fig-model-results}
-![](figures/v2/Figure2.png)
+![](figures/v2/Figure2.png){width=98%}
 
 Pyro&thinsp;-Velocity outperforms other RNA-velocity methods and accurately
 predicts cell lineage trajectories. **a,b**, RNA Velocity model comparisons from
@@ -466,7 +466,7 @@ in **b**.
 :::
 
 ::: {#fig-lineage-tracing}
-![](figures/v2/Figure3.png)
+![](figures/v2/Figure3.png){width=98%}
 
 Pyro&thinsp;-Velocity accurately predicts cell fate choices and lineage
 trajectory in human LARRY barcoded hematopoietic cells. Systematic benchmarking
@@ -964,7 +964,7 @@ policies.
 # Extended Data Figures
 
 ::: {#extfig-graphical-models}
-![](figures/v2/Supplementary-Figure1.pdf)
+![](figures/v2/Supplementary-Figure1.pdf){width=98%}
 
 Graphical representations detail the generative process of the
 Pyro&thinsp;-Velocity models and highlight their differences. **a**,
@@ -996,7 +996,7 @@ differences can also be illustrated for the unspliced gene expression profiles
 :::
 
 ::: {#extfig-model-results}
-![](figures/v2/Supplementary-Figure2.png)
+![](figures/v2/Supplementary-Figure2.png){width=98%}
 
 Extended version of @fig-model-results for evaluating Pyro&thinsp;-Velocity
 (Model 1) and scVelo on the PBMC and pancreas datasets. **a**, Left figure shows
@@ -1023,7 +1023,7 @@ selected in **e**.
 :::
 
 ::: {#extfig-model-2-result}
-![](figures/v2/Supplementary-Figure3.png)
+![](figures/v2/Supplementary-Figure3.png){width=98%}
 
 Extension of @fig-model-results, Pyro&thinsp;-Velocity (Model 2) outperforms
 scVelo on PBMC and pancreas datasets. Same format as in @fig-model-results and
@@ -1031,7 +1031,7 @@ scVelo on PBMC and pancreas datasets. Same format as in @fig-model-results and
 :::
 
 ::: {#extfig-lineage-tracing}
-![](figures/v2/Supplementary-Figure4.png)
+![](figures/v2/Supplementary-Figure4.png){width=98%}
 
 Extension of @fig-lineage-tracing, Pyro&thinsp;-Velocity (Model 1 for uni-fate
 data, Model 2 for bi-fate and multi-fate data) outperforms Cytotrace on
@@ -1057,7 +1057,7 @@ genes selected in **e**.
 :::
 
 ::: {#extfig-lineage-tracing-2}
-![](figures/v2/Supplementary-Figure5.png)
+![](figures/v2/Supplementary-Figure5.png){width=98%}
 
 Extension of [@fig-lineage-tracing] presenting an extended comparison of
 Pyro&thinsp;-Velocity and scVelo on scRNA-seq datasets with lineage barcoding
