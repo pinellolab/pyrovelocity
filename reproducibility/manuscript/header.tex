@@ -6,3 +6,6 @@
 % \usepackage{showframe}
 % \usepackage{layout}
 \allowdisplaybreaks
+
+\let\oldincludegraphics\includegraphics
+\renewcommand{\includegraphics}[2][]{\oldincludegraphics[#1,keepaspectratio]{#2}}
