@@ -164,6 +164,9 @@
 % \usepackage{showframe}
 % \usepackage{layout}
 \allowdisplaybreaks
+
+\let\oldincludegraphics\includegraphics
+\renewcommand{\includegraphics}[2][]{\oldincludegraphics[#1,keepaspectratio]{#2}}
 \makeatletter
 \@ifpackageloaded{float}{}{\usepackage{float}}
 \floatstyle{plain}
@@ -553,7 +556,7 @@ state-of-the-art methods like Cytotrace and scVelo
 
 \centering{
 
-\includegraphics{figures/v2/Figure1.pdf}
+\includegraphics[width=0.98\textwidth,height=\textheight]{figures/v2/Figure1.pdf}
 
 }
 
@@ -585,7 +588,7 @@ cell order using rainbow plots (right panel).}
 
 \centering{
 
-\includegraphics{figures/v2/Figure2.png}
+\includegraphics[width=0.98\textwidth,height=\textheight]{figures/v2/Figure2.png}
 
 }
 
@@ -626,7 +629,7 @@ lines (middle). Cell type annotation coloring is the same as in
 
 \centering{
 
-\includegraphics{figures/v2/Figure3.png}
+\includegraphics[width=0.98\textwidth,height=\textheight]{figures/v2/Figure3.png}
 
 }
 
@@ -1212,7 +1215,7 @@ with their conflict of interest policies.
 
 \centering{
 
-\includegraphics{figures/v2/Supplementary-Figure1.pdf}
+\includegraphics[width=0.98\textwidth,height=\textheight]{figures/v2/Supplementary-Figure1.pdf}
 
 }
 
@@ -1254,7 +1257,7 @@ expression profiles (not shown).}
 
 \centering{
 
-\includegraphics{figures/v2/Supplementary-Figure2.png}
+\includegraphics[width=0.98\textwidth,height=\textheight]{figures/v2/Supplementary-Figure2.png}
 
 }
 
@@ -1291,7 +1294,7 @@ genes selected in \textbf{e}.}
 
 \centering{
 
-\includegraphics{figures/v2/Supplementary-Figure3.png}
+\includegraphics[width=0.98\textwidth,height=\textheight]{figures/v2/Supplementary-Figure3.png}
 
 }
 
@@ -1307,7 +1310,7 @@ Extended Data Fig.~\ref{extfig-model-results}.}
 
 \centering{
 
-\includegraphics{figures/v2/Supplementary-Figure4.png}
+\includegraphics[width=0.98\textwidth,height=\textheight]{figures/v2/Supplementary-Figure4.png}
 
 }
 
@@ -1342,7 +1345,7 @@ splicing gene expression level for the genes selected in \textbf{e}.}
 
 \centering{
 
-\includegraphics{figures/v2/Supplementary-Figure5.png}
+\includegraphics[width=0.98\textwidth,height=\textheight]{figures/v2/Supplementary-Figure5.png}
 
 }
 
