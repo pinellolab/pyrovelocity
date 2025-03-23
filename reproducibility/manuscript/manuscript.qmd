@@ -557,7 +557,7 @@ with logits equal to the difference between the cell's shared time $t_c$ and the
 
 
 Next we introduce the priors for the splicing parameters (where the activation rate $\alpha$ depends on the activation state $k_{cg}$ from above):
-\begin{align}
+\begin{align*}
   \alpha^{(0)}_g &\sim \text{LogNormal}(0, 1) \\
   \beta_g &\sim \text{LogNormal}(0, 1) \\
   \gamma_g &\sim \text{LogNormal}(0, 1) \\
@@ -565,25 +565,31 @@ Next we introduce the priors for the splicing parameters (where the activation r
     \alpha^{(0)}_g & \text{if } k_{cg} = 0 \\
     0 & \text{if } k_{cg} = 1.
   \end{cases}
-\end{align}
+\end{align*}
 
-Now, we describe the priors for the initial conditions, noting that this is the only difference between Model 1 and Model 2:
-\begin{align}
-  \hat{u}^{(0)}_{cg}, \hat{s}^{(0)}_{cg} &\sim \begin{cases}
-    (0, 0) & \text{Model 1} \\
-    (\text{LogNormal}(0, 1), \text{LogNormal}(0, 1)) & \text{Model 2}
-  \end{cases} \\
-  u^{(0)}_{cg}, s^{(0)}_{cg} &= \begin{cases}
-    \hat{u}^{(0)}_{cg}, \hat{s}^{(0)}_{cg} & \text{if } k_{cg} = 0 \\
-    \textrm{ODESolve}\Big( \hat{u}^{(0)}_{cg}, \hat{s}^{(0)}_{cg}, \alpha^{(0)}_g, \beta_g, \gamma_g; \ T_0=0, T_1=\Delta \textrm{switching}_g \Big) & \text{if } k_{cg} = 1
+Now, we describe the priors for the initial conditions, noting that these define the difference between Model 1 and Model 2, given respectively
+\begin{align*}
+  &\left(\hat{u}^{(0)}_{cg}, \hat{s}^{(0)}_{cg}\right) \sim 
+  \begin{cases}
+    (0, 0) \\
+    (\text{LogNormal}(0, 1), \text{LogNormal}(0, 1))
   \end{cases}
-\end{align}
+\end{align*}
+where
+\begin{align*}
+  &\left(u^{(0)}_{cg}, s^{(0)}_{cg}\right) = \\
+  &\hskip 3pt \begin{cases}
+    \hat{u}^{(0)}_{cg}, \hat{s}^{(0)}_{cg} & \text{if } k_{cg} = 0 \\
+    \textrm{ODESolve}\Big( \hat{u}^{(0)}_{cg}, \hat{s}^{(0)}_{cg}, \alpha^{(0)}_g, \beta_g, \gamma_g; \\
+    \hskip 24pt T_0=0, T_1=\Delta \textrm{switching}_g \Big) & \text{if } k_{cg} = 1
+  \end{cases}
+\end{align*}
 
 We define the ODE solution at time $\tau_{cg}$ as:
-\begin{equation}
-  \label{eq-ODE-solve}
-    \hat{u}_{cg}, \hat{s}_{cg} = \text{ODESolve}\Big( u^{(0)}_{cg}, s^{(0)}_{cg}, \alpha_{cg}, \beta_g, \gamma_g; \ T_0=0, T_1=\tau_{cg} \Big).
-\end{equation}
+\begin{align}
+    \hat{u}_{cg}, \hat{s}_{cg} = \text{ODESolve}\Big( u^{(0)}_{cg}, & s^{(0)}_{cg}, \alpha_{cg}, \beta_g, \gamma_g; \nonumber \\
+    & T_0=0, T_1=\tau_{cg} \Big). \label{eq-ODE-solve}
+\end{align}
 
 Next, we define the observation model that gives rise to the observed counts as:
 \begin{align}
@@ -610,10 +616,12 @@ First, let $C = u_0 - \frac{\alpha}{\beta}$. Then, the solution to the ODE in Eq
 \begin{equation}
 \label{eq-rna-solution}
 \begin{aligned}
-  u(t) &= \frac{\alpha}{\beta} + C e^{-\beta t} \\
-  s(t) &= \begin{cases}
-    \frac{\alpha}{\gamma} + \frac{\beta}{\gamma - \beta} C e^{-\beta t} + \Big(s_0 - \frac{\alpha}{\gamma} - \frac{\beta}{\gamma - \beta} C\Big) e^{-\gamma t} & \text{if } \beta \neq \gamma \\
-    \frac{\alpha}{\beta} + \Big(s_0 - \frac{\alpha}{\beta} + \beta C t\Big) e^{-\beta t} & \text{if } \beta = \gamma.
+  &u(t) = \frac{\alpha}{\beta} + C e^{-\beta t} \\
+  &s(t) = 
+  \begin{cases}
+    \frac{\alpha}{\gamma} + \frac{\beta}{\gamma - \beta} C e^{-\beta t} \\
+    \hskip 12pt + \Big(s_0 - \frac{\alpha}{\gamma} - \frac{\beta}{\gamma - \beta} C\Big) e^{-\gamma t} & \text{if } \beta \neq \gamma \\
+    \frac{\alpha}{\beta} \Big(s_0 - \frac{\alpha}{\beta} + \beta C t\Big) e^{-\beta t} & \text{if } \beta = \gamma.
   \end{cases}
 \end{aligned}
 \end{equation}
