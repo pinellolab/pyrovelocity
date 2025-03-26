@@ -3,7 +3,7 @@ from pathlib import Path
 import matplotlib
 import matplotlib.pyplot as plt
 from beartype import beartype
-from beartype.typing import List, Tuple
+from beartype.typing import List, Union
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.gridspec import GridSpec
@@ -25,6 +25,7 @@ from pyrovelocity.workflows.main_configuration import (
 
 __all__ = [
     "configure_time_lineage_fate_plot",
+    "create_time_lineage_fate_correlation_plot",
 ]
 
 logger = configure_logging(__name__)
@@ -109,6 +110,93 @@ def estimate_time_lineage_fate_correlation(
         ],
         reports_path=Path(reports_path),
         model_identifier=model_identifier,
+    )
+
+
+@beartype
+def create_time_lineage_fate_correlation_plot(
+    model_results: List[dict],
+    vertical_texts: List[str] = [
+        "Monocytes",
+        "Neutrophils",
+        "Multilineage",
+        "All lineages",
+    ],
+    reports_path: Union[str, Path] = ".",
+) -> Path:
+    """
+    Create a time lineage fate correlation plot from model results.
+
+    This function is designed to be called from Flyte workflow or standalone Python code,
+    processing model outputs to create lineage fate correlation visualizations.
+
+    Args:
+        model_results: List of dictionaries containing model outputs with the following keys:
+            - data_model: String identifier for the data model
+            - postprocessed_data: Path to the postprocessed AnnData file
+            - pyrovelocity_data: Path to the posterior samples file
+        vertical_texts: Labels for each row in the plot
+        reports_path: Directory to save the plot
+
+    Returns:
+        Path: The path where the final plot is saved
+    """
+    n_rows = len(model_results)
+    n_cols = 7
+    width = 14
+    height = width * (n_rows / n_cols) + 1
+
+    fig = plt.figure(figsize=(width, height))
+
+    gs = fig.add_gridspec(
+        n_rows + 1,
+        n_cols + 1,
+        width_ratios=[0.02] + [1] * n_cols,
+        height_ratios=[1] * n_rows + [0.2],
+    )
+
+    adata_cospar = larry_cospar()
+
+    all_axes = []
+    data_set_model_pairing = None
+
+    for i, model_output in enumerate(model_results):
+        data_set_model_pairing = model_output["data_model"]
+
+        postprocessed_data_path = model_output["postprocessed_data"]
+        posterior_samples_path = model_output["pyrovelocity_data"]
+
+        plot_path = Path(f"time_fate_correlation_{data_set_model_pairing}.pdf")
+
+        axes = [fig.add_subplot(gs[i, j + 1]) for j in range(n_cols)]
+        all_axes.append(axes)
+
+        plot_lineage_fate_correlation(
+            posterior_samples_path=posterior_samples_path,
+            adata_pyrovelocity=postprocessed_data_path,
+            adata_cospar=adata_cospar,
+            all_axes=axes,
+            fig=fig,
+            state_color_dict=LARRY_CELL_TYPE_COLORS,
+            lineage_fate_correlation_path=plot_path,
+            save_plot=False,
+            ylabel="",
+            show_titles=True if i == 0 else False,
+            show_colorbars=False,
+            default_fontsize=12 if matplotlib.rcParams["text.usetex"] else 9,
+        )
+
+    row_labels = ["a", "b", "c", "d"][:n_rows]
+    vertical_texts = vertical_texts[:n_rows]
+
+    return configure_time_lineage_fate_plot(
+        fig=fig,
+        gs=gs,
+        all_axes=all_axes,
+        row_labels=row_labels,
+        vertical_texts=vertical_texts,
+        reports_path=Path(reports_path),
+        model_identifier=data_set_model_pairing or "model",
     )
 
 
