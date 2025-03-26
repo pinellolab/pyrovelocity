@@ -3,13 +3,11 @@ from dataclasses import asdict
 from datetime import timedelta
 from pathlib import Path
 
-import matplotlib
 from beartype.typing import List
 from flytekit import Resources, current_context, dynamic, task
 from flytekit.extras.accelerators import T4, GPUAccelerator
 from flytekit.types.directory import FlyteDirectory
 from flytekit.types.file import FlyteFile
-from matplotlib import pyplot as plt
 from returns.result import Failure, Success
 
 from pyrovelocity.interfaces import (
@@ -21,7 +19,6 @@ from pyrovelocity.io.archive import (
     copy_files_to_directory,
     create_tarball_from_filtered_dir,
 )
-from pyrovelocity.io.datasets import larry_cospar
 from pyrovelocity.io.gcs import upload_file_concurrently
 from pyrovelocity.io.metrics import (
     add_duration_to_run_info,
@@ -30,16 +27,12 @@ from pyrovelocity.io.metrics import (
     load_json,
 )
 from pyrovelocity.logging import configure_logging
-from pyrovelocity.plots import (
-    plot_lineage_fate_correlation,
-)
-from pyrovelocity.styles.colors import LARRY_CELL_TYPE_COLORS
 from pyrovelocity.tasks.data import download_dataset
 from pyrovelocity.tasks.postprocess import postprocess_dataset
 from pyrovelocity.tasks.preprocess import preprocess_dataset
 from pyrovelocity.tasks.summarize import summarize_dataset
 from pyrovelocity.tasks.time_fate_correlation import (
-    configure_time_lineage_fate_plot,
+    create_time_lineage_fate_correlation_plot,
 )
 from pyrovelocity.tasks.train import train_dataset
 from pyrovelocity.workflows.constants import (
@@ -513,72 +506,31 @@ def combine_time_lineage_fate_correlation(
 
     for model_results in model_ordered_results:
         print(model_results)
-        n_rows = len(model_results)
-        n_cols = 7
-        width = 14
-        height = width * (n_rows / n_cols) + 1
 
-        fig = plt.figure(figsize=(width, height))
-
-        gs = fig.add_gridspec(
-            n_rows + 1,
-            n_cols + 1,
-            width_ratios=[0.02] + [1] * n_cols,
-            height_ratios=[1] * n_rows + [0.2],
-        )
-
-        adata_cospar = larry_cospar()
-
-        all_axes = []
-        for i, model_output in enumerate(model_results):
-            data_set_model_pairing = model_output.data_model
-
+        prepared_model_results = []
+        for model_output in model_results:
             postprocessed_data_path = model_output.postprocessed_data.download()
-
             posterior_samples_path = model_output.pyrovelocity_data.download()
 
-            plot_path = Path(
-                f"time_fate_correlation_{data_set_model_pairing}.pdf"
+            prepared_model_results.append(
+                {
+                    "data_model": model_output.data_model,
+                    "postprocessed_data": postprocessed_data_path,
+                    "pyrovelocity_data": posterior_samples_path,
+                }
             )
 
-            axes = [fig.add_subplot(gs[i, j + 1]) for j in range(n_cols)]
-            all_axes.append(axes)
-
-            plot_lineage_fate_correlation(
-                posterior_samples_path=posterior_samples_path,
-                adata_pyrovelocity=postprocessed_data_path,
-                adata_cospar=adata_cospar,
-                all_axes=axes,
-                fig=fig,
-                state_color_dict=LARRY_CELL_TYPE_COLORS,
-                lineage_fate_correlation_path=plot_path,
-                save_plot=False,
-                ylabel="",
-                show_titles=True if i == 0 else False,
-                show_colorbars=False,
-                default_fontsize=12
-                if matplotlib.rcParams["text.usetex"]
-                else 9,
+        time_lineage_fate_correlation_plot = (
+            create_time_lineage_fate_correlation_plot(
+                model_results=prepared_model_results,
+                vertical_texts=[
+                    "Monocytes",
+                    "Neutrophils",
+                    "Multilineage",
+                    "All lineages",
+                ][: len(prepared_model_results)],
+                reports_path=Path("."),
             )
-
-        time_lineage_fate_correlation_plot = configure_time_lineage_fate_plot(
-            fig=fig,
-            gs=gs,
-            all_axes=all_axes,
-            row_labels=[
-                "a",
-                "b",
-                "c",
-                "d",
-            ][:n_rows],
-            vertical_texts=[
-                "Monocytes",
-                "Neutrophils",
-                "Multilineage",
-                "All lineages",
-            ][:n_rows],
-            reports_path=Path("."),
-            model_identifier=data_set_model_pairing,
         )
 
         time_lineage_fate_correlation_plots.append(
