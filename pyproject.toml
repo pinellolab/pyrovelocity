@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyrovelocity"
-version = "0.4.0"
+version = "0.3.0"
 packages = [{ include = "pyrovelocity", from = "src" }]
 description = "A multivariate RNA Velocity model to estimate future cell states with uncertainty using probabilistic modeling with pyro."
 authors = ["pyrovelocity team"]
@@ -45,7 +45,6 @@ click = ">=8.1.7"
 colorlog = ">=6.7.0"
 daft = ">=0.1.2"
 diffrax = ">=0.5.0"
-dill = ">=0.3.8"
 diskcache = ">=5.6.1"
 duckdb = ">=1.0.0"
 einops = ">=0.7.0"
@@ -61,7 +60,6 @@ fsspec = ">=2024.3.0"
 greenlet = ">=3.0.3"
 httpx = ">=0.27.0"
 h5py = ">=3.9.0"
-# hdf5plugin = ">=4.4.0"
 ibis-framework = { extras = ["duckdb"], version = ">=9.2.0" }
 jax = ">=0.4.23"
 jaxlib = ">=0.4.23"
@@ -79,7 +77,6 @@ matplotlib = ">=3.9.1"
 mlflow = ">=2.13.0"
 numpyro = ">=0.15.0"
 pandas = ">=2.0.0"
-pillow = ">=10.1.0"
 plumbum = ">=1.8.2"
 polars = ">=0.20.17"
 pyarrow = ">=14.0.2"
@@ -139,7 +136,6 @@ google-api-python-client = { version = ">=2.79.0", optional = true }
 hydra-core = { version = ">=1.3.2", optional = true }
 hydra-zen = { version = ">=0.12.1", optional = true }
 hypothesis = { version = ">=6.71.0", optional = true }
-ipdb = { version = ">=0.13.13", optional = true }
 ipython = { version = ">=8.11.0", optional = true }
 ipywidgets = { version = ">=8.0.0", optional = true }
 # isort = { version = ">=5.10.1", optional = true }
@@ -168,7 +164,6 @@ pytest = { version = ">=6.2.5", optional = true }
 pytest-asyncio = { version = ">=0.21.1", optional = true }
 pytest-cov = { version = ">=4.0.0", optional = true }
 pytest-mock = { version = ">=3.10.0", optional = true }
-pytest-xdist = { version = ">=3.1.0", optional = true }
 python-dotenv = { version = ">=1.0.0", optional = true }
 # pyupgrade = { version = ">=2.29.1", optional = true }
 # pyvis = { version = ">=0.3.2", optional = true }
@@ -223,7 +218,6 @@ optional = true
 [tool.poetry.group.test.dependencies]
 coverage = { version = ">=6.2", extras = ["toml"] }
 hypothesis = ">=6.72.1"
-ipdb = ">=0.13.13"
 ipython = ">=8.11.0"
 # poethepoet = ">=0.19.0"
 pygments = ">=2.15.0"
@@ -231,7 +225,6 @@ pytest = ">=7.3.1"
 pytest-asyncio = ">=0.21.1"
 pytest-cov = ">=4.0.0"
 pytest-mock = ">=3.10.0"
-pytest-xdist = ">=3.1.0"
 requests-mock = ">=1.11.0"
 xdoctest = ">=1.1.1"
 
@@ -308,7 +301,6 @@ test = [
   "pytest-asyncio",
   "pytest-cov",
   "pytest-mock",
-  "pytest-xdist",
   "requests-mock",
   "xdoctest",
 ]
@@ -431,13 +423,8 @@ log_level = "INFO"
 # We exclude markers associated with slow tests by default
 # but run them in CI with the make target `test-cov-xml`
 # which overrides this behavior.
-# Add these options to enable the ipdb debugger:
-# --pdb
-# --pdbcls=IPython.terminal.debugger:Pdb
-# Run tests in parallel with pytest-xdist:
-# -n auto
 addopts = """ 
--m "not slow and not pyensembl and not network"
+-m "not slow and not pyensembl"
 -rA
 --xdoctest
 --disable-warnings
@@ -451,7 +438,6 @@ markers = [
   "pyensembl: Tests that require pyensembl to run.",
   "slow: Tests that are slow and should be run separately.",
   "integration: Tests that use many library components.",
-  "network: Tests that use network resources.",
 ]
 
 [tool.coverage.paths]
@@ -624,5 +610,5 @@ exclude = [
 ]
 
 [build-system]
-requires = ["poetry-core>=1.6.0,<2"]
+requires = ["poetry-core>=1.6.0"]
 build-backend = "poetry.core.masonry.api"
