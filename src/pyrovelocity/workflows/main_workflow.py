@@ -682,9 +682,9 @@ def training_workflow(
     ]
 
     developmental_configurations = [
-        # (bonemarrow_configuration, "bonemarrow"),
+        (bonemarrow_configuration, "bonemarrow"),
         (pancreas_configuration, "pancreas"),
-        # (pons_configuration, "pons"),
+        (pons_configuration, "pons"),
     ]
 
     lineage_traced_results = []
@@ -700,9 +700,9 @@ def training_workflow(
     ]
 
     if not PYROVELOCITY_DATA_SUBSET:
-        # configurations += stationary_configurations
+        configurations += stationary_configurations
         configurations += developmental_configurations
-        # configurations += lineage_traced_configurations
+        configurations += lineage_traced_configurations
 
     for config, data_set_name in configurations:
         result = map_model_configurations_over_data_set(
