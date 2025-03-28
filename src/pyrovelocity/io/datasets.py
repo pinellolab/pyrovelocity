@@ -24,6 +24,9 @@ __all__ = [
     "pancreas",
     "bonemarrow",
     "pbmc68k",
+    "larry_mono_clone_trajectory",
+    "larry_neu_clone_trajectory",
+    "larry_multilineage_clone_trajectory",
 ]
 
 
@@ -296,6 +299,77 @@ def larry_multilineage(
         adata.write(file_path)
     expected_hash = (
         "9add35ae4f736aa5e11d076eadb3b1d842dbc88102047f029bd7fa0929f46be0"
+    )
+    _check_hash(file_path, expected_hash)
+    return adata
+
+
+@beartype
+def larry_mono_clone_trajectory(
+    file_path: str | Path = "data/external/larry_mono_clone_trajectory.h5ad",
+) -> anndata._core.anndata.AnnData:
+    """
+    Pre-computed clone trajectory data for the LARRY monocyte lineage.
+
+    This contains the output of get_clone_trajectory applied to the larry_mono dataset.
+    The clone trajectory information is used for visualizing clonal progression
+    and calculating trajectory alignment with velocity predictions.
+
+    Returns:
+        AnnData object with clone trajectory information
+    """
+    url = "https://storage.googleapis.com/pyrovelocity/data/larry_mono_clone_trajectory.h5ad"
+    adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+    expected_hash = (
+        "f5d0dcb9baa63460c5be5a1ebdab6a97c6f3ec0b5641ab1b770d16fb96bd9fc9"
+    )
+    _check_hash(file_path, expected_hash)
+    return adata
+
+
+@beartype
+def larry_neu_clone_trajectory(
+    file_path: str | Path = "data/external/larry_neu_clone_trajectory.h5ad",
+) -> anndata._core.anndata.AnnData:
+    """
+    Pre-computed clone trajectory data for the LARRY neutrophil lineage.
+
+    This contains the output of get_clone_trajectory applied to the larry_neu dataset.
+    The clone trajectory information is used for visualizing clonal progression
+    and calculating trajectory alignment with velocity predictions.
+
+    Returns:
+        AnnData object with clone trajectory information
+    """
+    url = "https://storage.googleapis.com/pyrovelocity/data/larry_neu_clone_trajectory.h5ad"
+    adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+    expected_hash = (
+        "6e7dbc273c59e28f1962df31452d5eea00336089c36a44f55fcfc91f6f428396"
+    )
+    _check_hash(file_path, expected_hash)
+    return adata
+
+
+@beartype
+def larry_multilineage_clone_trajectory(
+    file_path: str
+    | Path = "data/external/larry_multilineage_clone_trajectory.h5ad",
+) -> anndata._core.anndata.AnnData:
+    """
+    Pre-computed clone trajectory data for the LARRY multilineage dataset.
+
+    This contains the concatenated output of get_clone_trajectory applied to
+    both larry_mono and larry_neu datasets. Using this pre-computed trajectory
+    ensures consistent fate analysis across both lineages without recomputing
+    trajectories separately.
+
+    Returns:
+        AnnData object with clone trajectory information
+    """
+    url = "https://storage.googleapis.com/pyrovelocity/data/larry_multilineage_clone_trajectory.h5ad"
+    adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+    expected_hash = (
+        "ffedda0332c411ca10c09562e5c8a50643af9120f65b0b3701bf30a8d5fdc97b"
     )
     _check_hash(file_path, expected_hash)
     return adata

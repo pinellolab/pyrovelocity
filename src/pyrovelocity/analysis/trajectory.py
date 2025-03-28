@@ -11,7 +11,23 @@ def get_clone_trajectory(
     average_start_point: bool = True,
     times: List[int] = [2, 4, 6],
     clone_num: Optional[int] = None,
+    fix_nans: bool = True,
 ) -> AnnData:
+    """
+    Generate clone trajectory data from AnnData object.
+
+    Args:
+        adata: The input AnnData object with clone information
+        average_start_point: Whether to average the start point for visualization
+        times: List of time points to consider for trajectory construction
+        clone_num: Maximum number of clones to process, uses all if None
+        fix_nans: Whether to replace NaN values with zeros in clone_vector_emb
+
+    Returns:
+        An AnnData object with clone trajectory information including:
+        - Centroid cells representing average positions at each time point
+        - clone_vector_emb in .obsm containing trajectory vectors
+    """
     adata = adata.copy()
     if not average_start_point:
         adata.obsm["clone_vector_emb"] = np.zeros((adata.shape[0], 2))
@@ -61,9 +77,7 @@ def get_clone_trajectory(
                 adata.obs.columns.get_loc("clones"),
             ] = int(j)
             adata_new.obs.loc[:, "time"] = [
-                t
-                for t, time in zip([2, 4, 6], times_index)
-                if time.shape[0] > 0
+                t for t, time in zip(times, times_index) if time.shape[0] > 0
             ]
             adata_new.obs.loc[:, "clones"] = int(j)
             adata_new.obs.loc[:, "state_info"] = "Centroid"
@@ -87,9 +101,20 @@ def get_clone_trajectory(
 
         centroids.append(adata_new)
 
+    if not centroids:
+        raise ValueError("No valid clone trajectories found in the data")
+
     adata_new = adata.concatenate(
         centroids[0].concatenate(centroids[1:]), join="outer"
     )
+
+    if fix_nans and "clone_vector_emb" in adata_new.obsm:
+        nan_count = np.isnan(adata_new.obsm["clone_vector_emb"]).sum()
+        if nan_count > 0:
+            adata_new.obsm["clone_vector_emb"][
+                np.isnan(adata_new.obsm["clone_vector_emb"])
+            ] = 0
+
     return adata_new
 
 

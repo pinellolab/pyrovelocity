@@ -3,13 +3,16 @@ from pathlib import Path
 import matplotlib
 import matplotlib.pyplot as plt
 from beartype import beartype
-from beartype.typing import List, Tuple
+from beartype.typing import List, Union
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import MaxNLocator
 
-from pyrovelocity.io.datasets import larry_cospar
+from pyrovelocity.analysis.trajectory import get_clone_trajectory
+from pyrovelocity.io.datasets import (
+    larry_cospar,
+)
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.plots import plot_lineage_fate_correlation
 from pyrovelocity.styles import configure_matplotlib_style
@@ -25,6 +28,7 @@ from pyrovelocity.workflows.main_configuration import (
 
 __all__ = [
     "configure_time_lineage_fate_plot",
+    "create_time_lineage_fate_correlation_plot",
 ]
 
 logger = configure_logging(__name__)
@@ -109,6 +113,161 @@ def estimate_time_lineage_fate_correlation(
         ],
         reports_path=Path(reports_path),
         model_identifier=model_identifier,
+    )
+
+
+@beartype
+def create_time_lineage_fate_correlation_plot(
+    model_results: List[dict],
+    vertical_texts: List[str] = [
+        "Monocytes",
+        "Neutrophils",
+        "Multilineage",
+        "All lineages",
+    ],
+    reports_path: Union[str, Path] = ".",
+) -> Path:
+    """
+    Create a time lineage fate correlation plot from model results.
+
+    This function is designed to be called from Flyte workflow or standalone Python code,
+    processing model outputs to create lineage fate correlation visualizations.
+
+    Args:
+        model_results: List of dictionaries containing model outputs with the following keys:
+            - data_model: String identifier for the data model
+            - postprocessed_data: Path to the postprocessed AnnData file
+            - pyrovelocity_data: Path to the posterior samples file
+        vertical_texts: Labels for each row in the plot
+        reports_path: Directory to save the plot
+
+    Returns:
+        Path: The path where the final plot is saved
+    """
+    n_rows = len(model_results)
+    n_cols = 7
+    width = 14
+    height = width * (n_rows / n_cols) + 1
+
+    fig = plt.figure(figsize=(width, height))
+
+    gs = fig.add_gridspec(
+        n_rows + 1,
+        n_cols + 1,
+        width_ratios=[0.02] + [1] * n_cols,
+        height_ratios=[1] * n_rows + [0.2],
+    )
+
+    adata_cospar = larry_cospar()
+
+    logger.info("Generating clone trajectories for all datasets")
+    clone_trajectories = {}
+
+    for model_output in model_results:
+        data_set_model_pairing = model_output["data_model"]
+        dataset_name = data_set_model_pairing.split("_model")[0]
+
+        if dataset_name in clone_trajectories:
+            continue
+
+        postprocessed_data_path = model_output["postprocessed_data"]
+
+        logger.info(f"Loading data for {dataset_name}")
+        adata_pyrovelocity = load_anndata_from_path(postprocessed_data_path)
+
+        if dataset_name == "larry_multilineage":
+            logger.info(
+                "Creating multilineage clone trajectory from mono and neu subsets"
+            )
+
+            if "state_info" in adata_pyrovelocity.obs:
+                mono_mask = adata_pyrovelocity.obs["state_info"].str.contains(
+                    "Mono", case=False, na=False
+                )
+                neu_mask = adata_pyrovelocity.obs["state_info"].str.contains(
+                    "Neu", case=False, na=False
+                )
+
+                mono_adata = adata_pyrovelocity[mono_mask].copy()
+                neu_adata = adata_pyrovelocity[neu_mask].copy()
+
+                logger.info(
+                    f"  - Generating mono trajectory with {mono_adata.n_obs} cells"
+                )
+                mono_clone = get_clone_trajectory(mono_adata)
+
+                logger.info(
+                    f"  - Generating neu trajectory with {neu_adata.n_obs} cells"
+                )
+                neu_clone = get_clone_trajectory(neu_adata)
+
+                logger.info("  - Concatenating mono and neu trajectories")
+                clone_trajectories[dataset_name] = mono_clone.concatenate(
+                    neu_clone
+                )
+            else:
+                logger.warning(
+                    "Could not identify mono/neu cells in multilineage dataset. Generating unified trajectory."
+                )
+                clone_trajectories[dataset_name] = get_clone_trajectory(
+                    adata_pyrovelocity
+                )
+        else:
+            logger.info(
+                f"Generating clone trajectory for {dataset_name} with {adata_pyrovelocity.n_obs} cells"
+            )
+            clone_trajectories[dataset_name] = get_clone_trajectory(
+                adata_pyrovelocity
+            )
+
+        logger.info(f"Completed trajectory generation for {dataset_name}")
+
+    logger.info("Creating plots using generated trajectories")
+    all_axes = []
+    data_set_model_pairing = None
+
+    for i, model_output in enumerate(model_results):
+        data_set_model_pairing = model_output["data_model"]
+        dataset_name = data_set_model_pairing.split("_model")[0]
+
+        postprocessed_data_path = model_output["postprocessed_data"]
+        posterior_samples_path = model_output["pyrovelocity_data"]
+
+        plot_path = Path(f"time_fate_correlation_{data_set_model_pairing}.pdf")
+
+        axes = [fig.add_subplot(gs[i, j + 1]) for j in range(n_cols)]
+        all_axes.append(axes)
+
+        adata_input_clone = clone_trajectories[dataset_name]
+        logger.info(f"Using cached clone trajectory for {dataset_name}")
+
+        plot_lineage_fate_correlation(
+            posterior_samples_path=posterior_samples_path,
+            adata_pyrovelocity=postprocessed_data_path,
+            adata_cospar=adata_cospar,
+            all_axes=axes,
+            fig=fig,
+            state_color_dict=LARRY_CELL_TYPE_COLORS,
+            adata_input_clone=adata_input_clone,
+            lineage_fate_correlation_path=plot_path,
+            save_plot=False,
+            ylabel="",
+            show_titles=True if i == 0 else False,
+            show_colorbars=False,
+            default_fontsize=12 if matplotlib.rcParams["text.usetex"] else 9,
+        )
+
+    row_labels = ["a", "b", "c", "d"][:n_rows]
+    vertical_texts = vertical_texts[:n_rows]
+
+    return configure_time_lineage_fate_plot(
+        fig=fig,
+        gs=gs,
+        all_axes=all_axes,
+        row_labels=row_labels,
+        vertical_texts=vertical_texts,
+        reports_path=Path(reports_path),
+        model_identifier=data_set_model_pairing or "model",
     )
 
 

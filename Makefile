@@ -228,13 +228,32 @@ run-async: ## Run registered workflow (async).
 run-check-image: ## Check workflow image exists.
 	crane ls $(WORKFLOW_IMAGE) | grep "$(GIT_REF)\|$(GIT_SHA)\|$(GIT_SHA_SHORT)"
 
-TEST_DATASET_NAME ?= simulated
+TEST_DATASET_NAMES ?= simulated larry larry_neu larry_mono larry_multilineage
 
-workflow-clean-outputs: ## Clean testing dataset and model outputs. make workflow-clean-outputs TEST_DATASET_NAME=simulated.
-	rm data/external/$(TEST_DATASET_NAME).h5ad || true
-	rm data/processed/$(TEST_DATASET_NAME)_* || true
-	rm -r models/$(TEST_DATASET_NAME)_model* || true
-	rm -r reports/$(TEST_DATASET_NAME)_model* || true
+# Function to clean a single dataset
+define clean-dataset
+	@echo "Cleaning outputs for $(1)..."
+	rm -f data/processed/$(1)_* || true
+	rm -rf models/$(1)_model* || true
+	rm -rf reports/$(1)_model* || true
+
+endef
+
+# Function to print external dataset remove command
+define print-rm-external
+	@echo "  rm -f data/external/$(1).h5ad"
+
+endef
+
+workflow-clean-outputs: ## Clean testing dataset and model outputs. make workflow-clean-outputs TEST_DATASET_NAMES="simulated pancreas"
+	@echo "Cleaning outputs for datasets: $(TEST_DATASET_NAMES)"
+	$(foreach dataset,$(TEST_DATASET_NAMES),$(call clean-dataset,$(dataset)))
+	@echo ""
+	@echo "To remove external datasets, run one of these commands:"
+	$(foreach dataset,$(TEST_DATASET_NAMES),$(call print-rm-external,$(dataset)))
+	@echo ""
+	@echo "Or remove all with:"
+	@echo "  rm -f data/external/{$(shell echo $(TEST_DATASET_NAMES) | tr ' ' ',')}.h5ad"
 
 workflow-clear-cache: ## Clear local cache db from ~/.flyte/local-cache/cache.db.
 	pyflyte local-cache clear
