@@ -7,7 +7,7 @@ import scvelo as scv
 import seaborn as sns
 from anndata import AnnData
 from beartype import beartype
-from beartype.typing import Dict, List, Tuple
+from beartype.typing import Dict, List, Optional, Tuple
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from scipy.spatial import distance
@@ -18,7 +18,6 @@ from pyrovelocity.logging import configure_logging
 from pyrovelocity.plots._time import plot_posterior_time
 from pyrovelocity.plots._trajectory import (
     align_trajectory_diff,
-    get_clone_trajectory,
 )
 from pyrovelocity.plots._uncertainty import (
     get_posterior_sample_angle_uncertainty,
@@ -39,6 +38,7 @@ def plot_lineage_fate_correlation(
     all_axes: List[Axes] | np.ndarray,
     fig: Figure,
     state_color_dict: Dict,
+    adata_input_clone: str | Path | AnnData,
     ylabel: str = "Monocyte lineage",
     dotsize: int = 3,
     scale: float = 0.35,
@@ -55,17 +55,29 @@ def plot_lineage_fate_correlation(
     Plot lineage fate correlation with shared latent time estimates.
 
     Args:
-        posterior_samples_path (str | Path): Path to the posterior samples.
-        adata_pyrovelocity (str | Path): Path to the Pyro-Velocity AnnData object.
-        adata_scvelo (str | Path): Path to the scVelo AnnData object.
-        adata_cospar (AnnData): AnnData object with COSPAR results.
-        ax (Axes): Matplotlib axes.
+        posterior_samples_path (str | Path | AnnData): Path to the posterior samples.
+        adata_pyrovelocity (str | Path | AnnData): Path to the Pyro-Velocity AnnData object.
+        adata_cospar (str | Path | AnnData): AnnData object with COSPAR results.
+        all_axes (List[Axes] | np.ndarray): List of matplotlib axes.
         fig (Figure): Matplotlib figure.
         state_color_dict (Dict): Dictionary with cell state colors.
-        ylabel (str, optional): Label for y axis. Defaults to "Unipotent Monocyte lineage".
+        adata_input_clone (str | Path | AnnData): Pre-computed clone trajectory data.
+        ylabel (str, optional): Label for y axis. Defaults to "Monocyte lineage".
         dotsize (int, optional): Size of plotted points. Defaults to 3.
         scale (float, optional): Plot scale. Defaults to 0.35.
         arrow (float, optional): Arrow size. Defaults to 3.5.
+        lineage_fate_correlation_path (str | Path, optional): Path to save the plot.
+            Defaults to "lineage_fate_correlation.pdf".
+        save_plot (bool, optional): Whether to save the plot. Defaults to True.
+        show_colorbars (bool, optional): Whether to show colorbars. Defaults to False.
+        show_titles (bool, optional): Whether to show titles. Defaults to False.
+        default_fontsize (int, optional): Default font size. Defaults to 7.
+        default_title_padding (int, optional): Default title padding. Defaults to 2.
+        include_uncertainty_measures (bool, optional): Whether to include uncertainty
+            measures. Defaults to False.
+
+    Returns:
+        List[Axes] | np.ndarray: The axes objects.
 
     Examples:
         >>> # xdoctest: +SKIP
@@ -111,12 +123,11 @@ def plot_lineage_fate_correlation(
         adata_pyrovelocity = load_anndata_from_path(adata_pyrovelocity)
     if isinstance(adata_cospar, str | Path):
         adata_cospar = load_anndata_from_path(adata_cospar)
+    if isinstance(adata_input_clone, str | Path):
+        adata_input_clone = load_anndata_from_path(adata_input_clone)
 
     adata_scvelo = adata_pyrovelocity.copy()
-    adata_input_clone = get_clone_trajectory(adata_scvelo)
-    adata_input_clone.obsm["clone_vector_emb"][
-        np.isnan(adata_input_clone.obsm["clone_vector_emb"])
-    ] = 0
+
     density = 0.35
     diff = align_trajectory_diff(
         [adata_input_clone, adata_scvelo, adata_scvelo],
