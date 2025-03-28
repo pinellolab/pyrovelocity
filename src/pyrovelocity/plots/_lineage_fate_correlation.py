@@ -13,12 +13,10 @@ from matplotlib.figure import Figure
 from scipy.spatial import distance
 from scipy.stats import spearmanr
 
+from pyrovelocity.analysis.trajectory import align_trajectory_diff
 from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.plots._time import plot_posterior_time
-from pyrovelocity.plots._trajectory import (
-    align_trajectory_diff,
-)
 from pyrovelocity.plots._uncertainty import (
     get_posterior_sample_angle_uncertainty,
 )
@@ -240,15 +238,14 @@ def plot_lineage_fate_correlation(
     )
     ax.axis("off")
     if show_titles:
+        # "scVelo cosine similarity: %.2f" % scvelo_cos_mean, fontsize=default_fontsize
         ax.set_title(
-            # "scVelo cosine similarity: %.2f" % scvelo_cos_mean, fontsize=default_fontsize
             f"scVelo ({scvelo_cos_mean:.2f})",
             fontsize=default_fontsize,
             pad=default_title_padding,
         )
     else:
         ax.set_title(
-            # f""
             f"({scvelo_cos_mean:.2f})",
             fontsize=default_fontsize,
             pad=default_title_padding,
@@ -275,8 +272,8 @@ def plot_lineage_fate_correlation(
     )
     ax.axis("off")
     if show_titles:
+        # "Pyro-Velocity cosine similarity: %.2f" % pyro_cos_mean, fontsize=default_fontsize
         ax.set_title(
-            # "Pyro-Velocity cosine similarity: %.2f" % pyro_cos_mean, fontsize=default_fontsize
             rf"Pyro\thinspace-Velocity ({pyro_cos_mean:.2f})"
             if matplotlib.rcParams["text.usetex"]
             else f"Pyro\u2009-Velocity ({pyro_cos_mean:.2f})",
@@ -285,7 +282,6 @@ def plot_lineage_fate_correlation(
         )
     else:
         ax.set_title(
-            # f""
             f"({pyro_cos_mean:.2f})",
             fontsize=default_fontsize,
             pad=default_title_padding,
@@ -390,15 +386,12 @@ def plot_lineage_fate_correlation(
     ax.axis("off")
     if show_titles:
         ax.set_title(
-            # f"scVelo latent time\ncorrelation: {scvelo_latent_time_correlation:.2f}"
-            # f"scVelo latent time ({scvelo_latent_time_correlation:.2f})",
             f"scVelo time ({scvelo_latent_time_correlation:.2f})",
             fontsize=default_fontsize,
             pad=default_title_padding,
         )
     else:
         ax.set_title(
-            # f"scVelo latent time\ncorrelation: {scvelo_latent_time_correlation:.2f}"
             f"({scvelo_latent_time_correlation:.2f})",
             fontsize=default_fontsize,
             pad=default_title_padding,
@@ -425,8 +418,6 @@ def plot_lineage_fate_correlation(
     )
     if show_titles:
         ax.set_title(
-            # f"Pyro-Velocity shared time\ncorrelation: {pyrovelocity_shared_time_correlation:.2f}"
-            # f"Pyro-Velocity shared time ({pyrovelocity_shared_time_correlation:.2f})",
             rf"Pyro\thinspace-Velocity time ({pyrovelocity_shared_time_correlation:.2f})"
             if matplotlib.rcParams["text.usetex"]
             else f"Pyro\u2009-Velocity time ({pyrovelocity_shared_time_correlation:.2f})",
@@ -435,7 +426,6 @@ def plot_lineage_fate_correlation(
         )
     else:
         ax.set_title(
-            # f""
             f"({pyrovelocity_shared_time_correlation:.2f})",
             fontsize=default_fontsize,
             pad=default_title_padding,
