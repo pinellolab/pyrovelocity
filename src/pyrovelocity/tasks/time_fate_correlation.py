@@ -9,12 +9,12 @@ from matplotlib.figure import Figure
 from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import MaxNLocator
 
+from pyrovelocity.analysis.trajectory import get_clone_trajectory
 from pyrovelocity.io.datasets import (
     larry_cospar,
 )
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.plots import plot_lineage_fate_correlation
-from pyrovelocity.plots._trajectory import get_clone_trajectory
 from pyrovelocity.styles import configure_matplotlib_style
 from pyrovelocity.styles.colors import LARRY_CELL_TYPE_COLORS
 from pyrovelocity.utils import load_anndata_from_path
