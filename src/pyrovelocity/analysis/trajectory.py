@@ -77,9 +77,7 @@ def get_clone_trajectory(
                 adata.obs.columns.get_loc("clones"),
             ] = int(j)
             adata_new.obs.loc[:, "time"] = [
-                t
-                for t, time in zip([2, 4, 6], times_index)
-                if time.shape[0] > 0
+                t for t, time in zip(times, times_index) if time.shape[0] > 0
             ]
             adata_new.obs.loc[:, "clones"] = int(j)
             adata_new.obs.loc[:, "state_info"] = "Centroid"
@@ -102,6 +100,9 @@ def get_clone_trajectory(
             continue
 
         centroids.append(adata_new)
+
+    if not centroids:
+        raise ValueError("No valid clone trajectories found in the data")
 
     adata_new = adata.concatenate(
         centroids[0].concatenate(centroids[1:]), join="outer"
