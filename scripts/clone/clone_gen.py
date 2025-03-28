@@ -13,7 +13,7 @@ from rich.logging import RichHandler
 from rich.theme import Theme
 
 from pyrovelocity.io.datasets import larry_mono, larry_neu
-from pyrovelocity.plots._trajectory import get_clone_trajectory
+from pyrovelocity.analysis.trajectory import get_clone_trajectory
 
 click.rich_click.SHOW_ARGUMENTS = True
 click.rich_click.USE_MARKDOWN = True
