@@ -159,17 +159,54 @@ def plot_lineage_fate_correlation(
     # SHIFT AXIS INDEX
     ax, current_axis_index = get_next_axis(all_axes, current_axis_index)
 
-    res = pd.DataFrame(
-        {
-            "X": adata_pyrovelocity.obsm["X_emb"][:, 0],
-            "Y": adata_pyrovelocity.obsm["X_emb"][:, 1],
-            "cell_type": adata_pyrovelocity.obs.state_info,
-        }
-    )
+    if plot_individual_obs or adata_pyrovelocity.n_obs < 5000:
+        plot_data = pd.DataFrame(
+            {
+                "X": adata_pyrovelocity.obsm["X_emb"][:, 0],
+                "Y": adata_pyrovelocity.obsm["X_emb"][:, 1],
+                "cell_type": adata_pyrovelocity.obs.state_info,
+            }
+        )
+    else:
+        cell_counts = adata_pyrovelocity.obs.state_info.value_counts()
+        smallest_cluster_size = cell_counts.min()
+        min_representation = max(50, int(smallest_cluster_size * 0.9))
+        max_total_cells = 5000
+        obs_indices = []
+
+        for ct in adata_pyrovelocity.obs.state_info.cat.categories:
+            mask = adata_pyrovelocity.obs.state_info == ct
+            n_cells = np.sum(mask)
+            if n_cells <= min_representation:
+                sample_size = n_cells
+            else:
+                proportion = n_cells / adata_pyrovelocity.n_obs
+                sample_size = max(
+                    min_representation,
+                    min(n_cells, int(max_total_cells * proportion)),
+                )
+            if sample_size >= n_cells:
+                ct_indices = np.where(mask)[0]
+            else:
+                ct_indices = np.random.choice(
+                    np.where(mask)[0], size=sample_size, replace=False
+                )
+            obs_indices.extend(ct_indices)
+
+        plot_data = pd.DataFrame(
+            {
+                "X": adata_pyrovelocity.obsm["X_emb"][obs_indices, 0],
+                "Y": adata_pyrovelocity.obsm["X_emb"][obs_indices, 1],
+                "cell_type": adata_pyrovelocity.obs.state_info.values[
+                    obs_indices
+                ],
+            }
+        )
+
     sns.scatterplot(
         x="X",
         y="Y",
-        data=res,
+        data=plot_data,
         alpha=0.90,
         s=dotsize,
         linewidth=0,
@@ -179,6 +216,7 @@ def plot_lineage_fate_correlation(
         ax=ax,
         legend="brief",
     )
+
     ax.get_legend().remove()
     ax.axis("off")
     if show_titles:
