@@ -177,41 +177,26 @@ def create_time_lineage_fate_correlation_plot(
 
         if dataset_name == "larry_multilineage":
             logger.info(
-                "Creating multilineage clone trajectory from mono and neu subsets"
+                "Creating multilineage clone trajectory from mono and neu datasets"
             )
 
-            if "state_info" in adata_pyrovelocity.obs:
-                mono_mask = adata_pyrovelocity.obs["state_info"].str.contains(
-                    "Mono", case=False, na=False
-                )
-                neu_mask = adata_pyrovelocity.obs["state_info"].str.contains(
-                    "Neu", case=False, na=False
-                )
+            from pyrovelocity.io.datasets import larry_mono, larry_neu
 
-                mono_adata = adata_pyrovelocity[mono_mask].copy()
-                neu_adata = adata_pyrovelocity[neu_mask].copy()
+            mono_adata = larry_mono()
+            neu_adata = larry_neu()
 
-                logger.info(
-                    f"  - Generating mono trajectory with {mono_adata.n_obs} cells"
-                )
-                mono_clone = get_clone_trajectory(mono_adata)
+            logger.info(
+                f"  - Generating mono trajectory with {mono_adata.n_obs} cells"
+            )
+            mono_clone = get_clone_trajectory(mono_adata)
 
-                logger.info(
-                    f"  - Generating neu trajectory with {neu_adata.n_obs} cells"
-                )
-                neu_clone = get_clone_trajectory(neu_adata)
+            logger.info(
+                f"  - Generating neu trajectory with {neu_adata.n_obs} cells"
+            )
+            neu_clone = get_clone_trajectory(neu_adata)
 
-                logger.info("  - Concatenating mono and neu trajectories")
-                clone_trajectories[dataset_name] = mono_clone.concatenate(
-                    neu_clone
-                )
-            else:
-                logger.warning(
-                    "Could not identify mono/neu cells in multilineage dataset. Generating unified trajectory."
-                )
-                clone_trajectories[dataset_name] = get_clone_trajectory(
-                    adata_pyrovelocity
-                )
+            logger.info("  - Concatenating mono and neu trajectories")
+            clone_trajectories[dataset_name] = mono_clone.concatenate(neu_clone)
         else:
             logger.info(
                 f"Generating clone trajectory for {dataset_name} with {adata_pyrovelocity.n_obs} cells"
