@@ -16,6 +16,7 @@ from scipy.stats import spearmanr
 from pyrovelocity.analysis.trajectory import align_trajectory_diff
 from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.logging import configure_logging
+from pyrovelocity.plots._common import set_colorbar
 from pyrovelocity.plots._time import plot_posterior_time
 from pyrovelocity.plots._uncertainty import (
     get_posterior_sample_angle_uncertainty,
@@ -48,6 +49,7 @@ def plot_lineage_fate_correlation(
     default_fontsize: int = 7,
     default_title_padding: int = 2,
     include_uncertainty_measures: bool = False,
+    plot_individual_obs: bool = False,
 ) -> List[Axes] | np.ndarray:
     """
     Plot lineage fate correlation with shared latent time estimates.
@@ -73,6 +75,8 @@ def plot_lineage_fate_correlation(
         default_title_padding (int, optional): Default title padding. Defaults to 2.
         include_uncertainty_measures (bool, optional): Whether to include uncertainty
             measures. Defaults to False.
+        plot_individual_obs (bool, optional): Whether to plot individual observations
+            instead of using hexbin. Defaults to False.
 
     Returns:
         List[Axes] | np.ndarray: The axes objects.
@@ -342,21 +346,38 @@ def plot_lineage_fate_correlation(
     scatter_dotsize_factor = 3
     # SHIFT AXIS INDEX
     ax, current_axis_index = get_next_axis(all_axes, current_axis_index)
-    scv.pl.scatter(
-        adata=adata_cospar_obs_subset,
-        basis="emb",
-        fontsize=default_fontsize,
-        color="fate_potency_transition_map",
-        cmap="inferno_r",
-        show=False,
-        ax=ax,
-        s=dotsize * scatter_dotsize_factor,
-        colorbar=show_colorbars,
-        title="",
-    )
+
+    if plot_individual_obs:
+        scv.pl.scatter(
+            adata=adata_cospar_obs_subset,
+            basis="emb",
+            fontsize=default_fontsize,
+            color="fate_potency_transition_map",
+            cmap="inferno_r",
+            show=False,
+            ax=ax,
+            s=dotsize * scatter_dotsize_factor,
+            colorbar=show_colorbars,
+            title="",
+        )
+    else:
+        im = ax.hexbin(
+            x=adata_cospar_obs_subset.obsm[f"X_emb"][:, 0],
+            y=adata_cospar_obs_subset.obsm[f"X_emb"][:, 1],
+            C=adata_cospar_obs_subset.obs["fate_potency_transition_map"],
+            gridsize=100,
+            cmap="inferno_r",
+            linewidths=0,
+            edgecolors="none",
+            reduce_C_function=np.mean,
+        )
+        if show_colorbars:
+            set_colorbar(
+                im, ax, labelsize=default_fontsize, fig=fig, position="right"
+            )
+
     ax.axis("off")
     if show_titles:
-        # ax.set_title("Clonal fate potency", fontsize=default_fontsize)
         ax.set_title(
             "Fate potency",
             fontsize=default_fontsize,
@@ -371,18 +392,36 @@ def plot_lineage_fate_correlation(
 
     # SHIFT AXIS INDEX
     ax, current_axis_index = get_next_axis(all_axes, current_axis_index)
-    scv.pl.scatter(
-        adata=adata_scvelo,
-        c="latent_time",
-        basis="emb",
-        s=dotsize * scatter_dotsize_factor,
-        cmap="inferno",
-        ax=ax,
-        show=False,
-        fontsize=default_fontsize,
-        colorbar=show_colorbars,
-        title="",
-    )
+
+    if plot_individual_obs:
+        scv.pl.scatter(
+            adata=adata_scvelo,
+            c="latent_time",
+            basis="emb",
+            s=dotsize * scatter_dotsize_factor,
+            cmap="inferno",
+            ax=ax,
+            show=False,
+            fontsize=default_fontsize,
+            colorbar=show_colorbars,
+            title="",
+        )
+    else:
+        im = ax.hexbin(
+            x=adata_scvelo.obsm[f"X_emb"][:, 0],
+            y=adata_scvelo.obsm[f"X_emb"][:, 1],
+            C=adata_scvelo.obs["latent_time"],
+            gridsize=100,
+            cmap="inferno",
+            linewidths=0,
+            edgecolors="none",
+            reduce_C_function=np.mean,
+        )
+        if show_colorbars:
+            set_colorbar(
+                im, ax, labelsize=default_fontsize, fig=fig, position="right"
+            )
+
     ax.axis("off")
     if show_titles:
         ax.set_title(
