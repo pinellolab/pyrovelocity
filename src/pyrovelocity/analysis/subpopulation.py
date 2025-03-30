@@ -4,10 +4,10 @@ Functions for extracting clonal subpopulations from datasets with clone informat
 
 import numpy as np
 import pandas as pd
-import anndata
-from scipy.sparse import issparse
-from typing import List, Optional, Tuple
+from anndata import AnnData
 from beartype import beartype
+from beartype.typing import List, Optional, Tuple
+from scipy.sparse import issparse
 
 from pyrovelocity.logging import configure_logging
 
@@ -78,12 +78,12 @@ def select_clones(
 
 @beartype
 def extract_clonal_subpopulation(
-    adata: anndata.AnnData,
+    adata: AnnData,
     cell_type: Optional[str] = None,
     cell_types: Optional[List[str]] = None,
     ratio: float = 1.0,
     cutoff_timepoints: int = 2,
-) -> anndata.AnnData:
+) -> AnnData:
     """
     Extract cells belonging to clones that differentiate into specified cell type(s).
 
@@ -128,13 +128,18 @@ def extract_clonal_subpopulation(
         f"Extracted {adata_filtered.n_obs} cells from {len(clones_selected)} clones"
     )
 
+    if cell_types:
+        logger.info(
+            f"Extracting cells from clones differentiated into: {', '.join(cell_types)}"
+        )
+
     return adata_filtered
 
 
 @beartype
 def create_larry_subpopulations(
     output_dir: str = "data/external"
-) -> Tuple[anndata.AnnData, anndata.AnnData, anndata.AnnData]:
+) -> Tuple[AnnData, AnnData, AnnData]:
     """
     Create and save the larry_neu, larry_mono, and larry_multilineage datasets.
 
@@ -145,6 +150,7 @@ def create_larry_subpopulations(
         Tuple containing (larry_neu, larry_mono, larry_multilineage) AnnData objects
     """
     import os
+
     from pyrovelocity.io.datasets import larry
 
     adata_larry = larry()
