@@ -42,6 +42,14 @@ def adata_postprocessed_pancreas_50_7():
 
 
 @pytest.fixture
+def adata_larry_multilineage_50_6():
+    fixture_file_path = (
+        files("pyrovelocity.tests.data") / "larry_multilineage_50_6.json"
+    )
+    return load_anndata_from_json(fixture_file_path)
+
+
+@pytest.fixture
 def pancreas_model2_path():
     return files("pyrovelocity.tests.data") / "models" / "pancreas_model2"
 
