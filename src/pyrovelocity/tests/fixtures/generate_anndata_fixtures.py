@@ -11,9 +11,10 @@ import shutil
 import tempfile
 from pathlib import Path
 
+import numpy as np
 from anndata import AnnData
 from beartype import beartype
-from beartype.typing import List, Union
+from beartype.typing import List
 
 from pyrovelocity.io.datasets import pancreas
 from pyrovelocity.io.serialization import (
@@ -219,6 +220,76 @@ def generate_postprocessed_pancreas_fixture_data(
     return trained_output_path, postprocessed_output_path
 
 
+@beartype
+def generate_larry_fixture_data(
+    output_path: str
+    | Path = "src/pyrovelocity/tests/data/larry_multilineage_50_6.json",
+    n_obs: int = 50,
+    genes: List[str] = ["Itgb2", "S100a9", "Fcer1g", "Lilrb4", "Vim", "Serbp1"],
+) -> Path:
+    """
+    Generate a test fixture for the Larry multilineage dataset with specific genes.
+
+    Args:
+        output_path: Path to save the JSON fixture.
+        n_obs: Number of observations to keep.
+        genes: List of gene names to include. Defaults to a set of marker genes.
+
+    Returns:
+        Path to the saved fixture.
+    """
+    output_path = Path(output_path)
+
+    from pyrovelocity.io.datasets import larry_multilineage
+
+    adata: AnnData = larry_multilineage()
+
+    available_genes = [gene for gene in genes if gene in adata.var_names]
+    if len(available_genes) < len(genes):
+        missing_genes = set(genes) - set(available_genes)
+        logger.warning(
+            f"Some requested genes are not in the dataset: {missing_genes}"
+        )
+
+    if not available_genes:
+        logger.error("None of the requested genes are in the dataset!")
+        var_indices = np.random.choice(
+            adata.n_vars, size=min(6, adata.n_vars), replace=False
+        )
+        adata = adata[:, var_indices]
+    else:
+        adata = adata[:, available_genes]
+
+    np.random.seed(42)
+    obs_indices = np.random.choice(
+        adata.n_obs, size=min(n_obs, adata.n_obs), replace=False
+    )
+    adata = adata[obs_indices, :]
+
+    original_anndata_string = anndata_string(adata)
+    print_anndata(adata)
+
+    save_anndata_to_json(adata, output_path)
+    logger.info(f"Larry multilineage test fixture saved to {output_path}")
+
+    try:
+        logger.info("Attempting to load the serialized Larry AnnData object...")
+        loaded_adata = load_anndata_from_json(output_path)
+        loaded_anndata_string = anndata_string(loaded_adata)
+        logger.info("Successfully loaded the serialized Larry AnnData object.")
+        print_string_diff(
+            text1=original_anndata_string,
+            text2=loaded_anndata_string,
+            diff_title="Original vs Loaded Larry AnnData",
+        )
+        print_anndata(loaded_adata)
+    except Exception as e:
+        logger.error(f"Error loading serialized Larry AnnData object: {str(e)}")
+
+    return output_path
+
+
 if __name__ == "__main__":
     generate_pancreas_fixture_data()
     generate_postprocessed_pancreas_fixture_data()
+    generate_larry_fixture_data()
