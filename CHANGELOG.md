@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.4.1](https://github.com/pinellolab/pyrovelocity/compare/v0.4.0...v0.4.1) (2025-03-31)
+
+### Bug Fixes
+
+* **analysis:** include trajectory functions ([16d382e](https://github.com/pinellolab/pyrovelocity/commit/16d382ea3b6b1f13e69e190d04adfcb41d54d561))
+* **ci:** include log files in manuscript artifacts ([16253ae](https://github.com/pinellolab/pyrovelocity/commit/16253ae5abf03f8adc1f1edec644c9d73c8ce695))
+* **ci:** include tmp log files in manuscript artifacts ([92926e2](https://github.com/pinellolab/pyrovelocity/commit/92926e2c08763e8e2fdef7f3cbb6a3bead45b5cc))
+* **ci:** note artifact path to include latexdiff log ([3ed2de2](https://github.com/pinellolab/pyrovelocity/commit/3ed2de22235ed3f65057d095f66ea9c5cfd34bb3))
+* **constants:** disable demo flag ([ef3518b](https://github.com/pinellolab/pyrovelocity/commit/ef3518b024ba200d64a942397fe243236736481b))
+* **datasets:** add clone trajectory data sets ([e2b4e5c](https://github.com/pinellolab/pyrovelocity/commit/e2b4e5c98ffc4e96fb55b20f138711ddf7c5f84c))
+* **fixture:** add function to generate larry data fixture ([9b9491c](https://github.com/pinellolab/pyrovelocity/commit/9b9491c7dc2115040048cf125da20dd52dab1122))
+* **lineage_fate_correlation:** absorb nan cleanup from plotting function to get_clone_trajectory ([d194fea](https://github.com/pinellolab/pyrovelocity/commit/d194feaee48cfbdb839c351ecb78379b5581a24c))
+* **main_workflow:** reenable all data sets ([776ed2c](https://github.com/pinellolab/pyrovelocity/commit/776ed2c5743c179d02ebc4a89a87cfdfeb2c19ef))
+* **make:** support cleaning up workflow artifacts for multiple data sets ([9fcd1af](https://github.com/pinellolab/pyrovelocity/commit/9fcd1affd2baf7b1f0402b99c20814caa530c337))
+* **manuscript:** add local latexmkrc to ensure xelatex ([7a2de6d](https://github.com/pinellolab/pyrovelocity/commit/7a2de6d6ddd316b90c84c403c0e37544ca68a187))
+* **manuscript:** make model formulation eqs align ([be84321](https://github.com/pinellolab/pyrovelocity/commit/be8432188386497ea37e7dfe1e75b8b91d4bd305))
+* **manuscript:** note how to retain latexdiff log ([267dc1d](https://github.com/pinellolab/pyrovelocity/commit/267dc1d5ed8b2c469f4949e575d6dfa29e654f63))
+* **manuscript:** note local tmpdir build ([be9070e](https://github.com/pinellolab/pyrovelocity/commit/be9070e6d4c5bfe6072f0a34cdef336f36e1fdb2))
+* **manuscript:** remove paragraph break in align env ([481000a](https://github.com/pinellolab/pyrovelocity/commit/481000ad555909c4199f2ec9f7321726ef3ec5a0))
+* **manuscript:** set explicit figure width percentages ([f62edd0](https://github.com/pinellolab/pyrovelocity/commit/f62edd0d9d353c3ea5d391623990e58e2aeeab85))
+* **manuscript:** support unicode thin space in tex ([9d7cc90](https://github.com/pinellolab/pyrovelocity/commit/9d7cc90c94a3e44e76725e18fef10a804eaba873))
+* **manuscript:** update header to include keepaspectratio in includegraphics ([8c73ad7](https://github.com/pinellolab/pyrovelocity/commit/8c73ad7e12523cbb92b903f9903e383b23570464)), closes [#1](https://github.com/pinellolab/pyrovelocity/issues/1)
+* **plots:** downsample cluster data for larger than 5000 obs ([e02e02f](https://github.com/pinellolab/pyrovelocity/commit/e02e02feae1d8a799e374612a4fc8d52a4b3cbf9))
+* **plots:** prefer hexbin in lineage fate correlation plot ([77e2487](https://github.com/pinellolab/pyrovelocity/commit/77e24870d1f14d7e98e18bc29d533edba9df1eb0))
+* **plots:** use trajectory functions from analysis package ([38809fc](https://github.com/pinellolab/pyrovelocity/commit/38809fc1a3129b521a69e8e560f669b442159948))
+* **scripts:** use trajectory functions from analysis package ([5c38692](https://github.com/pinellolab/pyrovelocity/commit/5c386927940bf9f161085e8539fee75f1a130432))
+* **subpopulation:** update types ([cc3b3d8](https://github.com/pinellolab/pyrovelocity/commit/cc3b3d8d6e825b902f412c786e9145bddfe319bf))
+* **tasks:** compute clone trajectories in time lineage fate correlation task ([4f557a9](https://github.com/pinellolab/pyrovelocity/commit/4f557a9107f10e1c374c543889b3cca2b115ad9c))
+* **tasks:** use trajectory functions from analysis package ([6f50788](https://github.com/pinellolab/pyrovelocity/commit/6f507886e2c3412cbd3bfbd38ada799b39e68438))
+* **tasks:** use vendored data for multilineage clone trajectory ([ce26b54](https://github.com/pinellolab/pyrovelocity/commit/ce26b549e5677717b50ea6130351f200c02719ff))
+* **time_fate_correlation:** refactor create_time_lineage_fate_correlation_plot for workflow usage ([695a98c](https://github.com/pinellolab/pyrovelocity/commit/695a98c9e42159987ae2f829f169c9b65737a596))
+* **trajectory:** use input times and error on empty centroids ([71174d2](https://github.com/pinellolab/pyrovelocity/commit/71174d2d0b5009da5fcd57af19cd469c5c90cd91))
+* **workflows:** use create_time_lineage_fate_correlation_plot task function ([07b0ee3](https://github.com/pinellolab/pyrovelocity/commit/07b0ee39c10c22ca3b8f02b182833e13eac0924c))
+
 ## [0.4.0](https://github.com/pinellolab/pyrovelocity/compare/v0.3.0...v0.4.0) (2025-03-14)
 
 ### Features
