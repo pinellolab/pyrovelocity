@@ -2,6 +2,7 @@ import json
 from dataclasses import asdict
 from datetime import timedelta
 from pathlib import Path
+from typing import Tuple
 
 from beartype.typing import List
 from flytekit import Resources, current_context, dynamic, task
@@ -28,6 +29,7 @@ from pyrovelocity.io.metrics import (
 )
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.tasks.data import download_dataset
+from pyrovelocity.tasks.evaluate import calculate_cross_boundary_correctness
 from pyrovelocity.tasks.postprocess import postprocess_dataset
 from pyrovelocity.tasks.preprocess import preprocess_dataset
 from pyrovelocity.tasks.summarize import summarize_dataset
@@ -48,6 +50,7 @@ from pyrovelocity.workflows.main_configuration import (
     SummarizeConfiguration,
     SummarizeOutputs,
     TrainingOutputs,
+    TrajectoryEvaluationOutputs,
     WorkflowConfiguration,
     bonemarrow_configuration,
     default_resource_limits,
@@ -75,6 +78,7 @@ __all__ = [
     "upload_summary",
     "map_model_configurations_over_data_set",
     "training_workflow",
+    "evaluate_trajectory_metrics",
 ]
 
 logger = configure_logging(__name__)
@@ -87,6 +91,7 @@ POSTPROCESS_CACHE_VERSION = f"{CACHE_VERSION}.2"
 SUMMARIZE_CACHE_VERSION = f"{CACHE_VERSION}.3"
 UPLOAD_CACHE_VERSION = f"{CACHE_VERSION}.7"
 LINEAGE_FATE_CORRELATION_CACHE_VERSION = f"{CACHE_VERSION}.8"
+TRAJECTORY_EVALUATION_CACHE_VERSION = f"{CACHE_VERSION}.0"
 COMBINE_METRICS_CACHE_VERSION = f"{CACHE_VERSION}.5"
 DEFAULT_ACCELERATOR_TYPE: GPUAccelerator = T4
 
@@ -655,6 +660,73 @@ def combine_all_metrics(
         )
 
 
+@task(
+    cache=PYROVELOCITY_CACHE_FLAG,
+    cache_version=TRAJECTORY_EVALUATION_CACHE_VERSION,
+    retries=3,
+    interruptible=False,
+    timeout=timedelta(minutes=120),
+    requests=Resources(cpu="8", mem="30Gi", ephemeral_storage="50Gi"),
+    limits=Resources(cpu="16", mem="60Gi", ephemeral_storage="200Gi"),
+    enable_deck=False,
+)
+def evaluate_trajectory_metrics(
+    results: List[List[SummarizeOutputs]],
+) -> TrajectoryEvaluationOutputs:
+    logger.info("Evaluating trajectory metrics for datasets")
+
+    output_dir = Path("reports/trajectory_metrics")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    model_results = []
+
+    for dataset_results in results:
+        for model_output in dataset_results:
+            postprocessed_data_path = model_output.postprocessed_data.download()
+
+            model_results.append(
+                {
+                    "data_model": model_output.data_model,
+                    "postprocessed_data": postprocessed_data_path,
+                }
+            )
+
+    summary_file, results_dir, plot_file = calculate_cross_boundary_correctness(
+        model_results=model_results,
+        output_dir=output_dir,
+    )
+
+    ctx = current_context()
+    execution_id = ctx.execution_id.name
+
+    uploaded_files = []
+    for file_path in [summary_file, plot_file]:
+        for ext in ["", ".png"]:
+            if Path(f"{file_path}{ext}").exists():
+                upload_result = upload_file_concurrently(
+                    bucket_name=f"pyrovelocity/reports/{execution_id}",
+                    source_filename=f"{file_path}{ext}",
+                    destination_blob_name=f"{file_path.name}{ext}",
+                )
+                uploaded_files.append(upload_result)
+
+    if all(isinstance(result, Success) for result in uploaded_files):
+        logger.info("All trajectory metrics files uploaded successfully")
+    else:
+        failed_uploads = [
+            str(i)
+            for i, result in enumerate(uploaded_files)
+            if isinstance(result, Failure)
+        ]
+        logger.warning(f"Failed uploads: {', '.join(failed_uploads)}")
+
+    return TrajectoryEvaluationOutputs(
+        summary_file=FlyteFile(path=str(summary_file)),
+        results_directory=FlyteDirectory(path=str(results_dir)),
+        plot_file=FlyteFile(path=str(plot_file)),
+    )
+
+
 @dynamic
 def training_workflow(
     simulated_configuration: WorkflowConfiguration = simulated_configuration,
@@ -668,7 +740,11 @@ def training_workflow(
     larry_neu_configuration: WorkflowConfiguration = larry_neu_configuration,
     larry_mono_configuration: WorkflowConfiguration = larry_mono_configuration,
     larry_multilineage_configuration: WorkflowConfiguration = larry_multilineage_configuration,
-) -> list[list[SummarizeOutputs]]:
+) -> Tuple[
+    List[List[SummarizeOutputs]],
+    TrajectoryEvaluationOutputs,
+    CombinedMetricsOutputs,
+]:
     """
     Apply the primary workflow to a collection of configurations.
     Conditionally executes configurations based on the value of PYROVELOCITY_DATA_SUBSET.
@@ -688,6 +764,7 @@ def training_workflow(
     ]
 
     lineage_traced_results = []
+    developmental_results = []
     lineage_traced_configurations = [
         (larry_mono_configuration, "larry_mono"),
         (larry_neu_configuration, "larry_neu"),
@@ -721,16 +798,30 @@ def training_workflow(
             accelerator_type=config.accelerator_type,
             upload_results=config.upload_results,
         )
+
         if "larry" in data_set_name:
             lineage_traced_results.append(result)
+
+        if (
+            data_set_name in ["bonemarrow", "pancreas", "pons"]
+            or "larry" in data_set_name
+        ):
+            developmental_results.append(result)
+
         results.append(result)
 
-    combine_all_metrics(results=results)
+    metrics_outputs = combine_all_metrics(results=results)
 
     if len(lineage_traced_results) > 0:
         combine_time_lineage_fate_correlation(results=lineage_traced_results)
 
-    return results
+    trajectory_outputs = None
+    if len(developmental_results) > 0:
+        trajectory_outputs = evaluate_trajectory_metrics(
+            results=developmental_results
+        )
+
+    return results, trajectory_outputs, metrics_outputs
 
 
 if __name__ == "__main__":
