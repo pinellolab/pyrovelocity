@@ -164,47 +164,77 @@ def calculate_cross_boundary_correctness(
             f"Saved results for {dataset_name} to {dataset_results_file}"
         )
 
-        mean_column = dataset_df.set_index("model")["Mean"]
-        summary_df[dataset_name] = mean_column
-
-    if not summary_df.empty:
-        summary_df["Mean Across All Data"] = summary_df.mean(axis=1)
+        if not dataset_df.empty:
+            mean_column = dataset_df.set_index("model")["Mean"]
+            summary_df[dataset_name] = mean_column
 
     summary_file = output_dir / "cross_boundary_correctness_summary.csv"
     summary_df.to_csv(summary_file)
 
     if not summary_df.empty:
+        summary_df["Mean Across All Data"] = summary_df.mean(axis=1)
+
+        plot_data = []
+        for model_idx, model_name in enumerate(summary_df.index):
+            for dataset in summary_df.columns:
+                value = summary_df.loc[model_name, dataset]
+                plot_data.append(
+                    {
+                        "Model": model_name,
+                        "Dataset": dataset,
+                        "Cross Boundary Direction Correctness": value,
+                    }
+                )
+
+        plot_df = pd.DataFrame(plot_data)
+
         plot_file = output_dir / "cross_boundary_correctness_plot.pdf"
-        plot_path = create_summary_plot(summary_df, plot_file)
+        plot_path = create_summary_plot(
+            plot_df,
+            plot_file,
+            ["Mean Across All Data"]
+            + [
+                col
+                for col in summary_df.columns
+                if col != "Mean Across All Data"
+            ],
+        )
     else:
-        plot_path = output_dir / "empty_plot.pdf"
+        plot_file = output_dir / "no_plot.pdf"
+        logger.warning(
+            f"No data to plot, creating empty plot file:\n\t{plot_file}"
+        )
         plt.figure()
         plt.text(0.5, 0.5, "No data available", ha="center", va="center")
-        plt.savefig(plot_path)
+        plt.savefig(str(plot_file))
+        plt.savefig(f"{plot_file}.png")
         plt.close()
+        plot_path = plot_file
 
     return summary_file, results_dir, plot_path
 
 
 def create_summary_plot(
-    summary_df: pd.DataFrame, output_path: str | Path
+    plot_df: pd.DataFrame, output_path: str | Path, order: List[str] = None
 ) -> Path:
-    """Create a summary plot of cross-boundary correctness metrics."""
-    plot_df = summary_df.reset_index().melt(
-        id_vars="index",
-        var_name="Dataset",
-        value_name="Cross Boundary Direction Correctness",
-    )
-    plot_df.rename(columns={"index": "Model"}, inplace=True)
+    """Create a summary plot of cross-boundary correctness metrics.
 
+    Args:
+        plot_df: DataFrame in long format with columns Model, Dataset, and Cross Boundary Direction Correctness
+        output_path: Path to save the plot
+        order: Optional order of datasets in the plot
+
+    Returns:
+        Path to the saved plot
+    """
     plt.figure(figsize=(15, 6))
+
     ax = sns.barplot(
         data=plot_df,
         x="Dataset",
         y="Cross Boundary Direction Correctness",
         hue="Model",
-        order=["Mean Across All Data"]
-        + [col for col in summary_df.columns if col != "Mean Across All Data"],
+        order=order,
     )
 
     plt.xticks(rotation=45, ha="right")
