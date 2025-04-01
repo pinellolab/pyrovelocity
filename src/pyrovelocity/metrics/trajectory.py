@@ -9,8 +9,10 @@ including directional correctness and coherence measures taken from:
 """
 
 import numpy as np
+from anndata import AnnData
 from beartype import beartype
 from beartype.typing import Dict, List, Tuple, Union
+from scipy import sparse
 from sklearn.metrics.pairwise import cosine_similarity
 
 
@@ -39,7 +41,7 @@ def keep_type(
 
 @beartype
 def cross_boundary_correctness(
-    adata,
+    adata: AnnData,
     k_cluster: str,
     cluster_edges: List[Tuple[str, str]],
     k_velocity: str = "velocity",
@@ -73,10 +75,19 @@ def cross_boundary_correctness(
     Returns:
         Raw cell scores by cluster edge or mean scores by cluster edge and overall mean
     """
+    if "neighbors" not in adata.uns:
+        raise ValueError("AnnData object must have neighbors computed")
+
     if "indices" not in adata.uns["neighbors"]:
         k = adata.uns["neighbors"]["params"]["n_neighbors"]
         connectivities = adata.obsp["connectivities"]
-        neighbor_indices = np.argsort(-connectivities.toarray(), axis=1)[:, :k]
+
+        if sparse.issparse(connectivities):
+            connectivities_array = connectivities.toarray()
+        else:
+            connectivities_array = connectivities
+
+        neighbor_indices = np.argsort(-connectivities_array, axis=1)[:, :k]
         adata.uns["neighbors"]["indices"] = neighbor_indices
 
     scores = {}
@@ -146,6 +157,21 @@ def inner_cluster_coherence(
     Returns:
         Raw scores by cluster or mean scores by cluster and overall mean
     """
+    if "neighbors" not in adata.uns:
+        raise ValueError("AnnData object must have neighbors computed")
+
+    if "indices" not in adata.uns["neighbors"]:
+        k = adata.uns["neighbors"]["params"]["n_neighbors"]
+        connectivities = adata.obsp["connectivities"]
+
+        if sparse.issparse(connectivities):
+            connectivities_array = connectivities.toarray()
+        else:
+            connectivities_array = connectivities
+
+        neighbor_indices = np.argsort(-connectivities_array, axis=1)[:, :k]
+        adata.uns["neighbors"]["indices"] = neighbor_indices
+
     clusters = np.unique(adata.obs[k_cluster])
     scores = {}
     all_scores = {}
