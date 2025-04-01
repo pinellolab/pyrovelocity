@@ -24,6 +24,8 @@ __all__ = [
     "TrainingOutputs",
     "PostprocessOutputs",
     "SummarizeOutputs",
+    "TrajectoryEvaluationOutputs",
+    "CombinedMetricsOutputs",
     "WorkflowConfiguration",
 ]
 
@@ -219,6 +221,13 @@ class SummarizeOutputs(DataClassJSONMixin):
     combined_metrics_path: FlyteFile
     pyrovelocity_data: FlyteFile
     postprocessed_data: FlyteFile
+
+
+@dataclass
+class TrajectoryEvaluationOutputs(DataClassJSONMixin):
+    summary_file: FlyteFile
+    results_directory: FlyteDirectory
+    plot_file: FlyteFile
 
 
 @dataclass
