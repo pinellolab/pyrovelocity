@@ -5,8 +5,9 @@ import numpy as np
 import pandas as pd
 import scanpy as sc
 import seaborn as sns
+from anndata import AnnData
 from beartype import beartype
-from beartype.typing import Any, Dict, List, Tuple
+from beartype.typing import Dict, List, Tuple
 
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.metrics.trajectory import cross_boundary_correctness
@@ -61,7 +62,7 @@ DATASET_CONFIGS = {
 
 @beartype
 def calculate_cross_boundary_correctness(
-    model_results: List[Dict[str, Any]],
+    model_results: List[Dict[str, str | Path | AnnData]],
     output_dir: str | Path,
 ) -> Tuple[Path, Path, Path]:
     """
@@ -71,7 +72,8 @@ def calculate_cross_boundary_correctness(
         model_results: List of dictionaries containing model results.
             Each dictionary should have:
             - data_model: str - Dataset and model name (e.g., 'pancreas_model1')
-            - postprocessed_data: str | Path - Path to postprocessed AnnData file
+            - postprocessed_data: Union[str, Path, AnnData] - Path to postprocessed AnnData file
+              or the actual AnnData object
         output_dir: Directory to save results to
 
     Returns:
@@ -125,13 +127,16 @@ def calculate_cross_boundary_correctness(
         dataset_df = pd.DataFrame(
             columns=["model"] + [f"{u}->{v}" for u, v in transitions] + ["Mean"]
         )
-
         for model_data in models:
             model_name = model_data["model_name"]
-            adata_path = model_data["postprocessed_data"]
+            adata_path_or_obj = model_data["postprocessed_data"]
 
             logger.info(f"Processing {dataset_name} with model {model_name}")
-            adata = sc.read_h5ad(adata_path)
+
+            if isinstance(adata_path_or_obj, AnnData):
+                adata = adata_path_or_obj
+            else:
+                adata = sc.read_h5ad(adata_path_or_obj)
 
             velocity_key = (
                 "velocity_pyro"
@@ -140,7 +145,7 @@ def calculate_cross_boundary_correctness(
             )
 
             cb_scores, cb_mean = cross_boundary_correctness(
-                adata,
+                adata=adata,
                 k_cluster=cluster_key,
                 cluster_edges=transitions,
                 k_velocity=velocity_key,
