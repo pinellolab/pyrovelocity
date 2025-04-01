@@ -218,16 +218,16 @@ def print_string_diff(
 ):
     console = rich.console.Console(width=max_width)
 
-    diff = list(
+    diff_lines = list(
         difflib.unified_diff(
-            text1.splitlines(keepends=True),
-            text2.splitlines(keepends=True),
+            text1.splitlines(keepends=False),
+            text2.splitlines(keepends=False),
             lineterm="",
             n=diff_context_lines,
         )
     )
 
-    diff_text = "".join(diff)
+    diff_text = "\n".join(diff_lines)
 
     syntax = rich.syntax.Syntax(diff_text, "diff", theme=theme, word_wrap=True)
 
@@ -1163,10 +1163,6 @@ def setup_colors(
 #         "fatal",
 #         "critical",
 #     )
-#     for level in logging_levels:
-#         setattr(logger, level, rank_zero_only(getattr(logger, level)))
-
-#     return logger
 #     for level in logging_levels:
 #         setattr(logger, level, rank_zero_only(getattr(logger, level)))
 
