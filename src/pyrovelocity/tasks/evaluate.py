@@ -16,18 +16,38 @@ __all__ = ["calculate_cross_boundary_correctness"]
 
 logger = configure_logging(__name__)
 
+DEFAULT_COLOR_PALETTE = [
+    "#0B559F",
+    "#1D9E74",
+    "#E69F00",
+    "#CC79A7",
+    "#56B4E9",
+    "#D55E00",
+    "#F0E442",
+]
 
+
+@beartype
 def plot_cross_boundary_correctness(
     plot_df: pd.DataFrame,
     output_path: str | Path,
-    order: List[str] = None,
+    order: List[str],
+    model_order: List[str],
+    color_palette: List[str] = DEFAULT_COLOR_PALETTE,
+    default_fontsize: int = 16,
 ) -> Path:
     """Create a summary plot of cross-boundary correctness metrics.
 
     Args:
-        plot_df: DataFrame in long format with columns Model, Dataset, and Cross Boundary Direction Correctness
+        plot_df: DataFrame in long format with columns Model, Dataset, and
+            Cross Boundary Direction Correctness
         output_path: Path to save the plot
         order: Optional order of datasets in the plot
+        model_order: Optional order of models in the plot
+        color_palette: Optional list of colors to use for the models. If provided,
+            must be at least as long as the number of models. If not provided,
+            default colors will be used.
+        default_fontsize: Font size for the plot
 
     Returns:
         Path to the saved plot
@@ -37,39 +57,82 @@ def plot_cross_boundary_correctness(
 
     plt.figure(figsize=(fig_width, 8))
 
+    order = [
+        dataset for dataset in order if dataset in plot_df["Dataset"].unique()
+    ]
+
+    for dataset in plot_df["Dataset"].unique():
+        if dataset not in order:
+            order.append(dataset)
+
+    hue_order = [
+        model for model in model_order if model in plot_df["Model"].unique()
+    ]
+
+    for model in plot_df["Model"].unique():
+        if model not in hue_order:
+            hue_order.append(model)
+
+    palette = {}
+
+    for i, model in enumerate(hue_order):
+        if i < len(color_palette):
+            palette[model] = color_palette[i]
+        else:
+            logger.error(
+                f"Not enough colors provided in color_palette, "
+                f"expected at least {len(hue_order)}"
+            )
+
     ax = sns.barplot(
         data=plot_df,
         x="Dataset",
         y="Cross Boundary Direction Correctness",
         hue="Model",
         order=order,
-        palette={
-            "model1": "#0B559F",
-            "model2": "#1D9E74",
-            "scvelo": "#E69F00",
-        },
+        hue_order=hue_order,
+        palette=palette,
     )
 
     plt.grid(axis="y", linestyle="--", alpha=0.7)
     plt.axhline(y=0, color="k", linestyle="-", alpha=0.3)
 
     plt.ylabel(
-        "Cross Boundary Direction Correctness", fontsize=12, fontweight="bold"
+        "Cross Boundary Direction Correctness",
+        fontsize=default_fontsize,
+        fontweight="bold",
     )
-    plt.xlabel("Dataset", fontsize=12, fontweight="bold")
+    plt.xlabel("", fontsize=default_fontsize, fontweight="bold")
 
-    plt.xticks(rotation=45, ha="right", fontsize=12)
-    plt.yticks(fontsize=12)
+    labels = ax.get_xticklabels()
+    new_labels = []
+
+    for label in labels:
+        text = label.get_text()
+        formatted_text = text.replace("mono", "monocytes")
+        formatted_text = formatted_text.replace("neu", "neutrophils")
+        formatted_text = formatted_text.replace("_", " ").capitalize()
+        formatted_text = formatted_text.replace("Larry", "LARRY")
+
+        new_labels.append(formatted_text)
+
+    ax.set_xticklabels(
+        new_labels, rotation=0, ha="center", fontsize=default_fontsize
+    )
+
+    plt.yticks(fontsize=default_fontsize)
 
     plt.legend(
-        title="", fontsize=12, bbox_to_anchor=(1.02, 1), loc="upper left"
+        title="",
+        fontsize=default_fontsize,
+        loc="upper right",
     )
 
-    plt.tight_layout()
+    plt.tight_layout(pad=2.0)
 
     output_path = Path(output_path)
     for ext in ["", ".png"]:
-        plt.savefig(f"{output_path}{ext}", bbox_inches="tight")
+        plt.savefig(f"{output_path}{ext}", bbox_inches="tight", dpi=300)
 
     plt.close()
     return output_path
@@ -82,6 +145,7 @@ def calculate_cross_boundary_correctness(
     dataset_configs: Dict[str, Dict[str, str]],
     ground_truth_transitions: Dict[str, List[Tuple[str, str]]],
     model_velocity_keys: Dict[str, str],
+    color_palette: List[str] = DEFAULT_COLOR_PALETTE,
 ) -> Tuple[Path, Path, Path]:
     """
     Calculate cross-boundary correctness metrics for multiple datasets and models.
@@ -96,6 +160,7 @@ def calculate_cross_boundary_correctness(
         dataset_configs: Mapping of dataset names to their cluster and embedding keys
         ground_truth_transitions: Mapping of dataset names to their ground truth cell transitions
         model_velocity_keys: Mapping of model types to their velocity keys
+        color_palette: Optional list of colors to use for models in the plot
 
     Returns:
         Tuple of paths to:
@@ -169,6 +234,9 @@ def calculate_cross_boundary_correctness(
         results_by_dataset=results_by_dataset,
         output_dir=output_dir,
         all_model_types=all_model_types,
+        ground_truth_transitions=ground_truth_transitions,
+        model_velocity_keys=model_velocity_keys,
+        color_palette=color_palette,
     )
 
     return summary_file, results_dir, plot_file
@@ -335,6 +403,9 @@ def generate_summary_outputs(
     results_by_dataset: Dict[str, Dict[str, float]],
     output_dir: Path,
     all_model_types: set,
+    ground_truth_transitions: Dict[str, List[Tuple[str, str]]],
+    model_velocity_keys: Dict[str, str],
+    color_palette: List[str] = DEFAULT_COLOR_PALETTE,
 ) -> Tuple[Path, Path]:
     """
     Generate summary CSV and plot from all results.
@@ -343,6 +414,9 @@ def generate_summary_outputs(
         results_by_dataset: Results organized by dataset and model
         output_dir: Directory to save outputs
         all_model_types: Set of all model types
+        ground_truth_transitions: Mapping of dataset names to ground truth transitions
+        model_velocity_keys: Mapping of model types to velocity keys, used for ordering models
+        color_palette: Optional list of colors to use for models in the plot
 
     Returns:
         Tuple of (summary_file_path, plot_file_path)
@@ -351,9 +425,18 @@ def generate_summary_outputs(
 
     summary_data = []
 
-    sorted_model_types = sorted(all_model_types)
+    if model_velocity_keys:
+        model_order = list(model_velocity_keys.keys())
+        for model_type in all_model_types:
+            if model_type not in model_order:
+                model_order.append(model_type)
+    else:
+        model_order = sorted(all_model_types)
 
-    for model_type in sorted_model_types:
+    for model_type in model_order:
+        if model_type not in all_model_types:
+            continue
+
         row = {"Model": model_type}
         valid_scores = []
 
@@ -364,7 +447,7 @@ def generate_summary_outputs(
                 valid_scores.append(score)
 
         if valid_scores:
-            row["Mean Across All Data"] = np.mean(valid_scores)
+            row["mean"] = np.mean(valid_scores)
 
         summary_data.append(row)
 
@@ -377,13 +460,23 @@ def generate_summary_outputs(
 
         plot_df = create_plot_dataframe(summary_df)
 
-        dataset_order = ["Mean Across All Data"] + sorted(
-            [col for col in summary_df.columns if col != "Mean Across All Data"]
-        )
+        dataset_order = ["mean"]
+
+        for dataset in ground_truth_transitions.keys():
+            if dataset in summary_df.columns:
+                dataset_order.append(dataset)
+
+        for dataset in summary_df.columns:
+            if dataset != "mean" and dataset not in dataset_order:
+                dataset_order.append(dataset)
 
         plot_file = output_dir / "cross_boundary_correctness_plot.pdf"
         plot_path = plot_cross_boundary_correctness(
-            plot_df, plot_file, dataset_order
+            plot_df=plot_df,
+            output_path=plot_file,
+            order=dataset_order,
+            model_order=model_order,
+            color_palette=color_palette,
         )
         logger.info(f"Created plot at {plot_file}")
     else:
