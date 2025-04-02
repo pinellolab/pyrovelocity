@@ -104,9 +104,9 @@ GROUND_TRUTH_TRANSITIONS = {
 
 # Mapping of model types to respective velocity keys in AnnData layers
 MODEL_VELOCITY_KEYS = {
+    "scvelo": "velocity",
     "model1": "velocity_pyro",
     "model2": "velocity_pyro",
-    "scvelo": "velocity",
 }
 
 
