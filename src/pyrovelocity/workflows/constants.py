@@ -102,6 +102,13 @@ GROUND_TRUTH_TRANSITIONS = {
     ],
 }
 
+# Mapping of model types to respective velocity keys in AnnData layers
+MODEL_VELOCITY_KEYS = {
+    "model1": "velocity_pyro",
+    "model2": "velocity_pyro",
+    "scvelo": "velocity",
+}
+
 
 def get_git_repo_root(path="."):
     try:
