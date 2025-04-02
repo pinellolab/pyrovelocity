@@ -668,8 +668,8 @@ def combine_all_metrics(
     retries=3,
     interruptible=False,
     timeout=timedelta(minutes=120),
-    requests=Resources(cpu="8", mem="30Gi", ephemeral_storage="50Gi"),
-    limits=Resources(cpu="16", mem="60Gi", ephemeral_storage="200Gi"),
+    requests=Resources(cpu="8", mem="30Gi", ephemeral_storage="100Gi"),
+    limits=Resources(cpu="16", mem="100Gi", ephemeral_storage="500Gi"),
     enable_deck=False,
 )
 def evaluate_trajectory_metrics(
