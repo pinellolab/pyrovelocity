@@ -3,7 +3,7 @@ from pathlib import Path
 import matplotlib
 import matplotlib.pyplot as plt
 from beartype import beartype
-from beartype.typing import List, Union
+from beartype.typing import List
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.gridspec import GridSpec
@@ -125,7 +125,7 @@ def create_time_lineage_fate_correlation_plot(
         "Multilineage",
         "All lineages",
     ],
-    reports_path: Union[str, Path] = ".",
+    output_dir: str | Path = "reports/time_fate_correlation",
 ) -> Path:
     """
     Create a time lineage fate correlation plot from model results.
@@ -144,6 +144,9 @@ def create_time_lineage_fate_correlation_plot(
     Returns:
         Path: The path where the final plot is saved
     """
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     n_rows = len(model_results)
     n_cols = 7
     width = 14
@@ -251,7 +254,7 @@ def create_time_lineage_fate_correlation_plot(
         all_axes=all_axes,
         row_labels=row_labels,
         vertical_texts=vertical_texts,
-        reports_path=Path(reports_path),
+        output_dir=Path(output_dir),
         model_identifier=data_set_model_pairing or "model",
     )
 
@@ -263,7 +266,7 @@ def configure_time_lineage_fate_plot(
     all_axes: List[List[Axes]],
     row_labels: List[str],
     vertical_texts: List[str],
-    reports_path: Path,
+    output_dir: Path,
     model_identifier: str,
 ) -> Path:
     """
@@ -275,7 +278,7 @@ def configure_time_lineage_fate_plot(
         all_axes: A list of lists containing all subplot Axes objects.
         row_labels: Labels for each row (e.g., "a", "b", "c", "d").
         vertical_texts: Vertical text labels for each row.
-        reports_path: Path to save the final plot.
+        output_dir: Path to save the final plot.
         model_identifier: Identifier for the model used.
 
     Returns:
@@ -286,7 +289,7 @@ def configure_time_lineage_fate_plot(
     _add_legend(fig, gs, all_axes)
     _adjust_layout(fig)
     _add_colorbars(fig, gs, all_axes)
-    return _save_plot(fig, reports_path, model_identifier)
+    return _save_plot(fig, output_dir, model_identifier)
 
 
 def _set_axes_aspect(all_axes: List[List[Axes]]) -> None:
@@ -370,11 +373,11 @@ def _adjust_colorbar_position(cbar_ax: Axes, ref_ax: Axes) -> None:
 
 def _save_plot(
     fig: Figure,
-    reports_path: Path,
+    output_dir: Path,
     model_identifier: str,
 ) -> Path:
     combined_plot_path = (
-        reports_path / f"combined_time_fate_correlation_{model_identifier}.pdf"
+        output_dir / f"combined_time_fate_correlation_{model_identifier}.pdf"
     )
     for ext in ["", ".png"]:
         fig.savefig(
