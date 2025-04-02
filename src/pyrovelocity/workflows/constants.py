@@ -69,6 +69,39 @@ logger.info(
     f"PYROVELOCITY_UPLOAD_RESULTS: {PYROVELOCITY_UPLOAD_RESULTS}\n\n"
 )
 
+# Ground truth cell transitions for different datasets
+# These transitions represent known developmental trajectories
+# that are used for evaluating model predictions
+GROUND_TRUTH_TRANSITIONS = {
+    "pancreas": [
+        ("Ngn3 high EP", "Pre-endocrine"),
+        ("Pre-endocrine", "Alpha"),
+        ("Pre-endocrine", "Beta"),
+        ("Pre-endocrine", "Delta"),
+        ("Pre-endocrine", "Epsilon"),
+    ],
+    "bonemarrow": [("HSC_1", "Ery_1"), ("HSC_1", "HSC_2"), ("Ery_1", "Ery_2")],
+    "pons": [("COPs", "NFOLs"), ("NFOLs", "MFOLs")],
+    "larry_mono": [("Undifferentiated", "Monocyte")],
+    "larry_neu": [("Undifferentiated", "Neutrophil")],
+    "larry_multilineage": [
+        ("Undifferentiated", "Monocyte"),
+        ("Undifferentiated", "Neutrophil"),
+    ],
+    "larry": [
+        ("Undifferentiated", "Monocyte"),
+        ("Undifferentiated", "Neutrophil"),
+        ("Undifferentiated", "pDC"),
+        ("Undifferentiated", "Meg"),
+        ("Undifferentiated", "Mast"),
+        ("Undifferentiated", "Lymphoid"),
+        ("Undifferentiated", "Erythroid"),
+        ("Undifferentiated", "Eos"),
+        ("Undifferentiated", "Ccr7_DC"),
+        ("Undifferentiated", "Baso"),
+    ],
+}
+
 
 def get_git_repo_root(path="."):
     try:
