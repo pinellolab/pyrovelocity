@@ -506,14 +506,13 @@ def map_model_configurations_over_data_set(
 def combine_time_lineage_fate_correlation(
     results: List[List[SummarizeOutputs]],
 ) -> List[FlyteFile]:
-    print(results)
+    output_dir = Path("reports/time_fate_correlation")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     model_ordered_results = list(map(list, zip(*results)))
-    print(model_ordered_results)
     time_lineage_fate_correlation_plots = []
 
     for model_results in model_ordered_results:
-        print(model_results)
-
         prepared_model_results = []
         for model_output in model_results:
             postprocessed_data_path = model_output.postprocessed_data.download()
@@ -536,7 +535,7 @@ def combine_time_lineage_fate_correlation(
                     "Multilineage",
                     "All lineages",
                 ][: len(prepared_model_results)],
-                reports_path=Path("."),
+                output_dir=output_dir,
             )
         )
 
@@ -554,7 +553,7 @@ def combine_time_lineage_fate_correlation(
             upload_result = upload_file_concurrently(
                 bucket_name=f"pyrovelocity/reports/{execution_id}/time_fate_correlation",
                 source_filename=f"{file}{ext}",
-                destination_blob_name=f"{file}{ext}",
+                destination_blob_name=f"{file.name}{ext}",
             )
             attempted_upload_results.append(upload_result)
 
