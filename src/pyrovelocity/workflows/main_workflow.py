@@ -732,7 +732,7 @@ def evaluate_trajectory_metrics(
         for ext in ["", ".png"]:
             if Path(f"{file_path}{ext}").exists():
                 upload_result = upload_file_concurrently(
-                    bucket_name=f"pyrovelocity/reports/{execution_id}",
+                    bucket_name=f"pyrovelocity/reports/{execution_id}/trajectory_metrics",
                     source_filename=f"{file_path}{ext}",
                     destination_blob_name=f"{file_path.name}{ext}",
                 )
