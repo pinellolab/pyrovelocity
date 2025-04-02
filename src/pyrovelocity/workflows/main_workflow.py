@@ -552,7 +552,7 @@ def combine_time_lineage_fate_correlation(
     for file in time_lineage_fate_correlation_plots:
         for ext in ["", ".png"]:
             upload_result = upload_file_concurrently(
-                bucket_name=f"pyrovelocity/reports/{execution_id}",
+                bucket_name=f"pyrovelocity/reports/{execution_id}/time_fate_correlation",
                 source_filename=f"{file}{ext}",
                 destination_blob_name=f"{file}{ext}",
             )
