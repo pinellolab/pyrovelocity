@@ -2,7 +2,7 @@ import json
 from dataclasses import asdict
 from datetime import timedelta
 from pathlib import Path
-from typing import Tuple
+from typing import List
 
 from beartype.typing import List
 from flytekit import Resources, current_context, dynamic, task
@@ -38,6 +38,8 @@ from pyrovelocity.tasks.time_fate_correlation import (
 )
 from pyrovelocity.tasks.train import train_dataset
 from pyrovelocity.workflows.constants import (
+    GROUND_TRUTH_TRANSITIONS,
+    MODEL_VELOCITY_KEYS,
     PYROVELOCITY_CACHE_FLAG,
     PYROVELOCITY_DATA_SUBSET,
 )
@@ -672,6 +674,7 @@ def combine_all_metrics(
 )
 def evaluate_trajectory_metrics(
     results: List[List[SummarizeOutputs]],
+    configs: List[WorkflowConfiguration],
 ) -> TrajectoryEvaluationOutputs:
     logger.info("Evaluating trajectory metrics for datasets")
 
@@ -679,14 +682,36 @@ def evaluate_trajectory_metrics(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     model_results = []
+    dataset_configs = {}
+
+    dataset_to_config = {}
+    for config in configs:
+        dataset_name = config.download_dataset.data_set_name
+        dataset_to_config[dataset_name] = config
+
+        if dataset_name in GROUND_TRUTH_TRANSITIONS:
+            cell_state = config.preprocess_data.cell_state
+            vector_field_basis = config.preprocess_data.vector_field_basis
+            embedding_key = f"X_{vector_field_basis}"
+
+            dataset_configs[dataset_name] = {
+                "cluster_key": cell_state,
+                "embedding_key": embedding_key,
+            }
+
+            logger.info(
+                f"Using configuration for {dataset_name}: "
+                f"cluster_key={cell_state}, embedding_key={embedding_key}"
+            )
 
     for dataset_results in results:
         for model_output in dataset_results:
+            data_model = model_output.data_model
             postprocessed_data_path = model_output.postprocessed_data.download()
 
             model_results.append(
                 {
-                    "data_model": model_output.data_model,
+                    "data_model": data_model,
                     "postprocessed_data": postprocessed_data_path,
                 }
             )
@@ -694,6 +719,9 @@ def evaluate_trajectory_metrics(
     summary_file, results_dir, plot_file = calculate_cross_boundary_correctness(
         model_results=model_results,
         output_dir=output_dir,
+        dataset_configs=dataset_configs,
+        ground_truth_transitions=GROUND_TRUTH_TRANSITIONS,
+        model_velocity_keys=MODEL_VELOCITY_KEYS,
     )
 
     ctx = current_context()
@@ -740,16 +768,15 @@ def training_workflow(
     larry_neu_configuration: WorkflowConfiguration = larry_neu_configuration,
     larry_mono_configuration: WorkflowConfiguration = larry_mono_configuration,
     larry_multilineage_configuration: WorkflowConfiguration = larry_multilineage_configuration,
-) -> Tuple[
-    List[List[SummarizeOutputs]],
-    TrajectoryEvaluationOutputs,
-    CombinedMetricsOutputs,
-]:
+) -> List[List[SummarizeOutputs]]:
     """
     Apply the primary workflow to a collection of configurations.
     Conditionally executes configurations based on the value of PYROVELOCITY_DATA_SUBSET.
     """
     results = []
+    lineage_traced_results = []
+    evaluation_results = []
+    evaluation_configs = []
 
     stationary_configurations = [
         (pbmc5k_configuration, "pbmc5k"),
@@ -763,8 +790,6 @@ def training_workflow(
         (pons_configuration, "pons"),
     ]
 
-    lineage_traced_results = []
-    developmental_results = []
     lineage_traced_configurations = [
         (larry_mono_configuration, "larry_mono"),
         (larry_neu_configuration, "larry_neu"),
@@ -799,29 +824,34 @@ def training_workflow(
             upload_results=config.upload_results,
         )
 
-        if "larry" in data_set_name:
+        is_developmental = any(
+            c[1] == data_set_name for c in developmental_configurations
+        )
+        is_lineage_traced = any(
+            c[1] == data_set_name for c in lineage_traced_configurations
+        )
+
+        if is_lineage_traced:
             lineage_traced_results.append(result)
 
-        if (
-            data_set_name in ["bonemarrow", "pancreas", "pons"]
-            or "larry" in data_set_name
-        ):
-            developmental_results.append(result)
+        if is_developmental or is_lineage_traced:
+            evaluation_configs.append(config)
+            evaluation_results.append(result)
 
         results.append(result)
 
-    metrics_outputs = combine_all_metrics(results=results)
+    combine_all_metrics(results=results)
 
     if len(lineage_traced_results) > 0:
         combine_time_lineage_fate_correlation(results=lineage_traced_results)
 
-    trajectory_outputs = None
-    if len(developmental_results) > 0:
-        trajectory_outputs = evaluate_trajectory_metrics(
-            results=developmental_results
+    if len(evaluation_results) > 0:
+        evaluate_trajectory_metrics(
+            results=evaluation_results,
+            configs=evaluation_configs,
         )
 
-    return results, trajectory_outputs, metrics_outputs
+    return results
 
 
 if __name__ == "__main__":
