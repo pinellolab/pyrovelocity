@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.4.2](https://github.com/pinellolab/pyrovelocity/compare/v0.4.1...v0.4.2) (2025-04-02)
+
+### Bug Fixes
+
+* **constants:** map model identifiers to velocity layer keys ([71032aa](https://github.com/pinellolab/pyrovelocity/commit/71032aaa96b955dcb798617f830d7634960f7001))
+* **constants:** presume developmental cluster orderings ([ff996fc](https://github.com/pinellolab/pyrovelocity/commit/ff996fce0bb1f8cf4b6026cb9432e236f1e240f8))
+* **constants:** update model ordering ([fde8c65](https://github.com/pinellolab/pyrovelocity/commit/fde8c655eb8f7aeb7ab80d05251f4f106b5ea0e3))
+* **evaluate:** accept in-memory objects in addition to file paths ([832e359](https://github.com/pinellolab/pyrovelocity/commit/832e3598c9f8e0aa3a3a0a9f8a5e003646b10254))
+* **evaluate:** decompose calculate_cross_boundary_correctness ([08f7044](https://github.com/pinellolab/pyrovelocity/commit/08f70445fea49c29543662de85179c757e42e413))
+* **evaluate:** perform all dataframe manipulation outside plot helper ([f86f056](https://github.com/pinellolab/pyrovelocity/commit/f86f056866b2719349991259c8e23d4d49b4c7d8))
+* **metrics:** add external trajectory metrics ([325169f](https://github.com/pinellolab/pyrovelocity/commit/325169f892e8c5d260b29f4749d2c9947056924f))
+* **metrics:** handle sparse and dense neighbor graph data ([9edb447](https://github.com/pinellolab/pyrovelocity/commit/9edb447fdc32a93300f77b97408fd748d7909c05))
+* **tasks:** add evaluation task ([0f1cc42](https://github.com/pinellolab/pyrovelocity/commit/0f1cc422b18c5cfa9f346140f724db6d715f0667))
+* **tasks:** export evaluation task ([21d3e18](https://github.com/pinellolab/pyrovelocity/commit/21d3e187f880aaaa55809ae4b396fb861a74c0b7))
+* **tasks:** set evaluation data set and model ordering ([9487e4d](https://github.com/pinellolab/pyrovelocity/commit/9487e4d40e5e424dc7ed7d1897c19c146b2414e8))
+* **tasks:** update time fate correlation output directory ([c9d90b4](https://github.com/pinellolab/pyrovelocity/commit/c9d90b4d236e97e05c72ca92eb5b15dc9de6afae))
+* **utils:** refactor string diff line endings ([912b107](https://github.com/pinellolab/pyrovelocity/commit/912b107a7208bdcf8bc2a61124681435344d87c4))
+* **workflows:** add task to evaluate trajectory metrics ([f965992](https://github.com/pinellolab/pyrovelocity/commit/f9659925b781eecb7d66d3a56ed47d4140f2a7d6))
+* **workflows:** add trajectory evaluation outputs ([1c80ccb](https://github.com/pinellolab/pyrovelocity/commit/1c80ccbe7bb0aac0b209871f1b3cffc38721f974))
+* **workflows:** increase memory limit for evaluate trajectory metrics ([65890b2](https://github.com/pinellolab/pyrovelocity/commit/65890b276a10f1a32af3be0a24d763469d9243e3))
+* **workflows:** set time lineage fate correlation upload path ([3c0fc4a](https://github.com/pinellolab/pyrovelocity/commit/3c0fc4a8aaf9bba97568accf568857f748dd5332))
+* **workflows:** set trajectory metrics upload path ([c41bca4](https://github.com/pinellolab/pyrovelocity/commit/c41bca421ba017594a5d282ed05d37a0666e3d9f))
+* **workflows:** update combine time fate correlation task output directory ([a1d3429](https://github.com/pinellolab/pyrovelocity/commit/a1d34295cc8084a18c0ab2e9076628c90210dbd9))
+* **workflows:** use evaluate_trajectory_metrics task ([bb99a9e](https://github.com/pinellolab/pyrovelocity/commit/bb99a9ea36e9142c820362bfa00edab1a2c0f208))
+
 ## [0.4.1](https://github.com/pinellolab/pyrovelocity/compare/v0.4.0...v0.4.1) (2025-03-31)
 
 ### Bug Fixes
