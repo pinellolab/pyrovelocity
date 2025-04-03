@@ -206,6 +206,47 @@ run-help: ## Print hydra help for execute script.
 #   make run HYDRA_OVERRIDES="entity_config.inputs.logistic_regression.max_iter=2000 execution_context=local_shell"
 HYDRA_OVERRIDES = $(filter-out $@,$(MAKECMDGOALS))
 
+# Default to running only pancreas dataset if DATASET_SUBSET is not specified
+DATASET_SUBSET ?= pancreas
+
+.PHONY: run-subset
+run-subset: ## Run with a specific dataset subset. Use DATASET_SUBSET="pancreas bonemarrow" or specify all datasets individually.
+	@datasets_list="simulated pancreas bonemarrow pbmc5k pbmc10k pbmc68k pons larry larry_neu larry_mono larry_multilineage"; \
+	registry="{"; \
+	for dataset in $$datasets_list; do \
+		if echo "$(DATASET_SUBSET)" | grep -q "$$dataset"; then \
+			registry="$$registry$$dataset:true,"; \
+		else \
+			registry="$$registry$$dataset:false,"; \
+		fi; \
+	done; \
+	registry="$${registry%,}}"; \
+	echo "Registry configuration: $$registry"; \
+	poetry run pyrovelocity -c job "entity_config.inputs._args_.0.dataset_registry=$$registry" $(HYDRA_OVERRIDES)
+
+# Any of the run* targets can be run with a specific dataset subset by setting 
+.PHONY: run-instructions
+run-instructions: ## Print a copy-pastable dataset registry template for manual editing
+	@echo "# Copy and paste this template, then edit which datasets to set to true"
+	@echo "DATASET_REGISTRY=\"{\\"
+	@echo "simulated:false,\\"
+	@echo "pancreas:false,\\"
+	@echo "bonemarrow:false,\\"
+	@echo "pbmc5k:false,\\"
+	@echo "pbmc10k:false,\\"
+	@echo "pbmc68k:false,\\"
+	@echo "pons:false,\\"
+	@echo "larry:false,\\"
+	@echo "larry_neu:false,\\"
+	@echo "larry_mono:false,\\"
+	@echo "larry_multilineage:false\\"
+	@echo "}\""
+	@echo "HYDRA_OVERRIDES=\"entity_config.inputs._args_.0.dataset_registry=\$$DATASET_REGISTRY\""
+	@echo "make run-local HYDRA_OVERRIDES=\"\$$HYDRA_OVERRIDES\""
+	@echo ""
+	@echo "# For a simpler approach that only prints the rendered config, use:"
+	@echo "make run-subset DATASET_SUBSET=\"pancreas bonemarrow\""
+
 .PHONY: run
 run: ## Run registered workflow in remote dev mode. (default)
 	poetry run pyrovelocity $(HYDRA_OVERRIDES)
