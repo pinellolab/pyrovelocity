@@ -1,5 +1,6 @@
 import os
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
+from typing import List
 
 from beartype import beartype
 from flytekit.types.directory import FlyteDirectory
@@ -27,6 +28,15 @@ __all__ = [
     "TrajectoryEvaluationOutputs",
     "CombinedMetricsOutputs",
     "WorkflowConfiguration",
+    "DatasetRegistry",
+    "dataset_registry_simulated_only",
+    "dataset_registry_developmental",
+    "dataset_registry_stationary",
+    "dataset_registry_lineage_traced",
+    "dataset_registry_all",
+    "dataset_registry_none",
+    "developmental_dataset_names",
+    "lineage_traced_dataset_names",
 ]
 
 
@@ -831,6 +841,98 @@ larry_configuration = WorkflowConfiguration(
     summarizing_resources_requests=large_resource_requests,
     summarizing_resources_limits=large_resource_limits,
     accelerator_type=larry_accelerator_type,
+)
+
+
+@dataclass
+class DatasetRegistry(DataClassJSONMixin):
+    """
+    Registry for dataset configurations that allows selective dataset execution.
+
+    Only datasets explicitly set to True will be executed in the workflow.
+    """
+
+    simulated: bool = False
+    pancreas: bool = False
+    bonemarrow: bool = False
+    pbmc5k: bool = False
+    pbmc10k: bool = False
+    pbmc68k: bool = False
+    pons: bool = False
+    larry: bool = False
+    larry_neu: bool = False
+    larry_mono: bool = False
+    larry_multilineage: bool = False
+
+    def get_active_datasets(self) -> List[str]:
+        """Returns a list of names of datasets that are active (set to True)."""
+        return [name for name, value in asdict(self).items() if value]
+
+
+developmental_dataset_names = {
+    "bonemarrow",
+    "pancreas",
+    "pons",
+}
+
+lineage_traced_dataset_names = {
+    "larry",
+    "larry_neu",
+    "larry_mono",
+    "larry_multilineage",
+}
+
+dataset_registry_none = DatasetRegistry()
+
+dataset_registry_simulated_only = DatasetRegistry(
+    simulated=True,
+)
+
+dataset_registry_developmental = DatasetRegistry(
+    simulated=False,
+    pancreas=True,
+    bonemarrow=True,
+    pons=True,
+)
+
+dataset_registry_stationary = DatasetRegistry(
+    simulated=False,
+    pbmc5k=True,
+    pbmc10k=True,
+    pbmc68k=True,
+)
+
+dataset_registry_lineage_traced = DatasetRegistry(
+    simulated=False,
+    larry=True,
+    larry_neu=True,
+    larry_mono=True,
+    larry_multilineage=True,
+)
+
+dataset_registry_nonstationary = DatasetRegistry(
+    simulated=False,
+    pancreas=True,
+    bonemarrow=True,
+    pons=True,
+    larry=True,
+    larry_neu=True,
+    larry_mono=True,
+    larry_multilineage=True,
+)
+
+dataset_registry_all = DatasetRegistry(
+    simulated=False,
+    pancreas=True,
+    bonemarrow=True,
+    pons=True,
+    pbmc5k=True,
+    pbmc10k=True,
+    pbmc68k=True,
+    larry=True,
+    larry_neu=True,
+    larry_mono=True,
+    larry_multilineage=True,
 )
 
 
