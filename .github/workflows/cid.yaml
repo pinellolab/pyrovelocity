@@ -421,10 +421,29 @@ jobs:
         if: ${{ inputs.debug_enabled == 'true' }}
         uses: mxschmitt/action-tmate@e5c7151931ca95bad1c6f4190c730ecf8c7dde48 # ratchet:mxschmitt/action-tmate@v3
       - name: Execute workflow
-
         id: execute
         run: |
-          make run-${{ needs.set-variables.outputs.mode }}
+          DATASET_REGISTRY="{\
+          simulated:true,\
+          pancreas:true,\
+          bonemarrow:true,\
+          pbmc5k:true,\
+          pbmc10k:true,\
+          pbmc68k:true,\
+          pons:true,\
+          larry:true,\
+          larry_neu:true,\
+          larry_mono:true,\
+          larry_multilineage:true\
+          }"
+
+          HYDRA_OVERRIDES="entity_config.inputs._args_.0.dataset_registry=$DATASET_REGISTRY"
+
+          printf "Using dataset registry configuration:\n\n"
+          printf "$DATASET_REGISTRY\n\n"
+          printf "HYDRA_OVERRIDES: $HYDRA_OVERRIDES\n\n"
+
+          make run-${{ needs.set-variables.outputs.mode }} HYDRA_OVERRIDES="$HYDRA_OVERRIDES"
 
       - name: Create config tarball
         id: save-hydra-outputs
