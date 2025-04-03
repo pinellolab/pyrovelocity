@@ -45,6 +45,7 @@ from pyrovelocity.workflows.constants import (
 )
 from pyrovelocity.workflows.main_configuration import (
     CombinedMetricsOutputs,
+    DatasetRegistry,
     PostprocessConfiguration,
     PostprocessOutputs,
     PreprocessOutputs,
@@ -55,14 +56,17 @@ from pyrovelocity.workflows.main_configuration import (
     TrajectoryEvaluationOutputs,
     WorkflowConfiguration,
     bonemarrow_configuration,
+    dataset_registry_none,
     default_resource_limits,
     default_resource_requests,
     default_training_resource_limits,
     default_training_resource_requests,
+    developmental_dataset_names,
     larry_configuration,
     larry_mono_configuration,
     larry_multilineage_configuration,
     larry_neu_configuration,
+    lineage_traced_dataset_names,
     pancreas_configuration,
     pbmc5k_configuration,
     pbmc10k_configuration,
@@ -81,6 +85,7 @@ __all__ = [
     "map_model_configurations_over_data_set",
     "training_workflow",
     "evaluate_trajectory_metrics",
+    "DatasetRegistry",
 ]
 
 logger = configure_logging(__name__)
@@ -589,6 +594,9 @@ def combine_all_metrics(
 ) -> CombinedMetricsOutputs:
     combined_metrics = {}
 
+    output_dir = Path("reports/combined_metrics")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     for dataset_results in results:
         for model_result in dataset_results:
             metrics_path = model_result.combined_metrics_path.download()
@@ -603,13 +611,13 @@ def combine_all_metrics(
                     f"Failed to load metrics from {metrics_path}: {metrics_result.failure()}"
                 )
 
-    json_metrics_file = Path("combined_metrics.json")
+    json_metrics_file = output_dir / "combined_metrics.json"
     with json_metrics_file.open("w") as f:
         json.dump(combined_metrics, f, indent=2)
 
     files_to_upload = generate_and_save_metric_tables(
         json_data=combined_metrics,
-        output_dir=Path("."),
+        output_dir=output_dir,
     )
 
     ctx = current_context()
@@ -619,9 +627,9 @@ def combine_all_metrics(
 
     for file in files_to_upload:
         upload_result = upload_file_concurrently(
-            bucket_name=f"pyrovelocity/reports/{execution_id}",
+            bucket_name=f"pyrovelocity/reports/{execution_id}/combined_metrics",
             source_filename=file,
-            destination_blob_name=str(file),
+            destination_blob_name=f"{file.name}",
         )
         attempted_upload_results.append(upload_result)
 
@@ -756,6 +764,7 @@ def evaluate_trajectory_metrics(
 
 @dynamic
 def training_workflow(
+    dataset_registry: DatasetRegistry = dataset_registry_none,
     simulated_configuration: WorkflowConfiguration = simulated_configuration,
     pancreas_configuration: WorkflowConfiguration = pancreas_configuration,
     bonemarrow_configuration: WorkflowConfiguration = bonemarrow_configuration,
@@ -770,42 +779,47 @@ def training_workflow(
 ) -> List[List[SummarizeOutputs]]:
     """
     Apply the primary workflow to a collection of configurations.
-    Conditionally executes configurations based on the value of PYROVELOCITY_DATA_SUBSET.
+    Dataset selection is controlled by the dataset_registry parameter.
+
+    Args:
+        dataset_registry: Registry indicating which datasets to process
+        *_configuration: Configurations for each dataset type
+
+    Returns:
+        List of lists of summarize outputs for each dataset and model
     """
     results = []
     lineage_traced_results = []
     evaluation_results = []
     evaluation_configs = []
 
-    stationary_configurations = [
-        (pbmc5k_configuration, "pbmc5k"),
-        (pbmc10k_configuration, "pbmc10k"),
-        (pbmc68k_configuration, "pbmc68k"),
-    ]
+    data_set_name_configuration_map = {
+        "simulated": (simulated_configuration, "simulated"),
+        "pancreas": (pancreas_configuration, "pancreas"),
+        "bonemarrow": (bonemarrow_configuration, "bonemarrow"),
+        "pbmc5k": (pbmc5k_configuration, "pbmc5k"),
+        "pbmc10k": (pbmc10k_configuration, "pbmc10k"),
+        "pbmc68k": (pbmc68k_configuration, "pbmc68k"),
+        "pons": (pons_configuration, "pons"),
+        "larry": (larry_configuration, "larry"),
+        "larry_neu": (larry_neu_configuration, "larry_neu"),
+        "larry_mono": (larry_mono_configuration, "larry_mono"),
+        "larry_multilineage": (
+            larry_multilineage_configuration,
+            "larry_multilineage",
+        ),
+    }
 
-    developmental_configurations = [
-        (bonemarrow_configuration, "bonemarrow"),
-        (pancreas_configuration, "pancreas"),
-        (pons_configuration, "pons"),
-    ]
+    active_datasets = dataset_registry.get_active_datasets()
+    logger.info(f"Running with datasets: {active_datasets}")
 
-    lineage_traced_configurations = [
-        (larry_mono_configuration, "larry_mono"),
-        (larry_neu_configuration, "larry_neu"),
-        (larry_multilineage_configuration, "larry_multilineage"),
-        (larry_configuration, "larry"),
-    ]
+    for dataset_name in active_datasets:
+        if dataset_name not in data_set_name_configuration_map:
+            logger.warning(f"Unknown dataset: {dataset_name}, skipping")
+            continue
 
-    configurations = [
-        (simulated_configuration, "simulated"),
-    ]
+        config, _ = data_set_name_configuration_map[dataset_name]
 
-    if not PYROVELOCITY_DATA_SUBSET:
-        configurations += stationary_configurations
-        configurations += developmental_configurations
-        configurations += lineage_traced_configurations
-
-    for config, data_set_name in configurations:
         result = map_model_configurations_over_data_set(
             download_dataset_args=config.download_dataset,
             preprocess_data_args=config.preprocess_data,
@@ -823,12 +837,8 @@ def training_workflow(
             upload_results=config.upload_results,
         )
 
-        is_developmental = any(
-            c[1] == data_set_name for c in developmental_configurations
-        )
-        is_lineage_traced = any(
-            c[1] == data_set_name for c in lineage_traced_configurations
-        )
+        is_developmental = dataset_name in developmental_dataset_names
+        is_lineage_traced = dataset_name in lineage_traced_dataset_names
 
         if is_lineage_traced:
             lineage_traced_results.append(result)
@@ -839,12 +849,13 @@ def training_workflow(
 
         results.append(result)
 
-    combine_all_metrics(results=results)
+    if results:
+        combine_all_metrics(results=results)
 
-    if len(lineage_traced_results) > 0:
+    if lineage_traced_results:
         combine_time_lineage_fate_correlation(results=lineage_traced_results)
 
-    if len(evaluation_results) > 0:
+    if evaluation_results:
         evaluate_trajectory_metrics(
             results=evaluation_results,
             configs=evaluation_configs,
