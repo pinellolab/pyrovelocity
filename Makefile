@@ -990,7 +990,7 @@ VERSION_FILES := \
 update-version: ## Update version in VERSION_FILES.
 	@for file in $(VERSION_FILES); do \
 		if [ -f $$file ]; then \
-			sed -i 's/$(PREVIOUS_VERSION)/$(NEXT_VERSION)/g' $$file; \
+			sed -i 's/\b$(PREVIOUS_VERSION)\b/$(NEXT_VERSION)/g' $$file; \
 			echo "Updated $$file"; \
 		else \
 			echo "$$file does not exist"; \
