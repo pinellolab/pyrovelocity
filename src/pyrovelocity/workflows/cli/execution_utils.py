@@ -9,22 +9,13 @@ import secrets
 import sys
 import threading
 import time
-from dataclasses import asdict
-from dataclasses import dataclass
-from dataclasses import is_dataclass
+from dataclasses import asdict, dataclass, is_dataclass
 from datetime import timedelta
 from textwrap import dedent
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Tuple
-from typing import Union
-from typing import get_args
-from typing import get_origin
+from typing import Any, Dict, List, Tuple, Union, get_args, get_origin
 
 from dataclasses_json import dataclass_json
-from dulwich.repo import NotGitRepository
-from dulwich.repo import Repo
+from dulwich.repo import NotGitRepository, Repo
 from flytekit import WorkflowExecutionPhase
 from flytekit.core.base_task import PythonTask
 from flytekit.core.workflow import WorkflowBase
@@ -32,15 +23,10 @@ from flytekit.exceptions.system import FlyteSystemException
 from flytekit.exceptions.user import FlyteTimeout
 from flytekit.remote import FlyteRemote
 from flytekit.remote.executions import FlyteWorkflowExecution
-from hydra.conf import HelpConf
-from hydra.conf import HydraConf
-from hydra.conf import JobConf
-from hydra_zen import ZenStore
-from hydra_zen import builds
-from hydra_zen import make_custom_builds_fn
+from hydra.conf import HelpConf, HydraConf, JobConf
+from hydra_zen import ZenStore, builds, make_custom_builds_fn
 
 from pyrovelocity.logging import configure_logging
-
 
 logger = configure_logging(__name__)
 
@@ -385,6 +371,38 @@ def generate_hydra_config() -> HydraConf:
                        entity_config=main_workflow_process_data \\
                        entity_config.inputs._args_.0.data.data="[[12.0, 0],[13.0, 1],[9.5, 2]]" \\
                        entity_config.inputs._args_.0.data.columns="[ash, target]"`
+
+                # Example of using a custom dataset registry to select specific datasets to run
+                # Run only pancreas dataset:
+
+                registry="{\\
+                simulated: false,\\
+                pancreas: true,\\
+                bonemarrow: false,\\
+                pbmc5k: false,\\
+                pbmc10k: false,\\
+                pbmc68k: false,\\
+                pons: false,\\
+                larry: false,\\
+                larry_neu: false,\\
+                larry_mono: false,\\
+                larry_multilineage: false\\
+                }"
+                ${hydra.help.app_name} -c job "entity_config.inputs._args_.0.dataset_registry=$$registry"
+                ${hydra.help.app_name} \\
+                  execution_context=local_shell \\
+                  "entity_config.inputs._args_.0.dataset_registry=$$registry"
+
+                # Run only the pancreas and bonemarrow datasets:
+
+                ${hydra.help.app_name} -c job "entity_config.inputs._args_.0.dataset_registry={pancreas: true,bonemarrow: true}"
+
+                then remove the `-c job` and ensure the execution_context config group 
+                is set to the desired value, e.g. for the local_shell execution context:
+                
+                ${hydra.help.app_name} \\
+                  execution_context=local_shell \\
+                  "entity_config.inputs._args_.0.dataset_registry={pancreas: true,bonemarrow: true}"
 
 
                 This will generate `== Config ==` above resolved in context of the command line overrides.
