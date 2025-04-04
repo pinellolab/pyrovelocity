@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.4.3](https://github.com/pinellolab/pyrovelocity/compare/v0.4.2...v0.4.3) (2025-04-04)
+
+### Bug Fixes
+
+* **cid:** enable all data sets for workflow execution ([f955657](https://github.com/pinellolab/pyrovelocity/commit/f955657d19cdb45d7034d6665fb667b7b20e0ac8))
+* **make:** add targets to selectively execute workflows ([fe8b596](https://github.com/pinellolab/pyrovelocity/commit/fe8b59688eec7091109bac3e413ae3f33f032e8f))
+* **make:** make version updates match exactly ([bd10c32](https://github.com/pinellolab/pyrovelocity/commit/bd10c32326a6edd118266101443cf0dba819d261))
+* **workflows:** add DatasetRegistry class to support selective execution ([309c08f](https://github.com/pinellolab/pyrovelocity/commit/309c08f30e735b154c26883dc041c78b4b54a772))
+* **workflows:** document data set selection from cli ([4c695e2](https://github.com/pinellolab/pyrovelocity/commit/4c695e2b220bd7cfa429eb668fa551223426cecb))
+* **workflows:** use DatasetRegistry to select data sets for execution ([c4d61ef](https://github.com/pinellolab/pyrovelocity/commit/c4d61ef9fd83b94752d4d836cd70924a139b2b13))
+
 ## [0.4.2](https://github.com/pinellolab/pyrovelocity/compare/v0.4.1...v0.4.2) (2025-04-02)
 
 ### Bug Fixes
