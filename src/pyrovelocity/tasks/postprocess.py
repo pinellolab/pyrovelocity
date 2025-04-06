@@ -12,6 +12,7 @@ from mlflow import MlflowClient
 from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models._velocity import PyroVelocity
+from pyrovelocity.random_state import set_seed
 from pyrovelocity.utils import mae_evaluate, pretty_print_dict, print_anndata
 
 __all__ = ["postprocess_dataset"]
@@ -28,6 +29,7 @@ def postprocess_dataset(
     metrics_path: str | Path,
     vector_field_basis: str,
     number_posterior_samples: int,
+    random_seed: int = 99,
 ) -> Tuple[Path, Path]:
     """
     Postprocess dataset computing vector field uncertainty for a given set of posterior samples.
@@ -40,9 +42,11 @@ def postprocess_dataset(
         posterior_samples_path (str | Path): path to the posterior samples, e.g. models/simulated_model1/posterior_samples.pkl.zst
         metrics_path (str | Path): path to the metrics, e.g. models/simulated_model1/metrics.json
         vector_field_basis (str): basis for the vector field, e.g. umap
+        number_posterior_samples (int): number of posterior samples to use
+        random_seed (int, optional): Random seed for reproducibility. Defaults to 42.
 
     Returns:
-        str: path to the pyrovelocity output data
+        Tuple[Path, Path]: A tuple containing the path to the pyrovelocity output data and the path to the postprocessed data
 
     Examples:
         >>> # xdoctest: +SKIP
@@ -59,6 +63,8 @@ def postprocess_dataset(
         ...     number_posterior_samples=3,
         ... )
     """
+    set_seed(random_seed)
+    logger.info(f"Reset random state from seed: {random_seed}")
 
     Path(data_model_path).mkdir(parents=True, exist_ok=True)
     pyrovelocity_data_path = os.path.join(
