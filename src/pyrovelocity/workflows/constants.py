@@ -60,13 +60,18 @@ PYROVELOCITY_CACHE_FLAG = str_to_bool(
     os.getenv("PYROVELOCITY_CACHE_FLAG", "True")
 )
 
+# Global random seed for reproducible results across all models and workflows.
+# Defaults to 42 if not set.
+PYROVELOCITY_SEED = int(os.getenv("PYROVELOCITY_SEED", "42"))
+
 
 logger.info(
     f"\nPYROVELOCITY_TESTING_FLAG: {PYROVELOCITY_TESTING_FLAG}\n"
     f"PYROVELOCITY_DATA_SUBSET: {PYROVELOCITY_DATA_SUBSET}\n"
     f"PYROVELOCITY_OVERWRITE_CACHE: {PYROVELOCITY_OVERWRITE_CACHE}\n"
     f"PYROVELOCITY_CACHE_FLAG: {PYROVELOCITY_CACHE_FLAG}\n"
-    f"PYROVELOCITY_UPLOAD_RESULTS: {PYROVELOCITY_UPLOAD_RESULTS}\n\n"
+    f"PYROVELOCITY_UPLOAD_RESULTS: {PYROVELOCITY_UPLOAD_RESULTS}\n"
+    f"PYROVELOCITY_SEED: {PYROVELOCITY_SEED}\n\n"
 )
 
 # Ground truth cell transitions for different datasets
