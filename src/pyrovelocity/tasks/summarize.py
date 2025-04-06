@@ -24,6 +24,7 @@ from pyrovelocity.plots import (
     save_subfigures,
 )
 from pyrovelocity.plots._rainbow import rainbowplot_module as rainbowplot
+from pyrovelocity.random_state import set_seed
 from pyrovelocity.styles.colors import LARRY_CELL_TYPE_COLORS
 from pyrovelocity.utils import (
     save_anndata_counts_to_dataframe,
@@ -47,6 +48,7 @@ def summarize_dataset(
     reports_path: str | Path = "reports",
     enable_experimental_plots: bool = False,
     selected_genes: list[str] = [""],
+    random_seed: int = 99,
 ) -> Tuple[Path, Path]:
     """
     Construct summary plots for each data set and model.
@@ -68,6 +70,8 @@ def summarize_dataset(
             identifier, e.g. umap
         reports_path (str | Path): path to the reports, e.g. reports
         enable_experimental_plots (bool): flag to enable experimental plots
+        selected_genes (list[str]): list of gene names to include in plots
+        random_seed (int, optional): Random seed for reproducibility. Defaults to 99.
 
     Returns:
         Path: Top-level path to reports outputs for the data model combination,
@@ -87,6 +91,8 @@ def summarize_dataset(
         ...     vector_field_basis="umap",
         ... )
     """
+    set_seed(random_seed)
+    logger.info(f"Reset random state from seed: {random_seed}")
 
     logger.info(f"\n\nPlotting summary figure(s) in: {data_model}\n\n")
 
