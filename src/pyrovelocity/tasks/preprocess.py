@@ -19,6 +19,7 @@ from pyrovelocity.logging import configure_logging
 from pyrovelocity.plots._count_histograms import (
     plot_spliced_unspliced_histogram,
 )
+from pyrovelocity.random_state import set_seed
 from pyrovelocity.utils import (
     ensure_numpy_array,
     load_anndata_from_path,
@@ -59,6 +60,7 @@ def preprocess_dataset(
     vector_field_basis: str = "umap",
     cell_state: str = "clusters",
     selected_genes: List[str] = [""],
+    random_seed: int = 99,
 ) -> Tuple[AnnData, Path, Path]:
     """
     Preprocess data.
@@ -82,6 +84,7 @@ def preprocess_dataset(
         vector_field_basis (str, optional): vector field basis. Defaults to "umap".
         cell_state (str, optional): Name of the cell state/cluster variable. Defaults to "clusters".
         selected_genes (Optional[List[str]], optional): List of genes to preserve during preprocessing. Defaults to None.
+        random_seed (int, optional): Random seed for reproducibility. Defaults to 42.
 
     Returns:
         AnnData: processed AnnData object
@@ -102,6 +105,9 @@ def preprocess_dataset(
         ...     adata=simulated_dataset_path,
         ... )
     """
+    set_seed(random_seed)
+    logger.info(f"Reset random state from seed: {random_seed}")
+
     if isinstance(adata, str | Path):
         data_path = adata
         adata = load_anndata_from_path(data_path)
