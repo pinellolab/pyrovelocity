@@ -14,6 +14,7 @@ from pyrovelocity.interfaces import (
 )
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.workflows.constants import (
+    PYROVELOCITY_SEED,
     PYROVELOCITY_TESTING_FLAG,
     PYROVELOCITY_UPLOAD_RESULTS,
 )
@@ -168,11 +169,13 @@ class PostprocessConfiguration(DataClassJSONMixin):
     number_posterior_samples: int = field(
         default_factory=lambda: NUMBER_POSTERIOR_SAMPLES
     )
+    random_seed: int = PYROVELOCITY_SEED
 
 
 @dataclass
 class SummarizeConfiguration(DataClassJSONMixin):
     selected_genes: list[str] = field(default_factory=lambda: [""])
+    random_seed: int = PYROVELOCITY_SEED
 
 
 @dataclass
@@ -191,6 +194,7 @@ class WorkflowConfiguration(DataClassJSONMixin):
     summarizing_resources_limits: ResourcesJSON
     accelerator_type: str = "nvidia-tesla-t4"
     upload_results: bool = PYROVELOCITY_UPLOAD_RESULTS
+    random_seed: int = PYROVELOCITY_SEED
 
 
 @dataclass
@@ -266,6 +270,7 @@ simulated_preprocess_data_args = PreprocessDataInterface(
     use_obs_subset=SUBSET_OBS,
     use_vars_subset=SUBSET_VARS,
     cell_state="leiden",
+    random_seed=PYROVELOCITY_SEED,
 )
 simulated_train_model1_args = PyroVelocityTrainInterface(
     adata=f"{simulated_preprocess_data_args.data_processed_path}/{simulated_dataset_args.data_set_name}_processed.h5ad",
@@ -274,15 +279,18 @@ simulated_train_model1_args = PyroVelocityTrainInterface(
     guide_type="auto_t0_constraint",
     offset=False,
     max_epochs=MAX_EPOCHS,
+    random_seed=PYROVELOCITY_SEED,
 )
 simulated_train_model2_args = PyroVelocityTrainInterface(
     adata=f"{simulated_preprocess_data_args.data_processed_path}/{simulated_dataset_args.data_set_name}_processed.h5ad",
     data_set_name=f"{simulated_dataset_args.data_set_name}",
     model_identifier="model2",
     max_epochs=MAX_EPOCHS,
+    random_seed=PYROVELOCITY_SEED,
 )
 simulated_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
+    random_seed=PYROVELOCITY_SEED,
 )
 simulated_summary_configuration = SummarizeConfiguration(
     selected_genes=[
@@ -292,7 +300,8 @@ simulated_summary_configuration = SummarizeConfiguration(
         "1157",
         "804",
         "360",
-    ]
+    ],
+    random_seed=PYROVELOCITY_SEED,
 )
 simulated_configuration = WorkflowConfiguration(
     download_dataset=simulated_dataset_args,
@@ -307,6 +316,7 @@ simulated_configuration = WorkflowConfiguration(
     postprocessing_resources_limits=default_resource_limits,
     summarizing_resources_requests=default_resource_requests,
     summarizing_resources_limits=default_resource_limits,
+    random_seed=PYROVELOCITY_SEED,
 )
 
 pancreas_dataset_args = DownloadDatasetInterface(
@@ -318,6 +328,7 @@ pancreas_preprocess_data_args = PreprocessDataInterface(
     use_obs_subset=SUBSET_OBS,
     use_vars_subset=SUBSET_VARS,
     process_cytotrace=True,
+    random_seed=PYROVELOCITY_SEED,
 )
 pancreas_train_model1_args = PyroVelocityTrainInterface(
     adata=f"{pancreas_preprocess_data_args.data_processed_path}/{pancreas_dataset_args.data_set_name}_processed.h5ad",
@@ -326,15 +337,18 @@ pancreas_train_model1_args = PyroVelocityTrainInterface(
     guide_type="auto_t0_constraint",
     offset=False,
     max_epochs=MAX_EPOCHS,
+    random_seed=PYROVELOCITY_SEED,
 )
 pancreas_train_model2_args = PyroVelocityTrainInterface(
     adata=f"{pancreas_preprocess_data_args.data_processed_path}/{pancreas_dataset_args.data_set_name}_processed.h5ad",
     data_set_name=f"{pancreas_dataset_args.data_set_name}",
     model_identifier="model2",
     max_epochs=MAX_EPOCHS,
+    random_seed=PYROVELOCITY_SEED,
 )
 pancreas_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
+    random_seed=PYROVELOCITY_SEED,
 )
 pancreas_summary_configuration = SummarizeConfiguration(
     selected_genes=[
@@ -344,7 +358,8 @@ pancreas_summary_configuration = SummarizeConfiguration(
         "Ttr",
         "Krt7",
         "Spp1",
-    ]
+    ],
+    random_seed=PYROVELOCITY_SEED,
 )
 pancreas_configuration = WorkflowConfiguration(
     download_dataset=pancreas_dataset_args,
@@ -359,6 +374,7 @@ pancreas_configuration = WorkflowConfiguration(
     postprocessing_resources_limits=medium_resource_limits,
     summarizing_resources_requests=default_resource_requests,
     summarizing_resources_limits=default_resource_limits,
+    random_seed=PYROVELOCITY_SEED,
 )
 
 
@@ -370,6 +386,7 @@ bonemarrow_preprocess_data_args = PreprocessDataInterface(
     adata=f"{bonemarrow_dataset_args.data_external_path}/{bonemarrow_dataset_args.data_set_name}.h5ad",
     use_obs_subset=SUBSET_OBS,
     use_vars_subset=SUBSET_VARS,
+    random_seed=PYROVELOCITY_SEED,
 )
 bonemarrow_train_model1_args = PyroVelocityTrainInterface(
     adata=f"{bonemarrow_preprocess_data_args.data_processed_path}/{bonemarrow_dataset_args.data_set_name}_processed.h5ad",
@@ -378,15 +395,18 @@ bonemarrow_train_model1_args = PyroVelocityTrainInterface(
     guide_type="auto_t0_constraint",
     offset=False,
     max_epochs=MAX_EPOCHS,
+    random_seed=PYROVELOCITY_SEED,
 )
 bonemarrow_train_model2_args = PyroVelocityTrainInterface(
     adata=f"{bonemarrow_preprocess_data_args.data_processed_path}/{bonemarrow_dataset_args.data_set_name}_processed.h5ad",
     data_set_name=f"{bonemarrow_dataset_args.data_set_name}",
     model_identifier="model2",
     max_epochs=MAX_EPOCHS,
+    random_seed=PYROVELOCITY_SEED,
 )
 bonemarrow_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
+    random_seed=PYROVELOCITY_SEED,
 )
 bonemarrow_summary_configuration = SummarizeConfiguration(
     selected_genes=[
@@ -396,7 +416,8 @@ bonemarrow_summary_configuration = SummarizeConfiguration(
         "SLC40A1",
         "VPREB1",
         "MYB",
-    ]
+    ],
+    random_seed=PYROVELOCITY_SEED,
 )
 bonemarrow_configuration = WorkflowConfiguration(
     download_dataset=bonemarrow_dataset_args,
@@ -411,6 +432,7 @@ bonemarrow_configuration = WorkflowConfiguration(
     postprocessing_resources_limits=medium_resource_limits,
     summarizing_resources_requests=default_resource_requests,
     summarizing_resources_limits=default_resource_limits,
+    random_seed=PYROVELOCITY_SEED,
 )
 
 
@@ -423,6 +445,7 @@ pbmc5k_preprocess_data_args = PreprocessDataInterface(
     use_obs_subset=SUBSET_OBS,
     use_vars_subset=SUBSET_VARS,
     cell_state="celltype",
+    random_seed=PYROVELOCITY_SEED,
 )
 pbmc5k_train_model1_args = PyroVelocityTrainInterface(
     adata=f"{pbmc5k_preprocess_data_args.data_processed_path}/{pbmc5k_dataset_args.data_set_name}_processed.h5ad",
@@ -431,15 +454,18 @@ pbmc5k_train_model1_args = PyroVelocityTrainInterface(
     guide_type="auto_t0_constraint",
     offset=False,
     max_epochs=MAX_EPOCHS,
+    random_seed=PYROVELOCITY_SEED,
 )
 pbmc5k_train_model2_args = PyroVelocityTrainInterface(
     adata=f"{pbmc5k_preprocess_data_args.data_processed_path}/{pbmc5k_dataset_args.data_set_name}_processed.h5ad",
     data_set_name=f"{pbmc5k_dataset_args.data_set_name}",
     model_identifier="model2",
     max_epochs=MAX_EPOCHS,
+    random_seed=PYROVELOCITY_SEED,
 )
 pbmc5k_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
+    random_seed=PYROVELOCITY_SEED,
 )
 pbmc5k_summary_configuration = SummarizeConfiguration(
     selected_genes=[
@@ -449,7 +475,8 @@ pbmc5k_summary_configuration = SummarizeConfiguration(
         "HLA-DQA1",
         "MS4A1",
         "IL32",
-    ]
+    ],
+    random_seed=PYROVELOCITY_SEED,
 )
 pbmc5k_configuration = WorkflowConfiguration(
     download_dataset=pbmc5k_dataset_args,
@@ -464,6 +491,7 @@ pbmc5k_configuration = WorkflowConfiguration(
     postprocessing_resources_limits=large_resource_limits,
     summarizing_resources_requests=large_resource_requests,
     summarizing_resources_limits=large_resource_limits,
+    random_seed=PYROVELOCITY_SEED,
 )
 
 
@@ -476,6 +504,7 @@ pbmc10k_preprocess_data_args = PreprocessDataInterface(
     use_obs_subset=SUBSET_OBS,
     use_vars_subset=SUBSET_VARS,
     cell_state="celltype",
+    random_seed=PYROVELOCITY_SEED,
 )
 pbmc10k_train_model1_args = PyroVelocityTrainInterface(
     adata=f"{pbmc10k_preprocess_data_args.data_processed_path}/{pbmc10k_dataset_args.data_set_name}_processed.h5ad",
@@ -484,15 +513,18 @@ pbmc10k_train_model1_args = PyroVelocityTrainInterface(
     guide_type="auto_t0_constraint",
     offset=False,
     max_epochs=MAX_EPOCHS,
+    random_seed=PYROVELOCITY_SEED,
 )
 pbmc10k_train_model2_args = PyroVelocityTrainInterface(
     adata=f"{pbmc10k_preprocess_data_args.data_processed_path}/{pbmc10k_dataset_args.data_set_name}_processed.h5ad",
     data_set_name=f"{pbmc10k_dataset_args.data_set_name}",
     model_identifier="model2",
     max_epochs=MAX_EPOCHS,
+    random_seed=PYROVELOCITY_SEED,
 )
 pbmc10k_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
+    random_seed=PYROVELOCITY_SEED,
 )
 pbmc10k_summary_configuration = SummarizeConfiguration(
     selected_genes=[
@@ -502,7 +534,8 @@ pbmc10k_summary_configuration = SummarizeConfiguration(
         "HLA-DQA1",
         "MS4A1",
         "IL32",
-    ]
+    ],
+    random_seed=PYROVELOCITY_SEED,
 )
 pbmc10k_configuration = WorkflowConfiguration(
     download_dataset=pbmc10k_dataset_args,
@@ -517,6 +550,7 @@ pbmc10k_configuration = WorkflowConfiguration(
     postprocessing_resources_limits=large_resource_limits,
     summarizing_resources_requests=large_resource_requests,
     summarizing_resources_limits=large_resource_limits,
+    random_seed=PYROVELOCITY_SEED,
 )
 
 
@@ -531,6 +565,7 @@ pbmc68k_preprocess_data_args = PreprocessDataInterface(
     default_velocity_mode="stochastic",
     cell_state="celltype",
     vector_field_basis="tsne",
+    random_seed=PYROVELOCITY_SEED,
 )
 pbmc68k_train_model1_args = PyroVelocityTrainInterface(
     adata=f"{pbmc68k_preprocess_data_args.data_processed_path}/{pbmc68k_dataset_args.data_set_name}_processed.h5ad",
@@ -539,15 +574,18 @@ pbmc68k_train_model1_args = PyroVelocityTrainInterface(
     guide_type="auto_t0_constraint",
     offset=False,
     max_epochs=MAX_EPOCHS,
+    random_seed=PYROVELOCITY_SEED,
 )
 pbmc68k_train_model2_args = PyroVelocityTrainInterface(
     adata=f"{pbmc68k_preprocess_data_args.data_processed_path}/{pbmc68k_dataset_args.data_set_name}_processed.h5ad",
     data_set_name=f"{pbmc68k_dataset_args.data_set_name}",
     model_identifier="model2",
     max_epochs=MAX_EPOCHS,
+    random_seed=PYROVELOCITY_SEED,
 )
 pbmc68k_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
+    random_seed=PYROVELOCITY_SEED,
 )
 pbmc68k_summary_configuration = SummarizeConfiguration(
     selected_genes=[
@@ -557,7 +595,8 @@ pbmc68k_summary_configuration = SummarizeConfiguration(
         "GNLY",
         "TMSB4X",
         "FTL",
-    ]
+    ],
+    random_seed=PYROVELOCITY_SEED,
 )
 pbmc68k_configuration = WorkflowConfiguration(
     download_dataset=pbmc68k_dataset_args,
@@ -572,6 +611,7 @@ pbmc68k_configuration = WorkflowConfiguration(
     postprocessing_resources_limits=large_resource_limits,
     summarizing_resources_requests=large_resource_requests,
     summarizing_resources_limits=large_resource_limits,
+    random_seed=PYROVELOCITY_SEED,
 )
 
 
@@ -584,6 +624,7 @@ pons_preprocess_data_args = PreprocessDataInterface(
     use_obs_subset=SUBSET_OBS,
     use_vars_subset=SUBSET_VARS,
     cell_state="celltype",
+    random_seed=PYROVELOCITY_SEED,
 )
 pons_train_model1_args = PyroVelocityTrainInterface(
     adata=f"{pons_preprocess_data_args.data_processed_path}/{pons_dataset_args.data_set_name}_processed.h5ad",
@@ -592,15 +633,18 @@ pons_train_model1_args = PyroVelocityTrainInterface(
     guide_type="auto_t0_constraint",
     offset=False,
     max_epochs=MAX_EPOCHS,
+    random_seed=PYROVELOCITY_SEED,
 )
 pons_train_model2_args = PyroVelocityTrainInterface(
     adata=f"{pons_preprocess_data_args.data_processed_path}/{pons_dataset_args.data_set_name}_processed.h5ad",
     data_set_name=f"{pons_dataset_args.data_set_name}",
     model_identifier="model2",
     max_epochs=MAX_EPOCHS,
+    random_seed=PYROVELOCITY_SEED,
 )
 pons_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
+    random_seed=PYROVELOCITY_SEED,
 )
 pons_summary_configuration = SummarizeConfiguration(
     selected_genes=[
@@ -610,7 +654,8 @@ pons_summary_configuration = SummarizeConfiguration(
         "Marcks",
         "Tubb4a",
         "Mbp",
-    ]
+    ],
+    random_seed=PYROVELOCITY_SEED,
 )
 pons_configuration = WorkflowConfiguration(
     download_dataset=pons_dataset_args,
@@ -625,6 +670,7 @@ pons_configuration = WorkflowConfiguration(
     postprocessing_resources_limits=medium_resource_limits,
     summarizing_resources_requests=default_resource_requests,
     summarizing_resources_limits=default_resource_limits,
+    random_seed=PYROVELOCITY_SEED,
 )
 
 larry_neu_dataset_args = DownloadDatasetInterface(
@@ -637,6 +683,7 @@ larry_neu_preprocess_data_args = PreprocessDataInterface(
     use_vars_subset=SUBSET_VARS,
     cell_state="state_info",
     vector_field_basis="emb",
+    random_seed=PYROVELOCITY_SEED,
 )
 larry_neu_train_model1_args = PyroVelocityTrainInterface(
     adata=f"{larry_neu_preprocess_data_args.data_processed_path}/{larry_neu_dataset_args.data_set_name}_processed.h5ad",
@@ -645,15 +692,18 @@ larry_neu_train_model1_args = PyroVelocityTrainInterface(
     guide_type="auto_t0_constraint",
     offset=False,
     max_epochs=MAX_EPOCHS,
+    random_seed=PYROVELOCITY_SEED,
 )
 larry_neu_train_model2_args = PyroVelocityTrainInterface(
     adata=f"{larry_neu_preprocess_data_args.data_processed_path}/{larry_neu_dataset_args.data_set_name}_processed.h5ad",
     data_set_name=f"{larry_neu_dataset_args.data_set_name}",
     model_identifier="model2",
     max_epochs=MAX_EPOCHS,
+    random_seed=PYROVELOCITY_SEED,
 )
 larry_neu_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
+    random_seed=PYROVELOCITY_SEED,
 )
 larry_neu_summary_configuration = SummarizeConfiguration(
     selected_genes=[
@@ -663,7 +713,8 @@ larry_neu_summary_configuration = SummarizeConfiguration(
         "Lilrb4",
         "Mpp1",
         "Srgn",
-    ]
+    ],
+    random_seed=PYROVELOCITY_SEED,
 )
 larry_neu_configuration = WorkflowConfiguration(
     download_dataset=larry_neu_dataset_args,
@@ -678,6 +729,7 @@ larry_neu_configuration = WorkflowConfiguration(
     postprocessing_resources_limits=medium_resource_limits,
     summarizing_resources_requests=default_resource_requests,
     summarizing_resources_limits=default_resource_limits,
+    random_seed=PYROVELOCITY_SEED,
 )
 
 larry_mono_dataset_args = DownloadDatasetInterface(
@@ -690,6 +742,7 @@ larry_mono_preprocess_data_args = PreprocessDataInterface(
     use_vars_subset=SUBSET_VARS,
     cell_state="state_info",
     vector_field_basis="emb",
+    random_seed=PYROVELOCITY_SEED,
 )
 larry_mono_train_model1_args = PyroVelocityTrainInterface(
     adata=f"{larry_mono_preprocess_data_args.data_processed_path}/{larry_mono_dataset_args.data_set_name}_processed.h5ad",
@@ -698,15 +751,18 @@ larry_mono_train_model1_args = PyroVelocityTrainInterface(
     guide_type="auto_t0_constraint",
     offset=False,
     max_epochs=MAX_EPOCHS,
+    random_seed=PYROVELOCITY_SEED,
 )
 larry_mono_train_model2_args = PyroVelocityTrainInterface(
     adata=f"{larry_mono_preprocess_data_args.data_processed_path}/{larry_mono_dataset_args.data_set_name}_processed.h5ad",
     data_set_name=f"{larry_mono_dataset_args.data_set_name}",
     model_identifier="model2",
     max_epochs=MAX_EPOCHS,
+    random_seed=PYROVELOCITY_SEED,
 )
 larry_mono_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
+    random_seed=PYROVELOCITY_SEED,
 )
 larry_mono_summary_configuration = SummarizeConfiguration(
     selected_genes=[
@@ -716,7 +772,8 @@ larry_mono_summary_configuration = SummarizeConfiguration(
         "Ctsc",
         "Itm2b",
         "Sell",
-    ]
+    ],
+    random_seed=PYROVELOCITY_SEED,
 )
 larry_mono_configuration = WorkflowConfiguration(
     download_dataset=larry_mono_dataset_args,
@@ -731,6 +788,7 @@ larry_mono_configuration = WorkflowConfiguration(
     postprocessing_resources_limits=medium_resource_limits,
     summarizing_resources_requests=default_resource_requests,
     summarizing_resources_limits=default_resource_limits,
+    random_seed=PYROVELOCITY_SEED,
 )
 
 larry_multilineage_dataset_args = DownloadDatasetInterface(
@@ -743,6 +801,7 @@ larry_multilineage_preprocess_data_args = PreprocessDataInterface(
     use_vars_subset=SUBSET_VARS,
     cell_state="state_info",
     vector_field_basis="emb",
+    random_seed=PYROVELOCITY_SEED,
 )
 larry_multilineage_train_model1_args = PyroVelocityTrainInterface(
     adata=f"{larry_multilineage_preprocess_data_args.data_processed_path}/{larry_multilineage_dataset_args.data_set_name}_processed.h5ad",
@@ -751,15 +810,18 @@ larry_multilineage_train_model1_args = PyroVelocityTrainInterface(
     guide_type="auto_t0_constraint",
     offset=False,
     max_epochs=MAX_EPOCHS,
+    random_seed=PYROVELOCITY_SEED,
 )
 larry_multilineage_train_model2_args = PyroVelocityTrainInterface(
     adata=f"{larry_multilineage_preprocess_data_args.data_processed_path}/{larry_multilineage_dataset_args.data_set_name}_processed.h5ad",
     data_set_name=f"{larry_multilineage_dataset_args.data_set_name}",
     model_identifier="model2",
     max_epochs=MAX_EPOCHS,
+    random_seed=PYROVELOCITY_SEED,
 )
 larry_multilineage_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
+    random_seed=PYROVELOCITY_SEED,
 )
 larry_multilineage_summary_configuration = SummarizeConfiguration(
     selected_genes=[
@@ -769,7 +831,8 @@ larry_multilineage_summary_configuration = SummarizeConfiguration(
         "Lilrb4",
         "Vim",
         "Serbp1",
-    ]
+    ],
+    random_seed=PYROVELOCITY_SEED,
 )
 larry_multilineage_configuration = WorkflowConfiguration(
     download_dataset=larry_multilineage_dataset_args,
@@ -784,6 +847,7 @@ larry_multilineage_configuration = WorkflowConfiguration(
     postprocessing_resources_limits=medium_resource_limits,
     summarizing_resources_requests=default_resource_requests,
     summarizing_resources_limits=default_resource_limits,
+    random_seed=PYROVELOCITY_SEED,
 )
 
 larry_dataset_args = DownloadDatasetInterface(
@@ -796,6 +860,7 @@ larry_preprocess_data_args = PreprocessDataInterface(
     use_vars_subset=SUBSET_VARS,
     cell_state="state_info",
     vector_field_basis="emb",
+    random_seed=PYROVELOCITY_SEED,
 )
 # To train the model with batching, set the batch_size argument
 # e.g., batch_size=4000.
@@ -806,15 +871,18 @@ larry_train_model1_args = PyroVelocityTrainInterface(
     guide_type="auto_t0_constraint",
     offset=False,
     max_epochs=MAX_EPOCHS,
+    random_seed=PYROVELOCITY_SEED,
 )
 larry_train_model2_args = PyroVelocityTrainInterface(
     adata=f"{larry_preprocess_data_args.data_processed_path}/{larry_dataset_args.data_set_name}_processed.h5ad",
     data_set_name=f"{larry_dataset_args.data_set_name}",
     model_identifier="model2",
     max_epochs=MAX_EPOCHS,
+    random_seed=PYROVELOCITY_SEED,
 )
 larry_postprocess_configuration = PostprocessConfiguration(
     number_posterior_samples=NUMBER_POSTERIOR_SAMPLES,
+    random_seed=PYROVELOCITY_SEED,
 )
 larry_summary_configuration = SummarizeConfiguration(
     selected_genes=[
@@ -824,7 +892,8 @@ larry_summary_configuration = SummarizeConfiguration(
         "Fcer1g",
         "Csf2rb",
         "Ms4a3",
-    ]
+    ],
+    random_seed=PYROVELOCITY_SEED,
 )
 larry_accelerator_type = "nvidia-tesla-a100"
 larry_configuration = WorkflowConfiguration(
@@ -841,6 +910,7 @@ larry_configuration = WorkflowConfiguration(
     summarizing_resources_requests=large_resource_requests,
     summarizing_resources_limits=large_resource_limits,
     accelerator_type=larry_accelerator_type,
+    random_seed=PYROVELOCITY_SEED,
 )
 
 
