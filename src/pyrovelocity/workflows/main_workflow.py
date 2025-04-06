@@ -242,6 +242,7 @@ def postprocess_data(
         metrics_path=metrics_path,
         vector_field_basis=preprocess_data_args.vector_field_basis,
         number_posterior_samples=postprocess_configuration.number_posterior_samples,
+        random_seed=postprocess_configuration.random_seed,
     )
 
     print(
@@ -296,6 +297,7 @@ def summarize_data(
         cell_state=preprocess_data_args.cell_state,
         vector_field_basis=preprocess_data_args.vector_field_basis,
         selected_genes=summarize_configuration.selected_genes,
+        random_seed=summarize_configuration.random_seed,
     )
     print(
         f"\ndata_model_reports_path: {data_model_reports_path}\n",
