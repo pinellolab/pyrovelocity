@@ -18,6 +18,7 @@ from scvi.model._utils import parse_device_args
 from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models import PyroVelocity
+from pyrovelocity.random_state import set_seed
 from pyrovelocity.utils import load_anndata_from_path, print_anndata
 
 logger = configure_logging(__name__)
@@ -38,7 +39,7 @@ def train_dataset(
     log_every: int = 100,
     patient_improve: float = 1e-4,
     patient_init: int = 45,
-    seed: int = 99,
+    random_seed: int = 99,
     learning_rate: float = 0.01,
     max_epochs: int = 3000,
     include_prior: bool = True,
@@ -91,13 +92,13 @@ def train_dataset(
             Minimum improvement in training loss for early stopping. Default is 5e-4.
         patient_init (int, optional):
             Number of initial training epochs before early stopping is enabled. Default is 30.
-        seed (int, optional): Random seed for reproducibility. Default is 99.
+        random_seed (int, optional): Random seed for reproducibility. Default is 99.
         learning_rate (float, optional): Learning rate for the optimizer. Default is 0.01.
         max_epochs (int, optional): Maximum number of training epochs. Default is 3000.
         include_prior (bool, optional):
             Whether to include prior information in the model. Default is True.
         library_size (bool, optional): Whether to correct for library size. Default is True.
-        offset (bool, optional): Whether to add an offset to the model. Default is False.
+        offset (bool, optional): Whether to add an offset to the model. Default is True.
         input_type (str, optional): Type of input data. Default is "raw".
         cell_specific_kinetics (Optional[str], optional):
             Name of the attribute containing cell-specific kinetics information. Default is None.
@@ -114,6 +115,8 @@ def train_dataset(
     Examples:
         >>> train_dataset() # xdoctest: +SKIP
     """
+    set_seed(random_seed)
+    logger.info(f"Reset random state from seed: {random_seed}")
 
     # load data
     data_model = f"{data_set_name}_{model_identifier}"
@@ -201,7 +204,7 @@ def train_dataset(
                 log_every=log_every,
                 patient_improve=patient_improve,
                 patient_init=patient_init,
-                seed=seed,
+                random_seed=random_seed,
                 learning_rate=learning_rate,
                 max_epochs=max_epochs,
                 include_prior=include_prior,
@@ -292,7 +295,7 @@ def train_model(
     log_every: int = 100,
     patient_improve: float = 1e-4,
     patient_init: int = 45,
-    seed: int = 99,
+    random_seed: int = 99,
     learning_rate: float = 0.01,
     max_epochs: int = 3000,
     include_prior: bool = True,
@@ -319,16 +322,17 @@ def train_model(
         log_every (int, optional): Frequency of logging progress. Default is 100.
         patient_improve (float, optional): Minimum improvement in training loss for early stopping. Default is 5e-4.
         patient_init (int, optional): Number of initial training epochs before early stopping is enabled. Default is 30.
-        seed (int, optional): Random seed for reproducibility. Default is 99.
+        random_seed (int, optional): Random seed for reproducibility. Default is 99.
         learning_rate (float, optional): Learning rate for the optimizer. Default is 0.01.
         max_epochs (int, optional): Maximum number of training epochs. Default is 3000.
         include_prior (bool, optional): Whether to include prior information in the model. Default is True.
         library_size (bool, optional): Whether to correct for library size. Default is True.
-        offset (bool, optional): Whether to add an offset to the model. Default is False.
+        offset (bool, optional): Whether to add an offset to the model. Default is True.
         input_type (str, optional): Type of input data. Default is "raw".
         cell_specific_kinetics (Optional[str], optional): Name of the attribute containing cell-specific kinetics information. Default is None.
         kinetics_num (int, optional): Number of kinetics parameters. Default is 2.
         loss_plot_path (str, optional): Path to save the loss plot. Default is "loss_plot.png".
+        loss_csv_path (str, optional): Path to save the loss data as CSV. Default is "loss_plot.png.csv".
 
         These arguments are deprecated:
         # svi_train: bool = False,
@@ -339,7 +343,7 @@ def train_model(
         # cell_state (str, optional): Cell state attribute in the AnnData object. Default is "clusters".
 
     Returns:
-        Tuple[PyroVelocity, Dict[str, ndarray]]: A tuple containing the trained PyroVelocity model and a dictionary of posterior samples.
+        Tuple[AnnData, PyroVelocity, Dict[str, ndarray]]: A tuple containing the processed AnnData object, the trained PyroVelocity model, and a dictionary of posterior samples.
 
     Examples:
         >>> from pyrovelocity.tasks.train import train_model
@@ -347,11 +351,22 @@ def train_model(
         >>> from pyrovelocity.tasks.preprocess import copy_raw_counts
         >>> tmp = getfixture("tmp_path")
         >>> loss_plot_path = str(tmp) + "/loss_plot_docs.png"
+        >>> loss_csv_path = str(tmp) + "/loss_plot_docs.png.csv"
         >>> print(loss_plot_path)
         >>> adata = generate_sample_data(random_seed=99)
         >>> copy_raw_counts(adata)
-        >>> _, model, posterior_samples = train_model(adata, use_gpu="auto", seed=99, max_epochs=200, loss_plot_path=loss_plot_path)
+        >>> _, model, posterior_samples = train_model(
+        ...   adata,
+        ...   use_gpu="auto",
+        ...   random_seed=99,
+        ...   max_epochs=200,
+        ...   loss_plot_path=loss_plot_path,
+        ...   loss_csv_path=loss_csv_path,
+        ... )
     """
+    set_seed(random_seed)
+    logger.info(f"Reset random state from seed: {random_seed}")
+
     if isinstance(adata, str | Path):
         adata = load_anndata_from_path(adata)
 
@@ -381,7 +396,7 @@ def train_model(
             max_epochs=max_epochs,
             lr=learning_rate,
             use_gpu=use_gpu,
-            seed=seed,
+            seed=random_seed,
             patient_improve=patient_improve,
             patient_init=patient_init,
             log_every=log_every,
@@ -393,7 +408,7 @@ def train_model(
             log_every=log_every,
             lr=learning_rate,
             use_gpu=use_gpu,
-            seed=seed,
+            seed=random_seed,
             patient_improve=patient_improve,
             patient_init=patient_init,
         )
