@@ -11,6 +11,7 @@ from beartype.typing import Dict, List, Tuple
 
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.metrics.trajectory import cross_boundary_correctness
+from pyrovelocity.random_state import set_seed
 
 __all__ = ["calculate_cross_boundary_correctness"]
 
@@ -146,6 +147,7 @@ def calculate_cross_boundary_correctness(
     ground_truth_transitions: Dict[str, List[Tuple[str, str]]],
     model_velocity_keys: Dict[str, str],
     color_palette: List[str] = DEFAULT_COLOR_PALETTE,
+    random_seed: int = 99,
 ) -> Tuple[Path, Path, Path]:
     """
     Calculate cross-boundary correctness metrics for multiple datasets and models.
@@ -161,6 +163,7 @@ def calculate_cross_boundary_correctness(
         ground_truth_transitions: Mapping of dataset names to their ground truth cell transitions
         model_velocity_keys: Mapping of model types to their velocity keys
         color_palette: Optional list of colors to use for models in the plot
+        random_seed: Random seed for reproducibility. Defaults to 42.
 
     Returns:
         Tuple of paths to:
@@ -168,6 +171,9 @@ def calculate_cross_boundary_correctness(
         - Individual dataset results directory
         - Plot file
     """
+    set_seed(random_seed)
+    logger.info(f"Reset random state from seed: {random_seed}")
+
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
