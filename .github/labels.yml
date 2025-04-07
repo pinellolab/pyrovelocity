@@ -73,6 +73,9 @@
 - name: execute-workflow
   description: Control workflow execution on PRs
   color: 74da90
+- name: test-workflow
+  description: Test local workflow execution on PRs
+  color: 006b75
 - name: skip-ci
   description: Skip CI workflow
   color: 35539d
