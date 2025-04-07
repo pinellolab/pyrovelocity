@@ -399,12 +399,15 @@ jobs:
       branch: ${{ needs.set-variables.outputs.checkout_ref }}
       revision: ${{ needs.set-variables.outputs.checkout_rev }}
       mode: "local"
-      testing_flag: "True"
-      upload_results: "False"
-      random_seed: "43"
-      cache_flag: "True"
-      overwrite_cache: "False"
-      log_level: "INFO"
+      env_vars_json: >-
+        {
+          "PYROVELOCITY_TESTING_FLAG": "True",
+          "PYROVELOCITY_UPLOAD_RESULTS": "False",
+          "PYROVELOCITY_CACHE_FLAG": "True", 
+          "PYROVELOCITY_OVERWRITE_CACHE": "False",
+          "PYROVELOCITY_LOG_LEVEL": "INFO",
+          "PYROVELOCITY_SEED": "43"
+        }
       dataset_registry: >-
         {
         simulated:false,
@@ -433,12 +436,15 @@ jobs:
       branch: ${{ needs.set-variables.outputs.checkout_ref }}
       revision: ${{ needs.set-variables.outputs.checkout_rev }}
       mode: ${{ needs.set-variables.outputs.mode }}
-      testing_flag: "True"
-      upload_results: "False"
-      random_seed: "42"
-      cache_flag: "True"
-      overwrite_cache: "False"
-      log_level: "INFO"
+      env_vars_json: >-
+        {
+          "PYROVELOCITY_TESTING_FLAG": "True",
+          "PYROVELOCITY_UPLOAD_RESULTS": "False",
+          "PYROVELOCITY_CACHE_FLAG": "True", 
+          "PYROVELOCITY_OVERWRITE_CACHE": "False",
+          "PYROVELOCITY_LOG_LEVEL": "INFO",
+          "PYROVELOCITY_SEED": "42"
+        }
       dataset_registry: >-
         {
         simulated:true,
