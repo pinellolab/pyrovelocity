@@ -152,6 +152,7 @@ def postprocess_dataset(
                     posterior_samples,
                     vector_field_basis=vector_field_basis,
                     ncpus_use=number_of_cpus_to_use,
+                    random_seed=random_seed,
                 )
             )
             logger.info(
