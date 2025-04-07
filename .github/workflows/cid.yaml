@@ -385,6 +385,101 @@ jobs:
       revision: ${{ needs.set-variables.outputs.checkout_rev }}
       mode: ${{ needs.set-variables.outputs.mode }}
 
+  test-workflow:
+    needs: [config-workflows, set-variables]
+    if: ${{ needs.set-variables.outputs.skip_ci != 'true' && (contains(github.event.pull_request.labels.*.name, 'test-workflow') || (github.event_name == 'workflow_dispatch')) }}
+    runs-on: ubuntu-latest
+    concurrency:
+      group: twf-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref_name }}-${{ needs.set-variables.outputs.mode }}-${{ github.sha }}
+      cancel-in-progress: true
+    strategy:
+      matrix:
+        python_version: ["3.11"]
+    env:
+      FLYTECTL_CONFIG: ${{ secrets.FLYTECTL_CONFIG }}
+      FLYTE_OAUTH_CLIENT_SECRET: ${{ secrets.FLYTE_OAUTH_CLIENT_SECRET }}
+      WORKFLOW_IMAGE: ${{ vars.WORKFLOW_IMAGE }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # ratchet:actions/checkout@v4.2.2
+        with:
+          ref: ${{ needs.set-variables.outputs.checkout_ref }}
+      - name: Setup environment
+        uses: ./.github/actions/setup_environment
+        with:
+          python_version: ${{ matrix.python_version }}
+          debug_enabled: ${{ needs.set-variables.outputs.debug }}
+      - name: Download Flyte config
+        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # ratchet:actions/download-artifact@v4.1.9
+        with:
+          name: flyte-config
+          path: .flyte/
+      - name: Setup tmate debug session
+        if: ${{ inputs.debug_enabled == 'true' }}
+        uses: mxschmitt/action-tmate@e5c7151931ca95bad1c6f4190c730ecf8c7dde48 # ratchet:mxschmitt/action-tmate@v3
+      - name: Execute workflow
+        id: execute
+        run: |
+          cat > .env << EOF
+          PYROVELOCITY_TESTING_FLAG=True
+          PYROVELOCITY_UPLOAD_RESULTS=False
+          PYROVELOCITY_CACHE_FLAG=True
+          PYROVELOCITY_OVERWRITE_CACHE=False
+          PYROVELOCITY_LOG_LEVEL=INFO
+          PYROVELOCITY_SEED=43
+          EOF
+
+          DATASET_REGISTRY="{\
+          simulated:false,\
+          pancreas:false,\
+          bonemarrow:false,\
+          pbmc5k:false,\
+          pbmc10k:false,\
+          pbmc68k:false,\
+          pons:false,\
+          larry:true,\
+          larry_neu:false,\
+          larry_mono:false,\
+          larry_multilineage:true\
+          }"
+
+          HYDRA_OVERRIDES="entity_config.inputs._args_.0.dataset_registry=$DATASET_REGISTRY"
+
+          printf "Using dataset registry configuration:\n\n"
+          printf "$DATASET_REGISTRY\n\n"
+          printf "HYDRA_OVERRIDES: $HYDRA_OVERRIDES\n\n"
+
+          make run-local HYDRA_OVERRIDES="$HYDRA_OVERRIDES"
+      - name: Print reports tree
+        id: print-reports-tree
+        run: |
+          tree --du -alh ./reports/
+      - name: Create reports tarball
+        id: save-reports-tar
+        run: |
+          TAR_FILENAME="reports_test_${{ needs.set-variables.outputs.checkout_rev }}.tar.gz"
+          tar -czf $TAR_FILENAME ./reports/
+          tar -tzf $TAR_FILENAME
+          echo "REPORTS_TAR=$TAR_FILENAME" >> $GITHUB_ENV
+      - name: Upload reports artifact
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # ratchet:actions/upload-artifact@v4.6.1
+        with:
+          name: reports
+          path: ${{ env.REPORTS_TAR }}
+      - name: Create config tarball
+        id: save-hydra-outputs
+        run: |
+          TAR_FILENAME="hydra_outputs_test_${{ needs.set-variables.outputs.checkout_rev }}.tar.gz"
+
+          tar -czf $TAR_FILENAME ./outputs/
+          tar -tzf $TAR_FILENAME
+          echo "HYDRA_OUTPUTS_TAR=$TAR_FILENAME" >> $GITHUB_ENV
+      - name: Upload config artifact
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # ratchet:actions/upload-artifact@v4.6.1
+        with:
+          name: hydra-outputs
+          path: ${{ env.HYDRA_OUTPUTS_TAR }}
+
   execute-workflow:
     needs: [config-workflows, build-nix-images, set-variables]
 
