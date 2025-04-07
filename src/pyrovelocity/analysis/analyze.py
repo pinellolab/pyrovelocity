@@ -37,15 +37,21 @@ def compute_mean_vector_field(
     n_jobs=1,
     spliced="spliced_pyro",
     raw=False,
+    random_seed: int = 99,
 ):
     logger.info("Computing mean vector field")
-    # scv.pp.neighbors(adata, use_rep="pca")
     if "X_pca" not in adata.obsm.keys():
         sc.pp.pca(
             data=adata,
             svd_solver="arpack",
+            random_state=random_seed,
         )
-    sc.pp.neighbors(adata=adata, n_neighbors=30, use_rep="X_pca")
+    sc.pp.neighbors(
+        adata=adata,
+        n_neighbors=30,
+        use_rep="X_pca",
+        random_state=random_seed,
+    )
 
     adata.var["velocity_genes"] = True
 
@@ -88,7 +94,6 @@ def compute_mean_vector_field(
             vkey="velocity_pyro",
             xkey="spliced_pyro",
             n_jobs=n_jobs,
-            # show_progress_bar=False,
         )
     elif spliced in ["Ms"]:
         ut = adata.layers["Mu"]
@@ -112,7 +117,6 @@ def compute_mean_vector_field(
             vkey="velocity_pyro",
             xkey="Ms",
             n_jobs=n_jobs,
-            # show_progress_bar=False,
         )
     elif spliced in ["spliced"]:
         ut = adata.layers["unspliced"]
@@ -136,7 +140,6 @@ def compute_mean_vector_field(
             vkey="velocity_pyro",
             xkey="spliced",
             n_jobs=n_jobs,
-            # show_progress_bar=False,
         )
 
     scv.tl.velocity_embedding(adata, vkey="velocity_pyro", basis=basis)
@@ -214,13 +217,11 @@ def vector_field_uncertainty(
     basis: str = "tsne",
     n_jobs: int = 1,
     denoised: bool = False,
+    random_seed: int = 99,
 ) -> Tuple[ndarray, ndarray, ndarray]:
     """Run cosine similarity-based vector field across posterior samples"""
 
     logger.info("Estimating vector field uncertainty")
-    # fig, ax = plt.subplots(10, 3)
-    # fig.set_size_inches(16, 36)
-    # ax = ax.flatten()
     v_map_all = []
     if ("u_scale" in posterior_samples) and (
         "s_scale" in posterior_samples
@@ -247,7 +248,10 @@ def vector_field_uncertainty(
         projection = [
             (
                 "PCA",
-                sklearn.decomposition.PCA(random_state=99, n_components=50),
+                sklearn.decomposition.PCA(
+                    random_state=random_seed,
+                    n_components=50,
+                ),
             ),
             ("UMAP", umap.UMAP(random_state=99, n_components=2)),
         ]
@@ -258,16 +262,25 @@ def vector_field_uncertainty(
         adata.obsm["X_umap1"] = umap_orig
         joint_pcs = pipelines.steps[0][1].transform(expression[0])
         adata.obsm["X_pyropca"] = joint_pcs
-        # scv.pp.neighbors(adata, use_rep="pyropca")
-        sc.pp.neighbors(adata=adata, n_neighbors=30, use_rep="X_pyropca")
+        sc.pp.neighbors(
+            adata=adata,
+            n_neighbors=30,
+            use_rep="X_pyropca",
+            random_state=random_seed,
+        )
     else:
-        # scv.pp.neighbors(adata, use_rep="pca")
         if "X_pca" not in adata.obsm.keys():
             sc.pp.pca(
                 data=adata,
                 svd_solver="arpack",
+                random_state=random_seed,
             )
-        sc.pp.neighbors(adata=adata, n_neighbors=30, use_rep="X_pca")
+        sc.pp.neighbors(
+            adata=adata,
+            n_neighbors=30,
+            use_rep="X_pca",
+            random_state=random_seed,
+        )
 
     assert len(posterior_samples["st"].shape) == 3
     adata.var["velocity_genes"] = True
@@ -279,6 +292,7 @@ def vector_field_uncertainty(
             sc.pp.pca(
                 data=adata,
                 svd_solver="arpack",
+                random_state=random_seed,
             )
             scv.tl.velocity_embedding(
                 adata,
@@ -292,9 +306,12 @@ def vector_field_uncertainty(
                 vkey="velocity_pyro",
                 xkey="spliced_pyro",
                 n_jobs=n_jobs,
-                # show_progress_bar=False,
             )
-            scv.tl.velocity_embedding(adata, vkey="velocity_pyro", basis=basis)
+            scv.tl.velocity_embedding(
+                adata,
+                vkey="velocity_pyro",
+                basis=basis,
+            )
         v_map_all.append(adata.obsm[f"velocity_pyro_{basis}"])
     v_map_all = np.stack(v_map_all)
     embeds_radian = np.arctan2(v_map_all[:, :, 1], v_map_all[:, :, 0])
