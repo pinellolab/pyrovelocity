@@ -25,36 +25,11 @@ on:
         description: "Dataset registry configuration"
         required: true
         type: string
-      testing_flag:
-        description: "Set PYROVELOCITY_TESTING_FLAG"
-        required: false
-        type: boolean
-        default: true
-      upload_results:
-        description: "Set PYROVELOCITY_UPLOAD_RESULTS"
-        required: false
-        type: boolean
-        default: false
-      random_seed:
-        description: "Set PYROVELOCITY_SEED"
+      env_vars_json:
+        description: "Environment variables as JSON string"
         required: false
         type: string
-        default: "42"
-      cache_flag:
-        description: "Set PYROVELOCITY_CACHE_FLAG"
-        required: false
-        type: boolean
-        default: true
-      overwrite_cache:
-        description: "Set PYROVELOCITY_OVERWRITE_CACHE"
-        required: false
-        type: boolean
-        default: false
-      log_level:
-        description: "Set PYROVELOCITY_LOG_LEVEL"
-        required: false
-        type: string
-        default: "INFO"
+        default: "{}"
 
   workflow_call:
     inputs:
@@ -80,36 +55,11 @@ on:
         description: "Dataset registry configuration"
         required: true
         type: string
-      testing_flag:
-        description: "Set PYROVELOCITY_TESTING_FLAG"
+      env_vars_json:
+        description: "Environment variables as JSON string"
         required: false
         type: string
-        default: "True"
-      upload_results:
-        description: "Set PYROVELOCITY_UPLOAD_RESULTS"
-        required: false
-        type: string
-        default: "False"
-      random_seed:
-        description: "Set PYROVELOCITY_SEED"
-        required: false
-        type: string
-        default: "42"
-      cache_flag:
-        description: "Set PYROVELOCITY_CACHE_FLAG"
-        required: false
-        type: string
-        default: "True"
-      overwrite_cache:
-        description: "Set PYROVELOCITY_OVERWRITE_CACHE"
-        required: false
-        type: string
-        default: "False"
-      log_level:
-        description: "Set PYROVELOCITY_LOG_LEVEL"
-        required: false
-        type: string
-        default: "INFO"
+        default: "{}"
     secrets:
       FLYTECTL_CONFIG:
         required: true
@@ -158,16 +108,51 @@ jobs:
       - name: Execute workflow
         id: execute
         run: |
-          # Create .env file with environment variables
+          # Create .env file with environment variables from JSON
+          # Default values if not specified in JSON
+          PYROVELOCITY_TESTING_FLAG="True"
+          PYROVELOCITY_UPLOAD_RESULTS="False"
+          PYROVELOCITY_CACHE_FLAG="True"
+          PYROVELOCITY_OVERWRITE_CACHE="False"
+          PYROVELOCITY_LOG_LEVEL="INFO"
+          PYROVELOCITY_SEED="42"
+
+          # Parse environment variables from JSON
+          ENV_VARS='${{ inputs.env_vars_json }}'
+          if [ -n "$ENV_VARS" ] && [ "$ENV_VARS" != "{}" ]; then
+            echo "Parsing environment variables from JSON"
+            # Parse variables using jq
+            if [[ $(jq -r 'has("PYROVELOCITY_TESTING_FLAG")' <<< "$ENV_VARS") == "true" ]]; then
+              PYROVELOCITY_TESTING_FLAG=$(jq -r '.PYROVELOCITY_TESTING_FLAG' <<< "$ENV_VARS")
+            fi
+            if [[ $(jq -r 'has("PYROVELOCITY_UPLOAD_RESULTS")' <<< "$ENV_VARS") == "true" ]]; then
+              PYROVELOCITY_UPLOAD_RESULTS=$(jq -r '.PYROVELOCITY_UPLOAD_RESULTS' <<< "$ENV_VARS")
+            fi
+            if [[ $(jq -r 'has("PYROVELOCITY_CACHE_FLAG")' <<< "$ENV_VARS") == "true" ]]; then
+              PYROVELOCITY_CACHE_FLAG=$(jq -r '.PYROVELOCITY_CACHE_FLAG' <<< "$ENV_VARS")
+            fi
+            if [[ $(jq -r 'has("PYROVELOCITY_OVERWRITE_CACHE")' <<< "$ENV_VARS") == "true" ]]; then
+              PYROVELOCITY_OVERWRITE_CACHE=$(jq -r '.PYROVELOCITY_OVERWRITE_CACHE' <<< "$ENV_VARS")
+            fi
+            if [[ $(jq -r 'has("PYROVELOCITY_LOG_LEVEL")' <<< "$ENV_VARS") == "true" ]]; then
+              PYROVELOCITY_LOG_LEVEL=$(jq -r '.PYROVELOCITY_LOG_LEVEL' <<< "$ENV_VARS")
+            fi
+            if [[ $(jq -r 'has("PYROVELOCITY_SEED")' <<< "$ENV_VARS") == "true" ]]; then
+              PYROVELOCITY_SEED=$(jq -r '.PYROVELOCITY_SEED' <<< "$ENV_VARS")
+            fi
+          fi
+
+          # Write environment variables to .env file
           cat > .env << EOF
-          PYROVELOCITY_TESTING_FLAG=${{ inputs.testing_flag }}
-          PYROVELOCITY_UPLOAD_RESULTS=${{ inputs.upload_results }}
-          PYROVELOCITY_CACHE_FLAG=${{ inputs.cache_flag }}
-          PYROVELOCITY_OVERWRITE_CACHE=${{ inputs.overwrite_cache }}
-          PYROVELOCITY_LOG_LEVEL=${{ inputs.log_level }}
-          PYROVELOCITY_SEED=${{ inputs.random_seed }}
+          PYROVELOCITY_TESTING_FLAG=$PYROVELOCITY_TESTING_FLAG
+          PYROVELOCITY_UPLOAD_RESULTS=$PYROVELOCITY_UPLOAD_RESULTS
+          PYROVELOCITY_CACHE_FLAG=$PYROVELOCITY_CACHE_FLAG
+          PYROVELOCITY_OVERWRITE_CACHE=$PYROVELOCITY_OVERWRITE_CACHE
+          PYROVELOCITY_LOG_LEVEL=$PYROVELOCITY_LOG_LEVEL
+          PYROVELOCITY_SEED=$PYROVELOCITY_SEED
           EOF
 
+          # Set up dataset registry and hydra overrides
           DATASET_REGISTRY='${{ inputs.dataset_registry }}'
           HYDRA_OVERRIDES="entity_config.inputs._args_.0.dataset_registry=$DATASET_REGISTRY"
 
