@@ -1,4 +1,5 @@
 import os
+import time
 from pathlib import Path
 
 import anndata
@@ -34,6 +35,60 @@ logger = configure_logging(__name__)
 
 
 @beartype
+def download_with_retry(
+    file_path: str | Path,
+    backup_url: str,
+    max_retries: int = 3,
+    initial_delay: float = 1.0,
+    sparse: bool = True,
+    cache: bool = True,
+) -> anndata._core.anndata.AnnData:
+    """
+    Download a file with retry logic for handling transient network issues.
+
+    Args:
+        file_path: Path where the file should be saved
+        backup_url: URL to download from if file_path doesn't exist
+        max_retries: Maximum number of download attempts (default: 3)
+        initial_delay: Initial delay in seconds before first retry (default: 1.0)
+        sparse: Whether to load the data as sparse matrices (default: True)
+        cache: Whether to cache the data (default: True)
+
+    Returns:
+        AnnData object
+
+    Raises:
+        Exception: If all retry attempts fail
+    """
+    last_exception = None
+
+    for retry in range(max_retries):
+        try:
+            logger.info(
+                f"Download attempt {retry + 1}/{max_retries} for {backup_url}"
+            )
+            adata = sc.read(
+                file_path, backup_url=backup_url, sparse=sparse, cache=cache
+            )
+            logger.info(f"Successfully downloaded data on attempt {retry + 1}")
+            return adata
+        except Exception as e:
+            last_exception = e
+            if retry < max_retries - 1:
+                delay = initial_delay * (2**retry)
+                logger.warning(
+                    f"Attempt {retry + 1}/{max_retries} failed with error: {str(e)}. "
+                    f"Retrying in {delay:.1f} seconds..."
+                )
+                time.sleep(delay)
+
+    logger.error(
+        f"All {max_retries} download attempts failed for {backup_url}. Last error: {str(last_exception)}"
+    )
+    raise last_exception
+
+
+@beartype
 def pbmc5k(
     file_path: str | Path = "data/external/pbmc5k.h5ad",
 ) -> anndata._core.anndata.AnnData:
@@ -46,7 +101,7 @@ def pbmc5k(
         Returns `AnnData` object
     """
     url = "https://storage.googleapis.com/pyrovelocity/data/pbmc5k.h5ad"
-    adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+    adata = download_with_retry(file_path, backup_url=url)
     expected_hash = (
         "349028bdf7992f5b196a3c4efd7a83cebdf0624d3d42a712628967dad608ad35"
     )
@@ -67,7 +122,7 @@ def pbmc10k(
         Returns `AnnData` object
     """
     url = "https://storage.googleapis.com/pyrovelocity/data/pbmc10k.h5ad"
-    adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+    adata = download_with_retry(file_path, backup_url=url)
     expected_hash = (
         "267d1d2710251a68413fcb82fa03f9bcfe8fe33a6bae05117603da983ebe2c5b"
     )
@@ -89,7 +144,7 @@ def pons(
         Returns `AnnData` object
     """
     url = "https://storage.googleapis.com/pyrovelocity/data/oligo_lite.h5ad"
-    adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+    adata = download_with_retry(file_path, backup_url=url)
     expected_hash = (
         "d3a3286a6f33c307aca20bcbb127abb6ac52dbf6c968ee24df6ed9584b857de0"
     )
@@ -111,7 +166,7 @@ def larry(
         Returns `AnnData` object
     """
     url = "https://figshare.com/ndownloader/files/37028569"
-    adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+    adata = download_with_retry(file_path, backup_url=url)
     expected_hash = (
         "7f567427f591e85678580ebaa8b1e59aae51e9be63864a68ef9e905a0cbe8575"
     )
@@ -137,9 +192,9 @@ def larry_neu(
     url = "https://figshare.com/ndownloader/files/37028575"
 
     if os.path.isfile(file_path):
-        adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+        adata = download_with_retry(file_path, backup_url=url)
     else:
-        adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+        adata = download_with_retry(file_path, backup_url=url)
         premodification_hash = (
             "ae4113834a1318168c92715887173d27bf88c57ccbd715e69481b13cf2539b92"
         )
@@ -171,9 +226,9 @@ def larry_mono(
     url = "https://figshare.com/ndownloader/files/37028572"
 
     if os.path.isfile(file_path):
-        adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+        adata = download_with_retry(file_path, backup_url=url)
     else:
-        adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+        adata = download_with_retry(file_path, backup_url=url)
         premodification_hash = (
             "b880b7f72f0ccc8b11ca63c53d340983a6d478e214d4960a529d6e02a9ccd597"
         )
@@ -201,7 +256,7 @@ def larry_cospar(
         Returns `AnnData` object
     """
     url = "https://storage.googleapis.com/pyrovelocity/data/larry_cospar.h5ad"
-    adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+    adata = download_with_retry(file_path, backup_url=url)
     expected_hash = (
         "cdf2ff25c4e3222122beeff2da65539ba7541f4426547f4622813874fd9be070"
     )
@@ -224,7 +279,7 @@ def larry_cytotrace(
     url = (
         "https://storage.googleapis.com/pyrovelocity/data/larry_cytotrace.h5ad"
     )
-    adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+    adata = download_with_retry(file_path, backup_url=url)
     expected_hash = (
         "fdaa99408f93c52d993cd47bf7997f5c01f7cb88be1824864075c67afb04b625"
     )
@@ -247,7 +302,7 @@ def larry_dynamical(
     url = (
         "https://storage.googleapis.com/pyrovelocity/data/larry_dynamical.h5ad"
     )
-    adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+    adata = download_with_retry(file_path, backup_url=url)
     expected_hash = (
         "d3808463203f3d0a8fd1eb76ac723d8e6ab939223eb528434c3e38926a460863"
     )
@@ -319,7 +374,7 @@ def larry_mono_clone_trajectory(
         AnnData object with clone trajectory information
     """
     url = "https://storage.googleapis.com/pyrovelocity/data/larry_mono_clone_trajectory.h5ad"
-    adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+    adata = download_with_retry(file_path, backup_url=url)
     expected_hash = (
         "f5d0dcb9baa63460c5be5a1ebdab6a97c6f3ec0b5641ab1b770d16fb96bd9fc9"
     )
@@ -342,7 +397,7 @@ def larry_neu_clone_trajectory(
         AnnData object with clone trajectory information
     """
     url = "https://storage.googleapis.com/pyrovelocity/data/larry_neu_clone_trajectory.h5ad"
-    adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+    adata = download_with_retry(file_path, backup_url=url)
     expected_hash = (
         "6e7dbc273c59e28f1962df31452d5eea00336089c36a44f55fcfc91f6f428396"
     )
@@ -367,7 +422,7 @@ def larry_multilineage_clone_trajectory(
         AnnData object with clone trajectory information
     """
     url = "https://storage.googleapis.com/pyrovelocity/data/larry_multilineage_clone_trajectory.h5ad"
-    adata = sc.read(file_path, backup_url=url, sparse=True, cache=True)
+    adata = download_with_retry(file_path, backup_url=url)
     expected_hash = (
         "ffedda0332c411ca10c09562e5c8a50643af9120f65b0b3701bf30a8d5fdc97b"
     )
