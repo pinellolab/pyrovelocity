@@ -1,0 +1,216 @@
+name: Run Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: "Run with tmate.io debugging enabled"
+        required: true
+        type: boolean
+        default: false
+      branch:
+        description: "Git branch or ref to checkout"
+        required: true
+        type: string
+      revision:
+        description: "Git revision to checkout"
+        required: true
+        type: string
+      mode:
+        description: "Workflow run mode (local, dev, prod)"
+        required: true
+        type: string
+        default: "local"
+      dataset_registry:
+        description: "Dataset registry configuration"
+        required: true
+        type: string
+      testing_flag:
+        description: "Set PYROVELOCITY_TESTING_FLAG"
+        required: false
+        type: boolean
+        default: true
+      upload_results:
+        description: "Set PYROVELOCITY_UPLOAD_RESULTS"
+        required: false
+        type: boolean
+        default: false
+      random_seed:
+        description: "Set PYROVELOCITY_SEED"
+        required: false
+        type: string
+        default: "42"
+      cache_flag:
+        description: "Set PYROVELOCITY_CACHE_FLAG"
+        required: false
+        type: boolean
+        default: true
+      overwrite_cache:
+        description: "Set PYROVELOCITY_OVERWRITE_CACHE"
+        required: false
+        type: boolean
+        default: false
+      log_level:
+        description: "Set PYROVELOCITY_LOG_LEVEL"
+        required: false
+        type: string
+        default: "INFO"
+
+  workflow_call:
+    inputs:
+      debug_enabled:
+        description: "Run with tmate.io debugging enabled"
+        required: true
+        type: string
+        default: "false"
+      branch:
+        description: "Git branch or ref to checkout"
+        required: true
+        type: string
+      revision:
+        description: "Git revision to checkout"
+        required: true
+        type: string
+      mode:
+        description: "Workflow run mode (local, dev, prod)"
+        required: true
+        type: string
+        default: "local"
+      dataset_registry:
+        description: "Dataset registry configuration"
+        required: true
+        type: string
+      testing_flag:
+        description: "Set PYROVELOCITY_TESTING_FLAG"
+        required: false
+        type: string
+        default: "True"
+      upload_results:
+        description: "Set PYROVELOCITY_UPLOAD_RESULTS"
+        required: false
+        type: string
+        default: "False"
+      random_seed:
+        description: "Set PYROVELOCITY_SEED"
+        required: false
+        type: string
+        default: "42"
+      cache_flag:
+        description: "Set PYROVELOCITY_CACHE_FLAG"
+        required: false
+        type: string
+        default: "True"
+      overwrite_cache:
+        description: "Set PYROVELOCITY_OVERWRITE_CACHE"
+        required: false
+        type: string
+        default: "False"
+      log_level:
+        description: "Set PYROVELOCITY_LOG_LEVEL"
+        required: false
+        type: string
+        default: "INFO"
+    secrets:
+      FLYTECTL_CONFIG:
+        required: true
+      FLYTE_OAUTH_CLIENT_SECRET:
+        required: true
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+
+jobs:
+  run-workflow:
+    runs-on: ubuntu-latest
+    env:
+      FLYTECTL_CONFIG: ${{ secrets.FLYTECTL_CONFIG }}
+      FLYTE_OAUTH_CLIENT_SECRET: ${{ secrets.FLYTE_OAUTH_CLIENT_SECRET }}
+      WORKFLOW_IMAGE: ${{ vars.WORKFLOW_IMAGE }}
+    strategy:
+      matrix:
+        python_version: ["3.11"]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # ratchet:actions/checkout@v4.2.2
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Setup environment
+        uses: ./.github/actions/setup_environment
+        with:
+          python_version: ${{ matrix.python_version }}
+          debug_enabled: ${{ inputs.debug_enabled }}
+
+      - name: Download Flyte config
+        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # ratchet:actions/download-artifact@v4.1.9
+        with:
+          name: flyte-config
+          path: .flyte/
+
+      - name: Setup tmate debug session
+        if: ${{ inputs.debug_enabled == 'true' }}
+        uses: mxschmitt/action-tmate@e5c7151931ca95bad1c6f4190c730ecf8c7dde48 # ratchet:mxschmitt/action-tmate@v3
+
+      - name: Execute workflow
+        id: execute
+        run: |
+          # Create .env file with environment variables
+          cat > .env << EOF
+          PYROVELOCITY_TESTING_FLAG=${{ inputs.testing_flag }}
+          PYROVELOCITY_UPLOAD_RESULTS=${{ inputs.upload_results }}
+          PYROVELOCITY_CACHE_FLAG=${{ inputs.cache_flag }}
+          PYROVELOCITY_OVERWRITE_CACHE=${{ inputs.overwrite_cache }}
+          PYROVELOCITY_LOG_LEVEL=${{ inputs.log_level }}
+          PYROVELOCITY_SEED=${{ inputs.random_seed }}
+          EOF
+
+          DATASET_REGISTRY='${{ inputs.dataset_registry }}'
+          HYDRA_OVERRIDES="entity_config.inputs._args_.0.dataset_registry=$DATASET_REGISTRY"
+
+          printf "Using dataset registry configuration:\n\n"
+          printf "$DATASET_REGISTRY\n\n"
+          printf "Using environment variables:\n"
+          cat .env
+          printf "HYDRA_OVERRIDES: $HYDRA_OVERRIDES\n\n"
+
+          make run-${{ inputs.mode }} HYDRA_OVERRIDES="$HYDRA_OVERRIDES"
+
+      - name: Print reports tree
+        id: print-reports-tree
+        if: ${{ inputs.mode == 'local' }}
+        run: |
+          tree --du -alh ./reports/
+
+      - name: Create reports tarball
+        id: save-reports-tar
+        if: ${{ inputs.mode == 'local' }}
+        run: |
+          TAR_FILENAME="reports_${{ inputs.mode }}_${{ inputs.revision }}.tar.gz"
+          tar -czf $TAR_FILENAME ./reports/
+          tar -tzf $TAR_FILENAME
+          echo "REPORTS_TAR=$TAR_FILENAME" >> $GITHUB_ENV
+
+      - name: Upload reports artifact
+        if: ${{ inputs.mode == 'local' }}
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # ratchet:actions/upload-artifact@v4.6.1
+        with:
+          name: reports
+          path: ${{ env.REPORTS_TAR }}
+
+      - name: Create config tarball
+        id: save-hydra-outputs
+        run: |
+          TAR_FILENAME="hydra_outputs_${{ inputs.mode }}_${{ inputs.revision }}.tar.gz"
+          tar -czf $TAR_FILENAME ./outputs/
+          tar -tzf $TAR_FILENAME
+          echo "HYDRA_OUTPUTS_TAR=$TAR_FILENAME" >> $GITHUB_ENV
+
+      - name: Upload config artifact
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # ratchet:actions/upload-artifact@v4.6.1
+        with:
+          name: hydra-outputs
+          path: ${{ env.HYDRA_OUTPUTS_TAR }}
