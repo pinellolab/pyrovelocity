@@ -291,12 +291,14 @@ def preprocess_dataset(
             sc.pp.pca(
                 adata,
                 svd_solver="arpack",
+                random_state=random_seed,
             )
 
         sc.pp.neighbors(
             adata=adata,
             n_neighbors=n_neighbors,
             n_pcs=n_pcs,
+            random_state=random_seed,
         )
         scv.pp.moments(
             data=adata,
@@ -320,9 +322,15 @@ def preprocess_dataset(
         # TODO: export QC plots, which will require use of the cell_state variable
         logger.info(f"cell state variable: {cell_state}")
         if "X_umap" not in adata.obsm.keys():
-            sc.tl.umap(adata)
+            sc.tl.umap(
+                adata,
+                random_state=random_seed,
+            )
         if "leiden" not in adata.obs.keys():
-            sc.tl.leiden(adata)
+            sc.tl.leiden(
+                adata,
+                random_state=random_seed,
+            )
         if use_vars_subset:
             likelihood_sorted_genes = (
                 adata.var["fit_likelihood"].sort_values(ascending=False).index
