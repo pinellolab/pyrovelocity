@@ -414,6 +414,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
         posterior_samples: Dict[str, ndarray],
         vector_field_basis: str = "umap",
         ncpus_use: int = 1,
+        random_seed: int = 99,
     ) -> Dict[str, ndarray]:
         """
         Estimate statistics from posterior samples and add them to the
@@ -496,6 +497,7 @@ class PyroVelocity(VelocityTrainingMixin, BaseModelClass):
             adata=adata,
             basis=vector_field_basis,
             n_jobs=ncpus_use,
+            random_seed=random_seed,
         )
 
         vector_field_posterior_mean = adata.obsm[
