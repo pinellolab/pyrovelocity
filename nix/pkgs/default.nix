@@ -160,6 +160,7 @@
     # disable this here and manually set QUARTO_PYTHON in our devShell or other
     # derivations
     (quarto.override {python3 = null;})
+    teller
     tex
     yarn-berry
   ];
