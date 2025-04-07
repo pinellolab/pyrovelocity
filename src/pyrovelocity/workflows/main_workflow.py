@@ -41,7 +41,7 @@ from pyrovelocity.workflows.constants import (
     GROUND_TRUTH_TRANSITIONS,
     MODEL_VELOCITY_KEYS,
     PYROVELOCITY_CACHE_FLAG,
-    PYROVELOCITY_DATA_SUBSET,
+    PYROVELOCITY_UPLOAD_RESULTS,
 )
 from pyrovelocity.workflows.main_configuration import (
     CombinedMetricsOutputs,
@@ -553,31 +553,37 @@ def combine_time_lineage_fate_correlation(
     ctx = current_context()
     execution_id = ctx.execution_id.name
 
-    attempted_upload_results = []
+    if PYROVELOCITY_UPLOAD_RESULTS:
+        attempted_upload_results = []
 
-    for file in time_lineage_fate_correlation_plots:
-        for ext in ["", ".png"]:
-            upload_result = upload_file_concurrently(
-                bucket_name=f"pyrovelocity/reports/{execution_id}/time_fate_correlation",
-                source_filename=f"{file}{ext}",
-                destination_blob_name=f"{file.name}{ext}",
-            )
-            attempted_upload_results.append(upload_result)
+        for file in time_lineage_fate_correlation_plots:
+            for ext in ["", ".png"]:
+                upload_result = upload_file_concurrently(
+                    bucket_name=f"pyrovelocity/reports/{execution_id}/time_fate_correlation",
+                    source_filename=f"{file}{ext}",
+                    destination_blob_name=f"{file.name}{ext}",
+                )
+                attempted_upload_results.append(upload_result)
 
-    if all(isinstance(result, Success) for result in attempted_upload_results):
-        logger.info("\nAll time lineage fate correlation uploads successful.")
-    else:
-        logger.error(
-            "\nOne or more time lineage fate correlation uploads failed."
-        )
-        failed_uploads = [
-            str(file)
-            for file, result in zip(
-                time_lineage_fate_correlation_plots, attempted_upload_results
+        if all(
+            isinstance(result, Success) for result in attempted_upload_results
+        ):
+            logger.info(
+                "\nAll time lineage fate correlation uploads successful."
             )
-            if isinstance(result, Failure)
-        ]
-        logger.info(f"Failed uploads: {', '.join(failed_uploads)}")
+        else:
+            logger.error(
+                "\nOne or more time lineage fate correlation uploads failed."
+            )
+            failed_uploads = [
+                str(file)
+                for file, result in zip(
+                    time_lineage_fate_correlation_plots,
+                    attempted_upload_results,
+                )
+                if isinstance(result, Failure)
+            ]
+            logger.info(f"Failed uploads: {', '.join(failed_uploads)}")
 
     return [FlyteFile(path=str(x)) for x in time_lineage_fate_correlation_plots]
 
@@ -625,18 +631,56 @@ def combine_all_metrics(
     ctx = current_context()
     execution_id = ctx.execution_id.name
 
-    attempted_upload_results = []
+    if PYROVELOCITY_UPLOAD_RESULTS:
+        attempted_upload_results = []
 
-    for file in files_to_upload:
-        upload_result = upload_file_concurrently(
-            bucket_name=f"pyrovelocity/reports/{execution_id}/combined_metrics",
-            source_filename=file,
-            destination_blob_name=f"{file.name}",
-        )
-        attempted_upload_results.append(upload_result)
+        for file in files_to_upload:
+            upload_result = upload_file_concurrently(
+                bucket_name=f"pyrovelocity/reports/{execution_id}/combined_metrics",
+                source_filename=file,
+                destination_blob_name=f"{file.name}",
+            )
+            attempted_upload_results.append(upload_result)
 
-    if all(isinstance(result, Success) for result in attempted_upload_results):
-        print("\nAll uploads successful.")
+        if all(
+            isinstance(result, Success) for result in attempted_upload_results
+        ):
+            print("\nAll uploads successful.")
+            return CombinedMetricsOutputs(
+                metrics_json=FlyteFile(path=str(files_to_upload[0])),
+                metrics_html=FlyteFile(path=str(files_to_upload[1])),
+                metrics_latex=FlyteFile(path=str(files_to_upload[2])),
+                metrics_md=FlyteFile(path=str(files_to_upload[3])),
+                elbo_html=FlyteFile(path=str(files_to_upload[4])),
+                elbo_latex=FlyteFile(path=str(files_to_upload[5])),
+                elbo_md=FlyteFile(path=str(files_to_upload[6])),
+                mae_html=FlyteFile(path=str(files_to_upload[7])),
+                mae_latex=FlyteFile(path=str(files_to_upload[8])),
+                mae_md=FlyteFile(path=str(files_to_upload[9])),
+            )
+        else:
+            print("\nOne or more uploads failed.")
+            failed_uploads = [
+                str(file)
+                for file, result in zip(
+                    files_to_upload, attempted_upload_results
+                )
+                if isinstance(result, Failure)
+            ]
+            print(f"Failed uploads: {', '.join(failed_uploads)}")
+            return CombinedMetricsOutputs(
+                metrics_json=FlyteFile(path=""),
+                metrics_latex=FlyteFile(path=""),
+                metrics_html=FlyteFile(path=""),
+                metrics_md=FlyteFile(path=""),
+                elbo_html=FlyteFile(path=""),
+                elbo_latex=FlyteFile(path=""),
+                elbo_md=FlyteFile(path=""),
+                mae_html=FlyteFile(path=""),
+                mae_latex=FlyteFile(path=""),
+                mae_md=FlyteFile(path=""),
+            )
+    else:
         return CombinedMetricsOutputs(
             metrics_json=FlyteFile(path=str(files_to_upload[0])),
             metrics_html=FlyteFile(path=str(files_to_upload[1])),
@@ -648,26 +692,6 @@ def combine_all_metrics(
             mae_html=FlyteFile(path=str(files_to_upload[7])),
             mae_latex=FlyteFile(path=str(files_to_upload[8])),
             mae_md=FlyteFile(path=str(files_to_upload[9])),
-        )
-    else:
-        print("\nOne or more uploads failed.")
-        failed_uploads = [
-            str(file)
-            for file, result in zip(files_to_upload, attempted_upload_results)
-            if isinstance(result, Failure)
-        ]
-        print(f"Failed uploads: {', '.join(failed_uploads)}")
-        return CombinedMetricsOutputs(
-            metrics_json=FlyteFile(path=""),
-            metrics_latex=FlyteFile(path=""),
-            metrics_html=FlyteFile(path=""),
-            metrics_md=FlyteFile(path=""),
-            elbo_html=FlyteFile(path=""),
-            elbo_latex=FlyteFile(path=""),
-            elbo_md=FlyteFile(path=""),
-            mae_html=FlyteFile(path=""),
-            mae_latex=FlyteFile(path=""),
-            mae_md=FlyteFile(path=""),
         )
 
 
@@ -733,29 +757,30 @@ def evaluate_trajectory_metrics(
         model_velocity_keys=MODEL_VELOCITY_KEYS,
     )
 
-    ctx = current_context()
-    execution_id = ctx.execution_id.name
+    if PYROVELOCITY_UPLOAD_RESULTS:
+        ctx = current_context()
+        execution_id = ctx.execution_id.name
 
-    uploaded_files = []
-    for file_path in [summary_file, plot_file]:
-        for ext in ["", ".png"]:
-            if Path(f"{file_path}{ext}").exists():
-                upload_result = upload_file_concurrently(
-                    bucket_name=f"pyrovelocity/reports/{execution_id}/trajectory_metrics",
-                    source_filename=f"{file_path}{ext}",
-                    destination_blob_name=f"{file_path.name}{ext}",
-                )
-                uploaded_files.append(upload_result)
+        uploaded_files = []
+        for file_path in [summary_file, plot_file]:
+            for ext in ["", ".png"]:
+                if Path(f"{file_path}{ext}").exists():
+                    upload_result = upload_file_concurrently(
+                        bucket_name=f"pyrovelocity/reports/{execution_id}/trajectory_metrics",
+                        source_filename=f"{file_path}{ext}",
+                        destination_blob_name=f"{file_path.name}{ext}",
+                    )
+                    uploaded_files.append(upload_result)
 
-    if all(isinstance(result, Success) for result in uploaded_files):
-        logger.info("All trajectory metrics files uploaded successfully")
-    else:
-        failed_uploads = [
-            str(i)
-            for i, result in enumerate(uploaded_files)
-            if isinstance(result, Failure)
-        ]
-        logger.warning(f"Failed uploads: {', '.join(failed_uploads)}")
+        if all(isinstance(result, Success) for result in uploaded_files):
+            logger.info("All trajectory metrics files uploaded successfully")
+        else:
+            failed_uploads = [
+                str(i)
+                for i, result in enumerate(uploaded_files)
+                if isinstance(result, Failure)
+            ]
+            logger.warning(f"Failed uploads: {', '.join(failed_uploads)}")
 
     return TrajectoryEvaluationOutputs(
         summary_file=FlyteFile(path=str(summary_file)),
