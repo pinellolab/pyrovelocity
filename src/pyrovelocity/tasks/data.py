@@ -5,11 +5,11 @@ from typing import Optional, Tuple
 from urllib.parse import unquote
 
 import requests
-import scanpy as sc
 import validators
 from beartype import beartype
 
 import pyrovelocity.io.datasets
+from pyrovelocity.io.datasets import download_with_retry
 from pyrovelocity.io.subset_data import subset_anndata
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.utils import generate_sample_data, print_anndata
@@ -111,9 +111,11 @@ def download_dataset(
             else:
                 logger.info(valid_url_message)
             try:
-                adata = sc.read(str(data_path), backup_url=data_url, cache=True)
+                adata = download_with_retry(str(data_path), backup_url=data_url)
             except Exception as e:
-                logger.error(f"Failed to download from URL {data_url}: {e}")
+                logger.error(
+                    f"Failed to download from URL {data_url} after retries: {e}"
+                )
         elif source == "pyrovelocity":
             logger.info(
                 f"Downloading {data_set_name} data with pyrovelocity..."
