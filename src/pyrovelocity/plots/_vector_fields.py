@@ -548,6 +548,7 @@ def plot_mean_vector_field(
     density=0.4,
     spliced="spliced_pyro",
     raw=False,
+    random_seed: int = 99,
 ):
     compute_mean_vector_field(
         posterior_samples=posterior_samples,
@@ -556,6 +557,7 @@ def plot_mean_vector_field(
         n_jobs=n_jobs,
         spliced=spliced,
         raw=raw,
+        random_seed=random_seed,
     )
     scv.pl.velocity_embedding_grid(
         adata,
