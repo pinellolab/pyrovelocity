@@ -241,7 +241,7 @@ run-instructions: ## Print a copy-pastable dataset registry template for manual 
 	@echo "larry_mono:false,\\"
 	@echo "larry_multilineage:false\\"
 	@echo "}\""
-	@echo "HYDRA_OVERRIDES=\"entity_config.inputs._args_.0.dataset_registry=\$$DATASET_REGISTRY\""
+	@echo "HYDRA_OVERRIDES=\"entity_config.inputs._args_.0.dataset_registry='\$$DATASET_REGISTRY'\""
 	@echo "make run-local HYDRA_OVERRIDES=\"\$$HYDRA_OVERRIDES\""
 	@echo ""
 	@echo "# For a simpler approach that only prints the rendered config, use:"
