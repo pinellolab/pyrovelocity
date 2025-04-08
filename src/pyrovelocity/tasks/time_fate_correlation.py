@@ -119,13 +119,13 @@ def estimate_time_lineage_fate_correlation(
 @beartype
 def create_time_lineage_fate_correlation_plot(
     model_results: List[dict],
-    vertical_texts: List[str] = [
-        "Monocytes",
-        "Neutrophils",
-        "Multilineage",
-        "All lineages",
-    ],
     output_dir: str | Path = "reports/time_fate_correlation",
+    dataset_label_map: dict[str, str] = {
+        "larry_mono": "Monocytes",
+        "larry_neu": "Neutrophils",
+        "larry_multilineage": "Multilineage",
+        "larry": "All lineages",
+    },
 ) -> Path:
     """
     Create a time lineage fate correlation plot from model results.
@@ -138,8 +138,11 @@ def create_time_lineage_fate_correlation_plot(
             - data_model: String identifier for the data model
             - postprocessed_data: Path to the postprocessed AnnData file
             - pyrovelocity_data: Path to the posterior samples file
-        vertical_texts: Labels for each row in the plot
-        reports_path: Directory to save the plot
+        output_dir: Directory to save the plot
+        dataset_label_map: Dictionary mapping dataset names to their vertical labels.
+            This determines both the order and labels for datasets in the plot.
+            Only datasets found in both model_results and this map will be included.
+            The order of keys in this dictionary determines the order of rows in the plot.
 
     Returns:
         Path: The path where the final plot is saved
@@ -147,10 +150,55 @@ def create_time_lineage_fate_correlation_plot(
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    dataset_to_result = {}
+    for result in model_results:
+        dataset_name = result["data_model"].split("_model")[0]
+        if dataset_name in dataset_label_map:
+            dataset_to_result[dataset_name] = result
+
+    ordered_results = []
+    ordered_labels = []
+    found_datasets = []
+
+    for dataset_name in dataset_label_map:
+        if dataset_name in dataset_to_result:
+            ordered_results.append(dataset_to_result[dataset_name])
+            ordered_labels.append(dataset_label_map[dataset_name])
+            found_datasets.append(dataset_name)
+
+    if not ordered_results:
+        logger.warning(
+            "No matching datasets found in both model_results and dataset_label_map"
+        )
+        ordered_results = model_results
+        ordered_labels = [
+            dataset_label_map.get(r["data_model"].split("_model")[0], "Unknown")
+            for r in model_results
+        ]
+        found_datasets = [
+            r["data_model"].split("_model")[0] for r in model_results
+        ]
+
+    model_results = ordered_results
+    vertical_texts = ordered_labels
+
+    logger.info(
+        f"Datasets ordered according to dataset_label_map: {found_datasets}"
+    )
+    logger.info(f"Corresponding labels: {vertical_texts}")
+
     n_rows = len(model_results)
     n_cols = 7
     width = 14
     height = width * (n_rows / n_cols) + 1
+
+    dataset_names = [
+        model_output["data_model"].split("_model")[0]
+        for model_output in model_results
+    ]
+    logger.info(f"Creating time-fate correlation plot with {n_rows} datasets")
+    for i, (dataset, label) in enumerate(zip(dataset_names, vertical_texts)):
+        logger.info(f"  Row {i+1}: {dataset} with label '{label}'")
 
     fig = plt.figure(figsize=(width, height))
 
@@ -246,7 +294,6 @@ def create_time_lineage_fate_correlation_plot(
         )
 
     row_labels = ["a", "b", "c", "d"][:n_rows]
-    vertical_texts = vertical_texts[:n_rows]
 
     return configure_time_lineage_fate_plot(
         fig=fig,
