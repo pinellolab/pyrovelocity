@@ -49,16 +49,45 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
+safe_cleanup() {
+    local dir_to_remove="$1"
+    
+    if [ -z "$dir_to_remove" ]; then
+        echo "Error: Empty directory path provided for cleanup. Skipping removal."
+        return 1
+    fi
+    
+    if [[ ! "$dir_to_remove" =~ ^/tmp/tmp\. ]] && [[ ! "$dir_to_remove" =~ ^/var/folders/.*/T/tmp\. ]]; then
+        echo "Error: '$dir_to_remove' does not appear to be a valid temporary directory. Skipping removal."
+        return 1
+    fi
+    
+    if [ ! -d "$dir_to_remove" ]; then
+        echo "Warning: Directory '$dir_to_remove' does not exist. Skipping removal."
+        return 0
+    fi
+    
+    rm -rf "$dir_to_remove"
+    return 0
+}
+
 extract_and_upload() {
     local filename="$1"
     local source="$2"
     local destination="$3"
-    local tempdir
+    local tempdir=""
+    
     tempdir=$(mktemp -d)
+    if [ ! -d "$tempdir" ]; then
+        echo "Error: Failed to create temporary directory."
+        return 1
+    fi
+    
+    trap 'safe_cleanup "$tempdir"' EXIT
+    
     echo ""
     echo "Using tempdir: $tempdir"
     echo ""
-    trap '[ -n "$tempdir" ] && rm -rf "$tempdir"' EXIT
 
     local file_stem
     file_stem="${filename}" 
@@ -69,6 +98,9 @@ extract_and_upload() {
     echo "Transferring $filename to $destination/$file_stem..."
     rclone cat "${source}${filename}" | tar -xz -C "$tempdir"
     rclone copy --transfers=20 "$tempdir/" "${destination}/${file_stem}/" -P
+    
+    safe_cleanup "$tempdir"
+    trap - EXIT
 }
 
 copy_file() {
@@ -78,6 +110,15 @@ copy_file() {
     
     echo "Copying $filename to $destination..."
     rclone copy "${source}${filename}" "${destination}/" -P
+}
+
+copy_directory() {
+    local dirname="$1"
+    local source="$2"
+    local destination="$3"
+    
+    echo "Copying directory $dirname to $destination..."
+    rclone copy "${source}${dirname}" "${destination}/${dirname}" -P --create-empty-src-dirs
 }
 
 SOURCE="${RCLONE_GCS_CONFIG}:${PROJECT}/${REPORTS_PATH}/${EXECUTION_ID}/"
@@ -106,21 +147,46 @@ run() {
     [ "$VERBOSE" = true ] && set -x
 
     rclone mkdir "$DESTINATION" || { echo "Failed to create destination directory."; exit 1; }
-    TAR_FILES=$(rclone lsf "$SOURCE" | grep '\.tar\.gz$')
-    OTHER_FILES=$(rclone lsf "$SOURCE" | grep -E '\.(json|html|tex|md)$')
+    
+    TAR_FILES=$(rclone lsf "$SOURCE" | grep '\.tar\.gz$' || true)
+    
+    OTHER_FILES=$(rclone lsf "$SOURCE" | grep -E '\.(json|html|tex|md|pdf|png|csv)$' || true)
+    
+    DIRECTORIES=$(rclone lsf "$SOURCE" | grep '/$' || true)
 
     if [ "$JOBS" -eq 1 ]; then
-        for filename in $TAR_FILES; do
-            extract_and_upload "$filename" "$SOURCE" "$DESTINATION"
-        done
-        for filename in $OTHER_FILES; do
-            copy_file "$filename" "$SOURCE" "$DESTINATION"
-        done
+        if [ -n "$TAR_FILES" ]; then
+            for filename in $TAR_FILES; do
+                extract_and_upload "$filename" "$SOURCE" "$DESTINATION"
+            done
+        fi
+        
+        if [ -n "$OTHER_FILES" ]; then
+            for filename in $OTHER_FILES; do
+                copy_file "$filename" "$SOURCE" "$DESTINATION"
+            done
+        fi
+        
+        if [ -n "$DIRECTORIES" ]; then
+            for dirname in $DIRECTORIES; do
+                copy_directory "$dirname" "$SOURCE" "$DESTINATION"
+            done
+        fi
     else
-        export -f extract_and_upload copy_file
+        export -f extract_and_upload copy_file copy_directory safe_cleanup
         export SOURCE DESTINATION
-        echo "$TAR_FILES" | parallel -j "$JOBS" --will-cite extract_and_upload {} "$SOURCE" "$DESTINATION"
-        echo "$OTHER_FILES" | parallel -j "$JOBS" --will-cite copy_file {} "$SOURCE" "$DESTINATION"
+        
+        if [ -n "$TAR_FILES" ]; then
+            echo "$TAR_FILES" | parallel -j "$JOBS" --will-cite extract_and_upload {} "$SOURCE" "$DESTINATION"
+        fi
+        
+        if [ -n "$OTHER_FILES" ]; then
+            echo "$OTHER_FILES" | parallel -j "$JOBS" --will-cite copy_file {} "$SOURCE" "$DESTINATION"
+        fi
+        
+        if [ -n "$DIRECTORIES" ]; then
+            echo "$DIRECTORIES" | parallel -j "$JOBS" --will-cite copy_directory {} "$SOURCE" "$DESTINATION"
+        fi
     fi
 }
 
