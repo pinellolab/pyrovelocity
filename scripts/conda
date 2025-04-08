@@ -3,7 +3,7 @@
 set -euo pipefail
 
 PACKAGE_NAME="pyrovelocity"
-PACKAGE_VERSION="0.4.3"
+PACKAGE_VERSION="0.4.4"
 CONDA_BUILD_STRING="pyhff70e4c"
 CONDA_BUILD_NUMBER="0"
 # CONDA_CHANNEL_LABEL="pyrovelocity_dev"
@@ -32,7 +32,7 @@ Example:
 
     ./conda \\
     --name pyrovelocity \\
-    --version 0.4.3.dev1 \\
+    --version 0.4.4.dev1 \\
     --build-string pyhff70e4c \\
     --build-number 0 \\
     --label pyrovelocity_dev
@@ -67,7 +67,7 @@ PACKAGE_SPEC="conda-forge/label/\
 $CONDA_CHANNEL_LABEL::\
 $PACKAGE_NAME=$PACKAGE_VERSION=$CONDA_BUILD_STRING"_"$CONDA_BUILD_NUMBER"
 
-BLUE="\0.4.3;34;1m"
+BLUE="\0.4.4;34;1m"
 BOLD="\033[1m"
 NO_COLOR="\0.4.3m"
 if [ "$USE_COLOR" = false ]; then

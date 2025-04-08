@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyrovelocity"
-version = "0.4.3"
+version = "0.4.4"
 packages = [{ include = "pyrovelocity", from = "src" }]
 description = "A multivariate RNA Velocity model to estimate future cell states with uncertainty using probabilistic modeling with pyro."
 authors = ["pyrovelocity team"]
