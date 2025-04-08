@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.4.4](https://github.com/pinellolab/pyrovelocity/compare/v0.4.3...v0.4.4) (2025-04-08)
+
+### Bug Fixes
+
+* **analyze:** set seeds in third-party calls ([5afe372](https://github.com/pinellolab/pyrovelocity/commit/5afe372fc0ad7239c3c703ed5f4150a2940c58d6))
+* **constants:** read or set PYROVELOCITY_SEED from env ([22a4954](https://github.com/pinellolab/pyrovelocity/commit/22a49544b407001943d521c96c00a2b3862a30bf))
+* **io:** add logic to retry dataset downloads ([dd4b371](https://github.com/pinellolab/pyrovelocity/commit/dd4b3713c79fc6141d7686664ebc391ae275866d))
+* **models:** set seeds in third-party calls ([a19ec6a](https://github.com/pinellolab/pyrovelocity/commit/a19ec6aa30ab4fbd56381badc7e0aa026daeac63))
+* **plots:** set seeds in third-party calls ([fd23ec8](https://github.com/pinellolab/pyrovelocity/commit/fd23ec87cf5913b0dea4c0903e4a735ae742db33))
+* **postprocess:** set seeds in third-party calls ([79522bb](https://github.com/pinellolab/pyrovelocity/commit/79522bb8f2c0edf14b247e516ee83f26cad9733f))
+* **preprocess:** set seeds in third-party calls ([7f14f5c](https://github.com/pinellolab/pyrovelocity/commit/7f14f5c37acebc1948795775cb62cca7fc533e21))
+* **random_state:** add functions to set rng seeds and states ([82bd12e](https://github.com/pinellolab/pyrovelocity/commit/82bd12ea24d61092b88d95eb9cc6f837fd2e4b1e))
+* **tasks:** reset seed in evaluate ([72ffcec](https://github.com/pinellolab/pyrovelocity/commit/72ffceca502d5975d7bce9ff19e6fb61b65e0b44))
+* **tasks:** reset seed in postprocess ([79087b5](https://github.com/pinellolab/pyrovelocity/commit/79087b54ac3eed5fe502f31b9eea0512ad88a47f))
+* **tasks:** reset seed in preprocess ([81a7671](https://github.com/pinellolab/pyrovelocity/commit/81a76719d7dda18bc6e4ca5fa74ee6f92cbf2fd3))
+* **tasks:** reset seed in summarize ([ccbae6e](https://github.com/pinellolab/pyrovelocity/commit/ccbae6eb14ad361901c448fc5e083a33df9d08cc))
+* **tasks:** reset seed in train ([5fefd01](https://github.com/pinellolab/pyrovelocity/commit/5fefd017a204f0d7363ccd43d0fad27d3ea73721))
+* **tasks:** use download with retry enabled by default ([f7ec55b](https://github.com/pinellolab/pyrovelocity/commit/f7ec55b09b6d15b513bc5eb6bf47c40a8777f730))
+* **workflows:** condition all uploads on upload results var ([3da221d](https://github.com/pinellolab/pyrovelocity/commit/3da221ddcc3028f4e7cab78617b5788c459d05a8))
+* **workflows:** use global seed constant ([84f8be2](https://github.com/pinellolab/pyrovelocity/commit/84f8be256268d915dfd7930c8c38dc176ee4f2ed))
+* **workflows:** use seed constant in main configuration ([0994b72](https://github.com/pinellolab/pyrovelocity/commit/0994b723cc6e2ea9e882f2610dcea6e8498c581e))
+
 ## [0.4.3](https://github.com/pinellolab/pyrovelocity/compare/v0.4.2...v0.4.3) (2025-04-04)
 
 ### Bug Fixes
