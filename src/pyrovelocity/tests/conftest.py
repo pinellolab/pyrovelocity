@@ -16,13 +16,27 @@ from pyrovelocity.tasks.summarize import summarize_dataset
 from pyrovelocity.tasks.train import train_dataset
 from pyrovelocity.utils import generate_sample_data
 
+# see `src/pyrovelocity/tests/fixtures/get_fixture_hashes.py` to update fixture hashes
+FIXTURE_HASHES = {
+    "preprocessed_pancreas_50_7.json": "95c80131694f2c6449a48a56513ef79cdc56eae75204ec69abde0d81a18722ae",
+    "trained_pancreas_50_7.json": "8c575d9de0430003b469b9cc9850171914a4fe1f0ae655fe0146f81af34abd04",
+    "postprocessed_pancreas_50_7.json": "d50813ad23e4ae1c34f483547a7d8351fdfa94c805098caf99b8864eba8892ef",
+    "larry_multilineage_50_6.json": "227a025f340e9ead0779abf8349e6c2a9774301b50e13f1c6d9f3f96001dfe73",
+    "preprocessed_larry_multilineage_50_6.json": "61d3da04b5de323d3e0fd0bfd6218281c76e58f2d5271d52247f2f3218f1b1a2",
+    "trained_larry_multilineage_50_6.json": "c6338e64b437e8b7a82f245729e585dc4fa7f11cd428777716e84fc6c46603f8",
+    "postprocessed_larry_multilineage_50_6.json": "a8aeec31939a8d1b93577e5bf3d4f747d69cd4564bd87af54ec800903aaa25a6",
+}
+
 
 @pytest.fixture
 def adata_preprocessed_pancreas_50_7():
     fixture_file_path = (
         files("pyrovelocity.tests.data") / "preprocessed_pancreas_50_7.json"
     )
-    return load_anndata_from_json(fixture_file_path)
+    return load_anndata_from_json(
+        filename=fixture_file_path,
+        expected_hash=FIXTURE_HASHES["preprocessed_pancreas_50_7.json"],
+    )
 
 
 @pytest.fixture
@@ -30,7 +44,10 @@ def adata_trained_pancreas_50_7():
     fixture_file_path = (
         files("pyrovelocity.tests.data") / "trained_pancreas_50_7.json"
     )
-    return load_anndata_from_json(fixture_file_path)
+    return load_anndata_from_json(
+        filename=fixture_file_path,
+        expected_hash=FIXTURE_HASHES["trained_pancreas_50_7.json"],
+    )
 
 
 @pytest.fixture
@@ -38,7 +55,10 @@ def adata_postprocessed_pancreas_50_7():
     fixture_file_path = (
         files("pyrovelocity.tests.data") / "postprocessed_pancreas_50_7.json"
     )
-    return load_anndata_from_json(fixture_file_path)
+    return load_anndata_from_json(
+        filename=fixture_file_path,
+        expected_hash=FIXTURE_HASHES["postprocessed_pancreas_50_7.json"],
+    )
 
 
 @pytest.fixture
@@ -46,7 +66,50 @@ def adata_larry_multilineage_50_6():
     fixture_file_path = (
         files("pyrovelocity.tests.data") / "larry_multilineage_50_6.json"
     )
-    return load_anndata_from_json(fixture_file_path)
+    return load_anndata_from_json(
+        filename=fixture_file_path,
+        expected_hash=FIXTURE_HASHES["larry_multilineage_50_6.json"],
+    )
+
+
+@pytest.fixture
+def adata_preprocessed_larry_multilineage_50_6():
+    fixture_file_path = (
+        files("pyrovelocity.tests.data")
+        / "preprocessed_larry_multilineage_50_6.json"
+    )
+    return load_anndata_from_json(
+        filename=fixture_file_path,
+        expected_hash=FIXTURE_HASHES[
+            "preprocessed_larry_multilineage_50_6.json"
+        ],
+    )
+
+
+@pytest.fixture
+def adata_trained_larry_multilineage_50_6():
+    fixture_file_path = (
+        files("pyrovelocity.tests.data")
+        / "trained_larry_multilineage_50_6.json"
+    )
+    return load_anndata_from_json(
+        filename=fixture_file_path,
+        expected_hash=FIXTURE_HASHES["trained_larry_multilineage_50_6.json"],
+    )
+
+
+@pytest.fixture
+def adata_postprocessed_larry_multilineage_50_6():
+    fixture_file_path = (
+        files("pyrovelocity.tests.data")
+        / "postprocessed_larry_multilineage_50_6.json"
+    )
+    return load_anndata_from_json(
+        filename=fixture_file_path,
+        expected_hash=FIXTURE_HASHES[
+            "postprocessed_larry_multilineage_50_6.json"
+        ],
+    )
 
 
 @pytest.fixture

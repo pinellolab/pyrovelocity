@@ -1,0 +1,12 @@
+{
+    "artifact_uri": "mlflow-artifacts:/1a741690552b410eb9c7ba642cf21e2d/365e2f5e14314973a63053224221aa9e/artifacts",
+    "end_time": 1744143829592,
+    "experiment_id": "0",
+    "lifecycle_stage": "active",
+    "run_id": "365e2f5e14314973a63053224221aa9e",
+    "run_name": "larry_multilineage_model2-365e2f5",
+    "run_uuid": "365e2f5e14314973a63053224221aa9e",
+    "start_time": 1744143827632,
+    "status": "FINISHED",
+    "user_id": "cameronraysmith"
+}
