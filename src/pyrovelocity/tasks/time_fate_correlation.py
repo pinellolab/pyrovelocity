@@ -18,13 +18,6 @@ from pyrovelocity.plots import plot_lineage_fate_correlation
 from pyrovelocity.styles import configure_matplotlib_style
 from pyrovelocity.styles.colors import LARRY_CELL_TYPE_COLORS
 from pyrovelocity.utils import load_anndata_from_path
-from pyrovelocity.workflows.main_configuration import (
-    WorkflowConfiguration,
-    larry_configuration,
-    larry_mono_configuration,
-    larry_multilineage_configuration,
-    larry_neu_configuration,
-)
 
 __all__ = [
     "configure_time_lineage_fate_plot",
@@ -34,86 +27,6 @@ __all__ = [
 logger = configure_logging(__name__)
 
 configure_matplotlib_style()
-
-
-@beartype
-def estimate_time_lineage_fate_correlation(
-    reports_path: str | Path = "reports",
-    model_identifier: str = "model2",
-    configurations: List[WorkflowConfiguration] = [
-        larry_mono_configuration,
-        larry_neu_configuration,
-        larry_multilineage_configuration,
-        larry_configuration,
-    ],
-) -> Path:
-    """
-    This function is a duplicate of the `combine_time_lineage_fate_correlation`
-    task function and will be removed in a future release.
-    """
-    n_rows = len(configurations)
-    n_cols = 7
-    width = 14
-    height = width * (n_rows / n_cols) + 1
-
-    fig = plt.figure(figsize=(width, height))
-
-    gs = fig.add_gridspec(
-        n_rows + 1,
-        n_cols + 1,
-        width_ratios=[0.02] + [1] * n_cols,
-        height_ratios=[1] * n_rows + [0.2],
-    )
-
-    adata_cospar = larry_cospar()
-
-    all_axes = []
-    for i, config in enumerate(configurations):
-        data_set_name = config.download_dataset.data_set_name
-        data_set_model_pairing = f"{data_set_name}_{model_identifier}"
-        model_path = f"models/{data_set_model_pairing}"
-
-        adata_pyrovelocity = load_anndata_from_path(
-            f"{model_path}/postprocessed.h5ad"
-        )
-        posterior_samples_path = f"{model_path}/pyrovelocity.pkl.zst"
-        plot_path = (
-            Path(reports_path)
-            / f"time_fate_correlation_{data_set_model_pairing}.pdf"
-        )
-
-        axes = [fig.add_subplot(gs[i, j + 1]) for j in range(n_cols)]
-        all_axes.append(axes)
-
-        plot_lineage_fate_correlation(
-            posterior_samples_path=posterior_samples_path,
-            adata_pyrovelocity=adata_pyrovelocity,
-            adata_cospar=adata_cospar,
-            all_axes=axes,
-            fig=fig,
-            state_color_dict=LARRY_CELL_TYPE_COLORS,
-            lineage_fate_correlation_path=plot_path,
-            save_plot=False,
-            ylabel="",
-            show_titles=True if i == 0 else False,
-            show_colorbars=False,
-            default_fontsize=12 if matplotlib.rcParams["text.usetex"] else 9,
-        )
-
-    return configure_time_lineage_fate_plot(
-        fig=fig,
-        gs=gs,
-        all_axes=all_axes,
-        row_labels=["a", "b", "c", "d"],
-        vertical_texts=[
-            "Monocytes",
-            "Neutrophils",
-            "Multilineage",
-            "All lineages",
-        ],
-        reports_path=Path(reports_path),
-        model_identifier=model_identifier,
-    )
 
 
 @beartype
@@ -390,3 +303,91 @@ def _save_plot(
         )
     plt.close(fig)
     return combined_plot_path
+
+
+# from pyrovelocity.workflows.main_configuration import (
+#     WorkflowConfiguration,
+#     larry_configuration,
+#     larry_mono_configuration,
+#     larry_multilineage_configuration,
+#     larry_neu_configuration,
+# )
+#
+# @beartype
+# def estimate_time_lineage_fate_correlation(
+#     reports_path: str | Path = "reports",
+#     model_identifier: str = "model2",
+#     configurations: List[WorkflowConfiguration] = [
+#         larry_mono_configuration,
+#         larry_neu_configuration,
+#         larry_multilineage_configuration,
+#         larry_configuration,
+#     ],
+# ) -> Path:
+#     """
+#     This function is a duplicate of the `combine_time_lineage_fate_correlation`
+#     task function and will be removed in a future release.
+#     """
+#     n_rows = len(configurations)
+#     n_cols = 7
+#     width = 14
+#     height = width * (n_rows / n_cols) + 1
+
+#     fig = plt.figure(figsize=(width, height))
+
+#     gs = fig.add_gridspec(
+#         n_rows + 1,
+#         n_cols + 1,
+#         width_ratios=[0.02] + [1] * n_cols,
+#         height_ratios=[1] * n_rows + [0.2],
+#     )
+
+#     adata_cospar = larry_cospar()
+
+#     all_axes = []
+#     for i, config in enumerate(configurations):
+#         data_set_name = config.download_dataset.data_set_name
+#         data_set_model_pairing = f"{data_set_name}_{model_identifier}"
+#         model_path = f"models/{data_set_model_pairing}"
+
+#         adata_pyrovelocity = load_anndata_from_path(
+#             f"{model_path}/postprocessed.h5ad"
+#         )
+#         posterior_samples_path = f"{model_path}/pyrovelocity.pkl.zst"
+#         plot_path = (
+#             Path(reports_path)
+#             / f"time_fate_correlation_{data_set_model_pairing}.pdf"
+#         )
+
+#         axes = [fig.add_subplot(gs[i, j + 1]) for j in range(n_cols)]
+#         all_axes.append(axes)
+
+#         plot_lineage_fate_correlation(
+#             posterior_samples_path=posterior_samples_path,
+#             adata_pyrovelocity=adata_pyrovelocity,
+#             adata_cospar=adata_cospar,
+#             all_axes=axes,
+#             fig=fig,
+#             state_color_dict=LARRY_CELL_TYPE_COLORS,
+#             lineage_fate_correlation_path=plot_path,
+#             save_plot=False,
+#             ylabel="",
+#             show_titles=True if i == 0 else False,
+#             show_colorbars=False,
+#             default_fontsize=12 if matplotlib.rcParams["text.usetex"] else 9,
+#         )
+
+#     return configure_time_lineage_fate_plot(
+#         fig=fig,
+#         gs=gs,
+#         all_axes=all_axes,
+#         row_labels=["a", "b", "c", "d"],
+#         vertical_texts=[
+#             "Monocytes",
+#             "Neutrophils",
+#             "Multilineage",
+#             "All lineages",
+#         ],
+#         reports_path=Path(reports_path),
+#         model_identifier=model_identifier,
+#     )
