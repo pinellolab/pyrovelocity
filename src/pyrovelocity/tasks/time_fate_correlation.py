@@ -92,6 +92,7 @@ def create_time_lineage_fate_correlation_plot(
         adata_pyrovelocity = load_anndata_from_path(postprocessed_data_path)
 
         if dataset_name == "larry_multilineage":
+            # TODO: migrate this branch to a separate function
             logger.info(
                 "Creating multilineage clone trajectory from mono and neu datasets"
             )
@@ -110,6 +111,34 @@ def create_time_lineage_fate_correlation_plot(
                 f"  - Generating neu trajectory with {neu_adata.n_obs} cells"
             )
             neu_clone = get_clone_trajectory(neu_adata)
+
+            # this section is to ensure that the cell IDs are compatible between the
+            # pyrovelocity data and the clone trajectories
+            pyrovelocity_cell_ids = set(adata_pyrovelocity.obs_names)
+
+            original_mono_cells = mono_clone.n_obs
+            mono_cell_mask = mono_clone.obs_names.isin(pyrovelocity_cell_ids)
+            if not any(mono_cell_mask):
+                logger.warning(
+                    "No matching cells found in mono_clone. Using all cells."
+                )
+            else:
+                mono_clone = mono_clone[mono_cell_mask].copy()
+                logger.info(
+                    f"  - Subset mono_clone from {original_mono_cells} to {mono_clone.n_obs} cells"
+                )
+
+            original_neu_cells = neu_clone.n_obs
+            neu_cell_mask = neu_clone.obs_names.isin(pyrovelocity_cell_ids)
+            if not any(neu_cell_mask):
+                logger.warning(
+                    "No matching cells found in neu_clone. Using all cells."
+                )
+            else:
+                neu_clone = neu_clone[neu_cell_mask].copy()
+                logger.info(
+                    f"  - Subset neu_clone from {original_neu_cells} to {neu_clone.n_obs} cells"
+                )
 
             logger.info("  - Concatenating mono and neu trajectories")
             clone_trajectories[dataset_name] = mono_clone.concatenate(neu_clone)
