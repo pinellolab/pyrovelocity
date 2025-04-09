@@ -644,10 +644,17 @@ def internal_help(obj: Callable | ModuleType):
 @beartype
 def load_anndata_from_path(adata_path: str | Path) -> AnnData:
     adata_path = Path(adata_path)
+
+    if adata_path.suffix == ".json":
+        from pyrovelocity.io.serialization import load_anndata_from_json
+
+        logger.info(f"Reading JSON input file: {adata_path}")
+        return load_anndata_from_json(filename=adata_path)
+
     if adata_path.suffix not in {".h5ad", ".loom"}:
         raise ValueError(
             f"The input file {adata_path}\n"
-            "must be either a .h5ad or .loom file."
+            "must be either a .h5ad, .loom, or .json file."
         )
     if os.path.isfile(adata_path) and os.access(adata_path, os.R_OK):
         logger.info(f"Reading input file: {adata_path}")
