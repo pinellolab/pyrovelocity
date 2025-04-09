@@ -188,5 +188,6 @@ scratch.*
 # scratch
 *scratch*
 .*rules*
+rules/
 
 /.luarc.json
