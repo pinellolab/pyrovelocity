@@ -519,8 +519,16 @@ def combine_time_lineage_fate_correlation(
     model_ordered_results = list(map(list, zip(*results)))
     time_lineage_fate_correlation_plots = []
 
+    dataset_label_map = {
+        "larry_mono": "Monocytes",
+        "larry_neu": "Neutrophils",
+        "larry_multilineage": "Multilineage",
+        "larry": "All lineages",
+    }
+
     for model_results in model_ordered_results:
         prepared_model_results = []
+
         for model_output in model_results:
             postprocessed_data_path = model_output.postprocessed_data.download()
             posterior_samples_path = model_output.pyrovelocity_data.download()
@@ -533,15 +541,14 @@ def combine_time_lineage_fate_correlation(
                 }
             )
 
+        logger.info(
+            f"Creating time-fate correlation plot with {len(prepared_model_results)} datasets"
+        )
+
         time_lineage_fate_correlation_plot = (
             create_time_lineage_fate_correlation_plot(
                 model_results=prepared_model_results,
-                vertical_texts=[
-                    "Monocytes",
-                    "Neutrophils",
-                    "Multilineage",
-                    "All lineages",
-                ][: len(prepared_model_results)],
+                dataset_label_map=dataset_label_map,
                 output_dir=output_dir,
             )
         )
