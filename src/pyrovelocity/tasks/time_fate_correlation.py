@@ -160,33 +160,56 @@ def create_time_lineage_fate_correlation_plot(
             )
             neu_clone = get_clone_trajectory(neu_adata)
 
-            # this section is to ensure that the cell IDs are compatible between the
-            # pyrovelocity data and the clone trajectories
-            pyrovelocity_cell_ids = set(adata_pyrovelocity.obs_names)
+            # ensure the cell IDs are compatible between the pyrovelocity data
+            # and the clone trajectories if a subset of observations has been
+            # used to generate the pyrovelocity data
+            if (mono_adata.n_obs + neu_adata.n_obs) > adata_pyrovelocity.n_obs:
+                pyrovelocity_cell_ids = set(adata_pyrovelocity.obs_names)
 
-            original_mono_cells = mono_clone.n_obs
-            mono_cell_mask = mono_clone.obs_names.isin(pyrovelocity_cell_ids)
-            if not any(mono_cell_mask):
-                logger.warning(
-                    "No matching cells found in mono_clone. Using all cells."
-                )
-            else:
-                mono_clone = mono_clone[mono_cell_mask].copy()
-                logger.info(
-                    f"  - Subset mono_clone from {original_mono_cells} to {mono_clone.n_obs} cells"
-                )
+                original_mono_cells = mono_clone.n_obs
 
-            original_neu_cells = neu_clone.n_obs
-            neu_cell_mask = neu_clone.obs_names.isin(pyrovelocity_cell_ids)
-            if not any(neu_cell_mask):
-                logger.warning(
-                    "No matching cells found in neu_clone. Using all cells."
-                )
-            else:
-                neu_clone = neu_clone[neu_cell_mask].copy()
-                logger.info(
-                    f"  - Subset neu_clone from {original_neu_cells} to {neu_clone.n_obs} cells"
-                )
+                # note the obs with state_info == "Centroid" are added by
+                # get_clone_trajectory
+                centroid_mask = mono_clone.obs.state_info == "Centroid"
+                id_mask = mono_clone.obs_names.isin(pyrovelocity_cell_ids)
+                mono_cell_mask = centroid_mask | id_mask
+
+                if not any(mono_cell_mask):
+                    logger.warning(
+                        "No matching cells found in mono_clone. Using all cells."
+                    )
+                else:
+                    num_centroids = centroid_mask.sum()
+                    logger.info(
+                        f"  - Preserving {num_centroids} centroids in mono_clone"
+                    )
+
+                    mono_clone = mono_clone[mono_cell_mask].copy()
+                    logger.info(
+                        f"  - Subset mono_clone from {original_mono_cells} to {mono_clone.n_obs} cells"
+                    )
+
+                original_neu_cells = neu_clone.n_obs
+
+                centroid_mask = neu_clone.obs.state_info == "Centroid"
+                id_mask = neu_clone.obs_names.isin(pyrovelocity_cell_ids)
+                neu_cell_mask = centroid_mask | id_mask
+
+                if not any(neu_cell_mask):
+                    logger.warning(
+                        "No matching cells found in neu_clone. Using all cells."
+                    )
+                else:
+                    # Log how many centroids we're preserving
+                    num_centroids = centroid_mask.sum()
+                    logger.info(
+                        f"  - Preserving {num_centroids} centroids in neu_clone"
+                    )
+
+                    neu_clone = neu_clone[neu_cell_mask].copy()
+                    logger.info(
+                        f"  - Subset neu_clone from {original_neu_cells} to {neu_clone.n_obs} cells"
+                    )
 
             logger.info("  - Concatenating mono and neu trajectories")
             clone_trajectories[dataset_name] = mono_clone.concatenate(neu_clone)
