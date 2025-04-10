@@ -301,6 +301,7 @@ lint = [
 test = [
   "coverage",
   "hypothesis",
+  "ipdb",
   "ipython",
   # "poethepoet",
   "pygments",
