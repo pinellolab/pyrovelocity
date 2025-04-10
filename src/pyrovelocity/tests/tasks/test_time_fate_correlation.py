@@ -1,11 +1,14 @@
 import os
 from importlib.resources import files
 
+import pytest
+
 from pyrovelocity.tasks.time_fate_correlation import (
     create_time_lineage_fate_correlation_plot,
 )
 
 
+@pytest.mark.network
 def test_create_time_lineage_fate_correlation_plot(
     larry_multilineage_model2_pyrovelocity_data_path,
     tmp_path,
