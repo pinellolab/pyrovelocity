@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.4.5](https://github.com/pinellolab/pyrovelocity/compare/v0.4.4...v0.4.5) (2025-04-10)
+
+### Bug Fixes
+
+* **make:** update run-instructions target ([37a4d20](https://github.com/pinellolab/pyrovelocity/commit/37a4d20ab9e201887b95e7d1673334d99a16a178))
+* **pyproject:** do not exclude tests with network mark by default ([4324962](https://github.com/pinellolab/pyrovelocity/commit/43249627cdd14a7d0abab07771601c61042aac6e))
+* **pyproject:** update test extra group to include ipdb ([a6c7fc1](https://github.com/pinellolab/pyrovelocity/commit/a6c7fc1c73e1a14ef2f8bb30a78ae13686458cc2))
+* **run-workflow:** qualify hydra outputs artifact by execution mode ([3981426](https://github.com/pinellolab/pyrovelocity/commit/3981426d302646ad7fd41e4b2059540bd91947c4))
+* **scripts:** include unzipped directories in copying gcs files to drive remotes ([b63fce2](https://github.com/pinellolab/pyrovelocity/commit/b63fce2dcfa033c046be2e59dff5d9cb62808063))
+* **time_fate_correlation:** comment unused `estimate_time_lineage_fate_correlation` function ([0887ff3](https://github.com/pinellolab/pyrovelocity/commit/0887ff3aaf2ff8e6e4d5bb43bc1aac162bded479))
+* **time_fate_correlation:** do not remove centroid obs ([fd2295a](https://github.com/pinellolab/pyrovelocity/commit/fd2295a4734c898a0061019fd2e6997987226ac4))
+* **time_fate_correlation:** map data set names to labels ([e8a297e](https://github.com/pinellolab/pyrovelocity/commit/e8a297ec9b1cc9f0a44bd24ab65f9d3704c0de83))
+* **time_fate_correlation:** synchronize obs subsets ([9a93e18](https://github.com/pinellolab/pyrovelocity/commit/9a93e18aa272626c1dc782622eec2be8bd160cab))
+* **utils:** dispatch to load_anndata_from_json on json paths ([1493107](https://github.com/pinellolab/pyrovelocity/commit/1493107c096311b8589c53268f4d9440d7e2dd35))
+* **workflows:** use updated time lineage fate correlation interface ([ae76d9d](https://github.com/pinellolab/pyrovelocity/commit/ae76d9d99db3f60f6719b46370638c46cdad6baf))
+
 ## [0.4.4](https://github.com/pinellolab/pyrovelocity/compare/v0.4.3...v0.4.4) (2025-04-08)
 
 ### Bug Fixes
