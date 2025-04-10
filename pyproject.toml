@@ -438,7 +438,7 @@ log_level = "INFO"
 # Run tests in parallel with pytest-xdist:
 # -n auto
 addopts = """ 
--m "not slow and not pyensembl and not network"
+-m "not slow and not pyensembl"
 -rA
 --xdoctest
 --disable-warnings
