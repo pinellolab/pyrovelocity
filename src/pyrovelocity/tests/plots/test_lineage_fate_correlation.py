@@ -2,6 +2,7 @@ import os
 from importlib.resources import files
 
 import matplotlib.pyplot as plt
+import pytest
 
 from pyrovelocity.analysis.trajectory import get_clone_trajectory
 from pyrovelocity.io.datasets import larry_cospar
@@ -10,6 +11,7 @@ from pyrovelocity.styles.colors import LARRY_CELL_TYPE_COLORS
 from pyrovelocity.utils import load_anndata_from_path
 
 
+@pytest.mark.network
 def test_plot_lineage_fate_correlation(
     larry_multilineage_model2_pyrovelocity_data_path,
     tmp_path,
