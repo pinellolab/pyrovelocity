@@ -406,7 +406,7 @@ jobs:
           "PYROVELOCITY_CACHE_FLAG": "True", 
           "PYROVELOCITY_OVERWRITE_CACHE": "False",
           "PYROVELOCITY_LOG_LEVEL": "INFO",
-          "PYROVELOCITY_SEED": "41"
+          "PYROVELOCITY_SEED": "42"
         }
       dataset_registry: "{simulated:false,pancreas:false,bonemarrow:false,pbmc5k:false,pbmc10k:false,pbmc68k:false,pons:false,larry:true,larry_neu:false,larry_mono:false,larry_multilineage:true}"
     secrets: inherit
@@ -430,7 +430,7 @@ jobs:
           "PYROVELOCITY_CACHE_FLAG": "True", 
           "PYROVELOCITY_OVERWRITE_CACHE": "False",
           "PYROVELOCITY_LOG_LEVEL": "INFO",
-          "PYROVELOCITY_SEED": "41"
+          "PYROVELOCITY_SEED": "42"
         }
       dataset_registry: "{simulated:true,pancreas:true,bonemarrow:true,pbmc5k:true,pbmc10k:true,pbmc68k:true,pons:true,larry:true,larry_neu:true,larry_mono:true,larry_multilineage:true}"
     secrets: inherit
