@@ -508,7 +508,13 @@ class BaseObservationModel(BaseComponent, ObservationModel, abc.ABC):
         Returns:
             Dictionary of prepared data
         """
-        return self._prepare_data_impl(adata, **kwargs)
+        try:
+            return self._prepare_data_impl(adata, **kwargs)
+        except Exception as e:
+            # Log the error
+            print(f"Error preparing data: {e}")
+            # Raise a ValueError with a standard message
+            raise ValueError(f"Failed to prepare data") from e
     
     @abc.abstractmethod
     def _prepare_data_impl(
@@ -543,7 +549,13 @@ class BaseObservationModel(BaseComponent, ObservationModel, abc.ABC):
         Returns:
             Dictionary of data loaders
         """
-        return self._create_dataloaders_impl(data, **kwargs)
+        try:
+            return self._create_dataloaders_impl(data, **kwargs)
+        except Exception as e:
+            # Log the error
+            print(f"Error creating dataloaders: {e}")
+            # Raise a ValueError with a standard message
+            raise ValueError(f"Failed to create dataloaders") from e
     
     @abc.abstractmethod
     def _create_dataloaders_impl(
@@ -577,7 +589,13 @@ class BaseObservationModel(BaseComponent, ObservationModel, abc.ABC):
         Returns:
             Preprocessed batch data
         """
-        return self._preprocess_batch_impl(batch)
+        try:
+            return self._preprocess_batch_impl(batch)
+        except Exception as e:
+            # Log the error
+            print(f"Error preprocessing batch: {e}")
+            # Raise a ValueError with a standard message
+            raise ValueError(f"Failed to preprocess batch") from e
     
     @abc.abstractmethod
     def _preprocess_batch_impl(
