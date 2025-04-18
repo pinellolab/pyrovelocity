@@ -5,29 +5,29 @@ including factory methods for model creation and configuration management, adapt
 backward compatibility with the legacy API, and Bayesian model comparison tools.
 """
 
-from pyrovelocity.models.base import (
+from pyrovelocity.models.components.base import (
     BaseDynamicsModel,
     BaseLikelihoodModel,
     BaseObservationModel,
     BasePriorModel,
     BaseInferenceGuide,
 )
-from pyrovelocity.models.dynamics import (
+from pyrovelocity.models.components.dynamics import (
     StandardDynamicsModel,
     NonlinearDynamicsModel,
 )
-from pyrovelocity.models.priors import (
+from pyrovelocity.models.components.priors import (
     LogNormalPriorModel,
     InformativePriorModel,
 )
-from pyrovelocity.models.likelihoods import (
+from pyrovelocity.models.components.likelihoods import (
     PoissonLikelihoodModel,
     NegativeBinomialLikelihoodModel,
 )
-from pyrovelocity.models.observations import (
+from pyrovelocity.models.components.observations import (
     StandardObservationModel,
 )
-from pyrovelocity.models.guides import (
+from pyrovelocity.models.components.guides import (
     AutoGuideFactory,
     NormalGuide,
     DeltaGuide,

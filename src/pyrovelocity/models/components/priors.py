@@ -15,7 +15,7 @@ from beartype import beartype
 from jaxtyping import Float, jaxtyped
 from pyro.nn import PyroModule
 
-from pyrovelocity.models.base import BasePriorModel
+from pyrovelocity.models.components.base import BasePriorModel
 from pyrovelocity.models.interfaces import BatchTensor, ModelState, ParamTensor
 from pyrovelocity.models.registry import PriorModelRegistry
 

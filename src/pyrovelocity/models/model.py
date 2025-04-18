@@ -16,8 +16,8 @@ import numpyro.distributions as dist
 from beartype import beartype
 from jaxtyping import Array, Float, Int
 
-from pyrovelocity.models.base import BaseDynamicsModel
-from pyrovelocity.models.guides import AutoGuideFactory
+from pyrovelocity.models.components.base import BaseDynamicsModel
+from pyrovelocity.models.components.guides import AutoGuideFactory
 from pyrovelocity.models.interfaces import (
     DynamicsModel as DynamicsModelProtocol,
     InferenceGuide as GuideModelProtocol,
@@ -25,9 +25,9 @@ from pyrovelocity.models.interfaces import (
     ObservationModel as ObservationModelProtocol,
     PriorModel as PriorModelProtocol,
 )
-from pyrovelocity.models.likelihoods import PoissonLikelihoodModel
-from pyrovelocity.models.observations import StandardObservationModel
-from pyrovelocity.models.priors import LogNormalPriorModel
+from pyrovelocity.models.components.likelihoods import PoissonLikelihoodModel
+from pyrovelocity.models.components.observations import StandardObservationModel
+from pyrovelocity.models.components.priors import LogNormalPriorModel
 
 
 @dataclass(frozen=True)

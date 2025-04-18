@@ -12,7 +12,7 @@ from beartype import beartype
 from diffrax import ODETerm, SaveAt, Solution, Tsit5, diffeqsolve
 from jaxtyping import Array, Float, jaxtyped
 
-from pyrovelocity.models.base import BaseDynamicsModel
+from pyrovelocity.models.components.base import BaseDynamicsModel
 from pyrovelocity.models.registry import DynamicsModelRegistry
 
 

@@ -14,7 +14,7 @@ from beartype import beartype
 from jaxtyping import Array, Float, Int
 from anndata._core.anndata import AnnData
 
-from pyrovelocity.models.base import BaseLikelihoodModel
+from pyrovelocity.models.components.base import BaseLikelihoodModel
 from pyrovelocity.models.registry import LikelihoodModelRegistry
 
 

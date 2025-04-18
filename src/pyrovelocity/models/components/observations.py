@@ -18,7 +18,7 @@ from beartype import beartype
 from jaxtyping import Array, Float, Int
 from torch.utils.data import DataLoader, TensorDataset
 
-from pyrovelocity.models.base import BaseObservationModel
+from pyrovelocity.models.components.base import BaseObservationModel
 from pyrovelocity.models.interfaces import ObservationModel
 from pyrovelocity.models.registry import observation_model_registry
 
