@@ -6,7 +6,7 @@ import pyro
 import pyro.distributions as dist
 from pyro.nn import PyroModule
 
-from pyrovelocity.models.priors import LogNormalPriorModel, InformativePriorModel
+from pyrovelocity.models.components.priors import LogNormalPriorModel, InformativePriorModel
 from pyrovelocity.models.registry import PriorModelRegistry
 
 

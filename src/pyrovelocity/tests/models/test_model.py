@@ -13,14 +13,14 @@ import pytest
 import torch
 from jaxtyping import Array, Float
 
-from pyrovelocity.models.base import (
+from pyrovelocity.models.components.base import (
     BaseDynamicsModel,
     BaseLikelihoodModel,
     BaseObservationModel,
     BasePriorModel,
     BaseInferenceGuide,
 )
-from pyrovelocity.models.dynamics import StandardDynamicsModel
+from pyrovelocity.models.components.dynamics import StandardDynamicsModel
 from pyrovelocity.models.interfaces import (
     DynamicsModel as DynamicsModelProtocol,
     InferenceGuide as GuideModelProtocol,
@@ -28,7 +28,7 @@ from pyrovelocity.models.interfaces import (
     ObservationModel as ObservationModelProtocol,
     PriorModel as PriorModelProtocol,
 )
-from pyrovelocity.models.likelihoods import PoissonLikelihoodModel
+from pyrovelocity.models.components.likelihoods import PoissonLikelihoodModel
 from pyrovelocity.models.model import ModelState, PyroVelocityModel
 
 

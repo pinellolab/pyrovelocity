@@ -5,7 +5,7 @@ import pyro
 import pyro.distributions as dist
 import torch
 
-from pyrovelocity.models.guides import AutoGuideFactory, NormalGuide, DeltaGuide
+from pyrovelocity.models.components.guides import AutoGuideFactory, NormalGuide, DeltaGuide
 from pyrovelocity.models.registry import inference_guide_registry
 
 

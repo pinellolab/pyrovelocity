@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 from jaxtyping import Array
 
-from pyrovelocity.models.dynamics import NonlinearDynamicsModel, StandardDynamicsModel
+from pyrovelocity.models.components.dynamics import NonlinearDynamicsModel, StandardDynamicsModel
 from pyrovelocity.models.registry import DynamicsModelRegistry
 
 

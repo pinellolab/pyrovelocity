@@ -7,7 +7,7 @@ from jaxtyping import Array, Float
 import numpy as np
 from anndata._core.anndata import AnnData
 
-from pyrovelocity.models.likelihoods import (
+from pyrovelocity.models.components.likelihoods import (
     NegativeBinomialLikelihoodModel,
     PoissonLikelihoodModel,
 )

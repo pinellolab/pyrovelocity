@@ -12,17 +12,14 @@ import pyro.distributions as dist
 from anndata import AnnData
 from expression import case, tag, tagged_union
 
-from pyrovelocity.models.base import (
-    BaseComponent,
+from pyrovelocity.models.components.base import (
     BaseDynamicsModel,
     BasePriorModel,
     BaseLikelihoodModel,
     BaseObservationModel,
     BaseInferenceGuide,
-    ComponentError,
-    Result,
 )
-from pyrovelocity.utils.data import DataSplitter, MiniBatchDataset
+# Removed import of non-existent module
 
 
 class TestBaseComponent:

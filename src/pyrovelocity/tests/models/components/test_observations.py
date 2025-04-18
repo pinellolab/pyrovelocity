@@ -5,7 +5,7 @@ import pytest
 import torch
 from anndata import AnnData
 
-from pyrovelocity.models.observations import StandardObservationModel
+from pyrovelocity.models.components.observations import StandardObservationModel
 from pyrovelocity.models.registry import observation_model_registry
 
 
