@@ -12,6 +12,8 @@ from __future__ import annotations
 import abc
 from typing import Any, Dict, Optional, Tuple, Union
 
+from expression import Result, case, tag, tagged_union
+
 import jax.numpy as jnp
 import pyro
 import torch
@@ -21,15 +23,100 @@ from beartype.typing import Callable
 from jaxtyping import Array, Float, jaxtyped
 
 from pyrovelocity.models.interfaces import (
+    BatchTensor,
     DynamicsModel,
     InferenceGuide,
     LikelihoodModel,
     ObservationModel,
+    ParamTensor,
     PriorModel,
 )
 
 
-class BaseDynamicsModel(DynamicsModel, abc.ABC):
+class ComponentError:
+    """
+    Error information for component operations.
+    
+    This class represents errors that occur during component operations.
+    It includes information about the component, operation, error message,
+    and additional details.
+    """
+    
+    def __init__(
+        self,
+        component: str,
+        operation: str,
+        message: str,
+        details: Optional[Dict[str, Any]] = None
+    ):
+        self.component = component
+        self.operation = operation
+        self.message = message
+        self.details = details or {}
+
+
+class BaseComponent:
+    """
+    Base class for all components in PyroVelocity's modular architecture.
+    
+    This class provides common functionality for all components, including
+    error handling and input validation.
+    """
+    
+    def __init__(self, name: str):
+        """
+        Initialize the component.
+        
+        Args:
+            name: A unique name for this component instance.
+        """
+        self.name = name
+    
+    def _handle_error(
+        self,
+        operation: str,
+        message: str,
+        details: Optional[Dict[str, Any]] = None
+    ) -> Result:
+        """
+        Create an Error result for a component operation.
+        
+        Args:
+            operation: The name of the operation that failed.
+            message: A descriptive error message.
+            details: Optional additional error details.
+            
+        Returns:
+            A Result.Error containing a ComponentError.
+        """
+        error = ComponentError(
+            component=self.__class__.__name__,
+            operation=operation,
+            message=message,
+            details=details or {}
+        )
+        
+        error_message = f"{self.__class__.__name__}.{operation}: {message}"
+        return Result.Error(error_message)
+    
+    def validate_inputs(self, **kwargs) -> Result:
+        """
+        Validate inputs for a component operation.
+        
+        This method should be overridden by subclasses to provide specific
+        validation logic. The default implementation accepts all inputs.
+        
+        Args:
+            **kwargs: The inputs to validate.
+            
+        Returns:
+            A Result.Ok containing the validated inputs, or a Result.Error
+            if validation fails.
+        """
+        return Result.Ok(kwargs)
+
+
+class BaseDynamicsModel(BaseComponent, DynamicsModel, abc.ABC):
     """
     Base class for dynamics models that define gene expression evolution over time.
     
@@ -44,7 +131,148 @@ class BaseDynamicsModel(DynamicsModel, abc.ABC):
         Args:
             name: A unique name for this component instance.
         """
-        self.name = name
+        super().__init__(name=name)
+    
+    @jaxtyped
+    @beartype
+    def forward(
+        self,
+        u: BatchTensor,
+        s: BatchTensor,
+        alpha: ParamTensor,
+        beta: ParamTensor,
+        gamma: ParamTensor,
+        scaling: Optional[ParamTensor] = None,
+        t: Optional[BatchTensor] = None,
+    ) -> Tuple[BatchTensor, BatchTensor]:
+        """
+        Compute the expected unspliced and spliced RNA counts based on the dynamics model.
+        
+        Args:
+            u: Observed unspliced RNA counts
+            s: Observed spliced RNA counts
+            alpha: Transcription rate
+            beta: Splicing rate
+            gamma: Degradation rate
+            scaling: Optional scaling factor for the dynamics
+            t: Optional time points for the dynamics
+            
+        Returns:
+            Tuple of (expected unspliced counts, expected spliced counts)
+        """
+        # Validate inputs
+        validation_result = self.validate_inputs(
+            u=u, s=s, alpha=alpha, beta=beta, gamma=gamma, scaling=scaling, t=t
+        )
+        
+        if validation_result.is_error():
+            raise ValueError(f"Error in dynamics model forward pass: {validation_result.error}")
+        
+        # Call implementation
+        return self._forward_impl(u, s, alpha, beta, gamma, scaling, t)
+    
+    @abc.abstractmethod
+    def _forward_impl(
+        self,
+        u: BatchTensor,
+        s: BatchTensor,
+        alpha: ParamTensor,
+        beta: ParamTensor,
+        gamma: ParamTensor,
+        scaling: Optional[ParamTensor] = None,
+        t: Optional[BatchTensor] = None,
+    ) -> Tuple[BatchTensor, BatchTensor]:
+        """
+        Implementation of the forward method.
+        
+        This method should be implemented by subclasses to provide the specific
+        dynamics model implementation.
+        
+        Args:
+            u: Observed unspliced RNA counts
+            s: Observed spliced RNA counts
+            alpha: Transcription rate
+            beta: Splicing rate
+            gamma: Degradation rate
+            scaling: Optional scaling factor for the dynamics
+            t: Optional time points for the dynamics
+            
+        Returns:
+            Tuple of (expected unspliced counts, expected spliced counts)
+        """
+        pass
+    
+    @jaxtyped
+    @beartype
+    def predict_future_states(
+        self,
+        current_state: Tuple[BatchTensor, BatchTensor],
+        time_delta: BatchTensor,
+        alpha: ParamTensor,
+        beta: ParamTensor,
+        gamma: ParamTensor,
+        scaling: Optional[ParamTensor] = None,
+    ) -> Tuple[BatchTensor, BatchTensor]:
+        """
+        Predict future states based on current state and time delta.
+        
+        Args:
+            current_state: Tuple of (current unspliced counts, current spliced counts)
+            time_delta: Time difference for prediction
+            alpha: Transcription rate
+            beta: Splicing rate
+            gamma: Degradation rate
+            scaling: Optional scaling factor for the dynamics
+            
+        Returns:
+            Tuple of (predicted unspliced counts, predicted spliced counts)
+        """
+        # Validate inputs
+        validation_result = self.validate_inputs(
+            current_state=current_state,
+            time_delta=time_delta,
+            alpha=alpha,
+            beta=beta,
+            gamma=gamma,
+            scaling=scaling,
+        )
+        
+        if validation_result.is_error():
+            raise ValueError(f"Error in dynamics model prediction: {validation_result.error}")
+        
+        # Call implementation
+        return self._predict_future_states_impl(
+            current_state, time_delta, alpha, beta, gamma, scaling
+        )
+    
+    @abc.abstractmethod
+    def _predict_future_states_impl(
+        self,
+        current_state: Tuple[BatchTensor, BatchTensor],
+        time_delta: BatchTensor,
+        alpha: ParamTensor,
+        beta: ParamTensor,
+        gamma: ParamTensor,
+        scaling: Optional[ParamTensor] = None,
+    ) -> Tuple[BatchTensor, BatchTensor]:
+        """
+        Implementation of the predict_future_states method.
+        
+        This method should be implemented by subclasses to provide the specific
+        future state prediction implementation.
+        
+        Args:
+            current_state: Tuple of (current unspliced counts, current spliced counts)
+            time_delta: Time difference for prediction
+            alpha: Transcription rate
+            beta: Splicing rate
+            gamma: Degradation rate
+            scaling: Optional scaling factor for the dynamics
+            
+        Returns:
+            Tuple of (predicted unspliced counts, predicted spliced counts)
+        """
+        pass
 
 
 class PyroBufferMixin:
@@ -69,7 +297,7 @@ class PyroBufferMixin:
         setattr(self, name, tensor)
 
 
-class BasePriorModel(PriorModel, PyroBufferMixin, abc.ABC):
+class BasePriorModel(BaseComponent, PriorModel, PyroBufferMixin, abc.ABC):
     """
     Base class for prior models that define parameter distributions.
     
@@ -85,7 +313,7 @@ class BasePriorModel(PriorModel, PyroBufferMixin, abc.ABC):
         Args:
             name: A unique name for this component instance.
         """
-        self.name = name
+        super().__init__(name=name)
     
     @beartype
     def register_priors(self, prefix: str = "") -> None:
@@ -119,9 +347,16 @@ class BasePriorModel(PriorModel, PyroBufferMixin, abc.ABC):
             prefix: Optional prefix for parameter names
             
         Returns:
-            Dictionary of sampled parameters
+            Dictionary of sampled parameters or a tuple with None and the error
+            if sampling fails.
         """
-        return self._sample_parameters_impl(prefix)
+        try:
+            return self._sample_parameters_impl(prefix)
+        except Exception as e:
+            # Log the error
+            print(f"Error sampling parameters: {e}")
+            # Raise a ValueError with a standard message
+            raise ValueError(f"Failed to sample parameters") from e
     
     @abc.abstractmethod
     def _sample_parameters_impl(self, prefix: str = "") -> Dict[str, Any]:
@@ -140,7 +375,7 @@ class BasePriorModel(PriorModel, PyroBufferMixin, abc.ABC):
         pass
 
 
-class BaseLikelihoodModel(LikelihoodModel, abc.ABC):
+class BaseLikelihoodModel(BaseComponent, LikelihoodModel, abc.ABC):
     """
     Base class for likelihood models that define observation distributions.
     
@@ -155,7 +390,7 @@ class BaseLikelihoodModel(LikelihoodModel, abc.ABC):
         Args:
             name: A unique name for this component instance.
         """
-        self.name = name
+        super().__init__(name=name)
     
     @jaxtyped
     @beartype
@@ -242,7 +477,7 @@ class BaseLikelihoodModel(LikelihoodModel, abc.ABC):
         pass
 
 
-class BaseObservationModel(ObservationModel, abc.ABC):
+class BaseObservationModel(BaseComponent, ObservationModel, abc.ABC):
     """
     Base class for observation models that transform raw data.
     
@@ -257,7 +492,7 @@ class BaseObservationModel(ObservationModel, abc.ABC):
         Args:
             name: A unique name for this component instance.
         """
-        self.name = name
+        super().__init__(name=name)
     
     @beartype
     def prepare_data(
@@ -363,7 +598,7 @@ class BaseObservationModel(ObservationModel, abc.ABC):
         pass
 
 
-class BaseInferenceGuide(InferenceGuide, abc.ABC):
+class BaseInferenceGuide(BaseComponent, InferenceGuide, abc.ABC):
     """
     Base class for inference guides that define approximate posterior distributions.
     
@@ -378,7 +613,7 @@ class BaseInferenceGuide(InferenceGuide, abc.ABC):
         Args:
             name: A unique name for this component instance.
         """
-        self.name = name
+        super().__init__(name=name)
     
     @beartype
     def setup_guide(self, model: Callable, **kwargs) -> None:
