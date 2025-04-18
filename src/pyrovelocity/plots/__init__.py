@@ -30,7 +30,7 @@ from pyrovelocity.plots._uncertainty import (
     plot_state_uncertainty,
 )
 from pyrovelocity.plots._vector_fields import plot_vector_field_summary
-from pyrovelocity.plots.visualization import (
+from pyrovelocity.plots.model_comparison import (
     plot_model_comparison,
     plot_model_comparison_grid,
     plot_pointwise_comparison,

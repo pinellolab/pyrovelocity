@@ -1,8 +1,8 @@
 """
-Tests for the visualization module for model comparison.
+Tests for the model comparison visualization module.
 
 This module contains tests for the visualization functions in the
-pyrovelocity.plots.visualization module, which provides tools for
+pyrovelocity.plots.model_comparison module, which provides tools for
 visualizing model comparison results.
 """
 
@@ -17,7 +17,7 @@ import torch
 from unittest.mock import MagicMock, patch
 
 from pyrovelocity.models.comparison import BayesianModelComparison, ComparisonResult
-from pyrovelocity.plots.visualization import (
+from pyrovelocity.plots.model_comparison import (
     plot_model_comparison,
     plot_model_comparison_grid,
     plot_pointwise_comparison,
@@ -357,14 +357,14 @@ def test_plot_waic_loo_comparison(mock_compare_models, comparison_results_list, 
     plt.close("all")
 
 
-def test_import_visualization_module():
-    """Test that the visualization module can be imported."""
-    import pyrovelocity.plots.visualization
+def test_import_model_comparison_module():
+    """Test that the model_comparison module can be imported."""
+    import pyrovelocity.plots.model_comparison
     
     # Check that the module has the expected functions
-    assert hasattr(pyrovelocity.plots.visualization, "plot_model_comparison")
-    assert hasattr(pyrovelocity.plots.visualization, "plot_model_comparison_grid")
-    assert hasattr(pyrovelocity.plots.visualization, "plot_pointwise_comparison")
-    assert hasattr(pyrovelocity.plots.visualization, "plot_posterior_predictive_check")
-    assert hasattr(pyrovelocity.plots.visualization, "plot_diagnostic_metrics")
-    assert hasattr(pyrovelocity.plots.visualization, "plot_waic_loo_comparison")
+    assert hasattr(pyrovelocity.plots.model_comparison, "plot_model_comparison")
+    assert hasattr(pyrovelocity.plots.model_comparison, "plot_model_comparison_grid")
+    assert hasattr(pyrovelocity.plots.model_comparison, "plot_pointwise_comparison")
+    assert hasattr(pyrovelocity.plots.model_comparison, "plot_posterior_predictive_check")
+    assert hasattr(pyrovelocity.plots.model_comparison, "plot_diagnostic_metrics")
+    assert hasattr(pyrovelocity.plots.model_comparison, "plot_waic_loo_comparison")
