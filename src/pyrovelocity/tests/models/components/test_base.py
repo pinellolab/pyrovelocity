@@ -252,11 +252,12 @@ class TestInferenceGuide(BaseInferenceGuide):
         # Mock implementation
         self.guide = MagicMock()
     
-    def _sample_posterior_impl(self, num_samples=1, **kwargs):
+    def _sample_posterior_impl(self, **kwargs):
         # Mock implementation
+        num_samples = kwargs.get("num_samples", 1)
         return {
-            "alpha": np.ones((num_samples, 10)),
-            "beta": np.ones((num_samples, 10)) * 2,
+            "alpha": torch.ones((num_samples, 10)),
+            "beta": torch.ones((num_samples, 10)) * 2,
         }
 
 
@@ -696,8 +697,8 @@ class TestInferenceGuideImplementation:
         assert "beta" in samples
         assert samples["alpha"].shape == (5, 10)
         assert samples["beta"].shape == (5, 10)
-        assert np.all(samples["alpha"] == 1.0)
-        assert np.all(samples["beta"] == 2.0)
+        assert torch.all(samples["alpha"] == 1.0)
+        assert torch.all(samples["beta"] == 2.0)
     
     def test_sample_posterior_with_error(self):
         """Test the sample_posterior method with an error."""

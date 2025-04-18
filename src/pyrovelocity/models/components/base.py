@@ -642,7 +642,13 @@ class BaseInferenceGuide(BaseComponent, InferenceGuide, abc.ABC):
             model: Model function to guide
             **kwargs: Additional keyword arguments
         """
-        self._setup_guide_impl(model, **kwargs)
+        try:
+            self._setup_guide_impl(model, **kwargs)
+        except Exception as e:
+            # Log the error
+            print(f"Error setting up guide: {e}")
+            # Raise a ValueError with a standard message
+            raise ValueError(f"Failed to set up guide") from e
     
     @abc.abstractmethod
     def _setup_guide_impl(self, model: Callable, **kwargs) -> None:
@@ -660,24 +666,30 @@ class BaseInferenceGuide(BaseComponent, InferenceGuide, abc.ABC):
     
     @beartype
     def sample_posterior(
-        self, model: Callable, guide: Callable, **kwargs
+        self, model: Optional[Callable] = None, guide: Optional[Callable] = None, **kwargs
     ) -> Dict[str, torch.Tensor]:
         """
         Sample from the posterior distribution.
         
         Args:
-            model: Model function
-            guide: Guide function
+            model: Optional model function
+            guide: Optional guide function
             **kwargs: Additional keyword arguments
             
         Returns:
             Dictionary of posterior samples
         """
-        return self._sample_posterior_impl(model, guide, **kwargs)
+        try:
+            return self._sample_posterior_impl(**kwargs)
+        except Exception as e:
+            # Log the error
+            print(f"Error sampling from posterior: {e}")
+            # Raise a ValueError with a standard message
+            raise ValueError(f"Failed to sample from posterior") from e
     
     @abc.abstractmethod
     def _sample_posterior_impl(
-        self, model: Callable, guide: Callable, **kwargs
+        self, **kwargs
     ) -> Dict[str, torch.Tensor]:
         """
         Implementation of posterior sampling.
@@ -686,8 +698,6 @@ class BaseInferenceGuide(BaseComponent, InferenceGuide, abc.ABC):
         posterior sampling implementation.
         
         Args:
-            model: Model function
-            guide: Guide function
             **kwargs: Additional keyword arguments
             
         Returns:
