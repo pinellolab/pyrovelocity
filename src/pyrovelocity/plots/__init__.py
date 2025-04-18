@@ -30,6 +30,14 @@ from pyrovelocity.plots._uncertainty import (
     plot_state_uncertainty,
 )
 from pyrovelocity.plots._vector_fields import plot_vector_field_summary
+from pyrovelocity.plots.visualization import (
+    plot_model_comparison,
+    plot_model_comparison_grid,
+    plot_pointwise_comparison,
+    plot_posterior_predictive_check,
+    plot_diagnostic_metrics,
+    plot_waic_loo_comparison,
+)
 
 __all__ = [
     "cluster_violin_plots",
@@ -51,4 +59,11 @@ __all__ = [
     "plot_vector_field_summary",
     "plot_gene_selection_summary",
     "save_subfigures",
+    # Model comparison visualization functions
+    "plot_model_comparison",
+    "plot_model_comparison_grid",
+    "plot_pointwise_comparison",
+    "plot_posterior_predictive_check",
+    "plot_diagnostic_metrics",
+    "plot_waic_loo_comparison",
 ]
