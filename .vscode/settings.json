@@ -25,7 +25,7 @@
     "source.fixAll": "always",
     "source.organizeImports": "always"
   },
-  "editor.fontSize": 16,
+  "editor.fontSize": 12,
   "editor.formatOnSave": false,
   "files.autoSave": "off",
   // "files.autoSave": "afterDelay",
@@ -65,7 +65,7 @@
   // /Applications/Visual Studio Code.app/Contents/Resources/app/node_modules.asar.unpacked/@vscode/ripgrep/bin/rg
   // https://github.com/microsoft/vscode/issues/186279#issuecomment-1633159669
   "search.followSymlinks": false,
-  "terminal.integrated.fontSize": 14,
+  "terminal.integrated.fontSize": 12,
   "terminal.integrated.scrollback": 100000,
   "workbench.colorTheme": "Catppuccin Mocha",
   "workbench.iconTheme": "vscode-icons",
