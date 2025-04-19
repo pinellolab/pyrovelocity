@@ -144,7 +144,7 @@ def solve_transcription_splicing_model(
         Solution: diffrax Solution object.
 
     Examples:
-        >>> from pyrovelocity.models import solve_transcription_splicing_model
+        >>> from pyrovelocity.models.experimental import solve_transcription_splicing_model
         >>> from jax import numpy as jnp
         >>> ts0 = jnp.linspace(0, 4, 40)
         >>> ts1 = jnp.linspace(4 + (10 - 4) / 20, 10, 20)
@@ -265,7 +265,7 @@ def solve_transcription_splicing_model_analytical(
         Solution: A Diffrax Solution object containing the analytical solutions.
 
     Examples:
-        >>> from pyrovelocity.models import solve_transcription_splicing_model_analytical
+        >>> from pyrovelocity.models.experimental import solve_transcription_splicing_model_analytical
         >>> from jax import numpy as jnp
         >>> ts0 = jnp.linspace(0, 4, 40)
         >>> ts1 = jnp.linspace(4 + (10 - 4) / 20, 10, 20)

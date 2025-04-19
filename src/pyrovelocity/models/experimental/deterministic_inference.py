@@ -32,7 +32,7 @@ from numpyro.infer import MCMC, NUTS, Predictive
 from xarray import DataArray  # type-checking
 
 from pyrovelocity.logging import configure_logging
-from pyrovelocity.models._deterministic_simulation import (
+from pyrovelocity.models.experimental.deterministic_simulation import (
     solve_transcription_splicing_model,
 )
 
