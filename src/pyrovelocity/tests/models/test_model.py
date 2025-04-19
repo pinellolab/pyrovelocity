@@ -21,7 +21,9 @@ from pyrovelocity.models.modular.components.base import (
     BasePriorModel,
     BaseInferenceGuide,
 )
-from pyrovelocity.models.modular.components.dynamics import StandardDynamicsModel
+from pyrovelocity.models.modular.components.dynamics import (
+    StandardDynamicsModel,
+)
 from pyrovelocity.models.interfaces import (
     BatchTensor,
     DynamicsModel as DynamicsModelProtocol,
@@ -31,7 +33,9 @@ from pyrovelocity.models.interfaces import (
     ParamTensor,
     PriorModel as PriorModelProtocol,
 )
-from pyrovelocity.models.modular.components.likelihoods import PoissonLikelihoodModel
+from pyrovelocity.models.modular.components.likelihoods import (
+    PoissonLikelihoodModel,
+)
 from pyrovelocity.models.modular.model import ModelState, PyroVelocityModel
 
 

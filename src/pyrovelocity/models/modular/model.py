@@ -25,8 +25,12 @@ from pyrovelocity.models.modular.interfaces import (
     ObservationModel as ObservationModelProtocol,
     PriorModel as PriorModelProtocol,
 )
-from pyrovelocity.models.modular.components.likelihoods import PoissonLikelihoodModel
-from pyrovelocity.models.modular.components.observations import StandardObservationModel
+from pyrovelocity.models.modular.components.likelihoods import (
+    PoissonLikelihoodModel,
+)
+from pyrovelocity.models.modular.components.observations import (
+    StandardObservationModel,
+)
 from pyrovelocity.models.modular.components.priors import LogNormalPriorModel
 
 

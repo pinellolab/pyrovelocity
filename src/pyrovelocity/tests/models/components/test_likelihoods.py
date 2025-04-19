@@ -19,14 +19,16 @@ def register_likelihood_models():
     """Register likelihood models for testing."""
     # Save original registry state
     original_registry = dict(LikelihoodModelRegistry._registry)
-    
+
     # Clear registry and register test components
     LikelihoodModelRegistry.clear()
     LikelihoodModelRegistry._registry["poisson"] = PoissonLikelihoodModel
-    LikelihoodModelRegistry._registry["negative_binomial"] = NegativeBinomialLikelihoodModel
-    
+    LikelihoodModelRegistry._registry[
+        "negative_binomial"
+    ] = NegativeBinomialLikelihoodModel
+
     yield
-    
+
     # Restore original registry state
     LikelihoodModelRegistry._registry = original_registry
 

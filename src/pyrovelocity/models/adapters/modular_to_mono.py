@@ -126,16 +126,18 @@ class LegacyModelAdapter(PyroVelocity):
             self._modular_model = modular_model
         else:
             # Import here to avoid circular imports
-            from pyrovelocity.models.adapters.mono_to_modular import ConfigurationAdapter
-            
+            from pyrovelocity.models.adapters.mono_to_modular import (
+                ConfigurationAdapter,
+            )
+
             # Convert legacy parameters to modular configuration
             modular_config = ConfigurationAdapter.legacy_to_modular_config(
                 kwargs
             )
-            
+
             # Import here to avoid circular imports
             from pyrovelocity.models.modular.factory import create_model
-            
+
             self._modular_model = create_model(modular_config)
 
         # Set up legacy attributes for compatibility

@@ -2,7 +2,9 @@
 
 import pytest
 from pyrovelocity.models.modular.registry import ObservationModelRegistry
-from pyrovelocity.models.modular.components.observations import StandardObservationModel
+from pyrovelocity.models.modular.components.observations import (
+    StandardObservationModel,
+)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -10,22 +12,25 @@ def register_observation_models():
     """Register observation models for testing."""
     # Save original registry state
     original_registry = dict(ObservationModelRegistry._registry)
-    
+
     # Clear registry and register test components
     ObservationModelRegistry.clear()
     ObservationModelRegistry._registry["standard"] = StandardObservationModel
-    
+
     yield
-    
+
     # Restore original registry state
     ObservationModelRegistry._registry = original_registry
+
 
 import numpy as np
 import pytest
 import torch
 from anndata import AnnData
 
-from pyrovelocity.models.modular.components.observations import StandardObservationModel
+from pyrovelocity.models.modular.components.observations import (
+    StandardObservationModel,
+)
 from pyrovelocity.models.modular.registry import observation_model_registry
 
 

@@ -4,7 +4,7 @@ import pytest
 from pyrovelocity.models.modular.registry import PriorModelRegistry
 from pyrovelocity.models.modular.components.priors import (
     LogNormalPriorModel,
-    InformativePriorModel
+    InformativePriorModel,
 )
 
 
@@ -13,16 +13,17 @@ def register_prior_models():
     """Register prior models for testing."""
     # Save original registry state
     original_registry = dict(PriorModelRegistry._registry)
-    
+
     # Clear registry and register test components
     PriorModelRegistry.clear()
     PriorModelRegistry._registry["lognormal"] = LogNormalPriorModel
     PriorModelRegistry._registry["informative"] = InformativePriorModel
-    
+
     yield
-    
+
     # Restore original registry state
     PriorModelRegistry._registry = original_registry
+
 
 import pytest
 import torch

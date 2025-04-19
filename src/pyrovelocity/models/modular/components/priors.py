@@ -16,7 +16,11 @@ from jaxtyping import Float, jaxtyped
 from pyro.nn import PyroModule
 
 from pyrovelocity.models.modular.components.base import BasePriorModel
-from pyrovelocity.models.modular.interfaces import BatchTensor, ModelState, ParamTensor
+from pyrovelocity.models.modular.interfaces import (
+    BatchTensor,
+    ModelState,
+    ParamTensor,
+)
 from pyrovelocity.models.modular.registry import PriorModelRegistry
 
 

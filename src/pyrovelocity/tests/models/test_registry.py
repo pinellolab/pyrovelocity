@@ -297,10 +297,16 @@ class TestRegistryIntegration:
         # Save original registry state
         self.original_dynamics_registry = dict(DynamicsModelRegistry._registry)
         self.original_prior_registry = dict(PriorModelRegistry._registry)
-        self.original_likelihood_registry = dict(LikelihoodModelRegistry._registry)
-        self.original_observation_registry = dict(ObservationModelRegistry._registry)
-        self.original_inference_guide_registry = dict(InferenceGuideRegistry._registry)
-        
+        self.original_likelihood_registry = dict(
+            LikelihoodModelRegistry._registry
+        )
+        self.original_observation_registry = dict(
+            ObservationModelRegistry._registry
+        )
+        self.original_inference_guide_registry = dict(
+            InferenceGuideRegistry._registry
+        )
+
         # Clear all registries for this test
         DynamicsModelRegistry.clear()
         PriorModelRegistry.clear()
@@ -367,7 +373,7 @@ class TestRegistryIntegration:
         # Test compatibility validation
         assert DynamicsModelRegistry.validate_compatibility(dynamics_model)
         assert LikelihoodModelRegistry.validate_compatibility(likelihood_model)
-        
+
     def teardown_method(self):
         """Restore the original registry state after the test."""
         # Restore original registry state
@@ -375,4 +381,6 @@ class TestRegistryIntegration:
         PriorModelRegistry._registry = self.original_prior_registry
         LikelihoodModelRegistry._registry = self.original_likelihood_registry
         ObservationModelRegistry._registry = self.original_observation_registry
-        InferenceGuideRegistry._registry = self.original_inference_guide_registry
+        InferenceGuideRegistry._registry = (
+            self.original_inference_guide_registry
+        )

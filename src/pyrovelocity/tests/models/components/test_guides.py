@@ -18,15 +18,15 @@ def register_guides():
     """Register inference guides for testing."""
     # Save original registry state
     original_registry = dict(inference_guide_registry._registry)
-    
+
     # Clear registry and register test components
     inference_guide_registry.clear()
     inference_guide_registry._registry["auto"] = AutoGuideFactory
     inference_guide_registry._registry["normal"] = NormalGuide
     inference_guide_registry._registry["delta"] = DeltaGuide
-    
+
     yield
-    
+
     # Restore original registry state
     inference_guide_registry._registry = original_registry
 

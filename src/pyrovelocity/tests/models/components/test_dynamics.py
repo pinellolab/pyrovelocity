@@ -17,14 +17,14 @@ def register_dynamics_models():
     """Register dynamics models for testing."""
     # Save original registry state
     original_registry = dict(DynamicsModelRegistry._registry)
-    
+
     # Clear registry and register test components
     DynamicsModelRegistry.clear()
     DynamicsModelRegistry._registry["standard"] = StandardDynamicsModel
     DynamicsModelRegistry._registry["nonlinear"] = NonlinearDynamicsModel
-    
+
     yield
-    
+
     # Restore original registry state
     DynamicsModelRegistry._registry = original_registry
 
