@@ -54,10 +54,16 @@ class TestPriorModel:
     ) -> ModelState:
         # Simple implementation for testing
         with plate:
-            alpha = pyro.sample("alpha", dist.LogNormal(torch.tensor(0.0), torch.tensor(1.0)))
-            beta = pyro.sample("beta", dist.LogNormal(torch.tensor(0.0), torch.tensor(1.0)))
-            gamma = pyro.sample("gamma", dist.LogNormal(torch.tensor(0.0), torch.tensor(1.0)))
-        
+            alpha = pyro.sample(
+                "alpha", dist.LogNormal(torch.tensor(0.0), torch.tensor(1.0))
+            )
+            beta = pyro.sample(
+                "beta", dist.LogNormal(torch.tensor(0.0), torch.tensor(1.0))
+            )
+            gamma = pyro.sample(
+                "gamma", dist.LogNormal(torch.tensor(0.0), torch.tensor(1.0))
+            )
+
         return {"alpha": alpha, "beta": beta, "gamma": gamma}
 
 
@@ -98,11 +104,13 @@ class TestInferenceGuide:
         # Simple implementation for testing
         def guide(*args, **kwargs):
             return None
+
         return guide
 
 
 class TestGenericClass:
     """A generic class for testing the Registry."""
+
     pass
 
 
@@ -136,6 +144,7 @@ class TestRegistry:
             pass
 
         with pytest.raises(ValueError):
+
             @registry.register("test")
             class TestClass2(TestGenericClass):
                 pass
@@ -219,7 +228,7 @@ class TestSpecializedRegistries:
 
         assert "test" in DynamicsModelRegistry._registry
         assert DynamicsModelRegistry._registry["test"] == TestDynamicsModelImpl
-        
+
         # Test validate_compatibility
         model = TestDynamicsModelImpl()
         assert DynamicsModelRegistry.validate_compatibility(model)
@@ -244,8 +253,10 @@ class TestSpecializedRegistries:
             pass
 
         assert "test" in LikelihoodModelRegistry._registry
-        assert LikelihoodModelRegistry._registry["test"] == TestLikelihoodModelImpl
-        
+        assert (
+            LikelihoodModelRegistry._registry["test"] == TestLikelihoodModelImpl
+        )
+
         # Test validate_compatibility
         model = TestLikelihoodModelImpl()
         assert LikelihoodModelRegistry.validate_compatibility(model)
@@ -259,7 +270,10 @@ class TestSpecializedRegistries:
             pass
 
         assert "test" in ObservationModelRegistry._registry
-        assert ObservationModelRegistry._registry["test"] == TestObservationModelImpl
+        assert (
+            ObservationModelRegistry._registry["test"]
+            == TestObservationModelImpl
+        )
 
     def test_inference_guide_registry(self):
         """Test the InferenceGuideRegistry."""
@@ -270,7 +284,9 @@ class TestSpecializedRegistries:
             pass
 
         assert "test" in InferenceGuideRegistry._registry
-        assert InferenceGuideRegistry._registry["test"] == TestInferenceGuideImpl
+        assert (
+            InferenceGuideRegistry._registry["test"] == TestInferenceGuideImpl
+        )
 
 
 class TestRegistryIntegration:

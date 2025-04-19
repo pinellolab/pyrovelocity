@@ -104,55 +104,44 @@ __all__ = [
     "BaseObservationModel",
     "BasePriorModel",
     "BaseInferenceGuide",
-    
     # Interfaces
     "DynamicsModel",
     "LikelihoodModel",
     "ObservationModel",
     "PriorModel",
     "InferenceGuide",
-    
     # Registries
     "DynamicsModelRegistry",
     "LikelihoodModelRegistry",
     "ObservationModelRegistry",
     "PriorModelRegistry",
     "InferenceGuideRegistry",
-    
     # Dynamics models
     "StandardDynamicsModel",
     "NonlinearDynamicsModel",
-    
     # Prior models
     "LogNormalPriorModel",
     "InformativePriorModel",
-    
     # Likelihood models
     "PoissonLikelihoodModel",
     "NegativeBinomialLikelihoodModel",
-    
     # Observation models
     "StandardObservationModel",
-    
     # Inference guides
     "AutoGuideFactory",
     "NormalGuide",
     "DeltaGuide",
-    
     # Legacy model
     "PyroVelocity",
-    
     # New model
     "ModelState",
     "PyroVelocityModel",
-    
     # Adapter classes and functions
     "ConfigurationAdapter",
     "LegacyModelAdapter",
     "ModularModelAdapter",
     "convert_legacy_to_modular",
     "convert_modular_to_legacy",
-    
     # Factory module
     "DynamicsModelConfig",
     "PriorModelConfig",
@@ -168,13 +157,11 @@ __all__ = [
     "create_model",
     "standard_model_config",
     "create_standard_model",
-    
     # Model comparison
     "BayesianModelComparison",
     "ComparisonResult",
     "create_comparison_table",
     "select_best_model",
-    
     # Model selection
     "ModelSelection",
     "ModelEnsemble",

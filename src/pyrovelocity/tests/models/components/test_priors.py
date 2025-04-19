@@ -6,7 +6,10 @@ import pyro
 import pyro.distributions as dist
 from pyro.nn import PyroModule
 
-from pyrovelocity.models.components.priors import LogNormalPriorModel, InformativePriorModel
+from pyrovelocity.models.components.priors import (
+    LogNormalPriorModel,
+    InformativePriorModel,
+)
 from pyrovelocity.models.registry import PriorModelRegistry
 
 
@@ -69,7 +72,7 @@ class TestLogNormalPriorModel:
             scale_u=0.2,
             scale_s=0.3,
             scale_dt=0.8,
-            name="custom_prior"
+            name="custom_prior",
         )
         assert model.name == "custom_prior"
         assert model.scale_alpha == 2.0
@@ -82,7 +85,7 @@ class TestLogNormalPriorModel:
     def test_sample_parameters(self, model):
         """Test parameter sampling."""
         params = model._sample_parameters_impl()
-        
+
         # Check that all expected parameters are present
         assert "alpha" in params
         assert "beta" in params
@@ -91,7 +94,7 @@ class TestLogNormalPriorModel:
         assert "s_scale" in params
         assert "dt_switching" in params
         assert "t0" in params
-        
+
         # Check parameter shapes and types
         assert isinstance(params["alpha"], torch.Tensor)
         assert isinstance(params["beta"], torch.Tensor)
@@ -100,7 +103,7 @@ class TestLogNormalPriorModel:
         assert isinstance(params["s_scale"], torch.Tensor)
         assert isinstance(params["dt_switching"], torch.Tensor)
         assert isinstance(params["t0"], torch.Tensor)
-        
+
         # Check that all parameters are positive (except t0 which can be negative)
         assert torch.all(params["alpha"] > 0)
         assert torch.all(params["beta"] > 0)
@@ -113,7 +116,7 @@ class TestLogNormalPriorModel:
         """Test forward method with mock data."""
         # Create a gene plate
         gene_plate = pyro.plate("genes", mock_data["num_genes"], dim=-1)
-        
+
         # Run the forward method
         with pyro.poutine.trace() as tr:
             params = model.forward(
@@ -121,7 +124,7 @@ class TestLogNormalPriorModel:
                 s_obs=mock_data["s_obs"],
                 plate=gene_plate,
             )
-        
+
         # Check that all expected parameters are present
         assert "alpha" in params
         assert "beta" in params
@@ -130,7 +133,7 @@ class TestLogNormalPriorModel:
         assert "s_scale" in params
         assert "dt_switching" in params
         assert "t0" in params
-        
+
         # Check parameter shapes
         assert params["alpha"].shape == (mock_data["num_genes"],)
         assert params["beta"].shape == (mock_data["num_genes"],)
@@ -139,7 +142,7 @@ class TestLogNormalPriorModel:
         assert params["s_scale"].shape == (mock_data["num_genes"],)
         assert params["dt_switching"].shape == (mock_data["num_genes"],)
         assert params["t0"].shape == (mock_data["num_genes"],)
-        
+
         # Check that the trace contains the expected sample sites
         trace = tr.trace
         assert "alpha" in trace.nodes
@@ -149,7 +152,7 @@ class TestLogNormalPriorModel:
         assert "s_scale" in trace.nodes
         assert "dt_switching" in trace.nodes
         assert "t0" in trace.nodes
-        
+
         # Check that the distributions are correct - handle MaskedDistribution
         assert hasattr(trace.nodes["alpha"]["fn"], "base_dist")
         assert isinstance(trace.nodes["alpha"]["fn"].base_dist, dist.LogNormal)
@@ -158,11 +161,17 @@ class TestLogNormalPriorModel:
         assert hasattr(trace.nodes["gamma"]["fn"], "base_dist")
         assert isinstance(trace.nodes["gamma"]["fn"].base_dist, dist.LogNormal)
         assert hasattr(trace.nodes["u_scale"]["fn"], "base_dist")
-        assert isinstance(trace.nodes["u_scale"]["fn"].base_dist, dist.LogNormal)
+        assert isinstance(
+            trace.nodes["u_scale"]["fn"].base_dist, dist.LogNormal
+        )
         assert hasattr(trace.nodes["s_scale"]["fn"], "base_dist")
-        assert isinstance(trace.nodes["s_scale"]["fn"].base_dist, dist.LogNormal)
+        assert isinstance(
+            trace.nodes["s_scale"]["fn"].base_dist, dist.LogNormal
+        )
         assert hasattr(trace.nodes["dt_switching"]["fn"], "base_dist")
-        assert isinstance(trace.nodes["dt_switching"]["fn"].base_dist, dist.LogNormal)
+        assert isinstance(
+            trace.nodes["dt_switching"]["fn"].base_dist, dist.LogNormal
+        )
         assert isinstance(trace.nodes["t0"]["fn"], dist.Normal)
 
 
@@ -221,7 +230,7 @@ class TestInformativePriorModel:
             s_scale_scale=0.3,
             dt_switching_loc=0.1,
             dt_switching_scale=0.4,
-            name="custom_informative"
+            name="custom_informative",
         )
         assert model.name == "custom_informative"
         assert model.alpha_loc == -0.3
@@ -240,7 +249,7 @@ class TestInformativePriorModel:
     def test_sample_parameters(self, model):
         """Test parameter sampling."""
         params = model._sample_parameters_impl()
-        
+
         # Check that all expected parameters are present
         assert "alpha" in params
         assert "beta" in params
@@ -249,7 +258,7 @@ class TestInformativePriorModel:
         assert "s_scale" in params
         assert "dt_switching" in params
         assert "t0" in params
-        
+
         # Check parameter shapes and types
         assert isinstance(params["alpha"], torch.Tensor)
         assert isinstance(params["beta"], torch.Tensor)
@@ -258,7 +267,7 @@ class TestInformativePriorModel:
         assert isinstance(params["s_scale"], torch.Tensor)
         assert isinstance(params["dt_switching"], torch.Tensor)
         assert isinstance(params["t0"], torch.Tensor)
-        
+
         # Check that all parameters are positive (except t0 which can be negative)
         assert torch.all(params["alpha"] > 0)
         assert torch.all(params["beta"] > 0)
@@ -271,7 +280,7 @@ class TestInformativePriorModel:
         """Test forward method with mock data."""
         # Create a gene plate
         gene_plate = pyro.plate("genes", mock_data["num_genes"], dim=-1)
-        
+
         # Run the forward method
         with pyro.poutine.trace() as tr:
             params = model.forward(
@@ -279,7 +288,7 @@ class TestInformativePriorModel:
                 s_obs=mock_data["s_obs"],
                 plate=gene_plate,
             )
-        
+
         # Check that all expected parameters are present
         assert "alpha" in params
         assert "beta" in params
@@ -288,7 +297,7 @@ class TestInformativePriorModel:
         assert "s_scale" in params
         assert "dt_switching" in params
         assert "t0" in params
-        
+
         # Check parameter shapes
         assert params["alpha"].shape == (mock_data["num_genes"],)
         assert params["beta"].shape == (mock_data["num_genes"],)
@@ -297,7 +306,7 @@ class TestInformativePriorModel:
         assert params["s_scale"].shape == (mock_data["num_genes"],)
         assert params["dt_switching"].shape == (mock_data["num_genes"],)
         assert params["t0"].shape == (mock_data["num_genes"],)
-        
+
         # Check that the trace contains the expected sample sites
         trace = tr.trace
         assert "alpha" in trace.nodes
@@ -307,7 +316,7 @@ class TestInformativePriorModel:
         assert "s_scale" in trace.nodes
         assert "dt_switching" in trace.nodes
         assert "t0" in trace.nodes
-        
+
         # Check that the distributions are correct - handle MaskedDistribution
         assert hasattr(trace.nodes["alpha"]["fn"], "base_dist")
         assert isinstance(trace.nodes["alpha"]["fn"].base_dist, dist.LogNormal)
@@ -316,11 +325,17 @@ class TestInformativePriorModel:
         assert hasattr(trace.nodes["gamma"]["fn"], "base_dist")
         assert isinstance(trace.nodes["gamma"]["fn"].base_dist, dist.LogNormal)
         assert hasattr(trace.nodes["u_scale"]["fn"], "base_dist")
-        assert isinstance(trace.nodes["u_scale"]["fn"].base_dist, dist.LogNormal)
+        assert isinstance(
+            trace.nodes["u_scale"]["fn"].base_dist, dist.LogNormal
+        )
         assert hasattr(trace.nodes["s_scale"]["fn"], "base_dist")
-        assert isinstance(trace.nodes["s_scale"]["fn"].base_dist, dist.LogNormal)
+        assert isinstance(
+            trace.nodes["s_scale"]["fn"].base_dist, dist.LogNormal
+        )
         assert hasattr(trace.nodes["dt_switching"]["fn"], "base_dist")
-        assert isinstance(trace.nodes["dt_switching"]["fn"].base_dist, dist.LogNormal)
+        assert isinstance(
+            trace.nodes["dt_switching"]["fn"].base_dist, dist.LogNormal
+        )
         assert isinstance(trace.nodes["t0"]["fn"], dist.Normal)
 
 
@@ -329,47 +344,49 @@ def test_model_comparison():
     # Create models
     lognormal_model = LogNormalPriorModel()
     informative_model = InformativePriorModel()
-    
+
     # Sample parameters from both models
     lognormal_params = lognormal_model._sample_parameters_impl()
     informative_params = informative_model._sample_parameters_impl()
-    
+
     # Check that both models produce the same parameter keys
     assert set(lognormal_params.keys()) == set(informative_params.keys())
-    
+
     # Create mock data
     num_cells = 3
     num_genes = 4
     u_obs = torch.rand(num_cells, num_genes)
     s_obs = torch.rand(num_cells, num_genes)
-    
+
     # Create a gene plate
     gene_plate = pyro.plate("genes", num_genes, dim=-1)
-    
+
     # Run the forward method for both models
     with pyro.poutine.trace() as tr_lognormal:
         lognormal_model.forward(u_obs=u_obs, s_obs=s_obs, plate=gene_plate)
-    
+
     # Clear the param store before running the second model
     pyro.clear_param_store()
-    
+
     with pyro.poutine.trace() as tr_informative:
         informative_model.forward(u_obs=u_obs, s_obs=s_obs, plate=gene_plate)
-    
+
     # Check that both traces have the same sample sites
     lognormal_trace = tr_lognormal.trace
     informative_trace = tr_informative.trace
-    
+
     lognormal_sites = set(
-        name for name, node in lognormal_trace.nodes.items() 
+        name
+        for name, node in lognormal_trace.nodes.items()
         if node["type"] == "sample" and not node["is_observed"]
     )
-    
+
     informative_sites = set(
-        name for name, node in informative_trace.nodes.items() 
+        name
+        for name, node in informative_trace.nodes.items()
         if node["type"] == "sample" and not node["is_observed"]
     )
-    
+
     assert lognormal_sites == informative_sites
 
 
@@ -378,36 +395,32 @@ def test_registry_create():
     # Create models through the registry
     lognormal_model = PriorModelRegistry.create("lognormal")
     informative_model = PriorModelRegistry.create("informative")
-    
+
     # Check that the models are of the correct type
     assert isinstance(lognormal_model, LogNormalPriorModel)
     assert isinstance(informative_model, InformativePriorModel)
-    
+
     # Check that the models have the correct names
     assert lognormal_model.name == "lognormal"
     assert informative_model.name == "informative"
-    
+
     # Create models with custom parameters - use kwargs only
-    custom_lognormal = PriorModelRegistry.create(
-        "lognormal",
-        scale_alpha=2.0
-    )
-    
+    custom_lognormal = PriorModelRegistry.create("lognormal", scale_alpha=2.0)
+
     custom_informative = PriorModelRegistry.create(
-        "informative",
-        alpha_loc=-0.3
+        "informative", alpha_loc=-0.3
     )
-    
+
     # Check that the custom parameters were applied
     assert custom_lognormal.scale_alpha == 2.0
     assert custom_lognormal.name == "lognormal"  # Default name from class
-    
+
     assert custom_informative.alpha_loc == -0.3
     assert custom_informative.name == "informative"  # Default name from class
-    
+
     # Test with explicit name
     named_lognormal = LogNormalPriorModel(name="custom_lognormal")
     assert named_lognormal.name == "custom_lognormal"
-    
+
     named_informative = InformativePriorModel(name="custom_informative")
     assert named_informative.name == "custom_informative"

@@ -94,7 +94,7 @@ class StandardObservationModel(BaseObservationModel):
         # Calculate library size
         u_lib_size = u_obs.sum(1).unsqueeze(1).float()  # Convert to float
         s_lib_size = s_obs.sum(1).unsqueeze(1).float()  # Convert to float
-        
+
         # Normalize by library size if specified
         if self.use_observed_lib_size:
             u_scale = u_lib_size / u_lib_size.mean()
@@ -102,13 +102,13 @@ class StandardObservationModel(BaseObservationModel):
         else:
             u_scale = torch.ones_like(u_lib_size)
             s_scale = torch.ones_like(s_lib_size)
-        
+
         # Store parameters
         self.u_obs = u_obs
         self.s_obs = s_obs
         self.u_scale = u_scale
         self.s_scale = s_scale
-        
+
         return {
             "u_obs": u_obs,
             "s_obs": s_obs,
@@ -150,11 +150,11 @@ class StandardObservationModel(BaseObservationModel):
         with cell_plate as ind:
             # Get cell indices for the mini-batch
             i = ind[idx]
-            
+
             # Apply scaling factors
             u_rate = torch.exp(u_log_rate[i]) * u_scale[i]
             s_rate = torch.exp(s_log_rate[i]) * s_scale[i]
-            
+
             with gene_plate:
                 # Define negative binomial distributions for unspliced and spliced counts
                 u_dist = dist.GammaPoisson(
@@ -165,11 +165,11 @@ class StandardObservationModel(BaseObservationModel):
                     concentration=torch.exp(s_log_r),
                     rate=torch.exp(s_log_r) / s_rate,
                 )
-                
+
                 # Sample from the distributions
                 u = pyro.sample("u", u_dist, obs=self.u_obs[i])
                 s = pyro.sample("s", s_dist, obs=self.s_obs[i])
-                
+
         return u, s
 
     @beartype
@@ -193,21 +193,21 @@ class StandardObservationModel(BaseObservationModel):
         """
         # The standard observation model doesn't need a custom guide
         pass
-        
+
     @beartype
     def _prepare_data_impl(
         self, adata: AnnData, **kwargs: Any
     ) -> Dict[str, Union[torch.Tensor, jnp.ndarray]]:
         """
         Implementation of data preparation.
-        
+
         This method prepares data from an AnnData object for use in the model.
         It extracts unspliced and spliced counts and calculates scaling factors.
-        
+
         Args:
             adata: AnnData object containing the data
             **kwargs: Additional keyword arguments
-            
+
         Returns:
             Dictionary of prepared data
         """
@@ -226,7 +226,7 @@ class StandardObservationModel(BaseObservationModel):
         # Calculate library size
         u_lib_size = u_obs.sum(1).unsqueeze(1).float()  # Convert to float
         s_lib_size = s_obs.sum(1).unsqueeze(1).float()  # Convert to float
-        
+
         # Normalize by library size if specified
         if self.use_observed_lib_size:
             u_scale = u_lib_size / u_lib_size.mean()
@@ -234,10 +234,10 @@ class StandardObservationModel(BaseObservationModel):
         else:
             u_scale = torch.ones_like(u_lib_size)
             s_scale = torch.ones_like(s_lib_size)
-        
+
         # Create cell indices
         cell_indices = torch.arange(u_obs.shape[0])
-        
+
         return {
             "u_obs": u_obs,
             "s_obs": s_obs,
@@ -245,20 +245,20 @@ class StandardObservationModel(BaseObservationModel):
             "s_scale": s_scale,
             "cell_indices": cell_indices,
         }
-    
+
     @beartype
     def _create_dataloaders_impl(
         self, data: Dict[str, torch.Tensor], **kwargs: Any
     ) -> Dict[str, torch.utils.data.DataLoader]:
         """
         Implementation of data loader creation.
-        
+
         This method creates data loaders from prepared data for use in training.
-        
+
         Args:
             data: Dictionary of prepared data
             **kwargs: Additional keyword arguments
-            
+
         Returns:
             Dictionary of data loaders
         """
@@ -268,37 +268,35 @@ class StandardObservationModel(BaseObservationModel):
         u_scale = data["u_scale"]
         s_scale = data["s_scale"]
         cell_indices = data["cell_indices"]
-        
+
         # Create dataset
-        dataset = TensorDataset(
-            cell_indices, u_obs, s_obs, u_scale, s_scale
-        )
-        
+        dataset = TensorDataset(cell_indices, u_obs, s_obs, u_scale, s_scale)
+
         # Create data loader
         batch_size = kwargs.get("batch_size", self.batch_size)
         shuffle = kwargs.get("shuffle", True)
-        
+
         dataloader = DataLoader(
             dataset,
             batch_size=batch_size,
             shuffle=shuffle,
             drop_last=False,
         )
-        
+
         return {"train": dataloader}
-    
+
     @beartype
     def _preprocess_batch_impl(
         self, batch: Dict[str, torch.Tensor]
     ) -> Dict[str, Union[torch.Tensor, jnp.ndarray]]:
         """
         Implementation of batch preprocessing.
-        
+
         This method preprocesses a batch of data for use in the model.
-        
+
         Args:
             batch: Dictionary containing batch data
-            
+
         Returns:
             Preprocessed batch data
         """
@@ -308,11 +306,11 @@ class StandardObservationModel(BaseObservationModel):
         s_obs = batch.get("s_obs")
         u_scale = batch.get("u_scale")
         s_scale = batch.get("s_scale")
-        
+
         # If batch is a tuple from DataLoader, unpack it
         if isinstance(batch, tuple) or isinstance(batch, list):
             cell_indices, u_obs, s_obs, u_scale, s_scale = batch
-        
+
         return {
             "cell_indices": cell_indices,
             "u_obs": u_obs,

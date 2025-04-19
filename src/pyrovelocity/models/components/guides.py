@@ -130,14 +130,14 @@ class AutoGuideFactory(BaseInferenceGuide):
                 "Guide has not been created yet. Call create_guide first."
             )
         return self._guide.get_posterior()
-        
+
     @beartype
     def _setup_guide_impl(self, model: Callable, **kwargs) -> None:
         """
         Implementation of guide setup.
-        
+
         This method creates an AutoGuide for the given model.
-        
+
         Args:
             model: Model function to guide
             **kwargs: Additional keyword arguments
@@ -150,29 +150,33 @@ class AutoGuideFactory(BaseInferenceGuide):
     ) -> Dict[str, torch.Tensor]:
         """
         Implementation of posterior sampling.
-        
+
         This method samples from the posterior distribution using the guide.
-        
+
         Args:
             model: Model function
             guide: Guide function
             **kwargs: Additional keyword arguments
-            
+
         Returns:
             Dictionary of posterior samples
         """
         # Get the number of samples
         num_samples = kwargs.get("num_samples", 1000)
-        
+
         # Create a predictive object
-        predictive = pyro.infer.Predictive(model, guide=guide, num_samples=num_samples)
-        
+        predictive = pyro.infer.Predictive(
+            model, guide=guide, num_samples=num_samples
+        )
+
         # Get samples
         samples = predictive()
-        
+
         # Filter out observed values
-        posterior_samples = {k: v for k, v in samples.items() if not k.startswith("_")}
-        
+        posterior_samples = {
+            k: v for k, v in samples.items() if not k.startswith("_")
+        }
+
         return posterior_samples
 
 
@@ -204,9 +208,7 @@ class NormalGuide(BaseInferenceGuide):
         self._params = {}
 
     @beartype
-    def create_guide(
-        self, model: Callable, **kwargs: Any
-    ) -> Callable:
+    def create_guide(self, model: Callable, **kwargs: Any) -> Callable:
         """Create a guide function for the given model.
 
         Args:
@@ -218,7 +220,7 @@ class NormalGuide(BaseInferenceGuide):
         """
         # Store the model for later use
         self._model = model
-        
+
         # Define the guide function
         def guide_fn(*args, **kwargs):
             # Register parameters for each latent variable
@@ -241,10 +243,10 @@ class NormalGuide(BaseInferenceGuide):
                     self._params[name] = (loc, scale)
                 else:
                     loc, scale = self._params[name]
-                
+
                 # Sample from the variational distribution
                 pyro.sample(name, dist.Normal(loc, scale))
-        
+
         return guide_fn
 
     @beartype
@@ -277,21 +279,21 @@ class NormalGuide(BaseInferenceGuide):
             raise RuntimeError(
                 "Guide has not been created yet or no parameters have been registered."
             )
-        
+
         posterior = {}
         for name, (loc, scale) in self._params.items():
             posterior[f"{name}_loc"] = loc
             posterior[f"{name}_scale"] = scale
-        
+
         return posterior
-        
+
     @beartype
     def _setup_guide_impl(self, model: Callable, **kwargs) -> None:
         """
         Implementation of guide setup.
-        
+
         This method creates a guide function for the given model.
-        
+
         Args:
             model: Model function to guide
             **kwargs: Additional keyword arguments
@@ -304,29 +306,33 @@ class NormalGuide(BaseInferenceGuide):
     ) -> Dict[str, torch.Tensor]:
         """
         Implementation of posterior sampling.
-        
+
         This method samples from the posterior distribution using the guide.
-        
+
         Args:
             model: Model function
             guide: Guide function
             **kwargs: Additional keyword arguments
-            
+
         Returns:
             Dictionary of posterior samples
         """
         # Get the number of samples
         num_samples = kwargs.get("num_samples", 1000)
-        
+
         # Create a predictive object
-        predictive = pyro.infer.Predictive(model, guide=guide, num_samples=num_samples)
-        
+        predictive = pyro.infer.Predictive(
+            model, guide=guide, num_samples=num_samples
+        )
+
         # Get samples
         samples = predictive()
-        
+
         # Filter out observed values
-        posterior_samples = {k: v for k, v in samples.items() if not k.startswith("_")}
-        
+        posterior_samples = {
+            k: v for k, v in samples.items() if not k.startswith("_")
+        }
+
         return posterior_samples
 
 
@@ -359,9 +365,7 @@ class DeltaGuide(BaseInferenceGuide):
         self._params = {}
 
     @beartype
-    def create_guide(
-        self, model: Callable, **kwargs: Any
-    ) -> Callable:
+    def create_guide(self, model: Callable, **kwargs: Any) -> Callable:
         """Create a guide function for the given model.
 
         Args:
@@ -373,16 +377,14 @@ class DeltaGuide(BaseInferenceGuide):
         """
         # Store the model for later use
         self._model = model
-        
+
         # Define the guide function
         def guide_fn(*args, **kwargs):
             # Register parameters for each latent variable
             for name, shape in kwargs.get("latent_shapes", {}).items():
                 if name not in self._params:
                     # Initialize parameter with provided value or zeros
-                    init_value = self.init_values.get(
-                        name, torch.zeros(shape)
-                    )
+                    init_value = self.init_values.get(name, torch.zeros(shape))
                     param = pyro.param(
                         f"{name}_param",
                         init_value,
@@ -391,10 +393,10 @@ class DeltaGuide(BaseInferenceGuide):
                     self._params[name] = param
                 else:
                     param = self._params[name]
-                
+
                 # Sample from delta distribution (point estimate)
                 pyro.sample(name, dist.Delta(param))
-        
+
         return guide_fn
 
     @beartype
@@ -427,20 +429,20 @@ class DeltaGuide(BaseInferenceGuide):
             raise RuntimeError(
                 "Guide has not been created yet or no parameters have been registered."
             )
-        
+
         posterior = {}
         for name, param in self._params.items():
             posterior[name] = param
-        
+
         return posterior
-        
+
     @beartype
     def _setup_guide_impl(self, model: Callable, **kwargs) -> None:
         """
         Implementation of guide setup.
-        
+
         This method creates a guide function for the given model.
-        
+
         Args:
             model: Model function to guide
             **kwargs: Additional keyword arguments
@@ -453,15 +455,15 @@ class DeltaGuide(BaseInferenceGuide):
     ) -> Dict[str, torch.Tensor]:
         """
         Implementation of posterior sampling.
-        
+
         This method samples from the posterior distribution using the guide.
         For a Delta guide, this just returns the point estimates.
-        
+
         Args:
             model: Model function
             guide: Guide function
             **kwargs: Additional keyword arguments
-            
+
         Returns:
             Dictionary of posterior samples
         """
@@ -470,5 +472,5 @@ class DeltaGuide(BaseInferenceGuide):
         for name, param in self._params.items():
             # Create a batch dimension for consistency with other guides
             posterior_samples[name] = param.unsqueeze(0)
-        
+
         return posterior_samples

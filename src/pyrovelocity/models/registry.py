@@ -25,11 +25,11 @@ T = TypeVar("T")
 class Registry(Generic[T]):
     """
     Generic registry for component implementations.
-    
+
     This class implements the registry pattern, allowing component implementations
     to be registered by name and retrieved later. It uses a class-level dictionary
     to store the registered components.
-    
+
     Type Parameters:
         T: The type of components stored in this registry.
     """
@@ -41,58 +41,64 @@ class Registry(Generic[T]):
     def register(cls, name: str) -> Callable[[Type[T]], Type[T]]:
         """
         Register a component implementation.
-        
+
         This method returns a decorator that registers a component class
         in the registry under the given name.
-        
+
         Args:
             name: The name to register the component under.
-            
+
         Returns:
             A decorator function that registers the decorated class.
-            
+
         Example:
             @DynamicsModelRegistry.register("standard")
             class StandardDynamicsModel:
                 ...
         """
+
         def decorator(component_class: Type[T]) -> Type[T]:
             if name in cls._registry:
-                raise ValueError(f"Component '{name}' is already registered in {cls.__name__}")
+                raise ValueError(
+                    f"Component '{name}' is already registered in {cls.__name__}"
+                )
             cls._registry[name] = component_class
             return component_class
+
         return decorator
 
     @classmethod
     def get(cls, name: str) -> Type[T]:
         """
         Get a component implementation class.
-        
+
         Args:
             name: The name of the registered component.
-            
+
         Returns:
             The registered component class.
-            
+
         Raises:
             ValueError: If no component is registered under the given name.
         """
         if name not in cls._registry:
-            raise ValueError(f"Unknown component: '{name}'. Available components: {list(cls._registry.keys())}")
+            raise ValueError(
+                f"Unknown component: '{name}'. Available components: {list(cls._registry.keys())}"
+            )
         return cls._registry[name]
 
     @classmethod
     def create(cls, name: str, **kwargs: Any) -> T:
         """
         Create an instance of a registered component.
-        
+
         Args:
             name: The name of the registered component.
             **kwargs: Additional arguments to pass to the component constructor.
-            
+
         Returns:
             An instance of the registered component.
-            
+
         Raises:
             ValueError: If no component is registered under the given name.
         """
@@ -103,17 +109,17 @@ class Registry(Generic[T]):
     def list_available(cls) -> list[str]:
         """
         List all available registered components.
-        
+
         Returns:
             A list of names of all registered components.
         """
         return list(cls._registry.keys())
-        
+
     @classmethod
     def available_models(cls) -> list[str]:
         """
         Alias for list_available for backward compatibility.
-        
+
         Returns:
             A list of names of all registered components.
         """
@@ -123,7 +129,7 @@ class Registry(Generic[T]):
     def clear(cls) -> None:
         """
         Clear all registered components.
-        
+
         This method is primarily intended for testing purposes.
         """
         cls._registry.clear()
@@ -131,20 +137,23 @@ class Registry(Generic[T]):
 
 class DynamicsModelRegistry(Registry[DynamicsModel]):
     """Registry for dynamics model implementations."""
+
     _registry: Dict[str, Type[DynamicsModel]] = {}
 
     @classmethod
     @beartype
     def validate_compatibility(
-        cls, dynamics_model: DynamicsModel, prior_model: Optional[PriorModel] = None
+        cls,
+        dynamics_model: DynamicsModel,
+        prior_model: Optional[PriorModel] = None,
     ) -> bool:
         """
         Validate that a dynamics model is compatible with a prior model.
-        
+
         Args:
             dynamics_model: The dynamics model to validate.
             prior_model: The prior model to check compatibility with.
-            
+
         Returns:
             True if the models are compatible, False otherwise.
         """
@@ -155,25 +164,29 @@ class DynamicsModelRegistry(Registry[DynamicsModel]):
 
 class PriorModelRegistry(Registry[PriorModel]):
     """Registry for prior model implementations."""
+
     _registry: Dict[str, Type[PriorModel]] = {}
 
 
 class LikelihoodModelRegistry(Registry[LikelihoodModel]):
     """Registry for likelihood model implementations."""
+
     _registry: Dict[str, Type[LikelihoodModel]] = {}
 
     @classmethod
     @beartype
     def validate_compatibility(
-        cls, likelihood_model: LikelihoodModel, dynamics_model: Optional[DynamicsModel] = None
+        cls,
+        likelihood_model: LikelihoodModel,
+        dynamics_model: Optional[DynamicsModel] = None,
     ) -> bool:
         """
         Validate that a likelihood model is compatible with a dynamics model.
-        
+
         Args:
             likelihood_model: The likelihood model to validate.
             dynamics_model: The dynamics model to check compatibility with.
-            
+
         Returns:
             True if the models are compatible, False otherwise.
         """
@@ -184,11 +197,13 @@ class LikelihoodModelRegistry(Registry[LikelihoodModel]):
 
 class ObservationModelRegistry(Registry[ObservationModel]):
     """Registry for observation model implementations."""
+
     _registry: Dict[str, Type[ObservationModel]] = {}
 
 
 class InferenceGuideRegistry(Registry[InferenceGuide]):
     """Registry for inference guide implementations."""
+
     _registry: Dict[str, Type[InferenceGuide]] = {}
 
 
@@ -197,7 +212,9 @@ dynamics_registry = DynamicsModelRegistry()
 prior_registry = PriorModelRegistry()
 likelihood_registry = LikelihoodModelRegistry()
 observation_registry = ObservationModelRegistry()
-observation_model_registry = observation_registry  # Alias for backward compatibility
+observation_model_registry = (
+    observation_registry  # Alias for backward compatibility
+)
 inference_guide_registry = InferenceGuideRegistry()
 
 # Export all registry classes and instances
@@ -209,7 +226,6 @@ __all__ = [
     "LikelihoodModelRegistry",
     "ObservationModelRegistry",
     "InferenceGuideRegistry",
-    
     # Registry instances
     "dynamics_registry",
     "prior_registry",

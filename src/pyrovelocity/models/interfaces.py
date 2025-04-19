@@ -6,7 +6,15 @@ in the PyroVelocity modular architecture. These interfaces establish the contrac
 that component implementations must follow.
 """
 
-from typing import Any, Dict, Optional, Protocol, Tuple, TypeVar, runtime_checkable
+from typing import (
+    Any,
+    Dict,
+    Optional,
+    Protocol,
+    Tuple,
+    TypeVar,
+    runtime_checkable,
+)
 
 import pyro
 import pyro.distributions as dist
@@ -27,11 +35,11 @@ ModelState = Dict[str, Any]
 class DynamicsModel(Protocol):
     """
     Protocol for dynamics models that define the RNA velocity equations.
-    
+
     Dynamics models define the mathematical relationships between transcription,
     splicing, and degradation rates in the RNA velocity model.
     """
-    
+
     def forward(
         self,
         u: BatchTensor,
@@ -44,7 +52,7 @@ class DynamicsModel(Protocol):
     ) -> Tuple[BatchTensor, BatchTensor]:
         """
         Compute the expected unspliced and spliced RNA counts based on the dynamics model.
-        
+
         Args:
             u: Observed unspliced RNA counts
             s: Observed spliced RNA counts
@@ -53,7 +61,7 @@ class DynamicsModel(Protocol):
             gamma: Degradation rate
             scaling: Optional scaling factor for the dynamics
             t: Optional time points for the dynamics
-            
+
         Returns:
             Tuple of (expected unspliced counts, expected spliced counts)
         """
@@ -64,11 +72,11 @@ class DynamicsModel(Protocol):
 class PriorModel(Protocol):
     """
     Protocol for prior models that define the prior distributions for model parameters.
-    
+
     Prior models define the prior distributions for the model parameters (alpha, beta, gamma)
     and any additional parameters required by the model.
     """
-    
+
     def forward(
         self,
         u_obs: BatchTensor,
@@ -78,13 +86,13 @@ class PriorModel(Protocol):
     ) -> ModelState:
         """
         Sample model parameters from prior distributions.
-        
+
         Args:
             u_obs: Observed unspliced RNA counts
             s_obs: Observed spliced RNA counts
             plate: Pyro plate for batched sampling
             **kwargs: Additional model-specific parameters
-            
+
         Returns:
             Dictionary containing sampled parameters
         """
@@ -95,11 +103,11 @@ class PriorModel(Protocol):
 class LikelihoodModel(Protocol):
     """
     Protocol for likelihood models that define the observation distributions.
-    
+
     Likelihood models define how the expected RNA counts (from the dynamics model)
     relate to the observed counts through probability distributions.
     """
-    
+
     def forward(
         self,
         u_obs: BatchTensor,
@@ -111,7 +119,7 @@ class LikelihoodModel(Protocol):
     ) -> None:
         """
         Define the likelihood distributions for observed data given expected values.
-        
+
         Args:
             u_obs: Observed unspliced RNA counts
             s_obs: Observed spliced RNA counts
@@ -127,11 +135,11 @@ class LikelihoodModel(Protocol):
 class ObservationModel(Protocol):
     """
     Protocol for observation models that transform raw data for the model.
-    
+
     Observation models handle data preprocessing, transformation, and normalization
     before feeding it into the dynamics and likelihood models.
     """
-    
+
     def forward(
         self,
         u_obs: BatchTensor,
@@ -140,12 +148,12 @@ class ObservationModel(Protocol):
     ) -> Tuple[BatchTensor, BatchTensor]:
         """
         Transform observed data for model input.
-        
+
         Args:
             u_obs: Raw observed unspliced RNA counts
             s_obs: Raw observed spliced RNA counts
             **kwargs: Additional model-specific parameters
-            
+
         Returns:
             Tuple of (transformed unspliced counts, transformed spliced counts)
         """
@@ -156,11 +164,11 @@ class ObservationModel(Protocol):
 class InferenceGuide(Protocol):
     """
     Protocol for inference guides that define the variational distribution.
-    
+
     Inference guides define the variational distribution used for approximate
     Bayesian inference in the model.
     """
-    
+
     def __call__(
         self,
         model: Callable,
@@ -169,12 +177,12 @@ class InferenceGuide(Protocol):
     ) -> Callable:
         """
         Create a guide function for the given model.
-        
+
         Args:
             model: The model function to create a guide for
             *args: Additional positional arguments
             **kwargs: Additional keyword arguments
-            
+
         Returns:
             A guide function compatible with the model
         """

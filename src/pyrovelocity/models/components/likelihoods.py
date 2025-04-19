@@ -79,39 +79,40 @@ class PoissonLikelihoodModel(BaseLikelihoodModel):
         # Extract relevant data from AnnData
         batch_size = cell_state.shape[0]
         n_genes = adata.n_vars
-        
+
         # Get gene-specific parameters
         gene_scale = numpyro.param(
             "gene_scale",
             jnp.ones(n_genes),
             constraint=dist.constraints.positive,
         )
-        
+
         # Apply gene offset if provided
         if gene_offset is None:
             gene_offset = jnp.ones((batch_size, n_genes))
-        
+
         # Transform cell_state to have compatible shape with gene_scale
         # We'll use a linear transformation from latent_dim to n_genes
         # This is a simple approach - in a real implementation, this would be more sophisticated
         latent_dim = cell_state.shape[1]
         projection = numpyro.param(
             "projection_matrix",
-            jnp.ones((latent_dim, n_genes)) / latent_dim,  # Initialize with uniform weights
+            jnp.ones((latent_dim, n_genes))
+            / latent_dim,  # Initialize with uniform weights
             constraint=dist.constraints.positive,
         )
-        
+
         # Project cell_state to gene space
-        projected_state = jnp.matmul(cell_state, projection)  # Shape: (batch_size, n_genes)
-        
+        projected_state = jnp.matmul(
+            cell_state, projection
+        )  # Shape: (batch_size, n_genes)
+
         # Calculate rate parameter
         rate = jnp.exp(projected_state) * gene_scale * gene_offset
-        
+
         # Create Poisson likelihood distribution
-        return {
-            "obs_counts": dist.Poisson(rate=rate)
-        }
-    
+        return {"obs_counts": dist.Poisson(rate=rate)}
+
     @beartype
     def _log_prob_impl(
         self,
@@ -136,14 +137,14 @@ class PoissonLikelihoodModel(BaseLikelihoodModel):
             rate = predictions * scale_factors
         else:
             rate = predictions
-        
+
         # Create Poisson distribution and calculate log probability
         distribution = dist.Poisson(rate=rate)
         log_probs = distribution.log_prob(observations)
-        
+
         # Sum log probabilities across genes for each cell
         return jnp.sum(log_probs, axis=-1)
-    
+
     @beartype
     def _sample_impl(
         self,
@@ -166,7 +167,7 @@ class PoissonLikelihoodModel(BaseLikelihoodModel):
             rate = predictions * scale_factors
         else:
             rate = predictions
-        
+
         # Create Poisson distribution and sample
         distribution = dist.Poisson(rate=rate)
         key = jax.random.PRNGKey(0)  # Use a fixed seed for reproducibility
@@ -234,44 +235,47 @@ class NegativeBinomialLikelihoodModel(BaseLikelihoodModel):
         # Extract relevant data from AnnData
         batch_size = cell_state.shape[0]
         n_genes = adata.n_vars
-        
+
         # Get gene-specific parameters
         gene_scale = numpyro.param(
             "gene_scale",
             jnp.ones(n_genes),
             constraint=dist.constraints.positive,
         )
-        
+
         # Get gene-specific dispersion parameters
         gene_dispersion = numpyro.param(
             "gene_dispersion",
             jnp.ones(n_genes),
             constraint=dist.constraints.positive,
         )
-        
+
         # Apply gene offset if provided
         if gene_offset is None:
             gene_offset = jnp.ones((batch_size, n_genes))
-        
+
         # Transform cell_state to have compatible shape with gene_scale
         # We'll use a linear transformation from latent_dim to n_genes
         # This is a simple approach - in a real implementation, this would be more sophisticated
         latent_dim = cell_state.shape[1]
         projection = numpyro.param(
             "projection_matrix",
-            jnp.ones((latent_dim, n_genes)) / latent_dim,  # Initialize with uniform weights
+            jnp.ones((latent_dim, n_genes))
+            / latent_dim,  # Initialize with uniform weights
             constraint=dist.constraints.positive,
         )
-        
+
         # Project cell_state to gene space
-        projected_state = jnp.matmul(cell_state, projection)  # Shape: (batch_size, n_genes)
-        
+        projected_state = jnp.matmul(
+            cell_state, projection
+        )  # Shape: (batch_size, n_genes)
+
         # Calculate rate parameter
         rate = jnp.exp(projected_state) * gene_scale * gene_offset
-        
+
         # Calculate concentration parameter (inverse of dispersion)
         concentration = 1.0 / gene_dispersion
-        
+
         # Create Negative Binomial likelihood distribution
         # In NumPyro, Negative Binomial is implemented as GammaPoisson
         return {
@@ -280,7 +284,7 @@ class NegativeBinomialLikelihoodModel(BaseLikelihoodModel):
                 rate=concentration / rate,
             )
         }
-    
+
     @beartype
     def _log_prob_impl(
         self,
@@ -305,22 +309,22 @@ class NegativeBinomialLikelihoodModel(BaseLikelihoodModel):
             mean = predictions * scale_factors
         else:
             mean = predictions
-        
+
         # Use a fixed dispersion parameter for simplicity
         # In a real implementation, this would be learned or provided
         dispersion = jnp.ones(mean.shape[1])
         concentration = 1.0 / dispersion
-        
+
         # Create Negative Binomial distribution and calculate log probability
         distribution = dist.GammaPoisson(
             concentration=concentration,
             rate=concentration / mean,
         )
         log_probs = distribution.log_prob(observations)
-        
+
         # Sum log probabilities across genes for each cell
         return jnp.sum(log_probs, axis=-1)
-    
+
     @beartype
     def _sample_impl(
         self,
@@ -343,12 +347,12 @@ class NegativeBinomialLikelihoodModel(BaseLikelihoodModel):
             mean = predictions * scale_factors
         else:
             mean = predictions
-        
+
         # Use a fixed dispersion parameter for simplicity
         # In a real implementation, this would be learned or provided
         dispersion = jnp.ones(mean.shape[1])
         concentration = 1.0 / dispersion
-        
+
         # Create Negative Binomial distribution and sample
         distribution = dist.GammaPoisson(
             concentration=concentration,
