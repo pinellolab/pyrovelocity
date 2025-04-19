@@ -4,7 +4,7 @@ import pytest
 import torch
 from beartype.roar import BeartypeCallHintParamViolation
 
-from pyrovelocity.models import mrna_dynamics
+from pyrovelocity.models._transcription_dynamics import mrna_dynamics
 
 
 def test_load__transcription_dynamics():

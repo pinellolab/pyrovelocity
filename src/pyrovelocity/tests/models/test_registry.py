@@ -8,7 +8,7 @@ import pyro
 import pyro.distributions as dist
 from beartype.typing import Callable
 
-from pyrovelocity.models.interfaces import (
+from pyrovelocity.models.modular.interfaces import (
     DynamicsModel,
     PriorModel,
     LikelihoodModel,
@@ -18,7 +18,7 @@ from pyrovelocity.models.interfaces import (
     ParamTensor,
     ModelState,
 )
-from pyrovelocity.models.registry import (
+from pyrovelocity.models.modular.registry import (
     Registry,
     DynamicsModelRegistry,
     PriorModelRegistry,
@@ -294,7 +294,14 @@ class TestRegistryIntegration:
 
     def setup_method(self):
         """Set up the test by registering components."""
-        # Clear all registries
+        # Save original registry state
+        self.original_dynamics_registry = dict(DynamicsModelRegistry._registry)
+        self.original_prior_registry = dict(PriorModelRegistry._registry)
+        self.original_likelihood_registry = dict(LikelihoodModelRegistry._registry)
+        self.original_observation_registry = dict(ObservationModelRegistry._registry)
+        self.original_inference_guide_registry = dict(InferenceGuideRegistry._registry)
+        
+        # Clear all registries for this test
         DynamicsModelRegistry.clear()
         PriorModelRegistry.clear()
         LikelihoodModelRegistry.clear()
@@ -360,3 +367,12 @@ class TestRegistryIntegration:
         # Test compatibility validation
         assert DynamicsModelRegistry.validate_compatibility(dynamics_model)
         assert LikelihoodModelRegistry.validate_compatibility(likelihood_model)
+        
+    def teardown_method(self):
+        """Restore the original registry state after the test."""
+        # Restore original registry state
+        DynamicsModelRegistry._registry = self.original_dynamics_registry
+        PriorModelRegistry._registry = self.original_prior_registry
+        LikelihoodModelRegistry._registry = self.original_likelihood_registry
+        ObservationModelRegistry._registry = self.original_observation_registry
+        InferenceGuideRegistry._registry = self.original_inference_guide_registry

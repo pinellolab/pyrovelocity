@@ -13,7 +13,7 @@ from hydra_zen import instantiate
 from omegaconf import DictConfig, OmegaConf
 from typing import Any, Dict, Optional, Tuple, cast
 
-from pyrovelocity.models.factory import (
+from pyrovelocity.models.modular.factory import (
     DynamicsModelConfig,
     InferenceGuideConfig,
     LikelihoodModelConfig,
@@ -39,8 +39,8 @@ from pyrovelocity.models.interfaces import (
     ParamTensor,
     ModelState,
 )
-from pyrovelocity.models.model import PyroVelocityModel
-from pyrovelocity.models.registry import (
+from pyrovelocity.models.modular.model import PyroVelocityModel
+from pyrovelocity.models.modular.registry import (
     DynamicsModelRegistry,
     InferenceGuideRegistry,
     LikelihoodModelRegistry,
@@ -498,7 +498,7 @@ class TestHydraZenIntegration:
         """Test instantiating a model using hydra-zen."""
         # Create a configuration dictionary
         config_dict = {
-            "_target_": "pyrovelocity.models.factory.create_model",
+            "_target_": "pyrovelocity.models.modular.factory.create_model",
             "config": {
                 "dynamics_model": {"name": "mock", "params": {"param1": 1}},
                 "prior_model": {"name": "mock", "params": {"param1": 2}},

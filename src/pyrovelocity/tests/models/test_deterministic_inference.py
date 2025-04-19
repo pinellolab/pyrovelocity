@@ -16,7 +16,7 @@ from pyrovelocity.logging import configure_logging
 from pyrovelocity.models import (
     deterministic_transcription_splicing_probabilistic_model,
 )
-from pyrovelocity.models._deterministic_inference import (
+from pyrovelocity.models.experimental.deterministic_inference import (
     generate_posterior_inference_data,
     generate_prior_inference_data,
     generate_test_data_for_deterministic_model_inference,

@@ -7,11 +7,28 @@ from jaxtyping import Array, Float
 import numpy as np
 from anndata._core.anndata import AnnData
 
-from pyrovelocity.models.components.likelihoods import (
+from pyrovelocity.models.modular.components.likelihoods import (
     NegativeBinomialLikelihoodModel,
     PoissonLikelihoodModel,
 )
-from pyrovelocity.models.registry import LikelihoodModelRegistry
+from pyrovelocity.models.modular.registry import LikelihoodModelRegistry
+
+
+@pytest.fixture(scope="module", autouse=True)
+def register_likelihood_models():
+    """Register likelihood models for testing."""
+    # Save original registry state
+    original_registry = dict(LikelihoodModelRegistry._registry)
+    
+    # Clear registry and register test components
+    LikelihoodModelRegistry.clear()
+    LikelihoodModelRegistry._registry["poisson"] = PoissonLikelihoodModel
+    LikelihoodModelRegistry._registry["negative_binomial"] = NegativeBinomialLikelihoodModel
+    
+    yield
+    
+    # Restore original registry state
+    LikelihoodModelRegistry._registry = original_registry
 
 
 @pytest.fixture

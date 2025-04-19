@@ -3,7 +3,7 @@ import jax
 from diffrax import Solution
 from jax import numpy as jnp
 
-from pyrovelocity.models._deterministic_simulation import (
+from pyrovelocity.models.experimental.deterministic_simulation import (
     analytical_solution_dstate_dt_dimless,
     calculate_xi,
     dstate_dt_dimensioned,

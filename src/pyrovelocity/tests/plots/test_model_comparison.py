@@ -16,7 +16,7 @@ import pytest
 import torch
 from unittest.mock import MagicMock, patch
 
-from pyrovelocity.models.comparison import (
+from pyrovelocity.models.modular.comparison import (
     BayesianModelComparison,
     ComparisonResult,
 )
