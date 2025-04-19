@@ -16,9 +16,9 @@ from anndata import AnnData
 from beartype import beartype
 from jaxtyping import Array, Float, Int
 
-from pyrovelocity.models.components.base import BaseInferenceGuide
-from pyrovelocity.models.interfaces import InferenceGuide
-from pyrovelocity.models.registry import inference_guide_registry
+from pyrovelocity.models.modular.components.base import BaseInferenceGuide
+from pyrovelocity.models.modular.interfaces import InferenceGuide
+from pyrovelocity.models.modular.registry import inference_guide_registry
 
 
 @inference_guide_registry.register("auto")

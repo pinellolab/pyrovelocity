@@ -12,9 +12,9 @@ from beartype import beartype
 from diffrax import ODETerm, SaveAt, Solution, Tsit5, diffeqsolve
 from jaxtyping import Array, Float, jaxtyped
 
-from pyrovelocity.models.components.base import BaseDynamicsModel
-from pyrovelocity.models.interfaces import BatchTensor, ParamTensor
-from pyrovelocity.models.registry import DynamicsModelRegistry
+from pyrovelocity.models.modular.components.base import BaseDynamicsModel
+from pyrovelocity.models.modular.interfaces import BatchTensor, ParamTensor
+from pyrovelocity.models.modular.registry import DynamicsModelRegistry
 
 
 @DynamicsModelRegistry.register("standard")

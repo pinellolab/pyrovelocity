@@ -22,7 +22,7 @@ from beartype import beartype
 from beartype.typing import Callable
 from jaxtyping import Array, Float, jaxtyped
 
-from pyrovelocity.models.interfaces import (
+from pyrovelocity.models.modular.interfaces import (
     BatchTensor,
     DynamicsModel,
     InferenceGuide,

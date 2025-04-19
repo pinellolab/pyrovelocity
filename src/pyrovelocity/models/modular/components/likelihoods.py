@@ -14,8 +14,8 @@ from beartype import beartype
 from jaxtyping import Array, Float, Int
 from anndata._core.anndata import AnnData
 
-from pyrovelocity.models.components.base import BaseLikelihoodModel
-from pyrovelocity.models.registry import LikelihoodModelRegistry
+from pyrovelocity.models.modular.components.base import BaseLikelihoodModel
+from pyrovelocity.models.modular.registry import LikelihoodModelRegistry
 
 
 @LikelihoodModelRegistry.register("poisson")
