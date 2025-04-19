@@ -29,7 +29,7 @@ from pyrovelocity.models.modular.factory import (
     create_standard_model,
     standard_model_config,
 )
-from pyrovelocity.models.interfaces import (
+from pyrovelocity.models.modular.interfaces import (
     DynamicsModel,
     InferenceGuide,
     LikelihoodModel,

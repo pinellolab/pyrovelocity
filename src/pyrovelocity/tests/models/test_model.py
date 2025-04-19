@@ -24,7 +24,7 @@ from pyrovelocity.models.modular.components.base import (
 from pyrovelocity.models.modular.components.dynamics import (
     StandardDynamicsModel,
 )
-from pyrovelocity.models.interfaces import (
+from pyrovelocity.models.modular.interfaces import (
     BatchTensor,
     DynamicsModel as DynamicsModelProtocol,
     InferenceGuide as GuideModelProtocol,
