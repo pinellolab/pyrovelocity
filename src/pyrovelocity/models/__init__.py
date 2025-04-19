@@ -5,41 +5,42 @@ including factory methods for model creation and configuration management, adapt
 backward compatibility with the legacy API, and Bayesian model comparison tools.
 """
 
-from pyrovelocity.models.components.base import (
+# Import from modular components
+from pyrovelocity.models.modular.components.base import (
     BaseDynamicsModel,
     BaseLikelihoodModel,
     BaseObservationModel,
     BasePriorModel,
     BaseInferenceGuide,
 )
-from pyrovelocity.models.components.dynamics import (
+from pyrovelocity.models.modular.components.dynamics import (
     StandardDynamicsModel,
     NonlinearDynamicsModel,
 )
-from pyrovelocity.models.components.priors import (
+from pyrovelocity.models.modular.components.priors import (
     LogNormalPriorModel,
     InformativePriorModel,
 )
-from pyrovelocity.models.components.likelihoods import (
+from pyrovelocity.models.modular.components.likelihoods import (
     PoissonLikelihoodModel,
     NegativeBinomialLikelihoodModel,
 )
-from pyrovelocity.models.components.observations import (
+from pyrovelocity.models.modular.components.observations import (
     StandardObservationModel,
 )
-from pyrovelocity.models.components.guides import (
+from pyrovelocity.models.modular.components.guides import (
     AutoGuideFactory,
     NormalGuide,
     DeltaGuide,
 )
-from pyrovelocity.models.interfaces import (
+from pyrovelocity.models.modular.interfaces import (
     DynamicsModel,
     LikelihoodModel,
     ObservationModel,
     PriorModel,
     InferenceGuide,
 )
-from pyrovelocity.models.registry import (
+from pyrovelocity.models.modular.registry import (
     DynamicsModelRegistry,
     LikelihoodModelRegistry,
     ObservationModelRegistry,
@@ -48,7 +49,7 @@ from pyrovelocity.models.registry import (
 )
 
 # Import the factory module for model creation and configuration
-from pyrovelocity.models.factory import (
+from pyrovelocity.models.modular.factory import (
     DynamicsModelConfig,
     PriorModelConfig,
     LikelihoodModelConfig,
@@ -69,7 +70,7 @@ from pyrovelocity.models.factory import (
 from pyrovelocity.models._velocity import PyroVelocity
 
 # Import the new PyroVelocityModel and ModelState
-from pyrovelocity.models.model import ModelState, PyroVelocityModel
+from pyrovelocity.models.modular.model import ModelState, PyroVelocityModel
 
 # Import the adapter classes and functions for backward compatibility
 from pyrovelocity.models.adapters import (
@@ -81,7 +82,7 @@ from pyrovelocity.models.adapters import (
 )
 
 # Import the model comparison classes and functions
-from pyrovelocity.models.comparison import (
+from pyrovelocity.models.modular.comparison import (
     BayesianModelComparison,
     ComparisonResult,
     create_comparison_table,
@@ -89,12 +90,29 @@ from pyrovelocity.models.comparison import (
 )
 
 # Import the model selection classes and functions
-from pyrovelocity.models.selection import (
+from pyrovelocity.models.modular.selection import (
     ModelSelection,
     ModelEnsemble,
     CrossValidator,
     SelectionCriterion,
     SelectionResult,
+)
+
+# Import experimental implementations
+from pyrovelocity.models.experimental import (
+    deterministic_transcription_splicing_probabilistic_model,
+    generate_test_data_for_deterministic_model_inference,
+    generate_prior_inference_data,
+    generate_posterior_inference_data,
+    plot_sample_phase_portraits,
+    plot_sample_trajectories,
+    plot_sample_trajectories_with_percentiles,
+    save_inference_plots,
+    solve_transcription_splicing_model,
+    solve_transcription_splicing_model_analytical,
+    lognormal_tail_probability,
+    solve_for_lognormal_sigma_given_threshold_and_tail_mass,
+    solve_for_lognormal_mu_given_threshold_and_tail_mass,
 )
 
 __all__ = [
@@ -168,4 +186,18 @@ __all__ = [
     "CrossValidator",
     "SelectionCriterion",
     "SelectionResult",
+    # Experimental implementations
+    "deterministic_transcription_splicing_probabilistic_model",
+    "generate_test_data_for_deterministic_model_inference",
+    "generate_prior_inference_data",
+    "generate_posterior_inference_data",
+    "plot_sample_phase_portraits",
+    "plot_sample_trajectories",
+    "plot_sample_trajectories_with_percentiles",
+    "save_inference_plots",
+    "solve_transcription_splicing_model",
+    "solve_transcription_splicing_model_analytical",
+    "lognormal_tail_probability",
+    "solve_for_lognormal_sigma_given_threshold_and_tail_mass",
+    "solve_for_lognormal_mu_given_threshold_and_tail_mass",
 ]
