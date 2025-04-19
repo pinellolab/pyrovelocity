@@ -209,9 +209,9 @@ def test_selection_result_to_dataframe(mock_selection_result):
     
     # Check values
     assert len(df) == 3  # Three models
-    assert df.loc[df["model"] == "model3", "selected"].iloc[0] is True
-    assert df.loc[df["model"] != "model3", "selected"].all() is False
-    assert df["significance"].all() is True  # All rows have significance=True
+    assert df.loc[df["model"] == "model3", "selected"].iloc[0] == True
+    assert df.loc[df["model"] != "model3", "selected"].all() == False
+    assert df["significance"].all() == True  # All rows have significance=True
 
 
 @patch.object(BayesianModelComparison, "compare_models")
@@ -367,10 +367,15 @@ def test_model_ensemble_predict(mock_obs_forward, mock_dyn_forward, mock_models,
     # Create ModelEnsemble instance
     ensemble = ModelEnsemble(models=mock_models)
     
+    # Convert torch tensors to jax arrays for compatibility with jaxtyping
+    import jax.numpy as jnp
+    x_jax = jnp.array(sample_data["x"].numpy())
+    time_points_jax = jnp.array(sample_data["time_points"].numpy())
+    
     # Generate predictions
     predictions = ensemble.predict(
-        x=sample_data["x"],
-        time_points=sample_data["time_points"],
+        x=x_jax,
+        time_points=time_points_jax,
         posterior_samples=mock_posterior_samples_dict,
     )
     

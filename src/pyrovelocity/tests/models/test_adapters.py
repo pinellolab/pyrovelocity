@@ -119,6 +119,9 @@ class TestLegacyModelAdapter:
     
     def test_initialization(self, sample_adata):
         """Test initialization of LegacyModelAdapter."""
+        # Set up AnnData for LegacyModelAdapter
+        LegacyModelAdapter.setup_anndata(sample_adata)
+        
         # Create a LegacyModelAdapter
         adapter = LegacyModelAdapter(sample_adata)
         
@@ -129,6 +132,9 @@ class TestLegacyModelAdapter:
     
     def test_from_modular_model(self, sample_adata):
         """Test creation of LegacyModelAdapter from a PyroVelocityModel."""
+        # Set up AnnData for LegacyModelAdapter
+        LegacyModelAdapter.setup_anndata(sample_adata)
+        
         # Create a standard modular model
         modular_model = create_standard_model()
         
@@ -202,6 +208,9 @@ class TestConversionFunctions:
     
     def test_convert_modular_to_legacy(self, sample_adata):
         """Test conversion from PyroVelocityModel to legacy PyroVelocity."""
+        # Set up AnnData for LegacyModelAdapter
+        LegacyModelAdapter.setup_anndata(sample_adata)
+        
         # Create a modular model
         modular_model = create_standard_model()
         
@@ -219,6 +228,9 @@ class TestEndToEndCompatibility:
     
     def test_legacy_api_with_modular_model(self, sample_adata, tmp_path):
         """Test using the legacy API with a modular model under the hood."""
+        # Set up AnnData for LegacyModelAdapter
+        LegacyModelAdapter.setup_anndata(sample_adata)
+        
         # Create a LegacyModelAdapter
         adapter = LegacyModelAdapter(sample_adata)
         

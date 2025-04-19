@@ -11,6 +11,7 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 import torch
+from typing import Any, Dict, Optional, Tuple, Union
 from jaxtyping import Array, Float
 
 from pyrovelocity.models.components.base import (
@@ -22,10 +23,12 @@ from pyrovelocity.models.components.base import (
 )
 from pyrovelocity.models.components.dynamics import StandardDynamicsModel
 from pyrovelocity.models.interfaces import (
+    BatchTensor,
     DynamicsModel as DynamicsModelProtocol,
     InferenceGuide as GuideModelProtocol,
     LikelihoodModel as LikelihoodModelProtocol,
     ObservationModel as ObservationModelProtocol,
+    ParamTensor,
     PriorModel as PriorModelProtocol,
 )
 from pyrovelocity.models.components.likelihoods import PoissonLikelihoodModel
@@ -39,6 +42,52 @@ class MockDynamicsModel(BaseDynamicsModel):
     def __init__(self, name="mock_dynamics_model"):
         super().__init__(name=name)
         self.state = {}
+    
+    def _forward_impl(
+        self,
+        u: BatchTensor,
+        s: BatchTensor,
+        alpha: ParamTensor,
+        beta: ParamTensor,
+        gamma: ParamTensor,
+        scaling: Optional[ParamTensor] = None,
+        t: Optional[BatchTensor] = None,
+    ) -> Tuple[BatchTensor, BatchTensor]:
+        """Implementation of the forward method for testing."""
+        # For testing, just return the input u and s
+        u_expected = u
+        s_expected = s
+        
+        # Apply scaling if provided
+        if scaling is not None:
+            u_expected = u_expected * scaling
+            s_expected = s_expected * scaling
+            
+        return u_expected, s_expected
+    
+    def _predict_future_states_impl(
+        self,
+        current_state: Tuple[BatchTensor, BatchTensor],
+        time_delta: BatchTensor,
+        alpha: ParamTensor,
+        beta: ParamTensor,
+        gamma: ParamTensor,
+        scaling: Optional[ParamTensor] = None,
+    ) -> Tuple[BatchTensor, BatchTensor]:
+        """Implementation of the predict_future_states method for testing."""
+        # Extract current state
+        u_current, s_current = current_state
+        
+        # For testing, just return the current state
+        u_future = u_current
+        s_future = s_current
+        
+        # Apply scaling if provided
+        if scaling is not None:
+            u_future = u_future * scaling
+            s_future = s_future * scaling
+            
+        return u_future, s_future
     
     def forward(self, context):
         """Forward pass that just returns the input context."""

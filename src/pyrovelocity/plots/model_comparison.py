@@ -14,6 +14,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple, Union
+import numpy as np
 
 import arviz as az
 import matplotlib.pyplot as plt
@@ -35,7 +36,7 @@ logger = logging.getLogger(__name__)
 def plot_model_comparison(
     comparison_result: ComparisonResult,
     title: Optional[str] = None,
-    figsize: Tuple[float, float] = (10, 6),
+    figsize: Tuple[Union[float, int], Union[float, int]] = (10, 6),
     save_path: Optional[Union[str, Path]] = None,
     show_differences: bool = True,
     highlight_best: bool = True,
@@ -138,7 +139,7 @@ def plot_model_comparison(
                     y = y_max - (i * 0.1 * y_max)
                     
                     ax.annotate(
-                        f'Δ = {diff:.2f}',
+                        f'diff = {diff:.2f}',
                         xy=(x2, y),
                         xytext=(x1, y),
                         arrowprops=dict(arrowstyle='<->', color='red' if abs(diff) > threshold else 'gray'),
@@ -159,9 +160,9 @@ def plot_model_comparison(
     # Add a legend explaining the colors
     if highlight_best:
         if is_significant:
-            ax.bar(0, 0, color='#2ca02c', label=f'Best model (significant: Δ > {threshold})')
+            ax.bar(0, 0, color='#2ca02c', label=f'Best model (significant: diff > {threshold})')
         else:
-            ax.bar(0, 0, color='#ff7f0e', label=f'Best model (not significant: Δ ≤ {threshold})')
+            ax.bar(0, 0, color='#ff7f0e', label=f'Best model (not significant: diff <= {threshold})')
         ax.bar(0, 0, color='#1f77b4', label='Other models')
         ax.legend(loc='best')
     
@@ -179,7 +180,7 @@ def plot_model_comparison(
 def plot_model_comparison_grid(
     comparison_results: List[ComparisonResult],
     titles: Optional[List[str]] = None,
-    figsize: Tuple[float, float] = (15, 10),
+    figsize: Tuple[Union[float, int], Union[float, int]] = (15, 10),
     save_path: Optional[Union[str, Path]] = None,
     highlight_best: bool = True,
     threshold: float = 2.0,
@@ -299,8 +300,8 @@ def plot_model_comparison_grid(
         fig.subplots_adjust(bottom=0.15)
         legend_ax = fig.add_axes([0.15, 0.05, 0.7, 0.03])
         legend_ax.axis('off')
-        legend_ax.bar(0, 0, color='#2ca02c', label=f'Best model (significant: Δ > {threshold})')
-        legend_ax.bar(1, 0, color='#ff7f0e', label=f'Best model (not significant: Δ ≤ {threshold})')
+        legend_ax.bar(0, 0, color='#2ca02c', label=f'Best model (significant: diff > {threshold})')
+        legend_ax.bar(1, 0, color='#ff7f0e', label=f'Best model (not significant: diff <= {threshold})')
         legend_ax.bar(2, 0, color='#1f77b4', label='Other models')
         legend_ax.legend(loc='center', ncol=3)
     
@@ -318,10 +319,10 @@ def plot_model_comparison_grid(
 def plot_pointwise_comparison(
     model1_name: str,
     model2_name: str,
-    model1_pointwise: Float[Array, "num_observations"],
-    model2_pointwise: Float[Array, "num_observations"],
+    model1_pointwise: np.ndarray,
+    model2_pointwise: np.ndarray,
     metric_name: str = "WAIC",
-    figsize: Tuple[float, float] = (10, 6),
+    figsize: Tuple[Union[float, int], Union[float, int]] = (10, 6),
     save_path: Optional[Union[str, Path]] = None,
 ) -> Figure:
     """
@@ -369,7 +370,7 @@ def plot_pointwise_comparison(
     text = (
         f"Points where {model2_name} > {model1_name}: {n_above} ({n_above/total:.1%})\n"
         f"Points where {model1_name} > {model2_name}: {n_below} ({n_below/total:.1%})\n"
-        f"Points where {model1_name} ≈ {model2_name}: {n_equal} ({n_equal/total:.1%})"
+        f"Points where {model1_name} ~= {model2_name}: {n_equal} ({n_equal/total:.1%})"
     )
     
     ax.text(
@@ -391,10 +392,10 @@ def plot_pointwise_comparison(
 @jaxtyped
 @beartype
 def plot_posterior_predictive_check(
-    observed_data: Float[Array, "num_observations"],
-    predicted_data: Float[Array, "num_samples num_observations"],
+    observed_data: np.ndarray,
+    predicted_data: np.ndarray,
     model_name: str = "Model",
-    figsize: Tuple[float, float] = (10, 6),
+    figsize: Tuple[Union[float, int], Union[float, int]] = (10, 6),
     save_path: Optional[Union[str, Path]] = None,
 ) -> Figure:
     """
@@ -475,7 +476,7 @@ def plot_posterior_predictive_check(
 @beartype
 def plot_diagnostic_metrics(
     models: Dict[str, Dict[str, float]],
-    figsize: Tuple[float, float] = (12, 8),
+    figsize: Tuple[Union[float, int], Union[float, int]] = (12, 8),
     save_path: Optional[Union[str, Path]] = None,
 ) -> Figure:
     """
@@ -553,7 +554,7 @@ def plot_waic_loo_comparison(
     models: Dict[str, object],
     posterior_samples: Dict[str, Dict[str, object]],
     data: Dict[str, object],
-    figsize: Tuple[float, float] = (12, 10),
+    figsize: Tuple[Union[float, int], Union[float, int]] = (12, 10),
     save_path: Optional[Union[str, Path]] = None,
 ) -> Figure:
     """

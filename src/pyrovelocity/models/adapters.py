@@ -39,6 +39,7 @@ from pyrovelocity.models.factory import (
     create_model,
 )
 from pyrovelocity.models.model import ModelState, PyroVelocityModel
+from scvi.data.fields import LayerField, NumericalObsField
 
 
 class ConfigurationAdapter:
@@ -159,6 +160,65 @@ class LegacyModelAdapter(PyroVelocity):
     modular PyroVelocityModel internally, allowing existing code to work with the new
     architecture without modification.
     """
+    
+    @classmethod
+    def setup_anndata(
+        cls,
+        adata: AnnData,
+        **kwargs
+    ):
+        """
+        Set up AnnData object for use with LegacyModelAdapter.
+        
+        This method registers the necessary fields in the AnnData object
+        and sets up the AnnDataManager for the adapter.
+        
+        Args:
+            adata: AnnData object to set up
+            **kwargs: Additional keyword arguments to pass to setup_anndata
+        """
+        # Make sure the required layers exist
+        required_layers = ["spliced", "unspliced", "raw_spliced", "raw_unspliced"]
+        for layer in required_layers:
+            if layer not in adata.layers:
+                raise ValueError(f"Layer '{layer}' not found in AnnData object")
+        
+        # Get the setup method args
+        setup_method_args = cls._get_setup_method_args(**locals())
+        
+        # Set up the library size information
+        adata.obs["u_lib_size"] = np.log(
+            adata.obs["u_lib_size_raw"].astype(float) + 1e-6
+        )
+        adata.obs["s_lib_size"] = np.log(
+            adata.obs["s_lib_size_raw"].astype(float) + 1e-6
+        )
+        
+        adata.obs["u_lib_size_mean"] = adata.obs["u_lib_size"].mean()
+        adata.obs["s_lib_size_mean"] = adata.obs["s_lib_size"].mean()
+        adata.obs["u_lib_size_scale"] = adata.obs["u_lib_size"].std()
+        adata.obs["s_lib_size_scale"] = adata.obs["s_lib_size"].std()
+        adata.obs["ind_x"] = np.arange(adata.n_obs).astype("int64")
+        
+        # Create the AnnData fields
+        anndata_fields = [
+            LayerField("U", "raw_unspliced", is_count_data=True),
+            LayerField("X", "raw_spliced", is_count_data=True),
+            NumericalObsField("u_lib_size", "u_lib_size"),
+            NumericalObsField("s_lib_size", "s_lib_size"),
+            NumericalObsField("u_lib_size_mean", "u_lib_size_mean"),
+            NumericalObsField("s_lib_size_mean", "s_lib_size_mean"),
+            NumericalObsField("u_lib_size_scale", "u_lib_size_scale"),
+            NumericalObsField("s_lib_size_scale", "s_lib_size_scale"),
+            NumericalObsField("ind_x", "ind_x"),
+        ]
+        
+        # Create and register the AnnData manager
+        adata_manager = AnnDataManager(
+            fields=anndata_fields, setup_method_args=setup_method_args
+        )
+        adata_manager.register_fields(adata)
+        cls.register_manager(adata_manager)
     
     @beartype
     def __init__(

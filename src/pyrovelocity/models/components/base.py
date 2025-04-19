@@ -124,14 +124,37 @@ class BaseDynamicsModel(BaseComponent, DynamicsModel, abc.ABC):
     functionality for dynamics models.
     """
     
-    def __init__(self, name: str = "dynamics_model"):
+    def __init__(
+        self,
+        name: str = "dynamics_model",
+        shared_time: bool = True,
+        t_scale_on: bool = False,
+        cell_specific_kinetics: Optional[str] = None,
+        kinetics_num: Optional[int] = None,
+        **kwargs
+    ):
         """
         Initialize the dynamics model.
         
         Args:
             name: A unique name for this component instance.
+            shared_time: Whether to use shared time across cells.
+            t_scale_on: Whether to use time scaling.
+            cell_specific_kinetics: Type of cell-specific kinetics.
+            kinetics_num: Number of kinetics.
+            **kwargs: Additional keyword arguments.
         """
         super().__init__(name=name)
+        
+        # Store dynamics parameters
+        self.shared_time = shared_time
+        self.t_scale_on = t_scale_on
+        self.cell_specific_kinetics = cell_specific_kinetics
+        self.kinetics_num = kinetics_num
+        
+        # Store any additional parameters
+        for key, value in kwargs.items():
+            setattr(self, key, value)
     
     @jaxtyped
     @beartype

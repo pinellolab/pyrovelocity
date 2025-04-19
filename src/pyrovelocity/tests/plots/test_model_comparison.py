@@ -317,9 +317,12 @@ def test_plot_waic_loo_comparison(mock_compare_models, comparison_results_list, 
     output_path = tmp_path / "waic_loo_comparison.png"
     
     # Mock the compare_models method to return the comparison results
+    # We need to reset the side_effect for each test case
     mock_compare_models.side_effect = [
-        comparison_results_list[0],  # WAIC result
-        comparison_results_list[1],  # LOO result
+        comparison_results_list[0],  # WAIC result for first test
+        comparison_results_list[1],  # LOO result for first test
+        comparison_results_list[0],  # WAIC result for second test
+        comparison_results_list[1],  # LOO result for second test
     ]
     
     # Create mock objects
@@ -351,8 +354,8 @@ def test_plot_waic_loo_comparison(mock_compare_models, comparison_results_list, 
     assert os.path.exists(output_path)
     assert os.path.getsize(output_path) > 0
     
-    # Verify that compare_models was called twice (once for WAIC, once for LOO)
-    assert mock_compare_models.call_count == 2
+    # Verify that compare_models was called four times (twice for WAIC, twice for LOO)
+    assert mock_compare_models.call_count == 4
     
     plt.close("all")
 

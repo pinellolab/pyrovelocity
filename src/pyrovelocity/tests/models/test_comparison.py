@@ -10,12 +10,13 @@ import pandas as pd
 import pytest
 import torch
 from unittest.mock import MagicMock, patch
+from typing import Dict, List, Optional, Tuple, Union
 
 import jax
 import jax.numpy as jnp
 import pyro
 
-from pyrovelocity.models.base import (
+from pyrovelocity.models.components.base import (
     BaseDynamicsModel,
     BaseLikelihoodModel,
     BaseObservationModel,
@@ -48,6 +49,38 @@ class MockDynamicsModel(BaseDynamicsModel):
         context["predictions"] = torch.ones((10, 5)) * parameters.get("alpha", 1.0)
         
         return context
+    
+    def _forward_impl(
+        self,
+        u: torch.Tensor,
+        s: torch.Tensor,
+        alpha: torch.Tensor,
+        beta: torch.Tensor,
+        gamma: torch.Tensor,
+        scaling: Optional[torch.Tensor] = None,
+        t: Optional[torch.Tensor] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Implementation of the forward method."""
+        # Simple implementation for testing
+        u_pred = torch.ones_like(u) * alpha
+        s_pred = torch.ones_like(s) * alpha
+        return u_pred, s_pred
+    
+    def _predict_future_states_impl(
+        self,
+        current_state: Tuple[torch.Tensor, torch.Tensor],
+        time_delta: torch.Tensor,
+        alpha: torch.Tensor,
+        beta: torch.Tensor,
+        gamma: torch.Tensor,
+        scaling: Optional[torch.Tensor] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Implementation of the predict_future_states method."""
+        # Simple implementation for testing
+        u_current, s_current = current_state
+        u_future = u_current + alpha * time_delta
+        s_future = s_current + beta * time_delta
+        return u_future, s_future
 
 
 class MockLikelihoodModel(BaseLikelihoodModel):
