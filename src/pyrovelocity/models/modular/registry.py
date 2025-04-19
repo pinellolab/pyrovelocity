@@ -10,7 +10,7 @@ from typing import Any, Callable, Dict, Generic, Type, TypeVar, cast
 from beartype import beartype
 from beartype.typing import Optional
 
-from pyrovelocity.models.interfaces import (
+from pyrovelocity.models.modular.interfaces import (
     DynamicsModel,
     InferenceGuide,
     LikelihoodModel,

@@ -27,7 +27,7 @@ from anndata import AnnData
 from beartype import beartype
 from jaxtyping import Array, Float, jaxtyped
 
-from pyrovelocity.models.model import PyroVelocityModel
+from pyrovelocity.models.modular.model import PyroVelocityModel
 
 logger = logging.getLogger(__name__)
 

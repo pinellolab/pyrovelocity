@@ -41,13 +41,13 @@ from beartype import beartype
 from jaxtyping import Array, Float, jaxtyped
 from sklearn.model_selection import KFold, StratifiedKFold
 
-from pyrovelocity.models.comparison import (
+from pyrovelocity.models.modular.comparison import (
     BayesianModelComparison,
     ComparisonResult,
     create_comparison_table,
     select_best_model,
 )
-from pyrovelocity.models.model import ModelState, PyroVelocityModel
+from pyrovelocity.models.modular.model import ModelState, PyroVelocityModel
 
 logger = logging.getLogger(__name__)
 

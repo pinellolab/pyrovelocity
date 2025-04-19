@@ -13,15 +13,15 @@ from beartype import beartype
 from hydra_zen import builds, make_config, make_custom_builds_fn
 from omegaconf import DictConfig, OmegaConf
 
-from pyrovelocity.models.interfaces import (
+from pyrovelocity.models.modular.interfaces import (
     DynamicsModel,
     InferenceGuide,
     LikelihoodModel,
     ObservationModel,
     PriorModel,
 )
-from pyrovelocity.models.model import PyroVelocityModel
-from pyrovelocity.models.registry import (
+from pyrovelocity.models.modular.model import PyroVelocityModel
+from pyrovelocity.models.modular.registry import (
     DynamicsModelRegistry,
     InferenceGuideRegistry,
     LikelihoodModelRegistry,
