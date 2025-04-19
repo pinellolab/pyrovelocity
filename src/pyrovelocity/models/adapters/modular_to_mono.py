@@ -23,7 +23,7 @@ from scvi.model.base import BaseModelClass
 
 from pyrovelocity.models._velocity import PyroVelocity
 from pyrovelocity.models._velocity_module import VelocityModule
-from pyrovelocity.models.model import ModelState, PyroVelocityModel
+from pyrovelocity.models.modular.model import ModelState, PyroVelocityModel
 
 
 class LegacyModelAdapter(PyroVelocity):
@@ -134,7 +134,7 @@ class LegacyModelAdapter(PyroVelocity):
             )
             
             # Import here to avoid circular imports
-            from pyrovelocity.models.factory import create_model
+            from pyrovelocity.models.modular.factory import create_model
             
             self._modular_model = create_model(modular_config)
 

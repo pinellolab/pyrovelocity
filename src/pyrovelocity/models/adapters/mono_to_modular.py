@@ -11,7 +11,7 @@ from anndata import AnnData
 from beartype import beartype
 
 from pyrovelocity.models._velocity import PyroVelocity
-from pyrovelocity.models.factory import (
+from pyrovelocity.models.modular.factory import (
     DynamicsModelConfig,
     InferenceGuideConfig,
     LikelihoodModelConfig,
@@ -20,7 +20,7 @@ from pyrovelocity.models.factory import (
     PyroVelocityModelConfig,
     create_model,
 )
-from pyrovelocity.models.model import PyroVelocityModel
+from pyrovelocity.models.modular.model import PyroVelocityModel
 
 
 class ConfigurationAdapter:

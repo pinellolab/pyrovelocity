@@ -5,11 +5,11 @@ import numpy as np
 import pytest
 from jaxtyping import Array
 
-from pyrovelocity.models.components.dynamics import (
+from pyrovelocity.models.modular.components.dynamics import (
     NonlinearDynamicsModel,
     StandardDynamicsModel,
 )
-from pyrovelocity.models.registry import DynamicsModelRegistry
+from pyrovelocity.models.modular.registry import DynamicsModelRegistry
 
 
 def test_standard_dynamics_model_registration():

@@ -11,7 +11,7 @@ import numpy as np
 from anndata import AnnData
 
 from pyrovelocity.models._velocity import PyroVelocity
-from pyrovelocity.models.model import PyroVelocityModel, ModelState
+from pyrovelocity.models.modular.model import PyroVelocityModel, ModelState
 from pyrovelocity.models.adapters import (
     ConfigurationAdapter,
     LegacyModelAdapter,
@@ -19,7 +19,7 @@ from pyrovelocity.models.adapters import (
     convert_legacy_to_modular,
     convert_modular_to_legacy,
 )
-from pyrovelocity.models.factory import (
+from pyrovelocity.models.modular.factory import (
     create_standard_model,
     standard_model_config,
     PyroVelocityModelConfig,

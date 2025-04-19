@@ -16,20 +16,20 @@ import jax
 import jax.numpy as jnp
 import pyro
 
-from pyrovelocity.models.components.base import (
+from pyrovelocity.models.modular.components.base import (
     BaseDynamicsModel,
     BaseLikelihoodModel,
     BaseObservationModel,
     BasePriorModel,
     BaseInferenceGuide,
 )
-from pyrovelocity.models.comparison import (
+from pyrovelocity.models.modular.comparison import (
     BayesianModelComparison,
     ComparisonResult,
     create_comparison_table,
     select_best_model,
 )
-from pyrovelocity.models.model import ModelState, PyroVelocityModel
+from pyrovelocity.models.modular.model import ModelState, PyroVelocityModel
 
 
 # Mock implementations for testing

@@ -14,14 +14,14 @@ import torch
 from typing import Any, Dict, Optional, Tuple, Union
 from jaxtyping import Array, Float
 
-from pyrovelocity.models.components.base import (
+from pyrovelocity.models.modular.components.base import (
     BaseDynamicsModel,
     BaseLikelihoodModel,
     BaseObservationModel,
     BasePriorModel,
     BaseInferenceGuide,
 )
-from pyrovelocity.models.components.dynamics import StandardDynamicsModel
+from pyrovelocity.models.modular.components.dynamics import StandardDynamicsModel
 from pyrovelocity.models.interfaces import (
     BatchTensor,
     DynamicsModel as DynamicsModelProtocol,
@@ -31,8 +31,8 @@ from pyrovelocity.models.interfaces import (
     ParamTensor,
     PriorModel as PriorModelProtocol,
 )
-from pyrovelocity.models.components.likelihoods import PoissonLikelihoodModel
-from pyrovelocity.models.model import ModelState, PyroVelocityModel
+from pyrovelocity.models.modular.components.likelihoods import PoissonLikelihoodModel
+from pyrovelocity.models.modular.model import ModelState, PyroVelocityModel
 
 
 # Mock implementations for testing

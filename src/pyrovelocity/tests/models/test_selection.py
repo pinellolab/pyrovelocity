@@ -16,18 +16,18 @@ import jax.numpy as jnp
 import pyro
 from anndata import AnnData
 
-from pyrovelocity.models.comparison import (
+from pyrovelocity.models.modular.comparison import (
     BayesianModelComparison,
     ComparisonResult,
 )
-from pyrovelocity.models.selection import (
+from pyrovelocity.models.modular.selection import (
     CrossValidator,
     ModelEnsemble,
     ModelSelection,
     SelectionCriterion,
     SelectionResult,
 )
-from pyrovelocity.models.model import ModelState, PyroVelocityModel
+from pyrovelocity.models.modular.model import ModelState, PyroVelocityModel
 
 # Import mock models from test_comparison.py
 from pyrovelocity.tests.models.test_comparison import (

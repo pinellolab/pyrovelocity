@@ -12,7 +12,7 @@ import pyro.distributions as dist
 from anndata import AnnData
 from expression import Result, case, tag, tagged_union
 
-from pyrovelocity.models.components.base import (
+from pyrovelocity.models.modular.components.base import (
     BaseComponent,
     BaseDynamicsModel,
     BasePriorModel,
