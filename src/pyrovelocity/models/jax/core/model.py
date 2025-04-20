@@ -75,16 +75,14 @@ def velocity_model(
     with numpyro.plate("gene", num_genes):
         # Sample RNA velocity parameters from prior
         if include_prior:
-            # Use the prior function to sample parameters
-            # Get a random key from numpyro, with fallback to a new key if it returns None
-            key_from_numpyro = numpyro.prng_key()
-            if key_from_numpyro is None:
-                # Create a new key if numpyro.prng_key() returns None
-                key = jax.random.PRNGKey(0)
-            else:
-                key = key_from_numpyro
-                
-            params = prior_fn(key, num_genes)
+            # Create a deterministic key for reproducibility
+            # We use a seed of 0 for consistency, but in a real application
+            # this should be a parameter or derived from a global seed
+            seed = 0
+            deterministic_key = jax.random.PRNGKey(seed)
+            
+            # Sample parameters using the deterministic key
+            params = prior_fn(deterministic_key, num_genes)
             
             # Register parameters with the model
             alpha = numpyro.sample("alpha", dist.Delta(params["alpha"]))
