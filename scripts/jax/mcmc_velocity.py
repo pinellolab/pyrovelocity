@@ -100,11 +100,22 @@ def main():
     print("Running MCMC inference...")
     key, subkey = jax.random.split(key)
     
+    # Extract the data from data_dict and map to the expected parameter names
+    u_obs = data_dict["X_unspliced"]
+    s_obs = data_dict["X_spliced"]
+    u_log_library = jnp.log(data_dict["u_lib_size"])
+    s_log_library = jnp.log(data_dict["s_lib_size"])
+    
     # The run_inference function expects (model, args, kwargs, config, key)
     inference_state = run_inference(
         model=model,
         args=(),  # Empty tuple for positional args
-        kwargs={"data": data_dict},  # Pass data as kwargs
+        kwargs={
+            "u_obs": u_obs,
+            "s_obs": s_obs,
+            "u_log_library": u_log_library,
+            "s_log_library": s_log_library
+        },
         config=inference_config,
         key=subkey,
     )
