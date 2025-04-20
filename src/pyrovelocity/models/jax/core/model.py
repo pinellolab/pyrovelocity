@@ -195,6 +195,28 @@ def create_model(
     likelihood_fn = create_likelihood(config.likelihood)
     
     # Create a properly typed wrapper function for the prior
+    # Create a properly typed wrapper function for the prior
+    def typed_prior_fn(key: Optional[jnp.ndarray], num_genes: int) -> Dict[str, Float[Array, "gene"]]:
+        """Wrapper for sample_prior_parameters with proper type annotations.
+        
+        This ensures that a valid key is always passed to sample_prior_parameters.
+        If key is None, it creates a new deterministic key using JAX's PRNGKey.
+        
+        Args:
+            key: JAX random key (can be None)
+            num_genes: Number of genes
+            
+        Returns:
+            Dictionary of parameter samples
+        """
+        # Handle the case where key is None
+        if key is None:
+            # Create a deterministic key for reproducibility using JAX's PRNGKey
+            key = jax.random.PRNGKey(0)
+            
+        # Now we can safely call sample_prior_parameters with a valid key
+        return sample_prior_parameters(key, num_genes, config.prior)
+    
     # Create model function
     def model_fn(
         u_obs: Float[Array, "cell gene"],
@@ -209,9 +231,7 @@ def create_model(
             s_log_library=s_log_library,
             dynamics_fn=dynamics_fn,
             likelihood_fn=likelihood_fn,
-            prior_fn=lambda key, num_genes: sample_prior_parameters(
-                key, num_genes, config.prior
-            ),
+            prior_fn=typed_prior_fn,  # Use the properly typed wrapper function
             latent_time=config.latent_time,
             include_prior=config.include_prior,
         )
