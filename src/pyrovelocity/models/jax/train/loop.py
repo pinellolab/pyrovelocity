@@ -102,18 +102,11 @@ def evaluate_model(
     Returns:
         Loss value
     """
-    # Get the loss function from the SVI object
-    loss_fn = svi.loss
-    
-    # Get the model and guide from the SVI object
-    model = svi.model
-    guide = svi.guide
-    
     # Get the parameters from the state
     params = state.params
     
-    # Compute the loss
-    loss = loss_fn(model, guide, params, **data)
+    # Compute the loss using the SVI object directly
+    loss = svi.evaluate(params, **data)
     
     return float(loss)
 
