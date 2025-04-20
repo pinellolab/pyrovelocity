@@ -147,7 +147,11 @@ def test_mcmc_diagnostics(test_data):
     diagnostics = mcmc_diagnostics(mcmc)
     
     # Check that diagnostics are present
-    assert "summary" in diagnostics
+    assert "samples" in diagnostics
+    
+    # Check that we have mean and std for parameters
+    assert "alpha_mean" in diagnostics
+    assert "alpha_std" in diagnostics
 
 
 def test_extract_posterior_samples(test_data):
