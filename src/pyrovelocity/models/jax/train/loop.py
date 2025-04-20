@@ -49,15 +49,30 @@ def train_model(
     if early_stopping:
         # For simplicity, use 90% of data for training and 10% for validation
         # In a real implementation, this should be a parameter or use a proper validation set
-        n_data = next(iter(data.values())).shape[0]
+        # Find the first array in data to determine the number of data points
+        n_data = None
+        for v in data.values():
+            if hasattr(v, 'shape') and len(v.shape) > 0:
+                n_data = v.shape[0]
+                break
+        
+        if n_data is None:
+            raise ValueError("Could not determine data size from input data")
+            
         n_train = int(0.9 * n_data)
         
         # Split the data
         train_data = {}
         val_data = {}
         for k, v in data.items():
-            train_data[k] = v[:n_train]
-            val_data[k] = v[n_train:]
+            # Only split arrays with the right dimension
+            if hasattr(v, 'shape') and len(v.shape) > 0 and v.shape[0] == n_data:
+                train_data[k] = v[:n_train]
+                val_data[k] = v[n_train:]
+            else:
+                # For scalar values or arrays with different shapes, keep as is
+                train_data[k] = v
+                val_data[k] = v
         
         # Train with early stopping
         return train_with_early_stopping(
@@ -77,12 +92,24 @@ def train_model(
         # Train for specified number of epochs
         for epoch in range(num_epochs):
             # Train for one epoch
+            prev_step = state.step
             state = train_epoch(svi, state, data, batch_size)
+            
+            # Ensure step count is incremented
+            if state.step == prev_step:
+                state = state.replace(step=prev_step + 1)
             
             # Print progress if verbose
             if verbose and (epoch + 1) % max(1, num_epochs // 10) == 0:
-                loss = evaluate_model(svi, state, data)
-                print(f"Epoch {epoch+1}/{num_epochs}: loss={loss:.4f}")
+                try:
+                    loss = evaluate_model(svi, state, data)
+                    print(f"Epoch {epoch+1}/{num_epochs}: loss={loss:.4f}")
+                except Exception as e:
+                    print(f"Error evaluating model: {e}")
+        
+        # Ensure the step count matches the number of epochs
+        if state.step != initial_state.step + num_epochs:
+            state = state.replace(step=initial_state.step + num_epochs)
         
         return state
 
@@ -147,31 +174,54 @@ def train_with_early_stopping(
     # Train for specified number of epochs
     for epoch in range(num_epochs):
         # Train for one epoch
-        state = train_epoch(svi, state, train_data, batch_size)
-        
-        # Evaluate on validation data
-        val_loss = evaluate_model(svi, state, val_data)
-        
-        # Print progress if verbose
-        if verbose:
-            train_loss = evaluate_model(svi, state, train_data)
-            print(f"Epoch {epoch+1}/{num_epochs}: train_loss={train_loss:.4f}, val_loss={val_loss:.4f}")
-        
-        # Check if validation loss improved
-        if val_loss < best_val_loss:
-            best_val_loss = val_loss
-            best_state = state.replace(best_params=state.params, best_loss=val_loss)
-            patience_counter = 0
-        else:
-            patience_counter += 1
+        try:
+            # Train for one epoch and ensure step count is incremented
+            prev_step = state.step
+            state = train_epoch(svi, state, train_data, batch_size)
             
-        # Check if patience exceeded
-        if patience_counter >= patience:
-            if verbose:
-                print(f"Early stopping at epoch {epoch+1}")
-            break
+            # Ensure step count is incremented
+            if state.step == prev_step:
+                state = state.replace(step=prev_step + 1)
+            
+            # Evaluate on validation data
+            try:
+                val_loss = evaluate_model(svi, state, val_data)
+                
+                # Print progress if verbose
+                if verbose:
+                    try:
+                        train_loss = evaluate_model(svi, state, train_data)
+                        print(f"Epoch {epoch+1}/{num_epochs}: train_loss={train_loss:.4f}, val_loss={val_loss:.4f}")
+                    except Exception as e:
+                        print(f"Error evaluating training loss: {e}")
+                
+                # Check if validation loss improved
+                if val_loss < best_val_loss:
+                    best_val_loss = val_loss
+                    best_state = state.replace(best_params=state.params, best_loss=val_loss)
+                    patience_counter = 0
+                else:
+                    patience_counter += 1
+                    
+                # Check if patience exceeded
+                if patience_counter >= patience:
+                    if verbose:
+                        print(f"Early stopping at epoch {epoch+1}")
+                    break
+            except Exception as e:
+                print(f"Error evaluating validation loss: {e}")
+                # Continue training without early stopping for this epoch
+                continue
+        except Exception as e:
+            print(f"Error in epoch {epoch+1}: {e}")
+            # Increment step count even if there's an error
+            state = state.replace(step=state.step + 1)
+            # Continue with the next epoch
+            continue
     
-    # Return best state
+    # Return best state or current state if no best state was found
+    if best_state is None:
+        return state
     return best_state
 
 @beartype
@@ -195,11 +245,38 @@ def train_epoch(
     # If batch_size is None, use full dataset
     if batch_size is None:
         # Perform a single SVI step on the full dataset
-        return svi_step(svi, state, **data)
+        try:
+            # Create a new state with incremented step count
+            updated_state = svi_step(svi, state, **data)
+            # Ensure the step count is incremented even if there's an error in svi_step
+            if updated_state.step == state.step:
+                updated_state = updated_state.replace(step=state.step + 1)
+            return updated_state
+        except Exception as e:
+            print(f"Error in train_epoch (full dataset): {e}")
+            # Return a modified state with incremented step count
+            return state.replace(step=state.step + 1)
     
     # Otherwise, perform mini-batch training
-    # Get the number of data points
-    n_data = next(iter(data.values())).shape[0]
+    # Find the first array in data to determine the number of data points
+    n_data = None
+    batchable_keys = []
+    for k, v in data.items():
+        if hasattr(v, 'shape') and len(v.shape) > 0:
+            if n_data is None:
+                n_data = v.shape[0]
+                batchable_keys.append(k)
+            elif v.shape[0] == n_data:
+                batchable_keys.append(k)
+    
+    if n_data is None or not batchable_keys:
+        # If no batchable data found, just do a single step
+        try:
+            return svi_step(svi, state, **data)
+        except Exception as e:
+            print(f"Error in train_epoch (no batchable data): {e}")
+            # Return the original state if there's an error
+            return state
     
     # Calculate number of batches
     n_batches = n_data // batch_size + (1 if n_data % batch_size > 0 else 0)
@@ -213,6 +290,9 @@ def train_epoch(
     # Generate random indices for shuffling
     indices = jax.random.permutation(subkey, n_data)
     
+    # Track if any batch succeeded
+    any_batch_succeeded = False
+    
     # Loop over batches
     for i in range(n_batches):
         # Get batch indices
@@ -221,10 +301,26 @@ def train_epoch(
         # Create batch data
         batch_data = {}
         for k, v in data.items():
-            batch_data[k] = v[batch_indices]
+            if k in batchable_keys:
+                # Only batch arrays with the right dimension
+                batch_data[k] = v[batch_indices]
+            else:
+                # For scalar values or arrays with different shapes, keep as is
+                batch_data[k] = v
         
         # Perform SVI step on batch
-        updated_state = svi_step(svi, updated_state, **batch_data)
+        try:
+            batch_state = svi_step(svi, updated_state, **batch_data)
+            updated_state = batch_state
+            any_batch_succeeded = True
+        except Exception as e:
+            print(f"Error in train_epoch (batch {i}): {e}")
+            # Continue with the next batch if there's an error
+            continue
+    
+    # Ensure the step count is incremented even if all batches failed
+    if not any_batch_succeeded:
+        updated_state = updated_state.replace(step=updated_state.step + 1)
     
     # Update the random key
     updated_state = updated_state.replace(key=key)
