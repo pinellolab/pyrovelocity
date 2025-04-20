@@ -7,6 +7,7 @@ import jax
 import jax.numpy as jnp
 import numpyro
 import numpyro.distributions as dist
+import optax
 
 from pyrovelocity.models.jax.inference.svi import (
     run_svi_inference,
@@ -40,14 +41,18 @@ def test_create_optimizer():
     # Get Adam optimizer
     optimizer = create_optimizer("adam", learning_rate=0.01)
     
-    # Check that optimizer is a callable
-    assert callable(optimizer)
+    # Check that optimizer is an Optax optimizer
+    assert isinstance(optimizer, optax.GradientTransformation)
+    assert hasattr(optimizer, 'init')
+    assert hasattr(optimizer, 'update')
     
     # Get SGD optimizer
     optimizer = create_optimizer("sgd", learning_rate=0.01)
     
-    # Check that optimizer is a callable
-    assert callable(optimizer)
+    # Check that optimizer is an Optax optimizer
+    assert isinstance(optimizer, optax.GradientTransformation)
+    assert hasattr(optimizer, 'init')
+    assert hasattr(optimizer, 'update')
     
     # Check that an error is raised for unknown optimizer
     with pytest.raises(ValueError):
