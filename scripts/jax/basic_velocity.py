@@ -104,10 +104,13 @@ def main():
     # 6. Run inference
     print("Running SVI inference...")
     key, subkey = jax.random.split(key)
+    
+    # For SVI, we need to pass the guide to the model's kwargs
+    # The run_inference function expects (model, args, kwargs, config, key)
     inference_state = run_inference(
         model=model,
-        guide=guide,
-        data=data_dict,
+        args=(),  # Empty tuple for positional args
+        kwargs={"data": data_dict, "guide": guide},  # Pass data and guide as kwargs
         config=inference_config,
         key=subkey,
     )

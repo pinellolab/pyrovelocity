@@ -99,9 +99,12 @@ def main():
     # 6. Run inference
     print("Running MCMC inference...")
     key, subkey = jax.random.split(key)
+    
+    # The run_inference function expects (model, args, kwargs, config, key)
     inference_state = run_inference(
         model=model,
-        data=data_dict,
+        args=(),  # Empty tuple for positional args
+        kwargs={"data": data_dict},  # Pass data as kwargs
         config=inference_config,
         key=subkey,
     )
