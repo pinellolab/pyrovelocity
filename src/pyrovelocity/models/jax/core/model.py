@@ -75,9 +75,12 @@ def velocity_model(
     with numpyro.plate("gene", num_genes):
         # Sample RNA velocity parameters from prior
         if include_prior:
-            # Use the prior function to sample parameters
-            key = numpyro.prng_key()
-            params = prior_fn(key, num_genes)
+            # Create a deterministic key for reproducibility
+            # This is the proper way to handle random keys in JAX
+            rng_key = jax.random.PRNGKey(0)
+            
+            # Use the prior function to sample parameters with a valid key
+            params = prior_fn(rng_key, num_genes)
             
             # Register parameters with the model
             alpha = numpyro.sample("alpha", dist.Delta(params["alpha"]))
@@ -192,27 +195,6 @@ def create_model(
     likelihood_fn = create_likelihood(config.likelihood)
     
     # Create a properly typed wrapper function for the prior
-    def typed_prior_fn(key: jnp.ndarray, num_genes: int) -> Dict[str, Float[Array, "gene"]]:
-        """Wrapper for sample_prior_parameters with proper type annotations.
-        
-        This ensures that a valid key is always passed to sample_prior_parameters.
-        If key is None, it creates a new deterministic key.
-        
-        Args:
-            key: JAX random key (can be None)
-            num_genes: Number of genes
-            
-        Returns:
-            Dictionary of parameter samples
-        """
-        # Handle the case where key is None
-        if key is None:
-            # Create a deterministic key for reproducibility
-            key = jax.random.PRNGKey(0)
-            
-        # Now we can safely call sample_prior_parameters with a valid key
-        return sample_prior_parameters(key, num_genes, config.prior)
-    
     # Create model function
     def model_fn(
         u_obs: Float[Array, "cell gene"],
@@ -227,7 +209,9 @@ def create_model(
             s_log_library=s_log_library,
             dynamics_fn=dynamics_fn,
             likelihood_fn=likelihood_fn,
-            prior_fn=typed_prior_fn,  # Use the properly typed wrapper function
+            prior_fn=lambda key, num_genes: sample_prior_parameters(
+                key, num_genes, config.prior
+            ),
             latent_time=config.latent_time,
             include_prior=config.include_prior,
         )
