@@ -1,0 +1,287 @@
+"""
+Tests for the unified inference interface.
+"""
+
+import pytest
+import jax
+import jax.numpy as jnp
+import numpyro
+import numpyro.distributions as dist
+from numpyro.infer import SVI, MCMC, Trace_ELBO
+from numpyro.infer.autoguide import AutoNormal
+
+from pyrovelocity.models.jax.inference.unified import (
+    run_inference,
+    extract_posterior_samples,
+    posterior_predictive,
+    create_inference_state,
+)
+from pyrovelocity.models.jax.core.state import InferenceConfig, InferenceState
+
+
+# Simple model for testing
+def simple_model(x=None, y=None):
+    # Sample parameters
+    alpha = numpyro.sample("alpha", dist.LogNormal(0.0, 1.0))
+    beta = numpyro.sample("beta", dist.LogNormal(0.0, 1.0))
+    gamma = numpyro.sample("gamma", dist.LogNormal(0.0, 1.0))
+    
+    # Sample latent time
+    with numpyro.plate("cell", 10):
+        tau = numpyro.sample("tau", dist.Normal(0.0, 1.0))
+    
+    # Compute expected values
+    u_expected = alpha * jnp.exp(-beta * tau)
+    s_expected = alpha * beta / (gamma - beta) * (jnp.exp(-beta * tau) - jnp.exp(-gamma * tau))
+    
+    # Sample observations
+    with numpyro.plate("cell_gene", 10):
+        if x is not None:
+            numpyro.sample("x_obs", dist.Poisson(u_expected.reshape(-1)), obs=x)
+        if y is not None:
+            numpyro.sample("y_obs", dist.Poisson(s_expected.reshape(-1)), obs=y)
+    
+    # Return expected values
+    return {
+        "u_expected": u_expected,
+        "s_expected": s_expected,
+    }
+
+
+@pytest.fixture
+def test_data():
+    # Set random seed for reproducibility
+    key = jax.random.PRNGKey(0)
+    
+    # Generate synthetic data
+    alpha = jnp.exp(jnp.array(0.0))
+    beta = jnp.exp(jnp.array(0.0))
+    gamma = jnp.exp(jnp.array(0.0))
+    tau = jnp.linspace(0.0, 1.0, 10)
+    
+    # Compute expected values
+    u_expected = alpha * jnp.exp(-beta * tau)
+    s_expected = alpha * beta / (gamma - beta + 1e-6) * (jnp.exp(-beta * tau) - jnp.exp(-gamma * tau))
+    
+    # Sample observations
+    key, subkey1, subkey2 = jax.random.split(key, 3)
+    x = jax.random.poisson(subkey1, u_expected)
+    y = jax.random.poisson(subkey2, s_expected)
+    
+    return x, y
+
+
+def test_run_inference_svi(test_data):
+    """Test running SVI inference."""
+    # Get test data
+    x, y = test_data
+    
+    # Create inference config
+    config = InferenceConfig(
+        method="svi",
+        num_samples=10,
+        num_epochs=5,
+        guide_type="auto_normal",
+    )
+    
+    # Set random seed for reproducibility
+    key = jax.random.PRNGKey(0)
+    
+    # Run inference
+    inference_object, inference_state = run_inference(
+        model=simple_model,
+        args=(),
+        kwargs={"x": x, "y": y},
+        config=config,
+        key=key,
+    )
+    
+    # Check that inference object is an AutoGuide
+    assert isinstance(inference_object, AutoNormal)
+    
+    # Check that inference state is an InferenceState
+    assert isinstance(inference_state, InferenceState)
+    
+    # Check that posterior samples are present
+    assert "alpha" in inference_state.posterior_samples
+    assert "beta" in inference_state.posterior_samples
+    assert "gamma" in inference_state.posterior_samples
+    assert "tau" in inference_state.posterior_samples
+
+
+def test_run_inference_mcmc(test_data):
+    """Test running MCMC inference."""
+    # Get test data
+    x, y = test_data
+    
+    # Create inference config
+    config = InferenceConfig(
+        method="mcmc",
+        num_samples=5,
+        num_warmup=5,
+        num_chains=1,
+    )
+    
+    # Set random seed for reproducibility
+    key = jax.random.PRNGKey(0)
+    
+    # Run inference
+    inference_object, inference_state = run_inference(
+        model=simple_model,
+        args=(),
+        kwargs={"x": x, "y": y},
+        config=config,
+        key=key,
+    )
+    
+    # Check that inference object is an MCMC
+    assert isinstance(inference_object, MCMC)
+    
+    # Check that inference state is an InferenceState
+    assert isinstance(inference_state, InferenceState)
+    
+    # Check that posterior samples are present
+    assert "alpha" in inference_state.posterior_samples
+    assert "beta" in inference_state.posterior_samples
+    assert "gamma" in inference_state.posterior_samples
+    assert "tau" in inference_state.posterior_samples
+    
+    # Check that diagnostics are present
+    assert inference_state.diagnostics is not None
+
+
+def test_extract_posterior_samples(test_data):
+    """Test extracting posterior samples."""
+    # Get test data
+    x, y = test_data
+    
+    # Create inference config
+    config = InferenceConfig(
+        method="svi",
+        num_samples=10,
+        num_epochs=5,
+        guide_type="auto_normal",
+    )
+    
+    # Set random seed for reproducibility
+    key = jax.random.PRNGKey(0)
+    
+    # Run inference
+    guide, inference_state = run_inference(
+        model=simple_model,
+        args=(),
+        kwargs={"x": x, "y": y},
+        config=config,
+        key=key,
+    )
+    
+    # Extract posterior samples
+    key, subkey = jax.random.split(key)
+    posterior_samples = extract_posterior_samples(
+        inference_object=guide,
+        params=inference_state.posterior_samples,
+        num_samples=5,
+        key=subkey,
+    )
+    
+    # Check that posterior samples are present
+    assert "alpha" in posterior_samples
+    assert "beta" in posterior_samples
+    assert "gamma" in posterior_samples
+    assert "tau" in posterior_samples
+    
+    # Check that posterior samples have the correct shape
+    assert posterior_samples["alpha"].shape == (5,)
+    assert posterior_samples["beta"].shape == (5,)
+    assert posterior_samples["gamma"].shape == (5,)
+    assert posterior_samples["tau"].shape == (5, 10)
+
+
+def test_posterior_predictive(test_data):
+    """Test generating posterior predictive samples."""
+    # Get test data
+    x, y = test_data
+    
+    # Create inference config
+    config = InferenceConfig(
+        method="svi",
+        num_samples=10,
+        num_epochs=5,
+        guide_type="auto_normal",
+    )
+    
+    # Set random seed for reproducibility
+    key = jax.random.PRNGKey(0)
+    
+    # Run inference
+    guide, inference_state = run_inference(
+        model=simple_model,
+        args=(),
+        kwargs={"x": x, "y": y},
+        config=config,
+        key=key,
+    )
+    
+    # Generate posterior predictive samples
+    key, subkey = jax.random.split(key)
+    posterior_predictive_samples = posterior_predictive(
+        model=simple_model,
+        posterior_samples=inference_state.posterior_samples,
+        args=(),
+        kwargs={},
+        num_samples=5,
+        key=subkey,
+    )
+    
+    # Check that posterior predictive samples are present
+    assert "alpha" in posterior_predictive_samples
+    assert "beta" in posterior_predictive_samples
+    assert "gamma" in posterior_predictive_samples
+    assert "tau" in posterior_predictive_samples
+    
+    # Check that posterior predictive samples have the correct shape
+    assert posterior_predictive_samples["alpha"].shape == (5,)
+    assert posterior_predictive_samples["beta"].shape == (5,)
+    assert posterior_predictive_samples["gamma"].shape == (5,)
+    assert posterior_predictive_samples["tau"].shape == (5, 10)
+
+
+def test_create_inference_state():
+    """Test creating an inference state."""
+    # Create posterior samples
+    posterior_samples = {
+        "alpha": jnp.ones((10,)),
+        "beta": jnp.ones((10,)),
+        "gamma": jnp.ones((10,)),
+        "tau": jnp.ones((10, 10)),
+    }
+    
+    # Create posterior predictive samples
+    posterior_predictive_samples = {
+        "x_obs": jnp.ones((10, 10)),
+        "y_obs": jnp.ones((10, 10)),
+    }
+    
+    # Create diagnostics
+    diagnostics = {
+        "summary": {"r_hat": 1.0},
+    }
+    
+    # Create inference state
+    inference_state = create_inference_state(
+        posterior_samples=posterior_samples,
+        posterior_predictive_samples=posterior_predictive_samples,
+        diagnostics=diagnostics,
+    )
+    
+    # Check that inference state is an InferenceState
+    assert isinstance(inference_state, InferenceState)
+    
+    # Check that posterior samples are present
+    assert inference_state.posterior_samples == posterior_samples
+    
+    # Check that posterior predictive samples are present
+    assert inference_state.posterior_predictive == posterior_predictive_samples
+    
+    # Check that diagnostics are present
+    assert inference_state.diagnostics == diagnostics
