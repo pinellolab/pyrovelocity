@@ -118,7 +118,7 @@ def compute_metrics(
     *args,
     **kwargs
 ) -> Dict[str, float]:
-    """Compute multiple metrics.
+    """Compute metrics.
     
     Args:
         model: NumPyro model function
@@ -166,6 +166,8 @@ def compute_validation_metrics(
     params: PyTree,
     train_data: Dict[str, jnp.ndarray],
     val_data: Dict[str, jnp.ndarray],
+    num_samples: int = 100,
+    key: Optional[jnp.ndarray] = None,
 ) -> Dict[str, float]:
     """Compute validation metrics.
     
@@ -175,6 +177,8 @@ def compute_validation_metrics(
         params: Model parameters (can be TrainingState.params or raw params)
         train_data: Dictionary of training data arrays
         val_data: Dictionary of validation data arrays
+        num_samples: Number of posterior samples
+        key: JAX random key
         
     Returns:
         Dictionary of validation metric values

@@ -19,6 +19,9 @@ from beartype import beartype
 from pyrovelocity.models.jax.core.state import TrainingState, InferenceConfig
 from pyrovelocity.models.jax.inference.svi import svi_step
 
+# We can't JIT-compile the SVI step directly because the SVI object is not a JAX array
+# Instead, we'll use the svi_step function directly
+
 @beartype
 def train_model(
     svi: SVI,
@@ -246,8 +249,18 @@ def train_epoch(
     if batch_size is None:
         # Perform a single SVI step on the full dataset
         try:
-            # Create a new state with incremented step count
+            # Use the svi_step function directly
             updated_state = svi_step(svi, state, **data)
+            # Update the loss history - only add one loss value per epoch
+            try:
+                loss = svi.evaluate(updated_state.params, **data)
+                updated_state = updated_state.replace(
+                    loss_history=state.loss_history + [float(loss)]
+                )
+            except Exception as e:
+                print(f"Error updating loss history: {e}")
+                # If we can't compute the loss, just keep the original loss history
+                updated_state = updated_state.replace(loss_history=state.loss_history)
             # Ensure the step count is incremented even if there's an error in svi_step
             if updated_state.step == state.step:
                 updated_state = updated_state.replace(step=state.step + 1)
@@ -310,7 +323,9 @@ def train_epoch(
         
         # Perform SVI step on batch
         try:
+            # Use the svi_step function directly
             batch_state = svi_step(svi, updated_state, **batch_data)
+            # Don't update the loss history here - we'll do it at the end of the epoch
             updated_state = batch_state
             any_batch_succeeded = True
         except Exception as e:
@@ -321,6 +336,17 @@ def train_epoch(
     # Ensure the step count is incremented even if all batches failed
     if not any_batch_succeeded:
         updated_state = updated_state.replace(step=updated_state.step + 1)
+    
+    # Update the loss history - only add one loss value per epoch
+    try:
+        loss = svi.evaluate(updated_state.params, **data)
+        updated_state = updated_state.replace(
+            loss_history=state.loss_history + [float(loss)]
+        )
+    except Exception as e:
+        print(f"Error updating loss history: {e}")
+        # If we can't compute the loss, just keep the original loss history
+        updated_state = updated_state.replace(loss_history=state.loss_history)
     
     # Update the random key
     updated_state = updated_state.replace(key=key)
