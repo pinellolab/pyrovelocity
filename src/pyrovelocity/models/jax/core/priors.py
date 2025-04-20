@@ -34,8 +34,20 @@ def lognormal_prior(
     Returns:
         Dictionary of parameter samples
     """
-    # Placeholder for future implementation
-    raise NotImplementedError("This function will be implemented in a future phase.")
+    # Split the key for different parameters
+    key_alpha, key_beta, key_gamma = jax.random.split(key, 3)
+    
+    # Sample from log-normal distributions
+    alpha = jnp.exp(jax.random.normal(key_alpha, shape) * scale + loc)
+    beta = jnp.exp(jax.random.normal(key_beta, shape) * scale + loc)
+    gamma = jnp.exp(jax.random.normal(key_gamma, shape) * scale + loc)
+    
+    # Return dictionary of parameters
+    return {
+        "alpha": alpha,
+        "beta": beta,
+        "gamma": gamma
+    }
 
 @beartype
 def informative_prior(
@@ -53,8 +65,28 @@ def informative_prior(
     Returns:
         Dictionary of parameter samples
     """
-    # Placeholder for future implementation
-    raise NotImplementedError("This function will be implemented in a future phase.")
+    # Split the key for different parameters
+    key_alpha, key_beta, key_gamma = jax.random.split(key, 3)
+    
+    # Extract prior parameters with defaults
+    alpha_loc = prior_params.get("alpha_loc", 0.0)
+    alpha_scale = prior_params.get("alpha_scale", 1.0)
+    beta_loc = prior_params.get("beta_loc", 0.0)
+    beta_scale = prior_params.get("beta_scale", 1.0)
+    gamma_loc = prior_params.get("gamma_loc", 0.0)
+    gamma_scale = prior_params.get("gamma_scale", 1.0)
+    
+    # Sample from log-normal distributions with parameter-specific settings
+    alpha = jnp.exp(jax.random.normal(key_alpha, shape) * alpha_scale + alpha_loc)
+    beta = jnp.exp(jax.random.normal(key_beta, shape) * beta_scale + beta_loc)
+    gamma = jnp.exp(jax.random.normal(key_gamma, shape) * gamma_scale + gamma_loc)
+    
+    # Return dictionary of parameters
+    return {
+        "alpha": alpha,
+        "beta": beta,
+        "gamma": gamma
+    }
 
 @beartype
 def sample_prior_parameters(
@@ -74,5 +106,21 @@ def sample_prior_parameters(
     Returns:
         Dictionary of parameter samples
     """
-    # Placeholder for future implementation
-    raise NotImplementedError("This function will be implemented in a future phase.")
+    # Define shape for gene-specific parameters
+    shape = (num_genes,)
+    
+    # Use default prior parameters if not provided
+    if prior_params is None:
+        prior_params = {}
+    
+    # Sample parameters based on prior type
+    if prior_type == "lognormal":
+        # Default log-normal prior
+        loc = prior_params.get("loc", 0.0)
+        scale = prior_params.get("scale", 1.0)
+        return lognormal_prior(key, shape, loc, scale)
+    elif prior_type == "informative":
+        # Informative prior with parameter-specific settings
+        return informative_prior(key, shape, prior_params)
+    else:
+        raise ValueError(f"Unknown prior type: {prior_type}")

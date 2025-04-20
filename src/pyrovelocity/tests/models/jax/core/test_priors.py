@@ -15,18 +15,30 @@ from pyrovelocity.models.jax.core.utils import create_key
 
 def test_lognormal_prior_interface():
     """Test lognormal_prior interface."""
-    # This test only checks that the function has the correct interface
-    # The actual implementation will be tested in a future phase
-    
     # Prepare test inputs
     key = create_key(42)
     shape = (3,)
     loc = 0.0
     scale = 1.0
     
-    # Check that the function raises NotImplementedError
-    with pytest.raises(NotImplementedError):
-        lognormal_prior(key, shape, loc, scale)
+    # Call the function
+    result = lognormal_prior(key, shape, loc, scale)
+    
+    # Check that the result is a dictionary with the expected keys
+    assert isinstance(result, dict)
+    assert "alpha" in result
+    assert "beta" in result
+    assert "gamma" in result
+    
+    # Check that the values have the expected shape
+    assert result["alpha"].shape == shape
+    assert result["beta"].shape == shape
+    assert result["gamma"].shape == shape
+    
+    # Check that the values are positive (log-normal distribution)
+    assert jnp.all(result["alpha"] > 0)
+    assert jnp.all(result["beta"] > 0)
+    assert jnp.all(result["gamma"] > 0)
 
 
 def test_lognormal_prior_type_checking():
@@ -56,9 +68,6 @@ def test_lognormal_prior_type_checking():
 
 def test_informative_prior_interface():
     """Test informative_prior interface."""
-    # This test only checks that the function has the correct interface
-    # The actual implementation will be tested in a future phase
-    
     # Prepare test inputs
     key = create_key(42)
     shape = (3,)
@@ -71,9 +80,24 @@ def test_informative_prior_interface():
         "gamma_scale": 1.0,
     }
     
-    # Check that the function raises NotImplementedError
-    with pytest.raises(NotImplementedError):
-        informative_prior(key, shape, prior_params)
+    # Call the function
+    result = informative_prior(key, shape, prior_params)
+    
+    # Check that the result is a dictionary with the expected keys
+    assert isinstance(result, dict)
+    assert "alpha" in result
+    assert "beta" in result
+    assert "gamma" in result
+    
+    # Check that the values have the expected shape
+    assert result["alpha"].shape == shape
+    assert result["beta"].shape == shape
+    assert result["gamma"].shape == shape
+    
+    # Check that the values are positive (log-normal distribution)
+    assert jnp.all(result["alpha"] > 0)
+    assert jnp.all(result["beta"] > 0)
+    assert jnp.all(result["gamma"] > 0)
 
 
 def test_informative_prior_type_checking():
@@ -105,17 +129,47 @@ def test_informative_prior_type_checking():
 
 def test_sample_prior_parameters_interface():
     """Test sample_prior_parameters interface."""
-    # This test only checks that the function has the correct interface
-    # The actual implementation will be tested in a future phase
-    
     # Prepare test inputs
     key = create_key(42)
     num_genes = 3
-    prior_type = "lognormal"
     
-    # Check that the function raises NotImplementedError
-    with pytest.raises(NotImplementedError):
-        sample_prior_parameters(key, num_genes, prior_type)
+    # Test with lognormal prior
+    result_lognormal = sample_prior_parameters(key, num_genes, "lognormal")
+    
+    # Check that the result is a dictionary with the expected keys
+    assert isinstance(result_lognormal, dict)
+    assert "alpha" in result_lognormal
+    assert "beta" in result_lognormal
+    assert "gamma" in result_lognormal
+    
+    # Check that the values have the expected shape
+    assert result_lognormal["alpha"].shape == (num_genes,)
+    assert result_lognormal["beta"].shape == (num_genes,)
+    assert result_lognormal["gamma"].shape == (num_genes,)
+    
+    # Test with informative prior
+    prior_params = {
+        "alpha_loc": 0.0,
+        "alpha_scale": 1.0,
+        "beta_loc": 0.0,
+        "beta_scale": 1.0,
+        "gamma_loc": 0.0,
+        "gamma_scale": 1.0,
+    }
+    result_informative = sample_prior_parameters(
+        key, num_genes, "informative", prior_params
+    )
+    
+    # Check that the result is a dictionary with the expected keys
+    assert isinstance(result_informative, dict)
+    assert "alpha" in result_informative
+    assert "beta" in result_informative
+    assert "gamma" in result_informative
+    
+    # Check that the values have the expected shape
+    assert result_informative["alpha"].shape == (num_genes,)
+    assert result_informative["beta"].shape == (num_genes,)
+    assert result_informative["gamma"].shape == (num_genes,)
 
 
 def test_sample_prior_parameters_type_checking():
@@ -136,3 +190,47 @@ def test_sample_prior_parameters_type_checking():
     # Invalid prior_type type
     with pytest.raises(BeartypeCallHintParamViolation):
         sample_prior_parameters(key, num_genes, 123)
+
+
+def test_sample_prior_parameters_unknown_prior():
+    """Test sample_prior_parameters with unknown prior type."""
+    # Prepare test inputs
+    key = create_key(42)
+    num_genes = 3
+    
+    # Check that the function raises ValueError for unknown prior type
+    with pytest.raises(ValueError):
+        sample_prior_parameters(key, num_genes, "unknown_prior")
+
+
+def test_prior_deterministic_with_same_key():
+    """Test that priors are deterministic with the same key."""
+    # Prepare test inputs
+    key = create_key(42)
+    shape = (3,)
+    
+    # Call the function twice with the same key
+    result1 = lognormal_prior(key, shape)
+    result2 = lognormal_prior(key, shape)
+    
+    # Check that the results are identical
+    assert jnp.array_equal(result1["alpha"], result2["alpha"])
+    assert jnp.array_equal(result1["beta"], result2["beta"])
+    assert jnp.array_equal(result1["gamma"], result2["gamma"])
+
+
+def test_prior_different_with_different_keys():
+    """Test that priors are different with different keys."""
+    # Prepare test inputs
+    key1 = create_key(42)
+    key2 = create_key(43)
+    shape = (3,)
+    
+    # Call the function with different keys
+    result1 = lognormal_prior(key1, shape)
+    result2 = lognormal_prior(key2, shape)
+    
+    # Check that the results are different
+    assert not jnp.array_equal(result1["alpha"], result2["alpha"])
+    assert not jnp.array_equal(result1["beta"], result2["beta"])
+    assert not jnp.array_equal(result1["gamma"], result2["gamma"])
