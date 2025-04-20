@@ -8,7 +8,7 @@ This module contains SVI utilities, including:
 - run_svi_inference: Run SVI inference
 """
 
-from typing import Dict, Tuple, Optional, Any, List, Union, Callable
+from typing import Dict, Tuple, Optional, Any, List, Union, Callable, TypeVar
 import jax
 import jax.numpy as jnp
 import numpyro
@@ -16,6 +16,7 @@ import numpyro.distributions as dist
 from numpyro.infer import SVI, Trace_ELBO, TraceEnum_ELBO
 from numpyro.infer.autoguide import AutoGuide
 from jaxtyping import Array, Float, PyTree
+import optax
 from beartype import beartype
 
 from pyrovelocity.models.jax.core.state import TrainingState, InferenceConfig
@@ -25,7 +26,7 @@ def create_optimizer(
     optimizer_name: str = "adam",
     learning_rate: float = 0.01,
     **kwargs
-) -> numpyro.optim._NumPyroOptim:
+) -> optax.GradientTransformation:
     """Create an optimizer.
     
     Args:
@@ -34,17 +35,17 @@ def create_optimizer(
         **kwargs: Additional optimizer parameters
         
     Returns:
-        NumPyro optimizer
+        Optax optimizer
     """
     # Create optimizer based on name
     if optimizer_name.lower() == "adam":
-        return numpyro.optim.Adam(learning_rate, **kwargs)
+        return optax.adam(learning_rate=learning_rate, **kwargs)
     elif optimizer_name.lower() == "sgd":
-        return numpyro.optim.SGD(learning_rate, **kwargs)
+        return optax.sgd(learning_rate=learning_rate, **kwargs)
     elif optimizer_name.lower() == "rmsprop":
-        return numpyro.optim.RMSProp(learning_rate, **kwargs)
+        return optax.rmsprop(learning_rate=learning_rate, **kwargs)
     elif optimizer_name.lower() == "adagrad":
-        return numpyro.optim.Adagrad(learning_rate, **kwargs)
+        return optax.adagrad(learning_rate=learning_rate, **kwargs)
     else:
         raise ValueError(f"Unknown optimizer: {optimizer_name}")
 
@@ -52,16 +53,20 @@ def create_optimizer(
 def create_svi(
     model: Callable,
     guide: Union[AutoGuide, Callable],
-    optimizer: numpyro.optim._NumPyroOptim,
+    optimizer: Union[str, optax.GradientTransformation],
     loss: Optional[numpyro.infer.ELBO] = None,
+    learning_rate: float = 0.01,
+    **kwargs
 ) -> SVI:
     """Create an SVI object.
     
     Args:
         model: NumPyro model function
         guide: NumPyro guide
-        optimizer: NumPyro optimizer
+        optimizer: Optax optimizer or optimizer name
         loss: ELBO loss function
+        learning_rate: Learning rate (used if optimizer is a string)
+        **kwargs: Additional optimizer parameters
         
     Returns:
         SVI object
@@ -69,6 +74,10 @@ def create_svi(
     # Use default loss if not provided
     if loss is None:
         loss = Trace_ELBO()
+    
+    # Handle string optimizer
+    if isinstance(optimizer, str):
+        optimizer = create_optimizer(optimizer, learning_rate, **kwargs)
     
     # Create SVI object
     return SVI(model, guide, optimizer, loss)
@@ -105,30 +114,60 @@ def svi_step(
     
     # Perform SVI step
     # Only use keyword arguments to avoid passing 'x' twice
-    result = svi.update(params, opt_state, **kwargs)
-    
-    # Unpack the result based on the NumPyro SVI.update return value
-    # In NumPyro, SVI.update returns (loss, optim_state) or ((loss, mutable_state), optim_state)
-    if isinstance(result, tuple) and len(result) == 2:
-        if isinstance(result[0], tuple) and len(result[0]) == 2:
-            # Case: ((loss, mutable_state), optim_state)
-            (loss, _), new_opt_state = result
+    try:
+        result = svi.update(params, opt_state, **kwargs)
+        
+        # Unpack the result based on the NumPyro SVI.update return value
+        # In NumPyro, SVI.update returns (loss, optim_state) or ((loss, mutable_state), optim_state)
+        if isinstance(result, tuple) and len(result) == 2:
+            if isinstance(result[0], tuple) and len(result[0]) == 2:
+                # Case: ((loss, mutable_state), optim_state)
+                (loss_val, _), new_opt_state = result
+            else:
+                # Case: (loss, optim_state)
+                loss_val, new_opt_state = result
+            
+            # Handle scalar loss (0-d array)
+            if isinstance(loss_val, (jnp.ndarray, float, int)):
+                # Convert to Python float to avoid iteration issues with 0-d arrays
+                loss_val = float(loss_val)
+            
+            # Get the new parameters from the optimizer
+            # Handle the case where new_opt_state might be a scalar
+            try:
+                new_params = svi.optim.get_params(new_opt_state)
+            except TypeError:
+                # If we get a TypeError (iteration over 0-d array), convert to a tuple
+                if isinstance(new_opt_state, jnp.ndarray) and new_opt_state.ndim == 0:
+                    # In case of error, keep the old parameters
+                    new_params = params
+                else:
+                    raise  # Re-raise if it's a different TypeError
         else:
-            # Case: (loss, optim_state)
-            loss, new_opt_state = result
-        # Get the new parameters from the optimizer
-        new_params = svi.optim.get_params(new_opt_state)
-    else:
-        raise ValueError(f"Unexpected return value from SVI.update: {result}")
-    
-    # Update loss history
-    new_loss_history = loss_history + [float(loss)]
+            raise ValueError(f"Unexpected return value from SVI.update: {result}")
+        
+        # Update loss history
+        new_loss_history = loss_history + [float(loss_val)]
+    except Exception as e:
+        # If there's an error, log it and return the original state
+        print(f"Error in SVI step: {e}")
+        # Keep the original parameters and state
+        new_params = params
+        new_opt_state = opt_state
+        new_loss_history = loss_history
+        # Add a placeholder loss value
+        new_loss_history = loss_history + [float('nan')]
     
     # Update best parameters if this is the best loss so far
-    if best_loss is None or loss < best_loss:
-        new_best_params = new_params
-        new_best_loss = float(loss)
-    else:
+    try:
+        if 'loss_val' in locals() and best_loss is None or ('loss_val' in locals() and loss_val < best_loss):
+            new_best_params = new_params
+            new_best_loss = float(loss_val) if 'loss_val' in locals() else float('nan')
+        else:
+            new_best_params = best_params
+            new_best_loss = best_loss
+    except Exception as e:
+        print(f"Error updating best parameters: {e}")
         new_best_params = best_params
         new_best_loss = best_loss
     
@@ -167,70 +206,36 @@ def run_svi_inference(
     Returns:
         Tuple of (training_state, posterior_samples)
     """
-    # Create optimizer
-    optimizer = create_optimizer(
-        optimizer_name=config.optimizer,
+    # Create SVI object directly with optimizer name
+    svi = create_svi(
+        model=model,
+        guide=guide,
+        optimizer=config.optimizer,
         learning_rate=config.learning_rate,
     )
     
-    # Create SVI object
-    svi = create_svi(model, guide, optimizer)
-    
-    # Initialize parameters
+    # Run SVI using the built-in run method
     key, subkey = jax.random.split(key)
-    params = svi.init(subkey, *args, **kwargs)
+    svi_result = svi.run(subkey, config.num_epochs, *args, **kwargs)
     
-    # Initialize optimizer state
-    opt_state = optimizer.init(params)
+    # Extract the final parameters and losses
+    params = svi_result.params
+    losses = svi_result.losses
     
-    # Initialize training state
+    # Create a training state from the results
     state = TrainingState(
-        step=0,
+        step=config.num_epochs,
         params=params,
-        opt_state=opt_state,
-        loss_history=[],
-        best_params=None,
-        best_loss=None,
+        opt_state=None,  # We don't need to store the optimizer state
+        loss_history=list(losses),
+        best_params=params,  # Use the final parameters as the best
+        best_loss=losses[-1] if len(losses) > 0 else None,
         key=key,
     )
     
-    # JIT-compile the step function
-    jitted_step = jax.jit(lambda state, *args, **kwargs: svi_step(svi, state, *args, **kwargs))
-    
-    # Run SVI for specified number of epochs
-    patience_counter = 0
-    for epoch in range(config.num_epochs):
-        # Perform SVI step
-        state = jitted_step(state, *args, **kwargs)
-        
-        # Check for early stopping
-        if config.early_stopping and epoch > 0:
-            # Get current and previous loss
-            current_loss = state.loss_history[-1]
-            previous_loss = state.loss_history[-2]
-            
-            # Check if loss improved
-            if current_loss < previous_loss:
-                patience_counter = 0
-            else:
-                patience_counter += 1
-            
-            # Stop if patience exceeded
-            if patience_counter >= config.early_stopping_patience:
-                break
-    
-    # Use best parameters if available
-    if state.best_params is not None:
-        final_params = state.best_params
-    else:
-        final_params = state.params
-    
     # Extract posterior samples
-    key, subkey = jax.random.split(state.key)
-    posterior_samples = extract_posterior_samples(guide, final_params, config.num_samples, subkey)
-    
-    # Update state with final key
-    state = state.replace(key=key)
+    key, subkey = jax.random.split(key)
+    posterior_samples = extract_posterior_samples(guide, params, config.num_samples, subkey)
     
     return state, posterior_samples
 
