@@ -117,8 +117,14 @@ def mcmc_diagnostics(
     diagnostics = {}
     
     # Get summary statistics
-    summary = mcmc.get_diagnostics()
-    diagnostics["summary"] = summary
+    # NumPyro MCMC doesn't have get_diagnostics(), use get_samples() instead
+    samples = mcmc.get_samples()
+    diagnostics["samples"] = samples
+    
+    # Add basic summary statistics
+    for key, value in samples.items():
+        diagnostics[f"{key}_mean"] = jnp.mean(value, axis=0)
+        diagnostics[f"{key}_std"] = jnp.std(value, axis=0)
     
     # Get effective sample size
     if mcmc.num_chains > 1:
