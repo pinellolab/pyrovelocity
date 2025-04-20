@@ -76,7 +76,14 @@ def velocity_model(
         # Sample RNA velocity parameters from prior
         if include_prior:
             # Use the prior function to sample parameters
-            key = numpyro.prng_key()
+            # Get a random key from numpyro, with fallback to a new key if it returns None
+            key_from_numpyro = numpyro.prng_key()
+            if key_from_numpyro is None:
+                # Create a new key if numpyro.prng_key() returns None
+                key = jax.random.PRNGKey(0)
+            else:
+                key = key_from_numpyro
+                
             params = prior_fn(key, num_genes)
             
             # Register parameters with the model
