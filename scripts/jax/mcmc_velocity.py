@@ -87,11 +87,9 @@ def main():
         num_warmup=50,   # Reduced for example
         num_samples=100,  # Reduced for example
         num_chains=2,     # Reduced for example
-        thinning=2,
         method="mcmc",
-        mcmc_method="nuts",
-        target_accept_prob=0.8,
-        max_tree_depth=10,
+        # Note: mcmc_method, target_accept_prob, and max_tree_depth are not part of InferenceConfig
+        # They would need to be passed separately to the MCMC kernel
     )
     
     # 5. Create model

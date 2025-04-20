@@ -90,7 +90,6 @@ def main():
         num_warmup=100,  # Reduced for example
         num_samples=200,  # Reduced for example
         num_chains=1,
-        thinning=2,
         method="svi",
         optimizer="adam",
         learning_rate=0.01,
