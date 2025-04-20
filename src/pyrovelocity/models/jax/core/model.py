@@ -62,8 +62,109 @@ def velocity_model(
     Returns:
         Dictionary of model outputs
     """
-    # Placeholder for future implementation
-    raise NotImplementedError("This function will be implemented in a future phase.")
+    # Get dimensions
+    num_cells, num_genes = u_obs.shape
+    
+    # Create default log library sizes if not provided
+    if u_log_library is None:
+        u_log_library = jnp.log(jnp.sum(u_obs, axis=1))
+    if s_log_library is None:
+        s_log_library = jnp.log(jnp.sum(s_obs, axis=1))
+    
+    # Sample model parameters
+    with numpyro.plate("gene", num_genes):
+        # Sample RNA velocity parameters from prior
+        if include_prior:
+            # Use the prior function to sample parameters
+            key = numpyro.prng_key()
+            params = prior_fn(key, num_genes)
+            
+            # Register parameters with the model
+            alpha = numpyro.sample("alpha", dist.Delta(params["alpha"]))
+            beta = numpyro.sample("beta", dist.Delta(params["beta"]))
+            gamma = numpyro.sample("gamma", dist.Delta(params["gamma"]))
+        else:
+            # Sample parameters directly
+            alpha = numpyro.sample("alpha", dist.LogNormal(0.0, 1.0))
+            beta = numpyro.sample("beta", dist.LogNormal(0.0, 1.0))
+            gamma = numpyro.sample("gamma", dist.LogNormal(0.0, 1.0))
+    
+    # Sample latent time for each cell
+    if latent_time:
+        with numpyro.plate("cell", num_cells):
+            tau = numpyro.sample("tau", dist.Normal(0.0, 1.0))
+    else:
+        # Use fixed time points if latent_time is False
+        tau = jnp.linspace(0.0, 1.0, num_cells)
+        numpyro.deterministic("tau", tau)
+    
+    # Compute RNA dynamics
+    params = {"alpha": alpha, "beta": beta, "gamma": gamma}
+    
+    # Initial conditions (steady state)
+    u0 = alpha / beta
+    s0 = alpha / gamma
+    
+    # Reshape parameters for broadcasting
+    # tau has shape (num_cells,), parameters have shape (num_genes,)
+    # We need to reshape to allow proper broadcasting in the dynamics function
+    tau_expanded = tau[:, jnp.newaxis]  # Shape: (num_cells, 1)
+    u0_expanded = u0[jnp.newaxis, :]    # Shape: (1, num_genes)
+    s0_expanded = s0[jnp.newaxis, :]    # Shape: (1, num_genes)
+    
+    # Create expanded parameters dictionary
+    expanded_params = {
+        "alpha": alpha[jnp.newaxis, :],  # Shape: (1, num_genes)
+        "beta": beta[jnp.newaxis, :],    # Shape: (1, num_genes)
+        "gamma": gamma[jnp.newaxis, :]   # Shape: (1, num_genes)
+    }
+    
+    # Add scaling parameter if it exists in the parameters
+    if "scaling" in params:
+        expanded_params["scaling"] = params["scaling"][jnp.newaxis, :]
+    
+    # Apply dynamics model to get expected counts
+    u_expected, s_expected = dynamics_fn(tau_expanded, u0_expanded, s0_expanded, expanded_params)
+    
+    # Register expected counts with the model
+    numpyro.deterministic("u_expected", u_expected)
+    numpyro.deterministic("s_expected", s_expected)
+    
+    # Create scaling parameters for likelihood
+    scaling_params = {
+        "u_log_library": u_log_library,
+        "s_log_library": s_log_library,
+    }
+    
+    # Get likelihood distributions
+    u_dist, s_dist = likelihood_fn(u_expected, s_expected, scaling_params)
+    
+    # Observe data
+    with numpyro.plate("cell_gene", num_cells * num_genes, dim=-1):
+        # Reshape observations to match plate dimension
+        u_obs_flat = u_obs.reshape(-1)
+        s_obs_flat = s_obs.reshape(-1)
+        
+        # Reshape expected counts to match plate dimension
+        u_expected_flat = u_expected.reshape(-1)
+        s_expected_flat = s_expected.reshape(-1)
+        
+        # Create likelihood distributions for flattened data
+        u_dist_flat, s_dist_flat = likelihood_fn(u_expected_flat, s_expected_flat, scaling_params)
+        
+        # Observe data
+        numpyro.sample("u_obs", u_dist_flat, obs=u_obs_flat)
+        numpyro.sample("s_obs", s_dist_flat, obs=s_obs_flat)
+    
+    # Return model outputs
+    return {
+        "alpha": alpha,
+        "beta": beta,
+        "gamma": gamma,
+        "tau": tau,
+        "u_expected": u_expected,
+        "s_expected": s_expected,
+    }
 
 @beartype
 def create_model(
