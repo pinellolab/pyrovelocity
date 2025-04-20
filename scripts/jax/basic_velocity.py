@@ -14,6 +14,7 @@ import numpyro
 import matplotlib.pyplot as plt
 import scanpy as sc
 import anndata
+from importlib.resources import files
 
 from pyrovelocity.models.jax import (
     # Core components
@@ -42,17 +43,32 @@ from pyrovelocity.models.jax import (
     format_anndata_output,
 )
 
+from pyrovelocity.io.serialization import load_anndata_from_json
+
+# Fixture hash for data validation
+FIXTURE_HASH = "95c80131694f2c6449a48a56513ef79cdc56eae75204ec69abde0d81a18722ae"
+
+def load_test_data():
+    """Load test data from the fixtures."""
+    fixture_file_path = (
+        files("pyrovelocity.tests.data") / "preprocessed_pancreas_50_7.json"
+    )
+    return load_anndata_from_json(
+        filename=fixture_file_path,
+        expected_hash=FIXTURE_HASH,
+    )
+
 def main():
     # Set random seed for reproducibility
     key = create_key(0)
     
-    # 1. Load and preprocess data
-    adata = sc.read("path/to/your/data.h5ad")
-    sc.pp.filter_genes(adata, min_counts=10)
-    sc.pp.normalize_per_cell(adata)
-    sc.pp.log1p(adata)
+    # 1. Load test data
+    print("Loading test data...")
+    adata = load_test_data()
+    print(f"Loaded AnnData: {adata.shape[0]} cells, {adata.shape[1]} genes")
     
     # 2. Prepare data for velocity model
+    print("Preparing data for velocity model...")
     data_dict = prepare_anndata(
         adata,
         spliced_layer="spliced",
@@ -60,6 +76,7 @@ def main():
     )
     
     # 3. Create model configuration
+    print("Creating model configuration...")
     model_config = ModelConfig(
         dynamics="standard",  # or "nonlinear" or "ode"
         likelihood="poisson",  # or "negative_binomial"
@@ -68,22 +85,25 @@ def main():
     )
     
     # 4. Create inference configuration
+    print("Creating inference configuration...")
     inference_config = InferenceConfig(
-        num_warmup=500,
-        num_samples=1000,
+        num_warmup=100,  # Reduced for example
+        num_samples=200,  # Reduced for example
         num_chains=1,
         thinning=2,
         method="svi",
         optimizer="adam",
         learning_rate=0.01,
-        num_epochs=1000,
+        num_epochs=200,  # Reduced for example
     )
     
     # 5. Create model and guide
+    print("Creating model and guide...")
     model = create_model(model_config)
     guide = create_guide(model, guide_type="auto_normal")
     
     # 6. Run inference
+    print("Running SVI inference...")
     key, subkey = jax.random.split(key)
     inference_state = run_inference(
         model=model,
@@ -94,10 +114,12 @@ def main():
     )
     
     # 7. Analyze results
+    print("Analyzing results...")
     posterior_samples = inference_state.posterior_samples
     velocity = compute_velocity(posterior_samples, data_dict)
     
     # 8. Store results in AnnData
+    print("Storing results in AnnData...")
     results = {
         "velocity": velocity,
         "alpha": jnp.mean(posterior_samples["alpha"], axis=0),
@@ -110,11 +132,15 @@ def main():
     adata_out = format_anndata_output(adata, results)
     
     # 9. Visualize results
+    print("Visualizing results...")
     sc.pl.umap(adata_out, color="latent_time", title="Latent Time")
     sc.pl.velocity_embedding_stream(adata_out, basis="umap", color="clusters")
     
     # 10. Save results
-    adata_out.write("velocity_results.h5ad")
+    output_path = "velocity_results_svi.h5ad"
+    print(f"Saving results to {output_path}...")
+    adata_out.write(output_path)
+    print("Done!")
 
 if __name__ == "__main__":
     main()
