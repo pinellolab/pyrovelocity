@@ -29,7 +29,6 @@ from pyrovelocity.models.jax import (
     prepare_anndata,
     
     # Inference
-    create_guide,
     run_inference,
     
     # Training
@@ -96,10 +95,9 @@ def main():
         num_epochs=200,  # Reduced for example
     )
     
-    # 5. Create model and guide
-    print("Creating model and guide...")
+    # 5. Create model
+    print("Creating model...")
     model = create_model(model_config)
-    guide = create_guide(model, guide_type="auto_normal")
     
     # 6. Run inference
     print("Running SVI inference...")
@@ -112,6 +110,7 @@ def main():
     s_log_library = jnp.log(data_dict["s_lib_size"])
     
     # The run_inference function expects (model, args, kwargs, config, key)
+    # It will create the guide internally based on the guide_type in inference_config
     inference_state = run_inference(
         model=model,
         args=(),  # Empty tuple for positional args
@@ -119,8 +118,7 @@ def main():
             "u_obs": u_obs,
             "s_obs": s_obs,
             "u_log_library": u_log_library,
-            "s_log_library": s_log_library,
-            "guide": guide
+            "s_log_library": s_log_library
         },
         config=inference_config,
         key=subkey,
