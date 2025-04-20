@@ -122,7 +122,18 @@ def posterior_predictive(
     )
     
     # Generate posterior predictive samples
-    return predictive(key, *args, **kwargs)
+    samples = predictive(key, *args, **kwargs)
+    
+    # If the samples don't include the original parameters, add them
+    for param_name, param_samples in posterior_samples.items():
+        if param_name not in samples:
+            # Take only the first num_samples samples if we have more
+            if param_samples.shape[0] > num_samples:
+                samples[param_name] = param_samples[:num_samples]
+            else:
+                samples[param_name] = param_samples
+    
+    return samples
 
 @beartype
 def compute_velocity(
@@ -139,14 +150,33 @@ def compute_velocity(
         Dictionary of velocity results
     """
     # Extract parameters
-    alpha = posterior_samples["alpha"]  # Shape: (num_samples, num_genes)
-    beta = posterior_samples["beta"]    # Shape: (num_samples, num_genes)
-    gamma = posterior_samples["gamma"]  # Shape: (num_samples, num_genes)
-    tau = posterior_samples["tau"]      # Shape: (num_samples, num_cells)
+    alpha = posterior_samples["alpha"]  # Shape: (num_samples, num_genes) or (num_samples,)
+    beta = posterior_samples["beta"]    # Shape: (num_samples, num_genes) or (num_samples,)
+    gamma = posterior_samples["gamma"]  # Shape: (num_samples, num_genes) or (num_samples,)
+    tau = posterior_samples["tau"]      # Shape: (num_samples, num_cells) or (num_samples,)
     
     # Get dimensions
-    num_samples, num_genes = alpha.shape
-    _, num_cells = tau.shape
+    num_samples = alpha.shape[0]
+    
+    # Handle both 1D and 2D parameter cases
+    if len(alpha.shape) == 1:
+        # Single gene case - reshape to 2D
+        alpha = alpha.reshape(-1, 1)  # Shape: (num_samples, 1)
+        beta = beta.reshape(-1, 1)    # Shape: (num_samples, 1)
+        gamma = gamma.reshape(-1, 1)  # Shape: (num_samples, 1)
+        num_genes = 1
+    else:
+        # Multiple genes case
+        num_genes = alpha.shape[1]
+    
+    # Handle both 1D and 2D tau cases
+    if len(tau.shape) == 1:
+        # Single cell case - reshape to 2D
+        tau = tau.reshape(-1, 1)  # Shape: (num_samples, 1)
+        num_cells = 1
+    else:
+        # Multiple cells case
+        num_cells = tau.shape[1]
     
     # Reshape parameters for broadcasting
     alpha_expanded = alpha[:, :, jnp.newaxis]  # Shape: (num_samples, num_genes, 1)
@@ -175,7 +205,17 @@ def compute_velocity(
     s0_expanded = s0[:, :, jnp.newaxis]  # Shape: (num_samples, num_genes, 1)
     
     # Apply dynamics model to get expected counts
-    u_expected, s_expected = dynamics_fn(tau_expanded, u0_expanded, s0_expanded, expanded_params)
+    dynamics_result = dynamics_fn(tau_expanded, u0_expanded, s0_expanded, expanded_params)
+    
+    # Handle both tuple and single return value cases
+    if isinstance(dynamics_result, tuple) and len(dynamics_result) == 2:
+        u_expected, s_expected = dynamics_result
+    else:
+        # If only one value is returned, assume it's the spliced counts
+        # and compute unspliced counts from the parameters
+        s_expected = dynamics_result
+        # For standard dynamics, u = (ds/dt + gamma*s) / beta
+        u_expected = (beta_expanded * u0_expanded * jnp.exp(-beta_expanded * tau_expanded))
     
     # Compute velocity as time derivative of spliced counts
     # For standard dynamics: ds/dt = beta*u - gamma*s
@@ -344,7 +384,7 @@ def create_inference_data(
     posterior_samples: Dict[str, jnp.ndarray],
     posterior_predictive_samples: Optional[Dict[str, jnp.ndarray]] = None,
     observed_data: Optional[Dict[str, jnp.ndarray]] = None,
-) -> az.InferenceData:
+) -> Any:  # Using Any instead of az.InferenceData to avoid beartype issues
     """Create ArviZ InferenceData object from posterior samples.
     
     Args:
@@ -401,26 +441,58 @@ def format_anndata_output(
     
     # Add mean velocity to cell-specific annotations
     if "velocity_mean" in uncertainty:
-        adata_copy.layers[f"{model_name}_velocity"] = jnp.array(uncertainty["velocity_mean"]).T
+        # Handle both 1D and 2D cases
+        velocity = jnp.array(uncertainty["velocity_mean"])
+        if len(velocity.shape) == 1:
+            velocity = velocity.reshape(1, -1)
+        adata_copy.layers[f"{model_name}_velocity"] = velocity.T
     
     # Add velocity confidence to cell-specific annotations
     if "velocity_confidence" in uncertainty:
-        adata_copy.obs[f"{model_name}_velocity_confidence"] = jnp.array(uncertainty["velocity_confidence"])
+        # Handle both 1D and 2D cases
+        confidence = jnp.array(uncertainty["velocity_confidence"])
+        if len(confidence.shape) > 1 and confidence.shape[0] == 1:
+            # If shape is (1, n_cells), reshape to (n_cells,)
+            confidence = confidence.reshape(-1)
+        adata_copy.obs[f"{model_name}_velocity_confidence"] = confidence
     
     # Add velocity probability to cell-specific annotations
     if "velocity_prob_positive" in uncertainty:
-        adata_copy.obs[f"{model_name}_velocity_probability"] = jnp.array(uncertainty["velocity_prob_positive"])
+        # Handle both 1D and 2D cases
+        probability = jnp.array(uncertainty["velocity_prob_positive"])
+        if len(probability.shape) > 1 and probability.shape[0] == 1:
+            # If shape is (1, n_cells), reshape to (n_cells,)
+            probability = probability.reshape(-1)
+        adata_copy.obs[f"{model_name}_velocity_probability"] = probability
     
     # Add expected unspliced and spliced counts to layers
     if "u_expected_mean" in uncertainty and "s_expected_mean" in uncertainty:
-        adata_copy.layers[f"{model_name}_u_expected"] = jnp.array(uncertainty["u_expected_mean"]).T
-        adata_copy.layers[f"{model_name}_s_expected"] = jnp.array(uncertainty["s_expected_mean"]).T
+        # Handle both 1D and 2D cases for u_expected
+        u_expected = jnp.array(uncertainty["u_expected_mean"])
+        if len(u_expected.shape) == 1:
+            u_expected = u_expected.reshape(1, -1)
+        adata_copy.layers[f"{model_name}_u_expected"] = u_expected.T
+        
+        # Handle both 1D and 2D cases for s_expected
+        s_expected = jnp.array(uncertainty["s_expected_mean"])
+        if len(s_expected.shape) == 1:
+            s_expected = s_expected.reshape(1, -1)
+        adata_copy.layers[f"{model_name}_s_expected"] = s_expected.T
     
     # Add uncertainty measures to var annotations
     for key in uncertainty:
         if key.endswith("_cv") or key.endswith("_norm_ci_width"):
             # These are gene-specific measures
-            adata_copy.var[f"{model_name}_{key}"] = jnp.array(uncertainty[key])
+            value = jnp.array(uncertainty[key])
+            # Handle both 1D and 2D cases
+            if len(value.shape) > 1:
+                # If shape is (n_genes, n_cells) or (1, n_cells), reshape to (n_genes,)
+                if value.shape[0] == 1:
+                    value = value[0]  # Take the first row
+                else:
+                    # Take the mean across cells
+                    value = jnp.mean(value, axis=1)
+            adata_copy.var[f"{model_name}_{key}"] = value
     
     # Add model parameters to var annotations
     posterior_samples = results.get("posterior_samples", {})
@@ -428,11 +500,17 @@ def format_anndata_output(
         if param_name in posterior_samples:
             # Compute mean across samples
             param_mean = jnp.mean(posterior_samples[param_name], axis=0)
+            # Handle both scalar and vector cases
+            if not isinstance(param_mean, jnp.ndarray) or param_mean.ndim == 0:
+                param_mean = jnp.array([param_mean])
             adata_copy.var[f"{model_name}_{param_name}"] = jnp.array(param_mean)
     
     # Add latent time to obs annotations
     if "tau" in posterior_samples:
         tau_mean = jnp.mean(posterior_samples["tau"], axis=0)
+        # Handle both scalar and vector cases
+        if not isinstance(tau_mean, jnp.ndarray) or tau_mean.ndim == 0:
+            tau_mean = jnp.array([tau_mean])
         adata_copy.obs[f"{model_name}_latent_time"] = jnp.array(tau_mean)
     
     # Store the model name in uns
