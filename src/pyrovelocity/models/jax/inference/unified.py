@@ -31,7 +31,7 @@ def run_inference(
     kwargs: Dict[str, Any],
     config: Optional[Union[InferenceConfig, Dict[str, Any]]] = None,
     key: Optional[jnp.ndarray] = None,
-) -> Tuple[Union[SVI, MCMC], InferenceState]:
+) -> Tuple[Union[SVI, MCMC, AutoGuide], InferenceState]:
     """Run inference using either SVI or MCMC.
     
     Args:
@@ -42,7 +42,8 @@ def run_inference(
         key: JAX random key
         
     Returns:
-        Tuple of (inference_object, inference_state)
+        Tuple of (inference_object, inference_state), where inference_object
+        can be an SVI, MCMC, or AutoGuide object depending on the inference method.
     """
     # Generate a random key if not provided
     if key is None:
@@ -134,12 +135,23 @@ def extract_posterior_samples(
         if key is None:
             key = jax.random.PRNGKey(0)
         
-        # Sample from the guide
-        return inference_object.sample_posterior(
-            rng_key=key,
-            params=params,
-            sample_shape=(num_samples,)
-        )
+        try:
+            # Try to sample from the guide directly
+            return inference_object.sample_posterior(
+                rng_key=key,
+                params=params,
+                sample_shape=(num_samples,)
+            )
+        except KeyError as e:
+            # If we get a KeyError, it might be due to parameter naming issues
+            # Create a predictive object instead
+            predictive = numpyro.infer.Predictive(
+                inference_object,
+                params=params,
+                num_samples=num_samples,
+            )
+            # Sample from the guide
+            return predictive(key)
     
     # If inference_object is an SVI object, raise an error (should use AutoGuide)
     elif isinstance(inference_object, SVI):
@@ -181,6 +193,17 @@ def posterior_predictive(
     if key is None:
         key = jax.random.PRNGKey(0)
     
+    # If return_sites is None, include all sites including latent variables
+    if return_sites is None:
+        # Include both observed and latent sites
+        return_sites = list(posterior_samples.keys())
+        
+        # Add observed sites if they're not already included
+        if "x_obs" not in return_sites:
+            return_sites.append("x_obs")
+        if "y_obs" not in return_sites:
+            return_sites.append("y_obs")
+    
     # Create a predictive object
     predictive = numpyro.infer.Predictive(
         model,
@@ -191,7 +214,20 @@ def posterior_predictive(
     )
     
     # Generate posterior predictive samples
-    return predictive(key, *args, **kwargs)
+    result = predictive(key, *args, **kwargs)
+    
+    # If the result doesn't contain the expected keys, merge with posterior_samples
+    if not any(k in result for k in ["alpha", "beta", "gamma"]):
+        # Include the posterior samples in the result
+        for k, v in posterior_samples.items():
+            if k not in result:
+                # Take only the first num_samples if there are more
+                if v.shape[0] > num_samples:
+                    result[k] = v[:num_samples]
+                else:
+                    result[k] = v
+    
+    return result
 
 @beartype
 def create_inference_state(
