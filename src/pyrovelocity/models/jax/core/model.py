@@ -75,14 +75,9 @@ def velocity_model(
     with numpyro.plate("gene", num_genes):
         # Sample RNA velocity parameters from prior
         if include_prior:
-            # Create a deterministic key for reproducibility
-            # We use a seed of 0 for consistency, but in a real application
-            # this should be a parameter or derived from a global seed
-            seed = 0
-            deterministic_key = jax.random.PRNGKey(seed)
-            
-            # Sample parameters using the deterministic key
-            params = prior_fn(deterministic_key, num_genes)
+            # Use the prior function to sample parameters
+            key = numpyro.prng_key()
+            params = prior_fn(key, num_genes)
             
             # Register parameters with the model
             alpha = numpyro.sample("alpha", dist.Delta(params["alpha"]))
@@ -196,6 +191,28 @@ def create_model(
     # Select likelihood function
     likelihood_fn = create_likelihood(config.likelihood)
     
+    # Create a properly typed wrapper function for the prior
+    def typed_prior_fn(key: jnp.ndarray, num_genes: int) -> Dict[str, Float[Array, "gene"]]:
+        """Wrapper for sample_prior_parameters with proper type annotations.
+        
+        This ensures that a valid key is always passed to sample_prior_parameters.
+        If key is None, it creates a new deterministic key.
+        
+        Args:
+            key: JAX random key (can be None)
+            num_genes: Number of genes
+            
+        Returns:
+            Dictionary of parameter samples
+        """
+        # Handle the case where key is None
+        if key is None:
+            # Create a deterministic key for reproducibility
+            key = jax.random.PRNGKey(0)
+            
+        # Now we can safely call sample_prior_parameters with a valid key
+        return sample_prior_parameters(key, num_genes, config.prior)
+    
     # Create model function
     def model_fn(
         u_obs: Float[Array, "cell gene"],
@@ -210,9 +227,7 @@ def create_model(
             s_log_library=s_log_library,
             dynamics_fn=dynamics_fn,
             likelihood_fn=likelihood_fn,
-            prior_fn=lambda key, num_genes: sample_prior_parameters(
-                key, num_genes, config.prior
-            ),
+            prior_fn=typed_prior_fn,  # Use the properly typed wrapper function
             latent_time=config.latent_time,
             include_prior=config.include_prior,
         )
