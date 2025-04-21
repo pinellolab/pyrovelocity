@@ -149,8 +149,15 @@ def main():
     
     # 9. Visualize results
     print("Visualizing results...")
-    sc.pl.umap(adata_out, color="latent_time", title="Latent Time")
-    sc.pl.velocity_embedding_stream(adata_out, basis="umap", color="clusters")
+    # Use the correct column name with the model_name prefix
+    sc.pl.umap(adata_out, color="velocity_model_latent_time", title="Latent Time")
+    
+    # Check if 'clusters' exists in the AnnData object
+    if 'clusters' in adata_out.obs.columns:
+        sc.pl.velocity_embedding_stream(adata_out, basis="umap", color="clusters")
+    else:
+        # Use a default color if 'clusters' doesn't exist
+        sc.pl.velocity_embedding_stream(adata_out, basis="umap")
     
     # 10. Save results
     output_path = "velocity_results_svi.h5ad"
