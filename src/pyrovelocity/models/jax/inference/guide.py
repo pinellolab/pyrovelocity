@@ -40,13 +40,18 @@ def auto_normal_guide(
             # initialize with small positive values
             if site["name"] in ["alpha", "beta", "gamma"]:
                 # Initialize with values between 0.1 and 1.0
-                return jnp.ones(site["fn"].shape()) * 0.5
+                return jnp.ones(site["value"].shape) * 0.5
             # For latent time, initialize uniformly between 0 and 1
             elif site["name"] == "tau":
-                return jnp.zeros(site["fn"].shape())
+                return jnp.zeros(site["value"].shape)
             # For other parameters, use small values centered at 0
             else:
-                return jnp.zeros(site["fn"].shape())
+                # If value is not available, use a default shape
+                if "value" in site:
+                    return jnp.zeros(site["value"].shape)
+                else:
+                    # Default to a scalar
+                    return jnp.zeros(())
         
         # Create AutoNormal guide with robust initialization
         return numpyro.infer.autoguide.AutoNormal(model, init_loc_fn=robust_init_fn)
