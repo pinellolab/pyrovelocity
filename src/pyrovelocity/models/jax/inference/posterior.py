@@ -12,18 +12,19 @@ This module contains posterior analysis utilities, including:
 - format_anndata_output: Format results into AnnData object
 """
 
-from typing import Dict, Tuple, Optional, Any, List, Union, Callable
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+
+import anndata
+import arviz as az
 import jax
 import jax.numpy as jnp
 import numpyro
 import numpyro.distributions as dist
-import arviz as az
-import anndata
-from jaxtyping import Array, Float, PyTree
 from beartype import beartype
+from jaxtyping import Array, Float, PyTree
 
-from pyrovelocity.models.jax.core.state import InferenceState
 from pyrovelocity.models.jax.core.dynamics import standard_dynamics_model
+from pyrovelocity.models.jax.core.state import InferenceState
 
 
 @beartype
@@ -542,12 +543,15 @@ def format_anndata_output(
         adata_copy.obs[f"{model_name}_latent_time"] = jnp.array(tau_mean)
 
     # Store the model name in uns
-    if "uns" not in adata_copy or adata_copy.uns is None:
+    # Initialize uns if it doesn't exist or is None
+    if not hasattr(adata_copy, 'uns') or adata_copy.uns is None:
         adata_copy.uns = {}
 
+    # Initialize velocity_models if it doesn't exist
     if "velocity_models" not in adata_copy.uns:
         adata_copy.uns["velocity_models"] = []
 
+    # Add model_name to velocity_models if it's not already there
     if model_name not in adata_copy.uns["velocity_models"]:
         adata_copy.uns["velocity_models"].append(model_name)
 
