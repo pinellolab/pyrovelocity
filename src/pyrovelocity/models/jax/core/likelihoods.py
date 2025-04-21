@@ -7,13 +7,14 @@ This module contains likelihood model implementations for RNA counts, including:
 - negative_binomial_likelihood: Negative binomial likelihood for RNA counts
 """
 
-from typing import Dict, Tuple, Optional, Any, Callable
+from typing import Any, Callable, Dict, Optional, Tuple
+
 import jax
 import jax.numpy as jnp
 import numpyro
 import numpyro.distributions as dist
-from jaxtyping import Array, Float
 from beartype import beartype
+from jaxtyping import Array, Float
 
 
 @beartype
@@ -49,8 +50,14 @@ def poisson_likelihood(
     # Apply library size scaling
     u_rate = jnp.exp(u_log_library_expanded) * ut
     s_rate = jnp.exp(s_log_library_expanded) * st
+    
+    # Ensure rate parameters are positive (required for Poisson distribution)
+    # Use a small positive value (epsilon) as the minimum rate
+    epsilon = 1e-6
+    u_rate = jnp.maximum(u_rate, epsilon)
+    s_rate = jnp.maximum(s_rate, epsilon)
 
-    # Create Poisson distributions
+    # Create Poisson distributions with valid rate parameters
     u_dist = dist.Poisson(rate=u_rate)
     s_dist = dist.Poisson(rate=s_rate)
 
@@ -92,10 +99,15 @@ def negative_binomial_likelihood(
     # Apply library size scaling
     u_rate = jnp.exp(u_log_library_expanded) * ut
     s_rate = jnp.exp(s_log_library_expanded) * st
+    
+    # Ensure rate parameters are positive
+    epsilon = 1e-6
+    u_rate = jnp.maximum(u_rate, epsilon)
+    s_rate = jnp.maximum(s_rate, epsilon)
 
     # Ensure positive dispersion values
-    u_dispersion = jnp.maximum(u_dispersion, 1e-6)
-    s_dispersion = jnp.maximum(s_dispersion, 1e-6)
+    u_dispersion = jnp.maximum(u_dispersion, epsilon)
+    s_dispersion = jnp.maximum(s_dispersion, epsilon)
 
     # Create Negative Binomial distributions
     # Using the parameterization with mean and dispersion
