@@ -14,6 +14,7 @@ import numpyro
 import matplotlib.pyplot as plt
 import scanpy as sc
 import anndata
+import numpy as np
 from importlib.resources import files
 
 from pyrovelocity.models.jax import (
@@ -129,6 +130,10 @@ def main():
     # 7. Analyze results
     print("Analyzing results...")
     posterior_samples = inference_state.posterior_samples
+    
+    # Print the keys in posterior_samples to see what's available
+    print("Keys in posterior_samples:", list(posterior_samples.keys()))
+    
     # Use the default dynamics_fn (standard_dynamics_model) by not providing a second argument
     velocity = compute_velocity(posterior_samples)
     
@@ -147,10 +152,24 @@ def main():
     
     adata_out = format_anndata_output(adata, results)
     
+    # Print the columns in the AnnData object to see what's available
+    print("Columns in adata_out.obs:", list(adata_out.obs.columns))
+    print("Keys in adata_out.uns:", list(adata_out.uns.keys()) if hasattr(adata_out, 'uns') and adata_out.uns is not None else "None")
+    
+    # Add latent time directly to the AnnData object
+    if "tau" in posterior_samples:
+        print("Adding latent_time to AnnData object...")
+        tau_mean = jnp.mean(posterior_samples["tau"], axis=0)
+        # Convert to numpy array for compatibility with AnnData
+        tau_mean_np = np.array(tau_mean)
+        # Add to AnnData object
+        adata_out.obs["latent_time"] = tau_mean_np
+        print("Added latent_time column:", "latent_time" in adata_out.obs.columns)
+    
     # 9. Visualize results
     print("Visualizing results...")
-    # Use the correct column name with the model_name prefix
-    sc.pl.umap(adata_out, color="velocity_model_latent_time", title="Latent Time")
+    # Use the column we just added
+    sc.pl.umap(adata_out, color="latent_time", title="Latent Time")
     
     # Check if 'clusters' exists in the AnnData object
     if 'clusters' in adata_out.obs.columns:
