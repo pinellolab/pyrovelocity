@@ -91,7 +91,6 @@ def main():
         num_samples=200,  # Reduced for example
         num_chains=1,
         method="mcmc",  # Use MCMC instead of SVI
-        mcmc_method="nuts",  # Use NUTS sampler
         guide_type="auto_normal",  # Not used for MCMC, but required
     )
     
