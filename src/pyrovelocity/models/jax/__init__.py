@@ -5,10 +5,11 @@ This module contains the JAX/NumPyro implementation of PyroVelocity, a probabili
 model for RNA velocity analysis.
 """
 
+# Register standard components
+from pyrovelocity.models.jax.components import register_standard_components
 from pyrovelocity.models.jax.core import (
     InferenceConfig,
     InferenceState,
-    ModelConfig,
     TrainingState,
     # State
     VelocityModelState,
@@ -17,7 +18,6 @@ from pyrovelocity.models.jax.core import (
     # Utils
     create_key,
     create_likelihood,
-    create_model,
     disable_x64,
     dynamics_ode_model,
     enable_x64,
@@ -39,6 +39,12 @@ from pyrovelocity.models.jax.core import (
     # Model
     velocity_model,
 )
+from pyrovelocity.models.jax.core import (
+    ModelConfig as CoreModelConfig,
+)
+from pyrovelocity.models.jax.core import (
+    create_model as core_create_model,
+)
 from pyrovelocity.models.jax.data import (
     _internal_transform,
     batch_data,
@@ -55,6 +61,25 @@ from pyrovelocity.models.jax.data import (
     random_batch_indices,
     store_results,
     vmap_batch_function,
+)
+from pyrovelocity.models.jax.factory import (
+    # Configuration classes
+    DynamicsFunctionConfig,
+    GuideFunctionConfig,
+    LikelihoodFunctionConfig,
+    ModelConfig,
+    ObservationFunctionConfig,
+    PriorFunctionConfig,
+    # Factory functions
+    create_dynamics_function,
+    create_guide_factory_function,
+    create_likelihood_function,
+    create_model,
+    create_observation_function,
+    create_prior_function,
+    create_standard_model,
+    # Predefined configurations
+    standard_model_config,
 )
 from pyrovelocity.models.jax.inference import (
     analyze_posterior,
@@ -124,7 +149,23 @@ __all__ = [
     "TrainingState",
     "InferenceState",
     "ModelConfig",
+    "CoreModelConfig",
     "InferenceConfig",
+    # Factory
+    "DynamicsFunctionConfig",
+    "PriorFunctionConfig",
+    "LikelihoodFunctionConfig",
+    "ObservationFunctionConfig",
+    "GuideFunctionConfig",
+    "create_dynamics_function",
+    "create_prior_function",
+    "create_likelihood_function",
+    "create_observation_function",
+    "create_guide_factory_function",
+    "create_model",
+    "standard_model_config",
+    "create_standard_model",
+    "register_standard_components",
     # Dynamics
     "standard_dynamics_model",
     "nonlinear_dynamics_model",
@@ -139,7 +180,7 @@ __all__ = [
     "create_likelihood",
     # Model
     "velocity_model",
-    "create_model",
+    "core_create_model",
     # AnnData integration
     "prepare_anndata",
     "extract_layers",
