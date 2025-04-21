@@ -50,7 +50,7 @@ def poisson_likelihood(
     # Apply library size scaling
     u_rate = jnp.exp(u_log_library_expanded) * ut
     s_rate = jnp.exp(s_log_library_expanded) * st
-    
+
     # Ensure rate parameters are positive (required for Poisson distribution)
     # Use a small positive value (epsilon) as the minimum rate
     epsilon = 1e-6
@@ -99,7 +99,7 @@ def negative_binomial_likelihood(
     # Apply library size scaling
     u_rate = jnp.exp(u_log_library_expanded) * ut
     s_rate = jnp.exp(s_log_library_expanded) * st
-    
+
     # Ensure rate parameters are positive
     epsilon = 1e-6
     u_rate = jnp.maximum(u_rate, epsilon)

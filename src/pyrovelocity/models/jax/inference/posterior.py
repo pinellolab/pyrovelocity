@@ -544,7 +544,7 @@ def format_anndata_output(
 
     # Store the model name in uns
     # Initialize uns if it doesn't exist or is None
-    if not hasattr(adata_copy, 'uns') or adata_copy.uns is None:
+    if not hasattr(adata_copy, "uns") or adata_copy.uns is None:
         adata_copy.uns = {}
 
     # Initialize velocity_models if it doesn't exist
