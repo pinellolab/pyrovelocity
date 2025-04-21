@@ -8,33 +8,42 @@ This module contains SVI utilities, including:
 - run_svi_inference: Run SVI inference
 """
 
-from typing import Dict, Tuple, Optional, Any, List, Union, Callable, TypeVar
+from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union
+
 import jax
 import jax.numpy as jnp
 import numpyro
 import numpyro.distributions as dist
-from numpyro.infer import SVI, Trace_ELBO, TraceEnum_ELBO
-from numpyro.infer.autoguide import AutoGuide
-from jaxtyping import Array, Float, PyTree
 import optax
 from beartype import beartype
+from jaxtyping import Array, Float, PyTree
+from numpyro.infer import SVI, Trace_ELBO, TraceEnum_ELBO
+from numpyro.infer.autoguide import AutoGuide
 
-from pyrovelocity.models.jax.core.state import TrainingState, InferenceConfig
+from pyrovelocity.models.jax.core.state import InferenceConfig, TrainingState
+from pyrovelocity.models.jax.factory.factory import create_model
+from pyrovelocity.models.jax.inference.guide import create_guide
 
 
 @beartype
 def create_optimizer(
     optimizer_name: str = "adam", learning_rate: float = 0.01, **kwargs
 ) -> optax.GradientTransformation:
-    """Create an optimizer.
+    """Create an optimizer for SVI.
+
+    This function creates an Optax optimizer based on the specified name and parameters.
+    Supported optimizers include Adam, SGD, RMSProp, and Adagrad.
 
     Args:
-        optimizer_name: Name of the optimizer
-        learning_rate: Learning rate
-        **kwargs: Additional optimizer parameters
+        optimizer_name: Name of the optimizer ("adam", "sgd", "rmsprop", or "adagrad")
+        learning_rate: Learning rate for the optimizer
+        **kwargs: Additional optimizer-specific parameters
 
     Returns:
-        Optax optimizer
+        An Optax optimizer (GradientTransformation)
+
+    Raises:
+        ValueError: If an unknown optimizer name is provided
     """
     # Create optimizer based on name
     if optimizer_name.lower() == "adam":
@@ -58,18 +67,21 @@ def create_svi(
     learning_rate: float = 0.01,
     **kwargs,
 ) -> SVI:
-    """Create an SVI object.
+    """Create an SVI object for variational inference.
+
+    This function creates a Stochastic Variational Inference (SVI) object with the
+    specified model, guide, optimizer, and loss function.
 
     Args:
-        model: NumPyro model function
-        guide: NumPyro guide
-        optimizer: Optax optimizer or optimizer name
-        loss: ELBO loss function
-        learning_rate: Learning rate (used if optimizer is a string)
+        model: NumPyro model function that defines the probabilistic model
+        guide: NumPyro guide function or AutoGuide object that defines the variational distribution
+        optimizer: Optax optimizer or optimizer name ("adam", "sgd", etc.)
+        loss: ELBO loss function (defaults to Trace_ELBO if None)
+        learning_rate: Learning rate for the optimizer (used if optimizer is a string)
         **kwargs: Additional optimizer parameters
 
     Returns:
-        SVI object
+        An SVI object for performing variational inference
     """
     # Use default loss if not provided
     if loss is None:
@@ -194,29 +206,63 @@ def svi_step(svi: SVI, state: TrainingState, *args, **kwargs) -> TrainingState:
 
 @beartype
 def run_svi_inference(
-    model: Callable,
-    guide: Union[AutoGuide, Callable],
-    args: Tuple,
-    kwargs: Dict[str, Any],
-    config: InferenceConfig,
-    key: jnp.ndarray,
+    model: Union[Callable, Dict[str, Any]],
+    guide: Optional[Union[AutoGuide, Callable, str]] = None,
+    args: Tuple = (),
+    kwargs: Dict[str, Any] = None,
+    config: InferenceConfig = None,
+    key: Optional[jnp.ndarray] = None,
 ) -> Tuple[TrainingState, Dict[str, jnp.ndarray]]:
-    """Run SVI inference.
+    """Run SVI inference with a model and guide.
+
+    This function performs Stochastic Variational Inference (SVI) with the specified model
+    and guide. It supports both direct model/guide functions and model configurations that
+    can be used with the factory system.
 
     Args:
-        model: NumPyro model function
-        guide: NumPyro guide
+        model: Either a NumPyro model function or a model configuration dictionary
+        guide: NumPyro guide function, AutoGuide object, guide type string, or None (auto-created from model)
         args: Positional arguments for the model
         kwargs: Keyword arguments for the model
         config: Inference configuration
-        key: JAX random key
+        key: JAX random key (created automatically if None)
 
     Returns:
-        Tuple of (training_state, posterior_samples)
+        A tuple containing:
+            - training_state: The final training state after inference
+            - posterior_samples: Dictionary of posterior samples
     """
-    # Create SVI object directly with optimizer name
+    # Initialize kwargs if None
+    if kwargs is None:
+        kwargs = {}
+
+    # Initialize config if None
+    if config is None:
+        config = InferenceConfig()
+
+    # Initialize key if None
+    if key is None:
+        key = jax.random.PRNGKey(0)
+
+    # Handle model configuration dictionary
+    if isinstance(model, dict):
+        # Create model from configuration
+        model_fn = create_model(model)
+    else:
+        # Use model function directly
+        model_fn = model
+
+    # Handle guide creation if needed
+    if guide is None or isinstance(guide, str):
+        # Create guide from model
+        guide_type = guide if isinstance(guide, str) else config.guide_type
+        key, subkey = jax.random.split(key)
+        # Don't pass the key to create_guide since it doesn't accept it
+        guide = create_guide(model_fn, guide_type=guide_type)
+
+    # Create SVI object
     svi = create_svi(
-        model=model,
+        model=model_fn,
         guide=guide,
         optimizer=config.optimizer,
         learning_rate=config.learning_rate,
@@ -257,16 +303,22 @@ def extract_posterior_samples(
     num_samples: int,
     key: jnp.ndarray,
 ) -> Dict[str, jnp.ndarray]:
-    """Extract posterior samples from guide.
+    """Extract posterior samples from a guide.
+
+    This function extracts posterior samples from a guide using the provided parameters.
+    It handles both AutoGuide objects and custom guide functions.
 
     Args:
-        guide: NumPyro guide
-        params: Guide parameters
-        num_samples: Number of posterior samples
-        key: JAX random key
+        guide: NumPyro guide (AutoGuide object or callable function)
+        params: Guide parameters (PyTree)
+        num_samples: Number of posterior samples to generate
+        key: JAX random key for sampling
 
     Returns:
-        Dictionary of posterior samples
+        Dictionary mapping parameter names to arrays of samples
+
+    Raises:
+        TypeError: If the guide type is not supported
     """
     # Handle different guide types
     if isinstance(guide, AutoGuide):
@@ -283,7 +335,14 @@ def extract_posterior_samples(
         )
         # Sample from the guide
         samples = predictive(key)
-        # Remove the "_auto_latent" prefix if present
-        return {k.replace("_auto_latent", ""): v for k, v in samples.items()}
+        # Remove the "_auto_latent" prefix if present and other guide-specific prefixes
+        cleaned_samples = {}
+        for k, v in samples.items():
+            # Remove common prefixes used in guides
+            cleaned_key = k
+            for prefix in ["_auto_latent", "_auto", "guide$"]:
+                cleaned_key = cleaned_key.replace(prefix, "")
+            cleaned_samples[cleaned_key] = v
+        return cleaned_samples
     else:
         raise TypeError(f"Unsupported guide type: {type(guide)}")
