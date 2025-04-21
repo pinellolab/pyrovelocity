@@ -62,29 +62,24 @@ __all__ = [
     "check_array_shape",
     "check_array_dtype",
     "ensure_array",
-    
     # State
     "VelocityModelState",
     "TrainingState",
     "InferenceState",
     "ModelConfig",
     "InferenceConfig",
-    
     # Dynamics
     "standard_dynamics_model",
     "nonlinear_dynamics_model",
     "dynamics_ode_model",
-    
     # Priors
     "lognormal_prior",
     "informative_prior",
     "sample_prior_parameters",
-    
     # Likelihoods
     "poisson_likelihood",
     "negative_binomial_likelihood",
     "create_likelihood",
-    
     # Model
     "velocity_model",
     "create_model",

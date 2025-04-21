@@ -17,7 +17,7 @@ from pyrovelocity.models.jax.core.state import (
 def test_velocity_model_state_creation(model_parameters):
     """Test VelocityModelState creation."""
     state = VelocityModelState(parameters=model_parameters)
-    
+
     assert state.parameters == model_parameters
     assert state.dynamics_output is None
     assert state.distributions is None
@@ -27,7 +27,7 @@ def test_velocity_model_state_creation(model_parameters):
 def test_velocity_model_state_immutability(model_parameters):
     """Test VelocityModelState immutability."""
     state = VelocityModelState(parameters=model_parameters)
-    
+
     # Test immutability
     with pytest.raises(FrozenInstanceError):
         state.parameters = {}
@@ -36,14 +36,14 @@ def test_velocity_model_state_immutability(model_parameters):
 def test_velocity_model_state_replace(model_parameters):
     """Test VelocityModelState replace method."""
     state = VelocityModelState(parameters=model_parameters)
-    
+
     # Create new state with updated parameters
     new_parameters = {"alpha": jnp.array([2.0, 3.0, 4.0])}
     new_state = state.replace(parameters=new_parameters)
-    
+
     # Check that the original state is unchanged
     assert state.parameters == model_parameters
-    
+
     # Check that the new state has the updated parameters
     assert new_state.parameters == new_parameters
     assert new_state.dynamics_output is None
@@ -55,14 +55,14 @@ def test_training_state_creation(jax_key):
     """Test TrainingState creation."""
     params = {"weights": jnp.array([1.0, 2.0, 3.0])}
     opt_state = {"momentum": jnp.array([0.1, 0.2, 0.3])}
-    
+
     state = TrainingState(
         step=0,
         params=params,
         opt_state=opt_state,
         key=jax_key,
     )
-    
+
     assert state.step == 0
     assert state.params == params
     assert state.opt_state == opt_state
@@ -76,14 +76,14 @@ def test_training_state_immutability(jax_key):
     """Test TrainingState immutability."""
     params = {"weights": jnp.array([1.0, 2.0, 3.0])}
     opt_state = {"momentum": jnp.array([0.1, 0.2, 0.3])}
-    
+
     state = TrainingState(
         step=0,
         params=params,
         opt_state=opt_state,
         key=jax_key,
     )
-    
+
     # Test immutability
     with pytest.raises(FrozenInstanceError):
         state.step = 1
@@ -93,20 +93,20 @@ def test_training_state_replace(jax_key):
     """Test TrainingState replace method."""
     params = {"weights": jnp.array([1.0, 2.0, 3.0])}
     opt_state = {"momentum": jnp.array([0.1, 0.2, 0.3])}
-    
+
     state = TrainingState(
         step=0,
         params=params,
         opt_state=opt_state,
         key=jax_key,
     )
-    
+
     # Create new state with updated step
     new_state = state.replace(step=1)
-    
+
     # Check that the original state is unchanged
     assert state.step == 0
-    
+
     # Check that the new state has the updated step
     assert new_state.step == 1
     assert new_state.params == params
@@ -120,9 +120,9 @@ def test_inference_state_creation():
         "alpha": jnp.array([[1.0, 2.0], [3.0, 4.0]]),
         "beta": jnp.array([[0.5, 1.0], [1.5, 2.0]]),
     }
-    
+
     state = InferenceState(posterior_samples=posterior_samples)
-    
+
     assert state.posterior_samples == posterior_samples
     assert state.posterior_predictive is None
     assert state.diagnostics is None
@@ -134,9 +134,9 @@ def test_inference_state_immutability():
         "alpha": jnp.array([[1.0, 2.0], [3.0, 4.0]]),
         "beta": jnp.array([[0.5, 1.0], [1.5, 2.0]]),
     }
-    
+
     state = InferenceState(posterior_samples=posterior_samples)
-    
+
     # Test immutability
     with pytest.raises(FrozenInstanceError):
         state.posterior_samples = {}
@@ -148,18 +148,18 @@ def test_inference_state_replace():
         "alpha": jnp.array([[1.0, 2.0], [3.0, 4.0]]),
         "beta": jnp.array([[0.5, 1.0], [1.5, 2.0]]),
     }
-    
+
     state = InferenceState(posterior_samples=posterior_samples)
-    
+
     # Create new state with updated posterior_samples
     new_posterior_samples = {
         "gamma": jnp.array([[0.3, 0.6], [0.9, 1.2]]),
     }
     new_state = state.replace(posterior_samples=new_posterior_samples)
-    
+
     # Check that the original state is unchanged
     assert state.posterior_samples == posterior_samples
-    
+
     # Check that the new state has the updated posterior_samples
     assert new_state.posterior_samples == new_posterior_samples
     assert new_state.posterior_predictive is None
@@ -169,7 +169,7 @@ def test_inference_state_replace():
 def test_model_config_creation():
     """Test ModelConfig creation."""
     config = ModelConfig()
-    
+
     assert config.dynamics == "standard"
     assert config.likelihood == "poisson"
     assert config.prior == "lognormal"
@@ -184,7 +184,7 @@ def test_model_config_creation():
 def test_model_config_immutability():
     """Test ModelConfig immutability."""
     config = ModelConfig()
-    
+
     # Test immutability
     with pytest.raises(FrozenInstanceError):
         config.dynamics = "nonlinear"
@@ -193,13 +193,13 @@ def test_model_config_immutability():
 def test_model_config_replace():
     """Test ModelConfig replace method."""
     config = ModelConfig()
-    
+
     # Create new config with updated dynamics
     new_config = config.replace(dynamics="nonlinear")
-    
+
     # Check that the original config is unchanged
     assert config.dynamics == "standard"
-    
+
     # Check that the new config has the updated dynamics
     assert new_config.dynamics == "nonlinear"
     assert new_config.likelihood == "poisson"
@@ -215,7 +215,7 @@ def test_model_config_replace():
 def test_inference_config_creation():
     """Test InferenceConfig creation."""
     config = InferenceConfig()
-    
+
     assert config.method == "svi"
     assert config.num_samples == 1000
     assert config.num_warmup == 500
@@ -233,7 +233,7 @@ def test_inference_config_creation():
 def test_inference_config_immutability():
     """Test InferenceConfig immutability."""
     config = InferenceConfig()
-    
+
     # Test immutability
     with pytest.raises(FrozenInstanceError):
         config.method = "mcmc"
@@ -242,13 +242,13 @@ def test_inference_config_immutability():
 def test_inference_config_replace():
     """Test InferenceConfig replace method."""
     config = InferenceConfig()
-    
+
     # Create new config with updated method
     new_config = config.replace(method="mcmc")
-    
+
     # Check that the original config is unchanged
     assert config.method == "svi"
-    
+
     # Check that the new config has the updated method
     assert new_config.method == "mcmc"
     assert new_config.num_samples == 1000

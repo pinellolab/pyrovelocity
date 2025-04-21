@@ -44,7 +44,7 @@ def test_create_key_type_checking():
     # Valid input
     key = create_key(42)
     assert isinstance(key, jnp.ndarray)
-    
+
     # Invalid input
     with pytest.raises(BeartypeCallHintParamViolation):
         create_key("not_an_int")
@@ -56,7 +56,7 @@ def test_split_key_type_checking(jax_key):
     key1, key2 = split_key(jax_key)
     assert isinstance(key1, jnp.ndarray)
     assert isinstance(key2, jnp.ndarray)
-    
+
     # Invalid input
     with pytest.raises(BeartypeCallHintParamViolation):
         split_key("not_a_key")
@@ -74,7 +74,7 @@ def test_check_array_dtype(jax_array_1d):
     """Test check_array_dtype function."""
     assert check_array_dtype(jax_array_1d, jnp.float32)
     assert not check_array_dtype(jax_array_1d, jnp.int32)
-    
+
     # Convert to int32 and test
     int_array = jnp.array([1, 2, 3, 4, 5], dtype=jnp.int32)
     assert check_array_dtype(int_array, jnp.int32)
@@ -88,19 +88,19 @@ def test_ensure_array():
     array_output = ensure_array(list_input)
     assert isinstance(array_output, jnp.ndarray)
     assert jnp.array_equal(array_output, jnp.array(list_input))
-    
+
     # Test with tuple
     tuple_input = (1.0, 2.0, 3.0)
     array_output = ensure_array(tuple_input)
     assert isinstance(array_output, jnp.ndarray)
     assert jnp.array_equal(array_output, jnp.array(tuple_input))
-    
+
     # Test with numpy array
     numpy_input = np.array([1.0, 2.0, 3.0])
     array_output = ensure_array(numpy_input)
     assert isinstance(array_output, jnp.ndarray)
     assert jnp.array_equal(array_output, jnp.array(numpy_input))
-    
+
     # Test with JAX array
     jax_input = jnp.array([1.0, 2.0, 3.0])
     array_output = ensure_array(jax_input)

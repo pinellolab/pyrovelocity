@@ -22,6 +22,7 @@ from pyrovelocity.models.jax.inference.svi import svi_step
 # We can't JIT-compile the SVI step directly because the SVI object is not a JAX array
 # Instead, we'll use the svi_step function directly
 
+
 @beartype
 def train_model(
     svi: SVI,
@@ -34,7 +35,7 @@ def train_model(
     verbose: bool = True,
 ) -> TrainingState:
     """Train a model using functional SVI.
-    
+
     Args:
         svi: SVI object
         initial_state: Initial training state
@@ -44,7 +45,7 @@ def train_model(
         early_stopping: Whether to use early stopping
         early_stopping_patience: Patience for early stopping
         verbose: Whether to print progress
-        
+
     Returns:
         Final training state
     """
@@ -55,28 +56,32 @@ def train_model(
         # Find the first array in data to determine the number of data points
         n_data = None
         for v in data.values():
-            if hasattr(v, 'shape') and len(v.shape) > 0:
+            if hasattr(v, "shape") and len(v.shape) > 0:
                 n_data = v.shape[0]
                 break
-        
+
         if n_data is None:
             raise ValueError("Could not determine data size from input data")
-            
+
         n_train = int(0.9 * n_data)
-        
+
         # Split the data
         train_data = {}
         val_data = {}
         for k, v in data.items():
             # Only split arrays with the right dimension
-            if hasattr(v, 'shape') and len(v.shape) > 0 and v.shape[0] == n_data:
+            if (
+                hasattr(v, "shape")
+                and len(v.shape) > 0
+                and v.shape[0] == n_data
+            ):
                 train_data[k] = v[:n_train]
                 val_data[k] = v[n_train:]
             else:
                 # For scalar values or arrays with different shapes, keep as is
                 train_data[k] = v
                 val_data[k] = v
-        
+
         # Train with early stopping
         return train_with_early_stopping(
             svi=svi,
@@ -91,17 +96,17 @@ def train_model(
     else:
         # Initialize state
         state = initial_state
-        
+
         # Train for specified number of epochs
         for epoch in range(num_epochs):
             # Train for one epoch
             prev_step = state.step
             state = train_epoch(svi, state, data, batch_size)
-            
+
             # Ensure step count is incremented
             if state.step == prev_step:
                 state = state.replace(step=prev_step + 1)
-            
+
             # Print progress if verbose
             if verbose and (epoch + 1) % max(1, num_epochs // 10) == 0:
                 try:
@@ -109,12 +114,13 @@ def train_model(
                     print(f"Epoch {epoch+1}/{num_epochs}: loss={loss:.4f}")
                 except Exception as e:
                     print(f"Error evaluating model: {e}")
-        
+
         # Ensure the step count matches the number of epochs
         if state.step != initial_state.step + num_epochs:
             state = state.replace(step=initial_state.step + num_epochs)
-        
+
         return state
+
 
 @beartype
 def evaluate_model(
@@ -123,22 +129,23 @@ def evaluate_model(
     data: Dict[str, jnp.ndarray],
 ) -> float:
     """Evaluate a model on data.
-    
+
     Args:
         svi: SVI object
         state: Training state
         data: Dictionary of data arrays
-        
+
     Returns:
         Loss value
     """
     # Get the parameters from the state
     params = state.params
-    
+
     # Compute the loss using the SVI object directly
     loss = svi.evaluate(params, **data)
-    
+
     return float(loss)
+
 
 @beartype
 def train_with_early_stopping(
@@ -152,7 +159,7 @@ def train_with_early_stopping(
     verbose: bool = True,
 ) -> TrainingState:
     """Train with early stopping.
-    
+
     Args:
         svi: SVI object
         initial_state: Initial training state
@@ -162,18 +169,18 @@ def train_with_early_stopping(
         batch_size: Batch size
         patience: Patience for early stopping
         verbose: Whether to print progress
-        
+
     Returns:
         Final training state
     """
     # Initialize state
     state = initial_state
-    
+
     # Initialize early stopping variables
-    best_val_loss = float('inf')
+    best_val_loss = float("inf")
     best_state = state
     patience_counter = 0
-    
+
     # Train for specified number of epochs
     for epoch in range(num_epochs):
         # Train for one epoch
@@ -181,31 +188,35 @@ def train_with_early_stopping(
             # Train for one epoch and ensure step count is incremented
             prev_step = state.step
             state = train_epoch(svi, state, train_data, batch_size)
-            
+
             # Ensure step count is incremented
             if state.step == prev_step:
                 state = state.replace(step=prev_step + 1)
-            
+
             # Evaluate on validation data
             try:
                 val_loss = evaluate_model(svi, state, val_data)
-                
+
                 # Print progress if verbose
                 if verbose:
                     try:
                         train_loss = evaluate_model(svi, state, train_data)
-                        print(f"Epoch {epoch+1}/{num_epochs}: train_loss={train_loss:.4f}, val_loss={val_loss:.4f}")
+                        print(
+                            f"Epoch {epoch+1}/{num_epochs}: train_loss={train_loss:.4f}, val_loss={val_loss:.4f}"
+                        )
                     except Exception as e:
                         print(f"Error evaluating training loss: {e}")
-                
+
                 # Check if validation loss improved
                 if val_loss < best_val_loss:
                     best_val_loss = val_loss
-                    best_state = state.replace(best_params=state.params, best_loss=val_loss)
+                    best_state = state.replace(
+                        best_params=state.params, best_loss=val_loss
+                    )
                     patience_counter = 0
                 else:
                     patience_counter += 1
-                    
+
                 # Check if patience exceeded
                 if patience_counter >= patience:
                     if verbose:
@@ -221,11 +232,12 @@ def train_with_early_stopping(
             state = state.replace(step=state.step + 1)
             # Continue with the next epoch
             continue
-    
+
     # Return best state or current state if no best state was found
     if best_state is None:
         return state
     return best_state
+
 
 @beartype
 def train_epoch(
@@ -235,13 +247,13 @@ def train_epoch(
     batch_size: Optional[int] = None,
 ) -> TrainingState:
     """Train for one epoch.
-    
+
     Args:
         svi: SVI object
         state: Training state
         data: Dictionary of data arrays
         batch_size: Batch size
-        
+
     Returns:
         Updated training state
     """
@@ -260,7 +272,9 @@ def train_epoch(
             except Exception as e:
                 print(f"Error updating loss history: {e}")
                 # If we can't compute the loss, just keep the original loss history
-                updated_state = updated_state.replace(loss_history=state.loss_history)
+                updated_state = updated_state.replace(
+                    loss_history=state.loss_history
+                )
             # Ensure the step count is incremented even if there's an error in svi_step
             if updated_state.step == state.step:
                 updated_state = updated_state.replace(step=state.step + 1)
@@ -269,19 +283,19 @@ def train_epoch(
             print(f"Error in train_epoch (full dataset): {e}")
             # Return a modified state with incremented step count
             return state.replace(step=state.step + 1)
-    
+
     # Otherwise, perform mini-batch training
     # Find the first array in data to determine the number of data points
     n_data = None
     batchable_keys = []
     for k, v in data.items():
-        if hasattr(v, 'shape') and len(v.shape) > 0:
+        if hasattr(v, "shape") and len(v.shape) > 0:
             if n_data is None:
                 n_data = v.shape[0]
                 batchable_keys.append(k)
             elif v.shape[0] == n_data:
                 batchable_keys.append(k)
-    
+
     if n_data is None or not batchable_keys:
         # If no batchable data found, just do a single step
         try:
@@ -290,27 +304,29 @@ def train_epoch(
             print(f"Error in train_epoch (no batchable data): {e}")
             # Return the original state if there's an error
             return state
-    
+
     # Calculate number of batches
     n_batches = n_data // batch_size + (1 if n_data % batch_size > 0 else 0)
-    
+
     # Initialize updated state
     updated_state = state
-    
+
     # Generate a new key for shuffling
     key, subkey = jax.random.split(state.key)
-    
+
     # Generate random indices for shuffling
     indices = jax.random.permutation(subkey, n_data)
-    
+
     # Track if any batch succeeded
     any_batch_succeeded = False
-    
+
     # Loop over batches
     for i in range(n_batches):
         # Get batch indices
-        batch_indices = indices[i * batch_size:min((i + 1) * batch_size, n_data)]
-        
+        batch_indices = indices[
+            i * batch_size : min((i + 1) * batch_size, n_data)
+        ]
+
         # Create batch data
         batch_data = {}
         for k, v in data.items():
@@ -320,7 +336,7 @@ def train_epoch(
             else:
                 # For scalar values or arrays with different shapes, keep as is
                 batch_data[k] = v
-        
+
         # Perform SVI step on batch
         try:
             # Use the svi_step function directly
@@ -332,11 +348,11 @@ def train_epoch(
             print(f"Error in train_epoch (batch {i}): {e}")
             # Continue with the next batch if there's an error
             continue
-    
+
     # Ensure the step count is incremented even if all batches failed
     if not any_batch_succeeded:
         updated_state = updated_state.replace(step=updated_state.step + 1)
-    
+
     # Update the loss history - only add one loss value per epoch
     try:
         loss = svi.evaluate(updated_state.params, **data)
@@ -347,8 +363,8 @@ def train_epoch(
         print(f"Error updating loss history: {e}")
         # If we can't compute the loss, just keep the original loss history
         updated_state = updated_state.replace(loss_history=state.loss_history)
-    
+
     # Update the random key
     updated_state = updated_state.replace(key=key)
-    
+
     return updated_state

@@ -31,7 +31,6 @@ __all__ = [
     "convert_pyro_to_numpyro_model",
     "convert_pyro_to_numpyro_guide",
     "convert_pyro_to_numpyro_posterior",
-    
     # JAX to PyTorch
     "convert_array_to_torch",
     "convert_parameters_to_torch",

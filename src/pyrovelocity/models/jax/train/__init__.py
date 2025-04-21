@@ -33,13 +33,11 @@ __all__ = [
     "evaluate_model",
     "train_with_early_stopping",
     "train_epoch",
-    
     # Optimizer
     "create_optimizer",
     "learning_rate_schedule",
     "clip_gradients",
     "create_optimizer_with_schedule",
-    
     # Metrics
     "compute_loss",
     "compute_elbo",

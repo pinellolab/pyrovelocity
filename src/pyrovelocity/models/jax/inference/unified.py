@@ -22,7 +22,11 @@ from pyrovelocity.models.jax.core.state import InferenceConfig, InferenceState
 from pyrovelocity.models.jax.inference.config import create_inference_config
 from pyrovelocity.models.jax.inference.guide import create_guide
 from pyrovelocity.models.jax.inference.svi import run_svi_inference
-from pyrovelocity.models.jax.inference.mcmc import run_mcmc_inference, mcmc_diagnostics
+from pyrovelocity.models.jax.inference.mcmc import (
+    run_mcmc_inference,
+    mcmc_diagnostics,
+)
+
 
 @beartype
 def run_inference(
@@ -33,14 +37,14 @@ def run_inference(
     key: Optional[jnp.ndarray] = None,
 ) -> Tuple[Union[SVI, MCMC, AutoGuide], InferenceState]:
     """Run inference using either SVI or MCMC.
-    
+
     Args:
         model: NumPyro model function
         args: Positional arguments for the model
         kwargs: Keyword arguments for the model
         config: Inference configuration
         key: JAX random key
-        
+
     Returns:
         Tuple of (inference_object, inference_state), where inference_object
         can be an SVI, MCMC, or AutoGuide object depending on the inference method.
@@ -48,18 +52,18 @@ def run_inference(
     # Generate a random key if not provided
     if key is None:
         key = jax.random.PRNGKey(0)
-    
+
     # Create inference config if not provided or convert dict to InferenceConfig
     if config is None:
         config = create_inference_config()
     elif isinstance(config, dict):
         config = create_inference_config(**config)
-    
+
     # Run inference based on method
     if config.method.lower() == "svi":
         # Create guide
         guide = create_guide(model, guide_type=config.guide_type)
-        
+
         # Run SVI inference
         training_state, posterior_samples = run_svi_inference(
             model=model,
@@ -69,13 +73,15 @@ def run_inference(
             config=config,
             key=key,
         )
-        
+
         # Create inference state
-        inference_state = create_inference_state(posterior_samples=posterior_samples)
-        
+        inference_state = create_inference_state(
+            posterior_samples=posterior_samples
+        )
+
         # Return SVI object and inference state
         return guide, inference_state
-    
+
     elif config.method.lower() == "mcmc":
         # Run MCMC inference
         mcmc, posterior_samples = run_mcmc_inference(
@@ -85,21 +91,22 @@ def run_inference(
             config=config,
             key=key,
         )
-        
+
         # Get diagnostics
         diagnostics = mcmc_diagnostics(mcmc)
-        
+
         # Create inference state
         inference_state = create_inference_state(
             posterior_samples=posterior_samples,
             diagnostics=diagnostics,
         )
-        
+
         # Return MCMC object and inference state
         return mcmc, inference_state
-    
+
     else:
         raise ValueError(f"Unknown inference method: {config.method}")
+
 
 @beartype
 def extract_posterior_samples(
@@ -109,38 +116,36 @@ def extract_posterior_samples(
     key: Optional[jnp.ndarray] = None,
 ) -> Dict[str, jnp.ndarray]:
     """Extract posterior samples from inference results.
-    
+
     Args:
         inference_object: SVI, MCMC, AutoGuide, or dictionary of samples
         params: Optional parameters (for SVI/AutoGuide)
         num_samples: Number of samples (for SVI/AutoGuide)
         key: JAX random key (for SVI/AutoGuide)
-        
+
     Returns:
         Dictionary of posterior samples
     """
     # If inference_object is already a dictionary of samples, return it
     if isinstance(inference_object, dict):
         return inference_object
-    
+
     # If inference_object is an MCMC object, extract samples
     elif isinstance(inference_object, MCMC):
         return inference_object.get_samples()
-    
+
     # If inference_object is an AutoGuide, sample from the guide
     elif isinstance(inference_object, AutoGuide):
         if params is None:
             raise ValueError("Parameters must be provided for AutoGuide")
-        
+
         if key is None:
             key = jax.random.PRNGKey(0)
-        
+
         try:
             # Try to sample from the guide directly
             return inference_object.sample_posterior(
-                rng_key=key,
-                params=params,
-                sample_shape=(num_samples,)
+                rng_key=key, params=params, sample_shape=(num_samples,)
             )
         except KeyError as e:
             # If we get a KeyError, it might be due to parameter naming issues
@@ -152,16 +157,19 @@ def extract_posterior_samples(
             )
             # Sample from the guide
             return predictive(key)
-    
+
     # If inference_object is an SVI object, raise an error (should use AutoGuide)
     elif isinstance(inference_object, SVI):
         raise ValueError(
             "SVI object cannot be used directly to extract samples. "
             "Use the guide object with parameters instead."
         )
-    
+
     else:
-        raise TypeError(f"Unsupported inference object type: {type(inference_object)}")
+        raise TypeError(
+            f"Unsupported inference object type: {type(inference_object)}"
+        )
+
 
 @beartype
 def posterior_predictive(
@@ -175,7 +183,7 @@ def posterior_predictive(
     return_sites: Optional[List[str]] = None,
 ) -> Dict[str, jnp.ndarray]:
     """Generate posterior predictive samples.
-    
+
     Args:
         model: NumPyro model function
         posterior_samples: Dictionary of posterior samples
@@ -185,25 +193,25 @@ def posterior_predictive(
         key: JAX random key
         parallel: Whether to run in parallel
         return_sites: Optional list of sites to return
-        
+
     Returns:
         Dictionary of posterior predictive samples
     """
     # Generate a random key if not provided
     if key is None:
         key = jax.random.PRNGKey(0)
-    
+
     # If return_sites is None, include all sites including latent variables
     if return_sites is None:
         # Include both observed and latent sites
         return_sites = list(posterior_samples.keys())
-        
+
         # Add observed sites if they're not already included
         if "x_obs" not in return_sites:
             return_sites.append("x_obs")
         if "y_obs" not in return_sites:
             return_sites.append("y_obs")
-    
+
     # Create a predictive object
     predictive = numpyro.infer.Predictive(
         model,
@@ -212,10 +220,10 @@ def posterior_predictive(
         return_sites=return_sites,
         parallel=parallel,
     )
-    
+
     # Generate posterior predictive samples
     result = predictive(key, *args, **kwargs)
-    
+
     # If the result doesn't contain the expected keys, merge with posterior_samples
     if not any(k in result for k in ["alpha", "beta", "gamma"]):
         # Include the posterior samples in the result
@@ -226,8 +234,9 @@ def posterior_predictive(
                     result[k] = v[:num_samples]
                 else:
                     result[k] = v
-    
+
     return result
+
 
 @beartype
 def create_inference_state(
@@ -236,12 +245,12 @@ def create_inference_state(
     diagnostics: Optional[Dict[str, Any]] = None,
 ) -> InferenceState:
     """Create an inference state from inference results.
-    
+
     Args:
         posterior_samples: Dictionary of posterior samples
         posterior_predictive_samples: Optional dictionary of posterior predictive samples
         diagnostics: Optional dictionary of diagnostic results
-        
+
     Returns:
         InferenceState object
     """

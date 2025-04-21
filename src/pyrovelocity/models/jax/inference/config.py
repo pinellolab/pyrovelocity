@@ -17,17 +17,15 @@ from beartype import beartype
 
 from pyrovelocity.models.jax.core.state import InferenceConfig
 
+
 @beartype
-def create_inference_config(
-    method: str = "svi",
-    **kwargs
-) -> InferenceConfig:
+def create_inference_config(method: str = "svi", **kwargs) -> InferenceConfig:
     """Factory function for creating inference configurations.
-    
+
     Args:
         method: Inference method ("svi" or "mcmc")
         **kwargs: Additional configuration parameters
-        
+
     Returns:
         InferenceConfig object
     """
@@ -54,30 +52,34 @@ def create_inference_config(
         )
     else:
         raise ValueError(f"Unknown inference method: {method}")
-    
+
     # Update config with kwargs
     return config.replace(**kwargs)
+
 
 @beartype
 def validate_config(config: InferenceConfig) -> bool:
     """Validate inference configuration.
-    
+
     Args:
         config: InferenceConfig object
-        
+
     Returns:
         True if the configuration is valid, False otherwise
     """
     # Placeholder for future implementation
-    raise NotImplementedError("This function will be implemented in a future phase.")
+    raise NotImplementedError(
+        "This function will be implemented in a future phase."
+    )
+
 
 @beartype
 def get_default_config(method: str = "svi") -> InferenceConfig:
     """Get default inference configuration.
-    
+
     Args:
         method: Inference method ("svi" or "mcmc")
-        
+
     Returns:
         Default InferenceConfig object
     """

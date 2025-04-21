@@ -21,19 +21,18 @@ from beartype import beartype
 
 from pyrovelocity.models.jax.core.state import TrainingState, InferenceConfig
 
+
 @beartype
 def create_optimizer(
-    optimizer_name: str = "adam",
-    learning_rate: float = 0.01,
-    **kwargs
+    optimizer_name: str = "adam", learning_rate: float = 0.01, **kwargs
 ) -> optax.GradientTransformation:
     """Create an optimizer.
-    
+
     Args:
         optimizer_name: Name of the optimizer
         learning_rate: Learning rate
         **kwargs: Additional optimizer parameters
-        
+
     Returns:
         Optax optimizer
     """
@@ -49,6 +48,7 @@ def create_optimizer(
     else:
         raise ValueError(f"Unknown optimizer: {optimizer_name}")
 
+
 @beartype
 def create_svi(
     model: Callable,
@@ -56,10 +56,10 @@ def create_svi(
     optimizer: Union[str, optax.GradientTransformation],
     loss: Optional[numpyro.infer.ELBO] = None,
     learning_rate: float = 0.01,
-    **kwargs
+    **kwargs,
 ) -> SVI:
     """Create an SVI object.
-    
+
     Args:
         model: NumPyro model function
         guide: NumPyro guide
@@ -67,36 +67,32 @@ def create_svi(
         loss: ELBO loss function
         learning_rate: Learning rate (used if optimizer is a string)
         **kwargs: Additional optimizer parameters
-        
+
     Returns:
         SVI object
     """
     # Use default loss if not provided
     if loss is None:
         loss = Trace_ELBO()
-    
+
     # Handle string optimizer
     if isinstance(optimizer, str):
         optimizer = create_optimizer(optimizer, learning_rate, **kwargs)
-    
+
     # Create SVI object
     return SVI(model, guide, optimizer, loss)
 
+
 @beartype
-def svi_step(
-    svi: SVI,
-    state: TrainingState,
-    *args,
-    **kwargs
-) -> TrainingState:
+def svi_step(svi: SVI, state: TrainingState, *args, **kwargs) -> TrainingState:
     """Single SVI step.
-    
+
     Args:
         svi: SVI object
         state: Training state
         *args: Additional positional arguments for the model
         **kwargs: Additional keyword arguments for the model
-        
+
     Returns:
         Updated training state
     """
@@ -108,15 +104,15 @@ def svi_step(
     loss_history = state.loss_history
     best_params = state.best_params
     best_loss = state.best_loss
-    
+
     # Generate a new key for this step
     key, subkey = jax.random.split(key)
-    
+
     # Perform SVI step
     # Only use keyword arguments to avoid passing 'x' twice
     try:
         result = svi.update(params, opt_state, **kwargs)
-        
+
         # Unpack the result based on the NumPyro SVI.update return value
         # In NumPyro, SVI.update returns (loss, optim_state) or ((loss, mutable_state), optim_state)
         if isinstance(result, tuple) and len(result) == 2:
@@ -126,26 +122,31 @@ def svi_step(
             else:
                 # Case: (loss, optim_state)
                 loss_val, new_opt_state = result
-            
+
             # Handle scalar loss (0-d array)
             if isinstance(loss_val, (jnp.ndarray, float, int)):
                 # Convert to Python float to avoid iteration issues with 0-d arrays
                 loss_val = float(loss_val)
-            
+
             # Get the new parameters from the optimizer
             # Handle the case where new_opt_state might be a scalar
             try:
                 new_params = svi.optim.get_params(new_opt_state)
             except TypeError:
                 # If we get a TypeError (iteration over 0-d array), convert to a tuple
-                if isinstance(new_opt_state, jnp.ndarray) and new_opt_state.ndim == 0:
+                if (
+                    isinstance(new_opt_state, jnp.ndarray)
+                    and new_opt_state.ndim == 0
+                ):
                     # In case of error, keep the old parameters
                     new_params = params
                 else:
                     raise  # Re-raise if it's a different TypeError
         else:
-            raise ValueError(f"Unexpected return value from SVI.update: {result}")
-        
+            raise ValueError(
+                f"Unexpected return value from SVI.update: {result}"
+            )
+
         # Update loss history
         new_loss_history = loss_history + [float(loss_val)]
     except Exception as e:
@@ -156,13 +157,19 @@ def svi_step(
         new_opt_state = opt_state
         new_loss_history = loss_history
         # Add a placeholder loss value
-        new_loss_history = loss_history + [float('nan')]
-    
+        new_loss_history = loss_history + [float("nan")]
+
     # Update best parameters if this is the best loss so far
     try:
-        if 'loss_val' in locals() and best_loss is None or ('loss_val' in locals() and loss_val < best_loss):
+        if (
+            "loss_val" in locals()
+            and best_loss is None
+            or ("loss_val" in locals() and loss_val < best_loss)
+        ):
             new_best_params = new_params
-            new_best_loss = float(loss_val) if 'loss_val' in locals() else float('nan')
+            new_best_loss = (
+                float(loss_val) if "loss_val" in locals() else float("nan")
+            )
         else:
             new_best_params = best_params
             new_best_loss = best_loss
@@ -170,7 +177,7 @@ def svi_step(
         print(f"Error updating best parameters: {e}")
         new_best_params = best_params
         new_best_loss = best_loss
-    
+
     # Create updated state
     new_state = TrainingState(
         step=step + 1,
@@ -181,8 +188,9 @@ def svi_step(
         best_loss=new_best_loss,
         key=key,
     )
-    
+
     return new_state
+
 
 @beartype
 def run_svi_inference(
@@ -194,7 +202,7 @@ def run_svi_inference(
     key: jnp.ndarray,
 ) -> Tuple[TrainingState, Dict[str, jnp.ndarray]]:
     """Run SVI inference.
-    
+
     Args:
         model: NumPyro model function
         guide: NumPyro guide
@@ -202,7 +210,7 @@ def run_svi_inference(
         kwargs: Keyword arguments for the model
         config: Inference configuration
         key: JAX random key
-        
+
     Returns:
         Tuple of (training_state, posterior_samples)
     """
@@ -213,15 +221,15 @@ def run_svi_inference(
         optimizer=config.optimizer,
         learning_rate=config.learning_rate,
     )
-    
+
     # Run SVI using the built-in run method
     key, subkey = jax.random.split(key)
     svi_result = svi.run(subkey, config.num_epochs, *args, **kwargs)
-    
+
     # Extract the final parameters and losses
     params = svi_result.params
     losses = svi_result.losses
-    
+
     # Create a training state from the results
     state = TrainingState(
         step=config.num_epochs,
@@ -232,12 +240,15 @@ def run_svi_inference(
         best_loss=losses[-1] if len(losses) > 0 else None,
         key=key,
     )
-    
+
     # Extract posterior samples
     key, subkey = jax.random.split(key)
-    posterior_samples = extract_posterior_samples(guide, params, config.num_samples, subkey)
-    
+    posterior_samples = extract_posterior_samples(
+        guide, params, config.num_samples, subkey
+    )
+
     return state, posterior_samples
+
 
 @beartype
 def extract_posterior_samples(
@@ -247,13 +258,13 @@ def extract_posterior_samples(
     key: jnp.ndarray,
 ) -> Dict[str, jnp.ndarray]:
     """Extract posterior samples from guide.
-    
+
     Args:
         guide: NumPyro guide
         params: Guide parameters
         num_samples: Number of posterior samples
         key: JAX random key
-        
+
     Returns:
         Dictionary of posterior samples
     """
@@ -261,9 +272,7 @@ def extract_posterior_samples(
     if isinstance(guide, AutoGuide):
         # Use AutoGuide's sample_posterior method
         return guide.sample_posterior(
-            rng_key=key,
-            params=params,
-            sample_shape=(num_samples,)
+            rng_key=key, params=params, sample_shape=(num_samples,)
         )
     elif callable(guide):
         # For custom guides, we need to create a predictive object

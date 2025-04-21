@@ -19,6 +19,7 @@ from beartype import beartype
 
 from pyrovelocity.models.jax.core.state import InferenceConfig, InferenceState
 
+
 @beartype
 def create_mcmc(
     model: Callable,
@@ -28,10 +29,10 @@ def create_mcmc(
     num_chains: int = 1,
     chain_method: str = "parallel",
     progress_bar: bool = True,
-    **kwargs
+    **kwargs,
 ) -> MCMC:
     """Create an MCMC object.
-    
+
     Args:
         model: NumPyro model function
         kernel: MCMC kernel
@@ -41,7 +42,7 @@ def create_mcmc(
         chain_method: Method for running chains ("parallel" or "sequential")
         progress_bar: Whether to show progress bar
         **kwargs: Additional MCMC parameters
-        
+
     Returns:
         MCMC object
     """
@@ -49,12 +50,12 @@ def create_mcmc(
     if kernel is None:
         # Use NUTS as the default kernel
         kernel = NUTS(model, **kwargs)
-    
+
     # Check if the model has discrete variables
     if "discrete" in kwargs and kwargs["discrete"]:
         # Use DiscreteHMCGibbs for models with discrete variables
         kernel = DiscreteHMCGibbs(kernel)
-    
+
     # Create MCMC object
     return MCMC(
         kernel,
@@ -65,6 +66,7 @@ def create_mcmc(
         progress_bar=progress_bar,
     )
 
+
 @beartype
 def run_mcmc_inference(
     model: Callable,
@@ -74,14 +76,14 @@ def run_mcmc_inference(
     key: jnp.ndarray,
 ) -> Tuple[MCMC, Dict[str, jnp.ndarray]]:
     """Run MCMC inference.
-    
+
     Args:
         model: NumPyro model function
         args: Positional arguments for the model
         kwargs: Keyword arguments for the model
         config: Inference configuration
         key: JAX random key
-        
+
     Returns:
         Tuple of (mcmc, posterior_samples)
     """
@@ -92,40 +94,41 @@ def run_mcmc_inference(
         num_samples=config.num_samples,
         num_chains=config.num_chains,
     )
-    
+
     # Run MCMC
     mcmc.run(key, *args, **kwargs)
-    
+
     # Extract posterior samples
     posterior_samples = mcmc.get_samples()
-    
+
     return mcmc, posterior_samples
+
 
 @beartype
 def mcmc_diagnostics(
     mcmc: MCMC,
 ) -> Dict[str, Any]:
     """MCMC diagnostics.
-    
+
     Args:
         mcmc: MCMC object
-        
+
     Returns:
         Dictionary of diagnostic results
     """
     # Get diagnostic summaries
     diagnostics = {}
-    
+
     # Get summary statistics
     # NumPyro MCMC doesn't have get_diagnostics(), use get_samples() instead
     samples = mcmc.get_samples()
     diagnostics["samples"] = samples
-    
+
     # Add basic summary statistics
     for key, value in samples.items():
         diagnostics[f"{key}_mean"] = jnp.mean(value, axis=0)
         diagnostics[f"{key}_std"] = jnp.std(value, axis=0)
-    
+
     # Get effective sample size
     if mcmc.num_chains > 1:
         try:
@@ -134,7 +137,7 @@ def mcmc_diagnostics(
         except:
             # ESS calculation may fail for some models
             pass
-    
+
     # Get R-hat statistics for convergence diagnostics
     if mcmc.num_chains > 1:
         try:
@@ -143,7 +146,7 @@ def mcmc_diagnostics(
         except:
             # R-hat calculation may fail for some models
             pass
-    
+
     # Get acceptance rate
     try:
         accept_rate = mcmc.get_extra_fields()["accept_prob"].mean()
@@ -151,30 +154,32 @@ def mcmc_diagnostics(
     except:
         # Accept rate may not be available for all kernels
         pass
-    
+
     return diagnostics
+
 
 @beartype
 def extract_posterior_samples(
     mcmc: MCMC,
 ) -> Dict[str, jnp.ndarray]:
     """Extract posterior samples from MCMC.
-    
+
     Args:
         mcmc: MCMC object
-        
+
     Returns:
         Dictionary of posterior samples
     """
     # Get samples from MCMC
     samples = mcmc.get_samples()
-    
+
     # Reshape samples if needed
     if mcmc.num_chains > 1:
         # Combine samples from multiple chains
         samples = {k: v.reshape(-1, *v.shape[2:]) for k, v in samples.items()}
-    
+
     return samples
+
 
 @beartype
 def create_inference_state(
@@ -182,11 +187,11 @@ def create_inference_state(
     diagnostics: Optional[Dict[str, Any]] = None,
 ) -> InferenceState:
     """Create an inference state from MCMC results.
-    
+
     Args:
         posterior_samples: Dictionary of posterior samples
         diagnostics: Optional dictionary of diagnostic results
-        
+
     Returns:
         InferenceState object
     """

@@ -55,33 +55,28 @@ __all__ = [
     "create_inference_config",
     "validate_config",
     "get_default_config",
-    
     # Guide
     "auto_normal_guide",
     "auto_delta_guide",
     "custom_guide",
     "create_guide",
-    
     # SVI
     "create_optimizer",
     "create_svi",
     "svi_step",
     "run_svi_inference",
     "extract_svi_posterior_samples",
-    
     # MCMC
     "create_mcmc",
     "run_mcmc_inference",
     "mcmc_diagnostics",
     "extract_mcmc_posterior_samples",
     "create_mcmc_inference_state",
-    
     # Unified
     "run_inference",
     "extract_posterior_samples",
     "posterior_predictive",
     "create_inference_state",
-    
     # Posterior
     "sample_posterior",
     "compute_velocity",

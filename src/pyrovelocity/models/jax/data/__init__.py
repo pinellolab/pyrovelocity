@@ -32,13 +32,11 @@ __all__ = [
     "extract_layers",
     "store_results",
     "get_library_size",
-    
     # Batch processing
     "random_batch_indices",
     "create_batch_iterator",
     "batch_data",
     "vmap_batch_function",
-    
     # Preprocessing
     "normalize_counts",
     "compute_size_factors",

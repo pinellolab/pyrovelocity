@@ -16,19 +16,20 @@ from jaxtyping import Array, Float, PyTree
 from typing import Union, Callable
 from beartype import beartype
 
+
 @beartype
 def create_optimizer(
     optimizer_name: str = "adam",
     learning_rate: Union[float, Callable[[int], float]] = 0.01,
-    **kwargs
+    **kwargs,
 ) -> numpyro.optim._NumPyroOptim:
     """Create an optimizer.
-    
+
     Args:
         optimizer_name: Name of the optimizer
         learning_rate: Learning rate
         **kwargs: Additional optimizer parameters
-        
+
     Returns:
         NumPyro optimizer
     """
@@ -37,23 +38,20 @@ def create_optimizer(
             step_size=learning_rate,
             b1=kwargs.get("b1", 0.9),
             b2=kwargs.get("b2", 0.999),
-            eps=kwargs.get("eps", 1e-8)
+            eps=kwargs.get("eps", 1e-8),
         )
     elif optimizer_name.lower() == "sgd":
-        return numpyro.optim.SGD(
-            step_size=learning_rate
-        )
+        return numpyro.optim.SGD(step_size=learning_rate)
     elif optimizer_name.lower() == "momentum":
         # In JAX, the momentum parameter is called "mass"
         return numpyro.optim.Momentum(
-            step_size=learning_rate,
-            mass=kwargs.get("momentum", 0.9)
+            step_size=learning_rate, mass=kwargs.get("momentum", 0.9)
         )
     elif optimizer_name.lower() == "rmsprop":
         return numpyro.optim.RMSProp(
             step_size=learning_rate,
             gamma=kwargs.get("gamma", 0.9),
-            eps=kwargs.get("eps", 1e-8)
+            eps=kwargs.get("eps", 1e-8),
         )
     elif optimizer_name.lower() == "clipped_adam":
         return numpyro.optim.ClippedAdam(
@@ -61,10 +59,11 @@ def create_optimizer(
             clip_norm=kwargs.get("clip_norm", 10.0),
             b1=kwargs.get("b1", 0.9),
             b2=kwargs.get("b2", 0.999),
-            eps=kwargs.get("eps", 1e-8)
+            eps=kwargs.get("eps", 1e-8),
         )
     else:
         raise ValueError(f"Unsupported optimizer: {optimizer_name}")
+
 
 @beartype
 def learning_rate_schedule(
@@ -74,16 +73,17 @@ def learning_rate_schedule(
     staircase: bool = False,
 ) -> Callable[[int], float]:
     """Learning rate schedule.
-    
+
     Args:
         init_lr: Initial learning rate
         decay_steps: Number of steps for decay
         decay_rate: Decay rate
         staircase: Whether to use staircase decay
-        
+
     Returns:
         Learning rate schedule function
     """
+
     def schedule(step: int) -> float:
         if staircase:
             # Staircase decay: lr = init_lr * decay_rate^floor(step/decay_steps)
@@ -91,10 +91,11 @@ def learning_rate_schedule(
         else:
             # Continuous decay: lr = init_lr * decay_rate^(step/decay_steps)
             decay_factor = decay_rate ** (step / decay_steps)
-        
+
         return init_lr * decay_factor
-    
+
     return schedule
+
 
 @beartype
 def clip_gradients(
@@ -102,11 +103,11 @@ def clip_gradients(
     clip_norm: float,
 ) -> numpyro.optim._NumPyroOptim:
     """Clip gradients.
-    
+
     Args:
         optimizer: NumPyro optimizer
         clip_norm: Gradient clipping norm
-        
+
     Returns:
         NumPyro optimizer with gradient clipping
     """
@@ -119,9 +120,9 @@ def clip_gradients(
             clip_norm=clip_norm,
             b1=0.9,  # Default value
             b2=0.999,  # Default value
-            eps=1e-8  # Default value
+            eps=1e-8,  # Default value
         )
-    
+
     # For other optimizers, we need to create a custom wrapper
     # For simplicity, we'll just use ClippedAdam for all optimizers
     # This is a compromise but should work for most cases
@@ -130,10 +131,11 @@ def clip_gradients(
         clip_norm=clip_norm,
         b1=0.9,  # Default value
         b2=0.999,  # Default value
-        eps=1e-8  # Default value
+        eps=1e-8,  # Default value
     )
-    
+
     return ClippedOptimizer(optimizer, clip_norm)
+
 
 @beartype
 def create_optimizer_with_schedule(
@@ -143,10 +145,10 @@ def create_optimizer_with_schedule(
     decay_rate: float = 0.9,
     staircase: bool = False,
     clip_norm: Optional[float] = None,
-    **kwargs
+    **kwargs,
 ) -> numpyro.optim._NumPyroOptim:
     """Create an optimizer with learning rate schedule.
-    
+
     Args:
         optimizer_name: Name of the optimizer
         init_lr: Initial learning rate
@@ -155,7 +157,7 @@ def create_optimizer_with_schedule(
         staircase: Whether to use staircase decay
         clip_norm: Gradient clipping norm
         **kwargs: Additional optimizer parameters
-        
+
     Returns:
         NumPyro optimizer with learning rate schedule
     """
@@ -164,18 +166,16 @@ def create_optimizer_with_schedule(
         init_lr=init_lr,
         decay_steps=decay_steps,
         decay_rate=decay_rate,
-        staircase=staircase
+        staircase=staircase,
     )
-    
+
     # Create optimizer with schedule
     optimizer = create_optimizer(
-        optimizer_name=optimizer_name,
-        learning_rate=lr_schedule,
-        **kwargs
+        optimizer_name=optimizer_name, learning_rate=lr_schedule, **kwargs
     )
-    
+
     # Apply gradient clipping if specified
     if clip_norm is not None:
         optimizer = clip_gradients(optimizer, clip_norm)
-    
+
     return optimizer
