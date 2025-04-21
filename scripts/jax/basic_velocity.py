@@ -91,8 +91,9 @@ def main():
         num_chains=1,
         method="svi",
         optimizer="adam",
-        learning_rate=0.01,
-        num_epochs=200,  # Reduced for example
+        learning_rate=0.001,  # Lower learning rate for more stable training
+        num_epochs=500,  # More epochs to ensure convergence
+        guide_type="auto_normal",  # Explicitly specify the guide type
     )
     
     # 5. Create model

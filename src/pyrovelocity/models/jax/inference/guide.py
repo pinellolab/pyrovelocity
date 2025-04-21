@@ -8,14 +8,15 @@ This module contains variational guide implementations, including:
 - custom_guide: Custom guide for specialized inference
 """
 
-from typing import Dict, Tuple, Optional, Any, List, Union, Callable
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+
 import jax
 import jax.numpy as jnp
 import numpyro
 import numpyro.distributions as dist
-from numpyro.infer.autoguide import AutoNormal, AutoDelta, AutoGuide
-from jaxtyping import Array, Float, PyTree
 from beartype import beartype
+from jaxtyping import Array, Float, PyTree
+from numpyro.infer.autoguide import AutoDelta, AutoGuide, AutoNormal
 
 
 @beartype
@@ -32,10 +33,23 @@ def auto_normal_guide(
     Returns:
         AutoNormal guide
     """
-    # Use default initialization if not provided
+    # Define a custom initialization function if none is provided
     if init_loc_fn is None:
-        # Create AutoNormal guide with default initialization
-        return numpyro.infer.autoguide.AutoNormal(model)
+        def robust_init_fn(site):
+            # For parameters that are expected to be positive (alpha, beta, gamma),
+            # initialize with small positive values
+            if site["name"] in ["alpha", "beta", "gamma"]:
+                # Initialize with values between 0.1 and 1.0
+                return jnp.ones(site["fn"].shape()) * 0.5
+            # For latent time, initialize uniformly between 0 and 1
+            elif site["name"] == "tau":
+                return jnp.zeros(site["fn"].shape())
+            # For other parameters, use small values centered at 0
+            else:
+                return jnp.zeros(site["fn"].shape())
+        
+        # Create AutoNormal guide with robust initialization
+        return numpyro.infer.autoguide.AutoNormal(model, init_loc_fn=robust_init_fn)
     else:
         # Create AutoNormal guide with custom initialization
         return numpyro.infer.autoguide.AutoNormal(
