@@ -6,125 +6,105 @@ model for RNA velocity analysis.
 """
 
 from pyrovelocity.models.jax.core import (
-    # Utils
-    create_key,
-    split_key,
-    set_platform_device,
-    enable_x64,
-    disable_x64,
-    get_device_count,
-    get_devices,
-    check_array_shape,
-    check_array_dtype,
-    ensure_array,
-    # State
-    VelocityModelState,
-    TrainingState,
+    InferenceConfig,
     InferenceState,
     ModelConfig,
-    InferenceConfig,
-    # Dynamics
-    standard_dynamics_model,
-    nonlinear_dynamics_model,
+    TrainingState,
+    # State
+    VelocityModelState,
+    check_array_dtype,
+    check_array_shape,
+    # Utils
+    create_key,
+    create_likelihood,
+    create_model,
+    disable_x64,
     dynamics_ode_model,
+    enable_x64,
+    ensure_array,
+    get_device_count,
+    get_devices,
+    informative_prior,
     # Priors
     lognormal_prior,
-    informative_prior,
-    sample_prior_parameters,
+    negative_binomial_likelihood,
+    nonlinear_dynamics_model,
     # Likelihoods
     poisson_likelihood,
-    negative_binomial_likelihood,
-    create_likelihood,
+    sample_prior_parameters,
+    set_platform_device,
+    split_key,
+    # Dynamics
+    standard_dynamics_model,
     # Model
     velocity_model,
-    create_model,
 )
-
 from pyrovelocity.models.jax.data import (
-    # AnnData integration
-    prepare_anndata,
-    extract_layers,
-    store_results,
-    get_library_size,
-    # Batch processing
-    random_batch_indices,
-    create_batch_iterator,
+    _internal_transform,
     batch_data,
-    vmap_batch_function,
+    compute_size_factors,
+    create_batch_iterator,
+    extract_layers,
+    filter_genes,
+    get_library_size,
     # Preprocessing
     normalize_counts,
-    compute_size_factors,
-    filter_genes,
-    _internal_transform,
+    # AnnData integration
+    prepare_anndata,
+    # Batch processing
+    random_batch_indices,
+    store_results,
+    vmap_batch_function,
 )
-
 from pyrovelocity.models.jax.inference import (
-    # Config
-    create_inference_config,
-    validate_config,
-    get_default_config,
+    analyze_posterior,
+    auto_delta_guide,
     # Guide
     auto_normal_guide,
-    auto_delta_guide,
-    custom_guide,
+    compute_uncertainty,
+    compute_velocity,
     create_guide,
+    # Config
+    create_inference_config,
+    create_inference_data,
+    create_inference_state,
+    # MCMC
+    create_mcmc,
     # SVI
     create_optimizer,
     create_svi,
-    svi_step,
-    run_svi_inference,
-    # MCMC
-    create_mcmc,
-    run_mcmc_inference,
+    custom_guide,
+    extract_posterior_samples,
+    format_anndata_output,
+    get_default_config,
     mcmc_diagnostics,
+    posterior_predictive,
     # Unified
     run_inference,
-    extract_posterior_samples,
-    posterior_predictive,
-    create_inference_state,
+    run_mcmc_inference,
+    run_svi_inference,
     # Posterior
     sample_posterior,
-    compute_velocity,
-    compute_uncertainty,
-    analyze_posterior,
-    create_inference_data,
-    format_anndata_output,
+    svi_step,
+    validate_config,
 )
-
 from pyrovelocity.models.jax.train import (
-    # Loop
-    train_model,
-    evaluate_model,
-    train_with_early_stopping,
-    train_epoch,
-    # Optimizer
-    create_optimizer,
-    learning_rate_schedule,
     clip_gradients,
-    create_optimizer_with_schedule,
+    compute_elbo,
     # Metrics
     compute_loss,
-    compute_elbo,
-    compute_predictive_log_likelihood,
     compute_metrics,
+    compute_predictive_log_likelihood,
     compute_validation_metrics,
-)
-
-from pyrovelocity.models.jax.adapters import (
-    # PyTorch to JAX
-    convert_tensor_to_jax,
-    convert_parameters_to_jax,
-    convert_model_state_to_jax,
-    convert_pyro_to_numpyro_model,
-    convert_pyro_to_numpyro_guide,
-    convert_pyro_to_numpyro_posterior,
-    # JAX to PyTorch
-    convert_array_to_torch,
-    convert_parameters_to_torch,
-    convert_model_state_to_torch,
-    convert_numpyro_to_pyro_model,
-    convert_numpyro_to_pyro_guide,
-    convert_numpyro_to_pyro_posterior,
+    # Optimizer
+    create_optimizer,
+    create_optimizer_with_schedule,
+    evaluate_model,
+    learning_rate_schedule,
+    train_epoch,
+    # Loop
+    train_model,
+    train_with_early_stopping,
 )
 
 __all__ = [
@@ -220,18 +200,4 @@ __all__ = [
     "compute_predictive_log_likelihood",
     "compute_metrics",
     "compute_validation_metrics",
-    # PyTorch to JAX
-    "convert_tensor_to_jax",
-    "convert_parameters_to_jax",
-    "convert_model_state_to_jax",
-    "convert_pyro_to_numpyro_model",
-    "convert_pyro_to_numpyro_guide",
-    "convert_pyro_to_numpyro_posterior",
-    # JAX to PyTorch
-    "convert_array_to_torch",
-    "convert_parameters_to_torch",
-    "convert_model_state_to_torch",
-    "convert_numpyro_to_pyro_model",
-    "convert_numpyro_to_pyro_guide",
-    "convert_numpyro_to_pyro_posterior",
 ]
