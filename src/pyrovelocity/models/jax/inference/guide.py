@@ -35,8 +35,8 @@ def auto_normal_guide(
     """
     # Define a custom initialization function if none is provided
     if init_loc_fn is None:
-        # Use a simpler initialization approach
-        return numpyro.infer.autoguide.init_to_median
+        # Use a simpler initialization approach with init_to_median
+        return numpyro.infer.autoguide.AutoNormal(model, init_loc_fn=numpyro.infer.autoguide.init_to_median)
         
         # Create AutoNormal guide with robust initialization
         return numpyro.infer.autoguide.AutoNormal(model, init_loc_fn=robust_init_fn)
