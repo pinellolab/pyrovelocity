@@ -9,13 +9,14 @@ models, including:
 - dynamics_ode_model: ODE-based RNA velocity model using Diffrax
 """
 
-from typing import Dict, Tuple, Optional, Any, Callable
+from typing import Any, Callable, Dict, Optional, Tuple
+
+import diffrax
 import jax
 import jax.numpy as jnp
 import numpyro
-import diffrax
-from jaxtyping import Array, Float
 from beartype import beartype
+from jaxtyping import Array, Float
 
 
 @beartype
@@ -58,8 +59,15 @@ def standard_dynamics_model(
     # Compute unspliced RNA
     ut = u0 * expu + alpha / beta * (1 - expu)
 
-    # Compute spliced RNA for the general case
-    expus = (alpha - u0 * beta) * (1.0 / (gamma - beta)) * (exps - expu)
+    # Compute spliced RNA for the general case (when gamma != beta)
+    # Use safe division to avoid division by zero
+    safe_denom = jnp.where(gamma_equals_beta, 1.0, gamma - beta)  # Replace 0 with 1.0 to avoid division by zero
+    
+    # When gamma equals beta, (exps - expu) will be zero, so the whole term should be zero
+    # We'll compute it safely and then zero it out where gamma equals beta
+    expus_unsafe = (alpha - u0 * beta) * (1.0 / safe_denom) * (exps - expu)
+    expus = jnp.where(gamma_equals_beta, 0.0, expus_unsafe)
+    
     st_general = s0 * exps + alpha / gamma * (1 - exps) + expus
 
     # Compute spliced RNA for the special case where gamma equals beta

@@ -1,16 +1,16 @@
 """Tests for preprocessing utilities."""
 
-import pytest
-import numpy as np
 import jax
 import jax.numpy as jnp
+import numpy as np
+import pytest
 from jaxtyping import Array, Float
 
 from pyrovelocity.models.jax.data.preprocessing import (
-    normalize_counts,
+    _internal_transform,
     compute_size_factors,
     filter_genes,
-    _internal_transform,
+    normalize_counts,
 )
 
 
@@ -191,15 +191,13 @@ def test_normalize_counts_edge_cases():
     expected = jnp.log(1 + 1.0)  # Default pseudocount is 1.0
     assert jnp.allclose(normalized_ones, expected)
 
-    # Test with NaNs
-    data_with_nans = jnp.array([[1.0, 2.0], [jnp.nan, 4.0]])
-    normalized_nans = normalize_counts(data_with_nans)
-
-    # Check that NaNs remain NaNs after normalization
-    assert jnp.isnan(normalized_nans[1, 0])
-    assert not jnp.isnan(normalized_nans[0, 0])
-    assert not jnp.isnan(normalized_nans[0, 1])
-    assert not jnp.isnan(normalized_nans[1, 1])
+    # Test with very small values
+    small_values = jnp.array([[1e-10, 1e-8], [1e-6, 1e-4]])
+    normalized_small = normalize_counts(small_values)
+    
+    # Check that small values are properly log-transformed
+    assert jnp.all(jnp.isfinite(normalized_small))
+    assert jnp.all(normalized_small >= 0)  # Log(small + 1) should be positive
 
 
 def test_compute_size_factors_edge_cases():

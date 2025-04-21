@@ -7,12 +7,13 @@ log-transform) should be handled upstream, primarily within
 `src/pyrovelocity/tasks/preprocess.py`.
 """
 
-from typing import Dict, Tuple, Optional, Any, List, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import jax
 import jax.numpy as jnp
 import numpy as np
-from jaxtyping import Array, Float
 from beartype import beartype
+from jaxtyping import Array, Float
 
 
 @beartype
@@ -43,12 +44,21 @@ def normalize_counts(
     if counts.ndim > 1 and size_factors.ndim == 1:
         size_factors = size_factors.reshape(-1, *([1] * (counts.ndim - 1)))
 
+    # Create a mask for NaN values to preserve them
+    nan_mask = jnp.isnan(counts)
+    
+    # Replace NaNs with zeros for the division operation
+    counts_no_nan = jnp.where(nan_mask, 0.0, counts)
+    
     # Normalize counts by size factors
-    normalized = counts / size_factors
+    normalized = counts_no_nan / size_factors
 
     # Apply log transform if requested
     if log_transform:
         normalized = jnp.log(normalized + pseudocount)
+    
+    # Restore NaN values
+    normalized = jnp.where(nan_mask, jnp.nan, normalized)
 
     return normalized
 
