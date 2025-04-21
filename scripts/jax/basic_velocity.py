@@ -112,7 +112,8 @@ def main():
     
     # The run_inference function expects (model, args, kwargs, config, key)
     # It will create the guide internally based on the guide_type in inference_config
-    inference_state = run_inference(
+    # run_inference returns a tuple of (inference_object, inference_state)
+    _, inference_state = run_inference(
         model=model,
         args=(),  # Empty tuple for positional args
         kwargs={
