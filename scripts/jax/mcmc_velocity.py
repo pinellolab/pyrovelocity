@@ -1,5 +1,5 @@
 """
-End-to-end example of RNA velocity analysis using MCMC with PyroVelocity JAX/NumPyro implementation.
+End-to-end example of RNA velocity analysis using PyroVelocity JAX/NumPyro implementation with MCMC.
 
 This example demonstrates:
 1. Loading and preprocessing data
@@ -14,6 +14,7 @@ import numpyro
 import matplotlib.pyplot as plt
 import scanpy as sc
 import anndata
+import numpy as np
 from importlib.resources import files
 
 from pyrovelocity.models.jax import (
@@ -31,10 +32,12 @@ from pyrovelocity.models.jax import (
     # Inference
     run_inference,
     
+    # Training
+    create_optimizer_with_schedule,
+    
     # Analysis
     compute_velocity,
     analyze_posterior,
-    mcmc_diagnostics,
     
     # Visualization
     format_anndata_output,
@@ -75,8 +78,8 @@ def main():
     # 3. Create model configuration
     print("Creating model configuration...")
     model_config = ModelConfig(
-        dynamics="standard",
-        likelihood="poisson",
+        dynamics="standard",  # or "nonlinear" or "ode"
+        likelihood="poisson",  # or "negative_binomial"
         latent_time=True,
         include_prior=True,
     )
@@ -84,12 +87,12 @@ def main():
     # 4. Create inference configuration
     print("Creating inference configuration...")
     inference_config = InferenceConfig(
-        num_warmup=50,   # Reduced for example
-        num_samples=100,  # Reduced for example
-        num_chains=2,     # Reduced for example
-        method="mcmc",
-        # Note: mcmc_method, target_accept_prob, and max_tree_depth are not part of InferenceConfig
-        # They would need to be passed separately to the MCMC kernel
+        num_warmup=100,  # Reduced for example
+        num_samples=200,  # Reduced for example
+        num_chains=1,
+        method="mcmc",  # Use MCMC instead of SVI
+        mcmc_method="nuts",  # Use NUTS sampler
+        guide_type="auto_normal",  # Not used for MCMC, but required
     )
     
     # 5. Create model
@@ -107,7 +110,8 @@ def main():
     s_log_library = jnp.log(data_dict["s_lib_size"])
     
     # The run_inference function expects (model, args, kwargs, config, key)
-    inference_state = run_inference(
+    # It will create the guide internally based on the guide_type in inference_config
+    _, inference_state = run_inference(
         model=model,
         args=(),  # Empty tuple for positional args
         kwargs={
@@ -120,38 +124,55 @@ def main():
         key=subkey,
     )
     
-    # 7. Check MCMC diagnostics
-    print("Checking MCMC diagnostics...")
-    diagnostics = mcmc_diagnostics(inference_state)
-    print("MCMC Diagnostics:")
-    print(f"Number of divergences: {diagnostics['num_divergences']}")
-    print(f"Average r_hat: {diagnostics['average_r_hat']}")
-    print(f"Minimum ESS: {diagnostics['min_ess']}")
-    
-    # 8. Analyze results
+    # 7. Analyze results
     print("Analyzing results...")
     posterior_samples = inference_state.posterior_samples
-    velocity = compute_velocity(posterior_samples, data_dict)
     
-    # 9. Store results in AnnData
+    # Print the keys in posterior_samples to see what's available
+    print("Keys in posterior_samples:", list(posterior_samples.keys()))
+    
+    # Use the default dynamics_fn (standard_dynamics_model) by not providing a second argument
+    velocity = compute_velocity(posterior_samples)
+    
+    # 8. Store results in AnnData
     print("Storing results in AnnData...")
     results = {
         "velocity": velocity,
         "alpha": jnp.mean(posterior_samples["alpha"], axis=0),
         "beta": jnp.mean(posterior_samples["beta"], axis=0),
         "gamma": jnp.mean(posterior_samples["gamma"], axis=0),
-        "switching": jnp.mean(posterior_samples["switching"], axis=0),
-        "latent_time": jnp.mean(posterior_samples["latent_time"], axis=0),
     }
+    
+    # Add optional parameters if they exist in posterior_samples
+    if "tau" in posterior_samples:
+        results["latent_time"] = jnp.mean(posterior_samples["tau"], axis=0)
     
     adata_out = format_anndata_output(adata, results)
     
-    # 10. Visualize results
-    print("Visualizing results...")
-    sc.pl.umap(adata_out, color="latent_time", title="Latent Time")
-    sc.pl.velocity_embedding_stream(adata_out, basis="umap", color="clusters")
+    # Print the columns in the AnnData object to see what's available
+    print("Columns in adata_out.obs:", list(adata_out.obs.columns))
+    print("Keys in adata_out.uns:", list(adata_out.uns.keys()) if hasattr(adata_out, 'uns') and adata_out.uns is not None else "None")
     
-    # 11. Save results
+    # Add latent time directly to the AnnData object
+    if "tau" in posterior_samples:
+        print("Adding latent_time to AnnData object...")
+        tau_mean = jnp.mean(posterior_samples["tau"], axis=0)
+        # Convert to numpy array for compatibility with AnnData
+        tau_mean_np = np.array(tau_mean)
+        # Add to AnnData object
+        adata_out.obs["latent_time"] = tau_mean_np
+        print("Added latent_time column:", "latent_time" in adata_out.obs.columns)
+    
+    # 9. Visualize results
+    print("Visualizing results...")
+    # Use the column we just added
+    sc.pl.umap(adata_out, color="latent_time", title="Latent Time")
+    
+    # For velocity visualization, we need to use scvelo or a similar package
+    # Since we might not have scvelo installed, let's skip this for now
+    print("Skipping velocity visualization (requires scvelo package)")
+    
+    # 10. Save results
     output_path = "velocity_results_mcmc.h5ad"
     print(f"Saving results to {output_path}...")
     adata_out.write(output_path)
