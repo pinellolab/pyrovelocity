@@ -78,9 +78,9 @@ def main():
     # 3. Create model configuration
     print("Creating model configuration...")
     model_config = ModelConfig(
-        dynamics="standard",  # or "nonlinear" or "ode"
-        likelihood="poisson",  # or "negative_binomial"
-        latent_time=True,
+        dynamics="standard",  # Use standard dynamics for simplicity
+        likelihood="poisson",  # Use Poisson likelihood for simplicity
+        latent_time=False,    # Disable latent time for simpler initialization
         include_prior=True,
     )
     
@@ -152,20 +152,18 @@ def main():
     print("Columns in adata_out.obs:", list(adata_out.obs.columns))
     print("Keys in adata_out.uns:", list(adata_out.uns.keys()) if hasattr(adata_out, 'uns') and adata_out.uns is not None else "None")
     
-    # Add latent time directly to the AnnData object
-    if "tau" in posterior_samples:
-        print("Adding latent_time to AnnData object...")
-        tau_mean = jnp.mean(posterior_samples["tau"], axis=0)
-        # Convert to numpy array for compatibility with AnnData
-        tau_mean_np = np.array(tau_mean)
-        # Add to AnnData object
-        adata_out.obs["latent_time"] = tau_mean_np
-        print("Added latent_time column:", "latent_time" in adata_out.obs.columns)
-    
-    # 9. Visualize results
+    # Since we disabled latent time, we'll visualize other parameters
     print("Visualizing results...")
-    # Use the column we just added
-    sc.pl.umap(adata_out, color="latent_time", title="Latent Time")
+    
+    # Add alpha, beta, gamma to var for visualization
+    adata_out.var["alpha"] = np.array(jnp.mean(posterior_samples["alpha"], axis=0))
+    adata_out.var["beta"] = np.array(jnp.mean(posterior_samples["beta"], axis=0))
+    adata_out.var["gamma"] = np.array(jnp.mean(posterior_samples["gamma"], axis=0))
+    
+    # Visualize clusters
+    if "clusters" in adata_out.obs.columns:
+        print("Visualizing clusters...")
+        sc.pl.umap(adata_out, color="clusters", title="Cell Clusters")
     
     # For velocity visualization, we need to use scvelo or a similar package
     # Since we might not have scvelo installed, let's skip this for now
