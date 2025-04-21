@@ -129,7 +129,8 @@ def main():
     # 7. Analyze results
     print("Analyzing results...")
     posterior_samples = inference_state.posterior_samples
-    velocity = compute_velocity(posterior_samples, data_dict)
+    # Use the default dynamics_fn (standard_dynamics_model) by not providing a second argument
+    velocity = compute_velocity(posterior_samples)
     
     # 8. Store results in AnnData
     print("Storing results in AnnData...")
