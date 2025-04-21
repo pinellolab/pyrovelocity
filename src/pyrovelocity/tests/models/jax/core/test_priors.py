@@ -134,7 +134,7 @@ def test_sample_prior_parameters_interface():
     num_genes = 3
     
     # Test with lognormal prior
-    result_lognormal = sample_prior_parameters(key, num_genes, "lognormal")
+    result_lognormal = sample_prior_parameters(key=key, num_genes=num_genes, prior_type="lognormal")
     
     # Check that the result is a dictionary with the expected keys
     assert isinstance(result_lognormal, dict)

@@ -7,32 +7,34 @@ This module contains the NumPyro model definition for RNA velocity, including:
 - create_model: Factory function for creating models with different components
 """
 
-from typing import Dict, Tuple, Optional, Any, Callable
+from typing import Any, Callable, Dict, Optional, Tuple
+
 import jax
 import jax.numpy as jnp
 import numpyro
 import numpyro.distributions as dist
-from jaxtyping import Array, Float
 from beartype import beartype
+from jaxtyping import Array, Float
 
 from pyrovelocity.models.jax.core.dynamics import (
-    standard_dynamics_model,
-    nonlinear_dynamics_model,
     dynamics_ode_model,
-)
-from pyrovelocity.models.jax.core.priors import (
-    lognormal_prior,
-    informative_prior,
-    sample_prior_parameters,
+    nonlinear_dynamics_model,
+    standard_dynamics_model,
 )
 from pyrovelocity.models.jax.core.likelihoods import (
-    poisson_likelihood,
-    negative_binomial_likelihood,
     create_likelihood,
+    negative_binomial_likelihood,
+    poisson_likelihood,
+)
+from pyrovelocity.models.jax.core.priors import (
+    informative_prior,
+    lognormal_prior,
+    sample_prior_parameters,
 )
 from pyrovelocity.models.jax.core.state import (
     ModelConfig,
 )
+
 
 @beartype
 def velocity_model(
@@ -195,7 +197,6 @@ def create_model(
     likelihood_fn = create_likelihood(config.likelihood)
     
     # Create a properly typed wrapper function for the prior
-    # Create a properly typed wrapper function for the prior
     def typed_prior_fn(key: Optional[jnp.ndarray], num_genes: int) -> Dict[str, Float[Array, "gene"]]:
         """Wrapper for sample_prior_parameters with proper type annotations.
         
@@ -231,7 +232,7 @@ def create_model(
             s_log_library=s_log_library,
             dynamics_fn=dynamics_fn,
             likelihood_fn=likelihood_fn,
-            prior_fn=typed_prior_fn,  # Use the properly typed wrapper function
+            prior_fn=lambda key, num_genes: sample_prior_parameters(key=key, num_genes=num_genes, prior_type=config.prior),
             latent_time=config.latent_time,
             include_prior=config.include_prior,
         )

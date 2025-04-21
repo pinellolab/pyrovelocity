@@ -8,13 +8,15 @@ parameters, including:
 - informative_prior: Informative prior for RNA velocity parameters
 """
 
-from typing import Dict, Tuple, Optional, Any, Callable
+from typing import Any, Callable, Dict, Optional, Tuple
+
 import jax
 import jax.numpy as jnp
 import numpyro
 import numpyro.distributions as dist
-from jaxtyping import Array, Float
 from beartype import beartype
+from jaxtyping import Array, ArrayLike, Float
+
 
 @beartype
 def lognormal_prior(
@@ -90,10 +92,10 @@ def informative_prior(
 
 @beartype
 def sample_prior_parameters(
-    key: jnp.ndarray,
+    key: Optional[ArrayLike],
     num_genes: int,
     prior_type: str = "lognormal",
-    prior_params: Optional[Dict[str, Any]] = None
+    prior_params: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Float[Array, "gene"]]:
     """Sample prior parameters for RNA velocity model.
     
@@ -108,6 +110,9 @@ def sample_prior_parameters(
     """
     # Define shape for gene-specific parameters
     shape = (num_genes,)
+
+    if key is None:
+        key = jax.random.PRNGKey(0)
     
     # Use default prior parameters if not provided
     if prior_params is None:
