@@ -139,9 +139,11 @@ def main():
         "alpha": jnp.mean(posterior_samples["alpha"], axis=0),
         "beta": jnp.mean(posterior_samples["beta"], axis=0),
         "gamma": jnp.mean(posterior_samples["gamma"], axis=0),
-        "switching": jnp.mean(posterior_samples["switching"], axis=0),
-        "latent_time": jnp.mean(posterior_samples["latent_time"], axis=0),
     }
+    
+    # Add optional parameters if they exist in posterior_samples
+    if "tau" in posterior_samples:
+        results["latent_time"] = jnp.mean(posterior_samples["tau"], axis=0)
     
     adata_out = format_anndata_output(adata, results)
     
