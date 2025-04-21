@@ -8,16 +8,18 @@ This module contains MCMC utilities, including:
 - mcmc_diagnostics: MCMC diagnostics
 """
 
-from typing import Dict, Tuple, Optional, Any, List, Union, Callable
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+
 import jax
 import jax.numpy as jnp
 import numpyro
 import numpyro.distributions as dist
-from numpyro.infer import MCMC, NUTS, HMC, DiscreteHMCGibbs
-from jaxtyping import Array, Float, PyTree
 from beartype import beartype
+from jaxtyping import Array, Float, PyTree
+from numpyro.infer import HMC, MCMC, NUTS, DiscreteHMCGibbs
 
 from pyrovelocity.models.jax.core.state import InferenceConfig, InferenceState
+from pyrovelocity.models.jax.factory.factory import create_model
 
 
 @beartype
@@ -69,27 +71,53 @@ def create_mcmc(
 
 @beartype
 def run_mcmc_inference(
-    model: Callable,
-    args: Tuple,
-    kwargs: Dict[str, Any],
-    config: InferenceConfig,
-    key: jnp.ndarray,
+    model: Union[Callable, Dict[str, Any]],
+    args: Tuple = (),
+    kwargs: Optional[Dict[str, Any]] = None,
+    config: Optional[InferenceConfig] = None,
+    key: Optional[jnp.ndarray] = None,
 ) -> Tuple[MCMC, Dict[str, jnp.ndarray]]:
-    """Run MCMC inference.
+    """Run MCMC inference with a model.
+
+    This function performs Markov Chain Monte Carlo (MCMC) inference with the specified model.
+    It supports both direct model functions and model configurations that can be used with
+    the factory system.
 
     Args:
-        model: NumPyro model function
-        args: Positional arguments for the model
-        kwargs: Keyword arguments for the model
-        config: Inference configuration
-        key: JAX random key
+        model: Either a NumPyro model function or a model configuration dictionary
+        args: Positional arguments for the model (default: empty tuple)
+        kwargs: Keyword arguments for the model (default: empty dict)
+        config: Inference configuration (default: default InferenceConfig)
+        key: JAX random key (created automatically if None)
 
     Returns:
-        Tuple of (mcmc, posterior_samples)
+        A tuple containing:
+            - mcmc: The MCMC object after inference
+            - posterior_samples: Dictionary of posterior samples
     """
+    # Initialize kwargs if None
+    if kwargs is None:
+        kwargs = {}
+
+    # Initialize config if None
+    if config is None:
+        config = InferenceConfig(method="mcmc")
+
+    # Initialize key if None
+    if key is None:
+        key = jax.random.PRNGKey(0)
+
+    # Handle model configuration dictionary
+    if isinstance(model, dict):
+        # Create model from configuration
+        model_fn = create_model(model)
+    else:
+        # Use model function directly
+        model_fn = model
+
     # Create MCMC object
     mcmc = create_mcmc(
-        model=model,
+        model=model_fn,
         num_warmup=config.num_warmup,
         num_samples=config.num_samples,
         num_chains=config.num_chains,

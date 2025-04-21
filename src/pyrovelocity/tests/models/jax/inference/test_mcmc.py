@@ -2,21 +2,22 @@
 Tests for the MCMC inference components.
 """
 
-import pytest
 import jax
 import jax.numpy as jnp
 import numpyro
 import numpyro.distributions as dist
+import pytest
 from numpyro.infer import MCMC, NUTS
 
-from pyrovelocity.models.jax.inference.mcmc import (
-    create_mcmc,
-    run_mcmc_inference,
-    mcmc_diagnostics,
-    extract_posterior_samples,
-    create_inference_state,
-)
 from pyrovelocity.models.jax.core.state import InferenceConfig, InferenceState
+from pyrovelocity.models.jax.factory.factory import create_model
+from pyrovelocity.models.jax.inference.mcmc import (
+    create_inference_state,
+    create_mcmc,
+    extract_posterior_samples,
+    mcmc_diagnostics,
+    run_mcmc_inference,
+)
 
 
 # Simple model for testing
@@ -82,7 +83,7 @@ def test_create_mcmc():
 
 
 def test_run_mcmc_inference(test_data):
-    """Test running MCMC inference."""
+    """Test running MCMC inference with direct model function."""
     # Get test data
     x = test_data
 
@@ -116,6 +117,74 @@ def test_run_mcmc_inference(test_data):
     # Check that posterior samples have the correct shape
     assert posterior_samples["alpha"].shape == (5,)
     assert posterior_samples["beta"].shape == (5,)
+
+
+def test_run_mcmc_inference_with_model_config(test_data):
+    """Test running MCMC inference with model configuration."""
+    # Get test data
+    x = test_data
+
+    # Create model configuration
+    model_config = {
+        "type": "simple",  # This would be a registered model type in a real scenario
+        "params": {
+            "num_data": 10,
+        }
+    }
+
+    # Create a simple model factory for testing
+    def create_model_mock(config):
+        """Simple model factory for testing."""
+        def model(x=None):
+            # Sample parameters
+            alpha = numpyro.sample("alpha", dist.LogNormal(0.0, 1.0))
+            beta = numpyro.sample("beta", dist.LogNormal(0.0, 1.0))
+
+            # Sample observations
+            with numpyro.plate("data", config["params"]["num_data"]):
+                if x is not None:
+                    numpyro.sample("x_obs", dist.Poisson(alpha * beta), obs=x)
+
+            # Return expected values
+            return {"expected": alpha * beta}
+
+        return model
+
+    # Create inference config
+    config = InferenceConfig(
+        method="mcmc",
+        num_samples=5,
+        num_warmup=5,
+        num_chains=1,
+    )
+
+    # Patch the create_model function in the mcmc module
+    import pyrovelocity.models.jax.inference.mcmc as mcmc_module
+    original_create_model = mcmc_module.create_model
+    mcmc_module.create_model = create_model_mock
+
+    try:
+        # Run MCMC inference with model configuration
+        mcmc, posterior_samples = run_mcmc_inference(
+            model=model_config,
+            kwargs={"x": x},
+            config=config,
+            key=jax.random.PRNGKey(0),
+        )
+
+        # Check that MCMC object is an MCMC
+        assert isinstance(mcmc, MCMC)
+
+        # Check that posterior samples are present
+        assert "alpha" in posterior_samples
+        assert "beta" in posterior_samples
+
+        # Check that posterior samples have the correct shape
+        assert posterior_samples["alpha"].shape == (5,)
+        assert posterior_samples["beta"].shape == (5,)
+    finally:
+        # Restore the original create_model function
+        mcmc_module.create_model = original_create_model
 
 
 def test_mcmc_diagnostics(test_data):
