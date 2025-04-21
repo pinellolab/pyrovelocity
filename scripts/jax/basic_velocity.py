@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import scanpy as sc
 import anndata
 import numpy as np
+import scvelo as scv
 from importlib.resources import files
 
 from pyrovelocity.models.jax import (
@@ -173,10 +174,10 @@ def main():
     
     # Check if 'clusters' exists in the AnnData object
     if 'clusters' in adata_out.obs.columns:
-        sc.pl.velocity_embedding_stream(adata_out, basis="umap", color="clusters")
+        scv.pl.velocity_embedding_stream(adata_out, basis="umap", color="clusters")
     else:
         # Use a default color if 'clusters' doesn't exist
-        sc.pl.velocity_embedding_stream(adata_out, basis="umap")
+        scv.pl.velocity_embedding_stream(adata_out, basis="umap")
     
     # 10. Save results
     output_path = "velocity_results_svi.h5ad"
