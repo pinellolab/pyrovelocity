@@ -8,16 +8,23 @@ This module contains functional training loop implementations, including:
 - train_with_early_stopping: Train with early stopping
 """
 
-from typing import Dict, Tuple, Optional, Any, List, Union, Callable
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+
 import jax
 import jax.numpy as jnp
 import numpyro
-from numpyro.infer import SVI
-from jaxtyping import Array, Float, PyTree
 from beartype import beartype
+from jaxtyping import Array, Float, PyTree
+from numpyro.infer import SVI
 
-from pyrovelocity.models.jax.core.state import TrainingState, InferenceConfig
-from pyrovelocity.models.jax.inference.svi import svi_step
+from pyrovelocity.models.jax.core.state import InferenceConfig, TrainingState
+from pyrovelocity.models.jax.factory.factory import create_model
+from pyrovelocity.models.jax.inference.guide import create_guide
+from pyrovelocity.models.jax.inference.svi import (
+    create_svi,
+    run_svi_inference,
+    svi_step,
+)
 
 # We can't JIT-compile the SVI step directly because the SVI object is not a JAX array
 # Instead, we'll use the svi_step function directly
@@ -25,30 +32,101 @@ from pyrovelocity.models.jax.inference.svi import svi_step
 
 @beartype
 def train_model(
-    svi: SVI,
-    initial_state: TrainingState,
-    data: Dict[str, jnp.ndarray],
-    num_epochs: int,
+    model: Union[Callable, Dict[str, Any], SVI],
+    initial_state: Optional[TrainingState] = None,
+    data: Dict[str, jnp.ndarray] = None,
+    num_epochs: int = 100,
     batch_size: Optional[int] = None,
     early_stopping: bool = True,
     early_stopping_patience: int = 10,
+    guide: Optional[Union[Callable, str]] = None,
+    optimizer: Optional[str] = "adam",
+    learning_rate: float = 0.01,
     verbose: bool = True,
+    key: Optional[jnp.ndarray] = None,
 ) -> TrainingState:
     """Train a model using functional SVI.
 
+    This function trains a model using Stochastic Variational Inference (SVI). It supports
+    both direct model functions, model configurations, and pre-created SVI objects.
+
     Args:
-        svi: SVI object
-        initial_state: Initial training state
+        model: Either a NumPyro model function, a model configuration dictionary, or an SVI object
+        initial_state: Initial training state (created automatically if None)
         data: Dictionary of data arrays
-        num_epochs: Number of epochs
-        batch_size: Batch size
+        num_epochs: Number of epochs to train for
+        batch_size: Batch size for mini-batch training (None for full-batch)
         early_stopping: Whether to use early stopping
         early_stopping_patience: Patience for early stopping
+        guide: Guide function or guide type string (used if model is not an SVI object)
+        optimizer: Optimizer name (used if model is not an SVI object)
+        learning_rate: Learning rate for the optimizer
         verbose: Whether to print progress
+        key: JAX random key (created automatically if None)
 
     Returns:
         Final training state
     """
+    # Initialize data if None
+    if data is None:
+        data = {}
+
+    # Initialize key if None
+    if key is None:
+        key = jax.random.PRNGKey(0)
+
+    # Create SVI object if not provided
+    svi_obj = None
+    if isinstance(model, SVI):
+        # Use the provided SVI object
+        svi_obj = model
+    else:
+        # Create model function if needed
+        if isinstance(model, dict):
+            # Create model from configuration
+            model_fn = create_model(model)
+        else:
+            # Use model function directly
+            model_fn = model
+
+        # Create guide if needed
+        if guide is None:
+            # Use auto_normal guide by default
+            guide_fn = create_guide(model_fn, guide_type="auto_normal")
+        elif isinstance(guide, str):
+            # Create guide from type string
+            guide_fn = create_guide(model_fn, guide_type=guide)
+        else:
+            # Use guide function directly
+            guide_fn = guide
+
+        # Create SVI object
+        svi_obj = create_svi(
+            model=model_fn,
+            guide=guide_fn,
+            optimizer=optimizer,
+            learning_rate=learning_rate,
+        )
+
+    # Create initial state if None
+    if initial_state is None:
+        # Initialize parameters
+        params = svi_obj.init(key, **data)
+
+        # Create optimizer state
+        opt_state = svi_obj.optim.init(params)
+
+        # Create initial state
+        initial_state = TrainingState(
+            step=0,
+            params=params,
+            opt_state=opt_state,
+            loss_history=[],
+            best_params=None,
+            best_loss=None,
+            key=key,
+        )
+
     # If early stopping is enabled, we need to split the data into train and validation sets
     if early_stopping:
         # For simplicity, use 90% of data for training and 10% for validation
@@ -84,7 +162,7 @@ def train_model(
 
         # Train with early stopping
         return train_with_early_stopping(
-            svi=svi,
+            svi=svi_obj,
             initial_state=initial_state,
             train_data=train_data,
             val_data=val_data,
@@ -101,7 +179,7 @@ def train_model(
         for epoch in range(num_epochs):
             # Train for one epoch
             prev_step = state.step
-            state = train_epoch(svi, state, data, batch_size)
+            state = train_epoch(svi_obj, state, data, batch_size)
 
             # Ensure step count is incremented
             if state.step == prev_step:
@@ -110,7 +188,7 @@ def train_model(
             # Print progress if verbose
             if verbose and (epoch + 1) % max(1, num_epochs // 10) == 0:
                 try:
-                    loss = evaluate_model(svi, state, data)
+                    loss = evaluate_model(svi_obj, state, data)
                     print(f"Epoch {epoch+1}/{num_epochs}: loss={loss:.4f}")
                 except Exception as e:
                     print(f"Error evaluating model: {e}")

@@ -9,21 +9,21 @@ This module contains tests for the training loop utilities, including:
 - test_train_model: Test model training
 """
 
-import pytest
 import jax
 import jax.numpy as jnp
 import numpy as np
 import numpyro
 import numpyro.distributions as dist
+import pytest
 from numpyro.infer import SVI, Trace_ELBO, autoguide
 
-from pyrovelocity.models.jax.train.loop import (
-    train_epoch,
-    evaluate_model,
-    train_with_early_stopping,
-    train_model,
-)
 from pyrovelocity.models.jax.core.state import TrainingState
+from pyrovelocity.models.jax.train.loop import (
+    evaluate_model,
+    train_epoch,
+    train_model,
+    train_with_early_stopping,
+)
 
 
 # Define a simple model for testing
@@ -200,15 +200,15 @@ def test_train_with_early_stopping(svi_fixture):
 
 
 def test_train_model_with_early_stopping(svi_fixture):
-    """Test model training with early stopping."""
+    """Test model training with early stopping using SVI object."""
     svi, initial_state, data = svi_fixture
 
     # Train model with early stopping
     num_epochs = 10
     final_state = train_model(
-        svi,
-        initial_state,
-        data,
+        model=svi,
+        initial_state=initial_state,
+        data=data,
         num_epochs=num_epochs,
         early_stopping=True,
         early_stopping_patience=3,
@@ -227,16 +227,105 @@ def test_train_model_with_early_stopping(svi_fixture):
     # assert final_state.best_loss is not None
 
 
+def test_train_model_with_model_function(svi_fixture):
+    """Test model training with model function."""
+    _, _, data = svi_fixture
+
+    # Set random seed for reproducibility
+    key = jax.random.PRNGKey(0)
+
+    # Train model with model function
+    num_epochs = 5
+    final_state = train_model(
+        model=simple_model,
+        data=data,
+        num_epochs=num_epochs,
+        early_stopping=False,
+        verbose=False,
+        key=key,
+    )
+
+    # Check that state was updated
+    assert final_state.step == num_epochs
+    assert len(final_state.loss_history) == num_epochs
+
+
+def test_train_model_with_model_config(svi_fixture):
+    """Test model training with model configuration."""
+    _, _, data = svi_fixture
+
+    # Create model configuration
+    model_config = {
+        "type": "simple",  # This would be a registered model type in a real scenario
+        "params": {
+            "num_data": len(data["x_data"]),
+        }
+    }
+
+    # Create a simple model factory for testing
+    def create_model_mock(config):
+        """Simple model factory for testing."""
+        def model(**kwargs):
+            # Extract data from kwargs
+            x_data = kwargs.get("x_data", None)
+            y_data = kwargs.get("y_data", None)
+
+            if x_data is None or y_data is None:
+                return None
+
+            # Sample parameters
+            w = numpyro.sample("w", dist.Normal(0.0, 1.0))
+            b = numpyro.sample("b", dist.Normal(0.0, 1.0))
+
+            # Compute mean
+            mean = w * x_data + b
+
+            # Sample observations
+            with numpyro.plate("data", x_data.shape[0]):
+                numpyro.sample("y", dist.Normal(mean, 0.1), obs=y_data)
+
+            return mean
+
+        return model
+
+    # Patch the create_model function in the loop module
+    import pyrovelocity.models.jax.train.loop as loop_module
+    original_create_model = loop_module.create_model
+    loop_module.create_model = create_model_mock
+
+    try:
+        # Set random seed for reproducibility
+        key = jax.random.PRNGKey(0)
+
+        # Train model with model configuration
+        num_epochs = 5
+        final_state = train_model(
+            model=model_config,
+            data=data,
+            num_epochs=num_epochs,
+            early_stopping=False,
+            verbose=False,
+            key=key,
+        )
+
+        # Check that state was updated
+        assert final_state.step == num_epochs
+        assert len(final_state.loss_history) == num_epochs
+    finally:
+        # Restore the original create_model function
+        loop_module.create_model = original_create_model
+
+
 def test_train_model_without_early_stopping(svi_fixture):
-    """Test model training without early stopping."""
+    """Test model training without early stopping using SVI object."""
     svi, initial_state, data = svi_fixture
 
     # Train model without early stopping
     num_epochs = 5
     final_state = train_model(
-        svi,
-        initial_state,
-        data,
+        model=svi,
+        initial_state=initial_state,
+        data=data,
         num_epochs=num_epochs,
         early_stopping=False,
         verbose=False,
