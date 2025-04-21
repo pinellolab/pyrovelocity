@@ -18,7 +18,7 @@ from numpyro.infer import MCMC, NUTS, init_to_value
 from pyrovelocity.models.jax import (
     # Core components
     create_key,
-    
+
     # Factory system
     DynamicsFunctionConfig,
     PriorFunctionConfig,
@@ -68,19 +68,21 @@ def main():
     # Get the standard dynamics function from the registry
     from pyrovelocity.models.jax.registry import get_dynamics
     standard_dynamics_fn = get_dynamics("standard")
-    
+
     # Apply dynamics model to get expected counts
     u_expected, s_expected = standard_dynamics_fn(
         tau_expanded, u0_expanded, s0_expanded, expanded_params
     )
 
-    # Generate observed counts
+    # Generate observed counts (ensure positive values)
     key, subkey = jax.random.split(key)
-    u_obs = jax.random.poisson(subkey, u_expected)
+    u_expected_pos = jnp.maximum(u_expected, 1e-6)  # Ensure positive values
+    u_obs = jax.random.poisson(subkey, u_expected_pos)
 
     key, subkey = jax.random.split(key)
-    s_obs = jax.random.poisson(subkey, s_expected)
-    
+    s_expected_pos = jnp.maximum(s_expected, 1e-6)  # Ensure positive values
+    s_obs = jax.random.poisson(subkey, s_expected_pos)
+
     # Add batch dimension for the model
     u_obs = u_obs[jnp.newaxis, :, :]  # Shape: (1, n_cells, n_genes)
     s_obs = s_obs[jnp.newaxis, :, :]  # Shape: (1, n_cells, n_genes)
@@ -116,7 +118,7 @@ def main():
             params={"init_scale": 0.1}
         ),
     )
-    
+
     # Create the model
     model = create_model(model_config)
 
@@ -168,7 +170,7 @@ def main():
     plt.tight_layout()
     plt.savefig("factory_mcmc_velocity_results.png")
     plt.close()
-    
+
     print("Results saved to factory_mcmc_velocity_results.png")
 
 
