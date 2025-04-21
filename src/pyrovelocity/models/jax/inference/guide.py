@@ -35,36 +35,8 @@ def auto_normal_guide(
     """
     # Define a custom initialization function if none is provided
     if init_loc_fn is None:
-        def robust_init_fn(site):
-            # Default shape for parameters (scalar)
-            default_shape = ()
-            
-            # Get shape from site if available
-            if "value" in site and site["value"] is not None:
-                shape = site["value"].shape
-            elif "fn" in site and hasattr(site["fn"], "shape"):
-                shape = site["fn"].shape
-            else:
-                # For alpha, beta, gamma, use a shape of (7,) for 7 genes
-                if site["name"] in ["alpha", "beta", "gamma"]:
-                    shape = (7,)  # Hardcoded for this example with 7 genes
-                # For tau, use a shape of (50,) for 50 cells
-                elif site["name"] == "tau":
-                    shape = (50,)  # Hardcoded for this example with 50 cells
-                else:
-                    shape = default_shape
-            
-            # For parameters that are expected to be positive (alpha, beta, gamma),
-            # initialize with small positive values
-            if site["name"] in ["alpha", "beta", "gamma"]:
-                # Initialize with values between 0.1 and 1.0
-                return jnp.ones(shape) * 0.5
-            # For latent time, initialize uniformly between 0 and 1
-            elif site["name"] == "tau":
-                return jnp.zeros(shape)
-            # For other parameters, use small values centered at 0
-            else:
-                return jnp.zeros(shape)
+        # Use a simpler initialization approach
+        return numpyro.infer.autoguide.init_to_median
         
         # Create AutoNormal guide with robust initialization
         return numpyro.infer.autoguide.AutoNormal(model, init_loc_fn=robust_init_fn)
