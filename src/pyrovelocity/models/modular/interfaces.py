@@ -37,7 +37,8 @@ class DynamicsModel(Protocol):
     Protocol for dynamics models that define the RNA velocity equations.
 
     Dynamics models define the mathematical relationships between transcription,
-    splicing, and degradation rates in the RNA velocity model.
+    splicing, and degradation rates in the RNA velocity model. They implement
+    analytical or numerical solutions to the RNA velocity differential equations.
     """
 
     def forward(
@@ -49,6 +50,7 @@ class DynamicsModel(Protocol):
         gamma: ParamTensor,
         scaling: Optional[ParamTensor] = None,
         t: Optional[BatchTensor] = None,
+        **kwargs: Any,
     ) -> Tuple[BatchTensor, BatchTensor]:
         """
         Compute the expected unspliced and spliced RNA counts based on the dynamics model.
@@ -61,9 +63,31 @@ class DynamicsModel(Protocol):
             gamma: Degradation rate
             scaling: Optional scaling factor for the dynamics
             t: Optional time points for the dynamics
+            **kwargs: Additional model-specific parameters
 
         Returns:
             Tuple of (expected unspliced counts, expected spliced counts)
+        """
+        ...
+
+    def steady_state(
+        self,
+        alpha: ParamTensor,
+        beta: ParamTensor,
+        gamma: ParamTensor,
+        **kwargs: Any,
+    ) -> Tuple[ParamTensor, ParamTensor]:
+        """
+        Compute the steady-state unspliced and spliced RNA counts.
+
+        Args:
+            alpha: Transcription rate
+            beta: Splicing rate
+            gamma: Degradation rate
+            **kwargs: Additional model-specific parameters
+
+        Returns:
+            Tuple of (steady-state unspliced counts, steady-state spliced counts)
         """
         ...
 
