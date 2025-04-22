@@ -2,26 +2,25 @@
 
 import jax
 import jax.numpy as jnp
-import pytest
 import numpyro
+import pytest
 from beartype.roar import BeartypeCallHintParamViolation
 
-from pyrovelocity.models.jax.core.priors import sample_prior_parameters
-
-from pyrovelocity.models.jax.core.model import (
-    velocity_model,
-    create_model,
-)
-from pyrovelocity.models.jax.core.state import ModelConfig
 from pyrovelocity.models.jax.core.dynamics import (
-    standard_dynamics_model,
-    nonlinear_dynamics_model,
     dynamics_ode_model,
+    nonlinear_dynamics_model,
+    standard_dynamics_model,
 )
 from pyrovelocity.models.jax.core.likelihoods import (
-    poisson_likelihood,
     negative_binomial_likelihood,
+    poisson_likelihood,
 )
+from pyrovelocity.models.jax.core.model import (
+    create_model,
+    velocity_model,
+)
+from pyrovelocity.models.jax.core.priors import sample_prior_parameters
+from pyrovelocity.models.jax.core.state import ModelConfig
 
 
 def test_velocity_model_interface(cell_gene_data):
@@ -237,7 +236,6 @@ def test_model_config_likelihood_selection():
     assert config.likelihood == "negative_binomial"
 
 
-@pytest.mark.skip(reason="Nonlinear dynamics requires additional parameters")
 def test_model_with_different_dynamics(cell_gene_data):
     """Test model with different dynamics functions."""
     # Prepare test inputs
@@ -255,9 +253,6 @@ def test_model_with_different_dynamics(cell_gene_data):
             dynamics_fn=standard_dynamics_model,
         )
 
-    # Note: Nonlinear dynamics requires a 'scaling' parameter that would need
-    # to be added to the model. This is left for future implementation.
-
     # Test with ODE dynamics
     with numpyro.handlers.seed(rng_seed=0):
         result_ode = velocity_model(
@@ -267,7 +262,6 @@ def test_model_with_different_dynamics(cell_gene_data):
         )
 
     # Check that the results have the same structure
-    assert set(result_standard.keys()) == set(result_nonlinear.keys())
     assert set(result_standard.keys()) == set(result_ode.keys())
 
 
