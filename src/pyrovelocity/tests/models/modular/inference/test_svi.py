@@ -7,6 +7,12 @@ import pyro.distributions as dist
 import pytest
 import torch
 
+# These will be needed when we implement the guide tests
+# from pyrovelocity.models.modular.components.guides import (
+#     AutoGuideFactory,
+#     DeltaGuide,
+#     NormalGuide,
+# )
 from pyrovelocity.models.modular.inference.config import create_inference_config
 from pyrovelocity.models.modular.inference.svi import (
     TrainingState,
@@ -150,15 +156,15 @@ class TestSVI:
 
     def test_auto_guide_factory(self):
         """Test using AutoGuideFactory."""
-        # Skip this test for now as AutoGuideFactory is not implemented yet
-        pytest.skip("AutoGuideFactory not implemented yet")
+        # Skip this test for now as it requires more work to integrate with Pyro's AutoGuide
+        pytest.skip("AutoGuideFactory integration needs more work")
 
     def test_normal_guide(self):
         """Test using NormalGuide."""
-        # Skip this test for now as NormalGuide implementation is not complete
-        pytest.skip("NormalGuide implementation not complete")
+        # Skip this test for now as it requires more work to integrate with Pyro's guide system
+        pytest.skip("NormalGuide integration needs more work")
 
     def test_delta_guide(self):
         """Test using DeltaGuide."""
-        # Skip this test for now as DeltaGuide implementation is not complete
-        pytest.skip("DeltaGuide implementation not complete")
+        # Skip this test for now as it requires more work to integrate with Pyro's guide system
+        pytest.skip("DeltaGuide integration needs more work")
