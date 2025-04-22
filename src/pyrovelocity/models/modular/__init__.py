@@ -61,6 +61,7 @@ def _ensure_registrations():
     # handle registration, but importing the classes ensures decorators are executed
     pass
 
+
 # Call the function to ensure registrations
 _ensure_registrations()
 
@@ -68,10 +69,9 @@ __all__ = [
     # Component registries
     "DynamicsModelRegistry",
     "PriorModelRegistry",
-    "LikelihoodModelRegistry", 
+    "LikelihoodModelRegistry",
     "ObservationModelRegistry",
     "InferenceGuideRegistry",
-    
     # Component implementations
     "StandardDynamicsModel",
     "NonlinearDynamicsModel",
@@ -83,15 +83,12 @@ __all__ = [
     "AutoGuideFactory",
     "NormalGuide",
     "DeltaGuide",
-    
     # Factory functions
     "create_model",
     "create_standard_model",
     "standard_model_config",
-    
     # Adapters
     "LegacyModelAdapter",
-    
     # Comparison and selection
     "BayesianModelComparison",
     "compute_waic",

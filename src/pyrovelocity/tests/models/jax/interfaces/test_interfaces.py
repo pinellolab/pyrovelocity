@@ -43,7 +43,10 @@ def example_dynamics_function(
     u0: Float[Array, "batch_size n_cells n_genes"],
     s0: Float[Array, "batch_size n_cells n_genes"],
     params: Dict[str, Float[Array, "..."]],
-) -> Tuple[Float[Array, "batch_size n_cells n_genes"], Float[Array, "batch_size n_cells n_genes"]]:
+) -> Tuple[
+    Float[Array, "batch_size n_cells n_genes"],
+    Float[Array, "batch_size n_cells n_genes"],
+]:
     """Example dynamics function implementation for testing."""
     alpha = params["alpha"]
     beta = params["beta"]
@@ -55,9 +58,12 @@ def example_dynamics_function(
     gamma_expanded = gamma.reshape((1, 1, -1))
 
     # Compute dynamics
-    ut = u0 * jnp.exp(-beta_expanded * tau) + (alpha_expanded / beta_expanded) * (1 - jnp.exp(-beta_expanded * tau))
-    st = s0 * jnp.exp(-gamma_expanded * tau) + (beta_expanded * u0 / (gamma_expanded - beta_expanded)) * \
-         (jnp.exp(-beta_expanded * tau) - jnp.exp(-gamma_expanded * tau))
+    ut = u0 * jnp.exp(-beta_expanded * tau) + (
+        alpha_expanded / beta_expanded
+    ) * (1 - jnp.exp(-beta_expanded * tau))
+    st = s0 * jnp.exp(-gamma_expanded * tau) + (
+        beta_expanded * u0 / (gamma_expanded - beta_expanded)
+    ) * (jnp.exp(-beta_expanded * tau) - jnp.exp(-gamma_expanded * tau))
 
     return ut, st
 
@@ -81,9 +87,15 @@ def example_prior_function(
 
     key1, key2, key3 = jax.random.split(key, 3)
 
-    alpha = jnp.exp(jax.random.normal(key1, (num_genes,)) * alpha_scale + alpha_loc)
-    beta = jnp.exp(jax.random.normal(key2, (num_genes,)) * beta_scale + beta_loc)
-    gamma = jnp.exp(jax.random.normal(key3, (num_genes,)) * gamma_scale + gamma_loc)
+    alpha = jnp.exp(
+        jax.random.normal(key1, (num_genes,)) * alpha_scale + alpha_loc
+    )
+    beta = jnp.exp(
+        jax.random.normal(key2, (num_genes,)) * beta_scale + beta_loc
+    )
+    gamma = jnp.exp(
+        jax.random.normal(key3, (num_genes,)) * gamma_scale + gamma_loc
+    )
 
     return {"alpha": alpha, "beta": beta, "gamma": gamma}
 
@@ -107,7 +119,10 @@ def example_observation_function(
     u_obs: Float[Array, "batch_size n_cells n_genes"],
     s_obs: Float[Array, "batch_size n_cells n_genes"],
     observation_params: Optional[Dict[str, Any]] = None,
-) -> Tuple[Float[Array, "batch_size n_cells n_genes"], Float[Array, "batch_size n_cells n_genes"]]:
+) -> Tuple[
+    Float[Array, "batch_size n_cells n_genes"],
+    Float[Array, "batch_size n_cells n_genes"],
+]:
     """Example observation function implementation for testing."""
     # Simple normalization
     u_size_factor = jnp.sum(u_obs, axis=-1, keepdims=True)
@@ -246,6 +261,7 @@ def test_guide_factory_function_interface():
 
 def test_interface_validation_with_invalid_functions():
     """Test interface validation with invalid functions."""
+
     # Test with a function that doesn't match the dynamics function interface
     def invalid_dynamics_function(x, y):
         return x, y

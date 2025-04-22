@@ -242,21 +242,25 @@ class MockGuideModel(BaseInferenceGuide):
     def __call__(self, model, *args, **kwargs):
         """Create a guide function for the given model."""
         self._model = model
-        
+
         def guide_fn(*args, **kwargs):
             """Mock guide function."""
             # Register some dummy parameters
             alpha_loc = pyro.param("alpha_loc", torch.tensor(0.0))
             beta_loc = pyro.param("beta_loc", torch.tensor(0.0))
             gamma_loc = pyro.param("gamma_loc", torch.tensor(0.0))
-            
+
             # Sample from some dummy distributions
-            alpha = pyro.sample("alpha", dist.Normal(alpha_loc, torch.tensor(1.0)))
+            alpha = pyro.sample(
+                "alpha", dist.Normal(alpha_loc, torch.tensor(1.0))
+            )
             beta = pyro.sample("beta", dist.Normal(beta_loc, torch.tensor(1.0)))
-            gamma = pyro.sample("gamma", dist.Normal(gamma_loc, torch.tensor(1.0)))
-            
+            gamma = pyro.sample(
+                "gamma", dist.Normal(gamma_loc, torch.tensor(1.0))
+            )
+
             return {"alpha": alpha, "beta": beta, "gamma": gamma}
-        
+
         self._guide_fn = guide_fn
         return guide_fn
 
@@ -334,12 +338,20 @@ def pyro_velocity_model(component_models):
 def test_model_initialization(pyro_velocity_model, component_models):
     """Test that the model initializes correctly with component models."""
     # Check that the component models are correctly stored
-    assert pyro_velocity_model.dynamics_model == component_models["dynamics_model"]
+    assert (
+        pyro_velocity_model.dynamics_model == component_models["dynamics_model"]
+    )
     assert pyro_velocity_model.prior_model == component_models["prior_model"]
-    assert pyro_velocity_model.likelihood_model == component_models["likelihood_model"]
-    assert pyro_velocity_model.observation_model == component_models["observation_model"]
+    assert (
+        pyro_velocity_model.likelihood_model
+        == component_models["likelihood_model"]
+    )
+    assert (
+        pyro_velocity_model.observation_model
+        == component_models["observation_model"]
+    )
     assert pyro_velocity_model.guide_model == component_models["guide_model"]
-    
+
     # Check that the state is initialized correctly
     assert isinstance(pyro_velocity_model.state, ModelState)
     assert pyro_velocity_model.state.dynamics_state == {}
@@ -355,7 +367,7 @@ def test_model_forward(pyro_velocity_model, sample_data):
     context = pyro_velocity_model.forward(
         sample_data["x"], sample_data["time_points"]
     )
-    
+
     # Check that the context contains expected keys
     assert "x" in context
     assert "time_points" in context
@@ -364,7 +376,7 @@ def test_model_forward(pyro_velocity_model, sample_data):
     assert "alpha" in context
     assert "beta" in context
     assert "gamma" in context
-    
+
     # Check that the shapes are correct
     assert context["x"].shape == sample_data["x"].shape
     assert context["u"].shape == sample_data["x"].shape
@@ -378,24 +390,24 @@ def test_model_guide(pyro_velocity_model, sample_data):
     """Test the guide method of the model."""
     # Reset pyro to avoid parameter name conflicts
     pyro.clear_param_store()
-    
+
     # Set up the guide
     pyro_velocity_model.guide_model.setup_guide(
         model=lambda: None  # Dummy model function
     )
-    
+
     # Run guide method
     context = pyro_velocity_model.guide(
         sample_data["x"], sample_data["time_points"]
     )
-    
+
     # Check that the context contains expected keys
     assert "x" in context
     assert "time_points" in context
-    
+
     # Verify that the guide can generate samples
     samples = pyro_velocity_model.guide_model.sample_posterior(num_samples=10)
-    
+
     # Check that samples contain expected keys
     assert isinstance(samples, dict)
     assert len(samples) > 0  # This should now pass with our implementation
@@ -413,17 +425,17 @@ def test_model_with_state(pyro_velocity_model):
         guide_state={"param5": 5.0},
         metadata={"meta1": "value1"},
     )
-    
+
     # Create a new model with the updated state
     new_model = pyro_velocity_model.with_state(new_state)
-    
+
     # Check that the original model's state is unchanged
     assert pyro_velocity_model.state.dynamics_state == {}
     assert pyro_velocity_model.state.prior_state == {}
     assert pyro_velocity_model.state.likelihood_state == {}
     assert pyro_velocity_model.state.observation_state == {}
     assert pyro_velocity_model.state.guide_state == {}
-    
+
     # Check that the new model has the updated state
     assert new_model.state.dynamics_state == {"param1": 1.0}
     assert new_model.state.prior_state == {"param2": 2.0}
@@ -431,7 +443,7 @@ def test_model_with_state(pyro_velocity_model):
     assert new_model.state.observation_state == {"param4": 4.0}
     assert new_model.state.guide_state == {"param5": 5.0}
     assert new_model.state.metadata == {"meta1": "value1"}
-    
+
     # Check that the component models are the same
     assert new_model.dynamics_model == pyro_velocity_model.dynamics_model
     assert new_model.prior_model == pyro_velocity_model.prior_model
@@ -450,22 +462,20 @@ def test_model_composition(component_models, sample_data):
         observation_model=component_models["observation_model"],
         guide_model=component_models["guide_model"],
     )
-    
+
     # Run forward pass
-    context = model.forward(
-        sample_data["x"], sample_data["time_points"]
-    )
-    
+    context = model.forward(sample_data["x"], sample_data["time_points"])
+
     # Check that the context has been processed by each component
     # First by observation model (adds u and s)
     assert "u" in context
     assert "s" in context
-    
+
     # Then by prior model (adds alpha, beta, gamma)
     assert "alpha" in context
     assert "beta" in context
     assert "gamma" in context
-    
+
     # Check that the component models have processed the data correctly
     assert jnp.array_equal(context["u"], sample_data["x"])
     assert jnp.array_equal(context["s"], sample_data["x"])

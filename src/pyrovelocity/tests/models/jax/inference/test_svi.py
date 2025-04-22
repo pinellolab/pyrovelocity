@@ -138,12 +138,13 @@ def test_run_svi_inference_with_model_config():
         "type": "simple",  # This would be a registered model type in a real scenario
         "params": {
             "num_data": 10,
-        }
+        },
     }
 
     # Create a simple model factory for testing
     def create_model(config):
         """Simple model factory for testing."""
+
         def model(x=None):
             # Sample parameters
             alpha = numpyro.sample("alpha", dist.LogNormal(0.0, 1.0))
@@ -174,11 +175,13 @@ def test_run_svi_inference_with_model_config():
 
     # Patch the create_model function in the svi module
     import pyrovelocity.models.jax.inference.svi as svi_module
+
     original_create_model = svi_module.create_model
     svi_module.create_model = create_model
 
     # Also patch the create_guide function to not use the key parameter
     import pyrovelocity.models.jax.inference.guide as guide_module
+
     original_create_guide = guide_module.create_guide
 
     def patched_create_guide(model, guide_type="auto_normal", **kwargs):
@@ -216,6 +219,7 @@ def test_run_svi_inference_with_model_config():
 
 def test_extract_posterior_samples():
     """Test extracting posterior samples from a guide."""
+
     # Create a simple guide
     def guide():
         alpha = numpyro.sample("alpha", dist.Normal(0.0, 1.0))
@@ -223,7 +227,12 @@ def test_extract_posterior_samples():
         return alpha, beta
 
     # Create parameters
-    params = {"alpha_loc": 0.0, "alpha_scale": 1.0, "beta_loc": 0.0, "beta_scale": 1.0}
+    params = {
+        "alpha_loc": 0.0,
+        "alpha_scale": 1.0,
+        "beta_loc": 0.0,
+        "beta_scale": 1.0,
+    }
 
     # Create key
     key = jax.random.PRNGKey(0)

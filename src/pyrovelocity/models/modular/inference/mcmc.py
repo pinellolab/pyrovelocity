@@ -59,7 +59,7 @@ def create_mcmc(
         num_samples=num_samples,
         warmup_steps=num_warmup,
         num_chains=num_chains,
-        disable_progbar=not progress_bar
+        disable_progbar=not progress_bar,
     )
 
 
@@ -182,9 +182,13 @@ def extract_posterior_samples(
     samples = mcmc.get_samples()
 
     # Subsample if num_samples is specified
-    if num_samples is not None and num_samples < len(next(iter(samples.values()))):
+    if num_samples is not None and num_samples < len(
+        next(iter(samples.values()))
+    ):
         # Get indices for subsampling
-        indices = torch.randperm(len(next(iter(samples.values()))))[:num_samples]
+        indices = torch.randperm(len(next(iter(samples.values()))))[
+            :num_samples
+        ]
 
         # Subsample
         samples = {k: v[indices] for k, v in samples.items()}

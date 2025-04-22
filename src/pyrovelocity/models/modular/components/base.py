@@ -187,7 +187,14 @@ class BaseDynamicsModel(BaseComponent, DynamicsModel, abc.ABC):
         """
         # Validate inputs
         validation_result = self.validate_inputs(
-            u=u, s=s, alpha=alpha, beta=beta, gamma=gamma, scaling=scaling, t=t, **kwargs
+            u=u,
+            s=s,
+            alpha=alpha,
+            beta=beta,
+            gamma=gamma,
+            scaling=scaling,
+            t=t,
+            **kwargs,
         )
 
         if validation_result.is_error():
@@ -196,7 +203,9 @@ class BaseDynamicsModel(BaseComponent, DynamicsModel, abc.ABC):
             )
 
         # Call implementation
-        return self._forward_impl(u, s, alpha, beta, gamma, scaling, t, **kwargs)
+        return self._forward_impl(
+            u, s, alpha, beta, gamma, scaling, t, **kwargs
+        )
 
     @abc.abstractmethod
     def _forward_impl(
@@ -427,7 +436,9 @@ class BasePriorModel(BaseComponent, PriorModel, PyroBufferMixin, abc.ABC):
         pass
 
     @beartype
-    def sample_parameters(self, prefix: str = "", n_genes: Optional[int] = None) -> Dict[str, Any]:
+    def sample_parameters(
+        self, prefix: str = "", n_genes: Optional[int] = None
+    ) -> Dict[str, Any]:
         """
         Sample parameters from prior distributions.
 
@@ -448,7 +459,9 @@ class BasePriorModel(BaseComponent, PriorModel, PyroBufferMixin, abc.ABC):
             raise ValueError(f"Failed to sample parameters") from e
 
     @abc.abstractmethod
-    def _sample_parameters_impl(self, prefix: str = "", n_genes: Optional[int] = None) -> Dict[str, Any]:
+    def _sample_parameters_impl(
+        self, prefix: str = "", n_genes: Optional[int] = None
+    ) -> Dict[str, Any]:
         """
         Implementation of parameter sampling.
 

@@ -112,7 +112,9 @@ def create_inference_config(
 
 
 @beartype
-def validate_config(config: Union[InferenceConfig, Dict[str, Any]]) -> InferenceConfig:
+def validate_config(
+    config: Union[InferenceConfig, Dict[str, Any]]
+) -> InferenceConfig:
     """
     Validate an inference configuration.
 
@@ -152,7 +154,9 @@ def validate_config(config: Union[InferenceConfig, Dict[str, Any]]) -> Inference
     # Validate MCMC parameters if using MCMC
     if config.method == "mcmc":
         if config.num_warmup <= 0:
-            raise ValueError(f"Invalid number of warmup steps: {config.num_warmup}")
+            raise ValueError(
+                f"Invalid number of warmup steps: {config.num_warmup}"
+            )
         if config.num_chains <= 0:
             raise ValueError(f"Invalid number of chains: {config.num_chains}")
         if config.chain_method not in ["parallel", "sequential"]:

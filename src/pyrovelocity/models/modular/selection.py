@@ -227,10 +227,13 @@ class ModelEnsemble:
         # Validate models
         if not self.models:
             raise ValueError("At least one model must be provided")
-        
-        if not all(isinstance(model, PyroVelocityModel) for model in self.models.values()):
+
+        if not all(
+            isinstance(model, PyroVelocityModel)
+            for model in self.models.values()
+        ):
             raise TypeError("All models must be instances of PyroVelocityModel")
-            
+
         # If weights are not provided, use equal weights
         if self.weights is None:
             self.weights = {
@@ -242,7 +245,7 @@ class ModelEnsemble:
             raise ValueError(
                 "Model names in weights must match model names in models"
             )
-            
+
         # Check for negative weights
         if any(weight < 0 for weight in self.weights.values()):
             raise ValueError("All weights must be non-negative")
@@ -255,11 +258,7 @@ class ModelEnsemble:
 
     @beartype
     def predict(
-        self,
-        x: Any,
-        time_points: Optional[Any] = None,
-        *args,
-        **kwargs
+        self, x: Any, time_points: Optional[Any] = None, *args, **kwargs
     ) -> torch.Tensor:
         """
         Generate ensemble predictions by aggregating individual model predictions.
@@ -275,30 +274,26 @@ class ModelEnsemble:
         """
         # Initialize container for weighted predictions
         weighted_preds = None
-        
+
         # Generate predictions from each model
         for model_name, model in self.models.items():
             # Get model prediction
             model_pred = model.predict(x, *args, **kwargs)
-            
+
             # Get weight for this model
             weight = self.weights[model_name]
-            
+
             # Add weighted prediction
             if weighted_preds is None:
                 weighted_preds = weight * model_pred
             else:
                 weighted_preds += weight * model_pred
-        
+
         return weighted_preds
-    
+
     @beartype
     def predict_future_states(
-        self,
-        current_state: Any,
-        time_delta: Any,
-        *args,
-        **kwargs
+        self, current_state: Any, time_delta: Any, *args, **kwargs
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Generate ensemble future state predictions by aggregating individual model predictions.
@@ -315,15 +310,17 @@ class ModelEnsemble:
         # Initialize containers for weighted predictions
         weighted_u_future = None
         weighted_s_future = None
-        
+
         # Generate predictions from each model
         for model_name, model in self.models.items():
             # Get model prediction
-            u_future, s_future = model.predict_future_states(current_state, time_delta, *args, **kwargs)
-            
+            u_future, s_future = model.predict_future_states(
+                current_state, time_delta, *args, **kwargs
+            )
+
             # Get weight for this model
             weight = self.weights[model_name]
-            
+
             # Add weighted prediction
             if weighted_u_future is None:
                 weighted_u_future = weight * u_future
@@ -331,7 +328,7 @@ class ModelEnsemble:
             else:
                 weighted_u_future += weight * u_future
                 weighted_s_future += weight * s_future
-        
+
         return (weighted_u_future, weighted_s_future)
 
     @beartype
@@ -348,12 +345,12 @@ class ModelEnsemble:
         """
         # Initialize containers for all samples
         all_samples = {}
-        
+
         # Collect posterior samples from each model
         for model_name, model in self.models.items():
             # Get posterior samples for this model
             model_samples = model.result.posterior_samples
-            
+
             # For each parameter, concatenate samples across models
             for param_name, param_samples in model_samples.items():
                 if param_name not in all_samples:
@@ -361,17 +358,14 @@ class ModelEnsemble:
                 else:
                     # Concatenate along the second dimension (model dimensions)
                     all_samples[param_name] = torch.cat(
-                        [all_samples[param_name], param_samples],
-                        dim=1
+                        [all_samples[param_name], param_samples], dim=1
                     )
-        
+
         return all_samples
 
     @beartype
     def calculate_weights_from_comparison(
-        self,
-        comparison_result: ComparisonResult,
-        criterion: str = "WAIC"
+        self, comparison_result: ComparisonResult, criterion: str = "WAIC"
     ) -> Dict[str, float]:
         """
         Calculate model weights based on comparison metrics.
@@ -391,10 +385,10 @@ class ModelEnsemble:
         """
         # Convert criterion to lowercase for case-insensitive comparison
         criterion = criterion.lower()
-        
+
         # Extract metric values from comparison result
         metric_values = comparison_result.values
-        
+
         # For metrics where lower is better, invert the values
         if criterion in ["waic", "loo", "cv_error"]:
             # Add a small constant to avoid division by zero
@@ -406,7 +400,7 @@ class ModelEnsemble:
         else:
             # For metrics where higher is better, use values directly
             raw_weights = metric_values
-        
+
         # Normalize weights to sum to 1
         return self._normalize_weights(raw_weights)
 
@@ -532,7 +526,9 @@ class ModelEnsemble:
 
     def __str__(self) -> str:
         """Get string representation of the model ensemble."""
-        model_weights_str = ", ".join(f"{name}: {weight}" for name, weight in self.weights.items())
+        model_weights_str = ", ".join(
+            f"{name}: {weight}" for name, weight in self.weights.items()
+        )
         return f"ModelEnsemble(models={len(self.models)} models, weights=[{model_weights_str}])"
 
     @staticmethod
@@ -547,12 +543,12 @@ class ModelEnsemble:
             Dictionary with normalized weights that sum to 1
         """
         total = sum(weights.values())
-        
+
         # If all weights are zero, use equal weights
         if total == 0:
             n_models = len(weights)
             return {name: 1.0 / n_models for name in weights}
-        
+
         # Otherwise, normalize by dividing by the sum
         return {name: weight / total for name, weight in weights.items()}
 
@@ -691,7 +687,7 @@ class ModelEnsemble:
 class CrossValidator:
     """
     Class for performing cross-validation of PyroVelocity models.
-    
+
     This class provides methods for creating train-test splits, evaluating models on cross-validation
     folds, and selecting the best model based on cross-validation results.
     """
@@ -706,7 +702,7 @@ class CrossValidator:
     ):
         """
         Initialize the cross-validator.
-        
+
         Args:
             models: Dictionary mapping model names to PyroVelocityModel instances (optional)
             n_splits: Number of cross-validation folds
@@ -727,10 +723,10 @@ class CrossValidator:
     ) -> Union[KFold, StratifiedKFold]:
         """
         Get the cross-validation splitter object.
-        
+
         Args:
             adata: AnnData object containing cell metadata for stratification
-            
+
         Returns:
             Cross-validation splitter object
         """
@@ -747,7 +743,7 @@ class CrossValidator:
                 raise ValueError(
                     f"Stratification column '{self.stratify_by}' not found in adata.obs"
                 )
-                
+
             return StratifiedKFold(
                 n_splits=self.n_splits,
                 shuffle=True,
@@ -761,32 +757,34 @@ class CrossValidator:
     ) -> List[Dict[str, np.ndarray]]:
         """
         Create train-test splits for cross-validation.
-        
+
         Args:
             adata: AnnData object containing cell metadata
-            
+
         Returns:
             List of dictionaries with train and test indices for each fold
         """
         # Get CV splitter
         cv_splitter = self._get_cv_splitter(adata)
-        
+
         # Create array of indices
         indices = np.arange(adata.n_obs)
-        
+
         # Get stratification labels if needed
         y = None
         if self.stratify_by is not None:
             y = adata.obs[self.stratify_by].values
-        
+
         # Create splits
         splits = []
         for train_idx, test_idx in cv_splitter.split(indices, y):
-            splits.append({
-                "train_indices": train_idx,
-                "test_indices": test_idx,
-            })
-        
+            splits.append(
+                {
+                    "train_indices": train_idx,
+                    "test_indices": test_idx,
+                }
+            )
+
         return splits
 
     @beartype
@@ -798,12 +796,12 @@ class CrossValidator:
     ) -> Dict[str, float]:
         """
         Evaluate a model on a single cross-validation fold.
-        
+
         Args:
             model: PyroVelocityModel to evaluate
             adata: AnnData object containing data
             split: Dictionary with train and test indices
-            
+
         Returns:
             Dictionary with evaluation metrics
         """
@@ -812,13 +810,13 @@ class CrossValidator:
             adata=adata,
             indices=split["train_indices"],
         )
-        
+
         # Evaluate on test data
         eval_metrics = model.evaluate(
             adata=adata,
             indices=split["test_indices"],
         )
-        
+
         return eval_metrics
 
     @beartype
@@ -828,26 +826,26 @@ class CrossValidator:
     ) -> Dict[str, Dict[str, Dict[str, float]]]:
         """
         Perform cross-validation on all models.
-        
+
         Args:
             adata: AnnData object containing data
-            
+
         Returns:
             Dictionary mapping model names to fold results
         """
         # Create train-test splits
         splits = self._create_train_test_splits(adata)
-        
+
         # Initialize results
         results = {}
-        
+
         # Evaluate each model on each fold
         for name, model in self.models.items():
             results[name] = {}
             for i, split in enumerate(splits):
                 fold_metrics = self._evaluate_model_fold(model, adata, split)
                 results[name][f"fold_{i}"] = fold_metrics
-                
+
         return results
 
     @beartype
@@ -858,24 +856,24 @@ class CrossValidator:
     ) -> Tuple[PyroVelocityModel, Dict[str, float]]:
         """
         Perform cross-validation and select the best model.
-        
+
         Args:
             adata: AnnData object containing data
             metric: Metric to use for model selection
-            
+
         Returns:
             Tuple of (best model, average scores)
         """
         # Perform cross-validation
         cv_results = self.cross_validate(adata)
-        
+
         # Compute average scores
         avg_scores = self._compute_average_scores(cv_results, metric)
-        
+
         # Select best model
         best_model_name = max(avg_scores, key=avg_scores.get)
         best_model = self.models[best_model_name]
-        
+
         return best_model, avg_scores
 
     @beartype
@@ -886,30 +884,32 @@ class CrossValidator:
     ) -> Dict[str, float]:
         """
         Compute average scores for each model across folds.
-        
+
         Args:
             cv_results: Cross-validation results
             metric: Metric to average
-            
+
         Returns:
             Dictionary mapping model names to average scores
         """
         avg_scores = {}
-        
+
         for model_name, fold_results in cv_results.items():
             # Extract metric values for each fold
             metric_values = []
-            
+
             for fold_name, metrics in fold_results.items():
                 # Check if metric exists
                 if metric not in metrics:
-                    raise KeyError(f"Metric '{metric}' not found in fold results")
-                    
+                    raise KeyError(
+                        f"Metric '{metric}' not found in fold results"
+                    )
+
                 metric_values.append(metrics[metric])
-                
+
             # Compute average
             avg_scores[model_name] = sum(metric_values) / len(metric_values)
-            
+
         return avg_scores
 
     def __str__(self) -> str:
@@ -933,7 +933,7 @@ class CrossValidator:
     ) -> List[float]:
         """
         Perform cross-validation and compute log likelihood on test data.
-        
+
         Args:
             model: PyroVelocityModel to evaluate
             data: Dictionary of data tensors
@@ -941,45 +941,57 @@ class CrossValidator:
             num_samples: Number of posterior samples to draw
             num_inference_steps: Number of inference steps for SVI
             **inference_kwargs: Additional arguments for inference
-            
+
         Returns:
             List of log likelihood scores for each fold
         """
         # Get the cross-validation splitter
         cv_splitter = self._get_cv_splitter(adata)
-        
+
         # Find cell-dimension tensors to determine length and for splitting
         cell_tensors = []
         for key, value in data.items():
-            if isinstance(value, torch.Tensor) and value.ndim > 1 and value.shape[0] > 1:
+            if (
+                isinstance(value, torch.Tensor)
+                and value.ndim > 1
+                and value.shape[0] > 1
+            ):
                 cell_tensors.append((key, value))
-        
+
         if not cell_tensors:
-            raise ValueError("No cell-dimension tensors found in data dictionary")
-            
+            raise ValueError(
+                "No cell-dimension tensors found in data dictionary"
+            )
+
         # Get all indices based on the first cell-dimension tensor
         first_key, first_tensor = cell_tensors[0]
         indices = np.arange(first_tensor.shape[0])
-        
+
         # Initialize scores list
         scores = []
-        
+
         # Get stratification values if needed
         stratify = None
         if self.stratify_by is not None and adata is not None:
             stratify = adata.obs[self.stratify_by].values
-        
+
         # Perform cross-validation
-        for fold_idx, (train_idx, test_idx) in enumerate(cv_splitter.split(indices, stratify)):
+        for fold_idx, (train_idx, test_idx) in enumerate(
+            cv_splitter.split(indices, stratify)
+        ):
             # Create train and test data, only splitting tensors with cell dimension
             train_data = {}
             test_data = {}
-            
+
             for key, value in data.items():
                 if isinstance(value, torch.Tensor):
                     # For tensors with a cell dimension (usually first dimension)
                     # and multiple cells (shape[0] > 1), split by cell indices
-                    if value.ndim > 1 and value.shape[0] > 1 and value.shape[0] == first_tensor.shape[0]:
+                    if (
+                        value.ndim > 1
+                        and value.shape[0] > 1
+                        and value.shape[0] == first_tensor.shape[0]
+                    ):
                         train_data[key] = value[train_idx]
                         test_data[key] = value[test_idx]
                     else:
@@ -990,7 +1002,7 @@ class CrossValidator:
                     # For non-tensor values, just copy
                     train_data[key] = value
                     test_data[key] = value
-            
+
             # Train the model
             pyro.clear_param_store()
             guide = model.guide()
@@ -1000,37 +1012,37 @@ class CrossValidator:
                 optim=pyro.optim.Adam({"lr": 0.01}),
                 loss=pyro.infer.Trace_ELBO(),
             )
-            
+
             # Run inference
             for step in range(num_inference_steps):
                 loss = svi.step(train_data)
-                
+
             # Get posterior samples
             posterior_samples = model.sample_posterior(
-                guide=guide, 
-                data=train_data, 
-                num_samples=num_samples
+                guide=guide, data=train_data, num_samples=num_samples
             )
-            
+
             # Compute log likelihood on test data
             log_probs = []
             for i in range(num_samples):
                 # Extract parameters for this sample
                 params = {k: v[i] for k, v in posterior_samples.items()}
-                
+
                 # Create context with parameters
-                context = model._create_context(parameters=params, data=test_data)
-                
+                context = model._create_context(
+                    parameters=params, data=test_data
+                )
+
                 # Compute log likelihood
                 log_prob = model.likelihood_model.log_prob(context)
-                
+
                 # Store the mean log likelihood for this sample
                 log_probs.append(torch.mean(log_prob).item())
-            
+
             # Compute mean log likelihood across samples
             mean_log_likelihood = np.mean(log_probs)
             scores.append(mean_log_likelihood)
-            
+
         return scores
 
     def cross_validate_error(
@@ -1046,7 +1058,7 @@ class CrossValidator:
     ) -> List[float]:
         """
         Perform cross-validation and compute prediction error on test data.
-        
+
         Args:
             model: PyroVelocityModel to evaluate
             data: Dictionary of data tensors
@@ -1056,45 +1068,57 @@ class CrossValidator:
             num_samples: Number of posterior samples to draw
             num_inference_steps: Number of inference steps for SVI
             **inference_kwargs: Additional arguments for inference
-            
+
         Returns:
             List of MSE scores for each fold
         """
         # Get the cross-validation splitter
         cv_splitter = self._get_cv_splitter(adata)
-        
+
         # Find cell-dimension tensors to determine length and for splitting
         cell_tensors = []
         for key, value in data.items():
-            if isinstance(value, torch.Tensor) and value.ndim > 1 and value.shape[0] > 1:
+            if (
+                isinstance(value, torch.Tensor)
+                and value.ndim > 1
+                and value.shape[0] > 1
+            ):
                 cell_tensors.append((key, value))
-        
+
         if not cell_tensors:
-            raise ValueError("No cell-dimension tensors found in data dictionary")
-            
+            raise ValueError(
+                "No cell-dimension tensors found in data dictionary"
+            )
+
         # Get all indices based on the first cell-dimension tensor
         first_key, first_tensor = cell_tensors[0]
         indices = np.arange(first_tensor.shape[0])
-        
+
         # Initialize scores list
         scores = []
-        
+
         # Get stratification values if needed
         stratify = None
         if self.stratify_by is not None and adata is not None:
             stratify = adata.obs[self.stratify_by].values
-        
+
         # Perform cross-validation
-        for fold_idx, (train_idx, test_idx) in enumerate(cv_splitter.split(indices, stratify)):
+        for fold_idx, (train_idx, test_idx) in enumerate(
+            cv_splitter.split(indices, stratify)
+        ):
             # Create train and test data, only splitting tensors with cell dimension
             train_data = {}
             test_data = {}
-            
+
             for key, value in data.items():
                 if isinstance(value, torch.Tensor):
                     # For tensors with a cell dimension (usually first dimension)
                     # and multiple cells (shape[0] > 1), split by cell indices
-                    if value.ndim > 1 and value.shape[0] > 1 and value.shape[0] == first_tensor.shape[0]:
+                    if (
+                        value.ndim > 1
+                        and value.shape[0] > 1
+                        and value.shape[0] == first_tensor.shape[0]
+                    ):
                         train_data[key] = value[train_idx]
                         test_data[key] = value[test_idx]
                     else:
@@ -1105,7 +1129,7 @@ class CrossValidator:
                     # For non-tensor values, just copy
                     train_data[key] = value
                     test_data[key] = value
-            
+
             # Train the model
             pyro.clear_param_store()
             guide = model.guide()
@@ -1115,48 +1139,50 @@ class CrossValidator:
                 optim=pyro.optim.Adam({"lr": 0.01}),
                 loss=pyro.infer.Trace_ELBO(),
             )
-            
+
             # Run inference
             for step in range(num_inference_steps):
                 loss = svi.step(train_data)
-                
+
             # Get posterior samples
             posterior_samples = model.sample_posterior(
-                guide=guide, 
-                data=train_data, 
-                num_samples=num_samples
+                guide=guide, data=train_data, num_samples=num_samples
             )
-            
+
             # Generate predictions
             predictions = []
             for i in range(num_samples):
                 # Extract parameters for this sample
                 params = {k: v[i] for k, v in posterior_samples.items()}
-                
+
                 # Create context with parameters
-                context = model._create_context(parameters=params, data=test_data)
-                
+                context = model._create_context(
+                    parameters=params, data=test_data
+                )
+
                 # Generate predictions
                 outputs = model.dynamics_model.forward(context)
                 predictions.append(outputs[prediction_key])
-            
+
             # Stack predictions across samples
             stacked_predictions = torch.stack(predictions)
-            
+
             # Compute mean prediction across samples
             mean_prediction = torch.mean(stacked_predictions, dim=0)
-            
+
             # Convert to numpy arrays for sklearn
             y_pred = mean_prediction.detach().cpu().numpy()
             y_true = test_data[target_key].detach().cpu().numpy()
-            
+
             # Compute mean squared error
             mse = mean_squared_error(y_true, y_pred)
             scores.append(mse)
-            
+
         return scores
 
+
 # Convenience functions for module-level access
+
 
 def select_model(
     models: Dict[str, PyroVelocityModel],

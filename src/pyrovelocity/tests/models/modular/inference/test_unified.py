@@ -39,11 +39,17 @@ def simple_model(x=None):
 def simple_guide(x=None):  # x is unused but required for API compatibility
     # Variational parameters
     alpha_loc = pyro.param("alpha_loc", torch.tensor(0.0))
-    alpha_scale = pyro.param("alpha_scale", torch.tensor(1.0), constraint=dist.constraints.positive)
+    alpha_scale = pyro.param(
+        "alpha_scale", torch.tensor(1.0), constraint=dist.constraints.positive
+    )
     beta_loc = pyro.param("beta_loc", torch.tensor(0.0))
-    beta_scale = pyro.param("beta_scale", torch.tensor(1.0), constraint=dist.constraints.positive)
+    beta_scale = pyro.param(
+        "beta_scale", torch.tensor(1.0), constraint=dist.constraints.positive
+    )
     gamma_loc = pyro.param("gamma_loc", torch.tensor(0.0))
-    gamma_scale = pyro.param("gamma_scale", torch.tensor(1.0), constraint=dist.constraints.positive)
+    gamma_scale = pyro.param(
+        "gamma_scale", torch.tensor(1.0), constraint=dist.constraints.positive
+    )
 
     # Sample from variational distributions
     alpha = pyro.sample("alpha", dist.LogNormal(alpha_loc, alpha_scale))

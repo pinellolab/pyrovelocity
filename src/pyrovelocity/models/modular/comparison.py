@@ -175,18 +175,18 @@ class BayesianModelComparison:
             # Use PyTorch tensors for likelihood computation
             # The likelihood model should accept PyTorch tensors
             scale_factors = data.get("scale_factors", None)
-            
+
             # Compute log likelihood
             log_prob = likelihood_model.log_prob(
                 observations=observations,
                 predictions=predictions,
                 scale_factors=scale_factors,
             )
-            
+
             # Ensure result is a PyTorch tensor
             if not isinstance(log_prob, torch.Tensor):
                 log_prob = torch.tensor(np.array(log_prob))
-                
+
             log_likes[i] = log_prob
 
         return log_likes
@@ -548,7 +548,9 @@ def create_comparison_table(
 
     return df
 
+
 # Convenience functions for module-level access
+
 
 def compute_waic(
     model: PyroVelocityModel,
@@ -573,6 +575,7 @@ def compute_waic(
     """
     comparison = BayesianModelComparison()
     return comparison.compute_waic(model, posterior_samples, data, pointwise)
+
 
 def compute_loo(
     model: PyroVelocityModel,

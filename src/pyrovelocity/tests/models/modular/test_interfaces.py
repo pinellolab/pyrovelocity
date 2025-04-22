@@ -34,6 +34,7 @@ class TestDynamicsModelInterface:
 
     def test_dynamics_model_implementation(self):
         """Test that a class implementing the DynamicsModel interface is recognized."""
+
         class TestDynamicsModelImpl:
             def forward(
                 self,
@@ -76,6 +77,7 @@ class TestPriorModelInterface:
 
     def test_prior_model_implementation(self):
         """Test that a class implementing the PriorModel interface is recognized."""
+
         class TestPriorModelImpl:
             def forward(
                 self,
@@ -104,6 +106,7 @@ class TestLikelihoodModelInterface:
 
     def test_likelihood_model_implementation(self):
         """Test that a class implementing the LikelihoodModel interface is recognized."""
+
         class TestLikelihoodModelImpl:
             def forward(
                 self,
@@ -134,6 +137,7 @@ class TestObservationModelInterface:
 
     def test_observation_model_implementation(self):
         """Test that a class implementing the ObservationModel interface is recognized."""
+
         class TestObservationModelImpl:
             def forward(
                 self,
@@ -161,6 +165,7 @@ class TestInferenceGuideInterface:
 
     def test_inference_guide_implementation(self):
         """Test that a class implementing the InferenceGuide interface is recognized."""
+
         class TestInferenceGuideImpl:
             def __call__(
                 self,

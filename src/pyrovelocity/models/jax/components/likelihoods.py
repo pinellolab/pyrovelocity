@@ -112,4 +112,6 @@ def negative_binomial_likelihood_function(
 def register_standard_likelihoods():
     """Register standard likelihood functions."""
     register_likelihood("poisson", poisson_likelihood_function)
-    register_likelihood("negative_binomial", negative_binomial_likelihood_function)
+    register_likelihood(
+        "negative_binomial", negative_binomial_likelihood_function
+    )

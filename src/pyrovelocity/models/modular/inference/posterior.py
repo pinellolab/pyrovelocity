@@ -79,7 +79,9 @@ def compute_velocity(
     gamma = posterior_samples.get("gamma")
 
     if alpha is None or beta is None or gamma is None:
-        raise ValueError("Posterior samples must contain alpha, beta, and gamma")
+        raise ValueError(
+            "Posterior samples must contain alpha, beta, and gamma"
+        )
 
     # Get unspliced and spliced counts
     if adata is not None:
@@ -168,7 +170,9 @@ def compute_uncertainty(
             # Compute entropy for each gene
             uncertainties = []
             for gene_idx in range(velocity_np.shape[1]):
-                hist, _ = np.histogram(velocity_np[:, gene_idx], bins=20, density=True)
+                hist, _ = np.histogram(
+                    velocity_np[:, gene_idx], bins=20, density=True
+                )
                 uncertainties.append(entropy(hist))
             return torch.tensor(uncertainties)
         except ImportError:
@@ -258,7 +262,9 @@ def create_inference_data(
         }
 
     # Convert torch tensors to numpy arrays
-    posterior_np = {k: v.detach().cpu().numpy() for k, v in posterior_samples.items()}
+    posterior_np = {
+        k: v.detach().cpu().numpy() for k, v in posterior_samples.items()
+    }
     observed_np = (
         {k: v.detach().cpu().numpy() for k, v in observed_data.items()}
         if observed_data
@@ -316,7 +322,10 @@ def format_anndata_output(
         if velocity.ndim == 1:
             velocity = velocity.reshape(1, -1)
             # Transpose if needed to match AnnData dimensions
-            if velocity.shape[1] == adata.n_obs and velocity.shape[0] != adata.n_vars:
+            if (
+                velocity.shape[1] == adata.n_obs
+                and velocity.shape[0] != adata.n_vars
+            ):
                 velocity = velocity.T
         adata.layers[f"{model_name}_velocity"] = velocity
 

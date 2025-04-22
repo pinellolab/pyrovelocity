@@ -131,12 +131,16 @@ class StandardDynamicsModel(BaseDynamicsModel):
         is_close = torch.isclose(gamma, beta)
 
         # For gamma != beta
-        expus = (alpha - u_current * beta) / (gamma - beta + 1e-8) * (exps - expu)
+        expus = (
+            (alpha - u_current * beta) / (gamma - beta + 1e-8) * (exps - expu)
+        )
         st = s_current * exps + alpha / gamma * (1 - exps) + expus
 
         # For gamma == beta
         st_gamma_equals_beta = (
-            s_current * expu + alpha / beta * (1 - expu) - (alpha - beta * u_current) * time_delta * expu
+            s_current * expu
+            + alpha / beta * (1 - expu)
+            - (alpha - beta * u_current) * time_delta * expu
         )
 
         # Use torch.where to select the appropriate formula
@@ -194,7 +198,7 @@ class StandardDynamicsModel(BaseDynamicsModel):
         # Simulate using analytical solution for each time step
         for i in range(1, n_steps):
             tau = float(times[i] - times[0])  # Time since start as float
-            current_state = (u_t[i-1], s_t[i-1])
+            current_state = (u_t[i - 1], s_t[i - 1])
             u_t[i], s_t[i] = self._predict_future_states_impl(
                 current_state, tau, alpha, beta, gamma, scaling
             )
@@ -208,8 +212,11 @@ class StandardDynamicsModel(BaseDynamicsModel):
         alpha: Union[ParamTensor, torch.Tensor, Array],
         beta: Union[ParamTensor, torch.Tensor, Array],
         gamma: Union[ParamTensor, torch.Tensor, Array],
-        **kwargs: Any
-    ) -> Tuple[Union[ParamTensor, torch.Tensor, Array], Union[ParamTensor, torch.Tensor, Array]]:
+        **kwargs: Any,
+    ) -> Tuple[
+        Union[ParamTensor, torch.Tensor, Array],
+        Union[ParamTensor, torch.Tensor, Array],
+    ]:
         """Implementation of the steady_state method for the standard dynamics model.
 
         Args:
@@ -257,7 +264,9 @@ class StandardDynamicsModelSimulated(BaseDynamicsModel):
     """
 
     name: ClassVar[str] = "standard_simulated"
-    description: ClassVar[str] = "Standard RNA velocity dynamics model using numerical simulation"
+    description: ClassVar[
+        str
+    ] = "Standard RNA velocity dynamics model using numerical simulation"
 
     @jaxtyped
     @beartype
@@ -472,7 +481,9 @@ class StandardDynamicsModelSimulated(BaseDynamicsModel):
             # For gamma == beta
             # s(t) = s0 * e^(-beta*t) + alpha/beta * (1 - e^(-beta*t)) - (alpha - beta*u0) * t * e^(-beta*t)
             st_gamma_equals_beta = (
-                s0 * expu + alpha / beta * (1 - expu) - (alpha - beta * u0) * tau * expu
+                s0 * expu
+                + alpha / beta * (1 - expu)
+                - (alpha - beta * u0) * tau * expu
             )
 
             # Use torch.where to select the appropriate formula
@@ -509,8 +520,11 @@ class StandardDynamicsModelSimulated(BaseDynamicsModel):
         alpha: Union[ParamTensor, torch.Tensor, Array],
         beta: Union[ParamTensor, torch.Tensor, Array],
         gamma: Union[ParamTensor, torch.Tensor, Array],
-        **kwargs: Any
-    ) -> Tuple[Union[ParamTensor, torch.Tensor, Array], Union[ParamTensor, torch.Tensor, Array]]:
+        **kwargs: Any,
+    ) -> Tuple[
+        Union[ParamTensor, torch.Tensor, Array],
+        Union[ParamTensor, torch.Tensor, Array],
+    ]:
         """Implementation of the steady_state method for the standard dynamics model.
 
         Args:
@@ -617,7 +631,9 @@ class NonlinearDynamicsModel(BaseDynamicsModel):
             return u_ss, s_ss
 
         # Calculate steady state using the nonlinear model
-        u_ss, s_ss = self._steady_state_impl(alpha, beta, gamma, k_alpha=k_alpha, k_beta=k_beta)
+        u_ss, s_ss = self._steady_state_impl(
+            alpha, beta, gamma, k_alpha=k_alpha, k_beta=k_beta
+        )
 
         # Apply scaling if provided
         if scaling is not None:
@@ -684,12 +700,18 @@ class NonlinearDynamicsModel(BaseDynamicsModel):
             is_close = torch.isclose(gamma, beta)
 
             # For gamma != beta
-            expus = (alpha - u_current * beta) / (gamma - beta + 1e-8) * (exps - expu)
+            expus = (
+                (alpha - u_current * beta)
+                / (gamma - beta + 1e-8)
+                * (exps - expu)
+            )
             st = s_current * exps + alpha / gamma * (1 - exps) + expus
 
             # For gamma == beta
             st_gamma_equals_beta = (
-                s_current * expu + alpha / beta * (1 - expu) - (alpha - beta * u_current) * time_delta * expu
+                s_current * expu
+                + alpha / beta * (1 - expu)
+                - (alpha - beta * u_current) * time_delta * expu
             )
 
             # Use torch.where to select the appropriate formula
@@ -841,7 +863,7 @@ class NonlinearDynamicsModel(BaseDynamicsModel):
             # Use the analytical solution for each time point
             for i in range(1, n_steps):
                 tau = float(times[i] - times[0])  # Time since start
-                current_state = (u_t[i-1], s_t[i-1])
+                current_state = (u_t[i - 1], s_t[i - 1])
                 # Compute exponentials
                 u_current, s_current = current_state
                 expu = torch.exp(-beta * tau)
@@ -855,12 +877,18 @@ class NonlinearDynamicsModel(BaseDynamicsModel):
                 is_close = torch.isclose(gamma, beta)
 
                 # For gamma != beta
-                expus = (alpha - u_current * beta) / (gamma - beta + 1e-8) * (exps - expu)
+                expus = (
+                    (alpha - u_current * beta)
+                    / (gamma - beta + 1e-8)
+                    * (exps - expu)
+                )
                 st = s_current * exps + alpha / gamma * (1 - exps) + expus
 
                 # For gamma == beta
                 st_gamma_equals_beta = (
-                    s_current * expu + alpha / beta * (1 - expu) - (alpha - beta * u_current) * tau * expu
+                    s_current * expu
+                    + alpha / beta * (1 - expu)
+                    - (alpha - beta * u_current) * tau * expu
                 )
 
                 # Use torch.where to select the appropriate formula
@@ -907,11 +935,11 @@ class NonlinearDynamicsModel(BaseDynamicsModel):
 
         # Simple Euler integration for each time step
         for i in range(1, n_steps):
-            dt = float(times[i] - times[i-1])  # Time step
+            dt = float(times[i] - times[i - 1])  # Time step
 
             # Euler method for each time step
-            u_t[i] = u_t[i-1] + dt * dudt(u_t[i-1], s_t[i-1])
-            s_t[i] = s_t[i-1] + dt * dsdt(u_t[i-1], s_t[i-1])
+            u_t[i] = u_t[i - 1] + dt * dudt(u_t[i - 1], s_t[i - 1])
+            s_t[i] = s_t[i - 1] + dt * dsdt(u_t[i - 1], s_t[i - 1])
 
         # The code below shows how we would use torchode for numerical integration
         # but we're using Euler method for now to avoid torchode issues
@@ -953,7 +981,9 @@ class NonlinearDynamicsModel(BaseDynamicsModel):
         k_alpha: Optional[Union[ParamTensor, torch.Tensor]] = None,
         k_beta: Optional[Union[ParamTensor, torch.Tensor]] = None,
         **kwargs: Any,
-    ) -> Tuple[Union[ParamTensor, torch.Tensor], Union[ParamTensor, torch.Tensor]]:
+    ) -> Tuple[
+        Union[ParamTensor, torch.Tensor], Union[ParamTensor, torch.Tensor]
+    ]:
         """Implementation of the steady_state method for the nonlinear dynamics model.
 
         Args:

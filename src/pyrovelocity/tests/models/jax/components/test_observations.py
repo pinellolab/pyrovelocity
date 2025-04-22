@@ -41,7 +41,9 @@ def test_standard_observation_function():
 
     # Test with log1p transformation
     observation_params = {"log1p": True}
-    u_transformed, s_transformed = standard_observation_function(u_obs, s_obs, observation_params)
+    u_transformed, s_transformed = standard_observation_function(
+        u_obs, s_obs, observation_params
+    )
 
     # Check that values are log1p transformed
     np.testing.assert_allclose(u_transformed, jnp.log1p(u_obs))
@@ -49,7 +51,9 @@ def test_standard_observation_function():
 
     # Test with normalization
     observation_params = {"normalize": True}
-    u_transformed, s_transformed = standard_observation_function(u_obs, s_obs, observation_params)
+    u_transformed, s_transformed = standard_observation_function(
+        u_obs, s_obs, observation_params
+    )
 
     # Check that values are normalized (approximately)
     u_size_factor = jnp.sum(u_obs, axis=-1, keepdims=True)
@@ -59,15 +63,21 @@ def test_standard_observation_function():
 
     # Test with both log1p and normalization
     observation_params = {"log1p": True, "normalize": True}
-    u_transformed, s_transformed = standard_observation_function(u_obs, s_obs, observation_params)
+    u_transformed, s_transformed = standard_observation_function(
+        u_obs, s_obs, observation_params
+    )
 
     # Check that values are log1p transformed and normalized (approximately)
     u_log1p = jnp.log1p(u_obs)
     s_log1p = jnp.log1p(s_obs)
     u_size_factor = jnp.sum(u_obs, axis=-1, keepdims=True)
     s_size_factor = jnp.sum(s_obs, axis=-1, keepdims=True)
-    np.testing.assert_allclose(u_transformed, u_log1p / u_size_factor, rtol=1e-5)
-    np.testing.assert_allclose(s_transformed, s_log1p / s_size_factor, rtol=1e-5)
+    np.testing.assert_allclose(
+        u_transformed, u_log1p / u_size_factor, rtol=1e-5
+    )
+    np.testing.assert_allclose(
+        s_transformed, s_log1p / s_size_factor, rtol=1e-5
+    )
 
 
 def test_normalized_observation_function():
@@ -95,13 +105,19 @@ def test_normalized_observation_function():
 
     # Test with scaling
     observation_params = {"scale_factor": 2.0}
-    u_transformed, s_transformed = normalized_observation_function(u_obs, s_obs, observation_params)
+    u_transformed, s_transformed = normalized_observation_function(
+        u_obs, s_obs, observation_params
+    )
 
     # Check that values are normalized and scaled (approximately)
     u_size_factor = jnp.sum(u_obs, axis=-1, keepdims=True)
     s_size_factor = jnp.sum(s_obs, axis=-1, keepdims=True)
-    np.testing.assert_allclose(u_transformed, u_obs / u_size_factor * 2.0, rtol=1e-5)
-    np.testing.assert_allclose(s_transformed, s_obs / s_size_factor * 2.0, rtol=1e-5)
+    np.testing.assert_allclose(
+        u_transformed, u_obs / u_size_factor * 2.0, rtol=1e-5
+    )
+    np.testing.assert_allclose(
+        s_transformed, s_obs / s_size_factor * 2.0, rtol=1e-5
+    )
 
 
 def test_register_standard_observations():

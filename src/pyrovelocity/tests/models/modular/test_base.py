@@ -93,6 +93,7 @@ class TestPyroBufferMixin:
 
     def test_register_buffer(self):
         """Test that register_buffer sets an attribute."""
+
         class TestClass(PyroBufferMixin):
             pass
 
@@ -197,7 +198,9 @@ class TestBaseDynamicsModel:
         gamma = torch.tensor([0.5, 0.6])
 
         # Mock validate_inputs to return a successful result
-        model.validate_inputs = MagicMock(return_value=pytest.importorskip("expression").Result.Ok({}))
+        model.validate_inputs = MagicMock(
+            return_value=pytest.importorskip("expression").Result.Ok({})
+        )
 
         # Mock _forward_impl
         model._forward_impl = MagicMock(return_value=(u, s))
@@ -209,7 +212,9 @@ class TestBaseDynamicsModel:
         model.validate_inputs.assert_called_once()
 
         # Check that _forward_impl was called with the correct arguments
-        model._forward_impl.assert_called_once_with(u, s, alpha, beta, gamma, None, None)
+        model._forward_impl.assert_called_once_with(
+            u, s, alpha, beta, gamma, None, None
+        )
 
         # Check that the result is correct
         assert result == (u, s)
@@ -228,13 +233,17 @@ class TestBaseDynamicsModel:
         gamma = torch.tensor([0.5, 0.6])
 
         # Mock validate_inputs to return a successful result
-        model.validate_inputs = MagicMock(return_value=pytest.importorskip("expression").Result.Ok({}))
+        model.validate_inputs = MagicMock(
+            return_value=pytest.importorskip("expression").Result.Ok({})
+        )
 
         # Mock _predict_future_states_impl
         model._predict_future_states_impl = MagicMock(return_value=(u, s))
 
         # Call predict_future_states
-        result = model.predict_future_states(current_state, time_delta, alpha, beta, gamma)
+        result = model.predict_future_states(
+            current_state, time_delta, alpha, beta, gamma
+        )
 
         # Check that validate_inputs was called with the correct arguments
         model.validate_inputs.assert_called_once()
@@ -328,7 +337,9 @@ class TestBasePriorModel:
         model = self.ConcretePriorModel()
 
         # Mock _sample_parameters_impl to raise an exception
-        model._sample_parameters_impl = MagicMock(side_effect=ValueError("Test error"))
+        model._sample_parameters_impl = MagicMock(
+            side_effect=ValueError("Test error")
+        )
 
         # Call sample_parameters and check that it raises a ValueError
         with pytest.raises(ValueError, match="Failed to sample parameters"):
@@ -349,6 +360,7 @@ class TestBaseLikelihoodModel:
         ) -> Float[Array, "batch_size"]:
             """Implement abstract method."""
             import jax.numpy as jnp
+
             return jnp.zeros(observations.shape[0])
 
         def _sample_impl(
@@ -358,6 +370,7 @@ class TestBaseLikelihoodModel:
         ) -> Float[Array, "batch_size genes"]:
             """Implement abstract method."""
             import jax.numpy as jnp
+
             return predictions
 
         def forward(
@@ -383,6 +396,7 @@ class TestBaseLikelihoodModel:
 
         # Create test inputs
         import jax.numpy as jnp
+
         observations = jnp.zeros((2, 3))
         predictions = jnp.zeros((2, 3))
 
@@ -405,6 +419,7 @@ class TestBaseLikelihoodModel:
 
         # Create test inputs
         import jax.numpy as jnp
+
         predictions = jnp.zeros((2, 3))
 
         # Mock _sample_impl
@@ -437,9 +452,11 @@ class TestBaseObservationModel:
             self, data: Dict[str, torch.Tensor], **kwargs: Any
         ) -> Dict[str, torch.utils.data.DataLoader]:
             """Implement abstract method."""
-            return {"dataloader": torch.utils.data.DataLoader(
-                torch.utils.data.TensorDataset(data["data"])
-            )}
+            return {
+                "dataloader": torch.utils.data.DataLoader(
+                    torch.utils.data.TensorDataset(data["data"])
+                )
+            }
 
         def _preprocess_batch_impl(
             self, batch: Dict[str, torch.Tensor]
@@ -489,7 +506,9 @@ class TestBaseObservationModel:
         adata = MagicMock(spec=AnnData)
 
         # Mock _prepare_data_impl to raise an exception
-        model._prepare_data_impl = MagicMock(side_effect=ValueError("Test error"))
+        model._prepare_data_impl = MagicMock(
+            side_effect=ValueError("Test error")
+        )
 
         # Call prepare_data and check that it raises a ValueError
         with pytest.raises(ValueError, match="Failed to prepare data"):
@@ -503,7 +522,9 @@ class TestBaseObservationModel:
         data = {"data": torch.zeros(10)}
 
         # Mock _create_dataloaders_impl
-        mock_dataloader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(torch.zeros(1)))
+        mock_dataloader = torch.utils.data.DataLoader(
+            torch.utils.data.TensorDataset(torch.zeros(1))
+        )
         expected_result = {"dataloader": mock_dataloader}
         model._create_dataloaders_impl = MagicMock(return_value=expected_result)
 
@@ -511,7 +532,9 @@ class TestBaseObservationModel:
         result = model.create_dataloaders(data, param="value")
 
         # Check that _create_dataloaders_impl was called with the correct arguments
-        model._create_dataloaders_impl.assert_called_once_with(data, param="value")
+        model._create_dataloaders_impl.assert_called_once_with(
+            data, param="value"
+        )
 
         # Check that the result is correct
         assert result == expected_result
@@ -524,7 +547,9 @@ class TestBaseObservationModel:
         data = {"data": torch.zeros(10)}
 
         # Mock _create_dataloaders_impl to raise an exception
-        model._create_dataloaders_impl = MagicMock(side_effect=ValueError("Test error"))
+        model._create_dataloaders_impl = MagicMock(
+            side_effect=ValueError("Test error")
+        )
 
         # Call create_dataloaders and check that it raises a ValueError
         with pytest.raises(ValueError, match="Failed to create dataloaders"):
@@ -558,7 +583,9 @@ class TestBaseObservationModel:
         batch = {"data": torch.zeros(10)}
 
         # Mock _preprocess_batch_impl to raise an exception
-        model._preprocess_batch_impl = MagicMock(side_effect=ValueError("Test error"))
+        model._preprocess_batch_impl = MagicMock(
+            side_effect=ValueError("Test error")
+        )
 
         # Call preprocess_batch and check that it raises a ValueError
         with pytest.raises(ValueError, match="Failed to preprocess batch"):
@@ -618,7 +645,9 @@ class TestBaseInferenceGuide:
         model = MagicMock()
 
         # Mock _setup_guide_impl to raise an exception
-        guide._setup_guide_impl = MagicMock(side_effect=ValueError("Test error"))
+        guide._setup_guide_impl = MagicMock(
+            side_effect=ValueError("Test error")
+        )
 
         # Call setup_guide and check that it raises a ValueError
         with pytest.raises(ValueError, match="Failed to set up guide"):
@@ -646,7 +675,9 @@ class TestBaseInferenceGuide:
         guide = self.ConcreteInferenceGuide()
 
         # Mock _sample_posterior_impl to raise an exception
-        guide._sample_posterior_impl = MagicMock(side_effect=ValueError("Test error"))
+        guide._sample_posterior_impl = MagicMock(
+            side_effect=ValueError("Test error")
+        )
 
         # Call sample_posterior and check that it raises a ValueError
         with pytest.raises(ValueError, match="Failed to sample from posterior"):

@@ -120,7 +120,9 @@ def test_select_best_model(test_models, test_data, test_inference_states):
     assert "loo" in comparison_results["model1"]
 
 
-def test_compute_predictive_performance(test_models, test_data, test_inference_states):
+def test_compute_predictive_performance(
+    test_models, test_data, test_inference_states
+):
     """Test computing predictive performance."""
     # Get test data and models
     x, y = test_data

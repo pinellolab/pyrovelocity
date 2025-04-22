@@ -162,7 +162,10 @@ def compute_loo(
     p_loo = lppd - jnp.sum(jnp.mean(log_likelihoods, axis=0))
 
     # Compute standard error of LOO
-    loo_se = jnp.sqrt(log_likelihoods.shape[0] * jnp.var(-2 * jnp.log(jnp.mean(jnp.exp(log_likelihoods), axis=0))))
+    loo_se = jnp.sqrt(
+        log_likelihoods.shape[0]
+        * jnp.var(-2 * jnp.log(jnp.mean(jnp.exp(log_likelihoods), axis=0)))
+    )
 
     # Return LOO, standard error, and effective number of parameters
     return float(loo), float(loo_se), float(p_loo)

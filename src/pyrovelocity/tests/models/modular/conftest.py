@@ -265,15 +265,19 @@ def mock_posterior_samples():
 def multiple_models(sample_data):
     """Create multiple mock PyroVelocityModel instances for testing."""
     models = {}
-    
+
     # Create three different models with slightly different names
     for i in range(3):
         dynamics_model = MockDynamicsModel(name=f"mock_dynamics_model_{i}")
         prior_model = MockPriorModel(name=f"mock_prior_model_{i}")
-        likelihood_model = MockLikelihoodModel(name=f"mock_likelihood_model_{i}")
-        observation_model = MockObservationModel(name=f"mock_observation_model_{i}")
+        likelihood_model = MockLikelihoodModel(
+            name=f"mock_likelihood_model_{i}"
+        )
+        observation_model = MockObservationModel(
+            name=f"mock_observation_model_{i}"
+        )
         guide_model = MockGuideModel(name=f"mock_guide_model_{i}")
-        
+
         models[f"model{i+1}"] = PyroVelocityModel(
             dynamics_model=dynamics_model,
             prior_model=prior_model,
@@ -281,7 +285,7 @@ def multiple_models(sample_data):
             observation_model=observation_model,
             guide_model=guide_model,
         )
-    
+
     return models
 
 
@@ -289,7 +293,7 @@ def multiple_models(sample_data):
 def multiple_posterior_samples(mock_posterior_samples):
     """Create posterior samples for multiple models."""
     samples = {}
-    
+
     # Create slightly different posterior samples for each model
     for i in range(3):
         # Add small offsets to make samples different for each model
@@ -299,7 +303,7 @@ def multiple_posterior_samples(mock_posterior_samples):
             "beta": mock_posterior_samples["beta"] + offset,
             "gamma": mock_posterior_samples["gamma"] + offset,
         }
-    
+
     return samples
 
 
@@ -309,21 +313,23 @@ def mock_adata():
     try:
         import anndata as ad
         import pandas as pd
-        
+
         # Create a simple AnnData object
         n_cells = 10
         n_genes = 5
         X = np.random.randn(n_cells, n_genes)
-        
+
         # Create cell metadata with a stratification column
-        obs = pd.DataFrame({
-            "cell_type": np.random.choice(["A", "B", "C"], size=n_cells),
-            "timepoint": np.random.choice([0, 1, 2], size=n_cells),
-        })
-        
+        obs = pd.DataFrame(
+            {
+                "cell_type": np.random.choice(["A", "B", "C"], size=n_cells),
+                "timepoint": np.random.choice([0, 1, 2], size=n_cells),
+            }
+        )
+
         return ad.AnnData(X=X, obs=obs)
     except ImportError:
         # If anndata isn't available, return a mock object
         mock_adata = MagicMock()
         mock_adata.obs = {"cell_type": np.array(["A"] * 5 + ["B"] * 5)}
-        return mock_adata 
+        return mock_adata

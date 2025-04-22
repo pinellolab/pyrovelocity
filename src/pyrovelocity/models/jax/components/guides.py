@@ -18,23 +18,23 @@ def auto_normal_guide_factory(
 ) -> Callable:
     """
     Auto normal guide factory function.
-    
+
     This function creates an AutoNormal guide for the given model.
-    
+
     Args:
         model: Model function
         guide_params: Dictionary of guide parameters
-        
+
     Returns:
         Guide function
     """
     if guide_params is None:
         guide_params = {}
-    
+
     # Get guide parameters
     init_loc_fn = guide_params.get("init_loc_fn", None)
     init_scale = guide_params.get("init_scale", 0.1)
-    
+
     # Create guide
     return AutoNormal(
         model,
@@ -49,22 +49,22 @@ def auto_delta_guide_factory(
 ) -> Callable:
     """
     Auto delta guide factory function.
-    
+
     This function creates an AutoDelta guide for the given model.
-    
+
     Args:
         model: Model function
         guide_params: Dictionary of guide parameters
-        
+
     Returns:
         Guide function
     """
     if guide_params is None:
         guide_params = {}
-    
+
     # Get guide parameters
     init_loc_fn = guide_params.get("init_loc_fn", None)
-    
+
     # Create guide
     return AutoDelta(
         model,
@@ -78,47 +78,59 @@ def custom_guide_factory(
 ) -> Callable:
     """
     Custom guide factory function.
-    
+
     This function creates a custom guide for the given model.
-    
+
     Args:
         model: Model function
         guide_params: Dictionary of guide parameters
-        
+
     Returns:
         Guide function
     """
     if guide_params is None:
         guide_params = {}
-    
+
     # Define custom guide
     def guide(*args, **kwargs):
         # Sample parameters
         with numpyro.plate("gene", guide_params.get("num_genes", 1)):
-            alpha_loc = numpyro.param("alpha_loc", guide_params.get("alpha_loc", 0.0))
+            alpha_loc = numpyro.param(
+                "alpha_loc", guide_params.get("alpha_loc", 0.0)
+            )
             alpha_scale = numpyro.param(
                 "alpha_scale",
                 guide_params.get("alpha_scale", 1.0),
                 constraint=numpyro.distributions.constraints.positive,
             )
-            numpyro.sample("alpha", numpyro.distributions.Normal(alpha_loc, alpha_scale))
-            
-            beta_loc = numpyro.param("beta_loc", guide_params.get("beta_loc", 0.0))
+            numpyro.sample(
+                "alpha", numpyro.distributions.Normal(alpha_loc, alpha_scale)
+            )
+
+            beta_loc = numpyro.param(
+                "beta_loc", guide_params.get("beta_loc", 0.0)
+            )
             beta_scale = numpyro.param(
                 "beta_scale",
                 guide_params.get("beta_scale", 1.0),
                 constraint=numpyro.distributions.constraints.positive,
             )
-            numpyro.sample("beta", numpyro.distributions.Normal(beta_loc, beta_scale))
-            
-            gamma_loc = numpyro.param("gamma_loc", guide_params.get("gamma_loc", 0.0))
+            numpyro.sample(
+                "beta", numpyro.distributions.Normal(beta_loc, beta_scale)
+            )
+
+            gamma_loc = numpyro.param(
+                "gamma_loc", guide_params.get("gamma_loc", 0.0)
+            )
             gamma_scale = numpyro.param(
                 "gamma_scale",
                 guide_params.get("gamma_scale", 1.0),
                 constraint=numpyro.distributions.constraints.positive,
             )
-            numpyro.sample("gamma", numpyro.distributions.Normal(gamma_loc, gamma_scale))
-        
+            numpyro.sample(
+                "gamma", numpyro.distributions.Normal(gamma_loc, gamma_scale)
+            )
+
         # Sample latent time
         with numpyro.plate("cell", guide_params.get("num_cells", 1)):
             tau_loc = numpyro.param("tau_loc", guide_params.get("tau_loc", 0.0))
@@ -127,8 +139,10 @@ def custom_guide_factory(
                 guide_params.get("tau_scale", 1.0),
                 constraint=numpyro.distributions.constraints.positive,
             )
-            numpyro.sample("tau", numpyro.distributions.Normal(tau_loc, tau_scale))
-    
+            numpyro.sample(
+                "tau", numpyro.distributions.Normal(tau_loc, tau_scale)
+            )
+
     return guide
 
 

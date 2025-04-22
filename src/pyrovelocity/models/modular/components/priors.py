@@ -206,7 +206,9 @@ class LogNormalPriorModel(BasePriorModel):
         # For the standard PyroModule approach, this can be a no-op
         pass
 
-    def _sample_parameters_impl(self, prefix: str = "", n_genes: Optional[int] = None) -> Dict[str, Any]:
+    def _sample_parameters_impl(
+        self, prefix: str = "", n_genes: Optional[int] = None
+    ) -> Dict[str, Any]:
         """
         Implementation of parameter sampling.
 
@@ -433,7 +435,9 @@ class InformativePriorModel(BasePriorModel):
         # For the standard PyroModule approach, this can be a no-op
         pass
 
-    def _sample_parameters_impl(self, prefix: str = "", n_genes: Optional[int] = None) -> Dict[str, Any]:
+    def _sample_parameters_impl(
+        self, prefix: str = "", n_genes: Optional[int] = None
+    ) -> Dict[str, Any]:
         """
         Implementation of parameter sampling.
 

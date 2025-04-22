@@ -122,9 +122,7 @@ def create_svi(
 
 
 @beartype
-def svi_step(
-    svi: SVI, *args: Any, **kwargs: Any
-) -> Any:
+def svi_step(svi: SVI, *args: Any, **kwargs: Any) -> Any:
     """
     Perform a single SVI step.
 
@@ -142,7 +140,9 @@ def svi_step(
 @beartype
 def extract_posterior_samples(
     guide: Union[AutoGuide, Callable, InferenceGuide],
-    params: Optional[Dict[str, torch.Tensor]] = None,  # Unused but kept for API compatibility
+    params: Optional[
+        Dict[str, torch.Tensor]
+    ] = None,  # Unused but kept for API compatibility
     num_samples: int = 1000,
     seed: Optional[int] = None,
 ) -> Dict[str, torch.Tensor]:
@@ -165,9 +165,7 @@ def extract_posterior_samples(
     # For all guide types, create a predictive object
     # In Pyro, we need to get the parameters from the param store
     param_store = pyro.get_param_store()
-    predictive = pyro.infer.Predictive(
-        guide, num_samples=num_samples
-    )
+    predictive = pyro.infer.Predictive(guide, num_samples=num_samples)
     samples = predictive()
 
     return samples
@@ -239,7 +237,10 @@ def run_svi_inference(
         if state.best_loss is None or loss_value < state.best_loss:
             state.best_loss = loss_value
             # In Pyro, we need to get the parameters from the param store
-            state.best_params = {name: param.detach().clone() for name, param in pyro.get_param_store().items()}
+            state.best_params = {
+                name: param.detach().clone()
+                for name, param in pyro.get_param_store().items()
+            }
 
         # Early stopping
         if (

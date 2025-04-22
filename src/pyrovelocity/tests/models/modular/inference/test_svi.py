@@ -45,11 +45,17 @@ def simple_model(x=None):
 def simple_guide(x=None):  # x is unused but required for API compatibility
     # Variational parameters
     alpha_loc = pyro.param("alpha_loc", torch.tensor(0.0))
-    alpha_scale = pyro.param("alpha_scale", torch.tensor(1.0), constraint=dist.constraints.positive)
+    alpha_scale = pyro.param(
+        "alpha_scale", torch.tensor(1.0), constraint=dist.constraints.positive
+    )
     beta_loc = pyro.param("beta_loc", torch.tensor(0.0))
-    beta_scale = pyro.param("beta_scale", torch.tensor(1.0), constraint=dist.constraints.positive)
+    beta_scale = pyro.param(
+        "beta_scale", torch.tensor(1.0), constraint=dist.constraints.positive
+    )
     gamma_loc = pyro.param("gamma_loc", torch.tensor(0.0))
-    gamma_scale = pyro.param("gamma_scale", torch.tensor(1.0), constraint=dist.constraints.positive)
+    gamma_scale = pyro.param(
+        "gamma_scale", torch.tensor(1.0), constraint=dist.constraints.positive
+    )
 
     # Sample from variational distributions
     alpha = pyro.sample("alpha", dist.LogNormal(alpha_loc, alpha_scale))
@@ -158,50 +164,48 @@ class TestSVI:
         """Test using AutoGuideFactory."""
         # Instead of using an AutoGuide directly, we'll test a simplified version
         # that doesn't rely on the full AutoGuide machinery
-        
+
         # Reset pyro parameter store
         pyro.clear_param_store()
-        
+
         # Create a simple PyTorch model
         def model():
             alpha = pyro.sample("alpha", dist.LogNormal(0.0, 1.0))
             beta = pyro.sample("beta", dist.LogNormal(0.0, 1.0))
             gamma = pyro.sample("gamma", dist.LogNormal(0.0, 1.0))
             return {"alpha": alpha, "beta": beta, "gamma": gamma}
-        
+
         # Create an AutoGuideFactory
         guide_factory = AutoGuideFactory(
-            guide_type="AutoNormal",
-            init_scale=0.1,
-            name="auto_guide"
+            guide_type="AutoNormal", init_scale=0.1, name="auto_guide"
         )
-        
+
         # Mock the behavior to avoid the initialization issues
         # Store a model for reference
         guide_factory._model = model
-        
+
         # Mock the sample_posterior_impl method to return predictable values
         def mock_sample_posterior(**kwargs):
             num_samples = kwargs.get("num_samples", 100)
             return {
                 "alpha": torch.ones(num_samples),
                 "beta": torch.ones(num_samples) * 2.0,
-                "gamma": torch.ones(num_samples) * 3.0
+                "gamma": torch.ones(num_samples) * 3.0,
             }
-        
+
         # Replace the implementation with our mock
         guide_factory._sample_posterior_impl = mock_sample_posterior
-        
+
         # Now we can test the sample_posterior method
         samples = guide_factory.sample_posterior(num_samples=10)
-        
+
         # Check samples
         assert isinstance(samples, dict)
         assert "alpha" in samples
         assert "beta" in samples
         assert "gamma" in samples
         assert samples["alpha"].shape[0] == 10
-        
+
         # Verify values are as expected
         assert torch.allclose(samples["alpha"], torch.ones(10))
         assert torch.allclose(samples["beta"], torch.ones(10) * 2.0)
@@ -211,20 +215,17 @@ class TestSVI:
         """Test using NormalGuide."""
         # Reset pyro parameter store
         pyro.clear_param_store()
-        
+
         # Create a simple PyTorch model
         def model():
             alpha = pyro.sample("alpha", dist.LogNormal(0.0, 1.0))
             beta = pyro.sample("beta", dist.LogNormal(0.0, 1.0))
             gamma = pyro.sample("gamma", dist.LogNormal(0.0, 1.0))
             return {"alpha": alpha, "beta": beta, "gamma": gamma}
-        
+
         # Create a NormalGuide
-        guide = NormalGuide(
-            init_scale=0.1,
-            name="normal_guide"
-        )
-        
+        guide = NormalGuide(init_scale=0.1, name="normal_guide")
+
         # Mock the necessary internal state
         guide._model = model
         guide._params = {
@@ -233,31 +234,31 @@ class TestSVI:
             "beta_loc": torch.tensor(0.0),
             "beta_scale": torch.tensor(1.0),
             "gamma_loc": torch.tensor(0.0),
-            "gamma_scale": torch.tensor(1.0)
+            "gamma_scale": torch.tensor(1.0),
         }
-        
+
         # Mock the sample_posterior_impl method
         def mock_sample_posterior(**kwargs):
             num_samples = kwargs.get("num_samples", 100)
             return {
                 "alpha": torch.ones(num_samples) * 1.0,
                 "beta": torch.ones(num_samples) * 2.0,
-                "gamma": torch.ones(num_samples) * 3.0
+                "gamma": torch.ones(num_samples) * 3.0,
             }
-        
+
         # Replace the implementation with our mock
         guide._sample_posterior_impl = mock_sample_posterior
-        
+
         # Now we can test the sample_posterior method
         samples = guide.sample_posterior(num_samples=10)
-        
+
         # Check samples
         assert isinstance(samples, dict)
         assert "alpha" in samples
         assert "beta" in samples
         assert "gamma" in samples
         assert samples["alpha"].shape[0] == 10
-        
+
         # Verify values are as expected
         assert torch.allclose(samples["alpha"], torch.ones(10) * 1.0)
         assert torch.allclose(samples["beta"], torch.ones(10) * 2.0)
@@ -267,53 +268,50 @@ class TestSVI:
         """Test using DeltaGuide."""
         # Reset pyro parameter store
         pyro.clear_param_store()
-        
+
         # Create a simple PyTorch model
         def model():
             alpha = pyro.sample("alpha", dist.LogNormal(0.0, 1.0))
             beta = pyro.sample("beta", dist.LogNormal(0.0, 1.0))
             gamma = pyro.sample("gamma", dist.LogNormal(0.0, 1.0))
             return {"alpha": alpha, "beta": beta, "gamma": gamma}
-        
+
         # Create initial values
         init_values = {
             "alpha": torch.tensor(1.0),
             "beta": torch.tensor(2.0),
             "gamma": torch.tensor(3.0),
         }
-        
+
         # Create a DeltaGuide
-        guide = DeltaGuide(
-            init_values=init_values,
-            name="delta_guide"
-        )
-        
+        guide = DeltaGuide(init_values=init_values, name="delta_guide")
+
         # Mock the necessary internal state
         guide._model = model
         guide._params = init_values.copy()
-        
+
         # Mock the sample_posterior_impl method
         def mock_sample_posterior(**kwargs):
             num_samples = kwargs.get("num_samples", 100)
             return {
                 "alpha": torch.ones(num_samples) * 1.0,
                 "beta": torch.ones(num_samples) * 2.0,
-                "gamma": torch.ones(num_samples) * 3.0
+                "gamma": torch.ones(num_samples) * 3.0,
             }
-        
+
         # Replace the implementation with our mock
         guide._sample_posterior_impl = mock_sample_posterior
-        
+
         # Now we can test the sample_posterior method
         samples = guide.sample_posterior(num_samples=10)
-        
+
         # Check samples
         assert isinstance(samples, dict)
         assert "alpha" in samples
         assert "beta" in samples
         assert "gamma" in samples
         assert samples["alpha"].shape[0] == 10
-        
+
         # Verify values are as expected
         assert torch.allclose(samples["alpha"], torch.ones(10) * 1.0)
         assert torch.allclose(samples["beta"], torch.ones(10) * 2.0)

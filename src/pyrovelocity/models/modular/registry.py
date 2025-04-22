@@ -217,11 +217,12 @@ observation_model_registry = (
 )
 inference_guide_registry = InferenceGuideRegistry()
 
+
 # Force explicit registration of component implementations
 def register_standard_components():
     """
     Explicitly register standard component implementations in their respective registries.
-    
+
     This function should be called in test setup to ensure standard components
     are registered and available for tests that use create_standard_model().
     """
@@ -246,33 +247,38 @@ def register_standard_components():
         InformativePriorModel,
         LogNormalPriorModel,
     )
-    
+
     # The import itself should trigger the registrations through decorators
     # But we can also explicitly register them if needed
     if "standard" not in DynamicsModelRegistry._registry:
         DynamicsModelRegistry._registry["standard"] = StandardDynamicsModel
     if "nonlinear" not in DynamicsModelRegistry._registry:
         DynamicsModelRegistry._registry["nonlinear"] = NonlinearDynamicsModel
-    
+
     if "lognormal" not in PriorModelRegistry._registry:
         PriorModelRegistry._registry["lognormal"] = LogNormalPriorModel
     if "informative" not in PriorModelRegistry._registry:
         PriorModelRegistry._registry["informative"] = InformativePriorModel
-    
+
     if "poisson" not in LikelihoodModelRegistry._registry:
         LikelihoodModelRegistry._registry["poisson"] = PoissonLikelihoodModel
     if "negative_binomial" not in LikelihoodModelRegistry._registry:
-        LikelihoodModelRegistry._registry["negative_binomial"] = NegativeBinomialLikelihoodModel
-    
+        LikelihoodModelRegistry._registry[
+            "negative_binomial"
+        ] = NegativeBinomialLikelihoodModel
+
     if "standard" not in ObservationModelRegistry._registry:
-        ObservationModelRegistry._registry["standard"] = StandardObservationModel
-    
+        ObservationModelRegistry._registry[
+            "standard"
+        ] = StandardObservationModel
+
     if "auto" not in InferenceGuideRegistry._registry:
         InferenceGuideRegistry._registry["auto"] = AutoGuideFactory
     if "normal" not in InferenceGuideRegistry._registry:
         InferenceGuideRegistry._registry["normal"] = NormalGuide
     if "delta" not in InferenceGuideRegistry._registry:
         InferenceGuideRegistry._registry["delta"] = DeltaGuide
+
 
 # Export all registry classes and instances
 __all__ = [

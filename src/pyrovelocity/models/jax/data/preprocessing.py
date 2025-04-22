@@ -46,17 +46,17 @@ def normalize_counts(
 
     # Create a mask for NaN values to preserve them
     nan_mask = jnp.isnan(counts)
-    
+
     # Replace NaNs with zeros for the division operation
     counts_no_nan = jnp.where(nan_mask, 0.0, counts)
-    
+
     # Normalize counts by size factors
     normalized = counts_no_nan / size_factors
 
     # Apply log transform if requested
     if log_transform:
         normalized = jnp.log(normalized + pseudocount)
-    
+
     # Restore NaN values
     normalized = jnp.where(nan_mask, jnp.nan, normalized)
 

@@ -24,17 +24,27 @@ def test_standard_dynamics_function():
     n_cells = 2
     n_genes = 3
 
-    tau = jnp.zeros((batch_size, n_cells, n_genes))  # Shape: (batch_size, n_cells, n_genes)
+    tau = jnp.zeros(
+        (batch_size, n_cells, n_genes)
+    )  # Shape: (batch_size, n_cells, n_genes)
     tau = tau.at[:, 1, :].set(1.0)  # Set tau=1.0 for the second cell
 
-    u0 = jnp.ones((batch_size, n_cells, n_genes))  # Shape: (batch_size, n_cells, n_genes)
-    s0 = jnp.ones((batch_size, n_cells, n_genes))  # Shape: (batch_size, n_cells, n_genes)
+    u0 = jnp.ones(
+        (batch_size, n_cells, n_genes)
+    )  # Shape: (batch_size, n_cells, n_genes)
+    s0 = jnp.ones(
+        (batch_size, n_cells, n_genes)
+    )  # Shape: (batch_size, n_cells, n_genes)
 
     # Create parameters
     params = {
-        "alpha": jnp.ones((batch_size, n_genes)),  # Shape: (batch_size, n_genes)
+        "alpha": jnp.ones(
+            (batch_size, n_genes)
+        ),  # Shape: (batch_size, n_genes)
         "beta": jnp.ones((batch_size, n_genes)),  # Shape: (batch_size, n_genes)
-        "gamma": jnp.ones((batch_size, n_genes)),  # Shape: (batch_size, n_genes)
+        "gamma": jnp.ones(
+            (batch_size, n_genes)
+        ),  # Shape: (batch_size, n_genes)
     }
 
     # Call function
@@ -55,18 +65,29 @@ def test_nonlinear_dynamics_function():
     n_cells = 2
     n_genes = 3
 
-    tau = jnp.zeros((batch_size, n_cells, n_genes))  # Shape: (batch_size, n_cells, n_genes)
+    tau = jnp.zeros(
+        (batch_size, n_cells, n_genes)
+    )  # Shape: (batch_size, n_cells, n_genes)
     tau = tau.at[:, 1, :].set(1.0)  # Set tau=1.0 for the second cell
 
-    u0 = jnp.ones((batch_size, n_cells, n_genes))  # Shape: (batch_size, n_cells, n_genes)
-    s0 = jnp.ones((batch_size, n_cells, n_genes))  # Shape: (batch_size, n_cells, n_genes)
+    u0 = jnp.ones(
+        (batch_size, n_cells, n_genes)
+    )  # Shape: (batch_size, n_cells, n_genes)
+    s0 = jnp.ones(
+        (batch_size, n_cells, n_genes)
+    )  # Shape: (batch_size, n_cells, n_genes)
 
     # Create parameters
     params = {
-        "alpha": jnp.ones((batch_size, n_genes)),  # Shape: (batch_size, n_genes)
+        "alpha": jnp.ones(
+            (batch_size, n_genes)
+        ),  # Shape: (batch_size, n_genes)
         "beta": jnp.ones((batch_size, n_genes)),  # Shape: (batch_size, n_genes)
-        "gamma": jnp.ones((batch_size, n_genes)),  # Shape: (batch_size, n_genes)
-        "scaling": jnp.ones((batch_size, n_genes)) * 0.1,  # Shape: (batch_size, n_genes)
+        "gamma": jnp.ones(
+            (batch_size, n_genes)
+        ),  # Shape: (batch_size, n_genes)
+        "scaling": jnp.ones((batch_size, n_genes))
+        * 0.1,  # Shape: (batch_size, n_genes)
     }
 
     # Call function

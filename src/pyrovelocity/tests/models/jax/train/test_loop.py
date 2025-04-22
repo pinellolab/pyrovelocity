@@ -259,12 +259,13 @@ def test_train_model_with_model_config(svi_fixture):
         "type": "simple",  # This would be a registered model type in a real scenario
         "params": {
             "num_data": len(data["x_data"]),
-        }
+        },
     }
 
     # Create a simple model factory for testing
     def create_model_mock(config):
         """Simple model factory for testing."""
+
         def model(**kwargs):
             # Extract data from kwargs
             x_data = kwargs.get("x_data", None)
@@ -290,6 +291,7 @@ def test_train_model_with_model_config(svi_fixture):
 
     # Patch the create_model function in the loop module
     import pyrovelocity.models.jax.train.loop as loop_module
+
     original_create_model = loop_module.create_model
     loop_module.create_model = create_model_mock
 

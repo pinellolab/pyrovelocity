@@ -51,11 +51,17 @@ def simple_model(x=None):
 def simple_guide(x=None):  # x is unused but required for API compatibility
     # Variational parameters
     alpha_loc = pyro.param("alpha_loc", torch.tensor(0.0))
-    alpha_scale = pyro.param("alpha_scale", torch.tensor(1.0), constraint=dist.constraints.positive)
+    alpha_scale = pyro.param(
+        "alpha_scale", torch.tensor(1.0), constraint=dist.constraints.positive
+    )
     beta_loc = pyro.param("beta_loc", torch.tensor(0.0))
-    beta_scale = pyro.param("beta_scale", torch.tensor(1.0), constraint=dist.constraints.positive)
+    beta_scale = pyro.param(
+        "beta_scale", torch.tensor(1.0), constraint=dist.constraints.positive
+    )
     gamma_loc = pyro.param("gamma_loc", torch.tensor(0.0))
-    gamma_scale = pyro.param("gamma_scale", torch.tensor(1.0), constraint=dist.constraints.positive)
+    gamma_scale = pyro.param(
+        "gamma_scale", torch.tensor(1.0), constraint=dist.constraints.positive
+    )
 
     # Sample from variational distributions
     alpha = pyro.sample("alpha", dist.LogNormal(alpha_loc, alpha_scale))
@@ -130,7 +136,9 @@ class TestPosterior:
         assert velocity_results["velocity"].shape == (2, 2)
 
         # Compute velocity with mean
-        velocity_results = compute_velocity(simple_model, posterior_samples, use_mean=True)
+        velocity_results = compute_velocity(
+            simple_model, posterior_samples, use_mean=True
+        )
         assert isinstance(velocity_results, dict)
         assert "velocity" in velocity_results
         assert "alpha" in velocity_results
@@ -217,7 +225,9 @@ class TestPosterior:
 
         # Create inference data
         inference_data = create_inference_data(posterior_samples, observed_data)
-        assert isinstance(inference_data, dict) or hasattr(inference_data, "posterior")
+        assert isinstance(inference_data, dict) or hasattr(
+            inference_data, "posterior"
+        )
 
     def test_format_anndata_output(self):
         """Test formatting results into AnnData object."""
@@ -232,9 +242,15 @@ class TestPosterior:
 
         # Generate results
         # Create data with correct dimensions for AnnData (n_obs x n_vars)
-        alpha = torch.tensor([[1.0, 2.0, 3.0, 4.0, 5.0], [6.0, 7.0, 8.0, 9.0, 10.0]])
-        beta = torch.tensor([[0.5, 0.6, 0.7, 0.8, 0.9], [1.0, 1.1, 1.2, 1.3, 1.4]])
-        gamma = torch.tensor([[0.3, 0.4, 0.5, 0.6, 0.7], [0.8, 0.9, 1.0, 1.1, 1.2]])
+        alpha = torch.tensor(
+            [[1.0, 2.0, 3.0, 4.0, 5.0], [6.0, 7.0, 8.0, 9.0, 10.0]]
+        )
+        beta = torch.tensor(
+            [[0.5, 0.6, 0.7, 0.8, 0.9], [1.0, 1.1, 1.2, 1.3, 1.4]]
+        )
+        gamma = torch.tensor(
+            [[0.3, 0.4, 0.5, 0.6, 0.7], [0.8, 0.9, 1.0, 1.1, 1.2]]
+        )
 
         # Create velocity matrix with shape (n_obs, n_vars) = (10, 5)
         velocity = np.random.rand(10, 5)

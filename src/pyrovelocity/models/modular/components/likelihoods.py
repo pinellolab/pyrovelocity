@@ -50,9 +50,9 @@ class PoissonLikelihoodModel(BaseLikelihoodModel):
             Dictionary mapping observation names to their distributions
         """
         # Handle direct tensor inputs for integration testing
-        if 'u_expected' in kwargs and 's_expected' in kwargs:
+        if "u_expected" in kwargs and "s_expected" in kwargs:
             return self._generate_direct_distributions(**kwargs)
-            
+
         return self._generate_distributions(
             adata=adata,
             cell_state=cell_state,
@@ -212,14 +212,14 @@ class PoissonLikelihoodModel(BaseLikelihoodModel):
             u_obs = torch.tensor(u_obs)
         if not isinstance(s_obs, torch.Tensor):
             s_obs = torch.tensor(s_obs)
-        
+
         # Create Poisson distributions for both unspliced and spliced counts
         with pyro.plate("cells", u_expected.shape[0]):
             with pyro.plate("genes", u_expected.shape[1]):
                 # Apply scale if provided
                 u_rate = u_expected
                 s_rate = s_expected
-                
+
                 if u_scale is not None:
                     if not isinstance(u_scale, torch.Tensor):
                         u_scale = torch.tensor(u_scale)
@@ -228,19 +228,15 @@ class PoissonLikelihoodModel(BaseLikelihoodModel):
                     if not isinstance(s_scale, torch.Tensor):
                         s_scale = torch.tensor(s_scale)
                     s_rate = s_rate * s_scale
-                
+
                 # Create Poisson distributions and observe data
                 u_dist = pyro.sample(
-                    "u_obs",
-                    pyro.distributions.Poisson(rate=u_rate),
-                    obs=u_obs
+                    "u_obs", pyro.distributions.Poisson(rate=u_rate), obs=u_obs
                 )
                 s_dist = pyro.sample(
-                    "s_obs",
-                    pyro.distributions.Poisson(rate=s_rate),
-                    obs=s_obs
+                    "s_obs", pyro.distributions.Poisson(rate=s_rate), obs=s_obs
                 )
-                
+
         return {"u_obs": u_dist, "s_obs": s_dist}
 
 

@@ -53,11 +53,11 @@ class MockDynamicsModel(BaseDynamicsModel):
         alpha = parameters.get("alpha", torch.tensor(1.0))
         beta = parameters.get("beta", torch.tensor(1.0))
         gamma = parameters.get("gamma", torch.tensor(1.0))
-        
+
         # Extract state from context
         u = context.get("u", torch.ones((10, 5)))
         s = context.get("s", torch.ones((10, 5)))
-        
+
         # Apply forward transform
         u_new, s_new = self._forward_impl(
             u=u,
@@ -66,7 +66,7 @@ class MockDynamicsModel(BaseDynamicsModel):
             beta=beta,
             gamma=gamma,
         )
-        
+
         # Create predictions dictionary
         predictions = {
             "u": u_new,
@@ -74,10 +74,10 @@ class MockDynamicsModel(BaseDynamicsModel):
             "mu": u_new,  # Example: use unspliced as prediction for mu
             "ms": s_new,  # Example: use spliced as prediction for ms
         }
-        
+
         # Add predictions to context
         context["predictions"] = predictions
-        
+
         return context
 
     def _forward_impl(
@@ -138,10 +138,10 @@ class MockLikelihoodModel(BaseLikelihoodModel):
         return context
 
     def _log_prob_impl(
-        self, 
+        self,
         observations: Float[Array, "batch_size genes"],
         predictions: Float[Array, "batch_size genes"],
-        scale_factors: Optional[Float[Array, "batch_size"]] = None
+        scale_factors: Optional[Float[Array, "batch_size"]] = None,
     ) -> Float[Array, "batch_size"]:
         """Implementation of log probability calculation."""
         # Simple mock implementation that returns ones
@@ -151,7 +151,7 @@ class MockLikelihoodModel(BaseLikelihoodModel):
     def _sample_impl(
         self,
         predictions: Float[Array, "batch_size genes"],
-        scale_factors: Optional[Float[Array, "batch_size"]] = None
+        scale_factors: Optional[Float[Array, "batch_size"]] = None,
     ) -> Float[Array, "batch_size genes"]:
         """Implementation of sampling."""
         # Add small Gaussian noise
@@ -231,11 +231,12 @@ class MockGuideModel(BaseInferenceGuide):
 
     def __call__(self, model, *args, **kwargs):
         """Return a guide function that can be used by Pyro."""
+
         def guide(*args, **kwargs):
             """Mock guide function."""
             # No-op for testing
             return None
-        
+
         return guide
 
     def _setup_guide_impl(self, model, **kwargs):
@@ -254,7 +255,7 @@ def sample_data():
     """Create sample data for testing."""
     n_cells = 10
     n_genes = 5
-    
+
     x = torch.randn((n_cells, n_genes))
     time_points = torch.linspace(0, 1, 3)
     observations = torch.abs(torch.randn((n_cells, n_genes)))
@@ -273,23 +274,33 @@ def mock_adata():
     """Create a real AnnData object for testing."""
     import anndata
     import pandas as pd
-    
+
     # Generate random data
     n_obs = 10
     n_vars = 5
     X = np.random.randn(n_obs, n_vars)
-    
+
     # Create observation annotations
-    obs = pd.DataFrame({
-        "cell_type": np.random.choice(["type1", "type2", "type3"], size=n_obs),
-        "time": np.random.rand(n_obs),
-    }, index=[f"cell_{i}" for i in range(n_obs)])
-    
+    obs = pd.DataFrame(
+        {
+            "cell_type": np.random.choice(
+                ["type1", "type2", "type3"], size=n_obs
+            ),
+            "time": np.random.rand(n_obs),
+        },
+        index=[f"cell_{i}" for i in range(n_obs)],
+    )
+
     # Create variable annotations
-    var = pd.DataFrame({
-        "gene_type": np.random.choice(["coding", "non-coding"], size=n_vars),
-    }, index=[f"gene_{i}" for i in range(n_vars)])
-    
+    var = pd.DataFrame(
+        {
+            "gene_type": np.random.choice(
+                ["coding", "non-coding"], size=n_vars
+            ),
+        },
+        index=[f"gene_{i}" for i in range(n_vars)],
+    )
+
     # Create AnnData object
     adata = anndata.AnnData(
         X=X,
@@ -297,7 +308,7 @@ def mock_adata():
         var=var,
         uns={"dataset_info": "test_dataset"},
     )
-    
+
     return adata
 
 
@@ -316,9 +327,9 @@ def mock_model(sample_data):
         likelihood_model=likelihood_model,
         observation_model=observation_model,
         guide_model=guide_model,
-        name="mock_model"
+        name="mock_model",
     )
-    
+
     # Add test result attributes
     model.result = MagicMock()
     model.result.posterior_samples = {
@@ -327,7 +338,7 @@ def mock_model(sample_data):
         "gamma": torch.ones(10, 3),
     }
     model.result.log_likelihood = torch.ones(10, 20)
-    
+
     return model
 
 
@@ -348,9 +359,9 @@ def multiple_models(sample_data):
             likelihood_model=likelihood_model,
             observation_model=observation_model,
             guide_model=guide_model,
-            name=f"model_{i}"
+            name=f"model_{i}",
         )
-        
+
         # Add test result attributes
         model.result = MagicMock()
         model.result.posterior_samples = {
@@ -359,9 +370,9 @@ def multiple_models(sample_data):
             "gamma": torch.ones(10, 3) * (i + 1),
         }
         model.result.log_likelihood = torch.ones(10, 20) * (i + 1)
-        
+
         models.append(model)
-    
+
     return models
 
 
@@ -369,13 +380,13 @@ def multiple_models(sample_data):
 def mock_comparison_result(multiple_models):
     """Create a mock ComparisonResult for testing."""
     names = [model.name for model in multiple_models]
-    
+
     # Create values dict for WAIC
     waic_values = {names[i]: float(i) for i in range(len(names))}
-    
+
     # Create values dict for LOO
     loo_values = {names[i]: float(i * 2) for i in range(len(names))}
-    
+
     # Create Bayes factors
     bayes_factors = {
         f"{names[i]}:{names[j]}": float(i / (j + 1))
@@ -383,7 +394,7 @@ def mock_comparison_result(multiple_models):
         for j in range(len(names))
         if i != j
     }
-    
+
     # Create WAIC comparison result
     waic_result = ComparisonResult(
         metric_name="WAIC",
@@ -391,7 +402,7 @@ def mock_comparison_result(multiple_models):
         differences=None,
         standard_errors=None,
     )
-    
+
     # Create LOO comparison result
     loo_result = ComparisonResult(
         metric_name="LOO",
@@ -399,7 +410,7 @@ def mock_comparison_result(multiple_models):
         differences=None,
         standard_errors=None,
     )
-    
+
     # Return WAIC result as default
     return waic_result
 
@@ -413,7 +424,7 @@ def mock_selection_result(multiple_models, mock_comparison_result):
         comparison_result=mock_comparison_result,
         is_significant=True,
         significance_threshold=2.0,
-        metadata={"weights": [0.5, 0.3, 0.2]}
+        metadata={"weights": [0.5, 0.3, 0.2]},
     )
 
 
@@ -442,7 +453,10 @@ def model_selection(multiple_models):
 def model_ensemble(multiple_models):
     """Create a ModelEnsemble instance for testing."""
     models_dict = {model.name: model for model in multiple_models}
-    weights_dict = {model.name: weight for model, weight in zip(multiple_models, [0.5, 0.3, 0.2])}
+    weights_dict = {
+        model.name: weight
+        for model, weight in zip(multiple_models, [0.5, 0.3, 0.2])
+    }
     return ModelEnsemble(models=models_dict, weights=weights_dict)
 
 
@@ -457,7 +471,7 @@ def cross_validator(multiple_models):
 # Mock PyroVelocityModel that allows setting the name property for testing
 class MockPyroVelocityModel(PyroVelocityModel):
     """Mock PyroVelocityModel that allows setting the name property for testing."""
-    
+
     def __init__(
         self,
         dynamics_model,
@@ -466,7 +480,7 @@ class MockPyroVelocityModel(PyroVelocityModel):
         observation_model,
         guide_model,
         state=None,
-        name="mock_model"
+        name="mock_model",
     ):
         super().__init__(
             dynamics_model=dynamics_model,
@@ -477,8 +491,8 @@ class MockPyroVelocityModel(PyroVelocityModel):
             state=state,
         )
         self._name = name
-    
+
     @property
     def name(self):
         """Return the custom model name."""
-        return self._name 
+        return self._name

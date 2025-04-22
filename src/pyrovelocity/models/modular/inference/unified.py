@@ -207,7 +207,10 @@ def extract_posterior_samples(
 
     # If num_samples is specified and different from the current number of samples,
     # subsample the posterior samples
-    if num_samples is not None and len(next(iter(samples.values()))) != num_samples:
+    if (
+        num_samples is not None
+        and len(next(iter(samples.values()))) != num_samples
+    ):
         subsampled = {}
         for k, v in samples.items():
             indices = torch.randperm(len(v))[:num_samples]

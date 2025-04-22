@@ -46,7 +46,9 @@ class TestMCMC:
 
         # Test creating MCMC with custom kernel
         kernel = pyro.infer.NUTS(simple_model)
-        mcmc = create_mcmc(simple_model, kernel=kernel, num_warmup=10, num_samples=10)
+        mcmc = create_mcmc(
+            simple_model, kernel=kernel, num_warmup=10, num_samples=10
+        )
         assert mcmc is not None
 
     def test_run_mcmc_inference(self):

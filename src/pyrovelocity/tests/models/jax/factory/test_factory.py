@@ -51,7 +51,10 @@ def mock_dynamics_function(
     u0: Float[Array, "batch_size n_cells n_genes"],
     s0: Float[Array, "batch_size n_cells n_genes"],
     params: Dict[str, Float[Array, "..."]],
-) -> Tuple[Float[Array, "batch_size n_cells n_genes"], Float[Array, "batch_size n_cells n_genes"]]:
+) -> Tuple[
+    Float[Array, "batch_size n_cells n_genes"],
+    Float[Array, "batch_size n_cells n_genes"],
+]:
     """Mock dynamics function for testing."""
     return u0, s0
 
@@ -84,7 +87,10 @@ def mock_observation_function(
     u_obs: Float[Array, "batch_size n_cells n_genes"],
     s_obs: Float[Array, "batch_size n_cells n_genes"],
     observation_params: Optional[Dict[str, Any]] = None,
-) -> Tuple[Float[Array, "batch_size n_cells n_genes"], Float[Array, "batch_size n_cells n_genes"]]:
+) -> Tuple[
+    Float[Array, "batch_size n_cells n_genes"],
+    Float[Array, "batch_size n_cells n_genes"],
+]:
     """Mock observation function for testing."""
     return u_obs, s_obs
 
@@ -134,7 +140,9 @@ def test_config_classes():
     assert dynamics_config.name == "standard"
     assert dynamics_config.params == {}
 
-    dynamics_config = DynamicsFunctionConfig(name="standard", params={"param1": 1})
+    dynamics_config = DynamicsFunctionConfig(
+        name="standard", params={"param1": 1}
+    )
     assert dynamics_config.name == "standard"
     assert dynamics_config.params == {"param1": 1}
 
@@ -152,7 +160,9 @@ def test_config_classes():
     assert likelihood_config.name == "poisson"
     assert likelihood_config.params == {}
 
-    likelihood_config = LikelihoodFunctionConfig(name="poisson", params={"param1": 1})
+    likelihood_config = LikelihoodFunctionConfig(
+        name="poisson", params={"param1": 1}
+    )
     assert likelihood_config.name == "poisson"
     assert likelihood_config.params == {"param1": 1}
 
@@ -161,7 +171,9 @@ def test_config_classes():
     assert observation_config.name == "standard"
     assert observation_config.params == {}
 
-    observation_config = ObservationFunctionConfig(name="standard", params={"param1": 1})
+    observation_config = ObservationFunctionConfig(
+        name="standard", params={"param1": 1}
+    )
     assert observation_config.name == "standard"
     assert observation_config.params == {"param1": 1}
 
@@ -219,7 +231,9 @@ def test_create_dynamics_function(setup_registries):
     assert fn is mock_dynamics_function
 
     # Test with params
-    fn = create_dynamics_function(DynamicsFunctionConfig(name="mock", params={"param1": 1}))
+    fn = create_dynamics_function(
+        DynamicsFunctionConfig(name="mock", params={"param1": 1})
+    )
     assert fn is mock_dynamics_function
 
     # Test with invalid name
@@ -246,7 +260,9 @@ def test_create_prior_function(setup_registries):
     assert fn is mock_prior_function
 
     # Test with params
-    fn = create_prior_function(PriorFunctionConfig(name="mock", params={"param1": 1}))
+    fn = create_prior_function(
+        PriorFunctionConfig(name="mock", params={"param1": 1})
+    )
     assert fn is mock_prior_function
 
     # Test with invalid name
@@ -273,7 +289,9 @@ def test_create_likelihood_function(setup_registries):
     assert fn is mock_likelihood_function
 
     # Test with params
-    fn = create_likelihood_function(LikelihoodFunctionConfig(name="mock", params={"param1": 1}))
+    fn = create_likelihood_function(
+        LikelihoodFunctionConfig(name="mock", params={"param1": 1})
+    )
     assert fn is mock_likelihood_function
 
     # Test with invalid name
@@ -300,7 +318,9 @@ def test_create_observation_function(setup_registries):
     assert fn is mock_observation_function
 
     # Test with params
-    fn = create_observation_function(ObservationFunctionConfig(name="mock", params={"param1": 1}))
+    fn = create_observation_function(
+        ObservationFunctionConfig(name="mock", params={"param1": 1})
+    )
     assert fn is mock_observation_function
 
     # Test with invalid name
@@ -327,7 +347,9 @@ def test_create_guide_factory_function(setup_registries):
     assert fn is mock_guide_factory_function
 
     # Test with params
-    fn = create_guide_factory_function(GuideFunctionConfig(name="mock", params={"param1": 1}))
+    fn = create_guide_factory_function(
+        GuideFunctionConfig(name="mock", params={"param1": 1})
+    )
     assert fn is mock_guide_factory_function
 
     # Test with invalid name
@@ -349,13 +371,15 @@ def test_create_model(setup_registries):
     assert callable(model)
 
     # Test with dict
-    model = create_model({
-        "dynamics_function": {"name": "mock"},
-        "prior_function": {"name": "mock"},
-        "likelihood_function": {"name": "mock"},
-        "observation_function": {"name": "mock"},
-        "guide_function": {"name": "mock"},
-    })
+    model = create_model(
+        {
+            "dynamics_function": {"name": "mock"},
+            "prior_function": {"name": "mock"},
+            "likelihood_function": {"name": "mock"},
+            "observation_function": {"name": "mock"},
+            "guide_function": {"name": "mock"},
+        }
+    )
     assert callable(model)
 
     # Test standard model config

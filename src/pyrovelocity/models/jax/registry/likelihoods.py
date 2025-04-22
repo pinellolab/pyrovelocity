@@ -17,61 +17,61 @@ _LIKELIHOOD_REGISTRY = None
 class LikelihoodRegistry(Registry):
     """
     Registry for likelihood functions.
-    
+
     This class provides a registry for likelihood functions, allowing registration
     and retrieval of likelihood functions by name.
     """
-    
+
     def __init__(self):
         """Initialize the likelihood registry."""
         super().__init__("likelihoods")
-    
+
     def register(self, name: str, fn: Callable) -> Callable:
         """
         Register a likelihood function in the registry.
-        
+
         Args:
             name: Name to register the function under
             fn: Likelihood function to register
-            
+
         Returns:
             The registered function
-            
+
         Raises:
             ValueError: If a function with the same name is already registered
             TypeError: If the function does not conform to the likelihood function interface
         """
         # Validate the function
         validate_likelihood_function(fn)
-        
+
         return super().register(name, fn)
 
 
 def get_likelihood_registry() -> LikelihoodRegistry:
     """
     Get the likelihood registry.
-    
+
     Returns:
         The likelihood registry
     """
     global _LIKELIHOOD_REGISTRY
     if _LIKELIHOOD_REGISTRY is None:
         _LIKELIHOOD_REGISTRY = LikelihoodRegistry()
-    
+
     return _LIKELIHOOD_REGISTRY
 
 
 def register_likelihood(name: str, fn: Callable) -> Callable:
     """
     Register a likelihood function.
-    
+
     Args:
         name: Name to register the function under
         fn: Likelihood function to register
-        
+
     Returns:
         The registered function
-        
+
     Raises:
         ValueError: If a function with the same name is already registered
         TypeError: If the function does not conform to the likelihood function interface
@@ -83,10 +83,10 @@ def register_likelihood(name: str, fn: Callable) -> Callable:
 def get_likelihood(name: str) -> Optional[Callable]:
     """
     Get a likelihood function by name.
-    
+
     Args:
         name: Name of the likelihood function to get
-        
+
     Returns:
         The registered likelihood function, or None if not found
     """
@@ -97,7 +97,7 @@ def get_likelihood(name: str) -> Optional[Callable]:
 def list_likelihoods() -> List[str]:
     """
     List all registered likelihood function names.
-    
+
     Returns:
         List of registered likelihood function names
     """

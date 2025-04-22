@@ -148,8 +148,12 @@ class TestStandardDynamicsModel:
         # This is more complex to derive analytically, so we'll just check
         # that the steady state values are correct
         u_ss, s_ss = model.steady_state(alpha, beta, gamma)
-        assert torch.allclose(alpha - beta * u_ss, torch.zeros_like(u_ss), rtol=1e-5)
-        assert torch.allclose(beta * u_ss - gamma * s_ss, torch.zeros_like(s_ss), rtol=1e-5)
+        assert torch.allclose(
+            alpha - beta * u_ss, torch.zeros_like(u_ss), rtol=1e-5
+        )
+        assert torch.allclose(
+            beta * u_ss - gamma * s_ss, torch.zeros_like(s_ss), rtol=1e-5
+        )
 
 
 class TestNonlinearDynamicsModel:
@@ -368,11 +372,15 @@ def test_model_comparison():
     (
         u_ss_nonlinear_large_k,
         s_ss_nonlinear_large_k,
-    ) = nonlinear_model.steady_state(alpha, beta, gamma, k_alpha=k_large, k_beta=k_large)
+    ) = nonlinear_model.steady_state(
+        alpha, beta, gamma, k_alpha=k_large, k_beta=k_large
+    )
     (
         u_ss_nonlinear_small_k,
         s_ss_nonlinear_small_k,
-    ) = nonlinear_model.steady_state(alpha, beta, gamma, k_alpha=k_small, k_beta=k_small)
+    ) = nonlinear_model.steady_state(
+        alpha, beta, gamma, k_alpha=k_small, k_beta=k_small
+    )
 
     # Compare steady states
     # Use a larger tolerance for the comparison

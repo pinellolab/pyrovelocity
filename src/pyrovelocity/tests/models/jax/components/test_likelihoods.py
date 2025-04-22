@@ -56,7 +56,9 @@ def test_poisson_likelihood_function():
 
     # Create a model that uses the likelihood function with library size scaling
     def model_with_scaling():
-        poisson_likelihood_function(u_obs, s_obs, u_logits, s_logits, likelihood_params)
+        poisson_likelihood_function(
+            u_obs, s_obs, u_logits, s_logits, likelihood_params
+        )
 
     # Trace the model to check that it samples from the correct distributions
     tr = trace(seed(model_with_scaling, 0)).get_trace()
@@ -105,7 +107,9 @@ def test_negative_binomial_likelihood_function():
 
     # Create a model that uses the likelihood function with library size scaling and dispersion
     def model_with_params():
-        negative_binomial_likelihood_function(u_obs, s_obs, u_logits, s_logits, likelihood_params)
+        negative_binomial_likelihood_function(
+            u_obs, s_obs, u_logits, s_logits, likelihood_params
+        )
 
     # Trace the model to check that it samples from the correct distributions
     tr = trace(seed(model_with_params, 0)).get_trace()

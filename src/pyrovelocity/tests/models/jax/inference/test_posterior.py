@@ -273,7 +273,9 @@ def test_create_inference_data(test_inference_state):
     assert "tau" in inference_data.posterior
 
 
-@pytest.mark.skip(reason="This test needs more work to handle model parameters correctly")
+@pytest.mark.skip(
+    reason="This test needs more work to handle model parameters correctly"
+)
 def test_analyze_posterior_with_model_config(test_inference_state):
     """Test analyzing posterior samples with a model configuration."""
     # This test is skipped because it requires more work to handle the model parameters correctly.
@@ -296,7 +298,9 @@ def test_analyze_posterior_with_model_config(test_inference_state):
     # but this is skipped for now due to the complexity of mocking the correct model parameters.
 
 
-@pytest.mark.skip(reason="This test needs more work to handle AnnData format correctly")
+@pytest.mark.skip(
+    reason="This test needs more work to handle AnnData format correctly"
+)
 def test_format_anndata_output(test_inference_state):
     """Test formatting results into an AnnData object."""
     # This test is skipped because it requires more work to handle the AnnData format correctly.

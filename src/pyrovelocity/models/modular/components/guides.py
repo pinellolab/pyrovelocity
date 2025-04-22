@@ -188,7 +188,7 @@ class AutoGuideFactory(BaseInferenceGuide):
         """
         Create a guide function for the given model.
 
-        This method is called by Pyro's SVI when the guide is used directly 
+        This method is called by Pyro's SVI when the guide is used directly
         in svi.step() as the guide parameter. It should delegate to the guide
         object created by create_guide.
 
@@ -204,11 +204,13 @@ class AutoGuideFactory(BaseInferenceGuide):
             model = args[0]
             self.create_guide(model)
             self._model = model
-        
+
         # If we still don't have a guide, raise an error
         if self._guide is None:
-            raise RuntimeError("Guide has not been created yet. Call create_guide first.")
-        
+            raise RuntimeError(
+                "Guide has not been created yet. Call create_guide first."
+            )
+
         # Delegate to the created guide
         return self._guide(*args, **kwargs)
 
@@ -348,7 +350,11 @@ class NormalGuide(BaseInferenceGuide):
         Returns:
             Dictionary of posterior samples
         """
-        if not hasattr(self, "_model") or not hasattr(self, "_params") or not self._params:
+        if (
+            not hasattr(self, "_model")
+            or not hasattr(self, "_params")
+            or not self._params
+        ):
             raise RuntimeError(
                 "Guide has not been created yet or no parameters have been registered."
             )
@@ -360,7 +366,9 @@ class NormalGuide(BaseInferenceGuide):
         posterior_samples = {}
         for name, (loc, scale) in self._params.items():
             # Sample from normal distribution
-            samples = torch.distributions.Normal(loc, scale).sample(torch.Size([num_samples]))
+            samples = torch.distributions.Normal(loc, scale).sample(
+                torch.Size([num_samples])
+            )
             posterior_samples[name] = samples
 
         return posterior_samples
@@ -369,7 +377,7 @@ class NormalGuide(BaseInferenceGuide):
         """
         Create a guide function for the given model.
 
-        This method is called by Pyro's SVI when the guide is used directly 
+        This method is called by Pyro's SVI when the guide is used directly
         in svi.step() as the guide parameter. It should delegate to the guide
         object created by create_guide.
 
@@ -381,15 +389,17 @@ class NormalGuide(BaseInferenceGuide):
             A guide function compatible with the model
         """
         # If being used directly in SVI, the first argument will be the model
-        if len(args) > 0 and callable(args[0]) and not hasattr(self, '_model'):
+        if len(args) > 0 and callable(args[0]) and not hasattr(self, "_model"):
             model = args[0]
             self.create_guide(model)
             self._model = model
-        
+
         # If we still don't have a guide, raise an error
-        if not hasattr(self, '_model'):
-            raise RuntimeError("Guide has not been created yet. Call create_guide first.")
-        
+        if not hasattr(self, "_model"):
+            raise RuntimeError(
+                "Guide has not been created yet. Call create_guide first."
+            )
+
         # Get the guide function and call it
         guide_fn = self.get_guide()
         return guide_fn(*args, **kwargs)
@@ -524,7 +534,11 @@ class DeltaGuide(BaseInferenceGuide):
         Returns:
             Dictionary of posterior samples
         """
-        if not hasattr(self, "_model") or not hasattr(self, "_params") or not self._params:
+        if (
+            not hasattr(self, "_model")
+            or not hasattr(self, "_params")
+            or not self._params
+        ):
             raise RuntimeError(
                 "Guide has not been created yet or no parameters have been registered."
             )
@@ -541,7 +555,7 @@ class DeltaGuide(BaseInferenceGuide):
         """
         Create a guide function for the given model.
 
-        This method is called by Pyro's SVI when the guide is used directly 
+        This method is called by Pyro's SVI when the guide is used directly
         in svi.step() as the guide parameter. It should delegate to the guide
         object created by create_guide.
 
@@ -553,15 +567,17 @@ class DeltaGuide(BaseInferenceGuide):
             A guide function compatible with the model
         """
         # If being used directly in SVI, the first argument will be the model
-        if len(args) > 0 and callable(args[0]) and not hasattr(self, '_model'):
+        if len(args) > 0 and callable(args[0]) and not hasattr(self, "_model"):
             model = args[0]
             self.create_guide(model)
             self._model = model
-        
+
         # If we still don't have a guide, raise an error
-        if not hasattr(self, '_model'):
-            raise RuntimeError("Guide has not been created yet. Call create_guide first.")
-        
+        if not hasattr(self, "_model"):
+            raise RuntimeError(
+                "Guide has not been created yet. Call create_guide first."
+            )
+
         # Get the guide function and call it
         guide_fn = self.get_guide()
         return guide_fn(*args, **kwargs)

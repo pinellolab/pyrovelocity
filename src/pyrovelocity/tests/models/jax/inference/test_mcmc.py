@@ -129,12 +129,13 @@ def test_run_mcmc_inference_with_model_config(test_data):
         "type": "simple",  # This would be a registered model type in a real scenario
         "params": {
             "num_data": 10,
-        }
+        },
     }
 
     # Create a simple model factory for testing
     def create_model_mock(config):
         """Simple model factory for testing."""
+
         def model(x=None):
             # Sample parameters
             alpha = numpyro.sample("alpha", dist.LogNormal(0.0, 1.0))
@@ -160,6 +161,7 @@ def test_run_mcmc_inference_with_model_config(test_data):
 
     # Patch the create_model function in the mcmc module
     import pyrovelocity.models.jax.inference.mcmc as mcmc_module
+
     original_create_model = mcmc_module.create_model
     mcmc_module.create_model = create_model_mock
 

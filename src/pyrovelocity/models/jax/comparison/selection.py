@@ -157,7 +157,9 @@ def cross_validate(
     }
 
     # Perform cross-validation
-    for i, (train_args, train_kwargs, test_args, test_kwargs) in enumerate(data_splits):
+    for i, (train_args, train_kwargs, test_args, test_kwargs) in enumerate(
+        data_splits
+    ):
         # Split key for this fold
         key, subkey = jax.random.split(key)
 
