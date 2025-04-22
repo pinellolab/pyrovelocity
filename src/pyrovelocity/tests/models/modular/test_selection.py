@@ -5,21 +5,22 @@ This module contains tests for the ModelSelection, ModelEnsemble, and CrossValid
 classes and related utility functions for model selection and ensemble creation.
 """
 
-import numpy as np
-import pandas as pd
-import pytest
-import torch
 from unittest.mock import MagicMock, patch
 
 import jax
 import jax.numpy as jnp
+import numpy as np
+import pandas as pd
 import pyro
+import pytest
+import torch
 from anndata import AnnData
 
 from pyrovelocity.models.modular.comparison import (
     BayesianModelComparison,
     ComparisonResult,
 )
+from pyrovelocity.models.modular.model import ModelState, PyroVelocityModel
 from pyrovelocity.models.modular.selection import (
     CrossValidator,
     ModelEnsemble,
@@ -27,15 +28,14 @@ from pyrovelocity.models.modular.selection import (
     SelectionCriterion,
     SelectionResult,
 )
-from pyrovelocity.models.modular.model import ModelState, PyroVelocityModel
 
 # Import mock models from test_comparison.py
-from pyrovelocity.tests.models.test_comparison import (
+from pyrovelocity.tests.models.modular.test_comparison import (
     MockDynamicsModel,
-    MockLikelihoodModel,
-    MockPriorModel,
-    MockObservationModel,
     MockGuideModel,
+    MockLikelihoodModel,
+    MockObservationModel,
+    MockPriorModel,
 )
 
 
