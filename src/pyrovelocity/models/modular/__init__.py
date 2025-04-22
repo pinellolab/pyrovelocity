@@ -1,110 +1,77 @@
 """
-PyroVelocity modular model architecture.
+PyroVelocity modular architecture package.
 
-This package contains the modular components of the PyroVelocity model architecture,
-including component interfaces, implementations, factory methods, and registries.
+This package contains the modular architecture for PyroVelocity, enabling
+flexible composition of models, priors, likelihoods, and inference methods.
 """
 
-# Import component interfaces
-from pyrovelocity.models.modular.interfaces import (
-    DynamicsModel,
-    LikelihoodModel,
-    ObservationModel,
-    PriorModel,
-    InferenceGuide,
+# Import component registries and register components
+# Import adapters
+from pyrovelocity.models.adapters import (
+    LegacyModelAdapter,
 )
 
-# Import component base classes
-from pyrovelocity.models.modular.components.base import (
-    BaseDynamicsModel,
-    BaseLikelihoodModel,
-    BaseObservationModel,
-    BasePriorModel,
-    BaseInferenceGuide,
+# Import comparison and selection
+from pyrovelocity.models.modular.comparison import (
+    BayesianModelComparison,
+    compute_loo,
+    compute_waic,
 )
 
 # Import component implementations
-from pyrovelocity.models.modular.components.dynamics import (
-    StandardDynamicsModel,
-    NonlinearDynamicsModel,
-)
-from pyrovelocity.models.modular.components.priors import (
-    LogNormalPriorModel,
+from pyrovelocity.models.modular.components import (
+    AutoGuideFactory,
+    DeltaGuide,
     InformativePriorModel,
-)
-from pyrovelocity.models.modular.components.likelihoods import (
-    PoissonLikelihoodModel,
+    LogNormalPriorModel,
     NegativeBinomialLikelihoodModel,
-)
-from pyrovelocity.models.modular.components.observations import (
+    NonlinearDynamicsModel,
+    NormalGuide,
+    PoissonLikelihoodModel,
+    StandardDynamicsModel,
     StandardObservationModel,
 )
-from pyrovelocity.models.modular.components.guides import (
-    AutoGuideFactory,
-    NormalGuide,
-    DeltaGuide,
-)
 
-# Import component registries
+# Import factory functions
+from pyrovelocity.models.modular.factory import (
+    create_model,
+    create_standard_model,
+    standard_model_config,
+)
 from pyrovelocity.models.modular.registry import (
     DynamicsModelRegistry,
+    InferenceGuideRegistry,
     LikelihoodModelRegistry,
     ObservationModelRegistry,
     PriorModelRegistry,
-    InferenceGuideRegistry,
 )
-
-# Import factory methods
-from pyrovelocity.models.modular.factory import (
-    DynamicsModelConfig,
-    PriorModelConfig,
-    LikelihoodModelConfig,
-    ObservationModelConfig,
-    InferenceGuideConfig,
-    PyroVelocityModelConfig,
-    create_dynamics_model,
-    create_prior_model,
-    create_likelihood_model,
-    create_observation_model,
-    create_inference_guide,
-    create_model,
-    standard_model_config,
-    create_standard_model,
-)
-
-# Import model classes
-from pyrovelocity.models.modular.model import ModelState, PyroVelocityModel
-
-# Import model comparison tools
-from pyrovelocity.models.modular.comparison import (
-    BayesianModelComparison,
-    ComparisonResult,
-    create_comparison_table,
-    select_best_model,
-)
-
-# Import model selection tools
 from pyrovelocity.models.modular.selection import (
-    ModelSelection,
     ModelEnsemble,
-    CrossValidator,
-    SelectionCriterion,
-    SelectionResult,
+    select_model,
 )
+
+
+# Ensure components are registered in registries
+def _ensure_registrations():
+    """
+    Ensure all components are properly registered in their respective registries.
+    This function is called when the module is imported.
+    """
+    # This function doesn't need to do anything special since the decorators
+    # handle registration, but importing the classes ensures decorators are executed
+    pass
+
+# Call the function to ensure registrations
+_ensure_registrations()
 
 __all__ = [
-    # Interfaces
-    "DynamicsModel",
-    "LikelihoodModel",
-    "ObservationModel",
-    "PriorModel",
-    "InferenceGuide",
-    # Base classes
-    "BaseDynamicsModel",
-    "BaseLikelihoodModel",
-    "BaseObservationModel",
-    "BasePriorModel",
-    "BaseInferenceGuide",
+    # Component registries
+    "DynamicsModelRegistry",
+    "PriorModelRegistry",
+    "LikelihoodModelRegistry", 
+    "ObservationModelRegistry",
+    "InferenceGuideRegistry",
+    
     # Component implementations
     "StandardDynamicsModel",
     "NonlinearDynamicsModel",
@@ -116,39 +83,19 @@ __all__ = [
     "AutoGuideFactory",
     "NormalGuide",
     "DeltaGuide",
-    # Registries
-    "DynamicsModelRegistry",
-    "LikelihoodModelRegistry",
-    "ObservationModelRegistry",
-    "PriorModelRegistry",
-    "InferenceGuideRegistry",
-    # Factory methods
-    "DynamicsModelConfig",
-    "PriorModelConfig",
-    "LikelihoodModelConfig",
-    "ObservationModelConfig",
-    "InferenceGuideConfig",
-    "PyroVelocityModelConfig",
-    "create_dynamics_model",
-    "create_prior_model",
-    "create_likelihood_model",
-    "create_observation_model",
-    "create_inference_guide",
+    
+    # Factory functions
     "create_model",
-    "standard_model_config",
     "create_standard_model",
-    # Model classes
-    "ModelState",
-    "PyroVelocityModel",
-    # Model comparison
+    "standard_model_config",
+    
+    # Adapters
+    "LegacyModelAdapter",
+    
+    # Comparison and selection
     "BayesianModelComparison",
-    "ComparisonResult",
-    "create_comparison_table",
-    "select_best_model",
-    # Model selection
-    "ModelSelection",
+    "compute_waic",
+    "compute_loo",
+    "select_model",
     "ModelEnsemble",
-    "CrossValidator",
-    "SelectionCriterion",
-    "SelectionResult",
 ]

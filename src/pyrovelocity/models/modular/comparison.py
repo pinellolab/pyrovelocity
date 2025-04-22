@@ -125,7 +125,7 @@ class BayesianModelComparison:
         num_samples: int = 100,
     ) -> torch.Tensor:
         """
-        Extract log likelihood values for each observation and posterior sample.
+        Extract log likelihood values from a model for given posterior samples.
 
         Args:
             model: PyroVelocityModel instance
@@ -143,6 +143,15 @@ class BayesianModelComparison:
 
         # Get likelihood model from the PyroVelocityModel
         likelihood_model = model.likelihood_model
+
+        # Determine the actual number of samples from the posterior_samples
+        if posterior_samples and len(posterior_samples) > 0:
+            first_key = next(iter(posterior_samples))
+            actual_num_samples = posterior_samples[first_key].shape[0]
+            # Use the minimum of the provided num_samples and actual available samples
+            num_samples = min(num_samples, actual_num_samples)
+        else:
+            raise ValueError("posterior_samples dictionary is empty")
 
         # Initialize log likelihood tensor
         num_observations = observations.shape[0]
@@ -163,25 +172,22 @@ class BayesianModelComparison:
                     "Dynamics model did not return 'predictions' key"
                 )
 
-            # Convert torch tensors to jax arrays for type compatibility
-            observations_jax = jnp.array(observations.numpy())
-            predictions_jax = jnp.array(predictions.numpy())
+            # Use PyTorch tensors for likelihood computation
+            # The likelihood model should accept PyTorch tensors
             scale_factors = data.get("scale_factors", None)
-            scale_factors_jax = (
-                jnp.array(scale_factors.numpy())
-                if scale_factors is not None
-                else None
-            )
-
+            
             # Compute log likelihood
-            log_likes_jax = likelihood_model.log_prob(
-                observations=observations_jax,
-                predictions=predictions_jax,
-                scale_factors=scale_factors_jax,
+            log_prob = likelihood_model.log_prob(
+                observations=observations,
+                predictions=predictions,
+                scale_factors=scale_factors,
             )
-
-            # Convert back to torch tensor
-            log_likes[i] = torch.tensor(np.array(log_likes_jax))
+            
+            # Ensure result is a PyTorch tensor
+            if not isinstance(log_prob, torch.Tensor):
+                log_prob = torch.tensor(np.array(log_prob))
+                
+            log_likes[i] = log_prob
 
         return log_likes
 
@@ -193,7 +199,7 @@ class BayesianModelComparison:
         posterior_samples: Dict[str, torch.Tensor],
         data: Dict[str, torch.Tensor],
         pointwise: bool = False,
-    ) -> Union[float, Tuple[float, Float[Array, "num_observations"]]]:
+    ) -> Union[float, Tuple[float, torch.Tensor]]:
         """
         Compute the Widely Applicable Information Criterion (WAIC).
 
@@ -223,7 +229,7 @@ class BayesianModelComparison:
         waic_result = az.waic(waic_data, pointwise=True)
 
         if pointwise:
-            return waic_result.waic, jnp.array(waic_result.pointwise)
+            return waic_result.waic, torch.tensor(waic_result.pointwise)
         else:
             return waic_result.waic
 
@@ -235,7 +241,7 @@ class BayesianModelComparison:
         posterior_samples: Dict[str, torch.Tensor],
         data: Dict[str, torch.Tensor],
         pointwise: bool = False,
-    ) -> Union[float, Tuple[float, Float[Array, "num_observations"]]]:
+    ) -> Union[float, Tuple[float, torch.Tensor]]:
         """
         Compute Leave-One-Out (LOO) cross-validation.
 
@@ -264,7 +270,7 @@ class BayesianModelComparison:
         loo_result = az.loo(loo_data, pointwise=True)
 
         if pointwise:
-            return loo_result.loo, jnp.array(loo_result.pointwise)
+            return loo_result.loo, torch.tensor(loo_result.pointwise)
         else:
             return loo_result.loo
 
@@ -541,3 +547,53 @@ def create_comparison_table(
         df = pd.merge(df, metric_df[["model"] + metric_cols], on="model")
 
     return df
+
+# Convenience functions for module-level access
+
+def compute_waic(
+    model: PyroVelocityModel,
+    posterior_samples: Dict[str, torch.Tensor],
+    data: Dict[str, torch.Tensor],
+    pointwise: bool = False,
+) -> Union[float, Tuple[float, torch.Tensor]]:
+    """
+    Compute the Widely Applicable Information Criterion (WAIC).
+
+    This is a convenience function that creates a BayesianModelComparison instance
+    and calls its compute_waic method.
+
+    Args:
+        model: PyroVelocityModel instance
+        posterior_samples: Dictionary of posterior samples
+        data: Dictionary of observed data
+        pointwise: Whether to return pointwise WAIC values
+
+    Returns:
+        WAIC value (lower is better) and optionally pointwise values
+    """
+    comparison = BayesianModelComparison()
+    return comparison.compute_waic(model, posterior_samples, data, pointwise)
+
+def compute_loo(
+    model: PyroVelocityModel,
+    posterior_samples: Dict[str, torch.Tensor],
+    data: Dict[str, torch.Tensor],
+    pointwise: bool = False,
+) -> Union[float, Tuple[float, torch.Tensor]]:
+    """
+    Compute Leave-One-Out (LOO) cross-validation.
+
+    This is a convenience function that creates a BayesianModelComparison instance
+    and calls its compute_loo method.
+
+    Args:
+        model: PyroVelocityModel instance
+        posterior_samples: Dictionary of posterior samples
+        data: Dictionary of observed data
+        pointwise: Whether to return pointwise LOO values
+
+    Returns:
+        LOO value (lower is better) and optionally pointwise values
+    """
+    comparison = BayesianModelComparison()
+    return comparison.compute_loo(model, posterior_samples, data, pointwise)

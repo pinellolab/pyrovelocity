@@ -318,7 +318,7 @@ class TestBasePriorModel:
         result = model.sample_parameters(prefix="test_")
 
         # Check that _sample_parameters_impl was called with the correct arguments
-        model._sample_parameters_impl.assert_called_once_with("test_")
+        model._sample_parameters_impl.assert_called_once_with("test_", None)
 
         # Check that the result is correct
         assert result == expected_result

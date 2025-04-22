@@ -158,9 +158,9 @@ class StandardDynamicsModel(BaseDynamicsModel):
         alpha: torch.Tensor,
         beta: torch.Tensor,
         gamma: torch.Tensor,
-        scaling: torch.Tensor,
-        t_max: float,
-        n_steps: int,
+        scaling: Optional[torch.Tensor] = None,
+        t_max: float = 10.0,
+        n_steps: int = 100,
         **kwargs: Any,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Simulate the dynamics model forward in time using analytical solution.
@@ -396,9 +396,9 @@ class StandardDynamicsModelSimulated(BaseDynamicsModel):
         alpha: torch.Tensor,
         beta: torch.Tensor,
         gamma: torch.Tensor,
-        scaling: torch.Tensor,
-        t_max: float,
-        n_steps: int,
+        scaling: Optional[torch.Tensor] = None,
+        t_max: float = 10.0,
+        n_steps: int = 100,
         **kwargs: Any,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Simulate the dynamics model forward in time using numerical integration.
@@ -791,9 +791,9 @@ class NonlinearDynamicsModel(BaseDynamicsModel):
         alpha: torch.Tensor,
         beta: torch.Tensor,
         gamma: torch.Tensor,
-        scaling: torch.Tensor,
-        t_max: float,
-        n_steps: int,
+        scaling: Optional[torch.Tensor] = None,
+        t_max: float = 10.0,
+        n_steps: int = 100,
         k_alpha: Optional[torch.Tensor] = None,
         k_beta: Optional[torch.Tensor] = None,
         **kwargs,

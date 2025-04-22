@@ -206,12 +206,13 @@ class LogNormalPriorModel(BasePriorModel):
         # For the standard PyroModule approach, this can be a no-op
         pass
 
-    def _sample_parameters_impl(self, prefix: str = "") -> Dict[str, Any]:
+    def _sample_parameters_impl(self, prefix: str = "", n_genes: Optional[int] = None) -> Dict[str, Any]:
         """
         Implementation of parameter sampling.
 
         Args:
             prefix: Optional prefix for parameter names
+            n_genes: Optional number of genes to sample parameters for
 
         Returns:
             Dictionary of sampled parameters
@@ -219,26 +220,32 @@ class LogNormalPriorModel(BasePriorModel):
         # Create a dictionary to store sampled parameters
         params = {}
 
+        # Create a base shape based on n_genes if provided
+        if n_genes is not None:
+            shape = (n_genes,)
+        else:
+            shape = ()
+
         # Sample from prior distributions
         params["alpha"] = dist.LogNormal(
             self.zero, self.one * self.scale_alpha
-        ).sample()
+        ).sample(shape)
         params["beta"] = dist.LogNormal(
             self.zero, self.one * self.scale_beta
-        ).sample()
+        ).sample(shape)
         params["gamma"] = dist.LogNormal(
             self.zero, self.one * self.scale_gamma
-        ).sample()
+        ).sample(shape)
         params["u_scale"] = dist.LogNormal(
             self.zero, self.one * self.scale_u
-        ).sample()
+        ).sample(shape)
         params["s_scale"] = dist.LogNormal(
             self.zero, self.one * self.scale_s
-        ).sample()
+        ).sample(shape)
         params["dt_switching"] = dist.LogNormal(
             self.zero, self.one * self.scale_dt
-        ).sample()
-        params["t0"] = dist.Normal(self.zero, self.one).sample()
+        ).sample(shape)
+        params["t0"] = dist.Normal(self.zero, self.one).sample(shape)
 
         return params
 
@@ -426,12 +433,13 @@ class InformativePriorModel(BasePriorModel):
         # For the standard PyroModule approach, this can be a no-op
         pass
 
-    def _sample_parameters_impl(self, prefix: str = "") -> Dict[str, Any]:
+    def _sample_parameters_impl(self, prefix: str = "", n_genes: Optional[int] = None) -> Dict[str, Any]:
         """
         Implementation of parameter sampling.
 
         Args:
             prefix: Optional prefix for parameter names
+            n_genes: Optional number of genes to sample parameters for
 
         Returns:
             Dictionary of sampled parameters
@@ -439,32 +447,38 @@ class InformativePriorModel(BasePriorModel):
         # Create a dictionary to store sampled parameters
         params = {}
 
+        # Create a base shape based on n_genes if provided
+        if n_genes is not None:
+            shape = (n_genes,)
+        else:
+            shape = ()
+
         # Sample from informative prior distributions
         params["alpha"] = dist.LogNormal(
             torch.tensor(self.alpha_loc), torch.tensor(self.alpha_scale)
-        ).sample()
+        ).sample(shape)
 
         params["beta"] = dist.LogNormal(
             torch.tensor(self.beta_loc), torch.tensor(self.beta_scale)
-        ).sample()
+        ).sample(shape)
 
         params["gamma"] = dist.LogNormal(
             torch.tensor(self.gamma_loc), torch.tensor(self.gamma_scale)
-        ).sample()
+        ).sample(shape)
 
         params["u_scale"] = dist.LogNormal(
             torch.tensor(self.u_scale_loc), torch.tensor(self.u_scale_scale)
-        ).sample()
+        ).sample(shape)
 
         params["s_scale"] = dist.LogNormal(
             torch.tensor(self.s_scale_loc), torch.tensor(self.s_scale_scale)
-        ).sample()
+        ).sample(shape)
 
         params["dt_switching"] = dist.LogNormal(
             torch.tensor(self.dt_switching_loc),
             torch.tensor(self.dt_switching_scale),
-        ).sample()
+        ).sample(shape)
 
-        params["t0"] = dist.Normal(self.zero, self.one * 0.5).sample()
+        params["t0"] = dist.Normal(self.zero, self.one * 0.5).sample(shape)
 
         return params

@@ -39,6 +39,7 @@ import torch
 from anndata import AnnData
 from beartype import beartype
 from jaxtyping import Array, Float, jaxtyped
+from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold, StratifiedKFold
 
 from pyrovelocity.models.modular.comparison import (
@@ -223,6 +224,13 @@ class ModelEnsemble:
 
     def __post_init__(self):
         """Validate and initialize after creation."""
+        # Validate models
+        if not self.models:
+            raise ValueError("At least one model must be provided")
+        
+        if not all(isinstance(model, PyroVelocityModel) for model in self.models.values()):
+            raise TypeError("All models must be instances of PyroVelocityModel")
+            
         # If weights are not provided, use equal weights
         if self.weights is None:
             self.weights = {
@@ -234,6 +242,10 @@ class ModelEnsemble:
             raise ValueError(
                 "Model names in weights must match model names in models"
             )
+            
+        # Check for negative weights
+        if any(weight < 0 for weight in self.weights.values()):
+            raise ValueError("All weights must be non-negative")
 
         # Normalize weights to sum to 1
         total_weight = sum(self.weights.values())
@@ -241,9 +253,166 @@ class ModelEnsemble:
             name: weight / total_weight for name, weight in self.weights.items()
         }
 
-    @jaxtyped
     @beartype
     def predict(
+        self,
+        x: Any,
+        time_points: Optional[Any] = None,
+        *args,
+        **kwargs
+    ) -> torch.Tensor:
+        """
+        Generate ensemble predictions by aggregating individual model predictions.
+
+        Args:
+            x: Input data
+            time_points: Optional time points for dynamics models
+            *args: Additional positional arguments passed to component models
+            **kwargs: Additional keyword arguments passed to component models
+
+        Returns:
+            Tensor with ensemble predictions
+        """
+        # Initialize container for weighted predictions
+        weighted_preds = None
+        
+        # Generate predictions from each model
+        for model_name, model in self.models.items():
+            # Get model prediction
+            model_pred = model.predict(x, *args, **kwargs)
+            
+            # Get weight for this model
+            weight = self.weights[model_name]
+            
+            # Add weighted prediction
+            if weighted_preds is None:
+                weighted_preds = weight * model_pred
+            else:
+                weighted_preds += weight * model_pred
+        
+        return weighted_preds
+    
+    @beartype
+    def predict_future_states(
+        self,
+        current_state: Any,
+        time_delta: Any,
+        *args,
+        **kwargs
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Generate ensemble future state predictions by aggregating individual model predictions.
+
+        Args:
+            current_state: Current state (u, s) tuple
+            time_delta: Time delta for prediction
+            *args: Additional positional arguments passed to component models
+            **kwargs: Additional keyword arguments passed to component models
+
+        Returns:
+            Tuple of (u_future, s_future) tensors with ensemble predictions
+        """
+        # Initialize containers for weighted predictions
+        weighted_u_future = None
+        weighted_s_future = None
+        
+        # Generate predictions from each model
+        for model_name, model in self.models.items():
+            # Get model prediction
+            u_future, s_future = model.predict_future_states(current_state, time_delta, *args, **kwargs)
+            
+            # Get weight for this model
+            weight = self.weights[model_name]
+            
+            # Add weighted prediction
+            if weighted_u_future is None:
+                weighted_u_future = weight * u_future
+                weighted_s_future = weight * s_future
+            else:
+                weighted_u_future += weight * u_future
+                weighted_s_future += weight * s_future
+        
+        return (weighted_u_future, weighted_s_future)
+
+    @beartype
+    def get_posterior_samples(self) -> Dict[str, torch.Tensor]:
+        """
+        Get posterior samples from all models in the ensemble.
+
+        This method concatenates posterior samples from all models in the ensemble.
+        The result is a dictionary of tensors where each tensor has dimensions
+        [n_samples, sum(n_model_dims)].
+
+        Returns:
+            Dictionary of posterior samples
+        """
+        # Initialize containers for all samples
+        all_samples = {}
+        
+        # Collect posterior samples from each model
+        for model_name, model in self.models.items():
+            # Get posterior samples for this model
+            model_samples = model.result.posterior_samples
+            
+            # For each parameter, concatenate samples across models
+            for param_name, param_samples in model_samples.items():
+                if param_name not in all_samples:
+                    all_samples[param_name] = param_samples
+                else:
+                    # Concatenate along the second dimension (model dimensions)
+                    all_samples[param_name] = torch.cat(
+                        [all_samples[param_name], param_samples],
+                        dim=1
+                    )
+        
+        return all_samples
+
+    @beartype
+    def calculate_weights_from_comparison(
+        self,
+        comparison_result: ComparisonResult,
+        criterion: str = "WAIC"
+    ) -> Dict[str, float]:
+        """
+        Calculate model weights based on comparison metrics.
+
+        This method computes weights for each model in the ensemble based on
+        the provided comparison result. For metrics like WAIC and LOO where
+        lower is better, weights are inversely proportional to metric values.
+        For metrics like Bayes factors where higher is better, weights are
+        directly proportional to metric values.
+
+        Args:
+            comparison_result: ComparisonResult from model comparison
+            criterion: Metric to use for weight calculation (default: "WAIC")
+
+        Returns:
+            Dictionary mapping model names to weights
+        """
+        # Convert criterion to lowercase for case-insensitive comparison
+        criterion = criterion.lower()
+        
+        # Extract metric values from comparison result
+        metric_values = comparison_result.values
+        
+        # For metrics where lower is better, invert the values
+        if criterion in ["waic", "loo", "cv_error"]:
+            # Add a small constant to avoid division by zero
+            epsilon = 1e-10
+            raw_weights = {
+                name: 1.0 / (value + epsilon)
+                for name, value in metric_values.items()
+            }
+        else:
+            # For metrics where higher is better, use values directly
+            raw_weights = metric_values
+        
+        # Normalize weights to sum to 1
+        return self._normalize_weights(raw_weights)
+
+    @jaxtyped
+    @beartype
+    def predict_with_uncertainty(
         self,
         x: Float[Array, "batch_size n_features"],
         time_points: Float[Array, "n_times"],
@@ -252,7 +421,7 @@ class ModelEnsemble:
         **kwargs,
     ) -> Dict[str, Any]:
         """
-        Generate ensemble predictions by aggregating across models.
+        Generate ensemble predictions with uncertainty by aggregating across models.
 
         Args:
             x: Input data tensor of shape [batch_size, n_features]
@@ -361,6 +530,32 @@ class ModelEnsemble:
             "model_weights": all_weights,
         }
 
+    def __str__(self) -> str:
+        """Get string representation of the model ensemble."""
+        model_weights_str = ", ".join(f"{name}: {weight}" for name, weight in self.weights.items())
+        return f"ModelEnsemble(models={len(self.models)} models, weights=[{model_weights_str}])"
+
+    @staticmethod
+    def _normalize_weights(weights: Dict[str, float]) -> Dict[str, float]:
+        """
+        Normalize weights to sum to 1.
+
+        Args:
+            weights: Dictionary mapping model names to weights
+
+        Returns:
+            Dictionary with normalized weights that sum to 1
+        """
+        total = sum(weights.values())
+        
+        # If all weights are zero, use equal weights
+        if total == 0:
+            n_models = len(weights)
+            return {name: 1.0 / n_models for name in weights}
+        
+        # Otherwise, normalize by dividing by the sum
+        return {name: weight / total for name, weight in weights.items()}
+
     @classmethod
     @beartype
     def from_selection_result(
@@ -399,10 +594,7 @@ class ModelEnsemble:
                 raw_values = comparison_result.values
 
             # Normalize to get weights
-            total = sum(raw_values.values())
-            weights = {
-                name: value / total for name, value in raw_values.items()
-            }
+            weights = cls._normalize_weights(raw_values)
         else:
             # Use equal weights
             weights = {name: 1.0 / len(models) for name in models}
@@ -477,10 +669,7 @@ class ModelEnsemble:
                 raw_values = top_k_models
 
             # Normalize to get weights
-            total = sum(raw_values.values())
-            weights = {
-                name: value / total for name, value in raw_values.items()
-            }
+            weights = cls._normalize_weights(raw_values)
         else:
             # Use equal weights
             weights = {
@@ -501,27 +690,33 @@ class ModelEnsemble:
 
 class CrossValidator:
     """
-    Cross-validation tools for PyroVelocity models.
-
-    This class provides methods for performing cross-validation of PyroVelocity
-    models, including stratified cross-validation based on cell metadata.
+    Class for performing cross-validation of PyroVelocity models.
+    
+    This class provides methods for creating train-test splits, evaluating models on cross-validation
+    folds, and selecting the best model based on cross-validation results.
     """
 
     def __init__(
         self,
+        models: Optional[Dict[str, PyroVelocityModel]] = None,
         n_splits: int = 5,
+        test_size: Optional[float] = None,
         stratify_by: Optional[str] = None,
         random_state: int = 42,
     ):
         """
         Initialize the cross-validator.
-
+        
         Args:
+            models: Dictionary mapping model names to PyroVelocityModel instances (optional)
             n_splits: Number of cross-validation folds
-            stratify_by: Optional column in AnnData.obs to use for stratified CV
+            test_size: Size of the test set (ignored if n_splits is provided)
+            stratify_by: Column name in AnnData object to use for stratification
             random_state: Random seed for reproducibility
         """
+        self.models = models or {}
         self.n_splits = n_splits
+        self.test_size = test_size
         self.stratify_by = stratify_by
         self.random_state = random_state
 
@@ -531,298 +726,466 @@ class CrossValidator:
         adata: AnnData,
     ) -> Union[KFold, StratifiedKFold]:
         """
-        Get the appropriate CV splitter based on settings.
-
+        Get the cross-validation splitter object.
+        
         Args:
-            adata: AnnData object containing cell metadata
-
+            adata: AnnData object containing cell metadata for stratification
+            
         Returns:
-            CV splitter (KFold or StratifiedKFold)
+            Cross-validation splitter object
         """
-        if self.stratify_by is not None:
-            # Get stratification labels
-            if self.stratify_by not in adata.obs:
-                raise ValueError(
-                    f"Stratification column '{self.stratify_by}' not found in adata.obs"
-                )
-
-            # Create stratified splitter
-            return StratifiedKFold(
-                n_splits=self.n_splits,
-                shuffle=True,
-                random_state=self.random_state,
-            )
-        else:
-            # Create regular splitter
+        if self.stratify_by is None:
+            # Use regular K-fold cross-validation
             return KFold(
                 n_splits=self.n_splits,
                 shuffle=True,
                 random_state=self.random_state,
             )
+        else:
+            # Use stratified K-fold cross-validation
+            if self.stratify_by not in adata.obs.columns:
+                raise ValueError(
+                    f"Stratification column '{self.stratify_by}' not found in adata.obs"
+                )
+                
+            return StratifiedKFold(
+                n_splits=self.n_splits,
+                shuffle=True,
+                random_state=self.random_state,
+            )
 
     @beartype
+    def _create_train_test_splits(
+        self,
+        adata: AnnData,
+    ) -> List[Dict[str, np.ndarray]]:
+        """
+        Create train-test splits for cross-validation.
+        
+        Args:
+            adata: AnnData object containing cell metadata
+            
+        Returns:
+            List of dictionaries with train and test indices for each fold
+        """
+        # Get CV splitter
+        cv_splitter = self._get_cv_splitter(adata)
+        
+        # Create array of indices
+        indices = np.arange(adata.n_obs)
+        
+        # Get stratification labels if needed
+        y = None
+        if self.stratify_by is not None:
+            y = adata.obs[self.stratify_by].values
+        
+        # Create splits
+        splits = []
+        for train_idx, test_idx in cv_splitter.split(indices, y):
+            splits.append({
+                "train_indices": train_idx,
+                "test_indices": test_idx,
+            })
+        
+        return splits
+
+    @beartype
+    def _evaluate_model_fold(
+        self,
+        model: PyroVelocityModel,
+        adata: AnnData,
+        split: Dict[str, np.ndarray],
+    ) -> Dict[str, float]:
+        """
+        Evaluate a model on a single cross-validation fold.
+        
+        Args:
+            model: PyroVelocityModel to evaluate
+            adata: AnnData object containing data
+            split: Dictionary with train and test indices
+            
+        Returns:
+            Dictionary with evaluation metrics
+        """
+        # Train the model on training data
+        train_result = model.train(
+            adata=adata,
+            indices=split["train_indices"],
+        )
+        
+        # Evaluate on test data
+        eval_metrics = model.evaluate(
+            adata=adata,
+            indices=split["test_indices"],
+        )
+        
+        return eval_metrics
+
+    @beartype
+    def cross_validate(
+        self,
+        adata: AnnData,
+    ) -> Dict[str, Dict[str, Dict[str, float]]]:
+        """
+        Perform cross-validation on all models.
+        
+        Args:
+            adata: AnnData object containing data
+            
+        Returns:
+            Dictionary mapping model names to fold results
+        """
+        # Create train-test splits
+        splits = self._create_train_test_splits(adata)
+        
+        # Initialize results
+        results = {}
+        
+        # Evaluate each model on each fold
+        for name, model in self.models.items():
+            results[name] = {}
+            for i, split in enumerate(splits):
+                fold_metrics = self._evaluate_model_fold(model, adata, split)
+                results[name][f"fold_{i}"] = fold_metrics
+                
+        return results
+
+    @beartype
+    def select_best_model(
+        self,
+        adata: AnnData,
+        metric: str = "log_likelihood",
+    ) -> Tuple[PyroVelocityModel, Dict[str, float]]:
+        """
+        Perform cross-validation and select the best model.
+        
+        Args:
+            adata: AnnData object containing data
+            metric: Metric to use for model selection
+            
+        Returns:
+            Tuple of (best model, average scores)
+        """
+        # Perform cross-validation
+        cv_results = self.cross_validate(adata)
+        
+        # Compute average scores
+        avg_scores = self._compute_average_scores(cv_results, metric)
+        
+        # Select best model
+        best_model_name = max(avg_scores, key=avg_scores.get)
+        best_model = self.models[best_model_name]
+        
+        return best_model, avg_scores
+
+    @beartype
+    def _compute_average_scores(
+        self,
+        cv_results: Dict[str, Dict[str, Dict[str, float]]],
+        metric: str,
+    ) -> Dict[str, float]:
+        """
+        Compute average scores for each model across folds.
+        
+        Args:
+            cv_results: Cross-validation results
+            metric: Metric to average
+            
+        Returns:
+            Dictionary mapping model names to average scores
+        """
+        avg_scores = {}
+        
+        for model_name, fold_results in cv_results.items():
+            # Extract metric values for each fold
+            metric_values = []
+            
+            for fold_name, metrics in fold_results.items():
+                # Check if metric exists
+                if metric not in metrics:
+                    raise KeyError(f"Metric '{metric}' not found in fold results")
+                    
+                metric_values.append(metrics[metric])
+                
+            # Compute average
+            avg_scores[model_name] = sum(metric_values) / len(metric_values)
+            
+        return avg_scores
+
+    def __str__(self) -> str:
+        """Return a string representation of the cross-validator."""
+        return (
+            f"CrossValidator(n_splits={self.n_splits}, "
+            f"test_size={self.test_size}, "
+            f"stratify_by={self.stratify_by}, "
+            f"random_state={self.random_state}, "
+            f"n_models={len(self.models)})"
+        )
+
     def cross_validate_likelihood(
         self,
         model: PyroVelocityModel,
         data: Dict[str, torch.Tensor],
-        adata: AnnData,
+        adata: Optional[AnnData] = None,
+        num_samples: int = 100,
+        num_inference_steps: int = 1000,
+        **inference_kwargs,
     ) -> List[float]:
         """
-        Perform cross-validation and compute log likelihood scores.
-
+        Perform cross-validation and compute log likelihood on test data.
+        
         Args:
-            model: PyroVelocityModel instance
-            data: Dictionary of observed data
-            adata: AnnData object containing cell metadata
-
+            model: PyroVelocityModel to evaluate
+            data: Dictionary of data tensors
+            adata: AnnData object (optional, for stratification)
+            num_samples: Number of posterior samples to draw
+            num_inference_steps: Number of inference steps for SVI
+            **inference_kwargs: Additional arguments for inference
+            
         Returns:
             List of log likelihood scores for each fold
         """
-        # Get CV splitter
+        # Get the cross-validation splitter
         cv_splitter = self._get_cv_splitter(adata)
-
-        # Get data arrays
-        x = data.get("x", None)
-        if x is None:
-            raise ValueError("Data dictionary must contain 'x' key")
-
-        observations = data.get("observations", None)
-        if observations is None:
-            raise ValueError("Data dictionary must contain 'observations' key")
-
-        # Get stratification labels if needed
-        y = None
-        if self.stratify_by is not None:
-            y = adata.obs[self.stratify_by].values
-
+        
+        # Find cell-dimension tensors to determine length and for splitting
+        cell_tensors = []
+        for key, value in data.items():
+            if isinstance(value, torch.Tensor) and value.ndim > 1 and value.shape[0] > 1:
+                cell_tensors.append((key, value))
+        
+        if not cell_tensors:
+            raise ValueError("No cell-dimension tensors found in data dictionary")
+            
+        # Get all indices based on the first cell-dimension tensor
+        first_key, first_tensor = cell_tensors[0]
+        indices = np.arange(first_tensor.shape[0])
+        
         # Initialize scores list
         scores = []
-
+        
+        # Get stratification values if needed
+        stratify = None
+        if self.stratify_by is not None and adata is not None:
+            stratify = adata.obs[self.stratify_by].values
+        
         # Perform cross-validation
-        for train_idx, test_idx in cv_splitter.split(x, y):
-            # Split data
-            x_train = x[train_idx]
-            x_test = x[test_idx]
-            obs_train = observations[train_idx]
-            obs_test = observations[test_idx]
-
-            # Create train and test data dictionaries
-            train_data = {**data, "x": x_train, "observations": obs_train}
-            test_data = {**data, "x": x_test, "observations": obs_test}
-
-            # Train model on training data
-            guide = model.guide_model(model)
+        for fold_idx, (train_idx, test_idx) in enumerate(cv_splitter.split(indices, stratify)):
+            # Create train and test data, only splitting tensors with cell dimension
+            train_data = {}
+            test_data = {}
+            
+            for key, value in data.items():
+                if isinstance(value, torch.Tensor):
+                    # For tensors with a cell dimension (usually first dimension)
+                    # and multiple cells (shape[0] > 1), split by cell indices
+                    if value.ndim > 1 and value.shape[0] > 1 and value.shape[0] == first_tensor.shape[0]:
+                        train_data[key] = value[train_idx]
+                        test_data[key] = value[test_idx]
+                    else:
+                        # For other tensors (time points, etc.), use as is
+                        train_data[key] = value
+                        test_data[key] = value
+                else:
+                    # For non-tensor values, just copy
+                    train_data[key] = value
+                    test_data[key] = value
+            
+            # Train the model
             pyro.clear_param_store()
-
-            # Run inference
-            from pyro.infer import SVI, Trace_ELBO
-
-            optimizer = pyro.optim.Adam({"lr": 0.01})
-            svi = SVI(model.forward, guide, optimizer, loss=Trace_ELBO())
-
-            # Train for a few iterations (simplified for testing)
-            for _ in range(100):
-                loss = svi.step(
-                    x=train_data["x"],
-                    time_points=train_data.get("time_points", None),
-                    cell_state=train_data.get("cell_state", None),
-                )
-
-            # Get posterior samples
-            posterior_samples = model.guide_model._sample_posterior_impl(
+            guide = model.guide()
+            svi = pyro.infer.SVI(
                 model=model,
                 guide=guide,
-                num_samples=100,
+                optim=pyro.optim.Adam({"lr": 0.01}),
+                loss=pyro.infer.Trace_ELBO(),
             )
-
-            # Evaluate log likelihood on test data
-            log_likes = []
-            for i in range(len(next(iter(posterior_samples.values())))):
+            
+            # Run inference
+            for step in range(num_inference_steps):
+                loss = svi.step(train_data)
+                
+            # Get posterior samples
+            posterior_samples = model.sample_posterior(
+                guide=guide, 
+                data=train_data, 
+                num_samples=num_samples
+            )
+            
+            # Compute log likelihood on test data
+            log_probs = []
+            for i in range(num_samples):
                 # Extract parameters for this sample
-                sample_params = {k: v[i] for k, v in posterior_samples.items()}
-
-                # Generate predictions
-                context = {
-                    "x": test_data["x"],
-                    "time_points": test_data.get("time_points", None),
-                    "cell_state": test_data.get("cell_state", None),
-                    "parameters": sample_params,
-                }
-
-                # Process through observation model
-                context = model.observation_model.forward(context)
-
-                # Generate predictions using the dynamics model
-                context = model.dynamics_model.forward(context)
-
-                # Extract predictions
-                predictions = context.get("predictions", None)
-                if predictions is None:
-                    raise ValueError(
-                        "Dynamics model did not return 'predictions' key"
-                    )
-
-                # Convert torch tensors to jax arrays for type compatibility
-                observations_jax = jnp.array(obs_test.numpy())
-                predictions_jax = jnp.array(predictions.numpy())
-                scale_factors = test_data.get("scale_factors", None)
-                scale_factors_jax = (
-                    jnp.array(scale_factors.numpy())
-                    if scale_factors is not None
-                    else None
-                )
-
+                params = {k: v[i] for k, v in posterior_samples.items()}
+                
+                # Create context with parameters
+                context = model._create_context(parameters=params, data=test_data)
+                
                 # Compute log likelihood
-                log_likes_jax = model.likelihood_model.log_prob(
-                    observations=observations_jax,
-                    predictions=predictions_jax,
-                    scale_factors=scale_factors_jax,
-                )
-
-                # Store log likelihood
-                log_likes.append(np.mean(np.array(log_likes_jax)))
-
-            # Compute average log likelihood across posterior samples
-            avg_log_like = np.mean(log_likes)
-            # Convert to Python float for type compatibility
-            scores.append(float(avg_log_like))
-
+                log_prob = model.likelihood_model.log_prob(context)
+                
+                # Store the mean log likelihood for this sample
+                log_probs.append(torch.mean(log_prob).item())
+            
+            # Compute mean log likelihood across samples
+            mean_log_likelihood = np.mean(log_probs)
+            scores.append(mean_log_likelihood)
+            
         return scores
 
-    @beartype
     def cross_validate_error(
         self,
         model: PyroVelocityModel,
         data: Dict[str, torch.Tensor],
-        adata: AnnData,
+        adata: Optional[AnnData] = None,
+        prediction_key: str = "mu",
+        target_key: str = "u",
+        num_samples: int = 100,
+        num_inference_steps: int = 1000,
+        **inference_kwargs,
     ) -> List[float]:
         """
-        Perform cross-validation and compute prediction error.
-
+        Perform cross-validation and compute prediction error on test data.
+        
         Args:
-            model: PyroVelocityModel instance
-            data: Dictionary of observed data
-            adata: AnnData object containing cell metadata
-
+            model: PyroVelocityModel to evaluate
+            data: Dictionary of data tensors
+            adata: AnnData object (optional, for stratification)
+            prediction_key: Key for predicted values in model output
+            target_key: Key for target values in data
+            num_samples: Number of posterior samples to draw
+            num_inference_steps: Number of inference steps for SVI
+            **inference_kwargs: Additional arguments for inference
+            
         Returns:
-            List of mean squared error scores for each fold
+            List of MSE scores for each fold
         """
-        # Get CV splitter
+        # Get the cross-validation splitter
         cv_splitter = self._get_cv_splitter(adata)
-
-        # Get data arrays
-        x = data.get("x", None)
-        if x is None:
-            raise ValueError("Data dictionary must contain 'x' key")
-
-        observations = data.get("observations", None)
-        if observations is None:
-            raise ValueError("Data dictionary must contain 'observations' key")
-
-        # Get stratification labels if needed
-        y = None
-        if self.stratify_by is not None:
-            y = adata.obs[self.stratify_by].values
-
+        
+        # Find cell-dimension tensors to determine length and for splitting
+        cell_tensors = []
+        for key, value in data.items():
+            if isinstance(value, torch.Tensor) and value.ndim > 1 and value.shape[0] > 1:
+                cell_tensors.append((key, value))
+        
+        if not cell_tensors:
+            raise ValueError("No cell-dimension tensors found in data dictionary")
+            
+        # Get all indices based on the first cell-dimension tensor
+        first_key, first_tensor = cell_tensors[0]
+        indices = np.arange(first_tensor.shape[0])
+        
         # Initialize scores list
         scores = []
-
+        
+        # Get stratification values if needed
+        stratify = None
+        if self.stratify_by is not None and adata is not None:
+            stratify = adata.obs[self.stratify_by].values
+        
         # Perform cross-validation
-        for train_idx, test_idx in cv_splitter.split(x, y):
-            # Split data
-            x_train = x[train_idx]
-            x_test = x[test_idx]
-            obs_train = observations[train_idx]
-            obs_test = observations[test_idx]
-
-            # Create train and test data dictionaries
-            train_data = {**data, "x": x_train, "observations": obs_train}
-            test_data = {**data, "x": x_test, "observations": obs_test}
-
-            # Train model on training data
-            guide = model.guide_model(model)
+        for fold_idx, (train_idx, test_idx) in enumerate(cv_splitter.split(indices, stratify)):
+            # Create train and test data, only splitting tensors with cell dimension
+            train_data = {}
+            test_data = {}
+            
+            for key, value in data.items():
+                if isinstance(value, torch.Tensor):
+                    # For tensors with a cell dimension (usually first dimension)
+                    # and multiple cells (shape[0] > 1), split by cell indices
+                    if value.ndim > 1 and value.shape[0] > 1 and value.shape[0] == first_tensor.shape[0]:
+                        train_data[key] = value[train_idx]
+                        test_data[key] = value[test_idx]
+                    else:
+                        # For other tensors (time points, etc.), use as is
+                        train_data[key] = value
+                        test_data[key] = value
+                else:
+                    # For non-tensor values, just copy
+                    train_data[key] = value
+                    test_data[key] = value
+            
+            # Train the model
             pyro.clear_param_store()
-
-            # Run inference
-            from pyro.infer import SVI, Trace_ELBO
-
-            optimizer = pyro.optim.Adam({"lr": 0.01})
-            svi = SVI(model.forward, guide, optimizer, loss=Trace_ELBO())
-
-            # Train for a few iterations (simplified for testing)
-            for _ in range(100):
-                loss = svi.step(
-                    x=train_data["x"],
-                    time_points=train_data.get("time_points", None),
-                    cell_state=train_data.get("cell_state", None),
-                )
-
-            # Get posterior samples
-            posterior_samples = model.guide_model._sample_posterior_impl(
+            guide = model.guide()
+            svi = pyro.infer.SVI(
                 model=model,
                 guide=guide,
-                num_samples=100,
+                optim=pyro.optim.Adam({"lr": 0.01}),
+                loss=pyro.infer.Trace_ELBO(),
             )
-
-            # Evaluate prediction error on test data
-            errors = []
-            for i in range(len(next(iter(posterior_samples.values())))):
+            
+            # Run inference
+            for step in range(num_inference_steps):
+                loss = svi.step(train_data)
+                
+            # Get posterior samples
+            posterior_samples = model.sample_posterior(
+                guide=guide, 
+                data=train_data, 
+                num_samples=num_samples
+            )
+            
+            # Generate predictions
+            predictions = []
+            for i in range(num_samples):
                 # Extract parameters for this sample
-                sample_params = {k: v[i] for k, v in posterior_samples.items()}
-
+                params = {k: v[i] for k, v in posterior_samples.items()}
+                
+                # Create context with parameters
+                context = model._create_context(parameters=params, data=test_data)
+                
                 # Generate predictions
-                context = {
-                    "x": test_data["x"],
-                    "time_points": test_data.get("time_points", None),
-                    "cell_state": test_data.get("cell_state", None),
-                    "parameters": sample_params,
-                }
-
-                # Process through observation model
-                context = model.observation_model.forward(context)
-
-                # Generate predictions using the dynamics model
-                context = model.dynamics_model.forward(context)
-
-                # Extract predictions
-                predictions = context.get("predictions", None)
-                if predictions is None:
-                    raise ValueError(
-                        "Dynamics model did not return 'predictions' key"
-                    )
-
-                # Ensure predictions and observations have the same shape
-                # This is needed because the mock model might return predictions with a different shape
-                if predictions.shape != obs_test.shape:
-                    # Reshape predictions to match observations if possible
-                    try:
-                        if predictions.numel() == obs_test.numel():
-                            predictions = predictions.reshape(obs_test.shape)
-                        else:
-                            # If reshaping isn't possible, use only the first dimension that matches
-                            min_dim0 = min(
-                                predictions.shape[0], obs_test.shape[0]
-                            )
-                            predictions = predictions[:min_dim0]
-                            obs_test_subset = obs_test[:min_dim0]
-                            # Compute mean squared error on the subset
-                            mse = torch.mean(
-                                (predictions - obs_test_subset) ** 2
-                            ).item()
-                            errors.append(mse)
-                            continue
-                    except Exception as e:
-                        raise ValueError(
-                            f"Cannot reshape predictions to match observations: {e}"
-                        )
-
-                # Compute mean squared error
-                mse = torch.mean((predictions - obs_test) ** 2).item()
-                errors.append(mse)
-
-            # Compute average error across posterior samples
-            avg_error = np.mean(errors)
-            # Convert to Python float for type compatibility
-            scores.append(float(avg_error))
-
+                outputs = model.dynamics_model.forward(context)
+                predictions.append(outputs[prediction_key])
+            
+            # Stack predictions across samples
+            stacked_predictions = torch.stack(predictions)
+            
+            # Compute mean prediction across samples
+            mean_prediction = torch.mean(stacked_predictions, dim=0)
+            
+            # Convert to numpy arrays for sklearn
+            y_pred = mean_prediction.detach().cpu().numpy()
+            y_true = test_data[target_key].detach().cpu().numpy()
+            
+            # Compute mean squared error
+            mse = mean_squared_error(y_true, y_pred)
+            scores.append(mse)
+            
         return scores
+
+# Convenience functions for module-level access
+
+def select_model(
+    models: Dict[str, PyroVelocityModel],
+    posterior_samples: Dict[str, Dict[str, torch.Tensor]],
+    data: Dict[str, torch.Tensor],
+    criterion: Union[str, SelectionCriterion] = SelectionCriterion.WAIC,
+    significance_threshold: float = 2.0,
+) -> SelectionResult:
+    """
+    Select the best model based on the specified criterion.
+
+    This is a convenience function that creates a ModelSelection instance
+    and calls its select_model method.
+
+    Args:
+        models: Dictionary mapping model names to PyroVelocityModel instances
+        posterior_samples: Dictionary mapping model names to posterior samples
+        data: Dictionary of observed data
+        criterion: Selection criterion to use
+        significance_threshold: Threshold for considering a difference significant
+
+    Returns:
+        SelectionResult containing the selected model and comparison results
+    """
+    selection = ModelSelection()
+    return selection.select_model(
+        models=models,
+        posterior_samples=posterior_samples,
+        data=data,
+        criterion=criterion,
+        significance_threshold=significance_threshold,
+    )

@@ -184,21 +184,33 @@ class AutoGuideFactory(BaseInferenceGuide):
 
         return posterior_samples
 
-    def __call__(self, model: Callable, *args: Any, **kwargs: Any) -> Callable:
+    def __call__(self, *args: Any, **kwargs: Any) -> Callable:
         """
         Create a guide function for the given model.
 
+        This method is called by Pyro's SVI when the guide is used directly 
+        in svi.step() as the guide parameter. It should delegate to the guide
+        object created by create_guide.
+
         Args:
-            model: The model function to create a guide for
-            *args: Additional positional arguments
+            *args: Additional positional arguments (first is model when used with SVI)
             **kwargs: Additional keyword arguments
 
         Returns:
             A guide function compatible with the model
         """
-        if self._guide is None or self._model != model:
+        # If being used directly in SVI, the first argument will be the model
+        if len(args) > 0 and callable(args[0]) and self._guide is None:
+            model = args[0]
             self.create_guide(model)
-        return self._guide
+            self._model = model
+        
+        # If we still don't have a guide, raise an error
+        if self._guide is None:
+            raise RuntimeError("Guide has not been created yet. Call create_guide first.")
+        
+        # Delegate to the created guide
+        return self._guide(*args, **kwargs)
 
 
 @inference_guide_registry.register("normal")
@@ -353,6 +365,35 @@ class NormalGuide(BaseInferenceGuide):
 
         return posterior_samples
 
+    def __call__(self, *args: Any, **kwargs: Any) -> Callable:
+        """
+        Create a guide function for the given model.
+
+        This method is called by Pyro's SVI when the guide is used directly 
+        in svi.step() as the guide parameter. It should delegate to the guide
+        object created by create_guide.
+
+        Args:
+            *args: Additional positional arguments (first is model when used with SVI)
+            **kwargs: Additional keyword arguments
+
+        Returns:
+            A guide function compatible with the model
+        """
+        # If being used directly in SVI, the first argument will be the model
+        if len(args) > 0 and callable(args[0]) and not hasattr(self, '_model'):
+            model = args[0]
+            self.create_guide(model)
+            self._model = model
+        
+        # If we still don't have a guide, raise an error
+        if not hasattr(self, '_model'):
+            raise RuntimeError("Guide has not been created yet. Call create_guide first.")
+        
+        # Get the guide function and call it
+        guide_fn = self.get_guide()
+        return guide_fn(*args, **kwargs)
+
 
 @inference_guide_registry.register("delta")
 class DeltaGuide(BaseInferenceGuide):
@@ -495,3 +536,32 @@ class DeltaGuide(BaseInferenceGuide):
             posterior_samples[name] = param.unsqueeze(0)
 
         return posterior_samples
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Callable:
+        """
+        Create a guide function for the given model.
+
+        This method is called by Pyro's SVI when the guide is used directly 
+        in svi.step() as the guide parameter. It should delegate to the guide
+        object created by create_guide.
+
+        Args:
+            *args: Additional positional arguments (first is model when used with SVI)
+            **kwargs: Additional keyword arguments
+
+        Returns:
+            A guide function compatible with the model
+        """
+        # If being used directly in SVI, the first argument will be the model
+        if len(args) > 0 and callable(args[0]) and not hasattr(self, '_model'):
+            model = args[0]
+            self.create_guide(model)
+            self._model = model
+        
+        # If we still don't have a guide, raise an error
+        if not hasattr(self, '_model'):
+            raise RuntimeError("Guide has not been created yet. Call create_guide first.")
+        
+        # Get the guide function and call it
+        guide_fn = self.get_guide()
+        return guide_fn(*args, **kwargs)

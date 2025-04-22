@@ -427,19 +427,20 @@ class BasePriorModel(BaseComponent, PriorModel, PyroBufferMixin, abc.ABC):
         pass
 
     @beartype
-    def sample_parameters(self, prefix: str = "") -> Dict[str, Any]:
+    def sample_parameters(self, prefix: str = "", n_genes: Optional[int] = None) -> Dict[str, Any]:
         """
         Sample parameters from prior distributions.
 
         Args:
             prefix: Optional prefix for parameter names
+            n_genes: Optional number of genes to sample parameters for
 
         Returns:
             Dictionary of sampled parameters or a tuple with None and the error
             if sampling fails.
         """
         try:
-            return self._sample_parameters_impl(prefix)
+            return self._sample_parameters_impl(prefix, n_genes)
         except Exception as e:
             # Log the error
             print(f"Error sampling parameters: {e}")
@@ -447,7 +448,7 @@ class BasePriorModel(BaseComponent, PriorModel, PyroBufferMixin, abc.ABC):
             raise ValueError(f"Failed to sample parameters") from e
 
     @abc.abstractmethod
-    def _sample_parameters_impl(self, prefix: str = "") -> Dict[str, Any]:
+    def _sample_parameters_impl(self, prefix: str = "", n_genes: Optional[int] = None) -> Dict[str, Any]:
         """
         Implementation of parameter sampling.
 
@@ -456,6 +457,7 @@ class BasePriorModel(BaseComponent, PriorModel, PyroBufferMixin, abc.ABC):
 
         Args:
             prefix: Optional prefix for parameter names
+            n_genes: Optional number of genes to sample parameters for
 
         Returns:
             Dictionary of sampled parameters
