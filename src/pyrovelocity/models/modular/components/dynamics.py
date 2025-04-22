@@ -631,7 +631,7 @@ class NonlinearDynamicsModel(BaseDynamicsModel):
     def _predict_future_states_impl(
         self,
         current_state: Tuple[BatchTensor, BatchTensor],
-        time_delta: BatchTensor,
+        time_delta: Union[float, BatchTensor],
         alpha: ParamTensor,
         beta: ParamTensor,
         gamma: ParamTensor,
@@ -717,8 +717,17 @@ class NonlinearDynamicsModel(BaseDynamicsModel):
 
         # Simple Euler integration
         dt = 0.01  # Small time step for stability
-        steps = int(time_delta.item() / dt) + 1
-        dt = time_delta.item() / steps  # Adjust dt for exact time_delta
+
+        # Handle both float and tensor time_delta
+        if isinstance(time_delta, float):
+            time_delta_value = time_delta
+        elif isinstance(time_delta, torch.Tensor):
+            time_delta_value = time_delta.item()
+        else:
+            time_delta_value = float(time_delta)  # Try to convert to float
+
+        steps = int(time_delta_value / dt) + 1
+        dt = time_delta_value / steps  # Adjust dt for exact time_delta
 
         u = u_current.clone()
         s = s_current.clone()

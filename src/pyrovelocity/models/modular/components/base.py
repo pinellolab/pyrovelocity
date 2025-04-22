@@ -10,7 +10,7 @@ implementations of each component.
 from __future__ import annotations
 
 import abc
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, ClassVar, Dict, Optional, Tuple, Union
 
 import jax.numpy as jnp
 import pyro
@@ -234,7 +234,7 @@ class BaseDynamicsModel(BaseComponent, DynamicsModel, abc.ABC):
     def predict_future_states(
         self,
         current_state: Tuple[BatchTensor, BatchTensor],
-        time_delta: BatchTensor,
+        time_delta: Union[float, BatchTensor],
         alpha: ParamTensor,
         beta: ParamTensor,
         gamma: ParamTensor,
@@ -278,7 +278,7 @@ class BaseDynamicsModel(BaseComponent, DynamicsModel, abc.ABC):
     def _predict_future_states_impl(
         self,
         current_state: Tuple[BatchTensor, BatchTensor],
-        time_delta: BatchTensor,
+        time_delta: Union[float, BatchTensor],
         alpha: ParamTensor,
         beta: ParamTensor,
         gamma: ParamTensor,
