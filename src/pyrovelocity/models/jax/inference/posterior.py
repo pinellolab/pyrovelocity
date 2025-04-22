@@ -25,6 +25,8 @@ from jaxtyping import Array, Float, PyTree
 
 from pyrovelocity.models.jax.core.dynamics import standard_dynamics_model
 from pyrovelocity.models.jax.core.state import InferenceState
+from pyrovelocity.models.jax.factory.config import ModelConfig
+from pyrovelocity.models.jax.factory.factory import create_model
 
 
 @beartype
@@ -79,8 +81,8 @@ def sample_posterior(
 def posterior_predictive(
     model: Callable,
     posterior_samples: Dict[str, jnp.ndarray],
-    args: Tuple,
-    kwargs: Dict[str, Any],
+    args: Tuple = (),
+    kwargs: Optional[Dict[str, Any]] = None,
     num_samples: int = 1000,
     key: Optional[jnp.ndarray] = None,
     return_sites: Optional[List[str]] = None,
@@ -126,6 +128,8 @@ def posterior_predictive(
     )
 
     # Generate posterior predictive samples
+    if kwargs is None:
+        kwargs = {}
     samples = predictive(key, *args, **kwargs)
 
     # If the samples don't include the original parameters, add them
@@ -323,30 +327,44 @@ def compute_uncertainty(
 @beartype
 def analyze_posterior(
     inference_state: InferenceState,
-    model: Callable,
-    args: Tuple,
-    kwargs: Dict[str, Any],
+    model: Union[Callable, Dict[str, Any], ModelConfig],
+    args: Tuple = (),
+    kwargs: Optional[Dict[str, Any]] = None,
     dynamics_fn: Callable = standard_dynamics_model,
     num_samples: int = 1000,
     key: Optional[jnp.ndarray] = None,
 ) -> Dict[str, Any]:
     """Analyze posterior samples from either SVI or MCMC.
 
+    This function analyzes posterior samples from an inference state, computes velocity,
+    uncertainty, and generates posterior predictive samples. It supports both direct model
+    functions and model configurations through the factory system.
+
     Args:
-        inference_state: Inference state
-        model: NumPyro model function
-        args: Positional arguments for the model
-        kwargs: Keyword arguments for the model
-        dynamics_fn: Dynamics function
-        num_samples: Number of samples
-        key: JAX random key
+        inference_state: Inference state containing posterior samples
+        model: Either a NumPyro model function or a model configuration dictionary
+        args: Positional arguments for the model (optional)
+        kwargs: Keyword arguments for the model (optional)
+        dynamics_fn: Dynamics function to use for velocity computation
+        num_samples: Number of posterior samples to use
+        key: JAX random key (optional)
 
     Returns:
-        Dictionary of analysis results
+        Dictionary of analysis results containing:
+        - posterior_samples: Samples from the posterior distribution
+        - posterior_predictive: Posterior predictive samples
+        - velocity: Computed velocity samples
+        - uncertainty: Uncertainty measures for velocity
+        - inference_data: ArviZ InferenceData object
+        - diagnostics: Inference diagnostics (if available)
     """
     # Generate random key if not provided
     if key is None:
         key = jax.random.PRNGKey(0)
+
+    # Initialize kwargs if None
+    if kwargs is None:
+        kwargs = {}
 
     # Split key for different operations
     key, subkey1, subkey2 = jax.random.split(key, 3)
@@ -358,9 +376,14 @@ def analyze_posterior(
         key=subkey1,
     )
 
+    # Handle model configuration by creating a model function
+    model_fn = model
+    if isinstance(model, (dict, ModelConfig)):
+        model_fn = create_model(model)
+
     # Generate posterior predictive samples
     posterior_predictive_samples = posterior_predictive(
-        model=model,
+        model=model_fn,
         posterior_samples=posterior_samples,
         args=args,
         kwargs=kwargs,
@@ -380,13 +403,22 @@ def analyze_posterior(
     )
 
     # Create inference data for ArviZ
+    observed_data = {}
+    if args and len(args) > 0:
+        observed_data["u_obs"] = args[0]
+    if args and len(args) > 1:
+        observed_data["s_obs"] = args[1]
+
+    # Override with kwargs if provided
+    if "u_obs" in kwargs:
+        observed_data["u_obs"] = kwargs["u_obs"]
+    if "s_obs" in kwargs:
+        observed_data["s_obs"] = kwargs["s_obs"]
+
     inference_data = create_inference_data(
         posterior_samples=posterior_samples,
         posterior_predictive_samples=posterior_predictive_samples,
-        observed_data={
-            "u_obs": kwargs.get("u_obs", args[0]),
-            "s_obs": kwargs.get("s_obs", args[1]),
-        },
+        observed_data=observed_data,
     )
 
     # Combine all results

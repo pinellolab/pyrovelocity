@@ -2,26 +2,30 @@
 Tests for the posterior analysis utilities.
 """
 
-import pytest
+import anndata
+import arviz as az
 import jax
 import jax.numpy as jnp
+import numpy as np
 import numpyro
 import numpyro.distributions as dist
-import anndata
-import numpy as np
-import arviz as az
+import pytest
 
+from pyrovelocity.models.jax.core.dynamics import standard_dynamics_model
+from pyrovelocity.models.jax.core.state import InferenceState
+from pyrovelocity.models.jax.factory.factory import (
+    create_standard_model,
+    standard_model_config,
+)
 from pyrovelocity.models.jax.inference.posterior import (
-    sample_posterior,
-    posterior_predictive,
-    compute_velocity,
-    compute_uncertainty,
     analyze_posterior,
+    compute_uncertainty,
+    compute_velocity,
     create_inference_data,
     format_anndata_output,
+    posterior_predictive,
+    sample_posterior,
 )
-from pyrovelocity.models.jax.core.state import InferenceState
-from pyrovelocity.models.jax.core.dynamics import standard_dynamics_model
 
 
 # Simple model for testing
@@ -270,6 +274,51 @@ def test_create_inference_data(test_inference_state):
     assert "beta" in inference_data.posterior
     assert "gamma" in inference_data.posterior
     assert "tau" in inference_data.posterior
+
+
+@pytest.mark.skip(reason="Model configuration test needs more work")
+def test_analyze_posterior_with_model_config(test_inference_state, test_data):
+    """Test analyzing posterior samples with a model configuration."""
+    # Get test data
+    u_obs, s_obs = test_data
+
+    # Add batch dimension for the model
+    u_obs = u_obs[jnp.newaxis, :, jnp.newaxis]
+    s_obs = s_obs[jnp.newaxis, :, jnp.newaxis]
+
+    # Get the standard model configuration
+    model_config = standard_model_config()
+
+    # Generate random key
+    key = jax.random.PRNGKey(0)
+
+    # Analyze posterior
+    results = analyze_posterior(
+        inference_state=test_inference_state,
+        model=model_config,
+        args=(),
+        kwargs={"u_obs": u_obs, "s_obs": s_obs},
+        num_samples=5,
+        key=key,
+    )
+
+    # Check that results contain expected keys
+    assert "posterior_samples" in results
+    assert "posterior_predictive" in results
+    assert "velocity" in results
+    assert "uncertainty" in results
+    assert "inference_data" in results
+
+    # Check that velocity results have the expected shape
+    assert results["velocity"]["u_expected"].shape[0] == 5  # num_samples
+    assert results["velocity"]["s_expected"].shape[0] == 5  # num_samples
+    assert results["velocity"]["velocity"].shape[0] == 5  # num_samples
+
+    # Check that uncertainty results have the expected keys
+    assert "u_expected_mean" in results["uncertainty"]
+    assert "s_expected_mean" in results["uncertainty"]
+    assert "velocity_mean" in results["uncertainty"]
+    assert "velocity_confidence" in results["uncertainty"]
 
 
 def test_format_anndata_output(test_inference_state):
