@@ -8584,6 +8584,41 @@ typing = ["mypy (==1.7.1)", "torch (==2.1.1)", "types-PyYAML", "types-emoji", "t
 visual = ["SciencePlots (>=2.0.0)", "matplotlib (>=3.2.0)"]
 
 [[package]]
+name = "torchode"
+version = "1.0.0"
+description = "A parallel ODE solver for PyTorch"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "torchode-1.0.0-py3-none-any.whl", hash = "sha256:df0883aa0e98ba5118a3d768ec2d543c27ff6fc205b866caa2a98a8f2545122f"},
+    {file = "torchode-1.0.0.tar.gz", hash = "sha256:fd308ef0424ec4d82669135ec60658c67f6b8a9feea8992464c04ef1e936040e"},
+]
+
+[package.dependencies]
+sympy = ">=1.10,<2.0"
+torch = ">=2.0"
+torchtyping = ">=0.1.4,<0.2.0"
+
+[package.extras]
+benchmark = ["pytest-benchmark"]
+test = ["numpy (>=1.22,<2.0)", "pytest"]
+
+[[package]]
+name = "torchtyping"
+version = "0.1.5"
+description = "Runtime type annotations for the shape, dtype etc. of PyTorch Tensors."
+optional = false
+python-versions = ">=3.7.0"
+files = [
+    {file = "torchtyping-0.1.5-py3-none-any.whl", hash = "sha256:429d76e16b08a2409226320565d557d4ba3d0d6f544db3e5dc4cf690ffa2a3bd"},
+    {file = "torchtyping-0.1.5.tar.gz", hash = "sha256:fb51e1792536223e2497b1e106ed0cbe681f7324044599cb718d03be3f2b3851"},
+]
+
+[package.dependencies]
+torch = ">=1.7.0"
+typeguard = ">=2.11.1,<3"
+
+[[package]]
 name = "tornado"
 version = "6.3"
 description = "Tornado is a Python web framework and asynchronous networking library, originally developed at FriendFeed."
@@ -9421,10 +9456,10 @@ bioinformatics = ["pyensembl", "pyfaidx"]
 docs = ["furo", "jupyter-cache", "jupyterlab", "jupytext", "myst-parser", "nbsphinx", "quartodoc", "sphinx", "sphinx-autobuild", "sphinx-autodoc-typehints", "sphinx-click", "sphinx-copybutton", "sphinx-markdown-builder"]
 lint = ["black", "mypy", "pre-commit", "pre-commit-hooks", "pygments", "ruff"]
 plotting = ["matplotlib-venn"]
-test = ["coverage", "hypothesis", "ipython", "pygments", "pytest", "pytest-asyncio", "pytest-cov", "pytest-mock", "pytest-xdist", "xdoctest"]
+test = ["coverage", "hypothesis", "ipdb", "ipython", "pygments", "pytest", "pytest-asyncio", "pytest-cov", "pytest-mock", "pytest-xdist", "xdoctest"]
 workflows = ["dataclasses-json", "dulwich", "flytekit", "google-api-python-client", "hydra-core", "hydra-zen", "ipywidgets", "jupytext", "mashumaro", "nbconvert", "nbformat", "omegaconf", "papermill", "python-dotenv", "rich-click"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "f0210897e67426de13accca67d50992c3df6db6cf7017c013997fe155241bef4"
+content-hash = "3e0fc819e8902277963e617dcca77d3b6522bbfcbfd6fb6265bffcb78ffe9e11"
