@@ -6,15 +6,13 @@ Guides are responsible for defining the variational distribution used to
 approximate the posterior distribution of the model parameters.
 """
 
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Optional
 
 import pyro
 import pyro.distributions as dist
-import pyro.infer as infer
 import torch
-from anndata import AnnData
 from beartype import beartype
-from jaxtyping import Array, Float, Int
+from pyro.infer import Predictive, autoguide
 
 from pyrovelocity.models.modular.components.base import BaseInferenceGuide
 from pyrovelocity.models.modular.interfaces import InferenceGuide
@@ -41,6 +39,7 @@ class AutoGuideFactory(BaseInferenceGuide):
         guide_type: str = "AutoNormal",
         init_loc_fn: Optional[Callable] = None,
         init_scale: float = 0.1,
+        name: str = "inference_guide",
         **kwargs: Any,
     ) -> None:
         """Initialize the AutoGuideFactory.
@@ -49,18 +48,20 @@ class AutoGuideFactory(BaseInferenceGuide):
             guide_type: The type of AutoGuide to create.
             init_loc_fn: Function to initialize the location parameters of the guide.
             init_scale: Initial scale for the guide parameters.
+            name: A unique name for this component instance.
             **kwargs: Additional keyword arguments.
         """
-        super().__init__(**kwargs)
+        super().__init__(name=name)
         self.guide_type = guide_type
         self.init_loc_fn = init_loc_fn
         self.init_scale = init_scale
         self._guide = None
+        self._model = None
 
     @beartype
     def create_guide(
         self, model: Callable, **kwargs: Any
-    ) -> infer.autoguide.AutoGuide:
+    ) -> autoguide.AutoGuide:
         """Create an AutoGuide for the given model.
 
         Args:
@@ -73,15 +74,18 @@ class AutoGuideFactory(BaseInferenceGuide):
         Raises:
             ValueError: If the specified guide_type is not supported.
         """
+        # Store the model for later use
+        self._model = model
+
         # Map guide_type to the corresponding AutoGuide class
         guide_classes = {
-            "AutoNormal": infer.autoguide.AutoNormal,
-            "AutoDiagonalNormal": infer.autoguide.AutoDiagonalNormal,
-            "AutoMultivariateNormal": infer.autoguide.AutoMultivariateNormal,
-            "AutoLowRankMultivariateNormal": infer.autoguide.AutoLowRankMultivariateNormal,
-            "AutoIAFNormal": infer.autoguide.AutoIAFNormal,
-            "AutoLaplaceApproximation": infer.autoguide.AutoLaplaceApproximation,
-            "AutoDelta": infer.autoguide.AutoDelta,
+            "AutoNormal": autoguide.AutoNormal,
+            "AutoDiagonalNormal": autoguide.AutoDiagonalNormal,
+            "AutoMultivariateNormal": autoguide.AutoMultivariateNormal,
+            "AutoLowRankMultivariateNormal": autoguide.AutoLowRankMultivariateNormal,
+            "AutoIAFNormal": autoguide.AutoIAFNormal,
+            "AutoLaplaceApproximation": autoguide.AutoLaplaceApproximation,
+            "AutoDelta": autoguide.AutoDelta,
         }
 
         if self.guide_type not in guide_classes:
@@ -100,7 +104,7 @@ class AutoGuideFactory(BaseInferenceGuide):
         return self._guide
 
     @beartype
-    def get_guide(self) -> infer.autoguide.AutoGuide:
+    def get_guide(self) -> autoguide.AutoGuide:
         """Get the created guide.
 
         Returns:
@@ -145,32 +149,33 @@ class AutoGuideFactory(BaseInferenceGuide):
         self.create_guide(model, **kwargs)
 
     @beartype
-    def _sample_posterior_impl(
-        self, model: Callable, guide: Callable, **kwargs
-    ) -> Dict[str, torch.Tensor]:
+    def _sample_posterior_impl(self, **kwargs) -> Dict[str, torch.Tensor]:
         """
         Implementation of posterior sampling.
 
         This method samples from the posterior distribution using the guide.
 
         Args:
-            model: Model function
-            guide: Guide function
             **kwargs: Additional keyword arguments
 
         Returns:
             Dictionary of posterior samples
         """
+        if self._guide is None or self._model is None:
+            raise RuntimeError(
+                "Guide has not been created yet. Call create_guide first."
+            )
+
         # Get the number of samples
         num_samples = kwargs.get("num_samples", 1000)
 
         # Create a predictive object
-        predictive = pyro.infer.Predictive(
-            model, guide=guide, num_samples=num_samples
+        predictive = Predictive(
+            self._model, guide=self._guide, num_samples=num_samples
         )
 
         # Get samples
-        samples = predictive()
+        samples = predictive(**kwargs)
 
         # Filter out observed values
         posterior_samples = {
@@ -178,6 +183,22 @@ class AutoGuideFactory(BaseInferenceGuide):
         }
 
         return posterior_samples
+
+    def __call__(self, model: Callable, *args: Any, **kwargs: Any) -> Callable:
+        """
+        Create a guide function for the given model.
+
+        Args:
+            model: The model function to create a guide for
+            *args: Additional positional arguments
+            **kwargs: Additional keyword arguments
+
+        Returns:
+            A guide function compatible with the model
+        """
+        if self._guide is None or self._model != model:
+            self.create_guide(model)
+        return self._guide
 
 
 @inference_guide_registry.register("normal")
@@ -301,9 +322,7 @@ class NormalGuide(BaseInferenceGuide):
         self.create_guide(model, **kwargs)
 
     @beartype
-    def _sample_posterior_impl(
-        self, model: Callable, guide: Callable, **kwargs
-    ) -> Dict[str, torch.Tensor]:
+    def _sample_posterior_impl(self, **kwargs) -> Dict[str, torch.Tensor]:
         """
         Implementation of posterior sampling.
 
@@ -317,21 +336,20 @@ class NormalGuide(BaseInferenceGuide):
         Returns:
             Dictionary of posterior samples
         """
+        if not hasattr(self, "_model") or not hasattr(self, "_params") or not self._params:
+            raise RuntimeError(
+                "Guide has not been created yet or no parameters have been registered."
+            )
+
         # Get the number of samples
         num_samples = kwargs.get("num_samples", 1000)
 
-        # Create a predictive object
-        predictive = pyro.infer.Predictive(
-            model, guide=guide, num_samples=num_samples
-        )
-
-        # Get samples
-        samples = predictive()
-
-        # Filter out observed values
-        posterior_samples = {
-            k: v for k, v in samples.items() if not k.startswith("_")
-        }
+        # For a normal guide, we sample from the learned distributions
+        posterior_samples = {}
+        for name, (loc, scale) in self._params.items():
+            # Sample from normal distribution
+            samples = torch.distributions.Normal(loc, scale).sample(torch.Size([num_samples]))
+            posterior_samples[name] = samples
 
         return posterior_samples
 
@@ -450,9 +468,7 @@ class DeltaGuide(BaseInferenceGuide):
         self.create_guide(model, **kwargs)
 
     @beartype
-    def _sample_posterior_impl(
-        self, model: Callable, guide: Callable, **kwargs
-    ) -> Dict[str, torch.Tensor]:
+    def _sample_posterior_impl(self, **kwargs) -> Dict[str, torch.Tensor]:
         """
         Implementation of posterior sampling.
 
@@ -467,6 +483,11 @@ class DeltaGuide(BaseInferenceGuide):
         Returns:
             Dictionary of posterior samples
         """
+        if not hasattr(self, "_model") or not hasattr(self, "_params") or not self._params:
+            raise RuntimeError(
+                "Guide has not been created yet or no parameters have been registered."
+            )
+
         # For a Delta guide, we just return the point estimates
         posterior_samples = {}
         for name, param in self._params.items():
