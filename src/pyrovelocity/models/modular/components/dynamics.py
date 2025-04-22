@@ -4,7 +4,7 @@ This module implements various dynamics models that simulate RNA velocity
 by modeling the time evolution of unspliced and spliced mRNA counts.
 """
 
-from typing import Any, ClassVar, Dict, Optional, Tuple, Type
+from typing import Any, ClassVar, Dict, Optional, Tuple, Type, Union
 
 import jax
 import jax.numpy as jnp
@@ -232,10 +232,10 @@ class StandardDynamicsModel(BaseDynamicsModel):
 
     @jaxtyped
     @beartype
-    def steady_state(
-        self, alpha: Array, beta: Array, gamma: Array, **kwargs
-    ) -> Tuple[Array, Array]:
-        """Calculate the steady state values for unspliced and spliced mRNA.
+    def _steady_state_impl(
+        self, alpha: Union[ParamTensor, Array], beta: Union[ParamTensor, Array], gamma: Union[ParamTensor, Array], **kwargs: Any
+    ) -> Tuple[Union[ParamTensor, Array], Union[ParamTensor, Array]]:
+        """Implementation of the steady_state method for the standard dynamics model.
 
         Args:
             alpha: Transcription rates [genes]
@@ -341,7 +341,7 @@ class NonlinearDynamicsModel(BaseDynamicsModel):
             return u_ss, s_ss
 
         # Calculate steady state using the nonlinear model
-        u_ss, s_ss = self.steady_state(alpha, beta, gamma, k_alpha, k_beta)
+        u_ss, s_ss = self._steady_state_impl(alpha, beta, gamma, k_alpha=k_alpha, k_beta=k_beta)
 
         # Apply scaling if provided
         if scaling is not None:
@@ -532,16 +532,16 @@ class NonlinearDynamicsModel(BaseDynamicsModel):
 
     @jaxtyped
     @beartype
-    def steady_state(
+    def _steady_state_impl(
         self,
-        alpha: Array,
-        beta: Array,
-        gamma: Array,
-        k_alpha: Optional[Array] = None,
-        k_beta: Optional[Array] = None,
-        **kwargs,
-    ) -> Tuple[Array, Array]:
-        """Calculate the steady state values for unspliced and spliced mRNA.
+        alpha: Union[ParamTensor, Array],
+        beta: Union[ParamTensor, Array],
+        gamma: Union[ParamTensor, Array],
+        k_alpha: Optional[Union[ParamTensor, Array]] = None,
+        k_beta: Optional[Union[ParamTensor, Array]] = None,
+        **kwargs: Any,
+    ) -> Tuple[Union[ParamTensor, Array], Union[ParamTensor, Array]]:
+        """Implementation of the steady_state method for the nonlinear dynamics model.
 
         Args:
             alpha: Transcription rates [genes]

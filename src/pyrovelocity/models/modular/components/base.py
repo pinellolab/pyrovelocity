@@ -12,14 +12,13 @@ from __future__ import annotations
 import abc
 from typing import Any, Dict, Optional, Tuple, Union
 
-from expression import Result, case, tag, tagged_union
-
 import jax.numpy as jnp
 import pyro
 import torch
 from anndata import AnnData
 from beartype import beartype
 from beartype.typing import Callable
+from expression import Result, case, tag, tagged_union
 from jaxtyping import Array, Float, jaxtyped
 
 from pyrovelocity.models.modular.interfaces import (
@@ -121,7 +120,8 @@ class BaseDynamicsModel(BaseComponent, DynamicsModel, abc.ABC):
     Base class for dynamics models that define gene expression evolution over time.
 
     This class implements the DynamicsModel protocol and provides common
-    functionality for dynamics models.
+    functionality for dynamics models. It supports analytical and numerical solutions
+    to the RNA velocity differential equations.
     """
 
     def __init__(
@@ -167,6 +167,7 @@ class BaseDynamicsModel(BaseComponent, DynamicsModel, abc.ABC):
         gamma: ParamTensor,
         scaling: Optional[ParamTensor] = None,
         t: Optional[BatchTensor] = None,
+        **kwargs: Any,
     ) -> Tuple[BatchTensor, BatchTensor]:
         """
         Compute the expected unspliced and spliced RNA counts based on the dynamics model.
@@ -179,13 +180,14 @@ class BaseDynamicsModel(BaseComponent, DynamicsModel, abc.ABC):
             gamma: Degradation rate
             scaling: Optional scaling factor for the dynamics
             t: Optional time points for the dynamics
+            **kwargs: Additional model-specific parameters
 
         Returns:
             Tuple of (expected unspliced counts, expected spliced counts)
         """
         # Validate inputs
         validation_result = self.validate_inputs(
-            u=u, s=s, alpha=alpha, beta=beta, gamma=gamma, scaling=scaling, t=t
+            u=u, s=s, alpha=alpha, beta=beta, gamma=gamma, scaling=scaling, t=t, **kwargs
         )
 
         if validation_result.is_error():
@@ -194,7 +196,7 @@ class BaseDynamicsModel(BaseComponent, DynamicsModel, abc.ABC):
             )
 
         # Call implementation
-        return self._forward_impl(u, s, alpha, beta, gamma, scaling, t)
+        return self._forward_impl(u, s, alpha, beta, gamma, scaling, t, **kwargs)
 
     @abc.abstractmethod
     def _forward_impl(
@@ -298,6 +300,65 @@ class BaseDynamicsModel(BaseComponent, DynamicsModel, abc.ABC):
 
         Returns:
             Tuple of (predicted unspliced counts, predicted spliced counts)
+        """
+        pass
+
+    @jaxtyped
+    @beartype
+    def steady_state(
+        self,
+        alpha: Union[ParamTensor, Array],
+        beta: Union[ParamTensor, Array],
+        gamma: Union[ParamTensor, Array],
+        **kwargs: Any,
+    ) -> Tuple[Union[ParamTensor, Array], Union[ParamTensor, Array]]:
+        """
+        Compute the steady-state unspliced and spliced RNA counts.
+
+        Args:
+            alpha: Transcription rate
+            beta: Splicing rate
+            gamma: Degradation rate
+            **kwargs: Additional model-specific parameters
+
+        Returns:
+            Tuple of (steady-state unspliced counts, steady-state spliced counts)
+        """
+        # Validate inputs
+        validation_result = self.validate_inputs(
+            alpha=alpha, beta=beta, gamma=gamma, **kwargs
+        )
+
+        if validation_result.is_error():
+            raise ValueError(
+                f"Error in dynamics model steady state calculation: {validation_result.error}"
+            )
+
+        # Call implementation
+        return self._steady_state_impl(alpha, beta, gamma, **kwargs)
+
+    @abc.abstractmethod
+    def _steady_state_impl(
+        self,
+        alpha: Union[ParamTensor, Array],
+        beta: Union[ParamTensor, Array],
+        gamma: Union[ParamTensor, Array],
+        **kwargs: Any,
+    ) -> Tuple[Union[ParamTensor, Array], Union[ParamTensor, Array]]:
+        """
+        Implementation of the steady_state method.
+
+        This method should be implemented by subclasses to provide the specific
+        steady-state calculation implementation.
+
+        Args:
+            alpha: Transcription rate
+            beta: Splicing rate
+            gamma: Degradation rate
+            **kwargs: Additional model-specific parameters
+
+        Returns:
+            Tuple of (steady-state unspliced counts, steady-state spliced counts)
         """
         pass
 

@@ -160,8 +160,8 @@ class TestNonlinearDynamicsModel:
             simple_params["alpha"],
             simple_params["beta"],
             simple_params["gamma"],
-            simple_params["k_alpha"],
-            simple_params["k_beta"],
+            k_alpha=simple_params["k_alpha"],
+            k_beta=simple_params["k_beta"],
         )
 
         # Steady state should be positive
@@ -174,8 +174,8 @@ class TestNonlinearDynamicsModel:
             simple_params["alpha"],
             simple_params["beta"],
             simple_params["gamma"],
-            large_k,
-            large_k,
+            k_alpha=large_k,
+            k_beta=large_k,
         )
 
         standard_model = StandardDynamicsModel()
@@ -216,8 +216,8 @@ class TestNonlinearDynamicsModel:
             simple_params["alpha"],
             simple_params["beta"],
             simple_params["gamma"],
-            simple_params["k_alpha"],
-            simple_params["k_beta"],
+            k_alpha=simple_params["k_alpha"],
+            k_beta=simple_params["k_beta"],
         )
 
         # Final values should be close to steady state
@@ -346,11 +346,11 @@ def test_model_comparison():
     (
         u_ss_nonlinear_large_k,
         s_ss_nonlinear_large_k,
-    ) = nonlinear_model.steady_state(alpha, beta, gamma, k_large, k_large)
+    ) = nonlinear_model.steady_state(alpha, beta, gamma, k_alpha=k_large, k_beta=k_large)
     (
         u_ss_nonlinear_small_k,
         s_ss_nonlinear_small_k,
-    ) = nonlinear_model.steady_state(alpha, beta, gamma, k_small, k_small)
+    ) = nonlinear_model.steady_state(alpha, beta, gamma, k_alpha=k_small, k_beta=k_small)
 
     # Compare steady states
     # Use a larger tolerance for the comparison
