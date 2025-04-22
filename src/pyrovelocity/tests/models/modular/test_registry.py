@@ -1,35 +1,35 @@
 """Tests for the registry system in PyroVelocity's modular architecture."""
 
-import pytest
-import torch
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import pyro
 import pyro.distributions as dist
+import pytest
+import torch
 from beartype.typing import Callable
 
 from pyrovelocity.models.modular.interfaces import (
-    DynamicsModel,
-    PriorModel,
-    LikelihoodModel,
-    ObservationModel,
-    InferenceGuide,
     BatchTensor,
-    ParamTensor,
+    DynamicsModel,
+    InferenceGuide,
+    LikelihoodModel,
     ModelState,
+    ObservationModel,
+    ParamTensor,
+    PriorModel,
 )
 from pyrovelocity.models.modular.registry import (
-    Registry,
     DynamicsModelRegistry,
-    PriorModelRegistry,
+    InferenceGuideRegistry,
     LikelihoodModelRegistry,
     ObservationModelRegistry,
-    InferenceGuideRegistry,
+    PriorModelRegistry,
+    Registry,
 )
 
 
 # Test implementations of the interfaces
-class TestDynamicsModel:
+class TestDynamicsModel(DynamicsModel):
     def forward(
         self,
         u: BatchTensor,
@@ -37,14 +37,25 @@ class TestDynamicsModel:
         alpha: ParamTensor,
         beta: ParamTensor,
         gamma: ParamTensor,
-        scaling: ParamTensor = None,
-        t: BatchTensor = None,
+        scaling: Optional[ParamTensor] = None,
+        t: Optional[BatchTensor] = None,
+        **kwargs: Any,
     ) -> Tuple[BatchTensor, BatchTensor]:
         # Simple implementation for testing
         return u * alpha / beta, s * gamma
 
+    def steady_state(
+        self,
+        alpha: ParamTensor,
+        beta: ParamTensor,
+        gamma: ParamTensor,
+        **kwargs: Any,
+    ) -> Tuple[ParamTensor, ParamTensor]:
+        # Simple implementation for testing
+        return alpha / beta, alpha / gamma
 
-class TestPriorModel:
+
+class TestPriorModel(PriorModel):
     def forward(
         self,
         u_obs: BatchTensor,
@@ -67,7 +78,7 @@ class TestPriorModel:
         return {"alpha": alpha, "beta": beta, "gamma": gamma}
 
 
-class TestLikelihoodModel:
+class TestLikelihoodModel(LikelihoodModel):
     def forward(
         self,
         u_obs: BatchTensor,
@@ -83,7 +94,7 @@ class TestLikelihoodModel:
             pyro.sample("s", dist.Poisson(s_logits), obs=s_obs)
 
 
-class TestObservationModel:
+class TestObservationModel(ObservationModel):
     def forward(
         self,
         u_obs: BatchTensor,
@@ -94,7 +105,7 @@ class TestObservationModel:
         return u_obs, s_obs
 
 
-class TestInferenceGuide:
+class TestInferenceGuide(InferenceGuide):
     def __call__(
         self,
         model: Callable,

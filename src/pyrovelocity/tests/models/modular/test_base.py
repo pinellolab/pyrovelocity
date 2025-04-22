@@ -382,11 +382,11 @@ class TestBaseLikelihoodModel:
         model = self.ConcreteLikelihoodModel()
 
         # Create test inputs
-        observations = np.zeros((2, 3))
-        predictions = np.zeros((2, 3))
+        import jax.numpy as jnp
+        observations = jnp.zeros((2, 3))
+        predictions = jnp.zeros((2, 3))
 
         # Mock _log_prob_impl
-        import jax.numpy as jnp
         expected_result = jnp.zeros(2)
         model._log_prob_impl = MagicMock(return_value=expected_result)
 
@@ -404,10 +404,10 @@ class TestBaseLikelihoodModel:
         model = self.ConcreteLikelihoodModel()
 
         # Create test inputs
-        predictions = np.zeros((2, 3))
+        import jax.numpy as jnp
+        predictions = jnp.zeros((2, 3))
 
         # Mock _sample_impl
-        import jax.numpy as jnp
         expected_result = jnp.zeros((2, 3))
         model._sample_impl = MagicMock(return_value=expected_result)
 
@@ -503,7 +503,8 @@ class TestBaseObservationModel:
         data = {"data": torch.zeros(10)}
 
         # Mock _create_dataloaders_impl
-        expected_result = {"dataloader": "mock_dataloader"}
+        mock_dataloader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(torch.zeros(1)))
+        expected_result = {"dataloader": mock_dataloader}
         model._create_dataloaders_impl = MagicMock(return_value=expected_result)
 
         # Call create_dataloaders
