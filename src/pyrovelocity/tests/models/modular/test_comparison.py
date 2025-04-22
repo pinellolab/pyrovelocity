@@ -5,29 +5,29 @@ This module contains tests for the BayesianModelComparison class and related
 utility functions for model selection and comparison.
 """
 
-import numpy as np
-import pandas as pd
-import pytest
-import torch
-from unittest.mock import MagicMock, patch
 from typing import Dict, List, Optional, Tuple, Union
+from unittest.mock import MagicMock, patch
 
 import jax
 import jax.numpy as jnp
+import numpy as np
+import pandas as pd
 import pyro
+import pytest
+import torch
 
-from pyrovelocity.models.modular.components.base import (
-    BaseDynamicsModel,
-    BaseLikelihoodModel,
-    BaseObservationModel,
-    BasePriorModel,
-    BaseInferenceGuide,
-)
 from pyrovelocity.models.modular.comparison import (
     BayesianModelComparison,
     ComparisonResult,
     create_comparison_table,
     select_best_model,
+)
+from pyrovelocity.models.modular.components.base import (
+    BaseDynamicsModel,
+    BaseInferenceGuide,
+    BaseLikelihoodModel,
+    BaseObservationModel,
+    BasePriorModel,
 )
 from pyrovelocity.models.modular.model import ModelState, PyroVelocityModel
 
@@ -67,6 +67,25 @@ class MockDynamicsModel(BaseDynamicsModel):
         u_pred = torch.ones_like(u) * alpha
         s_pred = torch.ones_like(s) * alpha
         return u_pred, s_pred
+
+    def _steady_state_impl(
+        self,
+        alpha: torch.Tensor,
+        beta: torch.Tensor,
+        gamma: torch.Tensor,
+        scaling: Optional[torch.Tensor] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Implementation of the steady state calculation for testing."""
+        # For testing, just return ones
+        u_ss = torch.ones_like(alpha)
+        s_ss = torch.ones_like(alpha)
+
+        # Apply scaling if provided
+        if scaling is not None:
+            u_ss = u_ss * scaling
+            s_ss = s_ss * scaling
+
+        return u_ss, s_ss
 
     def _predict_future_states_impl(
         self,
