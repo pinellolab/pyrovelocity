@@ -201,6 +201,22 @@ class MockGuideModel(BaseInferenceGuide):
         """Forward pass that just returns the input context."""
         return context
 
+    def guide(self, x=None, time_points=None, **kwargs):
+        """Mock guide function that accepts torch tensors.
+
+        This method is used by the PyroVelocityModel.guide method.
+
+        Args:
+            x: Input data tensor (can be any tensor-like object)
+            time_points: Time points tensor (can be any tensor-like object)
+            **kwargs: Additional keyword arguments
+
+        Returns:
+            Empty dictionary for testing
+        """
+        # Just return an empty dict for testing
+        return {}
+
     def __call__(self, model, *args, **kwargs):
         """Create a guide function for the given model."""
         self._model = model
@@ -215,7 +231,7 @@ class MockGuideModel(BaseInferenceGuide):
         """Implementation of guide setup."""
         pass
 
-    def _sample_posterior_impl(self, model, guide, **kwargs):
+    def _sample_posterior_impl(self, **kwargs):
         """Implementation of posterior sampling."""
         # Return empty dict for testing
         return {}
