@@ -81,6 +81,24 @@ class StandardDynamicsModel(BaseDynamicsModel):
             u_ss = u_ss * scaling
             s_ss = s_ss * scaling
 
+        # Expand to match batch size if needed
+        if u.dim() > u_ss.dim():
+            batch_size = u.shape[0]
+            u_ss = u_ss.unsqueeze(0).expand(batch_size, -1)
+            s_ss = s_ss.unsqueeze(0).expand(batch_size, -1)
+
+        # Ensure the expected values have the same shape as the observations
+        if u_ss.shape != u.shape:
+            # If the shapes don't match, reshape the expected values
+            # This can happen if the expected values have a different number of genes
+            # than the observations (e.g., if the expected values are computed for all genes
+            # but the observations are for a subset of genes)
+            n_cells, n_genes = u.shape
+            if u_ss.shape[1] != n_genes:
+                # Slice the expected values to match the number of genes in the observations
+                u_ss = u_ss[:, :n_genes]
+                s_ss = s_ss[:, :n_genes]
+
         return u_ss, s_ss
 
     @jaxtyped
@@ -307,6 +325,24 @@ class StandardDynamicsModelSimulated(BaseDynamicsModel):
             u_ss = u_ss * scaling
             s_ss = s_ss * scaling
 
+        # Expand to match batch size if needed
+        if u.dim() > u_ss.dim():
+            batch_size = u.shape[0]
+            u_ss = u_ss.unsqueeze(0).expand(batch_size, -1)
+            s_ss = s_ss.unsqueeze(0).expand(batch_size, -1)
+
+        # Ensure the expected values have the same shape as the observations
+        if u_ss.shape != u.shape:
+            # If the shapes don't match, reshape the expected values
+            # This can happen if the expected values have a different number of genes
+            # than the observations (e.g., if the expected values are computed for all genes
+            # but the observations are for a subset of genes)
+            n_cells, n_genes = u.shape
+            if u_ss.shape[1] != n_genes:
+                # Slice the expected values to match the number of genes in the observations
+                u_ss = u_ss[:, :n_genes]
+                s_ss = s_ss[:, :n_genes]
+
         return u_ss, s_ss
 
     @jaxtyped
@@ -358,7 +394,7 @@ class StandardDynamicsModelSimulated(BaseDynamicsModel):
         # For the standard model, we can use the analytical solution
         # This is more efficient and accurate than numerical integration
         standard_model = StandardDynamicsModel()
-        u_future, s_future = standard_model._predict_future_states_impl(
+        u_future, s_future = standard_model.predict_future_states(
             current_state, time_delta, alpha, beta, gamma, scaling
         )
 
@@ -628,6 +664,12 @@ class NonlinearDynamicsModel(BaseDynamicsModel):
                 u_ss = u_ss * scaling
                 s_ss = s_ss * scaling
 
+            # Expand to match batch size if needed
+            if u.dim() > u_ss.dim():
+                batch_size = u.shape[0]
+                u_ss = u_ss.unsqueeze(0).expand(batch_size, -1)
+                s_ss = s_ss.unsqueeze(0).expand(batch_size, -1)
+
             return u_ss, s_ss
 
         # Calculate steady state using the nonlinear model
@@ -639,6 +681,12 @@ class NonlinearDynamicsModel(BaseDynamicsModel):
         if scaling is not None:
             u_ss = u_ss * scaling
             s_ss = s_ss * scaling
+
+        # Expand to match batch size if needed
+        if u.dim() > u_ss.dim():
+            batch_size = u.shape[0]
+            u_ss = u_ss.unsqueeze(0).expand(batch_size, -1)
+            s_ss = s_ss.unsqueeze(0).expand(batch_size, -1)
 
         return u_ss, s_ss
 
