@@ -9,10 +9,6 @@ component models (dynamics, priors, likelihoods, observations, guides).
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Protocol, Tuple, Union
 
-import jax
-import jax.numpy as jnp
-import numpyro
-import numpyro.distributions as dist
 import torch
 from beartype import beartype
 from jaxtyping import Array, Float, Int
@@ -140,11 +136,42 @@ class PyroVelocityModel:
         else:
             self.state = state
 
+    def __call__(self, *args, **kwargs):
+        """Make the model callable for Pyro's autoguide.
+
+        This method delegates to the forward method, making the model compatible
+        with Pyro's autoguide system. It handles both the case where x and time_points
+        are provided directly and the case where u_obs and s_obs are provided.
+
+        Args:
+            *args: Positional arguments passed to forward
+            **kwargs: Keyword arguments passed to forward
+
+        Returns:
+            Result from the forward method
+        """
+        # Handle the case where u_obs and s_obs are provided instead of x and time_points
+        if not args and 'x' not in kwargs and 'time_points' not in kwargs:
+            if 'u_obs' in kwargs and 's_obs' in kwargs:
+                # Get u_obs and s_obs but don't remove them from kwargs
+                u_obs = kwargs['u_obs']
+                s_obs = kwargs['s_obs']
+
+                # Create a dummy time_points tensor
+                time_points = torch.tensor([0.0, 1.0])
+
+                # Pass the original u_obs and s_obs to forward
+                return self.forward(time_points=time_points, **kwargs)
+
+        return self.forward(*args, **kwargs)
+
     @beartype
     def forward(
         self,
-        x: Float[Array, "batch_size n_features"],
-        time_points: Float[Array, "n_times"],
+        x: Optional[torch.Tensor] = None,
+        time_points: Optional[torch.Tensor] = None,
+        u_obs: Optional[torch.Tensor] = None,
+        s_obs: Optional[torch.Tensor] = None,
         cell_state: Optional[Dict[str, Any]] = None,
         **kwargs,
     ) -> Dict[str, Any]:
@@ -157,8 +184,10 @@ class PyroVelocityModel:
         next component.
 
         Args:
-            x: Input data tensor of shape [batch_size, n_features]
-            time_points: Time points for the dynamics model
+            x: Optional input data tensor of shape [batch_size, n_features]
+            time_points: Optional time points for the dynamics model
+            u_obs: Observed unspliced RNA counts
+            s_obs: Observed spliced RNA counts
             cell_state: Optional dictionary with cell state information
             **kwargs: Additional keyword arguments passed to component models
 
@@ -167,11 +196,19 @@ class PyroVelocityModel:
         """
         # Initialize the context dictionary to pass between components
         context = {
-            "x": x,
-            "time_points": time_points,
             "cell_state": cell_state or {},
             **kwargs,
         }
+
+        # Add optional parameters to context if provided
+        if x is not None:
+            context["x"] = x
+        if time_points is not None:
+            context["time_points"] = time_points
+        if u_obs is not None:
+            context["u_obs"] = u_obs
+        if s_obs is not None:
+            context["s_obs"] = s_obs
 
         # Process data through the observation model
         observation_context = self.observation_model.forward(context)
@@ -191,8 +228,10 @@ class PyroVelocityModel:
     @beartype
     def guide(
         self,
-        x: Float[Array, "batch_size n_features"],
-        time_points: Float[Array, "n_times"],
+        x: Optional[torch.Tensor] = None,
+        time_points: Optional[torch.Tensor] = None,
+        u_obs: Optional[torch.Tensor] = None,
+        s_obs: Optional[torch.Tensor] = None,
         cell_state: Optional[Dict[str, Any]] = None,
         **kwargs,
     ) -> Dict[str, Any]:
@@ -203,8 +242,10 @@ class PyroVelocityModel:
         the inference guide for posterior approximation.
 
         Args:
-            x: Input data tensor of shape [batch_size, n_features]
-            time_points: Time points for the dynamics model
+            x: Optional input data tensor of shape [batch_size, n_features]
+            time_points: Optional time points for the dynamics model
+            u_obs: Observed unspliced RNA counts
+            s_obs: Observed spliced RNA counts
             cell_state: Optional dictionary with cell state information
             **kwargs: Additional keyword arguments passed to the guide model
 
@@ -213,17 +254,26 @@ class PyroVelocityModel:
         """
         # Initialize the context dictionary to pass to the guide
         context = {
-            "x": x,
-            "time_points": time_points,
             "cell_state": cell_state or {},
             **kwargs,
         }
+
+        # Add optional parameters to context if provided
+        if x is not None:
+            context["x"] = x
+        if time_points is not None:
+            context["time_points"] = time_points
+        if u_obs is not None:
+            context["u_obs"] = u_obs
+        if s_obs is not None:
+            context["s_obs"] = s_obs
 
         # Process through the observation model first to prepare data
         observation_context = self.observation_model.forward(context)
 
         # Delegate to the guide model
-        return self.guide_model.forward(observation_context)
+        guide_fn = self.guide_model.get_guide()
+        return guide_fn(observation_context)
 
     @property
     def name(self) -> str:
@@ -313,14 +363,29 @@ class PyroVelocityModel:
         gamma = parameters.get("gamma", torch.tensor(1.0))
         scaling = parameters.get("scaling", None)
 
+        # Extract current state
+        u_current, s_current = current_state
+
+        # Create context dictionary
+        context = {
+            "u_obs": u_current,
+            "s_obs": s_current,
+            "time_delta": time_delta,
+            "alpha": alpha,
+            "beta": beta,
+            "gamma": gamma,
+        }
+
+        if scaling is not None:
+            context["scaling"] = scaling
+
         # Delegate to dynamics model
-        return self.dynamics_model.predict_future_states(
-            current_state=current_state,
-            time_delta=time_delta,
-            alpha=alpha,
-            beta=beta,
-            gamma=gamma,
-            scaling=scaling,
-        )
+        result_context = self.dynamics_model.forward(context)
+
+        # Extract future states from context
+        u_future = result_context.get("u_future")
+        s_future = result_context.get("s_future")
+
+        return u_future, s_future
 
 
