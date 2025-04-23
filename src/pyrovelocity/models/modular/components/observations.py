@@ -8,7 +8,7 @@ data given the latent variables.
 
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import jax.numpy as jnp
+# Remove JAX dependency
 import numpy as np
 import pyro
 import pyro.distributions as dist
@@ -36,6 +36,104 @@ class StandardObservationModel(BaseObservationModel):
         use_observed_lib_size: Whether to use observed library size as a scaling factor.
         transform_batch: Whether to transform batch effects.
     """
+
+    @beartype
+    def forward(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Forward pass through the observation model.
+
+        Args:
+            context: Dictionary containing model context
+
+        Returns:
+            Updated context dictionary with observation model outputs
+        """
+        # Extract u_obs and s_obs from context
+        u_obs = context.get("u_obs")
+        s_obs = context.get("s_obs")
+
+        if u_obs is None or s_obs is None:
+            # If x is provided but not u_obs and s_obs, split x into u_obs and s_obs
+            x = context.get("x")
+            if x is not None:
+                # Assume first half of features are u_obs and second half are s_obs
+                n_genes = x.shape[1] // 2
+                u_obs = x[:, :n_genes]
+                s_obs = x[:, n_genes:]
+                context["u_obs"] = u_obs
+                context["s_obs"] = s_obs
+            else:
+                raise ValueError("Either u_obs and s_obs or x must be provided in the context")
+
+        # Calculate library size
+        u_lib_size = u_obs.sum(1).unsqueeze(1).float()  # Convert to float
+        s_lib_size = s_obs.sum(1).unsqueeze(1).float()  # Convert to float
+
+        # Normalize by library size if specified
+        if self.use_observed_lib_size:
+            u_scale = u_lib_size / u_lib_size.mean()
+            s_scale = s_lib_size / s_lib_size.mean()
+        else:
+            u_scale = torch.ones_like(u_lib_size)
+            s_scale = torch.ones_like(s_lib_size)
+
+        # Store the observations and scaling factors
+        self.u_obs = u_obs
+        self.s_obs = s_obs
+        self.u_scale = u_scale
+        self.s_scale = s_scale
+
+        # Update the context with the transformed data
+        context["u_obs"] = u_obs
+        context["s_obs"] = s_obs
+        context["u_scale"] = u_scale
+        context["s_scale"] = s_scale
+
+        return context
+
+    @beartype
+    def _forward_impl(self, u_obs: torch.Tensor, s_obs: torch.Tensor, **kwargs: Any) -> Dict[str, Any]:
+        """
+        Implementation of the forward transformation.
+
+        Args:
+            u_obs: Raw observed unspliced RNA counts
+            s_obs: Raw observed spliced RNA counts
+            **kwargs: Additional model-specific parameters
+
+        Returns:
+            Dictionary with transformed data
+        """
+        # Remove u_obs and s_obs from kwargs to avoid duplicate arguments
+        if 'u_obs' in kwargs:
+            del kwargs['u_obs']
+        if 's_obs' in kwargs:
+            del kwargs['s_obs']
+        # Calculate library size
+        u_lib_size = u_obs.sum(1).unsqueeze(1).float()  # Convert to float
+        s_lib_size = s_obs.sum(1).unsqueeze(1).float()  # Convert to float
+
+        # Normalize by library size if specified
+        if self.use_observed_lib_size:
+            u_scale = u_lib_size / u_lib_size.mean()
+            s_scale = s_lib_size / s_lib_size.mean()
+        else:
+            u_scale = torch.ones_like(u_lib_size)
+            s_scale = torch.ones_like(s_lib_size)
+
+        # Store the observations and scaling factors
+        self.u_obs = u_obs
+        self.s_obs = s_obs
+        self.u_scale = u_scale
+        self.s_scale = s_scale
+
+        # Return the transformed data
+        return {
+            "u_obs": u_obs,
+            "s_obs": s_obs,
+            "u_scale": u_scale,
+            "s_scale": s_scale,
+        }
 
     @beartype
     def __init__(
@@ -197,7 +295,7 @@ class StandardObservationModel(BaseObservationModel):
     @beartype
     def _prepare_data_impl(
         self, adata: AnnData, **kwargs: Any
-    ) -> Dict[str, Union[torch.Tensor, jnp.ndarray]]:
+    ) -> Dict[str, torch.Tensor]:
         """
         Implementation of data preparation.
 
@@ -288,7 +386,7 @@ class StandardObservationModel(BaseObservationModel):
     @beartype
     def _preprocess_batch_impl(
         self, batch: Dict[str, torch.Tensor]
-    ) -> Dict[str, Union[torch.Tensor, jnp.ndarray]]:
+    ) -> Dict[str, torch.Tensor]:
         """
         Implementation of batch preprocessing.
 

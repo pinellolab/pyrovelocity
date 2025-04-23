@@ -12,15 +12,16 @@ from __future__ import annotations
 import abc
 from typing import Any, ClassVar, Dict, Optional, Tuple, Union
 
-import jax.numpy as jnp
+# Remove JAX dependency
 import pyro
 import torch
+import torch.utils.data
 from anndata import AnnData
 from beartype import beartype
 from beartype.typing import Callable
 from expression import Result, case, tag, tagged_union
-from jaxtyping import Array, Float, jaxtyped
 
+# We're using PyTorch tensors, not JAX arrays
 from pyrovelocity.models.modular.interfaces import (
     BatchTensor,
     DynamicsModel,
@@ -156,45 +157,43 @@ class BaseDynamicsModel(BaseComponent, DynamicsModel, abc.ABC):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-    @jaxtyped
     @beartype
     def forward(
         self,
-        u: BatchTensor,
-        s: BatchTensor,
-        alpha: ParamTensor,
-        beta: ParamTensor,
-        gamma: ParamTensor,
-        scaling: Optional[ParamTensor] = None,
-        t: Optional[BatchTensor] = None,
-        **kwargs: Any,
-    ) -> Tuple[BatchTensor, BatchTensor]:
+        context: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """
         Compute the expected unspliced and spliced RNA counts based on the dynamics model.
 
         Args:
-            u: Observed unspliced RNA counts
-            s: Observed spliced RNA counts
-            alpha: Transcription rate
-            beta: Splicing rate
-            gamma: Degradation rate
-            scaling: Optional scaling factor for the dynamics
-            t: Optional time points for the dynamics
-            **kwargs: Additional model-specific parameters
+            context: Dictionary containing model context including u_obs, s_obs, and parameters
 
         Returns:
-            Tuple of (expected unspliced counts, expected spliced counts)
+            Updated context dictionary with expected counts
         """
+        # Extract parameters from context
+        u_obs = context.get("u_obs")
+        s_obs = context.get("s_obs")
+
+        # Extract parameters from context or use defaults
+        alpha = context.get("alpha", torch.tensor(1.0))
+        beta = context.get("beta", torch.tensor(1.0))
+        gamma = context.get("gamma", torch.tensor(1.0))
+        scaling = context.get("scaling")
+        t = context.get("t")
+
+        if u_obs is None or s_obs is None:
+            raise ValueError("Both u_obs and s_obs must be provided in the context")
+
         # Validate inputs
         validation_result = self.validate_inputs(
-            u=u,
-            s=s,
+            u=u_obs,
+            s=s_obs,
             alpha=alpha,
             beta=beta,
             gamma=gamma,
             scaling=scaling,
             t=t,
-            **kwargs,
         )
 
         if validation_result.is_error():
@@ -203,9 +202,15 @@ class BaseDynamicsModel(BaseComponent, DynamicsModel, abc.ABC):
             )
 
         # Call implementation
-        return self._forward_impl(
-            u, s, alpha, beta, gamma, scaling, t, **kwargs
+        u_expected, s_expected = self._forward_impl(
+            u_obs, s_obs, alpha, beta, gamma, scaling, t
         )
+
+        # Update context with expected counts
+        context["u_expected"] = u_expected
+        context["s_expected"] = s_expected
+
+        return context
 
     @abc.abstractmethod
     def _forward_impl(
@@ -238,7 +243,6 @@ class BaseDynamicsModel(BaseComponent, DynamicsModel, abc.ABC):
         """
         pass
 
-    @jaxtyped
     @beartype
     def predict_future_states(
         self,
@@ -312,15 +316,14 @@ class BaseDynamicsModel(BaseComponent, DynamicsModel, abc.ABC):
         """
         pass
 
-    @jaxtyped
     @beartype
     def steady_state(
         self,
-        alpha: Union[ParamTensor, Array],
-        beta: Union[ParamTensor, Array],
-        gamma: Union[ParamTensor, Array],
+        alpha: torch.Tensor,
+        beta: torch.Tensor,
+        gamma: torch.Tensor,
         **kwargs: Any,
-    ) -> Tuple[Union[ParamTensor, Array], Union[ParamTensor, Array]]:
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Compute the steady-state unspliced and spliced RNA counts.
 
@@ -349,11 +352,11 @@ class BaseDynamicsModel(BaseComponent, DynamicsModel, abc.ABC):
     @abc.abstractmethod
     def _steady_state_impl(
         self,
-        alpha: Union[ParamTensor, Array],
-        beta: Union[ParamTensor, Array],
-        gamma: Union[ParamTensor, Array],
+        alpha: torch.Tensor,
+        beta: torch.Tensor,
+        gamma: torch.Tensor,
         **kwargs: Any,
-    ) -> Tuple[Union[ParamTensor, Array], Union[ParamTensor, Array]]:
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Implementation of the steady_state method.
 
@@ -411,6 +414,35 @@ class BasePriorModel(BaseComponent, PriorModel, PyroBufferMixin, abc.ABC):
             name: A unique name for this component instance.
         """
         super().__init__(name=name)
+
+    @beartype
+    def forward(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Sample model parameters from prior distributions.
+
+        Args:
+            context: Dictionary containing model context including u_obs, s_obs, and other parameters
+
+        Returns:
+            Updated context dictionary with sampled parameters
+        """
+        # Extract u_obs and s_obs from context
+        u_obs = context.get("u_obs")
+        s_obs = context.get("s_obs")
+
+        if u_obs is None or s_obs is None:
+            raise ValueError("Both u_obs and s_obs must be provided in the context")
+
+        # Create a plate for batched sampling
+        n_genes = u_obs.shape[1]
+        with pyro.plate(f"{self.name}_plate", n_genes):
+            # Sample parameters
+            params = self.sample_parameters(n_genes=n_genes)
+
+        # Update the context with the sampled parameters
+        context.update(params)
+
+        return context
 
     @beartype
     def register_priors(self, prefix: str = "") -> None:
@@ -495,14 +527,49 @@ class BaseLikelihoodModel(BaseComponent, LikelihoodModel, abc.ABC):
         """
         super().__init__(name=name)
 
-    @jaxtyped
+    @beartype
+    def forward(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Define the likelihood distributions for observed data given expected values.
+
+        Args:
+            context: Dictionary containing model context including u_obs, s_obs, u_expected, s_expected, and other parameters
+
+        Returns:
+            Updated context dictionary with likelihood information
+        """
+        # Extract required values from context
+        u_obs = context.get("u_obs")
+        s_obs = context.get("s_obs")
+        u_expected = context.get("u_expected")
+        s_expected = context.get("s_expected")
+
+        if u_obs is None or s_obs is None:
+            raise ValueError("Both u_obs and s_obs must be provided in the context")
+
+        if u_expected is None or s_expected is None:
+            raise ValueError("Both u_expected and s_expected must be provided in the context")
+
+        # Create a plate for batched sampling
+        n_genes = u_obs.shape[1]
+        with pyro.plate(f"{self.name}_plate", n_genes):
+            # Calculate log probabilities
+            u_log_prob = self.log_prob(u_obs, u_expected)
+            s_log_prob = self.log_prob(s_obs, s_expected)
+
+        # Update the context with the log probabilities
+        context["u_log_prob"] = u_log_prob
+        context["s_log_prob"] = s_log_prob
+
+        return context
+
     @beartype
     def log_prob(
         self,
-        observations: Float[Array, "batch_size genes"],
-        predictions: Float[Array, "batch_size genes"],
-        scale_factors: Optional[Float[Array, "batch_size"]] = None,
-    ) -> Float[Array, "batch_size"]:
+        observations: torch.Tensor,
+        predictions: torch.Tensor,
+        scale_factors: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         """
         Calculate log probability of observations given predictions.
 
@@ -519,10 +586,10 @@ class BaseLikelihoodModel(BaseComponent, LikelihoodModel, abc.ABC):
     @abc.abstractmethod
     def _log_prob_impl(
         self,
-        observations: Float[Array, "batch_size genes"],
-        predictions: Float[Array, "batch_size genes"],
-        scale_factors: Optional[Float[Array, "batch_size"]] = None,
-    ) -> Float[Array, "batch_size"]:
+        observations: torch.Tensor,
+        predictions: torch.Tensor,
+        scale_factors: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         """
         Implementation of log probability calculation.
 
@@ -539,13 +606,12 @@ class BaseLikelihoodModel(BaseComponent, LikelihoodModel, abc.ABC):
         """
         pass
 
-    @jaxtyped
     @beartype
     def sample(
         self,
-        predictions: Float[Array, "batch_size genes"],
-        scale_factors: Optional[Float[Array, "batch_size"]] = None,
-    ) -> Float[Array, "batch_size genes"]:
+        predictions: torch.Tensor,
+        scale_factors: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         """
         Sample observations from the likelihood model.
 
@@ -561,9 +627,9 @@ class BaseLikelihoodModel(BaseComponent, LikelihoodModel, abc.ABC):
     @abc.abstractmethod
     def _sample_impl(
         self,
-        predictions: Float[Array, "batch_size genes"],
-        scale_factors: Optional[Float[Array, "batch_size"]] = None,
-    ) -> Float[Array, "batch_size genes"]:
+        predictions: torch.Tensor,
+        scale_factors: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         """
         Implementation of observation sampling.
 
@@ -588,6 +654,50 @@ class BaseObservationModel(BaseComponent, ObservationModel, abc.ABC):
     functionality for observation models.
     """
 
+    @beartype
+    def forward(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Transform observed data for model input.
+
+        Args:
+            context: Dictionary containing model context including u_obs and s_obs
+
+        Returns:
+            Updated context dictionary with transformed data
+        """
+        # Extract u_obs and s_obs from context
+        u_obs = context.get("u_obs")
+        s_obs = context.get("s_obs")
+
+        if u_obs is None or s_obs is None:
+            raise ValueError("Both u_obs and s_obs must be provided in the context")
+
+        # Create a copy of the context without u_obs and s_obs to avoid duplicate arguments
+        context_copy = {k: v for k, v in context.items() if k not in ["u_obs", "s_obs"]}
+
+        # Call the implementation method
+        result = self._forward_impl(u_obs, s_obs, **context_copy)
+
+        # Update the context with the result
+        context.update(result)
+
+        return context
+
+    @abc.abstractmethod
+    def _forward_impl(self, u_obs: torch.Tensor, s_obs: torch.Tensor, **kwargs: Any) -> Dict[str, Any]:
+        """
+        Implementation of the forward transformation.
+
+        Args:
+            u_obs: Raw observed unspliced RNA counts
+            s_obs: Raw observed spliced RNA counts
+            **kwargs: Additional model-specific parameters
+
+        Returns:
+            Dictionary with transformed data
+        """
+        pass
+
     def __init__(self, name: str = "observation_model"):
         """
         Initialize the observation model.
@@ -600,7 +710,7 @@ class BaseObservationModel(BaseComponent, ObservationModel, abc.ABC):
     @beartype
     def prepare_data(
         self, adata: AnnData, **kwargs: Any
-    ) -> Dict[str, Union[torch.Tensor, jnp.ndarray]]:
+    ) -> Dict[str, torch.Tensor]:
         """
         Prepare data from AnnData object.
 
@@ -622,7 +732,7 @@ class BaseObservationModel(BaseComponent, ObservationModel, abc.ABC):
     @abc.abstractmethod
     def _prepare_data_impl(
         self, adata: AnnData, **kwargs: Any
-    ) -> Dict[str, Union[torch.Tensor, jnp.ndarray]]:
+    ) -> Dict[str, torch.Tensor]:
         """
         Implementation of data preparation.
 
@@ -682,7 +792,7 @@ class BaseObservationModel(BaseComponent, ObservationModel, abc.ABC):
     @beartype
     def preprocess_batch(
         self, batch: Dict[str, torch.Tensor]
-    ) -> Dict[str, Union[torch.Tensor, jnp.ndarray]]:
+    ) -> Dict[str, torch.Tensor]:
         """
         Preprocess a batch of data.
 
@@ -703,7 +813,7 @@ class BaseObservationModel(BaseComponent, ObservationModel, abc.ABC):
     @abc.abstractmethod
     def _preprocess_batch_impl(
         self, batch: Dict[str, torch.Tensor]
-    ) -> Dict[str, Union[torch.Tensor, jnp.ndarray]]:
+    ) -> Dict[str, torch.Tensor]:
         """
         Implementation of batch preprocessing.
 
@@ -737,7 +847,7 @@ class BaseInferenceGuide(BaseComponent, InferenceGuide, abc.ABC):
         super().__init__(name=name)
 
     @beartype
-    def setup_guide(self, model: Callable, **kwargs) -> None:
+    def setup_guide(self, model: Union[Callable, Any], **kwargs) -> None:
         """
         Set up the inference guide.
 
@@ -754,7 +864,7 @@ class BaseInferenceGuide(BaseComponent, InferenceGuide, abc.ABC):
             raise ValueError(f"Failed to set up guide") from e
 
     @abc.abstractmethod
-    def _setup_guide_impl(self, model: Callable, **kwargs) -> None:
+    def _setup_guide_impl(self, model: Union[Callable, Any], **kwargs) -> None:
         """
         Implementation of guide setup.
 

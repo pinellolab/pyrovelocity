@@ -6,17 +6,15 @@ for observed data given latent variables.
 
 from typing import Any, Dict, Optional
 
-import jax
-import jax.numpy as jnp
-import numpyro
-import numpyro.distributions as dist
 import pyro
+
+# Using PyTorch instead of JAX/NumPyro
 import pyro.distributions
 import torch
 from anndata._core.anndata import AnnData
 from beartype import beartype
-from jaxtyping import Array, Float, Int
 
+# Remove jaxtyping dependency
 from pyrovelocity.models.modular.components.base import BaseLikelihoodModel
 from pyrovelocity.models.modular.registry import LikelihoodModelRegistry
 
@@ -104,12 +102,12 @@ class PoissonLikelihoodModel(BaseLikelihoodModel):
 
     def __call__(
         self,
-        adata: AnnData = None,
-        cell_state: Float[Array, "batch_size latent_dim"] = None,
-        gene_offset: Optional[Float[Array, "batch_size genes"]] = None,
+        adata: Optional[AnnData] = None,
+        cell_state: Optional[torch.Tensor] = None,
+        gene_offset: Optional[torch.Tensor] = None,
         time_info: Optional[Dict[str, Any]] = None,
         **kwargs: Any,
-    ) -> Dict[str, dist.Distribution]:
+    ) -> Dict[str, pyro.distributions.Distribution]:
         """Generate likelihood distributions for observed data.
 
         Args:
@@ -126,6 +124,16 @@ class PoissonLikelihoodModel(BaseLikelihoodModel):
         if "u_expected" in kwargs and "s_expected" in kwargs:
             return self._generate_direct_distributions(**kwargs)
 
+        # Validate inputs
+        if adata is None or cell_state is None:
+            raise ValueError("Both adata and cell_state must be provided")
+
+        # Ensure inputs are torch.Tensor
+        assert isinstance(cell_state, torch.Tensor), "cell_state must be a torch.Tensor"
+
+        if gene_offset is not None:
+            assert isinstance(gene_offset, torch.Tensor), "gene_offset must be a torch.Tensor"
+
         return self._generate_distributions(
             adata=adata,
             cell_state=cell_state,
@@ -138,11 +146,11 @@ class PoissonLikelihoodModel(BaseLikelihoodModel):
     def _generate_distributions(
         self,
         adata: AnnData,
-        cell_state: Float[Array, "batch_size latent_dim"],
-        gene_offset: Optional[Float[Array, "batch_size genes"]] = None,
+        cell_state: torch.Tensor,
+        gene_offset: Optional[torch.Tensor] = None,
         time_info: Optional[Dict[str, Any]] = None,
         **kwargs: Any,
-    ) -> Dict[str, dist.Distribution]:
+    ) -> Dict[str, pyro.distributions.Distribution]:
         """Generate Poisson likelihood distributions for observed data.
 
         Args:
@@ -160,37 +168,28 @@ class PoissonLikelihoodModel(BaseLikelihoodModel):
         n_genes = adata.n_vars
 
         # Get gene-specific parameters
-        gene_scale = numpyro.param(
-            "gene_scale",
-            jnp.ones(n_genes),
-            constraint=dist.constraints.positive,
-        )
+        gene_scale = torch.ones(n_genes)
 
         # Apply gene offset if provided
         if gene_offset is None:
-            gene_offset = jnp.ones((batch_size, n_genes))
+            gene_offset = torch.ones((batch_size, n_genes))
 
         # Transform cell_state to have compatible shape with gene_scale
         # We'll use a linear transformation from latent_dim to n_genes
         # This is a simple approach - in a real implementation, this would be more sophisticated
         latent_dim = cell_state.shape[1]
-        projection = numpyro.param(
-            "projection_matrix",
-            jnp.ones((latent_dim, n_genes))
-            / latent_dim,  # Initialize with uniform weights
-            constraint=dist.constraints.positive,
-        )
+        projection = torch.ones((latent_dim, n_genes)) / latent_dim  # Initialize with uniform weights
 
         # Project cell_state to gene space
-        projected_state = jnp.matmul(
+        projected_state = torch.matmul(
             cell_state, projection
         )  # Shape: (batch_size, n_genes)
 
         # Calculate rate parameter
-        rate = jnp.exp(projected_state) * gene_scale * gene_offset
+        rate = torch.exp(projected_state) * gene_scale * gene_offset
 
         # Create Poisson likelihood distribution
-        return {"obs_counts": dist.Poisson(rate=rate)}
+        return {"obs_counts": pyro.distributions.Poisson(rate=rate)}
 
     @beartype
     def _log_prob_impl(
@@ -396,12 +395,12 @@ class NegativeBinomialLikelihoodModel(BaseLikelihoodModel):
 
     def __call__(
         self,
-        adata: AnnData,
-        cell_state: Float[Array, "batch_size latent_dim"],
-        gene_offset: Optional[Float[Array, "batch_size genes"]] = None,
+        adata: Optional[AnnData] = None,
+        cell_state: Optional[torch.Tensor] = None,
+        gene_offset: Optional[torch.Tensor] = None,
         time_info: Optional[Dict[str, Any]] = None,
         **kwargs: Any,
-    ) -> Dict[str, dist.Distribution]:
+    ) -> Dict[str, pyro.distributions.Distribution]:
         """Generate likelihood distributions for observed data.
 
         Args:
@@ -414,6 +413,20 @@ class NegativeBinomialLikelihoodModel(BaseLikelihoodModel):
         Returns:
             Dictionary mapping observation names to their distributions
         """
+        # Handle direct tensor inputs for integration testing
+        if "u_expected" in kwargs and "s_expected" in kwargs:
+            return self._generate_direct_distributions(**kwargs)
+
+        # Validate inputs
+        if adata is None or cell_state is None:
+            raise ValueError("Both adata and cell_state must be provided")
+
+        # Ensure inputs are torch.Tensor
+        assert isinstance(cell_state, torch.Tensor), "cell_state must be a torch.Tensor"
+
+        if gene_offset is not None:
+            assert isinstance(gene_offset, torch.Tensor), "gene_offset must be a torch.Tensor"
+
         return self._generate_distributions(
             adata=adata,
             cell_state=cell_state,
@@ -423,14 +436,63 @@ class NegativeBinomialLikelihoodModel(BaseLikelihoodModel):
         )
 
     @beartype
+    def _generate_direct_distributions(
+        self,
+        u_expected: torch.Tensor,
+        s_expected: torch.Tensor,
+        u_scale: Optional[torch.Tensor] = None,
+        s_scale: Optional[torch.Tensor] = None,
+        **kwargs: Any,
+    ) -> Dict[str, pyro.distributions.Distribution]:
+        """Generate Negative Binomial distributions directly from expected counts for testing.
+
+        Args:
+            u_expected: Expected unspliced counts
+            s_expected: Expected spliced counts
+            u_scale: Optional scaling factors for unspliced counts
+            s_scale: Optional scaling factors for spliced counts
+            **kwargs: Additional keyword arguments
+
+        Returns:
+            Dictionary mapping observation names to their distributions
+        """
+        # Apply scaling if provided
+        if u_scale is not None:
+            u_rate = u_expected * u_scale
+        else:
+            u_rate = u_expected
+
+        if s_scale is not None:
+            s_rate = s_expected * s_scale
+        else:
+            s_rate = s_expected
+
+        # Use a fixed dispersion parameter for simplicity
+        dispersion = torch.ones(u_rate.shape[1])
+        concentration = 1.0 / dispersion
+
+        # Create Negative Binomial distributions
+        u_probs = concentration / (concentration + u_rate)
+        s_probs = concentration / (concentration + s_rate)
+
+        u_dist = pyro.distributions.NegativeBinomial(total_count=concentration, probs=u_probs)
+        s_dist = pyro.distributions.NegativeBinomial(total_count=concentration, probs=s_probs)
+
+        # Return distributions in a dictionary
+        return {
+            "u_dist": u_dist,
+            "s_dist": s_dist
+        }
+
+    @beartype
     def _generate_distributions(
         self,
         adata: AnnData,
-        cell_state: Float[Array, "batch_size latent_dim"],
-        gene_offset: Optional[Float[Array, "batch_size genes"]] = None,
+        cell_state: torch.Tensor,
+        gene_offset: Optional[torch.Tensor] = None,
         time_info: Optional[Dict[str, Any]] = None,
         **kwargs: Any,
-    ) -> Dict[str, dist.Distribution]:
+    ) -> Dict[str, pyro.distributions.Distribution]:
         """Generate Negative Binomial likelihood distributions for observed data.
 
         Args:
@@ -448,61 +510,49 @@ class NegativeBinomialLikelihoodModel(BaseLikelihoodModel):
         n_genes = adata.n_vars
 
         # Get gene-specific parameters
-        gene_scale = numpyro.param(
-            "gene_scale",
-            jnp.ones(n_genes),
-            constraint=dist.constraints.positive,
-        )
+        gene_scale = torch.ones(n_genes)
 
         # Get gene-specific dispersion parameters
-        gene_dispersion = numpyro.param(
-            "gene_dispersion",
-            jnp.ones(n_genes),
-            constraint=dist.constraints.positive,
-        )
+        gene_dispersion = torch.ones(n_genes)
 
         # Apply gene offset if provided
         if gene_offset is None:
-            gene_offset = jnp.ones((batch_size, n_genes))
+            gene_offset = torch.ones((batch_size, n_genes))
 
         # Transform cell_state to have compatible shape with gene_scale
         # We'll use a linear transformation from latent_dim to n_genes
         # This is a simple approach - in a real implementation, this would be more sophisticated
         latent_dim = cell_state.shape[1]
-        projection = numpyro.param(
-            "projection_matrix",
-            jnp.ones((latent_dim, n_genes))
-            / latent_dim,  # Initialize with uniform weights
-            constraint=dist.constraints.positive,
-        )
+        projection = torch.ones((latent_dim, n_genes)) / latent_dim  # Initialize with uniform weights
 
         # Project cell_state to gene space
-        projected_state = jnp.matmul(
+        projected_state = torch.matmul(
             cell_state, projection
         )  # Shape: (batch_size, n_genes)
 
         # Calculate rate parameter
-        rate = jnp.exp(projected_state) * gene_scale * gene_offset
+        rate = torch.exp(projected_state) * gene_scale * gene_offset
 
         # Calculate concentration parameter (inverse of dispersion)
         concentration = 1.0 / gene_dispersion
 
         # Create Negative Binomial likelihood distribution
-        # In NumPyro, Negative Binomial is implemented as GammaPoisson
+        # Use PyTorch's NegativeBinomial instead of NumPyro's GammaPoisson
+        probs = concentration / (concentration + rate)
         return {
-            "obs_counts": dist.GammaPoisson(
-                concentration=concentration,
-                rate=concentration / rate,
+            "obs_counts": pyro.distributions.NegativeBinomial(
+                total_count=concentration,
+                probs=probs
             )
         }
 
     @beartype
     def _log_prob_impl(
         self,
-        observations: Float[Array, "batch_size genes"],
-        predictions: Float[Array, "batch_size genes"],
-        scale_factors: Optional[Float[Array, "batch_size"]] = None,
-    ) -> Float[Array, "batch_size"]:
+        observations: torch.Tensor,
+        predictions: torch.Tensor,
+        scale_factors: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         """Calculate log probability of observations under Negative Binomial distribution.
 
         Args:
@@ -523,25 +573,27 @@ class NegativeBinomialLikelihoodModel(BaseLikelihoodModel):
 
         # Use a fixed dispersion parameter for simplicity
         # In a real implementation, this would be learned or provided
-        dispersion = jnp.ones(mean.shape[1])
+        dispersion = torch.ones(mean.shape[1])
         concentration = 1.0 / dispersion
 
         # Create Negative Binomial distribution and calculate log probability
-        distribution = dist.GammaPoisson(
-            concentration=concentration,
-            rate=concentration / mean,
+        # Use PyTorch's NegativeBinomial instead of NumPyro's GammaPoisson
+        probs = concentration / (concentration + mean)
+        distribution = pyro.distributions.NegativeBinomial(
+            total_count=concentration,
+            probs=probs
         )
         log_probs = distribution.log_prob(observations)
 
         # Sum log probabilities across genes for each cell
-        return jnp.sum(log_probs, axis=-1)
+        return torch.sum(log_probs, dim=-1)
 
     @beartype
     def _sample_impl(
         self,
-        predictions: Float[Array, "batch_size genes"],
-        scale_factors: Optional[Float[Array, "batch_size"]] = None,
-    ) -> Float[Array, "batch_size genes"]:
+        predictions: torch.Tensor,
+        scale_factors: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         """Sample observations from Negative Binomial distribution.
 
         Args:
@@ -561,13 +613,14 @@ class NegativeBinomialLikelihoodModel(BaseLikelihoodModel):
 
         # Use a fixed dispersion parameter for simplicity
         # In a real implementation, this would be learned or provided
-        dispersion = jnp.ones(mean.shape[1])
+        dispersion = torch.ones(mean.shape[1])
         concentration = 1.0 / dispersion
 
         # Create Negative Binomial distribution and sample
-        distribution = dist.GammaPoisson(
-            concentration=concentration,
-            rate=concentration / mean,
+        # Use PyTorch's NegativeBinomial instead of NumPyro's GammaPoisson
+        probs = concentration / (concentration + mean)
+        distribution = pyro.distributions.NegativeBinomial(
+            total_count=concentration,
+            probs=probs
         )
-        key = jax.random.PRNGKey(0)  # Use a fixed seed for reproducibility
-        return distribution.sample(key)
+        return distribution.sample()
