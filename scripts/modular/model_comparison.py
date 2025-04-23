@@ -20,7 +20,12 @@ from importlib.resources import files
 # Import model creation
 from pyrovelocity.models.modular.factory import create_model, standard_model_config
 
-# No need to import model comparison tools for this simplified example
+# Import model comparison tools
+from pyrovelocity.models.modular.comparison import (
+    BayesianModelComparison,
+    create_comparison_table,
+    select_best_model,
+)
 
 # Import adapters for AnnData integration
 from pyrovelocity.models.adapters import LegacyModelAdapter
@@ -111,25 +116,49 @@ def main():
     # 7. Compare models
     print("Comparing models...")
 
-    # Compute metrics
-    metrics = {}
-    for name, adapter in adapters.items():
-        # Get the processed AnnData object
-        adata_out = adapter.adata
+    # Create a model comparison object
+    comparison = BayesianModelComparison()
 
-        # Store metrics
-        metrics[name] = {
-            "adata": adata_out,
-        }
+    # For this example, we'll create a simple comparison result manually
+    # In a real application, you would use comparison.compare_models() or
+    # comparison.compare_models_bayes_factors()
 
-    # 8. Select best model (for this example, we'll just use the first model)
+    # Create a simple comparison result
+    values = {}
+    for name in models.keys():
+        # Assign arbitrary values for demonstration
+        values[name] = -100.0 * (len(name) % 3 + 1)  # Just for demonstration
+
+    # Create differences dictionary
+    differences = {}
+    for name1 in values:
+        differences[name1] = {}
+        for name2 in values:
+            if name1 != name2:
+                differences[name1][name2] = values[name1] - values[name2]
+
+    # Create a ComparisonResult
+    from pyrovelocity.models.modular.comparison import ComparisonResult
+    comparison_result = ComparisonResult(
+        metric_name="WAIC",
+        values=values,
+        differences=differences
+    )
+
+    # Convert to DataFrame for display
+    comparison_table = comparison_result.to_dataframe()
+    print("Model Comparison Table:")
+    print(comparison_table)
+
+    # 8. Select best model
     print("Selecting best model...")
-    best_model_name = list(metrics.keys())[0]
-    print(f"Best model: {best_model_name}")
+    best_model_name, is_significant = select_best_model(comparison_result, threshold=2.0)
+    print(f"Best model: {best_model_name}, Significant: {is_significant}")
 
     # 9. Analyze best model
     print("Analyzing best model...")
-    best_adata = metrics[best_model_name]["adata"]
+    best_adapter = adapters[best_model_name]
+    best_adata = best_adapter.adata
 
     # 10. Visualize results
     print("Visualizing results...")
