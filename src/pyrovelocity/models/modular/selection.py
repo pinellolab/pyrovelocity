@@ -107,6 +107,9 @@ class SelectionResult:
         df = self.comparison_result.to_dataframe()
 
         # Add selection information
+        df["selected_model"] = self.selected_model_name
+        df["criterion"] = self.criterion.name
+        df["threshold"] = self.significance_threshold
         df["selected"] = df["model"] == self.selected_model_name
         df["significance"] = self.is_significant
 

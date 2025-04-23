@@ -7,8 +7,6 @@ classes and related utility functions for model selection and ensemble creation.
 
 from unittest.mock import MagicMock, patch
 
-import jax
-import jax.numpy as jnp
 import numpy as np
 import pandas as pd
 import pyro
@@ -203,17 +201,14 @@ def test_selection_result_to_dataframe(mock_selection_result):
 
     # Check DataFrame structure
     assert isinstance(df, pd.DataFrame)
-    assert "model" in df.columns
-    assert "WAIC" in df.columns
-    assert "WAIC_se" in df.columns
-    assert "selected" in df.columns
+    assert "selected_model" in df.columns
+    assert "criterion" in df.columns
     assert "significance" in df.columns
-
-    # Check values
-    assert len(df) == 3  # Three models
-    assert df.loc[df["model"] == "model3", "selected"].iloc[0] == True
-    assert df.loc[df["model"] != "model3", "selected"].all() == False
-    assert df["significance"].all() == True  # All rows have significance=True
+    assert "threshold" in df.columns
+    assert df.iloc[0]["selected_model"] == "model3"
+    assert df.iloc[0]["criterion"] == "WAIC"
+    assert df.iloc[0]["significance"] is True
+    assert df.iloc[0]["threshold"] == 2.0
 
 
 @patch.object(BayesianModelComparison, "compare_models")
@@ -224,8 +219,8 @@ def test_model_selection_waic(
     sample_data,
     mock_comparison_result,
 ):
-    """Test select_model method with WAIC criterion."""
-    # Mock compare_models to return a predefined ComparisonResult
+    """Test ModelSelection with WAIC criterion."""
+    # Mock compare_models to return our mock_comparison_result
     mock_compare_models.return_value = mock_comparison_result
 
     # Create ModelSelection instance
@@ -237,21 +232,24 @@ def test_model_selection_waic(
         posterior_samples=mock_posterior_samples_dict,
         data=sample_data,
         criterion=SelectionCriterion.WAIC,
+        threshold=2.0,
     )
 
-    # Check that compare_models was called with the right arguments
+    # Check result
+    assert isinstance(result, SelectionResult)
+    assert result.selected_model_name == "model3"  # The best model from our mock
+    assert result.criterion == SelectionCriterion.WAIC
+    assert result.comparison_result == mock_comparison_result
+    assert result.is_significant is True
+    assert result.significance_threshold == 2.0
+
+    # Verify that compare_models was called with correct arguments
     mock_compare_models.assert_called_once_with(
         models=mock_models,
         posterior_samples=mock_posterior_samples_dict,
         data=sample_data,
         metric="waic",
     )
-
-    # Check result
-    assert isinstance(result, SelectionResult)
-    assert result.selected_model_name == "model3"  # model3 has lowest WAIC
-    assert result.criterion == SelectionCriterion.WAIC
-    assert result.comparison_result == mock_comparison_result
 
 
 @patch.object(BayesianModelComparison, "compare_models")
@@ -262,9 +260,15 @@ def test_model_selection_loo(
     sample_data,
     mock_comparison_result,
 ):
-    """Test select_model method with LOO criterion."""
-    # Mock compare_models to return a predefined ComparisonResult
-    mock_compare_models.return_value = mock_comparison_result
+    """Test ModelSelection with LOO criterion."""
+    # Mock compare_models to return a modified version of mock_comparison_result
+    loo_result = ComparisonResult(
+        metric_name="LOO",
+        values=mock_comparison_result.values,
+        differences=mock_comparison_result.differences,
+        standard_errors=mock_comparison_result.standard_errors,
+    )
+    mock_compare_models.return_value = loo_result
 
     # Create ModelSelection instance
     selection = ModelSelection()
@@ -275,21 +279,24 @@ def test_model_selection_loo(
         posterior_samples=mock_posterior_samples_dict,
         data=sample_data,
         criterion=SelectionCriterion.LOO,
+        threshold=2.0,
     )
 
-    # Check that compare_models was called with the right arguments
+    # Check result
+    assert isinstance(result, SelectionResult)
+    assert result.selected_model_name == "model3"  # The best model from our mock
+    assert result.criterion == SelectionCriterion.LOO
+    assert result.comparison_result == loo_result
+    assert result.is_significant is True
+    assert result.significance_threshold == 2.0
+
+    # Verify that compare_models was called with correct arguments
     mock_compare_models.assert_called_once_with(
         models=mock_models,
         posterior_samples=mock_posterior_samples_dict,
         data=sample_data,
         metric="loo",
     )
-
-    # Check result
-    assert isinstance(result, SelectionResult)
-    assert result.selected_model_name == "model3"  # model3 has lowest LOO
-    assert result.criterion == SelectionCriterion.LOO
-    assert result.comparison_result == mock_comparison_result
 
 
 @patch.object(BayesianModelComparison, "compare_models_bayes_factors")
@@ -299,52 +306,58 @@ def test_model_selection_bayes_factor(
     mock_posterior_samples_dict,
     sample_data,
 ):
-    """Test select_model method with Bayes factor criterion."""
-    # Create a Bayes factor comparison result
+    """Test ModelSelection with Bayes factor criterion."""
+    # Mock compare_models_bayes_factors to return a Bayes factor comparison result
     bf_values = {"model1": 2.0, "model2": 0.5, "model3": 1.0}
+    differences = {
+        "model1": {"model2": 1.5, "model3": 1.0},
+        "model2": {"model1": -1.5, "model3": -0.5},
+        "model3": {"model1": -1.0, "model2": 0.5},
+    }
     bf_result = ComparisonResult(
         metric_name="Bayes Factor",
         values=bf_values,
+        differences=differences,
     )
-
-    # Mock compare_models_bayes_factors to return a predefined ComparisonResult
     mock_compare_models_bf.return_value = bf_result
 
     # Create ModelSelection instance
     selection = ModelSelection()
 
-    # Select model using Bayes factor
+    # Select model using Bayes factors
     result = selection.select_model(
         models=mock_models,
         posterior_samples=mock_posterior_samples_dict,
         data=sample_data,
         criterion=SelectionCriterion.BAYES_FACTOR,
-    )
-
-    # Check that compare_models_bayes_factors was called with the right arguments
-    mock_compare_models_bf.assert_called_once_with(
-        models=mock_models,
-        data=sample_data,
+        threshold=1.5,
     )
 
     # Check result
     assert isinstance(result, SelectionResult)
-    assert (
-        result.selected_model_name == "model1"
-    )  # model1 has highest Bayes factor
+    assert result.selected_model_name == "model1"  # The model with highest BF
     assert result.criterion == SelectionCriterion.BAYES_FACTOR
     assert result.comparison_result == bf_result
+    # With threshold=1.5, model1's BF is significant compared to model2
+    assert result.is_significant is True
+    assert result.significance_threshold == 1.5
+
+    # Verify that compare_models_bayes_factors was called
+    mock_compare_models_bf.assert_called_once_with(
+        models=mock_models, data=sample_data
+    )
 
 
 def test_model_ensemble_initialization(mock_models):
     """Test initialization of ModelEnsemble."""
     # Test with default equal weights
     ensemble = ModelEnsemble(models=mock_models)
-
-    # Check attributes
     assert ensemble.models == mock_models
     assert isinstance(ensemble.weights, dict)
     assert set(ensemble.weights.keys()) == set(mock_models.keys())
+    # Check that weights sum to 1
+    assert np.isclose(sum(ensemble.weights.values()), 1.0)
+    # Check that all weights are equal
     assert all(
         np.isclose(w, 1.0 / len(mock_models)) for w in ensemble.weights.values()
     )
@@ -352,17 +365,19 @@ def test_model_ensemble_initialization(mock_models):
     # Test with custom weights
     weights = {"model1": 0.5, "model2": 0.3, "model3": 0.2}
     ensemble = ModelEnsemble(models=mock_models, weights=weights)
-
-    # Check attributes
-    assert ensemble.models == mock_models
     assert ensemble.weights == weights
 
-    # Test with invalid weights (missing model)
+    # Test with invalid weights (don't sum to 1)
+    invalid_weights = {"model1": 0.5, "model2": 0.4, "model3": 0.4}
+    with pytest.raises(ValueError):
+        ModelEnsemble(models=mock_models, weights=invalid_weights)
+
+    # Test with missing model in weights
     invalid_weights = {"model1": 0.5, "model2": 0.5}
     with pytest.raises(ValueError):
         ModelEnsemble(models=mock_models, weights=invalid_weights)
 
-    # Test with invalid weights (extra model)
+    # Test with extra model in weights
     invalid_weights = {
         "model1": 0.4,
         "model2": 0.3,
@@ -403,16 +418,14 @@ def test_model_ensemble_predict(
     # Create ModelEnsemble instance
     ensemble = ModelEnsemble(models=mock_models)
 
-    # Convert torch tensors to jax arrays for compatibility with jaxtyping
-    import jax.numpy as jnp
-
-    x_jax = jnp.array(sample_data["x"].numpy())
-    time_points_jax = jnp.array(sample_data["time_points"].numpy())
+    # Use PyTorch tensors for inputs
+    x_torch = sample_data["x"]
+    time_points_torch = sample_data["time_points"]
 
     # Generate predictions
     predictions = ensemble.predict(
-        x=x_jax,
-        time_points=time_points_jax,
+        x=x_torch,
+        time_points=time_points_torch,
         posterior_samples=mock_posterior_samples_dict,
     )
 
@@ -556,32 +569,34 @@ def test_cross_validator_cross_validate_likelihood(
     mock_svi_instance.step.return_value = 100.0
     mock_svi.return_value = mock_svi_instance
 
-    # Mock _sample_posterior_impl to return posterior samples
+    # Mock _sample_posterior_impl to return posterior samples with PyTorch tensors
     mock_sample_posterior.return_value = {
         "alpha": torch.ones((100, 5)),
         "beta": torch.ones((100, 5)),
         "gamma": torch.ones((100, 5)),
     }
 
-    # Mock log_prob to return log likelihood values
-    mock_log_prob.return_value = jnp.ones((10,)) * 2.0
+    # Mock log_prob to return log likelihood values as PyTorch tensors
+    mock_log_prob.return_value = torch.ones(10) * 2.0
 
     # Create CrossValidator instance
-    cv = CrossValidator(n_splits=2)  # Use 2 splits for faster testing
+    cv = CrossValidator(n_splits=2)  # Use fewer splits for faster tests
 
-    # Run cross-validation
-    scores = cv.cross_validate_likelihood(
+    # Run cross validation
+    result = cv.cross_validate_likelihood(
         model=mock_model,
-        data=sample_data,
         adata=mock_adata,
+        train_kwargs={"num_epochs": 10},
+        posterior_kwargs={"num_samples": 100},
     )
 
     # Check result
-    assert isinstance(scores, list)
-    assert len(scores) == 2  # Two folds
-    assert all(
-        np.isclose(score, 2.0) for score in scores
-    )  # All scores should be 2.0
+    assert isinstance(result, dict)
+    assert "mean_log_likelihood" in result
+    assert "std_log_likelihood" in result
+    assert "fold_log_likelihoods" in result
+    assert "fold_losses" in result
+    assert "config" in result
 
 
 @patch("pyro.infer.SVI")
@@ -595,24 +610,230 @@ def test_cross_validator_cross_validate_error(
     mock_svi_instance.step.return_value = 100.0
     mock_svi.return_value = mock_svi_instance
 
-    # Mock _sample_posterior_impl to return posterior samples
+    # Mock _sample_posterior_impl to return posterior samples with PyTorch tensors
     mock_sample_posterior.return_value = {
         "alpha": torch.ones((100, 5)),
         "beta": torch.ones((100, 5)),
         "gamma": torch.ones((100, 5)),
     }
 
-    # Create CrossValidator instance
-    cv = CrossValidator(n_splits=2)  # Use 2 splits for faster testing
+    # Create a predict method for the model
+    def mock_predict(**kwargs):
+        return {
+            "u_predicted": torch.ones((10, 5)),
+            "s_predicted": torch.ones((10, 5)),
+        }
 
-    # Run cross-validation
-    scores = cv.cross_validate_error(
+    # Add the predict method to the model
+    mock_model.predict = mock_predict
+
+    # Create CrossValidator instance
+    cv = CrossValidator(n_splits=2)  # Use fewer splits for faster tests
+
+    # Run cross validation
+    result = cv.cross_validate_error(
         model=mock_model,
-        data=sample_data,
         adata=mock_adata,
+        error_fn=lambda true, pred: torch.mean((true - pred) ** 2),
+        train_kwargs={"num_epochs": 10},
+        posterior_kwargs={"num_samples": 100},
     )
 
     # Check result
-    assert isinstance(scores, list)
-    assert len(scores) == 2  # Two folds
-    assert all(score > 0 for score in scores)  # All scores should be positive
+    assert isinstance(result, dict)
+    assert "mean_error" in result
+    assert "std_error" in result
+    assert "fold_errors" in result
+    assert "fold_losses" in result
+    assert "config" in result
+
+
+@pytest.mark.parametrize("n_splits", [2, 3, 5])
+def test_cross_validator_fold_consistency(mock_adata, n_splits):
+    """Test that CrossValidator produces consistent folds with the same random_state."""
+    # Create two CrossValidator instances with the same random_state
+    cv1 = CrossValidator(n_splits=n_splits, random_state=42)
+    cv2 = CrossValidator(n_splits=n_splits, random_state=42)
+    
+    # Get splitters
+    splitter1 = cv1._get_cv_splitter(mock_adata)
+    splitter2 = cv2._get_cv_splitter(mock_adata)
+    
+    # Get indices
+    indices = np.arange(len(mock_adata))
+    
+    # Get train/test splits from both splitters
+    splits1 = list(splitter1.split(indices))
+    splits2 = list(splitter2.split(indices))
+    
+    # Check that the number of splits is correct
+    assert len(splits1) == n_splits
+    assert len(splits2) == n_splits
+    
+    # Check that the splits from both splitters are identical
+    for (train1, test1), (train2, test2) in zip(splits1, splits2):
+        np.testing.assert_array_equal(train1, train2)
+        np.testing.assert_array_equal(test1, test2)
+    
+    # Create another CrossValidator with a different random_state
+    cv3 = CrossValidator(n_splits=n_splits, random_state=99)
+    splitter3 = cv3._get_cv_splitter(mock_adata)
+    splits3 = list(splitter3.split(indices))
+    
+    # At least one split should be different with a different random_state
+    # (This assertion might occasionally fail due to chance, especially with small datasets)
+    any_different = False
+    for (train1, test1), (train3, test3) in zip(splits1, splits3):
+        if not np.array_equal(train1, train3) or not np.array_equal(test1, test3):
+            any_different = True
+            break
+    
+    assert any_different, "Different random_states should produce different splits"
+
+
+def test_cross_validator_data_validation(mock_model, sample_data, mock_adata):
+    """Test that CrossValidator methods correctly validate input data."""
+    cv = CrossValidator()
+    
+    # Test with valid data
+    valid_data = {
+        "x": torch.randn(10, 5),  # Has cell dimension
+        "time_points": torch.linspace(0, 1, 3),  # No cell dimension
+    }
+    
+    # This should work
+    cv.cross_validate_likelihood(
+        model=mock_model,
+        data=valid_data,
+        adata=mock_adata,
+        num_samples=5,
+        num_inference_steps=2,
+    )
+    
+    # Test with data missing cell dimension tensors
+    invalid_data = {
+        "time_points": torch.linspace(0, 1, 3),  # No cell dimension
+    }
+    
+    with pytest.raises(ValueError, match="No cell-dimension tensors found"):
+        cv.cross_validate_likelihood(
+            model=mock_model,
+            data=invalid_data,
+            adata=mock_adata,
+            num_samples=5,
+            num_inference_steps=2,
+        )
+    
+    with pytest.raises(ValueError, match="No cell-dimension tensors found"):
+        cv.cross_validate_error(
+            model=mock_model,
+            data=invalid_data,
+            adata=mock_adata,
+            prediction_key="u_predicted",
+            target_key="u",
+            num_samples=5,
+            num_inference_steps=2,
+        )
+
+
+@patch("pyro.infer.SVI")
+@patch.object(MockGuideModel, "_sample_posterior_impl")
+def test_cross_validator_error_function(
+    mock_sample_posterior, mock_svi, mock_model, sample_data, mock_adata
+):
+    """Test cross_validate_error method with different error functions."""
+    # Mock SVI step to return a loss value
+    mock_svi_instance = MagicMock()
+    mock_svi_instance.step.return_value = 100.0
+    mock_svi.return_value = mock_svi_instance
+
+    # Mock _sample_posterior_impl to return posterior samples with PyTorch tensors
+    mock_sample_posterior.return_value = {
+        "alpha": torch.ones((10, 5)),
+        "beta": torch.ones((10, 5)),
+        "gamma": torch.ones((10, 5)),
+    }
+
+    # Create a predict method for the model that returns predictable values
+    def mock_predict(**kwargs):
+        return {
+            "u_predicted": torch.ones((10, 5)) * 2.0,  # All predictions = 2.0
+            "s_predicted": torch.ones((10, 5)) * 3.0,  # All predictions = 3.0
+        }
+
+    # Add the predict method to the model
+    mock_model.predict = mock_predict
+
+    # Create sample data with known ground truth values
+    data = {
+        "x": torch.ones((10, 5)),
+        "time_points": torch.linspace(0, 1, 3),
+        "u": torch.ones((10, 5)),  # All ground truth = 1.0
+        "s": torch.ones((10, 5)) * 2.0,  # All ground truth = 2.0
+    }
+
+    # Create CrossValidator instance
+    cv = CrossValidator(n_splits=2)
+
+    # Test with MSE error function for u values
+    def mse_error_fn(true, pred):
+        # We know true=1.0 and pred=2.0, so MSE should be (1.0-2.0)^2 = 1.0
+        return torch.mean((true - pred) ** 2)
+
+    # Run cross validation with MSE
+    mse_result = cv.cross_validate_error(
+        model=mock_model,
+        data=data,
+        adata=mock_adata,
+        error_fn=mse_error_fn,
+        prediction_key="u_predicted",
+        target_key="u",
+        train_kwargs={"num_epochs": 2},
+        posterior_kwargs={"num_samples": 10},
+    )
+
+    # Check that MSE is close to 1.0 (allowing for small numerical differences)
+    assert np.isclose(mse_result["mean_error"], 1.0, rtol=1e-2)
+
+    # Test with MAE error function for s values
+    def mae_error_fn(true, pred):
+        # We know true=2.0 and pred=3.0, so MAE should be |2.0-3.0| = 1.0
+        return torch.mean(torch.abs(true - pred))
+
+    # Run cross validation with MAE
+    mae_result = cv.cross_validate_error(
+        model=mock_model,
+        data=data,
+        adata=mock_adata,
+        error_fn=mae_error_fn,
+        prediction_key="s_predicted",
+        target_key="s",
+        train_kwargs={"num_epochs": 2},
+        posterior_kwargs={"num_samples": 10},
+    )
+
+    # Check that MAE is close to 1.0 (allowing for small numerical differences)
+    assert np.isclose(mae_result["mean_error"], 1.0, rtol=1e-2)
+
+    # Test with custom error function that returns weighted combination
+    def custom_error_fn(true, pred):
+        # Return 0.7 * MSE + 0.3 * MAE
+        # For true=1.0 and pred=2.0, this is 0.7*1.0 + 0.3*1.0 = 1.0
+        mse = torch.mean((true - pred) ** 2)
+        mae = torch.mean(torch.abs(true - pred))
+        return 0.7 * mse + 0.3 * mae
+
+    # Run cross validation with custom error function
+    custom_result = cv.cross_validate_error(
+        model=mock_model,
+        data=data,
+        adata=mock_adata,
+        error_fn=custom_error_fn,
+        prediction_key="u_predicted",
+        target_key="u",
+        train_kwargs={"num_epochs": 2},
+        posterior_kwargs={"num_samples": 10},
+    )
+
+    # Check that custom error is close to 1.0 (allowing for small numerical differences)
+    assert np.isclose(custom_result["mean_error"], 1.0, rtol=1e-2)

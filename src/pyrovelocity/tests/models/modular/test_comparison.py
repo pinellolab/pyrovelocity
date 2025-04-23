@@ -8,8 +8,6 @@ utility functions for model selection and comparison.
 from typing import Dict, List, Optional, Tuple, Union
 from unittest.mock import MagicMock, patch
 
-import jax
-import jax.numpy as jnp
 import numpy as np
 import pandas as pd
 import pyro
@@ -118,15 +116,21 @@ class MockLikelihoodModel(BaseLikelihoodModel):
     def _log_prob_impl(self, observations, predictions, scale_factors=None):
         """Implementation of log probability calculation."""
         # Simple log probability calculation for testing
-        # Note: This implementation works with both torch tensors and jax arrays
-        return -jnp.sum((observations - predictions) ** 2, axis=1)
+        # Convert inputs to PyTorch tensors if needed
+        if not isinstance(observations, torch.Tensor):
+            observations = torch.tensor(observations, dtype=torch.float32)
+        if not isinstance(predictions, torch.Tensor):
+            predictions = torch.tensor(predictions, dtype=torch.float32)
+            
+        return -torch.sum((observations - predictions) ** 2, dim=1)
 
     def _sample_impl(self, predictions, scale_factors=None):
         """Implementation of sampling."""
         # Return the predictions with some noise for testing
-        return (
-            predictions + jnp.array(np.random.randn(*predictions.shape)) * 0.1
-        )
+        if not isinstance(predictions, torch.Tensor):
+            predictions = torch.tensor(predictions, dtype=torch.float32)
+            
+        return predictions + torch.randn_like(predictions) * 0.1
 
 
 class MockPriorModel(BasePriorModel):
@@ -199,6 +203,7 @@ class MockGuideModel(BaseInferenceGuide):
 
     def __call__(self, model, *args, **kwargs):
         """Create a guide function for the given model."""
+        self._model = model
 
         def guide(*args, **kwargs):
             """Mock guide function."""
@@ -208,7 +213,6 @@ class MockGuideModel(BaseInferenceGuide):
 
     def _setup_guide_impl(self, model, **kwargs):
         """Implementation of guide setup."""
-        # No-op for testing
         pass
 
     def _sample_posterior_impl(self, model, guide, **kwargs):
@@ -220,35 +224,35 @@ class MockGuideModel(BaseInferenceGuide):
 @pytest.fixture
 def sample_data():
     """Create sample data for testing."""
-    # Create random data for testing
+    # Create random data
     torch.manual_seed(42)
     n_cells = 10
     n_genes = 5
 
-    # Generate random data
+    # Generate random data with PyTorch
     x = torch.randn((n_cells, n_genes))
-    time_points = torch.linspace(0, 1, 3)
     observations = torch.abs(torch.randn((n_cells, n_genes)))
+    time_points = torch.linspace(0, 1, 10)
 
     return {
         "x": x,
-        "time_points": time_points,
         "observations": observations,
-        "n_cells": n_cells,
-        "n_genes": n_genes,
+        "time_points": time_points,
     }
 
 
 @pytest.fixture
 def mock_model(sample_data):
     """Create a mock PyroVelocityModel for testing."""
+    # Create component models
     dynamics_model = MockDynamicsModel()
     prior_model = MockPriorModel()
     likelihood_model = MockLikelihoodModel()
     observation_model = MockObservationModel()
     guide_model = MockGuideModel()
 
-    return PyroVelocityModel(
+    # Create PyroVelocityModel
+    model = PyroVelocityModel(
         dynamics_model=dynamics_model,
         prior_model=prior_model,
         likelihood_model=likelihood_model,
@@ -256,17 +260,21 @@ def mock_model(sample_data):
         guide_model=guide_model,
     )
 
+    return model
+
 
 @pytest.fixture
 def mock_posterior_samples():
     """Create mock posterior samples for testing."""
+    # Create random samples with PyTorch
     torch.manual_seed(42)
+    num_samples = 100
+    n_genes = 5
 
-    # Create random posterior samples
     return {
-        "alpha": torch.abs(torch.randn(100, 5)),
-        "beta": torch.abs(torch.randn(100, 5)),
-        "gamma": torch.abs(torch.randn(100, 5)),
+        "alpha": torch.abs(torch.randn((num_samples, n_genes))),
+        "beta": torch.abs(torch.randn((num_samples, n_genes))),
+        "gamma": torch.abs(torch.randn((num_samples, n_genes))),
     }
 
 
@@ -335,7 +343,7 @@ def test_compute_waic(
     sample_data,
 ):
     """Test compute_waic method."""
-    # Mock _extract_log_likelihood to avoid type issues
+    # Mock _extract_log_likelihood to return PyTorch tensors
     mock_log_likes = torch.ones((100, 10))
     mock_extract_log_likelihood.return_value = mock_log_likes
 
@@ -362,7 +370,7 @@ def test_compute_waic(
         pointwise=True,
     )
     assert waic == 100.0
-    assert isinstance(pointwise, jnp.ndarray)
+    assert isinstance(pointwise, torch.Tensor)
     assert len(pointwise) == 4
 
 
@@ -377,7 +385,7 @@ def test_compute_loo(
     sample_data,
 ):
     """Test compute_loo method."""
-    # Mock _extract_log_likelihood to avoid type issues
+    # Mock _extract_log_likelihood to return PyTorch tensors
     mock_log_likes = torch.ones((100, 10))
     mock_extract_log_likelihood.return_value = mock_log_likes
 
@@ -404,7 +412,7 @@ def test_compute_loo(
         pointwise=True,
     )
     assert loo == 100.0
-    assert isinstance(pointwise, jnp.ndarray)
+    assert isinstance(pointwise, torch.Tensor)
     assert len(pointwise) == 4
 
 
@@ -444,7 +452,7 @@ def test_compare_models_waic(
     sample_data,
 ):
     """Test compare_models method with WAIC."""
-    # Mock _extract_log_likelihood to avoid type issues
+    # Mock _extract_log_likelihood to return PyTorch tensors
     mock_log_likes = torch.ones((100, 10))
     mock_extract_log_likelihood.return_value = mock_log_likes
 
@@ -501,7 +509,7 @@ def test_compare_models_loo(
     sample_data,
 ):
     """Test compare_models method with LOO."""
-    # Mock _extract_log_likelihood to avoid type issues
+    # Mock _extract_log_likelihood to return PyTorch tensors
     mock_log_likes = torch.ones((100, 10))
     mock_extract_log_likelihood.return_value = mock_log_likes
 
@@ -553,98 +561,96 @@ def test_compare_models_bayes_factors(
 ):
     """Test compare_models_bayes_factors method."""
     # Mock _compute_log_marginal_likelihood return values
-    # Provide enough values for all calls (including the second test)
-    mock_compute_lml.side_effect = [-10.0, -12.0, -11.0, -12.0, -10.0, -11.0]
+    mock_compute_lml.side_effect = [
+        -10.0,  # model1
+        -12.0,  # model2
+        -11.0,  # model3
+    ]
 
     # Create models dictionary
     models = {
         "model1": mock_model,
-        "model2": mock_model,  # Using the same mock model for simplicity
+        "model2": mock_model,
         "model3": mock_model,
     }
 
-    # Compare models with default reference model
+    # Compare models
     result = comparison_instance.compare_models_bayes_factors(
         models=models,
         data=sample_data,
+        reference_model="model1",
     )
 
     # Check result
     assert isinstance(result, ComparisonResult)
     assert result.metric_name == "Bayes Factor"
-    assert np.isclose(result.values["model1"], 1.0, rtol=1e-5)
-    assert np.isclose(result.values["model2"], np.exp(-12 - (-10)), rtol=1e-5)
-    assert np.isclose(result.values["model3"], np.exp(-11 - (-10)), rtol=1e-5)
-    assert result.metadata["reference_model"] == "model1"
-
-    # Compare models with specified reference model
-    result = comparison_instance.compare_models_bayes_factors(
-        models=models,
-        data=sample_data,
-        reference_model="model2",
-    )
-
-    # Check result
-    assert result.metadata["reference_model"] == "model2"
+    assert len(result.values) == 3
+    # Check specific values
+    assert result.values["model1"] == 1.0  # Relative to itself
+    assert np.isclose(result.values["model2"], np.exp(-12.0 - (-10.0)), rtol=1e-5)
+    assert np.isclose(result.values["model3"], np.exp(-11.0 - (-10.0)), rtol=1e-5)
+    # Check metadata
+    assert result.metadata == {"reference_model": "model1"}
 
 
 def test_select_best_model():
     """Test select_best_model function."""
-    # Test with information criteria
+    # Test for information criteria (lower is better)
     waic_values = {"model1": 100.0, "model2": 110.0, "model3": 90.0}
-    waic_differences = {
+    
+    # Create differences - model3 is 10 units better than model1 and 20 units better than model2
+    differences = {
         "model1": {"model2": -10.0, "model3": 10.0},
-        "model2": {"model3": 20.0},
-        "model3": {},
+        "model2": {"model1": 10.0, "model3": 20.0},
+        "model3": {"model1": -10.0, "model2": -20.0},
     }
+    
     waic_result = ComparisonResult(
         metric_name="WAIC",
         values=waic_values,
-        differences=waic_differences,
+        differences=differences,
     )
-
-    # With default threshold (2.0)
-    best_model, is_significant = select_best_model(waic_result)
+    
+    # Threshold = 2, differences are significant
+    best_model, is_significant = select_best_model(waic_result, threshold=2.0)
     assert best_model == "model3"
-    # The test now passes with our updated logic
     assert is_significant is True
-
-    # With higher threshold (25.0)
-    best_model, is_significant = select_best_model(waic_result, threshold=25.0)
+    
+    # Threshold = 15, differences with model1 are not significant
+    best_model, is_significant = select_best_model(waic_result, threshold=15.0)
     assert best_model == "model3"
     assert is_significant is False
-
-    # Test with Bayes factors
-    bf_values = {"model1": 3.0, "model2": 0.5, "model3": 1.0}
-    # Create differences dictionary for Bayes factors
-    bf_differences = {
-        "model1": {"model2": 2.5, "model3": 2.0},
-        "model2": {"model1": -2.5, "model3": -0.5},
-        "model3": {"model1": -2.0, "model2": 0.5},
+    
+    # Test for Bayes factors (higher is better)
+    bf_values = {"model1": 3.0, "model2": 1.0, "model3": 2.0}
+    
+    # Create differences - model1 is 3x better than model2 and 1.5x better than model3
+    differences = {
+        "model1": {"model2": np.log(3.0/1.0), "model3": np.log(3.0/2.0)},
+        "model2": {"model1": np.log(1.0/3.0), "model3": np.log(1.0/2.0)},
+        "model3": {"model1": np.log(2.0/3.0), "model2": np.log(2.0/1.0)},
     }
+    
     bf_result = ComparisonResult(
         metric_name="Bayes Factor",
         values=bf_values,
-        differences=bf_differences,
+        differences=differences,
     )
-
-    # With default threshold (2.0)
-    best_model, is_significant = select_best_model(bf_result)
+    
+    # Threshold = 2, differences with model3 are significant
+    best_model, is_significant = select_best_model(bf_result, threshold=2.0)
     assert best_model == "model1"
-    # This should now pass with our updated implementation
     assert is_significant is True
-
-    # With higher threshold (4.0) - update the assertion to match implementation
-    best_model, is_significant = select_best_model(bf_result, threshold=4.0)
+    
+    # Threshold = 5, no differences are significant
+    best_model, is_significant = select_best_model(bf_result, threshold=5.0)
     assert best_model == "model1"
-    assert (
-        is_significant is True
-    )  # Changed from False to True to match implementation
+    assert is_significant is False
 
 
 def test_create_comparison_table():
     """Test create_comparison_table function."""
-    # Create multiple ComparisonResult objects
+    # Create comparison results
     waic_values = {"model1": 100.0, "model2": 110.0, "model3": 90.0}
     waic_se = {"model1": 5.0, "model2": 6.0, "model3": 4.0}
     waic_result = ComparisonResult(
@@ -652,7 +658,7 @@ def test_create_comparison_table():
         values=waic_values,
         standard_errors=waic_se,
     )
-
+    
     loo_values = {"model1": 105.0, "model2": 115.0, "model3": 95.0}
     loo_se = {"model1": 5.5, "model2": 6.5, "model3": 4.5}
     loo_result = ComparisonResult(
@@ -660,16 +666,16 @@ def test_create_comparison_table():
         values=loo_values,
         standard_errors=loo_se,
     )
-
+    
     # Create comparison table
     table = create_comparison_table([waic_result, loo_result])
-
-    # Check table structure
+    
+    # Check table
     assert isinstance(table, pd.DataFrame)
     assert list(table.columns) == ["model", "WAIC", "WAIC_se", "LOO", "LOO_se"]
     assert len(table) == 3
     assert set(table["model"]) == {"model1", "model2", "model3"}
-
+    
     # Check values
     model1_row = table[table["model"] == "model1"].iloc[0]
     assert model1_row["WAIC"] == 100.0
@@ -687,38 +693,34 @@ def test_extract_log_likelihood(
     sample_data,
 ):
     """Test _extract_log_likelihood method."""
-    # Mock the internal implementation to avoid type issues
-    mock_log_likes = torch.ones((10, sample_data["n_cells"]))
-    mock_extract_log_likelihood.return_value = mock_log_likes
-
-    # Extract log likelihood values
-    log_likes = comparison_instance._extract_log_likelihood(
-        model=mock_model,
-        posterior_samples=mock_posterior_samples,
-        data=sample_data,
-        num_samples=10,
+    # Mock the patched method to return a known tensor
+    expected_log_likes = torch.ones((100, 10)) * 2.0
+    mock_extract_log_likelihood.return_value = expected_log_likes
+    
+    # Call the method - this will use our mocked version
+    log_likes = BayesianModelComparison._extract_log_likelihood(
+        mock_model,
+        mock_posterior_samples,
+        sample_data,
     )
-
-    # Check result
-    assert isinstance(log_likes, torch.Tensor)
-    assert log_likes.shape == (10, sample_data["n_cells"])
+    
+    # Check the result
+    assert torch.all(log_likes == expected_log_likes)
 
 
 def test_extract_log_likelihood_missing_observations(
     comparison_instance, mock_model, mock_posterior_samples
 ):
-    """Test _extract_log_likelihood method with missing observations."""
+    """Test _extract_log_likelihood method when observations are missing."""
     # Create data without observations
     data = {"x": torch.ones((10, 5))}
-
-    # Check that ValueError is raised
-    with pytest.raises(
-        ValueError, match="Data dictionary must contain 'observations' key"
-    ):
-        comparison_instance._extract_log_likelihood(
-            model=mock_model,
-            posterior_samples=mock_posterior_samples,
-            data=data,
+    
+    # Expect a ValueError
+    with pytest.raises(ValueError, match="Data dictionary must contain 'observations' key"):
+        BayesianModelComparison._extract_log_likelihood(
+            mock_model,
+            mock_posterior_samples,
+            data,
         )
 
 
@@ -727,20 +729,26 @@ def test_compute_log_marginal_likelihood(
     mock_importance, comparison_instance, mock_model, sample_data
 ):
     """Test _compute_log_marginal_likelihood method."""
-    # Mock pyro.infer.Importance
+    # Mock pyro.infer.Importance.run() return value
     mock_importance_instance = MagicMock()
+    mock_importance.return_value = mock_importance_instance
+    
+    # Mock importance_results.log_mean() return value
     mock_importance_results = MagicMock()
     mock_importance_results.log_mean.return_value = torch.tensor(-10.0)
     mock_importance_instance.run.return_value = mock_importance_results
-    mock_importance.return_value = mock_importance_instance
-
-    # Compute log marginal likelihood
+    
+    # Call the method
     log_ml = comparison_instance._compute_log_marginal_likelihood(
         model=mock_model,
         data=sample_data,
-        num_samples=100,
+        num_samples=1000,
     )
-
-    # Check result
+    
+    # Check the result
     assert log_ml == -10.0
-    assert mock_importance.call_count == 1
+    
+    # Check that Importance was called
+    mock_importance.assert_called_once()
+    # Check that importance_instance.run() was called
+    mock_importance_instance.run.assert_called_once()

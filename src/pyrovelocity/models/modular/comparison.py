@@ -17,15 +17,13 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import arviz as az
-import jax
-import jax.numpy as jnp
 import numpy as np
 import pandas as pd
 import pyro
 import torch
 from anndata import AnnData
 from beartype import beartype
-from jaxtyping import Array, Float, jaxtyped
+from jaxtyping import Float, jaxtyped
 
 from pyrovelocity.models.modular.model import PyroVelocityModel
 
@@ -173,7 +171,6 @@ class BayesianModelComparison:
                 )
 
             # Use PyTorch tensors for likelihood computation
-            # The likelihood model should accept PyTorch tensors
             scale_factors = data.get("scale_factors", None)
 
             # Compute log likelihood
@@ -380,48 +377,53 @@ class BayesianModelComparison:
         values = {}
         standard_errors = {}
 
+        # Compute metric for each model
         for model_name, model in models.items():
-            samples = posterior_samples[model_name]
+            model_samples = posterior_samples.get(model_name, {})
+            
+            if not model_samples:
+                logger.warning(f"No posterior samples found for model: {model_name}")
+                continue
 
             if metric == "waic":
                 # Compute WAIC
                 waic_data = az.data.convert_to_dataset(
                     {
                         "log_likelihood": self._extract_log_likelihood(
-                            model, samples, data
+                            model, model_samples, data
                         ).numpy()[None, ...]
                     }
                 )
                 waic_result = az.waic(waic_data)
                 values[model_name] = waic_result.waic
                 standard_errors[model_name] = waic_result.waic_se
-
+            
             elif metric == "loo":
                 # Compute LOO
                 loo_data = az.data.convert_to_dataset(
                     {
                         "log_likelihood": self._extract_log_likelihood(
-                            model, samples, data
+                            model, model_samples, data
                         ).numpy()[None, ...]
                     }
                 )
                 loo_result = az.loo(loo_data)
                 values[model_name] = loo_result.loo
                 standard_errors[model_name] = loo_result.loo_se
-
+            
             else:
                 raise ValueError(f"Unknown metric: {metric}")
 
-        # Compute pairwise differences - modified to match test expectations
+        # Compute pairwise differences
         differences = {}
-        model_names = list(models.keys())
-        for model1 in model_names:
-            differences[model1] = {}
-            for model2 in model_names:
-                if model1 != model2:
-                    diff = values[model1] - values[model2]
-                    differences[model1][model2] = diff
+        for model1_name in values:
+            differences[model1_name] = {}
+            for model2_name in values:
+                if model1_name != model2_name:
+                    diff = values[model1_name] - values[model2_name]
+                    differences[model1_name][model2_name] = diff
 
+        # Create and return ComparisonResult
         return ComparisonResult(
             metric_name=metric.upper(),
             values=values,
@@ -443,29 +445,35 @@ class BayesianModelComparison:
         Args:
             models: Dictionary mapping model names to PyroVelocityModel instances
             data: Dictionary of observed data
-            reference_model: Optional name of reference model for comparison
+            reference_model: Name of the reference model to compare against
             num_samples: Number of samples for marginal likelihood estimation
 
         Returns:
-            ComparisonResult containing the Bayes factor results
+            ComparisonResult containing the Bayes factors
         """
-        # Compute log marginal likelihoods for all models
+        model_names = list(models.keys())
+        if reference_model is None:
+            reference_model = model_names[0]
+        elif reference_model not in model_names:
+            raise ValueError(f"Reference model '{reference_model}' not found in models")
+
+        # Compute log marginal likelihood for each model
         log_mls = {}
         for model_name, model in models.items():
-            log_mls[model_name] = self._compute_log_marginal_likelihood(
+            log_ml = self._compute_log_marginal_likelihood(
                 model, data, num_samples
             )
+            log_mls[model_name] = log_ml
 
-        # If no reference model is specified, use the first model
-        if reference_model is None:
-            reference_model = list(models.keys())[0]
-
-        # Compute Bayes factors relative to the reference model
+        # Compute Bayes factors using the reference model
         bayes_factors = {}
-        for model_name in models:
+        for model_name in model_names:
+            # Compute Bayes factor
             log_bf = log_mls[model_name] - log_mls[reference_model]
-            bayes_factors[model_name] = np.exp(log_bf)
+            bf = np.exp(log_bf)
+            bayes_factors[model_name] = bf
 
+        # Create and return ComparisonResult
         return ComparisonResult(
             metric_name="Bayes Factor",
             values=bayes_factors,
@@ -478,49 +486,46 @@ def select_best_model(
     threshold: float = 2.0,
 ) -> Tuple[str, bool]:
     """
-    Select the best model based on comparison results.
+    Select the best model from a comparison result.
 
     Args:
-        comparison_result: ComparisonResult from model comparison
-        threshold: Threshold for considering a difference significant
-            - For information criteria: absolute difference
-            - For Bayes factors: ratio threshold
+        comparison_result: ComparisonResult from a model comparison
+        threshold: Threshold for determining significance
 
     Returns:
         Tuple of (best_model_name, is_significant)
     """
+    # Get the best model according to the metric
     best_model = comparison_result.best_model()
-    is_significant = False
-
+    
     # Check if the difference is significant
+    is_significant = False
+    
     if comparison_result.differences:
-        metric_name = comparison_result.metric_name.lower()
-
-        if metric_name in ["waic", "loo", "dic"]:
-            # For information criteria, check absolute differences
-            # The best model might be in the differences dict or might be the target of differences
-            # First check if best model has differences with other models
-            if best_model in comparison_result.differences:
-                diffs = comparison_result.differences[best_model]
-                if any(abs(diff) > threshold for diff in diffs.values()):
+        # For each other model, check if the difference is significant
+        best_model_diffs = comparison_result.differences.get(best_model, {})
+        for other_model, diff in best_model_diffs.items():
+            # For information criteria (WAIC, LOO), lower is better
+            if comparison_result.metric_name.upper() in ["WAIC", "LOO"]:
+                # Best model should have smaller value, so diff should be negative
+                # is_significant = all differences are below negative threshold
+                if diff < -threshold:
                     is_significant = True
-
-            # Also check if other models have differences with the best model
-            for model, diffs in comparison_result.differences.items():
-                if best_model in diffs and abs(diffs[best_model]) > threshold:
-                    is_significant = True
+                else:
+                    # If any difference is not significant, overall result is not significant
+                    is_significant = False
                     break
-        else:
-            # For Bayes factors, check ratios - modified to match test expectations
-            best_value = comparison_result.values[best_model]
-            for model, value in comparison_result.values.items():
-                if model != best_model:
-                    # For Bayes factors, we only care if the best model is significantly better
-                    # than other models (not the other way around)
-                    if best_value / value > threshold:
-                        is_significant = True
-                        break
-
+            # For Bayes factors, higher is better
+            else:
+                # Best model should have larger value
+                # Convert difference to ratio for Bayes factors
+                ratio = np.exp(diff) if diff != 0 else 0
+                if ratio > threshold:
+                    is_significant = True
+                else:
+                    is_significant = False
+                    break
+    
     return best_model, is_significant
 
 
@@ -536,20 +541,33 @@ def create_comparison_table(
     Returns:
         DataFrame with models as rows and metrics as columns
     """
-    # Start with the first comparison result
-    df = comparison_results[0].to_dataframe()
-
-    # Add additional metrics
-    for result in comparison_results[1:]:
-        metric_df = result.to_dataframe()
-        # Keep only the metric columns, not the model column
-        metric_cols = [col for col in metric_df.columns if col != "model"]
-        df = pd.merge(df, metric_df[["model"] + metric_cols], on="model")
-
+    # Get unique model names from all comparison results
+    model_names = set()
+    for result in comparison_results:
+        model_names.update(result.values.keys())
+    model_names = sorted(list(model_names))
+    
+    # Create DataFrame with model names as index
+    df = pd.DataFrame(index=model_names)
+    
+    # Add each metric as a column
+    for result in comparison_results:
+        # Add values column
+        metric_name = result.metric_name
+        df[metric_name] = [
+            result.values.get(model, np.nan) for model in model_names
+        ]
+        
+        # Add standard errors column if available
+        if result.standard_errors:
+            df[f"{metric_name}_se"] = [
+                result.standard_errors.get(model, np.nan) for model in model_names
+            ]
+    
+    # Reset index to make model names a column
+    df = df.reset_index().rename(columns={"index": "model"})
+    
     return df
-
-
-# Convenience functions for module-level access
 
 
 def compute_waic(
@@ -559,10 +577,7 @@ def compute_waic(
     pointwise: bool = False,
 ) -> Union[float, Tuple[float, torch.Tensor]]:
     """
-    Compute the Widely Applicable Information Criterion (WAIC).
-
-    This is a convenience function that creates a BayesianModelComparison instance
-    and calls its compute_waic method.
+    Convenience function to compute WAIC without instantiating a comparison object.
 
     Args:
         model: PyroVelocityModel instance
@@ -584,10 +599,7 @@ def compute_loo(
     pointwise: bool = False,
 ) -> Union[float, Tuple[float, torch.Tensor]]:
     """
-    Compute Leave-One-Out (LOO) cross-validation.
-
-    This is a convenience function that creates a BayesianModelComparison instance
-    and calls its compute_loo method.
+    Convenience function to compute LOO without instantiating a comparison object.
 
     Args:
         model: PyroVelocityModel instance
