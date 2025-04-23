@@ -8,8 +8,6 @@ methods as expected.
 
 from typing import Any, Dict, Optional, Tuple, Union
 
-import jax
-import jax.numpy as jnp
 import numpy as np
 import pyro
 import pyro.distributions as dist
@@ -316,18 +314,14 @@ class MockGuideModel(BaseInferenceGuide):
 def sample_data():
     """Create sample data for testing."""
     # Create random data for testing
-    key = jax.random.PRNGKey(42)
+    torch.manual_seed(42)
     n_cells = 10
     n_genes = 5
     n_times = 3
 
-    # Generate random data
-    x_jax = jax.random.normal(key, (n_cells, n_genes))
-    time_points_jax = jnp.linspace(0, 1, n_times)
-
-    # Convert to torch tensors
-    x = torch.tensor(np.array(x_jax), dtype=torch.float32)
-    time_points = torch.tensor(np.array(time_points_jax), dtype=torch.float32)
+    # Generate random data directly with PyTorch
+    x = torch.randn((n_cells, n_genes))
+    time_points = torch.linspace(0, 1, n_times)
 
     return {
         "x": x,

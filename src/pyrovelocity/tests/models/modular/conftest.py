@@ -8,7 +8,6 @@ facilitating the testing of model selection and comparison functionality in the 
 from typing import Dict, List, Optional, Tuple, Union
 from unittest.mock import MagicMock
 
-import jax.numpy as jnp
 import numpy as np
 import pytest
 import torch
@@ -109,15 +108,13 @@ class MockLikelihoodModel(BaseLikelihoodModel):
     def _log_prob_impl(self, observations, predictions, scale_factors=None):
         """Implementation of log probability calculation."""
         # Simple log probability calculation for testing
-        # Make sure we return a JAX array with shape [batch_size]
-        return -jnp.sum((observations - predictions) ** 2, axis=1)
+        # Make sure we return a PyTorch tensor with shape [batch_size]
+        return -torch.sum((observations - predictions) ** 2, dim=1)
 
     def _sample_impl(self, predictions, scale_factors=None):
         """Implementation of sampling."""
         # Return the predictions with some noise for testing
-        return (
-            predictions + jnp.array(np.random.randn(*predictions.shape)) * 0.1
-        )
+        return predictions + torch.randn_like(predictions) * 0.1
 
 
 class MockPriorModel(BasePriorModel):
@@ -141,7 +138,7 @@ class MockPriorModel(BasePriorModel):
         # No-op for testing
         pass
 
-    def _sample_parameters_impl(self, prefix=""):
+    def _sample_parameters_impl(self, prefix="", n_genes=None, **kwargs):
         """Implementation of parameter sampling."""
         # Return empty dict for testing
         return {}
@@ -158,6 +155,19 @@ class MockObservationModel(BaseObservationModel):
         """Forward pass that adds observations to the context."""
         # Add observations to context
         context["observations"] = context.get("x", torch.ones((10, 5)))
+
+        return context
+
+    def _forward_impl(self, u_obs=None, s_obs=None, **kwargs):
+        """Implementation of the forward method."""
+        # Create a context dictionary
+        context = {}
+
+        # Add u and s to context
+        if u_obs is not None:
+            context["u"] = u_obs
+        if s_obs is not None:
+            context["s"] = s_obs
 
         return context
 
@@ -202,7 +212,7 @@ class MockGuideModel(BaseInferenceGuide):
         # No-op for testing
         pass
 
-    def _sample_posterior_impl(self, model, guide, **kwargs):
+    def _sample_posterior_impl(self, **kwargs):
         """Implementation of posterior sampling."""
         # Return empty dict for testing
         return {}
