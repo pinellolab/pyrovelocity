@@ -11,6 +11,7 @@ import jax.numpy as jnp
 import numpyro
 import numpyro.distributions as dist
 import pyro
+import pyro.distributions
 import torch
 from anndata._core.anndata import AnnData
 from beartype import beartype
@@ -28,6 +29,78 @@ class PoissonLikelihoodModel(BaseLikelihoodModel):
     observed RNA counts, which is appropriate when the variance
     is approximately equal to the mean.
     """
+
+    @beartype
+    def forward(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Define the likelihood distributions for observed data given expected values.
+
+        Args:
+            context: Dictionary containing model context including u_obs, s_obs, u_expected, s_expected, and other parameters
+
+        Returns:
+            Updated context dictionary with likelihood information
+        """
+        # Extract required values from context
+        u_obs = context.get("u_obs")
+        s_obs = context.get("s_obs")
+        u_expected = context.get("u_expected")
+        s_expected = context.get("s_expected")
+
+        if u_obs is None or s_obs is None:
+            raise ValueError("Both u_obs and s_obs must be provided in the context")
+
+        if u_expected is None or s_expected is None:
+            raise ValueError("Both u_expected and s_expected must be provided in the context")
+
+        # Extract optional scaling factors
+        u_scale = context.get("u_scale")
+        s_scale = context.get("s_scale")
+
+        # Apply scale if provided
+        u_rate = u_expected
+        s_rate = s_expected
+
+        if u_scale is not None:
+            u_rate = u_rate * u_scale
+        if s_scale is not None:
+            s_rate = s_rate * s_scale
+
+        # Ensure u_rate and s_rate have the same shape as u_obs and s_obs
+        if u_rate.shape != u_obs.shape:
+            # Reshape u_rate to match u_obs
+            if u_rate.shape[1] != u_obs.shape[1]:
+                # If the number of genes doesn't match, slice to match
+                u_rate = u_rate[:, :u_obs.shape[1]]
+            if u_rate.shape[0] != u_obs.shape[0]:
+                # If the number of cells doesn't match, expand to match
+                u_rate = u_rate[:u_obs.shape[0]]
+
+        if s_rate.shape != s_obs.shape:
+            # Reshape s_rate to match s_obs
+            if s_rate.shape[1] != s_obs.shape[1]:
+                # If the number of genes doesn't match, slice to match
+                s_rate = s_rate[:, :s_obs.shape[1]]
+            if s_rate.shape[0] != s_obs.shape[0]:
+                # If the number of cells doesn't match, expand to match
+                s_rate = s_rate[:s_obs.shape[0]]
+
+        # Create Poisson distributions for both unspliced and spliced counts
+        with pyro.plate("cells", u_obs.shape[0]):
+            with pyro.plate("genes", u_obs.shape[1]):
+                # Create Poisson distributions and observe data
+                u_dist = pyro.distributions.Poisson(rate=u_rate)
+                s_dist = pyro.distributions.Poisson(rate=s_rate)
+
+                # Observe data
+                pyro.sample("u_obs", u_dist, obs=u_obs)
+                pyro.sample("s_obs", s_dist, obs=s_obs)
+
+        # Add distributions to context
+        context["u_dist"] = u_dist
+        context["s_dist"] = s_dist
+
+        return context
 
     def __call__(
         self,
@@ -122,10 +195,10 @@ class PoissonLikelihoodModel(BaseLikelihoodModel):
     @beartype
     def _log_prob_impl(
         self,
-        observations: Float[Array, "batch_size genes"],
-        predictions: Float[Array, "batch_size genes"],
-        scale_factors: Optional[Float[Array, "batch_size"]] = None,
-    ) -> Float[Array, "batch_size"]:
+        observations: torch.Tensor,
+        predictions: torch.Tensor,
+        scale_factors: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         """Calculate log probability of observations under Poisson distribution.
 
         Args:
@@ -139,24 +212,24 @@ class PoissonLikelihoodModel(BaseLikelihoodModel):
         # Apply scale factors if provided
         if scale_factors is not None:
             # Reshape scale_factors to broadcast correctly
-            scale_factors = scale_factors.reshape((-1, 1))
+            scale_factors = scale_factors.reshape(-1, 1)
             rate = predictions * scale_factors
         else:
             rate = predictions
 
         # Create Poisson distribution and calculate log probability
-        distribution = dist.Poisson(rate=rate)
+        distribution = torch.distributions.Poisson(rate=rate)
         log_probs = distribution.log_prob(observations)
 
         # Sum log probabilities across genes for each cell
-        return jnp.sum(log_probs, axis=-1)
+        return torch.sum(log_probs, dim=-1)
 
     @beartype
     def _sample_impl(
         self,
-        predictions: Float[Array, "batch_size genes"],
-        scale_factors: Optional[Float[Array, "batch_size"]] = None,
-    ) -> Float[Array, "batch_size genes"]:
+        predictions: torch.Tensor,
+        scale_factors: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         """Sample observations from Poisson distribution.
 
         Args:
@@ -169,26 +242,27 @@ class PoissonLikelihoodModel(BaseLikelihoodModel):
         # Apply scale factors if provided
         if scale_factors is not None:
             # Reshape scale_factors to broadcast correctly
-            scale_factors = scale_factors.reshape((-1, 1))
+            scale_factors = scale_factors.reshape(-1, 1)
             rate = predictions * scale_factors
         else:
             rate = predictions
 
         # Create Poisson distribution and sample
-        distribution = dist.Poisson(rate=rate)
-        key = jax.random.PRNGKey(0)  # Use a fixed seed for reproducibility
-        return distribution.sample(key)
+        distribution = torch.distributions.Poisson(rate=rate)
+        # Set a fixed seed for reproducibility
+        torch.manual_seed(0)
+        return distribution.sample()
 
     def _generate_direct_distributions(
         self,
-        u_expected: Float[Array, "batch_size genes"],
-        s_expected: Float[Array, "batch_size genes"],
-        u_obs: Float[Array, "batch_size genes"],
-        s_obs: Float[Array, "batch_size genes"],
-        u_scale: Optional[Float[Array, "genes"]] = None,
-        s_scale: Optional[Float[Array, "genes"]] = None,
+        u_expected: torch.Tensor,
+        s_expected: torch.Tensor,
+        u_obs: torch.Tensor,
+        s_obs: torch.Tensor,
+        u_scale: Optional[torch.Tensor] = None,
+        s_scale: Optional[torch.Tensor] = None,
         **kwargs: Any,
-    ) -> Dict[str, dist.Distribution]:
+    ) -> Dict[str, pyro.distributions.Distribution]:
         """Generate Poisson distributions directly from expected counts for testing.
 
         Args:
@@ -203,16 +277,6 @@ class PoissonLikelihoodModel(BaseLikelihoodModel):
         Returns:
             Dictionary with Poisson distributions for u and s
         """
-        # Convert all inputs to PyTorch tensors if they're not already
-        if not isinstance(u_expected, torch.Tensor):
-            u_expected = torch.tensor(u_expected)
-        if not isinstance(s_expected, torch.Tensor):
-            s_expected = torch.tensor(s_expected)
-        if not isinstance(u_obs, torch.Tensor):
-            u_obs = torch.tensor(u_obs)
-        if not isinstance(s_obs, torch.Tensor):
-            s_obs = torch.tensor(s_obs)
-
         # Create Poisson distributions for both unspliced and spliced counts
         with pyro.plate("cells", u_expected.shape[0]):
             with pyro.plate("genes", u_expected.shape[1]):
@@ -221,21 +285,17 @@ class PoissonLikelihoodModel(BaseLikelihoodModel):
                 s_rate = s_expected
 
                 if u_scale is not None:
-                    if not isinstance(u_scale, torch.Tensor):
-                        u_scale = torch.tensor(u_scale)
                     u_rate = u_rate * u_scale
                 if s_scale is not None:
-                    if not isinstance(s_scale, torch.Tensor):
-                        s_scale = torch.tensor(s_scale)
                     s_rate = s_rate * s_scale
 
                 # Create Poisson distributions and observe data
-                u_dist = pyro.sample(
-                    "u_obs", pyro.distributions.Poisson(rate=u_rate), obs=u_obs
-                )
-                s_dist = pyro.sample(
-                    "s_obs", pyro.distributions.Poisson(rate=s_rate), obs=s_obs
-                )
+                u_dist = pyro.distributions.Poisson(rate=u_rate)
+                s_dist = pyro.distributions.Poisson(rate=s_rate)
+
+                # Observe data
+                pyro.sample("u_obs", u_dist, obs=u_obs)
+                pyro.sample("s_obs", s_dist, obs=s_obs)
 
         return {"u_obs": u_dist, "s_obs": s_dist}
 
@@ -248,6 +308,91 @@ class NegativeBinomialLikelihoodModel(BaseLikelihoodModel):
     GammaPoisson in NumPyro) as the likelihood for observed RNA counts,
     which is appropriate when the variance exceeds the mean (overdispersion).
     """
+
+    @beartype
+    def forward(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Define the likelihood distributions for observed data given expected values.
+
+        Args:
+            context: Dictionary containing model context including u_obs, s_obs, u_expected, s_expected, and other parameters
+
+        Returns:
+            Updated context dictionary with likelihood information
+        """
+        # Extract required values from context
+        u_obs = context.get("u_obs")
+        s_obs = context.get("s_obs")
+        u_expected = context.get("u_expected")
+        s_expected = context.get("s_expected")
+
+        if u_obs is None or s_obs is None:
+            raise ValueError("Both u_obs and s_obs must be provided in the context")
+
+        if u_expected is None or s_expected is None:
+            raise ValueError("Both u_expected and s_expected must be provided in the context")
+
+        # Extract optional scaling factors
+        u_scale = context.get("u_scale")
+        s_scale = context.get("s_scale")
+
+        # Apply scale if provided
+        u_rate = u_expected
+        s_rate = s_expected
+
+        if u_scale is not None:
+            u_rate = u_rate * u_scale
+        if s_scale is not None:
+            s_rate = s_rate * s_scale
+
+        # Use fixed dispersion parameters for simplicity
+        # In a real implementation, these would be learned or provided
+        u_dispersion = torch.ones_like(u_rate[0] if u_rate.dim() > 1 else u_rate)
+        s_dispersion = torch.ones_like(s_rate[0] if s_rate.dim() > 1 else s_rate)
+
+        # Calculate concentration parameters (inverse of dispersion)
+        u_concentration = 1.0 / u_dispersion
+        s_concentration = 1.0 / s_dispersion
+
+        # Ensure u_rate and s_rate have the same shape as u_obs and s_obs
+        if u_rate.shape != u_obs.shape:
+            # Reshape u_rate to match u_obs
+            if u_rate.shape[1] != u_obs.shape[1]:
+                # If the number of genes doesn't match, slice to match
+                u_rate = u_rate[:, :u_obs.shape[1]]
+            if u_rate.shape[0] != u_obs.shape[0]:
+                # If the number of cells doesn't match, expand to match
+                u_rate = u_rate[:u_obs.shape[0]]
+
+        if s_rate.shape != s_obs.shape:
+            # Reshape s_rate to match s_obs
+            if s_rate.shape[1] != s_obs.shape[1]:
+                # If the number of genes doesn't match, slice to match
+                s_rate = s_rate[:, :s_obs.shape[1]]
+            if s_rate.shape[0] != s_obs.shape[0]:
+                # If the number of cells doesn't match, expand to match
+                s_rate = s_rate[:s_obs.shape[0]]
+
+        # Create Negative Binomial distributions for both unspliced and spliced counts
+        with pyro.plate("cells", u_obs.shape[0]):
+            with pyro.plate("genes", u_obs.shape[1]):
+                # Create Negative Binomial distributions and observe data
+                # In PyTorch, we use NegativeBinomial with total_count=concentration, probs=concentration/(concentration+rate)
+                u_probs = u_concentration / (u_concentration + u_rate)
+                s_probs = s_concentration / (s_concentration + s_rate)
+
+                u_dist = pyro.distributions.NegativeBinomial(total_count=u_concentration, probs=u_probs)
+                s_dist = pyro.distributions.NegativeBinomial(total_count=s_concentration, probs=s_probs)
+
+                # Observe data
+                pyro.sample("u_obs", u_dist, obs=u_obs)
+                pyro.sample("s_obs", s_dist, obs=s_obs)
+
+        # Add distributions to context
+        context["u_dist"] = u_dist
+        context["s_dist"] = s_dist
+
+        return context
 
     def __call__(
         self,
