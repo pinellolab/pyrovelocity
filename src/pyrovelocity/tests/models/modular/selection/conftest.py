@@ -8,8 +8,6 @@ facilitating the testing of model selection functionality in the PyroVelocity fr
 from typing import Any, Dict, Optional, Union
 from unittest.mock import MagicMock
 
-import jax
-import jax.numpy as jnp
 import numpy as np
 import pytest
 import torch
@@ -200,6 +198,12 @@ class MockObservationModel(BaseObservationModel):
         # Add observations to context
         context["observations"] = context.get("x", torch.ones((10, 5)))
 
+        return context
+
+    def _forward_impl(self, context):
+        """Implementation of the forward method."""
+        # Add observations to context
+        context["observations"] = context.get("x", torch.ones((10, 5)))
         return context
 
     def _prepare_data_impl(self, adata, **kwargs):

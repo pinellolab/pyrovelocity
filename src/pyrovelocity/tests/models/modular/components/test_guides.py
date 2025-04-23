@@ -1,14 +1,15 @@
 """Tests for inference guides."""
 
-import pytest
 import pyro
 import pyro.distributions as dist
+import pytest
 import torch
+from pyro.infer.autoguide import init_to_median
 
 from pyrovelocity.models.modular.components.guides import (
     AutoGuideFactory,
-    NormalGuide,
     DeltaGuide,
+    NormalGuide,
 )
 from pyrovelocity.models.modular.registry import inference_guide_registry
 
@@ -47,7 +48,7 @@ def test_auto_guide_factory_init():
     """Test initialization of AutoGuideFactory."""
     guide_factory = AutoGuideFactory()
     assert guide_factory.guide_type == "AutoNormal"
-    assert guide_factory.init_loc_fn is None
+    assert guide_factory.init_loc_fn is init_to_median
     assert guide_factory.init_scale == 0.1
 
     guide_factory = AutoGuideFactory(

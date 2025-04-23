@@ -205,8 +205,17 @@ class TestBaseDynamicsModel:
         # Mock _forward_impl
         model._forward_impl = MagicMock(return_value=(u, s))
 
+        # Create context dictionary
+        context = {
+            "u_obs": u,
+            "s_obs": s,
+            "alpha": alpha,
+            "beta": beta,
+            "gamma": gamma
+        }
+
         # Call forward
-        result = model.forward(u, s, alpha, beta, gamma)
+        result = model.forward(context)
 
         # Check that validate_inputs was called with the correct arguments
         model.validate_inputs.assert_called_once()
@@ -217,7 +226,8 @@ class TestBaseDynamicsModel:
         )
 
         # Check that the result is correct
-        assert result == (u, s)
+        assert torch.all(result["u_expected"] == u)
+        assert torch.all(result["s_expected"] == s)
 
     def test_predict_future_states(self):
         """Test that predict_future_states calls _predict_future_states_impl with validated inputs."""
@@ -283,17 +293,11 @@ class TestBasePriorModel:
             """Implement abstract method."""
             pass
 
-        def _sample_parameters_impl(self, prefix: str = "") -> Dict[str, Any]:
+        def _sample_parameters_impl(self, prefix: str = "", n_genes: Optional[int] = None) -> Dict[str, Any]:
             """Implement abstract method."""
             return {"alpha": 0.1, "beta": 0.2, "gamma": 0.3}
 
-        def forward(
-            self,
-            u_obs: BatchTensor,
-            s_obs: BatchTensor,
-            plate: pyro.plate,
-            **kwargs: Any,
-        ) -> ModelState:
+        def forward(self, context: Dict[str, Any]) -> Dict[str, Any]:
             """Implement forward method."""
             return {"alpha": 0.1, "beta": 0.2, "gamma": 0.3}
 
@@ -354,36 +358,24 @@ class TestBaseLikelihoodModel:
 
         def _log_prob_impl(
             self,
-            observations: Float[Array, "batch_size genes"],
-            predictions: Float[Array, "batch_size genes"],
-            scale_factors: Optional[Float[Array, "batch_size"]] = None,
-        ) -> Float[Array, "batch_size"]:
+            observations: torch.Tensor,
+            predictions: torch.Tensor,
+            scale_factors: Optional[torch.Tensor] = None,
+        ) -> torch.Tensor:
             """Implement abstract method."""
-            import jax.numpy as jnp
-
-            return jnp.zeros(observations.shape[0])
+            return torch.zeros(observations.shape[0])
 
         def _sample_impl(
             self,
-            predictions: Float[Array, "batch_size genes"],
-            scale_factors: Optional[Float[Array, "batch_size"]] = None,
-        ) -> Float[Array, "batch_size genes"]:
+            predictions: torch.Tensor,
+            scale_factors: Optional[torch.Tensor] = None,
+        ) -> torch.Tensor:
             """Implement abstract method."""
-            import jax.numpy as jnp
-
             return predictions
 
-        def forward(
-            self,
-            u_obs: BatchTensor,
-            s_obs: BatchTensor,
-            u_logits: BatchTensor,
-            s_logits: BatchTensor,
-            plate: pyro.plate,
-            **kwargs: Any,
-        ) -> None:
+        def forward(self, context):
             """Implement forward method."""
-            pass
+            return context
 
     def test_initialization(self):
         """Test that BaseLikelihoodModel initializes correctly."""
@@ -395,13 +387,11 @@ class TestBaseLikelihoodModel:
         model = self.ConcreteLikelihoodModel()
 
         # Create test inputs
-        import jax.numpy as jnp
-
-        observations = jnp.zeros((2, 3))
-        predictions = jnp.zeros((2, 3))
+        observations = torch.zeros((2, 3))
+        predictions = torch.zeros((2, 3))
 
         # Mock _log_prob_impl
-        expected_result = jnp.zeros(2)
+        expected_result = torch.zeros(2)
         model._log_prob_impl = MagicMock(return_value=expected_result)
 
         # Call log_prob
@@ -418,12 +408,10 @@ class TestBaseLikelihoodModel:
         model = self.ConcreteLikelihoodModel()
 
         # Create test inputs
-        import jax.numpy as jnp
-
-        predictions = jnp.zeros((2, 3))
+        predictions = torch.zeros((2, 3))
 
         # Mock _sample_impl
-        expected_result = jnp.zeros((2, 3))
+        expected_result = torch.zeros((2, 3))
         model._sample_impl = MagicMock(return_value=expected_result)
 
         # Call sample
@@ -444,7 +432,7 @@ class TestBaseObservationModel:
 
         def _prepare_data_impl(
             self, adata: AnnData, **kwargs: Any
-        ) -> Dict[str, Union[torch.Tensor, np.ndarray]]:
+        ) -> Dict[str, torch.Tensor]:
             """Implement abstract method."""
             return {"data": torch.zeros(10)}
 
@@ -460,18 +448,17 @@ class TestBaseObservationModel:
 
         def _preprocess_batch_impl(
             self, batch: Dict[str, torch.Tensor]
-        ) -> Dict[str, Union[torch.Tensor, np.ndarray]]:
+        ) -> Dict[str, torch.Tensor]:
             """Implement abstract method."""
             return batch
 
-        def forward(
-            self,
-            u_obs: BatchTensor,
-            s_obs: BatchTensor,
-            **kwargs: Any,
-        ) -> Tuple[BatchTensor, BatchTensor]:
+        def forward(self, context):
             """Implement forward method."""
-            return u_obs, s_obs
+            return context
+
+        def _forward_impl(self, u_obs: torch.Tensor, s_obs: torch.Tensor, **kwargs: Any) -> Dict[str, Any]:
+            """Implementation of the forward method."""
+            return {"u_obs": u_obs, "s_obs": s_obs}
 
     def test_initialization(self):
         """Test that BaseObservationModel initializes correctly."""
