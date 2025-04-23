@@ -603,8 +603,12 @@ def test_compare_models_bayes_factors(
     assert len(result.values) == 3
     # Check specific values
     assert result.values["model1"] == 1.0  # Relative to itself
-    assert np.isclose(result.values["model2"], np.exp(-12.0 - (-10.0)), rtol=1e-5)
-    assert np.isclose(result.values["model3"], np.exp(-11.0 - (-10.0)), rtol=1e-5)
+    assert np.isclose(
+        result.values["model2"], np.exp(-12.0 - (-10.0)), rtol=1e-5
+    )
+    assert np.isclose(
+        result.values["model3"], np.exp(-11.0 - (-10.0)), rtol=1e-5
+    )
     # Check metadata
     assert result.metadata == {"reference_model": "model1"}
 
@@ -642,9 +646,9 @@ def test_select_best_model():
 
     # Create differences - model1 is 3x better than model2 and 1.5x better than model3
     differences = {
-        "model1": {"model2": np.log(3.0/1.0), "model3": np.log(3.0/2.0)},
-        "model2": {"model1": np.log(1.0/3.0), "model3": np.log(1.0/2.0)},
-        "model3": {"model1": np.log(2.0/3.0), "model2": np.log(2.0/1.0)},
+        "model1": {"model2": np.log(3.0 / 1.0), "model3": np.log(3.0 / 2.0)},
+        "model2": {"model1": np.log(1.0 / 3.0), "model3": np.log(1.0 / 2.0)},
+        "model3": {"model1": np.log(2.0 / 3.0), "model2": np.log(2.0 / 1.0)},
     }
 
     bf_result = ComparisonResult(
@@ -735,7 +739,9 @@ def test_extract_log_likelihood_missing_observations(
     data = {"x": torch.ones((10, 5))}
 
     # Expect a ValueError
-    with pytest.raises(ValueError, match="Data dictionary must contain 'observations' key"):
+    with pytest.raises(
+        ValueError, match="Data dictionary must contain 'observations' key"
+    ):
         BayesianModelComparison._extract_log_likelihood(
             mock_model,
             mock_posterior_samples,

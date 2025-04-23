@@ -242,7 +242,9 @@ def test_model_selection_waic(
 
     # Check result
     assert isinstance(result, SelectionResult)
-    assert result.selected_model_name == "model3"  # The best model from our mock
+    assert (
+        result.selected_model_name == "model3"
+    )  # The best model from our mock
     assert result.criterion == SelectionCriterion.WAIC
     assert result.comparison_result == mock_comparison_result
     assert result.is_significant is True
@@ -289,7 +291,9 @@ def test_model_selection_loo(
 
     # Check result
     assert isinstance(result, SelectionResult)
-    assert result.selected_model_name == "model3"  # The best model from our mock
+    assert (
+        result.selected_model_name == "model3"
+    )  # The best model from our mock
     assert result.criterion == SelectionCriterion.LOO
     assert result.comparison_result == loo_result
     assert result.is_significant is True
@@ -415,7 +419,11 @@ def test_model_ensemble_predict(
         alpha = parameters.get("alpha", 1.0)
 
         # Handle both tensor and scalar alpha
-        alpha_value = alpha[0] if isinstance(alpha, torch.Tensor) and alpha.numel() > 0 else alpha
+        alpha_value = (
+            alpha[0]
+            if isinstance(alpha, torch.Tensor) and alpha.numel() > 0
+            else alpha
+        )
 
         # Add predictions to context
         context["predictions"] = torch.ones((10, 5)) * alpha_value
@@ -428,7 +436,7 @@ def test_model_ensemble_predict(
     for model_name, model in mock_models.items():
         model.predict = lambda x, time_points=None, **kwargs: {
             "predictions": torch.ones((10, 5)),
-            "parameters": kwargs.get("parameters", {})
+            "parameters": kwargs.get("parameters", {}),
         }
 
     # Create ModelEnsemble instance
@@ -599,10 +607,12 @@ def test_cross_validator_cross_validate_likelihood(
     mock_log_prob.return_value = torch.ones(10) * 2.0
 
     # Mock the predict method
-    mock_model.predict = MagicMock(return_value={
-        "u_predicted": torch.ones((10, 5)),
-        "s_predicted": torch.ones((10, 5)),
-    })
+    mock_model.predict = MagicMock(
+        return_value={
+            "u_predicted": torch.ones((10, 5)),
+            "s_predicted": torch.ones((10, 5)),
+        }
+    )
 
     # Create CrossValidator instance
     cv = CrossValidator(n_splits=2)  # Use fewer splits for faster tests
@@ -654,10 +664,12 @@ def test_cross_validator_cross_validate_error(
     }
 
     # Mock the predict method
-    mock_model.predict = MagicMock(return_value={
-        "u_predicted": torch.ones((10, 5)),
-        "s_predicted": torch.ones((10, 5)),
-    })
+    mock_model.predict = MagicMock(
+        return_value={
+            "u_predicted": torch.ones((10, 5)),
+            "s_predicted": torch.ones((10, 5)),
+        }
+    )
 
     # Create CrossValidator instance
     cv = CrossValidator(n_splits=2)  # Use fewer splits for faster tests
@@ -733,11 +745,15 @@ def test_cross_validator_fold_consistency(mock_adata, n_splits):
     # (This assertion might occasionally fail due to chance, especially with small datasets)
     any_different = False
     for (train1, test1), (train3, test3) in zip(splits1, splits3):
-        if not np.array_equal(train1, train3) or not np.array_equal(test1, test3):
+        if not np.array_equal(train1, train3) or not np.array_equal(
+            test1, test3
+        ):
             any_different = True
             break
 
-    assert any_different, "Different random_states should produce different splits"
+    assert (
+        any_different
+    ), "Different random_states should produce different splits"
 
 
 def test_cross_validator_data_validation(mock_model, sample_data, mock_adata):
@@ -766,7 +782,9 @@ def test_cross_validator_data_validation(mock_model, sample_data, mock_adata):
         ):
             cell_tensors.append((key, value))
 
-    assert len(cell_tensors) > 0, "Should find at least one cell-dimension tensor"
+    assert (
+        len(cell_tensors) > 0
+    ), "Should find at least one cell-dimension tensor"
 
     # Test with data missing cell dimension tensors
     invalid_data = {
@@ -816,10 +834,12 @@ def test_cross_validator_error_function(
     }
 
     # Mock the predict method with predictable values
-    mock_model.predict = MagicMock(return_value={
-        "u_predicted": torch.ones((10, 5)) * 2.0,  # All predictions = 2.0
-        "s_predicted": torch.ones((10, 5)) * 3.0,  # All predictions = 3.0
-    })
+    mock_model.predict = MagicMock(
+        return_value={
+            "u_predicted": torch.ones((10, 5)) * 2.0,  # All predictions = 2.0
+            "s_predicted": torch.ones((10, 5)) * 3.0,  # All predictions = 3.0
+        }
+    )
 
     # Create sample data with known ground truth values
     data = {

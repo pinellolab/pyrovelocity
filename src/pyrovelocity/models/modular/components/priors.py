@@ -127,7 +127,9 @@ class LogNormalPriorModel(BasePriorModel):
         s_obs = context.get("s_obs")
 
         if u_obs is None or s_obs is None:
-            raise ValueError("Both u_obs and s_obs must be provided in the context")
+            raise ValueError(
+                "Both u_obs and s_obs must be provided in the context"
+            )
 
         # Extract any additional parameters from context
         include_prior = context.get("include_prior", True)
@@ -358,7 +360,9 @@ class InformativePriorModel(BasePriorModel):
         s_obs = context.get("s_obs")
 
         if u_obs is None or s_obs is None:
-            raise ValueError("Both u_obs and s_obs must be provided in the context")
+            raise ValueError(
+                "Both u_obs and s_obs must be provided in the context"
+            )
 
         # Extract any additional parameters from context
         include_prior = context.get("include_prior", True)

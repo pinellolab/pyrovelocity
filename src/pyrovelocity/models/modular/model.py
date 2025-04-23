@@ -151,11 +151,11 @@ class PyroVelocityModel:
             Result from the forward method
         """
         # Handle the case where u_obs and s_obs are provided instead of x and time_points
-        if not args and 'x' not in kwargs and 'time_points' not in kwargs:
-            if 'u_obs' in kwargs and 's_obs' in kwargs:
+        if not args and "x" not in kwargs and "time_points" not in kwargs:
+            if "u_obs" in kwargs and "s_obs" in kwargs:
                 # Get u_obs and s_obs but don't remove them from kwargs
-                u_obs = kwargs['u_obs']
-                s_obs = kwargs['s_obs']
+                u_obs = kwargs["u_obs"]
+                s_obs = kwargs["s_obs"]
 
                 # Create a dummy time_points tensor
                 time_points = torch.tensor([0.0, 1.0])
@@ -308,7 +308,9 @@ class PyroVelocityModel:
         )
 
     @beartype
-    def predict(self, x: Any, time_points: Optional[Any] = None, **kwargs) -> Dict[str, Any]:
+    def predict(
+        self, x: Any, time_points: Optional[Any] = None, **kwargs
+    ) -> Dict[str, Any]:
         """
         Generate predictions using the model.
 
@@ -342,7 +344,9 @@ class PyroVelocityModel:
         return predictions
 
     @beartype
-    def predict_future_states(self, current_state: Tuple[Any, Any], time_delta: Any, **kwargs) -> Tuple[Any, Any]:
+    def predict_future_states(
+        self, current_state: Tuple[Any, Any], time_delta: Any, **kwargs
+    ) -> Tuple[Any, Any]:
         """
         Predict future states based on current state and time delta.
 
@@ -387,5 +391,3 @@ class PyroVelocityModel:
         s_future = result_context.get("s_future")
 
         return u_future, s_future
-
-

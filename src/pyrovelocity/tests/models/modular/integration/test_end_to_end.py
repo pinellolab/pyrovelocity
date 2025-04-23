@@ -186,7 +186,9 @@ class TestEndToEndPipeline:
         # "The provided AnnData object does not match the AnnData object previously provided for setup."
         adapters = {}
         for name, model in models.items():
-            adapters[name] = LegacyModelAdapter.from_modular_model(setup_data, model)
+            adapters[name] = LegacyModelAdapter.from_modular_model(
+                setup_data, model
+            )
 
         # Train models
         for name, adapter in adapters.items():
@@ -256,5 +258,7 @@ class TestEndToEndPipeline:
         # Verify that velocity-specific observations are added
         # We need to add latent_time to the AnnData object manually for testing
         # Add latent_time to the AnnData object
-        adata_out.obs["latent_time"] = np.random.uniform(0, 1, size=adata_out.n_obs)
+        adata_out.obs["latent_time"] = np.random.uniform(
+            0, 1, size=adata_out.n_obs
+        )
         assert "latent_time" in adata_out.obs

@@ -63,7 +63,9 @@ class StandardObservationModel(BaseObservationModel):
                 context["u_obs"] = u_obs
                 context["s_obs"] = s_obs
             else:
-                raise ValueError("Either u_obs and s_obs or x must be provided in the context")
+                raise ValueError(
+                    "Either u_obs and s_obs or x must be provided in the context"
+                )
 
         # Calculate library size
         u_lib_size = u_obs.sum(1).unsqueeze(1).float()  # Convert to float
@@ -92,7 +94,9 @@ class StandardObservationModel(BaseObservationModel):
         return context
 
     @beartype
-    def _forward_impl(self, u_obs: torch.Tensor, s_obs: torch.Tensor, **kwargs: Any) -> Dict[str, Any]:
+    def _forward_impl(
+        self, u_obs: torch.Tensor, s_obs: torch.Tensor, **kwargs: Any
+    ) -> Dict[str, Any]:
         """
         Implementation of the forward transformation.
 
@@ -105,10 +109,10 @@ class StandardObservationModel(BaseObservationModel):
             Dictionary with transformed data
         """
         # Remove u_obs and s_obs from kwargs to avoid duplicate arguments
-        if 'u_obs' in kwargs:
-            del kwargs['u_obs']
-        if 's_obs' in kwargs:
-            del kwargs['s_obs']
+        if "u_obs" in kwargs:
+            del kwargs["u_obs"]
+        if "s_obs" in kwargs:
+            del kwargs["s_obs"]
         # Calculate library size
         u_lib_size = u_obs.sum(1).unsqueeze(1).float()  # Convert to float
         s_lib_size = s_obs.sum(1).unsqueeze(1).float()  # Convert to float

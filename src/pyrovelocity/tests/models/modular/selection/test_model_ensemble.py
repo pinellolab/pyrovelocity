@@ -80,10 +80,10 @@ def test_model_ensemble_with_invalid_weights(multiple_models):
     # Note: This check is handled by the model auto-normalizing weights to sum to 1
     weights_sum_not_1 = {name: 0.5 for name in model_names}  # Sum = 1.5
     # Skip the validation in __post_init__ by patching it
-    with patch.object(ModelEnsemble, '__post_init__', return_value=None):
+    with patch.object(ModelEnsemble, "__post_init__", return_value=None):
         ensemble = ModelEnsemble(models=models_dict, weights=weights_sum_not_1)
         # Manually set normalized weights
-        ensemble.weights = {name: 1/len(model_names) for name in model_names}
+        ensemble.weights = {name: 1 / len(model_names) for name in model_names}
         # After normalization weights should sum to 1
         assert sum(ensemble.weights.values()) == pytest.approx(1.0)
 
@@ -115,7 +115,7 @@ def test_predict_method(multiple_models, sample_data):
     # Make a prediction with the ensemble
     # We need to patch the ModelEnsemble.predict method to avoid calling the individual model predict methods
     # Instead, we'll test that the ensemble predict method returns a tensor of the expected shape
-    with patch.object(ensemble, 'predict', return_value=torch.ones(10, 10)):
+    with patch.object(ensemble, "predict", return_value=torch.ones(10, 10)):
         prediction = ensemble.predict(sample_data["x"])
 
         # Since we're mocking the predict method, we just check that it returns a tensor
@@ -158,7 +158,9 @@ def test_predict_future_states_method(multiple_models, sample_data):
 
     # Predict future states with the ensemble
     mock_future_state = (torch.ones_like(u_current), torch.ones_like(s_current))
-    with patch.object(ensemble, 'predict_future_states', return_value=mock_future_state):
+    with patch.object(
+        ensemble, "predict_future_states", return_value=mock_future_state
+    ):
         future_state = ensemble.predict_future_states(current_state, time_delta)
 
         # Since we're mocking the predict_future_states method, we just check that it returns a tuple of tensors
@@ -257,7 +259,11 @@ def test_normalize_weights():
     """Test the _normalize_weights static method."""
     # Test with positive weights
     weights_dict = {"model1": 2.0, "model2": 3.0, "model3": 5.0}
-    with patch.object(ModelEnsemble, '_normalize_weights', return_value={"model1": 0.2, "model2": 0.3, "model3": 0.5}):
+    with patch.object(
+        ModelEnsemble,
+        "_normalize_weights",
+        return_value={"model1": 0.2, "model2": 0.3, "model3": 0.5},
+    ):
         normalized = ModelEnsemble._normalize_weights(weights_dict)
         assert sum(normalized.values()) == pytest.approx(1.0)
         assert normalized == pytest.approx(
@@ -266,7 +272,11 @@ def test_normalize_weights():
 
     # Test with all zeros (should return equal weights)
     weights_dict = {"model1": 0.0, "model2": 0.0, "model3": 0.0}
-    with patch.object(ModelEnsemble, '_normalize_weights', return_value={"model1": 1/3, "model2": 1/3, "model3": 1/3}):
+    with patch.object(
+        ModelEnsemble,
+        "_normalize_weights",
+        return_value={"model1": 1 / 3, "model2": 1 / 3, "model3": 1 / 3},
+    ):
         normalized = ModelEnsemble._normalize_weights(weights_dict)
         assert sum(normalized.values()) == pytest.approx(1.0)
         assert normalized == pytest.approx(

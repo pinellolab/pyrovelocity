@@ -420,14 +420,16 @@ def test_model_comparison():
     lognormal_sites = set(
         name
         for name, node in lognormal_trace.nodes.items()
-        if node["type"] == "sample" and not node["is_observed"]
+        if node["type"] == "sample"
+        and not node["is_observed"]
         and not name.endswith("_plate")  # Ignore plate names
     )
 
     informative_sites = set(
         name
         for name, node in informative_trace.nodes.items()
-        if node["type"] == "sample" and not node["is_observed"]
+        if node["type"] == "sample"
+        and not node["is_observed"]
         and not name.endswith("_plate")  # Ignore plate names
     )
 

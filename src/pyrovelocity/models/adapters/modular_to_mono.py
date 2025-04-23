@@ -199,9 +199,11 @@ class LegacyModelAdapter(PyroVelocity):
 
         # Add a history attribute to the module for compatibility with tests
         # We need to monkey-patch the VelocityModule class to add the history attribute
-        setattr(self.module, "history", {
-            "elbo_train": [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
-        })
+        setattr(
+            self.module,
+            "history",
+            {"elbo_train": [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]},
+        )
 
     def generate_posterior_samples(
         self,
@@ -235,7 +237,9 @@ class LegacyModelAdapter(PyroVelocity):
 
         # Add velocity to the AnnData object if it doesn't exist
         if "velocity" not in self.adata.layers:
-            self.adata.layers["velocity"] = np.random.normal(size=(cell_count, gene_count))
+            self.adata.layers["velocity"] = np.random.normal(
+                size=(cell_count, gene_count)
+            )
 
         return {
             "alpha": np.random.normal(size=(num_samples, gene_count)),

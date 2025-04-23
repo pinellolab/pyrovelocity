@@ -343,11 +343,17 @@ class ModelEnsemble:
 
         # If no valid predictions, return default values
         if not all_u_futures:
-            return torch.zeros_like(current_state[0]), torch.zeros_like(current_state[1])
+            return torch.zeros_like(current_state[0]), torch.zeros_like(
+                current_state[1]
+            )
 
         # Compute weighted average
-        u_future = sum(w * u for w, u in zip(all_weights, all_u_futures)) / sum(all_weights)
-        s_future = sum(w * s for w, s in zip(all_weights, all_s_futures)) / sum(all_weights)
+        u_future = sum(w * u for w, u in zip(all_weights, all_u_futures)) / sum(
+            all_weights
+        )
+        s_future = sum(w * s for w, s in zip(all_weights, all_s_futures)) / sum(
+            all_weights
+        )
 
         return (u_future, s_future)
 
@@ -1068,17 +1074,16 @@ class CrossValidator:
                 params = {k: v[i] for k, v in posterior_samples.items()}
 
                 # Create context dictionary with parameters and data
-                context = {
-                    "parameters": params,
-                    **test_data
-                }
+                context = {"parameters": params, **test_data}
 
                 # Use the model's predict method to get predictions
                 # Create a copy of the context without x and time_points to avoid duplicate kwargs
                 context_copy = context.copy()
                 x = context_copy.pop("x", None)
                 time_points = context_copy.pop("time_points", None)
-                predictions = model.predict(x=x, time_points=time_points, **context_copy)
+                predictions = model.predict(
+                    x=x, time_points=time_points, **context_copy
+                )
 
                 # Since we don't have direct access to log probabilities through the predict method,
                 # we'll compute a simple likelihood based on the predictions
@@ -1096,18 +1101,26 @@ class CrossValidator:
                         if predicted.ndim == 2 and observed.ndim == 2:
                             # If they're both 2D but with different first dimensions,
                             # we'll just use a simple scalar log likelihood
-                            log_prob = torch.tensor(-1.0)  # Default negative log likelihood
+                            log_prob = torch.tensor(
+                                -1.0
+                            )  # Default negative log likelihood
                         else:
                             # Try to make them compatible
                             try:
                                 # Simple Gaussian log likelihood: -0.5 * sum((observed - predicted)^2)
-                                log_prob = -0.5 * torch.sum((observed - predicted) ** 2)
+                                log_prob = -0.5 * torch.sum(
+                                    (observed - predicted) ** 2
+                                )
                             except:
                                 # If reshaping fails, use a default value
-                                log_prob = torch.tensor(-1.0)  # Default negative log likelihood
+                                log_prob = torch.tensor(
+                                    -1.0
+                                )  # Default negative log likelihood
                     else:
                         # Simple Gaussian log likelihood: -0.5 * sum((observed - predicted)^2)
-                        log_prob = -0.5 * torch.sum((observed - predicted) ** 2, dim=-1)
+                        log_prob = -0.5 * torch.sum(
+                            (observed - predicted) ** 2, dim=-1
+                        )
                 else:
                     # Default log probability if we can't compute it
                     log_prob = torch.tensor(0.0)
@@ -1116,7 +1129,9 @@ class CrossValidator:
                 if isinstance(log_prob, torch.Tensor):
                     log_probs.append(torch.mean(log_prob).item())
                 else:
-                    log_probs.append(0.0)  # Default value if log_prob is not available
+                    log_probs.append(
+                        0.0
+                    )  # Default value if log_prob is not available
 
             # Compute mean log likelihood across samples
             mean_log_likelihood = np.mean(log_probs)
@@ -1139,7 +1154,7 @@ class CrossValidator:
                 "random_state": self.random_state,
                 "num_samples": num_samples,
                 "num_inference_steps": num_inference_steps,
-            }
+            },
         }
 
     def cross_validate_error(
@@ -1147,7 +1162,9 @@ class CrossValidator:
         model: PyroVelocityModel,
         data: Dict[str, torch.Tensor],
         adata: Optional[AnnData] = None,
-        error_fn: Optional[Callable[[torch.Tensor, torch.Tensor], torch.Tensor]] = None,
+        error_fn: Optional[
+            Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
+        ] = None,
         prediction_key: str = "u_predicted",
         target_key: str = "u",
         num_samples: int = 100,
@@ -1266,17 +1283,16 @@ class CrossValidator:
                 params = {k: v[i] for k, v in posterior_samples.items()}
 
                 # Create context dictionary with parameters and data
-                context = {
-                    "parameters": params,
-                    **test_data
-                }
+                context = {"parameters": params, **test_data}
 
                 # Use the model's predict method instead of directly calling dynamics_model.forward
                 # Create a copy of the context without x and time_points to avoid duplicate kwargs
                 context_copy = context.copy()
                 x = context_copy.pop("x", None)
                 time_points = context_copy.pop("time_points", None)
-                predictions_dict = model.predict(x=x, time_points=time_points, **context_copy)
+                predictions_dict = model.predict(
+                    x=x, time_points=time_points, **context_copy
+                )
 
                 # Extract the requested prediction
                 if prediction_key in predictions_dict:
@@ -1297,7 +1313,11 @@ class CrossValidator:
                     predictions.append(pred)
                 else:
                     # Default to a tensor of zeros if prediction not found
-                    predictions.append(torch.zeros_like(test_data.get(target_key, torch.zeros(1))))
+                    predictions.append(
+                        torch.zeros_like(
+                            test_data.get(target_key, torch.zeros(1))
+                        )
+                    )
 
             # Stack predictions across samples
             stacked_predictions = torch.stack(predictions)
@@ -1313,8 +1333,7 @@ class CrossValidator:
             if error_fn is not None:
                 # Convert numpy arrays back to torch tensors for the error function
                 error = error_fn(
-                    torch.tensor(y_true),
-                    torch.tensor(y_pred)
+                    torch.tensor(y_true), torch.tensor(y_pred)
                 ).item()
             else:
                 # Default to mean squared error
@@ -1341,7 +1360,7 @@ class CrossValidator:
                 "target_key": target_key,
                 "num_samples": num_samples,
                 "num_inference_steps": num_inference_steps,
-            }
+            },
         }
 
 

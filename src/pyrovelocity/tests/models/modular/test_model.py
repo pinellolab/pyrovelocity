@@ -189,7 +189,9 @@ class MockObservationModel(BaseObservationModel):
 
         return context
 
-    def _forward_impl(self, u_obs: torch.Tensor, s_obs: torch.Tensor, **kwargs: Any) -> Dict[str, Any]:
+    def _forward_impl(
+        self, u_obs: torch.Tensor, s_obs: torch.Tensor, **kwargs: Any
+    ) -> Dict[str, Any]:
         """Implementation of the forward method."""
         # Create a context dictionary
         context = {}
@@ -306,7 +308,9 @@ class MockGuideModel(BaseInferenceGuide):
     def get_guide(self):
         """Return the guide function."""
         if self._guide_fn is None:
-            raise ValueError("Guide function not set up. Call setup_guide first.")
+            raise ValueError(
+                "Guide function not set up. Call setup_guide first."
+            )
         return self._guide_fn
 
 

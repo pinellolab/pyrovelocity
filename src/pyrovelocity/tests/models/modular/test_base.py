@@ -211,7 +211,7 @@ class TestBaseDynamicsModel:
             "s_obs": s,
             "alpha": alpha,
             "beta": beta,
-            "gamma": gamma
+            "gamma": gamma,
         }
 
         # Call forward
@@ -293,7 +293,9 @@ class TestBasePriorModel:
             """Implement abstract method."""
             pass
 
-        def _sample_parameters_impl(self, prefix: str = "", n_genes: Optional[int] = None) -> Dict[str, Any]:
+        def _sample_parameters_impl(
+            self, prefix: str = "", n_genes: Optional[int] = None
+        ) -> Dict[str, Any]:
             """Implement abstract method."""
             return {"alpha": 0.1, "beta": 0.2, "gamma": 0.3}
 
@@ -456,7 +458,9 @@ class TestBaseObservationModel:
             """Implement forward method."""
             return context
 
-        def _forward_impl(self, u_obs: torch.Tensor, s_obs: torch.Tensor, **kwargs: Any) -> Dict[str, Any]:
+        def _forward_impl(
+            self, u_obs: torch.Tensor, s_obs: torch.Tensor, **kwargs: Any
+        ) -> Dict[str, Any]:
             """Implementation of the forward method."""
             return {"u_obs": u_obs, "s_obs": s_obs}
 

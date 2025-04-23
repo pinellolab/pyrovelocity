@@ -183,7 +183,9 @@ class BaseDynamicsModel(BaseComponent, DynamicsModel, abc.ABC):
         t = context.get("t")
 
         if u_obs is None or s_obs is None:
-            raise ValueError("Both u_obs and s_obs must be provided in the context")
+            raise ValueError(
+                "Both u_obs and s_obs must be provided in the context"
+            )
 
         # Validate inputs
         validation_result = self.validate_inputs(
@@ -431,7 +433,9 @@ class BasePriorModel(BaseComponent, PriorModel, PyroBufferMixin, abc.ABC):
         s_obs = context.get("s_obs")
 
         if u_obs is None or s_obs is None:
-            raise ValueError("Both u_obs and s_obs must be provided in the context")
+            raise ValueError(
+                "Both u_obs and s_obs must be provided in the context"
+            )
 
         # Create a plate for batched sampling
         n_genes = u_obs.shape[1]
@@ -545,10 +549,14 @@ class BaseLikelihoodModel(BaseComponent, LikelihoodModel, abc.ABC):
         s_expected = context.get("s_expected")
 
         if u_obs is None or s_obs is None:
-            raise ValueError("Both u_obs and s_obs must be provided in the context")
+            raise ValueError(
+                "Both u_obs and s_obs must be provided in the context"
+            )
 
         if u_expected is None or s_expected is None:
-            raise ValueError("Both u_expected and s_expected must be provided in the context")
+            raise ValueError(
+                "Both u_expected and s_expected must be provided in the context"
+            )
 
         # Create a plate for batched sampling
         n_genes = u_obs.shape[1]
@@ -670,10 +678,14 @@ class BaseObservationModel(BaseComponent, ObservationModel, abc.ABC):
         s_obs = context.get("s_obs")
 
         if u_obs is None or s_obs is None:
-            raise ValueError("Both u_obs and s_obs must be provided in the context")
+            raise ValueError(
+                "Both u_obs and s_obs must be provided in the context"
+            )
 
         # Create a copy of the context without u_obs and s_obs to avoid duplicate arguments
-        context_copy = {k: v for k, v in context.items() if k not in ["u_obs", "s_obs"]}
+        context_copy = {
+            k: v for k, v in context.items() if k not in ["u_obs", "s_obs"]
+        }
 
         # Call the implementation method
         result = self._forward_impl(u_obs, s_obs, **context_copy)
@@ -684,7 +696,9 @@ class BaseObservationModel(BaseComponent, ObservationModel, abc.ABC):
         return context
 
     @abc.abstractmethod
-    def _forward_impl(self, u_obs: torch.Tensor, s_obs: torch.Tensor, **kwargs: Any) -> Dict[str, Any]:
+    def _forward_impl(
+        self, u_obs: torch.Tensor, s_obs: torch.Tensor, **kwargs: Any
+    ) -> Dict[str, Any]:
         """
         Implementation of the forward transformation.
 

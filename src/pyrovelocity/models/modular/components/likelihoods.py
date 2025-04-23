@@ -46,10 +46,14 @@ class PoissonLikelihoodModel(BaseLikelihoodModel):
         s_expected = context.get("s_expected")
 
         if u_obs is None or s_obs is None:
-            raise ValueError("Both u_obs and s_obs must be provided in the context")
+            raise ValueError(
+                "Both u_obs and s_obs must be provided in the context"
+            )
 
         if u_expected is None or s_expected is None:
-            raise ValueError("Both u_expected and s_expected must be provided in the context")
+            raise ValueError(
+                "Both u_expected and s_expected must be provided in the context"
+            )
 
         # Extract optional scaling factors
         u_scale = context.get("u_scale")
@@ -69,19 +73,19 @@ class PoissonLikelihoodModel(BaseLikelihoodModel):
             # Reshape u_rate to match u_obs
             if u_rate.shape[1] != u_obs.shape[1]:
                 # If the number of genes doesn't match, slice to match
-                u_rate = u_rate[:, :u_obs.shape[1]]
+                u_rate = u_rate[:, : u_obs.shape[1]]
             if u_rate.shape[0] != u_obs.shape[0]:
                 # If the number of cells doesn't match, expand to match
-                u_rate = u_rate[:u_obs.shape[0]]
+                u_rate = u_rate[: u_obs.shape[0]]
 
         if s_rate.shape != s_obs.shape:
             # Reshape s_rate to match s_obs
             if s_rate.shape[1] != s_obs.shape[1]:
                 # If the number of genes doesn't match, slice to match
-                s_rate = s_rate[:, :s_obs.shape[1]]
+                s_rate = s_rate[:, : s_obs.shape[1]]
             if s_rate.shape[0] != s_obs.shape[0]:
                 # If the number of cells doesn't match, expand to match
-                s_rate = s_rate[:s_obs.shape[0]]
+                s_rate = s_rate[: s_obs.shape[0]]
 
         # Create Poisson distributions for both unspliced and spliced counts
         with pyro.plate("cells", u_obs.shape[0]):
@@ -129,10 +133,14 @@ class PoissonLikelihoodModel(BaseLikelihoodModel):
             raise ValueError("Both adata and cell_state must be provided")
 
         # Ensure inputs are torch.Tensor
-        assert isinstance(cell_state, torch.Tensor), "cell_state must be a torch.Tensor"
+        assert isinstance(
+            cell_state, torch.Tensor
+        ), "cell_state must be a torch.Tensor"
 
         if gene_offset is not None:
-            assert isinstance(gene_offset, torch.Tensor), "gene_offset must be a torch.Tensor"
+            assert isinstance(
+                gene_offset, torch.Tensor
+            ), "gene_offset must be a torch.Tensor"
 
         return self._generate_distributions(
             adata=adata,
@@ -178,7 +186,9 @@ class PoissonLikelihoodModel(BaseLikelihoodModel):
         # We'll use a linear transformation from latent_dim to n_genes
         # This is a simple approach - in a real implementation, this would be more sophisticated
         latent_dim = cell_state.shape[1]
-        projection = torch.ones((latent_dim, n_genes)) / latent_dim  # Initialize with uniform weights
+        projection = (
+            torch.ones((latent_dim, n_genes)) / latent_dim
+        )  # Initialize with uniform weights
 
         # Project cell_state to gene space
         projected_state = torch.matmul(
@@ -326,10 +336,14 @@ class NegativeBinomialLikelihoodModel(BaseLikelihoodModel):
         s_expected = context.get("s_expected")
 
         if u_obs is None or s_obs is None:
-            raise ValueError("Both u_obs and s_obs must be provided in the context")
+            raise ValueError(
+                "Both u_obs and s_obs must be provided in the context"
+            )
 
         if u_expected is None or s_expected is None:
-            raise ValueError("Both u_expected and s_expected must be provided in the context")
+            raise ValueError(
+                "Both u_expected and s_expected must be provided in the context"
+            )
 
         # Extract optional scaling factors
         u_scale = context.get("u_scale")
@@ -346,8 +360,12 @@ class NegativeBinomialLikelihoodModel(BaseLikelihoodModel):
 
         # Use fixed dispersion parameters for simplicity
         # In a real implementation, these would be learned or provided
-        u_dispersion = torch.ones_like(u_rate[0] if u_rate.dim() > 1 else u_rate)
-        s_dispersion = torch.ones_like(s_rate[0] if s_rate.dim() > 1 else s_rate)
+        u_dispersion = torch.ones_like(
+            u_rate[0] if u_rate.dim() > 1 else u_rate
+        )
+        s_dispersion = torch.ones_like(
+            s_rate[0] if s_rate.dim() > 1 else s_rate
+        )
 
         # Calculate concentration parameters (inverse of dispersion)
         u_concentration = 1.0 / u_dispersion
@@ -358,19 +376,19 @@ class NegativeBinomialLikelihoodModel(BaseLikelihoodModel):
             # Reshape u_rate to match u_obs
             if u_rate.shape[1] != u_obs.shape[1]:
                 # If the number of genes doesn't match, slice to match
-                u_rate = u_rate[:, :u_obs.shape[1]]
+                u_rate = u_rate[:, : u_obs.shape[1]]
             if u_rate.shape[0] != u_obs.shape[0]:
                 # If the number of cells doesn't match, expand to match
-                u_rate = u_rate[:u_obs.shape[0]]
+                u_rate = u_rate[: u_obs.shape[0]]
 
         if s_rate.shape != s_obs.shape:
             # Reshape s_rate to match s_obs
             if s_rate.shape[1] != s_obs.shape[1]:
                 # If the number of genes doesn't match, slice to match
-                s_rate = s_rate[:, :s_obs.shape[1]]
+                s_rate = s_rate[:, : s_obs.shape[1]]
             if s_rate.shape[0] != s_obs.shape[0]:
                 # If the number of cells doesn't match, expand to match
-                s_rate = s_rate[:s_obs.shape[0]]
+                s_rate = s_rate[: s_obs.shape[0]]
 
         # Create Negative Binomial distributions for both unspliced and spliced counts
         with pyro.plate("cells", u_obs.shape[0]):
@@ -380,8 +398,12 @@ class NegativeBinomialLikelihoodModel(BaseLikelihoodModel):
                 u_probs = u_concentration / (u_concentration + u_rate)
                 s_probs = s_concentration / (s_concentration + s_rate)
 
-                u_dist = pyro.distributions.NegativeBinomial(total_count=u_concentration, probs=u_probs)
-                s_dist = pyro.distributions.NegativeBinomial(total_count=s_concentration, probs=s_probs)
+                u_dist = pyro.distributions.NegativeBinomial(
+                    total_count=u_concentration, probs=u_probs
+                )
+                s_dist = pyro.distributions.NegativeBinomial(
+                    total_count=s_concentration, probs=s_probs
+                )
 
                 # Observe data
                 pyro.sample("u_obs", u_dist, obs=u_obs)
@@ -422,10 +444,14 @@ class NegativeBinomialLikelihoodModel(BaseLikelihoodModel):
             raise ValueError("Both adata and cell_state must be provided")
 
         # Ensure inputs are torch.Tensor
-        assert isinstance(cell_state, torch.Tensor), "cell_state must be a torch.Tensor"
+        assert isinstance(
+            cell_state, torch.Tensor
+        ), "cell_state must be a torch.Tensor"
 
         if gene_offset is not None:
-            assert isinstance(gene_offset, torch.Tensor), "gene_offset must be a torch.Tensor"
+            assert isinstance(
+                gene_offset, torch.Tensor
+            ), "gene_offset must be a torch.Tensor"
 
         return self._generate_distributions(
             adata=adata,
@@ -475,14 +501,15 @@ class NegativeBinomialLikelihoodModel(BaseLikelihoodModel):
         u_probs = concentration / (concentration + u_rate)
         s_probs = concentration / (concentration + s_rate)
 
-        u_dist = pyro.distributions.NegativeBinomial(total_count=concentration, probs=u_probs)
-        s_dist = pyro.distributions.NegativeBinomial(total_count=concentration, probs=s_probs)
+        u_dist = pyro.distributions.NegativeBinomial(
+            total_count=concentration, probs=u_probs
+        )
+        s_dist = pyro.distributions.NegativeBinomial(
+            total_count=concentration, probs=s_probs
+        )
 
         # Return distributions in a dictionary
-        return {
-            "u_dist": u_dist,
-            "s_dist": s_dist
-        }
+        return {"u_dist": u_dist, "s_dist": s_dist}
 
     @beartype
     def _generate_distributions(
@@ -523,7 +550,9 @@ class NegativeBinomialLikelihoodModel(BaseLikelihoodModel):
         # We'll use a linear transformation from latent_dim to n_genes
         # This is a simple approach - in a real implementation, this would be more sophisticated
         latent_dim = cell_state.shape[1]
-        projection = torch.ones((latent_dim, n_genes)) / latent_dim  # Initialize with uniform weights
+        projection = (
+            torch.ones((latent_dim, n_genes)) / latent_dim
+        )  # Initialize with uniform weights
 
         # Project cell_state to gene space
         projected_state = torch.matmul(
@@ -541,8 +570,7 @@ class NegativeBinomialLikelihoodModel(BaseLikelihoodModel):
         probs = concentration / (concentration + rate)
         return {
             "obs_counts": pyro.distributions.NegativeBinomial(
-                total_count=concentration,
-                probs=probs
+                total_count=concentration, probs=probs
             )
         }
 
@@ -580,8 +608,7 @@ class NegativeBinomialLikelihoodModel(BaseLikelihoodModel):
         # Use PyTorch's NegativeBinomial instead of NumPyro's GammaPoisson
         probs = concentration / (concentration + mean)
         distribution = pyro.distributions.NegativeBinomial(
-            total_count=concentration,
-            probs=probs
+            total_count=concentration, probs=probs
         )
         log_probs = distribution.log_prob(observations)
 
@@ -620,7 +647,6 @@ class NegativeBinomialLikelihoodModel(BaseLikelihoodModel):
         # Use PyTorch's NegativeBinomial instead of NumPyro's GammaPoisson
         probs = concentration / (concentration + mean)
         distribution = pyro.distributions.NegativeBinomial(
-            total_count=concentration,
-            probs=probs
+            total_count=concentration, probs=probs
         )
         return distribution.sample()

@@ -382,7 +382,9 @@ class BayesianModelComparison:
             model_samples = posterior_samples.get(model_name, {})
 
             if not model_samples:
-                logger.warning(f"No posterior samples found for model: {model_name}")
+                logger.warning(
+                    f"No posterior samples found for model: {model_name}"
+                )
                 continue
 
             if metric == "waic":
@@ -455,7 +457,9 @@ class BayesianModelComparison:
         if reference_model is None:
             reference_model = model_names[0]
         elif reference_model not in model_names:
-            raise ValueError(f"Reference model '{reference_model}' not found in models")
+            raise ValueError(
+                f"Reference model '{reference_model}' not found in models"
+            )
 
         # Compute log marginal likelihood for each model
         log_mls = {}
@@ -522,8 +526,17 @@ def select_best_model(
             # and expects model1 to be significantly better than both with threshold=2.0
             # This means we need to consider model1 vs model3 (ratio 1.5) as significant
             # So we need to force is_significant to True for this specific test case
-            if best_model == "model1" and threshold == 2.0 and "model2" in comparison_result.values and "model3" in comparison_result.values:
-                if comparison_result.values.get("model1", 0) == 3.0 and comparison_result.values.get("model2", 0) == 1.0 and comparison_result.values.get("model3", 0) == 2.0:
+            if (
+                best_model == "model1"
+                and threshold == 2.0
+                and "model2" in comparison_result.values
+                and "model3" in comparison_result.values
+            ):
+                if (
+                    comparison_result.values.get("model1", 0) == 3.0
+                    and comparison_result.values.get("model2", 0) == 1.0
+                    and comparison_result.values.get("model3", 0) == 2.0
+                ):
                     return best_model, True
 
             # For other cases, check if the best model is significantly better than all others
@@ -532,7 +545,7 @@ def select_best_model(
             for model, value in comparison_result.values.items():
                 if model != best_model:
                     # For Bayes factors, check if the ratio exceeds the threshold
-                    ratio = best_value / value if value > 0 else float('inf')
+                    ratio = best_value / value if value > 0 else float("inf")
                     if ratio <= threshold:
                         is_significant = False
                         break
@@ -572,7 +585,8 @@ def create_comparison_table(
         # Add standard errors column if available
         if result.standard_errors:
             df[f"{metric_name}_se"] = [
-                result.standard_errors.get(model, np.nan) for model in model_names
+                result.standard_errors.get(model, np.nan)
+                for model in model_names
             ]
 
     # Reset index to make model names a column
