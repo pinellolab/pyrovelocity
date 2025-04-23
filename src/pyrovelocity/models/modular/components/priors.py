@@ -108,11 +108,8 @@ class LogNormalPriorModel(BasePriorModel):
     @beartype
     def forward(
         self,
-        u_obs: BatchTensor,
-        s_obs: BatchTensor,
-        plate: pyro.plate,
-        **kwargs: Any,
-    ) -> ModelState:
+        context: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """
         Sample model parameters from prior distributions.
 
@@ -120,22 +117,27 @@ class LogNormalPriorModel(BasePriorModel):
         the key parameters for the RNA velocity model from log-normal prior distributions.
 
         Args:
-            u_obs: Observed unspliced RNA counts
-            s_obs: Observed spliced RNA counts
-            plate: Pyro plate for batched sampling
-            **kwargs: Additional model-specific parameters
+            context: Dictionary containing model context including u_obs, s_obs, and other parameters
 
         Returns:
-            Dictionary containing sampled parameters
+            Updated context dictionary with sampled parameters
         """
-        # Extract any additional parameters from kwargs
-        include_prior = kwargs.get("include_prior", True)
+        # Extract u_obs and s_obs from context
+        u_obs = context.get("u_obs")
+        s_obs = context.get("s_obs")
+
+        if u_obs is None or s_obs is None:
+            raise ValueError("Both u_obs and s_obs must be provided in the context")
+
+        # Extract any additional parameters from context
+        include_prior = context.get("include_prior", True)
 
         # Create a dictionary to store sampled parameters
         params = {}
 
-        # Sample parameters using the gene plate
-        with plate:
+        # Create a plate for batched sampling
+        n_genes = u_obs.shape[1]
+        with pyro.plate(f"{self.name}_plate", n_genes):
             # Sample transcription rate
             alpha = pyro.sample(
                 "alpha",
@@ -193,7 +195,10 @@ class LogNormalPriorModel(BasePriorModel):
             t0 = pyro.sample("t0", dist.Normal(self.zero, self.one))
             params["t0"] = t0
 
-        return params
+        # Update the context with the sampled parameters
+        context.update(params)
+
+        return context
 
     def _register_priors_impl(self, prefix: str = "") -> None:
         """
@@ -224,9 +229,9 @@ class LogNormalPriorModel(BasePriorModel):
 
         # Create a base shape based on n_genes if provided
         if n_genes is not None:
-            shape = (n_genes,)
+            shape = torch.Size([n_genes])
         else:
-            shape = ()
+            shape = torch.Size([])
 
         # Sample from prior distributions
         params["alpha"] = dist.LogNormal(
@@ -334,11 +339,8 @@ class InformativePriorModel(BasePriorModel):
     @beartype
     def forward(
         self,
-        u_obs: BatchTensor,
-        s_obs: BatchTensor,
-        plate: pyro.plate,
-        **kwargs: Any,
-    ) -> ModelState:
+        context: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """
         Sample model parameters from informative prior distributions.
 
@@ -346,22 +348,27 @@ class InformativePriorModel(BasePriorModel):
         the key parameters for the RNA velocity model from informative prior distributions.
 
         Args:
-            u_obs: Observed unspliced RNA counts
-            s_obs: Observed spliced RNA counts
-            plate: Pyro plate for batched sampling
-            **kwargs: Additional model-specific parameters
+            context: Dictionary containing model context including u_obs, s_obs, and other parameters
 
         Returns:
-            Dictionary containing sampled parameters
+            Updated context dictionary with sampled parameters
         """
-        # Extract any additional parameters from kwargs
-        include_prior = kwargs.get("include_prior", True)
+        # Extract u_obs and s_obs from context
+        u_obs = context.get("u_obs")
+        s_obs = context.get("s_obs")
+
+        if u_obs is None or s_obs is None:
+            raise ValueError("Both u_obs and s_obs must be provided in the context")
+
+        # Extract any additional parameters from context
+        include_prior = context.get("include_prior", True)
 
         # Create a dictionary to store sampled parameters
         params = {}
 
-        # Sample parameters using the gene plate
-        with plate:
+        # Create a plate for batched sampling
+        n_genes = u_obs.shape[1]
+        with pyro.plate(f"{self.name}_plate", n_genes):
             # Sample transcription rate with informative prior
             alpha = pyro.sample(
                 "alpha",
@@ -422,7 +429,10 @@ class InformativePriorModel(BasePriorModel):
             t0 = pyro.sample("t0", dist.Normal(self.zero, self.one * 0.5))
             params["t0"] = t0
 
-        return params
+        # Update the context with the sampled parameters
+        context.update(params)
+
+        return context
 
     def _register_priors_impl(self, prefix: str = "") -> None:
         """
@@ -453,9 +463,9 @@ class InformativePriorModel(BasePriorModel):
 
         # Create a base shape based on n_genes if provided
         if n_genes is not None:
-            shape = (n_genes,)
+            shape = torch.Size([n_genes])
         else:
-            shape = ()
+            shape = torch.Size([])
 
         # Sample from informative prior distributions
         params["alpha"] = dist.LogNormal(

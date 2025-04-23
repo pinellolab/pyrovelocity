@@ -6,13 +6,14 @@ Guides are responsible for defining the variational distribution used to
 approximate the posterior distribution of the model parameters.
 """
 
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Union
 
 import pyro
 import pyro.distributions as dist
 import torch
 from beartype import beartype
 from pyro.infer import Predictive, autoguide
+from pyro.infer.autoguide import init_to_median
 
 from pyrovelocity.models.modular.components.base import BaseInferenceGuide
 from pyrovelocity.models.modular.interfaces import InferenceGuide
@@ -53,14 +54,14 @@ class AutoGuideFactory(BaseInferenceGuide):
         """
         super().__init__(name=name)
         self.guide_type = guide_type
-        self.init_loc_fn = init_loc_fn
+        self.init_loc_fn = init_loc_fn or init_to_median
         self.init_scale = init_scale
         self._guide = None
         self._model = None
 
     @beartype
     def create_guide(
-        self, model: Callable, **kwargs: Any
+        self, model: Union[Callable, Any], **kwargs: Any
     ) -> autoguide.AutoGuide:
         """Create an AutoGuide for the given model.
 
@@ -136,7 +137,7 @@ class AutoGuideFactory(BaseInferenceGuide):
         return self._guide.get_posterior()
 
     @beartype
-    def _setup_guide_impl(self, model: Callable, **kwargs) -> None:
+    def _setup_guide_impl(self, model: Union[Callable, Any], **kwargs) -> None:
         """
         Implementation of guide setup.
 
