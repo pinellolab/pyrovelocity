@@ -1,11 +1,12 @@
 """Tests for prior models."""
 
 import pytest
-from pyrovelocity.models.modular.registry import PriorModelRegistry
+
 from pyrovelocity.models.modular.components.priors import (
-    LogNormalPriorModel,
     InformativePriorModel,
+    LogNormalPriorModel,
 )
+from pyrovelocity.models.modular.registry import PriorModelRegistry
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -25,15 +26,15 @@ def register_prior_models():
     PriorModelRegistry._registry = original_registry
 
 
-import pytest
-import torch
 import pyro
 import pyro.distributions as dist
+import pytest
+import torch
 from pyro.nn import PyroModule
 
 from pyrovelocity.models.modular.components.priors import (
-    LogNormalPriorModel,
     InformativePriorModel,
+    LogNormalPriorModel,
 )
 from pyrovelocity.models.modular.registry import PriorModelRegistry
 
@@ -144,11 +145,13 @@ class TestLogNormalPriorModel:
 
         # Run the forward method
         with pyro.poutine.trace() as tr:
-            params = model.forward(
-                u_obs=mock_data["u_obs"],
-                s_obs=mock_data["s_obs"],
-                plate=gene_plate,
-            )
+            # Create context dictionary
+            context = {
+                "u_obs": mock_data["u_obs"],
+                "s_obs": mock_data["s_obs"],
+                "plate": gene_plate,
+            }
+            params = model.forward(context)
 
         # Check that all expected parameters are present
         assert "alpha" in params
@@ -308,11 +311,13 @@ class TestInformativePriorModel:
 
         # Run the forward method
         with pyro.poutine.trace() as tr:
-            params = model.forward(
-                u_obs=mock_data["u_obs"],
-                s_obs=mock_data["s_obs"],
-                plate=gene_plate,
-            )
+            # Create context dictionary
+            context = {
+                "u_obs": mock_data["u_obs"],
+                "s_obs": mock_data["s_obs"],
+                "plate": gene_plate,
+            }
+            params = model.forward(context)
 
         # Check that all expected parameters are present
         assert "alpha" in params
@@ -388,13 +393,25 @@ def test_model_comparison():
 
     # Run the forward method for both models
     with pyro.poutine.trace() as tr_lognormal:
-        lognormal_model.forward(u_obs=u_obs, s_obs=s_obs, plate=gene_plate)
+        # Create context dictionary
+        context = {
+            "u_obs": u_obs,
+            "s_obs": s_obs,
+            "plate": gene_plate,
+        }
+        lognormal_model.forward(context)
 
     # Clear the param store before running the second model
     pyro.clear_param_store()
 
     with pyro.poutine.trace() as tr_informative:
-        informative_model.forward(u_obs=u_obs, s_obs=s_obs, plate=gene_plate)
+        # Create context dictionary
+        context = {
+            "u_obs": u_obs,
+            "s_obs": s_obs,
+            "plate": gene_plate,
+        }
+        informative_model.forward(context)
 
     # Check that both traces have the same sample sites
     lognormal_trace = tr_lognormal.trace
@@ -404,12 +421,14 @@ def test_model_comparison():
         name
         for name, node in lognormal_trace.nodes.items()
         if node["type"] == "sample" and not node["is_observed"]
+        and not name.endswith("_plate")  # Ignore plate names
     )
 
     informative_sites = set(
         name
         for name, node in informative_trace.nodes.items()
         if node["type"] == "sample" and not node["is_observed"]
+        and not name.endswith("_plate")  # Ignore plate names
     )
 
     assert lognormal_sites == informative_sites
