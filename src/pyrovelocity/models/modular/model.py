@@ -1,30 +1,24 @@
 """
 PyroVelocity model implementation that composes component models.
-    
+
 This module provides the core model class for PyroVelocity's modular architecture,
 implementing a composable approach where the full model is built from specialized
 component models (dynamics, priors, likelihoods, observations, guides).
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union, Protocol
+from typing import Any, Callable, Dict, List, Optional, Protocol, Tuple, Union
 
 import jax
 import jax.numpy as jnp
 import numpyro
 import numpyro.distributions as dist
+import torch
 from beartype import beartype
 from jaxtyping import Array, Float, Int
 
 from pyrovelocity.models.modular.components.base import BaseDynamicsModel
 from pyrovelocity.models.modular.components.guides import AutoGuideFactory
-from pyrovelocity.models.modular.interfaces import (
-    DynamicsModel as DynamicsModelProtocol,
-    InferenceGuide as GuideModelProtocol,
-    LikelihoodModel as LikelihoodModelProtocol,
-    ObservationModel as ObservationModelProtocol,
-    PriorModel as PriorModelProtocol,
-)
 from pyrovelocity.models.modular.components.likelihoods import (
     PoissonLikelihoodModel,
 )
@@ -32,6 +26,21 @@ from pyrovelocity.models.modular.components.observations import (
     StandardObservationModel,
 )
 from pyrovelocity.models.modular.components.priors import LogNormalPriorModel
+from pyrovelocity.models.modular.interfaces import (
+    DynamicsModel as DynamicsModelProtocol,
+)
+from pyrovelocity.models.modular.interfaces import (
+    InferenceGuide as GuideModelProtocol,
+)
+from pyrovelocity.models.modular.interfaces import (
+    LikelihoodModel as LikelihoodModelProtocol,
+)
+from pyrovelocity.models.modular.interfaces import (
+    ObservationModel as ObservationModelProtocol,
+)
+from pyrovelocity.models.modular.interfaces import (
+    PriorModel as PriorModelProtocol,
+)
 
 
 @dataclass(frozen=True)
@@ -247,3 +256,71 @@ class PyroVelocityModel:
             guide_model=self.guide_model,
             state=state,
         )
+
+    @beartype
+    def predict(self, x: Any, time_points: Optional[Any] = None, **kwargs) -> Dict[str, Any]:
+        """
+        Generate predictions using the model.
+
+        This method processes the input data through the observation model and dynamics model
+        to generate predictions.
+
+        Args:
+            x: Input data tensor
+            time_points: Time points for the dynamics model
+            **kwargs: Additional keyword arguments passed to component models
+
+        Returns:
+            Dictionary containing predictions
+        """
+        # Initialize the context dictionary
+        context = {
+            "x": x,
+            "time_points": time_points,
+            **kwargs,
+        }
+
+        # Process data through the observation model
+        observation_context = self.observation_model.forward(context)
+
+        # Process through the dynamics model
+        dynamics_context = self.dynamics_model.forward(observation_context)
+
+        # Extract predictions
+        predictions = dynamics_context.get("predictions", {})
+
+        return predictions
+
+    @beartype
+    def predict_future_states(self, current_state: Tuple[Any, Any], time_delta: Any, **kwargs) -> Tuple[Any, Any]:
+        """
+        Predict future states based on current state and time delta.
+
+        This method delegates to the dynamics model to predict future states.
+
+        Args:
+            current_state: Current state as a tuple of (u, s)
+            time_delta: Time delta for prediction
+            **kwargs: Additional keyword arguments passed to the dynamics model
+
+        Returns:
+            Tuple of (u_future, s_future) representing predicted future states
+        """
+        # Extract parameters from kwargs or use defaults
+        parameters = kwargs.get("parameters", {})
+        alpha = parameters.get("alpha", torch.tensor(1.0))
+        beta = parameters.get("beta", torch.tensor(1.0))
+        gamma = parameters.get("gamma", torch.tensor(1.0))
+        scaling = parameters.get("scaling", None)
+
+        # Delegate to dynamics model
+        return self.dynamics_model.predict_future_states(
+            current_state=current_state,
+            time_delta=time_delta,
+            alpha=alpha,
+            beta=beta,
+            gamma=gamma,
+            scaling=scaling,
+        )
+
+
