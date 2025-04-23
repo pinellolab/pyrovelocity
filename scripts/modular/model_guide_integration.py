@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """
 Example script demonstrating the integration between PyroVelocityModel and different guide implementations.
 

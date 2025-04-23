@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """
 Example script demonstrating the use of the registry system in the PyroVelocity modular architecture.
 
