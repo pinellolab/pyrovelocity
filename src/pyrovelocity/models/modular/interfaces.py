@@ -13,6 +13,7 @@ from typing import (
     Protocol,
     Tuple,
     TypeVar,
+    Union,
     runtime_checkable,
 )
 
@@ -43,30 +44,16 @@ class DynamicsModel(Protocol):
 
     def forward(
         self,
-        u: BatchTensor,
-        s: BatchTensor,
-        alpha: ParamTensor,
-        beta: ParamTensor,
-        gamma: ParamTensor,
-        scaling: Optional[ParamTensor] = None,
-        t: Optional[BatchTensor] = None,
-        **kwargs: Any,
-    ) -> Tuple[BatchTensor, BatchTensor]:
+        context: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """
         Compute the expected unspliced and spliced RNA counts based on the dynamics model.
 
         Args:
-            u: Observed unspliced RNA counts
-            s: Observed spliced RNA counts
-            alpha: Transcription rate
-            beta: Splicing rate
-            gamma: Degradation rate
-            scaling: Optional scaling factor for the dynamics
-            t: Optional time points for the dynamics
-            **kwargs: Additional model-specific parameters
+            context: Dictionary containing model context including u_obs, s_obs, and parameters
 
         Returns:
-            Tuple of (expected unspliced counts, expected spliced counts)
+            Updated context dictionary with expected counts
         """
         ...
 
@@ -103,22 +90,16 @@ class PriorModel(Protocol):
 
     def forward(
         self,
-        u_obs: BatchTensor,
-        s_obs: BatchTensor,
-        plate: pyro.plate,
-        **kwargs: Any,
-    ) -> ModelState:
+        context: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """
         Sample model parameters from prior distributions.
 
         Args:
-            u_obs: Observed unspliced RNA counts
-            s_obs: Observed spliced RNA counts
-            plate: Pyro plate for batched sampling
-            **kwargs: Additional model-specific parameters
+            context: Dictionary containing model context including u_obs, s_obs, and other parameters
 
         Returns:
-            Dictionary containing sampled parameters
+            Updated context dictionary with sampled parameters
         """
         ...
 
@@ -134,23 +115,16 @@ class LikelihoodModel(Protocol):
 
     def forward(
         self,
-        u_obs: BatchTensor,
-        s_obs: BatchTensor,
-        u_logits: BatchTensor,
-        s_logits: BatchTensor,
-        plate: pyro.plate,
-        **kwargs: Any,
-    ) -> None:
+        context: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """
         Define the likelihood distributions for observed data given expected values.
 
         Args:
-            u_obs: Observed unspliced RNA counts
-            s_obs: Observed spliced RNA counts
-            u_logits: Expected unspliced RNA counts from dynamics model
-            s_logits: Expected spliced RNA counts from dynamics model
-            plate: Pyro plate for batched sampling
-            **kwargs: Additional model-specific parameters
+            context: Dictionary containing model context including u_obs, s_obs, u_expected, s_expected, and other parameters
+
+        Returns:
+            Updated context dictionary with likelihood information
         """
         ...
 
@@ -166,20 +140,16 @@ class ObservationModel(Protocol):
 
     def forward(
         self,
-        u_obs: BatchTensor,
-        s_obs: BatchTensor,
-        **kwargs: Any,
-    ) -> Tuple[BatchTensor, BatchTensor]:
+        context: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """
         Transform observed data for model input.
 
         Args:
-            u_obs: Raw observed unspliced RNA counts
-            s_obs: Raw observed spliced RNA counts
-            **kwargs: Additional model-specific parameters
+            context: Dictionary containing model context including u_obs and s_obs
 
         Returns:
-            Tuple of (transformed unspliced counts, transformed spliced counts)
+            Updated context dictionary with transformed data
         """
         ...
 
@@ -195,7 +165,7 @@ class InferenceGuide(Protocol):
 
     def __call__(
         self,
-        model: Callable,
+        model: Union[Callable, Any],
         *args: Any,
         **kwargs: Any,
     ) -> Callable:
