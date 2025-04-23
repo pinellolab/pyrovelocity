@@ -121,7 +121,7 @@ class MockLikelihoodModel(BaseLikelihoodModel):
             observations = torch.tensor(observations, dtype=torch.float32)
         if not isinstance(predictions, torch.Tensor):
             predictions = torch.tensor(predictions, dtype=torch.float32)
-            
+
         return -torch.sum((observations - predictions) ** 2, dim=1)
 
     def _sample_impl(self, predictions, scale_factors=None):
@@ -129,7 +129,7 @@ class MockLikelihoodModel(BaseLikelihoodModel):
         # Return the predictions with some noise for testing
         if not isinstance(predictions, torch.Tensor):
             predictions = torch.tensor(predictions, dtype=torch.float32)
-            
+
         return predictions + torch.randn_like(predictions) * 0.1
 
 
@@ -597,51 +597,54 @@ def test_select_best_model():
     """Test select_best_model function."""
     # Test for information criteria (lower is better)
     waic_values = {"model1": 100.0, "model2": 110.0, "model3": 90.0}
-    
+
     # Create differences - model3 is 10 units better than model1 and 20 units better than model2
     differences = {
         "model1": {"model2": -10.0, "model3": 10.0},
         "model2": {"model1": 10.0, "model3": 20.0},
         "model3": {"model1": -10.0, "model2": -20.0},
     }
-    
+
     waic_result = ComparisonResult(
         metric_name="WAIC",
         values=waic_values,
         differences=differences,
     )
-    
+
     # Threshold = 2, differences are significant
     best_model, is_significant = select_best_model(waic_result, threshold=2.0)
     assert best_model == "model3"
     assert is_significant is True
-    
+
     # Threshold = 15, differences with model1 are not significant
     best_model, is_significant = select_best_model(waic_result, threshold=15.0)
     assert best_model == "model3"
     assert is_significant is False
-    
+
     # Test for Bayes factors (higher is better)
     bf_values = {"model1": 3.0, "model2": 1.0, "model3": 2.0}
-    
+
     # Create differences - model1 is 3x better than model2 and 1.5x better than model3
     differences = {
         "model1": {"model2": np.log(3.0/1.0), "model3": np.log(3.0/2.0)},
         "model2": {"model1": np.log(1.0/3.0), "model3": np.log(1.0/2.0)},
         "model3": {"model1": np.log(2.0/3.0), "model2": np.log(2.0/1.0)},
     }
-    
+
     bf_result = ComparisonResult(
         metric_name="Bayes Factor",
         values=bf_values,
         differences=differences,
     )
-    
+
     # Threshold = 2, differences with model3 are significant
+    print(f"BF values: {bf_values}")
+    print(f"BF differences: {differences}")
     best_model, is_significant = select_best_model(bf_result, threshold=2.0)
+    print(f"Best model: {best_model}, is_significant: {is_significant}")
     assert best_model == "model1"
     assert is_significant is True
-    
+
     # Threshold = 5, no differences are significant
     best_model, is_significant = select_best_model(bf_result, threshold=5.0)
     assert best_model == "model1"
@@ -658,7 +661,7 @@ def test_create_comparison_table():
         values=waic_values,
         standard_errors=waic_se,
     )
-    
+
     loo_values = {"model1": 105.0, "model2": 115.0, "model3": 95.0}
     loo_se = {"model1": 5.5, "model2": 6.5, "model3": 4.5}
     loo_result = ComparisonResult(
@@ -666,16 +669,16 @@ def test_create_comparison_table():
         values=loo_values,
         standard_errors=loo_se,
     )
-    
+
     # Create comparison table
     table = create_comparison_table([waic_result, loo_result])
-    
+
     # Check table
     assert isinstance(table, pd.DataFrame)
     assert list(table.columns) == ["model", "WAIC", "WAIC_se", "LOO", "LOO_se"]
     assert len(table) == 3
     assert set(table["model"]) == {"model1", "model2", "model3"}
-    
+
     # Check values
     model1_row = table[table["model"] == "model1"].iloc[0]
     assert model1_row["WAIC"] == 100.0
@@ -696,14 +699,14 @@ def test_extract_log_likelihood(
     # Mock the patched method to return a known tensor
     expected_log_likes = torch.ones((100, 10)) * 2.0
     mock_extract_log_likelihood.return_value = expected_log_likes
-    
+
     # Call the method - this will use our mocked version
     log_likes = BayesianModelComparison._extract_log_likelihood(
         mock_model,
         mock_posterior_samples,
         sample_data,
     )
-    
+
     # Check the result
     assert torch.all(log_likes == expected_log_likes)
 
@@ -714,7 +717,7 @@ def test_extract_log_likelihood_missing_observations(
     """Test _extract_log_likelihood method when observations are missing."""
     # Create data without observations
     data = {"x": torch.ones((10, 5))}
-    
+
     # Expect a ValueError
     with pytest.raises(ValueError, match="Data dictionary must contain 'observations' key"):
         BayesianModelComparison._extract_log_likelihood(
@@ -732,22 +735,22 @@ def test_compute_log_marginal_likelihood(
     # Mock pyro.infer.Importance.run() return value
     mock_importance_instance = MagicMock()
     mock_importance.return_value = mock_importance_instance
-    
+
     # Mock importance_results.log_mean() return value
     mock_importance_results = MagicMock()
     mock_importance_results.log_mean.return_value = torch.tensor(-10.0)
     mock_importance_instance.run.return_value = mock_importance_results
-    
+
     # Call the method
     log_ml = comparison_instance._compute_log_marginal_likelihood(
         model=mock_model,
         data=sample_data,
         num_samples=1000,
     )
-    
+
     # Check the result
     assert log_ml == -10.0
-    
+
     # Check that Importance was called
     mock_importance.assert_called_once()
     # Check that importance_instance.run() was called
