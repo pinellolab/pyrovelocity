@@ -3,9 +3,10 @@ End-to-end example of RNA velocity analysis using PyroVelocity PyTorch/Pyro modu
 
 This example demonstrates:
 1. Loading and preprocessing data
-2. Creating a velocity model
+2. Creating a velocity model with the modular architecture
 3. Performing MCMC inference
 4. Analyzing and visualizing results
+5. Saving the results
 
 Note: MCMC initialization can be challenging for complex models. If you encounter
 initialization errors, consider:
@@ -19,10 +20,11 @@ import torch
 import pyro
 import scanpy as sc
 import scvelo as scv
+import matplotlib.pyplot as plt
 from importlib.resources import files
 
-# Import model creation
-from pyrovelocity.models.modular.factory import create_standard_model
+# Import model creation and components
+from pyrovelocity.models.modular.factory import create_standard_model, create_model, standard_model_config
 
 # Import adapters for AnnData integration
 from pyrovelocity.models.adapters import LegacyModelAdapter
@@ -58,16 +60,32 @@ def main():
     # Set up AnnData for LegacyModelAdapter
     LegacyModelAdapter.setup_anndata(adata)
 
-    # 3. Create model
-    print("Creating model...")
-    model = create_standard_model()
+    # 3. Create model with custom configuration for MCMC
+    print("Creating model with MCMC-friendly configuration...")
 
-    # 5. Create a LegacyModelAdapter to use the legacy API for MCMC
-    print("Creating LegacyModelAdapter...")
+    # Create a standard model configuration
+    config = standard_model_config()
+
+    # Customize the configuration for MCMC
+    # - Use simpler priors
+    # - Disable latent time for simpler model
+    config.prior_model.name = "lognormal"
+    config.prior_model.params = {"scale_alpha": 1.0, "scale_beta": 1.0, "scale_gamma": 1.0}
+    config.dynamics_model.params = {"shared_time": False}  # Disable latent time
+
+    # Create the model
+    model = create_model(config)
+    print(f"Created model with components:")
+    print(f"  - Dynamics: {model.dynamics_model.__class__.__name__}")
+    print(f"  - Prior: {model.prior_model.__class__.__name__}")
+    print(f"  - Likelihood: {model.likelihood_model.__class__.__name__}")
+
+    # 4. Create adapter for AnnData integration
+    print("\nCreating LegacyModelAdapter...")
     adapter = LegacyModelAdapter.from_modular_model(adata, model)
 
-    # 6. Run MCMC inference
-    print("Running MCMC inference...")
+    # 5. Run MCMC inference
+    print("\nRunning MCMC inference...")
     # The adapter provides a convenient interface for MCMC
     adapter.train(
         mode="mcmc",
@@ -77,32 +95,36 @@ def main():
         use_gpu=False,
     )
 
-    # 7. Generate posterior samples
-    print("Generating posterior samples...")
+    # 6. Generate posterior samples
+    print("\nGenerating posterior samples...")
     posterior_samples = adapter.generate_posterior_samples()
 
-    # 8. Compute velocity
-    print("Computing velocity...")
+    # 7. Compute velocity
+    print("Computing RNA velocity...")
     # The velocity is computed internally by the adapter
     adata_out = adapter.adata
 
-    # 9. Visualize results
-    print("Visualizing results...")
+    # 8. Visualize results
+    print("\nVisualizing results...")
     # Use latent time if available
     if 'latent_time' in adata_out.obs.columns:
-        sc.pl.umap(adata_out, color="latent_time", title="Latent Time")
+        sc.pl.umap(adata_out, color="latent_time", title="Latent Time (MCMC)")
+        plt.savefig("mcmc_velocity_latent_time.png")
+        print("Latent time plot saved to mcmc_velocity_latent_time.png")
 
     # Check if 'clusters' exists in the AnnData object
     if 'clusters' in adata_out.obs.columns:
-        scv.pl.velocity_embedding_stream(adata_out, basis="umap", color="clusters")
+        scv.pl.velocity_embedding_stream(adata_out, basis="umap", color="clusters", title="RNA Velocity (MCMC)")
     else:
         # Use a default color if 'clusters' doesn't exist
-        scv.pl.velocity_embedding_stream(adata_out, basis="umap")
+        scv.pl.velocity_embedding_stream(adata_out, basis="umap", title="RNA Velocity (MCMC)")
+    plt.savefig("mcmc_velocity_stream.png")
+    print("Velocity stream plot saved to mcmc_velocity_stream.png")
 
-    # 10. Save results
+    # 9. Save results
     from pathlib import Path
     output_path = Path("velocity_results_mcmc.h5ad")
-    print(f"Saving results to {output_path}...")
+    print(f"\nSaving results to {output_path}...")
     adata_out.write(output_path)
     print("Done!")
 

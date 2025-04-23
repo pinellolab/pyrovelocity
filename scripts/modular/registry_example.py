@@ -9,6 +9,7 @@ This script shows how to:
 2. List available components
 3. Create components from the registry
 4. Use the components in a model
+5. Create a custom model with registered components
 """
 
 import torch
@@ -34,6 +35,16 @@ from pyrovelocity.models.modular.interfaces import (
     BatchTensor,
     ParamTensor,
     ModelState,
+)
+
+from pyrovelocity.models.modular.factory import (
+    DynamicsModelConfig,
+    PriorModelConfig,
+    LikelihoodModelConfig,
+    ObservationModelConfig,
+    InferenceGuideConfig,
+    PyroVelocityModelConfig,
+    create_model,
 )
 
 from typing import Any, Dict, Optional, Tuple
@@ -218,6 +229,40 @@ def main():
 
     # Verify that the steady state matches the expected values
     print(f"Steady state matches expected values: {torch.allclose(u_expected, u_ss) and torch.allclose(s_expected, s_ss)}")
+
+    # Create a custom model using the factory system
+    print("\nCreating a custom model using the factory system...")
+    custom_config = PyroVelocityModelConfig(
+        dynamics_model=DynamicsModelConfig(
+            name="custom_linear",
+            params={}
+        ),
+        prior_model=PriorModelConfig(
+            name="custom_normal",
+            params={}
+        ),
+        likelihood_model=LikelihoodModelConfig(
+            name="poisson",
+            params={}
+        ),
+        observation_model=ObservationModelConfig(
+            name="standard",
+            params={}
+        ),
+        inference_guide=InferenceGuideConfig(
+            name="auto",
+            params={"guide_type": "AutoNormal", "init_scale": 0.1}
+        )
+    )
+    
+    # Create the model
+    custom_model = create_model(custom_config)
+    print(f"Created custom model: {custom_model}")
+    print(f"  - Dynamics: {custom_model.dynamics_model.__class__.__name__}")
+    print(f"  - Prior: {custom_model.prior_model.__class__.__name__}")
+    print(f"  - Likelihood: {custom_model.likelihood_model.__class__.__name__}")
+    print(f"  - Observation: {custom_model.observation_model.__class__.__name__}")
+    print(f"  - Guide: {custom_model.guide_model.__class__.__name__}")
 
     print("\nRegistry example completed successfully!")
 

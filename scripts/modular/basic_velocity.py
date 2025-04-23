@@ -3,19 +3,28 @@ Basic end-to-end example of RNA velocity analysis using PyroVelocity PyTorch/Pyr
 
 This example demonstrates:
 1. Loading and preprocessing data
-2. Creating a velocity model
+2. Creating a velocity model with the modular architecture
 3. Performing SVI inference
 4. Analyzing and visualizing results
+5. Saving the results
 """
 
 import torch
 import pyro
 import scanpy as sc
 import scvelo as scv
+import matplotlib.pyplot as plt
 from importlib.resources import files
 
-# Import model creation
-from pyrovelocity.models.modular.factory import create_standard_model
+# Import model creation and components
+from pyrovelocity.models.modular.factory import create_standard_model, create_model, standard_model_config
+from pyrovelocity.models.modular.registry import (
+    DynamicsModelRegistry,
+    PriorModelRegistry,
+    LikelihoodModelRegistry,
+    ObservationModelRegistry,
+    InferenceGuideRegistry,
+)
 
 # Import adapters for AnnData integration
 from pyrovelocity.models.adapters import LegacyModelAdapter
@@ -51,49 +60,96 @@ def main():
     # Set up AnnData for LegacyModelAdapter
     LegacyModelAdapter.setup_anndata(adata)
 
-    # 3. Create model
-    print("Creating model...")
-    # Create the standard model directly
-    model = create_standard_model()
+    # 3. List available components in each registry
+    print("\nAvailable components in registries:")
+    print(f"Dynamics Models: {DynamicsModelRegistry.list_available()}")
+    print(f"Prior Models: {PriorModelRegistry.list_available()}")
+    print(f"Likelihood Models: {LikelihoodModelRegistry.list_available()}")
+    print(f"Observation Models: {ObservationModelRegistry.list_available()}")
+    print(f"Inference Guides: {InferenceGuideRegistry.list_available()}")
 
-    # 5. Create a LegacyModelAdapter to use the legacy API for training
-    print("Creating LegacyModelAdapter...")
+    # 4. Create model with custom configuration
+    print("\nCreating model with custom configuration...")
+
+    # Method 1: Create a standard model directly (simplest approach)
+    print("\nMethod 1: Using create_standard_model() (simplest approach)")
+    model1 = create_standard_model()
+    print(f"Created model with default components")
+
+    # Method 2: Create a model with a custom configuration
+    print("\nMethod 2: Using create_model() with standard_model_config()")
+    config = standard_model_config()
+
+    # Customize the configuration using available components from registries
+    config.dynamics_model.name = "standard"      # Use standard dynamics model
+    config.prior_model.name = "lognormal"        # Use lognormal prior
+    config.likelihood_model.name = "poisson"     # Use Poisson likelihood
+    config.inference_guide.name = "auto"         # Use auto guide
+    config.inference_guide.params = {"guide_type": "AutoNormal", "init_scale": 0.1}
+
+    # Create the model with custom configuration
+    model2 = create_model(config)
+    print(f"Created model with components:")
+    print(f"  - Dynamics: {model2.dynamics_model.__class__.__name__}")
+    print(f"  - Prior: {model2.prior_model.__class__.__name__}")
+    print(f"  - Likelihood: {model2.likelihood_model.__class__.__name__}")
+    # Note: inference_guide is not directly accessible as an attribute
+
+    # Use the second model for this example
+    model = model2
+
+    # 5. Create adapter for AnnData integration
+    print("\nCreating LegacyModelAdapter...")
     adapter = LegacyModelAdapter.from_modular_model(adata, model)
 
     # 6. Train the model
-    print("Training the model...")
+    print("\nTraining the model...")
     adapter.train(
-        max_epochs=500,  # More epochs to ensure convergence
-        learning_rate=0.001,  # Lower learning rate for more stable training
+        max_epochs=200,  # Reduced for example
+        learning_rate=0.01,
         use_gpu=False,
     )
 
+    # Plot training loss
+    if hasattr(adapter.module, "history") and "elbo_train" in adapter.module.history:
+        plt.figure(figsize=(10, 6))
+        plt.plot(adapter.module.history["elbo_train"])
+        plt.title("Training Loss (ELBO)")
+        plt.xlabel("Epoch")
+        plt.ylabel("ELBO")
+        plt.savefig("basic_velocity_training_loss.png")
+        print("Training loss plot saved to basic_velocity_training_loss.png")
+
     # 7. Generate posterior samples
-    print("Generating posterior samples...")
+    print("\nGenerating posterior samples...")
     posterior_samples = adapter.generate_posterior_samples()
 
     # 8. Compute velocity
-    print("Computing velocity...")
+    print("Computing RNA velocity...")
     # The velocity is computed internally by the adapter
     adata_out = adapter.adata
 
     # 9. Visualize results
-    print("Visualizing results...")
+    print("\nVisualizing results...")
     # Use latent time if available
     if 'latent_time' in adata_out.obs.columns:
         sc.pl.umap(adata_out, color="latent_time", title="Latent Time")
+        plt.savefig("basic_velocity_latent_time.png")
+        print("Latent time plot saved to basic_velocity_latent_time.png")
 
     # Check if 'clusters' exists in the AnnData object
     if 'clusters' in adata_out.obs.columns:
-        scv.pl.velocity_embedding_stream(adata_out, basis="umap", color="clusters")
+        scv.pl.velocity_embedding_stream(adata_out, basis="umap", color="clusters", title="RNA Velocity")
     else:
         # Use a default color if 'clusters' doesn't exist
-        scv.pl.velocity_embedding_stream(adata_out, basis="umap")
+        scv.pl.velocity_embedding_stream(adata_out, basis="umap", title="RNA Velocity")
+    plt.savefig("basic_velocity_stream.png")
+    print("Velocity stream plot saved to basic_velocity_stream.png")
 
     # 10. Save results
     from pathlib import Path
     output_path = Path("velocity_results_modular.h5ad")
-    print(f"Saving results to {output_path}...")
+    print(f"\nSaving results to {output_path}...")
     adata_out.write(output_path)
     print("Done!")
 
