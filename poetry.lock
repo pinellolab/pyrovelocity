@@ -3355,19 +3355,20 @@ cuda12-pip = ["nvidia-cublas-cu12", "nvidia-cuda-cupti-cu12", "nvidia-cuda-nvcc-
 
 [[package]]
 name = "jaxtyping"
-version = "0.2.25"
-description = "Type annotations and runtime checking for shape and dtype of JAX arrays, and PyTrees."
+version = "0.3.2"
+description = "Type annotations and runtime checking for shape and dtype of JAX/NumPy/PyTorch/etc. arrays."
 optional = false
-python-versions = "~=3.9"
+python-versions = ">=3.10"
 files = [
-    {file = "jaxtyping-0.2.25-py3-none-any.whl", hash = "sha256:503772cf985ff50bd160d0661266e1628da47cc8b9a302de16f230e07f5ac119"},
-    {file = "jaxtyping-0.2.25.tar.gz", hash = "sha256:4ec4bdb6839a67c062e48c27d62d44bf353099d7ff6cd3628b5a511c097ab922"},
+    {file = "jaxtyping-0.3.2-py3-none-any.whl", hash = "sha256:6a020fd276226ddb5ac4f5725323843dd65e3c7e85c64fd62431e5f738c74e04"},
+    {file = "jaxtyping-0.3.2.tar.gz", hash = "sha256:f30483fac4b42e915db8ad2414a85c3b63284aa7d3c100b96b59f755cf4a86ad"},
 ]
 
 [package.dependencies]
-numpy = ">=1.20.0"
-typeguard = ">=2.13.3,<3"
-typing-extensions = ">=3.7.4.1"
+wadler-lindig = ">=0.1.3"
+
+[package.extras]
+docs = ["hippogriffe (==0.2.0)", "mkdocs (==1.6.1)", "mkdocs-include-exclude-files (==0.1.0)", "mkdocs-ipynb (==0.1.0)", "mkdocs-material (==9.6.7)", "mkdocstrings[python] (==0.28.3)", "pymdown-extensions (==10.14.3)"]
 
 [[package]]
 name = "jedi"
@@ -8691,21 +8692,6 @@ files = [
 ]
 
 [[package]]
-name = "typeguard"
-version = "2.13.3"
-description = "Run-time type checker for Python"
-optional = false
-python-versions = ">=3.5.3"
-files = [
-    {file = "typeguard-2.13.3-py3-none-any.whl", hash = "sha256:5e3e3be01e887e7eafae5af63d1f36c849aaa94e3a0112097312aabfa16284f1"},
-    {file = "typeguard-2.13.3.tar.gz", hash = "sha256:00edaa8da3a133674796cf5ea87d9f4b4c367d77476e185e80251cc13dfbb8c4"},
-]
-
-[package.extras]
-doc = ["sphinx-autodoc-typehints (>=1.2.0)", "sphinx-rtd-theme"]
-test = ["mypy", "pytest", "typing-extensions"]
-
-[[package]]
 name = "types-python-dateutil"
 version = "2.8.19.14"
 description = "Typing stubs for python-dateutil"
@@ -8910,6 +8896,21 @@ files = [
     {file = "vl_convert_python-1.6.0-cp37-abi3-win_amd64.whl", hash = "sha256:2167d762f77991a36ce11d47d03d399219e80a1f19340ed1f6125713f8b31e87"},
     {file = "vl_convert_python-1.6.0.tar.gz", hash = "sha256:f7539c5558026d41d870df3ea92546ef87956c7b62ca99426906e941115bfd41"},
 ]
+
+[[package]]
+name = "wadler-lindig"
+version = "0.1.5"
+description = "A Wadler–Lindig pretty-printer for Python."
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "wadler_lindig-0.1.5-py3-none-any.whl", hash = "sha256:54f830ec0bdab41b28df8bc91be4596c6cc8cf9772b3b5c7cd5922d2ba5073b7"},
+    {file = "wadler_lindig-0.1.5.tar.gz", hash = "sha256:c8d6c0e74fc61c7108077009238b7f5a5a52b25f75e024dac313393faf7f7440"},
+]
+
+[package.extras]
+dev = ["numpy", "pre-commit", "pytest"]
+docs = ["hippogriffe (==0.1.0)", "mkdocs (==1.6.1)", "mkdocs-include-exclude-files (==0.1.0)", "mkdocs-ipynb (==0.1.0)", "mkdocs-material (==9.6.7)", "mkdocstrings[python] (==0.28.3)", "pymdown-extensions (==10.14.3)"]
 
 [[package]]
 name = "waitress"
