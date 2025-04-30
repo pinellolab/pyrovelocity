@@ -486,92 +486,301 @@ def format_anndata_output(
 ) -> anndata.AnnData:
     """Format results into AnnData object compatible with src/pyrovelocity/plots.
 
+    This function takes the results from analyze_posterior and formats them into an
+    AnnData object for visualization and further analysis. It handles different shapes
+    and formats of the input data, ensuring compatibility with the plotting functions.
+
     Args:
-        adata: AnnData object
-        results: Dictionary of results
-        model_name: Name of the model
+        adata: AnnData object with cells as rows and genes as columns
+        results: Dictionary of results from analyze_posterior
+        model_name: Name of the model to use as a prefix for annotations
 
     Returns:
-        Updated AnnData object
+        Updated AnnData object with velocity information
     """
     # Create a copy of the AnnData object to avoid modifying the original
     adata_copy = adata.copy()
 
+    # Validate AnnData structure
+    if adata_copy.n_obs == 0 or adata_copy.n_vars == 0:
+        raise ValueError("AnnData object is empty")
+
     # Extract uncertainty results
     uncertainty = results.get("uncertainty", {})
+    if not uncertainty:
+        raise ValueError("Results dictionary does not contain uncertainty measures")
+
+    # Extract posterior samples
+    posterior_samples = results.get("posterior_samples", {})
+    if not posterior_samples:
+        raise ValueError("Results dictionary does not contain posterior samples")
+
+    # Extract velocity samples
+    velocity_samples = results.get("velocity", {})
+    if not velocity_samples:
+        # Try to compute velocity if not provided
+        try:
+            from pyrovelocity.models.jax.core.dynamics import (
+                standard_dynamics_model,
+            )
+            velocity_samples = compute_velocity(
+                posterior_samples=posterior_samples,
+                dynamics_fn=standard_dynamics_model,
+            )
+        except Exception as e:
+            raise ValueError(f"Could not compute velocity: {e}")
+
+    # Get dimensions
+    n_cells = adata_copy.n_obs
+    n_genes = adata_copy.n_vars
 
     # Add mean velocity to cell-specific annotations
     if "velocity_mean" in uncertainty:
         # Handle both 1D and 2D cases
         velocity = jnp.array(uncertainty["velocity_mean"])
+
+        # Check shape and reshape if necessary
         if len(velocity.shape) == 1:
+            # If 1D, reshape to (1, n_genes)
             velocity = velocity.reshape(1, -1)
-        adata_copy.layers[f"{model_name}_velocity"] = velocity.T
+        elif velocity.shape[0] == n_genes and velocity.shape[1] == n_cells:
+            # If shape is (n_genes, n_cells), transpose to (n_cells, n_genes)
+            velocity = velocity.T
+        elif velocity.shape[0] == 1 and velocity.shape[1] == n_genes:
+            # If shape is (1, n_genes), broadcast to (n_cells, n_genes)
+            velocity = jnp.broadcast_to(velocity, (n_cells, n_genes))
+
+        # Ensure the shape matches AnnData dimensions
+        if velocity.shape[1] != n_genes:
+            # If the number of genes doesn't match, try to reshape
+            if velocity.size == n_genes:
+                velocity = velocity.reshape(1, n_genes)
+                velocity = jnp.broadcast_to(velocity, (n_cells, n_genes))
+            else:
+                raise ValueError(
+                    f"Velocity shape {velocity.shape} does not match AnnData dimensions "
+                    f"({n_cells}, {n_genes})"
+                )
+
+        # Store in layers
+        adata_copy.layers[f"{model_name}_velocity"] = jnp.array(velocity)
 
     # Add velocity confidence to cell-specific annotations
     if "velocity_confidence" in uncertainty:
         # Handle both 1D and 2D cases
         confidence = jnp.array(uncertainty["velocity_confidence"])
-        if len(confidence.shape) > 1 and confidence.shape[0] == 1:
-            # If shape is (1, n_cells), reshape to (n_cells,)
-            confidence = confidence.reshape(-1)
-        adata_copy.obs[f"{model_name}_velocity_confidence"] = confidence
+
+        # Check shape and reshape if necessary
+        if len(confidence.shape) > 1:
+            if confidence.shape[0] == 1:
+                # If shape is (1, n_cells), reshape to (n_cells,)
+                confidence = confidence.reshape(-1)
+            elif confidence.shape[1] == 1:
+                # If shape is (n_cells, 1), reshape to (n_cells,)
+                confidence = confidence.reshape(-1)
+            elif confidence.shape[0] == n_genes and confidence.shape[1] == n_cells:
+                # If shape is (n_genes, n_cells), take mean across genes
+                confidence = jnp.mean(confidence, axis=0)
+            elif confidence.shape[0] == n_cells and confidence.shape[1] == n_genes:
+                # If shape is (n_cells, n_genes), take mean across genes
+                confidence = jnp.mean(confidence, axis=1)
+
+        # Ensure the shape matches AnnData dimensions
+        if len(confidence.shape) == 1 and confidence.shape[0] != n_cells:
+            # If the number of cells doesn't match, try to reshape or broadcast
+            if confidence.size == 1:
+                # If scalar, broadcast to all cells
+                confidence = jnp.broadcast_to(confidence, (n_cells,))
+            elif confidence.size == n_genes:
+                # If gene-wise, take mean
+                confidence = jnp.mean(confidence) * jnp.ones(n_cells)
+            else:
+                raise ValueError(
+                    f"Confidence shape {confidence.shape} does not match AnnData dimensions "
+                    f"({n_cells}, {n_genes})"
+                )
+
+        # Store in obs
+        adata_copy.obs[f"{model_name}_velocity_confidence"] = jnp.array(confidence)
 
     # Add velocity probability to cell-specific annotations
     if "velocity_prob_positive" in uncertainty:
         # Handle both 1D and 2D cases
         probability = jnp.array(uncertainty["velocity_prob_positive"])
-        if len(probability.shape) > 1 and probability.shape[0] == 1:
-            # If shape is (1, n_cells), reshape to (n_cells,)
-            probability = probability.reshape(-1)
-        adata_copy.obs[f"{model_name}_velocity_probability"] = probability
+
+        # Check shape and reshape if necessary
+        if len(probability.shape) > 1:
+            if probability.shape[0] == 1:
+                # If shape is (1, n_cells), reshape to (n_cells,)
+                probability = probability.reshape(-1)
+            elif probability.shape[1] == 1:
+                # If shape is (n_cells, 1), reshape to (n_cells,)
+                probability = probability.reshape(-1)
+            elif probability.shape[0] == n_genes and probability.shape[1] == n_cells:
+                # If shape is (n_genes, n_cells), take mean across genes
+                probability = jnp.mean(probability, axis=0)
+            elif probability.shape[0] == n_cells and probability.shape[1] == n_genes:
+                # If shape is (n_cells, n_genes), take mean across genes
+                probability = jnp.mean(probability, axis=1)
+
+        # Ensure the shape matches AnnData dimensions
+        if len(probability.shape) == 1 and probability.shape[0] != n_cells:
+            # If the number of cells doesn't match, try to reshape or broadcast
+            if probability.size == 1:
+                # If scalar, broadcast to all cells
+                probability = jnp.broadcast_to(probability, (n_cells,))
+            elif probability.size == n_genes:
+                # If gene-wise, take mean
+                probability = jnp.mean(probability) * jnp.ones(n_cells)
+            else:
+                raise ValueError(
+                    f"Probability shape {probability.shape} does not match AnnData dimensions "
+                    f"({n_cells}, {n_genes})"
+                )
+
+        # Store in obs
+        adata_copy.obs[f"{model_name}_velocity_probability"] = jnp.array(probability)
 
     # Add expected unspliced and spliced counts to layers
     if "u_expected_mean" in uncertainty and "s_expected_mean" in uncertainty:
         # Handle both 1D and 2D cases for u_expected
         u_expected = jnp.array(uncertainty["u_expected_mean"])
-        if len(u_expected.shape) == 1:
-            u_expected = u_expected.reshape(1, -1)
-        adata_copy.layers[f"{model_name}_u_expected"] = u_expected.T
-
-        # Handle both 1D and 2D cases for s_expected
         s_expected = jnp.array(uncertainty["s_expected_mean"])
+
+        # Check shape and reshape if necessary for u_expected
+        if len(u_expected.shape) == 1:
+            # If 1D, reshape to (1, n_genes)
+            u_expected = u_expected.reshape(1, -1)
+        elif u_expected.shape[0] == n_genes and u_expected.shape[1] == n_cells:
+            # If shape is (n_genes, n_cells), transpose to (n_cells, n_genes)
+            u_expected = u_expected.T
+        elif u_expected.shape[0] == 1 and u_expected.shape[1] == n_genes:
+            # If shape is (1, n_genes), broadcast to (n_cells, n_genes)
+            u_expected = jnp.broadcast_to(u_expected, (n_cells, n_genes))
+
+        # Check shape and reshape if necessary for s_expected
         if len(s_expected.shape) == 1:
+            # If 1D, reshape to (1, n_genes)
             s_expected = s_expected.reshape(1, -1)
-        adata_copy.layers[f"{model_name}_s_expected"] = s_expected.T
+        elif s_expected.shape[0] == n_genes and s_expected.shape[1] == n_cells:
+            # If shape is (n_genes, n_cells), transpose to (n_cells, n_genes)
+            s_expected = s_expected.T
+        elif s_expected.shape[0] == 1 and s_expected.shape[1] == n_genes:
+            # If shape is (1, n_genes), broadcast to (n_cells, n_genes)
+            s_expected = jnp.broadcast_to(s_expected, (n_cells, n_genes))
+
+        # Ensure the shapes match AnnData dimensions
+        if u_expected.shape[1] != n_genes or s_expected.shape[1] != n_genes:
+            # If the number of genes doesn't match, try to reshape
+            if u_expected.size == n_genes and s_expected.size == n_genes:
+                u_expected = u_expected.reshape(1, n_genes)
+                s_expected = s_expected.reshape(1, n_genes)
+                u_expected = jnp.broadcast_to(u_expected, (n_cells, n_genes))
+                s_expected = jnp.broadcast_to(s_expected, (n_cells, n_genes))
+            else:
+                raise ValueError(
+                    f"Expected counts shapes {u_expected.shape}, {s_expected.shape} do not match "
+                    f"AnnData dimensions ({n_cells}, {n_genes})"
+                )
+
+        # Store in layers
+        adata_copy.layers[f"{model_name}_u_expected"] = jnp.array(u_expected)
+        adata_copy.layers[f"{model_name}_s_expected"] = jnp.array(s_expected)
 
     # Add uncertainty measures to var annotations
     for key in uncertainty:
         if key.endswith("_cv") or key.endswith("_norm_ci_width"):
             # These are gene-specific measures
             value = jnp.array(uncertainty[key])
+
             # Handle both 1D and 2D cases
             if len(value.shape) > 1:
-                # If shape is (n_genes, n_cells) or (1, n_cells), reshape to (n_genes,)
                 if value.shape[0] == 1:
-                    value = value[0]  # Take the first row
-                else:
-                    # Take the mean across cells
+                    # If shape is (1, n_genes), reshape to (n_genes,)
+                    value = value[0]
+                elif value.shape[1] == 1:
+                    # If shape is (n_genes, 1), reshape to (n_genes,)
+                    value = value.reshape(-1)
+                elif value.shape[0] == n_cells and value.shape[1] == n_genes:
+                    # If shape is (n_cells, n_genes), take mean across cells
+                    value = jnp.mean(value, axis=0)
+                elif value.shape[0] == n_genes and value.shape[1] == n_cells:
+                    # If shape is (n_genes, n_cells), take mean across cells
                     value = jnp.mean(value, axis=1)
-            adata_copy.var[f"{model_name}_{key}"] = value
+
+            # Ensure the shape matches AnnData dimensions
+            if len(value.shape) == 1 and value.shape[0] != n_genes:
+                # If the number of genes doesn't match, try to reshape or broadcast
+                if value.size == 1:
+                    # If scalar, broadcast to all genes
+                    value = jnp.broadcast_to(value, (n_genes,))
+                elif value.size == n_cells:
+                    # If cell-wise, take mean
+                    value = jnp.mean(value) * jnp.ones(n_genes)
+                else:
+                    raise ValueError(
+                        f"Uncertainty measure {key} shape {value.shape} does not match "
+                        f"AnnData dimensions ({n_cells}, {n_genes})"
+                    )
+
+            # Store in var
+            adata_copy.var[f"{model_name}_{key}"] = jnp.array(value)
 
     # Add model parameters to var annotations
-    posterior_samples = results.get("posterior_samples", {})
     for param_name in ["alpha", "beta", "gamma"]:
         if param_name in posterior_samples:
             # Compute mean across samples
-            param_mean = jnp.mean(posterior_samples[param_name], axis=0)
+            param_samples = jnp.array(posterior_samples[param_name])
+            param_mean = jnp.mean(param_samples, axis=0)
+
             # Handle both scalar and vector cases
             if not isinstance(param_mean, jnp.ndarray) or param_mean.ndim == 0:
+                # If scalar, broadcast to all genes
                 param_mean = jnp.array([param_mean])
+                param_mean = jnp.broadcast_to(param_mean, (n_genes,))
+            elif param_mean.shape[0] != n_genes:
+                # If the number of genes doesn't match, try to reshape or broadcast
+                if param_mean.size == 1:
+                    # If scalar, broadcast to all genes
+                    param_mean = jnp.broadcast_to(param_mean, (n_genes,))
+                elif param_mean.size == n_cells:
+                    # If cell-wise, take mean
+                    param_mean = jnp.mean(param_mean) * jnp.ones(n_genes)
+                else:
+                    raise ValueError(
+                        f"Parameter {param_name} shape {param_mean.shape} does not match "
+                        f"AnnData dimensions ({n_cells}, {n_genes})"
+                    )
+
+            # Store in var
             adata_copy.var[f"{model_name}_{param_name}"] = jnp.array(param_mean)
 
     # Add latent time to obs annotations
     if "tau" in posterior_samples:
-        tau_mean = jnp.mean(posterior_samples["tau"], axis=0)
+        # Compute mean across samples
+        tau_samples = jnp.array(posterior_samples["tau"])
+        tau_mean = jnp.mean(tau_samples, axis=0)
+
         # Handle both scalar and vector cases
         if not isinstance(tau_mean, jnp.ndarray) or tau_mean.ndim == 0:
+            # If scalar, broadcast to all cells
             tau_mean = jnp.array([tau_mean])
+            tau_mean = jnp.broadcast_to(tau_mean, (n_cells,))
+        elif tau_mean.shape[0] != n_cells:
+            # If the number of cells doesn't match, try to reshape or broadcast
+            if tau_mean.size == 1:
+                # If scalar, broadcast to all cells
+                tau_mean = jnp.broadcast_to(tau_mean, (n_cells,))
+            elif tau_mean.size == n_genes:
+                # If gene-wise, take mean
+                tau_mean = jnp.mean(tau_mean) * jnp.ones(n_cells)
+            else:
+                raise ValueError(
+                    f"Latent time shape {tau_mean.shape} does not match "
+                    f"AnnData dimensions ({n_cells}, {n_genes})"
+                )
+
+        # Store in obs
         adata_copy.obs[f"{model_name}_latent_time"] = jnp.array(tau_mean)
 
     # Store the model name in uns
@@ -589,5 +798,12 @@ def format_anndata_output(
 
     # Store additional model information
     adata_copy.uns[f"{model_name}_model_type"] = "jax_numpyro"
+
+    # Store model parameters in uns
+    adata_copy.uns[f"{model_name}_params"] = {
+        param: jnp.array(posterior_samples[param]).tolist()
+        for param in ["alpha", "beta", "gamma"]
+        if param in posterior_samples
+    }
 
     return adata_copy
