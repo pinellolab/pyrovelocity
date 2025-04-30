@@ -6,6 +6,7 @@ flexible composition of models, priors, likelihoods, and inference methods.
 """
 
 # Import component registries and register components
+# Import model class
 # Import adapters
 from pyrovelocity.models.adapters import (
     LegacyModelAdapter,
@@ -32,12 +33,21 @@ from pyrovelocity.models.modular.components import (
     StandardObservationModel,
 )
 
+# Import data utilities
+from pyrovelocity.models.modular.data.anndata import (
+    extract_layers,
+    get_library_size,
+    prepare_anndata,
+    store_results,
+)
+
 # Import factory functions
 from pyrovelocity.models.modular.factory import (
     create_model,
     create_standard_model,
     standard_model_config,
 )
+from pyrovelocity.models.modular.model import ModelState, PyroVelocityModel
 from pyrovelocity.models.modular.registry import (
     DynamicsModelRegistry,
     InferenceGuideRegistry,
@@ -66,6 +76,14 @@ def _ensure_registrations():
 _ensure_registrations()
 
 __all__ = [
+    # Model class
+    "ModelState",
+    "PyroVelocityModel",
+    # Data utilities
+    "prepare_anndata",
+    "extract_layers",
+    "store_results",
+    "get_library_size",
     # Component registries
     "DynamicsModelRegistry",
     "PriorModelRegistry",
