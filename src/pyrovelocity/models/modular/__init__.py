@@ -7,10 +7,6 @@ flexible composition of models, priors, likelihoods, and inference methods.
 
 # Import component registries and register components
 # Import model class
-# Import adapters
-from pyrovelocity.models.adapters import (
-    LegacyModelAdapter,
-)
 
 # Import comparison and selection
 from pyrovelocity.models.modular.comparison import (
@@ -105,8 +101,7 @@ __all__ = [
     "create_model",
     "create_standard_model",
     "standard_model_config",
-    # Adapters
-    "LegacyModelAdapter",
+
     # Comparison and selection
     "BayesianModelComparison",
     "compute_waic",
