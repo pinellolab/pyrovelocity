@@ -227,19 +227,45 @@ class PyroVelocityModel:
             context["time_points"] = time_points
         if u_obs is not None:
             context["u_obs"] = u_obs
+            print(f"PyroVelocityModel.forward - Initial u_obs shape: {u_obs.shape}")
         if s_obs is not None:
             context["s_obs"] = s_obs
+            print(f"PyroVelocityModel.forward - Initial s_obs shape: {s_obs.shape}")
 
         # Process data through the observation model
+        print("PyroVelocityModel.forward - Processing through observation model")
         observation_context = self.observation_model.forward(context)
 
+        # Log shapes after observation model
+        if "u_obs" in observation_context:
+            print(f"PyroVelocityModel.forward - After observation model, u_obs shape: {observation_context['u_obs'].shape}")
+        if "s_obs" in observation_context:
+            print(f"PyroVelocityModel.forward - After observation model, s_obs shape: {observation_context['s_obs'].shape}")
+
         # Process through the dynamics model
+        print("PyroVelocityModel.forward - Processing through dynamics model")
         dynamics_context = self.dynamics_model.forward(observation_context)
 
+        # Log shapes after dynamics model
+        if "u_expected" in dynamics_context:
+            print(f"PyroVelocityModel.forward - After dynamics model, u_expected shape: {dynamics_context['u_expected'].shape}")
+        if "s_expected" in dynamics_context:
+            print(f"PyroVelocityModel.forward - After dynamics model, s_expected shape: {dynamics_context['s_expected'].shape}")
+
         # Apply prior distributions
+        print("PyroVelocityModel.forward - Processing through prior model")
         prior_context = self.prior_model.forward(dynamics_context)
 
+        # Log shapes after prior model
+        if "alpha" in prior_context:
+            print(f"PyroVelocityModel.forward - After prior model, alpha shape: {prior_context['alpha'].shape}")
+        if "beta" in prior_context:
+            print(f"PyroVelocityModel.forward - After prior model, beta shape: {prior_context['beta'].shape}")
+        if "gamma" in prior_context:
+            print(f"PyroVelocityModel.forward - After prior model, gamma shape: {prior_context['gamma'].shape}")
+
         # Apply likelihood model
+        print("PyroVelocityModel.forward - Processing through likelihood model")
         likelihood_context = self.likelihood_model.forward(prior_context)
 
         # Return the final context with all model outputs

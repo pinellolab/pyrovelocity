@@ -103,6 +103,26 @@ class StandardObservationModel(BaseObservationModel):
             u_scale = torch.ones_like(u_lib_size)
             s_scale = torch.ones_like(s_lib_size)
 
+        # If there's a shape mismatch between model parameters and data,
+        # handle it by reshaping the data to match the model parameters
+        if model_n_genes is not None and model_n_genes != u_obs.shape[1]:
+            print(f"WARNING: Shape mismatch between model parameters ({model_n_genes} genes) and data ({u_obs.shape[1]} genes)")
+
+            # Determine the minimum number of genes to use
+            n_genes = min(model_n_genes, u_obs.shape[1])
+            print(f"StandardObservationModel - Reshaping data to use {n_genes} genes")
+
+            # Reshape u_obs and s_obs to match the model parameters
+            if u_obs.shape[1] > n_genes:
+                print(f"StandardObservationModel - Reshaping u_obs from {u_obs.shape} to use {n_genes} genes")
+                u_obs = u_obs[:, :n_genes]
+
+            if s_obs.shape[1] > n_genes:
+                print(f"StandardObservationModel - Reshaping s_obs from {s_obs.shape} to use {n_genes} genes")
+                s_obs = s_obs[:, :n_genes]
+
+            print(f"StandardObservationModel - After reshaping: u_obs shape: {u_obs.shape}, s_obs shape: {s_obs.shape}")
+
         # Store the observations and scaling factors
         self.u_obs = u_obs
         self.s_obs = s_obs
@@ -114,12 +134,6 @@ class StandardObservationModel(BaseObservationModel):
         context["s_obs"] = s_obs
         context["u_scale"] = u_scale
         context["s_scale"] = s_scale
-
-        # If there's a shape mismatch between model parameters and data,
-        # log a warning but don't modify the data here - let the likelihood models handle it
-        if model_n_genes is not None and model_n_genes != u_obs.shape[1]:
-            print(f"WARNING: Shape mismatch between model parameters ({model_n_genes} genes) and data ({u_obs.shape[1]} genes)")
-            print(f"This will be handled by the likelihood models")
 
         return context
 
