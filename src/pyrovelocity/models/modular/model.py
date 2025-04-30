@@ -4,6 +4,39 @@ PyroVelocity model implementation that composes component models.
 This module provides the core model class for PyroVelocity's modular architecture,
 implementing a composable approach where the full model is built from specialized
 component models (dynamics, priors, likelihoods, observations, guides).
+
+The modular architecture follows a component-based design pattern, where each
+component is responsible for a specific aspect of the model. This approach enables:
+
+1. Flexibility: Components can be swapped out independently
+2. Extensibility: New components can be added without modifying existing code
+3. Testability: Components can be tested in isolation
+4. Reusability: Components can be reused across different models
+
+The main class in this module is `PyroVelocityModel`, which composes the different
+components into a cohesive probabilistic model. The model uses functional composition
+for the forward method, enabling railway-oriented programming patterns.
+
+Example:
+    >>> import torch
+    >>> import pyro
+    >>> from pyrovelocity.models.modular.factory import create_standard_model
+    >>> from pyrovelocity.models.modular.model import PyroVelocityModel
+    >>>
+    >>> # Create a standard model with default components
+    >>> model = create_standard_model()
+    >>>
+    >>> # Generate synthetic data
+    >>> u_obs = torch.randn(10, 5)  # 10 cells, 5 genes
+    >>> s_obs = torch.randn(10, 5)  # 10 cells, 5 genes
+    >>>
+    >>> # Run the model forward
+    >>> results = model.forward(u_obs=u_obs, s_obs=s_obs)
+    >>>
+    >>> # Access model parameters
+    >>> alpha = results.get("alpha")
+    >>> beta = results.get("beta")
+    >>> gamma = results.get("gamma")
 """
 
 from dataclasses import dataclass, field
@@ -107,6 +140,13 @@ class PyroVelocityModel:
     - Observation model: Handles data preprocessing and transformation
     - Guide model: Implements the inference guide for posterior approximation
 
+    The PyroVelocityModel provides methods for:
+    1. Running the model forward to compute expected RNA counts
+    2. Training the model using SVI (Stochastic Variational Inference)
+    3. Generating posterior samples for uncertainty quantification
+    4. Computing RNA velocity from posterior samples
+    5. Storing results in AnnData objects for visualization and analysis
+
     Attributes:
         dynamics_model: Component handling velocity vector field modeling
         prior_model: Component handling prior distributions
@@ -114,6 +154,27 @@ class PyroVelocityModel:
         observation_model: Component handling data observations
         guide_model: Component handling inference guide
         state: Immutable state container for all model components
+
+    Examples:
+        >>> # Create a model with standard components
+        >>> from pyrovelocity.models.modular.factory import create_standard_model
+        >>> model = create_standard_model()
+        >>>
+        >>> # Train the model with AnnData
+        >>> import anndata as ad
+        >>> adata = ad.read_h5ad("example_data.h5ad")
+        >>> adata = PyroVelocityModel.setup_anndata(adata)
+        >>> model.train(adata=adata, max_epochs=500)
+        >>>
+        >>> # Generate posterior samples
+        >>> posterior_samples = model.generate_posterior_samples(
+        ...     adata=adata, num_samples=50
+        ... )
+        >>>
+        >>> # Store results in AnnData
+        >>> adata = model.store_results_in_anndata(
+        ...     adata=adata, posterior_samples=posterior_samples
+        ... )
     """
 
     @beartype
@@ -203,16 +264,53 @@ class PyroVelocityModel:
         approach where each component processes the data and passes it to the
         next component.
 
+        The forward pass follows this sequence:
+        1. Observation model: Processes input data and prepares it for the dynamics model
+        2. Dynamics model: Computes expected RNA counts based on dynamics equations
+        3. Prior model: Applies prior distributions to model parameters
+        4. Likelihood model: Computes likelihood of observed data given expected counts
+
+        The method can be called in two ways:
+        - With x and time_points: For general input data and time points
+        - With u_obs and s_obs: For RNA velocity-specific input data
+
         Args:
             x: Optional input data tensor of shape [batch_size, n_features]
-            time_points: Optional time points for the dynamics model
-            u_obs: Observed unspliced RNA counts
-            s_obs: Observed spliced RNA counts
+            time_points: Optional time points for the dynamics model of shape [n_time_points]
+            u_obs: Observed unspliced RNA counts of shape [batch_size, n_genes]
+            s_obs: Observed spliced RNA counts of shape [batch_size, n_genes]
             cell_state: Optional dictionary with cell state information
             **kwargs: Additional keyword arguments passed to component models
 
         Returns:
-            Dictionary containing model outputs and intermediate results
+            Dictionary containing model outputs and intermediate results, including:
+            - alpha: Transcription rate parameter
+            - beta: Splicing rate parameter
+            - gamma: Degradation rate parameter
+            - u_expected: Expected unspliced RNA counts
+            - s_expected: Expected spliced RNA counts
+            - tau: Latent time (if enabled)
+            - Other model-specific outputs
+
+        Examples:
+            >>> # Run forward pass with RNA count data
+            >>> import torch
+            >>> from pyrovelocity.models.modular.factory import create_standard_model
+            >>>
+            >>> # Create model and synthetic data
+            >>> model = create_standard_model()
+            >>> u_obs = torch.randn(10, 5)  # 10 cells, 5 genes
+            >>> s_obs = torch.randn(10, 5)  # 10 cells, 5 genes
+            >>>
+            >>> # Run forward pass
+            >>> results = model.forward(u_obs=u_obs, s_obs=s_obs)
+            >>>
+            >>> # Access results
+            >>> alpha = results["alpha"]
+            >>> beta = results["beta"]
+            >>> gamma = results["gamma"]
+            >>> u_expected = results["u_expected"]
+            >>> s_expected = results["s_expected"]
         """
         # Initialize the context dictionary to pass between components
         context = {
@@ -282,21 +380,49 @@ class PyroVelocityModel:
         **kwargs,
     ) -> Dict[str, Any]:
         """
-        Inference guide for the model.
+        Inference guide for the model used in variational inference.
 
         This method delegates to the guide model component to implement
-        the inference guide for posterior approximation.
+        the inference guide for posterior approximation. The guide defines
+        the variational distribution that approximates the true posterior
+        distribution over model parameters.
+
+        During training, this guide is used by Pyro's SVI (Stochastic Variational
+        Inference) to optimize the variational parameters. After training, the guide
+        can be used to sample from the approximate posterior distribution.
+
+        The method handles two cases:
+        1. When data is provided (x, u_obs, or s_obs): Processes data through the
+           observation model before passing to the guide
+        2. When no data is provided: Assumes posterior sampling mode and passes
+           directly to the guide
 
         Args:
             x: Optional input data tensor of shape [batch_size, n_features]
-            time_points: Optional time points for the dynamics model
-            u_obs: Observed unspliced RNA counts
-            s_obs: Observed spliced RNA counts
+            time_points: Optional time points for the dynamics model of shape [n_time_points]
+            u_obs: Observed unspliced RNA counts of shape [batch_size, n_genes]
+            s_obs: Observed spliced RNA counts of shape [batch_size, n_genes]
             cell_state: Optional dictionary with cell state information
             **kwargs: Additional keyword arguments passed to the guide model
 
         Returns:
-            Dictionary containing guide outputs
+            Dictionary containing guide outputs, typically including variational parameters
+
+        Examples:
+            >>> # Use guide for posterior sampling
+            >>> import torch
+            >>> from pyrovelocity.models.modular.factory import create_standard_model
+            >>>
+            >>> # Create model and synthetic data
+            >>> model = create_standard_model()
+            >>> u_obs = torch.randn(10, 5)  # 10 cells, 5 genes
+            >>> s_obs = torch.randn(10, 5)  # 10 cells, 5 genes
+            >>>
+            >>> # Train model (simplified)
+            >>> model.guide_model.create_guide(model.forward)
+            >>>
+            >>> # Use guide for inference
+            >>> guide_results = model.guide(u_obs=u_obs, s_obs=s_obs)
         """
         # Initialize the context dictionary to pass to the guide
         context = {
@@ -365,18 +491,46 @@ class PyroVelocityModel:
         self, x: Any, time_points: Optional[Any] = None, **kwargs
     ) -> Dict[str, Any]:
         """
-        Generate predictions using the model.
+        Generate predictions using the model without sampling from the posterior.
 
         This method processes the input data through the observation model and dynamics model
-        to generate predictions.
+        to generate predictions. Unlike the forward method, this method is focused on
+        prediction rather than inference, and doesn't apply prior distributions or
+        likelihood models.
+
+        The method is useful for:
+        1. Making predictions with fixed parameter values
+        2. Simulating RNA dynamics over time
+        3. Testing the dynamics model in isolation
 
         Args:
-            x: Input data tensor
-            time_points: Time points for the dynamics model
+            x: Input data tensor of shape [batch_size, n_features]
+            time_points: Time points for the dynamics model of shape [n_time_points]
             **kwargs: Additional keyword arguments passed to component models
 
         Returns:
-            Dictionary containing predictions
+            Dictionary containing predictions, typically including:
+            - u_predicted: Predicted unspliced RNA counts
+            - s_predicted: Predicted spliced RNA counts
+            - velocity: Predicted RNA velocity
+
+        Examples:
+            >>> # Make predictions with the model
+            >>> import torch
+            >>> from pyrovelocity.models.modular.factory import create_standard_model
+            >>>
+            >>> # Create model and synthetic data
+            >>> model = create_standard_model()
+            >>> x = torch.randn(10, 5)  # 10 cells, 5 genes
+            >>> time_points = torch.linspace(0, 1, 10)  # 10 time points
+            >>>
+            >>> # Generate predictions
+            >>> predictions = model.predict(x, time_points)
+            >>>
+            >>> # Access predictions
+            >>> u_predicted = predictions.get("u_predicted")
+            >>> s_predicted = predictions.get("s_predicted")
+            >>> velocity = predictions.get("velocity")
         """
         # Initialize the context dictionary
         context = {
@@ -398,17 +552,48 @@ class PyroVelocityModel:
 
     @beartype
     def predict_future_states(
-        self, current_state: Tuple[Any, Any], time_delta: Any, **kwargs
-    ) -> Tuple[Any, Any]:
+        self, current_state: Tuple[torch.Tensor, torch.Tensor], time_delta: torch.Tensor, **kwargs
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Predict future states based on current state and time delta.
+        Predict future RNA states based on current state and time delta.
 
-        This method delegates to the dynamics model to predict future states.
+        This method delegates to the dynamics model to predict future states of
+        unspliced and spliced RNA counts given the current state and a time delta.
+        It's useful for simulating RNA dynamics over time and predicting cell
+        trajectories.
+
+        The method solves the RNA velocity differential equations to predict
+        how the RNA counts will evolve over the specified time delta.
 
         Args:
-            current_state: Current state as a tuple of (u, s)
-            time_delta: Time delta for prediction
-            **kwargs: Additional keyword arguments passed to the dynamics model
+            current_state: Current state as a tuple of (u, s) where:
+                - u: Unspliced RNA counts of shape [batch_size, n_genes]
+                - s: Spliced RNA counts of shape [batch_size, n_genes]
+            time_delta: Time delta for prediction, either a scalar or tensor of shape [batch_size]
+            **kwargs: Additional keyword arguments passed to the dynamics model,
+                including parameters like alpha, beta, gamma
+
+        Returns:
+            Tuple of (u_future, s_future) representing the predicted future state:
+                - u_future: Predicted unspliced RNA counts of shape [batch_size, n_genes]
+                - s_future: Predicted spliced RNA counts of shape [batch_size, n_genes]
+
+        Examples:
+            >>> # Predict future states
+            >>> import torch
+            >>> from pyrovelocity.models.modular.factory import create_standard_model
+            >>>
+            >>> # Create model and synthetic data
+            >>> model = create_standard_model()
+            >>> u_current = torch.ones(10, 5)  # 10 cells, 5 genes
+            >>> s_current = torch.ones(10, 5)  # 10 cells, 5 genes
+            >>> current_state = (u_current, s_current)
+            >>>
+            >>> # Predict future state after time_delta
+            >>> time_delta = torch.tensor(0.5)
+            >>> u_future, s_future = model.predict_future_states(
+            ...     current_state, time_delta
+            ... )
         """
         # Delegate to the dynamics model
         return self.dynamics_model.predict_future_states(
@@ -424,19 +609,59 @@ class PyroVelocityModel:
         unspliced_layer: str = "unspliced",
         use_raw: bool = False,
         **kwargs
-    ):
+    ) -> AnnData:
         """
         Set up AnnData object for use with PyroVelocityModel.
 
-        This method prepares the AnnData object for use with the PyroVelocityModel,
-        ensuring that the required layers exist and computing library sizes.
+        This method prepares the AnnData object for use with the PyroVelocityModel by:
+        1. Verifying that required layers exist
+        2. Computing library sizes for normalization
+        3. Computing library size statistics
+        4. Adding indices for batch processing
+
+        The method modifies the AnnData object in-place by adding several new columns
+        to the obs attribute:
+        - u_lib_size_raw: Raw library size for unspliced counts
+        - s_lib_size_raw: Raw library size for spliced counts
+        - u_lib_size: Log-transformed library size for unspliced counts
+        - s_lib_size: Log-transformed library size for spliced counts
+        - u_lib_size_mean: Mean of log library size for unspliced counts
+        - s_lib_size_mean: Mean of log library size for spliced counts
+        - u_lib_size_scale: Standard deviation of log library size for unspliced counts
+        - s_lib_size_scale: Standard deviation of log library size for spliced counts
+        - ind_x: Indices for batch processing
 
         Args:
             adata: AnnData object to set up
-            spliced_layer: Name of the spliced layer
-            unspliced_layer: Name of the unspliced layer
-            use_raw: Whether to use raw data
-            **kwargs: Additional keyword arguments
+            spliced_layer: Name of the spliced layer in adata.layers
+            unspliced_layer: Name of the unspliced layer in adata.layers
+            use_raw: Whether to use raw data from adata.raw
+            **kwargs: Additional keyword arguments (unused)
+
+        Returns:
+            Modified AnnData object with additional columns
+
+        Raises:
+            ValueError: If required layers are not found in the AnnData object
+
+        Examples:
+            >>> # Set up AnnData for PyroVelocity
+            >>> import anndata as ad
+            >>> from pyrovelocity.models.modular.model import PyroVelocityModel
+            >>>
+            >>> # Load data
+            >>> adata = ad.read_h5ad("example_data.h5ad")
+            >>>
+            >>> # Set up AnnData
+            >>> adata = PyroVelocityModel.setup_anndata(
+            ...     adata,
+            ...     spliced_layer="spliced",
+            ...     unspliced_layer="unspliced"
+            ... )
+            >>>
+            >>> # Check that library sizes were computed
+            >>> print("u_lib_size in adata.obs:", "u_lib_size" in adata.obs)
+            >>> print("s_lib_size in adata.obs:", "s_lib_size" in adata.obs)
         """
         # Make sure the required layers exist
         required_layers = [spliced_layer, unspliced_layer]
@@ -492,11 +717,19 @@ class PyroVelocityModel:
         learning_rate: float = 0.01,
         use_gpu: Union[str, bool, int] = "auto",
         **kwargs
-    ):
+    ) -> "PyroVelocityModel":
         """
         Train the model using the provided AnnData object.
 
-        This method trains the model using the data in the AnnData object.
+        This method trains the model using the data in the AnnData object. It performs
+        the following steps:
+        1. Prepares data from the AnnData object
+        2. Sets up the inference configuration
+        3. Runs SVI (Stochastic Variational Inference)
+        4. Stores the inference state in the model state
+
+        The method supports mini-batch training, early stopping, and GPU acceleration.
+        After training, the model's state is updated with the trained parameters.
 
         Args:
             adata: AnnData object containing the data
@@ -507,8 +740,30 @@ class PyroVelocityModel:
             early_stopping: Whether to use early stopping
             early_stopping_patience: Patience for early stopping
             learning_rate: Learning rate for the optimizer
-            use_gpu: Whether to use GPU for training
+            use_gpu: Whether to use GPU for training ("auto", True, False, or GPU index)
             **kwargs: Additional keyword arguments for training
+
+        Returns:
+            The model instance with updated state (for method chaining)
+
+        Examples:
+            >>> # Create a model and train it
+            >>> from pyrovelocity.models.modular.factory import create_standard_model
+            >>> import anndata as ad
+            >>>
+            >>> # Load data and prepare it
+            >>> adata = ad.read_h5ad("example_data.h5ad")
+            >>> adata = PyroVelocityModel.setup_anndata(adata)
+            >>>
+            >>> # Create and train the model
+            >>> model = create_standard_model()
+            >>> model.train(
+            ...     adata=adata,
+            ...     max_epochs=500,
+            ...     batch_size=128,
+            ...     learning_rate=0.005,
+            ...     use_gpu=True
+            ... )
         """
         # Enable Pyro validation
         pyro.enable_validation(True)
@@ -608,17 +863,44 @@ class PyroVelocityModel:
         """
         Generate posterior samples using the trained model.
 
-        This method generates posterior samples for the given data using the trained model.
+        This method generates posterior samples for model parameters using the trained model.
+        The samples represent the posterior distribution over parameters like alpha, beta, and gamma,
+        which can be used for uncertainty quantification and downstream analysis.
+
+        The method requires that the model has been trained first. It uses the guide
+        from the inference state to sample from the approximate posterior distribution.
 
         Args:
             adata: Optional AnnData object (if None, uses the one from training)
-            indices: Optional sequence of indices to generate samples for
-            batch_size: Batch size for generating samples
+            indices: Optional sequence of indices to generate samples for (for batch processing)
+            batch_size: Batch size for generating samples (for memory efficiency)
             num_samples: Number of posterior samples to generate
-            **kwargs: Additional keyword arguments
+            **kwargs: Additional keyword arguments including 'seed' for reproducibility
 
         Returns:
-            Dictionary of posterior samples
+            Dictionary of posterior samples with keys for model parameters (alpha, beta, gamma, etc.)
+            and values as numpy arrays of shape [num_samples, num_genes]
+
+        Examples:
+            >>> # Generate posterior samples after training
+            >>> from pyrovelocity.models.modular.factory import create_standard_model
+            >>> import anndata as ad
+            >>>
+            >>> # Load data and prepare it
+            >>> adata = ad.read_h5ad("example_data.h5ad")
+            >>> adata = PyroVelocityModel.setup_anndata(adata)
+            >>>
+            >>> # Create, train the model, and generate samples
+            >>> model = create_standard_model()
+            >>> model.train(adata=adata, max_epochs=500)
+            >>> posterior_samples = model.generate_posterior_samples(
+            ...     num_samples=50, seed=42
+            ... )
+            >>>
+            >>> # Access parameter samples
+            >>> alpha_samples = posterior_samples["alpha"]  # Shape: [50, num_genes]
+            >>> beta_samples = posterior_samples["beta"]    # Shape: [50, num_genes]
+            >>> gamma_samples = posterior_samples["gamma"]  # Shape: [50, num_genes]
         """
         # Import inference utilities
         from pyrovelocity.models.modular.inference.posterior import (
@@ -654,17 +936,48 @@ class PyroVelocityModel:
         model_name: str = "pyrovelocity",
     ) -> AnnData:
         """
-        Store model results in AnnData.
+        Store model results in AnnData for visualization and analysis.
 
-        This method stores the model results in the AnnData object.
+        This method computes velocity from posterior samples and stores all results
+        in the AnnData object. The results are stored in various slots of the AnnData object:
+        - adata.obs: Cell-level information (e.g., latent time)
+        - adata.var: Gene-level information (e.g., kinetic parameters)
+        - adata.layers: Matrix data (e.g., velocity, uncertainty)
+        - adata.uns: Unstructured data (e.g., model configuration)
+
+        The stored results can be used with visualization tools like scVelo for
+        creating velocity stream plots and other visualizations.
 
         Args:
-            adata: AnnData object
-            posterior_samples: Dictionary of posterior samples
-            model_name: Name to use for storing results
+            adata: AnnData object to store results in
+            posterior_samples: Dictionary of posterior samples from generate_posterior_samples()
+            model_name: Name prefix to use for storing results (to distinguish between models)
 
         Returns:
-            Updated AnnData object
+            Updated AnnData object with model results
+
+        Examples:
+            >>> # Store results in AnnData after generating posterior samples
+            >>> from pyrovelocity.models.modular.factory import create_standard_model
+            >>> import anndata as ad
+            >>> import scvelo as scv
+            >>>
+            >>> # Load data, train model, and generate samples
+            >>> adata = ad.read_h5ad("example_data.h5ad")
+            >>> adata = PyroVelocityModel.setup_anndata(adata)
+            >>> model = create_standard_model()
+            >>> model.train(adata=adata, max_epochs=500)
+            >>> posterior_samples = model.generate_posterior_samples(num_samples=50)
+            >>>
+            >>> # Store results and visualize
+            >>> adata = model.store_results_in_anndata(
+            ...     adata=adata,
+            ...     posterior_samples=posterior_samples,
+            ...     model_name="standard_model"
+            ... )
+            >>>
+            >>> # Visualize results with scVelo
+            >>> scv.pl.velocity_embedding_stream(adata, basis="umap", color="clusters")
         """
         # Import inference utilities
         from pyrovelocity.models.modular.inference.posterior import (
