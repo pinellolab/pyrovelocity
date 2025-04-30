@@ -4,8 +4,8 @@ Inference configuration utilities for PyroVelocity PyTorch/Pyro modular implemen
 This module contains utilities for creating and validating inference configurations.
 """
 
-from typing import Any, Dict, Optional, Union
 from dataclasses import dataclass, field
+from typing import Any, Dict, Optional, Union
 
 from beartype import beartype
 
@@ -33,6 +33,8 @@ class InferenceConfig:
     early_stopping: bool = True  # Whether to use early stopping
     early_stopping_patience: int = 10  # Patience for early stopping
     clip_norm: Optional[float] = None  # Gradient clipping norm
+    train_size: float = 0.8  # Fraction of data to use for training
+    valid_size: Optional[float] = 0.2  # Fraction of data to use for validation
 
     # MCMC parameters
     num_warmup: int = 500  # Number of warmup steps for MCMC
@@ -58,6 +60,8 @@ def create_inference_config(
     early_stopping: bool = True,
     early_stopping_patience: int = 10,
     clip_norm: Optional[float] = None,
+    train_size: float = 0.8,
+    valid_size: Optional[float] = 0.2,
     num_warmup: int = 500,
     num_chains: int = 1,
     chain_method: str = "parallel",
@@ -80,6 +84,8 @@ def create_inference_config(
         early_stopping: Whether to use early stopping
         early_stopping_patience: Patience for early stopping
         clip_norm: Gradient clipping norm
+        train_size: Fraction of data to use for training
+        valid_size: Fraction of data to use for validation
         num_warmup: Number of warmup steps for MCMC
         num_chains: Number of chains for MCMC
         chain_method: Method for running chains
@@ -102,6 +108,8 @@ def create_inference_config(
         early_stopping=early_stopping,
         early_stopping_patience=early_stopping_patience,
         clip_norm=clip_norm,
+        train_size=train_size,
+        valid_size=valid_size,
         num_warmup=num_warmup,
         num_chains=num_chains,
         chain_method=chain_method,
@@ -150,6 +158,10 @@ def validate_config(
             )
         if config.clip_norm is not None and config.clip_norm <= 0:
             raise ValueError(f"Invalid clip norm: {config.clip_norm}")
+        if config.train_size <= 0 or config.train_size > 1:
+            raise ValueError(f"Invalid train size: {config.train_size}")
+        if config.valid_size is not None and (config.valid_size <= 0 or config.valid_size > 1):
+            raise ValueError(f"Invalid validation size: {config.valid_size}")
 
     # Validate MCMC parameters if using MCMC
     if config.method == "mcmc":
@@ -198,6 +210,8 @@ def get_default_config(method: str = "svi") -> InferenceConfig:
             early_stopping=True,
             early_stopping_patience=10,
             clip_norm=None,
+            train_size=0.8,
+            valid_size=0.2,
         )
     elif method == "mcmc":
         return create_inference_config(
