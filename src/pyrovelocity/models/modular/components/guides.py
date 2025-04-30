@@ -97,11 +97,19 @@ class AutoGuideFactory(BaseInferenceGuide):
 
         # Create the guide
         guide_cls = guide_classes[self.guide_type]
-        self._guide = guide_cls(
-            model,
-            init_loc_fn=self.init_loc_fn,
-            init_scale=self.init_scale,
-        )
+
+        # Different guide types accept different parameters
+        if self.guide_type == "AutoDelta":
+            self._guide = guide_cls(
+                model,
+                init_loc_fn=self.init_loc_fn,
+            )
+        else:
+            self._guide = guide_cls(
+                model,
+                init_loc_fn=self.init_loc_fn,
+                init_scale=self.init_scale,
+            )
         return self._guide
 
     @beartype
