@@ -273,40 +273,89 @@ def test_create_inference_data(test_inference_state):
     assert "tau" in inference_data.posterior
 
 
-@pytest.mark.skip(
-    reason="This test needs more work to handle model parameters correctly"
-)
 def test_analyze_posterior_with_model_config(test_inference_state):
     """Test analyzing posterior samples with a model configuration."""
-    # This test is skipped because it requires more work to handle the model parameters correctly.
-    # The analyze_posterior function expects specific shapes and formats for the input data and model
-    # that are difficult to mock in a test environment.
-
     # Create test data with the correct shape and type
-    u_obs = jnp.ones((10, 5), dtype=jnp.float32)  # (cells, genes)
-    s_obs = jnp.ones((10, 5), dtype=jnp.float32)  # (cells, genes)
+    u_obs = jnp.ones((10,), dtype=jnp.float32)  # (cells,)
+    s_obs = jnp.ones((10,), dtype=jnp.float32)  # (cells,)
 
-    # Create a model function directly instead of using model_config
-    # This avoids issues with the factory system in the test
-    def model_fn(u_obs, s_obs):
-        return velocity_model(u_obs=u_obs, s_obs=s_obs)
+    # Create a simple model function
+    def simple_model(u_obs=None, s_obs=None):
+        # Sample parameters
+        alpha = numpyro.sample("alpha", dist.LogNormal(0.0, 1.0))
+        beta = numpyro.sample("beta", dist.LogNormal(0.0, 1.0))
+        gamma = numpyro.sample("gamma", dist.LogNormal(0.0, 1.0))
+
+        # Sample latent time
+        with numpyro.plate("cell", 10):
+            tau = numpyro.sample("tau", dist.Normal(0.0, 1.0))
+
+        # Compute expected values
+        u_expected = alpha * jnp.exp(-beta * tau)
+        s_expected = (
+            alpha
+            * beta
+            / (gamma - beta + 1e-6)
+            * (jnp.exp(-beta * tau) - jnp.exp(-gamma * tau))
+        )
+
+        # Sample observations
+        with numpyro.plate("cell_gene", 10):
+            if u_obs is not None:
+                numpyro.sample(
+                    "u_obs", dist.Poisson(u_expected.reshape(-1)), obs=u_obs
+                )
+            if s_obs is not None:
+                numpyro.sample(
+                    "s_obs", dist.Poisson(s_expected.reshape(-1)), obs=s_obs
+                )
+
+        # Return expected values
+        return {
+            "u_expected": u_expected,
+            "s_expected": s_expected,
+        }
 
     # Generate random key
     key = jax.random.PRNGKey(0)
 
-    # The test would continue with analyze_posterior and assertions,
-    # but this is skipped for now due to the complexity of mocking the correct model parameters.
+    # Analyze posterior
+    results = analyze_posterior(
+        inference_state=test_inference_state,
+        model=simple_model,
+        kwargs={"u_obs": u_obs, "s_obs": s_obs},
+        num_samples=5,
+        key=key,
+    )
+
+    # Check that results contain expected keys
+    assert "posterior_samples" in results
+    assert "posterior_predictive" in results
+    assert "velocity" in results
+    assert "uncertainty" in results
+    assert "inference_data" in results
+
+    # Check that posterior samples have the correct shape
+    assert results["posterior_samples"]["alpha"].shape == (5,)
+    assert results["posterior_samples"]["beta"].shape == (5,)
+    assert results["posterior_samples"]["gamma"].shape == (5,)
+    assert results["posterior_samples"]["tau"].shape == (5, 10)
+
+    # Check that velocity samples have the correct shape
+    assert "u_expected" in results["velocity"]
+    assert "s_expected" in results["velocity"]
+    assert "velocity" in results["velocity"]
+    assert "acceleration" in results["velocity"]
+
+    # Check that uncertainty measures have the correct shape
+    assert "velocity_mean" in results["uncertainty"]
+    assert "velocity_std" in results["uncertainty"]
+    assert "velocity_prob_positive" in results["uncertainty"]
+    assert "velocity_confidence" in results["uncertainty"]
 
 
-@pytest.mark.skip(
-    reason="This test needs more work to handle AnnData format correctly"
-)
 def test_format_anndata_output(test_inference_state):
     """Test formatting results into an AnnData object."""
-    # This test is skipped because it requires more work to handle the AnnData format correctly.
-    # The format_anndata_output function expects specific shapes and formats for the input data
-    # that are difficult to mock in a test environment.
-
     # Sample from the posterior
     key = jax.random.PRNGKey(0)
     posterior_samples = sample_posterior(
@@ -316,11 +365,14 @@ def test_format_anndata_output(test_inference_state):
     )
 
     # Create mock velocity samples with shape (num_samples, num_cells, num_genes)
+    n_samples = 5
+    n_cells = 10
+    n_genes = 10
     mock_velocity_samples = {
-        "u_expected": jnp.ones((5, 10, 10)),  # 5 samples, 10 cells, 10 genes
-        "s_expected": jnp.ones((5, 10, 10)),
-        "velocity": jnp.ones((5, 10, 10)),
-        "acceleration": jnp.ones((5, 10, 10)),
+        "u_expected": jnp.ones((n_samples, n_genes, n_cells)),  # 5 samples, 10 genes, 10 cells
+        "s_expected": jnp.ones((n_samples, n_genes, n_cells)),
+        "velocity": jnp.ones((n_samples, n_genes, n_cells)),
+        "acceleration": jnp.ones((n_samples, n_genes, n_cells)),
     }
 
     # Compute uncertainty from mock data
@@ -337,10 +389,50 @@ def test_format_anndata_output(test_inference_state):
 
     # Create AnnData object with the correct dimensions
     adata = anndata.AnnData(
-        X=np.random.rand(10, 10),
-        obs={"cell_type": ["cell"] * 10},
-        var={"gene_name": [f"gene_{i}" for i in range(10)]},
+        X=np.random.rand(n_cells, n_genes),
+        obs={"cell_type": [f"cell_{i}" for i in range(n_cells)]},
+        var={"gene_name": [f"gene_{i}" for i in range(n_genes)]},
     )
 
-    # The test would continue with format_anndata_output and assertions,
-    # but this is skipped for now due to the complexity of mocking the correct data format.
+    # Format results into AnnData object
+    adata_out = format_anndata_output(
+        adata=adata,
+        results=results,
+        model_name="test_model",
+    )
+
+    # Check that the output is an AnnData object
+    assert isinstance(adata_out, anndata.AnnData)
+
+    # Check that the output has the expected layers
+    assert "test_model_velocity" in adata_out.layers
+    assert "test_model_u_expected" in adata_out.layers
+    assert "test_model_s_expected" in adata_out.layers
+
+    # Check that the output has the expected obs
+    assert "test_model_velocity_confidence" in adata_out.obs
+    assert "test_model_velocity_probability" in adata_out.obs
+
+    # Check that the output has the expected var
+    assert "test_model_velocity_cv" in adata_out.var
+    assert "test_model_alpha" in adata_out.var
+    assert "test_model_beta" in adata_out.var
+    assert "test_model_gamma" in adata_out.var
+
+    # Check that the output has the expected uns
+    assert "velocity_models" in adata_out.uns
+    assert "test_model" in adata_out.uns["velocity_models"]
+    assert "test_model_model_type" in adata_out.uns
+    assert adata_out.uns["test_model_model_type"] == "jax_numpyro"
+    assert "test_model_params" in adata_out.uns
+
+    # Check that the shapes are correct
+    assert adata_out.layers["test_model_velocity"].shape == (n_cells, n_genes)
+    assert adata_out.layers["test_model_u_expected"].shape == (n_cells, n_genes)
+    assert adata_out.layers["test_model_s_expected"].shape == (n_cells, n_genes)
+    assert adata_out.obs["test_model_velocity_confidence"].shape == (n_cells,)
+    assert adata_out.obs["test_model_velocity_probability"].shape == (n_cells,)
+    assert adata_out.var["test_model_velocity_cv"].shape == (n_genes,)
+    assert adata_out.var["test_model_alpha"].shape == (n_genes,)
+    assert adata_out.var["test_model_beta"].shape == (n_genes,)
+    assert adata_out.var["test_model_gamma"].shape == (n_genes,)
