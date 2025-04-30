@@ -5,6 +5,39 @@ This module contains the NumPyro model definition for RNA velocity, including:
 
 - velocity_model: Main NumPyro model for RNA velocity
 - create_model: Factory function for creating models with different components
+
+The JAX/NumPyro implementation of PyroVelocity provides several advantages:
+1. JIT compilation for faster execution
+2. Automatic vectorization for better hardware utilization
+3. Functional programming approach for composability
+4. Immutable state containers for thread safety
+5. Automatic differentiation for gradient-based inference
+
+Example:
+    >>> import jax
+    >>> import jax.numpy as jnp
+    >>> from pyrovelocity.models.jax.core.model import create_model
+    >>> from pyrovelocity.models.jax.core.state import ModelConfig
+    >>>
+    >>> # Create a model configuration
+    >>> config = ModelConfig(
+    ...     dynamics="standard",
+    ...     likelihood="poisson",
+    ...     prior="lognormal",
+    ...     latent_time=True,
+    ...     include_prior=True
+    ... )
+    >>>
+    >>> # Create the model function
+    >>> model_fn = create_model(config)
+    >>>
+    >>> # Generate synthetic data
+    >>> key = jax.random.PRNGKey(0)
+    >>> u_obs = jax.random.poisson(key, jnp.ones((10, 5)) * 5.0)
+    >>> s_obs = jax.random.poisson(key, jnp.ones((10, 5)) * 5.0)
+    >>>
+    >>> # Run the model
+    >>> results = model_fn(u_obs=u_obs, s_obs=s_obs)
 """
 
 from typing import Any, Callable, Dict, Optional, Tuple
@@ -50,19 +83,57 @@ def velocity_model(
 ) -> Dict[str, Float[Array, "..."]]:
     """Main NumPyro model for RNA velocity.
 
+    This function defines the probabilistic model for RNA velocity analysis using
+    NumPyro. The model consists of several components:
+
+    1. Prior distributions for model parameters (alpha, beta, gamma)
+    2. Latent time for each cell (optional)
+    3. RNA dynamics equations that relate unspliced and spliced RNA counts
+    4. Likelihood distributions for observed RNA counts
+
+    The model follows the standard RNA velocity framework where:
+    - alpha: Transcription rate
+    - beta: Splicing rate
+    - gamma: Degradation rate
+    - tau: Latent time for each cell
+
+    The dynamics are governed by the differential equations:
+    du/dt = alpha - beta * u
+    ds/dt = beta * u - gamma * s
+
     Args:
-        u_obs: Observed unspliced RNA counts
-        s_obs: Observed spliced RNA counts
-        u_log_library: Log library size for unspliced RNA
-        s_log_library: Log library size for spliced RNA
-        dynamics_fn: Dynamics function
-        likelihood_fn: Likelihood function
-        prior_fn: Prior function
-        latent_time: Whether to use latent time
-        include_prior: Whether to include prior in the model
+        u_obs: Observed unspliced RNA counts of shape [cell, gene]
+        s_obs: Observed spliced RNA counts of shape [cell, gene]
+        u_log_library: Log library size for unspliced RNA of shape [cell]
+        s_log_library: Log library size for spliced RNA of shape [cell]
+        dynamics_fn: Function that implements RNA dynamics equations
+        likelihood_fn: Function that defines the likelihood distribution
+        prior_fn: Function that defines prior distributions for parameters
+        latent_time: Whether to use latent time for each cell
+        include_prior: Whether to include prior distributions in the model
 
     Returns:
-        Dictionary of model outputs
+        Dictionary of model outputs including:
+        - alpha: Transcription rate parameter of shape [gene]
+        - beta: Splicing rate parameter of shape [gene]
+        - gamma: Degradation rate parameter of shape [gene]
+        - tau: Latent time of shape [cell] (if latent_time=True)
+        - u_expected: Expected unspliced RNA counts of shape [cell, gene]
+        - s_expected: Expected spliced RNA counts of shape [cell, gene]
+
+    Examples:
+        >>> import jax
+        >>> import jax.numpy as jnp
+        >>> import numpyro
+        >>>
+        >>> # Generate synthetic data
+        >>> key = jax.random.PRNGKey(0)
+        >>> u_obs = jax.random.poisson(key, jnp.ones((10, 5)) * 5.0)
+        >>> s_obs = jax.random.poisson(key, jnp.ones((10, 5)) * 5.0)
+        >>>
+        >>> # Run the model
+        >>> with numpyro.handlers.seed(rng_seed=0):
+        ...     results = velocity_model(u_obs=u_obs, s_obs=s_obs)
     """
     # Get dimensions
     num_cells, num_genes = u_obs.shape
@@ -180,13 +251,45 @@ def velocity_model(
 def create_model(
     config: ModelConfig,
 ) -> Callable:
-    """Factory function for creating models with different components.
+    """Factory function for creating RNA velocity models with different components.
+
+    This function creates a model function based on the provided configuration.
+    It selects the appropriate dynamics function, likelihood function, and prior
+    function based on the configuration, and returns a model function that can
+    be used for inference.
+
+    The factory pattern allows for flexible composition of different model components
+    without modifying the core model definition. This enables users to experiment
+    with different combinations of dynamics, likelihoods, and priors.
 
     Args:
-        config: Model configuration
+        config: Model configuration object with the following attributes:
+            - dynamics: Type of dynamics function ("standard", "nonlinear", or "ode")
+            - likelihood: Type of likelihood function ("poisson" or "negative_binomial")
+            - prior: Type of prior function ("lognormal" or "informative")
+            - latent_time: Whether to use latent time
+            - include_prior: Whether to include prior in the model
 
     Returns:
-        Model function
+        A model function that takes observed data and returns model outputs
+
+    Examples:
+        >>> from pyrovelocity.models.jax.core.state import ModelConfig
+        >>>
+        >>> # Create a model configuration
+        >>> config = ModelConfig(
+        ...     dynamics="standard",
+        ...     likelihood="poisson",
+        ...     prior="lognormal",
+        ...     latent_time=True,
+        ...     include_prior=True
+        ... )
+        >>>
+        >>> # Create a model function
+        >>> model_fn = create_model(config)
+        >>>
+        >>> # The model_fn can now be used for inference
+        >>> # model_fn(u_obs=u_obs, s_obs=s_obs)
     """
     # Select dynamics function
     if config.dynamics == "standard":
@@ -207,15 +310,25 @@ def create_model(
     ) -> Dict[str, Float[Array, "gene"]]:
         """Wrapper for sample_prior_parameters with proper type annotations.
 
-        This ensures that a valid key is always passed to sample_prior_parameters.
+        This function ensures that a valid key is always passed to sample_prior_parameters.
         If key is None, it creates a new deterministic key using JAX's PRNGKey.
+        This is important for JAX's functional programming model where randomness
+        is explicitly managed through PRNGKeys.
+
+        The function returns a dictionary of parameter samples with the correct
+        shape and type annotations, which is important for JAX's type checking
+        and shape inference.
 
         Args:
             key: JAX random key (can be None)
-            num_genes: Number of genes
+            num_genes: Number of genes to generate parameters for
 
         Returns:
-            Dictionary of parameter samples
+            Dictionary of parameter samples with keys:
+            - alpha: Transcription rate parameter of shape [gene]
+            - beta: Splicing rate parameter of shape [gene]
+            - gamma: Degradation rate parameter of shape [gene]
+            - scaling: Optional scaling parameter of shape [gene] (if applicable)
         """
         # Handle the case where key is None
         if key is None:
@@ -232,6 +345,31 @@ def create_model(
         u_log_library: Optional[Float[Array, "cell"]] = None,
         s_log_library: Optional[Float[Array, "cell"]] = None,
     ) -> Dict[str, Float[Array, "..."]]:
+        """NumPyro model function for RNA velocity with configured components.
+
+        This function is the actual model function that will be used for inference.
+        It's created by the factory function with the specified configuration and
+        component functions.
+
+        The function takes observed RNA counts and library sizes, and returns
+        a dictionary of model outputs. It delegates to the velocity_model function
+        with the configured dynamics, likelihood, and prior functions.
+
+        Args:
+            u_obs: Observed unspliced RNA counts of shape [cell, gene]
+            s_obs: Observed spliced RNA counts of shape [cell, gene]
+            u_log_library: Log library size for unspliced RNA of shape [cell]
+            s_log_library: Log library size for spliced RNA of shape [cell]
+
+        Returns:
+            Dictionary of model outputs including:
+            - alpha: Transcription rate parameter of shape [gene]
+            - beta: Splicing rate parameter of shape [gene]
+            - gamma: Degradation rate parameter of shape [gene]
+            - tau: Latent time of shape [cell] (if latent_time=True)
+            - u_expected: Expected unspliced RNA counts of shape [cell, gene]
+            - s_expected: Expected spliced RNA counts of shape [cell, gene]
+        """
         return velocity_model(
             u_obs=u_obs,
             s_obs=s_obs,
