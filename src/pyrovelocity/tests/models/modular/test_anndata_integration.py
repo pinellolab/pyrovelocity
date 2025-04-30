@@ -175,14 +175,19 @@ def test_store_results_in_anndata(sample_adata, model, monkeypatch):
     adata_out = model.store_results_in_anndata(adata, posterior_samples)
 
     # Check that the results are stored in the correct locations
-    assert "velocity_model_alpha" in adata_out.var
-    assert "velocity_model_beta" in adata_out.var
-    assert "velocity_model_gamma" in adata_out.var
-    assert "velocity_model_latent_time" in adata_out.obs
-    assert "velocity_model_velocity" in adata_out.layers
+    assert "pyrovelocity_alpha" in adata_out.var
+    assert "pyrovelocity_beta" in adata_out.var
+    assert "pyrovelocity_gamma" in adata_out.var
+    assert "pyrovelocity_latent_time" in adata_out.obs
+    assert "pyrovelocity_velocity" in adata_out.layers
 
     # We can't check exact values because the mock returns random values
     # Just check that the shapes are correct
-    assert adata_out.var["velocity_model_alpha"].shape == (sample_adata.n_vars,)
-    assert adata_out.var["velocity_model_beta"].shape == (sample_adata.n_vars,)
-    assert adata_out.var["velocity_model_gamma"].shape == (sample_adata.n_vars,)
+    assert adata_out.var["pyrovelocity_alpha"].shape == (sample_adata.n_vars,)
+    assert adata_out.var["pyrovelocity_beta"].shape == (sample_adata.n_vars,)
+    assert adata_out.var["pyrovelocity_gamma"].shape == (sample_adata.n_vars,)
+    assert adata_out.layers["pyrovelocity_velocity"].shape == (
+        sample_adata.n_obs,
+        sample_adata.n_vars,
+    )
+    assert adata_out.obs["pyrovelocity_latent_time"].shape == (sample_adata.n_obs,)

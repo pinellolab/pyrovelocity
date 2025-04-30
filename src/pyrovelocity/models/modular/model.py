@@ -188,7 +188,7 @@ class PyroVelocityModel:
     @beartype
     def forward(
         self,
-        x: Optional[torch.Tensor] = None,
+        x: Optional[Union[torch.Tensor, Dict[str, Any]]] = None,
         time_points: Optional[torch.Tensor] = None,
         u_obs: Optional[torch.Tensor] = None,
         s_obs: Optional[torch.Tensor] = None,
@@ -248,7 +248,7 @@ class PyroVelocityModel:
     @beartype
     def guide(
         self,
-        x: Optional[torch.Tensor] = None,
+        x: Optional[Union[torch.Tensor, Dict[str, Any]]] = None,
         time_points: Optional[torch.Tensor] = None,
         u_obs: Optional[torch.Tensor] = None,
         s_obs: Optional[torch.Tensor] = None,
@@ -287,6 +287,13 @@ class PyroVelocityModel:
             context["u_obs"] = u_obs
         if s_obs is not None:
             context["s_obs"] = s_obs
+
+        # If no data is provided, we're in posterior sampling mode
+        # In this case, we can skip the observation model and go directly to the guide
+        if x is None and u_obs is None and s_obs is None:
+            # Pass directly to the guide model without observation processing
+            guide_fn = self.guide_model.get_guide()
+            return guide_fn(context)
 
         # Process through the observation model first to prepare data
         observation_context = self.observation_model.forward(context)
@@ -532,6 +539,12 @@ class PyroVelocityModel:
             **kwargs
         )
 
+        # Ensure the guide is created before running inference
+        # This is necessary because the guide needs to be created with the model
+        if isinstance(self.guide_model, AutoGuideFactory):
+            # Create the guide with the model
+            self.guide_model.create_guide(self.forward)
+
         # Run inference
         inference_state = run_inference(
             model=self.forward,
@@ -612,7 +625,7 @@ class PyroVelocityModel:
         self,
         adata: AnnData,
         posterior_samples: Dict[str, np.ndarray],
-        model_name: str = "velocity_model",
+        model_name: str = "pyrovelocity",
     ) -> AnnData:
         """
         Store model results in AnnData.

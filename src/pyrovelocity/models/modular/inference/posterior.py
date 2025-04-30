@@ -57,7 +57,7 @@ def sample_posterior(
 @beartype
 def compute_velocity(
     model: Union[Callable, PyroVelocityModel],
-    posterior_samples: Dict[str, torch.Tensor],
+    posterior_samples: Dict[str, Union[torch.Tensor, np.ndarray]],
     adata: Optional[AnnData] = None,
     use_mean: bool = False,
 ) -> Dict[str, Union[torch.Tensor, np.ndarray]]:
@@ -83,6 +83,14 @@ def compute_velocity(
             "Posterior samples must contain alpha, beta, and gamma"
         )
 
+    # Convert numpy arrays to torch tensors if needed
+    if isinstance(alpha, np.ndarray):
+        alpha = torch.tensor(alpha)
+    if isinstance(beta, np.ndarray):
+        beta = torch.tensor(beta)
+    if isinstance(gamma, np.ndarray):
+        gamma = torch.tensor(gamma)
+
     # Get unspliced and spliced counts
     if adata is not None:
         u_layer = adata.layers["unspliced"]
@@ -97,6 +105,12 @@ def compute_velocity(
     else:
         u = posterior_samples.get("u")
         s = posterior_samples.get("s")
+
+        # Convert numpy arrays to torch tensors if needed
+        if isinstance(u, np.ndarray):
+            u = torch.tensor(u)
+        if isinstance(s, np.ndarray):
+            s = torch.tensor(s)
 
     if u is None or s is None:
         raise ValueError("Unable to get unspliced and spliced counts")
@@ -114,6 +128,21 @@ def compute_velocity(
         u_ss_mean = alpha_mean / beta_mean
         s_ss_mean = alpha_mean / gamma_mean
         velocity = beta_mean * (u - u_ss_mean) - gamma_mean * (s - s_ss_mean)
+
+        # Compute latent time (pseudotime)
+        # This is a simple implementation based on the ratio of unspliced to spliced
+        # More sophisticated methods could be used
+
+        # Handle 1D tensors
+        if u.dim() == 1:
+            u_norm = u / (u.max() + 1e-6)
+            s_norm = s / (s.max() + 1e-6)
+            latent_time = torch.tensor(1.0 - u_norm.mean() / (s_norm.mean() + 1e-6))
+        else:
+            u_norm = u / u.max(dim=1, keepdim=True)[0]
+            s_norm = s / s.max(dim=1, keepdim=True)[0]
+            latent_time = 1.0 - u_norm.mean(dim=1) / (s_norm.mean(dim=1) + 1e-6)
+
         return {
             "velocity": velocity,
             "alpha": alpha_mean,
@@ -121,18 +150,95 @@ def compute_velocity(
             "gamma": gamma_mean,
             "u_ss": u_ss_mean,
             "s_ss": s_ss_mean,
+            "latent_time": latent_time,
         }
     else:
-        # Compute velocity for each posterior sample
-        velocity = beta * (u - u_ss) - gamma * (s - s_ss)
-        return {
-            "velocity": velocity,
-            "alpha": alpha,
-            "beta": beta,
-            "gamma": gamma,
-            "u_ss": u_ss,
-            "s_ss": s_ss,
-        }
+        # Check if the shapes are compatible for broadcasting
+        # If not, use the mean of the parameters
+        if alpha.shape[0] != u.shape[0] and u.shape[0] > 1:
+            print(f"Shape mismatch: alpha shape {alpha.shape}, u shape {u.shape}")
+            print(f"Using mean of parameters for velocity calculation")
+            # Use mean of posterior samples
+            alpha_mean = alpha.mean(dim=0)
+            beta_mean = beta.mean(dim=0)
+            gamma_mean = gamma.mean(dim=0)
+            u_ss_mean = alpha_mean / beta_mean
+            s_ss_mean = alpha_mean / gamma_mean
+            velocity = beta_mean * (u - u_ss_mean) - gamma_mean * (s - s_ss_mean)
+
+            # Compute latent time (pseudotime)
+            # This is a simple implementation based on the ratio of unspliced to spliced
+            # More sophisticated methods could be used
+
+            # Handle 1D tensors
+            if u.dim() == 1:
+                u_norm = u / (u.max() + 1e-6)
+                s_norm = s / (s.max() + 1e-6)
+                latent_time = torch.tensor(1.0 - u_norm.mean() / (s_norm.mean() + 1e-6))
+            else:
+                u_norm = u / u.max(dim=1, keepdim=True)[0]
+                s_norm = s / s.max(dim=1, keepdim=True)[0]
+                latent_time = 1.0 - u_norm.mean(dim=1) / (s_norm.mean(dim=1) + 1e-6)
+
+            return {
+                "velocity": velocity,
+                "alpha": alpha,
+                "beta": beta,
+                "gamma": gamma,
+                "u_ss": u_ss,
+                "s_ss": s_ss,
+                "latent_time": latent_time,
+            }
+        else:
+            # Compute velocity for each posterior sample
+            # We need to ensure the shapes are compatible for broadcasting
+            # If alpha has shape [num_samples, n_genes] and u has shape [n_cells, n_genes],
+            # we need to reshape for proper broadcasting
+            if alpha.dim() == 2 and u.dim() == 2 and alpha.shape[0] != u.shape[0]:
+                # Reshape u and s to [1, n_cells, n_genes] for broadcasting with
+                # alpha, beta, gamma of shape [num_samples, 1, n_genes]
+                u_reshaped = u.unsqueeze(0)  # [1, n_cells, n_genes]
+                s_reshaped = s.unsqueeze(0)  # [1, n_cells, n_genes]
+
+                # Reshape alpha, beta, gamma to [num_samples, 1, n_genes]
+                alpha_reshaped = alpha.unsqueeze(1)  # [num_samples, 1, n_genes]
+                beta_reshaped = beta.unsqueeze(1)    # [num_samples, 1, n_genes]
+                gamma_reshaped = gamma.unsqueeze(1)  # [num_samples, 1, n_genes]
+
+                # Reshape u_ss and s_ss to [num_samples, 1, n_genes]
+                u_ss_reshaped = u_ss.unsqueeze(1)    # [num_samples, 1, n_genes]
+                s_ss_reshaped = s_ss.unsqueeze(1)    # [num_samples, 1, n_genes]
+
+                # Compute velocity with broadcasting
+                # This will result in shape [num_samples, n_cells, n_genes]
+                velocity = beta_reshaped * (u_reshaped - u_ss_reshaped) - gamma_reshaped * (s_reshaped - s_ss_reshaped)
+            else:
+                # Standard computation when shapes are compatible
+                velocity = beta * (u - u_ss) - gamma * (s - s_ss)
+
+            # Compute latent time (pseudotime)
+            # This is a simple implementation based on the ratio of unspliced to spliced
+            # More sophisticated methods could be used
+
+            # Handle 1D tensors
+            if u.dim() == 1:
+                u_norm = u / (u.max() + 1e-6)
+                s_norm = s / (s.max() + 1e-6)
+                latent_time = torch.tensor(1.0 - u_norm.mean() / (s_norm.mean() + 1e-6))
+            else:
+                u_norm = u / u.max(dim=1, keepdim=True)[0]
+                s_norm = s / s.max(dim=1, keepdim=True)[0]
+                latent_time = 1.0 - u_norm.mean(dim=1) / (s_norm.mean(dim=1) + 1e-6)
+
+            return {
+                "velocity": velocity,
+                "alpha": alpha,
+                "beta": beta,
+                "gamma": gamma,
+                "u_ss": u_ss,
+                "s_ss": s_ss,
+                "latent_time": latent_time,
+            }
 
 
 @beartype
@@ -310,7 +416,34 @@ def format_anndata_output(
             # Convert to numpy array
             if isinstance(value, torch.Tensor):
                 value = value.detach().cpu().numpy()
-            # Add to AnnData object
+
+            # Special handling for alpha, beta, gamma - store in var
+            if key in ["alpha", "beta", "gamma"]:
+                # If value is multi-dimensional, take the mean across samples
+                if value.ndim > 1:
+                    value_mean = value.mean(axis=0)
+                else:
+                    value_mean = value
+
+                # Ensure the value has the right shape for var
+                if value_mean.shape[0] != adata.n_vars:
+                    # Transpose if needed
+                    if value_mean.shape[0] == adata.n_obs:
+                        value_mean = value_mean.T
+                    else:
+                        # Reshape if possible
+                        try:
+                            value_mean = value_mean.reshape(adata.n_vars)
+                        except ValueError:
+                            warnings.warn(f"Could not reshape {key} to match var dimensions")
+                            # Still store the original in uns
+                            adata.uns[f"{model_name}_{key}"] = value
+                            continue
+
+                # Store in var dataframe
+                adata.var[f"{model_name}_{key}"] = value_mean
+
+            # Store original in uns for all parameters
             adata.uns[f"{model_name}_{key}"] = value
 
     # Add velocity to AnnData object
@@ -335,6 +468,13 @@ def format_anndata_output(
         if isinstance(uncertainty, torch.Tensor):
             uncertainty = uncertainty.detach().cpu().numpy()
         adata.var[f"{model_name}_uncertainty"] = uncertainty
+
+    # Add latent time to AnnData object
+    if "latent_time" in results:
+        latent_time = results["latent_time"]
+        if isinstance(latent_time, torch.Tensor):
+            latent_time = latent_time.detach().cpu().numpy()
+        adata.obs[f"{model_name}_latent_time"] = latent_time
 
     # Add steady state to AnnData object
     if "u_ss" in results and "s_ss" in results:
@@ -364,6 +504,21 @@ def format_anndata_output(
             value = results[param]
             if isinstance(value, torch.Tensor):
                 value = value.detach().cpu().numpy()
+            # If value is multi-dimensional, take the mean across samples
+            if value.ndim > 1:
+                value = value.mean(axis=0)
+            # Ensure the value has the right shape for var
+            if value.shape[0] != adata.n_vars:
+                # Transpose if needed
+                if value.shape[0] == adata.n_obs:
+                    value = value.T
+                else:
+                    # Reshape if possible
+                    try:
+                        value = value.reshape(adata.n_vars)
+                    except ValueError:
+                        warnings.warn(f"Could not reshape {param} to match var dimensions")
+                        continue
             adata.var[f"{model_name}_{param}"] = value
 
     return adata

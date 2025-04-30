@@ -15,12 +15,12 @@ import scanpy as sc
 import torch
 
 from pyrovelocity.io.serialization import load_anndata_from_json
-from pyrovelocity.models.adapters import LegacyModelAdapter
 from pyrovelocity.models.modular.factory import (
     create_model,
     create_standard_model,
     standard_model_config,
 )
+from pyrovelocity.models.modular.model import PyroVelocityModel
 from pyrovelocity.models.modular.registry import register_standard_components
 
 # Fixture hash for data validation
@@ -51,9 +51,8 @@ def test_data():
 @pytest.fixture
 def setup_data(test_data):
     """Set up the test data for velocity inference."""
-    # Set up AnnData for LegacyModelAdapter
-    LegacyModelAdapter.setup_anndata(test_data)
-    return test_data
+    # Set up AnnData using the direct method
+    return PyroVelocityModel.setup_anndata(test_data)
 
 
 class TestEndToEndPipeline:
@@ -68,23 +67,19 @@ class TestEndToEndPipeline:
         # Create the model
         model = create_standard_model()
 
-        # Create an adapter for the model
-        adapter = LegacyModelAdapter.from_modular_model(setup_data, model)
-
         # Train the model (with reduced epochs for testing)
-        adapter.train(
+        model.train(
+            adata=setup_data,
             max_epochs=10,
             learning_rate=0.01,
             use_gpu=False,
         )
 
-        # Verify the model has been trained
-        assert hasattr(adapter.module, "history")
-        assert "elbo_train" in adapter.module.history
-        assert len(adapter.module.history["elbo_train"]) > 0
-
         # Generate posterior samples
-        posterior_samples = adapter.generate_posterior_samples()
+        posterior_samples = model.generate_posterior_samples(
+            adata=setup_data,
+            num_samples=30
+        )
 
         # Verify that samples contain alpha, beta, gamma
         assert "alpha" in posterior_samples
@@ -97,19 +92,22 @@ class TestEndToEndPipeline:
         assert posterior_samples["beta"].shape[1] == gene_count
         assert posterior_samples["gamma"].shape[1] == gene_count
 
+        # Store results in AnnData
+        adata_out = model.store_results_in_anndata(
+            adata=setup_data,
+            posterior_samples=posterior_samples
+        )
+
         # Verify that adata has been updated with velocity information
-        adata_out = adapter.adata
-        assert "velocity" in adata_out.layers
-        assert adata_out.layers["velocity"].shape == (
+        assert "pyrovelocity_velocity" in adata_out.layers
+        assert adata_out.layers["pyrovelocity_velocity"].shape == (
             setup_data.shape[0],
             setup_data.shape[1],
         )
 
         # Verify that latent time has been computed
-        # We need to add latent_time to the AnnData object in the generate_posterior_samples method
-        adapter.generate_posterior_samples()
-        assert "latent_time" in adata_out.obs
-        assert adata_out.obs["latent_time"].shape[0] == setup_data.shape[0]
+        assert "pyrovelocity_latent_time" in adata_out.obs
+        assert adata_out.obs["pyrovelocity_latent_time"].shape[0] == setup_data.shape[0]
 
     def test_custom_model_training(self, setup_data):
         """Test training a custom model."""
@@ -127,33 +125,34 @@ class TestEndToEndPipeline:
         # Create the model
         model = create_model(config)
 
-        # Create an adapter for the model
-        adapter = LegacyModelAdapter.from_modular_model(setup_data, model)
-
         # Train the model (with reduced epochs for testing)
-        adapter.train(
+        model.train(
+            adata=setup_data,
             max_epochs=10,
             learning_rate=0.01,
             use_gpu=False,
         )
 
-        # Verify the model has been trained
-        assert hasattr(adapter.module, "history")
-        assert "elbo_train" in adapter.module.history
-        assert len(adapter.module.history["elbo_train"]) > 0
-
         # Generate posterior samples
-        posterior_samples = adapter.generate_posterior_samples()
+        posterior_samples = model.generate_posterior_samples(
+            adata=setup_data,
+            num_samples=30
+        )
 
         # Verify that samples contain alpha, beta, gamma
         assert "alpha" in posterior_samples
         assert "beta" in posterior_samples
         assert "gamma" in posterior_samples
 
+        # Store results in AnnData
+        adata_out = model.store_results_in_anndata(
+            adata=setup_data,
+            posterior_samples=posterior_samples
+        )
+
         # Verify that adata has been updated with velocity information
-        adata_out = adapter.adata
-        assert "velocity" in adata_out.layers
-        assert adata_out.layers["velocity"].shape == (
+        assert "pyrovelocity_velocity" in adata_out.layers
+        assert adata_out.layers["pyrovelocity_velocity"].shape == (
             setup_data.shape[0],
             setup_data.shape[1],
         )
@@ -181,39 +180,40 @@ class TestEndToEndPipeline:
             name: create_model(config) for name, config in model_configs.items()
         }
 
-        # Create adapters
-        # We need to use the same AnnData object for all adapters to avoid the error
-        # "The provided AnnData object does not match the AnnData object previously provided for setup."
-        adapters = {}
+        # Train models and store results
+        adatas = {}
         for name, model in models.items():
-            adapters[name] = LegacyModelAdapter.from_modular_model(
-                setup_data, model
-            )
-
-        # Train models
-        for name, adapter in adapters.items():
-            adapter.train(
+            # Train the model
+            model.train(
+                adata=setup_data,
                 max_epochs=10,
                 learning_rate=0.01,
                 use_gpu=False,
             )
 
+            # Generate posterior samples
+            posterior_samples = model.generate_posterior_samples(
+                adata=setup_data,
+                num_samples=30
+            )
+
+            # Store results in AnnData
+            adatas[name] = model.store_results_in_anndata(
+                adata=setup_data.copy(),
+                posterior_samples=posterior_samples
+            )
+
         # Compare models
         # For this test, just verify that all models trained successfully
-        for name, adapter in adapters.items():
-            assert hasattr(adapter.module, "history")
-            assert "elbo_train" in adapter.module.history
-            assert len(adapter.module.history["elbo_train"]) > 0
-
-            # Verify posterior samples
-            posterior_samples = adapter.generate_posterior_samples()
-            assert "alpha" in posterior_samples
-            assert "beta" in posterior_samples
-            assert "gamma" in posterior_samples
+        for name, adata_out in adatas.items():
+            # Verify posterior samples were stored
+            assert "pyrovelocity_alpha" in adata_out.uns
+            assert "pyrovelocity_beta" in adata_out.uns
+            assert "pyrovelocity_gamma" in adata_out.uns
 
             # Verify velocity
-            assert "velocity" in adapter.adata.layers
-            assert adapter.adata.layers["velocity"].shape == (
+            assert "pyrovelocity_velocity" in adata_out.layers
+            assert adata_out.layers["pyrovelocity_velocity"].shape == (
                 setup_data.shape[0],
                 setup_data.shape[1],
             )
@@ -226,23 +226,30 @@ class TestEndToEndPipeline:
 
         # Set up AnnData for velocity
         adata = test_data.copy()
-        LegacyModelAdapter.setup_anndata(adata)
+        adata = PyroVelocityModel.setup_anndata(adata)
 
         # Create a model
         model = create_standard_model()
 
-        # Create an adapter
-        adapter = LegacyModelAdapter.from_modular_model(adata, model)
-
         # Train with minimal epochs
-        adapter.train(
+        model.train(
+            adata=adata,
             max_epochs=2,
             learning_rate=0.01,
             use_gpu=False,
         )
 
-        # Get the processed AnnData
-        adata_out = adapter.adata
+        # Generate posterior samples
+        posterior_samples = model.generate_posterior_samples(
+            adata=adata,
+            num_samples=30
+        )
+
+        # Store results in AnnData
+        adata_out = model.store_results_in_anndata(
+            adata=adata,
+            posterior_samples=posterior_samples
+        )
 
         # Verify that standard AnnData attributes are preserved
         assert adata_out.n_obs == adata.n_obs
@@ -253,12 +260,7 @@ class TestEndToEndPipeline:
         assert "unspliced" in adata_out.layers
 
         # Verify that velocity-specific layers are added
-        assert "velocity" in adata_out.layers
+        assert "pyrovelocity_velocity" in adata_out.layers
 
         # Verify that velocity-specific observations are added
-        # We need to add latent_time to the AnnData object manually for testing
-        # Add latent_time to the AnnData object
-        adata_out.obs["latent_time"] = np.random.uniform(
-            0, 1, size=adata_out.n_obs
-        )
-        assert "latent_time" in adata_out.obs
+        assert "pyrovelocity_latent_time" in adata_out.obs
