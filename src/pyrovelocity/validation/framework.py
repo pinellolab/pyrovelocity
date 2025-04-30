@@ -78,6 +78,7 @@ Example:
 import time
 from typing import Any, Dict, Optional, Sequence
 
+import jax.numpy as jnp
 import numpy as np
 from anndata import AnnData
 from beartype import beartype
@@ -417,6 +418,28 @@ class ValidationRunner:
                 from pyrovelocity.models.jax.data.anndata import prepare_anndata
                 data_dict = prepare_anndata(self.adata)
 
+                # Rename keys to match model function parameters
+                if "X_unspliced" in data_dict and "X_spliced" in data_dict:
+                    data_dict["u_obs"] = data_dict.pop("X_unspliced")
+                    data_dict["s_obs"] = data_dict.pop("X_spliced")
+
+                # Add library size information
+                if "u_lib_size" in data_dict and "s_lib_size" in data_dict:
+                    data_dict["u_log_library"] = jnp.log(data_dict["u_lib_size"])
+                    data_dict["s_log_library"] = jnp.log(data_dict["s_lib_size"])
+
+                # Remove keys that are not used by the model
+                keys_to_keep = ["u_obs", "s_obs", "u_log_library", "s_log_library"]
+                data_dict = {k: v for k, v in data_dict.items() if k in keys_to_keep}
+
+                # Add batch dimension for factory model
+                data_dict["u_obs"] = jnp.expand_dims(data_dict["u_obs"], axis=0)
+                data_dict["s_obs"] = jnp.expand_dims(data_dict["s_obs"], axis=0)
+                if "u_log_library" in data_dict:
+                    data_dict["u_log_library"] = jnp.expand_dims(data_dict["u_log_library"], axis=0)
+                if "s_log_library" in data_dict:
+                    data_dict["s_log_library"] = jnp.expand_dims(data_dict["s_log_library"], axis=0)
+
                 # Create inference configuration
                 from pyrovelocity.models.jax.core.state import InferenceConfig
                 inference_config = InferenceConfig(
@@ -425,15 +448,21 @@ class ValidationRunner:
                 )
 
                 # Run inference
+                import jax
+
                 from pyrovelocity.models.jax.inference.unified import (
                     run_inference,
                 )
+
+                # Create a JAX random key from the seed
+                key = jax.random.PRNGKey(kwargs.get("seed", 0))
+
                 _, inference_state = run_inference(
                     model=model,
                     args=(),
                     kwargs=data_dict,
                     config=inference_config,
-                    seed=kwargs.get("seed", 0),
+                    key=key,
                 )
 
                 # Store inference state

@@ -29,6 +29,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from importlib.resources import files
 from tqdm import tqdm
+import os
+import sys
+import traceback
 
 # Import model creation and components
 from pyrovelocity.models.modular.factory import create_standard_model, create_model, standard_model_config
@@ -94,6 +97,8 @@ def main():
     """Run a complete RNA velocity analysis workflow using the modular implementation."""
     # Set random seed for reproducibility
     # This ensures that results are deterministic and reproducible
+    import torch
+    import pyro
     pyro.set_rng_seed(0)
     torch.manual_seed(0)
 

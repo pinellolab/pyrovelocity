@@ -230,7 +230,7 @@ def main():
                 "s_log_library": s_log_library
             },
             config=inference_config,      # Inference configuration
-            seed=subkey,                  # Random seed for reproducibility
+            key=subkey,                   # Random seed for reproducibility
         )
     except Exception as e:
         print(f"Error during inference: {e}")
@@ -266,7 +266,7 @@ def main():
                     "s_log_library": s_log_library
                 },
                 config=inference_config,
-                seed=subkey,
+                key=subkey,
             )
         except Exception as e:
             print(f"Inference failed again: {e}")
@@ -287,8 +287,7 @@ def main():
             inference_state = InferenceState(
                 posterior_samples=dummy_samples,
                 posterior_predictive=None,
-                method="dummy",
-                params={},
+                diagnostics=None,
             )
     finally:
         # Ensure progress bar is closed

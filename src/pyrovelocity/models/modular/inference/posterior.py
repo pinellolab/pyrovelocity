@@ -243,19 +243,25 @@ def compute_velocity(
 
 @beartype
 def compute_uncertainty(
-    velocity_samples: torch.Tensor,
+    velocity_samples: Union[torch.Tensor, Dict[str, torch.Tensor]],
     method: str = "std",
 ) -> torch.Tensor:
     """
     Compute uncertainty in RNA velocity.
 
     Args:
-        velocity_samples: Velocity samples from posterior
+        velocity_samples: Velocity samples from posterior, either a tensor or a dictionary with a 'velocity' key
         method: Method for computing uncertainty ("std", "quantile", "entropy")
 
     Returns:
         Uncertainty in RNA velocity
     """
+    # Handle dictionary input
+    if isinstance(velocity_samples, dict):
+        if 'velocity' not in velocity_samples:
+            raise ValueError("velocity_samples dictionary must contain a 'velocity' key")
+        velocity_samples = velocity_samples['velocity']
+
     if method == "std":
         # Standard deviation across samples
         return velocity_samples.std(dim=0)
