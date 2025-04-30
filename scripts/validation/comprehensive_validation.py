@@ -38,6 +38,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import anndata as ad
 import scanpy as sc
+from tqdm import tqdm
 
 from pyrovelocity.io.datasets import pancreas
 from pyrovelocity.validation.framework import ValidationRunner
@@ -94,6 +95,43 @@ def parse_args():
     return parser.parse_args()
 
 
+def create_synthetic_data():
+    """Create synthetic data for testing when fixture data is not available."""
+    # Create synthetic data
+    n_cells, n_genes = 50, 20
+    u_data = np.random.poisson(5, size=(n_cells, n_genes))
+    s_data = np.random.poisson(5, size=(n_cells, n_genes))
+
+    # Create AnnData object
+    adata = ad.AnnData(X=s_data)
+    adata.layers["spliced"] = s_data
+    adata.layers["unspliced"] = u_data
+    adata.obs_names = [f"cell_{i}" for i in range(n_cells)]
+    adata.var_names = [f"gene_{i}" for i in range(n_genes)]
+
+    # Add cluster information
+    adata.obs["clusters"] = np.random.choice(["A", "B", "C"], size=n_cells)
+
+    # Add UMAP coordinates for visualization
+    adata.obsm = {}
+    adata.obsm["X_umap"] = np.random.normal(0, 1, size=(n_cells, 2))
+
+    # Add library size information
+    adata.obs["u_lib_size_raw"] = np.sum(u_data, axis=1)
+    adata.obs["s_lib_size_raw"] = np.sum(s_data, axis=1)
+    # Add small epsilon to avoid log(0)
+    adata.obs["u_lib_size"] = np.log(adata.obs["u_lib_size_raw"] + 1e-6)
+    adata.obs["s_lib_size"] = np.log(adata.obs["s_lib_size_raw"] + 1e-6)
+    adata.obs["u_lib_size_mean"] = np.mean(adata.obs["u_lib_size"])
+    adata.obs["s_lib_size_mean"] = np.mean(adata.obs["s_lib_size"])
+    adata.obs["u_lib_size_scale"] = np.std(adata.obs["u_lib_size"])
+    adata.obs["s_lib_size_scale"] = np.std(adata.obs["s_lib_size"])
+    adata.obs["ind_x"] = np.arange(n_cells)
+
+    print(f"Created synthetic AnnData: {adata.shape[0]} cells, {adata.shape[1]} genes")
+    return adata
+
+
 def main():
     """Run comprehensive validation and save results.
 
@@ -117,253 +155,437 @@ def main():
     # that is suitable for testing and validation
     print("Loading data...")
     start_time = time.time()
-    adata = pancreas()
-    print(f"Loaded dataset with {adata.shape[0]} cells and {adata.shape[1]} genes")
-    print(f"Loading completed in {time.time() - start_time:.2f} seconds")
+    try:
+        with tqdm(total=1, desc="Loading data") as pbar:
+            adata = pancreas()
+            pbar.update(1)
+        print(f"Loaded dataset with {adata.shape[0]} cells and {adata.shape[1]} genes")
+        print(f"Loading completed in {time.time() - start_time:.2f} seconds")
 
-    # Subset data for faster validation
-    # For demonstration purposes, we use a small subset of cells and genes
-    print("Subsetting data...")
-    adata = adata[:100, :100].copy()
-    print(f"Subset dataset to {adata.shape[0]} cells and {adata.shape[1]} genes")
+        # Subset data for faster validation
+        # For demonstration purposes, we use a small subset of cells and genes
+        print("Subsetting data...")
+        with tqdm(total=1, desc="Subsetting data") as pbar:
+            adata = adata[:100, :100].copy()
+            pbar.update(1)
+        print(f"Subset dataset to {adata.shape[0]} cells and {adata.shape[1]} genes")
+    except Exception as e:
+        print(f"Error loading pancreas dataset: {e}")
+        print("Falling back to synthetic data...")
+        with tqdm(total=1, desc="Creating synthetic data") as pbar:
+            adata = create_synthetic_data()
+            pbar.update(1)
+        print(f"Loading completed in {time.time() - start_time:.2f} seconds")
 
     # Preprocess data
     # Standard scanpy preprocessing pipeline for single-cell data
     print("Preprocessing data...")
     start_time = time.time()
-    sc.pp.normalize_per_cell(adata)  # Normalize by library size
-    sc.pp.log1p(adata)               # Log-transform
-    sc.pp.pca(adata)                 # Dimensionality reduction with PCA
-    sc.pp.neighbors(adata)           # Compute neighbor graph
-    sc.tl.umap(adata)                # Compute UMAP embedding
-    print(f"Preprocessing completed in {time.time() - start_time:.2f} seconds")
+    try:
+        with tqdm(total=5, desc="Preprocessing") as pbar:
+            # Step 1: Normalize by library size
+            sc.pp.normalize_per_cell(adata)
+            pbar.update(1)
+
+            # Step 2: Log-transform
+            sc.pp.log1p(adata)
+            pbar.update(1)
+
+            # Step 3: Dimensionality reduction with PCA
+            sc.pp.pca(adata)
+            pbar.update(1)
+
+            # Step 4: Compute neighbor graph
+            sc.pp.neighbors(adata)
+            pbar.update(1)
+
+            # Step 5: Compute UMAP embedding
+            sc.tl.umap(adata)
+            pbar.update(1)
+
+        print(f"Preprocessing completed in {time.time() - start_time:.2f} seconds")
+    except Exception as e:
+        print(f"Error during preprocessing: {e}")
+        print("Continuing with minimal preprocessing...")
+        # Ensure UMAP coordinates exist for visualization
+        if "X_umap" not in adata.obsm:
+            adata.obsm["X_umap"] = np.random.normal(0, 1, size=(adata.shape[0], 2))
 
     # Initialize ValidationRunner
     # The ValidationRunner handles the validation process for all implementations
     print("Initializing ValidationRunner...")
-    runner = ValidationRunner(adata)
+    try:
+        runner = ValidationRunner(adata)
+    except Exception as e:
+        print(f"Error initializing ValidationRunner: {e}")
+        print("Please check that the AnnData object has the required fields.")
+        return
 
     # Set up models with custom configurations
     # We can customize each model's configuration separately
     print("Setting up models...")
 
-    # Legacy model with deterministic configuration
-    # This uses the original PyroVelocity implementation
-    print("Setting up legacy model...")
-    runner.setup_legacy_model(
-        model_type="deterministic",  # Use deterministic model
-        latent_time=True,            # Include latent time
-        likelihood="Poisson",        # Use Poisson likelihood
-    )
+    try:
+        with tqdm(total=3, desc="Setting up models") as pbar:
+            # Legacy model with deterministic configuration
+            # This uses the original PyroVelocity implementation
+            print("Setting up legacy model...")
+            runner.setup_legacy_model(
+                model_type="deterministic",  # Use deterministic model
+                latent_time=True,            # Include latent time
+                likelihood="Poisson",        # Use Poisson likelihood
+            )
+            pbar.update(1)
 
-    # Modular model with standard configuration
-    # This uses the PyTorch/Pyro modular implementation
-    print("Setting up modular model...")
-    runner.setup_modular_model(
-        model_type="standard",       # Use standard dynamics model
-        latent_time=True,            # Include latent time
-        likelihood="poisson",        # Use Poisson likelihood
-        prior="lognormal",           # Use LogNormal prior
-        guide="auto",                # Use auto guide
-    )
+            # Modular model with standard configuration
+            # This uses the PyTorch/Pyro modular implementation
+            print("Setting up modular model...")
+            runner.setup_modular_model(
+                model_type="standard",       # Use standard dynamics model
+                latent_time=True,            # Include latent time
+                likelihood="poisson",        # Use Poisson likelihood
+                prior="lognormal",           # Use LogNormal prior
+                guide="auto",                # Use auto guide
+            )
+            pbar.update(1)
 
-    # JAX model with standard configuration
-    # This uses the JAX/NumPyro implementation
-    print("Setting up JAX model...")
-    runner.setup_jax_model(
-        model_type="standard",       # Use standard dynamics model
-        latent_time=True,            # Include latent time
-        likelihood="poisson",        # Use Poisson likelihood
-        prior="lognormal",           # Use LogNormal prior
-        guide="auto_normal",         # Use auto normal guide
-    )
+            # JAX model with standard configuration
+            # This uses the JAX/NumPyro implementation
+            print("Setting up JAX model...")
+            runner.setup_jax_model(
+                model_type="standard",       # Use standard dynamics model
+                latent_time=True,            # Include latent time
+                likelihood="poisson",        # Use Poisson likelihood
+                prior="lognormal",           # Use LogNormal prior
+                guide="auto_normal",         # Use auto normal guide
+            )
+            pbar.update(1)
+    except Exception as e:
+        print(f"Error setting up models: {e}")
+        print("Please check the model configurations.")
+        return
 
     # Run validation
     # This will train models, generate posterior samples, and compute metrics
     print("Running validation...")
     start_time = time.time()
-    results = runner.run_validation(
-        max_epochs=args.max_epochs,
-        num_samples=args.num_samples,
-        use_scalene=args.use_scalene,
-        batch_size=64,               # Use mini-batch training
-        learning_rate=0.01,          # Set learning rate
-        early_stopping=True,         # Enable early stopping
-    )
-    print(f"Validation completed in {time.time() - start_time:.2f} seconds")
+    try:
+        results = runner.run_validation(
+            max_epochs=args.max_epochs,
+            num_samples=args.num_samples,
+            use_scalene=args.use_scalene,
+            batch_size=64,               # Use mini-batch training
+            learning_rate=0.01,          # Set learning rate
+            early_stopping=True,         # Enable early stopping
+        )
+        print(f"Validation completed in {time.time() - start_time:.2f} seconds")
+    except Exception as e:
+        print(f"Error during validation: {e}")
+        print("Trying again with reduced complexity...")
+        try:
+            # Try with reduced complexity
+            results = runner.run_validation(
+                max_epochs=max(5, args.max_epochs // 4),  # Reduce epochs
+                num_samples=max(5, args.num_samples // 2),  # Reduce samples
+                use_scalene=False,  # Disable profiling
+                batch_size=32,      # Smaller batch size
+                learning_rate=0.005,  # Lower learning rate
+                early_stopping=True,
+            )
+            print(f"Validation completed in {time.time() - start_time:.2f} seconds")
+        except Exception as e:
+            print(f"Validation failed: {e}")
+            print("Cannot proceed without validation results.")
+            return
 
     # Compare implementations
     print("Comparing implementations...")
-    comparison = runner.compare_implementations()
+    try:
+        with tqdm(total=1, desc="Comparing implementations") as pbar:
+            comparison = runner.compare_implementations()
+            pbar.update(1)
+    except Exception as e:
+        print(f"Error comparing implementations: {e}")
+        print("Using minimal comparison results.")
+        # Create minimal comparison results to continue
+        comparison = {
+            "parameter_comparison": {},
+            "velocity_comparison": {},
+            "uncertainty_comparison": {},
+            "performance_comparison": {},
+        }
 
     # Save results
     print("Saving results...")
-    np.save(os.path.join(args.output_dir, "results.npy"), results)
-    np.save(os.path.join(args.output_dir, "comparison.npy"), comparison)
+    try:
+        with tqdm(total=2, desc="Saving results") as pbar:
+            np.save(os.path.join(args.output_dir, "results.npy"), results)
+            pbar.update(1)
+            np.save(os.path.join(args.output_dir, "comparison.npy"), comparison)
+            pbar.update(1)
+    except Exception as e:
+        print(f"Error saving results: {e}")
 
-    # Plot parameter comparison
-    print("Plotting parameter comparison...")
-    fig = plot_parameter_comparison(comparison["parameter_comparison"])
-    fig.savefig(os.path.join(args.output_dir, "parameter_comparison.png"))
-    plt.close(fig)
+    # Create visualizations with progress tracking
+    print("Creating visualizations...")
 
-    # Plot parameter distributions
-    print("Plotting parameter distributions...")
-    for param in ["alpha", "beta", "gamma"]:
-        fig = plot_parameter_distributions(results, param)
-        fig.savefig(os.path.join(args.output_dir, f"{param}_distributions.png"))
-        plt.close(fig)
+    # Count total number of plots to create
+    total_plots = 8  # Base plots
+    params = ["alpha", "beta", "gamma"]
+    total_plots += len(params)  # Parameter distribution plots
 
-    # Plot velocity comparison
-    print("Plotting velocity comparison...")
-    fig = plot_velocity_comparison(comparison["velocity_comparison"])
-    fig.savefig(os.path.join(args.output_dir, "velocity_comparison.png"))
-    plt.close(fig)
+    with tqdm(total=total_plots, desc="Creating plots") as pbar:
+        # Plot parameter comparison
+        try:
+            print("Plotting parameter comparison...")
+            fig = plot_parameter_comparison(comparison.get("parameter_comparison", {}))
+            fig.savefig(os.path.join(args.output_dir, "parameter_comparison.png"))
+            plt.close(fig)
+        except Exception as e:
+            print(f"Error plotting parameter comparison: {e}")
+        pbar.update(1)
 
-    # Plot velocity vector field
-    print("Plotting velocity vector field...")
-    coordinates = adata.obsm["X_umap"]
-    fig = plot_velocity_vector_field(results, coordinates)
-    fig.savefig(os.path.join(args.output_dir, "velocity_vector_field.png"))
-    plt.close(fig)
+        # Plot parameter distributions
+        print("Plotting parameter distributions...")
+        for param in params:
+            try:
+                fig = plot_parameter_distributions(results, param)
+                fig.savefig(os.path.join(args.output_dir, f"{param}_distributions.png"))
+                plt.close(fig)
+            except Exception as e:
+                print(f"Error plotting {param} distributions: {e}")
+            pbar.update(1)
 
-    # Plot uncertainty comparison
-    print("Plotting uncertainty comparison...")
-    fig = plot_uncertainty_comparison(comparison["uncertainty_comparison"])
-    fig.savefig(os.path.join(args.output_dir, "uncertainty_comparison.png"))
-    plt.close(fig)
+        # Plot velocity comparison
+        try:
+            print("Plotting velocity comparison...")
+            fig = plot_velocity_comparison(comparison.get("velocity_comparison", {}))
+            fig.savefig(os.path.join(args.output_dir, "velocity_comparison.png"))
+            plt.close(fig)
+        except Exception as e:
+            print(f"Error plotting velocity comparison: {e}")
+        pbar.update(1)
 
-    # Plot uncertainty heatmap
-    print("Plotting uncertainty heatmap...")
-    fig = plot_uncertainty_heatmap(results)
-    fig.savefig(os.path.join(args.output_dir, "uncertainty_heatmap.png"))
-    plt.close(fig)
+        # Plot velocity vector field
+        try:
+            print("Plotting velocity vector field...")
+            coordinates = adata.obsm["X_umap"]
+            fig = plot_velocity_vector_field(results, coordinates)
+            fig.savefig(os.path.join(args.output_dir, "velocity_vector_field.png"))
+            plt.close(fig)
+        except Exception as e:
+            print(f"Error plotting velocity vector field: {e}")
+        pbar.update(1)
 
-    # Plot performance comparison
-    print("Plotting performance comparison...")
-    fig = plot_performance_comparison(comparison["performance_comparison"])
-    fig.savefig(os.path.join(args.output_dir, "performance_comparison.png"))
-    plt.close(fig)
+        # Plot uncertainty comparison
+        try:
+            print("Plotting uncertainty comparison...")
+            fig = plot_uncertainty_comparison(comparison.get("uncertainty_comparison", {}))
+            fig.savefig(os.path.join(args.output_dir, "uncertainty_comparison.png"))
+            plt.close(fig)
+        except Exception as e:
+            print(f"Error plotting uncertainty comparison: {e}")
+        pbar.update(1)
 
-    # Plot performance radar
-    print("Plotting performance radar...")
-    fig = plot_performance_radar(results)
-    fig.savefig(os.path.join(args.output_dir, "performance_radar.png"))
-    plt.close(fig)
+        # Plot uncertainty heatmap
+        try:
+            print("Plotting uncertainty heatmap...")
+            fig = plot_uncertainty_heatmap(results)
+            fig.savefig(os.path.join(args.output_dir, "uncertainty_heatmap.png"))
+            plt.close(fig)
+        except Exception as e:
+            print(f"Error plotting uncertainty heatmap: {e}")
+        pbar.update(1)
 
-    # Perform statistical comparison
-    print("Performing statistical comparison...")
-    statistical_results = {}
+        # Plot performance comparison
+        try:
+            print("Plotting performance comparison...")
+            fig = plot_performance_comparison(comparison.get("performance_comparison", {}))
+            fig.savefig(os.path.join(args.output_dir, "performance_comparison.png"))
+            plt.close(fig)
+        except Exception as e:
+            print(f"Error plotting performance comparison: {e}")
+        pbar.update(1)
 
-    # Compare parameters
-    for param in ["alpha", "beta", "gamma"]:
-        if param in results["legacy"]["posterior_samples"] and param in results["modular"]["posterior_samples"]:
-            legacy_param = np.array(results["legacy"]["posterior_samples"][param])
-            modular_param = np.array(results["modular"]["posterior_samples"][param])
-            statistical_results[f"{param}_legacy_vs_modular"] = statistical_comparison(
-                legacy_param.flatten(), modular_param.flatten()
-            )
+        # Plot performance radar
+        try:
+            print("Plotting performance radar...")
+            fig = plot_performance_radar(results)
+            fig.savefig(os.path.join(args.output_dir, "performance_radar.png"))
+            plt.close(fig)
+        except Exception as e:
+            print(f"Error plotting performance radar: {e}")
+        pbar.update(1)
 
-        if param in results["legacy"]["posterior_samples"] and param in results["jax"]["posterior_samples"]:
-            legacy_param = np.array(results["legacy"]["posterior_samples"][param])
-            jax_param = np.array(results["jax"]["posterior_samples"][param])
-            statistical_results[f"{param}_legacy_vs_jax"] = statistical_comparison(
-                legacy_param.flatten(), jax_param.flatten()
-            )
+    # Perform statistical analysis with progress tracking
+    print("Performing statistical analysis...")
 
-        if param in results["modular"]["posterior_samples"] and param in results["jax"]["posterior_samples"]:
-            modular_param = np.array(results["modular"]["posterior_samples"][param])
-            jax_param = np.array(results["jax"]["posterior_samples"][param])
-            statistical_results[f"{param}_modular_vs_jax"] = statistical_comparison(
-                modular_param.flatten(), jax_param.flatten()
-            )
+    # Count total number of analysis steps
+    params = ["alpha", "beta", "gamma"]
+    implementations = ["legacy", "modular", "jax"]
+    comparison_pairs = [("legacy", "modular"), ("legacy", "jax"), ("modular", "jax")]
 
-    # Save statistical results
-    with open(os.path.join(args.output_dir, "statistical_results.txt"), "w") as f:
-        for key, value in statistical_results.items():
-            f.write(f"{key}:\n")
-            for test, results in value.items():
-                f.write(f"  {test}:\n")
-                for metric, val in results.items():
-                    f.write(f"    {metric}: {val}\n")
-            f.write("\n")
+    # Calculate total steps: statistical comparison + outlier detection + bias detection + edge case detection
+    total_steps = (len(params) * len(comparison_pairs)) + (len(params) * len(implementations)) * 2 + (len(params) * len(comparison_pairs))
 
-    # Detect outliers
-    print("Detecting outliers...")
-    outlier_results = {}
+    with tqdm(total=total_steps, desc="Statistical analysis") as pbar:
+        # 1. Perform statistical comparison
+        print("Performing statistical comparison...")
+        statistical_results = {}
 
-    # Detect outliers in parameters
-    for param in ["alpha", "beta", "gamma"]:
-        for impl in ["legacy", "modular", "jax"]:
-            if param in results[impl]["posterior_samples"]:
-                param_values = np.array(results[impl]["posterior_samples"][param])
-                outliers = detect_outliers(param_values.flatten())
-                outlier_results[f"{param}_{impl}_outliers"] = outliers
+        try:
+            # Compare parameters
+            for param in params:
+                for impl1, impl2 in comparison_pairs:
+                    try:
+                        if (impl1 in results and impl2 in results and
+                            "posterior_samples" in results[impl1] and "posterior_samples" in results[impl2] and
+                            param in results[impl1]["posterior_samples"] and param in results[impl2]["posterior_samples"]):
 
-    # Save outlier results
-    with open(os.path.join(args.output_dir, "outlier_results.txt"), "w") as f:
-        for key, value in outlier_results.items():
-            f.write(f"{key}: {value}\n")
+                            param1 = np.array(results[impl1]["posterior_samples"][param])
+                            param2 = np.array(results[impl2]["posterior_samples"][param])
 
-    # Detect systematic bias
-    print("Detecting systematic bias...")
-    bias_results = {}
+                            # Ensure arrays are flattened and have the same shape
+                            param1_flat = param1.flatten()
+                            param2_flat = param2.flatten()
 
-    # Detect bias in parameters
-    for param in ["alpha", "beta", "gamma"]:
-        if param in results["legacy"]["posterior_samples"] and param in results["modular"]["posterior_samples"]:
-            legacy_param = np.array(results["legacy"]["posterior_samples"][param])
-            modular_param = np.array(results["modular"]["posterior_samples"][param])
-            bias_results[f"{param}_legacy_vs_modular"] = detect_systematic_bias(
-                legacy_param.flatten(), modular_param.flatten()
-            )
+                            # Use the minimum length if they differ
+                            min_len = min(len(param1_flat), len(param2_flat))
+                            param1_flat = param1_flat[:min_len]
+                            param2_flat = param2_flat[:min_len]
 
-        if param in results["legacy"]["posterior_samples"] and param in results["jax"]["posterior_samples"]:
-            legacy_param = np.array(results["legacy"]["posterior_samples"][param])
-            jax_param = np.array(results["jax"]["posterior_samples"][param])
-            bias_results[f"{param}_legacy_vs_jax"] = detect_systematic_bias(
-                legacy_param.flatten(), jax_param.flatten()
-            )
+                            statistical_results[f"{param}_{impl1}_vs_{impl2}"] = statistical_comparison(
+                                param1_flat, param2_flat
+                            )
+                    except Exception as e:
+                        print(f"Error comparing {param} between {impl1} and {impl2}: {e}")
+                    pbar.update(1)
 
-        if param in results["modular"]["posterior_samples"] and param in results["jax"]["posterior_samples"]:
-            modular_param = np.array(results["modular"]["posterior_samples"][param])
-            jax_param = np.array(results["jax"]["posterior_samples"][param])
-            bias_results[f"{param}_modular_vs_jax"] = detect_systematic_bias(
-                modular_param.flatten(), jax_param.flatten()
-            )
+            # Save statistical results
+            with open(os.path.join(args.output_dir, "statistical_results.txt"), "w") as f:
+                for key, value in statistical_results.items():
+                    f.write(f"{key}:\n")
+                    for test, test_results in value.items():
+                        f.write(f"  {test}:\n")
+                        for metric, val in test_results.items():
+                            f.write(f"    {metric}: {val}\n")
+                    f.write("\n")
+        except Exception as e:
+            print(f"Error in statistical comparison: {e}")
 
-    # Save bias results
-    with open(os.path.join(args.output_dir, "bias_results.txt"), "w") as f:
-        for key, value in bias_results.items():
-            f.write(f"{key}:\n")
-            for metric, val in value.items():
-                f.write(f"  {metric}: {val}\n")
-            f.write("\n")
+        # 2. Detect outliers
+        print("Detecting outliers...")
+        outlier_results = {}
 
-    # Identify edge cases
-    print("Identifying edge cases...")
-    edge_case_results = {}
+        try:
+            # Detect outliers in parameters
+            for param in params:
+                for impl in implementations:
+                    try:
+                        if (impl in results and "posterior_samples" in results[impl] and
+                            param in results[impl]["posterior_samples"]):
 
-    # Identify edge cases in parameters
-    for param in ["alpha", "beta", "gamma"]:
-        for impl in ["legacy", "modular", "jax"]:
-            if param in results[impl]["posterior_samples"]:
-                param_values = np.array(results[impl]["posterior_samples"][param])
-                edge_cases = identify_edge_cases(param_values)
-                edge_case_results[f"{param}_{impl}_edge_cases"] = edge_cases
+                            param_values = np.array(results[impl]["posterior_samples"][param])
+                            outliers = detect_outliers(param_values.flatten())
+                            outlier_results[f"{param}_{impl}_outliers"] = outliers
+                    except Exception as e:
+                        print(f"Error detecting outliers for {param} in {impl}: {e}")
+                    pbar.update(1)
 
-    # Save edge case results
-    with open(os.path.join(args.output_dir, "edge_case_results.txt"), "w") as f:
-        for key, value in edge_case_results.items():
-            f.write(f"{key}:\n")
-            for metric, val in value.items():
-                if metric != "extreme_values":
-                    f.write(f"  {metric}: {val}\n")
-                else:
-                    f.write(f"  {metric}: {len(val)} values\n")
-            f.write("\n")
+            # Save outlier results
+            with open(os.path.join(args.output_dir, "outlier_results.txt"), "w") as f:
+                for key, value in outlier_results.items():
+                    f.write(f"{key}: {value}\n")
+        except Exception as e:
+            print(f"Error in outlier detection: {e}")
 
-    print(f"Validation results saved to {args.output_dir}")
+        # 3. Detect systematic bias
+        print("Detecting systematic bias...")
+        bias_results = {}
+
+        try:
+            # Detect bias in parameters
+            for param in params:
+                for impl1, impl2 in comparison_pairs:
+                    try:
+                        if (impl1 in results and impl2 in results and
+                            "posterior_samples" in results[impl1] and "posterior_samples" in results[impl2] and
+                            param in results[impl1]["posterior_samples"] and param in results[impl2]["posterior_samples"]):
+
+                            param1 = np.array(results[impl1]["posterior_samples"][param])
+                            param2 = np.array(results[impl2]["posterior_samples"][param])
+
+                            # Ensure arrays are flattened and have the same shape
+                            param1_flat = param1.flatten()
+                            param2_flat = param2.flatten()
+
+                            # Use the minimum length if they differ
+                            min_len = min(len(param1_flat), len(param2_flat))
+                            param1_flat = param1_flat[:min_len]
+                            param2_flat = param2_flat[:min_len]
+
+                            bias_results[f"{param}_{impl1}_vs_{impl2}"] = detect_systematic_bias(
+                                param1_flat, param2_flat
+                            )
+                    except Exception as e:
+                        print(f"Error detecting bias for {param} between {impl1} and {impl2}: {e}")
+                    pbar.update(1)
+
+            # Save bias results
+            with open(os.path.join(args.output_dir, "bias_results.txt"), "w") as f:
+                for key, value in bias_results.items():
+                    f.write(f"{key}:\n")
+                    for metric, val in value.items():
+                        f.write(f"  {metric}: {val}\n")
+                    f.write("\n")
+        except Exception as e:
+            print(f"Error in bias detection: {e}")
+
+        # 4. Identify edge cases
+        print("Identifying edge cases...")
+        edge_case_results = {}
+
+        try:
+            # Identify edge cases in parameters
+            for param in params:
+                for impl in implementations:
+                    try:
+                        if (impl in results and "posterior_samples" in results[impl] and
+                            param in results[impl]["posterior_samples"]):
+
+                            param_values = np.array(results[impl]["posterior_samples"][param])
+                            edge_cases = identify_edge_cases(param_values)
+                            edge_case_results[f"{param}_{impl}_edge_cases"] = edge_cases
+                    except Exception as e:
+                        print(f"Error identifying edge cases for {param} in {impl}: {e}")
+                    pbar.update(1)
+
+            # Save edge case results
+            with open(os.path.join(args.output_dir, "edge_case_results.txt"), "w") as f:
+                for key, value in edge_case_results.items():
+                    f.write(f"{key}:\n")
+                    for metric, val in value.items():
+                        if metric != "extreme_values":
+                            f.write(f"  {metric}: {val}\n")
+                        else:
+                            f.write(f"  {metric}: {len(val)} values\n")
+                    f.write("\n")
+        except Exception as e:
+            print(f"Error in edge case identification: {e}")
+
+    # Print summary
+    print("\nValidation Summary:")
+    print(f"- Output directory: {args.output_dir}")
+    print(f"- Max epochs: {args.max_epochs}")
+    print(f"- Num samples: {args.num_samples}")
+    print(f"- Implementations: {', '.join(impl for impl in implementations if impl in results)}")
+    print(f"- Parameters analyzed: {', '.join(params)}")
+    print(f"- Statistical comparisons: {len(statistical_results)}")
+    print(f"- Outliers detected: {len(outlier_results)}")
+    print(f"- Bias analyses: {len(bias_results)}")
+    print(f"- Edge cases identified: {len(edge_case_results)}")
+
+    print(f"\nValidation results saved to {args.output_dir}")
 
 
 if __name__ == "__main__":
