@@ -214,6 +214,12 @@ def main():
         # Run inference
         # The run_inference function is a unified interface for SVI and MCMC
         # It returns a tuple of (inference_object, inference_state)
+        # Define a callback function for progress tracking
+        def progress_callback(epoch, loss):
+            progress.update(1)
+            progress.set_postfix({"loss": f"{loss:.4f}"})
+
+        # Run inference
         _, inference_state = run_inference(
             model=model,                  # The model function
             args=(),                      # Empty tuple for positional args
@@ -224,8 +230,7 @@ def main():
                 "s_log_library": s_log_library
             },
             config=inference_config,      # Inference configuration
-            key=subkey,                   # Random key for reproducibility
-            progress_callback=progress.update,  # Progress tracking
+            seed=subkey,                  # Random seed for reproducibility
         )
     except Exception as e:
         print(f"Error during inference: {e}")
@@ -261,8 +266,7 @@ def main():
                     "s_log_library": s_log_library
                 },
                 config=inference_config,
-                key=subkey,
-                progress_callback=progress.update,
+                seed=subkey,
             )
         except Exception as e:
             print(f"Inference failed again: {e}")
@@ -283,9 +287,8 @@ def main():
             inference_state = InferenceState(
                 posterior_samples=dummy_samples,
                 posterior_predictive=None,
-                inference_algorithm="dummy",
-                model_config=model_config,
-                inference_config=inference_config,
+                method="dummy",
+                params={},
             )
     finally:
         # Ensure progress bar is closed
