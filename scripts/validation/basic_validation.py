@@ -390,10 +390,12 @@ def main():
                 for comp_key, comp_value in comparison["uncertainty_comparison"].items():
                     f.write(f"  {comp_key}:\n")
                     for metric, value in comp_value.items():
-                        if metric in ["shape1", "shape2", "shape_mismatch"]:
+                        if metric in ["shape1", "shape2", "shape_mismatch", "error", "uncertainty1_shape", "uncertainty2_shape"]:
                             f.write(f"    {metric}: {value}\n")
-                        else:
+                        elif isinstance(value, (int, float)):
                             f.write(f"    {metric}: {value:.4f}\n")
+                        else:
+                            f.write(f"    {metric}: {value}\n")
 
         print(f"Validation results saved to {args.output_dir}")
 
