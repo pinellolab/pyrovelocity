@@ -53,19 +53,43 @@ class StandardObservationModel(BaseObservationModel):
         s_obs = context.get("s_obs")
 
         if u_obs is None or s_obs is None:
-            # If x is provided but not u_obs and s_obs, split x into u_obs and s_obs
+            # If x is provided but not u_obs and s_obs, extract u_obs and s_obs from x
             x = context.get("x")
             if x is not None:
-                # Assume first half of features are u_obs and second half are s_obs
-                n_genes = x.shape[1] // 2
-                u_obs = x[:, :n_genes]
-                s_obs = x[:, n_genes:]
-                context["u_obs"] = u_obs
-                context["s_obs"] = s_obs
+                if isinstance(x, dict):
+                    # If x is a dictionary, extract u_obs and s_obs directly
+                    if "u_obs" in x and "s_obs" in x:
+                        u_obs = x["u_obs"]
+                        s_obs = x["s_obs"]
+                        context["u_obs"] = u_obs
+                        context["s_obs"] = s_obs
+                    else:
+                        raise ValueError(
+                            "If x is a dictionary, it must contain 'u_obs' and 's_obs' keys"
+                        )
+                else:
+                    # If x is a tensor, assume first half of features are u_obs and second half are s_obs
+                    n_genes = x.shape[1] // 2
+                    u_obs = x[:, :n_genes]
+                    s_obs = x[:, n_genes:]
+                    context["u_obs"] = u_obs
+                    context["s_obs"] = s_obs
             else:
                 raise ValueError(
                     "Either u_obs and s_obs or x must be provided in the context"
                 )
+
+        # Log tensor shapes for debugging
+        print(f"StandardObservationModel - u_obs shape: {u_obs.shape}")
+        print(f"StandardObservationModel - s_obs shape: {s_obs.shape}")
+
+        # Check for model parameters in context that might have different shapes
+        model_n_genes = None
+        for param_name in ["alpha", "beta", "gamma"]:
+            if param_name in context:
+                model_n_genes = context[param_name].shape[0]
+                print(f"StandardObservationModel - Found {param_name} with shape: {context[param_name].shape}")
+                break
 
         # Calculate library size
         u_lib_size = u_obs.sum(1).unsqueeze(1).float()  # Convert to float
@@ -90,6 +114,12 @@ class StandardObservationModel(BaseObservationModel):
         context["s_obs"] = s_obs
         context["u_scale"] = u_scale
         context["s_scale"] = s_scale
+
+        # If there's a shape mismatch between model parameters and data,
+        # log a warning but don't modify the data here - let the likelihood models handle it
+        if model_n_genes is not None and model_n_genes != u_obs.shape[1]:
+            print(f"WARNING: Shape mismatch between model parameters ({model_n_genes} genes) and data ({u_obs.shape[1]} genes)")
+            print(f"This will be handled by the likelihood models")
 
         return context
 
