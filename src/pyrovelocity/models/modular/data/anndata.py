@@ -8,12 +8,13 @@ This module contains utilities for AnnData integration, including:
 - store_results: Store results in AnnData
 """
 
-from typing import Dict, Tuple, Optional, Any, List, Union
-import torch
-import numpy as np
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import anndata
-from jaxtyping import Array, Float
+import numpy as np
+import torch
 from beartype import beartype
+from jaxtyping import Array, Float
 
 
 @beartype
@@ -232,7 +233,8 @@ def get_library_size(
     u, s = extract_layers(adata, spliced_layer, unspliced_layer, use_raw)
 
     # Calculate library sizes (sum across genes for each cell)
-    u_lib_size = torch.sum(u, dim=1)
-    s_lib_size = torch.sum(s, dim=1)
+    # Ensure the result is a 1D tensor with shape (n_cells,)
+    u_lib_size = torch.sum(u, dim=1).flatten()
+    s_lib_size = torch.sum(s, dim=1).flatten()
 
     return u_lib_size, s_lib_size
