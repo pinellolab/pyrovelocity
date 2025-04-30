@@ -14,6 +14,7 @@ import pyro
 import scanpy as sc
 import scvelo as scv
 import matplotlib.pyplot as plt
+import numpy as np
 from importlib.resources import files
 
 # Import model creation and components
@@ -25,9 +26,7 @@ from pyrovelocity.models.modular.registry import (
     ObservationModelRegistry,
     InferenceGuideRegistry,
 )
-
-# Import adapters for AnnData integration
-from pyrovelocity.models.adapters import LegacyModelAdapter
+from pyrovelocity.models.modular.model import PyroVelocityModel
 
 # Import data loading utilities
 from pyrovelocity.io.serialization import load_anndata_from_json
@@ -57,8 +56,8 @@ def main():
 
     # 2. Prepare data for velocity model
     print("Preparing data for velocity model...")
-    # Set up AnnData for LegacyModelAdapter
-    LegacyModelAdapter.setup_anndata(adata)
+    # Set up AnnData using the direct method
+    adata = PyroVelocityModel.setup_anndata(adata)
 
     # 3. List available components in each registry
     print("\nAvailable components in registries:")
@@ -98,42 +97,34 @@ def main():
     # Use the second model for this example
     model = model2
 
-    # 5. Create adapter for AnnData integration
-    print("\nCreating LegacyModelAdapter...")
-    adapter = LegacyModelAdapter.from_modular_model(adata, model)
-
-    # 6. Train the model
+    # 5. Train the model directly using AnnData
     print("\nTraining the model...")
-    adapter.train(
+    model.train(
+        adata=adata,
         max_epochs=200,  # Reduced for example
         learning_rate=0.01,
         use_gpu=False,
     )
 
-    # Plot training loss
-    if hasattr(adapter.module, "history") and "elbo_train" in adapter.module.history:
-        plt.figure(figsize=(10, 6))
-        plt.plot(adapter.module.history["elbo_train"])
-        plt.title("Training Loss (ELBO)")
-        plt.xlabel("Epoch")
-        plt.ylabel("ELBO")
-        plt.savefig("basic_velocity_training_loss.png")
-        print("Training loss plot saved to basic_velocity_training_loss.png")
-
-    # 7. Generate posterior samples
+    # 6. Generate posterior samples
     print("\nGenerating posterior samples...")
-    posterior_samples = adapter.generate_posterior_samples()
+    posterior_samples = model.generate_posterior_samples(
+        adata=adata,
+        num_samples=30
+    )
 
-    # 8. Compute velocity
-    print("Computing RNA velocity...")
-    # The velocity is computed internally by the adapter
-    adata_out = adapter.adata
+    # 7. Store results in AnnData
+    print("Storing results in AnnData...")
+    adata_out = model.store_results_in_anndata(
+        adata=adata,
+        posterior_samples=posterior_samples
+    )
 
-    # 9. Visualize results
+    # 8. Visualize results
     print("\nVisualizing results...")
     # Use latent time if available
-    if 'latent_time' in adata_out.obs.columns:
-        sc.pl.umap(adata_out, color="latent_time", title="Latent Time")
+    if 'velocity_model_latent_time' in adata_out.obs.columns:
+        sc.pl.umap(adata_out, color="velocity_model_latent_time", title="Latent Time")
         plt.savefig("basic_velocity_latent_time.png")
         print("Latent time plot saved to basic_velocity_latent_time.png")
 
@@ -146,7 +137,7 @@ def main():
     plt.savefig("basic_velocity_stream.png")
     print("Velocity stream plot saved to basic_velocity_stream.png")
 
-    # 10. Save results
+    # 9. Save results
     from pathlib import Path
     output_path = Path("velocity_results_modular.h5ad")
     print(f"\nSaving results to {output_path}...")

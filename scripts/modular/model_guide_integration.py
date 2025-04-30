@@ -25,9 +25,7 @@ from pyrovelocity.models.modular.inference.unified import run_inference
 from pyrovelocity.models.modular.inference.config import InferenceConfig
 from pyrovelocity.models.modular.inference.posterior import analyze_posterior
 from pyrovelocity.models.modular.registry import inference_guide_registry
-
-# Import adapters for AnnData integration
-from pyrovelocity.models.adapters import LegacyModelAdapter
+from pyrovelocity.models.modular.model import PyroVelocityModel
 
 # Import data loading utilities
 from pyrovelocity.io.serialization import load_anndata_from_json
@@ -57,8 +55,8 @@ def main():
 
     # 2. Prepare data for velocity model
     print("Preparing data for velocity model...")
-    # Set up AnnData for LegacyModelAdapter
-    LegacyModelAdapter.setup_anndata(adata)
+    # Set up AnnData using the direct method
+    adata = PyroVelocityModel.setup_anndata(adata)
 
     # 3. Check available guide names in registry
     print("Available guides in registry:", inference_guide_registry.list_available())
@@ -89,36 +87,41 @@ def main():
         print(f"Creating model with guide: {guide_name}")
         models[guide_name] = create_model(config)
 
-    # 7. Create adapters for each model
-    print("Creating adapters for each model...")
-    adapters = {}
+    # 7. Train each model and store results
+    print("Training models and storing results...")
+    metrics = {}
+    adatas = {}
+    
     for name, model in models.items():
-        adapters[name] = LegacyModelAdapter.from_modular_model(adata, model)
-
-    # 8. Train each model
-    print("Training models...")
-    for name, adapter in adapters.items():
         print(f"Training model: {name}")
-        adapter.train(
+        # Train the model
+        model.train(
+            adata=adata,
             max_epochs=100,  # Reduced for example
             learning_rate=0.01,
             use_gpu=False,
         )
-
-    # 9. Compare inference results
-    print("Comparing inference results...")
-    metrics = {}
-    for name, adapter in adapters.items():
-        # Get the processed AnnData object
-        adata_out = adapter.adata
         
-        # Store metrics - note: using module instead of model
+        # Generate posterior samples
+        posterior_samples = model.generate_posterior_samples(
+            adata=adata,
+            num_samples=30
+        )
+        
+        # Store results in AnnData
+        adatas[name] = model.store_results_in_anndata(
+            adata=adata.copy(),
+            posterior_samples=posterior_samples
+        )
+        
+        # Store metrics - note: we don't have direct access to training history yet
+        # This is a placeholder for future implementation
         metrics[name] = {
-            "adata": adata_out,
-            "elbo": adapter.module.history["elbo_train"][-1] if hasattr(adapter.module, "history") and "elbo_train" in adapter.module.history else None,
+            "adata": adatas[name],
+            "elbo": None  # We'll need to implement a way to access training history
         }
 
-    # 10. Print metrics
+    # 8. Print metrics
     print("\nInference Results Comparison:")
     print("-" * 80)
     print(f"{'Guide Name':<25} {'Final ELBO':<15}")
@@ -128,18 +131,17 @@ def main():
         print(f"{guide_name:<25} {elbo_val}")
     print("-" * 80)
 
-    # 11. Select a model for demonstration (using the first one)
+    # 9. Select a model for demonstration (using the first one)
     demo_guide_name = list(models.keys())[0]
     demo_model = models[demo_guide_name]
-    demo_adapter = adapters[demo_guide_name]
     demo_adata = metrics[demo_guide_name]["adata"]
     
     print(f"\nUsing {demo_guide_name} for demonstration...")
 
-    # 12. Create a figure showing latent time and velocity streams
+    # 10. Create a figure showing latent time and velocity streams
     print("Creating visualization...")
-    if 'latent_time' in demo_adata.obs.columns:
-        sc.pl.umap(demo_adata, color="latent_time", title=f"Latent Time - {demo_guide_name}")
+    if 'velocity_model_latent_time' in demo_adata.obs.columns:
+        sc.pl.umap(demo_adata, color="velocity_model_latent_time", title=f"Latent Time - {demo_guide_name}")
 
     # Check if 'clusters' exists in the AnnData object
     if 'clusters' in demo_adata.obs.columns:
@@ -148,7 +150,7 @@ def main():
         # Use a default color if 'clusters' doesn't exist
         scv.pl.velocity_embedding_stream(demo_adata, basis="umap", title=f"Velocity - {demo_guide_name}")
 
-    # 13. Demonstrate a simple stand-alone Pyro model and guide
+    # 11. Demonstrate a simple stand-alone Pyro model and guide
     print("\nDemonstrating a simple stand-alone Pyro model and guide...")
     
     # Section header

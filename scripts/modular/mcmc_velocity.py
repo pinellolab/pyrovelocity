@@ -21,13 +21,12 @@ import pyro
 import scanpy as sc
 import scvelo as scv
 import matplotlib.pyplot as plt
+import numpy as np
 from importlib.resources import files
 
 # Import model creation and components
 from pyrovelocity.models.modular.factory import create_standard_model, create_model, standard_model_config
-
-# Import adapters for AnnData integration
-from pyrovelocity.models.adapters import LegacyModelAdapter
+from pyrovelocity.models.modular.model import PyroVelocityModel
 
 # Import data loading utilities
 from pyrovelocity.io.serialization import load_anndata_from_json
@@ -57,8 +56,8 @@ def main():
 
     # 2. Prepare data for velocity model
     print("Preparing data for velocity model...")
-    # Set up AnnData for LegacyModelAdapter
-    LegacyModelAdapter.setup_anndata(adata)
+    # Set up AnnData using the direct method
+    adata = PyroVelocityModel.setup_anndata(adata)
 
     # 3. Create model with custom configuration for MCMC
     print("Creating model with MCMC-friendly configuration...")
@@ -80,35 +79,36 @@ def main():
     print(f"  - Prior: {model.prior_model.__class__.__name__}")
     print(f"  - Likelihood: {model.likelihood_model.__class__.__name__}")
 
-    # 4. Create adapter for AnnData integration
-    print("\nCreating LegacyModelAdapter...")
-    adapter = LegacyModelAdapter.from_modular_model(adata, model)
-
-    # 5. Run MCMC inference
+    # 4. Train the model directly using AnnData with MCMC
     print("\nRunning MCMC inference...")
-    # The adapter provides a convenient interface for MCMC
-    adapter.train(
-        mode="mcmc",
+    model.train(
+        adata=adata,
+        method="mcmc",
         num_samples=500,  # Number of posterior samples
         num_warmup=200,   # Number of warmup steps
         num_chains=2,     # Number of MCMC chains
         use_gpu=False,
     )
 
-    # 6. Generate posterior samples
+    # 5. Generate posterior samples
     print("\nGenerating posterior samples...")
-    posterior_samples = adapter.generate_posterior_samples()
+    posterior_samples = model.generate_posterior_samples(
+        adata=adata,
+        num_samples=30
+    )
 
-    # 7. Compute velocity
-    print("Computing RNA velocity...")
-    # The velocity is computed internally by the adapter
-    adata_out = adapter.adata
+    # 6. Store results in AnnData
+    print("Storing results in AnnData...")
+    adata_out = model.store_results_in_anndata(
+        adata=adata,
+        posterior_samples=posterior_samples
+    )
 
-    # 8. Visualize results
+    # 7. Visualize results
     print("\nVisualizing results...")
     # Use latent time if available
-    if 'latent_time' in adata_out.obs.columns:
-        sc.pl.umap(adata_out, color="latent_time", title="Latent Time (MCMC)")
+    if 'velocity_model_latent_time' in adata_out.obs.columns:
+        sc.pl.umap(adata_out, color="velocity_model_latent_time", title="Latent Time (MCMC)")
         plt.savefig("mcmc_velocity_latent_time.png")
         print("Latent time plot saved to mcmc_velocity_latent_time.png")
 
@@ -121,7 +121,7 @@ def main():
     plt.savefig("mcmc_velocity_stream.png")
     print("Velocity stream plot saved to mcmc_velocity_stream.png")
 
-    # 9. Save results
+    # 8. Save results
     from pathlib import Path
     output_path = Path("velocity_results_mcmc.h5ad")
     print(f"\nSaving results to {output_path}...")

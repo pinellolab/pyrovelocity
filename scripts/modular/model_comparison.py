@@ -19,6 +19,7 @@ from importlib.resources import files
 
 # Import model creation
 from pyrovelocity.models.modular.factory import create_model, standard_model_config
+from pyrovelocity.models.modular.model import PyroVelocityModel
 
 # Import model comparison tools
 from pyrovelocity.models.modular.comparison import (
@@ -26,9 +27,6 @@ from pyrovelocity.models.modular.comparison import (
     create_comparison_table,
     select_best_model,
 )
-
-# Import adapters for AnnData integration
-from pyrovelocity.models.adapters import LegacyModelAdapter
 
 # Import data loading utilities
 from pyrovelocity.io.serialization import load_anndata_from_json
@@ -58,8 +56,8 @@ def main():
 
     # 2. Prepare data for velocity model
     print("Preparing data for velocity model...")
-    # Set up AnnData for LegacyModelAdapter
-    LegacyModelAdapter.setup_anndata(adata)
+    # Set up AnnData using the direct method
+    adata = PyroVelocityModel.setup_anndata(adata)
 
     # 3. Create model configurations
     print("Creating model configurations...")
@@ -97,23 +95,37 @@ def main():
         "standard_informative": model4,
     }
 
-    # 5. Create adapters for each model
-    print("Creating adapters for each model...")
-    adapters = {}
+    # 5. Train each model and store results
+    print("Training models and storing results...")
+    trained_models = {}
+    adatas = {}
+    
     for name, model in models.items():
-        adapters[name] = LegacyModelAdapter.from_modular_model(adata, model)
-
-    # 6. Train each model
-    print("Training models...")
-    for name, adapter in adapters.items():
         print(f"Training model: {name}")
-        adapter.train(
+        # Train the model
+        model.train(
+            adata=adata,
             max_epochs=200,  # Reduced for example
             learning_rate=0.001,
             use_gpu=False,
         )
+        
+        # Generate posterior samples
+        posterior_samples = model.generate_posterior_samples(
+            adata=adata,
+            num_samples=30
+        )
+        
+        # Store results in AnnData
+        adatas[name] = model.store_results_in_anndata(
+            adata=adata.copy(),
+            posterior_samples=posterior_samples
+        )
+        
+        # Store the trained model
+        trained_models[name] = model
 
-    # 7. Compare models
+    # 6. Compare models
     print("Comparing models...")
 
     # Create a model comparison object
@@ -150,21 +162,21 @@ def main():
     print("Model Comparison Table:")
     print(comparison_table)
 
-    # 8. Select best model
+    # 7. Select best model
     print("Selecting best model...")
     best_model_name, is_significant = select_best_model(comparison_result, threshold=2.0)
     print(f"Best model: {best_model_name}, Significant: {is_significant}")
 
-    # 9. Analyze best model
+    # 8. Analyze best model
     print("Analyzing best model...")
-    best_adapter = adapters[best_model_name]
-    best_adata = best_adapter.adata
+    best_model = trained_models[best_model_name]
+    best_adata = adatas[best_model_name]
 
-    # 10. Visualize results
+    # 9. Visualize results
     print("Visualizing results...")
     # Use latent time if available
-    if 'latent_time' in best_adata.obs.columns:
-        sc.pl.umap(best_adata, color="latent_time", title=f"Latent Time - {best_model_name}")
+    if 'velocity_model_latent_time' in best_adata.obs.columns:
+        sc.pl.umap(best_adata, color="velocity_model_latent_time", title=f"Latent Time - {best_model_name}")
 
     # Check if 'clusters' exists in the AnnData object
     if 'clusters' in best_adata.obs.columns:
@@ -173,7 +185,7 @@ def main():
         # Use a default color if 'clusters' doesn't exist
         scv.pl.velocity_embedding_stream(best_adata, basis="umap", title=f"Velocity - {best_model_name}")
 
-    # 11. Save results
+    # 10. Save results
     from pathlib import Path
     output_path = Path(f"velocity_results_{best_model_name}.h5ad")
     print(f"Saving results to {output_path}...")
