@@ -16,6 +16,7 @@ The JAX/NumPyro implementation of PyroVelocity provides several advantages:
 Example:
     >>> import jax
     >>> import jax.numpy as jnp
+    >>> import numpyro
     >>> from pyrovelocity.models.jax.core.model import create_model
     >>> from pyrovelocity.models.jax.core.state import ModelConfig
     >>>
@@ -31,13 +32,19 @@ Example:
     >>> # Create the model function
     >>> model_fn = create_model(config)
     >>>
-    >>> # Generate synthetic data
+    >>> # Generate synthetic data with proper type conversion
     >>> key = jax.random.PRNGKey(0)
-    >>> u_obs = jax.random.poisson(key, jnp.ones((10, 5)) * 5.0)
-    >>> s_obs = jax.random.poisson(key, jnp.ones((10, 5)) * 5.0)
+    >>> key1, key2 = jax.random.split(key)
+    >>> # Generate integer counts
+    >>> u_counts = jax.random.poisson(key1, jnp.ones((10, 5)) * 5.0)
+    >>> s_counts = jax.random.poisson(key2, jnp.ones((10, 5)) * 5.0)
+    >>> # Convert to float arrays to satisfy type annotations
+    >>> u_obs = jnp.asarray(u_counts, dtype=jnp.float32)
+    >>> s_obs = jnp.asarray(s_counts, dtype=jnp.float32)
     >>>
-    >>> # Run the model
-    >>> results = model_fn(u_obs=u_obs, s_obs=s_obs)
+    >>> # Run the model with numpyro seed handler
+    >>> with numpyro.handlers.seed(rng_seed=0):
+    ...     results = model_fn(u_obs=u_obs, s_obs=s_obs)
 """
 
 from typing import Any, Callable, Dict, Optional, Tuple
@@ -125,8 +132,7 @@ def velocity_model(
         >>> import jax
         >>> import jax.numpy as jnp
         >>> import numpyro
-        >>> tmp = getfixture("tmp_path")  # For any temporary file operations
-        >>>
+        >>> tmp = getfixture("tmp_path")
         >>> # Generate synthetic data with proper type conversion
         >>> key = jax.random.PRNGKey(0)
         >>> key1, key2 = jax.random.split(key)
@@ -136,7 +142,6 @@ def velocity_model(
         >>> # Convert to float arrays to satisfy type annotations
         >>> u_obs = jnp.asarray(u_counts, dtype=jnp.float32)
         >>> s_obs = jnp.asarray(s_counts, dtype=jnp.float32)
-        >>>
         >>> # Run the model
         >>> with numpyro.handlers.seed(rng_seed=0):
         ...     results = velocity_model(u_obs=u_obs, s_obs=s_obs)
@@ -283,8 +288,7 @@ def create_model(
         >>> import jax
         >>> import jax.numpy as jnp
         >>> from pyrovelocity.models.jax.core.state import ModelConfig
-        >>> tmp = getfixture("tmp_path")  # For any temporary file operations
-        >>>
+        >>> tmp = getfixture("tmp_path")
         >>> # Create a model configuration
         >>> config = ModelConfig(
         ...     dynamics="standard",
@@ -307,8 +311,10 @@ def create_model(
         >>> u_obs = jnp.asarray(u_counts, dtype=jnp.float32)
         >>> s_obs = jnp.asarray(s_counts, dtype=jnp.float32)
         >>>
-        >>> # Use the model function for inference
-        >>> results = model_fn(u_obs=u_obs, s_obs=s_obs)
+        >>> # Use the model function for inference with numpyro seed handler
+        >>> import numpyro
+        >>> with numpyro.handlers.seed(rng_seed=0):
+        ...     results = model_fn(u_obs=u_obs, s_obs=s_obs)
     """
     # Select dynamics function
     if config.dynamics == "standard":

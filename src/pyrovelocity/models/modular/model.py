@@ -166,9 +166,9 @@ class PyroVelocityModel:
         >>> import torch
         >>> import pandas as pd
         >>> import os
-        >>> # Create a temporary directory for any file operations
-        >>> tmp_dir = os.path.join(os.getcwd(), "tmp_test_dir")
-        >>> os.makedirs(tmp_dir, exist_ok=True)
+        >>> # Use pytest tmp_path fixture for temporary directory
+        >>> tmp = getfixture("tmp_path")
+        >>> tmp_dir = str(tmp)
         >>>
         >>> # Create synthetic data
         >>> n_cells, n_genes = 10, 5
@@ -325,9 +325,9 @@ class PyroVelocityModel:
             >>> import os
             >>> from pyrovelocity.models.modular.factory import create_standard_model
             >>>
-            >>> # Create a temporary directory for any file operations
-            >>> tmp_dir = os.path.join(os.getcwd(), "tmp_test_dir")
-            >>> os.makedirs(tmp_dir, exist_ok=True)
+            >>> # Use pytest tmp_path fixture for temporary directory
+            >>> tmp = getfixture("tmp_path")
+            >>> tmp_dir = str(tmp)
             >>>
             >>> # Create model and synthetic data
             >>> model = create_standard_model()
@@ -563,7 +563,7 @@ class PyroVelocityModel:
 
     @beartype
     def predict_future_states(
-        self, current_state: Tuple[torch.Tensor, torch.Tensor], time_delta: torch.Tensor, **kwargs
+        self, current_state: Tuple[torch.Tensor, torch.Tensor], time_delta: Union[float, torch.Tensor], **kwargs
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Predict future RNA states based on current state and time delta.
@@ -601,9 +601,13 @@ class PyroVelocityModel:
             >>> current_state = (u_current, s_current)
             >>>
             >>> # Predict future state after time_delta
-            >>> time_delta = torch.tensor(0.5)
+            >>> time_delta = 0.5  # Use float to match type annotation
+            >>> # Create default parameters
+            >>> alpha = torch.ones(5)  # One value per gene
+            >>> beta = torch.ones(5)  # One value per gene
+            >>> gamma = torch.ones(5)  # One value per gene
             >>> u_future, s_future = model.predict_future_states(
-            ...     current_state, time_delta
+            ...     current_state, time_delta, alpha=alpha, beta=beta, gamma=gamma
             ... )
         """
         # Delegate to the dynamics model
@@ -662,9 +666,9 @@ class PyroVelocityModel:
             >>> import os
             >>> from pyrovelocity.models.modular.model import PyroVelocityModel
             >>>
-            >>> # Create a temporary directory for any file operations
-            >>> tmp_dir = os.path.join(os.getcwd(), "tmp_test_dir")
-            >>> os.makedirs(tmp_dir, exist_ok=True)
+            >>> # Use pytest tmp_path fixture for temporary directory
+            >>> tmp = getfixture("tmp_path")
+            >>> tmp_dir = str(tmp)
             >>>
             >>> # Create synthetic data
             >>> n_cells, n_genes = 10, 5
@@ -784,9 +788,9 @@ class PyroVelocityModel:
             >>> import numpy as np
             >>> import os
             >>>
-            >>> # Create a temporary directory for any file operations
-            >>> tmp_dir = os.path.join(os.getcwd(), "tmp_test_dir")
-            >>> os.makedirs(tmp_dir, exist_ok=True)
+            >>> # Use pytest tmp_path fixture for temporary directory
+            >>> tmp = getfixture("tmp_path")
+            >>> tmp_dir = str(tmp)
             >>>
             >>> # Create synthetic data
             >>> n_cells, n_genes = 10, 5
@@ -1007,7 +1011,7 @@ class PyroVelocityModel:
     def store_results_in_anndata(
         self,
         adata: AnnData,
-        posterior_samples: Dict[str, np.ndarray],
+        posterior_samples: Dict[str, Union[np.ndarray, torch.Tensor]],
         model_name: str = "pyrovelocity",
     ) -> AnnData:
         """
@@ -1036,13 +1040,12 @@ class PyroVelocityModel:
             >>> from pyrovelocity.models.modular.factory import create_standard_model
             >>> import anndata as ad
             >>> import numpy as np
-            >>> tmp = getfixture("tmp_path")  # For any temporary file operations
-            >>>
+            >>> import torch
+            >>> tmp = getfixture("tmp_path")
             >>> # Create synthetic data
             >>> n_cells, n_genes = 10, 5
             >>> u_data = np.random.poisson(5, size=(n_cells, n_genes))
             >>> s_data = np.random.poisson(5, size=(n_cells, n_genes))
-            >>>
             >>> # Create AnnData object
             >>> adata = ad.AnnData(X=s_data)
             >>> adata.layers["spliced"] = s_data
@@ -1054,43 +1057,56 @@ class PyroVelocityModel:
             >>> adata.obsm["X_umap"] = np.random.normal(0, 1, size=(n_cells, 2))
             >>> # Add cluster information
             >>> adata.obs["clusters"] = np.random.choice(["A", "B", "C"], size=n_cells)
-            >>>
             >>> # Prepare AnnData
             >>> adata = PyroVelocityModel.setup_anndata(adata)
-            >>>
             >>> # Create, train model, and generate samples
             >>> model = create_standard_model()
             >>> model.train(adata=adata, max_epochs=2)  # Use small number for testing
             >>> posterior_samples = model.generate_posterior_samples(
             ...     adata=adata, num_samples=2  # Use small number for testing
             ... )
-            >>>
+            >>> # Convert torch tensors to numpy arrays if needed
+            >>> numpy_posterior_samples = {}
+            >>> for key, value in posterior_samples.items():
+            ...     if isinstance(value, torch.Tensor):
+            ...         numpy_posterior_samples[key] = value.detach().cpu().numpy()
+            ...     else:
+            ...         numpy_posterior_samples[key] = value
             >>> # Store results in AnnData
             >>> adata_out = model.store_results_in_anndata(
             ...     adata=adata,
-            ...     posterior_samples=posterior_samples,
+            ...     posterior_samples=numpy_posterior_samples,
             ...     model_name="standard_model"
             ... )
-            >>>
             >>> # Check that results were stored
             >>> assert "standard_model_alpha" in adata_out.var
             >>> assert "standard_model_beta" in adata_out.var
             >>> assert "standard_model_gamma" in adata_out.var
         """
         # Import inference utilities
+        # Import store_results function
+        from pyrovelocity.models.modular.data.anndata import store_results
         from pyrovelocity.models.modular.inference.posterior import (
             compute_velocity,
         )
 
+        # Convert torch tensors to numpy arrays if needed
+        numpy_posterior_samples = {}
+        for key, value in posterior_samples.items():
+            if isinstance(value, torch.Tensor):
+                numpy_posterior_samples[key] = value.detach().cpu().numpy()
+            else:
+                numpy_posterior_samples[key] = value
+
         # Compute velocity from posterior samples
         velocity_results = compute_velocity(
             model=self,
-            posterior_samples=posterior_samples,
+            posterior_samples=numpy_posterior_samples,
             adata=adata,
         )
 
         # Combine results
-        results = {**posterior_samples, **velocity_results}
+        results = {**numpy_posterior_samples, **velocity_results}
 
         # Store results in AnnData
         return store_results(adata, results, model_name)

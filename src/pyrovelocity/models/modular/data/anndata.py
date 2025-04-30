@@ -183,8 +183,35 @@ def store_results(
         else:
             value_np = value
 
+        # Special handling for alpha, beta, gamma - store in var
+        if key in ["alpha", "beta", "gamma"]:
+            # If value is multi-dimensional, take the mean across samples
+            if value_np.ndim > 1:
+                value_mean = value_np.mean(axis=0)
+            else:
+                value_mean = value_np
+
+            # Ensure the value has the right shape for var
+            if value_mean.shape[0] != adata.n_vars:
+                # Transpose if needed
+                if value_mean.shape[0] == adata.n_obs:
+                    value_mean = value_mean.T
+                else:
+                    # Reshape if possible
+                    try:
+                        value_mean = value_mean.reshape(adata.n_vars)
+                    except ValueError:
+                        print(f"Could not reshape {key} to match var dimensions")
+                        # Still store the original in uns
+                        adata_out.uns[f"{model_name}_{key}"] = value_np
+                        continue
+
+            # Store in var dataframe
+            adata_out.var[f"{model_name}_{key}"] = value_mean
+            # Also store original in uns
+            adata_out.uns[f"{model_name}_{key}"] = value_np
         # Store the result based on its shape
-        if (
+        elif (
             value_np.ndim == 2
             and value_np.shape[0] == adata.n_obs
             and value_np.shape[1] == adata.n_vars
