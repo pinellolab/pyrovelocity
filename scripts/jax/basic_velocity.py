@@ -6,6 +6,18 @@ This example demonstrates:
 2. Creating a velocity model
 3. Performing SVI inference
 4. Analyzing and visualizing results
+
+The JAX/NumPyro implementation of PyroVelocity provides several advantages:
+1. JIT compilation for faster execution
+2. Automatic vectorization for better hardware utilization
+3. Functional programming approach for composability
+4. Immutable state containers for thread safety
+5. Automatic differentiation for gradient-based inference
+
+This script shows how to use the JAX implementation for a basic RNA velocity
+analysis workflow, from data loading to visualization. The JAX implementation
+follows a functional programming paradigm, where functions are composed to
+create the model and perform inference.
 """
 
 import jax
@@ -13,6 +25,7 @@ import jax.numpy as jnp
 import scanpy as sc
 import numpy as np
 import scvelo as scv
+import matplotlib.pyplot as plt
 from importlib.resources import files
 
 # Import core components
@@ -50,23 +63,28 @@ def load_test_data():
     )
 
 def main():
+    """Run a complete RNA velocity analysis workflow using the JAX implementation."""
     # Set random seed for reproducibility
+    # In JAX, randomness is explicitly managed through PRNGKeys
     key = create_key(0)
 
     # 1. Load test data
+    # We use a small test dataset for demonstration purposes
     print("Loading test data...")
     adata = load_test_data()
     print(f"Loaded AnnData: {adata.shape[0]} cells, {adata.shape[1]} genes")
 
     # 2. Prepare data for velocity model
+    # The prepare_anndata function extracts data from AnnData and formats it for the model
     print("Preparing data for velocity model...")
     data_dict = prepare_anndata(
         adata,
-        spliced_layer="spliced",
-        unspliced_layer="unspliced",
+        spliced_layer="spliced",      # Name of the spliced layer in adata.layers
+        unspliced_layer="unspliced",  # Name of the unspliced layer in adata.layers
     )
 
     # 3. Create model configuration
+    # The JAX implementation uses a configuration-based factory system
     print("Creating model configuration...")
     # Import the necessary configuration classes
     from pyrovelocity.models.jax.factory.config import (
@@ -79,97 +97,109 @@ def main():
     )
 
     # Create the model configuration
+    # Each component is configured separately
     model_config = ModelConfig(
-        dynamics_function=DynamicsFunctionConfig(name="standard"),
-        prior_function=PriorFunctionConfig(name="lognormal"),
-        likelihood_function=LikelihoodFunctionConfig(name="poisson"),
-        observation_function=ObservationFunctionConfig(name="standard"),
-        guide_function=GuideFunctionConfig(name="auto"),
+        dynamics_function=DynamicsFunctionConfig(name="standard"),     # Standard ODE dynamics
+        prior_function=PriorFunctionConfig(name="lognormal"),          # LogNormal prior
+        likelihood_function=LikelihoodFunctionConfig(name="poisson"),  # Poisson likelihood
+        observation_function=ObservationFunctionConfig(name="standard"), # Standard observation
+        guide_function=GuideFunctionConfig(name="auto"),               # Auto guide
     )
 
     # 4. Create inference configuration
+    # This specifies how inference will be performed
     print("Creating inference configuration...")
     inference_config = InferenceConfig(
-        num_warmup=100,  # Reduced for example
-        num_samples=200,  # Reduced for example
-        num_chains=1,
-        method="svi",
-        optimizer="adam",
-        learning_rate=0.001,  # Lower learning rate for more stable training
-        num_epochs=500,  # More epochs to ensure convergence
-        guide_type="auto_normal",  # Explicitly specify the guide type
+        num_warmup=100,               # Number of warmup steps for MCMC (not used for SVI)
+        num_samples=200,              # Number of samples for MCMC (not used for SVI)
+        num_chains=1,                 # Number of MCMC chains (not used for SVI)
+        method="svi",                 # Inference method: "svi" or "mcmc"
+        optimizer="adam",             # Optimizer for SVI
+        learning_rate=0.001,          # Learning rate for the optimizer
+        num_epochs=500,               # Number of training epochs
+        guide_type="auto_normal",     # Type of guide for SVI
     )
 
     # 5. Create model
+    # The factory system creates the model with the specified components
     print("Creating model...")
     model = create_model(model_config)
 
     # 6. Run inference
+    # This performs SVI to approximate the posterior distribution
     print("Running SVI inference...")
-    key, subkey = jax.random.split(key)
+    key, subkey = jax.random.split(key)  # Split the key for randomness
 
     # Extract the data from data_dict and map to the expected parameter names
-    u_obs = data_dict["X_unspliced"]
-    s_obs = data_dict["X_spliced"]
-    u_log_library = jnp.log(data_dict["u_lib_size"])
-    s_log_library = jnp.log(data_dict["s_lib_size"])
+    u_obs = data_dict["X_unspliced"]     # Unspliced RNA counts
+    s_obs = data_dict["X_spliced"]       # Spliced RNA counts
+    u_log_library = jnp.log(data_dict["u_lib_size"])  # Log library size for unspliced
+    s_log_library = jnp.log(data_dict["s_lib_size"])  # Log library size for spliced
 
     # Add batch dimension for the model
+    # The model expects inputs with shape [batch, cell, gene]
     u_obs = u_obs[jnp.newaxis, :, :]
     s_obs = s_obs[jnp.newaxis, :, :]
     u_log_library = u_log_library[jnp.newaxis, :]
     s_log_library = s_log_library[jnp.newaxis, :]
 
-    # The run_inference function expects (model, args, kwargs, config, key)
-    # It will create the guide internally based on the guide_type in inference_config
-    # run_inference returns a tuple of (inference_object, inference_state)
+    # Run inference
+    # The run_inference function is a unified interface for SVI and MCMC
+    # It returns a tuple of (inference_object, inference_state)
     _, inference_state = run_inference(
-        model=model,
-        args=(),  # Empty tuple for positional args
-        kwargs={
+        model=model,                  # The model function
+        args=(),                      # Empty tuple for positional args
+        kwargs={                      # Keyword arguments for the model
             "u_obs": u_obs,
             "s_obs": s_obs,
             "u_log_library": u_log_library,
             "s_log_library": s_log_library
         },
-        config=inference_config,
-        key=subkey,
+        config=inference_config,      # Inference configuration
+        key=subkey,                   # Random key for reproducibility
     )
 
     # 7. Analyze results
+    # Extract posterior samples and compute velocity
     print("Analyzing results...")
     posterior_samples = inference_state.posterior_samples
 
     # Print the keys in posterior_samples to see what's available
     print("Keys in posterior_samples:", list(posterior_samples.keys()))
 
-    # Use the default dynamics_fn (standard_dynamics_model) by not providing a second argument
+    # Compute velocity from posterior samples
+    # This uses the standard dynamics model by default
     velocity = compute_velocity(posterior_samples)
 
     # 8. Store results in AnnData
+    # Format results for storage in AnnData
     print("Storing results in AnnData...")
+
     # Flatten the velocity dictionary
     results = {}
     for key, value in velocity.items():
         results[key] = value
 
     # Add mean parameters
-    results["alpha"] = jnp.mean(posterior_samples["alpha"], axis=0)
-    results["beta"] = jnp.mean(posterior_samples["beta"], axis=0)
-    results["gamma"] = jnp.mean(posterior_samples["gamma"], axis=0)
+    # These are the average values of the parameters across posterior samples
+    results["alpha"] = jnp.mean(posterior_samples["alpha"], axis=0)  # Transcription rate
+    results["beta"] = jnp.mean(posterior_samples["beta"], axis=0)    # Splicing rate
+    results["gamma"] = jnp.mean(posterior_samples["gamma"], axis=0)  # Degradation rate
 
-    # Add optional parameters if they exist in posterior_samples
+    # Add latent time if available
+    # Latent time represents the progression of cells along a trajectory
     if "tau" in posterior_samples:
         results["latent_time"] = jnp.mean(posterior_samples["tau"], axis=0)
 
+    # Store results in AnnData
     adata_out = format_anndata_output(adata, results)
 
     # Print the columns in the AnnData object to see what's available
     print("Columns in adata_out.obs:", list(adata_out.obs.columns))
     print("Keys in adata_out.uns:", list(adata_out.uns.keys()) if hasattr(adata_out, 'uns') and adata_out.uns is not None else "None")
 
-    # Add latent time directly to the AnnData object
-    if "tau" in posterior_samples:
+    # Add latent time directly to the AnnData object if not already added
+    if "tau" in posterior_samples and "latent_time" not in adata_out.obs.columns:
         print("Adding latent_time to AnnData object...")
         tau_mean = jnp.mean(posterior_samples["tau"], axis=0)
         # Convert to numpy array for compatibility with AnnData
@@ -179,20 +209,28 @@ def main():
         print("Added latent_time column:", "latent_time" in adata_out.obs.columns)
 
     # 9. Visualize results
+    # Create visualizations of the results
     print("Visualizing results...")
-    # Use the column we just added
-    sc.pl.umap(adata_out, color="latent_time", title="Latent Time")
 
-    # Check if 'clusters' exists in the AnnData object
+    # Plot latent time
+    sc.pl.umap(adata_out, color="latent_time", title="Latent Time")
+    plt.savefig("jax_velocity_latent_time.png")
+    print("Latent time plot saved to jax_velocity_latent_time.png")
+
+    # Plot velocity stream
+    # This shows the direction and magnitude of RNA velocity
     if 'clusters' in adata_out.obs.columns:
-        scv.pl.velocity_embedding_stream(adata_out, basis="umap", color="clusters")
+        scv.pl.velocity_embedding_stream(adata_out, basis="umap", color="clusters", title="RNA Velocity")
     else:
         # Use a default color if 'clusters' doesn't exist
-        scv.pl.velocity_embedding_stream(adata_out, basis="umap")
+        scv.pl.velocity_embedding_stream(adata_out, basis="umap", title="RNA Velocity")
+    plt.savefig("jax_velocity_stream.png")
+    print("Velocity stream plot saved to jax_velocity_stream.png")
 
     # 10. Save results
+    # Save the AnnData object with results for later use
     from pathlib import Path
-    output_path = Path("velocity_results_svi.h5ad")
+    output_path = Path("velocity_results_jax_svi.h5ad")
     print(f"Saving results to {output_path}...")
     adata_out.write(output_path)
     print("Done!")
