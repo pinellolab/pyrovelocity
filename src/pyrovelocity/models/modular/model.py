@@ -160,21 +160,48 @@ class PyroVelocityModel:
         >>> from pyrovelocity.models.modular.factory import create_standard_model
         >>> model = create_standard_model()
         >>>
-        >>> # Train the model with AnnData
+        >>> # Create synthetic AnnData for testing
         >>> import anndata as ad
-        >>> adata = ad.read_h5ad("example_data.h5ad")
+        >>> import numpy as np
+        >>> import torch
+        >>> import pandas as pd
+        >>> import os
+        >>> # Create a temporary directory for any file operations
+        >>> tmp_dir = os.path.join(os.getcwd(), "tmp_test_dir")
+        >>> os.makedirs(tmp_dir, exist_ok=True)
+        >>>
+        >>> # Create synthetic data
+        >>> n_cells, n_genes = 10, 5
+        >>> u_data = np.random.poisson(5, size=(n_cells, n_genes))
+        >>> s_data = np.random.poisson(5, size=(n_cells, n_genes))
+        >>>
+        >>> # Create AnnData object
+        >>> adata = ad.AnnData(X=s_data)
+        >>> adata.layers["spliced"] = s_data
+        >>> adata.layers["unspliced"] = u_data
+        >>> adata.obs_names = [f"cell_{i}" for i in range(n_cells)]
+        >>> adata.var_names = [f"gene_{i}" for i in range(n_genes)]
+        >>>
+        >>> # Set up AnnData for PyroVelocity
         >>> adata = PyroVelocityModel.setup_anndata(adata)
-        >>> model.train(adata=adata, max_epochs=500)
+        >>>
+        >>> # Train the model with minimal epochs for testing
+        >>> model.train(adata=adata, max_epochs=2)
         >>>
         >>> # Generate posterior samples
         >>> posterior_samples = model.generate_posterior_samples(
-        ...     adata=adata, num_samples=50
+        ...     adata=adata, num_samples=2
         ... )
         >>>
         >>> # Store results in AnnData
         >>> adata = model.store_results_in_anndata(
         ...     adata=adata, posterior_samples=posterior_samples
         ... )
+        >>>
+        >>> # Clean up temporary directory
+        >>> import shutil
+        >>> if os.path.exists(tmp_dir):
+        ...     shutil.rmtree(tmp_dir)
     """
 
     @beartype
@@ -295,7 +322,12 @@ class PyroVelocityModel:
         Examples:
             >>> # Run forward pass with RNA count data
             >>> import torch
+            >>> import os
             >>> from pyrovelocity.models.modular.factory import create_standard_model
+            >>>
+            >>> # Create a temporary directory for any file operations
+            >>> tmp_dir = os.path.join(os.getcwd(), "tmp_test_dir")
+            >>> os.makedirs(tmp_dir, exist_ok=True)
             >>>
             >>> # Create model and synthetic data
             >>> model = create_standard_model()
@@ -311,6 +343,11 @@ class PyroVelocityModel:
             >>> gamma = results["gamma"]
             >>> u_expected = results["u_expected"]
             >>> s_expected = results["s_expected"]
+            >>>
+            >>> # Clean up temporary directory
+            >>> import shutil
+            >>> if os.path.exists(tmp_dir):
+            ...     shutil.rmtree(tmp_dir)
         """
         # Initialize the context dictionary to pass between components
         context = {
@@ -325,45 +362,19 @@ class PyroVelocityModel:
             context["time_points"] = time_points
         if u_obs is not None:
             context["u_obs"] = u_obs
-            print(f"PyroVelocityModel.forward - Initial u_obs shape: {u_obs.shape}")
         if s_obs is not None:
             context["s_obs"] = s_obs
-            print(f"PyroVelocityModel.forward - Initial s_obs shape: {s_obs.shape}")
 
         # Process data through the observation model
-        print("PyroVelocityModel.forward - Processing through observation model")
         observation_context = self.observation_model.forward(context)
 
-        # Log shapes after observation model
-        if "u_obs" in observation_context:
-            print(f"PyroVelocityModel.forward - After observation model, u_obs shape: {observation_context['u_obs'].shape}")
-        if "s_obs" in observation_context:
-            print(f"PyroVelocityModel.forward - After observation model, s_obs shape: {observation_context['s_obs'].shape}")
-
         # Process through the dynamics model
-        print("PyroVelocityModel.forward - Processing through dynamics model")
         dynamics_context = self.dynamics_model.forward(observation_context)
 
-        # Log shapes after dynamics model
-        if "u_expected" in dynamics_context:
-            print(f"PyroVelocityModel.forward - After dynamics model, u_expected shape: {dynamics_context['u_expected'].shape}")
-        if "s_expected" in dynamics_context:
-            print(f"PyroVelocityModel.forward - After dynamics model, s_expected shape: {dynamics_context['s_expected'].shape}")
-
         # Apply prior distributions
-        print("PyroVelocityModel.forward - Processing through prior model")
         prior_context = self.prior_model.forward(dynamics_context)
 
-        # Log shapes after prior model
-        if "alpha" in prior_context:
-            print(f"PyroVelocityModel.forward - After prior model, alpha shape: {prior_context['alpha'].shape}")
-        if "beta" in prior_context:
-            print(f"PyroVelocityModel.forward - After prior model, beta shape: {prior_context['beta'].shape}")
-        if "gamma" in prior_context:
-            print(f"PyroVelocityModel.forward - After prior model, gamma shape: {prior_context['gamma'].shape}")
-
         # Apply likelihood model
-        print("PyroVelocityModel.forward - Processing through likelihood model")
         likelihood_context = self.likelihood_model.forward(prior_context)
 
         # Return the final context with all model outputs
@@ -647,10 +658,25 @@ class PyroVelocityModel:
         Examples:
             >>> # Set up AnnData for PyroVelocity
             >>> import anndata as ad
+            >>> import numpy as np
+            >>> import os
             >>> from pyrovelocity.models.modular.model import PyroVelocityModel
             >>>
-            >>> # Load data
-            >>> adata = ad.read_h5ad("example_data.h5ad")
+            >>> # Create a temporary directory for any file operations
+            >>> tmp_dir = os.path.join(os.getcwd(), "tmp_test_dir")
+            >>> os.makedirs(tmp_dir, exist_ok=True)
+            >>>
+            >>> # Create synthetic data
+            >>> n_cells, n_genes = 10, 5
+            >>> u_data = np.random.poisson(5, size=(n_cells, n_genes))
+            >>> s_data = np.random.poisson(5, size=(n_cells, n_genes))
+            >>>
+            >>> # Create AnnData object
+            >>> adata = ad.AnnData(X=s_data)
+            >>> adata.layers["spliced"] = s_data
+            >>> adata.layers["unspliced"] = u_data
+            >>> adata.obs_names = [f"cell_{i}" for i in range(n_cells)]
+            >>> adata.var_names = [f"gene_{i}" for i in range(n_genes)]
             >>>
             >>> # Set up AnnData
             >>> adata = PyroVelocityModel.setup_anndata(
@@ -662,6 +688,11 @@ class PyroVelocityModel:
             >>> # Check that library sizes were computed
             >>> print("u_lib_size in adata.obs:", "u_lib_size" in adata.obs)
             >>> print("s_lib_size in adata.obs:", "s_lib_size" in adata.obs)
+            >>>
+            >>> # Clean up temporary directory
+            >>> import shutil
+            >>> if os.path.exists(tmp_dir):
+            ...     shutil.rmtree(tmp_dir)
         """
         # Make sure the required layers exist
         required_layers = [spliced_layer, unspliced_layer]
@@ -750,20 +781,42 @@ class PyroVelocityModel:
             >>> # Create a model and train it
             >>> from pyrovelocity.models.modular.factory import create_standard_model
             >>> import anndata as ad
+            >>> import numpy as np
+            >>> import os
             >>>
-            >>> # Load data and prepare it
-            >>> adata = ad.read_h5ad("example_data.h5ad")
+            >>> # Create a temporary directory for any file operations
+            >>> tmp_dir = os.path.join(os.getcwd(), "tmp_test_dir")
+            >>> os.makedirs(tmp_dir, exist_ok=True)
+            >>>
+            >>> # Create synthetic data
+            >>> n_cells, n_genes = 10, 5
+            >>> u_data = np.random.poisson(5, size=(n_cells, n_genes))
+            >>> s_data = np.random.poisson(5, size=(n_cells, n_genes))
+            >>>
+            >>> # Create AnnData object
+            >>> adata = ad.AnnData(X=s_data)
+            >>> adata.layers["spliced"] = s_data
+            >>> adata.layers["unspliced"] = u_data
+            >>> adata.obs_names = [f"cell_{i}" for i in range(n_cells)]
+            >>> adata.var_names = [f"gene_{i}" for i in range(n_genes)]
+            >>>
+            >>> # Prepare AnnData
             >>> adata = PyroVelocityModel.setup_anndata(adata)
             >>>
             >>> # Create and train the model
             >>> model = create_standard_model()
             >>> model.train(
             ...     adata=adata,
-            ...     max_epochs=500,
-            ...     batch_size=128,
-            ...     learning_rate=0.005,
-            ...     use_gpu=True
+            ...     max_epochs=2,  # Use small number for testing
+            ...     batch_size=5,
+            ...     learning_rate=0.01,
+            ...     use_gpu=False  # Set to True if GPU is available
             ... )
+            >>>
+            >>> # Clean up temporary directory
+            >>> import shutil
+            >>> if os.path.exists(tmp_dir):
+            ...     shutil.rmtree(tmp_dir)
         """
         # Enable Pyro validation
         pyro.enable_validation(True)
@@ -885,22 +938,44 @@ class PyroVelocityModel:
             >>> # Generate posterior samples after training
             >>> from pyrovelocity.models.modular.factory import create_standard_model
             >>> import anndata as ad
+            >>> import numpy as np
+            >>> import os
             >>>
-            >>> # Load data and prepare it
-            >>> adata = ad.read_h5ad("example_data.h5ad")
+            >>> # Create a temporary directory for any file operations
+            >>> tmp_dir = os.path.join(os.getcwd(), "tmp_test_dir")
+            >>> os.makedirs(tmp_dir, exist_ok=True)
+            >>>
+            >>> # Create synthetic data
+            >>> n_cells, n_genes = 10, 5
+            >>> u_data = np.random.poisson(5, size=(n_cells, n_genes))
+            >>> s_data = np.random.poisson(5, size=(n_cells, n_genes))
+            >>>
+            >>> # Create AnnData object
+            >>> adata = ad.AnnData(X=s_data)
+            >>> adata.layers["spliced"] = s_data
+            >>> adata.layers["unspliced"] = u_data
+            >>> adata.obs_names = [f"cell_{i}" for i in range(n_cells)]
+            >>> adata.var_names = [f"gene_{i}" for i in range(n_genes)]
+            >>>
+            >>> # Prepare AnnData
             >>> adata = PyroVelocityModel.setup_anndata(adata)
             >>>
             >>> # Create, train the model, and generate samples
             >>> model = create_standard_model()
-            >>> model.train(adata=adata, max_epochs=500)
+            >>> model.train(adata=adata, max_epochs=2)  # Use small number for testing
             >>> posterior_samples = model.generate_posterior_samples(
-            ...     num_samples=50, seed=42
+            ...     adata=adata, num_samples=2, seed=42  # Use small number for testing
             ... )
             >>>
             >>> # Access parameter samples
-            >>> alpha_samples = posterior_samples["alpha"]  # Shape: [50, num_genes]
-            >>> beta_samples = posterior_samples["beta"]    # Shape: [50, num_genes]
-            >>> gamma_samples = posterior_samples["gamma"]  # Shape: [50, num_genes]
+            >>> alpha_samples = posterior_samples["alpha"]  # Shape: [2, num_genes]
+            >>> beta_samples = posterior_samples["beta"]    # Shape: [2, num_genes]
+            >>> gamma_samples = posterior_samples["gamma"]  # Shape: [2, num_genes]
+            >>>
+            >>> # Clean up temporary directory
+            >>> import shutil
+            >>> if os.path.exists(tmp_dir):
+            ...     shutil.rmtree(tmp_dir)
         """
         # Import inference utilities
         from pyrovelocity.models.modular.inference.posterior import (
@@ -960,24 +1035,47 @@ class PyroVelocityModel:
             >>> # Store results in AnnData after generating posterior samples
             >>> from pyrovelocity.models.modular.factory import create_standard_model
             >>> import anndata as ad
-            >>> import scvelo as scv
+            >>> import numpy as np
+            >>> tmp = getfixture("tmp_path")  # For any temporary file operations
             >>>
-            >>> # Load data, train model, and generate samples
-            >>> adata = ad.read_h5ad("example_data.h5ad")
+            >>> # Create synthetic data
+            >>> n_cells, n_genes = 10, 5
+            >>> u_data = np.random.poisson(5, size=(n_cells, n_genes))
+            >>> s_data = np.random.poisson(5, size=(n_cells, n_genes))
+            >>>
+            >>> # Create AnnData object
+            >>> adata = ad.AnnData(X=s_data)
+            >>> adata.layers["spliced"] = s_data
+            >>> adata.layers["unspliced"] = u_data
+            >>> adata.obs_names = [f"cell_{i}" for i in range(n_cells)]
+            >>> adata.var_names = [f"gene_{i}" for i in range(n_genes)]
+            >>> # Add UMAP coordinates for visualization
+            >>> adata.obsm = {}
+            >>> adata.obsm["X_umap"] = np.random.normal(0, 1, size=(n_cells, 2))
+            >>> # Add cluster information
+            >>> adata.obs["clusters"] = np.random.choice(["A", "B", "C"], size=n_cells)
+            >>>
+            >>> # Prepare AnnData
             >>> adata = PyroVelocityModel.setup_anndata(adata)
-            >>> model = create_standard_model()
-            >>> model.train(adata=adata, max_epochs=500)
-            >>> posterior_samples = model.generate_posterior_samples(num_samples=50)
             >>>
-            >>> # Store results and visualize
-            >>> adata = model.store_results_in_anndata(
+            >>> # Create, train model, and generate samples
+            >>> model = create_standard_model()
+            >>> model.train(adata=adata, max_epochs=2)  # Use small number for testing
+            >>> posterior_samples = model.generate_posterior_samples(
+            ...     adata=adata, num_samples=2  # Use small number for testing
+            ... )
+            >>>
+            >>> # Store results in AnnData
+            >>> adata_out = model.store_results_in_anndata(
             ...     adata=adata,
             ...     posterior_samples=posterior_samples,
             ...     model_name="standard_model"
             ... )
             >>>
-            >>> # Visualize results with scVelo
-            >>> scv.pl.velocity_embedding_stream(adata, basis="umap", color="clusters")
+            >>> # Check that results were stored
+            >>> assert "standard_model_alpha" in adata_out.var
+            >>> assert "standard_model_beta" in adata_out.var
+            >>> assert "standard_model_gamma" in adata_out.var
         """
         # Import inference utilities
         from pyrovelocity.models.modular.inference.posterior import (

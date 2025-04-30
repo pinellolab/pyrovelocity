@@ -125,11 +125,17 @@ def velocity_model(
         >>> import jax
         >>> import jax.numpy as jnp
         >>> import numpyro
+        >>> tmp = getfixture("tmp_path")  # For any temporary file operations
         >>>
-        >>> # Generate synthetic data
+        >>> # Generate synthetic data with proper type conversion
         >>> key = jax.random.PRNGKey(0)
-        >>> u_obs = jax.random.poisson(key, jnp.ones((10, 5)) * 5.0)
-        >>> s_obs = jax.random.poisson(key, jnp.ones((10, 5)) * 5.0)
+        >>> key1, key2 = jax.random.split(key)
+        >>> # Generate integer counts
+        >>> u_counts = jax.random.poisson(key1, jnp.ones((10, 5)) * 5.0)
+        >>> s_counts = jax.random.poisson(key2, jnp.ones((10, 5)) * 5.0)
+        >>> # Convert to float arrays to satisfy type annotations
+        >>> u_obs = jnp.asarray(u_counts, dtype=jnp.float32)
+        >>> s_obs = jnp.asarray(s_counts, dtype=jnp.float32)
         >>>
         >>> # Run the model
         >>> with numpyro.handlers.seed(rng_seed=0):
@@ -274,7 +280,10 @@ def create_model(
         A model function that takes observed data and returns model outputs
 
     Examples:
+        >>> import jax
+        >>> import jax.numpy as jnp
         >>> from pyrovelocity.models.jax.core.state import ModelConfig
+        >>> tmp = getfixture("tmp_path")  # For any temporary file operations
         >>>
         >>> # Create a model configuration
         >>> config = ModelConfig(
@@ -288,8 +297,18 @@ def create_model(
         >>> # Create a model function
         >>> model_fn = create_model(config)
         >>>
-        >>> # The model_fn can now be used for inference
-        >>> # model_fn(u_obs=u_obs, s_obs=s_obs)
+        >>> # Generate synthetic data with proper type conversion
+        >>> key = jax.random.PRNGKey(0)
+        >>> key1, key2 = jax.random.split(key)
+        >>> # Generate integer counts
+        >>> u_counts = jax.random.poisson(key1, jnp.ones((10, 5)) * 5.0)
+        >>> s_counts = jax.random.poisson(key2, jnp.ones((10, 5)) * 5.0)
+        >>> # Convert to float arrays to satisfy type annotations
+        >>> u_obs = jnp.asarray(u_counts, dtype=jnp.float32)
+        >>> s_obs = jnp.asarray(s_counts, dtype=jnp.float32)
+        >>>
+        >>> # Use the model function for inference
+        >>> results = model_fn(u_obs=u_obs, s_obs=s_obs)
     """
     # Select dynamics function
     if config.dynamics == "standard":
