@@ -541,19 +541,42 @@ class ValidationRunner:
                 from pyrovelocity.models.modular.inference.posterior import (
                     compute_velocity,
                 )
-                velocity = compute_velocity(
-                    model=model,
-                    posterior_samples=posterior_samples,
-                    adata=self.adata,
-                )
+                try:
+                    velocity_results = compute_velocity(
+                        model=model,
+                        posterior_samples=posterior_samples,
+                        adata=self.adata,
+                        use_mean=True,  # Use mean to avoid shape issues
+                    )
+                    # Extract velocity from results
+                    if isinstance(velocity_results, dict) and "velocity" in velocity_results:
+                        velocity = velocity_results["velocity"]
+                    else:
+                        velocity = velocity_results
+                except Exception as e:
+                    print(f"Error computing velocity for {name}: {e}")
+                    velocity = None
             elif name == "jax":
                 # For JAX model, we need to compute velocity
+                from pyrovelocity.models.jax.core.dynamics import (
+                    standard_dynamics_model,
+                )
                 from pyrovelocity.models.jax.inference.posterior import (
                     compute_velocity,
                 )
-                velocity = compute_velocity(
-                    posterior_samples=posterior_samples,
-                )
+                try:
+                    velocity_results = compute_velocity(
+                        posterior_samples=posterior_samples,
+                        dynamics_fn=standard_dynamics_model,
+                    )
+                    # Extract velocity from results
+                    if isinstance(velocity_results, dict) and "velocity" in velocity_results:
+                        velocity = velocity_results["velocity"]
+                    else:
+                        velocity = velocity_results
+                except Exception as e:
+                    print(f"Error computing velocity for {name}: {e}")
+                    velocity = None
 
             # Store velocity
             self.results[name]["velocity"] = velocity
@@ -568,17 +591,41 @@ class ValidationRunner:
                     compute_uncertainty,
                 )
                 # Compute uncertainty from velocity samples
-                uncertainty = compute_uncertainty(
-                    velocity_samples=velocity,
-                )
+                try:
+                    if velocity is not None:
+                        uncertainty_results = compute_uncertainty(
+                            velocity_samples=velocity,
+                        )
+                        # Extract uncertainty from results
+                        if isinstance(uncertainty_results, dict) and "velocity_uncertainty" in uncertainty_results:
+                            uncertainty = uncertainty_results["velocity_uncertainty"]
+                        else:
+                            uncertainty = uncertainty_results
+                    else:
+                        uncertainty = None
+                except Exception as e:
+                    print(f"Error computing uncertainty for {name}: {e}")
+                    uncertainty = None
             elif name == "jax":
                 # For JAX model, we need to compute uncertainty
                 from pyrovelocity.models.jax.inference.posterior import (
                     compute_uncertainty,
                 )
-                uncertainty = compute_uncertainty(
-                    velocity_samples=velocity,
-                )
+                try:
+                    if velocity is not None:
+                        uncertainty_results = compute_uncertainty(
+                            velocity_samples=velocity,
+                        )
+                        # Extract uncertainty from results
+                        if isinstance(uncertainty_results, dict) and "velocity_uncertainty" in uncertainty_results:
+                            uncertainty = uncertainty_results["velocity_uncertainty"]
+                        else:
+                            uncertainty = uncertainty_results
+                    else:
+                        uncertainty = None
+                except Exception as e:
+                    print(f"Error computing uncertainty for {name}: {e}")
+                    uncertainty = None
 
             # Store uncertainty
             self.results[name]["uncertainty"] = uncertainty

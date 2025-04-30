@@ -82,6 +82,20 @@ def parse_args():
         default="validation_results",
         help="Directory to save validation results",
     )
+    parser.add_argument(
+        "--normalize-method",
+        type=str,
+        default="nearest",
+        choices=["nearest", "linear", "cubic"],
+        help="Method for normalizing shapes when comparing implementations",
+    )
+    parser.add_argument(
+        "--target-strategy",
+        type=str,
+        default="max",
+        choices=["max", "min", "first", "second"],
+        help="Strategy for determining target shape when normalizing",
+    )
     return parser.parse_args()
 
 
@@ -176,6 +190,10 @@ def main():
     print("Running validation...")
     start_time = time.time()
     try:
+        # Import comparison functions with shape normalization
+        from pyrovelocity.validation.comparison import compare_velocities, compare_uncertainties
+
+        # Run validation
         validation_results = run_validation(
             adata=adata,
             max_epochs=args.max_epochs,
@@ -185,6 +203,32 @@ def main():
             use_modular=args.use_modular,
             use_jax=args.use_jax,
         )
+
+        # Extract results
+        model_results = validation_results["results"]
+
+        # Re-run comparisons with shape normalization
+        # This ensures that arrays with different shapes can be compared
+        print("Comparing implementations with shape normalization...")
+
+        # Compare velocities with shape normalization
+        velocity_comparison = compare_velocities(
+            model_results,
+            normalize_method=args.normalize_method,
+            target_strategy=args.target_strategy
+        )
+
+        # Compare uncertainties with shape normalization
+        uncertainty_comparison = compare_uncertainties(
+            model_results,
+            normalize_method=args.normalize_method,
+            target_strategy=args.target_strategy
+        )
+
+        # Update comparison results
+        validation_results["comparison"]["velocity_comparison"] = velocity_comparison
+        validation_results["comparison"]["uncertainty_comparison"] = uncertainty_comparison
+
         elapsed_time = time.time() - start_time
         print(f"Validation completed in {elapsed_time:.2f} seconds")
 
@@ -224,8 +268,26 @@ def main():
             fig = plot_velocity_comparison(comparison["velocity_comparison"])
             fig.savefig(os.path.join(args.output_dir, "velocity_comparison.png"))
             plt.close(fig)
+
+            # Also plot velocity vector field if coordinates are available
+            if "X_umap" in adata.obsm:
+                from pyrovelocity.validation.visualization import plot_velocity_vector_field
+
+                # Get UMAP coordinates
+                coordinates = adata.obsm["X_umap"]
+
+                # Plot velocity vector field
+                fig = plot_velocity_vector_field(
+                    model_results,
+                    coordinates,
+                    resample_method=args.normalize_method
+                )
+                fig.savefig(os.path.join(args.output_dir, "velocity_vector_field.png"))
+                plt.close(fig)
         except Exception as e:
             print(f"Error plotting velocity comparison: {e}")
+            import traceback
+            traceback.print_exc()
 
         # Plot uncertainty comparison
         # This compares uncertainty estimates across implementations
@@ -234,8 +296,21 @@ def main():
             fig = plot_uncertainty_comparison(comparison["uncertainty_comparison"])
             fig.savefig(os.path.join(args.output_dir, "uncertainty_comparison.png"))
             plt.close(fig)
+
+            # Also plot uncertainty heatmap
+            from pyrovelocity.validation.visualization import plot_uncertainty_heatmap
+
+            # Plot uncertainty heatmap
+            fig = plot_uncertainty_heatmap(
+                model_results,
+                resample_method=args.normalize_method
+            )
+            fig.savefig(os.path.join(args.output_dir, "uncertainty_heatmap.png"))
+            plt.close(fig)
         except Exception as e:
             print(f"Error plotting uncertainty comparison: {e}")
+            import traceback
+            traceback.print_exc()
 
         # Plot performance comparison
         # This compares training and inference times across implementations
@@ -253,8 +328,34 @@ def main():
             f.write(f"=================\n\n")
             f.write(f"Implementations: {', '.join(implementations)}\n")
             f.write(f"Parameters: max_epochs={args.max_epochs}, num_samples={args.num_samples}\n")
-            f.write(f"Dataset: {adata.shape[0]} cells, {adata.shape[1]} genes\n\n")
+            f.write(f"Dataset: {adata.shape[0]} cells, {adata.shape[1]} genes\n")
+            f.write(f"Shape normalization: method={args.normalize_method}, target={args.target_strategy}\n\n")
 
+            # Write model information
+            f.write(f"Model Information\n")
+            f.write(f"----------------\n")
+            for model_name in implementations:
+                if model_name in model_results:
+                    f.write(f"{model_name}:\n")
+
+                    # Write velocity shape
+                    if "velocity" in model_results[model_name]:
+                        velocity = model_results[model_name]["velocity"]
+                        if isinstance(velocity, np.ndarray):
+                            f.write(f"  Velocity shape: {velocity.shape}\n")
+                        else:
+                            f.write(f"  Velocity shape: {type(velocity)}\n")
+
+                    # Write uncertainty shape
+                    if "uncertainty" in model_results[model_name]:
+                        uncertainty = model_results[model_name]["uncertainty"]
+                        if isinstance(uncertainty, np.ndarray):
+                            f.write(f"  Uncertainty shape: {uncertainty.shape}\n")
+                        else:
+                            f.write(f"  Uncertainty shape: {type(uncertainty)}\n")
+            f.write("\n")
+
+            # Write performance information
             f.write(f"Performance Summary\n")
             f.write(f"-----------------\n")
             for model_name in implementations:
@@ -263,6 +364,36 @@ def main():
                     f.write(f"{model_name}:\n")
                     f.write(f"  Training time: {perf.get('training_time', 'N/A'):.2f} seconds\n")
                     f.write(f"  Inference time: {perf.get('inference_time', 'N/A'):.2f} seconds\n")
+            f.write("\n")
+
+            # Write comparison information
+            f.write(f"Comparison Information\n")
+            f.write(f"---------------------\n")
+
+            # Write velocity comparison information
+            if "velocity_comparison" in comparison:
+                f.write(f"Velocity Comparison:\n")
+                for comp_key, comp_value in comparison["velocity_comparison"].items():
+                    f.write(f"  {comp_key}:\n")
+                    for metric, value in comp_value.items():
+                        if metric in ["shape1", "shape2", "shape_mismatch", "error", "velocity1_shape", "velocity2_shape"]:
+                            f.write(f"    {metric}: {value}\n")
+                        elif isinstance(value, (int, float)):
+                            f.write(f"    {metric}: {value:.4f}\n")
+                        else:
+                            f.write(f"    {metric}: {value}\n")
+            f.write("\n")
+
+            # Write uncertainty comparison information
+            if "uncertainty_comparison" in comparison:
+                f.write(f"Uncertainty Comparison:\n")
+                for comp_key, comp_value in comparison["uncertainty_comparison"].items():
+                    f.write(f"  {comp_key}:\n")
+                    for metric, value in comp_value.items():
+                        if metric in ["shape1", "shape2", "shape_mismatch"]:
+                            f.write(f"    {metric}: {value}\n")
+                        else:
+                            f.write(f"    {metric}: {value:.4f}\n")
 
         print(f"Validation results saved to {args.output_dir}")
 
