@@ -613,18 +613,38 @@ class ValidationRunner:
                 )
                 try:
                     if velocity is not None:
+                        # Create a dictionary with velocity samples if needed
+                        if not isinstance(velocity, dict):
+                            # If velocity is not a dictionary, create one with a 'velocity' key
+                            velocity_dict = {"velocity": velocity}
+                        else:
+                            velocity_dict = velocity
+
+                        # Compute uncertainty
                         uncertainty_results = compute_uncertainty(
-                            velocity_samples=velocity,
+                            velocity_samples=velocity_dict,
                         )
+
                         # Extract uncertainty from results
-                        if isinstance(uncertainty_results, dict) and "velocity_uncertainty" in uncertainty_results:
+                        if "velocity_std" in uncertainty_results:
+                            # Use standard deviation as uncertainty measure
+                            uncertainty = uncertainty_results["velocity_std"]
+                        elif "velocity_cv" in uncertainty_results:
+                            # Use coefficient of variation as uncertainty measure
+                            uncertainty = uncertainty_results["velocity_cv"]
+                        elif "velocity_uncertainty" in uncertainty_results:
+                            # Legacy format
                             uncertainty = uncertainty_results["velocity_uncertainty"]
                         else:
+                            # Use the whole dictionary
                             uncertainty = uncertainty_results
                     else:
                         uncertainty = None
                 except Exception as e:
                     print(f"Error computing uncertainty for {name}: {e}")
+                    print(f"Velocity type: {type(velocity)}")
+                    if isinstance(velocity, dict):
+                        print(f"Velocity keys: {velocity.keys()}")
                     uncertainty = None
 
             # Store uncertainty

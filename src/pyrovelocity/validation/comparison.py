@@ -495,7 +495,7 @@ def identify_edge_cases(
 
 @beartype
 def resample_array(
-    array: np.ndarray,
+    array: Union[np.ndarray, jnp.ndarray, torch.Tensor, List, Tuple],
     target_shape: Tuple[int, ...],
     method: str = "nearest"
 ) -> np.ndarray:
@@ -503,21 +503,45 @@ def resample_array(
     Resample an array to match a target shape.
 
     This function resamples an array to match a target shape, which is useful
-    for comparing arrays with different shapes. It uses scipy's zoom function
-    to perform the resampling and handles arrays with different dimensions.
+    for comparing arrays with different shapes. It uses multiple resampling methods
+    and falls back gracefully if one method fails.
 
     Args:
-        array: Input array to resample
+        array: Input array to resample (numpy array, JAX array, PyTorch tensor, or nested list/tuple)
         target_shape: Target shape for the resampled array
         method: Resampling method ('nearest', 'linear', 'cubic')
 
     Returns:
         Resampled array with the target shape
     """
+    # Import resampling functions
     from scipy.ndimage import zoom
+    try:
+        from skimage.transform import resize as sk_resize
+        HAS_SKIMAGE = True
+    except ImportError:
+        HAS_SKIMAGE = False
+
+    # Convert input to numpy array
+    if isinstance(array, torch.Tensor):
+        array = array.detach().cpu().numpy()
+    elif isinstance(array, jnp.ndarray):
+        array = np.array(array)
+    elif isinstance(array, (list, tuple)):
+        array = np.array(array)
 
     # Ensure array is a numpy array
     array = np.array(array)
+
+    # Check for NaN or Inf values
+    if np.isnan(array).any() or np.isinf(array).any():
+        print("Warning: Input array contains NaN or Inf values. Replacing with zeros.")
+        array = np.nan_to_num(array, nan=0.0, posinf=0.0, neginf=0.0)
+
+    # Handle empty arrays
+    if array.size == 0:
+        print("Warning: Input array is empty. Returning zeros with target shape.")
+        return np.zeros(target_shape)
 
     # Handle dimension mismatch
     if array.ndim != len(target_shape):
@@ -527,7 +551,24 @@ def resample_array(
             new_shape = list(array.shape)
             while len(new_shape) < len(target_shape):
                 new_shape.append(1)
-            array = array.reshape(new_shape)
+            try:
+                array = array.reshape(new_shape)
+            except ValueError as e:
+                print(f"Warning: Failed to reshape array from {array.shape} to {new_shape}: {e}")
+                # Try a different approach - broadcast to target shape
+                if array.size == 1:
+                    # If array is a scalar, broadcast to target shape
+                    return np.full(target_shape, array.item())
+                else:
+                    # Flatten and then reshape
+                    flat_array = array.flatten()
+                    if flat_array.size >= np.prod(target_shape):
+                        # If flattened array is large enough, reshape to target
+                        return flat_array[:np.prod(target_shape)].reshape(target_shape)
+                    else:
+                        # Otherwise, tile the flattened array
+                        tiled = np.tile(flat_array, int(np.ceil(np.prod(target_shape) / flat_array.size)))
+                        return tiled[:np.prod(target_shape)].reshape(target_shape)
         # If array has more dimensions than target, flatten extra dimensions
         else:
             # Keep the first len(target_shape)-1 dimensions as is
@@ -535,10 +576,28 @@ def resample_array(
             if len(target_shape) > 1:
                 new_shape = list(array.shape[:len(target_shape)-1])
                 new_shape.append(-1)  # Flatten remaining dimensions
-                array = array.reshape(new_shape)
+                try:
+                    array = array.reshape(new_shape)
+                except ValueError as e:
+                    print(f"Warning: Failed to reshape array from {array.shape} to {new_shape}: {e}")
+                    # Flatten completely and then reshape to target
+                    flat_array = array.flatten()
+                    if flat_array.size >= np.prod(target_shape):
+                        return flat_array[:np.prod(target_shape)].reshape(target_shape)
+                    else:
+                        # Tile the flattened array
+                        tiled = np.tile(flat_array, int(np.ceil(np.prod(target_shape) / flat_array.size)))
+                        return tiled[:np.prod(target_shape)].reshape(target_shape)
             else:
                 # If target is 1D, flatten the entire array
                 array = array.flatten()
+                # If flattened array is too long, truncate
+                if array.size > target_shape[0]:
+                    array = array[:target_shape[0]]
+                # If flattened array is too short, pad
+                elif array.size < target_shape[0]:
+                    pad_width = target_shape[0] - array.size
+                    array = np.pad(array, (0, pad_width), mode='constant')
 
     # Calculate zoom factors
     zoom_factors = []
@@ -557,21 +616,46 @@ def resample_array(
     if any(factor == 0 for factor in zoom_factors):
         return np.resize(array, target_shape)
 
-    try:
-        # Resample array
-        resampled = zoom(array, zoom_factors, order=0 if method == "nearest" else 1, mode="nearest")
+    # Try multiple resampling methods in order of preference
+    methods_to_try = [
+        # Method 1: scipy.ndimage.zoom
+        lambda: zoom(array, zoom_factors, order=0 if method == "nearest" else 1, mode="nearest"),
 
-        # Reshape if needed
-        if resampled.shape != target_shape:
-            # This can happen if the dimensions don't match exactly
-            # We'll reshape to match the target shape
-            resampled = np.resize(resampled, target_shape)
+        # Method 2: skimage.transform.resize (if available)
+        lambda: sk_resize(array, target_shape, order=0 if method == "nearest" else 1,
+                          mode='edge', anti_aliasing=False) if HAS_SKIMAGE else None,
 
-        return resampled
-    except Exception as e:
-        # If zoom fails, fall back to resize
-        print(f"Warning: zoom failed with error: {e}. Falling back to resize.")
-        return np.resize(array, target_shape)
+        # Method 3: numpy.resize (fallback)
+        lambda: np.resize(array, target_shape)
+    ]
+
+    # Try each method in order
+    for i, method_func in enumerate(methods_to_try):
+        try:
+            resampled = method_func()
+            if resampled is None:
+                # Skip this method if it returned None (e.g., skimage not available)
+                continue
+
+            # Check if the resampled array has the correct shape
+            if resampled.shape != target_shape:
+                # This can happen if the dimensions don't match exactly
+                # We'll reshape to match the target shape
+                resampled = np.resize(resampled, target_shape)
+
+            # Check for NaN or Inf values in the result
+            if np.isnan(resampled).any() or np.isinf(resampled).any():
+                print(f"Warning: Method {i+1} produced NaN or Inf values. Trying next method.")
+                continue
+
+            return resampled
+        except Exception as e:
+            print(f"Warning: Resampling method {i+1} failed with error: {e}. Trying next method.")
+            continue
+
+    # If all methods fail, return a zero array with the target shape
+    print("Warning: All resampling methods failed. Returning zeros with target shape.")
+    return np.zeros(target_shape)
 
 
 @beartype

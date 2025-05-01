@@ -42,53 +42,144 @@ def plot_parameter_comparison(
     Returns:
         Matplotlib figure
     """
-    # Get parameters and metrics
+    # Check if parameter_comparison is empty
+    if not parameter_comparison:
+        # Create a figure to display error message
+        fig, ax = plt.subplots(figsize=figsize)
+        ax.text(0.5, 0.5, "No parameter comparison results available",
+                ha="center", va="center", fontsize=12, fontweight="bold")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        return fig
+
+    # Get parameters
     parameters = list(parameter_comparison.keys())
+
+    # Check if there are any parameters
+    if not parameters:
+        # Create a figure to display error message
+        fig, ax = plt.subplots(figsize=figsize)
+        ax.text(0.5, 0.5, "No parameters found in comparison results",
+                ha="center", va="center", fontsize=12, fontweight="bold")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        return fig
+
+    # Check if there are any comparisons for the first parameter
+    first_param = parameters[0]
+    if not parameter_comparison[first_param]:
+        # Create a figure to display error message
+        fig, ax = plt.subplots(figsize=figsize)
+        ax.text(0.5, 0.5, f"No comparisons found for parameter '{first_param}'",
+                ha="center", va="center", fontsize=12, fontweight="bold")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        return fig
+
+    # Get metrics
     if metrics is None:
-        # Get all metrics from the first parameter and comparison
-        first_param = parameters[0]
-        first_comp = list(parameter_comparison[first_param].keys())[0]
-        metrics = list(parameter_comparison[first_param][first_comp].keys())
+        try:
+            # Get all metrics from the first parameter and comparison
+            first_comp = list(parameter_comparison[first_param].keys())[0]
+            if not parameter_comparison[first_param][first_comp]:
+                # Create a figure to display error message
+                fig, ax = plt.subplots(figsize=figsize)
+                ax.text(0.5, 0.5, f"No metrics found for parameter '{first_param}' and comparison '{first_comp}'",
+                        ha="center", va="center", fontsize=12, fontweight="bold")
+                ax.set_xticks([])
+                ax.set_yticks([])
+                return fig
 
-    # Create figure
-    fig, axes = plt.subplots(len(metrics), len(parameters), figsize=figsize)
+            metrics = list(parameter_comparison[first_param][first_comp].keys())
+        except (IndexError, KeyError) as e:
+            # Create a figure to display error message
+            fig, ax = plt.subplots(figsize=figsize)
+            ax.text(0.5, 0.5, f"Error getting metrics: {e}",
+                    ha="center", va="center", fontsize=12, fontweight="bold")
+            ax.set_xticks([])
+            ax.set_yticks([])
+            return fig
 
-    # Adjust axes for single parameter or metric
-    if len(parameters) == 1:
-        axes = axes.reshape(-1, 1)
-    if len(metrics) == 1:
-        axes = axes.reshape(1, -1)
+    # Check if there are any metrics
+    if not metrics:
+        # Create a figure to display error message
+        fig, ax = plt.subplots(figsize=figsize)
+        ax.text(0.5, 0.5, "No metrics found in comparison results",
+                ha="center", va="center", fontsize=12, fontweight="bold")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        return fig
 
-    # Plot comparison results
-    for i, param in enumerate(parameters):
-        for j, metric in enumerate(metrics):
-            # Get axis
-            ax = axes[j, i]
+    try:
+        # Create figure
+        fig, axes = plt.subplots(len(metrics), len(parameters), figsize=figsize)
 
-            # Get comparison results for this parameter and metric
-            comparisons = []
-            values = []
-            for comp, results in parameter_comparison[param].items():
-                if metric in results:
-                    comparisons.append(comp)
-                    values.append(results[metric])
+        # Adjust axes for single parameter or metric
+        if len(parameters) == 1 and len(metrics) == 1:
+            # Single parameter and single metric
+            axes = np.array([[axes]])
+        elif len(parameters) == 1:
+            # Single parameter, multiple metrics
+            axes = axes.reshape(-1, 1)
+        elif len(metrics) == 1:
+            # Multiple parameters, single metric
+            axes = axes.reshape(1, -1)
 
-            # Plot bar chart
-            ax.bar(comparisons, values)
+        # Plot comparison results
+        for i, param in enumerate(parameters):
+            for j, metric in enumerate(metrics):
+                try:
+                    # Get axis
+                    ax = axes[j, i]
 
-            # Set title and labels
-            if j == 0:
-                ax.set_title(param)
-            if i == 0:
-                ax.set_ylabel(metric)
+                    # Get comparison results for this parameter and metric
+                    comparisons = []
+                    values = []
+                    for comp, results in parameter_comparison[param].items():
+                        if metric in results:
+                            # Check if the value is a number
+                            value = results[metric]
+                            if isinstance(value, (int, float)) and not np.isnan(value) and not np.isinf(value):
+                                comparisons.append(comp)
+                                values.append(value)
+                            else:
+                                print(f"Warning: Non-numeric value for {param}, {comp}, {metric}: {value}")
 
-            # Rotate x-tick labels
-            ax.set_xticklabels(comparisons, rotation=45, ha="right")
+                    # Plot bar chart if there are any values
+                    if comparisons and values:
+                        ax.bar(comparisons, values)
+                    else:
+                        ax.text(0.5, 0.5, "No valid data", ha="center", va="center")
 
-    # Adjust layout
-    plt.tight_layout()
+                    # Set title and labels
+                    if j == 0:
+                        ax.set_title(param)
+                    if i == 0:
+                        ax.set_ylabel(metric)
 
-    return fig
+                    # Rotate x-tick labels if there are any
+                    if comparisons:
+                        ax.set_xticklabels(comparisons, rotation=45, ha="right")
+                except Exception as e:
+                    # Handle errors for individual subplots
+                    print(f"Error plotting {param}, {metric}: {e}")
+                    ax.text(0.5, 0.5, f"Error: {e}", ha="center", va="center", fontsize=8, wrap=True)
+                    ax.set_xticks([])
+                    ax.set_yticks([])
+
+        # Adjust layout
+        plt.tight_layout()
+
+        return fig
+    except Exception as e:
+        # Handle errors for the entire figure
+        print(f"Error creating parameter comparison plot: {e}")
+        fig, ax = plt.subplots(figsize=figsize)
+        ax.text(0.5, 0.5, f"Error creating parameter comparison plot: {e}",
+                ha="center", va="center", fontsize=12, fontweight="bold")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        return fig
 
 
 @beartype

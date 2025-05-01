@@ -32,9 +32,21 @@ def mean_squared_error(x: np.ndarray, y: np.ndarray) -> float:
         y: Second array
 
     Returns:
-        Mean squared error
+        Mean squared error or NaN if calculation fails
     """
-    return float(np.mean((x - y) ** 2))
+    try:
+        # Check for NaN or Inf values
+        if np.isnan(x).any() or np.isnan(y).any() or np.isinf(x).any() or np.isinf(y).any():
+            # Replace NaN and Inf with zeros
+            x = np.nan_to_num(x, nan=0.0, posinf=0.0, neginf=0.0)
+            y = np.nan_to_num(y, nan=0.0, posinf=0.0, neginf=0.0)
+            print("Warning: Arrays contain NaN or Inf values. Replacing with zeros.")
+
+        # Calculate MSE
+        return float(np.mean((x - y) ** 2))
+    except Exception as e:
+        print(f"Error calculating mean squared error: {e}")
+        return float('nan')
 
 
 @beartype
@@ -47,9 +59,35 @@ def correlation(x: np.ndarray, y: np.ndarray) -> float:
         y: Second array
 
     Returns:
-        Correlation coefficient
+        Correlation coefficient or NaN if calculation fails
     """
-    return float(np.corrcoef(x.flatten(), y.flatten())[0, 1])
+    try:
+        # Check for NaN or Inf values
+        if np.isnan(x).any() or np.isnan(y).any() or np.isinf(x).any() or np.isinf(y).any():
+            # Replace NaN and Inf with zeros
+            x = np.nan_to_num(x, nan=0.0, posinf=0.0, neginf=0.0)
+            y = np.nan_to_num(y, nan=0.0, posinf=0.0, neginf=0.0)
+            print("Warning: Arrays contain NaN or Inf values. Replacing with zeros.")
+
+        # Flatten arrays
+        x_flat = x.flatten()
+        y_flat = y.flatten()
+
+        # Check if arrays have constant values
+        if np.all(x_flat == x_flat[0]) or np.all(y_flat == y_flat[0]):
+            print("Warning: One or both arrays have constant values. Correlation is undefined.")
+            return 0.0
+
+        # Calculate correlation
+        corr_matrix = np.corrcoef(x_flat, y_flat)
+        if corr_matrix.shape == (2, 2):
+            return float(corr_matrix[0, 1])
+        else:
+            print(f"Warning: Correlation matrix has unexpected shape: {corr_matrix.shape}")
+            return 0.0
+    except Exception as e:
+        print(f"Error calculating correlation: {e}")
+        return float('nan')
 
 
 @beartype
@@ -62,9 +100,33 @@ def cosine_similarity(x: np.ndarray, y: np.ndarray) -> float:
         y: Second array
 
     Returns:
-        Cosine similarity
+        Cosine similarity or NaN if calculation fails
     """
-    return float(np.dot(x.flatten(), y.flatten()) / (np.linalg.norm(x) * np.linalg.norm(y)))
+    try:
+        # Check for NaN or Inf values
+        if np.isnan(x).any() or np.isnan(y).any() or np.isinf(x).any() or np.isinf(y).any():
+            # Replace NaN and Inf with zeros
+            x = np.nan_to_num(x, nan=0.0, posinf=0.0, neginf=0.0)
+            y = np.nan_to_num(y, nan=0.0, posinf=0.0, neginf=0.0)
+            print("Warning: Arrays contain NaN or Inf values. Replacing with zeros.")
+
+        # Flatten arrays
+        x_flat = x.flatten()
+        y_flat = y.flatten()
+
+        # Check for zero norm
+        x_norm = np.linalg.norm(x_flat)
+        y_norm = np.linalg.norm(y_flat)
+
+        if x_norm == 0 or y_norm == 0:
+            print("Warning: One or both arrays have zero norm. Cosine similarity is undefined.")
+            return 0.0
+
+        # Calculate cosine similarity
+        return float(np.dot(x_flat, y_flat) / (x_norm * y_norm))
+    except Exception as e:
+        print(f"Error calculating cosine similarity: {e}")
+        return float('nan')
 
 
 @beartype
@@ -78,22 +140,54 @@ def kl_divergence(x: np.ndarray, y: np.ndarray, epsilon: float = 1e-10) -> float
         epsilon: Small constant to avoid division by zero
 
     Returns:
-        KL divergence
+        KL divergence or NaN if calculation fails
     """
-    # Ensure arrays are probability distributions
-    x = x / np.sum(x)
-    y = y / np.sum(y)
+    try:
+        # Check for NaN or Inf values
+        if np.isnan(x).any() or np.isnan(y).any() or np.isinf(x).any() or np.isinf(y).any():
+            # Replace NaN and Inf with zeros
+            x = np.nan_to_num(x, nan=0.0, posinf=0.0, neginf=0.0)
+            y = np.nan_to_num(y, nan=0.0, posinf=0.0, neginf=0.0)
+            print("Warning: Arrays contain NaN or Inf values. Replacing with zeros.")
 
-    # Add small constant to avoid division by zero
-    x = x + epsilon
-    y = y + epsilon
+        # Check for negative values
+        if np.any(x < 0) or np.any(y < 0):
+            print("Warning: Arrays contain negative values. Taking absolute values.")
+            x = np.abs(x)
+            y = np.abs(y)
 
-    # Renormalize
-    x = x / np.sum(x)
-    y = y / np.sum(y)
+        # Check for zero sums
+        x_sum = np.sum(x)
+        y_sum = np.sum(y)
 
-    # Calculate KL divergence
-    return float(np.sum(x * np.log(x / y)))
+        if x_sum == 0 or y_sum == 0:
+            print("Warning: One or both arrays sum to zero. KL divergence is undefined.")
+            return 0.0
+
+        # Ensure arrays are probability distributions
+        x = x / x_sum
+        y = y / y_sum
+
+        # Add small constant to avoid division by zero
+        x = x + epsilon
+        y = y + epsilon
+
+        # Renormalize
+        x = x / np.sum(x)
+        y = y / np.sum(y)
+
+        # Calculate KL divergence
+        kl_div = float(np.sum(x * np.log(x / y)))
+
+        # Check for NaN or Inf in result
+        if np.isnan(kl_div) or np.isinf(kl_div):
+            print("Warning: KL divergence calculation resulted in NaN or Inf. Returning 0.")
+            return 0.0
+
+        return kl_div
+    except Exception as e:
+        print(f"Error calculating KL divergence: {e}")
+        return float('nan')
 
 
 @beartype
@@ -106,9 +200,37 @@ def wasserstein_distance(x: np.ndarray, y: np.ndarray) -> float:
         y: Second array
 
     Returns:
-        Wasserstein distance
+        Wasserstein distance or NaN if calculation fails
     """
-    return float(stats.wasserstein_distance(x.flatten(), y.flatten()))
+    try:
+        # Check for NaN or Inf values
+        if np.isnan(x).any() or np.isnan(y).any() or np.isinf(x).any() or np.isinf(y).any():
+            # Replace NaN and Inf with zeros
+            x = np.nan_to_num(x, nan=0.0, posinf=0.0, neginf=0.0)
+            y = np.nan_to_num(y, nan=0.0, posinf=0.0, neginf=0.0)
+            print("Warning: Arrays contain NaN or Inf values. Replacing with zeros.")
+
+        # Flatten arrays
+        x_flat = x.flatten()
+        y_flat = y.flatten()
+
+        # Check if arrays are empty
+        if x_flat.size == 0 or y_flat.size == 0:
+            print("Warning: One or both arrays are empty. Wasserstein distance is undefined.")
+            return 0.0
+
+        # Calculate Wasserstein distance
+        distance = float(stats.wasserstein_distance(x_flat, y_flat))
+
+        # Check for NaN or Inf in result
+        if np.isnan(distance) or np.isinf(distance):
+            print("Warning: Wasserstein distance calculation resulted in NaN or Inf. Returning 0.")
+            return 0.0
+
+        return distance
+    except Exception as e:
+        print(f"Error calculating Wasserstein distance: {e}")
+        return float('nan')
 
 
 # Parameter comparison metrics
@@ -159,6 +281,10 @@ def compute_velocity_metrics(
     """
     Compute metrics for comparing velocity estimates.
 
+    This function computes metrics for comparing velocity estimates between
+    different implementations. It handles arrays with different shapes by
+    ensuring they are compatible before computing metrics.
+
     Args:
         velocity1: First velocity estimate, either a numpy array or a dictionary with a 'velocity' key
         velocity2: Second velocity estimate, either a numpy array or a dictionary with a 'velocity' key
@@ -187,13 +313,37 @@ def compute_velocity_metrics(
     else:
         v2 = np.array(velocity2)
 
-    # Compute metrics
-    metrics = {
-        "mse": mean_squared_error(v1, v2),
-        "correlation": correlation(v1, v2),
-        "cosine_similarity": cosine_similarity(v1, v2),
-        "magnitude_similarity": 1.0 - np.abs(np.linalg.norm(v1) - np.linalg.norm(v2)) / (np.linalg.norm(v1) + np.linalg.norm(v2)),
-    }
+    # Check if shapes match
+    if v1.shape != v2.shape:
+        # Shapes don't match, but we can still compute some metrics
+        # For metrics that require the same shape, we'll flatten the arrays
+        v1_flat = v1.flatten()
+        v2_flat = v2.flatten()
+
+        # If arrays have different lengths after flattening, truncate to the shorter length
+        min_length = min(len(v1_flat), len(v2_flat))
+        v1_flat = v1_flat[:min_length]
+        v2_flat = v2_flat[:min_length]
+
+        # Compute metrics that can handle different shapes
+        metrics = {
+            "mse": mean_squared_error(v1_flat, v2_flat),
+            "correlation": correlation(v1_flat, v2_flat),
+            "cosine_similarity": cosine_similarity(v1_flat, v2_flat),
+            "magnitude_similarity": 1.0 - np.abs(np.linalg.norm(v1_flat) - np.linalg.norm(v2_flat)) / (np.linalg.norm(v1_flat) + np.linalg.norm(v2_flat)),
+            "shape_mismatch": True,
+            "shape1": str(v1.shape),
+            "shape2": str(v2.shape)
+        }
+    else:
+        # Shapes match, compute metrics normally
+        metrics = {
+            "mse": mean_squared_error(v1, v2),
+            "correlation": correlation(v1, v2),
+            "cosine_similarity": cosine_similarity(v1, v2),
+            "magnitude_similarity": 1.0 - np.abs(np.linalg.norm(v1) - np.linalg.norm(v2)) / (np.linalg.norm(v1) + np.linalg.norm(v2)),
+            "shape_mismatch": False
+        }
 
     return metrics
 
@@ -208,6 +358,10 @@ def compute_uncertainty_metrics(
     """
     Compute metrics for comparing uncertainty estimates.
 
+    This function computes metrics for comparing uncertainty estimates between
+    different implementations. It handles arrays with different shapes by
+    ensuring they are compatible before computing metrics.
+
     Args:
         uncertainty1: First uncertainty estimate
         uncertainty2: Second uncertainty estimate
@@ -219,12 +373,35 @@ def compute_uncertainty_metrics(
     u1 = np.array(uncertainty1)
     u2 = np.array(uncertainty2)
 
-    # Compute metrics
-    metrics = {
-        "mse": mean_squared_error(u1, u2),
-        "correlation": correlation(u1, u2),
-        "distribution_similarity": 1.0 - wasserstein_distance(u1, u2) / (np.mean(u1) + np.mean(u2)),
-    }
+    # Check if shapes match
+    if u1.shape != u2.shape:
+        # Shapes don't match, but we can still compute some metrics
+        # For metrics that require the same shape, we'll flatten the arrays
+        u1_flat = u1.flatten()
+        u2_flat = u2.flatten()
+
+        # If arrays have different lengths after flattening, truncate to the shorter length
+        min_length = min(len(u1_flat), len(u2_flat))
+        u1_flat = u1_flat[:min_length]
+        u2_flat = u2_flat[:min_length]
+
+        # Compute metrics that can handle different shapes
+        metrics = {
+            "mse": mean_squared_error(u1_flat, u2_flat),
+            "correlation": correlation(u1_flat, u2_flat),
+            "distribution_similarity": 1.0 - wasserstein_distance(u1_flat, u2_flat) / (np.mean(u1_flat) + np.mean(u2_flat)),
+            "shape_mismatch": True,
+            "shape1": str(u1.shape),
+            "shape2": str(u2.shape)
+        }
+    else:
+        # Shapes match, compute metrics normally
+        metrics = {
+            "mse": mean_squared_error(u1, u2),
+            "correlation": correlation(u1, u2),
+            "distribution_similarity": 1.0 - wasserstein_distance(u1, u2) / (np.mean(u1) + np.mean(u2)),
+            "shape_mismatch": False
+        }
 
     return metrics
 

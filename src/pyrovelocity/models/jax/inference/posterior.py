@@ -18,8 +18,10 @@ import anndata
 import arviz as az
 import jax
 import jax.numpy as jnp
+import numpy as np
 import numpyro
 import numpyro.distributions as dist
+import torch
 from beartype import beartype
 from jaxtyping import Array, Float, PyTree
 
@@ -265,12 +267,17 @@ def compute_velocity(
 
 @beartype
 def compute_uncertainty(
-    velocity_samples: Dict[str, jnp.ndarray],
+    velocity_samples: Union[Dict[str, jnp.ndarray], jnp.ndarray, np.ndarray, torch.Tensor],
 ) -> Dict[str, jnp.ndarray]:
     """Compute uncertainty in RNA velocity.
 
+    This function computes uncertainty measures for RNA velocity. It can handle
+    different input formats:
+    - Dictionary of velocity samples (e.g., {"velocity": samples, "u_expected": samples})
+    - Array of velocity samples (e.g., samples with shape [num_samples, num_genes] or [num_samples, num_cells, num_genes])
+
     Args:
-        velocity_samples: Dictionary of velocity samples
+        velocity_samples: Velocity samples, either as a dictionary or an array
 
     Returns:
         Dictionary of uncertainty measures
@@ -278,42 +285,109 @@ def compute_uncertainty(
     # Initialize uncertainty measures
     uncertainty = {}
 
-    # Compute mean and standard deviation for each quantity
-    for key, samples in velocity_samples.items():
+    # Handle different input types
+    if isinstance(velocity_samples, dict):
+        # Dictionary input - process each key
+        for key, samples in velocity_samples.items():
+            # Convert to JAX array if needed
+            if isinstance(samples, np.ndarray):
+                samples = jnp.array(samples)
+            elif isinstance(samples, torch.Tensor):
+                samples = jnp.array(samples.detach().cpu().numpy())
+
+            # Ensure samples has at least 2 dimensions
+            if samples.ndim == 1:
+                samples = samples.reshape(-1, 1)
+
+            # Compute mean across samples (first dimension)
+            mean = jnp.mean(samples, axis=0)
+            uncertainty[f"{key}_mean"] = mean
+
+            # Compute standard deviation across samples
+            std = jnp.std(samples, axis=0)
+            uncertainty[f"{key}_std"] = std
+
+            # Compute coefficient of variation (CV = std/mean)
+            # Add small epsilon to avoid division by zero
+            epsilon = 1e-10
+            cv = std / (jnp.abs(mean) + epsilon)
+            uncertainty[f"{key}_cv"] = cv
+
+            # Compute quantiles
+            q10 = jnp.quantile(samples, 0.1, axis=0)
+            q90 = jnp.quantile(samples, 0.9, axis=0)
+            uncertainty[f"{key}_q10"] = q10
+            uncertainty[f"{key}_q90"] = q90
+
+            # Compute credible interval width
+            ci_width = q90 - q10
+            uncertainty[f"{key}_ci_width"] = ci_width
+
+            # Compute normalized credible interval width
+            norm_ci_width = ci_width / (jnp.abs(mean) + epsilon)
+            uncertainty[f"{key}_norm_ci_width"] = norm_ci_width
+
+        # For velocity specifically, compute additional measures
+        if "velocity" in velocity_samples:
+            velocity = velocity_samples["velocity"]
+
+            # Convert to JAX array if needed
+            if isinstance(velocity, np.ndarray):
+                velocity = jnp.array(velocity)
+            elif isinstance(velocity, torch.Tensor):
+                velocity = jnp.array(velocity.detach().cpu().numpy())
+
+            # Compute probability of positive velocity
+            prob_positive = jnp.mean(velocity > 0, axis=0)
+            uncertainty["velocity_prob_positive"] = prob_positive
+
+            # Compute velocity confidence (1 - 2*|0.5 - prob_positive|)
+            # This is 1 when prob_positive is 0 or 1 (certain) and 0 when prob_positive is 0.5 (uncertain)
+            velocity_confidence = 1 - 2 * jnp.abs(0.5 - prob_positive)
+            uncertainty["velocity_confidence"] = velocity_confidence
+    else:
+        # Array input - treat as velocity samples
+        # Convert to JAX array if needed
+        samples = velocity_samples
+        if isinstance(samples, np.ndarray):
+            samples = jnp.array(samples)
+        elif isinstance(samples, torch.Tensor):
+            samples = jnp.array(samples.detach().cpu().numpy())
+
+        # Ensure samples has at least 2 dimensions
+        if samples.ndim == 1:
+            samples = samples.reshape(-1, 1)
+
         # Compute mean across samples (first dimension)
         mean = jnp.mean(samples, axis=0)
-        uncertainty[f"{key}_mean"] = mean
+        uncertainty["velocity_mean"] = mean
 
         # Compute standard deviation across samples
         std = jnp.std(samples, axis=0)
-        uncertainty[f"{key}_std"] = std
+        uncertainty["velocity_std"] = std
 
         # Compute coefficient of variation (CV = std/mean)
         # Add small epsilon to avoid division by zero
         epsilon = 1e-10
         cv = std / (jnp.abs(mean) + epsilon)
-        uncertainty[f"{key}_cv"] = cv
+        uncertainty["velocity_cv"] = cv
 
         # Compute quantiles
         q10 = jnp.quantile(samples, 0.1, axis=0)
         q90 = jnp.quantile(samples, 0.9, axis=0)
-        uncertainty[f"{key}_q10"] = q10
-        uncertainty[f"{key}_q90"] = q90
+        uncertainty["velocity_q10"] = q10
+        uncertainty["velocity_q90"] = q90
 
         # Compute credible interval width
         ci_width = q90 - q10
-        uncertainty[f"{key}_ci_width"] = ci_width
+        uncertainty["velocity_ci_width"] = ci_width
 
         # Compute normalized credible interval width
         norm_ci_width = ci_width / (jnp.abs(mean) + epsilon)
-        uncertainty[f"{key}_norm_ci_width"] = norm_ci_width
-
-    # For velocity specifically, compute additional measures
-    if "velocity" in velocity_samples:
-        velocity = velocity_samples["velocity"]
+        uncertainty["velocity_norm_ci_width"] = norm_ci_width
 
         # Compute probability of positive velocity
-        prob_positive = jnp.mean(velocity > 0, axis=0)
+        prob_positive = jnp.mean(samples > 0, axis=0)
         uncertainty["velocity_prob_positive"] = prob_positive
 
         # Compute velocity confidence (1 - 2*|0.5 - prob_positive|)
