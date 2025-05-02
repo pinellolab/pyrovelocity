@@ -7,12 +7,17 @@ configuration management.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Dict, Union, cast
 
 from beartype import beartype
-from hydra_zen import builds, make_config, make_custom_builds_fn
+from hydra_zen import make_custom_builds_fn
 from omegaconf import DictConfig, OmegaConf
 
+from pyrovelocity.models.modular.config import (
+    ComponentConfig,
+    ComponentType,
+    ModelConfig,
+)
 from pyrovelocity.models.modular.interfaces import (
     DynamicsModel,
     InferenceGuide,
@@ -30,7 +35,197 @@ from pyrovelocity.models.modular.registry import (
 )
 
 
-# Type-safe configuration dataclasses for each component type
+class ComponentFactory:
+    """
+    Factory for creating components in the PyroVelocity modular architecture.
+
+    This class provides methods for creating components from configurations,
+    replacing the multiple component-specific factory functions in the original
+    implementation.
+    """
+
+    @staticmethod
+    @beartype
+    def create_component(
+        config: ComponentConfig, component_type: ComponentType
+    ) -> Union[DynamicsModel, PriorModel, LikelihoodModel, ObservationModel, InferenceGuide]:
+        """
+        Create a component from a configuration.
+
+        Args:
+            config: Configuration for the component
+            component_type: Type of component to create
+
+        Returns:
+            An instance of the specified component
+
+        Raises:
+            ValueError: If the specified component is not registered or the component type is invalid
+        """
+        # Select the appropriate registry based on the component type
+        if component_type == ComponentType.DYNAMICS_MODEL:
+            return DynamicsModelRegistry.create(config.name, **config.params)
+        elif component_type == ComponentType.PRIOR_MODEL:
+            return PriorModelRegistry.create(config.name, **config.params)
+        elif component_type == ComponentType.LIKELIHOOD_MODEL:
+            return LikelihoodModelRegistry.create(config.name, **config.params)
+        elif component_type == ComponentType.OBSERVATION_MODEL:
+            return ObservationModelRegistry.create(config.name, **config.params)
+        elif component_type == ComponentType.INFERENCE_GUIDE:
+            return InferenceGuideRegistry.create(config.name, **config.params)
+        else:
+            raise ValueError(f"Invalid component type: {component_type}")
+
+    @staticmethod
+    @beartype
+    def create_component_from_dict(
+        config_dict: Dict[str, Any], component_type: ComponentType
+    ) -> Union[DynamicsModel, PriorModel, LikelihoodModel, ObservationModel, InferenceGuide]:
+        """
+        Create a component from a dictionary configuration.
+
+        Args:
+            config_dict: Dictionary containing the configuration
+            component_type: Type of component to create
+
+        Returns:
+            An instance of the specified component
+
+        Raises:
+            ValueError: If the specified component is not registered or the component type is invalid
+        """
+        config = ComponentConfig.from_dict(config_dict)
+        return ComponentFactory.create_component(config, component_type)
+
+    @staticmethod
+    @beartype
+    def create_dynamics_model(
+        config: Union[ComponentConfig, Dict[str, Any]]
+    ) -> DynamicsModel:
+        """
+        Create a dynamics model from a configuration.
+
+        Args:
+            config: Configuration for the dynamics model, either as a ComponentConfig
+                   object or a dictionary.
+
+        Returns:
+            An instance of the specified dynamics model.
+
+        Raises:
+            ValueError: If the specified model is not registered.
+        """
+        if isinstance(config, dict):
+            config = ComponentConfig.from_dict(config)
+        return cast(
+            DynamicsModel,
+            ComponentFactory.create_component(config, ComponentType.DYNAMICS_MODEL),
+        )
+
+    @staticmethod
+    @beartype
+    def create_prior_model(
+        config: Union[ComponentConfig, Dict[str, Any]]
+    ) -> PriorModel:
+        """
+        Create a prior model from a configuration.
+
+        Args:
+            config: Configuration for the prior model, either as a ComponentConfig
+                   object or a dictionary.
+
+        Returns:
+            An instance of the specified prior model.
+
+        Raises:
+            ValueError: If the specified model is not registered.
+        """
+        if isinstance(config, dict):
+            config = ComponentConfig.from_dict(config)
+        return cast(
+            PriorModel,
+            ComponentFactory.create_component(config, ComponentType.PRIOR_MODEL),
+        )
+
+    @staticmethod
+    @beartype
+    def create_likelihood_model(
+        config: Union[ComponentConfig, Dict[str, Any]]
+    ) -> LikelihoodModel:
+        """
+        Create a likelihood model from a configuration.
+
+        Args:
+            config: Configuration for the likelihood model, either as a ComponentConfig
+                   object or a dictionary.
+
+        Returns:
+            An instance of the specified likelihood model.
+
+        Raises:
+            ValueError: If the specified model is not registered.
+        """
+        if isinstance(config, dict):
+            config = ComponentConfig.from_dict(config)
+        return cast(
+            LikelihoodModel,
+            ComponentFactory.create_component(config, ComponentType.LIKELIHOOD_MODEL),
+        )
+
+    @staticmethod
+    @beartype
+    def create_observation_model(
+        config: Union[ComponentConfig, Dict[str, Any]]
+    ) -> ObservationModel:
+        """
+        Create an observation model from a configuration.
+
+        Args:
+            config: Configuration for the observation model, either as a ComponentConfig
+                   object or a dictionary.
+
+        Returns:
+            An instance of the specified observation model.
+
+        Raises:
+            ValueError: If the specified model is not registered.
+        """
+        if isinstance(config, dict):
+            config = ComponentConfig.from_dict(config)
+        return cast(
+            ObservationModel,
+            ComponentFactory.create_component(config, ComponentType.OBSERVATION_MODEL),
+        )
+
+    @staticmethod
+    @beartype
+    def create_inference_guide(
+        config: Union[ComponentConfig, Dict[str, Any]]
+    ) -> InferenceGuide:
+        """
+        Create an inference guide from a configuration.
+
+        Args:
+            config: Configuration for the inference guide, either as a ComponentConfig
+                   object or a dictionary.
+
+        Returns:
+            An instance of the specified inference guide.
+
+        Raises:
+            ValueError: If the specified guide is not registered.
+        """
+        if isinstance(config, dict):
+            config = ComponentConfig.from_dict(config)
+        return cast(
+            InferenceGuide,
+            ComponentFactory.create_component(config, ComponentType.INFERENCE_GUIDE),
+        )
+
+
+# For backward compatibility, we keep the old configuration classes
+# These will be deprecated in a future release
+
 @dataclass
 class DynamicsModelConfig:
     """Configuration for dynamics models."""
@@ -129,6 +324,54 @@ PyroVelocityModelConf = zen_builds(
 
 
 @beartype
+def create_model_from_config(
+    config: Union[ModelConfig, Dict[str, Any], DictConfig]
+) -> PyroVelocityModel:
+    """
+    Create a PyroVelocityModel from a configuration.
+
+    This function creates a PyroVelocityModel by instantiating each component
+    from the provided configuration and composing them together.
+
+    Args:
+        config: Configuration for the PyroVelocityModel, either as a ModelConfig
+               object, a dictionary, or a DictConfig.
+
+    Returns:
+        An instance of PyroVelocityModel with the specified components.
+
+    Raises:
+        ValueError: If any of the specified components are not registered.
+    """
+    # Convert config to a ModelConfig if it's a dictionary or DictConfig
+    if isinstance(config, DictConfig):
+        config_dict = OmegaConf.to_container(config, resolve=True)
+        config = ModelConfig.from_dict(config_dict)
+    elif isinstance(config, dict):
+        config = ModelConfig.from_dict(config)
+
+    # Create each component using the ComponentFactory
+    dynamics_model = ComponentFactory.create_dynamics_model(config.dynamics_model)
+    prior_model = ComponentFactory.create_prior_model(config.prior_model)
+    likelihood_model = ComponentFactory.create_likelihood_model(config.likelihood_model)
+    observation_model = ComponentFactory.create_observation_model(config.observation_model)
+    inference_guide = ComponentFactory.create_inference_guide(config.inference_guide)
+
+    # Create and return the model
+    return PyroVelocityModel(
+        dynamics_model=dynamics_model,
+        prior_model=prior_model,
+        likelihood_model=likelihood_model,
+        observation_model=observation_model,
+        guide_model=inference_guide,
+    )
+
+
+# Backward compatibility functions
+# These functions use the new unified configuration system but maintain
+# the same interface as the original functions for backward compatibility
+
+@beartype
 def create_dynamics_model(
     config: Union[DynamicsModelConfig, Dict, DictConfig]
 ) -> DynamicsModel:
@@ -152,8 +395,9 @@ def create_dynamics_model(
     elif isinstance(config, dict):
         config = DynamicsModelConfig(**config)
 
-    # Create the model using the registry
-    return DynamicsModelRegistry.create(config.name, **config.params)
+    # Create the model using the ComponentFactory
+    component_config = ComponentConfig(name=config.name, params=config.params)
+    return ComponentFactory.create_dynamics_model(component_config)
 
 
 @beartype
@@ -180,8 +424,9 @@ def create_prior_model(
     elif isinstance(config, dict):
         config = PriorModelConfig(**config)
 
-    # Create the model using the registry
-    return PriorModelRegistry.create(config.name, **config.params)
+    # Create the model using the ComponentFactory
+    component_config = ComponentConfig(name=config.name, params=config.params)
+    return ComponentFactory.create_prior_model(component_config)
 
 
 @beartype
@@ -208,8 +453,9 @@ def create_likelihood_model(
     elif isinstance(config, dict):
         config = LikelihoodModelConfig(**config)
 
-    # Create the model using the registry
-    return LikelihoodModelRegistry.create(config.name, **config.params)
+    # Create the model using the ComponentFactory
+    component_config = ComponentConfig(name=config.name, params=config.params)
+    return ComponentFactory.create_likelihood_model(component_config)
 
 
 @beartype
@@ -236,8 +482,9 @@ def create_observation_model(
     elif isinstance(config, dict):
         config = ObservationModelConfig(**config)
 
-    # Create the model using the registry
-    return ObservationModelRegistry.create(config.name, **config.params)
+    # Create the model using the ComponentFactory
+    component_config = ComponentConfig(name=config.name, params=config.params)
+    return ComponentFactory.create_observation_model(component_config)
 
 
 @beartype
@@ -264,8 +511,9 @@ def create_inference_guide(
     elif isinstance(config, dict):
         config = InferenceGuideConfig(**config)
 
-    # Create the guide using the registry
-    return InferenceGuideRegistry.create(config.name, **config.params)
+    # Create the guide using the ComponentFactory
+    component_config = ComponentConfig(name=config.name, params=config.params)
+    return ComponentFactory.create_inference_guide(component_config)
 
 
 @beartype
@@ -324,6 +572,8 @@ def standard_model_config() -> PyroVelocityModelConfig:
     Returns:
         A PyroVelocityModelConfig object with standard component configurations.
     """
+    # For backward compatibility, we return the old config type
+    # In the future, we should encourage users to use ModelConfig.standard() directly
     return PyroVelocityModelConfig(
         dynamics_model=DynamicsModelConfig(name="standard"),
         prior_model=PriorModelConfig(name="lognormal"),
@@ -344,12 +594,17 @@ def create_standard_model() -> PyroVelocityModel:
     Returns:
         A PyroVelocityModel instance with standard components.
     """
-    return create_model(standard_model_config())
+    # Use the new ModelConfig.standard() for creating the model
+    return create_model_from_config(ModelConfig.standard())
 
 
 # Export all public symbols
 __all__ = [
-    # Configuration classes
+    # Factory class
+    "ComponentFactory",
+    # New factory functions
+    "create_model_from_config",
+    # Backward compatibility configuration classes
     "DynamicsModelConfig",
     "PriorModelConfig",
     "LikelihoodModelConfig",
@@ -363,7 +618,7 @@ __all__ = [
     "ObservationModelConf",
     "InferenceGuideConf",
     "PyroVelocityModelConf",
-    # Factory functions
+    # Backward compatibility functions
     "create_dynamics_model",
     "create_prior_model",
     "create_likelihood_model",
