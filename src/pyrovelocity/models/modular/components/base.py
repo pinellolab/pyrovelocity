@@ -5,6 +5,48 @@ This module provides abstract base classes for each component type that adhere t
 the Protocol interfaces defined in `interfaces.py`. These base classes include
 common functionality and utilities that would be useful across different
 implementations of each component.
+
+The base classes follow a consistent pattern:
+1. They implement the corresponding Protocol interface
+2. They inherit from BaseComponent for common functionality
+3. They use abc.ABC to enforce implementation of abstract methods
+4. They provide default implementations where appropriate
+5. They use Result for error handling
+
+The architecture follows these design principles:
+- Protocol-first: Interfaces are defined as Protocols for runtime checking
+- Composition over inheritance: Components are composed rather than extended
+- Railway-oriented programming: Error handling uses the Result type
+- Functional core: Components maintain minimal state and focus on transformations
+- Type safety: All components use beartype and jaxtyping for type checking
+
+Example usage:
+    ```python
+    # Create a custom dynamics model
+    class MyDynamicsModel(BaseDynamicsModel):
+        def _forward_impl(
+            self,
+            u: BatchTensor,
+            s: BatchTensor,
+            alpha: ParamTensor,
+            beta: ParamTensor,
+            gamma: ParamTensor,
+            scaling: Optional[ParamTensor] = None,
+            t: Optional[BatchTensor] = None,
+        ) -> Tuple[BatchTensor, BatchTensor]:
+            # Custom implementation
+            return u_expected, s_expected
+
+        def _steady_state_impl(
+            self,
+            alpha: torch.Tensor,
+            beta: torch.Tensor,
+            gamma: torch.Tensor,
+            **kwargs: Any,
+        ) -> Tuple[torch.Tensor, torch.Tensor]:
+            # Custom implementation
+            return u_ss, s_ss
+    ```
 """
 
 from __future__ import annotations
@@ -39,7 +81,29 @@ class ComponentError:
 
     This class represents errors that occur during component operations.
     It includes information about the component, operation, error message,
-    and additional details.
+    and additional details. It is used with the Result type from the
+    expression library to implement railway-oriented programming for
+    error handling.
+
+    Attributes:
+        component: The name of the component where the error occurred
+        operation: The operation that failed
+        message: A descriptive error message
+        details: Additional details about the error (optional)
+
+    Example:
+        ```python
+        # Create an error
+        error = ComponentError(
+            component="DynamicsModel",
+            operation="forward",
+            message="Invalid parameters",
+            details={"alpha": alpha, "beta": beta}
+        )
+
+        # Return as a Result.Error
+        return Result.Error(error)
+        ```
     """
 
     def __init__(
@@ -49,6 +113,15 @@ class ComponentError:
         message: str,
         details: Optional[Dict[str, Any]] = None,
     ):
+        """
+        Initialize a ComponentError.
+
+        Args:
+            component: The name of the component where the error occurred
+            operation: The operation that failed
+            message: A descriptive error message
+            details: Additional details about the error (optional)
+        """
         self.component = component
         self.operation = operation
         self.message = message
@@ -60,7 +133,47 @@ class BaseComponent:
     Base class for all components in PyroVelocity's modular architecture.
 
     This class provides common functionality for all components, including
-    error handling and input validation.
+    error handling and input validation. All component implementations should
+    inherit from this class to ensure consistent behavior and access to
+    common utilities.
+
+    The BaseComponent class follows these principles:
+    1. Minimal state: Components should maintain minimal state
+    2. Consistent naming: Components have a unique name
+    3. Error handling: Components use Result for error handling
+    4. Input validation: Components validate inputs before processing
+
+    Attributes:
+        name: A unique name for this component instance
+
+    Example:
+        ```python
+        class MyComponent(BaseComponent):
+            def __init__(self, name: str = "my_component", **kwargs):
+                super().__init__(name=name)
+                # Initialize component-specific attributes
+
+            def process(self, data: Dict[str, Any]) -> Result:
+                # Validate inputs
+                validation_result = self.validate_inputs(data=data)
+                if validation_result.is_error():
+                    return validation_result
+
+                # Process data
+                try:
+                    result = self._process_impl(data)
+                    return Result.Ok(result)
+                except Exception as e:
+                    return self.create_error(
+                        "process",
+                        f"Error processing data: {str(e)}",
+                        {"data": data}
+                    )
+
+            def _process_impl(self, data: Dict[str, Any]) -> Dict[str, Any]:
+                # Implementation details
+                return processed_data
+        ```
     """
 
     def __init__(self, name: str):
@@ -68,7 +181,7 @@ class BaseComponent:
         Initialize the component.
 
         Args:
-            name: A unique name for this component instance.
+            name: A unique name for this component instance
         """
         self.name = name
 
@@ -104,14 +217,54 @@ class BaseComponent:
         Validate inputs for a component operation.
 
         This method should be overridden by subclasses to provide specific
-        validation logic. The default implementation accepts all inputs.
+        validation logic. The default implementation accepts all inputs without
+        validation. Subclasses should implement their own validation logic
+        to ensure inputs meet their requirements.
+
+        Validation should check:
+        1. Required parameters are present
+        2. Parameter types are correct
+        3. Parameter values are within valid ranges
+        4. Parameter shapes are compatible
+        5. Any other component-specific constraints
 
         Args:
-            **kwargs: The inputs to validate.
+            **kwargs: The inputs to validate
 
         Returns:
             A Result.Ok containing the validated inputs, or a Result.Error
-            if validation fails.
+            if validation fails
+
+        Example:
+            ```python
+            def validate_inputs(self, **kwargs) -> Result:
+                # Check required parameters
+                if "alpha" not in kwargs:
+                    return self.create_error(
+                        "validate_inputs",
+                        "Missing required parameter: alpha",
+                        {"provided_keys": list(kwargs.keys())}
+                    )
+
+                # Check parameter types
+                alpha = kwargs.get("alpha")
+                if not isinstance(alpha, torch.Tensor):
+                    return self.create_error(
+                        "validate_inputs",
+                        f"Parameter alpha must be a torch.Tensor, got {type(alpha)}",
+                        {"alpha_type": str(type(alpha))}
+                    )
+
+                # Check parameter values
+                if torch.any(alpha <= 0):
+                    return self.create_error(
+                        "validate_inputs",
+                        "Parameter alpha must be positive",
+                        {"alpha_min": float(torch.min(alpha))}
+                    )
+
+                return Result.Ok(kwargs)
+            ```
         """
         return Result.Ok(kwargs)
 
@@ -123,6 +276,24 @@ class BaseDynamicsModel(BaseComponent, DynamicsModel, abc.ABC):
     This class implements the DynamicsModel protocol and provides common
     functionality for dynamics models. It supports analytical and numerical solutions
     to the RNA velocity differential equations.
+
+    The BaseDynamicsModel follows the Template Method pattern:
+    1. Public methods (forward, steady_state) implement the Protocol interface
+    2. These methods handle input validation and error handling
+    3. They delegate the actual implementation to abstract methods (_forward_impl, _steady_state_impl)
+    4. Subclasses must implement these abstract methods with their specific logic
+
+    Subclasses should focus on implementing:
+    - _forward_impl: Compute expected counts based on the dynamics model
+    - _steady_state_impl: Compute steady-state values
+    - _predict_future_states_impl: Predict future states (if needed)
+
+    Attributes:
+        name: A unique name for this component instance
+        shared_time: Whether to use shared time across cells
+        t_scale_on: Whether to use time scaling
+        cell_specific_kinetics: Type of cell-specific kinetics
+        kinetics_num: Number of kinetics
     """
 
     def __init__(
@@ -406,6 +577,60 @@ class BasePriorModel(BaseComponent, PriorModel, PyroBufferMixin, abc.ABC):
     This class implements the PriorModel protocol and provides common
     functionality for prior models. It uses PyroBufferMixin to provide
     the register_buffer method needed by prior model implementations.
+
+    The BasePriorModel follows the Template Method pattern:
+    1. The forward method implements the Protocol interface
+    2. It handles input validation and error handling
+    3. It delegates the actual implementation to the sample_parameters method
+    4. Subclasses must implement sample_parameters with their specific logic
+
+    Prior models are responsible for:
+    1. Defining prior distributions for model parameters
+    2. Sampling from these distributions using Pyro
+    3. Registering the samples with Pyro
+    4. Handling hyperparameter configuration
+
+    Subclasses should focus on implementing:
+    - sample_parameters: Sample parameters from prior distributions
+
+    Example implementation:
+        ```python
+        class LogNormalPriorModel(BasePriorModel):
+            def __init__(
+                self,
+                name: str = "lognormal_prior",
+                alpha_loc: float = -0.5,
+                alpha_scale: float = 1.0,
+                beta_loc: float = -0.5,
+                beta_scale: float = 1.0,
+                gamma_loc: float = -0.5,
+                gamma_scale: float = 1.0,
+            ):
+                super().__init__(name=name)
+                self.register_buffer("alpha_loc", torch.tensor(alpha_loc))
+                self.register_buffer("alpha_scale", torch.tensor(alpha_scale))
+                self.register_buffer("beta_loc", torch.tensor(beta_loc))
+                self.register_buffer("beta_scale", torch.tensor(beta_scale))
+                self.register_buffer("gamma_loc", torch.tensor(gamma_loc))
+                self.register_buffer("gamma_scale", torch.tensor(gamma_scale))
+
+            def sample_parameters(self, n_genes: int) -> Dict[str, torch.Tensor]:
+                # Sample parameters from prior distributions
+                alpha = pyro.sample(
+                    f"{self.name}_alpha",
+                    dist.LogNormal(self.alpha_loc, self.alpha_scale).expand([n_genes]),
+                )
+                beta = pyro.sample(
+                    f"{self.name}_beta",
+                    dist.LogNormal(self.beta_loc, self.beta_scale).expand([n_genes]),
+                )
+                gamma = pyro.sample(
+                    f"{self.name}_gamma",
+                    dist.LogNormal(self.gamma_loc, self.gamma_scale).expand([n_genes]),
+                )
+
+                return {"alpha": alpha, "beta": beta, "gamma": gamma}
+        ```
     """
 
     def __init__(self, name: str = "prior_model"):
@@ -519,7 +744,59 @@ class BaseLikelihoodModel(BaseComponent, LikelihoodModel, abc.ABC):
     Base class for likelihood models that define observation distributions.
 
     This class implements the LikelihoodModel protocol and provides common
-    functionality for likelihood models.
+    functionality for likelihood models. Likelihood models define how the
+    expected RNA counts (from the dynamics model) relate to the observed
+    counts through probability distributions.
+
+    The BaseLikelihoodModel follows the Template Method pattern:
+    1. The forward method implements the Protocol interface
+    2. It handles input validation and error handling
+    3. It delegates the actual implementation to the _forward_impl method
+    4. Subclasses must implement _forward_impl with their specific logic
+
+    Likelihood models are responsible for:
+    1. Defining appropriate likelihood distributions for observed data
+    2. Using Pyro's observe method to register observations
+    3. Handling scaling factors and other transformations
+    4. Supporting different distribution types (e.g., Poisson, Negative Binomial)
+
+    Subclasses should focus on implementing:
+    - _forward_impl: Define likelihood distributions and register observations
+
+    Example implementation:
+        ```python
+        class PoissonLikelihoodModel(BaseLikelihoodModel):
+            def __init__(self, name: str = "poisson_likelihood"):
+                super().__init__(name=name)
+
+            def _forward_impl(
+                self,
+                u_obs: BatchTensor,
+                s_obs: BatchTensor,
+                u_expected: BatchTensor,
+                s_expected: BatchTensor,
+                plate: pyro.plate,
+                **kwargs: Any,
+            ) -> Dict[str, Any]:
+                # Register observations with Pyro
+                with plate:
+                    u_dist = dist.Poisson(u_expected)
+                    s_dist = dist.Poisson(s_expected)
+
+                    pyro.sample(
+                        f"{self.name}_u_obs",
+                        u_dist,
+                        obs=u_obs,
+                    )
+
+                    pyro.sample(
+                        f"{self.name}_s_obs",
+                        s_dist,
+                        obs=s_obs,
+                    )
+
+                return {"u_dist": u_dist, "s_dist": s_dist}
+        ```
     """
 
     def __init__(self, name: str = "likelihood_model"):
@@ -659,7 +936,56 @@ class BaseObservationModel(BaseComponent, ObservationModel, abc.ABC):
     Base class for observation models that transform raw data.
 
     This class implements the ObservationModel protocol and provides common
-    functionality for observation models.
+    functionality for observation models. Observation models handle data
+    preprocessing, transformation, and normalization before feeding it into
+    the dynamics and likelihood models.
+
+    The BaseObservationModel follows the Template Method pattern:
+    1. The forward method implements the Protocol interface
+    2. It handles input validation and error handling
+    3. It delegates the actual implementation to the _forward_impl method
+    4. Subclasses must implement _forward_impl with their specific logic
+
+    Observation models are responsible for:
+    1. Handling data preprocessing and normalization
+    2. Computing scaling factors if needed
+    3. Handling missing values and zeros
+    4. Supporting different data types and formats
+
+    Subclasses should focus on implementing:
+    - _forward_impl: Transform observed data for model input
+
+    Example implementation:
+        ```python
+        class StandardObservationModel(BaseObservationModel):
+            def __init__(
+                self,
+                name: str = "standard_observation",
+                use_size_factor: bool = True,
+            ):
+                super().__init__(name=name)
+                self.use_size_factor = use_size_factor
+
+            def _forward_impl(
+                self,
+                u_obs: BatchTensor,
+                s_obs: BatchTensor,
+                **kwargs: Any,
+            ) -> Dict[str, Any]:
+                # Compute size factors if needed
+                if self.use_size_factor:
+                    size_factor = torch.sum(s_obs, dim=1, keepdim=True)
+                    size_factor = size_factor / torch.mean(size_factor)
+                else:
+                    size_factor = torch.ones_like(s_obs[:, :1])
+
+                # Return transformed data and scaling factors
+                return {
+                    "u_transformed": u_obs,
+                    "s_transformed": s_obs,
+                    "scaling": size_factor,
+                }
+        ```
     """
 
     @beartype
@@ -848,7 +1174,59 @@ class BaseInferenceGuide(BaseComponent, InferenceGuide, abc.ABC):
     Base class for inference guides that define approximate posterior distributions.
 
     This class implements the InferenceGuide protocol and provides common
-    functionality for inference guides.
+    functionality for inference guides. Inference guides define the variational
+    distribution used for approximate Bayesian inference in the model.
+
+    The BaseInferenceGuide follows the Template Method pattern:
+    1. The __call__ method implements the Protocol interface
+    2. It handles input validation and error handling
+    3. It delegates the actual implementation to the _create_guide method
+    4. Subclasses must implement _create_guide with their specific logic
+
+    Inference guides are responsible for:
+    1. Creating guide functions compatible with the model
+    2. Supporting different variational families (e.g., Normal, Delta)
+    3. Handling parameter initialization
+    4. Supporting different inference algorithms
+
+    Subclasses should focus on implementing:
+    - _create_guide: Create a guide function for the given model
+    - _setup_guide_impl: Set up the guide for inference
+    - _sample_posterior_impl: Sample from the posterior distribution
+
+    Example implementation:
+        ```python
+        class AutoGuideFactory(BaseInferenceGuide):
+            def __init__(
+                self,
+                name: str = "auto_guide",
+                guide_type: str = "AutoNormal",
+                init_loc_fn: Optional[Callable] = None,
+            ):
+                super().__init__(name=name)
+                self.guide_type = guide_type
+                self.init_loc_fn = init_loc_fn or pyro.infer.autoguide.init_to_median
+
+            def __call__(
+                self,
+                model: Callable,
+                *args: Any,
+                **kwargs: Any,
+            ) -> Callable:
+                # Create the appropriate guide based on guide_type
+                if self.guide_type == "AutoNormal":
+                    return pyro.infer.autoguide.AutoNormal(
+                        model,
+                        init_loc_fn=self.init_loc_fn,
+                    )
+                elif self.guide_type == "AutoDelta":
+                    return pyro.infer.autoguide.AutoDelta(
+                        model,
+                        init_loc_fn=self.init_loc_fn,
+                    )
+                else:
+                    raise ValueError(f"Unknown guide type: {self.guide_type}")
+        ```
     """
 
     def __init__(self, name: str = "inference_guide"):
