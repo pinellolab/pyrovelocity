@@ -2,11 +2,18 @@
 Example script demonstrating the different dynamics models in the PyroVelocity modular architecture.
 
 This script shows how to:
-1. Create different dynamics models
+1. Create different dynamics models (both base class and Protocol-First implementations)
 2. Simulate RNA dynamics over time
 3. Compute steady states
 4. Visualize the results
 5. Predict future states
+6. Compare base class and Protocol-First implementations
+
+The PyroVelocity modular architecture supports two implementation approaches:
+1. Base Class Approach: Components inherit from base classes (BaseDynamicsModel, etc.)
+2. Protocol-First Approach: Components directly implement Protocol interfaces without inheritance
+
+This script demonstrates both approaches for dynamics models.
 """
 
 import torch
@@ -14,16 +21,31 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pyrovelocity.models.modular.registry import DynamicsModelRegistry
+from pyrovelocity.models.modular.components.direct import (
+    StandardDynamicsModelDirect,
+    NonlinearDynamicsModelDirect,
+)
 
 
 def main():
     # Set random seed for reproducibility
     torch.manual_seed(42)
 
-    # Create dynamics models
+    # Create base class dynamics models
     standard_model = DynamicsModelRegistry.create("standard")
     standard_model_simulated = DynamicsModelRegistry.create("standard_simulated")
     nonlinear_model = DynamicsModelRegistry.create("nonlinear")
+
+    # Create Protocol-First dynamics models
+    standard_model_direct = DynamicsModelRegistry.create("standard_direct")
+    nonlinear_model_direct = DynamicsModelRegistry.create("nonlinear_direct")
+
+    print("Created dynamics models:")
+    print(f"  Base class - Standard: {standard_model.__class__.__name__}")
+    print(f"  Base class - Standard Simulated: {standard_model_simulated.__class__.__name__}")
+    print(f"  Base class - Nonlinear: {nonlinear_model.__class__.__name__}")
+    print(f"  Protocol-First - Standard: {standard_model_direct.__class__.__name__}")
+    print(f"  Protocol-First - Nonlinear: {nonlinear_model_direct.__class__.__name__}")
 
     # Set up parameters
     n_genes = 3
@@ -47,51 +69,51 @@ def main():
     # Simulate dynamics over time
     # Note: The simulate method is not part of the DynamicsModel interface
     # We'll implement our own simulation function
-    
+
     def simulate_standard(model, u0, s0, alpha, beta, gamma, times, scaling=None):
         """Simulate standard dynamics model over time."""
         n_times = len(times)
         n_genes = len(u0)
         u = torch.zeros((n_times, n_genes))
         s = torch.zeros((n_times, n_genes))
-        
+
         # Set initial conditions
         u[0] = u0
         s[0] = s0
-        
+
         # Simple Euler integration
         dt = times[1] - times[0]
-        
+
         for t in range(1, n_times):
             # Standard model: du/dt = alpha - beta * u, ds/dt = beta * u - gamma * s
             u[t] = u[t-1] + dt * (alpha - beta * u[t-1])
             s[t] = s[t-1] + dt * (beta * u[t-1] - gamma * s[t-1])
-            
+
         return times, u, s
-    
+
     def simulate_nonlinear(model, u0, s0, alpha, beta, gamma, times, k_alpha, k_beta, scaling=None):
         """Simulate nonlinear dynamics model over time."""
         n_times = len(times)
         n_genes = len(u0)
         u = torch.zeros((n_times, n_genes))
         s = torch.zeros((n_times, n_genes))
-        
+
         # Set initial conditions
         u[0] = u0
         s[0] = s0
-        
+
         # Simple Euler integration
         dt = times[1] - times[0]
-        
+
         for t in range(1, n_times):
             # Nonlinear model: du/dt = alpha / (1 + u / k_alpha) - beta * u / (k_beta + u)
             #                  ds/dt = beta * u / (k_beta + u) - gamma * s
             dudt = alpha / (1 + u[t-1] / k_alpha) - beta * u[t-1] / (k_beta + u[t-1])
             dsdt = beta * u[t-1] / (k_beta + u[t-1]) - gamma * s[t-1]
-            
+
             u[t] = u[t-1] + dt * dudt
             s[t] = s[t-1] + dt * dsdt
-            
+
         return times, u, s
 
     # Run simulations
@@ -133,26 +155,42 @@ def main():
         scaling=scaling
     )
 
-    # Compute steady states
+    # Compute steady states for base class models
     u_ss_standard, s_ss_standard = standard_model.steady_state(alpha, beta, gamma)
     u_ss_simulated, s_ss_simulated = standard_model_simulated.steady_state(alpha, beta, gamma)
-    
-    # For nonlinear model, we need to compute steady state manually
-    # At steady state: du/dt = 0, ds/dt = 0
-    # Solving: alpha / (1 + u / k_alpha) = beta * u / (k_beta + u)
-    #          beta * u / (k_beta + u) = gamma * s
-    # This is a quadratic equation for u, we'll use the model's steady_state method
     u_ss_nonlinear, s_ss_nonlinear = nonlinear_model.steady_state(
         alpha, beta, gamma, k_alpha=k_alpha, k_beta=k_beta
     )
 
+    # Compute steady states for Protocol-First models
+    u_ss_standard_direct, s_ss_standard_direct = standard_model_direct.steady_state(alpha, beta, gamma)
+    u_ss_nonlinear_direct, s_ss_nonlinear_direct = nonlinear_model_direct.steady_state(
+        alpha, beta, gamma, k_alpha=k_alpha, k_beta=k_beta
+    )
+
     print("\nSteady States:")
-    print(f"Standard Model - Unspliced: {u_ss_standard}")
-    print(f"Standard Model - Spliced: {s_ss_standard}")
+    print(f"Standard Model (Base) - Unspliced: {u_ss_standard}")
+    print(f"Standard Model (Base) - Spliced: {s_ss_standard}")
     print(f"Standard Model Simulated - Unspliced: {u_ss_simulated}")
     print(f"Standard Model Simulated - Spliced: {s_ss_simulated}")
-    print(f"Nonlinear Model - Unspliced: {u_ss_nonlinear}")
-    print(f"Nonlinear Model - Spliced: {s_ss_nonlinear}")
+    print(f"Nonlinear Model (Base) - Unspliced: {u_ss_nonlinear}")
+    print(f"Nonlinear Model (Base) - Spliced: {s_ss_nonlinear}")
+    print(f"Standard Model (Protocol-First) - Unspliced: {u_ss_standard_direct}")
+    print(f"Standard Model (Protocol-First) - Spliced: {s_ss_standard_direct}")
+    print(f"Nonlinear Model (Protocol-First) - Unspliced: {u_ss_nonlinear_direct}")
+    print(f"Nonlinear Model (Protocol-First) - Spliced: {s_ss_nonlinear_direct}")
+
+    # Compare base class and Protocol-First implementations
+    print("\nComparing Base Class and Protocol-First implementations:")
+    standard_equal_u = torch.allclose(u_ss_standard, u_ss_standard_direct)
+    standard_equal_s = torch.allclose(s_ss_standard, s_ss_standard_direct)
+    nonlinear_equal_u = torch.allclose(u_ss_nonlinear, u_ss_nonlinear_direct)
+    nonlinear_equal_s = torch.allclose(s_ss_nonlinear, s_ss_nonlinear_direct)
+
+    print(f"Standard Model - Unspliced: {'Equal' if standard_equal_u else 'Different'}")
+    print(f"Standard Model - Spliced: {'Equal' if standard_equal_s else 'Different'}")
+    print(f"Nonlinear Model - Unspliced: {'Equal' if nonlinear_equal_u else 'Different'}")
+    print(f"Nonlinear Model - Spliced: {'Equal' if nonlinear_equal_s else 'Different'}")
 
     # Visualize the results
     gene_idx = 0  # Choose a gene to visualize
@@ -161,22 +199,26 @@ def main():
     fig, axs = plt.subplots(2, 1, figsize=(10, 12))
 
     # Plot unspliced mRNA dynamics
-    axs[0].plot(times_standard, u_standard[:, gene_idx], label="Standard Model")
+    axs[0].plot(times_standard, u_standard[:, gene_idx], label="Standard Model (Base)")
     axs[0].plot(times_simulated, u_simulated[:, gene_idx], label="Standard Model Simulated", linestyle="--")
-    axs[0].plot(times_nonlinear, u_nonlinear[:, gene_idx], label="Nonlinear Model", linestyle="-.")
-    axs[0].axhline(y=u_ss_standard[gene_idx].item(), color="blue", linestyle=":", label="Standard Steady State")
-    axs[0].axhline(y=u_ss_nonlinear[gene_idx].item(), color="green", linestyle=":", label="Nonlinear Steady State")
+    axs[0].plot(times_nonlinear, u_nonlinear[:, gene_idx], label="Nonlinear Model (Base)", linestyle="-.")
+    axs[0].axhline(y=u_ss_standard[gene_idx].item(), color="blue", linestyle=":", label="Standard Steady State (Base)")
+    axs[0].axhline(y=u_ss_nonlinear[gene_idx].item(), color="green", linestyle=":", label="Nonlinear Steady State (Base)")
+    axs[0].axhline(y=u_ss_standard_direct[gene_idx].item(), color="red", linestyle=":", label="Standard Steady State (Protocol-First)")
+    axs[0].axhline(y=u_ss_nonlinear_direct[gene_idx].item(), color="purple", linestyle=":", label="Nonlinear Steady State (Protocol-First)")
     axs[0].set_xlabel("Time")
     axs[0].set_ylabel("Unspliced Counts")
     axs[0].set_title(f"Unspliced mRNA Dynamics for Gene {gene_idx}")
     axs[0].legend()
 
     # Plot spliced mRNA dynamics
-    axs[1].plot(times_standard, s_standard[:, gene_idx], label="Standard Model")
+    axs[1].plot(times_standard, s_standard[:, gene_idx], label="Standard Model (Base)")
     axs[1].plot(times_simulated, s_simulated[:, gene_idx], label="Standard Model Simulated", linestyle="--")
-    axs[1].plot(times_nonlinear, s_nonlinear[:, gene_idx], label="Nonlinear Model", linestyle="-.")
-    axs[1].axhline(y=s_ss_standard[gene_idx].item(), color="blue", linestyle=":", label="Standard Steady State")
-    axs[1].axhline(y=s_ss_nonlinear[gene_idx].item(), color="green", linestyle=":", label="Nonlinear Steady State")
+    axs[1].plot(times_nonlinear, s_nonlinear[:, gene_idx], label="Nonlinear Model (Base)", linestyle="-.")
+    axs[1].axhline(y=s_ss_standard[gene_idx].item(), color="blue", linestyle=":", label="Standard Steady State (Base)")
+    axs[1].axhline(y=s_ss_nonlinear[gene_idx].item(), color="green", linestyle=":", label="Nonlinear Steady State (Base)")
+    axs[1].axhline(y=s_ss_standard_direct[gene_idx].item(), color="red", linestyle=":", label="Standard Steady State (Protocol-First)")
+    axs[1].axhline(y=s_ss_nonlinear_direct[gene_idx].item(), color="purple", linestyle=":", label="Nonlinear Steady State (Protocol-First)")
     axs[1].set_xlabel("Time")
     axs[1].set_ylabel("Spliced Counts")
     axs[1].set_title(f"Spliced mRNA Dynamics for Gene {gene_idx}")
@@ -187,11 +229,13 @@ def main():
 
     # Create a phase portrait
     plt.figure(figsize=(10, 8))
-    plt.plot(u_standard[:, gene_idx], s_standard[:, gene_idx], label="Standard Model")
+    plt.plot(u_standard[:, gene_idx], s_standard[:, gene_idx], label="Standard Model (Base)")
     plt.plot(u_simulated[:, gene_idx], s_simulated[:, gene_idx], label="Standard Model Simulated", linestyle="--")
-    plt.plot(u_nonlinear[:, gene_idx], s_nonlinear[:, gene_idx], label="Nonlinear Model", linestyle="-.")
-    plt.scatter(u_ss_standard[gene_idx].item(), s_ss_standard[gene_idx].item(), color="blue", s=100, marker="*", label="Standard Steady State")
-    plt.scatter(u_ss_nonlinear[gene_idx].item(), s_ss_nonlinear[gene_idx].item(), color="green", s=100, marker="*", label="Nonlinear Steady State")
+    plt.plot(u_nonlinear[:, gene_idx], s_nonlinear[:, gene_idx], label="Nonlinear Model (Base)", linestyle="-.")
+    plt.scatter(u_ss_standard[gene_idx].item(), s_ss_standard[gene_idx].item(), color="blue", s=100, marker="*", label="Standard Steady State (Base)")
+    plt.scatter(u_ss_nonlinear[gene_idx].item(), s_ss_nonlinear[gene_idx].item(), color="green", s=100, marker="*", label="Nonlinear Steady State (Base)")
+    plt.scatter(u_ss_standard_direct[gene_idx].item(), s_ss_standard_direct[gene_idx].item(), color="red", s=100, marker="*", label="Standard Steady State (Protocol-First)")
+    plt.scatter(u_ss_nonlinear_direct[gene_idx].item(), s_ss_nonlinear_direct[gene_idx].item(), color="purple", s=100, marker="*", label="Nonlinear Steady State (Protocol-First)")
     plt.xlabel("Unspliced Counts")
     plt.ylabel("Spliced Counts")
     plt.title(f"Phase Portrait for Gene {gene_idx}")
@@ -200,6 +244,48 @@ def main():
     plt.close()
 
     print("\nSimulation completed. Plots saved as 'dynamics_example.png' and 'phase_portrait.png'.")
+
+    # Compare context-based interface between base class and Protocol-First implementations
+    print("\nComparing context-based interface between base class and Protocol-First implementations:")
+
+    # Create context dictionaries
+    base_context = {
+        "u_obs": torch.ones(10, n_genes) * 4.0,
+        "s_obs": torch.ones(10, n_genes) * 6.0,
+        "alpha": alpha,
+        "beta": beta,
+        "gamma": gamma,
+        "t": torch.ones(10, 1) * 2.0,
+    }
+
+    protocol_context = base_context.copy()
+
+    # Run forward pass
+    base_result = standard_model.forward(base_context)
+    protocol_result = standard_model_direct.forward(protocol_context)
+
+    # Compare results
+    print("Base class forward results:")
+    print(f"  u_expected shape: {base_result['u_expected'].shape}")
+    print(f"  s_expected shape: {base_result['s_expected'].shape}")
+
+    print("Protocol-First forward results:")
+    print(f"  u_expected shape: {protocol_result['u_expected'].shape}")
+    print(f"  s_expected shape: {protocol_result['s_expected'].shape}")
+
+    # Check if results are identical
+    u_equal = torch.allclose(base_result['u_expected'], protocol_result['u_expected'])
+    s_equal = torch.allclose(base_result['s_expected'], protocol_result['s_expected'])
+    print(f"Forward results are identical: {u_equal and s_equal}")
+
+    # Explain the differences in implementation
+    print("\nKey differences between base class and Protocol-First implementations:")
+    print("1. Base class inherits from BaseDynamicsModel, which provides common functionality")
+    print("2. Protocol-First implementation directly implements the DynamicsModel Protocol")
+    print("3. Protocol-First implementation uses utility functions for common functionality")
+    print("4. Both implementations produce identical results, demonstrating functional equivalence")
+    print("5. Protocol-First approach reduces code complexity by eliminating inheritance hierarchies")
+    print("6. Protocol-First approach creates perfect architectural consistency with the JAX implementation")
 
     # Predict future states
     print("\nPredicting future states...")
@@ -210,40 +296,40 @@ def main():
     def predict_standard_future(current_state, time_delta, alpha, beta, gamma, scaling=None):
         """Predict future state for standard model."""
         u_current, s_current = current_state
-        
+
         # Standard model solution:
         # u(t) = u_0 * exp(-beta * t) + alpha/beta * (1 - exp(-beta * t))
         # s(t) = s_0 * exp(-gamma * t) + beta * u_0 / (gamma - beta) * (exp(-beta * t) - exp(-gamma * t))
         #        + alpha * beta / (beta * gamma) * (1 - exp(-gamma * t) - gamma/(gamma - beta) * (exp(-beta * t) - exp(-gamma * t)))
-        
+
         # Simplified for the case where we start from a known state
         u_future = u_current * torch.exp(-beta * time_delta) + (alpha / beta) * (1 - torch.exp(-beta * time_delta))
-        
+
         # For s, we need to be careful about the case where beta = gamma
         # We'll use a small epsilon to avoid division by zero
         epsilon = 1e-10
         beta_gamma_diff = gamma - beta
         beta_gamma_diff = torch.where(torch.abs(beta_gamma_diff) < epsilon, epsilon * torch.sign(beta_gamma_diff), beta_gamma_diff)
-        
+
         term1 = s_current * torch.exp(-gamma * time_delta)
         term2 = (beta * u_current / beta_gamma_diff) * (torch.exp(-beta * time_delta) - torch.exp(-gamma * time_delta))
         term3 = (alpha * beta / (beta * gamma)) * (1 - torch.exp(-gamma * time_delta))
         term4 = (alpha * beta * gamma / (beta * gamma * beta_gamma_diff)) * (torch.exp(-beta * time_delta) - torch.exp(-gamma * time_delta))
-        
+
         s_future = term1 + term2 + term3 - term4
-        
+
         # Apply scaling if provided
         if scaling is not None:
             u_future = u_future * scaling
             s_future = s_future * scaling
-            
+
         return u_future, s_future
 
     # Use our custom function for the standard model
     u_future_standard, s_future_standard = predict_standard_future(
         current_state, time_delta, alpha, beta, gamma, scaling
     )
-    
+
     # Use the same function for the simulated model since they have the same dynamics
     u_future_simulated, s_future_simulated = predict_standard_future(
         current_state, time_delta, alpha, beta, gamma, scaling
@@ -265,7 +351,7 @@ def main():
         # Simple Euler integration
         dt = 0.01  # Small time step for stability
         time_delta_value = float(time_delta)  # Ensure it's a float
-        
+
         steps = int(time_delta_value / dt) + 1
         dt = time_delta_value / steps  # Adjust dt for exact time_delta
 

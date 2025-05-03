@@ -16,8 +16,18 @@ is implemented as a separate component. This enables:
 - Testability: Components can be tested in isolation
 - Reusability: Components can be reused across different models
 
-This script shows how to use the modular implementation for a basic RNA velocity
-analysis workflow, from data loading to visualization.
+PyroVelocity supports two implementation approaches for components:
+1. Base Class Approach: Components inherit from base classes (BaseDynamicsModel, etc.)
+2. Protocol-First Approach: Components directly implement Protocol interfaces without inheritance
+
+The Protocol-First approach has several advantages:
+- Reduced code complexity by eliminating inheritance hierarchies
+- Enhanced flexibility through Protocol interfaces
+- Perfect architectural consistency with the JAX implementation's pure functional approach
+- Discovery of natural abstractions through actual usage patterns
+- Avoidance of premature abstraction by initially allowing intentional duplication
+
+This script shows how to use both approaches for a basic RNA velocity analysis workflow.
 """
 
 import time
@@ -34,7 +44,14 @@ import sys
 import traceback
 
 # Import model creation and components
-from pyrovelocity.models.modular.factory import create_standard_model, create_model, standard_model_config
+from pyrovelocity.models.modular.factory import (
+    create_standard_model,
+    create_model,
+    create_protocol_first_model,
+    create_model_from_config,
+    standard_model_config
+)
+from pyrovelocity.models.modular.config import ModelConfig
 from pyrovelocity.models.modular.registry import (
     DynamicsModelRegistry,
     PriorModelRegistry,
@@ -130,10 +147,14 @@ def main():
     print("\nCreating model with custom configuration...")
 
     # Method 1: Create a standard model directly (simplest approach)
-    # This uses default components for all aspects of the model
-    print("\nMethod 1: Using create_standard_model() (simplest approach)")
+    # This uses default components with base class implementations
+    print("\nMethod 1: Using create_standard_model() (base class approach)")
     model1 = create_standard_model()
-    print(f"Created model with default components")
+    print(f"Created model with base class components:")
+    print(f"  - Dynamics: {model1.dynamics_model.__class__.__name__}")
+    print(f"  - Prior: {model1.prior_model.__class__.__name__}")
+    print(f"  - Likelihood: {model1.likelihood_model.__class__.__name__}")
+    print(f"  - Observation: {model1.observation_model.__class__.__name__}")
 
     # Method 2: Create a model with a custom configuration
     # This allows for more control over the model components
@@ -155,9 +176,32 @@ def main():
     print(f"  - Dynamics: {model2.dynamics_model.__class__.__name__}")
     print(f"  - Prior: {model2.prior_model.__class__.__name__}")
     print(f"  - Likelihood: {model2.likelihood_model.__class__.__name__}")
+    print(f"  - Observation: {model2.observation_model.__class__.__name__}")
     # Note: inference_guide is not directly accessible as an attribute
 
+    # Method 3: Create a model with Protocol-First components
+    # This uses components that directly implement Protocol interfaces without inheritance
+    print("\nMethod 3: Using create_protocol_first_model() (Protocol-First approach)")
+    model3 = create_protocol_first_model()
+    print(f"Created model with Protocol-First components:")
+    print(f"  - Dynamics: {model3.dynamics_model.__class__.__name__}")
+    print(f"  - Prior: {model3.prior_model.__class__.__name__}")
+    print(f"  - Likelihood: {model3.likelihood_model.__class__.__name__}")
+    print(f"  - Observation: {model3.observation_model.__class__.__name__}")
+
+    # Method 4: Create a model with ModelConfig.standard(use_protocol_first=True)
+    # This is an alternative way to create a model with Protocol-First components
+    print("\nMethod 4: Using ModelConfig.standard(use_protocol_first=True)")
+    protocol_config = ModelConfig.standard(use_protocol_first=True)
+    model4 = create_model_from_config(protocol_config)
+    print(f"Created model with Protocol-First components:")
+    print(f"  - Dynamics: {model4.dynamics_model.__class__.__name__}")
+    print(f"  - Prior: {model4.prior_model.__class__.__name__}")
+    print(f"  - Likelihood: {model4.likelihood_model.__class__.__name__}")
+    print(f"  - Observation: {model4.observation_model.__class__.__name__}")
+
     # Use the second model for this example
+    # You could also use model3 or model4 (Protocol-First models) which are functionally equivalent
     model = model2
 
     # 5. Train the model directly using AnnData
