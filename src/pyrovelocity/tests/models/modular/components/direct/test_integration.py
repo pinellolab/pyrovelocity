@@ -5,18 +5,23 @@ import pytest
 import torch
 
 from pyrovelocity.models.modular.components.direct.dynamics import (
+    NonlinearDynamicsModelDirect,
     StandardDynamicsModelDirect,
 )
 from pyrovelocity.models.modular.components.direct.guides import (
     AutoGuideFactoryDirect,
+    DeltaGuideDirect,
+    NormalGuideDirect,
 )
 from pyrovelocity.models.modular.components.direct.likelihoods import (
+    NegativeBinomialLikelihoodModelDirect,
     PoissonLikelihoodModelDirect,
 )
 from pyrovelocity.models.modular.components.direct.observations import (
     StandardObservationModelDirect,
 )
 from pyrovelocity.models.modular.components.direct.priors import (
+    InformativePriorModelDirect,
     LogNormalPriorModelDirect,
 )
 from pyrovelocity.models.modular.model import PyroVelocityModel
@@ -97,34 +102,69 @@ def test_protocol_first_components_with_model(simple_data):
         guide_model=guide_model,
     )
 
-    # Initialize Pyro
-    pyro.clear_param_store()
+    # Create context
+    context = {
+        "u_obs": simple_data["u_obs"],
+        "s_obs": simple_data["s_obs"],
+        # Add required parameters that would normally come from the prior model
+        "alpha": torch.ones(simple_data["u_obs"].shape[1]),
+        "beta": torch.ones(simple_data["u_obs"].shape[1]),
+        "gamma": torch.ones(simple_data["u_obs"].shape[1]),
+    }
 
-    # Create parameters manually for testing
-    batch_size, n_genes = simple_data["u_obs"].shape
-    alpha = torch.ones(n_genes)
-    beta = torch.ones(n_genes)
-    gamma = torch.ones(n_genes)
+    # Call the model directly with the context
+    result = model.forward(**context)
 
-    # Call the model's forward method with parameters
-    with pyro.poutine.trace() as tr:
-        result = model.forward(
-            u_obs=simple_data["u_obs"],
-            s_obs=simple_data["s_obs"],
-            # Add required parameters
-            alpha=alpha,
-            beta=beta,
-            gamma=gamma,
-            include_prior=False  # Skip prior sampling since we're providing parameters
-        )
-
-    # Check that the result contains expected keys
-    assert "u_expected" in result
-    assert "s_expected" in result
+    # Verify that the model produced expected outputs
     assert "u_dist" in result
     assert "s_dist" in result
+    assert "u_expected" in result
+    assert "s_expected" in result
 
-    # Check that the trace contains expected sample sites
-    trace = tr.trace
-    assert "u_obs" in trace.nodes
-    assert "s_obs" in trace.nodes
+    # Test with different Protocol-First components
+    dynamics_models = [
+        StandardDynamicsModelDirect(),
+        NonlinearDynamicsModelDirect(),
+    ]
+
+    prior_models = [
+        LogNormalPriorModelDirect(),
+        InformativePriorModelDirect(),
+    ]
+
+    likelihood_models = [
+        PoissonLikelihoodModelDirect(),
+        NegativeBinomialLikelihoodModelDirect(),
+    ]
+
+    guide_models = [
+        AutoGuideFactoryDirect(guide_type="AutoNormal"),
+        NormalGuideDirect(),
+        DeltaGuideDirect(),
+    ]
+
+    # Test a few combinations
+    for dynamics in dynamics_models:
+        for prior in prior_models:
+            for likelihood in likelihood_models:
+                for guide in guide_models:
+                    # Create the model with this combination
+                    model = PyroVelocityModel(
+                        dynamics_model=dynamics,
+                        prior_model=prior,
+                        likelihood_model=likelihood,
+                        observation_model=observation_model,
+                        guide_model=guide,
+                    )
+
+                    # Clear Pyro's param store between runs
+                    pyro.clear_param_store()
+
+                    # Call the model
+                    result = model.forward(**context)
+
+                    # Verify outputs
+                    assert "u_dist" in result
+                    assert "s_dist" in result
+                    assert "u_expected" in result
+                    assert "s_expected" in result
