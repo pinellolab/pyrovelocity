@@ -178,6 +178,52 @@ class LogNormalPriorModelDirect:
         context.update(params)
 
         return context
+        
+    def sample_parameters(
+        self, n_genes: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """
+        Sample parameters from prior distributions without using Pyro's sampling mechanism.
+
+        This method is useful for testing and initialization.
+
+        Args:
+            n_genes: Optional number of genes to sample parameters for
+
+        Returns:
+            Dictionary of sampled parameters
+        """
+        # Create a dictionary to store sampled parameters
+        params = {}
+
+        # Create a base shape based on n_genes if provided
+        if n_genes is not None:
+            shape = torch.Size([n_genes])
+        else:
+            shape = torch.Size([])
+
+        # Sample from prior distributions
+        params["alpha"] = dist.LogNormal(
+            self.zero, self.one * self.scale_alpha
+        ).sample(shape)
+        params["beta"] = dist.LogNormal(
+            self.zero, self.one * self.scale_beta
+        ).sample(shape)
+        params["gamma"] = dist.LogNormal(
+            self.zero, self.one * self.scale_gamma
+        ).sample(shape)
+        params["u_scale"] = dist.LogNormal(
+            self.zero, self.one * self.scale_u
+        ).sample(shape)
+        params["s_scale"] = dist.LogNormal(
+            self.zero, self.one * self.scale_s
+        ).sample(shape)
+        params["dt_switching"] = dist.LogNormal(
+            self.zero, self.one * self.scale_dt
+        ).sample(shape)
+        params["t0"] = dist.Normal(self.zero, self.one).sample(shape)
+
+        return params
 
 
 @PriorModelRegistry.register("informative_direct")
@@ -390,23 +436,23 @@ class InformativePriorModelDirect:
 
         # Sample from prior distributions
         params["alpha"] = dist.LogNormal(
-            self.zero, self.one * self.scale_alpha
+            torch.tensor(self.alpha_loc), torch.tensor(self.alpha_scale)
         ).sample(shape)
         params["beta"] = dist.LogNormal(
-            self.zero, self.one * self.scale_beta
+            torch.tensor(self.beta_loc), torch.tensor(self.beta_scale)
         ).sample(shape)
         params["gamma"] = dist.LogNormal(
-            self.zero, self.one * self.scale_gamma
+            torch.tensor(self.gamma_loc), torch.tensor(self.gamma_scale)
         ).sample(shape)
         params["u_scale"] = dist.LogNormal(
-            self.zero, self.one * self.scale_u
+            torch.tensor(self.u_scale_loc), torch.tensor(self.u_scale_scale)
         ).sample(shape)
         params["s_scale"] = dist.LogNormal(
-            self.zero, self.one * self.scale_s
+            torch.tensor(self.s_scale_loc), torch.tensor(self.s_scale_scale)
         ).sample(shape)
         params["dt_switching"] = dist.LogNormal(
-            self.zero, self.one * self.scale_dt
+            torch.tensor(self.dt_switching_loc), torch.tensor(self.dt_switching_scale)
         ).sample(shape)
-        params["t0"] = dist.Normal(self.zero, self.one).sample(shape)
+        params["t0"] = dist.Normal(self.zero, self.one * 0.5).sample(shape)
 
         return params

@@ -126,9 +126,7 @@ def test_lognormal_prior_model_direct_forward():
 
 def test_lognormal_prior_model_direct_sample_parameters():
     """Test sample_parameters method of LogNormalPriorModelDirect."""
-    # Skip this test for now as it requires more complex integration
-    # This test will be fixed in a future PR
-    pytest.skip("This test requires more complex integration and will be fixed in a future PR")
+    # This test was previously skipped but has been fixed
 
     model = LogNormalPriorModelDirect()
 

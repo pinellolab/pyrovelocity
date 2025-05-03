@@ -600,17 +600,33 @@ class NonlinearDynamicsModelDirect:
         # For the nonlinear model, the steady state is more complex
         # We'll use a numerical approach to find it
 
-        # Initialize with a guess
+        # Initialize with a guess (standard model steady state)
         u_ss = alpha / beta
         s_ss = alpha / gamma
 
         # Refine the steady state using fixed-point iteration
         for _ in range(100):
-            u_ss_new = alpha / (beta * u_ss / (k_beta + u_ss))
+            # At steady state:
+            # du/dt = 0 => alpha / (1 + u/k_alpha) = beta * u / (k_beta + u)
+            # ds/dt = 0 => beta * u / (k_beta + u) = gamma * s
+
+            # From ds/dt = 0, we get:
             s_ss_new = beta * u_ss / (k_beta + u_ss) / gamma
 
+            # From du/dt = 0, we get:
+            # alpha / (1 + u/k_alpha) = beta * u / (k_beta + u)
+            # Solving for u:
+            # alpha * (k_beta + u) = beta * u * (1 + u/k_alpha)
+            # alpha * k_beta + alpha * u = beta * u + beta * u^2 / k_alpha
+            # alpha * k_beta = beta * u + beta * u^2 / k_alpha - alpha * u
+            # alpha * k_beta = u * (beta + beta * u / k_alpha - alpha)
+
+            # This is a quadratic equation in u, but for simplicity and numerical stability,
+            # we'll use a fixed-point iteration approach:
+            u_ss_new = alpha * (k_beta + u_ss) / (beta * u_ss / (k_beta + u_ss) * (1 + u_ss / k_alpha))
+
             # Check for convergence
-            if torch.allclose(u_ss, u_ss_new) and torch.allclose(s_ss, s_ss_new):
+            if torch.allclose(u_ss, u_ss_new, rtol=1e-4, atol=1e-4) and torch.allclose(s_ss, s_ss_new, rtol=1e-4, atol=1e-4):
                 break
 
             u_ss = u_ss_new
