@@ -8,11 +8,9 @@ that composes ComponentConfig instances.
 
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Any, Dict, Optional, Type, Union, cast
+from typing import Any, Dict
 
-from beartype import beartype
-from hydra_zen import builds, make_config, make_custom_builds_fn
-from omegaconf import DictConfig, OmegaConf
+from hydra_zen import make_custom_builds_fn
 
 
 class ComponentType(Enum):
@@ -132,7 +130,7 @@ class ModelConfig:
         }
 
     @classmethod
-    def standard(cls, use_protocol_first: bool = False) -> "ModelConfig":
+    def standard(cls, use_protocol_first: bool = False, **_) -> "ModelConfig":
         """
         Create a standard model configuration.
 
@@ -141,15 +139,13 @@ class ModelConfig:
         StandardObservationModel, and AutoGuide.
 
         Args:
-            use_protocol_first: If True, use Protocol-First component implementations
-                               (with "_direct" suffix in component names)
+            use_protocol_first: Whether to use Protocol-First components (with "_direct" suffix)
+            **_: Ignored keyword arguments (for backward compatibility)
 
         Returns:
             A ModelConfig instance with standard component configurations
         """
-        # Add "_direct" suffix to component names if using Protocol-First implementations
         suffix = "_direct" if use_protocol_first else ""
-
         return cls(
             dynamics_model=ComponentConfig(name=f"standard{suffix}"),
             prior_model=ComponentConfig(name=f"lognormal{suffix}"),
