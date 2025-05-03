@@ -52,6 +52,9 @@ from pyrovelocity.models.modular.data.anndata import (
 # Import factory functions
 from pyrovelocity.models.modular.factory import (
     create_model,
+    create_model_from_config,
+    create_protocol_first_model,
+    create_protocol_first_model_from_config,
     create_standard_model,
     standard_model_config,
 )
@@ -122,6 +125,9 @@ __all__ = [
     "DeltaGuideDirect",
     # Factory functions
     "create_model",
+    "create_model_from_config",
+    "create_protocol_first_model",
+    "create_protocol_first_model_from_config",
     "create_standard_model",
     "standard_model_config",
 
