@@ -20,16 +20,45 @@ Each component implementation in this package:
 4. Includes clear documentation of the implementation approach
 """
 
-from pyrovelocity.models.modular.components.direct.dynamics import StandardDynamicsModelDirect
-from pyrovelocity.models.modular.components.direct.priors import LogNormalPriorModelDirect
-from pyrovelocity.models.modular.components.direct.likelihoods import PoissonLikelihoodModelDirect
-from pyrovelocity.models.modular.components.direct.observations import StandardObservationModelDirect
-from pyrovelocity.models.modular.components.direct.guides import AutoGuideFactoryDirect
+from pyrovelocity.models.modular.components.direct.dynamics import (
+    NonlinearDynamicsModelDirect,
+    StandardDynamicsModelDirect,
+)
+from pyrovelocity.models.modular.components.direct.guides import (
+    AutoGuideFactoryDirect,
+    DeltaGuideDirect,
+    NormalGuideDirect,
+)
+from pyrovelocity.models.modular.components.direct.likelihoods import (
+    NegativeBinomialLikelihoodModelDirect,
+    PoissonLikelihoodModelDirect,
+)
+from pyrovelocity.models.modular.components.direct.observations import (
+    StandardObservationModelDirect,
+)
+from pyrovelocity.models.modular.components.direct.priors import (
+    InformativePriorModelDirect,
+    LogNormalPriorModelDirect,
+)
 
 __all__ = [
+    # Dynamics models
     "StandardDynamicsModelDirect",
+    "NonlinearDynamicsModelDirect",
+
+    # Prior models
     "LogNormalPriorModelDirect",
+    "InformativePriorModelDirect",
+
+    # Likelihood models
     "PoissonLikelihoodModelDirect",
+    "NegativeBinomialLikelihoodModelDirect",
+
+    # Observation models
     "StandardObservationModelDirect",
+
+    # Guide factories
     "AutoGuideFactoryDirect",
+    "NormalGuideDirect",
+    "DeltaGuideDirect",
 ]

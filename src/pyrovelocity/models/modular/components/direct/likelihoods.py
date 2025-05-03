@@ -59,72 +59,72 @@ class PoissonLikelihoodModelDirect:
             required_keys=["u_obs", "s_obs", "u_expected", "s_expected"],
             tensor_keys=["u_obs", "s_obs", "u_expected", "s_expected"],
         )
-        
+
         if isinstance(validation_result, dict):
             # Extract required values from context
             u_obs = context["u_obs"]
             s_obs = context["s_obs"]
             u_expected = context["u_expected"]
             s_expected = context["s_expected"]
-            
+
             # Extract optional scaling factors
             u_scale = context.get("u_scale")
             s_scale = context.get("s_scale")
-            
+
             # Apply scaling factors if provided
             u_rate = u_expected
             s_rate = s_expected
-            
+
             if u_scale is not None:
                 u_rate = u_rate * u_scale
             if s_scale is not None:
                 s_rate = s_rate * s_scale
-            
+
             # Get model dimensions if available
             model_n_genes = None
             for param in ["alpha", "beta", "gamma"]:
                 if param in context and isinstance(context[param], torch.Tensor):
                     model_n_genes = context[param].shape[-1]
                     break
-            
+
             # Determine the correct dimensions to use
             n_cells = u_obs.shape[0]
-            
+
             # If model parameters have been sampled, use their dimensions for the genes
             # Otherwise, use the data dimensions
             n_genes = model_n_genes if model_n_genes is not None else u_obs.shape[1]
-            
+
             # If there's a mismatch between model parameters and data dimensions,
             # use the minimum to ensure compatibility
             if model_n_genes is not None and model_n_genes != u_obs.shape[1]:
                 n_genes = min(model_n_genes, u_obs.shape[1])
-            
+
             # Ensure all tensors have compatible shapes
             # Reshape u_obs and s_obs if needed
             if u_obs.shape[1] != n_genes:
                 u_obs = u_obs[:, :n_genes]
-            
+
             if s_obs.shape[1] != n_genes:
                 s_obs = s_obs[:, :n_genes]
-            
+
             # Reshape u_rate and s_rate if needed
             if u_rate.dim() > 1 and u_rate.shape[1] != n_genes:
                 u_rate = u_rate[:, :n_genes]
-            
+
             if s_rate.dim() > 1 and s_rate.shape[1] != n_genes:
                 s_rate = s_rate[:, :n_genes]
-            
+
             # If u_rate or s_rate are 1D tensors (gene parameters), expand them to match batch size
             if u_rate.dim() == 1:
                 u_rate = u_rate.unsqueeze(0).expand(n_cells, -1)
-            
+
             if s_rate.dim() == 1:
                 s_rate = s_rate.unsqueeze(0).expand(n_cells, -1)
-            
+
             # Ensure observations are integers for Poisson distribution
             u_obs_int = u_obs.round().long()
             s_obs_int = s_obs.round().long()
-            
+
             # Use the data dimensions for the plate
             # Ensure the plate dimensions match the tensor dimensions
             with pyro.plate("cells", n_cells, dim=-2):
@@ -132,15 +132,15 @@ class PoissonLikelihoodModelDirect:
                     # Create Poisson distributions and observe data
                     u_dist = pyro.distributions.Poisson(rate=u_rate)
                     s_dist = pyro.distributions.Poisson(rate=s_rate)
-                    
+
                     # Observe data
                     pyro.sample("u_obs", u_dist, obs=u_obs_int)
                     pyro.sample("s_obs", s_dist, obs=s_obs_int)
-            
+
             # Add distributions to context
             context["u_dist"] = u_dist
             context["s_dist"] = s_dist
-            
+
             return context
         else:
             # If validation failed, raise an error
@@ -168,7 +168,7 @@ class PoissonLikelihoodModelDirect:
         """
         if adata is None and cell_state is None:
             raise ValueError("Either adata or cell_state must be provided")
-        
+
         if adata is not None:
             return self._generate_distributions_from_adata(
                 adata, gene_offset, time_info, **kwargs
@@ -199,17 +199,17 @@ class PoissonLikelihoodModelDirect:
         # Extract counts from AnnData
         if "X" not in adata.layers:
             raise ValueError("AnnData object must have 'X' in layers")
-        
+
         # Convert to torch tensor
         counts = torch.tensor(adata.layers["X"].toarray())
-        
+
         # Use mean expression as rate parameter
         rate = torch.mean(counts, dim=0)
-        
+
         # Apply gene offset if provided
         if gene_offset is not None:
             rate = rate * gene_offset
-        
+
         # Create Poisson likelihood distribution
         return {"obs_counts": pyro.distributions.Poisson(rate=rate)}
 
@@ -238,22 +238,22 @@ class PoissonLikelihoodModelDirect:
             n_latent = cell_state.shape[1]
             n_genes = kwargs.get("n_genes", 100)
             projection = torch.randn(n_latent, n_genes)
-        
+
         # Get gene scale from kwargs or use default
         gene_scale = kwargs.get("gene_scale", torch.ones(projection.shape[1]))
-        
+
         # Apply gene offset if not provided
         if gene_offset is None:
             gene_offset = torch.ones(projection.shape[1])
-        
+
         # Project cell_state to gene space
         projected_state = torch.matmul(
             cell_state, projection
         )  # Shape: (batch_size, n_genes)
-        
+
         # Calculate rate parameter
         rate = torch.exp(projected_state) * gene_scale * gene_offset
-        
+
         # Create Poisson likelihood distribution
         return {"obs_counts": pyro.distributions.Poisson(rate=rate)}
 
@@ -280,11 +280,11 @@ class PoissonLikelihoodModelDirect:
             rate = predictions * scale_factors
         else:
             rate = predictions
-        
+
         # Create Poisson distribution and calculate log probability
         distribution = torch.distributions.Poisson(rate=rate)
         log_probs = distribution.log_prob(observations)
-        
+
         # Sum log probabilities across genes for each cell
         return torch.sum(log_probs, dim=-1)
 
@@ -309,9 +309,232 @@ class PoissonLikelihoodModelDirect:
             rate = predictions * scale_factors
         else:
             rate = predictions
-        
+
         # Create Poisson distribution and sample
         distribution = torch.distributions.Poisson(rate=rate)
+        # Set a fixed seed for reproducibility
+        torch.manual_seed(0)
+        return distribution.sample()
+
+
+@LikelihoodModelRegistry.register("negative_binomial_direct")
+class NegativeBinomialLikelihoodModelDirect:
+    """Negative Binomial likelihood model for observed counts.
+
+    This model uses a Negative Binomial distribution as the likelihood for
+    observed RNA counts, which is appropriate when the variance exceeds
+    the mean (overdispersion).
+
+    This implementation directly implements the LikelihoodModel Protocol
+    without inheriting from BaseLikelihoodModel.
+    """
+
+    def __init__(self, name: str = "negative_binomial_likelihood_direct"):
+        """
+        Initialize the NegativeBinomialLikelihoodModelDirect.
+
+        Args:
+            name: A unique name for this component instance.
+        """
+        self.name = name
+
+    @beartype
+    def forward(
+        self,
+        context: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """
+        Register observations with Pyro using Negative Binomial distributions.
+
+        This method takes a context dictionary containing observed data and expected counts,
+        creates Negative Binomial distributions for the expected counts, and registers
+        the observed data with Pyro.
+
+        Args:
+            context: Dictionary containing model context with the following required keys:
+                - u_obs: Observed unspliced counts
+                - s_obs: Observed spliced counts
+                - u_expected: Expected unspliced counts
+                - s_expected: Expected spliced counts
+
+                And optional keys:
+                - u_scale: Scaling factor for unspliced counts
+                - s_scale: Scaling factor for spliced counts
+
+        Returns:
+            Updated context dictionary with the following additional keys:
+                - u_dist: Negative Binomial distribution for unspliced counts
+                - s_dist: Negative Binomial distribution for spliced counts
+        """
+        # Validate context
+        validation_result = validate_context(
+            component_name=self.__class__.__name__,
+            context=context,
+            required_keys=["u_obs", "s_obs", "u_expected", "s_expected"],
+            tensor_keys=["u_obs", "s_obs", "u_expected", "s_expected"],
+        )
+
+        if isinstance(validation_result, dict):
+            # Extract required values from context
+            u_obs = context["u_obs"]
+            s_obs = context["s_obs"]
+            u_expected = context["u_expected"]
+            s_expected = context["s_expected"]
+            u_scale = context.get("u_scale")
+            s_scale = context.get("s_scale")
+
+            # Apply scaling if provided
+            if u_scale is not None:
+                u_rate = u_expected * u_scale
+            else:
+                u_rate = u_expected
+
+            if s_scale is not None:
+                s_rate = s_expected * s_scale
+            else:
+                s_rate = s_expected
+
+            # Get dimensions
+            n_cells = u_obs.shape[0]
+            n_genes = u_obs.shape[1]
+
+            # Determine the correct dimensions to use
+            model_n_genes = u_rate.shape[-1] if u_rate.dim() > 1 else u_rate.shape[0]
+
+            # If there's a mismatch between model parameters and data dimensions,
+            # use the minimum to ensure compatibility
+            if model_n_genes != n_genes:
+                n_genes = min(model_n_genes, n_genes)
+
+                # Adjust dimensions if needed
+                if u_obs.shape[1] > n_genes:
+                    u_obs = u_obs[:, :n_genes]
+                    s_obs = s_obs[:, :n_genes]
+
+                if u_rate.dim() > 1 and u_rate.shape[1] > n_genes:
+                    u_rate = u_rate[:, :n_genes]
+                    s_rate = s_rate[:, :n_genes]
+
+            # If u_rate or s_rate are 1D tensors (gene parameters), expand them to match batch size
+            if u_rate.dim() == 1:
+                u_rate = u_rate.unsqueeze(0).expand(n_cells, -1)
+
+            if s_rate.dim() == 1:
+                s_rate = s_rate.unsqueeze(0).expand(n_cells, -1)
+
+            # Use fixed dispersion parameters for simplicity
+            # In a real implementation, these would be learned or provided
+            u_dispersion = torch.ones(n_genes)
+            s_dispersion = torch.ones(n_genes)
+
+            # Calculate concentration parameters (inverse of dispersion)
+            u_concentration = 1.0 / u_dispersion
+            s_concentration = 1.0 / s_dispersion
+
+            # Ensure observations are integers for Negative Binomial distribution
+            u_obs_int = u_obs.round().long()
+            s_obs_int = s_obs.round().long()
+
+            # Calculate probabilities for Negative Binomial distribution
+            u_probs = u_concentration / (u_concentration + u_rate)
+            s_probs = s_concentration / (s_concentration + s_rate)
+
+            # Use the data dimensions for the plate
+            # Ensure the plate dimensions match the tensor dimensions
+            with pyro.plate("cells", n_cells, dim=-2):
+                with pyro.plate("genes", n_genes, dim=-1):
+                    # Create Negative Binomial distributions and observe data
+                    u_dist = pyro.distributions.NegativeBinomial(
+                        total_count=u_concentration, probs=u_probs
+                    )
+                    s_dist = pyro.distributions.NegativeBinomial(
+                        total_count=s_concentration, probs=s_probs
+                    )
+
+                    # Observe data
+                    pyro.sample("u_obs", u_dist, obs=u_obs_int)
+                    pyro.sample("s_obs", s_dist, obs=s_obs_int)
+
+            # Update context with distributions
+            context["u_dist"] = u_dist
+            context["s_dist"] = s_dist
+
+            return context
+        else:
+            # If validation failed, raise an error
+            raise ValueError(f"Error in negative binomial likelihood model forward pass: {validation_result.error}")
+
+    def log_prob(
+        self,
+        observations: torch.Tensor,
+        predictions: torch.Tensor,
+        scale_factors: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        """Calculate log probability of observations under Negative Binomial distribution.
+
+        Args:
+            observations: Observed gene expression counts
+            predictions: Predicted mean expression levels
+            scale_factors: Optional scaling factors for observations
+
+        Returns:
+            Log probability of observations for each cell
+        """
+        # Apply scale factors if provided
+        if scale_factors is not None:
+            # Reshape scale_factors to broadcast correctly
+            scale_factors = scale_factors.reshape(-1, 1)
+            mean = predictions * scale_factors
+        else:
+            mean = predictions
+
+        # Use a fixed dispersion parameter for simplicity
+        # In a real implementation, this would be learned or provided
+        dispersion = torch.ones(mean.shape[1])
+        concentration = 1.0 / dispersion
+
+        # Create Negative Binomial distribution and calculate log probability
+        probs = concentration / (concentration + mean)
+        distribution = pyro.distributions.NegativeBinomial(
+            total_count=concentration, probs=probs
+        )
+        log_probs = distribution.log_prob(observations)
+
+        # Sum log probabilities across genes for each cell
+        return torch.sum(log_probs, dim=-1)
+
+    def sample(
+        self,
+        predictions: torch.Tensor,
+        scale_factors: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        """Sample observations from Negative Binomial distribution.
+
+        Args:
+            predictions: Predicted mean expression levels
+            scale_factors: Optional scaling factors for observations
+
+        Returns:
+            Sampled observations
+        """
+        # Apply scale factors if provided
+        if scale_factors is not None:
+            # Reshape scale_factors to broadcast correctly
+            scale_factors = scale_factors.reshape(-1, 1)
+            mean = predictions * scale_factors
+        else:
+            mean = predictions
+
+        # Use a fixed dispersion parameter for simplicity
+        # In a real implementation, this would be learned or provided
+        dispersion = torch.ones(mean.shape[1])
+        concentration = 1.0 / dispersion
+
+        # Create Negative Binomial distribution and sample
+        probs = concentration / (concentration + mean)
+        distribution = pyro.distributions.NegativeBinomial(
+            total_count=concentration, probs=probs
+        )
         # Set a fixed seed for reproducibility
         torch.manual_seed(0)
         return distribution.sample()

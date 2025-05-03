@@ -21,18 +21,23 @@ from pyrovelocity.models.modular.components.base import (
 
 # Import Protocol-First implementations
 from pyrovelocity.models.modular.components.direct.dynamics import (
+    NonlinearDynamicsModelDirect,
     StandardDynamicsModelDirect,
 )
 from pyrovelocity.models.modular.components.direct.guides import (
     AutoGuideFactoryDirect,
+    DeltaGuideDirect,
+    NormalGuideDirect,
 )
 from pyrovelocity.models.modular.components.direct.likelihoods import (
+    NegativeBinomialLikelihoodModelDirect,
     PoissonLikelihoodModelDirect,
 )
 from pyrovelocity.models.modular.components.direct.observations import (
     StandardObservationModelDirect,
 )
 from pyrovelocity.models.modular.components.direct.priors import (
+    InformativePriorModelDirect,
     LogNormalPriorModelDirect,
 )
 
@@ -78,8 +83,13 @@ __all__ = [
     "DeltaGuide",
     # Protocol-First implementations
     "StandardDynamicsModelDirect",
+    "NonlinearDynamicsModelDirect",
     "LogNormalPriorModelDirect",
+    "InformativePriorModelDirect",
     "PoissonLikelihoodModelDirect",
+    "NegativeBinomialLikelihoodModelDirect",
     "StandardObservationModelDirect",
     "AutoGuideFactoryDirect",
+    "NormalGuideDirect",
+    "DeltaGuideDirect",
 ]
