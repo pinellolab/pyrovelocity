@@ -1,23 +1,29 @@
-"""Dynamics models for RNA velocity simulation.
+"""
+Dynamics model implementations for PyroVelocity's modular architecture.
 
-This module implements various dynamics models that simulate RNA velocity
-by modeling the time evolution of unspliced and spliced mRNA counts.
+This module contains dynamics model implementations that directly implement the
+DynamicsModel Protocol. These implementations follow the Protocol-First approach,
+which embraces composition over inheritance and allows for more flexible component composition.
 """
 
-from typing import Any, ClassVar, Dict, Optional, Tuple, Type, Union
+from typing import Any, ClassVar, Dict, Optional, Tuple, Union
 
 import torch
-import torchode as to
 from beartype import beartype
-from jaxtyping import Array, Float, jaxtyped
+from jaxtyping import jaxtyped
 
-from pyrovelocity.models.modular.components.base import BaseDynamicsModel
-from pyrovelocity.models.modular.interfaces import BatchTensor, ParamTensor
+from pyrovelocity.models.modular.interfaces import (
+    BatchTensor,
+    DynamicsModel,
+    ParamTensor,
+)
 from pyrovelocity.models.modular.registry import DynamicsModelRegistry
+from pyrovelocity.models.modular.utils.context_utils import validate_context
 
 
 @DynamicsModelRegistry.register("standard")
-class StandardDynamicsModel(BaseDynamicsModel):
+@DynamicsModelRegistry.register("standard_direct")  # For backward compatibility
+class StandardDynamicsModel:
     """Standard dynamics model for RNA velocity using analytical solution.
 
     This model implements the standard model of RNA velocity:
@@ -32,19 +38,112 @@ class StandardDynamicsModel(BaseDynamicsModel):
     - beta is the splicing rate
     - gamma is the degradation rate
 
-    This implementation uses the analytical solution from _transcription_dynamics.py.
+    This implementation uses the analytical solution and directly implements
+    the DynamicsModel Protocol.
 
     Attributes:
         name: The name of the model
         description: A brief description of the model
+        shared_time: Whether to use shared time across cells
+        t_scale_on: Whether to use time scaling
+        cell_specific_kinetics: Type of cell-specific kinetics
+        kinetics_num: Number of kinetics
     """
 
     name: ClassVar[str] = "standard"
     description: ClassVar[str] = "Standard RNA velocity dynamics model"
 
+    def __init__(
+        self,
+        name: str = "dynamics_model",
+        shared_time: bool = True,
+        t_scale_on: bool = False,
+        cell_specific_kinetics: Optional[str] = None,
+        kinetics_num: Optional[int] = None,
+        **kwargs,
+    ):
+        """
+        Initialize the dynamics model.
+
+        Args:
+            name: A unique name for this component instance.
+            shared_time: Whether to use shared time across cells.
+            t_scale_on: Whether to use time scaling.
+            cell_specific_kinetics: Type of cell-specific kinetics.
+            kinetics_num: Number of kinetics.
+            **kwargs: Additional keyword arguments.
+        """
+        self.name = name
+        self.shared_time = shared_time
+        self.t_scale_on = t_scale_on
+        self.cell_specific_kinetics = cell_specific_kinetics
+        self.kinetics_num = kinetics_num
+
     @jaxtyped
     @beartype
-    def _forward_impl(
+    def forward(
+        self,
+        context: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """
+        Compute the expected unspliced and spliced RNA counts based on the dynamics model.
+
+        This method takes a context dictionary containing observed data and parameters,
+        computes the expected unspliced and spliced counts according to the dynamics model,
+        and updates the context with the results.
+
+        Args:
+            context: Dictionary containing model context with the following required keys:
+                - u_obs: Observed unspliced counts (BatchTensor)
+                - s_obs: Observed spliced counts (BatchTensor)
+                - alpha: Transcription rate (ParamTensor)
+                - beta: Splicing rate (ParamTensor)
+                - gamma: Degradation rate (ParamTensor)
+
+                And optional keys:
+                - scaling: Scaling factor (ParamTensor)
+                - t: Time points (BatchTensor)
+
+        Returns:
+            Updated context dictionary with the following additional keys:
+                - u_expected: Expected unspliced counts (BatchTensor)
+                - s_expected: Expected spliced counts (BatchTensor)
+        """
+        # Validate context
+        validation_result = validate_context(
+            self.__class__.__name__,
+            context,
+            required_keys=["u_obs", "s_obs", "alpha", "beta", "gamma"],
+            tensor_keys=["u_obs", "s_obs", "alpha", "beta", "gamma"],
+        )
+
+        if isinstance(validation_result, dict):
+            # Extract required values from context
+            u_obs = context["u_obs"]
+            s_obs = context["s_obs"]
+            alpha = context["alpha"]
+            beta = context["beta"]
+            gamma = context["gamma"]
+            scaling = context.get("scaling")
+            t = context.get("t")
+
+            # Compute expected counts
+            u_expected, s_expected = self._compute_expected_counts(
+                u_obs, s_obs, alpha, beta, gamma, scaling, t
+            )
+
+            # Update context with expected counts
+            context["u_expected"] = u_expected
+            context["s_expected"] = s_expected
+
+            return context
+        else:
+            # If validation failed, raise an error
+            raise ValueError(f"Error in dynamics model forward pass: {validation_result.error}")
+
+    @jaxtyped
+    @beartype
+    def _compute_expected_counts(
         self,
         u: BatchTensor,
         s: BatchTensor,
@@ -55,7 +154,7 @@ class StandardDynamicsModel(BaseDynamicsModel):
         t: Optional[BatchTensor] = None,
     ) -> Tuple[BatchTensor, BatchTensor]:
         """
-        Implementation of the forward method for the standard dynamics model.
+        Compute the expected unspliced and spliced RNA counts.
 
         This method computes the expected unspliced and spliced RNA counts
         based on the standard dynamics model.
@@ -72,52 +171,82 @@ class StandardDynamicsModel(BaseDynamicsModel):
         Returns:
             Tuple of (expected unspliced counts, expected spliced counts)
         """
-        # Compute steady state values
-        u_ss = alpha / beta
-        s_ss = alpha / gamma
+        # Compute steady state
+        u_ss, s_ss = self.steady_state(alpha, beta, gamma)
+
+        # If time points are not provided, use steady state
+        if t is None:
+            # Use steady state as expected counts
+            u_expected = u_ss
+            s_expected = s_ss
+
+            # Expand to match batch size if needed
+            if u.dim() > u_expected.dim():
+                batch_size = u.shape[0]
+                u_expected = u_expected.unsqueeze(0).expand(batch_size, -1)
+                s_expected = s_expected.unsqueeze(0).expand(batch_size, -1)
+        else:
+            # Compute expected counts using analytical solution
+            u_expected = u_ss - (u_ss - u) * torch.exp(-beta * t)
+            s_expected = s_ss - (s_ss - s) * torch.exp(-gamma * t) - (
+                beta * (u_ss - u) / (gamma - beta)
+            ) * (torch.exp(-beta * t) - torch.exp(-gamma * t))
 
         # Apply scaling if provided
         if scaling is not None:
-            u_ss = u_ss * scaling
-            s_ss = s_ss * scaling
+            u_expected = u_expected * scaling
+            s_expected = s_expected * scaling
 
-        # Expand to match batch size if needed
-        if u.dim() > u_ss.dim():
-            batch_size = u.shape[0]
-            u_ss = u_ss.unsqueeze(0).expand(batch_size, -1)
-            s_ss = s_ss.unsqueeze(0).expand(batch_size, -1)
+        return u_expected, s_expected
 
-        # Ensure the expected values have the same shape as the observations
-        if u_ss.shape != u.shape:
-            # If the shapes don't match, reshape the expected values
-            # This can happen if the expected values have a different number of genes
-            # than the observations (e.g., if the expected values are computed for all genes
-            # but the observations are for a subset of genes)
-            n_cells, n_genes = u.shape
-            if u_ss.shape[1] != n_genes:
-                # Slice the expected values to match the number of genes in the observations
-                u_ss = u_ss[:, :n_genes]
-                s_ss = s_ss[:, :n_genes]
+    @jaxtyped
+    @beartype
+    def steady_state(
+        self,
+        alpha: Union[ParamTensor, torch.Tensor],
+        beta: Union[ParamTensor, torch.Tensor],
+        gamma: Union[ParamTensor, torch.Tensor],
+        **kwargs: Any,
+    ) -> Tuple[
+        Union[ParamTensor, torch.Tensor],
+        Union[ParamTensor, torch.Tensor],
+    ]:
+        """
+        Compute the steady-state unspliced and spliced RNA counts.
+
+        Args:
+            alpha: Transcription rate
+            beta: Splicing rate
+            gamma: Degradation rate
+            **kwargs: Additional model-specific parameters
+
+        Returns:
+            Tuple of (steady-state unspliced counts, steady-state spliced counts)
+        """
+        # At steady state, du/dt = 0 and ds/dt = 0
+        # From du/dt = 0: alpha - beta * u = 0 => u = alpha / beta
+        u_ss = alpha / beta
+
+        # From ds/dt = 0: beta * u - gamma * s = 0 => s = beta * u / gamma
+        # Substituting u = alpha / beta: s = beta * (alpha / beta) / gamma = alpha / gamma
+        s_ss = alpha / gamma
 
         return u_ss, s_ss
 
     @jaxtyped
     @beartype
-    def _predict_future_states_impl(
+    def predict_future_states(
         self,
-        current_state: Tuple[BatchTensor, BatchTensor],
+        current_state: Tuple[torch.Tensor, torch.Tensor],
         time_delta: Union[float, torch.Tensor],
-        alpha: ParamTensor,
-        beta: ParamTensor,
-        gamma: ParamTensor,
-        scaling: Optional[ParamTensor] = None,
-    ) -> Tuple[BatchTensor, BatchTensor]:
+        alpha: torch.Tensor,
+        beta: torch.Tensor,
+        gamma: torch.Tensor,
+        scaling: Optional[torch.Tensor] = None,
+        **kwargs: Any,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Implementation of the predict_future_states method for the standard dynamics model.
-
-        This method predicts future unspliced and spliced RNA counts based on
-        the current state and the standard dynamics model using the analytical solution
-        from _transcription_dynamics.py.
+        Predict future states based on current state and parameters.
 
         Args:
             current_state: Tuple of (current unspliced counts, current spliced counts)
@@ -126,6 +255,7 @@ class StandardDynamicsModel(BaseDynamicsModel):
             beta: Splicing rate
             gamma: Degradation rate
             scaling: Optional scaling factor for the dynamics
+            **kwargs: Additional model-specific parameters
 
         Returns:
             Tuple of (predicted unspliced counts, predicted spliced counts)
@@ -137,32 +267,14 @@ class StandardDynamicsModel(BaseDynamicsModel):
         if isinstance(time_delta, float):
             time_delta = torch.tensor(time_delta)
 
-        # Compute exponentials
-        expu = torch.exp(-beta * time_delta)
-        exps = torch.exp(-gamma * time_delta)
+        # Compute steady state
+        u_ss, s_ss = self.steady_state(alpha, beta, gamma)
 
-        # Compute future unspliced counts using analytical solution
-        u_future = u_current * expu + alpha / beta * (1 - expu)
-
-        # Compute future spliced counts using analytical solution
-        # Handle the case where gamma == beta
-        is_close = torch.isclose(gamma, beta)
-
-        # For gamma != beta
-        expus = (
-            (alpha - u_current * beta) / (gamma - beta + 1e-8) * (exps - expu)
-        )
-        st = s_current * exps + alpha / gamma * (1 - exps) + expus
-
-        # For gamma == beta
-        st_gamma_equals_beta = (
-            s_current * expu
-            + alpha / beta * (1 - expu)
-            - (alpha - beta * u_current) * time_delta * expu
-        )
-
-        # Use torch.where to select the appropriate formula
-        s_future = torch.where(is_close, st_gamma_equals_beta, st)
+        # Compute future state using analytical solution
+        u_future = u_ss - (u_ss - u_current) * torch.exp(-beta * time_delta)
+        s_future = s_ss - (s_ss - s_current) * torch.exp(-gamma * time_delta) - (
+            beta * (u_ss - u_current) / (gamma - beta)
+        ) * (torch.exp(-beta * time_delta) - torch.exp(-gamma * time_delta))
 
         # Apply scaling if provided
         if scaling is not None:
@@ -202,390 +314,40 @@ class StandardDynamicsModel(BaseDynamicsModel):
             Tuple of (time_points, unspliced_counts, spliced_counts)
             where each array has shape [n_steps, genes]
         """
-        # Set up time points
-        times = torch.linspace(0, t_max, n_steps)
+        # Create time points
+        t = torch.linspace(0, t_max, n_steps)
 
-        # Initialize arrays to store results
-        u_t = torch.zeros((n_steps, u0.shape[0]))
-        s_t = torch.zeros((n_steps, s0.shape[0]))
+        # Compute steady state
+        u_ss, s_ss = self.steady_state(alpha, beta, gamma)
+
+        # Initialize arrays for results
+        u = torch.zeros((n_steps, u0.shape[0]))
+        s = torch.zeros((n_steps, s0.shape[0]))
 
         # Set initial conditions
-        u_t[0] = u0
-        s_t[0] = s0
+        u[0] = u0.clone()
+        s[0] = s0.clone()
 
-        # Simulate using analytical solution for each time step
-        for i in range(1, n_steps):
-            tau = float(times[i] - times[0])  # Time since start as float
-            current_state = (u_t[i - 1], s_t[i - 1])
-            u_t[i], s_t[i] = self._predict_future_states_impl(
-                current_state, tau, alpha, beta, gamma, scaling
-            )
-
-        return times, u_t, s_t
-
-    @jaxtyped
-    @beartype
-    def _steady_state_impl(
-        self,
-        alpha: Union[ParamTensor, torch.Tensor, Array],
-        beta: Union[ParamTensor, torch.Tensor, Array],
-        gamma: Union[ParamTensor, torch.Tensor, Array],
-        **kwargs: Any,
-    ) -> Tuple[
-        Union[ParamTensor, torch.Tensor, Array],
-        Union[ParamTensor, torch.Tensor, Array],
-    ]:
-        """Implementation of the steady_state method for the standard dynamics model.
-
-        Args:
-            alpha: Transcription rates [genes]
-            beta: Splicing rates [genes]
-            gamma: Degradation rates [genes]
-            **kwargs: Additional model-specific parameters
-
-        Returns:
-            Tuple of (unspliced_steady_state, spliced_steady_state)
-            each with shape [genes]
-        """
-        # At steady state, du/dt = 0 and ds/dt = 0
-        # From du/dt = 0: alpha - beta * u = 0 => u = alpha / beta
-        u_ss = alpha / beta
-
-        # From ds/dt = 0: beta * u - gamma * s = 0 => s = beta * u / gamma
-        # Substituting u = alpha / beta: s = beta * (alpha / beta) / gamma = alpha / gamma
-        s_ss = alpha / gamma
-
-        return u_ss, s_ss
-
-
-@DynamicsModelRegistry.register("standard_simulated")
-class StandardDynamicsModelSimulated(BaseDynamicsModel):
-    """Standard dynamics model for RNA velocity using numerical simulation.
-
-    This model implements the standard model of RNA velocity:
-
-    du/dt = alpha - beta * u
-    ds/dt = beta * u - gamma * s
-
-    where:
-    - u is the unspliced mRNA count
-    - s is the spliced mRNA count
-    - alpha is the transcription rate
-    - beta is the splicing rate
-    - gamma is the degradation rate
-
-    This implementation uses torchode for numerical simulation instead of the analytical solution.
-
-    Attributes:
-        name: ClassVar[str]: The name of the model
-        description: ClassVar[str]: A brief description of the model
-    """
-
-    name: ClassVar[str] = "standard_simulated"
-    description: ClassVar[
-        str
-    ] = "Standard RNA velocity dynamics model using numerical simulation"
-
-    @jaxtyped
-    @beartype
-    def _forward_impl(
-        self,
-        u: BatchTensor,
-        s: BatchTensor,
-        alpha: ParamTensor,
-        beta: ParamTensor,
-        gamma: ParamTensor,
-        scaling: Optional[ParamTensor] = None,
-        t: Optional[BatchTensor] = None,
-    ) -> Tuple[BatchTensor, BatchTensor]:
-        """
-        Implementation of the forward method for the standard dynamics model.
-
-        This method computes the expected unspliced and spliced RNA counts
-        based on the standard dynamics model.
-
-        Args:
-            u: Observed unspliced RNA counts
-            s: Observed spliced RNA counts
-            alpha: Transcription rate
-            beta: Splicing rate
-            gamma: Degradation rate
-            scaling: Optional scaling factor for the dynamics
-            t: Optional time points for the dynamics
-
-        Returns:
-            Tuple of (expected unspliced counts, expected spliced counts)
-        """
-        # Compute steady state values
-        u_ss = alpha / beta
-        s_ss = alpha / gamma
+        # Compute solution at each time point
+        for i, ti in enumerate(t):
+            if i > 0:  # Skip the first point which is already set
+                # Compute solution using analytical formula
+                u[i] = u_ss - (u_ss - u0) * torch.exp(-beta * ti)
+                s[i] = s_ss - (s_ss - s0) * torch.exp(-gamma * ti) - (
+                    beta * (u_ss - u0) / (gamma - beta)
+                ) * (torch.exp(-beta * ti) - torch.exp(-gamma * ti))
 
         # Apply scaling if provided
         if scaling is not None:
-            u_ss = u_ss * scaling
-            s_ss = s_ss * scaling
+            u = u * scaling
+            s = s * scaling
 
-        # Expand to match batch size if needed
-        if u.dim() > u_ss.dim():
-            batch_size = u.shape[0]
-            u_ss = u_ss.unsqueeze(0).expand(batch_size, -1)
-            s_ss = s_ss.unsqueeze(0).expand(batch_size, -1)
-
-        # Ensure the expected values have the same shape as the observations
-        if u_ss.shape != u.shape:
-            # If the shapes don't match, reshape the expected values
-            # This can happen if the expected values have a different number of genes
-            # than the observations (e.g., if the expected values are computed for all genes
-            # but the observations are for a subset of genes)
-            n_cells, n_genes = u.shape
-            if u_ss.shape[1] != n_genes:
-                # Slice the expected values to match the number of genes in the observations
-                u_ss = u_ss[:, :n_genes]
-                s_ss = s_ss[:, :n_genes]
-
-        return u_ss, s_ss
-
-    @jaxtyped
-    @beartype
-    def _predict_future_states_impl(
-        self,
-        current_state: Tuple[BatchTensor, BatchTensor],
-        time_delta: Union[float, torch.Tensor],
-        alpha: ParamTensor,
-        beta: ParamTensor,
-        gamma: ParamTensor,
-        scaling: Optional[ParamTensor] = None,
-    ) -> Tuple[BatchTensor, BatchTensor]:
-        """
-        Implementation of the predict_future_states method using numerical simulation.
-
-        This method predicts future unspliced and spliced RNA counts based on
-        the current state and the standard dynamics model using torchode for numerical integration.
-
-        Args:
-            current_state: Tuple of (current unspliced counts, current spliced counts)
-            time_delta: Time difference for prediction
-            alpha: Transcription rate
-            beta: Splicing rate
-            gamma: Degradation rate
-            scaling: Optional scaling factor for the dynamics
-
-        Returns:
-            Tuple of (predicted unspliced counts, predicted spliced counts)
-        """
-        # Extract current state
-        u_current, s_current = current_state
-
-        # Convert time_delta to tensor if it's a float
-        if isinstance(time_delta, float):
-            time_delta = torch.tensor(time_delta)
-
-        # Define the ODE system
-        def rhs(t, state):
-            # Unpack state
-            u, s = state
-
-            # Standard RNA velocity model
-            dudt = alpha - beta * u
-            dsdt = beta * u - gamma * s
-
-            return torch.stack([dudt, dsdt])
-
-        # For the standard model, we can use the analytical solution
-        # This is more efficient and accurate than numerical integration
-        standard_model = StandardDynamicsModel()
-        u_future, s_future = standard_model.predict_future_states(
-            current_state, time_delta, alpha, beta, gamma, scaling
-        )
-
-        # The code below shows how we would use torchode for numerical integration
-        # but we're not using it for the standard model since we have an analytical solution
-
-        # # Set up time points for integration
-        # t0 = torch.tensor(0.0)
-        # t1 = torch.tensor(float(time_delta))
-        #
-        # # Initial state
-        # y0 = torch.stack([u_current, s_current])
-        #
-        # # Solve the ODE system using torchode
-        # term = to.ODETerm(rhs)
-        # step_method = to.Tsit5(term=term)
-        # step_size_controller = to.IntegralController(atol=1e-6, rtol=1e-3, term=term)
-        # solver = to.AutoDiffAdjoint(step_method, step_size_controller)
-        #
-        # # Create the initial value problem
-        # problem = to.InitialValueProblem(y0=y0, t_start=t0, t_end=t1)
-        #
-        # # Solve the ODE
-        # solution = solver.solve(problem)
-        #
-        # # Extract results (final state)
-        # final_state = solution.ys[-1]
-        # u_future = final_state[0]
-        # s_future = final_state[1]
-
-        # Apply scaling if provided
-        if scaling is not None:
-            u_future = u_future * scaling
-            s_future = s_future * scaling
-
-        return u_future, s_future
-
-    @jaxtyped
-    @beartype
-    def simulate(
-        self,
-        u0: torch.Tensor,
-        s0: torch.Tensor,
-        alpha: torch.Tensor,
-        beta: torch.Tensor,
-        gamma: torch.Tensor,
-        scaling: Optional[torch.Tensor] = None,
-        t_max: float = 10.0,
-        n_steps: int = 100,
-        **kwargs: Any,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """Simulate the dynamics model forward in time using numerical integration.
-
-        Args:
-            u0: Initial unspliced mRNA counts [genes]
-            s0: Initial spliced mRNA counts [genes]
-            alpha: Transcription rates [genes]
-            beta: Splicing rates [genes]
-            gamma: Degradation rates [genes]
-            scaling: Scaling factors [genes]
-            t_max: Maximum simulation time
-            n_steps: Number of simulation steps
-            **kwargs: Additional model-specific parameters
-
-        Returns:
-            Tuple of (time_points, unspliced_counts, spliced_counts)
-            where each array has shape [n_steps, genes]
-        """
-        # Set up time points
-        times = torch.linspace(0, t_max, n_steps)
-
-        # Define the ODE system
-        def rhs(t, state):
-            # Unpack state
-            u, s = state
-
-            # Standard RNA velocity model
-            dudt = alpha - beta * u
-            dsdt = beta * u - gamma * s
-
-            return torch.stack([dudt, dsdt])
-
-        # Create initial state tensor [2, genes]
-        y0 = torch.stack([u0, s0])
-
-        # For the standard model, we can use the analytical solution
-        # This is more efficient and accurate than numerical integration
-
-        # Initialize arrays to store results
-        u_t = torch.zeros((n_steps, u0.shape[0]))
-        s_t = torch.zeros((n_steps, s0.shape[0]))
-
-        # Set initial conditions
-        u_t[0] = u0
-        s_t[0] = s0
-
-        # For the standard model, we can directly compute the analytical solution
-        # at each time point rather than iteratively
-        for i in range(1, n_steps):
-            tau = float(times[i])  # Time since start of simulation
-
-            # Compute exponentials
-            expu = torch.exp(-beta * tau)
-            exps = torch.exp(-gamma * tau)
-
-            # Compute unspliced counts using analytical solution
-            # u(t) = u0 * e^(-beta*t) + alpha/beta * (1 - e^(-beta*t))
-            u_t[i] = u0 * expu + alpha / beta * (1 - expu)
-
-            # Compute spliced counts using analytical solution
-            # Handle the case where gamma == beta
-            is_close = torch.isclose(gamma, beta)
-
-            # For gamma != beta
-            # s(t) = s0 * e^(-gamma*t) + alpha/gamma * (1 - e^(-gamma*t)) +
-            #        (alpha - u0*beta)/(gamma - beta) * (e^(-gamma*t) - e^(-beta*t))
-            expus = (alpha - u0 * beta) / (gamma - beta + 1e-8) * (exps - expu)
-            st = s0 * exps + alpha / gamma * (1 - exps) + expus
-
-            # For gamma == beta
-            # s(t) = s0 * e^(-beta*t) + alpha/beta * (1 - e^(-beta*t)) - (alpha - beta*u0) * t * e^(-beta*t)
-            st_gamma_equals_beta = (
-                s0 * expu
-                + alpha / beta * (1 - expu)
-                - (alpha - beta * u0) * tau * expu
-            )
-
-            # Use torch.where to select the appropriate formula
-            s_t[i] = torch.where(is_close, st_gamma_equals_beta, st)
-
-        # The code below shows how we would use torchode for numerical integration
-        # but we're not using it for the standard model since we have an analytical solution
-
-        # # Define the ODE system
-        # def dudt(u, s):
-        #     return alpha - beta * u
-        #
-        # def dsdt(u, s):
-        #     return beta * u - gamma * s
-        #
-        # # Simple Euler integration for each time step
-        # for i in range(1, n_steps):
-        #     dt = float(times[i] - times[i-1])  # Time step
-        #
-        #     # Euler method for each time step
-        #     u_t[i] = u_t[i-1] + dt * dudt(u_t[i-1], s_t[i-1])
-        #     s_t[i] = s_t[i-1] + dt * dsdt(u_t[i-1], s_t[i-1])
-
-        # Apply scaling
-        u_t = u_t * scaling
-        s_t = s_t * scaling
-
-        return times, u_t, s_t
-
-    @jaxtyped
-    @beartype
-    def _steady_state_impl(
-        self,
-        alpha: Union[ParamTensor, torch.Tensor, Array],
-        beta: Union[ParamTensor, torch.Tensor, Array],
-        gamma: Union[ParamTensor, torch.Tensor, Array],
-        **kwargs: Any,
-    ) -> Tuple[
-        Union[ParamTensor, torch.Tensor, Array],
-        Union[ParamTensor, torch.Tensor, Array],
-    ]:
-        """Implementation of the steady_state method for the standard dynamics model.
-
-        Args:
-            alpha: Transcription rates [genes]
-            beta: Splicing rates [genes]
-            gamma: Degradation rates [genes]
-            **kwargs: Additional model-specific parameters
-
-        Returns:
-            Tuple of (unspliced_steady_state, spliced_steady_state)
-            each with shape [genes]
-        """
-        # At steady state, du/dt = 0 and ds/dt = 0
-        # From du/dt = 0: alpha - beta * u = 0 => u = alpha / beta
-        u_ss = alpha / beta
-
-        # From ds/dt = 0: beta * u - gamma * s = 0 => s = beta * u / gamma
-        # Substituting u = alpha / beta: s = beta * (alpha / beta) / gamma = alpha / gamma
-        s_ss = alpha / gamma
-
-        return u_ss, s_ss
+        return t, u, s
 
 
 @DynamicsModelRegistry.register("nonlinear")
-class NonlinearDynamicsModel(BaseDynamicsModel):
+@DynamicsModelRegistry.register("nonlinear_direct")  # For backward compatibility
+class NonlinearDynamicsModel:
     """Nonlinear dynamics model for RNA velocity with saturation effects.
 
     This model implements a nonlinear model of RNA velocity with saturation:
@@ -602,9 +364,15 @@ class NonlinearDynamicsModel(BaseDynamicsModel):
     - k_alpha is the saturation constant for transcription
     - k_beta is the saturation constant for splicing
 
+    This implementation directly implements the DynamicsModel Protocol.
+
     Attributes:
         name: The name of the model
         description: A brief description of the model
+        shared_time: Whether to use shared time across cells
+        t_scale_on: Whether to use time scaling
+        cell_specific_kinetics: Type of cell-specific kinetics
+        kinetics_num: Number of kinetics
     """
 
     name: ClassVar[str] = "nonlinear"
@@ -612,9 +380,107 @@ class NonlinearDynamicsModel(BaseDynamicsModel):
         str
     ] = "Nonlinear RNA velocity dynamics model with saturation effects"
 
+    def __init__(
+        self,
+        name: str = "nonlinear_dynamics_model",
+        shared_time: bool = True,
+        t_scale_on: bool = False,
+        cell_specific_kinetics: Optional[str] = None,
+        kinetics_num: Optional[int] = None,
+        **kwargs,
+    ):
+        """
+        Initialize the nonlinear dynamics model.
+
+        Args:
+            name: A unique name for this component instance.
+            shared_time: Whether to use shared time across cells.
+            t_scale_on: Whether to use time scaling.
+            cell_specific_kinetics: Type of cell-specific kinetics.
+            kinetics_num: Number of kinetics.
+            **kwargs: Additional keyword arguments.
+        """
+        self.name = name
+        self.shared_time = shared_time
+        self.t_scale_on = t_scale_on
+        self.cell_specific_kinetics = cell_specific_kinetics
+        self.kinetics_num = kinetics_num
+
     @jaxtyped
     @beartype
-    def _forward_impl(
+    def forward(
+        self,
+        context: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """
+        Compute the expected unspliced and spliced RNA counts based on the nonlinear dynamics model.
+
+        This method takes a context dictionary containing observed data and parameters,
+        computes the expected unspliced and spliced counts according to the nonlinear dynamics model,
+        and updates the context with the results.
+
+        Args:
+            context: Dictionary containing model context with the following required keys:
+                - u_obs: Observed unspliced counts (BatchTensor)
+                - s_obs: Observed spliced counts (BatchTensor)
+                - alpha: Transcription rate (ParamTensor)
+                - beta: Splicing rate (ParamTensor)
+                - gamma: Degradation rate (ParamTensor)
+
+                And optional keys:
+                - scaling: Scaling factor (ParamTensor)
+                - t: Time points (BatchTensor)
+                - k_alpha: Saturation constant for transcription (ParamTensor)
+                - k_beta: Saturation constant for splicing (ParamTensor)
+
+        Returns:
+            Updated context dictionary with the following additional keys:
+                - u_expected: Expected unspliced counts (BatchTensor)
+                - s_expected: Expected spliced counts (BatchTensor)
+        """
+        # Validate context
+        validation_result = validate_context(
+            component_name=self.__class__.__name__,
+            context=context,
+            required_keys=["u_obs", "s_obs", "alpha", "beta", "gamma"],
+            tensor_keys=["u_obs", "s_obs", "alpha", "beta", "gamma"],
+        )
+
+        if isinstance(validation_result, dict):
+            # Extract required values from context
+            u_obs = context["u_obs"]
+            s_obs = context["s_obs"]
+            alpha = context["alpha"]
+            beta = context["beta"]
+            gamma = context["gamma"]
+            scaling = context.get("scaling")
+            t = context.get("t")
+            k_alpha = context.get("k_alpha")
+            k_beta = context.get("k_beta")
+
+            # Set default values for saturation constants if not provided
+            if k_alpha is None:
+                k_alpha = alpha
+            if k_beta is None:
+                k_beta = beta
+
+            # Compute expected counts
+            u_expected, s_expected = self._compute_expected_counts(
+                u_obs, s_obs, alpha, beta, gamma, scaling, t, k_alpha, k_beta
+            )
+
+            # Update context with expected counts
+            context["u_expected"] = u_expected
+            context["s_expected"] = s_expected
+
+            return context
+        else:
+            # If validation failed, raise an error
+            raise ValueError(f"Error in nonlinear dynamics model forward pass: {validation_result.error}")
+
+    @jaxtyped
+    @beartype
+    def _compute_expected_counts(
         self,
         u: BatchTensor,
         s: BatchTensor,
@@ -673,7 +539,7 @@ class NonlinearDynamicsModel(BaseDynamicsModel):
             return u_ss, s_ss
 
         # Calculate steady state using the nonlinear model
-        u_ss, s_ss = self._steady_state_impl(
+        u_ss, s_ss = self.steady_state(
             alpha, beta, gamma, k_alpha=k_alpha, k_beta=k_beta
         )
 
@@ -692,17 +558,18 @@ class NonlinearDynamicsModel(BaseDynamicsModel):
 
     @jaxtyped
     @beartype
-    def _predict_future_states_impl(
+    def predict_future_states(
         self,
-        current_state: Tuple[BatchTensor, BatchTensor],
-        time_delta: Union[float, BatchTensor],
-        alpha: ParamTensor,
-        beta: ParamTensor,
-        gamma: ParamTensor,
-        scaling: Optional[ParamTensor] = None,
-        k_alpha: Optional[ParamTensor] = None,
-        k_beta: Optional[ParamTensor] = None,
-    ) -> Tuple[BatchTensor, BatchTensor]:
+        current_state: Tuple[torch.Tensor, torch.Tensor],
+        time_delta: Union[float, torch.Tensor],
+        alpha: torch.Tensor,
+        beta: torch.Tensor,
+        gamma: torch.Tensor,
+        scaling: Optional[torch.Tensor] = None,
+        k_alpha: Optional[torch.Tensor] = None,
+        k_beta: Optional[torch.Tensor] = None,
+        **kwargs: Any,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Implementation of the predict_future_states method for the nonlinear dynamics model.
 
@@ -1021,7 +888,7 @@ class NonlinearDynamicsModel(BaseDynamicsModel):
 
     @jaxtyped
     @beartype
-    def _steady_state_impl(
+    def steady_state(
         self,
         alpha: Union[ParamTensor, torch.Tensor],
         beta: Union[ParamTensor, torch.Tensor],

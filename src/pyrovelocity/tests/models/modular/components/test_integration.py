@@ -1,28 +1,28 @@
-"""Integration tests for Protocol-First component implementations."""
+"""Integration tests for component implementations."""
 
 import pyro
 import pytest
 import torch
 
-from pyrovelocity.models.modular.components.direct.dynamics import (
-    NonlinearDynamicsModelDirect,
-    StandardDynamicsModelDirect,
+from pyrovelocity.models.modular.components.dynamics import (
+    NonlinearDynamicsModel,
+    StandardDynamicsModel,
 )
-from pyrovelocity.models.modular.components.direct.guides import (
-    AutoGuideFactoryDirect,
-    DeltaGuideDirect,
-    NormalGuideDirect,
+from pyrovelocity.models.modular.components.guides import (
+    AutoGuideFactory,
+    DeltaGuide,
+    NormalGuide,
 )
-from pyrovelocity.models.modular.components.direct.likelihoods import (
-    NegativeBinomialLikelihoodModelDirect,
-    PoissonLikelihoodModelDirect,
+from pyrovelocity.models.modular.components.likelihoods import (
+    NegativeBinomialLikelihoodModel,
+    PoissonLikelihoodModel,
 )
-from pyrovelocity.models.modular.components.direct.observations import (
-    StandardObservationModelDirect,
+from pyrovelocity.models.modular.components.observations import (
+    StandardObservationModel,
 )
-from pyrovelocity.models.modular.components.direct.priors import (
-    InformativePriorModelDirect,
-    LogNormalPriorModelDirect,
+from pyrovelocity.models.modular.components.priors import (
+    InformativePriorModel,
+    LogNormalPriorModel,
 )
 from pyrovelocity.models.modular.model import PyroVelocityModel
 
@@ -42,14 +42,14 @@ def simple_data():
     }
 
 
-def test_protocol_first_components_integration(simple_data):
-    """Test that all Protocol-First components work together."""
+def test_components_integration(simple_data):
+    """Test that all components work together."""
     # Create components
-    dynamics_model = StandardDynamicsModelDirect()
-    prior_model = LogNormalPriorModelDirect()
-    likelihood_model = PoissonLikelihoodModelDirect()
-    observation_model = StandardObservationModelDirect()
-    guide_model = AutoGuideFactoryDirect(guide_type="AutoNormal")
+    dynamics_model = StandardDynamicsModel()
+    prior_model = LogNormalPriorModel()
+    likelihood_model = PoissonLikelihoodModel()
+    observation_model = StandardObservationModel()
+    guide_model = AutoGuideFactory(guide_type="AutoNormal")
 
     # Create context
     context = {
@@ -80,14 +80,14 @@ def test_protocol_first_components_integration(simple_data):
     assert "s_dist" in context
 
 
-def test_protocol_first_components_with_model(simple_data):
-    """Test that Protocol-First components work with PyroVelocityModel."""
+def test_components_with_model(simple_data):
+    """Test that components work with PyroVelocityModel."""
     # Create components
-    dynamics_model = StandardDynamicsModelDirect()
-    prior_model = LogNormalPriorModelDirect()
-    likelihood_model = PoissonLikelihoodModelDirect()
-    observation_model = StandardObservationModelDirect()
-    guide_model = AutoGuideFactoryDirect(guide_type="AutoNormal")
+    dynamics_model = StandardDynamicsModel()
+    prior_model = LogNormalPriorModel()
+    likelihood_model = PoissonLikelihoodModel()
+    observation_model = StandardObservationModel()
+    guide_model = AutoGuideFactory(guide_type="AutoNormal")
 
     # Create the full model
     model = PyroVelocityModel(
@@ -117,26 +117,26 @@ def test_protocol_first_components_with_model(simple_data):
     assert "u_expected" in result
     assert "s_expected" in result
 
-    # Test with different Protocol-First components
+    # Test with different components
     dynamics_models = [
-        StandardDynamicsModelDirect(),
-        NonlinearDynamicsModelDirect(),
+        StandardDynamicsModel(),
+        NonlinearDynamicsModel(),
     ]
 
     prior_models = [
-        LogNormalPriorModelDirect(),
-        InformativePriorModelDirect(),
+        LogNormalPriorModel(),
+        InformativePriorModel(),
     ]
 
     likelihood_models = [
-        PoissonLikelihoodModelDirect(),
-        NegativeBinomialLikelihoodModelDirect(),
+        PoissonLikelihoodModel(),
+        NegativeBinomialLikelihoodModel(),
     ]
 
     guide_models = [
-        AutoGuideFactoryDirect(guide_type="AutoNormal"),
-        NormalGuideDirect(),
-        DeltaGuideDirect(),
+        AutoGuideFactory(guide_type="AutoNormal"),
+        NormalGuide(),
+        DeltaGuide(),
     ]
 
     # Test a few combinations

@@ -1,37 +1,39 @@
-"""Inference guides for PyroVelocity.
+"""
+Protocol-First inference guide implementations for PyroVelocity's modular architecture.
 
-This module contains implementations of inference guides that define how
-to perform approximate Bayesian inference in the PyroVelocity framework.
-Guides are responsible for defining the variational distribution used to
-approximate the posterior distribution of the model parameters.
+This module contains inference guide implementations that directly implement the
+InferenceGuide Protocol. These implementations follow the Protocol-First approach,
+which embraces composition over inheritance and allows for more flexible component composition.
 """
 
 from typing import Any, Callable, Dict, Optional, Union
 
 import pyro
-import pyro.distributions as dist
 import torch
 from beartype import beartype
 from pyro.infer import Predictive, autoguide
 from pyro.infer.autoguide import init_to_median
 
-from pyrovelocity.models.modular.components.base import BaseInferenceGuide
 from pyrovelocity.models.modular.interfaces import InferenceGuide
 from pyrovelocity.models.modular.registry import inference_guide_registry
 
 
 @inference_guide_registry.register("auto")
-class AutoGuideFactory(BaseInferenceGuide):
+@inference_guide_registry.register("auto_direct")  # For backward compatibility
+class AutoGuideFactory:
     """Factory for creating AutoGuides for PyroVelocity models.
 
     This class provides a factory for creating different types of AutoGuides
     based on the specified guide type. It supports various AutoGuide types
     provided by Pyro, such as AutoNormal, AutoDiagonalNormal, etc.
 
+    This implementation directly implements the InferenceGuide Protocol.
+
     Attributes:
         guide_type: The type of AutoGuide to create.
         init_loc_fn: Function to initialize the location parameters of the guide.
         init_scale: Initial scale for the guide parameters.
+        name: A unique name for this component instance.
     """
 
     @beartype
@@ -52,7 +54,7 @@ class AutoGuideFactory(BaseInferenceGuide):
             name: A unique name for this component instance.
             **kwargs: Additional keyword arguments.
         """
-        super().__init__(name=name)
+        self.name = name
         self.guide_type = guide_type
         self.init_loc_fn = init_loc_fn or init_to_median
         self.init_scale = init_scale
@@ -129,66 +131,54 @@ class AutoGuideFactory(BaseInferenceGuide):
         return self._guide
 
     @beartype
-    def get_posterior(self) -> Dict[str, torch.Tensor]:
-        """Get the posterior distribution parameters.
-
-        Returns:
-            Dictionary of posterior distribution parameters.
-
-        Raises:
-            RuntimeError: If the guide has not been created yet.
-        """
-        if self._guide is None:
-            raise RuntimeError(
-                "Guide has not been created yet. Call create_guide first."
-            )
-        return self._guide.get_posterior()
-
-    @beartype
-    def _setup_guide_impl(self, model: Union[Callable, Any], **kwargs) -> None:
-        """
-        Implementation of guide setup.
-
-        This method creates an AutoGuide for the given model.
+    def sample_posterior(
+        self,
+        model: Optional[Callable] = None,
+        guide: Optional[Callable] = None,
+        num_samples: int = 1000,
+        **kwargs: Any,
+    ) -> Dict[str, torch.Tensor]:
+        """Sample from the posterior distribution.
 
         Args:
-            model: Model function to guide
-            **kwargs: Additional keyword arguments
-        """
-        self.create_guide(model, **kwargs)
-
-    @beartype
-    def _sample_posterior_impl(self, **kwargs) -> Dict[str, torch.Tensor]:
-        """
-        Implementation of posterior sampling.
-
-        This method samples from the posterior distribution using the guide.
-
-        Args:
+            model: Optional model function (uses stored model if None)
+            guide: Optional guide function (uses stored guide if None)
+            num_samples: Number of samples to draw
             **kwargs: Additional keyword arguments
 
         Returns:
             Dictionary of posterior samples
+
+        Raises:
+            RuntimeError: If guide has not been created yet
         """
-        if self._guide is None or self._model is None:
+        if self._guide is None and guide is None:
             raise RuntimeError(
                 "Guide has not been created yet. Call create_guide first."
             )
 
-        # Get the number of samples
-        num_samples = kwargs.get("num_samples", 1000)
+        # Use stored model/guide if not provided
+        if model is None:
+            model = self._model
+        if guide is None:
+            guide = self._guide
 
         # Create a predictive object
         predictive = Predictive(
-            self._model, guide=self._guide, num_samples=num_samples
+            model=model,
+            guide=guide,
+            num_samples=num_samples,
+            return_sites=kwargs.get("return_sites", None),
         )
 
-        # Get samples
-        samples = predictive(**kwargs)
+        # Sample from the posterior
+        posterior_samples = predictive()
 
-        # Filter out observed values
+        # Filter out non-sample sites
         posterior_samples = {
-            k: v for k, v in samples.items() if not k.startswith("_")
+            k: v
+            for k, v in posterior_samples.items()
+            if not k.startswith("_") and k != "obs"
         }
 
         return posterior_samples
@@ -214,53 +204,120 @@ class AutoGuideFactory(BaseInferenceGuide):
             self.create_guide(model)
             self._model = model
 
-        # If we still don't have a guide, raise an error
-        if self._guide is None:
-            raise RuntimeError(
-                "Guide has not been created yet. Call create_guide first."
-            )
+        # If we have a guide, delegate to it
+        if self._guide is not None:
+            return self._guide(*args, **kwargs)
 
-        # Delegate to the created guide
-        return self._guide(*args, **kwargs)
+        # Otherwise, raise an error
+        raise RuntimeError(
+            "Guide has not been created yet. Call create_guide first."
+        )
 
 
 @inference_guide_registry.register("normal")
-class NormalGuide(BaseInferenceGuide):
+@inference_guide_registry.register("normal_direct")  # For backward compatibility
+class NormalGuide:
     """Normal guide for PyroVelocity models.
 
     This guide uses a multivariate normal distribution with diagonal covariance
     to approximate the posterior distribution of the model parameters.
 
+    This implementation directly implements the InferenceGuide Protocol.
+
     Attributes:
         init_scale: Initial scale for the guide parameters.
+        name: A unique name for this component instance.
     """
 
     @beartype
     def __init__(
         self,
         init_scale: float = 0.1,
+        name: str = "normal_guide",
         **kwargs: Any,
     ) -> None:
         """Initialize the NormalGuide.
 
         Args:
             init_scale: Initial scale for the guide parameters.
+            name: A unique name for this component instance.
             **kwargs: Additional keyword arguments.
         """
-        super().__init__(**kwargs)
+        self.name = name
         self.init_scale = init_scale
         self._params = {}
+        self._model = None
 
     @beartype
-    def create_guide(self, model: Callable, **kwargs: Any) -> Callable:
-        """Create a guide function for the given model.
+    def forward(
+        self,
+        context: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """
+        Create a guide function for the model.
+
+        This method takes a context dictionary containing the model function,
+        creates a guide function that uses normal distributions for all latent variables,
+        and updates the context with the guide function.
 
         Args:
-            model: The model function for which to create a guide.
-            **kwargs: Additional keyword arguments.
+            context: Dictionary containing model context with the following required keys:
+                - model: The model function
 
         Returns:
-            The guide function.
+            Updated context dictionary with the following additional keys:
+                - guide: The guide function
+        """
+        # Extract model from context
+        model = context.get("model")
+        if model is None:
+            raise ValueError("Model must be provided in the context")
+
+        # Store the model for later use
+        self._model = model
+
+        # Define the guide function
+        def guide_fn(*args, **kwargs):
+            # Register parameters for each latent variable
+            for name, shape in kwargs.get("latent_shapes", {}).items():
+                if name not in self._params:
+                    # Initialize location parameter
+                    loc = pyro.param(
+                        f"{name}_loc",
+                        torch.zeros(shape),
+                        constraint=pyro.distributions.constraints.real,
+                    )
+                    # Initialize scale parameter
+                    scale = pyro.param(
+                        f"{name}_scale",
+                        torch.ones(shape) * self.init_scale,
+                        constraint=pyro.distributions.constraints.positive,
+                    )
+                    self._params[name] = (loc, scale)
+                else:
+                    loc, scale = self._params[name]
+
+                # Sample from the variational distribution
+                pyro.sample(name, pyro.distributions.Normal(loc, scale))
+
+        # Update context with guide function
+        context["guide"] = guide_fn
+
+        return context
+
+    @beartype
+    def create_guide(
+        self,
+        model: Callable,
+    ) -> Callable:
+        """
+        Create a guide function for the given model.
+
+        Args:
+            model: The model function
+
+        Returns:
+            A guide function compatible with the model
         """
         # Store the model for later use
         self._model = model
@@ -268,108 +325,81 @@ class NormalGuide(BaseInferenceGuide):
         # Define the guide function
         def guide_fn(*args, **kwargs):
             # Register parameters for each latent variable
-            # This is a simplified example; in practice, you would need to
-            # register parameters for all latent variables in the model
             for name, shape in kwargs.get("latent_shapes", {}).items():
                 if name not in self._params:
                     # Initialize location parameter
                     loc = pyro.param(
                         f"{name}_loc",
                         torch.zeros(shape),
-                        constraint=dist.constraints.real,
+                        constraint=pyro.distributions.constraints.real,
                     )
                     # Initialize scale parameter
                     scale = pyro.param(
                         f"{name}_scale",
                         torch.ones(shape) * self.init_scale,
-                        constraint=dist.constraints.positive,
+                        constraint=pyro.distributions.constraints.positive,
                     )
                     self._params[name] = (loc, scale)
                 else:
                     loc, scale = self._params[name]
 
                 # Sample from the variational distribution
-                pyro.sample(name, dist.Normal(loc, scale))
+                pyro.sample(name, pyro.distributions.Normal(loc, scale))
 
         return guide_fn
 
     @beartype
-    def get_guide(self) -> Callable:
-        """Get the created guide function.
+    def __call__(
+        self,
+        *args: Any,
+        **kwargs: Any,
+    ) -> Callable:
+        """
+        Create a guide function for the given model.
+
+        This method is called by Pyro's SVI when the guide is used directly
+        in svi.step() as the guide parameter.
+
+        Args:
+            *args: Additional positional arguments (first is model when used with SVI)
+            **kwargs: Additional keyword arguments
 
         Returns:
-            The guide function.
-
-        Raises:
-            RuntimeError: If the guide has not been created yet.
+            A guide function compatible with the model
         """
-        if not hasattr(self, "_model"):
-            raise RuntimeError(
-                "Guide has not been created yet. Call create_guide first."
-            )
-        return self.create_guide(self._model)
+        # If being used directly in SVI, the first argument will be the model
+        if len(args) > 0 and callable(args[0]) and self._model is None:
+            model = args[0]
+            return self.create_guide(model)(*args[1:], **kwargs)
+
+        # If we have a model, create a guide for it
+        if self._model is not None:
+            return self.create_guide(self._model)(*args, **kwargs)
+
+        # Otherwise, raise an error
+        raise RuntimeError(
+            "Guide has not been created yet. Call create_guide first."
+        )
 
     @beartype
-    def get_posterior(self) -> Dict[str, torch.Tensor]:
-        """Get the posterior distribution parameters.
+    def sample_posterior(
+        self,
+        num_samples: int = 1000,
+        **kwargs: Any,
+    ) -> Dict[str, torch.Tensor]:
+        """Sample from the posterior distribution.
+
+        Args:
+            num_samples: Number of samples to draw from the posterior.
+            **kwargs: Additional keyword arguments.
 
         Returns:
-            Dictionary of posterior distribution parameters.
-
-        Raises:
-            RuntimeError: If the guide has not been created yet.
+            Dictionary of posterior samples.
         """
         if not self._params:
             raise RuntimeError(
-                "Guide has not been created yet or no parameters have been registered."
+                "No parameters have been registered. Call create_guide first."
             )
-
-        posterior = {}
-        for name, (loc, scale) in self._params.items():
-            posterior[f"{name}_loc"] = loc
-            posterior[f"{name}_scale"] = scale
-
-        return posterior
-
-    @beartype
-    def _setup_guide_impl(self, model: Callable, **kwargs) -> None:
-        """
-        Implementation of guide setup.
-
-        This method creates a guide function for the given model.
-
-        Args:
-            model: Model function to guide
-            **kwargs: Additional keyword arguments
-        """
-        self.create_guide(model, **kwargs)
-
-    @beartype
-    def _sample_posterior_impl(self, **kwargs) -> Dict[str, torch.Tensor]:
-        """
-        Implementation of posterior sampling.
-
-        This method samples from the posterior distribution using the guide.
-
-        Args:
-            model: Model function
-            guide: Guide function
-            **kwargs: Additional keyword arguments
-
-        Returns:
-            Dictionary of posterior samples
-        """
-        if (
-            not hasattr(self, "_model")
-            or not hasattr(self, "_params")
-            or not self._params
-        ):
-            raise RuntimeError(
-                "Guide has not been created yet or no parameters have been registered."
-            )
-
-        # Get the number of samples
-        num_samples = kwargs.get("num_samples", 1000)
 
         # For a normal guide, we sample from the learned distributions
         posterior_samples = {}
@@ -382,76 +412,55 @@ class NormalGuide(BaseInferenceGuide):
 
         return posterior_samples
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Callable:
-        """
-        Create a guide function for the given model.
-
-        This method is called by Pyro's SVI when the guide is used directly
-        in svi.step() as the guide parameter. It should delegate to the guide
-        object created by create_guide.
-
-        Args:
-            *args: Additional positional arguments (first is model when used with SVI)
-            **kwargs: Additional keyword arguments
-
-        Returns:
-            A guide function compatible with the model
-        """
-        # If being used directly in SVI, the first argument will be the model
-        if len(args) > 0 and callable(args[0]) and not hasattr(self, "_model"):
-            model = args[0]
-            self.create_guide(model)
-            self._model = model
-
-        # If we still don't have a guide, raise an error
-        if not hasattr(self, "_model"):
-            raise RuntimeError(
-                "Guide has not been created yet. Call create_guide first."
-            )
-
-        # Get the guide function and call it
-        guide_fn = self.get_guide()
-        return guide_fn(*args, **kwargs)
-
 
 @inference_guide_registry.register("delta")
-class DeltaGuide(BaseInferenceGuide):
+@inference_guide_registry.register("delta_direct")  # For backward compatibility
+class DeltaGuide:
     """Delta guide for PyroVelocity models.
 
     This guide uses point estimates (delta distributions) to approximate
     the posterior distribution of the model parameters. This is equivalent
     to maximum likelihood estimation.
 
+    This implementation directly implements the InferenceGuide Protocol.
+
     Attributes:
         init_values: Initial values for the guide parameters.
+        name: A unique name for this component instance.
     """
 
     @beartype
     def __init__(
         self,
         init_values: Optional[Dict[str, torch.Tensor]] = None,
+        name: str = "delta_guide",
         **kwargs: Any,
     ) -> None:
         """Initialize the DeltaGuide.
 
         Args:
             init_values: Initial values for the guide parameters.
+            name: A unique name for this component instance.
             **kwargs: Additional keyword arguments.
         """
-        super().__init__(**kwargs)
+        self.name = name
         self.init_values = init_values or {}
         self._params = {}
+        self._model = None
 
     @beartype
-    def create_guide(self, model: Callable, **kwargs: Any) -> Callable:
-        """Create a guide function for the given model.
+    def create_guide(
+        self,
+        model: Callable,
+    ) -> Callable:
+        """
+        Create a guide function for the given model.
 
         Args:
-            model: The model function for which to create a guide.
-            **kwargs: Additional keyword arguments.
+            model: The model function
 
         Returns:
-            The guide function.
+            A guide function compatible with the model
         """
         # Store the model for later use
         self._model = model
@@ -466,107 +475,109 @@ class DeltaGuide(BaseInferenceGuide):
                     param = pyro.param(
                         f"{name}_param",
                         init_value,
-                        constraint=dist.constraints.real,
+                        constraint=pyro.distributions.constraints.real,
                     )
                     self._params[name] = param
                 else:
                     param = self._params[name]
 
                 # Sample from delta distribution (point estimate)
-                pyro.sample(name, dist.Delta(param))
+                pyro.sample(name, pyro.distributions.Delta(param))
 
         return guide_fn
 
     @beartype
-    def get_guide(self) -> Callable:
-        """Get the created guide function.
+    def forward(
+        self,
+        context: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """
+        Create a guide function for the model.
+
+        This method takes a context dictionary containing the model function,
+        creates a guide function that uses delta distributions for all latent variables,
+        and updates the context with the guide function.
+
+        Args:
+            context: Dictionary containing model context with the following required keys:
+                - model: The model function
 
         Returns:
-            The guide function.
-
-        Raises:
-            RuntimeError: If the guide has not been created yet.
+            Updated context dictionary with the following additional keys:
+                - guide: The guide function
         """
-        if not hasattr(self, "_model"):
-            raise RuntimeError(
-                "Guide has not been created yet. Call create_guide first."
-            )
-        return self.create_guide(self._model)
+        # Extract model from context
+        model = context.get("model")
+        if model is None:
+            raise ValueError("Model must be provided in the context")
+
+        # Store the model for later use
+        self._model = model
+
+        # Define the guide function
+        def guide_fn(*args, **kwargs):
+            # Register parameters for each latent variable
+            for name, shape in kwargs.get("latent_shapes", {}).items():
+                if name not in self._params:
+                    # Initialize parameter with provided value or zeros
+                    init_value = self.init_values.get(name, torch.zeros(shape))
+                    param = pyro.param(
+                        f"{name}_param",
+                        init_value,
+                        constraint=pyro.distributions.constraints.real,
+                    )
+                    self._params[name] = param
+                else:
+                    param = self._params[name]
+
+                # Sample from delta distribution (point estimate)
+                pyro.sample(name, pyro.distributions.Delta(param))
+
+        # Update context with guide function
+        context["guide"] = guide_fn
+
+        return context
 
     @beartype
-    def get_posterior(self) -> Dict[str, torch.Tensor]:
-        """Get the posterior distribution parameters.
+    def sample_posterior(
+        self,
+        num_samples: int = 1000,
+        **kwargs: Any,
+    ) -> Dict[str, torch.Tensor]:
+        """Sample from the posterior distribution.
+
+        Args:
+            num_samples: Number of samples to draw from the posterior.
+            **kwargs: Additional keyword arguments.
 
         Returns:
-            Dictionary of posterior distribution parameters.
-
-        Raises:
-            RuntimeError: If the guide has not been created yet.
+            Dictionary of posterior samples.
         """
         if not self._params:
             raise RuntimeError(
-                "Guide has not been created yet or no parameters have been registered."
+                "No parameters have been registered. Call create_guide first."
             )
 
-        posterior = {}
-        for name, param in self._params.items():
-            posterior[name] = param
-
-        return posterior
-
-    @beartype
-    def _setup_guide_impl(self, model: Callable, **kwargs) -> None:
-        """
-        Implementation of guide setup.
-
-        This method creates a guide function for the given model.
-
-        Args:
-            model: Model function to guide
-            **kwargs: Additional keyword arguments
-        """
-        self.create_guide(model, **kwargs)
-
-    @beartype
-    def _sample_posterior_impl(self, **kwargs) -> Dict[str, torch.Tensor]:
-        """
-        Implementation of posterior sampling.
-
-        This method samples from the posterior distribution using the guide.
-        For a Delta guide, this just returns the point estimates.
-
-        Args:
-            model: Model function
-            guide: Guide function
-            **kwargs: Additional keyword arguments
-
-        Returns:
-            Dictionary of posterior samples
-        """
-        if (
-            not hasattr(self, "_model")
-            or not hasattr(self, "_params")
-            or not self._params
-        ):
-            raise RuntimeError(
-                "Guide has not been created yet or no parameters have been registered."
-            )
-
-        # For a Delta guide, we just return the point estimates
+        # For a delta guide, we just repeat the point estimates
         posterior_samples = {}
         for name, param in self._params.items():
-            # Create a batch dimension for consistency with other guides
-            posterior_samples[name] = param.unsqueeze(0)
+            # Repeat the parameter for each sample
+            samples = param.unsqueeze(0).expand(num_samples, -1)
+            posterior_samples[name] = samples
 
         return posterior_samples
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Callable:
+    @beartype
+    def __call__(
+        self,
+        *args: Any,
+        **kwargs: Any,
+    ) -> Callable:
         """
         Create a guide function for the given model.
 
         This method is called by Pyro's SVI when the guide is used directly
-        in svi.step() as the guide parameter. It should delegate to the guide
-        object created by create_guide.
+        in svi.step() as the guide parameter.
 
         Args:
             *args: Additional positional arguments (first is model when used with SVI)
@@ -576,17 +587,15 @@ class DeltaGuide(BaseInferenceGuide):
             A guide function compatible with the model
         """
         # If being used directly in SVI, the first argument will be the model
-        if len(args) > 0 and callable(args[0]) and not hasattr(self, "_model"):
+        if len(args) > 0 and callable(args[0]) and self._model is None:
             model = args[0]
-            self.create_guide(model)
-            self._model = model
+            return self.create_guide(model)(*args[1:], **kwargs)
 
-        # If we still don't have a guide, raise an error
-        if not hasattr(self, "_model"):
-            raise RuntimeError(
-                "Guide has not been created yet. Call create_guide first."
-            )
+        # If we have a model, create a guide for it
+        if self._model is not None:
+            return self.create_guide(self._model)(*args, **kwargs)
 
-        # Get the guide function and call it
-        guide_fn = self.get_guide()
-        return guide_fn(*args, **kwargs)
+        # Otherwise, raise an error
+        raise RuntimeError(
+            "Guide has not been created yet. Call create_guide first."
+        )

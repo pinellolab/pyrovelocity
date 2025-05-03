@@ -5,43 +5,13 @@ This package contains the implementations of the various components used in the
 PyroVelocity modular architecture, including dynamics models, prior models,
 likelihood models, observation models, and inference guides.
 
-The package includes both base class implementations and Protocol-First implementations:
-- Base class implementations: Components that inherit from base classes in base.py
-- Protocol-First implementations: Components that directly implement Protocol interfaces
+All components directly implement Protocol interfaces defined in interfaces.py,
+following a Protocol-First approach that embraces composition over inheritance.
+This approach reduces code complexity, enhances flexibility, and creates
+architectural consistency with the JAX implementation's pure functional approach.
 """
 
-# Import base classes
-from pyrovelocity.models.modular.components.base import (
-    BaseDynamicsModel,
-    BaseInferenceGuide,
-    BaseLikelihoodModel,
-    BaseObservationModel,
-    BasePriorModel,
-)
-
-# Import Protocol-First implementations
-from pyrovelocity.models.modular.components.direct.dynamics import (
-    NonlinearDynamicsModelDirect,
-    StandardDynamicsModelDirect,
-)
-from pyrovelocity.models.modular.components.direct.guides import (
-    AutoGuideFactoryDirect,
-    DeltaGuideDirect,
-    NormalGuideDirect,
-)
-from pyrovelocity.models.modular.components.direct.likelihoods import (
-    NegativeBinomialLikelihoodModelDirect,
-    PoissonLikelihoodModelDirect,
-)
-from pyrovelocity.models.modular.components.direct.observations import (
-    StandardObservationModelDirect,
-)
-from pyrovelocity.models.modular.components.direct.priors import (
-    InformativePriorModelDirect,
-    LogNormalPriorModelDirect,
-)
-
-# Import base class implementations
+# Import component implementations
 from pyrovelocity.models.modular.components.dynamics import (
     NonlinearDynamicsModel,
     StandardDynamicsModel,
@@ -64,13 +34,7 @@ from pyrovelocity.models.modular.components.priors import (
 )
 
 __all__ = [
-    # Base classes
-    "BaseDynamicsModel",
-    "BaseLikelihoodModel",
-    "BaseObservationModel",
-    "BasePriorModel",
-    "BaseInferenceGuide",
-    # Base class implementations
+    # Component implementations
     "StandardDynamicsModel",
     "NonlinearDynamicsModel",
     "LogNormalPriorModel",
@@ -81,15 +45,4 @@ __all__ = [
     "AutoGuideFactory",
     "NormalGuide",
     "DeltaGuide",
-    # Protocol-First implementations
-    "StandardDynamicsModelDirect",
-    "NonlinearDynamicsModelDirect",
-    "LogNormalPriorModelDirect",
-    "InformativePriorModelDirect",
-    "PoissonLikelihoodModelDirect",
-    "NegativeBinomialLikelihoodModelDirect",
-    "StandardObservationModelDirect",
-    "AutoGuideFactoryDirect",
-    "NormalGuideDirect",
-    "DeltaGuideDirect",
 ]

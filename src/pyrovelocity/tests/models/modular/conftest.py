@@ -12,22 +12,22 @@ import numpy as np
 import pytest
 import torch
 
-from pyrovelocity.models.modular.components.base import (
-    BaseDynamicsModel,
-    BaseInferenceGuide,
-    BaseLikelihoodModel,
-    BaseObservationModel,
-    BasePriorModel,
+from pyrovelocity.models.modular.interfaces import (
+    DynamicsModel,
+    InferenceGuide,
+    LikelihoodModel,
+    ObservationModel,
+    PriorModel,
 )
 from pyrovelocity.models.modular.model import PyroVelocityModel
 
 
 # Mock implementations for testing
-class MockDynamicsModel(BaseDynamicsModel):
+class MockDynamicsModel:
     """Mock dynamics model for testing."""
 
     def __init__(self, name="mock_dynamics_model"):
-        super().__init__(name=name)
+        self.name = name
         self.state = {}
 
     def forward(self, context):
@@ -94,11 +94,11 @@ class MockDynamicsModel(BaseDynamicsModel):
         return u_future, s_future
 
 
-class MockLikelihoodModel(BaseLikelihoodModel):
+class MockLikelihoodModel:
     """Mock likelihood model for testing."""
 
     def __init__(self, name="mock_likelihood_model"):
-        super().__init__(name=name)
+        self.name = name
         self.state = {}
 
     def forward(self, context):
@@ -117,11 +117,11 @@ class MockLikelihoodModel(BaseLikelihoodModel):
         return predictions + torch.randn_like(predictions) * 0.1
 
 
-class MockPriorModel(BasePriorModel):
+class MockPriorModel:
     """Mock prior model for testing."""
 
     def __init__(self, name="mock_prior_model"):
-        super().__init__(name=name)
+        self.name = name
         self.state = {}
 
     def forward(self, context):
@@ -144,11 +144,11 @@ class MockPriorModel(BasePriorModel):
         return {}
 
 
-class MockObservationModel(BaseObservationModel):
+class MockObservationModel:
     """Mock observation model for testing."""
 
     def __init__(self, name="mock_observation_model"):
-        super().__init__(name=name)
+        self.name = name
         self.state = {}
 
     def forward(self, context):
@@ -187,11 +187,11 @@ class MockObservationModel(BaseObservationModel):
         return batch
 
 
-class MockGuideModel(BaseInferenceGuide):
+class MockGuideModel:
     """Mock guide model for testing."""
 
     def __init__(self, name="mock_guide_model"):
-        super().__init__(name=name)
+        self.name = name
         self.state = {}
 
     def forward(self, context):

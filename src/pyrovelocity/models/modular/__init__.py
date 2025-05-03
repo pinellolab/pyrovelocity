@@ -17,28 +17,16 @@ from pyrovelocity.models.modular.comparison import (
 
 # Import component implementations
 from pyrovelocity.models.modular.components import (
-    # Base class implementations
     AutoGuideFactory,
-    # Protocol-First implementations
-    AutoGuideFactoryDirect,
     DeltaGuide,
-    DeltaGuideDirect,
     InformativePriorModel,
-    InformativePriorModelDirect,
     LogNormalPriorModel,
-    LogNormalPriorModelDirect,
     NegativeBinomialLikelihoodModel,
-    NegativeBinomialLikelihoodModelDirect,
     NonlinearDynamicsModel,
-    NonlinearDynamicsModelDirect,
     NormalGuide,
-    NormalGuideDirect,
     PoissonLikelihoodModel,
-    PoissonLikelihoodModelDirect,
     StandardDynamicsModel,
-    StandardDynamicsModelDirect,
     StandardObservationModel,
-    StandardObservationModelDirect,
 )
 
 # Import data utilities
@@ -101,7 +89,7 @@ __all__ = [
     "LikelihoodModelRegistry",
     "ObservationModelRegistry",
     "InferenceGuideRegistry",
-    # Base class implementations
+    # Component implementations
     "StandardDynamicsModel",
     "NonlinearDynamicsModel",
     "LogNormalPriorModel",
@@ -112,17 +100,6 @@ __all__ = [
     "AutoGuideFactory",
     "NormalGuide",
     "DeltaGuide",
-    # Protocol-First implementations
-    "StandardDynamicsModelDirect",
-    "NonlinearDynamicsModelDirect",
-    "LogNormalPriorModelDirect",
-    "InformativePriorModelDirect",
-    "PoissonLikelihoodModelDirect",
-    "NegativeBinomialLikelihoodModelDirect",
-    "StandardObservationModelDirect",
-    "AutoGuideFactoryDirect",
-    "NormalGuideDirect",
-    "DeltaGuideDirect",
     # Factory functions
     "create_model",
     "create_model_from_config",
@@ -130,7 +107,6 @@ __all__ = [
     "create_protocol_first_model_from_config",
     "create_standard_model",
     "standard_model_config",
-
     # Comparison and selection
     "BayesianModelComparison",
     "compute_waic",

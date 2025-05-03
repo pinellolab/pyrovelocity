@@ -502,23 +502,23 @@ class TestProtocolFirstFactoryFunctions:
         """Test the ModelConfig.standard() method with use_protocol_first=True."""
         # Register Protocol-First components
         @DynamicsModelRegistry.register("standard_direct")
-        class StandardDynamicsModelDirect(MockDynamicsModel):
+        class StandardDynamicsModel(MockDynamicsModel):
             pass
 
         @PriorModelRegistry.register("lognormal_direct")
-        class LogNormalPriorModelDirect(MockPriorModel):
+        class LogNormalPriorModel(MockPriorModel):
             pass
 
         @LikelihoodModelRegistry.register("poisson_direct")
-        class PoissonLikelihoodModelDirect(MockLikelihoodModel):
+        class PoissonLikelihoodModel(MockLikelihoodModel):
             pass
 
         @ObservationModelRegistry.register("standard_direct")
-        class StandardObservationModelDirect(MockObservationModel):
+        class StandardObservationModel(MockObservationModel):
             pass
 
         @InferenceGuideRegistry.register("auto_direct")
-        class AutoGuideFactoryDirect(MockInferenceGuide):
+        class AutoGuideFactory(MockInferenceGuide):
             pass
 
         # Get the standard model configuration with Protocol-First components
@@ -536,23 +536,23 @@ class TestProtocolFirstFactoryFunctions:
         """Test creating a model with Protocol-First components."""
         # Register Protocol-First components
         @DynamicsModelRegistry.register("standard_direct")
-        class StandardDynamicsModelDirect(MockDynamicsModel):
+        class StandardDynamicsModel(MockDynamicsModel):
             pass
 
         @PriorModelRegistry.register("lognormal_direct")
-        class LogNormalPriorModelDirect(MockPriorModel):
+        class LogNormalPriorModel(MockPriorModel):
             pass
 
         @LikelihoodModelRegistry.register("poisson_direct")
-        class PoissonLikelihoodModelDirect(MockLikelihoodModel):
+        class PoissonLikelihoodModel(MockLikelihoodModel):
             pass
 
         @ObservationModelRegistry.register("standard_direct")
-        class StandardObservationModelDirect(MockObservationModel):
+        class StandardObservationModel(MockObservationModel):
             pass
 
         @InferenceGuideRegistry.register("auto_direct")
-        class AutoGuideFactoryDirect(MockInferenceGuide):
+        class AutoGuideFactory(MockInferenceGuide):
             pass
 
         # Create a model with Protocol-First components
@@ -572,23 +572,23 @@ class TestProtocolFirstFactoryFunctions:
         """Test creating a model with Protocol-First components from a configuration."""
         # Register Protocol-First components
         @DynamicsModelRegistry.register("standard_direct")
-        class StandardDynamicsModelDirect(MockDynamicsModel):
+        class StandardDynamicsModel(MockDynamicsModel):
             pass
 
         @PriorModelRegistry.register("lognormal_direct")
-        class LogNormalPriorModelDirect(MockPriorModel):
+        class LogNormalPriorModel(MockPriorModel):
             pass
 
         @LikelihoodModelRegistry.register("poisson_direct")
-        class PoissonLikelihoodModelDirect(MockLikelihoodModel):
+        class PoissonLikelihoodModel(MockLikelihoodModel):
             pass
 
         @ObservationModelRegistry.register("standard_direct")
-        class StandardObservationModelDirect(MockObservationModel):
+        class StandardObservationModel(MockObservationModel):
             pass
 
         @InferenceGuideRegistry.register("auto_direct")
-        class AutoGuideFactoryDirect(MockInferenceGuide):
+        class AutoGuideFactory(MockInferenceGuide):
             pass
 
         # Create a configuration

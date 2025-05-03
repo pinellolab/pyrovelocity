@@ -4,6 +4,9 @@ Prior model implementations for PyroVelocity's modular architecture.
 This module provides implementations of the PriorModel Protocol for different
 prior distributions used in RNA velocity models. These prior models define
 the prior distributions for model parameters (alpha, beta, gamma, etc.).
+
+These implementations directly implement the PriorModel Protocol without
+inheriting from base classes, following the Protocol-First approach.
 """
 
 from typing import Any, Dict, Optional
@@ -12,16 +15,12 @@ import pyro
 import pyro.distributions as dist
 import torch
 from beartype import beartype
-from jaxtyping import Float, jaxtyped
+from jaxtyping import jaxtyped
 from pyro.nn import PyroModule
 
-from pyrovelocity.models.modular.components.base import BasePriorModel
-from pyrovelocity.models.modular.interfaces import (
-    BatchTensor,
-    ModelState,
-    ParamTensor,
-)
+from pyrovelocity.models.modular.interfaces import PriorModel
 from pyrovelocity.models.modular.registry import PriorModelRegistry
+from pyrovelocity.models.modular.utils.pyro_utils import register_buffer
 
 
 class PyroModuleMixin:
@@ -45,13 +44,14 @@ PyroModule.__instancecheck__ = lambda cls, instance: (
 
 
 @PriorModelRegistry.register("lognormal")
-class LogNormalPriorModel(BasePriorModel):
+@PriorModelRegistry.register("lognormal_direct")  # For backward compatibility
+class LogNormalPriorModel:
     """
     Log-normal prior model for RNA velocity parameters.
 
     This model uses log-normal distributions for the key parameters in the RNA velocity
-    model (alpha, beta, gamma). It implements the same prior logic as the original
-    LogNormalModel but as a standalone component following the PriorModel Protocol.
+    model (alpha, beta, gamma). It directly implements the PriorModel Protocol without
+    inheriting from base classes.
 
     Attributes:
         name (str): A unique name for this component instance.
@@ -92,7 +92,7 @@ class LogNormalPriorModel(BasePriorModel):
         if name is None:
             name = self.__class__.name
 
-        super().__init__(name=name)
+        self.name = name
         self.scale_alpha = scale_alpha
         self.scale_beta = scale_beta
         self.scale_gamma = scale_gamma
@@ -101,8 +101,8 @@ class LogNormalPriorModel(BasePriorModel):
         self.scale_dt = scale_dt
 
         # Register buffers for zero and one tensors
-        self.register_buffer("zero", torch.tensor(0.0))
-        self.register_buffer("one", torch.tensor(1.0))
+        register_buffer(self, "zero", torch.tensor(0.0))
+        register_buffer(self, "one", torch.tensor(1.0))
 
     @jaxtyped
     @beartype
@@ -260,7 +260,8 @@ class LogNormalPriorModel(BasePriorModel):
 
 
 @PriorModelRegistry.register("informative")
-class InformativePriorModel(BasePriorModel):
+@PriorModelRegistry.register("informative_direct")  # For backward compatibility
+class InformativePriorModel:
     """
     Informative prior model for RNA velocity parameters.
 
@@ -319,7 +320,7 @@ class InformativePriorModel(BasePriorModel):
         if name is None:
             name = self.__class__.name
 
-        super().__init__(name=name)
+        self.name = name
         self.alpha_loc = alpha_loc
         self.alpha_scale = alpha_scale
         self.beta_loc = beta_loc
@@ -334,8 +335,8 @@ class InformativePriorModel(BasePriorModel):
         self.dt_switching_scale = dt_switching_scale
 
         # Register buffers for zero and one tensors
-        self.register_buffer("zero", torch.tensor(0.0))
-        self.register_buffer("one", torch.tensor(1.0))
+        register_buffer(self, "zero", torch.tensor(0.0))
+        register_buffer(self, "one", torch.tensor(1.0))
 
     @jaxtyped
     @beartype

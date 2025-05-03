@@ -603,56 +603,40 @@ def create_protocol_first_model_from_config(
     config: Union[ModelConfig, Dict[str, Any], DictConfig]
 ) -> PyroVelocityModel:
     """
-    Create a PyroVelocityModel with Protocol-First components from a configuration.
+    Create a PyroVelocityModel from a configuration.
 
-    This function creates a PyroVelocityModel by instantiating Protocol-First components
-    from the provided configuration and composing them together. Protocol-First components
-    directly implement the Protocol interfaces without inheriting from base classes.
+    This function is maintained for backward compatibility. It now simply calls
+    create_model_from_config directly, as all components now use the Protocol-First
+    approach by default.
 
     Args:
         config: Configuration for the PyroVelocityModel, either as a ModelConfig
                object, a dictionary, or a DictConfig.
 
     Returns:
-        An instance of PyroVelocityModel with Protocol-First components.
+        An instance of PyroVelocityModel.
 
     Raises:
         ValueError: If any of the specified components are not registered.
     """
-    # Ensure component names have the "_direct" suffix
-    if isinstance(config, DictConfig):
-        config_dict = OmegaConf.to_container(config, resolve=True)
-        config = ModelConfig.from_dict(config_dict)
-    elif isinstance(config, dict):
-        config = ModelConfig.from_dict(config)
-
-    # Add "_direct" suffix to component names if not already present
-    for attr_name in ["dynamics_model", "prior_model", "likelihood_model", "observation_model", "inference_guide"]:
-        component_config = getattr(config, attr_name)
-        if not component_config.name.endswith("_direct"):
-            component_config.name = f"{component_config.name}_direct"
-
-    # Create the model using the updated configuration
+    # Simply call create_model_from_config directly
     return create_model_from_config(config)
 
 
 @beartype
 def create_protocol_first_model() -> PyroVelocityModel:
     """
-    Create a standard PyroVelocityModel with Protocol-First components.
+    Create a standard PyroVelocityModel.
 
-    This function creates a PyroVelocityModel with Protocol-First components:
-    StandardDynamicsModelDirect, LogNormalPriorModelDirect, PoissonLikelihoodModelDirect,
-    StandardObservationModelDirect, and AutoGuideFactoryDirect.
-
-    Protocol-First components directly implement the Protocol interfaces without
-    inheriting from base classes, following a composition-over-inheritance approach.
+    This function is maintained for backward compatibility. It now simply calls
+    create_standard_model directly, as all components now use the Protocol-First
+    approach by default.
 
     Returns:
-        A PyroVelocityModel instance with Protocol-First components.
+        A PyroVelocityModel instance with standard components.
     """
-    # Use the ModelConfig.standard() with use_protocol_first=True
-    return create_model_from_config(ModelConfig.standard(use_protocol_first=True))
+    # Simply call create_standard_model directly
+    return create_standard_model()
 
 
 # Export all public symbols

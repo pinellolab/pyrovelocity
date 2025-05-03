@@ -19,12 +19,12 @@ from pyrovelocity.models.modular.comparison import (
     BayesianModelComparison,
     ComparisonResult,
 )
-from pyrovelocity.models.modular.components.base import (
-    BaseDynamicsModel,
-    BaseInferenceGuide,
-    BaseLikelihoodModel,
-    BaseObservationModel,
-    BasePriorModel,
+from pyrovelocity.models.modular.interfaces import (
+    DynamicsModel,
+    InferenceGuide,
+    LikelihoodModel,
+    ObservationModel,
+    PriorModel,
 )
 from pyrovelocity.models.modular.model import ModelState, PyroVelocityModel
 from pyrovelocity.models.modular.selection import (
@@ -37,11 +37,11 @@ from pyrovelocity.models.modular.selection import (
 
 
 # Mock implementations for testing
-class MockDynamicsModel(BaseDynamicsModel):
+class MockDynamicsModel:
     """Mock dynamics model for testing."""
 
     def __init__(self, name="mock_dynamics_model"):
-        super().__init__(name=name)
+        self.name = name
         self.state = {}
 
     def forward(self, context):
@@ -124,44 +124,44 @@ class MockDynamicsModel(BaseDynamicsModel):
         return u_future, s_future
 
 
-class MockLikelihoodModel(BaseLikelihoodModel):
+class MockLikelihoodModel:
     """Mock likelihood model for testing."""
 
     def __init__(self, name="mock_likelihood_model"):
-        super().__init__(name=name)
+        self.name = name
         self.state = {}
 
     def forward(self, context):
         """Forward pass that just returns the input context."""
         return context
 
-    def _log_prob_impl(
+    def log_prob(
         self,
         observations: Float[Array, "batch_size genes"],
         predictions: Float[Array, "batch_size genes"],
         scale_factors: Optional[Float[Array, "batch_size"]] = None,
     ) -> Float[Array, "batch_size"]:
-        """Implementation of log probability calculation."""
+        """Calculate log probability of observations given predictions."""
         # Simple mock implementation that returns ones
         batch_size = observations.shape[0]
         return torch.ones(batch_size) * (-1.0)
 
-    def _sample_impl(
+    def sample(
         self,
         predictions: Float[Array, "batch_size genes"],
         scale_factors: Optional[Float[Array, "batch_size"]] = None,
     ) -> Float[Array, "batch_size genes"]:
-        """Implementation of sampling."""
+        """Sample from the likelihood distribution."""
         # Add small Gaussian noise
         noise = torch.randn(*predictions.shape) * 0.1
         return predictions + noise
 
 
-class MockPriorModel(BasePriorModel):
+class MockPriorModel:
     """Mock prior model for testing."""
 
     def __init__(self, name="mock_prior_model"):
-        super().__init__(name=name)
+        self.name = name
         self.state = {}
 
     def forward(self, context):
@@ -175,22 +175,22 @@ class MockPriorModel(BasePriorModel):
 
         return context
 
-    def _register_priors_impl(self, prefix=""):
-        """Implementation of prior registration."""
+    def register_priors(self, prefix=""):
+        """Register priors for the model parameters."""
         # No-op for testing
         pass
 
-    def _sample_parameters_impl(self, prefix=""):
-        """Implementation of parameter sampling."""
+    def sample_parameters(self, prefix=""):
+        """Sample parameters from the prior distributions."""
         # Return empty dict for testing
         return {}
 
 
-class MockObservationModel(BaseObservationModel):
+class MockObservationModel:
     """Mock observation model for testing."""
 
     def __init__(self, name="mock_observation_model"):
-        super().__init__(name=name)
+        self.name = name
         self.state = {}
 
     def forward(self, context):
@@ -200,33 +200,27 @@ class MockObservationModel(BaseObservationModel):
 
         return context
 
-    def _forward_impl(self, context):
-        """Implementation of the forward method."""
-        # Add observations to context
-        context["observations"] = context.get("x", torch.ones((10, 5)))
-        return context
-
-    def _prepare_data_impl(self, adata, **kwargs):
-        """Implementation of data preparation."""
+    def prepare_data(self, adata, **kwargs):
+        """Prepare data for the model."""
         # Return empty dict for testing
         return {}
 
-    def _create_dataloaders_impl(self, data, **kwargs):
-        """Implementation of dataloader creation."""
+    def create_dataloaders(self, data, **kwargs):
+        """Create dataloaders for the model."""
         # Return empty dict for testing
         return {}
 
-    def _preprocess_batch_impl(self, batch):
-        """Implementation of batch preprocessing."""
+    def preprocess_batch(self, batch):
+        """Preprocess a batch of data."""
         # No-op for testing
         return batch
 
 
-class MockGuideModel(BaseInferenceGuide):
+class MockGuideModel:
     """Mock guide model for testing."""
 
     def __init__(self, name="mock_guide_model"):
-        super().__init__(name=name)
+        self.name = name
         self.state = {}
 
     def forward(self, context):
@@ -243,15 +237,23 @@ class MockGuideModel(BaseInferenceGuide):
 
         return guide
 
-    def _setup_guide_impl(self, model, **kwargs):
-        """Implementation of guide setup."""
+    def setup_guide(self, model, **kwargs):
+        """Set up the guide function for the model."""
         # No-op for testing
         pass
 
-    def _sample_posterior_impl(self, model, guide, **kwargs):
-        """Implementation of posterior sampling."""
+    def sample_posterior(self, **kwargs):
+        """Sample from the posterior distribution."""
         # Return empty dict for testing
         return {}
+
+
+# Register the mock classes with the Protocol interfaces
+DynamicsModel.register(MockDynamicsModel)
+LikelihoodModel.register(MockLikelihoodModel)
+PriorModel.register(MockPriorModel)
+ObservationModel.register(MockObservationModel)
+InferenceGuide.register(MockGuideModel)
 
 
 @pytest.fixture

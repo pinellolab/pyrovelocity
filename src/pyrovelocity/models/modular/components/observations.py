@@ -18,13 +18,13 @@ from beartype import beartype
 from jaxtyping import Array, Float, Int
 from torch.utils.data import DataLoader, TensorDataset
 
-from pyrovelocity.models.modular.components.base import BaseObservationModel
 from pyrovelocity.models.modular.interfaces import ObservationModel
 from pyrovelocity.models.modular.registry import observation_model_registry
 
 
 @observation_model_registry.register("standard")
-class StandardObservationModel(BaseObservationModel):
+@observation_model_registry.register("standard_direct")  # For backward compatibility
+class StandardObservationModel:
     """Standard observation model for RNA velocity.
 
     This model defines the likelihood of observed data (spliced and unspliced counts)
@@ -199,7 +199,7 @@ class StandardObservationModel(BaseObservationModel):
             batch_size: Batch size for data loaders.
             **kwargs: Additional keyword arguments.
         """
-        super().__init__(**kwargs)
+        self.name = kwargs.get("name", "standard_observation_model")
         self.use_observed_lib_size = use_observed_lib_size
         self.transform_batch = transform_batch
         self.batch_size = batch_size

@@ -20,22 +20,22 @@ from pyrovelocity.models.modular.comparison import (
     create_comparison_table,
     select_best_model,
 )
-from pyrovelocity.models.modular.components.base import (
-    BaseDynamicsModel,
-    BaseInferenceGuide,
-    BaseLikelihoodModel,
-    BaseObservationModel,
-    BasePriorModel,
+from pyrovelocity.models.modular.interfaces import (
+    DynamicsModel,
+    InferenceGuide,
+    LikelihoodModel,
+    ObservationModel,
+    PriorModel,
 )
 from pyrovelocity.models.modular.model import ModelState, PyroVelocityModel
 
 
 # Mock implementations for testing
-class MockDynamicsModel(BaseDynamicsModel):
+class MockDynamicsModel:
     """Mock dynamics model for testing."""
 
     def __init__(self, name="mock_dynamics_model"):
-        super().__init__(name=name)
+        self.name = name
         self.state = {}
 
     def forward(self, context):
@@ -50,30 +50,14 @@ class MockDynamicsModel(BaseDynamicsModel):
 
         return context
 
-    def _forward_impl(
-        self,
-        u: torch.Tensor,
-        s: torch.Tensor,
-        alpha: torch.Tensor,
-        beta: torch.Tensor,
-        gamma: torch.Tensor,
-        scaling: Optional[torch.Tensor] = None,
-        t: Optional[torch.Tensor] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Implementation of the forward method."""
-        # Simple implementation for testing
-        u_pred = torch.ones_like(u) * alpha
-        s_pred = torch.ones_like(s) * alpha
-        return u_pred, s_pred
-
-    def _steady_state_impl(
+    def steady_state(
         self,
         alpha: torch.Tensor,
         beta: torch.Tensor,
         gamma: torch.Tensor,
         scaling: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Implementation of the steady state calculation for testing."""
+        """Calculate the steady state of the system."""
         # For testing, just return ones
         u_ss = torch.ones_like(alpha)
         s_ss = torch.ones_like(alpha)
@@ -85,7 +69,7 @@ class MockDynamicsModel(BaseDynamicsModel):
 
         return u_ss, s_ss
 
-    def _predict_future_states_impl(
+    def predict_future_states(
         self,
         current_state: Tuple[torch.Tensor, torch.Tensor],
         time_delta: torch.Tensor,
@@ -94,7 +78,7 @@ class MockDynamicsModel(BaseDynamicsModel):
         gamma: torch.Tensor,
         scaling: Optional[torch.Tensor] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Implementation of the predict_future_states method."""
+        """Predict future states of the system."""
         # Simple implementation for testing
         u_current, s_current = current_state
         u_future = u_current + alpha * time_delta
@@ -102,19 +86,19 @@ class MockDynamicsModel(BaseDynamicsModel):
         return u_future, s_future
 
 
-class MockLikelihoodModel(BaseLikelihoodModel):
+class MockLikelihoodModel:
     """Mock likelihood model for testing."""
 
     def __init__(self, name="mock_likelihood_model"):
-        super().__init__(name=name)
+        self.name = name
         self.state = {}
 
     def forward(self, context):
         """Forward pass that just returns the input context."""
         return context
 
-    def _log_prob_impl(self, observations, predictions, scale_factors=None):
-        """Implementation of log probability calculation."""
+    def log_prob(self, observations, predictions, scale_factors=None):
+        """Calculate log probability of observations given predictions."""
         # Simple log probability calculation for testing
         # Convert inputs to PyTorch tensors if needed
         if not isinstance(observations, torch.Tensor):
@@ -124,8 +108,8 @@ class MockLikelihoodModel(BaseLikelihoodModel):
 
         return -torch.sum((observations - predictions) ** 2, dim=1)
 
-    def _sample_impl(self, predictions, scale_factors=None):
-        """Implementation of sampling."""
+    def sample(self, predictions, scale_factors=None):
+        """Sample from the likelihood distribution."""
         # Return the predictions with some noise for testing
         if not isinstance(predictions, torch.Tensor):
             predictions = torch.tensor(predictions, dtype=torch.float32)
@@ -133,11 +117,11 @@ class MockLikelihoodModel(BaseLikelihoodModel):
         return predictions + torch.randn_like(predictions) * 0.1
 
 
-class MockPriorModel(BasePriorModel):
+class MockPriorModel:
     """Mock prior model for testing."""
 
     def __init__(self, name="mock_prior_model"):
-        super().__init__(name=name)
+        self.name = name
         self.state = {}
 
     def forward(self, context):
@@ -149,22 +133,22 @@ class MockPriorModel(BasePriorModel):
 
         return context
 
-    def _register_priors_impl(self, prefix=""):
-        """Implementation of prior registration."""
+    def register_priors(self, prefix=""):
+        """Register priors for the model parameters."""
         # No-op for testing
         pass
 
-    def _sample_parameters_impl(self, prefix=""):
-        """Implementation of parameter sampling."""
+    def sample_parameters(self, prefix=""):
+        """Sample parameters from the prior distributions."""
         # Return empty dict for testing
         return {}
 
 
-class MockObservationModel(BaseObservationModel):
+class MockObservationModel:
     """Mock observation model for testing."""
 
     def __init__(self, name="mock_observation_model"):
-        super().__init__(name=name)
+        self.name = name
         self.state = {}
 
     def forward(self, context):
@@ -174,33 +158,27 @@ class MockObservationModel(BaseObservationModel):
 
         return context
 
-    def _forward_impl(self, context):
-        """Implementation of the forward method."""
-        # Add observations to context
-        context["observations"] = context.get("x", torch.ones((10, 5)))
-        return context
-
-    def _prepare_data_impl(self, adata, **kwargs):
-        """Implementation of data preparation."""
+    def prepare_data(self, adata, **kwargs):
+        """Prepare data for the model."""
         # Return empty dict for testing
         return {}
 
-    def _create_dataloaders_impl(self, data, **kwargs):
-        """Implementation of dataloader creation."""
+    def create_dataloaders(self, data, **kwargs):
+        """Create dataloaders for the model."""
         # Return empty dict for testing
         return {}
 
-    def _preprocess_batch_impl(self, batch):
-        """Implementation of batch preprocessing."""
+    def preprocess_batch(self, batch):
+        """Preprocess a batch of data."""
         # Return the input batch for testing
         return batch
 
 
-class MockGuideModel(BaseInferenceGuide):
+class MockGuideModel:
     """Mock guide model for testing."""
 
     def __init__(self, name="mock_guide_model"):
-        super().__init__(name=name)
+        self.name = name
         self.state = {}
 
     def forward(self, context):
@@ -233,14 +211,22 @@ class MockGuideModel(BaseInferenceGuide):
 
         return guide
 
-    def _setup_guide_impl(self, model, **kwargs):
-        """Implementation of guide setup."""
+    def setup_guide(self, model, **kwargs):
+        """Set up the guide function for the model."""
         pass
 
-    def _sample_posterior_impl(self, **kwargs):
-        """Implementation of posterior sampling."""
+    def sample_posterior(self, **kwargs):
+        """Sample from the posterior distribution."""
         # Return empty dict for testing
         return {}
+
+
+# Register the mock classes with the Protocol interfaces
+DynamicsModel.register(MockDynamicsModel)
+LikelihoodModel.register(MockLikelihoodModel)
+PriorModel.register(MockPriorModel)
+ObservationModel.register(MockObservationModel)
+InferenceGuide.register(MockGuideModel)
 
 
 @pytest.fixture
@@ -264,7 +250,7 @@ def sample_data():
 
 
 @pytest.fixture
-def mock_model(sample_data):
+def mock_model():
     """Create a mock PyroVelocityModel for testing."""
     # Create component models
     dynamics_model = MockDynamicsModel()

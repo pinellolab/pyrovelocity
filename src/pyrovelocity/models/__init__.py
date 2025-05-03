@@ -33,13 +33,8 @@ from pyrovelocity.models.modular.comparison import (
     create_comparison_table,
     select_best_model,
 )
-from pyrovelocity.models.modular.components.base import (
-    BaseDynamicsModel,
-    BaseInferenceGuide,
-    BaseLikelihoodModel,
-    BaseObservationModel,
-    BasePriorModel,
-)
+
+# Base classes have been removed in favor of Protocol interfaces
 from pyrovelocity.models.modular.components.dynamics import (
     NonlinearDynamicsModel,
     StandardDynamicsModel,
@@ -106,12 +101,6 @@ from pyrovelocity.models.modular.selection import (
 )
 
 __all__ = [
-    # Base classes
-    "BaseDynamicsModel",
-    "BaseLikelihoodModel",
-    "BaseObservationModel",
-    "BasePriorModel",
-    "BaseInferenceGuide",
     # Interfaces
     "DynamicsModel",
     "LikelihoodModel",

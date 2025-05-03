@@ -227,12 +227,6 @@ def register_standard_components():
     are registered and available for tests that use create_standard_model().
     """
     # Import component implementations
-    # Import Protocol-First component implementations
-    from pyrovelocity.models.modular.components.direct.guides import (
-        AutoGuideFactoryDirect,
-        DeltaGuideDirect,
-        NormalGuideDirect,
-    )
     from pyrovelocity.models.modular.components.dynamics import (
         NonlinearDynamicsModel,
         StandardDynamicsModel,
@@ -284,14 +278,6 @@ def register_standard_components():
         InferenceGuideRegistry._registry["normal"] = NormalGuide
     if "delta" not in InferenceGuideRegistry._registry:
         InferenceGuideRegistry._registry["delta"] = DeltaGuide
-
-    # Register Protocol-First guides
-    if "auto_direct" not in InferenceGuideRegistry._registry:
-        InferenceGuideRegistry._registry["auto_direct"] = AutoGuideFactoryDirect
-    if "normal_direct" not in InferenceGuideRegistry._registry:
-        InferenceGuideRegistry._registry["normal_direct"] = NormalGuideDirect
-    if "delta_direct" not in InferenceGuideRegistry._registry:
-        InferenceGuideRegistry._registry["delta_direct"] = DeltaGuideDirect
 
 
 # Export all registry classes and instances
