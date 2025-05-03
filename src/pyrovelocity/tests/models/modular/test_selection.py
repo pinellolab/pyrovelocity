@@ -577,7 +577,7 @@ def test_cross_validator_get_cv_splitter(mock_adata):
 
 
 @patch("pyro.infer.SVI")
-@patch.object(MockGuideModel, "_sample_posterior_impl")
+@patch.object(MockGuideModel, "sample_posterior")
 @patch.object(MockLikelihoodModel, "log_prob")
 def test_cross_validator_cross_validate_likelihood(
     mock_log_prob,
@@ -596,7 +596,7 @@ def test_cross_validator_cross_validate_likelihood(
     mock_svi_instance.step.return_value = 100.0
     mock_svi.return_value = mock_svi_instance
 
-    # Mock _sample_posterior_impl to return posterior samples with PyTorch tensors
+    # Mock sample_posterior to return posterior samples with PyTorch tensors
     mock_sample_posterior.return_value = {
         "alpha": torch.ones((100, 5)),
         "beta": torch.ones((100, 5)),
@@ -643,7 +643,7 @@ def test_cross_validator_cross_validate_likelihood(
 
 
 @patch("pyro.infer.SVI")
-@patch.object(MockGuideModel, "_sample_posterior_impl")
+@patch.object(MockGuideModel, "sample_posterior")
 def test_cross_validator_cross_validate_error(
     mock_sample_posterior, mock_svi, mock_model, sample_data, mock_adata
 ):
@@ -656,7 +656,7 @@ def test_cross_validator_cross_validate_error(
     mock_svi_instance.step.return_value = 100.0
     mock_svi.return_value = mock_svi_instance
 
-    # Mock _sample_posterior_impl to return posterior samples with PyTorch tensors
+    # Mock sample_posterior to return posterior samples with PyTorch tensors
     mock_sample_posterior.return_value = {
         "alpha": torch.ones((100, 5)),
         "beta": torch.ones((100, 5)),
@@ -813,7 +813,7 @@ def test_cross_validator_data_validation(mock_model, sample_data, mock_adata):
 
 
 @patch("pyro.infer.SVI")
-@patch.object(MockGuideModel, "_sample_posterior_impl")
+@patch.object(MockGuideModel, "sample_posterior")
 def test_cross_validator_error_function(
     mock_sample_posterior, mock_svi, mock_model, sample_data, mock_adata
 ):
@@ -826,7 +826,7 @@ def test_cross_validator_error_function(
     mock_svi_instance.step.return_value = 100.0
     mock_svi.return_value = mock_svi_instance
 
-    # Mock _sample_posterior_impl to return posterior samples with PyTorch tensors
+    # Mock sample_posterior to return posterior samples with PyTorch tensors
     mock_sample_posterior.return_value = {
         "alpha": torch.ones((10, 5)),
         "beta": torch.ones((10, 5)),

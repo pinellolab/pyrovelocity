@@ -239,10 +239,6 @@ class MockGuideModel:
 
     def sample_posterior(self, num_samples=100, **kwargs):
         """Sample from the posterior distribution."""
-        return self._sample_posterior_impl(num_samples=num_samples, **kwargs)
-
-    def _sample_posterior_impl(self, num_samples=100, **kwargs):
-        """Implementation of posterior sampling."""
         # Return mock samples for testing
         return {
             "alpha": torch.ones(num_samples, 5),

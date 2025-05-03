@@ -279,7 +279,7 @@ class TestSVI:
         guide._model = model
         guide._params = init_values.copy()
 
-        # Mock the sample_posterior_impl method
+        # Mock the sample_posterior method
         def mock_sample_posterior(**kwargs):
             num_samples = kwargs.get("num_samples", 100)
             return {
@@ -288,8 +288,8 @@ class TestSVI:
                 "gamma": torch.ones(num_samples) * 3.0,
             }
 
-        # Replace the implementation with our mock
-        guide._sample_posterior_impl = mock_sample_posterior
+        # Replace the method with our mock
+        guide.sample_posterior = mock_sample_posterior
 
         # Now we can test the sample_posterior method
         samples = guide.sample_posterior(num_samples=10)

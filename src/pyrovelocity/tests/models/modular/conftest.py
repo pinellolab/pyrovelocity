@@ -212,8 +212,8 @@ class MockGuideModel:
         # No-op for testing
         pass
 
-    def _sample_posterior_impl(self, **kwargs):
-        """Implementation of posterior sampling."""
+    def sample_posterior(self, **kwargs):
+        """Sample from the posterior distribution."""
         # Return empty dict for testing
         return {}
 
