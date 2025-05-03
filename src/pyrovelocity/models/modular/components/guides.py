@@ -131,6 +131,22 @@ class AutoGuideFactory:
         return self._guide
 
     @beartype
+    def get_posterior(self) -> Dict[str, torch.Tensor]:
+        """Get the posterior distribution.
+
+        Returns:
+            Dictionary of posterior samples.
+
+        Raises:
+            RuntimeError: If the guide has not been created yet.
+        """
+        if self._guide is None:
+            raise RuntimeError(
+                "Guide has not been created yet. Call create_guide first."
+            )
+        return self.sample_posterior()
+
+    @beartype
     def sample_posterior(
         self,
         model: Optional[Callable] = None,
@@ -382,6 +398,38 @@ class NormalGuide:
         )
 
     @beartype
+    def get_guide(self) -> Callable:
+        """Get the created guide.
+
+        Returns:
+            The created guide function.
+
+        Raises:
+            RuntimeError: If the guide has not been created yet.
+        """
+        if self._model is None:
+            raise RuntimeError(
+                "Guide has not been created yet. Call create_guide first."
+            )
+        return self.create_guide(self._model)
+
+    @beartype
+    def get_posterior(self) -> Dict[str, torch.Tensor]:
+        """Get the posterior distribution.
+
+        Returns:
+            Dictionary of posterior samples.
+
+        Raises:
+            RuntimeError: If the guide has not been created yet.
+        """
+        if self._model is None:
+            raise RuntimeError(
+                "Guide has not been created yet. Call create_guide first."
+            )
+        return self.sample_posterior()
+
+    @beartype
     def sample_posterior(
         self,
         num_samples: int = 1000,
@@ -537,6 +585,38 @@ class DeltaGuide:
         context["guide"] = guide_fn
 
         return context
+
+    @beartype
+    def get_guide(self) -> Callable:
+        """Get the created guide.
+
+        Returns:
+            The created guide function.
+
+        Raises:
+            RuntimeError: If the guide has not been created yet.
+        """
+        if self._model is None:
+            raise RuntimeError(
+                "Guide has not been created yet. Call create_guide first."
+            )
+        return self.create_guide(self._model)
+
+    @beartype
+    def get_posterior(self) -> Dict[str, torch.Tensor]:
+        """Get the posterior distribution.
+
+        Returns:
+            Dictionary of posterior samples.
+
+        Raises:
+            RuntimeError: If the guide has not been created yet.
+        """
+        if self._model is None:
+            raise RuntimeError(
+                "Guide has not been created yet. Call create_guide first."
+            )
+        return self.sample_posterior()
 
     @beartype
     def sample_posterior(

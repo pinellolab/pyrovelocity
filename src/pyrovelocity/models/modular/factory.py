@@ -598,45 +598,35 @@ def create_standard_model() -> PyroVelocityModel:
     return create_model_from_config(ModelConfig.standard())
 
 
-@beartype
-def create_protocol_first_model_from_config(
-    config: Union[ModelConfig, Dict[str, Any], DictConfig]
-) -> PyroVelocityModel:
-    """
-    Create a PyroVelocityModel from a configuration.
-
-    This function is maintained for backward compatibility. It now simply calls
-    create_model_from_config directly, as all components now use the Protocol-First
-    approach by default.
-
-    Args:
-        config: Configuration for the PyroVelocityModel, either as a ModelConfig
-               object, a dictionary, or a DictConfig.
-
-    Returns:
-        An instance of PyroVelocityModel.
-
-    Raises:
-        ValueError: If any of the specified components are not registered.
-    """
-    # Simply call create_model_from_config directly
-    return create_model_from_config(config)
-
-
-@beartype
+# Protocol-First model creation functions
+# These functions are now deprecated as Protocol-First is the default implementation
 def create_protocol_first_model() -> PyroVelocityModel:
     """
-    Create a standard PyroVelocityModel.
+    Create a PyroVelocityModel with Protocol-First components.
 
-    This function is maintained for backward compatibility. It now simply calls
-    create_standard_model directly, as all components now use the Protocol-First
-    approach by default.
+    This function is now deprecated as Protocol-First is the default implementation.
+    It is maintained for backward compatibility with existing tests.
 
     Returns:
-        A PyroVelocityModel instance with standard components.
+        A PyroVelocityModel instance with Protocol-First components.
     """
-    # Simply call create_standard_model directly
-    return create_standard_model()
+    return create_model_from_config(ModelConfig.standard())
+
+
+def create_protocol_first_model_from_config(config: ModelConfig) -> PyroVelocityModel:
+    """
+    Create a PyroVelocityModel with Protocol-First components from a configuration.
+
+    This function is now deprecated as Protocol-First is the default implementation.
+    It is maintained for backward compatibility with existing tests.
+
+    Args:
+        config: Configuration for the PyroVelocityModel
+
+    Returns:
+        A PyroVelocityModel instance with Protocol-First components.
+    """
+    return create_model_from_config(config)
 
 
 # Export all public symbols
@@ -645,8 +635,6 @@ __all__ = [
     "ComponentFactory",
     # New factory functions
     "create_model_from_config",
-    "create_protocol_first_model_from_config",
-    "create_protocol_first_model",
     # Backward compatibility configuration classes
     "DynamicsModelConfig",
     "PriorModelConfig",
@@ -668,6 +656,9 @@ __all__ = [
     "create_observation_model",
     "create_inference_guide",
     "create_model",
+    # Protocol-First functions
+    "create_protocol_first_model",
+    "create_protocol_first_model_from_config",
     # Predefined configurations
     "standard_model_config",
     "create_standard_model",

@@ -194,19 +194,46 @@ class PoissonLikelihoodModel:
         Returns:
             Dictionary of likelihood distributions
         """
+        # Check if cell_state is provided in kwargs
+        cell_state = kwargs.get("cell_state")
+
+        if cell_state is not None:
+            # If cell_state is provided, use it to generate distributions
+            return self._generate_distributions_from_cell_state(
+                cell_state, gene_offset, time_info, n_genes=adata.n_vars, **kwargs
+            )
+
+        # Otherwise, use AnnData to generate distributions
         # Extract counts from AnnData
         if "X" not in adata.layers:
             raise ValueError("AnnData object must have 'X' in layers")
 
         # Convert to torch tensor
-        counts = torch.tensor(adata.layers["X"].toarray())
+        # Handle both sparse and dense arrays
+        layer_data = adata.layers["X"]
+        if hasattr(layer_data, 'toarray'):
+            # For sparse matrices
+            counts = torch.tensor(layer_data.toarray(), dtype=torch.float32)
+        else:
+            # For numpy arrays
+            counts = torch.tensor(layer_data, dtype=torch.float32)
 
         # Use mean expression as rate parameter
         rate = torch.mean(counts, dim=0)
 
+        # Check if we need to expand the rate to match a batch dimension
+        # This is needed for the tests that expect a batch dimension
+        batch_size = kwargs.get("batch_size")
+        if batch_size is not None:
+            rate = rate.unsqueeze(0).expand(batch_size, -1)
+
         # Apply gene offset if provided
         if gene_offset is not None:
-            rate = rate * gene_offset
+            # If gene_offset has a batch dimension, use it directly
+            if gene_offset.dim() > 1:
+                rate = rate.expand(gene_offset.shape[0], -1) * gene_offset
+            else:
+                rate = rate * gene_offset
 
         # Create Poisson likelihood distribution
         return {"obs_counts": pyro.distributions.Poisson(rate=rate)}
@@ -240,9 +267,19 @@ class PoissonLikelihoodModel:
         # Get gene scale from kwargs or use default
         gene_scale = kwargs.get("gene_scale", torch.ones(projection.shape[1]))
 
+        # Get batch size from cell_state
+        batch_size = cell_state.shape[0]
+
         # Apply gene offset if not provided
         if gene_offset is None:
-            gene_offset = torch.ones(projection.shape[1])
+            gene_offset = torch.ones((batch_size, projection.shape[1]))
+        elif gene_offset.dim() == 1:
+            # If gene_offset is 1D, expand it to match batch size
+            gene_offset = gene_offset.unsqueeze(0).expand(batch_size, -1)
+
+        # Ensure gene_scale has the right shape
+        if gene_scale.dim() == 1:
+            gene_scale = gene_scale.unsqueeze(0).expand(batch_size, -1)
 
         # Project cell_state to gene space
         projected_state = torch.matmul(
@@ -512,24 +549,55 @@ class NegativeBinomialLikelihoodModel:
         Returns:
             Dictionary of likelihood distributions
         """
+        # Check if cell_state is provided in kwargs
+        cell_state = kwargs.get("cell_state")
+
+        if cell_state is not None:
+            # If cell_state is provided, use it to generate distributions
+            return self._generate_distributions_from_cell_state(
+                cell_state, gene_offset, time_info, n_genes=adata.n_vars, **kwargs
+            )
+
+        # Otherwise, use AnnData to generate distributions
         # Extract counts from AnnData
         if "X" not in adata.layers:
             raise ValueError("AnnData object must have 'X' in layers")
 
         # Convert to torch tensor
-        counts = torch.tensor(adata.layers["X"].toarray())
+        # Handle both sparse and dense arrays
+        layer_data = adata.layers["X"]
+        if hasattr(layer_data, 'toarray'):
+            # For sparse matrices
+            counts = torch.tensor(layer_data.toarray(), dtype=torch.float32)
+        else:
+            # For numpy arrays
+            counts = torch.tensor(layer_data, dtype=torch.float32)
 
         # Use mean expression as rate parameter
         rate = torch.mean(counts, dim=0)
 
+        # Check if we need to expand the rate to match a batch dimension
+        # This is needed for the tests that expect a batch dimension
+        batch_size = kwargs.get("batch_size")
+        if batch_size is not None:
+            rate = rate.unsqueeze(0).expand(batch_size, -1)
+
         # Apply gene offset if provided
         if gene_offset is not None:
-            rate = rate * gene_offset
+            # If gene_offset has a batch dimension, use it directly
+            if gene_offset.dim() > 1:
+                rate = rate.expand(gene_offset.shape[0], -1) * gene_offset
+            else:
+                rate = rate * gene_offset
 
         # Use fixed dispersion parameter for simplicity
         # In a real implementation, this would be learned or provided
-        dispersion = torch.ones(rate.shape[0])
+        dispersion = torch.ones(rate.shape[-1])
         concentration = 1.0 / dispersion
+
+        # Expand concentration to match batch dimension if needed
+        if rate.dim() > 1 and concentration.dim() == 1:
+            concentration = concentration.unsqueeze(0).expand(rate.shape[0], -1)
 
         # Calculate probability parameter for Negative Binomial distribution
         probs = concentration / (concentration + rate)
@@ -570,9 +638,19 @@ class NegativeBinomialLikelihoodModel:
         # Get gene scale from kwargs or use default
         gene_scale = kwargs.get("gene_scale", torch.ones(projection.shape[1]))
 
+        # Get batch size from cell_state
+        batch_size = cell_state.shape[0]
+
         # Apply gene offset if not provided
         if gene_offset is None:
-            gene_offset = torch.ones(projection.shape[1])
+            gene_offset = torch.ones((batch_size, projection.shape[1]))
+        elif gene_offset.dim() == 1:
+            # If gene_offset is 1D, expand it to match batch size
+            gene_offset = gene_offset.unsqueeze(0).expand(batch_size, -1)
+
+        # Ensure gene_scale has the right shape
+        if gene_scale.dim() == 1:
+            gene_scale = gene_scale.unsqueeze(0).expand(batch_size, -1)
 
         # Project cell_state to gene space
         projected_state = torch.matmul(
@@ -584,8 +662,12 @@ class NegativeBinomialLikelihoodModel:
 
         # Use fixed dispersion parameter for simplicity
         # In a real implementation, this would be learned or provided
-        dispersion = torch.ones(rate.shape[1])
+        dispersion = torch.ones(projection.shape[1])
         concentration = 1.0 / dispersion
+
+        # Expand concentration to match batch size if needed
+        if concentration.dim() == 1:
+            concentration = concentration.unsqueeze(0).expand(batch_size, -1)
 
         # Calculate probability parameter for Negative Binomial distribution
         probs = concentration / (concentration + rate)

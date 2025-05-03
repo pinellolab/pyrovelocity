@@ -39,7 +39,10 @@ def test_adata():
     n_cells = 10
     n_genes = 20
     X = np.random.poisson(lam=5, size=(n_cells, n_genes))
-    return AnnData(X=X)
+    adata = AnnData(X=X)
+    # Add X to layers as well, which is required by the likelihood models
+    adata.layers["X"] = X.copy()
+    return adata
 
 
 def test_poisson_likelihood_model(test_adata):
@@ -55,7 +58,7 @@ def test_poisson_likelihood_model(test_adata):
     batch_size = 8
     latent_dim = 5
     cell_state = torch.zeros((batch_size, latent_dim))
-    dists = model(test_adata, cell_state=cell_state)
+    dists = model(test_adata, cell_state=cell_state, batch_size=batch_size)
 
     # Check output
     assert isinstance(dists, dict)
@@ -84,7 +87,7 @@ def test_negative_binomial_likelihood_model(test_adata):
     batch_size = 8
     latent_dim = 5
     cell_state = torch.zeros((batch_size, latent_dim))
-    dists = model(test_adata, cell_state=cell_state)
+    dists = model(test_adata, cell_state=cell_state, batch_size=batch_size)
 
     # Check output
     assert isinstance(dists, dict)
@@ -121,10 +124,10 @@ def test_likelihood_model_with_gene_offset(test_adata):
 
     # Generate distributions
     poisson_dists = poisson_model(
-        test_adata, cell_state=cell_state, gene_offset=gene_offset
+        test_adata, cell_state=cell_state, gene_offset=gene_offset, batch_size=batch_size
     )
     nb_dists = nb_model(
-        test_adata, cell_state=cell_state, gene_offset=gene_offset
+        test_adata, cell_state=cell_state, gene_offset=gene_offset, batch_size=batch_size
     )
 
     # Check that offset affects the rate/probs
@@ -132,8 +135,8 @@ def test_likelihood_model_with_gene_offset(test_adata):
     nb_probs = nb_dists["obs_counts"].probs
 
     # Generate distributions without offset for comparison
-    poisson_dists_no_offset = poisson_model(test_adata, cell_state=cell_state)
-    nb_dists_no_offset = nb_model(test_adata, cell_state=cell_state)
+    poisson_dists_no_offset = poisson_model(test_adata, cell_state=cell_state, batch_size=batch_size)
+    nb_dists_no_offset = nb_model(test_adata, cell_state=cell_state, batch_size=batch_size)
 
     poisson_rate_no_offset = poisson_dists_no_offset["obs_counts"].rate
     nb_probs_no_offset = nb_dists_no_offset["obs_counts"].probs

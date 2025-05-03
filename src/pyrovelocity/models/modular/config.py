@@ -130,7 +130,7 @@ class ModelConfig:
         }
 
     @classmethod
-    def standard(cls, use_protocol_first: bool = False, **_) -> "ModelConfig":
+    def standard(cls, **_) -> "ModelConfig":
         """
         Create a standard model configuration.
 
@@ -139,19 +139,17 @@ class ModelConfig:
         StandardObservationModel, and AutoGuide.
 
         Args:
-            use_protocol_first: Whether to use Protocol-First components (with "_direct" suffix)
             **_: Ignored keyword arguments (for backward compatibility)
 
         Returns:
             A ModelConfig instance with standard component configurations
         """
-        suffix = "_direct" if use_protocol_first else ""
         return cls(
-            dynamics_model=ComponentConfig(name=f"standard{suffix}"),
-            prior_model=ComponentConfig(name=f"lognormal{suffix}"),
-            likelihood_model=ComponentConfig(name=f"poisson{suffix}"),
-            observation_model=ComponentConfig(name=f"standard{suffix}"),
-            inference_guide=ComponentConfig(name=f"auto{suffix}"),
+            dynamics_model=ComponentConfig(name="standard"),
+            prior_model=ComponentConfig(name="lognormal"),
+            likelihood_model=ComponentConfig(name="poisson"),
+            observation_model=ComponentConfig(name="standard"),
+            inference_guide=ComponentConfig(name="auto"),
         )
 
 

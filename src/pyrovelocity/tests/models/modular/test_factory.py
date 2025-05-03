@@ -498,40 +498,6 @@ class TestPredefinedConfigurations:
 class TestProtocolFirstFactoryFunctions:
     """Tests for the Protocol-First factory functions."""
 
-    def test_model_config_standard_with_protocol_first(self, setup_registries):
-        """Test the ModelConfig.standard() method with use_protocol_first=True."""
-        # Register Protocol-First components
-        @DynamicsModelRegistry.register("standard_direct")
-        class StandardDynamicsModel(MockDynamicsModel):
-            pass
-
-        @PriorModelRegistry.register("lognormal_direct")
-        class LogNormalPriorModel(MockPriorModel):
-            pass
-
-        @LikelihoodModelRegistry.register("poisson_direct")
-        class PoissonLikelihoodModel(MockLikelihoodModel):
-            pass
-
-        @ObservationModelRegistry.register("standard_direct")
-        class StandardObservationModel(MockObservationModel):
-            pass
-
-        @InferenceGuideRegistry.register("auto_direct")
-        class AutoGuideFactory(MockInferenceGuide):
-            pass
-
-        # Get the standard model configuration with Protocol-First components
-        from pyrovelocity.models.modular.config import ModelConfig
-        config = ModelConfig.standard(use_protocol_first=True)
-
-        # Check that it has the expected component configurations with "_direct" suffix
-        assert config.dynamics_model.name == "standard_direct"
-        assert config.prior_model.name == "lognormal_direct"
-        assert config.likelihood_model.name == "poisson_direct"
-        assert config.observation_model.name == "standard_direct"
-        assert config.inference_guide.name == "auto_direct"
-
     def test_create_protocol_first_model(self, setup_registries):
         """Test creating a model with Protocol-First components."""
         # Register Protocol-First components

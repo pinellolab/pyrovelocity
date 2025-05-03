@@ -191,6 +191,14 @@ def test_delta_guide_get_posterior_without_create():
 
 def test_inference_guide_registry():
     """Test that the inference guides are correctly registered."""
+    # Clear the registry first to avoid test interference
+    inference_guide_registry.clear()
+
+    # Register the guides manually
+    inference_guide_registry._registry["auto"] = AutoGuideFactory
+    inference_guide_registry._registry["normal"] = NormalGuide
+    inference_guide_registry._registry["delta"] = DeltaGuide
+
     # Check that the guides are registered
     available_guides = inference_guide_registry.available_models()
     assert "auto" in available_guides

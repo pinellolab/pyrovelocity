@@ -213,6 +213,19 @@ class LogNormalPriorModel:
         # For the standard PyroModule approach, this can be a no-op
         pass
 
+    @beartype
+    def sample_parameters(self, n_genes: Optional[int] = None) -> Dict[str, Any]:
+        """
+        Sample model parameters from prior distributions.
+
+        Args:
+            n_genes: Optional number of genes to sample parameters for
+
+        Returns:
+            Dictionary of sampled parameters
+        """
+        return self._sample_parameters_impl(n_genes=n_genes)
+
     def _sample_parameters_impl(
         self, prefix: str = "", n_genes: Optional[int] = None
     ) -> Dict[str, Any]:
@@ -449,6 +462,19 @@ class InformativePriorModel:
         # This method is used for explicit prior registration if needed
         # For the standard PyroModule approach, this can be a no-op
         pass
+
+    @beartype
+    def sample_parameters(self, n_genes: Optional[int] = None) -> Dict[str, Any]:
+        """
+        Sample model parameters from prior distributions.
+
+        Args:
+            n_genes: Optional number of genes to sample parameters for
+
+        Returns:
+            Dictionary of sampled parameters
+        """
+        return self._sample_parameters_impl(n_genes=n_genes)
 
     def _sample_parameters_impl(
         self, prefix: str = "", n_genes: Optional[int] = None
