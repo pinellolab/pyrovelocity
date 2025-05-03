@@ -20,11 +20,13 @@ def register_guides():
     # Save original registry state
     original_registry = dict(inference_guide_registry._registry)
 
-    # Clear registry and register test components
-    inference_guide_registry.clear()
-    inference_guide_registry._registry["auto"] = AutoGuideFactory
-    inference_guide_registry._registry["normal"] = NormalGuide
-    inference_guide_registry._registry["delta"] = DeltaGuide
+    # Import the register_standard_components function
+    from pyrovelocity.models.modular.registry import (
+        register_standard_components,
+    )
+
+    # Register standard components
+    register_standard_components()
 
     yield
 

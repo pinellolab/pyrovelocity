@@ -18,6 +18,9 @@ from pyro.infer.autoguide import init_to_median
 from pyrovelocity.models.modular.interfaces import InferenceGuide
 from pyrovelocity.models.modular.registry import inference_guide_registry
 
+# Ensure the registry is initialized
+inference_guide_registry._registry = inference_guide_registry._registry or {}
+
 
 @inference_guide_registry.register("auto_direct")
 class AutoGuideFactoryDirect:

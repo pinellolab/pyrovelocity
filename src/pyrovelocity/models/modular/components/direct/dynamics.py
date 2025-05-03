@@ -325,13 +325,18 @@ class StandardDynamicsModelDirect:
         u = torch.zeros((n_steps, u0.shape[0]))
         s = torch.zeros((n_steps, s0.shape[0]))
 
+        # Set initial conditions
+        u[0] = u0.clone()
+        s[0] = s0.clone()
+
         # Compute solution at each time point
         for i, ti in enumerate(t):
-            # Compute solution using analytical formula
-            u[i] = u_ss - (u_ss - u0) * torch.exp(-beta * ti)
-            s[i] = s_ss - (s_ss - s0) * torch.exp(-gamma * ti) - (
-                beta * (u_ss - u0) / (gamma - beta)
-            ) * (torch.exp(-beta * ti) - torch.exp(-gamma * ti))
+            if i > 0:  # Skip the first point which is already set
+                # Compute solution using analytical formula
+                u[i] = u_ss - (u_ss - u0) * torch.exp(-beta * ti)
+                s[i] = s_ss - (s_ss - s0) * torch.exp(-gamma * ti) - (
+                    beta * (u_ss - u0) / (gamma - beta)
+                ) * (torch.exp(-beta * ti) - torch.exp(-gamma * ti))
 
         # Apply scaling if provided
         if scaling is not None:

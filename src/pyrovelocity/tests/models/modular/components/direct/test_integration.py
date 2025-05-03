@@ -82,10 +82,6 @@ def test_protocol_first_components_integration(simple_data):
 
 def test_protocol_first_components_with_model(simple_data):
     """Test that Protocol-First components work with PyroVelocityModel."""
-    # Skip this test for now as it requires more complex integration
-    # This test will be fixed in a future PR
-    pytest.skip("This test requires more complex integration and will be fixed in a future PR")
-
     # Create components
     dynamics_model = StandardDynamicsModelDirect()
     prior_model = LogNormalPriorModelDirect()
