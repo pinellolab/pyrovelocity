@@ -177,9 +177,12 @@ class MockObservationModel:
 class MockGuideModel:
     """Mock guide model for testing."""
 
-    def __init__(self, name="mock_guide_model"):
+    def __init__(self, name="mock_guide_model", guide_type=None, init_scale=0.1):
         self.name = name
         self.state = {}
+        self.guide_type = guide_type
+        self.init_scale = init_scale
+        self._guide = None
 
     def forward(self, context):
         """Forward pass that just returns the input context."""
@@ -213,12 +216,39 @@ class MockGuideModel:
 
     def setup_guide(self, model, **kwargs):
         """Set up the guide function for the model."""
-        pass
+        self._model = model
+        self._guide = lambda *args, **kwargs: {}
 
-    def sample_posterior(self, **kwargs):
-        """Sample from the posterior distribution."""
-        # Return empty dict for testing
+    def create_guide(self, model, **kwargs):
+        """Create a guide function for the model."""
+        self._model = model
+        self._guide = lambda *args, **kwargs: {}
+        return self._guide
+
+    def get_guide(self):
+        """Get the guide function."""
+        if self._guide is None:
+            raise RuntimeError("Guide has not been created yet.")
+        return self._guide
+
+    def get_posterior(self):
+        """Get the posterior distribution."""
+        if self._guide is None:
+            raise RuntimeError("Guide has not been created yet.")
         return {}
+
+    def sample_posterior(self, num_samples=100, **kwargs):
+        """Sample from the posterior distribution."""
+        return self._sample_posterior_impl(num_samples=num_samples, **kwargs)
+
+    def _sample_posterior_impl(self, num_samples=100, **kwargs):
+        """Implementation of posterior sampling."""
+        # Return mock samples for testing
+        return {
+            "alpha": torch.ones(num_samples, 5),
+            "beta": torch.ones(num_samples, 5) * 2.0,
+            "gamma": torch.ones(num_samples, 5) * 3.0,
+        }
 
 
 # Register the mock classes with the Protocol interfaces
