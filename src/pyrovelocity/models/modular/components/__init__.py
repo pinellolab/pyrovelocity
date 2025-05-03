@@ -4,34 +4,58 @@ PyroVelocity modular component implementations.
 This package contains the implementations of the various components used in the
 PyroVelocity modular architecture, including dynamics models, prior models,
 likelihood models, observation models, and inference guides.
+
+The package includes both base class implementations and Protocol-First implementations:
+- Base class implementations: Components that inherit from base classes in base.py
+- Protocol-First implementations: Components that directly implement Protocol interfaces
 """
 
+# Import base classes
 from pyrovelocity.models.modular.components.base import (
     BaseDynamicsModel,
+    BaseInferenceGuide,
     BaseLikelihoodModel,
     BaseObservationModel,
     BasePriorModel,
-    BaseInferenceGuide,
 )
+
+# Import Protocol-First implementations
+from pyrovelocity.models.modular.components.direct.dynamics import (
+    StandardDynamicsModelDirect,
+)
+from pyrovelocity.models.modular.components.direct.guides import (
+    AutoGuideFactoryDirect,
+)
+from pyrovelocity.models.modular.components.direct.likelihoods import (
+    PoissonLikelihoodModelDirect,
+)
+from pyrovelocity.models.modular.components.direct.observations import (
+    StandardObservationModelDirect,
+)
+from pyrovelocity.models.modular.components.direct.priors import (
+    LogNormalPriorModelDirect,
+)
+
+# Import base class implementations
 from pyrovelocity.models.modular.components.dynamics import (
-    StandardDynamicsModel,
     NonlinearDynamicsModel,
+    StandardDynamicsModel,
 )
-from pyrovelocity.models.modular.components.priors import (
-    LogNormalPriorModel,
-    InformativePriorModel,
+from pyrovelocity.models.modular.components.guides import (
+    AutoGuideFactory,
+    DeltaGuide,
+    NormalGuide,
 )
 from pyrovelocity.models.modular.components.likelihoods import (
-    PoissonLikelihoodModel,
     NegativeBinomialLikelihoodModel,
+    PoissonLikelihoodModel,
 )
 from pyrovelocity.models.modular.components.observations import (
     StandardObservationModel,
 )
-from pyrovelocity.models.modular.components.guides import (
-    AutoGuideFactory,
-    NormalGuide,
-    DeltaGuide,
+from pyrovelocity.models.modular.components.priors import (
+    InformativePriorModel,
+    LogNormalPriorModel,
 )
 
 __all__ = [
@@ -41,7 +65,7 @@ __all__ = [
     "BaseObservationModel",
     "BasePriorModel",
     "BaseInferenceGuide",
-    # Component implementations
+    # Base class implementations
     "StandardDynamicsModel",
     "NonlinearDynamicsModel",
     "LogNormalPriorModel",
@@ -52,4 +76,10 @@ __all__ = [
     "AutoGuideFactory",
     "NormalGuide",
     "DeltaGuide",
+    # Protocol-First implementations
+    "StandardDynamicsModelDirect",
+    "LogNormalPriorModelDirect",
+    "PoissonLikelihoodModelDirect",
+    "StandardObservationModelDirect",
+    "AutoGuideFactoryDirect",
 ]

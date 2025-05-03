@@ -17,16 +17,23 @@ from pyrovelocity.models.modular.comparison import (
 
 # Import component implementations
 from pyrovelocity.models.modular.components import (
+    # Base class implementations
     AutoGuideFactory,
+    # Protocol-First implementations
+    AutoGuideFactoryDirect,
     DeltaGuide,
     InformativePriorModel,
     LogNormalPriorModel,
+    LogNormalPriorModelDirect,
     NegativeBinomialLikelihoodModel,
     NonlinearDynamicsModel,
     NormalGuide,
     PoissonLikelihoodModel,
+    PoissonLikelihoodModelDirect,
     StandardDynamicsModel,
+    StandardDynamicsModelDirect,
     StandardObservationModel,
+    StandardObservationModelDirect,
 )
 
 # Import data utilities
@@ -86,7 +93,7 @@ __all__ = [
     "LikelihoodModelRegistry",
     "ObservationModelRegistry",
     "InferenceGuideRegistry",
-    # Component implementations
+    # Base class implementations
     "StandardDynamicsModel",
     "NonlinearDynamicsModel",
     "LogNormalPriorModel",
@@ -97,6 +104,12 @@ __all__ = [
     "AutoGuideFactory",
     "NormalGuide",
     "DeltaGuide",
+    # Protocol-First implementations
+    "StandardDynamicsModelDirect",
+    "LogNormalPriorModelDirect",
+    "PoissonLikelihoodModelDirect",
+    "StandardObservationModelDirect",
+    "AutoGuideFactoryDirect",
     # Factory functions
     "create_model",
     "create_standard_model",
