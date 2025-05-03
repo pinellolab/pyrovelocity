@@ -1,10 +1,10 @@
 """
-Protocol-First Architecture Example for PyroVelocity's Modular Implementation.
+Protocol-Based Architecture (now the default) Example for PyroVelocity's Modular Implementation.
 
-This script demonstrates the Protocol-First architecture in PyroVelocity's modular implementation,
+This script demonstrates the Protocol-Based architecture in PyroVelocity's modular implementation,
 which directly implements Protocol interfaces without inheriting from base classes.
 
-The Protocol-First approach has several advantages:
+The Protocol-Based approach (now the default) has several advantages:
 1. Reduces code complexity by eliminating inheritance hierarchies
 2. Enhances flexibility through Protocol interfaces
 3. Creates perfect architectural consistency with the JAX implementation's pure functional approach
@@ -12,10 +12,10 @@ The Protocol-First approach has several advantages:
 5. Avoids premature abstraction by initially allowing intentional duplication
 
 This example shows:
-1. Creating models using Protocol-First components
+1. Creating models using Protocol-Based components (now the default)
 2. Side-by-side comparisons with base class implementations
-3. Customizing Protocol-First components
-4. Explaining the benefits of the Protocol-First approach
+3. Customizing Protocol-Based components (now the default)
+4. Explaining the benefits of the Protocol-Based approach (now the default)
 """
 
 import torch
@@ -32,26 +32,26 @@ from pyrovelocity.models.modular.interfaces import (
     InferenceGuide,
 )
 
-# Import Protocol-First components
+# Import Protocol-Based components (now the default)
 from pyrovelocity.models.modular.components.direct.dynamics import (
-    StandardDynamicsModelDirect,
-    NonlinearDynamicsModelDirect,
+    StandardDynamicsModel,
+    NonlinearDynamicsModel,
 )
 from pyrovelocity.models.modular.components.direct.priors import (
-    LogNormalPriorModelDirect,
-    InformativePriorModelDirect,
+    LogNormalPriorModel,
+    InformativePriorModel,
 )
 from pyrovelocity.models.modular.components.direct.likelihoods import (
-    PoissonLikelihoodModelDirect,
-    NegativeBinomialLikelihoodModelDirect,
+    PoissonLikelihoodModel,
+    NegativeBinomialLikelihoodModel,
 )
 from pyrovelocity.models.modular.components.direct.observations import (
-    StandardObservationModelDirect,
+    StandardObservationModel,
 )
 from pyrovelocity.models.modular.components.direct.guides import (
-    AutoGuideFactoryDirect,
-    NormalGuideDirect,
-    DeltaGuideDirect,
+    AutoGuideFactory,
+    NormalGuide,
+    DeltaGuide,
 )
 
 # Import base class implementations for comparison
@@ -66,7 +66,7 @@ from pyrovelocity.models.modular.components import (
 # Import factory functions
 from pyrovelocity.models.modular.factory import (
     create_standard_model,
-    create_protocol_first_model,
+    create_model,
     create_model_from_config,
 )
 
@@ -116,12 +116,12 @@ def generate_synthetic_data(n_cells=100, n_genes=10, batch_size=1):
 
 
 def compare_base_and_protocol_first_dynamics():
-    """Compare base class and Protocol-First dynamics models."""
-    print("\n=== Comparing Base Class and Protocol-First Dynamics Models ===")
+    """Compare base class and Protocol-Based dynamics models."""
+    print("\n=== Comparing Base Class and Protocol-Based Dynamics Models ===")
 
-    # Create base class and Protocol-First dynamics models
+    # Create base class and Protocol-Based dynamics models
     base_dynamics = StandardDynamicsModel()
-    protocol_dynamics = StandardDynamicsModelDirect()
+    protocol_dynamics = StandardDynamicsModel()
 
     # Generate test data
     n_genes = 3
@@ -138,7 +138,7 @@ def compare_base_and_protocol_first_dynamics():
     print(f"  u_ss: {base_u_ss}")
     print(f"  s_ss: {base_s_ss}")
 
-    print("Protocol-First steady state:")
+    print("Protocol-Based steady state:")
     print(f"  u_ss: {protocol_u_ss}")
     print(f"  s_ss: {protocol_s_ss}")
 
@@ -168,7 +168,7 @@ def compare_base_and_protocol_first_dynamics():
     u_expected = base_result["u_expected"]
     s_expected = base_result["s_expected"]
 
-    # For Protocol-First implementation, we use the context dictionary
+    # For Protocol-Based implementation (now the default), we use the context dictionary
     protocol_context = {
         "u_obs": u_obs,
         "s_obs": s_obs,
@@ -186,7 +186,7 @@ def compare_base_and_protocol_first_dynamics():
     print(f"  u_expected shape: {u_expected.shape}")
     print(f"  s_expected shape: {s_expected.shape}")
 
-    print("Protocol-First forward results:")
+    print("Protocol-Based forward results:")
     print(f"  u_expected shape: {protocol_result['u_expected'].shape}")
     print(f"  s_expected shape: {protocol_result['s_expected'].shape}")
 
@@ -198,18 +198,18 @@ def compare_base_and_protocol_first_dynamics():
     # Highlight the differences in implementation
     print("\nKey differences in implementation:")
     print("1. Base class inherits from BaseDynamicsModel, which provides common functionality")
-    print("2. Protocol-First implementation directly implements the DynamicsModel Protocol")
-    print("3. Protocol-First implementation uses utility functions for common functionality")
-    print("4. Protocol-First implementation allows for more flexible composition")
+    print("2. Protocol-Based implementation (now the default) directly implements the DynamicsModel Protocol")
+    print("3. Protocol-Based implementation (now the default) uses utility functions for common functionality")
+    print("4. Protocol-Based implementation (now the default) allows for more flexible composition")
 
 
 def compare_base_and_protocol_first_models():
-    """Compare complete models using base class and Protocol-First components."""
-    print("\n=== Comparing Complete Models with Base Class and Protocol-First Components ===")
+    """Compare complete models using base class and Protocol-Based components (now the default)."""
+    print("\n=== Comparing Complete Models with Base Class and Protocol-Based Components ===")
 
     # Create models
     base_model = create_standard_model()
-    protocol_model = create_protocol_first_model()
+    protocol_model = create_model()
 
     # Print model components
     print("Base model components:")
@@ -219,7 +219,7 @@ def compare_base_and_protocol_first_models():
     print(f"  Observation: {base_model.observation_model.__class__.__name__}")
     print(f"  Guide: {base_model.guide_model.__class__.__name__}")
 
-    print("\nProtocol-First model components:")
+    print("\nProtocol-Based model components:")
     print(f"  Dynamics: {protocol_model.dynamics_model.__class__.__name__}")
     print(f"  Prior: {protocol_model.prior_model.__class__.__name__}")
     print(f"  Likelihood: {protocol_model.likelihood_model.__class__.__name__}")
@@ -241,7 +241,7 @@ def compare_base_and_protocol_first_models():
         protocol_keys = set(protocol_result.keys())
 
         print(f"Base model result keys: {base_keys}")
-        print(f"Protocol-First model result keys: {protocol_keys}")
+        print(f"Protocol-Based model result keys: {protocol_keys}")
 
         # Check if results are similar (not necessarily identical due to random initialization)
         common_keys = base_keys.intersection(protocol_keys)
@@ -258,18 +258,18 @@ def compare_base_and_protocol_first_models():
 
 
 def create_custom_protocol_first_component():
-    """Create a custom Protocol-First component."""
-    print("\n=== Creating a Custom Protocol-First Component ===")
+    """Create a custom Protocol-Based component."""
+    print("\n=== Creating a Custom Protocol-Based Component ===")
 
-    # Define a custom Protocol-First dynamics model
+    # Define a custom Protocol-Based dynamics model
     @DynamicsModelRegistry.register("custom_protocol_first")
     class CustomProtocolFirstDynamics:
         """
-        A custom Protocol-First dynamics model.
+        A custom Protocol-Based dynamics model.
 
         This model directly implements the DynamicsModel Protocol without
         inheriting from BaseDynamicsModel. It demonstrates how to create
-        custom components in the Protocol-First architecture.
+        custom components in the Protocol-Based architecture.
         """
 
         def __init__(self, name="custom_protocol_first", scaling_factor=2.0):
@@ -343,7 +343,7 @@ def create_custom_protocol_first_component():
     # Compute steady state
     u_ss, s_ss = custom_dynamics.steady_state(alpha, beta, gamma)
 
-    print("Custom Protocol-First component:")
+    print("Custom Protocol-Based component:")
     print(f"  Class: {custom_dynamics.__class__.__name__}")
     print(f"  Steady state u_ss: {u_ss}")
     print(f"  Steady state s_ss: {s_ss}")
@@ -351,15 +351,15 @@ def create_custom_protocol_first_component():
     # Create a model with the custom component
     custom_config = ModelConfig(
         dynamics_model=ComponentConfig(name="custom_protocol_first"),
-        prior_model=ComponentConfig(name="lognormal_direct"),
-        likelihood_model=ComponentConfig(name="poisson_direct"),
-        observation_model=ComponentConfig(name="standard_direct"),
-        inference_guide=ComponentConfig(name="auto_direct"),
+        prior_model=ComponentConfig(name="lognormal"),
+        likelihood_model=ComponentConfig(name="poisson"),
+        observation_model=ComponentConfig(name="standard"),
+        inference_guide=ComponentConfig(name="auto"),
     )
 
     custom_model = create_model_from_config(custom_config)
 
-    print("\nCreated model with custom Protocol-First component:")
+    print("\nCreated model with custom Protocol-Based component:")
     print(f"  Dynamics: {custom_model.dynamics_model.__class__.__name__}")
     print(f"  Prior: {custom_model.prior_model.__class__.__name__}")
     print(f"  Likelihood: {custom_model.likelihood_model.__class__.__name__}")
@@ -368,8 +368,8 @@ def create_custom_protocol_first_component():
 
 
 def explain_protocol_first_benefits():
-    """Explain the benefits of the Protocol-First approach."""
-    print("\n=== Benefits of the Protocol-First Approach ===")
+    """Explain the benefits of the Protocol-Based approach (now the default)."""
+    print("\n=== Benefits of the Protocol-Based Approach ===")
 
     print("1. Reduced code complexity")
     print("   - No inheritance hierarchies")
@@ -384,7 +384,7 @@ def explain_protocol_first_benefits():
     print("\n3. Architectural consistency with JAX implementation")
     print("   - Both implementations follow a functional approach")
     print("   - JAX implementation uses pure functions")
-    print("   - Protocol-First implementation uses stateful objects with functional interfaces")
+    print("   - Protocol-Based implementation (now the default) uses stateful objects with functional interfaces")
     print("   - Consistent mental model across implementations")
 
     print("\n4. Discovery of natural abstractions")
@@ -400,24 +400,24 @@ def explain_protocol_first_benefits():
 
 
 def main():
-    """Run the Protocol-First architecture example."""
+    """Run the Protocol-Based architecture example."""
     # Set random seed for reproducibility
     pyro.set_rng_seed(42)
     torch.manual_seed(42)
 
-    print("=== Protocol-First Architecture Example ===")
-    print("This example demonstrates the Protocol-First architecture in PyroVelocity's modular implementation.")
+    print("=== Protocol-Based Architecture (now the default) Example ===")
+    print("This example demonstrates the Protocol-Based architecture in PyroVelocity's modular implementation.")
 
-    # Compare base class and Protocol-First dynamics models
+    # Compare base class and Protocol-Based dynamics models
     compare_base_and_protocol_first_dynamics()
 
     # Compare complete models
     compare_base_and_protocol_first_models()
 
-    # Create a custom Protocol-First component
+    # Create a custom Protocol-Based component
     create_custom_protocol_first_component()
 
-    # Explain the benefits of the Protocol-First approach
+    # Explain the benefits of the Protocol-Based approach (now the default)
     explain_protocol_first_benefits()
 
     print("\n=== Example Completed ===")

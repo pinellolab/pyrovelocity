@@ -2,16 +2,16 @@
 Example script demonstrating the different dynamics models in the PyroVelocity modular architecture.
 
 This script shows how to:
-1. Create different dynamics models (both base class and Protocol-First implementations)
+1. Create different dynamics models (both base class and Protocol-Based implementation (now the default)s)
 2. Simulate RNA dynamics over time
 3. Compute steady states
 4. Visualize the results
 5. Predict future states
-6. Compare base class and Protocol-First implementations
+6. Compare base class and Protocol-Based implementation (now the default)s
 
 The PyroVelocity modular architecture supports two implementation approaches:
 1. Base Class Approach: Components inherit from base classes (BaseDynamicsModel, etc.)
-2. Protocol-First Approach: Components directly implement Protocol interfaces without inheritance
+2. Protocol-Based Approach: Components directly implement Protocol interfaces without inheritance
 
 This script demonstrates both approaches for dynamics models.
 """
@@ -22,8 +22,8 @@ import numpy as np
 
 from pyrovelocity.models.modular.registry import DynamicsModelRegistry
 from pyrovelocity.models.modular.components.direct import (
-    StandardDynamicsModelDirect,
-    NonlinearDynamicsModelDirect,
+    StandardDynamicsModel,
+    NonlinearDynamicsModel,
 )
 
 
@@ -36,16 +36,16 @@ def main():
     standard_model_simulated = DynamicsModelRegistry.create("standard_simulated")
     nonlinear_model = DynamicsModelRegistry.create("nonlinear")
 
-    # Create Protocol-First dynamics models
-    standard_model_direct = DynamicsModelRegistry.create("standard_direct")
-    nonlinear_model_direct = DynamicsModelRegistry.create("nonlinear_direct")
+    # Create Protocol-Based dynamics models
+    standard_model_protocol = DynamicsModelRegistry.create("standard")
+    nonlinear_model_protocol = DynamicsModelRegistry.create("nonlinear")
 
     print("Created dynamics models:")
     print(f"  Base class - Standard: {standard_model.__class__.__name__}")
     print(f"  Base class - Standard Simulated: {standard_model_simulated.__class__.__name__}")
     print(f"  Base class - Nonlinear: {nonlinear_model.__class__.__name__}")
-    print(f"  Protocol-First - Standard: {standard_model_direct.__class__.__name__}")
-    print(f"  Protocol-First - Nonlinear: {nonlinear_model_direct.__class__.__name__}")
+    print(f"  Protocol-Based - Standard: {standard_model_protocol.__class__.__name__}")
+    print(f"  Protocol-Based - Nonlinear: {nonlinear_model_protocol.__class__.__name__}")
 
     # Set up parameters
     n_genes = 3
@@ -162,9 +162,9 @@ def main():
         alpha, beta, gamma, k_alpha=k_alpha, k_beta=k_beta
     )
 
-    # Compute steady states for Protocol-First models
-    u_ss_standard_direct, s_ss_standard_direct = standard_model_direct.steady_state(alpha, beta, gamma)
-    u_ss_nonlinear_direct, s_ss_nonlinear_direct = nonlinear_model_direct.steady_state(
+    # Compute steady states for Protocol-Based models
+    u_ss_standard_protocol, s_ss_standard_protocol = standard_model_protocol.steady_state(alpha, beta, gamma)
+    u_ss_nonlinear_protocol, s_ss_nonlinear_protocol = nonlinear_model_protocol.steady_state(
         alpha, beta, gamma, k_alpha=k_alpha, k_beta=k_beta
     )
 
@@ -175,17 +175,17 @@ def main():
     print(f"Standard Model Simulated - Spliced: {s_ss_simulated}")
     print(f"Nonlinear Model (Base) - Unspliced: {u_ss_nonlinear}")
     print(f"Nonlinear Model (Base) - Spliced: {s_ss_nonlinear}")
-    print(f"Standard Model (Protocol-First) - Unspliced: {u_ss_standard_direct}")
-    print(f"Standard Model (Protocol-First) - Spliced: {s_ss_standard_direct}")
-    print(f"Nonlinear Model (Protocol-First) - Unspliced: {u_ss_nonlinear_direct}")
-    print(f"Nonlinear Model (Protocol-First) - Spliced: {s_ss_nonlinear_direct}")
+    print(f"Standard Model (Protocol-Based) - Unspliced: {u_ss_standard_protocol}")
+    print(f"Standard Model (Protocol-Based) - Spliced: {s_ss_standard_protocol}")
+    print(f"Nonlinear Model (Protocol-Based) - Unspliced: {u_ss_nonlinear_protocol}")
+    print(f"Nonlinear Model (Protocol-Based) - Spliced: {s_ss_nonlinear_protocol}")
 
-    # Compare base class and Protocol-First implementations
-    print("\nComparing Base Class and Protocol-First implementations:")
-    standard_equal_u = torch.allclose(u_ss_standard, u_ss_standard_direct)
-    standard_equal_s = torch.allclose(s_ss_standard, s_ss_standard_direct)
-    nonlinear_equal_u = torch.allclose(u_ss_nonlinear, u_ss_nonlinear_direct)
-    nonlinear_equal_s = torch.allclose(s_ss_nonlinear, s_ss_nonlinear_direct)
+    # Compare base class and Protocol-Based implementation (now the default)s
+    print("\nComparing Base Class and Protocol-Based implementation (now the default)s:")
+    standard_equal_u = torch.allclose(u_ss_standard, u_ss_standard_protocol)
+    standard_equal_s = torch.allclose(s_ss_standard, s_ss_standard_protocol)
+    nonlinear_equal_u = torch.allclose(u_ss_nonlinear, u_ss_nonlinear_protocol)
+    nonlinear_equal_s = torch.allclose(s_ss_nonlinear, s_ss_nonlinear_protocol)
 
     print(f"Standard Model - Unspliced: {'Equal' if standard_equal_u else 'Different'}")
     print(f"Standard Model - Spliced: {'Equal' if standard_equal_s else 'Different'}")
@@ -204,8 +204,8 @@ def main():
     axs[0].plot(times_nonlinear, u_nonlinear[:, gene_idx], label="Nonlinear Model (Base)", linestyle="-.")
     axs[0].axhline(y=u_ss_standard[gene_idx].item(), color="blue", linestyle=":", label="Standard Steady State (Base)")
     axs[0].axhline(y=u_ss_nonlinear[gene_idx].item(), color="green", linestyle=":", label="Nonlinear Steady State (Base)")
-    axs[0].axhline(y=u_ss_standard_direct[gene_idx].item(), color="red", linestyle=":", label="Standard Steady State (Protocol-First)")
-    axs[0].axhline(y=u_ss_nonlinear_direct[gene_idx].item(), color="purple", linestyle=":", label="Nonlinear Steady State (Protocol-First)")
+    axs[0].axhline(y=u_ss_standard_protocol[gene_idx].item(), color="red", linestyle=":", label="Standard Steady State (Protocol-Based)")
+    axs[0].axhline(y=u_ss_nonlinear_protocol[gene_idx].item(), color="purple", linestyle=":", label="Nonlinear Steady State (Protocol-Based)")
     axs[0].set_xlabel("Time")
     axs[0].set_ylabel("Unspliced Counts")
     axs[0].set_title(f"Unspliced mRNA Dynamics for Gene {gene_idx}")
@@ -217,8 +217,8 @@ def main():
     axs[1].plot(times_nonlinear, s_nonlinear[:, gene_idx], label="Nonlinear Model (Base)", linestyle="-.")
     axs[1].axhline(y=s_ss_standard[gene_idx].item(), color="blue", linestyle=":", label="Standard Steady State (Base)")
     axs[1].axhline(y=s_ss_nonlinear[gene_idx].item(), color="green", linestyle=":", label="Nonlinear Steady State (Base)")
-    axs[1].axhline(y=s_ss_standard_direct[gene_idx].item(), color="red", linestyle=":", label="Standard Steady State (Protocol-First)")
-    axs[1].axhline(y=s_ss_nonlinear_direct[gene_idx].item(), color="purple", linestyle=":", label="Nonlinear Steady State (Protocol-First)")
+    axs[1].axhline(y=s_ss_standard_protocol[gene_idx].item(), color="red", linestyle=":", label="Standard Steady State (Protocol-Based)")
+    axs[1].axhline(y=s_ss_nonlinear_protocol[gene_idx].item(), color="purple", linestyle=":", label="Nonlinear Steady State (Protocol-Based)")
     axs[1].set_xlabel("Time")
     axs[1].set_ylabel("Spliced Counts")
     axs[1].set_title(f"Spliced mRNA Dynamics for Gene {gene_idx}")
@@ -234,8 +234,8 @@ def main():
     plt.plot(u_nonlinear[:, gene_idx], s_nonlinear[:, gene_idx], label="Nonlinear Model (Base)", linestyle="-.")
     plt.scatter(u_ss_standard[gene_idx].item(), s_ss_standard[gene_idx].item(), color="blue", s=100, marker="*", label="Standard Steady State (Base)")
     plt.scatter(u_ss_nonlinear[gene_idx].item(), s_ss_nonlinear[gene_idx].item(), color="green", s=100, marker="*", label="Nonlinear Steady State (Base)")
-    plt.scatter(u_ss_standard_direct[gene_idx].item(), s_ss_standard_direct[gene_idx].item(), color="red", s=100, marker="*", label="Standard Steady State (Protocol-First)")
-    plt.scatter(u_ss_nonlinear_direct[gene_idx].item(), s_ss_nonlinear_direct[gene_idx].item(), color="purple", s=100, marker="*", label="Nonlinear Steady State (Protocol-First)")
+    plt.scatter(u_ss_standard_protocol[gene_idx].item(), s_ss_standard_protocol[gene_idx].item(), color="red", s=100, marker="*", label="Standard Steady State (Protocol-Based)")
+    plt.scatter(u_ss_nonlinear_protocol[gene_idx].item(), s_ss_nonlinear_protocol[gene_idx].item(), color="purple", s=100, marker="*", label="Nonlinear Steady State (Protocol-Based)")
     plt.xlabel("Unspliced Counts")
     plt.ylabel("Spliced Counts")
     plt.title(f"Phase Portrait for Gene {gene_idx}")
@@ -245,8 +245,8 @@ def main():
 
     print("\nSimulation completed. Plots saved as 'dynamics_example.png' and 'phase_portrait.png'.")
 
-    # Compare context-based interface between base class and Protocol-First implementations
-    print("\nComparing context-based interface between base class and Protocol-First implementations:")
+    # Compare context-based interface between base class and Protocol-Based implementation (now the default)s
+    print("\nComparing context-based interface between base class and Protocol-Based implementation (now the default)s:")
 
     # Create context dictionaries
     base_context = {
@@ -262,14 +262,14 @@ def main():
 
     # Run forward pass
     base_result = standard_model.forward(base_context)
-    protocol_result = standard_model_direct.forward(protocol_context)
+    protocol_result = standard_model_protocol.forward(protocol_context)
 
     # Compare results
     print("Base class forward results:")
     print(f"  u_expected shape: {base_result['u_expected'].shape}")
     print(f"  s_expected shape: {base_result['s_expected'].shape}")
 
-    print("Protocol-First forward results:")
+    print("Protocol-Based forward results:")
     print(f"  u_expected shape: {protocol_result['u_expected'].shape}")
     print(f"  s_expected shape: {protocol_result['s_expected'].shape}")
 
@@ -279,13 +279,13 @@ def main():
     print(f"Forward results are identical: {u_equal and s_equal}")
 
     # Explain the differences in implementation
-    print("\nKey differences between base class and Protocol-First implementations:")
+    print("\nKey differences between base class and Protocol-Based implementation (now the default)s:")
     print("1. Base class inherits from BaseDynamicsModel, which provides common functionality")
-    print("2. Protocol-First implementation directly implements the DynamicsModel Protocol")
-    print("3. Protocol-First implementation uses utility functions for common functionality")
+    print("2. Protocol-Based implementation (now the default) directly implements the DynamicsModel Protocol")
+    print("3. Protocol-Based implementation (now the default) uses utility functions for common functionality")
     print("4. Both implementations produce identical results, demonstrating functional equivalence")
-    print("5. Protocol-First approach reduces code complexity by eliminating inheritance hierarchies")
-    print("6. Protocol-First approach creates perfect architectural consistency with the JAX implementation")
+    print("5. Protocol-Based approach (now the default) reduces code complexity by eliminating inheritance hierarchies")
+    print("6. Protocol-Based approach (now the default) creates perfect architectural consistency with the JAX implementation")
 
     # Predict future states
     print("\nPredicting future states...")

@@ -4,7 +4,7 @@ Example script demonstrating the use of different guide implementations in Pyro.
 This script shows how to use different guide types (AutoNormal, AutoDelta, and AutoDiagonalNormal)
 to perform variational inference on a simple model.
 
-It also demonstrates the use of Protocol-First guide implementations from PyroVelocity's modular
+It also demonstrates the use of Protocol-Based guide implementations from PyroVelocity's modular
 architecture, which directly implement the InferenceGuide Protocol without inheriting from base classes.
 """
 
@@ -24,11 +24,11 @@ from pyrovelocity.models.modular.components import (
     DeltaGuide,
 )
 
-# Import Protocol-First guide implementations
+# Import Protocol-Based guide implementations
 from pyrovelocity.models.modular.components.direct import (
-    AutoGuideFactoryDirect,
-    NormalGuideDirect,
-    DeltaGuideDirect,
+    AutoGuideFactory,
+    NormalGuide,
+    DeltaGuide,
 )
 
 
@@ -183,18 +183,18 @@ def main():
     print("Skipping Part 2 due to implementation challenges.")
     print("In a real implementation, this part would demonstrate:")
     print("1. Creating PyroVelocity base class guides (AutoGuideFactory, NormalGuide, DeltaGuide)")
-    print("2. Creating PyroVelocity Protocol-First guides (AutoGuideFactoryDirect, NormalGuideDirect, DeltaGuideDirect)")
+    print("2. Creating PyroVelocity Protocol-Based guides (AutoGuideFactory, NormalGuide, DeltaGuide)")
     print("3. Training both types of guides on a velocity model")
     print("4. Comparing the results to demonstrate functional equivalence")
 
     # Explain the differences in implementation
-    print("\nKey differences between base class and Protocol-First guide implementations:")
+    print("\nKey differences between base class and Protocol-Based guide implementations:")
     print("1. Base class guides inherit from BaseInferenceGuide, which provides common functionality")
-    print("2. Protocol-First guides directly implement the InferenceGuide Protocol")
-    print("3. Protocol-First guides use utility functions for common functionality")
+    print("2. Protocol-Based guides directly implement the InferenceGuide Protocol")
+    print("3. Protocol-Based guides use utility functions for common functionality")
     print("4. Both implementations produce similar results, demonstrating functional equivalence")
-    print("5. Protocol-First approach reduces code complexity by eliminating inheritance hierarchies")
-    print("6. Protocol-First approach creates perfect architectural consistency with the JAX implementation")
+    print("5. Protocol-Based approach (now the default) reduces code complexity by eliminating inheritance hierarchies")
+    print("6. Protocol-Based approach (now the default) creates perfect architectural consistency with the JAX implementation")
 
     print("\nSimulation completed. Plots saved as 'guide_losses.png' and 'velocity_guide_losses.png'.")
 

@@ -2,16 +2,16 @@
 Example script demonstrating the use of the registry system in the PyroVelocity modular architecture.
 
 This script shows how to:
-1. Register custom components in the registry (both base class and Protocol-First implementations)
+1. Register custom components in the registry (both base class and Protocol-Based implementation (now the default)s)
 2. List available components
 3. Create components from the registry
 4. Use the components in a model
 5. Create a custom model with registered components
-6. Compare base class and Protocol-First implementations
+6. Compare base class and Protocol-Based implementation (now the default)s
 
 The PyroVelocity modular architecture supports two implementation approaches:
 1. Base Class Approach: Components inherit from base classes (BaseDynamicsModel, etc.)
-2. Protocol-First Approach: Components directly implement Protocol interfaces without inheritance
+2. Protocol-Based Approach: Components directly implement Protocol interfaces without inheritance
 
 This script demonstrates both approaches for custom component registration.
 """
@@ -174,18 +174,18 @@ class CustomNormalPriorModel:
         return {"alpha": alpha, "beta": beta, "gamma": gamma}
 
 
-# Define a custom Protocol-First dynamics model
-@DynamicsModelRegistry.register("custom_linear_direct")
-class CustomLinearDynamicsModelDirect:
+# Define a custom Protocol-Based dynamics model
+@DynamicsModelRegistry.register("custom_linear")
+class CustomLinearDynamicsModel:
     """
-    A custom Protocol-First dynamics model that directly implements the DynamicsModel Protocol.
+    A custom Protocol-Based dynamics model that directly implements the DynamicsModel Protocol.
 
     This model uses a simple linear relationship between unspliced and spliced RNA.
-    This implementation uses the Protocol-First approach by directly implementing the Protocol
+    This implementation uses the Protocol-Based approach (now the default) by directly implementing the Protocol
     without inheriting from any base class.
     """
 
-    def __init__(self, name="custom_linear_direct", **kwargs):
+    def __init__(self, name="custom_linear", **kwargs):
         """Initialize the custom dynamics model."""
         self.name = name
 
@@ -243,18 +243,18 @@ class CustomLinearDynamicsModelDirect:
         return u_ss, s_ss
 
 
-# Define a custom Protocol-First prior model
-@PriorModelRegistry.register("custom_normal_direct")
-class CustomNormalPriorModelDirect:
+# Define a custom Protocol-Based prior model
+@PriorModelRegistry.register("custom_normal")
+class CustomNormalPriorModel:
     """
-    A custom Protocol-First prior model that directly implements the PriorModel Protocol.
+    A custom Protocol-Based prior model that directly implements the PriorModel Protocol.
 
     This model uses normal distributions for all parameters.
-    This implementation uses the Protocol-First approach by directly implementing the Protocol
+    This implementation uses the Protocol-Based approach (now the default) by directly implementing the Protocol
     without inheriting from any base class.
     """
 
-    def __init__(self, name="custom_normal_direct", **kwargs):
+    def __init__(self, name="custom_normal", **kwargs):
         """Initialize the custom prior model."""
         self.name = name
 
@@ -337,22 +337,22 @@ def main():
     inference_guide = InferenceGuideRegistry.create("auto")
     print(f"  Created inference guide: {inference_guide.__class__.__name__}")
 
-    # Create Protocol-First components
-    print("\nCreating Protocol-First components:")
-    dynamics_model_direct = DynamicsModelRegistry.create("custom_linear_direct")
-    print(f"  Created dynamics model: {dynamics_model_direct.__class__.__name__}")
+    # Create Protocol-Based components (now the default)
+    print("\nCreating Protocol-Based components (now the default):")
+    dynamics_model_protocol = DynamicsModelRegistry.create("custom_linear")
+    print(f"  Created dynamics model: {dynamics_model_protocol.__class__.__name__}")
 
-    prior_model_direct = PriorModelRegistry.create("custom_normal_direct")
-    print(f"  Created prior model: {prior_model_direct.__class__.__name__}")
+    prior_model_protocol = PriorModelRegistry.create("custom_normal")
+    print(f"  Created prior model: {prior_model_protocol.__class__.__name__}")
 
-    likelihood_model_direct = LikelihoodModelRegistry.create("poisson_direct")
-    print(f"  Created likelihood model: {likelihood_model_direct.__class__.__name__}")
+    likelihood_model_protocol = LikelihoodModelRegistry.create("poisson")
+    print(f"  Created likelihood model: {likelihood_model_protocol.__class__.__name__}")
 
-    observation_model_direct = ObservationModelRegistry.create("standard_direct")
-    print(f"  Created observation model: {observation_model_direct.__class__.__name__}")
+    observation_model_protocol = ObservationModelRegistry.create("standard")
+    print(f"  Created observation model: {observation_model_protocol.__class__.__name__}")
 
-    inference_guide_direct = InferenceGuideRegistry.create("auto_direct")
-    print(f"  Created inference guide: {inference_guide_direct.__class__.__name__}")
+    inference_guide_protocol = InferenceGuideRegistry.create("auto")
+    print(f"  Created inference guide: {inference_guide_protocol.__class__.__name__}")
 
     # Test the dynamics model
     print("\nTesting the dynamics model...")
@@ -399,8 +399,8 @@ def main():
     print(f"  Steady-state unspliced counts: {u_ss}")
     print(f"  Steady-state spliced counts: {s_ss}")
 
-    # Test Protocol-First dynamics model
-    print("\nTesting Protocol-First dynamics model:")
+    # Test Protocol-Based dynamics model
+    print("\nTesting Protocol-Based dynamics model:")
     context = {
         "u_obs": u,
         "s_obs": s,
@@ -409,13 +409,13 @@ def main():
         "gamma": gamma,
     }
 
-    result_context = dynamics_model_direct.forward(context)
+    result_context = dynamics_model_protocol.forward(context)
     print(f"  Expected unspliced counts: {result_context['u_expected']}")
     print(f"  Expected spliced counts: {result_context['s_expected']}")
 
-    u_ss_direct, s_ss_direct = dynamics_model_direct.steady_state(alpha, beta, gamma)
-    print(f"  Steady-state unspliced counts: {u_ss_direct}")
-    print(f"  Steady-state spliced counts: {s_ss_direct}")
+    u_ss_protocol, s_ss_protocol = dynamics_model_protocol.steady_state(alpha, beta, gamma)
+    print(f"  Steady-state unspliced counts: {u_ss_protocol}")
+    print(f"  Steady-state spliced counts: {s_ss_protocol}")
 
     # Compare results
     print("\nComparing results:")
@@ -423,8 +423,8 @@ def main():
     s_equal = torch.allclose(s_expected, result_context['s_expected'])
     print(f"  Expected counts match: {u_equal and s_equal}")
 
-    u_ss_equal = torch.allclose(u_ss, u_ss_direct)
-    s_ss_equal = torch.allclose(s_ss, s_ss_direct)
+    u_ss_equal = torch.allclose(u_ss, u_ss_protocol)
+    s_ss_equal = torch.allclose(s_ss, s_ss_protocol)
     print(f"  Steady state counts match: {u_ss_equal and s_ss_equal}")
 
     # Create a custom model using the factory system with base class components
@@ -461,34 +461,34 @@ def main():
     print(f"  - Observation: {custom_model.observation_model.__class__.__name__}")
     print(f"  - Guide: {custom_model.guide_model.__class__.__name__}")
 
-    # Create a custom model using the factory system with Protocol-First components
-    print("\nCreating a custom model with Protocol-First components...")
+    # Create a custom model using the factory system with Protocol-Based components (now the default)
+    print("\nCreating a custom model with Protocol-Based components (now the default)...")
     protocol_config = ModelConfig(
         dynamics_model=ComponentConfig(
-            name="custom_linear_direct",
+            name="custom_linear",
             params={}
         ),
         prior_model=ComponentConfig(
-            name="custom_normal_direct",
+            name="custom_normal",
             params={}
         ),
         likelihood_model=ComponentConfig(
-            name="poisson_direct",
+            name="poisson",
             params={}
         ),
         observation_model=ComponentConfig(
-            name="standard_direct",
+            name="standard",
             params={}
         ),
         inference_guide=ComponentConfig(
-            name="auto_direct",
+            name="auto",
             params={"guide_type": "AutoNormal", "init_scale": 0.1}
         )
     )
 
     # Create the model
     protocol_model = create_model_from_config(protocol_config)
-    print(f"Created custom model with Protocol-First components:")
+    print(f"Created custom model with Protocol-Based components (now the default):")
     print(f"  - Dynamics: {protocol_model.dynamics_model.__class__.__name__}")
     print(f"  - Prior: {protocol_model.prior_model.__class__.__name__}")
     print(f"  - Likelihood: {protocol_model.likelihood_model.__class__.__name__}")
@@ -496,13 +496,13 @@ def main():
     print(f"  - Guide: {protocol_model.guide_model.__class__.__name__}")
 
     # Explain the differences in implementation
-    print("\nKey differences between base class and Protocol-First implementations:")
+    print("\nKey differences between base class and Protocol-Based implementation (now the default)s:")
     print("1. Base class components inherit from base classes, which provide common functionality")
-    print("2. Protocol-First components directly implement Protocol interfaces")
-    print("3. Protocol-First components use utility functions for common functionality")
+    print("2. Protocol-Based components (now the default) directly implement Protocol interfaces")
+    print("3. Protocol-Based components (now the default) use utility functions for common functionality")
     print("4. Both implementations produce identical results, demonstrating functional equivalence")
-    print("5. Protocol-First approach reduces code complexity by eliminating inheritance hierarchies")
-    print("6. Protocol-First approach creates perfect architectural consistency with the JAX implementation")
+    print("5. Protocol-Based approach (now the default) reduces code complexity by eliminating inheritance hierarchies")
+    print("6. Protocol-Based approach (now the default) creates perfect architectural consistency with the JAX implementation")
 
     print("\nRegistry example completed successfully!")
 
