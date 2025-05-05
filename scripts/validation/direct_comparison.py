@@ -226,42 +226,135 @@ def compare_models(legacy_results, modular_results):
 
     # Compare parameters
     parameter_comparison = {}
-    for param in ["alpha", "beta", "gamma"]:
-        # Get parameter samples
-        param_samples1 = legacy_results["posterior_samples"][param]
-        param_samples2 = modular_results["posterior_samples"][param]
+    try:
+        # Prepare the results dictionary in the format expected by compare_parameters
+        results = {
+            "legacy": {
+                "posterior_samples": legacy_results["posterior_samples"]
+            },
+            "modular": {
+                "posterior_samples": modular_results["posterior_samples"]
+            }
+        }
 
         # Compare parameters
-        param_metrics = compare_parameters(
-            {param: param_samples1}, {param: param_samples2}
-        )[param]
+        param_comparison_results = compare_parameters(results)
 
-        # Store parameter comparison results
-        parameter_comparison[param] = {"legacy_vs_modular": param_metrics}
+        # Extract the comparison results for each parameter
+        for param in ["alpha", "beta", "gamma"]:
+            if param in param_comparison_results:
+                parameter_comparison[param] = param_comparison_results[param]
+            else:
+                print(f"Warning: Parameter {param} not found in comparison results")
+                parameter_comparison[param] = {"error": f"Parameter {param} not found in comparison results"}
+    except Exception as e:
+        print(f"Error comparing parameters: {e}")
+        import traceback
+        traceback.print_exc()
+
+        # Fallback to manual comparison
+        print("Falling back to manual parameter comparison")
+        for param in ["alpha", "beta", "gamma"]:
+            try:
+                # Get parameter samples
+                param_samples1 = legacy_results["posterior_samples"][param]
+                param_samples2 = modular_results["posterior_samples"][param]
+
+                # Convert to numpy arrays if needed
+                if isinstance(param_samples1, torch.Tensor):
+                    param_samples1 = param_samples1.detach().cpu().numpy()
+                if isinstance(param_samples2, torch.Tensor):
+                    param_samples2 = param_samples2.detach().cpu().numpy()
+
+                # Flatten arrays for comparison
+                param_samples1_flat = param_samples1.flatten()
+                param_samples2_flat = param_samples2.flatten()
+
+                # Compute basic statistics
+                correlation = np.corrcoef(param_samples1_flat, param_samples2_flat)[0, 1]
+                mse = np.mean((param_samples1_flat - param_samples2_flat) ** 2)
+                mae = np.mean(np.abs(param_samples1_flat - param_samples2_flat))
+
+                # Store parameter comparison results
+                parameter_comparison[param] = {
+                    "legacy_vs_modular": {
+                        "correlation": correlation,
+                        "mse": mse,
+                        "mae": mae
+                    }
+                }
+            except Exception as e:
+                print(f"Error comparing parameter {param}: {e}")
+                parameter_comparison[param] = {
+                    "legacy_vs_modular": {
+                        "error": str(e)
+                    }
+                }
 
     # Store parameter comparison results
     comparison_results["parameter_comparison"] = parameter_comparison
 
     # Compare velocities if both are available
     if legacy_results["velocity"] is not None and modular_results["velocity"] is not None:
-        # Ensure both velocities are numpy arrays
-        legacy_velocity = legacy_results["velocity"]
-        if isinstance(legacy_velocity, torch.Tensor):
-            legacy_velocity = legacy_velocity.detach().cpu().numpy()
+        try:
+            # Ensure both velocities are numpy arrays
+            legacy_velocity = legacy_results["velocity"]
+            if isinstance(legacy_velocity, torch.Tensor):
+                legacy_velocity = legacy_velocity.detach().cpu().numpy()
 
-        modular_velocity = modular_results["velocity"]
-        if isinstance(modular_velocity, torch.Tensor):
-            modular_velocity = modular_velocity.detach().cpu().numpy()
+            modular_velocity = modular_results["velocity"]
+            if isinstance(modular_velocity, torch.Tensor):
+                modular_velocity = modular_velocity.detach().cpu().numpy()
 
-        # Compare velocities
-        velocity_comparison = {
-            "legacy_vs_modular": compare_velocities(
-                {"velocity": legacy_velocity}, {"velocity": modular_velocity}
-            )
-        }
+            # Prepare the results dictionary in the format expected by compare_velocities
+            velocity_results = {
+                "legacy": {
+                    "velocity": legacy_velocity
+                },
+                "modular": {
+                    "velocity": modular_velocity
+                }
+            }
 
-        # Store velocity comparison results
-        comparison_results["velocity_comparison"] = velocity_comparison
+            # Compare velocities
+            velocity_comparison = {
+                "legacy_vs_modular": compare_velocities(velocity_results)
+            }
+
+            # Store velocity comparison results
+            comparison_results["velocity_comparison"] = velocity_comparison
+        except Exception as e:
+            print(f"Error comparing velocities: {e}")
+            import traceback
+            traceback.print_exc()
+
+            # Fallback to manual comparison
+            print("Falling back to manual velocity comparison")
+            try:
+                # Flatten arrays for comparison
+                legacy_velocity_flat = legacy_velocity.flatten()
+                modular_velocity_flat = modular_velocity.flatten()
+
+                # Compute basic statistics
+                correlation = np.corrcoef(legacy_velocity_flat, modular_velocity_flat)[0, 1]
+                mse = np.mean((legacy_velocity_flat - modular_velocity_flat) ** 2)
+                mae = np.mean(np.abs(legacy_velocity_flat - modular_velocity_flat))
+
+                # Store velocity comparison results
+                comparison_results["velocity_comparison"] = {
+                    "legacy_vs_modular": {
+                        "correlation": correlation,
+                        "mse": mse,
+                        "mae": mae
+                    }
+                }
+            except Exception as e:
+                print(f"Error in manual velocity comparison: {e}")
+                comparison_results["velocity_comparison"] = {
+                    "legacy_vs_modular": {
+                        "error": str(e)
+                    }
+                }
     else:
         print("Warning: Velocity comparison skipped because one or both velocities are None")
         comparison_results["velocity_comparison"] = {
@@ -270,24 +363,65 @@ def compare_models(legacy_results, modular_results):
 
     # Compare uncertainties if both are available
     if legacy_results["uncertainty"] is not None and modular_results["uncertainty"] is not None:
-        # Ensure both uncertainties are numpy arrays
-        legacy_uncertainty = legacy_results["uncertainty"]
-        if isinstance(legacy_uncertainty, torch.Tensor):
-            legacy_uncertainty = legacy_uncertainty.detach().cpu().numpy()
+        try:
+            # Ensure both uncertainties are numpy arrays
+            legacy_uncertainty = legacy_results["uncertainty"]
+            if isinstance(legacy_uncertainty, torch.Tensor):
+                legacy_uncertainty = legacy_uncertainty.detach().cpu().numpy()
 
-        modular_uncertainty = modular_results["uncertainty"]
-        if isinstance(modular_uncertainty, torch.Tensor):
-            modular_uncertainty = modular_uncertainty.detach().cpu().numpy()
+            modular_uncertainty = modular_results["uncertainty"]
+            if isinstance(modular_uncertainty, torch.Tensor):
+                modular_uncertainty = modular_uncertainty.detach().cpu().numpy()
 
-        # Compare uncertainties
-        uncertainty_comparison = {
-            "legacy_vs_modular": compare_uncertainties(
-                {"uncertainty": legacy_uncertainty}, {"uncertainty": modular_uncertainty}
-            )
-        }
+            # Prepare the results dictionary in the format expected by compare_uncertainties
+            uncertainty_results = {
+                "legacy": {
+                    "uncertainty": legacy_uncertainty
+                },
+                "modular": {
+                    "uncertainty": modular_uncertainty
+                }
+            }
 
-        # Store uncertainty comparison results
-        comparison_results["uncertainty_comparison"] = uncertainty_comparison
+            # Compare uncertainties
+            uncertainty_comparison = {
+                "legacy_vs_modular": compare_uncertainties(uncertainty_results)
+            }
+
+            # Store uncertainty comparison results
+            comparison_results["uncertainty_comparison"] = uncertainty_comparison
+        except Exception as e:
+            print(f"Error comparing uncertainties: {e}")
+            import traceback
+            traceback.print_exc()
+
+            # Fallback to manual comparison
+            print("Falling back to manual uncertainty comparison")
+            try:
+                # Flatten arrays for comparison
+                legacy_uncertainty_flat = legacy_uncertainty.flatten()
+                modular_uncertainty_flat = modular_uncertainty.flatten()
+
+                # Compute basic statistics
+                correlation = np.corrcoef(legacy_uncertainty_flat, modular_uncertainty_flat)[0, 1]
+                mse = np.mean((legacy_uncertainty_flat - modular_uncertainty_flat) ** 2)
+                mae = np.mean(np.abs(legacy_uncertainty_flat - modular_uncertainty_flat))
+
+                # Store uncertainty comparison results
+                comparison_results["uncertainty_comparison"] = {
+                    "legacy_vs_modular": {
+                        "correlation": correlation,
+                        "mse": mse,
+                        "mae": mae
+                    }
+                }
+            except Exception as e:
+                print(f"Error in manual uncertainty comparison: {e}")
+                comparison_results["uncertainty_comparison"] = {
+                    "legacy_vs_modular": {
+                        "error": str(e)
+                    }
+                }
     else:
         print("Warning: Uncertainty comparison skipped because one or both uncertainties are None")
         comparison_results["uncertainty_comparison"] = {
@@ -295,14 +429,60 @@ def compare_models(legacy_results, modular_results):
         }
 
     # Compare performance
-    performance_comparison = {
-        "legacy_vs_modular": compare_performance(
-            legacy_results["performance"], modular_results["performance"]
-        )
-    }
+    try:
+        # Prepare the results dictionary in the format expected by compare_performance
+        performance_results = {
+            "legacy": {
+                "performance": legacy_results["performance"]
+            },
+            "modular": {
+                "performance": modular_results["performance"]
+            }
+        }
 
-    # Store performance comparison results
-    comparison_results["performance_comparison"] = performance_comparison
+        # Compare performance
+        performance_comparison = {
+            "legacy_vs_modular": compare_performance(performance_results)
+        }
+
+        # Store performance comparison results
+        comparison_results["performance_comparison"] = performance_comparison
+    except Exception as e:
+        print(f"Error comparing performance: {e}")
+        import traceback
+        traceback.print_exc()
+
+        # Fallback to manual comparison
+        print("Falling back to manual performance comparison")
+        try:
+            # Get performance metrics
+            legacy_training_time = legacy_results["performance"]["training_time"]
+            modular_training_time = modular_results["performance"]["training_time"]
+            legacy_inference_time = legacy_results["performance"]["inference_time"]
+            modular_inference_time = modular_results["performance"]["inference_time"]
+
+            # Compute ratios
+            training_time_ratio = modular_training_time / legacy_training_time if legacy_training_time > 0 else float('inf')
+            inference_time_ratio = modular_inference_time / legacy_inference_time if legacy_inference_time > 0 else float('inf')
+
+            # Store performance comparison results
+            comparison_results["performance_comparison"] = {
+                "legacy_vs_modular": {
+                    "training_time_ratio": training_time_ratio,
+                    "inference_time_ratio": inference_time_ratio,
+                    "legacy_training_time": legacy_training_time,
+                    "modular_training_time": modular_training_time,
+                    "legacy_inference_time": legacy_inference_time,
+                    "modular_inference_time": modular_inference_time
+                }
+            }
+        except Exception as e:
+            print(f"Error in manual performance comparison: {e}")
+            comparison_results["performance_comparison"] = {
+                "legacy_vs_modular": {
+                    "error": str(e)
+                }
+            }
 
     return comparison_results
 
@@ -492,51 +672,57 @@ def main():
     try:
         # Check if modular_results is available
         if 'modular_results' in locals() and modular_results is not None:
-            comparison = compare_models(legacy_results, modular_results)
+            comparison_results = compare_models(legacy_results, modular_results)
             print("Model comparison successful")
+
+            # Generate summary report
+            try:
+                report_path = generate_summary_report(legacy_results, modular_results, comparison_results, args, args.output_dir)
+                print(f"Summary report saved to {report_path}")
+                print(f"Results saved to {args.output_dir}")
+            except Exception as e:
+                print(f"Error generating summary report: {e}")
+                import traceback
+                traceback.print_exc()
         else:
             print("Skipping model comparison because modular model failed")
-            comparison = {"error": "Modular model failed"}
+
+            # Create a simple summary report for the legacy model
+            try:
+                report_path = os.path.join(args.output_dir, "legacy_model_summary.txt")
+                with open(report_path, "w") as f:
+                    f.write("PyroVelocity Legacy Model Summary\n")
+                    f.write("===============================\n\n")
+                    f.write(f"Max epochs: {args.max_epochs}\n")
+                    f.write(f"Number of posterior samples: {args.num_samples}\n")
+                    f.write(f"Random seed: {args.seed}\n")
+                    f.write("\n")
+                    f.write("Legacy Model:\n")
+                    f.write(f"  Training time: {legacy_results['performance']['training_time']:.2f} seconds\n")
+                    f.write(f"  Inference time: {legacy_results['performance']['inference_time']:.2f} seconds\n")
+                    if legacy_results['velocity'] is not None:
+                        f.write(f"  Velocity shape: {legacy_results['velocity'].shape}\n")
+                    else:
+                        f.write("  Velocity: None\n")
+                    f.write("\n")
+                    f.write("Modular Model:\n")
+                    f.write("  Failed to train\n")
+                    f.write("\n")
+                    f.write("Conclusion:\n")
+                    f.write("  The legacy model was trained successfully, but the modular model failed.\n")
+                    f.write("  This is expected since we're focusing on validating the legacy model's workflow first.\n")
+                    f.write("  The next step is to fix the modular model implementation.\n")
+
+                print(f"Legacy model summary saved to {report_path}")
+                print(f"Results saved to {args.output_dir}")
+            except Exception as e:
+                print(f"Error generating legacy model summary: {e}")
+                import traceback
+                traceback.print_exc()
     except Exception as e:
         print(f"Error comparing models: {e}")
         import traceback
         traceback.print_exc()
-        return
-
-    # Generate summary report
-    try:
-        # Create a simple summary report for the legacy model
-        report_path = os.path.join(args.output_dir, "legacy_model_summary.txt")
-        with open(report_path, "w") as f:
-            f.write("PyroVelocity Legacy Model Summary\n")
-            f.write("===============================\n\n")
-            f.write(f"Max epochs: {args.max_epochs}\n")
-            f.write(f"Number of posterior samples: {args.num_samples}\n")
-            f.write(f"Random seed: {args.seed}\n")
-            f.write("\n")
-            f.write("Legacy Model:\n")
-            f.write(f"  Training time: {legacy_results['performance']['training_time']:.2f} seconds\n")
-            f.write(f"  Inference time: {legacy_results['performance']['inference_time']:.2f} seconds\n")
-            if legacy_results['velocity'] is not None:
-                f.write(f"  Velocity shape: {legacy_results['velocity'].shape}\n")
-            else:
-                f.write("  Velocity: None\n")
-            f.write("\n")
-            f.write("Modular Model:\n")
-            f.write("  Failed to train\n")
-            f.write("\n")
-            f.write("Conclusion:\n")
-            f.write("  The legacy model was trained successfully, but the modular model failed.\n")
-            f.write("  This is expected since we're focusing on validating the legacy model's workflow first.\n")
-            f.write("  The next step is to fix the modular model implementation.\n")
-
-        print(f"Legacy model summary saved to {report_path}")
-        print(f"Results saved to {args.output_dir}")
-    except Exception as e:
-        print(f"Error generating summary report: {e}")
-        import traceback
-        traceback.print_exc()
-        return
 
 
 if __name__ == "__main__":

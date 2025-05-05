@@ -164,6 +164,24 @@ def compute_velocity(
             gamma_mean = gamma.mean(dim=0)
             u_ss_mean = alpha_mean / beta_mean
             s_ss_mean = alpha_mean / gamma_mean
+
+            # Ensure the shapes are compatible for broadcasting
+            if u.dim() == 1 and u_ss_mean.dim() > 1:
+                # If u is 1D but u_ss_mean is multi-dimensional, flatten u_ss_mean
+                u_ss_mean = u_ss_mean.flatten()
+                s_ss_mean = s_ss_mean.flatten()
+            elif u.dim() > 1 and u_ss_mean.dim() == 1:
+                # If u is multi-dimensional but u_ss_mean is 1D, expand u_ss_mean
+                if u.shape[1] == u_ss_mean.shape[0]:
+                    # If the second dimension of u matches the size of u_ss_mean, expand along first dimension
+                    u_ss_mean = u_ss_mean.unsqueeze(0).expand(u.shape[0], -1)
+                    s_ss_mean = s_ss_mean.unsqueeze(0).expand(u.shape[0], -1)
+                else:
+                    # Otherwise, try to reshape to match
+                    u_ss_mean = u_ss_mean.reshape(1, -1).expand(u.shape[0], -1)
+                    s_ss_mean = s_ss_mean.reshape(1, -1).expand(u.shape[0], -1)
+
+            # Compute velocity
             velocity = beta_mean * (u - u_ss_mean) - gamma_mean * (s - s_ss_mean)
 
             # Compute latent time (pseudotime)

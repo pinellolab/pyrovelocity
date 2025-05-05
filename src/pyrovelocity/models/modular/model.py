@@ -367,14 +367,14 @@ class PyroVelocityModel:
         # Process data through the observation model
         observation_context = self.observation_model.forward(context)
 
-        # Process through the dynamics model
-        dynamics_context = self.dynamics_model.forward(observation_context)
+        # Apply prior distributions first to provide parameters for the dynamics model
+        prior_context = self.prior_model.forward(observation_context)
 
-        # Apply prior distributions
-        prior_context = self.prior_model.forward(dynamics_context)
+        # Process through the dynamics model with the parameters from the prior model
+        dynamics_context = self.dynamics_model.forward(prior_context)
 
         # Apply likelihood model
-        likelihood_context = self.likelihood_model.forward(prior_context)
+        likelihood_context = self.likelihood_model.forward(dynamics_context)
 
         # Return the final context with all model outputs
         return likelihood_context
@@ -1181,8 +1181,15 @@ class PyroVelocityModel:
             use_mean=True,
         )
 
-        # Return velocity
-        return velocity_results["velocity"]
+        # Get velocity from results
+        velocity = velocity_results["velocity"]
+
+        # Convert to numpy array if it's a tensor
+        if isinstance(velocity, torch.Tensor):
+            velocity = velocity.detach().cpu().numpy()
+
+        # Return velocity as numpy array
+        return velocity
 
     @beartype
     def get_velocity_uncertainty(
@@ -1268,5 +1275,8 @@ class PyroVelocityModel:
         # Convert to numpy array
         if isinstance(uncertainty, torch.Tensor):
             uncertainty = uncertainty.detach().cpu().numpy()
+        elif not isinstance(uncertainty, np.ndarray):
+            # Handle other types if needed
+            uncertainty = np.array(uncertainty)
 
         return uncertainty
