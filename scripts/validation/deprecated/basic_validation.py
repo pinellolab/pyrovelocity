@@ -110,6 +110,8 @@ def create_synthetic_data():
     adata = ad.AnnData(X=s_data)
     adata.layers["spliced"] = s_data
     adata.layers["unspliced"] = u_data
+    adata.layers["raw_spliced"] = s_data.copy()  # Required by legacy model
+    adata.layers["raw_unspliced"] = u_data.copy()  # Required by legacy model
     adata.obs_names = [f"cell_{i}" for i in range(n_cells)]
     adata.var_names = [f"gene_{i}" for i in range(n_genes)]
 
@@ -123,8 +125,8 @@ def create_synthetic_data():
     # Add library size information
     adata.obs["u_lib_size_raw"] = np.sum(u_data, axis=1)
     adata.obs["s_lib_size_raw"] = np.sum(s_data, axis=1)
-    adata.obs["u_lib_size"] = np.log(adata.obs["u_lib_size_raw"])
-    adata.obs["s_lib_size"] = np.log(adata.obs["s_lib_size_raw"])
+    adata.obs["u_lib_size"] = np.log(adata.obs["u_lib_size_raw"] + 1e-6)
+    adata.obs["s_lib_size"] = np.log(adata.obs["s_lib_size_raw"] + 1e-6)
     adata.obs["u_lib_size_mean"] = np.mean(adata.obs["u_lib_size"])
     adata.obs["s_lib_size_mean"] = np.mean(adata.obs["s_lib_size"])
     adata.obs["u_lib_size_scale"] = np.std(adata.obs["u_lib_size"])
@@ -164,6 +166,32 @@ def main():
         print("Subsetting data for faster validation...")
         adata = adata[:100, :100].copy()
         print(f"Subset dataset to {adata.shape[0]} cells and {adata.shape[1]} genes")
+
+        # Ensure raw layers are present (required by legacy model)
+        if "raw_spliced" not in adata.layers:
+            adata.layers["raw_spliced"] = adata.layers["spliced"].copy()
+        if "raw_unspliced" not in adata.layers:
+            adata.layers["raw_unspliced"] = adata.layers["unspliced"].copy()
+
+        # Ensure library size information is present
+        if "u_lib_size_raw" not in adata.obs:
+            adata.obs["u_lib_size_raw"] = np.sum(adata.layers["unspliced"], axis=1)
+        if "s_lib_size_raw" not in adata.obs:
+            adata.obs["s_lib_size_raw"] = np.sum(adata.layers["spliced"], axis=1)
+        if "u_lib_size" not in adata.obs:
+            adata.obs["u_lib_size"] = np.log(adata.obs["u_lib_size_raw"] + 1e-6)
+        if "s_lib_size" not in adata.obs:
+            adata.obs["s_lib_size"] = np.log(adata.obs["s_lib_size_raw"] + 1e-6)
+        if "u_lib_size_mean" not in adata.obs:
+            adata.obs["u_lib_size_mean"] = np.mean(adata.obs["u_lib_size"])
+        if "s_lib_size_mean" not in adata.obs:
+            adata.obs["s_lib_size_mean"] = np.mean(adata.obs["s_lib_size"])
+        if "u_lib_size_scale" not in adata.obs:
+            adata.obs["u_lib_size_scale"] = np.std(adata.obs["u_lib_size"])
+        if "s_lib_size_scale" not in adata.obs:
+            adata.obs["s_lib_size_scale"] = np.std(adata.obs["s_lib_size"])
+        if "ind_x" not in adata.obs:
+            adata.obs["ind_x"] = np.arange(adata.shape[0])
     except Exception as e:
         print(f"Error loading pancreas dataset: {e}")
         print("Falling back to synthetic data...")
@@ -206,28 +234,65 @@ def main():
 
         # Extract results
         model_results = validation_results["results"]
+        comparison = validation_results["comparison"]
+
+        # Check if we have valid results
+        valid_implementations = []
+        for name, result in model_results.items():
+            if "error" not in result:
+                valid_implementations.append(name)
+
+        if len(valid_implementations) < 2:
+            print(f"Warning: Less than two valid implementations available for comparison.")
+            print(f"Valid implementations: {valid_implementations}")
+            print("Skipping detailed comparison.")
+
+            # Save error information
+            with open(os.path.join(args.output_dir, "validation_errors.txt"), "w") as f:
+                f.write("Validation Errors:\n")
+                f.write("=================\n\n")
+                for name, result in model_results.items():
+                    if "error" in result:
+                        f.write(f"{name} implementation:\n")
+                        f.write(f"  Error: {result['error']}\n")
+                        if "traceback" in result:
+                            f.write(f"  Traceback:\n{result['traceback']}\n")
+                        f.write("\n")
+
+            print(f"Error information saved to {os.path.join(args.output_dir, 'validation_errors.txt')}")
+            return
 
         # Re-run comparisons with shape normalization
         # This ensures that arrays with different shapes can be compared
         print("Comparing implementations with shape normalization...")
 
-        # Compare velocities with shape normalization
-        velocity_comparison = compare_velocities(
-            model_results,
-            normalize_method=args.normalize_method,
-            target_strategy=args.target_strategy
-        )
+        try:
+            # Compare velocities with shape normalization
+            velocity_comparison = compare_velocities(
+                model_results,
+                normalize_method=args.normalize_method,
+                target_strategy=args.target_strategy
+            )
 
-        # Compare uncertainties with shape normalization
-        uncertainty_comparison = compare_uncertainties(
-            model_results,
-            normalize_method=args.normalize_method,
-            target_strategy=args.target_strategy
-        )
+            # Update comparison results
+            comparison["velocity_comparison"] = velocity_comparison
+        except Exception as e:
+            print(f"Error comparing velocities: {e}")
+            comparison["velocity_comparison"] = {"error": str(e)}
 
-        # Update comparison results
-        validation_results["comparison"]["velocity_comparison"] = velocity_comparison
-        validation_results["comparison"]["uncertainty_comparison"] = uncertainty_comparison
+        try:
+            # Compare uncertainties with shape normalization
+            uncertainty_comparison = compare_uncertainties(
+                model_results,
+                normalize_method=args.normalize_method,
+                target_strategy=args.target_strategy
+            )
+
+            # Update comparison results
+            comparison["uncertainty_comparison"] = uncertainty_comparison
+        except Exception as e:
+            print(f"Error comparing uncertainties: {e}")
+            comparison["uncertainty_comparison"] = {"error": str(e)}
 
         elapsed_time = time.time() - start_time
         print(f"Validation completed in {elapsed_time:.2f} seconds")
