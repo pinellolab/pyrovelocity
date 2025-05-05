@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyrovelocity"
-version = "0.4.5"
+version = "0.4.0"
 packages = [{ include = "pyrovelocity", from = "src" }]
 description = "A multivariate RNA Velocity model to estimate future cell states with uncertainty using probabilistic modeling with pyro."
 authors = ["pyrovelocity team"]
@@ -301,7 +301,6 @@ lint = [
 test = [
   "coverage",
   "hypothesis",
-  "ipdb",
   "ipython",
   # "poethepoet",
   "pygments",
@@ -438,7 +437,7 @@ log_level = "INFO"
 # Run tests in parallel with pytest-xdist:
 # -n auto
 addopts = """ 
--m "not slow and not pyensembl"
+-m "not slow and not pyensembl and not network"
 -rA
 --xdoctest
 --disable-warnings
