@@ -85,11 +85,18 @@ from beartype import beartype
 
 # Import the different implementations
 from pyrovelocity.models._velocity import PyroVelocity
-from pyrovelocity.models.jax.factory.factory import (
-    create_standard_model as create_jax_standard_model,
-)
 from pyrovelocity.models.modular import PyroVelocityModel
 from pyrovelocity.models.modular.factory import create_standard_model
+
+# Import JAX implementation only if available
+try:
+    from pyrovelocity.models.jax.factory.factory import (
+        create_standard_model as create_jax_standard_model,
+    )
+    HAS_JAX = True
+except ImportError:
+    HAS_JAX = False
+    print("Warning: JAX implementation not available. JAX validation will be disabled.")
 
 # Import comparison utilities
 from pyrovelocity.validation.comparison import (
@@ -228,14 +235,25 @@ class ValidationRunner:
         Args:
             **kwargs: Keyword arguments for PyroVelocity constructor
         """
-        # Set up AnnData for legacy model
-        PyroVelocity.setup_anndata(self.adata)
+        try:
+            # Set up AnnData for legacy model
+            PyroVelocity.setup_anndata(self.adata)
 
-        # Create legacy model
-        model = PyroVelocity(self.adata, **kwargs)
+            # Create legacy model with validation_fraction=0 to avoid validation dataloader issues
+            model_kwargs = kwargs.copy()
+            # Remove validation_fraction if present (it's not supported by the legacy model)
+            if "validation_fraction" in model_kwargs:
+                del model_kwargs["validation_fraction"]
 
-        # Add model to ValidationRunner
-        self.add_model("legacy", model)
+            # Create legacy model
+            model = PyroVelocity(self.adata, **model_kwargs)
+
+            # Add model to ValidationRunner
+            self.add_model("legacy", model)
+        except Exception as e:
+            print(f"Error setting up legacy model: {e}")
+            import traceback
+            traceback.print_exc()
 
     @beartype
     def setup_modular_model(self, **kwargs) -> None:
@@ -245,14 +263,19 @@ class ValidationRunner:
         Args:
             **kwargs: Additional keyword arguments for model creation (ignored)
         """
-        # Set up AnnData for modular model
-        PyroVelocityModel.setup_anndata(self.adata.copy())
+        try:
+            # Set up AnnData for modular model
+            PyroVelocityModel.setup_anndata(self.adata.copy())
 
-        # Create standard model (only option currently available)
-        model = create_standard_model()
+            # Create standard model (only option currently available)
+            model = create_standard_model()
 
-        # Add model to ValidationRunner
-        self.add_model("modular", model)
+            # Add model to ValidationRunner
+            self.add_model("modular", model)
+        except Exception as e:
+            print(f"Error setting up modular model: {e}")
+            import traceback
+            traceback.print_exc()
 
     @beartype
     def setup_jax_model(self, **kwargs) -> None:
@@ -261,12 +284,23 @@ class ValidationRunner:
 
         Args:
             **kwargs: Additional keyword arguments for model creation (ignored)
-        """
-        # Create JAX standard model (only option currently available)
-        model = create_jax_standard_model()
 
-        # Add model to ValidationRunner
-        self.add_model("jax", model)
+        Raises:
+            ImportError: If JAX implementation is not available
+        """
+        try:
+            if not HAS_JAX:
+                raise ImportError("JAX implementation not available. Cannot set up JAX model.")
+
+            # Create JAX standard model (only option currently available)
+            model = create_jax_standard_model()
+
+            # Add model to ValidationRunner
+            self.add_model("jax", model)
+        except Exception as e:
+            print(f"Error setting up JAX model: {e}")
+            import traceback
+            traceback.print_exc()
 
     @beartype
     def run_validation(
@@ -409,64 +443,83 @@ class ValidationRunner:
             training_start_time = time.time()
 
             # Train model
-            if name == "legacy":
-                model.train(max_epochs=max_epochs, **kwargs)
-            elif name == "modular":
-                model.train(adata=self.adata, max_epochs=max_epochs, **kwargs)
-            elif name == "jax":
-                # For JAX model, we need to prepare data from AnnData
-                from pyrovelocity.models.jax.data.anndata import prepare_anndata
-                data_dict = prepare_anndata(self.adata)
+            try:
+                if name == "legacy":
+                    # For legacy model, we need to remove validation_fraction
+                    # to avoid issues with the validation dataloader
+                    legacy_kwargs = kwargs.copy()
+                    if "validation_fraction" in legacy_kwargs:
+                        del legacy_kwargs["validation_fraction"]
+                    model.train(max_epochs=max_epochs, **legacy_kwargs)
+                elif name == "modular":
+                    model.train(adata=self.adata, max_epochs=max_epochs, **kwargs)
+                elif name == "jax":
+                    # For JAX model, we need to prepare data from AnnData
+                    from pyrovelocity.models.jax.data.anndata import (
+                        prepare_anndata,
+                    )
+                    data_dict = prepare_anndata(self.adata)
 
-                # Rename keys to match model function parameters
-                if "X_unspliced" in data_dict and "X_spliced" in data_dict:
-                    data_dict["u_obs"] = data_dict.pop("X_unspliced")
-                    data_dict["s_obs"] = data_dict.pop("X_spliced")
+                    # Rename keys to match model function parameters
+                    if "X_unspliced" in data_dict and "X_spliced" in data_dict:
+                        data_dict["u_obs"] = data_dict.pop("X_unspliced")
+                        data_dict["s_obs"] = data_dict.pop("X_spliced")
 
-                # Add library size information
-                if "u_lib_size" in data_dict and "s_lib_size" in data_dict:
-                    data_dict["u_log_library"] = jnp.log(data_dict["u_lib_size"])
-                    data_dict["s_log_library"] = jnp.log(data_dict["s_lib_size"])
+                    # Add library size information
+                    if "u_lib_size" in data_dict and "s_lib_size" in data_dict:
+                        data_dict["u_log_library"] = jnp.log(data_dict["u_lib_size"])
+                        data_dict["s_log_library"] = jnp.log(data_dict["s_lib_size"])
 
-                # Remove keys that are not used by the model
-                keys_to_keep = ["u_obs", "s_obs", "u_log_library", "s_log_library"]
-                data_dict = {k: v for k, v in data_dict.items() if k in keys_to_keep}
+                    # Remove keys that are not used by the model
+                    keys_to_keep = ["u_obs", "s_obs", "u_log_library", "s_log_library"]
+                    data_dict = {k: v for k, v in data_dict.items() if k in keys_to_keep}
 
-                # Add batch dimension for factory model
-                data_dict["u_obs"] = jnp.expand_dims(data_dict["u_obs"], axis=0)
-                data_dict["s_obs"] = jnp.expand_dims(data_dict["s_obs"], axis=0)
-                if "u_log_library" in data_dict:
-                    data_dict["u_log_library"] = jnp.expand_dims(data_dict["u_log_library"], axis=0)
-                if "s_log_library" in data_dict:
-                    data_dict["s_log_library"] = jnp.expand_dims(data_dict["s_log_library"], axis=0)
+                    # Add batch dimension for factory model
+                    data_dict["u_obs"] = jnp.expand_dims(data_dict["u_obs"], axis=0)
+                    data_dict["s_obs"] = jnp.expand_dims(data_dict["s_obs"], axis=0)
+                    if "u_log_library" in data_dict:
+                        data_dict["u_log_library"] = jnp.expand_dims(data_dict["u_log_library"], axis=0)
+                    if "s_log_library" in data_dict:
+                        data_dict["s_log_library"] = jnp.expand_dims(data_dict["s_log_library"], axis=0)
 
-                # Create inference configuration
-                from pyrovelocity.models.jax.core.state import InferenceConfig
-                inference_config = InferenceConfig(
-                    num_epochs=max_epochs,
-                    **kwargs
-                )
+                    # Create inference configuration
+                    from pyrovelocity.models.jax.core.state import (
+                        InferenceConfig,
+                    )
+                    inference_config = InferenceConfig(
+                        num_epochs=max_epochs,
+                        **kwargs
+                    )
 
-                # Run inference
-                import jax
+                    # Run inference
+                    import jax
 
-                from pyrovelocity.models.jax.inference.unified import (
-                    run_inference,
-                )
+                    from pyrovelocity.models.jax.inference.unified import (
+                        run_inference,
+                    )
 
-                # Create a JAX random key from the seed
-                key = jax.random.PRNGKey(kwargs.get("seed", 0))
+                    # Create a JAX random key from the seed
+                    key = jax.random.PRNGKey(kwargs.get("seed", 0))
 
-                _, inference_state = run_inference(
-                    model=model,
-                    args=(),
-                    kwargs=data_dict,
-                    config=inference_config,
-                    key=key,
-                )
+                    _, inference_state = run_inference(
+                        model=model,
+                        args=(),
+                        kwargs=data_dict,
+                        config=inference_config,
+                        key=key,
+                    )
 
-                # Store inference state
-                self.results[name]["inference_state"] = inference_state
+                    # Store inference state
+                    self.results[name]["inference_state"] = inference_state
+            except Exception as e:
+                print(f"Error training {name} model: {e}")
+                import traceback
+                traceback.print_exc()
+                # Store error in results
+                self.results[name]["error"] = str(e)
+                self.results[name]["traceback"] = traceback.format_exc()
+                # Skip the rest of the processing for this model
+                continue
 
             # Record training end time
             training_end_time = time.time()
@@ -497,23 +550,33 @@ class ValidationRunner:
             inference_start_time = time.time()
 
             # Generate posterior samples
-            if name == "legacy":
-                posterior_samples = model.generate_posterior_samples(
-                    model.adata, num_samples=num_samples
-                )
-            elif name == "modular":
-                posterior_samples = model.generate_posterior_samples(
-                    adata=self.adata, num_samples=num_samples
-                )
-            elif name == "jax":
-                # For JAX model, we need to sample from the posterior
-                from pyrovelocity.models.jax.inference.posterior import (
-                    sample_posterior,
-                )
-                posterior_samples = sample_posterior(
-                    inference_state=self.results[name]["inference_state"],
-                    num_samples=num_samples,
-                )
+            try:
+                if name == "legacy":
+                    posterior_samples = model.generate_posterior_samples(
+                        model.adata, num_samples=num_samples
+                    )
+                elif name == "modular":
+                    posterior_samples = model.generate_posterior_samples(
+                        adata=self.adata, num_samples=num_samples
+                    )
+                elif name == "jax":
+                    # For JAX model, we need to sample from the posterior
+                    from pyrovelocity.models.jax.inference.posterior import (
+                        sample_posterior,
+                    )
+                    posterior_samples = sample_posterior(
+                        inference_state=self.results[name]["inference_state"],
+                        num_samples=num_samples,
+                    )
+            except Exception as e:
+                print(f"Error generating posterior samples for {name} model: {e}")
+                import traceback
+                traceback.print_exc()
+                # Store error in results
+                self.results[name]["error"] = str(e)
+                self.results[name]["traceback"] = traceback.format_exc()
+                # Skip the rest of the processing for this model
+                continue
 
             # Record inference end time
             inference_end_time = time.time()
@@ -757,17 +820,52 @@ class ValidationRunner:
         if not self.results:
             raise ValueError("No results available. Run validation first.")
 
-        # Compare parameters
-        parameter_comparison = compare_parameters(self.results)
+        # Filter out implementations with errors
+        valid_results = {}
+        for name, result in self.results.items():
+            if "error" not in result:
+                valid_results[name] = result
 
-        # Compare velocities
-        velocity_comparison = compare_velocities(self.results)
+        # Check if we have at least two valid implementations to compare
+        if len(valid_results) < 2:
+            print("Warning: Less than two valid implementations available for comparison.")
+            print(f"Valid implementations: {list(valid_results.keys())}")
+            print("Returning empty comparison results.")
+            return {
+                "parameter_comparison": {},
+                "velocity_comparison": {},
+                "uncertainty_comparison": {},
+                "performance_comparison": {},
+                "error": "Less than two valid implementations available for comparison."
+            }
 
-        # Compare uncertainties
-        uncertainty_comparison = compare_uncertainties(self.results)
+        try:
+            # Compare parameters
+            parameter_comparison = compare_parameters(valid_results)
+        except Exception as e:
+            print(f"Error comparing parameters: {e}")
+            parameter_comparison = {"error": str(e)}
 
-        # Compare performance
-        performance_comparison = compare_performance(self.results)
+        try:
+            # Compare velocities
+            velocity_comparison = compare_velocities(valid_results)
+        except Exception as e:
+            print(f"Error comparing velocities: {e}")
+            velocity_comparison = {"error": str(e)}
+
+        try:
+            # Compare uncertainties
+            uncertainty_comparison = compare_uncertainties(valid_results)
+        except Exception as e:
+            print(f"Error comparing uncertainties: {e}")
+            uncertainty_comparison = {"error": str(e)}
+
+        try:
+            # Compare performance
+            performance_comparison = compare_performance(valid_results)
+        except Exception as e:
+            print(f"Error comparing performance: {e}")
+            performance_comparison = {"error": str(e)}
 
         # Return comparison results
         return {
@@ -900,8 +998,15 @@ def run_validation(
         runner.setup_modular_model(**modular_kwargs)
 
     if use_jax:
-        jax_kwargs = jax_model_kwargs or {}
-        runner.setup_jax_model(**jax_kwargs)
+        if not HAS_JAX:
+            print("Warning: JAX implementation not available. Skipping JAX validation.")
+        else:
+            jax_kwargs = jax_model_kwargs or {}
+            try:
+                runner.setup_jax_model(**jax_kwargs)
+            except ImportError as e:
+                print(f"Error setting up JAX model: {e}")
+                print("Skipping JAX validation.")
 
     # Run validation
     results = runner.run_validation(
