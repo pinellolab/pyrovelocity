@@ -18,6 +18,7 @@ import numpy as np
 import pyro
 import pyro.distributions as dist
 import pyro.infer as infer
+import scipy.sparse
 import torch
 from anndata import AnnData
 from beartype import beartype
@@ -64,6 +65,9 @@ def compute_velocity(
     """
     Compute RNA velocity from posterior samples.
 
+    This function computes velocity using the same approach as the legacy implementation
+    in compute_mean_vector_field.
+
     Args:
         model: Pyro model function or PyroVelocityModel
         posterior_samples: Posterior samples from inference
@@ -77,6 +81,21 @@ def compute_velocity(
     alpha = posterior_samples.get("alpha")
     beta = posterior_samples.get("beta")
     gamma = posterior_samples.get("gamma")
+    u_scale = posterior_samples.get("u_scale")
+    s_scale = posterior_samples.get("s_scale")
+
+    # Extract data from AnnData object
+    if adata is not None:
+        u = torch.tensor(adata.layers["unspliced"].toarray() if isinstance(adata.layers["unspliced"], scipy.sparse.spmatrix) else adata.layers["unspliced"])
+        s = torch.tensor(adata.layers["spliced"].toarray() if isinstance(adata.layers["spliced"], scipy.sparse.spmatrix) else adata.layers["spliced"])
+    else:
+        u = posterior_samples.get("u")
+        s = posterior_samples.get("s")
+
+    if u is None or s is None:
+        raise ValueError(
+            "Either adata must be provided or posterior_samples must contain u and s"
+        )
 
     if alpha is None or beta is None or gamma is None:
         raise ValueError(
@@ -90,6 +109,14 @@ def compute_velocity(
         beta = torch.tensor(beta)
     if isinstance(gamma, np.ndarray):
         gamma = torch.tensor(gamma)
+    if isinstance(u_scale, np.ndarray):
+        u_scale = torch.tensor(u_scale)
+    if isinstance(s_scale, np.ndarray):
+        s_scale = torch.tensor(s_scale)
+    if isinstance(u, np.ndarray):
+        u = torch.tensor(u)
+    if isinstance(s, np.ndarray):
+        s = torch.tensor(s)
 
     # Get unspliced and spliced counts
     if adata is not None:
@@ -127,7 +154,22 @@ def compute_velocity(
         gamma_mean = gamma.mean(dim=0)
         u_ss_mean = alpha_mean / beta_mean
         s_ss_mean = alpha_mean / gamma_mean
-        velocity = beta_mean * (u - u_ss_mean) - gamma_mean * (s - s_ss_mean)
+
+        # Match legacy implementation velocity calculation with scaling
+        # In the legacy implementation, velocity is computed as:
+        # beta * u / scale - gamma * s
+        # where scale depends on the model type
+        if u_scale is not None and s_scale is not None:
+            # For Gaussian models with two scales
+            scale = u_scale.mean(dim=0) / s_scale.mean(dim=0)
+            velocity = beta_mean * u / scale - gamma_mean * s
+        elif u_scale is not None:
+            # For Poisson Model 2 with one scale
+            scale = u_scale.mean(dim=0)
+            velocity = beta_mean * u / scale - gamma_mean * s
+        else:
+            # For Poisson Model 1 with no scale
+            velocity = beta_mean * u - gamma_mean * s
 
         # Compute latent time (pseudotime)
         # This is a simple implementation based on the ratio of unspliced to spliced
@@ -181,8 +223,20 @@ def compute_velocity(
                     u_ss_mean = u_ss_mean.reshape(1, -1).expand(u.shape[0], -1)
                     s_ss_mean = s_ss_mean.reshape(1, -1).expand(u.shape[0], -1)
 
-            # Compute velocity
-            velocity = beta_mean * (u - u_ss_mean) - gamma_mean * (s - s_ss_mean)
+            # Compute velocity - match legacy implementation with scaling
+            if u_scale is not None and s_scale is not None:
+                # For Gaussian models with two scales
+                scale = u_scale.mean(dim=0)
+                if scale.dim() > 0 and s_scale.dim() > 0:
+                    scale = scale / s_scale.mean(dim=0)
+                velocity = beta_mean * u / scale - gamma_mean * s
+            elif u_scale is not None:
+                # For Poisson Model 2 with one scale
+                scale = u_scale.mean(dim=0)
+                velocity = beta_mean * u / scale - gamma_mean * s
+            else:
+                # For Poisson Model 1 with no scale
+                velocity = beta_mean * u - gamma_mean * s
 
             # Compute latent time (pseudotime)
             # This is a simple implementation based on the ratio of unspliced to spliced
@@ -227,12 +281,33 @@ def compute_velocity(
                 u_ss_reshaped = u_ss.unsqueeze(1)    # [num_samples, 1, n_genes]
                 s_ss_reshaped = s_ss.unsqueeze(1)    # [num_samples, 1, n_genes]
 
-                # Compute velocity with broadcasting
+                # Compute velocity with broadcasting - match legacy implementation with scaling
                 # This will result in shape [num_samples, n_cells, n_genes]
-                velocity = beta_reshaped * (u_reshaped - u_ss_reshaped) - gamma_reshaped * (s_reshaped - s_ss_reshaped)
+                if u_scale is not None and s_scale is not None:
+                    # For Gaussian models with two scales
+                    u_scale_reshaped = u_scale.unsqueeze(1)  # [num_samples, 1, n_genes]
+                    s_scale_reshaped = s_scale.unsqueeze(1)  # [num_samples, 1, n_genes]
+                    scale = u_scale_reshaped / s_scale_reshaped
+                    velocity = beta_reshaped * u_reshaped / scale - gamma_reshaped * s_reshaped
+                elif u_scale is not None:
+                    # For Poisson Model 2 with one scale
+                    u_scale_reshaped = u_scale.unsqueeze(1)  # [num_samples, 1, n_genes]
+                    velocity = beta_reshaped * u_reshaped / u_scale_reshaped - gamma_reshaped * s_reshaped
+                else:
+                    # For Poisson Model 1 with no scale
+                    velocity = beta_reshaped * u_reshaped - gamma_reshaped * s_reshaped
             else:
-                # Standard computation when shapes are compatible
-                velocity = beta * (u - u_ss) - gamma * (s - s_ss)
+                # Standard computation when shapes are compatible - match legacy implementation with scaling
+                if u_scale is not None and s_scale is not None:
+                    # For Gaussian models with two scales
+                    scale = u_scale / s_scale
+                    velocity = beta * u / scale - gamma * s
+                elif u_scale is not None:
+                    # For Poisson Model 2 with one scale
+                    velocity = beta * u / u_scale - gamma * s
+                else:
+                    # For Poisson Model 1 with no scale
+                    velocity = beta * u - gamma * s
 
             # Compute latent time (pseudotime)
             # This is a simple implementation based on the ratio of unspliced to spliced
