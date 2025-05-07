@@ -27,7 +27,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 from pyrovelocity.io.serialization import load_anndata_from_json
 from pyrovelocity.models._velocity import PyroVelocity
 from pyrovelocity.models.modular import PyroVelocityModel
-from pyrovelocity.models.modular.factory import create_standard_model
+from pyrovelocity.models.modular.factory import create_standard_model, create_legacy_model1
 from pyrovelocity.validation.comparison import (
     compare_parameters,
     compare_velocities,
@@ -258,43 +258,54 @@ def train_modular_model(adata, max_epochs, num_samples, seed=42, model_type="nor
     # Create modular model based on model_type
     print(f"Modular model using model_type: {model_type}")
 
-    # Import necessary components for custom model creation
-    from pyrovelocity.models.modular.factory import (
-        create_model,
-        DynamicsModelConfig,
-        PriorModelConfig,
-        LikelihoodModelConfig,
-        ObservationModelConfig,
-        InferenceGuideConfig,
-        PyroVelocityModelConfig,
-    )
-
     # Print available components for debugging
-    from pyrovelocity.models.modular.registry import (
-        DynamicsModelRegistry,
-        PriorModelRegistry,
-        LikelihoodModelRegistry,
-        ObservationModelRegistry,
-        InferenceGuideRegistry,
-    )
+    from pyrovelocity.models.modular.registry import LikelihoodModelRegistry
 
     # Get available components by inspecting the registry
     print(f"Available likelihood models: {list(LikelihoodModelRegistry._registry.keys())}")
 
     # Create model based on model_type
     if model_type == "normal":
-        # Create a model with negative_binomial likelihood model (closest to Gaussian)
-        config = PyroVelocityModelConfig(
-            dynamics_model=DynamicsModelConfig(name="standard"),
-            prior_model=PriorModelConfig(name="lognormal"),
-            likelihood_model=LikelihoodModelConfig(name="negative_binomial"),
-            observation_model=ObservationModelConfig(name="standard"),
-            inference_guide=InferenceGuideConfig(name="auto"),
+        # Use the legacy model replication for direct comparison with the legacy model
+        # Create a configuration with the legacy dynamics model
+        from pyrovelocity.models.modular.factory import ModelConfig, ComponentConfig, create_model_from_config
+
+        config = ModelConfig(
+            dynamics_model=ComponentConfig(
+                name="legacy",  # Use our new LegacyDynamicsModel
+                params={
+                    "shared_time": True,
+                    "t_scale_on": False,
+                    "correct_library_size": True,
+                },
+            ),
+            prior_model=ComponentConfig(
+                name="lognormal",
+                params={},
+            ),
+            likelihood_model=ComponentConfig(
+                name="legacy",
+                params={},
+            ),
+            observation_model=ComponentConfig(
+                name="standard",
+                params={},
+            ),
+            inference_guide=ComponentConfig(
+                name="auto",
+                params={
+                    "init_scale": 0.1,
+                },
+            ),
         )
-        model = create_model(config)
+
+        # Create the model from the configuration
+        model = create_model_from_config(config)
+        print("Using legacy dynamics model for direct comparison with legacy implementation")
     else:
         # Default to standard model with Poisson observation model
         model = create_standard_model()
+        print("Using standard model with Poisson likelihood")
 
     # Train model
     training_start_time = time.time()
