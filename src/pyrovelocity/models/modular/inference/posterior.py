@@ -84,17 +84,25 @@ def compute_velocity(
     u_scale = posterior_samples.get("u_scale")
     s_scale = posterior_samples.get("s_scale")
 
-    # Extract data from AnnData object
-    if adata is not None:
-        u = torch.tensor(adata.layers["unspliced"].toarray() if isinstance(adata.layers["unspliced"], scipy.sparse.spmatrix) else adata.layers["unspliced"])
-        s = torch.tensor(adata.layers["spliced"].toarray() if isinstance(adata.layers["spliced"], scipy.sparse.spmatrix) else adata.layers["spliced"])
-    else:
-        u = posterior_samples.get("u")
-        s = posterior_samples.get("s")
+    # Try to get ut and st from posterior samples (like legacy implementation)
+    ut = posterior_samples.get("ut")
+    st = posterior_samples.get("st")
 
-    if u is None or s is None:
+    # If ut/st not available, fall back to u/s from AnnData or posterior samples
+    if ut is None or st is None:
+        # Extract data from AnnData object
+        if adata is not None:
+            u = torch.tensor(adata.layers["unspliced"].toarray() if isinstance(adata.layers["unspliced"], scipy.sparse.spmatrix) else adata.layers["unspliced"])
+            s = torch.tensor(adata.layers["spliced"].toarray() if isinstance(adata.layers["spliced"], scipy.sparse.spmatrix) else adata.layers["spliced"])
+            ut = u
+            st = s
+        else:
+            ut = posterior_samples.get("u")
+            st = posterior_samples.get("s")
+
+    if ut is None or st is None:
         raise ValueError(
-            "Either adata must be provided or posterior_samples must contain u and s"
+            "Either adata must be provided or posterior_samples must contain ut/st or u/s"
         )
 
     if alpha is None or beta is None or gamma is None:
@@ -113,34 +121,10 @@ def compute_velocity(
         u_scale = torch.tensor(u_scale)
     if isinstance(s_scale, np.ndarray):
         s_scale = torch.tensor(s_scale)
-    if isinstance(u, np.ndarray):
-        u = torch.tensor(u)
-    if isinstance(s, np.ndarray):
-        s = torch.tensor(s)
-
-    # Get unspliced and spliced counts
-    if adata is not None:
-        u_layer = adata.layers["unspliced"]
-        s_layer = adata.layers["spliced"]
-        # Handle sparse matrices
-        if hasattr(u_layer, "toarray"):
-            u = torch.tensor(u_layer.toarray())
-            s = torch.tensor(s_layer.toarray())
-        else:
-            u = torch.tensor(u_layer)
-            s = torch.tensor(s_layer)
-    else:
-        u = posterior_samples.get("u")
-        s = posterior_samples.get("s")
-
-        # Convert numpy arrays to torch tensors if needed
-        if isinstance(u, np.ndarray):
-            u = torch.tensor(u)
-        if isinstance(s, np.ndarray):
-            s = torch.tensor(s)
-
-    if u is None or s is None:
-        raise ValueError("Unable to get unspliced and spliced counts")
+    if isinstance(ut, np.ndarray):
+        ut = torch.tensor(ut)
+    if isinstance(st, np.ndarray):
+        st = torch.tensor(st)
 
     # Compute steady state
     u_ss = alpha / beta
@@ -157,32 +141,32 @@ def compute_velocity(
 
         # Match legacy implementation velocity calculation with scaling
         # In the legacy implementation, velocity is computed as:
-        # beta * u / scale - gamma * s
+        # beta * ut / scale - gamma * st
         # where scale depends on the model type
         if u_scale is not None and s_scale is not None:
             # For Gaussian models with two scales
             scale = u_scale.mean(dim=0) / s_scale.mean(dim=0)
-            velocity = beta_mean * u / scale - gamma_mean * s
+            velocity = beta_mean * ut / scale - gamma_mean * st
         elif u_scale is not None:
             # For Poisson Model 2 with one scale
             scale = u_scale.mean(dim=0)
-            velocity = beta_mean * u / scale - gamma_mean * s
+            velocity = beta_mean * ut / scale - gamma_mean * st
         else:
             # For Poisson Model 1 with no scale
-            velocity = beta_mean * u - gamma_mean * s
+            velocity = beta_mean * ut - gamma_mean * st
 
         # Compute latent time (pseudotime)
         # This is a simple implementation based on the ratio of unspliced to spliced
         # More sophisticated methods could be used
 
         # Handle 1D tensors
-        if u.dim() == 1:
-            u_norm = u / (u.max() + 1e-6)
-            s_norm = s / (s.max() + 1e-6)
+        if ut.dim() == 1:
+            u_norm = ut / (ut.max() + 1e-6)
+            s_norm = st / (st.max() + 1e-6)
             latent_time = torch.tensor(1.0 - u_norm.mean() / (s_norm.mean() + 1e-6))
         else:
-            u_norm = u / u.max(dim=1, keepdim=True)[0]
-            s_norm = s / s.max(dim=1, keepdim=True)[0]
+            u_norm = ut / ut.max(dim=1, keepdim=True)[0]
+            s_norm = st / st.max(dim=1, keepdim=True)[0]
             latent_time = 1.0 - u_norm.mean(dim=1) / (s_norm.mean(dim=1) + 1e-6)
 
         return {
@@ -197,8 +181,8 @@ def compute_velocity(
     else:
         # Check if the shapes are compatible for broadcasting
         # If not, use the mean of the parameters
-        if alpha.shape[0] != u.shape[0] and u.shape[0] > 1:
-            print(f"Shape mismatch: alpha shape {alpha.shape}, u shape {u.shape}")
+        if alpha.shape[0] != ut.shape[0] and ut.shape[0] > 1:
+            print(f"Shape mismatch: alpha shape {alpha.shape}, ut shape {ut.shape}")
             print(f"Using mean of parameters for velocity calculation")
             # Use mean of posterior samples
             alpha_mean = alpha.mean(dim=0)
@@ -229,14 +213,14 @@ def compute_velocity(
                 scale = u_scale.mean(dim=0)
                 if scale.dim() > 0 and s_scale.dim() > 0:
                     scale = scale / s_scale.mean(dim=0)
-                velocity = beta_mean * u / scale - gamma_mean * s
+                velocity = beta_mean * ut / scale - gamma_mean * st
             elif u_scale is not None:
                 # For Poisson Model 2 with one scale
                 scale = u_scale.mean(dim=0)
-                velocity = beta_mean * u / scale - gamma_mean * s
+                velocity = beta_mean * ut / scale - gamma_mean * st
             else:
                 # For Poisson Model 1 with no scale
-                velocity = beta_mean * u - gamma_mean * s
+                velocity = beta_mean * ut - gamma_mean * st
 
             # Compute latent time (pseudotime)
             # This is a simple implementation based on the ratio of unspliced to spliced
@@ -266,11 +250,12 @@ def compute_velocity(
             # We need to ensure the shapes are compatible for broadcasting
             # If alpha has shape [num_samples, n_genes] and u has shape [n_cells, n_genes],
             # we need to reshape for proper broadcasting
-            if alpha.dim() == 2 and u.dim() == 2 and alpha.shape[0] != u.shape[0]:
-                # Reshape u and s to [1, n_cells, n_genes] for broadcasting with
+            if alpha.dim() == 2 and ut.dim() == 2 and alpha.shape[0] != ut.shape[0]:
+                # Reshape ut and st to [1, n_cells, n_genes] for broadcasting with
                 # alpha, beta, gamma of shape [num_samples, 1, n_genes]
-                u_reshaped = u.unsqueeze(0)  # [1, n_cells, n_genes]
-                s_reshaped = s.unsqueeze(0)  # [1, n_cells, n_genes]
+                # Note: We don't actually use these variables directly anymore, but keep them for clarity
+                u_reshaped = ut.unsqueeze(0)  # [1, n_cells, n_genes]
+                s_reshaped = st.unsqueeze(0)  # [1, n_cells, n_genes]
 
                 # Reshape alpha, beta, gamma to [num_samples, 1, n_genes]
                 alpha_reshaped = alpha.unsqueeze(1)  # [num_samples, 1, n_genes]
@@ -288,39 +273,39 @@ def compute_velocity(
                     u_scale_reshaped = u_scale.unsqueeze(1)  # [num_samples, 1, n_genes]
                     s_scale_reshaped = s_scale.unsqueeze(1)  # [num_samples, 1, n_genes]
                     scale = u_scale_reshaped / s_scale_reshaped
-                    velocity = beta_reshaped * u_reshaped / scale - gamma_reshaped * s_reshaped
+                    velocity = beta_reshaped * ut.unsqueeze(0) / scale - gamma_reshaped * st.unsqueeze(0)
                 elif u_scale is not None:
                     # For Poisson Model 2 with one scale
                     u_scale_reshaped = u_scale.unsqueeze(1)  # [num_samples, 1, n_genes]
-                    velocity = beta_reshaped * u_reshaped / u_scale_reshaped - gamma_reshaped * s_reshaped
+                    velocity = beta_reshaped * ut.unsqueeze(0) / u_scale_reshaped - gamma_reshaped * st.unsqueeze(0)
                 else:
                     # For Poisson Model 1 with no scale
-                    velocity = beta_reshaped * u_reshaped - gamma_reshaped * s_reshaped
+                    velocity = beta_reshaped * ut.unsqueeze(0) - gamma_reshaped * st.unsqueeze(0)
             else:
                 # Standard computation when shapes are compatible - match legacy implementation with scaling
                 if u_scale is not None and s_scale is not None:
                     # For Gaussian models with two scales
                     scale = u_scale / s_scale
-                    velocity = beta * u / scale - gamma * s
+                    velocity = beta * ut / scale - gamma * st
                 elif u_scale is not None:
                     # For Poisson Model 2 with one scale
-                    velocity = beta * u / u_scale - gamma * s
+                    velocity = beta * ut / u_scale - gamma * st
                 else:
                     # For Poisson Model 1 with no scale
-                    velocity = beta * u - gamma * s
+                    velocity = beta * ut - gamma * st
 
             # Compute latent time (pseudotime)
             # This is a simple implementation based on the ratio of unspliced to spliced
             # More sophisticated methods could be used
 
             # Handle 1D tensors
-            if u.dim() == 1:
-                u_norm = u / (u.max() + 1e-6)
-                s_norm = s / (s.max() + 1e-6)
+            if ut.dim() == 1:
+                u_norm = ut / (ut.max() + 1e-6)
+                s_norm = st / (st.max() + 1e-6)
                 latent_time = torch.tensor(1.0 - u_norm.mean() / (s_norm.mean() + 1e-6))
             else:
-                u_norm = u / u.max(dim=1, keepdim=True)[0]
-                s_norm = s / s.max(dim=1, keepdim=True)[0]
+                u_norm = ut / ut.max(dim=1, keepdim=True)[0]
+                s_norm = st / st.max(dim=1, keepdim=True)[0]
                 latent_time = 1.0 - u_norm.mean(dim=1) / (s_norm.mean(dim=1) + 1e-6)
 
             return {

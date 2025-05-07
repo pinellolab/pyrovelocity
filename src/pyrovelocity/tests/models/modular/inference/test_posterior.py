@@ -116,12 +116,21 @@ class TestPosterior:
         gamma = torch.tensor([[0.3, 0.4], [0.5, 0.6]])
         u = torch.tensor([2.0, 3.0])
         s = torch.tensor([3.0, 4.0])
+        # Add ut and st to match legacy implementation
+        ut = torch.tensor([2.0, 3.0])
+        st = torch.tensor([3.0, 4.0])
+        u_scale = torch.tensor([[0.9, 1.1], [0.8, 1.2]])
+        s_scale = torch.tensor([[1.0, 1.0], [1.0, 1.0]])
         posterior_samples = {
             "alpha": alpha,
             "beta": beta,
             "gamma": gamma,
             "u": u,
             "s": s,
+            "ut": ut,
+            "st": st,
+            "u_scale": u_scale,
+            "s_scale": s_scale,
         }
 
         # Compute velocity
@@ -147,6 +156,48 @@ class TestPosterior:
         assert "u_ss" in velocity_results
         assert "s_ss" in velocity_results
         assert velocity_results["velocity"].shape == (2,)
+
+        # Test with only u_scale (like legacy implementation)
+        posterior_samples_legacy = {
+            "alpha": alpha,
+            "beta": beta,
+            "gamma": gamma,
+            "ut": ut,
+            "st": st,
+            "u_scale": u_scale,
+        }
+        velocity_results = compute_velocity(simple_model, posterior_samples_legacy, use_mean=True)
+        assert isinstance(velocity_results, dict)
+        assert "velocity" in velocity_results
+
+        # Test with no scaling
+        posterior_samples_no_scale = {
+            "alpha": alpha,
+            "beta": beta,
+            "gamma": gamma,
+            "ut": ut,
+            "st": st,
+        }
+        velocity_results = compute_velocity(simple_model, posterior_samples_no_scale, use_mean=True)
+        assert isinstance(velocity_results, dict)
+        assert "velocity" in velocity_results
+
+        # Test with AnnData
+        adata = AnnData(
+            X=np.random.rand(10, 5),
+            layers={
+                "unspliced": np.random.rand(10, 5),
+                "spliced": np.random.rand(10, 5),
+            },
+        )
+        posterior_samples_minimal = {
+            "alpha": alpha,
+            "beta": beta,
+            "gamma": gamma,
+        }
+        velocity_results = compute_velocity(simple_model, posterior_samples_minimal, adata=adata, use_mean=True)
+        assert isinstance(velocity_results, dict)
+        assert "velocity" in velocity_results
 
     def test_compute_uncertainty(self):
         """Test computing uncertainty in RNA velocity."""
