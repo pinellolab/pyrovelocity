@@ -332,6 +332,18 @@ def train_modular_model(adata, max_epochs, num_samples, seed=42, model_type="nor
                 param_value = param_value.detach().cpu().numpy()
             print(f"  {param} mean: {np.mean(param_value):.6f}, std: {np.std(param_value):.6f}, min: {np.min(param_value):.6f}, max: {np.max(param_value):.6f}")
 
+    # Compute velocity and uncertainty - include this in inference time like the legacy model
+    # This is equivalent to compute_statistics_from_posterior_samples in the legacy model
+    velocity = model.get_velocity(
+        adata=adata_copy,
+        random_seed=seed
+    )
+
+    uncertainty = model.get_velocity_uncertainty(
+        adata=adata_copy,
+        num_samples=num_samples
+    )
+
     inference_end_time = time.time()
     inference_time = inference_end_time - inference_start_time
 
