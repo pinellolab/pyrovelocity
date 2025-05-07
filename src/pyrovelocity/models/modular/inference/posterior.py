@@ -11,8 +11,11 @@ This module contains posterior analysis utilities, including:
 - format_anndata_output: Format results into AnnData object
 """
 
+import logging
 import warnings
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+
+logger = logging.getLogger(__name__)
 
 import numpy as np
 import pyro
@@ -85,20 +88,130 @@ def compute_velocity(
     s_scale = posterior_samples.get("s_scale")
 
     # Try to get ut and st from posterior samples (like legacy implementation)
+    # These are the latent variables, not the observed data
     ut = posterior_samples.get("ut")
     st = posterior_samples.get("st")
 
-    # If ut/st not available, fall back to u/s from AnnData or posterior samples
+    # If ut/st not available, compute them from the model parameters
     if ut is None or st is None:
-        # Extract data from AnnData object
-        if adata is not None:
-            u = torch.tensor(adata.layers["unspliced"].toarray() if isinstance(adata.layers["unspliced"], scipy.sparse.spmatrix) else adata.layers["unspliced"])
-            s = torch.tensor(adata.layers["spliced"].toarray() if isinstance(adata.layers["spliced"], scipy.sparse.spmatrix) else adata.layers["spliced"])
-            ut = u
-            st = s
+        # Try to compute ut and st from the model parameters
+        if alpha is not None and beta is not None and gamma is not None:
+            # Get cell_time from posterior samples
+            cell_time = posterior_samples.get("cell_time")
+
+            if cell_time is not None:
+                # Convert numpy arrays to torch tensors if needed
+                if isinstance(alpha, np.ndarray):
+                    alpha = torch.tensor(alpha)
+                if isinstance(beta, np.ndarray):
+                    beta = torch.tensor(beta)
+                if isinstance(gamma, np.ndarray):
+                    gamma = torch.tensor(gamma)
+                if isinstance(cell_time, np.ndarray):
+                    cell_time = torch.tensor(cell_time)
+
+                # Compute steady state values
+                u_inf = alpha / beta
+                s_inf = alpha / gamma
+
+                # Compute switching time (t0 + dt_switching)
+                t0 = posterior_samples.get("t0")
+                dt_switching = posterior_samples.get("dt_switching")
+
+                if t0 is not None and dt_switching is not None:
+                    if isinstance(t0, np.ndarray):
+                        t0 = torch.tensor(t0)
+                    if isinstance(dt_switching, np.ndarray):
+                        dt_switching = torch.tensor(dt_switching)
+                    switching = t0 + dt_switching
+                else:
+                    # If t0 or dt_switching are not available, use zeros
+                    switching = torch.zeros_like(u_inf)
+
+                # Compute ut and st based on the transcription model
+                # For cells before switching time
+                # Reshape for broadcasting
+                if u_inf.dim() == 2 and cell_time.dim() == 2:
+                    # Reshape u_inf from [num_samples, n_genes] to [num_samples, 1, n_genes]
+                    u_inf_reshaped = u_inf.unsqueeze(1)
+                    s_inf_reshaped = s_inf.unsqueeze(1)
+                    beta_reshaped = beta.unsqueeze(1)
+                    gamma_reshaped = gamma.unsqueeze(1)
+                    switching_reshaped = switching.unsqueeze(1)
+
+                    # Reshape cell_time from [num_samples, n_cells] to [num_samples, n_cells, 1]
+                    if cell_time.shape[1] > 1:  # If cell_time has multiple cells
+                        cell_time_reshaped = cell_time.unsqueeze(2)
+
+                        # Expand to match the number of genes
+                        n_genes = u_inf.shape[1]
+                        cell_time_expanded = cell_time_reshaped.expand(-1, -1, n_genes)
+
+                        # Compute ut and st
+                        ut = u_inf_reshaped * (1 - torch.exp(-beta_reshaped * cell_time_expanded))
+                        st = s_inf_reshaped * (1 - torch.exp(-gamma_reshaped * cell_time_expanded)) - (
+                            u_inf_reshaped * beta_reshaped / (gamma_reshaped - beta_reshaped)
+                        ) * (torch.exp(-beta_reshaped * cell_time_expanded) - torch.exp(-gamma_reshaped * cell_time_expanded))
+                    else:
+                        # If cell_time has only one cell, we need to handle it differently
+                        logger.warning(
+                            "cell_time has only one cell, computing ut/st with simplified approach."
+                        )
+                        # Extract data from AnnData object as a fallback
+                        if adata is not None:
+                            u = torch.tensor(adata.layers["unspliced"].toarray() if isinstance(adata.layers["unspliced"], scipy.sparse.spmatrix) else adata.layers["unspliced"])
+                            s = torch.tensor(adata.layers["spliced"].toarray() if isinstance(adata.layers["spliced"], scipy.sparse.spmatrix) else adata.layers["spliced"])
+                            ut = u
+                            st = s
+                        else:
+                            # Try to get u and s from posterior samples
+                            ut = posterior_samples.get("u")
+                            st = posterior_samples.get("s")
+                else:
+                    # If dimensions don't match, fall back to using observed data
+                    logger.warning(
+                        "Dimension mismatch between u_inf and cell_time, computing ut/st with simplified approach."
+                    )
+                    # Extract data from AnnData object as a fallback
+                    if adata is not None:
+                        u = torch.tensor(adata.layers["unspliced"].toarray() if isinstance(adata.layers["unspliced"], scipy.sparse.spmatrix) else adata.layers["unspliced"])
+                        s = torch.tensor(adata.layers["spliced"].toarray() if isinstance(adata.layers["spliced"], scipy.sparse.spmatrix) else adata.layers["spliced"])
+                        ut = u
+                        st = s
+                    else:
+                        # Try to get u and s from posterior samples
+                        ut = posterior_samples.get("u")
+                        st = posterior_samples.get("s")
+            else:
+                # If cell_time is not available, fall back to using observed data
+                logger.warning(
+                    "cell_time not found in posterior_samples, computing ut/st with simplified approach."
+                )
+                # Extract data from AnnData object as a fallback
+                if adata is not None:
+                    u = torch.tensor(adata.layers["unspliced"].toarray() if isinstance(adata.layers["unspliced"], scipy.sparse.spmatrix) else adata.layers["unspliced"])
+                    s = torch.tensor(adata.layers["spliced"].toarray() if isinstance(adata.layers["spliced"], scipy.sparse.spmatrix) else adata.layers["spliced"])
+                    ut = u
+                    st = s
+                else:
+                    # Try to get u and s from posterior samples
+                    ut = posterior_samples.get("u")
+                    st = posterior_samples.get("s")
         else:
-            ut = posterior_samples.get("u")
-            st = posterior_samples.get("s")
+            # If alpha, beta, or gamma are not available, fall back to using observed data
+            logger.warning(
+                "alpha, beta, or gamma not found in posterior_samples, computing ut/st with simplified approach."
+            )
+            # Extract data from AnnData object as a fallback
+            if adata is not None:
+                u = torch.tensor(adata.layers["unspliced"].toarray() if isinstance(adata.layers["unspliced"], scipy.sparse.spmatrix) else adata.layers["unspliced"])
+                s = torch.tensor(adata.layers["spliced"].toarray() if isinstance(adata.layers["spliced"], scipy.sparse.spmatrix) else adata.layers["spliced"])
+                ut = u
+                st = s
+            else:
+                # Try to get u and s from posterior samples
+                ut = posterior_samples.get("u")
+                st = posterior_samples.get("s")
 
     if ut is None or st is None:
         raise ValueError(
@@ -155,6 +268,7 @@ def compute_velocity(
                 # Ensure scale has the right shape for broadcasting
                 if scale.dim() == 1:
                     scale = scale.unsqueeze(0)
+                # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
                 velocity = beta_mean * ut / scale - gamma_mean * st
             elif u_scale is not None:
                 # For Poisson Model 2 with one scale
@@ -162,9 +276,11 @@ def compute_velocity(
                 # Ensure scale has the right shape for broadcasting
                 if scale.dim() == 1:
                     scale = scale.unsqueeze(0)
+                # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
                 velocity = beta_mean * ut / scale - gamma_mean * st
             else:
                 # For Poisson Model 1 with no scale
+                # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
                 velocity = beta_mean * ut - gamma_mean * st
 
             # Remove the batch dimension we added if the result has it
@@ -175,13 +291,16 @@ def compute_velocity(
             if u_scale is not None and s_scale is not None:
                 # For Gaussian models with two scales
                 scale = u_scale.mean(dim=0) / s_scale.mean(dim=0)
+                # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
                 velocity = beta_mean * ut / scale - gamma_mean * st
             elif u_scale is not None:
                 # For Poisson Model 2 with one scale
                 scale = u_scale.mean(dim=0)
+                # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
                 velocity = beta_mean * ut / scale - gamma_mean * st
             else:
                 # For Poisson Model 1 with no scale
+                # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
                 velocity = beta_mean * ut - gamma_mean * st
 
         # Compute latent time (pseudotime)
@@ -250,6 +369,7 @@ def compute_velocity(
                     if scale.dim() == 1:
                         scale = scale.unsqueeze(0)
 
+                # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
                 velocity = beta_mean * ut / scale - gamma_mean * st
 
                 # Remove the batch dimension we added if the result has it
@@ -266,6 +386,7 @@ def compute_velocity(
                     if scale.dim() == 1:
                         scale = scale.unsqueeze(0)
 
+                # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
                 velocity = beta_mean * ut / scale - gamma_mean * st
 
                 # Remove the batch dimension we added if the result has it
@@ -278,6 +399,7 @@ def compute_velocity(
                     beta_mean = beta_mean.unsqueeze(0)  # Add batch dimension
                     gamma_mean = gamma_mean.unsqueeze(0)
 
+                # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
                 velocity = beta_mean * ut - gamma_mean * st
 
                 # Remove the batch dimension we added if the result has it
@@ -341,6 +463,7 @@ def compute_velocity(
                     # We need to ensure the shapes are compatible for broadcasting
                     ut_expanded = ut.unsqueeze(0)  # [1, n_cells, n_genes]
                     st_expanded = st.unsqueeze(0)  # [1, n_cells, n_genes]
+                    # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
                     velocity = beta_reshaped * ut_expanded / scale - gamma_reshaped * st_expanded
                 elif u_scale is not None:
                     # For Poisson Model 2 with one scale
@@ -351,6 +474,7 @@ def compute_velocity(
                     # We need to ensure the shapes are compatible for broadcasting
                     ut_expanded = ut.unsqueeze(0)  # [1, n_cells, n_genes]
                     st_expanded = st.unsqueeze(0)  # [1, n_cells, n_genes]
+                    # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
                     velocity = beta_reshaped * ut_expanded / u_scale_reshaped - gamma_reshaped * st_expanded
                 else:
                     # For Poisson Model 1 with no scale
@@ -359,6 +483,7 @@ def compute_velocity(
                     # We need to ensure the shapes are compatible for broadcasting
                     ut_expanded = ut.unsqueeze(0)  # [1, n_cells, n_genes]
                     st_expanded = st.unsqueeze(0)  # [1, n_cells, n_genes]
+                    # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
                     velocity = beta_reshaped * ut_expanded - gamma_reshaped * st_expanded
             else:
                 # Standard computation when shapes are compatible - match legacy implementation with scaling
@@ -379,8 +504,10 @@ def compute_velocity(
                         ut_expanded = ut.unsqueeze(0)
                         st_expanded = st.unsqueeze(0)
 
+                        # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
                         velocity = beta_reshaped * ut_expanded / scale_reshaped - gamma_reshaped * st_expanded
                     else:
+                        # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
                         velocity = beta * ut / scale - gamma * st
                 elif u_scale is not None:
                     # For Poisson Model 2 with one scale
@@ -395,8 +522,10 @@ def compute_velocity(
                         ut_expanded = ut.unsqueeze(0)
                         st_expanded = st.unsqueeze(0)
 
+                        # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
                         velocity = beta_reshaped * ut_expanded / u_scale_reshaped - gamma_reshaped * st_expanded
                     else:
+                        # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
                         velocity = beta * ut / u_scale - gamma * st
                 else:
                     # For Poisson Model 1 with no scale
@@ -410,8 +539,10 @@ def compute_velocity(
                         ut_expanded = ut.unsqueeze(0)
                         st_expanded = st.unsqueeze(0)
 
+                        # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
                         velocity = beta_reshaped * ut_expanded - gamma_reshaped * st_expanded
                     else:
+                        # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
                         velocity = beta * ut - gamma * st
 
             # Compute latent time (pseudotime)
