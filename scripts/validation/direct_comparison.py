@@ -64,6 +64,13 @@ def parse_args():
         default=42,
         help="Random seed for reproducibility",
     )
+    parser.add_argument(
+        "--model-type",
+        type=str,
+        default="normal",
+        choices=["normal", "poisson"],
+        help="Model type to use (normal=Gaussian, poisson=Poisson)",
+    )
     return parser.parse_args()
 
 
@@ -89,15 +96,21 @@ def load_preprocessed_pancreas_data():
         raise
 
 
-def train_legacy_model(adata, max_epochs, num_samples):
+def train_legacy_model(adata, max_epochs, num_samples, seed=42, model_type="normal"):
     """Train the legacy model and return results."""
     print("Training legacy model...")
+
+    # Set random seed for reproducibility
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    pyro.set_rng_seed(seed)
 
     # Set up AnnData for legacy model
     PyroVelocity.setup_anndata(adata)
 
-    # Create legacy model
-    model = PyroVelocity(adata)
+    # Create legacy model with specific model_type
+    print(f"Legacy model using model_type: {model_type}")
+    model = PyroVelocity(adata, model_type=model_type)
 
     # Train model
     training_start_time = time.time()
@@ -117,6 +130,12 @@ def train_legacy_model(adata, max_epochs, num_samples):
         else:
             raise
 
+    # Print parameter shapes for debugging
+    print("Legacy model parameter shapes:")
+    for key, value in posterior_samples.items():
+        if isinstance(value, (np.ndarray, torch.Tensor)):
+            print(f"  {key}: {value.shape}")
+
     # Compute statistics from posterior samples (this computes velocity and stores it in adata)
     # The method signature is compute_statistics_from_posterior_samples(self, adata, posterior_samples, ...)
     posterior_samples = model.compute_statistics_from_posterior_samples(
@@ -124,7 +143,7 @@ def train_legacy_model(adata, max_epochs, num_samples):
         posterior_samples=posterior_samples,
         vector_field_basis="umap",
         ncpus_use=1,
-        random_seed=99
+        random_seed=seed
     )
     inference_end_time = time.time()
     inference_time = inference_end_time - inference_start_time
@@ -166,16 +185,59 @@ def train_legacy_model(adata, max_epochs, num_samples):
     }
 
 
-def train_modular_model(adata, max_epochs, num_samples):
+def train_modular_model(adata, max_epochs, num_samples, seed=42, model_type="normal"):
     """Train the modular model and return results."""
     print("Training modular model...")
+
+    # Set random seed for reproducibility
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    pyro.set_rng_seed(seed)
 
     # Set up AnnData for modular model
     adata_copy = adata.copy()
     PyroVelocityModel.setup_anndata(adata_copy)
 
-    # Create modular model
-    model = create_standard_model()
+    # Create modular model based on model_type
+    print(f"Modular model using model_type: {model_type}")
+
+    # Import necessary components for custom model creation
+    from pyrovelocity.models.modular.factory import (
+        create_model,
+        DynamicsModelConfig,
+        PriorModelConfig,
+        LikelihoodModelConfig,
+        ObservationModelConfig,
+        InferenceGuideConfig,
+        PyroVelocityModelConfig,
+    )
+
+    # Print available components for debugging
+    from pyrovelocity.models.modular.registry import (
+        DynamicsModelRegistry,
+        PriorModelRegistry,
+        LikelihoodModelRegistry,
+        ObservationModelRegistry,
+        InferenceGuideRegistry,
+    )
+
+    # Get available components by inspecting the registry
+    print(f"Available likelihood models: {list(LikelihoodModelRegistry._registry.keys())}")
+
+    # Create model based on model_type
+    if model_type == "normal":
+        # Create a model with negative_binomial likelihood model (closest to Gaussian)
+        config = PyroVelocityModelConfig(
+            dynamics_model=DynamicsModelConfig(name="standard"),
+            prior_model=PriorModelConfig(name="lognormal"),
+            likelihood_model=LikelihoodModelConfig(name="negative_binomial"),
+            observation_model=ObservationModelConfig(name="standard"),
+            inference_guide=InferenceGuideConfig(name="auto"),
+        )
+        model = create_model(config)
+    else:
+        # Default to standard model with Poisson observation model
+        model = create_standard_model()
 
     # Train model
     training_start_time = time.time()
@@ -185,6 +247,7 @@ def train_modular_model(adata, max_epochs, num_samples):
         adata=adata_copy,
         max_epochs=max_epochs,
         early_stopping=False,
+        seed=seed,
     )
     training_end_time = time.time()
     training_time = training_end_time - training_start_time
@@ -193,16 +256,30 @@ def train_modular_model(adata, max_epochs, num_samples):
     inference_start_time = time.time()
     posterior_samples = model.generate_posterior_samples(
         adata=adata_copy,
-        num_samples=num_samples
+        num_samples=num_samples,
+        seed=seed
     )
+
+    # Print parameter shapes for debugging
+    print("Modular model parameter shapes:")
+    for key, value in posterior_samples.items():
+        if isinstance(value, (np.ndarray, torch.Tensor)):
+            print(f"  {key}: {value.shape}")
+
     inference_end_time = time.time()
     inference_time = inference_end_time - inference_start_time
 
     # Compute velocity
-    velocity = model.get_velocity(adata=adata_copy)
+    velocity = model.get_velocity(
+        adata=adata_copy,
+        random_seed=seed
+    )
 
     # Compute uncertainty
-    uncertainty = model.get_velocity_uncertainty(adata=adata_copy)
+    uncertainty = model.get_velocity_uncertainty(
+        adata=adata_copy,
+        num_samples=num_samples
+    )
 
     # Return results
     return {
@@ -501,6 +578,7 @@ def generate_summary_report(legacy_results, modular_results, comparison, args, o
         f.write(f"Max epochs: {args.max_epochs}\n")
         f.write(f"Number of posterior samples: {args.num_samples}\n")
         f.write(f"Random seed: {args.seed}\n")
+        f.write(f"Model type: {args.model_type}\n")
         f.write("\n")
 
         # Write model information
@@ -650,7 +728,13 @@ def main():
 
     # Train legacy model
     try:
-        legacy_results = train_legacy_model(adata, args.max_epochs, args.num_samples)
+        legacy_results = train_legacy_model(
+            adata,
+            args.max_epochs,
+            args.num_samples,
+            seed=args.seed,
+            model_type=args.model_type
+        )
         print("Legacy model training successful")
     except Exception as e:
         print(f"Error training legacy model: {e}")
@@ -660,7 +744,13 @@ def main():
 
     # Train modular model
     try:
-        modular_results = train_modular_model(adata, args.max_epochs, args.num_samples)
+        modular_results = train_modular_model(
+            adata,
+            args.max_epochs,
+            args.num_samples,
+            seed=args.seed,
+            model_type=args.model_type
+        )
         print("Modular model training successful")
     except Exception as e:
         print(f"Error training modular model: {e}")
@@ -696,6 +786,7 @@ def main():
                     f.write(f"Max epochs: {args.max_epochs}\n")
                     f.write(f"Number of posterior samples: {args.num_samples}\n")
                     f.write(f"Random seed: {args.seed}\n")
+                    f.write(f"Model type: {args.model_type}\n")
                     f.write("\n")
                     f.write("Legacy Model:\n")
                     f.write(f"  Training time: {legacy_results['performance']['training_time']:.2f} seconds\n")
