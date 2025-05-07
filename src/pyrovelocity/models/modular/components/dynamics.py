@@ -60,6 +60,7 @@ class StandardDynamicsModel:
         t_scale_on: bool = False,
         cell_specific_kinetics: Optional[str] = None,
         kinetics_num: Optional[int] = None,
+        correct_library_size: Union[bool, str] = True,
         **kwargs,
     ):
         """
@@ -71,6 +72,7 @@ class StandardDynamicsModel:
             t_scale_on: Whether to use time scaling.
             cell_specific_kinetics: Type of cell-specific kinetics.
             kinetics_num: Number of kinetics.
+            correct_library_size: Whether to correct for library size.
             **kwargs: Additional keyword arguments.
         """
         self.name = name
@@ -78,6 +80,7 @@ class StandardDynamicsModel:
         self.t_scale_on = t_scale_on
         self.cell_specific_kinetics = cell_specific_kinetics
         self.kinetics_num = kinetics_num
+        self.correct_library_size = correct_library_size
 
     @jaxtyped
     @beartype
@@ -103,11 +106,15 @@ class StandardDynamicsModel:
                 And optional keys:
                 - scaling: Scaling factor (ParamTensor)
                 - t: Time points (BatchTensor)
+                - u_read_depth: Unspliced read depth (BatchTensor)
+                - s_read_depth: Spliced read depth (BatchTensor)
 
         Returns:
             Updated context dictionary with the following additional keys:
                 - u_expected: Expected unspliced counts (BatchTensor)
                 - s_expected: Expected spliced counts (BatchTensor)
+                - ut: Latent unspliced counts (BatchTensor)
+                - st: Latent spliced counts (BatchTensor)
         """
         # Validate context
         validation_result = validate_context(
@@ -127,6 +134,26 @@ class StandardDynamicsModel:
             scaling = context.get("scaling")
             t = context.get("t")
 
+            # Extract read depths if available
+            u_read_depth = context.get("u_read_depth")
+            s_read_depth = context.get("s_read_depth")
+
+            # If read depths are not provided, create default ones
+            if u_read_depth is None and hasattr(self, 'correct_library_size') and self.correct_library_size:
+                # Create default read depths (will be used in _compute_expected_counts)
+                if u_obs.dim() == 2:
+                    # Shape: [batch_size, 1]
+                    u_read_depth = torch.ones(u_obs.shape[0], 1)
+                    s_read_depth = torch.ones(s_obs.shape[0], 1)
+                else:
+                    # Shape: [1]
+                    u_read_depth = torch.ones(1)
+                    s_read_depth = torch.ones(1)
+
+                # Add to context
+                context["u_read_depth"] = u_read_depth
+                context["s_read_depth"] = s_read_depth
+
             # Compute expected counts
             u_expected, s_expected = self._compute_expected_counts(
                 u_obs, s_obs, alpha, beta, gamma, scaling, t
@@ -135,6 +162,63 @@ class StandardDynamicsModel:
             # Update context with expected counts
             context["u_expected"] = u_expected
             context["s_expected"] = s_expected
+
+            # Create latent variables ut and st using pyro.deterministic
+            # This matches the legacy implementation's approach
+            import pyro
+
+            # Create latent variables with the same shape as in the legacy implementation
+            # Reshape parameters to match legacy implementation shape if needed
+            if u_expected.dim() == 2 and u_expected.shape[0] > 1:
+                # Add an extra dimension to match legacy shape (num_cells, 1, n_genes)
+                # This is critical for proper broadcasting during velocity calculation
+                u_expected_reshaped = u_expected.unsqueeze(1)
+                s_expected_reshaped = s_expected.unsqueeze(1)
+            else:
+                u_expected_reshaped = u_expected
+                s_expected_reshaped = s_expected
+
+            # Create latent variables
+            ut = pyro.deterministic("ut", u_expected_reshaped)
+            st = pyro.deterministic("st", s_expected_reshaped)
+
+            # In the legacy implementation, these are also normalized and scaled
+            # We'll add that logic here to match exactly
+            one = torch.ones_like(ut) * 1e-6
+
+            # Apply ReLU and add small constant for numerical stability
+            ut = torch.relu(ut) + one
+            st = torch.relu(st) + one
+
+            # If we're using library size correction, normalize and scale
+            if hasattr(self, 'correct_library_size') and self.correct_library_size:
+                # Normalize
+                ut_norm = ut / torch.sum(ut, dim=-1, keepdim=True)
+                st_norm = st / torch.sum(st, dim=-1, keepdim=True)
+
+                # Register as deterministic variables
+                ut_norm = pyro.deterministic("ut_norm", ut_norm)
+                st_norm = pyro.deterministic("st_norm", st_norm)
+
+                # Add small constant and scale by read depth
+                if u_read_depth is not None and s_read_depth is not None:
+                    # Reshape read depths to match ut_norm and st_norm
+                    if u_read_depth.dim() == 1:
+                        u_read_depth = u_read_depth.unsqueeze(1)
+                    if s_read_depth.dim() == 1:
+                        s_read_depth = s_read_depth.unsqueeze(1)
+
+                    # Scale by read depth
+                    ut = (ut_norm + one) * u_read_depth
+                    st = (st_norm + one) * s_read_depth
+                else:
+                    # Use default scaling
+                    ut = (ut_norm + one)
+                    st = (st_norm + one)
+
+            # Add latent variables to context
+            context["ut"] = ut
+            context["st"] = st
 
             return context
         else:
