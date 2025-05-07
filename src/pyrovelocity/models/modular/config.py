@@ -145,11 +145,52 @@ class ModelConfig:
             A ModelConfig instance with standard component configurations
         """
         return cls(
-            dynamics_model=ComponentConfig(name="standard"),
-            prior_model=ComponentConfig(name="lognormal"),
-            likelihood_model=ComponentConfig(name="poisson"),
-            observation_model=ComponentConfig(name="standard"),
-            inference_guide=ComponentConfig(name="auto"),
+            dynamics_model=ComponentConfig(
+                name="standard",
+                # Match legacy model parameters
+                params={
+                    "shared_time": True,
+                    "t_scale_on": False,
+                    "cell_specific_kinetics": None,
+                    "kinetics_num": None,
+                    "correct_library_size": True,
+                }
+            ),
+            prior_model=ComponentConfig(
+                name="lognormal",
+                # Match legacy model parameters
+                params={
+                    "scale_alpha": 1.0,
+                    "scale_beta": 0.25,
+                    "scale_gamma": 1.0,
+                    "scale_u": 0.1,
+                    "scale_s": 0.1,
+                    "scale_dt": 1.0,
+                }
+            ),
+            likelihood_model=ComponentConfig(
+                name="poisson",
+                # Match legacy model parameters
+                params={}
+            ),
+            observation_model=ComponentConfig(
+                name="standard",
+                # Match legacy model parameters
+                params={
+                    "use_raw": True,
+                    "log_transform": True,
+                    "normalize": True,
+                }
+            ),
+            inference_guide=ComponentConfig(
+                name="auto",
+                # Match legacy model parameters
+                params={
+                    "guide_type": "AutoNormal",
+                    "init_loc_fn": None,  # Will use init_to_median by default
+                    "init_scale": 0.1,
+                }
+            ),
         )
 
 
