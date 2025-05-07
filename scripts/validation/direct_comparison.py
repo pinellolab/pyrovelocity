@@ -18,6 +18,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import pyro
+import scipy.sparse
 from importlib.resources import files
 
 # Add the src directory to the path to import test fixtures
@@ -135,6 +136,62 @@ def train_legacy_model(adata, max_epochs, num_samples, seed=42, model_type="norm
     for key, value in posterior_samples.items():
         if isinstance(value, (np.ndarray, torch.Tensor)):
             print(f"  {key}: {value.shape}")
+
+    # Print parameter statistics for debugging
+    print("\nLegacy model parameter statistics:")
+    for param in ["alpha", "beta", "gamma"]:
+        if param in posterior_samples:
+            param_value = posterior_samples[param]
+            if isinstance(param_value, torch.Tensor):
+                param_value = param_value.detach().cpu().numpy()
+            print(f"  {param} mean: {np.mean(param_value):.6f}, std: {np.std(param_value):.6f}, min: {np.min(param_value):.6f}, max: {np.max(param_value):.6f}")
+
+    # Print scaling factors if available
+    if "u_scale" in posterior_samples:
+        u_scale = posterior_samples["u_scale"]
+        if isinstance(u_scale, torch.Tensor):
+            u_scale = u_scale.detach().cpu().numpy()
+        print(f"  u_scale mean: {np.mean(u_scale):.6f}, std: {np.std(u_scale):.6f}, min: {np.min(u_scale):.6f}, max: {np.max(u_scale):.6f}")
+
+    if "s_scale" in posterior_samples:
+        s_scale = posterior_samples["s_scale"]
+        if isinstance(s_scale, torch.Tensor):
+            s_scale = s_scale.detach().cpu().numpy()
+        print(f"  s_scale mean: {np.mean(s_scale):.6f}, std: {np.std(s_scale):.6f}, min: {np.min(s_scale):.6f}, max: {np.max(s_scale):.6f}")
+
+    # Print ut and st statistics
+    if "ut" in posterior_samples:
+        ut = posterior_samples["ut"]
+        if isinstance(ut, torch.Tensor):
+            ut = ut.detach().cpu().numpy()
+        print(f"  ut mean: {np.mean(ut):.6f}, std: {np.std(ut):.6f}, min: {np.min(ut):.6f}, max: {np.max(ut):.6f}")
+
+    if "st" in posterior_samples:
+        st = posterior_samples["st"]
+        if isinstance(st, torch.Tensor):
+            st = st.detach().cpu().numpy()
+        print(f"  st mean: {np.mean(st):.6f}, std: {np.std(st):.6f}, min: {np.min(st):.6f}, max: {np.max(st):.6f}")
+
+    # Print velocity calculation details
+    print("\nComputing velocity for legacy model...")
+
+    # Calculate velocity manually for comparison
+    if ("u_scale" in posterior_samples) and ("s_scale" in posterior_samples):
+        scale = posterior_samples["u_scale"] / posterior_samples["s_scale"]
+        print(f"  Using scale from u_scale/s_scale, shape: {scale.shape}, mean: {np.mean(scale):.6f}")
+    elif ("u_scale" in posterior_samples) and not ("s_scale" in posterior_samples):
+        scale = posterior_samples["u_scale"]
+        print(f"  Using scale from u_scale only, shape: {scale.shape}, mean: {np.mean(scale):.6f}")
+    else:
+        scale = 1
+        print("  No scaling applied (scale = 1)")
+
+    # Calculate velocity manually
+    manual_velocity = (
+        posterior_samples["beta"] * posterior_samples["ut"] / scale
+        - posterior_samples["gamma"] * posterior_samples["st"]
+    ).mean(0)
+    print(f"  Manual velocity shape: {manual_velocity.shape}, mean: {np.mean(manual_velocity):.6f}, std: {np.std(manual_velocity):.6f}")
 
     # Compute statistics from posterior samples (this computes velocity and stores it in adata)
     # The method signature is compute_statistics_from_posterior_samples(self, adata, posterior_samples, ...)
@@ -266,10 +323,72 @@ def train_modular_model(adata, max_epochs, num_samples, seed=42, model_type="nor
         if isinstance(value, (np.ndarray, torch.Tensor)):
             print(f"  {key}: {value.shape}")
 
+    # Print parameter statistics for debugging
+    print("\nModular model parameter statistics:")
+    for param in ["alpha", "beta", "gamma"]:
+        if param in posterior_samples:
+            param_value = posterior_samples[param]
+            if isinstance(param_value, torch.Tensor):
+                param_value = param_value.detach().cpu().numpy()
+            print(f"  {param} mean: {np.mean(param_value):.6f}, std: {np.std(param_value):.6f}, min: {np.min(param_value):.6f}, max: {np.max(param_value):.6f}")
+
     inference_end_time = time.time()
     inference_time = inference_end_time - inference_start_time
 
-    # Compute velocity
+    # Compute velocity with detailed logging
+    print("\nComputing velocity for modular model...")
+
+    # Get the raw data
+    u = adata_copy.layers["unspliced"]
+    s = adata_copy.layers["spliced"]
+    if isinstance(u, scipy.sparse.spmatrix):
+        u = u.toarray()
+    if isinstance(s, scipy.sparse.spmatrix):
+        s = s.toarray()
+    print(f"  u shape: {u.shape}, mean: {np.mean(u):.6f}, std: {np.std(u):.6f}")
+    print(f"  s shape: {s.shape}, mean: {np.mean(s):.6f}, std: {np.std(s):.6f}")
+
+    # Extract parameters for velocity calculation
+    alpha = posterior_samples["alpha"]
+    beta = posterior_samples["beta"]
+    gamma = posterior_samples["gamma"]
+    u_scale = posterior_samples.get("u_scale")
+    s_scale = posterior_samples.get("s_scale")
+
+    if isinstance(alpha, torch.Tensor):
+        alpha_mean = alpha.mean(dim=0).detach().cpu().numpy()
+    else:
+        alpha_mean = np.mean(alpha, axis=0)
+
+    if isinstance(beta, torch.Tensor):
+        beta_mean = beta.mean(dim=0).detach().cpu().numpy()
+    else:
+        beta_mean = np.mean(beta, axis=0)
+
+    if isinstance(gamma, torch.Tensor):
+        gamma_mean = gamma.mean(dim=0).detach().cpu().numpy()
+    else:
+        gamma_mean = np.mean(gamma, axis=0)
+
+    print(f"  alpha_mean shape: {alpha_mean.shape}, mean: {np.mean(alpha_mean):.6f}, std: {np.std(alpha_mean):.6f}")
+    print(f"  beta_mean shape: {beta_mean.shape}, mean: {np.mean(beta_mean):.6f}, std: {np.std(beta_mean):.6f}")
+    print(f"  gamma_mean shape: {gamma_mean.shape}, mean: {np.mean(gamma_mean):.6f}, std: {np.std(gamma_mean):.6f}")
+
+    if u_scale is not None:
+        if isinstance(u_scale, torch.Tensor):
+            u_scale_mean = u_scale.mean(dim=0).detach().cpu().numpy()
+        else:
+            u_scale_mean = np.mean(u_scale, axis=0)
+        print(f"  u_scale_mean shape: {u_scale_mean.shape}, mean: {np.mean(u_scale_mean):.6f}, std: {np.std(u_scale_mean):.6f}")
+
+    if s_scale is not None:
+        if isinstance(s_scale, torch.Tensor):
+            s_scale_mean = s_scale.mean(dim=0).detach().cpu().numpy()
+        else:
+            s_scale_mean = np.mean(s_scale, axis=0)
+        print(f"  s_scale_mean shape: {s_scale_mean.shape}, mean: {np.mean(s_scale_mean):.6f}, std: {np.std(s_scale_mean):.6f}")
+
+    # Compute velocity using the model's get_velocity method
     velocity = model.get_velocity(
         adata=adata_copy,
         random_seed=seed
