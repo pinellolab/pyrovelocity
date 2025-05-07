@@ -68,16 +68,19 @@ class LogNormalPriorModel:
     @beartype
     def __init__(
         self,
-        scale_alpha: float = 1.0,
-        scale_beta: float = 0.25,
-        scale_gamma: float = 1.0,
-        scale_u: float = 0.1,
-        scale_s: float = 0.1,
+        scale_alpha: float = 1.0,  # Match legacy model in _velocity_model.py
+        scale_beta: float = 0.25,  # Match legacy model in _velocity_model.py
+        scale_gamma: float = 1.0,  # Match legacy model in _velocity_model.py
+        scale_u: float = 0.1,      # Match legacy model in _velocity_model.py
+        scale_s: float = 0.1,      # Match legacy model in _velocity_model.py
         scale_dt: float = 1.0,
         name: Optional[str] = None,
     ) -> None:
         """
         Initialize the LogNormalPriorModel.
+
+        The default scale parameters are set to match the legacy implementation
+        in _velocity_model.py to ensure consistent behavior.
 
         Args:
             scale_alpha: Scale parameter for alpha prior distribution.
