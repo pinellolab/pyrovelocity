@@ -48,25 +48,33 @@ def create_optimizer(
     optimizer_name: str,
     learning_rate: float = 0.01,
     clip_norm: Optional[float] = None,
+    max_epochs: Optional[int] = 1000,
     **kwargs: Any,
 ) -> Any:
     """
     Create a Pyro optimizer.
 
     Args:
-        optimizer_name: Name of the optimizer ("adam", "sgd", "rmsprop")
+        optimizer_name: Name of the optimizer ("adam", "sgd", "rmsprop", "velocity_clipped_adam")
         learning_rate: Learning rate
         clip_norm: Gradient clipping norm
+        max_epochs: Maximum number of epochs (used for learning rate decay in VelocityClippedAdam)
         **kwargs: Additional optimizer parameters
 
     Returns:
         Pyro optimizer
     """
+    # Import VelocityClippedAdam from the legacy implementation
+    from pyrovelocity.models._trainer import VelocityClippedAdam
+
     # Set up optimizer parameters
     optim_args = {"lr": learning_rate, **kwargs}
 
     # Create optimizer based on name
-    if optimizer_name.lower() == "adam":
+    if optimizer_name.lower() == "velocity_clipped_adam":
+        # Use VelocityClippedAdam with learning rate decay like in the legacy implementation
+        return VelocityClippedAdam({"lr": learning_rate, "lrd": 0.1 ** (1 / max_epochs)})
+    elif optimizer_name.lower() == "adam":
         if clip_norm is not None:
             return pyro.optim.ClippedAdam(optim_args)
         else:
@@ -87,6 +95,7 @@ def create_svi(
     loss: Optional[Any] = None,
     learning_rate: float = 0.01,
     clip_norm: Optional[float] = None,
+    max_epochs: Optional[int] = 1000,
     **kwargs: Any,
 ) -> SVI:
     """
@@ -98,10 +107,11 @@ def create_svi(
     Args:
         model: Pyro model function that defines the probabilistic model
         guide: Pyro guide function or AutoGuide object that defines the variational distribution
-        optimizer: Pyro optimizer or optimizer name ("adam", "sgd", etc.)
+        optimizer: Pyro optimizer or optimizer name ("adam", "sgd", "velocity_clipped_adam", etc.)
         loss: ELBO loss function (defaults to Trace_ELBO if None)
         learning_rate: Learning rate for the optimizer (used if optimizer is a string)
         clip_norm: Gradient clipping norm (used if optimizer is a string)
+        max_epochs: Maximum number of epochs (used for learning rate decay in VelocityClippedAdam)
         **kwargs: Additional optimizer parameters
 
     Returns:
@@ -109,12 +119,17 @@ def create_svi(
     """
     # Use default loss if not provided
     if loss is None:
-        loss = Trace_ELBO()
+        # Use Trace_ELBO with strict_enumeration_warning=True like in the legacy implementation
+        loss = Trace_ELBO(strict_enumeration_warning=True)
 
     # Handle string optimizer
     if isinstance(optimizer, str):
+        # Use VelocityClippedAdam by default to match the legacy implementation
+        if optimizer.lower() == "adam":
+            optimizer = "velocity_clipped_adam"
+
         optimizer = create_optimizer(
-            optimizer, learning_rate, clip_norm=clip_norm, **kwargs
+            optimizer, learning_rate, clip_norm=clip_norm, max_epochs=max_epochs, **kwargs
         )
 
     # Create SVI object
@@ -218,6 +233,7 @@ def run_svi_inference(
         optimizer=config.optimizer,
         learning_rate=config.learning_rate,
         clip_norm=config.clip_norm,
+        max_epochs=config.num_epochs,
     )
 
     # Initialize training state
