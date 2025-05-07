@@ -139,21 +139,50 @@ def compute_velocity(
         u_ss_mean = alpha_mean / beta_mean
         s_ss_mean = alpha_mean / gamma_mean
 
-        # Match legacy implementation velocity calculation with scaling
-        # In the legacy implementation, velocity is computed as:
-        # beta * ut / scale - gamma * st
-        # where scale depends on the model type
-        if u_scale is not None and s_scale is not None:
-            # For Gaussian models with two scales
-            scale = u_scale.mean(dim=0) / s_scale.mean(dim=0)
-            velocity = beta_mean * ut / scale - gamma_mean * st
-        elif u_scale is not None:
-            # For Poisson Model 2 with one scale
-            scale = u_scale.mean(dim=0)
-            velocity = beta_mean * ut / scale - gamma_mean * st
+        # Reshape parameters to match legacy implementation shape (num_samples, 1, n_genes)
+        # This ensures broadcasting works the same way as in the legacy implementation
+        if beta_mean.dim() == 1:
+            beta_mean = beta_mean.unsqueeze(0)  # Add batch dimension
+            gamma_mean = gamma_mean.unsqueeze(0)
+
+            # Match legacy implementation velocity calculation with scaling
+            # In the legacy implementation, velocity is computed as:
+            # beta * ut / scale - gamma * st
+            # where scale depends on the model type
+            if u_scale is not None and s_scale is not None:
+                # For Gaussian models with two scales
+                scale = u_scale.mean(dim=0) / s_scale.mean(dim=0)
+                # Ensure scale has the right shape for broadcasting
+                if scale.dim() == 1:
+                    scale = scale.unsqueeze(0)
+                velocity = beta_mean * ut / scale - gamma_mean * st
+            elif u_scale is not None:
+                # For Poisson Model 2 with one scale
+                scale = u_scale.mean(dim=0)
+                # Ensure scale has the right shape for broadcasting
+                if scale.dim() == 1:
+                    scale = scale.unsqueeze(0)
+                velocity = beta_mean * ut / scale - gamma_mean * st
+            else:
+                # For Poisson Model 1 with no scale
+                velocity = beta_mean * ut - gamma_mean * st
+
+            # Remove the batch dimension we added if the result has it
+            if velocity.dim() > ut.dim():
+                velocity = velocity.squeeze(0)
         else:
-            # For Poisson Model 1 with no scale
-            velocity = beta_mean * ut - gamma_mean * st
+            # Match legacy implementation velocity calculation with scaling
+            if u_scale is not None and s_scale is not None:
+                # For Gaussian models with two scales
+                scale = u_scale.mean(dim=0) / s_scale.mean(dim=0)
+                velocity = beta_mean * ut / scale - gamma_mean * st
+            elif u_scale is not None:
+                # For Poisson Model 2 with one scale
+                scale = u_scale.mean(dim=0)
+                velocity = beta_mean * ut / scale - gamma_mean * st
+            else:
+                # For Poisson Model 1 with no scale
+                velocity = beta_mean * ut - gamma_mean * st
 
         # Compute latent time (pseudotime)
         # This is a simple implementation based on the ratio of unspliced to spliced
@@ -192,20 +221,20 @@ def compute_velocity(
             s_ss_mean = alpha_mean / gamma_mean
 
             # Ensure the shapes are compatible for broadcasting
-            if u.dim() == 1 and u_ss_mean.dim() > 1:
-                # If u is 1D but u_ss_mean is multi-dimensional, flatten u_ss_mean
+            if ut.dim() == 1 and u_ss_mean.dim() > 1:
+                # If ut is 1D but u_ss_mean is multi-dimensional, flatten u_ss_mean
                 u_ss_mean = u_ss_mean.flatten()
                 s_ss_mean = s_ss_mean.flatten()
-            elif u.dim() > 1 and u_ss_mean.dim() == 1:
-                # If u is multi-dimensional but u_ss_mean is 1D, expand u_ss_mean
-                if u.shape[1] == u_ss_mean.shape[0]:
-                    # If the second dimension of u matches the size of u_ss_mean, expand along first dimension
-                    u_ss_mean = u_ss_mean.unsqueeze(0).expand(u.shape[0], -1)
-                    s_ss_mean = s_ss_mean.unsqueeze(0).expand(u.shape[0], -1)
+            elif ut.dim() > 1 and u_ss_mean.dim() == 1:
+                # If ut is multi-dimensional but u_ss_mean is 1D, expand u_ss_mean
+                if ut.shape[1] == u_ss_mean.shape[0]:
+                    # If the second dimension of ut matches the size of u_ss_mean, expand along first dimension
+                    u_ss_mean = u_ss_mean.unsqueeze(0).expand(ut.shape[0], -1)
+                    s_ss_mean = s_ss_mean.unsqueeze(0).expand(ut.shape[0], -1)
                 else:
                     # Otherwise, try to reshape to match
-                    u_ss_mean = u_ss_mean.reshape(1, -1).expand(u.shape[0], -1)
-                    s_ss_mean = s_ss_mean.reshape(1, -1).expand(u.shape[0], -1)
+                    u_ss_mean = u_ss_mean.reshape(1, -1).expand(ut.shape[0], -1)
+                    s_ss_mean = s_ss_mean.reshape(1, -1).expand(ut.shape[0], -1)
 
             # Compute velocity - match legacy implementation with scaling
             if u_scale is not None and s_scale is not None:
@@ -213,27 +242,60 @@ def compute_velocity(
                 scale = u_scale.mean(dim=0)
                 if scale.dim() > 0 and s_scale.dim() > 0:
                     scale = scale / s_scale.mean(dim=0)
+
+                # Reshape parameters to match legacy implementation shape
+                if beta_mean.dim() == 1:
+                    beta_mean = beta_mean.unsqueeze(0)  # Add batch dimension
+                    gamma_mean = gamma_mean.unsqueeze(0)
+                    if scale.dim() == 1:
+                        scale = scale.unsqueeze(0)
+
                 velocity = beta_mean * ut / scale - gamma_mean * st
+
+                # Remove the batch dimension we added if the result has it
+                if velocity.dim() > ut.dim():
+                    velocity = velocity.squeeze(0)
             elif u_scale is not None:
                 # For Poisson Model 2 with one scale
                 scale = u_scale.mean(dim=0)
+
+                # Reshape parameters to match legacy implementation shape
+                if beta_mean.dim() == 1:
+                    beta_mean = beta_mean.unsqueeze(0)  # Add batch dimension
+                    gamma_mean = gamma_mean.unsqueeze(0)
+                    if scale.dim() == 1:
+                        scale = scale.unsqueeze(0)
+
                 velocity = beta_mean * ut / scale - gamma_mean * st
+
+                # Remove the batch dimension we added if the result has it
+                if velocity.dim() > ut.dim():
+                    velocity = velocity.squeeze(0)
             else:
                 # For Poisson Model 1 with no scale
+                # Reshape parameters to match legacy implementation shape
+                if beta_mean.dim() == 1:
+                    beta_mean = beta_mean.unsqueeze(0)  # Add batch dimension
+                    gamma_mean = gamma_mean.unsqueeze(0)
+
                 velocity = beta_mean * ut - gamma_mean * st
+
+                # Remove the batch dimension we added if the result has it
+                if velocity.dim() > ut.dim():
+                    velocity = velocity.squeeze(0)
 
             # Compute latent time (pseudotime)
             # This is a simple implementation based on the ratio of unspliced to spliced
             # More sophisticated methods could be used
 
             # Handle 1D tensors
-            if u.dim() == 1:
-                u_norm = u / (u.max() + 1e-6)
-                s_norm = s / (s.max() + 1e-6)
+            if ut.dim() == 1:
+                u_norm = ut / (ut.max() + 1e-6)
+                s_norm = st / (st.max() + 1e-6)
                 latent_time = torch.tensor(1.0 - u_norm.mean() / (s_norm.mean() + 1e-6))
             else:
-                u_norm = u / u.max(dim=1, keepdim=True)[0]
-                s_norm = s / s.max(dim=1, keepdim=True)[0]
+                u_norm = ut / ut.max(dim=1, keepdim=True)[0]
+                s_norm = st / st.max(dim=1, keepdim=True)[0]
                 latent_time = 1.0 - u_norm.mean(dim=1) / (s_norm.mean(dim=1) + 1e-6)
 
             return {
@@ -273,26 +335,84 @@ def compute_velocity(
                     u_scale_reshaped = u_scale.unsqueeze(1)  # [num_samples, 1, n_genes]
                     s_scale_reshaped = s_scale.unsqueeze(1)  # [num_samples, 1, n_genes]
                     scale = u_scale_reshaped / s_scale_reshaped
-                    velocity = beta_reshaped * ut.unsqueeze(0) / scale - gamma_reshaped * st.unsqueeze(0)
+
+                    # In the legacy implementation, velocity is computed as:
+                    # beta * ut / scale - gamma * st
+                    # We need to ensure the shapes are compatible for broadcasting
+                    ut_expanded = ut.unsqueeze(0)  # [1, n_cells, n_genes]
+                    st_expanded = st.unsqueeze(0)  # [1, n_cells, n_genes]
+                    velocity = beta_reshaped * ut_expanded / scale - gamma_reshaped * st_expanded
                 elif u_scale is not None:
                     # For Poisson Model 2 with one scale
                     u_scale_reshaped = u_scale.unsqueeze(1)  # [num_samples, 1, n_genes]
-                    velocity = beta_reshaped * ut.unsqueeze(0) / u_scale_reshaped - gamma_reshaped * st.unsqueeze(0)
+
+                    # In the legacy implementation, velocity is computed as:
+                    # beta * ut / scale - gamma * st
+                    # We need to ensure the shapes are compatible for broadcasting
+                    ut_expanded = ut.unsqueeze(0)  # [1, n_cells, n_genes]
+                    st_expanded = st.unsqueeze(0)  # [1, n_cells, n_genes]
+                    velocity = beta_reshaped * ut_expanded / u_scale_reshaped - gamma_reshaped * st_expanded
                 else:
                     # For Poisson Model 1 with no scale
-                    velocity = beta_reshaped * ut.unsqueeze(0) - gamma_reshaped * st.unsqueeze(0)
+                    # In the legacy implementation, velocity is computed as:
+                    # beta * ut - gamma * st
+                    # We need to ensure the shapes are compatible for broadcasting
+                    ut_expanded = ut.unsqueeze(0)  # [1, n_cells, n_genes]
+                    st_expanded = st.unsqueeze(0)  # [1, n_cells, n_genes]
+                    velocity = beta_reshaped * ut_expanded - gamma_reshaped * st_expanded
             else:
                 # Standard computation when shapes are compatible - match legacy implementation with scaling
                 if u_scale is not None and s_scale is not None:
                     # For Gaussian models with two scales
                     scale = u_scale / s_scale
-                    velocity = beta * ut / scale - gamma * st
+
+                    # Ensure shapes are compatible for broadcasting
+                    # In the legacy implementation, parameters have shape [num_samples, 1, n_genes]
+                    # We need to reshape our parameters to match this
+                    if beta.dim() == 2 and ut.dim() == 2 and beta.shape[0] != ut.shape[0]:
+                        # Reshape beta and gamma to [num_samples, 1, n_genes]
+                        beta_reshaped = beta.unsqueeze(1)
+                        gamma_reshaped = gamma.unsqueeze(1)
+                        scale_reshaped = scale.unsqueeze(1)
+
+                        # Reshape ut and st to [1, n_cells, n_genes]
+                        ut_expanded = ut.unsqueeze(0)
+                        st_expanded = st.unsqueeze(0)
+
+                        velocity = beta_reshaped * ut_expanded / scale_reshaped - gamma_reshaped * st_expanded
+                    else:
+                        velocity = beta * ut / scale - gamma * st
                 elif u_scale is not None:
                     # For Poisson Model 2 with one scale
-                    velocity = beta * ut / u_scale - gamma * st
+                    # Ensure shapes are compatible for broadcasting
+                    if beta.dim() == 2 and ut.dim() == 2 and beta.shape[0] != ut.shape[0]:
+                        # Reshape beta and gamma to [num_samples, 1, n_genes]
+                        beta_reshaped = beta.unsqueeze(1)
+                        gamma_reshaped = gamma.unsqueeze(1)
+                        u_scale_reshaped = u_scale.unsqueeze(1)
+
+                        # Reshape ut and st to [1, n_cells, n_genes]
+                        ut_expanded = ut.unsqueeze(0)
+                        st_expanded = st.unsqueeze(0)
+
+                        velocity = beta_reshaped * ut_expanded / u_scale_reshaped - gamma_reshaped * st_expanded
+                    else:
+                        velocity = beta * ut / u_scale - gamma * st
                 else:
                     # For Poisson Model 1 with no scale
-                    velocity = beta * ut - gamma * st
+                    # Ensure shapes are compatible for broadcasting
+                    if beta.dim() == 2 and ut.dim() == 2 and beta.shape[0] != ut.shape[0]:
+                        # Reshape beta and gamma to [num_samples, 1, n_genes]
+                        beta_reshaped = beta.unsqueeze(1)
+                        gamma_reshaped = gamma.unsqueeze(1)
+
+                        # Reshape ut and st to [1, n_cells, n_genes]
+                        ut_expanded = ut.unsqueeze(0)
+                        st_expanded = st.unsqueeze(0)
+
+                        velocity = beta_reshaped * ut_expanded - gamma_reshaped * st_expanded
+                    else:
+                        velocity = beta * ut - gamma * st
 
             # Compute latent time (pseudotime)
             # This is a simple implementation based on the ratio of unspliced to spliced
