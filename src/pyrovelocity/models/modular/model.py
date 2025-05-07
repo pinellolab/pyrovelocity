@@ -878,7 +878,7 @@ class PyroVelocityModel:
 
         # Ensure the guide is created before running inference
         # This is necessary because the guide needs to be created with the model
-        if isinstance(self.guide_model, AutoGuideFactory):
+        if hasattr(self.guide_model, 'create_guide'):
             # Create the guide with the model
             self.guide_model.create_guide(self.forward)
 
@@ -1034,6 +1034,40 @@ class PyroVelocityModel:
             # Combine guide and model samples
             # Guide samples take precedence if there's a conflict
             posterior_samples = {**model_samples, **posterior_samples}
+
+            # If ut and st are not in the posterior samples, we need to compute them
+            # This is critical for the legacy model compatibility
+            if "ut" not in posterior_samples or "st" not in posterior_samples:
+                # Check if we have the necessary parameters to compute ut and st
+                if all(k in posterior_samples for k in ["alpha", "beta", "gamma", "cell_time"]):
+                    # Extract parameters
+                    alpha = posterior_samples["alpha"]
+                    beta = posterior_samples["beta"]
+                    gamma = posterior_samples["gamma"]
+                    cell_time = posterior_samples["cell_time"]
+
+                    # Compute steady state values
+                    u_inf = alpha / beta
+                    s_inf = alpha / gamma
+
+                    # Compute ut and st based on the transcription model
+                    # For cells before switching time
+                    t0 = posterior_samples.get("t0", torch.zeros_like(alpha))
+                    dt_switching = posterior_samples.get("dt_switching", torch.zeros_like(alpha))
+                    switching = t0 + dt_switching
+
+                    # Compute ut and st
+                    ut = u_inf * (1 - torch.exp(-beta * cell_time))
+                    st = s_inf * (1 - torch.exp(-gamma * cell_time)) - (
+                        alpha / (gamma - beta)
+                    ) * (torch.exp(-beta * cell_time) - torch.exp(-gamma * cell_time))
+
+                    # Add to posterior samples
+                    posterior_samples["ut"] = ut
+                    posterior_samples["st"] = st
+                    posterior_samples["u_inf"] = u_inf
+                    posterior_samples["s_inf"] = s_inf
+                    posterior_samples["switching"] = switching
 
         # Convert PyTorch tensors to NumPy arrays
         posterior_samples_np = {
@@ -1280,6 +1314,13 @@ class PyroVelocityModel:
                 # If velocity has shape (n_cells * n_genes,), reshape it
                 elif velocity.shape == (n_cells * n_genes,):
                     velocity = velocity.reshape(n_cells, n_genes)
+                # If velocity has shape (num_samples, 1, 1, 1, 1, n_cells, n_genes), reshape it
+                elif len(velocity.shape) >= 6 and velocity.shape[-2] == n_cells and velocity.shape[-1] == n_genes:
+                    # First, take the mean across all dimensions except the last two
+                    velocity = velocity.mean(axis=tuple(range(len(velocity.shape) - 2)))
+                    # If we still don't have the right shape, reshape it
+                    if velocity.shape != (n_cells, n_genes):
+                        velocity = velocity.reshape(n_cells, n_genes)
                 # If velocity has shape (num_samples, 1, 1, n_cells, 1, n_genes), reshape it
                 elif len(velocity.shape) == 6 and velocity.shape[3] == n_cells and velocity.shape[5] == n_genes:
                     # First, take the mean across samples
@@ -1296,16 +1337,23 @@ class PyroVelocityModel:
                     except ValueError:
                         # If reshaping fails, print a warning and try to use the mean
                         print(f"Warning: Could not reshape velocity from {velocity.shape} to ({n_cells}, {n_genes})")
-                        # If velocity is multi-dimensional, try to take the mean along the first dimension
+                        # If velocity is multi-dimensional, try to take the mean along all dimensions except the last two
                         if len(velocity.shape) > 2:
-                            velocity = velocity.mean(axis=0)
-                            # Try reshaping again
                             try:
+                                # Try to reshape by taking the mean across all dimensions except the last two
+                                velocity = velocity.mean(axis=tuple(range(len(velocity.shape) - 2)))
+                                # Try reshaping again
                                 velocity = velocity.reshape(n_cells, n_genes)
-                            except ValueError:
-                                print(f"Warning: Still could not reshape velocity from {velocity.shape} to ({n_cells}, {n_genes})")
-                                # As a last resort, create a new velocity array of the right shape
-                                velocity = np.zeros((n_cells, n_genes))
+                            except (ValueError, IndexError):
+                                # If that fails, try to take the mean along the first dimension
+                                try:
+                                    velocity = velocity.mean(axis=0)
+                                    # Try reshaping again
+                                    velocity = velocity.reshape(n_cells, n_genes)
+                                except ValueError:
+                                    print(f"Warning: Still could not reshape velocity from {velocity.shape} to ({n_cells}, {n_genes})")
+                                    # As a last resort, create a new velocity array of the right shape
+                                    velocity = np.zeros((n_cells, n_genes))
 
             # Print the final shape for debugging
             print(f"Velocity shape after reshaping: {velocity.shape}")
