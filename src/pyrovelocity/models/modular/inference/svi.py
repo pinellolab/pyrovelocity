@@ -178,12 +178,39 @@ def extract_posterior_samples(
         pyro.set_rng_seed(seed)
 
     # For all guide types, create a predictive object
-    # In Pyro, we need to get the parameters from the param store
-    param_store = pyro.get_param_store()
-    predictive = pyro.infer.Predictive(guide, num_samples=num_samples)
-    samples = predictive()
+    # First, get samples from the guide (latent variables)
+    guide_predictive = pyro.infer.Predictive(guide, num_samples=num_samples)
+    guide_samples = guide_predictive()
 
-    return samples
+    # Now, we need to get deterministic sites from the model
+    # We'll use the guide samples as input to the model
+    # This is critical for getting ut and st which are deterministic sites
+
+    # Get the model function from the guide if it's an AutoGuide
+    if hasattr(guide, "model"):
+        model_fn = guide.model
+    else:
+        # If guide is not an AutoGuide, we can't get the model
+        # In this case, we'll just return the guide samples
+        return guide_samples
+
+    # Create a predictive object for the model, using the guide samples
+    # Use True to return all sites, including deterministic ones
+    model_predictive = pyro.infer.Predictive(
+        model_fn,
+        posterior_samples=guide_samples,
+        return_sites=True,  # Return all sites, including deterministic
+        num_samples=num_samples
+    )
+
+    # Run the model predictive to get all sites, including deterministic ones
+    model_samples = model_predictive()
+
+    # Combine guide and model samples
+    # Guide samples take precedence if there's a conflict
+    combined_samples = {**model_samples, **guide_samples}
+
+    return combined_samples
 
 
 @beartype
@@ -276,8 +303,30 @@ def run_svi_inference(
     state.params = state.best_params
 
     # Extract posterior samples
+    # We need to pass both the guide and the model to extract_posterior_samples
+    # This is critical for getting deterministic sites like ut and st
     posterior_samples = extract_posterior_samples(
         guide, state.params, config.num_samples, seed
     )
+
+    # If we're using an AutoGuide, we can get the model from it
+    if hasattr(guide, "model"):
+        model_fn = guide.model
+
+        # Create a predictive object for the model, using the guide samples
+        # Return all sites, including deterministic ones
+        model_predictive = pyro.infer.Predictive(
+            model_fn,
+            posterior_samples=posterior_samples,
+            return_sites=None,  # Return all sites, including deterministic
+            num_samples=config.num_samples
+        )
+
+        # Run the model predictive to get all sites, including deterministic ones
+        model_samples = model_predictive()
+
+        # Combine guide and model samples
+        # Guide samples take precedence if there's a conflict
+        posterior_samples = {**model_samples, **posterior_samples}
 
     return state, posterior_samples

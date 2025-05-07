@@ -129,11 +129,17 @@ class StandardObservationModel:
         self.u_scale = u_scale
         self.s_scale = s_scale
 
+        # Calculate read depths (library sizes) for use in dynamics model
+        u_read_depth = u_lib_size
+        s_read_depth = s_lib_size
+
         # Update the context with the transformed data
         context["u_obs"] = u_obs
         context["s_obs"] = s_obs
         context["u_scale"] = u_scale
         context["s_scale"] = s_scale
+        context["u_read_depth"] = u_read_depth
+        context["s_read_depth"] = s_read_depth
 
         return context
 
@@ -181,6 +187,8 @@ class StandardObservationModel:
             "s_obs": s_obs,
             "u_scale": u_scale,
             "s_scale": s_scale,
+            "u_read_depth": u_lib_size,
+            "s_read_depth": s_lib_size,
         }
 
     @beartype
@@ -260,6 +268,8 @@ class StandardObservationModel:
             "s_obs": s_obs,
             "u_scale": u_scale,
             "s_scale": s_scale,
+            "u_read_depth": u_lib_size,
+            "s_read_depth": s_lib_size,
         }
 
     @beartype
@@ -389,6 +399,8 @@ class StandardObservationModel:
             "s_obs": s_obs,
             "u_scale": u_scale,
             "s_scale": s_scale,
+            "u_read_depth": u_lib_size,
+            "s_read_depth": s_lib_size,
             "cell_indices": cell_indices,
         }
 
@@ -413,10 +425,12 @@ class StandardObservationModel:
         s_obs = data["s_obs"]
         u_scale = data["u_scale"]
         s_scale = data["s_scale"]
+        u_read_depth = data["u_read_depth"]
+        s_read_depth = data["s_read_depth"]
         cell_indices = data["cell_indices"]
 
         # Create dataset
-        dataset = TensorDataset(cell_indices, u_obs, s_obs, u_scale, s_scale)
+        dataset = TensorDataset(cell_indices, u_obs, s_obs, u_scale, s_scale, u_read_depth, s_read_depth)
 
         # Create data loader
         batch_size = kwargs.get("batch_size", self.batch_size)
@@ -452,10 +466,12 @@ class StandardObservationModel:
         s_obs = batch.get("s_obs")
         u_scale = batch.get("u_scale")
         s_scale = batch.get("s_scale")
+        u_read_depth = batch.get("u_read_depth")
+        s_read_depth = batch.get("s_read_depth")
 
         # If batch is a tuple from DataLoader, unpack it
         if isinstance(batch, tuple) or isinstance(batch, list):
-            cell_indices, u_obs, s_obs, u_scale, s_scale = batch
+            cell_indices, u_obs, s_obs, u_scale, s_scale, u_read_depth, s_read_depth = batch
 
         return {
             "cell_indices": cell_indices,
@@ -463,4 +479,6 @@ class StandardObservationModel:
             "s_obs": s_obs,
             "u_scale": u_scale,
             "s_scale": s_scale,
+            "u_read_depth": u_read_depth,
+            "s_read_depth": s_read_depth,
         }

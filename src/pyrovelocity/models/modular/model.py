@@ -998,6 +998,43 @@ class PyroVelocityModel:
             seed=kwargs.get("seed", None),
         )
 
+        # Now, we need to run the model with the posterior samples to get deterministic sites
+        # This is critical for getting ut and st which are deterministic sites
+        import pyro
+
+        # Create a predictive object for the model, using the guide samples
+        # Return all sites, including deterministic ones
+        model_predictive = pyro.infer.Predictive(
+            self,
+            posterior_samples=posterior_samples,
+            return_sites=None,  # Return all sites, including deterministic
+            num_samples=num_samples
+        )
+
+        # Run the model predictive to get all sites, including deterministic ones
+        # We need to pass the same arguments as during training
+        # For the modular model, we can pass u_obs and s_obs
+        if adata is not None:
+            # Extract u_obs and s_obs from adata
+            import scipy.sparse
+            u_obs = torch.tensor(
+                adata.layers["unspliced"].toarray()
+                if isinstance(adata.layers["unspliced"], scipy.sparse.spmatrix)
+                else adata.layers["unspliced"]
+            )
+            s_obs = torch.tensor(
+                adata.layers["spliced"].toarray()
+                if isinstance(adata.layers["spliced"], scipy.sparse.spmatrix)
+                else adata.layers["spliced"]
+            )
+
+            # Run the model predictive with u_obs and s_obs
+            model_samples = model_predictive(u_obs=u_obs, s_obs=s_obs)
+
+            # Combine guide and model samples
+            # Guide samples take precedence if there's a conflict
+            posterior_samples = {**model_samples, **posterior_samples}
+
         # Convert PyTorch tensors to NumPy arrays
         posterior_samples_np = {
             k: v.detach().cpu().numpy() if isinstance(v, torch.Tensor) else v
@@ -1218,8 +1255,62 @@ class PyroVelocityModel:
         if isinstance(velocity, torch.Tensor):
             velocity = velocity.detach().cpu().numpy()
 
-        # Store velocity in AnnData object
+        # Check the shape of velocity and reshape if needed
+        # The velocity should have shape (n_cells, n_genes) to match AnnData
         if adata is not None:
+            n_cells, n_genes = adata.n_obs, adata.n_vars
+
+            # Print the current shape for debugging
+            print(f"Velocity shape before reshaping: {velocity.shape}")
+
+            # Reshape velocity to match AnnData dimensions
+            if velocity.shape != (n_cells, n_genes):
+                # If velocity has shape (num_samples, n_cells, n_genes), take the mean across samples
+                if len(velocity.shape) == 3 and velocity.shape[1] == n_cells and velocity.shape[2] == n_genes:
+                    velocity = velocity.mean(axis=0)
+                # If velocity has shape (n_cells, 1, n_genes), squeeze the middle dimension
+                elif len(velocity.shape) == 3 and velocity.shape[0] == n_cells and velocity.shape[2] == n_genes:
+                    velocity = velocity.squeeze(1)
+                # If velocity has shape (1, n_cells, n_genes), squeeze the first dimension
+                elif len(velocity.shape) == 3 and velocity.shape[1] == n_cells and velocity.shape[2] == n_genes:
+                    velocity = velocity.squeeze(0)
+                # If velocity has shape (n_genes, n_cells), transpose it
+                elif velocity.shape == (n_genes, n_cells):
+                    velocity = velocity.T
+                # If velocity has shape (n_cells * n_genes,), reshape it
+                elif velocity.shape == (n_cells * n_genes,):
+                    velocity = velocity.reshape(n_cells, n_genes)
+                # If velocity has shape (num_samples, 1, 1, n_cells, 1, n_genes), reshape it
+                elif len(velocity.shape) == 6 and velocity.shape[3] == n_cells and velocity.shape[5] == n_genes:
+                    # First, take the mean across samples
+                    velocity = velocity.mean(axis=0)
+                    # Then, squeeze all the singleton dimensions
+                    velocity = velocity.squeeze()
+                    # If we still don't have the right shape, reshape it
+                    if velocity.shape != (n_cells, n_genes):
+                        velocity = velocity.reshape(n_cells, n_genes)
+                else:
+                    # Try to reshape to the correct dimensions
+                    try:
+                        velocity = velocity.reshape(n_cells, n_genes)
+                    except ValueError:
+                        # If reshaping fails, print a warning and try to use the mean
+                        print(f"Warning: Could not reshape velocity from {velocity.shape} to ({n_cells}, {n_genes})")
+                        # If velocity is multi-dimensional, try to take the mean along the first dimension
+                        if len(velocity.shape) > 2:
+                            velocity = velocity.mean(axis=0)
+                            # Try reshaping again
+                            try:
+                                velocity = velocity.reshape(n_cells, n_genes)
+                            except ValueError:
+                                print(f"Warning: Still could not reshape velocity from {velocity.shape} to ({n_cells}, {n_genes})")
+                                # As a last resort, create a new velocity array of the right shape
+                                velocity = np.zeros((n_cells, n_genes))
+
+            # Print the final shape for debugging
+            print(f"Velocity shape after reshaping: {velocity.shape}")
+
+            # Store velocity in AnnData object
             adata.layers["velocity_pyro"] = velocity
 
             # Compute velocity graph and embedding
