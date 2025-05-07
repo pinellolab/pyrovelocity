@@ -598,6 +598,99 @@ def create_standard_model() -> PyroVelocityModel:
     return create_model_from_config(ModelConfig.standard())
 
 
+# Legacy model replication functions
+def create_legacy_model1() -> PyroVelocityModel:
+    """
+    Create a PyroVelocityModel that replicates the legacy model with add_offset=False.
+
+    This function creates a PyroVelocityModel with components specifically configured
+    to match the behavior of the legacy PyroVelocity implementation with add_offset=False.
+    It uses the LegacyDynamicsModel to create a model that exactly matches the
+    behavior of the legacy implementation.
+
+    Returns:
+        A PyroVelocityModel instance that replicates the legacy model.
+    """
+    # Create a configuration with the legacy dynamics model
+    config = ModelConfig(
+        dynamics_model=ComponentConfig(
+            name="legacy",
+            params={
+                "shared_time": True,
+                "t_scale_on": False,
+                "correct_library_size": True,
+            },
+        ),
+        prior_model=ComponentConfig(
+            name="lognormal",
+            params={},
+        ),
+        likelihood_model=ComponentConfig(
+            name="poisson",
+            params={},
+        ),
+        observation_model=ComponentConfig(
+            name="standard",
+            params={},
+        ),
+        inference_guide=ComponentConfig(
+            name="auto",
+            params={
+                "init_scale": 0.1,
+            },
+        ),
+    )
+
+    # Create and return the model
+    return create_model_from_config(config)
+
+
+def create_legacy_model2() -> PyroVelocityModel:
+    """
+    Create a PyroVelocityModel that replicates the legacy model with add_offset=True.
+
+    This function creates a PyroVelocityModel with components specifically configured
+    to match the behavior of the legacy PyroVelocity implementation with add_offset=True.
+    It uses the LegacyDynamicsModel to create a model that exactly matches the
+    behavior of the legacy implementation.
+
+    Returns:
+        A PyroVelocityModel instance that replicates the legacy model.
+    """
+    # Create a configuration with the legacy dynamics model
+    config = ModelConfig(
+        dynamics_model=ComponentConfig(
+            name="legacy",
+            params={
+                "shared_time": True,
+                "t_scale_on": False,
+                "correct_library_size": True,
+            },
+        ),
+        prior_model=ComponentConfig(
+            name="lognormal",
+            params={},
+        ),
+        likelihood_model=ComponentConfig(
+            name="poisson",
+            params={},
+        ),
+        observation_model=ComponentConfig(
+            name="standard",
+            params={},
+        ),
+        inference_guide=ComponentConfig(
+            name="auto",
+            params={
+                "init_scale": 0.1,
+            },
+        ),
+    )
+
+    # Create and return the model
+    return create_model_from_config(config)
+
+
 # Protocol-First model creation functions
 # These functions are now deprecated as Protocol-First is the default implementation
 def create_protocol_first_model() -> PyroVelocityModel:
@@ -656,6 +749,9 @@ __all__ = [
     "create_observation_model",
     "create_inference_guide",
     "create_model",
+    # Legacy model replication functions
+    "create_legacy_model1",
+    "create_legacy_model2",
     # Protocol-First functions
     "create_protocol_first_model",
     "create_protocol_first_model_from_config",
