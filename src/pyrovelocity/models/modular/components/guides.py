@@ -41,11 +41,14 @@ class AutoGuideFactory:
         self,
         guide_type: str = "AutoNormal",
         init_loc_fn: Optional[Callable] = None,
-        init_scale: float = 0.1,
+        init_scale: float = 0.1,  # Match legacy model's default scale
         name: str = "inference_guide",
         **kwargs: Any,
     ) -> None:
         """Initialize the AutoGuideFactory.
+
+        The default parameters are set to match the legacy implementation
+        to ensure consistent behavior.
 
         Args:
             guide_type: The type of AutoGuide to create.
