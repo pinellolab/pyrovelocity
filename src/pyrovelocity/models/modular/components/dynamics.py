@@ -12,6 +12,7 @@ import torch
 from beartype import beartype
 from jaxtyping import jaxtyped
 
+from pyrovelocity.models.modular.constants import CELLS_DIM, GENES_DIM
 from pyrovelocity.models.modular.interfaces import (
     BatchTensor,
     DynamicsModel,
@@ -584,114 +585,92 @@ class LegacyDynamicsModel:
             num_cells = u_obs.shape[0]
             num_genes = alpha.shape[-1] if alpha.dim() > 0 else 1
 
-            # Create plates with consistent dimensions
-            # Use dim=-1 for genes and dim=-2 for cells
-            gene_plate = pyro.plate("genes", num_genes, dim=-1)
-            cell_plate = pyro.plate("cells", num_cells, dim=-2)
+            # Create plates with consistent dimensions using constants
+            # Use GENES_DIM (-1) for genes and CELLS_DIM (-2) for cells
+            gene_plate = pyro.plate("genes", num_genes, dim=GENES_DIM)
+            cell_plate = pyro.plate("cells", num_cells, dim=CELLS_DIM)
 
-            # Ensure parameters have the correct shape for the legacy model
-            # In the legacy model, gene parameters have shape [num_samples, 1, n_genes]
-            # and cell parameters have shape [num_samples, n_cells, 1]
+            # SIMPLIFIED PLATE STRUCTURE MATCHING LEGACY MODEL
+            # In the legacy model:
+            # - Gene parameters have shape [num_samples, 1, n_genes]
+            # - Cell parameters have shape [num_samples, n_cells, 1]
+            # - Cell-gene interactions have shape [num_samples, n_cells, n_genes]
+
+            # First, reshape gene parameters to match legacy model shape
+            # We want alpha, beta, gamma to have shape [1, 1, n_genes]
+            if alpha.dim() == 1:  # [n_genes]
+                alpha = alpha.unsqueeze(0).unsqueeze(0)  # [1, 1, n_genes]
+                beta = beta.unsqueeze(0).unsqueeze(0)  # [1, 1, n_genes]
+                gamma = gamma.unsqueeze(0).unsqueeze(0)  # [1, 1, n_genes]
+                t0 = t0.unsqueeze(0).unsqueeze(0)  # [1, 1, n_genes]
+                dt_switching = dt_switching.unsqueeze(0).unsqueeze(0)  # [1, 1, n_genes]
+            elif alpha.dim() == 2:  # [num_samples, n_genes]
+                alpha = alpha.unsqueeze(1)  # [num_samples, 1, n_genes]
+                beta = beta.unsqueeze(1)  # [num_samples, 1, n_genes]
+                gamma = gamma.unsqueeze(1)  # [num_samples, 1, n_genes]
+                t0 = t0.unsqueeze(1)  # [num_samples, 1, n_genes]
+                dt_switching = dt_switching.unsqueeze(1)  # [num_samples, 1, n_genes]
 
             # Sample gene-specific parameters with the correct shape
             with gene_plate:
-                # Reshape gene parameters if needed to ensure shape [1, n_genes]
-                if alpha.dim() == 1:  # [n_genes]
-                    alpha_reshaped = alpha.unsqueeze(0)  # [1, n_genes]
-                    beta_reshaped = beta.unsqueeze(0)
-                    gamma_reshaped = gamma.unsqueeze(0)
-                    t0_reshaped = t0.unsqueeze(0)
-                    dt_switching_reshaped = dt_switching.unsqueeze(0)
-                    u_scale_reshaped = u_scale.unsqueeze(0)
-                    s_scale_reshaped = s_scale.unsqueeze(0)
-                elif alpha.dim() == 2 and alpha.shape[0] > 1:  # [num_samples, n_genes]
-                    # Already in correct shape for gene parameters
-                    alpha_reshaped = alpha
-                    beta_reshaped = beta
-                    gamma_reshaped = gamma
-                    t0_reshaped = t0
-                    dt_switching_reshaped = dt_switching
-                    u_scale_reshaped = u_scale
-                    s_scale_reshaped = s_scale
-                else:
-                    # Handle other cases
-                    alpha_reshaped = alpha
-                    beta_reshaped = beta
-                    gamma_reshaped = gamma
-                    t0_reshaped = t0
-                    dt_switching_reshaped = dt_switching
-                    u_scale_reshaped = u_scale
-                    s_scale_reshaped = s_scale
+                # Create deterministic sites for gene parameters
+                alpha = pyro.deterministic("alpha_det", alpha)
+                beta = pyro.deterministic("beta_det", beta)
+                gamma = pyro.deterministic("gamma_det", gamma)
 
-                # Use the parameters directly without creating deterministic sites
-                # This avoids duplicate sample sites
-                alpha_dynamics = alpha_reshaped
-                beta_dynamics = beta_reshaped
-                gamma_dynamics = gamma_reshaped
-                t0_dynamics = t0_reshaped
-                dt_switching_dynamics = dt_switching_reshaped
-
-                # Compute steady state values with the correct shape
-                u_inf = alpha_dynamics / beta_dynamics  # Shape: [num_samples, n_genes]
-                s_inf = alpha_dynamics / gamma_dynamics  # Shape: [num_samples, n_genes]
+                # Compute steady state values
+                u_inf = alpha / beta  # Shape: [1, 1, n_genes] or [num_samples, 1, n_genes]
+                s_inf = alpha / gamma  # Shape: [1, 1, n_genes] or [num_samples, 1, n_genes]
 
                 # Compute switching time
-                switching = t0_dynamics + dt_switching_dynamics  # Shape: [num_samples, n_genes]
+                switching = t0 + dt_switching  # Shape: [1, 1, n_genes] or [num_samples, 1, n_genes]
 
                 # Create deterministic sites for steady state and switching
-                # Use unique names to avoid conflicts
-                u_inf = pyro.deterministic("u_inf_dynamics", u_inf)
-                s_inf = pyro.deterministic("s_inf_dynamics", s_inf)
-                switching = pyro.deterministic("switching_dynamics", switching)
+                u_inf = pyro.deterministic("u_inf", u_inf)
+                s_inf = pyro.deterministic("s_inf", s_inf)
+                switching = pyro.deterministic("switching", switching)
 
-            # Generate cell_time if not provided
-            # This is critical for the legacy model compatibility
-            cell_time = context.get("cell_time")
-            if cell_time is None:
-                # Create a uniform distribution of cell times between 0 and 1
-                # This is similar to what the legacy model does
-                cell_time = torch.linspace(0, 1, num_cells).unsqueeze(1)  # [n_cells, 1]
-
-                # Register as a parameter with pyro
-                with cell_plate:
+            # Next, sample cell-specific parameters
+            with cell_plate:
+                # Generate cell_time if not provided
+                cell_time = context.get("cell_time")
+                if cell_time is None:
+                    # Create a uniform distribution of cell times between 0 and 1
+                    cell_time = torch.linspace(0, 1, num_cells).unsqueeze(1)  # [n_cells, 1]
                     cell_time = pyro.sample(
                         "cell_time",
                         pyro.distributions.Delta(cell_time)
                     )  # Shape: [n_cells, 1]
+                    context["cell_time"] = cell_time
+                elif cell_time.dim() == 1:  # [n_cells]
+                    cell_time = cell_time.unsqueeze(1)  # [n_cells, 1]
 
-                # Add to context
-                context["cell_time"] = cell_time
+                # Ensure cell_time has shape [n_cells, 1] or [num_samples, n_cells, 1]
+                if cell_time.dim() == 2:  # [n_cells, 1]
+                    # If we have multiple samples, expand cell_time
+                    if alpha.dim() == 3 and alpha.shape[0] > 1:
+                        # Expand to [num_samples, n_cells, 1]
+                        cell_time = cell_time.unsqueeze(0).expand(alpha.shape[0], -1, -1)
 
-            # Now compute ut and st with proper broadcasting
+            # Compute ut and st with proper broadcasting
             # We need to ensure:
-            # - cell_time has shape [n_cells, 1]
-            # - gene parameters (alpha, beta, gamma, u_inf, s_inf) have shape [1, n_genes]
-            # - result (ut, st) will have shape [n_cells, n_genes]
+            # - alpha, beta, gamma have shape [1, 1, n_genes] or [num_samples, 1, n_genes]
+            # - cell_time has shape [n_cells, 1] or [num_samples, n_cells, 1]
+            # - ut, st will have shape [n_cells, n_genes] or [num_samples, n_cells, n_genes]
 
-            # Ensure cell_time has the right shape [n_cells, 1]
-            if cell_time.dim() == 1:  # [n_cells]
-                cell_time = cell_time.unsqueeze(1)  # [n_cells, 1]
+            # Compute ut and st
+            ut = u_inf * (1 - torch.exp(-beta * cell_time))
+            st = s_inf * (1 - torch.exp(-gamma * cell_time)) - (
+                alpha / (gamma - beta + 1e-8)  # Add small epsilon to avoid division by zero
+            ) * (torch.exp(-beta * cell_time) - torch.exp(-gamma * cell_time))
 
-            # Compute ut and st with proper broadcasting between cells and genes
-            with cell_plate, gene_plate:
-                # Compute ut and st based on the transcription model
-                # These calculations will broadcast correctly:
-                # cell_time: [n_cells, 1]
-                # beta_dynamics: [1, n_genes]
-                # Result: [n_cells, n_genes]
-                ut = u_inf * (1 - torch.exp(-beta_dynamics * cell_time))
-                st = s_inf * (1 - torch.exp(-gamma_dynamics * cell_time)) - (
-                    alpha_dynamics / (gamma_dynamics - beta_dynamics + 1e-8)  # Add small epsilon to avoid division by zero
-                ) * (torch.exp(-beta_dynamics * cell_time) - torch.exp(-gamma_dynamics * cell_time))
+            # Create deterministic sites for ut and st
+            ut = pyro.deterministic("ut", ut)
+            st = pyro.deterministic("st", st)
 
-                # Create deterministic sites for ut and st
-                ut = pyro.deterministic("ut", ut)  # Shape: [n_cells, n_genes]
-                st = pyro.deterministic("st", st)  # Shape: [n_cells, n_genes]
-
-                # Create deterministic sites for u and s (observed values)
-                # In the legacy model, these are the same as ut and st
-                u = pyro.deterministic("u", ut)
-                s = pyro.deterministic("s", st)
+            # Create deterministic sites for u and s (observed values)
+            u = pyro.deterministic("u", ut)
+            s = pyro.deterministic("s", st)
 
             # Add to context
             context["u_inf"] = u_inf
