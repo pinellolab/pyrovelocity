@@ -70,7 +70,8 @@ def parse_args():
         type=str,
         default="normal",
         choices=["normal", "poisson"],
-        help="Model type to use (normal=Gaussian, poisson=Poisson)",
+        help="Model type to use for the modular implementation (normal=Gaussian, poisson=Poisson). "
+             "Note: This parameter has no effect on the legacy model, which always uses VelocityModelAuto.",
     )
     return parser.parse_args()
 
@@ -97,8 +98,13 @@ def load_preprocessed_pancreas_data():
         raise
 
 
-def train_legacy_model(adata, max_epochs, num_samples, seed=42, model_type="normal"):
-    """Train the legacy model and return results."""
+def train_legacy_model(adata, max_epochs, num_samples, seed=42, **kwargs):
+    """
+    Train the legacy model and return results.
+
+    Note: The legacy model always uses VelocityModelAuto regardless of any model_type parameter.
+    The model_type parameter is accepted through **kwargs for compatibility but has no effect.
+    """
     print("Training legacy model...")
 
     # Set random seed for reproducibility
@@ -109,9 +115,14 @@ def train_legacy_model(adata, max_epochs, num_samples, seed=42, model_type="norm
     # Set up AnnData for legacy model
     PyroVelocity.setup_anndata(adata)
 
-    # Create legacy model with specific model_type
-    print(f"Legacy model using model_type: {model_type}")
-    model = PyroVelocity(adata, model_type=model_type)
+    # Create legacy model - note that model_type is not used as it doesn't affect the legacy model
+    # The legacy model always uses VelocityModelAuto regardless of model_type value
+    print("Legacy model always uses VelocityModelAuto regardless of model_type")
+
+    # Intentionally ignore kwargs (including model_type) as they have no effect on the legacy model
+    _ = kwargs  # Suppress unused variable warning
+
+    model = PyroVelocity(adata)
 
     # Train model
     training_start_time = time.time()
@@ -870,12 +881,13 @@ def main():
 
     # Train legacy model
     try:
+        # Note: model_type is passed for compatibility but has no effect on the legacy model
         legacy_results = train_legacy_model(
             adata,
             args.max_epochs,
             args.num_samples,
             seed=args.seed,
-            model_type=args.model_type
+            model_type=args.model_type  # This parameter is ignored by the legacy model
         )
         print("Legacy model training successful")
     except Exception as e:
