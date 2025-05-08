@@ -23,7 +23,6 @@ from pyrovelocity.models.modular.utils.context_utils import validate_context
 
 
 @DynamicsModelRegistry.register("standard")
-@DynamicsModelRegistry.register("standard_direct")  # For backward compatibility
 class StandardDynamicsModel:
     """Standard dynamics model for RNA velocity using analytical solution.
 
@@ -733,7 +732,6 @@ class LegacyDynamicsModel:
 
 
 @DynamicsModelRegistry.register("nonlinear")
-@DynamicsModelRegistry.register("nonlinear_direct")  # For backward compatibility
 class NonlinearDynamicsModel:
     """Nonlinear dynamics model for RNA velocity with saturation effects.
 
