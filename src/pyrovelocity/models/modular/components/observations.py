@@ -24,7 +24,6 @@ from pyrovelocity.models.modular.registry import observation_model_registry
 
 
 @observation_model_registry.register("standard")
-@observation_model_registry.register("standard_direct")  # For backward compatibility
 class StandardObservationModel:
     """Standard observation model for RNA velocity.
 
