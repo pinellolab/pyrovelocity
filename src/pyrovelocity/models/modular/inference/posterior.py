@@ -27,6 +27,7 @@ from anndata import AnnData
 from beartype import beartype
 from jaxtyping import Array, Float
 
+from pyrovelocity.models.modular.constants import CELLS_DIM, GENES_DIM
 from pyrovelocity.models.modular.inference.unified import (
     InferenceState,
     extract_posterior_samples,
@@ -106,52 +107,130 @@ def compute_velocity(
     print(f"compute_velocity - ut shape: {ut.shape if ut is not None else None}")
     print(f"compute_velocity - st shape: {st.shape if st is not None else None}")
 
-    # Ensure ut and st have the correct shapes
-    # In the legacy model, ut and st have shape [num_samples, n_cells, n_genes]
-
     # Convert numpy arrays to torch tensors if needed
     if ut is not None and isinstance(ut, np.ndarray):
         ut = torch.tensor(ut)
     if st is not None and isinstance(st, np.ndarray):
         st = torch.tensor(st)
+    if alpha is not None and isinstance(alpha, np.ndarray):
+        alpha = torch.tensor(alpha)
+    if beta is not None and isinstance(beta, np.ndarray):
+        beta = torch.tensor(beta)
+    if gamma is not None and isinstance(gamma, np.ndarray):
+        gamma = torch.tensor(gamma)
+    if u_scale is not None and isinstance(u_scale, np.ndarray):
+        u_scale = torch.tensor(u_scale)
+    if s_scale is not None and isinstance(s_scale, np.ndarray):
+        s_scale = torch.tensor(s_scale)
 
-    if ut is not None and ut.dim() > 3:
-        # Remove extra dimensions
-        print(f"Reshaping ut from {ut.shape} to [num_samples, n_cells, n_genes]")
-        ut = ut.squeeze()
-        # If we squeezed too much, add back necessary dimensions
-        if ut.dim() < 3:
-            if ut.dim() == 2:
-                # Check if first dimension is num_samples or n_cells
-                if beta is not None and ut.shape[0] == beta.shape[0]:
-                    # [num_samples, n_genes] -> [num_samples, 1, n_genes]
-                    ut = ut.unsqueeze(1)
-                else:
-                    # [n_cells, n_genes] -> [1, n_cells, n_genes]
-                    ut = ut.unsqueeze(0)
-            elif ut.dim() == 1:
-                # [n_genes] -> [1, 1, n_genes]
-                ut = ut.unsqueeze(0).unsqueeze(0)
-        print(f"Reshaped ut to {ut.shape}")
+    # Normalize parameter shapes to match the legacy implementation
+    # In the legacy model:
+    # - Gene parameters (alpha, beta, gamma) have shape [num_samples, 1, n_genes]
+    # - Cell parameters (cell_time) have shape [num_samples, n_cells, 1]
+    # - Cell-gene interactions (ut, st) have shape [num_samples, n_cells, n_genes]
 
-    if st is not None and isinstance(st, torch.Tensor) and st.dim() > 3:
-        # Remove extra dimensions
-        print(f"Reshaping st from {st.shape} to [num_samples, n_cells, n_genes]")
-        st = st.squeeze()
-        # If we squeezed too much, add back necessary dimensions
-        if st.dim() < 3:
-            if st.dim() == 2:
-                # Check if first dimension is num_samples or n_cells
-                if gamma is not None and st.shape[0] == gamma.shape[0]:
-                    # [num_samples, n_genes] -> [num_samples, 1, n_genes]
-                    st = st.unsqueeze(1)
+    # 1. Normalize gene parameter shapes
+    if alpha is not None:
+        # Ensure alpha has shape [num_samples, 1, n_genes]
+        if alpha.dim() == 1:  # [n_genes]
+            alpha = alpha.unsqueeze(0).unsqueeze(0)  # [1, 1, n_genes]
+        elif alpha.dim() == 2:  # [num_samples, n_genes]
+            alpha = alpha.unsqueeze(1)  # [num_samples, 1, n_genes]
+        print(f"Normalized alpha shape: {alpha.shape}")
+
+    if beta is not None:
+        # Ensure beta has shape [num_samples, 1, n_genes]
+        if beta.dim() == 1:  # [n_genes]
+            beta = beta.unsqueeze(0).unsqueeze(0)  # [1, 1, n_genes]
+        elif beta.dim() == 2:  # [num_samples, n_genes]
+            beta = beta.unsqueeze(1)  # [num_samples, 1, n_genes]
+        print(f"Normalized beta shape: {beta.shape}")
+
+    if gamma is not None:
+        # Ensure gamma has shape [num_samples, 1, n_genes]
+        if gamma.dim() == 1:  # [n_genes]
+            gamma = gamma.unsqueeze(0).unsqueeze(0)  # [1, 1, n_genes]
+        elif gamma.dim() == 2:  # [num_samples, n_genes]
+            gamma = gamma.unsqueeze(1)  # [num_samples, 1, n_genes]
+        print(f"Normalized gamma shape: {gamma.shape}")
+
+    # 2. Normalize scaling factors
+    if u_scale is not None:
+        # Ensure u_scale has shape [num_samples, n_cells, 1] or [num_samples, 1, 1]
+        if u_scale.dim() == 0:  # scalar
+            u_scale = u_scale.unsqueeze(0).unsqueeze(0).unsqueeze(0)  # [1, 1, 1]
+        elif u_scale.dim() == 1:  # [n_cells] or [1]
+            if u_scale.shape[0] > 1:  # [n_cells]
+                u_scale = u_scale.unsqueeze(0).unsqueeze(-1)  # [1, n_cells, 1]
+            else:  # [1]
+                u_scale = u_scale.unsqueeze(0).unsqueeze(0)  # [1, 1, 1]
+        elif u_scale.dim() == 2:  # [num_samples, n_cells] or [num_samples, 1]
+            u_scale = u_scale.unsqueeze(-1)  # [num_samples, n_cells, 1] or [num_samples, 1, 1]
+        print(f"Normalized u_scale shape: {u_scale.shape}")
+
+    if s_scale is not None:
+        # Ensure s_scale has shape [num_samples, n_cells, 1] or [num_samples, 1, 1]
+        if s_scale.dim() == 0:  # scalar
+            s_scale = s_scale.unsqueeze(0).unsqueeze(0).unsqueeze(0)  # [1, 1, 1]
+        elif s_scale.dim() == 1:  # [n_cells] or [1]
+            if s_scale.shape[0] > 1:  # [n_cells]
+                s_scale = s_scale.unsqueeze(0).unsqueeze(-1)  # [1, n_cells, 1]
+            else:  # [1]
+                s_scale = s_scale.unsqueeze(0).unsqueeze(0)  # [1, 1, 1]
+        elif s_scale.dim() == 2:  # [num_samples, n_cells] or [num_samples, 1]
+            s_scale = s_scale.unsqueeze(-1)  # [num_samples, n_cells, 1] or [num_samples, 1, 1]
+        print(f"Normalized s_scale shape: {s_scale.shape}")
+
+    # 3. Normalize ut and st shapes
+    if ut is not None:
+        # Ensure ut has shape [num_samples, n_cells, n_genes]
+        if ut.dim() == 2:  # [n_cells, n_genes]
+            ut = ut.unsqueeze(0)  # [1, n_cells, n_genes]
+        elif ut.dim() > 3:  # Extra dimensions
+            # Get the number of samples, cells, and genes
+            if ut.shape[0] > 1 and ut.shape[1] > 1:
+                num_samples = ut.shape[0]
+                n_cells = ut.shape[1]
+                n_genes = ut.shape[-1]
+                ut = ut.reshape(num_samples, n_cells, n_genes)
+            else:
+                # Try to infer the correct shape
+                n_genes = ut.shape[-1]
+                if ut.shape[-2] > 1:
+                    n_cells = ut.shape[-2]
+                    num_samples = ut.numel() // (n_cells * n_genes)
+                    ut = ut.reshape(num_samples, n_cells, n_genes)
                 else:
-                    # [n_cells, n_genes] -> [1, n_cells, n_genes]
-                    st = st.unsqueeze(0)
-            elif st.dim() == 1:
-                # [n_genes] -> [1, 1, n_genes]
-                st = st.unsqueeze(0).unsqueeze(0)
-        print(f"Reshaped st to {st.shape}")
+                    # Assume single cell
+                    n_cells = 1
+                    num_samples = ut.numel() // n_genes
+                    ut = ut.reshape(num_samples, n_cells, n_genes)
+        print(f"Normalized ut shape: {ut.shape}")
+
+    if st is not None:
+        # Ensure st has shape [num_samples, n_cells, n_genes]
+        if st.dim() == 2:  # [n_cells, n_genes]
+            st = st.unsqueeze(0)  # [1, n_cells, n_genes]
+        elif st.dim() > 3:  # Extra dimensions
+            # Get the number of samples, cells, and genes
+            if st.shape[0] > 1 and st.shape[1] > 1:
+                num_samples = st.shape[0]
+                n_cells = st.shape[1]
+                n_genes = st.shape[-1]
+                st = st.reshape(num_samples, n_cells, n_genes)
+            else:
+                # Try to infer the correct shape
+                n_genes = st.shape[-1]
+                if st.shape[-2] > 1:
+                    n_cells = st.shape[-2]
+                    num_samples = st.numel() // (n_cells * n_genes)
+                    st = st.reshape(num_samples, n_cells, n_genes)
+                else:
+                    # Assume single cell
+                    n_cells = 1
+                    num_samples = st.numel() // n_genes
+                    st = st.reshape(num_samples, n_cells, n_genes)
+        print(f"Normalized st shape: {st.shape}")
 
     # If ut/st not available, compute them from the model parameters
     if ut is None or st is None:
@@ -301,105 +380,74 @@ def compute_velocity(
         st = torch.tensor(st)
 
     # Compute steady state
-    u_ss = alpha / beta
-    s_ss = alpha / gamma
+    if alpha is not None and beta is not None and gamma is not None:
+        u_ss = alpha / beta
+        s_ss = alpha / gamma
+        print(f"Computed u_ss shape: {u_ss.shape}")
+        print(f"Computed s_ss shape: {s_ss.shape}")
+    else:
+        u_ss = None
+        s_ss = None
+        print("Unable to compute steady state - missing parameters")
 
     # Compute velocity
     if use_mean:
-        # Use mean of posterior samples
-        alpha_mean = alpha.mean(dim=0)
-        beta_mean = beta.mean(dim=0)
-        gamma_mean = gamma.mean(dim=0)
+        # Use mean of posterior samples for each parameter
+        # Take mean across the sample dimension (dim=0)
+        alpha_mean = alpha.mean(dim=0) if alpha.dim() > 1 else alpha
+        beta_mean = beta.mean(dim=0) if beta.dim() > 1 else beta
+        gamma_mean = gamma.mean(dim=0) if gamma.dim() > 1 else gamma
+        ut_mean = ut.mean(dim=0) if ut.dim() > 2 else ut
+        st_mean = st.mean(dim=0) if st.dim() > 2 else st
+
+        # Compute steady state means
         u_ss_mean = alpha_mean / beta_mean
         s_ss_mean = alpha_mean / gamma_mean
 
         # Print shapes for debugging
         print(f"compute_velocity - alpha_mean shape: {alpha_mean.shape}")
         print(f"compute_velocity - beta_mean shape: {beta_mean.shape}")
-        print(f"compute_velocity - ut shape: {ut.shape}")
-        print(f"compute_velocity - st shape: {st.shape}")
-
-        # Ensure parameters have the correct shapes for broadcasting
-        # We need to ensure:
-        # - gene parameters (beta, gamma) have shape [n_genes] or [1, n_genes]
-        # - cell-gene parameters (ut, st) have shape [n_cells, n_genes]
-
-        # Reshape gene parameters if needed
-        if beta_mean.dim() == 1:  # [n_genes]
-            # This is the expected shape for gene parameters
-            pass
-        elif beta_mean.dim() == 2:  # [num_samples, n_genes]
-            # Take mean across samples
-            beta_mean = beta_mean.mean(dim=0)  # [n_genes]
-            gamma_mean = gamma_mean.mean(dim=0)  # [n_genes]
-
-        # Reshape ut and st if needed
-        if ut.dim() > 2:
-            # If ut has extra dimensions, reshape to [n_cells, n_genes]
-            if ut.dim() == 3 and ut.shape[0] == 1:  # [1, n_cells, n_genes]
-                ut = ut.squeeze(0)  # [n_cells, n_genes]
-                st = st.squeeze(0)  # [n_cells, n_genes]
-            elif ut.dim() == 3:  # [num_samples, n_cells, n_genes]
-                # Take mean across samples
-                ut = ut.mean(dim=0)  # [n_cells, n_genes]
-                st = st.mean(dim=0)  # [n_cells, n_genes]
-            else:
-                # For more complex shapes, try to reshape to [n_cells, n_genes]
-                print(f"Reshaping ut from {ut.shape} to [n_cells, n_genes]")
-                # Get the last two dimensions which should be cells and genes
-                n_cells = ut.shape[-2] if ut.dim() > 1 else 1
-                n_genes = ut.shape[-1]
-                ut = ut.reshape(n_cells, n_genes)
-                st = st.reshape(n_cells, n_genes)
+        print(f"compute_velocity - gamma_mean shape: {gamma_mean.shape}")
+        print(f"compute_velocity - ut_mean shape: {ut_mean.shape}")
+        print(f"compute_velocity - st_mean shape: {st_mean.shape}")
 
         # Calculate scaling factor if needed
         if u_scale is not None and s_scale is not None:
-            # For Gaussian models with two scales
-            if u_scale.dim() > 1:
-                u_scale_mean = u_scale.mean(dim=0)  # [n_cells, 1]
-                s_scale_mean = s_scale.mean(dim=0)  # [n_cells, 1]
-            else:
-                u_scale_mean = u_scale
-                s_scale_mean = s_scale
+            # For models with two scales
+            u_scale_mean = u_scale.mean(dim=0) if u_scale.dim() > 1 else u_scale
+            s_scale_mean = s_scale.mean(dim=0) if s_scale.dim() > 1 else s_scale
 
             # Calculate scale as u_scale / s_scale
-            scale = u_scale_mean / s_scale_mean  # [n_cells, 1]
+            scale = u_scale_mean / s_scale_mean
+            print(f"Scale shape: {scale.shape}")
 
             # Compute velocity with proper broadcasting
-            # beta: [n_genes] or [1, n_genes]
-            # ut: [n_cells, n_genes]
-            # scale: [n_cells, 1]
-            # Result: [n_cells, n_genes]
-            velocity = beta_mean * ut / scale - gamma_mean * st
+            velocity = beta_mean * ut_mean / scale - gamma_mean * st_mean
         elif u_scale is not None:
-            # For Poisson Model 2 with one scale
-            if u_scale.dim() > 1:
-                scale = u_scale.mean(dim=0)  # [n_cells, 1]
-            else:
-                scale = u_scale
+            # For models with one scale
+            u_scale_mean = u_scale.mean(dim=0) if u_scale.dim() > 1 else u_scale
+            print(f"u_scale_mean shape: {u_scale_mean.shape}")
 
             # Compute velocity with proper broadcasting
-            velocity = beta_mean * ut / scale - gamma_mean * st
+            velocity = beta_mean * ut_mean / u_scale_mean - gamma_mean * st_mean
         else:
-            # For Poisson Model 1 with no scale
-            # Compute velocity with proper broadcasting
-            velocity = beta_mean * ut - gamma_mean * st
+            # For models with no scale
+            velocity = beta_mean * ut_mean - gamma_mean * st_mean
 
         # Print final velocity shape
         print(f"compute_velocity - velocity shape: {velocity.shape}")
 
         # Compute latent time (pseudotime)
         # This is a simple implementation based on the ratio of unspliced to spliced
-        # More sophisticated methods could be used
-
-        # Handle 1D tensors
-        if ut.dim() == 1:
-            u_norm = ut / (ut.max() + 1e-6)
-            s_norm = st / (st.max() + 1e-6)
+        if ut_mean.dim() <= 1:
+            # Handle scalar or 1D case
+            u_norm = ut_mean / (ut_mean.max() + 1e-6)
+            s_norm = st_mean / (st_mean.max() + 1e-6)
             latent_time = torch.tensor(1.0 - u_norm.mean() / (s_norm.mean() + 1e-6))
         else:
-            u_norm = ut / ut.max(dim=1, keepdim=True)[0]
-            s_norm = st / st.max(dim=1, keepdim=True)[0]
+            # Handle 2D case [cells, genes]
+            u_norm = ut_mean / ut_mean.max(dim=1, keepdim=True)[0]
+            s_norm = st_mean / st_mean.max(dim=1, keepdim=True)[0]
             latent_time = 1.0 - u_norm.mean(dim=1) / (s_norm.mean(dim=1) + 1e-6)
 
         return {
@@ -412,90 +460,47 @@ def compute_velocity(
             "latent_time": latent_time,
         }
     else:
-        # For the non-mean case, we want to compute velocity for each posterior sample
-        # Print shapes for debugging
-        print(f"compute_velocity - alpha shape: {alpha.shape}")
-        print(f"compute_velocity - beta shape: {beta.shape}")
-        print(f"compute_velocity - gamma shape: {gamma.shape}")
-        print(f"compute_velocity - ut shape: {ut.shape}")
-        print(f"compute_velocity - st shape: {st.shape}")
-
-        # Simplify by using the mean of posterior samples
-        # This is a reasonable approach for most cases
-        print("Using mean of posterior samples for velocity calculation")
-        alpha_mean = alpha.mean(dim=0) if alpha.dim() > 1 else alpha
-        beta_mean = beta.mean(dim=0) if beta.dim() > 1 else beta
-        gamma_mean = gamma.mean(dim=0) if gamma.dim() > 1 else gamma
-        u_ss_mean = alpha_mean / beta_mean
-        s_ss_mean = alpha_mean / gamma_mean
-
-        # Reshape ut and st if needed
-        if ut.dim() > 2:
-            # If ut has extra dimensions, reshape to [n_cells, n_genes]
-            if ut.dim() == 3 and ut.shape[0] == 1:  # [1, n_cells, n_genes]
-                ut = ut.squeeze(0)  # [n_cells, n_genes]
-                st = st.squeeze(0)  # [n_cells, n_genes]
-            elif ut.dim() == 3:  # [num_samples, n_cells, n_genes]
-                # Take mean across samples
-                ut = ut.mean(dim=0)  # [n_cells, n_genes]
-                st = st.mean(dim=0)  # [n_cells, n_genes]
-            else:
-                # For more complex shapes, try to reshape to [n_cells, n_genes]
-                print(f"Reshaping ut from {ut.shape} to [n_cells, n_genes]")
-                # Get the last two dimensions which should be cells and genes
-                n_cells = ut.shape[-2] if ut.dim() > 1 else 1
-                n_genes = ut.shape[-1]
-                ut = ut.reshape(n_cells, n_genes)
-                st = st.reshape(n_cells, n_genes)
+        # For the non-mean case, compute velocity for each posterior sample
+        print("Computing velocity for all posterior samples")
 
         # Calculate scaling factor if needed
         if u_scale is not None and s_scale is not None:
-            # For Gaussian models with two scales
-            if u_scale.dim() > 1:
-                u_scale_mean = u_scale.mean(dim=0)  # [n_cells, 1]
-                s_scale_mean = s_scale.mean(dim=0)  # [n_cells, 1]
-            else:
-                u_scale_mean = u_scale
-                s_scale_mean = s_scale
-
-            # Calculate scale as u_scale / s_scale
-            scale = u_scale_mean / s_scale_mean  # [n_cells, 1]
+            # For models with two scales
+            # Ensure proper broadcasting
+            # beta: [num_samples, 1, n_genes]
+            # ut: [num_samples, n_cells, n_genes]
+            # scale: [num_samples, n_cells, 1] or [num_samples, 1, 1]
+            scale = u_scale / s_scale
+            print(f"Scale shape: {scale.shape}")
 
             # Compute velocity with proper broadcasting
-            # beta_mean: [n_genes]
-            # ut: [n_cells, n_genes]
-            # scale: [n_cells, 1]
-            # Result: [n_cells, n_genes]
-            velocity = beta_mean * ut / scale - gamma_mean * st
+            velocity = beta * ut / scale - gamma * st
         elif u_scale is not None:
-            # For Poisson Model 2 with one scale
-            if u_scale.dim() > 1:
-                scale = u_scale.mean(dim=0)  # [n_cells, 1]
-            else:
-                scale = u_scale
+            # For models with one scale
+            print(f"u_scale shape: {u_scale.shape}")
 
             # Compute velocity with proper broadcasting
-            velocity = beta_mean * ut / scale - gamma_mean * st
+            velocity = beta * ut / u_scale - gamma * st
         else:
-            # For Poisson Model 1 with no scale
-            # Compute velocity with proper broadcasting
-            velocity = beta_mean * ut - gamma_mean * st
+            # For models with no scale
+            velocity = beta * ut - gamma * st
 
         # Print final velocity shape
         print(f"compute_velocity - velocity shape: {velocity.shape}")
 
-        # Compute latent time (pseudotime)
-        # This is a simple implementation based on the ratio of unspliced to spliced
-        # More sophisticated methods could be used
+        # Compute latent time (pseudotime) using mean across samples
+        ut_mean = ut.mean(dim=0) if ut.dim() > 2 else ut
+        st_mean = st.mean(dim=0) if st.dim() > 2 else st
 
-        # Handle 1D tensors
-        if ut.dim() == 1:
-            u_norm = ut / (ut.max() + 1e-6)
-            s_norm = st / (st.max() + 1e-6)
+        if ut_mean.dim() <= 1:
+            # Handle scalar or 1D case
+            u_norm = ut_mean / (ut_mean.max() + 1e-6)
+            s_norm = st_mean / (st_mean.max() + 1e-6)
             latent_time = torch.tensor(1.0 - u_norm.mean() / (s_norm.mean() + 1e-6))
         else:
-            u_norm = ut / ut.max(dim=1, keepdim=True)[0]
-            s_norm = st / st.max(dim=1, keepdim=True)[0]
+            # Handle 2D case [cells, genes]
+            u_norm = ut_mean / ut_mean.max(dim=1, keepdim=True)[0]
+            s_norm = st_mean / st_mean.max(dim=1, keepdim=True)[0]
             latent_time = 1.0 - u_norm.mean(dim=1) / (s_norm.mean(dim=1) + 1e-6)
 
         return {
