@@ -544,6 +544,13 @@ class LegacyDynamicsModel:
             beta = context["beta"]
             gamma = context["gamma"]
 
+            # Print shapes for debugging
+            print(f"LegacyDynamicsModel - u_obs shape: {u_obs.shape}")
+            print(f"LegacyDynamicsModel - s_obs shape: {s_obs.shape}")
+            print(f"LegacyDynamicsModel - alpha shape: {alpha.shape}")
+            print(f"LegacyDynamicsModel - beta shape: {beta.shape}")
+            print(f"LegacyDynamicsModel - gamma shape: {gamma.shape}")
+
             # Extract optional values
             t0 = context.get("t0", torch.zeros_like(alpha))
             dt_switching = context.get("dt_switching", torch.zeros_like(alpha))
@@ -570,25 +577,72 @@ class LegacyDynamicsModel:
                 context["u_read_depth"] = u_read_depth
                 context["s_read_depth"] = s_read_depth
 
-            # Compute steady state values
-            u_inf = alpha / beta
-            s_inf = alpha / gamma
-
-            # Compute switching time
-            switching = t0 + dt_switching
-
-            # Add to context
-            context["u_inf"] = u_inf
-            context["s_inf"] = s_inf
-            context["switching"] = switching
-
             # Import pyro for deterministic sites
             import pyro
 
-            # Create deterministic sites for u_inf, s_inf, and switching
-            u_inf = pyro.deterministic("u_inf", u_inf)
-            s_inf = pyro.deterministic("s_inf", s_inf)
-            switching = pyro.deterministic("switching", switching)
+            # Get dimensions
+            num_cells = u_obs.shape[0]
+            num_genes = alpha.shape[-1] if alpha.dim() > 0 else 1
+
+            # Create plates with consistent dimensions
+            # Use dim=-1 for genes and dim=-2 for cells
+            gene_plate = pyro.plate("genes", num_genes, dim=-1)
+            cell_plate = pyro.plate("cells", num_cells, dim=-2)
+
+            # Ensure parameters have the correct shape for the legacy model
+            # In the legacy model, gene parameters have shape [num_samples, 1, n_genes]
+            # and cell parameters have shape [num_samples, n_cells, 1]
+
+            # Sample gene-specific parameters with the correct shape
+            with gene_plate:
+                # Reshape gene parameters if needed to ensure shape [1, n_genes]
+                if alpha.dim() == 1:  # [n_genes]
+                    alpha_reshaped = alpha.unsqueeze(0)  # [1, n_genes]
+                    beta_reshaped = beta.unsqueeze(0)
+                    gamma_reshaped = gamma.unsqueeze(0)
+                    t0_reshaped = t0.unsqueeze(0)
+                    dt_switching_reshaped = dt_switching.unsqueeze(0)
+                    u_scale_reshaped = u_scale.unsqueeze(0)
+                    s_scale_reshaped = s_scale.unsqueeze(0)
+                elif alpha.dim() == 2 and alpha.shape[0] > 1:  # [num_samples, n_genes]
+                    # Already in correct shape for gene parameters
+                    alpha_reshaped = alpha
+                    beta_reshaped = beta
+                    gamma_reshaped = gamma
+                    t0_reshaped = t0
+                    dt_switching_reshaped = dt_switching
+                    u_scale_reshaped = u_scale
+                    s_scale_reshaped = s_scale
+                else:
+                    # Handle other cases
+                    alpha_reshaped = alpha
+                    beta_reshaped = beta
+                    gamma_reshaped = gamma
+                    t0_reshaped = t0
+                    dt_switching_reshaped = dt_switching
+                    u_scale_reshaped = u_scale
+                    s_scale_reshaped = s_scale
+
+                # Use the parameters directly without creating deterministic sites
+                # This avoids duplicate sample sites
+                alpha_dynamics = alpha_reshaped
+                beta_dynamics = beta_reshaped
+                gamma_dynamics = gamma_reshaped
+                t0_dynamics = t0_reshaped
+                dt_switching_dynamics = dt_switching_reshaped
+
+                # Compute steady state values with the correct shape
+                u_inf = alpha_dynamics / beta_dynamics  # Shape: [num_samples, n_genes]
+                s_inf = alpha_dynamics / gamma_dynamics  # Shape: [num_samples, n_genes]
+
+                # Compute switching time
+                switching = t0_dynamics + dt_switching_dynamics  # Shape: [num_samples, n_genes]
+
+                # Create deterministic sites for steady state and switching
+                # Use unique names to avoid conflicts
+                u_inf = pyro.deterministic("u_inf_dynamics", u_inf)
+                s_inf = pyro.deterministic("s_inf_dynamics", s_inf)
+                switching = pyro.deterministic("switching_dynamics", switching)
 
             # Generate cell_time if not provided
             # This is critical for the legacy model compatibility
@@ -596,83 +650,68 @@ class LegacyDynamicsModel:
             if cell_time is None:
                 # Create a uniform distribution of cell times between 0 and 1
                 # This is similar to what the legacy model does
-                num_cells = u_obs.shape[0]
-
-                # Sample cell times from a uniform distribution
-                # Shape: [num_cells, 1]
-                cell_time = torch.linspace(0, 1, num_cells).unsqueeze(1)
+                cell_time = torch.linspace(0, 1, num_cells).unsqueeze(1)  # [n_cells, 1]
 
                 # Register as a parameter with pyro
-                # Use pyro.plate to handle the batch dimension
-                with pyro.plate("cells_dynamics", num_cells, dim=-2):
+                with cell_plate:
                     cell_time = pyro.sample(
                         "cell_time",
                         pyro.distributions.Delta(cell_time)
-                    )
+                    )  # Shape: [n_cells, 1]
 
                 # Add to context
                 context["cell_time"] = cell_time
 
-            # Ensure cell_time has the right shape for broadcasting
-            # The shape should be [batch_size, 1] or [1, batch_size, 1]
-            if cell_time.dim() == 2:
-                # Shape: [batch_size, 1]
-                # Add a batch dimension for broadcasting with gene parameters
-                cell_time = cell_time.unsqueeze(0)
+            # Now compute ut and st with proper broadcasting
+            # We need to ensure:
+            # - cell_time has shape [n_cells, 1]
+            # - gene parameters (alpha, beta, gamma, u_inf, s_inf) have shape [1, n_genes]
+            # - result (ut, st) will have shape [n_cells, n_genes]
 
-            # Ensure alpha, beta, gamma have the right shape for broadcasting
-            # The shape should be [1, 1, num_genes]
-            if alpha.dim() == 1:
-                # Shape: [num_genes]
-                # Add batch and cell dimensions for broadcasting
-                alpha = alpha.unsqueeze(0).unsqueeze(0)
-                beta = beta.unsqueeze(0).unsqueeze(0)
-                gamma = gamma.unsqueeze(0).unsqueeze(0)
-                t0 = t0.unsqueeze(0).unsqueeze(0)
-                dt_switching = dt_switching.unsqueeze(0).unsqueeze(0)
-                switching = switching.unsqueeze(0).unsqueeze(0)
-                u_inf = u_inf.unsqueeze(0).unsqueeze(0)
-                s_inf = s_inf.unsqueeze(0).unsqueeze(0)
+            # Ensure cell_time has the right shape [n_cells, 1]
+            if cell_time.dim() == 1:  # [n_cells]
+                cell_time = cell_time.unsqueeze(1)  # [n_cells, 1]
 
-            # Compute ut and st based on the transcription model
-            # For cells before switching time
-            before_switching = cell_time < switching
+            # Compute ut and st with proper broadcasting between cells and genes
+            with cell_plate, gene_plate:
+                # Compute ut and st based on the transcription model
+                # These calculations will broadcast correctly:
+                # cell_time: [n_cells, 1]
+                # beta_dynamics: [1, n_genes]
+                # Result: [n_cells, n_genes]
+                ut = u_inf * (1 - torch.exp(-beta_dynamics * cell_time))
+                st = s_inf * (1 - torch.exp(-gamma_dynamics * cell_time)) - (
+                    alpha_dynamics / (gamma_dynamics - beta_dynamics + 1e-8)  # Add small epsilon to avoid division by zero
+                ) * (torch.exp(-beta_dynamics * cell_time) - torch.exp(-gamma_dynamics * cell_time))
 
-            # Initialize ut and st with the right shape
-            # Shape: [batch_size, num_cells, num_genes]
-            batch_size = cell_time.shape[0]
-            num_cells = cell_time.shape[1]
-            num_genes = u_obs.shape[-1]
+                # Create deterministic sites for ut and st
+                ut = pyro.deterministic("ut", ut)  # Shape: [n_cells, n_genes]
+                st = pyro.deterministic("st", st)  # Shape: [n_cells, n_genes]
 
-            ut = torch.zeros(batch_size, num_cells, num_genes)
-            st = torch.zeros(batch_size, num_cells, num_genes)
-
-            # Compute ut and st for cells before switching
-            ut = u_inf * (1 - torch.exp(-beta * cell_time))
-            st = s_inf * (1 - torch.exp(-gamma * cell_time)) - (
-                alpha / (gamma - beta)
-            ) * (torch.exp(-beta * cell_time) - torch.exp(-gamma * cell_time))
-
-            # Create deterministic sites for ut and st
-            ut = pyro.deterministic("ut", ut)
-            st = pyro.deterministic("st", st)
+                # Create deterministic sites for u and s (observed values)
+                # In the legacy model, these are the same as ut and st
+                u = pyro.deterministic("u", ut)
+                s = pyro.deterministic("s", st)
 
             # Add to context
+            context["u_inf"] = u_inf
+            context["s_inf"] = s_inf
+            context["switching"] = switching
             context["ut"] = ut
             context["st"] = st
-
-            # Create deterministic sites for u and s (observed values)
-            u = pyro.deterministic("u", ut)
-            s = pyro.deterministic("s", st)
-
-            # Add to context
             context["u"] = u
             context["s"] = s
 
             # Add expected counts for the likelihood model
-            # This is required by the likelihood model
             context["u_expected"] = ut
             context["s_expected"] = st
+
+            # Print shapes for debugging
+            print(f"LegacyDynamicsModel - cell_time shape: {cell_time.shape}")
+            print(f"LegacyDynamicsModel - u_inf shape: {u_inf.shape}")
+            print(f"LegacyDynamicsModel - switching shape: {switching.shape}")
+            print(f"LegacyDynamicsModel - ut shape: {ut.shape}")
+            print(f"LegacyDynamicsModel - st shape: {st.shape}")
 
             return context
         else:
