@@ -18,6 +18,7 @@ from beartype import beartype
 from jaxtyping import Array, Float, Int
 from torch.utils.data import DataLoader, TensorDataset
 
+from pyrovelocity.models.modular.constants import CELLS_DIM, GENES_DIM
 from pyrovelocity.models.modular.interfaces import ObservationModel
 from pyrovelocity.models.modular.registry import observation_model_registry
 
@@ -309,8 +310,15 @@ class StandardObservationModel:
         print(f"model_obs - u_log_rate shape: {u_log_rate.shape}")
         print(f"model_obs - u_log_r shape: {u_log_r.shape}")
 
+        # Validate that cell_plate and gene_plate use the correct dimensions
+        if hasattr(cell_plate, 'dim') and cell_plate.dim != CELLS_DIM:
+            print(f"WARNING: cell_plate dimension {cell_plate.dim} does not match CELLS_DIM {CELLS_DIM}")
+
+        if hasattr(gene_plate, 'dim') and gene_plate.dim != GENES_DIM:
+            print(f"WARNING: gene_plate dimension {gene_plate.dim} does not match GENES_DIM {GENES_DIM}")
+
         # Get cell indices for the mini-batch
-        # Use cell_plate with dim=-2 for cells
+        # Use a single cell_plate with dim=CELLS_DIM for cells
         with cell_plate as ind:
             i = ind[idx]
 
@@ -319,11 +327,11 @@ class StandardObservationModel:
             u_rate = torch.exp(u_log_rate[i]) * u_scale[i]  # Shape: [batch_size, num_genes]
             s_rate = torch.exp(s_log_rate[i]) * s_scale[i]  # Shape: [batch_size, num_genes]
 
-            # Use gene_plate with dim=-1 for genes
+            # Use gene_plate with dim=GENES_DIM for genes
             # This ensures proper broadcasting between cell and gene dimensions
             with gene_plate:
                 # Define negative binomial distributions for unspliced and spliced counts
-                # The concentration parameter is gene-specific (dim=-1)
+                # The concentration parameter is gene-specific (dim=GENES_DIM)
                 # The rate parameter combines cell and gene information
                 u_dist = dist.GammaPoisson(
                     concentration=torch.exp(u_log_r),  # Shape: [num_genes]
@@ -336,8 +344,8 @@ class StandardObservationModel:
 
                 # Sample from the distributions
                 # The observations should have shape [batch_size, num_genes]
-                u = pyro.sample("u", u_dist, obs=self.u_obs[i])
-                s = pyro.sample("s", s_dist, obs=self.s_obs[i])
+                u = pyro.sample("u_obs", u_dist, obs=self.u_obs[i])
+                s = pyro.sample("s_obs", s_dist, obs=self.s_obs[i])
 
                 # Print shapes for debugging
                 print(f"model_obs - u shape: {u.shape}")
