@@ -303,28 +303,45 @@ class StandardObservationModel:
         Returns:
             Tuple of observed unspliced and spliced counts.
         """
+        # Print shapes for debugging
+        print(f"model_obs - idx shape: {idx.shape if hasattr(idx, 'shape') else 'scalar'}")
+        print(f"model_obs - u_scale shape: {u_scale.shape}")
+        print(f"model_obs - u_log_rate shape: {u_log_rate.shape}")
+        print(f"model_obs - u_log_r shape: {u_log_r.shape}")
+
+        # Get cell indices for the mini-batch
+        # Use cell_plate with dim=-2 for cells
         with cell_plate as ind:
-            # Get cell indices for the mini-batch
             i = ind[idx]
 
-            # Apply scaling factors
-            u_rate = torch.exp(u_log_rate[i]) * u_scale[i]
-            s_rate = torch.exp(s_log_rate[i]) * s_scale[i]
+            # Apply scaling factors to rates
+            # These operations should maintain proper dimensions
+            u_rate = torch.exp(u_log_rate[i]) * u_scale[i]  # Shape: [batch_size, num_genes]
+            s_rate = torch.exp(s_log_rate[i]) * s_scale[i]  # Shape: [batch_size, num_genes]
 
+            # Use gene_plate with dim=-1 for genes
+            # This ensures proper broadcasting between cell and gene dimensions
             with gene_plate:
                 # Define negative binomial distributions for unspliced and spliced counts
+                # The concentration parameter is gene-specific (dim=-1)
+                # The rate parameter combines cell and gene information
                 u_dist = dist.GammaPoisson(
-                    concentration=torch.exp(u_log_r),
-                    rate=torch.exp(u_log_r) / u_rate,
+                    concentration=torch.exp(u_log_r),  # Shape: [num_genes]
+                    rate=torch.exp(u_log_r) / u_rate,  # Shape: [batch_size, num_genes]
                 )
                 s_dist = dist.GammaPoisson(
-                    concentration=torch.exp(s_log_r),
-                    rate=torch.exp(s_log_r) / s_rate,
+                    concentration=torch.exp(s_log_r),  # Shape: [num_genes]
+                    rate=torch.exp(s_log_r) / s_rate,  # Shape: [batch_size, num_genes]
                 )
 
                 # Sample from the distributions
+                # The observations should have shape [batch_size, num_genes]
                 u = pyro.sample("u", u_dist, obs=self.u_obs[i])
                 s = pyro.sample("s", s_dist, obs=self.s_obs[i])
+
+                # Print shapes for debugging
+                print(f"model_obs - u shape: {u.shape}")
+                print(f"model_obs - s shape: {s.shape}")
 
         return u, s
 
