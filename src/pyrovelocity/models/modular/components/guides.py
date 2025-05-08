@@ -25,7 +25,6 @@ from pyrovelocity.models.modular.registry import inference_guide_registry
 
 
 @inference_guide_registry.register("auto")
-@inference_guide_registry.register("auto_direct")  # For backward compatibility
 class AutoGuideFactory:
     """Factory for creating AutoGuides for PyroVelocity models.
 
@@ -240,7 +239,6 @@ class AutoGuideFactory:
 
 
 @inference_guide_registry.register("normal")
-@inference_guide_registry.register("normal_direct")  # For backward compatibility
 class NormalGuide:
     """Normal guide for PyroVelocity models.
 
@@ -471,7 +469,6 @@ class NormalGuide:
 
 
 @inference_guide_registry.register("delta")
-@inference_guide_registry.register("delta_direct")  # For backward compatibility
 class DeltaGuide:
     """Delta guide for PyroVelocity models.
 
