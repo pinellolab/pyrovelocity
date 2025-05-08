@@ -19,7 +19,6 @@ from pyrovelocity.models.modular.utils.context_utils import validate_context
 
 
 @LikelihoodModelRegistry.register("poisson")
-@LikelihoodModelRegistry.register("poisson_direct")  # For backward compatibility
 class PoissonLikelihoodModel:
     """Poisson likelihood model for observed counts.
 
@@ -629,7 +628,6 @@ class LegacyLikelihoodModel:
 
 
 @LikelihoodModelRegistry.register("negative_binomial")
-@LikelihoodModelRegistry.register("negative_binomial_direct")  # For backward compatibility
 class NegativeBinomialLikelihoodModel:
     """Negative Binomial likelihood model for observed counts.
 
