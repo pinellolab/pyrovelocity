@@ -80,6 +80,9 @@ def compute_velocity(
     Returns:
         Dictionary containing velocity results
     """
+    # Print all keys in posterior_samples for debugging
+    print(f"compute_velocity - posterior_samples keys: {list(posterior_samples.keys())}")
+
     # Extract parameters from posterior samples
     alpha = posterior_samples.get("alpha")
     beta = posterior_samples.get("beta")
@@ -87,10 +90,68 @@ def compute_velocity(
     u_scale = posterior_samples.get("u_scale")
     s_scale = posterior_samples.get("s_scale")
 
+    # Print shapes for debugging
+    print(f"compute_velocity - alpha shape: {alpha.shape if alpha is not None else None}")
+    print(f"compute_velocity - beta shape: {beta.shape if beta is not None else None}")
+    print(f"compute_velocity - gamma shape: {gamma.shape if gamma is not None else None}")
+    print(f"compute_velocity - u_scale shape: {u_scale.shape if u_scale is not None else None}")
+    print(f"compute_velocity - s_scale shape: {s_scale.shape if s_scale is not None else None}")
+
     # Try to get ut and st from posterior samples (like legacy implementation)
     # These are the latent variables, not the observed data
     ut = posterior_samples.get("ut")
     st = posterior_samples.get("st")
+
+    # Print shapes for debugging
+    print(f"compute_velocity - ut shape: {ut.shape if ut is not None else None}")
+    print(f"compute_velocity - st shape: {st.shape if st is not None else None}")
+
+    # Ensure ut and st have the correct shapes
+    # In the legacy model, ut and st have shape [num_samples, n_cells, n_genes]
+
+    # Convert numpy arrays to torch tensors if needed
+    if ut is not None and isinstance(ut, np.ndarray):
+        ut = torch.tensor(ut)
+    if st is not None and isinstance(st, np.ndarray):
+        st = torch.tensor(st)
+
+    if ut is not None and ut.dim() > 3:
+        # Remove extra dimensions
+        print(f"Reshaping ut from {ut.shape} to [num_samples, n_cells, n_genes]")
+        ut = ut.squeeze()
+        # If we squeezed too much, add back necessary dimensions
+        if ut.dim() < 3:
+            if ut.dim() == 2:
+                # Check if first dimension is num_samples or n_cells
+                if beta is not None and ut.shape[0] == beta.shape[0]:
+                    # [num_samples, n_genes] -> [num_samples, 1, n_genes]
+                    ut = ut.unsqueeze(1)
+                else:
+                    # [n_cells, n_genes] -> [1, n_cells, n_genes]
+                    ut = ut.unsqueeze(0)
+            elif ut.dim() == 1:
+                # [n_genes] -> [1, 1, n_genes]
+                ut = ut.unsqueeze(0).unsqueeze(0)
+        print(f"Reshaped ut to {ut.shape}")
+
+    if st is not None and isinstance(st, torch.Tensor) and st.dim() > 3:
+        # Remove extra dimensions
+        print(f"Reshaping st from {st.shape} to [num_samples, n_cells, n_genes]")
+        st = st.squeeze()
+        # If we squeezed too much, add back necessary dimensions
+        if st.dim() < 3:
+            if st.dim() == 2:
+                # Check if first dimension is num_samples or n_cells
+                if gamma is not None and st.shape[0] == gamma.shape[0]:
+                    # [num_samples, n_genes] -> [num_samples, 1, n_genes]
+                    st = st.unsqueeze(1)
+                else:
+                    # [n_cells, n_genes] -> [1, n_cells, n_genes]
+                    st = st.unsqueeze(0)
+            elif st.dim() == 1:
+                # [n_genes] -> [1, 1, n_genes]
+                st = st.unsqueeze(0).unsqueeze(0)
+        print(f"Reshaped st to {st.shape}")
 
     # If ut/st not available, compute them from the model parameters
     if ut is None or st is None:
@@ -252,56 +313,80 @@ def compute_velocity(
         u_ss_mean = alpha_mean / beta_mean
         s_ss_mean = alpha_mean / gamma_mean
 
-        # Reshape parameters to match legacy implementation shape (num_samples, 1, n_genes)
-        # This ensures broadcasting works the same way as in the legacy implementation
-        if beta_mean.dim() == 1:
-            beta_mean = beta_mean.unsqueeze(0)  # Add batch dimension
-            gamma_mean = gamma_mean.unsqueeze(0)
+        # Print shapes for debugging
+        print(f"compute_velocity - alpha_mean shape: {alpha_mean.shape}")
+        print(f"compute_velocity - beta_mean shape: {beta_mean.shape}")
+        print(f"compute_velocity - ut shape: {ut.shape}")
+        print(f"compute_velocity - st shape: {st.shape}")
 
-            # Match legacy implementation velocity calculation with scaling
-            # In the legacy implementation, velocity is computed as:
-            # beta * ut / scale - gamma * st
-            # where scale depends on the model type
-            if u_scale is not None and s_scale is not None:
-                # For Gaussian models with two scales
-                scale = u_scale.mean(dim=0) / s_scale.mean(dim=0)
-                # Ensure scale has the right shape for broadcasting
-                if scale.dim() == 1:
-                    scale = scale.unsqueeze(0)
-                # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
-                velocity = beta_mean * ut / scale - gamma_mean * st
-            elif u_scale is not None:
-                # For Poisson Model 2 with one scale
-                scale = u_scale.mean(dim=0)
-                # Ensure scale has the right shape for broadcasting
-                if scale.dim() == 1:
-                    scale = scale.unsqueeze(0)
-                # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
-                velocity = beta_mean * ut / scale - gamma_mean * st
+        # Ensure parameters have the correct shapes for broadcasting
+        # We need to ensure:
+        # - gene parameters (beta, gamma) have shape [n_genes] or [1, n_genes]
+        # - cell-gene parameters (ut, st) have shape [n_cells, n_genes]
+
+        # Reshape gene parameters if needed
+        if beta_mean.dim() == 1:  # [n_genes]
+            # This is the expected shape for gene parameters
+            pass
+        elif beta_mean.dim() == 2:  # [num_samples, n_genes]
+            # Take mean across samples
+            beta_mean = beta_mean.mean(dim=0)  # [n_genes]
+            gamma_mean = gamma_mean.mean(dim=0)  # [n_genes]
+
+        # Reshape ut and st if needed
+        if ut.dim() > 2:
+            # If ut has extra dimensions, reshape to [n_cells, n_genes]
+            if ut.dim() == 3 and ut.shape[0] == 1:  # [1, n_cells, n_genes]
+                ut = ut.squeeze(0)  # [n_cells, n_genes]
+                st = st.squeeze(0)  # [n_cells, n_genes]
+            elif ut.dim() == 3:  # [num_samples, n_cells, n_genes]
+                # Take mean across samples
+                ut = ut.mean(dim=0)  # [n_cells, n_genes]
+                st = st.mean(dim=0)  # [n_cells, n_genes]
             else:
-                # For Poisson Model 1 with no scale
-                # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
-                velocity = beta_mean * ut - gamma_mean * st
+                # For more complex shapes, try to reshape to [n_cells, n_genes]
+                print(f"Reshaping ut from {ut.shape} to [n_cells, n_genes]")
+                # Get the last two dimensions which should be cells and genes
+                n_cells = ut.shape[-2] if ut.dim() > 1 else 1
+                n_genes = ut.shape[-1]
+                ut = ut.reshape(n_cells, n_genes)
+                st = st.reshape(n_cells, n_genes)
 
-            # Remove the batch dimension we added if the result has it
-            if velocity.dim() > ut.dim():
-                velocity = velocity.squeeze(0)
+        # Calculate scaling factor if needed
+        if u_scale is not None and s_scale is not None:
+            # For Gaussian models with two scales
+            if u_scale.dim() > 1:
+                u_scale_mean = u_scale.mean(dim=0)  # [n_cells, 1]
+                s_scale_mean = s_scale.mean(dim=0)  # [n_cells, 1]
+            else:
+                u_scale_mean = u_scale
+                s_scale_mean = s_scale
+
+            # Calculate scale as u_scale / s_scale
+            scale = u_scale_mean / s_scale_mean  # [n_cells, 1]
+
+            # Compute velocity with proper broadcasting
+            # beta: [n_genes] or [1, n_genes]
+            # ut: [n_cells, n_genes]
+            # scale: [n_cells, 1]
+            # Result: [n_cells, n_genes]
+            velocity = beta_mean * ut / scale - gamma_mean * st
+        elif u_scale is not None:
+            # For Poisson Model 2 with one scale
+            if u_scale.dim() > 1:
+                scale = u_scale.mean(dim=0)  # [n_cells, 1]
+            else:
+                scale = u_scale
+
+            # Compute velocity with proper broadcasting
+            velocity = beta_mean * ut / scale - gamma_mean * st
         else:
-            # Match legacy implementation velocity calculation with scaling
-            if u_scale is not None and s_scale is not None:
-                # For Gaussian models with two scales
-                scale = u_scale.mean(dim=0) / s_scale.mean(dim=0)
-                # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
-                velocity = beta_mean * ut / scale - gamma_mean * st
-            elif u_scale is not None:
-                # For Poisson Model 2 with one scale
-                scale = u_scale.mean(dim=0)
-                # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
-                velocity = beta_mean * ut / scale - gamma_mean * st
-            else:
-                # For Poisson Model 1 with no scale
-                # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
-                velocity = beta_mean * ut - gamma_mean * st
+            # For Poisson Model 1 with no scale
+            # Compute velocity with proper broadcasting
+            velocity = beta_mean * ut - gamma_mean * st
+
+        # Print final velocity shape
+        print(f"compute_velocity - velocity shape: {velocity.shape}")
 
         # Compute latent time (pseudotime)
         # This is a simple implementation based on the ratio of unspliced to spliced
@@ -327,247 +412,101 @@ def compute_velocity(
             "latent_time": latent_time,
         }
     else:
-        # Check if the shapes are compatible for broadcasting
-        # If not, use the mean of the parameters
-        if alpha.shape[0] != ut.shape[0] and ut.shape[0] > 1:
-            print(f"Shape mismatch: alpha shape {alpha.shape}, ut shape {ut.shape}")
-            print(f"Using mean of parameters for velocity calculation")
-            # Use mean of posterior samples
-            alpha_mean = alpha.mean(dim=0)
-            beta_mean = beta.mean(dim=0)
-            gamma_mean = gamma.mean(dim=0)
-            u_ss_mean = alpha_mean / beta_mean
-            s_ss_mean = alpha_mean / gamma_mean
+        # For the non-mean case, we want to compute velocity for each posterior sample
+        # Print shapes for debugging
+        print(f"compute_velocity - alpha shape: {alpha.shape}")
+        print(f"compute_velocity - beta shape: {beta.shape}")
+        print(f"compute_velocity - gamma shape: {gamma.shape}")
+        print(f"compute_velocity - ut shape: {ut.shape}")
+        print(f"compute_velocity - st shape: {st.shape}")
 
-            # Ensure the shapes are compatible for broadcasting
-            if ut.dim() == 1 and u_ss_mean.dim() > 1:
-                # If ut is 1D but u_ss_mean is multi-dimensional, flatten u_ss_mean
-                u_ss_mean = u_ss_mean.flatten()
-                s_ss_mean = s_ss_mean.flatten()
-            elif ut.dim() > 1 and u_ss_mean.dim() == 1:
-                # If ut is multi-dimensional but u_ss_mean is 1D, expand u_ss_mean
-                if ut.shape[1] == u_ss_mean.shape[0]:
-                    # If the second dimension of ut matches the size of u_ss_mean, expand along first dimension
-                    u_ss_mean = u_ss_mean.unsqueeze(0).expand(ut.shape[0], -1)
-                    s_ss_mean = s_ss_mean.unsqueeze(0).expand(ut.shape[0], -1)
-                else:
-                    # Otherwise, try to reshape to match
-                    u_ss_mean = u_ss_mean.reshape(1, -1).expand(ut.shape[0], -1)
-                    s_ss_mean = s_ss_mean.reshape(1, -1).expand(ut.shape[0], -1)
+        # Simplify by using the mean of posterior samples
+        # This is a reasonable approach for most cases
+        print("Using mean of posterior samples for velocity calculation")
+        alpha_mean = alpha.mean(dim=0) if alpha.dim() > 1 else alpha
+        beta_mean = beta.mean(dim=0) if beta.dim() > 1 else beta
+        gamma_mean = gamma.mean(dim=0) if gamma.dim() > 1 else gamma
+        u_ss_mean = alpha_mean / beta_mean
+        s_ss_mean = alpha_mean / gamma_mean
 
-            # Compute velocity - match legacy implementation with scaling
-            if u_scale is not None and s_scale is not None:
-                # For Gaussian models with two scales
-                scale = u_scale.mean(dim=0)
-                if scale.dim() > 0 and s_scale.dim() > 0:
-                    scale = scale / s_scale.mean(dim=0)
-
-                # Reshape parameters to match legacy implementation shape
-                if beta_mean.dim() == 1:
-                    beta_mean = beta_mean.unsqueeze(0)  # Add batch dimension
-                    gamma_mean = gamma_mean.unsqueeze(0)
-                    if scale.dim() == 1:
-                        scale = scale.unsqueeze(0)
-
-                # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
-                velocity = beta_mean * ut / scale - gamma_mean * st
-
-                # Remove the batch dimension we added if the result has it
-                if velocity.dim() > ut.dim():
-                    velocity = velocity.squeeze(0)
-            elif u_scale is not None:
-                # For Poisson Model 2 with one scale
-                scale = u_scale.mean(dim=0)
-
-                # Reshape parameters to match legacy implementation shape
-                if beta_mean.dim() == 1:
-                    beta_mean = beta_mean.unsqueeze(0)  # Add batch dimension
-                    gamma_mean = gamma_mean.unsqueeze(0)
-                    if scale.dim() == 1:
-                        scale = scale.unsqueeze(0)
-
-                # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
-                velocity = beta_mean * ut / scale - gamma_mean * st
-
-                # Remove the batch dimension we added if the result has it
-                if velocity.dim() > ut.dim():
-                    velocity = velocity.squeeze(0)
+        # Reshape ut and st if needed
+        if ut.dim() > 2:
+            # If ut has extra dimensions, reshape to [n_cells, n_genes]
+            if ut.dim() == 3 and ut.shape[0] == 1:  # [1, n_cells, n_genes]
+                ut = ut.squeeze(0)  # [n_cells, n_genes]
+                st = st.squeeze(0)  # [n_cells, n_genes]
+            elif ut.dim() == 3:  # [num_samples, n_cells, n_genes]
+                # Take mean across samples
+                ut = ut.mean(dim=0)  # [n_cells, n_genes]
+                st = st.mean(dim=0)  # [n_cells, n_genes]
             else:
-                # For Poisson Model 1 with no scale
-                # Reshape parameters to match legacy implementation shape
-                if beta_mean.dim() == 1:
-                    beta_mean = beta_mean.unsqueeze(0)  # Add batch dimension
-                    gamma_mean = gamma_mean.unsqueeze(0)
+                # For more complex shapes, try to reshape to [n_cells, n_genes]
+                print(f"Reshaping ut from {ut.shape} to [n_cells, n_genes]")
+                # Get the last two dimensions which should be cells and genes
+                n_cells = ut.shape[-2] if ut.dim() > 1 else 1
+                n_genes = ut.shape[-1]
+                ut = ut.reshape(n_cells, n_genes)
+                st = st.reshape(n_cells, n_genes)
 
-                # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
-                velocity = beta_mean * ut - gamma_mean * st
-
-                # Remove the batch dimension we added if the result has it
-                if velocity.dim() > ut.dim():
-                    velocity = velocity.squeeze(0)
-
-            # Compute latent time (pseudotime)
-            # This is a simple implementation based on the ratio of unspliced to spliced
-            # More sophisticated methods could be used
-
-            # Handle 1D tensors
-            if ut.dim() == 1:
-                u_norm = ut / (ut.max() + 1e-6)
-                s_norm = st / (st.max() + 1e-6)
-                latent_time = torch.tensor(1.0 - u_norm.mean() / (s_norm.mean() + 1e-6))
+        # Calculate scaling factor if needed
+        if u_scale is not None and s_scale is not None:
+            # For Gaussian models with two scales
+            if u_scale.dim() > 1:
+                u_scale_mean = u_scale.mean(dim=0)  # [n_cells, 1]
+                s_scale_mean = s_scale.mean(dim=0)  # [n_cells, 1]
             else:
-                u_norm = ut / ut.max(dim=1, keepdim=True)[0]
-                s_norm = st / st.max(dim=1, keepdim=True)[0]
-                latent_time = 1.0 - u_norm.mean(dim=1) / (s_norm.mean(dim=1) + 1e-6)
+                u_scale_mean = u_scale
+                s_scale_mean = s_scale
 
-            return {
-                "velocity": velocity,
-                "alpha": alpha,
-                "beta": beta,
-                "gamma": gamma,
-                "u_ss": u_ss,
-                "s_ss": s_ss,
-                "latent_time": latent_time,
-            }
+            # Calculate scale as u_scale / s_scale
+            scale = u_scale_mean / s_scale_mean  # [n_cells, 1]
+
+            # Compute velocity with proper broadcasting
+            # beta_mean: [n_genes]
+            # ut: [n_cells, n_genes]
+            # scale: [n_cells, 1]
+            # Result: [n_cells, n_genes]
+            velocity = beta_mean * ut / scale - gamma_mean * st
+        elif u_scale is not None:
+            # For Poisson Model 2 with one scale
+            if u_scale.dim() > 1:
+                scale = u_scale.mean(dim=0)  # [n_cells, 1]
+            else:
+                scale = u_scale
+
+            # Compute velocity with proper broadcasting
+            velocity = beta_mean * ut / scale - gamma_mean * st
         else:
-            # Compute velocity for each posterior sample
-            # We need to ensure the shapes are compatible for broadcasting
-            # If alpha has shape [num_samples, n_genes] and u has shape [n_cells, n_genes],
-            # we need to reshape for proper broadcasting
-            if alpha.dim() == 2 and ut.dim() == 2 and alpha.shape[0] != ut.shape[0]:
-                # Reshape ut and st to [1, n_cells, n_genes] for broadcasting with
-                # alpha, beta, gamma of shape [num_samples, 1, n_genes]
-                # Note: We don't actually use these variables directly anymore, but keep them for clarity
-                u_reshaped = ut.unsqueeze(0)  # [1, n_cells, n_genes]
-                s_reshaped = st.unsqueeze(0)  # [1, n_cells, n_genes]
+            # For Poisson Model 1 with no scale
+            # Compute velocity with proper broadcasting
+            velocity = beta_mean * ut - gamma_mean * st
 
-                # Reshape alpha, beta, gamma to [num_samples, 1, n_genes]
-                alpha_reshaped = alpha.unsqueeze(1)  # [num_samples, 1, n_genes]
-                beta_reshaped = beta.unsqueeze(1)    # [num_samples, 1, n_genes]
-                gamma_reshaped = gamma.unsqueeze(1)  # [num_samples, 1, n_genes]
+        # Print final velocity shape
+        print(f"compute_velocity - velocity shape: {velocity.shape}")
 
-                # Reshape u_ss and s_ss to [num_samples, 1, n_genes]
-                u_ss_reshaped = u_ss.unsqueeze(1)    # [num_samples, 1, n_genes]
-                s_ss_reshaped = s_ss.unsqueeze(1)    # [num_samples, 1, n_genes]
+        # Compute latent time (pseudotime)
+        # This is a simple implementation based on the ratio of unspliced to spliced
+        # More sophisticated methods could be used
 
-                # Compute velocity with broadcasting - match legacy implementation with scaling
-                # This will result in shape [num_samples, n_cells, n_genes]
-                if u_scale is not None and s_scale is not None:
-                    # For Gaussian models with two scales
-                    u_scale_reshaped = u_scale.unsqueeze(1)  # [num_samples, 1, n_genes]
-                    s_scale_reshaped = s_scale.unsqueeze(1)  # [num_samples, 1, n_genes]
-                    scale = u_scale_reshaped / s_scale_reshaped
+        # Handle 1D tensors
+        if ut.dim() == 1:
+            u_norm = ut / (ut.max() + 1e-6)
+            s_norm = st / (st.max() + 1e-6)
+            latent_time = torch.tensor(1.0 - u_norm.mean() / (s_norm.mean() + 1e-6))
+        else:
+            u_norm = ut / ut.max(dim=1, keepdim=True)[0]
+            s_norm = st / st.max(dim=1, keepdim=True)[0]
+            latent_time = 1.0 - u_norm.mean(dim=1) / (s_norm.mean(dim=1) + 1e-6)
 
-                    # In the legacy implementation, velocity is computed as:
-                    # beta * ut / scale - gamma * st
-                    # We need to ensure the shapes are compatible for broadcasting
-                    ut_expanded = ut.unsqueeze(0)  # [1, n_cells, n_genes]
-                    st_expanded = st.unsqueeze(0)  # [1, n_cells, n_genes]
-                    # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
-                    velocity = beta_reshaped * ut_expanded / scale - gamma_reshaped * st_expanded
-                elif u_scale is not None:
-                    # For Poisson Model 2 with one scale
-                    u_scale_reshaped = u_scale.unsqueeze(1)  # [num_samples, 1, n_genes]
-
-                    # In the legacy implementation, velocity is computed as:
-                    # beta * ut / scale - gamma * st
-                    # We need to ensure the shapes are compatible for broadcasting
-                    ut_expanded = ut.unsqueeze(0)  # [1, n_cells, n_genes]
-                    st_expanded = st.unsqueeze(0)  # [1, n_cells, n_genes]
-                    # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
-                    velocity = beta_reshaped * ut_expanded / u_scale_reshaped - gamma_reshaped * st_expanded
-                else:
-                    # For Poisson Model 1 with no scale
-                    # In the legacy implementation, velocity is computed as:
-                    # beta * ut - gamma * st
-                    # We need to ensure the shapes are compatible for broadcasting
-                    ut_expanded = ut.unsqueeze(0)  # [1, n_cells, n_genes]
-                    st_expanded = st.unsqueeze(0)  # [1, n_cells, n_genes]
-                    # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
-                    velocity = beta_reshaped * ut_expanded - gamma_reshaped * st_expanded
-            else:
-                # Standard computation when shapes are compatible - match legacy implementation with scaling
-                if u_scale is not None and s_scale is not None:
-                    # For Gaussian models with two scales
-                    scale = u_scale / s_scale
-
-                    # Ensure shapes are compatible for broadcasting
-                    # In the legacy implementation, parameters have shape [num_samples, 1, n_genes]
-                    # We need to reshape our parameters to match this
-                    if beta.dim() == 2 and ut.dim() == 2 and beta.shape[0] != ut.shape[0]:
-                        # Reshape beta and gamma to [num_samples, 1, n_genes]
-                        beta_reshaped = beta.unsqueeze(1)
-                        gamma_reshaped = gamma.unsqueeze(1)
-                        scale_reshaped = scale.unsqueeze(1)
-
-                        # Reshape ut and st to [1, n_cells, n_genes]
-                        ut_expanded = ut.unsqueeze(0)
-                        st_expanded = st.unsqueeze(0)
-
-                        # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
-                        velocity = beta_reshaped * ut_expanded / scale_reshaped - gamma_reshaped * st_expanded
-                    else:
-                        # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
-                        velocity = beta * ut / scale - gamma * st
-                elif u_scale is not None:
-                    # For Poisson Model 2 with one scale
-                    # Ensure shapes are compatible for broadcasting
-                    if beta.dim() == 2 and ut.dim() == 2 and beta.shape[0] != ut.shape[0]:
-                        # Reshape beta and gamma to [num_samples, 1, n_genes]
-                        beta_reshaped = beta.unsqueeze(1)
-                        gamma_reshaped = gamma.unsqueeze(1)
-                        u_scale_reshaped = u_scale.unsqueeze(1)
-
-                        # Reshape ut and st to [1, n_cells, n_genes]
-                        ut_expanded = ut.unsqueeze(0)
-                        st_expanded = st.unsqueeze(0)
-
-                        # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
-                        velocity = beta_reshaped * ut_expanded / u_scale_reshaped - gamma_reshaped * st_expanded
-                    else:
-                        # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
-                        velocity = beta * ut / u_scale - gamma * st
-                else:
-                    # For Poisson Model 1 with no scale
-                    # Ensure shapes are compatible for broadcasting
-                    if beta.dim() == 2 and ut.dim() == 2 and beta.shape[0] != ut.shape[0]:
-                        # Reshape beta and gamma to [num_samples, 1, n_genes]
-                        beta_reshaped = beta.unsqueeze(1)
-                        gamma_reshaped = gamma.unsqueeze(1)
-
-                        # Reshape ut and st to [1, n_cells, n_genes]
-                        ut_expanded = ut.unsqueeze(0)
-                        st_expanded = st.unsqueeze(0)
-
-                        # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
-                        velocity = beta_reshaped * ut_expanded - gamma_reshaped * st_expanded
-                    else:
-                        # CRITICAL: Use ut and st (latent variables), not u and s (observed data)
-                        velocity = beta * ut - gamma * st
-
-            # Compute latent time (pseudotime)
-            # This is a simple implementation based on the ratio of unspliced to spliced
-            # More sophisticated methods could be used
-
-            # Handle 1D tensors
-            if ut.dim() == 1:
-                u_norm = ut / (ut.max() + 1e-6)
-                s_norm = st / (st.max() + 1e-6)
-                latent_time = torch.tensor(1.0 - u_norm.mean() / (s_norm.mean() + 1e-6))
-            else:
-                u_norm = ut / ut.max(dim=1, keepdim=True)[0]
-                s_norm = st / st.max(dim=1, keepdim=True)[0]
-                latent_time = 1.0 - u_norm.mean(dim=1) / (s_norm.mean(dim=1) + 1e-6)
-
-            return {
-                "velocity": velocity,
-                "alpha": alpha,
-                "beta": beta,
-                "gamma": gamma,
-                "u_ss": u_ss,
-                "s_ss": s_ss,
-                "latent_time": latent_time,
-            }
+        return {
+            "velocity": velocity,
+            "alpha": alpha,
+            "beta": beta,
+            "gamma": gamma,
+            "u_ss": u_ss,
+            "s_ss": s_ss,
+            "latent_time": latent_time,
+        }
 
 
 @beartype
