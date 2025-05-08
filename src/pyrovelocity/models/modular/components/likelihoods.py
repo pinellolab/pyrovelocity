@@ -458,14 +458,14 @@ class LegacyLikelihoodModel:
                 # Use pyro.plate to handle the dimensions
                 with pyro.plate("batch", batch_size, dim=-3):
                     with pyro.plate("cells_likelihood", n_cells, dim=-2):
-                        with pyro.plate("genes", n_genes, dim=-1):
+                        with pyro.plate("genes_likelihood", n_genes, dim=-1):
                             # Observe data
                             pyro.sample("u_obs", u_dist, obs=u_obs_expanded)
                             pyro.sample("s_obs", s_dist, obs=s_obs_expanded)
             else:
                 # Use pyro.plate to handle the dimensions
                 with pyro.plate("cells_likelihood", n_cells, dim=-2):
-                    with pyro.plate("genes", n_genes, dim=-1):
+                    with pyro.plate("genes_likelihood", n_genes, dim=-1):
                         # Observe data
                         pyro.sample("u_obs", u_dist, obs=u_obs_int)
                         pyro.sample("s_obs", s_dist, obs=s_obs_int)
@@ -752,8 +752,8 @@ class NegativeBinomialLikelihoodModel:
 
             # Use the data dimensions for the plate
             # Ensure the plate dimensions match the tensor dimensions
-            with pyro.plate("cells", n_cells, dim=-2):
-                with pyro.plate("genes", n_genes, dim=-1):
+            with pyro.plate("cells_nb", n_cells, dim=-2):
+                with pyro.plate("genes_nb", n_genes, dim=-1):
                     # Create Negative Binomial distributions and observe data
                     u_dist = pyro.distributions.NegativeBinomial(
                         total_count=u_concentration, probs=u_probs
