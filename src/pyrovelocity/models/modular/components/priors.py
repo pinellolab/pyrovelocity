@@ -44,7 +44,6 @@ PyroModule.__instancecheck__ = lambda cls, instance: (
 
 
 @PriorModelRegistry.register("lognormal")
-@PriorModelRegistry.register("lognormal_direct")  # For backward compatibility
 class LogNormalPriorModel:
     """
     Log-normal prior model for RNA velocity parameters.
@@ -276,7 +275,6 @@ class LogNormalPriorModel:
 
 
 @PriorModelRegistry.register("informative")
-@PriorModelRegistry.register("informative_direct")  # For backward compatibility
 class InformativePriorModel:
     """
     Informative prior model for RNA velocity parameters.
