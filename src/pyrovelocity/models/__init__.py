@@ -3,6 +3,9 @@
 This package contains the modular components of the PyroVelocity model architecture,
 including factory methods for model creation and configuration management,
 direct AnnData integration, and Bayesian model comparison tools.
+
+This package has been simplified to include only the essential components needed for
+validation against the legacy implementation.
 """
 
 # Import from modular components
@@ -36,23 +39,21 @@ from pyrovelocity.models.modular.comparison import (
 
 # Base classes have been removed in favor of Protocol interfaces
 from pyrovelocity.models.modular.components.dynamics import (
-    NonlinearDynamicsModel,
+    LegacyDynamicsModel,
     StandardDynamicsModel,
 )
 from pyrovelocity.models.modular.components.guides import (
     AutoGuideFactory,
-    DeltaGuide,
-    NormalGuide,
+    LegacyAutoGuideFactory,
 )
 from pyrovelocity.models.modular.components.likelihoods import (
-    NegativeBinomialLikelihoodModel,
+    LegacyLikelihoodModel,
     PoissonLikelihoodModel,
 )
 from pyrovelocity.models.modular.components.observations import (
     StandardObservationModel,
 )
 from pyrovelocity.models.modular.components.priors import (
-    InformativePriorModel,
     LogNormalPriorModel,
 )
 
@@ -115,19 +116,17 @@ __all__ = [
     "InferenceGuideRegistry",
     # Dynamics models
     "StandardDynamicsModel",
-    "NonlinearDynamicsModel",
+    "LegacyDynamicsModel",
     # Prior models
     "LogNormalPriorModel",
-    "InformativePriorModel",
     # Likelihood models
     "PoissonLikelihoodModel",
-    "NegativeBinomialLikelihoodModel",
+    "LegacyLikelihoodModel",
     # Observation models
     "StandardObservationModel",
     # Inference guides
     "AutoGuideFactory",
-    "NormalGuide",
-    "DeltaGuide",
+    "LegacyAutoGuideFactory",
     # Legacy model
     "PyroVelocity",
     # New model
