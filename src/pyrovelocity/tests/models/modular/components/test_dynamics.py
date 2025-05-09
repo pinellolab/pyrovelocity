@@ -6,7 +6,7 @@ import torch
 from jaxtyping import Array
 
 from pyrovelocity.models.modular.components.dynamics import (
-    NonlinearDynamicsModel,
+    LegacyDynamicsModel,
     StandardDynamicsModel,
 )
 from pyrovelocity.models.modular.registry import DynamicsModelRegistry
@@ -21,7 +21,7 @@ def register_dynamics_models():
     # Clear registry and register test components
     DynamicsModelRegistry.clear()
     DynamicsModelRegistry._registry["standard"] = StandardDynamicsModel
-    DynamicsModelRegistry._registry["nonlinear"] = NonlinearDynamicsModel
+    DynamicsModelRegistry._registry["legacy"] = LegacyDynamicsModel
 
     yield
 
@@ -37,12 +37,12 @@ def test_standard_dynamics_model_registration():
     assert "standard" in DynamicsModelRegistry.list_available()
 
 
-def test_nonlinear_dynamics_model_registration():
-    """Test that NonlinearDynamicsModel is properly registered."""
-    model_class = DynamicsModelRegistry.get("nonlinear")
-    assert model_class == NonlinearDynamicsModel
-    assert model_class.name == "nonlinear"
-    assert "nonlinear" in DynamicsModelRegistry.list_available()
+def test_legacy_dynamics_model_registration():
+    """Test that LegacyDynamicsModel is properly registered."""
+    model_class = DynamicsModelRegistry.get("legacy")
+    assert model_class == LegacyDynamicsModel
+    assert model_class.name == "legacy"
+    assert "legacy" in DynamicsModelRegistry.list_available()
 
 
 class TestStandardDynamicsModel:
@@ -156,13 +156,13 @@ class TestStandardDynamicsModel:
         )
 
 
-class TestNonlinearDynamicsModel:
-    """Tests for NonlinearDynamicsModel."""
+class TestLegacyDynamicsModel:
+    """Tests for LegacyDynamicsModel."""
 
     @pytest.fixture
     def model(self):
-        """Create a NonlinearDynamicsModel instance."""
-        return NonlinearDynamicsModel()
+        """Create a LegacyDynamicsModel instance."""
+        return LegacyDynamicsModel()
 
     @pytest.fixture
     def simple_params(self):
@@ -174,8 +174,6 @@ class TestNonlinearDynamicsModel:
             "beta": torch.tensor([1.0, 1.5]),
             "gamma": torch.tensor([0.5, 0.8]),
             "scaling": torch.tensor([1.0, 1.0]),
-            "k_alpha": torch.tensor([5.0, 8.0]),
-            "k_beta": torch.tensor([2.0, 3.0]),
             "t_max": 10.0,
             "n_steps": 100,
         }
@@ -186,212 +184,68 @@ class TestNonlinearDynamicsModel:
             simple_params["alpha"],
             simple_params["beta"],
             simple_params["gamma"],
-            k_alpha=simple_params["k_alpha"],
-            k_beta=simple_params["k_beta"],
         )
 
-        # Steady state should be positive
-        assert torch.all(u_ss > 0)
-        assert torch.all(s_ss > 0)
+        # Expected steady states based on analytical solution
+        expected_u_ss = simple_params["alpha"] / simple_params["beta"]
+        expected_s_ss = simple_params["alpha"] / simple_params["gamma"]
 
-        # For very large k_alpha and k_beta, should approach standard model
-        large_k = torch.tensor([1e6, 1e6])
-        u_ss_large_k, s_ss_large_k = model.steady_state(
-            simple_params["alpha"],
-            simple_params["beta"],
-            simple_params["gamma"],
-            k_alpha=large_k,
-            k_beta=large_k,
-        )
+        assert torch.allclose(u_ss, expected_u_ss)
+        assert torch.allclose(s_ss, expected_s_ss)
 
-        standard_model = StandardDynamicsModel()
-        u_ss_standard, s_ss_standard = standard_model.steady_state(
-            simple_params["alpha"],
-            simple_params["beta"],
-            simple_params["gamma"],
-        )
+    def test_forward(self, model):
+        """Test forward method."""
+        # Create a simple context
+        batch_size = 3
+        num_genes = 4
+        u_obs = torch.rand(batch_size, num_genes)
+        s_obs = torch.rand(batch_size, num_genes)
+        alpha = torch.ones(num_genes)
+        beta = torch.ones(num_genes)
+        gamma = torch.ones(num_genes)
 
-        # With very large k values, should be close to standard model
-        # Use a larger tolerance since the fixed-point iteration might not converge perfectly
-        assert torch.allclose(
-            u_ss_large_k / u_ss_standard,
-            torch.ones_like(u_ss_standard),
-            rtol=1e-1,
-        )
-        assert torch.allclose(
-            s_ss_large_k / s_ss_standard,
-            torch.ones_like(s_ss_standard),
-            rtol=1e-1,
-        )
+        context = {
+            "u_obs": u_obs,
+            "s_obs": s_obs,
+            "alpha": alpha,
+            "beta": beta,
+            "gamma": gamma,
+        }
 
-    def test_simulate(self, model, simple_params):
-        """Test simulation results."""
-        times, u_t, s_t = model.simulate(**simple_params)
+        # Call forward method
+        result = model.forward(context)
+
+        # Check that the result contains expected keys
+        assert "ut" in result
+        assert "st" in result
+        assert "u_inf" in result
+        assert "s_inf" in result
+        assert "switching" in result
 
         # Check shapes
-        assert times.shape == (simple_params["n_steps"],)
-        assert u_t.shape == (simple_params["n_steps"], len(simple_params["u0"]))
-        assert s_t.shape == (simple_params["n_steps"], len(simple_params["s0"]))
-
-        # Check initial conditions
-        assert torch.allclose(u_t[0], simple_params["u0"])
-        assert torch.allclose(s_t[0], simple_params["s0"])
-
-        # Check that simulation approaches steady state
-        u_ss, s_ss = model.steady_state(
-            simple_params["alpha"],
-            simple_params["beta"],
-            simple_params["gamma"],
-            k_alpha=simple_params["k_alpha"],
-            k_beta=simple_params["k_beta"],
-        )
-
-        # Final values should be close to steady state
-        # Use a larger tolerance for the nonlinear model
-        assert torch.allclose(u_t[-1] / u_ss, torch.ones_like(u_ss), rtol=0.3)
-        assert torch.allclose(s_t[-1] / s_ss, torch.ones_like(s_ss), rtol=0.3)
-
-    def test_saturation_effects(self, model, simple_params):
-        """Test that saturation effects work as expected."""
-        # Run with normal parameters
-        times, u_t_normal, s_t_normal = model.simulate(**simple_params)
-
-        # Run with very small saturation constants (strong saturation)
-        small_k_params = simple_params.copy()
-        small_k_params["k_alpha"] = simple_params["k_alpha"] * 0.1
-        small_k_params["k_beta"] = simple_params["k_beta"] * 0.1
-
-        times, u_t_saturated, s_t_saturated = model.simulate(**small_k_params)
-
-        # With stronger saturation, steady state values should be lower
-        assert torch.all(u_t_saturated[-1] < u_t_normal[-1])
-
-        # Run with very large saturation constants (approaches standard model)
-        large_k_params = simple_params.copy()
-        large_k_params["k_alpha"] = torch.tensor(
-            [1e6, 1e6]
-        )  # Use very large values
-        large_k_params["k_beta"] = torch.tensor(
-            [1e6, 1e6]
-        )  # Use very large values
-
-        times, u_t_large_k, s_t_large_k = model.simulate(**large_k_params)
-
-        # Run standard model for comparison
-        standard_model = StandardDynamicsModel()
-        std_params = {
-            k: v
-            for k, v in simple_params.items()
-            if k not in ["k_alpha", "k_beta"]
-        }
-        times, u_t_standard, s_t_standard = standard_model.simulate(
-            **std_params
-        )
-
-        # Skip the comparison test since we've already verified the steady state behavior
-        # This test is redundant with the steady state test
-        pass
-
-    def test_default_saturation_constants(self, model, simple_params):
-        """Test that default saturation constants work correctly."""
-        # Remove k_alpha and k_beta to use defaults
-        default_params = {
-            k: v
-            for k, v in simple_params.items()
-            if k not in ["k_alpha", "k_beta"]
-        }
-
-        times, u_t, s_t = model.simulate(**default_params)
-
-        # Check that simulation runs successfully
-        assert times.shape == (simple_params["n_steps"],)
-        assert u_t.shape == (simple_params["n_steps"], len(simple_params["u0"]))
-        assert s_t.shape == (simple_params["n_steps"], len(simple_params["s0"]))
-
-        # Check steady state with default parameters
-        u_ss, s_ss = model.steady_state(
-            simple_params["alpha"],
-            simple_params["beta"],
-            simple_params["gamma"],
-        )
-
-        # Final values should be close to steady state
-        # Use a larger tolerance for the nonlinear model
-        assert torch.allclose(u_t[-1] / u_ss, torch.ones_like(u_ss), rtol=0.3)
-        assert torch.allclose(s_t[-1] / s_ss, torch.ones_like(s_ss), rtol=0.3)
+        assert result["ut"].shape[-2:] == (batch_size, num_genes)
+        assert result["st"].shape[-2:] == (batch_size, num_genes)
 
 
 def test_model_comparison():
-    """Compare standard and nonlinear models under different conditions."""
+    """Compare standard and legacy models steady states."""
     # Parameters
-    u0 = torch.tensor([1.0])
-    s0 = torch.tensor([0.5])
     alpha = torch.tensor([2.0])
     beta = torch.tensor([1.0])
     gamma = torch.tensor([0.5])
-    scaling = torch.tensor([1.0])
-    t_max = 10.0
-    n_steps = 100
 
     # Create models
     standard_model = StandardDynamicsModel()
-    nonlinear_model = NonlinearDynamicsModel()
-
-    # Run standard model
-    times, u_t_standard, s_t_standard = standard_model.simulate(
-        u0, s0, alpha, beta, gamma, scaling, t_max, n_steps
-    )
-
-    # Run nonlinear model with large k values (should approach standard model)
-    k_large = torch.tensor([1e6])  # Use very large values
-    (
-        times,
-        u_t_nonlinear_large_k,
-        s_t_nonlinear_large_k,
-    ) = nonlinear_model.simulate(
-        u0, s0, alpha, beta, gamma, scaling, t_max, n_steps, k_large, k_large
-    )
-
-    # Run nonlinear model with small k values (strong saturation)
-    k_small = torch.tensor([0.5])
-    (
-        times,
-        u_t_nonlinear_small_k,
-        s_t_nonlinear_small_k,
-    ) = nonlinear_model.simulate(
-        u0, s0, alpha, beta, gamma, scaling, t_max, n_steps, k_small, k_small
-    )
-
-    # With small k values, nonlinear model should show saturation effects
-    assert torch.all(u_t_nonlinear_small_k[-1] < u_t_standard[-1])
+    legacy_model = LegacyDynamicsModel()
 
     # Calculate steady states
     u_ss_standard, s_ss_standard = standard_model.steady_state(
         alpha, beta, gamma
     )
-    (
-        u_ss_nonlinear_large_k,
-        s_ss_nonlinear_large_k,
-    ) = nonlinear_model.steady_state(
-        alpha, beta, gamma, k_alpha=k_large, k_beta=k_large
-    )
-    (
-        u_ss_nonlinear_small_k,
-        s_ss_nonlinear_small_k,
-    ) = nonlinear_model.steady_state(
-        alpha, beta, gamma, k_alpha=k_small, k_beta=k_small
+    u_ss_legacy, s_ss_legacy = legacy_model.steady_state(
+        alpha, beta, gamma
     )
 
-    # Compare steady states
-    # Use a larger tolerance for the comparison
-    assert torch.allclose(
-        u_ss_nonlinear_large_k / u_ss_standard,
-        torch.ones_like(u_ss_standard),
-        rtol=0.3,
-    )
-    assert torch.allclose(
-        s_ss_nonlinear_large_k / s_ss_standard,
-        torch.ones_like(s_ss_standard),
-        rtol=0.3,
-    )
-    assert torch.all(u_ss_nonlinear_small_k < u_ss_standard)
+    # Compare steady states - they should be identical
+    assert torch.allclose(u_ss_legacy, u_ss_standard)
+    assert torch.allclose(s_ss_legacy, s_ss_standard)
