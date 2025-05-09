@@ -3,6 +3,9 @@ PyroVelocity modular architecture package.
 
 This package contains the modular architecture for PyroVelocity, enabling
 flexible composition of models, priors, likelihoods, and inference methods.
+
+This package has been simplified to include only the essential components needed for
+validation against the legacy implementation.
 """
 
 # Import component registries and register components
@@ -18,12 +21,10 @@ from pyrovelocity.models.modular.comparison import (
 # Import component implementations
 from pyrovelocity.models.modular.components import (
     AutoGuideFactory,
-    DeltaGuide,
-    InformativePriorModel,
+    LegacyAutoGuideFactory,
+    LegacyDynamicsModel,
+    LegacyLikelihoodModel,
     LogNormalPriorModel,
-    NegativeBinomialLikelihoodModel,
-    NonlinearDynamicsModel,
-    NormalGuide,
     PoissonLikelihoodModel,
     StandardDynamicsModel,
     StandardObservationModel,
@@ -89,15 +90,13 @@ __all__ = [
     "InferenceGuideRegistry",
     # Component implementations
     "StandardDynamicsModel",
-    "NonlinearDynamicsModel",
+    "LegacyDynamicsModel",
     "LogNormalPriorModel",
-    "InformativePriorModel",
     "PoissonLikelihoodModel",
-    "NegativeBinomialLikelihoodModel",
+    "LegacyLikelihoodModel",
     "StandardObservationModel",
     "AutoGuideFactory",
-    "NormalGuide",
-    "DeltaGuide",
+    "LegacyAutoGuideFactory",
     # Factory functions
     "create_model",
     "create_model_from_config",
