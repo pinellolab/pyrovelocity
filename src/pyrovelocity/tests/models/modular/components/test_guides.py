@@ -8,8 +8,7 @@ from pyro.infer.autoguide import init_to_median
 
 from pyrovelocity.models.modular.components.guides import (
     AutoGuideFactory,
-    DeltaGuide,
-    NormalGuide,
+    LegacyAutoGuideFactory,
 )
 from pyrovelocity.models.modular.registry import inference_guide_registry
 
@@ -49,7 +48,7 @@ def simple_model():
 def test_auto_guide_factory_init():
     """Test initialization of AutoGuideFactory."""
     guide_factory = AutoGuideFactory()
-    assert guide_factory.guide_type == "AutoNormal"
+    assert guide_factory.guide_type == "AutoLowRankMultivariateNormal"
     assert guide_factory.init_loc_fn is init_to_median
     assert guide_factory.init_scale == 0.1
 
@@ -104,89 +103,52 @@ def test_auto_guide_factory_get_posterior_without_create():
         guide_factory.get_posterior()
 
 
-def test_normal_guide_init():
-    """Test initialization of NormalGuide."""
-    guide = NormalGuide()
-    assert guide.init_scale == 0.1
+def test_legacy_auto_guide_factory_init():
+    """Test initialization of LegacyAutoGuideFactory."""
+    guide_factory = LegacyAutoGuideFactory()
+    assert guide_factory.init_scale == 0.1
+    assert guide_factory.add_offset == False
 
-    guide = NormalGuide(init_scale=0.5)
-    assert guide.init_scale == 0.5
+    guide_factory = LegacyAutoGuideFactory(
+        init_scale=0.5,
+        add_offset=True,
+    )
+    assert guide_factory.init_scale == 0.5
+    assert guide_factory.add_offset == True
 
 
-def test_normal_guide_create_guide(simple_model):
-    """Test create_guide method of NormalGuide."""
-    guide = NormalGuide()
+def test_legacy_auto_guide_factory_create_guide(simple_model):
+    """Test create_guide method of LegacyAutoGuideFactory."""
+    guide_factory = LegacyAutoGuideFactory()
 
     # Create guide
-    guide_fn = guide.create_guide(simple_model)
+    guide = guide_factory.create_guide(simple_model)
 
-    # Check that the guide function is created
-    assert callable(guide_fn)
+    # Check that the guide is created
+    assert guide is not None
+    assert guide_factory._guide is not None
 
     # Check that we can get the guide
-    retrieved_guide_fn = guide.get_guide()
-    assert callable(retrieved_guide_fn)
+    retrieved_guide = guide_factory.get_guide()
+    assert retrieved_guide is guide
 
 
-def test_normal_guide_get_guide_without_create():
+def test_legacy_auto_guide_factory_get_guide_without_create():
     """Test get_guide without creating guide first."""
-    guide = NormalGuide()
+    guide_factory = LegacyAutoGuideFactory()
 
     # Getting guide without creating it should raise RuntimeError
     with pytest.raises(RuntimeError):
-        guide.get_guide()
+        guide_factory.get_guide()
 
 
-def test_normal_guide_get_posterior_without_create():
+def test_legacy_auto_guide_factory_get_posterior_without_create():
     """Test get_posterior without creating guide first."""
-    guide = NormalGuide()
+    guide_factory = LegacyAutoGuideFactory()
 
     # Getting posterior without creating guide should raise RuntimeError
     with pytest.raises(RuntimeError):
-        guide.get_posterior()
-
-
-def test_delta_guide_init():
-    """Test initialization of DeltaGuide."""
-    guide = DeltaGuide()
-    assert guide.init_values == {}
-
-    init_values = {"x": torch.tensor(0.0)}
-    guide = DeltaGuide(init_values=init_values)
-    assert guide.init_values == init_values
-
-
-def test_delta_guide_create_guide(simple_model):
-    """Test create_guide method of DeltaGuide."""
-    guide = DeltaGuide()
-
-    # Create guide
-    guide_fn = guide.create_guide(simple_model)
-
-    # Check that the guide function is created
-    assert callable(guide_fn)
-
-    # Check that we can get the guide
-    retrieved_guide_fn = guide.get_guide()
-    assert callable(retrieved_guide_fn)
-
-
-def test_delta_guide_get_guide_without_create():
-    """Test get_guide without creating guide first."""
-    guide = DeltaGuide()
-
-    # Getting guide without creating it should raise RuntimeError
-    with pytest.raises(RuntimeError):
-        guide.get_guide()
-
-
-def test_delta_guide_get_posterior_without_create():
-    """Test get_posterior without creating guide first."""
-    guide = DeltaGuide()
-
-    # Getting posterior without creating guide should raise RuntimeError
-    with pytest.raises(RuntimeError):
-        guide.get_posterior()
+        guide_factory.get_posterior()
 
 
 def test_inference_guide_registry():
@@ -196,29 +158,23 @@ def test_inference_guide_registry():
 
     # Register the guides manually
     inference_guide_registry._registry["auto"] = AutoGuideFactory
-    inference_guide_registry._registry["normal"] = NormalGuide
-    inference_guide_registry._registry["delta"] = DeltaGuide
+    inference_guide_registry._registry["legacy_auto"] = LegacyAutoGuideFactory
 
     # Check that the guides are registered
     available_guides = inference_guide_registry.available_models()
     assert "auto" in available_guides
-    assert "normal" in available_guides
-    assert "delta" in available_guides
+    assert "legacy_auto" in available_guides
 
     # Check that we can retrieve the guide classes
     auto_cls = inference_guide_registry.get("auto")
-    normal_cls = inference_guide_registry.get("normal")
-    delta_cls = inference_guide_registry.get("delta")
+    legacy_auto_cls = inference_guide_registry.get("legacy_auto")
 
     assert auto_cls is AutoGuideFactory
-    assert normal_cls is NormalGuide
-    assert delta_cls is DeltaGuide
+    assert legacy_auto_cls is LegacyAutoGuideFactory
 
     # Check that we can create instances
     auto_guide = inference_guide_registry.create("auto")
-    normal_guide = inference_guide_registry.create("normal")
-    delta_guide = inference_guide_registry.create("delta")
+    legacy_auto_guide = inference_guide_registry.create("legacy_auto")
 
     assert isinstance(auto_guide, AutoGuideFactory)
-    assert isinstance(normal_guide, NormalGuide)
-    assert isinstance(delta_guide, DeltaGuide)
+    assert isinstance(legacy_auto_guide, LegacyAutoGuideFactory)
