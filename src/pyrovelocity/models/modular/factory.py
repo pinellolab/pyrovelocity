@@ -626,7 +626,7 @@ def create_legacy_model1() -> PyroVelocityModel:
             params={},
         ),
         likelihood_model=ComponentConfig(
-            name="poisson",
+            name="legacy",
             params={},
         ),
         observation_model=ComponentConfig(
@@ -672,7 +672,7 @@ def create_legacy_model2() -> PyroVelocityModel:
             params={},
         ),
         likelihood_model=ComponentConfig(
-            name="poisson",
+            name="legacy",
             params={},
         ),
         observation_model=ComponentConfig(

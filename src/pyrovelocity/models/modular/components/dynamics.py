@@ -623,10 +623,12 @@ class LegacyDynamicsModel:
                 switching = t0 + dt_switching  # Shape: [1, 1, n_genes] or [num_samples, 1, n_genes]
 
                 # Create deterministic sites for steady state and switching
-                # In the legacy model, these are registered without explicit event dimensions
-                u_inf = pyro.deterministic("u_inf", u_inf)
-                s_inf = pyro.deterministic("s_inf", s_inf)
-                switching = pyro.deterministic("switching", switching)
+                # Match the legacy model exactly by using event_dim=0
+                # In the legacy model, these are created within the gene_plate context
+                # See _velocity_model.py line 696-700
+                u_inf = pyro.deterministic("u_inf", u_inf, event_dim=0)
+                s_inf = pyro.deterministic("s_inf", s_inf, event_dim=0)
+                switching = pyro.deterministic("switching", switching, event_dim=0)
 
             # Next, sample cell-specific parameters
             with cell_plate:
@@ -666,24 +668,55 @@ class LegacyDynamicsModel:
             print(f"LegacyDynamicsModel - ut original shape: {ut.shape}")
             print(f"LegacyDynamicsModel - st original shape: {st.shape}")
 
-            # Remove extra dimensions from ut and st
-            # In the legacy model, ut and st should have shape [num_samples, n_cells, n_genes]
-            while ut.dim() > 3:
-                ut = ut.squeeze(1)
-                st = st.squeeze(1)
+            # Ensure ut and st have the correct shape [num_samples, n_cells, n_genes]
+            # First, determine the expected shape
+            if alpha.dim() == 3:
+                num_samples = alpha.shape[0]
+            else:
+                num_samples = 1
+
+            # Reshape to ensure we have exactly 3 dimensions with the correct shape
+            # This is more robust than using squeeze which can remove dimensions we want to keep
+            if ut.dim() > 3:
+                # Reshape to [num_samples, n_cells, n_genes]
+                ut = ut.reshape(num_samples, num_cells, num_genes)
+                st = st.reshape(num_samples, num_cells, num_genes)
+            elif ut.dim() < 3:
+                # Add missing dimensions
+                if ut.dim() == 2:  # [n_cells, n_genes]
+                    ut = ut.unsqueeze(0)  # [1, n_cells, n_genes]
+                    st = st.unsqueeze(0)  # [1, n_cells, n_genes]
+                elif ut.dim() == 1:  # [n_genes]
+                    ut = ut.unsqueeze(0).unsqueeze(0)  # [1, 1, n_genes]
+                    st = st.unsqueeze(0).unsqueeze(0)  # [1, 1, n_genes]
 
             # Print shapes after reshaping
             print(f"LegacyDynamicsModel - ut reshaped: {ut.shape}")
             print(f"LegacyDynamicsModel - st reshaped: {st.shape}")
 
-            # Create deterministic sites for ut and st
-            # In the legacy model, these are registered without explicit event dimensions
-            ut = pyro.deterministic("ut", ut)
-            st = pyro.deterministic("st", st)
+            # Ensure ut and st have the correct shape [num_samples, n_cells, n_genes]
+            # This is critical for proper shape in posterior samples
+            # In the legacy model, ut and st should have shape [num_samples, n_cells, n_genes]
+            # We need to be very aggressive about reshaping to match the legacy model exactly
 
-            # Create deterministic sites for u and s (observed values)
-            u = pyro.deterministic("u", ut)
-            s = pyro.deterministic("s", st)
+            # First, determine the expected shape
+            if alpha.dim() == 3:
+                num_samples = alpha.shape[0]
+            else:
+                num_samples = 1
+
+            # Reshape to ensure we have exactly 3 dimensions with the correct shape
+            # This is more robust than using squeeze which can remove dimensions we want to keep
+            ut = ut.reshape(num_samples, num_cells, num_genes)
+            st = st.reshape(num_samples, num_cells, num_genes)
+
+            # In the legacy model, ut and st are not registered as deterministic nodes here
+            # They are registered in the get_likelihood method, which is called within a nested plate context
+            # We'll skip creating deterministic nodes here and let the likelihood model handle it
+
+            # Instead, we'll just store the values in the context
+            u = ut
+            s = st
 
             # Add to context
             context["u_inf"] = u_inf
