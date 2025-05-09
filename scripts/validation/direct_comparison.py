@@ -68,9 +68,9 @@ def parse_args():
     parser.add_argument(
         "--model-type",
         type=str,
-        default="normal",
-        choices=["normal", "poisson"],
-        help="Model type to use for the modular implementation (normal=Gaussian, poisson=Poisson). "
+        default="legacy",
+        choices=["legacy", "poisson"],
+        help="Model type to use for the modular implementation (legacy=replicates legacy model, poisson=standard model with Poisson likelihood). "
              "Note: This parameter has no effect on the legacy model, which always uses VelocityModelAuto.",
     )
     return parser.parse_args()
@@ -253,7 +253,7 @@ def train_legacy_model(adata, max_epochs, num_samples, seed=42, **kwargs):
     }
 
 
-def train_modular_model(adata, max_epochs, num_samples, seed=42, model_type="normal"):
+def train_modular_model(adata, max_epochs, num_samples, seed=42, model_type="legacy"):
     """Train the modular model and return results."""
     print("Training modular model...")
 
@@ -276,43 +276,11 @@ def train_modular_model(adata, max_epochs, num_samples, seed=42, model_type="nor
     print(f"Available likelihood models: {list(LikelihoodModelRegistry._registry.keys())}")
 
     # Create model based on model_type
-    if model_type == "normal":
+    if model_type == "legacy":
         # Use the legacy model replication for direct comparison with the legacy model
-        # Create a configuration with the legacy dynamics model
-        from pyrovelocity.models.modular.factory import ModelConfig, ComponentConfig, create_model_from_config
-
-        config = ModelConfig(
-            dynamics_model=ComponentConfig(
-                name="legacy",  # Use our new LegacyDynamicsModel
-                params={
-                    "shared_time": True,
-                    "t_scale_on": False,
-                    "correct_library_size": True,
-                },
-            ),
-            prior_model=ComponentConfig(
-                name="lognormal",
-                params={},
-            ),
-            likelihood_model=ComponentConfig(
-                name="legacy",
-                params={},
-            ),
-            observation_model=ComponentConfig(
-                name="standard",
-                params={},
-            ),
-            inference_guide=ComponentConfig(
-                name="auto",
-                params={
-                    "init_scale": 0.1,
-                },
-            ),
-        )
-
-        # Create the model from the configuration
-        model = create_model_from_config(config)
-        print("Using legacy dynamics model for direct comparison with legacy implementation")
+        # Create the model using the predefined legacy model factory function
+        model = create_legacy_model1()
+        print("Using legacy model configuration for direct comparison with legacy implementation")
     else:
         # Default to standard model with Poisson observation model
         model = create_standard_model()
