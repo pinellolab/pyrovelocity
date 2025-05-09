@@ -4,6 +4,9 @@ Factory methods and configuration management for PyroVelocity's modular architec
 This module provides factory functions for creating PyroVelocity models from
 configuration objects, leveraging the registry system and hydra-zen for type-safe
 configuration management.
+
+This module has been simplified to include only the essential components needed for
+validation against the legacy implementation.
 """
 
 from dataclasses import dataclass, field
@@ -665,6 +668,7 @@ def create_legacy_model2() -> PyroVelocityModel:
                 "shared_time": True,
                 "t_scale_on": False,
                 "correct_library_size": True,
+                "add_offset": True,
             },
         ),
         prior_model=ComponentConfig(
@@ -680,9 +684,10 @@ def create_legacy_model2() -> PyroVelocityModel:
             params={},
         ),
         inference_guide=ComponentConfig(
-            name="auto",
+            name="legacy_auto",
             params={
                 "init_scale": 0.1,
+                "add_offset": True,
             },
         ),
     )

@@ -57,9 +57,14 @@ from pyrovelocity.models.modular.registry import (
 class MockDynamicsModel:
     """Mock dynamics model for testing."""
 
-    def __init__(self, param1=None, param2=None):
+    def __init__(self, param1=None, param2=None, shared_time=None, cell_specific_kinetics=None,
+                 correct_library_size=None, kinetics_num=None, **kwargs):
         self.param1 = param1
         self.param2 = param2
+        self.shared_time = shared_time
+        self.cell_specific_kinetics = cell_specific_kinetics
+        self.correct_library_size = correct_library_size
+        self.kinetics_num = kinetics_num
 
     def forward(
         self,
@@ -78,9 +83,16 @@ class MockDynamicsModel:
 class MockPriorModel:
     """Mock prior model for testing."""
 
-    def __init__(self, param1=None, param2=None):
+    def __init__(self, param1=None, param2=None, scale_alpha=None, scale_beta=None,
+                 scale_gamma=None, scale_u=None, scale_s=None, scale_dt=None, **kwargs):
         self.param1 = param1
         self.param2 = param2
+        self.scale_alpha = scale_alpha
+        self.scale_beta = scale_beta
+        self.scale_gamma = scale_gamma
+        self.scale_u = scale_u
+        self.scale_s = scale_s
+        self.scale_dt = scale_dt
 
     def forward(
         self,
@@ -116,9 +128,13 @@ class MockLikelihoodModel:
 class MockObservationModel:
     """Mock observation model for testing."""
 
-    def __init__(self, param1=None, param2=None):
+    def __init__(self, param1=None, param2=None, log_transform=None, normalize=None,
+                 use_raw=None, **kwargs):
         self.param1 = param1
         self.param2 = param2
+        self.log_transform = log_transform
+        self.normalize = normalize
+        self.use_raw = use_raw
 
     def forward(
         self,
@@ -133,9 +149,13 @@ class MockObservationModel:
 class MockInferenceGuide:
     """Mock inference guide for testing."""
 
-    def __init__(self, param1=None, param2=None):
+    def __init__(self, param1=None, param2=None, guide_type=None, init_loc_fn=None,
+                 init_scale=None, **kwargs):
         self.param1 = param1
         self.param2 = param2
+        self.guide_type = guide_type
+        self.init_loc_fn = init_loc_fn
+        self.init_scale = init_scale
 
     def __call__(
         self,
