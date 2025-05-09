@@ -60,8 +60,12 @@ from anndata import AnnData
 from beartype import beartype
 from jaxtyping import Array, Float, Int
 
-from pyrovelocity.models.modular.components.guides import AutoGuideFactory
+from pyrovelocity.models.modular.components.guides import (
+    AutoGuideFactory,
+    LegacyAutoGuideFactory,
+)
 from pyrovelocity.models.modular.components.likelihoods import (
+    LegacyLikelihoodModel,
     PoissonLikelihoodModel,
 )
 from pyrovelocity.models.modular.components.observations import (
