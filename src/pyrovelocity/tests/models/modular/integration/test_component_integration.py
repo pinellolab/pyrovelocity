@@ -12,14 +12,15 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 
 from pyrovelocity.models.modular.components.dynamics import (
+    LegacyDynamicsModel,
     StandardDynamicsModel,
 )
 from pyrovelocity.models.modular.components.guides import (
     AutoGuideFactory,
-    DeltaGuide,
-    NormalGuide,
+    LegacyAutoGuideFactory,
 )
 from pyrovelocity.models.modular.components.likelihoods import (
+    LegacyLikelihoodModel,
     PoissonLikelihoodModel,
 )
 from pyrovelocity.models.modular.components.observations import (
@@ -263,7 +264,10 @@ class TestComponentIntegration:
         }
 
         # Create different guide types to test
-        guide_types = [NormalGuide(), DeltaGuide()]
+        guide_types = [
+            AutoGuideFactory(guide_type="AutoNormal"),
+            LegacyAutoGuideFactory(add_offset=True),
+        ]
 
         # Test each guide
         for guide_model in guide_types:
