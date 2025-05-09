@@ -5,23 +5,21 @@ import pytest
 import torch
 
 from pyrovelocity.models.modular.components.dynamics import (
-    NonlinearDynamicsModel,
+    LegacyDynamicsModel,
     StandardDynamicsModel,
 )
 from pyrovelocity.models.modular.components.guides import (
     AutoGuideFactory,
-    DeltaGuide,
-    NormalGuide,
+    LegacyAutoGuideFactory,
 )
 from pyrovelocity.models.modular.components.likelihoods import (
-    NegativeBinomialLikelihoodModel,
+    LegacyLikelihoodModel,
     PoissonLikelihoodModel,
 )
 from pyrovelocity.models.modular.components.observations import (
     StandardObservationModel,
 )
 from pyrovelocity.models.modular.components.priors import (
-    InformativePriorModel,
     LogNormalPriorModel,
 )
 from pyrovelocity.models.modular.model import PyroVelocityModel
@@ -120,23 +118,21 @@ def test_components_with_model(simple_data):
     # Test with different components
     dynamics_models = [
         StandardDynamicsModel(),
-        NonlinearDynamicsModel(),
+        LegacyDynamicsModel(),
     ]
 
     prior_models = [
         LogNormalPriorModel(),
-        InformativePriorModel(),
     ]
 
     likelihood_models = [
         PoissonLikelihoodModel(),
-        NegativeBinomialLikelihoodModel(),
+        LegacyLikelihoodModel(),
     ]
 
     guide_models = [
         AutoGuideFactory(guide_type="AutoNormal"),
-        NormalGuide(),
-        DeltaGuide(),
+        LegacyAutoGuideFactory(),
     ]
 
     # Test a few combinations

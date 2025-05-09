@@ -9,40 +9,39 @@ All components directly implement Protocol interfaces defined in interfaces.py,
 following a Protocol-First approach that embraces composition over inheritance.
 This approach reduces code complexity, enhances flexibility, and creates
 architectural consistency with the JAX implementation's pure functional approach.
+
+This package has been simplified to include only the essential components needed for
+validation against the legacy implementation.
 """
 
 # Import component implementations
 from pyrovelocity.models.modular.components.dynamics import (
-    NonlinearDynamicsModel,
+    LegacyDynamicsModel,
     StandardDynamicsModel,
 )
 from pyrovelocity.models.modular.components.guides import (
     AutoGuideFactory,
-    DeltaGuide,
-    NormalGuide,
+    LegacyAutoGuideFactory,
 )
 from pyrovelocity.models.modular.components.likelihoods import (
-    NegativeBinomialLikelihoodModel,
+    LegacyLikelihoodModel,
     PoissonLikelihoodModel,
 )
 from pyrovelocity.models.modular.components.observations import (
     StandardObservationModel,
 )
 from pyrovelocity.models.modular.components.priors import (
-    InformativePriorModel,
     LogNormalPriorModel,
 )
 
 __all__ = [
     # Component implementations
     "StandardDynamicsModel",
-    "NonlinearDynamicsModel",
+    "LegacyDynamicsModel",
     "LogNormalPriorModel",
-    "InformativePriorModel",
     "PoissonLikelihoodModel",
-    "NegativeBinomialLikelihoodModel",
+    "LegacyLikelihoodModel",
     "StandardObservationModel",
     "AutoGuideFactory",
-    "NormalGuide",
-    "DeltaGuide",
+    "LegacyAutoGuideFactory",
 ]
