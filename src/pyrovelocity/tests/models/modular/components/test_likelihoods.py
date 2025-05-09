@@ -7,7 +7,7 @@ import torch
 from anndata._core.anndata import AnnData
 
 from pyrovelocity.models.modular.components.likelihoods import (
-    NegativeBinomialLikelihoodModel,
+    LegacyLikelihoodModel,
     PoissonLikelihoodModel,
 )
 from pyrovelocity.models.modular.registry import LikelihoodModelRegistry
@@ -22,9 +22,7 @@ def register_likelihood_models():
     # Clear registry and register test components
     LikelihoodModelRegistry.clear()
     LikelihoodModelRegistry._registry["poisson"] = PoissonLikelihoodModel
-    LikelihoodModelRegistry._registry[
-        "negative_binomial"
-    ] = NegativeBinomialLikelihoodModel
+    LikelihoodModelRegistry._registry["legacy"] = LegacyLikelihoodModel
 
     yield
 
@@ -74,11 +72,11 @@ def test_poisson_likelihood_model(test_adata):
     assert torch.all(rate > 0)  # Rate should be positive
 
 
-def test_negative_binomial_likelihood_model(test_adata):
-    """Test NegativeBinomialLikelihoodModel."""
+def test_legacy_likelihood_model(test_adata):
+    """Test LegacyLikelihoodModel."""
     # Get model from registry
-    model_class = LikelihoodModelRegistry.get("negative_binomial")
-    assert model_class == NegativeBinomialLikelihoodModel
+    model_class = LikelihoodModelRegistry.get("legacy")
+    assert model_class == LegacyLikelihoodModel
 
     # Create model instance
     model = model_class()
@@ -92,27 +90,22 @@ def test_negative_binomial_likelihood_model(test_adata):
     # Check output
     assert isinstance(dists, dict)
     assert "obs_counts" in dists
-    assert isinstance(dists["obs_counts"], pyro.distributions.NegativeBinomial)
+    assert isinstance(dists["obs_counts"], pyro.distributions.Poisson)
 
     # Check distribution parameters
     assert dists["obs_counts"].batch_shape == (batch_size, test_adata.n_vars)
 
-    # Check total_count and probs parameters
-    total_count = dists["obs_counts"].total_count
-    probs = dists["obs_counts"].probs
-    # The total_count parameter might have shape (n_genes,) or (1, n_genes)
-    # Just check that it contains the right number of elements
-    assert test_adata.n_vars in total_count.shape
-    assert probs.shape == (batch_size, test_adata.n_vars)
-    assert torch.all(total_count > 0)  # total_count should be positive
-    assert torch.all(probs > 0)  # probs should be positive
+    # Check rate parameter
+    rate = dists["obs_counts"].rate
+    assert rate.shape == (batch_size, test_adata.n_vars)
+    assert torch.all(rate > 0)  # Rate should be positive
 
 
 def test_likelihood_model_with_gene_offset(test_adata):
     """Test likelihood models with gene offset."""
     # Get models from registry
     poisson_model = LikelihoodModelRegistry.get("poisson")()
-    nb_model = LikelihoodModelRegistry.get("negative_binomial")()
+    legacy_model = LikelihoodModelRegistry.get("legacy")()
 
     # Generate test data
     batch_size = 8
@@ -126,44 +119,43 @@ def test_likelihood_model_with_gene_offset(test_adata):
     poisson_dists = poisson_model(
         test_adata, cell_state=cell_state, gene_offset=gene_offset, batch_size=batch_size
     )
-    nb_dists = nb_model(
+    legacy_dists = legacy_model(
         test_adata, cell_state=cell_state, gene_offset=gene_offset, batch_size=batch_size
     )
 
-    # Check that offset affects the rate/probs
+    # Check that offset affects the rate
     poisson_rate = poisson_dists["obs_counts"].rate
-    nb_probs = nb_dists["obs_counts"].probs
+    legacy_rate = legacy_dists["obs_counts"].rate
 
     # Generate distributions without offset for comparison
     poisson_dists_no_offset = poisson_model(test_adata, cell_state=cell_state, batch_size=batch_size)
-    nb_dists_no_offset = nb_model(test_adata, cell_state=cell_state, batch_size=batch_size)
+    legacy_dists_no_offset = legacy_model(test_adata, cell_state=cell_state, batch_size=batch_size)
 
     poisson_rate_no_offset = poisson_dists_no_offset["obs_counts"].rate
-    nb_probs_no_offset = nb_dists_no_offset["obs_counts"].probs
+    legacy_rate_no_offset = legacy_dists_no_offset["obs_counts"].rate
 
     # Check that rates with offset are approximately twice the rates without offset
     # (allowing for numerical precision issues)
     assert torch.allclose(poisson_rate, poisson_rate_no_offset * 2.0, rtol=1e-5)
-    # For NegativeBinomial, the relationship between probs and rate is more complex
-    # so we don't check the exact relationship here
+    assert torch.allclose(legacy_rate, legacy_rate_no_offset * 2.0, rtol=1e-5)
 
 
 def test_likelihood_registry():
     """Test likelihood model registry."""
     # Check that models are registered
     assert "poisson" in LikelihoodModelRegistry.list_available()
-    assert "negative_binomial" in LikelihoodModelRegistry.list_available()
+    assert "legacy" in LikelihoodModelRegistry.list_available()
 
     # Check retrieved models
     poisson_class = LikelihoodModelRegistry.get("poisson")
     assert poisson_class == PoissonLikelihoodModel
 
-    nb_class = LikelihoodModelRegistry.get("negative_binomial")
-    assert nb_class == NegativeBinomialLikelihoodModel
+    legacy_class = LikelihoodModelRegistry.get("legacy")
+    assert legacy_class == LegacyLikelihoodModel
 
     # Create instances using the registry
     poisson_model = LikelihoodModelRegistry.create("poisson")
-    nb_model = LikelihoodModelRegistry.create("negative_binomial")
+    legacy_model = LikelihoodModelRegistry.create("legacy")
 
     assert isinstance(poisson_model, PoissonLikelihoodModel)
-    assert isinstance(nb_model, NegativeBinomialLikelihoodModel)
+    assert isinstance(legacy_model, LegacyLikelihoodModel)
