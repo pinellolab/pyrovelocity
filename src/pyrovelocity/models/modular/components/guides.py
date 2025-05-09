@@ -44,7 +44,7 @@ class AutoGuideFactory:
     @beartype
     def __init__(
         self,
-        guide_type: str = "AutoNormal",
+        guide_type: str = "AutoLowRankMultivariateNormal",
         init_loc_fn: Optional[Callable] = None,
         init_scale: float = 0.1,  # Match legacy model's default scale
         name: str = "inference_guide",
