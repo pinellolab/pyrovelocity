@@ -7,11 +7,10 @@ import pyro.distributions as dist
 import pytest
 import torch
 
-# Uncomment and use the guide implementations
+# Import only the guides we're keeping
 from pyrovelocity.models.modular.components.guides import (
     AutoGuideFactory,
-    DeltaGuide,
-    NormalGuide,
+    LegacyAutoGuideFactory,
 )
 from pyrovelocity.models.modular.inference.config import create_inference_config
 from pyrovelocity.models.modular.inference.svi import (
@@ -209,8 +208,8 @@ class TestSVI:
         assert torch.allclose(samples["beta"], torch.ones(10) * 2.0)
         assert torch.allclose(samples["gamma"], torch.ones(10) * 3.0)
 
-    def test_normal_guide(self):
-        """Test using NormalGuide."""
+    def test_legacy_auto_guide_factory(self):
+        """Test using LegacyAutoGuideFactory."""
         # Reset pyro parameter store
         pyro.clear_param_store()
 
@@ -221,11 +220,13 @@ class TestSVI:
             gamma = pyro.sample("gamma", dist.LogNormal(0.0, 1.0))
             return {"alpha": alpha, "beta": beta, "gamma": gamma}
 
-        # Create a NormalGuide
-        guide_obj = NormalGuide(init_scale=0.1, name="normal_guide")
+        # Create a LegacyAutoGuideFactory
+        guide_factory = LegacyAutoGuideFactory(
+            init_scale=0.1, add_offset=True, name="legacy_auto_guide"
+        )
 
         # Create the guide first
-        guide_fn = guide_obj.create_guide(model)
+        guide = guide_factory.create_guide(model)
 
         # Create a custom sample_posterior method for testing
         def custom_sample_posterior(num_samples=100, **kwargs):
@@ -236,63 +237,10 @@ class TestSVI:
             }
 
         # Monkey patch the sample_posterior method for testing
-        guide_obj.sample_posterior = custom_sample_posterior
+        guide_factory.sample_posterior = custom_sample_posterior
 
         # Now we can test the sample_posterior method
-        samples = guide_obj.sample_posterior(num_samples=10)
-
-        # Check samples
-        assert isinstance(samples, dict)
-        assert "alpha" in samples
-        assert "beta" in samples
-        assert "gamma" in samples
-        assert samples["alpha"].shape[0] == 10
-
-        # Verify values are as expected
-        assert torch.allclose(samples["alpha"], torch.ones(10) * 1.0)
-        assert torch.allclose(samples["beta"], torch.ones(10) * 2.0)
-        assert torch.allclose(samples["gamma"], torch.ones(10) * 3.0)
-
-    def test_delta_guide(self):
-        """Test using DeltaGuide."""
-        # Reset pyro parameter store
-        pyro.clear_param_store()
-
-        # Create a simple PyTorch model
-        def model():
-            alpha = pyro.sample("alpha", dist.LogNormal(0.0, 1.0))
-            beta = pyro.sample("beta", dist.LogNormal(0.0, 1.0))
-            gamma = pyro.sample("gamma", dist.LogNormal(0.0, 1.0))
-            return {"alpha": alpha, "beta": beta, "gamma": gamma}
-
-        # Create initial values
-        init_values = {
-            "alpha": torch.tensor(1.0),
-            "beta": torch.tensor(2.0),
-            "gamma": torch.tensor(3.0),
-        }
-
-        # Create a DeltaGuide
-        guide = DeltaGuide(init_values=init_values, name="delta_guide")
-
-        # Mock the necessary internal state
-        guide._model = model
-        guide._params = init_values.copy()
-
-        # Mock the sample_posterior method
-        def mock_sample_posterior(**kwargs):
-            num_samples = kwargs.get("num_samples", 100)
-            return {
-                "alpha": torch.ones(num_samples) * 1.0,
-                "beta": torch.ones(num_samples) * 2.0,
-                "gamma": torch.ones(num_samples) * 3.0,
-            }
-
-        # Replace the method with our mock
-        guide.sample_posterior = mock_sample_posterior
-
-        # Now we can test the sample_posterior method
-        samples = guide.sample_posterior(num_samples=10)
+        samples = guide_factory.sample_posterior(num_samples=10)
 
         # Check samples
         assert isinstance(samples, dict)
