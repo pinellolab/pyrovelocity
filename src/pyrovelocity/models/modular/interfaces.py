@@ -96,42 +96,6 @@ class DynamicsModel(Protocol):
     3. Handle both analytical and numerical solutions as appropriate
     4. Properly validate input parameters
     5. Handle edge cases (e.g., zero rates, negative values)
-
-    Example implementation:
-        ```python
-        class StandardDynamicsModel(BaseDynamicsModel):
-            def _forward_impl(
-                self,
-                u: BatchTensor,
-                s: BatchTensor,
-                alpha: ParamTensor,
-                beta: ParamTensor,
-                gamma: ParamTensor,
-                scaling: Optional[ParamTensor] = None,
-                t: Optional[BatchTensor] = None,
-            ) -> Tuple[BatchTensor, BatchTensor]:
-                # Compute steady state
-                u_ss, s_ss = self.steady_state(alpha, beta, gamma)
-
-                # Compute expected counts
-                u_exp = u_ss - (u_ss - u) * torch.exp(-beta * t)
-                s_exp = s_ss - (s_ss - s) * torch.exp(-gamma * t) - (
-                    beta * (u_ss - u) / (gamma - beta)
-                ) * (torch.exp(-beta * t) - torch.exp(-gamma * t))
-
-                return u_exp, s_exp
-
-            def _steady_state_impl(
-                self,
-                alpha: torch.Tensor,
-                beta: torch.Tensor,
-                gamma: torch.Tensor,
-                **kwargs: Any,
-            ) -> Tuple[torch.Tensor, torch.Tensor]:
-                u_ss = alpha / beta
-                s_ss = alpha / gamma
-                return u_ss, s_ss
-        ```
     """
 
     def forward(
@@ -307,41 +271,6 @@ class LikelihoodModel(Protocol):
     3. Handle scaling factors and other transformations
     4. Support different distribution types (e.g., Poisson, Negative Binomial)
     5. Handle zero-inflation and other data characteristics
-
-    Example implementation:
-        ```python
-        class PoissonLikelihoodModel(BaseLikelihoodModel):
-            def __init__(self, name: str = "poisson_likelihood"):
-                super().__init__(name=name)
-
-            def _forward_impl(
-                self,
-                u_obs: BatchTensor,
-                s_obs: BatchTensor,
-                u_expected: BatchTensor,
-                s_expected: BatchTensor,
-                plate: pyro.plate,
-                **kwargs: Any,
-            ) -> Dict[str, Any]:
-                # Register observations with Pyro
-                with plate:
-                    u_dist = dist.Poisson(u_expected)
-                    s_dist = dist.Poisson(s_expected)
-
-                    pyro.sample(
-                        f"{self.name}_u_obs",
-                        u_dist,
-                        obs=u_obs,
-                    )
-
-                    pyro.sample(
-                        f"{self.name}_s_obs",
-                        s_dist,
-                        obs=s_obs,
-                    )
-
-                return {"u_dist": u_dist, "s_dist": s_dist}
-        ```
     """
 
     def forward(
@@ -393,38 +322,6 @@ class ObservationModel(Protocol):
     3. Handle missing values and zeros
     4. Support different data types and formats
     5. Maintain data integrity during transformations
-
-    Example implementation:
-        ```python
-        class StandardObservationModel(BaseObservationModel):
-            def __init__(
-                self,
-                name: str = "standard_observation",
-                use_size_factor: bool = True,
-            ):
-                super().__init__(name=name)
-                self.use_size_factor = use_size_factor
-
-            def _forward_impl(
-                self,
-                u_obs: BatchTensor,
-                s_obs: BatchTensor,
-                **kwargs: Any,
-            ) -> Dict[str, Any]:
-                # Compute size factors if needed
-                if self.use_size_factor:
-                    size_factor = torch.sum(s_obs, dim=1, keepdim=True)
-                    size_factor = size_factor / torch.mean(size_factor)
-                else:
-                    size_factor = torch.ones_like(s_obs[:, :1])
-
-                # Return transformed data and scaling factors
-                return {
-                    "u_transformed": u_obs,
-                    "s_transformed": s_obs,
-                    "scaling": size_factor,
-                }
-        ```
     """
 
     def forward(
@@ -475,40 +372,6 @@ class InferenceGuide(Protocol):
     3. Handle parameter initialization
     4. Support different inference algorithms
     5. Provide appropriate configuration options
-
-    Example implementation:
-        ```python
-        class AutoGuideFactory(BaseInferenceGuide):
-            def __init__(
-                self,
-                name: str = "auto_guide",
-                guide_type: str = "AutoNormal",
-                init_loc_fn: Optional[Callable] = None,
-            ):
-                super().__init__(name=name)
-                self.guide_type = guide_type
-                self.init_loc_fn = init_loc_fn or pyro.infer.autoguide.init_to_median
-
-            def __call__(
-                self,
-                model: Callable,
-                *args: Any,
-                **kwargs: Any,
-            ) -> Callable:
-                # Create the appropriate guide based on guide_type
-                if self.guide_type == "AutoNormal":
-                    return pyro.infer.autoguide.AutoNormal(
-                        model,
-                        init_loc_fn=self.init_loc_fn,
-                    )
-                elif self.guide_type == "AutoDelta":
-                    return pyro.infer.autoguide.AutoDelta(
-                        model,
-                        init_loc_fn=self.init_loc_fn,
-                    )
-                else:
-                    raise ValueError(f"Unknown guide type: {self.guide_type}")
-        ```
     """
 
     def __call__(
