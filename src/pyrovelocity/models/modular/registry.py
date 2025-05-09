@@ -3,6 +3,9 @@ Registry system for PyroVelocity's modular architecture.
 
 This module implements the registry pattern for component registration and retrieval.
 It provides a generic Registry class and specialized registries for each component type.
+
+This module has been simplified to include only the essential components needed for
+validation against the legacy implementation.
 """
 
 from typing import Any, Callable, Dict, Generic, Type, TypeVar
@@ -225,26 +228,27 @@ def register_standard_components():
 
     This function should be called in test setup to ensure standard components
     are registered and available for tests that use create_standard_model().
+
+    This function has been simplified to include only the essential components needed for
+    validation against the legacy implementation.
     """
     # Import component implementations
     from pyrovelocity.models.modular.components.dynamics import (
-        NonlinearDynamicsModel,
+        LegacyDynamicsModel,
         StandardDynamicsModel,
     )
     from pyrovelocity.models.modular.components.guides import (
         AutoGuideFactory,
-        DeltaGuide,
-        NormalGuide,
+        LegacyAutoGuideFactory,
     )
     from pyrovelocity.models.modular.components.likelihoods import (
-        NegativeBinomialLikelihoodModel,
+        LegacyLikelihoodModel,
         PoissonLikelihoodModel,
     )
     from pyrovelocity.models.modular.components.observations import (
         StandardObservationModel,
     )
     from pyrovelocity.models.modular.components.priors import (
-        InformativePriorModel,
         LogNormalPriorModel,
     )
 
@@ -252,20 +256,16 @@ def register_standard_components():
     # But we can also explicitly register them if needed
     if "standard" not in DynamicsModelRegistry._registry:
         DynamicsModelRegistry._registry["standard"] = StandardDynamicsModel
-    if "nonlinear" not in DynamicsModelRegistry._registry:
-        DynamicsModelRegistry._registry["nonlinear"] = NonlinearDynamicsModel
+    if "legacy" not in DynamicsModelRegistry._registry:
+        DynamicsModelRegistry._registry["legacy"] = LegacyDynamicsModel
 
     if "lognormal" not in PriorModelRegistry._registry:
         PriorModelRegistry._registry["lognormal"] = LogNormalPriorModel
-    if "informative" not in PriorModelRegistry._registry:
-        PriorModelRegistry._registry["informative"] = InformativePriorModel
 
     if "poisson" not in LikelihoodModelRegistry._registry:
         LikelihoodModelRegistry._registry["poisson"] = PoissonLikelihoodModel
-    if "negative_binomial" not in LikelihoodModelRegistry._registry:
-        LikelihoodModelRegistry._registry[
-            "negative_binomial"
-        ] = NegativeBinomialLikelihoodModel
+    if "legacy" not in LikelihoodModelRegistry._registry:
+        LikelihoodModelRegistry._registry["legacy"] = LegacyLikelihoodModel
 
     if "standard" not in ObservationModelRegistry._registry:
         ObservationModelRegistry._registry[
@@ -274,10 +274,8 @@ def register_standard_components():
 
     if "auto" not in InferenceGuideRegistry._registry:
         InferenceGuideRegistry._registry["auto"] = AutoGuideFactory
-    if "normal" not in InferenceGuideRegistry._registry:
-        InferenceGuideRegistry._registry["normal"] = NormalGuide
-    if "delta" not in InferenceGuideRegistry._registry:
-        InferenceGuideRegistry._registry["delta"] = DeltaGuide
+    if "legacy_auto" not in InferenceGuideRegistry._registry:
+        InferenceGuideRegistry._registry["legacy_auto"] = LegacyAutoGuideFactory
 
 
 # Export all registry classes and instances
