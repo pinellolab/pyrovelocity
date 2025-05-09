@@ -6,8 +6,12 @@ This script directly trains both the legacy and modular implementations
 of PyroVelocity on the preprocessed pancreas data and compares their results.
 It bypasses the validation framework to avoid the issues we've encountered.
 
+By default, velocity computation is skipped to accelerate model comparison
+during debugging. Use the --compute-velocity flag to enable velocity computation.
+
 Example usage:
     python direct_comparison.py --max-epochs 5 --num-samples 3
+    python direct_comparison.py --max-epochs 5 --num-samples 3 --compute-velocity
 """
 
 import os
@@ -73,6 +77,12 @@ def parse_args():
         help="Model type to use for the modular implementation (legacy=replicates legacy model, poisson=standard model with Poisson likelihood). "
              "Note: This parameter has no effect on the legacy model, which always uses VelocityModelAuto.",
     )
+    parser.add_argument(
+        "--compute-velocity",
+        action="store_true",
+        default=False,
+        help="Compute velocity (default: False)",
+    )
     return parser.parse_args()
 
 
@@ -98,9 +108,17 @@ def load_preprocessed_pancreas_data():
         raise
 
 
-def train_legacy_model(adata, max_epochs, num_samples, seed=42, **kwargs):
+def train_legacy_model(adata, max_epochs, num_samples, seed=42, compute_velocity=True, **kwargs):
     """
     Train the legacy model and return results.
+
+    Args:
+        adata: AnnData object containing the data
+        max_epochs: Maximum number of epochs for training
+        num_samples: Number of posterior samples to generate
+        seed: Random seed for reproducibility
+        compute_velocity: Whether to compute velocity (default: True)
+        **kwargs: Additional keyword arguments (ignored)
 
     Note: The legacy model always uses VelocityModelAuto regardless of any model_type parameter.
     The model_type parameter is accepted through **kwargs for compatibility but has no effect.
@@ -183,62 +201,71 @@ def train_legacy_model(adata, max_epochs, num_samples, seed=42, **kwargs):
             st = st.detach().cpu().numpy()
         print(f"  st mean: {np.mean(st):.6f}, std: {np.std(st):.6f}, min: {np.min(st):.6f}, max: {np.max(st):.6f}")
 
-    # Print velocity calculation details
-    print("\nComputing velocity for legacy model...")
+    # Initialize velocity and uncertainty as None
+    velocity = None
+    uncertainty = None
 
-    # Calculate velocity manually for comparison
-    if ("u_scale" in posterior_samples) and ("s_scale" in posterior_samples):
-        scale = posterior_samples["u_scale"] / posterior_samples["s_scale"]
-        print(f"  Using scale from u_scale/s_scale, shape: {scale.shape}, mean: {np.mean(scale):.6f}")
-    elif ("u_scale" in posterior_samples) and not ("s_scale" in posterior_samples):
-        scale = posterior_samples["u_scale"]
-        print(f"  Using scale from u_scale only, shape: {scale.shape}, mean: {np.mean(scale):.6f}")
-    else:
-        scale = 1
-        print("  No scaling applied (scale = 1)")
+    # Compute velocity only if requested
+    if compute_velocity:
+        # Print velocity calculation details
+        print("\nComputing velocity for legacy model...")
 
-    # Calculate velocity manually
-    manual_velocity = (
-        posterior_samples["beta"] * posterior_samples["ut"] / scale
-        - posterior_samples["gamma"] * posterior_samples["st"]
-    ).mean(0)
-    print(f"  Manual velocity shape: {manual_velocity.shape}, mean: {np.mean(manual_velocity):.6f}, std: {np.std(manual_velocity):.6f}")
-
-    # Compute statistics from posterior samples (this computes velocity and stores it in adata)
-    # The method signature is compute_statistics_from_posterior_samples(self, adata, posterior_samples, ...)
-    posterior_samples = model.compute_statistics_from_posterior_samples(
-        adata=adata,
-        posterior_samples=posterior_samples,
-        vector_field_basis="umap",
-        ncpus_use=1,
-        random_seed=seed
-    )
-    inference_end_time = time.time()
-    inference_time = inference_end_time - inference_start_time
-
-    # Extract velocity from adata.layers["velocity_pyro"]
-    velocity = adata.layers["velocity_pyro"] if "velocity_pyro" in adata.layers else None
-
-    # Extract uncertainty (using the FDR values as a proxy for uncertainty)
-    # In the legacy model, uncertainty is computed during vector_field_uncertainty
-    # and stored in the posterior_samples dictionary as 'fdri'
-    uncertainty = posterior_samples.get('fdri', None)
-
-    if uncertainty is None:
-        # If fdri is not available, we can use a simple standard deviation across samples
-        # as a proxy for uncertainty
-        if ('u_scale' in posterior_samples) and ('s_scale' in posterior_samples):
+        # Calculate velocity manually for comparison
+        if ("u_scale" in posterior_samples) and ("s_scale" in posterior_samples):
             scale = posterior_samples["u_scale"] / posterior_samples["s_scale"]
-        elif ('u_scale' in posterior_samples) and not ('s_scale' in posterior_samples):
+            print(f"  Using scale from u_scale/s_scale, shape: {scale.shape}, mean: {np.mean(scale):.6f}")
+        elif ("u_scale" in posterior_samples) and not ("s_scale" in posterior_samples):
             scale = posterior_samples["u_scale"]
+            print(f"  Using scale from u_scale only, shape: {scale.shape}, mean: {np.mean(scale):.6f}")
         else:
             scale = 1
+            print("  No scaling applied (scale = 1)")
 
-        velocity_samples = (
+        # Calculate velocity manually
+        manual_velocity = (
             posterior_samples["beta"] * posterior_samples["ut"] / scale
             - posterior_samples["gamma"] * posterior_samples["st"]
+        ).mean(0)
+        print(f"  Manual velocity shape: {manual_velocity.shape}, mean: {np.mean(manual_velocity):.6f}, std: {np.std(manual_velocity):.6f}")
+
+        # Compute statistics from posterior samples (this computes velocity and stores it in adata)
+        # The method signature is compute_statistics_from_posterior_samples(self, adata, posterior_samples, ...)
+        posterior_samples = model.compute_statistics_from_posterior_samples(
+            adata=adata,
+            posterior_samples=posterior_samples,
+            vector_field_basis="umap",
+            ncpus_use=1,
+            random_seed=seed
         )
-        uncertainty = np.std(velocity_samples, axis=0)
+
+        # Extract velocity from adata.layers["velocity_pyro"]
+        velocity = adata.layers["velocity_pyro"] if "velocity_pyro" in adata.layers else None
+
+        # Extract uncertainty (using the FDR values as a proxy for uncertainty)
+        # In the legacy model, uncertainty is computed during vector_field_uncertainty
+        # and stored in the posterior_samples dictionary as 'fdri'
+        uncertainty = posterior_samples.get('fdri', None)
+
+        if uncertainty is None:
+            # If fdri is not available, we can use a simple standard deviation across samples
+            # as a proxy for uncertainty
+            if ('u_scale' in posterior_samples) and ('s_scale' in posterior_samples):
+                scale = posterior_samples["u_scale"] / posterior_samples["s_scale"]
+            elif ('u_scale' in posterior_samples) and not ('s_scale' in posterior_samples):
+                scale = posterior_samples["u_scale"]
+            else:
+                scale = 1
+
+            velocity_samples = (
+                posterior_samples["beta"] * posterior_samples["ut"] / scale
+                - posterior_samples["gamma"] * posterior_samples["st"]
+            )
+            uncertainty = np.std(velocity_samples, axis=0)
+    else:
+        print("\nSkipping velocity computation for legacy model (--no-compute-velocity flag is set)")
+
+    inference_end_time = time.time()
+    inference_time = inference_end_time - inference_start_time
 
     # Return results
     return {
@@ -253,8 +280,18 @@ def train_legacy_model(adata, max_epochs, num_samples, seed=42, **kwargs):
     }
 
 
-def train_modular_model(adata, max_epochs, num_samples, seed=42, model_type="legacy"):
-    """Train the modular model and return results."""
+def train_modular_model(adata, max_epochs, num_samples, seed=42, model_type="legacy", compute_velocity=True):
+    """
+    Train the modular model and return results.
+
+    Args:
+        adata: AnnData object containing the data
+        max_epochs: Maximum number of epochs for training
+        num_samples: Number of posterior samples to generate
+        seed: Random seed for reproducibility
+        model_type: Model type to use (legacy or poisson)
+        compute_velocity: Whether to compute velocity (default: True)
+    """
     print("Training modular model...")
 
     # Set random seed for reproducibility
@@ -322,85 +359,81 @@ def train_modular_model(adata, max_epochs, num_samples, seed=42, model_type="leg
                 param_value = param_value.detach().cpu().numpy()
             print(f"  {param} mean: {np.mean(param_value):.6f}, std: {np.std(param_value):.6f}, min: {np.min(param_value):.6f}, max: {np.max(param_value):.6f}")
 
-    # Compute velocity and uncertainty - include this in inference time like the legacy model
-    # This is equivalent to compute_statistics_from_posterior_samples in the legacy model
-    velocity = model.get_velocity(
-        adata=adata_copy,
-        random_seed=seed
-    )
+    # Initialize velocity and uncertainty as None
+    velocity = None
+    uncertainty = None
 
-    uncertainty = model.get_velocity_uncertainty(
-        adata=adata_copy,
-        num_samples=num_samples
-    )
+    # Compute velocity only if requested
+    if compute_velocity:
+        # Compute velocity with detailed logging
+        print("\nComputing velocity for modular model...")
+
+        # Get the raw data
+        u = adata_copy.layers["unspliced"]
+        s = adata_copy.layers["spliced"]
+        if isinstance(u, scipy.sparse.spmatrix):
+            u = u.toarray()
+        if isinstance(s, scipy.sparse.spmatrix):
+            s = s.toarray()
+        print(f"  u shape: {u.shape}, mean: {np.mean(u):.6f}, std: {np.std(u):.6f}")
+        print(f"  s shape: {s.shape}, mean: {np.mean(s):.6f}, std: {np.std(s):.6f}")
+
+        # Extract parameters for velocity calculation
+        alpha = posterior_samples["alpha"]
+        beta = posterior_samples["beta"]
+        gamma = posterior_samples["gamma"]
+        u_scale = posterior_samples.get("u_scale")
+        s_scale = posterior_samples.get("s_scale")
+
+        if isinstance(alpha, torch.Tensor):
+            alpha_mean = alpha.mean(dim=0).detach().cpu().numpy()
+        else:
+            alpha_mean = np.mean(alpha, axis=0)
+
+        if isinstance(beta, torch.Tensor):
+            beta_mean = beta.mean(dim=0).detach().cpu().numpy()
+        else:
+            beta_mean = np.mean(beta, axis=0)
+
+        if isinstance(gamma, torch.Tensor):
+            gamma_mean = gamma.mean(dim=0).detach().cpu().numpy()
+        else:
+            gamma_mean = np.mean(gamma, axis=0)
+
+        print(f"  alpha_mean shape: {alpha_mean.shape}, mean: {np.mean(alpha_mean):.6f}, std: {np.std(alpha_mean):.6f}")
+        print(f"  beta_mean shape: {beta_mean.shape}, mean: {np.mean(beta_mean):.6f}, std: {np.std(beta_mean):.6f}")
+        print(f"  gamma_mean shape: {gamma_mean.shape}, mean: {np.mean(gamma_mean):.6f}, std: {np.std(gamma_mean):.6f}")
+
+        if u_scale is not None:
+            if isinstance(u_scale, torch.Tensor):
+                u_scale_mean = u_scale.mean(dim=0).detach().cpu().numpy()
+            else:
+                u_scale_mean = np.mean(u_scale, axis=0)
+            print(f"  u_scale_mean shape: {u_scale_mean.shape}, mean: {np.mean(u_scale_mean):.6f}, std: {np.std(u_scale_mean):.6f}")
+
+        if s_scale is not None:
+            if isinstance(s_scale, torch.Tensor):
+                s_scale_mean = s_scale.mean(dim=0).detach().cpu().numpy()
+            else:
+                s_scale_mean = np.mean(s_scale, axis=0)
+            print(f"  s_scale_mean shape: {s_scale_mean.shape}, mean: {np.mean(s_scale_mean):.6f}, std: {np.std(s_scale_mean):.6f}")
+
+        # Compute velocity using the model's get_velocity method
+        velocity = model.get_velocity(
+            adata=adata_copy,
+            random_seed=seed
+        )
+
+        # Compute uncertainty
+        uncertainty = model.get_velocity_uncertainty(
+            adata=adata_copy,
+            num_samples=num_samples
+        )
+    else:
+        print("\nSkipping velocity computation for modular model (--no-compute-velocity flag is set)")
 
     inference_end_time = time.time()
     inference_time = inference_end_time - inference_start_time
-
-    # Compute velocity with detailed logging
-    print("\nComputing velocity for modular model...")
-
-    # Get the raw data
-    u = adata_copy.layers["unspliced"]
-    s = adata_copy.layers["spliced"]
-    if isinstance(u, scipy.sparse.spmatrix):
-        u = u.toarray()
-    if isinstance(s, scipy.sparse.spmatrix):
-        s = s.toarray()
-    print(f"  u shape: {u.shape}, mean: {np.mean(u):.6f}, std: {np.std(u):.6f}")
-    print(f"  s shape: {s.shape}, mean: {np.mean(s):.6f}, std: {np.std(s):.6f}")
-
-    # Extract parameters for velocity calculation
-    alpha = posterior_samples["alpha"]
-    beta = posterior_samples["beta"]
-    gamma = posterior_samples["gamma"]
-    u_scale = posterior_samples.get("u_scale")
-    s_scale = posterior_samples.get("s_scale")
-
-    if isinstance(alpha, torch.Tensor):
-        alpha_mean = alpha.mean(dim=0).detach().cpu().numpy()
-    else:
-        alpha_mean = np.mean(alpha, axis=0)
-
-    if isinstance(beta, torch.Tensor):
-        beta_mean = beta.mean(dim=0).detach().cpu().numpy()
-    else:
-        beta_mean = np.mean(beta, axis=0)
-
-    if isinstance(gamma, torch.Tensor):
-        gamma_mean = gamma.mean(dim=0).detach().cpu().numpy()
-    else:
-        gamma_mean = np.mean(gamma, axis=0)
-
-    print(f"  alpha_mean shape: {alpha_mean.shape}, mean: {np.mean(alpha_mean):.6f}, std: {np.std(alpha_mean):.6f}")
-    print(f"  beta_mean shape: {beta_mean.shape}, mean: {np.mean(beta_mean):.6f}, std: {np.std(beta_mean):.6f}")
-    print(f"  gamma_mean shape: {gamma_mean.shape}, mean: {np.mean(gamma_mean):.6f}, std: {np.std(gamma_mean):.6f}")
-
-    if u_scale is not None:
-        if isinstance(u_scale, torch.Tensor):
-            u_scale_mean = u_scale.mean(dim=0).detach().cpu().numpy()
-        else:
-            u_scale_mean = np.mean(u_scale, axis=0)
-        print(f"  u_scale_mean shape: {u_scale_mean.shape}, mean: {np.mean(u_scale_mean):.6f}, std: {np.std(u_scale_mean):.6f}")
-
-    if s_scale is not None:
-        if isinstance(s_scale, torch.Tensor):
-            s_scale_mean = s_scale.mean(dim=0).detach().cpu().numpy()
-        else:
-            s_scale_mean = np.mean(s_scale, axis=0)
-        print(f"  s_scale_mean shape: {s_scale_mean.shape}, mean: {np.mean(s_scale_mean):.6f}, std: {np.std(s_scale_mean):.6f}")
-
-    # Compute velocity using the model's get_velocity method
-    velocity = model.get_velocity(
-        adata=adata_copy,
-        random_seed=seed
-    )
-
-    # Compute uncertainty
-    uncertainty = model.get_velocity_uncertainty(
-        adata=adata_copy,
-        num_samples=num_samples
-    )
 
     # Return results
     return {
@@ -492,7 +525,7 @@ def compare_models(legacy_results, modular_results):
     # Store parameter comparison results
     comparison_results["parameter_comparison"] = parameter_comparison
 
-    # Compare velocities if both are available
+    # Compare velocities if both are available and velocity computation was requested
     if legacy_results["velocity"] is not None and modular_results["velocity"] is not None:
         try:
             # Ensure both velocities are numpy arrays
@@ -554,10 +587,17 @@ def compare_models(legacy_results, modular_results):
                     }
                 }
     else:
-        print("Warning: Velocity comparison skipped because one or both velocities are None")
-        comparison_results["velocity_comparison"] = {
-            "legacy_vs_modular": {"error": "One or both velocities are None"}
-        }
+        # Check if velocity computation was intentionally skipped
+        if legacy_results["velocity"] is None and modular_results["velocity"] is None:
+            print("Note: Velocity comparison skipped because velocity computation was disabled (--no-compute-velocity flag)")
+            comparison_results["velocity_comparison"] = {
+                "legacy_vs_modular": {"skipped": "Velocity computation was disabled"}
+            }
+        else:
+            print("Warning: Velocity comparison skipped because one or both velocities are None")
+            comparison_results["velocity_comparison"] = {
+                "legacy_vs_modular": {"error": "One or both velocities are None"}
+            }
 
     # Compare uncertainties if both are available
     if legacy_results["uncertainty"] is not None and modular_results["uncertainty"] is not None:
@@ -621,10 +661,17 @@ def compare_models(legacy_results, modular_results):
                     }
                 }
     else:
-        print("Warning: Uncertainty comparison skipped because one or both uncertainties are None")
-        comparison_results["uncertainty_comparison"] = {
-            "legacy_vs_modular": {"error": "One or both uncertainties are None"}
-        }
+        # Check if velocity computation was intentionally skipped (uncertainty is computed as part of velocity)
+        if legacy_results["uncertainty"] is None and modular_results["uncertainty"] is None:
+            print("Note: Uncertainty comparison skipped because velocity computation was disabled (--no-compute-velocity flag)")
+            comparison_results["uncertainty_comparison"] = {
+                "legacy_vs_modular": {"skipped": "Velocity computation was disabled"}
+            }
+        else:
+            print("Warning: Uncertainty comparison skipped because one or both uncertainties are None")
+            comparison_results["uncertainty_comparison"] = {
+                "legacy_vs_modular": {"error": "One or both uncertainties are None"}
+            }
 
     # Compare performance
     try:
@@ -700,6 +747,7 @@ def generate_summary_report(legacy_results, modular_results, comparison, args, o
         f.write(f"Number of posterior samples: {args.num_samples}\n")
         f.write(f"Random seed: {args.seed}\n")
         f.write(f"Model type: {args.model_type}\n")
+        f.write(f"Compute velocity: {args.compute_velocity}\n")
         f.write("\n")
 
         # Write model information
@@ -855,6 +903,7 @@ def main():
             args.max_epochs,
             args.num_samples,
             seed=args.seed,
+            compute_velocity=args.compute_velocity,
             model_type=args.model_type  # This parameter is ignored by the legacy model
         )
         print("Legacy model training successful")
@@ -871,7 +920,8 @@ def main():
             args.max_epochs,
             args.num_samples,
             seed=args.seed,
-            model_type=args.model_type
+            model_type=args.model_type,
+            compute_velocity=args.compute_velocity
         )
         print("Modular model training successful")
     except Exception as e:
@@ -909,6 +959,7 @@ def main():
                     f.write(f"Number of posterior samples: {args.num_samples}\n")
                     f.write(f"Random seed: {args.seed}\n")
                     f.write(f"Model type: {args.model_type}\n")
+                    f.write(f"Compute velocity: {args.compute_velocity}\n")
                     f.write("\n")
                     f.write("Legacy Model:\n")
                     f.write(f"  Training time: {legacy_results['performance']['training_time']:.2f} seconds\n")
