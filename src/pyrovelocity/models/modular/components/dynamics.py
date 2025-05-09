@@ -612,10 +612,8 @@ class LegacyDynamicsModel:
 
             # Sample gene-specific parameters with the correct shape
             with gene_plate:
-                # Create deterministic sites for gene parameters
-                alpha = pyro.deterministic("alpha_det", alpha)
-                beta = pyro.deterministic("beta_det", beta)
-                gamma = pyro.deterministic("gamma_det", gamma)
+                # Use parameters directly without creating duplicate deterministic nodes
+                # This avoids adding extra dimensions to the parameters
 
                 # Compute steady state values
                 u_inf = alpha / beta  # Shape: [1, 1, n_genes] or [num_samples, 1, n_genes]
@@ -625,6 +623,7 @@ class LegacyDynamicsModel:
                 switching = t0 + dt_switching  # Shape: [1, 1, n_genes] or [num_samples, 1, n_genes]
 
                 # Create deterministic sites for steady state and switching
+                # In the legacy model, these are registered without explicit event dimensions
                 u_inf = pyro.deterministic("u_inf", u_inf)
                 s_inf = pyro.deterministic("s_inf", s_inf)
                 switching = pyro.deterministic("switching", switching)
@@ -663,7 +662,22 @@ class LegacyDynamicsModel:
                 alpha / (gamma - beta + 1e-8)  # Add small epsilon to avoid division by zero
             ) * (torch.exp(-beta * cell_time) - torch.exp(-gamma * cell_time))
 
+            # Print shapes for debugging before reshaping
+            print(f"LegacyDynamicsModel - ut original shape: {ut.shape}")
+            print(f"LegacyDynamicsModel - st original shape: {st.shape}")
+
+            # Remove extra dimensions from ut and st
+            # In the legacy model, ut and st should have shape [num_samples, n_cells, n_genes]
+            while ut.dim() > 3:
+                ut = ut.squeeze(1)
+                st = st.squeeze(1)
+
+            # Print shapes after reshaping
+            print(f"LegacyDynamicsModel - ut reshaped: {ut.shape}")
+            print(f"LegacyDynamicsModel - st reshaped: {st.shape}")
+
             # Create deterministic sites for ut and st
+            # In the legacy model, these are registered without explicit event dimensions
             ut = pyro.deterministic("ut", ut)
             st = pyro.deterministic("st", st)
 
