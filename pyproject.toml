@@ -449,7 +449,7 @@ addopts = """
 --durations=0
 """
 asyncio_mode = "strict"
-norecursedirs = ["bazel-*", ".direnv", "reproducibility", "scripts"]
+norecursedirs = ["bazel-*", ".direnv", "reproducibility", "scripts", "external-*", "archive"]
 markers = [
   "pyensembl: Tests that require pyensembl to run.",
   "slow: Tests that are slow and should be run separately.",
