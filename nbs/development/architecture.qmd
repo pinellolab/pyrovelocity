@@ -1,58 +1,535 @@
 ---
-title: Architecture
+title: "System Architecture and Design: PyroVelocity"
 format:
   html:
+    mermaid-format: js
+    mermaid:
+      theme: dark
     toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: true
 ---
 
-## Overview
+# Introduction {#sec-introduction}
 
-PyroVelocity has a modular architecture that separates concerns into distinct components. This document describes the architecture of the PyroVelocity codebase, focusing on the modular implementation in `src/pyrovelocity/models/modular`.
+## Purpose {#sec-purpose}
 
-## Protocol-First Design
+This document describes the architecture and design of PyroVelocity's modular implementation. It serves as both a reference for ongoing development and as a resource for new developers and users who may be interested in extending the functionality of existing models or creating and comparing new ones. As such, this document will evolve alongside the implementation.
 
-PyroVelocity follows a protocol-first architecture with all contracts defined through Protocol interfaces. Components implement these interfaces directly without inheritance, promoting composition over inheritance.
+## Scope {#sec-scope}
 
-## Core Components
+This document covers:
 
-### Model Components
+- High-level system architecture
+- Key components and their interactions
+- Data flow and processing pipelines
+- Major design decisions and their rationales
+- Technical constraints and quality attributes
+
+The focus is currently on the modular model implementation in `src/pyrovelocity/models/modular`. Additional sections will be added as their architecture stabilizes.
+
+## Definitions {#sec-definitions}
+
+| Term | Definition |
+|------|------------|
+| RNA Velocity | The time derivative of gene expression, representing the rate of change of mRNA abundance |
+| AnnData | A data structure for annotated data matrices, commonly used in single-cell genomics |
+| Protocol | A Python typing construct that defines an interface without implementation |
+| Pyro | A probabilistic programming framework built on PyTorch |
+| SVI | Stochastic Variational Inference, a method for approximate Bayesian inference |
+
+# System Overview {#sec-system-overview}
+
+## Vision {#sec-vision}
+
+PyroVelocity aims to provide a robust, flexible, and extensible framework for probabilistic RNA velocity analysis. The modular architecture enables researchers to customize and extend the model while maintaining a consistent interface.
+
+## Architectural Style {#sec-architectural-style}
+
+PyroVelocity follows a Protocol-First architecture, chosen to maximize flexibility and composability. This style enables:
+
+1. **Composition over inheritance**: Components implement Protocol interfaces directly without inheritance hierarchies
+2. **Loose coupling**: Components interact through well-defined interfaces
+3. **Testability**: Components can be tested in isolation
+4. **Extensibility**: New components can be added without modifying existing code
+
+## Context Diagram {#sec-context-diagram}
+
+```{mermaid}
+graph TB
+    User["Data Scientist / Researcher"] -->|uses| Library["PyroVelocity"]
+    Library -->|depends on| PyTorch["PyTorch"]
+    Library -->|depends on| Pyro["Pyro"]
+    Library -->|processes| AnnData["AnnData Objects"]
+    Library -->|produces| Velocity["RNA Velocity"]
+    Library -->|integrates with| Scanpy["Scanpy"]
+    Library -->|integrates with| Scvelo["scVelo"]
+
+    class User user;
+    class Library library;
+    class PyTorch,Pyro,Scanpy,Scvelo external;
+    class AnnData,Velocity data;
+```
+
+## Key Principles {#sec-key-principles}
+
+The following principles guide architectural decisions for PyroVelocity:
+
+1. **Protocol-First Design**: All contracts are defined through Protocol interfaces, enabling structural typing and composition over inheritance.
+2. **Separation of Concerns**: Each component has a single responsibility, making the system more maintainable and testable.
+3. **Immutable State**: The system uses immutable data structures where possible to reduce side effects and improve reasoning about code.
+4. **Type Safety**: The system uses static typing and runtime type checking to catch errors early and provide better development support.
+
+# Structural View {#sec-structural-view}
+
+## Component Architecture {#sec-component-architecture}
+
+The modular implementation is composed of the following major components:
+
+```{mermaid}
+graph TB
+    Main["PyroVelocityModel"] -->|contains| Dynamics["Dynamics Models"]
+    Main -->|contains| Priors["Prior Models"]
+    Main -->|contains| Likelihoods["Likelihood Models"]
+    Main -->|contains| Observations["Observation Models"]
+    Main -->|contains| Guides["Inference Guides"]
+    Main -->|contains| Registry["Registry System"]
+    Main -->|contains| Factory["Factory System"]
+
+    Dynamics -->|implements| DynamicsInterface["DynamicsModel Protocol"]
+    Priors -->|implements| PriorsInterface["PriorModel Protocol"]
+    Likelihoods -->|implements| LikelihoodsInterface["LikelihoodModel Protocol"]
+    Observations -->|implements| ObservationsInterface["ObservationModel Protocol"]
+    Guides -->|implements| GuidesInterface["InferenceGuide Protocol"]
+
+    Factory -->|uses| Registry
+    Factory -->|creates| Main
+
+    class Main main;
+    class Dynamics,Priors,Likelihoods,Observations,Guides component;
+    class DynamicsInterface,PriorsInterface,LikelihoodsInterface,ObservationsInterface,GuidesInterface interface;
+    class Registry,Factory system;
+```
+
+### Core Components {#sec-core-components}
 
 The modular implementation consists of the following key components:
 
-- **Dynamics Models**: Implement the mathematical models of RNA dynamics
-  - `StandardDynamicsModel`: The standard implementation of RNA dynamics
-  - `LegacyDynamicsModel`: Compatibility implementation matching the legacy model
+#### Dynamics Models {#sec-dynamics-models}
 
-- **Prior Models**: Define the prior distributions for model parameters
-  - `LogNormalPriorModel`: Uses log-normal distributions for parameters
+Dynamics models implement the mathematical models of RNA dynamics, defining how unspliced and spliced RNA counts evolve over time.
 
-- **Likelihood Models**: Define the observation models
-  - `PoissonLikelihoodModel`: Uses Poisson distributions for RNA counts
-  - `LegacyLikelihoodModel`: Compatibility implementation matching the legacy model
+- **StandardDynamicsModel**: The standard implementation of RNA dynamics
+- **LegacyDynamicsModel**: Compatibility implementation matching the legacy model
 
-- **Observation Models**: Handle the interface between data and model
-  - `StandardObservationModel`: The standard implementation for observations
+```{mermaid}
+classDiagram
+    class DynamicsModel {
+        <<Protocol>>
+        +forward(context) Dict
+        +steady_state(alpha, beta, gamma) Tuple
+    }
 
-- **Guide Factories**: Create guide functions for variational inference
-  - `AutoGuideFactory`: Creates guides for the modular implementation
-  - `LegacyAutoGuideFactory`: Compatibility implementation matching the legacy guide
+    class StandardDynamicsModel {
+        +name: str
+        +description: str
+        +shared_time: bool
+        +t_scale_on: bool
+        +forward(context) Dict
+        +steady_state(alpha, beta, gamma) Tuple
+    }
 
-### Utility Modules
+    class LegacyDynamicsModel {
+        +name: str
+        +description: str
+        +shared_time: bool
+        +t_scale_on: bool
+        +forward(context) Dict
+        +steady_state(alpha, beta, gamma) Tuple
+    }
 
-The architecture includes several utility modules:
+    DynamicsModel <|.. StandardDynamicsModel : implements
+    DynamicsModel <|.. LegacyDynamicsModel : implements
+```
 
-- `core_utils.py`: Core utility functions used across components
-- `context_utils.py`: Utilities for managing Pyro contexts
-- `pyro_utils.py`: Utilities specific to Pyro functionality
+#### Prior Models {#sec-prior-models}
 
-## Integration with AnnData
+Prior models define the prior distributions for model parameters, using Pyro's probabilistic programming framework.
 
-The modular implementation integrates directly with AnnData through methods in the `PyroVelocityModel` class, eliminating the need for adapter classes.
+- **LogNormalPriorModel**: Uses log-normal distributions for parameters
 
-## Validation Framework
+#### Likelihood Models {#sec-likelihood-models}
 
-The architecture includes a validation framework to ensure that the modular implementation can replicate the behavior of the legacy implementation.
+Likelihood models define the observation models, relating expected RNA counts to observed counts.
 
-## Future Directions
+- **PoissonLikelihoodModel**: Uses Poisson distributions for RNA counts
+- **LegacyLikelihoodModel**: Compatibility implementation matching the legacy model
 
-The architecture is designed to be extensible, allowing for the addition of new components and features while maintaining backward compatibility with existing workflows.
+#### Observation Models {#sec-observation-models}
+
+Observation models handle the interface between data and model, preprocessing and transforming data.
+
+- **StandardObservationModel**: The standard implementation for observations
+
+#### Guide Factories {#sec-guide-factories}
+
+Guide factories create guide functions for variational inference.
+
+- **AutoGuideFactory**: Creates guides for the modular implementation
+- **LegacyAutoGuideFactory**: Compatibility implementation matching the legacy guide
+
+### Registry System {#sec-registry-system}
+
+The registry system enables component registration and retrieval, implementing the registry pattern.
+
+```{mermaid}
+classDiagram
+    class Registry~T~ {
+        <<Generic>>
+        +Dict _registry
+        +register(name) Callable
+        +get(name) T
+        +create(name, **kwargs) T
+        +list_available() List
+        +clear()
+    }
+
+    class DynamicsModelRegistry {
+        +Dict _registry
+    }
+
+    class PriorModelRegistry {
+        +Dict _registry
+    }
+
+    class LikelihoodModelRegistry {
+        +Dict _registry
+    }
+
+    class ObservationModelRegistry {
+        +Dict _registry
+    }
+
+    class InferenceGuideRegistry {
+        +Dict _registry
+    }
+
+    Registry <|-- DynamicsModelRegistry : extends
+    Registry <|-- PriorModelRegistry : extends
+    Registry <|-- LikelihoodModelRegistry : extends
+    Registry <|-- ObservationModelRegistry : extends
+    Registry <|-- InferenceGuideRegistry : extends
+```
+
+### Factory System {#sec-factory-system}
+
+The factory system creates components and models from configurations, implementing the factory pattern.
+
+```{mermaid}
+classDiagram
+    class ComponentFactory {
+        +create_component(config, component_type) Component
+        +create_component_from_dict(config_dict, component_type) Component
+        +create_dynamics_model(config) DynamicsModel
+        +create_prior_model(config) PriorModel
+        +create_likelihood_model(config) LikelihoodModel
+        +create_observation_model(config) ObservationModel
+        +create_inference_guide(config) InferenceGuide
+    }
+
+    class ModelConfig {
+        +ComponentConfig dynamics_model
+        +ComponentConfig prior_model
+        +ComponentConfig likelihood_model
+        +ComponentConfig observation_model
+        +ComponentConfig inference_guide
+        +Dict metadata
+    }
+
+    class ComponentConfig {
+        +str name
+        +Dict params
+    }
+
+    ComponentFactory --> ModelConfig : uses
+    ComponentFactory --> ComponentConfig : uses
+```
+
+## Module Organization {#sec-module-organization}
+
+The modular implementation follows this organization:
+
+```
+src/pyrovelocity/models/modular/
+├── __init__.py
+├── comparison.py
+├── components/
+│   ├── __init__.py
+│   ├── dynamics.py
+│   ├── guides.py
+│   ├── likelihoods.py
+│   ├── observations.py
+│   └── priors.py
+├── config.py
+├── constants.py
+├── data/
+│   ├── __init__.py
+│   └── anndata.py
+├── factory.py
+├── inference/
+│   ├── __init__.py
+│   ├── config.py
+│   ├── mcmc.py
+│   ├── posterior.py
+│   ├── svi.py
+│   └── unified.py
+├── interfaces.py
+├── model.py
+├── registry.py
+├── selection.py
+└── utils/
+    ├── __init__.py
+    ├── context_utils.py
+    ├── core_utils.py
+    └── pyro_utils.py
+```
+
+# Behavioral View {#sec-behavioral-view}
+
+## Key Workflows {#sec-key-workflows}
+
+### Model Creation Workflow {#sec-model-creation-workflow}
+
+```{mermaid}
+sequenceDiagram
+    participant User
+    participant Factory as ComponentFactory
+    participant Registry as Registry System
+    participant Components as Component Implementations
+    participant Model as PyroVelocityModel
+
+    User->>Factory: create_model_from_config(config)
+    activate Factory
+    Factory->>Factory: Extract component configs
+
+    Factory->>Registry: create(dynamics_model.name, **dynamics_model.params)
+    activate Registry
+    Registry->>Components: Instantiate DynamicsModel
+    Components-->>Registry: Return instance
+    Registry-->>Factory: Return DynamicsModel
+    deactivate Registry
+
+    Factory->>Registry: create(prior_model.name, **prior_model.params)
+    activate Registry
+    Registry->>Components: Instantiate PriorModel
+    Components-->>Registry: Return instance
+    Registry-->>Factory: Return PriorModel
+    deactivate Registry
+
+    Factory->>Registry: create(likelihood_model.name, **likelihood_model.params)
+    activate Registry
+    Registry->>Components: Instantiate LikelihoodModel
+    Components-->>Registry: Return instance
+    Registry-->>Factory: Return LikelihoodModel
+    deactivate Registry
+
+    Factory->>Registry: create(observation_model.name, **observation_model.params)
+    activate Registry
+    Registry->>Components: Instantiate ObservationModel
+    Components-->>Registry: Return instance
+    Registry-->>Factory: Return ObservationModel
+    deactivate Registry
+
+    Factory->>Registry: create(inference_guide.name, **inference_guide.params)
+    activate Registry
+    Registry->>Components: Instantiate InferenceGuide
+    Components-->>Registry: Return instance
+    Registry-->>Factory: Return InferenceGuide
+    deactivate Registry
+
+    Factory->>Model: Create PyroVelocityModel with components
+    Model-->>Factory: Return model instance
+    Factory-->>User: Return model
+    deactivate Factory
+```
+
+### Model Execution Workflow {#sec-model-execution-workflow}
+
+```{mermaid}
+sequenceDiagram
+    participant User
+    participant Model as PyroVelocityModel
+    participant Observation as ObservationModel
+    participant Prior as PriorModel
+    participant Dynamics as DynamicsModel
+    participant Likelihood as LikelihoodModel
+
+    User->>Model: forward(u_obs, s_obs)
+    activate Model
+    Model->>Model: Initialize context
+
+    Model->>Observation: forward(context)
+    activate Observation
+    Observation->>Observation: Preprocess data
+    Observation-->>Model: Updated context
+    deactivate Observation
+
+    Model->>Prior: forward(context)
+    activate Prior
+    Prior->>Prior: Sample parameters
+    Prior-->>Model: Updated context with parameters
+    deactivate Prior
+
+    Model->>Dynamics: forward(context)
+    activate Dynamics
+    Dynamics->>Dynamics: Compute expected counts
+    Dynamics-->>Model: Updated context with expected counts
+    deactivate Dynamics
+
+    Model->>Likelihood: forward(context)
+    activate Likelihood
+    Likelihood->>Likelihood: Define likelihoods and observe data
+    Likelihood-->>Model: Updated context with likelihoods
+    deactivate Likelihood
+
+    Model-->>User: Return results
+    deactivate Model
+```
+
+## Component Lifecycle {#sec-component-lifecycle}
+
+```{mermaid}
+stateDiagram-v2
+    [*] --> Registration: Component class defined
+    Registration --> Configuration: User creates config
+    Configuration --> Instantiation: Factory creates instance
+    Instantiation --> Composition: Added to PyroVelocityModel
+    Composition --> Execution: Model executed
+    Execution --> [*]
+```
+
+# Architectural Decisions {#sec-architectural-decisions}
+
+## ADR-1: Protocol-First Architecture {#sec-adr-1}
+
+### Status
+
+Accepted
+
+### Context
+
+The initial implementation used a mix of abstract base classes and Protocol interfaces, creating architectural inconsistency and forcing inheritance hierarchies.
+
+### Decision
+
+Adopt a Protocol-First architecture that completely removes base classes and standardizes exclusively on Protocol interfaces, with utility functions replacing base class functionality.
+
+### Consequences
+
+- Complete separation between interface and implementation
+- Maximum flexibility in component implementation
+- Full alignment with functional programming principles
+- Zero coupling between components
+- Greatly simplified testing and extension
+- Temporary code duplication during transition, gradually reduced as utility functions are extracted
+
+## ADR-2: Context-Based Component Communication {#sec-adr-2}
+
+### Status
+
+Accepted
+
+### Context
+
+Components need to share data and state during model execution.
+
+### Decision
+
+Use a shared context dictionary that is passed between components during model execution, with each component updating the context with its outputs.
+
+### Consequences
+
+- Flexible data sharing without tight coupling
+- Clear data flow through the system
+- Easy to extend with new data
+- Potential for inconsistent context structure if not properly documented
+
+# Cross-cutting Concerns {#sec-cross-cutting-concerns}
+
+## Performance Considerations {#sec-performance-considerations}
+
+PyroVelocity addresses performance through the following strategies:
+
+- **Vectorized Operations**: Using PyTorch's vectorized operations for efficient computation
+- **Batched Processing**: Supporting batch processing for large datasets
+- **GPU Acceleration**: Leveraging PyTorch's GPU support for accelerated computation
+- **Analytical Solutions**: Using analytical solutions where possible to avoid numerical integration
+
+## Error Handling {#sec-error-handling}
+
+The library follows these error handling principles:
+
+- **Early Validation**: Validating inputs early to catch errors before computation
+- **Informative Error Messages**: Providing clear error messages with context
+- **Graceful Degradation**: Falling back to simpler models when advanced features fail
+
+## Extensibility {#sec-extensibility}
+
+The library is designed for extensibility through:
+
+- **Protocol Interfaces**: Defining clear contracts for component implementations
+- **Registry System**: Enabling dynamic registration of new components
+- **Factory System**: Creating components from configurations
+- **Composition**: Building complex models from simple components
+
+# Technical Debt and Evolution {#sec-technical-debt}
+
+## Known Limitations {#sec-known-limitations}
+
+The current architecture has the following known limitations:
+
+1. **Code Duplication**: Some duplication exists across component implementations
+2. **Limited Documentation**: Documentation of component interfaces and behaviors is incomplete
+3. **Validation Coverage**: Not all components have comprehensive validation against the legacy implementation
+
+## Planned Improvements {#sec-planned-improvements}
+
+The following architectural improvements are planned:
+
+| Improvement | Priority | Timeline |
+|-------------|----------|----------|
+| Extract utility functions from duplicated code | High | Short-term |
+| Improve documentation of component interfaces | High | Short-term |
+| Expand validation coverage | Medium | Medium-term |
+| Implement additional dynamics models | Medium | Medium-term |
+| Enhance integration with AnnData | Medium | Medium-term |
+
+# Implementation References {#sec-implementation-references}
+
+## Key Source Files {#sec-key-source-files}
+
+| Component | Primary Modules | Location |
+|-----------|----------------|----------|
+| Core Model | model.py | `src/pyrovelocity/models/modular/model.py` |
+| Interfaces | interfaces.py | `src/pyrovelocity/models/modular/interfaces.py` |
+| Dynamics Models | dynamics.py | `src/pyrovelocity/models/modular/components/dynamics.py` |
+| Prior Models | priors.py | `src/pyrovelocity/models/modular/components/priors.py` |
+| Likelihood Models | likelihoods.py | `src/pyrovelocity/models/modular/components/likelihoods.py` |
+| Observation Models | observations.py | `src/pyrovelocity/models/modular/components/observations.py` |
+| Guide Factories | guides.py | `src/pyrovelocity/models/modular/components/guides.py` |
+| Registry System | registry.py | `src/pyrovelocity/models/modular/registry.py` |
+| Factory System | factory.py | `src/pyrovelocity/models/modular/factory.py` |
+
+## External Dependencies {#sec-external-dependencies}
+
+| Dependency | Purpose | Impact |
+|------------|---------|--------|
+| PyTorch | Deep learning framework | Core computation engine |
+| Pyro | Probabilistic programming | Core inference engine |
+| AnnData | Data structure | Core data representation |
+| Scanpy | Single-cell analysis | Data preprocessing and visualization |
+| scVelo | RNA velocity analysis | Velocity computation and visualization |
+| beartype | Runtime type checking | Type safety |
+| jaxtyping | Type annotations for arrays | Shape information in type annotations |
+| hydra-zen | Configuration management | Type-safe configuration |
