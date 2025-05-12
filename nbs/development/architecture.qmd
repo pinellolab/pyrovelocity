@@ -1,0 +1,58 @@
+---
+title: Architecture
+format:
+  html:
+    toc: true
+---
+
+## Overview
+
+PyroVelocity has a modular architecture that separates concerns into distinct components. This document describes the architecture of the PyroVelocity codebase, focusing on the modular implementation in `src/pyrovelocity/models/modular`.
+
+## Protocol-First Design
+
+PyroVelocity follows a protocol-first architecture with all contracts defined through Protocol interfaces. Components implement these interfaces directly without inheritance, promoting composition over inheritance.
+
+## Core Components
+
+### Model Components
+
+The modular implementation consists of the following key components:
+
+- **Dynamics Models**: Implement the mathematical models of RNA dynamics
+  - `StandardDynamicsModel`: The standard implementation of RNA dynamics
+  - `LegacyDynamicsModel`: Compatibility implementation matching the legacy model
+
+- **Prior Models**: Define the prior distributions for model parameters
+  - `LogNormalPriorModel`: Uses log-normal distributions for parameters
+
+- **Likelihood Models**: Define the observation models
+  - `PoissonLikelihoodModel`: Uses Poisson distributions for RNA counts
+  - `LegacyLikelihoodModel`: Compatibility implementation matching the legacy model
+
+- **Observation Models**: Handle the interface between data and model
+  - `StandardObservationModel`: The standard implementation for observations
+
+- **Guide Factories**: Create guide functions for variational inference
+  - `AutoGuideFactory`: Creates guides for the modular implementation
+  - `LegacyAutoGuideFactory`: Compatibility implementation matching the legacy guide
+
+### Utility Modules
+
+The architecture includes several utility modules:
+
+- `core_utils.py`: Core utility functions used across components
+- `context_utils.py`: Utilities for managing Pyro contexts
+- `pyro_utils.py`: Utilities specific to Pyro functionality
+
+## Integration with AnnData
+
+The modular implementation integrates directly with AnnData through methods in the `PyroVelocityModel` class, eliminating the need for adapter classes.
+
+## Validation Framework
+
+The architecture includes a validation framework to ensure that the modular implementation can replicate the behavior of the legacy implementation.
+
+## Future Directions
+
+The architecture is designed to be extensible, allowing for the addition of new components and features while maintaining backward compatibility with existing workflows.
