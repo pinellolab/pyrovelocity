@@ -1,0 +1,77 @@
+---
+title: Testing Framework
+format:
+  html:
+    toc: true
+---
+
+## Overview
+
+PyroVelocity uses a comprehensive testing framework to ensure code quality and correctness. This document describes the testing approach, tools, and guidelines for writing tests.
+
+## Testing Philosophy
+
+The testing philosophy of PyroVelocity emphasizes:
+
+- Creating simple instances of real objects over using mocking tools
+- Writing tests alongside code development
+- Ensuring tests provide reasonable constraints on the code
+- Systematic validation of model implementations
+
+## Test Organization
+
+Tests are organized in the following structure:
+
+- `src/pyrovelocity/tests/`: Root directory for all tests
+  - `models/`: Tests for model components
+  - `plots/`: Tests for plotting functions
+  - `utils/`: Tests for utility functions
+  - `data/`: Test data fixtures
+
+## Validation Framework
+
+PyroVelocity includes a validation framework (PRD-678-VALID) to verify that the modular model can replicate the legacy model. Key aspects include:
+
+- Direct comparison of model outputs
+- Validation using synthetic data from test fixtures
+- Validation using downsampled real datasets
+- Systematic addressing of implementation differences
+
+## Writing Tests
+
+When writing tests for PyroVelocity:
+
+1. Use pytest fixtures for test data and common setup
+2. Create simple instances of real objects rather than mocks
+3. Test both normal operation and edge cases
+4. Use xdoctests with proper type annotations
+5. Ensure tests are self-contained with synthetic data
+
+## Running Tests
+
+To run tests:
+
+```bash
+source .venv/bin/activate
+pytest src/pyrovelocity/tests/
+```
+
+To run specific test modules:
+
+```bash
+source .venv/bin/activate
+pytest src/pyrovelocity/tests/models/test_model.py
+```
+
+## Profiling and Benchmarking
+
+PyroVelocity uses Scalene for profiling and benchmarking:
+
+```bash
+source .venv/bin/activate
+scalene --profile-all src/pyrovelocity/tests/models/test_model.py
+```
+
+## Continuous Integration
+
+Tests are automatically run as part of the CI/CD pipeline defined in `.github/workflows/cid.yaml`.
