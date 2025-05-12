@@ -95,6 +95,7 @@ website:
       - sidebar:guides
       - sidebar:concepts
       - sidebar:reference
+      - sidebar:development
       - sidebar:about
 
   sidebar:
@@ -259,6 +260,24 @@ website:
             #   href: reference/tasks.qmd
             # - text: "Workflows"
             #   href: reference/workflows.qmd
+        - section: "Development"
+          contents:
+            - text: "Overview"
+              href: development/index.qmd
+            - text: "Architecture"
+              href: development/architecture.qmd
+            - text: "Testing"
+              href: development/testing.qmd
+    - id: development
+      title: "Development"
+      style: "floating"
+      contents:
+        - text: "Overview"
+          href: development/index.qmd
+        - text: "Architecture"
+          href: development/architecture.qmd
+        - text: "Testing"
+          href: development/testing.qmd
     - id: about
       title: "About"
       style: "floating"
