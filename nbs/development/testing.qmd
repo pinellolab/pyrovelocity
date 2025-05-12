@@ -33,8 +33,12 @@ src/pyrovelocity/tests/
 │   │   ├── integration/       # BDD step implementations
 │   │   │   ├── __init__.py
 │   │   │   ├── conftest.py    # BDD-specific fixtures
+│   │   │   ├── test_component_integration.py
 │   │   │   ├── test_dynamics_model_steps.py
+│   │   │   ├── test_guide_model_steps.py
+│   │   │   ├── test_likelihood_model_steps.py
 │   │   │   ├── test_model_steps.py
+│   │   │   ├── test_observation_model_steps.py
 │   │   │   └── test_prior_model_steps.py
 │   │   ├── selection/         # Tests for model selection
 │   │   ├── utils/             # Tests for utility modules
@@ -177,11 +181,21 @@ The table below tracks all feature specifications defined in our BDD feature fil
 | dynamics_model | Dynamics model handles edge cases | ✅ Implemented | Verify that the dynamics model handles edge cases gracefully |
 | dynamics_model | Dynamics model with library size correction | ✅ Implemented | Verify that the dynamics model correctly applies library size correction |
 | prior_model | LogNormal prior model creates stochastic nodes | ✅ Implemented | Verify that the LogNormalPriorModel creates appropriate stochastic nodes |
-| likelihood_model | Poisson likelihood model creates observation nodes | ✅ Implemented | Verify that the PoissonLikelihoodModel creates appropriate observation nodes |
+| likelihood_model | Poisson likelihood model defines distributions | ✅ Implemented | Verify that the PoissonLikelihoodModel defines appropriate Poisson distributions |
 | likelihood_model | Legacy likelihood model matches legacy implementation | ✅ Implemented | Verify that the LegacyLikelihoodModel matches the legacy implementation |
-| observation_model | Standard observation model preprocesses data | ✅ Implemented | Verify that the StandardObservationModel correctly preprocesses data |
-| guide_model | Auto guide factory creates guide | ✅ Implemented | Verify that the AutoGuideFactory creates an appropriate guide |
+| likelihood_model | Likelihood model with scaling factors | ✅ Implemented | Verify that the likelihood model correctly incorporates scaling factors |
+| likelihood_model | Likelihood model with zero counts | ✅ Implemented | Verify that the likelihood model handles zero counts gracefully |
+| likelihood_model | Likelihood model with Pyro plates | ✅ Implemented | Verify that the likelihood model correctly uses Pyro plates for batch dimensions |
+| observation_model | Standard observation model transforms data | ✅ Implemented | Verify that the StandardObservationModel correctly transforms input data |
+| observation_model | Observation model computes size factors | ✅ Implemented | Verify that the observation model correctly computes size factors |
+| observation_model | Observation model handles missing values | ✅ Implemented | Verify that the observation model handles missing values gracefully |
+| observation_model | Observation model with normalization | ✅ Implemented | Verify that the observation model correctly normalizes data |
+| observation_model | Observation model preserves data integrity | ✅ Implemented | Verify that the observation model preserves biological signal and doesn't introduce artifacts |
+| guide_model | AutoGuide factory creates guide | ✅ Implemented | Verify that the AutoGuideFactory creates an appropriate guide |
 | guide_model | Legacy auto guide factory matches legacy implementation | ✅ Implemented | Verify that the LegacyAutoGuideFactory matches the legacy implementation |
+| guide_model | Guide with parameter initialization | ✅ Implemented | Verify that the guide correctly initializes parameters with specified scale |
+| guide_model | Guide with different variational families | ✅ Implemented | Verify that the guide supports different variational families |
+| guide_model | Guide with custom initialization | ✅ Implemented | Verify that the guide supports custom initialization functions |
 | model | PyroVelocity model integrates components | ✅ Implemented | Verify that the PyroVelocityModel correctly integrates all components |
 | model | PyroVelocity model trains on AnnData | ✅ Implemented | Verify that the PyroVelocityModel can train on AnnData objects |
 
@@ -228,7 +242,11 @@ Feature: [Feature Name]
     Then [expected results]
 ```
 
-### Example Feature File
+### Example Feature Files
+
+PyroVelocity uses feature files to describe the expected behavior of each component. Here are examples from different components:
+
+#### Dynamics Model Example
 
 ```gherkin
 Feature: Dynamics Model
@@ -251,9 +269,74 @@ Feature: Dynamics Model
       | 1.0   | 0.5  | 0.2   |
 ```
 
+#### Inference Guide Example
+
+```gherkin
+Feature: Inference Guide
+  As a computational biologist
+  I want to define variational distributions for RNA velocity inference
+  So that I can perform efficient approximate Bayesian inference
+
+  Scenario: Guide with different variational families
+    Given I have an AutoGuideFactory with guide_type="<guide_type>"
+    When I create a guide for the model
+    Then the guide should be an instance of <guide_class>
+    And the guide should have the appropriate variational family
+
+    Examples:
+      | guide_type           | guide_class                  |
+      | AutoNormal           | AutoNormal                   |
+      | AutoDiagonalNormal   | AutoDiagonalNormal           |
+      | AutoLowRankMultivariateNormal | AutoLowRankMultivariateNormal |
+      | AutoDelta            | AutoDelta                    |
+```
+
+#### Likelihood Model Example
+
+```gherkin
+Feature: Likelihood Model
+  As a computational biologist
+  I want to define likelihood distributions for RNA velocity observations
+  So that I can relate expected counts to observed counts in single-cell data
+
+  Scenario: Poisson likelihood model defines distributions
+    Given I have a PoissonLikelihoodModel
+    When I run the forward method
+    Then the model should define Poisson distributions for unspliced and spliced counts
+    And the distributions should use the expected counts as rate parameters
+    And the model should register observations with Pyro
+```
+
+#### Observation Model Example
+
+```gherkin
+Feature: Observation Model
+  As a computational biologist
+  I want to preprocess and transform RNA velocity data
+  So that it can be used effectively in the model
+
+  Scenario: Observation model with normalization
+    Given I have a StandardObservationModel with normalization
+    When I run the forward method
+    Then the model should normalize the data
+    And the normalized data should have the expected properties
+    And the context should include the normalized data
+```
+
 ## Step Definitions Structure
 
-Step definition files connect feature files to actual test code. They are organized by component in the `integration/` directory:
+Step definition files connect feature files to actual test code. They are organized by component in the `integration/` directory. PyroVelocity has implemented step definitions for all the major components:
+
+- `test_dynamics_model_steps.py`: Implements steps for testing dynamics models
+- `test_prior_model_steps.py`: Implements steps for testing prior models
+- `test_likelihood_model_steps.py`: Implements steps for testing likelihood models
+- `test_observation_model_steps.py`: Implements steps for testing observation models
+- `test_guide_model_steps.py`: Implements steps for testing inference guides
+- `test_model_steps.py`: Implements steps for testing the full PyroVelocityModel
+
+Additionally, there's a `test_component_integration.py` file that tests the interactions between different components to ensure they work correctly together.
+
+Here's an example of a step definition file:
 
 ```python
 # src/pyrovelocity/tests/models/modular/integration/test_dynamics_model_steps.py
@@ -298,6 +381,65 @@ def run_forward_method_with_parameters_fixture(standard_dynamics_model, input_da
 
     # Store the result for later steps
     return result_context
+```
+
+### Component Integration Tests
+
+In addition to the BDD step definitions, PyroVelocity includes component integration tests that verify the interactions between different components:
+
+```python
+# src/pyrovelocity/tests/models/modular/integration/test_component_integration.py
+class TestComponentIntegration:
+    """Tests for component interactions."""
+
+    def test_dynamics_prior_integration(self):
+        """Test that dynamics model and prior model work together."""
+        # Create component models
+        dynamics_model = StandardDynamicsModel()
+        prior_model = LogNormalPriorModel()
+
+        # Sample parameters from prior
+        n_genes = 5
+        prior_params = prior_model.sample_parameters(n_genes=n_genes)
+
+        # Use parameters with dynamics model
+        u0 = torch.zeros(n_genes)
+        s0 = torch.zeros(n_genes)
+
+        # Simulate dynamics
+        times, u, s = dynamics_model.simulate(
+            u0=u0,
+            s0=s0,
+            alpha=prior_params["alpha"],
+            beta=prior_params["beta"],
+            gamma=prior_params["gamma"],
+            t_max=10.0,
+            n_steps=100,
+        )
+
+    def test_full_model_integration(self, simple_data):
+        """Test that all components work together in the full model."""
+        # Create components
+        dynamics_model = StandardDynamicsModel()
+        prior_model = LogNormalPriorModel()
+        likelihood_model = PoissonLikelihoodModel()
+        observation_model = StandardObservationModel()
+        guide_model = AutoGuideFactory(guide_type="AutoNormal")
+
+        # Create the full model
+        model = PyroVelocityModel(
+            dynamics_model=dynamics_model,
+            prior_model=prior_model,
+            likelihood_model=likelihood_model,
+            observation_model=observation_model,
+            guide_model=guide_model,
+        )
+
+        # Call the model with test data
+        result = model.forward(
+            u_obs=simple_data["u_obs"],
+            s_obs=simple_data["s_obs"]
+        )
 ```
 
 ## Contributing New Tests
