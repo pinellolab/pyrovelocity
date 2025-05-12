@@ -1,69 +1,137 @@
 ---
-title: Testing Framework
+title: Testing Framework and Reference
 format:
   html:
     toc: true
+    toc-depth: 3
 ---
 
-## Overview
+# PyroVelocity Testing
 
-PyroVelocity uses a comprehensive testing framework to ensure code quality and correctness. This document describes the testing approach, tools, and guidelines for writing tests.
+This documentation describes the testing approach and infrastructure for the `pyrovelocity` library. Our testing strategy combines traditional pytest unit/integration testing with Behavior-Driven Development (BDD) using pytest-bdd to ensure both technical correctness and alignment with user requirements.
+
+## Directory Structure
+
+The tests are organized to mirror the source code structure while separating unit tests from BDD feature definitions and step implementations:
+
+```
+src/pyrovelocity/tests/
+├── __init__.py
+├── conftest.py                # Shared pytest fixtures and configuration
+├── fixtures/                  # Test data generation utilities
+├── models/                    # Tests for model components
+│   ├── __init__.py
+│   ├── modular/               # Tests for modular implementation
+│   │   ├── __init__.py
+│   │   ├── conftest.py        # Modular-specific fixtures
+│   │   ├── components/        # Unit tests for component implementations
+│   │   │   ├── test_dynamics.py
+│   │   │   ├── test_guides.py
+│   │   │   ├── test_likelihoods.py
+│   │   │   ├── test_observations.py
+│   │   │   └── test_priors.py
+│   │   ├── integration/       # BDD step implementations
+│   │   │   ├── __init__.py
+│   │   │   ├── conftest.py    # BDD-specific fixtures
+│   │   │   ├── test_dynamics_model_steps.py
+│   │   │   ├── test_model_steps.py
+│   │   │   └── test_prior_model_steps.py
+│   │   ├── selection/         # Tests for model selection
+│   │   ├── utils/             # Tests for utility modules
+│   │   ├── test_anndata_integration.py
+│   │   ├── test_comparison.py
+│   │   ├── test_factory.py
+│   │   ├── test_interfaces.py
+│   │   ├── test_model.py
+│   │   ├── test_registry.py
+│   │   └── test_unified_config.py
+│   ├── jax/                   # Tests for JAX implementation (not yet documented)
+│   └── test_*.py              # Tests for legacy implementation
+├── features/                  # BDD feature specifications
+│   └── models/
+│       └── modular/
+│           ├── dynamics_model.feature
+│           ├── guide_model.feature
+│           ├── likelihood_model.feature
+│           ├── model.feature
+│           ├── observation_model.feature
+│           └── prior_model.feature
+├── plots/                     # Tests for plotting functions
+├── utils/                     # Tests for utility functions
+├── validation/                # Tests for validation framework
+└── test_*.py                  # Package-level tests
+```
 
 ## Testing Philosophy
 
-The testing philosophy of PyroVelocity emphasizes:
+Our testing approach implements a dual strategy that addresses both implementation details and user-facing behavior:
 
-- Creating simple instances of real objects over using mocking tools
-- Writing tests alongside code development
-- Ensuring tests provide reasonable constraints on the code
-- Systematic validation of model implementations
+1. **Unit and Integration Tests** (`tests/models/modular/*.py`):
+   - Traditional pytest-based tests focusing on implementation details
+   - Verify internal functions, edge cases, and error handling
+   - Target high code coverage and technical correctness
+   - Validate that individual components work as expected in isolation
 
-## Test Organization
+2. **Behavior-Driven Tests**:
+   - **Feature Definitions** (`tests/features/models/modular/*.feature`):
+     - User-centric specifications written in Gherkin syntax
+     - Focus on requirements and use cases from the user's perspective
+     - Serve as living documentation of expected behavior
+   - **Feature Implementations** (`tests/models/modular/integration/*.py`):
+     - Connect Gherkin specifications to actual code
+     - Test how components work together to deliver user-facing functionality
+     - Validate that the system behaves according to specifications
 
-Tests are organized in the following structure:
+This approach follows Acceptance Test-Driven Development (ATDD), where feature files are written before implementation to document requirements and guide development.
 
-- `src/pyrovelocity/tests/`: Root directory for all tests
-  - `models/`: Tests for model components
-  - `plots/`: Tests for plotting functions
-  - `utils/`: Tests for utility functions
-  - `data/`: Test data fixtures
+### Key Principles
 
-## Validation Framework
+PyroVelocity's testing philosophy emphasizes:
 
-PyroVelocity includes a validation framework (PRD-678-VALID) to verify that the modular model can replicate the legacy model. Key aspects include:
-
-- Direct comparison of model outputs
-- Validation using synthetic data from test fixtures
-- Validation using downsampled real datasets
-- Systematic addressing of implementation differences
-
-## Writing Tests
-
-When writing tests for PyroVelocity:
-
-1. Use pytest fixtures for test data and common setup
-2. Create simple instances of real objects rather than mocks
-3. Test both normal operation and edge cases
-4. Use xdoctests with proper type annotations
-5. Ensure tests are self-contained with synthetic data
+- **Real Objects Over Mocks**: Creating simple instances of real objects rather than using mocking tools
+- **Test-Driven Development**: Writing tests alongside code development
+- **Reasonable Constraints**: Ensuring tests provide reasonable constraints on the code
+- **Systematic Validation**: Comprehensive validation of model implementations
+- **Protocol-First Testing**: Testing against interfaces rather than concrete implementations
 
 ## Running Tests
 
-To run tests:
+### All Tests
 
 ```bash
 source .venv/bin/activate
-pytest src/pyrovelocity/tests/
+pytest src/pyrovelocity/tests
 ```
 
-To run specific test modules:
+### Only Modular Implementation Tests
 
 ```bash
 source .venv/bin/activate
-pytest src/pyrovelocity/tests/models/test_model.py
+pytest src/pyrovelocity/tests/models/modular
 ```
 
-## Profiling and Benchmarking
+### Only BDD Tests
+
+```bash
+source .venv/bin/activate
+pytest src/pyrovelocity/tests/models/modular/integration
+```
+
+### Specific Component Tests
+
+```bash
+source .venv/bin/activate
+pytest src/pyrovelocity/tests/models/modular/components/test_dynamics.py
+```
+
+### Running with Coverage
+
+```bash
+source .venv/bin/activate
+pytest src/pyrovelocity/tests --cov=pyrovelocity --cov-report=term-missing
+```
+
+### Profiling and Benchmarking
 
 PyroVelocity uses Scalene for profiling and benchmarking:
 
@@ -72,6 +140,326 @@ source .venv/bin/activate
 scalene --profile-all src/pyrovelocity/tests/models/test_model.py
 ```
 
+## Test Development Workflow
+
+Our recommended workflow follows these steps:
+
+1. **Specify Behavior**: Create or update a feature file in `features/` for new functionality
+2. **Implement Step Definitions**: Create/update step definitions in the subpackage's `integration/` directory
+3. **Add Unit Tests**: Create detailed unit tests in the subpackage's test modules
+4. **Implement Source Code**: Develop the actual functionality in the source code
+5. **Update Documentation**: Update this document's reference tables when adding new tests
+
+## Validation Framework
+
+PyroVelocity includes a validation framework (PRD-678-VALID) to verify that the modular model can replicate the legacy model. Key aspects include:
+
+- Direct comparison of model outputs
+- Validation using synthetic data from test fixtures
+- Validation using downsampled real datasets (e.g., `tests/data/preprocessed_pancreas_50_7.json`)
+- Systematic addressing of implementation differences
+
+The validation framework is implemented in the `src/pyrovelocity/tests/validation/` directory and includes tests for:
+
+- Direct comparison of model outputs
+- Metrics for quantifying differences
+- Visualization of differences
+
+## Feature Specifications Reference
+
+The table below tracks all feature specifications defined in our BDD feature files for the modular implementation. This serves as a living document of the intended functionality for the library.
+
+| Module | Feature | Status | Description |
+|--------|---------|--------|-------------|
+| dynamics_model | Standard dynamics model computes expected counts | ✅ Implemented | Verify that the StandardDynamicsModel correctly computes expected unspliced and spliced counts |
+| dynamics_model | Standard dynamics model computes steady state | ✅ Implemented | Verify that the StandardDynamicsModel correctly computes steady state values |
+| dynamics_model | Legacy dynamics model matches legacy implementation | ✅ Implemented | Verify that the LegacyDynamicsModel matches the legacy implementation |
+| dynamics_model | Dynamics model handles edge cases | ✅ Implemented | Verify that the dynamics model handles edge cases gracefully |
+| dynamics_model | Dynamics model with library size correction | ✅ Implemented | Verify that the dynamics model correctly applies library size correction |
+| prior_model | LogNormal prior model creates stochastic nodes | ✅ Implemented | Verify that the LogNormalPriorModel creates appropriate stochastic nodes |
+| likelihood_model | Poisson likelihood model creates observation nodes | ✅ Implemented | Verify that the PoissonLikelihoodModel creates appropriate observation nodes |
+| likelihood_model | Legacy likelihood model matches legacy implementation | ✅ Implemented | Verify that the LegacyLikelihoodModel matches the legacy implementation |
+| observation_model | Standard observation model preprocesses data | ✅ Implemented | Verify that the StandardObservationModel correctly preprocesses data |
+| guide_model | Auto guide factory creates guide | ✅ Implemented | Verify that the AutoGuideFactory creates an appropriate guide |
+| guide_model | Legacy auto guide factory matches legacy implementation | ✅ Implemented | Verify that the LegacyAutoGuideFactory matches the legacy implementation |
+| model | PyroVelocity model integrates components | ✅ Implemented | Verify that the PyroVelocityModel correctly integrates all components |
+| model | PyroVelocity model trains on AnnData | ✅ Implemented | Verify that the PyroVelocityModel can train on AnnData objects |
+
+### Legend
+- ✅ Implemented: Feature is fully implemented and tested
+- ⚠️ In Progress: Implementation or testing is underway
+- 📝 Specified: Feature is specified but not yet implemented
+- 🔄 Planned: Feature is planned but not fully specified
+
+## Unit Test Coverage Reference
+
+This table tracks the unit test coverage for each module in the modular implementation, helping identify areas that need additional testing.
+
+| Module | Test File | Test Coverage | Test Cases | Notes |
+|--------|-----------|---------------|------------|-------|
+| components/dynamics.py | test_dynamics.py | High | 10+ | Tests for StandardDynamicsModel and LegacyDynamicsModel |
+| components/guides.py | test_guides.py | High | 5+ | Tests for AutoGuideFactory and LegacyAutoGuideFactory |
+| components/likelihoods.py | test_likelihoods.py | High | 5+ | Tests for PoissonLikelihoodModel and LegacyLikelihoodModel |
+| components/observations.py | test_observations.py | High | 5+ | Tests for StandardObservationModel |
+| components/priors.py | test_priors.py | High | 5+ | Tests for LogNormalPriorModel |
+| model.py | test_model.py | High | 10+ | Tests for PyroVelocityModel |
+| factory.py | test_factory.py | High | 10+ | Tests for factory functions |
+| registry.py | test_registry.py | High | 5+ | Tests for component registries |
+| interfaces.py | test_interfaces.py | Medium | 5+ | Tests for Protocol interfaces |
+| data/anndata.py | test_anndata_integration.py | High | 5+ | Tests for AnnData integration |
+| utils/*.py | utils/test_*.py | Medium | 10+ | Tests for utility functions |
+
+## BDD Feature Files Explained
+
+Our feature files use Gherkin syntax to describe expected behavior. Each feature file follows this structure:
+
+```gherkin
+Feature: [Feature Name]
+  As a [type of user]
+  I want to [perform some action]
+  So that [achieve some benefit]
+
+  Background:
+    Given [common setup steps]
+
+  Scenario: [Specific use case name]
+    Given [preconditions]
+    When [actions]
+    Then [expected results]
+```
+
+### Example Feature File
+
+```gherkin
+Feature: Dynamics Model
+  As a computational biologist
+  I want to model RNA velocity dynamics
+  So that I can understand transcriptional dynamics in single-cell data
+
+  Background:
+    Given I have a dynamics model component
+    And I have input data with unspliced and spliced counts
+
+  Scenario Outline: Standard dynamics model computes expected counts
+    Given I have a StandardDynamicsModel
+    When I run the forward method with alpha <alpha>, beta <beta>, and gamma <gamma>
+    Then the model should compute expected unspliced and spliced counts
+    And the expected counts should follow RNA velocity dynamics
+
+    Examples:
+      | alpha | beta | gamma |
+      | 1.0   | 0.5  | 0.2   |
+```
+
+## Step Definitions Structure
+
+Step definition files connect feature files to actual test code. They are organized by component in the `integration/` directory:
+
+```python
+# src/pyrovelocity/tests/models/modular/integration/test_dynamics_model_steps.py
+from importlib.resources import files
+import pytest
+import torch
+from pytest_bdd import scenarios, given, when, then, parsers
+
+# Import the feature file using importlib.resources
+scenarios(str(files("pyrovelocity.tests.features") / "models" / "modular" / "dynamics_model.feature"))
+
+# Import the components
+from pyrovelocity.models.modular.components import (
+    LegacyDynamicsModel,
+    StandardDynamicsModel,
+)
+
+@given("I have a dynamics model component")
+def dynamics_model_component():
+    """Create a generic dynamics model component."""
+    return StandardDynamicsModel()
+
+@when(parsers.parse("I run the forward method with alpha {alpha}, beta {beta}, and gamma {gamma}"), target_fixture="run_forward_method_with_parameters")
+def run_forward_method_with_parameters_fixture(standard_dynamics_model, input_data, alpha, beta, gamma):
+    """Run the forward method with the given parameters."""
+    # Convert string parameters to float
+    alpha_val = float(alpha)
+    beta_val = float(beta)
+    gamma_val = float(gamma)
+
+    # Create context with input data and parameters
+    context = {
+        "u_obs": input_data["u_obs"],
+        "s_obs": input_data["s_obs"],
+        "alpha": torch.tensor([alpha_val] * input_data["n_genes"]),
+        "beta": torch.tensor([beta_val] * input_data["n_genes"]),
+        "gamma": torch.tensor([gamma_val] * input_data["n_genes"]),
+    }
+
+    # Run the forward method
+    result_context = standard_dynamics_model.forward(context)
+
+    # Store the result for later steps
+    return result_context
+```
+
+## Contributing New Tests
+
+When contributing new tests to the project:
+
+1. **Check Existing Coverage**: Review the feature and unit test reference tables
+2. **Update Feature Files**: If implementing a new feature, add or update the relevant feature file
+3. **Follow the Workflow**: Implement step definitions and unit tests as outlined above
+4. **Run Tests Locally**: Ensure all tests pass before submitting a PR
+5. **Update Documentation**: Update the reference tables in this document
+
+## Fixtures and Testing Utilities
+
+PyroVelocity provides a comprehensive set of fixtures for testing, defined in various `conftest.py` files:
+
+### Main Fixtures (`src/pyrovelocity/tests/conftest.py`)
+
+| Fixture Name | Purpose | Scope |
+|--------------|---------|-------|
+| `adata_preprocessed_pancreas_50_7` | Provides preprocessed pancreas dataset | Function |
+| `adata_trained_pancreas_50_7` | Provides trained pancreas dataset | Function |
+| `adata_postprocessed_pancreas_50_7` | Provides postprocessed pancreas dataset | Function |
+| `default_sample_data` | Provides synthetic sample data | Function |
+| `temp_file_path` | Provides a temporary file path | Function |
+| `temp_compressed_pickle_path` | Provides a temporary compressed pickle path | Function |
+| `save_and_load_helper` | Helper for saving and loading data | Function |
+
+### Modular Implementation Fixtures (`src/pyrovelocity/tests/models/modular/conftest.py`)
+
+These fixtures are specific to the modular implementation and provide test instances of various components.
+
+### BDD-Specific Fixtures (`src/pyrovelocity/tests/models/modular/integration/conftest.py`)
+
+| Fixture Name | Purpose | Scope |
+|--------------|---------|-------|
+| `bdd_simple_data` | Provides simple data for BDD testing | Function |
+| `bdd_model_parameters` | Provides model parameters for BDD testing | Function |
+| `bdd_standard_dynamics_model` | Provides a StandardDynamicsModel | Function |
+| `bdd_legacy_dynamics_model` | Provides a LegacyDynamicsModel | Function |
+| `bdd_lognormal_prior_model` | Provides a LogNormalPriorModel | Function |
+| `bdd_poisson_likelihood_model` | Provides a PoissonLikelihoodModel | Function |
+| `bdd_legacy_likelihood_model` | Provides a LegacyLikelihoodModel | Function |
+| `bdd_standard_observation_model` | Provides a StandardObservationModel | Function |
+| `bdd_auto_guide_factory` | Provides an AutoGuideFactory | Function |
+| `bdd_legacy_auto_guide_factory` | Provides a LegacyAutoGuideFactory | Function |
+| `bdd_pyro_velocity_model` | Provides a PyroVelocityModel | Function |
+| `bdd_anndata` | Provides a simple AnnData object | Function |
+| `clear_pyro_param_store` | Clears Pyro's parameter store | Function (autouse) |
+
+## Advanced Testing Topics
+
+### Parameterized Testing
+
+Both unit tests and BDD scenarios can be parameterized:
+
+```python
+# Unit test parameterization
+@pytest.mark.parametrize("alpha,beta,gamma,expected_u_ss,expected_s_ss", [
+    (1.0, 0.5, 0.2, 2.0, 5.0),
+    (2.0, 1.0, 0.5, 2.0, 4.0),
+])
+def test_steady_state(alpha, beta, gamma, expected_u_ss, expected_s_ss):
+    model = StandardDynamicsModel()
+    u_ss, s_ss = model.steady_state(
+        torch.tensor([alpha]),
+        torch.tensor([beta]),
+        torch.tensor([gamma]),
+    )
+    assert torch.allclose(u_ss, torch.tensor([expected_u_ss]))
+    assert torch.allclose(s_ss, torch.tensor([expected_s_ss]))
+```
+
+```gherkin
+# BDD parameterization with Scenario Outline
+Scenario Outline: Standard dynamics model computes steady state
+  Given I have a StandardDynamicsModel
+  When I compute the steady state with alpha <alpha>, beta <beta>, and gamma <gamma>
+  Then the steady state unspliced should equal alpha/beta
+  And the steady state spliced should equal alpha/gamma
+
+  Examples:
+    | alpha | beta | gamma |
+    | 1.0   | 0.5  | 0.2   |
+    | 2.0   | 1.0  | 0.5   |
+```
+
+### Testing with AnnData
+
+PyroVelocity provides fixtures for testing with AnnData objects:
+
+```python
+def test_anndata_integration(bdd_anndata, bdd_pyro_velocity_model):
+    """Test integration with AnnData."""
+    # Prepare AnnData
+    adata = bdd_anndata.copy()
+
+    # Train model
+    bdd_pyro_velocity_model.train(
+        adata,
+        max_epochs=2,
+        batch_size=5,
+        use_gpu=False,
+    )
+
+    # Check that results were stored in AnnData
+    assert "dynamics" in adata.uns
+    assert "model_type" in adata.uns["dynamics"]
+```
+
+### Testing with Pyro
+
+PyroVelocity provides utilities for testing with Pyro:
+
+```python
+def test_pyro_model(clear_pyro_param_store):
+    """Test a Pyro model."""
+    # Define a simple model
+    def model():
+        x = pyro.sample("x", pyro.distributions.Normal(0, 1))
+        return x
+
+    # Define a guide
+    def guide():
+        loc = pyro.param("loc", torch.tensor(0.0))
+        scale = pyro.param("scale", torch.tensor(1.0), constraint=pyro.constraints.positive)
+        pyro.sample("x", pyro.distributions.Normal(loc, scale))
+
+    # Run inference
+    pyro.clear_param_store()
+    svi = pyro.infer.SVI(
+        model=model,
+        guide=guide,
+        optim=pyro.optim.Adam({"lr": 0.01}),
+        loss=pyro.infer.Trace_ELBO(),
+    )
+
+    # Train for a few steps
+    for _ in range(10):
+        loss = svi.step()
+
+    # Check that parameters were updated
+    assert pyro.param("loc").item() != 0.0
+```
+
 ## Continuous Integration
 
-Tests are automatically run as part of the CI/CD pipeline defined in `.github/workflows/cid.yaml`.
+Tests are automatically run as part of the CI/CD pipeline defined in `.github/workflows/cid.yaml`. The CI pipeline includes:
+
+1. **Unit Tests**: Run all unit tests with coverage reporting
+2. **BDD Tests**: Run all BDD tests to verify behavior
+3. **Coverage Enforcement**: Ensure test coverage meets minimum thresholds
+
+## Best Practices for PyroVelocity Testing
+
+1. **Use Protocol Interfaces**: Test against Protocol interfaces rather than concrete implementations
+2. **Create Real Objects**: Prefer creating simple instances of real objects over using mocks
+3. **Test Edge Cases**: Include tests for edge cases and error handling
+4. **Use Fixtures**: Leverage pytest fixtures for common setup and teardown
+5. **Clear Pyro State**: Always clear Pyro's parameter store before and after tests
+6. **Synthetic Data**: Use synthetic data for tests to avoid external dependencies
+7. **Parameterize Tests**: Use parameterization to test multiple cases with the same logic
+8. **Document Tests**: Include docstrings and comments to explain test purpose and logic
+9. **Follow BDD Patterns**: Use Given-When-Then pattern for BDD tests
+10. **Validate Against Legacy**: Validate new implementations against legacy code
