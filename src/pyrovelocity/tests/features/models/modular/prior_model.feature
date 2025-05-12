@@ -4,8 +4,8 @@ Feature: Prior Model
   So that I can perform Bayesian inference on single-cell data
 
   Background:
-    Given I have a prior model component
-    And I have input data with unspliced and spliced counts
+    Given I have input data with unspliced and spliced counts
+    And I have a LogNormalPriorModel
 
   Scenario: LogNormal prior model samples parameters
     Given I have a LogNormalPriorModel
