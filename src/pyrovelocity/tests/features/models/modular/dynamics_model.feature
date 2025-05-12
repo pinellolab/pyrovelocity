@@ -7,21 +7,25 @@ Feature: Dynamics Model
     Given I have a dynamics model component
     And I have input data with unspliced and spliced counts
 
-  Scenario: Standard dynamics model computes expected counts
+  Scenario Outline: Standard dynamics model computes expected counts
     Given I have a StandardDynamicsModel
-    When I run the forward method with parameters:
-      | alpha | beta | gamma |
-      | 1.0   | 0.5  | 0.2   |
+    When I run the forward method with alpha <alpha>, beta <beta>, and gamma <gamma>
     Then the model should compute expected unspliced and spliced counts
     And the expected counts should follow RNA velocity dynamics
 
-  Scenario: Standard dynamics model computes steady state
-    Given I have a StandardDynamicsModel
-    When I compute the steady state with parameters:
+    Examples:
       | alpha | beta | gamma |
       | 1.0   | 0.5  | 0.2   |
+
+  Scenario Outline: Standard dynamics model computes steady state
+    Given I have a StandardDynamicsModel
+    When I compute the steady state with alpha <alpha>, beta <beta>, and gamma <gamma>
     Then the steady state unspliced should equal alpha/beta
     And the steady state spliced should equal alpha/gamma
+
+    Examples:
+      | alpha | beta | gamma |
+      | 1.0   | 0.5  | 0.2   |
 
   Scenario: Legacy dynamics model matches legacy implementation
     Given I have a LegacyDynamicsModel
