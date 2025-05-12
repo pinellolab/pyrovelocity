@@ -1,0 +1,31 @@
+---
+title: Development Overview
+format:
+  html:
+    toc: true
+---
+
+## Introduction
+
+This section provides technical documentation for developers working on PyroVelocity. It covers the architecture, implementation details, and testing framework of the project.
+
+## Purpose
+
+The development documentation is intended for:
+
+- Contributors to the PyroVelocity codebase
+- Researchers extending the models or algorithms
+- Developers integrating PyroVelocity into other systems
+
+## Contents
+
+The development documentation is organized into the following sections:
+
+- [Architecture](architecture.qmd): Detailed information about the modular architecture of PyroVelocity, including component interfaces, implementation patterns, and design decisions.
+- [Testing](testing.qmd): Information about the testing framework, validation approach, and guidelines for writing tests.
+
+## Development Workflow
+
+PyroVelocity follows a protocol-first architecture with all contracts defined through Protocol interfaces. The project is organized into modular components that can be composed to create different model configurations.
+
+For more information on contributing to PyroVelocity, please see the [Contributing](../about/contributing.qmd) guide.
