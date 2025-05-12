@@ -4,13 +4,15 @@ Feature: PyroVelocity Model
   So that I can analyze transcriptional dynamics in single-cell data
 
   Background:
-    Given I have components for a PyroVelocity model:
-      | component_type    | implementation        |
-      | dynamics_model    | StandardDynamicsModel |
-      | prior_model       | LogNormalPriorModel   |
-      | likelihood_model  | PoissonLikelihoodModel|
-      | observation_model | StandardObservationModel |
-      | guide_model       | AutoGuideFactory      |
+    Given I have input data with unspliced and spliced counts
+    And I have a StandardDynamicsModel
+    And I have a LogNormalPriorModel
+    And I have a PoissonLikelihoodModel
+    And I have a StandardObservationModel
+    And I have an AutoGuideFactory
+    And I have a trained PyroVelocity model
+    And I have a trained PyroVelocity model with posterior samples
+    And I have a trained PyroVelocity model with velocity results
 
   Scenario: Creating a PyroVelocity model
     When I create a PyroVelocity model with these components
