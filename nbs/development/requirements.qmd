@@ -1,0 +1,994 @@
+---
+title: "Requirements Specification"
+format:
+  html:
+    mermaid-format: js
+    mermaid:
+      theme: dark
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: true
+---
+
+# Introduction {#sec-introduction}
+
+## Purpose of this Document {#sec-purpose}
+
+This Requirements Specification defines what PyroVelocity should do from an external (black-box) perspective without specifying how it will be implemented internally. This document builds upon the [Scientific Context Specification](context.qmd) by transforming research needs into specific system requirements. It serves as the primary reference for domain scientists, computational specialists, developers, testers, and stakeholders to ensure a shared understanding of the system's expected behavior conceptually prior to detailed design considerations.
+
+## Document Conventions {#sec-conventions}
+
+This document uses the following conventions:
+
+- *Italics* are used for terms defined in the glossary
+- **Bold** is used for emphasis and key concepts
+- Blue text indicates a cross-reference to another section
+- REQ-XXX identifiers are used for individually traceable requirements
+- Mathematical formulas are presented using LaTeX notation
+- Code examples are presented in monospaced font
+- Computational complexity is expressed using Big O notation
+
+## References {#sec-references}
+
+1. [Scientific Context Specification](context.qmd)
+2. [System Architecture and Design](architecture.qmd)
+3. La Manno, G., Soldatov, R., Zeisel, A. et al. RNA velocity of single cells. Nature 560, 494–498 (2018). https://doi.org/10.1038/s41586-018-0414-6
+4. Bergen, V., Lange, M., Peidli, S. et al. Generalizing RNA velocity to transient cell states through dynamical modeling. Nat Biotechnol 38, 1408–1414 (2020). https://doi.org/10.1038/s41587-020-0591-3
+5. Pyro: Deep Universal Probabilistic Programming. https://pyro.ai/
+6. AnnData: Annotated Data. https://anndata.readthedocs.io/
+
+## Document Overview {#sec-overview}
+
+This Requirements Specification is organized to progressively define the PyroVelocity system from an external perspective. It begins with a system vision that outlines the overall scope and context, followed by detailed models of usage, computation, and data. The functional requirements organize system capabilities, while quality requirements define non-functional aspects with particular attention to scientific computing needs like accuracy, performance, and reproducibility. System constraints, deployment requirements, and development requirements outline limitations and implementation considerations. The risk assessment identifies potential issues, and the glossary ensures consistent terminology.
+
+# System Vision {#sec-system-vision}
+
+## System Overview {#sec-system-overview}
+
+PyroVelocity is a probabilistic framework for RNA velocity analysis in single-cell genomics. It provides a Bayesian approach to modeling RNA dynamics, enabling robust uncertainty quantification and parameter inference from single-cell RNA sequencing data. The system implements a modular architecture with interchangeable components for dynamics models, prior distributions, likelihood models, observation models, and inference guides.
+
+PyroVelocity aims to overcome limitations of deterministic RNA velocity methods by:
+
+1. Directly modeling raw spliced and unspliced read counts
+2. Providing uncertainty quantification for velocity estimates
+3. Synchronizing cell time estimation across genes
+4. Enabling multivariate modeling of gene expression
+5. Offering diagnostic analyses and visualizations of model uncertainty
+6. Integrating with existing single-cell analysis ecosystems
+
+The system is currently transitioning from a legacy implementation to a modular PyTorch/Pyro implementation, with a future migration to a JAX/NumPyro implementation for improved performance.
+
+## System Context {#sec-system-context}
+
+PyroVelocity interfaces with the following external entities:
+
+- **Single-cell RNA-seq Data**: Source data containing spliced and unspliced counts
+- **AnnData Objects**: Primary data structure for storing and manipulating single-cell data
+- **Scanpy/scVelo**: Ecosystem tools for preprocessing and visualization
+- **Pyro/PyTorch**: Core probabilistic programming and tensor computation frameworks
+- **JAX/NumPyro**: Alternative backend for improved performance (future)
+
+```{mermaid}
+graph TB
+    User["Data Scientist / Researcher"] -->|uses| Library["PyroVelocity"]
+    Library -->|depends on| PyTorch["PyTorch"]
+    Library -->|depends on| Pyro["Pyro"]
+    Library -->|processes| AnnData["AnnData Objects"]
+    Library -->|produces| Velocity["RNA Velocity"]
+    Library -->|integrates with| Scanpy["Scanpy"]
+    Library -->|integrates with| Scvelo["scVelo"]
+
+    class User user;
+    class Library library;
+    class PyTorch,Pyro,Scanpy,Scvelo external;
+    class AnnData,Velocity data;
+```
+
+## Capability Overview {#sec-capability-overview}
+
+| Capability ID | Capability Name | Description | Priority |
+|--------------|-----------------|-------------|----------|
+| CAP-01 | Probabilistic RNA Velocity | Bayesian modeling of RNA velocity with uncertainty quantification | High |
+| CAP-02 | Parameter Inference | Inference of biologically meaningful parameters from scRNA-seq data | High |
+| CAP-03 | Uncertainty Visualization | Visualization of uncertainty in velocity estimates and trajectories | High |
+| CAP-04 | AnnData Integration | Seamless integration with AnnData objects and the scanpy ecosystem | High |
+| CAP-05 | Modular Architecture | Flexible, component-based architecture with interchangeable parts | High |
+| CAP-06 | JAX/NumPyro Backend | High-performance implementation using JAX/NumPyro | Medium |
+| CAP-07 | Workflow Integration | Integration with workflow systems for reproducible analysis | Medium |
+
+## Usage Scenario Overview {#sec-usage-scenario-overview}
+
+The system supports the following high-level usage scenarios:
+
+- **Data Preprocessing**: Scientists prepare single-cell data for velocity analysis
+- **Model Configuration**: Scientists configure model components and parameters
+- **Model Training**: Scientists train the model using variational inference
+- **Posterior Analysis**: Scientists analyze posterior distributions of parameters
+- **Velocity Computation**: Scientists compute RNA velocity with uncertainty
+- **Result Visualization**: Scientists visualize velocity and uncertainty
+- **Integration with Workflows**: Scientists integrate velocity analysis into larger pipelines
+
+```{mermaid}
+graph TD
+    A[Data Preprocessing] --> B[Model Configuration]
+    B --> C[Model Training]
+    C --> D[Posterior Analysis]
+    D --> E[Velocity Computation]
+    E --> F[Result Visualization]
+    F --> G[Integration with Workflows]
+
+    class A,B,C,D,E,F,G scenario;
+```
+
+# Usage Model {#sec-usage-model}
+
+## Actors {#sec-actors}
+
+| Actor ID | Actor Name | Description | Related Stakeholder | Primary Goals |
+|----------|------------|-------------|---------------------|---------------|
+| A-01 | Computational Biologist | Researcher with programming experience who analyzes single-cell data | Computational Biologists | Analyze RNA velocity, infer cell trajectories, quantify uncertainty |
+| A-02 | Bioinformatician | Technical specialist who develops and runs analysis pipelines | Bioinformaticians | Integrate RNA velocity into workflows, extend functionality |
+| A-03 | Molecular Biologist | Wet-lab researcher who needs to interpret results | Molecular Biologists | Interpret velocity results, design follow-up experiments |
+| A-04 | Data Scientist | Researcher focused on method development | Research Community | Develop new models, benchmark against existing methods |
+| A-05 | AnnData | Data structure for annotated data matrices | External System | Store and provide access to single-cell data |
+| A-06 | Scanpy/scVelo | Single-cell analysis toolkits | External System | Preprocess data, visualize results |
+
+## Usage Scenarios {#sec-usage-scenarios}
+
+| Scenario ID | Scenario Name | Primary Actor | Description | Pre-conditions | Post-conditions |
+|-------------|---------------|---------------|-------------|----------------|-----------------|
+| US-01 | Data Preprocessing | A-01, A-02 | Prepare single-cell data for velocity analysis | Raw count data available | AnnData object with spliced/unspliced counts |
+| US-02 | Model Configuration | A-01, A-04 | Configure model components and parameters | Preprocessed data available | Configured model ready for training |
+| US-03 | Model Training | A-01, A-02 | Train the model using variational inference | Configured model and data available | Trained model with optimized parameters |
+| US-04 | Posterior Analysis | A-01, A-04 | Analyze posterior distributions of parameters | Trained model available | Parameter distributions and diagnostics |
+| US-05 | Velocity Computation | A-01, A-02 | Compute RNA velocity with uncertainty | Posterior samples available | Velocity estimates with uncertainty |
+| US-06 | Result Visualization | A-01, A-03 | Visualize velocity and uncertainty | Velocity estimates available | Visualizations for interpretation |
+| US-07 | Integration with Workflows | A-02 | Integrate velocity analysis into larger pipelines | Trained model and analysis code available | Integrated workflow |
+
+## Functional Scenarios {#sec-functional-scenarios}
+
+**Scenario ID:** FS-01
+
+**Usage Scenario:** US-03 (Model Training)
+
+**Description:** Training a PyroVelocity model on pancreas development data
+
+**Triggering Event:** User initiates model training
+
+**Steps:**
+
+1. User loads preprocessed AnnData object with spliced/unspliced counts
+2. User creates a PyroVelocity model with standard components
+3. System initializes model parameters and guide
+4. User calls the train method with the AnnData object
+5. System performs stochastic variational inference
+6. System monitors convergence and reports progress
+7. System returns the trained model
+8. User saves the trained model for later use
+
+**Alternative Paths:**
+
+* At step 2, if user wants custom components, they configure specific components
+* At step 4, if user wants custom training parameters, they provide additional arguments
+
+**Exception Paths:**
+
+* At step 1, if data is not properly formatted, system provides error message
+* At step 5, if training fails to converge, system provides diagnostic information
+
+## Common Research Workflows {#sec-common-research-workflows}
+
+**Workflow ID:** WF-01
+
+**Workflow Name:** RNA Velocity Analysis Workflow
+
+**Description:** Complete workflow for RNA velocity analysis from raw data to interpretation
+
+**Participants:** A-01, A-02, A-03
+
+**Workflow Steps:**
+
+1. Data Preprocessing: US-01
+2. Model Configuration: US-02
+3. Model Training: US-03
+4. Posterior Analysis: US-04
+5. Velocity Computation: US-05
+6. Result Visualization: US-06
+
+**Variations:**
+
+* For large datasets, users may subsample genes or cells before model training
+* For complex biological systems, users may use nonlinear dynamics models
+* For integration with other analyses, users may export velocity to other tools
+
+# Computational Model {#sec-computational-model}
+
+## Algorithm Specifications {#sec-algorithm-specifications}
+
+**Algorithm ID:** ALG-01
+
+**Algorithm Name:** Standard RNA Velocity Dynamics
+
+**Description:** Standard model of RNA velocity based on first-order kinetics
+
+**Mathematical Formulation:**
+
+```
+du/dt = α - βu
+ds/dt = βu - γs
+```
+
+Where:
+
+- u is the unspliced mRNA abundance
+- s is the spliced mRNA abundance
+- α is the transcription rate
+- β is the splicing rate
+- γ is the degradation rate
+
+**Inputs:**
+
+- u0: Initial unspliced RNA counts, tensor[num_cells, num_genes]
+- s0: Initial spliced RNA counts, tensor[num_cells, num_genes]
+- α: Transcription rates, tensor[num_genes]
+- β: Splicing rates, tensor[num_genes]
+- γ: Degradation rates, tensor[num_genes]
+- τ: Cell-specific time points, tensor[num_cells]
+
+**Outputs:**
+
+- ut: Unspliced RNA counts at time τ, tensor[num_cells, num_genes]
+- st: Spliced RNA counts at time τ, tensor[num_cells, num_genes]
+- velocity: RNA velocity vectors, tensor[num_cells, num_genes]
+
+**Computational Properties:**
+
+- Time Complexity: O(num_cells * num_genes)
+- Space Complexity: O(num_cells * num_genes)
+- Numerical Stability: Stable for β ≠ γ, special case handling for β = γ
+- Convergence: Converges to steady state (u_ss = α/β, s_ss = α/γ)
+
+**References:**
+
+- La Manno et al. (2018)
+- Bergen et al. (2020)
+
+**Algorithm ID:** ALG-02
+
+**Algorithm Name:** Stochastic Variational Inference
+
+**Description:** Approximate Bayesian inference for RNA velocity parameters
+
+**Mathematical Formulation:**
+
+```
+ELBO(q) = E_q[log p(x, z)] - E_q[log q(z)]
+```
+
+Where:
+- p(x, z) is the joint distribution of observed data x and latent variables z
+- q(z) is the variational distribution
+- ELBO is the Evidence Lower Bound
+
+**Inputs:**
+
+- Model: Probabilistic model p(x, z)
+- Guide: Variational distribution q(z)
+- Data: Observed data x
+- Optimizer: Optimization algorithm
+- Num_epochs: Number of training epochs
+
+**Outputs:**
+
+- Optimized guide parameters
+- Training diagnostics
+- ELBO values
+
+**Computational Properties:**
+
+- Time Complexity: O(num_epochs * num_cells * num_genes)
+- Space Complexity: O(num_cells * num_genes)
+- Convergence: Depends on model complexity and data characteristics
+
+**References:**
+
+- Pyro documentation
+- Hoffman et al. (2013)
+
+## Computational Interfaces {#sec-computational-interfaces}
+
+**Interface ID:** CI-01
+ 
+**Algorithm:** ALG-01
+
+**Description:** Interface for dynamics models
+
+**Input Parameters:**
+
+| Parameter | Type | Description | Constraints |
+|-----------|------|-------------|------------|
+| context | Dict[str, Any] | Context dictionary containing model state | Must contain u_obs, s_obs, and parameters |
+
+**Output Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| context | Dict[str, Any] | Updated context with computed values |
+
+**Error Conditions:**
+
+| Error Code | Description | Recovery Action |
+|------------|-------------|----------------|
+| ValueError | Missing required parameters | Provide missing parameters |
+| RuntimeError | Numerical instability | Check parameter values |
+
+**Interface ID:** CI-02
+
+**Algorithm:** ALG-02
+
+**Description:** Interface for model training
+
+**Input Parameters:**
+
+| Parameter | Type | Description | Constraints |
+|-----------|------|-------------|------------|
+| adata | AnnData | Annotated data object | Must contain spliced/unspliced layers |
+| max_epochs | int | Maximum number of training epochs | > 0 |
+| batch_size | Optional[int] | Batch size for training | None or > 0 |
+| learning_rate | float | Learning rate for optimizer | > 0 |
+| use_gpu | bool | Whether to use GPU acceleration | True/False |
+
+**Output Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| model | PyroVelocityModel | Trained model |
+| loss_history | List[float] | Training loss history |
+
+**Error Conditions:**
+
+| Error Code | Description | Recovery Action |
+|------------|-------------|----------------|
+| ValueError | Invalid AnnData format | Preprocess data correctly |
+| RuntimeError | Training divergence | Adjust learning rate or model parameters |
+| MemoryError | Out of memory | Reduce batch size or use data subsampling |
+
+## Execution Model {#sec-execution-model}
+
+**Execution Model ID:** EM-01
+
+**Description:** Execution model for PyroVelocity
+
+**Execution Environment:** Python environment with PyTorch/Pyro or JAX/NumPyro
+
+**Execution Strategy:**
+
+- Parallelization: Data parallelism across cells and genes
+- Distribution: Single-node execution with optional GPU acceleration
+- Scheduling: Batch-based processing for large datasets
+
+**Resource Requirements:**
+
+- Compute: Multi-core CPU or CUDA-compatible GPU
+- Memory: 16-64GB RAM depending on dataset size
+- Storage: 10-100GB for datasets and results
+- Network: Minimal (data loading only)
+
+**Scalability Characteristics:**
+
+- Scales linearly with number of cells and genes
+- GPU acceleration provides significant speedup for large datasets
+- JAX/NumPyro implementation offers improved performance over PyTorch/Pyro
+
+## Performance Parameters {#sec-performance-parameters}
+
+| Algorithm ID | Parameter | Description | Target Value | Measurement Method |
+|--------------|-----------|-------------|--------------|-------------------|
+| ALG-01 | Execution Time | Time to compute velocity for 10k cells, 2k genes | < 1 minute on GPU | Wall clock time |
+| ALG-02 | Training Time | Time to train model on 10k cells, 2k genes | < 30 minutes on GPU | Wall clock time |
+| ALG-02 | Memory Usage | Peak memory usage during training | < 16GB | Process monitoring |
+| ALG-02 | Convergence Rate | Number of epochs to reach convergence | < 1000 epochs | ELBO monitoring |
+
+# Data Model {#sec-data-model}
+
+## Data Objects {#sec-data-objects}
+
+| Data Object ID | Data Object Name | Description | Related Scientific Data Object | Persistence |
+|----------------|------------------|-------------|-------------------------------|------------|
+| DO-01 | AnnData | Annotated data matrix for single-cell data | AnnData | Yes |
+| DO-02 | CountMatrix | Matrix of RNA counts | CountMatrix | Yes |
+| DO-03 | ModelParameters | Parameters of the RNA velocity model | ModelParameters | Yes |
+| DO-04 | PosteriorSamples | Samples from parameter posterior distributions | PosteriorSamples | Yes |
+| DO-05 | VelocityEstimates | RNA velocity vectors for each cell | VelocityEstimates | Yes |
+| DO-06 | ModelState | Immutable state container for model components | N/A | Yes |
+| DO-07 | ComponentConfig | Configuration for model components | N/A | Yes |
+
+## Data Object Attributes {#sec-data-object-attributes}
+
+**Data Object:** DO-01 (AnnData)
+
+| Attribute ID | Attribute Name | Description | Type | Units | Constraints | Default Value |
+|--------------|----------------|-------------|------|-------|-------------|---------------|
+| ATTR-01 | X | Gene expression matrix | Matrix | Counts | Non-negative | None |
+| ATTR-02 | layers["spliced"] | Spliced RNA counts | Matrix | Counts | Non-negative | None |
+| ATTR-03 | layers["unspliced"] | Unspliced RNA counts | Matrix | Counts | Non-negative | None |
+| ATTR-04 | obs | Cell annotations | DataFrame | Various | None | None |
+| ATTR-05 | var | Gene annotations | DataFrame | Various | None | None |
+| ATTR-06 | obsm | Cell embeddings | Dict[str, Matrix] | Various | None | None |
+| ATTR-07 | uns | Unstructured annotations | Dict | Various | None | None |
+
+**Data Object:** DO-03 (ModelParameters)
+
+| Attribute ID | Attribute Name | Description | Type | Units | Constraints | Default Value |
+|--------------|----------------|-------------|------|-------|-------------|---------------|
+| ATTR-08 | alpha | Transcription rates | Tensor | Transcripts per unit time | Non-negative | None |
+| ATTR-09 | beta | Splicing rates | Tensor | Per unit time | Non-negative | None |
+| ATTR-10 | gamma | Degradation rates | Tensor | Per unit time | Non-negative | None |
+| ATTR-11 | switching | Switching times | Tensor | Time | Non-negative | None |
+| ATTR-12 | t | Cell-specific times | Tensor | Time | Non-negative | None |
+| ATTR-13 | u_scale | Scaling factors for unspliced counts | Tensor | Dimensionless | Positive | 1.0 |
+| ATTR-14 | s_scale | Scaling factors for spliced counts | Tensor | Dimensionless | Positive | 1.0 |
+
+## Data Object Relationships {#sec-data-object-relationships}
+
+| Relationship ID | From Object | To Object | Type | Cardinality | Description |
+|-----------------|-------------|-----------|------|-------------|-------------|
+| REL-01 | AnnData | CountMatrix | Composition | 1:N | AnnData contains multiple count matrices (X, layers) |
+| REL-02 | PyroVelocityModel | ModelParameters | Association | 1:1 | Model uses parameters for computation |
+| REL-03 | PyroVelocityModel | PosteriorSamples | Association | 1:1 | Model generates posterior samples |
+| REL-04 | PosteriorSamples | VelocityEstimates | Derivation | 1:1 | Velocity is computed from posterior samples |
+| REL-05 | AnnData | VelocityEstimates | Association | 1:1 | Velocity estimates are stored in AnnData |
+| REL-06 | PyroVelocityModel | ModelState | Composition | 1:1 | Model contains state |
+| REL-07 | ModelState | ComponentConfig | Composition | 1:N | State contains component configurations |
+
+```{mermaid}
+classDiagram
+    AnnData *-- CountMatrix : contains
+    PyroVelocityModel o-- ModelParameters : uses
+    PyroVelocityModel --> PosteriorSamples : generates
+    PosteriorSamples --> VelocityEstimates : computes
+    AnnData o-- VelocityEstimates : stores
+    PyroVelocityModel *-- ModelState : contains
+    ModelState *-- ComponentConfig : contains
+
+    class AnnData {
+        +Matrix X
+        +Dict layers
+        +DataFrame obs
+        +DataFrame var
+    }
+
+    class PyroVelocityModel {
+        +DynamicsModel dynamics_model
+        +PriorModel prior_model
+        +LikelihoodModel likelihood_model
+        +ObservationModel observation_model
+        +InferenceGuide guide_model
+        +ModelState state
+    }
+
+    class ModelParameters {
+        +Tensor alpha
+        +Tensor beta
+        +Tensor gamma
+        +Tensor switching
+        +Tensor t
+    }
+
+    class PosteriorSamples {
+        +Dict parameter_samples
+        +int num_samples
+        +int num_chains
+    }
+
+    class VelocityEstimates {
+        +Matrix velocity
+        +Matrix uncertainty
+    }
+
+    class ModelState {
+        +Dict dynamics_state
+        +Dict prior_state
+        +Dict likelihood_state
+        +Dict observation_state
+        +Dict guide_state
+    }
+
+    class ComponentConfig {
+        +str name
+        +Dict params
+    }
+```
+
+## Data Management Requirements {#sec-data-management-requirements}
+
+| Requirement ID | Requirement Name | Description | Priority |
+|----------------|------------------|-------------|----------|
+| DM-01 | AnnData Compatibility | System must maintain compatibility with AnnData format | High |
+| DM-02 | Serialization | System must support serialization of models and results | High |
+| DM-03 | Versioning | System must track model and data versions | Medium |
+| DM-04 | Data Provenance | System must track data processing steps | Medium |
+| DM-05 | Large Dataset Support | System must support large datasets through chunking or streaming | Medium |
+
+**Data Volume Considerations:**
+
+- Expected data volume: 1-100GB per dataset
+- Growth rate: Linear with number of cells and genes
+- Retention period: Indefinite for published results
+
+**Data Access Patterns:**
+
+- Random access to cells and genes during training
+- Sequential access to posterior samples during analysis
+- Batch access to cells during visualization
+
+**Data Quality Requirements:**
+
+- Validation of input data format and content
+- Handling of missing values and zeros
+- Detection and reporting of data quality issues
+
+# Functional Requirements {#sec-functional-requirements}
+
+## Core Functions {#sec-core-functions}
+
+| Function ID | Function Name | Description | Related Usage Scenarios | Priority |
+|-------------|---------------|-------------|-------------------------|----------|
+| FN-01 | Data Preprocessing | Prepare single-cell data for velocity analysis | US-01 | High |
+| FN-02 | Model Configuration | Configure model components and parameters | US-02 | High |
+| FN-03 | Model Training | Train the model using variational inference | US-03 | High |
+| FN-04 | Posterior Sampling | Generate samples from posterior distributions | US-04 | High |
+| FN-05 | Velocity Computation | Compute RNA velocity with uncertainty | US-05 | High |
+| FN-06 | Result Visualization | Visualize velocity and uncertainty | US-06 | High |
+| FN-07 | Model Serialization | Save and load trained models | US-03, US-04 | Medium |
+| FN-08 | AnnData Integration | Store results in AnnData objects | US-01, US-05, US-06 | High |
+| FN-09 | Parameter Analysis | Analyze posterior distributions of parameters | US-04 | Medium |
+| FN-10 | Trajectory Inference | Infer cell trajectories from velocity | US-05, US-06 | Medium |
+
+## Function Hierarchy {#sec-function-hierarchy}
+
+```{mermaid}
+graph TD
+    FN01[FN-01: Data Preprocessing] --> FN02[FN-02: Model Configuration]
+    FN02 --> FN03[FN-03: Model Training]
+    FN03 --> FN04[FN-04: Posterior Sampling]
+    FN04 --> FN05[FN-05: Velocity Computation]
+    FN05 --> FN06[FN-06: Result Visualization]
+    FN03 --> FN07[FN-07: Model Serialization]
+    FN01 --> FN08[FN-08: AnnData Integration]
+    FN05 --> FN08
+    FN04 --> FN09[FN-09: Parameter Analysis]
+    FN05 --> FN10[FN-10: Trajectory Inference]
+    FN10 --> FN06
+
+    class FN01,FN02,FN03,FN04,FN05,FN06,FN07,FN08,FN09,FN10 function;
+```
+
+## Function Input/Output Specifications {#sec-function-inputoutput-specifications}
+
+**Function:** FN-03 (Model Training)
+
+**Inputs:**
+
+| Input Name | Type | Description | Source | Constraints |
+|------------|------|-------------|--------|------------|
+| adata | AnnData | Annotated data object | FN-01 | Must contain spliced/unspliced layers |
+| model_config | ModelConfig | Model configuration | FN-02 | Valid component configurations |
+| training_params | Dict | Training parameters | User | Valid parameter values |
+
+**Outputs:**
+
+| Output Name | Type | Description | Destination | Constraints |
+|-------------|------|-------------|------------|------------|
+| trained_model | PyroVelocityModel | Trained model | FN-04, FN-05, FN-07 | None |
+| loss_history | List[float] | Training loss history | FN-06 | None |
+| training_diagnostics | Dict | Training diagnostics | FN-06 | None |
+
+**Function:** FN-05 (Velocity Computation)
+
+**Inputs:**
+
+| Input Name | Type | Description | Source | Constraints |
+|------------|------|-------------|--------|------------|
+| trained_model | PyroVelocityModel | Trained model | FN-03, FN-07 | None |
+| posterior_samples | Dict | Posterior samples | FN-04 | None |
+| adata | AnnData | Annotated data object | FN-01 | Must contain spliced/unspliced layers |
+
+**Outputs:**
+
+| Output Name | Type | Description | Destination | Constraints |
+|-------------|------|-------------|------------|------------|
+| velocity | Matrix | Velocity vectors | FN-06, FN-08, FN-10 | None |
+| velocity_uncertainty | Matrix | Uncertainty estimates | FN-06, FN-08 | None |
+| velocity_metrics | Dict | Velocity quality metrics | FN-06, FN-08 | None |
+
+## Function Relationships {#sec-function-relationships}
+
+| From Function | To Function | Relationship Type | Description |
+|---------------|-------------|-------------------|-------------|
+| FN-01 | FN-02 | PROVIDES_DATA_TO | Preprocessed data is used for model configuration |
+| FN-02 | FN-03 | PROVIDES_CONFIG_TO | Model configuration is used for training |
+| FN-03 | FN-04 | ENABLES | Trained model is used for posterior sampling |
+| FN-04 | FN-05 | PROVIDES_DATA_TO | Posterior samples are used for velocity computation |
+| FN-05 | FN-06 | PROVIDES_DATA_TO | Velocity estimates are used for visualization |
+| FN-03 | FN-07 | PROVIDES_DATA_TO | Trained model is serialized |
+| FN-07 | FN-03 | PROVIDES_DATA_TO | Serialized model is loaded for continued training |
+| FN-05 | FN-08 | PROVIDES_DATA_TO | Velocity estimates are stored in AnnData |
+| FN-04 | FN-09 | PROVIDES_DATA_TO | Posterior samples are used for parameter analysis |
+| FN-05 | FN-10 | PROVIDES_DATA_TO | Velocity estimates are used for trajectory inference |
+
+# Quality Requirements {#sec-quality-requirements}
+
+## Accuracy and Precision {#sec-accuracy-and-precision}
+
+| Requirement ID | Requirement Name | Description | Verification Method | Target Value |
+|----------------|------------------|-------------|---------------------|--------------|
+| ACC-01 | Parameter Estimation Accuracy | Accuracy of inferred parameters on synthetic data | Comparison with ground truth | Within 10% of true values |
+| ACC-02 | Velocity Direction Accuracy | Accuracy of velocity direction on benchmark datasets | Comparison with known trajectories | > 80% agreement |
+| ACC-03 | Uncertainty Calibration | Calibration of uncertainty estimates | Coverage analysis | 95% confidence intervals contain true values in > 90% of cases |
+| ACC-04 | Numerical Stability | Stability of numerical computations | Stress testing with extreme values | No NaN or Inf values in results |
+
+**Validation Approach:**
+
+- Synthetic data with known ground truth
+- Benchmark datasets with established trajectories
+- Cross-validation with held-out data
+- Comparison with deterministic methods
+
+**Error Bounds:**
+
+- Parameter estimation: 95% confidence intervals
+- Velocity direction: Angular error < 30 degrees
+- Trajectory inference: Pseudotime correlation > 0.8
+
+## Performance Requirements {#sec-performance-requirements}
+
+| Requirement ID | Requirement Name | Description | Measurement Method | Target Value |
+|----------------|------------------|-------------|-------------------|-------------|
+| PERF-01 | Training Time | Time to train model on standard dataset | Wall clock time | < 30 minutes on GPU |
+| PERF-02 | Memory Usage | Peak memory usage during training | Process monitoring | < 16GB for 10k cells |
+| PERF-03 | Sampling Speed | Time to generate posterior samples | Wall clock time | < 5 minutes for 1000 samples |
+| PERF-04 | Velocity Computation Speed | Time to compute velocity from samples | Wall clock time | < 1 minute for 10k cells |
+| PERF-05 | Visualization Speed | Time to generate standard visualizations | Wall clock time | < 30 seconds per plot |
+
+**Scalability Requirements:**
+
+- Linear scaling with number of cells up to 100k cells
+- Linear scaling with number of genes up to 5k genes
+- Sublinear scaling with number of posterior samples
+
+**Resource Utilization Limits:**
+
+- CPU: < 8 cores at 100% utilization
+- GPU: < 16GB VRAM
+- Disk: < 100GB for intermediate results
+
+## Reliability Requirements {#sec-reliability-requirements}
+
+| Requirement ID | Requirement Name | Description | Verification Method | Target Value |
+|----------------|------------------|-------------|---------------------|-------------|
+| REL-01 | Training Convergence | Reliable convergence of training process | Success rate on benchmark datasets | > 95% success rate |
+| REL-02 | Numerical Robustness | Robustness to numerical issues | Testing with varied datasets | No failures due to numerical issues |
+| REL-03 | Error Handling | Proper handling of errors and edge cases | Exception testing | All errors properly caught and reported |
+| REL-04 | State Persistence | Reliable saving and loading of model state | Recovery testing | 100% successful recovery |
+
+**Fault Tolerance Approach:**
+
+- Automatic parameter initialization retry on failure
+- Graceful degradation with problematic genes
+- Checkpointing during long-running operations
+- Validation of inputs before computation
+
+**Data Integrity Requirements:**
+
+- Validation of AnnData objects before processing
+- Checksums for serialized models
+- Version tracking for models and data
+
+## Usability Requirements {#sec-usability-requirements}
+
+| Requirement ID | Requirement Name | Description | Verification Method | Target Value |
+|----------------|------------------|-------------|---------------------|-------------|
+| USE-01 | API Simplicity | Simplicity of core API for common tasks | User testing | < 5 lines of code for standard workflow |
+| USE-02 | Documentation Quality | Comprehensive and clear documentation | Documentation coverage | 100% API coverage with examples |
+| USE-03 | Error Messages | Clear and actionable error messages | User testing | > 90% of errors resolvable from message |
+| USE-04 | Visualization Quality | Quality and interpretability of visualizations | User feedback | > 80% positive feedback |
+| USE-05 | Integration Ease | Ease of integration with existing workflows | Integration testing | Compatible with scanpy/scVelo workflows |
+
+## Reproducibility Requirements {#sec-reproducibility-requirements}
+
+| Requirement ID | Requirement Name | Description | Verification Method | Target Value |
+|----------------|------------------|-------------|---------------------|-------------|
+| REP-01 | Seed Control | Control over random seeds for reproducibility | Reproducibility testing | Identical results with same seed |
+| REP-02 | Version Tracking | Tracking of software and data versions | Version inspection | All components versioned |
+| REP-03 | Parameter Logging | Logging of all parameters and configurations | Log inspection | All parameters recorded |
+| REP-04 | Environment Specification | Specification of computational environment | Environment testing | Reproducible environment |
+| REP-05 | Workflow Integration | Integration with workflow management systems | Workflow testing | Compatible with standard workflow systems |
+
+**Reproducibility Mechanisms:**
+
+- Explicit random seed control
+- Deterministic computation modes
+- Configuration serialization
+- Comprehensive logging
+
+**Provenance Requirements:**
+
+- Recording of data preprocessing steps
+- Tracking of model configurations
+- Logging of training parameters
+- Documentation of analysis decisions
+
+# System Constraints {#sec-system-constraints}
+
+## Scientific Constraints {#sec-scientific-constraints}
+
+| Constraint ID | Constraint Name | Description | Source | Impact |
+|---------------|-----------------|-------------|--------|--------|
+| SC-01 | RNA Velocity Model Assumptions | The model assumes first-order kinetics for transcription, splicing, and degradation | RNA velocity theory | Limits ability to model complex regulatory dynamics |
+| SC-02 | Steady State Assumption | The model assumes cells can reach steady state | RNA velocity theory | May not accurately model highly dynamic processes |
+| SC-03 | Parameter Identifiability | Not all parameters may be uniquely identifiable from the data | Statistical theory | Requires careful prior specification and validation |
+| SC-04 | Data Quality Requirements | Requires high-quality spliced and unspliced count data | Single-cell sequencing | Limits applicability to certain datasets |
+| SC-05 | Biological Variability | Biological systems exhibit inherent variability | Biology | Requires probabilistic modeling approach |
+
+## Technical Constraints {#sec-technical-constraints}
+
+| Constraint ID | Constraint Name | Description | Source | Impact |
+|---------------|-----------------|-------------|--------|--------|
+| TC-01 | AnnData Compatibility | Must maintain compatibility with AnnData format | Ecosystem integration | Influences data structure design |
+| TC-02 | Pyro/PyTorch Dependency | Relies on Pyro and PyTorch for probabilistic programming | Implementation choice | Affects performance and deployment options |
+| TC-03 | Python Ecosystem | Must integrate with Python-based single-cell analysis tools | Ecosystem integration | Limits language and framework choices |
+| TC-04 | Backward Compatibility | Must maintain compatibility with legacy implementation during transition | Project requirement | Constrains design choices |
+| TC-05 | Protocol-First Architecture | Uses Protocol interfaces for component contracts | Architecture decision | Influences implementation patterns |
+
+## Computational Resource Constraints {#sec-computational-resource-constraints}
+
+| Constraint ID | Constraint Name | Description | Source | Impact |
+|---------------|-----------------|-------------|--------|--------|
+| RC-01 | Memory Usage | Large single-cell datasets can exceed available memory | Hardware limitations | Requires efficient memory management |
+| RC-02 | Inference Speed | Variational inference can be computationally intensive | Algorithm complexity | Affects user experience and scalability |
+| RC-03 | Parallelization | Need for efficient parallelization across cells and genes | Performance requirements | Influences algorithm design |
+| RC-04 | GPU Acceleration | Should leverage GPU acceleration when available | Performance requirements | Affects implementation choices |
+| RC-05 | Deployment Environment | Must run in standard computational biology environments | User environment | Limits dependency choices |
+
+# Deployment Requirements {#sec-deployment-requirements}
+
+## Installation Environment {#sec-installation-environment}
+
+| Requirement ID | Requirement Name | Description | Priority |
+|----------------|------------------|-------------|----------|
+| DE-01 | Python Compatibility | Compatible with Python 3.8+ | High |
+| DE-02 | Package Management | Installable via pip and conda | High |
+| DE-03 | Dependency Management | Clear specification of dependencies | High |
+| DE-04 | Platform Support | Support for Linux, macOS, and Windows | Medium |
+| DE-05 | GPU Support | Optional GPU support with clear instructions | Medium |
+
+**Hardware Requirements:**
+
+- CPU: Multi-core x86_64 processor
+- Memory: 16GB+ RAM (32GB+ recommended)
+- Storage: 10GB+ free space
+- GPU: CUDA-compatible GPU (optional but recommended)
+
+**Software Requirements:**
+
+- Python 3.8+
+- PyTorch 1.10+
+- Pyro 1.8+
+- AnnData 0.8+
+- Scanpy 1.9+
+- NumPy 1.20+
+- SciPy 1.7+
+
+**Network Requirements:**
+
+- Internet connection for installation
+- No ongoing network requirements for operation
+
+## Deployment Process Requirements {#sec-deployment-process-requirements}
+
+| Requirement ID | Requirement Name | Description | Priority |
+|----------------|------------------|-------------|----------|
+| DP-01 | Installation Documentation | Clear installation instructions | High |
+| DP-02 | Dependency Resolution | Automatic resolution of dependencies | High |
+| DP-03 | Version Compatibility | Clear specification of version compatibility | Medium |
+| DP-04 | Installation Verification | Verification of successful installation | Medium |
+| DP-05 | Containerization | Support for containerized deployment | Low |
+
+## Integration Requirements {#sec-integration-requirements}
+
+| Requirement ID | Requirement Name | Description | Priority |
+|----------------|------------------|-------------|----------|
+| INT-01 | AnnData Integration | Seamless integration with AnnData objects | High |
+| INT-02 | Scanpy Integration | Compatible with Scanpy workflows | High |
+| INT-03 | scVelo Integration | Compatible with scVelo for comparison | High |
+| INT-04 | Workflow System Integration | Integration with workflow management systems | Medium |
+| INT-05 | Visualization Integration | Integration with standard visualization tools | Medium |
+
+**Integration Points:**
+
+- AnnData for data exchange
+- Scanpy for preprocessing and visualization
+- scVelo for comparison and validation
+- Workflow systems (Snakemake, Nextflow) for pipeline integration
+- Visualization tools (Matplotlib, Plotly) for result presentation
+
+**Data Exchange Formats:**
+
+- AnnData (H5AD) for single-cell data
+- HDF5 for model serialization
+- CSV/TSV for tabular results
+- JSON for configuration and metadata
+- PDF/PNG for visualizations
+
+# Development Requirements {#sec-development-requirements}
+
+## Development Environment {#sec-development-environment}
+
+| Requirement ID | Requirement Name | Description | Priority |
+|----------------|------------------|-------------|----------|
+| DEV-01 | Version Control | Git-based version control | High |
+| DEV-02 | Issue Tracking | Issue tracking system | High |
+| DEV-03 | Continuous Integration | Automated testing and integration | High |
+| DEV-04 | Code Quality | Code quality checks and linting | Medium |
+| DEV-05 | Development Documentation | Documentation for developers | Medium |
+
+**Development Tools:**
+
+- Git for version control
+- GitHub for collaboration and issue tracking
+- Poetry for dependency management
+- Pytest for testing
+- Black for code formatting
+- Mypy and Beartype for type checking
+- Sphinx/Quarto for documentation
+
+**Version Control Requirements:**
+
+- Feature branch workflow
+- Pull request reviews
+- Semantic versioning
+- Conventional commits
+
+**Continuous Integration/Deployment Requirements:**
+
+- Automated testing on pull requests
+- Test coverage reporting
+- Documentation building
+- Package publishing
+
+## Documentation Requirements {#sec-documentation-requirements}
+
+| Requirement ID | Requirement Name | Description | Priority |
+|----------------|------------------|-------------|----------|
+| DOC-01 | API Documentation | Comprehensive API documentation | High |
+| DOC-02 | User Guide | User guide with examples | High |
+| DOC-03 | Tutorials | Step-by-step tutorials | High |
+| DOC-04 | Architecture Documentation | Documentation of system architecture | Medium |
+| DOC-05 | Development Guide | Guide for contributors | Medium |
+
+**Documentation Types:**
+
+- API reference
+- User guide
+- Tutorials
+- Architecture documentation
+- Development guide
+- Release notes
+
+**Documentation Format:**
+
+- Quarto for web documentation
+- Markdown for GitHub documentation
+- Docstrings for API documentation
+- Jupyter notebooks for tutorials
+- Mermaid diagrams for architecture
+
+## Testing and Validation Requirements {#sec-testing-and-validation-requirements}
+
+| Requirement ID | Requirement Name | Description | Priority |
+|----------------|------------------|-------------|----------|
+| TEST-01 | Unit Testing | Testing of individual components | High |
+| TEST-02 | Integration Testing | Testing of component interactions | High |
+| TEST-03 | Validation Testing | Validation against ground truth | High |
+| TEST-04 | Performance Testing | Testing of performance characteristics | Medium |
+| TEST-05 | Compatibility Testing | Testing of ecosystem compatibility | Medium |
+
+**Testing Approaches:**
+
+- Unit Testing: Pytest for individual components
+- Integration Testing: Pytest-BDD for component interactions
+- System Testing: End-to-end workflows
+- Performance Testing: Benchmarking against reference datasets
+- Validation Testing: Comparison with ground truth and legacy implementation
+
+**Test Environment Requirements:**
+
+- Automated test environment
+- Synthetic test data
+- Benchmark datasets
+- Performance monitoring tools
+- Continuous integration system
+
+# Risk Assessment {#sec-risk-assessment}
+
+## Technical Risks {#sec-technical-risks}
+
+| Risk ID | Risk Description | Affected Requirements | Probability | Impact | Risk Exposure |
+|---------|------------------|----------------------|-------------|--------|---------------|
+| TR-01 | Performance issues with large datasets | PERF-01, PERF-02, PERF-03 | Medium | High | High |
+| TR-02 | Numerical instability in parameter inference | ACC-01, ACC-03, REL-02 | Medium | High | High |
+| TR-03 | Compatibility issues with ecosystem tools | INT-01, INT-02, INT-03 | Low | Medium | Low |
+| TR-04 | Difficulty maintaining both PyTorch and JAX implementations | TC-02, TC-04, DEV-03 | Medium | Medium | Medium |
+| TR-05 | Dependency conflicts in deployment environments | DE-01, DE-02, DE-03 | Low | Medium | Low |
+
+## Scientific Risks {#sec-scientific-risks}
+
+| Risk ID | Risk Description | Affected Requirements | Probability | Impact | Risk Exposure |
+|---------|------------------|----------------------|-------------|--------|---------------|
+| SR-01 | Model assumptions not valid for all biological systems | SC-01, SC-02, ACC-02 | High | Medium | High |
+| SR-02 | Parameter identifiability issues | SC-03, ACC-01, ACC-03 | Medium | High | High |
+| SR-03 | Data quality issues affecting results | SC-04, ACC-02, REL-01 | Medium | High | High |
+| SR-04 | Difficulty interpreting uncertainty estimates | USE-04, ACC-03 | Medium | Medium | Medium |
+| SR-05 | Challenges in validating results without ground truth | ACC-02, TEST-03 | High | Medium | High |
+
+## Mitigation Strategies {#sec-mitigation-strategies}
+
+| Risk ID | Mitigation Strategy | Responsible Party | Monitoring Approach |
+|---------|---------------------|-------------------|---------------------|
+| TR-01 | Implement data chunking and streaming for large datasets | Development Team | Performance benchmarking |
+| TR-02 | Use robust initialization and regularization techniques | Research Team | Numerical stability testing |
+| TR-03 | Maintain compatibility layer and comprehensive integration tests | Development Team | Ecosystem compatibility testing |
+| TR-04 | Focus on modular design with shared interfaces | Architecture Team | Code quality metrics |
+| TR-05 | Use containerization and environment specification | DevOps Team | Deployment testing |
+| SR-01 | Develop multiple model variants for different biological contexts | Research Team | Model comparison on diverse datasets |
+| SR-02 | Use informative priors and sensitivity analysis | Research Team | Parameter recovery testing |
+| SR-03 | Implement robust preprocessing and quality control | Data Team | Data quality metrics |
+| SR-04 | Develop intuitive visualizations for uncertainty | UX Team | User feedback |
+| SR-05 | Use synthetic data and cross-validation for validation | Validation Team | Validation metrics |
+
+# Glossary {#sec-glossary}
+
+## Domain Terminology {#sec-domain-terminology}
+
+| Term | Definition | Source |
+|------|------------|--------|
+| RNA Velocity | The time derivative of gene expression, representing the rate of change of mRNA abundance | La Manno et al., 2018 |
+| Spliced mRNA | Mature messenger RNA with introns removed | Molecular biology |
+| Unspliced mRNA | Precursor messenger RNA containing introns | Molecular biology |
+| Transcription | Process of creating RNA from a DNA template | Molecular biology |
+| Splicing | Process of removing introns from pre-mRNA | Molecular biology |
+| Degradation | Process of breaking down mRNA | Molecular biology |
+| Cell Fate | The developmental trajectory or end state of a cell | Developmental biology |
+| Trajectory Inference | Computational methods to order cells along developmental paths | Computational biology |
+| Pseudotime | Computational ordering of cells based on their progression through a biological process | Computational biology |
+
+## Technical Terminology {#sec-technical-terminology}
+
+| Term | Definition | Source |
+|------|------------|--------|
+| AnnData | Annotated data format for single-cell genomics | AnnData documentation |
+| Pyro | Probabilistic programming language built on PyTorch | Pyro documentation |
+| Variational Inference | Method for approximating posterior distributions | Statistical learning theory |
+| ELBO | Evidence Lower Bound, objective function in variational inference | Statistical learning theory |
+| Protocol | Interface definition in Python typing | Python typing documentation |
+| Modular Architecture | Design approach based on interchangeable components | Software engineering |
+| JAX | Numerical computing library with automatic differentiation | JAX documentation |
+| NumPyro | Probabilistic programming library built on JAX | NumPyro documentation |
+| Railway-Oriented Programming | Programming pattern for explicit error handling | Functional programming |
+
+## Acronyms {#sec-acronyms}
+
+| Acronym | Definition |
+|---------|------------|
+| RNA | Ribonucleic Acid |
+| mRNA | Messenger RNA |
+| scRNA-seq | Single-cell RNA sequencing |
+| SVI | Stochastic Variational Inference |
+| ODE | Ordinary Differential Equation |
+| GPU | Graphics Processing Unit |
+| API | Application Programming Interface |
+| MCMC | Markov Chain Monte Carlo |
+| CI/CD | Continuous Integration/Continuous Deployment |
+| BDD | Behavior-Driven Development |
