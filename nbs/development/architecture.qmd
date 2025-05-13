@@ -74,12 +74,17 @@ graph TB
     Main -->|contains| Guides["Inference Guides"]
     Main -->|contains| Registry["Registry System"]
     Main -->|contains| Factory["Factory System"]
+    Main -->|uses| Validation["Validation Framework"]
 
     Dynamics -->|implements| DynamicsInterface["DynamicsModel Protocol"]
     Priors -->|implements| PriorsInterface["PriorModel Protocol"]
     Likelihoods -->|implements| LikelihoodsInterface["LikelihoodModel Protocol"]
     Observations -->|implements| ObservationsInterface["ObservationModel Protocol"]
     Guides -->|implements| GuidesInterface["InferenceGuide Protocol"]
+
+    Validation -->|contains| ParameterRecovery["Parameter Recovery"]
+    Validation -->|contains| ModelComparison["Model Comparison"]
+    Validation -->|contains| ValidationMetrics["Validation Metrics"]
 
     Factory -->|uses| Registry
     Factory -->|creates| Main
@@ -88,9 +93,10 @@ graph TB
     class Dynamics,Priors,Likelihoods,Observations,Guides component;
     class DynamicsInterface,PriorsInterface,LikelihoodsInterface,ObservationsInterface,GuidesInterface interface;
     class Registry,Factory system;
+    class Validation,ParameterRecovery,ModelComparison,ValidationMetrics validation;
 ```
 
-### Core Components {#sec-core-components}
+### Core Components {#sec-overview-core-components}
 
 1. **PyroVelocityModel**: Main model class that composes specialized component models
 2. **Dynamics Models**: Implement the mathematical models of RNA dynamics
@@ -108,6 +114,10 @@ graph TB
    - LegacyAutoGuideFactory: Compatibility implementation matching the legacy guide
 7. **Registry System**: Enables component registration and retrieval
 8. **Factory System**: Creates components and models from configurations
+9. **Validation Framework**: Provides tools for model validation and comparison
+   - Parameter Recovery: Validates model's ability to recover known parameters from synthetic data
+   - Model Comparison: Compares different model implementations and configurations
+   - Validation Metrics: Computes metrics for quantifying validation performance
 
 ## Major Functions Summary {#sec-major-functions-summary}
 
@@ -123,6 +133,10 @@ graph TB
 | LikelihoodModel | forward | Defines likelihood distributions for observed data | FN-03 |
 | ObservationModel | forward | Transforms observed data for model input | FN-01 |
 | InferenceGuide | create_guide | Creates guide functions for variational inference | FN-03 |
+| ParameterRecovery | generate_synthetic_data | Generates synthetic data with known parameters | FN-03 |
+| ParameterRecovery | validate_parameter_recovery | Validates model's ability to recover known parameters | FN-03 |
+| ModelComparison | compare_parameters | Compares parameter estimates between implementations | FN-04 |
+| ValidationMetrics | compute_parameter_metrics | Computes metrics for parameter recovery validation | FN-04 |
 
 ## Architecture Decisions {#sec-architecture-decisions}
 
@@ -133,6 +147,7 @@ graph TB
 | AD-03 | Immutable State Pattern | Thread safety, predictable behavior, functional programming style | Mutable state | Simplified reasoning about code, reduced side effects |
 | AD-04 | Registry Pattern | Dynamic component discovery, extensibility | Direct imports | Decoupling between component implementations and usage |
 | AD-05 | Factory Pattern | Encapsulation of creation logic, configuration management | Direct instantiation | Simplified client code, centralized creation logic |
+| AD-06 | Parameter Recovery Validation | Validate model's ability to recover known parameters from synthetic data before applying to real data | Direct comparison to legacy implementation only | Ensures model is internally consistent and capable of recovering parameters, prerequisite for robust model comparison |
 
 # Computational Implementation {#sec-computational-implementation}
 
@@ -310,6 +325,29 @@ def train(self, adata: AnnData, **kwargs) -> Dict[str, Any]:
 - Memory requirements: O(num_cells * num_genes * num_samples)
 - Parallelization strategy: Vectorized operations with GPU acceleration
 
+**Method ID:** CM-02
+
+**Method Name:** Parameter Recovery Validation
+
+**Related Function:** FN-03 (Parameter Recovery Validation)
+
+**Description:** Validates model's ability to recover known parameters from synthetic data
+
+**Method Details:**
+
+- Parameter generation: Samples parameter sets from prior distributions
+- Synthetic data generation: Creates synthetic data using known parameters
+- Inference: Performs inference on synthetic data to estimate parameters
+- Evaluation: Compares estimated parameters to original known values
+- Metrics computation: Calculates recovery accuracy, precision, and coverage metrics
+
+**Implementation Details:**
+
+- Libraries/frameworks used: PyTorch, Pyro, NumPy, SciPy
+- Computational complexity: O(num_parameter_sets * num_samples * max_sample_size * num_genes)
+- Memory requirements: O(num_parameter_sets * num_samples * max_sample_size * num_genes)
+- Parallelization strategy: Parallel processing across parameter sets and samples
+
 ## Computational Interfaces {#sec-computational-interfaces}
 
 **Interface ID:** CIF-01
@@ -361,6 +399,67 @@ class DynamicsModel(Protocol):
 - Missing parameters: Raises ValueError with descriptive message
 - Invalid parameters: Validates parameters and raises ValueError for negative values
 - Numerical issues: Special handling for edge cases (e.g., β = γ)
+
+**Interface ID:** CIF-02
+
+**Interface Name:** ParameterRecoveryValidator Protocol
+
+**Description:** Interface for parameter recovery validation
+
+**Implementation Approach:** Python Protocol with runtime checking
+
+**API Definition:**
+
+```python
+@runtime_checkable
+class ParameterRecoveryValidator(Protocol):
+    def generate_synthetic_data(
+        self,
+        model_config: Dict[str, Any],
+        prior_config: Dict[str, Any],
+        num_cells: int,
+        num_genes: int,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """
+        Generate synthetic data with known parameters.
+        """
+        ...
+
+    def validate_parameter_recovery(
+        self,
+        model_config: Dict[str, Any],
+        synthetic_data: Dict[str, Any],
+        **kwargs
+    ) -> Dict[str, Any]:
+        """
+        Validate model's ability to recover known parameters.
+        """
+        ...
+```
+
+**Parameters:**
+
+| Parameter | Type | Description | Default Value | Constraints |
+|-----------|------|-------------|---------------|-------------|
+| model_config | Dict[str, Any] | Model configuration | None | Must specify model components |
+| prior_config | Dict[str, Any] | Prior distribution configuration | None | Must specify prior distributions for all parameters |
+| num_cells | int | Number of cells in synthetic data | None | > 0 |
+| num_genes | int | Number of genes in synthetic data | None | > 0 |
+| synthetic_data | Dict[str, Any] | Synthetic data with known parameters | None | Must contain u_obs, s_obs, true_parameters |
+
+**Return Values:**
+
+| Return Value | Type | Description | Constraints |
+|--------------|------|-------------|-------------|
+| synthetic_data | Dict[str, Any] | Synthetic data with known parameters | Must contain u_obs, s_obs, true_parameters |
+| validation_results | Dict[str, Any] | Validation metrics and results | Must contain recovery_metrics, coverage_metrics |
+
+**Error Handling:**
+
+- Missing parameters: Raises ValueError with descriptive message
+- Invalid parameters: Validates parameters and raises ValueError for invalid values
+- Inference failure: Provides diagnostic information for inference failures
 
 # Structural View {#sec-structural-view}
 

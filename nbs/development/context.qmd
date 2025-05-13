@@ -305,6 +305,18 @@ The PyroVelocity computational workflow consists of six main stages:
   4. Monitor convergence and diagnostics
 - **Outputs**: Trained model with optimized parameters
 
+### Parameter Recovery Validation Workflow
+
+- **Purpose**: Validate model's ability to recover known parameters from synthetic data
+- **Inputs**: Model specification and prior distributions
+- **Steps**:
+  1. Generate known parameter sets from prior distributions
+  2. Create synthetic data using these parameters and the model's generative process
+  3. Perform inference on synthetic data to estimate parameters
+  4. Compare estimated parameters to original known values
+  5. Analyze recovery accuracy, precision, and coverage
+- **Outputs**: Validation metrics and visualizations demonstrating parameter recovery performance
+
 ### Posterior Analysis Workflow
 
 - **Purpose**: Generate and analyze posterior samples
