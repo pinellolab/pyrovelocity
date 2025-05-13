@@ -3,29 +3,277 @@ title: Development Overview
 format:
   html:
     toc: true
+    toc-depth: 3
+    number-sections: true
+    mermaid-format: js
+    mermaid:
+      theme: dark
+bibliography: ../references.bib
+csl: ../bibstyle.csl
 ---
 
-## Introduction
+# Introduction {#sec-introduction}
 
-This section provides technical documentation for developers working on PyroVelocity. It covers the architecture, implementation details, and testing framework of the project.
+This section provides comprehensive technical documentation for developers working on PyroVelocity. It follows the AMDiRE (Artefact-based Model for Domain-independent Requirements Engineering) framework to ensure a structured, traceable approach to development documentation [@Mendez-Fernandez2015-xj;@Chuprina2021-xx].
 
-## Purpose
+## Purpose of this Document {#sec-purpose}
 
-The development documentation is intended for:
+The development documentation serves as the authoritative reference for PyroVelocity's architecture, implementation details, and testing framework. It is designed to:
 
-- Contributors to the PyroVelocity codebase
-- Researchers extending the models or algorithms
-- Developers integrating PyroVelocity into other systems
+- Provide a clear understanding of the system's scientific context and requirements
+- Document the system architecture and implementation decisions
+- Establish traceability between requirements and implementation
+- Guide testing and validation efforts
+- Support the ongoing migration from legacy to modular implementations
 
-## Contents
+## Intended Audience {#sec-audience}
 
-The development documentation is organized into the following sections:
+This documentation is intended for:
 
-- [Architecture](architecture.qmd): Detailed information about the modular architecture of PyroVelocity, including component interfaces, implementation patterns, and design decisions.
-- [Testing](testing.qmd): Information about the testing framework, validation approach, and guidelines for writing tests.
+- **Contributors**: Developers working directly on the PyroVelocity codebase
+- **Researchers**: Scientists extending the models or algorithms
+- **Third-party developers**: Developers incorporating or integrating PyroVelocity into other systems
+- **Evaluators**: Prospective users verifying system functionality and correctness for their specific use cases
 
-## Development Workflow
+## Artifact-based requirements framework {#sec-amdire}
 
-PyroVelocity follows a protocol-first architecture with all contracts defined through Protocol interfaces. The project is organized into modular components that can be composed to create different model configurations.
+::: {.callout-note collapse="true" title="Relationships to international standards"}
+Note that the Requirements Specification is related to the [software requirements specification](https://en.wikipedia.org/wiki/Software_requirements_specification) associated to the [IEEE/ISO/IEC 29148-2018](https://standards.ieee.org/ieee/29148/6937/) [@Unknown2018-jr] and the System Specification is related to the [software design description](https://en.wikipedia.org/wiki/Software_design_description) associated to the [IEEE 1016-2009](https://standards.ieee.org/ieee/1016/4502/) [@Unknown2009-wv].
+:::
+
+PyroVelocity's development documentation follows the AMDiRE (Artefact-based Model for Domain-independent Requirements Engineering) framework [@Mendez-Fernandez2015-xj], which provides a structured approach to requirements engineering and system documentation.
+
+AMDiRE focuses on defining artifacts rather than activities, allowing for flexibility in development processes while maintaining clear documentation of what needs to be created. The framework consists of three primary specifications:
+
+1. **Context Specification**: Defines the scientific context, stakeholders, domain knowledge, and constraints
+2. **Requirements Specification**: Defines what the system should do from an external perspective
+3. **System Specification**: Defines how the system is implemented internally
+
+This artifact-based approach enables:
+
+- Clear traceability between scientific objectives and implementation
+- Flexibility in development processes
+- Consistent documentation structure
+- Evaluation of requirements implementation status and validation through traceable test case tracking and reference
+
+```{mermaid}
+graph TD
+    CS[Context Specification] --> RS[Requirements Specification]
+    RS --> SS[System Specification]
+    CS --> TF[Testing Framework]
+    RS --> TF
+    SS --> TF
+
+    class CS,RS,SS,TF document;
+```
+
+# Documentation Structure {#sec-structure}
+
+## Overview of Documents {#sec-documents}
+
+The PyroVelocity development documentation consists of four primary documents:
+
+1. [**Context Specification**](context.qmd): Defines the scientific context, stakeholders, research goals, and constraints
+2. [**Requirements Specification**](requirements.qmd): Defines the system's functional and quality requirements
+3. [**System Architecture and Design**](architecture.qmd): Defines the internal structure and implementation approach
+4. [**Testing Framework**](testing.qmd): Defines the testing approach and establishes traceability to requirements
+
+Each document builds upon the previous ones, creating a comprehensive view of the system from scientific context to implementation details.
+
+## Document Relationships {#sec-relationships}
+
+The documents in the development section are interconnected, with each subsequent document building upon the previous ones:
+
+[interactive chart](https://bit.ly/44CjSkL)
+
+```{mermaid}
+flowchart TD
+    subgraph "Scientific Context"
+        CS[Context Specification]
+        CS1[Research Goals]
+        CS2[Domain Model]
+        CS3[Constraints]
+        CS --> CS1
+        CS --> CS2
+        CS --> CS3
+    end
+
+    subgraph "System Requirements"
+        RS[Requirements Specification]
+        RS1[Functional Requirements]
+        RS2[Quality Requirements]
+        RS3[Data Model]
+        RS --> RS1
+        RS --> RS2
+        RS --> RS3
+    end
+
+    subgraph "System Design"
+        SS[System Architecture]
+        SS1[Component Model]
+        SS2[Computational Implementation]
+        SS3[Data Processing Pipeline]
+        SS --> SS1
+        SS --> SS2
+        SS --> SS3
+    end
+
+    subgraph "Validation"
+        TF[Testing Framework]
+        TF1[Test Coverage]
+        TF2[BDD Features]
+        TF3[Traceability]
+        TF --> TF1
+        TF --> TF2
+        TF --> TF3
+    end
+
+    CS --> RS
+    RS --> SS
+    CS --> TF
+    RS --> TF
+    SS --> TF
+
+    class CS,RS,SS,TF document;
+```
+
+# Document Summaries {#sec-summaries}
+
+## Context Specification {#sec-context-summary}
+
+The [Context Specification](context.qmd) establishes the foundation for PyroVelocity by defining:
+
+- **Research Problem**: The scientific challenges in RNA velocity analysis that PyroVelocity addresses
+- **Stakeholders**: The researchers, developers, and users involved in the project
+- **Scientific Objectives**: The research goals that drive the development
+- **Domain Model**: The scientific workflows, data objects, and algorithms
+- **Constraints**: The scientific, technical, and computational constraints
+
+This document serves as the primary reference for understanding the scientific context and objectives of PyroVelocity.
+
+## Requirements Specification {#sec-requirements-summary}
+
+The [Requirements Specification](requirements.qmd) defines what PyroVelocity should do from an external perspective:
+
+- **System Vision**: The overall scope and capabilities of PyroVelocity
+- **Usage Model**: How users interact with the system
+- **Computational Model**: The mathematical and algorithmic foundations
+- **Data Model**: The structure and relationships of data objects
+- **Functional Requirements**: The specific capabilities the system must provide
+- **Quality Requirements**: Performance, accuracy, reliability, and other quality attributes
+
+This document serves as the primary reference for understanding what PyroVelocity should do without specifying how it will be implemented.
+
+## System Architecture and Design {#sec-architecture-summary}
+
+The [System Architecture and Design](architecture.qmd) document defines how PyroVelocity is implemented internally:
+
+- **Architecture Overview**: The high-level organization and design patterns
+- **Computational Implementation**: How mathematical models and algorithms are implemented
+- **Component Model**: The modular components and their relationships
+- **Data Processing Pipeline**: How data flows through the system
+- **Execution Framework**: How computation is executed and managed
+- **Reproducibility Implementation**: How deterministic results are approximated amidst stochastic algorithms
+
+This document serves as the primary reference for understanding the internal structure and implementation of PyroVelocity.
+
+## Testing Framework {#sec-testing-summary}
+
+The [Testing Framework](testing.qmd) document defines the approach to testing and validation:
+
+- **Testing Philosophy**: The dual approach of unit testing and behavior-driven development
+- **AMDiRE Traceability**: How tests relate to context, requirements, and system elements
+- **Test Coverage**: The current state of test coverage across the system
+- **BDD Feature Files**: How behavior specifications are defined
+- **Step Definitions**: How behavior specifications are implemented
+- **Validation Framework**: How the system is validated against scientific requirements
+
+This document serves as the primary reference for understanding how PyroVelocity is tested and validated.
+
+# Implementation Migration Context {#sec-migration}
+
+PyroVelocity is currently in a transition phase, migrating from a legacy implementation to a modular architecture. The documentation reflects this transition and provides guidance for all implementations:
+
+1. **Legacy Implementation**: The original implementation in `src/pyrovelocity/models/_*.py`
+2. **Modular PyTorch/Pyro Implementation**: The current focus in `src/pyrovelocity/models/modular/`
+3. **JAX/NumPyro Implementation**: The future direction in `src/pyrovelocity/models/jax/`
+
+The development documentation primarily focuses on the modular PyTorch/Pyro implementation while acknowledging the legacy implementation and preparing for the JAX/NumPyro migration.
+
+```{mermaid}
+timeline
+    title PyroVelocity Implementation Migration
+    section Legacy
+        models/_velocity.py : Original implementation
+        models/_*.py : Supporting classes and utilities
+    section Modular
+        Protocol-First : Interface definitions
+        Component-Based : Interchangeable components
+        Validation : Against legacy implementation
+    section JAX/NumPyro
+        Functional : Pure functional approach
+        Performance : Improved computational efficiency
+        Feature Parity : Equivalent functionality
+```
+
+# Navigation Guide {#sec-navigation}
+
+## For New Contributors {#sec-for-contributors}
+
+If you're new to the PyroVelocity project:
+
+1. Start with the [Context Specification](context.qmd) to understand the scientific problem
+2. Review the [System Architecture](architecture.qmd) to understand the modular design
+3. Explore the [Testing Framework](testing.qmd) to understand how to validate your contributions
+
+## For Researchers {#sec-for-researchers}
+
+If you're a researcher looking to extend PyroVelocity:
+
+1. Start with the [Context Specification](context.qmd) to understand the scientific foundations
+2. Review the [Requirements Specification](requirements.qmd) to understand the computational models
+3. Explore the [System Architecture](architecture.qmd) to understand how to extend the system
+
+## For Integrators {#sec-for-integrators}
+
+If you're integrating PyroVelocity into another system:
+
+1. Start with the [Requirements Specification](requirements.qmd) to understand the system capabilities
+2. Review the [System Architecture](architecture.qmd) to understand the component interfaces
+3. Explore the [Testing Framework](testing.qmd) to understand how to validate your integration
+
+# Keeping Documentation Updated {#sec-updating}
+
+The development documentation should be updated whenever:
+
+1. New scientific objectives or constraints are identified
+2. New requirements are added or existing ones are modified
+3. The system architecture or implementation changes
+4. New tests are added or existing ones are modified
+
+When updating documentation:
+
+1. Maintain traceability between documents
+2. Update all affected documents to maintain consistency
+3. Ensure test coverage for new or modified elements
+4. Consider the updates in the context of the AMDiRE framework [@Mendez-Fernandez2015-xj]
 
 For more information on contributing to PyroVelocity, please see the [Contributing](../about/contributing.qmd) guide.
+
+# Glossary {#sec-glossary}
+
+<details>
+<summary>Development Documentation Terminology</summary>
+
+| Term | Definition | Example |
+|------|------------|---------|
+| Context Specification | Document defining the scientific context, stakeholders, and domain model | - |
+| Requirements Specification | Document defining functional and quality requirements | - |
+| System Specification | Document defining the system architecture and components | - |
+| Research Goal | A research goal that the system aims to achieve | RG-01: Probabilistic RNA Velocity |
+| Scientific Constraint | A limitation imposed by scientific principles | SC-01: RNA Velocity Model Assumptions |
+| Functional Requirement | A capability that the system must provide | FN-03: Model Training |
+| Component | A modular part of the system architecture | CMP-01: PyroVelocityModel |
+| Algorithm | A specific computational procedure | ALG-01: Standard RNA Velocity Dynamics |
+
+</details>
