@@ -1,5 +1,5 @@
 ---
-title: "System Architecture and Design"
+title: "System Architecture and Design Specification"
 format:
   html:
     mermaid-format: js
@@ -13,73 +13,354 @@ format:
 
 # Introduction {#sec-introduction}
 
-## Purpose {#sec-purpose}
+## Purpose of this Document {#sec-purpose}
 
-This document describes the architecture and design of PyroVelocity's modular implementation. It serves as both a reference for ongoing development and as a resource for new developers and users who may be interested in extending the functionality of existing models or creating and comparing new ones. As such, this document will evolve alongside the implementation.
+This Scientific Computing System Specification provides a glass-box view of PyroVelocity's architecture, detailing its internal structure, computational methods, and implementation approach. This document builds upon the [Scientific Context Specification](context.qmd) and [Requirements Specification](requirements.qmd) by defining how the system realizes the specified requirements through computational algorithms, data structures, and architectural components. It serves as the primary reference for domain scientists, computational specialists, developers, and testers to guide the implementation, validation, and deployment of the system.
 
-## Scope {#sec-scope}
+## Document Conventions {#sec-conventions}
 
-This document covers:
+This document uses the following conventions:
 
-- High-level system architecture
-- Key components and their interactions
-- Data flow and processing pipelines
-- Major design decisions and their rationales
-- Technical constraints and quality attributes
+- *Italics* are used for terms defined in the glossary
+- **Bold** is used for emphasis and key concepts
+- Blue text indicates a cross-reference to another section
+- Monospaced font is used for code examples and algorithm pseudocode
+- Mathematical formulas are presented using LaTeX notation
+- Diagrams follow the Mermaid specification
+- Computational complexity is expressed using Big O notation
 
-The focus is currently on the modular model implementation in `src/pyrovelocity/models/modular`. Additional sections will be added as their architecture stabilizes.
+## References {#sec-references}
 
-## Definitions {#sec-definitions}
+1. [Scientific Context Specification](context.qmd)
+2. [Requirements Specification](requirements.qmd)
+3. La Manno, G., Soldatov, R., Zeisel, A. et al. RNA velocity of single cells. Nature 560, 494–498 (2018). https://doi.org/10.1038/s41586-018-0414-6
+4. Bergen, V., Lange, M., Peidli, S. et al. Generalizing RNA velocity to transient cell states through dynamical modeling. Nat Biotechnol 38, 1408–1414 (2020). https://doi.org/10.1038/s41587-020-0591-3
+5. Pyro: Deep Universal Probabilistic Programming. https://pyro.ai/
+6. AnnData: Annotated Data. https://anndata.readthedocs.io/
 
-| Term | Definition |
-|------|------------|
-| RNA Velocity | The time derivative of gene expression, representing the rate of change of mRNA abundance |
-| AnnData | A data structure for annotated data matrices, commonly used in single-cell genomics |
-| Protocol | A Python typing construct that defines an interface without implementation |
-| Pyro | A probabilistic programming framework built on PyTorch |
-| SVI | Stochastic Variational Inference, a method for approximate Bayesian inference |
+## Document Overview {#sec-overview}
 
-# System Overview {#sec-system-overview}
+This System Specification is organized to progressively define the internal structure and implementation approach of PyroVelocity. It begins with an architecture overview that presents the high-level organization, followed by detailed models of the computational implementation, component structure, data processing pipeline, and execution framework. These sections define how the system implements the algorithms, data structures, and behaviors specified in the Requirements Specification. Additional sections cover reproducibility implementation, scientific validation, and performance optimization. The design rationale explains key design decisions and trade-offs made during the system design.
 
-## Vision {#sec-vision}
+# Architecture Overview {#sec-architecture-overview}
 
-PyroVelocity aims to provide a robust, flexible, and extensible framework for probabilistic RNA velocity analysis. The modular architecture enables researchers to customize and extend the model while maintaining a consistent interface.
+## Architectural Approach {#sec-architectural-approach}
 
-## Architectural Style {#sec-architectural-style}
+PyroVelocity follows a Protocol-First architecture with a modular component-based design. This approach was selected to support the system's quality requirements, particularly flexibility, extensibility, and maintainability. The modular design allows different model components to be interchanged while maintaining consistent interfaces, enabling researchers to select the best components for their specific use case.
 
-PyroVelocity follows a Protocol-First architecture, chosen to maximize flexibility and composability. This style enables:
+The system is currently transitioning from a legacy implementation to a modular PyTorch/Pyro implementation, with a future migration to a JAX/NumPyro implementation for improved performance. This document focuses primarily on the modular PyTorch/Pyro implementation.
 
-1. **Composition over inheritance**: Components implement Protocol interfaces directly without inheritance hierarchies
-2. **Loose coupling**: Components interact through well-defined interfaces
-3. **Testability**: Components can be tested in isolation
-4. **Extensibility**: New components can be added without modifying existing code
+Key architectural patterns employed include:
 
-## Context Diagram {#sec-context-diagram}
+1. **Protocol-First Design**: All contracts are defined through Protocol interfaces, enabling structural typing and composition over inheritance.
+2. **Component-Based Architecture**: The system is composed of specialized components with clear responsibilities.
+3. **Registry Pattern**: Components are registered by name and retrieved dynamically.
+4. **Factory Pattern**: Factory functions create components and models from configurations.
+5. **Immutable State Pattern**: Model state is stored in immutable containers for functional programming style.
+6. **Railway-Oriented Programming**: Components process data in a pipeline with explicit error handling.
+
+This approach was selected to maximize flexibility and composability, enabling researchers to easily extend the system with new model variants while maintaining a consistent interface.
+
+## Component Overview {#sec-component-overview}
+
+The system consists of the following major components:
 
 ```{mermaid}
 graph TB
-    User["Data Scientist / Researcher"] -->|uses| Library["PyroVelocity"]
-    Library -->|depends on| PyTorch["PyTorch"]
-    Library -->|depends on| Pyro["Pyro"]
-    Library -->|processes| AnnData["AnnData Objects"]
-    Library -->|produces| Velocity["RNA Velocity"]
-    Library -->|integrates with| Scanpy["Scanpy"]
-    Library -->|integrates with| Scvelo["scVelo"]
+    Main["PyroVelocityModel"] -->|contains| Dynamics["Dynamics Models"]
+    Main -->|contains| Priors["Prior Models"]
+    Main -->|contains| Likelihoods["Likelihood Models"]
+    Main -->|contains| Observations["Observation Models"]
+    Main -->|contains| Guides["Inference Guides"]
+    Main -->|contains| Registry["Registry System"]
+    Main -->|contains| Factory["Factory System"]
 
-    class User user;
-    class Library library;
-    class PyTorch,Pyro,Scanpy,Scvelo external;
-    class AnnData,Velocity data;
+    Dynamics -->|implements| DynamicsInterface["DynamicsModel Protocol"]
+    Priors -->|implements| PriorsInterface["PriorModel Protocol"]
+    Likelihoods -->|implements| LikelihoodsInterface["LikelihoodModel Protocol"]
+    Observations -->|implements| ObservationsInterface["ObservationModel Protocol"]
+    Guides -->|implements| GuidesInterface["InferenceGuide Protocol"]
+
+    Factory -->|uses| Registry
+    Factory -->|creates| Main
+
+    class Main main;
+    class Dynamics,Priors,Likelihoods,Observations,Guides component;
+    class DynamicsInterface,PriorsInterface,LikelihoodsInterface,ObservationsInterface,GuidesInterface interface;
+    class Registry,Factory system;
 ```
 
-## Key Principles {#sec-key-principles}
+### Core Components {#sec-core-components}
 
-The following principles guide architectural decisions for PyroVelocity:
+1. **PyroVelocityModel**: Main model class that composes specialized component models
+2. **Dynamics Models**: Implement the mathematical models of RNA dynamics
+   - StandardDynamicsModel: Standard implementation of RNA dynamics
+   - LegacyDynamicsModel: Compatibility implementation matching the legacy model
+3. **Prior Models**: Define prior distributions for model parameters
+   - LogNormalPriorModel: Uses log-normal distributions for parameters
+4. **Likelihood Models**: Define observation distributions
+   - PoissonLikelihoodModel: Uses Poisson distributions for RNA counts
+   - LegacyLikelihoodModel: Compatibility implementation matching the legacy model
+5. **Observation Models**: Handle data preprocessing and transformation
+   - StandardObservationModel: Standard implementation for observations
+6. **Inference Guides**: Create guide functions for variational inference
+   - AutoGuideFactory: Creates guides for the modular implementation
+   - LegacyAutoGuideFactory: Compatibility implementation matching the legacy guide
+7. **Registry System**: Enables component registration and retrieval
+8. **Factory System**: Creates components and models from configurations
 
-1. **Protocol-First Design**: All contracts are defined through Protocol interfaces, enabling structural typing and composition over inheritance.
-2. **Separation of Concerns**: Each component has a single responsibility, making the system more maintainable and testable.
-3. **Immutable State**: The system uses immutable data structures where possible to reduce side effects and improve reasoning about code.
-4. **Type Safety**: The system uses static typing and runtime type checking to catch errors early and provide better development support.
+## Major Functions Summary {#sec-major-functions-summary}
+
+| Component | Major Function | Description | Related Core Function |
+|-----------|----------------|-------------|----------------------|
+| PyroVelocityModel | forward | Runs the model forward to compute expected RNA counts | FN-03 |
+| PyroVelocityModel | train | Trains the model using variational inference | FN-03 |
+| PyroVelocityModel | generate_posterior_samples | Generates posterior samples for uncertainty quantification | FN-04 |
+| PyroVelocityModel | compute_velocity | Computes RNA velocity from posterior samples | FN-05 |
+| PyroVelocityModel | store_results_in_anndata | Stores results in AnnData objects | FN-08 |
+| DynamicsModel | forward | Computes expected unspliced and spliced RNA counts | FN-05 |
+| PriorModel | forward | Samples model parameters from prior distributions | FN-03 |
+| LikelihoodModel | forward | Defines likelihood distributions for observed data | FN-03 |
+| ObservationModel | forward | Transforms observed data for model input | FN-01 |
+| InferenceGuide | create_guide | Creates guide functions for variational inference | FN-03 |
+
+## Architecture Decisions {#sec-architecture-decisions}
+
+| Decision ID | Decision | Rationale | Alternatives Considered | Impact |
+|-------------|----------|-----------|-------------------------|--------|
+| AD-01 | Protocol-First Architecture | Enables composition over inheritance, maximum flexibility, and alignment with functional programming principles | Abstract Base Classes | Complete separation between interface and implementation, maximum flexibility, simplified testing |
+| AD-02 | Context-Based Component Communication | Flexible data sharing without tight coupling, clear data flow | Direct method parameters | Easy to extend with new data, potential for inconsistent context structure |
+| AD-03 | Immutable State Pattern | Thread safety, predictable behavior, functional programming style | Mutable state | Simplified reasoning about code, reduced side effects |
+| AD-04 | Registry Pattern | Dynamic component discovery, extensibility | Direct imports | Decoupling between component implementations and usage |
+| AD-05 | Factory Pattern | Encapsulation of creation logic, configuration management | Direct instantiation | Simplified client code, centralized creation logic |
+
+# Computational Implementation {#sec-computational-implementation}
+
+## Mathematical Model Implementation {#sec-mathematical-model-implementation}
+
+**Model ID:** MM-01
+
+**Model Name:** RNA Velocity Dynamics Model
+
+**Related Algorithm Specification:** ALG-01 (Standard RNA Velocity Dynamics)
+
+**Implementation Approach:** Analytical solution with numerical integration fallback
+
+**Mathematical Representation:**
+
+The core of PyroVelocity is a mathematical model of RNA dynamics based on a system of ordinary differential equations:
+
+$$
+\begin{align}
+\frac{du}{dt} &= \alpha - \beta u \\
+\frac{ds}{dt} &= \beta u - \gamma s
+\end{align}
+$$
+
+Where:
+- $u$ represents unspliced mRNA abundance
+- $s$ represents spliced mRNA abundance
+- $\alpha$ is the transcription rate
+- $\beta$ is the splicing rate
+- $\gamma$ is the degradation rate
+
+The analytical solution to this system is:
+
+$$
+\begin{align}
+u(t) &= u_0 e^{-\beta t} + \frac{\alpha}{\beta}(1 - e^{-\beta t}) \\
+s(t) &= s_0 e^{-\gamma t} + \frac{\beta u_0}{\gamma - \beta}(e^{-\beta t} - e^{-\gamma t}) + \frac{\alpha \beta}{\gamma \beta}(1 - \frac{\gamma}{\gamma - \beta}e^{-\beta t} + \frac{\beta}{\gamma - \beta}e^{-\gamma t})
+\end{align}
+$$
+
+**Numerical Implementation:**
+
+The StandardDynamicsModel implements this analytical solution with special handling for the case where β = γ:
+
+```python
+def forward(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    # Extract parameters from context
+    u_obs = context["u_obs"]
+    s_obs = context["s_obs"]
+    alpha = context["alpha"]
+    beta = context["beta"]
+    gamma = context["gamma"]
+    t = context.get("t", torch.ones_like(u_obs))
+
+    # Compute steady state
+    u_inf, s_inf = self.steady_state(alpha, beta, gamma)
+
+    # Handle the case where beta = gamma
+    mask = torch.isclose(beta, gamma, rtol=1e-6)
+
+    # Compute expected counts using analytical solution
+    # For beta != gamma
+    u_expected = torch.zeros_like(u_obs)
+    s_expected = torch.zeros_like(s_obs)
+
+    # Standard case: beta != gamma
+    if (~mask).any():
+        u_expected[~mask] = self._compute_u(u_obs[~mask], alpha[~mask], beta[~mask], t[~mask])
+        s_expected[~mask] = self._compute_s(s_obs[~mask], u_obs[~mask], alpha[~mask], beta[~mask], gamma[~mask], t[~mask])
+
+    # Special case: beta = gamma
+    if mask.any():
+        u_expected[mask] = self._compute_u_special(u_obs[mask], alpha[mask], beta[mask], t[mask])
+        s_expected[mask] = self._compute_s_special(s_obs[mask], u_obs[mask], alpha[mask], beta[mask], t[mask])
+
+    # Update context with computed values
+    context.update({
+        "u_expected": u_expected,
+        "s_expected": s_expected,
+        "u_inf": u_inf,
+        "s_inf": s_inf,
+    })
+
+    return context
+```
+
+**Implementation Considerations:**
+
+- Numerical stability: Special handling for β = γ case
+- Precision requirements: Double precision for stable computation
+- Special cases handling: Separate functions for standard and special cases
+
+## Algorithm Implementation {#sec-algorithm-implementation}
+
+**Algorithm ID:** ALG-IMP-01
+
+**Algorithm Name:** Stochastic Variational Inference for RNA Velocity
+
+**Related Algorithm Specification:** ALG-02 (Stochastic Variational Inference)
+
+**Implementation Approach:** Pyro SVI with AutoGuide
+
+**Algorithm Structure:**
+
+```python
+def train(self, adata: AnnData, **kwargs) -> Dict[str, Any]:
+    # Extract data from AnnData
+    data = prepare_anndata(adata)
+    u_obs = data["u"]
+    s_obs = data["s"]
+
+    # Set up SVI
+    optimizer = pyro.optim.Adam({"lr": kwargs.get("learning_rate", 0.01)})
+    guide = self.guide_model(self.forward)
+    svi = pyro.infer.SVI(
+        model=self.forward,
+        guide=guide,
+        optim=optimizer,
+        loss=pyro.infer.Trace_ELBO()
+    )
+
+    # Training loop
+    losses = []
+    for epoch in range(kwargs.get("max_epochs", 1000)):
+        loss = svi.step(u_obs=u_obs, s_obs=s_obs)
+        losses.append(loss)
+
+        # Early stopping logic
+        if kwargs.get("early_stopping", False) and self._check_convergence(losses):
+            break
+
+    return {"losses": losses, "guide": guide}
+```
+
+**Data Structures:**
+
+- Context dictionary: Shared state passed between components
+- ModelState: Immutable container for model state
+- AnnData: Container for single-cell data
+
+**Optimization Techniques:**
+
+- Vectorized operations: Using PyTorch's vectorized operations for efficient computation
+- Batched processing: Supporting batch processing for large datasets
+- GPU acceleration: Leveraging PyTorch's GPU support for accelerated computation
+- Analytical solutions: Using analytical solutions where possible to avoid numerical integration
+
+**Implementation Trade-offs:**
+
+- Accuracy vs. Performance: Using analytical solutions for speed, with numerical fallbacks for edge cases
+- Memory vs. Speed: Vectorized operations improve speed at the cost of higher memory usage
+- Generality vs. Specialization: Modular components allow specialization while maintaining a general interface
+
+## Computational Methods {#sec-computational-methods}
+
+**Method ID:** CM-01
+
+**Method Name:** RNA Velocity Computation
+
+**Related Function:** FN-05 (Velocity Computation)
+
+**Description:** Computes RNA velocity from posterior samples
+
+**Method Details:**
+
+- Input processing: Extracts posterior samples and prepares for velocity computation
+- Core computation: Computes velocity as the time derivative of spliced RNA abundance
+- Output generation: Returns velocity vectors and uncertainty estimates
+- Error handling: Validates inputs and handles edge cases
+
+**Implementation Details:**
+
+- Libraries/frameworks used: PyTorch, Pyro
+- Computational complexity: O(num_cells * num_genes * num_samples)
+- Memory requirements: O(num_cells * num_genes * num_samples)
+- Parallelization strategy: Vectorized operations with GPU acceleration
+
+## Computational Interfaces {#sec-computational-interfaces}
+
+**Interface ID:** CIF-01
+
+**Interface Name:** DynamicsModel Protocol
+
+**Description:** Interface for dynamics models that define RNA velocity equations
+
+**Implementation Approach:** Python Protocol with runtime checking
+
+**API Definition:**
+
+```python
+@runtime_checkable
+class DynamicsModel(Protocol):
+    def forward(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Compute expected RNA counts based on dynamics model.
+        """
+        ...
+
+    def steady_state(
+        self, alpha: ParamTensor, beta: ParamTensor, gamma: ParamTensor, **kwargs
+    ) -> Tuple[ParamTensor, ParamTensor]:
+        """
+        Compute steady-state RNA counts.
+        """
+        ...
+```
+
+**Parameters:**
+
+| Parameter | Type | Description | Default Value | Constraints |
+|-----------|------|-------------|---------------|-------------|
+| context | Dict[str, Any] | Context dictionary with model state | None | Must contain u_obs, s_obs, alpha, beta, gamma |
+| alpha | ParamTensor | Transcription rate | None | Non-negative |
+| beta | ParamTensor | Splicing rate | None | Non-negative |
+| gamma | ParamTensor | Degradation rate | None | Non-negative |
+
+**Return Values:**
+
+| Return Value | Type | Description | Constraints |
+|--------------|------|-------------|-------------|
+| context | Dict[str, Any] | Updated context with computed values | Must contain u_expected, s_expected |
+| steady_state | Tuple[ParamTensor, ParamTensor] | Steady-state unspliced and spliced counts | Non-negative |
+
+**Error Handling:**
+
+- Missing parameters: Raises ValueError with descriptive message
+- Invalid parameters: Validates parameters and raises ValueError for negative values
+- Numerical issues: Special handling for edge cases (e.g., β = γ)
 
 # Structural View {#sec-structural-view}
 
@@ -295,6 +576,255 @@ src/pyrovelocity/models/modular/
     └── pyro_utils.py
 ```
 
+# Execution Framework {#sec-execution-framework}
+
+## Execution Model {#sec-execution-model}
+
+**Execution Model ID:** EM-01
+
+**Execution Model Name:** Pyro Probabilistic Execution Model
+
+**Description:** Execution model for probabilistic programming with Pyro
+
+**Implementation Approach:** Pyro with PyTorch backend
+
+**Execution Patterns:**
+
+* Trace-based execution: Pyro traces model execution for inference
+* Vectorized operations: PyTorch tensor operations for efficient computation
+* Batched processing: Processing data in batches for memory efficiency
+* GPU acceleration: Leveraging GPU for parallel computation
+
+**Execution Flow:**
+
+1. Model definition: Define probabilistic model with Pyro primitives
+2. Guide definition: Define variational guide for inference
+3. SVI setup: Configure stochastic variational inference
+4. Training loop: Optimize parameters with SVI
+5. Posterior sampling: Generate samples from posterior distributions
+6. Velocity computation: Compute velocity from posterior samples
+
+**Implementation Details:**
+
+* Execution engine: Pyro probabilistic programming language
+* Computational backend: PyTorch tensor operations
+* Parallelization strategy: GPU acceleration and vectorized operations
+* Memory management: Batch processing for large datasets
+
+## Concurrency Model {#sec-concurrency-model}
+
+**Concurrency Model ID:** CM-01
+
+**Concurrency Model Name:** PyTorch Tensor Parallelism
+
+**Description:** Concurrency model for tensor operations with PyTorch
+
+**Implementation Approach:** PyTorch with GPU acceleration
+
+**Concurrency Patterns:**
+
+* Data parallelism: Parallel processing of tensor operations
+* Batch processing: Processing data in batches for memory efficiency
+* Asynchronous execution: Non-blocking operations for improved throughput
+
+**Concurrency Control:**
+
+* Synchronization mechanism: PyTorch's synchronization primitives
+* Resource management: GPU memory management
+* Thread safety: Immutable state pattern for thread safety
+
+**Implementation Details:**
+
+* Concurrency mechanism: PyTorch's tensor operations
+* Thread management: PyTorch's thread pool
+* Lock management: Implicit through PyTorch's operations
+* Resource allocation: GPU memory management
+
+## Resource Management {#sec-resource-management}
+
+**Resource Management ID:** RM-01
+
+**Resource Management Name:** PyTorch Memory Management
+
+**Description:** Memory management for tensor operations
+
+**Implementation Approach:** PyTorch with GPU support
+
+**Resource Types:**
+
+* Memory: GPU and CPU memory for tensor operations
+* Compute: GPU cores for parallel computation
+* Storage: Disk space for model checkpoints and data
+
+**Resource Allocation Strategy:**
+
+* Memory allocation: PyTorch's memory allocator
+* Compute allocation: PyTorch's thread pool and CUDA streams
+* Storage allocation: File-based storage for checkpoints
+
+**Resource Optimization:**
+
+* Memory optimization: Batch processing and in-place operations
+* Compute optimization: Vectorized operations and GPU acceleration
+* Storage optimization: Sparse matrix representation and compression
+
+**Implementation Details:**
+
+* Allocation mechanism: PyTorch's memory allocator
+* Deallocation mechanism: PyTorch's garbage collector
+* Monitoring mechanism: PyTorch's memory profiler
+* Optimization mechanism: PyTorch's memory optimization tools
+
+## Error Handling and Recovery {#sec-error-handling-and-recovery}
+
+**Error Handling ID:** EH-01
+
+**Error Handling Name:** Railway-Oriented Error Handling
+
+**Description:** Explicit error handling with railway-oriented programming
+
+**Implementation Approach:** Result types and explicit error handling
+
+**Error Types:**
+
+* Validation errors: Invalid input data or parameters
+* Numerical errors: Numerical instability or overflow
+* Resource errors: Insufficient memory or compute resources
+* Logic errors: Incorrect model configuration or implementation
+
+**Error Handling Strategy:**
+
+* Error detection: Explicit validation and runtime checks
+* Error propagation: Result types for explicit error handling
+* Error recovery: Fallback mechanisms for numerical issues
+* Error reporting: Detailed error messages with context
+
+**Implementation Details:**
+
+* Error representation: Result types with explicit error information
+* Error propagation: Railway-oriented programming with Result types
+* Error recovery: Fallback mechanisms for numerical issues
+* Error logging: Structured logging with context information
+
+# Reproducibility Implementation {#sec-reproducibility-implementation}
+
+## Reproducibility Strategy {#sec-reproducibility-strategy}
+
+**Reproducibility Strategy ID:** RS-01
+
+**Reproducibility Strategy Name:** Deterministic Execution Strategy
+
+**Description:** Strategy for ensuring reproducible results
+
+**Implementation Approach:** Seed control and deterministic operations
+
+**Reproducibility Mechanisms:**
+
+* Seed control: Fixed random seeds for reproducible randomness
+* Deterministic operations: Deterministic implementations of operations
+* Version control: Explicit versioning of dependencies
+* Configuration management: Explicit configuration of all parameters
+
+**Implementation Details:**
+
+* Seed management: Fixed random seeds for PyTorch, NumPy, and Python
+* Deterministic operations: PyTorch's deterministic mode
+* Version control: Poetry for dependency management
+* Configuration management: Hydra for configuration management
+
+## Configuration Management {#sec-configuration-management}
+
+**Configuration Management ID:** CM-01
+
+**Configuration Management Name:** Hydra Configuration Management
+
+**Description:** Configuration management with Hydra
+
+**Implementation Approach:** Hydra with YAML configuration files
+
+**Configuration Types:**
+
+* Model configuration: Parameters for model components
+* Training configuration: Parameters for training process
+* Data configuration: Parameters for data preprocessing
+* Execution configuration: Parameters for execution environment
+
+**Configuration Strategy:**
+
+* Configuration representation: YAML files with Hydra schema
+* Configuration validation: Runtime validation with Hydra
+* Configuration inheritance: Hierarchical configuration with Hydra
+* Configuration overrides: Command-line overrides with Hydra
+
+**Implementation Details:**
+
+* Configuration format: YAML files with Hydra schema
+* Configuration validation: Runtime validation with Hydra
+* Configuration storage: Version-controlled configuration files
+* Configuration access: Hydra's configuration API
+
+## Provenance Tracking {#sec-provenance-tracking}
+
+**Provenance Tracking ID:** PT-01
+
+**Provenance Tracking Name:** AnnData Provenance Tracking
+
+**Description:** Tracking provenance information in AnnData objects
+
+**Implementation Approach:** AnnData with metadata annotations
+
+**Provenance Types:**
+
+* Data provenance: Origin and preprocessing of input data
+* Model provenance: Model configuration and parameters
+* Execution provenance: Execution environment and parameters
+* Result provenance: Analysis results and parameters
+
+**Provenance Strategy:**
+
+* Provenance representation: Metadata in AnnData objects
+* Provenance capture: Automatic capture during execution
+* Provenance storage: Persistent storage in AnnData objects
+* Provenance access: AnnData's metadata API
+
+**Implementation Details:**
+
+* Provenance format: JSON-serializable metadata
+* Provenance capture: Automatic capture during execution
+* Provenance storage: AnnData's uns, obs, and var attributes
+* Provenance access: AnnData's metadata API
+
+## Versioning Strategy {#sec-versioning-strategy}
+
+**Versioning Strategy ID:** VS-01
+
+**Versioning Strategy Name:** Semantic Versioning Strategy
+
+**Description:** Versioning strategy for PyroVelocity
+
+**Implementation Approach:** Semantic versioning with conventional commits
+
+**Versioning Types:**
+
+* Code versioning: Git for source code versioning
+* Model versioning: Explicit versioning of model components
+* Data versioning: Explicit versioning of datasets
+* Result versioning: Explicit versioning of analysis results
+
+**Versioning Strategy:**
+
+* Version representation: Semantic versioning (MAJOR.MINOR.PATCH)
+* Version control: Git for source code versioning
+* Version compatibility: Explicit compatibility requirements
+* Version evolution: Conventional commits for version bumps
+
+**Implementation Details:**
+
+* Version format: Semantic versioning (MAJOR.MINOR.PATCH)
+* Version control: Git with GitHub
+* Version compatibility: Explicit compatibility requirements in documentation
+* Version evolution: Conventional commits for automated version bumps
+
 # Behavioral View {#sec-behavioral-view}
 
 ## Key Workflows {#sec-key-workflows}
@@ -455,16 +985,334 @@ Use a shared context dictionary that is passed between components during model e
 - Easy to extend with new data
 - Potential for inconsistent context structure if not properly documented
 
+# Component Model {#sec-component-model}
+
+## Component Definitions {#sec-component-definitions}
+
+**Component ID:** CMP-01
+
+**Component Name:** PyroVelocityModel
+
+**Description:** Main model class that composes specialized component models
+
+**Type:** Core
+
+**Category:** Model
+
+**Quality Attribute Responsibilities:**
+* Flexibility: Enables component swapping through composition
+* Extensibility: Provides clear extension points for new components
+* Testability: Supports isolated testing of components
+
+**Scientific Responsibilities:**
+* Implements the probabilistic RNA velocity model
+* Provides uncertainty quantification for velocity estimates
+* Enables parameter inference from single-cell data
+
+**Implementation Approach:**
+* Technologies: Python, PyTorch, Pyro
+* Frameworks: Pyro for probabilistic programming
+* Libraries: AnnData for data representation
+
+**Component ID:** CMP-02
+
+**Component Name:** DynamicsModel
+
+**Description:** Protocol interface for dynamics models that define RNA velocity equations
+
+**Type:** Interface
+
+**Category:** Protocol
+
+**Quality Attribute Responsibilities:**
+
+* Flexibility: Defines a clear contract for dynamics model implementations
+* Extensibility: Enables creation of new dynamics model variants
+* Performance: Supports efficient computation of RNA dynamics
+
+**Scientific Responsibilities:**
+
+* Defines the mathematical model of RNA velocity
+* Implements analytical and numerical solutions to RNA dynamics equations
+* Computes expected RNA counts based on model parameters
+
+**Implementation Approach:**
+
+* Technologies: Python Protocol, runtime_checkable
+* Frameworks: PyTorch for tensor operations
+* Libraries: jaxtyping for type annotations
+
+## Component Responsibilities {#sec-component-responsibilities}
+
+**Component ID:** CMP-01 (PyroVelocityModel)
+
+**Functional Responsibilities:**
+
+* Compose specialized component models into a cohesive probabilistic model
+* Implement the forward method for model execution
+* Provide training methods using SVI
+* Generate posterior samples for uncertainty quantification
+* Compute RNA velocity from posterior samples
+* Store results in AnnData objects
+
+**Data Responsibilities:**
+
+* Manage model state through immutable state container
+* Process input data from AnnData objects
+* Transform data between components
+* Store and retrieve model parameters
+* Handle posterior samples
+
+**Computational Responsibilities:**
+
+* Execute the probabilistic model using Pyro
+* Perform variational inference for parameter estimation
+* Compute RNA velocity vectors
+* Quantify uncertainty in velocity estimates
+* Optimize performance through vectorized operations
+
+**Scientific Responsibilities:**
+
+* Implement the probabilistic RNA velocity model
+* Provide uncertainty quantification for velocity estimates
+* Enable parameter inference from single-cell data
+* Support cell fate prediction from velocity estimates
+* Visualize velocity and uncertainty
+
+## Component Interfaces and Ports {#sec-component-interfaces-and-ports}
+
+**Component ID:** CMP-01 (PyroVelocityModel)
+
+**Provided Interfaces:**
+
+| Interface ID | Interface Name | Description | Operations |
+|--------------|----------------|-------------|-----------|
+| IF-01 | ModelInterface | Main interface for model execution | forward, guide, train, generate_posterior_samples, compute_velocity |
+| IF-02 | AnnDataInterface | Interface for AnnData integration | setup_anndata, store_results_in_anndata |
+
+**Required Interfaces:**
+
+| Interface ID | Interface Name | Description | Provider Component |
+|--------------|----------------|-------------|-------------------|
+| IF-03 | DynamicsModelInterface | Interface for dynamics model | CMP-02 (DynamicsModel) |
+| IF-04 | PriorModelInterface | Interface for prior model | CMP-03 (PriorModel) |
+| IF-05 | LikelihoodModelInterface | Interface for likelihood model | CMP-04 (LikelihoodModel) |
+| IF-06 | ObservationModelInterface | Interface for observation model | CMP-05 (ObservationModel) |
+| IF-07 | InferenceGuideInterface | Interface for inference guide | CMP-06 (InferenceGuide) |
+
+**Ports:**
+
+| Port ID | Port Name | Description | Connected To | Interfaces |
+|---------|-----------|-------------|--------------|------------|
+| P-01 | ModelPort | Main port for model execution | Client code | IF-01 |
+| P-02 | DataPort | Port for data integration | AnnData objects | IF-02 |
+| P-03 | DynamicsPort | Port for dynamics model | DynamicsModel | IF-03 |
+| P-04 | PriorPort | Port for prior model | PriorModel | IF-04 |
+| P-05 | LikelihoodPort | Port for likelihood model | LikelihoodModel | IF-05 |
+| P-06 | ObservationPort | Port for observation model | ObservationModel | IF-06 |
+| P-07 | GuidePort | Port for inference guide | InferenceGuide | IF-07 |
+
+## Component Relationships {#sec-component-relationships}
+
+| From Component | To Component | Relationship Type | Description |
+|----------------|--------------|-------------------|-------------|
+| PyroVelocityModel | DynamicsModel | DEPENDS_ON | Uses dynamics model to compute expected RNA counts |
+| PyroVelocityModel | PriorModel | DEPENDS_ON | Uses prior model to sample parameters |
+| PyroVelocityModel | LikelihoodModel | DEPENDS_ON | Uses likelihood model to define observation distributions |
+| PyroVelocityModel | ObservationModel | DEPENDS_ON | Uses observation model to preprocess data |
+| PyroVelocityModel | InferenceGuide | DEPENDS_ON | Uses inference guide for variational inference |
+| ComponentFactory | Registry | USES | Uses registry to retrieve component implementations |
+| ComponentFactory | PyroVelocityModel | CREATES | Creates PyroVelocityModel instances |
+| Registry | Component Implementations | REGISTERS | Registers component implementations by name |
+
+## Component Hierarchy {#sec-component-hierarchy}
+
+**Component ID:** CMP-01 (PyroVelocityModel)
+
+**Subcomponents:**
+
+* CMP-02 (DynamicsModel): Defines the RNA velocity equations
+* CMP-03 (PriorModel): Defines prior distributions for parameters
+* CMP-04 (LikelihoodModel): Defines observation distributions
+* CMP-05 (ObservationModel): Handles data preprocessing
+* CMP-06 (InferenceGuide): Creates guide functions for inference
+
+# Data Processing Pipeline {#sec-data-processing-pipeline}
+
+## Data Flow Architecture {#sec-data-flow-architecture}
+
+**Data Flow ID:** DF-01
+
+**Description:** Main data flow for RNA velocity analysis
+
+**Data Sources:** AnnData objects with spliced/unspliced counts
+
+**Data Sinks:** AnnData objects with velocity estimates
+
+**Data Flow Diagram:**
+
+```{mermaid}
+graph LR
+    A[AnnData Input] --> B[Data Preprocessing]
+    B --> C[Parameter Inference]
+    C --> D[Posterior Sampling]
+    D --> E[Velocity Computation]
+    E --> F[Uncertainty Quantification]
+    F --> G[AnnData Output]
+
+    class A,G io;
+    class B,C,D,E,F process;
+```
+
+**Key Data Flow Patterns:**
+
+* Pipeline: Sequential processing of data through components
+* Fork-Join: Parallel processing of genes during inference
+* Reduction: Aggregation of posterior samples for uncertainty quantification
+
+**Implementation Approach:**
+
+* Data movement strategy: In-memory processing with PyTorch tensors
+* Buffering approach: Batch processing for large datasets
+* Flow control mechanism: Context dictionary passed between components
+
+## Data Transformation Stages {#sec-data-transformation-stages}
+
+**Stage ID:** ST-01
+
+**Stage Name:** Data Preprocessing
+
+**Description:** Prepares single-cell data for velocity analysis
+
+**Inputs:** AnnData object with spliced/unspliced counts
+
+**Outputs:** Preprocessed tensors for model input
+
+**Transformation Operations:**
+
+1. Extract spliced and unspliced counts from AnnData layers
+2. Compute library size factors if requested
+3. Filter genes and cells based on quality metrics
+4. Transform counts to appropriate scale (log, normalized, etc.)
+
+**Implementation Details:**
+
+* Algorithm: StandardObservationModel.forward
+* Performance characteristics: O(num_cells * num_genes)
+* Error handling: Validates input data and reports missing layers
+
+**Stage ID:** ST-02
+
+**Stage Name:** Parameter Inference
+
+**Description:** Infers model parameters using variational inference
+
+**Inputs:** Preprocessed tensors from ST-01
+
+**Outputs:** Trained model with optimized parameters
+
+**Transformation Operations:**
+
+1. Initialize model parameters with prior distributions
+2. Set up variational inference with guide
+3. Optimize parameters using SVI
+4. Monitor convergence and apply early stopping
+
+**Implementation Details:**
+
+* Algorithm: PyroVelocityModel.train with Pyro SVI
+* Performance characteristics: O(num_epochs * num_cells * num_genes)
+* Error handling: Monitors loss for divergence and numerical issues
+
+## Data Storage Strategy {#sec-data-storage-strategy}
+
+**Storage Type:** In-Memory Tensors
+
+**Purpose:** Efficient computation during model execution
+
+**Data Classes:** RNA counts, model parameters, posterior samples
+
+**Implementation:** PyTorch tensors with GPU support
+
+**Storage Characteristics:**
+
+* Format: PyTorch tensors
+* Compression: None (raw tensors)
+* Indexing: Direct indexing with tensor operations
+* Partitioning: Batch-based processing for large datasets
+
+**Performance Considerations:**
+
+* Read pattern optimization: Vectorized operations for efficient access
+* Write pattern optimization: In-place operations where possible
+* Capacity planning: GPU memory management for large datasets
+
+**Storage Type:** AnnData Objects
+
+**Purpose:** Persistent storage of data and results
+
+**Data Classes:** RNA counts, velocity estimates, uncertainty metrics
+
+**Implementation:** AnnData with HDF5 backend
+
+**Storage Characteristics:**
+
+* Format: HDF5 (h5ad)
+* Compression: Automatic compression of sparse matrices
+* Indexing: AnnData slicing operations
+* Partitioning: None (monolithic file)
+
+**Performance Considerations:**
+
+* Read pattern optimization: Lazy loading of large matrices
+* Write pattern optimization: Chunked writing for large datasets
+* Capacity planning: Sparse matrix representation for memory efficiency
+
+## Data Access Patterns {#sec-data-access-patterns}
+
+**Pattern ID:** AP-01
+
+**Pattern Name:** Cell-Gene Matrix Access
+
+**Description:** Access to RNA count matrices by cells and genes
+
+**Usage Context:** Model training and inference
+
+**Access Characteristics:**
+
+* Frequency: High (inner loop of training)
+* Volume: Medium to large (10K-100K cells, 1K-30K genes)
+* Concurrency: Batch-based processing
+* Locality: High spatial locality within batches
+
+**Implementation Approach:**
+
+* Caching strategy: GPU memory for active tensors
+* Access method: Vectorized operations on tensors
+* Performance optimization: Batch processing and GPU acceleration
+
+**Pattern ID:** AP-02
+
+**Pattern Name:** Posterior Sample Access
+
+**Description:** Access to posterior samples for uncertainty quantification
+
+**Usage Context:** Velocity computation and visualization
+
+**Access Characteristics:**
+
+* Frequency: Medium (post-training analysis)
+* Volume: Large (num_cells * num_genes * num_samples)
+* Concurrency: Sequential processing
+* Locality: High temporal locality within samples
+
+**Implementation Approach:**
+
+* Caching strategy: Store samples in memory during analysis
+* Access method: Dictionary-based access by parameter name
+* Performance optimization: Vectorized operations across samples
+
 # Cross-cutting Concerns {#sec-cross-cutting-concerns}
-
-## Performance Considerations {#sec-performance-considerations}
-
-PyroVelocity addresses performance through the following strategies:
-
-- **Vectorized Operations**: Using PyTorch's vectorized operations for efficient computation
-- **Batched Processing**: Supporting batch processing for large datasets
-- **GPU Acceleration**: Leveraging PyTorch's GPU support for accelerated computation
-- **Analytical Solutions**: Using analytical solutions where possible to avoid numerical integration
 
 ## Error Handling {#sec-error-handling}
 
@@ -473,6 +1321,7 @@ The library follows these error handling principles:
 - **Early Validation**: Validating inputs early to catch errors before computation
 - **Informative Error Messages**: Providing clear error messages with context
 - **Graceful Degradation**: Falling back to simpler models when advanced features fail
+- **Railway-Oriented Programming**: Using Result types for explicit error handling
 
 ## Extensibility {#sec-extensibility}
 
@@ -482,6 +1331,261 @@ The library is designed for extensibility through:
 - **Registry System**: Enabling dynamic registration of new components
 - **Factory System**: Creating components from configurations
 - **Composition**: Building complex models from simple components
+
+# Scientific Validation {#sec-scientific-validation}
+
+## Validation Strategy {#sec-validation-strategy}
+
+**Validation Strategy ID:** VS-01
+
+**Validation Strategy Name:** Comprehensive Validation Strategy
+
+**Description:** Strategy for validating PyroVelocity's scientific correctness
+
+**Implementation Approach:** Multi-level validation with synthetic and real data
+
+**Validation Levels:**
+
+* Unit validation: Validation of individual components
+* Integration validation: Validation of component interactions
+* System validation: Validation of the complete system
+* Scientific validation: Validation of scientific correctness
+
+**Validation Approach:**
+
+* Synthetic data validation: Validation with synthetic data
+* Real data validation: Validation with real biological data
+* Cross-implementation validation: Validation against legacy implementation
+* Cross-method validation: Validation against other RNA velocity methods
+
+**Implementation Details:**
+
+* Validation framework: pytest-bdd for behavior-driven validation
+* Validation data: Synthetic data and real biological datasets
+* Validation metrics: Statistical measures of agreement
+* Validation reporting: Automated validation reports
+
+## Validation Framework {#sec-validation-framework}
+
+**Validation Framework ID:** VF-01
+
+**Validation Framework Name:** PyroVelocity Validation Framework
+
+**Description:** Framework for validating PyroVelocity
+
+**Implementation Approach:** pytest-bdd with Gherkin feature files
+
+**Validation Components:**
+
+* Feature files: Gherkin specifications of expected behavior
+* Step definitions: Python implementations of Gherkin steps
+* Fixtures: Reusable test data and setup
+* Validation utilities: Helper functions for validation
+
+**Validation Process:**
+
+1. Define expected behavior in Gherkin feature files
+2. Implement step definitions for Gherkin steps
+3. Create fixtures for test data and setup
+4. Run validation tests with pytest
+5. Generate validation reports
+
+**Implementation Details:**
+
+* Validation framework: pytest-bdd
+* Feature file location: src/pyrovelocity/tests/features/
+* Step definition location: src/pyrovelocity/tests/models/modular/integration/
+* Fixture location: src/pyrovelocity/tests/conftest.py
+
+## Validation Test Cases {#sec-validation-test-cases}
+
+**Test Case ID:** TC-01
+
+**Test Case Name:** Legacy Compatibility Test
+
+**Description:** Validates compatibility with legacy implementation
+
+**Implementation Approach:** Direct comparison of outputs
+
+**Test Scenario:**
+
+1. Create synthetic data with known properties
+2. Run legacy implementation on synthetic data
+3. Run modular implementation on synthetic data
+4. Compare outputs for equivalence
+
+**Validation Criteria:**
+
+* Parameter equivalence: Parameters should be equivalent
+* Output equivalence: Outputs should be equivalent
+* Performance equivalence: Performance should be comparable
+
+**Implementation Details:**
+
+* Test implementation: src/pyrovelocity/tests/models/modular/integration/test_legacy_compatibility.py
+* Test data: Synthetic data with known properties
+* Validation metrics: Statistical measures of agreement
+* Validation threshold: 1e-6 relative tolerance
+
+**Test Case ID:** TC-02
+
+**Test Case Name:** Scientific Correctness Test
+
+**Description:** Validates scientific correctness of the model
+
+**Implementation Approach:** Comparison with ground truth
+
+**Test Scenario:**
+
+1. Create synthetic data with known ground truth
+2. Run modular implementation on synthetic data
+3. Compare outputs with ground truth
+
+**Validation Criteria:**
+
+* Parameter accuracy: Parameters should match ground truth
+* Output accuracy: Outputs should match ground truth
+* Uncertainty calibration: Uncertainty should be well-calibrated
+
+**Implementation Details:**
+
+* Test implementation: src/pyrovelocity/tests/models/modular/integration/test_scientific_correctness.py
+* Test data: Synthetic data with known ground truth
+* Validation metrics: Statistical measures of accuracy
+* Validation threshold: 5% relative error
+
+# Performance Optimization {#sec-performance-optimization}
+
+## Performance Strategy {#sec-performance-strategy}
+
+**Performance Strategy ID:** PS-01
+
+**Performance Strategy Name:** Comprehensive Performance Strategy
+
+**Description:** Strategy for optimizing PyroVelocity's performance
+
+**Implementation Approach:** Multi-level optimization
+
+**Performance Goals:**
+
+* Execution speed: Fast execution for interactive analysis
+* Memory efficiency: Efficient memory usage for large datasets
+* Scalability: Linear scaling with dataset size
+* Responsiveness: Quick response for interactive analysis
+
+**Optimization Approach:**
+
+* Algorithmic optimization: Efficient algorithms and data structures
+* Implementation optimization: Efficient implementation techniques
+* Hardware optimization: Leveraging hardware acceleration
+* Configuration optimization: Optimal configuration for performance
+
+**Implementation Details:**
+
+* Profiling tool: Scalene for performance profiling
+* Benchmarking framework: pytest-benchmark for performance benchmarking
+* Optimization targets: Hotspots identified by profiling
+* Performance metrics: Execution time, memory usage, scalability
+
+## Performance Profiling {#sec-performance-profiling}
+
+**Profiling ID:** PP-01
+
+**Profiling Name:** Scalene Profiling
+
+**Description:** Performance profiling with Scalene
+
+**Implementation Approach:** Scalene profiler with CPU, GPU, and memory profiling
+
+**Profiling Components:**
+
+* CPU profiling: Line-level CPU profiling
+* GPU profiling: Line-level GPU profiling
+* Memory profiling: Line-level memory profiling
+* I/O profiling: Line-level I/O profiling
+
+**Profiling Process:**
+
+1. Run Scalene profiler on PyroVelocity
+2. Identify hotspots in CPU, GPU, memory, and I/O
+3. Analyze hotspots for optimization opportunities
+4. Implement optimizations for hotspots
+5. Verify performance improvements
+
+**Implementation Details:**
+
+* Profiling tool: Scalene
+* Profiling command: `scalene --profile-all src/pyrovelocity/models/modular/model.py`
+* Profiling output: HTML report with line-level profiling
+* Profiling frequency: Regular profiling during development
+
+## Performance Optimizations {#sec-performance-optimizations}
+
+**Optimization ID:** OPT-01
+
+**Optimization Name:** Vectorized Operations
+
+**Description:** Optimization using vectorized operations
+
+**Implementation Approach:** PyTorch's vectorized operations
+
+**Optimization Target:**
+
+* Component: DynamicsModel
+* Function: forward
+* Hotspot: Computation of expected RNA counts
+
+**Optimization Technique:**
+
+* Vectorized operations: Replace loops with vectorized operations
+* Batch processing: Process data in batches
+* In-place operations: Use in-place operations where possible
+
+**Performance Impact:**
+
+* Execution time: 10x improvement
+* Memory usage: 2x improvement
+* Scalability: Linear scaling with dataset size
+
+**Implementation Details:**
+
+* Implementation: src/pyrovelocity/models/modular/dynamics.py
+* Before optimization: Loop-based implementation
+* After optimization: Vectorized implementation
+* Verification: Benchmark tests confirm performance improvement
+
+**Optimization ID:** OPT-02
+
+**Optimization Name:** GPU Acceleration
+
+**Description:** Optimization using GPU acceleration
+
+**Implementation Approach:** PyTorch's GPU support
+
+**Optimization Target:**
+
+* Component: PyroVelocityModel
+* Function: train
+* Hotspot: Variational inference
+
+**Optimization Technique:**
+
+* GPU acceleration: Move tensors to GPU
+* Batch processing: Process data in batches
+* Asynchronous execution: Use asynchronous operations
+
+**Performance Impact:**
+
+* Execution time: 5x improvement
+* Memory usage: No significant change
+* Scalability: Linear scaling with dataset size
+
+**Implementation Details:**
+
+* Implementation: src/pyrovelocity/models/modular/model.py
+* Before optimization: CPU-only implementation
+* After optimization: GPU-accelerated implementation
+* Verification: Benchmark tests confirm performance improvement
 
 # Technical Debt and Evolution {#sec-technical-debt}
 
