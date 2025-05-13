@@ -264,6 +264,8 @@ website:
           contents:
             - text: "Overview"
               href: development/index.qmd
+            - text: "Context"
+              href: development/context.qmd
             - text: "Architecture"
               href: development/architecture.qmd
             - text: "Testing"
@@ -274,6 +276,8 @@ website:
       contents:
         - text: "Overview"
           href: development/index.qmd
+        - text: "Context"
+          href: development/context.qmd
         - text: "Architecture"
           href: development/architecture.qmd
         - text: "Testing"
