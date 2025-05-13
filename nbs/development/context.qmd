@@ -1,0 +1,463 @@
+---
+title: "Scientific Context Specification"
+format:
+  html:
+    mermaid-format: js
+    mermaid:
+      theme: dark
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: true
+---
+
+# Introduction {#sec-introduction}
+
+## Purpose of this Document {#sec-purpose}
+
+This Scientific Context Specification establishes the foundation for the PyroVelocity project by defining the scientific context in which the system operates. It captures the research problem being addressed, stakeholders involved, scientific workflows affected, and domain knowledge essential for understanding the project scope. This document serves as the primary reference for domain scientists, developers, requirements engineers, and other stakeholders to ensure a shared understanding of the project context before detailed requirements are specified.
+
+## Document Conventions {#sec-conventions}
+
+This document uses the following conventions:
+
+- *Italics* are used for terms defined in the glossary
+- **Bold** is used for emphasis and key concepts
+- Blue text indicates a cross-reference to another section
+- Mathematical equations are expressed using LaTeX notation
+- Code snippets are shown in monospaced font
+
+## References {#sec-references}
+
+1. La Manno, G., Soldatov, R., Zeisel, A. et al. RNA velocity of single cells. Nature 560, 494–498 (2018). https://doi.org/10.1038/s41586-018-0414-6
+2. Bergen, V., Lange, M., Peidli, S. et al. Generalizing RNA velocity to transient cell states through dynamical modeling. Nat Biotechnol 38, 1408–1414 (2020). https://doi.org/10.1038/s41587-020-0591-3
+3. Pyro: Deep Universal Probabilistic Programming. https://pyro.ai/
+4. AnnData: Annotated Data. https://anndata.readthedocs.io/
+5. scanpy: Single-Cell Analysis in Python. https://scanpy.readthedocs.io/
+
+## Document Overview {#sec-overview}
+
+This Scientific Context Specification is organized to progressively build understanding of the PyroVelocity project context. It begins with a definition of project scope, then identifies stakeholders and their concerns. Research goals are articulated to clarify the project's purpose, followed by a value proposition justifying the investment. The scientific domain model captures essential workflows and data objects, while the constraints section outlines limitations that must be considered throughout the project. Finally, a glossary ensures consistent terminology usage across all project artifacts.
+
+# Project Scope {#sec-project-scope}
+
+## Problem Description {#sec-problem-description}
+
+Single-cell RNA sequencing (scRNA-seq) provides a snapshot of gene expression in individual cells, but understanding cellular dynamics and developmental trajectories requires temporal information that is not directly captured in these static measurements. RNA velocity, which measures the rate of change of gene expression, offers a way to infer directional information from these snapshots by leveraging the distinction between unspliced pre-mRNAs and mature spliced mRNAs.
+
+Current methods for RNA velocity analysis have several limitations:
+
+1. **Deterministic Approaches**: Existing methods like scVelo and velocyto use deterministic models that cannot adequately capture the inherent stochasticity in gene expression.
+
+2. **Uncertainty Quantification**: These methods lack robust uncertainty quantification, making it difficult to assess the reliability of velocity estimates and downstream analyses.
+
+3. **Parameter Estimation**: Current approaches often rely on simplistic parameter estimation techniques that may not fully leverage the information in the data.
+
+4. **Cell Fate Prediction**: Existing methods provide limited capabilities for predicting cell fate choices and understanding developmental trajectory dynamics.
+
+PyroVelocity addresses these limitations by developing a Bayesian, generative, and multivariate approach to RNA velocity modeling that provides uncertainty quantification and more robust parameter estimation.
+
+## Research Objectives {#sec-research-objectives}
+
+PyroVelocity aims to develop a probabilistic framework for RNA velocity analysis that:
+
+1. Models raw spliced and unspliced read counts directly, avoiding information loss from normalization
+2. Provides uncertainty quantification for velocity estimates and downstream analyses
+3. Synchronizes cell time estimation across genes for more coherent trajectory inference
+4. Enables multivariate modeling of gene expression and velocity prediction
+5. Offers diagnostic analyses and visualizations of model uncertainty
+6. Integrates with existing single-cell analysis ecosystems
+
+## Project Boundaries {#sec-project-boundaries}
+
+### In Scope
+
+- Probabilistic modeling of RNA velocity using Pyro/PyTorch
+- Parameter inference from single-cell RNA-seq data
+- Uncertainty quantification of model predictions
+- Integration with existing bioinformatics tools (scanpy, scVelo)
+- Visualization of velocity estimates and uncertainty
+- Modular implementation with interchangeable components
+- JAX/NumPyro implementation for improved performance
+
+### Out of Scope
+
+- Development of new experimental protocols for RNA velocity measurement
+- Integration with spatial transcriptomics data
+- Multi-cellular tissue modeling
+- Clinical application of the models
+- Development of a standalone GUI application
+
+# Stakeholder Model {#sec-stakeholder-model}
+
+## Stakeholder Identification {#sec-stakeholder-identification}
+
+| Stakeholder | Role | Responsibilities | Influence Level |
+|-------------|------|------------------|-----------------|
+| Computational Biologists | Primary Users | Apply the tool to analyze single-cell data | High |
+| Bioinformaticians | Users/Developers | Extend the tool, integrate with workflows | High |
+| Molecular Biologists | End Users | Interpret results, design follow-up experiments | Medium |
+| Single-Cell Genomics Core Facilities | Users | Process data for researchers | Medium |
+| Software Developers | Maintainers | Implement and maintain the codebase | High |
+| Research Community | Beneficiaries | Use insights from the tool in research | Low |
+
+## User Groups {#sec-user-groups}
+
+| User Group | Description | Expertise Level | Computational Requirements |
+|------------|-------------|-----------------|----------------------------|
+| Computational Biologists | Researchers with programming experience who analyze single-cell data | High | High-performance computing, GPU access |
+| Bioinformaticians | Technical specialists who develop and run analysis pipelines | High | High-performance computing, GPU access |
+| Molecular Biologists | Wet-lab researchers who need to interpret results | Low-Medium | Standard workstations with visualization capabilities |
+| Data Scientists | Researchers focused on method development | High | High-performance computing, GPU access |
+
+## External Systems {#sec-external-systems}
+
+| System Name | Description | Owned By | Nature of Interface |
+|-------------|-------------|----------|---------------------|
+| scanpy | Single-cell analysis toolkit | scverse | Python API integration |
+| scVelo | RNA velocity analysis toolkit | scverse | Python API integration, data format compatibility |
+| AnnData | Annotated data format | scverse | Data structure for input/output |
+| Pyro | Probabilistic programming framework | Uber AI/Linux Foundation | Core dependency for model implementation |
+| PyTorch | Deep learning framework | Meta AI | Core dependency for tensor operations |
+| JAX | Numerical computing library | Google | Alternative backend for NumPyro implementation |
+
+## Stakeholder Concerns {#sec-stakeholder-concerns}
+
+| Stakeholder | Primary Concerns | Acceptance Criteria |
+|-------------|------------------|---------------------|
+| Computational Biologists | Accuracy, interpretability, integration with existing workflows | Validated against ground truth, clear documentation, compatible with scanpy/scVelo |
+| Bioinformaticians | Extensibility, performance, reproducibility | Modular architecture, efficient computation, deterministic results |
+| Molecular Biologists | Ease of use, biological interpretability | Clear visualizations, connection to biological processes |
+| Software Developers | Code quality, maintainability, test coverage | Clean code, comprehensive tests, CI/CD pipeline |
+
+# Scientific Objectives {#sec-scientific-objectives}
+
+## Research Goals {#sec-research-goals}
+
+| ID | Research Goal | Description | Success Measure | Priority |
+|----|---------------|-------------|-----------------|----------|
+| RG-01 | Probabilistic RNA Velocity | Develop a Bayesian framework for RNA velocity estimation | Published method with demonstrated advantages | High |
+| RG-02 | Uncertainty Quantification | Provide robust uncertainty estimates for velocity and trajectories | Calibrated uncertainty metrics | High |
+| RG-03 | Parameter Inference | Infer biologically meaningful parameters from scRNA-seq data | Validated parameter estimates | Medium |
+| RG-04 | Cell Fate Prediction | Enable prediction of cell fate choices from velocity estimates | Accurate prediction on benchmark datasets | Medium |
+| RG-05 | Multimodal Integration | Support integration of multiple data modalities | Demonstrated improvement with multimodal data | Low |
+
+## Usage Goals {#sec-usage-goals}
+
+| ID | Usage Goal | Related Research Goal | Description | Success Measure | Priority |
+|----|------------|----------------------|-------------|-----------------|----------|
+| UG-01 | Ease of Use | RG-01 | Provide a user-friendly API for RNA velocity analysis | Adoption by non-expert users | High |
+| UG-02 | Visualization | RG-02 | Develop visualizations for uncertainty in velocity estimates | User feedback on interpretability | Medium |
+| UG-03 | Integration | RG-01, RG-05 | Integrate with existing single-cell analysis tools | Seamless workflow with scanpy/scVelo | High |
+| UG-04 | Reproducibility | RG-03 | Ensure reproducible results across runs and platforms | Deterministic results with fixed seeds | Medium |
+| UG-05 | Scalability | RG-01 | Handle large datasets efficiently | Performance benchmarks | Medium |
+
+## System Goals {#sec-system-goals}
+
+| ID | System Goal | Related Usage Goal | Description | Success Measure | Priority |
+|----|-------------|-------------------|-------------|-----------------|----------|
+| SG-01 | Modular Architecture | UG-01, UG-03 | Implement a flexible, component-based design | Component interchangeability | High |
+| SG-02 | Performance Optimization | UG-05 | Optimize computational performance | Benchmark against existing methods | Medium |
+| SG-03 | Comprehensive Testing | UG-04 | Implement thorough testing framework | Test coverage metrics | High |
+| SG-04 | Documentation | UG-01 | Provide clear, comprehensive documentation | User feedback, documentation coverage | High |
+| SG-05 | JAX Implementation | UG-05 | Develop a JAX-based implementation for improved performance | Performance improvement metrics | Medium |
+
+## Goal Relationships {#sec-goal-relationships}
+
+```{mermaid}
+graph TD
+    RG01[RG-01: Probabilistic RNA Velocity] --> UG01[UG-01: Ease of Use]
+    RG01 --> UG03[UG-03: Integration]
+    RG02[RG-02: Uncertainty Quantification] --> UG02[UG-02: Visualization]
+    RG03[RG-03: Parameter Inference] --> UG04[UG-04: Reproducibility]
+    RG01 --> UG05[UG-05: Scalability]
+    RG05[RG-05: Multimodal Integration] --> UG03
+
+    UG01 --> SG01[SG-01: Modular Architecture]
+    UG01 --> SG04[SG-04: Documentation]
+    UG03 --> SG01
+    UG04 --> SG03[SG-03: Comprehensive Testing]
+    UG05 --> SG02[SG-02: Performance Optimization]
+    UG05 --> SG05[SG-05: JAX Implementation]
+
+    class RG01,RG02,RG03,RG05 research;
+    class UG01,UG02,UG03,UG04,UG05 usage;
+    class SG01,SG02,SG03,SG04,SG05 system;
+```
+
+# Value Proposition {#sec-value-proposition}
+
+## Scientific Value {#sec-scientific-value}
+
+PyroVelocity delivers scientific value in the following ways:
+
+1. For computational biologists:
+   - More accurate RNA velocity estimates with quantified uncertainty
+   - Better understanding of cell fate decisions in development and disease
+   - Improved ability to design and interpret single-cell experiments
+
+2. For bioinformaticians:
+   - Modular framework for developing and testing new velocity models
+   - Integration with existing single-cell analysis workflows
+   - Reproducible and reliable velocity analysis
+
+3. For molecular biologists:
+   - More reliable identification of key genes driving cell state transitions
+   - Better prediction of cell fate choices
+   - Improved understanding of temporal dynamics in biological processes
+
+4. For the research community:
+   - Open-source software for probabilistic RNA velocity analysis
+   - Reproducible computational workflows for gene expression dynamics
+   - New insights into the role of gene expression dynamics in cellular decision-making
+
+## Resource Analysis {#sec-resource-analysis}
+
+### Computational Resources
+
+- **High-performance computing**: Required for training models on large datasets
+- **GPU computing resources**: Recommended for accelerated training
+- **Storage requirements**: 10-100GB for typical single-cell datasets and analysis results
+- **Memory requirements**: 16-64GB RAM for large-scale analyses
+
+### Personnel Resources
+
+- **Computational scientists**: Algorithm development and implementation
+- **Bioinformaticians**: Integration with existing workflows and testing
+- **Domain experts**: Model formulation and result interpretation
+- **Software engineers**: Software architecture and maintenance
+
+### Timeline
+
+- **Modular PyTorch/Pyro implementation**: Complete
+- **Validation against legacy implementation**: In progress
+- **JAX/NumPyro implementation**: In progress
+- **Documentation and tutorials**: Ongoing
+
+## Risk Analysis {#sec-risk-analysis}
+
+| Risk ID | Risk Description | Probability | Impact | Mitigation Strategy |
+|---------|------------------|-------------|--------|---------------------|
+| RK-01 | Model complexity leads to slow performance | Medium | High | Optimize critical components, provide JAX implementation |
+| RK-02 | Uncertainty estimates are not well-calibrated | Medium | High | Validate on synthetic data with known ground truth |
+| RK-03 | Integration with existing tools is challenging | Low | Medium | Maintain compatibility with AnnData standard |
+| RK-04 | Users find probabilistic approach difficult to understand | Medium | Medium | Provide clear documentation and intuitive visualizations |
+| RK-05 | Modular architecture increases maintenance burden | Low | Low | Implement comprehensive testing and documentation |
+
+## Success Criteria {#sec-success-criteria}
+
+The project will be considered successful if:
+
+1. The probabilistic model provides more accurate RNA velocity estimates than deterministic methods on benchmark datasets
+2. Uncertainty quantification correctly captures true parameter values within confidence intervals
+3. The modular implementation successfully replicates the functionality of the legacy implementation
+4. The JAX implementation provides significant performance improvements over the PyTorch implementation
+5. The software is successfully used by external research groups for RNA velocity analysis
+6. The method is published in a peer-reviewed journal
+
+# Scientific Domain Model {#sec-scientific-domain-model}
+
+## Computational Workflow Overview {#sec-computational-workflow-overview}
+
+```{mermaid}
+graph TD
+    A[Data Preprocessing] --> B[Model Training]
+    B --> C[Posterior Sampling]
+    C --> D[Velocity Computation]
+    D --> E[Uncertainty Quantification]
+    E --> F[Visualization and Analysis]
+
+    class A preprocessing;
+    class B,C modeling;
+    class D,E,F analysis;
+```
+
+The PyroVelocity computational workflow consists of six main stages:
+
+1. **Data Preprocessing**: Processing raw single-cell RNA sequencing data into AnnData objects with spliced and unspliced counts
+2. **Model Training**: Training the probabilistic model using variational inference
+3. **Posterior Sampling**: Generating samples from the posterior distribution of model parameters
+4. **Velocity Computation**: Computing RNA velocity from the posterior samples
+5. **Uncertainty Quantification**: Quantifying uncertainty in velocity estimates and cell fate predictions
+6. **Visualization and Analysis**: Visualizing results and performing downstream analyses
+
+## Scientific Workflows {#sec-scientific-workflows}
+
+### Data Preprocessing Workflow
+
+- **Purpose**: Prepare single-cell RNA-seq data for velocity analysis
+- **Inputs**: Raw count matrices or AnnData objects
+- **Steps**:
+  1. Filter cells and genes based on quality metrics
+  2. Normalize data if required
+  3. Extract spliced and unspliced counts
+  4. Compute quality control metrics
+- **Outputs**: Preprocessed AnnData object with spliced and unspliced layers
+
+### Model Training Workflow
+
+- **Purpose**: Train the probabilistic model for RNA velocity
+- **Inputs**: Preprocessed AnnData object
+- **Steps**:
+  1. Initialize model components (dynamics, prior, likelihood, observation, guide)
+  2. Set up variational inference
+  3. Optimize model parameters using SVI
+  4. Monitor convergence and diagnostics
+- **Outputs**: Trained model with optimized parameters
+
+### Posterior Analysis Workflow
+
+- **Purpose**: Generate and analyze posterior samples
+- **Inputs**: Trained model and preprocessed AnnData object
+- **Steps**:
+  1. Generate posterior samples for model parameters
+  2. Compute RNA velocity from posterior samples
+  3. Quantify uncertainty in velocity estimates
+  4. Project velocity onto low-dimensional embeddings
+- **Outputs**: Velocity estimates with uncertainty quantification
+
+## Scientific Data Objects {#sec-scientific-data-objects}
+
+| Data Object | Description | Attributes | Format | Relationships |
+|-------------|-------------|------------|--------|---------------|
+| AnnData | Annotated data matrix for single-cell data | Cells (obs), genes (var), matrices (X, layers) | H5AD | Contains spliced/unspliced counts |
+| CountMatrix | Matrix of RNA counts | Cells (rows), genes (columns), values (counts) | Dense/sparse array | Component of AnnData |
+| ModelParameters | Parameters of the RNA velocity model | alpha, beta, gamma, switching, t | PyTorch tensors | Used by dynamics model |
+| PosteriorSamples | Samples from parameter posterior distributions | Parameter samples, chain information | Dictionary of tensors | Generated from trained model |
+| VelocityEstimates | RNA velocity vectors for each cell | Velocity magnitude and direction | Array | Computed from posterior samples |
+
+## Domain Algorithms {#sec-domain-algorithms}
+
+### RNA Velocity Dynamics Model
+
+The core of PyroVelocity is a mathematical model of RNA dynamics based on a system of ordinary differential equations:
+
+$$
+\begin{align}
+\frac{du}{dt} &= \alpha - \beta u \\
+\frac{ds}{dt} &= \beta u - \gamma s
+\end{align}
+$$
+
+Where:
+- $u$ represents unspliced mRNA abundance
+- $s$ represents spliced mRNA abundance
+- $\alpha$ is the transcription rate
+- $\beta$ is the splicing rate
+- $\gamma$ is the degradation rate
+
+The analytical solution to this system is:
+
+$$
+\begin{align}
+u(t) &= u_0 e^{-\beta t} + \frac{\alpha}{\beta}(1 - e^{-\beta t}) \\
+s(t) &= s_0 e^{-\gamma t} + \frac{\beta u_0}{\gamma - \beta}(e^{-\beta t} - e^{-\gamma t}) + \frac{\alpha \beta}{\gamma \beta}(1 - \frac{\gamma}{\gamma - \beta}e^{-\beta t} + \frac{\beta}{\gamma - \beta}e^{-\gamma t})
+\end{align}
+$$
+
+This model is implemented in the `StandardDynamicsModel` component of PyroVelocity.
+
+### Variational Inference Algorithm
+
+PyroVelocity uses Stochastic Variational Inference (SVI) for parameter estimation:
+
+1. Define a joint probability model $p(x, z)$ where $x$ are observed data and $z$ are latent variables
+2. Approximate the posterior $p(z|x)$ with a variational distribution $q(z)$
+3. Minimize the KL divergence between $q(z)$ and $p(z|x)$ by maximizing the ELBO (Evidence Lower Bound)
+4. Use stochastic gradient descent for optimization
+
+This is implemented using Pyro's SVI framework in the inference components of PyroVelocity.
+
+## Domain Data Dictionary {#sec-domain-data-dictionary}
+
+| Data Element | Definition | Format | Units | Valid Range |
+|--------------|------------|--------|-------|-------------|
+| alpha | Transcription rate | Float | Transcripts per unit time | [0, ∞) |
+| beta | Splicing rate | Float | Per unit time | [0, ∞) |
+| gamma | Degradation rate | Float | Per unit time | [0, ∞) |
+| u_obs | Observed unspliced counts | Integer | Counts | [0, ∞) |
+| s_obs | Observed spliced counts | Integer | Counts | [0, ∞) |
+| ut | True unspliced counts (latent) | Float | Counts | [0, ∞) |
+| st | True spliced counts (latent) | Float | Counts | [0, ∞) |
+| tau | Cell-specific time | Float | Arbitrary units | [0, ∞) |
+| u_scale | Scaling factor for unspliced counts | Float | Dimensionless | (0, ∞) |
+| s_scale | Scaling factor for spliced counts | Float | Dimensionless | (0, ∞) |
+
+# Constraints and Rules {#sec-constraints-and-rules}
+
+## Scientific Constraints {#sec-scientific-constraints}
+
+| ID | Constraint | Description | Source | Impact |
+|----|------------|-------------|--------|--------|
+| SC-01 | RNA Velocity Model Assumptions | The model assumes first-order kinetics for transcription, splicing, and degradation | RNA velocity theory | Limits ability to model complex regulatory dynamics |
+| SC-02 | Steady State Assumption | The model assumes cells can reach steady state | RNA velocity theory | May not accurately model highly dynamic processes |
+| SC-03 | Parameter Identifiability | Not all parameters may be uniquely identifiable from the data | Statistical theory | Requires careful prior specification and validation |
+| SC-04 | Data Quality Requirements | Requires high-quality spliced and unspliced count data | Single-cell sequencing | Limits applicability to certain datasets |
+
+## Technical Constraints {#sec-technical-constraints}
+
+| ID | Constraint | Description | Source | Impact |
+|----|------------|-------------|--------|--------|
+| TC-01 | AnnData Compatibility | Must maintain compatibility with AnnData format | Ecosystem integration | Influences data structure design |
+| TC-02 | Pyro/PyTorch Dependency | Relies on Pyro and PyTorch for probabilistic programming | Implementation choice | Affects performance and deployment options |
+| TC-03 | Python Ecosystem | Must integrate with Python-based single-cell analysis tools | Ecosystem integration | Limits language and framework choices |
+| TC-04 | Backward Compatibility | Must maintain compatibility with legacy implementation during transition | Project requirement | Constrains design choices |
+
+## Computational Constraints {#sec-computational-constraints}
+
+| ID | Constraint | Description | Source | Impact |
+|----|------------|-------------|--------|--------|
+| CC-01 | Memory Usage | Large single-cell datasets can exceed available memory | Hardware limitations | Requires efficient memory management |
+| CC-02 | Inference Speed | Variational inference can be computationally intensive | Algorithm complexity | Affects user experience and scalability |
+| CC-03 | Parallelization | Need for efficient parallelization across cells and genes | Performance requirements | Influences algorithm design |
+| CC-04 | GPU Acceleration | Should leverage GPU acceleration when available | Performance requirements | Affects implementation choices |
+
+## Environmental Constraints {#sec-environmental-constraints}
+
+| ID | Constraint | Description | Source | Impact |
+|----|------------|-------------|--------|--------|
+| EC-01 | Open Source Requirement | Must be released as open-source software | Project policy | Affects licensing and distribution |
+| EC-02 | Documentation Standards | Must maintain comprehensive documentation | User needs | Requires ongoing documentation effort |
+| EC-03 | Testing Requirements | Must have comprehensive test coverage | Software quality | Requires significant testing effort |
+| EC-04 | Integration Requirements | Must integrate with existing single-cell analysis workflows | User needs | Constrains API design |
+
+# Glossary {#sec-glossary}
+
+## Domain Terminology {#sec-domain-terminology}
+
+| Term | Definition | Source |
+|------|------------|--------|
+| RNA Velocity | The time derivative of gene expression, representing the rate of change of mRNA abundance | La Manno et al., 2018 |
+| Spliced mRNA | Mature messenger RNA with introns removed | Molecular biology |
+| Unspliced mRNA | Precursor messenger RNA containing introns | Molecular biology |
+| Transcription | Process of creating RNA from a DNA template | Molecular biology |
+| Splicing | Process of removing introns from pre-mRNA | Molecular biology |
+| Degradation | Process of breaking down mRNA | Molecular biology |
+| Cell Fate | The developmental trajectory or end state of a cell | Developmental biology |
+| Trajectory Inference | Computational methods to order cells along developmental paths | Computational biology |
+
+## Technical Terminology {#sec-technical-terminology}
+
+| Term | Definition | Source |
+|------|------------|--------|
+| AnnData | Annotated data format for single-cell genomics | AnnData documentation |
+| Pyro | Probabilistic programming language built on PyTorch | Pyro documentation |
+| Variational Inference | Method for approximating posterior distributions | Statistical learning theory |
+| ELBO | Evidence Lower Bound, objective function in variational inference | Statistical learning theory |
+| Protocol | Interface definition in Python typing | Python typing documentation |
+| Modular Architecture | Design approach based on interchangeable components | Software engineering |
+| JAX | Numerical computing library with automatic differentiation | JAX documentation |
+| NumPyro | Probabilistic programming library built on JAX | NumPyro documentation |
+
+## Acronyms {#sec-acronyms}
+
+| Acronym | Definition |
+|---------|------------|
+| RNA | Ribonucleic Acid |
+| mRNA | Messenger RNA |
+| scRNA-seq | Single-cell RNA sequencing |
+| SVI | Stochastic Variational Inference |
+| ODE | Ordinary Differential Equation |
+| GPU | Graphics Processing Unit |
+| API | Application Programming Interface |
+| MCMC | Markov Chain Monte Carlo |
