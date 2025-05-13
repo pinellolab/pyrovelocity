@@ -266,6 +266,8 @@ website:
               href: development/index.qmd
             - text: "Context"
               href: development/context.qmd
+            - text: "Requirements"
+              href: development/requirements.qmd
             - text: "Architecture"
               href: development/architecture.qmd
             - text: "Testing"
@@ -278,6 +280,8 @@ website:
           href: development/index.qmd
         - text: "Context"
           href: development/context.qmd
+        - text: "Requirements"
+          href: development/requirements.qmd
         - text: "Architecture"
           href: development/architecture.qmd
         - text: "Testing"
