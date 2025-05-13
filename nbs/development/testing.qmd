@@ -4,13 +4,71 @@ format:
   html:
     toc: true
     toc-depth: 3
+    number-sections: true
 ---
 
-# PyroVelocity Testing
+# Introduction {#sec-introduction}
 
-This documentation describes the testing approach and infrastructure for the `pyrovelocity` library. Our testing strategy combines traditional pytest unit/integration testing with Behavior-Driven Development (BDD) using pytest-bdd to ensure both technical correctness and alignment with user requirements.
+## Purpose of this Document {#sec-purpose}
 
-## Directory Structure
+This document describes the testing approach and infrastructure for the `pyrovelocity` library. It serves as both a reference for the existing test suite and a guide for developing new tests. The document establishes traceability between tests and the AMDiRE artifacts ([Context Specification](context.qmd), [Requirements Specification](requirements.qmd), and [System Specification](architecture.qmd)) to ensure comprehensive test coverage of all system aspects.
+
+## Document Conventions {#sec-conventions}
+
+This document uses the following conventions:
+
+- *Italics* are used for terms defined in the glossary
+- **Bold** is used for emphasis and key concepts
+- Blue text indicates a cross-reference to another section
+- Test IDs follow the format TEST-[type]-[number] (e.g., TEST-UNIT-01, TEST-BDD-01)
+- AMDiRE element references use their original identifiers (e.g., REQ-01, SC-01, COMP-01)
+
+## References {#sec-references}
+
+1. [Scientific Context Specification](context.qmd)
+2. [Scientific Requirements Specification](requirements.qmd)
+3. [Scientific System Specification](architecture.qmd)
+4. [PyroVelocity Validation Framework (PRD-678-VALID)](https://github.com/YosefLab/pyrovelocity/tree/main/pyrovelocity-planning/prds/prd-678-valid)
+5. [pytest-bdd Documentation](https://pytest-bdd.readthedocs.io/)
+
+## Document Overview {#sec-overview}
+
+This Testing Framework and Reference Documentation is organized to provide a comprehensive view of the testing strategy and implementation. It begins with the testing philosophy and infrastructure, then details the test development workflow and execution procedures. The AMDiRE traceability sections establish connections between tests and the elements defined in the Context, Requirements, and System specifications. Reference tables track test coverage and status, while subsequent sections provide detailed guidance on BDD feature files, step definitions, and advanced testing topics.
+
+# Testing Philosophy {#sec-testing-philosophy}
+
+Our testing approach implements a dual strategy that addresses both implementation details and user-facing behavior:
+
+1. **Unit and Integration Tests** (`tests/models/modular/*.py`):
+   - Traditional pytest-based tests focusing on implementation details
+   - Verify internal functions, edge cases, and error handling
+   - Target high code coverage and technical correctness
+   - Validate that individual components work as expected in isolation
+
+2. **Behavior-Driven Tests**:
+   - **Feature Definitions** (`tests/features/models/modular/*.feature`):
+     - User-centric specifications written in Gherkin syntax
+     - Focus on requirements and use cases from the user's perspective
+     - Serve as living documentation of expected behavior
+   - **Feature Implementations** (`tests/models/modular/integration/*.py`):
+     - Connect Gherkin specifications to actual code
+     - Test how components work together to deliver user-facing functionality
+     - Validate that the system behaves according to specifications
+
+This approach follows Acceptance Test-Driven Development (ATDD), where feature files are written before implementation to document requirements and guide development.
+
+### Key Principles {#sec-key-principles}
+
+PyroVelocity's testing philosophy emphasizes:
+
+- **Protocol-First Testing**: Testing against interfaces rather than concrete implementations
+- **Real Objects Over Mocks**: Creating simple instances of real objects rather than using mocking tools
+- **Test-Driven Development**: Writing tests alongside code development
+- **Reasonable Constraints**: Ensuring tests provide reasonable constraints on the code
+- **Systematic Validation**: Comprehensive validation of model implementations
+- **AMDiRE Traceability**: Connecting tests to context, requirements, and system elements
+
+# Directory Structure {#sec-directory-structure}
 
 The tests are organized to mirror the source code structure while separating unit tests from BDD feature definitions and step implementations:
 
@@ -66,39 +124,20 @@ src/pyrovelocity/tests/
 └── test_*.py                  # Package-level tests
 ```
 
-## Testing Philosophy
+# Test Development Workflow {#sec-test-development-workflow}
 
-Our testing approach implements a dual strategy that addresses both implementation details and user-facing behavior:
+Our recommended workflow follows these steps:
 
-1. **Unit and Integration Tests** (`tests/models/modular/*.py`):
-   - Traditional pytest-based tests focusing on implementation details
-   - Verify internal functions, edge cases, and error handling
-   - Target high code coverage and technical correctness
-   - Validate that individual components work as expected in isolation
+1. **Review AMDiRE Artifacts**: Examine the Context, Requirements, and System specifications to understand what needs to be tested
+2. **Identify Test Cases**: Derive test cases from AMDiRE elements, ensuring traceability to specific requirements and system components
+3. **Specify Behavior**: Create or update a feature file in `features/` for new functionality, referencing relevant AMDiRE elements
+4. **Implement Step Definitions**: Create/update step definitions in the subpackage's `integration/` directory
+5. **Add Unit Tests**: Create detailed unit tests in the subpackage's test modules
+6. **Implement Source Code**: Develop the actual functionality in the source code
+7. **Update Traceability**: Update the traceability matrices in this document to reflect the new tests
+8. **Update Documentation**: Update the reference tables in this document
 
-2. **Behavior-Driven Tests**:
-   - **Feature Definitions** (`tests/features/models/modular/*.feature`):
-     - User-centric specifications written in Gherkin syntax
-     - Focus on requirements and use cases from the user's perspective
-     - Serve as living documentation of expected behavior
-   - **Feature Implementations** (`tests/models/modular/integration/*.py`):
-     - Connect Gherkin specifications to actual code
-     - Test how components work together to deliver user-facing functionality
-     - Validate that the system behaves according to specifications
-
-This approach follows Acceptance Test-Driven Development (ATDD), where feature files are written before implementation to document requirements and guide development.
-
-### Key Principles
-
-PyroVelocity's testing philosophy emphasizes:
-
-- **Real Objects Over Mocks**: Creating simple instances of real objects rather than using mocking tools
-- **Test-Driven Development**: Writing tests alongside code development
-- **Reasonable Constraints**: Ensuring tests provide reasonable constraints on the code
-- **Systematic Validation**: Comprehensive validation of model implementations
-- **Protocol-First Testing**: Testing against interfaces rather than concrete implementations
-
-## Running Tests
+# Running Tests {#sec-running-tests}
 
 ### All Tests
 
@@ -144,60 +183,76 @@ source .venv/bin/activate
 scalene --profile-all src/pyrovelocity/tests/models/test_model.py
 ```
 
-## Test Development Workflow
+# AMDiRE Traceability {#sec-amdire-traceability}
 
-Our recommended workflow follows these steps:
+This section establishes traceability between tests and the elements defined in the AMDiRE artifacts (Context Specification, Requirements Specification, and System Specification). This traceability ensures that all aspects of the system are adequately tested and that the tests align with the project's objectives, requirements, and design.
 
-1. **Specify Behavior**: Create or update a feature file in `features/` for new functionality
-2. **Implement Step Definitions**: Create/update step definitions in the subpackage's `integration/` directory
-3. **Add Unit Tests**: Create detailed unit tests in the subpackage's test modules
-4. **Implement Source Code**: Develop the actual functionality in the source code
-5. **Update Documentation**: Update this document's reference tables when adding new tests
+## Context Element Traceability {#sec-context-element-traceability}
 
-## Validation Framework
+This table maps tests to elements in the Context Specification, ensuring that tests validate the scientific objectives, domain model elements, and constraints defined in the project context.
 
-PyroVelocity includes a validation framework (PRD-678-VALID) to verify that the modular model can replicate the legacy model. Key aspects include:
+| Test ID | Test Type | Test Name | Context Element ID | Context Element Type | Validation Approach |
+|---------|-----------|-----------|-------------------|---------------------|---------------------|
+| TEST-BDD-01 | BDD | Standard dynamics model | RG-01 | Research Goal | Verifies that the dynamics model correctly implements RNA velocity equations |
+| TEST-BDD-02 | BDD | Uncertainty quantification | RG-02 | Research Goal | Validates uncertainty estimates in velocity computation |
+| TEST-UNIT-01 | Unit | Parameter inference | RG-03 | Research Goal | Tests parameter inference from synthetic data |
+| TEST-BDD-03 | BDD | Library size correction | SC-01 | Scientific Constraint | Ensures model respects biological constraints |
 
-- Direct comparison of model outputs
-- Validation using synthetic data from test fixtures
-- Validation using downsampled real datasets (e.g., `tests/data/preprocessed_pancreas_50_7.json`)
-- Systematic addressing of implementation differences
+## Requirements Traceability {#sec-requirements-traceability}
 
-The validation framework is implemented in the `src/pyrovelocity/tests/validation/` directory and includes tests for:
+This table maps tests to elements in the Requirements Specification, ensuring that tests validate the functional requirements, quality requirements, and computational models defined for the system.
 
-- Direct comparison of model outputs
-- Metrics for quantifying differences
-- Visualization of differences
+| Test ID | Test Type | Test Name | Requirement ID | Requirement Type | Coverage Level |
+|---------|-----------|-----------|---------------|-----------------|---------------|
+| TEST-BDD-04 | BDD | Model training | FN-03 | Functional Requirement | Complete |
+| TEST-UNIT-02 | Unit | Posterior sampling | FN-04 | Functional Requirement | Complete |
+| TEST-BDD-05 | BDD | Velocity computation | FN-05 | Functional Requirement | Complete |
+| TEST-UNIT-03 | Unit | AnnData integration | FN-08 | Functional Requirement | Partial |
+| TEST-UNIT-04 | Unit | Performance benchmark | PERF-01 | Performance Requirement | Complete |
 
-## Feature Specifications Reference
+## System Element Traceability {#sec-system-element-traceability}
+
+This table maps tests to elements in the System Specification, ensuring that tests validate the components, interfaces, and algorithms defined in the system design.
+
+| Test ID | Test Type | Test Name | System Element ID | Element Type | Test Scope |
+|---------|-----------|-----------|------------------|-------------|------------|
+| TEST-BDD-06 | BDD | Component integration | CMP-01 | Component | Interface verification |
+| TEST-UNIT-05 | Unit | Dynamics model | CMP-02 | Component | Functional correctness |
+| TEST-UNIT-06 | Unit | Prior model | CMP-03 | Component | Functional correctness |
+| TEST-UNIT-07 | Unit | Likelihood model | CMP-04 | Component | Functional correctness |
+| TEST-UNIT-08 | Unit | RNA velocity algorithm | MM-01 | Mathematical Model | Correctness and stability |
+
+## Traceability Matrix {#sec-traceability-matrix}
+
+This comprehensive matrix provides a cross-reference between tests and all AMDiRE elements, helping to identify gaps in test coverage and ensure that all aspects of the system are adequately tested.
+
+| AMDiRE Element ID | Element Type | Element Description | Test IDs | Coverage Status |
+|-------------------|--------------|---------------------|----------|----------------|
+| RG-01 | Research Goal | Probabilistic RNA Velocity | TEST-BDD-01, TEST-UNIT-05 | Complete |
+| RG-02 | Research Goal | Uncertainty Quantification | TEST-BDD-02 | Partial |
+| FN-03 | Functional Requirement | Model Training | TEST-BDD-04 | Complete |
+| FN-05 | Functional Requirement | Velocity Computation | TEST-BDD-05 | Complete |
+| CMP-01 | Component | PyroVelocityModel | TEST-BDD-06 | Complete |
+| CMP-02 | Component | DynamicsModel | TEST-UNIT-05, TEST-BDD-01 | Complete |
+| MM-01 | Mathematical Model | RNA Velocity Dynamics | TEST-UNIT-08 | Complete |
+
+# Test Coverage Reference {#sec-test-coverage-reference}
+
+## Feature Specifications Reference {#sec-feature-specifications-reference}
 
 The table below tracks all feature specifications defined in our BDD feature files for the modular implementation. This serves as a living document of the intended functionality for the library.
 
-| Module | Feature | Status | Description |
-|--------|---------|--------|-------------|
-| dynamics_model | Standard dynamics model computes expected counts | ✅ Implemented | Verify that the StandardDynamicsModel correctly computes expected unspliced and spliced counts |
-| dynamics_model | Standard dynamics model computes steady state | ✅ Implemented | Verify that the StandardDynamicsModel correctly computes steady state values |
-| dynamics_model | Legacy dynamics model matches legacy implementation | ✅ Implemented | Verify that the LegacyDynamicsModel matches the legacy implementation |
-| dynamics_model | Dynamics model handles edge cases | ✅ Implemented | Verify that the dynamics model handles edge cases gracefully |
-| dynamics_model | Dynamics model with library size correction | ✅ Implemented | Verify that the dynamics model correctly applies library size correction |
-| prior_model | LogNormal prior model creates stochastic nodes | ✅ Implemented | Verify that the LogNormalPriorModel creates appropriate stochastic nodes |
-| likelihood_model | Poisson likelihood model defines distributions | ✅ Implemented | Verify that the PoissonLikelihoodModel defines appropriate Poisson distributions |
-| likelihood_model | Legacy likelihood model matches legacy implementation | ✅ Implemented | Verify that the LegacyLikelihoodModel matches the legacy implementation |
-| likelihood_model | Likelihood model with scaling factors | ✅ Implemented | Verify that the likelihood model correctly incorporates scaling factors |
-| likelihood_model | Likelihood model with zero counts | ✅ Implemented | Verify that the likelihood model handles zero counts gracefully |
-| likelihood_model | Likelihood model with Pyro plates | ✅ Implemented | Verify that the likelihood model correctly uses Pyro plates for batch dimensions |
-| observation_model | Standard observation model transforms data | ✅ Implemented | Verify that the StandardObservationModel correctly transforms input data |
-| observation_model | Observation model computes size factors | ✅ Implemented | Verify that the observation model correctly computes size factors |
-| observation_model | Observation model handles missing values | ✅ Implemented | Verify that the observation model handles missing values gracefully |
-| observation_model | Observation model with normalization | ✅ Implemented | Verify that the observation model correctly normalizes data |
-| observation_model | Observation model preserves data integrity | ✅ Implemented | Verify that the observation model preserves biological signal and doesn't introduce artifacts |
-| guide_model | AutoGuide factory creates guide | ✅ Implemented | Verify that the AutoGuideFactory creates an appropriate guide |
-| guide_model | Legacy auto guide factory matches legacy implementation | ✅ Implemented | Verify that the LegacyAutoGuideFactory matches the legacy implementation |
-| guide_model | Guide with parameter initialization | ✅ Implemented | Verify that the guide correctly initializes parameters with specified scale |
-| guide_model | Guide with different variational families | ✅ Implemented | Verify that the guide supports different variational families |
-| guide_model | Guide with custom initialization | ✅ Implemented | Verify that the guide supports custom initialization functions |
-| model | PyroVelocity model integrates components | ✅ Implemented | Verify that the PyroVelocityModel correctly integrates all components |
-| model | PyroVelocity model trains on AnnData | ✅ Implemented | Verify that the PyroVelocityModel can train on AnnData objects |
+| Module | Feature | Status | Description | Related AMDiRE Elements |
+|--------|---------|--------|-------------|------------------------|
+| dynamics_model | Standard dynamics model computes expected counts | ✅ Implemented | Verify that the StandardDynamicsModel correctly computes expected unspliced and spliced counts | MM-01, CMP-02, FN-05 |
+| dynamics_model | Standard dynamics model computes steady state | ✅ Implemented | Verify that the StandardDynamicsModel correctly computes steady state values | MM-01, CMP-02 |
+| dynamics_model | Legacy dynamics model matches legacy implementation | ✅ Implemented | Verify that the LegacyDynamicsModel matches the legacy implementation | CMP-02, TC-04 |
+| dynamics_model | Dynamics model handles edge cases | ✅ Implemented | Verify that the dynamics model handles edge cases gracefully | CMP-02, REL-02 |
+| dynamics_model | Dynamics model with library size correction | ✅ Implemented | Verify that the dynamics model correctly applies library size correction | CMP-02, SC-01 |
+| prior_model | LogNormal prior model creates stochastic nodes | ✅ Implemented | Verify that the LogNormalPriorModel creates appropriate stochastic nodes | CMP-03, ALG-02 |
+| likelihood_model | Poisson likelihood model defines distributions | ✅ Implemented | Verify that the PoissonLikelihoodModel defines appropriate Poisson distributions | CMP-04, ALG-02 |
+| model | PyroVelocity model integrates components | ✅ Implemented | Verify that the PyroVelocityModel correctly integrates all components | CMP-01, SG-01 |
+| model | PyroVelocity model trains on AnnData | ✅ Implemented | Verify that the PyroVelocityModel can train on AnnData objects | CMP-01, FN-03, INT-01 |
 
 ### Legend
 - ✅ Implemented: Feature is fully implemented and tested
@@ -205,25 +260,22 @@ The table below tracks all feature specifications defined in our BDD feature fil
 - 📝 Specified: Feature is specified but not yet implemented
 - 🔄 Planned: Feature is planned but not fully specified
 
-## Unit Test Coverage Reference
+## Unit Test Coverage Reference {#sec-unit-test-coverage-reference}
 
 This table tracks the unit test coverage for each module in the modular implementation, helping identify areas that need additional testing.
 
-| Module | Test File | Test Coverage | Test Cases | Notes |
-|--------|-----------|---------------|------------|-------|
-| components/dynamics.py | test_dynamics.py | High | 10+ | Tests for StandardDynamicsModel and LegacyDynamicsModel |
-| components/guides.py | test_guides.py | High | 5+ | Tests for AutoGuideFactory and LegacyAutoGuideFactory |
-| components/likelihoods.py | test_likelihoods.py | High | 5+ | Tests for PoissonLikelihoodModel and LegacyLikelihoodModel |
-| components/observations.py | test_observations.py | High | 5+ | Tests for StandardObservationModel |
-| components/priors.py | test_priors.py | High | 5+ | Tests for LogNormalPriorModel |
-| model.py | test_model.py | High | 10+ | Tests for PyroVelocityModel |
-| factory.py | test_factory.py | High | 10+ | Tests for factory functions |
-| registry.py | test_registry.py | High | 5+ | Tests for component registries |
-| interfaces.py | test_interfaces.py | Medium | 5+ | Tests for Protocol interfaces |
-| data/anndata.py | test_anndata_integration.py | High | 5+ | Tests for AnnData integration |
-| utils/*.py | utils/test_*.py | Medium | 10+ | Tests for utility functions |
+| Module | Test File | Test Coverage | Test Cases | Missing Coverage | Related AMDiRE Elements |
+|--------|-----------|---------------|------------|------------------|------------------------|
+| components/dynamics.py | test_dynamics.py | High | 10+ | Edge cases with β = γ | CMP-02, MM-01 |
+| components/guides.py | test_guides.py | High | 5+ | Custom initialization | CMP-06, ALG-02 |
+| components/likelihoods.py | test_likelihoods.py | High | 5+ | Zero count handling | CMP-04, ALG-02 |
+| components/observations.py | test_observations.py | High | 5+ | Missing value handling | CMP-05 |
+| components/priors.py | test_priors.py | High | 5+ | None | CMP-03, ALG-02 |
+| model.py | test_model.py | High | 10+ | None | CMP-01, FN-03, FN-05 |
+| factory.py | test_factory.py | High | 10+ | None | AD-05 |
+| registry.py | test_registry.py | High | 5+ | None | AD-04 |
 
-## BDD Feature Files Explained
+# BDD Feature Files Explained {#sec-bdd-feature-files-explained}
 
 Our feature files use Gherkin syntax to describe expected behavior. Each feature file follows this structure:
 
@@ -232,6 +284,11 @@ Feature: [Feature Name]
   As a [type of user]
   I want to [perform some action]
   So that [achieve some benefit]
+
+  # AMDiRE Traceability
+  # Context: [Context Element IDs]
+  # Requirements: [Requirement IDs]
+  # System: [System Element IDs]
 
   Background:
     Given [common setup steps]
@@ -244,15 +301,18 @@ Feature: [Feature Name]
 
 ### Example Feature Files
 
-PyroVelocity uses feature files to describe the expected behavior of each component. Here are examples from different components:
-
-#### Dynamics Model Example
+PyroVelocity uses feature files to describe the expected behavior of each component. Here's an example from the dynamics model:
 
 ```gherkin
 Feature: Dynamics Model
   As a computational biologist
   I want to model RNA velocity dynamics
   So that I can understand transcriptional dynamics in single-cell data
+
+  # AMDiRE Traceability
+  # Context: RG-01 (Probabilistic RNA Velocity)
+  # Requirements: FN-05 (Velocity Computation)
+  # System: CMP-02 (DynamicsModel), MM-01 (RNA Velocity Dynamics)
 
   Background:
     Given I have a dynamics model component
@@ -269,74 +329,28 @@ Feature: Dynamics Model
       | 1.0   | 0.5  | 0.2   |
 ```
 
-#### Inference Guide Example
+### Deriving Tests from AMDiRE Artifacts
 
-```gherkin
-Feature: Inference Guide
-  As a computational biologist
-  I want to define variational distributions for RNA velocity inference
-  So that I can perform efficient approximate Bayesian inference
+When creating BDD feature files, we follow these guidelines to ensure alignment with AMDiRE artifacts:
 
-  Scenario: Guide with different variational families
-    Given I have an AutoGuideFactory with guide_type="<guide_type>"
-    When I create a guide for the model
-    Then the guide should be an instance of <guide_class>
-    And the guide should have the appropriate variational family
+1. **From Context Specification**:
+   - Derive test scenarios from research goals (RG-xx)
+   - Ensure tests respect scientific constraints (SC-xx)
+   - Include validation of domain model elements
 
-    Examples:
-      | guide_type           | guide_class                  |
-      | AutoNormal           | AutoNormal                   |
-      | AutoDiagonalNormal   | AutoDiagonalNormal           |
-      | AutoLowRankMultivariateNormal | AutoLowRankMultivariateNormal |
-      | AutoDelta            | AutoDelta                    |
-```
+2. **From Requirements Specification**:
+   - Create test scenarios for each functional requirement (FN-xx)
+   - Develop performance tests for performance requirements (PERF-xx)
+   - Include reliability tests for reliability requirements (REL-xx)
 
-#### Likelihood Model Example
+3. **From System Specification**:
+   - Test each component's functionality (CMP-xx)
+   - Validate algorithm implementations (ALG-xx)
+   - Test interfaces between components
 
-```gherkin
-Feature: Likelihood Model
-  As a computational biologist
-  I want to define likelihood distributions for RNA velocity observations
-  So that I can relate expected counts to observed counts in single-cell data
+# Step Definitions Structure {#sec-step-definitions-structure}
 
-  Scenario: Poisson likelihood model defines distributions
-    Given I have a PoissonLikelihoodModel
-    When I run the forward method
-    Then the model should define Poisson distributions for unspliced and spliced counts
-    And the distributions should use the expected counts as rate parameters
-    And the model should register observations with Pyro
-```
-
-#### Observation Model Example
-
-```gherkin
-Feature: Observation Model
-  As a computational biologist
-  I want to preprocess and transform RNA velocity data
-  So that it can be used effectively in the model
-
-  Scenario: Observation model with normalization
-    Given I have a StandardObservationModel with normalization
-    When I run the forward method
-    Then the model should normalize the data
-    And the normalized data should have the expected properties
-    And the context should include the normalized data
-```
-
-## Step Definitions Structure
-
-Step definition files connect feature files to actual test code. They are organized by component in the `integration/` directory. PyroVelocity has implemented step definitions for all the major components:
-
-- `test_dynamics_model_steps.py`: Implements steps for testing dynamics models
-- `test_prior_model_steps.py`: Implements steps for testing prior models
-- `test_likelihood_model_steps.py`: Implements steps for testing likelihood models
-- `test_observation_model_steps.py`: Implements steps for testing observation models
-- `test_guide_model_steps.py`: Implements steps for testing inference guides
-- `test_model_steps.py`: Implements steps for testing the full PyroVelocityModel
-
-Additionally, there's a `test_component_integration.py` file that tests the interactions between different components to ensure they work correctly together.
-
-Here's an example of a step definition file:
+Step definition files connect feature files to actual test code. They are organized by component in the `integration/` directory:
 
 ```python
 # src/pyrovelocity/tests/models/modular/integration/test_dynamics_model_steps.py
@@ -345,7 +359,7 @@ import pytest
 import torch
 from pytest_bdd import scenarios, given, when, then, parsers
 
-# Import the feature file using importlib.resources
+# Link to the feature file using importlib.resources
 scenarios(str(files("pyrovelocity.tests.features") / "models" / "modular" / "dynamics_model.feature"))
 
 # Import the components
@@ -354,10 +368,10 @@ from pyrovelocity.models.modular.components import (
     StandardDynamicsModel,
 )
 
-@given("I have a dynamics model component")
-def dynamics_model_component():
-    """Create a generic dynamics model component."""
-    return StandardDynamicsModel()
+@given("I have a StandardDynamicsModel", target_fixture="standard_dynamics_model")
+def standard_dynamics_model_fixture(bdd_standard_dynamics_model):
+    """Get a StandardDynamicsModel from the fixture."""
+    return bdd_standard_dynamics_model
 
 @when(parsers.parse("I run the forward method with alpha {alpha}, beta {beta}, and gamma {gamma}"), target_fixture="run_forward_method_with_parameters")
 def run_forward_method_with_parameters_fixture(standard_dynamics_model, input_data, alpha, beta, gamma):
@@ -383,96 +397,86 @@ def run_forward_method_with_parameters_fixture(standard_dynamics_model, input_da
     return result_context
 ```
 
-### Component Integration Tests
+# Validation Framework {#sec-validation-framework}
 
-In addition to the BDD step definitions, PyroVelocity includes component integration tests that verify the interactions between different components:
+PyroVelocity includes a validation framework (PRD-678-VALID) to verify that the modular model can replicate the legacy model. This framework is a critical part of our testing strategy, ensuring that the refactored implementation maintains compatibility with existing workflows.
 
-```python
-# src/pyrovelocity/tests/models/modular/integration/test_component_integration.py
-class TestComponentIntegration:
-    """Tests for component interactions."""
+## Key Validation Components
 
-    def test_dynamics_prior_integration(self):
-        """Test that dynamics model and prior model work together."""
-        # Create component models
-        dynamics_model = StandardDynamicsModel()
-        prior_model = LogNormalPriorModel()
+- **Direct Comparison**: Comparing outputs between legacy and modular implementations
+- **Synthetic Data Validation**: Using synthetic data with known properties
+- **Real Data Validation**: Using downsampled real datasets (e.g., `tests/data/preprocessed_pancreas_50_7.json`)
+- **Parameter Validation**: Ensuring parameter inference matches between implementations
+- **Shape Validation**: Verifying tensor shapes are consistent between implementations
 
-        # Sample parameters from prior
-        n_genes = 5
-        prior_params = prior_model.sample_parameters(n_genes=n_genes)
+## Implementation
 
-        # Use parameters with dynamics model
-        u0 = torch.zeros(n_genes)
-        s0 = torch.zeros(n_genes)
+The validation framework is implemented in the `src/pyrovelocity/tests/validation/` directory and includes:
 
-        # Simulate dynamics
-        times, u, s = dynamics_model.simulate(
-            u0=u0,
-            s0=s0,
-            alpha=prior_params["alpha"],
-            beta=prior_params["beta"],
-            gamma=prior_params["gamma"],
-            t_max=10.0,
-            n_steps=100,
-        )
+- Direct comparison tests for model outputs
+- Metrics for quantifying differences between implementations
+- Visualization tools for analyzing differences
+- Utilities for creating patched versions of components to address compatibility issues
 
-    def test_full_model_integration(self, simple_data):
-        """Test that all components work together in the full model."""
-        # Create components
-        dynamics_model = StandardDynamicsModel()
-        prior_model = LogNormalPriorModel()
-        likelihood_model = PoissonLikelihoodModel()
-        observation_model = StandardObservationModel()
-        guide_model = AutoGuideFactory(guide_type="AutoNormal")
+## AMDiRE Traceability
 
-        # Create the full model
-        model = PyroVelocityModel(
-            dynamics_model=dynamics_model,
-            prior_model=prior_model,
-            likelihood_model=likelihood_model,
-            observation_model=observation_model,
-            guide_model=guide_model,
-        )
+The validation framework addresses several key AMDiRE elements:
 
-        # Call the model with test data
-        result = model.forward(
-            u_obs=simple_data["u_obs"],
-            s_obs=simple_data["s_obs"]
-        )
-```
+- **TC-04**: Backward Compatibility constraint
+- **REQ-01**: Parameter Estimation Accuracy requirement
+- **SG-03**: Comprehensive Testing system goal
+- **REL-01**: Training Convergence reliability requirement
 
-## Contributing New Tests
+# Contributing New Tests {#sec-contributing-new-tests}
 
 When contributing new tests to the project:
 
-1. **Check Existing Coverage**: Review the feature and unit test reference tables
-2. **Update Feature Files**: If implementing a new feature, add or update the relevant feature file
-3. **Follow the Workflow**: Implement step definitions and unit tests as outlined above
-4. **Run Tests Locally**: Ensure all tests pass before submitting a PR
-5. **Update Documentation**: Update the reference tables in this document
+1. **Review AMDiRE Artifacts**: Examine the Context, Requirements, and System specifications
+2. **Check Existing Coverage**: Review the traceability matrices and test reference tables
+3. **Identify Coverage Gaps**: Look for AMDiRE elements with incomplete test coverage
+4. **Update Feature Files**: If implementing a new feature, add or update the relevant feature file with AMDiRE traceability comments
+5. **Follow the Workflow**: Implement step definitions and unit tests as outlined above
+6. **Establish Traceability**: Ensure all tests are linked to specific AMDiRE elements
+7. **Run Tests Locally**: Ensure all tests pass before submitting a PR
+8. **Update Documentation**: Update the traceability matrices and reference tables in this document
 
-## Fixtures and Testing Utilities
+## Test Coverage Guidelines
+
+To ensure comprehensive test coverage across all AMDiRE elements:
+
+1. **Context Elements**:
+   - Every research goal (RG-xx) should have at least one associated test
+   - All scientific constraints (SC-xx) should be validated by appropriate tests
+   - Domain model elements should have tests verifying their implementation
+
+2. **Requirements Elements**:
+   - Each functional requirement (FN-xx) should have at least one BDD test
+   - Performance requirements (PERF-xx) should have benchmarking tests
+   - Reliability requirements (REL-xx) should have error handling and edge case tests
+
+3. **System Elements**:
+   - Every component (CMP-xx) should have unit tests for its internal functionality
+   - All algorithms (ALG-xx) should have tests for correctness and edge cases
+   - Interfaces (INT-xx) should have integration tests
+
+# Fixtures and Testing Utilities {#sec-fixtures-and-testing-utilities}
 
 PyroVelocity provides a comprehensive set of fixtures for testing, defined in various `conftest.py` files:
 
-### Main Fixtures (`src/pyrovelocity/tests/conftest.py`)
+## Main Fixtures (`src/pyrovelocity/tests/conftest.py`)
 
 | Fixture Name | Purpose | Scope |
 |--------------|---------|-------|
 | `adata_preprocessed_pancreas_50_7` | Provides preprocessed pancreas dataset | Function |
 | `adata_trained_pancreas_50_7` | Provides trained pancreas dataset | Function |
-| `adata_postprocessed_pancreas_50_7` | Provides postprocessed pancreas dataset | Function |
 | `default_sample_data` | Provides synthetic sample data | Function |
 | `temp_file_path` | Provides a temporary file path | Function |
-| `temp_compressed_pickle_path` | Provides a temporary compressed pickle path | Function |
-| `save_and_load_helper` | Helper for saving and loading data | Function |
 
-### Modular Implementation Fixtures (`src/pyrovelocity/tests/models/modular/conftest.py`)
+## Modular Implementation Fixtures (`src/pyrovelocity/tests/models/modular/conftest.py`)
 
 These fixtures are specific to the modular implementation and provide test instances of various components.
 
-### BDD-Specific Fixtures (`src/pyrovelocity/tests/models/modular/integration/conftest.py`)
+## BDD-Specific Fixtures (`src/pyrovelocity/tests/models/modular/integration/conftest.py`)
 
 | Fixture Name | Purpose | Scope |
 |--------------|---------|-------|
@@ -481,18 +485,12 @@ These fixtures are specific to the modular implementation and provide test insta
 | `bdd_standard_dynamics_model` | Provides a StandardDynamicsModel | Function |
 | `bdd_legacy_dynamics_model` | Provides a LegacyDynamicsModel | Function |
 | `bdd_lognormal_prior_model` | Provides a LogNormalPriorModel | Function |
-| `bdd_poisson_likelihood_model` | Provides a PoissonLikelihoodModel | Function |
-| `bdd_legacy_likelihood_model` | Provides a LegacyLikelihoodModel | Function |
-| `bdd_standard_observation_model` | Provides a StandardObservationModel | Function |
-| `bdd_auto_guide_factory` | Provides an AutoGuideFactory | Function |
-| `bdd_legacy_auto_guide_factory` | Provides a LegacyAutoGuideFactory | Function |
 | `bdd_pyro_velocity_model` | Provides a PyroVelocityModel | Function |
-| `bdd_anndata` | Provides a simple AnnData object | Function |
 | `clear_pyro_param_store` | Clears Pyro's parameter store | Function (autouse) |
 
-## Advanced Testing Topics
+# Advanced Testing Topics {#sec-advanced-testing-topics}
 
-### Parameterized Testing
+## Parameterized Testing
 
 Both unit tests and BDD scenarios can be parameterized:
 
@@ -527,30 +525,7 @@ Scenario Outline: Standard dynamics model computes steady state
     | 2.0   | 1.0  | 0.5   |
 ```
 
-### Testing with AnnData
-
-PyroVelocity provides fixtures for testing with AnnData objects:
-
-```python
-def test_anndata_integration(bdd_anndata, bdd_pyro_velocity_model):
-    """Test integration with AnnData."""
-    # Prepare AnnData
-    adata = bdd_anndata.copy()
-
-    # Train model
-    bdd_pyro_velocity_model.train(
-        adata,
-        max_epochs=2,
-        batch_size=5,
-        use_gpu=False,
-    )
-
-    # Check that results were stored in AnnData
-    assert "dynamics" in adata.uns
-    assert "model_type" in adata.uns["dynamics"]
-```
-
-### Testing with Pyro
+## Testing with Pyro
 
 PyroVelocity provides utilities for testing with Pyro:
 
@@ -585,7 +560,7 @@ def test_pyro_model(clear_pyro_param_store):
     assert pyro.param("loc").item() != 0.0
 ```
 
-## Continuous Integration
+# Continuous Integration {#sec-continuous-integration}
 
 Tests are automatically run as part of the CI/CD pipeline defined in `.github/workflows/cid.yaml`. The CI pipeline includes:
 
@@ -593,15 +568,15 @@ Tests are automatically run as part of the CI/CD pipeline defined in `.github/wo
 2. **BDD Tests**: Run all BDD tests to verify behavior
 3. **Coverage Enforcement**: Ensure test coverage meets minimum thresholds
 
-## Best Practices for PyroVelocity Testing
+# Glossary {#sec-glossary}
 
-1. **Use Protocol Interfaces**: Test against Protocol interfaces rather than concrete implementations
-2. **Create Real Objects**: Prefer creating simple instances of real objects over using mocks
-3. **Test Edge Cases**: Include tests for edge cases and error handling
-4. **Use Fixtures**: Leverage pytest fixtures for common setup and teardown
-5. **Clear Pyro State**: Always clear Pyro's parameter store before and after tests
-6. **Synthetic Data**: Use synthetic data for tests to avoid external dependencies
-7. **Parameterize Tests**: Use parameterization to test multiple cases with the same logic
-8. **Document Tests**: Include docstrings and comments to explain test purpose and logic
-9. **Follow BDD Patterns**: Use Given-When-Then pattern for BDD tests
-10. **Validate Against Legacy**: Validate new implementations against legacy code
+## Testing Terminology
+
+| Term | Definition | Related AMDiRE Elements |
+|------|------------|------------------------|
+| Unit Test | A test that verifies the functionality of a single function, method, or class in isolation | System components (CMP-xx), algorithms (ALG-xx) |
+| Integration Test | A test that verifies the interaction between multiple components | System interfaces (INT-xx) |
+| BDD Test | A test written in Gherkin syntax that describes behavior from a user perspective | Functional requirements (FN-xx) |
+| Test Fixture | A fixed state of the system used as a baseline for running tests | Data objects (DO-xx) |
+| Test Coverage | The percentage of code that is executed during tests | Quality requirements (QR-xx) |
+| Protocol-First Testing | Testing against Protocol interfaces rather than concrete implementations | AD-01 (Protocol-First Architecture) |
