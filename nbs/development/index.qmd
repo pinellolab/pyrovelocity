@@ -84,7 +84,7 @@ Each document builds upon the previous ones, creating a comprehensive view of th
 
 The documents in the development section are interconnected, with each subsequent document building upon the previous ones:
 
-[interactive chart](https://bit.ly/44CjSkL)
+[interactive diagram](https://bit.ly/44CjSkL)
 
 ```{mermaid}
 flowchart TD
@@ -199,6 +199,8 @@ PyroVelocity is currently in a transition phase, migrating from a legacy impleme
 3. **JAX/NumPyro Implementation**: The future direction in `src/pyrovelocity/models/jax/`
 
 The development documentation primarily focuses on the modular PyTorch/Pyro implementation while acknowledging the legacy implementation and preparing for the JAX/NumPyro migration.
+
+[interactive diagram](https://bit.ly/458gKNC)
 
 ```{mermaid}
 timeline
