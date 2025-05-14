@@ -304,7 +304,17 @@ quartodoc:
       desc: |
         The legacy implementation of PyroVelocity.
       contents:
-        - models.PyroVelocity
+        - name: models.PyroVelocity
+          children: separate
+          members:
+            - __init__
+            - train
+            - setup_anndata
+            - generate_posterior_samples
+            - compute_statistics_from_posterior_samples
+            - save_pyrovelocity_data
+            - save_model
+            - load_model
     - subtitle: Modular Models
       desc: |
         The modular implementation provides a flexible, composable architecture for
