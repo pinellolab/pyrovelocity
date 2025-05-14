@@ -9,6 +9,8 @@ format:
     toc-depth: 3
     number-sections: true
     code-fold: true
+bibliography: ../references.bib
+csl: ../bibstyle.csl
 ---
 
 # Introduction {#sec-introduction}
@@ -246,14 +248,14 @@ def forward(self, context: Dict[str, Any]) -> Dict[str, Any]:
 
 **Algorithm Name:** Stochastic Variational Inference for RNA Velocity
 
-**Related Algorithm Specification:** ALG-02 (Stochastic Variational Inference)
+**Related Algorithm Specification:** ALG-03 (Stochastic Variational Inference)
 
 **Implementation Approach:** Pyro SVI with AutoGuide
 
 **Algorithm Structure:**
 
 ```python
-def train(self, adata: AnnData, **kwargs) -> Dict[str, Any]:
+def train_svi(self, adata: AnnData, **kwargs) -> Dict[str, Any]:
     # Extract data from AnnData
     data = prepare_anndata(adata)
     u_obs = data["u"]
@@ -279,7 +281,60 @@ def train(self, adata: AnnData, **kwargs) -> Dict[str, Any]:
         if kwargs.get("early_stopping", False) and self._check_convergence(losses):
             break
 
-    return {"losses": losses, "guide": guide}
+    return {"losses": losses, "guide": guide, "posterior_samples": guide.get_posterior()}
+```
+
+**Algorithm ID:** ALG-IMP-02
+
+**Algorithm Name:** Markov Chain Monte Carlo for RNA Velocity
+
+**Related Algorithm Specification:** ALG-04 (Markov Chain Monte Carlo Inference)
+
+**Implementation Approach:** NumPyro MCMC with NUTS
+
+**Algorithm Structure:**
+
+```python
+def train_mcmc(self, adata: AnnData, **kwargs) -> Dict[str, Any]:
+    # Extract data from AnnData
+    data = prepare_anndata(adata)
+    u_obs = data["u"]
+    s_obs = data["s"]
+
+    # Set up MCMC
+    num_samples = kwargs.get("num_samples", 1000)
+    num_warmup = kwargs.get("num_warmup", 500)
+    num_chains = kwargs.get("num_chains", 4)
+
+    # Create MCMC kernel
+    kernel = numpyro.infer.NUTS(self.forward)
+    mcmc = numpyro.infer.MCMC(
+        kernel,
+        num_samples=num_samples,
+        num_warmup=num_warmup,
+        num_chains=num_chains,
+        progress_bar=kwargs.get("progress_bar", True)
+    )
+
+    # Run MCMC
+    mcmc.run(jax.random.PRNGKey(0), u_obs=u_obs, s_obs=s_obs)
+
+    # Get diagnostics
+    diagnostics = {
+        "r_hat": mcmc.get_diagnostics()["r_hat"],
+        "effective_sample_size": mcmc.get_diagnostics()["effective_sample_size"],
+        "acceptance_rate": mcmc.get_diagnostics()["acceptance_rate"],
+        "divergences": mcmc.get_diagnostics()["divergences"]
+    }
+
+    # Get posterior samples
+    posterior_samples = mcmc.get_samples()
+
+    return {
+        "posterior_samples": posterior_samples,
+        "diagnostics": diagnostics,
+        "mcmc": mcmc
+    }
 ```
 
 **Data Structures:**
@@ -474,22 +529,30 @@ graph TB
     Main -->|contains| Likelihoods["Likelihood Models"]
     Main -->|contains| Observations["Observation Models"]
     Main -->|contains| Guides["Inference Guides"]
+    Main -->|contains| MCMC["MCMC Models"]
     Main -->|contains| Registry["Registry System"]
     Main -->|contains| Factory["Factory System"]
+    Main -->|contains| Validation["Validation Framework"]
 
     Dynamics -->|implements| DynamicsInterface["DynamicsModel Protocol"]
     Priors -->|implements| PriorsInterface["PriorModel Protocol"]
     Likelihoods -->|implements| LikelihoodsInterface["LikelihoodModel Protocol"]
     Observations -->|implements| ObservationsInterface["ObservationModel Protocol"]
     Guides -->|implements| GuidesInterface["InferenceGuide Protocol"]
+    MCMC -->|implements| MCMCInterface["MCMCModel Protocol"]
+
+    Validation -->|contains| ParameterRecovery["Parameter Recovery"]
+    Validation -->|contains| ModelComparison["Model Comparison"]
+    Validation -->|contains| ValidationMetrics["Validation Metrics"]
 
     Factory -->|uses| Registry
     Factory -->|creates| Main
 
     class Main main;
-    class Dynamics,Priors,Likelihoods,Observations,Guides component;
-    class DynamicsInterface,PriorsInterface,LikelihoodsInterface,ObservationsInterface,GuidesInterface interface;
+    class Dynamics,Priors,Likelihoods,Observations,Guides,MCMC component;
+    class DynamicsInterface,PriorsInterface,LikelihoodsInterface,ObservationsInterface,GuidesInterface,MCMCInterface interface;
     class Registry,Factory system;
+    class Validation,ParameterRecovery,ModelComparison,ValidationMetrics validation;
 ```
 
 ### Core Components {#sec-core-components}
@@ -502,6 +565,7 @@ Dynamics models implement the mathematical models of RNA dynamics, defining how 
 
 - **StandardDynamicsModel**: The standard implementation of RNA dynamics
 - **LegacyDynamicsModel**: Compatibility implementation matching the legacy model
+- **NonlinearDynamicsModel**: Implementation supporting nonlinear dynamics with numerical integration
 
 ```{mermaid}
 classDiagram
@@ -529,8 +593,20 @@ classDiagram
         +steady_state(alpha, beta, gamma) Tuple
     }
 
+    class NonlinearDynamicsModel {
+        +name: str
+        +description: str
+        +shared_time: bool
+        +t_scale_on: bool
+        +ode_solver: ODESolver
+        +forward(context) Dict
+        +steady_state(alpha, beta, gamma) Tuple
+        +solve_ode(initial_state, params, times) Tensor
+    }
+
     DynamicsModel <|.. StandardDynamicsModel : implements
     DynamicsModel <|.. LegacyDynamicsModel : implements
+    DynamicsModel <|.. NonlinearDynamicsModel : implements
 ```
 
 #### Prior Models {#sec-prior-models}
@@ -558,6 +634,88 @@ Guide factories create guide functions for variational inference.
 
 - **AutoGuideFactory**: Creates guides for the modular implementation
 - **LegacyAutoGuideFactory**: Compatibility implementation matching the legacy guide
+
+#### MCMC Models {#sec-mcmc-models}
+
+MCMC models implement Markov Chain Monte Carlo sampling for Bayesian inference.
+
+- **NUTSModel**: Implements the No U-Turn Sampler for MCMC
+- **HMCModel**: Implements Hamiltonian Monte Carlo for MCMC
+
+```{mermaid}
+classDiagram
+    class MCMCModel {
+        <<Protocol>>
+        +sample(model, data, num_samples, num_chains) Dict
+        +get_diagnostics() Dict
+    }
+
+    class NUTSModel {
+        +name: str
+        +description: str
+        +sample(model, data, num_samples, num_chains) Dict
+        +get_diagnostics() Dict
+        +compute_r_hat() Tensor
+        +compute_effective_sample_size() Tensor
+    }
+
+    class HMCModel {
+        +name: str
+        +description: str
+        +sample(model, data, num_samples, num_chains) Dict
+        +get_diagnostics() Dict
+        +compute_r_hat() Tensor
+        +compute_effective_sample_size() Tensor
+    }
+
+    MCMCModel <|.. NUTSModel : implements
+    MCMCModel <|.. HMCModel : implements
+```
+
+#### Validation Framework {#sec-validation-framework}
+
+The validation framework provides tools for model validation and comparison.
+
+- **ParameterRecoveryValidator**: Validates model's ability to recover known parameters from synthetic data
+- **ModelComparisonFramework**: Compares different model implementations and configurations
+- **ValidationMetrics**: Computes metrics for quantifying validation performance
+
+```{mermaid}
+classDiagram
+    class ParameterRecoveryValidator {
+        <<Protocol>>
+        +generate_synthetic_data(model_config, prior_config, num_cells, num_genes) Dict
+        +validate_parameter_recovery(model_config, synthetic_data) Dict
+    }
+
+    class ModelComparisonFramework {
+        <<Protocol>>
+        +compare_models(models, data, metrics) Dict
+        +rank_models(comparison_results, criteria) Dict
+    }
+
+    class ValidationMetrics {
+        <<Protocol>>
+        +compute_parameter_metrics(true_params, estimated_params) Dict
+        +compute_coverage_metrics(true_params, credible_intervals) Dict
+        +compute_model_comparison_metrics(models, data) Dict
+    }
+
+    class StandardParameterRecoveryValidator {
+        +generate_synthetic_data(model_config, prior_config, num_cells, num_genes) Dict
+        +validate_parameter_recovery(model_config, synthetic_data) Dict
+        +compute_validation_metrics(true_params, estimated_params) Dict
+    }
+
+    class StandardModelComparisonFramework {
+        +compare_models(models, data, metrics) Dict
+        +rank_models(comparison_results, criteria) Dict
+        +visualize_comparison(comparison_results) Dict
+    }
+
+    ParameterRecoveryValidator <|.. StandardParameterRecoveryValidator : implements
+    ModelComparisonFramework <|.. StandardModelComparisonFramework : implements
+```
 
 ### Registry System {#sec-registry-system}
 
