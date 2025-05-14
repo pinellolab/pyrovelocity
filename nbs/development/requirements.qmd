@@ -9,6 +9,8 @@ format:
     toc-depth: 3
     number-sections: true
     code-fold: true
+bibliography: ../references.bib
+csl: ../bibstyle.csl
 ---
 
 # Introduction {#sec-introduction}
@@ -46,7 +48,7 @@ This Requirements Specification is organized to progressively define the PyroVel
 
 ## System Overview {#sec-system-overview}
 
-PyroVelocity is a probabilistic framework for RNA velocity analysis in single-cell genomics. It provides a Bayesian approach to modeling RNA dynamics, enabling robust uncertainty quantification and parameter inference from single-cell RNA sequencing data. The system implements a modular architecture with interchangeable components for dynamics models, prior distributions, likelihood models, observation models, and inference guides.
+PyroVelocity is a probabilistic framework for RNA velocity analysis in single-cell genomics. It provides a Bayesian approach to modeling RNA dynamics, enabling robust uncertainty quantification, parameter inference, and model comparison from single-cell RNA sequencing data. The system implements a modular architecture with interchangeable components for dynamics models, prior distributions, likelihood models, observation models, and inference guides.
 
 PyroVelocity aims to overcome limitations of deterministic RNA velocity methods by:
 
@@ -55,9 +57,10 @@ PyroVelocity aims to overcome limitations of deterministic RNA velocity methods 
 3. Synchronizing cell time estimation across genes
 4. Enabling multivariate modeling of gene expression
 5. Offering diagnostic analyses and visualizations of model uncertainty
-6. Integrating with existing single-cell analysis ecosystems
+6. Supporting model validation, comparison, and selection
+7. Integrating with existing single-cell analysis ecosystems
 
-The system is currently transitioning from a legacy implementation to a modular PyTorch/Pyro implementation, with a future migration to a JAX/NumPyro implementation for improved performance.
+The system is currently transitioning from a legacy implementation to a modular PyTorch/Pyro implementation, with a future migration to a JAX/NumPyro implementation for improved performance and support for multiple inference algorithms.
 
 ## System Context {#sec-system-context}
 
@@ -67,22 +70,34 @@ PyroVelocity interfaces with the following external entities:
 - **AnnData Objects**: Primary data structure for storing and manipulating single-cell data
 - **Scanpy/scVelo**: Ecosystem tools for preprocessing and visualization
 - **Pyro/PyTorch**: Core probabilistic programming and tensor computation frameworks
-- **JAX/NumPyro**: Alternative backend for improved performance (future)
+- **JAX/NumPyro**: Alternative backend for improved performance and inference algorithms
+- **torchode/diffrax**: Differential equation solvers for dynamical simulation
+- **beartype/jaxtyping**: Runtime type checking and array shape annotations
+- **Flyte/hydra-zen**: Workflow orchestration and configuration management
 
 ```{mermaid}
 graph TB
     User["Data Scientist / Researcher"] -->|uses| Library["PyroVelocity"]
     Library -->|depends on| PyTorch["PyTorch"]
     Library -->|depends on| Pyro["Pyro"]
+    Library -->|depends on| JAX["JAX"]
+    Library -->|depends on| NumPyro["NumPyro"]
+    Library -->|depends on| Torchode["torchode"]
+    Library -->|depends on| Diffrax["diffrax"]
+    Library -->|depends on| Beartype["beartype"]
+    Library -->|depends on| Jaxtyping["jaxtyping"]
+    Library -->|depends on| Flyte["Flyte"]
+    Library -->|depends on| HydraZen["hydra-zen"]
     Library -->|processes| AnnData["AnnData Objects"]
     Library -->|produces| Velocity["RNA Velocity"]
+    Library -->|produces| ModelComparison["Model Comparison"]
     Library -->|integrates with| Scanpy["Scanpy"]
     Library -->|integrates with| Scvelo["scVelo"]
 
     class User user;
     class Library library;
-    class PyTorch,Pyro,Scanpy,Scvelo external;
-    class AnnData,Velocity data;
+    class PyTorch,Pyro,JAX,NumPyro,Torchode,Diffrax,Beartype,Jaxtyping,Flyte,HydraZen,Scanpy,Scvelo external;
+    class AnnData,Velocity,ModelComparison data;
 ```
 
 ## Capability Overview {#sec-capability-overview}
@@ -90,14 +105,15 @@ graph TB
 | Capability ID | Capability Name | Description | Priority |
 |--------------|-----------------|-------------|----------|
 | CAP-01 | Probabilistic RNA Velocity | Bayesian modeling of RNA velocity with uncertainty quantification | High |
-| CAP-02 | Parameter Inference | Inference of biologically meaningful parameters from scRNA-seq data | High |
-| CAP-03 | Uncertainty Visualization | Visualization of uncertainty in velocity estimates and trajectories | High |
+| CAP-02 | Parameter Inference | Inference of biologically meaningful parameters from scRNA-seq data using multiple inference algorithms | High |
+| CAP-03 | Uncertainty Visualization | Visualization of uncertainty in velocity estimates, parameters, and trajectories | High |
 | CAP-04 | AnnData Integration | Seamless integration with AnnData objects and the scanpy ecosystem | High |
-| CAP-05 | Modular Architecture | Flexible, component-based architecture with interchangeable parts | High |
-| CAP-06 | Parameter Recovery Validation | Validation of model's ability to recover known parameters from synthetic data | High |
-| CAP-07 | Model Comparison | Comparison of different model implementations and configurations | High |
-| CAP-08 | JAX/NumPyro Backend | High-performance implementation using JAX/NumPyro | Medium |
-| CAP-09 | Workflow Integration | Integration with workflow systems for reproducible analysis | Medium |
+| CAP-05 | Modular Architecture | Flexible, component-based architecture with interchangeable parts for systematic model comparison | High |
+| CAP-06 | Parameter Recovery Validation | Validation of model's ability to recover known parameters from synthetic data to ensure empirically identifiable models | High |
+| CAP-07 | Model Comparison | Systematic comparison of different model architectures, implementations, and inference algorithms | High |
+| CAP-08 | JAX/NumPyro Backend | High-performance implementation using JAX/NumPyro with support for MCMC inference | Medium |
+| CAP-09 | Workflow Integration | Integration with workflow systems for reproducible analysis and model validation | Medium |
+| CAP-10 | Dynamical Simulation | Support for numerical integration of ODEs for non-linear and stochastic dynamics | Medium |
 
 ## Usage Scenario Overview {#sec-usage-scenario-overview}
 
@@ -105,13 +121,14 @@ The system supports the following high-level usage scenarios:
 
 - **Data Preprocessing**: Scientists prepare single-cell data for velocity analysis
 - **Model Configuration**: Scientists configure model components and parameters
-- **Parameter Recovery Validation**: Scientists validate model's ability to recover known parameters
-- **Model Training**: Scientists train the model using variational inference
+- **Parameter Recovery Validation**: Scientists validate model's ability to recover known parameters from synthetic data
+- **Model Training**: Scientists train the model using variational inference or MCMC
 - **Posterior Analysis**: Scientists analyze posterior distributions of parameters
 - **Velocity Computation**: Scientists compute RNA velocity with uncertainty
-- **Result Visualization**: Scientists visualize velocity and uncertainty
-- **Model Comparison**: Scientists compare different model implementations and configurations
-- **Integration with Workflows**: Scientists integrate velocity analysis into larger pipelines
+- **Result Visualization**: Scientists visualize velocity, parameters, and associated uncertainty
+- **Model Comparison**: Scientists systematically compare different model architectures, implementations, and inference algorithms
+- **Model Selection**: Scientists select the most appropriate model based on validation metrics
+- **Integration with Workflows**: Scientists integrate velocity analysis and model validation into larger pipelines
 
 ```{mermaid}
 graph TD
@@ -122,9 +139,10 @@ graph TD
     D --> E[Velocity Computation]
     E --> F[Result Visualization]
     F --> M[Model Comparison]
-    M --> G[Integration with Workflows]
+    M --> S[Model Selection]
+    S --> G[Integration with Workflows]
 
-    class A,B,V,C,D,E,F,M,G scenario;
+    class A,B,V,C,D,E,F,M,S,G scenario;
 ```
 
 # Usage Model {#sec-usage-model}
@@ -147,12 +165,13 @@ graph TD
 | US-01 | Data Preprocessing | A-01, A-02 | Prepare single-cell data for velocity analysis | Raw count data available | AnnData object with spliced/unspliced counts |
 | US-02 | Model Configuration | A-01, A-04 | Configure model components and parameters | Preprocessed data available | Configured model ready for training |
 | US-03 | Parameter Recovery Validation | A-01, A-04 | Validate model's ability to recover known parameters from synthetic data | Model specification and prior distributions available | Validation metrics and visualizations demonstrating parameter recovery performance |
-| US-04 | Model Training | A-01, A-02 | Train the model using variational inference | Configured model and data available | Trained model with optimized parameters |
+| US-04 | Model Training | A-01, A-02 | Train the model using variational inference or MCMC | Configured model and data available | Trained model with optimized parameters |
 | US-05 | Posterior Analysis | A-01, A-04 | Analyze posterior distributions of parameters | Trained model available | Parameter distributions and diagnostics |
 | US-06 | Velocity Computation | A-01, A-02 | Compute RNA velocity with uncertainty | Posterior samples available | Velocity estimates with uncertainty |
-| US-07 | Result Visualization | A-01, A-03 | Visualize velocity and uncertainty | Velocity estimates available | Visualizations for interpretation |
-| US-08 | Model Comparison | A-01, A-04 | Compare different model implementations and configurations | Multiple trained models available | Comparison metrics and visualizations |
-| US-09 | Integration with Workflows | A-02 | Integrate velocity analysis into larger pipelines | Trained model and analysis code available | Integrated workflow |
+| US-07 | Result Visualization | A-01, A-03 | Visualize velocity, parameters, and associated uncertainty | Velocity estimates and parameter distributions available | Visualizations for interpretation |
+| US-08 | Model Comparison | A-01, A-04 | Systematically compare different model architectures, implementations, and inference algorithms | Multiple trained models available | Comparison metrics and visualizations |
+| US-09 | Model Selection | A-01, A-04 | Select the most appropriate model based on validation metrics | Model comparison results available | Selected model for downstream analysis |
+| US-10 | Integration with Workflows | A-02 | Integrate velocity analysis and model validation into larger pipelines | Trained model, selected model, and analysis code available | Integrated workflow |
 
 ## Functional Scenarios {#sec-functional-scenarios}
 
@@ -160,30 +179,35 @@ graph TD
 
 **Usage Scenario:** US-03 (Parameter Recovery Validation)
 
-**Description:** Validating a PyroVelocity model's ability to recover known parameters from synthetic data
+**Description:** Validating a PyroVelocity model's ability to recover known parameters from synthetic data to ensure empirically identifiable models
 
 **Triggering Event:** User initiates parameter recovery validation
 
 **Steps:**
 
-1. User specifies model configuration and prior distributions
+1. User specifies model configuration, prior distributions, and inference algorithm (SVI or MCMC)
 2. System generates known parameter sets from prior distributions
 3. System creates synthetic data using these parameters and the model's generative process
 4. System performs inference on synthetic data to estimate parameters
 5. System compares estimated parameters to original known values
 6. System analyzes recovery accuracy, precision, and coverage
-7. System generates validation metrics and visualizations
-8. User evaluates parameter recovery performance
+7. System calculates credible intervals and coverage metrics
+8. System generates validation metrics and visualizations
+9. User evaluates parameter recovery performance
+10. System stores validation results for model comparison
 
 **Alternative Paths:**
 
 * At step 1, if user wants to test specific parameter values, they provide custom parameter sets
+* At step 1, if user wants to compare inference algorithms, they specify multiple algorithms
 * At step 3, if user wants to test robustness, they specify noise levels to add to synthetic data
+* At step 4, if user wants to test multiple sample sizes, they specify a range of sample sizes
 
 **Exception Paths:**
 
 * At step 4, if inference fails to converge, system provides diagnostic information
 * At step 5, if parameters are not recoverable, system identifies problematic parameters
+* At step 7, if credible intervals have poor coverage, system suggests model refinement
 
 **Scenario ID:** FS-02
 
@@ -197,30 +221,37 @@ graph TD
 
 1. User loads preprocessed AnnData object with spliced/unspliced counts
 2. User creates a PyroVelocity model with standard components
-3. System initializes model parameters and guide
-4. User calls the train method with the AnnData object
-5. System performs stochastic variational inference
-6. System monitors convergence and reports progress
-7. System returns the trained model
-8. User saves the trained model for later use
+3. User selects inference algorithm (SVI or MCMC)
+4. System initializes model parameters and inference components
+5. User calls the train method with the AnnData object
+6. If using SVI:
+   a. System performs stochastic variational inference
+   b. System monitors ELBO convergence and reports progress
+7. If using MCMC:
+   a. System performs Markov Chain Monte Carlo sampling
+   b. System monitors chain diagnostics and reports progress
+8. System returns the trained model with posterior samples
+9. User saves the trained model for later use
 
 **Alternative Paths:**
 
 * At step 2, if user wants custom components, they configure specific components
-* At step 4, if user wants custom training parameters, they provide additional arguments
+* At step 3, if user wants to compare inference algorithms, they specify multiple algorithms
+* At step 5, if user wants custom training parameters, they provide additional arguments
 
 **Exception Paths:**
 
 * At step 1, if data is not properly formatted, system provides error message
-* At step 5, if training fails to converge, system provides diagnostic information
+* At step 6a, if SVI fails to converge, system provides diagnostic information
+* At step 7a, if MCMC chains fail to mix, system suggests parameter adjustments
 
 ## Common Research Workflows {#sec-common-research-workflows}
 
 **Workflow ID:** WF-01
 
-**Workflow Name:** RNA Velocity Analysis Workflow with Parameter Recovery Validation
+**Workflow Name:** RNA Velocity Analysis Workflow with Model Validation and Selection
 
-**Description:** Complete workflow for RNA velocity analysis from raw data to interpretation, including parameter recovery validation
+**Description:** Complete workflow for RNA velocity analysis from raw data to interpretation, including parameter recovery validation, model comparison, and model selection
 
 **Participants:** A-01, A-02, A-03, A-04
 
@@ -233,21 +264,24 @@ graph TD
 5. Posterior Analysis: US-05
 6. Velocity Computation: US-06
 7. Result Visualization: US-07
-8. Model Comparison: US-08 (optional)
+8. Model Comparison: US-08
+9. Model Selection: US-09
+10. Integration with Workflows: US-10 (optional)
 
 **Variations:**
 
 * For large datasets, users may subsample genes or cells before model training
-* For complex biological systems, users may use nonlinear dynamics models
+* For complex biological systems, users may use nonlinear dynamics models with numerical integration
 * For integration with other analyses, users may export velocity to other tools
-* For comprehensive validation, users may test multiple parameter sets and noise levels
-* For model comparison, users may compare different model implementations and configurations
+* For comprehensive validation, users may test multiple parameter sets, sample sizes, and noise levels
+* For model comparison, users may compare different model architectures, implementations, and inference algorithms
+* For inference algorithm comparison, users may compare SVI and MCMC approaches
 
 **Workflow ID:** WF-02
 
-**Workflow Name:** Parameter Recovery Validation Workflow
+**Workflow Name:** Parameter Recovery Validation and Model Comparison Workflow
 
-**Description:** Focused workflow for validating model's ability to recover known parameters from synthetic data
+**Description:** Focused workflow for validating model's ability to recover known parameters from synthetic data and comparing different model architectures and inference algorithms
 
 **Participants:** A-01, A-04
 
@@ -256,13 +290,16 @@ graph TD
 1. Model Configuration: US-02
 2. Parameter Recovery Validation: US-03
 3. Result Visualization: US-07
-4. Model Comparison: US-08 (if comparing multiple models)
+4. Model Comparison: US-08
+5. Model Selection: US-09
 
 **Variations:**
 
-* For comprehensive validation, users may test multiple parameter sets and noise levels
-* For robustness testing, users may vary sample sizes and noise levels
+* For comprehensive validation, users may test multiple parameter sets, sample sizes, and noise levels
+* For robustness testing, users may vary sample sizes, noise levels, and data generation processes
 * For model development, users may iterate on model design based on validation results
+* For inference algorithm comparison, users may compare SVI and MCMC approaches
+* For empirical identifiability assessment, users may analyze parameter recovery across different model architectures
 
 # Computational Model {#sec-computational-model}
 
@@ -393,17 +430,62 @@ Where:
 - Optimized guide parameters
 - Training diagnostics
 - ELBO values
+- Posterior samples
 
 **Computational Properties:**
 
 - Time Complexity: O(num_epochs * num_cells * num_genes)
 - Space Complexity: O(num_cells * num_genes)
 - Convergence: Depends on model complexity and data characteristics
+- Parallelization: Embarrassingly parallel across batches
 
 **References:**
 
-- Pyro documentation
+- Pyro documentation [@Bingham2018-id]
 - Hoffman et al. (2013)
+
+**Algorithm ID:** ALG-04
+
+**Algorithm Name:** Markov Chain Monte Carlo Inference
+
+**Description:** Sampling-based Bayesian inference for RNA velocity parameters
+
+**Mathematical Formulation:**
+
+```
+p(z|x) ∝ p(x|z)p(z)
+```
+
+Where:
+- p(z|x) is the posterior distribution of latent variables z given observed data x
+- p(x|z) is the likelihood of observed data given latent variables
+- p(z) is the prior distribution of latent variables
+
+**Inputs:**
+
+- Model: Probabilistic model p(x, z)
+- Data: Observed data x
+- Num_samples: Number of posterior samples
+- Num_chains: Number of parallel chains
+- Num_warmup: Number of warmup steps
+
+**Outputs:**
+
+- Posterior samples
+- Chain diagnostics (R-hat, effective sample size)
+- Posterior predictive checks
+
+**Computational Properties:**
+
+- Time Complexity: O(num_samples * num_chains * num_cells * num_genes)
+- Space Complexity: O(num_samples * num_chains * num_parameters)
+- Convergence: Assessed via chain diagnostics
+- Parallelization: Embarrassingly parallel across chains
+
+**References:**
+
+- NumPyro documentation [@Phan2019-numpyro]
+- Hoffman and Gelman (2014) [No U-Turn Sampler]
 
 ## Computational Interfaces {#sec-computational-interfaces}
 
@@ -444,6 +526,7 @@ Where:
 |-----------|------|-------------|------------|
 | model_config | Dict[str, Any] | Model configuration | Must specify model components |
 | prior_config | Dict[str, Any] | Prior distribution configuration | Must specify prior distributions for all parameters |
+| inference_algorithm | str | Inference algorithm to use (SVI or MCMC) | "SVI" or "MCMC" |
 | num_parameter_sets | int | Number of parameter sets to test | > 0 |
 | num_samples | int | Number of synthetic datasets per parameter set | > 0 |
 | sample_sizes | List[int] | List of sample sizes to test | All values > 0 |
@@ -457,6 +540,7 @@ Where:
 | validation_results | Dict[str, Any] | Validation metrics and results |
 | parameter_recovery_plots | Dict[str, Figure] | Visualizations of parameter recovery |
 | recovery_summary | Dict[str, float] | Summary statistics of recovery performance |
+| credible_interval_coverage | Dict[str, float] | Coverage statistics for credible intervals |
 
 **Error Conditions:**
 
@@ -465,10 +549,11 @@ Where:
 | ValueError | Invalid model or prior configuration | Correct configuration |
 | RuntimeError | Inference failure | Adjust inference parameters or model complexity |
 | MemoryError | Out of memory | Reduce number of parameter sets or sample sizes |
+| ConvergenceError | Inference algorithm fails to converge | Adjust inference parameters or try alternative algorithm |
 
 **Interface ID:** CI-03
 
-**Algorithm:** ALG-03
+**Algorithm:** ALG-03, ALG-04
 
 **Description:** Interface for model training
 
@@ -477,9 +562,12 @@ Where:
 | Parameter | Type | Description | Constraints |
 |-----------|------|-------------|------------|
 | adata | AnnData | Annotated data object | Must contain spliced/unspliced layers |
-| max_epochs | int | Maximum number of training epochs | > 0 |
-| batch_size | Optional[int] | Batch size for training | None or > 0 |
-| learning_rate | float | Learning rate for optimizer | > 0 |
+| inference_algorithm | str | Inference algorithm to use (SVI or MCMC) | "SVI" or "MCMC" |
+| max_epochs | int | Maximum number of training epochs (SVI) or samples (MCMC) | > 0 |
+| batch_size | Optional[int] | Batch size for training (SVI only) | None or > 0 |
+| learning_rate | float | Learning rate for optimizer (SVI only) | > 0 |
+| num_chains | int | Number of MCMC chains (MCMC only) | > 0 |
+| num_warmup | int | Number of warmup steps (MCMC only) | > 0 |
 | use_gpu | bool | Whether to use GPU acceleration | True/False |
 
 **Output Parameters:**
@@ -487,15 +575,18 @@ Where:
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | model | PyroVelocityModel | Trained model |
-| loss_history | List[float] | Training loss history |
+| loss_history | List[float] | Training loss history (SVI only) |
+| posterior_samples | Dict[str, Tensor] | Posterior samples |
+| diagnostics | Dict[str, Any] | Training or sampling diagnostics |
 
 **Error Conditions:**
 
 | Error Code | Description | Recovery Action |
 |------------|-------------|----------------|
 | ValueError | Invalid AnnData format | Preprocess data correctly |
-| RuntimeError | Training divergence | Adjust learning rate or model parameters |
-| MemoryError | Out of memory | Reduce batch size or use data subsampling |
+| RuntimeError | Training divergence or sampling failure | Adjust parameters or try alternative algorithm |
+| MemoryError | Out of memory | Reduce batch size, number of chains, or use data subsampling |
+| ConvergenceError | Inference algorithm fails to converge | Adjust inference parameters or try alternative algorithm |
 
 ## Execution Model {#sec-execution-model}
 
@@ -510,12 +601,13 @@ Where:
 - Parallelization: Data parallelism across cells and genes
 - Distribution: Single-node execution with optional GPU acceleration
 - Scheduling: Batch-based processing for large datasets
+- Inference: Multiple inference algorithms (SVI and MCMC)
 
 **Resource Requirements:**
 
 - Compute: Multi-core CPU or CUDA-compatible GPU
-- Memory: 16-64GB RAM depending on dataset size
-- Storage: 10-100GB for datasets and results
+- Memory: 16-64GB RAM depending on dataset size and inference algorithm
+- Storage: 10-100GB for datasets, results, and posterior samples
 - Network: Minimal (data loading only)
 
 **Scalability Characteristics:**
@@ -523,6 +615,8 @@ Where:
 - Scales linearly with number of cells and genes
 - GPU acceleration provides significant speedup for large datasets
 - JAX/NumPyro implementation offers improved performance over PyTorch/Pyro
+- MCMC requires more computational resources than SVI but provides more accurate uncertainty quantification
+- Parallel chains in MCMC can leverage multi-GPU systems
 
 ## Performance Parameters {#sec-performance-parameters}
 
@@ -531,7 +625,11 @@ Where:
 | ALG-01 | Execution Time | Time to compute velocity for 10k cells, 2k genes | < 1 minute on GPU | Wall clock time |
 | ALG-02 | Training Time | Time to train model on 10k cells, 2k genes | < 30 minutes on GPU | Wall clock time |
 | ALG-02 | Memory Usage | Peak memory usage during training | < 16GB | Process monitoring |
-| ALG-02 | Convergence Rate | Number of epochs to reach convergence | < 1000 epochs | ELBO monitoring |
+| ALG-03 | Convergence Rate (SVI) | Number of epochs to reach convergence | < 1000 epochs | ELBO monitoring |
+| ALG-04 | Sampling Time (MCMC) | Time to generate 1000 posterior samples with 4 chains | < 2 hours on GPU | Wall clock time |
+| ALG-04 | Memory Usage (MCMC) | Peak memory usage during MCMC sampling | < 32GB | Process monitoring |
+| ALG-04 | Chain Convergence | R-hat statistic for all parameters | < 1.1 | MCMC diagnostics |
+| ALG-04 | Effective Sample Size | Minimum effective sample size across parameters | > 100 | MCMC diagnostics |
 
 # Data Model {#sec-data-model}
 
@@ -548,6 +646,10 @@ Where:
 | DO-07 | ComponentConfig | Configuration for model components | N/A | Yes |
 | DO-08 | SyntheticData | Synthetic data generated with known parameters | N/A | Yes |
 | DO-09 | ParameterRecoveryResults | Results of parameter recovery validation | N/A | Yes |
+| DO-10 | ModelComparisonResults | Results of comparing different model architectures and inference algorithms | N/A | Yes |
+| DO-11 | MCMCDiagnostics | Diagnostics for MCMC sampling | N/A | Yes |
+| DO-12 | CredibleIntervals | Credible intervals for parameter estimates | N/A | Yes |
+| DO-13 | ValidationMetrics | Metrics for validating model performance | N/A | Yes |
 
 ## Data Object Attributes {#sec-data-object-attributes}
 
@@ -598,6 +700,33 @@ Where:
 | ATTR-26 | bias_metrics | Metrics quantifying systematic bias in estimates | Dict[str, float] | Various | None | None |
 | ATTR-27 | sample_size | Number of cells used in recovery | int | Count | > 0 | None |
 | ATTR-28 | noise_level | Noise level used in data generation | float | Dimensionless | >= 0 | 0.0 |
+| ATTR-29 | inference_algorithm | Inference algorithm used | str | N/A | "SVI" or "MCMC" | "SVI" |
+| ATTR-30 | model_architecture | Model architecture used | str | N/A | Valid model name | "standard" |
+| ATTR-31 | empirical_identifiability | Assessment of parameter identifiability | Dict[str, bool] | N/A | True/False | None |
+
+**Data Object:** DO-10 (ModelComparisonResults)
+
+| Attribute ID | Attribute Name | Description | Type | Units | Constraints | Default Value |
+|--------------|----------------|-------------|------|-------|-------------|---------------|
+| ATTR-32 | model_configs | Configurations of compared models | List[Dict[str, Any]] | N/A | Non-empty | None |
+| ATTR-33 | inference_algorithms | Inference algorithms used | List[str] | N/A | "SVI" or "MCMC" | None |
+| ATTR-34 | performance_metrics | Performance metrics for each model | Dict[str, Dict[str, float]] | Various | None | None |
+| ATTR-35 | parameter_recovery_metrics | Parameter recovery metrics for each model | Dict[str, Dict[str, float]] | Various | None | None |
+| ATTR-36 | uncertainty_calibration | Uncertainty calibration metrics for each model | Dict[str, Dict[str, float]] | Various | None | None |
+| ATTR-37 | computational_metrics | Computational performance metrics | Dict[str, Dict[str, float]] | Various | None | None |
+| ATTR-38 | selected_model | Selected model based on comparison | str | N/A | Valid model name | None |
+| ATTR-39 | selection_criteria | Criteria used for model selection | Dict[str, float] | Various | None | None |
+
+**Data Object:** DO-11 (MCMCDiagnostics)
+
+| Attribute ID | Attribute Name | Description | Type | Units | Constraints | Default Value |
+|--------------|----------------|-------------|------|-------|-------------|---------------|
+| ATTR-40 | r_hat | R-hat convergence statistic | Dict[str, float] | Dimensionless | > 0 | None |
+| ATTR-41 | effective_sample_size | Effective sample size | Dict[str, float] | Count | > 0 | None |
+| ATTR-42 | chain_statistics | Statistics for each chain | Dict[str, Dict[str, Any]] | Various | None | None |
+| ATTR-43 | acceptance_rate | MCMC acceptance rate | float | Percentage | [0, 100] | None |
+| ATTR-44 | divergences | Number of divergent transitions | int | Count | >= 0 | None |
+| ATTR-45 | energy_statistics | Energy statistics for HMC | Dict[str, float] | Various | None | None |
 
 ## Data Object Relationships {#sec-data-object-relationships}
 
@@ -613,6 +742,11 @@ Where:
 | REL-08 | ModelParameters | SyntheticData | Generation | 1:N | Parameters are used to generate synthetic data |
 | REL-09 | SyntheticData | ParameterRecoveryResults | Association | 1:1 | Synthetic data is used for parameter recovery validation |
 | REL-10 | ParameterRecoveryResults | ModelParameters | Validation | N:1 | Recovery results validate parameter inference |
+| REL-11 | PosteriorSamples | MCMCDiagnostics | Association | 1:1 | MCMC diagnostics are generated from posterior samples |
+| REL-12 | PosteriorSamples | CredibleIntervals | Derivation | 1:1 | Credible intervals are computed from posterior samples |
+| REL-13 | ParameterRecoveryResults | ModelComparisonResults | Association | N:1 | Parameter recovery results are used for model comparison |
+| REL-14 | ModelComparisonResults | ValidationMetrics | Composition | 1:1 | Model comparison results contain validation metrics |
+| REL-15 | PyroVelocityModel | ModelComparisonResults | Association | N:1 | Multiple models are compared in model comparison |
 
 ```{mermaid}
 classDiagram
@@ -626,6 +760,11 @@ classDiagram
     ModelParameters --> SyntheticData : generates
     SyntheticData --> ParameterRecoveryResults : validates
     ParameterRecoveryResults --> ModelParameters : validates
+    PosteriorSamples --> MCMCDiagnostics : generates
+    PosteriorSamples --> CredibleIntervals : computes
+    ParameterRecoveryResults --> ModelComparisonResults : contributes to
+    ModelComparisonResults *-- ValidationMetrics : contains
+    PyroVelocityModel --> ModelComparisonResults : compared in
 
     class AnnData {
         +Matrix X
@@ -641,6 +780,7 @@ classDiagram
         +ObservationModel observation_model
         +InferenceGuide guide_model
         +ModelState state
+        +str inference_algorithm
     }
 
     class ModelParameters {
@@ -655,6 +795,7 @@ classDiagram
         +Dict parameter_samples
         +int num_samples
         +int num_chains
+        +str inference_algorithm
     }
 
     class VelocityEstimates {
@@ -689,6 +830,35 @@ classDiagram
         +Dict credible_intervals
         +Dict recovery_metrics
         +Dict coverage_metrics
+        +str inference_algorithm
+        +str model_architecture
+        +Dict empirical_identifiability
+    }
+
+    class ModelComparisonResults {
+        +List model_configs
+        +List inference_algorithms
+        +Dict performance_metrics
+        +Dict parameter_recovery_metrics
+        +str selected_model
+        +Dict selection_criteria
+    }
+
+    class MCMCDiagnostics {
+        +Dict r_hat
+        +Dict effective_sample_size
+        +float acceptance_rate
+        +int divergences
+    }
+
+    class CredibleIntervals {
+        +Dict intervals
+        +Dict coverage
+    }
+
+    class ValidationMetrics {
+        +Dict metrics
+        +Dict criteria
     }
 ```
 
@@ -728,37 +898,68 @@ classDiagram
 |-------------|---------------|-------------|-------------------------|----------|
 | FN-01 | Data Preprocessing | Prepare single-cell data for velocity analysis | US-01 | High |
 | FN-02 | Model Configuration | Configure model components and parameters | US-02 | High |
-| FN-03 | Model Training | Train the model using variational inference | US-03 | High |
-| FN-04 | Posterior Sampling | Generate samples from posterior distributions | US-04 | High |
-| FN-05 | Velocity Computation | Compute RNA velocity with uncertainty | US-05 | High |
-| FN-06 | Result Visualization | Visualize velocity and uncertainty | US-06 | High |
-| FN-07 | Model Serialization | Save and load trained models | US-03, US-04 | Medium |
-| FN-08 | AnnData Integration | Store results in AnnData objects | US-01, US-05, US-06 | High |
-| FN-09 | Parameter Analysis | Analyze posterior distributions of parameters | US-04 | Medium |
-| FN-10 | Trajectory Inference | Infer cell trajectories from velocity | US-05, US-06 | Medium |
+| FN-03 | Parameter Recovery Validation | Validate model's ability to recover known parameters from synthetic data | US-03 | High |
+| FN-04 | Model Training | Train the model using variational inference or MCMC | US-04 | High |
+| FN-05 | Posterior Sampling | Generate samples from posterior distributions | US-05 | High |
+| FN-06 | Velocity Computation | Compute RNA velocity with uncertainty | US-06 | High |
+| FN-07 | Result Visualization | Visualize velocity, parameters, and associated uncertainty | US-07 | High |
+| FN-08 | Model Comparison | Systematically compare different model architectures, implementations, and inference algorithms | US-08 | High |
+| FN-09 | Model Selection | Select the most appropriate model based on validation metrics | US-09 | Medium |
+| FN-10 | Model Serialization | Save and load trained models | US-04, US-05 | Medium |
+| FN-11 | AnnData Integration | Store results in AnnData objects | US-01, US-06, US-07 | High |
+| FN-12 | Parameter Analysis | Analyze posterior distributions of parameters | US-05 | Medium |
+| FN-13 | Trajectory Inference | Infer cell trajectories from velocity | US-06, US-07 | Medium |
 
 ## Function Hierarchy {#sec-function-hierarchy}
 
 ```{mermaid}
 graph TD
     FN01[FN-01: Data Preprocessing] --> FN02[FN-02: Model Configuration]
-    FN02 --> FN03[FN-03: Model Training]
-    FN03 --> FN04[FN-04: Posterior Sampling]
-    FN04 --> FN05[FN-05: Velocity Computation]
-    FN05 --> FN06[FN-06: Result Visualization]
-    FN03 --> FN07[FN-07: Model Serialization]
-    FN01 --> FN08[FN-08: AnnData Integration]
-    FN05 --> FN08
-    FN04 --> FN09[FN-09: Parameter Analysis]
-    FN05 --> FN10[FN-10: Trajectory Inference]
-    FN10 --> FN06
+    FN02 --> FN03[FN-03: Parameter Recovery Validation]
+    FN03 --> FN04[FN-04: Model Training]
+    FN04 --> FN05[FN-05: Posterior Sampling]
+    FN05 --> FN06[FN-06: Velocity Computation]
+    FN06 --> FN07[FN-07: Result Visualization]
+    FN03 --> FN08[FN-08: Model Comparison]
+    FN04 --> FN08
+    FN08 --> FN09[FN-09: Model Selection]
+    FN04 --> FN10[FN-10: Model Serialization]
+    FN01 --> FN11[FN-11: AnnData Integration]
+    FN06 --> FN11
+    FN05 --> FN12[FN-12: Parameter Analysis]
+    FN06 --> FN13[FN-13: Trajectory Inference]
+    FN13 --> FN07
+    FN12 --> FN07
+    FN12 --> FN08
 
-    class FN01,FN02,FN03,FN04,FN05,FN06,FN07,FN08,FN09,FN10 function;
+    class FN01,FN02,FN03,FN04,FN05,FN06,FN07,FN08,FN09,FN10,FN11,FN12,FN13 function;
 ```
 
 ## Function Input/Output Specifications {#sec-function-inputoutput-specifications}
 
-**Function:** FN-03 (Model Training)
+**Function:** FN-03 (Parameter Recovery Validation)
+
+**Inputs:**
+
+| Input Name | Type | Description | Source | Constraints |
+|------------|------|-------------|--------|------------|
+| model_config | ModelConfig | Model configuration | FN-02 | Valid component configurations |
+| prior_config | Dict | Prior distribution configuration | User | Valid prior distributions |
+| inference_algorithm | str | Inference algorithm to use | User | "SVI" or "MCMC" |
+| num_parameter_sets | int | Number of parameter sets to test | User | > 0 |
+| sample_sizes | List[int] | List of sample sizes to test | User | All values > 0 |
+| noise_levels | List[float] | List of noise levels to test | User | All values >= 0 |
+
+**Outputs:**
+
+| Output Name | Type | Description | Destination | Constraints |
+|-------------|------|-------------|------------|------------|
+| validation_results | Dict | Validation metrics and results | FN-08, FN-09 | None |
+| parameter_recovery_plots | Dict | Visualizations of parameter recovery | FN-07 | None |
+| recovery_summary | Dict | Summary statistics of recovery performance | FN-08, FN-09 | None |
+| credible_interval_coverage | Dict | Coverage statistics for credible intervals | FN-08, FN-09 | None |
+
+**Function:** FN-04 (Model Training)
 
 **Inputs:**
 
@@ -766,48 +967,78 @@ graph TD
 |------------|------|-------------|--------|------------|
 | adata | AnnData | Annotated data object | FN-01 | Must contain spliced/unspliced layers |
 | model_config | ModelConfig | Model configuration | FN-02 | Valid component configurations |
+| inference_algorithm | str | Inference algorithm to use | User | "SVI" or "MCMC" |
 | training_params | Dict | Training parameters | User | Valid parameter values |
 
 **Outputs:**
 
 | Output Name | Type | Description | Destination | Constraints |
 |-------------|------|-------------|------------|------------|
-| trained_model | PyroVelocityModel | Trained model | FN-04, FN-05, FN-07 | None |
-| loss_history | List[float] | Training loss history | FN-06 | None |
-| training_diagnostics | Dict | Training diagnostics | FN-06 | None |
+| trained_model | PyroVelocityModel | Trained model | FN-05, FN-06, FN-10 | None |
+| loss_history | List[float] | Training loss history (SVI only) | FN-07 | None |
+| diagnostics | Dict | Training or sampling diagnostics | FN-07, FN-08 | None |
+| posterior_samples | Dict | Posterior samples | FN-05, FN-12 | None |
 
-**Function:** FN-05 (Velocity Computation)
+**Function:** FN-06 (Velocity Computation)
 
 **Inputs:**
 
 | Input Name | Type | Description | Source | Constraints |
 |------------|------|-------------|--------|------------|
-| trained_model | PyroVelocityModel | Trained model | FN-03, FN-07 | None |
-| posterior_samples | Dict | Posterior samples | FN-04 | None |
+| trained_model | PyroVelocityModel | Trained model | FN-04, FN-10 | None |
+| posterior_samples | Dict | Posterior samples | FN-05 | None |
 | adata | AnnData | Annotated data object | FN-01 | Must contain spliced/unspliced layers |
 
 **Outputs:**
 
 | Output Name | Type | Description | Destination | Constraints |
 |-------------|------|-------------|------------|------------|
-| velocity | Matrix | Velocity vectors | FN-06, FN-08, FN-10 | None |
-| velocity_uncertainty | Matrix | Uncertainty estimates | FN-06, FN-08 | None |
-| velocity_metrics | Dict | Velocity quality metrics | FN-06, FN-08 | None |
+| velocity | Matrix | Velocity vectors | FN-07, FN-11, FN-13 | None |
+| velocity_uncertainty | Matrix | Uncertainty estimates | FN-07, FN-11 | None |
+| velocity_metrics | Dict | Velocity quality metrics | FN-07, FN-11 | None |
+
+**Function:** FN-08 (Model Comparison)
+
+**Inputs:**
+
+| Input Name | Type | Description | Source | Constraints |
+|------------|------|-------------|--------|------------|
+| model_configs | List[ModelConfig] | Configurations of compared models | FN-02 | Non-empty list |
+| validation_results | List[Dict] | Validation results for each model | FN-03 | None |
+| trained_models | List[PyroVelocityModel] | Trained models to compare | FN-04 | None |
+| parameter_analysis | List[Dict] | Parameter analysis results | FN-12 | None |
+| comparison_metrics | Dict | Metrics to use for comparison | User | Valid metric specifications |
+
+**Outputs:**
+
+| Output Name | Type | Description | Destination | Constraints |
+|-------------|------|-------------|------------|------------|
+| comparison_results | Dict | Comparison metrics and results | FN-09, FN-07 | None |
+| comparison_plots | Dict | Visualizations of model comparison | FN-07 | None |
+| model_rankings | Dict | Rankings of models by different criteria | FN-09 | None |
 
 ## Function Relationships {#sec-function-relationships}
 
 | From Function | To Function | Relationship Type | Description |
 |---------------|-------------|-------------------|-------------|
 | FN-01 | FN-02 | PROVIDES_DATA_TO | Preprocessed data is used for model configuration |
-| FN-02 | FN-03 | PROVIDES_CONFIG_TO | Model configuration is used for training |
-| FN-03 | FN-04 | ENABLES | Trained model is used for posterior sampling |
-| FN-04 | FN-05 | PROVIDES_DATA_TO | Posterior samples are used for velocity computation |
-| FN-05 | FN-06 | PROVIDES_DATA_TO | Velocity estimates are used for visualization |
-| FN-03 | FN-07 | PROVIDES_DATA_TO | Trained model is serialized |
-| FN-07 | FN-03 | PROVIDES_DATA_TO | Serialized model is loaded for continued training |
-| FN-05 | FN-08 | PROVIDES_DATA_TO | Velocity estimates are stored in AnnData |
-| FN-04 | FN-09 | PROVIDES_DATA_TO | Posterior samples are used for parameter analysis |
-| FN-05 | FN-10 | PROVIDES_DATA_TO | Velocity estimates are used for trajectory inference |
+| FN-02 | FN-03 | PROVIDES_CONFIG_TO | Model configuration is used for parameter recovery validation |
+| FN-02 | FN-04 | PROVIDES_CONFIG_TO | Model configuration is used for model training |
+| FN-03 | FN-08 | PROVIDES_DATA_TO | Validation results are used for model comparison |
+| FN-03 | FN-09 | PROVIDES_DATA_TO | Validation results are used for model selection |
+| FN-04 | FN-05 | ENABLES | Trained model is used for posterior sampling |
+| FN-04 | FN-08 | PROVIDES_DATA_TO | Trained models are used for model comparison |
+| FN-04 | FN-10 | PROVIDES_DATA_TO | Trained model is serialized |
+| FN-05 | FN-06 | PROVIDES_DATA_TO | Posterior samples are used for velocity computation |
+| FN-05 | FN-12 | PROVIDES_DATA_TO | Posterior samples are used for parameter analysis |
+| FN-06 | FN-07 | PROVIDES_DATA_TO | Velocity estimates are used for visualization |
+| FN-06 | FN-11 | PROVIDES_DATA_TO | Velocity estimates are stored in AnnData |
+| FN-06 | FN-13 | PROVIDES_DATA_TO | Velocity estimates are used for trajectory inference |
+| FN-08 | FN-09 | PROVIDES_DATA_TO | Model comparison results are used for model selection |
+| FN-10 | FN-04 | PROVIDES_DATA_TO | Serialized model is loaded for continued training |
+| FN-12 | FN-07 | PROVIDES_DATA_TO | Parameter analysis results are used for visualization |
+| FN-12 | FN-08 | PROVIDES_DATA_TO | Parameter analysis results are used for model comparison |
+| FN-13 | FN-07 | PROVIDES_DATA_TO | Trajectory inference results are used for visualization |
 
 # Quality Requirements {#sec-quality-requirements}
 
@@ -817,8 +1048,11 @@ graph TD
 |----------------|------------------|-------------|---------------------|--------------|
 | ACC-01 | Parameter Estimation Accuracy | Accuracy of inferred parameters on synthetic data | Comparison with ground truth | Within 10% of true values |
 | ACC-02 | Velocity Direction Accuracy | Accuracy of velocity direction on benchmark datasets | Comparison with known trajectories | > 80% agreement |
-| ACC-03 | Uncertainty Calibration | Calibration of uncertainty estimates | Coverage analysis | 95% confidence intervals contain true values in > 90% of cases |
+| ACC-03 | Uncertainty Calibration | Calibration of uncertainty estimates | Coverage analysis | 95% credible intervals contain true values in > 90% of cases |
 | ACC-04 | Numerical Stability | Stability of numerical computations | Stress testing with extreme values | No NaN or Inf values in results |
+| ACC-05 | Model Comparison Accuracy | Accuracy of model comparison metrics | Simulation studies | Correct model selection in > 90% of cases |
+| ACC-06 | Empirical Identifiability | Identifiability of model parameters | Parameter recovery validation | > 90% of parameters recoverable within specified bounds |
+| ACC-07 | Inference Algorithm Accuracy | Accuracy of different inference algorithms | Comparison with analytical solutions | MCMC more accurate than SVI for complex posteriors |
 
 **Validation Approach:**
 
@@ -826,43 +1060,58 @@ graph TD
 - Benchmark datasets with established trajectories
 - Cross-validation with held-out data
 - Comparison with deterministic methods
+- Simulation studies with known model differences
+- Parameter recovery validation across multiple sample sizes
+- Comparison of SVI and MCMC inference algorithms
 
 **Error Bounds:**
 
-- Parameter estimation: 95% confidence intervals
+- Parameter estimation: 95% credible intervals
 - Velocity direction: Angular error < 30 degrees
 - Trajectory inference: Pseudotime correlation > 0.8
+- Model selection: Bayes factor > 3 for significant difference
+- Parameter recovery: Within 2 standard deviations of true value
 
 ## Performance Requirements {#sec-performance-requirements}
 
 | Requirement ID | Requirement Name | Description | Measurement Method | Target Value |
 |----------------|------------------|-------------|-------------------|-------------|
-| PERF-01 | Training Time | Time to train model on standard dataset | Wall clock time | < 30 minutes on GPU |
-| PERF-02 | Memory Usage | Peak memory usage during training | Process monitoring | < 16GB for 10k cells |
-| PERF-03 | Sampling Speed | Time to generate posterior samples | Wall clock time | < 5 minutes for 1000 samples |
-| PERF-04 | Velocity Computation Speed | Time to compute velocity from samples | Wall clock time | < 1 minute for 10k cells |
-| PERF-05 | Visualization Speed | Time to generate standard visualizations | Wall clock time | < 30 seconds per plot |
+| PERF-01 | SVI Training Time | Time to train model using SVI on standard dataset | Wall clock time | < 30 minutes on GPU |
+| PERF-02 | MCMC Sampling Time | Time to generate MCMC samples on standard dataset | Wall clock time | < 2 hours on GPU |
+| PERF-03 | Memory Usage (SVI) | Peak memory usage during SVI training | Process monitoring | < 16GB for 10k cells |
+| PERF-04 | Memory Usage (MCMC) | Peak memory usage during MCMC sampling | Process monitoring | < 32GB for 10k cells |
+| PERF-05 | Posterior Sampling Speed | Time to generate posterior samples from trained model | Wall clock time | < 5 minutes for 1000 samples |
+| PERF-06 | Velocity Computation Speed | Time to compute velocity from samples | Wall clock time | < 1 minute for 10k cells |
+| PERF-07 | Visualization Speed | Time to generate standard visualizations | Wall clock time | < 30 seconds per plot |
+| PERF-08 | Parameter Recovery Validation Speed | Time to complete parameter recovery validation | Wall clock time | < 1 hour per model configuration |
+| PERF-09 | Model Comparison Speed | Time to compare multiple model configurations | Wall clock time | < 10 minutes per comparison |
 
 **Scalability Requirements:**
 
 - Linear scaling with number of cells up to 100k cells
 - Linear scaling with number of genes up to 5k genes
 - Sublinear scaling with number of posterior samples
+- Linear scaling with number of MCMC chains
+- Linear scaling with number of model configurations in comparison
 
 **Resource Utilization Limits:**
 
-- CPU: < 8 cores at 100% utilization
-- GPU: < 16GB VRAM
+- CPU: < 16 cores at 100% utilization
+- GPU: < 32GB VRAM
 - Disk: < 100GB for intermediate results
+- Memory: < 64GB RAM for MCMC with multiple chains
 
 ## Reliability Requirements {#sec-reliability-requirements}
 
 | Requirement ID | Requirement Name | Description | Verification Method | Target Value |
 |----------------|------------------|-------------|---------------------|-------------|
-| REL-01 | Training Convergence | Reliable convergence of training process | Success rate on benchmark datasets | > 95% success rate |
-| REL-02 | Numerical Robustness | Robustness to numerical issues | Testing with varied datasets | No failures due to numerical issues |
-| REL-03 | Error Handling | Proper handling of errors and edge cases | Exception testing | All errors properly caught and reported |
-| REL-04 | State Persistence | Reliable saving and loading of model state | Recovery testing | 100% successful recovery |
+| REL-01 | SVI Convergence | Reliable convergence of SVI training process | Success rate on benchmark datasets | > 95% success rate |
+| REL-02 | MCMC Convergence | Reliable convergence of MCMC chains | R-hat statistics | R-hat < 1.1 for all parameters |
+| REL-03 | Numerical Robustness | Robustness to numerical issues | Testing with varied datasets | No failures due to numerical issues |
+| REL-04 | Error Handling | Proper handling of errors and edge cases | Exception testing | All errors properly caught and reported |
+| REL-05 | State Persistence | Reliable saving and loading of model state | Recovery testing | 100% successful recovery |
+| REL-06 | Parameter Recovery Reliability | Reliable parameter recovery across different models | Success rate on synthetic data | > 90% success rate |
+| REL-07 | Model Comparison Reliability | Reliable model comparison results | Consistency testing | Consistent rankings across multiple runs |
 
 **Fault Tolerance Approach:**
 
@@ -870,12 +1119,18 @@ graph TD
 - Graceful degradation with problematic genes
 - Checkpointing during long-running operations
 - Validation of inputs before computation
+- Automatic adaptation of MCMC parameters
+- Fallback to alternative inference algorithms
+- Robust model comparison metrics
 
 **Data Integrity Requirements:**
 
 - Validation of AnnData objects before processing
 - Checksums for serialized models
 - Version tracking for models and data
+- Validation of MCMC diagnostics
+- Validation of parameter recovery results
+- Validation of model comparison metrics
 
 ## Usability Requirements {#sec-usability-requirements}
 
@@ -886,6 +1141,11 @@ graph TD
 | USE-03 | Error Messages | Clear and actionable error messages | User testing | > 90% of errors resolvable from message |
 | USE-04 | Visualization Quality | Quality and interpretability of visualizations | User feedback | > 80% positive feedback |
 | USE-05 | Integration Ease | Ease of integration with existing workflows | Integration testing | Compatible with scanpy/scVelo workflows |
+| USE-06 | Parameter Recovery API | Simplicity of parameter recovery validation API | User testing | < 10 lines of code for standard validation |
+| USE-07 | Model Comparison API | Simplicity of model comparison API | User testing | < 10 lines of code for standard comparison |
+| USE-08 | Inference Algorithm Selection | Ease of selecting and configuring inference algorithms | User testing | Single parameter to switch between SVI and MCMC |
+| USE-09 | Diagnostic Visualization | Quality of diagnostic visualizations for model validation | User feedback | > 80% positive feedback |
+| USE-10 | Model Selection Guidance | Clear guidance for model selection based on validation metrics | User feedback | > 80% of users can select appropriate model |
 
 ## Reproducibility Requirements {#sec-reproducibility-requirements}
 
@@ -896,6 +1156,11 @@ graph TD
 | REP-03 | Parameter Logging | Logging of all parameters and configurations | Log inspection | All parameters recorded |
 | REP-04 | Environment Specification | Specification of computational environment | Environment testing | Reproducible environment |
 | REP-05 | Workflow Integration | Integration with workflow management systems | Workflow testing | Compatible with standard workflow systems |
+| REP-06 | MCMC Diagnostics | Recording of MCMC diagnostics for reproducibility | Diagnostic inspection | Complete diagnostics recorded |
+| REP-07 | Parameter Recovery Tracking | Tracking of parameter recovery validation results | Result inspection | Complete validation results recorded |
+| REP-08 | Model Comparison Tracking | Tracking of model comparison results | Result inspection | Complete comparison results recorded |
+| REP-09 | Inference Algorithm Tracking | Tracking of inference algorithm configurations | Configuration inspection | Complete algorithm configurations recorded |
+| REP-10 | Validation Dataset Versioning | Versioning of synthetic datasets used for validation | Dataset inspection | All validation datasets versioned |
 
 **Reproducibility Mechanisms:**
 
@@ -903,6 +1168,11 @@ graph TD
 - Deterministic computation modes
 - Configuration serialization
 - Comprehensive logging
+- MCMC chain initialization tracking
+- Parameter recovery validation result serialization
+- Model comparison result serialization
+- Inference algorithm configuration serialization
+- Synthetic dataset serialization
 
 **Provenance Requirements:**
 
@@ -910,6 +1180,10 @@ graph TD
 - Tracking of model configurations
 - Logging of training parameters
 - Documentation of analysis decisions
+- Recording of parameter recovery validation configurations
+- Recording of model comparison configurations
+- Recording of inference algorithm configurations
+- Recording of synthetic dataset generation parameters
 
 # System Constraints {#sec-system-constraints}
 
@@ -922,6 +1196,11 @@ graph TD
 | SC-03 | Parameter Identifiability | Not all parameters may be uniquely identifiable from the data | Statistical theory | Requires careful prior specification and validation |
 | SC-04 | Data Quality Requirements | Requires high-quality spliced and unspliced count data | Single-cell sequencing | Limits applicability to certain datasets |
 | SC-05 | Biological Variability | Biological systems exhibit inherent variability | Biology | Requires probabilistic modeling approach |
+| SC-06 | Model Comparison Limitations | Model comparison metrics may not always select the biologically most relevant model | Statistical theory | Requires domain knowledge for final model selection |
+| SC-07 | Inference Algorithm Tradeoffs | Different inference algorithms have different strengths and weaknesses | Statistical theory | Requires careful selection based on model complexity |
+| SC-08 | Synthetic Data Limitations | Synthetic data may not capture all aspects of real biological data | Simulation theory | Validation results may not fully translate to real data |
+| SC-09 | Empirical Identifiability | Empirical identifiability depends on sample size and noise level | Statistical theory | Requires validation across multiple conditions |
+| SC-10 | Model Misspecification | All models are approximations of the true biological process | Modeling theory | Multiple models may be needed for robust inference |
 
 ## Technical Constraints {#sec-technical-constraints}
 
@@ -929,19 +1208,29 @@ graph TD
 |---------------|-----------------|-------------|--------|--------|
 | TC-01 | AnnData Compatibility | Must maintain compatibility with AnnData format | Ecosystem integration | Influences data structure design |
 | TC-02 | Pyro/PyTorch Dependency | Relies on Pyro and PyTorch for probabilistic programming | Implementation choice | Affects performance and deployment options |
-| TC-03 | Python Ecosystem | Must integrate with Python-based single-cell analysis tools | Ecosystem integration | Limits language and framework choices |
-| TC-04 | Backward Compatibility | Must maintain compatibility with legacy implementation during transition | Project requirement | Constrains design choices |
-| TC-05 | Protocol-First Architecture | Uses Protocol interfaces for component contracts | Architecture decision | Influences implementation patterns |
+| TC-03 | JAX/NumPyro Dependency | Relies on JAX and NumPyro for alternative implementation | Implementation choice | Affects performance and deployment options |
+| TC-04 | Python Ecosystem | Must integrate with Python-based single-cell analysis tools | Ecosystem integration | Limits language and framework choices |
+| TC-05 | Backward Compatibility | Must maintain compatibility with legacy implementation during transition | Project requirement | Constrains design choices |
+| TC-06 | Protocol-First Architecture | Uses Protocol interfaces for component contracts | Architecture decision | Influences implementation patterns |
+| TC-07 | MCMC Implementation | MCMC requires specialized implementation considerations | Algorithm requirement | Affects performance and memory usage |
+| TC-08 | Model Comparison Framework | Requires framework for systematic model comparison | Architecture decision | Adds complexity to system design |
+| TC-09 | Parameter Recovery Validation | Requires framework for parameter recovery validation | Architecture decision | Adds complexity to system design |
+| TC-10 | Multiple Inference Algorithms | Must support both SVI and MCMC inference | Architecture decision | Requires flexible model design |
 
 ## Computational Resource Constraints {#sec-computational-resource-constraints}
 
 | Constraint ID | Constraint Name | Description | Source | Impact |
 |---------------|-----------------|-------------|--------|--------|
-| RC-01 | Memory Usage | Large single-cell datasets can exceed available memory | Hardware limitations | Requires efficient memory management |
-| RC-02 | Inference Speed | Variational inference can be computationally intensive | Algorithm complexity | Affects user experience and scalability |
-| RC-03 | Parallelization | Need for efficient parallelization across cells and genes | Performance requirements | Influences algorithm design |
-| RC-04 | GPU Acceleration | Should leverage GPU acceleration when available | Performance requirements | Affects implementation choices |
-| RC-05 | Deployment Environment | Must run in standard computational biology environments | User environment | Limits dependency choices |
+| RC-01 | Memory Usage (SVI) | Large single-cell datasets can exceed available memory with SVI | Hardware limitations | Requires efficient memory management |
+| RC-02 | Memory Usage (MCMC) | MCMC requires more memory than SVI for storing chains | Hardware limitations | Limits dataset size for MCMC inference |
+| RC-03 | SVI Inference Speed | Variational inference can be computationally intensive | Algorithm complexity | Affects user experience and scalability |
+| RC-04 | MCMC Inference Speed | MCMC is typically slower than SVI | Algorithm complexity | Limits applicability to very large datasets |
+| RC-05 | Parallelization | Need for efficient parallelization across cells, genes, and chains | Performance requirements | Influences algorithm design |
+| RC-06 | GPU Acceleration | Should leverage GPU acceleration when available | Performance requirements | Affects implementation choices |
+| RC-07 | Deployment Environment | Must run in standard computational biology environments | User environment | Limits dependency choices |
+| RC-08 | Parameter Recovery Computation | Parameter recovery validation requires significant computation | Validation requirements | May require high-performance computing resources |
+| RC-09 | Model Comparison Computation | Model comparison across multiple configurations is computationally intensive | Validation requirements | May require high-performance computing resources |
+| RC-10 | Storage Requirements | Storing multiple models, validation results, and comparison metrics requires significant storage | Hardware limitations | Requires efficient storage management |
 
 # Deployment Requirements {#sec-deployment-requirements}
 
@@ -957,16 +1246,25 @@ graph TD
 
 **Hardware Requirements:**
 
-- CPU: Multi-core x86_64 processor
-- Memory: 16GB+ RAM (32GB+ recommended)
-- Storage: 10GB+ free space
-- GPU: CUDA-compatible GPU (optional but recommended)
+- CPU: Multi-core x86_64 processor (8+ cores recommended)
+- Memory: 16GB+ RAM for SVI (32GB+ recommended)
+- Memory: 32GB+ RAM for MCMC (64GB+ recommended)
+- Storage: 10GB+ free space for installation
+- Storage: 100GB+ free space for model storage and validation results
+- GPU: CUDA-compatible GPU with 16GB+ VRAM (optional but recommended)
+- GPU: Multiple GPUs for parallel MCMC chains (optional)
 
 **Software Requirements:**
 
 - Python 3.8+
 - PyTorch 1.10+
 - Pyro 1.8+
+- JAX 0.4.0+
+- NumPyro 0.11.0+
+- torchode 0.1.0+
+- diffrax 0.3.0+
+- beartype 0.14.0+
+- jaxtyping 0.2.20+
 - AnnData 0.8+
 - Scanpy 1.9+
 - NumPy 1.20+
@@ -996,14 +1294,24 @@ graph TD
 | INT-03 | scVelo Integration | Compatible with scVelo for comparison | High |
 | INT-04 | Workflow System Integration | Integration with workflow management systems | Medium |
 | INT-05 | Visualization Integration | Integration with standard visualization tools | Medium |
+| INT-06 | Parameter Recovery Integration | Integration with parameter recovery validation framework | High |
+| INT-07 | Model Comparison Integration | Integration with model comparison framework | High |
+| INT-08 | MCMC Diagnostics Integration | Integration with MCMC diagnostic tools | Medium |
+| INT-09 | JAX/NumPyro Integration | Integration with JAX/NumPyro ecosystem | Medium |
+| INT-10 | Synthetic Data Integration | Integration with synthetic data generation tools | Medium |
 
 **Integration Points:**
 
 - AnnData for data exchange
 - Scanpy for preprocessing and visualization
 - scVelo for comparison and validation
-- Workflow systems (Snakemake, Nextflow) for pipeline integration
+- Workflow systems (Flyte, hydra-zen) for pipeline integration and configuration
 - Visualization tools (Matplotlib, Plotly) for result presentation
+- Parameter recovery validation framework for model validation
+- Model comparison framework for model selection
+- MCMC diagnostic tools (ArviZ) for MCMC diagnostics
+- JAX/NumPyro ecosystem for alternative implementation
+- Synthetic data generation tools for validation
 
 **Data Exchange Formats:**
 
@@ -1012,6 +1320,9 @@ graph TD
 - CSV/TSV for tabular results
 - JSON for configuration and metadata
 - PDF/PNG for visualizations
+- NetCDF for MCMC samples and diagnostics
+- Zarr for large dataset storage
+- Parquet for validation results
 
 # Development Requirements {#sec-development-requirements}
 
@@ -1085,6 +1396,11 @@ graph TD
 | TEST-03 | Validation Testing | Validation against ground truth | High |
 | TEST-04 | Performance Testing | Testing of performance characteristics | Medium |
 | TEST-05 | Compatibility Testing | Testing of ecosystem compatibility | Medium |
+| TEST-06 | Parameter Recovery Testing | Testing of parameter recovery capabilities | High |
+| TEST-07 | Model Comparison Testing | Testing of model comparison framework | High |
+| TEST-08 | MCMC Convergence Testing | Testing of MCMC convergence diagnostics | Medium |
+| TEST-09 | Inference Algorithm Testing | Testing of different inference algorithms | Medium |
+| TEST-10 | Empirical Identifiability Testing | Testing of parameter identifiability | High |
 
 **Testing Approaches:**
 
@@ -1093,14 +1409,24 @@ graph TD
 - System Testing: End-to-end workflows
 - Performance Testing: Benchmarking against reference datasets
 - Validation Testing: Comparison with ground truth and legacy implementation
+- Parameter Recovery Testing: Synthetic data with known parameters
+- Model Comparison Testing: Comparison of different model architectures
+- MCMC Convergence Testing: R-hat statistics and effective sample size
+- Inference Algorithm Testing: Comparison of SVI and MCMC results
+- Empirical Identifiability Testing: Parameter recovery across sample sizes and noise levels
 
 **Test Environment Requirements:**
 
 - Automated test environment
-- Synthetic test data
+- Synthetic test data with known ground truth
 - Benchmark datasets
 - Performance monitoring tools
 - Continuous integration system
+- Parameter recovery validation framework
+- Model comparison framework
+- MCMC diagnostic tools
+- Multiple inference algorithm implementations
+- Synthetic data generation tools
 
 # Risk Assessment {#sec-risk-assessment}
 
@@ -1113,6 +1439,11 @@ graph TD
 | TR-03 | Compatibility issues with ecosystem tools | INT-01, INT-02, INT-03 | Low | Medium | Low |
 | TR-04 | Difficulty maintaining both PyTorch and JAX implementations | TC-02, TC-04, DEV-03 | Medium | Medium | Medium |
 | TR-05 | Dependency conflicts in deployment environments | DE-01, DE-02, DE-03 | Low | Medium | Low |
+| TR-06 | MCMC convergence issues with complex models | REL-02, ACC-07, PERF-02 | Medium | High | High |
+| TR-07 | Parameter recovery failure for certain model configurations | ACC-06, TEST-06, SC-09 | Medium | High | High |
+| TR-08 | Model comparison metrics not aligning with biological relevance | SC-06, ACC-05, TEST-07 | Medium | Medium | Medium |
+| TR-09 | Resource constraints for comprehensive validation | RC-08, RC-09, PERF-08 | Medium | Medium | Medium |
+| TR-10 | Empirical identifiability issues with real datasets | SC-03, SC-09, ACC-06 | High | High | High |
 
 ## Scientific Risks {#sec-scientific-risks}
 
@@ -1123,6 +1454,11 @@ graph TD
 | SR-03 | Data quality issues affecting results | SC-04, ACC-02, REL-01 | Medium | High | High |
 | SR-04 | Difficulty interpreting uncertainty estimates | USE-04, ACC-03 | Medium | Medium | Medium |
 | SR-05 | Challenges in validating results without ground truth | ACC-02, TEST-03 | High | Medium | High |
+| SR-06 | Synthetic data not capturing real data complexity | SC-08, TEST-06, ACC-06 | Medium | High | High |
+| SR-07 | Model comparison selecting mathematically optimal but biologically irrelevant models | SC-06, ACC-05, CAP-07 | Medium | High | High |
+| SR-08 | Different inference algorithms leading to different biological interpretations | SC-07, ACC-07, CAP-02 | Medium | Medium | Medium |
+| SR-09 | Empirical identifiability varying across biological contexts | SC-09, ACC-06, TEST-10 | High | Medium | High |
+| SR-10 | Model misspecification leading to incorrect biological conclusions | SC-10, ACC-05, CAP-07 | Medium | High | High |
 
 ## Mitigation Strategies {#sec-mitigation-strategies}
 
@@ -1133,11 +1469,21 @@ graph TD
 | TR-03 | Maintain compatibility layer and comprehensive integration tests | Development Team | Ecosystem compatibility testing |
 | TR-04 | Focus on modular design with shared interfaces | Architecture Team | Code quality metrics |
 | TR-05 | Use containerization and environment specification | DevOps Team | Deployment testing |
+| TR-06 | Implement robust MCMC diagnostics and adaptive sampling | Development Team | MCMC convergence metrics |
+| TR-07 | Validate parameter recovery across multiple model configurations | Research Team | Parameter recovery metrics |
+| TR-08 | Develop biologically relevant model comparison metrics | Research Team | Validation against benchmark datasets |
+| TR-09 | Implement efficient validation workflows and distributed computing | DevOps Team | Resource monitoring |
+| TR-10 | Develop empirical identifiability assessment framework | Research Team | Identifiability metrics |
 | SR-01 | Develop multiple model variants for different biological contexts | Research Team | Model comparison on diverse datasets |
 | SR-02 | Use informative priors and sensitivity analysis | Research Team | Parameter recovery testing |
 | SR-03 | Implement robust preprocessing and quality control | Data Team | Data quality metrics |
 | SR-04 | Develop intuitive visualizations for uncertainty | UX Team | User feedback |
 | SR-05 | Use synthetic data and cross-validation for validation | Validation Team | Validation metrics |
+| SR-06 | Develop realistic synthetic data generation with biological variability | Research Team | Comparison with real data distributions |
+| SR-07 | Incorporate domain knowledge into model selection criteria | Research Team | Expert validation of model selection |
+| SR-08 | Compare inference algorithms on benchmark datasets | Research Team | Consistency of biological interpretations |
+| SR-09 | Validate identifiability across multiple biological contexts | Research Team | Context-specific identifiability metrics |
+| SR-10 | Implement model misspecification tests | Research Team | Posterior predictive checks |
 
 # Glossary {#sec-glossary}
 
@@ -1154,6 +1500,11 @@ graph TD
 | Cell Fate | The developmental trajectory or end state of a cell | Developmental biology |
 | Trajectory Inference | Computational methods to order cells along developmental paths | Computational biology |
 | Pseudotime | Computational ordering of cells based on their progression through a biological process | Computational biology |
+| Parameter Recovery | Validation approach to assess if a model can recover known parameters from synthetic data | Statistical modeling |
+| Empirical Identifiability | The ability to uniquely determine parameter values from observed data in practice | Statistical theory |
+| Model Comparison | Systematic comparison of different model architectures and inference algorithms | Statistical modeling |
+| Model Selection | Process of choosing the most appropriate model based on validation metrics | Statistical modeling |
+| Synthetic Data | Artificially generated data with known parameters for validation purposes | Computational statistics |
 
 ## Technical Terminology {#sec-technical-terminology}
 
@@ -1163,11 +1514,21 @@ graph TD
 | Pyro | Probabilistic programming language built on PyTorch | Pyro documentation |
 | Variational Inference | Method for approximating posterior distributions | Statistical learning theory |
 | ELBO | Evidence Lower Bound, objective function in variational inference | Statistical learning theory |
+| Markov Chain Monte Carlo | Sampling-based method for Bayesian inference | Statistical learning theory |
+| No U-Turn Sampler | Adaptive variant of Hamiltonian Monte Carlo for MCMC | Statistical learning theory |
+| Credible Interval | Bayesian equivalent of confidence interval, derived from posterior distribution | Statistical learning theory |
+| R-hat Statistic | Diagnostic for MCMC convergence comparing within and between chain variance | Statistical learning theory |
+| Effective Sample Size | Measure of the effective number of independent samples from MCMC | Statistical learning theory |
+| Bayes Factor | Ratio of marginal likelihoods used for Bayesian model comparison | Statistical learning theory |
 | Protocol | Interface definition in Python typing | Python typing documentation |
 | Modular Architecture | Design approach based on interchangeable components | Software engineering |
 | JAX | Numerical computing library with automatic differentiation | JAX documentation |
 | NumPyro | Probabilistic programming library built on JAX | NumPyro documentation |
+| torchode | Numerical ODE solver for PyTorch | torchode documentation |
+| diffrax | Numerical differential equation solver for JAX | diffrax documentation |
 | Railway-Oriented Programming | Programming pattern for explicit error handling | Functional programming |
+| Parameter Recovery Validation | Framework for validating model parameter recovery | Statistical modeling |
+| Model Comparison Framework | Framework for systematic model comparison | Statistical modeling |
 
 ## Acronyms {#sec-acronyms}
 
@@ -1177,9 +1538,18 @@ graph TD
 | mRNA | Messenger RNA |
 | scRNA-seq | Single-cell RNA sequencing |
 | SVI | Stochastic Variational Inference |
+| MCMC | Markov Chain Monte Carlo |
+| NUTS | No U-Turn Sampler |
+| HMC | Hamiltonian Monte Carlo |
+| ELBO | Evidence Lower Bound |
 | ODE | Ordinary Differential Equation |
+| SDE | Stochastic Differential Equation |
+| PRV | Parameter Recovery Validation |
+| MCF | Model Comparison Framework |
+| ESS | Effective Sample Size |
+| CI | Credible Interval |
+| BF | Bayes Factor |
 | GPU | Graphics Processing Unit |
 | API | Application Programming Interface |
-| MCMC | Markov Chain Monte Carlo |
 | CI/CD | Continuous Integration/Continuous Deployment |
 | BDD | Behavior-Driven Development |
