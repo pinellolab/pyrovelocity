@@ -25,67 +25,36 @@ scenarios(
 # For now, we'll use placeholders that will be replaced with actual implementations
 class MockParameterGenerator:
     """Mock parameter generator for testing."""
-    
+
     def __init__(self, prior_type="lognormal"):
         self.prior_type = prior_type
         self.parameters = []
-        
+
     def generate_parameters(self, num_parameter_sets, num_genes, seed=None):
         """Generate parameter sets."""
         if seed is not None:
             torch.manual_seed(seed)
             np.random.seed(seed)
-            
+
         self.parameters = []
         for _ in range(num_parameter_sets):
             if self.prior_type == "lognormal":
                 alpha = torch.exp(torch.randn(num_genes))
                 beta = torch.exp(torch.randn(num_genes))
                 gamma = torch.exp(torch.randn(num_genes))
-            elif self.prior_type == "normal":
-                alpha = torch.abs(torch.randn(num_genes))
-                beta = torch.abs(torch.randn(num_genes))
-                gamma = torch.abs(torch.randn(num_genes))
-            else:  # informative
-                alpha = torch.abs(torch.randn(num_genes)) + 1.0
-                beta = torch.abs(torch.randn(num_genes)) + 0.5
-                gamma = torch.abs(torch.randn(num_genes)) + 0.2
-                
+            else:  # Default to lognormal if not recognized
+                alpha = torch.exp(torch.randn(num_genes))
+                beta = torch.exp(torch.randn(num_genes))
+                gamma = torch.exp(torch.randn(num_genes))
+
             self.parameters.append({
                 "alpha": alpha,
                 "beta": beta,
                 "gamma": gamma,
             })
-            
+
         return self.parameters
-    
-    def generate_stratified_parameters(self, regions, num_per_region, num_genes):
-        """Generate parameters with stratified sampling."""
-        self.parameters = []
-        for region in regions:
-            for _ in range(num_per_region):
-                if region == "fast":
-                    alpha = torch.ones(num_genes) * 2.0
-                    beta = torch.ones(num_genes) * 1.5
-                    gamma = torch.ones(num_genes) * 1.0
-                elif region == "slow":
-                    alpha = torch.ones(num_genes) * 0.5
-                    beta = torch.ones(num_genes) * 0.3
-                    gamma = torch.ones(num_genes) * 0.2
-                else:  # mixed
-                    alpha = torch.ones(num_genes) * 2.0
-                    beta = torch.ones(num_genes) * 0.3
-                    gamma = torch.ones(num_genes) * 1.0
-                    
-                self.parameters.append({
-                    "alpha": alpha,
-                    "beta": beta,
-                    "gamma": gamma,
-                    "region": region,
-                })
-                
-        return self.parameters
-    
+
     def generate_parameters_with_constraints(self, constraints, num_parameter_sets, num_genes):
         """Generate parameters with constraints."""
         self.parameters = []
@@ -93,49 +62,13 @@ class MockParameterGenerator:
             alpha = torch.rand(num_genes) * (constraints["alpha"]["max_value"] - constraints["alpha"]["min_value"]) + constraints["alpha"]["min_value"]
             beta = torch.rand(num_genes) * (constraints["beta"]["max_value"] - constraints["beta"]["min_value"]) + constraints["beta"]["min_value"]
             gamma = torch.rand(num_genes) * (constraints["gamma"]["max_value"] - constraints["gamma"]["min_value"]) + constraints["gamma"]["min_value"]
-                
+
             self.parameters.append({
                 "alpha": alpha,
                 "beta": beta,
                 "gamma": gamma,
             })
-            
-        return self.parameters
-    
-    def generate_parameters_with_switching(self, num_parameter_sets, num_genes, num_cells):
-        """Generate parameters with switching times."""
-        self.parameters = []
-        for _ in range(num_parameter_sets):
-            alpha = torch.exp(torch.randn(num_genes))
-            beta = torch.exp(torch.randn(num_genes))
-            gamma = torch.exp(torch.randn(num_genes))
-            switching = torch.rand(num_cells)  # Random switching times between 0 and 1
-                
-            self.parameters.append({
-                "alpha": alpha,
-                "beta": beta,
-                "gamma": gamma,
-                "switching": switching,
-            })
-            
-        return self.parameters
-    
-    def generate_parameters_with_times(self, num_parameter_sets, num_genes, num_cells):
-        """Generate parameters with cell-specific times."""
-        self.parameters = []
-        for _ in range(num_parameter_sets):
-            alpha = torch.exp(torch.randn(num_genes))
-            beta = torch.exp(torch.randn(num_genes))
-            gamma = torch.exp(torch.randn(num_genes))
-            t = torch.sort(torch.rand(num_cells))[0]  # Sorted random times between 0 and 1
-                
-            self.parameters.append({
-                "alpha": alpha,
-                "beta": beta,
-                "gamma": gamma,
-                "t": t,
-            })
-            
+
         return self.parameters
 
 
