@@ -17,7 +17,7 @@ The main class in this module is `PyroVelocityModel`, which composes the differe
 components into a cohesive probabilistic model. The model uses functional composition
 for the forward method, enabling railway-oriented programming patterns.
 
-Example:
+Examples:
     >>> import torch
     >>> import pyro
     >>> from pyrovelocity.models.modular.factory import create_standard_model
@@ -137,6 +137,7 @@ class PyroVelocityModel:
     patterns.
 
     The model follows a clear separation of concerns:
+
     - Dynamics model: Defines the velocity vector field
     - Prior model: Specifies priors for model parameters
     - Likelihood model: Defines the observation likelihood
@@ -144,6 +145,7 @@ class PyroVelocityModel:
     - Guide model: Implements the inference guide for posterior approximation
 
     The PyroVelocityModel provides methods for:
+
     1. Running the model forward to compute expected RNA counts
     2. Training the model using SVI (Stochastic Variational Inference)
     3. Generating posterior samples for uncertainty quantification

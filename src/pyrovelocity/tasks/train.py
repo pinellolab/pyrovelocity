@@ -53,10 +53,12 @@ def train_dataset(
     """
     Loads processed data, trains model, and saves model and posterior samples.
 
-    Inputs:
-        data/processed/{data_set_name}_processed.h5ad
+    Inputs
 
-    Outputs:
+        - data/processed/{data_set_name}_processed.h5ad
+
+    Outputs
+
         models/{data_model}/
         ├── trained.h5ad
         ├── posterior_samples.pkl.zst
@@ -311,6 +313,15 @@ def train_model(
     Train a PyroVelocity model to provide probabilistic estimates of RNA velocity
     for single-cell RNA sequencing data with quantified splice variants.
 
+    These arguments are deprecated
+
+    # svi_train: bool = False,
+    # train_size: float = 1.0,
+    # cell_state: str = "clusters",
+    # svi_train (bool, optional): Whether to use Stochastic Variational Inference for training. Default is False.
+    # train_size (float, optional): Proportion of data to be used for training. Default is 1.0.
+    # cell_state (str, optional): Cell state attribute in the AnnData object. Default is "clusters".
+
     Args:
         adata (str | AnnData): Path to a file that can be read to an AnnData object or an AnnData object.
         guide_type (str, optional): The type of guide function for the Pyro model. Default is "auto".
@@ -333,14 +344,6 @@ def train_model(
         kinetics_num (int, optional): Number of kinetics parameters. Default is 2.
         loss_plot_path (str, optional): Path to save the loss plot. Default is "loss_plot.png".
         loss_csv_path (str, optional): Path to save the loss data as CSV. Default is "loss_plot.png.csv".
-
-        These arguments are deprecated:
-        # svi_train: bool = False,
-        # train_size: float = 1.0,
-        # cell_state: str = "clusters",
-        # svi_train (bool, optional): Whether to use Stochastic Variational Inference for training. Default is False.
-        # train_size (float, optional): Proportion of data to be used for training. Default is 1.0.
-        # cell_state (str, optional): Cell state attribute in the AnnData object. Default is "clusters".
 
     Returns:
         Tuple[AnnData, PyroVelocity, Dict[str, ndarray]]: A tuple containing the processed AnnData object, the trained PyroVelocity model, and a dictionary of posterior samples.

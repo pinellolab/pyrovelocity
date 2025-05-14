@@ -30,7 +30,7 @@ class ComponentError:
         message: A descriptive error message
         details: Additional details about the error (optional)
 
-    Example:
+    Examples:
         ```python
         # Create an error
         error = ComponentError(
@@ -89,7 +89,7 @@ def create_error(
     Returns:
         A Result.Error containing a ComponentError.
 
-    Example:
+    Examples:
         ```python
         def forward(self, context: Dict[str, Any]) -> Dict[str, Any]:
             # Validate inputs

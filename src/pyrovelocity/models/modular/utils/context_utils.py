@@ -41,7 +41,7 @@ def validate_context(
     Returns:
         A Result.Error if validation fails, or the original context if validation succeeds.
 
-    Example:
+    Examples:
         ```python
         def forward(self, context: Dict[str, Any]) -> Dict[str, Any]:
             # Validate context

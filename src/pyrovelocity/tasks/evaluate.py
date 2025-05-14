@@ -154,10 +154,6 @@ def calculate_cross_boundary_correctness(
 
     Args:
         model_results: List of dictionaries containing model results.
-            Each dictionary should have:
-            - data_model: str - Dataset and model name (e.g., 'pancreas_model1')
-            - postprocessed_data: Union[str, Path, AnnData] - Path to postprocessed AnnData file
-              or the actual AnnData object
         output_dir: Directory to save results to
         dataset_configs: Mapping of dataset names to their cluster and embedding keys
         ground_truth_transitions: Mapping of dataset names to their ground truth cell transitions
@@ -166,10 +162,7 @@ def calculate_cross_boundary_correctness(
         random_seed: Random seed for reproducibility. Defaults to 42.
 
     Returns:
-        Tuple of paths to:
-        - Summary CSV file
-        - Individual dataset results directory
-        - Plot file
+        Tuple of paths to Summary CSV file, Individual dataset results directory, Plot file
     """
     set_seed(random_seed)
     logger.info(f"Reset random state from seed: {random_seed}")

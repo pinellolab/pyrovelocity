@@ -25,7 +25,7 @@ def register_buffer(obj: object, name: str, tensor: torch.Tensor) -> None:
         name: The name to register the buffer under.
         tensor: The tensor to register.
 
-    Example:
+    Examples:
         ```python
         class MyPriorModel:
             def __init__(self, alpha_loc: float = 0.0, alpha_scale: float = 1.0):

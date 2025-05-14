@@ -20,7 +20,7 @@ Components communicate through a shared context dictionary that is passed
 between components during model execution. Each component updates the context
 with its outputs, which are then used by subsequent components.
 
-Example:
+Examples:
     ```python
     # Create components
     dynamics_model = StandardDynamicsModel()
@@ -79,18 +79,21 @@ class DynamicsModel(Protocol):
     splicing, and degradation rates in the RNA velocity model. They implement
     analytical or numerical solutions to the RNA velocity differential equations.
 
-    The standard RNA velocity model is based on the following system of ODEs:
+    The standard RNA velocity model is based on the following system of ODEs
+
         du/dt = α - βu
         ds/dt = βu - γs
 
-    Where:
-        u: unspliced mRNA abundance
-        s: spliced mRNA abundance
-        α: transcription rate
-        β: splicing rate
-        γ: degradation rate
+    Where
 
-    Implementations must:
+        - u: unspliced mRNA abundance
+        - s: spliced mRNA abundance
+        - α: transcription rate
+        - β: splicing rate
+        - γ: degradation rate
+
+    Implementations must
+
     1. Provide a forward method that computes expected unspliced and spliced counts
     2. Provide a steady_state method that computes steady-state values
     3. Handle both analytical and numerical solutions as appropriate
@@ -175,14 +178,16 @@ class PriorModel(Protocol):
     and any additional parameters required by the model. They use Pyro's probabilistic
     programming framework to register samples with the model.
 
-    Implementations must:
+    Implementations must
+
     1. Define appropriate prior distributions for all model parameters
     2. Use Pyro's plate mechanism for batch dimensions
     3. Register all samples with Pyro
     4. Support disabling priors during guide execution (if needed)
     5. Handle hyperparameter configuration
 
-    Example implementation:
+    Example implementation
+
         ```python
         class LogNormalPriorModel(BasePriorModel):
             def __init__(

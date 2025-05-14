@@ -57,14 +57,14 @@ class CompressedPickle:
     A class for reading and writing zstandard-compressed pickle files.
 
     Examples:
-    >>> import pandas as pd
-    >>> tmp = getfixture("tmp_path")
-    >>> test_data_path = tmp / "test_data.pkl.zst"
-    >>> test_data = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})
-    >>> CompressedPickle.save(test_data_path, test_data)
-    >>> loaded_data = CompressedPickle.load(test_data_path)
-    >>> loaded_data.equals(test_data)
-    True
+        >>> import pandas as pd
+        >>> tmp = getfixture("tmp_path")
+        >>> test_data_path = tmp / "test_data.pkl.zst"
+        >>> test_data = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})
+        >>> CompressedPickle.save(test_data_path, test_data)
+        >>> loaded_data = CompressedPickle.load(test_data_path)
+        >>> loaded_data.equals(test_data)
+        True
     """
 
     @staticmethod

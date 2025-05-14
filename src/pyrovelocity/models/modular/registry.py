@@ -54,7 +54,7 @@ class Registry(Generic[T]):
         Returns:
             A decorator function that registers the decorated class.
 
-        Example:
+        Examples:
             @DynamicsModelRegistry.register("standard")
             class StandardDynamicsModel:
                 ...
