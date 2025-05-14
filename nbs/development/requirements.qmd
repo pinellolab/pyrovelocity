@@ -484,7 +484,7 @@ Where:
 
 **References:**
 
-- NumPyro documentation [@Phan2019-numpyro]
+- NumPyro documentation
 - Hoffman and Gelman (2014) [No U-Turn Sampler]
 
 ## Computational Interfaces {#sec-computational-interfaces}
