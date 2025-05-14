@@ -5,6 +5,8 @@ format:
     toc: true
     toc-depth: 3
     number-sections: true
+bibliography: ../references.bib
+csl: ../bibstyle.csl
 ---
 
 # Introduction {#sec-introduction}
@@ -230,16 +232,28 @@ This comprehensive matrix provides a cross-reference between tests and all AMDiR
 |-------------------|--------------|---------------------|----------|----------------|
 | RG-01 | Research Goal | Probabilistic RNA Velocity | TEST-BDD-01, TEST-UNIT-05 | Complete |
 | RG-02 | Research Goal | Uncertainty Quantification | TEST-BDD-02 | Partial |
-| RG-03 | Research Goal | Parameter Inference | TEST-UNIT-01, TEST-BDD-07 | Planned |
-| FN-03 | Functional Requirement | Model Training | TEST-BDD-04 | Complete |
-| FN-05 | Functional Requirement | Velocity Computation | TEST-BDD-05 | Complete |
-| CAP-06 | Capability | Parameter Recovery Validation | TEST-BDD-07, TEST-UNIT-09 | Planned |
-| CAP-07 | Capability | Model Comparison | TEST-BDD-08, TEST-UNIT-10 | Planned |
+| RG-03 | Research Goal | Parameter Inference | TEST-UNIT-01, TEST-BDD-07 | In Progress |
+| RG-06 | Research Goal | Model Validation | TEST-BDD-07, TEST-BDD-08, TEST-UNIT-09, TEST-UNIT-10 | In Progress |
+| UG-06 | Usage Goal | Flexibility | TEST-BDD-08, TEST-UNIT-11 | Planned |
+| FN-03 | Functional Requirement | Parameter Recovery Validation | TEST-BDD-07, TEST-UNIT-09 | In Progress |
+| FN-04 | Functional Requirement | Model Training | TEST-BDD-04 | Complete |
+| FN-06 | Functional Requirement | Velocity Computation | TEST-BDD-05 | Complete |
+| FN-08 | Functional Requirement | Model Comparison | TEST-BDD-08, TEST-UNIT-10 | In Progress |
+| FN-09 | Functional Requirement | Model Selection | TEST-BDD-09, TEST-UNIT-11 | Planned |
+| CAP-06 | Capability | Parameter Recovery Validation | TEST-BDD-07, TEST-UNIT-09 | In Progress |
+| CAP-07 | Capability | Model Comparison | TEST-BDD-08, TEST-UNIT-10 | In Progress |
 | CMP-01 | Component | PyroVelocityModel | TEST-BDD-06 | Complete |
 | CMP-02 | Component | DynamicsModel | TEST-UNIT-05, TEST-BDD-01 | Complete |
-| SC-03 | Scientific Constraint | Parameter Identifiability | TEST-BDD-07 | Planned |
+| CMP-08 | Component | MCMCModel | TEST-UNIT-12, TEST-BDD-10 | In Progress |
+| CMP-09 | Component | ValidationFramework | TEST-UNIT-09, TEST-BDD-07 | In Progress |
+| SC-03 | Scientific Constraint | Parameter Identifiability | TEST-BDD-07 | In Progress |
+| SC-06 | Scientific Constraint | Model Comparison Limitations | TEST-BDD-08 | Planned |
+| SC-07 | Scientific Constraint | Inference Algorithm Tradeoffs | TEST-BDD-10 | In Progress |
+| SC-09 | Scientific Constraint | Empirical Identifiability | TEST-BDD-11 | Planned |
 | MM-01 | Mathematical Model | RNA Velocity Dynamics | TEST-UNIT-08 | Complete |
-| ALG-02 | Algorithm | Parameter Recovery Validation | TEST-UNIT-09 | Planned |
+| ALG-02 | Algorithm | Parameter Recovery Validation | TEST-UNIT-09 | In Progress |
+| ALG-03 | Algorithm | Stochastic Variational Inference | TEST-UNIT-13 | Complete |
+| ALG-04 | Algorithm | Markov Chain Monte Carlo | TEST-UNIT-12 | In Progress |
 
 # Test Coverage Reference {#sec-test-coverage-reference}
 
@@ -258,8 +272,12 @@ The table below tracks all feature specifications defined in our BDD feature fil
 | likelihood_model | Poisson likelihood model defines distributions | ✅ Implemented | Verify that the PoissonLikelihoodModel defines appropriate Poisson distributions | CMP-04, ALG-02 |
 | model | PyroVelocity model integrates components | ✅ Implemented | Verify that the PyroVelocityModel correctly integrates all components | CMP-01, SG-01 |
 | model | PyroVelocity model trains on AnnData | ✅ Implemented | Verify that the PyroVelocityModel can train on AnnData objects | CMP-01, FN-03, INT-01 |
-| validation | Parameter recovery validation | 🔄 Planned | Verify that the model can recover known parameters from synthetic data | CAP-06, RG-03, SC-03, ALG-02 |
-| validation | Model comparison | 🔄 Planned | Verify that different model implementations can be compared | CAP-07, TC-04, SG-03 |
+| validation | Parameter recovery validation | ⚠️ In Progress | Verify that the model can recover known parameters from synthetic data | CAP-06, RG-03, RG-06, SC-03, ALG-02 |
+| validation | MCMC inference | ⚠️ In Progress | Verify that MCMC inference can recover parameters from synthetic data | TC-07, SC-07, ALG-04 |
+| validation | Inference algorithm comparison | ⚠️ In Progress | Compare SVI and MCMC inference algorithms | SC-07, ACC-07, TC-10 |
+| validation | Model comparison | ⚠️ In Progress | Verify that different model implementations can be compared | CAP-07, TC-04, TC-08, SG-03 |
+| validation | Empirical identifiability assessment | 🔄 Planned | Assess parameter identifiability across different sample sizes and noise levels | SC-09, ACC-06, TC-09 |
+| validation | Model selection | 🔄 Planned | Select the most appropriate model based on validation metrics | SC-06, SC-10, UG-06 |
 
 ### Legend
 - ✅ Implemented: Feature is fully implemented and tested
@@ -435,30 +453,118 @@ The parameter recovery validation workflow follows these steps:
 
 1. **Parameter Generation**: Sample parameter sets from prior distributions
 2. **Synthetic Data Generation**: Create synthetic data using known parameters
-3. **Inference**: Perform inference on synthetic data to estimate parameters
+3. **Inference**: Perform inference on synthetic data to estimate parameters using both SVI and MCMC
 4. **Evaluation**: Compare estimated parameters to original known values
 5. **Metrics Computation**: Calculate recovery accuracy, precision, and coverage metrics
+6. **Credible Interval Analysis**: Analyze credible interval coverage for different inference algorithms
+7. **Empirical Identifiability Assessment**: Evaluate parameter identifiability across different sample sizes and noise levels
 
 The validation framework provides tools for each step of this workflow, including:
 
 - Functions for generating parameter sets from prior distributions
 - Functions for creating synthetic data with known parameters
-- Functions for performing inference on synthetic data
+- Functions for performing inference on synthetic data using both SVI and MCMC
 - Functions for comparing estimated parameters to true values
 - Functions for calculating and visualizing recovery metrics
+- Functions for analyzing credible interval coverage
+- Functions for assessing empirical identifiability
+
+### Inference Algorithm Comparison
+
+The parameter recovery validation framework includes tools for comparing different inference algorithms:
+
+- **Stochastic Variational Inference (SVI)**: Fast approximate inference using optimization
+- **Markov Chain Monte Carlo (MCMC)**: Slower but more accurate sampling-based inference
+
+The framework evaluates each algorithm's performance on parameter recovery tasks, considering:
+
+- **Accuracy**: How close are the estimated parameters to the true values?
+- **Precision**: How much uncertainty is there in the parameter estimates?
+- **Coverage**: Do the credible intervals contain the true parameter values?
+- **Computational Efficiency**: How long does each algorithm take to run?
+- **Convergence Reliability**: How reliably does each algorithm converge?
+
+### Sample Size and Noise Level Analysis
+
+The framework includes tools for analyzing parameter recovery performance across different:
+
+- **Sample Sizes**: How does recovery performance change with the number of cells?
+- **Noise Levels**: How robust is parameter recovery to different levels of noise?
+- **Parameter Regimes**: How does recovery performance vary across different parameter values?
+
+This analysis helps identify the minimum sample size required for reliable parameter inference and the sensitivity of the model to noise.
+
+## Model Comparison Framework
+
+The model comparison framework provides tools for systematically comparing different model architectures, implementations, and inference algorithms. It enables researchers to select the most appropriate model for their specific use case based on quantitative metrics.
+
+The model comparison workflow follows these steps:
+
+1. **Model Configuration**: Configure multiple model variants to compare
+2. **Training**: Train each model on the same dataset using the same or different inference algorithms
+3. **Validation**: Validate each model using parameter recovery validation
+4. **Metric Computation**: Compute comparison metrics for each model
+5. **Ranking**: Rank models based on different criteria
+6. **Visualization**: Visualize comparison results for interpretation
+
+The framework provides tools for each step of this workflow, including:
+
+- Functions for configuring multiple model variants
+- Functions for training models with different inference algorithms
+- Functions for validating models using parameter recovery validation
+- Functions for computing comparison metrics
+- Functions for ranking models based on different criteria
+- Functions for visualizing comparison results
+
+### Comparison Metrics
+
+The model comparison framework includes a variety of metrics for comparing models:
+
+- **Parameter Recovery Performance**: How well does each model recover known parameters?
+- **Uncertainty Calibration**: How well calibrated are the uncertainty estimates?
+- **Computational Efficiency**: How computationally efficient is each model?
+- **Convergence Reliability**: How reliably does each model converge?
+- **Biological Relevance**: How well does each model capture known biological phenomena?
+
+### Model Selection Criteria
+
+The framework provides tools for selecting models based on different criteria:
+
+- **Accuracy-Focused**: Select the model with the best parameter recovery performance
+- **Efficiency-Focused**: Select the most computationally efficient model
+- **Robustness-Focused**: Select the model with the most reliable convergence
+- **Balanced**: Select the model with the best balance of accuracy, efficiency, and robustness
+- **Domain-Specific**: Select the model that best captures specific biological phenomena
 
 ## AMDiRE Traceability
 
 The validation framework addresses several key AMDiRE elements:
 
 - **TC-04**: Backward Compatibility constraint
+- **TC-07**: MCMC Implementation constraint
+- **TC-08**: Model Comparison Framework constraint
+- **TC-09**: Parameter Recovery Validation constraint
+- **TC-10**: Multiple Inference Algorithms constraint
 - **REQ-01**: Parameter Estimation Accuracy requirement
+- **ACC-05**: Model Comparison Accuracy requirement
+- **ACC-06**: Empirical Identifiability requirement
+- **ACC-07**: Inference Algorithm Accuracy requirement
 - **SG-03**: Comprehensive Testing system goal
-- **REL-01**: Training Convergence reliability requirement
+- **REL-01**: SVI Convergence reliability requirement
+- **REL-02**: MCMC Convergence reliability requirement
+- **REL-06**: Parameter Recovery Reliability requirement
+- **REL-07**: Model Comparison Reliability requirement
 - **CAP-06**: Parameter Recovery Validation capability
 - **CAP-07**: Model Comparison capability
 - **RG-03**: Parameter Inference research goal
+- **RG-06**: Model Validation research goal
+- **UG-06**: Flexibility usage goal
 - **SC-03**: Parameter Identifiability scientific constraint
+- **SC-06**: Model Comparison Limitations scientific constraint
+- **SC-07**: Inference Algorithm Tradeoffs scientific constraint
+- **SC-08**: Synthetic Data Limitations scientific constraint
+- **SC-09**: Empirical Identifiability scientific constraint
+- **SC-10**: Model Misspecification scientific constraint
 
 # Contributing New Tests {#sec-contributing-new-tests}
 
