@@ -182,22 +182,6 @@ website:
           contents:
             - text: "Pancreatic endocrinogenesis"
               href: tutorials/pancreas/results/pancreas.qmd
-    # - id: reference
-    #   title: "Reference"
-    #   style: "floating"
-    #   contents:
-    #     - text: "Overview"
-    #       href: reference/index.qmd
-    #     - text: "Modular Models"
-    #       href: reference/models/modular.qmd
-    #     - text: "Models"
-    #       href: reference/models.qmd
-    #     - text: "Plots"
-    #       href: reference/plots.qmd
-    #     # - text: "Tasks"
-    #     #   href: reference/tasks.qmd
-    #     # - text: "Workflows"
-    #     #   href: reference/workflows.qmd
     - id: documentation
       title: "Contents"
       style: "floating"
@@ -268,20 +252,6 @@ website:
               href: concepts/geneexpression.qmd
             - text: "Inference in dynamical systems"
               href: concepts/inferenceindynamicalsystems/index.qmd
-        # - section: "Reference"
-        #   contents:
-        #     - text: "Overview"
-        #       href: reference/index.qmd
-        #     - text: "Modular Models"
-        #       href: reference/models/modular.qmd
-        #     - text: "Models"
-        #       href: reference/models.qmd
-        #     - text: "Plots"
-        #       href: reference/plots.qmd
-        #     # - text: "Tasks"
-        #     #   href: reference/tasks.qmd
-        #     # - text: "Workflows"
-        #     #   href: reference/workflows.qmd
         - section: "Development"
           contents:
             - text: "Overview"
