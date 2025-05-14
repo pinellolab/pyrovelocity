@@ -43,10 +43,18 @@ interlinks:
       url: https://docs.python.org/3/
     anndata:
       url: https://anndata.readthedocs.io/en/latest/
+    beartype:
+      url: https://beartype.readthedocs.io/en/latest/
+    diffrax:
+      url: https://docs.kidger.site/diffrax/
+    jaxtyping:
+      url: https://docs.kidger.site/jaxtyping/
     matplotlib:
       url: https://matplotlib.org/stable/
     numpy:
       url: https://numpy.org/doc/stable/
+    numpyro:
+      url: https://num.pyro.ai/en/latest/
     pyro:
       url: https://docs.pyro.ai/en/stable/
     scanpy:
@@ -181,7 +189,7 @@ website:
     #     - text: "Overview"
     #       href: reference/index.qmd
     #     - text: "Modular Models"
-    #       href: reference/models/modular.qmd        
+    #       href: reference/models/modular.qmd
     #     - text: "Models"
     #       href: reference/models.qmd
     #     - text: "Plots"
@@ -322,17 +330,63 @@ quartodoc:
     signature_name: full
   sections:
     - title: Models
+    - subtitle: Legacy Models
+      desc: |
+        The legacy implementation of PyroVelocity.
+      contents:
+        - models.PyroVelocity
     - subtitle: Modular Models
       desc: |
-        The modular model provides a flexible, composable architecture for 
+        The modular implementation provides a flexible, composable architecture for
         RNA velocity modeling based on Protocol-First design.
       contents:
         - models.PyroVelocityModel
-    - subtitle: Legacy Models
+        - models.ModelState
+        - models.create_standard_model
+        - models.create_model
+        - models.modular.create_model_from_config
+    - subtitle: Component Interfaces
       desc: |
-        The models package hosts the suite of probabilistic models supported by Pyro-Velocity.
+        Protocol interfaces that define the contracts for component implementations.
       contents:
-        - models.PyroVelocity
+        - models.DynamicsModel
+        - models.PriorModel
+        - models.LikelihoodModel
+        - models.ObservationModel
+        - models.InferenceGuide
+    - subtitle: Component Implementations
+      desc: |
+        Specialized components that implement the core functionality of the modular architecture.
+      contents:
+        - models.StandardDynamicsModel
+        - models.LegacyDynamicsModel
+        - models.LogNormalPriorModel
+        - models.PoissonLikelihoodModel
+        - models.LegacyLikelihoodModel
+        - models.StandardObservationModel
+        - models.AutoGuideFactory
+        - models.LegacyAutoGuideFactory
+    - subtitle: Model Comparison and Selection
+      desc: |
+        Tools for Bayesian model comparison, criticism, and selection.
+      contents:
+        - models.BayesianModelComparison
+        - models.ComparisonResult
+        - models.ModelEnsemble
+        - models.ModelSelection
+        - models.SelectionCriterion
+        - models.SelectionResult
+        - models.select_best_model
+    - title: Tasks
+      desc: |
+        Task-oriented utilities for common workflows
+      contents:
+        - tasks.data
+        - tasks.preprocess
+        - tasks.train
+        - tasks.evaluate
+        - tasks.postprocess
+        - tasks.summarize
     - title: Plots
       desc: |
         Plotting functions and utilities
@@ -350,3 +404,36 @@ quartodoc:
         - plots.rainbowplot
         - plots.plot_vector_field_summary
         - plots.plot_gene_selection_summary
+        - plots.plot_model_comparison
+        - plots.plot_waic_loo_comparison
+        - plots.plot_deterministic_simulation_phase_portrait
+        - plots.plot_deterministic_simulation_trajectories
+    - title: Analysis
+      desc: |
+        Analysis utilities for RNA velocity data
+      contents:
+        - analysis.align_trajectory_diff
+        - analysis.get_clone_trajectory
+        - analysis.cytotrace
+        - analysis.transcriptome_properties
+    - title: IO
+      desc: |
+        Input/output utilities
+      contents:
+        - io.CompressedPickle
+        - io.datasets
+    - subtitle: JAX Implementation
+      desc: |
+        The JAX/NumPyro implementation of PyroVelocity.
+      contents:
+        - models.jax.velocity_model
+        - models.jax.create_standard_model
+        - models.jax.prepare_anndata
+        - models.jax.run_inference
+    - subtitle: Experimental Models
+      desc: |
+        Experimental implementations and utilities for research and development.
+      contents:
+        - models.deterministic_transcription_splicing_probabilistic_model
+        - models.solve_transcription_splicing_model
+        - models.solve_transcription_splicing_model_analytical
