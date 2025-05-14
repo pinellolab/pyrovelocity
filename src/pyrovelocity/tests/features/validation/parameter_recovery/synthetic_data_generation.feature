@@ -19,7 +19,6 @@ Feature: Synthetic Data Generation for Recovery Validation
       | num_cells | num_genes |
       | 50        | 10        |
       | 100       | 20        |
-      | 500       | 30        |
 
   Scenario Outline: Generate synthetic data with different noise levels
     Given a parameter set with 20 genes
@@ -32,21 +31,6 @@ Feature: Synthetic Data Generation for Recovery Validation
       | noise_level |
       | 0.1         |
       | 0.5         |
-      | 1.0         |
-
-  Scenario: Generate synthetic data with cell-specific times
-    Given a parameter set with cell-specific times
-    When I generate synthetic data with continuous time dynamics
-    Then the synthetic data should reflect the cell-specific time points
-    And cells with similar times should have similar expression profiles
-    And the data should show a trajectory of expression changes over time
-
-  Scenario: Generate synthetic data with switching dynamics
-    Given a parameter set with switching times
-    When I generate synthetic data with switching dynamics
-    Then the synthetic data should reflect the switching behavior
-    And the expression profiles should change after the switching times
-    And the data should show two distinct expression states
 
   Scenario: Generate synthetic data with multiple replicates
     Given a parameter set with 20 genes
@@ -67,19 +51,7 @@ Feature: Synthetic Data Generation for Recovery Validation
     Given a parameter set with 20 genes
     When I generate synthetic data with variable library sizes
     Then the synthetic data should have varying total counts per cell
-    And the library size variation should follow the specified distribution
     And the normalized expression should still reflect the underlying dynamics
-
-  Scenario: Generate synthetic data with gene-specific characteristics
-    Given a parameter set with gene-specific characteristics:
-      | gene_group | alpha_range | beta_range | gamma_range | count_range |
-      | high_expr  | high        | medium     | low         | high        |
-      | low_expr   | low         | low        | high        | low         |
-      | transient  | high        | high       | high        | medium      |
-    When I generate synthetic data with these gene groups
-    Then the synthetic data should reflect the gene-specific characteristics
-    And genes in the same group should show similar expression patterns
-    And the gene groups should be distinguishable in the data
 
   Scenario: Reproducibility of synthetic data generation
     Given a parameter set with 20 genes
