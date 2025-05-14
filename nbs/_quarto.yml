@@ -94,7 +94,9 @@ website:
       - sidebar:tutorials
       - sidebar:guides
       - sidebar:concepts
-      - sidebar:reference
+      - href: reference
+        text: Reference
+      # - sidebar:reference
       - sidebar:development
       - sidebar:about
 
@@ -130,6 +132,8 @@ website:
           href: guides/preprocessing/preprocessing.qmd
         - text: "Inference"
           href: guides/inference.qmd
+        - text: "Modular Components"
+          href: guides/modular_components.qmd
         - text: "Postprocessing"
           href: guides/postprocessing.qmd
         - text: "Model summary"
@@ -142,6 +146,8 @@ website:
           contents:
             - text: "Getting Started"
               href: tutorials/introduction.qmd
+            - text: "Modular Implementation"
+              href: tutorials/modular_implementation.qmd
             - text: "Usage example"
               href: templates/user_example/user_example.qmd
             - text: "v0.1.3 Getting Started"
@@ -168,20 +174,22 @@ website:
           contents:
             - text: "Pancreatic endocrinogenesis"
               href: tutorials/pancreas/results/pancreas.qmd
-    - id: reference
-      title: "Reference"
-      style: "floating"
-      contents:
-        - text: "Overview"
-          href: reference/index.qmd
-        - text: "Models"
-          href: reference/models.qmd
-        - text: "Plots"
-          href: reference/plots.qmd
-        # - text: "Tasks"
-        #   href: reference/tasks.qmd
-        # - text: "Workflows"
-        #   href: reference/workflows.qmd
+    # - id: reference
+    #   title: "Reference"
+    #   style: "floating"
+    #   contents:
+    #     - text: "Overview"
+    #       href: reference/index.qmd
+    #     - text: "Modular Models"
+    #       href: reference/models/modular.qmd        
+    #     - text: "Models"
+    #       href: reference/models.qmd
+    #     - text: "Plots"
+    #       href: reference/plots.qmd
+    #     # - text: "Tasks"
+    #     #   href: reference/tasks.qmd
+    #     # - text: "Workflows"
+    #     #   href: reference/workflows.qmd
     - id: documentation
       title: "Contents"
       style: "floating"
@@ -192,6 +200,8 @@ website:
               contents:
                 - text: "Getting Started"
                   href: tutorials/introduction.qmd
+                - text: "Modular Implementation"
+                  href: tutorials/modular_implementation.qmd
                 - text: "Usage example"
                   href: templates/user_example/user_example.qmd
                 - text: "v0.1.3 Getting Started"
@@ -230,6 +240,8 @@ website:
               href: guides/preprocessing/preprocessing.qmd
             - text: "Inference"
               href: guides/inference.qmd
+            - text: "Modular Components"
+              href: guides/modular_components.qmd
             - text: "Postprocessing"
               href: guides/postprocessing.qmd
             - text: "Model summary"
@@ -248,18 +260,20 @@ website:
               href: concepts/geneexpression.qmd
             - text: "Inference in dynamical systems"
               href: concepts/inferenceindynamicalsystems/index.qmd
-        - section: "Reference"
-          contents:
-            - text: "Overview"
-              href: reference/index.qmd
-            - text: "Models"
-              href: reference/models.qmd
-            - text: "Plots"
-              href: reference/plots.qmd
-            # - text: "Tasks"
-            #   href: reference/tasks.qmd
-            # - text: "Workflows"
-            #   href: reference/workflows.qmd
+        # - section: "Reference"
+        #   contents:
+        #     - text: "Overview"
+        #       href: reference/index.qmd
+        #     - text: "Modular Models"
+        #       href: reference/models/modular.qmd
+        #     - text: "Models"
+        #       href: reference/models.qmd
+        #     - text: "Plots"
+        #       href: reference/plots.qmd
+        #     # - text: "Tasks"
+        #     #   href: reference/tasks.qmd
+        #     # - text: "Workflows"
+        #     #   href: reference/workflows.qmd
         - section: "Development"
           contents:
             - text: "Overview"
@@ -298,6 +312,7 @@ website:
           href: about/credits.qmd
 
 quartodoc:
+  dir: reference
   parser: google
   package: pyrovelocity
   title: Reference
@@ -307,44 +322,31 @@ quartodoc:
     signature_name: full
   sections:
     - title: Models
-      desc: Model definitions and usage
+    - subtitle: Modular Models
+      desc: |
+        The modular model provides a flexible, composable architecture for 
+        RNA velocity modeling based on Protocol-First design.
       contents:
-        - kind: page
-          path: models
-          package: pyrovelocity.models
-          summary:
-            name: Models
-            desc: The models package hosts the suite of probabilistic models supported by Pyro-Velocity.
-          contents:
-            - name: PyroVelocity
-              members:
-                - __init__
-                - train
-                - generate_posterior_samples
-                - compute_statistics_from_posterior_samples
-                - save_model
-                - load_model
-            - name: mrna_dynamics
+        - models.PyroVelocityModel
+    - subtitle: Legacy Models
+      desc: |
+        The models package hosts the suite of probabilistic models supported by Pyro-Velocity.
+      contents:
+        - models.PyroVelocity
     - title: Plots
-      desc: Plotting functions and utilities
+      desc: |
+        Plotting functions and utilities
       contents:
-        - kind: page
-          path: plots
-          package: pyrovelocity.plots
-          summary:
-            name: Plots
-            desc: The plots package hosts plotting functions supported by Pyro-Velocity.
-          contents:
-            - name: cluster_violin_plots
-            - name: extrapolate_prediction_sample_predictive
-            - name: get_posterior_sample_angle_uncertainty
-            - name: plot_gene_ranking
-            - name: plot_parameter_posterior_distributions
-            - name: plot_posterior_time
-            - name: plot_shared_time_uncertainty
-            - name: plot_state_uncertainty
-            - name: plot_t0_selection
-            - name: posterior_curve
-            - name: rainbowplot
-            - name: plot_vector_field_summary
-            - name: plot_gene_selection_summary
+        - plots.cluster_violin_plots
+        - plots.extrapolate_prediction_sample_predictive
+        - plots.get_posterior_sample_angle_uncertainty
+        - plots.plot_gene_ranking
+        - plots.plot_parameter_posterior_distributions
+        - plots.plot_posterior_time
+        - plots.plot_shared_time_uncertainty
+        - plots.plot_state_uncertainty
+        - plots.plot_t0_selection
+        - plots.posterior_curve
+        - plots.rainbowplot
+        - plots.plot_vector_field_summary
+        - plots.plot_gene_selection_summary
