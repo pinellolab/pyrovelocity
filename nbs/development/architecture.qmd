@@ -672,7 +672,7 @@ classDiagram
     MCMCModel <|.. HMCModel : implements
 ```
 
-#### Validation Framework {#sec-validation-framework}
+#### Validation Framework {#sec-core-validation-framework}
 
 The validation framework provides tools for model validation and comparison.
 
