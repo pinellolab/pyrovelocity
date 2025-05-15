@@ -357,7 +357,7 @@ def anndata_string(
                 df = getattr(anndata_obj, prop_name)
                 elem_type = df[elem].dtype
                 elem_str += f" {elem_type},"
-                if pd.api.types.is_categorical_dtype(df[elem]):
+                if isinstance(df[elem].dtype, pd.CategoricalDtype):
                     num_categories = len(df[elem].cat.categories)
                     elem_str += f" {num_categories},"
                     if num_categories < max_categories:
