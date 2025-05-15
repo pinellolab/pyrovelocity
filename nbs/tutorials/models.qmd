@@ -35,6 +35,7 @@ import pyro
 import anndata as ad
 import numpy as np
 import matplotlib.pyplot as plt
+import scanpy as sc
 from pyrovelocity.utils import print_anndata, anndata_string, print_string_diff
 from pyrovelocity.models.modular import PyroVelocityModel
 from pyrovelocity.models.modular.factory import create_legacy_model1
@@ -43,9 +44,7 @@ from pyrovelocity.models.modular.factory import create_legacy_model1
 torch.manual_seed(42)
 np.random.seed(42)
 pyro.set_rng_seed(42)
-```
 
-```python
 # Create synthetic data
 n_cells, n_genes = 100, 10
 u_data = np.random.poisson(5, size=(n_cells, n_genes))
@@ -62,23 +61,30 @@ initial_data_state_representation = anndata_string(adata)
 
 # Set up AnnData for PyroVelocity
 adata = PyroVelocityModel.setup_anndata(adata)
-final_data_state_representation = anndata_string(adata)
+post_setup_anndata_representation = anndata_string(adata)
 print_string_diff(
     initial_data_state_representation,
-    final_data_state_representation,
+    post_setup_anndata_representation,
     diff_title="Setup AnnData diff",
 )
 print_anndata(adata)
-```
 
+# Compute PCA and UMAP embeddings
+sc.pp.pca(adata)
+sc.pp.neighbors(adata)
+sc.tl.umap(adata)
+post_embedding_representation = anndata_string(adata)
+print_string_diff(
+    post_setup_anndata_representation,
+    post_embedding_representation,
+    diff_title="Embedding diff",
+)
+print_anndata(adata)
 
-```python
 # Create a standard model with default components
 model = create_legacy_model1()
-```
+print(model)
 
-
-```python
 # Train the model
 model.train(
     adata=adata,
@@ -86,17 +92,13 @@ model.train(
     learning_rate=0.01,
     use_gpu=False  # Set to True if GPU is available
 )
-```
 
-```python
 # Generate posterior samples
 posterior_samples = model.generate_posterior_samples(
     adata=adata,
     num_samples=30  # Use a small number for demonstration
 )
-```
 
-```python
 # Store results in AnnData
 adata = model.store_results_in_anndata(
     adata=adata,
@@ -109,13 +111,12 @@ velocity = model.get_velocity(
     num_samples=30,
     basis='umap'  # This will be used for embedding
 )
-```
 
-```python
 # Print available keys in posterior samples
 print("Available keys in posterior samples:")
 for key in posterior_samples.keys():
     print(f"- {key}: {posterior_samples[key].shape}")
+print(model)
 ```
 
 ## Understanding the Modular Architecture
@@ -205,11 +206,21 @@ sc.pp.neighbors(adata)
 sc.tl.umap(adata)
 
 # Visualize velocity
-scv.pl.velocity_embedding_stream(
+scv.pl.velocity_embedding_grid(
     adata,
     basis='umap',
     color='gene_0',
     vkey='velocity_pyro'  # Use the velocity key added by get_velocity
+    color="gray",
+    s=3.5,
+    show=False,
+    alpha=0.25,
+    min_mass=3.5,
+    scale=0.35,
+    frameon=False,
+    density=0.4,
+    arrow_size=3,
+    linewidth=1,
 )
 ```
 
