@@ -322,9 +322,11 @@ quartodoc:
       contents:
         - models.PyroVelocityModel
         - models.ModelState
-        - models.create_standard_model
-        - models.create_model
+        - models.modular.create_model
         - models.modular.create_model_from_config
+        - models.modular.create_legacy_model1
+        - models.modular.create_legacy_model2
+        - models.modular.create_standard_model
     - subtitle: Component Interfaces
       desc: |
         Protocol interfaces that define the contracts for component implementations.
