@@ -1132,6 +1132,16 @@ graph TD
 - Validation of parameter recovery results
 - Validation of model comparison metrics
 
+## API Design Principles {#sec-api-design-principles}
+
+| Principle ID | Principle Name | Description | Priority |
+|--------------|----------------|-------------|----------|
+| API-01 | AnnData Mutation Tracking | Methods that modify AnnData objects must track and document mutations using print_anndata, anndata_string, and print_string_diff | High |
+| API-02 | AnnData Return Values | Methods that modify AnnData objects must return the modified object | High |
+| API-03 | Required Parameters | Parameters that are essential for method functionality should be required, not optional | High |
+| API-04 | Shape Validation | Array shapes should be validated using jaxtyping rather than complex shape handling code | High |
+| API-05 | Explicit Documentation | Methods that modify objects must explicitly document this behavior in their docstrings | High |
+
 ## Usability Requirements {#sec-usability-requirements}
 
 | Requirement ID | Requirement Name | Description | Verification Method | Target Value |

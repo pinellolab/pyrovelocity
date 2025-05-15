@@ -1844,6 +1844,27 @@ The library is designed for extensibility through:
 * After optimization: GPU-accelerated implementation
 * Verification: Benchmark tests confirm performance improvement
 
+# AnnData Integration {#sec-anndata-integration}
+
+PyroVelocity integrates with AnnData objects following these principles:
+
+1. **Mutation Tracking**: All methods that modify AnnData objects must track and document mutations using the `print_anndata`, `anndata_string`, and `print_string_diff` utilities.
+
+2. **Return Values**: Methods that modify AnnData objects must return the modified object to enable method chaining and make mutations explicit.
+
+3. **Required Parameters**: AnnData parameters should be required (not optional) when they are essential for method functionality.
+
+4. **Shape Validation**: Array shapes should be validated using jaxtyping rather than complex shape handling code.
+
+5. **Explicit Documentation**: Methods that modify objects must explicitly document this behavior in their docstrings.
+
+6. **Distinction Between Model State and External Data**: While the model state follows an immutable pattern (using `ModelState` and `with_state()`), external data structures like AnnData objects can be mutated in-place for efficiency. This distinction is important because:
+   - Model state must remain consistent and thread-safe
+   - AnnData objects are large and copying them is expensive
+   - In-place mutation of AnnData is a common pattern in the single-cell ecosystem
+
+These principles ensure that mutations to AnnData objects are explicit, traceable, and well-documented, making the code more maintainable and reducing the risk of bugs while maintaining performance with large datasets.
+
 # Technical Debt and Evolution {#sec-technical-debt}
 
 ## Known Limitations {#sec-known-limitations}
