@@ -1,0 +1,220 @@
+---
+title: "Model definition"
+execute:
+  freeze: true
+  eval: true
+  warning: false
+  error: false
+  cache: true
+toc: true
+number-sections: true
+highlight-style: gruvbox
+csl: ../../bibstyle.csl
+lightbox: auto
+format:
+  html:
+    html-math-method: katex
+#   ipynb: default
+---
+
+# Introduction to PyroVelocity Modular Models
+
+This tutorial introduces PyroVelocity modular models, which follows a Protocol-First architecture with composable components. The modular implementation provides a flexible and extensible framework for building RNA velocity models.
+
+## Prerequisites
+
+Before starting, make sure you have PyroVelocity [installed](../guides/installation.qmd).
+
+## Basic Usage
+
+Let's start with a simple example using the modular implementation:
+
+```python
+import torch
+import pyro
+import anndata as ad
+import numpy as np
+import matplotlib.pyplot as plt
+from pyrovelocity.utils import print_anndata, anndata_string, print_string_diff
+from pyrovelocity.models.modular import PyroVelocityModel
+from pyrovelocity.models.modular.factory import create_legacy_model1
+
+# Set random seed for reproducibility
+torch.manual_seed(42)
+np.random.seed(42)
+pyro.set_rng_seed(42)
+```
+
+```python
+# Create synthetic data
+n_cells, n_genes = 100, 10
+u_data = np.random.poisson(5, size=(n_cells, n_genes))
+s_data = np.random.poisson(5, size=(n_cells, n_genes))
+
+# Create AnnData object
+adata = ad.AnnData(X=s_data)
+adata.layers["spliced"] = s_data
+adata.layers["unspliced"] = u_data
+adata.obs_names = [f"cell_{i}" for i in range(n_cells)]
+adata.var_names = [f"gene_{i}" for i in range(n_genes)]
+print_anndata(adata)
+initial_data_state_representation = anndata_string(adata)
+
+# Set up AnnData for PyroVelocity
+adata = PyroVelocityModel.setup_anndata(adata)
+final_data_state_representation = anndata_string(adata)
+print_string_diff(
+    initial_data_state_representation,
+    final_data_state_representation,
+    diff_title="Setup AnnData diff",
+)
+print_anndata(adata)
+```
+
+
+```python
+# Create a standard model with default components
+model = create_legacy_model1()
+```
+
+
+```python
+# Train the model
+model.train(
+    adata=adata,
+    max_epochs=20,  # Use a small number for demonstration
+    learning_rate=0.01,
+    use_gpu=False  # Set to True if GPU is available
+)
+```
+
+```python
+# Generate posterior samples
+posterior_samples = model.generate_posterior_samples(
+    adata=adata,
+    num_samples=30  # Use a small number for demonstration
+)
+```
+
+```python
+# Store results in AnnData
+adata = model.store_results_in_anndata(
+    adata=adata,
+    posterior_samples=posterior_samples
+)
+
+# Compute velocity and store it in AnnData
+velocity = model.get_velocity(
+    adata=adata,
+    num_samples=30,
+    basis='umap'  # This will be used for embedding
+)
+```
+
+```python
+# Print available keys in posterior samples
+print("Available keys in posterior samples:")
+for key in posterior_samples.keys():
+    print(f"- {key}: {posterior_samples[key].shape}")
+```
+
+## Understanding the Modular Architecture
+
+The modular implementation is based on a Protocol-First architecture with five main component types:
+
+1. **Dynamics Model**: Defines the mathematical models of RNA dynamics
+2. **Prior Model**: Defines prior distributions for model parameters
+3. **Likelihood Model**: Defines observation distributions
+4. **Observation Model**: Handles data preprocessing and transformation
+5. **Guide Model**: Creates guide functions for variational inference
+
+Each component implements a Protocol interface, allowing for flexible composition and extension.
+
+## Creating Custom Models
+
+You can create custom models by combining different components:
+
+```python
+from pyrovelocity.models.modular.components import (
+    StandardDynamicsModel,
+    LegacyDynamicsModel,
+    LogNormalPriorModel,
+    PoissonLikelihoodModel,
+    LegacyLikelihoodModel,
+    StandardObservationModel,
+    AutoGuideFactory
+)
+from pyrovelocity.models.modular.model import PyroVelocityModel
+
+# Create components
+dynamics_model = LegacyDynamicsModel(shared_time=True, t_scale_on=False)
+prior_model = LogNormalPriorModel()
+likelihood_model = LegacyLikelihoodModel()
+observation_model = StandardObservationModel(correct_library_size=True)
+guide_model = AutoGuideFactory()
+
+# Create model
+custom_model = PyroVelocityModel(
+    dynamics_model=dynamics_model,
+    prior_model=prior_model,
+    likelihood_model=likelihood_model,
+    observation_model=observation_model,
+    guide_model=guide_model
+)
+
+# Train the model
+custom_model.train(
+    adata=adata,
+    max_epochs=20,
+    learning_rate=0.01,
+    use_gpu=False
+)
+```
+
+## Using Factory Functions
+
+The modular implementation provides factory functions for creating models with different configurations:
+
+```python
+from pyrovelocity.models.modular.factory import (
+    create_model_from_config,
+    create_legacy_model1,
+    create_legacy_model2
+)
+from pyrovelocity.models.modular.config import ModelConfig
+
+# Create a model that replicates the legacy implementation
+legacy_model = create_legacy_model1()
+
+# Create a model from a configuration
+config = ModelConfig.standard()
+config_model = create_model_from_config(config)
+```
+
+## Visualizing Results
+
+After training the model and generating posterior samples, you can visualize the results:
+
+```python
+import scanpy as sc
+import scvelo as scv
+
+# Compute PCA and UMAP embeddings
+sc.pp.pca(adata)
+sc.pp.neighbors(adata)
+sc.tl.umap(adata)
+
+# Visualize velocity
+scv.pl.velocity_embedding_stream(
+    adata,
+    basis='umap',
+    color='gene_0',
+    vkey='velocity_pyro'  # Use the velocity key added by get_velocity
+)
+```
+
+## Conclusion
+
+This tutorial introduced the basics of PyroVelocity's modular implementation. The modular architecture provides a flexible and extensible framework for building RNA velocity models, allowing you to customize components and create models tailored to your specific needs.
+
+For more advanced usage, refer to the [API reference](../reference/models.PyroVelocityModel.qmd) and [how-to guides](../guides/model_components.qmd).
