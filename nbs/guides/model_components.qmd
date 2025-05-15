@@ -1,0 +1,337 @@
+---
+title: "Customizing Modular Components"
+format:
+  html:
+    code-fold: false
+---
+
+# How to Customize Modular Components in PyroVelocity
+
+This guide shows how to customize components in PyroVelocity's modular implementation. The modular architecture allows you to create custom components that implement the Protocol interfaces, enabling you to tailor the model to your specific needs.
+
+## Available Component Types
+
+PyroVelocity's modular implementation defines five main component types:
+
+1. **Dynamics Model**: Defines the mathematical models of RNA dynamics
+2. **Prior Model**: Defines prior distributions for model parameters
+3. **Likelihood Model**: Defines observation distributions
+4. **Observation Model**: Handles data preprocessing and transformation
+5. **Guide Model**: Creates guide functions for variational inference
+
+Each component type has a corresponding Protocol interface that defines the contract that implementations must follow.
+
+## Creating a Custom Dynamics Model
+
+Let's create a custom dynamics model that implements a nonlinear ODE system:
+
+```python
+import torch
+import pyro
+from typing import Dict, Any, Tuple
+from pyrovelocity.models.modular.interfaces import DynamicsModel
+from pyrovelocity.models.modular.registry import DynamicsModelRegistry
+
+@DynamicsModelRegistry.register("nonlinear")
+class NonlinearDynamicsModel:
+    """
+    Custom dynamics model implementing a nonlinear ODE system.
+    
+    This model extends the standard RNA velocity model with nonlinear terms.
+    """
+    
+    def __init__(self, shared_time: bool = True, t_scale_on: bool = False):
+        """
+        Initialize the nonlinear dynamics model.
+        
+        Args:
+            shared_time: Whether to use shared time across genes
+            t_scale_on: Whether to use time scaling
+        """
+        self.name = "nonlinear"
+        self.description = "Nonlinear dynamics model for RNA velocity"
+        self.shared_time = shared_time
+        self.t_scale_on = t_scale_on
+    
+    def forward(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Compute expected RNA counts based on nonlinear dynamics model.
+        
+        Args:
+            context: Context dictionary with model state
+            
+        Returns:
+            Updated context with computed values
+        """
+        # Extract parameters from context
+        u_obs = context["u_obs"]
+        s_obs = context["s_obs"]
+        alpha = context["alpha"]
+        beta = context["beta"]
+        gamma = context["gamma"]
+        t = context.get("t", torch.ones_like(u_obs))
+        
+        # Compute steady state
+        u_inf, s_inf = self.steady_state(alpha, beta, gamma)
+        
+        # Compute expected counts using numerical approximation
+        # For simplicity, we'll use a basic Euler method here
+        dt = 0.1
+        steps = int(torch.max(t) / dt)
+        
+        u_expected = u_obs.clone()
+        s_expected = s_obs.clone()
+        
+        for _ in range(steps):
+            # Nonlinear ODE system
+            # du/dt = alpha - beta * u * (1 + s/10)
+            # ds/dt = beta * u - gamma * s
+            u_delta = alpha - beta * u_expected * (1 + s_expected/10)
+            s_delta = beta * u_expected - gamma * s_expected
+            
+            u_expected = u_expected + dt * u_delta
+            s_expected = s_expected + dt * s_delta
+        
+        # Update context with computed values
+        context.update({
+            "u_expected": u_expected,
+            "s_expected": s_expected,
+            "u_inf": u_inf,
+            "s_inf": s_inf,
+        })
+        
+        return context
+    
+    def steady_state(
+        self, alpha: torch.Tensor, beta: torch.Tensor, gamma: torch.Tensor, **kwargs
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Compute steady-state RNA counts.
+        
+        Args:
+            alpha: Transcription rate
+            beta: Splicing rate
+            gamma: Degradation rate
+            
+        Returns:
+            Tuple of steady-state unspliced and spliced counts
+        """
+        # For the nonlinear model, we need to solve:
+        # alpha - beta * u_inf * (1 + s_inf/10) = 0
+        # beta * u_inf - gamma * s_inf = 0
+        
+        # From the second equation: s_inf = beta * u_inf / gamma
+        # Substituting into the first:
+        # alpha - beta * u_inf * (1 + beta * u_inf / (gamma * 10)) = 0
+        
+        # For simplicity, we'll use an approximation here
+        # In a real implementation, you might use a numerical solver
+        
+        # First approximation: ignore the nonlinear term
+        u_inf_approx = alpha / beta
+        s_inf_approx = alpha / gamma
+        
+        # Refine with a few iterations
+        for _ in range(5):
+            s_inf_approx = beta * u_inf_approx / gamma
+            u_inf_approx = alpha / (beta * (1 + s_inf_approx/10))
+        
+        return u_inf_approx, s_inf_approx
+```
+
+## Creating a Custom Prior Model
+
+Now, let's create a custom prior model with informative priors:
+
+```python
+import torch
+import pyro
+from typing import Dict, Any
+from pyrovelocity.models.modular.interfaces import PriorModel
+from pyrovelocity.models.modular.registry import PriorModelRegistry
+
+@PriorModelRegistry.register("informative")
+class InformativePriorModel:
+    """
+    Custom prior model with informative priors.
+    
+    This model uses informative priors based on prior knowledge about
+    RNA dynamics parameters.
+    """
+    
+    def __init__(self):
+        """Initialize the informative prior model."""
+        self.name = "informative"
+        self.description = "Informative prior model for RNA velocity"
+    
+    def forward(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Sample parameters from informative prior distributions.
+        
+        Args:
+            context: Context dictionary with model state
+            
+        Returns:
+            Updated context with sampled parameters
+        """
+        # Extract dimensions from context
+        u_obs = context["u_obs"]
+        num_cells, num_genes = u_obs.shape
+        
+        # Create plates for batched sampling
+        with pyro.plate("genes", num_genes):
+            # Sample alpha (transcription rate) from gamma distribution
+            # with informative shape and rate parameters
+            alpha = pyro.sample(
+                "alpha",
+                pyro.distributions.Gamma(
+                    torch.ones(num_genes) * 2.0,  # shape parameter
+                    torch.ones(num_genes) * 0.5   # rate parameter
+                )
+            )
+            
+            # Sample beta (splicing rate) from gamma distribution
+            beta = pyro.sample(
+                "beta",
+                pyro.distributions.Gamma(
+                    torch.ones(num_genes) * 4.0,  # shape parameter
+                    torch.ones(num_genes) * 2.0   # rate parameter
+                )
+            )
+            
+            # Sample gamma (degradation rate) from gamma distribution
+            gamma = pyro.sample(
+                "gamma",
+                pyro.distributions.Gamma(
+                    torch.ones(num_genes) * 3.0,  # shape parameter
+                    torch.ones(num_genes) * 1.5   # rate parameter
+                )
+            )
+        
+        # Update context with sampled parameters
+        context.update({
+            "alpha": alpha,
+            "beta": beta,
+            "gamma": gamma,
+        })
+        
+        return context
+```
+
+## Using Custom Components
+
+Now, let's use our custom components to create a model:
+
+```python
+from pyrovelocity.models.modular.model import PyroVelocityModel
+from pyrovelocity.models.modular.components import (
+    StandardObservationModel,
+    PoissonLikelihoodModel,
+    AutoGuideFactory
+)
+
+# Create components
+dynamics_model = NonlinearDynamicsModel(shared_time=True, t_scale_on=False)
+prior_model = InformativePriorModel()
+likelihood_model = PoissonLikelihoodModel()
+observation_model = StandardObservationModel(correct_library_size=True)
+guide_model = AutoGuideFactory()
+
+# Create model
+custom_model = PyroVelocityModel(
+    dynamics_model=dynamics_model,
+    prior_model=prior_model,
+    likelihood_model=likelihood_model,
+    observation_model=observation_model,
+    guide_model=guide_model
+)
+
+# Train the model
+custom_model.train(
+    adata=adata,
+    max_epochs=100,
+    learning_rate=0.01,
+    use_gpu=False
+)
+```
+
+## Creating a Model with Factory Functions
+
+You can also use factory functions to create models with custom components:
+
+```python
+from pyrovelocity.models.modular.factory import create_model_from_config
+from pyrovelocity.models.modular.config import (
+    ModelConfig,
+    ComponentConfig
+)
+
+# Create component configurations
+dynamics_config = ComponentConfig(name="nonlinear", params={"shared_time": True})
+prior_config = ComponentConfig(name="informative", params={})
+likelihood_config = ComponentConfig(name="poisson", params={})
+observation_config = ComponentConfig(name="standard", params={"correct_library_size": True})
+guide_config = ComponentConfig(name="auto", params={})
+
+# Create model configuration
+model_config = ModelConfig(
+    dynamics_model=dynamics_config,
+    prior_model=prior_config,
+    likelihood_model=likelihood_config,
+    observation_model=observation_config,
+    inference_guide=guide_config
+)
+
+# Create model from configuration
+model = create_model_from_config(model_config)
+```
+
+## Registering Custom Components
+
+Custom components need to be registered with the appropriate registry to be used with factory functions. The registration is done using the `@Registry.register` decorator:
+
+```python
+from pyrovelocity.models.modular.registry import (
+    DynamicsModelRegistry,
+    PriorModelRegistry,
+    LikelihoodModelRegistry,
+    ObservationModelRegistry,
+    InferenceGuideRegistry
+)
+
+# Register a custom dynamics model
+@DynamicsModelRegistry.register("my_dynamics")
+class MyDynamicsModel:
+    # Implementation...
+    pass
+
+# Register a custom prior model
+@PriorModelRegistry.register("my_prior")
+class MyPriorModel:
+    # Implementation...
+    pass
+
+# Register a custom likelihood model
+@LikelihoodModelRegistry.register("my_likelihood")
+class MyLikelihoodModel:
+    # Implementation...
+    pass
+
+# Register a custom observation model
+@ObservationModelRegistry.register("my_observation")
+class MyObservationModel:
+    # Implementation...
+    pass
+
+# Register a custom inference guide
+@InferenceGuideRegistry.register("my_guide")
+class MyGuideFactory:
+    # Implementation...
+    pass
+```
+
+## Conclusion
+
+This guide showed how to create and use custom components in PyroVelocity's modular implementation. By implementing the Protocol interfaces and registering your components, you can create models tailored to your specific needs.
+
+For more information, refer to the [API reference](../reference/models.PyroVelocityModel.qmd) and the [modular implementation tutorial](../tutorials/models.qmd).
