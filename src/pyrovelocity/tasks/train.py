@@ -19,7 +19,12 @@ from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models import PyroVelocity
 from pyrovelocity.random_state import set_seed
-from pyrovelocity.utils import load_anndata_from_path, print_anndata
+from pyrovelocity.utils import (
+    anndata_string,
+    load_anndata_from_path,
+    print_anndata,
+    print_string_diff,
+)
 
 logger = configure_logging(__name__)
 
@@ -250,7 +255,18 @@ def train_dataset(
                 )
                 adata.obs["1-Cytotrace"] = 1 - adata.obs["cytotrace"]
 
+            # Capture state before check_shared_time
+            pre_shared_time_representation = anndata_string(adata)
+
             check_shared_time(posterior_samples, adata)
+
+            # Track changes after check_shared_time
+            post_shared_time_representation = anndata_string(adata)
+            print_string_diff(
+                text1=pre_shared_time_representation,
+                text2=post_shared_time_representation,
+                diff_title="Check shared time diff",
+            )
 
         print_anndata(adata)
 
@@ -352,7 +368,14 @@ def train_model(
         >>> from pyrovelocity.tasks.train import train_model
         >>> from pyrovelocity.utils import generate_sample_data
         >>> from pyrovelocity.tasks.preprocess import copy_raw_counts
-        >>> tmp = getfixture("tmp_path")
+        >>> from pathlib import Path
+        >>> tmpdir = None
+        >>> try:
+        >>>     tmp = getfixture("tmp_path")
+        >>> except NameError:
+        >>>     import tempfile
+        >>>     tmpdir = tempfile.TemporaryDirectory()
+        >>>     tmp = tmpdir.name
         >>> loss_plot_path = str(tmp) + "/loss_plot_docs.png"
         >>> loss_csv_path = str(tmp) + "/loss_plot_docs.png.csv"
         >>> print(loss_plot_path)
@@ -374,9 +397,18 @@ def train_model(
         adata = load_anndata_from_path(adata)
 
     logger.info(f"AnnData object prior to model training")
-    print_anndata(adata)
+    pre_setup_representation = anndata_string(adata)
+    print(pre_setup_representation)
 
     PyroVelocity.setup_anndata(adata)
+
+    # Track changes after setup_anndata
+    post_setup_representation = anndata_string(adata)
+    print_string_diff(
+        text1=pre_setup_representation,
+        text2=post_setup_representation,
+        diff_title="PyroVelocity.setup_anndata diff",
+    )
 
     model = PyroVelocity(
         adata,
@@ -436,8 +468,20 @@ def train_model(
         alpha=0.25,
     )
     set_loss_plot_axes(ax)
+
+    # Capture state before posterior samples generation
+    pre_posterior_samples_representation = anndata_string(adata)
+
     posterior_samples = model.generate_posterior_samples(
         model.adata, num_samples=num_samples, batch_size=512
+    )
+
+    # Track changes after posterior samples generation
+    post_posterior_samples_representation = anndata_string(adata)
+    print_string_diff(
+        text1=pre_posterior_samples_representation,
+        text2=post_posterior_samples_representation,
+        diff_title="Posterior samples generation diff",
     )
 
     fig.savefig(loss_plot_path, facecolor="white", bbox_inches="tight")
