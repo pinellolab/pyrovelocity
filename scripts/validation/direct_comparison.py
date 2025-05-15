@@ -60,7 +60,7 @@ def parse_args():
     parser.add_argument(
         "--output-dir",
         type=str,
-        default="direct_comparison_results",
+        default="scripts/validation/direct_comparison_results",
         help="Directory to save validation results",
     )
     parser.add_argument(
