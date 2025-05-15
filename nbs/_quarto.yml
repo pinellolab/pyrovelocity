@@ -141,7 +141,7 @@ website:
         - text: "Inference"
           href: guides/inference.qmd
         - text: "Modular Components"
-          href: guides/modular_components.qmd
+          href: guides/model_components.qmd
         - text: "Postprocessing"
           href: guides/postprocessing.qmd
         - text: "Model summary"
@@ -155,7 +155,7 @@ website:
             - text: "Getting Started"
               href: tutorials/introduction.qmd
             - text: "Modular Implementation"
-              href: tutorials/modular_implementation.qmd
+              href: tutorials/models.qmd
             - text: "Usage example"
               href: templates/user_example/user_example.qmd
             - text: "v0.1.3 Getting Started"
@@ -193,7 +193,7 @@ website:
                 - text: "Getting Started"
                   href: tutorials/introduction.qmd
                 - text: "Modular Implementation"
-                  href: tutorials/modular_implementation.qmd
+                  href: tutorials/models.qmd
                 - text: "Usage example"
                   href: templates/user_example/user_example.qmd
                 - text: "v0.1.3 Getting Started"
@@ -233,7 +233,7 @@ website:
             - text: "Inference"
               href: guides/inference.qmd
             - text: "Modular Components"
-              href: guides/modular_components.qmd
+              href: guides/model_components.qmd
             - text: "Postprocessing"
               href: guides/postprocessing.qmd
             - text: "Model summary"
