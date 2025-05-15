@@ -479,6 +479,113 @@ class PyroVelocityModel:
         """Return the current model state."""
         return self.state
 
+    def __repr__(self) -> str:
+        """
+        Return a string representation of the PyroVelocityModel.
+
+        This method provides a nicely formatted representation of the model,
+        including information about each component and its configuration.
+
+        Returns:
+            Formatted string representation of the model
+        """
+        # Get component names and descriptions
+        dynamics_name = getattr(self.dynamics_model, "name", self.dynamics_model.__class__.__name__)
+        dynamics_desc = getattr(self.dynamics_model, "description", "")
+
+        prior_name = getattr(self.prior_model, "name", self.prior_model.__class__.__name__)
+        prior_desc = getattr(self.prior_model, "description", "")
+
+        likelihood_name = getattr(self.likelihood_model, "name", self.likelihood_model.__class__.__name__)
+        likelihood_desc = getattr(self.likelihood_model, "description", "")
+
+        observation_name = getattr(self.observation_model, "name", self.observation_model.__class__.__name__)
+        observation_desc = getattr(self.observation_model, "description", "")
+
+        guide_name = getattr(self.guide_model, "name", self.guide_model.__class__.__name__)
+        guide_desc = getattr(self.guide_model, "description", "")
+
+        # Get component configurations
+        dynamics_config = getattr(self.dynamics_model, "config", {})
+        prior_config = getattr(self.prior_model, "config", {})
+        likelihood_config = getattr(self.likelihood_model, "config", {})
+        observation_config = getattr(self.observation_model, "config", {})
+        guide_config = getattr(self.guide_model, "config", {})
+
+        # Format component configurations as strings
+        def format_config(config):
+            if not config:
+                return ""
+            return ", ".join(f"{k}={v}" for k, v in config.items())
+
+        dynamics_config_str = format_config(dynamics_config)
+        prior_config_str = format_config(prior_config)
+        likelihood_config_str = format_config(likelihood_config)
+        observation_config_str = format_config(observation_config)
+        guide_config_str = format_config(guide_config)
+
+        # Check if model has been trained
+        trained_status = "Trained" if "inference_state" in self.state.metadata else "Untrained"
+
+        # Build the representation string
+        repr_str = [
+            f"PyroVelocityModel ({trained_status})",
+            "─" * 50,
+            "Components:",
+            f"  • Dynamics:    {dynamics_name} {f'({dynamics_config_str})' if dynamics_config_str else ''}",
+            f"                 {dynamics_desc}",
+            f"  • Prior:       {prior_name} {f'({prior_config_str})' if prior_config_str else ''}",
+            f"                 {prior_desc}",
+            f"  • Likelihood:  {likelihood_name} {f'({likelihood_config_str})' if likelihood_config_str else ''}",
+            f"                 {likelihood_desc}",
+            f"  • Observation: {observation_name} {f'({observation_config_str})' if observation_config_str else ''}",
+            f"                 {observation_desc}",
+            f"  • Guide:       {guide_name} {f'({guide_config_str})' if guide_config_str else ''}",
+            f"                 {guide_desc}",
+        ]
+
+        # Add training information if available
+        if "inference_state" in self.state.metadata:
+            inference_state = self.state.metadata["inference_state"]
+            training_config = self.state.metadata.get("training_config", {})
+
+            # Extract training information
+            loss = getattr(inference_state, "loss", None)
+            final_loss = loss[-1] if loss and isinstance(loss, list) else None
+            num_epochs = len(loss) if loss and isinstance(loss, list) else None
+
+            # Add training information to representation
+            repr_str.extend([
+                "─" * 50,
+                "Training:",
+                f"  • Epochs:      {num_epochs if num_epochs else 'Unknown'}",
+                f"  • Final Loss:  {final_loss:.4f}" if final_loss is not None else "  • Final Loss:  Unknown",
+            ])
+
+            # Add optimizer information if available
+            if hasattr(inference_state, "optimizer"):
+                optimizer = inference_state.optimizer
+                optimizer_name = optimizer.__class__.__name__ if optimizer else "Unknown"
+                learning_rate = training_config.get("learning_rate", "Unknown")
+
+                repr_str.extend([
+                    f"  • Optimizer:   {optimizer_name}",
+                    f"  • Learning Rate: {learning_rate}",
+                ])
+
+        return "\n".join(repr_str)
+
+    def __str__(self) -> str:
+        """
+        Return a string representation of the PyroVelocityModel.
+
+        This method delegates to __repr__ to ensure consistent string representation.
+
+        Returns:
+            String representation of the model
+        """
+        return self.__repr__()
+
     def with_state(self, state: ModelState) -> "PyroVelocityModel":
         """
         Create a new model instance with the given state.
