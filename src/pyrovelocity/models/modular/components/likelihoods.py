@@ -69,12 +69,7 @@ class PoissonLikelihoodModel:
             u_expected = context["u_expected"]
             s_expected = context["s_expected"]
 
-            # Print shapes for debugging
-            print(f"PoissonLikelihoodModel - u_obs shape: {u_obs.shape}")
-            print(f"PoissonLikelihoodModel - s_obs shape: {s_obs.shape}")
-            print(f"PoissonLikelihoodModel - u_expected shape: {u_expected.shape}")
-            print(f"PoissonLikelihoodModel - s_expected shape: {s_expected.shape}")
-
+                                                            
             # Extract optional scaling factors
             u_scale = context.get("u_scale")
             s_scale = context.get("s_scale")
@@ -84,18 +79,15 @@ class PoissonLikelihoodModel:
             s_rate = s_expected
 
             if u_scale is not None:
-                print(f"PoissonLikelihoodModel - u_scale shape: {u_scale.shape}")
-                u_rate = u_rate * u_scale
+                                u_rate = u_rate * u_scale
             if s_scale is not None:
-                print(f"PoissonLikelihoodModel - s_scale shape: {s_scale.shape}")
-                s_rate = s_rate * s_scale
+                                s_rate = s_rate * s_scale
 
             # Get model dimensions if available
             model_n_genes = None
             for param in ["alpha", "beta", "gamma"]:
                 if param in context and isinstance(context[param], torch.Tensor):
                     model_n_genes = context[param].shape[-1]
-                    print(f"PoissonLikelihoodModel - {param} shape: {context[param].shape}")
                     break
 
             # Determine the correct dimensions to use
@@ -115,12 +107,10 @@ class PoissonLikelihoodModel:
             # Reshape u_obs and s_obs if needed
             if u_obs.shape[1] != n_genes:
                 u_obs = u_obs[:, :n_genes]
-                print(f"PoissonLikelihoodModel - Reshaped u_obs to {u_obs.shape}")
-
+                
             if s_obs.shape[1] != n_genes:
                 s_obs = s_obs[:, :n_genes]
-                print(f"PoissonLikelihoodModel - Reshaped s_obs to {s_obs.shape}")
-
+                
             # Ensure observations are integers for Poisson distribution
             u_obs_int = u_obs.round().long()
             s_obs_int = s_obs.round().long()
@@ -142,8 +132,7 @@ class PoissonLikelihoodModel:
                 # Gene parameters only, need to expand to cells
                 u_rate = u_rate.unsqueeze(0).expand(n_cells, -1)
                 s_rate = s_rate.unsqueeze(0).expand(n_cells, -1)
-                print(f"PoissonLikelihoodModel - Expanded rates to shape: {u_rate.shape}")
-
+                
             # Reshape u_rate and s_rate if needed to match n_genes
             if u_rate.dim() > 1 and u_rate.shape[-1] != n_genes:
                 if u_rate.dim() == 3:  # Shape: [batch_size, num_cells, num_genes]
@@ -152,8 +141,7 @@ class PoissonLikelihoodModel:
                 else:  # Shape: [num_cells, num_genes]
                     u_rate = u_rate[:, :n_genes]
                     s_rate = s_rate[:, :n_genes]
-                print(f"PoissonLikelihoodModel - Reshaped rates to match {n_genes} genes")
-
+                
             # Ensure all rate values are positive (required for Poisson distribution)
             # Use a small positive value (epsilon) as the minimum rate
             epsilon = 1e-6
@@ -171,9 +159,7 @@ class PoissonLikelihoodModel:
                 u_obs_expanded = u_obs_int.unsqueeze(0).expand(batch_size, -1, -1)
                 s_obs_expanded = s_obs_int.unsqueeze(0).expand(batch_size, -1, -1)
 
-                print(f"PoissonLikelihoodModel - Expanded observations to shape: {u_obs_expanded.shape}")
-                print(f"PoissonLikelihoodModel - Final shapes: u_obs={u_obs_expanded.shape}, u_rate={u_rate.shape}")
-
+                                
                 # Use plates with consistent dimensions
                 with pyro.plate("batch", batch_size, dim=-3):
                     with pyro.plate("cells_likelihood", n_cells, dim=-2):
@@ -183,8 +169,7 @@ class PoissonLikelihoodModel:
                             pyro.sample("s_obs", s_dist, obs=s_obs_expanded)
             else:
                 # No batch dimension, use standard plates
-                print(f"PoissonLikelihoodModel - Final shapes: u_obs={u_obs_int.shape}, u_rate={u_rate.shape}")
-
+                
                 # Use plates with consistent dimensions
                 with pyro.plate("cells_likelihood", n_cells, dim=-2):
                     with pyro.plate("genes_likelihood", n_genes, dim=-1):

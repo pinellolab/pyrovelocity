@@ -201,7 +201,6 @@ def store_results(
                     try:
                         value_mean = value_mean.reshape(adata.n_vars)
                     except ValueError:
-                        print(f"Could not reshape {key} to match var dimensions")
                         # Still store the original in uns
                         adata_out.uns[f"{model_name}_{key}"] = value_np
                         continue

@@ -549,13 +549,7 @@ class LegacyDynamicsModel:
             beta = context["beta"]
             gamma = context["gamma"]
 
-            # Print shapes for debugging
-            print(f"LegacyDynamicsModel - u_obs shape: {u_obs.shape}")
-            print(f"LegacyDynamicsModel - s_obs shape: {s_obs.shape}")
-            print(f"LegacyDynamicsModel - alpha shape: {alpha.shape}")
-            print(f"LegacyDynamicsModel - beta shape: {beta.shape}")
-            print(f"LegacyDynamicsModel - gamma shape: {gamma.shape}")
-
+                                                                        
             # Extract optional values
             t0 = context.get("t0", torch.zeros_like(alpha))
             dt_switching = context.get("dt_switching", torch.zeros_like(alpha))
@@ -669,10 +663,6 @@ class LegacyDynamicsModel:
                 alpha / (gamma - beta + 1e-8)  # Add small epsilon to avoid division by zero
             ) * (torch.exp(-beta * cell_time) - torch.exp(-gamma * cell_time))
 
-            # Print shapes for debugging before reshaping
-            print(f"LegacyDynamicsModel - ut original shape: {ut.shape}")
-            print(f"LegacyDynamicsModel - st original shape: {st.shape}")
-
             # Ensure ut and st have the correct shape [num_samples, n_cells, n_genes]
             # First, determine the expected shape
             if alpha.dim() == 3:
@@ -696,9 +686,7 @@ class LegacyDynamicsModel:
                     st = st.unsqueeze(0).unsqueeze(0)  # [1, 1, n_genes]
 
             # Print shapes after reshaping
-            print(f"LegacyDynamicsModel - ut reshaped: {ut.shape}")
-            print(f"LegacyDynamicsModel - st reshaped: {st.shape}")
-
+                        
             # Ensure ut and st have the correct shape [num_samples, n_cells, n_genes]
             # This is critical for proper shape in posterior samples
             # In the legacy model, ut and st should have shape [num_samples, n_cells, n_genes]
@@ -736,13 +724,7 @@ class LegacyDynamicsModel:
             context["u_expected"] = ut
             context["s_expected"] = st
 
-            # Print shapes for debugging
-            print(f"LegacyDynamicsModel - cell_time shape: {cell_time.shape}")
-            print(f"LegacyDynamicsModel - u_inf shape: {u_inf.shape}")
-            print(f"LegacyDynamicsModel - switching shape: {switching.shape}")
-            print(f"LegacyDynamicsModel - ut shape: {ut.shape}")
-            print(f"LegacyDynamicsModel - st shape: {st.shape}")
-
+                                                                        
             return context
         else:
             # If validation failed, raise an error

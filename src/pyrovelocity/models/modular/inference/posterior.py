@@ -91,22 +91,13 @@ def compute_velocity(
     u_scale = posterior_samples.get("u_scale")
     s_scale = posterior_samples.get("s_scale")
 
-    # Print shapes for debugging
-    print(f"compute_velocity - alpha shape: {alpha.shape if alpha is not None else None}")
-    print(f"compute_velocity - beta shape: {beta.shape if beta is not None else None}")
-    print(f"compute_velocity - gamma shape: {gamma.shape if gamma is not None else None}")
-    print(f"compute_velocity - u_scale shape: {u_scale.shape if u_scale is not None else None}")
-    print(f"compute_velocity - s_scale shape: {s_scale.shape if s_scale is not None else None}")
-
+                        
     # Try to get ut and st from posterior samples (like legacy implementation)
     # These are the latent variables, not the observed data
     ut = posterior_samples.get("ut")
     st = posterior_samples.get("st")
 
-    # Print shapes for debugging
-    print(f"compute_velocity - ut shape: {ut.shape if ut is not None else None}")
-    print(f"compute_velocity - st shape: {st.shape if st is not None else None}")
-
+            
     # Convert numpy arrays to torch tensors if needed
     if ut is not None and isinstance(ut, np.ndarray):
         ut = torch.tensor(ut)
@@ -136,24 +127,21 @@ def compute_velocity(
             alpha = alpha.unsqueeze(0).unsqueeze(0)  # [1, 1, n_genes]
         elif alpha.dim() == 2:  # [num_samples, n_genes]
             alpha = alpha.unsqueeze(1)  # [num_samples, 1, n_genes]
-        print(f"Normalized alpha shape: {alpha.shape}")
-
+        
     if beta is not None:
         # Ensure beta has shape [num_samples, 1, n_genes]
         if beta.dim() == 1:  # [n_genes]
             beta = beta.unsqueeze(0).unsqueeze(0)  # [1, 1, n_genes]
         elif beta.dim() == 2:  # [num_samples, n_genes]
             beta = beta.unsqueeze(1)  # [num_samples, 1, n_genes]
-        print(f"Normalized beta shape: {beta.shape}")
-
+        
     if gamma is not None:
         # Ensure gamma has shape [num_samples, 1, n_genes]
         if gamma.dim() == 1:  # [n_genes]
             gamma = gamma.unsqueeze(0).unsqueeze(0)  # [1, 1, n_genes]
         elif gamma.dim() == 2:  # [num_samples, n_genes]
             gamma = gamma.unsqueeze(1)  # [num_samples, 1, n_genes]
-        print(f"Normalized gamma shape: {gamma.shape}")
-
+        
     # 2. Normalize scaling factors
     if u_scale is not None:
         # Ensure u_scale has shape [num_samples, n_cells, 1] or [num_samples, 1, 1]
@@ -166,8 +154,7 @@ def compute_velocity(
                 u_scale = u_scale.unsqueeze(0).unsqueeze(0)  # [1, 1, 1]
         elif u_scale.dim() == 2:  # [num_samples, n_cells] or [num_samples, 1]
             u_scale = u_scale.unsqueeze(-1)  # [num_samples, n_cells, 1] or [num_samples, 1, 1]
-        print(f"Normalized u_scale shape: {u_scale.shape}")
-
+        
     if s_scale is not None:
         # Ensure s_scale has shape [num_samples, n_cells, 1] or [num_samples, 1, 1]
         if s_scale.dim() == 0:  # scalar
@@ -179,8 +166,7 @@ def compute_velocity(
                 s_scale = s_scale.unsqueeze(0).unsqueeze(0)  # [1, 1, 1]
         elif s_scale.dim() == 2:  # [num_samples, n_cells] or [num_samples, 1]
             s_scale = s_scale.unsqueeze(-1)  # [num_samples, n_cells, 1] or [num_samples, 1, 1]
-        print(f"Normalized s_scale shape: {s_scale.shape}")
-
+        
     # 3. Normalize ut and st shapes
     if ut is not None:
         # Ensure ut has shape [num_samples, n_cells, n_genes]
@@ -205,8 +191,7 @@ def compute_velocity(
                     n_cells = 1
                     num_samples = ut.numel() // n_genes
                     ut = ut.reshape(num_samples, n_cells, n_genes)
-        print(f"Normalized ut shape: {ut.shape}")
-
+        
     if st is not None:
         # Ensure st has shape [num_samples, n_cells, n_genes]
         if st.dim() == 2:  # [n_cells, n_genes]
@@ -230,8 +215,7 @@ def compute_velocity(
                     n_cells = 1
                     num_samples = st.numel() // n_genes
                     st = st.reshape(num_samples, n_cells, n_genes)
-        print(f"Normalized st shape: {st.shape}")
-
+        
     # If ut/st not available, compute them from the model parameters
     if ut is None or st is None:
         # Try to compute ut and st from the model parameters
@@ -383,8 +367,6 @@ def compute_velocity(
     if alpha is not None and beta is not None and gamma is not None:
         u_ss = alpha / beta
         s_ss = alpha / gamma
-        print(f"Computed u_ss shape: {u_ss.shape}")
-        print(f"Computed s_ss shape: {s_ss.shape}")
     else:
         u_ss = None
         s_ss = None
@@ -404,13 +386,7 @@ def compute_velocity(
         u_ss_mean = alpha_mean / beta_mean
         s_ss_mean = alpha_mean / gamma_mean
 
-        # Print shapes for debugging
-        print(f"compute_velocity - alpha_mean shape: {alpha_mean.shape}")
-        print(f"compute_velocity - beta_mean shape: {beta_mean.shape}")
-        print(f"compute_velocity - gamma_mean shape: {gamma_mean.shape}")
-        print(f"compute_velocity - ut_mean shape: {ut_mean.shape}")
-        print(f"compute_velocity - st_mean shape: {st_mean.shape}")
-
+                                                
         # Calculate scaling factor if needed
         if u_scale is not None and s_scale is not None:
             # For models with two scales
@@ -419,15 +395,13 @@ def compute_velocity(
 
             # Calculate scale as u_scale / s_scale
             scale = u_scale_mean / s_scale_mean
-            print(f"Scale shape: {scale.shape}")
-
+            
             # Compute velocity with proper broadcasting
             velocity = beta_mean * ut_mean / scale - gamma_mean * st_mean
         elif u_scale is not None:
             # For models with one scale
             u_scale_mean = u_scale.mean(dim=0) if u_scale.dim() > 1 else u_scale
-            print(f"u_scale_mean shape: {u_scale_mean.shape}")
-
+            
             # Compute velocity with proper broadcasting
             velocity = beta_mean * ut_mean / u_scale_mean - gamma_mean * st_mean
         else:
@@ -435,8 +409,7 @@ def compute_velocity(
             velocity = beta_mean * ut_mean - gamma_mean * st_mean
 
         # Print final velocity shape
-        print(f"compute_velocity - velocity shape: {velocity.shape}")
-
+        
         # Compute latent time (pseudotime)
         # This is a simple implementation based on the ratio of unspliced to spliced
         if ut_mean.dim() <= 1:
@@ -471,14 +444,12 @@ def compute_velocity(
             # ut: [num_samples, n_cells, n_genes]
             # scale: [num_samples, n_cells, 1] or [num_samples, 1, 1]
             scale = u_scale / s_scale
-            print(f"Scale shape: {scale.shape}")
-
+            
             # Compute velocity with proper broadcasting
             velocity = beta * ut / scale - gamma * st
         elif u_scale is not None:
             # For models with one scale
-            print(f"u_scale shape: {u_scale.shape}")
-
+            
             # Compute velocity with proper broadcasting
             velocity = beta * ut / u_scale - gamma * st
         else:
@@ -486,8 +457,7 @@ def compute_velocity(
             velocity = beta * ut - gamma * st
 
         # Print final velocity shape
-        print(f"compute_velocity - velocity shape: {velocity.shape}")
-
+        
         # Compute latent time (pseudotime) using mean across samples
         ut_mean = ut.mean(dim=0) if ut.dim() > 2 else ut
         st_mean = st.mean(dim=0) if st.dim() > 2 else st

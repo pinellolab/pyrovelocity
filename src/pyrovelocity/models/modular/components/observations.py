@@ -79,16 +79,11 @@ class StandardObservationModel:
                     "Either u_obs and s_obs or x must be provided in the context"
                 )
 
-        # Log tensor shapes for debugging
-        print(f"StandardObservationModel - u_obs shape: {u_obs.shape}")
-        print(f"StandardObservationModel - s_obs shape: {s_obs.shape}")
-
         # Check for model parameters in context that might have different shapes
         model_n_genes = None
         for param_name in ["alpha", "beta", "gamma"]:
             if param_name in context:
                 model_n_genes = context[param_name].shape[0]
-                print(f"StandardObservationModel - Found {param_name} with shape: {context[param_name].shape}")
                 break
 
         # Calculate library size
@@ -106,23 +101,19 @@ class StandardObservationModel:
         # If there's a shape mismatch between model parameters and data,
         # handle it by reshaping the data to match the model parameters
         if model_n_genes is not None and model_n_genes != u_obs.shape[1]:
-            print(f"WARNING: Shape mismatch between model parameters ({model_n_genes} genes) and data ({u_obs.shape[1]} genes)")
-
+            
             # Determine the minimum number of genes to use
             n_genes = min(model_n_genes, u_obs.shape[1])
             print(f"StandardObservationModel - Reshaping data to use {n_genes} genes")
 
             # Reshape u_obs and s_obs to match the model parameters
             if u_obs.shape[1] > n_genes:
-                print(f"StandardObservationModel - Reshaping u_obs from {u_obs.shape} to use {n_genes} genes")
-                u_obs = u_obs[:, :n_genes]
+                                u_obs = u_obs[:, :n_genes]
 
             if s_obs.shape[1] > n_genes:
-                print(f"StandardObservationModel - Reshaping s_obs from {s_obs.shape} to use {n_genes} genes")
-                s_obs = s_obs[:, :n_genes]
+                                s_obs = s_obs[:, :n_genes]
 
-            print(f"StandardObservationModel - After reshaping: u_obs shape: {u_obs.shape}, s_obs shape: {s_obs.shape}")
-
+            
         # Store the observations and scaling factors
         self.u_obs = u_obs
         self.s_obs = s_obs
@@ -303,12 +294,7 @@ class StandardObservationModel:
         Returns:
             Tuple of observed unspliced and spliced counts.
         """
-        # Print shapes for debugging
-        print(f"model_obs - idx shape: {idx.shape if hasattr(idx, 'shape') else 'scalar'}")
-        print(f"model_obs - u_scale shape: {u_scale.shape}")
-        print(f"model_obs - u_log_rate shape: {u_log_rate.shape}")
-        print(f"model_obs - u_log_r shape: {u_log_r.shape}")
-
+                                        
         # Validate that cell_plate and gene_plate use the correct dimensions
         if hasattr(cell_plate, 'dim') and cell_plate.dim != CELLS_DIM:
             print(f"WARNING: cell_plate dimension {cell_plate.dim} does not match CELLS_DIM {CELLS_DIM}")
@@ -346,10 +332,7 @@ class StandardObservationModel:
                 u = pyro.sample("u_obs", u_dist, obs=self.u_obs[i])
                 s = pyro.sample("s_obs", s_dist, obs=self.s_obs[i])
 
-                # Print shapes for debugging
-                print(f"model_obs - u shape: {u.shape}")
-                print(f"model_obs - s shape: {s.shape}")
-
+                                                
         return u, s
 
     @beartype

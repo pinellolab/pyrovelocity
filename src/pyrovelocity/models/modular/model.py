@@ -1141,10 +1141,7 @@ class PyroVelocityModel:
                 else adata.layers["spliced"]
             )
 
-            # Print shapes for debugging
-            print(f"generate_posterior_samples - u_obs shape: {u_obs.shape}")
-            print(f"generate_posterior_samples - s_obs shape: {s_obs.shape}")
-
+                                    
             # Run the model predictive with u_obs and s_obs
             # Don't use plate context managers here - they're already in the model
             model_samples = model_predictive(u_obs=u_obs, s_obs=s_obs)
