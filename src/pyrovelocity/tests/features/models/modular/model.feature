@@ -45,14 +45,10 @@ Feature: PyroVelocity Model
 
   Scenario: Computing RNA velocity
     Given I have a trained PyroVelocity model with posterior samples
-    And I have an AnnData object
     When I compute RNA velocity
     Then the velocity vectors should be computed for each cell
     And the velocity should reflect the transcriptional dynamics
     And the velocity should be stored in the model state
-    And the velocity should be stored in the AnnData object
-    And the method should return the modified AnnData object
-    And the method should track mutations to the AnnData object
 
   Scenario: Storing results in AnnData
     Given I have a trained PyroVelocity model with velocity results
