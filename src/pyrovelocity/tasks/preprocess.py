@@ -21,9 +21,11 @@ from pyrovelocity.plots._count_histograms import (
 )
 from pyrovelocity.random_state import set_seed
 from pyrovelocity.utils import (
+    anndata_string,
     ensure_numpy_array,
     load_anndata_from_path,
     print_anndata,
+    print_string_diff,
 )
 
 __all__ = [
@@ -91,8 +93,16 @@ def preprocess_dataset(
 
     Examples:
         >>> # xdoctest: +SKIP
-        >>> from pyrovelocity.data import download_dataset
-        >>> tmp = getfixture('tmp_path')
+        >>> from pathlib import Path
+        >>> from pyrovelocity.tasks.data import download_dataset
+        >>> from pyrovelocity.tasks.preprocess import preprocess_dataset
+        >>> tmpdir = None
+        >>> try:
+        >>>     tmp = getfixture("tmp_path")
+        >>> except NameError:
+        >>>     import tempfile
+        >>>     tmpdir = tempfile.TemporaryDirectory()
+        >>>     tmp = tmpdir.name
         >>> simulated_dataset_path = download_dataset(
         ...   'simulated',
         ...   str(tmp) + '/data/external',
@@ -113,6 +123,10 @@ def preprocess_dataset(
         adata = load_anndata_from_path(data_path)
     else:
         data_path = "AnnData object"
+
+    # Capture initial state
+    initial_data_state_representation = anndata_string(adata)
+    print(initial_data_state_representation)
 
     if selected_genes and selected_genes != [""]:
         missing_genes = set(selected_genes) - set(adata.var_names)
@@ -148,6 +162,14 @@ def preprocess_dataset(
                 :,
             ].copy()
 
+            # Track changes after subsetting observations
+            subset_obs_representation = anndata_string(adata)
+            print_string_diff(
+                text1=initial_data_state_representation,
+                text2=subset_obs_representation,
+                diff_title="Observation subset diff",
+            )
+
     reports_processed_path = Path(reports_processed_path) / data_set_name
     logger.info(
         f"\n\nVerifying existence of path for:\n\n"
@@ -172,12 +194,22 @@ def preprocess_dataset(
         f"  to processed: {processed_path}\n"
     )
 
-    print_anndata(adata)
+    # Capture state before QC
+    pre_qc_representation = anndata_string(adata)
+
+    # Compute and plot QC metrics
     compute_and_plot_qc(
         adata=adata,
         qc_plots_path=reports_processed_path,
     )
-    print_anndata(adata)
+
+    # Track changes after QC
+    post_qc_representation = anndata_string(adata)
+    print_string_diff(
+        text1=pre_qc_representation,
+        text2=post_qc_representation,
+        diff_title="Quality control metrics diff",
+    )
 
     if (
         os.path.isfile(processed_path)
@@ -189,14 +221,26 @@ def preprocess_dataset(
         logger.info(
             f"loaded precomputed preprocessed data from {processed_path}"
         )
-        print_anndata(adata)
+        loaded_data_representation = anndata_string(adata)
+        print(loaded_data_representation)
         return adata, Path(processed_path), reports_processed_path
     else:
         logger.info(f"generating {processed_path} ...")
 
         if "raw_unspliced" not in adata.layers:
+            # Capture state before copying raw counts
+            pre_raw_counts_representation = anndata_string(adata)
+
+            # Copy raw counts
             copy_raw_counts(adata)
-            print_anndata(adata)
+
+            # Track changes after copying raw counts
+            post_raw_counts_representation = anndata_string(adata)
+            print_string_diff(
+                text1=pre_raw_counts_representation,
+                text2=post_raw_counts_representation,
+                diff_title="Copy raw counts diff",
+            )
 
         splice_state_histogram = plot_spliced_unspliced_histogram(
             adata=adata,
@@ -217,7 +261,22 @@ def preprocess_dataset(
 
         if process_cytotrace:
             logger.info("processing data with cytotrace ...")
+            # Capture state before cytotrace
+            pre_cytotrace_representation = anndata_string(adata)
+
+            # Apply cytotrace
             cytotrace_sparse(adata, layer="spliced")
+
+            # Track changes after cytotrace
+            post_cytotrace_representation = anndata_string(adata)
+            print_string_diff(
+                text1=pre_cytotrace_representation,
+                text2=post_cytotrace_representation,
+                diff_title="Cytotrace diff",
+            )
+
+        # Capture state before filtering and normalization
+        pre_filter_representation = anndata_string(adata)
 
         # TODO: clarify usage of selected_genes
         # It is possible to pass selected_genes to filter_and_normalize by
@@ -259,11 +318,22 @@ def preprocess_dataset(
             adata = adata_tmp.copy()
         del adata_tmp
 
+        # Track changes after filtering and normalization
+        post_filter_representation = anndata_string(adata)
+        print_string_diff(
+            text1=pre_filter_representation,
+            text2=post_filter_representation,
+            diff_title="Filter and normalize diff",
+        )
+
         if adata.n_vars < n_top_genes:
             logger.warning(
                 f"adata.n_vars: {adata.n_vars} < n_top_genes: {n_top_genes}\n"
                 f"for data_set_name: {data_set_name} and min_shared_counts: {min_shared_counts}\n"
             )
+
+        # Capture state before high US genes filtering
+        pre_high_us_genes_representation = anndata_string(adata)
 
         plot_high_us_genes(
             adata=adata,
@@ -281,12 +351,24 @@ def preprocess_dataset(
             spliced_layer="raw_spliced",
         )
 
+        # Track changes after high US genes filtering
+        post_high_us_genes_representation = anndata_string(adata)
+        print_string_diff(
+            text1=pre_high_us_genes_representation,
+            text2=post_high_us_genes_representation,
+            diff_title="High US genes filtering diff",
+        )
+
         if adata.n_vars <= n_pcs:
             logger.warning(
                 f"adata.n_vars: {adata.n_vars} <= n_pcs: {n_pcs}\n"
                 f"setting n_pcs to adata.n_vars - 1: {adata.n_vars -1}"
             )
             n_pcs = adata.n_vars - 1
+
+        # Capture state before PCA
+        pre_pca_representation = anndata_string(adata)
+
         if "X_pca" not in adata.obsm.keys():
             sc.pp.pca(
                 adata,
@@ -294,17 +376,52 @@ def preprocess_dataset(
                 random_state=random_seed,
             )
 
+        # Track changes after PCA
+        post_pca_representation = anndata_string(adata)
+        print_string_diff(
+            text1=pre_pca_representation,
+            text2=post_pca_representation,
+            diff_title="PCA diff",
+        )
+
+        # Capture state before neighbors
+        pre_neighbors_representation = anndata_string(adata)
+
         sc.pp.neighbors(
             adata=adata,
             n_neighbors=n_neighbors,
             n_pcs=n_pcs,
             random_state=random_seed,
         )
+
+        # Track changes after neighbors
+        post_neighbors_representation = anndata_string(adata)
+        print_string_diff(
+            text1=pre_neighbors_representation,
+            text2=post_neighbors_representation,
+            diff_title="Neighbors diff",
+        )
+
+        # Capture state before moments
+        pre_moments_representation = anndata_string(adata)
+
         scv.pp.moments(
             data=adata,
             n_pcs=n_pcs,
             n_neighbors=n_neighbors,
         )
+
+        # Track changes after moments
+        post_moments_representation = anndata_string(adata)
+        print_string_diff(
+            text1=pre_moments_representation,
+            text2=post_moments_representation,
+            diff_title="Moments diff",
+        )
+
+        # Capture state before recover dynamics
+        pre_dynamics_representation = anndata_string(adata)
+
         scv.tl.recover_dynamics(
             data=adata,
             n_jobs=-1,
@@ -312,15 +429,38 @@ def preprocess_dataset(
             # show_progress_bar=False,
         )
 
+        # Track changes after recover dynamics
+        post_dynamics_representation = anndata_string(adata)
+        print_string_diff(
+            text1=pre_dynamics_representation,
+            text2=post_dynamics_representation,
+            diff_title="Recover dynamics diff",
+        )
+
+        # Capture state before velocity
+        pre_velocity_representation = anndata_string(adata)
+
         scv.tl.velocity(
             data=adata,
             mode=default_velocity_mode,
             use_raw=False,
         )
 
+        # Track changes after velocity
+        post_velocity_representation = anndata_string(adata)
+        print_string_diff(
+            text1=pre_velocity_representation,
+            text2=post_velocity_representation,
+            diff_title="Velocity diff",
+        )
+
         # TODO: recompute umap for "larry_tips"
         # TODO: export QC plots, which will require use of the cell_state variable
         logger.info(f"cell state variable: {cell_state}")
+
+        # Capture state before UMAP and leiden
+        pre_embedding_representation = anndata_string(adata)
+
         if "X_umap" not in adata.obsm.keys():
             sc.tl.umap(
                 adata,
@@ -331,7 +471,19 @@ def preprocess_dataset(
                 adata,
                 random_state=random_seed,
             )
+
+        # Track changes after UMAP and leiden
+        post_embedding_representation = anndata_string(adata)
+        print_string_diff(
+            text1=pre_embedding_representation,
+            text2=post_embedding_representation,
+            diff_title="UMAP and Leiden diff",
+        )
+
         if use_vars_subset:
+            # Capture state before variable subsetting
+            pre_vars_subset_representation = anndata_string(adata)
+
             likelihood_sorted_genes = (
                 adata.var["fit_likelihood"].sort_values(ascending=False).index
             )
@@ -374,18 +526,70 @@ def preprocess_dataset(
                 adata = adata[:, final_gene_list].copy()
             else:
                 adata = adata[:, likelihood_sorted_genes[:n_vars_subset]].copy()
+
+            # Track changes after variable subsetting
+            post_vars_subset_representation = anndata_string(adata)
+            print_string_diff(
+                text1=pre_vars_subset_representation,
+                text2=post_vars_subset_representation,
+                diff_title="Variable subset diff",
+            )
+
+        # Capture state before velocity graph
+        pre_velocity_graph_representation = anndata_string(adata)
+
         scv.tl.velocity_graph(
             data=adata,
             n_jobs=-1,
             # show_progress_bar=False,
         )
 
+        # Track changes after velocity graph
+        post_velocity_graph_representation = anndata_string(adata)
+        print_string_diff(
+            text1=pre_velocity_graph_representation,
+            text2=post_velocity_graph_representation,
+            diff_title="Velocity graph diff",
+        )
+
+        # Capture state before velocity embedding
+        pre_velocity_embedding_representation = anndata_string(adata)
+
         scv.tl.velocity_embedding(adata, basis=vector_field_basis)
 
+        # Track changes after velocity embedding
+        post_velocity_embedding_representation = anndata_string(adata)
+        print_string_diff(
+            text1=pre_velocity_embedding_representation,
+            text2=post_velocity_embedding_representation,
+            diff_title="Velocity embedding diff",
+        )
+
         if n_obs_subset is None or n_obs_subset > 100:
+            # Capture state before latent time
+            pre_latent_time_representation = anndata_string(adata)
+
             scv.tl.latent_time(adata)
 
-        print_anndata(adata)
+            # Track changes after latent time
+            post_latent_time_representation = anndata_string(adata)
+            print_string_diff(
+                text1=pre_latent_time_representation,
+                text2=post_latent_time_representation,
+                diff_title="Latent time diff",
+            )
+
+        # Final state representation
+        final_data_state_representation = anndata_string(adata)
+
+        # Print summary of all changes
+        print_string_diff(
+            text1=initial_data_state_representation,
+            text2=final_data_state_representation,
+            diff_title="Preprocessing summary diff",
+            diff_context_lines=5,
+        )
+
         adata.write(processed_path)
 
         if os.path.isfile(processed_path) and os.access(
@@ -414,6 +618,9 @@ def compute_and_plot_qc(
             paths to mitochondrial counts,
             ribosomal counts, and counts in observations plots
     """
+    # Capture initial state
+    pre_mt_ribo_representation = anndata_string(adata)
+
     mitochondrial_counts_plot_path = os.path.join(
         qc_plots_path,
         "mitochondrial_counts_histogram.pdf",
@@ -432,12 +639,31 @@ def compute_and_plot_qc(
         ("RPS", "Rps", "rps", "RPL", "Rpl", "rpl")
     )
 
+    # Track changes after adding mt/ribo flags
+    post_mt_ribo_representation = anndata_string(adata)
+    print_string_diff(
+        text1=pre_mt_ribo_representation,
+        text2=post_mt_ribo_representation,
+        diff_title="MT/Ribo flags diff",
+    )
+
+    # Capture state before QC metrics calculation
+    pre_qc_metrics_representation = anndata_string(adata)
+
     sc.pp.calculate_qc_metrics(
         adata=adata,
         qc_vars=["mt", "ribo"],
         percent_top=None,
         log1p=False,
         inplace=True,
+    )
+
+    # Track changes after QC metrics calculation
+    post_qc_metrics_representation = anndata_string(adata)
+    print_string_diff(
+        text1=pre_qc_metrics_representation,
+        text2=post_qc_metrics_representation,
+        diff_title="QC metrics calculation diff",
     )
 
     ax = sns.histplot(
