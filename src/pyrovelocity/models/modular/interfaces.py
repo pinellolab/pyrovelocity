@@ -9,7 +9,8 @@ The modular architecture is based on Protocol interfaces rather than abstract ba
 classes to enable composition over inheritance. This approach allows for more
 flexible component composition and easier testing.
 
-Each Protocol defines a specific role in the RNA velocity model:
+Each Protocol defines a specific role in the RNA velocity model
+
 - DynamicsModel: Defines the mathematical relationships for RNA velocity
 - PriorModel: Defines prior distributions for model parameters
 - LikelihoodModel: Defines observation distributions
@@ -81,8 +82,8 @@ class DynamicsModel(Protocol):
 
     The standard RNA velocity model is based on the following system of ODEs
 
-        du/dt = α - βu
-        ds/dt = βu - γs
+        - du/dt = α - βu
+        - ds/dt = βu - γs
 
     Where
 
@@ -113,19 +114,22 @@ class DynamicsModel(Protocol):
         and updates the context with the results.
 
         Args:
-            context: Dictionary containing model context with the following required keys:
+            Dictionary containing model context with the following required keys
+
                 - u_obs: Observed unspliced counts (BatchTensor)
                 - s_obs: Observed spliced counts (BatchTensor)
                 - alpha: Transcription rate (ParamTensor)
                 - beta: Splicing rate (ParamTensor)
                 - gamma: Degradation rate (ParamTensor)
 
-                And optional keys:
+                And optional keys
+
                 - scaling: Scaling factor (ParamTensor)
                 - t: Time points (BatchTensor)
 
         Returns:
-            Updated context dictionary with additional keys:
+            Updated context dictionary with additional keys
+
                 - u_expected: Expected unspliced counts (BatchTensor)
                 - s_expected: Expected spliced counts (BatchTensor)
 
@@ -149,6 +153,10 @@ class DynamicsModel(Protocol):
             u_ss = α/β
             s_ss = α/γ
 
+        Note that the steady state may not exist for all parameter combinations in
+        non-standard dynamics models. Implementations should handle these
+        cases appropriately.
+
         Args:
             alpha: Transcription rate (shape: [genes] or [batch, genes])
             beta: Splicing rate (shape: [genes] or [batch, genes])
@@ -160,11 +168,6 @@ class DynamicsModel(Protocol):
 
         Raises:
             ValueError: If any rate parameters are zero or negative
-
-        Note:
-            The steady state may not exist for all parameter combinations in
-            non-standard dynamics models. Implementations should handle these
-            cases appropriately.
         """
         ...
 
