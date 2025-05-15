@@ -13,7 +13,13 @@ from pyrovelocity.io.compressedpickle import CompressedPickle
 from pyrovelocity.logging import configure_logging
 from pyrovelocity.models._velocity import PyroVelocity
 from pyrovelocity.random_state import set_seed
-from pyrovelocity.utils import mae_evaluate, pretty_print_dict, print_anndata
+from pyrovelocity.utils import (
+    anndata_string,
+    mae_evaluate,
+    pretty_print_dict,
+    print_anndata,
+    print_string_diff,
+)
 
 __all__ = ["postprocess_dataset"]
 
@@ -41,9 +47,9 @@ def postprocess_dataset(
         model_path (str | Path): path to the model, e.g. models/simulated_model1/model
         posterior_samples_path (str | Path): path to the posterior samples, e.g. models/simulated_model1/posterior_samples.pkl.zst
         metrics_path (str | Path): path to the metrics, e.g. models/simulated_model1/metrics.json
-        vector_field_basis (str): basis for the vector field, e.g. umap
+        vector_field_basis (str): basis for the vector field, e.g. umap. The AnnData object must have this embedding computed.
         number_posterior_samples (int): number of posterior samples to use
-        random_seed (int, optional): Random seed for reproducibility. Defaults to 42.
+        random_seed (int, optional): Random seed for reproducibility. Defaults to 99.
 
     Returns:
         Tuple[Path, Path]: A tuple containing the path to the pyrovelocity output data and the path to the postprocessed data
@@ -51,17 +57,59 @@ def postprocess_dataset(
     Examples:
         >>> # xdoctest: +SKIP
         >>> from pyrovelocity.tasks.postprocess import postprocess_dataset
-        >>> tmp = getfixture("tmp_path")
-        >>> postprocess_dataset(
-        ...     data_model="simulated_model1",
-        ...     data_model_path=tmp / "models/simulated_model1",
-        ...     trained_data_path=tmp / "models/simulated_model1/trained.h5ad",
-        ...     model_path=tmp / "models/simulated_model1/model",
-        ...     posterior_samples_path=tmp / "models/simulated_model1/posterior_samples.pkl.zst",
-        ...     metrics_path=tmp / "models/simulated_model1/metrics.json",
-        ...     vector_field_basis="leiden",
-        ...     number_posterior_samples=3,
+        >>> from pyrovelocity.tasks.train import train_dataset
+        >>> from pyrovelocity.utils import generate_sample_data
+        >>> from pyrovelocity.tasks.preprocess import copy_raw_counts
+        >>> from pathlib import Path
+        >>> import scanpy as sc
+        >>> tmpdir = None
+        >>> try:
+        >>>     tmp = getfixture("tmp_path")
+        >>> except NameError:
+        >>>     import tempfile
+        >>>     tmpdir = tempfile.TemporaryDirectory()
+        >>>     tmp = Path(tmpdir.name)
+        >>> adata = generate_sample_data(random_seed=99)
+        >>> copy_raw_counts(adata)
+        >>>
+        >>> # Compute embeddings needed for velocity visualization
+        >>> sc.pp.pca(adata, random_state=99)
+        >>> sc.pp.neighbors(adata, n_neighbors=10, random_state=99)
+        >>> sc.tl.umap(adata, random_state=99)
+        >>> sc.tl.leiden(adata, random_state=99)
+        >>>
+        >>> # Train the model and get all the paths
+        >>> data_model, data_model_path, trained_data_path, model_path, posterior_samples_path, metrics_path, _, _, _ = train_dataset(
+        ...   adata,
+        ...   data_set_name="simulated",
+        ...   model_identifier="model2",
+        ...   models_path=tmp / "models",
+        ...   use_gpu="auto",
+        ...   random_seed=99,
+        ...   max_epochs=200,
+        ...   force=True,
         ... )
+        >>> # Use the paths returned by train_dataset for postprocessing
+        >>> postprocess_dataset(
+        ...     data_model=data_model,
+        ...     data_model_path=data_model_path,
+        ...     trained_data_path=trained_data_path,
+        ...     model_path=model_path,
+        ...     posterior_samples_path=posterior_samples_path,
+        ...     metrics_path=metrics_path,
+        ...     vector_field_basis="umap",  # Use umap for vector field visualization
+        ...     number_posterior_samples=3,
+        ...     random_seed=99,
+        ... )
+        >>> # Handle temporary directory cleanup
+        >>> keep_tmp = True
+        >>> if tmpdir is not None:
+        >>>     if keep_tmp:
+        >>>         tmp_dir_path = tmpdir.name
+        >>>         tmpdir._finalizer.detach()
+        >>>         print(f"\nTemporary directory preserved at: {tmp_dir_path}")
+        >>>     else:
+        >>>         print("\nTemporary directory will be cleaned up on exit.")
     """
     set_seed(random_seed)
     logger.info(f"Reset random state from seed: {random_seed}")
@@ -81,7 +129,8 @@ def postprocess_dataset(
 
     logger.info(f"Loading trained data: {trained_data_path}")
     adata = sc.read(trained_data_path)
-    print_anndata(adata)
+    initial_data_state_representation = anndata_string(adata)
+    print(initial_data_state_representation)
 
     logger.info(f"Loading posterior samples: {posterior_samples_path}")
     posterior_samples = CompressedPickle.load(posterior_samples_path)
@@ -146,6 +195,9 @@ def postprocess_dataset(
 
             logger.info("Computing vector field uncertainty")
 
+            # Capture state before vector field uncertainty computation
+            pre_vector_field_representation = anndata_string(adata)
+
             pyrovelocity_data = (
                 trained_model.compute_statistics_from_posterior_samples(
                     adata,
@@ -155,6 +207,15 @@ def postprocess_dataset(
                     random_seed=random_seed,
                 )
             )
+
+            # Track changes after vector field uncertainty computation
+            post_vector_field_representation = anndata_string(adata)
+            print_string_diff(
+                text1=pre_vector_field_representation,
+                text2=post_vector_field_representation,
+                diff_title="Vector field uncertainty computation diff",
+            )
+
             logger.info(
                 "Data attributes after computation of vector field uncertainty"
             )
@@ -164,6 +225,15 @@ def postprocess_dataset(
 
         logger.info(f"Saving pyrovelocity data: {pyrovelocity_data_path}")
         CompressedPickle.save(pyrovelocity_data_path, pyrovelocity_data)
+
+        # Print summary of all changes from initial to final state
+        final_data_state_representation = anndata_string(adata)
+        print_string_diff(
+            text1=initial_data_state_representation,
+            text2=final_data_state_representation,
+            diff_title="Postprocessing summary diff",
+            diff_context_lines=5,
+        )
 
         logger.info(f"Saving postprocessed data: {postprocessed_data_path}")
         adata.write(postprocessed_data_path)
