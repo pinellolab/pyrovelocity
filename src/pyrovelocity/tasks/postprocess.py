@@ -58,8 +58,9 @@ def postprocess_dataset(
         >>> # xdoctest: +SKIP
         >>> from pyrovelocity.tasks.postprocess import postprocess_dataset
         >>> from pyrovelocity.tasks.train import train_dataset
-        >>> from pyrovelocity.utils import generate_sample_data
+        >>> from pyrovelocity.utils import generate_sample_data, print_anndata, pretty_print_dict
         >>> from pyrovelocity.tasks.preprocess import copy_raw_counts
+        >>> from pyrovelocity.io import CompressedPickle
         >>> from pathlib import Path
         >>> import scanpy as sc
         >>> tmpdir = None
@@ -90,7 +91,7 @@ def postprocess_dataset(
         ...   force=True,
         ... )
         >>> # Use the paths returned by train_dataset for postprocessing
-        >>> postprocess_dataset(
+        >>> pyrovelocity_data_path, postprocessed_data_path = postprocess_dataset(
         ...     data_model=data_model,
         ...     data_model_path=data_model_path,
         ...     trained_data_path=trained_data_path,
@@ -101,6 +102,12 @@ def postprocess_dataset(
         ...     number_posterior_samples=3,
         ...     random_seed=99,
         ... )
+        >>> adata = sc.read_h5ad(postprocessed_data_path)
+        >>> posterior_samples = CompressedPickle.load(posterior_samples_path)
+        >>> pyrovelocity_data = CompressedPickle.load(pyrovelocity_data_path)
+        >>> print_anndata(adata)
+        >>> pretty_print_dict(posterior_samples)
+        >>> pretty_print_dict(pyrovelocity_data)
         >>> # Handle temporary directory cleanup
         >>> keep_tmp = True
         >>> if tmpdir is not None:
