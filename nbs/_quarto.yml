@@ -154,7 +154,7 @@ website:
           contents:
             - text: "Getting Started"
               href: tutorials/introduction.qmd
-            - text: "Modular Implementation"
+            - text: "Model definition"
               href: tutorials/models.qmd
             - text: "Usage example"
               href: templates/user_example/user_example.qmd
