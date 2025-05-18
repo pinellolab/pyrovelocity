@@ -4,6 +4,28 @@ This document summarizes the relationship between Python functions and their eff
 
 ## Preprocessing Functions
 
+### `pyrovelocity.tasks.preprocess.compute_and_plot_qc`
+
+**Creates/Modifies:**
+
+- `adata.var["mt"]` - Boolean flag for mitochondrial genes - `bool, n_vars`
+- `adata.var["ribo"]` - Boolean flag for ribosomal genes - `bool, n_vars`
+
+### `scanpy.pp.calculate_qc_metrics` (called in `compute_and_plot_qc`)
+
+**Creates/Modifies:**
+
+- `adata.obs["n_genes_by_counts"]` - Number of genes with counts for each cell - `int64/category, n_obs`
+- `adata.obs["total_counts"]` - Total counts per cell - `float64, n_obs`
+- `adata.obs["total_counts_mt"]` - Total counts in mitochondrial genes - `float64, n_obs`
+- `adata.obs["pct_counts_mt"]` - Percentage of counts in mitochondrial genes - `float64, n_obs`
+- `adata.obs["total_counts_ribo"]` - Total counts in ribosomal genes - `float64, n_obs`
+- `adata.obs["pct_counts_ribo"]` - Percentage of counts in ribosomal genes - `float64, n_obs`
+- `adata.var["n_cells_by_counts"]` - Number of cells with counts for each gene - `int64, n_vars`
+- `adata.var["mean_counts"]` - Mean counts per gene - `float64, n_vars`
+- `adata.var["pct_dropout_by_counts"]` - Percentage of cells with no counts for each gene - `float64, n_vars`
+- `adata.var["total_counts"]` - Total counts per gene - `float64, n_vars`
+
 ### `pyrovelocity.tasks.preprocess.copy_raw_counts`
 
 **Creates/Modifies:**
@@ -96,6 +118,13 @@ This document summarizes the relationship between Python functions and their eff
 - `adata.layers["velocity"]` - Velocity vectors - `ndarray, n_obs x n_vars`
 - `adata.layers["velocity_u"]` - Unspliced velocity - `ndarray, n_obs x n_vars`
 
+### `scanpy.tl.umap` (called in `preprocess_dataset`)
+
+**Creates/Modifies:**
+
+- `adata.obsm["X_umap"]` - UMAP coordinates - `ndarray, n_obs x 2`
+- `adata.uns["umap"]` - UMAP parameters - `dict`
+
 ### `scanpy.tl.leiden` (called in `preprocess_dataset`)
 
 **Creates/Modifies:**
@@ -130,6 +159,112 @@ This document summarizes the relationship between Python functions and their eff
 
 - `adata.obs["velocity_pseudotime"]` - Velocity pseudotime - `float64, n_obs`
 - `adata.obs["latent_time"]` - Latent time - `float64, n_obs`
+
+## Example Initial and Final preprocessing states
+
+### Initial State
+
+```python
+AnnData object with n_obs × n_vars = 100 × 300
+    obs:
+        true_t, float64, 94,
+    var:
+        true_t_, float64, 4,
+        true_alpha, float64, 1,
+        true_beta, float64, 1,
+        true_gamma, float64, 1,
+        true_scaling, float64, 1,
+    layers:
+        spliced, ndarray, 100 x 300,
+        unspliced, ndarray, 100 x 300,
+```
+
+### Final expected state after preprocessing only
+
+```python
+AnnData object with n_obs × n_vars = 100 × 300
+    obs:
+        true_t, float64, 94,
+        n_genes_by_counts, category, 37,
+        total_counts, float64, 99,
+        total_counts_mt, float64, 1,
+        pct_counts_mt, float64, 1,
+        total_counts_ribo, float64, 1,
+        pct_counts_ribo, float64, 1,
+        u_lib_size_raw, float64, 97,
+        s_lib_size_raw, float64, 99,
+        initial_size_unspliced, float64, 97,
+        initial_size_spliced, float64, 99,
+        initial_size, float64, 99,
+        n_counts, float64, 5,
+        leiden, category, 5,
+        velocity_self_transition, float32, 78,
+        root_cells, float64, 55,
+        end_points, float64, 56,
+        velocity_pseudotime, float64, 95,
+        latent_time, float64, 78,
+    var:
+        true_t_, float64, 4,
+        true_alpha, float64, 1,
+        true_beta, float64, 1,
+        true_gamma, float64, 1,
+        true_scaling, float64, 1,
+        mt, bool, 1,
+        ribo, bool, 1,
+        n_cells_by_counts, int64, 52,
+        mean_counts, float64, 243,
+        pct_dropout_by_counts, float64, 52,
+        total_counts, float64, 243,
+        fit_r2, float64, 300,
+        fit_alpha, float64, 232,
+        fit_beta, float64, 232,
+        fit_gamma, float64, 232,
+        fit_t_, float64, 231,
+        fit_scaling, float64, 232,
+        fit_std_u, float64, 232,
+        fit_std_s, float64, 232,
+        fit_likelihood, float64, 232,
+        fit_u0, float64, 1,
+        fit_s0, float64, 1,
+        fit_pval_steady, float64, 232,
+        fit_steady_u, float64, 232,
+        fit_steady_s, float64, 232,
+        fit_variance, float64, 232,
+        fit_alignment_scaling, float64, 231,
+        velocity_genes, bool, 2,
+    uns:
+        log1p, dict,
+        pca, dict,
+        neighbors, dict,
+        recover_dynamics, dict,
+        velocity_params, dict,
+        umap, dict,
+        leiden, dict,
+        velocity_graph, csr_matrix, 100 x 100,
+        velocity_graph_neg, csr_matrix, 100 x 100,
+    obsm:
+        X_pca, ndarray, 100 x 50,
+        X_umap, ndarray, 100 x 2,
+        velocity_umap, ndarray, 100 x 2,
+    varm:
+        PCs, ndarray, 300 x 50,
+        loss, ndarray, 300 x 15,
+    layers:
+        spliced, ndarray, 100 x 300,
+        unspliced, ndarray, 100 x 300,
+        raw_unspliced, csr_matrix, 100 x 300,
+        raw_spliced, csr_matrix, 100 x 300,
+        Ms, ndarray, 100 x 300,
+        Mu, ndarray, 100 x 300,
+        fit_t, ndarray, 100 x 300,
+        fit_tau, ndarray, 100 x 300,
+        fit_tau_, ndarray, 100 x 300,
+        velocity, ndarray, 100 x 300,
+        velocity_u, ndarray, 100 x 300,
+    obsp:
+        distances, csr_matrix, 100 x 100,
+        connectivities, csr_matrix, 100 x 100,
+```
 
 ## Training Functions
 
@@ -175,3 +310,180 @@ This function calls `vector_field_uncertainty` and `compute_mean_vector_field` w
 - `adata.uns["velocity_pyro_params"]` - Velocity parameters - `dict`
 - `adata.obs["velocity_pyro_self_transition"]` - Self-transition probabilities - `float32, n_obs`
 - `adata.obsm["velocity_pyro_umap"]` - UMAP-embedded velocity vectors - `ndarray, n_obs x 2`
+
+## Example Initial and Final training and postprocessing states
+
+### Initial
+
+```python
+AnnData object with n_obs × n_vars = 100 × 300
+    obs:
+        true_t, float64, 94,
+    var:
+        true_t_, float64, 4,
+        true_alpha, float64, 1,
+        true_beta, float64, 1,
+        true_gamma, float64, 1,
+        true_scaling, float64, 1,
+    layers:
+        spliced, ndarray, 100 x 300,
+        unspliced, ndarray, 100 x 300,
+```
+
+### Final state after training and postprocessing only
+
+```python
+AnnData object with n_obs × n_vars = 100 × 12
+    obs:
+        true_t, float64, 94,
+        u_lib_size_raw, float64, 46,
+        s_lib_size_raw, float64, 52,
+        leiden, category, 8, [0, 1, 2, 3, 4, 5, 6, 7],
+        u_lib_size, float64, 46,
+        s_lib_size, float64, 52,
+        u_lib_size_mean, float64, 1,
+        s_lib_size_mean, float64, 1,
+        u_lib_size_scale, float64, 1,
+        s_lib_size_scale, float64, 1,
+        ind_x, int64, 100,
+        velocity_pyro_self_transition, float32, 99,
+    var:
+        true_t_, float64, 4,
+        true_alpha, float64, 1,
+        true_beta, float64, 1,
+        true_gamma, float64, 1,
+        true_scaling, float64, 1,
+        velocity_genes, bool, 1,
+    uns:
+        _scvi_manager_uuid, str,
+        _scvi_uuid, str,
+        leiden, dict,
+        neighbors, dict,
+        pca, dict,
+        umap, dict,
+        velocity_pyro_graph, csr_matrix, 100 x 100,
+        velocity_pyro_graph_neg, csr_matrix, 100 x 100,
+        velocity_pyro_params, dict,
+    obsm:
+        X_pca, ndarray, 100 x 11,
+        X_umap, ndarray, 100 x 2,
+        velocity_pyro_pca, ndarray, 100 x 11,
+        velocity_pyro_umap, ndarray, 100 x 2,
+    varm:
+        PCs, ndarray, 12 x 11,
+    layers:
+        raw_spliced, ndarray, 100 x 12,
+        raw_unspliced, ndarray, 100 x 12,
+        spliced, ndarray, 100 x 12,
+        spliced_pyro, ndarray, 100 x 12,
+        unspliced, ndarray, 100 x 12,
+        velocity_pyro, ndarray, 100 x 12,
+    obsp:
+        connectivities, csr_matrix, 100 x 100,
+        distances, csr_matrix, 100 x 100,
+```
+
+### Final state after complete pipeline (preprocessing + training + postprocessing)
+
+```python
+AnnData object with n_obs × n_vars = 100 × 300
+    X: ndarray, 100 x 300,  # Log-transformed normalized data
+    obs:
+        true_t, float64, 94,
+        n_genes_by_counts, category, 37,
+        total_counts, float64, 99,
+        total_counts_mt, float64, 1,
+        pct_counts_mt, float64, 1,
+        total_counts_ribo, float64, 1,
+        pct_counts_ribo, float64, 1,
+        u_lib_size_raw, float64, 97,
+        s_lib_size_raw, float64, 99,
+        initial_size_unspliced, float64, 97,
+        initial_size_spliced, float64, 99,
+        initial_size, float64, 99,
+        n_counts, float64, 5,
+        leiden, category, 5,
+        velocity_self_transition, float32, 78,
+        root_cells, float64, 55,
+        end_points, float64, 56,
+        velocity_pseudotime, float64, 95,
+        latent_time, float64, 78,
+        u_lib_size, float64, 97,
+        s_lib_size, float64, 99,
+        u_lib_size_mean, float64, 1,
+        s_lib_size_mean, float64, 1,
+        u_lib_size_scale, float64, 1,
+        s_lib_size_scale, float64, 1,
+        ind_x, int64, 100,
+        velocity_pyro_self_transition, float32, 99,
+    var:
+        true_t_, float64, 4,
+        true_alpha, float64, 1,
+        true_beta, float64, 1,
+        true_gamma, float64, 1,
+        true_scaling, float64, 1,
+        mt, bool, 1,
+        ribo, bool, 1,
+        n_cells_by_counts, int64, 52,
+        mean_counts, float64, 243,
+        pct_dropout_by_counts, float64, 52,
+        total_counts, float64, 243,
+        fit_r2, float64, 300,
+        fit_alpha, float64, 232,
+        fit_beta, float64, 232,
+        fit_gamma, float64, 232,
+        fit_t_, float64, 231,
+        fit_scaling, float64, 232,
+        fit_std_u, float64, 232,
+        fit_std_s, float64, 232,
+        fit_likelihood, float64, 232,
+        fit_u0, float64, 1,
+        fit_s0, float64, 1,
+        fit_pval_steady, float64, 232,
+        fit_steady_u, float64, 232,
+        fit_steady_s, float64, 232,
+        fit_variance, float64, 232,
+        fit_alignment_scaling, float64, 231,
+        velocity_genes, bool, 2,
+    uns:
+        log1p, dict,
+        pca, dict,
+        neighbors, dict,
+        recover_dynamics, dict,
+        velocity_params, dict,
+        umap, dict,
+        leiden, dict,
+        velocity_graph, csr_matrix, 100 x 100,
+        velocity_graph_neg, csr_matrix, 100 x 100,
+        _scvi_uuid, str,
+        _scvi_manager_uuid, str,
+        velocity_pyro_graph, csr_matrix, 100 x 100,
+        velocity_pyro_graph_neg, csr_matrix, 100 x 100,
+        velocity_pyro_params, dict,
+    obsm:
+        X_pca, ndarray, 100 x 50,
+        X_umap, ndarray, 100 x 2,
+        velocity_umap, ndarray, 100 x 2,
+        velocity_pyro_pca, ndarray, 100 x 50,
+        velocity_pyro_umap, ndarray, 100 x 2,
+    varm:
+        PCs, ndarray, 300 x 50,
+        loss, ndarray, 300 x 15,
+    layers:
+        spliced, ndarray, 100 x 300,
+        unspliced, ndarray, 100 x 300,
+        raw_unspliced, csr_matrix, 100 x 300,
+        raw_spliced, csr_matrix, 100 x 300,
+        Ms, ndarray, 100 x 300,
+        Mu, ndarray, 100 x 300,
+        fit_t, ndarray, 100 x 300,
+        fit_tau, ndarray, 100 x 300,
+        fit_tau_, ndarray, 100 x 300,
+        velocity, ndarray, 100 x 300,
+        velocity_u, ndarray, 100 x 300,
+        spliced_pyro, ndarray, 100 x 300,
+        velocity_pyro, ndarray, 100 x 300,
+    obsp:
+        distances, csr_matrix, 100 x 100,
+        connectivities, csr_matrix, 100 x 100,
+```
