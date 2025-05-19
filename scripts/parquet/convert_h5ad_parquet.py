@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import duckdb
@@ -5,6 +6,7 @@ import ibis
 
 from anndata import AnnData, read_h5ad
 from beartype import beartype
+from huggingface_hub import HfApi, RepoUrl
 
 from pqdata import read_anndata, write_anndata
 from pyrovelocity.utils import print_anndata
@@ -389,15 +391,53 @@ def analyze_parquet_database_ibis(pq_path: Path, data_set_name: str) -> Path:
 
     return db_path
 
+def upload_to_huggingface_hub(
+    data_set_path: Path, 
+    repo_id: str = "pyrovelocity/fixtures",
+) -> RepoUrl:
+    """
+    Uploads a directory to the Hugging Face Hub.
+    Assumes authentication.
+
+    - https://huggingface.co/docs/huggingface_hub/en/quick-start#authentication
+
+    Args:
+        data_set_path (Path): Path to the directory to upload.
+        data_set_name (str): Name of the dataset, used for the repository name.
+    """
+    api = HfApi()
+    repourl = api.create_repo(
+        repo_id=repo_id, 
+        private=False,
+        repo_type="dataset", 
+        exist_ok=True,
+    )
+    api.upload_large_folder(
+        repo_id=repo_id,
+        folder_path=data_set_path,
+        repo_type="dataset",
+        revision="main",
+        private=False,
+        num_workers=max(os.cpu_count() - 2, 2),
+        print_report=True,
+        print_report_every=10,
+    )
+    return repourl
+
 
 if __name__ == "__main__":
     file_path = Path("data")
     data_set_name = "postprocessed_pancreas_50_7"
 
-    h5ad_file = file_path / data_set_name / f"{data_set_name}.h5ad"
-    pq_path = file_path / data_set_name / f"{data_set_name}.pqdata"
+    data_set_path = file_path / data_set_name
+    h5ad_file = data_set_path / f"{data_set_name}.h5ad"
+    pq_path = data_set_path / f"{data_set_name}.pqdata"
 
     adata, adata_pq = convert_h5ad_to_pqdata(h5ad_file, pq_path)
+
+    repourl = upload_to_huggingface_hub(data_set_path)
+
+    print(repourl)
 
     print("\n" + "=" * 80)
     print("USING DUCKDB DIRECTLY")
