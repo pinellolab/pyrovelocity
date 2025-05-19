@@ -32,6 +32,7 @@ poetry2nix.overrides.withDefaults (
         matplotlib-venn = ["setuptools"];
         memoized-property = ["setuptools"];
         numba = [tbb_2021_11];
+        pqdata = ["hatchling" "hatch-vcs"];
         session-info = ["setuptools"];
         tinytimer = ["setuptools"];
         typechecks = ["setuptools"];
