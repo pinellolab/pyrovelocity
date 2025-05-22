@@ -16,7 +16,7 @@ from scvi.data._constants import _SETUP_ARGS_KEY, _SETUP_METHOD_NAME
 from scvi.data.fields import LayerField, NumericalObsField
 from scvi.model._utils import parse_device_args
 from scvi.model.base import BaseModelClass
-from scvi.model.base._utils import (
+from scvi.model.base._save_load import (
     _initialize_model,
     _load_saved_files,
     _validate_var_names,
