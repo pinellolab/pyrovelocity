@@ -7569,43 +7569,44 @@ wheel = ">=0.36.1"
 
 [[package]]
 name = "scanpy"
-version = "1.10.1"
+version = "1.11.1"
 description = "Single-Cell Analysis in Python."
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.10"
 files = [
-    {file = "scanpy-1.10.1-py3-none-any.whl", hash = "sha256:399c6a0fc9c8b85500cfab87f79daf8684782a6bb5303eb680c0ac99da14e4d8"},
-    {file = "scanpy-1.10.1.tar.gz", hash = "sha256:4a9194d94985dee41d914fc9438f0b502dfacf54796d0501e06a5978d709c7f6"},
+    {file = "scanpy-1.11.1-py3-none-any.whl", hash = "sha256:7eeed12b1221699dc5cc6fd9a52022d26e031118ed88d93cceccbd980c1d59b0"},
+    {file = "scanpy-1.11.1.tar.gz", hash = "sha256:4a88692f631d80f1b6a91d660a443d9534876173a0de236f25397ee396c2cace"},
 ]
 
 [package.dependencies]
 anndata = ">=0.8"
-h5py = ">=3.1"
+h5py = ">=3.7"
 joblib = "*"
 legacy-api-wrap = ">=1.4"
-matplotlib = ">=3.6"
+matplotlib = ">=3.7"
 natsort = "*"
 networkx = ">=2.7"
-numba = ">=0.56"
-numpy = ">=1.23"
+numba = ">=0.57"
+numpy = ">=1.24"
 packaging = ">=21.3"
 pandas = ">=1.5"
-patsy = "*"
+patsy = "!=1.0.0"
 pynndescent = ">=0.5"
-scikit-learn = ">=0.24"
+scikit-learn = ">=1.1,<1.6.0"
 scipy = ">=1.8"
 seaborn = ">=0.13"
-session-info = "*"
+session-info2 = "*"
 statsmodels = ">=0.13"
 tqdm = "*"
+typing-extensions = {version = "*", markers = "python_version < \"3.13\""}
 umap-learn = ">0.5.0"
 
 [package.extras]
 bbknn = ["bbknn"]
-dask = ["dask[array] (>=2022.09.2)"]
-dask-ml = ["dask-ml", "scanpy[dask]"]
-dev = ["pre-commit", "setuptools-scm"]
-doc = ["dask", "ipython (>=7.20)", "matplotlib (!=3.6.1)", "myst-nb (>=1)", "myst-parser (>=2)", "nbsphinx (>=0.9)", "readthedocs-sphinx-search", "sam-algorithm", "scanpy[paga]", "scanpydoc (>=0.13.4)", "setuptools", "sphinx (>=7)", "sphinx-autodoc-typehints (>=1.25.2)", "sphinx-book-theme (>=1.1.0)", "sphinx-copybutton", "sphinx-design", "sphinxcontrib-bibtex", "sphinxext-opengraph"]
+dask = ["dask[array] (>=2022.09.2,<2024.8.0)"]
+dask-ml = ["dask-ml", "dask[array] (>=2022.09.2,<2024.8.0)"]
+dev = ["hatch-vcs", "pre-commit", "towncrier"]
+doc = ["dask-ml", "dask[array] (>=2022.09.2,<2024.8.0)", "igraph", "ipython (>=7.20)", "matplotlib (!=3.6.1)", "myst-nb (>=1)", "myst-parser (>=2)", "nbsphinx (>=0.9)", "readthedocs-sphinx-search", "sam-algorithm", "scanpydoc (>=0.14.1)", "setuptools", "sphinx (>=7,<8.2.0)", "sphinx-autodoc-typehints (>=1.25.2)", "sphinx-book-theme (>=1.1.0)", "sphinx-copybutton", "sphinx-design", "sphinx-tabs", "sphinxcontrib-bibtex", "sphinxext-opengraph"]
 harmony = ["harmonypy"]
 leiden = ["igraph (>=0.10)", "leidenalg (>=0.9.0)"]
 louvain = ["igraph", "louvain (>=0.6.0,!=0.6.2)"]
@@ -7615,9 +7616,9 @@ rapids = ["cudf (>=0.9)", "cugraph (>=0.9)", "cuml (>=0.9)"]
 scanorama = ["scanorama"]
 scrublet = ["scikit-image"]
 skmisc = ["scikit-misc (>=0.1.3)"]
-test = ["scanpy[dask]", "scanpy[leiden]", "scanpy[scrublet]", "scanpy[test-min]", "zarr"]
-test-full = ["scanpy[dask-ml]", "scanpy[harmony]", "scanpy[louvain]", "scanpy[magic]", "scanpy[scanorama]", "scanpy[skmisc]", "scanpy[test]"]
-test-min = ["profimp", "pytest (>=7.4.2)", "pytest-cov", "pytest-mock", "pytest-nunit"]
+test = ["dask[array] (>=2022.09.2,<2024.8.0)", "igraph (>=0.10)", "leidenalg (>=0.9.0)", "profimp", "pytest (>=8.2)", "pytest-cov", "pytest-mock", "pytest-randomly", "pytest-rerunfailures", "pytest-xdist[psutil]", "scikit-image", "zarr (<3)"]
+test-full = ["dask-ml", "dask[array] (>=2022.09.2,<2024.8.0)", "harmonypy", "igraph", "igraph (>=0.10)", "leidenalg (>=0.9.0)", "louvain (>=0.6.0,!=0.6.2)", "magic-impute (>=2.0)", "profimp", "pytest (>=8.2)", "pytest-cov", "pytest-mock", "pytest-randomly", "pytest-rerunfailures", "pytest-xdist[psutil]", "scanorama", "scikit-image", "scikit-misc (>=0.1.3)", "zappy", "zarr (<3)"]
+test-min = ["profimp", "pytest (>=8.2)", "pytest-cov", "pytest-mock", "pytest-randomly", "pytest-rerunfailures", "pytest-xdist[psutil]"]
 
 [[package]]
 name = "scikit-learn"
@@ -7861,17 +7862,21 @@ simplejson = "*"
 typechecks = ">=0.0.2"
 
 [[package]]
-name = "session-info"
-version = "1.0.0"
-description = "session_info outputs version information for modules loaded in the current session, Python, and the OS."
+name = "session-info2"
+version = "0.1.2"
+description = "Print versions of imported packages."
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.10"
 files = [
-    {file = "session_info-1.0.0.tar.gz", hash = "sha256:3cda5e03cca703f32ae2eadbd6bd80b6c21442cfb60e412c21cb8ad6d5cbb6b7"},
+    {file = "session_info2-0.1.2-py3-none-any.whl", hash = "sha256:8f5c010b621930556eee640f6a71d76f0c746ed1194b27ad227e6fe6e61883d4"},
+    {file = "session_info2-0.1.2.tar.gz", hash = "sha256:bdb75885128333611e0cf4357f31a0b5869bcb7889b93251ed8571aa4e4ad0b6"},
 ]
 
-[package.dependencies]
-stdlib_list = "*"
+[package.extras]
+docs = ["furo", "hatch", "ipywidgets", "myst-nb", "numpy", "session-info", "sphinx", "sphinx-autodoc-typehints", "sphinx-codeautolink"]
+jupyter = ["ipywidgets"]
+notebook = ["ipywidgets", "numpy", "session-info"]
+test = ["coverage[toml] (>=6.5)", "ipykernel", "jupyter-client", "pytest", "pytest-asyncio", "pytest-md", "pytest-subprocess", "testing-common-database"]
 
 [[package]]
 name = "setuptools"
@@ -8509,20 +8514,6 @@ scipy = ">=1.8,<1.9.2 || >1.9.2"
 build = ["cython (>=0.29.33)"]
 develop = ["colorama", "cython (>=0.29.33)", "cython (>=3.0.10,<4)", "flake8", "isort", "joblib", "matplotlib (>=3)", "pytest (>=7.3.0,<8)", "pytest-cov", "pytest-randomly", "pytest-xdist", "pywinpty", "setuptools-scm[toml] (>=8.0,<9.0)"]
 docs = ["ipykernel", "jupyter-client", "matplotlib", "nbconvert", "nbformat", "numpydoc", "pandas-datareader", "sphinx"]
-
-[[package]]
-name = "stdlib-list"
-version = "0.8.0"
-description = "A list of Python Standard Libraries (2.6-7, 3.2-9)."
-optional = false
-python-versions = "*"
-files = [
-    {file = "stdlib-list-0.8.0.tar.gz", hash = "sha256:a1e503719720d71e2ed70ed809b385c60cd3fb555ba7ec046b96360d30b16d9f"},
-    {file = "stdlib_list-0.8.0-py3-none-any.whl", hash = "sha256:2ae0712a55b68f3fbbc9e58d6fa1b646a062188f49745b495f94d3310a9fdd3e"},
-]
-
-[package.extras]
-develop = ["sphinx"]
 
 [[package]]
 name = "sympy"
@@ -9797,4 +9788,4 @@ workflows = ["dataclasses-json", "dulwich", "flytekit", "google-api-python-clien
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11.1, <3.13"
-content-hash = "04496a1b32cf63e79ecb2cadd7da263ebf10043d8652717c886107a6976403d5"
+content-hash = "bb0970818fa4a9704b2ffa3e6ddfed6c9e2be8cd3d592d7cc10806971efb26cf"
