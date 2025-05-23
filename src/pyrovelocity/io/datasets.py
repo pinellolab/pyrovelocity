@@ -6,6 +6,7 @@ import anndata
 import scanpy as sc
 import scvelo as scv
 from beartype import beartype
+from huggingface_hub import hf_hub_download
 
 from pyrovelocity.io.hash import hash_file
 from pyrovelocity.logging import configure_logging
@@ -513,6 +514,56 @@ def pbmc68k(
         adata.write(file_path)
     expected_hash = (
         "c6ce6ca3dac3b97012d12c7a5e5ec1953bbd2ad5535538b0ef549f54d9276f0b"
+    )
+    _check_hash(file_path, expected_hash)
+    return adata
+
+
+@beartype
+def bifurcation_14(
+    file_path: str | Path = "data/external/bifurcation_14.h5ad",
+) -> anndata._core.anndata.AnnData:
+    """
+    This is considered an integration test fixture and does not represent real data.
+    Synthetic dataset with a single bifurcation in its differentiation trajectory.
+
+    Returns:
+        AnnData object
+    """
+    hf_hub_download(
+        repo_id="pyrovelocity/fixtures",
+        filename="bifurcation_14.h5ad",
+        local_dir=Path(file_path).parent,
+        repo_type="dataset",
+    )
+    adata = sc.read(file_path)
+    expected_hash = (
+        "15bfa054cb65c660b4254bc3b1cb7e1ac97739a6e699da90f21351c6a635df67"
+    )
+    _check_hash(file_path, expected_hash)
+    return adata
+
+
+@beartype
+def linear_22(
+    file_path: str | Path = "data/external/linear_22.h5ad",
+) -> anndata._core.anndata.AnnData:
+    """
+    This is considered an integration test fixture and does not represent real data.
+    Synthetic dataset with linear differentiation trajectory.
+
+    Returns:
+        AnnData object
+    """
+    hf_hub_download(
+        repo_id="pyrovelocity/fixtures",
+        filename="linear_22.h5ad",
+        local_dir=Path(file_path).parent,
+        repo_type="dataset",
+    )
+    adata = sc.read(file_path)
+    expected_hash = (
+        "dfd9215b5cfb7c82278770cdab62e7c29d460d789f1652aaa5cc06381378dd8a"
     )
     _check_hash(file_path, expected_hash)
     return adata
