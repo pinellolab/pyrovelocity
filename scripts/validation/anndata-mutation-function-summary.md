@@ -487,3 +487,252 @@ AnnData object with n_obs × n_vars = 100 × 300
         distances, csr_matrix, 100 x 100,
         connectivities, csr_matrix, 100 x 100,
 ```
+
+### Final state for our pancreas_50_7 postprocessed data fixture
+
+```python
+AnnData object with n_obs × n_vars = 50 × 7
+    obs:
+        clusters_coarse, category, 5, [Ductal, Endocrine, Ngn3 high EP, Ngn3 low EP Pre-endocrine],
+        clusters, category, 7, [Alpha, Beta, Ductal, Epsilon, Ngn3 high EP, Ngn3 low EP, Pre-endocrine],
+        S_score, float64, 50,
+        G2M_score, float64, 50,
+        n_genes_by_counts, int64, 49,
+        total_counts, float64, 48,
+        total_counts_mt, float64, 30,
+        pct_counts_mt, float64, 50,
+        total_counts_ribo, float64, 50,
+        pct_counts_ribo, float64, 50,
+        u_lib_size_raw, float64, 50,
+        s_lib_size_raw, float64, 48,
+        gcs, float64, 50,
+        cytotrace, float64, 50,
+        counts, float64, 50,
+        initial_size_unspliced, float64, 50,
+        initial_size_spliced, float64, 48,
+        initial_size, float64, 48,
+        n_counts, float64, 50,
+        leiden, category, 4, [0, 1, 2, 3],
+        velocity_self_transition, float64, 43,
+        u_lib_size, float64, 50,
+        s_lib_size, float64, 48,
+        u_lib_size_mean, float64, 1,
+        s_lib_size_mean, float64, 1,
+        u_lib_size_scale, float64, 1,
+        s_lib_size_scale, float64, 1,
+        ind_x, int64, 50,
+        cell_time, float64, 50,
+        1-Cytotrace, float64, 50,
+        velocity_pyro_self_transition, float64, 41,
+    var:
+        highly_variable_genes, category, 1, [True],
+        mt, bool, 1,
+        ribo, bool, 1,
+        n_cells_by_counts, int64, 7,
+        mean_counts, float64, 7,
+        pct_dropout_by_counts, float64, 7,
+        total_counts, float64, 7,
+        cytotrace, bool, 1,
+        cytotrace_corrs, float64, 7,
+        fit_r2, float64, 7,
+        fit_alpha, float64, 7,
+        fit_beta, float64, 7,
+        fit_gamma, float64, 7,
+        fit_t_, float64, 7,
+        fit_scaling, float64, 7,
+        fit_std_u, float64, 7,
+        fit_std_s, float64, 7,
+        fit_likelihood, float64, 7,
+        fit_u0, float64, 1,
+        fit_s0, float64, 1,
+        fit_pval_steady, float64, 7,
+        fit_steady_u, float64, 7,
+        fit_steady_s, float64, 7,
+        fit_variance, float64, 7,
+        fit_alignment_scaling, float64, 7,
+        velocity_genes, bool, 1,
+    uns:
+        _scvi_manager_uuid, str,
+        _scvi_uuid, str,
+        clusters_coarse_colors, ndarray, 5,
+        clusters_colors, ndarray, 7,
+        day_colors, ndarray, 1,
+        leiden, dict,
+        log1p, dict,
+        neighbors, dict,
+        pca, dict,
+        recover_dynamics, dict,
+        velocity_graph, ndarray, 50 x 50,
+        velocity_graph_neg, ndarray, 50 x 50,
+        velocity_params, dict,
+        velocity_pyro_graph, list,
+        velocity_pyro_graph_neg, list,
+        velocity_pyro_params, dict,
+    obsm:
+        X_pca, ndarray, 50 x 6,
+        X_umap, ndarray, 50 x 2,
+        velocity_pyro_pca, ndarray, 50 x 6,
+        velocity_pyro_umap, ndarray, 50 x 2,
+        velocity_umap, ndarray, 50 x 2,
+    varm:
+        PCs, ndarray, 7 x 6,
+        loss, ndarray, 7 x 15,
+    layers:
+        Ms, ndarray, 50 x 7,
+        Mu, ndarray, 50 x 7,
+        fit_t, ndarray, 50 x 7,
+        fit_tau, ndarray, 50 x 7,
+        fit_tau_, ndarray, 50 x 7,
+        raw_spliced, ndarray, 50 x 7,
+        raw_unspliced, ndarray, 50 x 7,
+        spliced, ndarray, 50 x 7,
+        spliced_pyro, ndarray, 50 x 7,
+        unspliced, ndarray, 50 x 7,
+        velocity, ndarray, 50 x 7,
+        velocity_pyro, ndarray, 50 x 7,
+        velocity_u, ndarray, 50 x 7,
+    obsp:
+        connectivities, ndarray, 50 x 50,
+        distances, ndarray, 50 x 50,
+```
+
+which can be loaded using
+
+```python
+from importlib.resources import files
+
+from pyrovelocity.io.serialization import load_anndata_from_json
+from pyrovelocity.utils import print_anndata, anndata_string, print_string_diff
+
+# see `src/pyrovelocity/tests/fixtures/get_fixture_hashes.py` to update fixture hashes
+FIXTURE_HASHES = {
+    "preprocessed_pancreas_50_7.json": "95c80131694f2c6449a48a56513ef79cdc56eae75204ec69abde0d81a18722ae",
+    "trained_pancreas_50_7.json": "8c575d9de0430003b469b9cc9850171914a4fe1f0ae655fe0146f81af34abd04",
+    "postprocessed_pancreas_50_7.json": "d50813ad23e4ae1c34f483547a7d8351fdfa94c805098caf99b8864eba8892ef",
+    "larry_multilineage_50_6.json": "227a025f340e9ead0779abf8349e6c2a9774301b50e13f1c6d9f3f96001dfe73",
+    "preprocessed_larry_multilineage_50_6.json": "61d3da04b5de323d3e0fd0bfd6218281c76e58f2d5271d52247f2f3218f1b1a2",
+    "trained_larry_multilineage_50_6.json": "c6338e64b437e8b7a82f245729e585dc4fa7f11cd428777716e84fc6c46603f8",
+    "postprocessed_larry_multilineage_50_6.json": "a8aeec31939a8d1b93577e5bf3d4f747d69cd4564bd87af54ec800903aaa25a6",
+}
+
+
+def adata_preprocessed_pancreas_50_7():
+    fixture_file_path = (
+        files("pyrovelocity.tests.data") / "preprocessed_pancreas_50_7.json"
+    )
+    return load_anndata_from_json(
+        filename=fixture_file_path,
+        expected_hash=FIXTURE_HASHES["preprocessed_pancreas_50_7.json"],
+    )
+
+
+def adata_trained_pancreas_50_7():
+    fixture_file_path = (
+        files("pyrovelocity.tests.data") / "trained_pancreas_50_7.json"
+    )
+    return load_anndata_from_json(
+        filename=fixture_file_path,
+        expected_hash=FIXTURE_HASHES["trained_pancreas_50_7.json"],
+    )
+
+
+def adata_postprocessed_pancreas_50_7():
+    fixture_file_path = (
+        files("pyrovelocity.tests.data") / "postprocessed_pancreas_50_7.json"
+    )
+    return load_anndata_from_json(
+        filename=fixture_file_path,
+        expected_hash=FIXTURE_HASHES["postprocessed_pancreas_50_7.json"],
+    )
+
+adata_pp = adata_preprocessed_pancreas_50_7()
+adata_tr = adata_trained_pancreas_50_7()
+adata_pt = adata_postprocessed_pancreas_50_7()
+
+print_string_diff(
+    text1=anndata_string(adata_pp),
+    text2=anndata_string(adata_tr),
+    diff_title="trained vs preprocessed",
+)
+print_string_diff(
+    text1=anndata_string(adata_tr),
+    text2=anndata_string(adata_pt),
+    diff_title="postprocessed vs trained",
+)
+print_string_diff(
+    text1=anndata_string(adata_pp),
+    text2=anndata_string(adata_pt),
+    diff_title="preprocessed vs postprocessed",
+)
+print_anndata(adata_pt)
+```
+
+demonstrating that training and postprocessing adds or updates
+
+```python
+╭─────────── preprocessed vs postprocessed ────────────╮
+│                                                      │
+│ ---                                                  │
+│ +++                                                  │
+│ @@ -22,6 +22,16 @@                                   │
+│          n_counts, float64, 50,                      │
+│          leiden, category, 4, [0, 1, 2, 3],          │
+│          velocity_self_transition, float64, 43,      │
+│ +        u_lib_size, float64, 50,                    │
+│ +        s_lib_size, float64, 48,                    │
+│ +        u_lib_size_mean, float64, 1,                │
+│ +        s_lib_size_mean, float64, 1,                │
+│ +        u_lib_size_scale, float64, 1,               │
+│ +        s_lib_size_scale, float64, 1,               │
+│ +        ind_x, int64, 50,                           │
+│ +        cell_time, float64, 50,                     │
+│ +        1-Cytotrace, float64, 50,                   │
+│ +        velocity_pyro_self_transition, float64, 41, │
+│      var:                                            │
+│          highly_variable_genes, category, 1, [True], │
+│          mt, bool, 1,                                │
+│ @@ -48,8 +58,10 @@                                   │
+│          fit_steady_s, float64, 7,                   │
+│          fit_variance, float64, 7,                   │
+│          fit_alignment_scaling, float64, 7,          │
+│ -        velocity_genes, bool, 2,                    │
+│ +        velocity_genes, bool, 1,                    │
+│      uns:                                            │
+│ +        _scvi_manager_uuid, str,                    │
+│ +        _scvi_uuid, str,                            │
+│          clusters_coarse_colors, ndarray, 5,         │
+│          clusters_colors, ndarray, 7,                │
+│          day_colors, ndarray, 1,                     │
+│ @@ -61,11 +73,17 @@                                  │
+│          velocity_graph, ndarray, 50 x 50,           │
+│          velocity_graph_neg, ndarray, 50 x 50,       │
+│          velocity_params, dict,                      │
+│ +        velocity_pyro_graph, list,                  │
+│ +        velocity_pyro_graph_neg, list,              │
+│ +        velocity_pyro_params, dict,                 │
+│      obsm:                                           │
+│ -        X_pca, ndarray, 50 x 50,                    │
+│ +        X_pca, ndarray, 50 x 6,                     │
+│          X_umap, ndarray, 50 x 2,                    │
+│ +        velocity_pyro_pca, ndarray, 50 x 6,         │
+│ +        velocity_pyro_umap, ndarray, 50 x 2,        │
+│          velocity_umap, ndarray, 50 x 2,             │
+│      varm:                                           │
+│ +        PCs, ndarray, 7 x 6,                        │
+│          loss, ndarray, 7 x 15,                      │
+│      layers:                                         │
+│          Ms, ndarray, 50 x 7,                        │
+│ @@ -76,8 +94,10 @@                                   │
+│          raw_spliced, ndarray, 50 x 7,               │
+│          raw_unspliced, ndarray, 50 x 7,             │
+│          spliced, ndarray, 50 x 7,                   │
+│ +        spliced_pyro, ndarray, 50 x 7,              │
+│          unspliced, ndarray, 50 x 7,                 │
+│          velocity, ndarray, 50 x 7,                  │
+│ +        velocity_pyro, ndarray, 50 x 7,             │
+│          velocity_u, ndarray, 50 x 7,                │
+│      obsp:                                           │
+│          connectivities, ndarray, 50 x 50,           │
+│                                                      │
+╰──────────────────────────────────────────────────────╯
+```
