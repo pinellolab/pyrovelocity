@@ -76,6 +76,18 @@ class TestDynamicsModelInterface:
                 # Simple implementation for testing
                 return alpha / beta, alpha / gamma
 
+            def compute_velocity(
+                self,
+                ut: ParamTensor,
+                st: ParamTensor,
+                alpha: ParamTensor,
+                beta: ParamTensor,
+                gamma: ParamTensor,
+                **kwargs: Any,
+            ) -> ParamTensor:
+                # Simple implementation for testing: ds/dt = β * u - γ * s
+                return beta * ut - gamma * st
+
         # Create an instance of the implementation
         impl = TestDynamicsModelImpl()
 

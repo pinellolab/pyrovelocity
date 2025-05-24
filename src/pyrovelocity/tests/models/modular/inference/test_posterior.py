@@ -9,6 +9,7 @@ import pytest
 import torch
 from anndata import AnnData
 
+from pyrovelocity.models.modular.factory import create_standard_model
 from pyrovelocity.models.modular.inference.config import (
     InferenceConfig,
     create_inference_config,
@@ -133,8 +134,11 @@ class TestPosterior:
             "s_scale": s_scale,
         }
 
+        # Create a PyroVelocityModel for testing
+        model = create_standard_model()
+
         # Compute velocity
-        velocity_results = compute_velocity(simple_model, posterior_samples)
+        velocity_results = compute_velocity(model, posterior_samples)
         assert isinstance(velocity_results, dict)
         assert "velocity" in velocity_results
         assert "alpha" in velocity_results
@@ -148,7 +152,7 @@ class TestPosterior:
 
         # Compute velocity with mean
         velocity_results = compute_velocity(
-            simple_model, posterior_samples, use_mean=True
+            model, posterior_samples, use_mean=True
         )
         assert isinstance(velocity_results, dict)
         assert "velocity" in velocity_results
@@ -169,7 +173,7 @@ class TestPosterior:
             "st": st,
             "u_scale": u_scale,
         }
-        velocity_results = compute_velocity(simple_model, posterior_samples_legacy, use_mean=True)
+        velocity_results = compute_velocity(model, posterior_samples_legacy, use_mean=True)
         assert isinstance(velocity_results, dict)
         assert "velocity" in velocity_results
 
@@ -181,7 +185,7 @@ class TestPosterior:
             "ut": ut,
             "st": st,
         }
-        velocity_results = compute_velocity(simple_model, posterior_samples_no_scale, use_mean=True)
+        velocity_results = compute_velocity(model, posterior_samples_no_scale, use_mean=True)
         assert isinstance(velocity_results, dict)
         assert "velocity" in velocity_results
 
@@ -199,7 +203,7 @@ class TestPosterior:
             "gamma": gamma,
         }
         try:
-            velocity_results = compute_velocity(simple_model, posterior_samples_minimal, adata=adata, use_mean=True)
+            velocity_results = compute_velocity(model, posterior_samples_minimal, adata=adata, use_mean=True)
             assert isinstance(velocity_results, dict)
             assert "velocity" in velocity_results
         except Exception as e:
@@ -248,10 +252,13 @@ class TestPosterior:
             config=config,
         )
 
+        # Create a PyroVelocityModel for testing
+        model = create_standard_model()
+
         # Analyze posterior
         results = analyze_posterior(
             state,
-            simple_model,
+            model,
             num_samples=5,
             compute_velocity_flag=True,
             compute_uncertainty_flag=True,
