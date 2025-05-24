@@ -68,6 +68,9 @@ BatchTensor = Float[Tensor, "batch ..."]
 ParamTensor = Float[Tensor, "..."]
 CountMatrix = Int[Tensor, "batch cells genes"]
 RateMatrix = Float[Tensor, "batch cells genes"]
+VelocityTensor = Float[Tensor, "... cells genes"]
+LatentCountTensor = Float[Tensor, "... cells genes"]
+KineticParamTensor = Float[Tensor, "... genes"]
 ModelState = Dict[str, Any]
 
 
@@ -168,6 +171,41 @@ class DynamicsModel(Protocol):
 
         Raises:
             ValueError: If any rate parameters are zero or negative
+        """
+        ...
+
+    def compute_velocity(
+        self,
+        ut: LatentCountTensor,
+        st: LatentCountTensor,
+        alpha: KineticParamTensor,
+        beta: KineticParamTensor,
+        gamma: KineticParamTensor,
+        **kwargs: Any,
+    ) -> VelocityTensor:
+        """
+        Compute RNA velocity from latent RNA counts and kinetic parameters.
+
+        This method computes the RNA velocity (ds/dt) based on the dynamics model's
+        differential equations. For the standard RNA velocity model:
+            ds/dt = βu - γs
+
+        Where the velocity is computed using the latent (true) RNA counts ut and st
+        rather than the observed counts.
+
+        Args:
+            ut: Latent unspliced RNA counts (shape: [samples, cells, genes] or [cells, genes])
+            st: Latent spliced RNA counts (shape: [samples, cells, genes] or [cells, genes])
+            alpha: Transcription rate (shape: [samples, genes] or [genes])
+            beta: Splicing rate (shape: [samples, genes] or [genes])
+            gamma: Degradation rate (shape: [samples, genes] or [genes])
+            **kwargs: Additional model-specific parameters (e.g., scaling factors)
+
+        Returns:
+            RNA velocity tensor with same shape as ut/st
+
+        Raises:
+            ValueError: If tensor shapes are incompatible
         """
         ...
 
