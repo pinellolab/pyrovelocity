@@ -1432,8 +1432,27 @@ class PyroVelocityModel:
             elif not isinstance(uncertainty, np.ndarray):
                 uncertainty = np.array(uncertainty)
 
-            # Store uncertainty in var (gene-level information)
-            adata.var[f"velocity_{model_name}_uncertainty"] = uncertainty
+            # Handle uncertainty shape for storage in adata.var (gene-level information)
+            if uncertainty.ndim == 2:
+                # If uncertainty is [num_cells, num_genes], take mean across cells for gene-level storage
+                uncertainty_gene_level = uncertainty.mean(axis=0)
+                # Also store the full uncertainty in layers for cell-gene level information
+                adata.layers[f"velocity_{model_name}_uncertainty"] = uncertainty
+            elif uncertainty.ndim == 1 and uncertainty.shape[0] == adata.n_vars:
+                # If uncertainty is already [num_genes], use directly
+                uncertainty_gene_level = uncertainty
+            elif uncertainty.ndim == 1 and uncertainty.shape[0] == adata.n_obs:
+                # If uncertainty is [num_cells], broadcast to genes (unusual case)
+                uncertainty_gene_level = np.full(adata.n_vars, uncertainty.mean())
+                adata.layers[f"velocity_{model_name}_uncertainty"] = uncertainty.reshape(-1, 1)
+            else:
+                raise ValueError(
+                    f"Uncertainty shape {uncertainty.shape} does not match AnnData dimensions "
+                    f"({adata.n_obs}, {adata.n_vars})"
+                )
+
+            # Store gene-level uncertainty in var
+            adata.var[f"velocity_{model_name}_uncertainty"] = uncertainty_gene_level
 
         # Compute velocity graph and embedding using scvelo
         scv.tl.velocity_graph(
