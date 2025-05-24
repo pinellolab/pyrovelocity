@@ -29,7 +29,7 @@ Before starting, make sure you have PyroVelocity [installed](../guides/installat
 
 Let's start with a realistic example using the bifurcation_14 dataset and the modular implementation:
 
-```python
+```{python}
 import torch
 import pyro
 import numpy as np
@@ -129,7 +129,7 @@ Each component implements a Protocol interface, allowing for flexible compositio
 
 You can create custom models by combining different components using the registry system:
 
-```python
+```{python}
 from pyrovelocity.models.modular.registry import (
     DynamicsModelRegistry,
     PriorModelRegistry,
@@ -177,7 +177,7 @@ custom_adata = custom_model.get_velocity(
 
 The modular implementation provides factory functions for creating models with different configurations:
 
-```python
+```{python}
 from pyrovelocity.models.modular.factory import (
     create_model_from_config,
     create_legacy_model1,
@@ -218,14 +218,14 @@ for layer in adata_primary.layers.keys():
 
 After training the model and computing velocity, you can visualize the results using scvelo's plotting functions. The velocity data is stored in the format expected by scvelo:
 
-```python
+```{python}
 import matplotlib.pyplot as plt
 
 # Add leiden clustering for visualization
 sc.tl.leiden(adata_with_velocity)
 
 # Set up the plot
-fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+fig, axes = plt.subplots()
 
 # Plot 1: Primary legacy model (create_legacy_model2)
 scv.pl.velocity_embedding_grid(
@@ -237,7 +237,7 @@ scv.pl.velocity_embedding_grid(
     s=15,
     alpha=1,
     linewidth=0.5,
-    ax=axes[0],
+    ax=axes,
     show=False,
     legend_loc='right margin',
     density=0.4,
@@ -246,31 +246,6 @@ scv.pl.velocity_embedding_grid(
     arrow_length=2,
     arrow_color='black',
 )
-
-# Plot 2: Alternative model comparison (if computed)
-if 'velocity_primary_legacy2' in adata_primary.layers:
-    scv.pl.velocity_embedding_grid(
-        adata_primary,
-        basis='umap',
-        color='leiden',
-        title='PyroVelocity Primary Legacy Model',
-        vkey='velocity_primary_legacy2',
-        s=15,
-        alpha=1,
-        linewidth=0.5,
-        ax=axes[1],
-        show=False,
-        legend_loc='right margin',
-        density=0.4,
-        scale=0.2,
-        arrow_size=2,
-        arrow_length=2,
-        arrow_color='black',
-    )
-else:
-    axes[1].text(0.5, 0.5, 'Alternative model\nnot computed',
-                ha='center', va='center', transform=axes[1].transAxes)
-    axes[1].axis('off')
 
 plt.tight_layout()
 plt.show()
