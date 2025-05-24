@@ -38,7 +38,7 @@ import scanpy as sc
 import scvelo as scv
 from pyrovelocity.utils import print_anndata, anndata_string, print_string_diff
 from pyrovelocity.models.modular import PyroVelocityModel
-from pyrovelocity.models.modular.factory import create_standard_model
+from pyrovelocity.models.modular.factory import create_legacy_model2
 from pyrovelocity.io.datasets import bifurcation_14
 
 # Set random seed for reproducibility
@@ -77,8 +77,8 @@ print_string_diff(
 )
 print_anndata(adata)
 
-# Create a standard model with default components
-model = create_standard_model()
+# Create a legacy model (add_offset=True) that replicates the original PyroVelocity implementation
+model = create_legacy_model2()
 print(model)
 
 # Train the model
@@ -97,7 +97,7 @@ adata_with_velocity = model.get_velocity(
     basis='umap',
     compute_uncertainty=True,
     uncertainty_method='std',
-    model_name='pyrovelocity'
+    model_name='legacy2'
 )
 
 # Print the updated AnnData structure
@@ -155,7 +155,7 @@ custom_model = PyroVelocityModel(
     guide_model=guide_model
 )
 
-# Train the model
+# Train the custom legacy model
 custom_model.train(
     adata=adata_with_velocity,  # Use the data with embeddings
     max_epochs=50,
@@ -163,13 +163,13 @@ custom_model.train(
     use_gpu=False
 )
 
-# Compute velocity with the custom model
+# Compute velocity with the custom legacy model
 custom_adata = custom_model.get_velocity(
     adata=adata_with_velocity,
     num_samples=100,
     basis='umap',
     compute_uncertainty=True,
-    model_name='custom_legacy'
+    model_name='custom_legacy2'
 )
 ```
 
@@ -179,40 +179,37 @@ The modular implementation provides factory functions for creating models with d
 
 ```python
 from pyrovelocity.models.modular.factory import (
-    create_standard_model,
     create_model_from_config,
     create_legacy_model1,
     create_legacy_model2
 )
 from pyrovelocity.models.modular.config import ModelConfig
 
-# Create a standard model (recommended for new projects)
-standard_model = create_standard_model()
+# The primary model we use is create_legacy_model2 (add_offset=True)
+# This replicates the original PyroVelocity implementation most closely
+primary_model = create_legacy_model2()
 
-# Create a model that replicates the legacy implementation (add_offset=False)
-legacy_model1 = create_legacy_model1()
+# Alternative: create_legacy_model1 (add_offset=False)
+alternative_model = create_legacy_model1()
 
-# Create a model that replicates the legacy implementation (add_offset=True)
-legacy_model2 = create_legacy_model2()
-
-# Create a model from a configuration
+# You can also create models from configurations
 config = ModelConfig.standard()
 config_model = create_model_from_config(config)
 
-# Train and use any of these models
-legacy_model1.train(adata=adata_with_velocity, max_epochs=50)
+# Train and use the primary legacy model
+primary_model.train(adata=adata_with_velocity, max_epochs=50)
 
 # The new unified get_velocity method returns the mutated AnnData object
-adata_legacy = legacy_model1.get_velocity(
+adata_primary = primary_model.get_velocity(
     adata=adata_with_velocity,
     num_samples=100,
     basis='umap',
     compute_uncertainty=True,
-    model_name='legacy1'
+    model_name='primary_legacy2'
 )
 
 print("Available velocity layers:")
-for layer in adata_legacy.layers.keys():
+for layer in adata_primary.layers.keys():
     if 'velocity' in layer:
         print(f"- {layer}")
 ```
@@ -230,13 +227,13 @@ sc.tl.leiden(adata_with_velocity)
 # Set up the plot
 fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
-# Plot 1: Standard velocity embedding
+# Plot 1: Primary legacy model (create_legacy_model2)
 scv.pl.velocity_embedding_grid(
     adata_with_velocity,
     basis='umap',
     color='leiden',
-    title='PyroVelocity Standard Model',
-    vkey='velocity_pyrovelocity',  # Use the velocity key added by get_velocity
+    title='PyroVelocity Legacy Model 2 (add_offset=True)',
+    vkey='velocity_legacy2',  # Use the velocity key added by get_velocity
     s=15,
     alpha=1,
     linewidth=0.5,
@@ -250,14 +247,14 @@ scv.pl.velocity_embedding_grid(
     arrow_color='black',
 )
 
-# Plot 2: Legacy model comparison (if computed)
-if 'velocity_legacy1' in adata_legacy.layers:
+# Plot 2: Alternative model comparison (if computed)
+if 'velocity_primary_legacy2' in adata_primary.layers:
     scv.pl.velocity_embedding_grid(
-        adata_legacy,
+        adata_primary,
         basis='umap',
         color='leiden',
-        title='PyroVelocity Legacy Model',
-        vkey='velocity_legacy1',
+        title='PyroVelocity Primary Legacy Model',
+        vkey='velocity_primary_legacy2',
         s=15,
         alpha=1,
         linewidth=0.5,
@@ -271,7 +268,7 @@ if 'velocity_legacy1' in adata_legacy.layers:
         arrow_color='black',
     )
 else:
-    axes[1].text(0.5, 0.5, 'Legacy model\nnot computed',
+    axes[1].text(0.5, 0.5, 'Alternative model\nnot computed',
                 ha='center', va='center', transform=axes[1].transAxes)
     axes[1].axis('off')
 
@@ -279,9 +276,9 @@ plt.tight_layout()
 plt.show()
 
 # Display uncertainty information if computed
-if 'velocity_pyrovelocity_uncertainty' in adata_with_velocity.var.columns:
+if 'velocity_legacy2_uncertainty' in adata_with_velocity.var.columns:
     print("Velocity uncertainty statistics:")
-    uncertainty = adata_with_velocity.var['velocity_pyrovelocity_uncertainty']
+    uncertainty = adata_with_velocity.var['velocity_legacy2_uncertainty']
     print(f"Mean uncertainty: {uncertainty.mean():.4f}")
     print(f"Std uncertainty: {uncertainty.std():.4f}")
     print(f"Min uncertainty: {uncertainty.min():.4f}")
