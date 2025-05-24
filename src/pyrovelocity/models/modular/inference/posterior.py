@@ -21,7 +21,6 @@ import numpy as np
 import pyro
 import pyro.distributions as dist
 import pyro.infer as infer
-import scipy.sparse
 import torch
 from anndata import AnnData
 from beartype import beartype
@@ -61,417 +60,132 @@ def sample_posterior(
 
 @beartype
 def compute_velocity(
-    model: Union[Callable, PyroVelocityModel],
+    model: PyroVelocityModel,
     posterior_samples: Dict[str, Union[torch.Tensor, np.ndarray]],
     adata: Optional[AnnData] = None,
     use_mean: bool = False,
 ) -> Dict[str, Union[torch.Tensor, np.ndarray]]:
     """
-    Compute RNA velocity from posterior samples.
+    Compute RNA velocity from posterior samples using the dynamics component.
 
-    This function computes velocity using the same approach as the legacy implementation
-    in compute_mean_vector_field.
+    This function leverages the dynamics component from the PyroVelocityModel to compute
+    velocity, ensuring consistency with the model's differential equations.
 
     Args:
-        model: Pyro model function or PyroVelocityModel
+        model: PyroVelocityModel with dynamics component
         posterior_samples: Posterior samples from inference
-        adata: AnnData object
+        adata: AnnData object (unused but kept for API compatibility)
         use_mean: Whether to use mean of posterior samples
 
     Returns:
         Dictionary containing velocity results
     """
+    # All modular models must have a dynamics component that follows the protocol
+    if not hasattr(model, 'dynamics_model'):
+        raise ValueError("Model must have a dynamics_model component")
+
+    dynamics_model = model.dynamics_model
+    if not hasattr(dynamics_model, 'compute_velocity'):
+        raise ValueError("Dynamics model must implement compute_velocity method")
+
+    print(f"Using dynamics component: {dynamics_model.__class__.__name__}")
+
     # Print all keys in posterior_samples for debugging
     print(f"compute_velocity - posterior_samples keys: {list(posterior_samples.keys())}")
 
-    # Extract parameters from posterior samples
+    # Extract required parameters from posterior samples
     alpha = posterior_samples.get("alpha")
     beta = posterior_samples.get("beta")
     gamma = posterior_samples.get("gamma")
+    ut = posterior_samples.get("ut")
+    st = posterior_samples.get("st")
     u_scale = posterior_samples.get("u_scale")
     s_scale = posterior_samples.get("s_scale")
 
-                        
-    # Try to get ut and st from posterior samples (like legacy implementation)
-    # These are the latent variables, not the observed data
-    ut = posterior_samples.get("ut")
-    st = posterior_samples.get("st")
-
-            
-    # Convert numpy arrays to torch tensors if needed
-    if ut is not None and isinstance(ut, np.ndarray):
-        ut = torch.tensor(ut)
-    if st is not None and isinstance(st, np.ndarray):
-        st = torch.tensor(st)
-    if alpha is not None and isinstance(alpha, np.ndarray):
-        alpha = torch.tensor(alpha)
-    if beta is not None and isinstance(beta, np.ndarray):
-        beta = torch.tensor(beta)
-    if gamma is not None and isinstance(gamma, np.ndarray):
-        gamma = torch.tensor(gamma)
-    if u_scale is not None and isinstance(u_scale, np.ndarray):
-        u_scale = torch.tensor(u_scale)
-    if s_scale is not None and isinstance(s_scale, np.ndarray):
-        s_scale = torch.tensor(s_scale)
-
-    # Normalize parameter shapes to match the legacy implementation
-    # In the legacy model:
-    # - Gene parameters (alpha, beta, gamma) have shape [num_samples, 1, n_genes]
-    # - Cell parameters (cell_time) have shape [num_samples, n_cells, 1]
-    # - Cell-gene interactions (ut, st) have shape [num_samples, n_cells, n_genes]
-
-    # 1. Normalize gene parameter shapes
-    if alpha is not None:
-        # Ensure alpha has shape [num_samples, 1, n_genes]
-        if alpha.dim() == 1:  # [n_genes]
-            alpha = alpha.unsqueeze(0).unsqueeze(0)  # [1, 1, n_genes]
-        elif alpha.dim() == 2:  # [num_samples, n_genes]
-            alpha = alpha.unsqueeze(1)  # [num_samples, 1, n_genes]
-        
-    if beta is not None:
-        # Ensure beta has shape [num_samples, 1, n_genes]
-        if beta.dim() == 1:  # [n_genes]
-            beta = beta.unsqueeze(0).unsqueeze(0)  # [1, 1, n_genes]
-        elif beta.dim() == 2:  # [num_samples, n_genes]
-            beta = beta.unsqueeze(1)  # [num_samples, 1, n_genes]
-        
-    if gamma is not None:
-        # Ensure gamma has shape [num_samples, 1, n_genes]
-        if gamma.dim() == 1:  # [n_genes]
-            gamma = gamma.unsqueeze(0).unsqueeze(0)  # [1, 1, n_genes]
-        elif gamma.dim() == 2:  # [num_samples, n_genes]
-            gamma = gamma.unsqueeze(1)  # [num_samples, 1, n_genes]
-        
-    # 2. Normalize scaling factors
-    if u_scale is not None:
-        # Ensure u_scale has shape [num_samples, n_cells, 1] or [num_samples, 1, 1]
-        if u_scale.dim() == 0:  # scalar
-            u_scale = u_scale.unsqueeze(0).unsqueeze(0).unsqueeze(0)  # [1, 1, 1]
-        elif u_scale.dim() == 1:  # [n_cells] or [1]
-            if u_scale.shape[0] > 1:  # [n_cells]
-                u_scale = u_scale.unsqueeze(0).unsqueeze(-1)  # [1, n_cells, 1]
-            else:  # [1]
-                u_scale = u_scale.unsqueeze(0).unsqueeze(0)  # [1, 1, 1]
-        elif u_scale.dim() == 2:  # [num_samples, n_cells] or [num_samples, 1]
-            u_scale = u_scale.unsqueeze(-1)  # [num_samples, n_cells, 1] or [num_samples, 1, 1]
-        
-    if s_scale is not None:
-        # Ensure s_scale has shape [num_samples, n_cells, 1] or [num_samples, 1, 1]
-        if s_scale.dim() == 0:  # scalar
-            s_scale = s_scale.unsqueeze(0).unsqueeze(0).unsqueeze(0)  # [1, 1, 1]
-        elif s_scale.dim() == 1:  # [n_cells] or [1]
-            if s_scale.shape[0] > 1:  # [n_cells]
-                s_scale = s_scale.unsqueeze(0).unsqueeze(-1)  # [1, n_cells, 1]
-            else:  # [1]
-                s_scale = s_scale.unsqueeze(0).unsqueeze(0)  # [1, 1, 1]
-        elif s_scale.dim() == 2:  # [num_samples, n_cells] or [num_samples, 1]
-            s_scale = s_scale.unsqueeze(-1)  # [num_samples, n_cells, 1] or [num_samples, 1, 1]
-        
-    # 3. Normalize ut and st shapes
-    if ut is not None:
-        # Ensure ut has shape [num_samples, n_cells, n_genes]
-        if ut.dim() == 2:  # [n_cells, n_genes]
-            ut = ut.unsqueeze(0)  # [1, n_cells, n_genes]
-        elif ut.dim() > 3:  # Extra dimensions
-            # Get the number of samples, cells, and genes
-            if ut.shape[0] > 1 and ut.shape[1] > 1:
-                num_samples = ut.shape[0]
-                n_cells = ut.shape[1]
-                n_genes = ut.shape[-1]
-                ut = ut.reshape(num_samples, n_cells, n_genes)
-            else:
-                # Try to infer the correct shape
-                n_genes = ut.shape[-1]
-                if ut.shape[-2] > 1:
-                    n_cells = ut.shape[-2]
-                    num_samples = ut.numel() // (n_cells * n_genes)
-                    ut = ut.reshape(num_samples, n_cells, n_genes)
-                else:
-                    # Assume single cell
-                    n_cells = 1
-                    num_samples = ut.numel() // n_genes
-                    ut = ut.reshape(num_samples, n_cells, n_genes)
-        
-    if st is not None:
-        # Ensure st has shape [num_samples, n_cells, n_genes]
-        if st.dim() == 2:  # [n_cells, n_genes]
-            st = st.unsqueeze(0)  # [1, n_cells, n_genes]
-        elif st.dim() > 3:  # Extra dimensions
-            # Get the number of samples, cells, and genes
-            if st.shape[0] > 1 and st.shape[1] > 1:
-                num_samples = st.shape[0]
-                n_cells = st.shape[1]
-                n_genes = st.shape[-1]
-                st = st.reshape(num_samples, n_cells, n_genes)
-            else:
-                # Try to infer the correct shape
-                n_genes = st.shape[-1]
-                if st.shape[-2] > 1:
-                    n_cells = st.shape[-2]
-                    num_samples = st.numel() // (n_cells * n_genes)
-                    st = st.reshape(num_samples, n_cells, n_genes)
-                else:
-                    # Assume single cell
-                    n_cells = 1
-                    num_samples = st.numel() // n_genes
-                    st = st.reshape(num_samples, n_cells, n_genes)
-        
-    # If ut/st not available, compute them from the model parameters
-    if ut is None or st is None:
-        # Try to compute ut and st from the model parameters
-        if alpha is not None and beta is not None and gamma is not None:
-            # Get cell_time from posterior samples
-            cell_time = posterior_samples.get("cell_time")
-
-            if cell_time is not None:
-                # Convert numpy arrays to torch tensors if needed
-                if isinstance(alpha, np.ndarray):
-                    alpha = torch.tensor(alpha)
-                if isinstance(beta, np.ndarray):
-                    beta = torch.tensor(beta)
-                if isinstance(gamma, np.ndarray):
-                    gamma = torch.tensor(gamma)
-                if isinstance(cell_time, np.ndarray):
-                    cell_time = torch.tensor(cell_time)
-
-                # Compute steady state values
-                u_inf = alpha / beta
-                s_inf = alpha / gamma
-
-                # Compute switching time (t0 + dt_switching)
-                t0 = posterior_samples.get("t0")
-                dt_switching = posterior_samples.get("dt_switching")
-
-                if t0 is not None and dt_switching is not None:
-                    if isinstance(t0, np.ndarray):
-                        t0 = torch.tensor(t0)
-                    if isinstance(dt_switching, np.ndarray):
-                        dt_switching = torch.tensor(dt_switching)
-                    switching = t0 + dt_switching
-                else:
-                    # If t0 or dt_switching are not available, use zeros
-                    switching = torch.zeros_like(u_inf)
-
-                # Compute ut and st based on the transcription model
-                # For cells before switching time
-                # Reshape for broadcasting
-                if u_inf.dim() == 2 and cell_time.dim() == 2:
-                    # Reshape u_inf from [num_samples, n_genes] to [num_samples, 1, n_genes]
-                    u_inf_reshaped = u_inf.unsqueeze(1)
-                    s_inf_reshaped = s_inf.unsqueeze(1)
-                    beta_reshaped = beta.unsqueeze(1)
-                    gamma_reshaped = gamma.unsqueeze(1)
-                    switching_reshaped = switching.unsqueeze(1)
-
-                    # Reshape cell_time from [num_samples, n_cells] to [num_samples, n_cells, 1]
-                    if cell_time.shape[1] > 1:  # If cell_time has multiple cells
-                        cell_time_reshaped = cell_time.unsqueeze(2)
-
-                        # Expand to match the number of genes
-                        n_genes = u_inf.shape[1]
-                        cell_time_expanded = cell_time_reshaped.expand(-1, -1, n_genes)
-
-                        # Compute ut and st
-                        ut = u_inf_reshaped * (1 - torch.exp(-beta_reshaped * cell_time_expanded))
-                        st = s_inf_reshaped * (1 - torch.exp(-gamma_reshaped * cell_time_expanded)) - (
-                            u_inf_reshaped * beta_reshaped / (gamma_reshaped - beta_reshaped)
-                        ) * (torch.exp(-beta_reshaped * cell_time_expanded) - torch.exp(-gamma_reshaped * cell_time_expanded))
-                    else:
-                        # If cell_time has only one cell, we need to handle it differently
-                        logger.warning(
-                            "cell_time has only one cell, computing ut/st with simplified approach."
-                        )
-                        # Extract data from AnnData object as a fallback
-                        if adata is not None:
-                            u = torch.tensor(adata.layers["unspliced"].toarray() if isinstance(adata.layers["unspliced"], scipy.sparse.spmatrix) else adata.layers["unspliced"])
-                            s = torch.tensor(adata.layers["spliced"].toarray() if isinstance(adata.layers["spliced"], scipy.sparse.spmatrix) else adata.layers["spliced"])
-                            ut = u
-                            st = s
-                        else:
-                            # Try to get u and s from posterior samples
-                            ut = posterior_samples.get("u")
-                            st = posterior_samples.get("s")
-                else:
-                    # If dimensions don't match, fall back to using observed data
-                    logger.warning(
-                        "Dimension mismatch between u_inf and cell_time, computing ut/st with simplified approach."
-                    )
-                    # Extract data from AnnData object as a fallback
-                    if adata is not None:
-                        u = torch.tensor(adata.layers["unspliced"].toarray() if isinstance(adata.layers["unspliced"], scipy.sparse.spmatrix) else adata.layers["unspliced"])
-                        s = torch.tensor(adata.layers["spliced"].toarray() if isinstance(adata.layers["spliced"], scipy.sparse.spmatrix) else adata.layers["spliced"])
-                        ut = u
-                        st = s
-                    else:
-                        # Try to get u and s from posterior samples
-                        ut = posterior_samples.get("u")
-                        st = posterior_samples.get("s")
-            else:
-                # If cell_time is not available, fall back to using observed data
-                logger.warning(
-                    "cell_time not found in posterior_samples, computing ut/st with simplified approach."
-                )
-                # Extract data from AnnData object as a fallback
-                if adata is not None:
-                    u = torch.tensor(adata.layers["unspliced"].toarray() if isinstance(adata.layers["unspliced"], scipy.sparse.spmatrix) else adata.layers["unspliced"])
-                    s = torch.tensor(adata.layers["spliced"].toarray() if isinstance(adata.layers["spliced"], scipy.sparse.spmatrix) else adata.layers["spliced"])
-                    ut = u
-                    st = s
-                else:
-                    # Try to get u and s from posterior samples
-                    ut = posterior_samples.get("u")
-                    st = posterior_samples.get("s")
-        else:
-            # If alpha, beta, or gamma are not available, fall back to using observed data
-            logger.warning(
-                "alpha, beta, or gamma not found in posterior_samples, computing ut/st with simplified approach."
-            )
-            # Extract data from AnnData object as a fallback
-            if adata is not None:
-                u = torch.tensor(adata.layers["unspliced"].toarray() if isinstance(adata.layers["unspliced"], scipy.sparse.spmatrix) else adata.layers["unspliced"])
-                s = torch.tensor(adata.layers["spliced"].toarray() if isinstance(adata.layers["spliced"], scipy.sparse.spmatrix) else adata.layers["spliced"])
-                ut = u
-                st = s
-            else:
-                # Try to get u and s from posterior samples
-                ut = posterior_samples.get("u")
-                st = posterior_samples.get("s")
-
-    if ut is None or st is None:
-        raise ValueError(
-            "Either adata must be provided or posterior_samples must contain ut/st or u/s"
-        )
-
+    # Validate that we have the required parameters
     if alpha is None or beta is None or gamma is None:
-        raise ValueError(
-            "Posterior samples must contain alpha, beta, and gamma"
-        )
+        raise ValueError("Posterior samples must contain alpha, beta, and gamma")
+
+    if ut is None or st is None:
+        # Fallback to observed counts if latent counts are not available
+        ut = posterior_samples.get("u")
+        st = posterior_samples.get("s")
+
+        if ut is None or st is None:
+            raise ValueError("Posterior samples must contain either ut/st (latent RNA counts) or u/s (observed RNA counts)")
+
+        print("Warning: Using observed RNA counts (u/s) instead of latent counts (ut/st) for velocity computation")
+
 
     # Convert numpy arrays to torch tensors if needed
-    if isinstance(alpha, np.ndarray):
-        alpha = torch.tensor(alpha)
-    if isinstance(beta, np.ndarray):
-        beta = torch.tensor(beta)
-    if isinstance(gamma, np.ndarray):
-        gamma = torch.tensor(gamma)
-    if isinstance(u_scale, np.ndarray):
-        u_scale = torch.tensor(u_scale)
-    if isinstance(s_scale, np.ndarray):
-        s_scale = torch.tensor(s_scale)
-    if isinstance(ut, np.ndarray):
-        ut = torch.tensor(ut)
-    if isinstance(st, np.ndarray):
-        st = torch.tensor(st)
+    def ensure_tensor(x):
+        if x is not None and isinstance(x, np.ndarray):
+            return torch.tensor(x)
+        return x
 
-    # Compute steady state
-    if alpha is not None and beta is not None and gamma is not None:
-        u_ss = alpha / beta
-        s_ss = alpha / gamma
-    else:
-        u_ss = None
-        s_ss = None
-        print("Unable to compute steady state - missing parameters")
+    ut = ensure_tensor(ut)
+    st = ensure_tensor(st)
+    alpha = ensure_tensor(alpha)
+    beta = ensure_tensor(beta)
+    gamma = ensure_tensor(gamma)
+    u_scale = ensure_tensor(u_scale)
+    s_scale = ensure_tensor(s_scale)
 
-    # Compute velocity
+    # Prepare kwargs for scaling factors
+    velocity_kwargs = {}
+    if u_scale is not None:
+        velocity_kwargs["u_scale"] = u_scale
+    if s_scale is not None:
+        velocity_kwargs["s_scale"] = s_scale
+
+    # Compute velocity using the dynamics component
     if use_mean:
-        # Use mean of posterior samples for each parameter
-        # Take mean across the sample dimension (dim=0)
+        # Take mean across samples first
         alpha_mean = alpha.mean(dim=0) if alpha.dim() > 1 else alpha
         beta_mean = beta.mean(dim=0) if beta.dim() > 1 else beta
         gamma_mean = gamma.mean(dim=0) if gamma.dim() > 1 else gamma
         ut_mean = ut.mean(dim=0) if ut.dim() > 2 else ut
         st_mean = st.mean(dim=0) if st.dim() > 2 else st
 
-        # Compute steady state means
-        u_ss_mean = alpha_mean / beta_mean
-        s_ss_mean = alpha_mean / gamma_mean
+        # Update kwargs with mean values
+        if u_scale is not None:
+            velocity_kwargs["u_scale"] = u_scale.mean(dim=0) if u_scale.dim() > 1 else u_scale
+        if s_scale is not None:
+            velocity_kwargs["s_scale"] = s_scale.mean(dim=0) if s_scale.dim() > 1 else s_scale
 
-                                                
-        # Calculate scaling factor if needed
-        if u_scale is not None and s_scale is not None:
-            # For models with two scales
-            u_scale_mean = u_scale.mean(dim=0) if u_scale.dim() > 1 else u_scale
-            s_scale_mean = s_scale.mean(dim=0) if s_scale.dim() > 1 else s_scale
+        velocity = dynamics_model.compute_velocity(
+            ut=ut_mean,
+            st=st_mean,
+            alpha=alpha_mean,
+            beta=beta_mean,
+            gamma=gamma_mean,
+            **velocity_kwargs
+        )
 
-            # Calculate scale as u_scale / s_scale
-            scale = u_scale_mean / s_scale_mean
-            
-            # Compute velocity with proper broadcasting
-            velocity = beta_mean * ut_mean / scale - gamma_mean * st_mean
-        elif u_scale is not None:
-            # For models with one scale
-            u_scale_mean = u_scale.mean(dim=0) if u_scale.dim() > 1 else u_scale
-            
-            # Compute velocity with proper broadcasting
-            velocity = beta_mean * ut_mean / u_scale_mean - gamma_mean * st_mean
-        else:
-            # For models with no scale
-            velocity = beta_mean * ut_mean - gamma_mean * st_mean
-
-        # Print final velocity shape
-        
-        # Compute latent time (pseudotime)
-        # This is a simple implementation based on the ratio of unspliced to spliced
-        if ut_mean.dim() <= 1:
-            # Handle scalar or 1D case
-            u_norm = ut_mean / (ut_mean.max() + 1e-6)
-            s_norm = st_mean / (st_mean.max() + 1e-6)
-            latent_time = torch.tensor(1.0 - u_norm.mean() / (s_norm.mean() + 1e-6))
-        else:
-            # Handle 2D case [cells, genes]
-            u_norm = ut_mean / ut_mean.max(dim=1, keepdim=True)[0]
-            s_norm = st_mean / st_mean.max(dim=1, keepdim=True)[0]
-            latent_time = 1.0 - u_norm.mean(dim=1) / (s_norm.mean(dim=1) + 1e-6)
+        # Compute steady state
+        u_ss, s_ss = dynamics_model.steady_state(alpha_mean, beta_mean, gamma_mean)
 
         return {
             "velocity": velocity,
             "alpha": alpha_mean,
             "beta": beta_mean,
             "gamma": gamma_mean,
-            "u_ss": u_ss_mean,
-            "s_ss": s_ss_mean,
-            "latent_time": latent_time,
+            "u_ss": u_ss,
+            "s_ss": s_ss,
         }
     else:
-        # For the non-mean case, compute velocity for each posterior sample
-        print("Computing velocity for all posterior samples")
+        # Compute velocity for all samples
+        velocity = dynamics_model.compute_velocity(
+            ut=ut,
+            st=st,
+            alpha=alpha,
+            beta=beta,
+            gamma=gamma,
+            **velocity_kwargs
+        )
 
-        # Calculate scaling factor if needed
-        if u_scale is not None and s_scale is not None:
-            # For models with two scales
-            # Ensure proper broadcasting
-            # beta: [num_samples, 1, n_genes]
-            # ut: [num_samples, n_cells, n_genes]
-            # scale: [num_samples, n_cells, 1] or [num_samples, 1, 1]
-            scale = u_scale / s_scale
-            
-            # Compute velocity with proper broadcasting
-            velocity = beta * ut / scale - gamma * st
-        elif u_scale is not None:
-            # For models with one scale
-            
-            # Compute velocity with proper broadcasting
-            velocity = beta * ut / u_scale - gamma * st
-        else:
-            # For models with no scale
-            velocity = beta * ut - gamma * st
-
-        # Print final velocity shape
-        
-        # Compute latent time (pseudotime) using mean across samples
-        ut_mean = ut.mean(dim=0) if ut.dim() > 2 else ut
-        st_mean = st.mean(dim=0) if st.dim() > 2 else st
-
-        if ut_mean.dim() <= 1:
-            # Handle scalar or 1D case
-            u_norm = ut_mean / (ut_mean.max() + 1e-6)
-            s_norm = st_mean / (st_mean.max() + 1e-6)
-            latent_time = torch.tensor(1.0 - u_norm.mean() / (s_norm.mean() + 1e-6))
-        else:
-            # Handle 2D case [cells, genes]
-            u_norm = ut_mean / ut_mean.max(dim=1, keepdim=True)[0]
-            s_norm = st_mean / st_mean.max(dim=1, keepdim=True)[0]
-            latent_time = 1.0 - u_norm.mean(dim=1) / (s_norm.mean(dim=1) + 1e-6)
+        # Compute steady state
+        u_ss, s_ss = dynamics_model.steady_state(alpha, beta, gamma)
 
         return {
             "velocity": velocity,
@@ -480,7 +194,6 @@ def compute_velocity(
             "gamma": gamma,
             "u_ss": u_ss,
             "s_ss": s_ss,
-            "latent_time": latent_time,
         }
 
 
