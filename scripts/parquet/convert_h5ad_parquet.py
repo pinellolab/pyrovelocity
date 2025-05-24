@@ -26,6 +26,12 @@ def convert_h5ad_to_pqdata(
     """
     adata = read_h5ad(h5ad_file)
     print_anndata(adata)
+
+    # remove 3D array that causes pqdata serialization issue
+    if 'true_sc_grn' in adata.uns:
+        del adata.uns['true_sc_grn']
+        print("Removed true_sc_grn from uns in {h5ad_file.name}")
+
     write_anndata(
         data=adata,
         path=pq_path,
@@ -392,7 +398,7 @@ def analyze_parquet_database_ibis(pq_path: Path, data_set_name: str) -> Path:
     return db_path
 
 def upload_to_huggingface_hub(
-    data_set_path: Path, 
+    data_set_path: Path,
     repo_id: str = "pyrovelocity/fixtures",
 ) -> RepoUrl:
     """
@@ -407,9 +413,9 @@ def upload_to_huggingface_hub(
     """
     api = HfApi()
     repourl = api.create_repo(
-        repo_id=repo_id, 
+        repo_id=repo_id,
         private=False,
-        repo_type="dataset", 
+        repo_type="dataset",
         exist_ok=True,
     )
     api.upload_large_folder(
