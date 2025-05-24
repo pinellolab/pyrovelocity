@@ -21,7 +21,10 @@ from pyrovelocity.models.modular.constants import CELLS_DIM, GENES_DIM
 from pyrovelocity.models.modular.interfaces import (
     BatchTensor,
     DynamicsModel,
+    KineticParamTensor,
+    LatentCountTensor,
     ParamTensor,
+    VelocityTensor,
 )
 from pyrovelocity.models.modular.registry import DynamicsModelRegistry
 from pyrovelocity.models.modular.utils.context_utils import validate_context
@@ -433,6 +436,68 @@ class StandardDynamicsModel:
 
         return t, u, s
 
+    @beartype
+    def compute_velocity(
+        self,
+        ut: Union[LatentCountTensor, torch.Tensor],
+        st: Union[LatentCountTensor, torch.Tensor],
+        alpha: Union[KineticParamTensor, torch.Tensor],
+        beta: Union[KineticParamTensor, torch.Tensor],
+        gamma: Union[KineticParamTensor, torch.Tensor],
+        **kwargs: Any,
+    ) -> Union[VelocityTensor, torch.Tensor]:
+        """
+        Compute RNA velocity from latent RNA counts and kinetic parameters.
+
+        This method computes the RNA velocity (ds/dt) based on the standard dynamics model:
+            ds/dt = βu - γs
+
+        Where the velocity is computed using the latent (true) RNA counts ut and st
+        rather than the observed counts.
+
+        Args:
+            ut: Latent unspliced RNA counts
+            st: Latent spliced RNA counts
+            alpha: Transcription rate (not used in velocity calculation but kept for interface consistency)
+            beta: Splicing rate
+            gamma: Degradation rate
+            **kwargs: Additional model-specific parameters (e.g., scaling factors)
+
+        Returns:
+            RNA velocity tensor with same shape as ut/st
+
+        Raises:
+            ValueError: If tensor shapes are incompatible
+        """
+        # Import einops for clean tensor operations
+        try:
+            from einops import rearrange, reduce
+        except ImportError:
+            # Fallback to manual operations if einops not available
+            pass
+
+        # Handle scaling factors if provided
+        u_scale = kwargs.get("u_scale")
+        s_scale = kwargs.get("s_scale")
+
+        # For the standard dynamics model: ds/dt = β * u - γ * s
+        # If scaling is provided, we need to account for it in the velocity calculation
+        if u_scale is not None and s_scale is not None:
+            # For models with two scales (e.g., Gaussian models)
+            # velocity = β * ut / (u_scale / s_scale) - γ * st
+            scale = u_scale / s_scale
+            velocity = beta * ut / scale - gamma * st
+        elif u_scale is not None:
+            # For models with one scale (e.g., Poisson models)
+            # velocity = β * ut / u_scale - γ * st
+            velocity = beta * ut / u_scale - gamma * st
+        else:
+            # For models with no scaling
+            # velocity = β * ut - γ * st
+            velocity = beta * ut - gamma * st
+
+        return velocity
+
 
 @DynamicsModelRegistry.register("legacy")
 class LegacyDynamicsModel:
@@ -549,7 +614,7 @@ class LegacyDynamicsModel:
             beta = context["beta"]
             gamma = context["gamma"]
 
-                                                                        
+
             # Extract optional values
             t0 = context.get("t0", torch.zeros_like(alpha))
             dt_switching = context.get("dt_switching", torch.zeros_like(alpha))
@@ -686,7 +751,7 @@ class LegacyDynamicsModel:
                     st = st.unsqueeze(0).unsqueeze(0)  # [1, 1, n_genes]
 
             # Print shapes after reshaping
-                        
+
             # Ensure ut and st have the correct shape [num_samples, n_cells, n_genes]
             # This is critical for proper shape in posterior samples
             # In the legacy model, ut and st should have shape [num_samples, n_cells, n_genes]
@@ -724,7 +789,7 @@ class LegacyDynamicsModel:
             context["u_expected"] = ut
             context["s_expected"] = st
 
-                                                                        
+
             return context
         else:
             # If validation failed, raise an error
@@ -763,6 +828,61 @@ class LegacyDynamicsModel:
         s_ss = alpha / gamma
 
         return u_ss, s_ss
+
+    @jaxtyped
+    @beartype
+    def compute_velocity(
+        self,
+        ut: LatentCountTensor,
+        st: LatentCountTensor,
+        alpha: KineticParamTensor,
+        beta: KineticParamTensor,
+        gamma: KineticParamTensor,
+        **kwargs: Any,
+    ) -> VelocityTensor:
+        """
+        Compute RNA velocity from latent RNA counts and kinetic parameters.
+
+        This method computes the RNA velocity (ds/dt) based on the legacy dynamics model:
+            ds/dt = βu - γs
+
+        This implementation exactly matches the legacy PyroVelocity velocity calculation.
+
+        Args:
+            ut: Latent unspliced RNA counts
+            st: Latent spliced RNA counts
+            alpha: Transcription rate (not used in velocity calculation but kept for interface consistency)
+            beta: Splicing rate
+            gamma: Degradation rate
+            **kwargs: Additional model-specific parameters (e.g., scaling factors)
+
+        Returns:
+            RNA velocity tensor with same shape as ut/st
+
+        Raises:
+            ValueError: If tensor shapes are incompatible
+        """
+        # Handle scaling factors if provided (matching legacy implementation)
+        u_scale = kwargs.get("u_scale")
+        s_scale = kwargs.get("s_scale")
+
+        # For the legacy dynamics model: ds/dt = β * u - γ * s
+        # This exactly matches the legacy implementation in compute_mean_vector_field
+        if u_scale is not None and s_scale is not None:
+            # For models with two scales (Gaussian models)
+            # velocity = β * ut / (u_scale / s_scale) - γ * st
+            scale = u_scale / s_scale
+            velocity = beta * ut / scale - gamma * st
+        elif u_scale is not None:
+            # For models with one scale (Poisson models)
+            # velocity = β * ut / u_scale - γ * st
+            velocity = beta * ut / u_scale - gamma * st
+        else:
+            # For models with no scaling
+            # velocity = β * ut - γ * st
+            velocity = beta * ut - gamma * st
+
+        return velocity
 
 
 
