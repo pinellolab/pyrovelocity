@@ -90,76 +90,36 @@ website:
     tools:
       - icon: github
         url: https://github.com/pinellolab/pyrovelocity
-        # menu:
-        #   - text: "Repository"
-        #     url: https://github.com/pinellolab/pyrovelocity
-        #   - text: "Start a discussion"
-        #     url: https://github.com/pinellolab/pyrovelocity/discussions/new/choose
-        #   - text: "Create an issue"
-        #     url: https://github.com/pinellolab/pyrovelocity/issues/new/choose
     left:
-      - sidebar:documentation
+      - sidebar:contents
       - sidebar:tutorials
       - sidebar:guides
       - sidebar:concepts
       - href: reference
         text: Reference
-      # - sidebar:reference
       - sidebar:development
       - sidebar:about
 
   sidebar:
     - id: ""
-    - id: concepts
-      title: "Concepts"
-      style: "floating"
-      contents:
-        - text: "Overview"
-          href: concepts/overview.qmd
-        - text: "Multi-modal transcriptomics"
-          href: concepts/multimodaltranscriptomics.qmd
-        - text: "Dynamical systems theory"
-          href: concepts/dynamicalsystems.qmd
-        - text: "Probabilistic inference"
-          href: concepts/probabilisticinference.qmd
-        - text: "Models of gene expression"
-          href: concepts/geneexpression.qmd
-        - text: "Inference in dynamical systems"
-          href: concepts/inferenceindynamicalsystems/index.qmd
-    - id: guides
-      title: "Guides"
-      style: "floating"
-      contents:
-        - text: "Installation"
-          href: guides/installation.qmd
-        - text: "Interactive review"
-          href: guides/interactive/interactive.qmd
-        - text: "Data Access"
-          href: guides/data.qmd
-        - text: "Preprocessing"
-          href: guides/preprocessing/preprocessing.qmd
-        - text: "Inference"
-          href: guides/inference.qmd
-        - text: "Modular Components"
-          href: guides/model_components.qmd
-        - text: "Postprocessing"
-          href: guides/postprocessing.qmd
-        - text: "Model summary"
-          href: guides/summarization.qmd
     - id: tutorials
       title: "Tutorials"
       style: "floating"
       contents:
         - section: "Introduction"
           contents:
+            # TODO: update for >v0.2.0
             - text: "Getting Started"
               href: tutorials/introduction.qmd
+            # TODO: update for modular model definition
             - text: "Model definition"
               href: tutorials/models.qmd
             - text: "Usage example"
               href: templates/user_example/user_example.qmd
+            # TODO: Remove after >v0.2.0 version is complete
             - text: "v0.1.3 Getting Started"
               href: tutorials/introduction_v013.qmd
+        # TODO: All are currently empty stubs but compare to guide
         - section: "Preprocessing"
           contents:
             - text: "Pancreatic endocrinogenesis"
@@ -178,11 +138,83 @@ website:
               href: tutorials/mousehematopoiesis.qmd
             - text: "Lineage tracing"
               href: tutorials/lineagetracing.qmd
+        # TODO: re-execute with new plotting functions
         - section: "Results"
           contents:
             - text: "Pancreatic endocrinogenesis"
               href: tutorials/pancreas/results/pancreas.qmd
-    - id: documentation
+    - id: guides
+      title: "Guides"
+      style: "floating"
+      contents:
+        - text: "Installation"
+          href: guides/installation.qmd
+        # TODO: update to use simulated data with bifurcation path
+        - text: "Interactive review"
+          href: guides/interactive/interactive.qmd
+        # TODO: Currently empty stub
+        - text: "Data Access"
+          href: guides/data.qmd
+        - text: "Preprocessing"
+          href: guides/preprocessing/preprocessing.qmd
+        # TODO: verify correct and complete
+        - text: "Inference"
+          href: guides/inference.qmd
+        # TODO: verify correct and complete
+        - text: "Modular Components"
+          href: guides/model_components.qmd
+        # TODO: Currently empty stub
+        - text: "Postprocessing"
+          href: guides/postprocessing.qmd
+        # TODO: Currently empty stub
+        - text: "Model summary"
+          href: guides/summarization.qmd
+    - id: concepts
+      title: "Concepts"
+      style: "floating"
+      contents:
+        # TODO: Currently empty stub
+        - text: "Overview"
+          href: concepts/overview.qmd
+        # TODO: Currently empty stub
+        - text: "Multi-modal transcriptomics"
+          href: concepts/multimodaltranscriptomics.qmd
+        # TODO: Currently empty stub
+        - text: "Dynamical systems theory"
+          href: concepts/dynamicalsystems.qmd
+        # TODO: Currently empty stub
+        - text: "Probabilistic inference"
+          href: concepts/probabilisticinference.qmd
+        # TODO: Currently empty stub
+        - text: "Models of gene expression"
+          href: concepts/geneexpression.qmd
+        - text: "Inference in dynamical systems"
+          href: concepts/inferenceindynamicalsystems/index.qmd
+    - id: development
+      title: "Development"
+      style: "floating"
+      contents:
+        - text: "Overview"
+          href: development/index.qmd
+        - text: "Context"
+          href: development/context.qmd
+        - text: "Requirements"
+          href: development/requirements.qmd
+        - text: "Architecture"
+          href: development/architecture.qmd
+        - text: "Testing"
+          href: development/testing.qmd
+    - id: about
+      title: "About"
+      style: "floating"
+      contents:
+        - text: "Changelog"
+          href: about/changelog.md
+        - text: "Contributing"
+          href: about/contributing.qmd
+        - text: "Credits"
+          href: about/credits.qmd
+    - id: contents
       title: "Contents"
       style: "floating"
       contents:
@@ -264,30 +296,6 @@ website:
               href: development/architecture.qmd
             - text: "Testing"
               href: development/testing.qmd
-    - id: development
-      title: "Development"
-      style: "floating"
-      contents:
-        - text: "Overview"
-          href: development/index.qmd
-        - text: "Context"
-          href: development/context.qmd
-        - text: "Requirements"
-          href: development/requirements.qmd
-        - text: "Architecture"
-          href: development/architecture.qmd
-        - text: "Testing"
-          href: development/testing.qmd
-    - id: about
-      title: "About"
-      style: "floating"
-      contents:
-        - text: "Changelog"
-          href: about/changelog.md
-        - text: "Contributing"
-          href: about/contributing.qmd
-        - text: "Credits"
-          href: about/credits.qmd
 
 quartodoc:
   dir: reference
