@@ -140,7 +140,11 @@ def train_legacy_model(adata, max_epochs, num_samples, seed=42, compute_velocity
     # Intentionally ignore kwargs (including model_type) as they have no effect on the legacy model
     _ = kwargs  # Suppress unused variable warning
 
-    model = PyroVelocity(adata)
+    model = PyroVelocity(
+        adata=adata,     
+        guide_type="auto_t0_constraint",
+        add_offset=False,
+    )
 
     # Train model
     training_start_time = time.time()
@@ -316,8 +320,9 @@ def train_modular_model(adata, max_epochs, num_samples, seed=42, model_type="leg
     if model_type == "legacy":
         # Use the legacy model replication for direct comparison with the legacy model
         # Create the model using the predefined legacy model factory function
+        # Use create_legacy_model1() instead of create_legacy_model2() to avoid offset parameter issues
         model = create_legacy_model1()
-        print("Using legacy model configuration for direct comparison with legacy implementation")
+        print("Using legacy model configuration (without offset) for direct comparison with legacy implementation")
     else:
         # Default to standard model with Poisson observation model
         model = create_standard_model()
@@ -418,17 +423,43 @@ def train_modular_model(adata, max_epochs, num_samples, seed=42, model_type="leg
                 s_scale_mean = np.mean(s_scale, axis=0)
             print(f"  s_scale_mean shape: {s_scale_mean.shape}, mean: {np.mean(s_scale_mean):.6f}, std: {np.std(s_scale_mean):.6f}")
 
-        # Compute velocity using the model's get_velocity method
-        velocity = model.get_velocity(
+        # Compute velocity and uncertainty using the model's get_velocity method
+        # The modular model computes both velocity and uncertainty in one call
+        adata_with_velocity = model.get_velocity(
             adata=adata_copy,
-            random_seed=seed
+            num_samples=num_samples,
+            random_seed=seed,
+            compute_uncertainty=True,
+            uncertainty_method="std"
         )
 
-        # Compute uncertainty
-        uncertainty = model.get_velocity_uncertainty(
-            adata=adata_copy,
-            num_samples=num_samples
-        )
+        # Extract velocity from AnnData layers
+        velocity_layer_name = f"velocity_{model.name}" if hasattr(model, 'name') else "velocity_pyrovelocity"
+        if velocity_layer_name in adata_with_velocity.layers:
+            velocity = adata_with_velocity.layers[velocity_layer_name]
+        else:
+            # Fallback to any velocity layer
+            velocity_layers = [k for k in adata_with_velocity.layers.keys() if k.startswith('velocity_')]
+            if velocity_layers:
+                velocity = adata_with_velocity.layers[velocity_layers[0]]
+                print(f"  Using velocity layer: {velocity_layers[0]}")
+            else:
+                print("  Warning: No velocity layer found in AnnData")
+                velocity = None
+
+        # Extract uncertainty from AnnData layers
+        uncertainty_layer_name = f"velocity_uncertainty_{model.name}" if hasattr(model, 'name') else "velocity_uncertainty_pyrovelocity"
+        if uncertainty_layer_name in adata_with_velocity.layers:
+            uncertainty = adata_with_velocity.layers[uncertainty_layer_name]
+        else:
+            # Fallback to any uncertainty layer
+            uncertainty_layers = [k for k in adata_with_velocity.layers.keys() if 'uncertainty' in k]
+            if uncertainty_layers:
+                uncertainty = adata_with_velocity.layers[uncertainty_layers[0]]
+                print(f"  Using uncertainty layer: {uncertainty_layers[0]}")
+            else:
+                print("  Warning: No uncertainty layer found in AnnData")
+                uncertainty = None
     else:
         print("\nSkipping velocity computation for modular model (--no-compute-velocity flag is set)")
 
