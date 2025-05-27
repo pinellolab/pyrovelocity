@@ -17,9 +17,10 @@ The legacy implementation provides a single `PyroVelocity` class that handles al
 import anndata as ad
 import numpy as np
 from pyrovelocity.models import PyroVelocity
+from pyrovelocity.io.datasets import bifurcation_14
 
 # Load data
-adata = ad.read_h5ad("path/to/data.h5ad")
+adata = bifurcation_14()
 
 # Set up AnnData for PyroVelocity
 PyroVelocity.setup_anndata(adata)
@@ -68,18 +69,19 @@ The modular implementation provides a more flexible approach with composable com
 import anndata as ad
 import numpy as np
 from pyrovelocity.models.modular import (
-    create_standard_model,
+    create_legacy_model2,
     PyroVelocityModel
 )
+from pyrovelocity.io.datasets import bifurcation_14
 
 # Load data
-adata = ad.read_h5ad("path/to/data.h5ad")
+adata = bifurcation_14()
 
 # Set up AnnData for PyroVelocity
 adata = PyroVelocityModel.setup_anndata(adata)
 
 # Create model using factory function
-model = create_standard_model()
+model = create_legacy_model2()
 
 # Train model
 model.train(
@@ -107,21 +109,54 @@ adata = model.store_results_in_anndata(
 The modular implementation allows you to create custom models by combining different components:
 
 ```python
-from pyrovelocity.models.modular.components import (
-    StandardDynamicsModel,
-    LogNormalPriorModel,
-    PoissonLikelihoodModel,
-    StandardObservationModel,
-    AutoGuideFactory
-)
+from pyrovelocity.models.modular.factory import ComponentFactory
+from pyrovelocity.models.modular.config import ComponentConfig, ComponentType
 from pyrovelocity.models.modular.model import PyroVelocityModel
+from pyrovelocity.io.datasets import bifurcation_14
 
-# Create components
-dynamics_model = StandardDynamicsModel(shared_time=True, t_scale_on=False)
-prior_model = LogNormalPriorModel()
-likelihood_model = PoissonLikelihoodModel()
-observation_model = StandardObservationModel(correct_library_size=True)
-guide_model = AutoGuideFactory()
+# Load data
+adata = bifurcation_14()
+adata = PyroVelocityModel.setup_anndata(adata)
+
+# Create components consistent with create_legacy_model2
+dynamics_model = ComponentFactory.create_component(
+    ComponentConfig(
+        name="legacy",
+        params={
+            "shared_time": True,
+            "t_scale_on": False,
+            "correct_library_size": True,
+            "add_offset": True,
+        }
+    ),
+    ComponentType.DYNAMICS_MODEL
+)
+
+prior_model = ComponentFactory.create_component(
+    ComponentConfig(name="lognormal", params={}),
+    ComponentType.PRIOR_MODEL
+)
+
+likelihood_model = ComponentFactory.create_component(
+    ComponentConfig(name="legacy", params={}),
+    ComponentType.LIKELIHOOD_MODEL
+)
+
+observation_model = ComponentFactory.create_component(
+    ComponentConfig(name="standard", params={}),
+    ComponentType.OBSERVATION_MODEL
+)
+
+guide_model = ComponentFactory.create_component(
+    ComponentConfig(
+        name="legacy_auto",
+        params={
+            "init_scale": 0.1,
+            "add_offset": True,
+        }
+    ),
+    ComponentType.INFERENCE_GUIDE
+)
 
 # Create model
 custom_model = PyroVelocityModel(
@@ -147,18 +182,23 @@ The modular implementation provides factory functions for creating models with d
 
 ```python
 from pyrovelocity.models.modular.factory import (
-    create_standard_model,
     create_model_from_config,
     create_legacy_model1,
     create_legacy_model2
 )
 from pyrovelocity.models.modular.config import ModelConfig
+from pyrovelocity.models.modular.model import PyroVelocityModel
+from pyrovelocity.io.datasets import bifurcation_14
 
-# Create a standard model
-standard_model = create_standard_model()
+# Load data
+adata = bifurcation_14()
+adata = PyroVelocityModel.setup_anndata(adata)
 
-# Create a model that replicates the legacy implementation
-legacy_model = create_legacy_model1()
+# Create a model that replicates the legacy implementation (add_offset=True)
+legacy_model2 = create_legacy_model2()
+
+# Create an alternative legacy model (add_offset=False)
+legacy_model1 = create_legacy_model1()
 
 # Create a model from a configuration
 config = ModelConfig.standard()
@@ -185,6 +225,18 @@ Both implementations support the following inference parameters:
 After training, you can generate posterior samples to quantify uncertainty:
 
 ```python
+from pyrovelocity.io.datasets import bifurcation_14
+from pyrovelocity.models.modular.factory import create_legacy_model2
+from pyrovelocity.models.modular.model import PyroVelocityModel
+
+# Load data and set up model
+adata = bifurcation_14()
+adata = PyroVelocityModel.setup_anndata(adata)
+model = create_legacy_model2()
+
+# Train the model first
+model.train(adata=adata, max_epochs=50, learning_rate=0.01, use_gpu=False)
+
 # Generate posterior samples
 posterior_samples = model.generate_posterior_samples(
     adata=adata,
