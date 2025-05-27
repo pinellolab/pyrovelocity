@@ -1,0 +1,353 @@
+---
+title: Parameter Recovery Validation
+toc: true
+number-sections: true
+highlight-style: gruvbox
+csl: ../../bibstyle.csl
+lightbox: auto
+format:
+  html:
+    html-math-method: mathjax
+    include-in-header: ../../mathjax.html
+format-links: [ipynb]
+execute:
+  freeze: true
+  eval: true
+  warning: false
+  error: false
+  cache: true
+author:
+  - name: Pyrovelocity Team
+    email: team@pyrovelocity.net
+abstract: |
+  This notebook demonstrates parameter recovery validation for a lattice of PyroVelocity models,
+  progressing from dimensioned models with analytical solutions and observed time to numerical simulation with unobserved time.
+  We focus on models that generate and fit count data while respecting the symmetries identified in dimensionless analysis,
+  synthesizing the approach from BayVel (Sabbioni et al.) with PyroVelocity's legacy implementation.
+  We illustrate how to systematically validate that probabilistic models can recover
+  known parameters from synthetic data, which is essential before applying models
+  to real-world data where true parameter values are unknown.
+keywords: [single-cell transcriptomics, probabilistic modeling, parameter recovery, model validation, RNA velocity]
+bibliography: ../../references.bib
+jupyter:
+  jupytext:
+    cell_metadata_filter: all
+    cell_metadata_json: true
+    notebook_metadata_filter: all
+    text_representation:
+      extension: .qmd
+      format_name: quarto
+      format_version: 1.0
+      jupytext_version: 1.16.0
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+  language_info:
+    name: python
+  rise:
+    scroll: true
+    theme: black
+  toc-autonumbering: true
+  toc-showcode: false
+  toc-showmarkdowntxt: false
+---
+
+## Introduction
+
+Parameter recovery validation is a critical step in validating probabilistic models before applying them to real data. This process involves:
+
+1. **Generating synthetic data** using known parameter values
+2. **Running inference** to recover parameters from the synthetic data
+3. **Evaluating recovery performance**
+4. **Assessing model identifiability**
+
+This notebook demonstrates parameter recovery validation for PyroVelocity models, starting with a dimensioned model that generates and fits count data while respecting the symmetries identified in dimensionless analysis. We synthesize the approach from BayVel (Sabbioni et al. 2025) regarding Poisson product distributions with PyroVelocity's legacy implementation, progressing from analytical solutions with observed time to numerical simulation with latent time. For each model we include a graphical representation of the model's generative process as well as a mathematical description of the prior, observation model, and likelihood.
+
+## Model Progression
+
+We will validate parameter recovery across a progression of models which prepare for situations where time is not observed and the dynamics are simulated rather than required to have analytical solutions.
+
+### Analytical Dynamics with Observed Time
+
+This model represents a dimensioned version that generates and fits count data while respecting symmetries:
+
+- **Time coordinates**: Observed (not latent)
+- **Dynamics**: Analytical transcription-splicing-degradation solutions in dimensional units
+- **Parameters**: α (transcription rate, molecules/cell·hr), β (splicing rate, hr⁻¹), γ (degradation rate, hr⁻¹)
+- **Prior**: Log-normal for positive rate parameters
+- **Observation Model**: Poisson counts of actual RNA molecules
+- **Likelihood**: Poisson product distribution (following Jahnke 2007)
+- **Identifiability**: Respects symmetries from dimensionless analysis
+
+### Analytical Dynamics with Latent Time
+
+This model introduces latent time coordinates:
+
+- **Time coordinates**: Latent with priors (similar to PyroVelocity)
+- **Dynamics**: Same analytical solutions
+- **Parameters**: α, β, γ, plus time coordinates
+- **Prior**: Log-normal for positive parameters
+- **Observation Model**: Standard observation model
+- **Likelihood**: Poisson
+
+### Simulated Dynamics with Observed Time
+
+This model replaces the analytical solutions with numerical integration using torchode:
+
+- **Time coordinates**: Latent with priors
+- **Dynamics**: Numerical integration with torchode
+- **Parameters**: α, β, γ, plus time coordinates
+- **Prior**: Log-normal for positive parameters
+- **Observation Model**: Standard observation model
+- **Likelihood**: Poisson
+
+### Simulated Dynamics with Latent Time
+
+This model replaces the analytical solutions with numerical integration using torchode:
+
+- **Time coordinates**: Latent with priors
+- **Dynamics**: Numerical integration with torchode
+- **Parameters**: α, β, γ, plus time coordinates
+- **Prior**: Log-normal for positive parameters
+- **Observation Model**: Standard observation model
+- **Likelihood**: Poisson
+
+## Parameter Recovery Validation Framework
+
+```{python}
+#| label: setup-imports
+#| code-fold: true
+
+import numpy as np
+import torch
+import pyro
+import matplotlib.pyplot as plt
+import seaborn as sns
+from pathlib import Path
+
+# PyroVelocity imports
+from pyrovelocity.models.modular.factory import (
+    create_simple_deterministic_model_with_validation,
+    create_legacy_model2,
+)
+from pyrovelocity.models.modular.components.validation import (
+    ParameterRecoveryConfig,
+)
+from pyrovelocity.io.datasets import bifurcation_14
+
+# Set random seeds for reproducibility
+torch.manual_seed(42)
+pyro.set_rng_seed(42)
+np.random.seed(42)
+
+print("Setup complete!")
+```
+
+## Validation Study 1: Analytical dynamics with observed time
+
+This validation study focuses on a dimensioned model that generates and fits count data while respecting the symmetries identified in the dimensionless analysis. We follow the approach from our [Probabilistic inference in dynamical systems](../inferenceindynamicalsystems/index.qmd) concept guide, providing both a probabilistic graphical model and mathematical description.
+
+### Model Description
+
+We model the transcription-splicing-degradation system using the dimensioned variables and parameters with their physical units (molecules/cell, hr⁻¹, etc.), but with Poisson observations of the actual RNA counts. This approach synthesizes the dimensionless analysis for identifiability with the count-based observation model used in PyroVelocity.
+
+The model generates count data for unspliced ($u$) and spliced ($s$) RNA molecules per cell, with the dynamics governed by the analytical solutions derived in the dimensionless case but scaled back to dimensional units.
+
+### Probabilistic Graphical Model
+
+```{python}
+#| label: fig-count-model-pgm
+#| code-fold: true
+#| fig-cap: Probabilistic graphical model for the dimensioned transcription-splicing-degradation model with Poisson count observations and observed time coordinates.
+
+import daft
+import matplotlib.pyplot as plt
+
+plt.rcParams["font.family"] = "serif"
+plt.rcParams["font.size"] = 16
+plt.rcParams["text.usetex"] = True
+
+pgm = daft.PGM(line_width=1.2)
+
+# hyperparameters
+pgm.add_node("mu_init", r"$\mu_{0}$", 0.5, 6, fixed=True)
+pgm.add_node("sigma_init", r"$\sigma_{0}^2$", 1.5, 6, fixed=True)
+pgm.add_node("mu_theta", r"$\mu_{\boldsymbol\theta}$", 2.5, 6, fixed=True)
+pgm.add_node("sigma_theta", r"$\sigma_{\boldsymbol\theta}^2$", 3.5, 6, fixed=True)
+pgm.add_node("mu_sigma", r"$\mu_{\sigma}$", 4.5, 6, fixed=True)
+pgm.add_node("sigma_sigma", r"$\sigma_{\sigma}^2$", 5.5, 6, fixed=True)
+
+# latent variables for gene-specific parameters
+pgm.add_node("u_0i", r"$u_{0i}$", 1, 5)
+pgm.add_node("s_0i", r"$s_{0i}$", 2, 5)
+pgm.add_node("theta_i", r"$\boldsymbol\theta_i$", 3, 5)
+pgm.add_node("sigma_ui", r"$\sigma_{ui}$", 4, 5)
+pgm.add_node("sigma_si", r"$\sigma_{si}$", 5, 5)
+
+# latent variables for cell-specific outcomes
+pgm.add_node(
+    "u_ij",
+    r"$u_{ij}$",
+    2,
+    4,
+    scale=1.0,
+    shape="rectangle",
+)
+pgm.add_node(
+    "s_ij",
+    r"$s_{ij}$",
+    4,
+    4,
+    scale=1.0,
+    shape="rectangle",
+)
+
+# observed data
+pgm.add_node(
+    "t_j",
+    r"$t_j$",
+    6.0,
+    3.25,
+    observed=True,
+    shape="rectangle",
+)
+pgm.add_node(
+    "u_obs_ij",
+    r"$\hat{u}_{ij}$",
+    2,
+    2.5,
+    scale=1.0,
+    observed=True,
+)
+pgm.add_node(
+    "s_obs_ij",
+    r"$\hat{s}_{ij}$",
+    4,
+    2.5,
+    scale=1.0,
+    observed=True,
+)
+
+# edges
+edge_params = {"head_length": 0.3, "head_width": 0.25, "lw": 0.7}
+pgm.add_edge("mu_init", "u_0i", plot_params=edge_params)
+pgm.add_edge("sigma_init", "u_0i", plot_params=edge_params)
+pgm.add_edge("mu_init", "s_0i", plot_params=edge_params)
+pgm.add_edge("sigma_init", "s_0i", plot_params=edge_params)
+pgm.add_edge("mu_theta", "theta_i", plot_params=edge_params)
+pgm.add_edge("sigma_theta", "theta_i", plot_params=edge_params)
+pgm.add_edge("mu_sigma", "sigma_ui", plot_params=edge_params)
+pgm.add_edge("sigma_sigma", "sigma_ui", plot_params=edge_params)
+pgm.add_edge("mu_sigma", "sigma_si", plot_params=edge_params)
+pgm.add_edge("sigma_sigma", "sigma_si", plot_params=edge_params)
+
+pgm.add_edge("u_0i", "u_ij", plot_params=edge_params)
+pgm.add_edge("s_0i", "s_ij", plot_params=edge_params)
+pgm.add_edge("u_0i", "s_ij", plot_params=edge_params)
+pgm.add_edge("theta_i", "s_ij", plot_params=edge_params)
+
+pgm.add_edge("u_ij", "u_obs_ij", plot_params=edge_params)
+pgm.add_edge("s_ij", "s_obs_ij", plot_params=edge_params)
+pgm.add_edge("sigma_ui", "u_obs_ij", plot_params=edge_params)
+pgm.add_edge("sigma_si", "s_obs_ij", plot_params=edge_params)
+
+pgm.add_edge("t_j", "u_ij", plot_params=edge_params)
+pgm.add_edge("t_j", "s_ij", plot_params=edge_params)
+
+# plates
+pgm.add_plate(
+    [0.5, 1.2, 5, 4.4],
+    label=r"$i \in \{1, \ldots, G\}$",
+    shift=-0.1,
+    fontsize=12,
+)
+pgm.add_plate(
+    [1.0, 1.8, 5.5, 2.75],
+    label=r"$j \in \{1, \ldots, N\}$",
+    shift=-0.1,
+    fontsize=12,
+)
+
+pgm.render()
+```
+
+### Mathematical Description
+
+The model is defined by the following hierarchical structure:
+
+**Priors for dimensional parameters:**
+\begin{align}
+    \alpha_i &\sim \text{LogNormal}(\mu_{\alpha}, \sigma_{\alpha}^2) \label{eq-alpha-prior-dim}, \\
+    \beta_i &\sim \text{LogNormal}(\mu_{\beta}, \sigma_{\beta}^2) \label{eq-beta-prior-dim}, \\
+    \gamma_i &\sim \text{LogNormal}(\mu_{\gamma}, \sigma_{\gamma}^2) \label{eq-gamma-prior-dim}
+\end{align}
+
+**Initial conditions (steady state):**
+\begin{align}
+    u_{0i} &= \frac{\alpha_i}{\beta_i} \label{eq-u0-steady}, \\
+    s_{0i} &= \frac{\alpha_i}{\gamma_i} \label{eq-s0-steady}
+\end{align}
+
+**Deterministic dynamics (analytical solution):**
+\begin{align}
+    u^t_{ij} &= u_{0i} + (\alpha_i/\beta_i - u_{0i}) e^{-\beta_i (t_j - t_{0i})} \label{eq-ut-analytical}, \\
+    s^t_{ij} &= s_{0i} + \frac{\alpha_i}{\gamma_i}(1 - e^{-\gamma_i (t_j - t_{0i})}) + \frac{\alpha_i - \beta_i u_{0i}}{\gamma_i - \beta_i}(e^{-\gamma_i (t_j - t_{0i})} - e^{-\beta_i (t_j - t_{0i})}) \label{eq-st-analytical}
+\end{align}
+
+**Poisson observation model:**
+\begin{align}
+    u_{ij} &\sim \text{Poisson}(u^t_{ij}) \label{eq-u-obs-poisson}, \\
+    s_{ij} &\sim \text{Poisson}(s^t_{ij}) \label{eq-s-obs-poisson}
+\end{align}
+
+where:
+
+- $i \in \{1, \ldots, G\}$ indexes genes
+- $j \in \{1, \ldots, N\}$ indexes cells
+- $t_j$ are observed time coordinates for each cell
+- $t_{0i}$ are gene-specific initial times (can be set to 0 for simplicity)
+
+This model respects the identifiability constraints identified in the dimensionless analysis while working directly with count data as in the PyroVelocity legacy implementation. The Poisson observation model follows the approach of Jahnke (2007), ensuring that if the initial distribution is a product of Poisson distributions, the transient distributions remain products of Poisson distributions centered at the deterministic solution.
+
+### Parameter Recovery Validation
+
+```{python}
+#| label: dimensional-count-validation
+#| code-fold: true
+
+# Create the simple deterministic model with validation functionality
+model = create_simple_deterministic_model_with_validation()
+
+# Configure validation parameters
+validation_config = ParameterRecoveryConfig(
+    num_parameter_sets=5,       # Number of parameter sets to test
+    sample_sizes=[50, 100, 200], # Different sample sizes
+    noise_levels=[0.1, 0.2],    # Different noise levels
+    inference_algorithm="SVI",   # Use SVI for speed
+    num_samples=1000,           # Number of inference samples
+    seed=42,                    # Random seed
+)
+
+# Run parameter recovery validation using registry-based validation components
+report = model.validate_parameter_recovery(validation_config)
+
+print(f"Validation completed!")
+print(f"Tested {len(report['parameter_sets'])} parameter sets")
+print(f"Overall parameter recovery success rate: {report['summary']['overall_success_rate']:.2%}")
+
+# Quick validation for development
+quick_results = model.quick_validation(num_genes=3, num_cells=50, noise_level=0.1)
+print(f"Quick validation success rate: {quick_results['summary']['overall_success_rate']:.2%}")
+
+# List available validation components
+print(f"Available validation components: {model.list_validation_components()}")
+```
+
+## Validation Study 2: Anayltical dynamics with unobserved time
+
+
+## Validation Study 3: Simulated dynamics with observed time
+
+
+## Validation Study 4: Simulated dynamics with unobserved time
