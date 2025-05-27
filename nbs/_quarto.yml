@@ -349,7 +349,6 @@ quartodoc:
             - generate_posterior_samples
             - get_state
             - get_velocity
-            - get_velocity_uncertainty
             - guide
             - predict
             - predict_future_states
