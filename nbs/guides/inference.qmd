@@ -17,35 +17,37 @@ The legacy implementation provides a single `PyroVelocity` class that handles al
 import anndata as ad
 import numpy as np
 from pyrovelocity.models import PyroVelocity
+from pyrovelocity.tasks.preprocess import preprocess_dataset
 from pyrovelocity.io.datasets import bifurcation_14
 
 # Load data
 adata = bifurcation_14()
+adata, _, _ = preprocess_dataset("bifurcation_14", adata)
 
 # Set up AnnData for PyroVelocity
 PyroVelocity.setup_anndata(adata)
 
 # Create model
 model = PyroVelocity(
-    adata,
-    model_type="normal",  # Options: "normal", "deterministic", "stochastic"
-    guide_type="auto",    # Options: "auto", "delta"
-    likelihood="Poisson", # Options: "Poisson", "NegativeBinomial"
-    shared_time=True,     # Whether to use shared time across genes
-    t_scale_on=False      # Whether to use time scaling
+    adata=adata,
+    likelihood="Poisson",
+    model_type="auto",
+    guide_type="auto",
+    correct_library_size=True,
+    add_offset=True,
 )
 
 # Train model
-model.train(
+model.train_faster(
     max_epochs=1000,
-    learning_rate=0.01,
+    lr=0.01,
     use_gpu="auto"
 )
 
 # Generate posterior samples
 posterior_samples = model.generate_posterior_samples(
     adata=adata,
-    num_samples=100
+    num_samples=5,
 )
 
 # Compute statistics from posterior samples
@@ -55,10 +57,10 @@ model.compute_statistics_from_posterior_samples(
 )
 
 # Save model
-model.save_model("path/to/save/model")
+model.save_model("models/bifurcation_14_model2/model")
 
 # Load model
-model = PyroVelocity.load_model("path/to/save/model", adata)
+model = PyroVelocity.load_model("models/bifurcation_14_model2/model", adata)
 ```
 
 ## Modular Implementation
@@ -69,13 +71,16 @@ The modular implementation provides a more flexible approach with composable com
 import anndata as ad
 import numpy as np
 from pyrovelocity.models.modular import (
-    create_legacy_model2,
     PyroVelocityModel
 )
+from pyrovelocity.models.modular.factory import create_legacy_model2
+from pyrovelocity.tasks.preprocess import preprocess_dataset
 from pyrovelocity.io.datasets import bifurcation_14
+from pyrovelocity.utils import print_anndata
 
 # Load data
 adata = bifurcation_14()
+adata, _, _ = preprocess_dataset("bifurcation_14", adata)
 
 # Set up AnnData for PyroVelocity
 adata = PyroVelocityModel.setup_anndata(adata)
@@ -94,7 +99,7 @@ model.train(
 # Generate posterior samples
 posterior_samples = model.generate_posterior_samples(
     adata=adata,
-    num_samples=100
+    num_samples=5,
 )
 
 # Store results in AnnData
@@ -102,6 +107,7 @@ adata = model.store_results_in_anndata(
     adata=adata,
     posterior_samples=posterior_samples
 )
+print_anndata(adata)
 ```
 
 ### Creating Custom Models
