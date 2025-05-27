@@ -482,8 +482,10 @@ conditions and parameters.
 # | label: transcription-splicing-degradation-simulation
 # | code-fold: true
 import diffrax
-from pyrovelocity.models import solve_transcription_splicing_model
-from pyrovelocity.models import solve_transcription_splicing_model_analytical
+from pyrovelocity.models.experimental import ( 
+    solve_transcription_splicing_model,
+    solve_transcription_splicing_model_analytical,
+)
 from pyrovelocity.logging import configure_logging
 from jax import numpy as jnp
 
@@ -907,7 +909,7 @@ Now we can set up some sample data and perform inference on the latent variables
 # | fig-cap: Test data
 
 import arviz as az
-from pyrovelocity.models._deterministic_inference import (
+from pyrovelocity.models.experimental import (
     generate_posterior_inference_data,
     generate_prior_inference_data,
     generate_test_data_for_deterministic_model_inference,
