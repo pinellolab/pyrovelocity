@@ -527,8 +527,12 @@ def bifurcation_14(
     This is considered an integration test fixture and does not represent real data.
     Synthetic dataset with a single bifurcation in its differentiation trajectory.
 
+    Note: This function reorganizes the layers to be compatible with the preprocessing
+    pipeline. The raw integer count data is moved to the main 'spliced' and 'unspliced'
+    layers, while the normalized data is moved to alternative layer names.
+
     Returns:
-        AnnData object
+        AnnData object with raw integer counts in main layers
     """
     hf_hub_download(
         repo_id="pyrovelocity/fixtures",
@@ -541,6 +545,24 @@ def bifurcation_14(
         "15bfa054cb65c660b4254bc3b1cb7e1ac97739a6e699da90f21351c6a635df67"
     )
     _check_hash(file_path, expected_hash)
+
+    # Reorganize layers to be compatible with preprocessing pipeline
+    # The preprocessing expects raw integer counts in 'spliced' and 'unspliced' layers
+    if 'spliced_raw' in adata.layers and 'unspliced_raw' in adata.layers:
+        # Store the normalized data with different names
+        adata.layers['spliced_normalized'] = adata.layers['spliced'].copy()
+        adata.layers['unspliced_normalized'] = adata.layers['unspliced'].copy()
+
+        # Move raw integer data to main layers
+        adata.layers['spliced'] = adata.layers['spliced_raw'].copy()
+        adata.layers['unspliced'] = adata.layers['unspliced_raw'].copy()
+
+        # Remove the old raw layer names to avoid confusion
+        del adata.layers['spliced_raw']
+        del adata.layers['unspliced_raw']
+
+        logger.info("Reorganized bifurcation_14 layers: raw integer counts moved to main 'spliced'/'unspliced' layers")
+
     return adata
 
 
