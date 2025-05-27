@@ -7,12 +7,13 @@ including JAX-based deterministic inference, simulation, and hyperparameter cali
 
 from pyrovelocity.models.experimental.deterministic_inference import (
     deterministic_transcription_splicing_probabilistic_model,
-    generate_test_data_for_deterministic_model_inference,
-    generate_prior_inference_data,
     generate_posterior_inference_data,
+    generate_prior_inference_data,
+    generate_test_data_for_deterministic_model_inference,
     plot_sample_phase_portraits,
     plot_sample_trajectories,
     plot_sample_trajectories_with_percentiles,
+    print_inference_data_structure,
     save_inference_plots,
 )
 from pyrovelocity.models.experimental.deterministic_simulation import (
@@ -21,8 +22,8 @@ from pyrovelocity.models.experimental.deterministic_simulation import (
 )
 from pyrovelocity.models.experimental.hyperparameter_calibration import (
     lognormal_tail_probability,
-    solve_for_lognormal_sigma_given_threshold_and_tail_mass,
     solve_for_lognormal_mu_given_threshold_and_tail_mass,
+    solve_for_lognormal_sigma_given_threshold_and_tail_mass,
 )
 
 __all__ = [
@@ -34,6 +35,7 @@ __all__ = [
     "plot_sample_phase_portraits",
     "plot_sample_trajectories",
     "plot_sample_trajectories_with_percentiles",
+    "print_inference_data_structure",
     "save_inference_plots",
     # Deterministic simulation
     "solve_transcription_splicing_model",
