@@ -86,7 +86,7 @@ This model introduces latent dimensionless time coordinates:
 
 - **Time coordinates**: Latent $t^*_j$ with hierarchical Gamma/Normal priors
 - **Dynamics**: Same dimensionless analytical solutions
-- **Parameters**: $\gamma^*_i$, $U_{0i}$, $\lambda_j$, plus hierarchical time structure ($T_{max}^*$, $t_{loc}$, $t_{scale}$, $\tilde{t}_j$)
+- **Parameters**: $\gamma^*_i$, $U_{0i}$, $\lambda_j$, plus hierarchical time structure ($T_{M}^*$, $t_{loc}$, $t_{scl}$)
 - **Prior**: Gamma priors for time scales, Normal for relative positions
 - **Observation Model**: Same Poisson scaling approach
 - **Likelihood**: Poisson
@@ -108,7 +108,7 @@ This model represents the full complexity of the PyroVelocity modular implementa
 
 - **Time coordinates**: Latent $t^*_j$ with hierarchical Gamma/Normal priors
 - **Dynamics**: Numerical integration of dimensionless ODEs using torchode
-- **Parameters**: $\gamma^*_i$, $U_{0i}$, $\lambda_j$, plus hierarchical time structure ($T_{max}^*$, $t_{loc}$, $t_{scale}$, $\tilde{t}_j$)
+- **Parameters**: $\gamma^*_i$, $U_{0i}$, $\lambda_j$, plus hierarchical time structure ($T_{M}^*$, $t_{loc}$, $t_{scl}$)
 - **Prior**: Gamma priors for time scales, Normal for relative positions
 - **Observation Model**: Same Poisson scaling approach
 - **Likelihood**: Poisson
@@ -520,13 +520,13 @@ pgm.add_node("sigma_gamma", r"$\sigma_{\gamma^*}^2$", 3.5, 6, fixed=True)
 pgm.add_node("mu_U0", r"$\mu_{U_0}$", 4.5, 6, fixed=True)
 pgm.add_node("sigma_U0", r"$\sigma_{U_0}^2$", 5, 6, fixed=True)
 
-# hyperparameters for hierarchical time structure (moved further left)
-pgm.add_node("mu_T", r"$\mu_{T}$", 5.5, 6, fixed=True)
-pgm.add_node("sigma_T", r"$\sigma_{T}^2$", 6, 6, fixed=True)
-pgm.add_node("mu_t_loc", r"$\mu_{t_{loc}}$", 6.5, 6, fixed=True)
-pgm.add_node("sigma_t_loc", r"$\sigma_{t_{loc}}^2$", 7, 6, fixed=True)
-pgm.add_node("mu_t_scale", r"$\mu_{t_{scl}}$", 7.5, 6, fixed=True)
-pgm.add_node("sigma_t_scale", r"$\sigma_{t_{scl}}^2$", 8, 6, fixed=True)
+# hyperparameters for hierarchical time structure
+pgm.add_node("alpha_T", r"$\alpha_{T}$", 5.5, 6, fixed=True)
+pgm.add_node("beta_T", r"$\beta_{T}$", 6, 6, fixed=True)
+pgm.add_node("alpha_t_loc", r"$\alpha_{t_{loc}}$", 6.5, 6, fixed=True)
+pgm.add_node("beta_t_loc", r"$\beta_{t_{loc}}$", 7, 6, fixed=True)
+pgm.add_node("alpha_t_scale", r"$\alpha_{t_{scl}}$", 7.5, 6, fixed=True)
+pgm.add_node("beta_t_scale", r"$\beta_{t_{scl}}$", 8, 6, fixed=True)
 
 # hyperparameters for lambda (entering from right edge of cell plate)
 pgm.add_node("mu_lambda", r"$\mu_{\lambda}$", 6.5, 3.5, fixed=True)
@@ -599,12 +599,12 @@ pgm.add_edge("mu_lambda", "lambda_j", plot_params=edge_params)
 pgm.add_edge("sigma_lambda", "lambda_j", plot_params=edge_params)
 
 # hierarchical time structure edges
-pgm.add_edge("mu_T", "T_max_star", plot_params=edge_params)
-pgm.add_edge("sigma_T", "T_max_star", plot_params=edge_params)
-pgm.add_edge("mu_t_loc", "t_loc", plot_params=edge_params)
-pgm.add_edge("sigma_t_loc", "t_loc", plot_params=edge_params)
-pgm.add_edge("mu_t_scale", "t_scale", plot_params=edge_params)
-pgm.add_edge("sigma_t_scale", "t_scale", plot_params=edge_params)
+pgm.add_edge("alpha_T", "T_max_star", plot_params=edge_params)
+pgm.add_edge("beta_T", "T_max_star", plot_params=edge_params)
+pgm.add_edge("alpha_t_loc", "t_loc", plot_params=edge_params)
+pgm.add_edge("beta_t_loc", "t_loc", plot_params=edge_params)
+pgm.add_edge("alpha_t_scale", "t_scale", plot_params=edge_params)
+pgm.add_edge("beta_t_scale", "t_scale", plot_params=edge_params)
 
 # time hierarchy edges
 pgm.add_edge("T_max_star", "t_star_j", plot_params=edge_params)
@@ -658,14 +658,14 @@ The model extends the dimensionless approach with **hierarchical latent time coo
 
 **Hierarchical priors for latent time coordinates:**
 \begin{align}
-    T_{max}^* &\sim \text{Gamma}(\alpha_{T}, \beta_{T}) \label{eq-T-max-prior} \\
+    T_{M}^* &\sim \text{Gamma}(\alpha_{T}, \beta_{T}) \label{eq-T-M-prior} \\
     t_{loc} &\sim \text{Gamma}(\alpha_{t_{loc}}, \beta_{t_{loc}}) \label{eq-t-loc-prior} \\
-    t_{scale} &\sim \text{Gamma}(\alpha_{t_{scale}}, \beta_{t_{scale}}) \label{eq-t-scale-prior} \\
-    \tilde{t}_j &\sim \text{Normal}(t_{loc}, t_{scale}^2) \quad \text{for } j \in \{1, \ldots, N\} \label{eq-t-tilde-prior} \\
-    t^*_j &= T_{max}^* \times \tilde{t}_j \quad \text{(deterministic transformation)} \label{eq-t-star-transform}
+    t_{scl} &\sim \text{Gamma}(\alpha_{t_{scl}}, \beta_{t_{scl}}) \label{eq-t-scl-prior} \\
+    \tilde{t}_j &\sim \text{Normal}(t_{loc}, t_{scl}^2) \quad \text{for } j \in \{1, \ldots, N\} \label{eq-t-tilde-prior} \\
+    t^*_j &= T_{M}^* \times \max(\tilde{t}_j, \epsilon) \quad \text{(clipped transformation)} \label{eq-t-star-transform}
 \end{align}
 
-$\tilde{t}_j$ represents the **relative temporal position** of cell $j$ (which can be negative for cells before the process start or greater than 1 for cells after the typical process duration), and $t^*_j$ represents the **actual dimensionless time coordinate** obtained by scaling the relative position by the global time scale $T_{max}^*$.
+$\tilde{t}_j$ represents the **relative temporal position** of cell $j$ within the population distribution, and $t^*_j$ represents the **actual dimensionless time coordinate**. The clipping operation $\max(\tilde{t}_j, \epsilon)$ with $\epsilon = 10^{-5}$ ensures that all time coordinates remain positive, maintaining biological realism (cells cannot be "before" the process) and mathematical consistency with the analytical solutions. While $\tilde{t}_j$ is not explicitly shown in the PGM for space constraints, the clipped transformation is implicitly included in the $t^*_j$ node.
 
 **Dimensionless analytical solutions (unchanged):**
 The same analytical solutions from Study 1 apply, but now using latent $t^*_j$:
@@ -691,15 +691,15 @@ The hierarchical time structure introduces new parameters with clear biological 
 
 #### **Global Time Scale Parameters**
 
-**$T_{max}^*$ (Global dimensionless time scale)**
+**$T_{M}^*$ (Global dimensionless time scale)**
 
 - **Definition**: Global scaling factor for dimensionless time coordinates
 - **Units**: Dimensionless (in units of characteristic splicing time)
 - **Interpretation**: Characteristic temporal extent of the biological process
 - **Biological meaning**: Represents the typical time scale over which the biological process unfolds
-- **Model role**: Multiplicative scaling factor in $t^*_j = T_{max}^* \times \tilde{t}_j$
-- **Prior**: $T_{max}^* \sim \text{Gamma}(\alpha_{T}, \beta_{T})$ ensures positive values with flexible tail behavior
-- **Example**: $T_{max}^* = 5$ means the process typically spans ~5 characteristic splicing times
+- **Model role**: Multiplicative scaling factor in $t^*_j \sim T_{M}^* \times \text{Normal}(t_{loc}, t_{scl}^2)$
+- **Prior**: $T_{M}^* \sim \text{Gamma}(\alpha_{T}, \beta_{T})$ ensures positive values with flexible tail behavior
+- **Example**: $T_{M}^* = 5$ means the process typically spans ~5 characteristic splicing times
 
 #### **Population-Level Time Parameters**
 
@@ -713,36 +713,37 @@ The hierarchical time structure introduces new parameters with clear biological 
 - **Statistical role**: Allows borrowing strength across cells while permitting individual variation
 - **Example**: $t_{loc} = 0.7$ means cells are typically positioned at 70% through the relative process timeline
 
-**$t_{scale}$ (Population relative time scale)**
+**$t_{scl}$ (Population relative time scale)**
 
 - **Definition**: Population-level scale parameter for relative time distribution
 - **Units**: Dimensionless (relative time units)
 - **Interpretation**: How much relative temporal variation exists across cells
 - **Biological meaning**: Degree of temporal heterogeneity in the cell population
-- **Prior**: $t_{scale} \sim \text{Gamma}(\alpha_{t_{scale}}, \beta_{t_{scale}})$ ensures positive scale with flexible shape
+- **Prior**: $t_{scl} \sim \text{Gamma}(\alpha_{t_{scl}}, \beta_{t_{scl}})$ ensures positive scale with flexible shape
 - **Statistical role**: Controls the amount of shrinkage toward the population mean
-- **Example**: $t_{scale} = 0.2$ indicates relatively tight temporal clustering around $t_{loc}$
+- **Example**: $t_{scl} = 0.2$ indicates relatively tight temporal clustering around $t_{loc}$
 
 #### **Cell-Specific Time Coordinates**
 
 **$\tilde{t}_j$ (Cell-specific relative time)**
 
-- **Definition**: Latent relative time coordinate for cell $j$
+- **Definition**: Latent relative time coordinate for cell $j$ within the population distribution
 - **Units**: Dimensionless (relative time units)
 - **Interpretation**: Cell's position relative to the population temporal distribution
 - **Biological meaning**: Where this cell sits in the relative temporal progression
-- **Prior**: $\tilde{t}_j \sim \text{Normal}(t_{loc}, t_{scale}^2)$ allows negative values (before process) and values >1 (after process)
-- **Flexibility**: Can represent cells outside the typical process timeline
-- **Example**: $\tilde{t}_j = -0.2$ means this cell is before the typical process start; $\tilde{t}_j = 1.3$ means after typical completion
+- **Prior**: $\tilde{t}_j \sim \text{Normal}(t_{loc}, t_{scl}^2)$ allows natural population variation
+- **Range**: Can be negative (before typical process) or greater than 1 (after typical process)
+- **Example**: $\tilde{t}_j = -0.2$ means this cell would be before the typical process start; $\tilde{t}_j = 1.3$ means after typical completion
 
 **$t^*_j$ (Cell-specific dimensionless time)**
 
-- **Definition**: Actual dimensionless time coordinate for cell $j$
+- **Definition**: Actual dimensionless time coordinate for cell $j$ after clipping
 - **Units**: Dimensionless (in units of characteristic splicing time)
 - **Interpretation**: How many splicing events have elapsed for this specific cell
 - **Biological meaning**: Cell's absolute position along the temporal trajectory of the biological process
-- **Transformation**: $t^*_j = T_{max}^* \times \tilde{t}_j$ (deterministic scaling)
-- **Example**: If $T_{max}^* = 5$ and $\tilde{t}_j = 0.6$, then $t^*_j = 3.0$ characteristic splicing times
+- **Transformation**: $t^*_j = T_{M}^* \times \max(\tilde{t}_j, \epsilon)$ with $\epsilon = 10^{-5}$
+- **Constraint**: Always positive, ensuring mathematical consistency with analytical solutions
+- **Example**: If $T_{M}^* = 5$, $\tilde{t}_j = 0.6$, then $t^*_j = 3.0$ characteristic splicing times; if $\tilde{t}_j = -0.1$, then $t^*_j = 5 \times 10^{-5}$ (clipped)
 
 ### Key Advantages of Gamma/Normal Hierarchical Time Structure
 
@@ -753,28 +754,441 @@ The hierarchical time structure introduces new parameters with clear biological 
 - **Uncertainty quantification**: Full posterior distributions for all time parameters
 - **Robustness**: Less sensitive to outlier cells or sparse data
 - **No truncation constraints**: Avoids computational complexity of truncated distributions
-- **Clear parameter roles**: $T_{max}^*$ controls global scale, $t_{loc}$ and $t_{scale}$ control population distribution
+- **Clear parameter roles**: $T_{M}^*$ controls global scale, $t_{loc}$ and $t_{scl}$ control population distribution
 
 #### **Biological Interpretability**
 
 - **Dimensionless time**: Universal interpretation across experimental conditions
 - **Population heterogeneity**: Captures natural variation in biological timing
 - **Individual trajectories**: Each cell has its own temporal position
-- **Flexible temporal range**: Cells can be before ($\tilde{t}_j < 0$) or after ($\tilde{t}_j > 1$) typical process timeline
-- **Natural biological variation**: No artificial hard boundaries on temporal positions
+- **Flexible temporal range**: $\tilde{t}_j$ can represent cells before or after the typical process timeline
+- **Biological realism**: Clipping ensures cells cannot be "before" the process start ($t^*_j \geq \epsilon$)
+- **Mathematical consistency**: Positive time coordinates maintain validity of analytical solutions
 
 #### **Computational Efficiency**
 
 - **Standard distributions**: Gamma and Normal distributions are computationally efficient
 - **No truncation**: Avoids complex truncated distribution sampling
+- **Simple clipping**: $\max(\tilde{t}_j, \epsilon)$ operation is computationally trivial
 - **Analytical solutions**: Fast likelihood evaluation for validation
 - **Hierarchical sampling**: Efficient MCMC mixing through population-level parameters
-- **Multiplicative structure**: Simple deterministic transformation $t^*_j = T_{max}^* \times \tilde{t}_j$
+- **Deterministic transformation**: $t^*_j = T_{M}^* \times \max(\tilde{t}_j, \epsilon)$ is simple and fast
 
-## Validation Study 3: Dimensionless simulated dynamics with observed time
+## Validation Study 3: Dimensionless Analytical Dynamics with Latent Time and Piecewise Activation
 
-*To be implemented: Replace analytical solutions with numerical integration using torchode while maintaining the dimensionless parameterization.*
+This validation study introduces **piecewise constant transcription rates** while maintaining analytical tractability and resolving the identifiability issues discovered in Study 2. The key innovation is the simultaneous introduction of piecewise activation dynamics and steady-state initial conditions, which together create biologically meaningful dynamics while ensuring proper parameter identifiability.
 
-## Validation Study 4: Dimensionless simulated dynamics with latent time
+### Model Description
 
-*To be implemented: Full complexity model with numerical integration and latent time coordinates, representing the complete PyroVelocity modular implementation.*
+The model extends Study 2 by replacing the constant transcription rate $\alpha^* = 1$ with a **piecewise constant transcription function** $\alpha^*_i(t^*)$ that varies over time for each gene. Initial conditions are fixed to the steady-state values associated with the "off" phase, eliminating the redundant parameterization between state and temporal initial conditions.
+
+### Piecewise Transcription Rate Function
+
+For each gene $i$, the dimensionless transcription rate follows a three-phase piecewise constant function:
+
+$$\alpha^*_i(t^*) := \begin{cases}
+\alpha^*_{\text{off}i} & \text{if } 0 \leq t^* < t^*_{0,\text{on}i}, \\
+\alpha^*_{\text{on}i} & \text{if } t^*_{0,\text{on}i} \leq t^* < t^*_{0,\text{on}i} + \delta^*_i, \\
+\alpha^*_{\text{off}i} & \text{if } t^*_{0,\text{on}i} + \delta^*_i \leq t^*
+\end{cases}$$
+
+where:
+- $\alpha^*_{\text{off}i} = \alpha_{\text{off}i}/\beta_i$ is the dimensionless basal transcription rate
+- $\alpha^*_{\text{on}i} = \alpha_{\text{on}i}/\beta_i$ is the dimensionless active transcription rate
+- $t^*_{0,\text{on}i} = \beta_i \cdot t_{0,\text{on}i}$ is the dimensionless activation onset time
+- $\delta^*_i = \beta_i \cdot \delta_i$ is the dimensionless activation duration
+
+### Steady-State Initial Conditions
+
+To resolve identifiability, initial conditions are fixed to the steady-state values corresponding to the "off" phase:
+
+$$u^*_{0i} = \alpha^*_{\text{off}i}, \quad s^*_{0i} = \frac{\alpha^*_{\text{off}i}}{\gamma^*_i}$$
+
+This eliminates the need to infer $u^*_{0i}$ and $s^*_{0i}$ as separate parameters while providing equivalent modeling flexibility through the $\alpha^*_{\text{off}i}$ parameter.
+
+### Analytical Solutions for Each Phase
+
+The dimensionless system with piecewise activation becomes:
+
+$$\begin{align}
+\frac{du^{\ast}}{dt^{\ast}} &= \alpha^*_i(t^*) - u^{\ast} \\
+\frac{ds^{\ast}}{dt^{\ast}} &= u^{\ast} - \gamma^{\ast}_i s^{\ast}
+\end{align}$$
+
+We solve this system analytically for each of the three phases:
+
+#### **Phase 1: Off State** ($0 \leq t^* < t^*_{0,\text{on}i}$)
+
+With constant transcription rate $\alpha^*_{\text{off}i}$ and initial conditions at steady state, the system remains at equilibrium:
+
+$$\begin{align}
+u^*_{ij}(t^*) &= \alpha^*_{\text{off}i} \\
+s^*_{ij}(t^*) &= \frac{\alpha^*_{\text{off}i}}{\gamma^*_i}
+\end{align}$$
+
+#### **Phase 2: On State** ($t^*_{0,\text{on}i} \leq t^* < t^*_{0,\text{on}i} + \delta^*_i$)
+
+Let $\tau_{\text{on}} = t^* - t^*_{0,\text{on}i}$ be the time since activation onset. The system transitions from the off-state steady state toward the on-state steady state.
+
+**Initial conditions for Phase 2:**
+$$u^*_{\text{on},0i} = \alpha^*_{\text{off}i}, \quad s^*_{\text{on},0i} = \frac{\alpha^*_{\text{off}i}}{\gamma^*_i}$$
+
+**Analytical solutions:**
+
+For $\gamma^*_i \neq 1$:
+$$\begin{align}
+u^*_{ij}(\tau_{\text{on}}) &= \alpha^*_{\text{on}i} + (\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}) e^{-\tau_{\text{on}}} \\
+s^*_{ij}(\tau_{\text{on}}) &= \frac{\alpha^*_{\text{on}i}}{\gamma^*_i} + \left(\frac{\alpha^*_{\text{off}i}}{\gamma^*_i} - \xi_{\text{on}i} - \frac{\alpha^*_{\text{on}i}}{\gamma^*_i}\right) e^{-\gamma^*_i \tau_{\text{on}}} + \xi_{\text{on}i} e^{-\tau_{\text{on}}}
+\end{align}$$
+
+where $\xi_{\text{on}i} = \frac{\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}}{\gamma^*_i - 1}$.
+
+For $\gamma^*_i = 1$:
+$$\begin{align}
+u^*_{ij}(\tau_{\text{on}}) &= \alpha^*_{\text{on}i} + (\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}) e^{-\tau_{\text{on}}} \\
+s^*_{ij}(\tau_{\text{on}}) &= \alpha^*_{\text{on}i} + (\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}) e^{-\tau_{\text{on}}} + (\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}) \tau_{\text{on}} e^{-\tau_{\text{on}}}
+\end{align}$$
+
+#### **Phase 3: Return to Off State** ($t^* \geq t^*_{0,\text{on}i} + \delta^*_i$)
+
+Let $\tau_{\text{off}} = t^* - (t^*_{0,\text{on}i} + \delta^*_i)$ be the time since returning to the off state. The system transitions from the end-of-phase-2 state back toward the off-state steady state.
+
+**Initial conditions for Phase 3:**
+
+The initial conditions for Phase 3 are the endpoint values from Phase 2, computed explicitly as:
+
+For $\gamma^*_i \neq 1$:
+$$\begin{align}
+u^*_{\text{off},0i} &= \alpha^*_{\text{on}i} + (\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}) e^{-\delta^*_i} \\
+s^*_{\text{off},0i} &= \frac{\alpha^*_{\text{on}i}}{\gamma^*_i} + \left(\frac{\alpha^*_{\text{off}i}}{\gamma^*_i} - \xi_{\text{on}i} - \frac{\alpha^*_{\text{on}i}}{\gamma^*_i}\right) e^{-\gamma^*_i \delta^*_i} + \xi_{\text{on}i} e^{-\delta^*_i}
+\end{align}$$
+
+For $\gamma^*_i = 1$:
+$$\begin{align}
+u^*_{\text{off},0i} &= \alpha^*_{\text{on}i} + (\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}) e^{-\delta^*_i} \\
+s^*_{\text{off},0i} &= \alpha^*_{\text{on}i} + (\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}) e^{-\delta^*_i} + (\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}) \delta^*_i e^{-\delta^*_i}
+\end{align}$$
+
+where $\xi_{\text{on}i} = \frac{\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}}{\gamma^*_i - 1}$ for the $\gamma^*_i \neq 1$ case.
+
+**Analytical solutions:**
+
+For $\gamma^*_i \neq 1$:
+$$\begin{align}
+u^*_{ij}(\tau_{\text{off}}) &= \alpha^*_{\text{off}i} + (u^*_{\text{off},0i} - \alpha^*_{\text{off}i}) e^{-\tau_{\text{off}}} \\
+s^*_{ij}(\tau_{\text{off}}) &= \frac{\alpha^*_{\text{off}i}}{\gamma^*_i} + \left(s^*_{\text{off},0i} - \xi_{\text{off}i} - \frac{\alpha^*_{\text{off}i}}{\gamma^*_i}\right) e^{-\gamma^*_i \tau_{\text{off}}} + \xi_{\text{off}i} e^{-\tau_{\text{off}}}
+\end{align}$$
+
+where $\xi_{\text{off}i} = \frac{u^*_{\text{off},0i} - \alpha^*_{\text{off}i}}{\gamma^*_i - 1}$.
+
+For $\gamma^*_i = 1$:
+$$\begin{align}
+u^*_{ij}(\tau_{\text{off}}) &= \alpha^*_{\text{off}i} + (u^*_{\text{off},0i} - \alpha^*_{\text{off}i}) e^{-\tau_{\text{off}}} \\
+s^*_{ij}(\tau_{\text{off}}) &= \alpha^*_{\text{off}i} + (s^*_{\text{off},0i} - \alpha^*_{\text{off}i}) e^{-\tau_{\text{off}}} + (u^*_{\text{off},0i} - \alpha^*_{\text{off}i}) \tau_{\text{off}} e^{-\tau_{\text{off}}}
+\end{align}$$
+
+### Gene Expression Pattern Capabilities
+
+This piecewise framework enables representation of diverse gene expression patterns:
+
+1. **Activation patterns**: Low $\alpha^*_{\text{off}i}$, early $t^*_{0,\text{on}i}$, high $\alpha^*_{\text{on}i}$
+2. **Decay-only patterns**: High $\alpha^*_{\text{off}i}$, $t^*_{0,\text{on}i} > T^*_M$ (onset beyond observation window)
+3. **Transient activation**: Early $t^*_{0,\text{on}i}$, short $\delta^*_i$, moderate $\alpha^*_{\text{on}i}$
+4. **Sustained activation**: Early $t^*_{0,\text{on}i}$, long $\delta^*_i$, high $\alpha^*_{\text{on}i}$
+
+### Probabilistic Graphical Model
+
+The probabilistic graphical model extends Study 2 by adding gene-specific piecewise activation parameters while maintaining the hierarchical latent time structure. For visual clarity, we use $\theta_i$ to represent the vector of piecewise activation parameters $(\gamma^*_i, \alpha^*_{\text{off}i}, \alpha^*_{\text{on}i}, t^*_{0,\text{on}i})$ and $\delta_i$ to represent the activation duration parameter.
+
+```{python}
+#| label: fig-piecewise-activation-pgm
+#| code-fold: true
+#| fig-cap: Probabilistic graphical model for dimensionless analytical dynamics with hierarchical latent time coordinates and piecewise activation.
+
+import daft
+import matplotlib.pyplot as plt
+
+plt.rcParams["font.family"] = "serif"
+plt.rcParams["font.size"] = 16
+plt.rcParams["text.usetex"] = True
+
+pgm = daft.PGM(line_width=1.2)
+
+# hyperparameters for gene-specific parameters
+pgm.add_node("mu_theta", r"$\mu_{\theta}$", 0.5, 6, fixed=True)
+pgm.add_node("sigma_theta", r"$\sigma_{\theta}^2$", 1.5, 6, fixed=True)
+pgm.add_node("mu_delta", r"$\mu_{\delta}$", 2.5, 6, fixed=True)
+pgm.add_node("sigma_delta", r"$\sigma_{\delta}^2$", 3.5, 6, fixed=True)
+pgm.add_node("mu_U0", r"$\mu_{U_0}$", 4.5, 6, fixed=True)
+pgm.add_node("sigma_U0", r"$\sigma_{U_0}^2$", 5, 6, fixed=True)
+
+# hyperparameters for hierarchical time structure
+pgm.add_node("alpha_T", r"$\alpha_{T}$", 5.5, 6, fixed=True)
+pgm.add_node("beta_T", r"$\beta_{T}$", 6, 6, fixed=True)
+pgm.add_node("alpha_t_loc", r"$\alpha_{t_{loc}}$", 6.5, 6, fixed=True)
+pgm.add_node("beta_t_loc", r"$\beta_{t_{loc}}$", 7, 6, fixed=True)
+pgm.add_node("alpha_t_scale", r"$\alpha_{t_{scl}}$", 7.5, 6, fixed=True)
+pgm.add_node("beta_t_scale", r"$\beta_{t_{scl}}$", 8, 6, fixed=True)
+
+# hyperparameters for lambda (entering from right edge of cell plate)
+pgm.add_node("mu_lambda", r"$\mu_{\lambda}$", 6.5, 3.5, fixed=True)
+pgm.add_node("sigma_lambda", r"$\sigma_{\lambda}^2$", 6.5, 2.5, fixed=True)
+
+# latent variables for gene-specific parameters
+pgm.add_node("theta_i", r"$\theta_i$", 1, 5)
+pgm.add_node("delta_i", r"$\delta_i$", 3, 5)
+pgm.add_node("U_0i", r"$U_{0i}$", 4.5, 5)
+
+# hierarchical time parameters (moved further left)
+pgm.add_node("T_max_star", r"$T_{M}^*$", 5.5, 5)
+pgm.add_node("t_loc", r"$t_{loc}$", 6.25, 5)
+pgm.add_node("t_scale", r"$t_{scl}$", 7, 5)
+
+# latent time coordinates and cell-specific parameters (moved further left, lambda enters from right)
+pgm.add_node("t_star_j", r"$t^{\ast}_j$", 5.5, 4)
+pgm.add_node("lambda_j", r"$\lambda_j$", 5.5, 3)
+
+# latent variables for cell-specific outcomes (centered between rows)
+pgm.add_node(
+    "u_star_ij",
+    r"$u^{\ast}_{ij}$",
+    2,
+    3.75,
+    scale=1.0,
+    shape="rectangle",
+)
+pgm.add_node(
+    "s_star_ij",
+    r"$s^{\ast}_{ij}$",
+    4,
+    3.75,
+    scale=1.0,
+    shape="rectangle",
+)
+
+# observed data
+pgm.add_node(
+    "u_obs_ij",
+    r"$u_{ij}$",
+    2,
+    2.25,
+    scale=1.0,
+    observed=True,
+)
+pgm.add_node(
+    "s_obs_ij",
+    r"$s_{ij}$",
+    4,
+    2.25,
+    scale=1.0,
+    observed=True,
+)
+
+# edges
+edge_params = {"head_length": 0.3, "head_width": 0.25, "lw": 0.7}
+
+# gene-specific parameter edges
+pgm.add_edge("mu_theta", "theta_i", plot_params=edge_params)
+pgm.add_edge("sigma_theta", "theta_i", plot_params=edge_params)
+pgm.add_edge("mu_delta", "delta_i", plot_params=edge_params)
+pgm.add_edge("sigma_delta", "delta_i", plot_params=edge_params)
+pgm.add_edge("mu_U0", "U_0i", plot_params=edge_params)
+pgm.add_edge("sigma_U0", "U_0i", plot_params=edge_params)
+pgm.add_edge("mu_lambda", "lambda_j", plot_params=edge_params)
+pgm.add_edge("sigma_lambda", "lambda_j", plot_params=edge_params)
+
+# hierarchical time structure edges
+pgm.add_edge("alpha_T", "T_max_star", plot_params=edge_params)
+pgm.add_edge("beta_T", "T_max_star", plot_params=edge_params)
+pgm.add_edge("alpha_t_loc", "t_loc", plot_params=edge_params)
+pgm.add_edge("beta_t_loc", "t_loc", plot_params=edge_params)
+pgm.add_edge("alpha_t_scale", "t_scale", plot_params=edge_params)
+pgm.add_edge("beta_t_scale", "t_scale", plot_params=edge_params)
+
+# time hierarchy edges
+pgm.add_edge("T_max_star", "t_star_j", plot_params=edge_params)
+pgm.add_edge("t_loc", "t_star_j", plot_params=edge_params)
+pgm.add_edge("t_scale", "t_star_j", plot_params=edge_params)
+
+# dynamics edges
+pgm.add_edge("theta_i", "u_star_ij", plot_params=edge_params)
+pgm.add_edge("theta_i", "s_star_ij", plot_params=edge_params)
+pgm.add_edge("delta_i", "u_star_ij", plot_params=edge_params)
+pgm.add_edge("delta_i", "s_star_ij", plot_params=edge_params)
+pgm.add_edge("t_star_j", "u_star_ij", plot_params=edge_params)
+pgm.add_edge("t_star_j", "s_star_ij", plot_params=edge_params)
+
+# observation edges
+pgm.add_edge("u_star_ij", "u_obs_ij", plot_params=edge_params)
+pgm.add_edge("s_star_ij", "s_obs_ij", plot_params=edge_params)
+pgm.add_edge("U_0i", "u_obs_ij", plot_params=edge_params)
+pgm.add_edge("U_0i", "s_obs_ij", plot_params=edge_params)
+pgm.add_edge("lambda_j", "u_obs_ij", plot_params=edge_params)
+pgm.add_edge("lambda_j", "s_obs_ij", plot_params=edge_params)
+
+# plates
+pgm.add_plate(
+    [0.5, 1.25, 4.5, 4.25],
+    label=r"$i \in \{1, \ldots, G\}$",
+    shift=-0.1,
+    fontsize=12,
+)
+pgm.add_plate(
+    [1.5, 1.75, 4.5, 2.75],
+    label=r"$j \in \{1, \ldots, N\}$",
+    shift=-0.1,
+    fontsize=12,
+)
+
+pgm.render()
+```
+
+### Mathematical Description
+
+The model combines the hierarchical latent time structure from Study 2 with piecewise constant transcription rates and steady-state initial conditions to resolve identifiability while enabling rich gene expression dynamics.
+
+**Notation mapping between PGM and mathematical description:**
+
+In the PGM above, we use simplified notation for visual clarity:
+- $\theta_i$ represents the vector of piecewise activation parameters $(\gamma^*_i, \alpha^*_{\text{off}i}, \alpha^*_{\text{on}i}, t^*_{0,\text{on}i})$
+- $\delta_i$ represents the activation duration parameter $\delta^*_i$ (waiting time from onset to deactivation)
+- The hyperparameters $\mu_{\theta}, \sigma_{\theta}^2$ represent the collection of hyperparameters for all components of $\theta_i$
+- The hyperparameters $\mu_{\delta}, \sigma_{\delta}^2$ represent the hyperparameters for $\delta_i$
+
+**Detailed priors for piecewise activation parameters:**
+
+The priors are designed to encode biologically reasonable parameter ranges while maintaining sufficient flexibility for diverse gene expression patterns:
+
+\begin{align}
+    \gamma^*_i &\sim \text{LogNormal}(\log(1.0), 0.5^2) \quad \text{(relative degradation rate)} \\
+    \alpha^*_{\text{off}i} &\sim \text{LogNormal}(\log(0.1), 0.5^2) \quad \text{(basal transcription rate)} \\
+    \alpha^*_{\text{on}i} &\sim \text{LogNormal}(\log(2.0), 0.5^2) \quad \text{(active transcription rate)} \\
+    t^*_{0,\text{on}i} &\sim \text{LogNormal}(\log(0.3), 0.3^2) \quad \text{(activation onset time)} \\
+    \delta^*_i &\sim \text{LogNormal}(\log(0.5), 0.3^2) \quad \text{(activation duration)}
+\end{align}
+
+**Biological interpretation of prior choices:**
+
+- **$\gamma^*_i \sim \text{LogNormal}(\log(1.0), 0.5^2)$**: Centers relative degradation around 1 (balanced splicing/degradation), with 95% of values between ~0.37 and ~2.7. This covers genes where mRNA is more stable than splicing time ($\gamma^* < 1$) to genes with rapid degradation ($\gamma^* > 1$).
+
+- **$\alpha^*_{\text{off}i} \sim \text{LogNormal}(\log(0.1), 0.5^2)$**: Centers basal transcription at 10% of characteristic rate, with 95% between ~0.037 and ~0.27. This represents low but non-zero basal expression typical of repressed genes.
+
+- **$\alpha^*_{\text{on}i} \sim \text{LogNormal}(\log(2.0), 0.5^2)$**: Centers active transcription at 2× characteristic rate, with 95% between ~0.74 and ~5.4. This ensures activation represents meaningful upregulation while avoiding extreme values.
+
+- **$t^*_{0,\text{on}i} \sim \text{LogNormal}(\log(0.3), 0.3^2)$**: Centers activation onset at 30% through the process timeline, with 95% between ~0.17 and ~0.53. This favors early activation while allowing variation in timing.
+
+- **$\delta^*_i \sim \text{LogNormal}(\log(0.5), 0.3^2)$**: Centers activation duration at 50% of the process timeline, with 95% between ~0.28 and ~0.89. This allows both transient and sustained activation patterns.
+
+**Priors for other gene-specific parameters (unchanged from Study 2):**
+\begin{align}
+    U_{0i} &\sim \text{LogNormal}(\mu_{U_0}, \sigma_{U_0}^2)
+\end{align}
+
+**Hierarchical priors for latent time coordinates (unchanged from Study 2):**
+\begin{align}
+    T_{M}^* &\sim \text{Gamma}(\alpha_{T}, \beta_{T}) \\
+    t_{loc} &\sim \text{Gamma}(\alpha_{t_{loc}}, \beta_{t_{loc}}) \\
+    t_{scl} &\sim \text{Gamma}(\alpha_{t_{scl}}, \beta_{t_{scl}}) \\
+    \tilde{t}_j &\sim \text{Normal}(t_{loc}, t_{scl}^2) \quad \text{for } j \in \{1, \ldots, N\} \\
+    t^*_j &= T_{M}^* \times \max(\tilde{t}_j, \epsilon) \quad \text{(clipped transformation)}
+\end{align}
+
+**Cell-specific capture efficiency (unchanged from Study 2):**
+\begin{align}
+    \lambda_j &\sim \text{LogNormal}(\mu_{\lambda}, \sigma_{\lambda}^2)
+\end{align}
+
+**Dimensionless dynamics with piecewise activation:**
+
+The dimensionless concentrations are computed using the analytical solutions for each phase as derived above, with the appropriate phase determined by comparing $t^*_j$ to the gene-specific activation parameters $t^*_{0,\text{on}i}$ and $\delta^*_i$.
+
+**Observation model (unchanged):**
+\begin{align}
+    u_{ij} &\sim \text{Poisson}(\lambda_j \cdot U_{0i} \cdot u^*_{ij}) \\
+    s_{ij} &\sim \text{Poisson}(\lambda_j \cdot U_{0i} \cdot s^*_{ij})
+\end{align}
+
+### Key Advantages of the Piecewise Framework
+
+#### **Identifiability Resolution**
+
+- **Eliminates redundant parameterization**: No separate inference of $u^*_{0i}, s^*_{0i}$ parameters
+- **Biological realism**: Steady-state initial conditions are more plausible than arbitrary values
+- **Clear parameter roles**: Each piecewise parameter has distinct biological interpretation
+
+#### **Rich Expression Pattern Representation**
+
+- **Activation genes**: Transition from low to high expression
+- **Decay genes**: Start high, remain high (no activation within observation window)
+- **Transient genes**: Brief activation followed by return to baseline
+- **Sustained genes**: Long-duration activation
+
+#### **Analytical Tractability**
+
+- **Fast likelihood evaluation**: All phases solved analytically
+- **Efficient parameter recovery validation**: No numerical integration required
+- **Clear mathematical structure**: Each phase has explicit closed-form solution
+
+#### **Biological Interpretability**
+
+- **Dimensionless parameters**: Universal interpretation across experimental conditions
+- **Temporal coordination**: Hierarchical time structure captures population-level timing
+- **Gene-specific dynamics**: Each gene can follow distinct activation pattern
+
+### Implementation Considerations
+
+#### **Phase Detection Logic**
+
+For implementation, each cell-gene pair $(j,i)$ must be assigned to the correct phase based on the cell's latent time $t^*_j$ relative to gene $i$'s activation parameters:
+
+```python
+def determine_phase(t_star_j, t_on_i, delta_i):
+    """Determine which phase cell j is in for gene i."""
+    if t_star_j < t_on_i:
+        return "off_phase_1"  # Phase 1: before activation
+    elif t_star_j < t_on_i + delta_i:
+        return "on_phase"     # Phase 2: during activation
+    else:
+        return "off_phase_3"  # Phase 3: after activation
+```
+
+#### **Numerical Stability Considerations**
+
+**Special case handling for $\gamma^*_i \approx 1$:**
+
+When $\gamma^*_i$ is very close to 1 (e.g., $|\gamma^*_i - 1| < 10^{-6}$), the helper variable $\xi_i = \frac{\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}}{\gamma^*_i - 1}$ becomes numerically unstable. Implementation should:
+
+1. **Use threshold switching**: If $|\gamma^*_i - 1| < \epsilon$ (e.g., $\epsilon = 10^{-6}$), use the $\gamma^*_i = 1$ analytical solutions
+2. **L'Hôpital's rule**: For intermediate values, the limit as $\gamma^*_i \to 1$ gives the correct $t^* e^{-t^*}$ terms
+3. **Robust computation**: Avoid direct division by $(\gamma^*_i - 1)$ when close to zero
+
+**Parameter validation ranges:**
+
+To ensure biological realism and numerical stability:
+
+```python
+def validate_parameters(alpha_off, alpha_on, t_on, delta, gamma_star):
+    """Validate parameter ranges for biological realism."""
+    assert 0.01 <= alpha_off <= 10.0    # Reasonable basal transcription
+    assert 0.1 <= alpha_on <= 20.0      # Reasonable active transcription
+    assert alpha_on > alpha_off          # Activation increases transcription
+    assert 0.01 <= t_on <= 0.9          # Onset within process timeline
+    assert 0.05 <= delta <= 2.0         # Reasonable activation duration
+    assert 0.1 <= gamma_star <= 10.0    # Reasonable relative degradation
+```
+
+### Parameter Recovery Validation Strategy
+
+This study will validate the model's ability to:
+
+1. **Recover piecewise activation parameters**: $\alpha^*_{\text{off}i}, \alpha^*_{\text{on}i}, t^*_{0,\text{on}i}, \delta^*_i$
+2. **Distinguish gene expression patterns**: Classify genes as activation, decay, transient, or sustained
+3. **Infer hierarchical time structure**: Recover population-level temporal parameters
+4. **Handle realistic noise levels**: Maintain accuracy with Poisson observation noise
+5. **Scale to multiple genes**: Demonstrate efficiency with gene panels of varying sizes
+6. **Numerical robustness**: Maintain stability across the $\gamma^*_i = 1$ boundary
+7. **Phase assignment accuracy**: Correctly identify which phase each cell-gene pair occupies
+
+## Validation Study 4: Dimensionless simulated dynamics with latent time and continuous pulse activation
+
+*To be implemented: Full complexity model with numerical integration using torchode for continuous activation functions, representing the complete PyroVelocity modular implementation.*
