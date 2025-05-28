@@ -84,10 +84,10 @@ This model uses the direct dimensionless approach with analytical solutions:
 
 This model introduces latent dimensionless time coordinates:
 
-- **Time coordinates**: Latent $t^*_j$ with priors
+- **Time coordinates**: Latent $t^*_j$ with hierarchical Gamma/Normal priors
 - **Dynamics**: Same dimensionless analytical solutions
-- **Parameters**: $\gamma^*_i$, $U_{0i}$, $\lambda_j$, plus latent time coordinates
-- **Prior**: Log-normal hierarchical priors
+- **Parameters**: $\gamma^*_i$, $U_{0i}$, $\lambda_j$, plus hierarchical time structure ($T_{max}^*$, $t_{loc}$, $t_{scale}$, $\tilde{t}_j$)
+- **Prior**: Gamma priors for time scales, Normal for relative positions
 - **Observation Model**: Same Poisson scaling approach
 - **Likelihood**: Poisson
 
@@ -106,10 +106,10 @@ This model replaces analytical solutions with numerical integration:
 
 This model represents the full complexity of the PyroVelocity modular implementation:
 
-- **Time coordinates**: Latent $t^*_j$ with priors
+- **Time coordinates**: Latent $t^*_j$ with hierarchical Gamma/Normal priors
 - **Dynamics**: Numerical integration of dimensionless ODEs using torchode
-- **Parameters**: $\gamma^*_i$, $U_{0i}$, $\lambda_j$, plus latent time coordinates
-- **Prior**: Log-normal hierarchical priors
+- **Parameters**: $\gamma^*_i$, $U_{0i}$, $\lambda_j$, plus hierarchical time structure ($T_{max}^*$, $t_{loc}$, $t_{scale}$, $\tilde{t}_j$)
+- **Prior**: Gamma priors for time scales, Normal for relative positions
 - **Observation Model**: Same Poisson scaling approach
 - **Likelihood**: Poisson
 
@@ -488,7 +488,288 @@ print(f"Available validation components: {model.list_validation_components()}")
 
 ## Validation Study 2: Dimensionless analytical dynamics with latent time
 
-*To be implemented: Same dimensionless approach but with latent time coordinates that must be inferred along with other parameters.*
+This validation study extends the dimensionless approach to include **latent time coordinates** that must be inferred along with other parameters. We implement a hierarchical time structure that maintains biological interpretability while ensuring statistical identifiability.
+
+### Model Description
+
+The model uses the same dimensionless dynamics and observation model as Validation Study 1, but replaces observed time coordinates with **hierarchical latent time coordinates**. This approach borrows strength across cells while allowing individual temporal variation.
+
+### Probabilistic Graphical Model
+
+The probabilistic graphical model now includes hierarchical priors for latent dimensionless time coordinates, with time parameters becoming random variables rather than observed quantities.
+
+```{python}
+#| label: fig-latent-time-pgm
+#| code-fold: true
+#| fig-cap: Probabilistic graphical model for dimensionless analytical dynamics with hierarchical latent time coordinates.
+
+import daft
+import matplotlib.pyplot as plt
+
+plt.rcParams["font.family"] = "serif"
+plt.rcParams["font.size"] = 16
+plt.rcParams["text.usetex"] = True
+
+pgm = daft.PGM(line_width=1.2)
+
+# hyperparameters for gene-specific parameters
+pgm.add_node("mu_init", r"$\mu_{0}$", 0.5, 6, fixed=True)
+pgm.add_node("sigma_init", r"$\sigma_{0}^2$", 1.5, 6, fixed=True)
+pgm.add_node("mu_gamma", r"$\mu_{\gamma^*}$", 2.5, 6, fixed=True)
+pgm.add_node("sigma_gamma", r"$\sigma_{\gamma^*}^2$", 3.5, 6, fixed=True)
+pgm.add_node("mu_U0", r"$\mu_{U_0}$", 4.5, 6, fixed=True)
+pgm.add_node("sigma_U0", r"$\sigma_{U_0}^2$", 5, 6, fixed=True)
+
+# hyperparameters for hierarchical time structure (moved further left)
+pgm.add_node("mu_T", r"$\mu_{T}$", 5.5, 6, fixed=True)
+pgm.add_node("sigma_T", r"$\sigma_{T}^2$", 6, 6, fixed=True)
+pgm.add_node("mu_t_loc", r"$\mu_{t_{loc}}$", 6.5, 6, fixed=True)
+pgm.add_node("sigma_t_loc", r"$\sigma_{t_{loc}}^2$", 7, 6, fixed=True)
+pgm.add_node("mu_t_scale", r"$\mu_{t_{scl}}$", 7.5, 6, fixed=True)
+pgm.add_node("sigma_t_scale", r"$\sigma_{t_{scl}}^2$", 8, 6, fixed=True)
+
+# hyperparameters for lambda (entering from right edge of cell plate)
+pgm.add_node("mu_lambda", r"$\mu_{\lambda}$", 6.5, 3.5, fixed=True)
+pgm.add_node("sigma_lambda", r"$\sigma_{\lambda}^2$", 6.5, 2.5, fixed=True)
+
+# latent variables for gene-specific parameters
+pgm.add_node("u_star_0i", r"$u^{\ast}_{0i}$", 1, 5)
+pgm.add_node("s_star_0i", r"$s^{\ast}_{0i}$", 2, 5)
+pgm.add_node("gamma_star_i", r"$\gamma^{\ast}_i$", 3, 5)
+pgm.add_node("U_0i", r"$U_{0i}$", 4.5, 5)
+
+# hierarchical time parameters (moved further left)
+pgm.add_node("T_max_star", r"$T_{M}^*$", 5.5, 5)
+pgm.add_node("t_loc", r"$t_{loc}$", 6.25, 5)
+pgm.add_node("t_scale", r"$t_{scl}$", 7, 5)
+
+# latent time coordinates and cell-specific parameters (moved further left, lambda enters from right)
+pgm.add_node("t_star_j", r"$t^{\ast}_j$", 5.5, 4)
+pgm.add_node("lambda_j", r"$\lambda_j$", 5.5, 3)
+
+# latent variables for cell-specific outcomes (centered between rows)
+pgm.add_node(
+    "u_star_ij",
+    r"$u^{\ast}_{ij}$",
+    2,
+    3.75,
+    scale=1.0,
+    shape="rectangle",
+)
+pgm.add_node(
+    "s_star_ij",
+    r"$s^{\ast}_{ij}$",
+    4,
+    3.75,
+    scale=1.0,
+    shape="rectangle",
+)
+
+# observed data
+pgm.add_node(
+    "u_obs_ij",
+    r"$u_{ij}$",
+    2,
+    2.25,
+    scale=1.0,
+    observed=True,
+)
+pgm.add_node(
+    "s_obs_ij",
+    r"$s_{ij}$",
+    4,
+    2.25,
+    scale=1.0,
+    observed=True,
+)
+
+# edges
+edge_params = {"head_length": 0.3, "head_width": 0.25, "lw": 0.7}
+
+# gene-specific parameter edges
+pgm.add_edge("mu_init", "u_star_0i", plot_params=edge_params)
+pgm.add_edge("sigma_init", "u_star_0i", plot_params=edge_params)
+pgm.add_edge("mu_init", "s_star_0i", plot_params=edge_params)
+pgm.add_edge("sigma_init", "s_star_0i", plot_params=edge_params)
+pgm.add_edge("mu_gamma", "gamma_star_i", plot_params=edge_params)
+pgm.add_edge("sigma_gamma", "gamma_star_i", plot_params=edge_params)
+pgm.add_edge("mu_U0", "U_0i", plot_params=edge_params)
+pgm.add_edge("sigma_U0", "U_0i", plot_params=edge_params)
+pgm.add_edge("mu_lambda", "lambda_j", plot_params=edge_params)
+pgm.add_edge("sigma_lambda", "lambda_j", plot_params=edge_params)
+
+# hierarchical time structure edges
+pgm.add_edge("mu_T", "T_max_star", plot_params=edge_params)
+pgm.add_edge("sigma_T", "T_max_star", plot_params=edge_params)
+pgm.add_edge("mu_t_loc", "t_loc", plot_params=edge_params)
+pgm.add_edge("sigma_t_loc", "t_loc", plot_params=edge_params)
+pgm.add_edge("mu_t_scale", "t_scale", plot_params=edge_params)
+pgm.add_edge("sigma_t_scale", "t_scale", plot_params=edge_params)
+
+# time hierarchy edges
+pgm.add_edge("T_max_star", "t_star_j", plot_params=edge_params)
+pgm.add_edge("t_loc", "t_star_j", plot_params=edge_params)
+pgm.add_edge("t_scale", "t_star_j", plot_params=edge_params)
+
+# dynamics edges
+pgm.add_edge("u_star_0i", "u_star_ij", plot_params=edge_params)
+pgm.add_edge("s_star_0i", "s_star_ij", plot_params=edge_params)
+pgm.add_edge("u_star_0i", "s_star_ij", plot_params=edge_params)
+pgm.add_edge("gamma_star_i", "s_star_ij", plot_params=edge_params)
+pgm.add_edge("t_star_j", "u_star_ij", plot_params=edge_params)
+pgm.add_edge("t_star_j", "s_star_ij", plot_params=edge_params)
+
+# observation edges
+pgm.add_edge("u_star_ij", "u_obs_ij", plot_params=edge_params)
+pgm.add_edge("s_star_ij", "s_obs_ij", plot_params=edge_params)
+pgm.add_edge("U_0i", "u_obs_ij", plot_params=edge_params)
+pgm.add_edge("U_0i", "s_obs_ij", plot_params=edge_params)
+pgm.add_edge("lambda_j", "u_obs_ij", plot_params=edge_params)
+pgm.add_edge("lambda_j", "s_obs_ij", plot_params=edge_params)
+
+# plates
+pgm.add_plate(
+    [0.5, 1.25, 4.5, 4.25],
+    label=r"$i \in \{1, \ldots, G\}$",
+    shift=-0.1,
+    fontsize=12,
+)
+pgm.add_plate(
+    [1.5, 1.75, 4.5, 2.75],
+    label=r"$j \in \{1, \ldots, N\}$",
+    shift=-0.1,
+    fontsize=12,
+)
+
+pgm.render()
+```
+
+### Mathematical Description
+
+The model extends the dimensionless approach with **hierarchical latent time coordinates**. The key modification is replacing observed time $t^*_j$ with latent time variables that follow a hierarchical prior structure.
+
+**Priors for dimensionless parameters (unchanged from Study 1):**
+\begin{align}
+    u^*_{0i}, s^*_{0i} &\sim \text{LogNormal}(\mu_{0}, \sigma_{0}^2) \\
+    \gamma^*_i &\sim \text{LogNormal}(\mu_{\gamma^*}, \sigma_{\gamma^*}^2) \\
+    U_{0i} &\sim \text{LogNormal}(\mu_{U_0}, \sigma_{U_0}^2) \\
+    \lambda_j &\sim \text{LogNormal}(\mu_{\lambda}, \sigma_{\lambda}^2)
+\end{align}
+
+**Hierarchical priors for latent time coordinates:**
+\begin{align}
+    T_{max}^* &\sim \text{Gamma}(\alpha_{T}, \beta_{T}) \label{eq-T-max-prior} \\
+    t_{loc} &\sim \text{Gamma}(\alpha_{t_{loc}}, \beta_{t_{loc}}) \label{eq-t-loc-prior} \\
+    t_{scale} &\sim \text{Gamma}(\alpha_{t_{scale}}, \beta_{t_{scale}}) \label{eq-t-scale-prior} \\
+    \tilde{t}_j &\sim \text{Normal}(t_{loc}, t_{scale}^2) \quad \text{for } j \in \{1, \ldots, N\} \label{eq-t-tilde-prior} \\
+    t^*_j &= T_{max}^* \times \tilde{t}_j \quad \text{(deterministic transformation)} \label{eq-t-star-transform}
+\end{align}
+
+$\tilde{t}_j$ represents the **relative temporal position** of cell $j$ (which can be negative for cells before the process start or greater than 1 for cells after the typical process duration), and $t^*_j$ represents the **actual dimensionless time coordinate** obtained by scaling the relative position by the global time scale $T_{max}^*$.
+
+**Dimensionless analytical solutions (unchanged):**
+The same analytical solutions from Study 1 apply, but now using latent $t^*_j$:
+\begin{align}
+    u^*_{ij} &= 1 + (u^*_{0i} - 1) e^{-t^*_j} \\
+    s^*_{ij} &= \begin{cases}
+        \frac{1}{\gamma^*_i} + \left(s^*_{0i} - \xi_i - \frac{1}{\gamma^*_i}\right) e^{-\gamma^*_i t^*_j} + \xi_i e^{-t^*_j} & \text{if } \gamma^*_i \neq 1 \\
+        1 + (s^*_{0i} - 1) e^{-t^*_j} + (u^*_{0i} - 1) t^*_j e^{-t^*_j} & \text{if } \gamma^*_i = 1
+    \end{cases}
+\end{align}
+
+where $\xi_i = \frac{u^*_{0i} - 1}{\gamma^*_i - 1}$.
+
+**Observation model (unchanged):**
+\begin{align}
+    u_{ij} &\sim \text{Poisson}(\lambda_j \cdot U_{0i} \cdot u^*_{ij}) \\
+    s_{ij} &\sim \text{Poisson}(\lambda_j \cdot U_{0i} \cdot s^*_{ij})
+\end{align}
+
+### Hierarchical Time Parameter Interpretability
+
+The hierarchical time structure introduces new parameters with clear biological and statistical interpretations:
+
+#### **Global Time Scale Parameters**
+
+**$T_{max}^*$ (Global dimensionless time scale)**
+
+- **Definition**: Global scaling factor for dimensionless time coordinates
+- **Units**: Dimensionless (in units of characteristic splicing time)
+- **Interpretation**: Characteristic temporal extent of the biological process
+- **Biological meaning**: Represents the typical time scale over which the biological process unfolds
+- **Model role**: Multiplicative scaling factor in $t^*_j = T_{max}^* \times \tilde{t}_j$
+- **Prior**: $T_{max}^* \sim \text{Gamma}(\alpha_{T}, \beta_{T})$ ensures positive values with flexible tail behavior
+- **Example**: $T_{max}^* = 5$ means the process typically spans ~5 characteristic splicing times
+
+#### **Population-Level Time Parameters**
+
+**$t_{loc}$ (Population relative time location)**
+
+- **Definition**: Population-level location parameter for relative time distribution
+- **Units**: Dimensionless (relative time units)
+- **Interpretation**: Central tendency of where cells are located in relative time
+- **Biological meaning**: Typical relative temporal position of cells in the biological process
+- **Prior**: $t_{loc} \sim \text{Gamma}(\alpha_{t_{loc}}, \beta_{t_{loc}})$ ensures positive location with flexible shape
+- **Statistical role**: Allows borrowing strength across cells while permitting individual variation
+- **Example**: $t_{loc} = 0.7$ means cells are typically positioned at 70% through the relative process timeline
+
+**$t_{scale}$ (Population relative time scale)**
+
+- **Definition**: Population-level scale parameter for relative time distribution
+- **Units**: Dimensionless (relative time units)
+- **Interpretation**: How much relative temporal variation exists across cells
+- **Biological meaning**: Degree of temporal heterogeneity in the cell population
+- **Prior**: $t_{scale} \sim \text{Gamma}(\alpha_{t_{scale}}, \beta_{t_{scale}})$ ensures positive scale with flexible shape
+- **Statistical role**: Controls the amount of shrinkage toward the population mean
+- **Example**: $t_{scale} = 0.2$ indicates relatively tight temporal clustering around $t_{loc}$
+
+#### **Cell-Specific Time Coordinates**
+
+**$\tilde{t}_j$ (Cell-specific relative time)**
+
+- **Definition**: Latent relative time coordinate for cell $j$
+- **Units**: Dimensionless (relative time units)
+- **Interpretation**: Cell's position relative to the population temporal distribution
+- **Biological meaning**: Where this cell sits in the relative temporal progression
+- **Prior**: $\tilde{t}_j \sim \text{Normal}(t_{loc}, t_{scale}^2)$ allows negative values (before process) and values >1 (after process)
+- **Flexibility**: Can represent cells outside the typical process timeline
+- **Example**: $\tilde{t}_j = -0.2$ means this cell is before the typical process start; $\tilde{t}_j = 1.3$ means after typical completion
+
+**$t^*_j$ (Cell-specific dimensionless time)**
+
+- **Definition**: Actual dimensionless time coordinate for cell $j$
+- **Units**: Dimensionless (in units of characteristic splicing time)
+- **Interpretation**: How many splicing events have elapsed for this specific cell
+- **Biological meaning**: Cell's absolute position along the temporal trajectory of the biological process
+- **Transformation**: $t^*_j = T_{max}^* \times \tilde{t}_j$ (deterministic scaling)
+- **Example**: If $T_{max}^* = 5$ and $\tilde{t}_j = 0.6$, then $t^*_j = 3.0$ characteristic splicing times
+
+### Key Advantages of Gamma/Normal Hierarchical Time Structure
+
+#### **Statistical Benefits**
+
+- **Improved identifiability**: Hierarchical structure provides regularization without redundant parameters
+- **Borrowing strength**: Information shared across cells improves parameter estimation
+- **Uncertainty quantification**: Full posterior distributions for all time parameters
+- **Robustness**: Less sensitive to outlier cells or sparse data
+- **No truncation constraints**: Avoids computational complexity of truncated distributions
+- **Clear parameter roles**: $T_{max}^*$ controls global scale, $t_{loc}$ and $t_{scale}$ control population distribution
+
+#### **Biological Interpretability**
+
+- **Dimensionless time**: Universal interpretation across experimental conditions
+- **Population heterogeneity**: Captures natural variation in biological timing
+- **Individual trajectories**: Each cell has its own temporal position
+- **Flexible temporal range**: Cells can be before ($\tilde{t}_j < 0$) or after ($\tilde{t}_j > 1$) typical process timeline
+- **Natural biological variation**: No artificial hard boundaries on temporal positions
+
+#### **Computational Efficiency**
+
+- **Standard distributions**: Gamma and Normal distributions are computationally efficient
+- **No truncation**: Avoids complex truncated distribution sampling
+- **Analytical solutions**: Fast likelihood evaluation for validation
+- **Hierarchical sampling**: Efficient MCMC mixing through population-level parameters
+- **Multiplicative structure**: Simple deterministic transformation $t^*_j = T_{max}^* \times \tilde{t}_j$
 
 ## Validation Study 3: Dimensionless simulated dynamics with observed time
 
