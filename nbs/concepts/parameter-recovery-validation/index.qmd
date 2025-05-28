@@ -849,6 +849,16 @@ u^*_{ij}(\tau_{\text{on}}) &= \alpha^*_{\text{on}i} + (\alpha^*_{\text{off}i} - 
 s^*_{ij}(\tau_{\text{on}}) &= \alpha^*_{\text{on}i} + (\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}) e^{-\tau_{\text{on}}} + (\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}) \tau_{\text{on}} e^{-\tau_{\text{on}}}
 \end{align}$$
 
+**Special case interpretation ($\gamma^*_i = 1$):**
+
+The case $\gamma^*_i = 1$ represents **balanced splicing-degradation kinetics** where mRNA degradation occurs at exactly the same rate as pre-mRNA splicing. This creates a mathematical resonance that fundamentally changes the system's dynamics:
+
+- **Biological meaning**: The characteristic timescales for splicing ($1/\beta_i$) and degradation ($1/\gamma_i$) are identical
+- **Mathematical consequence**: The standard exponential solutions become degenerate, requiring the additional $\tau_{\text{on}} e^{-\tau_{\text{on}}}$ term
+- **Physical interpretation**: The $\tau e^{-\tau}$ term represents the accumulation of mRNA over time when production and degradation rates are perfectly balanced
+- **Parameter recovery implications**: Inference near $\gamma^*_i = 1$ may exhibit slower convergence due to the discontinuous derivative in the analytical solutions
+- **Numerical considerations**: The transition between $\gamma^*_i \neq 1$ and $\gamma^*_i = 1$ solutions requires careful handling to maintain numerical stability
+
 #### **Phase 3: Return to Off State** ($t^* \geq t^*_{0,\text{on}i} + \delta^*_i$)
 
 Let $\tau_{\text{off}} = t^* - (t^*_{0,\text{on}i} + \delta^*_i)$ be the time since returning to the off state. The system transitions from the end-of-phase-2 state back toward the off-state steady state.
@@ -889,12 +899,84 @@ s^*_{ij}(\tau_{\text{off}}) &= \alpha^*_{\text{off}i} + (s^*_{\text{off},0i} - \
 
 ### Gene Expression Pattern Capabilities
 
-This piecewise framework enables representation of diverse gene expression patterns:
+This piecewise framework enables representation of diverse gene expression patterns through specific parameter combinations. Each pattern is defined by quantitative parameter ranges that create distinct temporal dynamics:
 
-1. **Activation patterns**: Low $\alpha^*_{\text{off}i}$, early $t^*_{0,\text{on}i}$, high $\alpha^*_{\text{on}i}$
-2. **Decay-only patterns**: High $\alpha^*_{\text{off}i}$, $t^*_{0,\text{on}i} > T^*_M$ (onset beyond observation window)
-3. **Transient activation**: Early $t^*_{0,\text{on}i}$, short $\delta^*_i$, moderate $\alpha^*_{\text{on}i}$
-4. **Sustained activation**: Early $t^*_{0,\text{on}i}$, long $\delta^*_i$, high $\alpha^*_{\text{on}i}$
+#### **1. Activation Patterns**
+**Characteristics**: Genes that start with low expression and become strongly activated during the process.
+
+**Parameter specifications**:
+- $\alpha^*_{\text{off}i} < 0.2$ (low basal transcription)
+- $\alpha^*_{\text{on}i} > 1.5$ (strong activation)
+- $t^*_{0,\text{on}i} < 0.4$ (early activation onset)
+- $\delta^*_i > 0.3$ (sustained activation duration)
+- **Fold-change**: $\alpha^*_{\text{on}i}/\alpha^*_{\text{off}i} > 7.5$ (strong upregulation)
+
+**Biological examples**: Developmental transcription factors, cell cycle genes, stress response genes
+
+#### **2. Decay-Only Patterns**
+**Characteristics**: Genes that start with high expression and gradually decrease without reactivation.
+
+**Parameter specifications**:
+- $\alpha^*_{\text{off}i} > 0.5$ (high basal transcription)
+- $t^*_{0,\text{on}i} > T^*_M$ (activation onset beyond observation window)
+- $\delta^*_i$ (irrelevant, no activation observed)
+- **Effective dynamics**: Monotonic decay from high initial levels
+
+**Biological examples**: Maternal transcripts during development, housekeeping genes during stress, pluripotency factors during differentiation
+
+#### **3. Transient Activation Patterns**
+**Characteristics**: Genes that show brief, pulse-like activation followed by return to baseline.
+
+**Parameter specifications**:
+- $\alpha^*_{\text{off}i} < 0.3$ (low basal transcription)
+- $\alpha^*_{\text{on}i} > 1.0$ (moderate to strong activation)
+- $t^*_{0,\text{on}i} < 0.5$ (early to mid-process activation)
+- $\delta^*_i < 0.3$ (brief activation duration)
+- **Fold-change**: $\alpha^*_{\text{on}i}/\alpha^*_{\text{off}i} > 3.3$ (clear but not extreme upregulation)
+
+**Biological examples**: Immediate early genes, signaling molecules, transient developmental regulators
+
+#### **4. Sustained Activation Patterns**
+**Characteristics**: Genes that become activated and remain highly expressed throughout most of the process.
+
+**Parameter specifications**:
+- $\alpha^*_{\text{off}i} < 0.3$ (low basal transcription)
+- $\alpha^*_{\text{on}i} > 1.0$ (strong activation)
+- $t^*_{0,\text{on}i} < 0.3$ (early activation onset)
+- $\delta^*_i > 0.6$ (long activation duration)
+- **Fold-change**: $\alpha^*_{\text{on}i}/\alpha^*_{\text{off}i} > 3.3$ (sustained upregulation)
+
+**Biological examples**: Lineage-specific transcription factors, structural proteins, metabolic enzymes
+
+#### **Pattern Classification Criteria**
+
+For parameter recovery validation, genes can be automatically classified using these decision rules:
+
+```python
+def classify_gene_pattern(alpha_off, alpha_on, t_on, delta, T_max):
+    """Classify gene expression pattern based on inferred parameters."""
+    fold_change = alpha_on / alpha_off
+
+    if t_on > T_max:
+        return "decay_only"
+    elif alpha_off < 0.2 and alpha_on > 1.5 and t_on < 0.4 and delta > 0.3:
+        return "activation"
+    elif alpha_off < 0.3 and fold_change > 3.3 and t_on < 0.5 and delta < 0.3:
+        return "transient"
+    elif alpha_off < 0.3 and fold_change > 3.3 and t_on < 0.3 and delta > 0.6:
+        return "sustained"
+    else:
+        return "intermediate"  # Mixed or boundary cases
+```
+
+#### **Validation Strategy for Pattern Recovery**
+
+Parameter recovery validation should test the model's ability to:
+
+1. **Correctly classify known patterns**: Generate synthetic data with known pattern types and verify classification accuracy
+2. **Recover pattern-specific parameters**: Ensure fold-changes, timing, and duration parameters are accurately inferred
+3. **Distinguish similar patterns**: Separate transient vs. sustained activation, activation vs. decay-only
+4. **Handle boundary cases**: Genes with intermediate parameter values that don't clearly fit one pattern
 
 ### Probabilistic Graphical Model
 
