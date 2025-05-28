@@ -1289,10 +1289,9 @@ from pathlib import Path
 
 # PyroVelocity imports
 from pyrovelocity.models.modular.factory import create_piecewise_activation_model
-from pyrovelocity.models.modular.data.synthetic import PiecewisePatternGenerator
 from pyrovelocity.models.modular.validation import (
     PiecewiseActivationValidator,
-    generate_validation_parameter_sets,
+    PatternClassificationValidator,
 )
 from pyrovelocity.plots.piecewise import (
     plot_piecewise_phase_portrait,
@@ -1324,64 +1323,76 @@ print(f"  Prior: {model.prior_model}")
 print(f"  Likelihood: {model.likelihood_model}")
 print(f"  Observation: {model.observation_model}")
 print(f"  Guide: {model.guide_model}")
+
+# Demonstrate key API methods available on any PyroVelocityModel
+print(f"\nKey API methods available:")
+print(f"  model.sample_system_parameters() - Sample constrained or unconstrained parameters")
+print(f"  model.generate_predictive_samples() - Generate prior/posterior predictive samples")
+print(f"  model.train() - Train model on data")
+print(f"  model.generate_posterior_samples() - Generate posterior samples after training")
+print(f"  model.get_velocity() - Compute velocity estimates")
 ```
 
 #### Synthetic Data Generation for All Expression Patterns
 
-We generate synthetic datasets representing each of the four gene expression patterns with known ground truth parameters:
+We generate synthetic datasets representing each of the four gene expression patterns using the generic predictive sampling interface:
 
 ```python
-# Initialize pattern generator
-pattern_generator = PiecewisePatternGenerator(seed=42)
+# Generate validation datasets for all patterns using generic API
+validation_datasets = {}
+validation_parameters = {}
 
-# Generate validation parameter sets (2 sets per pattern = 8 total)
-validation_parameter_sets = generate_validation_parameter_sets()
+# Define pattern configurations (2 parameter sets per pattern = 8 total)
+pattern_configs = [
+    # Activation patterns
+    {"pattern": "activation", "set_id": 1, "seed": 42},
+    {"pattern": "activation", "set_id": 2, "seed": 43},
+    # Decay patterns
+    {"pattern": "decay", "set_id": 1, "seed": 44},
+    {"pattern": "decay", "set_id": 2, "seed": 45},
+    # Transient patterns
+    {"pattern": "transient", "set_id": 1, "seed": 46},
+    {"pattern": "transient", "set_id": 2, "seed": 47},
+    # Sustained patterns
+    {"pattern": "sustained", "set_id": 1, "seed": 48},
+    {"pattern": "sustained", "set_id": 2, "seed": 49},
+]
 
-# Generate synthetic datasets for each parameter set
-synthetic_datasets = {}
-true_parameters = {}
-
-for param_set in validation_parameter_sets:
-    pattern = param_set["pattern"]
-    set_id = param_set["set_id"]
+for config in pattern_configs:
+    pattern = config["pattern"]
+    set_id = config["set_id"]
+    seed = config["seed"]
     dataset_key = f"{pattern}_{set_id}"
 
     print(f"Generating synthetic data for {dataset_key}...")
 
-    # Generate pattern-specific data
-    if pattern == "activation":
-        adata = pattern_generator.generate_activation_pattern(
-            num_genes=5,
-            num_cells=200,
-            parameters=param_set
-        )
-    elif pattern == "decay":
-        adata = pattern_generator.generate_decay_pattern(
-            num_genes=5,
-            num_cells=200,
-            parameters=param_set
-        )
-    elif pattern == "transient":
-        adata = pattern_generator.generate_transient_pattern(
-            num_genes=5,
-            num_cells=200,
-            parameters=param_set
-        )
-    elif pattern == "sustained":
-        adata = pattern_generator.generate_sustained_pattern(
-            num_genes=5,
-            num_cells=200,
-            parameters=param_set
-        )
+    # Sample system parameters constrained to this pattern
+    true_system_params = model.sample_system_parameters(
+        pattern=pattern,
+        set_id=set_id,
+        num_samples=1,
+        constrain_to_pattern=True,
+        rng_key=jax.random.PRNGKey(seed)
+    )
+
+    # Generate synthetic data using the generic predictive sampling interface
+    adata = model.generate_predictive_samples(
+        num_cells=200,
+        num_genes=5,
+        samples=true_system_params,  # Use constrained parameters as "posterior"
+        rng_key=jax.random.PRNGKey(seed + 100),
+        return_format="anndata"
+    )
 
     # Store dataset and true parameters
-    synthetic_datasets[dataset_key] = adata
-    true_parameters[dataset_key] = adata.uns["true_parameters"]
+    validation_datasets[dataset_key] = adata
+    validation_parameters[dataset_key] = true_system_params
 
     print(f"  Generated {adata.n_obs} cells × {adata.n_vars} genes")
-    print(f"  Pattern parameters: {param_set}")
+    print(f"  Pattern: {adata.uns['pattern_type']}")
+    print(f"  True parameters shape: {[f'{k}: {v.shape}' for k, v in true_system_params.items()]}")
 
-print(f"\nGenerated {len(synthetic_datasets)} synthetic datasets")
+print(f"\nGenerated {len(validation_datasets)} synthetic datasets")
 ```
 
 #### Prior Predictive Checks
@@ -1389,19 +1400,30 @@ print(f"\nGenerated {len(synthetic_datasets)} synthetic datasets")
 Before training, we validate that our priors generate biologically reasonable parameter ranges and expression patterns:
 
 ```python
-# Generate prior predictive samples
+# Generate prior predictive samples using the generic interface
 print("Performing prior predictive checks...")
 
-prior_predictive_samples = model.generate_prior_predictive_samples(
-    num_samples=1000,
+# Generate prior predictive samples (no samples argument = sample from prior)
+prior_predictive_adata = model.generate_predictive_samples(
+    num_cells=200,
     num_genes=10,
-    num_cells=200
+    num_samples=100,  # Generate 100 prior samples
+    rng_key=jax.random.PRNGKey(0),
+    return_format="anndata"
+)
+
+# Extract parameter samples for validation
+prior_parameter_samples = model.sample_system_parameters(
+    num_samples=1000,
+    constrain_to_pattern=False,  # Use full prior ranges
+    rng_key=jax.random.PRNGKey(1)
 )
 
 # Plot prior predictive checks
 fig_prior = plot_prior_predictive_checks(
     model=model,
-    prior_samples=prior_predictive_samples,
+    prior_adata=prior_predictive_adata,
+    prior_parameters=prior_parameter_samples,
     figsize=(15, 10)
 )
 
@@ -1411,11 +1433,21 @@ plt.show()
 
 # Validate prior parameter ranges
 print("\nPrior parameter range validation:")
-for param_name, samples in prior_predictive_samples.items():
+for param_name, samples in prior_parameter_samples.items():
     if param_name.startswith(('alpha_off', 'alpha_on', 't_on', 'delta', 'gamma_star')):
         print(f"{param_name}:")
         print(f"  Range: [{samples.min():.3f}, {samples.max():.3f}]")
         print(f"  Mean ± Std: {samples.mean():.3f} ± {samples.std():.3f}")
+
+# Validate that prior generates diverse expression patterns
+print("\nPrior pattern diversity:")
+prior_patterns = PatternClassificationValidator().classify_genes_from_parameters(
+    prior_parameter_samples
+)
+pattern_counts = {pattern: list(prior_patterns.values()).count(pattern)
+                 for pattern in ["activation", "decay", "transient", "sustained", "intermediate"]}
+for pattern, count in pattern_counts.items():
+    print(f"  {pattern}: {count} genes ({count/len(prior_patterns)*100:.1f}%)")
 ```
 
 #### Parameter Recovery Validation Across All Patterns
@@ -1434,7 +1466,7 @@ validator = PiecewiseActivationValidator(
 validation_results = {}
 posterior_samples_all = {}
 
-for dataset_key, adata in synthetic_datasets.items():
+for dataset_key, adata in validation_datasets.items():
     print(f"\n{'='*60}")
     print(f"Validating parameter recovery for {dataset_key}")
     print(f"{'='*60}")
@@ -1450,7 +1482,7 @@ for dataset_key, adata in synthetic_datasets.items():
     result = validator.validate_parameter_recovery(
         model=model_instance,
         adata=adata,
-        true_parameters=true_parameters[dataset_key],
+        true_parameters=validation_parameters[dataset_key],
         dataset_name=dataset_key
     )
 
@@ -1493,7 +1525,7 @@ print("Generating comprehensive validation visualizations...")
 
 # 1. Parameter recovery diagnostic plots
 fig_recovery = plot_parameter_recovery_diagnostics(
-    true_parameters=true_parameters,
+    true_parameters=validation_parameters,
     inferred_parameters={k: v["posterior_samples"] for k, v in validation_results.items()},
     figsize=(20, 15)
 )
@@ -1504,14 +1536,14 @@ plt.show()
 # 2. Phase portraits for each pattern
 for pattern in ["activation", "decay", "transient", "sustained"]:
     # Find datasets for this pattern
-    pattern_datasets = {k: v for k, v in synthetic_datasets.items() if k.startswith(pattern)}
+    pattern_datasets = {k: v for k, v in validation_datasets.items() if k.startswith(pattern)}
 
     for dataset_key, adata in pattern_datasets.items():
         fig_phase = plot_piecewise_phase_portrait(
             adata=adata,
             gene_names=adata.var_names[:3].tolist(),  # Plot first 3 genes
             posterior_samples=posterior_samples_all[dataset_key],
-            true_parameters=true_parameters[dataset_key],
+            true_parameters=validation_parameters[dataset_key],
             figsize=(15, 10)
         )
         plt.suptitle(f"Phase Portrait: {dataset_key.replace('_', ' ').title()}", fontsize=16)
@@ -1520,7 +1552,7 @@ for pattern in ["activation", "decay", "transient", "sustained"]:
 
 # 3. Temporal trajectories showing piecewise dynamics
 for pattern in ["activation", "transient", "sustained"]:  # Skip decay (no activation)
-    pattern_datasets = {k: v for k, v in synthetic_datasets.items() if k.startswith(pattern)}
+    pattern_datasets = {k: v for k, v in validation_datasets.items() if k.startswith(pattern)}
 
     for dataset_key, adata in pattern_datasets.items():
         fig_traj = plot_piecewise_trajectories(
@@ -1537,7 +1569,7 @@ for pattern in ["activation", "transient", "sustained"]:  # Skip decay (no activ
 # 4. Activation timing analysis
 fig_timing = plot_activation_timing(
     posterior_samples=posterior_samples_all,
-    true_parameters=true_parameters,
+    true_parameters=validation_parameters,
     figsize=(15, 10)
 )
 plt.suptitle("Activation Timing Analysis: All Patterns", fontsize=16)
@@ -1546,7 +1578,7 @@ plt.show()
 
 # 5. Posterior predictive checks for each pattern
 for pattern in ["activation", "decay", "transient", "sustained"]:
-    pattern_datasets = {k: v for k, v in synthetic_datasets.items() if k.startswith(pattern)}
+    pattern_datasets = {k: v for k, v in validation_datasets.items() if k.startswith(pattern)}
 
     for dataset_key, adata in pattern_datasets.items():
         fig_post = plot_posterior_predictive_checks(
@@ -1576,17 +1608,25 @@ stability_results = {}
 for gamma_val in gamma_values:
     print(f"\nTesting γ* = {gamma_val}")
 
-    # Generate test data with specific gamma value
-    test_adata = pattern_generator.generate_activation_pattern(
-        num_genes=3,
+    # Manually specify parameters with specific gamma value
+    test_system_params = {
+        "alpha_off": jnp.array([[0.1, 0.1, 0.1]]),
+        "alpha_on": jnp.array([[2.0, 2.0, 2.0]]),
+        "t_on": jnp.array([[0.3, 0.3, 0.3]]),
+        "delta": jnp.array([[0.4, 0.4, 0.4]]),
+        "gamma_star": jnp.array([[gamma_val, gamma_val, gamma_val]]),
+        "T_max_star": jnp.array([[1.0]]),
+        "t_loc": jnp.array([[0.5]]),
+        "t_scale": jnp.array([[0.2]]),
+    }
+
+    # Generate test data using generic API
+    test_adata = model.generate_predictive_samples(
         num_cells=100,
-        parameters={
-            "alpha_off": 0.1,
-            "alpha_on": 2.0,
-            "t_on": 0.3,
-            "delta": 0.4,
-            "gamma_star": gamma_val
-        }
+        num_genes=3,
+        samples=test_system_params,
+        rng_key=jax.random.PRNGKey(int(gamma_val * 1000)),
+        return_format="anndata"
     )
 
     # Create and train model
@@ -1668,11 +1708,21 @@ for config in benchmark_configs:
     config_key = f"{config['num_genes']}g_{config['num_cells']}c"
     print(f"\nBenchmarking {config_key}...")
 
-    # Generate test data
-    test_adata = pattern_generator.generate_activation_pattern(
+    # Sample parameters for benchmarking
+    bench_params = model.sample_system_parameters(
+        pattern="activation",
+        set_id=1,
+        num_samples=1,
+        rng_key=jax.random.PRNGKey(42)
+    )
+
+    # Generate test data using generic API
+    test_adata = model.generate_predictive_samples(
         num_genes=config["num_genes"],
         num_cells=config["num_cells"],
-        parameters=validation_parameter_sets[0]  # Use first parameter set
+        samples=bench_params,
+        rng_key=jax.random.PRNGKey(100),
+        return_format="anndata"
     )
 
     # Create model
