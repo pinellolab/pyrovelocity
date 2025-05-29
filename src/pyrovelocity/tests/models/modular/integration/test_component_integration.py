@@ -170,7 +170,6 @@ class TestComponentIntegration:
         dynamics_model = StandardDynamicsModel()
         prior_model = LogNormalPriorModel()
         likelihood_model = PoissonLikelihoodModel()
-        observation_model = StandardObservationModel()
         guide_model = AutoGuideFactory(guide_type="AutoNormal")
 
         # Create the full model
@@ -178,7 +177,6 @@ class TestComponentIntegration:
             dynamics_model=dynamics_model,
             prior_model=prior_model,
             likelihood_model=likelihood_model,
-            observation_model=observation_model,
             guide_model=guide_model,
         )
 
@@ -232,7 +230,6 @@ class TestComponentIntegration:
         dynamics_model = StandardDynamicsModel()
         prior_model = LogNormalPriorModel()
         likelihood_model = PoissonLikelihoodModel()
-        observation_model = StandardObservationModel()
 
         # Create a simple dataset with fixed dimensions
         n_cells = 5
@@ -276,7 +273,6 @@ class TestComponentIntegration:
                 dynamics_model=dynamics_model,
                 prior_model=prior_model,
                 likelihood_model=likelihood_model,
-                observation_model=observation_model,
                 guide_model=guide_model,
             )
 
