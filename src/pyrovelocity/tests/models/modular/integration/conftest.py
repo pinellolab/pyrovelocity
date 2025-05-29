@@ -6,9 +6,9 @@ the fixtures defined in the main conftest.py file.
 """
 
 import numpy as np
+import pyro
 import pytest
 import torch
-import pyro
 from anndata import AnnData
 
 from pyrovelocity.models.modular.components import (
@@ -115,7 +115,6 @@ def bdd_pyro_velocity_model(
     bdd_standard_dynamics_model,
     bdd_lognormal_prior_model,
     bdd_poisson_likelihood_model,
-    bdd_standard_observation_model,
     bdd_auto_guide_factory,
 ):
     """Create a PyroVelocityModel for BDD testing."""
@@ -123,7 +122,6 @@ def bdd_pyro_velocity_model(
         dynamics_model=bdd_standard_dynamics_model,
         prior_model=bdd_lognormal_prior_model,
         likelihood_model=bdd_poisson_likelihood_model,
-        observation_model=bdd_standard_observation_model,
         guide_model=bdd_auto_guide_factory,
     )
 
