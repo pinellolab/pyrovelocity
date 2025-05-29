@@ -310,8 +310,17 @@ class TestPiecewiseActivationPriorModel:
 
         # Check that Pyro trace contains the expected sample sites
         trace_sites = list(trace.trace.nodes.keys())
-        for param in expected_params:
-            assert param in trace_sites
+
+        # For PiecewiseActivationPriorModel, t_star is computed deterministically from tilde_t
+        # So we need to check for tilde_t in the trace instead of t_star
+        expected_trace_params = [
+            "T_M_star", "t_loc", "t_scale", "tilde_t",  # Note: tilde_t instead of t_star
+            "alpha_off", "alpha_on", "gamma_star", "t_on_star", "delta_star",
+            "lambda_j"
+        ]
+
+        for param in expected_trace_params:
+            assert param in trace_sites, f"Expected parameter '{param}' not found in trace sites: {trace_sites}"
 
     def test_integration_with_dynamics_model(self, prior_model):
         """Test that sampled parameters work with the dynamics model."""
