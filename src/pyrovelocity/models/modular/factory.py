@@ -276,7 +276,6 @@ class PyroVelocityModelConfig:
     dynamics_model: DynamicsModelConfig
     prior_model: PriorModelConfig
     likelihood_model: LikelihoodModelConfig
-    observation_model: ObservationModelConfig
     inference_guide: InferenceGuideConfig
     metadata: Dict[str, Any] = field(default_factory=dict)
 
@@ -320,7 +319,6 @@ PyroVelocityModelConf = zen_builds(
     dynamics_model=DynamicsModelConf,
     prior_model=PriorModelConf,
     likelihood_model=LikelihoodModelConf,
-    observation_model=ObservationModelConf,
     inference_guide=InferenceGuideConf,
     metadata=dict,
 )
@@ -357,15 +355,13 @@ def create_model_from_config(
     dynamics_model = ComponentFactory.create_dynamics_model(config.dynamics_model)
     prior_model = ComponentFactory.create_prior_model(config.prior_model)
     likelihood_model = ComponentFactory.create_likelihood_model(config.likelihood_model)
-    observation_model = ComponentFactory.create_observation_model(config.observation_model)
     inference_guide = ComponentFactory.create_inference_guide(config.inference_guide)
 
-    # Create and return the model
+    # Create and return the model (observation model functionality is now in likelihood model)
     return PyroVelocityModel(
         dynamics_model=dynamics_model,
         prior_model=prior_model,
         likelihood_model=likelihood_model,
-        observation_model=observation_model,
         guide_model=inference_guide,
     )
 
@@ -550,15 +546,15 @@ def create_model(
     dynamics_model = create_dynamics_model(config.dynamics_model)
     prior_model = create_prior_model(config.prior_model)
     likelihood_model = create_likelihood_model(config.likelihood_model)
-    observation_model = create_observation_model(config.observation_model)
+    # Note: observation_model is ignored as its functionality is now in likelihood_model
+    # observation_model = create_observation_model(config.observation_model)
     inference_guide = create_inference_guide(config.inference_guide)
 
-    # Create and return the model
+    # Create and return the model (observation model functionality is now in likelihood model)
     return PyroVelocityModel(
         dynamics_model=dynamics_model,
         prior_model=prior_model,
         likelihood_model=likelihood_model,
-        observation_model=observation_model,
         guide_model=inference_guide,
     )
 
@@ -569,8 +565,8 @@ def standard_model_config() -> PyroVelocityModelConfig:
     Create a configuration for a standard PyroVelocityModel.
 
     This function returns a configuration for a PyroVelocityModel with standard
-    components: StandardDynamicsModel, LogNormalPriorModel, PoissonLikelihoodModel,
-    StandardObservationModel, and AutoGuide.
+    components: StandardDynamicsModel, LogNormalPriorModel, PoissonLikelihoodModel
+    (includes data preprocessing), and AutoGuide.
 
     Returns:
         A PyroVelocityModelConfig object with standard component configurations.
@@ -581,7 +577,6 @@ def standard_model_config() -> PyroVelocityModelConfig:
         dynamics_model=DynamicsModelConfig(name="standard"),
         prior_model=PriorModelConfig(name="lognormal"),
         likelihood_model=LikelihoodModelConfig(name="poisson"),
-        observation_model=ObservationModelConfig(name="standard"),
         inference_guide=InferenceGuideConfig(name="auto"),
     )
 
@@ -632,10 +627,6 @@ def create_legacy_model1() -> PyroVelocityModel:
             name="legacy",
             params={},
         ),
-        observation_model=ComponentConfig(
-            name="standard",
-            params={},
-        ),
         inference_guide=ComponentConfig(
             name="auto",
             params={
@@ -677,10 +668,6 @@ def create_legacy_model2() -> PyroVelocityModel:
         ),
         likelihood_model=ComponentConfig(
             name="legacy",
-            params={},
-        ),
-        observation_model=ComponentConfig(
-            name="standard",
             params={},
         ),
         inference_guide=ComponentConfig(
@@ -735,8 +722,7 @@ def create_piecewise_activation_model() -> PyroVelocityModel:
     piecewise activation parameter recovery validation. It uses:
     - PiecewiseActivationDynamicsModel for dimensionless analytical dynamics
     - PiecewiseActivationPriorModel for hierarchical priors
-    - PoissonLikelihoodModel for count data likelihood
-    - StandardObservationModel for data preprocessing
+    - PoissonLikelihoodModel for count data likelihood (includes data preprocessing)
     - AutoGuideFactory for variational inference
 
     Returns:
@@ -760,10 +746,6 @@ def create_piecewise_activation_model() -> PyroVelocityModel:
         ),
         likelihood_model=ComponentConfig(
             name="poisson",
-            params={},
-        ),
-        observation_model=ComponentConfig(
-            name="standard",
             params={},
         ),
         inference_guide=ComponentConfig(

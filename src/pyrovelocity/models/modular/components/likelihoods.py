@@ -25,36 +25,44 @@ from pyrovelocity.models.modular.utils.context_utils import validate_context
 
 @LikelihoodModelRegistry.register("poisson")
 class PoissonLikelihoodModel:
-    """Poisson likelihood model for observed counts.
+    """Poisson likelihood model for observed counts with data preprocessing.
 
-    This model uses a Poisson distribution as the likelihood for
-    observed RNA counts, which is appropriate when the variance
-    is approximately equal to the mean.
+    This model handles both data preprocessing (library size calculation, scaling)
+    and likelihood computation using a Poisson distribution for observed RNA counts.
+    This is appropriate when the variance is approximately equal to the mean.
 
     This implementation directly implements the LikelihoodModel Protocol.
     """
 
-    def __init__(self, name: str = "poisson_likelihood"):
+    def __init__(self, name: str = "poisson_likelihood", use_observed_lib_size: bool = True):
         """
         Initialize the PoissonLikelihoodModel.
 
         Args:
             name: A unique name for this component instance.
+            use_observed_lib_size: Whether to use observed library size as a scaling factor.
         """
         self.name = name
+        self.use_observed_lib_size = use_observed_lib_size
 
     @beartype
     def forward(self, context: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Define the likelihood distributions for observed data given expected values.
+        Process data and define likelihood distributions for observed data given expected values.
+
+        This method handles both data preprocessing (library size calculation, scaling)
+        and likelihood computation using Poisson distributions.
 
         Args:
-            context: Dictionary containing model context including u_obs, s_obs, u_expected, s_expected, and other parameters
+            context: Dictionary containing model context including u_obs, s_obs, and optionally u_expected, s_expected
 
         Returns:
-            Updated context dictionary with likelihood information
+            Updated context dictionary with preprocessed data and likelihood information
         """
-        # Validate context
+        # First, handle data preprocessing if we have raw observations
+        context = self._preprocess_observations(context)
+
+        # Validate context after preprocessing
         validation_result = validate_context(
             self.__class__.__name__,
             context,
@@ -185,6 +193,98 @@ class PoissonLikelihoodModel:
         else:
             # If validation failed, raise an error
             raise ValueError(f"Error in likelihood model forward pass: {validation_result.error}")
+
+    @beartype
+    def _preprocess_observations(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Preprocess raw observation data.
+
+        This method handles data extraction, library size calculation, and scaling
+        that was previously done by the observation model.
+
+        Args:
+            context: Dictionary containing model context
+
+        Returns:
+            Updated context with preprocessed observation data
+        """
+        # Extract u_obs and s_obs from context
+        u_obs = context.get("u_obs")
+        s_obs = context.get("s_obs")
+
+        if u_obs is None or s_obs is None:
+            # If x is provided but not u_obs and s_obs, extract u_obs and s_obs from x
+            x = context.get("x")
+            if x is not None:
+                if isinstance(x, dict):
+                    # If x is a dictionary, extract u_obs and s_obs directly
+                    if "u_obs" in x and "s_obs" in x:
+                        u_obs = x["u_obs"]
+                        s_obs = x["s_obs"]
+                        context["u_obs"] = u_obs
+                        context["s_obs"] = s_obs
+                    else:
+                        raise ValueError(
+                            "If x is a dictionary, it must contain 'u_obs' and 's_obs' keys"
+                        )
+                else:
+                    # If x is a tensor, assume first half of features are u_obs and second half are s_obs
+                    n_genes = x.shape[1] // 2
+                    u_obs = x[:, :n_genes]
+                    s_obs = x[:, n_genes:]
+                    context["u_obs"] = u_obs
+                    context["s_obs"] = s_obs
+            else:
+                raise ValueError(
+                    "Either u_obs and s_obs or x must be provided in the context"
+                )
+
+        # Check for model parameters in context that might have different shapes
+        model_n_genes = None
+        for param_name in ["alpha", "beta", "gamma"]:
+            if param_name in context:
+                model_n_genes = context[param_name].shape[0]
+                break
+
+        # Calculate library size
+        u_lib_size = u_obs.sum(1).unsqueeze(1).float()  # Convert to float
+        s_lib_size = s_obs.sum(1).unsqueeze(1).float()  # Convert to float
+
+        # Normalize by library size if specified
+        if self.use_observed_lib_size:
+            u_scale = u_lib_size / u_lib_size.mean()
+            s_scale = s_lib_size / s_lib_size.mean()
+        else:
+            u_scale = torch.ones_like(u_lib_size)
+            s_scale = torch.ones_like(s_lib_size)
+
+        # If there's a shape mismatch between model parameters and data,
+        # handle it by reshaping the data to match the model parameters
+        if model_n_genes is not None and model_n_genes != u_obs.shape[1]:
+            # Determine the minimum number of genes to use
+            n_genes = min(model_n_genes, u_obs.shape[1])
+            print(f"PoissonLikelihoodModel - Reshaping data to use {n_genes} genes")
+
+            # Reshape u_obs and s_obs to match the model parameters
+            if u_obs.shape[1] > n_genes:
+                u_obs = u_obs[:, :n_genes]
+
+            if s_obs.shape[1] > n_genes:
+                s_obs = s_obs[:, :n_genes]
+
+        # Calculate read depths (library sizes) for use in dynamics model
+        u_read_depth = u_lib_size
+        s_read_depth = s_lib_size
+
+        # Update the context with the transformed data
+        context["u_obs"] = u_obs
+        context["s_obs"] = s_obs
+        context["u_scale"] = u_scale
+        context["s_scale"] = s_scale
+        context["u_read_depth"] = u_read_depth
+        context["s_read_depth"] = s_read_depth
+
+        return context
 
     def __call__(
         self,
@@ -396,39 +496,46 @@ class PoissonLikelihoodModel:
 
 @LikelihoodModelRegistry.register("legacy")
 class LegacyLikelihoodModel:
-    """Legacy likelihood model for observed counts.
+    """Legacy likelihood model for observed counts with data preprocessing.
 
-    This model is specifically designed to work with the LegacyDynamicsModel
-    and handle the shape mismatches that can occur between the legacy and
-    modular implementations.
+    This model handles both data preprocessing (library size calculation, scaling)
+    and likelihood computation. It is specifically designed to work with the
+    LegacyDynamicsModel and handle the shape mismatches that can occur between
+    the legacy and modular implementations.
 
     This implementation directly implements the LikelihoodModel Protocol.
     """
 
-    def __init__(self, name: str = "legacy_likelihood"):
+    def __init__(self, name: str = "legacy_likelihood", use_observed_lib_size: bool = True):
         """
         Initialize the LegacyLikelihoodModel.
 
         Args:
             name: A unique name for this component instance.
+            use_observed_lib_size: Whether to use observed library size as a scaling factor.
         """
         self.name = name
+        self.use_observed_lib_size = use_observed_lib_size
 
     @beartype
     def forward(self, context: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Define the likelihood distributions for observed data given expected values.
+        Process data and define likelihood distributions for observed data given expected values.
 
-        This method is specifically designed to handle the shape mismatches that
-        can occur between the legacy and modular implementations.
+        This method handles both data preprocessing and likelihood computation.
+        It is specifically designed to handle the shape mismatches that can occur
+        between the legacy and modular implementations.
 
         Args:
-            context: Dictionary containing model context including u_obs, s_obs, u_expected, s_expected, and other parameters
+            context: Dictionary containing model context including u_obs, s_obs, and optionally u_expected, s_expected
 
         Returns:
-            Updated context dictionary with likelihood information
+            Updated context dictionary with preprocessed data and likelihood information
         """
-        # Validate context
+        # First, handle data preprocessing if we have raw observations
+        context = self._preprocess_observations(context)
+
+        # Validate context after preprocessing
         validation_result = validate_context(
             self.__class__.__name__,
             context,
@@ -520,6 +627,99 @@ class LegacyLikelihoodModel:
         else:
             # If validation failed, raise an error
             raise ValueError(f"Error in likelihood model forward pass: {validation_result.error}")
+
+    @beartype
+    def _preprocess_observations(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Preprocess raw observation data for legacy model compatibility.
+
+        This method handles data extraction, library size calculation, and scaling
+        that was previously done by the observation model, with special handling
+        for legacy model requirements.
+
+        Args:
+            context: Dictionary containing model context
+
+        Returns:
+            Updated context with preprocessed observation data
+        """
+        # Extract u_obs and s_obs from context
+        u_obs = context.get("u_obs")
+        s_obs = context.get("s_obs")
+
+        if u_obs is None or s_obs is None:
+            # If x is provided but not u_obs and s_obs, extract u_obs and s_obs from x
+            x = context.get("x")
+            if x is not None:
+                if isinstance(x, dict):
+                    # If x is a dictionary, extract u_obs and s_obs directly
+                    if "u_obs" in x and "s_obs" in x:
+                        u_obs = x["u_obs"]
+                        s_obs = x["s_obs"]
+                        context["u_obs"] = u_obs
+                        context["s_obs"] = s_obs
+                    else:
+                        raise ValueError(
+                            "If x is a dictionary, it must contain 'u_obs' and 's_obs' keys"
+                        )
+                else:
+                    # If x is a tensor, assume first half of features are u_obs and second half are s_obs
+                    n_genes = x.shape[1] // 2
+                    u_obs = x[:, :n_genes]
+                    s_obs = x[:, n_genes:]
+                    context["u_obs"] = u_obs
+                    context["s_obs"] = s_obs
+            else:
+                raise ValueError(
+                    "Either u_obs and s_obs or x must be provided in the context"
+                )
+
+        # Check for model parameters in context that might have different shapes
+        model_n_genes = None
+        for param_name in ["alpha", "beta", "gamma"]:
+            if param_name in context:
+                model_n_genes = context[param_name].shape[0]
+                break
+
+        # Calculate library size
+        u_lib_size = u_obs.sum(1).unsqueeze(1).float()  # Convert to float
+        s_lib_size = s_obs.sum(1).unsqueeze(1).float()  # Convert to float
+
+        # Normalize by library size if specified
+        if self.use_observed_lib_size:
+            u_scale = u_lib_size / u_lib_size.mean()
+            s_scale = s_lib_size / s_lib_size.mean()
+        else:
+            u_scale = torch.ones_like(u_lib_size)
+            s_scale = torch.ones_like(s_lib_size)
+
+        # If there's a shape mismatch between model parameters and data,
+        # handle it by reshaping the data to match the model parameters
+        if model_n_genes is not None and model_n_genes != u_obs.shape[1]:
+            # Determine the minimum number of genes to use
+            n_genes = min(model_n_genes, u_obs.shape[1])
+            print(f"LegacyLikelihoodModel - Reshaping data to use {n_genes} genes")
+
+            # Reshape u_obs and s_obs to match the model parameters
+            if u_obs.shape[1] > n_genes:
+                u_obs = u_obs[:, :n_genes]
+
+            if s_obs.shape[1] > n_genes:
+                s_obs = s_obs[:, :n_genes]
+
+        # Calculate read depths (library sizes) for use in dynamics model
+        u_read_depth = u_lib_size
+        s_read_depth = s_lib_size
+
+        # Update the context with the transformed data
+        context["u_obs"] = u_obs
+        context["s_obs"] = s_obs
+        context["u_scale"] = u_scale
+        context["s_scale"] = s_scale
+        context["u_read_depth"] = u_read_depth
+        context["s_read_depth"] = s_read_depth
+
+        return context
 
     def __call__(
         self,

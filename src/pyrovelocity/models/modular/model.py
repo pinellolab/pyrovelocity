@@ -68,9 +68,6 @@ from pyrovelocity.models.modular.components.likelihoods import (
     LegacyLikelihoodModel,
     PoissonLikelihoodModel,
 )
-from pyrovelocity.models.modular.components.observations import (
-    StandardObservationModel,
-)
 from pyrovelocity.models.modular.components.priors import LogNormalPriorModel
 from pyrovelocity.models.modular.data.anndata import (
     extract_layers,
@@ -88,9 +85,6 @@ from pyrovelocity.models.modular.interfaces import (
     LikelihoodModel as LikelihoodModelProtocol,
 )
 from pyrovelocity.models.modular.interfaces import (
-    ObservationModel as ObservationModelProtocol,
-)
-from pyrovelocity.models.modular.interfaces import (
     PriorModel as PriorModelProtocol,
 )
 
@@ -106,8 +100,7 @@ class ModelState:
     Attributes:
         dynamics_state: State of the dynamics model component
         prior_state: State of the prior model component
-        likelihood_state: State of the likelihood model component
-        observation_state: State of the observation model component
+        likelihood_state: State of the likelihood model component (includes data preprocessing)
         guide_state: State of the inference guide component
         metadata: Optional dictionary for additional metadata
     """
@@ -115,7 +108,6 @@ class ModelState:
     dynamics_state: Dict[str, Any]
     prior_state: Dict[str, Any]
     likelihood_state: Dict[str, Any]
-    observation_state: Dict[str, Any]
     guide_state: Dict[str, Any]
     metadata: Dict[str, Any] = field(default_factory=dict)
 
@@ -155,8 +147,7 @@ class PyroVelocityModel:
     Attributes:
         dynamics_model: Component handling velocity vector field modeling
         prior_model: Component handling prior distributions
-        likelihood_model: Component handling likelihood distributions
-        observation_model: Component handling data observations
+        likelihood_model: Component handling likelihood distributions and data preprocessing
         guide_model: Component handling inference guide
         state: Immutable state container for all model components
 
@@ -215,7 +206,6 @@ class PyroVelocityModel:
         dynamics_model: DynamicsModelProtocol,
         prior_model: PriorModelProtocol,
         likelihood_model: LikelihoodModelProtocol,
-        observation_model: ObservationModelProtocol,
         guide_model: GuideModelProtocol,
         state: Optional[ModelState] = None,
     ):
@@ -225,8 +215,7 @@ class PyroVelocityModel:
         Args:
             dynamics_model: Model component for velocity vector field
             prior_model: Model component for prior distributions
-            likelihood_model: Model component for likelihood distributions
-            observation_model: Model component for data observations
+            likelihood_model: Model component for likelihood distributions and data preprocessing
             guide_model: Model component for inference guide
             state: Optional pre-initialized model state
         """
@@ -234,7 +223,6 @@ class PyroVelocityModel:
         self.dynamics_model = dynamics_model
         self.prior_model = prior_model
         self.likelihood_model = likelihood_model
-        self.observation_model = observation_model
         self.guide_model = guide_model
 
         # Initialize state if not provided
@@ -243,7 +231,6 @@ class PyroVelocityModel:
                 dynamics_state=getattr(self.dynamics_model, "state", {}),
                 prior_state=getattr(self.prior_model, "state", {}),
                 likelihood_state=getattr(self.likelihood_model, "state", {}),
-                observation_state=getattr(self.observation_model, "state", {}),
                 guide_state=getattr(self.guide_model, "state", {}),
             )
         else:
@@ -370,16 +357,13 @@ class PyroVelocityModel:
         if s_obs is not None:
             context["s_obs"] = s_obs
 
-        # Process data through the observation model
-        observation_context = self.observation_model.forward(context)
-
         # Apply prior distributions first to provide parameters for the dynamics model
-        prior_context = self.prior_model.forward(observation_context)
+        prior_context = self.prior_model.forward(context)
 
         # Process through the dynamics model with the parameters from the prior model
         dynamics_context = self.dynamics_model.forward(prior_context)
 
-        # Apply likelihood model
+        # Apply likelihood model (which now handles data preprocessing)
         likelihood_context = self.likelihood_model.forward(dynamics_context)
 
         # Return the final context with all model outputs
@@ -457,18 +441,16 @@ class PyroVelocityModel:
             context["s_obs"] = s_obs
 
         # If no data is provided, we're in posterior sampling mode
-        # In this case, we can skip the observation model and go directly to the guide
+        # In this case, we can go directly to the guide
         if x is None and u_obs is None and s_obs is None:
-            # Pass directly to the guide model without observation processing
+            # Pass directly to the guide model without data processing
             guide_fn = self.guide_model.get_guide()
             return guide_fn(context)
 
-        # Process through the observation model first to prepare data
-        observation_context = self.observation_model.forward(context)
-
+        # Data preprocessing is now handled by the likelihood model
         # Delegate to the guide model
         guide_fn = self.guide_model.get_guide()
-        return guide_fn(observation_context)
+        return guide_fn(context)
 
     @property
     def name(self) -> str:
@@ -499,9 +481,6 @@ class PyroVelocityModel:
         likelihood_name = getattr(self.likelihood_model, "name", self.likelihood_model.__class__.__name__)
         likelihood_desc = getattr(self.likelihood_model, "description", "")
 
-        observation_name = getattr(self.observation_model, "name", self.observation_model.__class__.__name__)
-        observation_desc = getattr(self.observation_model, "description", "")
-
         guide_name = getattr(self.guide_model, "name", self.guide_model.__class__.__name__)
         guide_desc = getattr(self.guide_model, "description", "")
 
@@ -509,7 +488,6 @@ class PyroVelocityModel:
         dynamics_config = getattr(self.dynamics_model, "config", {})
         prior_config = getattr(self.prior_model, "config", {})
         likelihood_config = getattr(self.likelihood_model, "config", {})
-        observation_config = getattr(self.observation_model, "config", {})
         guide_config = getattr(self.guide_model, "config", {})
 
         # Format component configurations as strings
@@ -521,7 +499,6 @@ class PyroVelocityModel:
         dynamics_config_str = format_config(dynamics_config)
         prior_config_str = format_config(prior_config)
         likelihood_config_str = format_config(likelihood_config)
-        observation_config_str = format_config(observation_config)
         guide_config_str = format_config(guide_config)
 
         # Check if model has been trained
@@ -537,9 +514,7 @@ class PyroVelocityModel:
             f"  • Prior:       {prior_name} {f'({prior_config_str})' if prior_config_str else ''}",
             f"                 {prior_desc}",
             f"  • Likelihood:  {likelihood_name} {f'({likelihood_config_str})' if likelihood_config_str else ''}",
-            f"                 {likelihood_desc}",
-            f"  • Observation: {observation_name} {f'({observation_config_str})' if observation_config_str else ''}",
-            f"                 {observation_desc}",
+            f"                 {likelihood_desc} (includes data preprocessing)",
             f"  • Guide:       {guide_name} {f'({guide_config_str})' if guide_config_str else ''}",
             f"                 {guide_desc}",
         ]
@@ -604,7 +579,6 @@ class PyroVelocityModel:
             dynamics_model=self.dynamics_model,
             prior_model=self.prior_model,
             likelihood_model=self.likelihood_model,
-            observation_model=self.observation_model,
             guide_model=self.guide_model,
             state=state,
         )
@@ -662,11 +636,8 @@ class PyroVelocityModel:
             **kwargs,
         }
 
-        # Process data through the observation model
-        observation_context = self.observation_model.forward(context)
-
-        # Process through the dynamics model
-        dynamics_context = self.dynamics_model.forward(observation_context)
+        # Process through the dynamics model (data preprocessing is now handled by likelihood model)
+        dynamics_context = self.dynamics_model.forward(context)
 
         # Extract predictions
         predictions = dynamics_context.get("predictions", {})
@@ -1009,7 +980,6 @@ class PyroVelocityModel:
             dynamics_state=self.state.dynamics_state,
             prior_state=self.state.prior_state,
             likelihood_state=self.state.likelihood_state,
-            observation_state=self.state.observation_state,
             guide_state=inference_state.params,
             metadata={
                 "inference_state": inference_state,

@@ -80,8 +80,7 @@ class ModelConfig:
     Attributes:
         dynamics_model: Configuration for the dynamics model
         prior_model: Configuration for the prior model
-        likelihood_model: Configuration for the likelihood model
-        observation_model: Configuration for the observation model
+        likelihood_model: Configuration for the likelihood model (includes data preprocessing)
         inference_guide: Configuration for the inference guide
         metadata: Additional metadata for the model
     """
@@ -89,7 +88,6 @@ class ModelConfig:
     dynamics_model: ComponentConfig
     prior_model: ComponentConfig
     likelihood_model: ComponentConfig
-    observation_model: ComponentConfig
     inference_guide: ComponentConfig
     metadata: Dict[str, Any] = field(default_factory=dict)
 
@@ -104,11 +102,14 @@ class ModelConfig:
         Returns:
             A ModelConfig instance
         """
+        # Handle backward compatibility: ignore observation_model if present
+        if "observation_model" in config_dict:
+            print("Warning: observation_model in config is ignored. Data preprocessing is now handled by likelihood_model.")
+
         return cls(
             dynamics_model=ComponentConfig.from_dict(config_dict["dynamics_model"]),
             prior_model=ComponentConfig.from_dict(config_dict["prior_model"]),
             likelihood_model=ComponentConfig.from_dict(config_dict["likelihood_model"]),
-            observation_model=ComponentConfig.from_dict(config_dict["observation_model"]),
             inference_guide=ComponentConfig.from_dict(config_dict["inference_guide"]),
             metadata=config_dict.get("metadata", {}),
         )
@@ -124,7 +125,6 @@ class ModelConfig:
             "dynamics_model": self.dynamics_model.to_dict(),
             "prior_model": self.prior_model.to_dict(),
             "likelihood_model": self.likelihood_model.to_dict(),
-            "observation_model": self.observation_model.to_dict(),
             "inference_guide": self.inference_guide.to_dict(),
             "metadata": self.metadata,
         }
@@ -135,8 +135,8 @@ class ModelConfig:
         Create a standard model configuration.
 
         This method returns a configuration for a PyroVelocityModel with standard
-        components: StandardDynamicsModel, LogNormalPriorModel, PoissonLikelihoodModel,
-        StandardObservationModel, and AutoGuide.
+        components: StandardDynamicsModel, LogNormalPriorModel, PoissonLikelihoodModel
+        (includes data preprocessing), and AutoGuide.
 
         Args:
             **_: Ignored keyword arguments (for backward compatibility)
@@ -170,16 +170,9 @@ class ModelConfig:
             ),
             likelihood_model=ComponentConfig(
                 name="poisson",
-                # Match legacy model parameters
-                params={}
-            ),
-            observation_model=ComponentConfig(
-                name="standard",
-                # Match legacy model parameters
+                # Match legacy model parameters and include data preprocessing
                 params={
-                    "use_raw": True,
-                    "log_transform": True,
-                    "normalize": True,
+                    "use_observed_lib_size": True,  # Data preprocessing parameter
                 }
             ),
             inference_guide=ComponentConfig(
@@ -208,7 +201,6 @@ ModelConfigConf = zen_builds(
     dynamics_model=ComponentConfigConf,
     prior_model=ComponentConfigConf,
     likelihood_model=ComponentConfigConf,
-    observation_model=ComponentConfigConf,
     inference_guide=ComponentConfigConf,
     metadata=dict,
 )

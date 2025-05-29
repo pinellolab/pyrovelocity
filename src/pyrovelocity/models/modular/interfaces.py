@@ -305,18 +305,22 @@ class PriorModel(Protocol):
 @runtime_checkable
 class LikelihoodModel(Protocol):
     """
-    Protocol for likelihood models that define the observation distributions.
+    Protocol for likelihood models that handle data preprocessing and define observation distributions.
 
-    Likelihood models define how the expected RNA counts (from the dynamics model)
-    relate to the observed counts through probability distributions. They use Pyro's
-    probabilistic programming framework to register observations with the model.
+    Likelihood models now handle both data preprocessing (previously done by observation models)
+    and likelihood computation. They define how the expected RNA counts (from the dynamics model)
+    relate to the observed counts through probability distributions, while also handling
+    data transformation and normalization.
 
     Implementations must:
-    1. Define appropriate likelihood distributions for observed data
-    2. Use Pyro's observe method to register observations
-    3. Handle scaling factors and other transformations
-    4. Support different distribution types (e.g., Poisson, Negative Binomial)
-    5. Handle zero-inflation and other data characteristics
+    1. Handle data preprocessing and normalization
+    2. Compute scaling factors if needed
+    3. Handle missing values and zeros
+    4. Define appropriate likelihood distributions for observed data
+    5. Use Pyro's observe method to register observations
+    6. Handle scaling factors and other transformations
+    7. Support different distribution types (e.g., Poisson, Negative Binomial)
+    8. Handle zero-inflation and other data characteristics
     """
 
     def forward(
@@ -324,27 +328,32 @@ class LikelihoodModel(Protocol):
         context: Dict[str, Any],
     ) -> Dict[str, Any]:
         """
-        Define the likelihood distributions for observed data given expected values.
+        Process data and define likelihood distributions for observed data given expected values.
 
-        This method takes a context dictionary containing observed data and expected values,
-        defines likelihood distributions for the observed data, registers observations with
-        Pyro, and updates the context with the likelihood distributions.
+        This method takes a context dictionary containing raw observed data, performs
+        preprocessing and transformation, then defines likelihood distributions for the
+        observed data, registers observations with Pyro, and updates the context with
+        the likelihood distributions.
 
         Args:
             context: Dictionary containing model context with the following required keys:
-                - u_obs: Observed unspliced counts (BatchTensor)
-                - s_obs: Observed spliced counts (BatchTensor)
-                - u_expected: Expected unspliced counts (BatchTensor)
-                - s_expected: Expected spliced counts (BatchTensor)
+                - u_obs: Raw observed unspliced counts (may need preprocessing)
+                - s_obs: Raw observed spliced counts (may need preprocessing)
+                - u_expected: Expected unspliced counts from dynamics model
+                - s_expected: Expected spliced counts from dynamics model
 
                 And optional keys:
                 - plate: Pyro plate for batch dimensions
                 - scaling: Scaling factors for observations
+                - Additional parameters from prior and dynamics models
 
         Returns:
             Updated context dictionary with additional keys:
+                - u_transformed: Preprocessed unspliced counts (if preprocessing applied)
+                - s_transformed: Preprocessed spliced counts (if preprocessing applied)
                 - u_dist: Distribution for unspliced counts
                 - s_dist: Distribution for spliced counts
+                - scaling: Computed scaling factors (if applicable)
 
         Raises:
             ValueError: If required parameters are missing from the context
