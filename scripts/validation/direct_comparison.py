@@ -18,8 +18,8 @@ import os
 import sys
 import time
 import argparse
+import signal
 import numpy as np
-import matplotlib.pyplot as plt
 import torch
 import pyro
 import scipy.sparse
@@ -38,6 +38,44 @@ from pyrovelocity.validation.comparison import (
     compare_uncertainties,
     compare_performance,
 )
+
+
+class TimeoutError(Exception):
+    """Custom timeout exception."""
+    pass
+
+
+def timeout_handler(signum, frame):
+    """Handle timeout signal."""
+    _ = signum, frame  # Suppress unused parameter warnings
+    raise TimeoutError("Operation timed out")
+
+
+def with_timeout(timeout_seconds):
+    """Decorator to add timeout to functions."""
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            # Set the signal handler and a timeout alarm
+            old_handler = signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(timeout_seconds)
+
+            try:
+                result = func(*args, **kwargs)
+            finally:
+                # Disable the alarm and restore the old handler
+                signal.alarm(0)
+                signal.signal(signal.SIGALRM, old_handler)
+
+            return result
+        return wrapper
+    return decorator
+
+
+def print_progress(message):
+    """Print progress message with timestamp."""
+    timestamp = time.strftime("%H:%M:%S")
+    print(f"[{timestamp}] {message}")
+    sys.stdout.flush()  # Ensure immediate output
 
 
 def parse_args():
@@ -141,28 +179,43 @@ def train_legacy_model(adata, max_epochs, num_samples, seed=42, compute_velocity
     _ = kwargs  # Suppress unused variable warning
 
     model = PyroVelocity(
-        adata=adata,     
+        adata=adata,
         guide_type="auto_t0_constraint",
         add_offset=False,
     )
 
     # Train model
+    print(f"Starting legacy model training with max_epochs={max_epochs}")
     training_start_time = time.time()
-    model.train(max_epochs=max_epochs, check_val_every_n_epoch=None)
+    try:
+        model.train(max_epochs=max_epochs, check_val_every_n_epoch=None)
+        print("Legacy model training completed successfully")
+    except Exception as e:
+        print(f"Error during legacy model training: {e}")
+        raise
     training_end_time = time.time()
     training_time = training_end_time - training_start_time
+    print(f"Legacy model training time: {training_time:.2f} seconds")
 
     # Generate posterior samples
+    print(f"Starting posterior sampling with num_samples={num_samples}")
     inference_start_time = time.time()
     try:
         posterior_samples = model.generate_posterior_samples(num_samples=num_samples)
+        print("Posterior sampling completed successfully")
     except AttributeError as e:
         if "'NoneType' object has no attribute 'uns'" in str(e):
             # This is a known issue with the legacy model
             # We need to pass the adata explicitly
+            print("Retrying posterior sampling with explicit adata parameter")
             posterior_samples = model.generate_posterior_samples(adata=model.adata, num_samples=num_samples)
+            print("Posterior sampling completed successfully (with explicit adata)")
         else:
+            print(f"AttributeError during posterior sampling: {e}")
             raise
+    except Exception as e:
+        print(f"Error during posterior sampling: {e}")
+        raise
 
     # Print parameter shapes for debugging
     print("Legacy model parameter shapes:")
@@ -305,49 +358,79 @@ def train_modular_model(adata, max_epochs, num_samples, seed=42, model_type="leg
 
     # Set up AnnData for modular model
     adata_copy = adata.copy()
-    PyroVelocityModel.setup_anndata(adata_copy)
+    try:
+        PyroVelocityModel.setup_anndata(adata_copy)
+        print("AnnData setup completed for modular model")
+
+        # Debug: Check the layers in adata_copy
+        print(f"Available layers in adata_copy: {list(adata_copy.layers.keys())}")
+        print(f"adata_copy.layers['unspliced'].shape: {adata_copy.layers['unspliced'].shape}")
+        print(f"adata_copy.layers['spliced'].shape: {adata_copy.layers['spliced'].shape}")
+    except Exception as e:
+        print(f"Error setting up AnnData for modular model: {e}")
+        raise
 
     # Create modular model based on model_type
     print(f"Modular model using model_type: {model_type}")
 
     # Print available components for debugging
-    from pyrovelocity.models.modular.registry import LikelihoodModelRegistry
-
-    # Get available components by inspecting the registry
-    print(f"Available likelihood models: {list(LikelihoodModelRegistry._registry.keys())}")
+    try:
+        from pyrovelocity.models.modular.registry import LikelihoodModelRegistry
+        # Get available components by inspecting the registry
+        print(f"Available likelihood models: {list(LikelihoodModelRegistry._registry.keys())}")
+    except Exception as e:
+        print(f"Warning: Could not access registry information: {e}")
 
     # Create model based on model_type
-    if model_type == "legacy":
-        # Use the legacy model replication for direct comparison with the legacy model
-        # Create the model using the predefined legacy model factory function
-        # Use create_legacy_model1() instead of create_legacy_model2() to avoid offset parameter issues
-        model = create_legacy_model1()
-        print("Using legacy model configuration (without offset) for direct comparison with legacy implementation")
-    else:
-        # Default to standard model with Poisson observation model
-        model = create_standard_model()
-        print("Using standard model with Poisson likelihood")
+    try:
+        if model_type == "legacy":
+            # Use the legacy model replication for direct comparison with the legacy model
+            # Create the model using the predefined legacy model factory function
+            # Use create_legacy_model1() instead of create_legacy_model2() to avoid offset parameter issues
+            model = create_legacy_model1()
+            print("Using legacy model configuration (without offset) for direct comparison with legacy implementation")
+        else:
+            # Default to standard model with Poisson observation model
+            model = create_standard_model()
+            print("Using standard model with Poisson likelihood")
+        print("Modular model created successfully")
+    except Exception as e:
+        print(f"Error creating modular model: {e}")
+        raise
 
     # Train model
+    print(f"Starting modular model training with max_epochs={max_epochs}")
     training_start_time = time.time()
-    # The modular model's train method has a different signature
-    # It doesn't accept check_val_every_n_epoch
-    model.train(
-        adata=adata_copy,
-        max_epochs=max_epochs,
-        early_stopping=False,
-        seed=seed,
-    )
+    try:
+        # The modular model's train method has a different signature
+        # It doesn't accept check_val_every_n_epoch
+        model.train(
+            adata=adata_copy,
+            max_epochs=max_epochs,
+            early_stopping=False,
+            seed=seed,
+        )
+        print("Modular model training completed successfully")
+    except Exception as e:
+        print(f"Error during modular model training: {e}")
+        raise
     training_end_time = time.time()
     training_time = training_end_time - training_start_time
+    print(f"Modular model training time: {training_time:.2f} seconds")
 
     # Generate posterior samples
+    print(f"Starting modular model posterior sampling with num_samples={num_samples}")
     inference_start_time = time.time()
-    posterior_samples = model.generate_posterior_samples(
-        adata=adata_copy,
-        num_samples=num_samples,
-        seed=seed
-    )
+    try:
+        posterior_samples = model.generate_posterior_samples(
+            adata=adata_copy,
+            num_samples=num_samples,
+            seed=seed
+        )
+        print("Modular model posterior sampling completed successfully")
+    except Exception as e:
+        print(f"Error during modular model posterior sampling: {e}")
+        raise
 
     # Print parameter shapes for debugging
     print("Modular model parameter shapes:")
@@ -910,6 +993,9 @@ def main():
     # Parse command line arguments
     args = parse_args()
 
+    print_progress("Starting PyroVelocity Direct Comparison")
+    print_progress(f"Configuration: max_epochs={args.max_epochs}, num_samples={args.num_samples}, model_type={args.model_type}, compute_velocity={args.compute_velocity}")
+
     # Set random seed for reproducibility
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
@@ -917,17 +1003,20 @@ def main():
 
     # Create output directory
     os.makedirs(args.output_dir, exist_ok=True)
-    print(f"Created output directory: {args.output_dir}")
+    print_progress(f"Created output directory: {args.output_dir}")
 
     # Load preprocessed pancreas data
     try:
+        print_progress("Loading preprocessed pancreas data...")
         adata = load_preprocessed_pancreas_data()
+        print_progress("Data loading completed successfully")
     except Exception as e:
-        print(f"Failed to load data: {e}")
+        print_progress(f"Failed to load data: {e}")
         return
 
     # Train legacy model
     try:
+        print_progress("Starting legacy model training...")
         # Note: model_type is passed for compatibility but has no effect on the legacy model
         legacy_results = train_legacy_model(
             adata,
@@ -937,15 +1026,16 @@ def main():
             compute_velocity=args.compute_velocity,
             model_type=args.model_type  # This parameter is ignored by the legacy model
         )
-        print("Legacy model training successful")
+        print_progress("Legacy model training completed successfully")
     except Exception as e:
-        print(f"Error training legacy model: {e}")
+        print_progress(f"Error training legacy model: {e}")
         import traceback
         traceback.print_exc()
         return
 
     # Train modular model
     try:
+        print_progress("Starting modular model training...")
         modular_results = train_modular_model(
             adata,
             args.max_epochs,
@@ -954,31 +1044,33 @@ def main():
             model_type=args.model_type,
             compute_velocity=args.compute_velocity
         )
-        print("Modular model training successful")
+        print_progress("Modular model training completed successfully")
     except Exception as e:
-        print(f"Error training modular model: {e}")
+        print_progress(f"Error training modular model: {e}")
         import traceback
         traceback.print_exc()
         return
 
     # Compare models
     try:
+        print_progress("Starting model comparison...")
         # Check if modular_results is available
         if 'modular_results' in locals() and modular_results is not None:
             comparison_results = compare_models(legacy_results, modular_results)
-            print("Model comparison successful")
+            print_progress("Model comparison completed successfully")
 
             # Generate summary report
             try:
+                print_progress("Generating summary report...")
                 report_path = generate_summary_report(legacy_results, modular_results, comparison_results, args, args.output_dir)
-                print(f"Summary report saved to {report_path}")
-                print(f"Results saved to {args.output_dir}")
+                print_progress(f"Summary report saved to {report_path}")
+                print_progress(f"All results saved to {args.output_dir}")
             except Exception as e:
-                print(f"Error generating summary report: {e}")
+                print_progress(f"Error generating summary report: {e}")
                 import traceback
                 traceback.print_exc()
         else:
-            print("Skipping model comparison because modular model failed")
+            print_progress("Skipping model comparison because modular model failed")
 
             # Create a simple summary report for the legacy model
             try:
