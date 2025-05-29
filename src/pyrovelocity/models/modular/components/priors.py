@@ -13,7 +13,7 @@ These implementations directly implement the PriorModel Protocol without
 inheriting from base classes, following the Protocol-First approach.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, ClassVar, Dict, Optional
 
 import pyro
 import pyro.distributions as dist
@@ -278,4 +278,361 @@ class LogNormalPriorModel:
         return params
 
 
+@PriorModelRegistry.register("piecewise_activation")
+class PiecewiseActivationPriorModel:
+    """
+    Piecewise activation prior model for RNA velocity parameters.
 
+    This model implements hierarchical priors for the piecewise activation dynamics
+    model with dimensionless analytical solutions. It follows the cell2fate approach
+    for hierarchical time modeling and uses LogNormal priors for activation parameters.
+
+    The hierarchical time structure is:
+        T*_M ~ Gamma(alpha_T, beta_T)
+        t_loc ~ Gamma(alpha_t_loc, beta_t_loc)
+        t_scale ~ Gamma(alpha_t_scale, beta_t_scale)
+        tilde_t_j ~ Normal(t_loc, t_scale^2)
+        t*_j = T*_M * max(tilde_t_j, epsilon)
+
+    The piecewise activation parameters are:
+        α*_off ~ LogNormal(log(0.1), 0.5^2)  # Basal transcription
+        α*_on ~ LogNormal(log(2.0), 0.5^2)   # Active transcription
+        γ* ~ LogNormal(log(1.0), 0.3^2)      # Relative degradation
+        t*_on ~ LogNormal(log(0.3), 0.3^2)   # Activation onset time
+        δ* ~ LogNormal(log(0.4), 0.3^2)      # Activation duration
+
+    The capture efficiency parameter is:
+        λ_j ~ LogNormal(log(1.0), 0.2^2)     # Lumped technical factors
+
+    Attributes:
+        name (str): A unique name for this component instance.
+        Various hyperparameters for the prior distributions.
+    """
+
+    name: ClassVar[str] = "piecewise_activation"
+
+    @beartype
+    def __init__(
+        self,
+        # Hierarchical time structure hyperparameters (following cell2fate)
+        T_M_alpha: float = 4.0,      # Shape parameter for T*_M ~ Gamma
+        T_M_beta: float = 0.08,      # Rate parameter for T*_M ~ Gamma (mean = 50)
+        t_loc_alpha: float = 1.0,    # Shape parameter for t_loc ~ Gamma
+        t_loc_beta: float = 2.0,     # Rate parameter for t_loc ~ Gamma (mean = 0.5)
+        t_scale_alpha: float = 1.0,  # Shape parameter for t_scale ~ Gamma
+        t_scale_beta: float = 4.0,   # Rate parameter for t_scale ~ Gamma (mean = 0.25)
+        t_epsilon: float = 1e-6,     # Small epsilon to prevent negative times
+
+        # Piecewise activation parameter hyperparameters
+        alpha_off_loc: float = -2.3,    # log(0.1) for LogNormal prior
+        alpha_off_scale: float = 0.5,   # Scale for α*_off prior
+        alpha_on_loc: float = 0.69,     # log(2.0) for LogNormal prior
+        alpha_on_scale: float = 0.5,    # Scale for α*_on prior
+        gamma_star_loc: float = 0.0,    # log(1.0) for LogNormal prior
+        gamma_star_scale: float = 0.3,  # Scale for γ* prior
+        t_on_star_loc: float = -1.2,    # log(0.3) for LogNormal prior
+        t_on_star_scale: float = 0.3,   # Scale for t*_on prior
+        delta_star_loc: float = -0.92,  # log(0.4) for LogNormal prior
+        delta_star_scale: float = 0.3,  # Scale for δ* prior
+
+        # Capture efficiency parameter hyperparameters
+        lambda_loc: float = 0.0,        # log(1.0) for LogNormal prior
+        lambda_scale: float = 0.2,      # Scale for λ_j prior
+
+        name: Optional[str] = None,
+    ) -> None:
+        """
+        Initialize the PiecewiseActivationPriorModel.
+
+        Args:
+            T_M_alpha: Shape parameter for T*_M ~ Gamma distribution
+            T_M_beta: Rate parameter for T*_M ~ Gamma distribution
+            t_loc_alpha: Shape parameter for t_loc ~ Gamma distribution
+            t_loc_beta: Rate parameter for t_loc ~ Gamma distribution
+            t_scale_alpha: Shape parameter for t_scale ~ Gamma distribution
+            t_scale_beta: Rate parameter for t_scale ~ Gamma distribution
+            t_epsilon: Small epsilon to prevent negative times
+            alpha_off_loc: Location parameter for α*_off ~ LogNormal distribution
+            alpha_off_scale: Scale parameter for α*_off ~ LogNormal distribution
+            alpha_on_loc: Location parameter for α*_on ~ LogNormal distribution
+            alpha_on_scale: Scale parameter for α*_on ~ LogNormal distribution
+            gamma_star_loc: Location parameter for γ* ~ LogNormal distribution
+            gamma_star_scale: Scale parameter for γ* ~ LogNormal distribution
+            t_on_star_loc: Location parameter for t*_on ~ LogNormal distribution
+            t_on_star_scale: Scale parameter for t*_on ~ LogNormal distribution
+            delta_star_loc: Location parameter for δ* ~ LogNormal distribution
+            delta_star_scale: Scale parameter for δ* ~ LogNormal distribution
+            lambda_loc: Location parameter for λ_j ~ LogNormal distribution
+            lambda_scale: Scale parameter for λ_j ~ LogNormal distribution
+            name: A unique name for this component instance.
+        """
+        # Use the class name attribute if no name is provided
+        if name is None:
+            name = self.__class__.name
+
+        self.name = name
+
+        # Store hyperparameters for hierarchical time structure
+        self.T_M_alpha = T_M_alpha
+        self.T_M_beta = T_M_beta
+        self.t_loc_alpha = t_loc_alpha
+        self.t_loc_beta = t_loc_beta
+        self.t_scale_alpha = t_scale_alpha
+        self.t_scale_beta = t_scale_beta
+        self.t_epsilon = t_epsilon
+
+        # Store hyperparameters for piecewise activation parameters
+        self.alpha_off_loc = alpha_off_loc
+        self.alpha_off_scale = alpha_off_scale
+        self.alpha_on_loc = alpha_on_loc
+        self.alpha_on_scale = alpha_on_scale
+        self.gamma_star_loc = gamma_star_loc
+        self.gamma_star_scale = gamma_star_scale
+        self.t_on_star_loc = t_on_star_loc
+        self.t_on_star_scale = t_on_star_scale
+        self.delta_star_loc = delta_star_loc
+        self.delta_star_scale = delta_star_scale
+
+        # Store hyperparameters for capture efficiency
+        self.lambda_loc = lambda_loc
+        self.lambda_scale = lambda_scale
+
+        # Register buffers for commonly used tensors
+        register_buffer(self, "zero", torch.tensor(0.0))
+        register_buffer(self, "one", torch.tensor(1.0))
+        register_buffer(self, "epsilon", torch.tensor(t_epsilon))
+
+    @jaxtyped
+    @beartype
+    def forward(
+        self,
+        context: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """
+        Sample model parameters from prior distributions.
+
+        This method implements the PriorModel Protocol's forward method, sampling
+        the hierarchical time structure and piecewise activation parameters from
+        their respective prior distributions.
+
+        Args:
+            context: Dictionary containing model context including u_obs, s_obs, and other parameters
+
+        Returns:
+            Updated context dictionary with sampled parameters
+        """
+        # Extract u_obs and s_obs from context
+        u_obs = context.get("u_obs")
+        s_obs = context.get("s_obs")
+
+        if u_obs is None or s_obs is None:
+            raise ValueError(
+                "Both u_obs and s_obs must be provided in the context"
+            )
+
+        # Extract any additional parameters from context
+        include_prior = context.get("include_prior", True)
+
+        # Get dimensions
+        n_cells = u_obs.shape[0]
+        n_genes = u_obs.shape[1]
+
+        # Create a dictionary to store sampled parameters
+        params = {}
+
+        # Sample hierarchical time structure (following cell2fate pattern)
+        # Global maximum time scale
+        T_M_star = pyro.sample(
+            "T_M_star",
+            dist.Gamma(
+                torch.tensor(self.T_M_alpha),
+                torch.tensor(self.T_M_beta)
+            ).mask(include_prior),
+        )
+        params["T_M_star"] = T_M_star
+
+        # Hierarchical parameters for cell-specific time
+        t_loc = pyro.sample(
+            "t_loc",
+            dist.Gamma(
+                torch.tensor(self.t_loc_alpha),
+                torch.tensor(self.t_loc_beta)
+            ).mask(include_prior),
+        )
+        params["t_loc"] = t_loc
+
+        t_scale = pyro.sample(
+            "t_scale",
+            dist.Gamma(
+                torch.tensor(self.t_scale_alpha),
+                torch.tensor(self.t_scale_beta)
+            ).mask(include_prior),
+        )
+        params["t_scale"] = t_scale
+
+        # Sample cell-specific normalized times
+        with pyro.plate(f"{self.name}_cells_plate", n_cells):
+            tilde_t = pyro.sample(
+                "tilde_t",
+                dist.Normal(t_loc, t_scale).mask(include_prior),
+            )
+            # Ensure non-negative times and scale by T_M_star
+            t_star = pyro.deterministic(
+                "t_star",
+                T_M_star * torch.clamp(tilde_t, min=self.t_epsilon)
+            )
+            params["t_star"] = t_star
+
+        # Sample piecewise activation parameters (per gene)
+        with pyro.plate(f"{self.name}_genes_plate", n_genes):
+            # Basal transcription rate
+            alpha_off = pyro.sample(
+                "alpha_off",
+                dist.LogNormal(
+                    torch.tensor(self.alpha_off_loc),
+                    torch.tensor(self.alpha_off_scale)
+                ).mask(include_prior),
+            )
+            params["alpha_off"] = alpha_off
+
+            # Active transcription rate
+            alpha_on = pyro.sample(
+                "alpha_on",
+                dist.LogNormal(
+                    torch.tensor(self.alpha_on_loc),
+                    torch.tensor(self.alpha_on_scale)
+                ).mask(include_prior),
+            )
+            params["alpha_on"] = alpha_on
+
+            # Relative degradation rate
+            gamma_star = pyro.sample(
+                "gamma_star",
+                dist.LogNormal(
+                    torch.tensor(self.gamma_star_loc),
+                    torch.tensor(self.gamma_star_scale)
+                ).mask(include_prior),
+            )
+            params["gamma_star"] = gamma_star
+
+            # Activation onset time (relative to T_M_star)
+            t_on_star = pyro.sample(
+                "t_on_star",
+                dist.LogNormal(
+                    torch.tensor(self.t_on_star_loc),
+                    torch.tensor(self.t_on_star_scale)
+                ).mask(include_prior),
+            )
+            params["t_on_star"] = t_on_star
+
+            # Activation duration (relative to T_M_star)
+            delta_star = pyro.sample(
+                "delta_star",
+                dist.LogNormal(
+                    torch.tensor(self.delta_star_loc),
+                    torch.tensor(self.delta_star_scale)
+                ).mask(include_prior),
+            )
+            params["delta_star"] = delta_star
+
+        # Sample capture efficiency parameters (per cell)
+        with pyro.plate(f"{self.name}_lambda_plate", n_cells):
+            lambda_j = pyro.sample(
+                "lambda_j",
+                dist.LogNormal(
+                    torch.tensor(self.lambda_loc),
+                    torch.tensor(self.lambda_scale)
+                ).mask(include_prior),
+            )
+            params["lambda_j"] = lambda_j
+
+        # Update the context with the sampled parameters
+        context.update(params)
+
+        return context
+
+    @beartype
+    def sample_parameters(
+        self,
+        n_genes: Optional[int] = None,
+        n_cells: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """
+        Sample model parameters from prior distributions without Pyro context.
+
+        This method provides a way to sample parameters directly from the prior
+        distributions without requiring a Pyro model context. Useful for testing
+        and parameter generation.
+
+        Args:
+            n_genes: Number of genes to sample parameters for
+            n_cells: Number of cells to sample parameters for
+
+        Returns:
+            Dictionary of sampled parameters
+        """
+        if n_genes is None:
+            n_genes = 2  # Default for testing
+        if n_cells is None:
+            n_cells = 50  # Default for testing
+
+        # Create a dictionary to store sampled parameters
+        params = {}
+
+        # Sample hierarchical time structure
+        T_M_star = dist.Gamma(
+            torch.tensor(self.T_M_alpha),
+            torch.tensor(self.T_M_beta)
+        ).sample()
+        params["T_M_star"] = T_M_star
+
+        t_loc = dist.Gamma(
+            torch.tensor(self.t_loc_alpha),
+            torch.tensor(self.t_loc_beta)
+        ).sample()
+        params["t_loc"] = t_loc
+
+        t_scale = dist.Gamma(
+            torch.tensor(self.t_scale_alpha),
+            torch.tensor(self.t_scale_beta)
+        ).sample()
+        params["t_scale"] = t_scale
+
+        # Sample cell-specific normalized times
+        tilde_t = dist.Normal(t_loc, t_scale).sample((n_cells,))
+        t_star = T_M_star * torch.clamp(tilde_t, min=self.t_epsilon)
+        params["t_star"] = t_star
+
+        # Sample piecewise activation parameters (per gene)
+        params["alpha_off"] = dist.LogNormal(
+            torch.tensor(self.alpha_off_loc),
+            torch.tensor(self.alpha_off_scale)
+        ).sample((n_genes,))
+
+        params["alpha_on"] = dist.LogNormal(
+            torch.tensor(self.alpha_on_loc),
+            torch.tensor(self.alpha_on_scale)
+        ).sample((n_genes,))
+
+        params["gamma_star"] = dist.LogNormal(
+            torch.tensor(self.gamma_star_loc),
+            torch.tensor(self.gamma_star_scale)
+        ).sample((n_genes,))
+
+        params["t_on_star"] = dist.LogNormal(
+            torch.tensor(self.t_on_star_loc),
+            torch.tensor(self.t_on_star_scale)
+        ).sample((n_genes,))
+
+        params["delta_star"] = dist.LogNormal(
+            torch.tensor(self.delta_star_loc),
+            torch.tensor(self.delta_star_scale)
+        ).sample((n_genes,))
+
+        # Sample capture efficiency parameters (per cell)
+        params["lambda_j"] = dist.LogNormal(
+            torch.tensor(self.lambda_loc),
+            torch.tensor(self.lambda_scale)
+        ).sample((n_cells,))
+
+        return params
