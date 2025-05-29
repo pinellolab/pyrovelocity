@@ -243,7 +243,9 @@ class PoissonLikelihoodModel:
         model_n_genes = None
         for param_name in ["alpha", "beta", "gamma"]:
             if param_name in context:
-                model_n_genes = context[param_name].shape[0]
+                # In the legacy model, parameters have shape [1, 1, n_genes] or [num_samples, 1, n_genes]
+                # So we need to get the last dimension to get the number of genes
+                model_n_genes = context[param_name].shape[-1]
                 break
 
         # Calculate library size
@@ -678,7 +680,9 @@ class LegacyLikelihoodModel:
         model_n_genes = None
         for param_name in ["alpha", "beta", "gamma"]:
             if param_name in context:
-                model_n_genes = context[param_name].shape[0]
+                # In the legacy model, parameters have shape [1, 1, n_genes] or [num_samples, 1, n_genes]
+                # So we need to get the last dimension to get the number of genes
+                model_n_genes = context[param_name].shape[-1]
                 break
 
         # Calculate library size
