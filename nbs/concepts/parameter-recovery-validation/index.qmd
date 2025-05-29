@@ -1019,31 +1019,6 @@ for pattern_name, constraints in patterns.items():
     print(f"  Joint probability: {joint_prob:.3f}")
 ```
 
-#### **Optimization Results Summary**
-
-| Pattern | Before Optimization | After Optimization | Improvement |
-|---------|-------------------|-------------------|-------------|
-| **Activation** | 27.0% | 23.4% | Stable ✅ |
-| **Decay** | 20.8% | 20.8% | Stable ✅ |
-| **Transient** | 8.9% | **30.8%** | +246% ✅ |
-| **Sustained** | 2.3% | **7.6%** | +230% ✅ |
-
-#### **Key Optimization Changes**
-
-**Prior Hyperparameter Adjustments**:
-- $\delta^*_i$ prior: $\text{LogNormal}(\log(0.4), 0.3^2) \rightarrow \text{LogNormal}(\log(0.37), 0.35^2)$
-- Shifted mean slightly lower and increased variance for better constraint coverage
-
-**Pattern Constraint Relaxations**:
-- **Transient**: $\delta^*_i < 0.3 \rightarrow \delta^*_i < 0.4$ (modest 33% increase in threshold)
-- **Sustained**: $\delta^*_i > 0.6 \rightarrow \delta^*_i > 0.45$ (25% decrease in threshold)
-
-**Biological Interpretation Preservation**:
-- Transient patterns still represent brief activation (< 40% of process duration)
-- Sustained patterns still represent long activation (> 45% of process duration)
-- Clear distinction maintained between pattern types
-- All constraints remain biologically meaningful
-
 ### Probabilistic Graphical Model
 
 The probabilistic graphical model extends Study 2 by adding gene-specific piecewise activation parameters while maintaining the hierarchical latent time structure. For visual clarity, we use $\theta_i$ to represent the vector of piecewise activation parameters $(\gamma^*_i, \alpha^*_{\text{off}i}, \alpha^*_{\text{on}i}, t^*_{0,\text{on}i})$ and $\delta_i$ to represent the activation duration parameter.
