@@ -1822,7 +1822,7 @@ class PyroVelocityModel:
             # Try to determine pattern type from parameters if available
             pattern_type = self._infer_pattern_type(true_params)
             if pattern_type:
-                adata.uns["pattern_type"] = pattern_type
+                adata.uns["pattern"] = pattern_type  # Store as 'pattern' for compatibility
 
         # Store additional metadata
         for key, value in kwargs.items():
@@ -1857,7 +1857,7 @@ class PyroVelocityModel:
             Inferred pattern type or None if cannot be determined
         """
         # Check if we have piecewise activation parameters
-        required_keys = ["alpha_off", "alpha_on", "t_on", "delta"]
+        required_keys = ["alpha_off", "alpha_on", "t_on_star", "delta_star"]
         if not all(key in true_params for key in required_keys):
             return None
 
@@ -1865,36 +1865,36 @@ class PyroVelocityModel:
             # Extract parameters (handle both tensor and array formats)
             alpha_off = true_params["alpha_off"]
             alpha_on = true_params["alpha_on"]
-            t_on = true_params["t_on"]
-            delta = true_params["delta"]
+            t_on_star = true_params["t_on_star"]
+            delta_star = true_params["delta_star"]
 
             # Convert to scalars if needed (take first gene/cell)
             if hasattr(alpha_off, '__len__') and len(alpha_off) > 0:
                 alpha_off = float(alpha_off.flat[0])
             if hasattr(alpha_on, '__len__') and len(alpha_on) > 0:
                 alpha_on = float(alpha_on.flat[0])
-            if hasattr(t_on, '__len__') and len(t_on) > 0:
-                t_on = float(t_on.flat[0])
-            if hasattr(delta, '__len__') and len(delta) > 0:
-                delta = float(delta.flat[0])
+            if hasattr(t_on_star, '__len__') and len(t_on_star) > 0:
+                t_on_star = float(t_on_star.flat[0])
+            if hasattr(delta_star, '__len__') and len(delta_star) > 0:
+                delta_star = float(delta_star.flat[0])
 
             # Apply pattern classification logic (same as in prior model)
             fold_change = alpha_on / alpha_off if alpha_off > 0 else float('inf')
 
             # Check for activation pattern
-            if alpha_off < 0.2 and alpha_on > 1.5 and fold_change > 7.5:
+            if alpha_off < 0.2 and alpha_on > 1.5 and t_on_star < 0.4 and delta_star > 0.3 and fold_change > 7.5:
                 return "activation"
 
             # Check for decay pattern (no activation within observation window)
-            if alpha_off > 0.5 and t_on > 1.0:  # t_on > T_M (assuming T_M ~ 1.0)
+            if alpha_off > 0.08 and t_on_star > 0.35:
                 return "decay"
 
             # Check for transient pattern
-            if delta < 0.3 and fold_change > 3.3:
+            if alpha_off < 0.3 and alpha_on > 1.0 and t_on_star < 0.5 and delta_star < 0.4 and fold_change > 3.3:
                 return "transient"
 
             # Check for sustained pattern
-            if delta > 0.6 and fold_change > 3.3:
+            if alpha_off < 0.3 and alpha_on > 1.0 and t_on_star < 0.3 and delta_star > 0.45 and fold_change > 3.3:
                 return "sustained"
 
             # If none of the patterns match, return unknown
