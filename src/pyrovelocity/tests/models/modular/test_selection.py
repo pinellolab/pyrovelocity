@@ -67,14 +67,12 @@ def mock_model(sample_data):
     dynamics_model = MockDynamicsModel()
     prior_model = MockPriorModel()
     likelihood_model = MockLikelihoodModel()
-    observation_model = MockObservationModel()
     guide_model = MockGuideModel()
 
     return PyroVelocityModel(
         dynamics_model=dynamics_model,
         prior_model=prior_model,
         likelihood_model=likelihood_model,
-        observation_model=observation_model,
         guide_model=guide_model,
     )
 
