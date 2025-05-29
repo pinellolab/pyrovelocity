@@ -5,6 +5,8 @@ This module provides flexible plotting functions for both prior and posterior
 predictive checks, designed to validate model behavior and biological plausibility.
 """
 
+import os
+from pathlib import Path
 from typing import Any, Dict, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
@@ -26,24 +28,37 @@ def plot_prior_predictive_checks(
     prior_adata: AnnData,
     prior_parameters: Dict[str, torch.Tensor],
     figsize: Tuple[int, int] = (15, 10),
-    check_type: str = "prior"
+    check_type: str = "prior",
+    save_path: Optional[str] = None,
+    figure_name: Optional[str] = None
 ) -> plt.Figure:
     """
     Generate comprehensive predictive check plots for PyroVelocity models.
-    
+
     This function creates a multi-panel figure showing parameter distributions,
     expression data validation, temporal dynamics, and biological plausibility checks.
     Can be used for both prior and posterior predictive checks.
-    
+
     Args:
         model: PyroVelocity model instance
         prior_adata: AnnData object with predictive samples
         prior_parameters: Dictionary of parameter samples
         figsize: Figure size (width, height)
         check_type: Type of check ("prior" or "posterior")
-    
+        save_path: Optional directory path to save figures (creates if doesn't exist)
+        figure_name: Optional figure name (defaults to "{check_type}_predictive_checks")
+
     Returns:
         matplotlib Figure object
+
+    Example:
+        >>> fig = plot_prior_predictive_checks(
+        ...     model=model,
+        ...     prior_adata=adata,
+        ...     prior_parameters=params,
+        ...     save_path="reports/docs/prior_predictive",
+        ...     figure_name="piecewise_activation_prior_checks"
+        ... )
     """
     fig = plt.figure(figsize=figsize)
     
@@ -88,7 +103,21 @@ def plot_prior_predictive_checks(
     
     ax12 = fig.add_subplot(gs[2, 3])
     _plot_correlation_structure(prior_adata, ax12, check_type)
-    
+
+    # Save figure if path is provided
+    if save_path is not None:
+        output_dir = Path(save_path)
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Use provided name or default
+        name = figure_name if figure_name is not None else f"{check_type}_predictive_checks"
+
+        # Save in both PNG and PDF formats
+        for ext in ["png", "pdf"]:
+            save_file = output_dir / f"{name}.{ext}"
+            fig.savefig(save_file, dpi=300, bbox_inches='tight')
+            print(f"Saved {check_type} predictive checks: {save_file}")
+
     return fig
 
 
@@ -160,7 +189,7 @@ def _plot_fold_change_distribution(
         ax.axvline(3.3, color='orange', linestyle=':', label='Min threshold: 3.3')
         ax.axvline(7.5, color='green', linestyle=':', label='Activation threshold: 7.5')
         
-        ax.set_xlabel('Fold-change (α*_on / α*_off)')
+        ax.set_xlabel('Fold-change (alpha*_on / alpha*_off)')
         ax.set_ylabel('Density')
         ax.set_title(f'{check_type.title()} Fold-change Distribution')
         ax.legend(fontsize=8)
@@ -185,7 +214,7 @@ def _plot_activation_timing(
         
         ax.scatter(t_on, delta, alpha=0.6, s=20, color='purple')
         ax.set_xlabel('Activation Onset (t*_on)')
-        ax.set_ylabel('Activation Duration (δ*)')
+        ax.set_ylabel('Activation Duration (delta*)')
         ax.set_title(f'{check_type.title()} Activation Timing')
         
         # Add pattern boundaries
@@ -472,7 +501,9 @@ def plot_posterior_predictive_checks(
     model: Any,
     posterior_adata: AnnData,
     posterior_parameters: Dict[str, torch.Tensor],
-    figsize: Tuple[int, int] = (15, 10)
+    figsize: Tuple[int, int] = (15, 10),
+    save_path: Optional[str] = None,
+    figure_name: Optional[str] = None
 ) -> plt.Figure:
     """
     Generate posterior predictive check plots.
@@ -484,14 +515,27 @@ def plot_posterior_predictive_checks(
         posterior_adata: AnnData object with posterior predictive samples
         posterior_parameters: Dictionary of posterior parameter samples
         figsize: Figure size (width, height)
+        save_path: Optional directory path to save figures (creates if doesn't exist)
+        figure_name: Optional figure name (defaults to "posterior_predictive_checks")
 
     Returns:
         matplotlib Figure object
+
+    Example:
+        >>> fig = plot_posterior_predictive_checks(
+        ...     model=model,
+        ...     posterior_adata=adata,
+        ...     posterior_parameters=params,
+        ...     save_path="reports/docs/posterior_predictive",
+        ...     figure_name="piecewise_activation_posterior_checks"
+        ... )
     """
     return plot_prior_predictive_checks(
         model=model,
         prior_adata=posterior_adata,
         prior_parameters=posterior_parameters,
         figsize=figsize,
-        check_type="posterior"
+        check_type="posterior",
+        save_path=save_path,
+        figure_name=figure_name
     )
