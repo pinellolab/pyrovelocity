@@ -291,7 +291,7 @@ def test_model_forward(pyro_velocity_model, sample_data):
     """Test the forward method of the model."""
     # Run forward pass
     context = pyro_velocity_model.forward(
-        sample_data["x"], sample_data["time_points"]
+        x=sample_data["x"], time_points=sample_data["time_points"]
     )
 
     # Check that the context contains expected keys
@@ -324,7 +324,7 @@ def test_model_guide(pyro_velocity_model, sample_data):
 
     # Run guide method
     _ = pyro_velocity_model.guide(
-        sample_data["x"], sample_data["time_points"]
+        x=sample_data["x"], time_points=sample_data["time_points"]
     )
 
     # Check that the context contains expected keys
@@ -385,7 +385,7 @@ def test_model_composition(component_models, sample_data):
     )
 
     # Run forward pass
-    context = model.forward(sample_data["x"], sample_data["time_points"])
+    context = model.forward(x=sample_data["x"], time_points=sample_data["time_points"])
 
     # Check that the context has been processed by each component
     # First by observation model (adds u and s)
