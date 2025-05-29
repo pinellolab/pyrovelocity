@@ -35,6 +35,7 @@ from pyrovelocity.models.modular.registry import (
     LikelihoodModelRegistry,
     ObservationModelRegistry,
     PriorModelRegistry,
+    register_standard_components,
 )
 
 
@@ -745,7 +746,7 @@ def create_piecewise_activation_model() -> PyroVelocityModel:
             params={},
         ),
         likelihood_model=ComponentConfig(
-            name="poisson",
+            name="piecewise_activation_poisson",
             params={},
         ),
         inference_guide=ComponentConfig(
@@ -800,3 +801,6 @@ __all__ = [
     # Piecewise activation model
     "create_piecewise_activation_model",
 ]
+
+# Register standard components when the module is imported
+register_standard_components()
