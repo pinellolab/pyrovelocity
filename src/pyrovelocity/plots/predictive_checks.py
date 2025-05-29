@@ -3,11 +3,13 @@ Predictive check plotting functions for PyroVelocity models.
 
 This module provides flexible plotting functions for both prior and posterior
 predictive checks, designed to validate model behavior and biological plausibility.
+The module is organized into modular plotting functions that can be used individually
+or combined into comprehensive overview plots.
 """
 
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,9 +19,349 @@ import torch
 from anndata import AnnData
 from beartype import beartype
 
-# Set plotting style
-plt.style.use('seaborn-v0_8')
-sns.set_palette("husl")
+from pyrovelocity.styles import configure_matplotlib_style
+
+# Try to import UMAP, fall back gracefully if not available
+try:
+    import umap
+    UMAP_AVAILABLE = True
+except ImportError:
+    UMAP_AVAILABLE = False
+
+configure_matplotlib_style()
+
+
+def _format_parameter_name(param_name: str) -> str:
+    """
+    Format parameter names for LaTeX rendering in plots.
+
+    Args:
+        param_name: Raw parameter name (e.g., 'alpha_off', 't_on_star')
+
+    Returns:
+        LaTeX-formatted parameter name
+    """
+    # Greek letter replacements
+    greek_replacements = {
+        'alpha': r'\alpha',
+        'beta': r'\beta',
+        'gamma': r'\gamma',
+        'delta': r'\delta',
+        'epsilon': r'\epsilon',
+        'theta': r'\theta',
+        'lambda': r'\lambda',
+        'mu': r'\mu',
+        'sigma': r'\sigma',
+        'tau': r'\tau',
+        'phi': r'\phi',
+        'psi': r'\psi',
+        'omega': r'\omega'
+    }
+
+    # Subscript replacements for common suffixes
+    subscript_replacements = {
+        '_loc': r'_{loc}',
+        '_scale': r'_{scl}',
+        '_on': r'_{on}',
+        '_off': r'_{off}',
+        '_0i': r'_{0i}',
+        '_star': r'^*',
+        '_max': r'_{max}',
+        '_min': r'_{min}',
+        '_rate': r'_{rate}',
+        '_conc': r'_{conc}',
+        '_shape': r'_{shape}',
+        '_mean': r'_{mean}',
+        '_std': r'_{std}',
+        '_var': r'_{var}'
+    }
+
+    # Start with the original name
+    formatted = param_name
+
+    # Apply subscript/superscript replacements
+    for suffix, latex_suffix in subscript_replacements.items():
+        formatted = formatted.replace(suffix, latex_suffix)
+
+    # Replace Greek letters at the beginning
+    for greek, latex in greek_replacements.items():
+        if formatted.startswith(greek):
+            formatted = formatted.replace(greek, latex, 1)
+            break
+
+    # Wrap in math mode
+    return f'${formatted}$'
+
+
+def _save_figure(
+    fig: plt.Figure,
+    save_path: str,
+    figure_name: str,
+    formats: List[str] = ["png", "pdf"]
+) -> None:
+    """
+    Save figure in multiple formats with consistent naming.
+
+    Args:
+        fig: matplotlib Figure object
+        save_path: Directory path to save figures
+        figure_name: Base name for the figure files
+        formats: List of file formats to save
+    """
+    if save_path is not None:
+        output_dir = Path(save_path)
+        os.makedirs(output_dir, exist_ok=True)
+
+        for ext in formats:
+            save_file = output_dir / f"{figure_name}.{ext}"
+            fig.savefig(save_file, dpi=300, bbox_inches='tight')
+            print(f"Saved figure: {save_file}")
+
+
+def _get_available_parameters(
+    parameters: Dict[str, torch.Tensor],
+    exclude_params: Optional[List[str]] = None
+) -> List[str]:
+    """
+    Get list of available parameters, optionally excluding specified ones.
+
+    Args:
+        parameters: Dictionary of parameter tensors
+        exclude_params: Optional list of parameter names to exclude
+
+    Returns:
+        List of available parameter names
+    """
+    exclude_params = exclude_params or []
+    return [name for name in parameters.keys() if name not in exclude_params]
+
+@beartype
+def plot_parameter_marginals(
+    parameters: Dict[str, torch.Tensor],
+    check_type: str = "prior",
+    exclude_params: Optional[List[str]] = None,
+    figsize: Optional[Tuple[int, int]] = None,
+    save_path: Optional[str] = None
+) -> plt.Figure:
+    """
+    Plot individual histograms for all parameter marginal distributions.
+
+    Args:
+        parameters: Dictionary of parameter tensors
+        check_type: Type of check ("prior" or "posterior")
+        exclude_params: Optional list of parameter names to exclude
+        figsize: Optional figure size (auto-calculated if None)
+        save_path: Optional directory path to save figures
+
+    Returns:
+        matplotlib Figure object
+    """
+    available_params = _get_available_parameters(parameters, exclude_params)
+
+    if not available_params:
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.text(0.5, 0.5, 'No parameters available',
+               ha='center', va='center', transform=ax.transAxes)
+        ax.set_title(f'{check_type.title()} Parameter Marginals')
+        return fig
+
+    # Auto-calculate figure size based on number of parameters
+    n_params = len(available_params)
+    if figsize is None:
+        cols = min(4, n_params)
+        rows = (n_params + cols - 1) // cols
+        figsize = (4 * cols, 3 * rows)
+
+    fig, axes = plt.subplots(rows, cols, figsize=figsize)
+    if n_params == 1:
+        axes = [axes]
+    elif rows == 1:
+        axes = axes.flatten()
+    else:
+        axes = axes.flatten()
+
+    colors = sns.color_palette("husl", n_params)
+
+    for i, param_name in enumerate(available_params):
+        ax = axes[i]
+        values = parameters[param_name].flatten().numpy()
+
+        ax.hist(values, bins=30, alpha=0.7, color=colors[i], density=True)
+        ax.set_xlabel('Value')
+        ax.set_ylabel('Density')
+        ax.set_title(_format_parameter_name(param_name))
+        ax.grid(True, alpha=0.3)
+
+        # Add summary statistics
+        mean_val = values.mean()
+        ax.axvline(mean_val, color='red', linestyle='--', alpha=0.7,
+                  label=f'Mean: {mean_val:.3f}')
+        ax.legend(fontsize=8)
+
+    # Hide unused subplots
+    for i in range(n_params, len(axes)):
+        axes[i].set_visible(False)
+
+    plt.tight_layout()
+
+    if save_path is not None:
+        _save_figure(fig, save_path, f"{check_type}_parameter_marginals")
+
+    return fig
+
+
+@beartype
+def plot_parameter_relationships(
+    parameters: Dict[str, torch.Tensor],
+    check_type: str = "prior",
+    figsize: Tuple[int, int] = (15, 5),
+    save_path: Optional[str] = None
+) -> plt.Figure:
+    """
+    Plot parameter relationships: correlations, fold-change, and timing.
+
+    Args:
+        parameters: Dictionary of parameter tensors
+        check_type: Type of check ("prior" or "posterior")
+        figsize: Figure size (width, height)
+        save_path: Optional directory path to save figures
+
+    Returns:
+        matplotlib Figure object
+    """
+    fig, axes = plt.subplots(1, 4, figsize=figsize)
+
+    # Parameter correlations
+    _plot_parameter_correlations(parameters, axes[0], check_type)
+
+    # Fold-change distribution
+    _plot_fold_change_distribution(parameters, axes[1], check_type)
+
+    # Activation timing
+    _plot_activation_timing(parameters, axes[2], check_type)
+
+    # Additional parameter scatter (if available)
+    _plot_parameter_scatter(parameters, axes[3], check_type)
+
+    plt.tight_layout()
+
+    if save_path is not None:
+        _save_figure(fig, save_path, f"{check_type}_parameter_relationships")
+
+    return fig
+
+
+@beartype
+def plot_expression_validation(
+    adata: AnnData,
+    check_type: str = "prior",
+    figsize: Tuple[int, int] = (15, 5),
+    save_path: Optional[str] = None
+) -> plt.Figure:
+    """
+    Plot expression data validation: counts, relationships, library sizes, ranges.
+
+    Args:
+        adata: AnnData object with expression data
+        check_type: Type of check ("prior" or "posterior")
+        figsize: Figure size (width, height)
+        save_path: Optional directory path to save figures
+
+    Returns:
+        matplotlib Figure object
+    """
+    fig, axes = plt.subplots(1, 4, figsize=figsize)
+
+    # Count distributions
+    _plot_count_distributions(adata, axes[0], check_type)
+
+    # U vs S relationships
+    _plot_expression_relationships(adata, axes[1], check_type)
+
+    # Library sizes
+    _plot_library_sizes(adata, axes[2], check_type)
+
+    # Expression ranges
+    _plot_expression_ranges(adata, axes[3], check_type)
+
+    plt.tight_layout()
+
+    if save_path is not None:
+        _save_figure(fig, save_path, f"{check_type}_expression_validation")
+
+    return fig
+
+
+@beartype
+def plot_temporal_dynamics(
+    adata: AnnData,
+    check_type: str = "prior",
+    figsize: Tuple[int, int] = (10, 5),
+    save_path: Optional[str] = None
+) -> plt.Figure:
+    """
+    Plot temporal dynamics: phase portraits and velocity distributions.
+
+    Args:
+        adata: AnnData object with expression data
+        check_type: Type of check ("prior" or "posterior")
+        figsize: Figure size (width, height)
+        save_path: Optional directory path to save figures
+
+    Returns:
+        matplotlib Figure object
+    """
+    fig, axes = plt.subplots(1, 2, figsize=figsize)
+
+    # Phase portrait
+    _plot_phase_portrait(adata, axes[0], check_type)
+
+    # Velocity magnitudes
+    _plot_velocity_magnitudes(adata, axes[1], check_type)
+
+    plt.tight_layout()
+
+    if save_path is not None:
+        _save_figure(fig, save_path, f"{check_type}_temporal_dynamics")
+
+    return fig
+
+
+@beartype
+def plot_pattern_analysis(
+    adata: AnnData,
+    parameters: Dict[str, torch.Tensor],
+    check_type: str = "prior",
+    figsize: Tuple[int, int] = (10, 5),
+    save_path: Optional[str] = None
+) -> plt.Figure:
+    """
+    Plot pattern analysis: proportions and gene correlations.
+
+    Args:
+        adata: AnnData object with expression data
+        parameters: Dictionary of parameter tensors
+        check_type: Type of check ("prior" or "posterior")
+        figsize: Figure size (width, height)
+        save_path: Optional directory path to save figures
+
+    Returns:
+        matplotlib Figure object
+    """
+    fig, axes = plt.subplots(1, 2, figsize=figsize)
+
+    # Pattern proportions
+    _plot_pattern_proportions(adata, parameters, axes[0], check_type)
+
+    # Gene correlations
+    _plot_correlation_structure(adata, axes[1], check_type)
+
+    plt.tight_layout()
+
+    if save_path is not None:
+        _save_figure(fig, save_path, f"{check_type}_pattern_analysis")
+
+    return fig
 
 
 @beartype
@@ -30,7 +372,8 @@ def plot_prior_predictive_checks(
     figsize: Tuple[int, int] = (15, 10),
     check_type: str = "prior",
     save_path: Optional[str] = None,
-    figure_name: Optional[str] = None
+    figure_name: Optional[str] = None,
+    create_individual_plots: bool = True
 ) -> plt.Figure:
     """
     Generate comprehensive predictive check plots for PyroVelocity models.
@@ -39,14 +382,17 @@ def plot_prior_predictive_checks(
     expression data validation, temporal dynamics, and biological plausibility checks.
     Can be used for both prior and posterior predictive checks.
 
+    Optionally creates individual modular plots in addition to the overview.
+
     Args:
-        model: PyroVelocity model instance
+        model: PyroVelocity model instance (unused but kept for compatibility)
         prior_adata: AnnData object with predictive samples
         prior_parameters: Dictionary of parameter samples
         figsize: Figure size (width, height)
         check_type: Type of check ("prior" or "posterior")
         save_path: Optional directory path to save figures (creates if doesn't exist)
         figure_name: Optional figure name (defaults to "{check_type}_predictive_checks")
+        create_individual_plots: Whether to create individual modular plots
 
     Returns:
         matplotlib Figure object
@@ -60,89 +406,250 @@ def plot_prior_predictive_checks(
         ...     figure_name="piecewise_activation_prior_checks"
         ... )
     """
+    # Create individual modular plots if requested
+    if create_individual_plots and save_path is not None:
+        plot_parameter_marginals(prior_parameters, check_type, save_path=save_path)
+        plot_parameter_relationships(prior_parameters, check_type, save_path=save_path)
+        plot_expression_validation(prior_adata, check_type, save_path=save_path)
+        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path)
+        plot_pattern_analysis(prior_adata, prior_parameters, check_type, save_path=save_path)
+
+    # Create comprehensive overview plot
     fig = plt.figure(figsize=figsize)
-    
+
     # Create subplot grid: 3 rows × 4 columns
     gs = fig.add_gridspec(3, 4, hspace=0.3, wspace=0.3)
-    
-    # Row 1: Parameter Distribution Plots
+
+    # Row 1: UMAP and Parameter Distribution Plots
     ax1 = fig.add_subplot(gs[0, 0])
-    _plot_parameter_marginals(prior_parameters, ax1, check_type)
-    
+    _plot_umap_leiden_clusters(prior_adata, ax1, check_type)
+
     ax2 = fig.add_subplot(gs[0, 1])
-    _plot_parameter_correlations(prior_parameters, ax2, check_type)
-    
+    _plot_umap_time_coordinate(prior_adata, ax2, check_type)
+
     ax3 = fig.add_subplot(gs[0, 2])
     _plot_fold_change_distribution(prior_parameters, ax3, check_type)
-    
+
     ax4 = fig.add_subplot(gs[0, 3])
     _plot_activation_timing(prior_parameters, ax4, check_type)
-    
+
     # Row 2: Expression Data Validation
     ax5 = fig.add_subplot(gs[1, 0])
     _plot_count_distributions(prior_adata, ax5, check_type)
-    
+
     ax6 = fig.add_subplot(gs[1, 1])
     _plot_expression_relationships(prior_adata, ax6, check_type)
-    
+
     ax7 = fig.add_subplot(gs[1, 2])
     _plot_library_sizes(prior_adata, ax7, check_type)
-    
+
     ax8 = fig.add_subplot(gs[1, 3])
     _plot_expression_ranges(prior_adata, ax8, check_type)
-    
+
     # Row 3: Temporal Dynamics and Biological Validation
     ax9 = fig.add_subplot(gs[2, 0])
     _plot_phase_portrait(prior_adata, ax9, check_type)
-    
+
     ax10 = fig.add_subplot(gs[2, 1])
     _plot_velocity_magnitudes(prior_adata, ax10, check_type)
-    
+
     ax11 = fig.add_subplot(gs[2, 2])
     _plot_pattern_proportions(prior_adata, prior_parameters, ax11, check_type)
-    
+
     ax12 = fig.add_subplot(gs[2, 3])
     _plot_correlation_structure(prior_adata, ax12, check_type)
 
-    # Save figure if path is provided
+    # Save comprehensive figure if path is provided
     if save_path is not None:
-        output_dir = Path(save_path)
-        os.makedirs(output_dir, exist_ok=True)
-
         # Use provided name or default
         name = figure_name if figure_name is not None else f"{check_type}_predictive_checks"
-
-        # Save in both PNG and PDF formats
-        for ext in ["png", "pdf"]:
-            save_file = output_dir / f"{name}.{ext}"
-            fig.savefig(save_file, dpi=300, bbox_inches='tight')
-            print(f"Saved {check_type} predictive checks: {save_file}")
+        _save_figure(fig, save_path, name)
 
     return fig
 
 
-def _plot_parameter_marginals(
-    parameters: Dict[str, torch.Tensor], 
-    ax: plt.Axes, 
+def _plot_umap_leiden_clusters(adata: AnnData, ax: plt.Axes, check_type: str) -> None:
+    """Plot UMAP embedding colored by Leiden clusters."""
+    if 'X_umap' in adata.obsm and 'leiden' in adata.obs:
+        umap_coords = adata.obsm['X_umap']
+        clusters = adata.obs['leiden']
+
+        # Get unique clusters and assign colors
+        unique_clusters = clusters.unique()
+        colors = sns.color_palette("tab10", len(unique_clusters))
+
+        for i, cluster in enumerate(unique_clusters):
+            mask = clusters == cluster
+            ax.scatter(umap_coords[mask, 0], umap_coords[mask, 1],
+                      c=[colors[i]], label=f'Cluster {cluster}',
+                      alpha=0.7, s=20)
+
+        ax.set_xlabel('UMAP 1')
+        ax.set_ylabel('UMAP 2')
+        ax.set_title(f'{check_type.title()} UMAP (Leiden Clusters)')
+        ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=8)
+
+    elif 'X_umap' in adata.obsm:
+        # Plot UMAP without cluster information
+        umap_coords = adata.obsm['X_umap']
+        ax.scatter(umap_coords[:, 0], umap_coords[:, 1],
+                  alpha=0.7, s=20, c='gray')
+        ax.set_xlabel('UMAP 1')
+        ax.set_ylabel('UMAP 2')
+        ax.set_title(f'{check_type.title()} UMAP (No Clusters)')
+
+    else:
+        # Compute UMAP if not available and UMAP is installed
+        if UMAP_AVAILABLE and 'X_pca' in adata.obsm:
+            try:
+                reducer = umap.UMAP(n_neighbors=15, min_dist=0.1, random_state=42)
+                embedding = reducer.fit_transform(adata.obsm['X_pca'][:, :50])  # Use first 50 PCs
+
+                ax.scatter(embedding[:, 0], embedding[:, 1],
+                          alpha=0.7, s=20, c='gray')
+                ax.set_xlabel('UMAP 1')
+                ax.set_ylabel('UMAP 2')
+                ax.set_title(f'{check_type.title()} UMAP (Computed)')
+
+            except Exception as e:
+                ax.text(0.5, 0.5, f'UMAP computation failed:\n{str(e)[:50]}...',
+                       ha='center', va='center', transform=ax.transAxes)
+                ax.set_title(f'{check_type.title()} UMAP (Failed)')
+        else:
+            ax.text(0.5, 0.5, 'UMAP data not available\nor UMAP not installed',
+                   ha='center', va='center', transform=ax.transAxes)
+            ax.set_title(f'{check_type.title()} UMAP (Leiden Clusters)')
+
+
+def _plot_umap_time_coordinate(adata: AnnData, ax: plt.Axes, check_type: str) -> None:
+    """Plot UMAP embedding colored by time coordinate."""
+    if 'X_umap' in adata.obsm:
+        umap_coords = adata.obsm['X_umap']
+
+        # Look for time coordinate in various possible locations
+        time_coord = None
+        time_label = 'Time'
+
+        # Check common time coordinate names
+        time_keys = ['latent_time', 'velocity_pseudotime', 'dpt_pseudotime',
+                    'pseudotime', 'time', 't', 'shared_time']
+
+        for key in time_keys:
+            if key in adata.obs:
+                time_coord = adata.obs[key].values
+                time_label = _format_parameter_name(key.replace('_', '_'))
+                break
+
+        if time_coord is not None:
+            # Create scatter plot colored by time
+            scatter = ax.scatter(umap_coords[:, 0], umap_coords[:, 1],
+                               c=time_coord, cmap='viridis', alpha=0.7, s=20)
+
+            # Add colorbar
+            cbar = plt.colorbar(scatter, ax=ax, shrink=0.8)
+            cbar.set_label(time_label, fontsize=10)
+
+            ax.set_xlabel('UMAP 1')
+            ax.set_ylabel('UMAP 2')
+            ax.set_title(f'{check_type.title()} UMAP (Time Coordinate)')
+
+        else:
+            # No time coordinate found, use a simple gradient based on position
+            gradient = np.arange(len(umap_coords))
+            scatter = ax.scatter(umap_coords[:, 0], umap_coords[:, 1],
+                               c=gradient, cmap='viridis', alpha=0.7, s=20)
+
+            cbar = plt.colorbar(scatter, ax=ax, shrink=0.8)
+            cbar.set_label('Cell Index', fontsize=10)
+
+            ax.set_xlabel('UMAP 1')
+            ax.set_ylabel('UMAP 2')
+            ax.set_title(f'{check_type.title()} UMAP (Cell Index)')
+
+    else:
+        # Compute UMAP if not available and UMAP is installed
+        if UMAP_AVAILABLE and 'X_pca' in adata.obsm:
+            try:
+                reducer = umap.UMAP(n_neighbors=15, min_dist=0.1, random_state=42)
+                embedding = reducer.fit_transform(adata.obsm['X_pca'][:, :50])
+
+                # Use cell index as pseudo-time
+                gradient = np.arange(len(embedding))
+                scatter = ax.scatter(embedding[:, 0], embedding[:, 1],
+                                   c=gradient, cmap='viridis', alpha=0.7, s=20)
+
+                cbar = plt.colorbar(scatter, ax=ax, shrink=0.8)
+                cbar.set_label('Cell Index', fontsize=10)
+
+                ax.set_xlabel('UMAP 1')
+                ax.set_ylabel('UMAP 2')
+                ax.set_title(f'{check_type.title()} UMAP (Computed)')
+
+            except Exception as e:
+                ax.text(0.5, 0.5, f'UMAP computation failed:\n{str(e)[:50]}...',
+                       ha='center', va='center', transform=ax.transAxes)
+                ax.set_title(f'{check_type.title()} UMAP (Failed)')
+        else:
+            ax.text(0.5, 0.5, 'UMAP data not available\nor UMAP not installed',
+                   ha='center', va='center', transform=ax.transAxes)
+            ax.set_title(f'{check_type.title()} UMAP (Time Coordinate)')
+
+
+def _plot_parameter_marginals_summary(
+    parameters: Dict[str, torch.Tensor],
+    ax: plt.Axes,
     check_type: str
 ) -> None:
-    """Plot marginal distributions of key parameters."""
+    """Plot marginal distributions of key parameters (summary version for overview)."""
     # Focus on piecewise activation parameters
     key_params = ['alpha_off', 'alpha_on', 't_on_star', 'delta_star']
-    
+
     colors = sns.color_palette("husl", len(key_params))
-    
+
     for i, param_name in enumerate(key_params):
         if param_name in parameters:
             values = parameters[param_name].flatten().numpy()
-            ax.hist(values, bins=30, alpha=0.6, color=colors[i], 
-                   label=f'${param_name.replace("_", "^*_")}$', density=True)
-    
+            ax.hist(values, bins=30, alpha=0.6, color=colors[i],
+                   label=_format_parameter_name(param_name), density=True)
+
     ax.set_xlabel('Parameter Value')
     ax.set_ylabel('Density')
     ax.set_title(f'{check_type.title()} Parameter Marginals')
     ax.legend(fontsize=8)
     ax.grid(True, alpha=0.3)
+
+
+def _plot_parameter_scatter(
+    parameters: Dict[str, torch.Tensor],
+    ax: plt.Axes,
+    check_type: str
+) -> None:
+    """Plot parameter scatter relationships."""
+    # Try to find two parameters to scatter
+    param_names = list(parameters.keys())
+
+    if len(param_names) >= 2:
+        # Prefer specific parameter pairs if available
+        if 'alpha_off' in parameters and 'alpha_on' in parameters:
+            x_param, y_param = 'alpha_off', 'alpha_on'
+        elif 't_on_star' in parameters and 'delta_star' in parameters:
+            x_param, y_param = 't_on_star', 'delta_star'
+        else:
+            # Use first two available parameters
+            x_param, y_param = param_names[0], param_names[1]
+
+        x_vals = parameters[x_param].flatten().numpy()
+        y_vals = parameters[y_param].flatten().numpy()
+
+        ax.scatter(x_vals, y_vals, alpha=0.6, s=20, color='purple')
+        ax.set_xlabel(_format_parameter_name(x_param))
+        ax.set_ylabel(_format_parameter_name(y_param))
+        ax.set_title(f'{check_type.title()} Parameter Scatter')
+        ax.grid(True, alpha=0.3)
+    else:
+        ax.text(0.5, 0.5, 'Insufficient parameters\nfor scatter plot',
+               ha='center', va='center', transform=ax.transAxes)
+        ax.set_title(f'{check_type.title()} Parameter Scatter')
 
 
 def _plot_parameter_correlations(
@@ -189,7 +696,7 @@ def _plot_fold_change_distribution(
         ax.axvline(3.3, color='orange', linestyle=':', label='Min threshold: 3.3')
         ax.axvline(7.5, color='green', linestyle=':', label='Activation threshold: 7.5')
         
-        ax.set_xlabel('Fold-change (alpha*_on / alpha*_off)')
+        ax.set_xlabel(f'Fold-change ({_format_parameter_name("alpha_on")} / {_format_parameter_name("alpha_off")})')
         ax.set_ylabel('Density')
         ax.set_title(f'{check_type.title()} Fold-change Distribution')
         ax.legend(fontsize=8)
@@ -213,8 +720,8 @@ def _plot_activation_timing(
         delta = parameters['delta_star'].flatten().numpy()
         
         ax.scatter(t_on, delta, alpha=0.6, s=20, color='purple')
-        ax.set_xlabel('Activation Onset (t*_on)')
-        ax.set_ylabel('Activation Duration (delta*)')
+        ax.set_xlabel(f'Activation Onset ({_format_parameter_name("t_on_star")})')
+        ax.set_ylabel(f'Activation Duration ({_format_parameter_name("delta_star")})')
         ax.set_title(f'{check_type.title()} Activation Timing')
         
         # Add pattern boundaries
@@ -425,8 +932,8 @@ def _plot_pattern_proportions(
         counts = list(pattern_counts.values())
         colors = sns.color_palette("Set2", len(patterns))
 
-        wedges, texts, autotexts = ax.pie(counts, labels=patterns, colors=colors,
-                                         autopct='%1.1f%%', startangle=90)
+        ax.pie(counts, labels=patterns, colors=colors,
+               autopct='%1.1f%%', startangle=90)
         ax.set_title(f'{check_type.title()} Pattern Proportions')
     else:
         ax.text(0.5, 0.5, 'Pattern information\nnot available',
