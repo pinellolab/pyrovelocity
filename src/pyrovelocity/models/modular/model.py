@@ -1881,20 +1881,20 @@ class PyroVelocityModel:
             # Apply pattern classification logic (same as in prior model)
             fold_change = alpha_on / alpha_off if alpha_off > 0 else float('inf')
 
-            # Check for activation pattern
-            if alpha_off < 0.2 and alpha_on > 1.5 and t_on_star < 0.4 and delta_star > 0.3 and fold_change > 7.5:
+            # Check for activation pattern first (most stringent requirements)
+            if alpha_off < 0.15 and alpha_on > 1.5 and t_on_star < 0.4 and delta_star > 0.4 and fold_change > 7.5:
                 return "activation"
 
-            # Check for decay pattern (no activation within observation window)
+            # Check for decay pattern (most specific constraints)
             if alpha_off > 0.08 and t_on_star > 0.35:
                 return "decay"
 
-            # Check for transient pattern
-            if alpha_off < 0.3 and alpha_on > 1.0 and t_on_star < 0.5 and delta_star < 0.4 and fold_change > 3.3:
+            # Check for transient pattern (specific delta_star range)
+            if alpha_off < 0.3 and alpha_on > 1.0 and t_on_star < 0.5 and delta_star < 0.35 and fold_change > 3.3:
                 return "transient"
 
-            # Check for sustained pattern
-            if alpha_off < 0.3 and alpha_on > 1.0 and t_on_star < 0.3 and delta_star > 0.45 and fold_change > 3.3:
+            # Check for sustained pattern (less stringent than activation)
+            if alpha_off < 0.3 and alpha_on > 1.0 and t_on_star < 0.3 and delta_star > 0.35 and fold_change > 3.3:
                 return "sustained"
 
             # If none of the patterns match, return unknown

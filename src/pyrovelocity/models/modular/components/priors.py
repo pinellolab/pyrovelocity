@@ -810,10 +810,10 @@ class PiecewiseActivationPriorModel:
 
         if pattern == 'activation':
             return (
-                torch.all(alpha_off < 0.2).item() and
+                torch.all(alpha_off < 0.15).item() and  # More stringent to separate from sustained
                 torch.all(alpha_on > 1.5).item() and
                 torch.all(t_on_star < 0.4).item() and
-                torch.all(delta_star > 0.3).item() and
+                torch.all(delta_star > 0.4).item() and  # Higher threshold to separate from sustained
                 torch.all(fold_change > 7.5).item()
             )
 
@@ -831,7 +831,7 @@ class PiecewiseActivationPriorModel:
                 torch.all(alpha_off < 0.3).item() and
                 torch.all(alpha_on > 1.0).item() and
                 torch.all(t_on_star < 0.5).item() and
-                torch.all(delta_star < 0.4).item() and  # Relaxed from 0.3 to 0.4 (hybrid optimization)
+                torch.all(delta_star < 0.35).item() and  # Adjusted to avoid overlap with sustained
                 torch.all(fold_change > 3.3).item()
             )
 
@@ -840,7 +840,7 @@ class PiecewiseActivationPriorModel:
                 torch.all(alpha_off < 0.3).item() and
                 torch.all(alpha_on > 1.0).item() and
                 torch.all(t_on_star < 0.3).item() and
-                torch.all(delta_star > 0.45).item() and  # Relaxed from 0.6 to 0.45 (hybrid optimization)
+                torch.all(delta_star > 0.35).item() and  # Clear separation from transient
                 torch.all(fold_change > 3.3).item()
             )
 
