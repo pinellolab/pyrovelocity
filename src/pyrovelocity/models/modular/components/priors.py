@@ -335,6 +335,10 @@ class PiecewiseActivationPriorModel:
         delta_star_loc: float = -0.92,  # log(0.4) for LogNormal prior
         delta_star_scale: float = 0.3,  # Scale for δ* prior
 
+        # Characteristic concentration scale parameter hyperparameters
+        U_0i_loc: float = 4.6,          # log(100) for LogNormal prior
+        U_0i_scale: float = 0.5,        # Scale for U_0i prior
+
         # Capture efficiency parameter hyperparameters
         lambda_loc: float = 0.0,        # log(1.0) for LogNormal prior
         lambda_scale: float = 0.2,      # Scale for λ_j prior
@@ -362,6 +366,8 @@ class PiecewiseActivationPriorModel:
             t_on_star_scale: Scale parameter for t*_on ~ LogNormal distribution
             delta_star_loc: Location parameter for δ* ~ LogNormal distribution
             delta_star_scale: Scale parameter for δ* ~ LogNormal distribution
+            U_0i_loc: Location parameter for U_0i ~ LogNormal distribution
+            U_0i_scale: Scale parameter for U_0i ~ LogNormal distribution
             lambda_loc: Location parameter for λ_j ~ LogNormal distribution
             lambda_scale: Scale parameter for λ_j ~ LogNormal distribution
             name: A unique name for this component instance.
@@ -392,6 +398,10 @@ class PiecewiseActivationPriorModel:
         self.t_on_star_scale = t_on_star_scale
         self.delta_star_loc = delta_star_loc
         self.delta_star_scale = delta_star_scale
+
+        # Store hyperparameters for characteristic concentration scale
+        self.U_0i_loc = U_0i_loc
+        self.U_0i_scale = U_0i_scale
 
         # Store hyperparameters for capture efficiency
         self.lambda_loc = lambda_loc
@@ -470,18 +480,26 @@ class PiecewiseActivationPriorModel:
         )
         params["t_scale"] = t_scale
 
-        # Sample cell-specific normalized times
+        # Sample cell-specific parameters (time and capture efficiency)
         with pyro.plate(f"{self.name}_cells_plate", n_cells):
             tilde_t = pyro.sample(
                 "tilde_t",
                 dist.Normal(t_loc, t_scale).mask(include_prior),
             )
             # Ensure non-negative times and scale by T_M_star
-            t_star = pyro.deterministic(
-                "t_star",
-                T_M_star * torch.clamp(tilde_t, min=self.t_epsilon)
-            )
+            # Compute t_star directly without pyro.deterministic to avoid plate conflicts
+            t_star = T_M_star * torch.clamp(tilde_t, min=self.t_epsilon)
             params["t_star"] = t_star
+
+            # Sample capture efficiency parameters (per cell)
+            lambda_j = pyro.sample(
+                "lambda_j",
+                dist.LogNormal(
+                    torch.tensor(self.lambda_loc),
+                    torch.tensor(self.lambda_scale)
+                ).mask(include_prior),
+            )
+            params["lambda_j"] = lambda_j
 
         # Sample piecewise activation parameters (per gene)
         with pyro.plate(f"{self.name}_genes_plate", n_genes):
@@ -535,16 +553,15 @@ class PiecewiseActivationPriorModel:
             )
             params["delta_star"] = delta_star
 
-        # Sample capture efficiency parameters (per cell)
-        with pyro.plate(f"{self.name}_lambda_plate", n_cells):
-            lambda_j = pyro.sample(
-                "lambda_j",
+            # Characteristic concentration scale
+            U_0i = pyro.sample(
+                "U_0i",
                 dist.LogNormal(
-                    torch.tensor(self.lambda_loc),
-                    torch.tensor(self.lambda_scale)
+                    torch.tensor(self.U_0i_loc),
+                    torch.tensor(self.U_0i_scale)
                 ).mask(include_prior),
             )
-            params["lambda_j"] = lambda_j
+            params["U_0i"] = U_0i
 
         # Update the context with the sampled parameters
         context.update(params)
@@ -629,6 +646,12 @@ class PiecewiseActivationPriorModel:
             torch.tensor(self.delta_star_scale)
         ).sample((n_genes,))
 
+        # Sample characteristic concentration scale (per gene)
+        params["U_0i"] = dist.LogNormal(
+            torch.tensor(self.U_0i_loc),
+            torch.tensor(self.U_0i_scale)
+        ).sample((n_genes,))
+
         # Sample capture efficiency parameters (per cell)
         params["lambda_j"] = dist.LogNormal(
             torch.tensor(self.lambda_loc),
@@ -696,6 +719,7 @@ class PiecewiseActivationPriorModel:
             'gamma_star': [],
             't_on_star': [],
             'delta_star': [],
+            'U_0i': [],
             'lambda_j': []
         }
 
