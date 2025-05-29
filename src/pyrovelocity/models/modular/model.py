@@ -240,8 +240,7 @@ class PyroVelocityModel:
         """Make the model callable for Pyro's autoguide.
 
         This method delegates to the forward method, making the model compatible
-        with Pyro's autoguide system. It handles both the case where x and time_points
-        are provided directly and the case where u_obs and s_obs are provided.
+        with Pyro's autoguide system.
 
         Args:
             *args: Positional arguments passed to forward
@@ -250,28 +249,17 @@ class PyroVelocityModel:
         Returns:
             Result from the forward method
         """
-        # Handle the case where u_obs and s_obs are provided instead of x and time_points
-        if not args and "x" not in kwargs and "time_points" not in kwargs:
-            if "u_obs" in kwargs and "s_obs" in kwargs:
-                # Get u_obs and s_obs but don't remove them from kwargs
-                u_obs = kwargs["u_obs"]
-                s_obs = kwargs["s_obs"]
-
-                # Create a dummy time_points tensor
-                time_points = torch.tensor([0.0, 1.0])
-
-                # Pass the original u_obs and s_obs to forward
-                return self.forward(time_points=time_points, **kwargs)
-
         return self.forward(*args, **kwargs)
 
     @beartype
     def forward(
         self,
-        x: Optional[Union[torch.Tensor, Dict[str, Any]]] = None,
-        time_points: Optional[torch.Tensor] = None,
         u_obs: Optional[torch.Tensor] = None,
         s_obs: Optional[torch.Tensor] = None,
+        u_log_library: Optional[torch.Tensor] = None,
+        s_log_library: Optional[torch.Tensor] = None,
+        x: Optional[Union[torch.Tensor, Dict[str, Any]]] = None,
+        time_points: Optional[torch.Tensor] = None,
         cell_state: Optional[Dict[str, Any]] = None,
         **kwargs,
     ) -> Dict[str, Any]:
@@ -341,21 +329,29 @@ class PyroVelocityModel:
             >>> if os.path.exists(tmp_dir):
             ...     shutil.rmtree(tmp_dir)
         """
+
+
         # Initialize the context dictionary to pass between components
         context = {
             "cell_state": cell_state or {},
-            **kwargs,
+            **kwargs,  # Include remaining kwargs
         }
 
         # Add optional parameters to context if provided
-        if x is not None:
-            context["x"] = x
-        if time_points is not None:
-            context["time_points"] = time_points
         if u_obs is not None:
             context["u_obs"] = u_obs
         if s_obs is not None:
             context["s_obs"] = s_obs
+        if u_log_library is not None:
+            context["u_log_library"] = u_log_library
+        if s_log_library is not None:
+            context["s_log_library"] = s_log_library
+        if x is not None:
+            context["x"] = x
+        if time_points is not None:
+            context["time_points"] = time_points
+
+
 
         # Apply prior distributions first to provide parameters for the dynamics model
         prior_context = self.prior_model.forward(context)
@@ -372,10 +368,12 @@ class PyroVelocityModel:
     @beartype
     def guide(
         self,
-        x: Optional[Union[torch.Tensor, Dict[str, Any]]] = None,
-        time_points: Optional[torch.Tensor] = None,
         u_obs: Optional[torch.Tensor] = None,
         s_obs: Optional[torch.Tensor] = None,
+        u_log_library: Optional[torch.Tensor] = None,
+        s_log_library: Optional[torch.Tensor] = None,
+        x: Optional[Union[torch.Tensor, Dict[str, Any]]] = None,
+        time_points: Optional[torch.Tensor] = None,
         cell_state: Optional[Dict[str, Any]] = None,
         **kwargs,
     ) -> Dict[str, Any]:
@@ -427,30 +425,38 @@ class PyroVelocityModel:
         # Initialize the context dictionary to pass to the guide
         context = {
             "cell_state": cell_state or {},
-            **kwargs,
+            **kwargs,  # Include remaining kwargs
         }
 
         # Add optional parameters to context if provided
-        if x is not None:
-            context["x"] = x
-        if time_points is not None:
-            context["time_points"] = time_points
         if u_obs is not None:
             context["u_obs"] = u_obs
         if s_obs is not None:
             context["s_obs"] = s_obs
+        if u_log_library is not None:
+            context["u_log_library"] = u_log_library
+        if s_log_library is not None:
+            context["s_log_library"] = s_log_library
+        if x is not None:
+            context["x"] = x
+        if time_points is not None:
+            context["time_points"] = time_points
 
-        # If no data is provided, we're in posterior sampling mode
-        # In this case, we can go directly to the guide
-        if x is None and u_obs is None and s_obs is None:
-            # Pass directly to the guide model without data processing
-            guide_fn = self.guide_model.get_guide()
-            return guide_fn(context)
-
-        # Data preprocessing is now handled by the likelihood model
-        # Delegate to the guide model
+        # Get the guide function
         guide_fn = self.guide_model.get_guide()
-        return guide_fn(context)
+
+        # The AutoGuide expects the same signature as the model
+        # So we need to call it with the same arguments
+        return guide_fn(
+            u_obs=u_obs,
+            s_obs=s_obs,
+            u_log_library=u_log_library,
+            s_log_library=s_log_library,
+            x=x,
+            time_points=time_points,
+            cell_state=cell_state,
+            **kwargs
+        )
 
     @property
     def name(self) -> str:

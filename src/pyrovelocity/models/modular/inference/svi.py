@@ -268,6 +268,8 @@ def run_svi_inference(
 
     # Run SVI for the specified number of epochs
     for _ in range(config.num_epochs):
+
+
         # Perform a single SVI step
         loss = svi.step(*args, **kwargs)
         loss_value = float(loss)  # Convert to float
