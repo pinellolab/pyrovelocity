@@ -324,14 +324,12 @@ def mock_model(sample_data):
     dynamics_model = MockDynamicsModel()
     prior_model = MockPriorModel()
     likelihood_model = MockLikelihoodModel()
-    observation_model = MockObservationModel()
     guide_model = MockGuideModel()
 
     model = MockPyroVelocityModel(
         dynamics_model=dynamics_model,
         prior_model=prior_model,
         likelihood_model=likelihood_model,
-        observation_model=observation_model,
         guide_model=guide_model,
         name="mock_model",
     )
@@ -356,14 +354,12 @@ def multiple_models(sample_data):
         dynamics_model = MockDynamicsModel(name=f"dynamics_{i}")
         prior_model = MockPriorModel(name=f"prior_{i}")
         likelihood_model = MockLikelihoodModel(name=f"likelihood_{i}")
-        observation_model = MockObservationModel(name=f"observation_{i}")
         guide_model = MockGuideModel(name=f"guide_{i}")
 
         model = MockPyroVelocityModel(
             dynamics_model=dynamics_model,
             prior_model=prior_model,
             likelihood_model=likelihood_model,
-            observation_model=observation_model,
             guide_model=guide_model,
             name=f"model_{i}",
         )
@@ -483,7 +479,6 @@ class MockPyroVelocityModel(PyroVelocityModel):
         dynamics_model,
         prior_model,
         likelihood_model,
-        observation_model,
         guide_model,
         state=None,
         name="mock_model",
@@ -492,7 +487,6 @@ class MockPyroVelocityModel(PyroVelocityModel):
             dynamics_model=dynamics_model,
             prior_model=prior_model,
             likelihood_model=likelihood_model,
-            observation_model=observation_model,
             guide_model=guide_model,
             state=state,
         )
