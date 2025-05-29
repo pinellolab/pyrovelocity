@@ -1453,4 +1453,86 @@ class PyroVelocityModel:
 
         return adata
 
+    @beartype
+    def sample_system_parameters(
+        self,
+        num_samples: int = 1000,
+        constrain_to_pattern: bool = False,
+        pattern: Optional[str] = None,
+        set_id: Optional[int] = None,
+        n_genes: Optional[int] = None,
+        n_cells: Optional[int] = None,
+        max_attempts: int = 10000,
+        **kwargs
+    ) -> Dict[str, torch.Tensor]:
+        """
+        Sample system parameters with optional pattern constraints.
+
+        This method provides a clean user interface for parameter sampling while
+        delegating to the prior model component. It enables controlled parameter
+        generation for validation studies and synthetic data creation.
+
+        The method supports both unconstrained sampling (using full prior ranges)
+        and pattern-constrained sampling (enforcing specific gene expression patterns).
+        This is essential for parameter recovery validation studies where we need
+        to generate parameters that produce known expression patterns.
+
+        Args:
+            num_samples: Number of parameter sets to generate
+            constrain_to_pattern: Whether to apply pattern constraints
+            pattern: Expression pattern to constrain to ('activation', 'decay', 'transient', 'sustained')
+            set_id: Identifier for parameter set (for reproducibility)
+            n_genes: Number of genes (default: 2)
+            n_cells: Number of cells (default: 50)
+            max_attempts: Maximum attempts to find valid parameters when constraining
+            **kwargs: Additional arguments passed to the prior model
+
+        Returns:
+            Dictionary of parameter tensors with shape [num_samples, ...]
+
+        Raises:
+            ValueError: If pattern is invalid or constraints cannot be satisfied
+
+        Examples:
+            >>> # Unconstrained parameter sampling
+            >>> from pyrovelocity.models.modular.factory import create_piecewise_activation_model
+            >>> model = create_piecewise_activation_model()
+            >>> prior_samples = model.sample_system_parameters(
+            ...     num_samples=1000,
+            ...     constrain_to_pattern=False,
+            ...     n_genes=2,
+            ...     n_cells=50
+            ... )
+            >>> print(f"Generated {len(prior_samples)} parameter types")
+            >>> print(f"alpha_off shape: {prior_samples['alpha_off'].shape}")
+
+            >>> # Pattern-constrained parameter sampling
+            >>> activation_samples = model.sample_system_parameters(
+            ...     num_samples=100,
+            ...     constrain_to_pattern=True,
+            ...     pattern='activation',
+            ...     set_id=1,
+            ...     n_genes=2,
+            ...     n_cells=50
+            ... )
+            >>> # Verify activation pattern constraints
+            >>> alpha_off = activation_samples['alpha_off']
+            >>> alpha_on = activation_samples['alpha_on']
+            >>> fold_change = alpha_on / alpha_off
+            >>> assert torch.all(alpha_off < 0.2), "Activation: alpha_off should be < 0.2"
+            >>> assert torch.all(alpha_on > 1.5), "Activation: alpha_on should be > 1.5"
+            >>> assert torch.all(fold_change > 7.5), "Activation: fold_change should be > 7.5"
+        """
+        # Delegate to the prior model component
+        return self.prior_model.sample_system_parameters(
+            num_samples=num_samples,
+            constrain_to_pattern=constrain_to_pattern,
+            pattern=pattern,
+            set_id=set_id,
+            n_genes=n_genes,
+            n_cells=n_cells,
+            max_attempts=max_attempts,
+            **kwargs
+        )
+
 
