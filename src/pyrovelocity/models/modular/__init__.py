@@ -65,9 +65,11 @@ def _ensure_registrations():
     Ensure all components are properly registered in their respective registries.
     This function is called when the module is imported.
     """
-    # This function doesn't need to do anything special since the decorators
-    # handle registration, but importing the classes ensures decorators are executed
-    pass
+    # Import and call register_standard_components to ensure all components are registered
+    from pyrovelocity.models.modular.registry import (
+        register_standard_components,
+    )
+    register_standard_components()
 
 
 # Call the function to ensure registrations

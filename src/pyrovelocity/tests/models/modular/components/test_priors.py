@@ -18,6 +18,7 @@ def register_prior_models():
     # Clear registry and register test components
     PriorModelRegistry.clear()
     PriorModelRegistry._registry["lognormal"] = LogNormalPriorModel
+    PriorModelRegistry._registry["piecewise_activation"] = PiecewiseActivationPriorModel
 
     yield
 

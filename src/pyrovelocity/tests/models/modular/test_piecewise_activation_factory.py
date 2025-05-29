@@ -16,9 +16,6 @@ from pyrovelocity.models.modular.components.guides import AutoGuideFactory
 from pyrovelocity.models.modular.components.likelihoods import (
     PoissonLikelihoodModel,
 )
-from pyrovelocity.models.modular.components.observations import (
-    StandardObservationModel,
-)
 from pyrovelocity.models.modular.components.priors import (
     PiecewiseActivationPriorModel,
 )
@@ -39,12 +36,11 @@ class TestPiecewiseActivationFactory:
     def test_create_piecewise_activation_model_has_correct_components(self):
         """Test that the factory creates a model with the correct component types."""
         model = create_piecewise_activation_model()
-        
+
         # Check that the model has the expected component types
         assert isinstance(model.dynamics_model, PiecewiseActivationDynamicsModel)
         assert isinstance(model.prior_model, PiecewiseActivationPriorModel)
         assert isinstance(model.likelihood_model, PoissonLikelihoodModel)
-        assert isinstance(model.observation_model, StandardObservationModel)
         assert isinstance(model.guide_model, AutoGuideFactory)
 
     def test_create_piecewise_activation_model_components_have_correct_names(self):
@@ -55,7 +51,6 @@ class TestPiecewiseActivationFactory:
         assert model.dynamics_model.name == "piecewise_dynamics_model"
         assert model.prior_model.name == "piecewise_activation"
         assert model.likelihood_model.name == "poisson_likelihood"
-        assert model.observation_model.name == "standard_observation_model"
         assert model.guide_model.name == "inference_guide"
 
     def test_create_piecewise_activation_model_forward_pass(self):
@@ -162,7 +157,6 @@ class TestPiecewiseActivationFactory:
         assert type(model1.dynamics_model) == type(model2.dynamics_model)
         assert type(model1.prior_model) == type(model2.prior_model)
         assert type(model1.likelihood_model) == type(model2.likelihood_model)
-        assert type(model1.observation_model) == type(model2.observation_model)
         assert type(model1.guide_model) == type(model2.guide_model)
 
     def test_create_piecewise_activation_model_basic_training(self):

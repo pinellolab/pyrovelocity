@@ -235,6 +235,7 @@ def register_standard_components():
     # Import component implementations
     from pyrovelocity.models.modular.components.dynamics import (
         LegacyDynamicsModel,
+        PiecewiseActivationDynamicsModel,
         StandardDynamicsModel,
     )
     from pyrovelocity.models.modular.components.guides import (
@@ -250,6 +251,7 @@ def register_standard_components():
     )
     from pyrovelocity.models.modular.components.priors import (
         LogNormalPriorModel,
+        PiecewiseActivationPriorModel,
     )
 
     # The import itself should trigger the registrations through decorators
@@ -258,9 +260,13 @@ def register_standard_components():
         DynamicsModelRegistry._registry["standard"] = StandardDynamicsModel
     if "legacy" not in DynamicsModelRegistry._registry:
         DynamicsModelRegistry._registry["legacy"] = LegacyDynamicsModel
+    if "piecewise_activation" not in DynamicsModelRegistry._registry:
+        DynamicsModelRegistry._registry["piecewise_activation"] = PiecewiseActivationDynamicsModel
 
     if "lognormal" not in PriorModelRegistry._registry:
         PriorModelRegistry._registry["lognormal"] = LogNormalPriorModel
+    if "piecewise_activation" not in PriorModelRegistry._registry:
+        PriorModelRegistry._registry["piecewise_activation"] = PiecewiseActivationPriorModel
 
     if "poisson" not in LikelihoodModelRegistry._registry:
         LikelihoodModelRegistry._registry["poisson"] = PoissonLikelihoodModel
