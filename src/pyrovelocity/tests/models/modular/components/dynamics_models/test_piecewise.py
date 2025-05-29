@@ -13,7 +13,7 @@ import pytest
 import torch
 from beartype.typing import Any, Dict
 
-from pyrovelocity.models.modular.components.dynamics_models.piecewise import (
+from pyrovelocity.models.modular.components.dynamics import (
     PiecewiseActivationDynamicsModel,
 )
 
