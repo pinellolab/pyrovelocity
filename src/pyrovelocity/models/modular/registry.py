@@ -244,6 +244,7 @@ def register_standard_components():
     )
     from pyrovelocity.models.modular.components.likelihoods import (
         LegacyLikelihoodModel,
+        PiecewiseActivationPoissonLikelihoodModel,
         PoissonLikelihoodModel,
     )
     from pyrovelocity.models.modular.components.observations import (
@@ -272,6 +273,8 @@ def register_standard_components():
         LikelihoodModelRegistry._registry["poisson"] = PoissonLikelihoodModel
     if "legacy" not in LikelihoodModelRegistry._registry:
         LikelihoodModelRegistry._registry["legacy"] = LegacyLikelihoodModel
+    if "piecewise_activation_poisson" not in LikelihoodModelRegistry._registry:
+        LikelihoodModelRegistry._registry["piecewise_activation_poisson"] = PiecewiseActivationPoissonLikelihoodModel
 
     if "standard" not in ObservationModelRegistry._registry:
         ObservationModelRegistry._registry[
