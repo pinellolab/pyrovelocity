@@ -636,3 +636,186 @@ class PiecewiseActivationPriorModel:
         ).sample((n_cells,))
 
         return params
+
+    @beartype
+    def sample_system_parameters(
+        self,
+        num_samples: int = 1000,
+        constrain_to_pattern: bool = False,
+        pattern: Optional[str] = None,
+        set_id: Optional[int] = None,
+        n_genes: Optional[int] = None,
+        n_cells: Optional[int] = None,
+        max_attempts: int = 10000,
+        **kwargs
+    ) -> Dict[str, torch.Tensor]:
+        """
+        Sample system parameters with optional pattern constraints.
+
+        This method generates parameter sets for validation studies, with support
+        for constraining parameters to specific gene expression patterns.
+
+        Args:
+            num_samples: Number of parameter sets to generate
+            constrain_to_pattern: Whether to apply pattern constraints
+            pattern: Expression pattern to constrain to ('activation', 'decay', 'transient', 'sustained')
+            set_id: Identifier for parameter set (for reproducibility)
+            n_genes: Number of genes (default: 2)
+            n_cells: Number of cells (default: 50)
+            max_attempts: Maximum attempts to find valid parameters when constraining
+            **kwargs: Additional arguments
+
+        Returns:
+            Dictionary of parameter tensors with shape [num_samples, ...]
+
+        Raises:
+            ValueError: If pattern is invalid or constraints cannot be satisfied
+        """
+        if n_genes is None:
+            n_genes = 2
+        if n_cells is None:
+            n_cells = 50
+
+        # Validate pattern if provided
+        valid_patterns = ['activation', 'decay', 'transient', 'sustained']
+        if constrain_to_pattern and pattern not in valid_patterns:
+            raise ValueError(f"Pattern must be one of {valid_patterns}, got {pattern}")
+
+        # Set random seed if set_id is provided for reproducibility
+        if set_id is not None:
+            torch.manual_seed(42 + set_id)
+
+        # Initialize storage for parameter samples
+        parameter_samples = {
+            'T_M_star': [],
+            't_loc': [],
+            't_scale': [],
+            't_star': [],
+            'alpha_off': [],
+            'alpha_on': [],
+            'gamma_star': [],
+            't_on_star': [],
+            'delta_star': [],
+            'lambda_j': []
+        }
+
+        samples_collected = 0
+        attempts = 0
+
+        while samples_collected < num_samples and attempts < max_attempts:
+            attempts += 1
+
+            # Sample one parameter set
+            params = self.sample_parameters(n_genes=n_genes, n_cells=n_cells)
+
+            # Apply pattern constraints if requested
+            if constrain_to_pattern and pattern is not None:
+                if not self._satisfies_pattern_constraints(params, pattern):
+                    continue  # Try again
+
+            # Store the valid parameter set
+            for key, value in params.items():
+                parameter_samples[key].append(value)
+
+            samples_collected += 1
+
+        if samples_collected < num_samples:
+            raise ValueError(
+                f"Could not generate {num_samples} valid parameter sets for pattern '{pattern}' "
+                f"after {max_attempts} attempts. Only generated {samples_collected} sets."
+            )
+
+        # Stack samples into tensors
+        stacked_samples = {}
+        for key, sample_list in parameter_samples.items():
+            stacked_samples[key] = torch.stack(sample_list, dim=0)
+
+        return stacked_samples
+
+    @beartype
+    def _satisfies_pattern_constraints(
+        self,
+        params: Dict[str, torch.Tensor],
+        pattern: str
+    ) -> bool:
+        """
+        Check if parameters satisfy constraints for a specific expression pattern.
+
+        Based on the quantitative parameter ranges defined in the validation study:
+
+        Activation patterns:
+        - α*_off < 0.2 (low basal transcription)
+        - α*_on > 1.5 (strong activation)
+        - t*_on < 0.4 (early activation onset)
+        - δ* > 0.3 (sustained activation duration)
+        - Fold-change: α*_on/α*_off > 7.5
+
+        Decay patterns:
+        - α*_off > 0.5 (high basal transcription)
+        - t*_on > T*_M (activation onset beyond observation window)
+
+        Transient patterns:
+        - α*_off < 0.3 (low basal transcription)
+        - α*_on > 1.0 (moderate to strong activation)
+        - t*_on < 0.5 (early to mid-process activation)
+        - δ* < 0.3 (brief activation duration)
+        - Fold-change: α*_on/α*_off > 3.3
+
+        Sustained patterns:
+        - α*_off < 0.3 (low basal transcription)
+        - α*_on > 1.0 (strong activation)
+        - t*_on < 0.3 (early activation onset)
+        - δ* > 0.6 (long activation duration)
+        - Fold-change: α*_on/α*_off > 3.3
+
+        Args:
+            params: Dictionary of sampled parameters
+            pattern: Expression pattern to check
+
+        Returns:
+            True if parameters satisfy pattern constraints, False otherwise
+        """
+        alpha_off = params['alpha_off']
+        alpha_on = params['alpha_on']
+        t_on_star = params['t_on_star']
+        delta_star = params['delta_star']
+        T_M_star = params['T_M_star']
+
+        # Calculate fold-change
+        fold_change = alpha_on / alpha_off
+
+        if pattern == 'activation':
+            return (
+                torch.all(alpha_off < 0.2).item() and
+                torch.all(alpha_on > 1.5).item() and
+                torch.all(t_on_star < 0.4).item() and
+                torch.all(delta_star > 0.3).item() and
+                torch.all(fold_change > 7.5).item()
+            )
+
+        elif pattern == 'decay':
+            return (
+                torch.all(alpha_off > 0.5).item() and
+                torch.all(t_on_star > T_M_star).item()  # Activation beyond observation window
+            )
+
+        elif pattern == 'transient':
+            return (
+                torch.all(alpha_off < 0.3).item() and
+                torch.all(alpha_on > 1.0).item() and
+                torch.all(t_on_star < 0.5).item() and
+                torch.all(delta_star < 0.3).item() and
+                torch.all(fold_change > 3.3).item()
+            )
+
+        elif pattern == 'sustained':
+            return (
+                torch.all(alpha_off < 0.3).item() and
+                torch.all(alpha_on > 1.0).item() and
+                torch.all(t_on_star < 0.3).item() and
+                torch.all(delta_star > 0.6).item() and
+                torch.all(fold_change > 3.3).item()
+            )
+
+        else:
+            return False
