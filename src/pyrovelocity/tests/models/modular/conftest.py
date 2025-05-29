@@ -97,8 +97,9 @@ class MockDynamicsModel:
 class MockLikelihoodModel:
     """Mock likelihood model for testing."""
 
-    def __init__(self, name="mock_likelihood_model"):
+    def __init__(self, name="mock_likelihood_model", use_observed_lib_size=True):
         self.name = name
+        self.use_observed_lib_size = use_observed_lib_size
         self.state = {}
 
     def forward(self, context):
@@ -246,14 +247,12 @@ def mock_model(sample_data):
     dynamics_model = MockDynamicsModel()
     prior_model = MockPriorModel()
     likelihood_model = MockLikelihoodModel()
-    observation_model = MockObservationModel()
     guide_model = MockGuideModel()
 
     return PyroVelocityModel(
         dynamics_model=dynamics_model,
         prior_model=prior_model,
         likelihood_model=likelihood_model,
-        observation_model=observation_model,
         guide_model=guide_model,
     )
 
@@ -283,16 +282,12 @@ def multiple_models(sample_data):
         likelihood_model = MockLikelihoodModel(
             name=f"mock_likelihood_model_{i}"
         )
-        observation_model = MockObservationModel(
-            name=f"mock_observation_model_{i}"
-        )
         guide_model = MockGuideModel(name=f"mock_guide_model_{i}")
 
         models[f"model{i+1}"] = PyroVelocityModel(
             dynamics_model=dynamics_model,
             prior_model=prior_model,
             likelihood_model=likelihood_model,
-            observation_model=observation_model,
             guide_model=guide_model,
         )
 
