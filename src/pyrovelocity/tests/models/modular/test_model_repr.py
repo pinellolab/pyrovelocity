@@ -2,19 +2,21 @@
 Test the string representation of PyroVelocityModel.
 """
 
+import pyro
 import pytest
 import torch
-import pyro
 
-from pyrovelocity.models.modular.factory import create_standard_model, create_legacy_model1
-from pyrovelocity.models.modular.model import PyroVelocityModel
 from pyrovelocity.models.modular.components import (
-    StandardDynamicsModel,
+    AutoGuideFactory,
     LogNormalPriorModel,
     PoissonLikelihoodModel,
-    StandardObservationModel,
-    AutoGuideFactory
+    StandardDynamicsModel,
 )
+from pyrovelocity.models.modular.factory import (
+    create_legacy_model1,
+    create_standard_model,
+)
+from pyrovelocity.models.modular.model import PyroVelocityModel
 
 
 def test_model_repr_untrained():
@@ -31,7 +33,6 @@ def test_model_repr_untrained():
     assert "Dynamics:" in repr_str
     assert "Prior:" in repr_str
     assert "Likelihood:" in repr_str
-    assert "Observation:" in repr_str
     assert "Guide:" in repr_str
     
     # Check that __str__ returns the same as __repr__
@@ -44,21 +45,19 @@ def test_model_repr_custom_components():
     dynamics_model = StandardDynamicsModel(shared_time=True, t_scale_on=False)
     prior_model = LogNormalPriorModel()
     likelihood_model = PoissonLikelihoodModel()
-    observation_model = StandardObservationModel(correct_library_size=True)
     guide_model = AutoGuideFactory()
-    
+
     # Add names and descriptions to components
     dynamics_model.name = "CustomDynamics"
     dynamics_model.description = "Custom dynamics model for testing"
     prior_model.name = "CustomPrior"
     prior_model.description = "Custom prior model for testing"
-    
+
     # Create model
     model = PyroVelocityModel(
         dynamics_model=dynamics_model,
         prior_model=prior_model,
         likelihood_model=likelihood_model,
-        observation_model=observation_model,
         guide_model=guide_model
     )
     
@@ -77,20 +76,18 @@ def test_model_repr_with_config():
     # Create a model with custom components that have config attributes
     dynamics_model = StandardDynamicsModel(shared_time=True, t_scale_on=False)
     dynamics_model.config = {"shared_time": True, "t_scale_on": False}
-    
+
     prior_model = LogNormalPriorModel()
     prior_model.config = {"alpha_prior": "LogNormal", "beta_prior": "LogNormal"}
-    
+
     likelihood_model = PoissonLikelihoodModel()
-    observation_model = StandardObservationModel(correct_library_size=True)
     guide_model = AutoGuideFactory()
-    
+
     # Create model
     model = PyroVelocityModel(
         dynamics_model=dynamics_model,
         prior_model=prior_model,
         likelihood_model=likelihood_model,
-        observation_model=observation_model,
         guide_model=guide_model
     )
     

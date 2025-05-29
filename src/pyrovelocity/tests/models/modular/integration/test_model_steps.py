@@ -84,7 +84,6 @@ def create_model_fixture(model_components):
         dynamics_model=model_components["dynamics_model"],
         prior_model=model_components["prior_model"],
         likelihood_model=model_components["likelihood_model"],
-        observation_model=model_components["observation_model"],
         guide_model=model_components["guide_model"],
     )
 
@@ -296,7 +295,6 @@ def check_model_initialization(create_model):
     assert hasattr(model, "dynamics_model")
     assert hasattr(model, "prior_model")
     assert hasattr(model, "likelihood_model")
-    assert hasattr(model, "observation_model")
     assert hasattr(model, "guide_model")
 
 
@@ -309,7 +307,6 @@ def check_component_structure(create_model, model_components):
     assert model.dynamics_model == model_components["dynamics_model"]
     assert model.prior_model == model_components["prior_model"]
     assert model.likelihood_model == model_components["likelihood_model"]
-    assert model.observation_model == model_components["observation_model"]
     assert model.guide_model == model_components["guide_model"]
 
 

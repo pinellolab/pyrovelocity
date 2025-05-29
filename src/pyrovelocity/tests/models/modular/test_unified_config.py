@@ -88,9 +88,10 @@ class MockPriorModel:
 class MockLikelihoodModel:
     """Mock likelihood model for testing."""
 
-    def __init__(self, param1=None, param2=None):
+    def __init__(self, param1=None, param2=None, use_observed_lib_size=True, **kwargs):
         self.param1 = param1
         self.param2 = param2
+        self.use_observed_lib_size = use_observed_lib_size
 
     def forward(
         self,
@@ -250,7 +251,6 @@ class TestModelConfig:
         dynamics_config = ComponentConfig(name="mock", params={"param1": 1})
         prior_config = ComponentConfig(name="mock", params={"param1": 2})
         likelihood_config = ComponentConfig(name="mock", params={"param1": 3})
-        observation_config = ComponentConfig(name="mock", params={"param1": 4})
         inference_config = ComponentConfig(name="mock", params={"param1": 5})
 
         # Create a ModelConfig
@@ -258,7 +258,6 @@ class TestModelConfig:
             dynamics_model=dynamics_config,
             prior_model=prior_config,
             likelihood_model=likelihood_config,
-            observation_model=observation_config,
             inference_guide=inference_config,
             metadata={"test": "value"},
         )
@@ -267,7 +266,6 @@ class TestModelConfig:
         assert config.dynamics_model == dynamics_config
         assert config.prior_model == prior_config
         assert config.likelihood_model == likelihood_config
-        assert config.observation_model == observation_config
         assert config.inference_guide == inference_config
         assert config.metadata == {"test": "value"}
 
@@ -278,7 +276,7 @@ class TestModelConfig:
             "dynamics_model": {"name": "mock", "params": {"param1": 1}},
             "prior_model": {"name": "mock", "params": {"param1": 2}},
             "likelihood_model": {"name": "mock", "params": {"param1": 3}},
-            "observation_model": {"name": "mock", "params": {"param1": 4}},
+            "observation_model": {"name": "mock", "params": {"param1": 4}},  # This should be ignored
             "inference_guide": {"name": "mock", "params": {"param1": 5}},
             "metadata": {"test": "value"},
         }
@@ -293,8 +291,6 @@ class TestModelConfig:
         assert config.prior_model.params == {"param1": 2}
         assert config.likelihood_model.name == "mock"
         assert config.likelihood_model.params == {"param1": 3}
-        assert config.observation_model.name == "mock"
-        assert config.observation_model.params == {"param1": 4}
         assert config.inference_guide.name == "mock"
         assert config.inference_guide.params == {"param1": 5}
         assert config.metadata == {"test": "value"}
@@ -305,7 +301,6 @@ class TestModelConfig:
         dynamics_config = ComponentConfig(name="mock", params={"param1": 1})
         prior_config = ComponentConfig(name="mock", params={"param1": 2})
         likelihood_config = ComponentConfig(name="mock", params={"param1": 3})
-        observation_config = ComponentConfig(name="mock", params={"param1": 4})
         inference_config = ComponentConfig(name="mock", params={"param1": 5})
 
         # Create a ModelConfig
@@ -313,7 +308,6 @@ class TestModelConfig:
             dynamics_model=dynamics_config,
             prior_model=prior_config,
             likelihood_model=likelihood_config,
-            observation_model=observation_config,
             inference_guide=inference_config,
             metadata={"test": "value"},
         )
@@ -326,7 +320,6 @@ class TestModelConfig:
             "dynamics_model": {"name": "mock", "params": {"param1": 1}},
             "prior_model": {"name": "mock", "params": {"param1": 2}},
             "likelihood_model": {"name": "mock", "params": {"param1": 3}},
-            "observation_model": {"name": "mock", "params": {"param1": 4}},
             "inference_guide": {"name": "mock", "params": {"param1": 5}},
             "metadata": {"test": "value"},
         }
@@ -341,7 +334,6 @@ class TestModelConfig:
         assert config.dynamics_model.name == "standard"
         assert config.prior_model.name == "lognormal"
         assert config.likelihood_model.name == "poisson"
-        assert config.observation_model.name == "standard"
         assert config.inference_guide.name == "auto"
 
 
@@ -453,7 +445,6 @@ class TestModelCreation:
         dynamics_config = ComponentConfig(name="mock", params={"param1": 1})
         prior_config = ComponentConfig(name="mock", params={"param1": 2})
         likelihood_config = ComponentConfig(name="mock", params={"param1": 3})
-        observation_config = ComponentConfig(name="mock", params={"param1": 4})
         inference_config = ComponentConfig(name="mock", params={"param1": 5})
 
         # Create a ModelConfig
@@ -461,7 +452,6 @@ class TestModelCreation:
             dynamics_model=dynamics_config,
             prior_model=prior_config,
             likelihood_model=likelihood_config,
-            observation_model=observation_config,
             inference_guide=inference_config,
         )
 
@@ -475,14 +465,12 @@ class TestModelCreation:
         assert isinstance(model.dynamics_model, MockDynamicsModel)
         assert isinstance(model.prior_model, MockPriorModel)
         assert isinstance(model.likelihood_model, MockLikelihoodModel)
-        assert isinstance(model.observation_model, MockObservationModel)
         assert isinstance(model.guide_model, MockInferenceGuide)
 
         # Check that the parameters were passed correctly
         assert model.dynamics_model.param1 == 1
         assert model.prior_model.param1 == 2
         assert model.likelihood_model.param1 == 3
-        assert model.observation_model.param1 == 4
         assert model.guide_model.param1 == 5
 
     def test_create_model_from_dict(self, setup_registries):
@@ -492,7 +480,7 @@ class TestModelCreation:
             "dynamics_model": {"name": "mock", "params": {"param1": 1}},
             "prior_model": {"name": "mock", "params": {"param1": 2}},
             "likelihood_model": {"name": "mock", "params": {"param1": 3}},
-            "observation_model": {"name": "mock", "params": {"param1": 4}},
+            "observation_model": {"name": "mock", "params": {"param1": 4}},  # This should be ignored
             "inference_guide": {"name": "mock", "params": {"param1": 5}},
         }
 
@@ -506,14 +494,12 @@ class TestModelCreation:
         assert isinstance(model.dynamics_model, MockDynamicsModel)
         assert isinstance(model.prior_model, MockPriorModel)
         assert isinstance(model.likelihood_model, MockLikelihoodModel)
-        assert isinstance(model.observation_model, MockObservationModel)
         assert isinstance(model.guide_model, MockInferenceGuide)
 
         # Check that the parameters were passed correctly
         assert model.dynamics_model.param1 == 1
         assert model.prior_model.param1 == 2
         assert model.likelihood_model.param1 == 3
-        assert model.observation_model.param1 == 4
         assert model.guide_model.param1 == 5
 
     def test_create_standard_model(self, setup_registries):
@@ -528,5 +514,4 @@ class TestModelCreation:
         assert isinstance(model.dynamics_model, MockDynamicsModel)
         assert isinstance(model.prior_model, MockPriorModel)
         assert isinstance(model.likelihood_model, MockLikelihoodModel)
-        assert isinstance(model.observation_model, MockObservationModel)
         assert isinstance(model.guide_model, MockInferenceGuide)

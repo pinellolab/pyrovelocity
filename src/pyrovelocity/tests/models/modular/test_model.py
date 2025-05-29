@@ -106,12 +106,21 @@ ObservationModel.register(MockObservationModel)
 class MockLikelihoodModel:
     """Mock likelihood model for testing."""
 
-    def __init__(self, name="mock_likelihood_model"):
+    def __init__(self, name="mock_likelihood_model", use_observed_lib_size=True):
         self.name = name
+        self.use_observed_lib_size = use_observed_lib_size
         self.state = {}
 
     def forward(self, context):
-        """Forward pass that just returns the input context."""
+        """Forward pass that adds u and s to context (merged observation functionality)."""
+        # Extract x from context
+        x = context["x"]
+
+        # Add u and s to context (for simplicity, just use x for both)
+        # This simulates the merged observation functionality
+        context["u"] = x
+        context["s"] = x
+
         return context
 
     def log_prob(self, observations, _predictions, _scale_factors=None):
@@ -253,7 +262,6 @@ def pyro_velocity_model(component_models):
         dynamics_model=component_models["dynamics_model"],
         prior_model=component_models["prior_model"],
         likelihood_model=component_models["likelihood_model"],
-        observation_model=component_models["observation_model"],
         guide_model=component_models["guide_model"],
     )
 
@@ -269,10 +277,6 @@ def test_model_initialization(pyro_velocity_model, component_models):
         pyro_velocity_model.likelihood_model
         == component_models["likelihood_model"]
     )
-    assert (
-        pyro_velocity_model.observation_model
-        == component_models["observation_model"]
-    )
     assert pyro_velocity_model.guide_model == component_models["guide_model"]
 
     # Check that the state is initialized correctly
@@ -280,7 +284,6 @@ def test_model_initialization(pyro_velocity_model, component_models):
     assert pyro_velocity_model.state.dynamics_state == {}
     assert pyro_velocity_model.state.prior_state == {}
     assert pyro_velocity_model.state.likelihood_state == {}
-    assert pyro_velocity_model.state.observation_state == {}
     assert pyro_velocity_model.state.guide_state == {}
 
 
@@ -344,7 +347,6 @@ def test_model_with_state(pyro_velocity_model):
         dynamics_state={"param1": 1.0},
         prior_state={"param2": 2.0},
         likelihood_state={"param3": 3.0},
-        observation_state={"param4": 4.0},
         guide_state={"param5": 5.0},
         metadata={"meta1": "value1"},
     )
@@ -356,14 +358,12 @@ def test_model_with_state(pyro_velocity_model):
     assert pyro_velocity_model.state.dynamics_state == {}
     assert pyro_velocity_model.state.prior_state == {}
     assert pyro_velocity_model.state.likelihood_state == {}
-    assert pyro_velocity_model.state.observation_state == {}
     assert pyro_velocity_model.state.guide_state == {}
 
     # Check that the new model has the updated state
     assert new_model.state.dynamics_state == {"param1": 1.0}
     assert new_model.state.prior_state == {"param2": 2.0}
     assert new_model.state.likelihood_state == {"param3": 3.0}
-    assert new_model.state.observation_state == {"param4": 4.0}
     assert new_model.state.guide_state == {"param5": 5.0}
     assert new_model.state.metadata == {"meta1": "value1"}
 
@@ -371,7 +371,6 @@ def test_model_with_state(pyro_velocity_model):
     assert new_model.dynamics_model == pyro_velocity_model.dynamics_model
     assert new_model.prior_model == pyro_velocity_model.prior_model
     assert new_model.likelihood_model == pyro_velocity_model.likelihood_model
-    assert new_model.observation_model == pyro_velocity_model.observation_model
     assert new_model.guide_model == pyro_velocity_model.guide_model
 
 
@@ -382,7 +381,6 @@ def test_model_composition(component_models, sample_data):
         dynamics_model=component_models["dynamics_model"],
         prior_model=component_models["prior_model"],
         likelihood_model=component_models["likelihood_model"],
-        observation_model=component_models["observation_model"],
         guide_model=component_models["guide_model"],
     )
 

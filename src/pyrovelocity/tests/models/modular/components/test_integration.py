@@ -84,7 +84,6 @@ def test_components_with_model(simple_data):
     dynamics_model = StandardDynamicsModel()
     prior_model = LogNormalPriorModel()
     likelihood_model = PoissonLikelihoodModel()
-    observation_model = StandardObservationModel()
     guide_model = AutoGuideFactory(guide_type="AutoNormal")
 
     # Create the full model
@@ -92,7 +91,6 @@ def test_components_with_model(simple_data):
         dynamics_model=dynamics_model,
         prior_model=prior_model,
         likelihood_model=likelihood_model,
-        observation_model=observation_model,
         guide_model=guide_model,
     )
 
@@ -145,7 +143,6 @@ def test_components_with_model(simple_data):
                         dynamics_model=dynamics,
                         prior_model=prior,
                         likelihood_model=likelihood,
-                        observation_model=observation_model,
                         guide_model=guide,
                     )
 

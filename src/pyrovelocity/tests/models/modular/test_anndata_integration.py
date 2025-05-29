@@ -105,7 +105,6 @@ def test_generate_posterior_samples(sample_adata, model):
         dynamics_state=model.state.dynamics_state,
         prior_state=model.state.prior_state,
         likelihood_state=model.state.likelihood_state,
-        observation_state=model.state.observation_state,
         guide_state=model.state.guide_state,
         metadata={"inference_state": mock_inference_state}
     )

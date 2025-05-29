@@ -108,9 +108,10 @@ class MockPriorModel:
 class MockLikelihoodModel:
     """Mock likelihood model for testing."""
 
-    def __init__(self, param1=None, param2=None):
+    def __init__(self, param1=None, param2=None, use_observed_lib_size=True, **kwargs):
         self.param1 = param1
         self.param2 = param2
+        self.use_observed_lib_size = use_observed_lib_size
 
     def forward(
         self,
@@ -390,9 +391,6 @@ class TestModelCreation:
             likelihood_model=LikelihoodModelConfig(
                 name="mock", params={"param1": 3}
             ),
-            observation_model=ObservationModelConfig(
-                name="mock", params={"param1": 4}
-            ),
             inference_guide=InferenceGuideConfig(
                 name="mock", params={"param1": 5}
             ),
@@ -408,14 +406,12 @@ class TestModelCreation:
         assert isinstance(model.dynamics_model, MockDynamicsModel)
         assert isinstance(model.prior_model, MockPriorModel)
         assert isinstance(model.likelihood_model, MockLikelihoodModel)
-        assert isinstance(model.observation_model, MockObservationModel)
         assert isinstance(model.guide_model, MockInferenceGuide)
 
         # Check that the parameters were passed correctly
         assert model.dynamics_model.param1 == 1
         assert model.prior_model.param1 == 2
         assert model.likelihood_model.param1 == 3
-        assert model.observation_model.param1 == 4
         assert model.guide_model.param1 == 5
 
     def test_create_model_from_dict(self, setup_registries):
@@ -425,7 +421,6 @@ class TestModelCreation:
             "dynamics_model": {"name": "mock", "params": {"param1": 1}},
             "prior_model": {"name": "mock", "params": {"param1": 2}},
             "likelihood_model": {"name": "mock", "params": {"param1": 3}},
-            "observation_model": {"name": "mock", "params": {"param1": 4}},
             "inference_guide": {"name": "mock", "params": {"param1": 5}},
         }
 
@@ -439,14 +434,12 @@ class TestModelCreation:
         assert isinstance(model.dynamics_model, MockDynamicsModel)
         assert isinstance(model.prior_model, MockPriorModel)
         assert isinstance(model.likelihood_model, MockLikelihoodModel)
-        assert isinstance(model.observation_model, MockObservationModel)
         assert isinstance(model.guide_model, MockInferenceGuide)
 
         # Check that the parameters were passed correctly
         assert model.dynamics_model.param1 == 1
         assert model.prior_model.param1 == 2
         assert model.likelihood_model.param1 == 3
-        assert model.observation_model.param1 == 4
         assert model.guide_model.param1 == 5
 
     def test_create_model_from_dictconfig(self, setup_registries):
@@ -456,7 +449,6 @@ class TestModelCreation:
             "dynamics_model": {"name": "mock", "params": {"param1": 1}},
             "prior_model": {"name": "mock", "params": {"param1": 2}},
             "likelihood_model": {"name": "mock", "params": {"param1": 3}},
-            "observation_model": {"name": "mock", "params": {"param1": 4}},
             "inference_guide": {"name": "mock", "params": {"param1": 5}},
         }
 
@@ -473,14 +465,12 @@ class TestModelCreation:
         assert isinstance(model.dynamics_model, MockDynamicsModel)
         assert isinstance(model.prior_model, MockPriorModel)
         assert isinstance(model.likelihood_model, MockLikelihoodModel)
-        assert isinstance(model.observation_model, MockObservationModel)
         assert isinstance(model.guide_model, MockInferenceGuide)
 
         # Check that the parameters were passed correctly
         assert model.dynamics_model.param1 == 1
         assert model.prior_model.param1 == 2
         assert model.likelihood_model.param1 == 3
-        assert model.observation_model.param1 == 4
         assert model.guide_model.param1 == 5
 
 
@@ -496,7 +486,6 @@ class TestPredefinedConfigurations:
         assert config.dynamics_model.name == "standard"
         assert config.prior_model.name == "lognormal"
         assert config.likelihood_model.name == "poisson"
-        assert config.observation_model.name == "standard"
         assert config.inference_guide.name == "auto"
 
     def test_create_standard_model(self, setup_registries):
@@ -511,7 +500,6 @@ class TestPredefinedConfigurations:
         assert isinstance(model.dynamics_model, MockDynamicsModel)
         assert isinstance(model.prior_model, MockPriorModel)
         assert isinstance(model.likelihood_model, MockLikelihoodModel)
-        assert isinstance(model.observation_model, MockObservationModel)
         assert isinstance(model.guide_model, MockInferenceGuide)
 
 
@@ -551,7 +539,6 @@ class TestProtocolFirstFactoryFunctions:
         assert isinstance(model.dynamics_model, MockDynamicsModel)
         assert isinstance(model.prior_model, MockPriorModel)
         assert isinstance(model.likelihood_model, MockLikelihoodModel)
-        assert isinstance(model.observation_model, MockObservationModel)
         assert isinstance(model.guide_model, MockInferenceGuide)
 
     def test_create_protocol_first_model_from_config(self, setup_registries):
@@ -586,7 +573,6 @@ class TestProtocolFirstFactoryFunctions:
             dynamics_model=ComponentConfig(name="standard"),
             prior_model=ComponentConfig(name="lognormal"),
             likelihood_model=ComponentConfig(name="poisson"),
-            observation_model=ComponentConfig(name="standard"),
             inference_guide=ComponentConfig(name="auto"),
         )
 
@@ -600,7 +586,6 @@ class TestProtocolFirstFactoryFunctions:
         assert isinstance(model.dynamics_model, MockDynamicsModel)
         assert isinstance(model.prior_model, MockPriorModel)
         assert isinstance(model.likelihood_model, MockLikelihoodModel)
-        assert isinstance(model.observation_model, MockObservationModel)
         assert isinstance(model.guide_model, MockInferenceGuide)
 
 
@@ -616,7 +601,6 @@ class TestHydraZenIntegration:
                 "dynamics_model": {"name": "mock", "params": {"param1": 1}},
                 "prior_model": {"name": "mock", "params": {"param1": 2}},
                 "likelihood_model": {"name": "mock", "params": {"param1": 3}},
-                "observation_model": {"name": "mock", "params": {"param1": 4}},
                 "inference_guide": {"name": "mock", "params": {"param1": 5}},
             },
         }
@@ -634,12 +618,10 @@ class TestHydraZenIntegration:
         assert isinstance(model.dynamics_model, MockDynamicsModel)
         assert isinstance(model.prior_model, MockPriorModel)
         assert isinstance(model.likelihood_model, MockLikelihoodModel)
-        assert isinstance(model.observation_model, MockObservationModel)
         assert isinstance(model.guide_model, MockInferenceGuide)
 
         # Check that the parameters were passed correctly
         assert model.dynamics_model.param1 == 1
         assert model.prior_model.param1 == 2
         assert model.likelihood_model.param1 == 3
-        assert model.observation_model.param1 == 4
         assert model.guide_model.param1 == 5
