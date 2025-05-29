@@ -14,7 +14,7 @@ from pyrovelocity.models.modular.components.dynamics import (
 )
 from pyrovelocity.models.modular.components.guides import AutoGuideFactory
 from pyrovelocity.models.modular.components.likelihoods import (
-    PoissonLikelihoodModel,
+    PiecewiseActivationPoissonLikelihoodModel,
 )
 from pyrovelocity.models.modular.components.priors import (
     PiecewiseActivationPriorModel,
@@ -40,7 +40,7 @@ class TestPiecewiseActivationFactory:
         # Check that the model has the expected component types
         assert isinstance(model.dynamics_model, PiecewiseActivationDynamicsModel)
         assert isinstance(model.prior_model, PiecewiseActivationPriorModel)
-        assert isinstance(model.likelihood_model, PoissonLikelihoodModel)
+        assert isinstance(model.likelihood_model, PiecewiseActivationPoissonLikelihoodModel)
         assert isinstance(model.guide_model, AutoGuideFactory)
 
     def test_create_piecewise_activation_model_components_have_correct_names(self):
@@ -50,7 +50,7 @@ class TestPiecewiseActivationFactory:
         # Check component names (using actual names from the implementation)
         assert model.dynamics_model.name == "piecewise_dynamics_model"
         assert model.prior_model.name == "piecewise_activation"
-        assert model.likelihood_model.name == "poisson_likelihood"
+        assert model.likelihood_model.name == "piecewise_activation_poisson_likelihood"
         assert model.guide_model.name == "inference_guide"
 
     def test_create_piecewise_activation_model_forward_pass(self):
