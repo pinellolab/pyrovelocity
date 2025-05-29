@@ -20,6 +20,14 @@ from pyrovelocity.models.modular.interfaces import (
     PriorModel,
 )
 from pyrovelocity.models.modular.model import PyroVelocityModel
+from pyrovelocity.models.modular.registry import (
+    DynamicsModelRegistry,
+    InferenceGuideRegistry,
+    LikelihoodModelRegistry,
+    ObservationModelRegistry,
+    PriorModelRegistry,
+    register_standard_components,
+)
 
 
 # Mock implementations for testing
@@ -92,6 +100,20 @@ class MockDynamicsModel:
         u_future = u_current + alpha * time_delta
         s_future = s_current + beta * time_delta
         return u_future, s_future
+
+    def compute_velocity(
+        self,
+        ut: torch.Tensor,
+        st: torch.Tensor,
+        alpha: torch.Tensor,
+        beta: torch.Tensor,
+        gamma: torch.Tensor,
+        **kwargs,
+    ) -> torch.Tensor:
+        """Compute RNA velocity for testing."""
+        # Simple velocity computation for testing
+        # velocity = alpha - beta * ut
+        return alpha - beta * ut
 
 
 class MockLikelihoodModel:
@@ -217,6 +239,41 @@ class MockGuideModel:
         """Sample from the posterior distribution."""
         # Return empty dict for testing
         return {}
+
+
+@pytest.fixture(autouse=True, scope="function")
+def setup_registries():
+    """
+    Set up component registries for each test with proper isolation.
+
+    This fixture ensures that each test starts with a clean registry state
+    and that any registrations made during the test don't affect other tests.
+    """
+    # Store original registry state
+    original_dynamics = DynamicsModelRegistry._registry.copy()
+    original_priors = PriorModelRegistry._registry.copy()
+    original_likelihoods = LikelihoodModelRegistry._registry.copy()
+    original_observations = ObservationModelRegistry._registry.copy()
+    original_guides = InferenceGuideRegistry._registry.copy()
+
+    # Clear all registries
+    DynamicsModelRegistry.clear()
+    PriorModelRegistry.clear()
+    LikelihoodModelRegistry.clear()
+    ObservationModelRegistry.clear()
+    InferenceGuideRegistry.clear()
+
+    # Register standard components for the test
+    register_standard_components()
+
+    yield
+
+    # Restore original registry state
+    DynamicsModelRegistry._registry = original_dynamics
+    PriorModelRegistry._registry = original_priors
+    LikelihoodModelRegistry._registry = original_likelihoods
+    ObservationModelRegistry._registry = original_observations
+    InferenceGuideRegistry._registry = original_guides
 
 
 @pytest.fixture
