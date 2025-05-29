@@ -1435,8 +1435,8 @@ We generate a comprehensive set of validation plots to visualize model performan
 
 ```python
 # Create visualization directory
-viz_dir = Path("validation_plots")
-viz_dir.mkdir(exist_ok=True)
+validation_outputs = Path("validation_plots")
+validation_outputs.mkdir(exist_ok=True)
 
 print("Generating comprehensive validation visualizations...")
 
@@ -1447,7 +1447,7 @@ fig_recovery = plot_parameter_recovery_diagnostics(
     figsize=(20, 15)
 )
 plt.suptitle("Parameter Recovery Diagnostics: All Patterns", fontsize=16)
-plt.savefig(viz_dir / "parameter_recovery_diagnostics.png", dpi=300, bbox_inches='tight')
+plt.savefig(validation_outputs / "parameter_recovery_diagnostics.png", dpi=300, bbox_inches='tight')
 plt.show()
 
 # 2. Phase portraits for each pattern
@@ -1464,7 +1464,7 @@ for pattern in ["activation", "decay", "transient", "sustained"]:
             figsize=(15, 10)
         )
         plt.suptitle(f"Phase Portrait: {dataset_key.replace('_', ' ').title()}", fontsize=16)
-        plt.savefig(viz_dir / f"phase_portrait_{dataset_key}.png", dpi=300, bbox_inches='tight')
+        plt.savefig(validation_outputs / f"phase_portrait_{dataset_key}.png", dpi=300, bbox_inches='tight')
         plt.show()
 
 # 3. Temporal trajectories showing piecewise dynamics
@@ -1480,7 +1480,7 @@ for pattern in ["activation", "transient", "sustained"]:  # Skip decay (no activ
             figsize=(12, 8)
         )
         plt.suptitle(f"Temporal Trajectories: {dataset_key.replace('_', ' ').title()}", fontsize=16)
-        plt.savefig(viz_dir / f"trajectories_{dataset_key}.png", dpi=300, bbox_inches='tight')
+        plt.savefig(validation_outputs / f"trajectories_{dataset_key}.png", dpi=300, bbox_inches='tight')
         plt.show()
 
 # 4. Activation timing analysis
@@ -1490,7 +1490,7 @@ fig_timing = plot_activation_timing(
     figsize=(15, 10)
 )
 plt.suptitle("Activation Timing Analysis: All Patterns", fontsize=16)
-plt.savefig(viz_dir / "activation_timing_analysis.png", dpi=300, bbox_inches='tight')
+plt.savefig(validation_outputs / "activation_timing_analysis.png", dpi=300, bbox_inches='tight')
 plt.show()
 
 # 5. Posterior predictive checks for each pattern
@@ -1505,10 +1505,10 @@ for pattern in ["activation", "decay", "transient", "sustained"]:
             figsize=(15, 10)
         )
         plt.suptitle(f"Posterior Predictive Checks: {dataset_key.replace('_', ' ').title()}", fontsize=16)
-        plt.savefig(viz_dir / f"posterior_predictive_{dataset_key}.png", dpi=300, bbox_inches='tight')
+        plt.savefig(validation_outputs / f"posterior_predictive_{dataset_key}.png", dpi=300, bbox_inches='tight')
         plt.show()
 
-print(f"All validation plots saved to {viz_dir}/")
+print(f"All validation plots saved to {validation_outputs}/")
 ```
 
 ## Validation Study 4: Dimensionless simulated dynamics with latent time and continuous pulse activation
