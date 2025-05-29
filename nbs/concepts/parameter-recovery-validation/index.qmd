@@ -745,7 +745,7 @@ The hierarchical time structure introduces new parameters with clear biological 
 - **Constraint**: Always positive, ensuring mathematical consistency with analytical solutions
 - **Example**: If $T_{M}^* = 5$, $\tilde{t}_j = 0.6$, then $t^*_j = 3.0$ characteristic splicing times; if $\tilde{t}_j = -0.1$, then $t^*_j = 5 \times 10^{-5}$ (clipped)
 
-### Key Advantages of Gamma/Normal Hierarchical Time Structure
+### Properties of Gamma/Normal Hierarchical Time Structure
 
 #### **Statistical Benefits**
 
@@ -902,9 +902,11 @@ s^*_{ij}(\tau_{\text{off}}) &= \alpha^*_{\text{off}i} + (s^*_{\text{off},0i} - \
 This piecewise framework enables representation of diverse gene expression patterns through specific parameter combinations. Each pattern is defined by quantitative parameter ranges that create distinct temporal dynamics:
 
 #### **1. Activation Patterns**
+
 **Characteristics**: Genes that start with low expression and become strongly activated during the process.
 
 **Parameter specifications**:
+
 - $\alpha^*_{\text{off}i} < 0.2$ (low basal transcription)
 - $\alpha^*_{\text{on}i} > 1.5$ (strong activation)
 - $t^*_{0,\text{on}i} < 0.4$ (early activation onset)
@@ -914,9 +916,11 @@ This piecewise framework enables representation of diverse gene expression patte
 **Biological examples**: Developmental transcription factors, cell cycle genes, stress response genes
 
 #### **2. Decay-Only Patterns**
+
 **Characteristics**: Genes that start with high expression and gradually decrease without reactivation.
 
 **Parameter specifications**:
+
 - $\alpha^*_{\text{off}i} > 0.5$ (high basal transcription)
 - $t^*_{0,\text{on}i} > T^*_M$ (activation onset beyond observation window)
 - $\delta^*_i$ (irrelevant, no activation observed)
@@ -928,6 +932,7 @@ This piecewise framework enables representation of diverse gene expression patte
 **Characteristics**: Genes that show brief, pulse-like activation followed by return to baseline.
 
 **Parameter specifications**:
+
 - $\alpha^*_{\text{off}i} < 0.3$ (low basal transcription)
 - $\alpha^*_{\text{on}i} > 1.0$ (moderate to strong activation)
 - $t^*_{0,\text{on}i} < 0.5$ (early to mid-process activation)
@@ -940,6 +945,7 @@ This piecewise framework enables representation of diverse gene expression patte
 **Characteristics**: Genes that become activated and remain highly expressed throughout most of the process.
 
 **Parameter specifications**:
+
 - $\alpha^*_{\text{off}i} < 0.3$ (low basal transcription)
 - $\alpha^*_{\text{on}i} > 1.0$ (strong activation)
 - $t^*_{0,\text{on}i} < 0.3$ (early activation onset)
@@ -947,36 +953,6 @@ This piecewise framework enables representation of diverse gene expression patte
 - **Fold-change**: $\alpha^*_{\text{on}i}/\alpha^*_{\text{off}i} > 3.3$ (sustained upregulation)
 
 **Biological examples**: Lineage-specific transcription factors, structural proteins, metabolic enzymes
-
-#### **Pattern Classification Criteria**
-
-For parameter recovery validation, genes can be automatically classified using these approximate decision rules:
-
-```python
-def classify_gene_pattern(alpha_off, alpha_on, t_on, delta, T_max):
-    """Classify gene expression pattern based on inferred parameters."""
-    fold_change = alpha_on / alpha_off
-
-    if t_on > T_max:
-        return "decay_only"
-    elif alpha_off < 0.2 and alpha_on > 1.5 and t_on < 0.4 and delta > 0.3:
-        return "activation"
-    elif alpha_off < 0.3 and fold_change > 3.3 and t_on < 0.5 and delta < 0.3:
-        return "transient"
-    elif alpha_off < 0.3 and fold_change > 3.3 and t_on < 0.3 and delta > 0.6:
-        return "sustained"
-    else:
-        return "intermediate"  # Mixed or boundary cases
-```
-
-#### **Validation Strategy for Pattern Recovery**
-
-Parameter recovery validation should test the model's ability to:
-
-1. **Correctly classify known patterns**: Generate synthetic data with known pattern types and verify classification accuracy
-2. **Recover pattern-specific parameters**: Ensure fold-changes, timing, and duration parameters are accurately inferred
-3. **Distinguish similar patterns**: Separate transient vs. sustained activation, activation vs. decay-only
-4. **Handle boundary cases**: Genes with intermediate parameter values that don't clearly fit one pattern
 
 ### Probabilistic Graphical Model
 
@@ -1190,7 +1166,7 @@ The dimensionless concentrations are computed using the analytical solutions for
     s_{ij} &\sim \text{Poisson}(\lambda_j \cdot U_{0i} \cdot s^*_{ij})
 \end{align}
 
-### Key Advantages of the Piecewise Framework
+### Properties of the Piecewise Framework
 
 #### **Identifiability Resolution**
 
@@ -1216,48 +1192,6 @@ The dimensionless concentrations are computed using the analytical solutions for
 - **Dimensionless parameters**: Universal interpretation across experimental conditions
 - **Temporal coordination**: Hierarchical time structure captures population-level timing
 - **Gene-specific dynamics**: Each gene can follow distinct activation pattern
-
-### Implementation Considerations
-
-#### **Phase Detection Logic**
-
-For implementation, each cell-gene pair $(j,i)$ must be assigned to the correct phase based on the cell's latent time $t^*_j$ relative to gene $i$'s activation parameters:
-
-```python
-def determine_phase(t_star_j, t_on_i, delta_i):
-    """Determine which phase cell j is in for gene i."""
-    if t_star_j < t_on_i:
-        return "off_phase_1"  # Phase 1: before activation
-    elif t_star_j < t_on_i + delta_i:
-        return "on_phase"     # Phase 2: during activation
-    else:
-        return "off_phase_3"  # Phase 3: after activation
-```
-
-#### **Numerical Stability Considerations**
-
-**Special case handling for $\gamma^*_i \approx 1$:**
-
-When $\gamma^*_i$ is very close to 1 (e.g., $|\gamma^*_i - 1| < 10^{-6}$), the helper variable $\xi_i = \frac{\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}}{\gamma^*_i - 1}$ becomes numerically unstable. Implementation should:
-
-1. **Use threshold switching**: If $|\gamma^*_i - 1| < \epsilon$ (e.g., $\epsilon = 10^{-6}$), use the $\gamma^*_i = 1$ analytical solutions
-2. **L'Hôpital's rule**: For intermediate values, the limit as $\gamma^*_i \to 1$ gives the correct $t^* e^{-t^*}$ terms
-3. **Robust computation**: Avoid direct division by $(\gamma^*_i - 1)$ when close to zero
-
-**Parameter validation ranges:**
-
-To ensure biological realism and numerical stability:
-
-```python
-def validate_parameters(alpha_off, alpha_on, t_on, delta, gamma_star):
-    """Validate parameter ranges for biological realism."""
-    assert 0.01 <= alpha_off <= 10.0    # Reasonable basal transcription
-    assert 0.1 <= alpha_on <= 20.0      # Reasonable active transcription
-    assert alpha_on > alpha_off          # Activation increases transcription
-    assert 0.01 <= t_on <= 0.9          # Onset within process timeline
-    assert 0.05 <= delta <= 2.0         # Reasonable activation duration
-    assert 0.1 <= gamma_star <= 10.0    # Reasonable relative degradation
-```
 
 ### Parameter Recovery Validation Strategy
 
@@ -1289,10 +1223,6 @@ from pathlib import Path
 
 # PyroVelocity imports
 from pyrovelocity.models.modular.factory import create_piecewise_activation_model
-from pyrovelocity.models.modular.validation import (
-    PiecewiseActivationValidator,
-    PatternClassificationValidator,
-)
 from pyrovelocity.plots.piecewise import (
     plot_piecewise_phase_portrait,
     plot_piecewise_trajectories,
@@ -1323,14 +1253,6 @@ print(f"  Prior: {model.prior_model}")
 print(f"  Likelihood: {model.likelihood_model}")
 print(f"  Observation: {model.observation_model}")
 print(f"  Guide: {model.guide_model}")
-
-# Demonstrate key API methods available on any PyroVelocityModel
-print(f"\nKey API methods available:")
-print(f"  model.sample_system_parameters() - Sample constrained or unconstrained parameters")
-print(f"  model.generate_predictive_samples() - Generate prior/posterior predictive samples")
-print(f"  model.train() - Train model on data")
-print(f"  model.generate_posterior_samples() - Generate posterior samples after training")
-print(f"  model.get_velocity() - Compute velocity estimates")
 ```
 
 #### Synthetic Data Generation for All Expression Patterns
@@ -1366,21 +1288,25 @@ for config in pattern_configs:
 
     print(f"Generating synthetic data for {dataset_key}...")
 
+    # Set PyTorch random seed for reproducibility
+    torch.manual_seed(seed)
+    pyro.set_rng_seed(seed)
+
     # Sample system parameters constrained to this pattern
     true_system_params = model.sample_system_parameters(
         pattern=pattern,
         set_id=set_id,
         num_samples=1,
-        constrain_to_pattern=True,
-        rng_key=jax.random.PRNGKey(seed)
+        constrain_to_pattern=True
     )
 
     # Generate synthetic data using the generic predictive sampling interface
+    torch.manual_seed(seed + 100)
+    pyro.set_rng_seed(seed + 100)
     adata = model.generate_predictive_samples(
         num_cells=200,
         num_genes=5,
         samples=true_system_params,  # Use constrained parameters as "posterior"
-        rng_key=jax.random.PRNGKey(seed + 100),
         return_format="anndata"
     )
 
@@ -1403,20 +1329,24 @@ Before training, we validate that our priors generate biologically reasonable pa
 # Generate prior predictive samples using the generic interface
 print("Performing prior predictive checks...")
 
+# Set seeds for reproducible prior sampling
+torch.manual_seed(0)
+pyro.set_rng_seed(0)
+
 # Generate prior predictive samples (no samples argument = sample from prior)
 prior_predictive_adata = model.generate_predictive_samples(
     num_cells=200,
     num_genes=10,
     num_samples=100,  # Generate 100 prior samples
-    rng_key=jax.random.PRNGKey(0),
     return_format="anndata"
 )
 
 # Extract parameter samples for validation
+torch.manual_seed(1)
+pyro.set_rng_seed(1)
 prior_parameter_samples = model.sample_system_parameters(
     num_samples=1000,
-    constrain_to_pattern=False,  # Use full prior ranges
-    rng_key=jax.random.PRNGKey(1)
+    constrain_to_pattern=False  # Use full prior ranges
 )
 
 # Plot prior predictive checks
@@ -1439,30 +1369,16 @@ for param_name, samples in prior_parameter_samples.items():
         print(f"  Range: [{samples.min():.3f}, {samples.max():.3f}]")
         print(f"  Mean ± Std: {samples.mean():.3f} ± {samples.std():.3f}")
 
-# Validate that prior generates diverse expression patterns
-print("\nPrior pattern diversity:")
-prior_patterns = PatternClassificationValidator().classify_genes_from_parameters(
-    prior_parameter_samples
-)
-pattern_counts = {pattern: list(prior_patterns.values()).count(pattern)
-                 for pattern in ["activation", "decay", "transient", "sustained", "intermediate"]}
-for pattern, count in pattern_counts.items():
-    print(f"  {pattern}: {count} genes ({count/len(prior_patterns)*100:.1f}%)")
+# Note: Pattern classification and other specialized validation methods
+# will be implemented later as separate functionality
 ```
 
 #### Parameter Recovery Validation Across All Patterns
 
-We now perform comprehensive parameter recovery validation across all eight parameter sets:
+We now perform comprehensive parameter recovery validation across all eight parameter sets using the built-in model validation method:
 
 ```python
-# Initialize validation framework
-validator = PiecewiseActivationValidator(
-    convergence_threshold=0.95,
-    max_epochs=2000,
-    num_posterior_samples=500
-)
-
-# Run parameter recovery validation for all datasets
+# Run parameter recovery validation for all datasets using built-in model method
 validation_results = {}
 posterior_samples_all = {}
 
@@ -1478,12 +1394,13 @@ for dataset_key, adata in validation_datasets.items():
         name=f"piecewise_{dataset_key}"
     )
 
-    # Run parameter recovery validation
-    result = validator.validate_parameter_recovery(
-        model=model_instance,
+    # Run parameter recovery validation using built-in model method
+    result = model_instance.validate_parameter_recovery(
         adata=adata,
         true_parameters=validation_parameters[dataset_key],
-        dataset_name=dataset_key
+        max_epochs=2000,
+        num_posterior_samples=500,
+        convergence_threshold=0.95
     )
 
     validation_results[dataset_key] = result
@@ -1492,11 +1409,11 @@ for dataset_key, adata in validation_datasets.items():
     # Print summary results
     print(f"Parameter recovery summary for {dataset_key}:")
     print(f"  Overall success rate: {result['overall_success_rate']:.1%}")
-    print(f"  Training converged: {result['training_converged']}")
-    print(f"  Final ELBO: {result['final_elbo']:.2f}")
+    print(f"  Training converged: {result['training_result']['converged']}")
+    print(f"  Final ELBO: {result['training_result']['final_elbo']:.2f}")
 
     # Print parameter-specific recovery rates
-    for param_name, recovery_rate in result['parameter_recovery_rates'].items():
+    for param_name, recovery_rate in result['recovery_metrics']['parameter_recovery_rates'].items():
         print(f"  {param_name}: {recovery_rate:.1%}")
 
 # Compute overall validation statistics
@@ -1592,229 +1509,6 @@ for pattern in ["activation", "decay", "transient", "sustained"]:
         plt.show()
 
 print(f"All validation plots saved to {viz_dir}/")
-```
-
-#### Numerical Stability Validation
-
-We specifically test numerical stability around the γ* = 1 boundary:
-
-```python
-# Test numerical stability around gamma* = 1
-print("Testing numerical stability around γ* = 1 boundary...")
-
-gamma_values = np.array([0.99, 0.999, 0.9999, 1.0, 1.0001, 1.001, 1.01])
-stability_results = {}
-
-for gamma_val in gamma_values:
-    print(f"\nTesting γ* = {gamma_val}")
-
-    # Manually specify parameters with specific gamma value
-    test_system_params = {
-        "alpha_off": jnp.array([[0.1, 0.1, 0.1]]),
-        "alpha_on": jnp.array([[2.0, 2.0, 2.0]]),
-        "t_on": jnp.array([[0.3, 0.3, 0.3]]),
-        "delta": jnp.array([[0.4, 0.4, 0.4]]),
-        "gamma_star": jnp.array([[gamma_val, gamma_val, gamma_val]]),
-        "T_max_star": jnp.array([[1.0]]),
-        "t_loc": jnp.array([[0.5]]),
-        "t_scale": jnp.array([[0.2]]),
-    }
-
-    # Generate test data using generic API
-    test_adata = model.generate_predictive_samples(
-        num_cells=100,
-        num_genes=3,
-        samples=test_system_params,
-        rng_key=jax.random.PRNGKey(int(gamma_val * 1000)),
-        return_format="anndata"
-    )
-
-    # Create and train model
-    test_model = create_piecewise_activation_model(
-        num_genes=test_adata.n_vars,
-        num_cells=test_adata.n_obs
-    )
-
-    try:
-        # Train model
-        training_result = test_model.train(
-            adata=test_adata,
-            max_epochs=500,
-            learning_rate=0.01
-        )
-
-        # Generate posterior samples
-        posterior_samples = test_model.generate_posterior_samples(
-            adata=test_adata,
-            num_samples=100
-        )
-
-        # Check for numerical issues
-        has_nan = any(torch.isnan(samples).any() for samples in posterior_samples.values())
-        has_inf = any(torch.isinf(samples).any() for samples in posterior_samples.values())
-
-        stability_results[gamma_val] = {
-            "converged": training_result["converged"],
-            "final_elbo": training_result["final_elbo"],
-            "has_nan": has_nan,
-            "has_inf": has_inf,
-            "stable": not (has_nan or has_inf) and training_result["converged"]
-        }
-
-        print(f"  Converged: {training_result['converged']}")
-        print(f"  Final ELBO: {training_result['final_elbo']:.2f}")
-        print(f"  Numerically stable: {stability_results[gamma_val]['stable']}")
-
-    except Exception as e:
-        print(f"  Error: {e}")
-        stability_results[gamma_val] = {
-            "converged": False,
-            "final_elbo": float('nan'),
-            "has_nan": True,
-            "has_inf": False,
-            "stable": False
-        }
-
-# Summary of stability results
-stable_count = sum(r["stable"] for r in stability_results.values())
-total_count = len(stability_results)
-
-print(f"\nNumerical stability summary:")
-print(f"Stable across γ* = 1 boundary: {stable_count}/{total_count} cases")
-print(f"Stability rate: {stable_count/total_count:.1%}")
-```
-
-#### Performance Benchmarking
-
-We benchmark computational performance across different dataset sizes:
-
-```python
-# Benchmark computational performance
-print("Benchmarking computational performance...")
-
-import time
-from memory_profiler import memory_usage
-
-benchmark_configs = [
-    {"num_genes": 5, "num_cells": 100},
-    {"num_genes": 10, "num_cells": 200},
-    {"num_genes": 20, "num_cells": 500},
-    {"num_genes": 50, "num_cells": 1000},
-]
-
-benchmark_results = {}
-
-for config in benchmark_configs:
-    config_key = f"{config['num_genes']}g_{config['num_cells']}c"
-    print(f"\nBenchmarking {config_key}...")
-
-    # Sample parameters for benchmarking
-    bench_params = model.sample_system_parameters(
-        pattern="activation",
-        set_id=1,
-        num_samples=1,
-        rng_key=jax.random.PRNGKey(42)
-    )
-
-    # Generate test data using generic API
-    test_adata = model.generate_predictive_samples(
-        num_genes=config["num_genes"],
-        num_cells=config["num_cells"],
-        samples=bench_params,
-        rng_key=jax.random.PRNGKey(100),
-        return_format="anndata"
-    )
-
-    # Create model
-    bench_model = create_piecewise_activation_model(
-        num_genes=config["num_genes"],
-        num_cells=config["num_cells"]
-    )
-
-    # Benchmark training
-    start_time = time.time()
-
-    def train_model():
-        return bench_model.train(
-            adata=test_adata,
-            max_epochs=100,  # Reduced for benchmarking
-            learning_rate=0.01
-        )
-
-    # Measure memory usage during training
-    mem_usage = memory_usage(train_model, interval=0.1)
-    training_time = time.time() - start_time
-
-    # Benchmark posterior sampling
-    start_time = time.time()
-    posterior_samples = bench_model.generate_posterior_samples(
-        adata=test_adata,
-        num_samples=100
-    )
-    sampling_time = time.time() - start_time
-
-    benchmark_results[config_key] = {
-        "num_genes": config["num_genes"],
-        "num_cells": config["num_cells"],
-        "training_time": training_time,
-        "sampling_time": sampling_time,
-        "peak_memory_mb": max(mem_usage),
-        "total_time": training_time + sampling_time
-    }
-
-    print(f"  Training time: {training_time:.1f}s")
-    print(f"  Sampling time: {sampling_time:.1f}s")
-    print(f"  Peak memory: {max(mem_usage):.1f} MB")
-
-# Display benchmark summary
-print(f"\n{'='*60}")
-print(f"PERFORMANCE BENCHMARK SUMMARY")
-print(f"{'='*60}")
-
-for config_key, results in benchmark_results.items():
-    print(f"{config_key}:")
-    print(f"  Total time: {results['total_time']:.1f}s")
-    print(f"  Peak memory: {results['peak_memory_mb']:.1f} MB")
-    print(f"  Time per cell: {results['total_time']/results['num_cells']:.3f}s")
-```
-
-#### Validation Summary and Results
-
-The comprehensive validation of the piecewise activation model demonstrates excellent performance across all evaluation criteria:
-
-```python
-# Generate final validation summary report
-print("="*80)
-print("PIECEWISE ACTIVATION MODEL VALIDATION SUMMARY")
-print("="*80)
-
-# Parameter recovery summary
-print(f"\n1. PARAMETER RECOVERY PERFORMANCE")
-print(f"   Mean recovery rate: {mean_success_rate:.1%} ± {std_success_rate:.1%}")
-print(f"   Datasets with >90% recovery: {sum(r >= 0.9 for r in overall_success_rates)}/{len(overall_success_rates)}")
-print(f"   Datasets with >95% recovery: {sum(r >= 0.95 for r in overall_success_rates)}/{len(overall_success_rates)}")
-
-# Pattern classification summary
-print(f"\n2. PATTERN CLASSIFICATION ACCURACY")
-print(f"   Overall classification accuracy: {mean_classification_accuracy:.1%}")
-print(f"   Pattern-specific performance:")
-for pattern in ["activation", "decay", "transient", "sustained"]:
-    pattern_results = [r for k, r in classification_results.items() if k.startswith(pattern)]
-    if pattern_results:
-        pattern_acc = np.mean([r['accuracy'] for r in pattern_results])
-        print(f"     {pattern.capitalize()}: {pattern_acc:.1%}")
-
-# Numerical stability summary
-print(f"\n3. NUMERICAL STABILITY")
-print(f"   Stable across γ* = 1 boundary: {stable_count}/{total_count} cases ({stable_count/total_count:.1%})")
-
-# Performance summary
-print(f"\n4. COMPUTATIONAL PERFORMANCE")
-fastest_config = min(benchmark_results.items(), key=lambda x: x[1]['total_time'])
-slowest_config = max(benchmark_results.items(), key=lambda x: x[1]['total_time'])
-print(f"   Fastest configuration: {fastest_config[0]} ({fastest_config[1]['total_time']:.1f}s)")
-print(f"   Slowest configuration: {slowest_config[0]} ({slowest_config[1]['total_time']:.1f}s)")
-print(f"   Memory usage range: {min(r['peak_memory_mb'] for r in benchmark_results.values()):.0f}-{max(r['peak_memory_mb'] for r in benchmark_results.values()):.0f} MB")
 ```
 
 ## Validation Study 4: Dimensionless simulated dynamics with latent time and continuous pulse activation
