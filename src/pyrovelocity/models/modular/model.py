@@ -1535,4 +1535,373 @@ class PyroVelocityModel:
             **kwargs
         )
 
+    @beartype
+    def generate_predictive_samples(
+        self,
+        num_cells: int,
+        num_genes: int,
+        samples: Optional[Dict[str, torch.Tensor]] = None,
+        num_samples: Optional[int] = None,
+        return_format: str = "dict",
+        **kwargs
+    ) -> Union[Dict[str, torch.Tensor], AnnData]:
+        """
+        Generate predictive samples using the model.
+
+        This method provides a unified interface for generating both prior and posterior
+        predictive samples. When samples=None, it generates prior predictive samples by
+        sampling parameters from the prior. When samples are provided, it generates
+        posterior predictive samples using those parameter values.
+
+        This is essential for parameter recovery validation studies where we need to
+        generate synthetic datasets with known ground truth parameters.
+
+        Args:
+            num_cells: Number of cells to generate
+            num_genes: Number of genes to generate
+            samples: Optional parameter samples to use (if None, samples from prior)
+            num_samples: Number of predictive samples (only used if samples=None)
+            return_format: Format for returned data ("dict", "anndata", "inference_data")
+            **kwargs: Additional arguments passed to the model
+
+        Returns:
+            Generated predictive samples in the specified format
+
+        Raises:
+            ValueError: If return_format is invalid or model components are missing
+
+        Examples:
+            >>> # Prior predictive sampling
+            >>> from pyrovelocity.models.modular.factory import create_piecewise_activation_model
+            >>> model = create_piecewise_activation_model()
+            >>> prior_data = model.generate_predictive_samples(
+            ...     num_cells=50,
+            ...     num_genes=2,
+            ...     num_samples=100,
+            ...     return_format="anndata"
+            ... )
+            >>> print(f"Generated {prior_data.n_obs} cells × {prior_data.n_vars} genes")
+
+            >>> # Posterior predictive sampling
+            >>> true_params = model.sample_system_parameters(
+            ...     num_samples=1,
+            ...     constrain_to_pattern=True,
+            ...     pattern='activation'
+            ... )
+            >>> synthetic_data = model.generate_predictive_samples(
+            ...     num_cells=200,
+            ...     num_genes=5,
+            ...     samples=true_params,
+            ...     return_format="anndata"
+            ... )
+            >>> print(f"Generated synthetic data: {synthetic_data.shape}")
+        """
+        import pyro
+        from pyro.infer import Predictive
+
+        # Validate return format
+        valid_formats = ["dict", "anndata", "inference_data"]
+        if return_format not in valid_formats:
+            raise ValueError(f"return_format must be one of {valid_formats}, got {return_format}")
+
+        # Create an unconditioned version of the model for predictive sampling
+        def create_predictive_model():
+            """Create a model for predictive sampling without conditioning on observations."""
+            # Create dummy observations with the right shape
+            dummy_u_obs = torch.zeros(num_cells, num_genes)
+            dummy_s_obs = torch.zeros(num_cells, num_genes)
+
+            # Call the main model forward method
+            return self.forward(dummy_u_obs, dummy_s_obs)
+
+        # Use pyro.poutine.uncondition to remove observation conditioning
+        unconditioned_model = pyro.poutine.uncondition(create_predictive_model)
+
+        # Handle prior vs posterior predictive sampling
+        if samples is None:
+            # Prior predictive sampling: sample parameters from prior
+            if num_samples is None:
+                num_samples = 1
+
+            # Generate prior predictive samples
+            predictive = Predictive(
+                unconditioned_model,
+                num_samples=num_samples,
+                return_sites=None,
+            )
+
+            predictive_samples = predictive()
+
+        else:
+            # Posterior predictive sampling: use provided parameter samples
+            if isinstance(samples, dict):
+                # The samples from sample_system_parameters have batch dimension [num_samples, ...]
+                # For posterior predictive sampling, we need to remove the batch dimension
+                # and use the samples as fixed parameter values
+
+                # Create a model that uses fixed parameter values
+                def posterior_predictive_model():
+                    """Model with fixed parameters for posterior predictive sampling."""
+                    # Create dummy observations with the right shape
+                    dummy_u_obs = torch.zeros(num_cells, num_genes)
+                    dummy_s_obs = torch.zeros(num_cells, num_genes)
+
+                    # Create context with observations
+                    context = {
+                        "u_obs": dummy_u_obs,
+                        "s_obs": dummy_s_obs,
+                    }
+
+                    # Add fixed parameter values to context (removing batch dimension)
+                    for key, value in samples.items():
+                        if isinstance(value, torch.Tensor):
+                            # Remove batch dimension if it exists
+                            if value.ndim > 1 and value.shape[0] == 1:
+                                context[key] = value.squeeze(0)
+                            else:
+                                context[key] = value
+                        else:
+                            context[key] = value
+
+                    # Skip prior sampling and go directly to dynamics and likelihood
+                    dynamics_context = self.dynamics_model.forward(context)
+                    likelihood_context = self.likelihood_model.forward(dynamics_context)
+
+                    return likelihood_context
+
+                # Use unconditioned version to generate observations
+                unconditioned_posterior_model = pyro.poutine.uncondition(posterior_predictive_model)
+
+                # Generate samples
+                predictive = Predictive(
+                    unconditioned_posterior_model,
+                    num_samples=1,  # Generate one sample with fixed parameters
+                    return_sites=None,
+                )
+
+                predictive_samples = predictive()
+            else:
+                raise ValueError("samples must be a dictionary of parameter values")
+
+        # Convert to requested format
+        if return_format == "dict":
+            return predictive_samples
+        elif return_format == "anndata":
+            return self._convert_to_anndata(
+                predictive_samples,
+                num_cells,
+                num_genes,
+                samples=samples,
+                **kwargs
+            )
+        elif return_format == "inference_data":
+            # TODO: Implement conversion to ArviZ InferenceData format
+            raise NotImplementedError("inference_data format not yet implemented")
+
+        return predictive_samples
+
+    @beartype
+    def _convert_to_anndata(
+        self,
+        predictive_samples: Dict[str, torch.Tensor],
+        num_cells: int,
+        num_genes: int,
+        samples: Optional[Dict[str, torch.Tensor]] = None,
+        **kwargs
+    ) -> AnnData:
+        """
+        Convert predictive samples to AnnData format.
+
+        This method creates a properly structured AnnData object from predictive samples,
+        including count data in layers and metadata in uns. It follows PyroVelocity
+        conventions for AnnData structure and naming.
+
+        Args:
+            predictive_samples: Dictionary of predictive samples from Pyro
+            num_cells: Number of cells
+            num_genes: Number of genes
+            samples: Optional parameter samples used for generation (stored as metadata)
+            **kwargs: Additional metadata to store
+
+        Returns:
+            AnnData object with proper structure for PyroVelocity
+
+        Raises:
+            ValueError: If required observation sites are missing from predictive samples
+        """
+        import pandas as pd
+
+        # Extract count data from predictive samples
+        # Look for standard observation sites
+        u_obs_key = None
+        s_obs_key = None
+
+        # Try different possible keys for observations
+        possible_u_keys = ["u", "u_obs", "unspliced", "unspliced_obs"]
+        possible_s_keys = ["s", "s_obs", "spliced", "spliced_obs"]
+
+        for key in possible_u_keys:
+            if key in predictive_samples:
+                u_obs_key = key
+                break
+
+        for key in possible_s_keys:
+            if key in predictive_samples:
+                s_obs_key = key
+                break
+
+        if u_obs_key is None or s_obs_key is None:
+            available_keys = list(predictive_samples.keys())
+            raise ValueError(
+                f"Could not find required observation sites in predictive samples. "
+                f"Expected unspliced and spliced count data. Available keys: {available_keys}"
+            )
+
+        # Extract count matrices
+        u_counts = predictive_samples[u_obs_key]
+        s_counts = predictive_samples[s_obs_key]
+
+        # Handle tensor conversion and shape
+        if isinstance(u_counts, torch.Tensor):
+            u_counts = u_counts.detach().cpu().numpy()
+        if isinstance(s_counts, torch.Tensor):
+            s_counts = s_counts.detach().cpu().numpy()
+
+        # Handle batch dimension (take first sample if multiple)
+        if u_counts.ndim == 3:  # [num_samples, num_cells, num_genes]
+            u_counts = u_counts[0]  # Take first sample
+        if s_counts.ndim == 3:
+            s_counts = s_counts[0]
+
+        # Ensure correct shape [num_cells, num_genes]
+        if u_counts.shape != (num_cells, num_genes):
+            raise ValueError(
+                f"Unspliced counts shape {u_counts.shape} does not match expected "
+                f"({num_cells}, {num_genes})"
+            )
+        if s_counts.shape != (num_cells, num_genes):
+            raise ValueError(
+                f"Spliced counts shape {s_counts.shape} does not match expected "
+                f"({num_cells}, {num_genes})"
+            )
+
+        # Create AnnData object with spliced counts as main matrix
+        adata = AnnData(X=s_counts.copy())
+
+        # Add layers for both count types
+        adata.layers["spliced"] = s_counts
+        adata.layers["unspliced"] = u_counts
+
+        # Add cell and gene names
+        adata.obs_names = [f"cell_{i}" for i in range(num_cells)]
+        adata.var_names = [f"gene_{i}" for i in range(num_genes)]
+
+        # Add basic metadata
+        adata.uns["pyrovelocity"] = {
+            "model_name": self.name,
+            "generation_method": "predictive_sampling",
+            "num_cells": num_cells,
+            "num_genes": num_genes,
+        }
+
+        # Store true parameters if provided (for validation studies)
+        if samples is not None:
+            true_params = {}
+            for key, value in samples.items():
+                if isinstance(value, torch.Tensor):
+                    # Convert to numpy and handle batch dimension
+                    param_array = value.detach().cpu().numpy()
+                    if param_array.ndim > 1 and param_array.shape[0] == 1:
+                        param_array = param_array[0]  # Remove batch dimension
+                    true_params[key] = param_array
+                else:
+                    true_params[key] = value
+
+            adata.uns["true_parameters"] = true_params
+
+            # Try to determine pattern type from parameters if available
+            pattern_type = self._infer_pattern_type(true_params)
+            if pattern_type:
+                adata.uns["pattern_type"] = pattern_type
+
+        # Store additional metadata
+        for key, value in kwargs.items():
+            if key not in adata.uns:
+                adata.uns[key] = value
+
+        # Add library size information
+        adata.obs["total_unspliced"] = u_counts.sum(axis=1)
+        adata.obs["total_spliced"] = s_counts.sum(axis=1)
+        adata.obs["total_counts"] = adata.obs["total_unspliced"] + adata.obs["total_spliced"]
+
+        # Add gene-level statistics
+        adata.var["mean_unspliced"] = u_counts.mean(axis=0)
+        adata.var["mean_spliced"] = s_counts.mean(axis=0)
+        adata.var["total_unspliced"] = u_counts.sum(axis=0)
+        adata.var["total_spliced"] = s_counts.sum(axis=0)
+
+        return adata
+
+    @beartype
+    def _infer_pattern_type(self, true_params: Dict[str, Any]) -> Optional[str]:
+        """
+        Infer the gene expression pattern type from true parameters.
+
+        This method attempts to classify the expression pattern based on the
+        parameter values, which is useful for validation studies.
+
+        Args:
+            true_params: Dictionary of true parameter values
+
+        Returns:
+            Inferred pattern type or None if cannot be determined
+        """
+        # Check if we have piecewise activation parameters
+        required_keys = ["alpha_off", "alpha_on", "t_on", "delta"]
+        if not all(key in true_params for key in required_keys):
+            return None
+
+        try:
+            # Extract parameters (handle both tensor and array formats)
+            alpha_off = true_params["alpha_off"]
+            alpha_on = true_params["alpha_on"]
+            t_on = true_params["t_on"]
+            delta = true_params["delta"]
+
+            # Convert to scalars if needed (take first gene/cell)
+            if hasattr(alpha_off, '__len__') and len(alpha_off) > 0:
+                alpha_off = float(alpha_off.flat[0])
+            if hasattr(alpha_on, '__len__') and len(alpha_on) > 0:
+                alpha_on = float(alpha_on.flat[0])
+            if hasattr(t_on, '__len__') and len(t_on) > 0:
+                t_on = float(t_on.flat[0])
+            if hasattr(delta, '__len__') and len(delta) > 0:
+                delta = float(delta.flat[0])
+
+            # Apply pattern classification logic (same as in prior model)
+            fold_change = alpha_on / alpha_off if alpha_off > 0 else float('inf')
+
+            # Check for activation pattern
+            if alpha_off < 0.2 and alpha_on > 1.5 and fold_change > 7.5:
+                return "activation"
+
+            # Check for decay pattern (no activation within observation window)
+            if alpha_off > 0.5 and t_on > 1.0:  # t_on > T_M (assuming T_M ~ 1.0)
+                return "decay"
+
+            # Check for transient pattern
+            if delta < 0.3 and fold_change > 3.3:
+                return "transient"
+
+            # Check for sustained pattern
+            if delta > 0.6 and fold_change > 3.3:
+                return "sustained"
+
+            # If none of the patterns match, return unknown
+            return "unknown"
+
+        except (KeyError, TypeError, ValueError):
+            # If we can't extract or convert parameters, return None
+            return None
+
 
