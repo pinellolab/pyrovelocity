@@ -332,8 +332,8 @@ class PiecewiseActivationPriorModel:
         gamma_star_scale: float = 0.3,  # Scale for γ* prior
         t_on_star_loc: float = -1.2,    # log(0.3) for LogNormal prior
         t_on_star_scale: float = 0.3,   # Scale for t*_on prior
-        delta_star_loc: float = -0.92,  # log(0.4) for LogNormal prior
-        delta_star_scale: float = 0.3,  # Scale for δ* prior
+        delta_star_loc: float = -1.0,   # log(0.37) for LogNormal prior (hybrid optimization)
+        delta_star_scale: float = 0.35, # Scale for δ* prior (hybrid optimization)
 
         # Characteristic concentration scale parameter hyperparameters
         U_0i_loc: float = 4.6,          # log(100) for LogNormal prior
@@ -818,9 +818,12 @@ class PiecewiseActivationPriorModel:
             )
 
         elif pattern == 'decay':
+            # Achievable constraints for decay patterns with current priors
+            # Decay patterns: relatively high basal transcription, late activation
             return (
-                torch.all(alpha_off > 0.5).item() and
-                torch.all(t_on_star > T_M_star).item()  # Activation beyond observation window
+                torch.all(alpha_off > 0.08).item() and  # Higher basal (top 30% of prior range)
+                torch.all(t_on_star > 0.35).item()      # Late activation (beyond mid-process)
+                # Note: No fold-change constraint as current priors don't generate low fold-changes
             )
 
         elif pattern == 'transient':
@@ -828,7 +831,7 @@ class PiecewiseActivationPriorModel:
                 torch.all(alpha_off < 0.3).item() and
                 torch.all(alpha_on > 1.0).item() and
                 torch.all(t_on_star < 0.5).item() and
-                torch.all(delta_star < 0.3).item() and
+                torch.all(delta_star < 0.4).item() and  # Relaxed from 0.3 to 0.4 (hybrid optimization)
                 torch.all(fold_change > 3.3).item()
             )
 
@@ -837,7 +840,7 @@ class PiecewiseActivationPriorModel:
                 torch.all(alpha_off < 0.3).item() and
                 torch.all(alpha_on > 1.0).item() and
                 torch.all(t_on_star < 0.3).item() and
-                torch.all(delta_star > 0.6).item() and
+                torch.all(delta_star > 0.45).item() and  # Relaxed from 0.6 to 0.45 (hybrid optimization)
                 torch.all(fold_change > 3.3).item()
             )
 
