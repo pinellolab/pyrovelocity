@@ -727,6 +727,58 @@ def create_protocol_first_model_from_config(config: ModelConfig) -> PyroVelocity
     return create_model_from_config(config)
 
 
+def create_piecewise_activation_model() -> PyroVelocityModel:
+    """
+    Create a PyroVelocityModel with piecewise activation components.
+
+    This function creates a PyroVelocityModel specifically configured for
+    piecewise activation parameter recovery validation. It uses:
+    - PiecewiseActivationDynamicsModel for dimensionless analytical dynamics
+    - PiecewiseActivationPriorModel for hierarchical priors
+    - PoissonLikelihoodModel for count data likelihood
+    - StandardObservationModel for data preprocessing
+    - AutoGuideFactory for variational inference
+
+    Returns:
+        A PyroVelocityModel instance configured for piecewise activation validation.
+
+    Examples:
+        >>> model = create_piecewise_activation_model()
+        >>> # Use model for parameter recovery validation
+        >>> # model.train(adata, max_epochs=100)
+        >>> # posterior_samples = model.generate_posterior_samples(adata)
+    """
+    # Create configuration for piecewise activation model
+    config = ModelConfig(
+        dynamics_model=ComponentConfig(
+            name="piecewise_activation",
+            params={},
+        ),
+        prior_model=ComponentConfig(
+            name="piecewise_activation",
+            params={},
+        ),
+        likelihood_model=ComponentConfig(
+            name="poisson",
+            params={},
+        ),
+        observation_model=ComponentConfig(
+            name="standard",
+            params={},
+        ),
+        inference_guide=ComponentConfig(
+            name="auto",
+            params={
+                "guide_type": "AutoLowRankMultivariateNormal",
+                "init_scale": 0.1,
+            },
+        ),
+    )
+
+    # Create and return the model
+    return create_model_from_config(config)
+
+
 # Export all public symbols
 __all__ = [
     # Factory class
@@ -763,4 +815,6 @@ __all__ = [
     # Predefined configurations
     "standard_model_config",
     "create_standard_model",
+    # Piecewise activation model
+    "create_piecewise_activation_model",
 ]
