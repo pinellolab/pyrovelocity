@@ -487,8 +487,11 @@ class PiecewiseActivationPriorModel:
                 dist.Normal(t_loc, t_scale).mask(include_prior),
             )
             # Ensure non-negative times and scale by T_M_star
-            # Compute t_star directly without pyro.deterministic to avoid plate conflicts
-            t_star = T_M_star * torch.clamp(tilde_t, min=self.t_epsilon)
+            # Use pyro.deterministic to track t_star in posterior samples
+            t_star = pyro.deterministic(
+                "t_star",
+                T_M_star * torch.clamp(tilde_t, min=self.t_epsilon)
+            )
             params["t_star"] = t_star
 
             # Sample capture efficiency parameters (per cell)
