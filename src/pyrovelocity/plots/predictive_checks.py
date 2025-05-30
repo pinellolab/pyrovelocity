@@ -428,11 +428,17 @@ def plot_prior_predictive_checks(
     """
     # Create individual modular plots if requested
     if create_individual_plots and save_path is not None:
-        plot_parameter_marginals(prior_parameters, check_type, save_path=save_path)
-        plot_parameter_relationships(prior_parameters, check_type, save_path=save_path)
+        # Process parameters for plotting compatibility (handle batch dimensions)
+        processed_parameters = _process_parameters_for_plotting(prior_parameters)
+
+        plot_parameter_marginals(processed_parameters, check_type, save_path=save_path)
+        plot_parameter_relationships(processed_parameters, check_type, save_path=save_path)
         plot_expression_validation(prior_adata, check_type, save_path=save_path)
         plot_temporal_dynamics(prior_adata, check_type, save_path=save_path)
-        plot_pattern_analysis(prior_adata, prior_parameters, check_type, save_path=save_path)
+        plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path)
+
+    # Process parameters for plotting compatibility (handle batch dimensions)
+    processed_parameters = _process_parameters_for_plotting(prior_parameters)
 
     # Create comprehensive overview plot
     fig = plt.figure(figsize=figsize)
@@ -448,10 +454,10 @@ def plot_prior_predictive_checks(
     _plot_umap_time_coordinate(prior_adata, ax2, check_type)
 
     ax3 = fig.add_subplot(gs[0, 2])
-    _plot_fold_change_distribution(prior_parameters, ax3, check_type)
+    _plot_fold_change_distribution(processed_parameters, ax3, check_type)
 
     ax4 = fig.add_subplot(gs[0, 3])
-    _plot_activation_timing(prior_parameters, ax4, check_type)
+    _plot_activation_timing(processed_parameters, ax4, check_type)
 
     # Row 2: Expression Data Validation
     ax5 = fig.add_subplot(gs[1, 0])
@@ -474,7 +480,7 @@ def plot_prior_predictive_checks(
     _plot_velocity_magnitudes(prior_adata, ax10, check_type)
 
     ax11 = fig.add_subplot(gs[2, 2])
-    _plot_pattern_proportions(prior_adata, prior_parameters, ax11, check_type)
+    _plot_pattern_proportions(prior_adata, processed_parameters, ax11, check_type)
 
     ax12 = fig.add_subplot(gs[2, 3])
     _plot_correlation_structure(prior_adata, ax12, check_type)
@@ -612,6 +618,54 @@ def _plot_umap_time_coordinate(adata: AnnData, ax: plt.Axes, check_type: str) ->
             ax.text(0.5, 0.5, 'UMAP data not available\nor UMAP not installed',
                    ha='center', va='center', transform=ax.transAxes)
             ax.set_title(f'{check_type.title()} UMAP (Time Coordinate)')
+
+
+def _process_parameters_for_plotting(
+    parameters: Dict[str, torch.Tensor]
+) -> Dict[str, torch.Tensor]:
+    """
+    Process parameters to make them compatible with plotting functions.
+
+    The plotting functions expect parameters to be flattened 1D arrays, but posterior
+    samples from SVI have batch dimensions. This method handles the tensor reshaping
+    to make the samples compatible with the plotting code.
+
+    Args:
+        parameters: Raw parameters with potential batch dimensions
+
+    Returns:
+        Processed parameters suitable for plotting functions
+    """
+    processed_parameters = {}
+
+    for key, value in parameters.items():
+        if isinstance(value, torch.Tensor):
+            # Handle different tensor shapes
+            if value.ndim == 1:
+                # Already 1D, use as-is
+                processed_parameters[key] = value
+            elif value.ndim == 2:
+                # 2D tensor: [num_samples, param_dim] or [batch_size, param_dim]
+                # Flatten to 1D for plotting
+                processed_parameters[key] = value.flatten()
+            elif value.ndim == 3:
+                # 3D tensor: [batch_size, num_samples, param_dim]
+                # Remove batch dimension and flatten
+                if value.shape[0] == 1:
+                    # Remove batch dimension: [1, num_samples, param_dim] -> [num_samples, param_dim]
+                    squeezed = value.squeeze(0)
+                    processed_parameters[key] = squeezed.flatten()
+                else:
+                    # Multiple batches: flatten everything
+                    processed_parameters[key] = value.flatten()
+            else:
+                # Higher dimensions: flatten everything
+                processed_parameters[key] = value.flatten()
+        else:
+            # Non-tensor values: keep as-is
+            processed_parameters[key] = value
+
+    return processed_parameters
 
 
 def _plot_parameter_marginals_summary(
