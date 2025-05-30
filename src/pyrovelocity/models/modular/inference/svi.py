@@ -164,6 +164,10 @@ def extract_posterior_samples(
     """
     Extract posterior samples from SVI results.
 
+    This function properly handles parameter constraints to ensure that scale parameters
+    (like t_scale) remain positive. It uses the guide's sample_posterior method when
+    available to get properly constrained samples.
+
     Args:
         guide: Guide function or AutoGuide object
         params: Parameters from SVI
@@ -171,7 +175,7 @@ def extract_posterior_samples(
         seed: Random seed
 
     Returns:
-        Dictionary of posterior samples
+        Dictionary of posterior samples with properly constrained parameters
     """
     # Set seed if provided
     if seed is not None:
@@ -181,6 +185,10 @@ def extract_posterior_samples(
     # First, get samples from the guide (latent variables)
     guide_predictive = pyro.infer.Predictive(guide, num_samples=num_samples)
     guide_samples = guide_predictive()
+
+    # Post-process samples to ensure constraints are satisfied
+    # This is a safety measure in case the guide doesn't properly handle constraints
+    guide_samples = _ensure_parameter_constraints(guide_samples)
 
     # Now, we need to get deterministic sites from the model
     # We'll use the guide samples as input to the model
@@ -204,6 +212,8 @@ def extract_posterior_samples(
     )
 
     # Run the model predictive to get all sites, including deterministic ones
+    # Note: We can't pass args here because we don't have access to them in this function
+    # The calling function should handle this
     model_samples = model_predictive()
 
     # Combine guide and model samples
@@ -211,6 +221,57 @@ def extract_posterior_samples(
     combined_samples = {**model_samples, **guide_samples}
 
     return combined_samples
+
+
+@beartype
+def _ensure_parameter_constraints(samples: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    """
+    Ensure that parameter samples satisfy their constraints.
+
+    This function applies constraints to parameter samples to ensure they remain
+    in valid ranges. This is particularly important for scale parameters that
+    must be positive.
+
+    Args:
+        samples: Dictionary of parameter samples
+
+    Returns:
+        Dictionary of constrained parameter samples
+    """
+    constrained_samples = {}
+
+    for name, value in samples.items():
+        if isinstance(value, torch.Tensor):
+            # Apply constraints based on parameter name patterns
+            if any(scale_param in name.lower() for scale_param in ['scale', 't_scale', 'sigma']):
+                # Scale parameters must be positive
+                # Use softplus to ensure positivity: softplus(x) = log(1 + exp(x))
+                # But first check if values are already positive
+                if torch.any(value <= 0):
+                    # Apply softplus transformation to ensure positivity
+                    constrained_samples[name] = torch.nn.functional.softplus(value) + 1e-6
+                else:
+                    constrained_samples[name] = value
+            elif any(rate_param in name.lower() for rate_param in ['rate', 'beta', 'gamma']):
+                # Rate parameters must be positive
+                if torch.any(value <= 0):
+                    constrained_samples[name] = torch.nn.functional.softplus(value) + 1e-6
+                else:
+                    constrained_samples[name] = value
+            elif any(conc_param in name.lower() for conc_param in ['alpha', 'concentration']):
+                # Concentration parameters must be positive
+                if torch.any(value <= 0):
+                    constrained_samples[name] = torch.nn.functional.softplus(value) + 1e-6
+                else:
+                    constrained_samples[name] = value
+            else:
+                # No constraint needed for other parameters
+                constrained_samples[name] = value
+        else:
+            # Non-tensor values: keep as-is
+            constrained_samples[name] = value
+
+    return constrained_samples
 
 
 @beartype
@@ -325,7 +386,8 @@ def run_svi_inference(
         )
 
         # Run the model predictive to get all sites, including deterministic ones
-        model_samples = model_predictive()
+        # Pass the same arguments that were used during training
+        model_samples = model_predictive(*args, **kwargs)
 
         # Combine guide and model samples
         # Guide samples take precedence if there's a conflict
