@@ -1309,6 +1309,77 @@ print(f"  Likelihood: {model.likelihood_model}")
 print(f"  Guide: {model.guide_model}")
 ```
 
+#### Prior Predictive Checks
+
+Before training, we validate that our priors generate biologically reasonable parameter ranges and expression patterns.
+
+```python
+# Generate prior predictive samples with proper parameter-data correspondence
+print("Performing prior predictive checks...")
+
+# Set seeds for reproducible prior sampling
+torch.manual_seed(0)
+pyro.set_rng_seed(0)
+
+# If we wanted to generate data from a specific parameter set, we could
+# first sample some parameters from the prior
+# prior_parameter_samples = model.sample_system_parameters(
+#     num_samples=1000,
+#     constrain_to_pattern=False,  # Use full prior ranges
+#     n_genes=10,
+#     n_cells=200
+# )
+# and then use those to generate data from a single sample
+# Take first parameter sample for data generation
+# single_param_sample = {key: value[:1] for key, value in prior_parameter_samples.items()}
+# And then set
+# model.generate_predictive_samples(samples=single_param_sample, ...)
+# But here we want to see the full breadth of what the prior can produce
+# so we generate data from multiple parameter sets in a single call
+
+prior_predictive_adata = model.generate_predictive_samples(
+    num_cells=200,
+    num_genes=10,
+    num_samples=100,  # Generate data from 100 different parameter sets
+    return_format="anndata"
+)
+
+# Sample parameters from the prior
+prior_parameter_samples = model.sample_system_parameters(
+    num_samples=1000,
+    constrain_to_pattern=False,  # Use full prior ranges
+    n_genes=10,
+    n_cells=200
+)
+
+# Add UMAP and clustering though these will be uninformative in the context of prior predictive checks
+sc.pp.neighbors(prior_predictive_adata, n_neighbors=10, random_state=42)
+sc.tl.umap(prior_predictive_adata, random_state=42)
+sc.tl.leiden(prior_predictive_adata, random_state=42)
+
+# Plot randomly sampled parameters and data
+fig_prior = plot_prior_predictive_checks(
+    model=model,
+    prior_adata=prior_predictive_adata,
+    prior_parameters=prior_parameter_samples,
+    figsize=(15, 10),
+    save_path="reports/docs/prior_predictive",
+)
+
+plt.suptitle("Prior Predictive Checks: Piecewise Activation Model", fontsize=16)
+plt.tight_layout()
+plt.show()
+
+# Validate prior parameter ranges
+print("\nPrior parameter range validation:")
+for param_name, samples in prior_parameter_samples.items():
+    if param_name.startswith(('alpha_off', 'alpha_on', 't_on', 'delta', 'gamma_star')):
+        print(f"{param_name}:")
+        print(f"  Range: [{samples.min():.3f}, {samples.max():.3f}]")
+        print(f"  Mean ± Std: {samples.mean():.3f} ± {samples.std():.3f}")
+```
+
+
 #### Synthetic Data Generation for All Expression Patterns
 
 We generate synthetic datasets representing each of the four gene expression patterns using the generic predictive sampling interface:
@@ -1377,67 +1448,6 @@ for config in pattern_configs:
 print(f"\nGenerated {len(validation_datasets)} synthetic datasets")
 ```
 
-#### Prior Predictive Checks
-
-Before training, we validate that our priors generate biologically reasonable parameter ranges and expression patterns.
-
-**Important**: For meaningful prior predictive checks, we must ensure the plotted data corresponds to the plotted parameters. This requires sampling parameters first, then generating data using those specific parameters.
-
-```python
-# Generate prior predictive samples with proper parameter-data correspondence
-print("Performing prior predictive checks...")
-
-# Set seeds for reproducible prior sampling
-torch.manual_seed(0)
-pyro.set_rng_seed(0)
-
-# STEP 1: Sample parameters from the prior first
-prior_parameter_samples = model.sample_system_parameters(
-    num_samples=1000,
-    constrain_to_pattern=False,  # Use full prior ranges
-    n_genes=10,
-    n_cells=200
-)
-
-# STEP 2: Generate data using a subset of those parameters for visualization
-# Take first parameter sample for data generation
-torch.manual_seed(1)
-pyro.set_rng_seed(1)
-single_param_sample = {key: value[:1] for key, value in prior_parameter_samples.items()}
-
-prior_predictive_adata = model.generate_predictive_samples(
-    num_cells=200,
-    num_genes=10,
-    samples=single_param_sample,  # Use specific parameters, not random sampling
-    return_format="anndata"
-)
-
-# Add UMAP and clustering for visualization
-sc.pp.neighbors(prior_predictive_adata, n_neighbors=10, random_state=42)
-sc.tl.umap(prior_predictive_adata, random_state=42)
-sc.tl.leiden(prior_predictive_adata, random_state=42)
-
-# STEP 3: Plot with corresponding parameters and data
-fig_prior = plot_prior_predictive_checks(
-    model=model,
-    prior_adata=prior_predictive_adata,        # Data generated from known parameters
-    prior_parameters=prior_parameter_samples,  # Full parameter distribution
-    figsize=(15, 10),
-    save_path="reports/docs/prior_predictive",
-)
-
-plt.suptitle("Prior Predictive Checks: Piecewise Activation Model", fontsize=16)
-plt.tight_layout()
-plt.show()
-
-# Validate prior parameter ranges
-print("\nPrior parameter range validation:")
-for param_name, samples in prior_parameter_samples.items():
-    if param_name.startswith(('alpha_off', 'alpha_on', 't_on', 'delta', 'gamma_star')):
-        print(f"{param_name}:")
-        print(f"  Range: [{samples.min():.3f}, {samples.max():.3f}]")
-        print(f"  Mean ± Std: {samples.mean():.3f} ± {samples.std():.3f}")
-```
 
 #### Parameter Recovery Validation Across All Patterns
 
