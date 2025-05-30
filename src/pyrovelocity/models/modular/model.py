@@ -1698,6 +1698,10 @@ class PyroVelocityModel:
                     # Process posterior samples for plotting (handle batch dimensions)
                     processed_posterior_samples = self._process_posterior_samples_for_plotting(posterior_samples)
 
+                    # Create dataset-specific subdirectory for plots
+                    dataset_plots_path = os.path.join(save_plots_path, dataset_key)
+                    os.makedirs(dataset_plots_path, exist_ok=True)
+
                     # Create comprehensive posterior predictive check plots
                     plot_filename = f"{dataset_key}_posterior_predictive_checks"
                     try:
@@ -1705,7 +1709,7 @@ class PyroVelocityModel:
                             model=self,
                             posterior_adata=posterior_adata,
                             posterior_parameters=processed_posterior_samples,
-                            save_path=save_plots_path,
+                            save_path=dataset_plots_path,
                             figure_name=plot_filename
                         )
                     except Exception as plot_error:
@@ -1714,7 +1718,7 @@ class PyroVelocityModel:
                         fig = None
 
                     plot_paths['posterior_predictive_checks'] = os.path.join(
-                        save_plots_path, f"{plot_filename}.png"
+                        dataset_plots_path, f"{plot_filename}.png"
                     )
 
                 # Determine validation success
