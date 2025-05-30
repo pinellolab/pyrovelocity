@@ -73,11 +73,23 @@ def _format_parameter_name(param_name: str) -> str:
         '_shape': r'_{shape}',
         '_mean': r'_{mean}',
         '_std': r'_{std}',
-        '_var': r'_{var}'
+        '_var': r'_{var}',
+        '_j': r'_j'
     }
 
     # Start with the original name
     formatted = param_name
+
+    # Handle special cases first
+    special_cases = {
+        'T_M_star': r'T^*_M',
+        't_star': r't^*',
+        'lambda_j': r'\lambda_j',
+        'U_0i': r'U_{0i}'
+    }
+
+    if param_name in special_cases:
+        return f'${special_cases[param_name]}$'
 
     # Apply subscript/superscript replacements
     for suffix, latex_suffix in subscript_replacements.items():
@@ -214,7 +226,7 @@ def plot_parameter_marginals(
 def plot_parameter_relationships(
     parameters: Dict[str, torch.Tensor],
     check_type: str = "prior",
-    figsize: Tuple[int, int] = (15, 5),
+    figsize: Tuple[int, int] = (12, 4),
     save_path: Optional[str] = None
 ) -> plt.Figure:
     """
@@ -229,7 +241,7 @@ def plot_parameter_relationships(
     Returns:
         matplotlib Figure object
     """
-    fig, axes = plt.subplots(1, 4, figsize=figsize)
+    fig, axes = plt.subplots(1, 3, figsize=figsize)
 
     # Parameter correlations
     _plot_parameter_correlations(parameters, axes[0], check_type)
@@ -239,9 +251,6 @@ def plot_parameter_relationships(
 
     # Activation timing
     _plot_activation_timing(parameters, axes[2], check_type)
-
-    # Additional parameter scatter (if available)
-    _plot_parameter_scatter(parameters, axes[3], check_type)
 
     plt.tight_layout()
 
@@ -487,7 +496,6 @@ def _plot_umap_leiden_clusters(adata: AnnData, ax: plt.Axes, check_type: str) ->
         ax.set_xlabel('UMAP 1')
         ax.set_ylabel('UMAP 2')
         ax.set_title(f'{check_type.title()} UMAP (Leiden Clusters)')
-        ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=8)
 
     elif 'X_umap' in adata.obsm:
         # Plot UMAP without cluster information
@@ -518,7 +526,7 @@ def _plot_umap_leiden_clusters(adata: AnnData, ax: plt.Axes, check_type: str) ->
         else:
             ax.text(0.5, 0.5, 'UMAP data not available\nor UMAP not installed',
                    ha='center', va='center', transform=ax.transAxes)
-            ax.set_title(f'{check_type.title()} UMAP (Leiden Clusters)')
+            ax.set_title(f'{check_type.title()} UMAP (Clusters)')
 
 
 def _plot_umap_time_coordinate(adata: AnnData, ax: plt.Axes, check_type: str) -> None:
@@ -619,62 +627,48 @@ def _plot_parameter_marginals_summary(
     ax.grid(True, alpha=0.3)
 
 
-def _plot_parameter_scatter(
+
+def _plot_parameter_correlations(
     parameters: Dict[str, torch.Tensor],
     ax: plt.Axes,
     check_type: str
 ) -> None:
-    """Plot parameter scatter relationships."""
-    # Try to find two parameters to scatter
-    param_names = list(parameters.keys())
-
-    if len(param_names) >= 2:
-        # Prefer specific parameter pairs if available
-        if 'alpha_off' in parameters and 'alpha_on' in parameters:
-            x_param, y_param = 'alpha_off', 'alpha_on'
-        elif 't_on_star' in parameters and 'delta_star' in parameters:
-            x_param, y_param = 't_on_star', 'delta_star'
-        else:
-            # Use first two available parameters
-            x_param, y_param = param_names[0], param_names[1]
-
-        x_vals = parameters[x_param].flatten().numpy()
-        y_vals = parameters[y_param].flatten().numpy()
-
-        ax.scatter(x_vals, y_vals, alpha=0.6, s=20, color='purple')
-        ax.set_xlabel(_format_parameter_name(x_param))
-        ax.set_ylabel(_format_parameter_name(y_param))
-        ax.set_title(f'{check_type.title()} Parameter Scatter')
-        ax.grid(True, alpha=0.3)
-    else:
-        ax.text(0.5, 0.5, 'Insufficient parameters\nfor scatter plot',
-               ha='center', va='center', transform=ax.transAxes)
-        ax.set_title(f'{check_type.title()} Parameter Scatter')
-
-
-def _plot_parameter_correlations(
-    parameters: Dict[str, torch.Tensor], 
-    ax: plt.Axes, 
-    check_type: str
-) -> None:
     """Plot parameter correlation matrix."""
-    # Extract key parameters for correlation analysis
-    key_params = ['alpha_off', 'alpha_on', 't_on_star', 'delta_star']
-    
+    # Include all available parameters for correlation analysis
+    # Prioritize the most important parameters but include all available
+    priority_params = ['alpha_off', 'alpha_on', 'gamma_star', 't_on_star', 'delta_star',
+                      'T_M_star', 't_loc', 't_scale', 'U_0i', 'lambda_j']
+
     param_data = {}
-    for param_name in key_params:
+    for param_name in priority_params:
         if param_name in parameters:
-            param_data[param_name.replace('_', '*_')] = parameters[param_name].flatten().numpy()
-    
+            # Apply LaTeX formatting to parameter names
+            formatted_name = _format_parameter_name(param_name)
+            param_data[formatted_name] = parameters[param_name].flatten().numpy()
+
+    # Add any additional parameters not in the priority list
+    for param_name in parameters.keys():
+        if param_name not in priority_params:
+            formatted_name = _format_parameter_name(param_name)
+            param_data[formatted_name] = parameters[param_name].flatten().numpy()
+
     if len(param_data) > 1:
         df = pd.DataFrame(param_data)
         corr_matrix = df.corr()
-        
+
+        # Use smaller font size for annotations if many parameters
+        annot_fontsize = 8 if len(param_data) > 6 else 10
+
         sns.heatmap(corr_matrix, annot=True, cmap='RdBu_r', center=0,
-                   square=True, ax=ax, cbar_kws={'shrink': 0.8})
+                   square=True, ax=ax, cbar_kws={'shrink': 0.8},
+                   annot_kws={'fontsize': annot_fontsize})
         ax.set_title(f'{check_type.title()} Parameter Correlations')
+
+        # Rotate labels for better readability
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
+        ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
     else:
-        ax.text(0.5, 0.5, 'Insufficient parameters\nfor correlation analysis', 
+        ax.text(0.5, 0.5, 'Insufficient parameters\nfor correlation analysis',
                ha='center', va='center', transform=ax.transAxes)
         ax.set_title(f'{check_type.title()} Parameter Correlations')
 
