@@ -1460,7 +1460,8 @@ class PyroVelocityModel:
         n_genes: int = 5,
         n_cells: int = 200,
         n_parameter_sets: int = 2,
-        seed: int = 42
+        seed: int = 42,
+        compute_dimred: bool = True
     ) -> Dict[str, Dict[str, Any]]:
         """
         Generate synthetic validation datasets for parameter recovery validation.
@@ -1527,6 +1528,14 @@ class PyroVelocityModel:
                     samples=true_parameters,
                     return_format="anndata"
                 )
+
+                if compute_dimred:
+                    import scanpy as sc
+                    # Add PCA for dimensionality reduction and as fallback for UMAP computation
+                    sc.pp.pca(synthetic_adata, random_state=dataset_seed)
+                    sc.pp.neighbors(synthetic_adata, n_neighbors=10, random_state=dataset_seed)
+                    sc.tl.umap(synthetic_adata, random_state=dataset_seed)
+                    sc.tl.leiden(synthetic_adata, random_state=dataset_seed)
 
                 # Create dataset key
                 dataset_key = f"{pattern}_{set_id + 1}"
