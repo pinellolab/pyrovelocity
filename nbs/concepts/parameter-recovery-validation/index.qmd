@@ -1283,23 +1283,15 @@ import torch
 import pyro
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
 from pathlib import Path
+import scanpy as sc
 
 # PyroVelocity imports
 from pyrovelocity.models.modular.factory import create_piecewise_activation_model
-# from pyrovelocity.plots.piecewise import (
-#     plot_piecewise_phase_portrait,
-#     plot_piecewise_trajectories,
-#     plot_activation_timing,
-# )
 from pyrovelocity.plots.predictive_checks import (
     plot_prior_predictive_checks,
     plot_posterior_predictive_checks,
 )
-# from pyrovelocity.plots.parameter_recovery import (
-#     plot_parameter_recovery_diagnostics,
-# )
 
 # Set random seeds for reproducibility
 torch.manual_seed(42)
@@ -1387,27 +1379,19 @@ print(f"\nGenerated {len(validation_datasets)} synthetic datasets")
 
 #### Prior Predictive Checks
 
-Before training, we validate that our priors generate biologically reasonable parameter ranges and expression patterns:
+Before training, we validate that our priors generate biologically reasonable parameter ranges and expression patterns.
+
+**Important**: For meaningful prior predictive checks, we must ensure the plotted data corresponds to the plotted parameters. This requires sampling parameters first, then generating data using those specific parameters.
 
 ```python
-# Generate prior predictive samples using the generic interface
+# Generate prior predictive samples with proper parameter-data correspondence
 print("Performing prior predictive checks...")
 
 # Set seeds for reproducible prior sampling
 torch.manual_seed(0)
 pyro.set_rng_seed(0)
 
-# Generate prior predictive samples (no samples argument = sample from prior)
-prior_predictive_adata = model.generate_predictive_samples(
-    num_cells=200,
-    num_genes=10,
-    num_samples=100,  # Generate 100 prior samples
-    return_format="anndata"
-)
-
-# Extract parameter samples for validation
-torch.manual_seed(1)
-pyro.set_rng_seed(1)
+# STEP 1: Sample parameters from the prior first
 prior_parameter_samples = model.sample_system_parameters(
     num_samples=1000,
     constrain_to_pattern=False,  # Use full prior ranges
@@ -1415,15 +1399,31 @@ prior_parameter_samples = model.sample_system_parameters(
     n_cells=200
 )
 
-# Plot prior predictive checks with automatic saving
-# This will save both PNG and PDF copies to reports/docs/prior_predictive/
+# STEP 2: Generate data using a subset of those parameters for visualization
+# Take first parameter sample for data generation
+torch.manual_seed(1)
+pyro.set_rng_seed(1)
+single_param_sample = {key: value[:1] for key, value in prior_parameter_samples.items()}
+
+prior_predictive_adata = model.generate_predictive_samples(
+    num_cells=200,
+    num_genes=10,
+    samples=single_param_sample,  # Use specific parameters, not random sampling
+    return_format="anndata"
+)
+
+# Add UMAP and clustering for visualization
+sc.pp.neighbors(prior_predictive_adata, n_neighbors=10, random_state=42)
+sc.tl.umap(prior_predictive_adata, random_state=42)
+sc.tl.leiden(prior_predictive_adata, random_state=42)
+
+# STEP 3: Plot with corresponding parameters and data
 fig_prior = plot_prior_predictive_checks(
     model=model,
-    prior_adata=prior_predictive_adata,
-    prior_parameters=prior_parameter_samples,
+    prior_adata=prior_predictive_adata,        # Data generated from known parameters
+    prior_parameters=prior_parameter_samples,  # Full parameter distribution
     figsize=(15, 10),
     save_path="reports/docs/prior_predictive",
-    figure_name="piecewise_activation_prior_checks"
 )
 
 plt.suptitle("Prior Predictive Checks: Piecewise Activation Model", fontsize=16)
@@ -1437,9 +1437,6 @@ for param_name, samples in prior_parameter_samples.items():
         print(f"{param_name}:")
         print(f"  Range: [{samples.min():.3f}, {samples.max():.3f}]")
         print(f"  Mean ± Std: {samples.mean():.3f} ± {samples.std():.3f}")
-
-# Note: Pattern classification and other specialized validation methods
-# will be implemented later as separate functionality
 ```
 
 #### Parameter Recovery Validation Across All Patterns
