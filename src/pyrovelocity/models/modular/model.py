@@ -1454,6 +1454,308 @@ class PyroVelocityModel:
         return adata
 
     @beartype
+    def generate_validation_datasets(
+        self,
+        patterns: List[str] = ['activation', 'decay', 'transient', 'sustained'],
+        n_genes: int = 5,
+        n_cells: int = 200,
+        n_parameter_sets: int = 2,
+        seed: int = 42
+    ) -> Dict[str, Dict[str, Any]]:
+        """
+        Generate synthetic validation datasets for parameter recovery validation.
+
+        This method creates synthetic datasets for each specified expression pattern
+        using pattern-constrained parameter sampling and predictive data generation.
+        Each dataset contains the synthetic data, true parameters, pattern information,
+        and metadata needed for validation studies.
+
+        Args:
+            patterns: List of expression patterns to generate datasets for
+                     ('activation', 'decay', 'transient', 'sustained')
+            n_genes: Number of genes in each dataset
+            n_cells: Number of cells in each dataset
+            n_parameter_sets: Number of parameter sets per pattern
+            seed: Base random seed for reproducibility
+
+        Returns:
+            Dictionary with keys like 'activation_1', 'decay_2' containing:
+            - 'adata': AnnData object with synthetic count data
+            - 'true_parameters': Dictionary of true parameter values
+            - 'pattern': Expression pattern name
+            - 'metadata': Additional metadata about the dataset
+
+        Example:
+            >>> from pyrovelocity.models.modular.factory import create_piecewise_activation_model
+            >>> model = create_piecewise_activation_model()
+            >>> datasets = model.generate_validation_datasets(
+            ...     patterns=['activation', 'decay'],
+            ...     n_genes=3,
+            ...     n_cells=100,
+            ...     n_parameter_sets=2,
+            ...     seed=42
+            ... )
+            >>> print(f"Generated {len(datasets)} datasets")
+            >>> for key, data in datasets.items():
+            ...     print(f"{key}: {data['adata'].shape}, pattern: {data['pattern']}")
+        """
+        import torch
+
+        validation_datasets = {}
+
+        # Generate datasets for each pattern and parameter set
+        for pattern in patterns:
+            for set_id in range(n_parameter_sets):
+                # Create unique seed for each dataset
+                dataset_seed = seed + len(validation_datasets)
+                torch.manual_seed(dataset_seed)
+
+                # Generate pattern-constrained parameters
+                true_parameters = self.sample_system_parameters(
+                    num_samples=1,
+                    constrain_to_pattern=True,
+                    pattern=pattern,
+                    set_id=set_id,
+                    n_genes=n_genes,
+                    n_cells=n_cells
+                )
+
+                # Generate synthetic data using the true parameters
+                synthetic_adata = self.generate_predictive_samples(
+                    num_cells=n_cells,
+                    num_genes=n_genes,
+                    samples=true_parameters,
+                    return_format="anndata"
+                )
+
+                # Create dataset key
+                dataset_key = f"{pattern}_{set_id + 1}"
+
+                # Store dataset with metadata
+                validation_datasets[dataset_key] = {
+                    'adata': synthetic_adata,
+                    'true_parameters': true_parameters,
+                    'pattern': pattern,
+                    'metadata': {
+                        'n_genes': n_genes,
+                        'n_cells': n_cells,
+                        'set_id': set_id,
+                        'seed': dataset_seed,
+                        'pattern_constraints': True
+                    }
+                }
+
+        return validation_datasets
+
+    @beartype
+    def validate_parameter_recovery(
+        self,
+        validation_datasets: Dict[str, Dict[str, Any]],
+        max_epochs: int = 1000,
+        learning_rate: float = 0.01,
+        success_threshold: float = 0.9,
+        num_posterior_samples: int = 1000,
+        adaptive_guide_rank: bool = True,
+        seed: int = 42,
+        create_predictive_plots: bool = True,
+        save_plots_path: Optional[str] = "reports/docs/validation"
+    ) -> Dict[str, Any]:
+        """
+        Validate parameter recovery across multiple synthetic datasets.
+
+        This method performs comprehensive parameter recovery validation by training
+        the model on synthetic datasets with known ground truth parameters, then
+        comparing the inferred parameters to the true values. It includes training,
+        posterior sampling, predictive checks, and metric computation.
+
+        Args:
+            validation_datasets: Dictionary of validation datasets from generate_validation_datasets()
+            max_epochs: Maximum number of training epochs per dataset
+            learning_rate: Learning rate for SVI training
+            success_threshold: Correlation threshold for successful parameter recovery
+            num_posterior_samples: Number of posterior samples to generate
+            adaptive_guide_rank: Whether to use adaptive guide rank based on parameter count
+            seed: Random seed for reproducibility
+            create_predictive_plots: Whether to create posterior predictive check plots
+            save_plots_path: Directory path to save plots (created if doesn't exist)
+
+        Returns:
+            Dictionary containing validation results for each dataset with:
+            - 'training_result': Training metrics and convergence info
+            - 'posterior_samples': Extracted posterior parameter samples
+            - 'recovery_metrics': Parameter recovery correlation and error metrics
+            - 'success': Boolean indicating if validation passed success threshold
+            - 'plot_paths': Paths to generated plots (if create_predictive_plots=True)
+
+        Example:
+            >>> from pyrovelocity.models.modular.factory import create_piecewise_activation_model
+            >>> model = create_piecewise_activation_model()
+            >>> datasets = model.generate_validation_datasets(n_genes=3, n_cells=100)
+            >>> results = model.validate_parameter_recovery(
+            ...     validation_datasets=datasets,
+            ...     max_epochs=500,
+            ...     success_threshold=0.85,
+            ...     create_predictive_plots=True
+            ... )
+            >>> for key, result in results.items():
+            ...     print(f"{key}: {result['recovery_metrics']['overall_correlation']:.3f}")
+        """
+        import os
+
+        import torch
+
+        from pyrovelocity.models.modular.inference.config import InferenceConfig
+        from pyrovelocity.models.modular.inference.svi import run_svi_inference
+        from pyrovelocity.plots.predictive_checks import (
+            plot_posterior_predictive_checks,
+        )
+
+        # Set seed for reproducibility
+        torch.manual_seed(seed)
+
+        validation_results = {}
+
+        # Create plots directory if needed
+        if create_predictive_plots and save_plots_path:
+            os.makedirs(save_plots_path, exist_ok=True)
+
+        print(f"🚀 Starting parameter recovery validation on {len(validation_datasets)} datasets...")
+
+        for dataset_key, dataset_info in validation_datasets.items():
+            print(f"\n📊 Validating {dataset_key} ({dataset_info['pattern']} pattern)...")
+
+            try:
+                # Extract dataset components
+                adata = dataset_info['adata']
+                true_parameters = dataset_info['true_parameters']
+                pattern = dataset_info['pattern']
+
+                # Prepare data for training
+                u_obs, s_obs = self._prepare_training_data(adata)
+
+                # Calculate adaptive guide rank if requested and update guide
+                if adaptive_guide_rank:
+                    total_params = sum(
+                        param.numel() for param in true_parameters.values()
+                        if isinstance(param, torch.Tensor)
+                    )
+                    guide_rank = max(5, min(50, int(0.12 * total_params)))
+                    print(f"  📐 Using adaptive guide rank: {guide_rank} (total params: {total_params})")
+
+                    # Update guide rank if the guide supports it
+                    if hasattr(self.guide_model, 'rank'):
+                        self.guide_model.rank = guide_rank
+                    elif hasattr(self.guide_model, '_rank'):
+                        self.guide_model._rank = guide_rank
+
+                # Create inference configuration
+                config = InferenceConfig(
+                    method="svi",
+                    optimizer="adam",
+                    learning_rate=learning_rate,
+                    num_epochs=max_epochs,
+                    seed=seed
+                )
+
+                # Ensure guide is created before training
+                if not hasattr(self.guide_model, '_guide') or self.guide_model._guide is None:
+                    print(f"  🔧 Creating guide for model...")
+                    self.guide_model.create_guide(self.forward)
+
+                # Run SVI training
+                print(f"  🔄 Training model (max {max_epochs} epochs)...")
+                training_state, posterior_samples = run_svi_inference(
+                    model=self.forward,
+                    guide=self.guide,
+                    args=(u_obs, s_obs),
+                    config=config,
+                    seed=seed
+                )
+
+                print(f"  ✅ Training completed in {training_state.step} epochs")
+                print(f"     Final ELBO: {training_state.best_loss:.2f}")
+
+                # Compute parameter recovery metrics
+                recovery_metrics = self._compute_recovery_metrics(
+                    true_parameters, posterior_samples, success_threshold
+                )
+
+                # Generate posterior predictive data and plots
+                plot_paths = {}
+                if create_predictive_plots:
+                    print(f"  📈 Creating posterior predictive check plots...")
+
+                    # Generate posterior predictive data
+                    posterior_adata = self.generate_predictive_samples(
+                        num_cells=adata.n_obs,
+                        num_genes=adata.n_vars,
+                        samples=posterior_samples,
+                        return_format="anndata"
+                    )
+
+                    # Create comprehensive posterior predictive check plots
+                    plot_filename = f"{dataset_key}_posterior_predictive_checks"
+                    fig = plot_posterior_predictive_checks(
+                        model=self,
+                        posterior_adata=posterior_adata,
+                        posterior_parameters=posterior_samples,
+                        save_path=save_plots_path,
+                        figure_name=plot_filename
+                    )
+
+                    plot_paths['posterior_predictive_checks'] = os.path.join(
+                        save_plots_path, f"{plot_filename}.png"
+                    )
+
+                # Determine validation success
+                success = recovery_metrics['overall_correlation'] >= success_threshold
+                status_emoji = "✅" if success else "❌"
+
+                print(f"  {status_emoji} Recovery: {recovery_metrics['overall_correlation']:.3f} correlation")
+                print(f"     Success rate: {recovery_metrics['success_rate']:.1%}")
+
+                # Store results
+                validation_results[dataset_key] = {
+                    'pattern': pattern,
+                    'training_result': {
+                        'num_epochs': training_state.step,
+                        'final_elbo': training_state.best_loss,
+                        'converged': training_state.step < max_epochs,
+                        'loss_history': training_state.loss_history
+                    },
+                    'posterior_samples': posterior_samples,
+                    'recovery_metrics': recovery_metrics,
+                    'success': success,
+                    'plot_paths': plot_paths
+                }
+
+            except Exception as e:
+                print(f"  ❌ Validation failed for {dataset_key}: {str(e)}")
+                validation_results[dataset_key] = {
+                    'pattern': dataset_info['pattern'],
+                    'error': str(e),
+                    'success': False
+                }
+
+        # Compute overall validation summary
+        successful_validations = sum(1 for result in validation_results.values() if result.get('success', False))
+        total_validations = len(validation_results)
+        overall_success_rate = successful_validations / total_validations if total_validations > 0 else 0.0
+
+        print(f"\n🎯 Validation Summary:")
+        print(f"   Successful: {successful_validations}/{total_validations} ({overall_success_rate:.1%})")
+
+        # Add summary to results
+        validation_results['_summary'] = {
+            'total_datasets': total_validations,
+            'successful_datasets': successful_validations,
+            'overall_success_rate': overall_success_rate,
+            'success_threshold': success_threshold
+        }
+
+        return validation_results
+
+    @beartype
     def sample_system_parameters(
         self,
         num_samples: int = 1000,
@@ -2027,5 +2329,118 @@ class PyroVelocityModel:
         except (KeyError, TypeError, ValueError):
             # If we can't extract or convert parameters, return None
             return None
+
+    @beartype
+    def _prepare_training_data(self, adata: AnnData) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Prepare training data from AnnData object.
+
+        Args:
+            adata: AnnData object containing count data
+
+        Returns:
+            Tuple of (unspliced_counts, spliced_counts) as torch tensors
+        """
+        # Extract count matrices
+        u_obs = adata.layers["unspliced"].copy()
+        s_obs = adata.layers["spliced"].copy()
+
+        # Convert to torch tensors
+        u_obs = torch.tensor(u_obs, dtype=torch.float32)
+        s_obs = torch.tensor(s_obs, dtype=torch.float32)
+
+        return u_obs, s_obs
+
+    @beartype
+    def _compute_recovery_metrics(
+        self,
+        true_parameters: Dict[str, torch.Tensor],
+        posterior_samples: Dict[str, torch.Tensor],
+        success_threshold: float
+    ) -> Dict[str, float]:
+        """
+        Compute parameter recovery metrics comparing true and inferred parameters.
+
+        Args:
+            true_parameters: Dictionary of true parameter values
+            posterior_samples: Dictionary of posterior parameter samples
+            success_threshold: Correlation threshold for success
+
+        Returns:
+            Dictionary containing recovery metrics
+        """
+        import numpy as np
+        from scipy.stats import pearsonr
+
+        correlations = []
+        mae_values = []
+        mape_values = []
+        successful_params = 0
+        total_params = 0
+
+        for param_name, true_value in true_parameters.items():
+            if param_name in posterior_samples:
+                # Convert to numpy arrays
+                if isinstance(true_value, torch.Tensor):
+                    true_array = true_value.detach().cpu().numpy().flatten()
+                else:
+                    true_array = np.array(true_value).flatten()
+
+                posterior_value = posterior_samples[param_name]
+                if isinstance(posterior_value, torch.Tensor):
+                    # Take mean across samples if multiple samples
+                    if posterior_value.ndim > 1:
+                        posterior_array = posterior_value.mean(dim=0).detach().cpu().numpy().flatten()
+                    else:
+                        posterior_array = posterior_value.detach().cpu().numpy().flatten()
+                else:
+                    posterior_array = np.array(posterior_value).flatten()
+
+                # Ensure same length
+                min_len = min(len(true_array), len(posterior_array))
+                true_array = true_array[:min_len]
+                posterior_array = posterior_array[:min_len]
+
+                if len(true_array) > 0 and len(posterior_array) > 0:
+                    # Compute correlation
+                    if np.std(true_array) > 1e-8 and np.std(posterior_array) > 1e-8:
+                        corr, _ = pearsonr(true_array, posterior_array)
+                        if not np.isnan(corr):
+                            correlations.append(corr)
+
+                            # Compute MAE
+                            mae = np.mean(np.abs(true_array - posterior_array))
+                            mae_values.append(mae)
+
+                            # Compute MAPE (avoid division by zero)
+                            true_nonzero = true_array[np.abs(true_array) > 1e-8]
+                            posterior_nonzero = posterior_array[np.abs(true_array) > 1e-8]
+                            if len(true_nonzero) > 0:
+                                mape = np.mean(np.abs((true_nonzero - posterior_nonzero) / true_nonzero)) * 100
+                                mape_values.append(mape)
+
+                            # Check if parameter recovery is successful
+                            if corr >= success_threshold:
+                                successful_params += 1
+                            total_params += 1
+
+        # Compute overall metrics
+        overall_correlation = np.mean(correlations) if correlations else 0.0
+        overall_mae = np.mean(mae_values) if mae_values else float('inf')
+        overall_mape = np.mean(mape_values) if mape_values else float('inf')
+        success_rate = successful_params / total_params if total_params > 0 else 0.0
+
+        return {
+            'overall_correlation': overall_correlation,
+            'mean_absolute_error': overall_mae,
+            'mean_absolute_percentage_error': overall_mape,
+            'success_rate': success_rate,
+            'successful_parameters': successful_params,
+            'total_parameters': total_params,
+            'parameter_correlations': dict(zip(
+                [name for name in true_parameters.keys() if name in posterior_samples],
+                correlations
+            ))
+        }
 
 
