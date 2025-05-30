@@ -2367,6 +2367,20 @@ class PyroVelocityModel:
         adata.var["total_unspliced"] = u_counts.sum(axis=0)
         adata.var["total_spliced"] = s_counts.sum(axis=0)
 
+        # Add dimensionality reduction for UMAP visualization
+        # This ensures posterior predictive check plots can display UMAP embeddings
+        try:
+            import scanpy as sc
+            # Add PCA for dimensionality reduction and as fallback for UMAP computation
+            sc.pp.pca(adata, random_state=42)
+            sc.pp.neighbors(adata, n_neighbors=10, random_state=42)
+            sc.tl.umap(adata, random_state=42)
+            sc.tl.leiden(adata, random_state=42)
+        except Exception as e:
+            # If dimensionality reduction fails, continue without it
+            # This ensures the method doesn't fail if scanpy is not available
+            pass
+
         return adata
 
     @beartype
