@@ -13,7 +13,6 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import seaborn as sns
 import torch
 from anndata import AnnData
@@ -198,11 +197,23 @@ def plot_parameter_marginals(
         ax = axes[i]
         values = parameters[param_name].flatten().numpy()
 
-        ax.hist(values, bins=30, alpha=0.7, color=colors[i], density=True)
+        # Use relative frequency instead of density for consistent y-axis interpretation
+        counts, bins, _ = ax.hist(values, bins=30, alpha=0.7, color=colors[i], density=False)
+
+        # Normalize to relative frequency (0-1 scale)
+        total_count = len(values)
+        relative_freq = counts / total_count
+
+        # Clear and replot with relative frequency
+        ax.clear()
+        ax.bar(bins[:-1], relative_freq, width=np.diff(bins), alpha=0.7, color=colors[i],
+               align='edge', edgecolor='none')
+
         ax.set_xlabel('Value')
-        ax.set_ylabel('Density')
+        ax.set_ylabel('Relative Frequency')
         ax.set_title(_format_parameter_name(param_name))
         ax.grid(True, alpha=0.3)
+        ax.set_ylim(0, max(relative_freq) * 1.1)  # Add some headroom
 
         # Add summary statistics
         mean_val = values.mean()
@@ -243,8 +254,8 @@ def plot_parameter_relationships(
     """
     fig, axes = plt.subplots(1, 3, figsize=figsize)
 
-    # Parameter correlations
-    _plot_parameter_correlations(parameters, axes[0], check_type)
+    # Hierarchical time structure
+    _plot_hierarchical_time_structure(parameters, axes[0], check_type)
 
     # Fold-change distribution
     _plot_fold_change_distribution(parameters, axes[1], check_type)
@@ -264,7 +275,7 @@ def plot_parameter_relationships(
 def plot_expression_validation(
     adata: AnnData,
     check_type: str = "prior",
-    figsize: Tuple[int, int] = (15, 5),
+    figsize: Tuple[int, int] = (10, 10),
     save_path: Optional[str] = None
 ) -> plt.Figure:
     """
@@ -273,25 +284,25 @@ def plot_expression_validation(
     Args:
         adata: AnnData object with expression data
         check_type: Type of check ("prior" or "posterior")
-        figsize: Figure size (width, height)
+        figsize: Figure size (width, height) - defaults to square aspect ratio
         save_path: Optional directory path to save figures
 
     Returns:
         matplotlib Figure object
     """
-    fig, axes = plt.subplots(1, 4, figsize=figsize)
+    fig, axes = plt.subplots(2, 2, figsize=figsize)
 
-    # Count distributions
-    _plot_count_distributions(adata, axes[0], check_type)
+    # Count distributions (top-left)
+    _plot_count_distributions(adata, axes[0, 0], check_type)
 
-    # U vs S relationships
-    _plot_expression_relationships(adata, axes[1], check_type)
+    # U vs S relationships (top-right)
+    _plot_expression_relationships(adata, axes[0, 1], check_type)
 
-    # Library sizes
-    _plot_library_sizes(adata, axes[2], check_type)
+    # Library sizes (bottom-left)
+    _plot_library_sizes(adata, axes[1, 0], check_type)
 
-    # Expression ranges
-    _plot_expression_ranges(adata, axes[3], check_type)
+    # Expression ranges (bottom-right)
+    _plot_expression_ranges(adata, axes[1, 1], check_type)
 
     plt.tight_layout()
 
@@ -617,60 +628,63 @@ def _plot_parameter_marginals_summary(
     for i, param_name in enumerate(key_params):
         if param_name in parameters:
             values = parameters[param_name].flatten().numpy()
+            # Use relative frequency for consistency with main marginals plot
             ax.hist(values, bins=30, alpha=0.6, color=colors[i],
-                   label=_format_parameter_name(param_name), density=True)
+                   label=_format_parameter_name(param_name), density=False,
+                   weights=np.ones(len(values)) / len(values))
 
     ax.set_xlabel('Parameter Value')
-    ax.set_ylabel('Density')
+    ax.set_ylabel('Relative Frequency')
     ax.set_title(f'{check_type.title()} Parameter Marginals')
     ax.legend(fontsize=8)
     ax.grid(True, alpha=0.3)
 
 
 
-def _plot_parameter_correlations(
+def _plot_hierarchical_time_structure(
     parameters: Dict[str, torch.Tensor],
     ax: plt.Axes,
     check_type: str
 ) -> None:
-    """Plot parameter correlation matrix."""
-    # Include all available parameters for correlation analysis
-    # Prioritize the most important parameters but include all available
-    priority_params = ['alpha_off', 'alpha_on', 'gamma_star', 't_on_star', 'delta_star',
-                      'T_M_star', 't_loc', 't_scale', 'U_0i', 'lambda_j']
+    """Plot hierarchical time parameter relationships."""
+    # Check for hierarchical time parameters
+    time_params = ['T_M_star', 't_loc', 't_scale']
+    available_time_params = [p for p in time_params if p in parameters]
 
-    param_data = {}
-    for param_name in priority_params:
-        if param_name in parameters:
-            # Apply LaTeX formatting to parameter names
-            formatted_name = _format_parameter_name(param_name)
-            param_data[formatted_name] = parameters[param_name].flatten().numpy()
+    if len(available_time_params) >= 2:
+        # Plot T_M_star vs population time spread (t_scale)
+        if 'T_M_star' in parameters and 't_scale' in parameters:
+            T_M = parameters['T_M_star'].flatten().numpy()
+            t_scale = parameters['t_scale'].flatten().numpy()
 
-    # Add any additional parameters not in the priority list
-    for param_name in parameters.keys():
-        if param_name not in priority_params:
-            formatted_name = _format_parameter_name(param_name)
-            param_data[formatted_name] = parameters[param_name].flatten().numpy()
+            ax.scatter(T_M, t_scale, alpha=0.6, s=20, color='purple')
+            ax.set_xlabel(f'Global Time Scale ({_format_parameter_name("T_M_star")})')
+            ax.set_ylabel(f'Population Time Spread ({_format_parameter_name("t_scale")})')
+            ax.set_title(f'{check_type.title()} Hierarchical Time Structure')
 
-    if len(param_data) > 1:
-        df = pd.DataFrame(param_data)
-        corr_matrix = df.corr()
+            # Add interpretation guidelines
+            ax.axhline(0.2, color='orange', linestyle='--', alpha=0.7,
+                      label='Tight temporal clustering')
+            ax.axvline(5.0, color='green', linestyle='--', alpha=0.7,
+                      label='Typical process duration')
+            ax.legend(fontsize=8)
 
-        # Use smaller font size for annotations if many parameters
-        annot_fontsize = 8 if len(param_data) > 6 else 10
+        # Alternative: t_loc vs t_scale if T_M_star not available
+        elif 't_loc' in parameters and 't_scale' in parameters:
+            t_loc = parameters['t_loc'].flatten().numpy()
+            t_scale = parameters['t_scale'].flatten().numpy()
 
-        sns.heatmap(corr_matrix, annot=True, cmap='RdBu_r', center=0,
-                   square=True, ax=ax, cbar_kws={'shrink': 0.8},
-                   annot_kws={'fontsize': annot_fontsize})
-        ax.set_title(f'{check_type.title()} Parameter Correlations')
-
-        # Rotate labels for better readability
-        ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
-        ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
+            ax.scatter(t_loc, t_scale, alpha=0.6, s=20, color='purple')
+            ax.set_xlabel(f'Population Time Location ({_format_parameter_name("t_loc")})')
+            ax.set_ylabel(f'Population Time Spread ({_format_parameter_name("t_scale")})')
+            ax.set_title(f'{check_type.title()} Population Time Parameters')
+            ax.legend(fontsize=8)
     else:
-        ax.text(0.5, 0.5, 'Insufficient parameters\nfor correlation analysis',
+        ax.text(0.5, 0.5, 'Hierarchical time parameters\nnot available',
                ha='center', va='center', transform=ax.transAxes)
-        ax.set_title(f'{check_type.title()} Parameter Correlations')
+        ax.set_title(f'{check_type.title()} Hierarchical Time Structure')
+
+    ax.grid(True, alpha=0.3)
 
 
 def _plot_fold_change_distribution(
@@ -684,14 +698,16 @@ def _plot_fold_change_distribution(
         alpha_on = parameters['alpha_on'].flatten()
         fold_change = (alpha_on / alpha_off).numpy()
         
-        ax.hist(fold_change, bins=50, alpha=0.7, color='skyblue', density=True)
-        ax.axvline(fold_change.mean(), color='red', linestyle='--', 
+        # Use relative frequency for consistency
+        ax.hist(fold_change, bins=50, alpha=0.7, color='skyblue', density=False,
+               weights=np.ones(len(fold_change)) / len(fold_change))
+        ax.axvline(fold_change.mean(), color='red', linestyle='--',
                   label=f'Mean: {fold_change.mean():.1f}')
         ax.axvline(3.3, color='orange', linestyle=':', label='Min threshold: 3.3')
         ax.axvline(7.5, color='green', linestyle=':', label='Activation threshold: 7.5')
-        
+
         ax.set_xlabel(f'Fold-change ({_format_parameter_name("alpha_on")} / {_format_parameter_name("alpha_off")})')
-        ax.set_ylabel('Density')
+        ax.set_ylabel('Relative Frequency')
         ax.set_title(f'{check_type.title()} Fold-change Distribution')
         ax.legend(fontsize=8)
         ax.set_xlim(0, min(100, fold_change.max()))
@@ -742,13 +758,16 @@ def _plot_count_distributions(adata: AnnData, ax: plt.Axes, check_type: str) -> 
         unspliced_nz = unspliced[unspliced > 0]
         spliced_nz = spliced[spliced > 0]
         
-        ax.hist(np.log1p(unspliced_nz), bins=50, alpha=0.6, 
-               label='Unspliced', color='red', density=True)
-        ax.hist(np.log1p(spliced_nz), bins=50, alpha=0.6, 
-               label='Spliced', color='blue', density=True)
-        
+        # Use relative frequency for consistency
+        ax.hist(np.log1p(unspliced_nz), bins=50, alpha=0.6,
+               label='Unspliced', color='red', density=False,
+               weights=np.ones(len(unspliced_nz)) / len(unspliced_nz))
+        ax.hist(np.log1p(spliced_nz), bins=50, alpha=0.6,
+               label='Spliced', color='blue', density=False,
+               weights=np.ones(len(spliced_nz)) / len(spliced_nz))
+
         ax.set_xlabel('log(count + 1)')
-        ax.set_ylabel('Density')
+        ax.set_ylabel('Relative Frequency')
         ax.set_title(f'{check_type.title()} Count Distributions')
         ax.legend()
     else:
@@ -795,12 +814,14 @@ def _plot_library_sizes(adata: AnnData, ax: plt.Axes, check_type: str) -> None:
     if 'unspliced' in adata.layers and 'spliced' in adata.layers:
         total_counts = adata.layers['unspliced'].sum(axis=1) + adata.layers['spliced'].sum(axis=1)
 
-        ax.hist(total_counts, bins=50, alpha=0.7, color='green', density=True)
+        # Use relative frequency for consistency
+        ax.hist(total_counts, bins=50, alpha=0.7, color='green', density=False,
+               weights=np.ones(len(total_counts)) / len(total_counts))
         ax.axvline(total_counts.mean(), color='red', linestyle='--',
                   label=f'Mean: {total_counts.mean():.0f}')
 
         ax.set_xlabel('Total Counts per Cell')
-        ax.set_ylabel('Density')
+        ax.set_ylabel('Relative Frequency')
         ax.set_title(f'{check_type.title()} Library Sizes')
         ax.legend()
     else:
@@ -873,12 +894,14 @@ def _plot_velocity_magnitudes(adata: AnnData, ax: plt.Axes, check_type: str) -> 
         velocity = adata.layers[velocity_layers[0]]
         velocity_magnitudes = np.linalg.norm(velocity, axis=1)
 
-        ax.hist(velocity_magnitudes, bins=50, alpha=0.7, color='teal', density=True)
+        # Use relative frequency for consistency
+        ax.hist(velocity_magnitudes, bins=50, alpha=0.7, color='teal', density=False,
+               weights=np.ones(len(velocity_magnitudes)) / len(velocity_magnitudes))
         ax.axvline(velocity_magnitudes.mean(), color='red', linestyle='--',
                   label=f'Mean: {velocity_magnitudes.mean():.3f}')
 
         ax.set_xlabel('Velocity Magnitude')
-        ax.set_ylabel('Density')
+        ax.set_ylabel('Relative Frequency')
         ax.set_title(f'{check_type.title()} Velocity Magnitudes')
         ax.legend()
     else:
@@ -890,12 +913,14 @@ def _plot_velocity_magnitudes(adata: AnnData, ax: plt.Axes, check_type: str) -> 
             # Simple velocity approximation: du/dt ≈ α - γu (assuming steady-state splicing)
             velocity_approx = np.mean(u - s, axis=1)  # Simplified
 
-            ax.hist(velocity_approx, bins=50, alpha=0.7, color='teal', density=True)
+            # Use relative frequency for consistency
+            ax.hist(velocity_approx, bins=50, alpha=0.7, color='teal', density=False,
+                   weights=np.ones(len(velocity_approx)) / len(velocity_approx))
             ax.axvline(velocity_approx.mean(), color='red', linestyle='--',
                       label=f'Mean: {velocity_approx.mean():.3f}')
 
             ax.set_xlabel('Velocity Approximation')
-            ax.set_ylabel('Density')
+            ax.set_ylabel('Relative Frequency')
             ax.set_title(f'{check_type.title()} Velocity Approximation')
             ax.legend()
         else:
