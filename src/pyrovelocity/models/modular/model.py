@@ -1834,6 +1834,9 @@ class PyroVelocityModel:
         adata.obs["total_spliced"] = s_counts.sum(axis=1)
         adata.obs["total_counts"] = adata.obs["total_unspliced"] + adata.obs["total_spliced"]
 
+        # Extract and store temporal coordinates for UMAP visualization
+        self._store_temporal_coordinates(adata, predictive_samples, samples, num_cells)
+
         # Add gene-level statistics
         adata.var["mean_unspliced"] = u_counts.mean(axis=0)
         adata.var["mean_spliced"] = s_counts.mean(axis=0)
@@ -1841,6 +1844,127 @@ class PyroVelocityModel:
         adata.var["total_spliced"] = s_counts.sum(axis=0)
 
         return adata
+
+    @beartype
+    def _store_temporal_coordinates(
+        self,
+        adata: AnnData,
+        predictive_samples: Dict[str, torch.Tensor],
+        samples: Optional[Dict[str, torch.Tensor]],
+        num_cells: int
+    ) -> None:
+        """
+        Extract and store temporal coordinates in AnnData for UMAP visualization.
+
+        This method looks for temporal coordinates in both the predictive samples
+        and the true parameters, and stores them in adata.obs with names that
+        the UMAP plotting functions can detect.
+
+        Args:
+            adata: AnnData object to store coordinates in
+            predictive_samples: Dictionary of predictive samples from Pyro
+            samples: Optional parameter samples used for generation
+            num_cells: Number of cells
+        """
+        # Priority order for temporal coordinate names (UMAP function searches for these)
+        target_time_names = ['latent_time', 'shared_time', 'pseudotime', 'time']
+
+        # Look for temporal coordinates in predictive samples first
+        temporal_coord = None
+        source_name = None
+
+        # Check predictive samples for temporal variables
+        for key, value in predictive_samples.items():
+            if any(t_word in key.lower() for t_word in ['time', 't_star', 'tau', 'latent']):
+                if isinstance(value, torch.Tensor):
+                    # Convert to numpy
+                    coord_array = value.detach().cpu().numpy()
+
+                    # Handle different tensor shapes
+                    if coord_array.ndim >= 2:
+                        # Try to find a dimension that matches num_cells
+                        for dim_idx in range(coord_array.ndim):
+                            if coord_array.shape[dim_idx] == num_cells:
+                                # Extract the cell dimension
+                                if coord_array.ndim == 2:
+                                    if dim_idx == 0:
+                                        temporal_coord = coord_array[:, 0]  # Take first column
+                                    else:
+                                        temporal_coord = coord_array[0, :]  # Take first row
+                                elif coord_array.ndim > 2:
+                                    # For higher dimensions, take first slice along other dimensions
+                                    if dim_idx == 0:
+                                        temporal_coord = coord_array[:, 0, 0] if coord_array.shape[1] > 0 else coord_array[:, 0]
+                                    else:
+                                        # Reshape to get cell dimension
+                                        coord_flat = coord_array.flatten()
+                                        if len(coord_flat) >= num_cells:
+                                            temporal_coord = coord_flat[:num_cells]
+                                break
+                    elif coord_array.ndim == 1 and len(coord_array) == num_cells:
+                        temporal_coord = coord_array
+
+                    if temporal_coord is not None:
+                        source_name = key
+                        break
+
+        # If not found in predictive samples, check true parameters
+        if temporal_coord is None and samples is not None:
+            if 'true_parameters' in adata.uns:
+                true_params = adata.uns['true_parameters']
+            else:
+                # Convert samples to true_params format
+                true_params = {}
+                for key, value in samples.items():
+                    if isinstance(value, torch.Tensor):
+                        param_array = value.detach().cpu().numpy()
+                        if param_array.ndim > 1 and param_array.shape[0] == 1:
+                            param_array = param_array[0]
+                        true_params[key] = param_array
+                    else:
+                        true_params[key] = value
+
+            # Look for t_star (cell-specific times) in true parameters
+            for key in ['t_star', 't_cell', 'cell_time', 'latent_time']:
+                if key in true_params:
+                    param_value = true_params[key]
+                    if hasattr(param_value, 'shape') and len(param_value) == num_cells:
+                        temporal_coord = param_value.flatten() if hasattr(param_value, 'flatten') else param_value
+                        source_name = key
+                        break
+                    elif hasattr(param_value, '__len__') and len(param_value) == num_cells:
+                        temporal_coord = np.array(param_value)
+                        source_name = key
+                        break
+
+        # Store temporal coordinate in adata.obs if found
+        if temporal_coord is not None:
+            # Ensure it's a 1D numpy array
+            if not isinstance(temporal_coord, np.ndarray):
+                temporal_coord = np.array(temporal_coord)
+
+            if temporal_coord.ndim > 1:
+                temporal_coord = temporal_coord.flatten()
+
+            # Ensure correct length
+            if len(temporal_coord) == num_cells:
+                # Store with the first available target name for UMAP compatibility
+                target_name = target_time_names[0]  # 'latent_time'
+                adata.obs[target_name] = temporal_coord
+
+                # Also store with original name if different
+                if source_name and source_name != target_name:
+                    adata.obs[source_name] = temporal_coord
+
+                # Add metadata about the temporal coordinate
+                if 'pyrovelocity' not in adata.uns:
+                    adata.uns['pyrovelocity'] = {}
+                adata.uns['pyrovelocity']['temporal_coordinate'] = {
+                    'source': source_name,
+                    'stored_as': target_name,
+                    'range': [float(temporal_coord.min()), float(temporal_coord.max())],
+                    'description': f'Temporal coordinate extracted from {source_name}'
+                }
 
     @beartype
     def _infer_pattern_type(self, true_params: Dict[str, Any]) -> Optional[str]:
