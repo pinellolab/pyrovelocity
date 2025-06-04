@@ -31,7 +31,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 from pyrovelocity.io.serialization import load_anndata_from_json
 from pyrovelocity.models._velocity import PyroVelocity
 from pyrovelocity.models.modular import PyroVelocityModel
-from pyrovelocity.models.modular.factory import create_standard_model, create_legacy_model1
+from pyrovelocity.models.modular.factory import create_legacy_model1
 from pyrovelocity.validation.comparison import (
     compare_parameters,
     compare_velocities,
@@ -358,45 +358,24 @@ def train_modular_model(adata, max_epochs, num_samples, seed=42, model_type="leg
 
     # Set up AnnData for modular model
     adata_copy = adata.copy()
-    try:
-        PyroVelocityModel.setup_anndata(adata_copy)
-        print("AnnData setup completed for modular model")
 
-        # Debug: Check the layers in adata_copy
-        print(f"Available layers in adata_copy: {list(adata_copy.layers.keys())}")
-        print(f"adata_copy.layers['unspliced'].shape: {adata_copy.layers['unspliced'].shape}")
-        print(f"adata_copy.layers['spliced'].shape: {adata_copy.layers['spliced'].shape}")
-    except Exception as e:
-        print(f"Error setting up AnnData for modular model: {e}")
-        raise
+    PyroVelocityModel.setup_anndata(adata_copy)
+    print("AnnData setup completed for modular model")
+
+    # Debug: Check the layers in adata_copy
+    print(f"Available layers in adata_copy: {list(adata_copy.layers.keys())}")
+    print(f"adata_copy.layers['unspliced'].shape: {adata_copy.layers['unspliced'].shape}")
+    print(f"adata_copy.layers['spliced'].shape: {adata_copy.layers['spliced'].shape}")
 
     # Create modular model based on model_type
     print(f"Modular model using model_type: {model_type}")
 
-    # Print available components for debugging
-    try:
-        from pyrovelocity.models.modular.registry import LikelihoodModelRegistry
-        # Get available components by inspecting the registry
-        print(f"Available likelihood models: {list(LikelihoodModelRegistry._registry.keys())}")
-    except Exception as e:
-        print(f"Warning: Could not access registry information: {e}")
+    from pyrovelocity.models.modular.registry import LikelihoodModelRegistry
+    # Get available components by inspecting the registry
+    print(f"Available likelihood models: {list(LikelihoodModelRegistry._registry.keys())}")
 
-    # Create model based on model_type
-    try:
-        if model_type == "legacy":
-            # Use the legacy model replication for direct comparison with the legacy model
-            # Create the model using the predefined legacy model factory function
-            # Use create_legacy_model1() instead of create_legacy_model2() to avoid offset parameter issues
-            model = create_legacy_model1()
-            print("Using legacy model configuration (without offset) for direct comparison with legacy implementation")
-        else:
-            # Default to standard model with Poisson observation model
-            model = create_standard_model()
-            print("Using standard model with Poisson likelihood")
-        print("Modular model created successfully")
-    except Exception as e:
-        print(f"Error creating modular model: {e}")
-        raise
+    model = create_legacy_model1()
+    print("Using legacy model configuration (without offset) for direct comparison with legacy implementation")
 
     # Train model
     print(f"Starting modular model training with max_epochs={max_epochs}")
