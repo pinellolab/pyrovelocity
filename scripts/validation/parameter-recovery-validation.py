@@ -2,14 +2,16 @@ import torch
 import pyro
 import numpy as np
 import matplotlib.pyplot as plt
-from pathlib import Path
 import scanpy as sc
 
-# PyroVelocity imports
 from pyrovelocity.models.modular.factory import create_piecewise_activation_model
+from pyrovelocity.models.modular.validation import (
+    create_validation_summary,
+    display_validation_table,
+    plot_validation_summary
+)
 from pyrovelocity.plots.predictive_checks import (
     plot_prior_predictive_checks,
-    plot_posterior_predictive_checks,
 )
 
 # Set random seeds for reproducibility
@@ -135,13 +137,6 @@ for dataset_key, result in validation_results.items():
 # Display validation results summary
 print("📊 PARAMETER RECOVERY VALIDATION RESULTS")
 print("=" * 80)
-
-# Import validation plotting functions
-from pyrovelocity.models.modular.validation import (
-    create_validation_summary,
-    display_validation_table,
-    plot_validation_summary
-)
 
 # Get overall summary
 summary = create_validation_summary(validation_results)
