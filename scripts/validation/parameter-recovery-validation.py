@@ -75,7 +75,7 @@ print(f"  Guide: {model.guide_model}")
 #         print(f"  Range: [{samples.min():.3f}, {samples.max():.3f}]")
 #         print(f"  Mean ± Std: {samples.mean():.3f} ± {samples.std():.3f}")
 
-# Generate validation datasets for all patterns using the new API
+# # Generate validation datasets for all patterns
 print("📊 Generating validation datasets...")
 
 validation_datasets = model.generate_validation_datasets(
@@ -139,7 +139,6 @@ print("=" * 80)
 # Import validation plotting functions
 from pyrovelocity.models.modular.validation import (
     create_validation_summary,
-    assess_validation_status,
     display_validation_table,
     plot_validation_summary
 )
@@ -166,50 +165,3 @@ plot_validation_summary(
     figsize=(15, 12),
     show_success_threshold=True
 )
-
-# Note: Individual posterior predictive check plots were automatically generated
-# during validation and saved to reports/docs/validation/ directory
-print(f"\n📈 Generated Validation Plots:")
-print(f"  📊 Validation summary: reports/docs/validation/validation_summary.png")
-print(f"  🔍 Posterior predictive checks:")
-for dataset_key in validation_datasets.keys():
-    print(f"    - {dataset_key}_posterior_predictive_checks.png")
-
-print(f"\n🎉 Parameter Recovery Validation Complete!")
-print(f"📊 All plots saved to reports/docs/validation/")
-print(f"📈 Visualization saved to reports/docs/validation/validation_summary.png")
-
-# Final validation summary
-print("\n" + "=" * 80)
-print("🏆 VALIDATION STUDY 3: PIECEWISE ACTIVATION PARAMETER RECOVERY")
-print("=" * 80)
-
-print(f"\n✅ COMPLETED OBJECTIVES:")
-print(f"  ✓ Implemented piecewise activation analytical dynamics")
-print(f"  ✓ Created hierarchical priors for all parameters")
-print(f"  ✓ Generated synthetic data for 4 expression patterns")
-print(f"  ✓ Trained models with adaptive AutoLowRankMultivariateNormal guide")
-print(f"  ✓ Extracted posterior samples and computed recovery metrics")
-print(f"  ✓ Validated parameter recovery across all patterns")
-
-# Get validation status using helper functions
-validation_status = assess_validation_status(validation_results)
-
-print(f"\n📊 KEY RESULTS:")
-print(f"  • Overall parameter recovery correlation: {summary['mean_correlation']:.3f}")
-print(f"  • Overall success rate: {summary['overall_success_rate']:.1%}")
-print(f"  • Successful validations: {summary['successful_count']}/{summary['total_count']}")
-
-print(f"\n🎯 VALIDATION STATUS: {validation_status['status_emoji']} {validation_status['status']}")
-print(f"  {validation_status['description']}")
-
-if validation_status['ready_for_production']:
-    print(f"\n🚀 READY FOR PRODUCTION:")
-    print(f"  The piecewise activation model is validated and ready for")
-    print(f"  application to real single-cell RNA velocity data.")
-
-print(f"\n📋 NEXT STEPS:")
-print(f"  • Apply model to real datasets")
-print(f"  • Compare with existing RNA velocity methods")
-print(f"  • Implement Phase 6 visualization suite")
-print(f"  • Develop Validation Study 4 (continuous activation)")
