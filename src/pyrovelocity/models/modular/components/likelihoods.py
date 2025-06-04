@@ -617,9 +617,15 @@ class PiecewiseActivationPoissonLikelihoodModel:
                     pyro.sample("u_obs", u_dist, obs=u_obs_int)
                     pyro.sample("s_obs", s_dist, obs=s_obs_int)
 
-            # Add distributions to context
+            # Compute and store log probabilities for debugging and validation
+            log_prob_u = u_dist.log_prob(u_obs_int)
+            log_prob_s = s_dist.log_prob(s_obs_int)
+
+            # Add distributions and log probabilities to context
             context["u_dist"] = u_dist
             context["s_dist"] = s_dist
+            context["log_prob_u"] = log_prob_u
+            context["log_prob_s"] = log_prob_s
 
             return context
         else:

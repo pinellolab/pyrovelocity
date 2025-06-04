@@ -684,37 +684,6 @@ def create_legacy_model2() -> PyroVelocityModel:
     return create_model_from_config(config)
 
 
-# Protocol-First model creation functions
-# These functions are now deprecated as Protocol-First is the default implementation
-def create_protocol_first_model() -> PyroVelocityModel:
-    """
-    Create a PyroVelocityModel with Protocol-First components.
-
-    This function is now deprecated as Protocol-First is the default implementation.
-    It is maintained for backward compatibility with existing tests.
-
-    Returns:
-        A PyroVelocityModel instance with Protocol-First components.
-    """
-    return create_model_from_config(ModelConfig.standard())
-
-
-def create_protocol_first_model_from_config(config: ModelConfig) -> PyroVelocityModel:
-    """
-    Create a PyroVelocityModel with Protocol-First components from a configuration.
-
-    This function is now deprecated as Protocol-First is the default implementation.
-    It is maintained for backward compatibility with existing tests.
-
-    Args:
-        config: Configuration for the PyroVelocityModel
-
-    Returns:
-        A PyroVelocityModel instance with Protocol-First components.
-    """
-    return create_model_from_config(config)
-
-
 def create_piecewise_activation_model() -> PyroVelocityModel:
     """
     Create a PyroVelocityModel with piecewise activation components.
@@ -792,9 +761,6 @@ __all__ = [
     # Legacy model replication functions
     "create_legacy_model1",
     "create_legacy_model2",
-    # Protocol-First functions
-    "create_protocol_first_model",
-    "create_protocol_first_model_from_config",
     # Predefined configurations
     "standard_model_config",
     "create_standard_model",

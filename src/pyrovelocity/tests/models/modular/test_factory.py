@@ -28,8 +28,6 @@ from pyrovelocity.models.modular.factory import (
     create_model_from_config,
     create_observation_model,
     create_prior_model,
-    create_protocol_first_model,
-    create_protocol_first_model_from_config,
     create_standard_model,
     standard_model_config,
 )
@@ -492,92 +490,6 @@ class TestPredefinedConfigurations:
         """Test creating a standard model."""
         # Create a standard model
         model = create_standard_model()
-
-        # Check that the model is a PyroVelocityModel
-        assert isinstance(model, PyroVelocityModel)
-
-        # Check that the components are of the correct types
-        assert isinstance(model.dynamics_model, MockDynamicsModel)
-        assert isinstance(model.prior_model, MockPriorModel)
-        assert isinstance(model.likelihood_model, MockLikelihoodModel)
-        assert isinstance(model.guide_model, MockInferenceGuide)
-
-
-class TestProtocolFirstFactoryFunctions:
-    """Tests for the Protocol-First factory functions."""
-
-    def test_create_protocol_first_model(self, setup_registries):
-        """Test creating a model with Protocol-First components."""
-        # Register Protocol-First components
-        @DynamicsModelRegistry.register("standard_direct")
-        class StandardDynamicsModel(MockDynamicsModel):
-            pass
-
-        @PriorModelRegistry.register("lognormal_direct")
-        class LogNormalPriorModel(MockPriorModel):
-            pass
-
-        @LikelihoodModelRegistry.register("poisson_direct")
-        class PoissonLikelihoodModel(MockLikelihoodModel):
-            pass
-
-        @ObservationModelRegistry.register("standard_direct")
-        class StandardObservationModel(MockObservationModel):
-            pass
-
-        @InferenceGuideRegistry.register("auto_direct")
-        class AutoGuideFactory(MockInferenceGuide):
-            pass
-
-        # Create a model with Protocol-First components
-        model = create_protocol_first_model()
-
-        # Check that the model is a PyroVelocityModel
-        assert isinstance(model, PyroVelocityModel)
-
-        # Check that the components are of the correct types
-        assert isinstance(model.dynamics_model, MockDynamicsModel)
-        assert isinstance(model.prior_model, MockPriorModel)
-        assert isinstance(model.likelihood_model, MockLikelihoodModel)
-        assert isinstance(model.guide_model, MockInferenceGuide)
-
-    def test_create_protocol_first_model_from_config(self, setup_registries):
-        """Test creating a model with Protocol-First components from a configuration."""
-        # Register Protocol-First components
-        @DynamicsModelRegistry.register("standard_direct")
-        class StandardDynamicsModel(MockDynamicsModel):
-            pass
-
-        @PriorModelRegistry.register("lognormal_direct")
-        class LogNormalPriorModel(MockPriorModel):
-            pass
-
-        @LikelihoodModelRegistry.register("poisson_direct")
-        class PoissonLikelihoodModel(MockLikelihoodModel):
-            pass
-
-        @ObservationModelRegistry.register("standard_direct")
-        class StandardObservationModel(MockObservationModel):
-            pass
-
-        @InferenceGuideRegistry.register("auto_direct")
-        class AutoGuideFactory(MockInferenceGuide):
-            pass
-
-        # Create a configuration
-        from pyrovelocity.models.modular.config import (
-            ComponentConfig,
-            ModelConfig,
-        )
-        config = ModelConfig(
-            dynamics_model=ComponentConfig(name="standard"),
-            prior_model=ComponentConfig(name="lognormal"),
-            likelihood_model=ComponentConfig(name="poisson"),
-            inference_guide=ComponentConfig(name="auto"),
-        )
-
-        # Create a model with Protocol-First components from the configuration
-        model = create_protocol_first_model_from_config(config)
 
         # Check that the model is a PyroVelocityModel
         assert isinstance(model, PyroVelocityModel)
