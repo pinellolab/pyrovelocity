@@ -487,12 +487,9 @@ class PiecewiseActivationPriorModel:
                 dist.Normal(t_loc, t_scale).mask(include_prior),
             )
             # Ensure non-negative times and scale by T_M_star
-            # Use pyro.deterministic to track t_star in posterior samples
-            t_star = pyro.deterministic(
-                "t_star",
-                T_M_star * torch.clamp(tilde_t, min=self.t_epsilon)
-            )
-            params["t_star"] = t_star
+            # Compute t_star outside pyro.deterministic to avoid plate broadcasting issues
+            t_star_computed = T_M_star * torch.clamp(tilde_t, min=self.t_epsilon)
+            params["t_star"] = t_star_computed
 
             # Sample capture efficiency parameters (per cell)
             lambda_j = pyro.sample(
@@ -503,6 +500,9 @@ class PiecewiseActivationPriorModel:
                 ).mask(include_prior),
             )
             params["lambda_j"] = lambda_j
+
+        # Track t_star in posterior samples outside the plate to avoid shape issues
+        t_star = pyro.deterministic("t_star", params["t_star"])
 
         # Sample piecewise activation parameters (per gene)
         with pyro.plate(f"{self.name}_genes_plate", n_genes):
