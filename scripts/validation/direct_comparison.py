@@ -21,7 +21,6 @@ import argparse
 import numpy as np
 import torch
 import pyro
-import scipy.sparse
 from importlib.resources import files
 
 # Add the src directory to the path to import test fixtures
@@ -30,7 +29,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 from pyrovelocity.io.serialization import load_anndata_from_json
 from pyrovelocity.models._velocity import PyroVelocity
 from pyrovelocity.models.modular import PyroVelocityModel
-from pyrovelocity.models.modular.factory import create_legacy_model1
+from pyrovelocity.models.modular.factory import create_legacy_model1, create_legacy_model2
 from pyrovelocity.validation.comparison import (
     compare_parameters,
     compare_velocities,
@@ -44,6 +43,13 @@ def print_progress(message):
     timestamp = time.strftime("%H:%M:%S")
     print(f"[{timestamp}] {message}")
     sys.stdout.flush()  # Ensure immediate output
+
+
+def to_numpy(tensor_or_array):
+    """Convert tensor to numpy array if needed."""
+    if isinstance(tensor_or_array, torch.Tensor):
+        return tensor_or_array.detach().cpu().numpy()
+    return tensor_or_array
 
 
 def parse_args():
@@ -80,8 +86,9 @@ def parse_args():
         type=str,
         default="model1",
         choices=["model1", "model2"],
-        help="Model type to use (model1=legacy model replication, model2=future implementation). "
-             "Currently only model1 is implemented.",
+        help="Model type to use (model1=legacy model1 replication, model2=legacy model2 replication). "
+             "model1: guide_type='auto_t0_constraint', add_offset=False. "
+             "model2: guide_type='auto', add_offset=True.",
     )
     parser.add_argument(
         "--compute-velocity",
@@ -110,7 +117,7 @@ def load_preprocessed_pancreas_data():
     return adata
 
 
-def train_legacy_model(adata, max_epochs, num_samples, seed=42, compute_velocity=True, **kwargs):
+def train_legacy_model(adata, max_epochs, num_samples, seed=42, compute_velocity=True, model_type=None):
     """
     Train the legacy model and return results.
 
@@ -120,7 +127,7 @@ def train_legacy_model(adata, max_epochs, num_samples, seed=42, compute_velocity
         num_samples: Number of posterior samples to generate
         seed: Random seed for reproducibility
         compute_velocity: Whether to compute velocity (default: True)
-        **kwargs: Additional keyword arguments (ignored)
+        model_type: Ignored - legacy model always uses VelocityModelAuto
 
     Note: The legacy model always uses VelocityModelAuto regardless of any model_type parameter.
     """
@@ -134,13 +141,23 @@ def train_legacy_model(adata, max_epochs, num_samples, seed=42, compute_velocity
     # Set up AnnData for legacy model
     PyroVelocity.setup_anndata(adata)
 
-    # Create legacy model
-    print("Legacy model always uses VelocityModelAuto regardless of model_type")
-    model = PyroVelocity(
-        adata=adata,
-        guide_type="auto_t0_constraint",
-        add_offset=False,
-    )
+    # Create legacy model based on model_type
+    if model_type == "model1":
+        print("Legacy model1: using guide_type='auto_t0_constraint', add_offset=False")
+        model = PyroVelocity(
+            adata=adata,
+            guide_type="auto_t0_constraint",
+            add_offset=False,
+        )
+    elif model_type == "model2":
+        print("Legacy model2: using guide_type='auto', add_offset=True")
+        model = PyroVelocity(
+            adata=adata,
+            guide_type="auto",
+            add_offset=True,
+        )
+    else:
+        raise ValueError(f"Unknown model_type: {model_type}")
 
     # Train model
     print(f"Starting legacy model training with max_epochs={max_epochs}")
@@ -156,13 +173,9 @@ def train_legacy_model(adata, max_epochs, num_samples, seed=42, compute_velocity
     inference_start_time = time.time()
     try:
         posterior_samples = model.generate_posterior_samples(num_samples=num_samples)
-    except AttributeError as e:
-        if "'NoneType' object has no attribute 'uns'" in str(e):
-            # This is a known issue with the legacy model - retry with explicit adata
-            print("Retrying posterior sampling with explicit adata parameter")
-            posterior_samples = model.generate_posterior_samples(adata=model.adata, num_samples=num_samples)
-        else:
-            raise
+    except AttributeError:
+        # Known issue with legacy model - retry with explicit adata
+        posterior_samples = model.generate_posterior_samples(adata=model.adata, num_samples=num_samples)
     print("Posterior sampling completed successfully")
 
     # Print parameter shapes for debugging
@@ -173,38 +186,10 @@ def train_legacy_model(adata, max_epochs, num_samples, seed=42, compute_velocity
 
     # Print parameter statistics for debugging
     print("\nLegacy model parameter statistics:")
-    for param in ["alpha", "beta", "gamma"]:
+    for param in ["alpha", "beta", "gamma", "u_scale", "ut", "st"]:
         if param in posterior_samples:
-            param_value = posterior_samples[param]
-            if isinstance(param_value, torch.Tensor):
-                param_value = param_value.detach().cpu().numpy()
+            param_value = to_numpy(posterior_samples[param])
             print(f"  {param} mean: {np.mean(param_value):.6f}, std: {np.std(param_value):.6f}, min: {np.min(param_value):.6f}, max: {np.max(param_value):.6f}")
-
-    # Print scaling factors if available
-    if "u_scale" in posterior_samples:
-        u_scale = posterior_samples["u_scale"]
-        if isinstance(u_scale, torch.Tensor):
-            u_scale = u_scale.detach().cpu().numpy()
-        print(f"  u_scale mean: {np.mean(u_scale):.6f}, std: {np.std(u_scale):.6f}, min: {np.min(u_scale):.6f}, max: {np.max(u_scale):.6f}")
-
-    if "s_scale" in posterior_samples:
-        s_scale = posterior_samples["s_scale"]
-        if isinstance(s_scale, torch.Tensor):
-            s_scale = s_scale.detach().cpu().numpy()
-        print(f"  s_scale mean: {np.mean(s_scale):.6f}, std: {np.std(s_scale):.6f}, min: {np.min(s_scale):.6f}, max: {np.max(s_scale):.6f}")
-
-    # Print ut and st statistics
-    if "ut" in posterior_samples:
-        ut = posterior_samples["ut"]
-        if isinstance(ut, torch.Tensor):
-            ut = ut.detach().cpu().numpy()
-        print(f"  ut mean: {np.mean(ut):.6f}, std: {np.std(ut):.6f}, min: {np.min(ut):.6f}, max: {np.max(ut):.6f}")
-
-    if "st" in posterior_samples:
-        st = posterior_samples["st"]
-        if isinstance(st, torch.Tensor):
-            st = st.detach().cpu().numpy()
-        print(f"  st mean: {np.mean(st):.6f}, std: {np.std(st):.6f}, min: {np.min(st):.6f}, max: {np.max(st):.6f}")
 
     # Initialize velocity and uncertainty as None
     velocity = None
@@ -212,29 +197,9 @@ def train_legacy_model(adata, max_epochs, num_samples, seed=42, compute_velocity
 
     # Compute velocity only if requested
     if compute_velocity:
-        # Print velocity calculation details
         print("\nComputing velocity for legacy model...")
 
-        # Calculate velocity manually for comparison
-        if ("u_scale" in posterior_samples) and ("s_scale" in posterior_samples):
-            scale = posterior_samples["u_scale"] / posterior_samples["s_scale"]
-            print(f"  Using scale from u_scale/s_scale, shape: {scale.shape}, mean: {np.mean(scale):.6f}")
-        elif ("u_scale" in posterior_samples) and not ("s_scale" in posterior_samples):
-            scale = posterior_samples["u_scale"]
-            print(f"  Using scale from u_scale only, shape: {scale.shape}, mean: {np.mean(scale):.6f}")
-        else:
-            scale = 1
-            print("  No scaling applied (scale = 1)")
-
-        # Calculate velocity manually
-        manual_velocity = (
-            posterior_samples["beta"] * posterior_samples["ut"] / scale
-            - posterior_samples["gamma"] * posterior_samples["st"]
-        ).mean(0)
-        print(f"  Manual velocity shape: {manual_velocity.shape}, mean: {np.mean(manual_velocity):.6f}, std: {np.std(manual_velocity):.6f}")
-
         # Compute statistics from posterior samples (this computes velocity and stores it in adata)
-        # The method signature is compute_statistics_from_posterior_samples(self, adata, posterior_samples, ...)
         posterior_samples = model.compute_statistics_from_posterior_samples(
             adata=adata,
             posterior_samples=posterior_samples,
@@ -243,29 +208,9 @@ def train_legacy_model(adata, max_epochs, num_samples, seed=42, compute_velocity
             random_seed=seed
         )
 
-        # Extract velocity from adata.layers["velocity_pyro"]
-        velocity = adata.layers["velocity_pyro"] if "velocity_pyro" in adata.layers else None
-
-        # Extract uncertainty (using the FDR values as a proxy for uncertainty)
-        # In the legacy model, uncertainty is computed during vector_field_uncertainty
-        # and stored in the posterior_samples dictionary as 'fdri'
+        # Extract velocity and uncertainty
+        velocity = adata.layers["velocity_pyro"]
         uncertainty = posterior_samples.get('fdri', None)
-
-        if uncertainty is None:
-            # If fdri is not available, we can use a simple standard deviation across samples
-            # as a proxy for uncertainty
-            if ('u_scale' in posterior_samples) and ('s_scale' in posterior_samples):
-                scale = posterior_samples["u_scale"] / posterior_samples["s_scale"]
-            elif ('u_scale' in posterior_samples) and not ('s_scale' in posterior_samples):
-                scale = posterior_samples["u_scale"]
-            else:
-                scale = 1
-
-            velocity_samples = (
-                posterior_samples["beta"] * posterior_samples["ut"] / scale
-                - posterior_samples["gamma"] * posterior_samples["st"]
-            )
-            uncertainty = np.std(velocity_samples, axis=0)
     else:
         print("\nSkipping velocity computation for legacy model (--no-compute-velocity flag is set)")
 
@@ -316,7 +261,8 @@ def train_modular_model(adata, max_epochs, num_samples, seed=42, model_type="mod
         model = create_legacy_model1()
         print("Using legacy model1 configuration for direct comparison with legacy implementation")
     elif model_type == "model2":
-        raise NotImplementedError("model2 is not yet implemented")
+        model = create_legacy_model2()
+        print("Using legacy model2 configuration for direct comparison with legacy implementation")
     else:
         raise ValueError(f"Unknown model_type: {model_type}")
 
@@ -353,11 +299,8 @@ def train_modular_model(adata, max_epochs, num_samples, seed=42, model_type="mod
     # Print parameter statistics for debugging
     print("\nModular model parameter statistics:")
     for param in ["alpha", "beta", "gamma"]:
-        if param in posterior_samples:
-            param_value = posterior_samples[param]
-            if isinstance(param_value, torch.Tensor):
-                param_value = param_value.detach().cpu().numpy()
-            print(f"  {param} mean: {np.mean(param_value):.6f}, std: {np.std(param_value):.6f}, min: {np.min(param_value):.6f}, max: {np.max(param_value):.6f}")
+        param_value = to_numpy(posterior_samples[param])
+        print(f"  {param} mean: {np.mean(param_value):.6f}, std: {np.std(param_value):.6f}, min: {np.min(param_value):.6f}, max: {np.max(param_value):.6f}")
 
     # Initialize velocity and uncertainty as None
     velocity = None
@@ -365,61 +308,9 @@ def train_modular_model(adata, max_epochs, num_samples, seed=42, model_type="mod
 
     # Compute velocity only if requested
     if compute_velocity:
-        # Compute velocity with detailed logging
         print("\nComputing velocity for modular model...")
 
-        # Get the raw data
-        u = adata_copy.layers["unspliced"]
-        s = adata_copy.layers["spliced"]
-        if isinstance(u, scipy.sparse.spmatrix):
-            u = u.toarray()
-        if isinstance(s, scipy.sparse.spmatrix):
-            s = s.toarray()
-        print(f"  u shape: {u.shape}, mean: {np.mean(u):.6f}, std: {np.std(u):.6f}")
-        print(f"  s shape: {s.shape}, mean: {np.mean(s):.6f}, std: {np.std(s):.6f}")
-
-        # Extract parameters for velocity calculation
-        alpha = posterior_samples["alpha"]
-        beta = posterior_samples["beta"]
-        gamma = posterior_samples["gamma"]
-        u_scale = posterior_samples.get("u_scale")
-        s_scale = posterior_samples.get("s_scale")
-
-        if isinstance(alpha, torch.Tensor):
-            alpha_mean = alpha.mean(dim=0).detach().cpu().numpy()
-        else:
-            alpha_mean = np.mean(alpha, axis=0)
-
-        if isinstance(beta, torch.Tensor):
-            beta_mean = beta.mean(dim=0).detach().cpu().numpy()
-        else:
-            beta_mean = np.mean(beta, axis=0)
-
-        if isinstance(gamma, torch.Tensor):
-            gamma_mean = gamma.mean(dim=0).detach().cpu().numpy()
-        else:
-            gamma_mean = np.mean(gamma, axis=0)
-
-        print(f"  alpha_mean shape: {alpha_mean.shape}, mean: {np.mean(alpha_mean):.6f}, std: {np.std(alpha_mean):.6f}")
-        print(f"  beta_mean shape: {beta_mean.shape}, mean: {np.mean(beta_mean):.6f}, std: {np.std(beta_mean):.6f}")
-        print(f"  gamma_mean shape: {gamma_mean.shape}, mean: {np.mean(gamma_mean):.6f}, std: {np.std(gamma_mean):.6f}")
-
-        if u_scale is not None:
-            if isinstance(u_scale, torch.Tensor):
-                u_scale_mean = u_scale.mean(dim=0).detach().cpu().numpy()
-            else:
-                u_scale_mean = np.mean(u_scale, axis=0)
-            print(f"  u_scale_mean shape: {u_scale_mean.shape}, mean: {np.mean(u_scale_mean):.6f}, std: {np.std(u_scale_mean):.6f}")
-
-        if s_scale is not None:
-            if isinstance(s_scale, torch.Tensor):
-                s_scale_mean = s_scale.mean(dim=0).detach().cpu().numpy()
-            else:
-                s_scale_mean = np.mean(s_scale, axis=0)
-            print(f"  s_scale_mean shape: {s_scale_mean.shape}, mean: {np.mean(s_scale_mean):.6f}, std: {np.std(s_scale_mean):.6f}")
-
         # Compute velocity and uncertainty using the model's get_velocity method
-        # The modular model computes both velocity and uncertainty in one call
         adata_with_velocity = model.get_velocity(
             adata=adata_copy,
             num_samples=num_samples,
@@ -428,33 +319,9 @@ def train_modular_model(adata, max_epochs, num_samples, seed=42, model_type="mod
             uncertainty_method="std"
         )
 
-        # Extract velocity from AnnData layers
-        velocity_layer_name = f"velocity_{model.name}" if hasattr(model, 'name') else "velocity_pyrovelocity"
-        if velocity_layer_name in adata_with_velocity.layers:
-            velocity = adata_with_velocity.layers[velocity_layer_name]
-        else:
-            # Fallback to any velocity layer
-            velocity_layers = [k for k in adata_with_velocity.layers.keys() if k.startswith('velocity_')]
-            if velocity_layers:
-                velocity = adata_with_velocity.layers[velocity_layers[0]]
-                print(f"  Using velocity layer: {velocity_layers[0]}")
-            else:
-                print("  Warning: No velocity layer found in AnnData")
-                velocity = None
-
-        # Extract uncertainty from AnnData layers
-        uncertainty_layer_name = f"velocity_uncertainty_{model.name}" if hasattr(model, 'name') else "velocity_uncertainty_pyrovelocity"
-        if uncertainty_layer_name in adata_with_velocity.layers:
-            uncertainty = adata_with_velocity.layers[uncertainty_layer_name]
-        else:
-            # Fallback to any uncertainty layer
-            uncertainty_layers = [k for k in adata_with_velocity.layers.keys() if 'uncertainty' in k]
-            if uncertainty_layers:
-                uncertainty = adata_with_velocity.layers[uncertainty_layers[0]]
-                print(f"  Using uncertainty layer: {uncertainty_layers[0]}")
-            else:
-                print("  Warning: No uncertainty layer found in AnnData")
-                uncertainty = None
+        # Extract velocity and uncertainty from AnnData layers (assuming consistent naming)
+        velocity = adata_with_velocity.layers["velocity_pyrovelocity"]
+        uncertainty = adata_with_velocity.layers["velocity_uncertainty_pyrovelocity"]
     else:
         print("\nSkipping velocity computation for modular model (--no-compute-velocity flag is set)")
 
@@ -481,178 +348,56 @@ def compare_models(legacy_results, modular_results):
     comparison_results = {}
 
     # Compare parameters
-    try:
-        results = {
-            "legacy": {"posterior_samples": legacy_results["posterior_samples"]},
-            "modular": {"posterior_samples": modular_results["posterior_samples"]}
-        }
-        param_comparison_results = compare_parameters(results)
-        parameter_comparison = {}
-        for param in ["alpha", "beta", "gamma"]:
-            if param in param_comparison_results:
-                parameter_comparison[param] = param_comparison_results[param]
-            else:
-                parameter_comparison[param] = {"error": f"Parameter {param} not found"}
-    except Exception as e:
-        print(f"Error comparing parameters, using manual comparison: {e}")
-        parameter_comparison = {}
-        for param in ["alpha", "beta", "gamma"]:
-            param_samples1 = legacy_results["posterior_samples"][param]
-            param_samples2 = modular_results["posterior_samples"][param]
-
-            # Convert to numpy arrays if needed
-            if isinstance(param_samples1, torch.Tensor):
-                param_samples1 = param_samples1.detach().cpu().numpy()
-            if isinstance(param_samples2, torch.Tensor):
-                param_samples2 = param_samples2.detach().cpu().numpy()
-
-            # Flatten arrays for comparison
-            param_samples1_flat = param_samples1.flatten()
-            param_samples2_flat = param_samples2.flatten()
-
-            # Compute basic statistics
-            correlation = np.corrcoef(param_samples1_flat, param_samples2_flat)[0, 1]
-            mse = np.mean((param_samples1_flat - param_samples2_flat) ** 2)
-            mae = np.mean(np.abs(param_samples1_flat - param_samples2_flat))
-
-            parameter_comparison[param] = {
-                "legacy_vs_modular": {
-                    "correlation": correlation,
-                    "mse": mse,
-                    "mae": mae
-                }
-            }
+    results = {
+        "legacy": {"posterior_samples": legacy_results["posterior_samples"]},
+        "modular": {"posterior_samples": modular_results["posterior_samples"]}
+    }
+    param_comparison_results = compare_parameters(results)
+    parameter_comparison = {}
+    for param in ["alpha", "beta", "gamma"]:
+        parameter_comparison[param] = param_comparison_results[param]
 
     comparison_results["parameter_comparison"] = parameter_comparison
 
     # Compare velocities if both are available
     if legacy_results["velocity"] is not None and modular_results["velocity"] is not None:
-        try:
-            # Ensure both velocities are numpy arrays
-            legacy_velocity = legacy_results["velocity"]
-            if isinstance(legacy_velocity, torch.Tensor):
-                legacy_velocity = legacy_velocity.detach().cpu().numpy()
-
-            modular_velocity = modular_results["velocity"]
-            if isinstance(modular_velocity, torch.Tensor):
-                modular_velocity = modular_velocity.detach().cpu().numpy()
-
-            velocity_results = {
-                "legacy": {"velocity": legacy_velocity},
-                "modular": {"velocity": modular_velocity}
-            }
-            velocity_comparison = {
-                "legacy_vs_modular": compare_velocities(velocity_results)
-            }
-            comparison_results["velocity_comparison"] = velocity_comparison
-        except Exception as e:
-            print(f"Error comparing velocities, using manual comparison: {e}")
-            # Flatten arrays for comparison
-            legacy_velocity_flat = legacy_velocity.flatten()
-            modular_velocity_flat = modular_velocity.flatten()
-
-            # Compute basic statistics
-            correlation = np.corrcoef(legacy_velocity_flat, modular_velocity_flat)[0, 1]
-            mse = np.mean((legacy_velocity_flat - modular_velocity_flat) ** 2)
-            mae = np.mean(np.abs(legacy_velocity_flat - modular_velocity_flat))
-
-            comparison_results["velocity_comparison"] = {
-                "legacy_vs_modular": {
-                    "correlation": correlation,
-                    "mse": mse,
-                    "mae": mae
-                }
-            }
+        velocity_results = {
+            "legacy": {"velocity": to_numpy(legacy_results["velocity"])},
+            "modular": {"velocity": to_numpy(modular_results["velocity"])}
+        }
+        velocity_comparison = {
+            "legacy_vs_modular": compare_velocities(velocity_results)
+        }
+        comparison_results["velocity_comparison"] = velocity_comparison
     else:
-        if legacy_results["velocity"] is None and modular_results["velocity"] is None:
-            comparison_results["velocity_comparison"] = {
-                "legacy_vs_modular": {"skipped": "Velocity computation was disabled"}
-            }
-        else:
-            comparison_results["velocity_comparison"] = {
-                "legacy_vs_modular": {"error": "One or both velocities are None"}
-            }
+        comparison_results["velocity_comparison"] = {
+            "legacy_vs_modular": {"skipped": "Velocity computation was disabled"}
+        }
 
     # Compare uncertainties if both are available
     if legacy_results["uncertainty"] is not None and modular_results["uncertainty"] is not None:
-        try:
-            # Ensure both uncertainties are numpy arrays
-            legacy_uncertainty = legacy_results["uncertainty"]
-            if isinstance(legacy_uncertainty, torch.Tensor):
-                legacy_uncertainty = legacy_uncertainty.detach().cpu().numpy()
-
-            modular_uncertainty = modular_results["uncertainty"]
-            if isinstance(modular_uncertainty, torch.Tensor):
-                modular_uncertainty = modular_uncertainty.detach().cpu().numpy()
-
-            uncertainty_results = {
-                "legacy": {"uncertainty": legacy_uncertainty},
-                "modular": {"uncertainty": modular_uncertainty}
-            }
-            uncertainty_comparison = {
-                "legacy_vs_modular": compare_uncertainties(uncertainty_results)
-            }
-            comparison_results["uncertainty_comparison"] = uncertainty_comparison
-        except Exception as e:
-            print(f"Error comparing uncertainties, using manual comparison: {e}")
-            # Flatten arrays for comparison
-            legacy_uncertainty_flat = legacy_uncertainty.flatten()
-            modular_uncertainty_flat = modular_uncertainty.flatten()
-
-            # Compute basic statistics
-            correlation = np.corrcoef(legacy_uncertainty_flat, modular_uncertainty_flat)[0, 1]
-            mse = np.mean((legacy_uncertainty_flat - modular_uncertainty_flat) ** 2)
-            mae = np.mean(np.abs(legacy_uncertainty_flat - modular_uncertainty_flat))
-
-            comparison_results["uncertainty_comparison"] = {
-                "legacy_vs_modular": {
-                    "correlation": correlation,
-                    "mse": mse,
-                    "mae": mae
-                }
-            }
+        uncertainty_results = {
+            "legacy": {"uncertainty": to_numpy(legacy_results["uncertainty"])},
+            "modular": {"uncertainty": to_numpy(modular_results["uncertainty"])}
+        }
+        uncertainty_comparison = {
+            "legacy_vs_modular": compare_uncertainties(uncertainty_results)
+        }
+        comparison_results["uncertainty_comparison"] = uncertainty_comparison
     else:
-        if legacy_results["uncertainty"] is None and modular_results["uncertainty"] is None:
-            comparison_results["uncertainty_comparison"] = {
-                "legacy_vs_modular": {"skipped": "Velocity computation was disabled"}
-            }
-        else:
-            comparison_results["uncertainty_comparison"] = {
-                "legacy_vs_modular": {"error": "One or both uncertainties are None"}
-            }
+        comparison_results["uncertainty_comparison"] = {
+            "legacy_vs_modular": {"skipped": "Velocity computation was disabled"}
+        }
 
     # Compare performance
-    try:
-        performance_results = {
-            "legacy": {"performance": legacy_results["performance"]},
-            "modular": {"performance": modular_results["performance"]}
-        }
-        performance_comparison = {
-            "legacy_vs_modular": compare_performance(performance_results)
-        }
-        comparison_results["performance_comparison"] = performance_comparison
-    except Exception as e:
-        print(f"Error comparing performance, using manual comparison: {e}")
-        # Get performance metrics
-        legacy_training_time = legacy_results["performance"]["training_time"]
-        modular_training_time = modular_results["performance"]["training_time"]
-        legacy_inference_time = legacy_results["performance"]["inference_time"]
-        modular_inference_time = modular_results["performance"]["inference_time"]
-
-        # Compute ratios
-        training_time_ratio = modular_training_time / legacy_training_time if legacy_training_time > 0 else float('inf')
-        inference_time_ratio = modular_inference_time / legacy_inference_time if legacy_inference_time > 0 else float('inf')
-
-        comparison_results["performance_comparison"] = {
-            "legacy_vs_modular": {
-                "training_time_ratio": training_time_ratio,
-                "inference_time_ratio": inference_time_ratio,
-                "legacy_training_time": legacy_training_time,
-                "modular_training_time": modular_training_time,
-                "legacy_inference_time": legacy_inference_time,
-                "modular_inference_time": modular_inference_time
-            }
-        }
+    performance_results = {
+        "legacy": {"performance": legacy_results["performance"]},
+        "modular": {"performance": modular_results["performance"]}
+    }
+    performance_comparison = {
+        "legacy_vs_modular": compare_performance(performance_results)
+    }
+    comparison_results["performance_comparison"] = performance_comparison
 
     return comparison_results
 
@@ -681,119 +426,108 @@ def generate_summary_report(legacy_results, modular_results, comparison, args, o
 
         # Legacy model
         f.write("Legacy Model:\n")
-        if legacy_results is not None:
-            f.write(f"  Training time: {legacy_results['performance']['training_time']:.2f} seconds\n")
-            f.write(f"  Inference time: {legacy_results['performance']['inference_time']:.2f} seconds\n")
-            if legacy_results['velocity'] is not None:
-                f.write(f"  Velocity shape: {legacy_results['velocity'].shape}\n")
-            else:
-                f.write("  Velocity: None\n")
+        f.write(f"  Training time: {legacy_results['performance']['training_time']:.2f} seconds\n")
+        f.write(f"  Inference time: {legacy_results['performance']['inference_time']:.2f} seconds\n")
+        if legacy_results['velocity'] is not None:
+            f.write(f"  Velocity shape: {legacy_results['velocity'].shape}\n")
         else:
-            f.write("  Failed to train\n")
+            f.write("  Velocity: None\n")
         f.write("\n")
 
         # Modular model
         f.write("Modular Model:\n")
-        if modular_results is not None:
-            f.write(f"  Training time: {modular_results['performance']['training_time']:.2f} seconds\n")
-            f.write(f"  Inference time: {modular_results['performance']['inference_time']:.2f} seconds\n")
-            if modular_results['velocity'] is not None:
-                f.write(f"  Velocity shape: {modular_results['velocity'].shape}\n")
-            else:
-                f.write("  Velocity: None\n")
+        f.write(f"  Training time: {modular_results['performance']['training_time']:.2f} seconds\n")
+        f.write(f"  Inference time: {modular_results['performance']['inference_time']:.2f} seconds\n")
+        if modular_results['velocity'] is not None:
+            f.write(f"  Velocity shape: {modular_results['velocity'].shape}\n")
         else:
-            f.write("  Failed to train\n")
+            f.write("  Velocity: None\n")
         f.write("\n")
 
         # Write comparison summary
         f.write("Comparison Summary\n")
         f.write("-----------------\n")
 
-        # Check if comparison has error
-        if "error" in comparison:
-            f.write(f"Error: {comparison['error']}\n")
-            f.write("\nRecommendation: Fix the modular model implementation and run validation again.\n")
-        else:
-            # Parameter comparison summary
-            f.write("Parameter Comparison:\n")
-            for param, param_comp in comparison["parameter_comparison"].items():
-                f.write(f"  {param}:\n")
-                for comp_name, metrics in param_comp.items():
-                    f.write(f"    {comp_name}:\n")
-                    for metric_name, value in metrics.items():
-                        if isinstance(value, float):
-                            f.write(f"      {metric_name}: {value:.6f}\n")
-                        else:
-                            f.write(f"      {metric_name}: {value}\n")
-            f.write("\n")
-
-            # Velocity comparison summary
-            f.write("Velocity Comparison:\n")
-            for comp_name, metrics in comparison["velocity_comparison"].items():
-                f.write(f"  {comp_name}:\n")
+        # Parameter comparison summary
+        f.write("Parameter Comparison:\n")
+        for param, param_comp in comparison["parameter_comparison"].items():
+            f.write(f"  {param}:\n")
+            for comp_name, metrics in param_comp.items():
+                f.write(f"    {comp_name}:\n")
                 for metric_name, value in metrics.items():
                     if isinstance(value, float):
-                        f.write(f"    {metric_name}: {value:.6f}\n")
+                        f.write(f"      {metric_name}: {value:.6f}\n")
                     else:
-                        f.write(f"    {metric_name}: {value}\n")
-            f.write("\n")
+                        f.write(f"      {metric_name}: {value}\n")
+        f.write("\n")
 
-            # Uncertainty comparison summary
-            f.write("Uncertainty Comparison:\n")
-            for comp_name, metrics in comparison["uncertainty_comparison"].items():
-                f.write(f"  {comp_name}:\n")
-                for metric_name, value in metrics.items():
-                    if isinstance(value, float):
-                        f.write(f"    {metric_name}: {value:.6f}\n")
-                    else:
-                        f.write(f"    {metric_name}: {value}\n")
-            f.write("\n")
+        # Velocity comparison summary
+        f.write("Velocity Comparison:\n")
+        for comp_name, metrics in comparison["velocity_comparison"].items():
+            f.write(f"  {comp_name}:\n")
+            for metric_name, value in metrics.items():
+                if isinstance(value, float):
+                    f.write(f"    {metric_name}: {value:.6f}\n")
+                else:
+                    f.write(f"    {metric_name}: {value}\n")
+        f.write("\n")
 
-            # Performance comparison summary
-            f.write("Performance Comparison:\n")
-            for comp_name, metrics in comparison["performance_comparison"].items():
-                f.write(f"  {comp_name}:\n")
-                for metric_name, value in metrics.items():
-                    if isinstance(value, float):
-                        f.write(f"    {metric_name}: {value:.6f}\n")
-                    else:
-                        f.write(f"    {metric_name}: {value}\n")
-            f.write("\n")
+        # Uncertainty comparison summary
+        f.write("Uncertainty Comparison:\n")
+        for comp_name, metrics in comparison["uncertainty_comparison"].items():
+            f.write(f"  {comp_name}:\n")
+            for metric_name, value in metrics.items():
+                if isinstance(value, float):
+                    f.write(f"    {metric_name}: {value:.6f}\n")
+                else:
+                    f.write(f"    {metric_name}: {value}\n")
+        f.write("\n")
 
-            # Write comparison conclusion
-            f.write("Comparison Conclusion\n")
-            f.write("--------------------\n")
+        # Performance comparison summary
+        f.write("Performance Comparison:\n")
+        for comp_name, metrics in comparison["performance_comparison"].items():
+            f.write(f"  {comp_name}:\n")
+            for metric_name, value in metrics.items():
+                if isinstance(value, float):
+                    f.write(f"    {metric_name}: {value:.6f}\n")
+                else:
+                    f.write(f"    {metric_name}: {value}\n")
+        f.write("\n")
 
-            # Check if there are any significant differences in parameters
-            param_diff = False
-            for param, param_comp in comparison["parameter_comparison"].items():
-                for comp_name, metrics in param_comp.items():
-                    if "correlation" in metrics and metrics["correlation"] < 0.9:
-                        param_diff = True
-                        break
-                if param_diff:
-                    break
+        # Write comparison conclusion
+        f.write("Comparison Conclusion\n")
+        f.write("--------------------\n")
 
-            # Check if there are any significant differences in velocities
-            vel_diff = False
-            for comp_name, metrics in comparison["velocity_comparison"].items():
+        # Check if there are any significant differences in parameters
+        param_diff = False
+        for param, param_comp in comparison["parameter_comparison"].items():
+            for comp_name, metrics in param_comp.items():
                 if "correlation" in metrics and metrics["correlation"] < 0.9:
-                    vel_diff = True
+                    param_diff = True
                     break
+            if param_diff:
+                break
 
-            # Write conclusion
-            if param_diff or vel_diff:
-                f.write("There are significant differences between the legacy and modular implementations.\n")
-                if param_diff:
-                    f.write("- Parameter estimates show low correlation (< 0.9)\n")
-                if vel_diff:
-                    f.write("- Velocity estimates show low correlation (< 0.9)\n")
-                f.write("\nRecommendation: Further investigation is needed to understand these differences.\n")
-            else:
-                f.write("The legacy and modular implementations produce similar results.\n")
-                f.write("- Parameter estimates show high correlation (>= 0.9)\n")
-                f.write("- Velocity estimates show high correlation (>= 0.9)\n")
-                f.write("\nRecommendation: The modular implementation can be considered a valid replacement for the legacy implementation.\n")
+        # Check if there are any significant differences in velocities
+        vel_diff = False
+        for comp_name, metrics in comparison["velocity_comparison"].items():
+            if "correlation" in metrics and metrics["correlation"] < 0.9:
+                vel_diff = True
+                break
+
+        # Write conclusion
+        if param_diff or vel_diff:
+            f.write("There are significant differences between the legacy and modular implementations.\n")
+            if param_diff:
+                f.write("- Parameter estimates show low correlation (< 0.9)\n")
+            if vel_diff:
+                f.write("- Velocity estimates show low correlation (< 0.9)\n")
+            f.write("\nRecommendation: Further investigation is needed to understand these differences.\n")
+        else:
+            f.write("The legacy and modular implementations produce similar results.\n")
+            f.write("- Parameter estimates show high correlation (>= 0.9)\n")
+            f.write("- Velocity estimates show high correlation (>= 0.9)\n")
+            f.write("\nRecommendation: The modular implementation can be considered a valid replacement for the legacy implementation.\n")
 
     print(f"Summary report saved to {report_path}")
     return report_path
