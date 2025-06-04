@@ -25,9 +25,9 @@ from pyrovelocity.models.modular.components import (
     LegacyDynamicsModel,
     LegacyLikelihoodModel,
     LogNormalPriorModel,
-    PoissonLikelihoodModel,
-    StandardDynamicsModel,
-    StandardObservationModel,
+    PiecewiseActivationDynamicsModel,
+    PiecewiseActivationPoissonLikelihoodModel,
+    PiecewiseActivationPriorModel,
 )
 
 # Import data utilities
@@ -40,10 +40,7 @@ from pyrovelocity.models.modular.data.anndata import (
 
 # Import factory functions
 from pyrovelocity.models.modular.factory import (
-    create_model,
     create_model_from_config,
-    create_standard_model,
-    standard_model_config,
 )
 from pyrovelocity.models.modular.model import ModelState, PyroVelocityModel
 from pyrovelocity.models.modular.registry import (
@@ -91,19 +88,16 @@ __all__ = [
     "ObservationModelRegistry",
     "InferenceGuideRegistry",
     # Component implementations
-    "StandardDynamicsModel",
     "LegacyDynamicsModel",
     "LogNormalPriorModel",
-    "PoissonLikelihoodModel",
     "LegacyLikelihoodModel",
-    "StandardObservationModel",
+    "PiecewiseActivationDynamicsModel",
+    "PiecewiseActivationPoissonLikelihoodModel",
+    "PiecewiseActivationPriorModel",
     "AutoGuideFactory",
     "LegacyAutoGuideFactory",
     # Factory functions
-    "create_model",
     "create_model_from_config",
-    "create_standard_model",
-    "standard_model_config",
     # Comparison and selection
     "BayesianModelComparison",
     "compute_waic",

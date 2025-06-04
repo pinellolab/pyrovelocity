@@ -16,14 +16,14 @@ scenarios(str(files("pyrovelocity.tests.features") / "models" / "modular" / "dyn
 # Import the components
 from pyrovelocity.models.modular.components import (
     LegacyDynamicsModel,
-    StandardDynamicsModel,
+    PiecewiseActivationDynamicsModel,
 )
 
 
 @given("I have a dynamics model component")
 def dynamics_model_component():
     """Create a generic dynamics model component."""
-    return StandardDynamicsModel()
+    return PiecewiseActivationDynamicsModel()
 
 
 @given("I have input data with unspliced and spliced counts", target_fixture="input_data")
@@ -47,7 +47,13 @@ def legacy_dynamics_model_fixture(bdd_legacy_dynamics_model):
 @given("I have a StandardDynamicsModel with library size correction", target_fixture="standard_dynamics_model_with_library_size_correction")
 def standard_dynamics_model_with_library_size_correction_fixture():
     """Create a StandardDynamicsModel with library size correction."""
-    return StandardDynamicsModel(correct_library_size=True)
+    return PiecewiseActivationDynamicsModel()  # Use PiecewiseActivationDynamicsModel as the standard
+
+
+@given("I have a PiecewiseActivationDynamicsModel with library size correction", target_fixture="piecewise_dynamics_model_with_library_size_correction")
+def piecewise_dynamics_model_with_library_size_correction_fixture():
+    """Create a PiecewiseActivationDynamicsModel with library size correction."""
+    return PiecewiseActivationDynamicsModel()
 
 
 @when(parsers.parse("I run the forward method with alpha {alpha}, beta {beta}, and gamma {gamma}"), target_fixture="run_forward_method_with_parameters")
@@ -58,14 +64,29 @@ def run_forward_method_with_parameters_fixture(standard_dynamics_model, input_da
     beta_val = float(beta)
     gamma_val = float(gamma)
 
-    # Create context with input data and parameters
-    context = {
-        "u_obs": input_data["u_obs"],
-        "s_obs": input_data["s_obs"],
-        "alpha": torch.tensor([alpha_val] * input_data["n_genes"]),
-        "beta": torch.tensor([beta_val] * input_data["n_genes"]),
-        "gamma": torch.tensor([gamma_val] * input_data["n_genes"]),
-    }
+    # Check if this is a PiecewiseActivationDynamicsModel and create appropriate parameters
+    if hasattr(standard_dynamics_model, '_compute_piecewise_solution'):
+        # This is a PiecewiseActivationDynamicsModel - create piecewise parameters
+        # Note: t_star should have shape [cells], while other parameters have shape [genes]
+        context = {
+            "u_obs": input_data["u_obs"],
+            "s_obs": input_data["s_obs"],
+            "alpha_off": torch.tensor([alpha_val * 0.1] * input_data["n_genes"]),  # Basal transcription [genes]
+            "alpha_on": torch.tensor([alpha_val] * input_data["n_genes"]),         # Active transcription [genes]
+            "gamma_star": torch.tensor([gamma_val] * input_data["n_genes"]),       # Relative degradation [genes]
+            "t_on_star": torch.tensor([0.3] * input_data["n_genes"]),              # Activation onset [genes]
+            "delta_star": torch.tensor([0.4] * input_data["n_genes"]),             # Activation duration [genes]
+            "t_star": torch.tensor([0.5] * input_data["n_cells"]),                 # Cell time [cells] - FIXED!
+        }
+    else:
+        # This is a LegacyDynamicsModel - use legacy parameters
+        context = {
+            "u_obs": input_data["u_obs"],
+            "s_obs": input_data["s_obs"],
+            "alpha": torch.tensor([alpha_val] * input_data["n_genes"]),
+            "beta": torch.tensor([beta_val] * input_data["n_genes"]),
+            "gamma": torch.tensor([gamma_val] * input_data["n_genes"]),
+        }
 
     # Run the forward method
     result_context = standard_dynamics_model.forward(context)
@@ -84,15 +105,28 @@ def compute_steady_state_fixture(standard_dynamics_model, alpha, beta, gamma):
 
     # Create tensor parameters
     n_genes = 5  # Using a fixed value for simplicity
-    alpha = torch.tensor([alpha_val] * n_genes)
-    beta = torch.tensor([beta_val] * n_genes)
-    gamma = torch.tensor([gamma_val] * n_genes)
 
-    # Compute steady state
-    u_ss, s_ss = standard_dynamics_model.steady_state(alpha, beta, gamma)
+    # Check if this is a PiecewiseActivationDynamicsModel and use appropriate parameters
+    if hasattr(standard_dynamics_model, '_compute_piecewise_solution'):
+        # This is a PiecewiseActivationDynamicsModel - use piecewise parameters
+        alpha_off = torch.tensor([alpha_val * 0.1] * n_genes)  # Basal transcription
+        gamma_star = torch.tensor([gamma_val] * n_genes)       # Relative degradation
+
+        # Compute steady state using piecewise parameters
+        u_ss, s_ss = standard_dynamics_model.steady_state(alpha_off, gamma_star)
+
+        return {"u_ss": u_ss, "s_ss": s_ss, "alpha_off": alpha_off, "gamma_star": gamma_star}
+    else:
+        # This is a LegacyDynamicsModel - use legacy parameters
+        alpha = torch.tensor([alpha_val] * n_genes)
+        beta = torch.tensor([beta_val] * n_genes)
+        gamma = torch.tensor([gamma_val] * n_genes)
+
+        # Compute steady state using legacy parameters
+        u_ss, s_ss = standard_dynamics_model.steady_state(alpha, beta, gamma)
 
     # Store the result for later steps
-    return {"u_ss": u_ss, "s_ss": s_ss, "alpha": alpha, "beta": beta, "gamma": gamma}
+        return {"u_ss": u_ss, "s_ss": s_ss, "alpha": alpha, "beta": beta, "gamma": gamma}
 
 
 @when("I run the forward method with the same parameters as the legacy implementation", target_fixture="run_forward_method_legacy")
@@ -141,19 +175,22 @@ def run_forward_method_with_zero_rates_fixture(standard_dynamics_model, input_da
 
 
 @when("I run the forward method with library size factors", target_fixture="run_forward_method_with_library_size")
-def run_forward_method_with_library_size_fixture(standard_dynamics_model_with_library_size_correction, input_data, bdd_model_parameters):
+def run_forward_method_with_library_size_fixture(standard_dynamics_model_with_library_size_correction, input_data, bdd_piecewise_model_parameters):
     """Run the forward method with library size factors."""
     # Create library size factors
     n_cells = input_data["n_cells"]
     library_size = torch.ones(n_cells) * 2.0  # Scale by 2x
 
-    # Create context with input data, parameters, and library size
+    # Create context with input data, piecewise parameters, and library size
     context = {
         "u_obs": input_data["u_obs"],
         "s_obs": input_data["s_obs"],
-        "alpha": bdd_model_parameters["alpha"],
-        "beta": bdd_model_parameters["beta"],
-        "gamma": bdd_model_parameters["gamma"],
+        "alpha_off": bdd_piecewise_model_parameters["alpha_off"],
+        "alpha_on": bdd_piecewise_model_parameters["alpha_on"],
+        "gamma_star": bdd_piecewise_model_parameters["gamma_star"],
+        "t_on_star": bdd_piecewise_model_parameters["t_on_star"],
+        "delta_star": bdd_piecewise_model_parameters["delta_star"],
+        "t_star": bdd_piecewise_model_parameters["t_star"],
         "u_lib_size": library_size,
         "s_lib_size": library_size,
     }
@@ -197,11 +234,19 @@ def check_dynamics(run_forward_method_with_parameters):
 def check_steady_state_unspliced(compute_steady_state):
     """Check that the steady state unspliced counts equal alpha/beta."""
     u_ss = compute_steady_state["u_ss"]
-    alpha = compute_steady_state["alpha"]
-    beta = compute_steady_state["beta"]
 
-    # Check that u_ss = alpha/beta (with some tolerance for numerical precision)
-    expected_u_ss = alpha / beta
+    # Check if we have legacy parameters or piecewise parameters
+    if "alpha" in compute_steady_state:
+        # Legacy model: u_ss = alpha/beta
+        alpha = compute_steady_state["alpha"]
+        beta = compute_steady_state["beta"]
+        expected_u_ss = alpha / beta
+    else:
+        # Piecewise model: u_ss = alpha_off (basal transcription in steady state)
+        alpha_off = compute_steady_state["alpha_off"]
+        expected_u_ss = alpha_off  # For piecewise model, steady state is just alpha_off
+
+    # Check that u_ss matches expected (with some tolerance for numerical precision)
     assert torch.allclose(u_ss, expected_u_ss, rtol=1e-4)
 
 
@@ -209,11 +254,20 @@ def check_steady_state_unspliced(compute_steady_state):
 def check_steady_state_spliced(compute_steady_state):
     """Check that the steady state spliced counts equal alpha/gamma."""
     s_ss = compute_steady_state["s_ss"]
-    alpha = compute_steady_state["alpha"]
-    gamma = compute_steady_state["gamma"]
 
-    # Check that s_ss = alpha/gamma (with some tolerance for numerical precision)
-    expected_s_ss = alpha / gamma
+    # Check if we have legacy parameters or piecewise parameters
+    if "alpha" in compute_steady_state:
+        # Legacy model: s_ss = alpha/gamma
+        alpha = compute_steady_state["alpha"]
+        gamma = compute_steady_state["gamma"]
+        expected_s_ss = alpha / gamma
+    else:
+        # Piecewise model: s_ss = alpha_off/gamma_star (basal transcription / degradation)
+        alpha_off = compute_steady_state["alpha_off"]
+        gamma_star = compute_steady_state["gamma_star"]
+        expected_s_ss = alpha_off / gamma_star
+
+    # Check that s_ss matches expected (with some tolerance for numerical precision)
     assert torch.allclose(s_ss, expected_s_ss, rtol=1e-4)
 
 

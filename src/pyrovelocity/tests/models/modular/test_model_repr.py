@@ -8,25 +8,24 @@ import torch
 
 from pyrovelocity.models.modular.components import (
     AutoGuideFactory,
+    LegacyDynamicsModel,
+    LegacyLikelihoodModel,
     LogNormalPriorModel,
-    PoissonLikelihoodModel,
-    StandardDynamicsModel,
 )
 from pyrovelocity.models.modular.factory import (
     create_legacy_model1,
-    create_standard_model,
 )
 from pyrovelocity.models.modular.model import PyroVelocityModel
 
 
 def test_model_repr_untrained():
     """Test the string representation of an untrained PyroVelocityModel."""
-    # Create a model with standard components
-    model = create_standard_model()
-    
+    # Create a model with legacy components
+    model = create_legacy_model1()
+
     # Get the string representation
     repr_str = repr(model)
-    
+
     # Check that the representation contains expected elements
     assert "PyroVelocityModel (Untrained)" in repr_str
     assert "Components:" in repr_str
@@ -34,7 +33,7 @@ def test_model_repr_untrained():
     assert "Prior:" in repr_str
     assert "Likelihood:" in repr_str
     assert "Guide:" in repr_str
-    
+
     # Check that __str__ returns the same as __repr__
     assert str(model) == repr(model)
 
@@ -42,9 +41,9 @@ def test_model_repr_untrained():
 def test_model_repr_custom_components():
     """Test the string representation of a model with custom components."""
     # Create a model with custom components
-    dynamics_model = StandardDynamicsModel(shared_time=True, t_scale_on=False)
+    dynamics_model = LegacyDynamicsModel(shared_time=True, t_scale_on=False)
     prior_model = LogNormalPriorModel()
-    likelihood_model = PoissonLikelihoodModel()
+    likelihood_model = LegacyLikelihoodModel()
     guide_model = AutoGuideFactory()
 
     # Add names and descriptions to components
@@ -60,10 +59,10 @@ def test_model_repr_custom_components():
         likelihood_model=likelihood_model,
         guide_model=guide_model
     )
-    
+
     # Get the string representation
     repr_str = repr(model)
-    
+
     # Check that the representation contains custom names and descriptions
     assert "CustomDynamics" in repr_str
     assert "Custom dynamics model for testing" in repr_str
@@ -74,13 +73,13 @@ def test_model_repr_custom_components():
 def test_model_repr_with_config():
     """Test the string representation of a model with component configurations."""
     # Create a model with custom components that have config attributes
-    dynamics_model = StandardDynamicsModel(shared_time=True, t_scale_on=False)
+    dynamics_model = LegacyDynamicsModel(shared_time=True, t_scale_on=False)
     dynamics_model.config = {"shared_time": True, "t_scale_on": False}
 
     prior_model = LogNormalPriorModel()
     prior_model.config = {"alpha_prior": "LogNormal", "beta_prior": "LogNormal"}
 
-    likelihood_model = PoissonLikelihoodModel()
+    likelihood_model = LegacyLikelihoodModel()
     guide_model = AutoGuideFactory()
 
     # Create model
@@ -90,10 +89,10 @@ def test_model_repr_with_config():
         likelihood_model=likelihood_model,
         guide_model=guide_model
     )
-    
+
     # Get the string representation
     repr_str = repr(model)
-    
+
     # Check that the representation contains configuration information
     assert "shared_time=True" in repr_str
     assert "t_scale_on=False" in repr_str

@@ -40,7 +40,7 @@ from pyrovelocity.models.modular.comparison import (
 # Base classes have been removed in favor of Protocol interfaces
 from pyrovelocity.models.modular.components.dynamics import (
     LegacyDynamicsModel,
-    StandardDynamicsModel,
+    PiecewiseActivationDynamicsModel,
 )
 from pyrovelocity.models.modular.components.guides import (
     AutoGuideFactory,
@@ -48,10 +48,7 @@ from pyrovelocity.models.modular.components.guides import (
 )
 from pyrovelocity.models.modular.components.likelihoods import (
     LegacyLikelihoodModel,
-    PoissonLikelihoodModel,
-)
-from pyrovelocity.models.modular.components.observations import (
-    StandardObservationModel,
+    PiecewiseActivationPoissonLikelihoodModel,
 )
 from pyrovelocity.models.modular.components.priors import (
     LogNormalPriorModel,
@@ -59,20 +56,11 @@ from pyrovelocity.models.modular.components.priors import (
 
 # Import the factory module for model creation and configuration
 from pyrovelocity.models.modular.factory import (
-    DynamicsModelConfig,
-    InferenceGuideConfig,
-    LikelihoodModelConfig,
-    ObservationModelConfig,
-    PriorModelConfig,
-    PyroVelocityModelConfig,
-    create_dynamics_model,
-    create_inference_guide,
-    create_likelihood_model,
-    create_model,
-    create_observation_model,
-    create_prior_model,
-    create_standard_model,
-    standard_model_config,
+    ComponentFactory,
+    create_legacy_model1,
+    create_legacy_model2,
+    create_model_from_config,
+    create_piecewise_activation_model,
 )
 from pyrovelocity.models.modular.interfaces import (
     DynamicsModel,
@@ -115,15 +103,14 @@ __all__ = [
     "PriorModelRegistry",
     "InferenceGuideRegistry",
     # Dynamics models
-    "StandardDynamicsModel",
+    "PiecewiseActivationDynamicsModel",
     "LegacyDynamicsModel",
     # Prior models
     "LogNormalPriorModel",
     # Likelihood models
-    "PoissonLikelihoodModel",
+    "PiecewiseActivationPoissonLikelihoodModel",
     "LegacyLikelihoodModel",
-    # Observation models
-    "StandardObservationModel",
+
     # Inference guides
     "AutoGuideFactory",
     "LegacyAutoGuideFactory",
@@ -134,20 +121,11 @@ __all__ = [
     "PyroVelocityModel",
 
     # Factory module
-    "DynamicsModelConfig",
-    "PriorModelConfig",
-    "LikelihoodModelConfig",
-    "ObservationModelConfig",
-    "InferenceGuideConfig",
-    "PyroVelocityModelConfig",
-    "create_dynamics_model",
-    "create_prior_model",
-    "create_likelihood_model",
-    "create_observation_model",
-    "create_inference_guide",
-    "create_model",
-    "standard_model_config",
-    "create_standard_model",
+    "ComponentFactory",
+    "create_legacy_model1",
+    "create_legacy_model2",
+    "create_model_from_config",
+    "create_piecewise_activation_model",
     # Model comparison
     "BayesianModelComparison",
     "ComparisonResult",

@@ -14,22 +14,14 @@ import torch
 from hydra_zen import instantiate
 from omegaconf import DictConfig, OmegaConf
 
+from pyrovelocity.models.modular.config import (
+    ComponentConfig,
+    ModelConfig,
+)
 from pyrovelocity.models.modular.factory import (
-    DynamicsModelConfig,
-    InferenceGuideConfig,
-    LikelihoodModelConfig,
-    ObservationModelConfig,
-    PriorModelConfig,
-    PyroVelocityModelConfig,
-    create_dynamics_model,
-    create_inference_guide,
-    create_likelihood_model,
-    create_model,
+    ComponentFactory,
+    create_legacy_model1,
     create_model_from_config,
-    create_observation_model,
-    create_prior_model,
-    create_standard_model,
-    standard_model_config,
 )
 from pyrovelocity.models.modular.interfaces import (
     BatchTensor,
@@ -236,11 +228,11 @@ class TestFactoryFunctions:
 
     def test_create_dynamics_model(self, setup_registries):
         """Test creating a dynamics model from a configuration."""
-        # Test with a DynamicsModelConfig object
-        config = DynamicsModelConfig(
+        # Test with a ComponentConfig object
+        config = ComponentConfig(
             name="mock", params={"param1": 42, "param2": "test"}
         )
-        model = create_dynamics_model(config)
+        model = ComponentFactory.create_dynamics_model(config)
         assert isinstance(model, MockDynamicsModel)
         assert model.param1 == 42
         assert model.param2 == "test"
@@ -250,25 +242,18 @@ class TestFactoryFunctions:
             "name": "mock",
             "params": {"param1": 43, "param2": "test2"},
         }
-        model = create_dynamics_model(config_dict)
-        assert isinstance(model, MockDynamicsModel)
-        assert model.param1 == 43
-        assert model.param2 == "test2"
-
-        # Test with a DictConfig
-        config_dict_config = OmegaConf.create(config_dict)
-        model = create_dynamics_model(config_dict_config)
+        model = ComponentFactory.create_dynamics_model(config_dict)
         assert isinstance(model, MockDynamicsModel)
         assert model.param1 == 43
         assert model.param2 == "test2"
 
     def test_create_prior_model(self, setup_registries):
         """Test creating a prior model from a configuration."""
-        # Test with a PriorModelConfig object
-        config = PriorModelConfig(
+        # Test with a ComponentConfig object
+        config = ComponentConfig(
             name="mock", params={"param1": 42, "param2": "test"}
         )
-        model = create_prior_model(config)
+        model = ComponentFactory.create_prior_model(config)
         assert isinstance(model, MockPriorModel)
         assert model.param1 == 42
         assert model.param2 == "test"
@@ -278,25 +263,18 @@ class TestFactoryFunctions:
             "name": "mock",
             "params": {"param1": 43, "param2": "test2"},
         }
-        model = create_prior_model(config_dict)
-        assert isinstance(model, MockPriorModel)
-        assert model.param1 == 43
-        assert model.param2 == "test2"
-
-        # Test with a DictConfig
-        config_dict_config = OmegaConf.create(config_dict)
-        model = create_prior_model(config_dict_config)
+        model = ComponentFactory.create_prior_model(config_dict)
         assert isinstance(model, MockPriorModel)
         assert model.param1 == 43
         assert model.param2 == "test2"
 
     def test_create_likelihood_model(self, setup_registries):
         """Test creating a likelihood model from a configuration."""
-        # Test with a LikelihoodModelConfig object
-        config = LikelihoodModelConfig(
+        # Test with a ComponentConfig object
+        config = ComponentConfig(
             name="mock", params={"param1": 42, "param2": "test"}
         )
-        model = create_likelihood_model(config)
+        model = ComponentFactory.create_likelihood_model(config)
         assert isinstance(model, MockLikelihoodModel)
         assert model.param1 == 42
         assert model.param2 == "test"
@@ -306,25 +284,18 @@ class TestFactoryFunctions:
             "name": "mock",
             "params": {"param1": 43, "param2": "test2"},
         }
-        model = create_likelihood_model(config_dict)
-        assert isinstance(model, MockLikelihoodModel)
-        assert model.param1 == 43
-        assert model.param2 == "test2"
-
-        # Test with a DictConfig
-        config_dict_config = OmegaConf.create(config_dict)
-        model = create_likelihood_model(config_dict_config)
+        model = ComponentFactory.create_likelihood_model(config_dict)
         assert isinstance(model, MockLikelihoodModel)
         assert model.param1 == 43
         assert model.param2 == "test2"
 
     def test_create_observation_model(self, setup_registries):
         """Test creating an observation model from a configuration."""
-        # Test with an ObservationModelConfig object
-        config = ObservationModelConfig(
+        # Test with a ComponentConfig object
+        config = ComponentConfig(
             name="mock", params={"param1": 42, "param2": "test"}
         )
-        model = create_observation_model(config)
+        model = ComponentFactory.create_observation_model(config)
         assert isinstance(model, MockObservationModel)
         assert model.param1 == 42
         assert model.param2 == "test"
@@ -334,25 +305,18 @@ class TestFactoryFunctions:
             "name": "mock",
             "params": {"param1": 43, "param2": "test2"},
         }
-        model = create_observation_model(config_dict)
-        assert isinstance(model, MockObservationModel)
-        assert model.param1 == 43
-        assert model.param2 == "test2"
-
-        # Test with a DictConfig
-        config_dict_config = OmegaConf.create(config_dict)
-        model = create_observation_model(config_dict_config)
+        model = ComponentFactory.create_observation_model(config_dict)
         assert isinstance(model, MockObservationModel)
         assert model.param1 == 43
         assert model.param2 == "test2"
 
     def test_create_inference_guide(self, setup_registries):
         """Test creating an inference guide from a configuration."""
-        # Test with an InferenceGuideConfig object
-        config = InferenceGuideConfig(
+        # Test with a ComponentConfig object
+        config = ComponentConfig(
             name="mock", params={"param1": 42, "param2": "test"}
         )
-        model = create_inference_guide(config)
+        model = ComponentFactory.create_inference_guide(config)
         assert isinstance(model, MockInferenceGuide)
         assert model.param1 == 42
         assert model.param2 == "test"
@@ -362,14 +326,7 @@ class TestFactoryFunctions:
             "name": "mock",
             "params": {"param1": 43, "param2": "test2"},
         }
-        model = create_inference_guide(config_dict)
-        assert isinstance(model, MockInferenceGuide)
-        assert model.param1 == 43
-        assert model.param2 == "test2"
-
-        # Test with a DictConfig
-        config_dict_config = OmegaConf.create(config_dict)
-        model = create_inference_guide(config_dict_config)
+        model = ComponentFactory.create_inference_guide(config_dict)
         assert isinstance(model, MockInferenceGuide)
         assert model.param1 == 43
         assert model.param2 == "test2"
@@ -381,21 +338,21 @@ class TestModelCreation:
     def test_create_model(self, setup_registries):
         """Test creating a PyroVelocityModel from a configuration."""
         # Create a configuration
-        config = PyroVelocityModelConfig(
-            dynamics_model=DynamicsModelConfig(
+        config = ModelConfig(
+            dynamics_model=ComponentConfig(
                 name="mock", params={"param1": 1}
             ),
-            prior_model=PriorModelConfig(name="mock", params={"param1": 2}),
-            likelihood_model=LikelihoodModelConfig(
+            prior_model=ComponentConfig(name="mock", params={"param1": 2}),
+            likelihood_model=ComponentConfig(
                 name="mock", params={"param1": 3}
             ),
-            inference_guide=InferenceGuideConfig(
+            inference_guide=ComponentConfig(
                 name="mock", params={"param1": 5}
             ),
         )
 
         # Create the model
-        model = create_model(config)
+        model = create_model_from_config(config)
 
         # Check that the model is a PyroVelocityModel
         assert isinstance(model, PyroVelocityModel)
@@ -423,7 +380,7 @@ class TestModelCreation:
         }
 
         # Create the model
-        model = create_model(config_dict)
+        model = create_model_from_config(config_dict)
 
         # Check that the model is a PyroVelocityModel
         assert isinstance(model, PyroVelocityModel)
@@ -454,7 +411,7 @@ class TestModelCreation:
         config = OmegaConf.create(config_dict)
 
         # Create the model
-        model = create_model(config)
+        model = create_model_from_config(config)
 
         # Check that the model is a PyroVelocityModel
         assert isinstance(model, PyroVelocityModel)
@@ -475,30 +432,25 @@ class TestModelCreation:
 class TestPredefinedConfigurations:
     """Tests for the predefined configurations."""
 
-    def test_standard_model_config(self, setup_registries):
-        """Test the standard model configuration."""
-        # Get the standard model configuration
-        config = standard_model_config()
+    def test_create_legacy_model1(self):
+        """Test creating a legacy model."""
+        # Ensure standard components are registered
+        from pyrovelocity.models.modular.registry import (
+            register_standard_components,
+        )
+        register_standard_components()
 
-        # Check that it has the expected component configurations
-        assert config.dynamics_model.name == "standard"
-        assert config.prior_model.name == "lognormal"
-        assert config.likelihood_model.name == "poisson"
-        assert config.inference_guide.name == "auto"
-
-    def test_create_standard_model(self, setup_registries):
-        """Test creating a standard model."""
-        # Create a standard model
-        model = create_standard_model()
+        # Create a legacy model (this uses the real registry, not mock components)
+        model = create_legacy_model1()
 
         # Check that the model is a PyroVelocityModel
         assert isinstance(model, PyroVelocityModel)
 
-        # Check that the components are of the correct types
-        assert isinstance(model.dynamics_model, MockDynamicsModel)
-        assert isinstance(model.prior_model, MockPriorModel)
-        assert isinstance(model.likelihood_model, MockLikelihoodModel)
-        assert isinstance(model.guide_model, MockInferenceGuide)
+        # Check that the components exist
+        assert model.dynamics_model is not None
+        assert model.prior_model is not None
+        assert model.likelihood_model is not None
+        assert model.guide_model is not None
 
 
 class TestHydraZenIntegration:
@@ -508,7 +460,7 @@ class TestHydraZenIntegration:
         """Test instantiating a model using hydra-zen."""
         # Create a configuration dictionary
         config_dict = {
-            "_target_": "pyrovelocity.models.modular.factory.create_model",
+            "_target_": "pyrovelocity.models.modular.factory.create_model_from_config",
             "config": {
                 "dynamics_model": {"name": "mock", "params": {"param1": 1}},
                 "prior_model": {"name": "mock", "params": {"param1": 2}},

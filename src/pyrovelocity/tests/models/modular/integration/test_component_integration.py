@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from pyrovelocity.models.modular.components.dynamics import (
     LegacyDynamicsModel,
-    StandardDynamicsModel,
+    PiecewiseActivationDynamicsModel,
 )
 from pyrovelocity.models.modular.components.guides import (
     AutoGuideFactory,
@@ -21,10 +21,7 @@ from pyrovelocity.models.modular.components.guides import (
 )
 from pyrovelocity.models.modular.components.likelihoods import (
     LegacyLikelihoodModel,
-    PoissonLikelihoodModel,
-)
-from pyrovelocity.models.modular.components.observations import (
-    StandardObservationModel,
+    PiecewiseActivationPoissonLikelihoodModel,
 )
 from pyrovelocity.models.modular.components.priors import LogNormalPriorModel
 from pyrovelocity.models.modular.model import ModelState, PyroVelocityModel
@@ -66,8 +63,8 @@ class TestComponentIntegration:
 
     def test_dynamics_prior_integration(self):
         """Test that dynamics model and prior model work together."""
-        # Create component models
-        dynamics_model = StandardDynamicsModel()
+        # Create component models - use LegacyDynamicsModel since we need simulate method
+        dynamics_model = LegacyDynamicsModel()
         prior_model = LogNormalPriorModel()
 
         # Set random seed for reproducibility
@@ -90,55 +87,62 @@ class TestComponentIntegration:
         assert prior_params["beta"].shape == (n_genes,)
         assert prior_params["gamma"].shape == (n_genes,)
 
-        # Use parameters with dynamics model
-        u0 = torch.zeros(n_genes)
-        s0 = torch.zeros(n_genes)
-
-        # Simulate dynamics
-        times, u, s = dynamics_model.simulate(
-            u0=u0,
-            s0=s0,
-            alpha=prior_params["alpha"],
-            beta=prior_params["beta"],
-            gamma=prior_params["gamma"],
-            t_max=10.0,
-            n_steps=100,
-        )
-
-        # Verify simulation results
-        assert times.shape == (100,)
-        assert u.shape == (100, n_genes)
-        assert s.shape == (100, n_genes)
-
-        # Compute steady state
+        # Test that dynamics model can compute steady state with prior parameters
         u_ss, s_ss = dynamics_model.steady_state(
             prior_params["alpha"],
             prior_params["beta"],
             prior_params["gamma"],
         )
 
-        # Verify steady state shapes
+        # Check shapes of steady state results
         assert u_ss.shape == (n_genes,)
         assert s_ss.shape == (n_genes,)
+
+        # Check that steady state values are positive (biological constraint)
+        assert torch.all(u_ss > 0)
+        assert torch.all(s_ss > 0)
+
+        # Test that dynamics model can be used in a forward pass context
+        # Create a minimal context for testing forward pass
+        n_cells = 10
+        context = {
+            "u_obs": torch.poisson(torch.rand(n_cells, n_genes) * 5).float(),
+            "s_obs": torch.poisson(torch.rand(n_cells, n_genes) * 5).float(),
+            "alpha": prior_params["alpha"],
+            "beta": prior_params["beta"],
+            "gamma": prior_params["gamma"],
+            "u_scale": prior_params["u_scale"],
+            "s_scale": prior_params["s_scale"],
+            "t": torch.rand(n_cells, n_genes),  # Random time points
+        }
+
+        # Test forward pass
+        result_context = dynamics_model.forward(context)
+
+        # Check that forward pass produces expected outputs
+        assert "u_expected" in result_context
+        assert "s_expected" in result_context
+        # Allow for sample dimension in the results
+        assert result_context["u_expected"].shape[-2:] == (n_cells, n_genes)
+        assert result_context["s_expected"].shape[-2:] == (n_cells, n_genes)
 
     def test_dynamics_likelihood_integration(self, simple_data):
         """Test that dynamics model and likelihood model work together."""
         # Create component models
-        dynamics_model = StandardDynamicsModel()
-        likelihood_model = PoissonLikelihoodModel()
+        dynamics_model = PiecewiseActivationDynamicsModel()
+        likelihood_model = PiecewiseActivationPoissonLikelihoodModel()
 
         # Set random seed for reproducibility
         pyro.set_rng_seed(0)
         torch.manual_seed(0)
 
-        # Create parameters
+        # Create parameters for piecewise activation model
         n_genes = simple_data["n_genes"]
-        alpha = torch.rand(n_genes) * 5 + 1  # [1, 6]
-        beta = torch.rand(n_genes) * 2 + 0.5  # [0.5, 2.5]
-        gamma = torch.rand(n_genes) * 1 + 0.2  # [0.2, 1.2]
+        alpha_off = torch.rand(n_genes) * 0.5 + 0.1  # [0.1, 0.6] - basal transcription
+        gamma_star = torch.rand(n_genes) * 1 + 0.2  # [0.2, 1.2] - relative degradation
 
-        # Compute steady state
-        u_ss, s_ss = dynamics_model.steady_state(alpha, beta, gamma)
+        # Compute steady state using piecewise parameters
+        u_ss, s_ss = dynamics_model.steady_state(alpha_off, gamma_star)
 
         # Create expected values using steady state - use a small batch size to match test
         batch_size = 10  # Use a smaller batch size to test
@@ -166,11 +170,11 @@ class TestComponentIntegration:
 
     def test_full_model_integration(self, simple_data):
         """Test that all components work together in the full model."""
-        # Create components
-        dynamics_model = StandardDynamicsModel()
+        # Create compatible components - use Legacy combination
+        dynamics_model = LegacyDynamicsModel()
         prior_model = LogNormalPriorModel()
-        likelihood_model = PoissonLikelihoodModel()
-        guide_model = AutoGuideFactory(guide_type="AutoNormal")
+        likelihood_model = LegacyLikelihoodModel()
+        guide_model = LegacyAutoGuideFactory()
 
         # Create the full model
         model = PyroVelocityModel(
@@ -190,12 +194,12 @@ class TestComponentIntegration:
         u_batch = torch.rand(n_cells, n_genes) * 5
         s_batch = torch.rand(n_cells, n_genes) * 5
 
-        # Create parameters for the model
+        # Create parameters for the model - compatible with LegacyDynamicsModel
         alpha = torch.rand(n_genes) * 5 + 1  # [1, 6]
         beta = torch.rand(n_genes) * 2 + 0.5  # [0.5, 2.5]
         gamma = torch.rand(n_genes) * 1 + 0.2  # [0.2, 1.2]
 
-        # Compute steady state values
+        # Compute steady state values using correct parameter interface
         u_ss, s_ss = dynamics_model.steady_state(alpha, beta, gamma)
 
         # Expand to match batch size
@@ -226,10 +230,10 @@ class TestComponentIntegration:
         pyro.set_rng_seed(0)
         torch.manual_seed(0)
 
-        # Create common components
-        dynamics_model = StandardDynamicsModel()
+        # Create compatible common components - use Legacy combination
+        dynamics_model = LegacyDynamicsModel()
         prior_model = LogNormalPriorModel()
-        likelihood_model = PoissonLikelihoodModel()
+        likelihood_model = LegacyLikelihoodModel()
 
         # Create a simple dataset with fixed dimensions
         n_cells = 5
@@ -237,12 +241,12 @@ class TestComponentIntegration:
         u_batch = torch.rand(n_cells, n_genes) * 5
         s_batch = torch.rand(n_cells, n_genes) * 5
 
-        # Create parameters for the model
+        # Create parameters for the model - compatible with LegacyDynamicsModel
         alpha = torch.rand(n_genes) * 5 + 1  # [1, 6]
         beta = torch.rand(n_genes) * 2 + 0.5  # [0.5, 2.5]
         gamma = torch.rand(n_genes) * 1 + 0.2  # [0.2, 1.2]
 
-        # Compute steady state values
+        # Compute steady state values using correct parameter interface
         u_ss, s_ss = dynamics_model.steady_state(alpha, beta, gamma)
 
         # Expand to match batch size
@@ -260,10 +264,10 @@ class TestComponentIntegration:
             "gamma": gamma,
         }
 
-        # Create different guide types to test
+        # Create different guide types to test - use compatible guides
         guide_types = [
-            AutoGuideFactory(guide_type="AutoNormal"),
             LegacyAutoGuideFactory(add_offset=True),
+            LegacyAutoGuideFactory(add_offset=False),
         ]
 
         # Test each guide

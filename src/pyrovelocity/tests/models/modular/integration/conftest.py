@@ -17,9 +17,9 @@ from pyrovelocity.models.modular.components import (
     LegacyDynamicsModel,
     LegacyLikelihoodModel,
     LogNormalPriorModel,
-    PoissonLikelihoodModel,
-    StandardDynamicsModel,
-    StandardObservationModel,
+    PiecewiseActivationDynamicsModel,
+    PiecewiseActivationPoissonLikelihoodModel,
+    PiecewiseActivationPriorModel,
 )
 from pyrovelocity.models.modular.model import PyroVelocityModel
 
@@ -46,11 +46,11 @@ def bdd_simple_data():
 
 @pytest.fixture
 def bdd_model_parameters():
-    """Create model parameters for BDD testing."""
+    """Create legacy model parameters for BDD testing."""
     torch.manual_seed(42)
     n_genes = 5
 
-    # Generate random parameters
+    # Generate random parameters for legacy models
     alpha = torch.abs(torch.randn(n_genes))
     beta = torch.abs(torch.randn(n_genes))
     gamma = torch.abs(torch.randn(n_genes))
@@ -63,9 +63,33 @@ def bdd_model_parameters():
 
 
 @pytest.fixture
+def bdd_piecewise_model_parameters():
+    """Create piecewise activation model parameters for BDD testing."""
+    torch.manual_seed(42)
+    n_genes = 5
+
+    # Generate random parameters for piecewise activation models
+    alpha_off = torch.abs(torch.randn(n_genes)) * 0.5 + 0.1  # [0.1, 0.6]
+    alpha_on = torch.abs(torch.randn(n_genes)) * 2.0 + 1.0   # [1.0, 3.0]
+    gamma_star = torch.abs(torch.randn(n_genes)) * 1.0 + 0.5 # [0.5, 1.5]
+    t_on_star = torch.abs(torch.randn(n_genes)) * 0.3 + 0.2  # [0.2, 0.5]
+    delta_star = torch.abs(torch.randn(n_genes)) * 0.4 + 0.3 # [0.3, 0.7]
+    t_star = torch.abs(torch.randn(n_genes)) * 0.5 + 0.1     # [0.1, 0.6]
+
+    return {
+        "alpha_off": alpha_off,
+        "alpha_on": alpha_on,
+        "gamma_star": gamma_star,
+        "t_on_star": t_on_star,
+        "delta_star": delta_star,
+        "t_star": t_star,
+    }
+
+
+@pytest.fixture
 def bdd_standard_dynamics_model():
-    """Create a StandardDynamicsModel for BDD testing."""
-    return StandardDynamicsModel()
+    """Create a PiecewiseActivationDynamicsModel for BDD testing."""
+    return PiecewiseActivationDynamicsModel()
 
 
 @pytest.fixture
@@ -82,8 +106,8 @@ def bdd_lognormal_prior_model():
 
 @pytest.fixture
 def bdd_poisson_likelihood_model():
-    """Create a PoissonLikelihoodModel for BDD testing."""
-    return PoissonLikelihoodModel()
+    """Create a PiecewiseActivationPoissonLikelihoodModel for BDD testing."""
+    return PiecewiseActivationPoissonLikelihoodModel()
 
 
 @pytest.fixture
@@ -94,8 +118,8 @@ def bdd_legacy_likelihood_model():
 
 @pytest.fixture
 def bdd_standard_observation_model():
-    """Create a StandardObservationModel for BDD testing."""
-    return StandardObservationModel()
+    """Create a LegacyLikelihoodModel for BDD testing (observation functionality moved to likelihood)."""
+    return LegacyLikelihoodModel()
 
 
 @pytest.fixture
@@ -111,18 +135,40 @@ def bdd_legacy_auto_guide_factory():
 
 
 @pytest.fixture
-def bdd_pyro_velocity_model(
+def bdd_piecewise_activation_prior_model():
+    """Create a PiecewiseActivationPriorModel for BDD testing."""
+    return PiecewiseActivationPriorModel()
+
+
+@pytest.fixture
+def bdd_piecewise_pyro_velocity_model(
     bdd_standard_dynamics_model,
-    bdd_lognormal_prior_model,
+    bdd_piecewise_activation_prior_model,
     bdd_poisson_likelihood_model,
     bdd_auto_guide_factory,
 ):
-    """Create a PyroVelocityModel for BDD testing."""
+    """Create a PyroVelocityModel for BDD testing using piecewise activation components."""
     return PyroVelocityModel(
         dynamics_model=bdd_standard_dynamics_model,
-        prior_model=bdd_lognormal_prior_model,
+        prior_model=bdd_piecewise_activation_prior_model,
         likelihood_model=bdd_poisson_likelihood_model,
         guide_model=bdd_auto_guide_factory,
+    )
+
+
+@pytest.fixture
+def bdd_pyro_velocity_model(
+    bdd_legacy_dynamics_model,
+    bdd_lognormal_prior_model,
+    bdd_legacy_likelihood_model,
+    bdd_legacy_auto_guide_factory,
+):
+    """Create a PyroVelocityModel for BDD testing using compatible components."""
+    return PyroVelocityModel(
+        dynamics_model=bdd_legacy_dynamics_model,
+        prior_model=bdd_lognormal_prior_model,
+        likelihood_model=bdd_legacy_likelihood_model,
+        guide_model=bdd_legacy_auto_guide_factory,
     )
 
 

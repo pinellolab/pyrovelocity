@@ -17,14 +17,14 @@ scenarios(str(files("pyrovelocity.tests.features") / "models" / "modular" / "lik
 # Import the components
 from pyrovelocity.models.modular.components import (
     LegacyLikelihoodModel,
-    PoissonLikelihoodModel,
+    PiecewiseActivationPoissonLikelihoodModel,
 )
 
 
 @given("I have a likelihood model component", target_fixture="likelihood_model_component")
 def likelihood_model_component():
     """Create a generic likelihood model component."""
-    return PoissonLikelihoodModel()
+    return PiecewiseActivationPoissonLikelihoodModel()
 
 
 @given("I have input data with unspliced and spliced counts", target_fixture="input_data")
@@ -52,9 +52,9 @@ def expected_counts_fixture():
 
 
 @given("I have a PoissonLikelihoodModel", target_fixture="poisson_likelihood_model")
-def poisson_likelihood_model_fixture(bdd_poisson_likelihood_model):
-    """Get a PoissonLikelihoodModel from the fixture."""
-    return bdd_poisson_likelihood_model
+def poisson_likelihood_model_fixture(bdd_legacy_likelihood_model):
+    """Get a PoissonLikelihoodModel from the fixture - using LegacyLikelihoodModel for generic tests."""
+    return bdd_legacy_likelihood_model
 
 
 @given("I have a LegacyLikelihoodModel", target_fixture="legacy_likelihood_model")

@@ -7,7 +7,7 @@ from jaxtyping import Array
 
 from pyrovelocity.models.modular.components.dynamics import (
     LegacyDynamicsModel,
-    StandardDynamicsModel,
+    PiecewiseActivationDynamicsModel,
 )
 from pyrovelocity.models.modular.registry import DynamicsModelRegistry
 
@@ -20,7 +20,7 @@ def register_dynamics_models():
 
     # Clear registry and register test components
     DynamicsModelRegistry.clear()
-    DynamicsModelRegistry._registry["standard"] = StandardDynamicsModel
+    DynamicsModelRegistry._registry["piecewise_activation"] = PiecewiseActivationDynamicsModel
     DynamicsModelRegistry._registry["legacy"] = LegacyDynamicsModel
 
     yield
@@ -29,12 +29,12 @@ def register_dynamics_models():
     DynamicsModelRegistry._registry = original_registry
 
 
-def test_standard_dynamics_model_registration():
-    """Test that StandardDynamicsModel is properly registered."""
-    model_class = DynamicsModelRegistry.get("standard")
-    assert model_class == StandardDynamicsModel
-    assert model_class.name == "standard"
-    assert "standard" in DynamicsModelRegistry.list_available()
+def test_piecewise_activation_dynamics_model_registration():
+    """Test that PiecewiseActivationDynamicsModel is properly registered."""
+    model_class = DynamicsModelRegistry.get("piecewise_activation")
+    assert model_class == PiecewiseActivationDynamicsModel
+    assert model_class.name == "piecewise_activation"
+    assert "piecewise_activation" in DynamicsModelRegistry.list_available()
 
 
 def test_legacy_dynamics_model_registration():
@@ -45,13 +45,13 @@ def test_legacy_dynamics_model_registration():
     assert "legacy" in DynamicsModelRegistry.list_available()
 
 
-class TestStandardDynamicsModel:
-    """Tests for StandardDynamicsModel."""
+class TestPiecewiseActivationDynamicsModel:
+    """Tests for PiecewiseActivationDynamicsModel."""
 
     @pytest.fixture
     def model(self):
-        """Create a StandardDynamicsModel instance."""
-        return StandardDynamicsModel()
+        """Create a PiecewiseActivationDynamicsModel instance."""
+        return PiecewiseActivationDynamicsModel()
 
     @pytest.fixture
     def simple_params(self):
@@ -65,46 +65,35 @@ class TestStandardDynamicsModel:
             "scaling": torch.tensor([1.0, 1.0]),
             "t_max": 10.0,
             "n_steps": 100,
+            # Piecewise-specific parameters
+            "alpha_off": torch.tensor([1.0, 1.5]),  # Basal transcription rate
+            "gamma_star": torch.tensor([0.5, 0.8]),  # Relative degradation rate
         }
 
     def test_steady_state(self, model, simple_params):
-        """Test steady state calculation."""
+        """Test steady state calculation for piecewise activation model."""
+        # For piecewise model, steady state uses alpha_off and gamma_star
         u_ss, s_ss = model.steady_state(
-            simple_params["alpha"],
-            simple_params["beta"],
-            simple_params["gamma"],
+            simple_params["alpha_off"],
+            simple_params["gamma_star"],
         )
 
-        # Expected steady states based on analytical solution
-        expected_u_ss = simple_params["alpha"] / simple_params["beta"]
-        expected_s_ss = simple_params["alpha"] / simple_params["gamma"]
+        # Expected steady states for OFF phase: u* = α*_off, s* = α*_off/γ*
+        expected_u_ss = simple_params["alpha_off"]
+        expected_s_ss = simple_params["alpha_off"] / simple_params["gamma_star"]
 
         assert torch.allclose(u_ss, expected_u_ss)
         assert torch.allclose(s_ss, expected_s_ss)
 
     def test_simulate(self, model, simple_params):
-        """Test simulation results."""
-        times, u_t, s_t = model.simulate(**simple_params)
+        """Test that PiecewiseActivationDynamicsModel doesn't have simulate method."""
+        # PiecewiseActivationDynamicsModel uses analytical solutions in forward()
+        # and doesn't provide a simulate() method like the legacy model
+        assert not hasattr(model, 'simulate'), "PiecewiseActivationDynamicsModel should not have simulate method"
 
-        # Check shapes
-        assert times.shape == (simple_params["n_steps"],)
-        assert u_t.shape == (simple_params["n_steps"], len(simple_params["u0"]))
-        assert s_t.shape == (simple_params["n_steps"], len(simple_params["s0"]))
-
-        # Check initial conditions
-        assert torch.allclose(u_t[0], simple_params["u0"])
-        assert torch.allclose(s_t[0], simple_params["s0"])
-
-        # Check that simulation approaches steady state
-        u_ss, s_ss = model.steady_state(
-            simple_params["alpha"],
-            simple_params["beta"],
-            simple_params["gamma"],
-        )
-
-        # Final values should be close to steady state
-        assert torch.allclose(u_t[-1], u_ss, rtol=1e-2)
-        assert torch.allclose(s_t[-1], s_ss, rtol=1e-2)
+        # Instead, test that the model has the expected analytical solution methods
+        assert hasattr(model, '_compute_piecewise_solution'), "Should have _compute_piecewise_solution method"
+        assert hasattr(model, 'forward'), "Should have forward method"
 
     def test_conservation_laws(self, model, simple_params):
         """Test that the model obeys conservation laws."""
@@ -144,16 +133,22 @@ class TestStandardDynamicsModel:
         # Verify that du/dt = alpha - beta * u
         assert torch.allclose(du_dt, alpha - beta * u_t, rtol=1e-5)
 
-        # Verify that ds/dt = beta * u - gamma * s
-        # This is more complex to derive analytically, so we'll just check
-        # that the steady state values are correct
-        u_ss, s_ss = model.steady_state(alpha, beta, gamma)
-        assert torch.allclose(
-            alpha - beta * u_ss, torch.zeros_like(u_ss), rtol=1e-5
-        )
-        assert torch.allclose(
-            beta * u_ss - gamma * s_ss, torch.zeros_like(s_ss), rtol=1e-5
-        )
+        # For the piecewise model, test the dimensionless conservation laws
+        # using the correct parameters
+        alpha_off = simple_params["alpha_off"]
+        gamma_star = simple_params["gamma_star"]
+
+        # At steady state (OFF phase), derivatives should be zero
+        u_ss, s_ss = model.steady_state(alpha_off, gamma_star)
+
+        # For OFF phase: du*/dt* = α*_off - u* = 0 at steady state
+        dudt_ss = alpha_off - u_ss
+
+        # ds*/dt* = u* - γ*s* = 0 at steady state
+        dsdt_ss = u_ss - gamma_star * s_ss
+
+        assert torch.allclose(dudt_ss, torch.zeros_like(dudt_ss), atol=1e-6)
+        assert torch.allclose(dsdt_ss, torch.zeros_like(dsdt_ss), atol=1e-6)
 
 
 class TestLegacyDynamicsModel:
@@ -228,24 +223,42 @@ class TestLegacyDynamicsModel:
 
 
 def test_model_comparison():
-    """Compare standard and legacy models steady states."""
-    # Parameters
+    """Compare piecewise activation and legacy models steady states."""
+    # Legacy model parameters
     alpha = torch.tensor([2.0])
     beta = torch.tensor([1.0])
     gamma = torch.tensor([0.5])
 
+    # Piecewise model parameters (for OFF phase comparison)
+    alpha_off = alpha  # Use same transcription rate for comparison
+    gamma_star = gamma  # Use same degradation rate for comparison
+
     # Create models
-    standard_model = StandardDynamicsModel()
+    piecewise_model = PiecewiseActivationDynamicsModel()
     legacy_model = LegacyDynamicsModel()
 
-    # Calculate steady states
-    u_ss_standard, s_ss_standard = standard_model.steady_state(
-        alpha, beta, gamma
+    # Calculate steady states using appropriate parameters for each model
+    u_ss_piecewise, s_ss_piecewise = piecewise_model.steady_state(
+        alpha_off, gamma_star
     )
     u_ss_legacy, s_ss_legacy = legacy_model.steady_state(
         alpha, beta, gamma
     )
 
-    # Compare steady states - they should be identical
-    assert torch.allclose(u_ss_legacy, u_ss_standard)
-    assert torch.allclose(s_ss_legacy, s_ss_standard)
+    # For the OFF phase of piecewise model: u* = α*_off, s* = α*_off/γ*
+    # For the legacy model: u = α/β, s = α/γ
+    # These are only comparable when β = 1 (dimensionless case)
+    expected_u_legacy = alpha / beta  # Should equal alpha when beta=1
+    expected_s_legacy = alpha / gamma
+    expected_u_piecewise = alpha_off
+    expected_s_piecewise = alpha_off / gamma_star
+
+    # Verify each model's steady state calculation
+    assert torch.allclose(u_ss_legacy, expected_u_legacy)
+    assert torch.allclose(s_ss_legacy, expected_s_legacy)
+    assert torch.allclose(u_ss_piecewise, expected_u_piecewise)
+    assert torch.allclose(s_ss_piecewise, expected_s_piecewise)
+
+    # When beta=1, the models should give the same results
+    assert torch.allclose(u_ss_legacy, u_ss_piecewise)
+    assert torch.allclose(s_ss_legacy, s_ss_piecewise)

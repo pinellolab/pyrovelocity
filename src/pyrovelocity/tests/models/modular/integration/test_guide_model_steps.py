@@ -22,9 +22,8 @@ from pyrovelocity.models.modular.components import (
     LegacyDynamicsModel,
     LegacyLikelihoodModel,
     LogNormalPriorModel,
-    PoissonLikelihoodModel,
-    StandardDynamicsModel,
-    StandardObservationModel,
+    PiecewiseActivationDynamicsModel,
+    PiecewiseActivationPoissonLikelihoodModel,
 )
 from pyrovelocity.models.modular.model import PyroVelocityModel
 

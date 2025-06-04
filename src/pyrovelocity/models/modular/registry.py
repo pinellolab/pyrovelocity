@@ -236,7 +236,6 @@ def register_standard_components():
     from pyrovelocity.models.modular.components.dynamics import (
         LegacyDynamicsModel,
         PiecewiseActivationDynamicsModel,
-        StandardDynamicsModel,
     )
     from pyrovelocity.models.modular.components.guides import (
         AutoGuideFactory,
@@ -245,10 +244,6 @@ def register_standard_components():
     from pyrovelocity.models.modular.components.likelihoods import (
         LegacyLikelihoodModel,
         PiecewiseActivationPoissonLikelihoodModel,
-        PoissonLikelihoodModel,
-    )
-    from pyrovelocity.models.modular.components.observations import (
-        StandardObservationModel,
     )
     from pyrovelocity.models.modular.components.priors import (
         LogNormalPriorModel,
@@ -257,8 +252,6 @@ def register_standard_components():
 
     # The import itself should trigger the registrations through decorators
     # But we can also explicitly register them if needed
-    if "standard" not in DynamicsModelRegistry._registry:
-        DynamicsModelRegistry._registry["standard"] = StandardDynamicsModel
     if "legacy" not in DynamicsModelRegistry._registry:
         DynamicsModelRegistry._registry["legacy"] = LegacyDynamicsModel
     if "piecewise_activation" not in DynamicsModelRegistry._registry:
@@ -269,17 +262,10 @@ def register_standard_components():
     if "piecewise_activation" not in PriorModelRegistry._registry:
         PriorModelRegistry._registry["piecewise_activation"] = PiecewiseActivationPriorModel
 
-    if "poisson" not in LikelihoodModelRegistry._registry:
-        LikelihoodModelRegistry._registry["poisson"] = PoissonLikelihoodModel
     if "legacy" not in LikelihoodModelRegistry._registry:
         LikelihoodModelRegistry._registry["legacy"] = LegacyLikelihoodModel
     if "piecewise_activation_poisson" not in LikelihoodModelRegistry._registry:
         LikelihoodModelRegistry._registry["piecewise_activation_poisson"] = PiecewiseActivationPoissonLikelihoodModel
-
-    if "standard" not in ObservationModelRegistry._registry:
-        ObservationModelRegistry._registry[
-            "standard"
-        ] = StandardObservationModel
 
     if "auto" not in InferenceGuideRegistry._registry:
         InferenceGuideRegistry._registry["auto"] = AutoGuideFactory

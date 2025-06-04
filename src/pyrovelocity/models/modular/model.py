@@ -20,11 +20,11 @@ for the forward method, enabling railway-oriented programming patterns.
 Examples:
     >>> import torch
     >>> import pyro
-    >>> from pyrovelocity.models.modular.factory import create_standard_model
+    >>> from pyrovelocity.models.modular.factory import create_legacy_model1
     >>> from pyrovelocity.models.modular.model import PyroVelocityModel
     >>>
     >>> # Create a standard model with default components
-    >>> model = create_standard_model()
+    >>> model = create_legacy_model1()
     >>>
     >>> # Generate synthetic data
     >>> u_obs = torch.randn(10, 5)  # 10 cells, 5 genes
@@ -66,7 +66,7 @@ from pyrovelocity.models.modular.components.guides import (
 )
 from pyrovelocity.models.modular.components.likelihoods import (
     LegacyLikelihoodModel,
-    PoissonLikelihoodModel,
+    PiecewiseActivationPoissonLikelihoodModel,
 )
 from pyrovelocity.models.modular.components.priors import LogNormalPriorModel
 from pyrovelocity.models.modular.data.anndata import (
@@ -153,8 +153,8 @@ class PyroVelocityModel:
 
     Examples:
         >>> # Create a model with standard components
-        >>> from pyrovelocity.models.modular.factory import create_standard_model
-        >>> model = create_standard_model()
+        >>> from pyrovelocity.models.modular.factory import create_legacy_model1
+        >>> model = create_legacy_model1()
         >>>
         >>> # Create synthetic AnnData for testing
         >>> import anndata as ad
@@ -303,14 +303,14 @@ class PyroVelocityModel:
             >>> # Run forward pass with RNA count data
             >>> import torch
             >>> import os
-            >>> from pyrovelocity.models.modular.factory import create_standard_model
+            >>> from pyrovelocity.models.modular.factory import create_legacy_model1
             >>>
             >>> # Use pytest tmp_path fixture for temporary directory
             >>> tmp = getfixture("tmp_path")
             >>> tmp_dir = str(tmp)
             >>>
             >>> # Create model and synthetic data
-            >>> model = create_standard_model()
+            >>> model = create_legacy_model1()
             >>> u_obs = torch.randn(10, 5)  # 10 cells, 5 genes
             >>> s_obs = torch.randn(10, 5)  # 10 cells, 5 genes
             >>>
@@ -409,10 +409,10 @@ class PyroVelocityModel:
         Examples:
             >>> # Use guide for posterior sampling
             >>> import torch
-            >>> from pyrovelocity.models.modular.factory import create_standard_model
+            >>> from pyrovelocity.models.modular.factory import create_legacy_model1
             >>>
             >>> # Create model and synthetic data
-            >>> model = create_standard_model()
+            >>> model = create_legacy_model1()
             >>> u_obs = torch.randn(10, 5)  # 10 cells, 5 genes
             >>> s_obs = torch.randn(10, 5)  # 10 cells, 5 genes
             >>>
@@ -620,10 +620,10 @@ class PyroVelocityModel:
         Examples:
             >>> # Make predictions with the model
             >>> import torch
-            >>> from pyrovelocity.models.modular.factory import create_standard_model
+            >>> from pyrovelocity.models.modular.factory import create_legacy_model1
             >>>
             >>> # Create model and synthetic data
-            >>> model = create_standard_model()
+            >>> model = create_legacy_model1()
             >>> x = torch.randn(10, 5)  # 10 cells, 5 genes
             >>> time_points = torch.linspace(0, 1, 10)  # 10 time points
             >>>
@@ -681,10 +681,10 @@ class PyroVelocityModel:
         Examples:
             >>> # Predict future states
             >>> import torch
-            >>> from pyrovelocity.models.modular.factory import create_standard_model
+            >>> from pyrovelocity.models.modular.factory import create_legacy_model1
             >>>
             >>> # Create model and synthetic data
-            >>> model = create_standard_model()
+            >>> model = create_legacy_model1()
             >>> u_current = torch.ones(10, 5)  # 10 cells, 5 genes
             >>> s_current = torch.ones(10, 5)  # 10 cells, 5 genes
             >>> current_state = (u_current, s_current)
@@ -872,7 +872,7 @@ class PyroVelocityModel:
 
         Examples:
             >>> # Create a model and train it
-            >>> from pyrovelocity.models.modular.factory import create_standard_model
+            >>> from pyrovelocity.models.modular.factory import create_legacy_model1
             >>> import anndata as ad
             >>> import numpy as np
             >>> import os
@@ -897,7 +897,7 @@ class PyroVelocityModel:
             >>> adata = PyroVelocityModel.setup_anndata(adata)
             >>>
             >>> # Create and train the model
-            >>> model = create_standard_model()
+            >>> model = create_legacy_model1()
             >>> model.train(
             ...     adata=adata,
             ...     max_epochs=2,  # Use small number for testing
@@ -1028,7 +1028,7 @@ class PyroVelocityModel:
 
         Examples:
             >>> # Generate posterior samples after training
-            >>> from pyrovelocity.models.modular.factory import create_standard_model
+            >>> from pyrovelocity.models.modular.factory import create_legacy_model1
             >>> import anndata as ad
             >>> import numpy as np
             >>> import os
@@ -1053,7 +1053,7 @@ class PyroVelocityModel:
             >>> adata = PyroVelocityModel.setup_anndata(adata)
             >>>
             >>> # Create, train the model, and generate samples
-            >>> model = create_standard_model()
+            >>> model = create_legacy_model1()
             >>> model.train(adata=adata, max_epochs=2)  # Use small number for testing
             >>> posterior_samples = model.generate_posterior_samples(
             ...     adata=adata, num_samples=2, seed=42  # Use small number for testing
@@ -1198,7 +1198,7 @@ class PyroVelocityModel:
 
         Examples:
             >>> # Store results in AnnData after generating posterior samples
-            >>> from pyrovelocity.models.modular.factory import create_standard_model
+            >>> from pyrovelocity.models.modular.factory import create_legacy_model1
             >>> import anndata as ad
             >>> import numpy as np
             >>> import torch
@@ -1221,7 +1221,7 @@ class PyroVelocityModel:
             >>> # Prepare AnnData
             >>> adata = PyroVelocityModel.setup_anndata(adata)
             >>> # Create, train model, and generate samples
-            >>> model = create_standard_model()
+            >>> model = create_legacy_model1()
             >>> model.train(adata=adata, max_epochs=2)  # Use small number for testing
             >>> posterior_samples = model.generate_posterior_samples(
             ...     adata=adata, num_samples=2  # Use small number for testing
@@ -1325,7 +1325,7 @@ class PyroVelocityModel:
             >>> # Compute velocity from a trained model
             >>> import anndata as ad
             >>> import numpy as np
-            >>> from pyrovelocity.models.modular.factory import create_standard_model
+            >>> from pyrovelocity.models.modular.factory import create_legacy_model1
             >>>
             >>> # Create synthetic data
             >>> n_cells, n_genes = 10, 5
@@ -1343,7 +1343,7 @@ class PyroVelocityModel:
             >>> adata = PyroVelocityModel.setup_anndata(adata)
             >>>
             >>> # Create and train model
-            >>> model = create_standard_model()
+            >>> model = create_legacy_model1()
             >>> model.train(adata=adata, max_epochs=2)  # Use small number for testing
             >>>
             >>> # Compute velocity and store results in AnnData

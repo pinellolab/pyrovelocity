@@ -18,7 +18,7 @@ import pytest
 import torch
 from anndata import AnnData
 
-from pyrovelocity.models.modular.factory import create_standard_model
+from pyrovelocity.models.modular.factory import create_legacy_model1
 from pyrovelocity.models.modular.model import ModelState, PyroVelocityModel
 
 
@@ -51,7 +51,7 @@ def sample_adata():
 @pytest.fixture
 def model():
     """Create a PyroVelocityModel for testing."""
-    return create_standard_model()
+    return create_legacy_model1()
 
 
 def test_setup_anndata(sample_adata, model):

@@ -86,12 +86,12 @@ from beartype import beartype
 # Import the different implementations
 from pyrovelocity.models._velocity import PyroVelocity
 from pyrovelocity.models.modular import PyroVelocityModel
-from pyrovelocity.models.modular.factory import create_standard_model
+from pyrovelocity.models.modular.factory import create_legacy_model1
 
 # Import JAX implementation only if available
 try:
     from pyrovelocity.models.jax.factory.factory import (
-        create_standard_model as create_jax_standard_model,
+        create_legacy_model as create_jax_standard_model,
     )
     HAS_JAX = True
 except ImportError:
@@ -267,8 +267,8 @@ class ValidationRunner:
             # Set up AnnData for modular model
             PyroVelocityModel.setup_anndata(self.adata.copy())
 
-            # Create standard model (only option currently available)
-            model = create_standard_model()
+            # Create legacy model (only option currently available)
+            model = create_legacy_model1()
 
             # Add model to ValidationRunner
             self.add_model("modular", model)

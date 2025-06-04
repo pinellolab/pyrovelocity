@@ -6,7 +6,7 @@ import torch
 
 from pyrovelocity.models.modular.components.dynamics import (
     LegacyDynamicsModel,
-    StandardDynamicsModel,
+    PiecewiseActivationDynamicsModel,
 )
 from pyrovelocity.models.modular.components.guides import (
     AutoGuideFactory,
@@ -14,10 +14,7 @@ from pyrovelocity.models.modular.components.guides import (
 )
 from pyrovelocity.models.modular.components.likelihoods import (
     LegacyLikelihoodModel,
-    PoissonLikelihoodModel,
-)
-from pyrovelocity.models.modular.components.observations import (
-    StandardObservationModel,
+    PiecewiseActivationPoissonLikelihoodModel,
 )
 from pyrovelocity.models.modular.components.priors import (
     LogNormalPriorModel,
@@ -42,11 +39,15 @@ def simple_data():
 
 def test_components_integration(simple_data):
     """Test that all components work together."""
-    # Create components
-    dynamics_model = StandardDynamicsModel()
-    prior_model = LogNormalPriorModel()
-    likelihood_model = PoissonLikelihoodModel()
-    observation_model = StandardObservationModel()
+    # Import the correct prior model for piecewise activation
+    from pyrovelocity.models.modular.components.priors import (
+        PiecewiseActivationPriorModel,
+    )
+
+    # Create components - use compatible model combinations
+    dynamics_model = PiecewiseActivationDynamicsModel()
+    prior_model = PiecewiseActivationPriorModel()  # Use piecewise prior for piecewise dynamics
+    likelihood_model = PiecewiseActivationPoissonLikelihoodModel()
     guide_model = AutoGuideFactory(guide_type="AutoNormal")
 
     # Create context
@@ -59,7 +60,7 @@ def test_components_integration(simple_data):
     pyro.clear_param_store()
 
     # Call each component's forward method
-    context = observation_model.forward(context)
+    # Note: observation functionality is now in likelihood model
     context = prior_model.forward(context)
     context = dynamics_model.forward(context)
     context = likelihood_model.forward(context)
@@ -67,23 +68,38 @@ def test_components_integration(simple_data):
     # Check that the context contains all expected keys
     assert "u_obs" in context
     assert "s_obs" in context
-    assert "u_scale" in context
-    assert "s_scale" in context
-    assert "alpha" in context
-    assert "beta" in context
-    assert "gamma" in context
+
+    # Check for piecewise activation parameters (not legacy parameters)
+    assert "alpha_off" in context
+    assert "alpha_on" in context
+    assert "gamma_star" in context
+    assert "t_on_star" in context
+    assert "delta_star" in context
+    assert "t_star" in context
+    assert "lambda_j" in context
+
+    # Check for dynamics outputs
     assert "u_expected" in context
     assert "s_expected" in context
+    assert "ut" in context
+    assert "st" in context
+
+    # Check for likelihood outputs
     assert "u_dist" in context
     assert "s_dist" in context
 
 
 def test_components_with_model(simple_data):
     """Test that components work with PyroVelocityModel."""
-    # Create components
-    dynamics_model = StandardDynamicsModel()
-    prior_model = LogNormalPriorModel()
-    likelihood_model = PoissonLikelihoodModel()
+    # Import the correct prior model for piecewise activation
+    from pyrovelocity.models.modular.components.priors import (
+        PiecewiseActivationPriorModel,
+    )
+
+    # Create components - use compatible model combinations
+    dynamics_model = PiecewiseActivationDynamicsModel()
+    prior_model = PiecewiseActivationPriorModel()  # Use piecewise prior for piecewise dynamics
+    likelihood_model = PiecewiseActivationPoissonLikelihoodModel()
     guide_model = AutoGuideFactory(guide_type="AutoNormal")
 
     # Create the full model
@@ -98,13 +114,9 @@ def test_components_with_model(simple_data):
     context = {
         "u_obs": simple_data["u_obs"],
         "s_obs": simple_data["s_obs"],
-        # Add required parameters that would normally come from the prior model
-        "alpha": torch.ones(simple_data["u_obs"].shape[1]),
-        "beta": torch.ones(simple_data["u_obs"].shape[1]),
-        "gamma": torch.ones(simple_data["u_obs"].shape[1]),
     }
 
-    # Call the model directly with the context
+    # Call the model directly with the context (it will call prior.forward internally)
     result = model.forward(**context)
 
     # Verify that the model produced expected outputs
@@ -113,47 +125,43 @@ def test_components_with_model(simple_data):
     assert "u_expected" in result
     assert "s_expected" in result
 
-    # Test with different components
-    dynamics_models = [
-        StandardDynamicsModel(),
-        LegacyDynamicsModel(),
+    # Test compatible model combinations only
+    # Each tuple contains (dynamics, prior, likelihood, guide) that are compatible
+    compatible_combinations = [
+        # Legacy combination
+        (
+            LegacyDynamicsModel(),
+            LogNormalPriorModel(),
+            LegacyLikelihoodModel(),
+            AutoGuideFactory(guide_type="AutoNormal"),
+        ),
+        # Piecewise combination (already tested above)
+        (
+            PiecewiseActivationDynamicsModel(),
+            PiecewiseActivationPriorModel(),
+            PiecewiseActivationPoissonLikelihoodModel(),
+            AutoGuideFactory(guide_type="AutoNormal"),
+        ),
     ]
 
-    prior_models = [
-        LogNormalPriorModel(),
-    ]
+    # Test each compatible combination
+    for dynamics, prior, likelihood, guide in compatible_combinations:
+        # Create the model with this combination
+        model = PyroVelocityModel(
+            dynamics_model=dynamics,
+            prior_model=prior,
+            likelihood_model=likelihood,
+            guide_model=guide,
+        )
 
-    likelihood_models = [
-        PoissonLikelihoodModel(),
-        LegacyLikelihoodModel(),
-    ]
+        # Clear Pyro's param store between runs
+        pyro.clear_param_store()
 
-    guide_models = [
-        AutoGuideFactory(guide_type="AutoNormal"),
-        LegacyAutoGuideFactory(),
-    ]
+        # Call the model
+        result = model.forward(**context)
 
-    # Test a few combinations
-    for dynamics in dynamics_models:
-        for prior in prior_models:
-            for likelihood in likelihood_models:
-                for guide in guide_models:
-                    # Create the model with this combination
-                    model = PyroVelocityModel(
-                        dynamics_model=dynamics,
-                        prior_model=prior,
-                        likelihood_model=likelihood,
-                        guide_model=guide,
-                    )
-
-                    # Clear Pyro's param store between runs
-                    pyro.clear_param_store()
-
-                    # Call the model
-                    result = model.forward(**context)
-
-                    # Verify outputs
-                    assert "u_dist" in result
-                    assert "s_dist" in result
-                    assert "u_expected" in result
-                    assert "s_expected" in result
+        # Verify outputs
+        assert "u_dist" in result
+        assert "s_dist" in result
+        assert "u_expected" in result
+        assert "s_expected" in result

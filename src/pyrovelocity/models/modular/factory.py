@@ -9,11 +9,9 @@ This module has been simplified to include only the essential components needed 
 validation against the legacy implementation.
 """
 
-from dataclasses import dataclass, field
 from typing import Any, Dict, Union, cast
 
 from beartype import beartype
-from hydra_zen import make_custom_builds_fn
 from omegaconf import DictConfig, OmegaConf
 
 from pyrovelocity.models.modular.config import (
@@ -227,102 +225,10 @@ class ComponentFactory:
         )
 
 
-# For backward compatibility, we keep the old configuration classes
-# These will be deprecated in a future release
-
-@dataclass
-class DynamicsModelConfig:
-    """Configuration for dynamics models."""
-
-    name: str
-    params: Dict[str, Any] = field(default_factory=dict)
 
 
-@dataclass
-class PriorModelConfig:
-    """Configuration for prior models."""
-
-    name: str
-    params: Dict[str, Any] = field(default_factory=dict)
 
 
-@dataclass
-class LikelihoodModelConfig:
-    """Configuration for likelihood models."""
-
-    name: str
-    params: Dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass
-class ObservationModelConfig:
-    """Configuration for observation models."""
-
-    name: str
-    params: Dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass
-class InferenceGuideConfig:
-    """Configuration for inference guides."""
-
-    name: str
-    params: Dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass
-class PyroVelocityModelConfig:
-    """Configuration for the PyroVelocityModel."""
-
-    dynamics_model: DynamicsModelConfig
-    prior_model: PriorModelConfig
-    likelihood_model: LikelihoodModelConfig
-    inference_guide: InferenceGuideConfig
-    metadata: Dict[str, Any] = field(default_factory=dict)
-
-
-# Create hydra-zen builds for each component type
-# These functions create configuration objects with type checking
-zen_builds = make_custom_builds_fn(populate_full_signature=True)
-
-DynamicsModelConf = zen_builds(
-    DynamicsModelConfig,
-    name=str,
-    params=dict,
-)
-
-PriorModelConf = zen_builds(
-    PriorModelConfig,
-    name=str,
-    params=dict,
-)
-
-LikelihoodModelConf = zen_builds(
-    LikelihoodModelConfig,
-    name=str,
-    params=dict,
-)
-
-ObservationModelConf = zen_builds(
-    ObservationModelConfig,
-    name=str,
-    params=dict,
-)
-
-InferenceGuideConf = zen_builds(
-    InferenceGuideConfig,
-    name=str,
-    params=dict,
-)
-
-PyroVelocityModelConf = zen_builds(
-    PyroVelocityModelConfig,
-    dynamics_model=DynamicsModelConf,
-    prior_model=PriorModelConf,
-    likelihood_model=LikelihoodModelConf,
-    inference_guide=InferenceGuideConf,
-    metadata=dict,
-)
 
 
 @beartype
@@ -367,234 +273,25 @@ def create_model_from_config(
     )
 
 
-# Backward compatibility functions
-# These functions use the new unified configuration system but maintain
-# the same interface as the original functions for backward compatibility
-
-@beartype
-def create_dynamics_model(
-    config: Union[DynamicsModelConfig, Dict, DictConfig]
-) -> DynamicsModel:
-    """
-    Create a dynamics model from a configuration.
-
-    Args:
-        config: Configuration for the dynamics model, either as a DynamicsModelConfig
-               object, a dictionary, or a DictConfig.
-
-    Returns:
-        An instance of the specified dynamics model.
-
-    Raises:
-        ValueError: If the specified model is not registered.
-    """
-    # Convert config to a dictionary if it's a DictConfig
-    if isinstance(config, DictConfig):
-        config_dict = OmegaConf.to_container(config, resolve=True)
-        config = DynamicsModelConfig(**config_dict)
-    elif isinstance(config, dict):
-        config = DynamicsModelConfig(**config)
-
-    # Create the model using the ComponentFactory
-    component_config = ComponentConfig(name=config.name, params=config.params)
-    return ComponentFactory.create_dynamics_model(component_config)
 
 
-@beartype
-def create_prior_model(
-    config: Union[PriorModelConfig, Dict, DictConfig]
-) -> PriorModel:
-    """
-    Create a prior model from a configuration.
-
-    Args:
-        config: Configuration for the prior model, either as a PriorModelConfig
-               object, a dictionary, or a DictConfig.
-
-    Returns:
-        An instance of the specified prior model.
-
-    Raises:
-        ValueError: If the specified model is not registered.
-    """
-    # Convert config to a dictionary if it's a DictConfig
-    if isinstance(config, DictConfig):
-        config_dict = OmegaConf.to_container(config, resolve=True)
-        config = PriorModelConfig(**config_dict)
-    elif isinstance(config, dict):
-        config = PriorModelConfig(**config)
-
-    # Create the model using the ComponentFactory
-    component_config = ComponentConfig(name=config.name, params=config.params)
-    return ComponentFactory.create_prior_model(component_config)
 
 
-@beartype
-def create_likelihood_model(
-    config: Union[LikelihoodModelConfig, Dict, DictConfig]
-) -> LikelihoodModel:
-    """
-    Create a likelihood model from a configuration.
-
-    Args:
-        config: Configuration for the likelihood model, either as a LikelihoodModelConfig
-               object, a dictionary, or a DictConfig.
-
-    Returns:
-        An instance of the specified likelihood model.
-
-    Raises:
-        ValueError: If the specified model is not registered.
-    """
-    # Convert config to a dictionary if it's a DictConfig
-    if isinstance(config, DictConfig):
-        config_dict = OmegaConf.to_container(config, resolve=True)
-        config = LikelihoodModelConfig(**config_dict)
-    elif isinstance(config, dict):
-        config = LikelihoodModelConfig(**config)
-
-    # Create the model using the ComponentFactory
-    component_config = ComponentConfig(name=config.name, params=config.params)
-    return ComponentFactory.create_likelihood_model(component_config)
 
 
-@beartype
-def create_observation_model(
-    config: Union[ObservationModelConfig, Dict, DictConfig]
-) -> ObservationModel:
-    """
-    Create an observation model from a configuration.
-
-    Args:
-        config: Configuration for the observation model, either as an ObservationModelConfig
-               object, a dictionary, or a DictConfig.
-
-    Returns:
-        An instance of the specified observation model.
-
-    Raises:
-        ValueError: If the specified model is not registered.
-    """
-    # Convert config to a dictionary if it's a DictConfig
-    if isinstance(config, DictConfig):
-        config_dict = OmegaConf.to_container(config, resolve=True)
-        config = ObservationModelConfig(**config_dict)
-    elif isinstance(config, dict):
-        config = ObservationModelConfig(**config)
-
-    # Create the model using the ComponentFactory
-    component_config = ComponentConfig(name=config.name, params=config.params)
-    return ComponentFactory.create_observation_model(component_config)
 
 
-@beartype
-def create_inference_guide(
-    config: Union[InferenceGuideConfig, Dict, DictConfig]
-) -> InferenceGuide:
-    """
-    Create an inference guide from a configuration.
-
-    Args:
-        config: Configuration for the inference guide, either as an InferenceGuideConfig
-               object, a dictionary, or a DictConfig.
-
-    Returns:
-        An instance of the specified inference guide.
-
-    Raises:
-        ValueError: If the specified guide is not registered.
-    """
-    # Convert config to a dictionary if it's a DictConfig
-    if isinstance(config, DictConfig):
-        config_dict = OmegaConf.to_container(config, resolve=True)
-        config = InferenceGuideConfig(**config_dict)
-    elif isinstance(config, dict):
-        config = InferenceGuideConfig(**config)
-
-    # Create the guide using the ComponentFactory
-    component_config = ComponentConfig(name=config.name, params=config.params)
-    return ComponentFactory.create_inference_guide(component_config)
 
 
-@beartype
-def create_model(
-    config: Union[PyroVelocityModelConfig, Dict, DictConfig]
-) -> PyroVelocityModel:
-    """
-    Create a PyroVelocityModel from a configuration.
-
-    This function creates a PyroVelocityModel by instantiating each component
-    from the provided configuration and composing them together.
-
-    Args:
-        config: Configuration for the PyroVelocityModel, either as a PyroVelocityModelConfig
-               object, a dictionary, or a DictConfig.
-
-    Returns:
-        An instance of PyroVelocityModel with the specified components.
-
-    Raises:
-        ValueError: If any of the specified components are not registered.
-    """
-    # Convert config to a dictionary if it's a DictConfig
-    if isinstance(config, DictConfig):
-        config_dict = OmegaConf.to_container(config, resolve=True)
-        config = PyroVelocityModelConfig(**config_dict)
-    elif isinstance(config, dict):
-        config = PyroVelocityModelConfig(**config)
-
-    # Create each component
-    dynamics_model = create_dynamics_model(config.dynamics_model)
-    prior_model = create_prior_model(config.prior_model)
-    likelihood_model = create_likelihood_model(config.likelihood_model)
-    # Note: observation_model is ignored as its functionality is now in likelihood_model
-    # observation_model = create_observation_model(config.observation_model)
-    inference_guide = create_inference_guide(config.inference_guide)
-
-    # Create and return the model (observation model functionality is now in likelihood model)
-    return PyroVelocityModel(
-        dynamics_model=dynamics_model,
-        prior_model=prior_model,
-        likelihood_model=likelihood_model,
-        guide_model=inference_guide,
-    )
 
 
-# Predefined configurations for common model setups
-def standard_model_config() -> PyroVelocityModelConfig:
-    """
-    Create a configuration for a standard PyroVelocityModel.
-
-    This function returns a configuration for a PyroVelocityModel with standard
-    components: StandardDynamicsModel, LogNormalPriorModel, PoissonLikelihoodModel
-    (includes data preprocessing), and AutoGuide.
-
-    Returns:
-        A PyroVelocityModelConfig object with standard component configurations.
-    """
-    # For backward compatibility, we return the old config type
-    # In the future, we should encourage users to use ModelConfig.standard() directly
-    return PyroVelocityModelConfig(
-        dynamics_model=DynamicsModelConfig(name="standard"),
-        prior_model=PriorModelConfig(name="lognormal"),
-        likelihood_model=LikelihoodModelConfig(name="poisson"),
-        inference_guide=InferenceGuideConfig(name="auto"),
-    )
 
 
-def create_standard_model() -> PyroVelocityModel:
-    """
-    Create a standard PyroVelocityModel.
 
-    This function creates a PyroVelocityModel with standard components:
-    StandardDynamicsModel, LogNormalPriorModel, PoissonLikelihoodModel,
-    StandardObservationModel, and AutoGuide.
 
-    Returns:
-        A PyroVelocityModel instance with standard components.
-    """
-    # Use the new ModelConfig.standard() for creating the model
-    return create_model_from_config(ModelConfig.standard())
+
+
+
 
 
 # Legacy model replication functions
@@ -737,33 +434,9 @@ __all__ = [
     "ComponentFactory",
     # New factory functions
     "create_model_from_config",
-    # Backward compatibility configuration classes
-    "DynamicsModelConfig",
-    "PriorModelConfig",
-    "LikelihoodModelConfig",
-    "ObservationModelConfig",
-    "InferenceGuideConfig",
-    "PyroVelocityModelConfig",
-    # Hydra-zen configuration builders
-    "DynamicsModelConf",
-    "PriorModelConf",
-    "LikelihoodModelConf",
-    "ObservationModelConf",
-    "InferenceGuideConf",
-    "PyroVelocityModelConf",
-    # Backward compatibility functions
-    "create_dynamics_model",
-    "create_prior_model",
-    "create_likelihood_model",
-    "create_observation_model",
-    "create_inference_guide",
-    "create_model",
     # Legacy model replication functions
     "create_legacy_model1",
     "create_legacy_model2",
-    # Predefined configurations
-    "standard_model_config",
-    "create_standard_model",
     # Piecewise activation model
     "create_piecewise_activation_model",
 ]
