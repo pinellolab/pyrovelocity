@@ -129,6 +129,85 @@ def _save_figure(
             print(f"Saved figure: {save_file}")
 
 
+@beartype
+def combine_pdfs(
+    pdf_directory: str,
+    output_filename: str = "combined_predictive_checks.pdf",
+    pdf_pattern: str = "*.pdf",
+    exclude_patterns: Optional[List[str]] = None
+) -> None:
+    """
+    Combine multiple PDF files into a single PDF using only Python libraries.
+
+    This function uses PyPDF2/pypdf to merge PDF files without requiring system calls.
+    It's designed to work with the output from plot_prior_predictive_checks.
+
+    Args:
+        pdf_directory: Directory containing PDF files to combine
+        output_filename: Name of the combined output PDF file
+        pdf_pattern: Glob pattern to match PDF files (default: "*.pdf")
+        exclude_patterns: Optional list of filename patterns to exclude from combination
+
+    Example:
+        >>> # Combine all PDFs from prior predictive checks
+        >>> combine_pdfs(
+        ...     pdf_directory="reports/docs/prior_predictive",
+        ...     output_filename="combined_prior_checks.pdf",
+        ...     exclude_patterns=["combined_*.pdf"]  # Don't include previous combined files
+        ... )
+    """
+    from pypdf import PdfReader, PdfWriter
+
+    pdf_dir = Path(pdf_directory)
+    if not pdf_dir.exists():
+        raise FileNotFoundError(f"Directory {pdf_directory} does not exist")
+
+    # Find all PDF files matching the pattern
+    pdf_files = list(pdf_dir.glob(pdf_pattern))
+
+    # Apply exclusion patterns
+    if exclude_patterns:
+        filtered_files = []
+        for pdf_file in pdf_files:
+            exclude = False
+            for pattern in exclude_patterns:
+                if pdf_file.match(pattern):
+                    exclude = True
+                    break
+            if not exclude:
+                filtered_files.append(pdf_file)
+        pdf_files = filtered_files
+
+    if not pdf_files:
+        print(f"No PDF files found in {pdf_directory} matching pattern '{pdf_pattern}'")
+        return
+
+    # Sort files for consistent ordering
+    pdf_files.sort()
+
+    # Create PDF writer object
+    pdf_writer = PdfWriter()
+
+    # Add each PDF to the writer
+    for pdf_file in pdf_files:
+        try:
+            pdf_reader = PdfReader(str(pdf_file))
+            for page in pdf_reader.pages:
+                pdf_writer.add_page(page)
+            print(f"Added {pdf_file.name} ({len(pdf_reader.pages)} pages)")
+        except Exception as e:
+            print(f"Warning: Could not read {pdf_file.name}: {e}")
+            continue
+
+    # Write combined PDF
+    output_path = pdf_dir / output_filename
+    with open(output_path, 'wb') as output_file:
+        pdf_writer.write(output_file)
+
+    print(f"Combined {len(pdf_files)} PDFs into {output_path}")
+    print(f"Total pages: {len(pdf_writer.pages)}")
+
+
 def _get_available_parameters(
     parameters: Dict[str, torch.Tensor],
     exclude_params: Optional[List[str]] = None
@@ -152,7 +231,8 @@ def plot_parameter_marginals(
     check_type: str = "prior",
     exclude_params: Optional[List[str]] = None,
     figsize: Optional[Tuple[int, int]] = None,
-    save_path: Optional[str] = None
+    save_path: Optional[str] = None,
+    file_prefix: str = ""
 ) -> plt.Figure:
     """
     Plot individual histograms for all parameter marginal distributions.
@@ -177,11 +257,14 @@ def plot_parameter_marginals(
         return fig
 
     # Auto-calculate figure size based on number of parameters
+    # Use 7.5" width to fit 8.5x11" page with 0.5" margins
     n_params = len(available_params)
     if figsize is None:
         cols = min(4, n_params)
         rows = (n_params + cols - 1) // cols
-        figsize = (4 * cols, 3 * rows)
+        width = 7.5  # Standard width for 8.5x11" with margins
+        height = width * (rows / cols) * 0.75  # Maintain reasonable aspect ratio
+        figsize = (width, height)
 
     fig, axes = plt.subplots(rows, cols, figsize=figsize)
     if n_params == 1:
@@ -209,11 +292,12 @@ def plot_parameter_marginals(
         ax.bar(bins[:-1], relative_freq, width=np.diff(bins), alpha=0.7, color=colors[i],
                align='edge', edgecolor='none')
 
-        ax.set_xlabel('Value')
-        ax.set_ylabel('Relative Frequency')
-        ax.set_title(_format_parameter_name(param_name))
+        ax.set_xlabel('Value', fontsize=7)
+        ax.set_ylabel('Freq.', fontsize=7)
+        ax.set_title(_format_parameter_name(param_name), fontsize=8)
         ax.grid(True, alpha=0.3)
         ax.set_ylim(0, max(relative_freq) * 1.1)  # Add some headroom
+        ax.tick_params(labelsize=6)  # Reduce tick label size
 
         # Add summary statistics
         mean_val = values.mean()
@@ -228,7 +312,8 @@ def plot_parameter_marginals(
     plt.tight_layout()
 
     if save_path is not None:
-        _save_figure(fig, save_path, f"{check_type}_parameter_marginals")
+        prefix = f"{file_prefix}_" if file_prefix else ""
+        _save_figure(fig, save_path, f"{prefix}{check_type}_parameter_marginals")
 
     return fig
 
@@ -237,8 +322,9 @@ def plot_parameter_marginals(
 def plot_parameter_relationships(
     parameters: Dict[str, torch.Tensor],
     check_type: str = "prior",
-    figsize: Tuple[int, int] = (12, 4),
-    save_path: Optional[str] = None
+    figsize: Tuple[int, int] = (7.5, 2.5),  # Standard width, appropriate height
+    save_path: Optional[str] = None,
+    file_prefix: str = ""
 ) -> plt.Figure:
     """
     Plot parameter relationships: correlations, fold-change, and timing.
@@ -266,7 +352,8 @@ def plot_parameter_relationships(
     plt.tight_layout()
 
     if save_path is not None:
-        _save_figure(fig, save_path, f"{check_type}_parameter_relationships")
+        prefix = f"{file_prefix}_" if file_prefix else ""
+        _save_figure(fig, save_path, f"{prefix}{check_type}_parameter_relationships")
 
     return fig
 
@@ -275,8 +362,9 @@ def plot_parameter_relationships(
 def plot_expression_validation(
     adata: AnnData,
     check_type: str = "prior",
-    figsize: Tuple[int, int] = (10, 10),
-    save_path: Optional[str] = None
+    figsize: Tuple[int, int] = (7.5, 7.5),  # Square aspect ratio with standard width
+    save_path: Optional[str] = None,
+    file_prefix: str = ""
 ) -> plt.Figure:
     """
     Plot expression data validation: counts, relationships, library sizes, ranges.
@@ -307,7 +395,8 @@ def plot_expression_validation(
     plt.tight_layout()
 
     if save_path is not None:
-        _save_figure(fig, save_path, f"{check_type}_expression_validation")
+        prefix = f"{file_prefix}_" if file_prefix else ""
+        _save_figure(fig, save_path, f"{prefix}{check_type}_expression_validation")
 
     return fig
 
@@ -320,7 +409,8 @@ def plot_temporal_dynamics(
     save_path: Optional[str] = None,
     num_genes: int = 6,
     basis: str = "umap",
-    default_fontsize: int = 7
+    default_fontsize: int = 7,
+    file_prefix: str = ""
 ) -> plt.Figure:
     """
     Plot temporal dynamics: multi-gene visualization with phase portraits,
@@ -362,6 +452,12 @@ def plot_temporal_dynamics(
     gene_names = [adata.var_names[i] for i in gene_indices]
 
     # Create figure and gridspec using rainbow plot pattern
+    # Use standard width if figsize not provided
+    if figsize is None:
+        width = 7.5  # Standard width for 8.5x11" with margins
+        height = width * (available_genes / 4) * 0.6  # Reasonable height based on gene count
+        figsize = (width, height)
+
     fig, axes_dict = _create_temporal_dynamics_figure(available_genes, figsize)
 
     # Plot each gene
@@ -387,7 +483,8 @@ def plot_temporal_dynamics(
     fig.tight_layout()
 
     if save_path is not None:
-        _save_figure(fig, save_path, f"{check_type}_temporal_dynamics")
+        prefix = f"{file_prefix}_" if file_prefix else ""
+        _save_figure(fig, save_path, f"{prefix}{check_type}_temporal_dynamics")
 
     return fig
 
@@ -397,8 +494,9 @@ def plot_pattern_analysis(
     adata: AnnData,
     parameters: Dict[str, torch.Tensor],
     check_type: str = "prior",
-    figsize: Tuple[int, int] = (10, 5),
-    save_path: Optional[str] = None
+    figsize: Tuple[int, int] = (7.5, 3.75),  # Standard width, half height
+    save_path: Optional[str] = None,
+    file_prefix: str = ""
 ) -> plt.Figure:
     """
     Plot pattern analysis: proportions and gene correlations.
@@ -424,7 +522,8 @@ def plot_pattern_analysis(
     plt.tight_layout()
 
     if save_path is not None:
-        _save_figure(fig, save_path, f"{check_type}_pattern_analysis")
+        prefix = f"{file_prefix}_" if file_prefix else ""
+        _save_figure(fig, save_path, f"{prefix}{check_type}_pattern_analysis")
 
     return fig
 
@@ -434,11 +533,12 @@ def plot_prior_predictive_checks(
     model: Any,
     prior_adata: AnnData,
     prior_parameters: Dict[str, torch.Tensor],
-    figsize: Tuple[int, int] = (15, 10),
+    figsize: Tuple[int, int] = (7.5, 5.0),  # Standard width for 8.5x11" with margins
     check_type: str = "prior",
     save_path: Optional[str] = None,
     figure_name: Optional[str] = None,
-    create_individual_plots: bool = True
+    create_individual_plots: bool = True,
+    combine_individual_pdfs: bool = False,
 ) -> plt.Figure:
     """
     Generate comprehensive predictive check plots for PyroVelocity models.
@@ -458,6 +558,7 @@ def plot_prior_predictive_checks(
         save_path: Optional directory path to save figures (creates if doesn't exist)
         figure_name: Optional figure name (defaults to "{check_type}_predictive_checks")
         create_individual_plots: Whether to create individual modular plots
+        combine_individual_pdfs: Whether to combine individual PDF plots into a single file
 
     Returns:
         matplotlib Figure object
@@ -468,7 +569,8 @@ def plot_prior_predictive_checks(
         ...     prior_adata=adata,
         ...     prior_parameters=params,
         ...     save_path="reports/docs/prior_predictive",
-        ...     figure_name="piecewise_activation_prior_checks"
+        ...     figure_name="piecewise_activation_prior_checks",
+        ...     combine_individual_pdfs=True
         ... )
     """
     # Create individual modular plots if requested
@@ -476,11 +578,12 @@ def plot_prior_predictive_checks(
         # Process parameters for plotting compatibility (handle batch dimensions)
         processed_parameters = _process_parameters_for_plotting(prior_parameters)
 
-        plot_parameter_marginals(processed_parameters, check_type, save_path=save_path)
-        plot_parameter_relationships(processed_parameters, check_type, save_path=save_path)
-        plot_expression_validation(prior_adata, check_type, save_path=save_path)
-        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path)
-        plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path)
+        # Create plots in logical order with numbered prefixes for proper PDF combination ordering
+        plot_parameter_marginals(processed_parameters, check_type, save_path=save_path, file_prefix="02")
+        plot_parameter_relationships(processed_parameters, check_type, save_path=save_path, file_prefix="03")
+        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="04")
+        plot_expression_validation(prior_adata, check_type, save_path=save_path, file_prefix="05")
+        plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path, file_prefix="06")
 
     # Process parameters for plotting compatibility (handle batch dimensions)
     processed_parameters = _process_parameters_for_plotting(prior_parameters)
@@ -532,9 +635,24 @@ def plot_prior_predictive_checks(
 
     # Save comprehensive figure if path is provided
     if save_path is not None:
-        # Use provided name or default
-        name = figure_name if figure_name is not None else f"{check_type}_predictive_checks"
+        # Use provided name or default, with "01" prefix for proper ordering
+        if figure_name is not None:
+            name = f"01_{figure_name}"
+        else:
+            name = f"01_{check_type}_predictive_checks"
         _save_figure(fig, save_path, name)
+
+        # Combine individual PDFs if requested
+        if combine_individual_pdfs and create_individual_plots:
+            try:
+                combine_pdfs(
+                    pdf_directory=save_path,
+                    output_filename=f"combined_{check_type}_predictive_checks.pdf",
+                    exclude_patterns=["combined_*.pdf"]  # Don't include previous combined files
+                )
+            except Exception as e:
+                print(f"Warning: Could not combine PDFs: {e}")
+                print("Individual PDF files are still available in the directory.")
 
     return fig
 
@@ -757,9 +875,10 @@ def _plot_hierarchical_time_structure(
             t_scale = parameters['t_scale'].flatten().numpy()
 
             ax.scatter(T_M, t_scale, alpha=0.6, s=20, color='purple')
-            ax.set_xlabel(f'Global Time Scale ({_format_parameter_name("T_M_star")})')
-            ax.set_ylabel(f'Population Time Spread ({_format_parameter_name("t_scale")})')
-            ax.set_title(f'{check_type.title()} Hierarchical Time Structure')
+            ax.set_xlabel(f'Global Time Scale ({_format_parameter_name("T_M_star")})', fontsize=7)
+            ax.set_ylabel(f'Population Time Spread ({_format_parameter_name("t_scale")})', fontsize=7)
+            ax.set_title(f'{check_type.title()} Hierarchical Time Structure', fontsize=8)
+            ax.tick_params(labelsize=6)  # Reduce tick label size
 
             # Add interpretation guidelines
             ax.axhline(0.2, color='orange', linestyle='--', alpha=0.7,
@@ -774,14 +893,15 @@ def _plot_hierarchical_time_structure(
             t_scale = parameters['t_scale'].flatten().numpy()
 
             ax.scatter(t_loc, t_scale, alpha=0.6, s=20, color='purple')
-            ax.set_xlabel(f'Population Time Location ({_format_parameter_name("t_loc")})')
-            ax.set_ylabel(f'Population Time Spread ({_format_parameter_name("t_scale")})')
-            ax.set_title(f'{check_type.title()} Population Time Parameters')
+            ax.set_xlabel(f'Population Time Location ({_format_parameter_name("t_loc")})', fontsize=7)
+            ax.set_ylabel(f'Population Time Spread ({_format_parameter_name("t_scale")})', fontsize=7)
+            ax.set_title(f'{check_type.title()} Population Time Parameters', fontsize=8)
+            ax.tick_params(labelsize=6)  # Reduce tick label size
             ax.legend(fontsize=8)
     else:
         ax.text(0.5, 0.5, 'Hierarchical time parameters\nnot available',
                ha='center', va='center', transform=ax.transAxes)
-        ax.set_title(f'{check_type.title()} Hierarchical Time Structure')
+        ax.set_title(f'{check_type.title()} Hierarchical Time Structure', fontsize=8)
 
     ax.grid(True, alpha=0.3)
 
@@ -805,15 +925,16 @@ def _plot_fold_change_distribution(
         ax.axvline(3.3, color='orange', linestyle=':', label='Min threshold: 3.3')
         ax.axvline(7.5, color='green', linestyle=':', label='Activation threshold: 7.5')
 
-        ax.set_xlabel(f'Fold-change ({_format_parameter_name("alpha_on")} / {_format_parameter_name("alpha_off")})')
-        ax.set_ylabel('Relative Frequency')
-        ax.set_title(f'{check_type.title()} Fold-change Distribution')
+        ax.set_xlabel(f'Fold-change ({_format_parameter_name("alpha_on")} / {_format_parameter_name("alpha_off")})', fontsize=7)
+        ax.set_ylabel('Relative Frequency', fontsize=7)
+        ax.set_title(f'{check_type.title()} Fold-change Distribution', fontsize=8)
+        ax.tick_params(labelsize=6)  # Reduce tick label size
         ax.legend(fontsize=8)
         ax.set_xlim(0, min(100, fold_change.max()))
     else:
-        ax.text(0.5, 0.5, 'Alpha parameters\nnot available', 
+        ax.text(0.5, 0.5, 'Alpha parameters\nnot available',
                ha='center', va='center', transform=ax.transAxes)
-        ax.set_title(f'{check_type.title()} Fold-change Distribution')
+        ax.set_title(f'{check_type.title()} Fold-change Distribution', fontsize=8)
     
     ax.grid(True, alpha=0.3)
 
@@ -829,20 +950,21 @@ def _plot_activation_timing(
         delta = parameters['delta_star'].flatten().numpy()
         
         ax.scatter(t_on, delta, alpha=0.6, s=20, color='purple')
-        ax.set_xlabel(f'Activation Onset ({_format_parameter_name("t_on_star")})')
-        ax.set_ylabel(f'Activation Duration ({_format_parameter_name("delta_star")})')
-        ax.set_title(f'{check_type.title()} Activation Timing')
-        
+        ax.set_xlabel(f'Activation Onset ({_format_parameter_name("t_on_star")})', fontsize=7)
+        ax.set_ylabel(f'Activation Duration ({_format_parameter_name("delta_star")})', fontsize=7)
+        ax.set_title(f'{check_type.title()} Activation Timing', fontsize=8)
+        ax.tick_params(labelsize=6)  # Reduce tick label size
+
         # Add pattern boundaries
-        ax.axhline(0.35, color='red', linestyle='--', alpha=0.7, 
+        ax.axhline(0.35, color='red', linestyle='--', alpha=0.7,
                   label='Transient/Sustained boundary')
         ax.axvline(0.3, color='orange', linestyle='--', alpha=0.7,
                   label='Early/Late activation')
         ax.legend(fontsize=8)
     else:
-        ax.text(0.5, 0.5, 'Timing parameters\nnot available', 
+        ax.text(0.5, 0.5, 'Timing parameters\nnot available',
                ha='center', va='center', transform=ax.transAxes)
-        ax.set_title(f'{check_type.title()} Activation Timing')
+        ax.set_title(f'{check_type.title()} Activation Timing', fontsize=8)
     
     ax.grid(True, alpha=0.3)
 
