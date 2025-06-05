@@ -84,7 +84,12 @@ def _format_parameter_name(param_name: str) -> str:
         'T_M_star': r'T^*_M',
         't_star': r't^*',
         'lambda_j': r'\lambda_j',
-        'U_0i': r'U_{0i}'
+        'U_0i': r'U_{0i}',
+        'latent_time': r't_{latent}',
+        'velocity_pseudotime': r't_{velocity}',
+        'dpt_pseudotime': r't_{dpt}',
+        'pseudotime': r't_{pseudo}',
+        'shared_time': r't_{shared}'
     }
 
     if param_name in special_cases:
