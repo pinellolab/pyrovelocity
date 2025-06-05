@@ -1051,9 +1051,9 @@ def _create_temporal_dynamics_figure(
 
     fig = plt.figure(figsize=figsize)
 
-    # Create gridspec with proper width ratios for gene labels
+    # Create gridspec with proper width ratios and spacing like rainbow plot
     gs = GridSpec(
-        nrows=number_of_genes,
+        nrows=number_of_genes + 1,  # Add extra row for titles
         ncols=horizontal_panels,
         figure=fig,
         width_ratios=[
@@ -1063,18 +1063,31 @@ def _create_temporal_dynamics_figure(
             1,     # Predictive UMAP
             1,     # Observed UMAP
         ],
+        height_ratios=[0.15] + [1] * number_of_genes,  # Small title row + gene rows
         wspace=0.2,
-        hspace=0.2,
+        hspace=0.1,  # Tighter spacing for title row
     )
 
     axes_dict = {}
+
+    # Create title row
+    for col, title in enumerate(['', r'$(u, s)$ phase space', 'Spliced dynamics', 'Predictive spliced', 'Observed spliced']):
+        if col == 0:
+            continue  # Skip gene label column for titles
+        title_ax = fig.add_subplot(gs[0, col])
+        title_ax.text(0.5, 0.5, title, ha='center', va='center',
+                     transform=title_ax.transAxes, fontsize=8, weight='bold')
+        title_ax.axis('off')
+
+    # Create gene rows
     for n in range(number_of_genes):
-        axes_dict[f"gene_{n}"] = fig.add_subplot(gs[n, 0])
+        row = n + 1  # Offset by 1 for title row
+        axes_dict[f"gene_{n}"] = fig.add_subplot(gs[row, 0])
         axes_dict[f"gene_{n}"].axis("off")
-        axes_dict[f"phase_{n}"] = fig.add_subplot(gs[n, 1])
-        axes_dict[f"dynamics_{n}"] = fig.add_subplot(gs[n, 2])
-        axes_dict[f"predictive_{n}"] = fig.add_subplot(gs[n, 3])
-        axes_dict[f"observed_{n}"] = fig.add_subplot(gs[n, 4])
+        axes_dict[f"phase_{n}"] = fig.add_subplot(gs[row, 1])
+        axes_dict[f"dynamics_{n}"] = fig.add_subplot(gs[row, 2])
+        axes_dict[f"predictive_{n}"] = fig.add_subplot(gs[row, 3])
+        axes_dict[f"observed_{n}"] = fig.add_subplot(gs[row, 4])
 
     return fig, axes_dict
 
@@ -1179,10 +1192,13 @@ def _plot_gene_predictive_umap_rainbow(
         coords = adata.obsm[f'X_{basis}']
         s_gene = adata.layers['spliced'][:, gene_idx]
 
-        # Create scatter plot with gene expression as color
+        # Use log-transformed expression for predictive data (same scale as observed)
+        s_gene_log = np.log1p(s_gene)  # log(1 + x) to handle zeros
+
+        # Create scatter plot with log gene expression as color
         im = axes_dict[f"predictive_{n}"].scatter(
             coords[:, 0], coords[:, 1],
-            c=s_gene, cmap='cividis',
+            c=s_gene_log, cmap='cividis',
             alpha=0.8, s=3, edgecolors='none'
         )
 
@@ -1211,14 +1227,14 @@ def _plot_gene_observed_umap_rainbow(
     check_type: str,
     basis: str = "umap"
 ) -> None:
-    """Plot observed log spliced expression in UMAP space using rainbow plot style."""
+    """Plot observed spliced expression in UMAP space using rainbow plot style."""
     from pyrovelocity.plots._common import set_colorbar
 
     if f'X_{basis}' in adata.obsm and 'spliced' in adata.layers:
         coords = adata.obsm[f'X_{basis}']
         s_gene = adata.layers['spliced'][:, gene_idx]
 
-        # Use log-transformed expression for observed data
+        # Use log-transformed expression for observed data (same scale as predictive)
         s_gene_log = np.log1p(s_gene)  # log(1 + x) to handle zeros
 
         # Create scatter plot with log gene expression as color
@@ -1251,28 +1267,47 @@ def _set_temporal_dynamics_labels(
     total_genes: int,
     default_fontsize: int
 ) -> None:
-    """Set labels and titles for temporal dynamics plot using rainbow plot style."""
+    """Set labels for temporal dynamics plot using rainbow plot style."""
     # Set gene name in the gene label column
     axes_dict[f"gene_{n}"].text(
-        0.5, 0.5, gene_name[:7],
+        0.0, 0.5, gene_name[:7],
         transform=axes_dict[f"gene_{n}"].transAxes,
         rotation=0, va='center', ha='center',
-        fontsize=default_fontsize, weight='bold'
+        fontsize=default_fontsize, weight='normal'
     )
 
-    # Set column titles only for the first row
-    if n == 0:
-        axes_dict[f"phase_{n}"].set_title(r"$(u, s)$ phase space", fontsize=default_fontsize)
-        axes_dict[f"dynamics_{n}"].set_title("Spliced dynamics", fontsize=default_fontsize)
-        axes_dict[f"predictive_{n}"].set_title("Predictive spliced", fontsize=default_fontsize)
-        axes_dict[f"observed_{n}"].set_title(r"Observed $\log_{e}$ spliced", fontsize=default_fontsize)
-
-    # Set axis labels only for bottom row
+    # Set axis labels only for bottom row (like rainbow plot)
     if n == total_genes - 1:
-        axes_dict[f"phase_{n}"].set_xlabel(r'spliced, $\hat{\mu}(s)$', fontsize=default_fontsize * 0.8)
-        axes_dict[f"phase_{n}"].set_ylabel(r'unspliced, $\hat{\mu}(u)$', fontsize=default_fontsize * 0.8)
-        axes_dict[f"dynamics_{n}"].set_xlabel(r'shared time, $\hat{\mu}(t)$', fontsize=default_fontsize * 0.8)
-        axes_dict[f"dynamics_{n}"].set_ylabel(r'spliced, $\hat{\mu}(s)$', fontsize=default_fontsize * 0.8)
+        # Set x-axis labels
+        axes_dict[f"phase_{n}"].set_xlabel(
+            r'spliced, $\hat{\mu}(s)$',
+            loc="left",
+            labelpad=0.7,
+            fontsize=default_fontsize
+        )
+        axes_dict[f"dynamics_{n}"].set_xlabel(
+            r'shared time, $\hat{\mu}(t)$',
+            loc="left",
+            labelpad=0.7,
+            fontsize=default_fontsize
+        )
+
+        # Set y-axis labels on the RIGHT side (like rainbow plot)
+        axes_dict[f"phase_{n}"].set_ylabel(
+            r'unspliced, $\hat{\mu}(u)$',
+            loc="bottom",
+            labelpad=0.7,
+            fontsize=default_fontsize
+        )
+        axes_dict[f"phase_{n}"].yaxis.set_label_position("right")
+
+        axes_dict[f"dynamics_{n}"].set_ylabel(
+            r'spliced, $\hat{\mu}(s)$',
+            loc="bottom",
+            labelpad=0.7,
+            fontsize=default_fontsize
+        )
+        axes_dict[f"dynamics_{n}"].yaxis.set_label_position("right")
     else:
         # Remove axis labels for non-bottom rows
         axes_dict[f"phase_{n}"].set_xlabel('')
