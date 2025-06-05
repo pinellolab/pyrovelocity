@@ -87,6 +87,7 @@ polars = ">=0.20.17"
 pqdata = { git = "https://github.com/gtca/pqdata.git", rev = "b4d8313ea63d9421b3ad515687a4d3fbd9b1b13f" }
 pyarrow = ">=14.0.2"
 pydantic = ">=2.8.0"
+pypdf = ">5.3.0"
 pyro-ppl = ">=1.9.1"
 lightning = ">=2.0.0"
 pytorch-lightning = ">=2.0.0"
