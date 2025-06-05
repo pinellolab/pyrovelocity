@@ -232,7 +232,8 @@ def plot_parameter_marginals(
     exclude_params: Optional[List[str]] = None,
     figsize: Optional[Tuple[int, int]] = None,
     save_path: Optional[str] = None,
-    file_prefix: str = ""
+    file_prefix: str = "",
+    model: Optional[Any] = None
 ) -> plt.Figure:
     """
     Plot individual histograms for all parameter marginal distributions.
@@ -243,6 +244,8 @@ def plot_parameter_marginals(
         exclude_params: Optional list of parameter names to exclude
         figsize: Optional figure size (auto-calculated if None)
         save_path: Optional directory path to save figures
+        file_prefix: Prefix for saved file names
+        model: Optional PyroVelocity model instance for parameter metadata
 
     Returns:
         matplotlib Figure object
@@ -259,9 +262,10 @@ def plot_parameter_marginals(
     # Auto-calculate figure size based on number of parameters
     # Use 7.5" width to fit 8.5x11" page with 0.5" margins
     n_params = len(available_params)
+    cols = min(4, n_params)
+    rows = (n_params + cols - 1) // cols
+
     if figsize is None:
-        cols = min(4, n_params)
-        rows = (n_params + cols - 1) // cols
         width = 7.5  # Standard width for 8.5x11" with margins
         height = width * (rows / cols) * 0.75  # Maintain reasonable aspect ratio
         figsize = (width, height)
@@ -292,18 +296,43 @@ def plot_parameter_marginals(
         ax.bar(bins[:-1], relative_freq, width=np.diff(bins), alpha=0.7, color=colors[i],
                align='edge', edgecolor='none')
 
-        ax.set_xlabel('Value', fontsize=7)
+        # Get parameter label using the new metadata system
+        from pyrovelocity.plots.parameter_metadata import (
+            get_parameter_label,
+            infer_component_name_from_parameters,
+        )
+
+        # Try to infer component name from all parameters if model not provided
+        component_name = None
+        if model is None:
+            component_name = infer_component_name_from_parameters(parameters)
+
+        # Get short label for x-axis and display name for title
+        short_label = get_parameter_label(
+            param_name=param_name,
+            label_type="short",
+            model=model,
+            component_name=component_name,
+            fallback_to_legacy=True
+        )
+        display_name = get_parameter_label(
+            param_name=param_name,
+            label_type="display",
+            model=model,
+            component_name=component_name,
+            fallback_to_legacy=True
+        )
+
+        ax.set_xlabel(short_label, fontsize=7)
         ax.set_ylabel('Freq.', fontsize=7)
-        ax.set_title(_format_parameter_name(param_name), fontsize=8)
+        ax.set_title(display_name, fontsize=8)
         ax.grid(True, alpha=0.3)
         ax.set_ylim(0, max(relative_freq) * 1.1)  # Add some headroom
         ax.tick_params(labelsize=6)  # Reduce tick label size
 
-        # Add summary statistics
-        mean_val = values.mean()
-        ax.axvline(mean_val, color='red', linestyle='--', alpha=0.7,
-                  label=f'Mean: {mean_val:.3f}')
-        ax.legend(fontsize=8)
+        # Add median line in light gray instead of mean line with legend
+        median_val = np.median(values)
+        ax.axvline(median_val, color='lightgray', linestyle='--', alpha=0.7)
 
     # Hide unused subplots
     for i in range(n_params, len(axes)):
@@ -579,7 +608,7 @@ def plot_prior_predictive_checks(
         processed_parameters = _process_parameters_for_plotting(prior_parameters)
 
         # Create plots in logical order with numbered prefixes for proper PDF combination ordering
-        plot_parameter_marginals(processed_parameters, check_type, save_path=save_path, file_prefix="02")
+        plot_parameter_marginals(processed_parameters, check_type, save_path=save_path, file_prefix="02", model=model)
         plot_parameter_relationships(processed_parameters, check_type, save_path=save_path, file_prefix="03")
         plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="04")
         plot_expression_validation(prior_adata, check_type, save_path=save_path, file_prefix="05")
@@ -1187,7 +1216,7 @@ def _create_temporal_dynamics_figure(
         ],
         height_ratios=[0.15] + [1] * number_of_genes,  # Small title row + gene rows
         wspace=0.3,   # Increased spacing to prevent axis label overlap
-        hspace=0.1,   # Tighter spacing for title row
+        hspace=0.25,  # Increased vertical spacing between gene rows
     )
 
     axes_dict = {}
