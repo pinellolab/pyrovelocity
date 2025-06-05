@@ -1064,7 +1064,7 @@ def _create_temporal_dynamics_figure(
             1,     # Observed UMAP
         ],
         height_ratios=[0.15] + [1] * number_of_genes,  # Small title row + gene rows
-        wspace=0.25,  # Slightly increased spacing to prevent axis label overlap
+        wspace=0.3,   # Increased spacing to prevent axis label overlap
         hspace=0.1,   # Tighter spacing for title row
     )
 
