@@ -316,28 +316,74 @@ def plot_expression_validation(
 def plot_temporal_dynamics(
     adata: AnnData,
     check_type: str = "prior",
-    figsize: Tuple[int, int] = (10, 5),
-    save_path: Optional[str] = None
+    figsize: Optional[Tuple[int, int]] = None,
+    save_path: Optional[str] = None,
+    num_genes: int = 6,
+    basis: str = "umap"
 ) -> plt.Figure:
     """
-    Plot temporal dynamics: phase portraits and velocity distributions.
+    Plot temporal dynamics: multi-gene visualization with phase portraits,
+    spliced dynamics, predictive and observed expression in UMAP space.
+
+    Creates a rainbow-plot style visualization with one row per gene showing:
+    - (u,s) phase space scatter plot
+    - Spliced dynamics over time
+    - Predictive spliced expression in UMAP space
+    - Observed log spliced expression in UMAP space
 
     Args:
         adata: AnnData object with expression data
         check_type: Type of check ("prior" or "posterior")
-        figsize: Figure size (width, height)
+        figsize: Figure size (width, height). If None, auto-calculated based on num_genes
         save_path: Optional directory path to save figures
+        num_genes: Number of genes to display (default: 6)
+        basis: Embedding basis for spatial plots (default: "umap")
 
     Returns:
         matplotlib Figure object
     """
-    fig, axes = plt.subplots(1, 2, figsize=figsize)
+    # Auto-calculate figure size if not provided (square aspect ratio preference)
+    if figsize is None:
+        subplot_height = 1.5
+        subplot_width = 2.0
+        n_cols = 4  # phase, dynamics, predictive, observed
+        figsize = (subplot_width * n_cols, subplot_height * num_genes)
 
-    # Phase portrait
-    _plot_phase_portrait(adata, axes[0], check_type)
+    # Select genes to plot
+    available_genes = min(num_genes, adata.n_vars)
+    if available_genes < num_genes:
+        print(f"Warning: Only {available_genes} genes available, plotting all")
 
-    # Velocity magnitudes
-    _plot_velocity_magnitudes(adata, axes[1], check_type)
+    gene_indices = np.random.choice(adata.n_vars, available_genes, replace=False)
+    gene_names = [adata.var_names[i] for i in gene_indices]
+
+    # Create subplot grid
+    fig, axes = plt.subplots(available_genes, 4, figsize=figsize)
+
+    # Handle single gene case
+    if available_genes == 1:
+        axes = axes.reshape(1, -1)
+
+    # Plot each gene
+    for n, (gene_idx, gene_name) in enumerate(zip(gene_indices, gene_names)):
+        # Phase portrait (column 0)
+        _plot_gene_phase_portrait(adata, axes[n, 0], gene_idx, gene_name, check_type, n, available_genes)
+
+        # Spliced dynamics (column 1)
+        _plot_gene_spliced_dynamics(adata, axes[n, 1], gene_idx, gene_name, check_type, n, available_genes)
+
+        # Predictive spliced in UMAP (column 2)
+        _plot_gene_predictive_umap(adata, axes[n, 2], gene_idx, gene_name, check_type, basis)
+
+        # Observed spliced in UMAP (column 3)
+        _plot_gene_observed_umap(adata, axes[n, 3], gene_idx, gene_name, check_type, basis)
+
+    # Set column titles
+    if available_genes > 0:
+        axes[0, 0].set_title(r"$(u, s)$ phase space", fontsize=10)
+        axes[0, 1].set_title("Spliced dynamics", fontsize=10)
+        axes[0, 2].set_title("Predictive spliced", fontsize=10)
+        axes[0, 3].set_title(r"Observed $\log_{e}$ spliced", fontsize=10)
 
     plt.tight_layout()
 
@@ -983,6 +1029,178 @@ def _plot_velocity_magnitudes(adata: AnnData, ax: plt.Axes, check_type: str) -> 
             ax.set_title(f'{check_type.title()} Velocity Magnitudes')
 
     ax.grid(True, alpha=0.3)
+
+
+def _plot_gene_phase_portrait(
+    adata: AnnData,
+    ax: plt.Axes,
+    gene_idx: int,
+    gene_name: str,
+    check_type: str,
+    row_idx: int,
+    total_genes: int
+) -> None:
+    """Plot phase portrait (u,s) for a single gene."""
+    if 'unspliced' in adata.layers and 'spliced' in adata.layers:
+        u_gene = adata.layers['unspliced'][:, gene_idx]
+        s_gene = adata.layers['spliced'][:, gene_idx]
+
+        # Color by latent time if available, otherwise use a single color
+        time_col = None
+        for col in ['latent_time', 'cell_time', 't_star']:
+            if col in adata.obs:
+                time_col = col
+                break
+
+        if time_col is not None:
+            c = adata.obs[time_col]
+            scatter = ax.scatter(s_gene, u_gene, c=c, cmap='viridis', alpha=0.6, s=8, edgecolors='none')
+        else:
+            ax.scatter(s_gene, u_gene, alpha=0.6, s=8, color='steelblue', edgecolors='none')
+
+        # Set axis labels only for bottom row
+        if row_idx == total_genes - 1:
+            ax.set_xlabel(r'spliced, $\hat{\mu}(s)$', fontsize=8)
+            ax.set_ylabel(r'unspliced, $\hat{\mu}(u)$', fontsize=8)
+        else:
+            ax.set_xlabel('')
+            ax.set_ylabel('')
+
+        # Add gene name on the left
+        ax.text(-0.15, 0.5, gene_name[:7], transform=ax.transAxes,
+               rotation=0, va='center', ha='center', fontsize=8, weight='bold')
+    else:
+        ax.text(0.5, 0.5, 'Expression data\nnot available',
+               ha='center', va='center', transform=ax.transAxes)
+
+    ax.grid(True, alpha=0.3)
+
+
+def _plot_gene_spliced_dynamics(
+    adata: AnnData,
+    ax: plt.Axes,
+    gene_idx: int,
+    gene_name: str,
+    check_type: str,
+    row_idx: int,
+    total_genes: int
+) -> None:
+    """Plot spliced expression dynamics over time for a single gene."""
+    # Find available time column
+    time_col = None
+    for col in ['latent_time', 'cell_time', 't_star']:
+        if col in adata.obs:
+            time_col = col
+            break
+
+    if 'spliced' in adata.layers and time_col is not None:
+        s_gene = adata.layers['spliced'][:, gene_idx]
+        time = adata.obs[time_col]
+
+        # Sort by time for better visualization
+        sort_idx = np.argsort(time)
+        time_sorted = time.iloc[sort_idx] if hasattr(time, 'iloc') else time[sort_idx]
+        s_sorted = s_gene[sort_idx]
+
+        # Color by clusters if available
+        cluster_col = None
+        for col in ['leiden', 'clusters', 'louvain']:
+            if col in adata.obs:
+                cluster_col = col
+                break
+
+        if cluster_col is not None:
+            clusters = adata.obs[cluster_col].iloc[sort_idx] if hasattr(adata.obs[cluster_col], 'iloc') else adata.obs[cluster_col][sort_idx]
+            unique_clusters = np.unique(clusters)
+            colors = plt.cm.Set1(np.linspace(0, 1, len(unique_clusters)))
+
+            for i, cluster in enumerate(unique_clusters):
+                mask = clusters == cluster
+                ax.scatter(time_sorted[mask], s_sorted[mask],
+                          alpha=0.6, s=8, color=colors[i],
+                          label=cluster if row_idx == 0 else "", edgecolors='none')
+        else:
+            ax.scatter(time_sorted, s_sorted, alpha=0.6, s=8, color='steelblue', edgecolors='none')
+
+        # Set axis labels only for bottom row
+        if row_idx == total_genes - 1:
+            ax.set_xlabel(r'shared time, $\hat{\mu}(t)$', fontsize=8)
+            ax.set_ylabel(r'spliced, $\hat{\mu}(s)$', fontsize=8)
+        else:
+            ax.set_xlabel('')
+            ax.set_ylabel('')
+    else:
+        ax.text(0.5, 0.5, 'Time data\nnot available',
+               ha='center', va='center', transform=ax.transAxes)
+
+    ax.grid(True, alpha=0.3)
+
+
+def _plot_gene_predictive_umap(
+    adata: AnnData,
+    ax: plt.Axes,
+    gene_idx: int,
+    gene_name: str,
+    check_type: str,
+    basis: str = "umap"
+) -> None:
+    """Plot predictive spliced expression in UMAP space for a single gene."""
+    if f'X_{basis}' in adata.obsm and 'spliced' in adata.layers:
+        coords = adata.obsm[f'X_{basis}']
+        s_gene = adata.layers['spliced'][:, gene_idx]
+
+        # Create scatter plot with gene expression as color
+        scatter = ax.scatter(
+            coords[:, 0], coords[:, 1],
+            c=s_gene, cmap='cividis',
+            alpha=0.8, s=8, edgecolors='none'
+        )
+
+        # Add colorbar
+        cbar = plt.colorbar(scatter, ax=ax, shrink=0.8, aspect=20)
+        cbar.ax.tick_params(labelsize=6)
+
+        ax.set_aspect('equal')
+        ax.axis('off')
+    else:
+        ax.text(0.5, 0.5, f'{basis.upper()} or\nexpression data\nnot available',
+               ha='center', va='center', transform=ax.transAxes)
+        ax.axis('off')
+
+
+def _plot_gene_observed_umap(
+    adata: AnnData,
+    ax: plt.Axes,
+    gene_idx: int,
+    gene_name: str,
+    check_type: str,
+    basis: str = "umap"
+) -> None:
+    """Plot observed log spliced expression in UMAP space for a single gene."""
+    if f'X_{basis}' in adata.obsm and 'spliced' in adata.layers:
+        coords = adata.obsm[f'X_{basis}']
+        s_gene = adata.layers['spliced'][:, gene_idx]
+
+        # Use log-transformed expression for observed data
+        s_gene_log = np.log1p(s_gene)  # log(1 + x) to handle zeros
+
+        # Create scatter plot with log gene expression as color
+        scatter = ax.scatter(
+            coords[:, 0], coords[:, 1],
+            c=s_gene_log, cmap='cividis',
+            alpha=0.8, s=8, edgecolors='none'
+        )
+
+        # Add colorbar
+        cbar = plt.colorbar(scatter, ax=ax, shrink=0.8, aspect=20)
+        cbar.ax.tick_params(labelsize=6)
+
+        ax.set_aspect('equal')
+        ax.axis('off')
+    else:
+        ax.text(0.5, 0.5, f'{basis.upper()} or\nexpression data\nnot available',
+               ha='center', va='center', transform=ax.transAxes)
+        ax.axis('off')
 
 
 def _plot_pattern_proportions(
