@@ -319,7 +319,8 @@ def plot_temporal_dynamics(
     figsize: Optional[Tuple[int, int]] = None,
     save_path: Optional[str] = None,
     num_genes: int = 6,
-    basis: str = "umap"
+    basis: str = "umap",
+    default_fontsize: int = 7
 ) -> plt.Figure:
     """
     Plot temporal dynamics: multi-gene visualization with phase portraits,
@@ -331,6 +332,8 @@ def plot_temporal_dynamics(
     - Predictive spliced expression in UMAP space
     - Observed log spliced expression in UMAP space
 
+    Uses the same gridspec layout as the rainbow plot for proper spacing and formatting.
+
     Args:
         adata: AnnData object with expression data
         check_type: Type of check ("prior" or "posterior")
@@ -338,16 +341,17 @@ def plot_temporal_dynamics(
         save_path: Optional directory path to save figures
         num_genes: Number of genes to display (default: 6)
         basis: Embedding basis for spatial plots (default: "umap")
+        default_fontsize: Default font size for labels and titles (default: 7)
 
     Returns:
         matplotlib Figure object
     """
-    # Auto-calculate figure size if not provided (square aspect ratio preference)
-    if figsize is None:
-        subplot_height = 1.5
-        subplot_width = 2.0
-        n_cols = 4  # phase, dynamics, predictive, observed
-        figsize = (subplot_width * n_cols, subplot_height * num_genes)
+    from matplotlib.gridspec import GridSpec
+
+    from pyrovelocity.plots._common import set_colorbar, set_font_size
+
+    # Set font size
+    set_font_size(default_fontsize)
 
     # Select genes to plot
     available_genes = min(num_genes, adata.n_vars)
@@ -357,35 +361,30 @@ def plot_temporal_dynamics(
     gene_indices = np.random.choice(adata.n_vars, available_genes, replace=False)
     gene_names = [adata.var_names[i] for i in gene_indices]
 
-    # Create subplot grid
-    fig, axes = plt.subplots(available_genes, 4, figsize=figsize)
-
-    # Handle single gene case
-    if available_genes == 1:
-        axes = axes.reshape(1, -1)
+    # Create figure and gridspec using rainbow plot pattern
+    fig, axes_dict = _create_temporal_dynamics_figure(available_genes, figsize)
 
     # Plot each gene
     for n, (gene_idx, gene_name) in enumerate(zip(gene_indices, gene_names)):
-        # Phase portrait (column 0)
-        _plot_gene_phase_portrait(adata, axes[n, 0], gene_idx, gene_name, check_type, n, available_genes)
+        # Phase portrait
+        _plot_gene_phase_portrait_rainbow(adata, axes_dict, n, gene_idx, gene_name, check_type, available_genes)
 
-        # Spliced dynamics (column 1)
-        _plot_gene_spliced_dynamics(adata, axes[n, 1], gene_idx, gene_name, check_type, n, available_genes)
+        # Spliced dynamics
+        _plot_gene_spliced_dynamics_rainbow(adata, axes_dict, n, gene_idx, gene_name, check_type, available_genes)
 
-        # Predictive spliced in UMAP (column 2)
-        _plot_gene_predictive_umap(adata, axes[n, 2], gene_idx, gene_name, check_type, basis)
+        # Predictive spliced in UMAP
+        _plot_gene_predictive_umap_rainbow(adata, axes_dict, n, gene_idx, gene_name, check_type, basis)
 
-        # Observed spliced in UMAP (column 3)
-        _plot_gene_observed_umap(adata, axes[n, 3], gene_idx, gene_name, check_type, basis)
+        # Observed spliced in UMAP
+        _plot_gene_observed_umap_rainbow(adata, axes_dict, n, gene_idx, gene_name, check_type, basis)
 
-    # Set column titles
-    if available_genes > 0:
-        axes[0, 0].set_title(r"$(u, s)$ phase space", fontsize=10)
-        axes[0, 1].set_title("Spliced dynamics", fontsize=10)
-        axes[0, 2].set_title("Predictive spliced", fontsize=10)
-        axes[0, 3].set_title(r"Observed $\log_{e}$ spliced", fontsize=10)
+        # Set labels and formatting
+        _set_temporal_dynamics_labels(axes_dict, n, gene_name, available_genes, default_fontsize)
 
-    plt.tight_layout()
+    # Set aspect ratios like rainbow plot
+    _set_temporal_dynamics_aspect(axes_dict)
+
+    fig.tight_layout()
 
     if save_path is not None:
         _save_figure(fig, save_path, f"{check_type}_temporal_dynamics")
@@ -1031,16 +1030,63 @@ def _plot_velocity_magnitudes(adata: AnnData, ax: plt.Axes, check_type: str) -> 
     ax.grid(True, alpha=0.3)
 
 
-def _plot_gene_phase_portrait(
+
+
+
+def _create_temporal_dynamics_figure(
+    number_of_genes: int,
+    figsize: Optional[Tuple[int, int]] = None
+) -> Tuple[plt.Figure, Dict[str, plt.Axes]]:
+    """Create figure and axes dict using rainbow plot gridspec pattern."""
+    from matplotlib.gridspec import GridSpec
+
+    # Calculate figure size using rainbow plot pattern
+    if figsize is None:
+        subplot_height = 0.9
+        horizontal_panels = 5  # gene_label, phase, dynamics, predictive, observed
+        subplot_width = 1.5 * subplot_height * horizontal_panels
+        figsize = (subplot_width, subplot_height * number_of_genes)
+
+    fig = plt.figure(figsize=figsize)
+
+    # Create gridspec with proper width ratios for gene labels
+    gs = GridSpec(
+        nrows=number_of_genes,
+        ncols=horizontal_panels,
+        figure=fig,
+        width_ratios=[
+            0.21,  # Gene label column (same as rainbow plot)
+            1,     # Phase portrait
+            1,     # Dynamics
+            1,     # Predictive UMAP
+            1,     # Observed UMAP
+        ],
+        wspace=0.2,
+        hspace=0.2,
+    )
+
+    axes_dict = {}
+    for n in range(number_of_genes):
+        axes_dict[f"gene_{n}"] = fig.add_subplot(gs[n, 0])
+        axes_dict[f"gene_{n}"].axis("off")
+        axes_dict[f"phase_{n}"] = fig.add_subplot(gs[n, 1])
+        axes_dict[f"dynamics_{n}"] = fig.add_subplot(gs[n, 2])
+        axes_dict[f"predictive_{n}"] = fig.add_subplot(gs[n, 3])
+        axes_dict[f"observed_{n}"] = fig.add_subplot(gs[n, 4])
+
+    return fig, axes_dict
+
+
+def _plot_gene_phase_portrait_rainbow(
     adata: AnnData,
-    ax: plt.Axes,
+    axes_dict: Dict[str, plt.Axes],
+    n: int,
     gene_idx: int,
     gene_name: str,
     check_type: str,
-    row_idx: int,
     total_genes: int
 ) -> None:
-    """Plot phase portrait (u,s) for a single gene."""
+    """Plot phase portrait (u,s) for a single gene using rainbow plot style."""
     if 'unspliced' in adata.layers and 'spliced' in adata.layers:
         u_gene = adata.layers['unspliced'][:, gene_idx]
         s_gene = adata.layers['spliced'][:, gene_idx]
@@ -1054,38 +1100,26 @@ def _plot_gene_phase_portrait(
 
         if time_col is not None:
             c = adata.obs[time_col]
-            scatter = ax.scatter(s_gene, u_gene, c=c, cmap='viridis', alpha=0.6, s=8, edgecolors='none')
+            axes_dict[f"phase_{n}"].scatter(s_gene, u_gene, c=c, cmap='viridis', alpha=0.6, s=3, edgecolors='none')
         else:
-            ax.scatter(s_gene, u_gene, alpha=0.6, s=8, color='steelblue', edgecolors='none')
-
-        # Set axis labels only for bottom row
-        if row_idx == total_genes - 1:
-            ax.set_xlabel(r'spliced, $\hat{\mu}(s)$', fontsize=8)
-            ax.set_ylabel(r'unspliced, $\hat{\mu}(u)$', fontsize=8)
-        else:
-            ax.set_xlabel('')
-            ax.set_ylabel('')
-
-        # Add gene name on the left
-        ax.text(-0.15, 0.5, gene_name[:7], transform=ax.transAxes,
-               rotation=0, va='center', ha='center', fontsize=8, weight='bold')
+            axes_dict[f"phase_{n}"].scatter(s_gene, u_gene, alpha=0.6, s=3, color='steelblue', edgecolors='none')
     else:
-        ax.text(0.5, 0.5, 'Expression data\nnot available',
-               ha='center', va='center', transform=ax.transAxes)
+        axes_dict[f"phase_{n}"].text(0.5, 0.5, 'Expression data\nnot available',
+               ha='center', va='center', transform=axes_dict[f"phase_{n}"].transAxes)
 
-    ax.grid(True, alpha=0.3)
+    axes_dict[f"phase_{n}"].grid(True, alpha=0.3)
 
 
-def _plot_gene_spliced_dynamics(
+def _plot_gene_spliced_dynamics_rainbow(
     adata: AnnData,
-    ax: plt.Axes,
+    axes_dict: Dict[str, plt.Axes],
+    n: int,
     gene_idx: int,
     gene_name: str,
     check_type: str,
-    row_idx: int,
     total_genes: int
 ) -> None:
-    """Plot spliced expression dynamics over time for a single gene."""
+    """Plot spliced expression dynamics over time using rainbow plot style."""
     # Find available time column
     time_col = None
     for col in ['latent_time', 'cell_time', 't_star']:
@@ -1116,67 +1150,68 @@ def _plot_gene_spliced_dynamics(
 
             for i, cluster in enumerate(unique_clusters):
                 mask = clusters == cluster
-                ax.scatter(time_sorted[mask], s_sorted[mask],
-                          alpha=0.6, s=8, color=colors[i],
-                          label=cluster if row_idx == 0 else "", edgecolors='none')
+                axes_dict[f"dynamics_{n}"].scatter(time_sorted[mask], s_sorted[mask],
+                          alpha=0.6, s=3, color=colors[i], edgecolors='none')
         else:
-            ax.scatter(time_sorted, s_sorted, alpha=0.6, s=8, color='steelblue', edgecolors='none')
-
-        # Set axis labels only for bottom row
-        if row_idx == total_genes - 1:
-            ax.set_xlabel(r'shared time, $\hat{\mu}(t)$', fontsize=8)
-            ax.set_ylabel(r'spliced, $\hat{\mu}(s)$', fontsize=8)
-        else:
-            ax.set_xlabel('')
-            ax.set_ylabel('')
+            axes_dict[f"dynamics_{n}"].scatter(time_sorted, s_sorted, alpha=0.6, s=3, color='steelblue', edgecolors='none')
     else:
-        ax.text(0.5, 0.5, 'Time data\nnot available',
-               ha='center', va='center', transform=ax.transAxes)
+        axes_dict[f"dynamics_{n}"].text(0.5, 0.5, 'Time data\nnot available',
+               ha='center', va='center', transform=axes_dict[f"dynamics_{n}"].transAxes)
 
-    ax.grid(True, alpha=0.3)
+    axes_dict[f"dynamics_{n}"].grid(True, alpha=0.3)
 
 
-def _plot_gene_predictive_umap(
+def _plot_gene_predictive_umap_rainbow(
     adata: AnnData,
-    ax: plt.Axes,
+    axes_dict: Dict[str, plt.Axes],
+    n: int,
     gene_idx: int,
     gene_name: str,
     check_type: str,
     basis: str = "umap"
 ) -> None:
-    """Plot predictive spliced expression in UMAP space for a single gene."""
+    """Plot predictive spliced expression in UMAP space using rainbow plot style."""
+    from pyrovelocity.plots._common import set_colorbar
+
     if f'X_{basis}' in adata.obsm and 'spliced' in adata.layers:
         coords = adata.obsm[f'X_{basis}']
         s_gene = adata.layers['spliced'][:, gene_idx]
 
         # Create scatter plot with gene expression as color
-        scatter = ax.scatter(
+        im = axes_dict[f"predictive_{n}"].scatter(
             coords[:, 0], coords[:, 1],
             c=s_gene, cmap='cividis',
-            alpha=0.8, s=8, edgecolors='none'
+            alpha=0.8, s=3, edgecolors='none'
         )
 
-        # Add colorbar
-        cbar = plt.colorbar(scatter, ax=ax, shrink=0.8, aspect=20)
-        cbar.ax.tick_params(labelsize=6)
+        # Add colorbar using rainbow plot style
+        set_colorbar(
+            im,
+            axes_dict[f"predictive_{n}"],
+            labelsize=5,
+            fig=axes_dict[f"predictive_{n}"].figure,
+            rainbow=True,
+        )
 
-        ax.set_aspect('equal')
-        ax.axis('off')
+        axes_dict[f"predictive_{n}"].axis('off')
     else:
-        ax.text(0.5, 0.5, f'{basis.upper()} or\nexpression data\nnot available',
-               ha='center', va='center', transform=ax.transAxes)
-        ax.axis('off')
+        axes_dict[f"predictive_{n}"].text(0.5, 0.5, f'{basis.upper()} or\nexpression data\nnot available',
+               ha='center', va='center', transform=axes_dict[f"predictive_{n}"].transAxes)
+        axes_dict[f"predictive_{n}"].axis('off')
 
 
-def _plot_gene_observed_umap(
+def _plot_gene_observed_umap_rainbow(
     adata: AnnData,
-    ax: plt.Axes,
+    axes_dict: Dict[str, plt.Axes],
+    n: int,
     gene_idx: int,
     gene_name: str,
     check_type: str,
     basis: str = "umap"
 ) -> None:
-    """Plot observed log spliced expression in UMAP space for a single gene."""
+    """Plot observed log spliced expression in UMAP space using rainbow plot style."""
+    from pyrovelocity.plots._common import set_colorbar
+
     if f'X_{basis}' in adata.obsm and 'spliced' in adata.layers:
         coords = adata.obsm[f'X_{basis}']
         s_gene = adata.layers['spliced'][:, gene_idx]
@@ -1185,22 +1220,81 @@ def _plot_gene_observed_umap(
         s_gene_log = np.log1p(s_gene)  # log(1 + x) to handle zeros
 
         # Create scatter plot with log gene expression as color
-        scatter = ax.scatter(
+        im = axes_dict[f"observed_{n}"].scatter(
             coords[:, 0], coords[:, 1],
             c=s_gene_log, cmap='cividis',
-            alpha=0.8, s=8, edgecolors='none'
+            alpha=0.8, s=3, edgecolors='none'
         )
 
-        # Add colorbar
-        cbar = plt.colorbar(scatter, ax=ax, shrink=0.8, aspect=20)
-        cbar.ax.tick_params(labelsize=6)
+        # Add colorbar using rainbow plot style
+        set_colorbar(
+            im,
+            axes_dict[f"observed_{n}"],
+            labelsize=5,
+            fig=axes_dict[f"observed_{n}"].figure,
+            rainbow=True,
+        )
 
-        ax.set_aspect('equal')
-        ax.axis('off')
+        axes_dict[f"observed_{n}"].axis('off')
     else:
-        ax.text(0.5, 0.5, f'{basis.upper()} or\nexpression data\nnot available',
-               ha='center', va='center', transform=ax.transAxes)
-        ax.axis('off')
+        axes_dict[f"observed_{n}"].text(0.5, 0.5, f'{basis.upper()} or\nexpression data\nnot available',
+               ha='center', va='center', transform=axes_dict[f"observed_{n}"].transAxes)
+        axes_dict[f"observed_{n}"].axis('off')
+
+
+def _set_temporal_dynamics_labels(
+    axes_dict: Dict[str, plt.Axes],
+    n: int,
+    gene_name: str,
+    total_genes: int,
+    default_fontsize: int
+) -> None:
+    """Set labels and titles for temporal dynamics plot using rainbow plot style."""
+    # Set gene name in the gene label column
+    axes_dict[f"gene_{n}"].text(
+        0.5, 0.5, gene_name[:7],
+        transform=axes_dict[f"gene_{n}"].transAxes,
+        rotation=0, va='center', ha='center',
+        fontsize=default_fontsize, weight='bold'
+    )
+
+    # Set column titles only for the first row
+    if n == 0:
+        axes_dict[f"phase_{n}"].set_title(r"$(u, s)$ phase space", fontsize=default_fontsize)
+        axes_dict[f"dynamics_{n}"].set_title("Spliced dynamics", fontsize=default_fontsize)
+        axes_dict[f"predictive_{n}"].set_title("Predictive spliced", fontsize=default_fontsize)
+        axes_dict[f"observed_{n}"].set_title(r"Observed $\log_{e}$ spliced", fontsize=default_fontsize)
+
+    # Set axis labels only for bottom row
+    if n == total_genes - 1:
+        axes_dict[f"phase_{n}"].set_xlabel(r'spliced, $\hat{\mu}(s)$', fontsize=default_fontsize * 0.8)
+        axes_dict[f"phase_{n}"].set_ylabel(r'unspliced, $\hat{\mu}(u)$', fontsize=default_fontsize * 0.8)
+        axes_dict[f"dynamics_{n}"].set_xlabel(r'shared time, $\hat{\mu}(t)$', fontsize=default_fontsize * 0.8)
+        axes_dict[f"dynamics_{n}"].set_ylabel(r'spliced, $\hat{\mu}(s)$', fontsize=default_fontsize * 0.8)
+    else:
+        # Remove axis labels for non-bottom rows
+        axes_dict[f"phase_{n}"].set_xlabel('')
+        axes_dict[f"phase_{n}"].set_ylabel('')
+        axes_dict[f"dynamics_{n}"].set_xlabel('')
+        axes_dict[f"dynamics_{n}"].set_ylabel('')
+
+    # Set tick parameters
+    axes_dict[f"phase_{n}"].tick_params(labelsize=default_fontsize * 0.6)
+    axes_dict[f"dynamics_{n}"].tick_params(labelsize=default_fontsize * 0.6)
+
+
+def _set_temporal_dynamics_aspect(axes_dict: Dict[str, plt.Axes]) -> None:
+    """Set aspect ratios for temporal dynamics plot using rainbow plot style."""
+    # Set equal aspect for UMAP plots (like rainbow plot)
+    for key in axes_dict.keys():
+        if 'predictive_' in key or 'observed_' in key:
+            axes_dict[key].set_aspect('equal')
+        elif 'phase_' in key:
+            # Phase plots can have auto aspect
+            axes_dict[key].set_aspect('auto')
+        elif 'dynamics_' in key:
+            # Dynamics plots can have auto aspect
+            axes_dict[key].set_aspect('auto')
 
 
 def _plot_pattern_proportions(
