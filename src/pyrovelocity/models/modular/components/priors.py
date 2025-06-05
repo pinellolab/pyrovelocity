@@ -277,6 +277,19 @@ class LogNormalPriorModel:
 
         return params
 
+    def get_parameter_metadata(self) -> "ComponentParameterMetadata":
+        """
+        Get parameter metadata for this component.
+
+        Returns:
+            ComponentParameterMetadata containing metadata for all parameters
+            defined by this component.
+        """
+        from pyrovelocity.models.modular.metadata import (
+            create_lognormal_prior_metadata,
+        )
+        return create_lognormal_prior_metadata()
+
 
 @PriorModelRegistry.register("piecewise_activation")
 class PiecewiseActivationPriorModel:
@@ -758,6 +771,19 @@ class PiecewiseActivationPriorModel:
             stacked_samples[key] = torch.stack(sample_list, dim=0)
 
         return stacked_samples
+
+    def get_parameter_metadata(self) -> "ComponentParameterMetadata":
+        """
+        Get parameter metadata for this component.
+
+        Returns:
+            ComponentParameterMetadata containing metadata for all parameters
+            defined by this component.
+        """
+        from pyrovelocity.models.modular.metadata import (
+            create_piecewise_activation_prior_metadata,
+        )
+        return create_piecewise_activation_prior_metadata()
 
     @beartype
     def _satisfies_pattern_constraints(
