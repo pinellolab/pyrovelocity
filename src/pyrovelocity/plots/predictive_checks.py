@@ -1040,10 +1040,12 @@ def _create_temporal_dynamics_figure(
     """Create figure and axes dict using rainbow plot gridspec pattern."""
     from matplotlib.gridspec import GridSpec
 
+    # Define number of horizontal panels
+    horizontal_panels = 5  # gene_label, phase, dynamics, predictive, observed
+
     # Calculate figure size using rainbow plot pattern
     if figsize is None:
         subplot_height = 0.9
-        horizontal_panels = 5  # gene_label, phase, dynamics, predictive, observed
         subplot_width = 1.5 * subplot_height * horizontal_panels
         figsize = (subplot_width, subplot_height * number_of_genes)
 
