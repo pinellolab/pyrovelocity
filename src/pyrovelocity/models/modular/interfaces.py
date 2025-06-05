@@ -45,9 +45,11 @@ Examples:
     ```
 """
 
+from dataclasses import dataclass
 from typing import (
     Any,
     Dict,
+    List,
     Optional,
     Protocol,
     Tuple,
@@ -59,8 +61,127 @@ from typing import (
 import pyro
 import pyro.distributions as dist
 import torch
+from beartype import beartype
 from beartype.typing import Callable
 from jaxtyping import Array, Float, Int
+
+
+@dataclass
+class ParameterMetadata:
+    """
+    Metadata for model parameters to support plotting and documentation.
+
+    This class provides a standardized way to store parameter metadata that can be
+    used by plotting functions, documentation generation, and other tools that need
+    to understand parameter semantics.
+
+    Attributes:
+        name: Parameter name as used in the model code
+        display_name: Human-readable name for display (LaTeX formatted)
+        short_label: Short label for x-axis in plots (plain text, space-constrained)
+        description: Detailed description of the parameter's biological/mathematical meaning
+        units: Physical or mathematical units (if applicable)
+        typical_range: Typical range of values for this parameter
+        biological_interpretation: Biological meaning and context
+        plot_color: Preferred color for plotting (optional)
+        plot_order: Suggested order for plotting multiple parameters (optional)
+
+    Examples:
+        >>> alpha_off_meta = ParameterMetadata(
+        ...     name="alpha_off",
+        ...     display_name=r"$\alpha_{off}$",
+        ...     short_label="Basal Rate",
+        ...     description="Dimensionless basal transcription rate during inactive phase",
+        ...     units="dimensionless",
+        ...     typical_range=(0.01, 0.5),
+        ...     biological_interpretation="Low expression state transcription activity",
+        ...     plot_order=1
+        ... )
+    """
+    name: str
+    display_name: str
+    short_label: str
+    description: str
+    units: Optional[str] = None
+    typical_range: Optional[Tuple[float, float]] = None
+    biological_interpretation: Optional[str] = None
+    plot_color: Optional[str] = None
+    plot_order: Optional[int] = None
+
+
+@dataclass
+class ComponentParameterMetadata:
+    """
+    Container for all parameter metadata associated with a model component.
+
+    This class aggregates parameter metadata for a specific component (e.g., prior model,
+    dynamics model) and provides methods for accessing and querying the metadata.
+
+    Attributes:
+        component_name: Name of the component (e.g., "piecewise_activation_prior")
+        component_type: Type of component (e.g., "prior", "dynamics", "likelihood")
+        parameters: Dictionary mapping parameter names to their metadata
+        description: Description of the component and its role
+
+    Examples:
+        >>> prior_metadata = ComponentParameterMetadata(
+        ...     component_name="piecewise_activation_prior",
+        ...     component_type="prior",
+        ...     parameters={
+        ...         "alpha_off": alpha_off_meta,
+        ...         "alpha_on": alpha_on_meta,
+        ...         # ... other parameters
+        ...     },
+        ...     description="Prior distributions for piecewise activation model parameters"
+        ... )
+    """
+    component_name: str
+    component_type: str
+    parameters: Dict[str, ParameterMetadata]
+    description: Optional[str] = None
+
+    def get_parameter_metadata(self, param_name: str) -> Optional[ParameterMetadata]:
+        """Get metadata for a specific parameter."""
+        return self.parameters.get(param_name)
+
+    def get_short_labels(self) -> Dict[str, str]:
+        """Get mapping of parameter names to short labels for plotting."""
+        return {name: meta.short_label for name, meta in self.parameters.items()}
+
+    def get_display_names(self) -> Dict[str, str]:
+        """Get mapping of parameter names to LaTeX display names."""
+        return {name: meta.display_name for name, meta in self.parameters.items()}
+
+    def get_ordered_parameters(self) -> List[str]:
+        """Get parameter names ordered by plot_order (if specified)."""
+        params_with_order = [(name, meta.plot_order or 999) for name, meta in self.parameters.items()]
+        params_with_order.sort(key=lambda x: x[1])
+        return [name for name, _ in params_with_order]
+
+
+@runtime_checkable
+class ParameterMetadataProvider(Protocol):
+    """
+    Protocol for components that provide parameter metadata.
+
+    Components implementing this protocol can provide metadata about their parameters
+    for use in plotting, documentation, and other tools that need to understand
+    parameter semantics.
+
+    This is an optional protocol - components that don't implement it will fall back
+    to default parameter formatting behavior.
+    """
+
+    def get_parameter_metadata(self) -> ComponentParameterMetadata:
+        """
+        Get parameter metadata for this component.
+
+        Returns:
+            ComponentParameterMetadata containing metadata for all parameters
+            defined by this component.
+        """
+        ...
+
 
 # Type aliases for improved readability
 Tensor = torch.Tensor
