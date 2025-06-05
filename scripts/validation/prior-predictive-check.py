@@ -58,6 +58,7 @@ fig_prior = plot_prior_predictive_checks(
     prior_parameters=prior_parameter_samples,
     figsize=(15, 10),
     save_path="reports/docs/prior_predictive",
+    combine_individual_pdfs=True,
 )
 
 plt.suptitle("Prior Predictive Checks: Piecewise Activation Model", fontsize=16)
