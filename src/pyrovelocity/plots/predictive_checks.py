@@ -353,7 +353,8 @@ def plot_parameter_relationships(
     check_type: str = "prior",
     figsize: Tuple[int, int] = (7.5, 2.5),  # Standard width, appropriate height
     save_path: Optional[str] = None,
-    file_prefix: str = ""
+    file_prefix: str = "",
+    model: Optional[Any] = None
 ) -> plt.Figure:
     """
     Plot parameter relationships: correlations, fold-change, and timing.
@@ -363,6 +364,8 @@ def plot_parameter_relationships(
         check_type: Type of check ("prior" or "posterior")
         figsize: Figure size (width, height)
         save_path: Optional directory path to save figures
+        file_prefix: Prefix for saved file names
+        model: Optional PyroVelocity model instance for parameter metadata
 
     Returns:
         matplotlib Figure object
@@ -370,13 +373,13 @@ def plot_parameter_relationships(
     fig, axes = plt.subplots(1, 3, figsize=figsize)
 
     # Hierarchical time structure
-    _plot_hierarchical_time_structure(parameters, axes[0], check_type)
+    _plot_hierarchical_time_structure(parameters, axes[0], check_type, model=model)
 
     # Fold-change distribution
-    _plot_fold_change_distribution(parameters, axes[1], check_type)
+    _plot_fold_change_distribution(parameters, axes[1], check_type, model=model)
 
     # Activation timing
-    _plot_activation_timing(parameters, axes[2], check_type)
+    _plot_activation_timing(parameters, axes[2], check_type, model=model)
 
     plt.tight_layout()
 
@@ -609,7 +612,7 @@ def plot_prior_predictive_checks(
 
         # Create plots in logical order with numbered prefixes for proper PDF combination ordering
         plot_parameter_marginals(processed_parameters, check_type, save_path=save_path, file_prefix="02", model=model)
-        plot_parameter_relationships(processed_parameters, check_type, save_path=save_path, file_prefix="03")
+        plot_parameter_relationships(processed_parameters, check_type, save_path=save_path, file_prefix="03", model=model)
         plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="04")
         plot_expression_validation(prior_adata, check_type, save_path=save_path, file_prefix="05")
         plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path, file_prefix="06")
@@ -628,13 +631,13 @@ def plot_prior_predictive_checks(
     _plot_umap_leiden_clusters(prior_adata, ax1, check_type)
 
     ax2 = fig.add_subplot(gs[0, 1])
-    _plot_umap_time_coordinate(prior_adata, ax2, check_type)
+    _plot_umap_time_coordinate(prior_adata, ax2, check_type, model=model)
 
     ax3 = fig.add_subplot(gs[0, 2])
-    _plot_fold_change_distribution(processed_parameters, ax3, check_type)
+    _plot_fold_change_distribution(processed_parameters, ax3, check_type, model=model)
 
     ax4 = fig.add_subplot(gs[0, 3])
-    _plot_activation_timing(processed_parameters, ax4, check_type)
+    _plot_activation_timing(processed_parameters, ax4, check_type, model=model)
 
     # Row 2: Expression Data Validation
     ax5 = fig.add_subplot(gs[1, 0])
@@ -738,8 +741,13 @@ def _plot_umap_leiden_clusters(adata: AnnData, ax: plt.Axes, check_type: str) ->
             ax.set_title(f'{check_type.title()} UMAP (Clusters)')
 
 
-def _plot_umap_time_coordinate(adata: AnnData, ax: plt.Axes, check_type: str) -> None:
+def _plot_umap_time_coordinate(adata: AnnData, ax: plt.Axes, check_type: str, model: Optional[Any] = None) -> None:
     """Plot UMAP embedding colored by time coordinate."""
+    from pyrovelocity.plots.parameter_metadata import (
+        get_parameter_label,
+        infer_component_name_from_parameters,
+    )
+
     if 'X_umap' in adata.obsm:
         umap_coords = adata.obsm['X_umap']
 
@@ -754,7 +762,15 @@ def _plot_umap_time_coordinate(adata: AnnData, ax: plt.Axes, check_type: str) ->
         for key in time_keys:
             if key in adata.obs:
                 time_coord = adata.obs[key].values
-                time_label = _format_parameter_name(key.replace('_', '_'))
+
+                # Get parameter label using new metadata system
+                time_label = get_parameter_label(
+                    param_name=key,
+                    label_type="display",
+                    model=model,
+                    component_name=None,  # Time coordinates don't have component names
+                    fallback_to_legacy=True
+                )
                 break
 
         if time_coord is not None:
@@ -863,9 +879,20 @@ def _process_parameters_for_plotting(
 def _plot_parameter_marginals_summary(
     parameters: Dict[str, torch.Tensor],
     ax: plt.Axes,
-    check_type: str
+    check_type: str,
+    model: Optional[Any] = None
 ) -> None:
     """Plot marginal distributions of key parameters (summary version for overview)."""
+    from pyrovelocity.plots.parameter_metadata import (
+        get_parameter_label,
+        infer_component_name_from_parameters,
+    )
+
+    # Try to infer component name from all parameters if model not provided
+    component_name = None
+    if model is None:
+        component_name = infer_component_name_from_parameters(parameters)
+
     # Focus on piecewise activation parameters
     key_params = ['alpha_off', 'alpha_on', 't_on_star', 'delta_star']
 
@@ -874,9 +901,19 @@ def _plot_parameter_marginals_summary(
     for i, param_name in enumerate(key_params):
         if param_name in parameters:
             values = parameters[param_name].flatten().numpy()
+
+            # Get parameter label using new metadata system
+            param_label = get_parameter_label(
+                param_name=param_name,
+                label_type="display",
+                model=model,
+                component_name=component_name,
+                fallback_to_legacy=True
+            )
+
             # Use relative frequency for consistency with main marginals plot
             ax.hist(values, bins=30, alpha=0.6, color=colors[i],
-                   label=_format_parameter_name(param_name), density=False,
+                   label=param_label, density=False,
                    weights=np.ones(len(values)) / len(values))
 
     ax.set_xlabel('Parameter Value')
@@ -890,9 +927,20 @@ def _plot_parameter_marginals_summary(
 def _plot_hierarchical_time_structure(
     parameters: Dict[str, torch.Tensor],
     ax: plt.Axes,
-    check_type: str
+    check_type: str,
+    model: Optional[Any] = None
 ) -> None:
     """Plot hierarchical time parameter relationships."""
+    from pyrovelocity.plots.parameter_metadata import (
+        get_parameter_label,
+        infer_component_name_from_parameters,
+    )
+
+    # Try to infer component name from all parameters if model not provided
+    component_name = None
+    if model is None:
+        component_name = infer_component_name_from_parameters(parameters)
+
     # Check for hierarchical time parameters
     time_params = ['T_M_star', 't_loc', 't_scale']
     available_time_params = [p for p in time_params if p in parameters]
@@ -904,8 +952,25 @@ def _plot_hierarchical_time_structure(
             t_scale = parameters['t_scale'].flatten().numpy()
 
             ax.scatter(T_M, t_scale, alpha=0.6, s=20, color='purple')
-            ax.set_xlabel(f'Global Time Scale ({_format_parameter_name("T_M_star")})', fontsize=7)
-            ax.set_ylabel(f'Population Time Spread ({_format_parameter_name("t_scale")})', fontsize=7)
+
+            # Get parameter labels using new metadata system
+            T_M_label = get_parameter_label(
+                param_name="T_M_star",
+                label_type="display",
+                model=model,
+                component_name=component_name,
+                fallback_to_legacy=True
+            )
+            t_scale_label = get_parameter_label(
+                param_name="t_scale",
+                label_type="display",
+                model=model,
+                component_name=component_name,
+                fallback_to_legacy=True
+            )
+
+            ax.set_xlabel(f'Global Time Scale ({T_M_label})', fontsize=7)
+            ax.set_ylabel(f'Population Time Spread ({t_scale_label})', fontsize=7)
             ax.set_title(f'{check_type.title()} Hierarchical Time Structure', fontsize=8)
             ax.tick_params(labelsize=6)  # Reduce tick label size
 
@@ -922,8 +987,25 @@ def _plot_hierarchical_time_structure(
             t_scale = parameters['t_scale'].flatten().numpy()
 
             ax.scatter(t_loc, t_scale, alpha=0.6, s=20, color='purple')
-            ax.set_xlabel(f'Population Time Location ({_format_parameter_name("t_loc")})', fontsize=7)
-            ax.set_ylabel(f'Population Time Spread ({_format_parameter_name("t_scale")})', fontsize=7)
+
+            # Get parameter labels using new metadata system
+            t_loc_label = get_parameter_label(
+                param_name="t_loc",
+                label_type="display",
+                model=model,
+                component_name=component_name,
+                fallback_to_legacy=True
+            )
+            t_scale_label = get_parameter_label(
+                param_name="t_scale",
+                label_type="display",
+                model=model,
+                component_name=component_name,
+                fallback_to_legacy=True
+            )
+
+            ax.set_xlabel(f'Population Time Location ({t_loc_label})', fontsize=7)
+            ax.set_ylabel(f'Population Time Spread ({t_scale_label})', fontsize=7)
             ax.set_title(f'{check_type.title()} Population Time Parameters', fontsize=8)
             ax.tick_params(labelsize=6)  # Reduce tick label size
             ax.legend(fontsize=8)
@@ -936,16 +1018,27 @@ def _plot_hierarchical_time_structure(
 
 
 def _plot_fold_change_distribution(
-    parameters: Dict[str, torch.Tensor], 
-    ax: plt.Axes, 
-    check_type: str
+    parameters: Dict[str, torch.Tensor],
+    ax: plt.Axes,
+    check_type: str,
+    model: Optional[Any] = None
 ) -> None:
     """Plot fold-change distribution."""
+    from pyrovelocity.plots.parameter_metadata import (
+        get_parameter_label,
+        infer_component_name_from_parameters,
+    )
+
+    # Try to infer component name from all parameters if model not provided
+    component_name = None
+    if model is None:
+        component_name = infer_component_name_from_parameters(parameters)
+
     if 'alpha_off' in parameters and 'alpha_on' in parameters:
         alpha_off = parameters['alpha_off'].flatten()
         alpha_on = parameters['alpha_on'].flatten()
         fold_change = (alpha_on / alpha_off).numpy()
-        
+
         # Use relative frequency for consistency
         ax.hist(fold_change, bins=50, alpha=0.7, color='skyblue', density=False,
                weights=np.ones(len(fold_change)) / len(fold_change))
@@ -954,7 +1047,23 @@ def _plot_fold_change_distribution(
         ax.axvline(3.3, color='orange', linestyle=':', label='Min threshold: 3.3')
         ax.axvline(7.5, color='green', linestyle=':', label='Activation threshold: 7.5')
 
-        ax.set_xlabel(f'Fold-change ({_format_parameter_name("alpha_on")} / {_format_parameter_name("alpha_off")})', fontsize=7)
+        # Get parameter labels using new metadata system
+        alpha_on_label = get_parameter_label(
+            param_name="alpha_on",
+            label_type="display",
+            model=model,
+            component_name=component_name,
+            fallback_to_legacy=True
+        )
+        alpha_off_label = get_parameter_label(
+            param_name="alpha_off",
+            label_type="display",
+            model=model,
+            component_name=component_name,
+            fallback_to_legacy=True
+        )
+
+        ax.set_xlabel(f'Fold-change ({alpha_on_label} / {alpha_off_label})', fontsize=7)
         ax.set_ylabel('Relative Frequency', fontsize=7)
         ax.set_title(f'{check_type.title()} Fold-change Distribution', fontsize=8)
         ax.tick_params(labelsize=6)  # Reduce tick label size
@@ -964,23 +1073,51 @@ def _plot_fold_change_distribution(
         ax.text(0.5, 0.5, 'Alpha parameters\nnot available',
                ha='center', va='center', transform=ax.transAxes)
         ax.set_title(f'{check_type.title()} Fold-change Distribution', fontsize=8)
-    
+
     ax.grid(True, alpha=0.3)
 
 
 def _plot_activation_timing(
-    parameters: Dict[str, torch.Tensor], 
-    ax: plt.Axes, 
-    check_type: str
+    parameters: Dict[str, torch.Tensor],
+    ax: plt.Axes,
+    check_type: str,
+    model: Optional[Any] = None
 ) -> None:
     """Plot activation timing and duration distributions."""
+    from pyrovelocity.plots.parameter_metadata import (
+        get_parameter_label,
+        infer_component_name_from_parameters,
+    )
+
+    # Try to infer component name from all parameters if model not provided
+    component_name = None
+    if model is None:
+        component_name = infer_component_name_from_parameters(parameters)
+
     if 't_on_star' in parameters and 'delta_star' in parameters:
         t_on = parameters['t_on_star'].flatten().numpy()
         delta = parameters['delta_star'].flatten().numpy()
-        
+
         ax.scatter(t_on, delta, alpha=0.6, s=20, color='purple')
-        ax.set_xlabel(f'Activation Onset ({_format_parameter_name("t_on_star")})', fontsize=7)
-        ax.set_ylabel(f'Activation Duration ({_format_parameter_name("delta_star")})', fontsize=7)
+
+        # Get parameter labels using new metadata system
+        t_on_label = get_parameter_label(
+            param_name="t_on_star",
+            label_type="display",
+            model=model,
+            component_name=component_name,
+            fallback_to_legacy=True
+        )
+        delta_label = get_parameter_label(
+            param_name="delta_star",
+            label_type="display",
+            model=model,
+            component_name=component_name,
+            fallback_to_legacy=True
+        )
+
+        ax.set_xlabel(f'Activation Onset ({t_on_label})', fontsize=7)
+        ax.set_ylabel(f'Activation Duration ({delta_label})', fontsize=7)
         ax.set_title(f'{check_type.title()} Activation Timing', fontsize=8)
         ax.tick_params(labelsize=6)  # Reduce tick label size
 
@@ -994,7 +1131,7 @@ def _plot_activation_timing(
         ax.text(0.5, 0.5, 'Timing parameters\nnot available',
                ha='center', va='center', transform=ax.transAxes)
         ax.set_title(f'{check_type.title()} Activation Timing', fontsize=8)
-    
+
     ax.grid(True, alpha=0.3)
 
 
