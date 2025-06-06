@@ -748,10 +748,6 @@ def _plot_umap_leiden_clusters(adata: AnnData, ax: plt.Axes, check_type: str) ->
 
 def _plot_umap_time_coordinate(adata: AnnData, ax: plt.Axes, check_type: str, model: Optional[Any] = None) -> None:
     """Plot UMAP embedding colored by time coordinate."""
-    from pyrovelocity.plots.parameter_metadata import (
-        get_parameter_label,
-        infer_component_name_from_parameters,
-    )
 
     if 'X_umap' in adata.obsm:
         umap_coords = adata.obsm['X_umap']
@@ -764,18 +760,23 @@ def _plot_umap_time_coordinate(adata: AnnData, ax: plt.Axes, check_type: str, mo
         time_keys = ['latent_time', 'velocity_pseudotime', 'dpt_pseudotime',
                     'pseudotime', 'time', 't', 'shared_time']
 
+        # Define appropriate labels for time coordinates (non-LaTeX for colorbar)
+        time_coordinate_labels = {
+            'latent_time': 'Latent Time',
+            'velocity_pseudotime': 'Velocity Pseudotime',
+            'dpt_pseudotime': 'DPT Pseudotime',
+            'pseudotime': 'Pseudotime',
+            'time': 'Time',
+            't': 'Time',
+            'shared_time': 'Shared Time'
+        }
+
         for key in time_keys:
             if key in adata.obs:
                 time_coord = adata.obs[key].values
 
-                # Get parameter label using new metadata system
-                time_label = get_parameter_label(
-                    param_name=key,
-                    label_type="display",
-                    model=model,
-                    component_name=None,  # Time coordinates don't have component names
-                    fallback_to_legacy=True
-                )
+                # Use appropriate label for colorbar (non-LaTeX)
+                time_label = time_coordinate_labels.get(key, 'Time Coordinate')
                 break
 
         if time_coord is not None:
@@ -1725,7 +1726,9 @@ def plot_posterior_predictive_checks(
     posterior_parameters: Dict[str, torch.Tensor],
     figsize: Tuple[int, int] = (15, 10),
     save_path: Optional[str] = None,
-    figure_name: Optional[str] = None
+    figure_name: Optional[str] = None,
+    create_individual_plots: bool = True,
+    combine_individual_pdfs: bool = False,
 ) -> plt.Figure:
     """
     Generate posterior predictive check plots.
@@ -1759,5 +1762,7 @@ def plot_posterior_predictive_checks(
         figsize=figsize,
         check_type="posterior",
         save_path=save_path,
-        figure_name=figure_name
+        figure_name=figure_name,
+        create_individual_plots=create_individual_plots,
+        combine_individual_pdfs=combine_individual_pdfs,
     )
