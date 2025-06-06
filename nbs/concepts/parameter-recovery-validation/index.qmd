@@ -776,35 +776,58 @@ The hierarchical time structure introduces new parameters with clear biological 
 
 ## Validation Study 3: Dimensionless Analytical Dynamics with Latent Time and Piecewise Activation
 
-This validation study introduces **piecewise constant transcription rates** while maintaining analytical tractability and resolving the identifiability issues discovered in Study 2. The key innovation is the simultaneous introduction of piecewise activation dynamics and steady-state initial conditions, which together create biologically meaningful dynamics while ensuring proper parameter identifiability.
+This validation study introduces **piecewise constant transcription rates** while maintaining analytical tractability and resolving critical dimensional analysis inconsistencies identified in the piecewise activation framework. The key innovation is a **dimensionally consistent parameterization** that eliminates parameter redundancy by fixing the reference transcription state, while maintaining biological interpretability through fold-change parameters.
 
 ### Model Description
 
-The model extends Study 2 by replacing the constant transcription rate $\alpha^* = 1$ with a **piecewise constant transcription function** $\alpha^*_i(t^*)$ that varies over time for each gene. Initial conditions are fixed to the steady-state values associated with the "off" phase, eliminating the redundant parameterization between state and temporal initial conditions.
+The model extends Study 2 by replacing the constant transcription rate $\alpha^* = 1$ with a **piecewise constant transcription function** $\alpha^*_i(t^*)$ that varies over time for each gene. To resolve dimensional analysis violations, we implement a **constrained parameterization** where the off-state transcription rate serves as a fixed reference ($\alpha^*_{\text{off}i} = 1.0$), eliminating parameter redundancy while maintaining biological interpretability through fold-change parameters.
 
-### Piecewise Transcription Rate Function
+### Dimensionally Consistent Piecewise Framework
+
+#### Reference State Parameterization
+
+To eliminate parameter redundancy identified in the dimensional analysis, we fix the off-state as a reference:
+
+$$\alpha^*_{\text{off}i} = 1.0 \quad \text{(fixed reference, not inferred)}$$
+
+This choice establishes a **consistent dimensional reference** where $U_{0i}$ unambiguously represents the characteristic concentration scale corresponding to the off-state transcription rate.
+
+#### Extended Temporal Framework with Pre-Activation
+
+To accommodate realistic gene expression scenarios, including genes that are already activated when observation begins, we extend the temporal framework to allow **negative onset times**.
+
+#### Piecewise Transcription Rate Function
 
 For each gene $i$, the dimensionless transcription rate follows a three-phase piecewise constant function:
 
 $$\alpha^*_i(t^*) := \begin{cases}
-\alpha^*_{\text{off}i} & \text{if } 0 \leq t^* < t^*_{0,\text{on}i}, \\
-\alpha^*_{\text{on}i} & \text{if } t^*_{0,\text{on}i} \leq t^* < t^*_{0,\text{on}i} + \delta^*_i, \\
-\alpha^*_{\text{off}i} & \text{if } t^*_{0,\text{on}i} + \delta^*_i \leq t^*
+1.0 & \text{if } t^* < t^*_{0,\text{on}i}, \\
+R_{\text{on},i} & \text{if } t^*_{0,\text{on}i} \leq t^* < t^*_{0,\text{on}i} + \delta^*_i, \\
+1.0 & \text{if } t^* \geq t^*_{0,\text{on}i} + \delta^*_i
 \end{cases}$$
 
 where:
-- $\alpha^*_{\text{off}i} = \alpha_{\text{off}i}/\beta_i$ is the dimensionless basal transcription rate
-- $\alpha^*_{\text{on}i} = \alpha_{\text{on}i}/\beta_i$ is the dimensionless active transcription rate
-- $t^*_{0,\text{on}i} = \beta_i \cdot t_{0,\text{on}i}$ is the dimensionless activation onset time
-- $\delta^*_i = \beta_i \cdot \delta_i$ is the dimensionless activation duration
+- $\alpha^*_{\text{off}i} = 1.0$ is the fixed reference transcription rate
+- $R_{\text{on},i} = \alpha^*_{\text{on}i}/\alpha^*_{\text{off}i} = \alpha^*_{\text{on}i}$ is the fold-change during activation (inferred parameter)
+- $t^*_{0,\text{on}i}$ is the dimensionless activation onset time (can be negative for pre-activation scenarios)
+- $\delta^*_i$ is the dimensionless activation duration
+
+#### Biological Interpretation of Negative Onset Times
+
+When $t^*_{0,\text{on}i} < 0$:
+
+- The gene was **already activated** before observation began ($t^* = 0$)
+- Cells at early timepoints may show **high expression** for such genes
+- The model captures **pre-existing activation states** in addition to activation events during observation
+- **Biological examples**: Early developmental genes already active when profiling begins, stress response genes in cells experiencing ongoing stress, lineage commitment factors in partially committed progenitors
 
 ### Steady-State Initial Conditions
 
-To resolve identifiability, initial conditions are fixed to the steady-state values corresponding to the "off" phase:
+Initial conditions are fixed to the off-state steady-state values:
 
-$$u^*_{0i} = \alpha^*_{\text{off}i}, \quad s^*_{0i} = \frac{\alpha^*_{\text{off}i}}{\gamma^*_i}$$
+$$u^*_{0i} = 1.0, \quad s^*_{0i} = \frac{1.0}{\gamma^*_i} = \frac{1}{\gamma^*_i}$$
 
-This eliminates the need to infer $u^*_{0i}$ and $s^*_{0i}$ as separate parameters while providing equivalent modeling flexibility through the $\alpha^*_{\text{off}i}$ parameter.
+This eliminates the need to infer $u^*_{0i}$ and $s^*_{0i}$ as separate parameters while providing equivalent modeling flexibility through the characteristic scale $U_{0i}$ and fold-change $R_{\text{on},i}$.
 
 ### Analytical Solutions for Each Phase
 
@@ -817,36 +840,38 @@ $$\begin{align}
 
 We solve this system analytically for each of the three phases:
 
-#### **Phase 1: Off State** ($0 \leq t^* < t^*_{0,\text{on}i}$)
+#### **Phase 1: Off State** ($t^* < t^*_{0,\text{on}i}$)
 
-With constant transcription rate $\alpha^*_{\text{off}i}$ and initial conditions at steady state, the system remains at equilibrium:
+With constant transcription rate $\alpha^*_{\text{off}i} = 1.0$ and initial conditions at steady state, the system remains at equilibrium:
 
 $$\begin{align}
-u^*_{ij}(t^*) &= \alpha^*_{\text{off}i} \\
-s^*_{ij}(t^*) &= \frac{\alpha^*_{\text{off}i}}{\gamma^*_i}
+u^*_{ij}(t^*) &= 1.0 \\
+s^*_{ij}(t^*) &= \frac{1.0}{\gamma^*_i}
 \end{align}$$
+
+**Note**: This phase may not be observed if $t^*_{0,\text{on}i} < 0$ (pre-activation scenario).
 
 #### **Phase 2: On State** ($t^*_{0,\text{on}i} \leq t^* < t^*_{0,\text{on}i} + \delta^*_i$)
 
 Let $\tau_{\text{on}} = t^* - t^*_{0,\text{on}i}$ be the time since activation onset. The system transitions from the off-state steady state toward the on-state steady state.
 
 **Initial conditions for Phase 2:**
-$$u^*_{\text{on},0i} = \alpha^*_{\text{off}i}, \quad s^*_{\text{on},0i} = \frac{\alpha^*_{\text{off}i}}{\gamma^*_i}$$
+$$u^*_{\text{on},0i} = 1.0, \quad s^*_{\text{on},0i} = \frac{1.0}{\gamma^*_i}$$
 
 **Analytical solutions:**
 
 For $\gamma^*_i \neq 1$:
 $$\begin{align}
-u^*_{ij}(\tau_{\text{on}}) &= \alpha^*_{\text{on}i} + (\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}) e^{-\tau_{\text{on}}} \\
-s^*_{ij}(\tau_{\text{on}}) &= \frac{\alpha^*_{\text{on}i}}{\gamma^*_i} + \left(\frac{\alpha^*_{\text{off}i}}{\gamma^*_i} - \xi_{\text{on}i} - \frac{\alpha^*_{\text{on}i}}{\gamma^*_i}\right) e^{-\gamma^*_i \tau_{\text{on}}} + \xi_{\text{on}i} e^{-\tau_{\text{on}}}
+u^*_{ij}(\tau_{\text{on}}) &= R_{\text{on},i} + (1.0 - R_{\text{on},i}) e^{-\tau_{\text{on}}} \\
+s^*_{ij}(\tau_{\text{on}}) &= \frac{R_{\text{on},i}}{\gamma^*_i} + \left(\frac{1.0}{\gamma^*_i} - \xi_{\text{on}i} - \frac{R_{\text{on},i}}{\gamma^*_i}\right) e^{-\gamma^*_i \tau_{\text{on}}} + \xi_{\text{on}i} e^{-\tau_{\text{on}}}
 \end{align}$$
 
-where $\xi_{\text{on}i} = \frac{\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}}{\gamma^*_i - 1}$.
+where $\xi_{\text{on}i} = \frac{1.0 - R_{\text{on},i}}{\gamma^*_i - 1}$.
 
 For $\gamma^*_i = 1$:
 $$\begin{align}
-u^*_{ij}(\tau_{\text{on}}) &= \alpha^*_{\text{on}i} + (\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}) e^{-\tau_{\text{on}}} \\
-s^*_{ij}(\tau_{\text{on}}) &= \alpha^*_{\text{on}i} + (\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}) e^{-\tau_{\text{on}}} + (\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}) \tau_{\text{on}} e^{-\tau_{\text{on}}}
+u^*_{ij}(\tau_{\text{on}}) &= R_{\text{on},i} + (1.0 - R_{\text{on},i}) e^{-\tau_{\text{on}}} \\
+s^*_{ij}(\tau_{\text{on}}) &= R_{\text{on},i} + (1.0 - R_{\text{on},i}) e^{-\tau_{\text{on}}} + (1.0 - R_{\text{on},i}) \tau_{\text{on}} e^{-\tau_{\text{on}}}
 \end{align}$$
 
 **Special case interpretation ($\gamma^*_i = 1$):**
@@ -869,32 +894,32 @@ The initial conditions for Phase 3 are the endpoint values from Phase 2, compute
 
 For $\gamma^*_i \neq 1$:
 $$\begin{align}
-u^*_{\text{off},0i} &= \alpha^*_{\text{on}i} + (\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}) e^{-\delta^*_i} \\
-s^*_{\text{off},0i} &= \frac{\alpha^*_{\text{on}i}}{\gamma^*_i} + \left(\frac{\alpha^*_{\text{off}i}}{\gamma^*_i} - \xi_{\text{on}i} - \frac{\alpha^*_{\text{on}i}}{\gamma^*_i}\right) e^{-\gamma^*_i \delta^*_i} + \xi_{\text{on}i} e^{-\delta^*_i}
+u^*_{\text{off},0i} &= R_{\text{on},i} + (1.0 - R_{\text{on},i}) e^{-\delta^*_i} \\
+s^*_{\text{off},0i} &= \frac{R_{\text{on},i}}{\gamma^*_i} + \left(\frac{1.0}{\gamma^*_i} - \xi_{\text{on}i} - \frac{R_{\text{on},i}}{\gamma^*_i}\right) e^{-\gamma^*_i \delta^*_i} + \xi_{\text{on}i} e^{-\delta^*_i}
 \end{align}$$
 
 For $\gamma^*_i = 1$:
 $$\begin{align}
-u^*_{\text{off},0i} &= \alpha^*_{\text{on}i} + (\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}) e^{-\delta^*_i} \\
-s^*_{\text{off},0i} &= \alpha^*_{\text{on}i} + (\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}) e^{-\delta^*_i} + (\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}) \delta^*_i e^{-\delta^*_i}
+u^*_{\text{off},0i} &= R_{\text{on},i} + (1.0 - R_{\text{on},i}) e^{-\delta^*_i} \\
+s^*_{\text{off},0i} &= R_{\text{on},i} + (1.0 - R_{\text{on},i}) e^{-\delta^*_i} + (1.0 - R_{\text{on},i}) \delta^*_i e^{-\delta^*_i}
 \end{align}$$
 
-where $\xi_{\text{on}i} = \frac{\alpha^*_{\text{off}i} - \alpha^*_{\text{on}i}}{\gamma^*_i - 1}$ for the $\gamma^*_i \neq 1$ case.
+where $\xi_{\text{on}i} = \frac{1.0 - R_{\text{on},i}}{\gamma^*_i - 1}$ for the $\gamma^*_i \neq 1$ case.
 
 **Analytical solutions:**
 
 For $\gamma^*_i \neq 1$:
 $$\begin{align}
-u^*_{ij}(\tau_{\text{off}}) &= \alpha^*_{\text{off}i} + (u^*_{\text{off},0i} - \alpha^*_{\text{off}i}) e^{-\tau_{\text{off}}} \\
-s^*_{ij}(\tau_{\text{off}}) &= \frac{\alpha^*_{\text{off}i}}{\gamma^*_i} + \left(s^*_{\text{off},0i} - \xi_{\text{off}i} - \frac{\alpha^*_{\text{off}i}}{\gamma^*_i}\right) e^{-\gamma^*_i \tau_{\text{off}}} + \xi_{\text{off}i} e^{-\tau_{\text{off}}}
+u^*_{ij}(\tau_{\text{off}}) &= 1.0 + (u^*_{\text{off},0i} - 1.0) e^{-\tau_{\text{off}}} \\
+s^*_{ij}(\tau_{\text{off}}) &= \frac{1.0}{\gamma^*_i} + \left(s^*_{\text{off},0i} - \xi_{\text{off}i} - \frac{1.0}{\gamma^*_i}\right) e^{-\gamma^*_i \tau_{\text{off}}} + \xi_{\text{off}i} e^{-\tau_{\text{off}}}
 \end{align}$$
 
-where $\xi_{\text{off}i} = \frac{u^*_{\text{off},0i} - \alpha^*_{\text{off}i}}{\gamma^*_i - 1}$.
+where $\xi_{\text{off}i} = \frac{u^*_{\text{off},0i} - 1.0}{\gamma^*_i - 1}$.
 
 For $\gamma^*_i = 1$:
 $$\begin{align}
-u^*_{ij}(\tau_{\text{off}}) &= \alpha^*_{\text{off}i} + (u^*_{\text{off},0i} - \alpha^*_{\text{off}i}) e^{-\tau_{\text{off}}} \\
-s^*_{ij}(\tau_{\text{off}}) &= \alpha^*_{\text{off}i} + (s^*_{\text{off},0i} - \alpha^*_{\text{off}i}) e^{-\tau_{\text{off}}} + (u^*_{\text{off},0i} - \alpha^*_{\text{off}i}) \tau_{\text{off}} e^{-\tau_{\text{off}}}
+u^*_{ij}(\tau_{\text{off}}) &= 1.0 + (u^*_{\text{off},0i} - 1.0) e^{-\tau_{\text{off}}} \\
+s^*_{ij}(\tau_{\text{off}}) &= 1.0 + (s^*_{\text{off},0i} - 1.0) e^{-\tau_{\text{off}}} + (u^*_{\text{off},0i} - 1.0) \tau_{\text{off}} e^{-\tau_{\text{off}}}
 \end{align}$$
 
 ### Gene Expression Pattern Capabilities
@@ -903,66 +928,97 @@ This piecewise framework enables representation of diverse gene expression patte
 
 #### **1. Activation Patterns**
 
-**Characteristics**: Genes that start with low expression and become strongly activated during the process.
+**Characteristics**: Genes that start with baseline expression and become strongly activated during the process.
 
 **Parameter specifications**:
 
-- $\alpha^*_{\text{off}i} < 0.2$ (low basal transcription)
-- $\alpha^*_{\text{on}i} > 1.5$ (strong activation)
-- $t^*_{0,\text{on}i} < 0.4$ (early activation onset)
+- $R_{\text{on},i} > 3.0$ (strong fold-change during activation)
+- $t^*_{0,\text{on}i} > 0$ and $t^*_{0,\text{on}i} < 0.4$ (activation occurs after observation start but early)
 - $\delta^*_i > 0.3$ (sustained activation duration)
-- **Fold-change**: $\alpha^*_{\text{on}i}/\alpha^*_{\text{off}i} > 7.5$ (strong upregulation)
 
 **Biological examples**: Developmental transcription factors, cell cycle genes, stress response genes
 
-#### **2. Decay-Only Patterns**
+#### **2. Pre-Activation Patterns**
+
+**Characteristics**: Genes that were already activated before observation began, showing high initial expression.
+
+**Parameter specifications**:
+
+- $R_{\text{on},i} > 2.0$ (moderate to strong fold-change)
+- $t^*_{0,\text{on}i} < 0$ (activation onset before observation window)
+- $\delta^*_i > |t^*_{0,\text{on}i}|$ (activation duration extends into observation window)
+
+**Biological examples**: Early developmental genes, lineage commitment factors, stress response genes in ongoing stress
+
+#### **3. Decay-Only Patterns**
 
 **Characteristics**: Genes that start with high expression and gradually decrease without reactivation.
 
 **Parameter specifications**:
 
-- $\alpha^*_{\text{off}i} > 0.5$ (high basal transcription)
-- $t^*_{0,\text{on}i} > T^*_M$ (activation onset beyond observation window)
-- $\delta^*_i$ (irrelevant, no activation observed)
-- **Effective dynamics**: Monotonic decay from high initial levels
+- $R_{\text{on},i} > 1.5$ (moderate fold-change, but not observed during activation)
+- $t^*_{0,\text{on}i} > T^*_M$ (activation onset beyond observation window) OR
+- $t^*_{0,\text{on}i} < 0$ and $\delta^*_i < |t^*_{0,\text{on}i}|$ (activation ended before observation)
 
-**Biological examples**: Maternal transcripts during development, housekeeping genes during stress, pluripotency factors during differentiation
+**Biological examples**: Maternal transcripts during development, pluripotency factors during differentiation
 
-#### **3. Transient Activation Patterns**
+#### **4. Transient Activation Patterns**
 **Characteristics**: Genes that show brief, pulse-like activation followed by return to baseline.
 
 **Parameter specifications**:
 
-- $\alpha^*_{\text{off}i} < 0.3$ (low basal transcription)
-- $\alpha^*_{\text{on}i} > 1.0$ (moderate to strong activation)
-- $t^*_{0,\text{on}i} < 0.5$ (early to mid-process activation)
-- $\delta^*_i < 0.4$ (brief activation duration) *[optimized from < 0.3]*
-- **Fold-change**: $\alpha^*_{\text{on}i}/\alpha^*_{\text{off}i} > 3.3$ (clear but not extreme upregulation)
+- $R_{\text{on},i} > 2.0$ (moderate to strong fold-change)
+- $t^*_{0,\text{on}i} > 0$ and $t^*_{0,\text{on}i} < 0.5$ (activation during observation)
+- $\delta^*_i < 0.4$ (brief activation duration)
 
 **Biological examples**: Immediate early genes, signaling molecules, transient developmental regulators
 
-#### **4. Sustained Activation Patterns**
+#### **5. Sustained Activation Patterns**
 **Characteristics**: Genes that become activated and remain highly expressed throughout most of the process.
 
 **Parameter specifications**:
 
-- $\alpha^*_{\text{off}i} < 0.3$ (low basal transcription)
-- $\alpha^*_{\text{on}i} > 1.0$ (strong activation)
-- $t^*_{0,\text{on}i} < 0.3$ (early activation onset)
-- $\delta^*_i > 0.45$ (long activation duration) *[optimized from > 0.6]*
-- **Fold-change**: $\alpha^*_{\text{on}i}/\alpha^*_{\text{off}i} > 3.3$ (sustained upregulation)
+- $R_{\text{on},i} > 2.0$ (strong fold-change)
+- $t^*_{0,\text{on}i} > 0$ and $t^*_{0,\text{on}i} < 0.3$ (early activation onset)
+- $\delta^*_i > 0.5$ (long activation duration)
 
 **Biological examples**: Lineage-specific transcription factors, structural proteins, metabolic enzymes
 
+### Mathematical Framework for Pre-Activation Scenarios
+
+The Normal prior for onset times enables modeling of **pre-activation scenarios** where genes are already activated when observation begins. This extension is mathematically valid and biologically realistic:
+
+#### **Mathematical Validity of Negative Onset Times**
+
+When $t^*_{0,\text{on}i} < 0$:
+
+1. **Phase determination remains consistent**: For any observed time $t^* \geq 0$, we can still determine which phase applies by comparing $t^*$ to $t^*_{0,\text{on}i}$ and $t^*_{0,\text{on}i} + \delta^*_i$
+
+2. **Analytical solutions remain valid**: All exponential solutions are well-defined for negative onset times
+
+3. **Biological interpretation is clear**: Negative onset simply means activation occurred before the observation window
+
+#### **Implementation Considerations**
+
+- **Phase 1 may be unobserved**: If $t^*_{0,\text{on}i} < 0$, no observed cells will be in Phase 1
+- **Phase 2 starts immediately**: Cells at $t^* = 0$ may already be in the activated state
+- **Duration constraints**: For pre-activation genes, $\delta^*_i > |t^*_{0,\text{on}i}|$ ensures activation extends into the observation window
+
 ### Constraint Feasibility Analysis and Optimization
 
-The pattern constraints above were optimized using a systematic CDF-based analysis to ensure mathematical feasibility while preserving biological interpretability. This section documents the optimization process and provides transparency about how we arrived at the final parameter specifications.
+The pattern constraints above were optimized using a systematic CDF-based analysis to ensure mathematical feasibility while preserving biological interpretability. The analysis now includes both LogNormal and Normal distributions to handle the extended temporal framework.
 
 #### **Mathematical Framework for Constraint Analysis**
 
-For each pattern constraint, we calculate the probability that a parameter sampled from its prior distribution satisfies the constraint using cumulative distribution functions (CDFs). For a LogNormal prior $X \sim \text{LogNormal}(\mu, \sigma^2)$, the probability of satisfying constraint $X < \theta$ is:
+For each pattern constraint, we calculate the probability that a parameter sampled from its prior distribution satisfies the constraint using cumulative distribution functions (CDFs).
 
-$$P(X < \theta) = \Phi\left(\frac{\log(\theta) - \mu}{\sigma}\right)$$
+For **LogNormal parameters** ($R_{\text{on},i}$, $\delta^*_i$), the probability of satisfying constraint $X > \theta$ is:
+
+$$P(X > \theta) = 1 - \Phi\left(\frac{\log(\theta) - \mu}{\sigma}\right)$$
+
+For **Normal parameters** ($t^*_{0,\text{on}i}$), the probability of satisfying constraint $X > \theta$ is:
+
+$$P(X > \theta) = 1 - \Phi\left(\frac{\theta - \mu}{\sigma}\right)$$
 
 where $\Phi$ is the standard normal CDF. The joint probability of satisfying all constraints for a pattern is the product of individual constraint probabilities (assuming independence).
 
@@ -980,27 +1036,37 @@ def calculate_lognormal_cdf_probability(loc, scale, threshold, upper=True):
     else:
         return stats.lognorm.cdf(threshold, s=scale, scale=np.exp(loc))
 
-# Prior hyperparameters (optimized)
+def calculate_normal_cdf_probability(loc, scale, threshold, upper=True):
+    """Calculate P(X > threshold) or P(X < threshold) for Normal(loc, scale)."""
+    if upper:
+        return 1 - stats.norm.cdf(threshold, loc=loc, scale=scale)
+    else:
+        return stats.norm.cdf(threshold, loc=loc, scale=scale)
+
+# Prior hyperparameters (updated for constrained parameterization with Normal onset times)
 priors = {
-    'alpha_off': {'loc': -2.3, 'scale': 0.5},    # log(0.1)
-    'alpha_on': {'loc': 0.69, 'scale': 0.5},     # log(2.0)
-    't_on_star': {'loc': -1.2, 'scale': 0.3},    # log(0.3)
-    'delta_star': {'loc': -1.0, 'scale': 0.35},  # log(0.37) [optimized]
+    'R_on': {'loc': 0.916, 'scale': 0.4},        # log(2.5), fold-change (LogNormal)
+    't_on_star': {'loc': 0.2, 'scale': 0.6},     # Normal(0.2, 0.6²), allows negatives
+    'delta_star': {'loc': -1.0, 'scale': 0.35},  # log(0.37) [optimized] (LogNormal)
 }
 
 # Calculate constraint feasibility for each pattern
 patterns = {
     'activation': [
-        ('alpha_off', '<', 0.2), ('alpha_on', '>', 1.5),
+        ('R_on', '>', 3.0), ('t_on_star', '>', 0.0),
         ('t_on_star', '<', 0.4), ('delta_star', '>', 0.3)
     ],
+    'pre_activation': [
+        ('R_on', '>', 2.0), ('t_on_star', '<', 0.0),
+        ('delta_star', '>', 0.3)  # Simplified constraint
+    ],
     'transient': [
-        ('alpha_off', '<', 0.3), ('alpha_on', '>', 1.0),
-        ('t_on_star', '<', 0.5), ('delta_star', '<', 0.4)  # optimized
+        ('R_on', '>', 2.0), ('t_on_star', '>', 0.0),
+        ('t_on_star', '<', 0.5), ('delta_star', '<', 0.4)
     ],
     'sustained': [
-        ('alpha_off', '<', 0.3), ('alpha_on', '>', 1.0),
-        ('t_on_star', '<', 0.3), ('delta_star', '>', 0.45)  # optimized
+        ('R_on', '>', 2.0), ('t_on_star', '>', 0.0),
+        ('t_on_star', '<', 0.3), ('delta_star', '>', 0.5)
     ]
 }
 
@@ -1010,9 +1076,16 @@ for pattern_name, constraints in patterns.items():
 
     for param, op, threshold in constraints:
         prior = priors[param]
-        prob = calculate_lognormal_cdf_probability(
-            prior['loc'], prior['scale'], threshold, upper=(op == '>')
-        )
+
+        if param == 't_on_star':  # Normal distribution
+            prob = calculate_normal_cdf_probability(
+                prior['loc'], prior['scale'], threshold, upper=(op == '>')
+            )
+        else:  # LogNormal distribution
+            prob = calculate_lognormal_cdf_probability(
+                prior['loc'], prior['scale'], threshold, upper=(op == '>')
+            )
+
         joint_prob *= prob
         print(f"  P({param} {op} {threshold}) = {prob:.3f}")
 
@@ -1021,7 +1094,7 @@ for pattern_name, constraints in patterns.items():
 
 ### Probabilistic Graphical Model
 
-The probabilistic graphical model extends Study 2 by adding gene-specific piecewise activation parameters while maintaining the hierarchical latent time structure. For visual clarity, we use $\theta_i$ to represent the vector of piecewise activation parameters $(\gamma^*_i, \alpha^*_{\text{off}i}, \alpha^*_{\text{on}i}, t^*_{0,\text{on}i})$ and $\delta_i$ to represent the activation duration parameter.
+The probabilistic graphical model extends Study 2 by adding gene-specific piecewise activation parameters while maintaining the hierarchical latent time structure. For visual clarity, we use $\theta_i$ to represent the vector of piecewise activation parameters $(\gamma^*_i, R_{\text{on},i}, t^*_{0,\text{on}i})$ and $\delta_i$ to represent the activation duration parameter. Note that $\alpha^*_{\text{off}i} = 1.0$ is fixed and not shown as a random variable.
 
 ```{python}
 #| label: fig-piecewise-activation-pgm
@@ -1173,20 +1246,20 @@ The model combines the hierarchical latent time structure from Study 2 with piec
 **Notation mapping between PGM and mathematical description:**
 
 In the PGM above, we use simplified notation for visual clarity:
-- $\theta_i$ represents the vector of piecewise activation parameters $(\gamma^*_i, \alpha^*_{\text{off}i}, \alpha^*_{\text{on}i}, t^*_{0,\text{on}i})$
+- $\theta_i$ represents the vector of piecewise activation parameters $(\gamma^*_i, R_{\text{on},i}, t^*_{0,\text{on}i})$
 - $\delta_i$ represents the activation duration parameter $\delta^*_i$ (waiting time from onset to deactivation)
 - The hyperparameters $\mu_{\theta}, \sigma_{\theta}^2$ represent the collection of hyperparameters for all components of $\theta_i$
 - The hyperparameters $\mu_{\delta}, \sigma_{\delta}^2$ represent the hyperparameters for $\delta_i$
+- $\alpha^*_{\text{off}i} = 1.0$ is fixed and not shown as a random variable
 
-**Detailed priors for piecewise activation parameters:**
+**Detailed priors for constrained piecewise activation parameters:**
 
-The priors are designed to encode biologically reasonable parameter ranges while maintaining sufficient flexibility for diverse gene expression patterns:
+The priors are designed to encode biologically reasonable parameter ranges while eliminating dimensional redundancy:
 
 \begin{align}
     \gamma^*_i &\sim \text{LogNormal}(\log(1.0), 0.5^2) \quad \text{(relative degradation rate)} \\
-    \alpha^*_{\text{off}i} &\sim \text{LogNormal}(\log(0.1), 0.5^2) \quad \text{(basal transcription rate)} \\
-    \alpha^*_{\text{on}i} &\sim \text{LogNormal}(\log(2.0), 0.5^2) \quad \text{(active transcription rate)} \\
-    t^*_{0,\text{on}i} &\sim \text{LogNormal}(\log(0.3), 0.3^2) \quad \text{(activation onset time)} \\
+    R_{\text{on},i} &\sim \text{LogNormal}(\log(2.5), 0.4^2) \quad \text{(activation fold-change)} \\
+    t^*_{0,\text{on}i} &\sim \text{Normal}(0.2, 0.6^2) \quad \text{(activation onset time, allows negatives)} \\
     \delta^*_i &\sim \text{LogNormal}(\log(0.37), 0.35^2) \quad \text{(activation duration, optimized)}
 \end{align}
 
@@ -1194,13 +1267,11 @@ The priors are designed to encode biologically reasonable parameter ranges while
 
 - **$\gamma^*_i \sim \text{LogNormal}(\log(1.0), 0.5^2)$**: Centers relative degradation around 1 (balanced splicing/degradation), with 95% of values between ~0.37 and ~2.7. This covers genes where mRNA is more stable than splicing time ($\gamma^* < 1$) to genes with rapid degradation ($\gamma^* > 1$).
 
-- **$\alpha^*_{\text{off}i} \sim \text{LogNormal}(\log(0.1), 0.5^2)$**: Centers basal transcription at 10% of characteristic rate, with 95% between ~0.037 and ~0.27. This represents low but non-zero basal expression typical of repressed genes.
+- **$R_{\text{on},i} \sim \text{LogNormal}(\log(2.5), 0.4^2)$**: Centers fold-change at 2.5× during activation, with 95% between ~1.5 and ~4.2. This represents meaningful upregulation while avoiding extreme values that could cause numerical issues.
 
-- **$\alpha^*_{\text{on}i} \sim \text{LogNormal}(\log(2.0), 0.5^2)$**: Centers active transcription at 2× characteristic rate, with 95% between ~0.74 and ~5.4. This ensures activation represents meaningful upregulation while avoiding extreme values.
+- **$t^*_{0,\text{on}i} \sim \text{Normal}(0.2, 0.6^2)$**: Centers activation onset at 20% through the process timeline, with 95% between approximately -1.0 and +1.4. **Negative values** represent genes already activated before observation began, enabling modeling of pre-activation scenarios.
 
-- **$t^*_{0,\text{on}i} \sim \text{LogNormal}(\log(0.3), 0.3^2)$**: Centers activation onset at 30% through the process timeline, with 95% between ~0.17 and ~0.53. This favors early activation while allowing variation in timing.
-
-- **$\delta^*_i \sim \text{LogNormal}(\log(0.37), 0.35^2)$**: Centers activation duration at 37% of the process timeline, with 95% between ~0.18 and ~0.76. This distribution was optimized to support both transient (< 40%) and sustained (> 45%) activation patterns with sufficient feasibility.
+- **$\delta^*_i \sim \text{LogNormal}(\log(0.37), 0.35^2)$**: Centers activation duration at 37% of the process timeline, with 95% between ~0.18 and ~0.76. This distribution was optimized to support both transient (< 40%) and sustained (> 50%) activation patterns with sufficient feasibility.
 
 **Priors for other gene-specific parameters (unchanged from Study 2):**
 \begin{align}
@@ -1233,15 +1304,25 @@ The dimensionless concentrations are computed using the analytical solutions for
 
 ### Properties of the Piecewise Framework
 
-#### **Identifiability Resolution**
+#### **Resolved Dimensional Analysis Issues**
 
-- **Eliminates redundant parameterization**: No separate inference of $u^*_{0i}, s^*_{0i}$ parameters
+- **Eliminates parameter redundancy**: No ambiguity between $U_{0i}$ and $\alpha^*_{\text{off}i}$ since $\alpha^*_{\text{off}i} = 1.0$ (fixed)
+- **Clear dimensional structure**: $U_{0i}$ unambiguously represents off-state concentration scale
+- **Proper parameter hierarchy**: Each inferred parameter has a unique biological role
+- **No separate inference of initial conditions**: $u^*_{0i}, s^*_{0i}$ fixed to steady-state values
 - **Biological realism**: Steady-state initial conditions are more plausible than arbitrary values
-- **Clear parameter roles**: Each piecewise parameter has distinct biological interpretation
+
+#### **Enhanced Temporal Modeling**
+
+- **Pre-activation scenarios**: Models genes already activated when observation begins
+- **Flexible onset timing**: Normal prior allows negative onset times naturally
+- **Biological realism**: Captures realistic experimental scenarios better
+- **Maintains population structure**: Hierarchical time modeling preserved
 
 #### **Rich Expression Pattern Representation**
 
-- **Activation genes**: Transition from low to high expression
+- **Activation genes**: Transition from baseline to high expression during observation
+- **Pre-activation genes**: Already activated before observation, showing high initial expression
 - **Decay genes**: Start high, remain high (no activation within observation window)
 - **Transient genes**: Brief activation followed by return to baseline
 - **Sustained genes**: Long-duration activation
@@ -1260,15 +1341,17 @@ The dimensionless concentrations are computed using the analytical solutions for
 
 ### Parameter Recovery Validation Strategy
 
-This study will validate the model's ability to:
+This study will validate the constrained model's ability to:
 
-1. **Recover piecewise activation parameters**: $\alpha^*_{\text{off}i}, \alpha^*_{\text{on}i}, t^*_{0,\text{on}i}, \delta^*_i$
-2. **Distinguish gene expression patterns**: Classify genes as activation, decay, transient, or sustained
-3. **Infer hierarchical time structure**: Recover population-level temporal parameters
-4. **Handle realistic noise levels**: Maintain accuracy with Poisson observation noise
-5. **Scale to multiple genes**: Demonstrate efficiency with gene panels of varying sizes
-6. **Numerical robustness**: Maintain stability across the $\gamma^*_i = 1$ boundary
-7. **Phase assignment accuracy**: Correctly identify which phase each cell-gene pair occupies
+1. **Recover constrained piecewise parameters**: $\gamma^*_i$, $R_{\text{on},i}$, $t^*_{0,\text{on}i}$, $\delta^*_i$
+2. **Handle pre-activation scenarios**: Correctly infer negative onset times and their biological implications
+3. **Distinguish enhanced expression patterns**: Classify genes across all five patterns including pre-activation
+4. **Maintain hierarchical time inference**: Recover population-level temporal parameters
+5. **Handle realistic noise levels**: Maintain accuracy with Poisson observation noise
+6. **Scale efficiently**: Demonstrate computational advantages of reduced parameter space
+7. **Validate fold-change interpretation**: Ensure $R_{\text{on},i}$ estimates match true activation strength
+8. **Assess dimensional consistency**: Verify elimination of parameter redundancy issues
+9. **Numerical robustness**: Maintain stability across the $\gamma^*_i = 1$ boundary
 
 ### Implementation and Validation Results
 
@@ -1373,7 +1456,7 @@ plt.show()
 # Validate prior parameter ranges
 print("\nPrior parameter range validation:")
 for param_name, samples in prior_parameter_samples.items():
-    if param_name.startswith(('alpha_off', 'alpha_on', 't_on', 'delta', 'gamma_star')):
+    if param_name.startswith(('R_on', 't_on', 'delta', 'gamma_star')):
         print(f"{param_name}:")
         print(f"  Range: [{samples.min():.3f}, {samples.max():.3f}]")
         print(f"  Mean ± Std: {samples.mean():.3f} ± {samples.std():.3f}")
