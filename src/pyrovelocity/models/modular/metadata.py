@@ -59,7 +59,18 @@ def create_piecewise_activation_prior_metadata() -> ComponentParameterMetadata:
             biological_interpretation="Spread of cell time coordinates around the population mean",
             plot_order=3
         ),
-        
+
+        "tilde_t": ParameterMetadata(
+            name="tilde_t",
+            display_name=r"$\tilde{t}$",
+            short_label="Norm Time",
+            description="Normalized cell time coordinates before scaling",
+            units="dimensionless",
+            typical_range=(-2.0, 4.0),
+            biological_interpretation="Cell-specific time coordinates sampled from hierarchical Normal distribution",
+            plot_order=4
+        ),
+
         "t_star": ParameterMetadata(
             name="t_star",
             display_name=r"$t^*$",
@@ -68,7 +79,7 @@ def create_piecewise_activation_prior_metadata() -> ComponentParameterMetadata:
             units="dimensionless time",
             typical_range=(0.0, 10.0),
             biological_interpretation="Progression of individual cells through the biological process",
-            plot_order=4
+            plot_order=5
         ),
         
         # Piecewise activation parameters
@@ -80,9 +91,9 @@ def create_piecewise_activation_prior_metadata() -> ComponentParameterMetadata:
             units="dimensionless rate",
             typical_range=(0.01, 0.5),
             biological_interpretation="Low expression state transcription activity, representing repressed gene expression",
-            plot_order=5
+            plot_order=6
         ),
-        
+
         "alpha_on": ParameterMetadata(
             name="alpha_on",
             display_name=r"$\alpha_{on}$",
@@ -91,9 +102,9 @@ def create_piecewise_activation_prior_metadata() -> ComponentParameterMetadata:
             units="dimensionless rate",
             typical_range=(0.5, 5.0),
             biological_interpretation="High expression state transcription activity, representing activated gene expression",
-            plot_order=6
+            plot_order=7
         ),
-        
+
         "gamma_star": ParameterMetadata(
             name="gamma_star",
             display_name=r"$\gamma^*$",
@@ -102,9 +113,9 @@ def create_piecewise_activation_prior_metadata() -> ComponentParameterMetadata:
             units="dimensionless rate ratio",
             typical_range=(0.3, 3.0),
             biological_interpretation="Balance between mRNA splicing and degradation kinetics; γ*=1 represents balanced kinetics",
-            plot_order=7
+            plot_order=8
         ),
-        
+
         "t_on_star": ParameterMetadata(
             name="t_on_star",
             display_name=r"$t^*_{on}$",
@@ -113,9 +124,9 @@ def create_piecewise_activation_prior_metadata() -> ComponentParameterMetadata:
             units="dimensionless time",
             typical_range=(0.1, 0.8),
             biological_interpretation="When during the process each gene begins its activation phase",
-            plot_order=8
+            plot_order=9
         ),
-        
+
         "delta_star": ParameterMetadata(
             name="delta_star",
             display_name=r"$\delta^*$",
@@ -124,7 +135,7 @@ def create_piecewise_activation_prior_metadata() -> ComponentParameterMetadata:
             units="dimensionless time",
             typical_range=(0.1, 1.0),
             biological_interpretation="How long each gene remains in its activated state",
-            plot_order=9
+            plot_order=10
         ),
         
         # Observation model parameters
@@ -136,9 +147,9 @@ def create_piecewise_activation_prior_metadata() -> ComponentParameterMetadata:
             units="count scale",
             typical_range=(10.0, 1000.0),
             biological_interpretation="Gene-specific expression scale, accounting for differences in gene expression levels",
-            plot_order=10
+            plot_order=11
         ),
-        
+
         "lambda_j": ParameterMetadata(
             name="lambda_j",
             display_name=r"$\lambda_j$",
@@ -147,7 +158,7 @@ def create_piecewise_activation_prior_metadata() -> ComponentParameterMetadata:
             units="efficiency ratio",
             typical_range=(0.1, 2.0),
             biological_interpretation="Technical variation in RNA capture and sequencing efficiency across cells",
-            plot_order=11
+            plot_order=12
         ),
     }
     

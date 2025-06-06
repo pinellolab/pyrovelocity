@@ -634,6 +634,7 @@ class PiecewiseActivationPriorModel:
         # Sample cell-specific normalized times
         tilde_t = dist.Normal(t_loc, t_scale).sample((n_cells,))
         t_star = T_M_star * torch.clamp(tilde_t, min=self.t_epsilon)
+        params["tilde_t"] = tilde_t  # Store the normalized times
         params["t_star"] = t_star
 
         # Sample piecewise activation parameters (per gene)
@@ -729,6 +730,7 @@ class PiecewiseActivationPriorModel:
             'T_M_star': [],
             't_loc': [],
             't_scale': [],
+            'tilde_t': [],  # Include normalized times
             't_star': [],
             'alpha_off': [],
             'alpha_on': [],
