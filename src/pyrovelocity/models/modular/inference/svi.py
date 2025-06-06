@@ -401,38 +401,4 @@ def run_svi_inference(
         guide, state.params, config.num_samples, seed, args, kwargs
     )
 
-    # If we're using an AutoGuide, we can get the model from it
-    if hasattr(guide, "model"):
-        model_fn = guide.model
-
-        # We will create the predictive object below with unconditioned model
-
-        # Run the model predictive to get all sites, including deterministic ones
-        # We need to run the model in unconditioned mode to generate deterministic sites
-        # from the posterior samples, not conditioning on observations
-
-        # Create unconditioned version of the model arguments
-        # Remove observation conditioning by creating dummy observations with the right shape
-        unconditioned_kwargs = {}
-        for key, value in kwargs.items():
-            if key in ['u_obs', 's_obs'] and isinstance(value, torch.Tensor):
-                # Create dummy observations with the same shape but don't condition on them
-                unconditioned_kwargs[key] = torch.zeros_like(value)
-            else:
-                unconditioned_kwargs[key] = value
-
-        # Use pyro.poutine.uncondition to remove observation conditioning
-        unconditioned_model = pyro.poutine.uncondition(model_fn)
-        unconditioned_predictive = pyro.infer.Predictive(
-            unconditioned_model,
-            posterior_samples=posterior_samples,
-            return_sites=None,  # Return all sites, including deterministic
-            num_samples=config.num_samples
-        )
-        model_samples = unconditioned_predictive(*args, **unconditioned_kwargs)
-
-        # Combine guide and model samples
-        # Guide samples take precedence if there's a conflict
-        posterior_samples = {**model_samples, **posterior_samples}
-
     return state, posterior_samples

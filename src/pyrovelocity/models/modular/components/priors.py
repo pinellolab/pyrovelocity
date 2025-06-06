@@ -514,8 +514,9 @@ class PiecewiseActivationPriorModel:
             )
             params["lambda_j"] = lambda_j
 
-        # Track t_star in posterior samples outside the plate to avoid shape issues
-        t_star = pyro.deterministic("t_star", params["t_star"])
+        # Note: t_star is computed deterministically from tilde_t and T_M_star
+        # We don't create a separate deterministic site to avoid issues with AutoGuides
+        # The downstream code can compute t_star from the sampled hierarchical parameters
 
         # Sample piecewise activation parameters (per gene)
         with pyro.plate(f"{self.name}_genes_plate", n_genes):

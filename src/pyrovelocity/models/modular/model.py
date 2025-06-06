@@ -1719,7 +1719,8 @@ class PyroVelocityModel:
                             posterior_adata=posterior_adata,
                             posterior_parameters=processed_posterior_samples,
                             save_path=dataset_plots_path,
-                            figure_name=plot_filename
+                            figure_name=plot_filename,
+                            combine_individual_pdfs=True,
                         )
                     except Exception as plot_error:
                         print(f"  ❌ Plotting error: {plot_error}")
@@ -2446,34 +2447,126 @@ class PyroVelocityModel:
                         source_name = key
                         break
 
-        # If not found in predictive samples, check true parameters
-        if temporal_coord is None and samples is not None:
-            if 'true_parameters' in adata.uns:
-                true_params = adata.uns['true_parameters']
-            else:
-                # Convert samples to true_params format
-                true_params = {}
-                for key, value in samples.items():
+        # If not found in predictive samples, try to compute from hierarchical parameters
+        if temporal_coord is None:
+            # Check if we have the hierarchical time parameters to compute t_star
+            hierarchical_params = {}
+
+            # Look in predictive samples first
+            for param_name in ['T_M_star', 'tilde_t', 't_loc', 't_scale']:
+                if param_name in predictive_samples:
+                    value = predictive_samples[param_name]
                     if isinstance(value, torch.Tensor):
                         param_array = value.detach().cpu().numpy()
-                        if param_array.ndim > 1 and param_array.shape[0] == 1:
-                            param_array = param_array[0]
-                        true_params[key] = param_array
-                    else:
-                        true_params[key] = value
+                        # Handle batch dimensions
+                        if param_array.ndim > 1:
+                            if param_array.shape[0] == 1:
+                                param_array = param_array[0]
+                            elif param_name == 'tilde_t' and param_array.shape[-1] == num_cells:
+                                # For tilde_t, take the first sample and last dimension
+                                param_array = param_array[0, :] if param_array.ndim == 2 else param_array[0, 0, :]
+                            else:
+                                param_array = param_array.flatten()
+                        hierarchical_params[param_name] = param_array
 
-            # Look for t_star (cell-specific times) in true parameters
-            for key in ['t_star', 't_cell', 'cell_time', 'latent_time']:
-                if key in true_params:
-                    param_value = true_params[key]
-                    if hasattr(param_value, 'shape') and len(param_value) == num_cells:
-                        temporal_coord = param_value.flatten() if hasattr(param_value, 'flatten') else param_value
-                        source_name = key
-                        break
-                    elif hasattr(param_value, '__len__') and len(param_value) == num_cells:
-                        temporal_coord = np.array(param_value)
-                        source_name = key
-                        break
+            # If not found in predictive samples, check samples parameter
+            if len(hierarchical_params) < 2 and samples is not None:
+                for param_name in ['T_M_star', 'tilde_t', 't_loc', 't_scale']:
+                    if param_name in samples and param_name not in hierarchical_params:
+                        value = samples[param_name]
+                        if isinstance(value, torch.Tensor):
+                            param_array = value.detach().cpu().numpy()
+                            if param_array.ndim > 1 and param_array.shape[0] == 1:
+                                param_array = param_array[0]
+                            hierarchical_params[param_name] = param_array
+                        else:
+                            hierarchical_params[param_name] = value
+
+            # If not found in samples, check true parameters in adata.uns
+            if len(hierarchical_params) < 2:
+                if 'true_parameters' in adata.uns:
+                    true_params = adata.uns['true_parameters']
+                    for param_name in ['T_M_star', 'tilde_t', 't_loc', 't_scale']:
+                        if param_name in true_params and param_name not in hierarchical_params:
+                            hierarchical_params[param_name] = true_params[param_name]
+
+            # Try to compute t_star from hierarchical parameters
+            if 'T_M_star' in hierarchical_params and 'tilde_t' in hierarchical_params:
+                T_M_star = hierarchical_params['T_M_star']
+                tilde_t = hierarchical_params['tilde_t']
+
+                # Handle different shapes and batch dimensions
+                t_epsilon = 1e-6
+
+                # Convert to numpy arrays if needed
+                if isinstance(T_M_star, np.ndarray):
+                    T_M_star_val = T_M_star
+                elif hasattr(T_M_star, 'detach'):
+                    T_M_star_val = T_M_star.detach().cpu().numpy()
+                else:
+                    T_M_star_val = np.array(T_M_star)
+
+                if isinstance(tilde_t, np.ndarray):
+                    tilde_t_val = tilde_t
+                elif hasattr(tilde_t, 'detach'):
+                    tilde_t_val = tilde_t.detach().cpu().numpy()
+                else:
+                    tilde_t_val = np.array(tilde_t)
+
+                # Handle batch dimensions
+                if T_M_star_val.ndim > 0:
+                    # Take the first sample if we have multiple samples
+                    T_M_star_scalar = T_M_star_val.flatten()[0]
+                else:
+                    T_M_star_scalar = float(T_M_star_val)
+
+                if tilde_t_val.ndim > 1:
+                    # Take the first sample if we have multiple samples
+                    tilde_t_cells = tilde_t_val[0] if tilde_t_val.shape[0] > 1 else tilde_t_val.flatten()
+                else:
+                    tilde_t_cells = tilde_t_val
+
+                # Ensure tilde_t_cells has the right length
+                if len(tilde_t_cells) == num_cells:
+                    # Compute t_star = T_M_star * clamp(tilde_t, min=epsilon)
+                    temporal_coord = T_M_star_scalar * np.maximum(tilde_t_cells, t_epsilon)
+                    source_name = 'computed_t_star'
+                elif len(tilde_t_cells) == 1:
+                    # Single value: expand to all cells
+                    tilde_t_scalar = tilde_t_cells[0] if hasattr(tilde_t_cells, '__len__') else tilde_t_cells
+                    temporal_coord = np.full(num_cells, T_M_star_scalar * max(float(tilde_t_scalar), t_epsilon))
+                    source_name = 'computed_t_star'
+
+            # Fallback: look for t_star directly in true parameters
+            if temporal_coord is None:
+                if 'true_parameters' in adata.uns:
+                    true_params = adata.uns['true_parameters']
+                elif samples is not None:
+                    # Convert samples to true_params format
+                    true_params = {}
+                    for key, value in samples.items():
+                        if isinstance(value, torch.Tensor):
+                            param_array = value.detach().cpu().numpy()
+                            if param_array.ndim > 1 and param_array.shape[0] == 1:
+                                param_array = param_array[0]
+                            true_params[key] = param_array
+                        else:
+                            true_params[key] = value
+                else:
+                    true_params = {}
+
+                # Look for t_star (cell-specific times) in true parameters
+                for key in ['t_star', 't_cell', 'cell_time', 'latent_time']:
+                    if key in true_params:
+                        param_value = true_params[key]
+                        if hasattr(param_value, 'shape') and len(param_value) == num_cells:
+                            temporal_coord = param_value.flatten() if hasattr(param_value, 'flatten') else param_value
+                            source_name = key
+                            break
+                        elif hasattr(param_value, '__len__') and len(param_value) == num_cells:
+                            temporal_coord = np.array(param_value)
+                            source_name = key
+                            break
 
         # Store temporal coordinate in adata.obs if found
         if temporal_coord is not None:
