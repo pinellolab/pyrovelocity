@@ -499,10 +499,6 @@ class PiecewiseActivationPriorModel:
                 "tilde_t",
                 dist.Normal(t_loc, t_scale).mask(include_prior),
             )
-            # Ensure non-negative times and scale by T_M_star
-            # Compute t_star outside pyro.deterministic to avoid plate broadcasting issues
-            t_star_computed = T_M_star * torch.clamp(tilde_t, min=self.t_epsilon)
-            params["t_star"] = t_star_computed
 
             # Sample capture efficiency parameters (per cell)
             lambda_j = pyro.sample(
@@ -514,9 +510,13 @@ class PiecewiseActivationPriorModel:
             )
             params["lambda_j"] = lambda_j
 
-        # Note: t_star is computed deterministically from tilde_t and T_M_star
-        # We don't create a separate deterministic site to avoid issues with AutoGuides
-        # The downstream code can compute t_star from the sampled hierarchical parameters
+        # Compute t_star outside the plate to avoid broadcasting issues
+        # Ensure non-negative times and scale by T_M_star
+        t_star_computed = T_M_star * torch.clamp(tilde_t, min=self.t_epsilon)
+
+        # Create deterministic site for t_star so it gets captured in posterior samples
+        t_star = pyro.deterministic("t_star", t_star_computed)
+        params["t_star"] = t_star
 
         # Sample piecewise activation parameters (per gene)
         with pyro.plate(f"{self.name}_genes_plate", n_genes):

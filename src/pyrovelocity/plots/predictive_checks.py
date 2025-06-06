@@ -844,6 +844,8 @@ def _process_parameters_for_plotting(
     samples from SVI have batch dimensions. This method handles the tensor reshaping
     to make the samples compatible with the plotting code.
 
+    Also filters out guide-specific parameters that shouldn't be displayed.
+
     Args:
         parameters: Raw parameters with potential batch dimensions
 
@@ -852,7 +854,24 @@ def _process_parameters_for_plotting(
     """
     processed_parameters = {}
 
+    # Define patterns for guide parameters to exclude
+    guide_param_patterns = [
+        'AutoLowRankMultivariateNormal',
+        'AutoNormal',
+        'AutoDelta',
+        'AutoGuide',
+        '_latent',
+        '_loc',
+        '_scale',
+        'auto_',
+        'guide_'
+    ]
+
     for key, value in parameters.items():
+        # Skip guide-specific parameters
+        if any(pattern in key for pattern in guide_param_patterns):
+            continue
+
         if isinstance(value, torch.Tensor):
             # Handle different tensor shapes
             if value.ndim == 1:
