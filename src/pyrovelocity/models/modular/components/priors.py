@@ -311,8 +311,8 @@ class PiecewiseActivationPriorModel:
         α*_off = 1.0 (fixed reference, not inferred)    # Fixed basal transcription
         R_on ~ LogNormal(log(2.5), 0.4^2)               # Activation fold-change
         γ* ~ LogNormal(log(1.0), 0.5^2)                 # Relative degradation
-        t*_on ~ Normal(0.2, 0.6^2)                      # Activation onset time (allows negatives)
-        δ* ~ LogNormal(log(0.37), 0.35^2)               # Activation duration
+        t*_on ~ Normal(0.5, 0.8^2)                      # Activation onset time (allows negatives) - CALIBRATED
+        δ* ~ LogNormal(log(0.45), 0.45^2)               # Activation duration - CALIBRATED for balanced patterns
 
     The capture efficiency parameter is:
         λ_j ~ LogNormal(log(1.0), 0.2^2)     # Lumped technical factors
@@ -342,10 +342,10 @@ class PiecewiseActivationPriorModel:
         R_on_scale: float = 0.4,        # Scale for R_on prior
         gamma_star_loc: float = 0.0,    # log(1.0) for LogNormal prior
         gamma_star_scale: float = 0.5,  # Scale for γ* prior
-        t_on_star_loc: float = 0.2,     # Mean for Normal prior (allows negatives)
-        t_on_star_scale: float = 0.6,   # Scale for t*_on Normal prior
-        delta_star_loc: float = -1.0,   # log(0.37) for LogNormal prior
-        delta_star_scale: float = 0.35, # Scale for δ* prior
+        t_on_star_loc: float = 0.5,     # Mean for Normal prior (allows negatives) - UPDATED for balanced pattern coverage
+        t_on_star_scale: float = 0.8,   # Scale for t*_on Normal prior - UPDATED for better decay-only pattern support
+        delta_star_loc: float = -0.8,   # log(0.45) for LogNormal prior - UPDATED from log(0.37) for sustained patterns
+        delta_star_scale: float = 0.45, # Scale for δ* prior - UPDATED for increased spread and sustained pattern support
 
         # Characteristic concentration scale parameter hyperparameters
         U_0i_loc: float = 4.6,          # log(100) for LogNormal prior

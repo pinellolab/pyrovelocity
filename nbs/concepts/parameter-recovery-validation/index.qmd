@@ -1046,8 +1046,8 @@ def calculate_normal_cdf_probability(loc, scale, threshold, upper=True):
 # Prior hyperparameters (updated for constrained parameterization with Normal onset times)
 priors = {
     'R_on': {'loc': 0.916, 'scale': 0.4},        # log(2.5), fold-change (LogNormal)
-    't_on_star': {'loc': 0.2, 'scale': 0.6},     # Normal(0.2, 0.6²), allows negatives
-    'delta_star': {'loc': -1.0, 'scale': 0.35},  # log(0.37) [optimized] (LogNormal)
+    't_on_star': {'loc': 0.5, 'scale': 0.8},     # Normal(0.5, 0.8²), allows negatives [calibrated]
+    'delta_star': {'loc': -0.8, 'scale': 0.45},  # log(0.45) [calibrated for balanced patterns] (LogNormal)
 }
 
 # Calculate constraint feasibility for each pattern
@@ -1259,8 +1259,8 @@ The priors are designed to encode biologically reasonable parameter ranges while
 \begin{align}
     \gamma^*_i &\sim \text{LogNormal}(\log(1.0), 0.5^2) \quad \text{(relative degradation rate)} \\
     R_{\text{on},i} &\sim \text{LogNormal}(\log(2.5), 0.4^2) \quad \text{(activation fold-change)} \\
-    t^*_{0,\text{on}i} &\sim \text{Normal}(0.2, 0.6^2) \quad \text{(activation onset time, allows negatives)} \\
-    \delta^*_i &\sim \text{LogNormal}(\log(0.37), 0.35^2) \quad \text{(activation duration, optimized)}
+    t^*_{0,\text{on}i} &\sim \text{Normal}(0.5, 0.8^2) \quad \text{(activation onset time, allows negatives, calibrated)} \\
+    \delta^*_i &\sim \text{LogNormal}(\log(0.45), 0.45^2) \quad \text{(activation duration, calibrated for balanced patterns)}
 \end{align}
 
 **Biological interpretation of prior choices:**

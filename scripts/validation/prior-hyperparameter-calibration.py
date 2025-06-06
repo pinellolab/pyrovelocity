@@ -59,11 +59,11 @@ class PriorHyperparameterCalibrator:
         self.save_path = Path(save_path)
         self.save_path.mkdir(parents=True, exist_ok=True)
         
-        # Current dimensionless prior hyperparameters (from priors.py)
+        # Current dimensionless prior hyperparameters (from priors.py) - UPDATED AFTER CALIBRATION
         self.current_priors = {
             'R_on': {'loc': 0.916, 'scale': 0.4},        # log(2.5), fold-change (LogNormal)
-            't_on_star': {'loc': 0.2, 'scale': 0.6},     # Normal(0.2, 0.6²), allows negatives
-            'delta_star': {'loc': -1.0, 'scale': 0.35},  # log(0.37) (LogNormal)
+            't_on_star': {'loc': 0.5, 'scale': 0.8},     # Normal(0.5, 0.8²), allows negatives - CALIBRATED
+            'delta_star': {'loc': -0.8, 'scale': 0.45},  # log(0.45) (LogNormal) - CALIBRATED
             'gamma_star': {'loc': 0.0, 'scale': 0.5},    # log(1.0) (LogNormal)
         }
         
