@@ -25,6 +25,7 @@ from beartype import beartype
 # Import PyroVelocity components
 from pyrovelocity.models.modular.factory import create_piecewise_activation_model
 from pyrovelocity.plots.predictive_checks import combine_pdfs
+from pyrovelocity.plots.parameter_metadata import get_parameter_label
 from pyrovelocity.styles import configure_matplotlib_style
 
 configure_matplotlib_style()
@@ -225,33 +226,36 @@ class PriorHyperparameterCalibrator:
         fig, axes = plt.subplots(2, 2, figsize=(12, 10))
         axes = axes.flatten()
 
-        # Define parameter plotting details
-        param_details = {
-            'R_on': {
-                'title': 'Fold-change (R_on)',
-                'x_range': (0.5, 10),
-                'distribution': 'lognormal',
-                'latex_label': r'$R_{\mathrm{on},i}$'
-            },
-            't_on_star': {
-                'title': 'Onset Time (t*_on)',
-                'x_range': (-1.5, 1.5),
-                'distribution': 'normal',
-                'latex_label': r'$t^*_{0,\mathrm{on}i}$'
-            },
-            'delta_star': {
-                'title': 'Duration (delta*)',
-                'x_range': (0.1, 2.0),
-                'distribution': 'lognormal',
-                'latex_label': r'$\delta^*_i$'
-            },
-            'gamma_star': {
-                'title': 'Relative Degradation (gamma*)',
-                'x_range': (0.2, 5.0),
-                'distribution': 'lognormal',
-                'latex_label': r'$\gamma^*_i$'
-            }
+        # Define parameter plotting details with proper metadata labels
+        param_details = {}
+        param_configs = {
+            'R_on': {'x_range': (0.5, 10), 'distribution': 'lognormal'},
+            't_on_star': {'x_range': (-1.5, 1.5), 'distribution': 'normal'},
+            'delta_star': {'x_range': (0.1, 2.0), 'distribution': 'lognormal'},
+            'gamma_star': {'x_range': (0.2, 5.0), 'distribution': 'lognormal'}
         }
+
+        for param_name, config in param_configs.items():
+            # Get proper labels using metadata system
+            display_label = get_parameter_label(
+                param_name=param_name,
+                label_type="display",
+                model=self.model,
+                fallback_to_legacy=True
+            )
+            short_label = get_parameter_label(
+                param_name=param_name,
+                label_type="short",
+                model=self.model,
+                fallback_to_legacy=True
+            )
+
+            param_details[param_name] = {
+                'title': f'{short_label}',
+                'x_range': config['x_range'],
+                'distribution': config['distribution'],
+                'latex_label': display_label
+            }
 
         for idx, (param_name, details) in enumerate(param_details.items()):
             ax = axes[idx]
@@ -1119,9 +1123,23 @@ class PriorHyperparameterCalibrator:
                     ax.hist(pattern_values, bins=30, alpha=0.6, color=color,
                            density=True, label=f'{pattern_name} ({mask.sum()})')
 
-            ax.set_xlabel(param_name)
+            # Get proper parameter labels using metadata system
+            x_label = get_parameter_label(
+                param_name=param_name,
+                label_type="display",
+                model=self.model,
+                fallback_to_legacy=True
+            )
+            title_label = get_parameter_label(
+                param_name=param_name,
+                label_type="short",
+                model=self.model,
+                fallback_to_legacy=True
+            )
+
+            ax.set_xlabel(x_label)
             ax.set_ylabel('Density')
-            ax.set_title(f'{param_name} Distribution by Pattern')
+            ax.set_title(f'{title_label} Distribution by Pattern')
             ax.legend(fontsize=8)
             ax.grid(True, alpha=0.3)
 
@@ -1153,9 +1171,35 @@ class PriorHyperparameterCalibrator:
                 if mask.sum() > 0:
                     ax.scatter(x_vals[mask], y_vals[mask], c=color, alpha=0.6, s=1, label=pattern_name)
 
-            ax.set_xlabel(diagram_data['x_label'])
-            ax.set_ylabel(diagram_data['y_label'])
-            ax.set_title(f'Phase Diagram: {diagram_data["x_label"]} vs {diagram_data["y_label"]}')
+            # Get proper parameter labels using metadata system
+            x_label = get_parameter_label(
+                param_name=diagram_data['x_label'],
+                label_type="display",
+                model=self.model,
+                fallback_to_legacy=True
+            )
+            y_label = get_parameter_label(
+                param_name=diagram_data['y_label'],
+                label_type="display",
+                model=self.model,
+                fallback_to_legacy=True
+            )
+            x_short = get_parameter_label(
+                param_name=diagram_data['x_label'],
+                label_type="short",
+                model=self.model,
+                fallback_to_legacy=True
+            )
+            y_short = get_parameter_label(
+                param_name=diagram_data['y_label'],
+                label_type="short",
+                model=self.model,
+                fallback_to_legacy=True
+            )
+
+            ax.set_xlabel(x_label)
+            ax.set_ylabel(y_label)
+            ax.set_title(f'Phase Diagram: {x_short} vs {y_short}')
             ax.legend(fontsize=8)
             ax.grid(True, alpha=0.3)
 
@@ -1171,11 +1215,22 @@ class PriorHyperparameterCalibrator:
         corr_matrix = dependency_analysis['overall_correlation']
         param_names = dependency_analysis['param_names']
 
+        # Get proper parameter labels using metadata system
+        param_labels = []
+        for param_name in param_names:
+            label = get_parameter_label(
+                param_name=param_name,
+                label_type="display",
+                model=self.model,
+                fallback_to_legacy=True
+            )
+            param_labels.append(label)
+
         im1 = axes[0].imshow(corr_matrix, cmap='RdBu_r', vmin=-1, vmax=1)
         axes[0].set_xticks(range(len(param_names)))
         axes[0].set_yticks(range(len(param_names)))
-        axes[0].set_xticklabels(param_names, rotation=45)
-        axes[0].set_yticklabels(param_names)
+        axes[0].set_xticklabels(param_labels, rotation=45)
+        axes[0].set_yticklabels(param_labels)
         axes[0].set_title('Overall Parameter Correlations')
 
         # Add correlation values to heatmap
@@ -1197,8 +1252,8 @@ class PriorHyperparameterCalibrator:
             im2 = axes[1].imshow(diff_matrix, cmap='RdBu_r', vmin=-0.5, vmax=0.5)
             axes[1].set_xticks(range(len(param_names)))
             axes[1].set_yticks(range(len(param_names)))
-            axes[1].set_xticklabels(param_names, rotation=45)
-            axes[1].set_yticklabels(param_names)
+            axes[1].set_xticklabels(param_labels, rotation=45)
+            axes[1].set_yticklabels(param_labels)
             axes[1].set_title(f'{first_pattern} Pattern - Overall Correlation Difference')
 
             plt.colorbar(im2, ax=axes[1])
@@ -1222,24 +1277,50 @@ class PriorHyperparameterCalibrator:
         T_M_values = param_samples['T_M_star'].numpy()
         t_on_values = param_samples['t_on_star'].numpy()
 
+        # Get proper parameter labels using metadata system
+        T_M_label = get_parameter_label(
+            param_name='T_M_star',
+            label_type="display",
+            model=self.model,
+            fallback_to_legacy=True
+        )
+        t_on_label = get_parameter_label(
+            param_name='t_on_star',
+            label_type="display",
+            model=self.model,
+            fallback_to_legacy=True
+        )
+        T_M_short = get_parameter_label(
+            param_name='T_M_star',
+            label_type="short",
+            model=self.model,
+            fallback_to_legacy=True
+        )
+        t_on_short = get_parameter_label(
+            param_name='t_on_star',
+            label_type="short",
+            model=self.model,
+            fallback_to_legacy=True
+        )
+
         # Plot 1: T_M_star distribution
         axes[0, 0].hist(T_M_values, bins=50, alpha=0.7, color='blue')
-        axes[0, 0].set_xlabel('T_M_star')
+        axes[0, 0].set_xlabel(T_M_label)
         axes[0, 0].set_ylabel('Frequency')
-        axes[0, 0].set_title('T_M_star Distribution')
+        axes[0, 0].set_title(f'{T_M_short} Distribution')
         axes[0, 0].grid(True, alpha=0.3)
 
         # Plot 2: t_on_star vs T_M_star
         axes[0, 1].scatter(T_M_values, t_on_values, alpha=0.5, s=1)
-        axes[0, 1].set_xlabel('T_M_star')
-        axes[0, 1].set_ylabel('t_on_star')
-        axes[0, 1].set_title('t_on_star vs T_M_star')
+        axes[0, 1].set_xlabel(T_M_label)
+        axes[0, 1].set_ylabel(t_on_label)
+        axes[0, 1].set_title(f'{t_on_short} vs {T_M_short}')
         axes[0, 1].grid(True, alpha=0.3)
 
         # Plot 3: Effective onset times
         t_on_effective = t_on_values * T_M_values
         axes[1, 0].hist(t_on_effective, bins=50, alpha=0.7, color='green')
-        axes[1, 0].set_xlabel('Effective Onset Time (t_on * T_M)')
+        axes[1, 0].set_xlabel(f'Effective Onset Time ({t_on_short} × {T_M_short})')
         axes[1, 0].set_ylabel('Frequency')
         axes[1, 0].set_title('Effective Onset Time Distribution')
         axes[1, 0].grid(True, alpha=0.3)
