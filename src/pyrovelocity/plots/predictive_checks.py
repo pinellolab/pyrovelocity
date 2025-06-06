@@ -855,14 +855,13 @@ def _process_parameters_for_plotting(
     processed_parameters = {}
 
     # Define patterns for guide parameters to exclude
+    # Be specific to avoid filtering legitimate model parameters like t_loc, t_scale
     guide_param_patterns = [
         'AutoLowRankMultivariateNormal',
         'AutoNormal',
         'AutoDelta',
         'AutoGuide',
         '_latent',
-        '_loc',
-        '_scale',
         'auto_',
         'guide_'
     ]
