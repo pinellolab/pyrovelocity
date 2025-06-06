@@ -216,11 +216,31 @@ def extract_posterior_samples(
     )
 
     # Run the model predictive to get all sites, including deterministic ones
-    # Pass the model arguments if provided - this is critical for generating deterministic sites like t_star
+    # We need to run the model in unconditioned mode to generate deterministic sites
+    # from the posterior samples, not conditioning on observations
     if model_args is not None or model_kwargs is not None:
         args = model_args or ()
         kwargs = model_kwargs or {}
-        model_samples = model_predictive(*args, **kwargs)
+
+        # Create unconditioned version of the model arguments
+        # Remove observation conditioning by creating dummy observations with the right shape
+        unconditioned_kwargs = {}
+        for key, value in kwargs.items():
+            if key in ['u_obs', 's_obs'] and isinstance(value, torch.Tensor):
+                # Create dummy observations with the same shape but don't condition on them
+                unconditioned_kwargs[key] = torch.zeros_like(value)
+            else:
+                unconditioned_kwargs[key] = value
+
+        # Use pyro.poutine.uncondition to remove observation conditioning
+        unconditioned_model = pyro.poutine.uncondition(model_fn)
+        unconditioned_predictive = pyro.infer.Predictive(
+            unconditioned_model,
+            posterior_samples=guide_samples,
+            return_sites=None,  # Return all sites, including deterministic
+            num_samples=num_samples
+        )
+        model_samples = unconditioned_predictive(*args, **unconditioned_kwargs)
     else:
         # Fallback to no arguments (this will fail for models that require arguments)
         model_samples = model_predictive()
@@ -385,18 +405,31 @@ def run_svi_inference(
     if hasattr(guide, "model"):
         model_fn = guide.model
 
-        # Create a predictive object for the model, using the guide samples
-        # Return all sites, including deterministic ones
-        model_predictive = pyro.infer.Predictive(
-            model_fn,
+        # We will create the predictive object below with unconditioned model
+
+        # Run the model predictive to get all sites, including deterministic ones
+        # We need to run the model in unconditioned mode to generate deterministic sites
+        # from the posterior samples, not conditioning on observations
+
+        # Create unconditioned version of the model arguments
+        # Remove observation conditioning by creating dummy observations with the right shape
+        unconditioned_kwargs = {}
+        for key, value in kwargs.items():
+            if key in ['u_obs', 's_obs'] and isinstance(value, torch.Tensor):
+                # Create dummy observations with the same shape but don't condition on them
+                unconditioned_kwargs[key] = torch.zeros_like(value)
+            else:
+                unconditioned_kwargs[key] = value
+
+        # Use pyro.poutine.uncondition to remove observation conditioning
+        unconditioned_model = pyro.poutine.uncondition(model_fn)
+        unconditioned_predictive = pyro.infer.Predictive(
+            unconditioned_model,
             posterior_samples=posterior_samples,
             return_sites=None,  # Return all sites, including deterministic
             num_samples=config.num_samples
         )
-
-        # Run the model predictive to get all sites, including deterministic ones
-        # Pass the same arguments that were used during training
-        model_samples = model_predictive(*args, **kwargs)
+        model_samples = unconditioned_predictive(*args, **unconditioned_kwargs)
 
         # Combine guide and model samples
         # Guide samples take precedence if there's a conflict
