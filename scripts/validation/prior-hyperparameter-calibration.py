@@ -29,6 +29,58 @@ from pyrovelocity.plots.parameter_metadata import get_parameter_label
 from pyrovelocity.styles import configure_matplotlib_style
 
 configure_matplotlib_style()
+
+def _latex_safe_text(text: str) -> str:
+    """
+    Make text safe for LaTeX rendering by escaping problematic characters.
+
+    Args:
+        text: Input text that may contain LaTeX-problematic characters
+
+    Returns:
+        LaTeX-safe text
+    """
+    # Replace underscores with escaped underscores
+    text = text.replace('_', r'\_')
+
+    # Replace other problematic characters
+    replacements = {
+        '&': r'\&',
+        '%': r'\%',
+        '$': r'\$',
+        '#': r'\#',
+        '^': r'\^{}',
+        '~': r'\~{}',
+        '{': r'\{',
+        '}': r'\}',
+    }
+
+    for char, replacement in replacements.items():
+        text = text.replace(char, replacement)
+
+    return text
+
+def _format_pattern_name(pattern_name: str) -> str:
+    """
+    Format pattern names for display in legends and titles.
+
+    Args:
+        pattern_name: Raw pattern name (e.g., 'pre_activation', 'decay_only')
+
+    Returns:
+        Formatted pattern name suitable for LaTeX rendering
+    """
+    # Pattern name mappings for better display
+    pattern_mappings = {
+        'activation': 'Activation',
+        'pre_activation': 'Pre-activation',
+        'decay_only': 'Decay Only',
+        'transient': 'Transient',
+        'sustained': 'Sustained'
+    }
+
+    formatted = pattern_mappings.get(pattern_name, pattern_name.replace('_', ' ').title())
+    return _latex_safe_text(formatted)
 # Set style for plots
 # plt.style.use('seaborn-v0_8')
 # sns.set_palette("husl")
@@ -170,7 +222,7 @@ class PriorHyperparameterCalibrator:
             pattern_results = {}
             joint_probability = 1.0
 
-            print(f"\n{pattern_name.upper()} PATTERN:")
+            print(f"\n{_format_pattern_name(pattern_name).upper()} PATTERN:")
 
             for constraint_name, (operator, threshold) in constraints.items():
                 # Handle special constraint names
@@ -291,8 +343,9 @@ class PriorHyperparameterCalibrator:
                     if base_param == param_name and x_range[0] <= threshold <= x_range[1]:
                         color = constraint_colors[color_idx % len(constraint_colors)]
                         linestyle = '--' if operator == '<' else '-'
+                        formatted_pattern = _format_pattern_name(pattern_name)
                         ax.axvline(threshold, color=color, linestyle=linestyle, alpha=0.7,
-                                 label=f'{pattern_name}: {operator}{threshold}')
+                                 label=f'{formatted_pattern}: {operator}{threshold}')
                         color_idx += 1
 
             ax.set_xlabel(details['latex_label'])
@@ -325,7 +378,8 @@ class PriorHyperparameterCalibrator:
         print("="*50)
 
         for pattern_name, constraints in self.pattern_constraints.items():
-            print(f"\nGenerating {n_examples} examples for {pattern_name.upper()} pattern...")
+            formatted_pattern = _format_pattern_name(pattern_name)
+            print(f"\nGenerating {n_examples} examples for {formatted_pattern.upper()} pattern...")
 
             examples = []
             attempts = 0
@@ -432,6 +486,7 @@ class PriorHyperparameterCalibrator:
                 continue
 
             color = pattern_colors[pattern_idx % len(pattern_colors)]
+            formatted_pattern = _format_pattern_name(pattern_name)
 
             # Plot multiple examples for this pattern
             for example_idx, params in enumerate(examples):
@@ -459,21 +514,21 @@ class PriorHyperparameterCalibrator:
                     label=f'Example {example_idx+1}' if example_idx < 3 else None
                 )
 
-            # Format axes
-            axes[pattern_idx, 0].set_xlabel('Dimensionless Time (t*)')
-            axes[pattern_idx, 0].set_ylabel('Unspliced (u*)')
-            axes[pattern_idx, 0].set_title(f'{pattern_name.title()}: Unspliced')
+            # Format axes with LaTeX-safe labels
+            axes[pattern_idx, 0].set_xlabel(_latex_safe_text('Dimensionless Time (t*)'))
+            axes[pattern_idx, 0].set_ylabel(_latex_safe_text('Unspliced (u*)'))
+            axes[pattern_idx, 0].set_title(f'{formatted_pattern}: Unspliced')
             axes[pattern_idx, 0].grid(True, alpha=0.3)
             axes[pattern_idx, 0].legend()
 
-            axes[pattern_idx, 1].set_xlabel('Dimensionless Time (t*)')
-            axes[pattern_idx, 1].set_ylabel('Spliced (s*)')
-            axes[pattern_idx, 1].set_title(f'{pattern_name.title()}: Spliced')
+            axes[pattern_idx, 1].set_xlabel(_latex_safe_text('Dimensionless Time (t*)'))
+            axes[pattern_idx, 1].set_ylabel(_latex_safe_text('Spliced (s*)'))
+            axes[pattern_idx, 1].set_title(f'{formatted_pattern}: Spliced')
             axes[pattern_idx, 1].grid(True, alpha=0.3)
 
-            axes[pattern_idx, 2].set_xlabel('Unspliced (u*)')
-            axes[pattern_idx, 2].set_ylabel('Spliced (s*)')
-            axes[pattern_idx, 2].set_title(f'{pattern_name.title()}: Phase Portrait')
+            axes[pattern_idx, 2].set_xlabel(_latex_safe_text('Unspliced (u*)'))
+            axes[pattern_idx, 2].set_ylabel(_latex_safe_text('Spliced (s*)'))
+            axes[pattern_idx, 2].set_title(f'{formatted_pattern}: Phase Portrait')
             axes[pattern_idx, 2].grid(True, alpha=0.3)
 
         plt.tight_layout()
@@ -1120,8 +1175,9 @@ class PriorHyperparameterCalibrator:
                 mask = assignments == i
                 if mask.sum() > 10:
                     pattern_values = values[mask]
+                    formatted_pattern = _format_pattern_name(pattern_name)
                     ax.hist(pattern_values, bins=30, alpha=0.6, color=color,
-                           density=True, label=f'{pattern_name} ({mask.sum()})')
+                           density=True, label=f'{formatted_pattern} ({mask.sum()})')
 
             # Get proper parameter labels using metadata system
             x_label = get_parameter_label(
@@ -1169,7 +1225,8 @@ class PriorHyperparameterCalibrator:
             for i, (pattern_name, color) in enumerate(zip(pattern_names, colors)):
                 mask = assignments == i
                 if mask.sum() > 0:
-                    ax.scatter(x_vals[mask], y_vals[mask], c=color, alpha=0.6, s=1, label=pattern_name)
+                    formatted_pattern = _format_pattern_name(pattern_name)
+                    ax.scatter(x_vals[mask], y_vals[mask], c=color, alpha=0.6, s=1, label=formatted_pattern)
 
             # Get proper parameter labels using metadata system
             x_label = get_parameter_label(
@@ -1352,9 +1409,12 @@ Scaling Factor Correlation: {hierarchical_impact['scaling_factor_impact']:.3f}
         patterns = list(coverage.keys())
         coverages = list(coverage.values())
 
+        # Format pattern names for LaTeX compatibility
+        formatted_patterns = [_format_pattern_name(p) for p in patterns]
+
         # Bar plot of coverage
         colors = ['red', 'blue', 'green', 'orange', 'purple'][:len(patterns)]
-        bars = axes[0].bar(patterns, coverages, color=colors, alpha=0.7)
+        bars = axes[0].bar(formatted_patterns, coverages, color=colors, alpha=0.7)
         axes[0].set_ylabel('Coverage Fraction')
         axes[0].set_title('Pattern Coverage Distribution')
         axes[0].tick_params(axis='x', rotation=45)
@@ -1367,7 +1427,7 @@ Scaling Factor Correlation: {hierarchical_impact['scaling_factor_impact']:.3f}
                         f'{coverage_val:.1%}', ha='center', va='bottom')
 
         # Pie chart of coverage
-        axes[1].pie(coverages, labels=patterns, colors=colors, autopct='%1.1f%%', startangle=90)
+        axes[1].pie(coverages, labels=formatted_patterns, colors=colors, autopct='%1.1f%%', startangle=90)
         axes[1].set_title('Pattern Coverage Distribution')
 
         plt.tight_layout()
@@ -1643,7 +1703,7 @@ Scaling Factor Correlation: {hierarchical_impact['scaling_factor_impact']:.3f}
         # Plot 2: Coverage summary pie chart
         summary = recommendations['summary']
         sizes = [len(summary['critical_patterns']), len(summary['marginal_patterns']), len(summary['acceptable_patterns'])]
-        labels = ['Critical (<5%)', 'Marginal (5-20%)', 'Acceptable (>20%)']
+        labels = [_latex_safe_text('Critical (<5%)'), _latex_safe_text('Marginal (5-20%)'), _latex_safe_text('Acceptable (>20%)')]
         colors_pie = ['red', 'orange', 'green']
 
         axes[0, 1].pie(sizes, labels=labels, colors=colors_pie, autopct='%1.0f%%', startangle=90)
@@ -1662,7 +1722,19 @@ Scaling Factor Correlation: {hierarchical_impact['scaling_factor_impact']:.3f}
         if param_violations:
             params = list(param_violations.keys())
             violations = list(param_violations.values())
-            axes[1, 0].bar(params, violations, color='red', alpha=0.7)
+
+            # Format parameter names for LaTeX compatibility
+            formatted_params = []
+            for param in params:
+                param_label = get_parameter_label(
+                    param_name=param,
+                    label_type="short",
+                    model=self.model,
+                    fallback_to_legacy=True
+                )
+                formatted_params.append(param_label)
+
+            axes[1, 0].bar(formatted_params, violations, color='red', alpha=0.7)
             axes[1, 0].set_ylabel('Number of Violations')
             axes[1, 0].set_title('Parameter Constraint Violations')
             axes[1, 0].tick_params(axis='x', rotation=45)
@@ -1675,16 +1747,20 @@ Scaling Factor Correlation: {hierarchical_impact['scaling_factor_impact']:.3f}
         axes[1, 1].axis('off')
         rec_action = recommendations['recommended_action']
 
+        # Format pattern names for display
+        critical_formatted = [_format_pattern_name(p) for p in summary['critical_patterns']] if summary['critical_patterns'] else ['None']
+        marginal_formatted = [_format_pattern_name(p) for p in summary['marginal_patterns']] if summary['marginal_patterns'] else ['None']
+
         summary_text = f"""
 CALIBRATION SUMMARY
 
 Overall Coverage: {summary['overall_coverage']:.1%}
 
 Critical Patterns: {len(summary['critical_patterns'])}
-{', '.join(summary['critical_patterns']) if summary['critical_patterns'] else 'None'}
+{', '.join(critical_formatted)}
 
 Marginal Patterns: {len(summary['marginal_patterns'])}
-{', '.join(summary['marginal_patterns']) if summary['marginal_patterns'] else 'None'}
+{', '.join(marginal_formatted)}
 
 RECOMMENDED ACTION:
 {rec_action['action'].replace('_', ' ').title()}
