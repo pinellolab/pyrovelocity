@@ -215,20 +215,54 @@ def combine_pdfs(
 
 def _get_available_parameters(
     parameters: Dict[str, torch.Tensor],
-    exclude_params: Optional[List[str]] = None
+    exclude_params: Optional[List[str]] = None,
+    model: Optional[Any] = None
 ) -> List[str]:
     """
     Get list of available parameters, optionally excluding specified ones.
 
+    Parameters are ordered by plot_order from metadata if available, otherwise alphabetically.
+
     Args:
         parameters: Dictionary of parameter tensors
         exclude_params: Optional list of parameter names to exclude
+        model: Optional PyroVelocity model instance for parameter metadata
 
     Returns:
-        List of available parameter names
+        List of available parameter names in proper order
     """
-    exclude_params = exclude_params or []
-    return [name for name in parameters.keys() if name not in exclude_params]
+    # Default exclusions for deprecated parameters in corrected parameterization
+    default_exclude = ['alpha_off', 'alpha_on']  # alpha_off fixed at 1.0, alpha_on computed from R_on
+    exclude_params = (exclude_params or []) + default_exclude
+
+    available_params = [name for name in parameters.keys() if name not in exclude_params]
+
+    # Try to order by metadata plot_order if available
+    try:
+        from pyrovelocity.plots.parameter_metadata import (
+            get_model_parameter_metadata,
+        )
+
+        if model is not None:
+            metadata = get_model_parameter_metadata(model)
+            if metadata is not None:
+                # Create ordering based on plot_order
+                param_order = {}
+                for param_name in available_params:
+                    if param_name in metadata.parameters:
+                        plot_order = metadata.parameters[param_name].plot_order
+                        param_order[param_name] = plot_order if plot_order is not None else 999
+                    else:
+                        param_order[param_name] = 999  # Put unordered params at end
+
+                # Sort by plot_order, then alphabetically for ties
+                available_params.sort(key=lambda x: (param_order.get(x, 999), x))
+                return available_params
+    except Exception:
+        pass  # Fall back to alphabetical ordering
+
+    # Fall back to alphabetical ordering
+    return sorted(available_params)
 
 @beartype
 def plot_parameter_marginals(
@@ -255,7 +289,7 @@ def plot_parameter_marginals(
     Returns:
         matplotlib Figure object
     """
-    available_params = _get_available_parameters(parameters, exclude_params)
+    available_params = _get_available_parameters(parameters, exclude_params, model)
 
     if not available_params:
         fig, ax = plt.subplots(figsize=(6, 4))

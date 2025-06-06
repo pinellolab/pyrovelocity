@@ -82,27 +82,17 @@ def create_piecewise_activation_prior_metadata() -> ComponentParameterMetadata:
             plot_order=5
         ),
         
-        # Piecewise activation parameters
-        "alpha_off": ParameterMetadata(
-            name="alpha_off",
-            display_name=r"$\alpha_{off}$",
-            short_label="Basal Rate",
-            description="Dimensionless basal transcription rate during inactive phase",
-            units="dimensionless rate",
-            typical_range=(0.01, 0.5),
-            biological_interpretation="Low expression state transcription activity, representing repressed gene expression",
+        # Piecewise activation parameters (corrected parameterization)
+        # Note: alpha_off is fixed at 1.0 (not inferred), alpha_on computed from R_on
+        "R_on": ParameterMetadata(
+            name="R_on",
+            display_name=r"$R_{on}$",
+            short_label="Fold Change",
+            description="Fold-change in transcription rate during activation (R_on = α*_on/α*_off)",
+            units="dimensionless ratio",
+            typical_range=(1.5, 4.2),
+            biological_interpretation="Magnitude of transcriptional upregulation during gene activation phase",
             plot_order=6
-        ),
-
-        "alpha_on": ParameterMetadata(
-            name="alpha_on",
-            display_name=r"$\alpha_{on}$",
-            short_label="Active Rate",
-            description="Dimensionless active transcription rate during activation phase",
-            units="dimensionless rate",
-            typical_range=(0.5, 5.0),
-            biological_interpretation="High expression state transcription activity, representing activated gene expression",
-            plot_order=7
         ),
 
         "gamma_star": ParameterMetadata(
@@ -113,18 +103,18 @@ def create_piecewise_activation_prior_metadata() -> ComponentParameterMetadata:
             units="dimensionless rate ratio",
             typical_range=(0.3, 3.0),
             biological_interpretation="Balance between mRNA splicing and degradation kinetics; γ*=1 represents balanced kinetics",
-            plot_order=8
+            plot_order=7
         ),
 
         "t_on_star": ParameterMetadata(
             name="t_on_star",
             display_name=r"$t^*_{on}$",
             short_label="Onset Time",
-            description="Dimensionless activation onset time",
+            description="Dimensionless activation onset time (allows negative values for pre-activation)",
             units="dimensionless time",
-            typical_range=(0.1, 0.8),
-            biological_interpretation="When during the process each gene begins its activation phase",
-            plot_order=9
+            typical_range=(-1.0, 1.4),
+            biological_interpretation="When during the process each gene begins its activation phase; negative values indicate pre-activation",
+            plot_order=8
         ),
 
         "delta_star": ParameterMetadata(
@@ -135,7 +125,7 @@ def create_piecewise_activation_prior_metadata() -> ComponentParameterMetadata:
             units="dimensionless time",
             typical_range=(0.1, 1.0),
             biological_interpretation="How long each gene remains in its activated state",
-            plot_order=10
+            plot_order=9
         ),
         
         # Observation model parameters

@@ -65,10 +65,10 @@ plt.suptitle("Prior Predictive Checks: Piecewise Activation Model", fontsize=16)
 plt.tight_layout()
 plt.show()
 
-# Validate prior parameter ranges
+# Validate prior parameter ranges (updated for corrected parameterization)
 print("\nPrior parameter range validation:")
 for param_name, samples in prior_parameter_samples.items():
-    if param_name.startswith(('alpha_off', 'alpha_on', 't_on', 'delta', 'gamma_star')):
+    if param_name.startswith(('R_on', 't_on', 'delta', 'gamma_star')):
         print(f"{param_name}:")
         print(f"  Range: [{samples.min():.3f}, {samples.max():.3f}]")
         print(f"  Mean ± Std: {samples.mean():.3f} ± {samples.std():.3f}")
