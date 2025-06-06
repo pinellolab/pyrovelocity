@@ -160,6 +160,8 @@ def extract_posterior_samples(
     ] = None,  # Unused but kept for API compatibility
     num_samples: int = 1000,
     seed: Optional[int] = None,
+    model_args: Optional[Tuple] = None,
+    model_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, torch.Tensor]:
     """
     Extract posterior samples from SVI results.
@@ -173,6 +175,8 @@ def extract_posterior_samples(
         params: Parameters from SVI
         num_samples: Number of posterior samples to extract
         seed: Random seed
+        model_args: Arguments to pass to the model for deterministic site computation
+        model_kwargs: Keyword arguments to pass to the model for deterministic site computation
 
     Returns:
         Dictionary of posterior samples with properly constrained parameters
@@ -203,18 +207,23 @@ def extract_posterior_samples(
         return guide_samples
 
     # Create a predictive object for the model, using the guide samples
-    # Use True to return all sites, including deterministic ones
+    # Use None to return all sites, including deterministic ones
     model_predictive = pyro.infer.Predictive(
         model_fn,
         posterior_samples=guide_samples,
-        return_sites=True,  # Return all sites, including deterministic
+        return_sites=None,  # Return all sites, including deterministic
         num_samples=num_samples
     )
 
     # Run the model predictive to get all sites, including deterministic ones
-    # Note: We can't pass args here because we don't have access to them in this function
-    # The calling function should handle this
-    model_samples = model_predictive()
+    # Pass the model arguments if provided - this is critical for generating deterministic sites like t_star
+    if model_args is not None or model_kwargs is not None:
+        args = model_args or ()
+        kwargs = model_kwargs or {}
+        model_samples = model_predictive(*args, **kwargs)
+    else:
+        # Fallback to no arguments (this will fail for models that require arguments)
+        model_samples = model_predictive()
 
     # Combine guide and model samples
     # Guide samples take precedence if there's a conflict
@@ -369,7 +378,7 @@ def run_svi_inference(
     # We need to pass both the guide and the model to extract_posterior_samples
     # This is critical for getting deterministic sites like ut and st
     posterior_samples = extract_posterior_samples(
-        guide, state.params, config.num_samples, seed
+        guide, state.params, config.num_samples, seed, args, kwargs
     )
 
     # If we're using an AutoGuide, we can get the model from it
