@@ -1117,35 +1117,57 @@ class PriorHyperparameterCalibrator:
         """Create comprehensive visualization plots."""
         print("  Creating comprehensive plots...")
 
-        # Plot 1: Enhanced prior distributions with pattern overlays
-        fig1 = self._plot_enhanced_prior_distributions(param_samples, pattern_scores)
-        fig1.savefig(self.save_path / "01_enhanced_prior_distributions.png", dpi=300, bbox_inches='tight')
-        fig1.savefig(self.save_path / "01_enhanced_prior_distributions.pdf", bbox_inches='tight')
+        # Plot 1: Basic prior distributions with HPDI ranges
+        fig1 = self.plot_prior_distributions()
+        fig1.savefig(self.save_path / "01_prior_distributions.png", dpi=300, bbox_inches='tight')
+        fig1.savefig(self.save_path / "01_prior_distributions.pdf", bbox_inches='tight')
         plt.close(fig1)
 
-        # Plot 2: Phase diagrams
-        fig2 = self._plot_phase_diagrams(phase_diagrams)
-        fig2.savefig(self.save_path / "02_phase_diagrams.png", dpi=300, bbox_inches='tight')
-        fig2.savefig(self.save_path / "02_phase_diagrams.pdf", bbox_inches='tight')
+        # Plot 2: Pattern time courses
+        pattern_examples = self.generate_pattern_examples(n_examples=3)
+        fig2 = self.plot_pattern_time_courses(pattern_examples)
+        fig2.savefig(self.save_path / "02_pattern_time_courses.png", dpi=300, bbox_inches='tight')
+        fig2.savefig(self.save_path / "02_pattern_time_courses.pdf", bbox_inches='tight')
         plt.close(fig2)
 
-        # Plot 3: Parameter correlation analysis
-        fig3 = self._plot_correlation_analysis(dependency_analysis)
-        fig3.savefig(self.save_path / "03_correlation_analysis.png", dpi=300, bbox_inches='tight')
-        fig3.savefig(self.save_path / "03_correlation_analysis.pdf", bbox_inches='tight')
+        # Plot 3: Phase diagrams
+        fig3 = self._plot_phase_diagrams(phase_diagrams)
+        fig3.savefig(self.save_path / "03_phase_diagrams.png", dpi=300, bbox_inches='tight')
+        fig3.savefig(self.save_path / "03_phase_diagrams.pdf", bbox_inches='tight')
         plt.close(fig3)
 
-        # Plot 4: Hierarchical impact analysis
-        fig4 = self._plot_hierarchical_impact(param_samples, hierarchical_impact)
-        fig4.savefig(self.save_path / "04_hierarchical_impact.png", dpi=300, bbox_inches='tight')
-        fig4.savefig(self.save_path / "04_hierarchical_impact.pdf", bbox_inches='tight')
+        # Plot 4: Parameter correlation analysis
+        fig4 = self._plot_correlation_analysis(dependency_analysis)
+        fig4.savefig(self.save_path / "04_correlation_analysis.png", dpi=300, bbox_inches='tight')
+        fig4.savefig(self.save_path / "04_correlation_analysis.pdf", bbox_inches='tight')
         plt.close(fig4)
 
-        # Plot 5: Pattern coverage analysis
-        fig5 = self._plot_pattern_coverage_analysis(pattern_scores)
-        fig5.savefig(self.save_path / "05_pattern_coverage.png", dpi=300, bbox_inches='tight')
-        fig5.savefig(self.save_path / "05_pattern_coverage.pdf", bbox_inches='tight')
+        # Plot 5: Hierarchical impact analysis
+        fig5 = self._plot_hierarchical_impact(param_samples, hierarchical_impact)
+        fig5.savefig(self.save_path / "05_hierarchical_impact.png", dpi=300, bbox_inches='tight')
+        fig5.savefig(self.save_path / "05_hierarchical_impact.pdf", bbox_inches='tight')
         plt.close(fig5)
+
+        # Plot 6: Enhanced prior distributions with pattern overlays
+        fig6 = self._plot_enhanced_prior_distributions(param_samples, pattern_scores)
+        fig6.savefig(self.save_path / "06_enhanced_prior_distributions.png", dpi=300, bbox_inches='tight')
+        fig6.savefig(self.save_path / "06_enhanced_prior_distributions.pdf", bbox_inches='tight')
+        plt.close(fig6)
+
+        # Plot 7: Pattern coverage analysis
+        fig7 = self._plot_pattern_coverage_analysis(pattern_scores)
+        fig7.savefig(self.save_path / "07_pattern_coverage.png", dpi=300, bbox_inches='tight')
+        fig7.savefig(self.save_path / "07_pattern_coverage.pdf", bbox_inches='tight')
+        plt.close(fig7)
+
+        # Plot 8: Calibration summary (using basic feasibility analysis)
+        print("  Computing constraint feasibility for summary...")
+        feasibility_results = self.analyze_constraint_feasibility()
+        recommendations = self.generate_optimization_recommendations(feasibility_results)
+        fig8 = self._create_summary_plot(feasibility_results, recommendations)
+        fig8.savefig(self.save_path / "08_calibration_summary.png", dpi=300, bbox_inches='tight')
+        fig8.savefig(self.save_path / "08_calibration_summary.pdf", bbox_inches='tight')
+        plt.close(fig8)
 
     @beartype
     def _plot_enhanced_prior_distributions(
