@@ -418,26 +418,33 @@ class LegacyDynamicsModel:
 
 @DynamicsModelRegistry.register("piecewise_activation")
 class PiecewiseActivationDynamicsModel:
-    """Piecewise activation dynamics model for RNA velocity using analytical solutions.
+    """Piecewise activation dynamics model with corrected dimensional analysis.
 
     This model implements dimensionless analytical dynamics with piecewise constant
-    transcription rates. The system has three phases:
+    transcription rates using the corrected parameterization that eliminates
+    parameter redundancy. The system has three phases:
 
-    Phase 1 (Off): 0 ≤ t* < t*_on
-        α*(t*) = α*_off (basal transcription)
+    Phase 1 (Off): t* < t*_on
+        α*(t*) = 1.0 (fixed reference transcription rate)
 
     Phase 2 (On): t*_on ≤ t* < t*_on + δ*
-        α*(t*) = α*_on (elevated transcription)
+        α*(t*) = R_on (fold-change from reference)
 
     Phase 3 (Return to Off): t* ≥ t*_on + δ*
-        α*(t*) = α*_off (back to basal)
+        α*(t*) = 1.0 (back to reference)
 
     The dimensionless system is:
         du*/dt* = α*(t*) - u*
         ds*/dt* = u* - γ*s*
 
-    With steady-state initial conditions:
-        u*_0 = α*_off, s*_0 = α*_off/γ*
+    With fixed steady-state initial conditions:
+        u*_0 = 1.0, s*_0 = 1.0/γ*
+
+    Key corrections:
+    - α*_off = 1.0 (fixed, not inferred) eliminates U₀ᵢ vs α*_off redundancy
+    - R_on = α*_on represents fold-change during activation
+    - t*_on ~ Normal allows negative values for pre-activation scenarios
+    - Initial conditions are fixed, not inferred
 
     Special handling for γ* = 1 boundary case with τe^(-τ) terms.
 
@@ -498,16 +505,16 @@ class PiecewiseActivationDynamicsModel:
                 - ut: Latent unspliced counts (BatchTensor)
                 - st: Latent spliced counts (BatchTensor)
         """
-        # Validate context
+        # Validate context (expect R_on instead of alpha_on, alpha_off fixed at 1.0)
         validation_result = validate_context(
             self.__class__.__name__,
             context,
             required_keys=[
-                "u_obs", "s_obs", "alpha_off", "alpha_on", "gamma_star",
+                "u_obs", "s_obs", "R_on", "gamma_star",
                 "t_on_star", "delta_star", "t_star"
             ],
             tensor_keys=[
-                "u_obs", "s_obs", "alpha_off", "alpha_on", "gamma_star",
+                "u_obs", "s_obs", "R_on", "gamma_star",
                 "t_on_star", "delta_star", "t_star"
             ],
         )
@@ -516,12 +523,16 @@ class PiecewiseActivationDynamicsModel:
             # Extract required values from context
             u_obs = context["u_obs"]
             s_obs = context["s_obs"]
-            alpha_off = context["alpha_off"]
-            alpha_on = context["alpha_on"]
+            R_on = context["R_on"]
             gamma_star = context["gamma_star"]
             t_on_star = context["t_on_star"]
             delta_star = context["delta_star"]
             t_star = context["t_star"]
+
+            # Create fixed alpha_off tensor (always 1.0) and compute alpha_on from R_on
+            n_genes = R_on.shape[0] if R_on.dim() > 0 else 1
+            alpha_off = torch.ones(n_genes, device=R_on.device, dtype=R_on.dtype)
+            alpha_on = R_on  # Since alpha_off = 1.0, alpha_on = R_on
 
             # Compute expected counts using piecewise analytical solutions
             u_expected, s_expected = self._compute_piecewise_solution(
@@ -615,11 +626,11 @@ class PiecewiseActivationDynamicsModel:
         u_star = torch.zeros_like(t_star)  # [cells, genes]
         s_star = torch.zeros_like(t_star)  # [cells, genes]
 
-        # Phase 1: Off state (0 ≤ t* < t*_on)
-        # System is at steady state with α*_off
+        # Phase 1: Off state (t* < t*_on)
+        # System is at steady state with α*_off = 1.0 (fixed reference)
         phase1_mask = t_star < t_on_star
-        u_star[phase1_mask] = alpha_off[phase1_mask]
-        s_star[phase1_mask] = (alpha_off / gamma_star)[phase1_mask]
+        u_star[phase1_mask] = 1.0  # Fixed reference state
+        s_star[phase1_mask] = (1.0 / gamma_star)[phase1_mask]
 
         # Phase 2: On state (t*_on ≤ t* < t*_on + δ*)
         phase2_mask = (t_star >= t_on_star) & (t_star < t_on_star + delta_star)
@@ -656,40 +667,41 @@ class PiecewiseActivationDynamicsModel:
         gamma_star: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Compute analytical solution for the ON phase.
+        Compute analytical solution for the ON phase with corrected parameterization.
 
         Phase 2: t*_on ≤ t* < t*_on + δ*
-        Initial conditions: u*_0 = α*_off, s*_0 = α*_off/γ*
-        Transcription rate: α*_on
+        Initial conditions: u*_0 = 1.0, s*_0 = 1.0/γ* (fixed)
+        Transcription rate: α*_on = R_on (fold-change from reference)
 
         Args:
             tau_on: Time since activation onset (τ_on = t* - t*_on)
-            alpha_off: Basal transcription rate
-            alpha_on: Active transcription rate
+            alpha_off: Fixed reference transcription rate (always 1.0)
+            alpha_on: Active transcription rate (R_on fold-change)
             gamma_star: Relative degradation rate
 
         Returns:
             Tuple of (u_star, s_star) for the ON phase
         """
-        # u* solution: u*(τ) = α*_on + (α*_off - α*_on) * exp(-τ)
-        u_star = alpha_on + (alpha_off - alpha_on) * torch.exp(-tau_on)
+        # u* solution: u*(τ) = α*_on + (1.0 - α*_on) * exp(-τ)
+        # Since alpha_off = 1.0 (fixed reference)
+        u_star = alpha_on + (1.0 - alpha_on) * torch.exp(-tau_on)
 
         # s* solution depends on whether γ* = 1 or γ* ≠ 1
         gamma_near_one = torch.abs(gamma_star - 1.0) < self.eps
 
-        # For γ* ≠ 1 case
-        xi_on = (alpha_off - alpha_on) / (gamma_star - 1.0)
+        # For γ* ≠ 1 case (using alpha_off = 1.0)
+        xi_on = (1.0 - alpha_on) / (gamma_star - 1.0)
         s_star_general = (
             alpha_on / gamma_star +
-            (alpha_off / gamma_star - xi_on - alpha_on / gamma_star) * torch.exp(-gamma_star * tau_on) +
+            (1.0 / gamma_star - xi_on - alpha_on / gamma_star) * torch.exp(-gamma_star * tau_on) +
             xi_on * torch.exp(-tau_on)
         )
 
-        # For γ* = 1 case (special case with τe^(-τ) term)
+        # For γ* = 1 case (special case with τe^(-τ) term, using alpha_off = 1.0)
         s_star_special = (
             alpha_on +
-            (alpha_off - alpha_on) * torch.exp(-tau_on) +
-            (alpha_off - alpha_on) * tau_on * torch.exp(-tau_on)
+            (1.0 - alpha_on) * torch.exp(-tau_on) +
+            (1.0 - alpha_on) * tau_on * torch.exp(-tau_on)
         )
 
         # Select appropriate solution based on γ* value
@@ -708,16 +720,16 @@ class PiecewiseActivationDynamicsModel:
         delta_star: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Compute analytical solution for the return to OFF phase.
+        Compute analytical solution for the return to OFF phase with corrected parameterization.
 
         Phase 3: t* ≥ t*_on + δ*
         Initial conditions: endpoint values from Phase 2
-        Transcription rate: α*_off
+        Transcription rate: α*_off = 1.0 (fixed reference)
 
         Args:
             tau_off: Time since deactivation (τ_off = t* - (t*_on + δ*))
-            alpha_off: Basal transcription rate
-            alpha_on: Active transcription rate
+            alpha_off: Fixed reference transcription rate (always 1.0)
+            alpha_on: Active transcription rate (R_on fold-change)
             gamma_star: Relative degradation rate
             delta_star: Activation duration
 
@@ -729,25 +741,26 @@ class PiecewiseActivationDynamicsModel:
             alpha_off, alpha_on, gamma_star, delta_star
         )
 
-        # u* solution: u*(τ) = α*_off + (u*_off,0 - α*_off) * exp(-τ)
-        u_star = alpha_off + (u_off_0 - alpha_off) * torch.exp(-tau_off)
+        # u* solution: u*(τ) = 1.0 + (u*_off,0 - 1.0) * exp(-τ)
+        # Since alpha_off = 1.0 (fixed reference)
+        u_star = 1.0 + (u_off_0 - 1.0) * torch.exp(-tau_off)
 
         # s* solution depends on whether γ* = 1 or γ* ≠ 1
         gamma_near_one = torch.abs(gamma_star - 1.0) < self.eps
 
-        # For γ* ≠ 1 case
-        xi_off = (u_off_0 - alpha_off) / (gamma_star - 1.0)
+        # For γ* ≠ 1 case (using alpha_off = 1.0)
+        xi_off = (u_off_0 - 1.0) / (gamma_star - 1.0)
         s_star_general = (
-            alpha_off / gamma_star +
-            (s_off_0 - xi_off - alpha_off / gamma_star) * torch.exp(-gamma_star * tau_off) +
+            1.0 / gamma_star +
+            (s_off_0 - xi_off - 1.0 / gamma_star) * torch.exp(-gamma_star * tau_off) +
             xi_off * torch.exp(-tau_off)
         )
 
-        # For γ* = 1 case (special case with τe^(-τ) term)
+        # For γ* = 1 case (special case with τe^(-τ) term, using alpha_off = 1.0)
         s_star_special = (
-            alpha_off +
-            (s_off_0 - alpha_off) * torch.exp(-tau_off) +
-            (u_off_0 - alpha_off) * tau_off * torch.exp(-tau_off)
+            1.0 +
+            (s_off_0 - 1.0) * torch.exp(-tau_off) +
+            (u_off_0 - 1.0) * tau_off * torch.exp(-tau_off)
         )
 
         # Select appropriate solution based on γ* value
@@ -799,11 +812,11 @@ class PiecewiseActivationDynamicsModel:
         """
         Compute the steady-state unspliced and spliced RNA counts for the OFF phase.
 
-        For the piecewise activation model, the steady state corresponds to the
-        OFF phase with basal transcription α*_off.
+        For the corrected piecewise activation model, the steady state corresponds to the
+        OFF phase with fixed reference transcription α*_off = 1.0.
 
         Args:
-            alpha_off: Basal transcription rate
+            alpha_off: Fixed reference transcription rate (always 1.0)
             gamma_star: Relative degradation rate
             **kwargs: Additional model-specific parameters
 
@@ -811,11 +824,11 @@ class PiecewiseActivationDynamicsModel:
             Tuple of (steady-state unspliced counts, steady-state spliced counts)
         """
         # At steady state in OFF phase:
-        # du*/dt* = α*_off - u* = 0 => u* = α*_off
-        u_ss = alpha_off
+        # du*/dt* = 1.0 - u* = 0 => u* = 1.0 (fixed reference)
+        u_ss = torch.ones_like(alpha_off)  # Always 1.0
 
-        # ds*/dt* = u* - γ*s* = 0 => s* = u*/γ* = α*_off/γ*
-        s_ss = alpha_off / gamma_star
+        # ds*/dt* = u* - γ*s* = 0 => s* = u*/γ* = 1.0/γ*
+        s_ss = torch.ones_like(alpha_off) / gamma_star
 
         return u_ss, s_ss
 
