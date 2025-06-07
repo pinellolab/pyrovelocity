@@ -115,10 +115,10 @@ class PriorHyperparameterCalibrator:
         # Current dimensionless prior hyperparameters (from priors.py) - UPDATED AFTER CALIBRATION
         self.current_priors = {
             # Piecewise activation parameters (for pattern analysis)
-            'R_on': {'loc': 0.916, 'scale': 0.4},        # log(2.5), fold-change (LogNormal)
+            'R_on': {'loc': 0.693, 'scale': 0.35},       # log(2.0), fold-change (LogNormal) - UPDATED
             't_on_star': {'loc': 0.5, 'scale': 0.8},     # Normal(0.5, 0.8²), allows negatives - CALIBRATED
             'delta_star': {'loc': -0.8, 'scale': 0.45},  # log(0.45) (LogNormal) - CALIBRATED
-            'gamma_star': {'loc': 0.0, 'scale': 0.5},    # log(1.0) (LogNormal)
+            'gamma_star': {'loc': -0.223, 'scale': 0.3}, # log(0.8) (LogNormal) - UPDATED for lower velocity magnitudes
 
             # Hierarchical time structure parameters
             'T_M_star': {'alpha': 4.0, 'beta': 0.08},    # Gamma(4.0, 0.08), mean = 50
