@@ -114,10 +114,20 @@ class PriorHyperparameterCalibrator:
         
         # Current dimensionless prior hyperparameters (from priors.py) - UPDATED AFTER CALIBRATION
         self.current_priors = {
+            # Piecewise activation parameters (for pattern analysis)
             'R_on': {'loc': 0.916, 'scale': 0.4},        # log(2.5), fold-change (LogNormal)
             't_on_star': {'loc': 0.5, 'scale': 0.8},     # Normal(0.5, 0.8²), allows negatives - CALIBRATED
             'delta_star': {'loc': -0.8, 'scale': 0.45},  # log(0.45) (LogNormal) - CALIBRATED
             'gamma_star': {'loc': 0.0, 'scale': 0.5},    # log(1.0) (LogNormal)
+
+            # Hierarchical time structure parameters
+            'T_M_star': {'alpha': 4.0, 'beta': 0.08},    # Gamma(4.0, 0.08), mean = 50
+            't_loc': {'alpha': 1.0, 'beta': 2.0},        # Gamma(1.0, 2.0), mean = 0.5
+            't_scale': {'alpha': 1.0, 'beta': 4.0},      # Gamma(1.0, 4.0), mean = 0.25
+
+            # Technical parameters
+            'U_0i': {'loc': 4.6, 'scale': 0.5},          # log(100) (LogNormal)
+            'lambda_j': {'loc': 0.0, 'scale': 0.2},      # log(1.0) (LogNormal)
         }
         
         # Gene expression pattern definitions (from documentation)
@@ -156,21 +166,21 @@ class PriorHyperparameterCalibrator:
         
     @beartype
     def calculate_lognormal_cdf_probability(
-        self, 
-        loc: float, 
-        scale: float, 
-        threshold: float, 
+        self,
+        loc: float,
+        scale: float,
+        threshold: float,
         upper: bool = True
     ) -> float:
         """
         Calculate P(X > threshold) or P(X < threshold) for LogNormal(loc, scale).
-        
+
         Args:
             loc: Location parameter (log-space mean)
             scale: Scale parameter (log-space std)
             threshold: Threshold value
             upper: If True, calculate P(X > threshold), else P(X < threshold)
-        
+
         Returns:
             Probability value between 0 and 1
         """
@@ -178,6 +188,31 @@ class PriorHyperparameterCalibrator:
             return 1 - stats.lognorm.cdf(threshold, s=scale, scale=np.exp(loc))
         else:
             return stats.lognorm.cdf(threshold, s=scale, scale=np.exp(loc))
+
+    @beartype
+    def calculate_gamma_cdf_probability(
+        self,
+        alpha: float,
+        beta: float,
+        threshold: float,
+        upper: bool = True
+    ) -> float:
+        """
+        Calculate P(X > threshold) or P(X < threshold) for Gamma(alpha, beta).
+
+        Args:
+            alpha: Shape parameter
+            beta: Rate parameter (not scale!)
+            threshold: Threshold value
+            upper: If True, calculate P(X > threshold), else P(X < threshold)
+
+        Returns:
+            Probability value between 0 and 1
+        """
+        if upper:
+            return 1 - stats.gamma.cdf(threshold, a=alpha, scale=1/beta)
+        else:
+            return stats.gamma.cdf(threshold, a=alpha, scale=1/beta)
     
     @beartype
     def calculate_normal_cdf_probability(
@@ -268,97 +303,147 @@ class PriorHyperparameterCalibrator:
         return results
 
     @beartype
-    def plot_prior_distributions(self) -> plt.Figure:
+    def calculate_hpdi_ranges(self, confidence: float = 0.95) -> Dict[str, Dict[str, float]]:
         """
-        Plot current prior distributions with pattern constraint overlays.
+        Calculate 95% HPDI ranges for all prior distributions.
+
+        Args:
+            confidence: Confidence level for HPDI calculation (default: 0.95)
 
         Returns:
-            matplotlib Figure object
+            Dictionary with HPDI ranges for each parameter
         """
-        fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-        axes = axes.flatten()
+        alpha = 1 - confidence
+        lower_percentile = (alpha / 2) * 100
+        upper_percentile = (1 - alpha / 2) * 100
 
-        # Define parameter plotting details with proper metadata labels
-        param_details = {}
-        param_configs = {
-            'R_on': {'x_range': (0.5, 10), 'distribution': 'lognormal'},
-            't_on_star': {'x_range': (-1.5, 1.5), 'distribution': 'normal'},
-            'delta_star': {'x_range': (0.1, 2.0), 'distribution': 'lognormal'},
-            'gamma_star': {'x_range': (0.2, 5.0), 'distribution': 'lognormal'}
-        }
+        hpdi_ranges = {}
 
-        for param_name, config in param_configs.items():
-            # Get proper labels using metadata system
-            display_label = get_parameter_label(
-                param_name=param_name,
-                label_type="display",
-                model=self.model,
-                fallback_to_legacy=True
-            )
-            short_label = get_parameter_label(
-                param_name=param_name,
-                label_type="short",
-                model=self.model,
-                fallback_to_legacy=True
-            )
+        print(f"\n" + "="*60)
+        print(f"95% HIGHEST POSTERIOR DENSITY INTERVAL (HPDI) ANALYSIS")
+        print("="*60)
+        print(f"Confidence level: {confidence*100:.1f}%")
+        print(f"Percentiles: [{lower_percentile:.1f}%, {upper_percentile:.1f}%]")
 
-            param_details[param_name] = {
-                'title': f'{short_label}',
-                'x_range': config['x_range'],
-                'distribution': config['distribution'],
-                'latex_label': display_label
+        for param_name, prior_config in self.current_priors.items():
+            if 'loc' in prior_config and 'scale' in prior_config:
+                # LogNormal or Normal distribution
+                if param_name == 't_on_star':  # Normal distribution
+                    lower = stats.norm.ppf(alpha/2, loc=prior_config['loc'], scale=prior_config['scale'])
+                    upper = stats.norm.ppf(1-alpha/2, loc=prior_config['loc'], scale=prior_config['scale'])
+                    dist_type = "Normal"
+                    mean_val = prior_config['loc']
+                else:  # LogNormal distribution
+                    lower = stats.lognorm.ppf(alpha/2, s=prior_config['scale'], scale=np.exp(prior_config['loc']))
+                    upper = stats.lognorm.ppf(1-alpha/2, s=prior_config['scale'], scale=np.exp(prior_config['loc']))
+                    dist_type = "LogNormal"
+                    mean_val = np.exp(prior_config['loc'] + 0.5 * prior_config['scale']**2)
+
+            elif 'alpha' in prior_config and 'beta' in prior_config:
+                # Gamma distribution
+                lower = stats.gamma.ppf(alpha/2, a=prior_config['alpha'], scale=1/prior_config['beta'])
+                upper = stats.gamma.ppf(1-alpha/2, a=prior_config['alpha'], scale=1/prior_config['beta'])
+                dist_type = "Gamma"
+                mean_val = prior_config['alpha'] / prior_config['beta']
+            else:
+                continue
+
+            hpdi_ranges[param_name] = {
+                'lower': lower,
+                'upper': upper,
+                'mean': mean_val,
+                'distribution': dist_type,
+                'width': upper - lower
             }
 
-        for idx, (param_name, details) in enumerate(param_details.items()):
-            ax = axes[idx]
-            prior = self.current_priors[param_name]
-            x_range = details['x_range']
+            # Display with biological interpretation
+            print(f"\n{param_name} ~ {dist_type}:")
+            print(f"  95% HPDI: [{lower:.3f}, {upper:.3f}]")
+            print(f"  Mean: {mean_val:.3f}")
+            print(f"  Width: {upper - lower:.3f}")
 
-            # Generate x values
-            x = np.linspace(x_range[0], x_range[1], 1000)
+            # Add biological interpretation
+            self._add_biological_interpretation(param_name, lower, upper, mean_val)
 
-            # Calculate PDF
-            if details['distribution'] == 'lognormal':
-                pdf = stats.lognorm.pdf(x, s=prior['scale'], scale=np.exp(prior['loc']))
-            else:  # normal
-                pdf = stats.norm.pdf(x, loc=prior['loc'], scale=prior['scale'])
+        return hpdi_ranges
 
-            # Plot distribution
-            ax.plot(x, pdf, 'b-', linewidth=2, label='Prior PDF')
-            ax.fill_between(x, pdf, alpha=0.3)
+    @beartype
+    def calculate_hpdi_for_single_param(self, param_name: str, confidence: float = 0.95) -> Dict[str, float]:
+        """
+        Calculate HPDI for a single parameter.
 
-            # Add constraint lines for relevant patterns
-            constraint_colors = ['red', 'orange', 'green', 'purple', 'brown']
-            color_idx = 0
+        Args:
+            param_name: Name of the parameter
+            confidence: Confidence level (default: 0.95)
 
-            for pattern_name, constraints in self.pattern_constraints.items():
-                for constraint_name, (operator, threshold) in constraints.items():
-                    # Handle special constraint names
-                    base_param = constraint_name
-                    if constraint_name.endswith('_upper'):
-                        base_param = constraint_name.replace('_upper', '')
-                    elif constraint_name.endswith('_beyond'):
-                        base_param = constraint_name.replace('_beyond', '')
+        Returns:
+            Dictionary with HPDI information
+        """
+        if param_name not in self.current_priors:
+            return {}
 
-                    if base_param == param_name and x_range[0] <= threshold <= x_range[1]:
-                        color = constraint_colors[color_idx % len(constraint_colors)]
-                        linestyle = '--' if operator == '<' else '-'
-                        formatted_pattern = _format_pattern_name(pattern_name)
-                        ax.axvline(threshold, color=color, linestyle=linestyle, alpha=0.7,
-                                 label=f'{formatted_pattern}: {operator}{threshold}')
-                        color_idx += 1
+        alpha = 1 - confidence
+        prior_config = self.current_priors[param_name]
 
-            ax.set_xlabel(details['latex_label'])
-            ax.set_ylabel('Density')
-            ax.set_title(details['title'])
-            ax.grid(True, alpha=0.3)
+        if 'loc' in prior_config and 'scale' in prior_config:
+            # LogNormal or Normal distribution
+            if param_name == 't_on_star':  # Normal distribution
+                lower = stats.norm.ppf(alpha/2, loc=prior_config['loc'], scale=prior_config['scale'])
+                upper = stats.norm.ppf(1-alpha/2, loc=prior_config['loc'], scale=prior_config['scale'])
+                mean_val = prior_config['loc']
+                mode_val = prior_config['loc']
+            else:  # LogNormal distribution
+                lower = stats.lognorm.ppf(alpha/2, s=prior_config['scale'], scale=np.exp(prior_config['loc']))
+                upper = stats.lognorm.ppf(1-alpha/2, s=prior_config['scale'], scale=np.exp(prior_config['loc']))
+                mean_val = np.exp(prior_config['loc'] + 0.5 * prior_config['scale']**2)
+                mode_val = np.exp(prior_config['loc'] - prior_config['scale']**2)
 
-            # Add legend if there are constraint lines
-            if color_idx > 0:
-                ax.legend(fontsize=8)
+        elif 'alpha' in prior_config and 'beta' in prior_config:
+            # Gamma distribution
+            lower = stats.gamma.ppf(alpha/2, a=prior_config['alpha'], scale=1/prior_config['beta'])
+            upper = stats.gamma.ppf(1-alpha/2, a=prior_config['alpha'], scale=1/prior_config['beta'])
+            mean_val = prior_config['alpha'] / prior_config['beta']
+            mode_val = max(0, (prior_config['alpha'] - 1) / prior_config['beta']) if prior_config['alpha'] > 1 else 0
+        else:
+            return {}
 
-        plt.tight_layout()
-        return fig
+        return {
+            'lower': lower,
+            'upper': upper,
+            'mean': mean_val,
+            'mode': mode_val,
+            'width': upper - lower
+        }
+
+    @beartype
+    def _add_biological_interpretation(self, param_name: str, lower: float, upper: float, mean: float) -> None:
+        """Add biological interpretation for parameter ranges."""
+        interpretations = {
+            'R_on': f"  Interpretation: Activation fold-change from {lower:.1f}× to {upper:.1f}× (mean: {mean:.1f}×)",
+            't_on_star': f"  Interpretation: Onset time from {lower:.2f} to {upper:.2f} (negative = pre-activation)",
+            'delta_star': f"  Interpretation: Activation duration from {lower:.2f} to {upper:.2f} (fraction of timeline)",
+            'gamma_star': f"  Interpretation: Relative degradation rate from {lower:.2f} to {upper:.2f} (1.0 = balanced)",
+            'T_M_star': f"  Interpretation: Maximum timeline from {lower:.1f} to {upper:.1f} time units",
+            't_loc': f"  Interpretation: Population time center from {lower:.2f} to {upper:.2f}",
+            't_scale': f"  Interpretation: Population time spread from {lower:.2f} to {upper:.2f}",
+            'U_0i': f"  Interpretation: Concentration scale from {lower:.0f} to {upper:.0f} counts",
+            'lambda_j': f"  Interpretation: Capture efficiency from {lower:.2f} to {upper:.2f} (1.0 = perfect)"
+        }
+
+        if param_name in interpretations:
+            print(interpretations[param_name])
+
+            # Add warnings for potentially problematic ranges
+            if param_name == 'R_on' and (lower < 1.2 or upper > 10):
+                print(f"  ⚠️  Warning: Fold-change range may include weak ({lower:.1f}×) or extreme ({upper:.1f}×) values")
+            elif param_name == 'lambda_j' and upper > 2.0:
+                print(f"  ⚠️  Warning: Capture efficiency > 2.0 may be unrealistic for single-cell data")
+            elif param_name == 'U_0i' and (lower < 10 or upper > 1000):
+                print(f"  ⚠️  Warning: Concentration scale may be outside typical single-cell range")
+
+
+
+
 
     @beartype
     def generate_pattern_examples(self, n_examples: int = 3) -> Dict[str, List[Dict[str, torch.Tensor]]]:
@@ -875,9 +960,33 @@ class PriorHyperparameterCalibrator:
         )
 
         # Step 8: Save comprehensive report
-        self._save_comprehensive_report(recommendations, pattern_scores)
+        self._save_comprehensive_analysis_report(recommendations, pattern_scores)
+
+        # Step 9: Combine PDFs into single comprehensive report
+        print("\nCombining PDF outputs into comprehensive report...")
+        try:
+            combine_pdfs(
+                pdf_directory=str(self.save_path),
+                output_filename="comprehensive_prior_calibration_report.pdf",
+                exclude_patterns=["combined_*.pdf", "comprehensive_*.pdf", "01_prior_distributions.pdf",
+                                "02_hpdi_summary.pdf", "03_pattern_time_courses.pdf", "04_calibration_summary.pdf",
+                                "07_calibration_summary.pdf"]
+            )
+        except Exception as e:
+            print(f"Warning: Could not combine PDFs: {e}")
 
         print(f"\n✅ Comprehensive analysis complete! Results saved to: {self.save_path}")
+        print("\nGenerated comprehensive report:")
+        print("- comprehensive_prior_calibration_report.pdf")
+        print("\nReport contents:")
+        print("1. Clean Prior Distributions (with HPDI ranges and mode annotations)")
+        print("2. Pattern Time Courses")
+        print("3. Phase Diagrams")
+        print("4. Parameter Correlation Analysis")
+        print("5. Hierarchical Impact Analysis")
+        print("6. Enhanced Prior Distributions (with pattern overlays)")
+        print("7. Pattern Coverage Analysis")
+        print("8. Calibration Summary (with pie charts)")
 
     @beartype
     def _sample_full_parameter_space(self, n_samples: int = 50000) -> Dict[str, torch.Tensor]:
@@ -1117,10 +1226,10 @@ class PriorHyperparameterCalibrator:
         """Create comprehensive visualization plots."""
         print("  Creating comprehensive plots...")
 
-        # Plot 1: Basic prior distributions with HPDI ranges
-        fig1 = self.plot_prior_distributions()
-        fig1.savefig(self.save_path / "01_prior_distributions.png", dpi=300, bbox_inches='tight')
-        fig1.savefig(self.save_path / "01_prior_distributions.pdf", bbox_inches='tight')
+        # Plot 1: Clean prior distributions with HPDI ranges and mode annotations
+        fig1 = self._plot_comprehensive_prior_distributions()
+        fig1.savefig(self.save_path / "01_comprehensive_prior_distributions.png", dpi=300, bbox_inches='tight')
+        fig1.savefig(self.save_path / "01_comprehensive_prior_distributions.pdf", bbox_inches='tight')
         plt.close(fig1)
 
         # Plot 2: Pattern time courses
@@ -1160,14 +1269,118 @@ class PriorHyperparameterCalibrator:
         fig7.savefig(self.save_path / "07_pattern_coverage.pdf", bbox_inches='tight')
         plt.close(fig7)
 
-        # Plot 8: Calibration summary (using basic feasibility analysis)
+        # Step 8: Save comprehensive analysis report
         print("  Computing constraint feasibility for summary...")
         feasibility_results = self.analyze_constraint_feasibility()
         recommendations = self.generate_optimization_recommendations(feasibility_results)
-        fig8 = self._create_summary_plot(feasibility_results, recommendations)
-        fig8.savefig(self.save_path / "08_calibration_summary.png", dpi=300, bbox_inches='tight')
-        fig8.savefig(self.save_path / "08_calibration_summary.pdf", bbox_inches='tight')
-        plt.close(fig8)
+
+    @beartype
+    def _plot_comprehensive_prior_distributions(self) -> plt.Figure:
+        """Plot comprehensive prior distributions with HPDI ranges and mode annotations."""
+        fig, axes = plt.subplots(3, 3, figsize=(18, 15))
+        axes = axes.flatten()
+
+        # Parameters to plot (9 parameters for 3x3 grid)
+        params_to_plot = ['R_on', 't_on_star', 'delta_star', 'gamma_star', 'T_M_star', 't_loc', 't_scale', 'U_0i', 'lambda_j']
+
+        for idx, param_name in enumerate(params_to_plot):
+            ax = axes[idx]
+
+            # Get parameter configuration for x-range and distribution type
+            param_configs = {
+                'R_on': {'x_range': (0.5, 10), 'distribution': 'lognormal'},
+                't_on_star': {'x_range': (-1.5, 1.5), 'distribution': 'normal'},
+                'delta_star': {'x_range': (0.1, 2.0), 'distribution': 'lognormal'},
+                'gamma_star': {'x_range': (0.2, 5.0), 'distribution': 'lognormal'},
+                'T_M_star': {'x_range': (10, 100), 'distribution': 'gamma'},
+                't_loc': {'x_range': (0.1, 1.5), 'distribution': 'gamma'},
+                't_scale': {'x_range': (0.05, 0.8), 'distribution': 'gamma'},
+                'U_0i': {'x_range': (20, 500), 'distribution': 'lognormal'},
+                'lambda_j': {'x_range': (0.3, 3.0), 'distribution': 'lognormal'}
+            }
+
+            if param_name not in param_configs:
+                continue
+
+            config = param_configs[param_name]
+            x_range = config['x_range']
+
+            # Generate x values for PDF calculation
+            x = np.linspace(x_range[0], x_range[1], 2000)
+
+            # Get prior configuration
+            if param_name in self.current_priors:
+                prior = self.current_priors[param_name]
+
+                # Calculate PDF and mode based on distribution type
+                if config['distribution'] == 'lognormal':
+                    pdf = stats.lognorm.pdf(x, s=prior['scale'], scale=np.exp(prior['loc']))
+                    mode = np.exp(prior['loc'] - prior['scale']**2)
+                elif config['distribution'] == 'normal':
+                    pdf = stats.norm.pdf(x, loc=prior['loc'], scale=prior['scale'])
+                    mode = prior['loc']
+                elif config['distribution'] == 'gamma':
+                    pdf = stats.gamma.pdf(x, a=prior['alpha'], scale=1/prior['beta'])
+                    mode = max(0, (prior['alpha'] - 1) / prior['beta']) if prior['alpha'] > 1 else 0
+                else:
+                    continue
+
+                # Plot main prior distribution with gray styling
+                ax.fill_between(x, pdf, alpha=0.7, color='lightgray', edgecolor='none', label='Prior PDF')
+
+                # Add HPDI bar and annotations
+                hpdi_info = self.calculate_hpdi_for_single_param(param_name)
+                if hpdi_info:
+                    # Set y-axis limits to accommodate HPDI bars
+                    max_density = max(pdf)
+                    y_bar_height = max_density * 0.08
+                    y_margin = max_density * 0.15
+                    ax.set_ylim(-y_margin, max_density * 1.2)
+
+                    # Position HPDI bar at the bottom
+                    y_bar_pos = -y_margin * 0.4
+
+                    # Draw HPDI bar
+                    ax.barh(y_bar_pos, hpdi_info['width'], left=hpdi_info['lower'],
+                           height=y_bar_height, color='darkblue', alpha=0.8,
+                           label=f"95% HPDI")
+
+                    # Add HPDI text annotations
+                    ax.text(hpdi_info['lower'], y_bar_pos - y_bar_height * 0.7,
+                           f"{hpdi_info['lower']:.2f}", ha='center', va='top', fontsize=8)
+                    ax.text(hpdi_info['upper'], y_bar_pos - y_bar_height * 0.7,
+                           f"{hpdi_info['upper']:.2f}", ha='center', va='top', fontsize=8)
+
+                    # Add mode annotation
+                    if x_range[0] <= mode <= x_range[1]:
+                        mode_density = np.interp(mode, x, pdf)
+                        ax.axvline(mode, color='red', linestyle='--', alpha=0.7, linewidth=1)
+                        ax.text(mode, mode_density * 1.1, f'mode={mode:.2f}',
+                               ha='center', va='bottom', fontsize=9,
+                               bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.8))
+
+            # Get proper parameter labels using metadata system
+            x_label = get_parameter_label(
+                param_name=param_name,
+                label_type="display",
+                model=self.model,
+                fallback_to_legacy=True
+            )
+            title_label = get_parameter_label(
+                param_name=param_name,
+                label_type="short",
+                model=self.model,
+                fallback_to_legacy=True
+            )
+
+            ax.set_xlabel(x_label)
+            ax.set_ylabel('Density')
+            ax.set_title(title_label)
+            ax.legend(fontsize=8, loc='upper right')
+            ax.grid(True, alpha=0.3)
+
+        plt.tight_layout()
+        return fig
 
     @beartype
     def _plot_enhanced_prior_distributions(
@@ -1590,7 +1803,7 @@ Scaling Factor Correlation: {hierarchical_impact['scaling_factor_impact']:.3f}
         return improvements
 
     @beartype
-    def _save_comprehensive_report(
+    def _save_comprehensive_analysis_report(
         self,
         recommendations: Dict[str, Any],
         pattern_scores: Dict[str, torch.Tensor]
@@ -1643,218 +1856,13 @@ Scaling Factor Correlation: {hierarchical_impact['scaling_factor_impact']:.3f}
 
         print(f"Comprehensive report saved to: {report_path}")
 
-    @beartype
-    def run_full_analysis(self) -> None:
-        """Run the complete calibration analysis and save all outputs."""
-        print("Starting comprehensive prior hyperparameter calibration analysis...")
 
-        # Step 1: Analyze constraint feasibility
-        feasibility_results = self.analyze_constraint_feasibility()
 
-        # Step 2: Plot prior distributions
-        print("\nGenerating prior distribution plots...")
-        prior_fig = self.plot_prior_distributions()
-        prior_fig.savefig(self.save_path / "01_prior_distributions.png", dpi=300, bbox_inches='tight')
-        prior_fig.savefig(self.save_path / "01_prior_distributions.pdf", bbox_inches='tight')
-        plt.close(prior_fig)
 
-        # Step 3: Generate pattern examples
-        pattern_examples = self.generate_pattern_examples(n_examples=3)
 
-        # Step 4: Plot pattern time courses
-        print("\nGenerating pattern time course plots...")
-        time_course_fig = self.plot_pattern_time_courses(pattern_examples)
-        time_course_fig.savefig(self.save_path / "02_pattern_time_courses.png", dpi=300, bbox_inches='tight')
-        time_course_fig.savefig(self.save_path / "02_pattern_time_courses.pdf", bbox_inches='tight')
-        plt.close(time_course_fig)
 
-        # Step 5: Generate optimization recommendations
-        print("\nGenerating optimization recommendations...")
-        recommendations = self.generate_optimization_recommendations(feasibility_results)
 
-        # Step 6: Create summary plot
-        summary_fig = self._create_summary_plot(feasibility_results, recommendations)
-        summary_fig.savefig(self.save_path / "03_calibration_summary.png", dpi=300, bbox_inches='tight')
-        summary_fig.savefig(self.save_path / "03_calibration_summary.pdf", bbox_inches='tight')
-        plt.close(summary_fig)
 
-        # Step 7: Save recommendations to text file
-        self._save_recommendations_report(recommendations, feasibility_results)
-
-        # Step 8: Combine PDFs
-        print("\nCombining PDF outputs...")
-        try:
-            combine_pdfs(
-                pdf_directory=str(self.save_path),
-                output_filename="combined_prior_calibration_analysis.pdf",
-                exclude_patterns=["combined_*.pdf"]
-            )
-        except Exception as e:
-            print(f"Warning: Could not combine PDFs: {e}")
-
-        print(f"\n✅ Analysis complete! Results saved to: {self.save_path}")
-        print("\nNext steps:")
-        print("1. Review the combined PDF report")
-        print("2. Consider implementing recommended hyperparameter adjustments")
-        print("3. Re-run prior-predictive-check.py to validate improvements")
-
-    @beartype
-    def _create_summary_plot(
-        self,
-        feasibility_results: Dict[str, Dict[str, float]],
-        recommendations: Dict[str, Any]
-    ) -> plt.Figure:
-        """Create a summary plot of the calibration analysis."""
-        fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-
-        # Plot 1: Pattern feasibility bar chart
-        patterns = list(feasibility_results.keys())
-        joint_probs = [feasibility_results[p]['joint_probability'] for p in patterns]
-
-        colors = ['red' if p < 0.05 else 'orange' if p < 0.2 else 'green' for p in joint_probs]
-
-        axes[0, 0].bar(patterns, joint_probs, color=colors, alpha=0.7)
-        axes[0, 0].axhline(y=0.05, color='red', linestyle='--', alpha=0.7, label='Critical threshold')
-        axes[0, 0].axhline(y=0.2, color='orange', linestyle='--', alpha=0.7, label='Acceptable threshold')
-        axes[0, 0].set_ylabel('Joint Probability')
-        axes[0, 0].set_title('Pattern Constraint Feasibility')
-        axes[0, 0].tick_params(axis='x', rotation=45)
-        axes[0, 0].legend()
-        axes[0, 0].grid(True, alpha=0.3)
-
-        # Plot 2: Coverage summary pie chart
-        summary = recommendations['summary']
-        sizes = [len(summary['critical_patterns']), len(summary['marginal_patterns']), len(summary['acceptable_patterns'])]
-        labels = [_latex_safe_text('Critical (<5%)'), _latex_safe_text('Marginal (5-20%)'), _latex_safe_text('Acceptable (>20%)')]
-        colors_pie = ['red', 'orange', 'green']
-
-        axes[0, 1].pie(sizes, labels=labels, colors=colors_pie, autopct='%1.0f%%', startangle=90)
-        axes[0, 1].set_title('Pattern Coverage Distribution')
-
-        # Plot 3: Parameter constraint violations
-        param_violations = {}
-        for pattern, results in feasibility_results.items():
-            for constraint, prob in results.items():
-                if constraint != 'joint_probability' and prob < 0.2:
-                    param_base = constraint.replace('_upper', '').replace('_beyond', '')
-                    if param_base not in param_violations:
-                        param_violations[param_base] = 0
-                    param_violations[param_base] += 1
-
-        if param_violations:
-            params = list(param_violations.keys())
-            violations = list(param_violations.values())
-
-            # Format parameter names for LaTeX compatibility
-            formatted_params = []
-            for param in params:
-                param_label = get_parameter_label(
-                    param_name=param,
-                    label_type="short",
-                    model=self.model,
-                    fallback_to_legacy=True
-                )
-                formatted_params.append(param_label)
-
-            axes[1, 0].bar(formatted_params, violations, color='red', alpha=0.7)
-            axes[1, 0].set_ylabel('Number of Violations')
-            axes[1, 0].set_title('Parameter Constraint Violations')
-            axes[1, 0].tick_params(axis='x', rotation=45)
-            axes[1, 0].grid(True, alpha=0.3)
-        else:
-            axes[1, 0].text(0.5, 0.5, 'No violations detected', ha='center', va='center', transform=axes[1, 0].transAxes)
-            axes[1, 0].set_title('Parameter Constraint Violations')
-
-        # Plot 4: Recommendations text summary
-        axes[1, 1].axis('off')
-        rec_action = recommendations['recommended_action']
-
-        # Format pattern names for display
-        critical_formatted = [_format_pattern_name(p) for p in summary['critical_patterns']] if summary['critical_patterns'] else ['None']
-        marginal_formatted = [_format_pattern_name(p) for p in summary['marginal_patterns']] if summary['marginal_patterns'] else ['None']
-
-        summary_text = f"""
-CALIBRATION SUMMARY
-
-Overall Coverage: {summary['overall_coverage']:.1%}
-
-Critical Patterns: {len(summary['critical_patterns'])}
-{', '.join(critical_formatted)}
-
-Marginal Patterns: {len(summary['marginal_patterns'])}
-{', '.join(marginal_formatted)}
-
-RECOMMENDED ACTION:
-{rec_action['action'].replace('_', ' ').title()}
-
-RATIONALE:
-{rec_action['rationale']}
-        """
-
-        axes[1, 1].text(0.05, 0.95, summary_text.strip(), transform=axes[1, 1].transAxes,
-                        fontsize=10, verticalalignment='top', fontfamily='monospace')
-
-        plt.tight_layout()
-        return fig
-
-    @beartype
-    def _save_recommendations_report(
-        self,
-        recommendations: Dict[str, Any],
-        feasibility_results: Dict[str, Dict[str, float]]
-    ) -> None:
-        """Save detailed recommendations to a text file."""
-        report_path = self.save_path / "calibration_recommendations.txt"
-
-        with open(report_path, 'w') as f:
-            f.write("PyroVelocity Prior Hyperparameter Calibration Report\n")
-            f.write("=" * 60 + "\n\n")
-
-            # Current prior settings
-            f.write("CURRENT PRIOR SETTINGS:\n")
-            f.write("-" * 25 + "\n")
-            for param, settings in self.current_priors.items():
-                f.write(f"{param}: loc={settings['loc']:.3f}, scale={settings['scale']:.3f}\n")
-            f.write("\n")
-
-            # Feasibility results
-            f.write("CONSTRAINT FEASIBILITY ANALYSIS:\n")
-            f.write("-" * 35 + "\n")
-            for pattern, results in feasibility_results.items():
-                f.write(f"\n{pattern.upper()} PATTERN:\n")
-                for constraint, prob in results.items():
-                    if constraint != 'joint_probability':
-                        status = "CRITICAL" if prob < 0.05 else "MARGINAL" if prob < 0.2 else "ACCEPTABLE"
-                        f.write(f"  {constraint}: {prob:.3f} ({status})\n")
-                f.write(f"  Joint Probability: {results['joint_probability']:.4f}\n")
-            f.write("\n")
-
-            # Recommendations
-            f.write("OPTIMIZATION RECOMMENDATIONS:\n")
-            f.write("-" * 30 + "\n")
-
-            summary = recommendations['summary']
-            f.write(f"Overall Coverage: {summary['overall_coverage']:.1%}\n")
-            f.write(f"Critical Patterns: {summary['critical_patterns']}\n")
-            f.write(f"Marginal Patterns: {summary['marginal_patterns']}\n")
-            f.write(f"Acceptable Patterns: {summary['acceptable_patterns']}\n\n")
-
-            rec_action = recommendations['recommended_action']
-            f.write(f"RECOMMENDED ACTION: {rec_action['action']}\n")
-            f.write(f"RATIONALE: {rec_action['rationale']}\n\n")
-
-            # Detailed options
-            f.write("DETAILED OPTIMIZATION OPTIONS:\n")
-            f.write("-" * 32 + "\n")
-            for option_name, option in recommendations['optimization_options'].items():
-                f.write(f"\n{option_name.upper().replace('_', ' ')}:\n")
-                f.write(f"Description: {option['description']}\n")
-                f.write(f"Pros: {', '.join(option['pros'])}\n")
-                f.write(f"Cons: {', '.join(option['cons'])}\n")
-                if 'changes' in option:
-                    f.write(f"Changes: {option['changes']}\n")
-
-        print(f"Detailed report saved to: {report_path}")
 
 
 def main():
@@ -1870,33 +1878,8 @@ def main():
     print(f"Analysis outputs will be saved to: {calibrator.save_path}")
     print()
 
-    # Offer analysis options
-    print("Available analysis modes:")
-    print("1. Basic Analysis (original CDF-based approach)")
-    print("2. Comprehensive Analysis (multi-dimensional parameter space)")
-    print()
-
-    # For now, run comprehensive analysis by default
-    # In the future, this could be made interactive
-    analysis_mode = "comprehensive"
-
-    if analysis_mode == "comprehensive":
-        print("Running comprehensive parameter space analysis...")
-        calibrator.run_comprehensive_parameter_space_analysis()
-
-        # Also combine PDFs
-        print("\nCombining PDF outputs...")
-        try:
-            combine_pdfs(
-                pdf_directory=str(calibrator.save_path),
-                output_filename="combined_comprehensive_calibration_analysis.pdf",
-                exclude_patterns=["combined_*.pdf"]
-            )
-        except Exception as e:
-            print(f"Warning: Could not combine PDFs: {e}")
-    else:
-        print("Running basic CDF analysis...")
-        calibrator.run_full_analysis()
+    print("Running comprehensive parameter space analysis...")
+    calibrator.run_comprehensive_parameter_space_analysis()
 
 
 if __name__ == "__main__":
