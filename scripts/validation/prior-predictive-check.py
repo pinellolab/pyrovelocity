@@ -65,10 +65,23 @@ plt.suptitle("Prior Predictive Checks: Piecewise Activation Model", fontsize=16)
 plt.tight_layout()
 plt.show()
 
-# Validate prior parameter ranges (updated for corrected parameterization)
+# Validate prior parameter ranges (updated for hierarchical temporal parameterization)
 print("\nPrior parameter range validation:")
 for param_name, samples in prior_parameter_samples.items():
-    if param_name.startswith(('R_on', 't_on', 'delta', 'gamma_star')):
+    if param_name.startswith(('R_on', 'tilde_t_on', 'tilde_delta', 't_on', 'delta', 'gamma_star', 'T_M_star')):
         print(f"{param_name}:")
         print(f"  Range: [{samples.min():.3f}, {samples.max():.3f}]")
         print(f"  Mean ± Std: {samples.mean():.3f} ± {samples.std():.3f}")
+
+        # Show mode for LogNormal parameters
+        if param_name in ['gamma_star', 'R_on', 'tilde_delta_star']:
+            # For LogNormal, mode = exp(μ - σ²)
+            if param_name == 'gamma_star':
+                mode = torch.exp(torch.tensor(-0.405) - torch.tensor(0.5)**2)
+                print(f"  Expected mode (γ*): {mode:.3f}")
+            elif param_name == 'R_on':
+                mode = torch.exp(torch.tensor(0.693) - torch.tensor(0.35)**2)
+                print(f"  Expected mode (R_on): {mode:.3f}")
+            elif param_name == 'tilde_delta_star':
+                mode = torch.exp(torch.tensor(-0.8) - torch.tensor(0.45)**2)
+                print(f"  Expected mode (tilde_δ*): {mode:.3f}")

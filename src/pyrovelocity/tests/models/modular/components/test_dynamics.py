@@ -73,14 +73,20 @@ class TestPiecewiseActivationDynamicsModel:
     def test_steady_state(self, model, simple_params):
         """Test steady state calculation for piecewise activation model."""
         # For piecewise model, steady state uses alpha_off and gamma_star
+        # Note: In the corrected parameterization, alpha_off is always 1.0 (fixed reference)
+        gamma_star = simple_params["gamma_star"]
+
+        # Create fixed alpha_off tensor (always 1.0)
+        alpha_off_fixed = torch.ones_like(gamma_star)
+
         u_ss, s_ss = model.steady_state(
-            simple_params["alpha_off"],
-            simple_params["gamma_star"],
+            alpha_off_fixed,
+            gamma_star,
         )
 
-        # Expected steady states for OFF phase: u* = α*_off, s* = α*_off/γ*
-        expected_u_ss = simple_params["alpha_off"]
-        expected_s_ss = simple_params["alpha_off"] / simple_params["gamma_star"]
+        # Expected steady states for OFF phase: u* = 1.0, s* = 1.0/γ*
+        expected_u_ss = torch.ones_like(gamma_star)  # Always 1.0 (fixed reference)
+        expected_s_ss = torch.ones_like(gamma_star) / gamma_star
 
         assert torch.allclose(u_ss, expected_u_ss)
         assert torch.allclose(s_ss, expected_s_ss)
@@ -134,15 +140,15 @@ class TestPiecewiseActivationDynamicsModel:
         assert torch.allclose(du_dt, alpha - beta * u_t, rtol=1e-5)
 
         # For the piecewise model, test the dimensionless conservation laws
-        # using the correct parameters
-        alpha_off = simple_params["alpha_off"]
+        # using the correct parameters (alpha_off is always 1.0 in corrected parameterization)
         gamma_star = simple_params["gamma_star"]
+        alpha_off_fixed = torch.ones_like(gamma_star)  # Fixed reference
 
         # At steady state (OFF phase), derivatives should be zero
-        u_ss, s_ss = model.steady_state(alpha_off, gamma_star)
+        u_ss, s_ss = model.steady_state(alpha_off_fixed, gamma_star)
 
         # For OFF phase: du*/dt* = α*_off - u* = 0 at steady state
-        dudt_ss = alpha_off - u_ss
+        dudt_ss = alpha_off_fixed - u_ss
 
         # ds*/dt* = u* - γ*s* = 0 at steady state
         dsdt_ss = u_ss - gamma_star * s_ss

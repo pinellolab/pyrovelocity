@@ -343,10 +343,12 @@ class PiecewiseActivationPriorModel:
         R_on_scale: float = 0.35,       # Scale for R_on prior
         gamma_star_loc: float = -0.405, # log(0.667) for LogNormal prior (target mode ≈ 0.5, realistic splicing/degradation ratio)
         gamma_star_scale: float = 0.5,  # Scale for γ* prior (HPDI ≈ [0.25, 1.7])
-        t_on_star_loc: float = 7.0,     # Mean for Normal prior (target mean = 7.0, accommodate longer pulses)
-        t_on_star_scale: float = 2.0,   # Scale for t*_on Normal prior (increased for longer timescales)
-        delta_star_loc: float = 2.89,   # log(18) for LogNormal prior (target mean = 18, allow steady state)
-        delta_star_scale: float = 0.4,  # Scale for δ* prior (tighter around target)
+
+        # Relative temporal parameters (scaled by T_M_star to create absolute parameters)
+        tilde_t_on_star_loc: float = 0.5,    # Mean for Normal prior on relative onset time
+        tilde_t_on_star_scale: float = 0.8,  # Scale for tilde_t*_on Normal prior (allows negatives)
+        tilde_delta_star_loc: float = -0.8,  # log(0.45) for LogNormal prior on relative duration
+        tilde_delta_star_scale: float = 0.45, # Scale for tilde_δ* prior
 
         # Characteristic concentration scale parameter hyperparameters
         U_0i_loc: float = 2.3,          # log(10) for LogNormal prior - REDUCED from log(100) for realistic single-cell count scales
@@ -373,10 +375,10 @@ class PiecewiseActivationPriorModel:
             R_on_scale: Scale parameter for R_on ~ LogNormal distribution
             gamma_star_loc: Location parameter for γ* ~ LogNormal distribution
             gamma_star_scale: Scale parameter for γ* ~ LogNormal distribution
-            t_on_star_loc: Location parameter for t*_on ~ Normal distribution (allows negatives)
-            t_on_star_scale: Scale parameter for t*_on ~ Normal distribution
-            delta_star_loc: Location parameter for δ* ~ LogNormal distribution
-            delta_star_scale: Scale parameter for δ* ~ LogNormal distribution
+            tilde_t_on_star_loc: Location parameter for tilde_t*_on ~ Normal distribution (relative onset time)
+            tilde_t_on_star_scale: Scale parameter for tilde_t*_on ~ Normal distribution
+            tilde_delta_star_loc: Location parameter for tilde_δ* ~ LogNormal distribution (relative duration)
+            tilde_delta_star_scale: Scale parameter for tilde_δ* ~ LogNormal distribution
             U_0i_loc: Location parameter for U_0i ~ LogNormal distribution
             U_0i_scale: Scale parameter for U_0i ~ LogNormal distribution
             lambda_loc: Location parameter for λ_j ~ LogNormal distribution
@@ -404,10 +406,12 @@ class PiecewiseActivationPriorModel:
         self.R_on_scale = R_on_scale
         self.gamma_star_loc = gamma_star_loc
         self.gamma_star_scale = gamma_star_scale
-        self.t_on_star_loc = t_on_star_loc
-        self.t_on_star_scale = t_on_star_scale
-        self.delta_star_loc = delta_star_loc
-        self.delta_star_scale = delta_star_scale
+
+        # Store hyperparameters for relative temporal parameters
+        self.tilde_t_on_star_loc = tilde_t_on_star_loc
+        self.tilde_t_on_star_scale = tilde_t_on_star_scale
+        self.tilde_delta_star_loc = tilde_delta_star_loc
+        self.tilde_delta_star_scale = tilde_delta_star_scale
 
         # Store hyperparameters for characteristic concentration scale
         self.U_0i_loc = U_0i_loc
@@ -545,26 +549,36 @@ class PiecewiseActivationPriorModel:
             )
             params["gamma_star"] = gamma_star
 
-            # Activation onset time (relative to T_M_star, allows negatives for pre-activation)
-            t_on_star = pyro.sample(
-                "t_on_star",
+            # Relative temporal parameters (scaled by T_M_star)
+            tilde_t_on_star = pyro.sample(
+                "tilde_t_on_star",
                 dist.Normal(
-                    torch.tensor(self.t_on_star_loc),
-                    torch.tensor(self.t_on_star_scale)
+                    torch.tensor(self.tilde_t_on_star_loc),
+                    torch.tensor(self.tilde_t_on_star_scale)
                 ).mask(include_prior),
             )
-            params["t_on_star"] = t_on_star
+            params["tilde_t_on_star"] = tilde_t_on_star
 
-            # Activation duration (relative to T_M_star)
-            delta_star = pyro.sample(
-                "delta_star",
+            tilde_delta_star = pyro.sample(
+                "tilde_delta_star",
                 dist.LogNormal(
-                    torch.tensor(self.delta_star_loc),
-                    torch.tensor(self.delta_star_scale)
+                    torch.tensor(self.tilde_delta_star_loc),
+                    torch.tensor(self.tilde_delta_star_scale)
                 ).mask(include_prior),
             )
-            params["delta_star"] = delta_star
+            params["tilde_delta_star"] = tilde_delta_star
 
+        # Compute absolute temporal parameters outside the gene plate to avoid broadcasting issues
+        # t_on_star = T_M_star * tilde_t_on_star (allows negatives for pre-activation)
+        t_on_star = pyro.deterministic("t_on_star", T_M_star * tilde_t_on_star)
+        params["t_on_star"] = t_on_star
+
+        # delta_star = T_M_star * tilde_delta_star (activation duration)
+        delta_star = pyro.deterministic("delta_star", T_M_star * tilde_delta_star)
+        params["delta_star"] = delta_star
+
+        # Sample remaining gene-specific parameters
+        with pyro.plate(f"{self.name}_genes_plate_2", n_genes):
             # Characteristic concentration scale
             U_0i = pyro.sample(
                 "U_0i",
@@ -651,15 +665,20 @@ class PiecewiseActivationPriorModel:
             torch.tensor(self.gamma_star_scale)
         ).sample((n_genes,))
 
-        params["t_on_star"] = dist.Normal(
-            torch.tensor(self.t_on_star_loc),
-            torch.tensor(self.t_on_star_scale)
+        # Sample relative temporal parameters
+        params["tilde_t_on_star"] = dist.Normal(
+            torch.tensor(self.tilde_t_on_star_loc),
+            torch.tensor(self.tilde_t_on_star_scale)
         ).sample((n_genes,))
 
-        params["delta_star"] = dist.LogNormal(
-            torch.tensor(self.delta_star_loc),
-            torch.tensor(self.delta_star_scale)
+        params["tilde_delta_star"] = dist.LogNormal(
+            torch.tensor(self.tilde_delta_star_loc),
+            torch.tensor(self.tilde_delta_star_scale)
         ).sample((n_genes,))
+
+        # Compute absolute temporal parameters via scaling
+        params["t_on_star"] = T_M_star * params["tilde_t_on_star"]
+        params["delta_star"] = T_M_star * params["tilde_delta_star"]
 
         # Sample characteristic concentration scale (per gene)
         params["U_0i"] = dist.LogNormal(
@@ -734,7 +753,9 @@ class PiecewiseActivationPriorModel:
             'alpha_on': [],   # Computed from R_on
             'R_on': [],       # New fold-change parameter
             'gamma_star': [],
-            't_on_star': [],
+            'tilde_t_on_star': [],  # Relative temporal parameters
+            'tilde_delta_star': [],
+            't_on_star': [],        # Absolute temporal parameters (computed)
             'delta_star': [],
             'U_0i': [],
             'lambda_j': []
