@@ -341,8 +341,8 @@ class PiecewiseActivationPriorModel:
         # Note: alpha_off is fixed at 1.0, not inferred
         R_on_loc: float = 0.693,        # log(2.0) for LogNormal prior (fold-change, target mean = 2.0)
         R_on_scale: float = 0.35,       # Scale for R_on prior
-        gamma_star_loc: float = -1.609, # log(0.2) for LogNormal prior (target mean = 0.2, slow degradation)
-        gamma_star_scale: float = 0.3,  # Scale for γ* prior
+        gamma_star_loc: float = -0.405, # log(0.667) for LogNormal prior (target mode ≈ 0.5, realistic splicing/degradation ratio)
+        gamma_star_scale: float = 0.5,  # Scale for γ* prior (HPDI ≈ [0.25, 1.7])
         t_on_star_loc: float = 7.0,     # Mean for Normal prior (target mean = 7.0, accommodate longer pulses)
         t_on_star_scale: float = 2.0,   # Scale for t*_on Normal prior (increased for longer timescales)
         delta_star_loc: float = 2.89,   # log(18) for LogNormal prior (target mean = 18, allow steady state)
