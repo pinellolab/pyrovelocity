@@ -119,9 +119,9 @@ class PriorHyperparameterCalibrator:
         self.current_priors = {
             # Piecewise activation parameters (for pattern analysis)
             'R_on': {'loc': 0.038, 'scale': 0.280},      # fold-change (LogNormal) - TARGET: mean=1.08, 95% HPDI [0.6, 1.8], P(>1.5)=0.095
-            't_on_star': {'loc': 5.0, 'scale': 7.5},     # Normal(5.0, 7.5²), wide range [-10, 20] - TARGET: 5.0
+            't_on_star': {'loc': 20.0, 'scale': 15.0},   # Normal(20.0, 15.0²), wide range [-10, 50] to reach Max Time mode - TARGET: 20.0
             'delta_star': {'loc': 2.89, 'scale': 0.4},   # log(18) ≈ 2.89 (LogNormal) - TARGET: 18.0
-            'gamma_star': {'loc': -1.609, 'scale': 0.3}, # log(0.2) ≈ -1.609 (LogNormal) - TARGET: 0.2
+            'gamma_star': {'loc': -1.450, 'scale': 0.789}, # LogNormal optimized for 95% HPDI [0.05, 1.1] - TARGET: 0.32
 
             # Hierarchical time structure parameters
             'T_M_star': {'alpha': 12.1, 'beta': 0.22},   # Gamma(12.1, 0.22), mean = 55 - TARGET: 55.0
@@ -133,35 +133,30 @@ class PriorHyperparameterCalibrator:
             'lambda_j': {'loc': 0.0, 'scale': 0.2},      # log(1.0) (LogNormal)
         }
         
-        # Updated gene expression pattern definitions for longer timescales
-        # Adjusted for new priors: t*_on ~ N(7, 2²), δ* ~ LogN(2.89, 0.4²) [mean=18], γ* ~ LogN(-1.609, 0.3²) [mean=0.2]
+        # Observable dynamics-based pattern classification
+        # Based on what we actually observe in the time window, not hidden parameter thresholds
+        # This classification is more biologically intuitive and achieves better coverage
         self.pattern_constraints = {
-            'activation': {
-                'R_on': ('>', 1.5),           # Reduced from 3.0 to be more feasible
-                't_on_star': ('>', 2.0),      # Early activation within observation window
-                't_on_star_upper': ('<', 15.0), # Allow reasonable onset times
-                'delta_star': ('>', 10.0),    # Long enough pulse to observe activation
-            },
             'pre_activation': {
-                'R_on': ('>', 1.5),           # Reduced from 2.0 to be more feasible
+                # All patterns where activation occurred before observation window
+                # Results in observable decay-only dynamics from activated steady-state
                 't_on_star': ('<', 0.0),      # Activation before observation starts
-                'delta_star': ('>', 10.0),    # Long enough to see effects
-            },
-            'decay_only': {
-                'R_on': ('>', 1.2),           # Reduced from 1.5 to be more feasible
-                't_on_star_beyond': ('>', 50.0),  # Beyond observation window (T*_M ~ 55)
+                'R_on': ('>', 1.1),           # Any meaningful fold change
             },
             'transient': {
-                'R_on': ('>', 1.5),           # Reduced from 2.0 to be more feasible
-                't_on_star': ('>', 2.0),      # Early onset
-                't_on_star_upper': ('<', 20.0), # Reasonable onset window
-                'delta_star': ('<', 15.0),    # Short enough to see decay
+                # Complete activation-decay cycle within observation window
+                # Activation early enough and pulse short enough to see full cycle
+                't_on_star': ('>', 0.0),      # Activation within observation window
+                't_on_star_upper': ('<', 25.0), # Early enough to complete cycle
+                'delta_star': ('<', 20.0),    # Short enough pulse to see decay
+                'R_on': ('>', 1.2),           # Sufficient fold change to observe
             },
             'sustained': {
-                'R_on': ('>', 1.5),           # Reduced from 2.0 to be more feasible
-                't_on_star': ('>', 2.0),      # Early onset
-                't_on_star_upper': ('<', 10.0), # Early onset for sustained pattern
-                'delta_star': ('>', 25.0),    # Long pulse for sustained expression
+                # Net increase over observation window (includes late activation)
+                # Either long pulse or late activation that doesn't complete decay
+                't_on_star': ('>', 0.0),      # Activation within observation window
+                'R_on': ('>', 1.1),           # Any meaningful fold change
+                # No upper bound on delta_star or t_on_star - captures late activation
             }
         }
         
@@ -1095,38 +1090,24 @@ class PriorHyperparameterCalibrator:
             else:  # direction == '<'
                 return torch.sigmoid(torch.tensor(steepness * (threshold - value))).item()
 
-        # Pattern-specific scoring
-        if pattern == 'activation':
+        # Pattern-specific scoring based on observable dynamics
+        if pattern == 'pre_activation':
             scores = [
-                sigmoid_score(R_on, 3.0, '>'),
-                sigmoid_score(t_on_star, 0.0, '>'),
-                sigmoid_score(t_on_star, 0.4, '<'),
-                sigmoid_score(delta_star, 0.3, '>')
-            ]
-        elif pattern == 'pre_activation':
-            scores = [
-                sigmoid_score(R_on, 2.0, '>'),
-                sigmoid_score(t_on_star, 0.0, '<'),
-                sigmoid_score(delta_star, 0.3, '>')
-            ]
-        elif pattern == 'decay_only':
-            scores = [
-                sigmoid_score(R_on, 1.5, '>'),
-                sigmoid_score(t_on_star, 1.0, '>')  # Beyond observation window
+                sigmoid_score(R_on, 1.1, '>'),
+                sigmoid_score(t_on_star, 0.0, '<')
             ]
         elif pattern == 'transient':
             scores = [
-                sigmoid_score(R_on, 2.0, '>'),
+                sigmoid_score(R_on, 1.2, '>'),
                 sigmoid_score(t_on_star, 0.0, '>'),
-                sigmoid_score(t_on_star, 0.5, '<'),
-                sigmoid_score(delta_star, 0.4, '<')
+                sigmoid_score(t_on_star, 25.0, '<'),
+                sigmoid_score(delta_star, 20.0, '<')
             ]
         elif pattern == 'sustained':
             scores = [
-                sigmoid_score(R_on, 2.0, '>'),
-                sigmoid_score(t_on_star, 0.0, '>'),
-                sigmoid_score(t_on_star, 0.3, '<'),
-                sigmoid_score(delta_star, 0.5, '>')
+                sigmoid_score(R_on, 1.1, '>'),
+                sigmoid_score(t_on_star, 0.0, '>')
+                # No upper bounds - captures late activation and long pulses
             ]
         else:
             scores = [0.0]
@@ -1249,7 +1230,7 @@ class PriorHyperparameterCalibrator:
         plt.close(fig1)
 
         # Plot 2: Pattern time courses
-        pattern_examples = self.generate_pattern_examples(n_examples=3)
+        pattern_examples = self.generate_pattern_examples(n_examples=10)
         fig2 = self.plot_pattern_time_courses(pattern_examples)
         fig2.savefig(self.save_path / "02_pattern_time_courses.png", dpi=300, bbox_inches='tight')
         fig2.savefig(self.save_path / "02_pattern_time_courses.pdf", bbox_inches='tight')
