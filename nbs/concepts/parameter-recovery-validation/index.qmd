@@ -128,12 +128,12 @@ from pathlib import Path
 
 # PyroVelocity imports
 from pyrovelocity.models.modular.factory import (
-    create_simple_deterministic_model_with_validation,
+    # create_simple_deterministic_model_with_validation,
     create_legacy_model2,
 )
-from pyrovelocity.models.modular.components.validation import (
-    ParameterRecoveryConfig,
-)
+# from pyrovelocity.models.modular.components.validation import (
+#     ParameterRecoveryConfig,
+# )
 from pyrovelocity.io.datasets import bifurcation_14
 
 # Set random seeds for reproducibility
@@ -459,31 +459,31 @@ This approach attempts to balance **biological interpretability**, **statistical
 #| code-fold: true
 
 # Create the simple deterministic model with validation functionality
-model = create_simple_deterministic_model_with_validation()
+# model = create_simple_deterministic_model_with_validation()
 
-# Configure validation parameters
-validation_config = ParameterRecoveryConfig(
-    num_parameter_sets=5,       # Number of parameter sets to test
-    sample_sizes=[50, 100, 200], # Different sample sizes
-    noise_levels=[0.1, 0.2],    # Different noise levels
-    inference_algorithm="SVI",   # Use SVI for speed
-    num_samples=1000,           # Number of inference samples
-    seed=42,                    # Random seed
-)
+# # Configure validation parameters
+# validation_config = ParameterRecoveryConfig(
+#     num_parameter_sets=5,       # Number of parameter sets to test
+#     sample_sizes=[50, 100, 200], # Different sample sizes
+#     noise_levels=[0.1, 0.2],    # Different noise levels
+#     inference_algorithm="SVI",   # Use SVI for speed
+#     num_samples=1000,           # Number of inference samples
+#     seed=42,                    # Random seed
+# )
 
-# Run parameter recovery validation using registry-based validation components
-report = model.validate_parameter_recovery(validation_config)
+# # Run parameter recovery validation using registry-based validation components
+# report = model.validate_parameter_recovery(validation_config)
 
-print(f"Validation completed!")
-print(f"Tested {len(report['parameter_sets'])} parameter sets")
-print(f"Overall parameter recovery success rate: {report['summary']['overall_success_rate']:.2%}")
+# print(f"Validation completed!")
+# print(f"Tested {len(report['parameter_sets'])} parameter sets")
+# print(f"Overall parameter recovery success rate: {report['summary']['overall_success_rate']:.2%}")
 
-# Quick validation for development
-quick_results = model.quick_validation(num_genes=3, num_cells=50, noise_level=0.1)
-print(f"Quick validation success rate: {quick_results['summary']['overall_success_rate']:.2%}")
+# # Quick validation for development
+# quick_results = model.quick_validation(num_genes=3, num_cells=50, noise_level=0.1)
+# print(f"Quick validation success rate: {quick_results['summary']['overall_success_rate']:.2%}")
 
-# List available validation components
-print(f"Available validation components: {model.list_validation_components()}")
+# # List available validation components
+# print(f"Available validation components: {model.list_validation_components()}")
 ```
 
 ## Validation Study 2: Dimensionless analytical dynamics with latent time
@@ -1094,7 +1094,7 @@ for pattern_name, constraints in patterns.items():
 
 ### Probabilistic Graphical Model
 
-The probabilistic graphical model extends Study 2 by adding gene-specific piecewise activation parameters while maintaining the hierarchical latent time structure. For visual clarity, we use $\theta_i$ to represent the vector of piecewise activation parameters $(\gamma^*_i, R_{\text{on},i}, t^*_{0,\text{on}i})$ and $\delta_i$ to represent the activation duration parameter. Note that $\alpha^*_{\text{off}i} = 1.0$ is fixed and not shown as a random variable.
+The probabilistic graphical model extends Study 2 by adding gene-specific piecewise activation parameters while maintaining the hierarchical latent time structure. For visual clarity, we use $\theta_i$ to represent the vector of non-temporal piecewise activation parameters $(\gamma^*_i, R_{\text{on},i})$ and $\Delta_i$ to represent the vector of relative temporal gene parameters $(\tilde{t}^*_{0,\text{on}i}, \tilde{\delta}^*_i)$. Note that $\alpha^*_{\text{off}i} = 1.0$ is fixed and not shown as a random variable.
 
 ```{python}
 #| label: fig-piecewise-activation-pgm
@@ -1113,8 +1113,8 @@ pgm = daft.PGM(line_width=1.2)
 # hyperparameters for gene-specific parameters
 pgm.add_node("mu_theta", r"$\mu_{\theta}$", 0.5, 6, fixed=True)
 pgm.add_node("sigma_theta", r"$\sigma_{\theta}^2$", 1.5, 6, fixed=True)
-pgm.add_node("mu_delta", r"$\mu_{\delta}$", 2.5, 6, fixed=True)
-pgm.add_node("sigma_delta", r"$\sigma_{\delta}^2$", 3.5, 6, fixed=True)
+pgm.add_node("mu_Delta", r"$\mu_{\Delta}$", 2.5, 6, fixed=True)
+pgm.add_node("sigma_Delta", r"$\sigma_{\Delta}^2$", 3.5, 6, fixed=True)
 pgm.add_node("mu_U0", r"$\mu_{U_0}$", 4.5, 6, fixed=True)
 pgm.add_node("sigma_U0", r"$\sigma_{U_0}^2$", 5, 6, fixed=True)
 
@@ -1132,7 +1132,7 @@ pgm.add_node("sigma_lambda", r"$\sigma_{\lambda}^2$", 6.5, 2.5, fixed=True)
 
 # latent variables for gene-specific parameters
 pgm.add_node("theta_i", r"$\theta_i$", 1, 5)
-pgm.add_node("delta_i", r"$\delta_i$", 3, 5)
+pgm.add_node("Delta_i", r"$\Delta_i$", 3, 5)
 pgm.add_node("U_0i", r"$U_{0i}$", 4.5, 5)
 
 # hierarchical time parameters (moved further left)
@@ -1186,8 +1186,8 @@ edge_params = {"head_length": 0.3, "head_width": 0.25, "lw": 0.7}
 # gene-specific parameter edges
 pgm.add_edge("mu_theta", "theta_i", plot_params=edge_params)
 pgm.add_edge("sigma_theta", "theta_i", plot_params=edge_params)
-pgm.add_edge("mu_delta", "delta_i", plot_params=edge_params)
-pgm.add_edge("sigma_delta", "delta_i", plot_params=edge_params)
+pgm.add_edge("mu_Delta", "Delta_i", plot_params=edge_params)
+pgm.add_edge("sigma_Delta", "Delta_i", plot_params=edge_params)
 pgm.add_edge("mu_U0", "U_0i", plot_params=edge_params)
 pgm.add_edge("sigma_U0", "U_0i", plot_params=edge_params)
 pgm.add_edge("mu_lambda", "lambda_j", plot_params=edge_params)
@@ -1205,12 +1205,14 @@ pgm.add_edge("beta_t_scale", "t_scale", plot_params=edge_params)
 pgm.add_edge("T_max_star", "t_star_j", plot_params=edge_params)
 pgm.add_edge("t_loc", "t_star_j", plot_params=edge_params)
 pgm.add_edge("t_scale", "t_star_j", plot_params=edge_params)
+# temporal scaling edge for gene parameters
+pgm.add_edge("T_max_star", "Delta_i", plot_params=edge_params)
 
 # dynamics edges
 pgm.add_edge("theta_i", "u_star_ij", plot_params=edge_params)
 pgm.add_edge("theta_i", "s_star_ij", plot_params=edge_params)
-pgm.add_edge("delta_i", "u_star_ij", plot_params=edge_params)
-pgm.add_edge("delta_i", "s_star_ij", plot_params=edge_params)
+pgm.add_edge("Delta_i", "u_star_ij", plot_params=edge_params)
+pgm.add_edge("Delta_i", "s_star_ij", plot_params=edge_params)
 pgm.add_edge("t_star_j", "u_star_ij", plot_params=edge_params)
 pgm.add_edge("t_star_j", "s_star_ij", plot_params=edge_params)
 
@@ -1246,32 +1248,57 @@ The model combines the hierarchical latent time structure from Study 2 with piec
 **Notation mapping between PGM and mathematical description:**
 
 In the PGM above, we use simplified notation for visual clarity:
-- $\theta_i$ represents the vector of piecewise activation parameters $(\gamma^*_i, R_{\text{on},i}, t^*_{0,\text{on}i})$
-- $\delta_i$ represents the activation duration parameter $\delta^*_i$ (waiting time from onset to deactivation)
+- $\theta_i$ represents the vector of **non-temporal** piecewise activation parameters $(\gamma^*_i, R_{\text{on},i})$
+- $\Delta_i$ represents the vector of **relative temporal** gene parameters $(\tilde{t}^*_{0,\text{on}i}, \tilde{\delta}^*_i)$
 - The hyperparameters $\mu_{\theta}, \sigma_{\theta}^2$ represent the collection of hyperparameters for all components of $\theta_i$
-- The hyperparameters $\mu_{\delta}, \sigma_{\delta}^2$ represent the hyperparameters for $\delta_i$
+- The hyperparameters $\mu_{\Delta}, \sigma_{\Delta}^2$ represent the collection of hyperparameters for all components of $\Delta_i$
+- The absolute timing parameters $t^*_{0,\text{on}i} = T_{M}^* \times \tilde{t}^*_{0,\text{on}i}$ and $\delta^*_i = T_{M}^* \times \tilde{\delta}^*_i$ are computed deterministically
 - $\alpha^*_{\text{off}i} = 1.0$ is fixed and not shown as a random variable
+- **Key edge**: $T_{M}^* \rightarrow \Delta_i$ represents the scaling relationship for all temporal parameters
 
 **Detailed priors for constrained piecewise activation parameters:**
 
-The priors are designed to encode biologically reasonable parameter ranges while eliminating dimensional redundancy:
+The priors are designed to encode biologically reasonable parameter ranges while eliminating dimensional redundancy and cleanly separating temporal from non-temporal parameters:
 
+**Non-temporal gene-specific parameters:**
 \begin{align}
     \gamma^*_i &\sim \text{LogNormal}(\log(1.0), 0.5^2) \quad \text{(relative degradation rate)} \\
-    R_{\text{on},i} &\sim \text{LogNormal}(\log(2.5), 0.4^2) \quad \text{(activation fold-change)} \\
-    t^*_{0,\text{on}i} &\sim \text{Normal}(0.5, 0.8^2) \quad \text{(activation onset time, allows negatives, calibrated)} \\
-    \delta^*_i &\sim \text{LogNormal}(\log(0.45), 0.45^2) \quad \text{(activation duration, calibrated for balanced patterns)}
+    R_{\text{on},i} &\sim \text{LogNormal}(\log(2.5), 0.4^2) \quad \text{(activation fold-change)}
+\end{align}
+
+**Relative temporal gene-specific parameters:**
+\begin{align}
+    \tilde{t}^*_{0,\text{on}i} &\sim \text{Normal}(0.5, 0.8^2) \quad \text{(relative activation onset time, allows negatives)} \\
+    \tilde{\delta}^*_i &\sim \text{LogNormal}(\log(0.45), 0.45^2) \quad \text{(relative activation duration)}
+\end{align}
+
+**Absolute temporal parameters (deterministic transformations):**
+\begin{align}
+    t^*_{0,\text{on}i} &= T_{M}^* \times \tilde{t}^*_{0,\text{on}i} \quad \text{(absolute activation onset time)} \\
+    \delta^*_i &= T_{M}^* \times \tilde{\delta}^*_i \quad \text{(absolute activation duration)}
 \end{align}
 
 **Biological interpretation of prior choices:**
 
-- **$\gamma^*_i \sim \text{LogNormal}(\log(1.0), 0.5^2)$**: Centers relative degradation around 1 (balanced splicing/degradation), with 95% of values between ~0.37 and ~2.7. This covers genes where mRNA is more stable than splicing time ($\gamma^* < 1$) to genes with rapid degradation ($\gamma^* > 1$).
+**Non-temporal parameters:**
+- **$\gamma^*_i \sim \text{LogNormal}(\log(1.0), 0.5^2)$**: Centers relative degradation around 1 (balanced splicing/degradation), with 95% of values between ~0.37 and ~2.7.
 
-- **$R_{\text{on},i} \sim \text{LogNormal}(\log(2.5), 0.4^2)$**: Centers fold-change at 2.5× during activation, with 95% between ~1.5 and ~4.2. This represents meaningful upregulation while avoiding extreme values that could cause numerical issues.
+- **$R_{\text{on},i} \sim \text{LogNormal}(\log(2.5), 0.4^2)$**: Centers fold-change at 2.5× during activation, with 95% between ~1.5 and ~4.2.
 
-- **$t^*_{0,\text{on}i} \sim \text{Normal}(0.2, 0.6^2)$**: Centers activation onset at 20% through the process timeline, with 95% between approximately -1.0 and +1.4. **Negative values** represent genes already activated before observation began, enabling modeling of pre-activation scenarios.
+**Relative temporal parameters:**
+- **$\tilde{t}^*_{0,\text{on}i} \sim \text{Normal}(0.5, 0.8^2)$**: Centers relative activation onset at 50% through the process timeline, with 95% between approximately -1.1 and +2.1. **Negative values** enable pre-activation scenarios.
 
-- **$\delta^*_i \sim \text{LogNormal}(\log(0.37), 0.35^2)$**: Centers activation duration at 37% of the process timeline, with 95% between ~0.18 and ~0.76. This distribution was optimized to support both transient (< 40%) and sustained (> 50%) activation patterns with sufficient feasibility.
+- **$\tilde{\delta}^*_i \sim \text{LogNormal}(\log(0.45), 0.45^2)$**: Centers relative activation duration at 45% of the process timeline, with 95% between ~0.18 and ~1.13.
+
+**Temporal scaling transformation:**
+- **Absolute onset**: $t^*_{0,\text{on}i} = T_{M}^* \times \tilde{t}^*_{0,\text{on}i}$ scales relative onset to absolute time
+- **Absolute duration**: $\delta^*_i = T_{M}^* \times \tilde{\delta}^*_i$ scales relative duration to absolute time
+- **Dimensional consistency**: All temporal comparisons now use consistently scaled absolute times
+
+**Parameter interpretation benefits:**
+- **Separation of concerns**: Non-temporal kinetics ($\theta_i$) vs temporal patterns ($\Delta_i$)
+- **Scale invariance**: Relative temporal patterns are independent of absolute time scale
+- **Biological realism**: Global time scale $T_{M}^*$ sets the pace for the entire process
 
 **Priors for other gene-specific parameters (unchanged from Study 2):**
 \begin{align}
@@ -1351,7 +1378,8 @@ This study will validate the constrained model's ability to:
 6. **Scale efficiently**: Demonstrate computational advantages of reduced parameter space
 7. **Validate fold-change interpretation**: Ensure $R_{\text{on},i}$ estimates match true activation strength
 8. **Assess dimensional consistency**: Verify elimination of parameter redundancy issues
-9. **Numerical robustness**: Maintain stability across the $\gamma^*_i = 1$ boundary
+9. **Validate temporal parameter scaling**: Ensure $T_{M}^*$ scaling correctly propagates to absolute timing parameters
+10. **Assess parameter separation**: Verify clean separation between kinetic and temporal parameter inference
 
 ### Implementation and Validation Results
 
