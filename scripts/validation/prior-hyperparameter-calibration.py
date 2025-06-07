@@ -126,7 +126,7 @@ class PriorHyperparameterCalibrator:
             't_scale': {'alpha': 1.0, 'beta': 4.0},      # Gamma(1.0, 4.0), mean = 0.25
 
             # Technical parameters
-            'U_0i': {'loc': 4.6, 'scale': 0.5},          # log(100) (LogNormal)
+            'U_0i': {'loc': 2.3, 'scale': 0.4},          # log(10) (LogNormal) - REDUCED from log(100) for realistic single-cell count scales
             'lambda_j': {'loc': 0.0, 'scale': 0.2},      # log(1.0) (LogNormal)
         }
         
@@ -1286,40 +1286,60 @@ class PriorHyperparameterCalibrator:
         for idx, param_name in enumerate(params_to_plot):
             ax = axes[idx]
 
-            # Get parameter configuration for x-range and distribution type
-            param_configs = {
-                'R_on': {'x_range': (0.5, 10), 'distribution': 'lognormal'},
-                't_on_star': {'x_range': (-1.5, 1.5), 'distribution': 'normal'},
-                'delta_star': {'x_range': (0.1, 2.0), 'distribution': 'lognormal'},
-                'gamma_star': {'x_range': (0.2, 5.0), 'distribution': 'lognormal'},
-                'T_M_star': {'x_range': (10, 100), 'distribution': 'gamma'},
-                't_loc': {'x_range': (0.1, 1.5), 'distribution': 'gamma'},
-                't_scale': {'x_range': (0.05, 0.8), 'distribution': 'gamma'},
-                'U_0i': {'x_range': (20, 500), 'distribution': 'lognormal'},
-                'lambda_j': {'x_range': (0.3, 3.0), 'distribution': 'lognormal'}
+            # Get distribution type configuration
+            distribution_types = {
+                'R_on': 'lognormal',
+                't_on_star': 'normal',
+                'delta_star': 'lognormal',
+                'gamma_star': 'lognormal',
+                'T_M_star': 'gamma',
+                't_loc': 'gamma',
+                't_scale': 'gamma',
+                'U_0i': 'lognormal',
+                'lambda_j': 'lognormal'
             }
 
-            if param_name not in param_configs:
+            if param_name not in distribution_types:
                 continue
 
-            config = param_configs[param_name]
-            x_range = config['x_range']
+            distribution_type = distribution_types[param_name]
 
-            # Generate x values for PDF calculation
-            x = np.linspace(x_range[0], x_range[1], 2000)
+            # Calculate HPDI to determine appropriate x-range
+            hpdi_info = self.calculate_hpdi_for_single_param(param_name)
+            if not hpdi_info:
+                continue
+
+            # Determine x-range based on HPDI with appropriate buffer
+            hpdi_lower = hpdi_info['lower']
+            hpdi_upper = hpdi_info['upper']
+            hpdi_width = hpdi_upper - hpdi_lower
+
+            # Add buffer margins (50% of HPDI width on each side, minimum 20%)
+            buffer_margin = max(hpdi_width * 0.5, hpdi_width * 0.2)
+
+            # For lognormal distributions, ensure we don't go below zero
+            if distribution_type in ['lognormal', 'gamma']:
+                x_min = max(0.001, hpdi_lower - buffer_margin)
+            else:  # normal distribution
+                x_min = hpdi_lower - buffer_margin
+
+            x_max = hpdi_upper + buffer_margin
+
+            # Generate x values for PDF calculation with extended range
+            x = np.linspace(x_min, x_max, 2000)
 
             # Get prior configuration
             if param_name in self.current_priors:
                 prior = self.current_priors[param_name]
 
                 # Calculate PDF and mode based on distribution type
-                if config['distribution'] == 'lognormal':
+                if distribution_type == 'lognormal':
                     pdf = stats.lognorm.pdf(x, s=prior['scale'], scale=np.exp(prior['loc']))
                     mode = np.exp(prior['loc'] - prior['scale']**2)
-                elif config['distribution'] == 'normal':
+                elif distribution_type == 'normal':
                     pdf = stats.norm.pdf(x, loc=prior['loc'], scale=prior['scale'])
                     mode = prior['loc']
-                elif config['distribution'] == 'gamma':
+                elif distribution_type == 'gamma':
                     pdf = stats.gamma.pdf(x, a=prior['alpha'], scale=1/prior['beta'])
                     mode = max(0, (prior['alpha'] - 1) / prior['beta']) if prior['alpha'] > 1 else 0
                 else:
@@ -1352,7 +1372,7 @@ class PriorHyperparameterCalibrator:
                            f"{hpdi_info['upper']:.2f}", ha='center', va='top', fontsize=8)
 
                     # Add mode annotation
-                    if x_range[0] <= mode <= x_range[1]:
+                    if x_min <= mode <= x_max:
                         mode_density = np.interp(mode, x, pdf)
                         ax.axvline(mode, color='red', linestyle='--', alpha=0.7, linewidth=1)
                         ax.text(mode, mode_density * 1.1, f'mode={mode:.2f}',

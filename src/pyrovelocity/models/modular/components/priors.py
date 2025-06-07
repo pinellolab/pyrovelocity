@@ -348,8 +348,8 @@ class PiecewiseActivationPriorModel:
         delta_star_scale: float = 0.45, # Scale for δ* prior - UPDATED for increased spread and sustained pattern support
 
         # Characteristic concentration scale parameter hyperparameters
-        U_0i_loc: float = 4.6,          # log(100) for LogNormal prior
-        U_0i_scale: float = 0.5,        # Scale for U_0i prior
+        U_0i_loc: float = 2.3,          # log(10) for LogNormal prior - REDUCED from log(100) for realistic single-cell count scales
+        U_0i_scale: float = 0.4,        # Scale for U_0i prior - REDUCED from 0.5 for tighter distribution
 
         # Capture efficiency parameter hyperparameters
         lambda_loc: float = 0.0,        # log(1.0) for LogNormal prior
