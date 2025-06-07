@@ -30,6 +30,58 @@ except ImportError:
 configure_matplotlib_style()
 
 
+def _latex_safe_text(text: str) -> str:
+    """
+    Make text safe for LaTeX rendering by escaping special characters.
+
+    Args:
+        text: Input text that may contain LaTeX special characters
+
+    Returns:
+        LaTeX-safe text with special characters escaped
+    """
+    # Escape underscores for LaTeX
+    text = text.replace('_', r'\_')
+
+    # Replace other problematic characters
+    replacements = {
+        '&': r'\&',
+        '%': r'\%',
+        '$': r'\$',
+        '#': r'\#',
+        '^': r'\^{}',
+        '~': r'\~{}',
+        '{': r'\{',
+        '}': r'\}',
+    }
+
+    for char, replacement in replacements.items():
+        text = text.replace(char, replacement)
+
+    return text
+
+
+def _format_pattern_name(pattern_name: str) -> str:
+    """
+    Format pattern names for display in legends and titles.
+
+    Args:
+        pattern_name: Raw pattern name (e.g., 'pre_activation', 'transient')
+
+    Returns:
+        Formatted pattern name suitable for LaTeX rendering
+    """
+    # Pattern name mappings for better display
+    pattern_mappings = {
+        'pre_activation': 'Pre-activation',
+        'transient': 'Transient',
+        'sustained': 'Sustained'
+    }
+
+    formatted = pattern_mappings.get(pattern_name, pattern_name.replace('_', ' ').title())
+    return _latex_safe_text(formatted)
+
+
 def _format_parameter_name(param_name: str) -> str:
     """
     Format parameter names for LaTeX rendering in plots.
@@ -83,6 +135,10 @@ def _format_parameter_name(param_name: str) -> str:
     special_cases = {
         'T_M_star': r'T^*_M',
         't_star': r't^*',
+        'tilde_t_on_star': r'\tilde{t}^*_{on}',
+        'tilde_delta_star': r'\tilde{\delta}^*',
+        't_on_star': r't^*_{on}',
+        'delta_star': r'\delta^*',
         'lambda_j': r'\lambda_j',
         'U_0i': r'U_{0i}',
         'latent_time': r't_{latent}',
@@ -1761,7 +1817,10 @@ def _plot_pattern_proportions(
         counts = list(pattern_counts.values())
         colors = sns.color_palette("Set2", len(patterns))
 
-        ax.pie(counts, labels=patterns, colors=colors,
+        # Format pattern names for display
+        formatted_patterns = [_format_pattern_name(pattern) for pattern in patterns]
+
+        ax.pie(counts, labels=formatted_patterns, colors=colors,
                autopct='%1.1f%%', startangle=90)
         ax.set_title(f'{check_type.title()} Pattern Proportions')
     else:
@@ -1804,52 +1863,66 @@ def _classify_patterns_from_parameters(parameters: Dict[str, torch.Tensor]) -> D
 
     This function uses the same pattern classification logic as the prior hyperparameter
     calibration script to ensure consistency between validation scripts.
+
+    Updated to use the simplified 3-pattern classification system:
+    - pre_activation: All patterns where activation occurred before observation window
+    - transient: Complete activation-decay cycle within observation window
+    - sustained: Net increase over observation window (includes late activation)
     """
-    # Check for required parameters
-    required_params = ['R_on', 't_on_star', 'delta_star']
+    # Check for required parameters - now using relative temporal parameters
+    required_params = ['R_on', 'tilde_t_on_star', 'tilde_delta_star']
     if not all(key in parameters for key in required_params):
-        return {}
+        # Fallback to absolute parameters if relative ones not available
+        required_params = ['R_on', 't_on_star', 'delta_star']
+        if not all(key in parameters for key in required_params):
+            return {}
+        use_relative_params = False
+    else:
+        use_relative_params = True
 
     # Extract parameter arrays
     R_on = parameters['R_on'].flatten()
-    t_on_star = parameters['t_on_star'].flatten()
-    delta_star = parameters['delta_star'].flatten()
+
+    if use_relative_params:
+        # Use relative temporal parameters (preferred)
+        tilde_t_on_star = parameters['tilde_t_on_star'].flatten()
+        tilde_delta_star = parameters['tilde_delta_star'].flatten()
+    else:
+        # Fallback to absolute parameters
+        t_on_star = parameters['t_on_star'].flatten()
+        delta_star = parameters['delta_star'].flatten()
 
     n_samples = len(R_on)
 
-    # Pattern constraints (same as in prior-hyperparameter-calibration.py)
+    # Updated pattern constraints matching prior-hyperparameter-calibration.py
+    # These work with relative temporal parameters (tilde_t_on_star, tilde_delta_star)
     pattern_constraints = {
-        'activation': {
-            'R_on': ('>', 3.0),
-            't_on_star': ('>', 0.0),
-            't_on_star_upper': ('<', 0.4),
-            'delta_star': ('>', 0.3),
-        },
         'pre_activation': {
-            'R_on': ('>', 2.0),
-            't_on_star': ('<', 0.0),
-            'delta_star': ('>', 0.3),
-        },
-        'decay_only': {
-            'R_on': ('>', 1.5),
-            't_on_star_beyond': ('>', 1.0),  # Beyond observation window
+            # All patterns where activation occurred before observation window
+            # Results in observable decay-only dynamics from activated steady-state
+            'tilde_t_on_star': ('<', 0.0),      # Relative activation before observation starts
+            'R_on': ('>', 2.0),                  # Moderate to strong fold change
         },
         'transient': {
-            'R_on': ('>', 2.0),
-            't_on_star': ('>', 0.0),
-            't_on_star_upper': ('<', 0.5),
-            'delta_star': ('<', 0.4),
+            # Complete activation-decay cycle within observation window
+            # Activation early enough and pulse short enough to see full cycle
+            'tilde_t_on_star': ('>', 0.0),      # Relative activation within observation window
+            'tilde_t_on_star_upper': ('<', 0.5), # Early enough to complete cycle (50% of timeline)
+            'tilde_delta_star': ('<', 0.4),     # Short enough pulse to see decay (40% of timeline)
+            'R_on': ('>', 2.0),                  # Sufficient fold change to observe
         },
         'sustained': {
-            'R_on': ('>', 2.0),
-            't_on_star': ('>', 0.0),
-            't_on_star_upper': ('<', 0.3),
-            'delta_star': ('>', 0.5),
+            # Net increase over observation window (includes late activation)
+            # Either long pulse or late activation that doesn't complete decay
+            'tilde_t_on_star': ('>', 0.0),      # Relative activation within observation window
+            'tilde_t_on_star_upper': ('<', 0.3), # Early activation onset (30% of timeline)
+            'tilde_delta_star': ('>', 0.5),     # Long activation duration (50% of timeline)
+            'R_on': ('>', 2.0),                  # Strong fold change
         }
     }
 
     # Soft scoring function (same as in calibration script)
-    def sigmoid_score(value: float, threshold: float, direction: str, steepness: float = 10.0) -> float:
+    def sigmoid_score(value: float, threshold: float, direction: str, steepness: float = 5.0) -> float:
         """Compute soft score using sigmoid function."""
         if direction == '>':
             return torch.sigmoid(torch.tensor(steepness * (value - threshold))).item()
@@ -1865,38 +1938,49 @@ def _classify_patterns_from_parameters(parameters: Dict[str, torch.Tensor]) -> D
         for pattern, constraints in pattern_constraints.items():
             scores = []
 
-            if pattern == 'activation':
-                scores = [
-                    sigmoid_score(R_on[i], 3.0, '>'),
-                    sigmoid_score(t_on_star[i], 0.0, '>'),
-                    sigmoid_score(t_on_star[i], 0.4, '<'),
-                    sigmoid_score(delta_star[i], 0.3, '>')
-                ]
-            elif pattern == 'pre_activation':
-                scores = [
-                    sigmoid_score(R_on[i], 2.0, '>'),
-                    sigmoid_score(t_on_star[i], 0.0, '<'),
-                    sigmoid_score(delta_star[i], 0.3, '>')
-                ]
-            elif pattern == 'decay_only':
-                scores = [
-                    sigmoid_score(R_on[i], 1.5, '>'),
-                    sigmoid_score(t_on_star[i], 1.0, '>')  # Beyond observation window
-                ]
-            elif pattern == 'transient':
-                scores = [
-                    sigmoid_score(R_on[i], 2.0, '>'),
-                    sigmoid_score(t_on_star[i], 0.0, '>'),
-                    sigmoid_score(t_on_star[i], 0.5, '<'),
-                    sigmoid_score(delta_star[i], 0.4, '<')
-                ]
-            elif pattern == 'sustained':
-                scores = [
-                    sigmoid_score(R_on[i], 2.0, '>'),
-                    sigmoid_score(t_on_star[i], 0.0, '>'),
-                    sigmoid_score(t_on_star[i], 0.3, '<'),
-                    sigmoid_score(delta_star[i], 0.5, '>')
-                ]
+            if use_relative_params:
+                # Use relative temporal parameters (preferred approach)
+                if pattern == 'pre_activation':
+                    scores = [
+                        sigmoid_score(R_on[i], 2.0, '>'),
+                        sigmoid_score(tilde_t_on_star[i], 0.0, '<')
+                    ]
+                elif pattern == 'transient':
+                    scores = [
+                        sigmoid_score(R_on[i], 2.0, '>'),
+                        sigmoid_score(tilde_t_on_star[i], 0.0, '>'),
+                        sigmoid_score(tilde_t_on_star[i], 0.5, '<'),
+                        sigmoid_score(tilde_delta_star[i], 0.4, '<')
+                    ]
+                elif pattern == 'sustained':
+                    scores = [
+                        sigmoid_score(R_on[i], 2.0, '>'),
+                        sigmoid_score(tilde_t_on_star[i], 0.0, '>'),
+                        sigmoid_score(tilde_t_on_star[i], 0.3, '<'),
+                        sigmoid_score(tilde_delta_star[i], 0.5, '>')
+                    ]
+            else:
+                # Fallback to absolute parameters with adjusted thresholds
+                # Note: These thresholds assume T_M_star ~ 50-60 for scaling
+                if pattern == 'pre_activation':
+                    scores = [
+                        sigmoid_score(R_on[i], 2.0, '>'),
+                        sigmoid_score(t_on_star[i], 0.0, '<')
+                    ]
+                elif pattern == 'transient':
+                    scores = [
+                        sigmoid_score(R_on[i], 2.0, '>'),
+                        sigmoid_score(t_on_star[i], 0.0, '>'),
+                        sigmoid_score(t_on_star[i], 25.0, '<'),  # 0.5 * 50 (typical T_M_star)
+                        sigmoid_score(delta_star[i], 20.0, '<')  # 0.4 * 50 (typical T_M_star)
+                    ]
+                elif pattern == 'sustained':
+                    scores = [
+                        sigmoid_score(R_on[i], 2.0, '>'),
+                        sigmoid_score(t_on_star[i], 0.0, '>'),
+                        sigmoid_score(t_on_star[i], 15.0, '<'),  # 0.3 * 50 (typical T_M_star)
+                        sigmoid_score(delta_star[i], 25.0, '>')  # 0.5 * 50 (typical T_M_star)
+                    ]
 
             # Compute geometric mean of scores
             if scores:
