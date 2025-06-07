@@ -983,8 +983,8 @@ def _plot_parameter_marginals_summary(
     if model is None:
         component_name = infer_component_name_from_parameters(parameters)
 
-    # Focus on piecewise activation parameters
-    key_params = ['alpha_off', 'alpha_on', 't_on_star', 'delta_star']
+    # Focus on piecewise activation parameters (use R_on instead of deprecated alpha_on)
+    key_params = ['R_on', 't_on_star', 'delta_star', 'gamma_star']
 
     colors = sns.color_palette("husl", len(key_params))
 
@@ -1113,7 +1113,7 @@ def _plot_fold_change_distribution(
     check_type: str,
     model: Optional[Any] = None
 ) -> None:
-    """Plot fold-change distribution."""
+    """Plot fold-change distribution using R_on parameter."""
     from pyrovelocity.plots.parameter_metadata import (
         get_parameter_label,
         infer_component_name_from_parameters,
@@ -1124,20 +1124,42 @@ def _plot_fold_change_distribution(
     if model is None:
         component_name = infer_component_name_from_parameters(parameters)
 
-    if 'alpha_off' in parameters and 'alpha_on' in parameters:
+    # Use R_on directly (preferred) or fall back to alpha_on/alpha_off ratio
+    if 'R_on' in parameters:
+        fold_change = parameters['R_on'].flatten().numpy()
+        param_source = "R_on"
+    elif 'alpha_off' in parameters and 'alpha_on' in parameters:
         alpha_off = parameters['alpha_off'].flatten()
         alpha_on = parameters['alpha_on'].flatten()
         fold_change = (alpha_on / alpha_off).numpy()
+        param_source = "alpha_ratio"
+    else:
+        ax.text(0.5, 0.5, 'Fold-change parameters\nnot available',
+               ha='center', va='center', transform=ax.transAxes)
+        ax.set_title(f'{check_type.title()} Fold-change Distribution', fontsize=8)
+        ax.grid(True, alpha=0.3)
+        return
 
-        # Use relative frequency for consistency
-        ax.hist(fold_change, bins=50, alpha=0.7, color='skyblue', density=False,
-               weights=np.ones(len(fold_change)) / len(fold_change))
-        ax.axvline(fold_change.mean(), color='red', linestyle='--',
-                  label=f'Mean: {fold_change.mean():.1f}')
-        ax.axvline(3.3, color='orange', linestyle=':', label='Min threshold: 3.3')
-        ax.axvline(7.5, color='green', linestyle=':', label='Activation threshold: 7.5')
+    # Use relative frequency for consistency
+    ax.hist(fold_change, bins=50, alpha=0.7, color='skyblue', density=False,
+           weights=np.ones(len(fold_change)) / len(fold_change))
+    ax.axvline(fold_change.mean(), color='red', linestyle='--',
+              label=f'Mean: {fold_change.mean():.1f}')
+    ax.axvline(3.3, color='orange', linestyle=':', label='Min threshold: 3.3')
+    ax.axvline(7.5, color='green', linestyle=':', label='Activation threshold: 7.5')
 
-        # Get parameter labels using new metadata system
+    # Get parameter label using new metadata system
+    if param_source == "R_on":
+        param_label = get_parameter_label(
+            param_name="R_on",
+            label_type="display",
+            model=model,
+            component_name=component_name,
+            fallback_to_legacy=True
+        )
+        xlabel = f'Fold-change ({param_label})'
+    else:
+        # Legacy fallback for alpha_on/alpha_off ratio
         alpha_on_label = get_parameter_label(
             param_name="alpha_on",
             label_type="display",
@@ -1152,18 +1174,14 @@ def _plot_fold_change_distribution(
             component_name=component_name,
             fallback_to_legacy=True
         )
+        xlabel = f'Fold-change ({alpha_on_label} / {alpha_off_label})'
 
-        ax.set_xlabel(f'Fold-change ({alpha_on_label} / {alpha_off_label})', fontsize=7)
-        ax.set_ylabel('Relative Frequency', fontsize=7)
-        ax.set_title(f'{check_type.title()} Fold-change Distribution', fontsize=8)
-        ax.tick_params(labelsize=6)  # Reduce tick label size
-        ax.legend(fontsize=8)
-        ax.set_xlim(0, min(100, fold_change.max()))
-    else:
-        ax.text(0.5, 0.5, 'Alpha parameters\nnot available',
-               ha='center', va='center', transform=ax.transAxes)
-        ax.set_title(f'{check_type.title()} Fold-change Distribution', fontsize=8)
-
+    ax.set_xlabel(xlabel, fontsize=7)
+    ax.set_ylabel('Relative Frequency', fontsize=7)
+    ax.set_title(f'{check_type.title()} Fold-change Distribution', fontsize=8)
+    ax.tick_params(labelsize=6)  # Reduce tick label size
+    ax.legend(fontsize=8)
+    ax.set_xlim(0, min(100, fold_change.max()))
     ax.grid(True, alpha=0.3)
 
 
@@ -1781,20 +1799,40 @@ def _plot_correlation_structure(adata: AnnData, ax: plt.Axes, check_type: str) -
 
 
 def _classify_patterns_from_parameters(parameters: Dict[str, torch.Tensor]) -> Dict[str, int]:
-    """Classify expression patterns from parameter samples."""
-    if not all(key in parameters for key in ['alpha_off', 'alpha_on', 't_on_star', 'delta_star']):
+    """Classify expression patterns from parameter samples using R_on parameterization."""
+    # Check for required parameters - prefer R_on over alpha_on/alpha_off
+    required_params = ['t_on_star', 'delta_star']
+    if 'R_on' in parameters:
+        required_params.append('R_on')
+        use_r_on = True
+    elif all(key in parameters for key in ['alpha_off', 'alpha_on']):
+        required_params.extend(['alpha_off', 'alpha_on'])
+        use_r_on = False
+    else:
         return {}
 
-    alpha_off = parameters['alpha_off'].flatten()
-    alpha_on = parameters['alpha_on'].flatten()
+    if not all(key in parameters for key in required_params):
+        return {}
+
     t_on_star = parameters['t_on_star'].flatten()
     delta_star = parameters['delta_star'].flatten()
-    fold_change = alpha_on / alpha_off
+
+    if use_r_on:
+        # Use R_on directly (dimensionless parameterization with alpha_off = 1.0)
+        fold_change = parameters['R_on'].flatten()
+        # Since alpha_off = 1.0, alpha_on = R_on
+        alpha_off = torch.ones_like(fold_change)
+        alpha_on = fold_change
+    else:
+        # Legacy fallback for alpha_on/alpha_off ratio
+        alpha_off = parameters['alpha_off'].flatten()
+        alpha_on = parameters['alpha_on'].flatten()
+        fold_change = alpha_on / alpha_off
 
     pattern_counts = {'activation': 0, 'decay': 0, 'transient': 0, 'sustained': 0, 'unknown': 0}
 
-    for i in range(len(alpha_off)):
-        # Apply same classification logic as in model
+    for i in range(len(fold_change)):
+        # Apply same classification logic as in model (updated for dimensionless parameterization)
         if (alpha_off[i] < 0.15 and alpha_on[i] > 1.5 and
             t_on_star[i] < 0.4 and delta_star[i] > 0.4 and fold_change[i] > 7.5):
             pattern_counts['activation'] += 1
