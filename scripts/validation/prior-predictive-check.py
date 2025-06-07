@@ -9,10 +9,15 @@ from pyrovelocity.plots.predictive_checks import (
     plot_prior_predictive_checks,
 )
 
+# Configurable random seed for reproducibility and variability analysis
+# Change this value to generate different datasets and see variability in priors
+# The seed will be included in the output filename: combined_prior_predictive_checks_{RANDOM_SEED}.pdf
+RANDOM_SEED = 42
+
 # Set random seeds for reproducibility
-torch.manual_seed(42)
-pyro.set_rng_seed(42)
-np.random.seed(42)
+torch.manual_seed(RANDOM_SEED)
+pyro.set_rng_seed(RANDOM_SEED)
+np.random.seed(RANDOM_SEED)
 
 # Create the piecewise activation model
 model = create_piecewise_activation_model()
@@ -25,11 +30,12 @@ print(f"  Likelihood: {model.likelihood_model}")
 print(f"  Guide: {model.guide_model}")
 
 # Generate prior predictive samples with proper parameter-data correspondence
-print("Performing prior predictive checks...")
+print(f"Performing prior predictive checks with random seed: {RANDOM_SEED}")
+print(f"Output will be saved as: combined_prior_predictive_checks_{RANDOM_SEED}.pdf")
 
 # Set seeds for reproducible prior sampling
-torch.manual_seed(0)
-pyro.set_rng_seed(0)
+torch.manual_seed(RANDOM_SEED)
+pyro.set_rng_seed(RANDOM_SEED)
 
 prior_predictive_adata = model.generate_predictive_samples(
     num_cells=200,
@@ -47,9 +53,9 @@ prior_parameter_samples = model.sample_system_parameters(
 )
 
 # Add UMAP and clustering though these will be uninformative in the context of prior predictive checks
-sc.pp.neighbors(prior_predictive_adata, n_neighbors=10, random_state=42)
-sc.tl.umap(prior_predictive_adata, random_state=42)
-sc.tl.leiden(prior_predictive_adata, random_state=42)
+sc.pp.neighbors(prior_predictive_adata, n_neighbors=10, random_state=RANDOM_SEED)
+sc.tl.umap(prior_predictive_adata, random_state=RANDOM_SEED)
+sc.tl.leiden(prior_predictive_adata, random_state=RANDOM_SEED)
 
 # Plot randomly sampled parameters and data
 fig_prior = plot_prior_predictive_checks(
@@ -58,6 +64,7 @@ fig_prior = plot_prior_predictive_checks(
     prior_parameters=prior_parameter_samples,
     figsize=(15, 10),
     save_path="reports/docs/prior_predictive",
+    figure_name=f"piecewise_activation_prior_checks_{RANDOM_SEED}",
     combine_individual_pdfs=True,
 )
 

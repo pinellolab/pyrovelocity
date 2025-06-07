@@ -772,9 +772,20 @@ def plot_prior_predictive_checks(
         # Combine individual PDFs if requested
         if combine_individual_pdfs and create_individual_plots:
             try:
+                # Extract seed from figure_name if present, otherwise use default filename
+                if figure_name is not None and '_' in figure_name:
+                    # Try to extract seed from figure_name (e.g., "piecewise_activation_prior_checks_42")
+                    parts = figure_name.split('_')
+                    if parts[-1].isdigit():
+                        seed_suffix = f"_{parts[-1]}"
+                    else:
+                        seed_suffix = ""
+                else:
+                    seed_suffix = ""
+
                 combine_pdfs(
                     pdf_directory=save_path,
-                    output_filename=f"combined_{check_type}_predictive_checks.pdf",
+                    output_filename=f"combined_{check_type}_predictive_checks{seed_suffix}.pdf",
                     exclude_patterns=["combined_*.pdf"]  # Don't include previous combined files
                 )
             except Exception as e:
