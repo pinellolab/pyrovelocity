@@ -1799,56 +1799,130 @@ def _plot_correlation_structure(adata: AnnData, ax: plt.Axes, check_type: str) -
 
 
 def _classify_patterns_from_parameters(parameters: Dict[str, torch.Tensor]) -> Dict[str, int]:
-    """Classify expression patterns from parameter samples using R_on parameterization."""
-    # Check for required parameters - prefer R_on over alpha_on/alpha_off
-    required_params = ['t_on_star', 'delta_star']
-    if 'R_on' in parameters:
-        required_params.append('R_on')
-        use_r_on = True
-    elif all(key in parameters for key in ['alpha_off', 'alpha_on']):
-        required_params.extend(['alpha_off', 'alpha_on'])
-        use_r_on = False
-    else:
-        return {}
+    """
+    Classify expression patterns from parameter samples using soft scoring approach.
 
+    This function uses the same pattern classification logic as the prior hyperparameter
+    calibration script to ensure consistency between validation scripts.
+    """
+    # Check for required parameters
+    required_params = ['R_on', 't_on_star', 'delta_star']
     if not all(key in parameters for key in required_params):
         return {}
 
+    # Extract parameter arrays
+    R_on = parameters['R_on'].flatten()
     t_on_star = parameters['t_on_star'].flatten()
     delta_star = parameters['delta_star'].flatten()
 
-    if use_r_on:
-        # Use R_on directly (dimensionless parameterization with alpha_off = 1.0)
-        fold_change = parameters['R_on'].flatten()
-        # Since alpha_off = 1.0, alpha_on = R_on
-        alpha_off = torch.ones_like(fold_change)
-        alpha_on = fold_change
-    else:
-        # Legacy fallback for alpha_on/alpha_off ratio
-        alpha_off = parameters['alpha_off'].flatten()
-        alpha_on = parameters['alpha_on'].flatten()
-        fold_change = alpha_on / alpha_off
+    n_samples = len(R_on)
 
-    pattern_counts = {'activation': 0, 'decay': 0, 'transient': 0, 'sustained': 0, 'unknown': 0}
+    # Pattern constraints (same as in prior-hyperparameter-calibration.py)
+    pattern_constraints = {
+        'activation': {
+            'R_on': ('>', 3.0),
+            't_on_star': ('>', 0.0),
+            't_on_star_upper': ('<', 0.4),
+            'delta_star': ('>', 0.3),
+        },
+        'pre_activation': {
+            'R_on': ('>', 2.0),
+            't_on_star': ('<', 0.0),
+            'delta_star': ('>', 0.3),
+        },
+        'decay_only': {
+            'R_on': ('>', 1.5),
+            't_on_star_beyond': ('>', 1.0),  # Beyond observation window
+        },
+        'transient': {
+            'R_on': ('>', 2.0),
+            't_on_star': ('>', 0.0),
+            't_on_star_upper': ('<', 0.5),
+            'delta_star': ('<', 0.4),
+        },
+        'sustained': {
+            'R_on': ('>', 2.0),
+            't_on_star': ('>', 0.0),
+            't_on_star_upper': ('<', 0.3),
+            'delta_star': ('>', 0.5),
+        }
+    }
 
-    for i in range(len(fold_change)):
-        # Apply same classification logic as in model (updated for dimensionless parameterization)
-        if (alpha_off[i] < 0.15 and alpha_on[i] > 1.5 and
-            t_on_star[i] < 0.4 and delta_star[i] > 0.4 and fold_change[i] > 7.5):
-            pattern_counts['activation'] += 1
-        elif alpha_off[i] > 0.08 and t_on_star[i] > 0.35:
-            pattern_counts['decay'] += 1
-        elif (alpha_off[i] < 0.3 and alpha_on[i] > 1.0 and
-              t_on_star[i] < 0.5 and delta_star[i] < 0.35 and fold_change[i] > 3.3):
-            pattern_counts['transient'] += 1
-        elif (alpha_off[i] < 0.3 and alpha_on[i] > 1.0 and
-              t_on_star[i] < 0.3 and delta_star[i] > 0.35 and fold_change[i] > 3.3):
-            pattern_counts['sustained'] += 1
-        else:
-            pattern_counts['unknown'] += 1
+    # Soft scoring function (same as in calibration script)
+    def sigmoid_score(value: float, threshold: float, direction: str, steepness: float = 10.0) -> float:
+        """Compute soft score using sigmoid function."""
+        if direction == '>':
+            return torch.sigmoid(torch.tensor(steepness * (value - threshold))).item()
+        else:  # direction == '<'
+            return torch.sigmoid(torch.tensor(steepness * (threshold - value))).item()
 
-    # Remove zero counts
-    return {k: v for k, v in pattern_counts.items() if v > 0}
+    # Compute pattern scores for each sample
+    pattern_scores = {}
+    for pattern in pattern_constraints.keys():
+        pattern_scores[pattern] = torch.zeros(n_samples)
+
+    for i in range(n_samples):
+        for pattern, constraints in pattern_constraints.items():
+            scores = []
+
+            if pattern == 'activation':
+                scores = [
+                    sigmoid_score(R_on[i], 3.0, '>'),
+                    sigmoid_score(t_on_star[i], 0.0, '>'),
+                    sigmoid_score(t_on_star[i], 0.4, '<'),
+                    sigmoid_score(delta_star[i], 0.3, '>')
+                ]
+            elif pattern == 'pre_activation':
+                scores = [
+                    sigmoid_score(R_on[i], 2.0, '>'),
+                    sigmoid_score(t_on_star[i], 0.0, '<'),
+                    sigmoid_score(delta_star[i], 0.3, '>')
+                ]
+            elif pattern == 'decay_only':
+                scores = [
+                    sigmoid_score(R_on[i], 1.5, '>'),
+                    sigmoid_score(t_on_star[i], 1.0, '>')  # Beyond observation window
+                ]
+            elif pattern == 'transient':
+                scores = [
+                    sigmoid_score(R_on[i], 2.0, '>'),
+                    sigmoid_score(t_on_star[i], 0.0, '>'),
+                    sigmoid_score(t_on_star[i], 0.5, '<'),
+                    sigmoid_score(delta_star[i], 0.4, '<')
+                ]
+            elif pattern == 'sustained':
+                scores = [
+                    sigmoid_score(R_on[i], 2.0, '>'),
+                    sigmoid_score(t_on_star[i], 0.0, '>'),
+                    sigmoid_score(t_on_star[i], 0.3, '<'),
+                    sigmoid_score(delta_star[i], 0.5, '>')
+                ]
+
+            # Compute geometric mean of scores
+            if scores:
+                pattern_scores[pattern][i] = torch.prod(torch.tensor(scores)) ** (1.0 / len(scores))
+
+    # Assign each sample to the pattern with highest score
+    assignments = torch.zeros(n_samples, dtype=torch.long)
+    pattern_names = list(pattern_constraints.keys())
+
+    for i in range(n_samples):
+        scores = [pattern_scores[pattern][i] for pattern in pattern_names]
+        assignments[i] = torch.argmax(torch.tensor(scores))
+
+    # Count pattern assignments
+    pattern_counts = {}
+    for i, pattern in enumerate(pattern_names):
+        count = (assignments == i).sum().item()
+        if count > 0:
+            pattern_counts[pattern] = count
+
+    # Add unknown category for any unassigned samples (shouldn't happen with soft scoring)
+    total_assigned = sum(pattern_counts.values())
+    if total_assigned < n_samples:
+        pattern_counts['unknown'] = n_samples - total_assigned
+
+    return pattern_counts
 
 
 # Alias for posterior predictive checks (same function, different check_type)
