@@ -112,16 +112,19 @@ class PriorHyperparameterCalibrator:
         self.save_path = Path(save_path)
         self.save_path.mkdir(parents=True, exist_ok=True)
         
-        # Current dimensionless prior hyperparameters (from priors.py) - UPDATED AFTER CALIBRATION
+        # Updated dimensionless prior hyperparameters for observable complete activation-decay cycles
+        # Mathematical constraint: t*_on + δ* + 3/γ* ≤ T*_M
+        # With γ* = 0.2, need 3/γ* = 15 time units for decay, so δ* must be ~18 for complete cycles
+        # UPDATED: R_on reduced to prevent amplified fold changes in spliced mRNA
         self.current_priors = {
             # Piecewise activation parameters (for pattern analysis)
-            'R_on': {'loc': 0.693, 'scale': 0.35},       # log(2.0), fold-change (LogNormal) - UPDATED
-            't_on_star': {'loc': 0.5, 'scale': 0.8},     # Normal(0.5, 0.8²), allows negatives - CALIBRATED
-            'delta_star': {'loc': -0.8, 'scale': 0.45},  # log(0.45) (LogNormal) - CALIBRATED
-            'gamma_star': {'loc': -0.223, 'scale': 0.3}, # log(0.8) (LogNormal) - UPDATED for lower velocity magnitudes
+            'R_on': {'loc': 0.038, 'scale': 0.280},      # fold-change (LogNormal) - TARGET: mean=1.08, 95% HPDI [0.6, 1.8], P(>1.5)=0.095
+            't_on_star': {'loc': 5.0, 'scale': 7.5},     # Normal(5.0, 7.5²), wide range [-10, 20] - TARGET: 5.0
+            'delta_star': {'loc': 2.89, 'scale': 0.4},   # log(18) ≈ 2.89 (LogNormal) - TARGET: 18.0
+            'gamma_star': {'loc': -1.609, 'scale': 0.3}, # log(0.2) ≈ -1.609 (LogNormal) - TARGET: 0.2
 
             # Hierarchical time structure parameters
-            'T_M_star': {'alpha': 4.0, 'beta': 0.08},    # Gamma(4.0, 0.08), mean = 50
+            'T_M_star': {'alpha': 12.1, 'beta': 0.22},   # Gamma(12.1, 0.22), mean = 55 - TARGET: 55.0
             't_loc': {'alpha': 1.0, 'beta': 2.0},        # Gamma(1.0, 2.0), mean = 0.5
             't_scale': {'alpha': 1.0, 'beta': 4.0},      # Gamma(1.0, 4.0), mean = 0.25
 
@@ -130,34 +133,35 @@ class PriorHyperparameterCalibrator:
             'lambda_j': {'loc': 0.0, 'scale': 0.2},      # log(1.0) (LogNormal)
         }
         
-        # Gene expression pattern definitions (from documentation)
+        # Updated gene expression pattern definitions for longer timescales
+        # Adjusted for new priors: t*_on ~ N(7, 2²), δ* ~ LogN(2.89, 0.4²) [mean=18], γ* ~ LogN(-1.609, 0.3²) [mean=0.2]
         self.pattern_constraints = {
             'activation': {
-                'R_on': ('>', 3.0),
-                't_on_star': ('>', 0.0),
-                't_on_star_upper': ('<', 0.4),
-                'delta_star': ('>', 0.3),
+                'R_on': ('>', 1.5),           # Reduced from 3.0 to be more feasible
+                't_on_star': ('>', 2.0),      # Early activation within observation window
+                't_on_star_upper': ('<', 15.0), # Allow reasonable onset times
+                'delta_star': ('>', 10.0),    # Long enough pulse to observe activation
             },
             'pre_activation': {
-                'R_on': ('>', 2.0),
-                't_on_star': ('<', 0.0),
-                'delta_star': ('>', 0.3),
+                'R_on': ('>', 1.5),           # Reduced from 2.0 to be more feasible
+                't_on_star': ('<', 0.0),      # Activation before observation starts
+                'delta_star': ('>', 10.0),    # Long enough to see effects
             },
             'decay_only': {
-                'R_on': ('>', 1.5),
-                't_on_star_beyond': ('>', 1.0),  # Beyond observation window
+                'R_on': ('>', 1.2),           # Reduced from 1.5 to be more feasible
+                't_on_star_beyond': ('>', 50.0),  # Beyond observation window (T*_M ~ 55)
             },
             'transient': {
-                'R_on': ('>', 2.0),
-                't_on_star': ('>', 0.0),
-                't_on_star_upper': ('<', 0.5),
-                'delta_star': ('<', 0.4),
+                'R_on': ('>', 1.5),           # Reduced from 2.0 to be more feasible
+                't_on_star': ('>', 2.0),      # Early onset
+                't_on_star_upper': ('<', 20.0), # Reasonable onset window
+                'delta_star': ('<', 15.0),    # Short enough to see decay
             },
             'sustained': {
-                'R_on': ('>', 2.0),
-                't_on_star': ('>', 0.0),
-                't_on_star_upper': ('<', 0.3),
-                'delta_star': ('>', 0.5),
+                'R_on': ('>', 1.5),           # Reduced from 2.0 to be more feasible
+                't_on_star': ('>', 2.0),      # Early onset
+                't_on_star_upper': ('<', 10.0), # Early onset for sustained pattern
+                'delta_star': ('>', 25.0),    # Long pulse for sustained expression
             }
         }
         
@@ -561,8 +565,11 @@ class PriorHyperparameterCalibrator:
         if n_patterns == 1:
             axes = axes.reshape(1, -1)
 
-        # Time points for evaluation
-        t_star = torch.linspace(0, 1.0, 100)
+        # Time points for evaluation - use range matching T*_M target mean of 55
+        # With updated priors: T*_M mean = 55, need to show complete activation-decay cycles
+        # Mathematical constraint: t*_on + δ* + 3/γ* ≤ T*_M
+        # With γ* = 0.2, δ* = 18, t*_on = 7: 7 + 18 + 15 = 40 ≤ 55 ✓
+        t_star = torch.linspace(0, 60.0, 300)  # Range [0, 60] to capture complete cycles within T*_M
 
         pattern_colors = ['red', 'blue', 'green', 'orange', 'purple']
 
@@ -996,10 +1003,19 @@ class PriorHyperparameterCalibrator:
         # Sample all parameters including hierarchical time structure
         samples = {}
 
-        # Hierarchical time parameters
-        samples['T_M_star'] = torch.distributions.Gamma(2.0, 0.5).sample((n_samples,))
-        samples['t_loc'] = torch.distributions.Gamma(2.0, 5.0).sample((n_samples,))
-        samples['t_scale'] = torch.distributions.Gamma(2.0, 10.0).sample((n_samples,))
+        # Hierarchical time parameters - use updated priors
+        samples['T_M_star'] = torch.distributions.Gamma(
+            self.current_priors['T_M_star']['alpha'],
+            self.current_priors['T_M_star']['beta']
+        ).sample((n_samples,))
+        samples['t_loc'] = torch.distributions.Gamma(
+            self.current_priors['t_loc']['alpha'],
+            self.current_priors['t_loc']['beta']
+        ).sample((n_samples,))
+        samples['t_scale'] = torch.distributions.Gamma(
+            self.current_priors['t_scale']['alpha'],
+            self.current_priors['t_scale']['beta']
+        ).sample((n_samples,))
 
         # Piecewise activation parameters
         samples['R_on'] = torch.distributions.LogNormal(

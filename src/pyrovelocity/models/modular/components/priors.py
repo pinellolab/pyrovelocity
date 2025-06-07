@@ -327,25 +327,26 @@ class PiecewiseActivationPriorModel:
     @beartype
     def __init__(
         self,
-        # Hierarchical time structure hyperparameters (following cell2fate)
-        T_M_alpha: float = 4.0,      # Shape parameter for T*_M ~ Gamma
-        T_M_beta: float = 0.08,      # Rate parameter for T*_M ~ Gamma (mean = 50)
+        # Hierarchical time structure hyperparameters (updated for observable complete cycles)
+        T_M_alpha: float = 12.1,     # Shape parameter for T*_M ~ Gamma (mean = 55)
+        T_M_beta: float = 0.22,      # Rate parameter for T*_M ~ Gamma (mean = 55)
         t_loc_alpha: float = 1.0,    # Shape parameter for t_loc ~ Gamma
         t_loc_beta: float = 2.0,     # Rate parameter for t_loc ~ Gamma (mean = 0.5)
         t_scale_alpha: float = 1.0,  # Shape parameter for t_scale ~ Gamma
         t_scale_beta: float = 4.0,   # Rate parameter for t_scale ~ Gamma (mean = 0.25)
         t_epsilon: float = 1e-6,     # Small epsilon to prevent negative times
 
-        # Piecewise activation parameter hyperparameters (corrected parameterization)
+        # Piecewise activation parameter hyperparameters (updated for complete cycles)
+        # Mathematical constraint: t*_on + δ* + 3/γ* ≤ T*_M
         # Note: alpha_off is fixed at 1.0, not inferred
-        R_on_loc: float = 0.693,        # log(2.0) for LogNormal prior (fold-change) - REDUCED for more realistic fold-changes
-        R_on_scale: float = 0.35,       # Scale for R_on prior - REDUCED for tighter distribution
-        gamma_star_loc: float = -0.223, # log(0.8) for LogNormal prior - REDUCED to lower velocity magnitudes (γ* < 1)
-        gamma_star_scale: float = 0.3,  # Scale for γ* prior - tighter distribution around 0.8
-        t_on_star_loc: float = 0.5,     # Mean for Normal prior (allows negatives) - UPDATED for balanced pattern coverage
-        t_on_star_scale: float = 0.8,   # Scale for t*_on Normal prior - UPDATED for better decay-only pattern support
-        delta_star_loc: float = -0.8,   # log(0.45) for LogNormal prior - UPDATED from log(0.37) for sustained patterns
-        delta_star_scale: float = 0.45, # Scale for δ* prior - UPDATED for increased spread and sustained pattern support
+        R_on_loc: float = 0.693,        # log(2.0) for LogNormal prior (fold-change, target mean = 2.0)
+        R_on_scale: float = 0.35,       # Scale for R_on prior
+        gamma_star_loc: float = -1.609, # log(0.2) for LogNormal prior (target mean = 0.2, slow degradation)
+        gamma_star_scale: float = 0.3,  # Scale for γ* prior
+        t_on_star_loc: float = 7.0,     # Mean for Normal prior (target mean = 7.0, accommodate longer pulses)
+        t_on_star_scale: float = 2.0,   # Scale for t*_on Normal prior (increased for longer timescales)
+        delta_star_loc: float = 2.89,   # log(18) for LogNormal prior (target mean = 18, allow steady state)
+        delta_star_scale: float = 0.4,  # Scale for δ* prior (tighter around target)
 
         # Characteristic concentration scale parameter hyperparameters
         U_0i_loc: float = 2.3,          # log(10) for LogNormal prior - REDUCED from log(100) for realistic single-cell count scales
