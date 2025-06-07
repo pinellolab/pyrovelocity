@@ -1382,23 +1382,34 @@ def _plot_velocity_magnitudes(adata: AnnData, ax: plt.Axes, check_type: str) -> 
         ax.set_title(f'{check_type.title()} Velocity Magnitudes')
         ax.legend()
     else:
-        # Compute simple velocity approximation from U/S ratio changes
+        # Compute velocity using the correct piecewise activation model formula
         if 'unspliced' in adata.layers and 'spliced' in adata.layers:
             u = adata.layers['unspliced']
             s = adata.layers['spliced']
 
-            # Simple velocity approximation: du/dt ≈ α - γu (assuming steady-state splicing)
-            velocity_approx = np.mean(u - s, axis=1)  # Simplified
+            # For the dimensionless piecewise activation model: ds*/dt* = u* - γ*s*
+            # We need gamma_star values, but if not available, use a reasonable approximation
+            if 'gamma_star' in adata.var:
+                gamma_star = adata.var['gamma_star'].values
+                # Compute velocity per gene: ds*/dt* = u* - γ*s*
+                velocity_per_gene = u - gamma_star[np.newaxis, :] * s
+            else:
+                # Use a typical gamma_star value (~1.0) as approximation
+                gamma_star_approx = 1.0
+                velocity_per_gene = u - gamma_star_approx * s
+
+            # Take mean velocity magnitude across genes for each cell
+            velocity_magnitudes = np.mean(np.abs(velocity_per_gene), axis=1)
 
             # Use relative frequency for consistency
-            ax.hist(velocity_approx, bins=50, alpha=0.7, color='teal', density=False,
-                   weights=np.ones(len(velocity_approx)) / len(velocity_approx))
-            ax.axvline(velocity_approx.mean(), color='red', linestyle='--',
-                      label=f'Mean: {velocity_approx.mean():.3f}')
+            ax.hist(velocity_magnitudes, bins=50, alpha=0.7, color='teal', density=False,
+                   weights=np.ones(len(velocity_magnitudes)) / len(velocity_magnitudes))
+            ax.axvline(velocity_magnitudes.mean(), color='red', linestyle='--',
+                      label=f'Mean: {velocity_magnitudes.mean():.3f}')
 
-            ax.set_xlabel('Velocity Approximation')
+            ax.set_xlabel('Velocity Magnitude')
             ax.set_ylabel('Relative Frequency')
-            ax.set_title(f'{check_type.title()} Velocity Approximation')
+            ax.set_title(f'{check_type.title()} Velocity Magnitudes')
             ax.legend()
         else:
             ax.text(0.5, 0.5, 'Velocity data\nnot available',
