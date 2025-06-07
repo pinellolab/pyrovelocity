@@ -338,10 +338,10 @@ class PiecewiseActivationPriorModel:
 
         # Piecewise activation parameter hyperparameters (corrected parameterization)
         # Note: alpha_off is fixed at 1.0, not inferred
-        R_on_loc: float = 0.916,        # log(2.5) for LogNormal prior (fold-change)
-        R_on_scale: float = 0.4,        # Scale for R_on prior
-        gamma_star_loc: float = 0.0,    # log(1.0) for LogNormal prior
-        gamma_star_scale: float = 0.5,  # Scale for γ* prior
+        R_on_loc: float = 0.693,        # log(2.0) for LogNormal prior (fold-change) - REDUCED for more realistic fold-changes
+        R_on_scale: float = 0.35,       # Scale for R_on prior - REDUCED for tighter distribution
+        gamma_star_loc: float = 1.099,  # log(3.0) for LogNormal prior - FURTHER INCREASED to reduce velocity magnitudes and improve U/S ratio
+        gamma_star_scale: float = 0.35, # Scale for γ* prior - FURTHER REDUCED for tighter distribution around 3.0
         t_on_star_loc: float = 0.5,     # Mean for Normal prior (allows negatives) - UPDATED for balanced pattern coverage
         t_on_star_scale: float = 0.8,   # Scale for t*_on Normal prior - UPDATED for better decay-only pattern support
         delta_star_loc: float = -0.8,   # log(0.45) for LogNormal prior - UPDATED from log(0.37) for sustained patterns
