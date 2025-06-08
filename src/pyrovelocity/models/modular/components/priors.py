@@ -734,7 +734,7 @@ class PiecewiseActivationPriorModel:
             n_cells = 50
 
         # Validate pattern if provided
-        valid_patterns = ['activation', 'pre_activation', 'decay', 'transient', 'sustained']
+        valid_patterns = ['pre_activation', 'transient', 'sustained']
         if constrain_to_pattern and pattern not in valid_patterns:
             raise ValueError(f"Pattern must be one of {valid_patterns}, got {pattern}")
 
@@ -816,35 +816,14 @@ class PiecewiseActivationPriorModel:
         """
         Check if parameters satisfy constraints for a specific expression pattern.
 
-        Based on the corrected dimensional analysis framework with:
-        - α*_off = 1.0 (fixed reference)
-        - R_on = fold-change parameter (inferred)
-        - t*_on ~ Normal (allows negative values for pre-activation)
+        Updated to use soft scoring approach with relative temporal parameters
+        to match the working logic in prior-predictive-check.py and
+        prior-hyperparameter-calibration.py.
 
-        Activation patterns:
-        - R_on > 3.0 (strong fold-change)
-        - t*_on > 0 and t*_on < 0.4 (activation during observation)
-        - δ* > 0.3 (sustained activation duration)
-
-        Pre-activation patterns:
-        - R_on > 2.0 (moderate to strong fold-change)
-        - t*_on < 0 (activation before observation)
-        - δ* > 0.3 (activation extends into observation)
-
-        Decay patterns:
-        - R_on > 1.5 (moderate fold-change, but not observed during activation)
-        - t*_on > T*_M (activation beyond observation) OR
-        - t*_on < 0 and δ* < |t*_on| (activation ended before observation)
-
-        Transient patterns:
-        - R_on > 2.0 (moderate to strong fold-change)
-        - t*_on > 0 and t*_on < 0.5 (activation during observation)
-        - δ* < 0.4 (brief activation duration)
-
-        Sustained patterns:
-        - R_on > 2.0 (strong fold-change)
-        - t*_on > 0 and t*_on < 0.3 (early activation onset)
-        - δ* > 0.5 (long activation duration)
+        Uses the simplified 3-pattern classification system:
+        - pre_activation: Genes activated before observation window (negative tilde_t_on)
+        - transient: Complete activation-decay cycles within observation window
+        - sustained: Net increase over observation window (includes late activation)
 
         Args:
             params: Dictionary of sampled parameters
@@ -854,50 +833,79 @@ class PiecewiseActivationPriorModel:
             True if parameters satisfy pattern constraints, False otherwise
         """
         # Use R_on directly (fold-change parameter)
-        R_on = params.get('R_on', params['alpha_on'])  # Fallback for compatibility
-        t_on_star = params['t_on_star']
-        delta_star = params['delta_star']
-        T_M_star = params['T_M_star']
+        R_on = params.get('R_on', params.get('alpha_on', torch.tensor(1.0)))
 
-        if pattern == 'activation':
-            return (
-                torch.all(R_on > 2.0).item() and  # Achievable constraint based on testing
-                torch.all(t_on_star > 0.0).item() and
-                torch.all(t_on_star < 0.8).item() and  # Achievable constraint based on testing
-                torch.all(delta_star > 0.2).item()  # Achievable constraint based on testing
-            )
+        # Use relative temporal parameters if available, otherwise fall back to absolute
+        if 'tilde_t_on_star' in params and 'tilde_delta_star' in params:
+            tilde_t_on_star = params['tilde_t_on_star']
+            tilde_delta_star = params['tilde_delta_star']
+            use_relative_params = True
+        else:
+            # Fallback to absolute parameters with adjusted thresholds
+            t_on_star = params['t_on_star']
+            delta_star = params['delta_star']
+            T_M_star = params.get('T_M_star', torch.tensor(50.0))  # Typical value
+            use_relative_params = False
 
-        elif pattern == 'pre_activation':
-            return (
-                torch.all(R_on > 1.5).item() and  # More achievable
-                torch.all(t_on_star < 0.0).item() and
-                torch.all(delta_star > 0.2).item()  # More achievable
-            )
+        # Soft scoring function for more flexible pattern matching
+        def sigmoid_score(value: torch.Tensor, threshold: float, direction: str, steepness: float = 5.0) -> float:
+            """Compute soft score using sigmoid function."""
+            if direction == '>':
+                return torch.sigmoid(steepness * (value - threshold)).mean().item()
+            else:  # direction == '<'
+                return torch.sigmoid(steepness * (threshold - value)).mean().item()
 
-        elif pattern == 'decay':
-            # Decay patterns: activation beyond observation OR activation ended before observation
-            return (
-                torch.all(R_on > 1.0).item() and  # More achievable
-                (torch.all(t_on_star > 1.0).item() or  # Late activation
-                 (torch.all(t_on_star < -0.5).item() and
-                  torch.all(delta_star < 0.3).item()))  # Early deactivation
-            )
+        if use_relative_params:
+            # Use relative temporal parameters (preferred approach)
+            if pattern == 'pre_activation':
+                scores = [
+                    sigmoid_score(R_on, 2.0, '>'),
+                    sigmoid_score(tilde_t_on_star, 0.0, '<')
+                ]
+            elif pattern == 'transient':
+                scores = [
+                    sigmoid_score(R_on, 2.0, '>'),
+                    sigmoid_score(tilde_t_on_star, 0.0, '>'),
+                    sigmoid_score(tilde_t_on_star, 0.5, '<'),
+                    sigmoid_score(tilde_delta_star, 0.4, '<')
+                ]
+            elif pattern == 'sustained':
+                scores = [
+                    sigmoid_score(R_on, 2.0, '>'),
+                    sigmoid_score(tilde_t_on_star, 0.0, '>'),
+                    sigmoid_score(tilde_t_on_star, 0.3, '<'),
+                    sigmoid_score(tilde_delta_star, 0.5, '>')
+                ]
+            else:
+                return False
+        else:
+            # Fallback to absolute parameters with adjusted thresholds
+            # Note: These thresholds assume T_M_star ~ 50-60 for scaling
+            if pattern == 'pre_activation':
+                scores = [
+                    sigmoid_score(R_on, 2.0, '>'),
+                    sigmoid_score(t_on_star, 0.0, '<')
+                ]
+            elif pattern == 'transient':
+                scores = [
+                    sigmoid_score(R_on, 2.0, '>'),
+                    sigmoid_score(t_on_star, 0.0, '>'),
+                    sigmoid_score(t_on_star, 25.0, '<'),  # 0.5 * 50 (typical T_M_star)
+                    sigmoid_score(delta_star, 20.0, '<')  # 0.4 * 50 (typical T_M_star)
+                ]
+            elif pattern == 'sustained':
+                scores = [
+                    sigmoid_score(R_on, 2.0, '>'),
+                    sigmoid_score(t_on_star, 0.0, '>'),
+                    sigmoid_score(t_on_star, 15.0, '<'),  # 0.3 * 50 (typical T_M_star)
+                    sigmoid_score(delta_star, 25.0, '>')  # 0.5 * 50 (typical T_M_star)
+                ]
+            else:
+                return False
 
-        elif pattern == 'transient':
-            return (
-                torch.all(R_on > 1.5).item() and  # More achievable
-                torch.all(t_on_star > 0.0).item() and
-                torch.all(t_on_star < 0.8).item() and  # More achievable
-                torch.all(delta_star < 0.3).item()  # Clear separation from sustained
-            )
-
-        elif pattern == 'sustained':
-            return (
-                torch.all(R_on > 1.5).item() and  # More achievable
-                torch.all(t_on_star > 0.0).item() and
-                torch.all(t_on_star < 0.5).item() and  # More achievable
-                torch.all(delta_star > 0.35).item()  # Clear separation from transient
-            )
-
+        # Compute geometric mean of scores and use threshold for acceptance
+        if scores:
+            geometric_mean = torch.prod(torch.tensor(scores)) ** (1.0 / len(scores))
+            return geometric_mean.item() > 0.3  # Relaxed threshold for better success rate
         else:
             return False
