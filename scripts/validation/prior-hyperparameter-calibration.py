@@ -574,6 +574,48 @@ class PriorHyperparameterCalibrator:
         return pattern_examples
 
     @beartype
+    def _compute_adaptive_time_range(
+        self,
+        pattern_examples: Dict[str, List[Dict[str, torch.Tensor]]],
+        buffer_factor: float = 1.2,
+        n_points: int = 300
+    ) -> torch.Tensor:
+        """
+        Compute adaptive time range based on T_M_star values in pattern examples.
+
+        This ensures trajectory plots remain meaningful regardless of T_M_star
+        hyperparameter changes by adapting the time axis to the actual sampled values.
+
+        Args:
+            pattern_examples: Dictionary with parameter sets for each pattern
+            buffer_factor: Multiplicative buffer beyond max T_M_star (default: 1.2 for 20% buffer)
+            n_points: Number of time points to generate (default: 300)
+
+        Returns:
+            torch.Tensor: Time points from 0 to adaptive maximum
+        """
+        # Collect all T_M_star values from pattern examples
+        all_T_M_star_values = []
+        for pattern_name, examples in pattern_examples.items():
+            for params in examples:
+                if 'T_M_star' in params:
+                    all_T_M_star_values.append(params['T_M_star'].item())
+
+        if all_T_M_star_values:
+            # Use the maximum T_M_star value across all examples with buffer
+            # This ensures we capture complete activation-decay cycles for all patterns
+            max_T_M_star = max(all_T_M_star_values)
+            time_range_max = max_T_M_star * buffer_factor
+            print(f"  Adaptive time range: [0, {time_range_max:.1f}] based on max T*_M = {max_T_M_star:.1f}")
+        else:
+            # Fallback to prior mean if no T_M_star values found
+            prior_mean_T_M = self.current_priors['T_M_star']['alpha'] / self.current_priors['T_M_star']['beta']
+            time_range_max = prior_mean_T_M * buffer_factor
+            print(f"  Fallback time range: [0, {time_range_max:.1f}] based on T*_M prior mean = {prior_mean_T_M:.1f}")
+
+        return torch.linspace(0, time_range_max, n_points)
+
+    @beartype
     def plot_pattern_time_courses(
         self,
         pattern_examples: Dict[str, List[Dict[str, torch.Tensor]]]
@@ -593,11 +635,9 @@ class PriorHyperparameterCalibrator:
         if n_patterns == 1:
             axes = axes.reshape(1, -1)
 
-        # Time points for evaluation - use range matching T*_M target mean of 55
-        # With updated priors: T*_M mean = 55, need to show complete activation-decay cycles
-        # Mathematical constraint: t*_on + δ* + 3/γ* ≤ T*_M
-        # With γ* = 0.2, δ* = 18, t*_on = 7: 7 + 18 + 15 = 40 ≤ 55 ✓
-        t_star = torch.linspace(0, 60.0, 300)  # Range [0, 60] to capture complete cycles within T*_M
+        # Compute adaptive time range based on actual T_M_star values in pattern examples
+        # This ensures plots remain meaningful regardless of T_M_star hyperparameter changes
+        t_star = self._compute_adaptive_time_range(pattern_examples)
 
         pattern_colors = ['red', 'blue', 'green', 'orange', 'purple']
 
