@@ -328,8 +328,8 @@ class PiecewiseActivationPriorModel:
     def __init__(
         self,
         # Hierarchical time structure hyperparameters (updated for observable complete cycles)
-        T_M_alpha: float = 12.1,     # Shape parameter for T*_M ~ Gamma (mean = 55)
-        T_M_beta: float = 0.22,      # Rate parameter for T*_M ~ Gamma (mean = 55)
+        T_M_alpha: float = 2.5,     # Shape parameter for T*_M ~ Gamma (mean = 50)
+        T_M_beta: float = 0.05,      # Rate parameter for T*_M ~ Gamma (mean = 50)
         t_loc_alpha: float = 1.0,    # Shape parameter for t_loc ~ Gamma
         t_loc_beta: float = 2.0,     # Rate parameter for t_loc ~ Gamma (mean = 0.5)
         t_scale_alpha: float = 1.0,  # Shape parameter for t_scale ~ Gamma

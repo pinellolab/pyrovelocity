@@ -2188,6 +2188,31 @@ class PyroVelocityModel:
                         t_star = T_M_star * torch.clamp(tilde_t, min=t_epsilon)
                         context["t_star"] = t_star
 
+                    # Ensure deterministic temporal parameters are computed if missing
+                    if "t_on_star" not in context and all(param in context for param in ["T_M_star", "tilde_t_on_star"]):
+                        t_on_star = pyro.deterministic("t_on_star", context["T_M_star"] * context["tilde_t_on_star"])
+                        context["t_on_star"] = t_on_star
+
+                    if "delta_star" not in context and all(param in context for param in ["T_M_star", "tilde_delta_star"]):
+                        delta_star = pyro.deterministic("delta_star", context["T_M_star"] * context["tilde_delta_star"])
+                        context["delta_star"] = delta_star
+
+                    # Ensure alpha parameters are computed if missing
+                    if "alpha_on" not in context and "R_on" in context:
+                        # alpha_off is fixed at 1.0, so alpha_on = R_on
+                        alpha_on = pyro.deterministic("alpha_on", context["R_on"])
+                        context["alpha_on"] = alpha_on
+
+                    if "alpha_off" not in context:
+                        # alpha_off is always fixed at 1.0
+                        R_on = context.get("R_on", torch.tensor(1.0))
+                        if R_on.dim() > 0:
+                            n_genes_for_alpha = R_on.shape[0]
+                            alpha_off = torch.ones(n_genes_for_alpha, device=R_on.device, dtype=R_on.dtype)
+                        else:
+                            alpha_off = torch.ones_like(R_on)
+                        context["alpha_off"] = alpha_off
+
                     # Skip prior sampling and go directly to dynamics and likelihood
                     dynamics_context = self.dynamics_model.forward(context)
                     likelihood_context = self.likelihood_model.forward(dynamics_context)

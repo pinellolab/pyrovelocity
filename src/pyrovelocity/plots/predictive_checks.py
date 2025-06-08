@@ -1030,6 +1030,98 @@ def _process_parameters_for_plotting(
         else:
             print(f"⚠️  Cannot compute t_star: unexpected tensor dimensions T_M_star: {T_M_star.shape}, tilde_t: {tilde_t.shape}")
 
+    # Compute t_on_star if missing but required components are available
+    # t_on_star = T_M_star * tilde_t_on_star
+    if ('t_on_star' not in processed_parameters and
+        'T_M_star' in processed_parameters and
+        'tilde_t_on_star' in processed_parameters):
+
+        T_M_star = processed_parameters['T_M_star']
+        tilde_t_on_star = processed_parameters['tilde_t_on_star']
+
+        # Ensure both tensors are 1D for consistent processing
+        if T_M_star.dim() > 1:
+            T_M_star = T_M_star.flatten()
+        if tilde_t_on_star.dim() > 1:
+            tilde_t_on_star = tilde_t_on_star.flatten()
+
+        # Compute t_on_star = T_M_star * tilde_t_on_star
+        # Handle broadcasting for gene-level parameters
+        num_samples = len(T_M_star)
+        num_genes = len(tilde_t_on_star) // num_samples if len(tilde_t_on_star) % num_samples == 0 else None
+
+        if num_genes is not None:
+            # Reshape tilde_t_on_star to [num_samples, num_genes] for proper broadcasting
+            tilde_t_on_star_reshaped = tilde_t_on_star.view(num_samples, num_genes)
+            # Broadcast T_M_star to match: [num_samples, 1] -> [num_samples, num_genes]
+            T_M_star_expanded = T_M_star.unsqueeze(-1).expand(-1, num_genes)
+            # Element-wise multiplication
+            t_on_star_computed = T_M_star_expanded * tilde_t_on_star_reshaped
+            # Flatten back to 1D for consistency
+            t_on_star_computed = t_on_star_computed.flatten()
+        elif len(T_M_star) == len(tilde_t_on_star):
+            # Same length - element-wise multiplication
+            t_on_star_computed = T_M_star * tilde_t_on_star
+        elif len(T_M_star) == 1:
+            # Broadcast single T_M_star to all genes
+            t_on_star_computed = T_M_star.item() * tilde_t_on_star
+        elif len(tilde_t_on_star) == 1:
+            # Broadcast single tilde_t_on_star to all samples
+            t_on_star_computed = T_M_star * tilde_t_on_star.item()
+        else:
+            print(f"⚠️  Cannot compute t_on_star: incompatible shapes T_M_star: {T_M_star.shape}, tilde_t_on_star: {tilde_t_on_star.shape}")
+            t_on_star_computed = None
+
+        if t_on_star_computed is not None:
+            processed_parameters['t_on_star'] = t_on_star_computed
+            print(f"ℹ️  Computed missing t_on_star from T_M_star and tilde_t_on_star (shape: {t_on_star_computed.shape})")
+
+    # Compute delta_star if missing but required components are available
+    # delta_star = T_M_star * tilde_delta_star
+    if ('delta_star' not in processed_parameters and
+        'T_M_star' in processed_parameters and
+        'tilde_delta_star' in processed_parameters):
+
+        T_M_star = processed_parameters['T_M_star']
+        tilde_delta_star = processed_parameters['tilde_delta_star']
+
+        # Ensure both tensors are 1D for consistent processing
+        if T_M_star.dim() > 1:
+            T_M_star = T_M_star.flatten()
+        if tilde_delta_star.dim() > 1:
+            tilde_delta_star = tilde_delta_star.flatten()
+
+        # Compute delta_star = T_M_star * tilde_delta_star
+        # Handle broadcasting for gene-level parameters
+        num_samples = len(T_M_star)
+        num_genes = len(tilde_delta_star) // num_samples if len(tilde_delta_star) % num_samples == 0 else None
+
+        if num_genes is not None:
+            # Reshape tilde_delta_star to [num_samples, num_genes] for proper broadcasting
+            tilde_delta_star_reshaped = tilde_delta_star.view(num_samples, num_genes)
+            # Broadcast T_M_star to match: [num_samples, 1] -> [num_samples, num_genes]
+            T_M_star_expanded = T_M_star.unsqueeze(-1).expand(-1, num_genes)
+            # Element-wise multiplication
+            delta_star_computed = T_M_star_expanded * tilde_delta_star_reshaped
+            # Flatten back to 1D for consistency
+            delta_star_computed = delta_star_computed.flatten()
+        elif len(T_M_star) == len(tilde_delta_star):
+            # Same length - element-wise multiplication
+            delta_star_computed = T_M_star * tilde_delta_star
+        elif len(T_M_star) == 1:
+            # Broadcast single T_M_star to all genes
+            delta_star_computed = T_M_star.item() * tilde_delta_star
+        elif len(tilde_delta_star) == 1:
+            # Broadcast single tilde_delta_star to all samples
+            delta_star_computed = T_M_star * tilde_delta_star.item()
+        else:
+            print(f"⚠️  Cannot compute delta_star: incompatible shapes T_M_star: {T_M_star.shape}, tilde_delta_star: {tilde_delta_star.shape}")
+            delta_star_computed = None
+
+        if delta_star_computed is not None:
+            processed_parameters['delta_star'] = delta_star_computed
+            print(f"ℹ️  Computed missing delta_star from T_M_star and tilde_delta_star (shape: {delta_star_computed.shape})")
+
     return processed_parameters
 
 
