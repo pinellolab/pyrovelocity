@@ -466,6 +466,10 @@ class PriorHyperparameterCalibrator:
         """
         Generate representative parameter sets for each expression pattern.
 
+        This method respects the hierarchical model structure by sampling a single
+        global T*_M value that applies to all pattern examples, consistent with
+        the dimensionless parameterization framework.
+
         Args:
             n_examples: Number of examples to generate per pattern
 
@@ -477,6 +481,14 @@ class PriorHyperparameterCalibrator:
         print("\n" + "="*50)
         print("GENERATING PATTERN EXAMPLES")
         print("="*50)
+
+        # Sample a single global T*_M value for all pattern examples
+        # This respects the hierarchical structure where T*_M is a global time scale
+        global_T_M_star = np.random.gamma(
+            self.current_priors['T_M_star']['alpha'],
+            1.0 / self.current_priors['T_M_star']['beta']
+        )
+        print(f"Global T*_M sampled: {global_T_M_star:.2f} (applies to all pattern examples)")
 
         for pattern_name, constraints in self.pattern_constraints.items():
             formatted_pattern = _format_pattern_name(pattern_name)
@@ -505,11 +517,9 @@ class PriorHyperparameterCalibrator:
                     self.current_priors['tilde_delta_star']['scale']
                 ))
 
-                # Sample global time scale
-                T_M_star = np.random.gamma(
-                    self.current_priors['T_M_star']['alpha'],
-                    1.0 / self.current_priors['T_M_star']['beta']
-                )
+                # Use the global T*_M value (sampled once for all examples)
+                # This respects the hierarchical structure where T*_M is global
+                T_M_star = global_T_M_star
 
                 # Compute absolute temporal parameters via scaling
                 t_on_star = T_M_star * tilde_t_on_star
@@ -581,32 +591,35 @@ class PriorHyperparameterCalibrator:
         n_points: int = 300
     ) -> torch.Tensor:
         """
-        Compute adaptive time range based on T_M_star values in pattern examples.
+        Compute adaptive time range based on the global T_M_star value in pattern examples.
 
-        This ensures trajectory plots remain meaningful regardless of T_M_star
-        hyperparameter changes by adapting the time axis to the actual sampled values.
+        This respects the hierarchical model structure where T*_M is a global parameter
+        that applies to all trajectories. The time range is set based on this single
+        global value rather than taking the max of multiple T*_M values.
 
         Args:
             pattern_examples: Dictionary with parameter sets for each pattern
-            buffer_factor: Multiplicative buffer beyond max T_M_star (default: 1.2 for 20% buffer)
+            buffer_factor: Multiplicative buffer beyond T_M_star (default: 1.2 for 20% buffer)
             n_points: Number of time points to generate (default: 300)
 
         Returns:
             torch.Tensor: Time points from 0 to adaptive maximum
         """
-        # Collect all T_M_star values from pattern examples
-        all_T_M_star_values = []
+        # Extract the global T_M_star value (should be the same for all examples)
+        global_T_M_star = None
         for pattern_name, examples in pattern_examples.items():
             for params in examples:
                 if 'T_M_star' in params:
-                    all_T_M_star_values.append(params['T_M_star'].item())
+                    global_T_M_star = params['T_M_star'].item()
+                    break
+            if global_T_M_star is not None:
+                break
 
-        if all_T_M_star_values:
-            # Use the maximum T_M_star value across all examples with buffer
-            # This ensures we capture complete activation-decay cycles for all patterns
-            max_T_M_star = max(all_T_M_star_values)
-            time_range_max = max_T_M_star * buffer_factor
-            print(f"  Adaptive time range: [0, {time_range_max:.1f}] based on max T*_M = {max_T_M_star:.1f}")
+        if global_T_M_star is not None:
+            # Use the global T_M_star value with buffer
+            # This ensures we capture complete activation-decay cycles within the global time scale
+            time_range_max = global_T_M_star * buffer_factor
+            print(f"  Adaptive time range: [0, {time_range_max:.1f}] based on global T*_M = {global_T_M_star:.1f}")
         else:
             # Fallback to prior mean if no T_M_star values found
             prior_mean_T_M = self.current_priors['T_M_star']['alpha'] / self.current_priors['T_M_star']['beta']
