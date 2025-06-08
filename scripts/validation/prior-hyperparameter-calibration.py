@@ -21,6 +21,7 @@ from scipy import stats
 from typing import Dict, Tuple, Any, List
 from pathlib import Path
 from beartype import beartype
+import random
 
 # Import PyroVelocity components
 from pyrovelocity.models.modular.factory import create_piecewise_activation_model
@@ -88,10 +89,27 @@ def _format_pattern_name(pattern_name: str) -> str:
 # Disable LaTeX rendering to avoid Unicode issues
 # plt.rcParams['text.usetex'] = False
 
-# Set random seeds for reproducibility
-torch.manual_seed(42)
-pyro.set_rng_seed(42)
-np.random.seed(42)
+# Default random seed for trajectory generation
+DEFAULT_TRAJECTORY_SEED = 42
+
+def set_trajectory_generation_seed(seed: int = DEFAULT_TRAJECTORY_SEED) -> None:
+    """
+    Set random seed for all trajectory generation randomness.
+
+    This ensures reproducible generation of hypothetical gene expression
+    trajectories while allowing easy cycling through different trajectory sets.
+
+    Args:
+        seed: Random seed value
+    """
+    print(f"Setting trajectory generation seed: {seed}")
+    torch.manual_seed(seed)
+    pyro.set_rng_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+
+# Set initial seed
+set_trajectory_generation_seed(DEFAULT_TRAJECTORY_SEED)
 
 
 class PriorHyperparameterCalibrator:
@@ -462,7 +480,7 @@ class PriorHyperparameterCalibrator:
 
 
     @beartype
-    def generate_pattern_examples(self, n_examples: int = 3) -> Dict[str, List[Dict[str, torch.Tensor]]]:
+    def generate_pattern_examples(self, n_examples: int = 3, seed: int = None) -> Dict[str, List[Dict[str, torch.Tensor]]]:
         """
         Generate representative parameter sets for each expression pattern.
 
@@ -472,15 +490,21 @@ class PriorHyperparameterCalibrator:
 
         Args:
             n_examples: Number of examples to generate per pattern
+            seed: Random seed for trajectory generation (if None, uses current seed)
 
         Returns:
             Dictionary with parameter sets for each pattern
         """
+        # Set seed for trajectory generation if provided
+        if seed is not None:
+            set_trajectory_generation_seed(seed)
+
         pattern_examples = {}
 
         print("\n" + "="*50)
         print("GENERATING PATTERN EXAMPLES")
         print("="*50)
+        print(f"Using random seed: {torch.initial_seed()} for trajectory generation")
 
         # Sample a single global T*_M value for all pattern examples
         # This respects the hierarchical structure where T*_M is a global time scale
@@ -1010,7 +1034,7 @@ class PriorHyperparameterCalibrator:
         return adjustments
 
     @beartype
-    def run_comprehensive_parameter_space_analysis(self) -> None:
+    def run_comprehensive_parameter_space_analysis(self, trajectory_seed: int = DEFAULT_TRAJECTORY_SEED) -> None:
         """
         Run comprehensive parameter space analysis including:
         1. Multi-dimensional parameter range analysis
@@ -1018,8 +1042,12 @@ class PriorHyperparameterCalibrator:
         3. Phase diagram mapping
         4. Conditional dependency analysis
         5. Hierarchical parameter impact assessment
+
+        Args:
+            trajectory_seed: Random seed for trajectory generation
         """
         print("Starting comprehensive parameter space analysis...")
+        print(f"Using trajectory seed: {trajectory_seed}")
 
         # Step 1: Multi-dimensional parameter sampling
         print("\n1. Multi-dimensional parameter sampling...")
@@ -1043,7 +1071,7 @@ class PriorHyperparameterCalibrator:
 
         # Step 6: Generate comprehensive visualizations
         print("\n6. Generating comprehensive visualizations...")
-        self._create_comprehensive_plots(param_samples, pattern_scores, phase_diagrams, dependency_analysis, hierarchical_impact)
+        self._create_comprehensive_plots(param_samples, pattern_scores, phase_diagrams, dependency_analysis, hierarchical_impact, trajectory_seed)
 
         # Step 7: Optimization recommendations
         print("\n7. Generating optimization recommendations...")
@@ -1317,10 +1345,12 @@ class PriorHyperparameterCalibrator:
         pattern_scores: Dict[str, torch.Tensor],
         phase_diagrams: Dict[str, Any],
         dependency_analysis: Dict[str, Any],
-        hierarchical_impact: Dict[str, Any]
+        hierarchical_impact: Dict[str, Any],
+        trajectory_seed: int = DEFAULT_TRAJECTORY_SEED
     ) -> None:
         """Create comprehensive visualization plots."""
         print("  Creating comprehensive plots...")
+        print(f"  Using trajectory seed: {trajectory_seed} for pattern examples")
 
         # Plot 1: Clean prior distributions with HPDI ranges and mode annotations
         fig1 = self._plot_comprehensive_prior_distributions()
@@ -1329,10 +1359,10 @@ class PriorHyperparameterCalibrator:
         plt.close(fig1)
 
         # Plot 2: Pattern time courses
-        pattern_examples = self.generate_pattern_examples(n_examples=10)
+        pattern_examples = self.generate_pattern_examples(n_examples=10, seed=trajectory_seed)
         fig2 = self.plot_pattern_time_courses(pattern_examples)
-        fig2.savefig(self.save_path / "02_pattern_time_courses.png", dpi=300, bbox_inches='tight')
-        fig2.savefig(self.save_path / "02_pattern_time_courses.pdf", bbox_inches='tight')
+        fig2.savefig(self.save_path / f"02_pattern_time_courses_seed_{trajectory_seed}.png", dpi=300, bbox_inches='tight')
+        fig2.savefig(self.save_path / f"02_pattern_time_courses_seed_{trajectory_seed}.pdf", bbox_inches='tight')
         plt.close(fig2)
 
         # Plot 3: Phase diagrams
@@ -1983,11 +2013,22 @@ Relative vs Absolute Correlation: {hierarchical_impact['relative_vs_absolute_cor
 
 
 
-def main():
-    """Main calibration workflow."""
+def main(trajectory_seed: int = DEFAULT_TRAJECTORY_SEED):
+    """
+    Main calibration workflow.
+
+    Args:
+        trajectory_seed: Random seed for trajectory generation
+    """
     print("PyroVelocity Prior Hyperparameter Calibration")
     print("=" * 60)
     print("Analyzing dimensionless parameterization for balanced gene expression pattern coverage")
+    print()
+
+    # Set trajectory generation seed
+    set_trajectory_generation_seed(trajectory_seed)
+    print(f"Trajectory generation seed: {trajectory_seed}")
+    print(f"(Change this value to cycle through different trajectory sets)")
     print()
 
     # Initialize calibrator
@@ -1997,8 +2038,23 @@ def main():
     print()
 
     print("Running comprehensive parameter space analysis...")
-    calibrator.run_comprehensive_parameter_space_analysis()
+    calibrator.run_comprehensive_parameter_space_analysis(trajectory_seed=trajectory_seed)
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+
+    # Allow command-line seed specification
+    if len(sys.argv) > 1:
+        try:
+            trajectory_seed = int(sys.argv[1])
+            print(f"Using command-line specified seed: {trajectory_seed}")
+        except ValueError:
+            print(f"Invalid seed '{sys.argv[1]}', using default seed: {DEFAULT_TRAJECTORY_SEED}")
+            trajectory_seed = DEFAULT_TRAJECTORY_SEED
+    else:
+        trajectory_seed = DEFAULT_TRAJECTORY_SEED
+        print(f"Using default seed: {trajectory_seed}")
+        print("(To use a different seed, run: python script.py <seed_number>)")
+
+    main(trajectory_seed)
