@@ -205,7 +205,7 @@ class PriorHyperparameterCalibrator:
             'tilde_delta_star': {'loc': -0.8, 'scale': 0.45},  # log(0.45), relative activation duration (LogNormal)
 
             # Hierarchical time structure parameters
-            'T_M_star': {'alpha': 12.1, 'beta': 0.22},   # Gamma(12.1, 0.22), mean = 55 - global time scale
+            'T_M_star': {'alpha': 2.5, 'beta': 0.05},   # Gamma(12.1, 0.22), mean = 55 - global time scale
             't_loc': {'alpha': 1.0, 'beta': 2.0},        # Gamma(1.0, 2.0), mean = 0.5
             't_scale': {'alpha': 1.0, 'beta': 4.0},      # Gamma(1.0, 4.0), mean = 0.25
 
