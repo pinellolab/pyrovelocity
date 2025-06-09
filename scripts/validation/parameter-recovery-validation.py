@@ -143,19 +143,6 @@ for param_name, samples in sample_params.items():
         print(f"  Range: [{samples.min():.3f}, {samples.max():.3f}]")
         print(f"  Mean ± Std: {samples.mean():.3f} ± {samples.std():.3f}")
 
-        # Show mode for LogNormal parameters
-        if param_name in ['gamma_star', 'R_on', 'tilde_delta_star']:
-            # For LogNormal, mode = exp(μ - σ²)
-            if param_name == 'gamma_star':
-                mode = torch.exp(torch.tensor(-0.405) - torch.tensor(0.5)**2)
-                print(f"  Expected mode (γ*): {mode:.3f}")
-            elif param_name == 'R_on':
-                mode = torch.exp(torch.tensor(0.693) - torch.tensor(0.35)**2)
-                print(f"  Expected mode (R_on): {mode:.3f}")
-            elif param_name == 'tilde_delta_star':
-                mode = torch.exp(torch.tensor(-0.8) - torch.tensor(0.45)**2)
-                print(f"  Expected mode (tilde_δ*): {mode:.3f}")
-
 print(f"\n✅ Parameter recovery validation completed with seed {RANDOM_SEED}!")
 print(f"📊 Results saved with seed identifier: validation_summary_{RANDOM_SEED}.png")
 
@@ -188,7 +175,3 @@ if successful_validations:
                 print(f"    ⚠️  Could not create plots for {dataset_key}: {e}")
 else:
     print("No successful validations found for posterior predictive plotting")
-
-print(f"\n🎯 Parameter recovery validation workflow completed!")
-print(f"📁 All outputs saved with seed identifier: {RANDOM_SEED}")
-print(f"📊 Check reports/docs/validation/ for detailed results and plots")
