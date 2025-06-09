@@ -1808,11 +1808,15 @@ def _plot_hierarchical_time_structure(
             ax.set_title(f'{check_type.title()} Hierarchical Time Structure', fontsize=default_fontsize)
             ax.tick_params(labelsize=default_fontsize * 0.75)
 
-            # Add interpretation guidelines
-            ax.axhline(0.2, color='orange', linestyle='--', alpha=0.7,
-                      label='Tight temporal clustering')
-            ax.axvline(5.0, color='green', linestyle='--', alpha=0.7,
-                      label='Typical process duration')
+            # Add adaptive interpretation guidelines
+            # Compute adaptive thresholds based on actual data
+            t_scale_median = np.median(t_scale)
+            T_M_median = np.median(T_M)
+
+            ax.axhline(t_scale_median, color='orange', linestyle='--', alpha=0.7,
+                      label=f'Median temporal spread: {t_scale_median:.2f}')
+            ax.axvline(T_M_median, color='green', linestyle='--', alpha=0.7,
+                      label=f'Median process duration: {T_M_median:.1f}')
             ax.legend(fontsize=default_fontsize * 0.8)
 
         # Alternative: t_loc vs t_scale if T_M_star not available
@@ -1851,6 +1855,47 @@ def _plot_hierarchical_time_structure(
     ax.grid(True, alpha=0.3)
 
 
+def _compute_adaptive_fold_change_thresholds(
+    fold_change: np.ndarray
+) -> Dict[str, float]:
+    """
+    Compute adaptive thresholds for fold-change classification.
+
+    Based on PyroVelocity pattern classification logic:
+    - Min threshold: R_on > 2.0 for meaningful activation
+    - Transient threshold: R_on > 3.3 for transient patterns
+    - Activation threshold: R_on > 7.5 for strong activation patterns
+
+    Args:
+        fold_change: Array of fold-change values (R_on)
+
+    Returns:
+        Dictionary with threshold values
+    """
+    # Use pattern classification thresholds as baseline
+    min_threshold = 2.0
+    transient_threshold = 3.3
+    activation_threshold = 7.5
+
+    # Adjust thresholds based on actual data distribution if needed
+    # For now, use the established biological thresholds from pattern classification
+    # but ensure they're within the data range
+    max_fold_change = np.max(fold_change)
+
+    # If data doesn't reach activation threshold, use a percentile-based approach
+    if max_fold_change < activation_threshold:
+        activation_threshold = np.percentile(fold_change, 90)
+
+    if max_fold_change < transient_threshold:
+        transient_threshold = np.percentile(fold_change, 75)
+
+    return {
+        'min_threshold': min_threshold,
+        'transient_threshold': transient_threshold,
+        'activation_threshold': activation_threshold
+    }
+
+
 def _plot_fold_change_distribution(
     parameters: Dict[str, torch.Tensor],
     ax: plt.Axes,
@@ -1885,13 +1930,18 @@ def _plot_fold_change_distribution(
         ax.grid(True, alpha=0.3)
         return
 
+    # Compute adaptive thresholds
+    thresholds = _compute_adaptive_fold_change_thresholds(fold_change)
+
     # Use relative frequency for consistency
     ax.hist(fold_change, bins=50, alpha=0.7, color='skyblue', density=False,
            weights=np.ones(len(fold_change)) / len(fold_change))
     ax.axvline(fold_change.mean(), color='red', linestyle='--',
               label=f'Mean: {fold_change.mean():.1f}')
-    ax.axvline(3.3, color='orange', linestyle=':', label='Min threshold: 3.3')
-    ax.axvline(7.5, color='green', linestyle=':', label='Activation threshold: 7.5')
+    ax.axvline(thresholds['transient_threshold'], color='orange', linestyle=':',
+              label=f'Min threshold: {thresholds["transient_threshold"]:.1f}')
+    ax.axvline(thresholds['activation_threshold'], color='green', linestyle=':',
+              label=f'Activation threshold: {thresholds["activation_threshold"]:.1f}')
 
     # Get parameter label using new metadata system
     if param_source == "R_on":
@@ -1930,6 +1980,49 @@ def _plot_fold_change_distribution(
     ax.grid(True, alpha=0.3)
 
 
+def _compute_adaptive_timing_thresholds(
+    parameters: Dict[str, torch.Tensor]
+) -> Dict[str, float]:
+    """
+    Compute adaptive thresholds for activation timing classification.
+
+    Based on PyroVelocity pattern classification logic:
+    - For relative parameters (tilde_t_on_star, tilde_delta_star):
+      - Transient/Sustained boundary: tilde_delta_star = 0.4 vs 0.5
+      - Early/Late activation: tilde_t_on_star = 0.3 vs 0.5
+    - For absolute parameters: scale by typical T_M_star values
+
+    Args:
+        parameters: Dictionary of parameter tensors
+
+    Returns:
+        Dictionary with threshold values
+    """
+    # Check if we have relative or absolute parameters
+    use_relative_params = ('tilde_t_on_star' in parameters and 'tilde_delta_star' in parameters)
+
+    if use_relative_params:
+        # Use relative parameter thresholds from pattern classification
+        return {
+            'transient_sustained_boundary': 0.4,  # tilde_delta_star threshold
+            'early_late_activation': 0.3,         # tilde_t_on_star threshold
+            'use_relative': True
+        }
+    else:
+        # Use absolute parameters with adaptive scaling
+        if 'T_M_star' in parameters:
+            T_M_star = parameters['T_M_star'].flatten().numpy()
+            typical_T_M = np.mean(T_M_star)
+        else:
+            typical_T_M = 55.0  # Default from pattern classification
+
+        return {
+            'transient_sustained_boundary': 0.4 * typical_T_M,  # delta_star threshold
+            'early_late_activation': 0.3 * typical_T_M,         # t_on_star threshold
+            'use_relative': False
+        }
+
+
 def _plot_activation_timing(
     parameters: Dict[str, torch.Tensor],
     ax: plt.Axes,
@@ -1948,15 +2041,31 @@ def _plot_activation_timing(
     if model is None:
         component_name = infer_component_name_from_parameters(parameters)
 
-    if 't_on_star' in parameters and 'delta_star' in parameters:
+    # Check for relative parameters first (preferred)
+    if 'tilde_t_on_star' in parameters and 'tilde_delta_star' in parameters:
+        t_on = parameters['tilde_t_on_star'].flatten().numpy()
+        delta = parameters['tilde_delta_star'].flatten().numpy()
+
+        # Get parameter labels
+        t_on_label = get_parameter_label(
+            param_name="tilde_t_on_star",
+            label_type="display",
+            model=model,
+            component_name=component_name,
+            fallback_to_legacy=True
+        )
+        delta_label = get_parameter_label(
+            param_name="tilde_delta_star",
+            label_type="display",
+            model=model,
+            component_name=component_name,
+            fallback_to_legacy=True
+        )
+    elif 't_on_star' in parameters and 'delta_star' in parameters:
         t_on = parameters['t_on_star'].flatten().numpy()
         delta = parameters['delta_star'].flatten().numpy()
 
-        ax.scatter(t_on, delta, alpha=0.6, s=5, 
-                   edgecolors="none",
-                   color='purple')
-
-        # Get parameter labels using new metadata system
+        # Get parameter labels
         t_on_label = get_parameter_label(
             param_name="t_on_star",
             label_type="display",
@@ -1971,22 +2080,31 @@ def _plot_activation_timing(
             component_name=component_name,
             fallback_to_legacy=True
         )
-
-        ax.set_xlabel(f'Activation Onset ({t_on_label})', fontsize=default_fontsize)
-        ax.set_ylabel(f'Activation Duration ({delta_label})', fontsize=default_fontsize)
-        ax.set_title(f'{check_type.title()} Activation Timing', fontsize=default_fontsize)
-        ax.tick_params(labelsize=default_fontsize * 0.75)  # Reduce tick label size
-
-        # Add pattern boundaries
-        ax.axhline(0.35, color='red', linestyle='--', alpha=0.7,
-                  label='Transient/Sustained boundary')
-        ax.axvline(0.3, color='orange', linestyle='--', alpha=0.7,
-                  label='Early/Late activation')
-        ax.legend(fontsize=4)  # Reduced legend font size to prevent overlap
     else:
         ax.text(0.5, 0.5, 'Timing parameters\nnot available',
                ha='center', va='center', transform=ax.transAxes)
-        ax.set_title(f'{check_type.title()} Activation Timing', fontsize=8)
+        ax.set_title(f'{check_type.title()} Activation Timing', fontsize=default_fontsize)
+        ax.grid(True, alpha=0.3)
+        return
+
+    # Compute adaptive thresholds
+    thresholds = _compute_adaptive_timing_thresholds(parameters)
+
+    ax.scatter(t_on, delta, alpha=0.6, s=5,
+               edgecolors="none",
+               color='purple')
+
+    ax.set_xlabel(f'Activation Onset ({t_on_label})', fontsize=default_fontsize)
+    ax.set_ylabel(f'Activation Duration ({delta_label})', fontsize=default_fontsize)
+    ax.set_title(f'{check_type.title()} Activation Timing', fontsize=default_fontsize)
+    ax.tick_params(labelsize=default_fontsize * 0.75)
+
+    # Add adaptive pattern boundaries
+    ax.axhline(thresholds['transient_sustained_boundary'], color='red', linestyle='--', alpha=0.7,
+              label='Transient/Sustained boundary')
+    ax.axvline(thresholds['early_late_activation'], color='orange', linestyle='--', alpha=0.7,
+              label='Early/Late activation')
+    ax.legend(fontsize=4)  # Reduced legend font size to prevent overlap
 
     ax.grid(True, alpha=0.3)
 
