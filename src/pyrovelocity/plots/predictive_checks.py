@@ -617,6 +617,130 @@ def plot_temporal_dynamics(
 
 
 @beartype
+def plot_temporal_trajectories(
+    parameters: Dict[str, torch.Tensor],
+    check_type: str = "prior",
+    figsize: Optional[Tuple[int, int]] = None,
+    save_path: Optional[str] = None,
+    file_prefix: str = "",
+    n_examples: int = 10,
+    n_time_points: int = 300,
+    buffer_factor: float = 1.2
+) -> plt.Figure:
+    """
+    Plot temporal trajectories showing underlying continuous dynamics.
+
+    This function creates trajectory plots similar to those in prior-hyperparameter-calibration.py,
+    showing the continuous temporal dynamics that underlie the discrete count observations.
+    Plots are organized by pattern type (pre-activation, transient, sustained) with multiple
+    examples per pattern.
+
+    Args:
+        parameters: Dictionary of parameter tensors from prior/posterior samples
+        check_type: Type of check ("prior" or "posterior")
+        figsize: Figure size (width, height). If None, auto-calculated
+        save_path: Optional directory path to save figures
+        file_prefix: Prefix for saved file names
+        n_examples: Number of examples to show per pattern (default: 10)
+        n_time_points: Number of time points for trajectory evaluation (default: 300)
+        buffer_factor: Multiplicative buffer beyond T_M_star for time range (default: 1.2)
+
+    Returns:
+        matplotlib Figure object
+    """
+    # Classify parameters into patterns and select examples
+    pattern_examples = _classify_parameters_into_patterns(parameters, n_examples)
+
+    if not pattern_examples:
+        # Create empty figure if no patterns found
+        fig, ax = plt.subplots(figsize=(7.5, 4))
+        ax.text(0.5, 0.5, 'No pattern examples available',
+               ha='center', va='center', transform=ax.transAxes)
+        ax.set_title(f'{check_type.title()} Temporal Trajectories')
+        return fig
+
+    n_patterns = len(pattern_examples)
+
+    # Auto-calculate figure size if not provided
+    if figsize is None:
+        width = 15  # Wide enough for 3 columns
+        height = 4 * n_patterns  # 4 inches per pattern row
+        figsize = (width, height)
+
+    fig, axes = plt.subplots(n_patterns, 3, figsize=figsize)
+
+    if n_patterns == 1:
+        axes = axes.reshape(1, -1)
+
+    # Compute adaptive time range based on T_M_star values
+    t_star = _compute_adaptive_time_range(pattern_examples, buffer_factor, n_time_points)
+
+    pattern_colors = ['red', 'blue', 'green', 'orange', 'purple']
+
+    for pattern_idx, (pattern_name, examples) in enumerate(pattern_examples.items()):
+        if not examples:
+            continue
+
+        color = pattern_colors[pattern_idx % len(pattern_colors)]
+        formatted_pattern = _format_pattern_name(pattern_name)
+
+        # Plot multiple examples for this pattern
+        for example_idx, params in enumerate(examples):
+            # Compute time courses using piecewise dynamics
+            u_star, s_star = _compute_time_course(t_star, params)
+
+            # Apply log2 transformation to show fold changes more clearly
+            u_star_log2 = torch.log2(u_star)
+            s_star_log2 = torch.log2(s_star)
+
+            # Plot unspliced (log2 scale)
+            axes[pattern_idx, 0].plot(
+                t_star.numpy(), u_star_log2.numpy(),
+                color=color, alpha=0.7, linewidth=2,
+                label=f'Example {example_idx+1}' if example_idx < 3 else None
+            )
+
+            # Plot spliced (log2 scale)
+            axes[pattern_idx, 1].plot(
+                t_star.numpy(), s_star_log2.numpy(),
+                color=color, alpha=0.7, linewidth=2,
+                label=f'Example {example_idx+1}' if example_idx < 3 else None
+            )
+
+            # Plot phase portrait (both axes log2)
+            axes[pattern_idx, 2].plot(
+                u_star_log2.numpy(), s_star_log2.numpy(),
+                color=color, alpha=0.7, linewidth=2,
+                label=f'Example {example_idx+1}' if example_idx < 3 else None
+            )
+
+        # Format axes with LaTeX-safe labels (log2 scale for fold changes)
+        axes[pattern_idx, 0].set_xlabel(_latex_safe_text('Dimensionless Time (t*)'))
+        axes[pattern_idx, 0].set_ylabel(_latex_safe_text('log2(Unspliced) (u*)'))
+        axes[pattern_idx, 0].set_title(f'{formatted_pattern}: Unspliced')
+        axes[pattern_idx, 0].grid(True, alpha=0.3)
+        axes[pattern_idx, 0].legend()
+
+        axes[pattern_idx, 1].set_xlabel(_latex_safe_text('Dimensionless Time (t*)'))
+        axes[pattern_idx, 1].set_ylabel(_latex_safe_text('log2(Spliced) (s*)'))
+        axes[pattern_idx, 1].set_title(f'{formatted_pattern}: Spliced')
+        axes[pattern_idx, 1].grid(True, alpha=0.3)
+
+        axes[pattern_idx, 2].set_xlabel(_latex_safe_text('log2(Unspliced) (u*)'))
+        axes[pattern_idx, 2].set_ylabel(_latex_safe_text('log2(Spliced) (s*)'))
+        axes[pattern_idx, 2].set_title(f'{formatted_pattern}: Phase Portrait')
+        axes[pattern_idx, 2].grid(True, alpha=0.3)
+
+    plt.tight_layout()
+
+    if save_path is not None:
+        prefix = f"{file_prefix}_" if file_prefix else ""
+        _save_figure(fig, save_path, f"{prefix}{check_type}_temporal_trajectories")
+
+    return fig
+
+
+@beartype
 def plot_pattern_analysis(
     adata: AnnData,
     parameters: Dict[str, torch.Tensor],
@@ -653,6 +777,222 @@ def plot_pattern_analysis(
         _save_figure(fig, save_path, f"{prefix}{check_type}_pattern_analysis")
 
     return fig
+
+
+def _classify_parameters_into_patterns(
+    parameters: Dict[str, torch.Tensor],
+    n_examples: int = 10
+) -> Dict[str, List[Dict[str, torch.Tensor]]]:
+    """
+    Classify parameter samples into patterns and select examples.
+
+    Args:
+        parameters: Dictionary of parameter tensors
+        n_examples: Number of examples to select per pattern
+
+    Returns:
+        Dictionary mapping pattern names to lists of parameter dictionaries
+    """
+    # Check if we have the required parameters
+    required_params = ['R_on', 't_on_star', 'delta_star', 'gamma_star']
+    if not all(param in parameters for param in required_params):
+        print(f"Warning: Missing required parameters for pattern classification: {required_params}")
+        return {}
+
+    # Get parameter values (flatten to 1D if needed)
+    R_on = parameters['R_on'].flatten()
+    t_on_star = parameters['t_on_star'].flatten()
+    delta_star = parameters['delta_star'].flatten()
+    gamma_star = parameters['gamma_star'].flatten()
+
+    # Ensure all parameters have the same length
+    min_length = min(len(R_on), len(t_on_star), len(delta_star), len(gamma_star))
+    R_on = R_on[:min_length]
+    t_on_star = t_on_star[:min_length]
+    delta_star = delta_star[:min_length]
+    gamma_star = gamma_star[:min_length]
+
+    # Compute alpha_off (fixed at 1.0) and alpha_on from R_on
+    alpha_off = torch.ones_like(R_on)
+    alpha_on = R_on * alpha_off  # R_on = alpha_on / alpha_off
+
+    pattern_examples = {
+        'pre_activation': [],
+        'transient': [],
+        'sustained': []
+    }
+
+    # Classify each parameter set
+    for i in range(min_length):
+        # Create parameter dictionary for this sample
+        params = {
+            'alpha_off': alpha_off[i],
+            'alpha_on': alpha_on[i],
+            'gamma_star': gamma_star[i],
+            't_on_star': t_on_star[i],
+            'delta_star': delta_star[i],
+            'R_on': R_on[i]
+        }
+
+        # Pattern classification logic (simplified from hyperparameter calibration)
+        if t_on_star[i] < 0:
+            # Negative onset time -> pre-activation pattern
+            if len(pattern_examples['pre_activation']) < n_examples:
+                pattern_examples['pre_activation'].append(params)
+        elif R_on[i] > 2.0 and t_on_star[i] > 0:
+            # Positive onset with significant fold change
+            if delta_star[i] < 0.4:
+                # Short duration -> transient pattern
+                if len(pattern_examples['transient']) < n_examples:
+                    pattern_examples['transient'].append(params)
+            else:
+                # Long duration -> sustained pattern
+                if len(pattern_examples['sustained']) < n_examples:
+                    pattern_examples['sustained'].append(params)
+
+    # Remove empty patterns
+    pattern_examples = {k: v for k, v in pattern_examples.items() if v}
+
+    return pattern_examples
+
+
+def _compute_adaptive_time_range(
+    pattern_examples: Dict[str, List[Dict[str, torch.Tensor]]],
+    buffer_factor: float = 1.2,
+    n_points: int = 300
+) -> torch.Tensor:
+    """
+    Compute adaptive time range based on T_M_star values in pattern examples.
+
+    Args:
+        pattern_examples: Dictionary with parameter sets for each pattern
+        buffer_factor: Multiplicative buffer beyond T_M_star
+        n_points: Number of time points to generate
+
+    Returns:
+        Time tensor for trajectory evaluation
+    """
+    # Find the maximum time scale from all examples
+    max_time_scale = 0.0
+
+    for pattern_name, examples in pattern_examples.items():
+        for params in examples:
+            # Estimate time scale from onset time and duration
+            t_on = params['t_on_star'].item()
+            delta = params['delta_star'].item()
+            gamma = params['gamma_star'].item()
+
+            # Estimate when trajectory returns to baseline (3 time constants)
+            decay_time = 3.0 / gamma if gamma > 0 else 10.0
+
+            # Total time scale includes onset, duration, and decay
+            total_time = max(0, t_on) + delta + decay_time
+            max_time_scale = max(max_time_scale, total_time)
+
+    # Use buffer factor and ensure minimum reasonable range
+    time_range_max = max(max_time_scale * buffer_factor, 10.0)
+
+    return torch.linspace(0, time_range_max, n_points)
+
+
+def _compute_time_course(
+    t_star: torch.Tensor,
+    params: Dict[str, torch.Tensor]
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    Compute time course using piecewise activation dynamics.
+
+    Args:
+        t_star: Time points to evaluate
+        params: Parameter dictionary
+
+    Returns:
+        Tuple of (u_star, s_star) time courses
+    """
+    # Extract parameters
+    alpha_off = params['alpha_off']
+    alpha_on = params['alpha_on']
+    gamma_star = params['gamma_star']
+    t_on_star = params['t_on_star']
+    delta_star = params['delta_star']
+
+    # Initialize output tensors
+    u_star = torch.zeros_like(t_star)
+    s_star = torch.zeros_like(t_star)
+
+    # Phase 1: Off state (t* < t*_on)
+    phase1_mask = t_star < t_on_star
+    u_star[phase1_mask] = 1.0  # Fixed reference state
+    s_star[phase1_mask] = 1.0 / gamma_star
+
+    # Phase 2: On state (t*_on ≤ t* < t*_on + δ*)
+    phase2_mask = (t_star >= t_on_star) & (t_star < t_on_star + delta_star)
+    if phase2_mask.any():
+        tau_on = t_star[phase2_mask] - t_on_star
+        u_on, s_on = _compute_on_phase_solution(tau_on, alpha_on, gamma_star)
+        u_star[phase2_mask] = u_on
+        s_star[phase2_mask] = s_on
+
+    # Phase 3: Return to off state (t* ≥ t*_on + δ*)
+    phase3_mask = t_star >= t_on_star + delta_star
+    if phase3_mask.any():
+        tau_off = t_star[phase3_mask] - (t_on_star + delta_star)
+        u_off, s_off = _compute_off_phase_solution(
+            tau_off, alpha_off, alpha_on, gamma_star, delta_star
+        )
+        u_star[phase3_mask] = u_off
+        s_star[phase3_mask] = s_off
+
+    return u_star, s_star
+
+
+def _compute_on_phase_solution(
+    tau_on: torch.Tensor,
+    alpha_on: torch.Tensor,
+    gamma_star: torch.Tensor
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """Compute analytical solution for ON phase."""
+    # Initial conditions: u*_0 = 1.0, s*_0 = 1.0/γ*
+    u_0 = 1.0
+    s_0 = 1.0 / gamma_star
+
+    # Analytical solution for ON phase
+    exp_tau = torch.exp(-tau_on)
+    exp_gamma_tau = torch.exp(-gamma_star * tau_on)
+
+    u_on = alpha_on + (u_0 - alpha_on) * exp_tau
+
+    s_on = (alpha_on / gamma_star +
+            (s_0 - alpha_on / gamma_star) * exp_gamma_tau +
+            (alpha_on - u_0) * (exp_tau - exp_gamma_tau) / (gamma_star - 1))
+
+    return u_on, s_on
+
+
+def _compute_off_phase_solution(
+    tau_off: torch.Tensor,
+    alpha_off: torch.Tensor,
+    alpha_on: torch.Tensor,
+    gamma_star: torch.Tensor,
+    delta_star: torch.Tensor
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """Compute analytical solution for return to OFF phase."""
+    # Initial conditions: endpoint values from ON phase
+    u_end, s_end = _compute_on_phase_solution(
+        delta_star, alpha_on, gamma_star
+    )
+
+    # Analytical solution for OFF phase
+    exp_tau = torch.exp(-tau_off)
+    exp_gamma_tau = torch.exp(-gamma_star * tau_off)
+
+    u_off = alpha_off + (u_end - alpha_off) * exp_tau
+
+    s_off = (alpha_off / gamma_star +
+            (s_end - alpha_off / gamma_star) * exp_gamma_tau +
+            (alpha_off - u_end) * (exp_tau - exp_gamma_tau) / (gamma_star - 1))
+
+    return u_off, s_off
 
 
 @beartype
@@ -708,9 +1048,10 @@ def plot_prior_predictive_checks(
         # Create plots in logical order with numbered prefixes for proper PDF combination ordering
         plot_parameter_marginals(processed_parameters, check_type, save_path=save_path, file_prefix="02", model=model)
         plot_parameter_relationships(processed_parameters, check_type, save_path=save_path, file_prefix="03", model=model)
-        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="04")
-        plot_expression_validation(prior_adata, check_type, save_path=save_path, file_prefix="05")
-        plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path, file_prefix="06")
+        plot_temporal_trajectories(processed_parameters, check_type, save_path=save_path, file_prefix="04")
+        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="05")
+        plot_expression_validation(prior_adata, check_type, save_path=save_path, file_prefix="06")
+        plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path, file_prefix="07")
 
     # Process parameters for plotting compatibility (handle batch dimensions)
     processed_parameters = _process_parameters_for_plotting(prior_parameters)
