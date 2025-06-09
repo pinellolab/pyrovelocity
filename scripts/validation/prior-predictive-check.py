@@ -11,17 +11,12 @@ from pyrovelocity.plots.predictive_checks import (
 from pyrovelocity.utils import print_anndata
 
 
-# Configurable random seed for reproducibility and variability analysis
-# Change this value to generate different datasets and see variability in priors
-# The seed will be included in the output filename: combined_prior_predictive_checks_{RANDOM_SEED}.pdf
 RANDOM_SEED = 42
 
-# Set random seeds for reproducibility
 torch.manual_seed(RANDOM_SEED)
 pyro.set_rng_seed(RANDOM_SEED)
 np.random.seed(RANDOM_SEED)
 
-# Create the piecewise activation model
 model = create_piecewise_activation_model()
 
 print(f"Created model: {model}")
@@ -30,14 +25,6 @@ print(f"  Dynamics: {model.dynamics_model}")
 print(f"  Prior: {model.prior_model}")
 print(f"  Likelihood: {model.likelihood_model}")
 print(f"  Guide: {model.guide_model}")
-
-# Generate single prior predictive dataset with all parameters stored in AnnData
-print(f"Performing prior predictive checks with random seed: {RANDOM_SEED}")
-print(f"Output will be saved as: combined_prior_predictive_checks_{RANDOM_SEED}.pdf")
-
-# Set seeds for reproducible prior sampling
-torch.manual_seed(RANDOM_SEED)
-pyro.set_rng_seed(RANDOM_SEED)
 
 # Generate a single dataset with 100 genes and 200 cells for better parameter coverage
 prior_predictive_adata = model.generate_predictive_samples(
