@@ -9,7 +9,7 @@ or combined into comprehensive overview plots.
 
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -382,10 +382,11 @@ def plot_parameter_marginals(
     parameters: Dict[str, torch.Tensor],
     check_type: str = "prior",
     exclude_params: Optional[List[str]] = None,
-    figsize: Optional[Tuple[int, int]] = None,
+    figsize: Optional[Tuple[Union[int, float], Union[int, float]]] = None,
     save_path: Optional[str] = None,
     file_prefix: str = "",
-    model: Optional[Any] = None
+    model: Optional[Any] = None,
+    default_fontsize: Union[int, float] = 8
 ) -> plt.Figure:
     """
     Plot individual histograms for all parameter marginal distributions.
@@ -475,12 +476,12 @@ def plot_parameter_marginals(
             fallback_to_legacy=True
         )
 
-        ax.set_xlabel(short_label, fontsize=7)
-        ax.set_ylabel('Freq.', fontsize=7)
-        ax.set_title(display_name, fontsize=8)
+        ax.set_xlabel(short_label, fontsize=default_fontsize * 0.9)
+        ax.set_ylabel('Freq.', fontsize=default_fontsize * 0.9)
+        ax.set_title(display_name, fontsize=default_fontsize)
         ax.grid(True, alpha=0.3)
         ax.set_ylim(0, max(relative_freq) * 1.1)  # Add some headroom
-        ax.tick_params(labelsize=6)  # Reduce tick label size
+        ax.tick_params(labelsize=default_fontsize * 0.75)  # Reduce tick label size
 
         # Add median line in light gray instead of mean line with legend
         median_val = np.median(values)
@@ -503,10 +504,11 @@ def plot_parameter_marginals(
 def plot_parameter_relationships(
     parameters: Dict[str, torch.Tensor],
     check_type: str = "prior",
-    figsize: Tuple[int, int] = (7.5, 2.5),  # Standard width, appropriate height
+    figsize: Tuple[Union[int, float], Union[int, float]] = (7.5, 2.5),  # Standard width, appropriate height
     save_path: Optional[str] = None,
     file_prefix: str = "",
-    model: Optional[Any] = None
+    model: Optional[Any] = None,
+    default_fontsize: Union[int, float] = 8
 ) -> plt.Figure:
     """
     Plot parameter relationships: correlations, fold-change, and timing.
@@ -525,13 +527,13 @@ def plot_parameter_relationships(
     fig, axes = plt.subplots(1, 3, figsize=figsize)
 
     # Hierarchical time structure
-    _plot_hierarchical_time_structure(parameters, axes[0], check_type, model=model)
+    _plot_hierarchical_time_structure(parameters, axes[0], check_type, model=model, default_fontsize=default_fontsize)
 
     # Fold-change distribution
-    _plot_fold_change_distribution(parameters, axes[1], check_type, model=model)
+    _plot_fold_change_distribution(parameters, axes[1], check_type, model=model, default_fontsize=default_fontsize)
 
     # Activation timing
-    _plot_activation_timing(parameters, axes[2], check_type, model=model)
+    _plot_activation_timing(parameters, axes[2], check_type, model=model, default_fontsize=default_fontsize)
 
     plt.tight_layout()
 
@@ -546,9 +548,10 @@ def plot_parameter_relationships(
 def plot_expression_validation(
     adata: AnnData,
     check_type: str = "prior",
-    figsize: Tuple[int, int] = (7.5, 7.5),  # Square aspect ratio with standard width
+    figsize: Tuple[Union[int, float], Union[int, float]] = (7.5, 7.5),  # Square aspect ratio with standard width
     save_path: Optional[str] = None,
-    file_prefix: str = ""
+    file_prefix: str = "",
+    default_fontsize: Union[int, float] = 8
 ) -> plt.Figure:
     """
     Plot expression data validation: counts, relationships, library sizes, ranges.
@@ -565,16 +568,16 @@ def plot_expression_validation(
     fig, axes = plt.subplots(2, 2, figsize=figsize)
 
     # Count distributions (top-left)
-    _plot_count_distributions(adata, axes[0, 0], check_type)
+    _plot_count_distributions(adata, axes[0, 0], check_type, default_fontsize)
 
     # U vs S relationships (top-right)
-    _plot_expression_relationships(adata, axes[0, 1], check_type)
+    _plot_expression_relationships(adata, axes[0, 1], check_type, default_fontsize)
 
     # Library sizes (bottom-left)
-    _plot_library_sizes(adata, axes[1, 0], check_type)
+    _plot_library_sizes(adata, axes[1, 0], check_type, default_fontsize)
 
     # Expression ranges (bottom-right)
-    _plot_expression_ranges(adata, axes[1, 1], check_type)
+    _plot_expression_ranges(adata, axes[1, 1], check_type, default_fontsize)
 
     plt.tight_layout()
 
@@ -589,7 +592,7 @@ def plot_expression_validation(
 def plot_temporal_dynamics(
     adata: AnnData,
     check_type: str = "prior",
-    figsize: Optional[Tuple[int, int]] = None,
+    figsize: Optional[Tuple[Union[int, float], Union[int, float]]] = None,
     save_path: Optional[str] = None,
     num_genes: int = 6,
     basis: str = "umap",
@@ -677,13 +680,14 @@ def plot_temporal_dynamics(
 def plot_temporal_trajectories(
     parameters: Dict[str, torch.Tensor],
     check_type: str = "prior",
-    figsize: Optional[Tuple[int, int]] = None,
+    figsize: Optional[Tuple[Union[int, float], Union[int, float]]] = None,
     save_path: Optional[str] = None,
     file_prefix: str = "",
     n_examples: int = 10,
     n_time_points: int = 300,
     buffer_factor: float = 1.2,
-    adata: Optional[AnnData] = None
+    adata: Optional[AnnData] = None,
+    default_fontsize: Union[int, float] = 8
 ) -> plt.Figure:
     """
     Plot temporal trajectories showing underlying continuous dynamics.
@@ -722,8 +726,8 @@ def plot_temporal_trajectories(
 
     # Auto-calculate figure size if not provided
     if figsize is None:
-        width = 15  # Wide enough for 3 columns
-        height = 4 * n_patterns  # 4 inches per pattern row
+        width = 7.5  # Standard width for 8.5x11" with margins
+        height = 2.5 * n_patterns  # Proportionally reduced height for narrower width
         figsize = (width, height)
 
     fig, axes = plt.subplots(n_patterns, 3, figsize=figsize)
@@ -785,21 +789,24 @@ def plot_temporal_trajectories(
         )
 
         # Format axes with metadata-derived labels (log2 scale for fold changes)
-        axes[pattern_idx, 0].set_xlabel(_latex_safe_text(f'{time_label}'))
-        axes[pattern_idx, 0].set_ylabel(_latex_safe_text('log2(Unspliced) (u*)'))
-        axes[pattern_idx, 0].set_title(f'{formatted_pattern}: Unspliced')
+        axes[pattern_idx, 0].set_xlabel(_latex_safe_text(f'{time_label}'), fontsize=default_fontsize * 0.9)
+        axes[pattern_idx, 0].set_ylabel(_latex_safe_text('log2(Unspliced) (u*)'), fontsize=default_fontsize * 0.9)
+        axes[pattern_idx, 0].set_title(f'{formatted_pattern}: Unspliced', fontsize=default_fontsize)
         axes[pattern_idx, 0].grid(True, alpha=0.3)
-        axes[pattern_idx, 0].legend()
+        axes[pattern_idx, 0].legend(fontsize=default_fontsize * 0.8)
+        axes[pattern_idx, 0].tick_params(labelsize=default_fontsize * 0.75)
 
-        axes[pattern_idx, 1].set_xlabel(_latex_safe_text(f'{time_label}'))
-        axes[pattern_idx, 1].set_ylabel(_latex_safe_text('log2(Spliced) (s*)'))
-        axes[pattern_idx, 1].set_title(f'{formatted_pattern}: Spliced')
+        axes[pattern_idx, 1].set_xlabel(_latex_safe_text(f'{time_label}'), fontsize=default_fontsize * 0.9)
+        axes[pattern_idx, 1].set_ylabel(_latex_safe_text('log2(Spliced) (s*)'), fontsize=default_fontsize * 0.9)
+        axes[pattern_idx, 1].set_title(f'{formatted_pattern}: Spliced', fontsize=default_fontsize)
         axes[pattern_idx, 1].grid(True, alpha=0.3)
+        axes[pattern_idx, 1].tick_params(labelsize=default_fontsize * 0.75)
 
-        axes[pattern_idx, 2].set_xlabel(_latex_safe_text('log2(Unspliced) (u*)'))
-        axes[pattern_idx, 2].set_ylabel(_latex_safe_text('log2(Spliced) (s*)'))
-        axes[pattern_idx, 2].set_title(f'{formatted_pattern}: Phase Portrait')
+        axes[pattern_idx, 2].set_xlabel(_latex_safe_text('log2(Unspliced) (u*)'), fontsize=default_fontsize * 0.9)
+        axes[pattern_idx, 2].set_ylabel(_latex_safe_text('log2(Spliced) (s*)'), fontsize=default_fontsize * 0.9)
+        axes[pattern_idx, 2].set_title(f'{formatted_pattern}: Phase Portrait', fontsize=default_fontsize)
         axes[pattern_idx, 2].grid(True, alpha=0.3)
+        axes[pattern_idx, 2].tick_params(labelsize=default_fontsize * 0.75)
 
     plt.tight_layout()
 
@@ -815,9 +822,10 @@ def plot_pattern_analysis(
     adata: AnnData,
     parameters: Dict[str, torch.Tensor],
     check_type: str = "prior",
-    figsize: Tuple[int, int] = (7.5, 3.75),  # Standard width, half height
+    figsize: Tuple[Union[int, float], Union[int, float]] = (7.5, 3.75),  # Standard width, half height
     save_path: Optional[str] = None,
-    file_prefix: str = ""
+    file_prefix: str = "",
+    default_fontsize: Union[int, float] = 8
 ) -> plt.Figure:
     """
     Plot pattern analysis: proportions and gene correlations.
@@ -835,10 +843,10 @@ def plot_pattern_analysis(
     fig, axes = plt.subplots(1, 2, figsize=figsize)
 
     # Pattern proportions
-    _plot_pattern_proportions(adata, parameters, axes[0], check_type)
+    _plot_pattern_proportions(adata, parameters, axes[0], check_type, default_fontsize)
 
     # Gene correlations
-    _plot_correlation_structure(adata, axes[1], check_type)
+    _plot_correlation_structure(adata, axes[1], check_type, default_fontsize)
 
     plt.tight_layout()
 
@@ -1224,12 +1232,13 @@ def plot_prior_predictive_checks(
     model: Any,
     prior_adata: AnnData,
     prior_parameters: Dict[str, torch.Tensor],
-    figsize: Tuple[int, int] = (7.5, 5.0),  # Standard width for 8.5x11" with margins
+    figsize: Tuple[Union[int, float], Union[int, float]] = (7.5, 5.0),  # Standard width for 8.5x11" with margins
     check_type: str = "prior",
     save_path: Optional[str] = None,
     figure_name: Optional[str] = None,
     create_individual_plots: bool = True,
     combine_individual_pdfs: bool = False,
+    default_fontsize: Union[int, float] = 8,  # Default font size for all text elements
 ) -> plt.Figure:
     """
     Generate comprehensive predictive check plots for PyroVelocity models.
@@ -1250,6 +1259,7 @@ def plot_prior_predictive_checks(
         figure_name: Optional figure name (defaults to "{check_type}_predictive_checks")
         create_individual_plots: Whether to create individual modular plots
         combine_individual_pdfs: Whether to combine individual PDF plots into a single file
+        default_fontsize: Default font size for all text elements (titles, labels, legends)
 
     Returns:
         matplotlib Figure object
@@ -1261,7 +1271,8 @@ def plot_prior_predictive_checks(
         ...     prior_parameters=params,
         ...     save_path="reports/docs/prior_predictive",
         ...     figure_name="piecewise_activation_prior_checks",
-        ...     combine_individual_pdfs=True
+        ...     combine_individual_pdfs=True,
+        ...     default_fontsize=8
         ... )
     """
     # Create individual modular plots if requested
@@ -1274,12 +1285,12 @@ def plot_prior_predictive_checks(
         processed_parameters = _process_parameters_for_plotting(prior_parameters)
 
         # Create plots in logical order with numbered prefixes for proper PDF combination ordering
-        plot_parameter_marginals(processed_parameters, check_type, save_path=save_path, file_prefix="02", model=model)
-        plot_parameter_relationships(processed_parameters, check_type, save_path=save_path, file_prefix="03", model=model)
-        plot_temporal_trajectories(processed_parameters, check_type, save_path=save_path, file_prefix="04", adata=prior_adata)
-        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="05")
-        plot_expression_validation(prior_adata, check_type, save_path=save_path, file_prefix="06")
-        plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path, file_prefix="07")
+        plot_parameter_marginals(processed_parameters, check_type, save_path=save_path, file_prefix="02", model=model, default_fontsize=default_fontsize)
+        plot_parameter_relationships(processed_parameters, check_type, save_path=save_path, file_prefix="03", model=model, default_fontsize=default_fontsize)
+        plot_temporal_trajectories(processed_parameters, check_type, save_path=save_path, file_prefix="04", adata=prior_adata, default_fontsize=default_fontsize)
+        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="05", default_fontsize=default_fontsize)
+        plot_expression_validation(prior_adata, check_type, save_path=save_path, file_prefix="06", default_fontsize=default_fontsize)
+        plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path, file_prefix="07", default_fontsize=default_fontsize)
 
     # Process parameters for plotting compatibility (handle batch dimensions)
     processed_parameters = _process_parameters_for_plotting(prior_parameters)
@@ -1287,47 +1298,47 @@ def plot_prior_predictive_checks(
     # Create comprehensive overview plot
     fig = plt.figure(figsize=figsize)
 
-    # Create subplot grid: 3 rows × 4 columns
-    gs = fig.add_gridspec(3, 4, hspace=0.3, wspace=0.3)
+    # Create subplot grid: 3 rows × 4 columns with optimized spacing for reduced overlap
+    gs = fig.add_gridspec(3, 4, hspace=0.4, wspace=0.35)
 
     # Row 1: UMAP and Parameter Distribution Plots
     ax1 = fig.add_subplot(gs[0, 0])
-    _plot_umap_leiden_clusters(prior_adata, ax1, check_type)
+    _plot_umap_leiden_clusters(prior_adata, ax1, check_type, default_fontsize)
 
     ax2 = fig.add_subplot(gs[0, 1])
-    _plot_umap_time_coordinate(prior_adata, ax2, check_type, model=model)
+    _plot_umap_time_coordinate(prior_adata, ax2, check_type, model=model, default_fontsize=default_fontsize)
 
     ax3 = fig.add_subplot(gs[0, 2])
-    _plot_fold_change_distribution(processed_parameters, ax3, check_type, model=model)
+    _plot_fold_change_distribution(processed_parameters, ax3, check_type, model=model, default_fontsize=default_fontsize)
 
     ax4 = fig.add_subplot(gs[0, 3])
-    _plot_activation_timing(processed_parameters, ax4, check_type, model=model)
+    _plot_activation_timing(processed_parameters, ax4, check_type, model=model, default_fontsize=default_fontsize)
 
     # Row 2: Expression Data Validation
     ax5 = fig.add_subplot(gs[1, 0])
-    _plot_count_distributions(prior_adata, ax5, check_type)
+    _plot_count_distributions(prior_adata, ax5, check_type, default_fontsize)
 
     ax6 = fig.add_subplot(gs[1, 1])
-    _plot_expression_relationships(prior_adata, ax6, check_type)
+    _plot_expression_relationships(prior_adata, ax6, check_type, default_fontsize)
 
     ax7 = fig.add_subplot(gs[1, 2])
-    _plot_library_sizes(prior_adata, ax7, check_type)
+    _plot_library_sizes(prior_adata, ax7, check_type, default_fontsize)
 
     ax8 = fig.add_subplot(gs[1, 3])
-    _plot_expression_ranges(prior_adata, ax8, check_type)
+    _plot_expression_ranges(prior_adata, ax8, check_type, default_fontsize)
 
     # Row 3: Temporal Dynamics and Biological Validation
     ax9 = fig.add_subplot(gs[2, 0])
-    _plot_phase_portrait(prior_adata, ax9, check_type)
+    _plot_phase_portrait(prior_adata, ax9, check_type, default_fontsize)
 
     ax10 = fig.add_subplot(gs[2, 1])
-    _plot_velocity_magnitudes(prior_adata, ax10, check_type)
+    _plot_velocity_magnitudes(prior_adata, ax10, check_type, default_fontsize)
 
     ax11 = fig.add_subplot(gs[2, 2])
-    _plot_pattern_proportions(prior_adata, processed_parameters, ax11, check_type)
+    _plot_pattern_proportions(prior_adata, processed_parameters, ax11, check_type, default_fontsize)
 
     ax12 = fig.add_subplot(gs[2, 3])
-    _plot_correlation_structure(prior_adata, ax12, check_type)
+    _plot_correlation_structure(prior_adata, ax12, check_type, default_fontsize)
 
     # Save comprehensive figure if path is provided
     if save_path is not None:
@@ -1364,34 +1375,40 @@ def plot_prior_predictive_checks(
     return fig
 
 
-def _plot_umap_leiden_clusters(adata: AnnData, ax: plt.Axes, check_type: str) -> None:
+def _plot_umap_leiden_clusters(adata: AnnData, ax: plt.Axes, check_type: str, default_fontsize: Union[int, float] = 8) -> None:
     """Plot UMAP embedding colored by Leiden clusters."""
     if 'X_umap' in adata.obsm and 'leiden' in adata.obs:
         umap_coords = adata.obsm['X_umap']
         clusters = adata.obs['leiden']
 
-        # Get unique clusters and assign colors
-        unique_clusters = clusters.unique()
+        # Get unique clusters and assign colors with consistent ordering
+        # Sort cluster names to ensure consistent color assignment across plots
+        unique_clusters = sorted(clusters.unique())
         colors = sns.color_palette("tab10", len(unique_clusters))
 
-        for i, cluster in enumerate(unique_clusters):
+        # Create a consistent cluster-to-color mapping
+        cluster_color_map = {cluster: colors[i] for i, cluster in enumerate(unique_clusters)}
+
+        for cluster in unique_clusters:
             mask = clusters == cluster
             ax.scatter(umap_coords[mask, 0], umap_coords[mask, 1],
-                      c=[colors[i]], label=f'Cluster {cluster}',
+                      c=[cluster_color_map[cluster]], label=f'Cluster {cluster}',
                       alpha=0.7, s=20)
 
-        ax.set_xlabel('UMAP 1')
-        ax.set_ylabel('UMAP 2')
-        ax.set_title(f'{check_type.title()} UMAP (Leiden Clusters)')
+        ax.set_xlabel('UMAP 1', fontsize=default_fontsize * 0.9)
+        ax.set_ylabel('UMAP 2', fontsize=default_fontsize * 0.9)
+        ax.set_title(f'{check_type.title()} UMAP (Leiden Clusters)', fontsize=default_fontsize)
+        ax.tick_params(labelsize=default_fontsize * 0.75)
 
     elif 'X_umap' in adata.obsm:
         # Plot UMAP without cluster information
         umap_coords = adata.obsm['X_umap']
         ax.scatter(umap_coords[:, 0], umap_coords[:, 1],
                   alpha=0.7, s=20, c='gray')
-        ax.set_xlabel('UMAP 1')
-        ax.set_ylabel('UMAP 2')
-        ax.set_title(f'{check_type.title()} UMAP (No Clusters)')
+        ax.set_xlabel('UMAP 1', fontsize=default_fontsize * 0.9)
+        ax.set_ylabel('UMAP 2', fontsize=default_fontsize * 0.9)
+        ax.set_title(f'{check_type.title()} UMAP (No Clusters)', fontsize=default_fontsize)
+        ax.tick_params(labelsize=default_fontsize * 0.75)
 
     else:
         # Compute UMAP if not available and UMAP is installed
@@ -1416,7 +1433,7 @@ def _plot_umap_leiden_clusters(adata: AnnData, ax: plt.Axes, check_type: str) ->
             ax.set_title(f'{check_type.title()} UMAP (Clusters)')
 
 
-def _plot_umap_time_coordinate(adata: AnnData, ax: plt.Axes, check_type: str, model: Optional[Any] = None) -> None:
+def _plot_umap_time_coordinate(adata: AnnData, ax: plt.Axes, check_type: str, model: Optional[Any] = None, default_fontsize: Union[int, float] = 8) -> None:
     """Plot UMAP embedding colored by time coordinate."""
 
     if 'X_umap' in adata.obsm:
@@ -1478,11 +1495,12 @@ def _plot_umap_time_coordinate(adata: AnnData, ax: plt.Axes, check_type: str, mo
 
             # Add colorbar
             cbar = plt.colorbar(scatter, ax=ax, shrink=0.8)
-            cbar.set_label(time_label, fontsize=10)
+            cbar.set_label(time_label, fontsize=default_fontsize * 0.9)
 
-            ax.set_xlabel('UMAP 1')
-            ax.set_ylabel('UMAP 2')
-            ax.set_title(f'{check_type.title()} UMAP (Time Coordinate)')
+            ax.set_xlabel('UMAP 1', fontsize=default_fontsize * 0.9)
+            ax.set_ylabel('UMAP 2', fontsize=default_fontsize * 0.9)
+            ax.set_title(f'{check_type.title()} UMAP (Time Coordinate)', fontsize=default_fontsize)
+            ax.tick_params(labelsize=default_fontsize * 0.75)
 
         else:
             # No time coordinate found, use a simple gradient based on position
@@ -1768,7 +1786,8 @@ def _plot_hierarchical_time_structure(
     parameters: Dict[str, torch.Tensor],
     ax: plt.Axes,
     check_type: str,
-    model: Optional[Any] = None
+    model: Optional[Any] = None,
+    default_fontsize: Union[int, float] = 8
 ) -> None:
     """Plot hierarchical time parameter relationships."""
     from pyrovelocity.plots.parameter_metadata import (
@@ -1809,17 +1828,17 @@ def _plot_hierarchical_time_structure(
                 fallback_to_legacy=True
             )
 
-            ax.set_xlabel(f'Global Time Scale ({T_M_label})', fontsize=7)
-            ax.set_ylabel(f'Population Time Spread ({t_scale_label})', fontsize=7)
-            ax.set_title(f'{check_type.title()} Hierarchical Time Structure', fontsize=8)
-            ax.tick_params(labelsize=6)  # Reduce tick label size
+            ax.set_xlabel(f'Global Time Scale ({T_M_label})', fontsize=default_fontsize * 0.9)
+            ax.set_ylabel(f'Population Time Spread ({t_scale_label})', fontsize=default_fontsize * 0.9)
+            ax.set_title(f'{check_type.title()} Hierarchical Time Structure', fontsize=default_fontsize)
+            ax.tick_params(labelsize=default_fontsize * 0.75)
 
             # Add interpretation guidelines
             ax.axhline(0.2, color='orange', linestyle='--', alpha=0.7,
                       label='Tight temporal clustering')
             ax.axvline(5.0, color='green', linestyle='--', alpha=0.7,
                       label='Typical process duration')
-            ax.legend(fontsize=8)
+            ax.legend(fontsize=default_fontsize * 0.8)
 
         # Alternative: t_loc vs t_scale if T_M_star not available
         elif 't_loc' in parameters and 't_scale' in parameters:
@@ -1861,7 +1880,8 @@ def _plot_fold_change_distribution(
     parameters: Dict[str, torch.Tensor],
     ax: plt.Axes,
     check_type: str,
-    model: Optional[Any] = None
+    model: Optional[Any] = None,
+    default_fontsize: Union[int, float] = 8
 ) -> None:
     """Plot fold-change distribution using R_on parameter."""
     from pyrovelocity.plots.parameter_metadata import (
@@ -1939,7 +1959,8 @@ def _plot_activation_timing(
     parameters: Dict[str, torch.Tensor],
     ax: plt.Axes,
     check_type: str,
-    model: Optional[Any] = None
+    model: Optional[Any] = None,
+    default_fontsize: Union[int, float] = 8
 ) -> None:
     """Plot activation timing and duration distributions."""
     from pyrovelocity.plots.parameter_metadata import (
@@ -1993,7 +2014,7 @@ def _plot_activation_timing(
     ax.grid(True, alpha=0.3)
 
 
-def _plot_count_distributions(adata: AnnData, ax: plt.Axes, check_type: str) -> None:
+def _plot_count_distributions(adata: AnnData, ax: plt.Axes, check_type: str, default_fontsize: Union[int, float] = 8) -> None:
     """Plot unspliced and spliced count distributions."""
     if 'unspliced' in adata.layers and 'spliced' in adata.layers:
         unspliced = adata.layers['unspliced'].flatten()
@@ -2023,7 +2044,7 @@ def _plot_count_distributions(adata: AnnData, ax: plt.Axes, check_type: str) -> 
     ax.grid(True, alpha=0.3)
 
 
-def _plot_expression_relationships(adata: AnnData, ax: plt.Axes, check_type: str) -> None:
+def _plot_expression_relationships(adata: AnnData, ax: plt.Axes, check_type: str, default_fontsize: Union[int, float] = 8) -> None:
     """Plot unspliced vs spliced expression relationships."""
     if 'unspliced' in adata.layers and 'spliced' in adata.layers:
         # Sample subset for visualization
@@ -2054,7 +2075,7 @@ def _plot_expression_relationships(adata: AnnData, ax: plt.Axes, check_type: str
     ax.grid(True, alpha=0.3)
 
 
-def _plot_library_sizes(adata: AnnData, ax: plt.Axes, check_type: str) -> None:
+def _plot_library_sizes(adata: AnnData, ax: plt.Axes, check_type: str, default_fontsize: Union[int, float] = 8) -> None:
     """Plot library size distributions."""
     if 'unspliced' in adata.layers and 'spliced' in adata.layers:
         total_counts = adata.layers['unspliced'].sum(axis=1) + adata.layers['spliced'].sum(axis=1)
@@ -2077,7 +2098,7 @@ def _plot_library_sizes(adata: AnnData, ax: plt.Axes, check_type: str) -> None:
     ax.grid(True, alpha=0.3)
 
 
-def _plot_expression_ranges(adata: AnnData, ax: plt.Axes, check_type: str) -> None:
+def _plot_expression_ranges(adata: AnnData, ax: plt.Axes, check_type: str, default_fontsize: Union[int, float] = 8) -> None:
     """Plot expression range validation."""
     if 'unspliced' in adata.layers and 'spliced' in adata.layers:
         # Calculate expression ranges per gene
@@ -2101,7 +2122,7 @@ def _plot_expression_ranges(adata: AnnData, ax: plt.Axes, check_type: str) -> No
     ax.grid(True, alpha=0.3)
 
 
-def _plot_phase_portrait(adata: AnnData, ax: plt.Axes, check_type: str) -> None:
+def _plot_phase_portrait(adata: AnnData, ax: plt.Axes, check_type: str, default_fontsize: Union[int, float] = 8) -> None:
     """Plot phase portrait (unspliced vs spliced trajectories)."""
     if 'unspliced' in adata.layers and 'spliced' in adata.layers:
         # Sample genes for visualization
@@ -2129,7 +2150,7 @@ def _plot_phase_portrait(adata: AnnData, ax: plt.Axes, check_type: str) -> None:
     ax.grid(True, alpha=0.3)
 
 
-def _plot_velocity_magnitudes(adata: AnnData, ax: plt.Axes, check_type: str) -> None:
+def _plot_velocity_magnitudes(adata: AnnData, ax: plt.Axes, check_type: str, default_fontsize: Union[int, float] = 8) -> None:
     """Plot RNA velocity magnitude distributions."""
     # Check if velocity has been computed
     velocity_layers = [key for key in adata.layers.keys() if 'velocity' in key.lower()]
@@ -2192,7 +2213,7 @@ def _plot_velocity_magnitudes(adata: AnnData, ax: plt.Axes, check_type: str) -> 
 
 def _create_temporal_dynamics_figure(
     number_of_genes: int,
-    figsize: Optional[Tuple[int, int]] = None
+    figsize: Optional[Tuple[Union[int, float], Union[int, float]]] = None
 ) -> Tuple[plt.Figure, Dict[str, plt.Axes]]:
     """Create figure and axes dict using rainbow plot gridspec pattern."""
     from matplotlib.gridspec import GridSpec
@@ -2200,11 +2221,11 @@ def _create_temporal_dynamics_figure(
     # Define number of horizontal panels
     horizontal_panels = 5  # gene_label, phase, dynamics, predictive, observed
 
-    # Calculate figure size using rainbow plot pattern
+    # Calculate figure size using standard width for 8.5x11" with margins
     if figsize is None:
+        width = 7.5  # Standard width for 8.5x11" with margins
         subplot_height = 0.9
-        subplot_width = 1.5 * subplot_height * horizontal_panels
-        figsize = (subplot_width, subplot_height * number_of_genes)
+        figsize = (width, subplot_height * number_of_genes)
 
     fig = plt.figure(figsize=figsize)
 
@@ -2320,14 +2341,18 @@ def _plot_gene_spliced_dynamics_rainbow(
 
         if cluster_col is not None:
             clusters = adata.obs[cluster_col].iloc[sort_idx] if hasattr(adata.obs[cluster_col], 'iloc') else adata.obs[cluster_col][sort_idx]
-            unique_clusters = np.unique(clusters)
+            # Sort cluster names to ensure consistent color assignment across plots
+            unique_clusters = sorted(np.unique(clusters))
             # Use tab10 colormap to match UMAP cluster plot coloring
             colors = sns.color_palette("tab10", len(unique_clusters))
 
-            for i, cluster in enumerate(unique_clusters):
+            # Create a consistent cluster-to-color mapping (same as UMAP plot)
+            cluster_color_map = {cluster: colors[i] for i, cluster in enumerate(unique_clusters)}
+
+            for cluster in unique_clusters:
                 mask = clusters == cluster
                 axes_dict[f"dynamics_{n}"].scatter(time_sorted[mask], s_sorted[mask],
-                          alpha=0.6, s=3, color=colors[i], edgecolors='none')
+                          alpha=0.6, s=3, color=cluster_color_map[cluster], edgecolors='none')
         else:
             axes_dict[f"dynamics_{n}"].scatter(time_sorted, s_sorted, alpha=0.6, s=3, color='steelblue', edgecolors='none')
     else:
@@ -2499,7 +2524,8 @@ def _plot_pattern_proportions(
     adata: AnnData,
     parameters: Dict[str, torch.Tensor],
     ax: plt.Axes,
-    check_type: str
+    check_type: str,
+    default_fontsize: Union[int, float] = 8
 ) -> None:
     """Plot proportion of expression patterns."""
     # Try to get pattern information from AnnData
@@ -2527,7 +2553,7 @@ def _plot_pattern_proportions(
         ax.set_title(f'{check_type.title()} Pattern Proportions')
 
 
-def _plot_correlation_structure(adata: AnnData, ax: plt.Axes, check_type: str) -> None:
+def _plot_correlation_structure(adata: AnnData, ax: plt.Axes, check_type: str, default_fontsize: Union[int, float] = 8) -> None:
     """Plot gene-gene correlation structure."""
     if 'spliced' in adata.layers:
         # Calculate gene-gene correlations
@@ -2713,7 +2739,7 @@ def plot_posterior_predictive_checks(
     model: Any,
     posterior_adata: AnnData,
     posterior_parameters: Dict[str, torch.Tensor],
-    figsize: Tuple[int, int] = (15, 10),
+    figsize: Tuple[Union[int, float], Union[int, float]] = (7.5, 5.0),  # Standard width for 8.5x11" with margins
     save_path: Optional[str] = None,
     figure_name: Optional[str] = None,
     create_individual_plots: bool = True,
