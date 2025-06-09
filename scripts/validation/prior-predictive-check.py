@@ -3,13 +3,12 @@ import pyro
 import numpy as np
 import matplotlib.pyplot as plt
 import scanpy as sc
-import glob
-import os
 
 from pyrovelocity.models.modular.factory import create_piecewise_activation_model
 from pyrovelocity.plots.predictive_checks import (
     plot_prior_predictive_checks,
 )
+from pyrovelocity.utils import print_anndata
 
 
 # Configurable random seed for reproducibility and variability analysis
@@ -32,7 +31,7 @@ print(f"  Prior: {model.prior_model}")
 print(f"  Likelihood: {model.likelihood_model}")
 print(f"  Guide: {model.guide_model}")
 
-# Generate prior predictive samples with proper parameter-data correspondence
+# Generate single prior predictive dataset with all parameters stored in AnnData
 print(f"Performing prior predictive checks with random seed: {RANDOM_SEED}")
 print(f"Output will be saved as: combined_prior_predictive_checks_{RANDOM_SEED}.pdf")
 
@@ -40,20 +39,31 @@ print(f"Output will be saved as: combined_prior_predictive_checks_{RANDOM_SEED}.
 torch.manual_seed(RANDOM_SEED)
 pyro.set_rng_seed(RANDOM_SEED)
 
+# Generate a single dataset with 100 genes and 200 cells for better parameter coverage
 prior_predictive_adata = model.generate_predictive_samples(
     num_cells=200,
-    num_genes=10,
-    num_samples=100,  # Generate data from 100 different parameter sets
+    num_genes=100,  # Increased for better gene-level parameter coverage
+    num_samples=1,   # Single dataset with parameters stored in AnnData
     return_format="anndata"
 )
 
-# Sample parameters from the prior
-prior_parameter_samples = model.sample_system_parameters(
-    num_samples=1000,
-    constrain_to_pattern=False,  # Use full prior ranges
-    n_genes=10,
-    n_cells=200
-)
+print("AnnData object summary:")
+print_anndata(prior_predictive_adata)
+
+# Extract parameters from AnnData object (stored in clean true_parameters dictionary)
+print("Parameters stored in AnnData:")
+if "true_parameters" in prior_predictive_adata.uns:
+    print(f"  Found {len(prior_predictive_adata.uns['true_parameters'])} parameters in true_parameters")
+    for key in sorted(prior_predictive_adata.uns['true_parameters'].keys()):
+        print(f"    {key}")
+else:
+    print("  No parameters found in adata.uns['true_parameters']")
+
+# Extract parameters for plotting functions (no prefix needed)
+prior_parameter_samples = {}
+if "true_parameters" in prior_predictive_adata.uns:
+    for key, value in prior_predictive_adata.uns['true_parameters'].items():
+        prior_parameter_samples[key] = torch.tensor(value) if not isinstance(value, torch.Tensor) else value
 
 # Add UMAP and clustering though these will be uninformative in the context of prior predictive checks
 sc.pp.neighbors(prior_predictive_adata, n_neighbors=10, random_state=RANDOM_SEED)
@@ -77,8 +87,30 @@ plt.show()
 
 # Validate prior parameter ranges (updated for hierarchical temporal parameterization)
 print("\nPrior parameter range validation:")
+print(f"Total parameters extracted: {len(prior_parameter_samples)}")
+
 for param_name, samples in prior_parameter_samples.items():
     if param_name.startswith(('R_on', 'tilde_t_on', 'tilde_delta', 't_on', 'delta', 'gamma_star', 'T_M_star')):
-        print(f"{param_name}:")
-        print(f"  Range: [{samples.min():.3f}, {samples.max():.3f}]")
-        print(f"  Mean ± Std: {samples.mean():.3f} ± {samples.std():.3f}")
+        # Convert to tensor if needed and handle different shapes
+        if isinstance(samples, np.ndarray):
+            samples_tensor = torch.tensor(samples)
+        else:
+            samples_tensor = samples
+
+        # Handle different parameter shapes (scalar vs vector)
+        if samples_tensor.numel() == 1:
+            # Scalar parameter
+            print(f"{param_name}: {samples_tensor.item():.3f}")
+        else:
+            # Vector parameter (gene-specific or cell-specific)
+            print(f"{param_name} (n={samples_tensor.numel()}):")
+            print(f"  Range: [{samples_tensor.min():.3f}, {samples_tensor.max():.3f}]")
+            print(f"  Mean ± Std: {samples_tensor.mean():.3f} ± {samples_tensor.std():.3f}")
+
+# Print information about the dataset
+print(f"\nDataset information:")
+print(f"  Cells: {prior_predictive_adata.n_obs}")
+print(f"  Genes: {prior_predictive_adata.n_vars}")
+print(f"  Layers: {list(prior_predictive_adata.layers.keys())}")
+print(f"  Unspliced counts range: [{prior_predictive_adata.layers['unspliced'].min():.0f}, {prior_predictive_adata.layers['unspliced'].max():.0f}]")
+print(f"  Spliced counts range: [{prior_predictive_adata.layers['spliced'].min():.0f}, {prior_predictive_adata.layers['spliced'].max():.0f}]")
