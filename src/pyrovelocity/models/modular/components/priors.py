@@ -494,12 +494,25 @@ class PiecewiseActivationPriorModel:
         )
         params["t_scale"] = t_scale
 
+        # Check if observed times are provided in context for trajectory-based sampling
+        observed_times = context.get("observed_times")
+
         # Sample cell-specific parameters (time and capture efficiency)
         with pyro.plate(f"{self.name}_cells_plate", n_cells):
-            tilde_t = pyro.sample(
-                "tilde_t",
-                dist.Normal(t_loc, t_scale).mask(include_prior),
-            )
+            if observed_times is not None:
+                # Use observed times for coherent trajectory sampling
+                # Convert observed times to normalized times (tilde_t)
+                tilde_t_observed = observed_times / T_M_star
+                tilde_t = pyro.sample(
+                    "tilde_t",
+                    dist.Delta(tilde_t_observed).mask(include_prior),
+                )
+            else:
+                # Standard stochastic sampling from prior
+                tilde_t = pyro.sample(
+                    "tilde_t",
+                    dist.Normal(t_loc, t_scale).mask(include_prior),
+                )
 
             # Sample capture efficiency parameters (per cell)
             lambda_j = pyro.sample(
@@ -512,11 +525,14 @@ class PiecewiseActivationPriorModel:
             params["lambda_j"] = lambda_j
 
         # Compute t_star outside the plate to avoid broadcasting issues
-        # Ensure non-negative times and scale by T_M_star
-        t_star_computed = T_M_star * torch.clamp(tilde_t, min=self.t_epsilon)
+        if observed_times is not None:
+            # Use observed times directly
+            t_star = pyro.deterministic("t_star", observed_times)
+        else:
+            # Ensure non-negative times and scale by T_M_star
+            t_star_computed = T_M_star * torch.clamp(tilde_t, min=self.t_epsilon)
+            t_star = pyro.deterministic("t_star", t_star_computed)
 
-        # Create deterministic site for t_star so it gets captured in posterior samples
-        t_star = pyro.deterministic("t_star", t_star_computed)
         params["t_star"] = t_star
 
         # Sample piecewise activation parameters (per gene)
