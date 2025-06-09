@@ -2569,19 +2569,60 @@ class PyroVelocityModel:
             samples: Optional parameter samples used for generation
             num_cells: Number of cells
         """
-        # Priority order for temporal coordinate names (UMAP function searches for these)
-        target_time_names = ['latent_time', 'shared_time', 'pseudotime', 'time']
+        # Priority order for temporal coordinate names (canonical parameter name first)
+        target_time_names = ['t_star', 'latent_time', 'shared_time', 'pseudotime', 'time']
 
         # Look for temporal coordinates in predictive samples first
         temporal_coord = None
         source_name = None
 
-        # Check predictive samples for temporal variables
-        for key, value in predictive_samples.items():
-            if any(t_word in key.lower() for t_word in ['time', 't_star', 'tau', 'latent']):
+        # Check predictive samples for temporal variables, prioritizing canonical names
+        canonical_temporal_keys = ['t_star', 'cell_time']
+        fallback_temporal_patterns = ['time', 'tau', 'latent']
+
+        # First check for canonical parameter names
+        for key in canonical_temporal_keys:
+            if key in predictive_samples:
+                value = predictive_samples[key]
                 if isinstance(value, torch.Tensor):
                     # Convert to numpy
                     coord_array = value.detach().cpu().numpy()
+
+                    # Handle different tensor shapes
+                    if coord_array.ndim >= 2:
+                        # Try to find a dimension that matches num_cells
+                        for dim_idx in range(coord_array.ndim):
+                            if coord_array.shape[dim_idx] == num_cells:
+                                # Extract the cell dimension
+                                if coord_array.ndim == 2:
+                                    if dim_idx == 0:
+                                        temporal_coord = coord_array[:, 0]  # Take first column
+                                    else:
+                                        temporal_coord = coord_array[0, :]  # Take first row
+                                elif coord_array.ndim > 2:
+                                    # For higher dimensions, take first slice along other dimensions
+                                    if dim_idx == 0:
+                                        temporal_coord = coord_array[:, 0, 0] if coord_array.shape[1] > 0 else coord_array[:, 0]
+                                    else:
+                                        # Reshape to get cell dimension
+                                        coord_flat = coord_array.flatten()
+                                        if len(coord_flat) >= num_cells:
+                                            temporal_coord = coord_flat[:num_cells]
+                                break
+                    elif coord_array.ndim == 1 and len(coord_array) == num_cells:
+                        temporal_coord = coord_array
+
+                    if temporal_coord is not None:
+                        source_name = key
+                        break
+
+        # If not found, search by pattern matching
+        if temporal_coord is None:
+            for key, value in predictive_samples.items():
+                if any(t_word in key.lower() for t_word in fallback_temporal_patterns):
+                    if isinstance(value, torch.Tensor):
+                        # Convert to numpy
+                        coord_array = value.detach().cpu().numpy()
 
                     # Handle different tensor shapes
                     if coord_array.ndim >= 2:
@@ -2744,12 +2785,16 @@ class PyroVelocityModel:
             # Ensure correct length
             if len(temporal_coord) == num_cells:
                 # Store with the first available target name for UMAP compatibility
-                target_name = target_time_names[0]  # 'latent_time'
+                target_name = target_time_names[0]  # 't_star' (canonical parameter name)
                 adata.obs[target_name] = temporal_coord
 
                 # Also store with original name if different
                 if source_name and source_name != target_name:
                     adata.obs[source_name] = temporal_coord
+
+                # For backward compatibility, also store as 'latent_time' if not already stored
+                if 'latent_time' not in adata.obs and target_name != 'latent_time':
+                    adata.obs['latent_time'] = temporal_coord
 
                 # Add metadata about the temporal coordinate
                 if 'pyrovelocity' not in adata.uns:
