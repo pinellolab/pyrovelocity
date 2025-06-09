@@ -1299,7 +1299,7 @@ def plot_prior_predictive_checks(
     fig = plt.figure(figsize=figsize)
 
     # Create subplot grid: 3 rows × 4 columns with optimized spacing for reduced overlap
-    gs = fig.add_gridspec(3, 4, hspace=0.4, wspace=0.35)
+    gs = fig.add_gridspec(3, 4, hspace=0.5, wspace=0.4)
 
     # Row 1: UMAP and Parameter Distribution Plots
     ax1 = fig.add_subplot(gs[0, 0])
@@ -1950,7 +1950,7 @@ def _plot_fold_change_distribution(
     ax.set_ylabel('Relative Frequency', fontsize=7)
     ax.set_title(f'{check_type.title()} Fold-change Distribution', fontsize=8)
     ax.tick_params(labelsize=6)  # Reduce tick label size
-    ax.legend(fontsize=8)
+    ax.legend(fontsize=6)  # Reduced legend font size to prevent overlap
     ax.set_xlim(0, min(100, fold_change.max()))
     ax.grid(True, alpha=0.3)
 
@@ -2005,7 +2005,7 @@ def _plot_activation_timing(
                   label='Transient/Sustained boundary')
         ax.axvline(0.3, color='orange', linestyle='--', alpha=0.7,
                   label='Early/Late activation')
-        ax.legend(fontsize=8)
+        ax.legend(fontsize=6)  # Reduced legend font size to prevent overlap
     else:
         ax.text(0.5, 0.5, 'Timing parameters\nnot available',
                ha='center', va='center', transform=ax.transAxes)
@@ -2138,14 +2138,15 @@ def _plot_phase_portrait(adata: AnnData, ax: plt.Axes, check_type: str, default_
             ax.scatter(s_gene, u_gene, alpha=0.6, s=20, color=colors[i],
                       label=f'Gene {gene_idx}')
 
-        ax.set_xlabel('Spliced Expression')
-        ax.set_ylabel('Unspliced Expression')
-        ax.set_title(f'{check_type.title()} Phase Portrait')
-        ax.legend(fontsize=8)
+        ax.set_xlabel('Spliced Expression', fontsize=default_fontsize * 0.9)
+        ax.set_ylabel('Unspliced Expression', fontsize=default_fontsize * 0.9)
+        ax.set_title(f'{check_type.title()} Phase Portrait', fontsize=default_fontsize)
+        ax.legend(fontsize=6)  # Reduced legend font size to prevent overlap
+        ax.tick_params(labelsize=default_fontsize * 0.75)
     else:
         ax.text(0.5, 0.5, 'Expression data\nnot available',
-               ha='center', va='center', transform=ax.transAxes)
-        ax.set_title(f'{check_type.title()} Phase Portrait')
+               ha='center', va='center', transform=ax.transAxes, fontsize=default_fontsize * 0.9)
+        ax.set_title(f'{check_type.title()} Phase Portrait', fontsize=default_fontsize)
 
     ax.grid(True, alpha=0.3)
 
