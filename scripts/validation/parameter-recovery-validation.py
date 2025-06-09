@@ -98,7 +98,9 @@ validation_datasets = model.generate_validation_datasets(
     n_genes=5,
     n_cells=200,
     n_parameter_sets=2,  # 2 parameter sets per pattern = 6 total datasets
-    seed=RANDOM_SEED
+    seed=RANDOM_SEED,
+    use_coherent_trajectories=True,  # Enable coherent trajectory sampling
+    trajectory_type="linear"  # Use linear trajectories for validation
 )
 
 print(f"✅ Generated {len(validation_datasets)} validation datasets")
