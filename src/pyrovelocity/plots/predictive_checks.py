@@ -1393,44 +1393,17 @@ def _plot_umap_leiden_clusters(adata: AnnData, ax: plt.Axes, check_type: str, de
             mask = clusters == cluster
             ax.scatter(umap_coords[mask, 0], umap_coords[mask, 1],
                       c=[cluster_color_map[cluster]], label=f'Cluster {cluster}',
-                      alpha=0.7, s=20)
+                      edgecolors="none",
+                      alpha=0.7, s=5,)
 
-        ax.set_xlabel('UMAP 1', fontsize=default_fontsize * 0.9)
-        ax.set_ylabel('UMAP 2', fontsize=default_fontsize * 0.9)
+        ax.set_xlabel('UMAP 1', fontsize=default_fontsize)
+        ax.set_ylabel('UMAP 2', fontsize=default_fontsize)
         ax.set_title(f'{check_type.title()} UMAP (Leiden Clusters)', fontsize=default_fontsize)
         ax.tick_params(labelsize=default_fontsize * 0.75)
-
-    elif 'X_umap' in adata.obsm:
-        # Plot UMAP without cluster information
-        umap_coords = adata.obsm['X_umap']
-        ax.scatter(umap_coords[:, 0], umap_coords[:, 1],
-                  alpha=0.7, s=20, c='gray')
-        ax.set_xlabel('UMAP 1', fontsize=default_fontsize * 0.9)
-        ax.set_ylabel('UMAP 2', fontsize=default_fontsize * 0.9)
-        ax.set_title(f'{check_type.title()} UMAP (No Clusters)', fontsize=default_fontsize)
-        ax.tick_params(labelsize=default_fontsize * 0.75)
-
     else:
-        # Compute UMAP if not available and UMAP is installed
-        if UMAP_AVAILABLE and 'X_pca' in adata.obsm:
-            try:
-                reducer = umap.UMAP(n_neighbors=15, min_dist=0.1, random_state=42)
-                embedding = reducer.fit_transform(adata.obsm['X_pca'][:, :50])  # Use first 50 PCs
-
-                ax.scatter(embedding[:, 0], embedding[:, 1],
-                          alpha=0.7, s=20, c='gray')
-                ax.set_xlabel('UMAP 1')
-                ax.set_ylabel('UMAP 2')
-                ax.set_title(f'{check_type.title()} UMAP (Computed)')
-
-            except Exception as e:
-                ax.text(0.5, 0.5, f'UMAP computation failed:\n{str(e)[:50]}...',
-                       ha='center', va='center', transform=ax.transAxes)
-                ax.set_title(f'{check_type.title()} UMAP (Failed)')
-        else:
-            ax.text(0.5, 0.5, 'UMAP data not available\nor UMAP not installed',
-                   ha='center', va='center', transform=ax.transAxes)
-            ax.set_title(f'{check_type.title()} UMAP (Clusters)')
+        ax.text(0.5, 0.5, 'UMAP data not available\nor UMAP not installed',
+                ha='center', va='center', transform=ax.transAxes)
+        ax.set_title(f'{check_type.title()} UMAP (Clusters)')
 
 
 def _plot_umap_time_coordinate(adata: AnnData, ax: plt.Axes, check_type: str, model: Optional[Any] = None, default_fontsize: Union[int, float] = 8) -> None:
@@ -1491,14 +1464,16 @@ def _plot_umap_time_coordinate(adata: AnnData, ax: plt.Axes, check_type: str, mo
         if time_coord is not None:
             # Create scatter plot colored by time
             scatter = ax.scatter(umap_coords[:, 0], umap_coords[:, 1],
-                               c=time_coord, cmap='viridis', alpha=0.7, s=20)
+                                edgecolors="none",
+                                c=time_coord, cmap='viridis', alpha=0.7, s=5)
 
             # Add colorbar
             cbar = plt.colorbar(scatter, ax=ax, shrink=0.8)
-            cbar.set_label(time_label, fontsize=default_fontsize * 0.9)
+            cbar.set_label(time_label, fontsize=default_fontsize)
+            cbar.ax.tick_params(labelsize=default_fontsize * 0.75)
 
-            ax.set_xlabel('UMAP 1', fontsize=default_fontsize * 0.9)
-            ax.set_ylabel('UMAP 2', fontsize=default_fontsize * 0.9)
+            ax.set_xlabel('UMAP 1', fontsize=default_fontsize)
+            ax.set_ylabel('UMAP 2', fontsize=default_fontsize)
             ax.set_title(f'{check_type.title()} UMAP (Time Coordinate)', fontsize=default_fontsize)
             ax.tick_params(labelsize=default_fontsize * 0.75)
 
@@ -1506,7 +1481,7 @@ def _plot_umap_time_coordinate(adata: AnnData, ax: plt.Axes, check_type: str, mo
             # No time coordinate found, use a simple gradient based on position
             gradient = np.arange(len(umap_coords))
             scatter = ax.scatter(umap_coords[:, 0], umap_coords[:, 1],
-                               c=gradient, cmap='viridis', alpha=0.7, s=20)
+                               c=gradient, cmap='viridis', alpha=0.7, s=5)
 
             cbar = plt.colorbar(scatter, ax=ax, shrink=0.8)
             cbar.set_label('Cell Index', fontsize=10)
@@ -1525,7 +1500,7 @@ def _plot_umap_time_coordinate(adata: AnnData, ax: plt.Axes, check_type: str, mo
                 # Use cell index as pseudo-time
                 gradient = np.arange(len(embedding))
                 scatter = ax.scatter(embedding[:, 0], embedding[:, 1],
-                                   c=gradient, cmap='viridis', alpha=0.7, s=20)
+                                   c=gradient, cmap='viridis', alpha=0.7, s=5)
 
                 cbar = plt.colorbar(scatter, ax=ax, shrink=0.8)
                 cbar.set_label('Cell Index', fontsize=10)
@@ -1810,7 +1785,7 @@ def _plot_hierarchical_time_structure(
             T_M = parameters['T_M_star'].flatten().numpy()
             t_scale = parameters['t_scale'].flatten().numpy()
 
-            ax.scatter(T_M, t_scale, alpha=0.6, s=20, color='purple')
+            ax.scatter(T_M, t_scale, alpha=0.6, s=5, color='purple')
 
             # Get parameter labels using new metadata system
             T_M_label = get_parameter_label(
@@ -1845,7 +1820,7 @@ def _plot_hierarchical_time_structure(
             t_loc = parameters['t_loc'].flatten().numpy()
             t_scale = parameters['t_scale'].flatten().numpy()
 
-            ax.scatter(t_loc, t_scale, alpha=0.6, s=20, color='purple')
+            ax.scatter(t_loc, t_scale, alpha=0.6, s=5, color='purple')
 
             # Get parameter labels using new metadata system
             t_loc_label = get_parameter_label(
@@ -1863,11 +1838,11 @@ def _plot_hierarchical_time_structure(
                 fallback_to_legacy=True
             )
 
-            ax.set_xlabel(f'Population Time Location ({t_loc_label})', fontsize=7)
-            ax.set_ylabel(f'Population Time Spread ({t_scale_label})', fontsize=7)
-            ax.set_title(f'{check_type.title()} Population Time Parameters', fontsize=8)
-            ax.tick_params(labelsize=6)  # Reduce tick label size
-            ax.legend(fontsize=8)
+            ax.set_xlabel(f'Population Time Location ({t_loc_label})', fontsize=default_fontsize)
+            ax.set_ylabel(f'Population Time Spread ({t_scale_label})', fontsize=default_fontsize)
+            ax.set_title(f'{check_type.title()} Population Time Parameters', fontsize=default_fontsize)
+            ax.tick_params(labelsize=default_fontsize * 0.75)  # Reduce tick label size
+            ax.legend(fontsize=default_fontsize * 0.75)
     else:
         ax.text(0.5, 0.5, 'Hierarchical time parameters\nnot available',
                ha='center', va='center', transform=ax.transAxes)
@@ -1906,7 +1881,7 @@ def _plot_fold_change_distribution(
     else:
         ax.text(0.5, 0.5, 'Fold-change parameters\nnot available',
                ha='center', va='center', transform=ax.transAxes)
-        ax.set_title(f'{check_type.title()} Fold-change Distribution', fontsize=8)
+        ax.set_title(f'{check_type.title()} Fold-change Distribution', fontsize=default_fontsize)
         ax.grid(True, alpha=0.3)
         return
 
@@ -1946,11 +1921,11 @@ def _plot_fold_change_distribution(
         )
         xlabel = f'Fold-change ({alpha_on_label} / {alpha_off_label})'
 
-    ax.set_xlabel(xlabel, fontsize=7)
-    ax.set_ylabel('Relative Frequency', fontsize=7)
-    ax.set_title(f'{check_type.title()} Fold-change Distribution', fontsize=8)
-    ax.tick_params(labelsize=6)  # Reduce tick label size
-    ax.legend(fontsize=6)  # Reduced legend font size to prevent overlap
+    ax.set_xlabel(xlabel, fontsize=default_fontsize)
+    ax.set_ylabel('Relative Frequency', fontsize=default_fontsize)
+    ax.set_title(f'{check_type.title()} Fold-change Distribution', fontsize=default_fontsize)
+    ax.tick_params(labelsize=default_fontsize * 0.75)  # Reduce tick label size
+    ax.legend(fontsize=4)  # Reduced legend font size to prevent overlap
     ax.set_xlim(0, min(100, fold_change.max()))
     ax.grid(True, alpha=0.3)
 
@@ -1977,7 +1952,9 @@ def _plot_activation_timing(
         t_on = parameters['t_on_star'].flatten().numpy()
         delta = parameters['delta_star'].flatten().numpy()
 
-        ax.scatter(t_on, delta, alpha=0.6, s=20, color='purple')
+        ax.scatter(t_on, delta, alpha=0.6, s=5, 
+                   edgecolors="none",
+                   color='purple')
 
         # Get parameter labels using new metadata system
         t_on_label = get_parameter_label(
@@ -1995,17 +1972,17 @@ def _plot_activation_timing(
             fallback_to_legacy=True
         )
 
-        ax.set_xlabel(f'Activation Onset ({t_on_label})', fontsize=7)
-        ax.set_ylabel(f'Activation Duration ({delta_label})', fontsize=7)
-        ax.set_title(f'{check_type.title()} Activation Timing', fontsize=8)
-        ax.tick_params(labelsize=6)  # Reduce tick label size
+        ax.set_xlabel(f'Activation Onset ({t_on_label})', fontsize=default_fontsize)
+        ax.set_ylabel(f'Activation Duration ({delta_label})', fontsize=default_fontsize)
+        ax.set_title(f'{check_type.title()} Activation Timing', fontsize=default_fontsize)
+        ax.tick_params(labelsize=default_fontsize * 0.75)  # Reduce tick label size
 
         # Add pattern boundaries
         ax.axhline(0.35, color='red', linestyle='--', alpha=0.7,
                   label='Transient/Sustained boundary')
         ax.axvline(0.3, color='orange', linestyle='--', alpha=0.7,
                   label='Early/Late activation')
-        ax.legend(fontsize=6)  # Reduced legend font size to prevent overlap
+        ax.legend(fontsize=4)  # Reduced legend font size to prevent overlap
     else:
         ax.text(0.5, 0.5, 'Timing parameters\nnot available',
                ha='center', va='center', transform=ax.transAxes)
@@ -2032,14 +2009,15 @@ def _plot_count_distributions(adata: AnnData, ax: plt.Axes, check_type: str, def
                label='Spliced', color='blue', density=False,
                weights=np.ones(len(spliced_nz)) / len(spliced_nz))
 
-        ax.set_xlabel('log(count + 1)')
-        ax.set_ylabel('Relative Frequency')
-        ax.set_title(f'{check_type.title()} Count Distributions')
-        ax.legend()
+        ax.set_xlabel('log(count + 1)', fontsize=default_fontsize)
+        ax.set_ylabel('Relative Frequency', fontsize=default_fontsize)
+        ax.set_title(f'{check_type.title()} Count Distributions', fontsize=default_fontsize)
+        ax.tick_params(labelsize=default_fontsize * 0.75)
+        ax.legend(fontsize=default_fontsize * 0.75)
     else:
         ax.text(0.5, 0.5, 'Count data\nnot available', 
                ha='center', va='center', transform=ax.transAxes)
-        ax.set_title(f'{check_type.title()} Count Distributions')
+        ax.set_title(f'{check_type.title()} Count Distributions', fontsize=default_fontsize)
     
     ax.grid(True, alpha=0.3)
 
@@ -2059,14 +2037,15 @@ def _plot_expression_relationships(adata: AnnData, ax: plt.Axes, check_type: str
         
         ax.scatter(np.log1p(s_sample), np.log1p(u_sample), 
                   alpha=0.5, s=1, color='purple')
-        ax.set_xlabel('log(Spliced + 1)')
-        ax.set_ylabel('log(Unspliced + 1)')
-        ax.set_title(f'{check_type.title()} U vs S Relationship')
+        ax.set_xlabel('log(Spliced + 1)', fontsize=default_fontsize)
+        ax.set_ylabel('log(Unspliced + 1)', fontsize=default_fontsize)
+        ax.set_title(f'{check_type.title()} U vs S Relationship', fontsize=default_fontsize)
         
         # Add diagonal reference
         max_val = max(ax.get_xlim()[1], ax.get_ylim()[1])
         ax.plot([0, max_val], [0, max_val], 'k--', alpha=0.5, label='U = S')
-        ax.legend()
+        ax.legend(fontsize=default_fontsize * 0.75)
+        ax.tick_params(labelsize=default_fontsize * 0.75)
     else:
         ax.text(0.5, 0.5, 'Expression data\nnot available', 
                ha='center', va='center', transform=ax.transAxes)
@@ -2086,10 +2065,11 @@ def _plot_library_sizes(adata: AnnData, ax: plt.Axes, check_type: str, default_f
         ax.axvline(total_counts.mean(), color='red', linestyle='--',
                   label=f'Mean: {total_counts.mean():.0f}')
 
-        ax.set_xlabel('Total Counts per Cell')
-        ax.set_ylabel('Relative Frequency')
-        ax.set_title(f'{check_type.title()} Library Sizes')
-        ax.legend()
+        ax.set_xlabel('Total Counts per Cell', fontsize=default_fontsize)
+        ax.set_ylabel('Relative Frequency', fontsize=default_fontsize)
+        ax.set_title(f'{check_type.title()} Library Sizes', fontsize=default_fontsize)
+        ax.legend(fontsize=default_fontsize * 0.75)
+        ax.tick_params(labelsize=default_fontsize * 0.75)
     else:
         ax.text(0.5, 0.5, 'Count data\nnot available',
                ha='center', va='center', transform=ax.transAxes)
@@ -2105,15 +2085,18 @@ def _plot_expression_ranges(adata: AnnData, ax: plt.Axes, check_type: str, defau
         u_ranges = np.ptp(adata.layers['unspliced'], axis=0)  # peak-to-peak
         s_ranges = np.ptp(adata.layers['spliced'], axis=0)
 
-        ax.scatter(s_ranges, u_ranges, alpha=0.7, s=50, color='orange')
-        ax.set_xlabel('Spliced Expression Range')
-        ax.set_ylabel('Unspliced Expression Range')
-        ax.set_title(f'{check_type.title()} Expression Ranges')
+        ax.scatter(s_ranges, u_ranges, alpha=0.7, s=5,
+                   edgecolors="none",
+                   color='orange')
+        ax.set_xlabel('Spliced', fontsize=default_fontsize)
+        ax.set_ylabel('Unspliced', fontsize=default_fontsize)
+        ax.set_title(f'{check_type.title()} Expression Ranges', fontsize=default_fontsize)
 
         # Add diagonal reference
         max_val = max(ax.get_xlim()[1], ax.get_ylim()[1])
-        ax.plot([0, max_val], [0, max_val], 'k--', alpha=0.5, label='U range = S range')
-        ax.legend()
+        ax.plot([0, max_val], [0, max_val], 'k--', alpha=0.5, label='U = S')
+        ax.legend(fontsize=default_fontsize * 0.75)
+        ax.tick_params(labelsize=default_fontsize * 0.75)
     else:
         ax.text(0.5, 0.5, 'Expression data\nnot available',
                ha='center', va='center', transform=ax.transAxes)
@@ -2135,13 +2118,14 @@ def _plot_phase_portrait(adata: AnnData, ax: plt.Axes, check_type: str, default_
             u_gene = adata.layers['unspliced'][:, gene_idx]
             s_gene = adata.layers['spliced'][:, gene_idx]
 
-            ax.scatter(s_gene, u_gene, alpha=0.6, s=20, color=colors[i],
-                      label=f'Gene {gene_idx}')
+            ax.scatter(s_gene, u_gene, alpha=0.6, s=5, color=colors[i],
+                       edgecolors="none",
+                       label=f'Gene {gene_idx}')
 
-        ax.set_xlabel('Spliced Expression', fontsize=default_fontsize * 0.9)
-        ax.set_ylabel('Unspliced Expression', fontsize=default_fontsize * 0.9)
+        ax.set_xlabel('Spliced', fontsize=default_fontsize)
+        ax.set_ylabel('Unspliced', fontsize=default_fontsize)
         ax.set_title(f'{check_type.title()} Phase Portrait', fontsize=default_fontsize)
-        ax.legend(fontsize=6)  # Reduced legend font size to prevent overlap
+        # ax.legend(fontsize=6)
         ax.tick_params(labelsize=default_fontsize * 0.75)
     else:
         ax.text(0.5, 0.5, 'Expression data\nnot available',
@@ -2167,10 +2151,11 @@ def _plot_velocity_magnitudes(adata: AnnData, ax: plt.Axes, check_type: str, def
         ax.axvline(velocity_magnitudes.mean(), color='red', linestyle='--',
                   label=f'Mean: {velocity_magnitudes.mean():.3f}')
 
-        ax.set_xlabel('Velocity Magnitude')
-        ax.set_ylabel('Relative Frequency')
-        ax.set_title(f'{check_type.title()} Velocity Magnitudes')
-        ax.legend()
+        ax.set_xlabel('Velocity Magnitude', fontsize=default_fontsize)
+        ax.set_ylabel('Relative Frequency', fontsize=default_fontsize)
+        ax.set_title(f'{check_type.title()} Velocity Magnitudes', fontsize=default_fontsize)
+        ax.legend(fontsize=default_fontsize * 0.75)
+        ax.tick_params(labelsize=default_fontsize * 0.75)
     else:
         # Compute velocity using the correct piecewise activation model formula
         if 'unspliced' in adata.layers and 'spliced' in adata.layers:
@@ -2197,10 +2182,11 @@ def _plot_velocity_magnitudes(adata: AnnData, ax: plt.Axes, check_type: str, def
             ax.axvline(velocity_magnitudes.mean(), color='red', linestyle='--',
                       label=f'Mean: {velocity_magnitudes.mean():.3f}')
 
-            ax.set_xlabel('Velocity Magnitude')
-            ax.set_ylabel('Relative Frequency')
-            ax.set_title(f'{check_type.title()} Velocity Magnitudes')
-            ax.legend()
+            ax.set_xlabel('Velocity Magnitude', fontsize=default_fontsize)
+            ax.set_ylabel('Relative Frequency', fontsize=default_fontsize)
+            ax.set_title(f'{check_type.title()} Velocity Magnitudes', fontsize=default_fontsize)
+            ax.legend(fontsize=default_fontsize * 0.75)
+            ax.tick_params(labelsize=default_fontsize * 0.75)
         else:
             ax.text(0.5, 0.5, 'Velocity data\nnot available',
                    ha='center', va='center', transform=ax.transAxes)
@@ -2503,8 +2489,8 @@ def _set_temporal_dynamics_labels(
         axes_dict[f"dynamics_{n}"].set_ylabel('')
 
     # Set tick parameters
-    axes_dict[f"phase_{n}"].tick_params(labelsize=default_fontsize * 0.6)
-    axes_dict[f"dynamics_{n}"].tick_params(labelsize=default_fontsize * 0.6)
+    axes_dict[f"phase_{n}"].tick_params(labelsize=default_fontsize * 0.75)
+    axes_dict[f"dynamics_{n}"].tick_params(labelsize=default_fontsize * 0.75)
 
 
 def _set_temporal_dynamics_aspect(axes_dict: Dict[str, plt.Axes]) -> None:
@@ -2547,7 +2533,7 @@ def _plot_pattern_proportions(
 
         ax.pie(counts, labels=formatted_patterns, colors=colors,
                autopct='%1.1f%%', startangle=90)
-        ax.set_title(f'{check_type.title()} Pattern Proportions')
+        ax.set_title(f'{check_type.title()} Pattern Proportions', fontsize=default_fontsize)
     else:
         ax.text(0.5, 0.5, 'Pattern information\nnot available',
                ha='center', va='center', transform=ax.transAxes)
@@ -2573,9 +2559,12 @@ def _plot_correlation_structure(adata: AnnData, ax: plt.Axes, check_type: str, d
 
         sns.heatmap(corr_matrix, annot=False, cmap='RdBu_r', center=0,
                    square=True, ax=ax, cbar_kws={'shrink': 0.8})
-        ax.set_title(f'{check_type.title()} Gene Correlations')
-        ax.set_xlabel('Gene Index')
-        ax.set_ylabel('Gene Index')
+        ax.set_title(f'{check_type.title()} Gene Correlations', fontsize=default_fontsize)
+        ax.set_xlabel('Gene Index', fontsize=default_fontsize)
+        ax.set_ylabel('Gene Index', fontsize=default_fontsize)
+        ax.tick_params(labelsize=default_fontsize * 0.75)
+        cbar = ax.collections[0].colorbar
+        cbar.ax.tick_params(labelsize=default_fontsize * 0.75)
     else:
         ax.text(0.5, 0.5, 'Expression data\nnot available',
                ha='center', va='center', transform=ax.transAxes)
