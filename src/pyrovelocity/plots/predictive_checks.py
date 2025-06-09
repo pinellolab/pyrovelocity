@@ -30,6 +30,63 @@ except ImportError:
 configure_matplotlib_style()
 
 
+@beartype
+def cleanup_numbered_files(output_dir: str, patterns: Optional[List[str]] = None) -> None:
+    """
+    Remove numbered PDF and PNG files from previous executions.
+
+    This function removes files matching patterns like:
+    - 01_*.pdf, 01_*.png
+    - 02_*.pdf, 02_*.png
+    - ...
+    - 09_*.pdf, 09_*.png
+
+    This ensures that when combining PDFs, we don't pick up remnant files
+    from previous executions that might have different seeds or configurations.
+
+    Args:
+        output_dir: Directory containing the files to clean up
+        patterns: Optional list of file patterns to remove. If None, uses default numbered patterns.
+
+    Example:
+        >>> # Clean up default numbered files
+        >>> cleanup_numbered_files("reports/docs/prior_predictive")
+        >>>
+        >>> # Clean up custom patterns
+        >>> cleanup_numbered_files("reports/docs/validation", ["temp_*.pdf", "draft_*.png"])
+    """
+    output_path = Path(output_dir)
+
+    if not output_path.exists():
+        print(f"📁 Output directory {output_dir} does not exist yet - nothing to clean")
+        return
+
+    # Use default numbered patterns if none provided
+    if patterns is None:
+        patterns = []
+        for num in range(1, 10):  # 01-09 to be future-proof
+            patterns.extend([
+                f"{num:02d}_*.pdf",
+                f"{num:02d}_*.png"
+            ])
+
+    files_removed = 0
+    for pattern in patterns:
+        matching_files = list(output_path.glob(pattern))
+        for file_path in matching_files:
+            try:
+                file_path.unlink()
+                print(f"🗑️  Removed: {file_path.name}")
+                files_removed += 1
+            except OSError as e:
+                print(f"⚠️  Could not remove {file_path.name}: {e}")
+
+    if files_removed > 0:
+        print(f"✅ Cleaned up {files_removed} numbered files from previous executions")
+    else:
+        print("✨ No numbered files found to clean up")
+
+
 def _latex_safe_text(text: str) -> str:
     """
     Make text safe for LaTeX rendering by escaping special characters.
@@ -1042,6 +1099,10 @@ def plot_prior_predictive_checks(
     """
     # Create individual modular plots if requested
     if create_individual_plots and save_path is not None:
+        # Clean up numbered files from previous executions before creating new plots
+        print("🧹 Cleaning up numbered files from previous executions...")
+        cleanup_numbered_files(save_path)
+
         # Process parameters for plotting compatibility (handle batch dimensions)
         processed_parameters = _process_parameters_for_plotting(prior_parameters)
 
