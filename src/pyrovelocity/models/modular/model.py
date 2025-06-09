@@ -2473,9 +2473,25 @@ class PyroVelocityModel:
             "num_genes": num_genes,
         }
 
-        # Store true parameters if provided (for validation studies)
+        # Store all parameters from predictive samples in clean dictionaries
+        # This ensures we capture ALL parameters that were sampled during generation
+        true_params = {}
+
+        # First, extract parameters from predictive_samples (prior predictive case)
+        for key, value in predictive_samples.items():
+            # Skip observation sites (u_obs, s_obs) and latent variables (ut, st)
+            if key not in [u_obs_key, s_obs_key, "ut", "st"]:
+                if isinstance(value, torch.Tensor):
+                    # Convert to numpy and handle batch dimension
+                    param_array = value.detach().cpu().numpy()
+                    if param_array.ndim > 1 and param_array.shape[0] == 1:
+                        param_array = param_array[0]  # Remove batch dimension
+                    true_params[key] = param_array
+                else:
+                    true_params[key] = value
+
+        # Also store parameters from samples argument if provided (posterior predictive case)
         if samples is not None:
-            true_params = {}
             for key, value in samples.items():
                 if isinstance(value, torch.Tensor):
                     # Convert to numpy and handle batch dimension
@@ -2486,6 +2502,10 @@ class PyroVelocityModel:
                 else:
                     true_params[key] = value
 
+        # Store parameters in AnnData using clean dictionary names
+        if true_params:
+            # For prior predictive: store as "true_parameters"
+            # For posterior predictive: store as "fit_parameters" (will be handled later)
             adata.uns["true_parameters"] = true_params
 
             # Try to determine pattern type from parameters if available
