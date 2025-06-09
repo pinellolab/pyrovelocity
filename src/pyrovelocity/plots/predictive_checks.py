@@ -682,7 +682,8 @@ def plot_temporal_trajectories(
     file_prefix: str = "",
     n_examples: int = 10,
     n_time_points: int = 300,
-    buffer_factor: float = 1.2
+    buffer_factor: float = 1.2,
+    adata: Optional[AnnData] = None
 ) -> plt.Figure:
     """
     Plot temporal trajectories showing underlying continuous dynamics.
@@ -700,7 +701,8 @@ def plot_temporal_trajectories(
         file_prefix: Prefix for saved file names
         n_examples: Number of examples to show per pattern (default: 10)
         n_time_points: Number of time points for trajectory evaluation (default: 300)
-        buffer_factor: Multiplicative buffer beyond T_M_star for time range (default: 1.2)
+        buffer_factor: Multiplicative buffer beyond realized time range (default: 1.2)
+        adata: Optional AnnData object containing realized t_star values for adaptive time range
 
     Returns:
         matplotlib Figure object
@@ -729,8 +731,8 @@ def plot_temporal_trajectories(
     if n_patterns == 1:
         axes = axes.reshape(1, -1)
 
-    # Compute adaptive time range based on T_M_star values
-    t_star = _compute_adaptive_time_range(pattern_examples, buffer_factor, n_time_points)
+    # Compute adaptive time range based on realized t_star values or T_M_star fallback
+    t_star = _compute_adaptive_time_range(pattern_examples, buffer_factor, n_time_points, adata)
 
     pattern_colors = ['red', 'blue', 'green', 'orange', 'purple']
 
@@ -771,14 +773,25 @@ def plot_temporal_trajectories(
                 label=f'Example {example_idx+1}' if example_idx < 3 else None
             )
 
-        # Format axes with LaTeX-safe labels (log2 scale for fold changes)
-        axes[pattern_idx, 0].set_xlabel(_latex_safe_text('Dimensionless Time (t*)'))
+        # Get parameter labels using metadata system
+        from pyrovelocity.plots.parameter_metadata import get_parameter_label
+
+        # Get time coordinate label (use t_star as canonical parameter name)
+        time_label = get_parameter_label(
+            param_name="t_star",
+            label_type="short",
+            model=None,  # Will fall back to legacy formatting
+            fallback_to_legacy=True
+        )
+
+        # Format axes with metadata-derived labels (log2 scale for fold changes)
+        axes[pattern_idx, 0].set_xlabel(_latex_safe_text(f'{time_label}'))
         axes[pattern_idx, 0].set_ylabel(_latex_safe_text('log2(Unspliced) (u*)'))
         axes[pattern_idx, 0].set_title(f'{formatted_pattern}: Unspliced')
         axes[pattern_idx, 0].grid(True, alpha=0.3)
         axes[pattern_idx, 0].legend()
 
-        axes[pattern_idx, 1].set_xlabel(_latex_safe_text('Dimensionless Time (t*)'))
+        axes[pattern_idx, 1].set_xlabel(_latex_safe_text(f'{time_label}'))
         axes[pattern_idx, 1].set_ylabel(_latex_safe_text('log2(Spliced) (s*)'))
         axes[pattern_idx, 1].set_title(f'{formatted_pattern}: Spliced')
         axes[pattern_idx, 1].grid(True, alpha=0.3)
@@ -843,6 +856,9 @@ def _classify_parameters_into_patterns(
     """
     Classify parameter samples into patterns and select examples.
 
+    Uses the same pattern classification logic as _classify_patterns_from_parameters
+    to ensure consistency between pattern proportions and trajectory plots.
+
     Args:
         parameters: Dictionary of parameter tensors
         n_examples: Number of examples to select per pattern
@@ -850,17 +866,54 @@ def _classify_parameters_into_patterns(
     Returns:
         Dictionary mapping pattern names to lists of parameter dictionaries
     """
-    # Check if we have the required parameters
-    required_params = ['R_on', 't_on_star', 'delta_star', 'gamma_star']
-    if not all(param in parameters for param in required_params):
-        print(f"Warning: Missing required parameters for pattern classification: {required_params}")
+    # Check for required parameters - prefer relative temporal parameters
+    required_params_relative = ['R_on', 'tilde_t_on_star', 'tilde_delta_star', 'gamma_star', 'T_M_star']
+    required_params_absolute = ['R_on', 't_on_star', 'delta_star', 'gamma_star']
+
+    use_relative_params = all(param in parameters for param in required_params_relative)
+    use_absolute_params = all(param in parameters for param in required_params_absolute)
+
+    if not (use_relative_params or use_absolute_params):
+        print(f"Warning: Missing required parameters for pattern classification")
+        print(f"  Relative params needed: {required_params_relative}")
+        print(f"  Absolute params needed: {required_params_absolute}")
         return {}
 
     # Get parameter values (flatten to 1D if needed)
     R_on = parameters['R_on'].flatten()
-    t_on_star = parameters['t_on_star'].flatten()
-    delta_star = parameters['delta_star'].flatten()
     gamma_star = parameters['gamma_star'].flatten()
+
+    if use_relative_params:
+        tilde_t_on_star = parameters['tilde_t_on_star'].flatten()
+        tilde_delta_star = parameters['tilde_delta_star'].flatten()
+        T_M_star = parameters['T_M_star'].flatten()
+
+        # Compute absolute parameters from relative ones
+        # Handle broadcasting: T_M_star might be scalar or per-sample
+        if len(T_M_star) == 1:
+            # Single T_M_star value - broadcast to all genes
+            t_on_star = T_M_star.item() * tilde_t_on_star
+            delta_star = T_M_star.item() * tilde_delta_star
+        elif len(T_M_star) == len(tilde_t_on_star):
+            # Same length - element-wise multiplication
+            t_on_star = T_M_star * tilde_t_on_star
+            delta_star = T_M_star * tilde_delta_star
+        else:
+            # Assume T_M_star is per-sample, tilde params are per-gene
+            num_samples = len(T_M_star)
+            num_genes = len(tilde_t_on_star) // num_samples
+            if len(tilde_t_on_star) % num_samples == 0:
+                T_M_expanded = T_M_star.repeat_interleave(num_genes)
+                t_on_star = T_M_expanded * tilde_t_on_star
+                delta_star = T_M_expanded * tilde_delta_star
+            else:
+                print(f"Warning: Cannot broadcast T_M_star (len={len(T_M_star)}) with tilde params (len={len(tilde_t_on_star)})")
+                return {}
+    else:
+        t_on_star = parameters['t_on_star'].flatten()
+        delta_star = parameters['delta_star'].flatten()
+        # Extract T_M_star if available for time range computation
+        T_M_star = parameters.get('T_M_star', torch.tensor([55.0])).flatten()  # Default to ~55
 
     # Ensure all parameters have the same length
     min_length = min(len(R_on), len(t_on_star), len(delta_star), len(gamma_star))
@@ -879,33 +932,102 @@ def _classify_parameters_into_patterns(
         'sustained': []
     }
 
-    # Classify each parameter set
-    for i in range(min_length):
-        # Create parameter dictionary for this sample
-        params = {
-            'alpha_off': alpha_off[i],
-            'alpha_on': alpha_on[i],
-            'gamma_star': gamma_star[i],
-            't_on_star': t_on_star[i],
-            'delta_star': delta_star[i],
-            'R_on': R_on[i]
-        }
+    # Use the same soft scoring approach as _classify_patterns_from_parameters
+    def sigmoid_score(value: float, threshold: float, direction: str, steepness: float = 5.0) -> float:
+        """Compute soft score using sigmoid function."""
+        if direction == '>':
+            return torch.sigmoid(torch.tensor(steepness * (value - threshold))).item()
+        else:  # direction == '<'
+            return torch.sigmoid(torch.tensor(steepness * (threshold - value))).item()
 
-        # Pattern classification logic (simplified from hyperparameter calibration)
-        if t_on_star[i] < 0:
-            # Negative onset time -> pre-activation pattern
-            if len(pattern_examples['pre_activation']) < n_examples:
-                pattern_examples['pre_activation'].append(params)
-        elif R_on[i] > 2.0 and t_on_star[i] > 0:
-            # Positive onset with significant fold change
-            if delta_star[i] < 0.4:
-                # Short duration -> transient pattern
-                if len(pattern_examples['transient']) < n_examples:
-                    pattern_examples['transient'].append(params)
-            else:
-                # Long duration -> sustained pattern
-                if len(pattern_examples['sustained']) < n_examples:
-                    pattern_examples['sustained'].append(params)
+    # Compute pattern scores for each sample
+    pattern_scores = {pattern: torch.zeros(min_length) for pattern in pattern_examples.keys()}
+
+    for i in range(min_length):
+        if use_relative_params:
+            # Use relative temporal parameters (preferred approach)
+            tilde_t_on = tilde_t_on_star[i].item()
+            tilde_delta = tilde_delta_star[i].item()
+
+            # Pre-activation: negative onset time
+            pattern_scores['pre_activation'][i] = torch.prod(torch.tensor([
+                sigmoid_score(R_on[i].item(), 2.0, '>'),
+                sigmoid_score(tilde_t_on, 0.0, '<')
+            ])) ** (1.0 / 2)
+
+            # Transient: positive onset, early timing, short duration
+            pattern_scores['transient'][i] = torch.prod(torch.tensor([
+                sigmoid_score(R_on[i].item(), 2.0, '>'),
+                sigmoid_score(tilde_t_on, 0.0, '>'),
+                sigmoid_score(tilde_t_on, 0.5, '<'),
+                sigmoid_score(tilde_delta, 0.4, '<')
+            ])) ** (1.0 / 4)
+
+            # Sustained: positive onset, early timing, long duration
+            pattern_scores['sustained'][i] = torch.prod(torch.tensor([
+                sigmoid_score(R_on[i].item(), 2.0, '>'),
+                sigmoid_score(tilde_t_on, 0.0, '>'),
+                sigmoid_score(tilde_t_on, 0.3, '<'),
+                sigmoid_score(tilde_delta, 0.5, '>')
+            ])) ** (1.0 / 4)
+        else:
+            # Fallback to absolute parameters with adjusted thresholds
+            # Assume T_M_star ~ 50-60 for scaling
+            typical_T_M = T_M_star[0].item() if len(T_M_star) > 0 else 55.0
+
+            # Pre-activation: negative onset time
+            pattern_scores['pre_activation'][i] = torch.prod(torch.tensor([
+                sigmoid_score(R_on[i].item(), 2.0, '>'),
+                sigmoid_score(t_on_star[i].item(), 0.0, '<')
+            ])) ** (1.0 / 2)
+
+            # Transient: positive onset, early timing, short duration
+            pattern_scores['transient'][i] = torch.prod(torch.tensor([
+                sigmoid_score(R_on[i].item(), 2.0, '>'),
+                sigmoid_score(t_on_star[i].item(), 0.0, '>'),
+                sigmoid_score(t_on_star[i].item(), 0.5 * typical_T_M, '<'),
+                sigmoid_score(delta_star[i].item(), 0.4 * typical_T_M, '<')
+            ])) ** (1.0 / 4)
+
+            # Sustained: positive onset, early timing, long duration
+            pattern_scores['sustained'][i] = torch.prod(torch.tensor([
+                sigmoid_score(R_on[i].item(), 2.0, '>'),
+                sigmoid_score(t_on_star[i].item(), 0.0, '>'),
+                sigmoid_score(t_on_star[i].item(), 0.3 * typical_T_M, '<'),
+                sigmoid_score(delta_star[i].item(), 0.5 * typical_T_M, '>')
+            ])) ** (1.0 / 4)
+
+    # Assign each sample to the pattern with highest score and collect examples
+    pattern_names = list(pattern_examples.keys())
+
+    for i in range(min_length):
+        scores = [pattern_scores[pattern][i] for pattern in pattern_names]
+        best_pattern_idx = torch.argmax(torch.tensor(scores))
+        best_pattern = pattern_names[best_pattern_idx]
+
+        # Only add if we haven't reached the limit for this pattern
+        if len(pattern_examples[best_pattern]) < n_examples:
+            # Create parameter dictionary for this sample
+            params = {
+                'alpha_off': alpha_off[i],
+                'alpha_on': alpha_on[i],
+                'gamma_star': gamma_star[i],
+                't_on_star': t_on_star[i],
+                'delta_star': delta_star[i],
+                'R_on': R_on[i]
+            }
+
+            # Add T_M_star if available
+            if use_relative_params and len(T_M_star) > 0:
+                if len(T_M_star) == 1:
+                    params['T_M_star'] = T_M_star[0]
+                elif len(T_M_star) == min_length:
+                    params['T_M_star'] = T_M_star[i]
+                else:
+                    # Use first T_M_star value as it's a global parameter
+                    params['T_M_star'] = T_M_star[0]
+
+            pattern_examples[best_pattern].append(params)
 
     # Remove empty patterns
     pattern_examples = {k: v for k, v in pattern_examples.items() if v}
@@ -916,38 +1038,83 @@ def _classify_parameters_into_patterns(
 def _compute_adaptive_time_range(
     pattern_examples: Dict[str, List[Dict[str, torch.Tensor]]],
     buffer_factor: float = 1.2,
-    n_points: int = 300
+    n_points: int = 300,
+    adata: Optional[AnnData] = None
 ) -> torch.Tensor:
     """
-    Compute adaptive time range based on T_M_star values in pattern examples.
+    Compute adaptive time range based on realized t_star values or T_M_star fallback.
+
+    This function prioritizes using the actual realized t_star values from the AnnData
+    object to ensure temporal trajectories match the time range of cells shown in UMAP plots.
+    Falls back to T_M_star-based computation when AnnData is not available.
 
     Args:
         pattern_examples: Dictionary with parameter sets for each pattern
-        buffer_factor: Multiplicative buffer beyond T_M_star
-        n_points: Number of time points to generate
+        buffer_factor: Multiplicative buffer beyond realized time range (default: 1.2 for 20% buffer)
+        n_points: Number of time points to generate (default: 300)
+        adata: Optional AnnData object containing realized t_star values
 
     Returns:
         Time tensor for trajectory evaluation
     """
-    # Find the maximum time scale from all examples
-    max_time_scale = 0.0
+    # Priority 1: Use realized t_star values from AnnData if available
+    if adata is not None:
+        # Look for time coordinate in various possible locations
+        time_coord = None
+        canonical_time_keys = ['t_star', 'cell_time']
+        fallback_time_keys = ['latent_time', 'velocity_pseudotime', 'dpt_pseudotime',
+                             'pseudotime', 'time', 't', 'shared_time']
+        time_keys = canonical_time_keys + fallback_time_keys
+
+        for key in time_keys:
+            if key in adata.obs:
+                time_coord = adata.obs[key].values
+                break
+
+        if time_coord is not None and len(time_coord) > 0:
+            # Use the actual realized time range from the data
+            time_range_max = float(np.max(time_coord)) * buffer_factor
+            print(f"  Adaptive time range: [0, {time_range_max:.1f}] based on realized {key} values (max: {np.max(time_coord):.1f})")
+            return torch.linspace(0, time_range_max, n_points)
+
+    # Priority 2: Look for T_M_star values in pattern examples
+    global_T_M_star = None
 
     for pattern_name, examples in pattern_examples.items():
         for params in examples:
-            # Estimate time scale from onset time and duration
-            t_on = params['t_on_star'].item()
-            delta = params['delta_star'].item()
-            gamma = params['gamma_star'].item()
+            if 'T_M_star' in params:
+                # T_M_star is a global parameter - should be the same across all examples
+                global_T_M_star = params['T_M_star'].item()
+                break
+        if global_T_M_star is not None:
+            break
 
-            # Estimate when trajectory returns to baseline (3 time constants)
-            decay_time = 3.0 / gamma if gamma > 0 else 10.0
+    if global_T_M_star is not None:
+        # Use the global T_M_star value with buffer
+        # This ensures we capture complete activation-decay cycles within the global time scale
+        time_range_max = global_T_M_star * buffer_factor
+        print(f"  Adaptive time range: [0, {time_range_max:.1f}] based on global T*_M = {global_T_M_star:.1f}")
+    else:
+        # Fallback: estimate from parameter values if T_M_star not available
+        max_time_scale = 0.0
 
-            # Total time scale includes onset, duration, and decay
-            total_time = max(0, t_on) + delta + decay_time
-            max_time_scale = max(max_time_scale, total_time)
+        for pattern_name, examples in pattern_examples.items():
+            for params in examples:
+                # Estimate time scale from onset time and duration
+                t_on = params['t_on_star'].item()
+                delta = params['delta_star'].item()
+                gamma = params['gamma_star'].item()
 
-    # Use buffer factor and ensure minimum reasonable range
-    time_range_max = max(max_time_scale * buffer_factor, 10.0)
+                # Estimate when trajectory returns to baseline (3 time constants)
+                decay_time = 3.0 / gamma if gamma > 0 else 10.0
+
+                # Total time scale includes onset, duration, and decay
+                total_time = max(0, t_on) + delta + decay_time
+                max_time_scale = max(max_time_scale, total_time)
+
+        # Use buffer factor and ensure minimum reasonable range
+        time_range_max = max(max_time_scale * buffer_factor, 10.0)
+        print(f"  Fallback time range: [0, {time_range_max:.1f}] estimated from parameter values")
 
     return torch.linspace(0, time_range_max, n_points)
 
@@ -1109,7 +1276,7 @@ def plot_prior_predictive_checks(
         # Create plots in logical order with numbered prefixes for proper PDF combination ordering
         plot_parameter_marginals(processed_parameters, check_type, save_path=save_path, file_prefix="02", model=model)
         plot_parameter_relationships(processed_parameters, check_type, save_path=save_path, file_prefix="03", model=model)
-        plot_temporal_trajectories(processed_parameters, check_type, save_path=save_path, file_prefix="04")
+        plot_temporal_trajectories(processed_parameters, check_type, save_path=save_path, file_prefix="04", adata=prior_adata)
         plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="05")
         plot_expression_validation(prior_adata, check_type, save_path=save_path, file_prefix="06")
         plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path, file_prefix="07")
@@ -1258,29 +1425,51 @@ def _plot_umap_time_coordinate(adata: AnnData, ax: plt.Axes, check_type: str, mo
         # Look for time coordinate in various possible locations
         time_coord = None
         time_label = 'Time'
+        found_key = None
 
-        # Check common time coordinate names
-        time_keys = ['latent_time', 'velocity_pseudotime', 'dpt_pseudotime',
-                    'pseudotime', 'time', 't', 'shared_time']
+        # Check canonical parameter names first (prioritize metadata system)
+        canonical_time_keys = ['t_star', 'cell_time']
 
-        # Define appropriate labels for time coordinates (non-LaTeX for colorbar)
-        time_coordinate_labels = {
-            'latent_time': 'Latent Time',
-            'velocity_pseudotime': 'Velocity Pseudotime',
-            'dpt_pseudotime': 'DPT Pseudotime',
-            'pseudotime': 'Pseudotime',
-            'time': 'Time',
-            't': 'Time',
-            'shared_time': 'Shared Time'
-        }
+        # Then check common time coordinate names for compatibility
+        fallback_time_keys = ['latent_time', 'velocity_pseudotime', 'dpt_pseudotime',
+                             'pseudotime', 'time', 't', 'shared_time']
+
+        # Combine in priority order
+        time_keys = canonical_time_keys + fallback_time_keys
 
         for key in time_keys:
             if key in adata.obs:
                 time_coord = adata.obs[key].values
-
-                # Use appropriate label for colorbar (non-LaTeX)
-                time_label = time_coordinate_labels.get(key, 'Time Coordinate')
+                found_key = key
                 break
+
+        # Get appropriate label using parameter metadata system
+        if found_key is not None:
+            from pyrovelocity.plots.parameter_metadata import (
+                get_parameter_label,
+            )
+
+            # Try to get label from metadata system first
+            time_label = get_parameter_label(
+                param_name=found_key,
+                label_type="short",
+                model=model,
+                fallback_to_legacy=False
+            )
+
+            # If metadata system doesn't have it, use fallback mapping
+            if time_label == found_key:  # No metadata found, use fallback
+                fallback_labels = {
+                    'latent_time': 'Latent Time',
+                    'velocity_pseudotime': 'Velocity Pseudotime',
+                    'dpt_pseudotime': 'DPT Pseudotime',
+                    'pseudotime': 'Pseudotime',
+                    'time': 'Time',
+                    't': 'Time',
+                    'shared_time': 'Shared Time',
+                    'cell_time': 'Cell Time'
+                }
+                time_label = fallback_labels.get(found_key, 'Time Coordinate')
 
         if time_coord is not None:
             # Create scatter plot colored by time
@@ -2074,15 +2263,18 @@ def _plot_gene_phase_portrait_rainbow(
         u_gene = adata.layers['unspliced'][:, gene_idx]
         s_gene = adata.layers['spliced'][:, gene_idx]
 
-        # Color by latent time if available, otherwise use a single color
+        # Color by time coordinate if available, prioritizing canonical parameter names
+        # This ensures consistency with the UMAP time coordinate plot
         time_col = None
-        for col in ['latent_time', 'cell_time', 't_star']:
+        # Check canonical parameter names first (prioritize metadata system)
+        for col in ['t_star', 'cell_time', 'latent_time']:
             if col in adata.obs:
                 time_col = col
                 break
 
         if time_col is not None:
             c = adata.obs[time_col]
+            # Use viridis colormap to match UMAP time coordinate plot
             axes_dict[f"phase_{n}"].scatter(s_gene, u_gene, c=c, cmap='viridis', alpha=0.6, s=3, edgecolors='none')
         else:
             axes_dict[f"phase_{n}"].scatter(s_gene, u_gene, alpha=0.6, s=3, color='steelblue', edgecolors='none')
@@ -2103,9 +2295,9 @@ def _plot_gene_spliced_dynamics_rainbow(
     total_genes: int
 ) -> None:
     """Plot spliced expression dynamics over time using rainbow plot style."""
-    # Find available time column
+    # Find available time column, prioritizing canonical parameter names
     time_col = None
-    for col in ['latent_time', 'cell_time', 't_star']:
+    for col in ['t_star', 'cell_time', 'latent_time']:
         if col in adata.obs:
             time_col = col
             break
@@ -2119,7 +2311,7 @@ def _plot_gene_spliced_dynamics_rainbow(
         time_sorted = time.iloc[sort_idx] if hasattr(time, 'iloc') else time[sort_idx]
         s_sorted = s_gene[sort_idx]
 
-        # Color by clusters if available
+        # Color by clusters if available to match UMAP cluster plot
         cluster_col = None
         for col in ['leiden', 'clusters', 'louvain']:
             if col in adata.obs:
@@ -2129,7 +2321,8 @@ def _plot_gene_spliced_dynamics_rainbow(
         if cluster_col is not None:
             clusters = adata.obs[cluster_col].iloc[sort_idx] if hasattr(adata.obs[cluster_col], 'iloc') else adata.obs[cluster_col][sort_idx]
             unique_clusters = np.unique(clusters)
-            colors = plt.cm.Set1(np.linspace(0, 1, len(unique_clusters)))
+            # Use tab10 colormap to match UMAP cluster plot coloring
+            colors = sns.color_palette("tab10", len(unique_clusters))
 
             for i, cluster in enumerate(unique_clusters):
                 mask = clusters == cluster
