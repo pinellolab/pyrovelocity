@@ -225,12 +225,6 @@ class ComponentFactory:
         )
 
 
-
-
-
-
-
-
 @beartype
 def create_model_from_config(
     config: Union[ModelConfig, Dict[str, Any], DictConfig]
@@ -273,28 +267,6 @@ def create_model_from_config(
     )
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Legacy model replication functions
 def create_legacy_model1() -> PyroVelocityModel:
     """
     Create a PyroVelocityModel that replicates the legacy model with add_offset=False.
@@ -377,7 +349,6 @@ def create_legacy_model2() -> PyroVelocityModel:
         ),
     )
 
-    # Create and return the model
     return create_model_from_config(config)
 
 
@@ -428,7 +399,6 @@ def create_piecewise_activation_model() -> PyroVelocityModel:
     return create_model_from_config(config)
 
 
-# Export all public symbols
 __all__ = [
     # Factory class
     "ComponentFactory",
@@ -441,5 +411,4 @@ __all__ = [
     "create_piecewise_activation_model",
 ]
 
-# Register standard components when the module is imported
 register_standard_components()
