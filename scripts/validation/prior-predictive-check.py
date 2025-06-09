@@ -66,7 +66,7 @@ fig_prior = plot_prior_predictive_checks(
     save_path="reports/docs/prior_predictive",
     figure_name=f"piecewise_activation_prior_checks_{RANDOM_SEED}",
     combine_individual_pdfs=True,
-    default_fontsize=7,
+    default_fontsize=5,
 )
 
 plt.suptitle("Prior Predictive Checks: Piecewise Activation Model", fontsize=16)
