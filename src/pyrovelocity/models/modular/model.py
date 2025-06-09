@@ -1454,6 +1454,81 @@ class PyroVelocityModel:
         return adata
 
     @beartype
+    def generate_trajectory_times(
+        self,
+        n_cells: int,
+        trajectory_type: str = "linear",
+        time_range: Tuple[float, float] = (0.0, 50.0),
+        n_trajectories: int = 1,
+        seed: Optional[int] = None
+    ) -> torch.Tensor:
+        """
+        Generate coherent time sequences for trajectory-based validation.
+
+        This method creates time vectors that represent cells sampled along
+        coherent developmental trajectories, addressing the issue where
+        independent time sampling breaks parameter recovery validation.
+
+        Args:
+            n_cells: Total number of cells to generate times for
+            trajectory_type: Type of trajectory ('linear', 'branching', 'cyclic')
+            time_range: (min_time, max_time) for the trajectory
+            n_trajectories: Number of separate trajectories (for branching)
+            seed: Random seed for reproducibility
+
+        Returns:
+            Tensor of shape [n_cells] with coherent time assignments
+        """
+        if seed is not None:
+            torch.manual_seed(seed)
+
+        min_time, max_time = time_range
+
+        if trajectory_type == "linear":
+            # Single linear trajectory with uniform time sampling
+            times = torch.linspace(min_time, max_time, n_cells)
+
+        elif trajectory_type == "branching":
+            # Multiple trajectories with cells distributed among them
+            cells_per_trajectory = n_cells // n_trajectories
+            times = []
+
+            for i in range(n_trajectories):
+                # Each trajectory has slightly different time range
+                traj_min = min_time + i * (max_time - min_time) * 0.1
+                traj_max = max_time - (n_trajectories - 1 - i) * (max_time - min_time) * 0.1
+
+                traj_times = torch.linspace(traj_min, traj_max, cells_per_trajectory)
+                times.append(traj_times)
+
+            # Handle remaining cells
+            remaining_cells = n_cells - cells_per_trajectory * n_trajectories
+            if remaining_cells > 0:
+                extra_times = torch.linspace(min_time, max_time, remaining_cells)
+                times.append(extra_times)
+
+            times = torch.cat(times)
+
+        elif trajectory_type == "cyclic":
+            # Cyclic trajectory with periodic time structure
+            base_times = torch.linspace(0, 2 * torch.pi, n_cells)
+            # Map to time range with cyclic structure
+            normalized_times = (torch.sin(base_times) + 1) / 2  # [0, 1]
+            times = min_time + normalized_times * (max_time - min_time)
+
+        else:
+            raise ValueError(f"Unknown trajectory_type: {trajectory_type}")
+
+        # Add small amount of noise to avoid exact duplicates
+        noise = torch.randn(n_cells) * 0.01 * (max_time - min_time)
+        times = times + noise
+
+        # Ensure times stay within bounds
+        times = torch.clamp(times, min_time, max_time)
+
+        return times
+
+    @beartype
     def generate_validation_datasets(
         self,
         patterns: List[str] = ['activation', 'decay', 'transient', 'sustained'],
@@ -1461,7 +1536,9 @@ class PyroVelocityModel:
         n_cells: int = 200,
         n_parameter_sets: int = 2,
         seed: int = 42,
-        compute_dimred: bool = True
+        compute_dimred: bool = True,
+        use_coherent_trajectories: bool = True,
+        trajectory_type: str = "linear"
     ) -> Dict[str, Dict[str, Any]]:
         """
         Generate synthetic validation datasets for parameter recovery validation.
@@ -1478,6 +1555,9 @@ class PyroVelocityModel:
             n_cells: Number of cells in each dataset
             n_parameter_sets: Number of parameter sets per pattern
             seed: Base random seed for reproducibility
+            compute_dimred: Whether to compute dimensionality reduction (PCA, UMAP, etc.)
+            use_coherent_trajectories: Whether to use coherent time trajectories instead of random sampling
+            trajectory_type: Type of trajectory ('linear', 'branching', 'cyclic') when using coherent trajectories
 
         Returns:
             Dictionary with keys like 'activation_1', 'decay_2' containing:
@@ -1521,13 +1601,32 @@ class PyroVelocityModel:
                     n_cells=n_cells
                 )
 
-                # Generate synthetic data using the true parameters
-                synthetic_adata = self.generate_predictive_samples(
-                    num_cells=n_cells,
-                    num_genes=n_genes,
-                    samples=true_parameters,
-                    return_format="anndata"
-                )
+                # Generate coherent trajectory times if requested
+                if use_coherent_trajectories:
+                    # Generate coherent time sequence for this dataset
+                    trajectory_times = self.generate_trajectory_times(
+                        n_cells=n_cells,
+                        trajectory_type=trajectory_type,
+                        time_range=(0.0, 50.0),  # Use typical T_M_star range
+                        seed=dataset_seed
+                    )
+
+                    # Generate synthetic data using the true parameters and coherent times
+                    synthetic_adata = self.generate_predictive_samples(
+                        num_cells=n_cells,
+                        num_genes=n_genes,
+                        samples=true_parameters,
+                        return_format="anndata",
+                        observed_times=trajectory_times
+                    )
+                else:
+                    # Generate synthetic data using the true parameters (original method)
+                    synthetic_adata = self.generate_predictive_samples(
+                        num_cells=n_cells,
+                        num_genes=n_genes,
+                        samples=true_parameters,
+                        return_format="anndata"
+                    )
 
                 if compute_dimred:
                     import scanpy as sc
@@ -1918,6 +2017,7 @@ class PyroVelocityModel:
         samples: Optional[Dict[str, torch.Tensor]] = None,
         num_samples: Optional[int] = None,
         return_format: str = "dict",
+        observed_times: Optional[torch.Tensor] = None,
         **kwargs
     ) -> Union[Dict[str, torch.Tensor], AnnData]:
         """
@@ -1937,6 +2037,7 @@ class PyroVelocityModel:
             samples: Optional parameter samples to use (if None, samples from prior)
             num_samples: Number of predictive samples (only used if samples=None)
             return_format: Format for returned data ("dict", "anndata", "inference_data")
+            observed_times: Optional tensor of observed times for coherent trajectory sampling
             **kwargs: Additional arguments passed to the model
 
         Returns:
@@ -1986,8 +2087,22 @@ class PyroVelocityModel:
             dummy_u_obs = torch.zeros(num_cells, num_genes)
             dummy_s_obs = torch.zeros(num_cells, num_genes)
 
-            # Call the main model forward method
-            return self.forward(dummy_u_obs, dummy_s_obs)
+            # Create context with observations
+            context = {
+                "u_obs": dummy_u_obs,
+                "s_obs": dummy_s_obs,
+            }
+
+            # Add observed times to context if provided
+            if observed_times is not None:
+                context["observed_times"] = observed_times
+
+            # Run the full model pipeline with context
+            prior_context = self.prior_model.forward(context)
+            dynamics_context = self.dynamics_model.forward(prior_context)
+            likelihood_context = self.likelihood_model.forward(dynamics_context)
+
+            return likelihood_context
 
         # Use pyro.poutine.uncondition to remove observation conditioning
         unconditioned_model = pyro.poutine.uncondition(create_predictive_model)
@@ -2026,6 +2141,10 @@ class PyroVelocityModel:
                         "u_obs": dummy_u_obs,
                         "s_obs": dummy_s_obs,
                     }
+
+                    # Add observed times to context if provided
+                    if observed_times is not None:
+                        context["observed_times"] = observed_times
 
                     # Add fixed parameter values to context (removing batch and sample dimensions)
                     for key, value in samples.items():
