@@ -2028,15 +2028,12 @@ class PyroVelocityModel:
         sampling parameters from the prior. When samples are provided, it generates
         posterior predictive samples using those parameter values.
 
-        This is essential for parameter recovery validation studies where we need to
-        generate synthetic datasets with known ground truth parameters.
-
         Args:
             num_cells: Number of cells to generate
             num_genes: Number of genes to generate
             samples: Optional parameter samples to use (if None, samples from prior)
             num_samples: Number of predictive samples (only used if samples=None)
-            return_format: Format for returned data ("dict", "anndata", "inference_data")
+            return_format: Format for returned data ("dict", "anndata")
             observed_times: Optional tensor of observed times for coherent trajectory sampling
             **kwargs: Additional arguments passed to the model
 
@@ -2045,38 +2042,12 @@ class PyroVelocityModel:
 
         Raises:
             ValueError: If return_format is invalid or model components are missing
-
-        Examples:
-            >>> # Prior predictive sampling
-            >>> from pyrovelocity.models.modular.factory import create_piecewise_activation_model
-            >>> model = create_piecewise_activation_model()
-            >>> prior_data = model.generate_predictive_samples(
-            ...     num_cells=50,
-            ...     num_genes=2,
-            ...     num_samples=100,
-            ...     return_format="anndata"
-            ... )
-            >>> print(f"Generated {prior_data.n_obs} cells × {prior_data.n_vars} genes")
-
-            >>> # Posterior predictive sampling
-            >>> true_params = model.sample_system_parameters(
-            ...     num_samples=1,
-            ...     constrain_to_pattern=True,
-            ...     pattern='activation'
-            ... )
-            >>> synthetic_data = model.generate_predictive_samples(
-            ...     num_cells=200,
-            ...     num_genes=5,
-            ...     samples=true_params,
-            ...     return_format="anndata"
-            ... )
-            >>> print(f"Generated synthetic data: {synthetic_data.shape}")
         """
         import pyro
         from pyro.infer import Predictive
 
         # Validate return format
-        valid_formats = ["dict", "anndata", "inference_data"]
+        valid_formats = ["dict", "anndata"]
         if return_format not in valid_formats:
             raise ValueError(f"return_format must be one of {valid_formats}, got {return_format}")
 
@@ -2125,10 +2096,6 @@ class PyroVelocityModel:
         else:
             # Posterior predictive sampling: use provided parameter samples
             if isinstance(samples, dict):
-                # The samples from sample_system_parameters have batch dimension [num_samples, ...]
-                # For posterior predictive sampling, we need to remove the batch dimension
-                # and use the samples as fixed parameter values
-
                 # Create a model that uses fixed parameter values
                 def posterior_predictive_model():
                     """Model with fixed parameters for posterior predictive sampling."""
@@ -2146,191 +2113,8 @@ class PyroVelocityModel:
                     if observed_times is not None:
                         context["observed_times"] = observed_times
 
-                    # Add fixed parameter values to context (removing batch and sample dimensions)
-                    for key, value in samples.items():
-                        if isinstance(value, torch.Tensor):
-                            # Remove batch dimension if it exists
-                            if value.ndim > 1 and value.shape[0] == 1:
-                                param_value = value.squeeze(0)
-                            else:
-                                param_value = value
-
-                            # If we still have multiple samples (e.g., [1000, 5]), take the first sample
-                            # This is necessary for posterior predictive sampling where we want to generate
-                            # data using a single parameter sample
-                            if param_value.ndim > 1 and param_value.shape[0] > 1:
-                                # Check if the first dimension looks like a sample dimension
-                                # (i.e., it's much larger than the expected parameter dimensions)
-                                if param_value.shape[0] >= 100:  # Likely a sample dimension
-                                    param_value = param_value[0]  # Take first sample
-
-                            # Handle cell-specific parameters that need to match num_cells
-                            if key == "t_star" and param_value.shape[0] != num_cells:
-                                # t_star is cell-specific and needs to match the number of cells
-                                # We need to resample or interpolate to match num_cells
-                                if param_value.shape[0] == 1:
-                                    # If we have a single value, expand it to all cells
-                                    # Handle multi-dimensional tensors properly
-                                    if param_value.ndim == 1:
-                                        context[key] = param_value.expand(num_cells)
-                                    else:
-                                        # For multi-dimensional tensors, handle batch dimensions properly
-                                        # First squeeze out batch dimension if present
-                                        if param_value.shape[0] == 1:
-                                            squeezed = param_value.squeeze(0)
-                                            if squeezed.ndim == 1 and squeezed.shape[0] == 1:
-                                                # Single value: repeat to match num_cells
-                                                context[key] = squeezed.expand(num_cells)
-                                            elif squeezed.ndim == 1:
-                                                # Already correct size or needs interpolation
-                                                if squeezed.shape[0] < num_cells:
-                                                    repeat_factor = (num_cells + squeezed.shape[0] - 1) // squeezed.shape[0]
-                                                    repeated = squeezed.repeat(repeat_factor)
-                                                    context[key] = repeated[:num_cells]
-                                                else:
-                                                    context[key] = squeezed[:num_cells]
-                                            else:
-                                                # Multi-dimensional: take first sample
-                                                context[key] = squeezed.flatten()[:num_cells] if squeezed.numel() >= num_cells else squeezed.flatten()
-                                        else:
-                                            # Multiple batch samples: take first and process
-                                            first_sample = param_value[0]
-                                            if first_sample.numel() == 1:
-                                                # Single value: expand to num_cells
-                                                context[key] = first_sample.expand(num_cells)
-                                            elif first_sample.numel() >= num_cells:
-                                                context[key] = first_sample.flatten()[:num_cells]
-                                            else:
-                                                # Repeat to match num_cells
-                                                repeat_factor = (num_cells + first_sample.numel() - 1) // first_sample.numel()
-                                                repeated = first_sample.repeat(repeat_factor)
-                                                context[key] = repeated.flatten()[:num_cells]
-                                else:
-                                    # If we have multiple values, we need to resample
-                                    # For now, we'll use the hierarchical parameters to generate new t_star
-                                    # This requires T_M_star, t_loc, t_scale from the samples
-                                    if all(param in samples for param in ["T_M_star", "t_loc", "t_scale"]):
-                                        T_M_star = samples["T_M_star"].squeeze(0) if samples["T_M_star"].ndim > 0 else samples["T_M_star"]
-                                        t_loc = samples["t_loc"].squeeze(0) if samples["t_loc"].ndim > 0 else samples["t_loc"]
-                                        t_scale = samples["t_scale"].squeeze(0) if samples["t_scale"].ndim > 0 else samples["t_scale"]
-
-                                        # Generate new t_star for the correct number of cells
-                                        import torch.distributions as dist
-                                        tilde_t = dist.Normal(t_loc, t_scale).sample((num_cells,))
-                                        t_epsilon = 1e-6  # Small epsilon to ensure positive times
-                                        new_t_star = T_M_star * torch.clamp(tilde_t, min=t_epsilon)
-                                        context[key] = new_t_star
-                                    else:
-                                        # Fallback: interpolate or repeat existing values
-                                        if param_value.shape[0] < num_cells:
-                                            # Repeat values to match num_cells
-                                            repeat_factor = (num_cells + param_value.shape[0] - 1) // param_value.shape[0]
-                                            repeated = param_value.repeat(repeat_factor)
-                                            context[key] = repeated[:num_cells]
-                                        else:
-                                            # Take first num_cells values
-                                            context[key] = param_value[:num_cells]
-                            elif key == "lambda_j" and param_value.shape[-1] != num_cells:
-                                # lambda_j is also cell-specific
-                                # Handle multi-dimensional tensors properly
-                                if param_value.ndim == 1:
-                                    # 1D tensor: [cells] or [samples]
-                                    if param_value.shape[0] == 1:
-                                        context[key] = param_value.expand(num_cells)
-                                    elif param_value.shape[0] < num_cells:
-                                        repeat_factor = (num_cells + param_value.shape[0] - 1) // param_value.shape[0]
-                                        repeated = param_value.repeat(repeat_factor)
-                                        context[key] = repeated[:num_cells]
-                                    else:
-                                        context[key] = param_value[:num_cells]
-                                elif param_value.ndim >= 2:
-                                    # Multi-dimensional tensor: handle batch dimensions
-                                    # Take the first sample if we have batch dimension
-                                    if param_value.shape[0] == 1:
-                                        # Remove batch dimension and handle the rest
-                                        param_squeezed = param_value.squeeze(0)
-                                        if param_squeezed.shape[-1] == num_cells:
-                                            context[key] = param_squeezed
-                                        elif param_squeezed.shape[-1] == 1:
-                                            # For 1D squeezed tensor, use simple expand
-                                            if param_squeezed.ndim == 1:
-                                                context[key] = param_squeezed.expand(num_cells)
-                                            else:
-                                                # For multi-dimensional, use repeat instead of expand
-                                                repeat_dims = [1] * param_squeezed.ndim
-                                                repeat_dims[-1] = num_cells
-                                                context[key] = param_squeezed.repeat(*repeat_dims)
-                                        elif param_squeezed.shape[-1] < num_cells:
-                                            # Repeat along the last dimension
-                                            repeat_dims = [1] * param_squeezed.ndim
-                                            repeat_dims[-1] = (num_cells + param_squeezed.shape[-1] - 1) // param_squeezed.shape[-1]
-                                            repeated = param_squeezed.repeat(*repeat_dims)
-                                            context[key] = repeated[..., :num_cells]
-                                        else:
-                                            # Take first num_cells values along last dimension
-                                            context[key] = param_squeezed[..., :num_cells]
-                                    else:
-                                        # Multiple samples: take first sample and process
-                                        first_sample = param_value[0]
-                                        if first_sample.shape[-1] == num_cells:
-                                            context[key] = first_sample
-                                        elif first_sample.shape[-1] == 1:
-                                            # For 1D first_sample, use simple expand
-                                            if first_sample.ndim == 1:
-                                                context[key] = first_sample.expand(num_cells)
-                                            else:
-                                                # For multi-dimensional, use repeat instead of expand
-                                                repeat_dims = [1] * first_sample.ndim
-                                                repeat_dims[-1] = num_cells
-                                                context[key] = first_sample.repeat(*repeat_dims)
-                                        elif first_sample.shape[-1] < num_cells:
-                                            repeat_dims = [1] * first_sample.ndim
-                                            repeat_dims[-1] = (num_cells + first_sample.shape[-1] - 1) // first_sample.shape[-1]
-                                            repeated = first_sample.repeat(*repeat_dims)
-                                            context[key] = repeated[..., :num_cells]
-                                        else:
-                                            context[key] = first_sample[..., :num_cells]
-                            else:
-                                context[key] = param_value
-                        else:
-                            context[key] = value
-
-                    # Check if t_star is missing and compute it from hierarchical parameters
-                    if "t_star" not in context and all(param in context for param in ["T_M_star", "tilde_t"]):
-                        # Compute t_star from the processed hierarchical time parameters
-                        # Use the already processed values from context, not the original samples
-                        T_M_star = context["T_M_star"]
-                        tilde_t = context["tilde_t"]
-
-                        # Compute t_star = T_M_star * clamp(tilde_t, min=epsilon)
-                        t_epsilon = 1e-6  # Small epsilon to ensure positive times
-                        t_star = T_M_star * torch.clamp(tilde_t, min=t_epsilon)
-                        context["t_star"] = t_star
-
-                    # Ensure deterministic temporal parameters are computed if missing
-                    if "t_on_star" not in context and all(param in context for param in ["T_M_star", "tilde_t_on_star"]):
-                        t_on_star = pyro.deterministic("t_on_star", context["T_M_star"] * context["tilde_t_on_star"])
-                        context["t_on_star"] = t_on_star
-
-                    if "delta_star" not in context and all(param in context for param in ["T_M_star", "tilde_delta_star"]):
-                        delta_star = pyro.deterministic("delta_star", context["T_M_star"] * context["tilde_delta_star"])
-                        context["delta_star"] = delta_star
-
-                    # Ensure alpha parameters are computed if missing
-                    if "alpha_on" not in context and "R_on" in context:
-                        # alpha_off is fixed at 1.0, so alpha_on = R_on
-                        alpha_on = pyro.deterministic("alpha_on", context["R_on"])
-                        context["alpha_on"] = alpha_on
-
-                    if "alpha_off" not in context:
-                        # alpha_off is always fixed at 1.0
-                        R_on = context.get("R_on", torch.tensor(1.0))
-                        if R_on.dim() > 0:
-                            n_genes_for_alpha = R_on.shape[0]
-                            alpha_off = torch.ones(n_genes_for_alpha, device=R_on.device, dtype=R_on.dtype)
-                        else:
-                            alpha_off = torch.ones_like(R_on)
-                        context["alpha_off"] = alpha_off
+                    # Add fixed parameter values to context with simplified processing
+                    context.update(self._process_parameter_samples(samples, num_cells, num_genes))
 
                     # Skip prior sampling and go directly to dynamics and likelihood
                     dynamics_context = self.dynamics_model.forward(context)
@@ -2368,6 +2152,72 @@ class PyroVelocityModel:
             raise NotImplementedError("inference_data format not yet implemented")
 
         return predictive_samples
+
+    @beartype
+    def _process_parameter_samples(
+        self,
+        samples: Dict[str, torch.Tensor],
+        num_cells: int,
+        num_genes: int
+    ) -> Dict[str, torch.Tensor]:
+        """
+        Process parameter samples for posterior predictive sampling.
+
+        This method simplifies the complex tensor reshaping logic by handling
+        common parameter processing patterns in a clean, maintainable way.
+
+        Args:
+            samples: Dictionary of parameter samples
+            num_cells: Target number of cells
+            num_genes: Target number of genes
+
+        Returns:
+            Dictionary of processed parameters ready for model context
+        """
+        processed = {}
+
+        for key, value in samples.items():
+            if isinstance(value, torch.Tensor):
+                # Simplify tensor processing - handle different tensor shapes
+                if value.ndim == 3:
+                    # 3D tensor: [num_samples, batch_dim, param_dim] -> take mean and squeeze
+                    processed_value = value.mean(dim=0).squeeze(0)
+                elif value.ndim == 2 and value.shape[0] > 1:
+                    # 2D tensor with multiple samples: take mean across sample dimension
+                    processed_value = value.mean(dim=0)
+                elif value.ndim >= 1:
+                    # 1D or 2D tensor: squeeze out batch dimensions
+                    processed_value = value.squeeze()
+                else:
+                    processed_value = value
+
+                # Handle cell-specific parameters
+                if key in ["t_star", "cell_time"]:
+                    # These parameters should have shape [num_cells] or be expandable to it
+                    if processed_value.numel() == 1:
+                        # Single value: expand to all cells
+                        processed[key] = processed_value.expand(num_cells)
+                    elif processed_value.shape == torch.Size([num_cells]):
+                        # Already correct shape
+                        processed[key] = processed_value
+                    elif processed_value.numel() >= num_cells:
+                        # Take first num_cells values
+                        processed[key] = processed_value.flatten()[:num_cells]
+                    else:
+                        # Repeat to match num_cells
+                        repeat_factor = (num_cells + processed_value.numel() - 1) // processed_value.numel()
+                        repeated = processed_value.repeat(repeat_factor)
+                        processed[key] = repeated.flatten()[:num_cells]
+                elif key in ["R_on", "alpha_on", "alpha_off", "gamma_star"] and processed_value.numel() == num_genes:
+                    # Gene-specific parameters should have shape [num_genes]
+                    processed[key] = processed_value.reshape(num_genes)
+                else:
+                    # Other parameters: use as-is
+                    processed[key] = processed_value
+            else:
+                processed[key] = value
+
+        return processed
 
     @beartype
     def _convert_to_anndata(
@@ -2980,5 +2830,3 @@ class PyroVelocityModel:
                 correlations
             ))
         }
-
-
