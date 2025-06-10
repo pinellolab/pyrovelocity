@@ -1238,7 +1238,7 @@ def plot_prior_predictive_checks(
     figure_name: Optional[str] = None,
     create_individual_plots: bool = True,
     combine_individual_pdfs: bool = False,
-    default_fontsize: Union[int, float] = 8,  # Default font size for all text elements
+    default_fontsize: Union[int, float] = 8,
 ) -> plt.Figure:
     """
     Generate comprehensive predictive check plots for PyroVelocity models.
@@ -2852,6 +2852,7 @@ def plot_posterior_predictive_checks(
     figure_name: Optional[str] = None,
     create_individual_plots: bool = True,
     combine_individual_pdfs: bool = False,
+    default_fontsize: Union[int, float] = 8,
 ) -> plt.Figure:
     """
     Generate posterior predictive check plots.
@@ -2888,4 +2889,5 @@ def plot_posterior_predictive_checks(
         figure_name=figure_name,
         create_individual_plots=create_individual_plots,
         combine_individual_pdfs=combine_individual_pdfs,
+        default_fontsize=default_fontsize,
     )
