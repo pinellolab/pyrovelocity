@@ -2096,43 +2096,113 @@ class PyroVelocityModel:
         else:
             # Posterior predictive sampling: use provided parameter samples
             if isinstance(samples, dict):
-                # Create a model that uses fixed parameter values
-                def posterior_predictive_model():
-                    """Model with fixed parameters for posterior predictive sampling."""
-                    # Create dummy observations with the right shape
-                    dummy_u_obs = torch.zeros(num_cells, num_genes)
-                    dummy_s_obs = torch.zeros(num_cells, num_genes)
+                # Check if samples contain multiple posterior samples or single averaged values
+                sample_sizes = [v.shape[0] if hasattr(v, 'shape') and len(v.shape) > 0 else 1
+                              for v in samples.values() if isinstance(v, torch.Tensor)]
 
-                    # Create context with observations
-                    context = {
-                        "u_obs": dummy_u_obs,
-                        "s_obs": dummy_s_obs,
-                    }
+                if sample_sizes and max(sample_sizes) > 1:
+                    # Multiple posterior samples: generate multiple predictive datasets
+                    num_posterior_samples = max(sample_sizes)
 
-                    # Add observed times to context if provided
-                    if observed_times is not None:
-                        context["observed_times"] = observed_times
+                    # For multiple posterior samples, we need to iterate manually
+                    # because the complex tensor shapes don't work well with Pyro's Predictive
+                    print(f"  🔄 Generating {num_posterior_samples} predictive datasets...")
 
-                    # Add fixed parameter values to context with simplified processing
-                    context.update(self._process_parameter_samples(samples, num_cells, num_genes))
+                    all_predictive_samples = []
 
-                    # Skip prior sampling and go directly to dynamics and likelihood
-                    dynamics_context = self.dynamics_model.forward(context)
-                    likelihood_context = self.likelihood_model.forward(dynamics_context)
+                    for i in range(num_posterior_samples):
+                        # Extract single sample from each parameter
+                        single_sample = {}
+                        for key, value in samples.items():
+                            if isinstance(value, torch.Tensor) and value.shape[0] > 1:
+                                single_sample[key] = value[i:i+1]  # Keep batch dimension
+                            else:
+                                single_sample[key] = value
 
-                    return likelihood_context
+                        # Generate single predictive sample using existing logic
+                        def posterior_predictive_model():
+                            """Model with fixed parameters for posterior predictive sampling."""
+                            # Create dummy observations with the right shape
+                            dummy_u_obs = torch.zeros(num_cells, num_genes)
+                            dummy_s_obs = torch.zeros(num_cells, num_genes)
 
-                # Use unconditioned version to generate observations
-                unconditioned_posterior_model = pyro.poutine.uncondition(posterior_predictive_model)
+                            # Create context with observations
+                            context = {
+                                "u_obs": dummy_u_obs,
+                                "s_obs": dummy_s_obs,
+                            }
 
-                # Generate samples
-                predictive = Predictive(
-                    unconditioned_posterior_model,
-                    num_samples=1,  # Generate one sample with fixed parameters
-                    return_sites=None,
-                )
+                            # Add observed times to context if provided
+                            if observed_times is not None:
+                                context["observed_times"] = observed_times
 
-                predictive_samples = predictive()
+                            # Add fixed parameter values to context with simplified processing
+                            context.update(self._process_parameter_samples(single_sample, num_cells, num_genes))
+
+                            # Skip prior sampling and go directly to dynamics and likelihood
+                            dynamics_context = self.dynamics_model.forward(context)
+                            likelihood_context = self.likelihood_model.forward(dynamics_context)
+
+                            return likelihood_context
+
+                        # Use unconditioned version to generate observations
+                        unconditioned_posterior_model = pyro.poutine.uncondition(posterior_predictive_model)
+
+                        # Generate samples
+                        predictive = Predictive(
+                            unconditioned_posterior_model,
+                            num_samples=1,  # Generate one sample with fixed parameters
+                            return_sites=None,
+                        )
+
+                        single_predictive_sample = predictive()
+                        all_predictive_samples.append(single_predictive_sample)
+
+                    # Combine all samples into a single dictionary with batch dimension
+                    predictive_samples = {}
+                    for key in all_predictive_samples[0].keys():
+                        # Stack samples along batch dimension
+                        stacked_samples = torch.stack([sample[key] for sample in all_predictive_samples], dim=0)
+                        predictive_samples[key] = stacked_samples
+
+                else:
+                    # Single parameter set (backward compatibility): use existing logic
+                    def posterior_predictive_model():
+                        """Model with fixed parameters for posterior predictive sampling."""
+                        # Create dummy observations with the right shape
+                        dummy_u_obs = torch.zeros(num_cells, num_genes)
+                        dummy_s_obs = torch.zeros(num_cells, num_genes)
+
+                        # Create context with observations
+                        context = {
+                            "u_obs": dummy_u_obs,
+                            "s_obs": dummy_s_obs,
+                        }
+
+                        # Add observed times to context if provided
+                        if observed_times is not None:
+                            context["observed_times"] = observed_times
+
+                        # Add fixed parameter values to context with simplified processing
+                        context.update(self._process_parameter_samples(samples, num_cells, num_genes))
+
+                        # Skip prior sampling and go directly to dynamics and likelihood
+                        dynamics_context = self.dynamics_model.forward(context)
+                        likelihood_context = self.likelihood_model.forward(dynamics_context)
+
+                        return likelihood_context
+
+                    # Use unconditioned version to generate observations
+                    unconditioned_posterior_model = pyro.poutine.uncondition(posterior_predictive_model)
+
+                    # Generate samples
+                    predictive = Predictive(
+                        unconditioned_posterior_model,
+                        num_samples=1,  # Generate one sample with fixed parameters
+                        return_sites=None,
+                    )
+
+                    predictive_samples = predictive()
             else:
                 raise ValueError("samples must be a dictionary of parameter values")
 
@@ -2181,10 +2251,18 @@ class PyroVelocityModel:
                 # Simplify tensor processing - handle different tensor shapes
                 if value.ndim == 3:
                     # 3D tensor: [num_samples, batch_dim, param_dim] -> take mean and squeeze
-                    processed_value = value.mean(dim=0).squeeze(0)
+                    if value.dtype in [torch.float32, torch.float64]:
+                        processed_value = value.mean(dim=0).squeeze(0)
+                    else:
+                        # For integer types, take the first sample instead of mean
+                        processed_value = value[0].squeeze(0)
                 elif value.ndim == 2 and value.shape[0] > 1:
                     # 2D tensor with multiple samples: take mean across sample dimension
-                    processed_value = value.mean(dim=0)
+                    if value.dtype in [torch.float32, torch.float64]:
+                        processed_value = value.mean(dim=0)
+                    else:
+                        # For integer types, take the first sample instead of mean
+                        processed_value = value[0]
                 elif value.ndim >= 1:
                     # 1D or 2D tensor: squeeze out batch dimensions
                     processed_value = value.squeeze()
@@ -2248,8 +2326,6 @@ class PyroVelocityModel:
         Raises:
             ValueError: If required observation sites are missing from predictive samples
         """
-        import pandas as pd
-
         # Extract count data from predictive samples
         # Look for standard observation sites
         u_obs_key = None
@@ -2286,11 +2362,80 @@ class PyroVelocityModel:
         if isinstance(s_counts, torch.Tensor):
             s_counts = s_counts.detach().cpu().numpy()
 
-        # Handle batch dimension (take first sample if multiple)
-        if u_counts.ndim == 3:  # [num_samples, num_cells, num_genes]
-            u_counts = u_counts[0]  # Take first sample
-        if s_counts.ndim == 3:
-            s_counts = s_counts[0]
+
+
+        # Handle batch dimension for multiple predictive samples
+        if u_counts.ndim >= 3:  # Multiple dimensions - need to find the right ones
+            # The tensor might be [num_samples, batch_dim, num_cells, num_genes] or similar
+            # We need to find the dimensions that correspond to [num_cells, num_genes]
+
+            # Look for dimensions that match our expected cell and gene counts
+            shape = u_counts.shape
+            cell_dim_idx = None
+            gene_dim_idx = None
+
+            for i, dim_size in enumerate(shape):
+                if dim_size == num_cells and cell_dim_idx is None:
+                    cell_dim_idx = i
+                elif dim_size == num_genes and gene_dim_idx is None:
+                    gene_dim_idx = i
+
+            if cell_dim_idx is not None and gene_dim_idx is not None:
+                # We found the cell and gene dimensions
+                # Reshape to [num_samples, num_cells, num_genes] by moving and squeezing
+
+                # First, move the cell and gene dimensions to the end
+                u_counts = np.moveaxis(u_counts, [cell_dim_idx, gene_dim_idx], [-2, -1])
+                s_counts = np.moveaxis(s_counts, [cell_dim_idx, gene_dim_idx], [-2, -1])
+
+                # Squeeze out any singleton dimensions except the last two (cells, genes)
+                while u_counts.ndim > 3:
+                    # Find singleton dimensions (excluding last two)
+                    singleton_dims = [i for i in range(u_counts.ndim - 2) if u_counts.shape[i] == 1]
+                    if singleton_dims:
+                        u_counts = np.squeeze(u_counts, axis=singleton_dims[0])
+                        s_counts = np.squeeze(s_counts, axis=singleton_dims[0])
+                    else:
+                        # If no singleton dimensions, flatten the first dimensions
+                        new_shape = (-1,) + u_counts.shape[-2:]
+                        u_counts = u_counts.reshape(new_shape)
+                        s_counts = s_counts.reshape(new_shape)
+                        break
+
+                if u_counts.ndim == 3:  # [num_samples, num_cells, num_genes]
+                    # For posterior predictive checks, we want to store summary statistics
+                    # Store mean as primary data and std/quantiles as additional layers
+                    u_counts_mean = u_counts.mean(axis=0)
+                    s_counts_mean = s_counts.mean(axis=0)
+
+                    # Store full samples for uncertainty computation
+                    u_counts_std = u_counts.std(axis=0)
+                    s_counts_std = s_counts.std(axis=0)
+
+                    # Store quantiles for credible intervals
+                    u_counts_q025 = np.quantile(u_counts, 0.025, axis=0)
+                    u_counts_q975 = np.quantile(u_counts, 0.975, axis=0)
+                    s_counts_q025 = np.quantile(s_counts, 0.025, axis=0)
+                    s_counts_q975 = np.quantile(s_counts, 0.975, axis=0)
+
+                    # Use mean for primary data
+                    u_counts = u_counts_mean
+                    s_counts = s_counts_mean
+
+                    # Flag that we have multiple samples for later storage
+                    has_multiple_samples = True
+                else:
+                    # Fallback: take first sample
+                    u_counts = u_counts[0] if u_counts.ndim > 2 else u_counts
+                    s_counts = s_counts[0] if s_counts.ndim > 2 else s_counts
+                    has_multiple_samples = False
+            else:
+                # Fallback: take first sample along first dimension
+                u_counts = u_counts[0] if u_counts.ndim > 2 else u_counts
+                s_counts = s_counts[0] if s_counts.ndim > 2 else s_counts
+                has_multiple_samples = False
+        else:
+            has_multiple_samples = False
 
         # Ensure correct shape [num_cells, num_genes]
         if u_counts.shape != (num_cells, num_genes):
@@ -2311,6 +2456,15 @@ class PyroVelocityModel:
         adata.layers["spliced"] = s_counts
         adata.layers["unspliced"] = u_counts
 
+        # Add uncertainty layers if we have multiple samples
+        if has_multiple_samples:
+            adata.layers["spliced_std"] = s_counts_std
+            adata.layers["unspliced_std"] = u_counts_std
+            adata.layers["spliced_q025"] = s_counts_q025
+            adata.layers["spliced_q975"] = s_counts_q975
+            adata.layers["unspliced_q025"] = u_counts_q025
+            adata.layers["unspliced_q975"] = u_counts_q975
+
         # Add cell and gene names
         adata.obs_names = [f"cell_{i}" for i in range(num_cells)]
         adata.var_names = [f"gene_{i}" for i in range(num_genes)]
@@ -2321,6 +2475,8 @@ class PyroVelocityModel:
             "generation_method": "predictive_sampling",
             "num_cells": num_cells,
             "num_genes": num_genes,
+            "has_posterior_uncertainty": has_multiple_samples,
+            "predictive_type": "posterior" if samples is not None else "prior",
         }
 
         # Store all parameters from predictive samples in clean dictionaries
@@ -2384,17 +2540,11 @@ class PyroVelocityModel:
 
         # Add dimensionality reduction for UMAP visualization
         # This ensures posterior predictive check plots can display UMAP embeddings
-        try:
-            import scanpy as sc
-            # Add PCA for dimensionality reduction and as fallback for UMAP computation
-            sc.pp.pca(adata, random_state=42)
-            sc.pp.neighbors(adata, n_neighbors=10, random_state=42)
-            sc.tl.umap(adata, random_state=42)
-            sc.tl.leiden(adata, random_state=42)
-        except Exception as e:
-            # If dimensionality reduction fails, continue without it
-            # This ensures the method doesn't fail if scanpy is not available
-            pass
+        #     import scanpy as sc
+        #     sc.pp.pca(adata, random_state=42)
+        #     sc.pp.neighbors(adata, n_neighbors=10, random_state=42)
+        #     sc.tl.umap(adata, random_state=42)
+        #     sc.tl.leiden(adata, random_state=42)
 
         return adata
 

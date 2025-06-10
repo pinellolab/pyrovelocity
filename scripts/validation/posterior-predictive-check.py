@@ -78,21 +78,23 @@ for key in sorted(posterior_samples.keys()):
 
 # Step 5: Generate posterior predictive data using posterior samples
 print(f"\n📊 Generating posterior predictive data...")
-print("  Using posterior samples to generate synthetic data")
+print("  Using full posterior samples to generate synthetic data with uncertainty")
 
 # Convert numpy arrays back to tensors for generate_predictive_samples
+# Keep all samples (don't average) to preserve posterior uncertainty
 posterior_samples_tensors = {}
 for key, value in posterior_samples.items():
     if isinstance(value, np.ndarray):
-        # Take mean of samples for single parameter set
-        if value.ndim > 1:
-            posterior_samples_tensors[key] = torch.tensor(value.mean(axis=0))
-        else:
-            posterior_samples_tensors[key] = torch.tensor(value)
+        posterior_samples_tensors[key] = torch.tensor(value)
     else:
         posterior_samples_tensors[key] = value
 
-# Generate posterior predictive data
+print(f"  📈 Posterior samples shape check:")
+for key, value in posterior_samples_tensors.items():
+    if hasattr(value, 'shape'):
+        print(f"    {key}: {value.shape}")
+
+# Generate posterior predictive data with uncertainty
 posterior_predictive_adata = trained_model.generate_predictive_samples(
     num_cells=prior_predictive_adata.n_obs,
     num_genes=prior_predictive_adata.n_vars,
@@ -105,10 +107,15 @@ print_anndata(posterior_predictive_adata)
 
 # Store fit parameters in the posterior predictive AnnData for plotting
 print("\n📋 Storing fit parameters in AnnData...")
+
+# Check if we have uncertainty information
+has_uncertainty = posterior_predictive_adata.uns.get("pyrovelocity", {}).get("has_posterior_uncertainty", False)
+print(f"  📊 Posterior uncertainty available: {has_uncertainty}")
+
 if "fit_parameters" not in posterior_predictive_adata.uns:
     fit_parameters = {}
     for key, value in posterior_samples.items():
-        # Take mean of posterior samples
+        # Store mean for plotting compatibility, but keep full samples for uncertainty
         if isinstance(value, np.ndarray) and value.ndim > 1:
             fit_parameters[key] = value.mean(axis=0)
         else:
@@ -117,20 +124,25 @@ if "fit_parameters" not in posterior_predictive_adata.uns:
     # Store in AnnData
     posterior_predictive_adata.uns["fit_parameters"] = fit_parameters
 
-print(f"✅ Stored {len(posterior_predictive_adata.uns['fit_parameters'])} fit parameters in AnnData")
+    # Also store full posterior samples for uncertainty analysis
+    posterior_predictive_adata.uns["posterior_samples_full"] = posterior_samples
 
-# Extract parameters for plotting functions
+print(f"✅ Stored {len(posterior_predictive_adata.uns['fit_parameters'])} fit parameters in AnnData")
+if has_uncertainty:
+    print(f"✅ Stored full posterior samples for uncertainty analysis")
+
+# Extract parameters for plotting functions (use mean for compatibility)
 posterior_parameter_samples = {}
 for key, value in posterior_predictive_adata.uns["fit_parameters"].items():
     posterior_parameter_samples[key] = torch.tensor(value) if not isinstance(value, torch.Tensor) else value
 
 # Add UMAP and clustering for visualization
 print(f"\n🗺️ Computing UMAP and clustering for visualization...")
-sc.pp.pca(adata=posterior_predictive_adata, random_state=RANDOM_SEED)
-sc.pp.neighbors(adata=posterior_predictive_adata, n_neighbors=10, random_state=RANDOM_SEED)
+sc.pp.pca(posterior_predictive_adata, random_state=RANDOM_SEED)
+sc.pp.neighbors(posterior_predictive_adata, n_neighbors=10, random_state=RANDOM_SEED)
 # Use UMAP parameters associated with prior predictive data for consistent visualization
-sc.tl.umap(adata=posterior_predictive_adata, **prior_predictive_adata.uns["umap"]["params"])
-sc.tl.leiden(adata=posterior_predictive_adata, random_state=RANDOM_SEED)
+sc.tl.umap(posterior_predictive_adata, **prior_predictive_adata.uns["umap"]["params"])
+sc.tl.leiden(posterior_predictive_adata, random_state=RANDOM_SEED)
 
 # Step 6: Generate posterior predictive check plots
 print(f"\n🎨 Creating posterior predictive check plots...")
