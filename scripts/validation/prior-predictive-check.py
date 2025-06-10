@@ -53,6 +53,7 @@ if "true_parameters" in prior_predictive_adata.uns:
         prior_parameter_samples[key] = torch.tensor(value) if not isinstance(value, torch.Tensor) else value
 
 # Add UMAP and clustering though these will be uninformative in the context of prior predictive checks
+sc.pp.pca(prior_predictive_adata, random_state=RANDOM_SEED)
 sc.pp.neighbors(prior_predictive_adata, n_neighbors=10, random_state=RANDOM_SEED)
 sc.tl.umap(prior_predictive_adata, random_state=RANDOM_SEED)
 sc.tl.leiden(prior_predictive_adata, random_state=RANDOM_SEED)
@@ -68,10 +69,6 @@ fig_prior = plot_prior_predictive_checks(
     combine_individual_pdfs=True,
     default_fontsize=5,
 )
-
-plt.suptitle("Prior Predictive Checks: Piecewise Activation Model", fontsize=16)
-plt.tight_layout()
-plt.show()
 
 # Validate prior parameter ranges (updated for hierarchical temporal parameterization)
 print("\nPrior parameter range validation:")

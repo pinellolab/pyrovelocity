@@ -1,7 +1,6 @@
 import torch
 import pyro
 import numpy as np
-import matplotlib.pyplot as plt
 import scanpy as sc
 
 from pyrovelocity.models.modular.factory import create_piecewise_activation_model
@@ -40,6 +39,7 @@ prior_predictive_adata = model.generate_predictive_samples(
     return_format="anndata"
 )
 print(f"\n🗺️ Computing UMAP and clustering for prior predictive data...")
+sc.pp.pca(prior_predictive_adata, random_state=RANDOM_SEED)
 sc.pp.neighbors(prior_predictive_adata, n_neighbors=10, random_state=RANDOM_SEED)
 sc.tl.umap(prior_predictive_adata, random_state=RANDOM_SEED)
 sc.tl.leiden(prior_predictive_adata, random_state=RANDOM_SEED)
@@ -126,8 +126,9 @@ for key, value in posterior_predictive_adata.uns["fit_parameters"].items():
 
 # Add UMAP and clustering for visualization
 print(f"\n🗺️ Computing UMAP and clustering for visualization...")
+sc.pp.pca(adata=posterior_predictive_adata, random_state=RANDOM_SEED)
 sc.pp.neighbors(adata=posterior_predictive_adata, n_neighbors=10, random_state=RANDOM_SEED)
-# Use same UMAP parameters as prior predictive data for consistency
+# Use UMAP parameters associated with prior predictive data for consistent visualization
 sc.tl.umap(adata=posterior_predictive_adata, **prior_predictive_adata.uns["umap"]["params"])
 sc.tl.leiden(adata=posterior_predictive_adata, random_state=RANDOM_SEED)
 
