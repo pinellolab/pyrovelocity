@@ -67,7 +67,7 @@ print(f"\n🔬 Generating posterior samples from trained model...")
 # Generate posterior samples using the trained model
 posterior_parameter_samples = trained_model.generate_posterior_samples(
     adata=prior_predictive_adata,
-    num_samples=100,
+    num_samples=30,
     seed=RANDOM_SEED,
     return_tensors=True
 )
@@ -97,32 +97,22 @@ posterior_predictive_adata = trained_model.generate_predictive_samples(
 print("✅ Posterior predictive data generated:")
 print_anndata(posterior_predictive_adata)
 
-# Use posterior samples directly for plotting - no need to store and retrieve
-print("\n📊 Using posterior samples directly for plotting...")
+print("\n📊 Generate plots from posterior samples...")
 print(f"✅ Using {len(posterior_parameter_samples)} types of posterior parameters")
 
-# The plotting function will handle any necessary tensor processing via _process_parameters_for_plotting
-posterior_parameter_samples = posterior_parameter_samples
-
-# Copy UMAP coordinates and related data for consistent visualization
+# Copy UMAP coordinates for consistent visualization
 print(f"\n🗺️ Copying UMAP coordinates from prior predictive data for consistent visualization...")
-# Copy UMAP coordinates directly to ensure identical coordinate system
 posterior_predictive_adata.obsm['X_umap'] = prior_predictive_adata.obsm['X_umap'].copy()
-# Copy PCA and neighbors data for completeness
-posterior_predictive_adata.obsm['X_pca'] = prior_predictive_adata.obsm['X_pca'].copy()
-posterior_predictive_adata.varm['PCs'] = prior_predictive_adata.varm['PCs'].copy()
-posterior_predictive_adata.obsp['distances'] = prior_predictive_adata.obsp['distances'].copy()
-posterior_predictive_adata.obsp['connectivities'] = prior_predictive_adata.obsp['connectivities'].copy()
-# Copy metadata
-posterior_predictive_adata.uns['pca'] = prior_predictive_adata.uns['pca'].copy()
-posterior_predictive_adata.uns['neighbors'] = prior_predictive_adata.uns['neighbors'].copy()
 posterior_predictive_adata.uns['umap'] = prior_predictive_adata.uns['umap'].copy()
 
-# Copy Leiden cluster labels from prior predictive data to track cell movement
+# Copy Leiden cluster labels from prior predictive data
 print(f"📋 Copying Leiden cluster labels from prior predictive data...")
 posterior_predictive_adata.obs['leiden'] = prior_predictive_adata.obs['leiden'].copy()
 posterior_predictive_adata.uns['leiden'] = prior_predictive_adata.uns['leiden'].copy()
-print(f"✅ Preserved {len(posterior_predictive_adata.obs['leiden'].cat.categories)} Leiden clusters from prior predictive data")
+
+# Recompute PCA and neighbors for posterior predictive data
+sc.pp.pca(posterior_predictive_adata, random_state=RANDOM_SEED)
+sc.pp.neighbors(posterior_predictive_adata, n_neighbors=10, random_state=RANDOM_SEED)
 
 # Step 6: Generate posterior predictive check plots
 print(f"\n🎨 Creating posterior predictive check plots...")
