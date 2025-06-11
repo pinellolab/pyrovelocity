@@ -779,6 +779,7 @@ def plot_parameter_marginals_by_gene(
     # Extract parameter samples for each gene
     # Assume parameters have shape [num_samples, num_genes] or [num_samples * num_genes]
     param_samples_by_gene = {}
+    param_global_ranges = {}  # Store global min/max for each parameter
 
     for param_name in available_params:
         param_tensor = posterior_parameters[param_name]
@@ -804,6 +805,12 @@ def plot_parameter_marginals_by_gene(
             param_reshaped = param_tensor.view(-1, param_tensor.shape[-1])
 
         param_samples_by_gene[param_name] = param_reshaped
+
+        # Compute global range for this parameter across all genes
+        param_global_ranges[param_name] = {
+            'min': float(param_reshaped.min()),
+            'max': float(param_reshaped.max())
+        }
 
     # Calculate global parameter ranges for consistent x-axis scaling
     param_ranges = {}
@@ -839,13 +846,16 @@ def plot_parameter_marginals_by_gene(
                 ax.set_yticks([])
                 continue
 
-            # Set consistent x-axis range for this parameter
-            x_min, x_max = param_ranges[param_name]
+            # Set consistent x-axis range for this parameter using global range
+            param_range = param_global_ranges[param_name]
+            range_padding = (param_range['max'] - param_range['min']) * 0.05  # 5% padding
+            x_min = param_range['min'] - range_padding
+            x_max = param_range['max'] + range_padding
             ax.set_xlim(x_min, x_max)
 
-            # Create histogram with fixed range
-            ax.hist(gene_param_samples, bins=20, alpha=0.7, color='steelblue',
-                   density=True, edgecolor='white', linewidth=0.5, range=(x_min, x_max))
+            # Create histogram with fixed range and matching marginal histogram style
+            ax.hist(gene_param_samples, bins=20, alpha=0.6, color='steelblue',
+                   density=True, edgecolor='none', range=(x_min, x_max))
 
             # Add vertical line for median
             median_val = np.median(gene_param_samples)
