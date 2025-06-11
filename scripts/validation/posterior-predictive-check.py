@@ -64,17 +64,17 @@ print("✅ Model training completed")
 # Step 4: Generate posterior samples from trained model
 print(f"\n🔬 Generating posterior samples from trained model...")
 
-# Generate posterior samples using the trained model (return torch tensors directly)
-posterior_samples = trained_model.generate_posterior_samples(
+# Generate posterior samples using the trained model
+posterior_parameter_samples = trained_model.generate_posterior_samples(
     adata=prior_predictive_adata,
-    num_samples=100,  # Reduced for faster testing
+    num_samples=100,
     seed=RANDOM_SEED,
-    return_tensors=True  # Return torch tensors directly - no conversion needed!
+    return_tensors=True
 )
 
-print(f"✅ Generated {len(posterior_samples)} types of posterior parameters")
-for key in sorted(posterior_samples.keys()):
-    param_shape = posterior_samples[key].shape if hasattr(posterior_samples[key], 'shape') else len(posterior_samples[key])
+print(f"✅ Generated {len(posterior_parameter_samples)} types of posterior parameters")
+for key in sorted(posterior_parameter_samples.keys()):
+    param_shape = posterior_parameter_samples[key].shape if hasattr(posterior_parameter_samples[key], 'shape') else len(posterior_parameter_samples[key])
     print(f"    {key}: {param_shape}")
 
 # Step 5: Generate posterior predictive data using posterior samples
@@ -82,7 +82,7 @@ print(f"\n📊 Generating posterior predictive data...")
 print("  Using full posterior samples to generate synthetic data with uncertainty")
 
 print(f"  📈 Posterior samples shape check:")
-for key, value in posterior_samples.items():
+for key, value in posterior_parameter_samples.items():
     if hasattr(value, 'shape'):
         print(f"    {key}: {value.shape}")
 
@@ -90,7 +90,7 @@ for key, value in posterior_samples.items():
 posterior_predictive_adata = trained_model.generate_predictive_samples(
     num_cells=prior_predictive_adata.n_obs,
     num_genes=prior_predictive_adata.n_vars,
-    samples=posterior_samples,  # Use torch tensors directly
+    samples=posterior_parameter_samples,  # Use torch tensors directly
     return_format="anndata"
 )
 
@@ -99,10 +99,10 @@ print_anndata(posterior_predictive_adata)
 
 # Use posterior samples directly for plotting - no need to store and retrieve
 print("\n📊 Using posterior samples directly for plotting...")
-print(f"✅ Using {len(posterior_samples)} types of posterior parameters")
+print(f"✅ Using {len(posterior_parameter_samples)} types of posterior parameters")
 
 # The plotting function will handle any necessary tensor processing via _process_parameters_for_plotting
-posterior_parameter_samples = posterior_samples
+posterior_parameter_samples = posterior_parameter_samples
 
 # Copy UMAP coordinates and related data for consistent visualization
 print(f"\n🗺️ Copying UMAP coordinates from prior predictive data for consistent visualization...")
