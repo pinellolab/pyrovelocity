@@ -3282,11 +3282,19 @@ def _plot_correlation_structure(
         # Calculate correlation matrix
         corr_matrix = np.corrcoef(expr_subset.T)
 
-        # Create heatmap with gene names as labels
+        # Extract numeric suffixes from gene names for cleaner labels
+        def extract_gene_suffix(gene_name: str) -> str:
+            """Extract numeric suffix from gene names like 'gene_23' -> '23'."""
+            digits = "".join(filter(str.isdigit, gene_name))
+            return digits if digits else gene_name[:6]  # Fallback to truncated name
+
+        gene_labels = [extract_gene_suffix(name) for name in gene_names]
+
+        # Create heatmap with numeric gene labels
         sns.heatmap(corr_matrix, annot=False, cmap='RdBu_r', center=0,
                    square=True, ax=ax, cbar_kws={'shrink': 0.8},
-                   xticklabels=[name[:6] for name in gene_names],  # Truncate names for readability
-                   yticklabels=[name[:6] for name in gene_names])
+                   xticklabels=gene_labels,
+                   yticklabels=gene_labels)
 
         ax.set_title(f'{check_type.title()} Gene Correlations\n({selection_method})', fontsize=default_fontsize)
         ax.set_xlabel('Gene', fontsize=default_fontsize)
