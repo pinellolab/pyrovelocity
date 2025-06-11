@@ -802,6 +802,14 @@ def plot_parameter_marginals_by_gene(
 
         param_samples_by_gene[param_name] = param_reshaped
 
+    # Calculate global parameter ranges for consistent x-axis scaling
+    param_ranges = {}
+    for param_name in available_params:
+        param_samples = param_samples_by_gene[param_name]
+        all_values = param_samples.numpy().flatten()
+        # Use 5th and 95th percentiles to avoid extreme outliers
+        param_ranges[param_name] = (np.percentile(all_values, 5), np.percentile(all_values, 95))
+
     # Plot histograms for each gene and parameter
     for row, (gene_idx, gene_name) in enumerate(zip(gene_indices, gene_names)):
         for col, param_name in enumerate(available_params):
@@ -820,9 +828,13 @@ def plot_parameter_marginals_by_gene(
                 ax.set_yticks([])
                 continue
 
-            # Create histogram
+            # Set consistent x-axis range for this parameter
+            x_min, x_max = param_ranges[param_name]
+            ax.set_xlim(x_min, x_max)
+
+            # Create histogram with fixed range
             ax.hist(gene_param_samples, bins=20, alpha=0.7, color='steelblue',
-                   density=True, edgecolor='white', linewidth=0.5)
+                   density=True, edgecolor='white', linewidth=0.5, range=(x_min, x_max))
 
             # Add vertical line for median
             median_val = np.median(gene_param_samples)
@@ -837,18 +849,22 @@ def plot_parameter_marginals_by_gene(
                 ax.set_ylabel(gene_name, fontsize=default_fontsize, rotation=0,
                              ha='right', va='center')
 
-            # Add x-axis labels only on bottom row
+            # Add x-axis labels only on bottom row using parameter metadata
             if row == available_genes - 1:
-                ax.set_xlabel('Value', fontsize=default_fontsize)
+                # Get parameter short label using metadata system
+                param_short_label = get_parameter_label(
+                    param_name=param_name,
+                    label_type="short",
+                    model=model,
+                    fallback_to_legacy=True
+                )
+                ax.set_xlabel(param_short_label, fontsize=default_fontsize)
             else:
                 ax.set_xlabel('')
 
             # Remove y-axis labels for cleaner look
             ax.set_ylabel('')
             ax.set_yticklabels([])
-
-    fig.suptitle(f'{check_type.title()} Parameter Marginals by Gene',
-                fontsize=default_fontsize + 2, y=0.98)
 
     # Save figure if path provided
     if save_path is not None:
