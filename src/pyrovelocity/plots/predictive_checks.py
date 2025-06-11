@@ -657,6 +657,208 @@ def _select_genes_by_mae(
 
 
 @beartype
+def plot_parameter_marginals_by_gene(
+    posterior_parameters: Dict[str, torch.Tensor],
+    figsize: Optional[Tuple[Union[int, float], Union[int, float]]] = None,
+    save_path: Optional[str] = None,
+    num_genes: int = 6,
+    gene_selection_method: str = "mae",
+    select_highest_error: bool = False,
+    parameters_to_show: List[str] = ["R_on", "gamma_star", "t_on_star", "delta_star"],
+    default_fontsize: int = 7,
+    file_prefix: str = "",
+    observed_adata: Optional[AnnData] = None,
+    predicted_adata: Optional[AnnData] = None,
+    model: Optional[Any] = None,
+    check_type: str = "posterior"
+) -> plt.Figure:
+    """
+    Plot marginal histograms of gene-specific parameter posterior samples.
+
+    This function creates a plot showing the posterior distributions of key
+    gene-specific parameters for the same genes selected in temporal dynamics plots.
+    Each row corresponds to a gene, and each column shows the marginal distribution
+    of a different parameter.
+
+    Args:
+        posterior_parameters: Dictionary of posterior parameter samples
+        figsize: Figure size (width, height). If None, auto-calculated
+        save_path: Optional directory path to save figures
+        num_genes: Number of genes to show
+        gene_selection_method: Method for gene selection ("mae" or "random")
+        select_highest_error: If True, select genes with highest MAE instead of lowest
+        parameters_to_show: List of parameter names to display as columns
+        default_fontsize: Default font size for all text elements
+        file_prefix: Prefix for saved file names
+        observed_adata: AnnData object with observed data for gene selection
+        predicted_adata: AnnData object with predicted data for gene selection
+        model: Optional PyroVelocity model instance for parameter metadata
+        check_type: Type of check ("prior" or "posterior")
+
+    Returns:
+        matplotlib Figure object
+
+    Example:
+        >>> fig = plot_parameter_marginals_by_gene(
+        ...     posterior_parameters=params,
+        ...     observed_adata=observed_data,
+        ...     predicted_adata=predicted_data,
+        ...     num_genes=6,
+        ...     save_path="reports/docs/posterior_predictive",
+        ...     file_prefix="05"
+        ... )
+    """
+    from matplotlib.gridspec import GridSpec
+
+    from pyrovelocity.plots.parameter_metadata import get_parameter_label
+
+    # Determine gene selection - use same logic as temporal dynamics
+    if gene_selection_method == "mae" and observed_adata is not None and predicted_adata is not None:
+        gene_indices, gene_names = _select_genes_by_mae(
+            observed_adata=observed_adata,
+            predicted_adata=predicted_adata,
+            num_genes=num_genes,
+            select_highest_error=select_highest_error
+        )
+        print(f"Selected {len(gene_names)} genes with {'highest' if select_highest_error else 'lowest'} MAE (sorted lowest to highest error): {gene_names}")
+    else:
+        # Fallback to first N genes if MAE selection not possible
+        available_genes = min(num_genes, observed_adata.n_vars if observed_adata is not None else 100)
+        gene_indices = list(range(available_genes))
+        gene_names = [f"gene_{i}" for i in gene_indices]
+        print(f"Using first {available_genes} genes (MAE selection not available)")
+
+    available_genes = len(gene_names)
+
+    # Filter parameters to show based on availability
+    available_params = [p for p in parameters_to_show if p in posterior_parameters]
+    if not available_params:
+        raise ValueError(f"None of the requested parameters {parameters_to_show} found in posterior_parameters. Available: {list(posterior_parameters.keys())}")
+
+    num_params = len(available_params)
+
+    # Calculate figure size
+    if figsize is None:
+        width = 2.0 * num_params  # 2 inches per parameter column
+        height = 0.8 * available_genes + 0.5  # 0.8 inches per gene row + title space
+        figsize = (width, height)
+
+    # Create figure and gridspec
+    fig = plt.figure(figsize=figsize)
+    gs = GridSpec(
+        nrows=available_genes + 1,  # Add extra row for titles
+        ncols=num_params,
+        figure=fig,
+        height_ratios=[0.15] + [1] * available_genes,  # Small title row + gene rows
+        hspace=0.3,  # Vertical spacing between gene rows
+        wspace=0.3,  # Horizontal spacing between parameter columns
+    )
+
+    # Add column titles
+    for col, param_name in enumerate(available_params):
+        ax_title = fig.add_subplot(gs[0, col])
+        ax_title.axis('off')
+
+        # Get parameter label using metadata system
+        param_label = get_parameter_label(
+            param_name=param_name,
+            label_type="display",
+            model=model,
+            fallback_to_legacy=True
+        )
+
+        ax_title.text(0.5, 0.5, param_label,
+                     ha='center', va='center',
+                     fontsize=default_fontsize + 1,
+                     weight='bold',
+                     transform=ax_title.transAxes)
+
+    # Extract parameter samples for each gene
+    # Assume parameters have shape [num_samples, num_genes] or [num_samples * num_genes]
+    param_samples_by_gene = {}
+
+    for param_name in available_params:
+        param_tensor = posterior_parameters[param_name]
+
+        # Handle different tensor shapes
+        if param_tensor.ndim == 1:
+            # Flattened: [num_samples * num_genes]
+            # Need to determine num_samples to reshape properly
+            total_length = len(param_tensor)
+            # Assume we can infer from other parameters or use reasonable default
+            num_samples = 30  # Default from the script
+            if total_length % num_samples == 0:
+                num_genes_in_param = total_length // num_samples
+                param_reshaped = param_tensor.view(num_samples, num_genes_in_param)
+            else:
+                # Fallback: treat as single sample per gene
+                param_reshaped = param_tensor.unsqueeze(0)  # [1, num_genes]
+        elif param_tensor.ndim == 2:
+            # Already shaped: [num_samples, num_genes]
+            param_reshaped = param_tensor
+        else:
+            # Higher dimensions: flatten and reshape
+            param_reshaped = param_tensor.view(-1, param_tensor.shape[-1])
+
+        param_samples_by_gene[param_name] = param_reshaped
+
+    # Plot histograms for each gene and parameter
+    for row, (gene_idx, gene_name) in enumerate(zip(gene_indices, gene_names)):
+        for col, param_name in enumerate(available_params):
+            ax = fig.add_subplot(gs[row + 1, col])  # +1 to account for title row
+
+            # Extract samples for this gene and parameter
+            param_samples = param_samples_by_gene[param_name]
+
+            # Handle gene indexing
+            if gene_idx < param_samples.shape[1]:
+                gene_param_samples = param_samples[:, gene_idx].numpy()
+            else:
+                # Gene index out of range, skip this plot
+                ax.text(0.5, 0.5, 'N/A', ha='center', va='center', transform=ax.transAxes)
+                ax.set_xticks([])
+                ax.set_yticks([])
+                continue
+
+            # Create histogram
+            ax.hist(gene_param_samples, bins=20, alpha=0.7, color='steelblue',
+                   density=True, edgecolor='white', linewidth=0.5)
+
+            # Add vertical line for median
+            median_val = np.median(gene_param_samples)
+            ax.axvline(median_val, color='red', linestyle='--', alpha=0.8, linewidth=1)
+
+            # Formatting
+            ax.tick_params(labelsize=default_fontsize * 0.8)
+            ax.grid(True, alpha=0.3)
+
+            # Add gene name on the leftmost column
+            if col == 0:
+                ax.set_ylabel(gene_name, fontsize=default_fontsize, rotation=0,
+                             ha='right', va='center')
+
+            # Add x-axis labels only on bottom row
+            if row == available_genes - 1:
+                ax.set_xlabel('Value', fontsize=default_fontsize)
+            else:
+                ax.set_xlabel('')
+
+            # Remove y-axis labels for cleaner look
+            ax.set_ylabel('')
+            ax.set_yticklabels([])
+
+    fig.suptitle(f'{check_type.title()} Parameter Marginals by Gene',
+                fontsize=default_fontsize + 2, y=0.98)
+
+    # Save figure if path provided
+    if save_path is not None:
+        prefix = f"{file_prefix}_" if file_prefix else ""
+        _save_figure(fig, save_path, f"{prefix}{check_type}_parameter_marginals_by_gene")
+
+    return fig
+
+
+@beartype
 def plot_temporal_dynamics(
     adata: AnnData,
     check_type: str = "prior",
@@ -1402,10 +1604,26 @@ def plot_prior_predictive_checks(
         plot_parameter_marginals(processed_parameters, check_type, save_path=save_path, file_prefix="02", model=model, default_fontsize=default_fontsize)
         plot_parameter_relationships(processed_parameters, check_type, save_path=save_path, file_prefix="03", model=model, default_fontsize=default_fontsize)
         plot_temporal_trajectories(processed_parameters, check_type, save_path=save_path, file_prefix="04", adata=prior_adata, default_fontsize=default_fontsize)
-        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="05", default_fontsize=default_fontsize, observed_adata=observed_adata, gene_selection_method="mae", num_genes=num_genes, select_highest_error=False)
-        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="06", default_fontsize=default_fontsize, observed_adata=observed_adata, gene_selection_method="mae", num_genes=num_genes, select_highest_error=True)
-        plot_expression_validation(prior_adata, check_type, save_path=save_path, file_prefix="07", default_fontsize=default_fontsize)
-        plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path, file_prefix="08", default_fontsize=default_fontsize)
+
+        # Plot 05: Parameter marginals by gene (NEW)
+        plot_parameter_marginals_by_gene(
+            posterior_parameters=processed_parameters,
+            observed_adata=observed_adata,
+            predicted_adata=prior_adata,
+            num_genes=num_genes,
+            save_path=save_path,
+            file_prefix="05",
+            default_fontsize=default_fontsize,
+            model=model,
+            check_type=check_type,
+            select_highest_error=False
+        )
+
+        # Shifted plots (previously 05-08, now 06-09)
+        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="06", default_fontsize=default_fontsize, observed_adata=observed_adata, gene_selection_method="mae", num_genes=num_genes, select_highest_error=False)
+        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="07", default_fontsize=default_fontsize, observed_adata=observed_adata, gene_selection_method="mae", num_genes=num_genes, select_highest_error=True)
+        plot_expression_validation(prior_adata, check_type, save_path=save_path, file_prefix="08", default_fontsize=default_fontsize)
+        plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path, file_prefix="09", default_fontsize=default_fontsize)
 
     # Process parameters for plotting compatibility (handle batch dimensions)
     processed_parameters = _process_parameters_for_plotting(prior_parameters)
