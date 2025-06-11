@@ -64,11 +64,12 @@ print("✅ Model training completed")
 # Step 4: Generate posterior samples from trained model
 print(f"\n🔬 Generating posterior samples from trained model...")
 
-# Generate posterior samples using the trained model
+# Generate posterior samples using the trained model (return torch tensors directly)
 posterior_samples = trained_model.generate_posterior_samples(
     adata=prior_predictive_adata,
     num_samples=100,  # Reduced for faster testing
-    seed=RANDOM_SEED
+    seed=RANDOM_SEED,
+    return_tensors=True  # Return torch tensors directly - no conversion needed!
 )
 
 print(f"✅ Generated {len(posterior_samples)} types of posterior parameters")
@@ -80,25 +81,16 @@ for key in sorted(posterior_samples.keys()):
 print(f"\n📊 Generating posterior predictive data...")
 print("  Using full posterior samples to generate synthetic data with uncertainty")
 
-# Convert numpy arrays back to tensors for generate_predictive_samples
-# Keep all samples (don't average) to preserve posterior uncertainty
-posterior_samples_tensors = {}
-for key, value in posterior_samples.items():
-    if isinstance(value, np.ndarray):
-        posterior_samples_tensors[key] = torch.tensor(value)
-    else:
-        posterior_samples_tensors[key] = value
-
 print(f"  📈 Posterior samples shape check:")
-for key, value in posterior_samples_tensors.items():
+for key, value in posterior_samples.items():
     if hasattr(value, 'shape'):
         print(f"    {key}: {value.shape}")
 
-# Generate posterior predictive data with uncertainty
+# Generate posterior predictive data with uncertainty (no conversion needed!)
 posterior_predictive_adata = trained_model.generate_predictive_samples(
     num_cells=prior_predictive_adata.n_obs,
     num_genes=prior_predictive_adata.n_vars,
-    samples=posterior_samples_tensors,
+    samples=posterior_samples,  # Use torch tensors directly
     return_format="anndata"
 )
 
@@ -116,15 +108,22 @@ if "fit_parameters" not in posterior_predictive_adata.uns:
     fit_parameters = {}
     for key, value in posterior_samples.items():
         # Store mean for plotting compatibility, but keep full samples for uncertainty
-        if isinstance(value, np.ndarray) and value.ndim > 1:
-            fit_parameters[key] = value.mean(axis=0)
+        if isinstance(value, torch.Tensor) and value.ndim > 1:
+            # Handle different tensor dtypes
+            if value.dtype in [torch.float32, torch.float64]:
+                fit_parameters[key] = value.mean(axis=0).detach().cpu().numpy()
+            else:
+                # For integer or other types, take the first sample instead of mean
+                fit_parameters[key] = value[0].detach().cpu().numpy()
+        elif isinstance(value, torch.Tensor):
+            fit_parameters[key] = value.detach().cpu().numpy()
         else:
             fit_parameters[key] = value
 
     # Store in AnnData
     posterior_predictive_adata.uns["fit_parameters"] = fit_parameters
 
-    # Also store full posterior samples for uncertainty analysis
+    # Also store full posterior samples for uncertainty analysis (keep as tensors)
     posterior_predictive_adata.uns["posterior_samples_full"] = posterior_samples
 
 print(f"✅ Stored {len(posterior_predictive_adata.uns['fit_parameters'])} fit parameters in AnnData")
@@ -134,12 +133,8 @@ if has_uncertainty:
 # Extract parameters for plotting functions (use full posterior samples)
 if has_uncertainty and "posterior_samples_full" in posterior_predictive_adata.uns:
     print("  📊 Using full posterior samples for plotting")
-    posterior_parameter_samples = {}
-    for key, value in posterior_predictive_adata.uns["posterior_samples_full"].items():
-        if isinstance(value, np.ndarray):
-            posterior_parameter_samples[key] = torch.tensor(value)
-        else:
-            posterior_parameter_samples[key] = value
+    # No conversion needed - they're already torch tensors!
+    posterior_parameter_samples = posterior_predictive_adata.uns["posterior_samples_full"]
 else:
     print("  📊 Using averaged parameters for plotting (fallback)")
     posterior_parameter_samples = {}
