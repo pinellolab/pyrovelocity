@@ -1402,9 +1402,10 @@ def plot_prior_predictive_checks(
         plot_parameter_marginals(processed_parameters, check_type, save_path=save_path, file_prefix="02", model=model, default_fontsize=default_fontsize)
         plot_parameter_relationships(processed_parameters, check_type, save_path=save_path, file_prefix="03", model=model, default_fontsize=default_fontsize)
         plot_temporal_trajectories(processed_parameters, check_type, save_path=save_path, file_prefix="04", adata=prior_adata, default_fontsize=default_fontsize)
-        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="05", default_fontsize=default_fontsize, observed_adata=observed_adata, gene_selection_method="mae", num_genes=num_genes)
-        plot_expression_validation(prior_adata, check_type, save_path=save_path, file_prefix="06", default_fontsize=default_fontsize)
-        plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path, file_prefix="07", default_fontsize=default_fontsize)
+        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="05", default_fontsize=default_fontsize, observed_adata=observed_adata, gene_selection_method="mae", num_genes=num_genes, select_highest_error=False)
+        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="06", default_fontsize=default_fontsize, observed_adata=observed_adata, gene_selection_method="mae", num_genes=num_genes, select_highest_error=True)
+        plot_expression_validation(prior_adata, check_type, save_path=save_path, file_prefix="07", default_fontsize=default_fontsize)
+        plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path, file_prefix="08", default_fontsize=default_fontsize)
 
     # Process parameters for plotting compatibility (handle batch dimensions)
     processed_parameters = _process_parameters_for_plotting(prior_parameters)
