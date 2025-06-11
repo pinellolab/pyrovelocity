@@ -1323,6 +1323,7 @@ def plot_prior_predictive_checks(
     combine_individual_pdfs: bool = False,
     default_fontsize: Union[int, float] = 8,
     observed_adata: Optional[AnnData] = None,
+    num_genes: int = 6,
 ) -> plt.Figure:
     """
     Generate comprehensive predictive check plots for PyroVelocity models.
@@ -1346,6 +1347,7 @@ def plot_prior_predictive_checks(
         default_fontsize: Default font size for all text elements (titles, labels, legends)
         observed_adata: Optional AnnData object with observed data for comparison in temporal dynamics plots.
                        If None, uses prior_adata for both predictive and observed columns.
+        num_genes: Number of genes to include in temporal dynamics plots (default: 6)
 
     Returns:
         matplotlib Figure object
@@ -1358,7 +1360,8 @@ def plot_prior_predictive_checks(
         ...     save_path="reports/docs/prior_predictive",
         ...     figure_name="piecewise_activation_prior_checks",
         ...     combine_individual_pdfs=True,
-        ...     default_fontsize=8
+        ...     default_fontsize=8,
+        ...     num_genes=10
         ... )
     """
     # Create individual modular plots if requested
@@ -1374,7 +1377,7 @@ def plot_prior_predictive_checks(
         plot_parameter_marginals(processed_parameters, check_type, save_path=save_path, file_prefix="02", model=model, default_fontsize=default_fontsize)
         plot_parameter_relationships(processed_parameters, check_type, save_path=save_path, file_prefix="03", model=model, default_fontsize=default_fontsize)
         plot_temporal_trajectories(processed_parameters, check_type, save_path=save_path, file_prefix="04", adata=prior_adata, default_fontsize=default_fontsize)
-        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="05", default_fontsize=default_fontsize, observed_adata=observed_adata, gene_selection_method="mae")
+        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="05", default_fontsize=default_fontsize, observed_adata=observed_adata, gene_selection_method="mae", num_genes=num_genes)
         plot_expression_validation(prior_adata, check_type, save_path=save_path, file_prefix="06", default_fontsize=default_fontsize)
         plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path, file_prefix="07", default_fontsize=default_fontsize)
 
@@ -2522,6 +2525,32 @@ def _plot_gene_phase_portrait_rainbow(
                 color='steelblue', edgecolors='none',
                 zorder=2  # In front of observed data
             )
+
+        # Add MAE calculation and display if observed data is available
+        if (observed_adata is not None and
+            'unspliced' in observed_adata.layers and
+            'spliced' in observed_adata.layers and
+            gene_idx < observed_adata.n_vars):
+
+            # Get observed data for this gene
+            u_obs = observed_adata.layers['unspliced'][:, gene_idx]
+            s_obs = observed_adata.layers['spliced'][:, gene_idx]
+
+            # Calculate MAE for both unspliced and spliced
+            mae_u = np.mean(np.abs(u_gene - u_obs))
+            mae_s = np.mean(np.abs(s_gene - s_obs))
+
+            # Use combined MAE (average of unspliced and spliced MAE)
+            combined_mae = (mae_u + mae_s) / 2
+
+            # Display MAE in top-left corner
+            axes_dict[f"phase_{n}"].text(
+                0.02, 0.98, f'MAE: {combined_mae:.1f}',
+                transform=axes_dict[f"phase_{n}"].transAxes,
+                fontsize=7 * 0.7, va='top', ha='left',
+                color='black', weight='bold',
+                bbox=dict(boxstyle='round,pad=0.2', facecolor='white', alpha=0.8, edgecolor='none')
+            )
     else:
         axes_dict[f"phase_{n}"].text(0.5, 0.5, 'Expression data\nnot available',
                ha='center', va='center', transform=axes_dict[f"phase_{n}"].transAxes)
@@ -2744,7 +2773,8 @@ def _plot_gene_marginal_histogram_rainbow(
                 0.02, 0.98, f'WD: {wd:.2f}',
                 transform=axes_dict[f"marginal_{n}"].transAxes,
                 fontsize=default_fontsize * 0.7, va='top', ha='left',
-                bbox=dict(boxstyle='round,pad=0.2', facecolor='white', alpha=0.8)
+                color='black', weight='bold',
+                bbox=dict(boxstyle='round,pad=0.2', facecolor='white', alpha=0.8, edgecolor='none')
             )
         except ImportError:
             # Fallback to simple MAE if scipy not available
@@ -2757,7 +2787,8 @@ def _plot_gene_marginal_histogram_rainbow(
                 0.02, 0.98, f'MAE: {mae:.2f}',
                 transform=axes_dict[f"marginal_{n}"].transAxes,
                 fontsize=default_fontsize * 0.7, va='top', ha='left',
-                bbox=dict(boxstyle='round,pad=0.2', facecolor='white', alpha=0.8)
+                color='black', weight='bold',
+                bbox=dict(boxstyle='round,pad=0.2', facecolor='white', alpha=0.8, edgecolor='none')
             )
 
         # Add legend only for first row to save space
@@ -3098,6 +3129,7 @@ def plot_posterior_predictive_checks(
     combine_individual_pdfs: bool = False,
     default_fontsize: Union[int, float] = 8,
     observed_adata: Optional[AnnData] = None,
+    num_genes: int = 6,
 ) -> plt.Figure:
     """
     Generate posterior predictive check plots.
@@ -3116,6 +3148,7 @@ def plot_posterior_predictive_checks(
         default_fontsize: Default font size for all text elements
         observed_adata: Optional AnnData object with observed data for comparison in temporal dynamics plots.
                        If None, uses posterior_adata for both predictive and observed columns.
+        num_genes: Number of genes to include in temporal dynamics plots (default: 6)
 
     Returns:
         matplotlib Figure object
@@ -3127,7 +3160,8 @@ def plot_posterior_predictive_checks(
         ...     posterior_parameters=params,
         ...     save_path="reports/docs/posterior_predictive",
         ...     figure_name="piecewise_activation_posterior_checks",
-        ...     observed_adata=original_adata
+        ...     observed_adata=original_adata,
+        ...     num_genes=10
         ... )
     """
     return plot_prior_predictive_checks(
@@ -3142,4 +3176,5 @@ def plot_posterior_predictive_checks(
         combine_individual_pdfs=combine_individual_pdfs,
         default_fontsize=default_fontsize,
         observed_adata=observed_adata,
+        num_genes=num_genes,
     )
