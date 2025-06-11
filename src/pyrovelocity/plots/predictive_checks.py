@@ -593,19 +593,22 @@ def _select_genes_by_mae(
     observed_adata: AnnData,
     predicted_adata: AnnData,
     num_genes: int = 6,
-    layer: str = "spliced"
+    layer: str = "spliced",
+    select_highest_error: bool = False
 ) -> Tuple[List[int], List[str]]:
     """
-    Select genes with lowest MAE for temporal dynamics plotting.
+    Select genes by MAE for temporal dynamics plotting.
 
     Args:
         observed_adata: AnnData object with observed data
         predicted_adata: AnnData object with predicted data
         num_genes: Number of genes to select
         layer: Layer to use for MAE computation (default: "spliced")
+        select_highest_error: If True, select genes with highest MAE instead of lowest.
+                             Genes are always sorted from lowest to highest error (default: False)
 
     Returns:
-        Tuple of (gene_indices, gene_names) for selected genes
+        Tuple of (gene_indices, gene_names) for selected genes, sorted from lowest to highest error
     """
     from pyrovelocity.analysis.analyze import mae_per_gene
 
@@ -630,11 +633,27 @@ def _select_genes_by_mae(
     # Store MAE scores in predicted_adata for transparency
     predicted_adata.var['mae_score'] = mae_scores
 
-    # Select top genes (highest scores = lowest MAE since mae_per_gene returns negative values)
-    top_gene_indices = np.argsort(mae_scores)[-num_genes:]
-    top_gene_names = [predicted_adata.var_names[i] for i in top_gene_indices]
+    # Sort all genes by MAE (lowest error to highest error)
+    # Since mae_per_gene returns negative values, we sort in descending order
+    # to get lowest error (highest negative value) to highest error (lowest negative value)
+    sorted_indices = np.argsort(mae_scores)[::-1]
 
-    return top_gene_indices.tolist(), top_gene_names
+    if select_highest_error:
+        # Select genes with highest error (from the end of the sorted list)
+        # but maintain the lowest-to-highest error ordering
+        selected_indices = sorted_indices[-num_genes:]
+    else:
+        # Select genes with lowest error (from the beginning of the sorted list)
+        selected_indices = sorted_indices[:num_genes]
+
+    # Ensure the selected genes are ordered from lowest to highest error
+    # by sorting the selected indices by their MAE scores (descending order for negative values)
+    selected_mae_scores = mae_scores[selected_indices]
+    reorder_indices = np.argsort(selected_mae_scores)[::-1]
+    final_gene_indices = selected_indices[reorder_indices]
+    final_gene_names = [predicted_adata.var_names[i] for i in final_gene_indices]
+
+    return final_gene_indices.tolist(), final_gene_names
 
 
 @beartype
@@ -648,7 +667,8 @@ def plot_temporal_dynamics(
     default_fontsize: int = 7,
     file_prefix: str = "",
     observed_adata: Optional[AnnData] = None,
-    gene_selection_method: str = "mae"
+    gene_selection_method: str = "mae",
+    select_highest_error: bool = False
 ) -> plt.Figure:
     """
     Plot temporal dynamics: multi-gene visualization with phase portraits,
@@ -674,9 +694,12 @@ def plot_temporal_dynamics(
         observed_adata: Optional AnnData object with observed data (used for observed column).
                        If None, uses adata for both predictive and observed columns.
         gene_selection_method: Method for selecting genes to plot. Options:
-                              "mae" - select genes with lowest MAE (requires observed_adata)
+                              "mae" - select genes by MAE (requires observed_adata)
                               "random" - randomly select genes
                               Default: "mae"
+        select_highest_error: If True and gene_selection_method="mae", select genes with highest MAE
+                             instead of lowest. Genes are always sorted from lowest to highest error
+                             regardless of this setting (default: False)
 
     Returns:
         matplotlib Figure object
@@ -698,9 +721,11 @@ def plot_temporal_dynamics(
         gene_indices, gene_names = _select_genes_by_mae(
             observed_adata=observed_adata,
             predicted_adata=adata,
-            num_genes=available_genes
+            num_genes=available_genes,
+            select_highest_error=select_highest_error
         )
-        print(f"Selected {len(gene_names)} genes with lowest MAE: {gene_names}")
+        error_type = "highest" if select_highest_error else "lowest"
+        print(f"Selected {len(gene_names)} genes with {error_type} MAE (sorted lowest to highest error): {gene_names}")
     else:
         if gene_selection_method == "mae" and observed_adata is None:
             print("Warning: MAE gene selection requested but no observed_adata provided. Using random selection.")
@@ -2526,26 +2551,20 @@ def _plot_gene_phase_portrait_rainbow(
                 zorder=2  # In front of observed data
             )
 
-        # Add MAE calculation and display if observed data is available
+        # Add MAE display using stored values from gene selection
         if (observed_adata is not None and
-            'unspliced' in observed_adata.layers and
-            'spliced' in observed_adata.layers and
-            gene_idx < observed_adata.n_vars):
+            'mae_score' in adata.var and
+            gene_idx < len(adata.var['mae_score'])):
 
-            # Get observed data for this gene
-            u_obs = observed_adata.layers['unspliced'][:, gene_idx]
-            s_obs = observed_adata.layers['spliced'][:, gene_idx]
+            # Get the stored MAE score (negative value from mae_per_gene)
+            mae_score = adata.var['mae_score'].iloc[gene_idx]
 
-            # Calculate MAE for both unspliced and spliced
-            mae_u = np.mean(np.abs(u_gene - u_obs))
-            mae_s = np.mean(np.abs(s_gene - s_obs))
-
-            # Use combined MAE (average of unspliced and spliced MAE)
-            combined_mae = (mae_u + mae_s) / 2
+            # Convert to positive value for display (lower = better)
+            display_mae = -mae_score
 
             # Display MAE in top-left corner
             axes_dict[f"phase_{n}"].text(
-                0.02, 0.98, f'MAE: {combined_mae:.1f}',
+                0.02, 0.98, f'MAE: {display_mae:.2f}',
                 transform=axes_dict[f"phase_{n}"].transAxes,
                 fontsize=7 * 0.7, va='top', ha='left',
                 color='black', weight='bold',
