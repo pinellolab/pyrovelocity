@@ -709,10 +709,10 @@ def plot_temporal_dynamics(
         print(f"Selected {len(gene_names)} genes randomly: {gene_names}")
 
     # Create figure and gridspec using rainbow plot pattern
-    # Use standard width if figsize not provided
+    # Use expanded width if figsize not provided to accommodate new marginal column
     if figsize is None:
-        width = 7.5  # Standard width for 8.5x11" with margins
-        height = width * (available_genes / 4) * 0.6  # Reasonable height based on gene count
+        width = 9.0  # Expanded from 7.5 to accommodate marginal histogram column
+        height = width * (available_genes / 5) * 0.6  # Adjusted ratio for 5 content columns
         figsize = (width, height)
 
     fig, axes_dict = _create_temporal_dynamics_figure(available_genes, figsize)
@@ -731,6 +731,18 @@ def plot_temporal_dynamics(
         # Observed spliced in UMAP (use observed_adata if provided, otherwise use adata)
         observed_data = observed_adata if observed_adata is not None else adata
         _plot_gene_observed_umap_rainbow(observed_data, axes_dict, n, gene_idx, gene_name, check_type, basis)
+
+        # Marginal histogram comparison (predictive vs observed)
+        _plot_gene_marginal_histogram_rainbow(
+            predicted_adata=adata,
+            observed_adata=observed_data,
+            axes_dict=axes_dict,
+            n=n,
+            gene_idx=gene_idx,
+            gene_name=gene_name,
+            check_type=check_type,
+            default_fontsize=default_fontsize
+        )
 
         # Set labels and formatting
         _set_temporal_dynamics_labels(axes_dict, n, gene_name, available_genes, default_fontsize)
@@ -2398,37 +2410,40 @@ def _create_temporal_dynamics_figure(
     from matplotlib.gridspec import GridSpec
 
     # Define number of horizontal panels
-    horizontal_panels = 5  # gene_label, phase, dynamics, predictive, observed
+    horizontal_panels = 6  # gene_label, phase, dynamics, predictive, observed, marginal
 
-    # Calculate figure size using standard width for 8.5x11" with margins
+    # Calculate figure size - expand width to accommodate new column
     if figsize is None:
-        width = 7.5  # Standard width for 8.5x11" with margins
+        width = 9.0  # Expanded from 7.5 to accommodate marginal histogram column
         subplot_height = 0.9
         figsize = (width, subplot_height * number_of_genes)
 
     fig = plt.figure(figsize=figsize)
 
     # Create gridspec with proper width ratios and spacing like rainbow plot
+    # Carefully balance spacing: phase/dynamics are tight, UMAP columns have more space
     gs = GridSpec(
         nrows=number_of_genes + 1,  # Add extra row for titles
         ncols=horizontal_panels,
         figure=fig,
         width_ratios=[
             0.21,  # Gene label column (same as rainbow plot)
-            1,     # Phase portrait
-            1,     # Dynamics
-            1,     # Predictive UMAP
-            1,     # Observed UMAP
+            1.0,   # Phase portrait (keep tight)
+            1.0,   # Dynamics (keep tight)
+            0.85,  # Predictive UMAP (reduce from excess space)
+            0.85,  # Observed UMAP (reduce from excess space)
+            0.75,  # Marginal histogram (compact but readable)
         ],
         height_ratios=[0.15] + [1] * number_of_genes,  # Small title row + gene rows
-        wspace=0.3,   # Increased spacing to prevent axis label overlap
+        wspace=0.25,  # Reduced from 0.3 to accommodate new column
         hspace=0.25,  # Increased vertical spacing between gene rows
     )
 
     axes_dict = {}
 
     # Create title row
-    for col, title in enumerate(['', r'$(u, s)$ phase space', 'Spliced dynamics', 'Predictive spliced', 'Observed spliced']):
+    titles = ['', r'$(u, s)$ phase space', 'Spliced dynamics', 'Predictive spliced', 'Observed spliced', 'Marginal comparison']
+    for col, title in enumerate(titles):
         if col == 0:
             continue  # Skip gene label column for titles
         title_ax = fig.add_subplot(gs[0, col])
@@ -2445,6 +2460,7 @@ def _create_temporal_dynamics_figure(
         axes_dict[f"dynamics_{n}"] = fig.add_subplot(gs[row, 2])
         axes_dict[f"predictive_{n}"] = fig.add_subplot(gs[row, 3])
         axes_dict[f"observed_{n}"] = fig.add_subplot(gs[row, 4])
+        axes_dict[f"marginal_{n}"] = fig.add_subplot(gs[row, 5])
 
     return fig, axes_dict
 
@@ -2625,6 +2641,106 @@ def _plot_gene_observed_umap_rainbow(
         axes_dict[f"observed_{n}"].axis('off')
 
 
+def _plot_gene_marginal_histogram_rainbow(
+    predicted_adata: AnnData,
+    observed_adata: AnnData,
+    axes_dict: Dict[str, plt.Axes],
+    n: int,
+    gene_idx: int,
+    gene_name: str,
+    check_type: str,
+    default_fontsize: int = 7
+) -> None:
+    """Plot marginal histogram comparison of predictive vs observed spliced expression."""
+
+    # Extract spliced expression data for this gene
+    predicted_expr = None
+    observed_expr = None
+
+    if 'spliced' in predicted_adata.layers:
+        predicted_expr = predicted_adata.layers['spliced'][:, gene_idx]
+
+    if 'spliced' in observed_adata.layers:
+        observed_expr = observed_adata.layers['spliced'][:, gene_idx]
+
+    if predicted_expr is not None and observed_expr is not None:
+        # Apply log1p transformation to handle zeros and improve visualization
+        predicted_log = np.log1p(predicted_expr)
+        observed_log = np.log1p(observed_expr)
+
+        # Determine common bin range for fair comparison
+        all_data = np.concatenate([predicted_log, observed_log])
+        data_min, data_max = np.min(all_data), np.max(all_data)
+
+        # Use 25 bins for good resolution without overcrowding
+        bins = np.linspace(data_min, data_max, 26)  # 26 edges = 25 bins
+
+        # Plot histograms with transparency for overlay
+        axes_dict[f"marginal_{n}"].hist(
+            predicted_log, bins=bins, alpha=0.6, density=True,
+            color='steelblue', label='Predictive', edgecolor='none'
+        )
+        axes_dict[f"marginal_{n}"].hist(
+            observed_log, bins=bins, alpha=0.6, density=True,
+            color='darkorange', label='Observed', edgecolor='none'
+        )
+
+        # Add median lines for quick comparison
+        pred_median = np.median(predicted_log)
+        obs_median = np.median(observed_log)
+
+        axes_dict[f"marginal_{n}"].axvline(
+            pred_median, color='steelblue', linestyle='--', alpha=0.8, linewidth=1
+        )
+        axes_dict[f"marginal_{n}"].axvline(
+            obs_median, color='darkorange', linestyle='--', alpha=0.8, linewidth=1
+        )
+
+        # Compute and display Wasserstein distance as a simple error metric
+        try:
+            from scipy.stats import wasserstein_distance
+            wd = wasserstein_distance(predicted_log, observed_log)
+            axes_dict[f"marginal_{n}"].text(
+                0.02, 0.98, f'WD: {wd:.2f}',
+                transform=axes_dict[f"marginal_{n}"].transAxes,
+                fontsize=default_fontsize * 0.7, va='top', ha='left',
+                bbox=dict(boxstyle='round,pad=0.2', facecolor='white', alpha=0.8)
+            )
+        except ImportError:
+            # Fallback to simple MAE if scipy not available
+            mae = np.mean(np.abs(predicted_log - np.interp(
+                np.linspace(0, 1, len(predicted_log)),
+                np.linspace(0, 1, len(observed_log)),
+                np.sort(observed_log)
+            )))
+            axes_dict[f"marginal_{n}"].text(
+                0.02, 0.98, f'MAE: {mae:.2f}',
+                transform=axes_dict[f"marginal_{n}"].transAxes,
+                fontsize=default_fontsize * 0.7, va='top', ha='left',
+                bbox=dict(boxstyle='round,pad=0.2', facecolor='white', alpha=0.8)
+            )
+
+        # Add legend only for first row to save space
+        if n == 0:
+            axes_dict[f"marginal_{n}"].legend(
+                fontsize=default_fontsize * 0.7, loc='upper right'
+            )
+
+        # Set labels and formatting
+        axes_dict[f"marginal_{n}"].set_ylabel('Density', fontsize=default_fontsize * 0.8)
+        axes_dict[f"marginal_{n}"].tick_params(labelsize=default_fontsize * 0.6)
+        axes_dict[f"marginal_{n}"].grid(True, alpha=0.3)
+
+    else:
+        # Handle missing data
+        axes_dict[f"marginal_{n}"].text(
+            0.5, 0.5, 'Expression data\nnot available',
+            ha='center', va='center', transform=axes_dict[f"marginal_{n}"].transAxes,
+            fontsize=default_fontsize * 0.8
+        )
+        axes_dict[f"marginal_{n}"].axis('off')
+
+
 def _set_temporal_dynamics_labels(
     axes_dict: Dict[str, plt.Axes],
     n: int,
@@ -2656,6 +2772,12 @@ def _set_temporal_dynamics_labels(
             labelpad=0.7,
             fontsize=default_fontsize
         )
+        axes_dict[f"marginal_{n}"].set_xlabel(
+            r'log(1+spliced)',
+            loc="center",
+            labelpad=0.7,
+            fontsize=default_fontsize * 0.9
+        )
 
         # Set y-axis labels on the RIGHT side (like rainbow plot)
         axes_dict[f"phase_{n}"].set_ylabel(
@@ -2679,10 +2801,16 @@ def _set_temporal_dynamics_labels(
         axes_dict[f"phase_{n}"].set_ylabel('')
         axes_dict[f"dynamics_{n}"].set_xlabel('')
         axes_dict[f"dynamics_{n}"].set_ylabel('')
+        # Remove marginal labels for non-bottom rows
+        if f"marginal_{n}" in axes_dict:
+            axes_dict[f"marginal_{n}"].set_xlabel('')
 
     # Set tick parameters
     axes_dict[f"phase_{n}"].tick_params(labelsize=default_fontsize * 0.75)
     axes_dict[f"dynamics_{n}"].tick_params(labelsize=default_fontsize * 0.75)
+    # Set tick parameters for marginal histogram
+    if f"marginal_{n}" in axes_dict:
+        axes_dict[f"marginal_{n}"].tick_params(labelsize=default_fontsize * 0.6)
 
 
 def _set_temporal_dynamics_aspect(axes_dict: Dict[str, plt.Axes]) -> None:
@@ -2696,6 +2824,9 @@ def _set_temporal_dynamics_aspect(axes_dict: Dict[str, plt.Axes]) -> None:
             axes_dict[key].set_aspect('auto')
         elif 'dynamics_' in key:
             # Dynamics plots can have auto aspect
+            axes_dict[key].set_aspect('auto')
+        elif 'marginal_' in key:
+            # Marginal histogram plots can have auto aspect
             axes_dict[key].set_aspect('auto')
 
 
