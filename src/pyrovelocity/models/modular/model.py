@@ -2101,69 +2101,70 @@ class PyroVelocityModel:
                               for v in samples.values() if isinstance(v, torch.Tensor)]
 
                 if sample_sizes and max(sample_sizes) > 1:
-                    # Multiple posterior samples: generate multiple predictive datasets
+                    # Multiple posterior samples
                     num_posterior_samples = max(sample_sizes)
+                    print(f"  🔄 Generating predictive data from {num_posterior_samples} posterior samples...")
 
-                    # For multiple posterior samples, we need to iterate manually
-                    # because the complex tensor shapes don't work well with Pyro's Predictive
-                    print(f"  🔄 Generating {num_posterior_samples} predictive datasets...")
+                    max_samples_to_use = min(num_posterior_samples, 20)  # Limit to 20 samples
 
-                    all_predictive_samples = []
+                    # Subsample the posterior samples
+                    subsampled_samples = {}
+                    for key, value in samples.items():
+                        if isinstance(value, torch.Tensor) and value.shape[0] > 1:
+                            # Take evenly spaced samples
+                            indices = torch.linspace(0, value.shape[0]-1, max_samples_to_use).long()
+                            subsampled_samples[key] = value[indices]
+                        else:
+                            subsampled_samples[key] = value
 
-                    for i in range(num_posterior_samples):
-                        # Extract single sample from each parameter
-                        single_sample = {}
-                        for key, value in samples.items():
-                            if isinstance(value, torch.Tensor) and value.shape[0] > 1:
-                                single_sample[key] = value[i:i+1]  # Keep batch dimension
+                    # Generate single predictive sample using averaged parameters
+                    averaged_samples = {}
+                    for key, value in subsampled_samples.items():
+                        if isinstance(value, torch.Tensor) and value.ndim > 1:
+                            if value.dtype in [torch.float32, torch.float64]:
+                                averaged_samples[key] = value.mean(dim=0, keepdim=True)
                             else:
-                                single_sample[key] = value
+                                averaged_samples[key] = value[0:1]  # Take first sample for non-float types
+                        else:
+                            averaged_samples[key] = value
 
-                        # Generate single predictive sample using existing logic
-                        def posterior_predictive_model():
-                            """Model with fixed parameters for posterior predictive sampling."""
-                            # Create dummy observations with the right shape
-                            dummy_u_obs = torch.zeros(num_cells, num_genes)
-                            dummy_s_obs = torch.zeros(num_cells, num_genes)
+                    # Generate a single sample from averaged parameters
+                    def posterior_predictive_model():
+                        """Model with fixed parameters for posterior predictive sampling."""
+                        # Create dummy observations with the right shape
+                        dummy_u_obs = torch.zeros(num_cells, num_genes)
+                        dummy_s_obs = torch.zeros(num_cells, num_genes)
 
-                            # Create context with observations
-                            context = {
-                                "u_obs": dummy_u_obs,
-                                "s_obs": dummy_s_obs,
-                            }
+                        # Create context with observations
+                        context = {
+                            "u_obs": dummy_u_obs,
+                            "s_obs": dummy_s_obs,
+                        }
 
-                            # Add observed times to context if provided
-                            if observed_times is not None:
-                                context["observed_times"] = observed_times
+                        # Add observed times to context if provided
+                        if observed_times is not None:
+                            context["observed_times"] = observed_times
 
-                            # Add fixed parameter values to context with simplified processing
-                            context.update(self._process_parameter_samples(single_sample, num_cells, num_genes))
+                        # Add fixed parameter values to context
+                        context.update(self._process_parameter_samples(averaged_samples, num_cells, num_genes))
 
-                            # Skip prior sampling and go directly to dynamics and likelihood
-                            dynamics_context = self.dynamics_model.forward(context)
-                            likelihood_context = self.likelihood_model.forward(dynamics_context)
+                        # Run dynamics and likelihood model components
+                        dynamics_context = self.dynamics_model.forward(context)
+                        likelihood_context = self.likelihood_model.forward(dynamics_context)
 
-                            return likelihood_context
+                        return likelihood_context
 
-                        # Use unconditioned version to generate observations
-                        unconditioned_posterior_model = pyro.poutine.uncondition(posterior_predictive_model)
+                    # Use unconditioned version to generate observations
+                    unconditioned_posterior_model = pyro.poutine.uncondition(posterior_predictive_model)
 
-                        # Generate samples
-                        predictive = Predictive(
-                            unconditioned_posterior_model,
-                            num_samples=1,  # Generate one sample with fixed parameters
-                            return_sites=None,
-                        )
+                    # Generate multiple samples to simulate posterior uncertainty
+                    predictive = Predictive(
+                        unconditioned_posterior_model,
+                        num_samples=max_samples_to_use,  # Generate multiple samples
+                        return_sites=None,
+                    )
 
-                        single_predictive_sample = predictive()
-                        all_predictive_samples.append(single_predictive_sample)
-
-                    # Combine all samples into a single dictionary with batch dimension
-                    predictive_samples = {}
-                    for key in all_predictive_samples[0].keys():
-                        # Stack samples along batch dimension
-                        stacked_samples = torch.stack([sample[key] for sample in all_predictive_samples], dim=0)
-                        predictive_samples[key] = stacked_samples
+                    predictive_samples = predictive()
 
                 else:
                     # Single parameter set (backward compatibility): use existing logic
