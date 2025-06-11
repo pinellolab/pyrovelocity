@@ -737,26 +737,29 @@ def plot_parameter_marginals_by_gene(
 
     num_params = len(available_params)
 
-    # Calculate figure size
+    # Calculate figure size - add gene label column like temporal dynamics plot
+    horizontal_panels = num_params + 1  # gene_label + parameter columns
+
     if figsize is None:
-        width = 2.0 * num_params  # 2 inches per parameter column
+        width = 2.0 * num_params + 1.0  # 2 inches per parameter column + 1 for gene label
         height = 0.8 * available_genes + 0.5  # 0.8 inches per gene row + title space
         figsize = (width, height)
 
-    # Create figure and gridspec
+    # Create figure and gridspec with gene label column
     fig = plt.figure(figsize=figsize)
     gs = GridSpec(
         nrows=available_genes + 1,  # Add extra row for titles
-        ncols=num_params,
+        ncols=horizontal_panels,
         figure=fig,
+        width_ratios=[0.21] + [1.0] * num_params,  # Gene label column + parameter columns
         height_ratios=[0.15] + [1] * available_genes,  # Small title row + gene rows
         hspace=0.3,  # Vertical spacing between gene rows
         wspace=0.3,  # Horizontal spacing between parameter columns
     )
 
-    # Add column titles
+    # Add column titles (skip gene label column)
     for col, param_name in enumerate(available_params):
-        ax_title = fig.add_subplot(gs[0, col])
+        ax_title = fig.add_subplot(gs[0, col + 1])  # +1 to skip gene label column
         ax_title.axis('off')
 
         # Get parameter label using metadata system
@@ -812,8 +815,16 @@ def plot_parameter_marginals_by_gene(
 
     # Plot histograms for each gene and parameter
     for row, (gene_idx, gene_name) in enumerate(zip(gene_indices, gene_names)):
+        # Create gene label axis (first column)
+        gene_ax = fig.add_subplot(gs[row + 1, 0])  # +1 to account for title row
+        gene_ax.axis('off')
+        gene_ax.text(0.0, 0.5, gene_name[:7],
+                    transform=gene_ax.transAxes,
+                    rotation=0, va='center', ha='center',
+                    fontsize=default_fontsize, weight='normal')
+
         for col, param_name in enumerate(available_params):
-            ax = fig.add_subplot(gs[row + 1, col])  # +1 to account for title row
+            ax = fig.add_subplot(gs[row + 1, col + 1])  # +1 for title row, +1 for gene label column
 
             # Extract samples for this gene and parameter
             param_samples = param_samples_by_gene[param_name]
@@ -843,11 +854,6 @@ def plot_parameter_marginals_by_gene(
             # Formatting
             ax.tick_params(labelsize=default_fontsize * 0.8)
             ax.grid(True, alpha=0.3)
-
-            # Add gene name on the leftmost column
-            if col == 0:
-                ax.set_ylabel(gene_name, fontsize=default_fontsize, rotation=0,
-                             ha='right', va='center')
 
             # Add x-axis labels only on bottom row using parameter metadata
             if row == available_genes - 1:
