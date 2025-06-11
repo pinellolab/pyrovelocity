@@ -597,7 +597,8 @@ def plot_temporal_dynamics(
     num_genes: int = 6,
     basis: str = "umap",
     default_fontsize: int = 7,
-    file_prefix: str = ""
+    file_prefix: str = "",
+    observed_adata: Optional[AnnData] = None
 ) -> plt.Figure:
     """
     Plot temporal dynamics: multi-gene visualization with phase portraits,
@@ -610,6 +611,18 @@ def plot_temporal_dynamics(
     - Observed log spliced expression in UMAP space
 
     Uses the same gridspec layout as the rainbow plot for proper spacing and formatting.
+
+    Args:
+        adata: AnnData object with predictive samples (used for predictive columns)
+        check_type: Type of check ("prior" or "posterior")
+        figsize: Figure size (width, height)
+        save_path: Optional directory path to save figures
+        num_genes: Number of genes to plot
+        basis: Embedding basis to use (default: "umap")
+        default_fontsize: Default font size for all text elements
+        file_prefix: Prefix for saved file names
+        observed_adata: Optional AnnData object with observed data (used for observed column).
+                       If None, uses adata for both predictive and observed columns.
 
     Args:
         adata: AnnData object with expression data
@@ -658,8 +671,9 @@ def plot_temporal_dynamics(
         # Predictive spliced in UMAP
         _plot_gene_predictive_umap_rainbow(adata, axes_dict, n, gene_idx, gene_name, check_type, basis)
 
-        # Observed spliced in UMAP
-        _plot_gene_observed_umap_rainbow(adata, axes_dict, n, gene_idx, gene_name, check_type, basis)
+        # Observed spliced in UMAP (use observed_adata if provided, otherwise use adata)
+        observed_data = observed_adata if observed_adata is not None else adata
+        _plot_gene_observed_umap_rainbow(observed_data, axes_dict, n, gene_idx, gene_name, check_type, basis)
 
         # Set labels and formatting
         _set_temporal_dynamics_labels(axes_dict, n, gene_name, available_genes, default_fontsize)
@@ -1239,6 +1253,7 @@ def plot_prior_predictive_checks(
     create_individual_plots: bool = True,
     combine_individual_pdfs: bool = False,
     default_fontsize: Union[int, float] = 8,
+    observed_adata: Optional[AnnData] = None,
 ) -> plt.Figure:
     """
     Generate comprehensive predictive check plots for PyroVelocity models.
@@ -1260,6 +1275,8 @@ def plot_prior_predictive_checks(
         create_individual_plots: Whether to create individual modular plots
         combine_individual_pdfs: Whether to combine individual PDF plots into a single file
         default_fontsize: Default font size for all text elements (titles, labels, legends)
+        observed_adata: Optional AnnData object with observed data for comparison in temporal dynamics plots.
+                       If None, uses prior_adata for both predictive and observed columns.
 
     Returns:
         matplotlib Figure object
@@ -1288,7 +1305,7 @@ def plot_prior_predictive_checks(
         plot_parameter_marginals(processed_parameters, check_type, save_path=save_path, file_prefix="02", model=model, default_fontsize=default_fontsize)
         plot_parameter_relationships(processed_parameters, check_type, save_path=save_path, file_prefix="03", model=model, default_fontsize=default_fontsize)
         plot_temporal_trajectories(processed_parameters, check_type, save_path=save_path, file_prefix="04", adata=prior_adata, default_fontsize=default_fontsize)
-        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="05", default_fontsize=default_fontsize)
+        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="05", default_fontsize=default_fontsize, observed_adata=observed_adata)
         plot_expression_validation(prior_adata, check_type, save_path=save_path, file_prefix="06", default_fontsize=default_fontsize)
         plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path, file_prefix="07", default_fontsize=default_fontsize)
 
@@ -2853,6 +2870,7 @@ def plot_posterior_predictive_checks(
     create_individual_plots: bool = True,
     combine_individual_pdfs: bool = False,
     default_fontsize: Union[int, float] = 8,
+    observed_adata: Optional[AnnData] = None,
 ) -> plt.Figure:
     """
     Generate posterior predictive check plots.
@@ -2866,6 +2884,11 @@ def plot_posterior_predictive_checks(
         figsize: Figure size (width, height)
         save_path: Optional directory path to save figures (creates if doesn't exist)
         figure_name: Optional figure name (defaults to "posterior_predictive_checks")
+        create_individual_plots: Whether to create individual modular plots
+        combine_individual_pdfs: Whether to combine individual PDF plots into a single file
+        default_fontsize: Default font size for all text elements
+        observed_adata: Optional AnnData object with observed data for comparison in temporal dynamics plots.
+                       If None, uses posterior_adata for both predictive and observed columns.
 
     Returns:
         matplotlib Figure object
@@ -2876,7 +2899,8 @@ def plot_posterior_predictive_checks(
         ...     posterior_adata=adata,
         ...     posterior_parameters=params,
         ...     save_path="reports/docs/posterior_predictive",
-        ...     figure_name="piecewise_activation_posterior_checks"
+        ...     figure_name="piecewise_activation_posterior_checks",
+        ...     observed_adata=original_adata
         ... )
     """
     return plot_prior_predictive_checks(
@@ -2890,4 +2914,5 @@ def plot_posterior_predictive_checks(
         create_individual_plots=create_individual_plots,
         combine_individual_pdfs=combine_individual_pdfs,
         default_fontsize=default_fontsize,
+        observed_adata=observed_adata,
     )

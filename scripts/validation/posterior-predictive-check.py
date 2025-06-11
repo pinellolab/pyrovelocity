@@ -131,18 +131,33 @@ print(f"✅ Stored {len(posterior_predictive_adata.uns['fit_parameters'])} fit p
 if has_uncertainty:
     print(f"✅ Stored full posterior samples for uncertainty analysis")
 
-# Extract parameters for plotting functions (use mean for compatibility)
-posterior_parameter_samples = {}
-for key, value in posterior_predictive_adata.uns["fit_parameters"].items():
-    posterior_parameter_samples[key] = torch.tensor(value) if not isinstance(value, torch.Tensor) else value
+# Extract parameters for plotting functions (use full posterior samples)
+if has_uncertainty and "posterior_samples_full" in posterior_predictive_adata.uns:
+    print("  📊 Using full posterior samples for plotting")
+    posterior_parameter_samples = {}
+    for key, value in posterior_predictive_adata.uns["posterior_samples_full"].items():
+        if isinstance(value, np.ndarray):
+            posterior_parameter_samples[key] = torch.tensor(value)
+        else:
+            posterior_parameter_samples[key] = value
+else:
+    print("  📊 Using averaged parameters for plotting (fallback)")
+    posterior_parameter_samples = {}
+    for key, value in posterior_predictive_adata.uns["fit_parameters"].items():
+        posterior_parameter_samples[key] = torch.tensor(value) if not isinstance(value, torch.Tensor) else value
 
 # Add UMAP and clustering for visualization
-print(f"\n🗺️ Computing UMAP and clustering for visualization...")
+print(f"\n🗺️ Computing UMAP for visualization...")
 sc.pp.pca(posterior_predictive_adata, random_state=RANDOM_SEED)
 sc.pp.neighbors(posterior_predictive_adata, n_neighbors=10, random_state=RANDOM_SEED)
 # Use UMAP parameters associated with prior predictive data for consistent visualization
 sc.tl.umap(posterior_predictive_adata, **prior_predictive_adata.uns["umap"]["params"])
-sc.tl.leiden(posterior_predictive_adata, random_state=RANDOM_SEED)
+
+# Copy Leiden cluster labels from prior predictive data to track cell movement
+print(f"📋 Copying Leiden cluster labels from prior predictive data...")
+posterior_predictive_adata.obs['leiden'] = prior_predictive_adata.obs['leiden'].copy()
+posterior_predictive_adata.uns['leiden'] = prior_predictive_adata.uns['leiden'].copy()
+print(f"✅ Preserved {len(posterior_predictive_adata.obs['leiden'].cat.categories)} Leiden clusters from prior predictive data")
 
 # Step 6: Generate posterior predictive check plots
 print(f"\n🎨 Creating posterior predictive check plots...")
@@ -157,6 +172,7 @@ fig_posterior = plot_posterior_predictive_checks(
     figure_name=f"piecewise_activation_posterior_checks_{RANDOM_SEED}",
     combine_individual_pdfs=True,
     default_fontsize=5,
+    observed_adata=prior_predictive_adata,  # Use original prior predictive data as "observed"
 )
 
 print(f"\n✅ Posterior predictive check workflow completed!")
