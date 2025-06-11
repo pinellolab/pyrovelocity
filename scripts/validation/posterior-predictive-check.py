@@ -127,7 +127,8 @@ fig_posterior = plot_posterior_predictive_checks(
     figure_name=f"piecewise_activation_posterior_checks_{RANDOM_SEED}",
     combine_individual_pdfs=True,
     default_fontsize=5,
-    observed_adata=prior_predictive_adata,  # Use original prior predictive data as "observed"
+    observed_adata=prior_predictive_adata,
+    num_genes=10,
 )
 
 print(f"\n✅ Posterior predictive check workflow completed!")
