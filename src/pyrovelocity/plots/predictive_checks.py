@@ -720,7 +720,7 @@ def plot_temporal_dynamics(
     # Plot each gene
     for n, (gene_idx, gene_name) in enumerate(zip(gene_indices, gene_names)):
         # Phase portrait
-        _plot_gene_phase_portrait_rainbow(adata, axes_dict, n, gene_idx, gene_name, check_type, available_genes)
+        _plot_gene_phase_portrait_rainbow(adata, axes_dict, n, gene_idx, gene_name, check_type, available_genes, observed_adata)
 
         # Spliced dynamics
         _plot_gene_spliced_dynamics_rainbow(adata, axes_dict, n, gene_idx, gene_name, check_type, available_genes)
@@ -2442,7 +2442,7 @@ def _create_temporal_dynamics_figure(
     axes_dict = {}
 
     # Create title row
-    titles = ['', r'$(u, s)$ phase space', 'Spliced dynamics', 'Predictive spliced', 'Observed spliced', 'Marginal comparison']
+    titles = ['', r'$(u, s)$ phase space', 'Spliced dynamics', 'Predictive spliced', 'Observed spliced', 'Marginal histograms']
     for col, title in enumerate(titles):
         if col == 0:
             continue  # Skip gene label column for titles
@@ -2472,12 +2472,32 @@ def _plot_gene_phase_portrait_rainbow(
     gene_idx: int,
     gene_name: str,
     check_type: str,
-    total_genes: int
+    total_genes: int,
+    observed_adata: Optional[AnnData] = None
 ) -> None:
     """Plot phase portrait (u,s) for a single gene using rainbow plot style."""
     if 'unspliced' in adata.layers and 'spliced' in adata.layers:
         u_gene = adata.layers['unspliced'][:, gene_idx]
         s_gene = adata.layers['spliced'][:, gene_idx]
+
+        # Plot observed data first (behind predictive data in z-order) if available
+        if (observed_adata is not None and
+            'unspliced' in observed_adata.layers and
+            'spliced' in observed_adata.layers and
+            gene_idx < observed_adata.n_vars):
+
+            u_obs = observed_adata.layers['unspliced'][:, gene_idx]
+            s_obs = observed_adata.layers['spliced'][:, gene_idx]
+
+            # Plot observed data as highly transparent, small gray points
+            axes_dict[f"phase_{n}"].scatter(
+                s_obs, u_obs,
+                alpha=0.3,  # Highly transparent
+                s=1.5,      # Relatively small
+                color='gray',
+                edgecolors='none',
+                zorder=1     # Behind predictive data
+            )
 
         # Color by time coordinate if available, prioritizing canonical parameter names
         # This ensures consistency with the UMAP time coordinate plot
@@ -2491,9 +2511,17 @@ def _plot_gene_phase_portrait_rainbow(
         if time_col is not None:
             c = adata.obs[time_col]
             # Use viridis colormap to match UMAP time coordinate plot
-            axes_dict[f"phase_{n}"].scatter(s_gene, u_gene, c=c, cmap='viridis', alpha=0.6, s=3, edgecolors='none')
+            axes_dict[f"phase_{n}"].scatter(
+                s_gene, u_gene, c=c, cmap='viridis',
+                alpha=0.6, s=3, edgecolors='none',
+                zorder=2  # In front of observed data
+            )
         else:
-            axes_dict[f"phase_{n}"].scatter(s_gene, u_gene, alpha=0.6, s=3, color='steelblue', edgecolors='none')
+            axes_dict[f"phase_{n}"].scatter(
+                s_gene, u_gene, alpha=0.6, s=3,
+                color='steelblue', edgecolors='none',
+                zorder=2  # In front of observed data
+            )
     else:
         axes_dict[f"phase_{n}"].text(0.5, 0.5, 'Expression data\nnot available',
                ha='center', va='center', transform=axes_dict[f"phase_{n}"].transAxes)
@@ -2675,14 +2703,26 @@ def _plot_gene_marginal_histogram_rainbow(
         # Use 25 bins for good resolution without overcrowding
         bins = np.linspace(data_min, data_max, 26)  # 26 edges = 25 bins
 
-        # Plot histograms with transparency for overlay
-        axes_dict[f"marginal_{n}"].hist(
-            predicted_log, bins=bins, alpha=0.6, density=True,
+        # Plot histograms with transparency for overlay using relative frequencies
+        # Get histogram counts first to compute relative frequencies
+        pred_counts, _ = np.histogram(predicted_log, bins=bins)
+        obs_counts, _ = np.histogram(observed_log, bins=bins)
+
+        # Convert to relative frequencies (sum to 1)
+        pred_freq = pred_counts / np.sum(pred_counts) if np.sum(pred_counts) > 0 else pred_counts
+        obs_freq = obs_counts / np.sum(obs_counts) if np.sum(obs_counts) > 0 else obs_counts
+
+        # Plot as bar charts with relative frequencies
+        bin_centers = (bins[:-1] + bins[1:]) / 2
+        bin_width = bins[1] - bins[0]
+
+        axes_dict[f"marginal_{n}"].bar(
+            bin_centers, pred_freq, width=bin_width * 0.8, alpha=0.6,
             color='steelblue', label='Predictive', edgecolor='none'
         )
-        axes_dict[f"marginal_{n}"].hist(
-            observed_log, bins=bins, alpha=0.6, density=True,
-            color='darkorange', label='Observed', edgecolor='none'
+        axes_dict[f"marginal_{n}"].bar(
+            bin_centers, obs_freq, width=bin_width * 0.8, alpha=0.5,
+            color='gray', label='Observed', edgecolor='none'
         )
 
         # Add median lines for quick comparison
@@ -2693,7 +2733,7 @@ def _plot_gene_marginal_histogram_rainbow(
             pred_median, color='steelblue', linestyle='--', alpha=0.8, linewidth=1
         )
         axes_dict[f"marginal_{n}"].axvline(
-            obs_median, color='darkorange', linestyle='--', alpha=0.8, linewidth=1
+            obs_median, color='gray', linestyle='--', alpha=0.8, linewidth=1
         )
 
         # Compute and display Wasserstein distance as a simple error metric
@@ -2726,8 +2766,7 @@ def _plot_gene_marginal_histogram_rainbow(
                 fontsize=default_fontsize * 0.7, loc='upper right'
             )
 
-        # Set labels and formatting
-        axes_dict[f"marginal_{n}"].set_ylabel('Density', fontsize=default_fontsize * 0.8)
+        # Set labels and formatting (no y-label to save space)
         axes_dict[f"marginal_{n}"].tick_params(labelsize=default_fontsize * 0.6)
         axes_dict[f"marginal_{n}"].grid(True, alpha=0.3)
 
