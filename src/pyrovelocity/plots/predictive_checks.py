@@ -673,8 +673,7 @@ def plot_temporal_dynamics(
 
         # Observed spliced in UMAP (use observed_adata if provided, otherwise use adata)
         observed_data = observed_adata if observed_adata is not None else adata
-        # Pass the predictive data's UMAP coordinates for proper comparison
-        _plot_gene_observed_umap_rainbow(observed_data, axes_dict, n, gene_idx, gene_name, check_type, basis, reference_coords=adata.obsm.get(f'X_{basis}'))
+        _plot_gene_observed_umap_rainbow(observed_data, axes_dict, n, gene_idx, gene_name, check_type, basis)
 
         # Set labels and formatting
         _set_temporal_dynamics_labels(axes_dict, n, gene_name, available_genes, default_fontsize)
@@ -2534,31 +2533,13 @@ def _plot_gene_observed_umap_rainbow(
     gene_idx: int,
     gene_name: str,
     check_type: str,
-    basis: str = "umap",
-    reference_coords: Optional[np.ndarray] = None
+    basis: str = "umap"
 ) -> None:
-    """Plot observed spliced expression in UMAP space using rainbow plot style.
-
-    Args:
-        adata: AnnData object with observed data
-        axes_dict: Dictionary of matplotlib axes
-        n: Gene index for plot positioning
-        gene_idx: Index of gene in adata.var
-        gene_name: Name of gene for labeling
-        check_type: Type of check ("prior" or "posterior")
-        basis: Embedding basis to use (default: "umap")
-        reference_coords: Optional reference coordinates to use instead of adata.obsm[f'X_{basis}'].
-                         This ensures observed data uses same UMAP coordinates as predictive data.
-    """
+    """Plot observed spliced expression in UMAP space using rainbow plot style."""
     from pyrovelocity.plots._common import set_colorbar
 
-    # Use reference coordinates if provided, otherwise fall back to adata coordinates
-    if (reference_coords is not None and 'spliced' in adata.layers) or (f'X_{basis}' in adata.obsm and 'spliced' in adata.layers):
-        if reference_coords is not None:
-            coords = reference_coords
-        else:
-            coords = adata.obsm[f'X_{basis}']
-
+    if f'X_{basis}' in adata.obsm and 'spliced' in adata.layers:
+        coords = adata.obsm[f'X_{basis}']
         s_gene = adata.layers['spliced'][:, gene_idx]
 
         # Use log-transformed expression for observed data (same scale as predictive)

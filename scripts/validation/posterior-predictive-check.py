@@ -146,12 +146,19 @@ else:
     for key, value in posterior_predictive_adata.uns["fit_parameters"].items():
         posterior_parameter_samples[key] = torch.tensor(value) if not isinstance(value, torch.Tensor) else value
 
-# Add UMAP and clustering for visualization
-print(f"\n🗺️ Computing UMAP for visualization...")
-sc.pp.pca(posterior_predictive_adata, random_state=RANDOM_SEED)
-sc.pp.neighbors(posterior_predictive_adata, n_neighbors=10, random_state=RANDOM_SEED)
-# Use UMAP parameters associated with prior predictive data for consistent visualization
-sc.tl.umap(posterior_predictive_adata, **prior_predictive_adata.uns["umap"]["params"])
+# Copy UMAP coordinates and related data for consistent visualization
+print(f"\n🗺️ Copying UMAP coordinates from prior predictive data for consistent visualization...")
+# Copy UMAP coordinates directly to ensure identical coordinate system
+posterior_predictive_adata.obsm['X_umap'] = prior_predictive_adata.obsm['X_umap'].copy()
+# Copy PCA and neighbors data for completeness
+posterior_predictive_adata.obsm['X_pca'] = prior_predictive_adata.obsm['X_pca'].copy()
+posterior_predictive_adata.varm['PCs'] = prior_predictive_adata.varm['PCs'].copy()
+posterior_predictive_adata.obsp['distances'] = prior_predictive_adata.obsp['distances'].copy()
+posterior_predictive_adata.obsp['connectivities'] = prior_predictive_adata.obsp['connectivities'].copy()
+# Copy metadata
+posterior_predictive_adata.uns['pca'] = prior_predictive_adata.uns['pca'].copy()
+posterior_predictive_adata.uns['neighbors'] = prior_predictive_adata.uns['neighbors'].copy()
+posterior_predictive_adata.uns['umap'] = prior_predictive_adata.uns['umap'].copy()
 
 # Copy Leiden cluster labels from prior predictive data to track cell movement
 print(f"📋 Copying Leiden cluster labels from prior predictive data...")
