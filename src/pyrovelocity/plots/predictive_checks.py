@@ -1637,7 +1637,7 @@ def plot_prior_predictive_checks(
         plot_parameter_relationships(processed_parameters, check_type, save_path=save_path, file_prefix="03", model=model, default_fontsize=default_fontsize)
         plot_temporal_trajectories(processed_parameters, check_type, save_path=save_path, file_prefix="04", adata=prior_adata, default_fontsize=default_fontsize)
 
-        # Plot 05: Parameter marginals by gene (NEW)
+        # Plot 05: Parameter marginals by gene - lowest error genes
         plot_parameter_marginals_by_gene(
             posterior_parameters=processed_parameters,
             observed_adata=observed_adata,
@@ -1651,11 +1651,25 @@ def plot_prior_predictive_checks(
             select_highest_error=False
         )
 
-        # Shifted plots (previously 05-08, now 06-09)
-        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="06", default_fontsize=default_fontsize, observed_adata=observed_adata, gene_selection_method="mae", num_genes=num_genes, select_highest_error=False)
-        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="07", default_fontsize=default_fontsize, observed_adata=observed_adata, gene_selection_method="mae", num_genes=num_genes, select_highest_error=True)
-        plot_expression_validation(prior_adata, check_type, save_path=save_path, file_prefix="08", default_fontsize=default_fontsize)
-        plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path, file_prefix="09", default_fontsize=default_fontsize)
+        # Plot 06: Parameter marginals by gene - highest error genes (NEW)
+        plot_parameter_marginals_by_gene(
+            posterior_parameters=processed_parameters,
+            observed_adata=observed_adata,
+            predicted_adata=prior_adata,
+            num_genes=num_genes,
+            save_path=save_path,
+            file_prefix="06",
+            default_fontsize=default_fontsize,
+            model=model,
+            check_type=check_type,
+            select_highest_error=True
+        )
+
+        # Shifted plots (previously 05-08, now 07-10)
+        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="07", default_fontsize=default_fontsize, observed_adata=observed_adata, gene_selection_method="mae", num_genes=num_genes, select_highest_error=False)
+        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="08", default_fontsize=default_fontsize, observed_adata=observed_adata, gene_selection_method="mae", num_genes=num_genes, select_highest_error=True)
+        plot_expression_validation(prior_adata, check_type, save_path=save_path, file_prefix="09", default_fontsize=default_fontsize)
+        plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path, file_prefix="10", default_fontsize=default_fontsize)
 
     # Process parameters for plotting compatibility (handle batch dimensions)
     processed_parameters = _process_parameters_for_plotting(prior_parameters)
