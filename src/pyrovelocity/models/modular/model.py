@@ -1003,8 +1003,9 @@ class PyroVelocityModel:
         indices: Optional[Sequence[int]] = None,
         batch_size: Optional[int] = None,
         num_samples: int = 100,
+        return_tensors: bool = True,
         **kwargs
-    ) -> Dict[str, np.ndarray]:
+    ) -> Dict[str, Union[torch.Tensor, np.ndarray]]:
         """
         Generate posterior samples using the trained model.
 
@@ -1020,11 +1021,12 @@ class PyroVelocityModel:
             indices: Optional sequence of indices to generate samples for (for batch processing)
             batch_size: Batch size for generating samples (for memory efficiency)
             num_samples: Number of posterior samples to generate
+            return_tensors: If True, return torch tensors; if False, return numpy arrays (default: True)
             **kwargs: Additional keyword arguments including 'seed' for reproducibility
 
         Returns:
             Dictionary of posterior samples with keys for model parameters (alpha, beta, gamma, etc.)
-            and values as numpy arrays of shape [num_samples, num_genes]
+            and values as torch tensors or numpy arrays of shape [num_samples, num_genes]
 
         Examples:
             >>> # Generate posterior samples after training
@@ -1160,13 +1162,17 @@ class PyroVelocityModel:
                     posterior_samples["s_inf"] = s_inf
                     posterior_samples["switching"] = switching
 
-        # Convert PyTorch tensors to NumPy arrays
-        posterior_samples_np = {
-            k: v.detach().cpu().numpy() if isinstance(v, torch.Tensor) else v
-            for k, v in posterior_samples.items()
-        }
-
-        return posterior_samples_np
+        # Return tensors or numpy arrays based on return_tensors parameter
+        if return_tensors:
+            # Return torch tensors directly (no conversion)
+            return posterior_samples
+        else:
+            # Convert PyTorch tensors to NumPy arrays (legacy behavior)
+            posterior_samples_np = {
+                k: v.detach().cpu().numpy() if isinstance(v, torch.Tensor) else v
+                for k, v in posterior_samples.items()
+            }
+            return posterior_samples_np
 
     @beartype
     def store_results_in_anndata(
@@ -1358,9 +1364,9 @@ class PyroVelocityModel:
             compute_velocity,
         )
 
-        # Generate posterior samples once
+        # Generate posterior samples once (return numpy arrays for compatibility with downstream functions)
         posterior_samples = self.generate_posterior_samples(
-            adata=adata, indices=indices, num_samples=num_samples, **kwargs
+            adata=adata, indices=indices, num_samples=num_samples, return_tensors=False, **kwargs
         )
 
         # Compute velocity from posterior samples (both mean and samples)
