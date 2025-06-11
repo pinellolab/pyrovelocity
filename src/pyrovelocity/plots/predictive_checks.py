@@ -589,6 +589,55 @@ def plot_expression_validation(
 
 
 @beartype
+def _select_genes_by_mae(
+    observed_adata: AnnData,
+    predicted_adata: AnnData,
+    num_genes: int = 6,
+    layer: str = "spliced"
+) -> Tuple[List[int], List[str]]:
+    """
+    Select genes with lowest MAE for temporal dynamics plotting.
+
+    Args:
+        observed_adata: AnnData object with observed data
+        predicted_adata: AnnData object with predicted data
+        num_genes: Number of genes to select
+        layer: Layer to use for MAE computation (default: "spliced")
+
+    Returns:
+        Tuple of (gene_indices, gene_names) for selected genes
+    """
+    from pyrovelocity.analysis.analyze import mae_per_gene
+
+    # Get count data from appropriate layers
+    if layer in observed_adata.layers and layer in predicted_adata.layers:
+        observed_counts = observed_adata.layers[layer]
+        predicted_counts = predicted_adata.layers[layer]
+    else:
+        # Fallback to X if layer not found
+        observed_counts = observed_adata.X
+        predicted_counts = predicted_adata.X
+
+    # Convert sparse matrices to dense if needed
+    if hasattr(observed_counts, 'toarray'):
+        observed_counts = observed_counts.toarray()
+    if hasattr(predicted_counts, 'toarray'):
+        predicted_counts = predicted_counts.toarray()
+
+    # Compute MAE per gene (returns negative values, higher is better)
+    mae_scores = mae_per_gene(predicted_counts, observed_counts)
+
+    # Store MAE scores in predicted_adata for transparency
+    predicted_adata.var['mae_score'] = mae_scores
+
+    # Select top genes (highest scores = lowest MAE since mae_per_gene returns negative values)
+    top_gene_indices = np.argsort(mae_scores)[-num_genes:]
+    top_gene_names = [predicted_adata.var_names[i] for i in top_gene_indices]
+
+    return top_gene_indices.tolist(), top_gene_names
+
+
+@beartype
 def plot_temporal_dynamics(
     adata: AnnData,
     check_type: str = "prior",
@@ -598,7 +647,8 @@ def plot_temporal_dynamics(
     basis: str = "umap",
     default_fontsize: int = 7,
     file_prefix: str = "",
-    observed_adata: Optional[AnnData] = None
+    observed_adata: Optional[AnnData] = None,
+    gene_selection_method: str = "mae"
 ) -> plt.Figure:
     """
     Plot temporal dynamics: multi-gene visualization with phase portraits,
@@ -615,23 +665,18 @@ def plot_temporal_dynamics(
     Args:
         adata: AnnData object with predictive samples (used for predictive columns)
         check_type: Type of check ("prior" or "posterior")
-        figsize: Figure size (width, height)
+        figsize: Figure size (width, height). If None, auto-calculated based on num_genes
         save_path: Optional directory path to save figures
-        num_genes: Number of genes to plot
+        num_genes: Number of genes to plot (default: 6)
         basis: Embedding basis to use (default: "umap")
-        default_fontsize: Default font size for all text elements
+        default_fontsize: Default font size for all text elements (default: 7)
         file_prefix: Prefix for saved file names
         observed_adata: Optional AnnData object with observed data (used for observed column).
                        If None, uses adata for both predictive and observed columns.
-
-    Args:
-        adata: AnnData object with expression data
-        check_type: Type of check ("prior" or "posterior")
-        figsize: Figure size (width, height). If None, auto-calculated based on num_genes
-        save_path: Optional directory path to save figures
-        num_genes: Number of genes to display (default: 6)
-        basis: Embedding basis for spatial plots (default: "umap")
-        default_fontsize: Default font size for labels and titles (default: 7)
+        gene_selection_method: Method for selecting genes to plot. Options:
+                              "mae" - select genes with lowest MAE (requires observed_adata)
+                              "random" - randomly select genes
+                              Default: "mae"
 
     Returns:
         matplotlib Figure object
@@ -648,8 +693,20 @@ def plot_temporal_dynamics(
     if available_genes < num_genes:
         print(f"Warning: Only {available_genes} genes available, plotting all")
 
-    gene_indices = np.random.choice(adata.n_vars, available_genes, replace=False)
-    gene_names = [adata.var_names[i] for i in gene_indices]
+    # Select genes based on method
+    if gene_selection_method == "mae" and observed_adata is not None:
+        gene_indices, gene_names = _select_genes_by_mae(
+            observed_adata=observed_adata,
+            predicted_adata=adata,
+            num_genes=available_genes
+        )
+        print(f"Selected {len(gene_names)} genes with lowest MAE: {gene_names}")
+    else:
+        if gene_selection_method == "mae" and observed_adata is None:
+            print("Warning: MAE gene selection requested but no observed_adata provided. Using random selection.")
+        gene_indices = np.random.choice(adata.n_vars, available_genes, replace=False)
+        gene_names = [adata.var_names[i] for i in gene_indices]
+        print(f"Selected {len(gene_names)} genes randomly: {gene_names}")
 
     # Create figure and gridspec using rainbow plot pattern
     # Use standard width if figsize not provided
@@ -1305,7 +1362,7 @@ def plot_prior_predictive_checks(
         plot_parameter_marginals(processed_parameters, check_type, save_path=save_path, file_prefix="02", model=model, default_fontsize=default_fontsize)
         plot_parameter_relationships(processed_parameters, check_type, save_path=save_path, file_prefix="03", model=model, default_fontsize=default_fontsize)
         plot_temporal_trajectories(processed_parameters, check_type, save_path=save_path, file_prefix="04", adata=prior_adata, default_fontsize=default_fontsize)
-        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="05", default_fontsize=default_fontsize, observed_adata=observed_adata)
+        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="05", default_fontsize=default_fontsize, observed_adata=observed_adata, gene_selection_method="mae")
         plot_expression_validation(prior_adata, check_type, save_path=save_path, file_prefix="06", default_fontsize=default_fontsize)
         plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path, file_prefix="07", default_fontsize=default_fontsize)
 
