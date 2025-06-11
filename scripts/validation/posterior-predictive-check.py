@@ -97,49 +97,12 @@ posterior_predictive_adata = trained_model.generate_predictive_samples(
 print("✅ Posterior predictive data generated:")
 print_anndata(posterior_predictive_adata)
 
-# Store fit parameters in the posterior predictive AnnData for plotting
-print("\n📋 Storing fit parameters in AnnData...")
+# Use posterior samples directly for plotting - no need to store and retrieve
+print("\n📊 Using posterior samples directly for plotting...")
+print(f"✅ Using {len(posterior_samples)} types of posterior parameters")
 
-# Check if we have uncertainty information
-has_uncertainty = posterior_predictive_adata.uns.get("pyrovelocity", {}).get("has_posterior_uncertainty", False)
-print(f"  📊 Posterior uncertainty available: {has_uncertainty}")
-
-if "fit_parameters" not in posterior_predictive_adata.uns:
-    fit_parameters = {}
-    for key, value in posterior_samples.items():
-        # Store mean for plotting compatibility, but keep full samples for uncertainty
-        if isinstance(value, torch.Tensor) and value.ndim > 1:
-            # Handle different tensor dtypes
-            if value.dtype in [torch.float32, torch.float64]:
-                fit_parameters[key] = value.mean(axis=0).detach().cpu().numpy()
-            else:
-                # For integer or other types, take the first sample instead of mean
-                fit_parameters[key] = value[0].detach().cpu().numpy()
-        elif isinstance(value, torch.Tensor):
-            fit_parameters[key] = value.detach().cpu().numpy()
-        else:
-            fit_parameters[key] = value
-
-    # Store in AnnData
-    posterior_predictive_adata.uns["fit_parameters"] = fit_parameters
-
-    # Also store full posterior samples for uncertainty analysis (keep as tensors)
-    posterior_predictive_adata.uns["posterior_samples_full"] = posterior_samples
-
-print(f"✅ Stored {len(posterior_predictive_adata.uns['fit_parameters'])} fit parameters in AnnData")
-if has_uncertainty:
-    print(f"✅ Stored full posterior samples for uncertainty analysis")
-
-# Extract parameters for plotting functions (use full posterior samples)
-if has_uncertainty and "posterior_samples_full" in posterior_predictive_adata.uns:
-    print("  📊 Using full posterior samples for plotting")
-    # No conversion needed - they're already torch tensors!
-    posterior_parameter_samples = posterior_predictive_adata.uns["posterior_samples_full"]
-else:
-    print("  📊 Using averaged parameters for plotting (fallback)")
-    posterior_parameter_samples = {}
-    for key, value in posterior_predictive_adata.uns["fit_parameters"].items():
-        posterior_parameter_samples[key] = torch.tensor(value) if not isinstance(value, torch.Tensor) else value
+# The plotting function will handle any necessary tensor processing via _process_parameters_for_plotting
+posterior_parameter_samples = posterior_samples
 
 # Copy UMAP coordinates and related data for consistent visualization
 print(f"\n🗺️ Copying UMAP coordinates from prior predictive data for consistent visualization...")
