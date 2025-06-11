@@ -1167,7 +1167,8 @@ def plot_pattern_analysis(
     figsize: Tuple[Union[int, float], Union[int, float]] = (7.5, 3.75),  # Standard width, half height
     save_path: Optional[str] = None,
     file_prefix: str = "",
-    default_fontsize: Union[int, float] = 8
+    default_fontsize: Union[int, float] = 8,
+    observed_adata: Optional[AnnData] = None
 ) -> plt.Figure:
     """
     Plot pattern analysis: proportions and gene correlations.
@@ -1178,6 +1179,9 @@ def plot_pattern_analysis(
         check_type: Type of check ("prior" or "posterior")
         figsize: Figure size (width, height)
         save_path: Optional directory path to save figures
+        file_prefix: Prefix for saved file names
+        default_fontsize: Default font size for all text elements
+        observed_adata: Optional AnnData object with observed data for MAE-based gene selection in correlations
 
     Returns:
         matplotlib Figure object
@@ -1187,8 +1191,8 @@ def plot_pattern_analysis(
     # Pattern proportions
     _plot_pattern_proportions(adata, parameters, axes[0], check_type, default_fontsize)
 
-    # Gene correlations
-    _plot_correlation_structure(adata, axes[1], check_type, default_fontsize)
+    # Gene correlations - now uses lowest error genes when observed_adata is available
+    _plot_correlation_structure(adata, axes[1], check_type, default_fontsize, observed_adata=observed_adata)
 
     plt.tight_layout()
 
@@ -1669,7 +1673,7 @@ def plot_prior_predictive_checks(
         plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="07", default_fontsize=default_fontsize, observed_adata=observed_adata, gene_selection_method="mae", num_genes=num_genes, select_highest_error=False)
         plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="08", default_fontsize=default_fontsize, observed_adata=observed_adata, gene_selection_method="mae", num_genes=num_genes, select_highest_error=True)
         plot_expression_validation(prior_adata, check_type, save_path=save_path, file_prefix="09", default_fontsize=default_fontsize)
-        plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path, file_prefix="10", default_fontsize=default_fontsize)
+        plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path, file_prefix="10", default_fontsize=default_fontsize, observed_adata=observed_adata)
 
     # Process parameters for plotting compatibility (handle batch dimensions)
     processed_parameters = _process_parameters_for_plotting(prior_parameters)
@@ -1717,7 +1721,7 @@ def plot_prior_predictive_checks(
     _plot_pattern_proportions(prior_adata, processed_parameters, ax11, check_type, default_fontsize)
 
     ax12 = fig.add_subplot(gs[2, 3])
-    _plot_correlation_structure(prior_adata, ax12, check_type, default_fontsize)
+    _plot_correlation_structure(prior_adata, ax12, check_type, default_fontsize, observed_adata=observed_adata)
 
     # Save comprehensive figure if path is provided
     if save_path is not None:
@@ -3217,29 +3221,82 @@ def _plot_pattern_proportions(
         ax.set_title(f'{check_type.title()} Pattern Proportions')
 
 
-def _plot_correlation_structure(adata: AnnData, ax: plt.Axes, check_type: str, default_fontsize: Union[int, float] = 8) -> None:
-    """Plot gene-gene correlation structure."""
+def _plot_correlation_structure(
+    adata: AnnData,
+    ax: plt.Axes,
+    check_type: str,
+    default_fontsize: Union[int, float] = 8,
+    observed_adata: Optional[AnnData] = None,
+    num_genes: int = 10
+) -> None:
+    """
+    Plot gene-gene correlation structure for lowest error genes.
+
+    Uses the same gene selection logic as temporal dynamics plots to show
+    correlations among the genes that PyroVelocity models most accurately.
+
+    Args:
+        adata: AnnData object with predicted data
+        ax: Matplotlib axes to plot on
+        check_type: Type of check ("prior" or "posterior")
+        default_fontsize: Font size for plot elements
+        observed_adata: Optional AnnData object with observed data for MAE-based gene selection
+        num_genes: Number of genes to include in correlation matrix (default: 10)
+    """
     if 'spliced' in adata.layers:
         # Calculate gene-gene correlations
         expr_data = adata.layers['spliced']
 
-        # Sample genes if too many
-        n_genes_plot = min(10, adata.n_vars)
-        if adata.n_vars > n_genes_plot:
-            gene_indices = np.random.choice(adata.n_vars, n_genes_plot, replace=False)
-            expr_subset = expr_data[:, gene_indices]
+        # Select genes using same logic as temporal dynamics plots
+        if observed_adata is not None and 'spliced' in observed_adata.layers:
+            # Use MAE-based selection to get the same genes as temporal dynamics
+            try:
+                gene_indices, gene_names = _select_genes_by_mae(
+                    observed_adata=observed_adata,
+                    predicted_adata=adata,
+                    num_genes=min(num_genes, adata.n_vars),
+                    select_highest_error=False  # Use lowest error genes
+                )
+                selection_method = f"lowest MAE genes"
+            except Exception as e:
+                print(f"Warning: MAE-based gene selection failed ({e}), using random selection")
+                # Fallback to random selection
+                n_genes_plot = min(num_genes, adata.n_vars)
+                gene_indices = np.random.choice(adata.n_vars, n_genes_plot, replace=False).tolist()
+                gene_names = [adata.var_names[i] for i in gene_indices]
+                selection_method = f"random genes"
         else:
-            expr_subset = expr_data
+            # Fallback to random selection when observed data not available
+            n_genes_plot = min(num_genes, adata.n_vars)
+            gene_indices = np.random.choice(adata.n_vars, n_genes_plot, replace=False).tolist()
+            gene_names = [adata.var_names[i] for i in gene_indices]
+            selection_method = f"random genes"
+
+        # Extract expression data for selected genes
+        expr_subset = expr_data[:, gene_indices]
+
+        # Convert to dense array if sparse
+        if hasattr(expr_subset, 'toarray'):
+            expr_subset = expr_subset.toarray()
 
         # Calculate correlation matrix
         corr_matrix = np.corrcoef(expr_subset.T)
 
+        # Create heatmap with gene names as labels
         sns.heatmap(corr_matrix, annot=False, cmap='RdBu_r', center=0,
-                   square=True, ax=ax, cbar_kws={'shrink': 0.8})
-        ax.set_title(f'{check_type.title()} Gene Correlations', fontsize=default_fontsize)
-        ax.set_xlabel('Gene Index', fontsize=default_fontsize)
-        ax.set_ylabel('Gene Index', fontsize=default_fontsize)
-        ax.tick_params(labelsize=default_fontsize * 0.75)
+                   square=True, ax=ax, cbar_kws={'shrink': 0.8},
+                   xticklabels=[name[:6] for name in gene_names],  # Truncate names for readability
+                   yticklabels=[name[:6] for name in gene_names])
+
+        ax.set_title(f'{check_type.title()} Gene Correlations\n({selection_method})', fontsize=default_fontsize)
+        ax.set_xlabel('Gene', fontsize=default_fontsize)
+        ax.set_ylabel('Gene', fontsize=default_fontsize)
+        ax.tick_params(labelsize=default_fontsize * 0.6)  # Smaller labels for gene names
+
+        # Rotate x-axis labels for better readability
+        ax.tick_params(axis='x', rotation=45)
+
+        # Adjust colorbar
         cbar = ax.collections[0].colorbar
         cbar.ax.tick_params(labelsize=default_fontsize * 0.75)
     else:
