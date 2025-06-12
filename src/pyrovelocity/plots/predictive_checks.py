@@ -17,6 +17,7 @@ import seaborn as sns
 import torch
 from anndata import AnnData
 from beartype import beartype
+from scipy.stats import linregress, pearsonr
 
 from pyrovelocity.styles import configure_matplotlib_style
 
@@ -3655,3 +3656,270 @@ def plot_posterior_predictive_checks(
         num_genes=num_genes,
         true_parameters_adata=true_parameters_adata,
     )
+
+
+@beartype
+def plot_parameter_recovery_correlation(
+    posterior_parameters: Dict[str, torch.Tensor],
+    true_parameters_adata: AnnData,
+    parameters_to_validate: List[str] = ["R_on", "gamma_star", "t_on_star", "delta_star"],
+    figsize: Optional[Tuple[Union[int, float], Union[int, float]]] = None,
+    save_path: Optional[str] = None,
+    file_prefix: str = "",
+    model: Optional[Any] = None,
+    default_fontsize: int = 8,
+    summary_statistic: str = "median"
+) -> Tuple[plt.Figure, Dict[str, Dict[str, float]]]:
+    """
+    Plot parameter recovery correlation analysis comparing posterior estimates to true values.
+
+    Creates scatter plots showing true parameter values (x-axis) vs posterior estimates (y-axis)
+    with correlation metrics, perfect recovery line (y=x), and best-fit line.
+
+    Args:
+        posterior_parameters: Dictionary of posterior parameter samples with shape [num_samples, num_genes]
+        true_parameters_adata: AnnData object containing true parameters in adata.uns['true_parameters']
+        parameters_to_validate: List of parameter names to include in correlation analysis
+        figsize: Optional figure size (auto-calculated if None)
+        save_path: Optional directory path to save figures
+        file_prefix: Prefix for saved file names
+        model: Optional PyroVelocity model instance for parameter metadata
+        default_fontsize: Default font size for all text elements
+        summary_statistic: Statistic to compute from posterior samples ("median" or "mean")
+
+    Returns:
+        Tuple of (matplotlib Figure object, recovery metrics dictionary)
+
+    Recovery metrics dictionary structure:
+        {
+            'parameter_name': {
+                'pearson_r': float,
+                'pearson_p': float,
+                'r_squared': float,
+                'slope': float,
+                'intercept': float,
+                'n_genes': int
+            },
+            'summary': {
+                'mean_pearson_r': float,
+                'mean_r_squared': float,
+                'overall_recovery_quality': str
+            }
+        }
+
+    Example:
+        >>> fig, metrics = plot_parameter_recovery_correlation(
+        ...     posterior_parameters=posterior_samples,
+        ...     true_parameters_adata=prior_predictive_adata,
+        ...     parameters_to_validate=["R_on", "gamma_star", "t_on_star", "delta_star"],
+        ...     save_path="reports/docs/posterior_predictive",
+        ...     file_prefix="06"
+        ... )
+        >>> print(f"Mean correlation: {metrics['summary']['mean_pearson_r']:.3f}")
+    """
+    from pyrovelocity.plots.parameter_metadata import get_parameter_label
+
+    # Validate inputs
+    if 'true_parameters' not in true_parameters_adata.uns:
+        raise ValueError("true_parameters_adata must contain 'true_parameters' in adata.uns")
+
+    true_params_dict = true_parameters_adata.uns['true_parameters']
+
+    # Filter parameters to only those available in both posterior and true parameters
+    available_params = []
+    for param_name in parameters_to_validate:
+        if param_name in posterior_parameters and param_name in true_params_dict:
+            available_params.append(param_name)
+        else:
+            print(f"Warning: Parameter '{param_name}' not found in both posterior and true parameters")
+
+    if not available_params:
+        raise ValueError("No valid parameters found for correlation analysis")
+
+    print(f"Analyzing parameter recovery for {len(available_params)} parameters: {available_params}")
+
+    # Calculate figure size
+    n_params = len(available_params)
+    cols = min(4, n_params)
+    rows = (n_params + cols - 1) // cols
+
+    if figsize is None:
+        width = 2.5 * cols  # 2.5 inches per subplot
+        height = 2.5 * rows
+        figsize = (width, height)
+
+    fig, axes = plt.subplots(rows, cols, figsize=figsize)
+    if n_params == 1:
+        axes = [axes]
+    elif rows == 1:
+        axes = axes.flatten()
+    else:
+        axes = axes.flatten()
+
+    # Initialize recovery metrics
+    recovery_metrics = {}
+
+    for i, param_name in enumerate(available_params):
+        ax = axes[i]
+
+        # Extract true parameter values
+        true_param = true_params_dict[param_name]
+        if not isinstance(true_param, torch.Tensor):
+            true_param = torch.tensor(true_param)
+
+        # Handle different tensor shapes and flatten properly
+        true_param_flat = true_param.flatten()
+
+        # Extract posterior parameter samples
+        posterior_param = posterior_parameters[param_name]
+
+        # Handle different posterior tensor shapes
+        if posterior_param.ndim == 1:
+            # Flattened: [num_samples * num_genes] - need to reshape
+            total_length = len(posterior_param)
+            num_genes = len(true_param_flat)
+            if total_length % num_genes == 0:
+                num_samples = total_length // num_genes
+                posterior_reshaped = posterior_param.view(num_samples, num_genes)
+            else:
+                # Fallback: treat as single sample per gene
+                posterior_reshaped = posterior_param.unsqueeze(0)
+        elif posterior_param.ndim == 2:
+            # Already shaped: [num_samples, num_genes]
+            posterior_reshaped = posterior_param
+        else:
+            # Higher dimensions: flatten and reshape
+            posterior_reshaped = posterior_param.view(-1, posterior_param.shape[-1])
+
+        # Compute summary statistic across samples
+        if summary_statistic == "median":
+            posterior_summary = torch.median(posterior_reshaped, dim=0)[0]
+        elif summary_statistic == "mean":
+            posterior_summary = torch.mean(posterior_reshaped, dim=0)
+        else:
+            raise ValueError(f"Unknown summary_statistic: {summary_statistic}")
+
+        # Ensure we have the same number of genes
+        n_genes = min(len(true_param_flat), len(posterior_summary))
+        true_values = true_param_flat[:n_genes].numpy()
+        estimated_values = posterior_summary[:n_genes].detach().numpy()
+
+        # Compute correlation metrics
+        try:
+            pearson_r, pearson_p = pearsonr(true_values, estimated_values)
+            slope, intercept, r_value, p_value, std_err = linregress(true_values, estimated_values)
+            r_squared = r_value ** 2
+        except Exception as e:
+            print(f"Warning: Could not compute correlation for {param_name}: {e}")
+            pearson_r = pearson_p = r_squared = slope = intercept = np.nan
+
+        # Store metrics
+        recovery_metrics[param_name] = {
+            'pearson_r': float(pearson_r),
+            'pearson_p': float(pearson_p),
+            'r_squared': float(r_squared),
+            'slope': float(slope),
+            'intercept': float(intercept),
+            'n_genes': int(n_genes)
+        }
+
+        # Create scatter plot
+        ax.scatter(true_values, estimated_values, alpha=0.6, s=20, color='steelblue')
+
+        # Add perfect recovery line (y=x)
+        min_val = min(np.min(true_values), np.min(estimated_values))
+        max_val = max(np.max(true_values), np.max(estimated_values))
+        ax.plot([min_val, max_val], [min_val, max_val], 'k--', alpha=0.5, linewidth=1, label='Perfect recovery')
+
+        # Add best-fit line
+        if not np.isnan(slope):
+            fit_x = np.array([min_val, max_val])
+            fit_y = slope * fit_x + intercept
+            ax.plot(fit_x, fit_y, 'r-', alpha=0.7, linewidth=1, label='Best fit')
+
+        # Get parameter labels using metadata system
+        x_label = get_parameter_label(
+            param_name=param_name,
+            label_type="short",
+            model=model,
+            fallback_to_legacy=True
+        )
+
+        # Set labels and title
+        ax.set_xlabel(f'True {x_label}', fontsize=default_fontsize)
+        ax.set_ylabel(f'Est. {x_label}', fontsize=default_fontsize)
+
+        # Add correlation info to title
+        if not np.isnan(pearson_r):
+            title = f'{x_label}\n$r = {pearson_r:.3f}$'
+        else:
+            title = f'{x_label}\n$r = $ NaN'
+        ax.set_title(title, fontsize=default_fontsize)
+
+        # Add legend only to first subplot
+        if i == 0:
+            ax.legend(fontsize=default_fontsize * 0.8, loc='upper left')
+
+        # Set equal aspect ratio and grid
+        ax.set_aspect('equal', adjustable='box')
+        ax.grid(True, alpha=0.3)
+
+        # Tick label size
+        ax.tick_params(labelsize=default_fontsize * 0.8)
+
+    # Hide unused subplots
+    for i in range(n_params, len(axes)):
+        axes[i].set_visible(False)
+
+    # Compute summary metrics
+    valid_correlations = [metrics['pearson_r'] for metrics in recovery_metrics.values()
+                         if not np.isnan(metrics['pearson_r'])]
+    valid_r_squared = [metrics['r_squared'] for metrics in recovery_metrics.values()
+                      if not np.isnan(metrics['r_squared'])]
+
+    mean_pearson_r = np.mean(valid_correlations) if valid_correlations else np.nan
+    mean_r_squared = np.mean(valid_r_squared) if valid_r_squared else np.nan
+
+    # Assess overall recovery quality
+    if np.isnan(mean_pearson_r):
+        recovery_quality = "Failed"
+    elif mean_pearson_r >= 0.9:
+        recovery_quality = "Excellent"
+    elif mean_pearson_r >= 0.7:
+        recovery_quality = "Good"
+    elif mean_pearson_r >= 0.5:
+        recovery_quality = "Moderate"
+    else:
+        recovery_quality = "Poor"
+
+    recovery_metrics['summary'] = {
+        'mean_pearson_r': float(mean_pearson_r),
+        'mean_r_squared': float(mean_r_squared),
+        'overall_recovery_quality': recovery_quality,
+        'n_valid_parameters': len(valid_correlations)
+    }
+
+    # Add overall title
+    suptitle = f'Parameter Recovery Correlation Analysis\n'
+    suptitle += f'Mean $r = {mean_pearson_r:.3f}$ ({recovery_quality} recovery)'
+    fig.suptitle(suptitle, fontsize=default_fontsize * 1.2, y=0.98)
+
+    plt.tight_layout()
+    plt.subplots_adjust(top=0.85)  # Make room for suptitle
+
+    # Save figure if path provided
+    if save_path is not None:
+        if file_prefix:
+            figure_name = f"{file_prefix}_parameter_recovery_correlation"
+        else:
+            figure_name = "parameter_recovery_correlation"
+        _save_figure(fig, save_path, figure_name)
+
+    # Print summary
+    print(f"\n📊 Parameter Recovery Summary:")
+    print(f"   Mean Pearson correlation: {mean_pearson_r:.3f}")
+    print(f"   Mean R²: {mean_r_squared:.3f}")
+    print(f"   Overall recovery quality: {recovery_quality}")
+    print(f"   Valid parameters: {len(valid_correlations)}/{len(available_params)}")
+
+    return fig, recovery_metrics
