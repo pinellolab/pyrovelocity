@@ -52,7 +52,7 @@ print(f"\n🎯 Training model on prior predictive data...")
 
 trained_model = model.train(
     adata=prior_predictive_adata,
-    max_epochs=2000,  # Reduced for faster testing
+    max_epochs=1000,
     learning_rate=0.01,
     early_stopping=True,
     early_stopping_patience=10,
