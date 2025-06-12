@@ -1812,6 +1812,19 @@ def plot_prior_predictive_checks(
         plot_expression_validation(prior_adata, check_type, save_path=save_path, file_prefix="10", default_fontsize=default_fontsize)
         plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path, file_prefix="11", default_fontsize=default_fontsize, observed_adata=observed_adata)
 
+        # Plot 12: Training loss (ELBO) - only for posterior checks when model has been trained
+        if check_type == "posterior":
+            try:
+                plot_training_loss(
+                    model=model,
+                    save_path=save_path,
+                    file_prefix="12",
+                    default_fontsize=default_fontsize
+                )
+            except ValueError as e:
+                print(f"Warning: Could not create training loss plot: {e}")
+                print("This is expected for prior predictive checks or untrained models.")
+
     # Process parameters for plotting compatibility (handle batch dimensions)
     processed_parameters = _process_parameters_for_plotting(prior_parameters)
 
@@ -3668,6 +3681,125 @@ def plot_posterior_predictive_checks(
         num_genes=num_genes,
         true_parameters_adata=true_parameters_adata,
     )
+
+
+@beartype
+def plot_training_loss(
+    model: Any,
+    figsize: Tuple[Union[int, float], Union[int, float]] = (7.5, 5.0),
+    save_path: Optional[str] = None,
+    file_prefix: str = "",
+    default_fontsize: int = 8,
+    moving_average_window: int = 50,
+) -> plt.Figure:
+    """
+    Plot training loss (ELBO) over epochs.
+
+    This function plots the Evidence Lower BOund (ELBO) during training, showing both
+    raw loss values and a moving average. The ELBO is plotted as positive values
+    (negative of the minimization objective) to align with Bayesian model selection
+    conventions used in WAIC and LOO-CV.
+
+    Args:
+        model: PyroVelocity model instance with training history
+        figsize: Figure size (width, height)
+        save_path: Optional directory path to save figures
+        file_prefix: Prefix for saved file names
+        default_fontsize: Default font size for all text elements
+        moving_average_window: Window size for moving average calculation
+
+    Returns:
+        matplotlib Figure object
+
+    Raises:
+        ValueError: If model has not been trained or training history is not available
+
+    Example:
+        >>> fig = plot_training_loss(
+        ...     model=trained_model,
+        ...     save_path="reports/docs/posterior_predictive",
+        ...     file_prefix="07",
+        ...     moving_average_window=100
+        ... )
+    """
+    # Extract training history from model state
+    if not hasattr(model, 'state') or model.state is None:
+        raise ValueError("Model has no state - has it been trained?")
+
+    inference_state = model.state.metadata.get("inference_state")
+    if inference_state is None:
+        raise ValueError("Model has no inference state - has it been trained?")
+
+    training_state = inference_state.training_state
+    if training_state is None or not training_state.loss_history:
+        raise ValueError("Model has no training history - has it been trained with SVI?")
+
+    # Extract loss history (negative ELBO values from minimization)
+    loss_history = training_state.loss_history
+    epochs = list(range(1, len(loss_history) + 1))
+
+    # Convert to positive ELBO (negate the minimization objective)
+    elbo_values = [-loss for loss in loss_history]
+
+    # Calculate moving average
+    moving_avg_values = []
+    moving_avg_epochs = []
+
+    if len(elbo_values) >= moving_average_window:
+        # Use simple moving average to avoid pandas dependency issues
+        for i in range(len(elbo_values)):
+            start_idx = max(0, i - moving_average_window // 2)
+            end_idx = min(len(elbo_values), i + moving_average_window // 2 + 1)
+            avg_val = sum(elbo_values[start_idx:end_idx]) / (end_idx - start_idx)
+            moving_avg_values.append(avg_val)
+            moving_avg_epochs.append(epochs[i])
+    else:
+        # If not enough data points for moving average, skip it
+        print(f"Warning: Not enough data points ({len(elbo_values)}) for moving average window ({moving_average_window})")
+        moving_avg_values = []
+        moving_avg_epochs = []
+
+    # Create figure
+    fig, ax = plt.subplots(figsize=figsize)
+
+    # Plot raw ELBO values
+    ax.scatter(epochs, elbo_values, alpha=0.6, s=8, color='steelblue',
+               label='ELBO', zorder=2)
+
+    # Plot connecting line for raw values
+    ax.plot(epochs, elbo_values, alpha=0.3, linewidth=0.5, color='steelblue', zorder=1)
+
+    # Plot moving average if available
+    if moving_avg_values:
+        ax.plot(moving_avg_epochs, moving_avg_values, color='red', linewidth=1.5,
+                label=f'Moving avg. ({moving_average_window})', zorder=3)
+
+    # Set labels and title
+    ax.set_xlabel('Epoch', fontsize=default_fontsize)
+    ax.set_ylabel('ELBO', fontsize=default_fontsize)
+    ax.set_title('Training Loss (Evidence Lower Bound)', fontsize=default_fontsize)
+
+    # Add legend
+    ax.legend(fontsize=default_fontsize * 0.9, loc='lower right')
+
+    # Add grid
+    ax.grid(True, alpha=0.3)
+
+    # Set tick label size
+    ax.tick_params(labelsize=default_fontsize * 0.9)
+
+    # Tight layout
+    plt.tight_layout()
+
+    # Save figure if path provided
+    if save_path is not None:
+        if file_prefix:
+            figure_name = f"{file_prefix}_training_loss"
+        else:
+            figure_name = "training_loss"
+        _save_figure(fig, save_path, figure_name)
+
+    return fig
 
 
 @beartype
