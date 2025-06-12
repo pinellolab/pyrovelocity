@@ -1794,11 +1794,23 @@ def plot_prior_predictive_checks(
             true_parameters_adata=true_parameters_adata
         )
 
-        # Shifted plots (previously 05-08, now 07-10)
-        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="07", default_fontsize=default_fontsize, observed_adata=observed_adata, gene_selection_method="mae", num_genes=num_genes, select_highest_error=False)
-        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="08", default_fontsize=default_fontsize, observed_adata=observed_adata, gene_selection_method="mae", num_genes=num_genes, select_highest_error=True)
-        plot_expression_validation(prior_adata, check_type, save_path=save_path, file_prefix="09", default_fontsize=default_fontsize)
-        plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path, file_prefix="10", default_fontsize=default_fontsize, observed_adata=observed_adata)
+        # Plot 07: Parameter recovery correlation analysis
+        if true_parameters_adata is not None:
+            plot_parameter_recovery_correlation(
+                posterior_parameters=processed_parameters,
+                true_parameters_adata=true_parameters_adata,
+                parameters_to_validate=["R_on", "gamma_star", "t_on_star", "delta_star"],
+                save_path=save_path,
+                file_prefix="07",
+                model=model,
+                default_fontsize=default_fontsize
+            )
+
+        # Shifted plots (previously 07-10, now 08-11)
+        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="08", default_fontsize=default_fontsize, observed_adata=observed_adata, gene_selection_method="mae", num_genes=num_genes, select_highest_error=False)
+        plot_temporal_dynamics(prior_adata, check_type, save_path=save_path, file_prefix="09", default_fontsize=default_fontsize, observed_adata=observed_adata, gene_selection_method="mae", num_genes=num_genes, select_highest_error=True)
+        plot_expression_validation(prior_adata, check_type, save_path=save_path, file_prefix="10", default_fontsize=default_fontsize)
+        plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path, file_prefix="11", default_fontsize=default_fontsize, observed_adata=observed_adata)
 
     # Process parameters for plotting compatibility (handle batch dimensions)
     processed_parameters = _process_parameters_for_plotting(prior_parameters)
@@ -3736,7 +3748,7 @@ def plot_parameter_recovery_correlation(
     if not available_params:
         raise ValueError("No valid parameters found for correlation analysis")
 
-    print(f"Analyzing parameter recovery for {len(available_params)} parameters: {available_params}")
+    # Parameter analysis info available in returned metrics dictionary
 
     # Calculate figure size
     n_params = len(available_params)
@@ -3791,11 +3803,15 @@ def plot_parameter_recovery_correlation(
             # Higher dimensions: flatten and reshape
             posterior_reshaped = posterior_param.view(-1, posterior_param.shape[-1])
 
-        # Compute summary statistic across samples
+        # Compute summary statistic and standard deviation across samples
         if summary_statistic == "median":
             posterior_summary = torch.median(posterior_reshaped, dim=0)[0]
+            # For median, use MAD (median absolute deviation) scaled to approximate std
+            mad = torch.median(torch.abs(posterior_reshaped - posterior_summary.unsqueeze(0)), dim=0)[0]
+            posterior_std = 1.4826 * mad  # Scale factor to approximate std from MAD
         elif summary_statistic == "mean":
             posterior_summary = torch.mean(posterior_reshaped, dim=0)
+            posterior_std = torch.std(posterior_reshaped, dim=0)
         else:
             raise ValueError(f"Unknown summary_statistic: {summary_statistic}")
 
@@ -3803,6 +3819,7 @@ def plot_parameter_recovery_correlation(
         n_genes = min(len(true_param_flat), len(posterior_summary))
         true_values = true_param_flat[:n_genes].numpy()
         estimated_values = posterior_summary[:n_genes].detach().numpy()
+        estimated_std = posterior_std[:n_genes].detach().numpy()
 
         # Compute correlation metrics
         try:
@@ -3823,12 +3840,14 @@ def plot_parameter_recovery_correlation(
             'n_genes': int(n_genes)
         }
 
-        # Create scatter plot
-        ax.scatter(true_values, estimated_values, alpha=0.6, s=20, color='steelblue')
+        # Create scatter plot with error bars
+        ax.errorbar(true_values, estimated_values, yerr=estimated_std,
+                   fmt='o', alpha=0.6, markersize=4, color='steelblue',
+                   ecolor='steelblue', elinewidth=0.5, capsize=2)
 
         # Add perfect recovery line (y=x)
-        min_val = min(np.min(true_values), np.min(estimated_values))
-        max_val = max(np.max(true_values), np.max(estimated_values))
+        min_val = min(np.min(true_values), np.min(estimated_values - estimated_std))
+        max_val = max(np.max(true_values), np.max(estimated_values + estimated_std))
         ax.plot([min_val, max_val], [min_val, max_val], 'k--', alpha=0.5, linewidth=1, label='Perfect recovery')
 
         # Add best-fit line
@@ -3899,13 +3918,8 @@ def plot_parameter_recovery_correlation(
         'n_valid_parameters': len(valid_correlations)
     }
 
-    # Add overall title
-    suptitle = f'Parameter Recovery Correlation Analysis\n'
-    suptitle += f'Mean $r = {mean_pearson_r:.3f}$ ({recovery_quality} recovery)'
-    fig.suptitle(suptitle, fontsize=default_fontsize * 1.2, y=0.98)
-
+    # No global title - will be provided in textual figure legend
     plt.tight_layout()
-    plt.subplots_adjust(top=0.85)  # Make room for suptitle
 
     # Save figure if path provided
     if save_path is not None:
@@ -3915,11 +3929,6 @@ def plot_parameter_recovery_correlation(
             figure_name = "parameter_recovery_correlation"
         _save_figure(fig, save_path, figure_name)
 
-    # Print summary
-    print(f"\n📊 Parameter Recovery Summary:")
-    print(f"   Mean Pearson correlation: {mean_pearson_r:.3f}")
-    print(f"   Mean R²: {mean_r_squared:.3f}")
-    print(f"   Overall recovery quality: {recovery_quality}")
-    print(f"   Valid parameters: {len(valid_correlations)}/{len(available_params)}")
+    # Summary information is returned in metrics dictionary for textual figure legend
 
     return fig, recovery_metrics

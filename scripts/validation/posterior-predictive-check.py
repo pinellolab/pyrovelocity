@@ -6,7 +6,6 @@ import scanpy as sc
 from pyrovelocity.models.modular.factory import create_piecewise_activation_model
 from pyrovelocity.plots.predictive_checks import (
     plot_posterior_predictive_checks,
-    plot_parameter_recovery_correlation,
 )
 from pyrovelocity.utils import print_anndata
 
@@ -132,33 +131,6 @@ fig_posterior = plot_posterior_predictive_checks(
     num_genes=10,
     true_parameters_adata=prior_predictive_adata,  # Contains true parameters for validation
 )
-
-# Step 7: Generate parameter recovery correlation analysis
-print(f"\n📊 Creating parameter recovery correlation analysis...")
-
-fig_recovery, recovery_metrics = plot_parameter_recovery_correlation(
-    posterior_parameters=posterior_parameter_samples,
-    true_parameters_adata=prior_predictive_adata,
-    parameters_to_validate=["R_on", "gamma_star", "t_on_star", "delta_star"],
-    figsize=(10, 8),
-    save_path=REPORTS_SAVE_PATH,
-    file_prefix="06",
-    model=trained_model,
-    default_fontsize=8
-)
-
-print(f"\n📈 Parameter Recovery Results:")
-print(f"   Overall recovery quality: {recovery_metrics['summary']['overall_recovery_quality']}")
-print(f"   Mean Pearson correlation: {recovery_metrics['summary']['mean_pearson_r']:.3f}")
-print(f"   Mean R²: {recovery_metrics['summary']['mean_r_squared']:.3f}")
-
-# Print individual parameter correlations
-print(f"\n📋 Individual Parameter Correlations:")
-for param_name in ["R_on", "gamma_star", "t_on_star", "delta_star"]:
-    if param_name in recovery_metrics:
-        r = recovery_metrics[param_name]['pearson_r']
-        r2 = recovery_metrics[param_name]['r_squared']
-        print(f"   {param_name}: r = {r:.3f}, R² = {r2:.3f}")
 
 print(f"\n✅ Posterior predictive check workflow completed!")
 print(f"📁 Plots saved to: {REPORTS_SAVE_PATH}")
