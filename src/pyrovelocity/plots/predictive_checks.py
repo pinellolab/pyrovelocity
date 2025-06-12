@@ -676,7 +676,8 @@ def plot_parameter_marginals_by_gene(
     observed_adata: Optional[AnnData] = None,
     predicted_adata: Optional[AnnData] = None,
     model: Optional[Any] = None,
-    check_type: str = "posterior"
+    check_type: str = "posterior",
+    true_parameters_adata: Optional[AnnData] = None
 ) -> plt.Figure:
     """
     Plot marginal histograms of gene-specific parameter posterior samples.
@@ -684,7 +685,8 @@ def plot_parameter_marginals_by_gene(
     This function creates a plot showing the posterior distributions of key
     gene-specific parameters for the same genes selected in temporal dynamics plots.
     Each row corresponds to a gene, and each column shows the marginal distribution
-    of a different parameter.
+    of a different parameter. When true_parameters_adata is provided, green solid
+    vertical lines show the true parameter values for parameter recovery validation.
 
     Args:
         posterior_parameters: Dictionary of posterior parameter samples
@@ -700,6 +702,8 @@ def plot_parameter_marginals_by_gene(
         predicted_adata: AnnData object with predicted data for gene selection
         model: Optional PyroVelocity model instance for parameter metadata
         check_type: Type of check ("prior" or "posterior")
+        true_parameters_adata: Optional AnnData object containing true parameters
+                              in adata.uns['true_parameters'] for validation
 
     Returns:
         matplotlib Figure object
@@ -711,7 +715,8 @@ def plot_parameter_marginals_by_gene(
         ...     predicted_adata=predicted_data,
         ...     num_genes=6,
         ...     save_path="reports/docs/posterior_predictive",
-        ...     file_prefix="05"
+        ...     file_prefix="05",
+        ...     true_parameters_adata=prior_predictive_adata  # For validation
         ... )
     """
     from matplotlib.gridspec import GridSpec
@@ -742,6 +747,19 @@ def plot_parameter_marginals_by_gene(
         raise ValueError(f"None of the requested parameters {parameters_to_show} found in posterior_parameters. Available: {list(posterior_parameters.keys())}")
 
     num_params = len(available_params)
+
+    # Extract true parameters if provided for validation
+    true_parameters = {}
+    if true_parameters_adata is not None and 'true_parameters' in true_parameters_adata.uns:
+        true_params_dict = true_parameters_adata.uns['true_parameters']
+        for param_name in available_params:
+            if param_name in true_params_dict:
+                true_value = true_params_dict[param_name]
+                # Convert to tensor if needed
+                if not isinstance(true_value, torch.Tensor):
+                    true_value = torch.tensor(true_value)
+                true_parameters[param_name] = true_value
+        print(f"Found {len(true_parameters)} true parameters for validation: {list(true_parameters.keys())}")
 
     # Calculate figure size - add gene label column like temporal dynamics plot
     horizontal_panels = num_params + 1  # gene_label + parameter columns
@@ -813,9 +831,26 @@ def plot_parameter_marginals_by_gene(
         param_samples_by_gene[param_name] = param_reshaped
 
         # Compute global range for this parameter across all genes
+        param_min = float(param_reshaped.min())
+        param_max = float(param_reshaped.max())
+
+        # Include true parameter values in range calculation if available
+        if param_name in true_parameters:
+            true_param = true_parameters[param_name]
+            if true_param.numel() == 1:
+                # Scalar parameter - single value for all genes
+                true_val = float(true_param.item())
+                param_min = min(param_min, true_val)
+                param_max = max(param_max, true_val)
+            else:
+                # Array parameter - gene-specific values
+                true_vals = true_param.flatten()
+                param_min = min(param_min, float(true_vals.min()))
+                param_max = max(param_max, float(true_vals.max()))
+
         param_global_ranges[param_name] = {
-            'min': float(param_reshaped.min()),
-            'max': float(param_reshaped.max())
+            'min': param_min,
+            'max': param_max
         }
 
     # Calculate global parameter ranges for consistent x-axis scaling
@@ -865,7 +900,37 @@ def plot_parameter_marginals_by_gene(
 
             # Add vertical line for median
             median_val = np.median(gene_param_samples)
-            ax.axvline(median_val, color='red', linestyle='--', alpha=0.8, linewidth=1)
+            median_line = ax.axvline(median_val, color='red', linestyle='--', alpha=0.8, linewidth=1)
+
+            # Add vertical line for true value if available
+            true_line = None
+            if param_name in true_parameters:
+                true_param = true_parameters[param_name]
+                if true_param.numel() == 1:
+                    # Scalar parameter - same value for all genes
+                    true_val = float(true_param.item())
+                else:
+                    # Array parameter - gene-specific value
+                    # Fix: Use flattened tensor for proper indexing
+                    true_param_flat = true_param.flatten()
+                    if gene_idx < len(true_param_flat):
+                        true_val = float(true_param_flat[gene_idx])
+                    else:
+                        true_val = None
+
+                if true_val is not None:
+                    true_line = ax.axvline(true_val, color='green', linestyle='-', alpha=0.8, linewidth=1)
+
+            # Add legend only for the first subplot (top-left)
+            if row == 0 and col == 0 and (median_line is not None or true_line is not None):
+                legend_elements = []
+                if median_line is not None:
+                    legend_elements.append(plt.Line2D([0], [0], color='red', linestyle='--', label='Posterior Median'))
+                if true_line is not None:
+                    legend_elements.append(plt.Line2D([0], [0], color='green', linestyle='-', label='True Value'))
+
+                if legend_elements:
+                    ax.legend(handles=legend_elements, loc='upper right', fontsize=default_fontsize * 0.7)
 
             # Formatting
             ax.tick_params(labelsize=default_fontsize * 0.8)
@@ -1593,6 +1658,7 @@ def plot_prior_predictive_checks(
     default_fontsize: Union[int, float] = 8,
     observed_adata: Optional[AnnData] = None,
     num_genes: int = 6,
+    true_parameters_adata: Optional[AnnData] = None,
 ) -> plt.Figure:
     """
     Generate comprehensive predictive check plots for PyroVelocity models.
@@ -1617,6 +1683,8 @@ def plot_prior_predictive_checks(
         observed_adata: Optional AnnData object with observed data for comparison in temporal dynamics plots.
                        If None, uses prior_adata for both predictive and observed columns.
         num_genes: Number of genes to include in temporal dynamics plots (default: 6)
+        true_parameters_adata: Optional AnnData object containing true parameters
+                              in adata.uns['true_parameters'] for parameter recovery validation
 
     Returns:
         matplotlib Figure object
@@ -1658,7 +1726,8 @@ def plot_prior_predictive_checks(
             default_fontsize=default_fontsize,
             model=model,
             check_type=check_type,
-            select_highest_error=False
+            select_highest_error=False,
+            true_parameters_adata=true_parameters_adata
         )
 
         # Plot 06: Parameter marginals by gene - highest error genes (NEW)
@@ -1672,7 +1741,8 @@ def plot_prior_predictive_checks(
             default_fontsize=default_fontsize,
             model=model,
             check_type=check_type,
-            select_highest_error=True
+            select_highest_error=True,
+            true_parameters_adata=true_parameters_adata
         )
 
         # Shifted plots (previously 05-08, now 07-10)
@@ -3485,6 +3555,7 @@ def plot_posterior_predictive_checks(
     default_fontsize: Union[int, float] = 8,
     observed_adata: Optional[AnnData] = None,
     num_genes: int = 6,
+    true_parameters_adata: Optional[AnnData] = None,
 ) -> plt.Figure:
     """
     Generate posterior predictive check plots.
@@ -3504,6 +3575,8 @@ def plot_posterior_predictive_checks(
         observed_adata: Optional AnnData object with observed data for comparison in temporal dynamics plots.
                        If None, uses posterior_adata for both predictive and observed columns.
         num_genes: Number of genes to include in temporal dynamics plots (default: 6)
+        true_parameters_adata: Optional AnnData object containing true parameters
+                              in adata.uns['true_parameters'] for parameter recovery validation
 
     Returns:
         matplotlib Figure object
@@ -3532,4 +3605,5 @@ def plot_posterior_predictive_checks(
         default_fontsize=default_fontsize,
         observed_adata=observed_adata,
         num_genes=num_genes,
+        true_parameters_adata=true_parameters_adata,
     )
