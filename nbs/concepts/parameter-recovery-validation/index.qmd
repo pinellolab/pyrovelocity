@@ -1331,11 +1331,277 @@ The priors are designed to encode biologically reasonable parameter ranges while
 
 The dimensionless concentrations are computed using the analytical solutions for each phase as derived above, with the appropriate phase determined by comparing $t^*_j$ to the gene-specific activation parameters $t^*_{0,\text{on}i}$ and $\delta^*_i$.
 
-**Observation model (unchanged):**
+**Observation model:**
 \begin{align}
     u_{ij} &\sim \text{Poisson}(\lambda_j \cdot U_{0i} \cdot u^*_{ij}) \\
     s_{ij} &\sim \text{Poisson}(\lambda_j \cdot U_{0i} \cdot s^*_{ij})
 \end{align}
+
+### Posterior Predictive Check Framework
+
+The posterior predictive checking procedure provides a rigorous mathematical framework for validating the piecewise activation model's ability to recover known parameters from synthetic data. This Bayesian validation approach systematically assesses parameter recovery performance by comparing posterior predictive samples to the original synthetic observations.
+
+#### **Mathematical Formulation of Posterior Predictive Checking**
+
+**Prior Predictive Distribution**
+
+The prior predictive distribution represents the model's predictions before observing any data:
+
+$$p(\tilde{y}) = \int p(\tilde{y} | \theta) p(\theta) d\theta$$
+
+where $\theta$ represents the complete parameter vector including all gene-specific parameters $(\gamma^*_i, R_{\text{on},i}, \tilde{t}^*_{0,\text{on}i}, \tilde{\delta}^*_i, U_{0i})$, hierarchical time parameters $(T_{M}^*, t_{loc}, t_{scl}, t^*_j)$, and cell-specific capture efficiencies $(\lambda_j)$.
+
+**Posterior Predictive Distribution**
+
+After observing synthetic data $y_{obs}$, the posterior predictive distribution incorporates learned parameter constraints:
+
+$$p(\tilde{y} | y_{obs}) = \int p(\tilde{y} | \theta) p(\theta | y_{obs}) d\theta$$
+
+This distribution quantifies the model's uncertainty about future observations given what it has learned from the synthetic data.
+
+**Hierarchical Uncertainty Decomposition**
+
+The piecewise activation model exhibits a complex uncertainty hierarchy that propagates from parameters through latent concentrations to final observations:
+
+1. **Parameter uncertainty**: $\text{Var}[\theta | y_{obs}]$ from the posterior distribution over all model parameters
+2. **Temporal uncertainty**: Uncertainty in latent time coordinates $t^*_j$ and their hierarchical structure
+3. **Kinetic uncertainty**: Uncertainty in gene-specific kinetic parameters $\gamma^*_i$ and fold-changes $R_{\text{on},i}$
+4. **Concentration uncertainty**: Uncertainty in predicted latent concentrations $u^*_{ij}(\theta), s^*_{ij}(\theta)$ arising from parameter uncertainty
+5. **Observation uncertainty**: Poisson noise in final count observations
+
+The total predictive uncertainty decomposes as:
+
+$$\text{Var}[\tilde{y} | y_{obs}] = \mathbb{E}_\theta[\text{Var}[y|\theta]] + \text{Var}_\theta[\mathbb{E}[y|\theta]]$$
+
+where the first term represents irreducible observation noise (Poisson variance) and the second term represents reducible uncertainty due to parameter estimation.
+
+#### **Model-Specific Implementation for Piecewise Activation**
+
+**Complete Parameter Space**
+
+The piecewise activation model's parameter space $\theta$ includes:
+
+- **Non-temporal gene parameters**: $\gamma^*_i \sim \text{LogNormal}(\log(1.0), 0.5^2)$, $R_{\text{on},i} \sim \text{LogNormal}(\log(2.5), 0.4^2)$
+- **Relative temporal gene parameters**: $\tilde{t}^*_{0,\text{on}i} \sim \text{Normal}(0.5, 0.8^2)$, $\tilde{\delta}^*_i \sim \text{LogNormal}(\log(0.45), 0.45^2)$
+- **Characteristic scales**: $U_{0i} \sim \text{LogNormal}(\mu_{U_0}, \sigma_{U_0}^2)$
+- **Hierarchical time parameters**: $T_{M}^* \sim \text{Gamma}(\alpha_{T}, \beta_{T})$, $t_{loc} \sim \text{Gamma}(\alpha_{t_{loc}}, \beta_{t_{loc}})$, $t_{scl} \sim \text{Gamma}(\alpha_{t_{scl}}, \beta_{t_{scl}})$
+- **Cell-specific times**: $\tilde{t}_j \sim \text{Normal}(t_{loc}, t_{scl}^2)$, $t^*_j = T_{M}^* \times \max(\tilde{t}_j, \epsilon)$
+- **Capture efficiencies**: $\lambda_j \sim \text{LogNormal}(\mu_{\lambda}, \sigma_{\lambda}^2)$
+
+**Dimensionless Dynamics with Piecewise Activation**
+
+The latent concentrations are computed using analytical solutions that depend on which phase each cell-gene pair occupies:
+
+$$u^*_{ij}(\theta), s^*_{ij}(\theta) = f_{\text{piecewise}}(t^*_j, \gamma^*_i, R_{\text{on},i}, t^*_{0,\text{on}i}, \delta^*_i)$$
+
+where $f_{\text{piecewise}}$ represents the appropriate analytical solution (Phase 1, 2, or 3) determined by comparing $t^*_j$ to the gene-specific activation timing parameters.
+
+**Poisson Observation Model with Scaling**
+
+The final observations follow Poisson distributions with rates determined by the latent concentrations:
+
+$$\begin{align}
+u_{ij} | \theta &\sim \text{Poisson}(\lambda_j \cdot U_{0i} \cdot u^*_{ij}(\theta)) \\
+s_{ij} | \theta &\sim \text{Poisson}(\lambda_j \cdot U_{0i} \cdot s^*_{ij}(\theta))
+\end{align}$$
+
+This scaling structure ensures that parameter uncertainty propagates through the characteristic scales $U_{0i}$ and capture efficiencies $\lambda_j$ to the final count observations.
+
+#### **Validation Procedure: Mathematical Description**
+
+**Step 1: Synthetic Data Generation from Prior Predictive**
+
+Generate synthetic data with known "true" parameters by sampling from the prior predictive distribution:
+
+1. Sample true parameters: $\theta_{true} \sim p(\theta)$
+2. Compute latent concentrations: $u^*_{ij,true}, s^*_{ij,true} = f_{\text{piecewise}}(t^*_{j,true}, \theta_{true})$
+3. Generate synthetic observations: $y_{obs} = \{u_{ij}, s_{ij}\} \sim p(y | \theta_{true})$
+
+**Step 2: Posterior Inference**
+
+Fit the model to synthetic data to obtain the posterior distribution:
+
+$$p(\theta | y_{obs}) \propto p(y_{obs} | \theta) p(\theta)$$
+
+This step uses MCMC or variational inference to approximate the posterior distribution over all model parameters.
+
+**Step 3: Posterior Sampling**
+
+Extract $S$ posterior samples from the fitted model:
+
+$$\{\theta^{(s)}\}_{s=1}^S \sim p(\theta | y_{obs})$$
+
+Each sample $\theta^{(s)}$ represents a complete parameter configuration consistent with the observed synthetic data.
+
+**Step 4: Posterior Predictive Sampling**
+
+For each posterior sample $\theta^{(s)}$, generate a corresponding posterior predictive sample:
+
+$$\tilde{y}^{(s)} \sim p(y | \theta^{(s)})$$
+
+**Mathematical Prohibition Against Parameter Averaging**: The posterior predictive distribution is **NOT** computed using averaged parameters:
+
+$$\bar{\theta} = \frac{1}{S}\sum_{s=1}^S \theta^{(s)} \quad \text{(MATHEMATICALLY INCORRECT)}$$
+
+Using $\bar{\theta}$ violates the fundamental definition of posterior predictive distributions and fails to capture parameter uncertainty propagation through the nonlinear piecewise dynamics.
+
+**Correct Sample-wise Generation**: Each $\tilde{y}^{(s)}$ must be generated using the complete parameter vector $\theta^{(s)}$:
+
+1. Compute phase assignments for each cell-gene pair using ${t^{\ast}_{j}}^{(s)}$, ${t^{\ast}_{0,\text{on}i}}^{(s)}$, ${\delta^{\ast}_i}^{(s)}$
+2. Evaluate analytical solutions: ${u^*_{ij}}^{(s)}, {s^*_{ij}}^{(s)} = f_{\text{piecewise}}({t^*_{j}}^{(s)}, {\gamma^*_i}^{(s)}, {R_{\text{on},i}}^{(s)}, {t^*_{0,\text{on}i}}^{(s)}, {\delta^*_i}^{(s)})$
+3. Sample observations: 
+
+\begin{align}
+{u_{ij}}^{(s)} &\sim \text{Poisson}({\lambda_j}^{(s)} \cdot {U_{0i}}^{(s)} \cdot {u^*_{ij}}^{(s)})$\\
+${s_{ij}}^{(s)} &\sim \text{Poisson}({\lambda_j}^{(s)} \cdot {U_{0i}}^{(s)} \cdot {s^*_{ij}}^{(s)})
+\end{align}
+
+**Step 5: Validation Assessment**
+
+Compare posterior predictive samples $\{\tilde{y}^{(s)}\}_{s=1}^S$ to the original synthetic data $y_{obs}$ using multiple validation metrics.
+
+#### **Uncertainty Propagation Through Piecewise Dynamics**
+
+**Parameter Uncertainty Sources**
+
+The piecewise activation model exhibits multiple sources of parameter uncertainty:
+
+1. **Kinetic parameter uncertainty**: Posterior distributions over $\gamma^*_i$ and $R_{\text{on},i}$ affect the shape and magnitude of concentration trajectories
+2. **Temporal parameter uncertainty**: Uncertainty in $\tilde{t}^*_{0,\text{on}i}$ and $\tilde{\delta}^*_i$ affects when activation occurs and how long it lasts
+3. **Hierarchical time uncertainty**: Uncertainty in $T_{M}^*$, $t_{loc}$, $t_{scl}$ affects the global temporal scaling and population-level time distribution
+4. **Cell-specific uncertainty**: Uncertainty in individual $t^*_j$ and $\lambda_j$ affects cell-specific predictions
+5. **Scale uncertainty**: Uncertainty in $U_{0i}$ affects the absolute magnitude of predicted counts
+
+**Nonlinear Uncertainty Propagation**
+
+Parameter uncertainty propagates nonlinearly through the piecewise analytical solutions:
+
+- **Phase transitions**: Small changes in temporal parameters can cause cells to switch between phases, leading to discontinuous changes in predicted concentrations
+- **Exponential sensitivity**: The exponential terms in analytical solutions amplify parameter uncertainty, particularly for large time values
+- **Interaction effects**: Uncertainty in $\gamma^*_i$ interacts with uncertainty in temporal parameters through the $\xi$ helper variables
+- **Special case sensitivity**: Near $\gamma^*_i = 1$, the transition between solution forms creates additional uncertainty
+
+**Total Predictive Uncertainty Decomposition**
+
+For the piecewise activation model, the total predictive uncertainty can be decomposed as:
+
+$$\begin{align}
+\text{Var}[\tilde{y}_{ij} | y_{obs}] &= \mathbb{E}_\theta[\lambda_j U_{0i} u^*_{ij}(\theta)] + \text{Var}_\theta[\lambda_j U_{0i} u^*_{ij}(\theta)] \\
+&= \text{Poisson variance} + \text{Parameter uncertainty}
+\end{align}$$
+
+The parameter uncertainty term captures the complex propagation of uncertainty through the hierarchical parameter structure and piecewise dynamics.
+
+#### **Validation Metrics for Posterior Predictive Checking**
+
+**Parameter Recovery Assessment**
+
+Compare true parameters $\theta_{true}$ to posterior samples $\{\theta^{(s)}\}_{s=1}^S$:
+
+1. **Coverage probability**: Fraction of true parameters falling within posterior credible intervals
+   $$\text{Coverage}(\alpha) = \frac{1}{|\Theta|} \sum_{\theta_k \in \Theta} \mathbb{I}[\theta_{k,true} \in \text{CI}_\alpha(\theta_k | y_{obs})]$$
+   where $\text{CI}_\alpha$ is the $\alpha$-level credible interval.
+
+2. **Posterior mean bias**: Systematic deviation of posterior means from true values
+   $$\text{Bias}(\theta_k) = \mathbb{E}[\theta_k | y_{obs}] - \theta_{k,true}$$
+
+3. **Posterior standard deviation**: Measure of parameter uncertainty
+   $$\text{SD}(\theta_k) = \sqrt{\text{Var}[\theta_k | y_{obs}]}$$
+
+**Predictive Accuracy Assessment**
+
+Compare observed synthetic data $y_{obs}$ to posterior predictive samples $\{\tilde{y}^{(s)}\}_{s=1}^S$:
+
+1. **Mean Absolute Error (MAE)**: Average absolute deviation between observations and posterior predictive means
+   $$\text{MAE} = \frac{1}{GN} \sum_{i=1}^G \sum_{j=1}^N |y_{ij,obs} - \mathbb{E}[\tilde{y}_{ij} | y_{obs}]|$$
+
+2. **Root Mean Square Error (RMSE)**: Penalizes large deviations more heavily
+   $$\text{RMSE} = \sqrt{\frac{1}{GN} \sum_{i=1}^G \sum_{j=1}^N (y_{ij,obs} - \mathbb{E}[\tilde{y}_{ij} | y_{obs}])^2}$$
+
+3. **Posterior predictive p-values**: Probability that replicated data would be more extreme than observed data
+   $$p_{pp} = P(T(\tilde{y}) \geq T(y_{obs}) | y_{obs})$$
+   where $T(\cdot)$ is a test statistic (e.g., mean, variance, skewness).
+
+#### **Critical Implementation Requirements**
+
+**Prohibition Against Parameter Averaging**
+
+The mathematical definition of posterior predictive distributions explicitly requires sample-wise generation. **Parameter averaging is mathematically incorrect** because:
+
+1. **Nonlinear dynamics**: The piecewise analytical solutions are nonlinear functions of parameters, so $f(\mathbb{E}[\theta]) \neq \mathbb{E}[f(\theta)]$
+2. **Phase discontinuities**: Averaged temporal parameters may place cells in incorrect phases
+3. **Uncertainty underestimation**: Averaging eliminates parameter uncertainty propagation
+4. **Invalid inference**: Results do not represent valid Bayesian posterior predictive distributions
+
+**Correct Sample-wise Implementation**
+
+Each posterior predictive sample must be generated independently:
+
+```python
+# CORRECT: Sample-wise generation
+for s in range(S):
+    theta_s = posterior_samples[s]  # Complete parameter vector
+    y_pred_s = generate_observations(theta_s)  # Use full parameter vector
+    posterior_predictive_samples.append(y_pred_s)
+
+# INCORRECT: Parameter averaging (mathematically invalid)
+theta_mean = np.mean(posterior_samples, axis=0)  # WRONG
+y_pred = generate_observations(theta_mean)  # WRONG
+```
+
+**Uncertainty Propagation Requirements**
+
+1. **Preserve parameter correlations**: Use complete parameter vectors $\theta^{(s)}$ to maintain posterior correlations
+2. **Respect phase boundaries**: Ensure temporal parameters correctly determine phase assignments for each sample
+3. **Include all uncertainty sources**: Propagate uncertainty from all hierarchical levels
+4. **Maintain biological constraints**: Ensure all generated samples satisfy model constraints (e.g., positive concentrations)
+
+#### **Computational Considerations for Piecewise Models**
+
+**Analytical Solution Advantages**
+
+The piecewise activation model's analytical solutions provide computational benefits for posterior predictive checking:
+
+1. **Fast likelihood evaluation**: No numerical integration required for each posterior sample
+2. **Exact uncertainty propagation**: Analytical derivatives enable precise uncertainty quantification
+3. **Efficient validation**: Rapid generation of large numbers of posterior predictive samples
+4. **Numerical stability**: Closed-form solutions avoid accumulation of numerical errors
+
+**Phase Assignment Efficiency**
+
+For each posterior sample $\theta^{(s)}$, phase assignments can be computed efficiently:
+
+1. **Vectorized comparisons**: Determine phases for all cell-gene pairs simultaneously
+2. **Cached computations**: Reuse phase-specific analytical solutions across similar parameter values
+3. **Parallel processing**: Generate multiple posterior predictive samples in parallel
+
+**Memory Management**
+
+Large posterior predictive sample sets require careful memory management:
+
+1. **Streaming generation**: Generate and process samples sequentially to avoid memory overflow
+2. **Selective storage**: Store only essential summary statistics rather than full sample arrays
+3. **Compressed representations**: Use efficient data structures for sparse count matrices
+
+#### **Biological Interpretation of Validation Results**
+
+**Successful Parameter Recovery Indicators**
+
+1. **High coverage probabilities** (>90%) indicate the model correctly quantifies parameter uncertainty
+2. **Low posterior bias** indicates the model can accurately estimate true parameter values
+3. **Appropriate posterior uncertainty** balances precision with realistic uncertainty quantification
+
+**Predictive Accuracy Indicators**
+
+1. **Low MAE/RMSE** indicates accurate point predictions
+2. **Posterior predictive p-values near 0.5** indicate good model fit without over- or under-fitting
+3. **Consistent pattern classification** indicates the model captures essential temporal dynamics
+
+**Failure Mode Identification**
+
+1. **Poor coverage** may indicate model misspecification or inadequate prior specification
+2. **High bias** may indicate identifiability issues or optimization problems
+3. **Poor predictive accuracy** may indicate missing biological mechanisms or inappropriate noise models
 
 ### Properties of the Piecewise Framework
 
@@ -1381,8 +1647,6 @@ The framework captures three core expression patterns that encompass the full ra
 This study will validate the constrained model's ability to:
 
 1. **Recover constrained piecewise parameters**: $\gamma^*_i$, $R_{\text{on},i}$, $\tilde{t}^*_{0,\text{on}i}$, $\tilde{\delta}^*_i$
-2. **Handle pre-activation scenarios**: Correctly infer negative relative onset times and their biological implications
-3. **Distinguish expression patterns**: Classify genes across the three core patterns (pre-activation, transient, sustained)
 4. **Maintain hierarchical time inference**: Recover population-level temporal parameters ($T_M^*$, $t_{loc}$, $t_{scl}$)
 5. **Handle realistic noise levels**: Maintain accuracy with Poisson observation noise
 6. **Scale efficiently**: Demonstrate computational advantages of reduced parameter space
@@ -1391,106 +1655,8 @@ This study will validate the constrained model's ability to:
 9. **Validate temporal parameter scaling**: Ensure $T_{M}^*$ scaling correctly propagates from relative to absolute timing parameters
 10. **Assess parameter separation**: Verify clean separation between kinetic ($\gamma^*_i$, $R_{\text{on},i}$) and temporal ($\tilde{t}^*_{0,\text{on}i}$, $\tilde{\delta}^*_i$) parameter inference
 11. **Validate relative parameter framework**: Confirm that relative temporal parameters enable consistent pattern classification across different experimental timescales
-12. **Assess pattern coverage**: Verify that the three-pattern framework adequately captures the diversity of gene expression dynamics in real biological systems
 
 ### Parameter Recovery Validation Implementation
-
-The following example demonstrates the user-facing API for performing parameter recovery validation with the piecewise activation model:
-
-```{python}
-#| label: piecewise-activation-validation
-#| code-fold: true
-#| code-summary: "Show/Hide Code"
-#| eval: false
-
-# Create the piecewise activation model
-model = create_piecewise_activation_model()
-
-print(f"Created piecewise activation model: {model}")
-print(f"Model components:")
-print(f"  Dynamics: {model.dynamics_model}")
-print(f"  Prior: {model.prior_model}")
-print(f"  Likelihood: {model.likelihood_model}")
-print(f"  Guide: {model.guide_model}")
-
-# Generate prior predictive data with known true parameters
-print(f"\nGenerating prior predictive data for validation...")
-prior_predictive_adata = model.generate_predictive_samples(
-    num_cells=200,
-    num_genes=100,
-    num_samples=1,
-    return_format="anndata"
-)
-
-print(f"Prior predictive data generated:")
-print(f"  Cells: {prior_predictive_adata.n_obs}")
-print(f"  Genes: {prior_predictive_adata.n_vars}")
-print(f"  Layers: {list(prior_predictive_adata.layers.keys())}")
-
-# Extract true parameters for validation
-true_parameters = prior_predictive_adata.uns.get('true_parameters', {})
-print(f"\nTrue parameters available for validation:")
-for key in sorted(true_parameters.keys()):
-    if key.startswith(('R_on', 'tilde_t_on', 'tilde_delta', 't_on', 'delta', 'gamma_star', 'T_M_star')):
-        param_value = true_parameters[key]
-        if hasattr(param_value, 'shape') and param_value.size > 1:
-            print(f"  {key}: shape {param_value.shape}, range [{param_value.min():.3f}, {param_value.max():.3f}]")
-        else:
-            print(f"  {key}: {param_value:.3f}")
-
-# Analyze pattern distribution in generated data
-print(f"\nPattern analysis of generated genes:")
-if 'tilde_t_on_star' in true_parameters and 'tilde_delta_star' in true_parameters:
-    tilde_t_on = true_parameters['tilde_t_on_star']
-    tilde_delta = true_parameters['tilde_delta_star']
-    R_on = true_parameters['R_on']
-
-    # Count genes in each pattern
-    pre_activation = (tilde_t_on < 0.0) & (R_on > 2.0)
-    transient = (tilde_t_on > 0.0) & (tilde_t_on < 0.5) & (tilde_delta < 0.4) & (R_on > 2.0)
-    sustained = (tilde_t_on > 0.0) & (tilde_t_on < 0.3) & (tilde_delta > 0.5) & (R_on > 2.0)
-
-    print(f"  Pre-activation: {pre_activation.sum()} genes ({pre_activation.mean()*100:.1f}%)")
-    print(f"  Transient: {transient.sum()} genes ({transient.mean()*100:.1f}%)")
-    print(f"  Sustained: {sustained.sum()} genes ({sustained.mean()*100:.1f}%)")
-    print(f"  Other patterns: {(~(pre_activation | transient | sustained)).sum()} genes")
-
-# Train model on prior predictive data (parameter recovery)
-print(f"\nTraining model for parameter recovery...")
-trained_model = model.train(
-    adata=prior_predictive_adata,
-    max_epochs=1000,  # Reduced for demonstration
-    learning_rate=0.01,
-    early_stopping=True,
-    early_stopping_patience=10,
-    use_gpu="auto",
-    seed=42
-)
-
-# Generate posterior samples from trained model
-print(f"\nGenerating posterior samples...")
-posterior_samples = trained_model.generate_posterior_samples(
-    adata=prior_predictive_adata,
-    num_samples=30,
-    seed=42,
-    return_tensors=True
-)
-
-print(f"Posterior samples generated:")
-for key in sorted(posterior_samples.keys()):
-    if key.startswith(('R_on', 'tilde_t_on', 'tilde_delta', 't_on', 'delta', 'gamma_star', 'T_M_star')):
-        param_shape = posterior_samples[key].shape if hasattr(posterior_samples[key], 'shape') else len(posterior_samples[key])
-        print(f"  {key}: {param_shape}")
-
-print(f"\nParameter recovery validation completed!")
-print(f"This demonstrates the complete workflow from:")
-print(f"  1. Model creation with create_piecewise_activation_model()")
-print(f"  2. Prior predictive data generation with known parameters")
-print(f"  3. Model training on synthetic data")
-print(f"  4. Posterior sampling for parameter recovery assessment")
-print(f"  5. Comparison of true vs recovered parameters")
-print(f"  6. Pattern classification analysis with 3-pattern framework")
-```
 
 This validation workflow demonstrates the key capabilities of the piecewise activation model:
 
