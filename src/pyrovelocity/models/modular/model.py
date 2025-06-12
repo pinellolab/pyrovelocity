@@ -2107,70 +2107,60 @@ class PyroVelocityModel:
                               for v in samples.values() if isinstance(v, torch.Tensor)]
 
                 if sample_sizes and max(sample_sizes) > 1:
-                    # Multiple posterior samples
+                    # Multiple posterior samples - CORRECTED APPROACH: Sample-wise generation
                     num_posterior_samples = max(sample_sizes)
-                    print(f"  🔄 Generating predictive data from {num_posterior_samples} posterior samples...")
+                    print(f"  🔄 Generating {num_posterior_samples} posterior predictive samples (sample-wise generation)...")
 
-                    max_samples_to_use = min(num_posterior_samples, 20)  # Limit to 20 samples
+                    # Limit samples for computational efficiency
+                    max_samples_to_use = min(num_posterior_samples, 30)
 
-                    # Subsample the posterior samples
-                    subsampled_samples = {}
-                    for key, value in samples.items():
-                        if isinstance(value, torch.Tensor) and value.shape[0] > 1:
-                            # Take evenly spaced samples
-                            indices = torch.linspace(0, value.shape[0]-1, max_samples_to_use).long()
-                            subsampled_samples[key] = value[indices]
-                        else:
-                            subsampled_samples[key] = value
+                    # Generate one observation per posterior sample (NO AVERAGING)
+                    all_predictive_samples = []
 
-                    # Generate single predictive sample using averaged parameters
-                    averaged_samples = {}
-                    for key, value in subsampled_samples.items():
-                        if isinstance(value, torch.Tensor) and value.ndim > 1:
-                            if value.dtype in [torch.float32, torch.float64]:
-                                averaged_samples[key] = value.mean(dim=0, keepdim=True)
+                    for sample_idx in range(max_samples_to_use):
+                        # Extract single parameter vector for this sample
+                        single_sample = {}
+                        for key, value in samples.items():
+                            if isinstance(value, torch.Tensor) and value.shape[0] > 1:
+                                single_sample[key] = value[sample_idx:sample_idx+1]  # Keep batch dimension
                             else:
-                                averaged_samples[key] = value[0:1]  # Take first sample for non-float types
-                        else:
-                            averaged_samples[key] = value
+                                single_sample[key] = value
 
-                    # Generate a single sample from averaged parameters
-                    def posterior_predictive_model():
-                        """Model with fixed parameters for posterior predictive sampling."""
-                        # Create dummy observations with the right shape
-                        dummy_u_obs = torch.zeros(num_cells, num_genes)
-                        dummy_s_obs = torch.zeros(num_cells, num_genes)
+                        # Generate ONE observation from this parameter vector
+                        def single_posterior_predictive_model():
+                            """Model with fixed parameters for single posterior sample."""
+                            # Create dummy observations with the right shape
+                            dummy_u_obs = torch.zeros(num_cells, num_genes)
+                            dummy_s_obs = torch.zeros(num_cells, num_genes)
 
-                        # Create context with observations
-                        context = {
-                            "u_obs": dummy_u_obs,
-                            "s_obs": dummy_s_obs,
-                        }
+                            # Create context with observations
+                            context = {
+                                "u_obs": dummy_u_obs,
+                                "s_obs": dummy_s_obs,
+                            }
 
-                        # Add observed times to context if provided
-                        if observed_times is not None:
-                            context["observed_times"] = observed_times
+                            # Add observed times to context if provided
+                            if observed_times is not None:
+                                context["observed_times"] = observed_times
 
-                        # Add fixed parameter values to context
-                        context.update(self._process_parameter_samples(averaged_samples, num_cells, num_genes))
+                            # Use single parameter vector (NO AVERAGING)
+                            context.update(self._process_single_parameter_sample(single_sample, num_cells, num_genes))
 
-                        # Run dynamics and likelihood model components
-                        dynamics_context = self.dynamics_model.forward(context)
-                        likelihood_context = self.likelihood_model.forward(dynamics_context)
+                            # Run dynamics and likelihood model components
+                            dynamics_context = self.dynamics_model.forward(context)
+                            likelihood_context = self.likelihood_model.forward(dynamics_context)
 
-                        return likelihood_context
+                            return likelihood_context
 
-                    # Use unconditioned version to generate observations
-                    unconditioned_posterior_model = pyro.poutine.uncondition(posterior_predictive_model)
+                        # Generate single observation from this parameter sample
+                        unconditioned_model = pyro.poutine.uncondition(single_posterior_predictive_model)
+                        predictive = Predictive(unconditioned_model, num_samples=1, return_sites=None)
+                        single_predictive_sample = predictive()
 
-                    # Generate multiple samples to simulate posterior uncertainty
-                    predictive = Predictive(
-                        unconditioned_posterior_model,
-                        num_samples=max_samples_to_use,  # Generate multiple samples
-                        return_sites=None,
-                    )
+                        all_predictive_samples.append(single_predictive_sample)
 
-                    predictive_samples = predictive()
+                    # Combine all samples into proper batch structure
+                    predictive_samples = self._combine_predictive_samples(all_predictive_samples)
 
                 else:
                     # Single parameter set (backward compatibility): use existing logic
@@ -2240,11 +2230,11 @@ class PyroVelocityModel:
         """
         Process parameter samples for posterior predictive sampling.
 
-        This method simplifies the complex tensor reshaping logic by handling
-        common parameter processing patterns in a clean, maintainable way.
+        This method handles tensor reshaping for single parameter sets (backward compatibility).
+        For multiple posterior samples, use _process_single_parameter_sample instead.
 
         Args:
-            samples: Dictionary of parameter samples
+            samples: Dictionary of parameter samples (should be single parameter set)
             num_cells: Target number of cells
             num_genes: Target number of genes
 
@@ -2255,20 +2245,17 @@ class PyroVelocityModel:
 
         for key, value in samples.items():
             if isinstance(value, torch.Tensor):
-                # Simplify tensor processing - handle different tensor shapes
+                # Handle tensor processing for single parameter sets
                 if value.ndim == 3:
-                    # 3D tensor: [num_samples, batch_dim, param_dim] -> take mean and squeeze
-                    if value.dtype in [torch.float32, torch.float64]:
-                        processed_value = value.mean(dim=0).squeeze(0)
+                    # 3D tensor: take first sample only (no averaging)
+                    processed_value = value[0].squeeze(0)
+                elif value.ndim == 2:
+                    # 2D tensor: check if it's a single parameter set
+                    if value.shape[0] == 1:
+                        # Single parameter set: squeeze batch dimension
+                        processed_value = value.squeeze(0)
                     else:
-                        # For integer types, take the first sample instead of mean
-                        processed_value = value[0].squeeze(0)
-                elif value.ndim == 2 and value.shape[0] > 1:
-                    # 2D tensor with multiple samples: take mean across sample dimension
-                    if value.dtype in [torch.float32, torch.float64]:
-                        processed_value = value.mean(dim=0)
-                    else:
-                        # For integer types, take the first sample instead of mean
+                        # Multiple samples: take first sample only (no averaging)
                         processed_value = value[0]
                 elif value.ndim >= 1:
                     # 1D or 2D tensor: squeeze out batch dimensions
@@ -2303,6 +2290,147 @@ class PyroVelocityModel:
                 processed[key] = value
 
         return processed
+
+    @beartype
+    def _process_single_parameter_sample(
+        self,
+        sample: Dict[str, torch.Tensor],
+        num_cells: int,
+        num_genes: int
+    ) -> Dict[str, torch.Tensor]:
+        """
+        Process a SINGLE parameter sample for posterior predictive sampling.
+
+        This method handles tensor reshaping for a single parameter vector
+        WITHOUT any averaging operations. This is the mathematically correct
+        approach for Bayesian posterior predictive checking.
+
+        Args:
+            sample: Dictionary containing a single parameter sample
+            num_cells: Target number of cells
+            num_genes: Target number of genes
+
+        Returns:
+            Dictionary of processed parameters ready for model context
+        """
+        processed = {}
+
+        for key, value in sample.items():
+            if isinstance(value, torch.Tensor):
+                # Handle complex tensor shapes from posterior samples
+                # The tensor has shape [1, ...] where we need to extract the single sample
+
+                # Remove the first dimension (batch dimension) and squeeze all singleton dimensions
+                if value.shape[0] == 1:
+                    # Remove batch dimension and squeeze singleton dimensions
+                    processed_value = value.squeeze()
+                else:
+                    # This shouldn't happen for single samples, but handle gracefully
+                    processed_value = value[0].squeeze()
+
+                # Handle parameter-specific reshaping based on expected shapes
+                if key in ["t_star", "cell_time"]:
+                    # These parameters should have shape [num_cells] or be expandable to it
+                    if processed_value.numel() == 1:
+                        # Single value: expand to all cells
+                        processed[key] = processed_value.expand(num_cells)
+                    elif processed_value.numel() == num_cells:
+                        # Already correct size: reshape to [num_cells]
+                        processed[key] = processed_value.reshape(num_cells)
+                    elif processed_value.numel() > num_cells:
+                        # Take first num_cells values
+                        processed[key] = processed_value.flatten()[:num_cells]
+                    else:
+                        # Repeat to match num_cells
+                        repeat_factor = (num_cells + processed_value.numel() - 1) // processed_value.numel()
+                        repeated = processed_value.repeat(repeat_factor)
+                        processed[key] = repeated.flatten()[:num_cells]
+
+                elif key in ["R_on", "alpha_on", "alpha_off", "gamma_star", "tilde_t_on_star", "tilde_delta_star", "U_0i"]:
+                    # Gene-specific parameters should have shape [num_genes]
+                    if processed_value.numel() == num_genes:
+                        processed[key] = processed_value.reshape(num_genes)
+                    elif processed_value.numel() == 1:
+                        # Single value: expand to all genes
+                        processed[key] = processed_value.expand(num_genes)
+                    else:
+                        # Use flattened version and take first num_genes elements
+                        flattened = processed_value.flatten()
+                        if flattened.numel() >= num_genes:
+                            processed[key] = flattened[:num_genes]
+                        else:
+                            # Repeat to match num_genes
+                            repeat_factor = (num_genes + flattened.numel() - 1) // flattened.numel()
+                            repeated = flattened.repeat(repeat_factor)
+                            processed[key] = repeated[:num_genes]
+
+                elif key in ["lambda_j"]:
+                    # Cell-specific parameters (like capture efficiency)
+                    if processed_value.numel() == num_cells:
+                        processed[key] = processed_value.reshape(num_cells)
+                    elif processed_value.numel() == 1:
+                        # Single value: expand to all cells
+                        processed[key] = processed_value.expand(num_cells)
+                    else:
+                        # Use flattened version and take first num_cells elements
+                        flattened = processed_value.flatten()
+                        if flattened.numel() >= num_cells:
+                            processed[key] = flattened[:num_cells]
+                        else:
+                            # Repeat to match num_cells
+                            repeat_factor = (num_cells + flattened.numel() - 1) // flattened.numel()
+                            repeated = flattened.repeat(repeat_factor)
+                            processed[key] = repeated[:num_cells]
+
+                else:
+                    # Other parameters: use squeezed version
+                    processed[key] = processed_value
+            else:
+                processed[key] = value
+
+        return processed
+
+    @beartype
+    def _combine_predictive_samples(
+        self,
+        all_samples: List[Dict[str, torch.Tensor]]
+    ) -> Dict[str, torch.Tensor]:
+        """
+        Combine multiple predictive samples into a single dictionary with batch dimension.
+
+        This method takes a list of individual predictive samples and combines them
+        into the format expected by _convert_to_anndata.
+
+        Args:
+            all_samples: List of dictionaries, each containing one predictive sample
+
+        Returns:
+            Combined dictionary with batch dimension for all tensors
+        """
+        if not all_samples:
+            return {}
+
+        combined = {}
+
+        # Get all keys from the first sample
+        sample_keys = all_samples[0].keys()
+
+        for key in sample_keys:
+            # Collect all values for this key
+            values = []
+            for sample in all_samples:
+                if key in sample:
+                    values.append(sample[key])
+
+            if values:
+                # Stack along new batch dimension
+                if isinstance(values[0], torch.Tensor):
+                    combined[key] = torch.stack(values, dim=0)
+                else:
+                    # For non-tensor values, just take the first one
+                    combined[key] = values[0]
+
+        return combined
 
     @beartype
     def _convert_to_anndata(
