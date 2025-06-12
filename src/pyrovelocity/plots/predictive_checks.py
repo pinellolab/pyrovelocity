@@ -392,7 +392,8 @@ def plot_parameter_marginals(
     save_path: Optional[str] = None,
     file_prefix: str = "",
     model: Optional[Any] = None,
-    default_fontsize: Union[int, float] = 8
+    default_fontsize: Union[int, float] = 8,
+    true_parameters_adata: Optional[AnnData] = None
 ) -> plt.Figure:
     """
     Plot individual histograms for all parameter marginal distributions.
@@ -405,6 +406,9 @@ def plot_parameter_marginals(
         save_path: Optional directory path to save figures
         file_prefix: Prefix for saved file names
         model: Optional PyroVelocity model instance for parameter metadata
+        default_fontsize: Default font size for all text elements
+        true_parameters_adata: Optional AnnData object containing true parameters
+                              in adata.uns['true_parameters'] for validation
 
     Returns:
         matplotlib Figure object
@@ -417,6 +421,24 @@ def plot_parameter_marginals(
                ha='center', va='center', transform=ax.transAxes)
         ax.set_title(f'{check_type.title()} Parameter Marginals')
         return fig
+
+    # Extract true parameters if provided for validation
+    true_parameters = {}
+    global_true_params = ['T_M_star', 't_loc', 't_scale']  # Global parameters that should appear on global marginals
+
+    if true_parameters_adata is not None and 'true_parameters' in true_parameters_adata.uns:
+        true_params_dict = true_parameters_adata.uns['true_parameters']
+        for param_name in available_params:
+            if param_name in true_params_dict and param_name in global_true_params:
+                true_value = true_params_dict[param_name]
+                # Convert to tensor if needed
+                if not isinstance(true_value, torch.Tensor):
+                    true_value = torch.tensor(true_value)
+                # Only store scalar global parameters
+                if true_value.numel() == 1:
+                    true_parameters[param_name] = true_value
+        if true_parameters:
+            print(f"Found {len(true_parameters)} global true parameters for validation: {list(true_parameters.keys())}")
 
     # Auto-calculate figure size based on number of parameters
     # Use 7.5" width to fit 8.5x11" page with 0.5" margins
@@ -491,7 +513,33 @@ def plot_parameter_marginals(
 
         # Add median line in light gray instead of mean line with legend
         median_val = np.median(values)
-        ax.axvline(median_val, color='lightgray', linestyle='--', alpha=0.7)
+        median_line = ax.axvline(median_val, color='lightgray', linestyle='--', alpha=0.7)
+
+        # Add vertical line for true value if available (for global parameters)
+        true_line = None
+        if param_name in true_parameters:
+            true_val = float(true_parameters[param_name].item())
+
+            # Extend x-axis range if true value is outside current range
+            current_xlim = ax.get_xlim()
+            if true_val < current_xlim[0] or true_val > current_xlim[1]:
+                # Extend range to include true value with some padding
+                range_padding = (current_xlim[1] - current_xlim[0]) * 0.1
+                new_xlim = (
+                    min(current_xlim[0], true_val - range_padding),
+                    max(current_xlim[1], true_val + range_padding)
+                )
+                ax.set_xlim(new_xlim)
+
+            true_line = ax.axvline(true_val, color='green', linestyle='-', alpha=0.8, linewidth=1.5)
+
+        # Add legend for the first subplot if we have true values
+        if i == 0 and true_line is not None:
+            legend_elements = [
+                plt.Line2D([0], [0], color='lightgray', linestyle='--', label='Posterior Median'),
+                plt.Line2D([0], [0], color='green', linestyle='-', label='True Value')
+            ]
+            ax.legend(handles=legend_elements, loc='upper right', fontsize=default_fontsize * 0.8)
 
     # Hide unused subplots
     for i in range(n_params, len(axes)):
@@ -1711,7 +1759,7 @@ def plot_prior_predictive_checks(
         processed_parameters = _process_parameters_for_plotting(prior_parameters)
 
         # Create plots in logical order with numbered prefixes for proper PDF combination ordering
-        plot_parameter_marginals(processed_parameters, check_type, save_path=save_path, file_prefix="02", model=model, default_fontsize=default_fontsize)
+        plot_parameter_marginals(processed_parameters, check_type, save_path=save_path, file_prefix="02", model=model, default_fontsize=default_fontsize, true_parameters_adata=true_parameters_adata)
         plot_parameter_relationships(processed_parameters, check_type, save_path=save_path, file_prefix="03", model=model, default_fontsize=default_fontsize)
         plot_temporal_trajectories(processed_parameters, check_type, save_path=save_path, file_prefix="04", adata=prior_adata, default_fontsize=default_fontsize)
 

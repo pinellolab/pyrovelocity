@@ -68,6 +68,7 @@ fig_prior = plot_prior_predictive_checks(
     figure_name=f"piecewise_activation_prior_checks_{RANDOM_SEED}",
     combine_individual_pdfs=True,
     default_fontsize=5,
+    true_parameters_adata=prior_predictive_adata,  # For prior predictive, true parameters are in the same adata
 )
 
 # Validate prior parameter ranges (updated for hierarchical temporal parameterization)
