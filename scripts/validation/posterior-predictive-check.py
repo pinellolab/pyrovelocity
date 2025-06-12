@@ -129,6 +129,7 @@ fig_posterior = plot_posterior_predictive_checks(
     default_fontsize=5,
     observed_adata=prior_predictive_adata,
     num_genes=10,
+    true_parameters_adata=prior_predictive_adata,  # Contains true parameters for validation
 )
 
 print(f"\n✅ Posterior predictive check workflow completed!")
