@@ -172,6 +172,52 @@ def create_piecewise_activation_prior_metadata() -> ComponentParameterMetadata:
             biological_interpretation="Technical variation in RNA capture and sequencing efficiency across cells",
             plot_order=12
         ),
+
+        # Latent RNA concentrations (true/unobserved values)
+        "ut": ParameterMetadata(
+            name="ut",
+            display_name=r"$u^*_{ij}$",
+            short_label="Latent Unspliced",
+            description="Latent dimensionless unspliced RNA concentrations",
+            units="dimensionless concentration",
+            typical_range=(0.0, 10.0),
+            biological_interpretation="True underlying unspliced RNA concentrations before observation noise and technical effects",
+            plot_order=13
+        ),
+
+        "st": ParameterMetadata(
+            name="st",
+            display_name=r"$s^*_{ij}$",
+            short_label="Latent Spliced",
+            description="Latent dimensionless spliced RNA concentrations",
+            units="dimensionless concentration",
+            typical_range=(0.0, 10.0),
+            biological_interpretation="True underlying spliced RNA concentrations before observation noise and technical effects",
+            plot_order=14
+        ),
+
+        # Observed RNA counts (measured values)
+        "u_obs": ParameterMetadata(
+            name="u_obs",
+            display_name=r"$u_{ij}$",
+            short_label="Observed Unspliced",
+            description="Observed unspliced RNA counts from sequencing",
+            units="RNA counts",
+            typical_range=(0.0, 1000.0),
+            biological_interpretation="Measured unspliced RNA counts including technical noise, capture efficiency, and sequencing depth effects",
+            plot_order=15
+        ),
+
+        "s_obs": ParameterMetadata(
+            name="s_obs",
+            display_name=r"$s_{ij}$",
+            short_label="Observed Spliced",
+            description="Observed spliced RNA counts from sequencing",
+            units="RNA counts",
+            typical_range=(0.0, 1000.0),
+            biological_interpretation="Measured spliced RNA counts including technical noise, capture efficiency, and sequencing depth effects",
+            plot_order=16
+        ),
     }
     
     return ComponentParameterMetadata(

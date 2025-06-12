@@ -202,7 +202,13 @@ def _format_parameter_name(param_name: str) -> str:
         'velocity_pseudotime': r't_{velocity}',
         'dpt_pseudotime': r't_{dpt}',
         'pseudotime': r't_{pseudo}',
-        'shared_time': r't_{shared}'
+        'shared_time': r't_{shared}',
+        # Latent RNA concentrations (true/unobserved values)
+        'ut': r'u^*_{ij}',
+        'st': r's^*_{ij}',
+        # Observed RNA counts (measured values)
+        'u_obs': r'u_{ij}',
+        's_obs': r's_{ij}'
     }
 
     if param_name in special_cases:
