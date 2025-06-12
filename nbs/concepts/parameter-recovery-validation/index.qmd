@@ -915,67 +915,61 @@ u^*_{ij}(\tau_{\text{off}}) &= 1.0 + (u^*_{\text{off},0i} - 1.0) e^{-\tau_{\text
 s^*_{ij}(\tau_{\text{off}}) &= 1.0 + (s^*_{\text{off},0i} - 1.0) e^{-\tau_{\text{off}}} + (u^*_{\text{off},0i} - 1.0) \tau_{\text{off}} e^{-\tau_{\text{off}}}
 \end{align}$$
 
-### Gene Expression Pattern Capabilities
+### Gene Expression Pattern Classification
 
-This piecewise framework enables representation of diverse gene expression patterns through specific parameter combinations. Each pattern is defined by quantitative parameter ranges that create distinct temporal dynamics:
+This piecewise framework enables representation of diverse gene expression patterns through specific parameter combinations. Each pattern is defined by quantitative parameter ranges applied to **relative temporal parameters** that create distinct temporal dynamics when scaled by the global time parameter $T_M^*$.
 
-#### **1. Activation Patterns**
+**Parameter Framework**: The classification uses relative temporal parameters ($\tilde{t}^*_{0,\text{on}i}$, $\tilde{\delta}^*_i$) that are scaled by the global maximum time $T_M^*$ to produce absolute temporal parameters:
 
-**Characteristics**: Genes that start with baseline expression and become strongly activated during the process.
+$$\begin{align}
+t^*_{0,\text{on}i} &= T_M^* \times \tilde{t}^*_{0,\text{on}i} \quad \text{(absolute activation onset time)} \\
+\delta^*_i &= T_M^* \times \tilde{\delta}^*_i \quad \text{(absolute activation duration)}
+\end{align}$$
 
-**Parameter specifications**:
+This hierarchical structure separates global temporal scaling from gene-specific temporal patterns, enabling consistent pattern classification across different experimental timescales.
 
-- $R_{\text{on},i} > 3.0$ (strong fold-change during activation)
-- $t^*_{0,\text{on}i} > 0$ and $t^*_{0,\text{on}i} < 0.4$ (activation occurs after observation start but early)
-- $\delta^*_i > 0.3$ (sustained activation duration)
+#### **Pre-Activation Patterns**
 
-**Biological examples**: Developmental transcription factors, cell cycle genes, stress response genes
-
-#### **2. Pre-Activation Patterns**
-
-**Characteristics**: Genes that were already activated before observation began, showing high initial expression.
+**Characteristics**: Genes that were already activated before observation began, showing decay-only dynamics from an initially activated steady-state.
 
 **Parameter specifications**:
 
-- $R_{\text{on},i} > 2.0$ (moderate to strong fold-change)
-- $t^*_{0,\text{on}i} < 0$ (activation onset before observation window)
-- $\delta^*_i > |t^*_{0,\text{on}i}|$ (activation duration extends into observation window)
+- $\tilde{t}^*_{0,\text{on}i} < 0.0$ (relative activation onset before observation window)
+- $R_{\text{on},i} > 2.0$ (moderate to strong fold-change during activation)
 
-**Biological examples**: Early developmental genes, lineage commitment factors, stress response genes in ongoing stress
+**Biological interpretation**: These genes underwent activation before the experimental observation window. During the observed period, they exhibit decay-only dynamics as they return toward baseline expression levels. The negative relative onset time indicates that activation occurred in the "past" relative to the observation start.
 
-#### **3. Decay-Only Patterns**
+**Biological examples**: Early developmental genes, maternal transcripts during development, lineage commitment factors established before observation, stress response genes in ongoing stress conditions
 
-**Characteristics**: Genes that start with high expression and gradually decrease without reactivation.
+#### **Transient Activation Patterns**
 
-**Parameter specifications**:
-
-- $R_{\text{on},i} > 1.5$ (moderate fold-change, but not observed during activation)
-- $t^*_{0,\text{on}i} > T^*_M$ (activation onset beyond observation window) OR
-- $t^*_{0,\text{on}i} < 0$ and $\delta^*_i < |t^*_{0,\text{on}i}|$ (activation ended before observation)
-
-**Biological examples**: Maternal transcripts during development, pluripotency factors during differentiation
-
-#### **4. Transient Activation Patterns**
-**Characteristics**: Genes that show brief, pulse-like activation followed by return to baseline.
+**Characteristics**: Genes that show complete activation-decay cycles within the observation window, exhibiting brief, pulse-like activation followed by return toward baseline.
 
 **Parameter specifications**:
 
-- $R_{\text{on},i} > 2.0$ (moderate to strong fold-change)
-- $t^*_{0,\text{on}i} > 0$ and $t^*_{0,\text{on}i} < 0.5$ (activation during observation)
-- $\delta^*_i < 0.4$ (brief activation duration)
+- $\tilde{t}^*_{0,\text{on}i} > 0.0$ (relative activation within observation window)
+- $\tilde{t}^*_{0,\text{on}i} < 0.5$ (activation early enough to complete cycle within 50% of timeline)
+- $\tilde{\delta}^*_i < 0.4$ (short activation duration, 40% of timeline or less)
+- $R_{\text{on},i} > 2.0$ (sufficient fold-change to observe activation)
 
-**Biological examples**: Immediate early genes, signaling molecules, transient developmental regulators
+**Biological interpretation**: These genes activate early enough and for a short enough duration that the complete activation-decay cycle is observable within the experimental window. The constraints ensure that both the activation and subsequent decay phases are captured.
 
-#### **5. Sustained Activation Patterns**
-**Characteristics**: Genes that become activated and remain highly expressed throughout most of the process.
+**Biological examples**: Immediate early genes, signaling molecules, transient developmental regulators, cell cycle checkpoint genes, acute stress response genes
+
+#### **Sustained Activation Patterns**
+
+**Characteristics**: Genes that become activated early and remain highly expressed throughout most of the observation period, showing net increase over the observation window.
 
 **Parameter specifications**:
 
-- $R_{\text{on},i} > 2.0$ (strong fold-change)
-- $t^*_{0,\text{on}i} > 0$ and $t^*_{0,\text{on}i} < 0.3$ (early activation onset)
-- $\delta^*_i > 0.5$ (long activation duration)
+- $\tilde{t}^*_{0,\text{on}i} > 0.0$ (relative activation within observation window)
+- $\tilde{t}^*_{0,\text{on}i} < 0.3$ (early activation onset within 30% of timeline)
+- $\tilde{\delta}^*_i > 0.5$ (long activation duration, more than 50% of timeline)
+- $R_{\text{on},i} > 2.0$ (strong fold-change during activation)
 
-**Biological examples**: Lineage-specific transcription factors, structural proteins, metabolic enzymes
+**Biological interpretation**: These genes activate early in the observation window and maintain high expression levels throughout most of the observed period. The long activation duration relative to the observation window means that decay back to baseline is either minimal or occurs beyond the observation period.
+
+**Biological examples**: Lineage-specific transcription factors, structural proteins, metabolic enzymes, terminal differentiation markers, long-term stress adaptation genes
 
 ### Mathematical Framework for Pre-Activation Scenarios
 
@@ -1017,7 +1011,11 @@ where $\Phi$ is the standard normal CDF. The joint probability of satisfying all
 
 #### **Constraint Feasibility Assessment**
 
-```python
+```{python}
+#| code-fold: true
+#| code-summary: "Show/Hide Code"
+#| eval: false
+
 # CDF-based feasibility analysis for pattern constraints
 from scipy import stats
 import numpy as np
@@ -1036,30 +1034,30 @@ def calculate_normal_cdf_probability(loc, scale, threshold, upper=True):
     else:
         return stats.norm.cdf(threshold, loc=loc, scale=scale)
 
-# Prior hyperparameters (updated for constrained parameterization with Normal onset times)
+# Prior hyperparameters (updated for relative temporal parameterization)
 priors = {
-    'R_on': {'loc': 0.916, 'scale': 0.4},        # log(2.5), fold-change (LogNormal)
-    't_on_star': {'loc': 0.5, 'scale': 0.8},     # Normal(0.5, 0.8²), allows negatives [calibrated]
-    'delta_star': {'loc': -0.8, 'scale': 0.45},  # log(0.45) [calibrated for balanced patterns] (LogNormal)
+    'R_on': {'loc': 0.916, 'scale': 0.4},              # log(2.5), fold-change (LogNormal)
+    'tilde_t_on_star': {'loc': 0.5, 'scale': 0.8},     # Normal(0.5, 0.8²), relative onset (allows negatives)
+    'tilde_delta_star': {'loc': -0.8, 'scale': 0.45},  # log(0.45), relative duration (LogNormal)
 }
 
-# Calculate constraint feasibility for each pattern
+# Calculate constraint feasibility for each pattern (updated to match script implementation)
 patterns = {
-    'activation': [
-        ('R_on', '>', 3.0), ('t_on_star', '>', 0.0),
-        ('t_on_star', '<', 0.4), ('delta_star', '>', 0.3)
-    ],
     'pre_activation': [
-        ('R_on', '>', 2.0), ('t_on_star', '<', 0.0),
-        ('delta_star', '>', 0.3)  # Simplified constraint
+        ('tilde_t_on_star', '<', 0.0),  # Activation before observation window
+        ('R_on', '>', 2.0),             # Moderate to strong fold change
     ],
     'transient': [
-        ('R_on', '>', 2.0), ('t_on_star', '>', 0.0),
-        ('t_on_star', '<', 0.5), ('delta_star', '<', 0.4)
+        ('tilde_t_on_star', '>', 0.0),  # Activation within observation window
+        ('tilde_t_on_star', '<', 0.5),  # Early enough to complete cycle (50% of timeline)
+        ('tilde_delta_star', '<', 0.4), # Short pulse duration (40% of timeline)
+        ('R_on', '>', 2.0),             # Sufficient fold change to observe
     ],
     'sustained': [
-        ('R_on', '>', 2.0), ('t_on_star', '>', 0.0),
-        ('t_on_star', '<', 0.3), ('delta_star', '>', 0.5)
+        ('tilde_t_on_star', '>', 0.0),  # Activation within observation window
+        ('tilde_t_on_star', '<', 0.3),  # Early activation onset (30% of timeline)
+        ('tilde_delta_star', '>', 0.5), # Long activation duration (50% of timeline)
+        ('R_on', '>', 2.0),             # Strong fold change
     ]
 }
 
@@ -1070,7 +1068,7 @@ for pattern_name, constraints in patterns.items():
     for param, op, threshold in constraints:
         prior = priors[param]
 
-        if param == 't_on_star':  # Normal distribution
+        if param == 'tilde_t_on_star':  # Normal distribution
             prob = calculate_normal_cdf_probability(
                 prior['loc'], prior['scale'], threshold, upper=(op == '>')
             )
@@ -1248,7 +1246,7 @@ In the PGM above, we use simplified notation for visual clarity:
 - The hyperparameters $\mu_{\Delta}, \sigma_{\Delta}^2$ represent the collection of hyperparameters for all components of $\Delta_i$
 - The absolute timing parameters $t^*_{0,\text{on}i} = T_{M}^* \times \tilde{t}^*_{0,\text{on}i}$ and $\delta^*_i = T_{M}^* \times \tilde{\delta}^*_i$ are computed deterministically
 - $\alpha^*_{\text{off}i} = 1.0$ is fixed and not shown as a random variable
-- **Key edge**: $T_{M}^* \rightarrow \Delta_i$ represents the scaling relationship for all temporal parameters
+- $T_{M}^* \rightarrow \Delta_i$ represents the scaling relationship for all temporal parameters
 
 **Detailed priors for constrained piecewise activation parameters:**
 
@@ -1272,24 +1270,40 @@ The priors are designed to encode biologically reasonable parameter ranges while
     \delta^*_i &= T_{M}^* \times \tilde{\delta}^*_i \quad \text{(absolute activation duration)}
 \end{align}
 
+**Pattern classification framework**: The three expression patterns are defined by constraints on the relative temporal parameters:
+
+- **Pre-activation**: $\tilde{t}^*_{0,\text{on}i} < 0.0$ and $R_{\text{on},i} > 2.0$
+- **Transient**: $0.0 < \tilde{t}^*_{0,\text{on}i} < 0.5$, $\tilde{\delta}^*_i < 0.4$, and $R_{\text{on},i} > 2.0$
+- **Sustained**: $0.0 < \tilde{t}^*_{0,\text{on}i} < 0.3$, $\tilde{\delta}^*_i > 0.5$, and $R_{\text{on},i} > 2.0$
+
 **Biological interpretation of prior choices:**
 
 **Non-temporal parameters:**
+
 - **$\gamma^*_i \sim \text{LogNormal}(\log(1.0), 0.5^2)$**: Centers relative degradation around 1 (balanced splicing/degradation), with 95% of values between ~0.37 and ~2.7.
 
 - **$R_{\text{on},i} \sim \text{LogNormal}(\log(2.5), 0.4^2)$**: Centers fold-change at 2.5× during activation, with 95% between ~1.5 and ~4.2.
 
 **Relative temporal parameters:**
-- **$\tilde{t}^*_{0,\text{on}i} \sim \text{Normal}(0.5, 0.8^2)$**: Centers relative activation onset at 50% through the process timeline, with 95% between approximately -1.1 and +2.1. **Negative values** enable pre-activation scenarios.
 
-- **$\tilde{\delta}^*_i \sim \text{LogNormal}(\log(0.45), 0.45^2)$**: Centers relative activation duration at 45% of the process timeline, with 95% between ~0.18 and ~1.13.
+- **$\tilde{t}^*_{0,\text{on}i} \sim \text{Normal}(0.5, 0.8^2)$**: Centers relative activation onset at 50% through the process timeline, with 95% between approximately -1.1 and +2.1. **Negative values** enable pre-activation scenarios where genes were already activated before observation began.
+
+- **$\tilde{\delta}^*_i \sim \text{LogNormal}(\log(0.45), 0.45^2)$**: Centers relative activation duration at 45% of the process timeline, with 95% between ~0.18 and ~1.13. This enables both transient (short duration) and sustained (long duration) activation patterns.
+
+**Pattern classification implications:**
+
+- **Pre-activation** ($\tilde{t}^*_{0,\text{on}i} < 0$): ~26.6% probability under the prior
+- **Transient** ($0 < \tilde{t}^*_{0,\text{on}i} < 0.5$ and $\tilde{\delta}^*_i < 0.4$): Balanced probability for observable complete cycles
+- **Sustained** ($0 < \tilde{t}^*_{0,\text{on}i} < 0.3$ and $\tilde{\delta}^*_i > 0.5$): Balanced probability for long-duration activation
 
 **Temporal scaling transformation:**
+
 - **Absolute onset**: $t^*_{0,\text{on}i} = T_{M}^* \times \tilde{t}^*_{0,\text{on}i}$ scales relative onset to absolute time
 - **Absolute duration**: $\delta^*_i = T_{M}^* \times \tilde{\delta}^*_i$ scales relative duration to absolute time
 - **Dimensional consistency**: All temporal comparisons now use consistently scaled absolute times
 
 **Parameter interpretation benefits:**
+
 - **Separation of concerns**: Non-temporal kinetics ($\theta_i$) vs temporal patterns ($\Delta_i$)
 - **Scale invariance**: Relative temporal patterns are independent of absolute time scale
 - **Biological realism**: Global time scale $T_{M}^*$ sets the pace for the entire process
@@ -1342,11 +1356,13 @@ The dimensionless concentrations are computed using the analytical solutions for
 
 #### **Rich Expression Pattern Representation**
 
-- **Activation genes**: Transition from baseline to high expression during observation
-- **Pre-activation genes**: Already activated before observation, showing high initial expression
-- **Decay genes**: Start high, remain high (no activation within observation window)
-- **Transient genes**: Brief activation followed by return to baseline
-- **Sustained genes**: Long-duration activation
+The framework captures three core expression patterns that encompass the full range of biologically relevant temporal dynamics:
+
+- **Pre-activation genes**: Already activated before observation, showing decay-only dynamics from activated steady-state
+- **Transient genes**: Complete activation-decay cycles within observation window, exhibiting pulse-like dynamics
+- **Sustained genes**: Early activation with long duration, showing net increase over observation period
+
+**Pattern coverage**: These three patterns effectively capture the essential temporal dynamics while eliminating redundant classifications. The relative temporal parameterization ensures consistent pattern identification across different experimental timescales.
 
 #### **Analytical Tractability**
 
@@ -1364,13 +1380,126 @@ The dimensionless concentrations are computed using the analytical solutions for
 
 This study will validate the constrained model's ability to:
 
-1. **Recover constrained piecewise parameters**: $\gamma^*_i$, $R_{\text{on},i}$, $t^*_{0,\text{on}i}$, $\delta^*_i$
-2. **Handle pre-activation scenarios**: Correctly infer negative onset times and their biological implications
-3. **Distinguish enhanced expression patterns**: Classify genes across all five patterns including pre-activation
-4. **Maintain hierarchical time inference**: Recover population-level temporal parameters
+1. **Recover constrained piecewise parameters**: $\gamma^*_i$, $R_{\text{on},i}$, $\tilde{t}^*_{0,\text{on}i}$, $\tilde{\delta}^*_i$
+2. **Handle pre-activation scenarios**: Correctly infer negative relative onset times and their biological implications
+3. **Distinguish expression patterns**: Classify genes across the three core patterns (pre-activation, transient, sustained)
+4. **Maintain hierarchical time inference**: Recover population-level temporal parameters ($T_M^*$, $t_{loc}$, $t_{scl}$)
 5. **Handle realistic noise levels**: Maintain accuracy with Poisson observation noise
 6. **Scale efficiently**: Demonstrate computational advantages of reduced parameter space
 7. **Validate fold-change interpretation**: Ensure $R_{\text{on},i}$ estimates match true activation strength
-8. **Assess dimensional consistency**: Verify elimination of parameter redundancy issues
-9. **Validate temporal parameter scaling**: Ensure $T_{M}^*$ scaling correctly propagates to absolute timing parameters
-10. **Assess parameter separation**: Verify clean separation between kinetic and temporal parameter inference
+8. **Assess dimensional consistency**: Verify elimination of parameter redundancy through fixed $\alpha^*_{\text{off}i} = 1.0$
+9. **Validate temporal parameter scaling**: Ensure $T_{M}^*$ scaling correctly propagates from relative to absolute timing parameters
+10. **Assess parameter separation**: Verify clean separation between kinetic ($\gamma^*_i$, $R_{\text{on},i}$) and temporal ($\tilde{t}^*_{0,\text{on}i}$, $\tilde{\delta}^*_i$) parameter inference
+11. **Validate relative parameter framework**: Confirm that relative temporal parameters enable consistent pattern classification across different experimental timescales
+12. **Assess pattern coverage**: Verify that the three-pattern framework adequately captures the diversity of gene expression dynamics in real biological systems
+
+### Parameter Recovery Validation Implementation
+
+The following example demonstrates the user-facing API for performing parameter recovery validation with the piecewise activation model:
+
+```{python}
+#| label: piecewise-activation-validation
+#| code-fold: true
+#| code-summary: "Show/Hide Code"
+#| eval: false
+
+# Create the piecewise activation model
+model = create_piecewise_activation_model()
+
+print(f"Created piecewise activation model: {model}")
+print(f"Model components:")
+print(f"  Dynamics: {model.dynamics_model}")
+print(f"  Prior: {model.prior_model}")
+print(f"  Likelihood: {model.likelihood_model}")
+print(f"  Guide: {model.guide_model}")
+
+# Generate prior predictive data with known true parameters
+print(f"\nGenerating prior predictive data for validation...")
+prior_predictive_adata = model.generate_predictive_samples(
+    num_cells=200,
+    num_genes=100,
+    num_samples=1,
+    return_format="anndata"
+)
+
+print(f"Prior predictive data generated:")
+print(f"  Cells: {prior_predictive_adata.n_obs}")
+print(f"  Genes: {prior_predictive_adata.n_vars}")
+print(f"  Layers: {list(prior_predictive_adata.layers.keys())}")
+
+# Extract true parameters for validation
+true_parameters = prior_predictive_adata.uns.get('true_parameters', {})
+print(f"\nTrue parameters available for validation:")
+for key in sorted(true_parameters.keys()):
+    if key.startswith(('R_on', 'tilde_t_on', 'tilde_delta', 't_on', 'delta', 'gamma_star', 'T_M_star')):
+        param_value = true_parameters[key]
+        if hasattr(param_value, 'shape') and param_value.size > 1:
+            print(f"  {key}: shape {param_value.shape}, range [{param_value.min():.3f}, {param_value.max():.3f}]")
+        else:
+            print(f"  {key}: {param_value:.3f}")
+
+# Analyze pattern distribution in generated data
+print(f"\nPattern analysis of generated genes:")
+if 'tilde_t_on_star' in true_parameters and 'tilde_delta_star' in true_parameters:
+    tilde_t_on = true_parameters['tilde_t_on_star']
+    tilde_delta = true_parameters['tilde_delta_star']
+    R_on = true_parameters['R_on']
+
+    # Count genes in each pattern
+    pre_activation = (tilde_t_on < 0.0) & (R_on > 2.0)
+    transient = (tilde_t_on > 0.0) & (tilde_t_on < 0.5) & (tilde_delta < 0.4) & (R_on > 2.0)
+    sustained = (tilde_t_on > 0.0) & (tilde_t_on < 0.3) & (tilde_delta > 0.5) & (R_on > 2.0)
+
+    print(f"  Pre-activation: {pre_activation.sum()} genes ({pre_activation.mean()*100:.1f}%)")
+    print(f"  Transient: {transient.sum()} genes ({transient.mean()*100:.1f}%)")
+    print(f"  Sustained: {sustained.sum()} genes ({sustained.mean()*100:.1f}%)")
+    print(f"  Other patterns: {(~(pre_activation | transient | sustained)).sum()} genes")
+
+# Train model on prior predictive data (parameter recovery)
+print(f"\nTraining model for parameter recovery...")
+trained_model = model.train(
+    adata=prior_predictive_adata,
+    max_epochs=1000,  # Reduced for demonstration
+    learning_rate=0.01,
+    early_stopping=True,
+    early_stopping_patience=10,
+    use_gpu="auto",
+    seed=42
+)
+
+# Generate posterior samples from trained model
+print(f"\nGenerating posterior samples...")
+posterior_samples = trained_model.generate_posterior_samples(
+    adata=prior_predictive_adata,
+    num_samples=30,
+    seed=42,
+    return_tensors=True
+)
+
+print(f"Posterior samples generated:")
+for key in sorted(posterior_samples.keys()):
+    if key.startswith(('R_on', 'tilde_t_on', 'tilde_delta', 't_on', 'delta', 'gamma_star', 'T_M_star')):
+        param_shape = posterior_samples[key].shape if hasattr(posterior_samples[key], 'shape') else len(posterior_samples[key])
+        print(f"  {key}: {param_shape}")
+
+print(f"\nParameter recovery validation completed!")
+print(f"This demonstrates the complete workflow from:")
+print(f"  1. Model creation with create_piecewise_activation_model()")
+print(f"  2. Prior predictive data generation with known parameters")
+print(f"  3. Model training on synthetic data")
+print(f"  4. Posterior sampling for parameter recovery assessment")
+print(f"  5. Comparison of true vs recovered parameters")
+print(f"  6. Pattern classification analysis with 3-pattern framework")
+```
+
+This validation workflow demonstrates the key capabilities of the piecewise activation model:
+
+- **Analytical tractability**: Fast likelihood evaluation enables efficient parameter recovery validation
+- **Rich parameter space**: Includes fold-change parameters, relative temporal parameters, and hierarchical time structure
+- **Pre-activation modeling**: Supports negative onset times for genes already activated before observation
+- **Dimensional consistency**: Eliminates parameter redundancy through fixed reference state parameterization
+- **Biological interpretability**: All parameters have clear biological meaning and interpretable ranges
+- **Coarse-grained expression pattern classification**: Classification of temporal expression patterns covering pre-activation, transient, and sustained that should all be able to be generated by the prior and prior predictive in order to ensure the ability to represent the expected collection of expression patterns in the underlying data
+- **Relative temporal parameterization**: Enables interpretable parameter values and consistent pattern classification across different experimental timescales and even distinct data sets
+
+The complete validation scripts referenced in the introduction (`prior-predictive-check.py` and `posterior-predictive-check.py`) provide comprehensive parameter recovery validation including visualization and statistical assessment of recovery performance.
