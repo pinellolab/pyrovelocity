@@ -105,35 +105,6 @@ This model extends the latent time framework with piecewise constant transcripti
 - **Observation Model**: Same Poisson scaling with characteristic scales and capture efficiency
 - **Likelihood**: Poisson
 
-## Parameter Recovery Validation Framework
-
-```{python}
-#| label: setup-imports
-#| code-fold: true
-
-import numpy as np
-import torch
-import pyro
-import matplotlib.pyplot as plt
-import seaborn as sns
-from pathlib import Path
-
-# PyroVelocity imports
-from pyrovelocity.models.modular.factory import (
-    create_piecewise_activation_model,
-    create_legacy_model2,
-)
-# from pyrovelocity.models.modular.components.validation import (
-#     ParameterRecoveryConfig,
-# )
-from pyrovelocity.io.datasets import bifurcation_14
-
-# Set random seeds for reproducibility
-torch.manual_seed(42)
-pyro.set_rng_seed(42)
-np.random.seed(42)
-```
-
 ## Dimensionless analytical dynamics with observed time {#sec-dimless-observed-time}
 
 This validation study focuses on the **direct dimensionless approach** that naturally avoids identifiability issues while maintaining biological interpretability. We follow the theoretical foundation from our [Probabilistic inference in dynamical systems](../inferenceindynamicalsystems/index.qmd) concept guide, implementing hierarchical priors on characteristic scales and lumped effective capture efficiency.
