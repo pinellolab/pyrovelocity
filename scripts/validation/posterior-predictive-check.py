@@ -5,12 +5,14 @@ import scanpy as sc
 
 from pyrovelocity.models.modular.factory import create_piecewise_activation_model
 from pyrovelocity.plots.predictive_checks import (
+    plot_prior_predictive_checks,
     plot_posterior_predictive_checks,
 )
 from pyrovelocity.utils import print_anndata
 
 
 RANDOM_SEED = 42
+REPORTS_SAVE_PATH="reports/docs/posterior_predictive"
 
 torch.manual_seed(RANDOM_SEED)
 pyro.set_rng_seed(RANDOM_SEED)
@@ -19,6 +21,7 @@ np.random.seed(RANDOM_SEED)
 print("=" * 50)
 print("🚀 Posterior Predictive Check Workflow")
 print("=" * 50)
+
 
 # Step 1: Create model
 model = create_piecewise_activation_model()
@@ -30,7 +33,8 @@ print(f"  Prior: {model.prior_model}")
 print(f"  Likelihood: {model.likelihood_model}")
 print(f"  Guide: {model.guide_model}")
 
-# Step 2: Generate prior predictive data with known true parameters
+
+# Step 2: Generate synthetic data with known true parameters from prior
 print(f"\n📊 Generating prior predictive data (seed: {RANDOM_SEED})...")
 prior_predictive_adata = model.generate_predictive_samples(
     num_cells=200,
@@ -47,6 +51,26 @@ sc.tl.leiden(prior_predictive_adata, random_state=RANDOM_SEED)
 print("✅ Prior predictive data generated:")
 print_anndata(prior_predictive_adata)
 
+# Extract parameters for plotting functions
+prior_parameter_samples = {}
+if "true_parameters" in prior_predictive_adata.uns:
+    for key, value in prior_predictive_adata.uns['true_parameters'].items():
+        prior_parameter_samples[key] = torch.tensor(value) if not isinstance(value, torch.Tensor) else value
+
+fig_prior = plot_prior_predictive_checks(
+    model=model,
+    prior_adata=prior_predictive_adata,
+    prior_parameters=prior_parameter_samples,
+    figsize=(7.5, 5.0),
+    save_path=f"{REPORTS_SAVE_PATH}/{RANDOM_SEED}/sample_data",
+    figure_name=f"posterior_predictive_check_sample_data_{RANDOM_SEED}",
+    combine_individual_pdfs=True,
+    default_fontsize=5,
+    num_genes=10,
+    true_parameters_adata=prior_predictive_adata,
+)
+
+
 # Step 3: Train model on prior predictive data
 print(f"\n🎯 Training model on prior predictive data...")
 
@@ -60,6 +84,7 @@ trained_model = model.train(
     seed=RANDOM_SEED
 )
 print("✅ Model training completed")
+
 
 # Step 4: Generate posterior samples from trained model
 print(f"\n🔬 Generating posterior samples from trained model...")
@@ -76,6 +101,7 @@ print(f"✅ Generated {len(posterior_parameter_samples)} types of posterior para
 for key in sorted(posterior_parameter_samples.keys()):
     param_shape = posterior_parameter_samples[key].shape if hasattr(posterior_parameter_samples[key], 'shape') else len(posterior_parameter_samples[key])
     print(f"    {key}: {param_shape}")
+
 
 # Step 5: Generate posterior predictive data using posterior samples
 print(f"\n📊 Generating posterior predictive data...")
@@ -116,14 +142,13 @@ sc.pp.neighbors(posterior_predictive_adata, n_neighbors=10, random_state=RANDOM_
 
 # Step 6: Generate posterior predictive check plots
 print(f"\n🎨 Creating posterior predictive check plots...")
-REPORTS_SAVE_PATH="reports/docs/posterior_predictive"
 
 fig_posterior = plot_posterior_predictive_checks(
     model=trained_model,
     posterior_adata=posterior_predictive_adata,
     posterior_parameters=posterior_parameter_samples,
     figsize=(7.5, 5.0),
-    save_path=REPORTS_SAVE_PATH,
+    save_path=f"{REPORTS_SAVE_PATH}/{RANDOM_SEED}",
     figure_name=f"piecewise_activation_posterior_checks_{RANDOM_SEED}",
     combine_individual_pdfs=True,
     default_fontsize=5,
