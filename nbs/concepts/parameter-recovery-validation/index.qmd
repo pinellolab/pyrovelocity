@@ -737,7 +737,7 @@ The hierarchical time structure introduces new parameters with clear biological 
 
 ## Dimensionless Analytical Dynamics with Latent Time and Piecewise Activation {#sec-dimless-latent-piecewise}
 
-This validation study introduces **piecewise constant transcription rates** while maintaining analytical tractability and resolving critical dimensional analysis inconsistencies identified in the piecewise activation framework. The key innovation is a **dimensionally consistent parameterization** that eliminates parameter redundancy by fixing the reference transcription state, while maintaining biological interpretability through fold-change parameters.
+This validation study introduces **piecewise constant transcription rates** while maintaining analytical tractability and resolving critical dimensional analysis inconsistencies identified in the piecewise activation framework. The key innovation is a **dimensionally consistent parameterization** that eliminates parameter redundancy by fixing the reference transcription state, while maintaining biological interpretability through fold-change parameters. Additionally, this study implements a **process duration with stick-breaking** temporal framework that eliminates scaling symmetry and achieves parameter identifiability while preserving all analytical and computational advantages.
 
 ### Model Description
 
@@ -884,18 +884,39 @@ u^*_{ij}(\tau_{\text{off}}) &= 1.0 + (u^*_{\text{off},0i} - 1.0) e^{-\tau_{\text
 s^*_{ij}(\tau_{\text{off}}) &= 1.0 + (s^*_{\text{off},0i} - 1.0) e^{-\tau_{\text{off}}} + (u^*_{\text{off},0i} - 1.0) \tau_{\text{off}} e^{-\tau_{\text{off}}}
 \end{align}
 
-### Gene Expression Pattern Classification
+### Process Duration with Stick-Breaking Framework
 
-This piecewise framework enables representation of diverse gene expression patterns through specific parameter combinations. Each pattern is defined by quantitative parameter ranges applied to **relative temporal parameters** that create distinct temporal dynamics when scaled by the global time parameter $T_M^*$.
+This study implements a **process duration with stick-breaking** approach that eliminates the scaling symmetry present in hierarchical temporal scaling while maintaining all analytical and biological advantages. The key innovation is the use of **fixed anchor points** that break scaling symmetry and achieve parameter identifiability.
 
-**Parameter Framework**: The classification uses relative temporal parameters ($\tilde{t}^*_{0,\text{on}i}$, $\tilde{\delta}^*_i$) that are scaled by the global maximum time $T_M^*$ to produce absolute temporal parameters:
+#### **Elimination of Scaling Symmetry**
+
+The previous hierarchical scaling approach suffered from fundamental **scaling symmetry** that prevented parameter identifiability:
+
+$$\mathcal{L}(T_M^*, \{t^*_j\}, \{t^*_{0,\text{on}i}\}, \{\delta^*_i\}) = \mathcal{L}(\lambda T_M^*, \{\lambda t^*_j\}, \{\lambda t^*_{0,\text{on}i}\}, \{\lambda \delta^*_i\})$$
+
+for any $\lambda > 0$. This symmetry creates non-identifiable parameters and leads to catastrophic validation failures.
+
+#### **Fixed Anchor Point Solution**
+
+The stick-breaking approach eliminates scaling symmetry through **fixed anchor points**:
 
 \begin{align}
-t^*_{0,\text{on}i} &= T_M^* \times \tilde{t}^*_{0,\text{on}i} \quad \text{(absolute activation onset time)} \\
-\delta^*_i &= T_M^* \times \tilde{\delta}^*_i \quad \text{(absolute activation duration)}
+t^*_1 &= 0 \quad \text{(process start, fixed)} \\
+t^*_N &= T_{\max} \quad \text{(process end, sampled)} \\
+t^*_{0,\text{on}i} &\sim \text{Normal}(\mu_{\text{on}}, \sigma_{\text{on}}^2) \quad \text{(independent gene timing)} \\
+\delta^*_i &\sim \text{LogNormal}(\mu_{\delta}, \sigma_{\delta}^2) \quad \text{(independent gene duration)}
 \end{align}
 
-This hierarchical structure separates global temporal scaling from gene-specific temporal patterns, enabling consistent pattern classification across different experimental timescales.
+**Identifiability proof**: For any $\lambda \neq 1$:
+$$\mathcal{L}(T_{\max}, \{t^*_j\}, \{t^*_{0,\text{on}i}\}, \{\delta^*_i\}) \neq \mathcal{L}(\lambda T_{\max}, \{\lambda t^*_j\}, \{t^*_{0,\text{on}i}\}, \{\delta^*_i\})$$
+
+The fixed anchor $t^*_1 = 0$ cannot be scaled, and gene parameters are independent of $T_{\max}$, breaking the symmetry.
+
+### Gene Expression Pattern Classification
+
+This framework enables representation of diverse gene expression patterns through specific parameter combinations. Each pattern is defined by quantitative parameter ranges applied to **absolute temporal parameters** within the process duration framework.
+
+**Parameter Framework**: The classification uses absolute temporal parameters that are independent of the process duration $T_{\max}$, enabling robust pattern identification across different experimental timescales.
 
 #### **Pre-Activation Patterns**
 
@@ -903,62 +924,62 @@ This hierarchical structure separates global temporal scaling from gene-specific
 
 **Parameter specifications**:
 
-- $\tilde{t}^*_{0,\text{on}i} < 0.0$ (relative activation onset before observation window)
+- $t^*_{0,\text{on}i} < 0.0$ (activation onset before process start)
 - $R_{\text{on},i} > 2.0$ (moderate to strong fold-change during activation)
 
-**Biological interpretation**: These genes underwent activation before the experimental observation window. During the observed period, they exhibit decay-only dynamics as they return toward baseline expression levels. The negative relative onset time indicates that activation occurred in the "past" relative to the observation start.
+**Biological interpretation**: These genes underwent activation before the biological process under study began ($t^* = 0$). During the observed period, they exhibit decay-only dynamics as they return toward baseline expression levels. The negative onset time indicates that activation occurred before the process boundary.
 
 **Biological examples**: Early developmental genes, maternal transcripts during development, lineage commitment factors established before observation, stress response genes in ongoing stress conditions
 
 #### **Transient Activation Patterns**
 
-**Characteristics**: Genes that show complete activation-decay cycles within the observation window, exhibiting brief, pulse-like activation followed by return toward baseline.
+**Characteristics**: Genes that show complete activation-decay cycles within the process duration, exhibiting brief, pulse-like activation followed by return toward baseline.
 
 **Parameter specifications**:
 
-- $\tilde{t}^*_{0,\text{on}i} > 0.0$ (relative activation within observation window)
-- $\tilde{t}^*_{0,\text{on}i} < 0.5$ (activation early enough to complete cycle within 50% of timeline)
-- $\tilde{\delta}^*_i < 0.4$ (short activation duration, 40% of timeline or less)
+- $t^*_{0,\text{on}i} > 0.0$ (activation within process duration)
+- $t^*_{0,\text{on}i} < 2.5$ (activation early enough to complete cycle within process)
+- $\delta^*_i < 2.0$ (short activation duration relative to process)
 - $R_{\text{on},i} > 2.0$ (sufficient fold-change to observe activation)
 
-**Biological interpretation**: These genes activate early enough and for a short enough duration that the complete activation-decay cycle is observable within the experimental window. The constraints ensure that both the activation and subsequent decay phases are captured.
+**Biological interpretation**: These genes activate early enough and for a short enough duration that the complete activation-decay cycle is observable within the process duration. The constraints ensure that both the activation and subsequent decay phases are captured within the temporal boundaries.
 
 **Biological examples**: Immediate early genes, signaling molecules, transient developmental regulators, cell cycle checkpoint genes, acute stress response genes
 
 #### **Sustained Activation Patterns**
 
-**Characteristics**: Genes that become activated early and remain highly expressed throughout most of the observation period, showing net increase over the observation window.
+**Characteristics**: Genes that become activated early and remain highly expressed throughout most of the process duration, showing net increase over the process timeline.
 
 **Parameter specifications**:
 
-- $\tilde{t}^*_{0,\text{on}i} > 0.0$ (relative activation within observation window)
-- $\tilde{t}^*_{0,\text{on}i} < 0.3$ (early activation onset within 30% of timeline)
-- $\tilde{\delta}^*_i > 0.5$ (long activation duration, more than 50% of timeline)
+- $t^*_{0,\text{on}i} > 0.0$ (activation within process duration)
+- $t^*_{0,\text{on}i} < 1.5$ (early activation onset within process)
+- $\delta^*_i > 2.5$ (long activation duration relative to process)
 - $R_{\text{on},i} > 2.0$ (strong fold-change during activation)
 
-**Biological interpretation**: These genes activate early in the observation window and maintain high expression levels throughout most of the observed period. The long activation duration relative to the observation window means that decay back to baseline is either minimal or occurs beyond the observation period.
+**Biological interpretation**: These genes activate early in the process and maintain high expression levels throughout most of the process duration. The long activation duration means that decay back to baseline is either minimal or occurs beyond the process endpoint.
 
 **Biological examples**: Lineage-specific transcription factors, structural proteins, metabolic enzymes, terminal differentiation markers, long-term stress adaptation genes
 
 ### Mathematical Framework for Pre-Activation Scenarios
 
-The Normal prior for onset times enables modeling of **pre-activation scenarios** where genes are already activated when observation begins. This extension is mathematically valid and biologically realistic:
+The Normal prior for onset times enables modeling of **pre-activation scenarios** where genes are already activated when the biological process begins. This extension is mathematically valid and biologically realistic:
 
 #### **Mathematical Validity of Negative Onset Times**
 
 When $t^*_{0,\text{on}i} < 0$:
 
-1. **Phase determination remains consistent**: For any observed time $t^* \geq 0$, we can still determine which phase applies by comparing $t^*$ to $t^*_{0,\text{on}i}$ and $t^*_{0,\text{on}i} + \delta^*_i$
+1. **Phase determination remains consistent**: For any process time $t^* \geq 0$, we can still determine which phase applies by comparing $t^*$ to $t^*_{0,\text{on}i}$ and $t^*_{0,\text{on}i} + \delta^*_i$
 
 2. **Analytical solutions remain valid**: All exponential solutions are well-defined for negative onset times
 
-3. **Biological interpretation is clear**: Negative onset simply means activation occurred before the observation window
+3. **Biological interpretation is clear**: Negative onset simply means activation occurred before the process start ($t^* = 0$)
 
 #### **Implementation Considerations**
 
-- **Phase 1 may be unobserved**: If $t^*_{0,\text{on}i} < 0$, no observed cells will be in Phase 1
+- **Phase 1 may be unobserved**: If $t^*_{0,\text{on}i} < 0$, no cells will be in Phase 1 during the process
 - **Phase 2 starts immediately**: Cells at $t^* = 0$ may already be in the activated state
-- **Duration constraints**: For pre-activation genes, $\delta^*_i > |t^*_{0,\text{on}i}|$ ensures activation extends into the observation window
+- **Duration constraints**: For pre-activation genes, $\delta^*_i > |t^*_{0,\text{on}i}|$ ensures activation extends into the process duration
 
 ### Constraint Feasibility Analysis and Optimization
 
@@ -1003,29 +1024,29 @@ def calculate_normal_cdf_probability(loc, scale, threshold, upper=True):
     else:
         return stats.norm.cdf(threshold, loc=loc, scale=scale)
 
-# Prior hyperparameters (updated for relative temporal parameterization)
+# Prior hyperparameters (updated for absolute temporal parameterization)
 priors = {
     'R_on': {'loc': 0.916, 'scale': 0.4},              # log(2.5), fold-change (LogNormal)
-    'tilde_t_on_star': {'loc': 0.5, 'scale': 0.8},     # Normal(0.5, 0.8²), relative onset (allows negatives)
-    'tilde_delta_star': {'loc': -0.8, 'scale': 0.45},  # log(0.45), relative duration (LogNormal)
+    't_on_star': {'loc': 2.5, 'scale': 1.5},           # Normal(2.5, 1.5²), absolute onset (allows negatives)
+    'delta_star': {'loc': 0.0, 'scale': 0.5},          # log(1.0), absolute duration (LogNormal)
 }
 
-# Calculate constraint feasibility for each pattern (updated to match script implementation)
+# Calculate constraint feasibility for each pattern (updated for absolute parameterization)
 patterns = {
     'pre_activation': [
-        ('tilde_t_on_star', '<', 0.0),  # Activation before observation window
+        ('t_on_star', '<', 0.0),        # Activation before process start
         ('R_on', '>', 2.0),             # Moderate to strong fold change
     ],
     'transient': [
-        ('tilde_t_on_star', '>', 0.0),  # Activation within observation window
-        ('tilde_t_on_star', '<', 0.5),  # Early enough to complete cycle (50% of timeline)
-        ('tilde_delta_star', '<', 0.4), # Short pulse duration (40% of timeline)
+        ('t_on_star', '>', 0.0),        # Activation within process duration
+        ('t_on_star', '<', 2.5),        # Early enough to complete cycle
+        ('delta_star', '<', 2.0),       # Short pulse duration
         ('R_on', '>', 2.0),             # Sufficient fold change to observe
     ],
     'sustained': [
-        ('tilde_t_on_star', '>', 0.0),  # Activation within observation window
-        ('tilde_t_on_star', '<', 0.3),  # Early activation onset (30% of timeline)
-        ('tilde_delta_star', '>', 0.5), # Long activation duration (50% of timeline)
+        ('t_on_star', '>', 0.0),        # Activation within process duration
+        ('t_on_star', '<', 1.5),        # Early activation onset
+        ('delta_star', '>', 2.5),       # Long activation duration
         ('R_on', '>', 2.0),             # Strong fold change
     ]
 }
@@ -1037,7 +1058,7 @@ for pattern_name, constraints in patterns.items():
     for param, op, threshold in constraints:
         prior = priors[param]
 
-        if param == 'tilde_t_on_star':  # Normal distribution
+        if param == 't_on_star':  # Normal distribution
             prob = calculate_normal_cdf_probability(
                 prior['loc'], prior['scale'], threshold, upper=(op == '>')
             )
@@ -1054,7 +1075,7 @@ for pattern_name, constraints in patterns.items():
 
 ### Probabilistic Graphical Model
 
-The probabilistic graphical model extends Study 2 by adding gene-specific piecewise activation parameters while maintaining the hierarchical latent time structure. For visual clarity, we use $\theta_i$ to represent the vector of non-temporal piecewise activation parameters $(\gamma^*_i, R_{\text{on},i})$ and $\Delta_i$ to represent the vector of relative temporal gene parameters $(\tilde{t}^*_{0,\text{on}i}, \tilde{\delta}^*_i)$. Note that $\alpha^*_{\text{off}i} = 1.0$ is fixed and not shown as a random variable.
+The probabilistic graphical model implements the process duration with stick-breaking framework while adding gene-specific piecewise activation parameters. For visual clarity, we use $\theta_i$ to represent the vector of non-temporal piecewise activation parameters $(\gamma^*_i, R_{\text{on},i})$ and $\Delta_i$ to represent the vector of absolute temporal gene parameters $(t^*_{0,\text{on}i}, \delta^*_i)$. Note that $\alpha^*_{\text{off}i} = 1.0$ is fixed and not shown as a random variable.
 
 ```{python}
 #| label: fig-piecewise-activation-pgm
@@ -1078,31 +1099,25 @@ pgm.add_node("sigma_Delta", r"$\sigma_{\Delta}^2$", 3.5, 6, fixed=True)
 pgm.add_node("mu_U0", r"$\mu_{U_0}$", 4.5, 6, fixed=True)
 pgm.add_node("sigma_U0", r"$\sigma_{U_0}^2$", 5, 6, fixed=True)
 
-# hyperparameters for hierarchical time structure
+# hyperparameters for process duration
 pgm.add_node("alpha_T", r"$\alpha_{T}$", 5.5, 6, fixed=True)
 pgm.add_node("beta_T", r"$\beta_{T}$", 6, 6, fixed=True)
-pgm.add_node("alpha_t_loc", r"$\alpha_{t_{loc}}$", 6.5, 6, fixed=True)
-pgm.add_node("beta_t_loc", r"$\beta_{t_{loc}}$", 7, 6, fixed=True)
-pgm.add_node("alpha_t_scale", r"$\alpha_{t_{scl}}$", 7.5, 6, fixed=True)
-pgm.add_node("beta_t_scale", r"$\beta_{t_{scl}}$", 8, 6, fixed=True)
 
 # hyperparameters for lambda (entering from right edge of cell plate)
-pgm.add_node("mu_lambda", r"$\mu_{\lambda}$", 6.5, 3.5, fixed=True)
-pgm.add_node("sigma_lambda", r"$\sigma_{\lambda}^2$", 6.5, 2.5, fixed=True)
+pgm.add_node("mu_lambda", r"$\mu_{\lambda}$", 7.5, 3.5, fixed=True)
+pgm.add_node("sigma_lambda", r"$\sigma_{\lambda}^2$", 7.5, 2.5, fixed=True)
 
 # latent variables for gene-specific parameters
 pgm.add_node("theta_i", r"$\theta_i$", 1, 5)
 pgm.add_node("Delta_i", r"$\Delta_i$", 3, 5)
 pgm.add_node("U_0i", r"$U_{0i}$", 4.5, 5)
 
-# hierarchical time parameters (moved further left)
-pgm.add_node("T_max_star", r"$T_{M}^*$", 5.5, 5)
-pgm.add_node("t_loc", r"$t_{loc}$", 6.25, 5)
-pgm.add_node("t_scale", r"$t_{scl}$", 7, 5)
+# process duration parameter (replaces hierarchical time scaling)
+pgm.add_node("T_max", r"$T_{\max}$", 5.5, 5)
 
-# latent time coordinates and cell-specific parameters (moved further left, lambda enters from right)
+# stick-breaking cell times and cell-specific parameters
 pgm.add_node("t_star_j", r"$t^{\ast}_j$", 5.5, 4)
-pgm.add_node("lambda_j", r"$\lambda_j$", 5.5, 3)
+pgm.add_node("lambda_j", r"$\lambda_j$", 6.5, 3)
 
 # latent variables for cell-specific outcomes (centered between rows)
 pgm.add_node(
@@ -1153,20 +1168,12 @@ pgm.add_edge("sigma_U0", "U_0i", plot_params=edge_params)
 pgm.add_edge("mu_lambda", "lambda_j", plot_params=edge_params)
 pgm.add_edge("sigma_lambda", "lambda_j", plot_params=edge_params)
 
-# hierarchical time structure edges
-pgm.add_edge("alpha_T", "T_max_star", plot_params=edge_params)
-pgm.add_edge("beta_T", "T_max_star", plot_params=edge_params)
-pgm.add_edge("alpha_t_loc", "t_loc", plot_params=edge_params)
-pgm.add_edge("beta_t_loc", "t_loc", plot_params=edge_params)
-pgm.add_edge("alpha_t_scale", "t_scale", plot_params=edge_params)
-pgm.add_edge("beta_t_scale", "t_scale", plot_params=edge_params)
+# process duration edges
+pgm.add_edge("alpha_T", "T_max", plot_params=edge_params)
+pgm.add_edge("beta_T", "T_max", plot_params=edge_params)
 
-# time hierarchy edges
-pgm.add_edge("T_max_star", "t_star_j", plot_params=edge_params)
-pgm.add_edge("t_loc", "t_star_j", plot_params=edge_params)
-pgm.add_edge("t_scale", "t_star_j", plot_params=edge_params)
-# temporal scaling edge for gene parameters
-pgm.add_edge("T_max_star", "Delta_i", plot_params=edge_params)
+# stick-breaking time edges
+pgm.add_edge("T_max", "t_star_j", plot_params=edge_params)
 
 # dynamics edges
 pgm.add_edge("theta_i", "u_star_ij", plot_params=edge_params)
@@ -1203,23 +1210,28 @@ pgm.render()
 
 ### Mathematical Description
 
-The model combines the hierarchical latent time structure from Study 2 with piecewise constant transcription rates and steady-state initial conditions to resolve identifiability while enabling rich gene expression dynamics.
+The model combines the process duration with stick-breaking framework with piecewise constant transcription rates and steady-state initial conditions to achieve parameter identifiability while enabling rich gene expression dynamics.
 
 **Notation mapping between PGM and mathematical description:**
 
 In the PGM above, we use simplified notation for visual clarity:
 
 - $\theta_i$ represents the vector of **non-temporal** piecewise activation parameters $(\gamma^*_i, R_{\text{on},i})$
-- $\Delta_i$ represents the vector of **relative temporal** gene parameters $(\tilde{t}^*_{0,\text{on}i}, \tilde{\delta}^*_i)$
+- $\Delta_i$ represents the vector of **absolute temporal** gene parameters $(t^*_{0,\text{on}i}, \delta^*_i)$
 - The hyperparameters $\mu_{\theta}, \sigma_{\theta}^2$ represent the collection of hyperparameters for all components of $\theta_i$
 - The hyperparameters $\mu_{\Delta}, \sigma_{\Delta}^2$ represent the collection of hyperparameters for all components of $\Delta_i$
-- The absolute timing parameters $t^*_{0,\text{on}i} = T_{M}^* \times \tilde{t}^*_{0,\text{on}i}$ and $\delta^*_i = T_{M}^* \times \tilde{\delta}^*_i$ are computed deterministically
+- $T_{\max}$ represents the total process duration with fixed anchor points at $t^*_1 = 0$ and $t^*_N = T_{\max}$
 - $\alpha^*_{\text{off}i} = 1.0$ is fixed and not shown as a random variable
-- $T_{M}^* \rightarrow \Delta_i$ represents the scaling relationship for all temporal parameters
+- Gene temporal parameters are sampled independently of $T_{\max}$, eliminating scaling symmetry
 
-**Detailed priors for constrained piecewise activation parameters:**
+**Detailed priors for process duration with stick-breaking framework:**
 
-The priors are designed to encode biologically reasonable parameter ranges while eliminating dimensional redundancy and cleanly separating temporal from non-temporal parameters:
+The priors are designed to encode biologically reasonable parameter ranges while achieving parameter identifiability through fixed anchor points and independent gene timing:
+
+**Process duration:**
+\begin{align}
+    T_{\max} &\sim \text{Gamma}(5.0, 1.0) \quad \text{(total process duration)}
+\end{align}
 
 **Non-temporal gene-specific parameters:**
 \begin{align}
@@ -1227,25 +1239,31 @@ The priors are designed to encode biologically reasonable parameter ranges while
     R_{\text{on},i} &\sim \text{LogNormal}(\log(2.5), 0.4^2) \quad \text{(activation fold-change)}
 \end{align}
 
-**Relative temporal gene-specific parameters:**
+**Absolute temporal gene-specific parameters (independent of $T_{\max}$):**
 \begin{align}
-    \tilde{t}^*_{0,\text{on}i} &\sim \text{Normal}(0.5, 0.8^2) \quad \text{(relative activation onset time, allows negatives)} \\
-    \tilde{\delta}^*_i &\sim \text{LogNormal}(\log(0.45), 0.45^2) \quad \text{(relative activation duration)}
+    t^*_{0,\text{on}i} &\sim \text{Normal}(2.5, 1.5^2) \quad \text{(absolute activation onset time)} \\
+    \delta^*_i &\sim \text{LogNormal}(0.0, 0.5^2) \quad \text{(absolute activation duration)}
 \end{align}
 
-**Absolute temporal parameters (deterministic transformations):**
+**Stick-breaking cell times:**
 \begin{align}
-    t^*_{0,\text{on}i} &= T_{M}^* \times \tilde{t}^*_{0,\text{on}i} \quad \text{(absolute activation onset time)} \\
-    \delta^*_i &= T_{M}^* \times \tilde{\delta}^*_i \quad \text{(absolute activation duration)}
+    t^*_1 &= 0 \quad \text{(process start, fixed)} \\
+    t^*_N &= T_{\max} \quad \text{(process end)} \\
+    \xi_j &\sim \text{Beta}(1, N-j) \quad \text{for } j \in \{2, \ldots, N-1\} \\
+    t^*_j &= t^*_{j-1} + \xi_{j-1}(T_{\max} - t^*_{j-1}) \quad \text{(recursive construction)}
 \end{align}
 
-**Pattern classification framework**: The three expression patterns are defined by constraints on the relative temporal parameters:
+**Pattern classification framework**: The three expression patterns are defined by constraints on the absolute temporal parameters:
 
-- **Pre-activation**: $\tilde{t}^*_{0,\text{on}i} < 0.0$ and $R_{\text{on},i} > 2.0$
-- **Transient**: $0.0 < \tilde{t}^*_{0,\text{on}i} < 0.5$, $\tilde{\delta}^*_i < 0.4$, and $R_{\text{on},i} > 2.0$
-- **Sustained**: $0.0 < \tilde{t}^*_{0,\text{on}i} < 0.3$, $\tilde{\delta}^*_i > 0.5$, and $R_{\text{on},i} > 2.0$
+- **Pre-activation**: $t^*_{0,\text{on}i} < 0.0$ and $R_{\text{on},i} > 2.0$
+- **Transient**: $0.0 < t^*_{0,\text{on}i} < 2.5$, $\delta^*_i < 2.0$, and $R_{\text{on},i} > 2.0$
+- **Sustained**: $0.0 < t^*_{0,\text{on}i} < 1.5$, $\delta^*_i > 2.5$, and $R_{\text{on},i} > 2.0$
 
 **Biological interpretation of prior choices:**
+
+**Process duration:**
+
+- **$T_{\max} \sim \text{Gamma}(5.0, 1.0)$**: Centers process duration at 5 dimensionless time units, providing sufficient range for exponential convergence while maintaining computational efficiency. The process has clear start ($t^* = 0$) and end ($t^* = T_{\max}$) boundaries.
 
 **Non-temporal parameters:**
 
@@ -1253,43 +1271,42 @@ The priors are designed to encode biologically reasonable parameter ranges while
 
 - **$R_{\text{on},i} \sim \text{LogNormal}(\log(2.5), 0.4^2)$**: Centers fold-change at 2.5× during activation, with 95% between ~1.5 and ~4.2.
 
-**Relative temporal parameters:**
+**Absolute temporal parameters:**
 
-- **$\tilde{t}^*_{0,\text{on}i} \sim \text{Normal}(0.5, 0.8^2)$**: Centers relative activation onset at 50% through the process timeline, with 95% between approximately -1.1 and +2.1. **Negative values** enable pre-activation scenarios where genes were already activated before observation began.
+- **$t^*_{0,\text{on}i} \sim \text{Normal}(2.5, 1.5^2)$**: Centers activation onset at the middle of the expected process duration, with 95% between approximately -0.4 and +5.4. **Negative values** enable pre-activation scenarios where genes were already activated before the process began.
 
-- **$\tilde{\delta}^*_i \sim \text{LogNormal}(\log(0.45), 0.45^2)$**: Centers relative activation duration at 45% of the process timeline, with 95% between ~0.18 and ~1.13. This enables both transient (short duration) and sustained (long duration) activation patterns.
+- **$\delta^*_i \sim \text{LogNormal}(0.0, 0.5^2)$**: Centers activation duration at 1 dimensionless time unit, with 95% between ~0.37 and ~2.7. This enables both transient (short duration) and sustained (long duration) activation patterns.
 
 **Pattern classification implications:**
 
-- **Pre-activation** ($\tilde{t}^*_{0,\text{on}i} < 0$): ~26.6% probability under the prior
-- **Transient** ($0 < \tilde{t}^*_{0,\text{on}i} < 0.5$ and $\tilde{\delta}^*_i < 0.4$): Balanced probability for observable complete cycles
-- **Sustained** ($0 < \tilde{t}^*_{0,\text{on}i} < 0.3$ and $\tilde{\delta}^*_i > 0.5$): Balanced probability for long-duration activation
+- **Pre-activation** ($t^*_{0,\text{on}i} < 0$): ~4.8% probability under the prior
+- **Transient** ($0 < t^*_{0,\text{on}i} < 2.5$ and $\delta^*_i < 2.0$): Balanced probability for observable complete cycles
+- **Sustained** ($0 < t^*_{0,\text{on}i} < 1.5$ and $\delta^*_i > 2.5$): Balanced probability for long-duration activation
 
-**Temporal scaling transformation:**
+**Parameter independence benefits:**
 
-- **Absolute onset**: $t^*_{0,\text{on}i} = T_{M}^* \times \tilde{t}^*_{0,\text{on}i}$ scales relative onset to absolute time
-- **Absolute duration**: $\delta^*_i = T_{M}^* \times \tilde{\delta}^*_i$ scales relative duration to absolute time
-- **Dimensional consistency**: All temporal comparisons now use consistently scaled absolute times
-
-**Parameter interpretation benefits:**
-
-- **Separation of concerns**: Non-temporal kinetics ($\theta_i$) vs temporal patterns ($\Delta_i$)
-- **Scale invariance**: Relative temporal patterns are independent of absolute time scale
-- **Biological realism**: Global time scale $T_{M}^*$ sets the pace for the entire process
+- **Identifiability**: Gene timing parameters are independent of process duration, eliminating scaling symmetry
+- **Biological realism**: Process boundaries ($0$ to $T_{\max}$) provide natural temporal reference frame
+- **Cross-scale applicability**: Same parameter values work across different experimental timescales
+- **Separation of concerns**: Process duration ($T_{\max}$) vs gene-specific timing (onset/duration) vs kinetics (degradation/fold-change)
 
 **Priors for other gene-specific parameters (unchanged from Study 2):**
 \begin{align}
     U_{0i} &\sim \text{LogNormal}(\mu_{U_0}, \sigma_{U_0}^2)
 \end{align}
 
-**Hierarchical priors for latent time coordinates (unchanged from Study 2):**
+**Stick-breaking cell time coordinates:**
+
+The cell times are sampled using a stick-breaking process that ensures proper ordering and eliminates scaling symmetry:
+
 \begin{align}
-    T_{M}^* &\sim \text{Gamma}(\alpha_{T}, \beta_{T}) \\
-    t_{loc} &\sim \text{Gamma}(\alpha_{t_{loc}}, \beta_{t_{loc}}) \\
-    t_{scl} &\sim \text{Gamma}(\alpha_{t_{scl}}, \beta_{t_{scl}}) \\
-    \tilde{t}_j &\sim \text{Normal}(t_{loc}, t_{scl}^2) \quad \text{for } j \in \{1, \ldots, N\} \\
-    t^*_j &= T_{M}^* \times \max(\tilde{t}_j, \epsilon) \quad \text{(clipped transformation)}
+    t^*_1 &= 0 \quad \text{(process start, fixed)} \\
+    t^*_N &= T_{\max} \quad \text{(process end)} \\
+    \xi_j &\sim \text{Beta}(1, N-j) \quad \text{for } j \in \{2, \ldots, N-1\} \\
+    t^*_j &= t^*_{j-1} + \xi_{j-1}(T_{\max} - t^*_{j-1}) \quad \text{(recursive construction)}
 \end{align}
+
+This construction automatically ensures $0 = t^*_1 < t^*_2 < \cdots < t^*_N = T_{\max}$ and eliminates the need for clipping operations.
 
 **Cell-specific capture efficiency (unchanged from Study 2):**
 \begin{align}
@@ -1298,7 +1315,7 @@ The priors are designed to encode biologically reasonable parameter ranges while
 
 **Dimensionless dynamics with piecewise activation:**
 
-The dimensionless concentrations are computed using the analytical solutions for each phase as derived above, with the appropriate phase determined by comparing $t^*_j$ to the gene-specific activation parameters $t^*_{0,\text{on}i}$ and $\delta^*_i$.
+The dimensionless concentrations are computed using the analytical solutions for each phase as derived above, with the appropriate phase determined by comparing $t^*_j$ to the gene-specific activation parameters $t^*_{0,\text{on}i}$ and $\delta^*_i$. The stick-breaking cell times provide the temporal coordinates for evaluating the piecewise analytical solutions.
 
 **Observation model:**
 \begin{align}
@@ -1318,7 +1335,7 @@ The prior predictive distribution represents the model's predictions before obse
 
 $$p(\tilde{y}) = \int p(\tilde{y} | \theta) p(\theta) d\theta$$
 
-where $\theta$ represents the complete parameter vector including all gene-specific parameters $(\gamma^*_i, R_{\text{on},i}, \tilde{t}^*_{0,\text{on}i}, \tilde{\delta}^*_i, U_{0i})$, hierarchical time parameters $(T_{M}^*, t_{loc}, t_{scl}, t^*_j)$, and cell-specific capture efficiencies $(\lambda_j)$.
+where $\theta$ represents the complete parameter vector including all gene-specific parameters $(\gamma^*_i, R_{\text{on},i}, t^*_{0,\text{on}i}, \delta^*_i, U_{0i})$, process duration parameter $(T_{\max})$, stick-breaking cell times $(t^*_j)$, and cell-specific capture efficiencies $(\lambda_j)$.
 
 #### **Prior Predictive Distribution: Mathematical Foundation**
 
@@ -1329,8 +1346,8 @@ The prior predictive distribution represents the model's predictions about obser
 For the piecewise activation model, this becomes:
 
 \begin{align}
-p(\tilde{y}) &= \int p(\tilde{y} | \gamma^*_i, R_{\text{on},i}, \tilde{t}^*_{0,\text{on}i}, \tilde{\delta}^*_i, U_{0i}, T_{M}^*, t_{loc}, t_{scl}, t^*_j, \lambda_j) \times \nonumber \\
-&\quad p(\gamma^*_i, R_{\text{on},i}, \tilde{t}^*_{0,\text{on}i}, \tilde{\delta}^*_i, U_{0i}, T_{M}^*, t_{loc}, t_{scl}, t^*_j, \lambda_j) \, d\theta \label{eq-prior-predictive-piecewise}
+p(\tilde{y}) &= \int p(\tilde{y} | \gamma^*_i, R_{\text{on},i}, t^*_{0,\text{on}i}, \delta^*_i, U_{0i}, T_{\max}, t^*_j, \lambda_j) \times \nonumber \\
+&\quad p(\gamma^*_i, R_{\text{on},i}, t^*_{0,\text{on}i}, \delta^*_i, U_{0i}, T_{\max}, t^*_j, \lambda_j) \, d\theta \label{eq-prior-predictive-piecewise}
 \end{align}
 
 where the integration spans the complete hierarchical parameter space defined by the model's prior distributions.
@@ -1340,17 +1357,17 @@ where the integration spans the complete hierarchical parameter space defined by
 The prior predictive distribution decomposes according to the model's hierarchical structure:
 
 \begin{align}
-p(\tilde{y}) &= \int \int \int \int \int p(\tilde{y} | T_{M}^*, \theta_{\text{gene}}, \theta_{\text{cell}}, \theta_{\text{tech}}) \times \nonumber \\
-&\quad p(T_{M}^*) \, p(\theta_{\text{gene}}) \, p(\theta_{\text{cell}}) \, p(\theta_{\text{tech}}) \, dT_{M}^* \, d\theta_{\text{gene}} \, d\theta_{\text{cell}} \, d\theta_{\text{tech}} \label{eq-hierarchical-integration}
+p(\tilde{y}) &= \int \int \int \int p(\tilde{y} | T_{\max}, \theta_{\text{gene}}, \theta_{\text{cell}}, \theta_{\text{tech}}) \times \nonumber \\
+&\quad p(T_{\max}) \, p(\theta_{\text{gene}}) \, p(\theta_{\text{cell}}) \, p(\theta_{\text{tech}}) \, dT_{\max} \, d\theta_{\text{gene}} \, d\theta_{\text{cell}} \, d\theta_{\text{tech}} \label{eq-hierarchical-integration}
 \end{align}
 
 where:
 
-- $\theta_{\text{gene}} = \{\gamma^*_i, R_{\text{on},i}, \tilde{t}^*_{0,\text{on}i}, \tilde{\delta}^*_i, U_{0i}\}_{i=1}^G$ represents gene-specific parameters
-- $\theta_{\text{cell}} = \{t_{loc}, t_{scl}, \tilde{t}_j, t^*_j\}_{j=1}^N$ represents cell-specific temporal parameters
+- $\theta_{\text{gene}} = \{\gamma^*_i, R_{\text{on},i}, t^*_{0,\text{on}i}, \delta^*_i, U_{0i}\}_{i=1}^G$ represents gene-specific parameters
+- $\theta_{\text{cell}} = \{t^*_j\}_{j=1}^N$ represents stick-breaking cell times
 - $\theta_{\text{tech}} = \{\lambda_j\}_{j=1}^N$ represents technical efficiency parameters
 
-This decomposition reflects the model's assumption that gene-specific kinetics, population-level temporal structure, and technical factors contribute independently to the prior uncertainty.
+This decomposition reflects the model's assumption that gene-specific kinetics, process duration, stick-breaking cell times, and technical factors contribute independently to the prior uncertainty.
 
 **Monte Carlo Approximation**
 
@@ -1364,46 +1381,39 @@ where $\theta^{(s)} \sim p(\theta)$ are samples from the joint prior distributio
 
 **Detailed Sampling Procedure:**
 
-1. **Sample hierarchical time parameters**:
+1. **Sample process duration**:
    \begin{align}
-   {T_{M}^*}^{(s)} &\sim \text{Gamma}(\alpha_{T}, \beta_{T}), \quad {t_{loc}}^{(s)} \sim \text{Gamma}(\alpha_{t_{loc}}, \beta_{t_{loc}}), \quad {t_{scl}}^{(s)} \sim \text{Gamma}(\alpha_{t_{scl}}, \beta_{t_{scl}})
+   {T_{\max}}^{(s)} &\sim \text{Gamma}(5.0, 1.0)
    \end{align}
 
-2. **Sample cell-specific relative times**:
+2. **Sample stick-breaking variables and construct cell times**:
    \begin{align}
-   {\tilde{t}_j}^{(s)} &\sim \text{Normal}({t_{loc}}^{(s)}, ({t_{scl}}^{(s)})^2) \quad \text{for } j \in \{1, \ldots, N\}
+   {\xi_j}^{(s)} &\sim \text{Beta}(1, N-j) \quad \text{for } j \in \{2, \ldots, N-1\} \\
+   {t^*_1}^{(s)} &= 0 \\
+   {t^*_N}^{(s)} &= {T_{\max}}^{(s)} \\
+   {t^*_j}^{(s)} &= {t^*_{j-1}}^{(s)} + {\xi_{j-1}}^{(s)}({T_{\max}}^{(s)} - {t^*_{j-1}}^{(s)})
    \end{align}
 
-3. **Transform to absolute times**:
-   \begin{align}
-   {t^{*}_j}^{(s)} &= {T_{M}^*}^{(s)} \times \max({\tilde{t}_j}^{(s)}, \epsilon)
-   \end{align}
-
-4. **Sample gene-specific parameters**:
+3. **Sample gene-specific parameters**:
    \begin{align}
    {\gamma^{*}_i}^{(s)} &\sim \text{LogNormal}(\log(1.0), 0.5^2) \\
    {R_{\text{on},i}}^{(s)} &\sim \text{LogNormal}(\log(2.5), 0.4^2) \\
-   {\tilde{t}^*_{0,\text{on}i}}^{(s)} &\sim \text{Normal}(0.5, 0.8^2) \\
-   {\tilde{\delta}^*_i}^{(s)} &\sim \text{LogNormal}(\log(0.45), 0.45^2) \\
+   {t^*_{0,\text{on}i}}^{(s)} &\sim \text{Normal}(2.5, 1.5^2) \\
+   {\delta^*_i}^{(s)} &\sim \text{LogNormal}(0.0, 0.5^2) \\
    {U_{0i}}^{(s)} &\sim \text{LogNormal}(\mu_{U_0}, \sigma_{U_0}^2)
    \end{align}
 
-5. **Transform relative temporal parameters**:
-   \begin{align}
-   {t^*_{0,\text{on}i}}^{(s)} &= {T_{M}^*}^{(s)} \times {\tilde{t}^*_{0,\text{on}i}}^{(s)}, \quad {\delta^*_i}^{(s)} = {T_{M}^*}^{(s)} \times {\tilde{\delta}^*_i}^{(s)}
-   \end{align}
-
-6. **Sample capture efficiencies**:
+4. **Sample capture efficiencies**:
    \begin{align}
    {\lambda_j}^{(s)} &\sim \text{LogNormal}(\mu_{\lambda}, \sigma_{\lambda}^2)
    \end{align}
 
-7. **Compute latent concentrations**:
+5. **Compute latent concentrations**:
    \begin{align}
    {u^{*}_{ij}}^{(s)}, {s^{*}_{ij}}^{(s)} &= f_{\text{piecewise}}({t^*_j}^{(s)}, {\gamma^*_i}^{(s)}, {R_{\text{on},i}}^{(s)}, {t^*_{0,\text{on}i}}^{(s)}, {\delta^*_i}^{(s)})
    \end{align}
 
-8. **Sample observations**:
+6. **Sample observations**:
    \begin{align}
    {u_{ij}}^{(s)} &\sim \text{Poisson}({\lambda_j}^{(s)} \cdot {U_{0i}}^{(s)} \cdot {u^{*}_{ij}}^{(s)}) \\
    {s_{ij}}^{(s)} &\sim \text{Poisson}({\lambda_j}^{(s)} \cdot {U_{0i}}^{(s)} \cdot {s^{*}_{ij}}^{(s)})
@@ -1423,13 +1433,13 @@ where the expectation and variance are taken over the joint prior distribution $
 
 The piecewise activation model exhibits multiple sources of prior uncertainty that propagate through the hierarchical structure:
 
-1. **Global temporal scale uncertainty**: Uncertainty in $T_{M}^*$ affects the absolute timescale of all temporal processes, scaling both activation onset times and durations proportionally
+1. **Process duration uncertainty**: Uncertainty in $T_{\max}$ affects the total duration of the biological process, determining the temporal scale for all dynamics
 
-2. **Population temporal distribution uncertainty**: Uncertainty in $t_{loc}, t_{scl}$ affects the distribution of cells across the relative temporal coordinate, determining population-level temporal heterogeneity
+2. **Stick-breaking cell time uncertainty**: Uncertainty in the stick-breaking construction affects the distribution of cells across the process timeline
 
 3. **Gene-specific kinetic uncertainty**: Prior uncertainty in $\gamma^*_i, R_{\text{on},i}$ affects the shape and magnitude of concentration trajectories during each phase
 
-4. **Gene-specific temporal pattern uncertainty**: Prior uncertainty in $\tilde{t}^*_{0,\text{on}i}, \tilde{\delta}^*_i$ affects when activation occurs and how long it lasts relative to the population timeline
+4. **Gene-specific temporal pattern uncertainty**: Prior uncertainty in $t^*_{0,\text{on}i}, \delta^*_i$ affects when activation occurs and how long it lasts in absolute time units
 
 5. **Characteristic scale uncertainty**: Prior uncertainty in $U_{0i}$ affects the absolute magnitude of expression levels for each gene
 
@@ -1455,7 +1465,7 @@ Parameter uncertainty propagates nonlinearly through the piecewise analytical so
 
 - **Exponential amplification**: The exponential terms in analytical solutions amplify prior parameter uncertainty, particularly for genes with large characteristic scales or cells at extreme time points
 
-- **Temporal scaling interactions**: Uncertainty in $T_{M}^*$ interacts multiplicatively with uncertainty in relative temporal parameters, creating complex correlation structures
+- **Process duration interactions**: Uncertainty in $T_{\max}$ affects the temporal boundaries but does not automatically scale gene parameters, creating asymmetric uncertainty propagation
 
 - **Special case transitions**: Prior probability mass near $\gamma^*_i = 1$ creates discontinuous changes in the analytical solution form, contributing additional uncertainty
 
@@ -1558,10 +1568,10 @@ where the first term represents irreducible observation noise (Poisson variance)
 The piecewise activation model's parameter space $\theta$ includes:
 
 - **Non-temporal gene parameters**: $\gamma^*_i \sim \text{LogNormal}(\log(1.0), 0.5^2)$, $R_{\text{on},i} \sim \text{LogNormal}(\log(2.5), 0.4^2)$
-- **Relative temporal gene parameters**: $\tilde{t}^*_{0,\text{on}i} \sim \text{Normal}(0.5, 0.8^2)$, $\tilde{\delta}^*_i \sim \text{LogNormal}(\log(0.45), 0.45^2)$
+- **Absolute temporal gene parameters**: $t^*_{0,\text{on}i} \sim \text{Normal}(2.5, 1.5^2)$, $\delta^*_i \sim \text{LogNormal}(0.0, 0.5^2)$
 - **Characteristic scales**: $U_{0i} \sim \text{LogNormal}(\mu_{U_0}, \sigma_{U_0}^2)$
-- **Hierarchical time parameters**: $T_{M}^* \sim \text{Gamma}(\alpha_{T}, \beta_{T})$, $t_{loc} \sim \text{Gamma}(\alpha_{t_{loc}}, \beta_{t_{loc}})$, $t_{scl} \sim \text{Gamma}(\alpha_{t_{scl}}, \beta_{t_{scl}})$
-- **Cell-specific times**: $\tilde{t}_j \sim \text{Normal}(t_{loc}, t_{scl}^2)$, $t^*_j = T_{M}^* \times \max(\tilde{t}_j, \epsilon)$
+- **Process duration**: $T_{\max} \sim \text{Gamma}(5.0, 1.0)$
+- **Stick-breaking cell times**: $t^*_1 = 0$, $t^*_N = T_{\max}$, $\xi_j \sim \text{Beta}(1, N-j)$, $t^*_j = t^*_{j-1} + \xi_{j-1}(T_{\max} - t^*_{j-1})$
 - **Capture efficiencies**: $\lambda_j \sim \text{LogNormal}(\mu_{\lambda}, \sigma_{\lambda}^2)$
 
 **Dimensionless Dynamics with Piecewise Activation**
@@ -1651,8 +1661,8 @@ Compare posterior predictive samples $\{\tilde{y}^{(s)}\}_{s=1}^S$ to the origin
 The piecewise activation model exhibits multiple sources of parameter uncertainty:
 
 1. **Kinetic parameter uncertainty**: Posterior distributions over $\gamma^*_i$ and $R_{\text{on},i}$ affect the shape and magnitude of concentration trajectories
-2. **Temporal parameter uncertainty**: Uncertainty in $\tilde{t}^*_{0,\text{on}i}$ and $\tilde{\delta}^*_i$ affects when activation occurs and how long it lasts
-3. **Hierarchical time uncertainty**: Uncertainty in $T_{M}^*$, $t_{loc}$, $t_{scl}$ affects the global temporal scaling and population-level time distribution
+2. **Temporal parameter uncertainty**: Uncertainty in $t^*_{0,\text{on}i}$ and $\delta^*_i$ affects when activation occurs and how long it lasts
+3. **Process duration uncertainty**: Uncertainty in $T_{\max}$ affects the total process duration and temporal boundaries
 4. **Cell-specific uncertainty**: Uncertainty in individual $t^*_j$ and $\lambda_j$ affects cell-specific predictions
 5. **Scale uncertainty**: Uncertainty in $U_{0i}$ affects the absolute magnitude of predicted counts
 
@@ -1753,7 +1763,14 @@ Large posterior predictive sample sets require careful memory management:
 2. **High bias** may indicate identifiability issues or optimization problems
 3. **Poor predictive accuracy** may indicate missing biological mechanisms or inappropriate noise models
 
-### Properties of the Piecewise Framework
+### Properties of the Process Duration with Stick-Breaking Framework
+
+#### **Resolved Identifiability Issues**
+
+- **Eliminates scaling symmetry**: Fixed anchor points ($t^*_1 = 0$, $t^*_N = T_{\max}$) break scaling symmetry that plagued hierarchical scaling approaches
+- **Parameter identifiability**: Gene timing parameters are independent of process duration, ensuring unique parameter estimates
+- **Mathematical rigor**: Formal proof that likelihood is not invariant under parameter scaling
+- **Computational stability**: Eliminates non-identifiable parameter combinations that cause inference failures
 
 #### **Resolved Dimensional Analysis Issues**
 
@@ -1765,10 +1782,11 @@ Large posterior predictive sample sets require careful memory management:
 
 #### **Enhanced Temporal Modeling**
 
-- **Pre-activation scenarios**: Models genes already activated when observation begins
+- **Process boundaries**: Clear start ($t^* = 0$) and end ($t^* = T_{\max}$) of biological process
+- **Pre-activation scenarios**: Models genes already activated when process begins
 - **Flexible onset timing**: Normal prior allows negative onset times naturally
-- **Biological realism**: Captures realistic experimental scenarios better
-- **Maintains population structure**: Hierarchical time modeling preserved
+- **Automatic ordering**: Stick-breaking ensures proper temporal ordering without constraints
+- **Cross-scale applicability**: Same framework works across different experimental timescales
 
 #### **Rich Expression Pattern Representation**
 
@@ -1778,7 +1796,7 @@ The framework captures three core expression patterns that encompass the full ra
 - **Transient genes**: Complete activation-decay cycles within observation window, exhibiting pulse-like dynamics
 - **Sustained genes**: Early activation with long duration, showing net increase over observation period
 
-**Pattern coverage**: These three patterns effectively capture the essential temporal dynamics while eliminating redundant classifications. The relative temporal parameterization ensures consistent pattern identification across different experimental timescales.
+**Pattern coverage**: These three patterns effectively capture the essential temporal dynamics while eliminating redundant classifications. The absolute temporal parameterization with process boundaries ensures consistent pattern identification across different experimental timescales.
 
 #### **Analytical Tractability**
 
@@ -1789,33 +1807,38 @@ The framework captures three core expression patterns that encompass the full ra
 #### **Biological Interpretability**
 
 - **Dimensionless parameters**: Universal interpretation across experimental conditions
-- **Temporal coordination**: Hierarchical time structure captures population-level timing
-- **Gene-specific dynamics**: Each gene can follow distinct activation pattern
+- **Process boundaries**: Natural temporal reference frame from start to completion
+- **Temporal progression**: Intuitive progress metric ($t^*_j / T_{\max}$) for cellular advancement
+- **Gene-specific dynamics**: Each gene can follow distinct activation pattern independent of process duration
 
 ### Parameter Recovery Validation Strategy
 
-This study will validate the constrained model's ability to:
+This study will validate the process duration with stick-breaking model's ability to:
 
-1. **Recover constrained piecewise parameters**: $\gamma^*_i$, $R_{\text{on},i}$, $\tilde{t}^*_{0,\text{on}i}$, $\tilde{\delta}^*_i$
-4. **Maintain hierarchical time inference**: Recover population-level temporal parameters ($T_M^*$, $t_{loc}$, $t_{scl}$)
+1. **Recover identifiable parameters**: $\gamma^*_i$, $R_{\text{on},i}$, $t^*_{0,\text{on}i}$, $\delta^*_i$, $T_{\max}$
+2. **Demonstrate scaling symmetry elimination**: Verify that different $T_{\max}$ values produce distinguishable likelihoods
+3. **Validate anchor point constraints**: Confirm that $t^*_1 = 0$ and $t^*_N = T_{\max}$ are properly enforced
+4. **Assess stick-breaking cell time inference**: Recover proper temporal ordering and distribution
 5. **Handle realistic noise levels**: Maintain accuracy with Poisson observation noise
-6. **Scale efficiently**: Demonstrate computational advantages of reduced parameter space
+6. **Scale efficiently**: Demonstrate computational advantages of analytical solutions
 7. **Validate fold-change interpretation**: Ensure $R_{\text{on},i}$ estimates match true activation strength
 8. **Assess dimensional consistency**: Verify elimination of parameter redundancy through fixed $\alpha^*_{\text{off}i} = 1.0$
-9. **Validate temporal parameter scaling**: Ensure $T_{M}^*$ scaling correctly propagates from relative to absolute timing parameters
-10. **Assess parameter separation**: Verify clean separation between kinetic ($\gamma^*_i$, $R_{\text{on},i}$) and temporal ($\tilde{t}^*_{0,\text{on}i}$, $\tilde{\delta}^*_i$) parameter inference
-11. **Validate relative parameter framework**: Confirm that relative temporal parameters enable consistent pattern classification across different experimental timescales
+9. **Validate parameter independence**: Ensure gene timing parameters are independent of process duration
+10. **Assess parameter separation**: Verify clean separation between kinetic ($\gamma^*_i$, $R_{\text{on},i}$) and temporal ($t^*_{0,\text{on}i}$, $\delta^*_i$) parameter inference
+11. **Validate process boundary framework**: Confirm that absolute temporal parameters enable consistent pattern classification across different experimental timescales
+12. **Cross-scale validation**: Test parameter recovery across different process durations to verify identifiability
 
 ### Parameter Recovery Validation Implementation
 
-This validation workflow demonstrates the key capabilities of the piecewise activation model:
+This validation workflow demonstrates the key capabilities of the process duration with stick-breaking model:
 
+- **Parameter identifiability**: Eliminates scaling symmetry through fixed anchor points and independent gene timing
 - **Analytical tractability**: Fast likelihood evaluation enables efficient parameter recovery validation
-- **Rich parameter space**: Includes fold-change parameters, relative temporal parameters, and hierarchical time structure
-- **Pre-activation modeling**: Supports negative onset times for genes already activated before observation
+- **Rich parameter space**: Includes fold-change parameters, absolute temporal parameters, and process duration
+- **Pre-activation modeling**: Supports negative onset times for genes already activated before process start
 - **Dimensional consistency**: Eliminates parameter redundancy through fixed reference state parameterization
-- **Biological interpretability**: All parameters have clear biological meaning and interpretable ranges
+- **Biological interpretability**: All parameters have clear biological meaning with process boundary interpretation
 - **Comprehensive prior predictive framework**: Mathematical foundation for validating model specification through prior predictive checking as detailed in equations \eqref{eq-prior-predictive-piecewise}-\eqref{eq-information-content}, ensuring the model can generate realistic data patterns before observing any data
-- **Relative temporal parameterization**: Enables interpretable parameter values and consistent pattern classification across different experimental timescales and even distinct data sets
+- **Process boundary parameterization**: Enables interpretable parameter values and consistent pattern classification across different experimental timescales through natural temporal reference frame
 
 The complete validation scripts referenced in the introduction (`prior-predictive-check.py` and `posterior-predictive-check.py`) provide comprehensive parameter recovery validation including visualization and statistical assessment of recovery performance. The prior predictive checking framework validates model specification and prior adequacy, while the posterior predictive checking framework assesses parameter recovery and predictive accuracy.
