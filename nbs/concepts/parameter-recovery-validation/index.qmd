@@ -907,10 +907,18 @@ t^*_{0,\text{on}i} &\sim \text{Normal}(\mu_{\text{on}}, \sigma_{\text{on}}^2) \q
 \delta^*_i &\sim \text{LogNormal}(\mu_{\delta}, \sigma_{\delta}^2) \quad \text{(independent gene duration)}
 \end{align}
 
-**Identifiability proof**: For any $\lambda \neq 1$:
+**Theorem (Elimination of Scaling Symmetry):**
+
+For any scaling factor $\lambda \neq 1$, the likelihood functions are not equal:
 $$\mathcal{L}(T_{\max}, \{t^*_j\}, \{t^*_{0,\text{on}i}\}, \{\delta^*_i\}) \neq \mathcal{L}(\lambda T_{\max}, \{\lambda t^*_j\}, \{t^*_{0,\text{on}i}\}, \{\delta^*_i\})$$
 
-The fixed anchor $t^*_1 = 0$ cannot be scaled, and gene parameters are independent of $T_{\max}$, breaking the symmetry.
+**Proof:**
+1. **Fixed anchor constraint**: The scaled system requires $t^*_1 = \lambda \cdot 0 = 0$ and $t^*_N = \lambda T_{\max}$
+2. **Process duration independence**: Gene parameters $t^*_{0,\text{on}i}, \delta^*_i$ are sampled independently of $T_{\max}$ and do not scale
+3. **Asymmetric scaling**: Scaling $T_{\max} \rightarrow \lambda T_{\max}$ and $t^*_j \rightarrow \lambda t^*_j$ changes the relative positioning of gene events within the process timeline
+4. **Likelihood dependence**: The piecewise analytical solutions depend on comparisons like $t^*_j$ vs. $t^*_{0,\text{on}i}$, which change under asymmetric scaling
+
+Therefore, the likelihood is not invariant under parameter scaling, eliminating the scaling symmetry. □
 
 ### Gene Expression Pattern Classification
 
@@ -1253,11 +1261,15 @@ The priors are designed to encode biologically reasonable parameter ranges while
     t^*_j &= t^*_{j-1} + \xi_{j-1}(T_{\max} - t^*_{j-1}) \quad \text{(recursive construction)}
 \end{align}
 
-**Pattern classification framework**: The three expression patterns are defined by constraints on the absolute temporal parameters:
+**Pattern Classification with Absolute Parameters:**
 
-- **Pre-activation**: $t^*_{0,\text{on}i} < 0.0$ and $R_{\text{on},i} > 2.0$
-- **Transient**: $0.0 < t^*_{0,\text{on}i} < 2.5$, $\delta^*_i < 2.0$, and $R_{\text{on},i} > 2.0$
-- **Sustained**: $0.0 < t^*_{0,\text{on}i} < 1.5$, $\delta^*_i > 2.5$, and $R_{\text{on},i} > 2.0$
+Using the expected process duration $\mathbb{E}[T_{\max}] = 5.0$, the pattern constraints become:
+
+- **Pre-activation**: $t^*_{0,\text{on}i} < 0.0$ and $R_{\text{on},i} > 2.0$ (gene activated before process begins)
+- **Transient**: $0.0 < t^*_{0,\text{on}i} < 2.5$ and $\delta^*_i < 2.0$ and $R_{\text{on},i} > 2.0$ (complete cycle within process)
+- **Sustained**: $0.0 < t^*_{0,\text{on}i} < 1.5$ and $\delta^*_i > 2.5$ and $R_{\text{on},i} > 2.0$ (long-duration activation)
+
+These absolute thresholds preserve the same biological pattern meanings as the original relative formulation.
 
 **Biological interpretation of prior choices:**
 
@@ -1290,23 +1302,36 @@ The priors are designed to encode biologically reasonable parameter ranges while
 - **Cross-scale applicability**: Same parameter values work across different experimental timescales
 - **Separation of concerns**: Process duration ($T_{\max}$) vs gene-specific timing (onset/duration) vs kinetics (degradation/fold-change)
 
+**Cross-System Biological Interpretation:**
+
+The same $T_{\max} = 5.0$ represents different real-world durations depending on the characteristic splicing rate $\beta$:
+
+- **Immediate-early response** ($\beta = 5 \text{ hr}^{-1}$): Process duration = $5.0/5 = 1$ hour
+- **Cell cycle progression** ($\beta = 1 \text{ hr}^{-1}$): Process duration = $5.0/1 = 5$ hours
+- **Developmental transition** ($\beta = 0.1 \text{ hr}^{-1}$): Process duration = $5.0/0.1 = 50$ hours
+
+Gene timing parameters maintain consistent biological interpretation across scales.
+
 **Priors for other gene-specific parameters (unchanged from Study 2):**
 \begin{align}
     U_{0i} &\sim \text{LogNormal}(\mu_{U_0}, \sigma_{U_0}^2)
 \end{align}
 
-**Stick-breaking cell time coordinates:**
+**Stick-Breaking Cell Time Construction:**
 
-The cell times are sampled using a stick-breaking process that ensures proper ordering and eliminates scaling symmetry:
+The cell times $\{t^*_j\}_{j=1}^N$ are constructed using a stick-breaking process with fixed anchor points:
 
 \begin{align}
-    t^*_1 &= 0 \quad \text{(process start, fixed)} \\
-    t^*_N &= T_{\max} \quad \text{(process end)} \\
-    \xi_j &\sim \text{Beta}(1, N-j) \quad \text{for } j \in \{2, \ldots, N-1\} \\
-    t^*_j &= t^*_{j-1} + \xi_{j-1}(T_{\max} - t^*_{j-1}) \quad \text{(recursive construction)}
+t^*_1 &= 0 \quad \text{(fixed process start)} \label{eq-anchor-start} \\
+t^*_N &= T_{\max} \quad \text{(fixed process end)} \label{eq-anchor-end} \\
+\xi_j &\sim \text{Beta}(1, N-j) \quad \text{for } j \in \{2, \ldots, N-1\} \label{eq-stick-breaking-weights} \\
+t^*_j &= t^*_{j-1} + \xi_{j-1}(T_{\max} - t^*_{j-1}) \quad \text{for } j \in \{2, \ldots, N-1\} \label{eq-stick-breaking-construction}
 \end{align}
 
-This construction automatically ensures $0 = t^*_1 < t^*_2 < \cdots < t^*_N = T_{\max}$ and eliminates the need for clipping operations.
+This construction automatically ensures:
+- **Ordered constraint**: $0 = t^*_1 < t^*_2 < \cdots < t^*_N = T_{\max}$
+- **Fixed boundaries**: Process start and end are anchored
+- **Efficient sampling**: $O(N)$ complexity with no constraint violations
 
 **Cell-specific capture efficiency (unchanged from Study 2):**
 \begin{align}
@@ -1386,12 +1411,11 @@ where $\theta^{(s)} \sim p(\theta)$ are samples from the joint prior distributio
    {T_{\max}}^{(s)} &\sim \text{Gamma}(5.0, 1.0)
    \end{align}
 
-2. **Sample stick-breaking variables and construct cell times**:
+2. **Sample stick-breaking cell times**:
    \begin{align}
    {\xi_j}^{(s)} &\sim \text{Beta}(1, N-j) \quad \text{for } j \in \{2, \ldots, N-1\} \\
-   {t^*_1}^{(s)} &= 0 \\
-   {t^*_N}^{(s)} &= {T_{\max}}^{(s)} \\
-   {t^*_j}^{(s)} &= {t^*_{j-1}}^{(s)} + {\xi_{j-1}}^{(s)}({T_{\max}}^{(s)} - {t^*_{j-1}}^{(s)})
+   {t^*_1}^{(s)} &= 0, \quad {t^*_N}^{(s)} = {T_{\max}}^{(s)} \\
+   {t^*_j}^{(s)} &= {t^*_{j-1}}^{(s)} + {\xi_{j-1}}^{(s)}({T_{\max}}^{(s)} - {t^*_{j-1}}^{(s)}) \quad \text{for } j \in \{2, \ldots, N-1\}
    \end{align}
 
 3. **Sample gene-specific parameters**:
