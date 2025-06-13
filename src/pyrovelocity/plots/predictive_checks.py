@@ -1323,6 +1323,308 @@ def plot_pattern_analysis(
     return fig
 
 
+@beartype
+def plot_temporal_coordinate_validation(
+    model: Any,
+    adata: AnnData,
+    parameters: Dict[str, torch.Tensor],
+    true_parameters_adata: Optional[AnnData] = None,
+    figsize: Tuple[float, float] = (7.5, 5.0),
+    save_path: Optional[str] = None,
+    file_prefix: str = "",
+    check_type: str = "prior",
+    default_fontsize: Union[int, float] = 8,
+    **kwargs
+) -> plt.Figure:
+    """
+    Plot temporal coordinate validation with three panels: true vs estimated, UMAP, and uncertainty.
+
+    This function validates temporal coordinate estimation quality and uncertainty quantification
+    by creating a three-panel visualization:
+    1. True vs Estimated Cell Time: Scatter plot with error bars and correlation metrics
+    2. UMAP (Time Coordinate): UMAP embedding colored by temporal coordinates
+    3. Temporal Uncertainty (CV): Coefficient of variation analysis
+
+    Args:
+        model: PyroVelocity model instance (for parameter metadata)
+        adata: AnnData object with predictive samples and temporal coordinates
+        parameters: Dictionary of parameter samples for uncertainty quantification
+        true_parameters_adata: Optional AnnData object containing true parameters
+                              in adata.uns['true_parameters'] for validation
+        figsize: Figure size (width, height)
+        save_path: Optional directory path to save figures
+        file_prefix: Prefix for saved file names
+        check_type: Type of check ("prior" or "posterior")
+        default_fontsize: Default font size for all text elements
+        **kwargs: Additional keyword arguments (for compatibility)
+
+    Returns:
+        matplotlib Figure object
+
+    Example:
+        >>> fig = plot_temporal_coordinate_validation(
+        ...     model=model,
+        ...     adata=posterior_adata,
+        ...     parameters=posterior_parameters,
+        ...     true_parameters_adata=prior_predictive_adata,
+        ...     save_path="reports/docs/posterior_predictive",
+        ...     file_prefix="12",
+        ...     check_type="posterior"
+        ... )
+    """
+    fig, axes = plt.subplots(1, 3, figsize=figsize)
+
+    # Panel 1: True vs Estimated Cell Time
+    _plot_true_vs_estimated_time(adata, parameters, true_parameters_adata, axes[0], check_type, default_fontsize)
+
+    # Panel 2: UMAP (Time Coordinate) - reuse existing logic
+    _plot_umap_time_coordinate(adata, axes[1], check_type, model, default_fontsize)
+
+    # Panel 3: Temporal Uncertainty (CV)
+    _plot_temporal_uncertainty(adata, parameters, axes[2], check_type, default_fontsize)
+
+    plt.tight_layout()
+
+    if save_path is not None:
+        prefix = f"{file_prefix}_" if file_prefix else ""
+        _save_figure(fig, save_path, f"{prefix}temporal_coordinate_validation")
+
+    return fig
+
+
+def _plot_true_vs_estimated_time(
+    adata: AnnData,
+    parameters: Dict[str, torch.Tensor],
+    true_parameters_adata: Optional[AnnData],
+    ax: plt.Axes,
+    check_type: str,
+    default_fontsize: Union[int, float]
+) -> None:
+    """Plot true vs estimated temporal coordinates with error bars and correlation metrics."""
+
+    # Extract estimated temporal coordinates (posterior mean)
+    estimated_t_star = adata.obs.get('t_star', None)
+
+    # Extract true temporal coordinates for validation
+    true_t_star = None
+    if true_parameters_adata is not None:
+        if 'true_parameters' in true_parameters_adata.uns:
+            true_t_star = true_parameters_adata.uns['true_parameters'].get('t_star', None)
+        elif 't_star' in true_parameters_adata.obs:
+            true_t_star = true_parameters_adata.obs['t_star'].values
+
+    # Extract posterior samples for uncertainty quantification
+    t_star_samples = parameters.get('t_star', None)
+
+    if estimated_t_star is not None and true_t_star is not None:
+        # Ensure arrays are compatible
+        if isinstance(true_t_star, torch.Tensor):
+            true_t_star = true_t_star.detach().cpu().numpy()
+        if isinstance(estimated_t_star, torch.Tensor):
+            estimated_t_star = estimated_t_star.detach().cpu().numpy()
+
+        # Flatten true_t_star if it has multiple dimensions
+        if true_t_star.ndim > 1:
+            true_t_star = true_t_star.flatten()
+
+        # Ensure estimated_t_star is 1D
+        if estimated_t_star.ndim > 1:
+            estimated_t_star = estimated_t_star.flatten()
+
+        # Handle length mismatch
+        min_length = min(len(true_t_star), len(estimated_t_star))
+        true_t_star = true_t_star[:min_length]
+        estimated_t_star = estimated_t_star[:min_length]
+
+        # Compute uncertainty if samples available
+        uncertainty = None
+        cv_values = None
+        if t_star_samples is not None:
+            # Use the original number of cells for uncertainty computation
+            num_cells_original = len(estimated_t_star) if isinstance(estimated_t_star, np.ndarray) else estimated_t_star.shape[0]
+            uncertainty, cv_values = _compute_temporal_uncertainty(t_star_samples, num_cells_original)
+
+            # Trim uncertainty arrays to match the minimum length
+            if uncertainty is not None:
+                uncertainty = uncertainty[:min_length]
+            if cv_values is not None:
+                cv_values = cv_values[:min_length]
+
+        # Create scatter plot
+        if cv_values is not None and len(cv_values) == min_length:
+            # Color points by coefficient of variation
+            scatter = ax.scatter(true_t_star, estimated_t_star, c=cv_values,
+                               cmap='viridis', alpha=0.7, s=20, edgecolors='none')
+            cbar = plt.colorbar(scatter, ax=ax, shrink=0.8)
+            cbar.set_label('CV', fontsize=default_fontsize * 0.9)
+            cbar.ax.tick_params(labelsize=default_fontsize * 0.75)
+        else:
+            ax.scatter(true_t_star, estimated_t_star, alpha=0.7, s=20, color='steelblue')
+
+        # Add error bars if uncertainty available
+        if uncertainty is not None and len(uncertainty) == min_length:
+            ax.errorbar(true_t_star, estimated_t_star, yerr=uncertainty,
+                       fmt='none', alpha=0.3, color='gray', capsize=2)
+
+        # Add perfect correlation line (y=x)
+        min_val = min(np.min(true_t_star), np.min(estimated_t_star))
+        max_val = max(np.max(true_t_star), np.max(estimated_t_star))
+        ax.plot([min_val, max_val], [min_val, max_val], 'r--', alpha=0.8, linewidth=1.5, label='Perfect Recovery')
+
+        # Compute and display correlation metrics
+        correlation, _ = pearsonr(true_t_star, estimated_t_star)
+        rmse = np.sqrt(np.mean((true_t_star - estimated_t_star) ** 2))
+
+        # Add metrics as text
+        metrics_text = f'r = {correlation:.3f}\nRMSE = {rmse:.3f}'
+        ax.text(0.05, 0.95, metrics_text, transform=ax.transAxes,
+               fontsize=default_fontsize * 0.9, verticalalignment='top',
+               bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+
+        # Get parameter labels using metadata system
+        from pyrovelocity.plots.parameter_metadata import get_parameter_label
+        time_label = get_parameter_label(
+            param_name="t_star",
+            label_type="short",
+            model=None,
+            fallback_to_legacy=True
+        )
+
+        ax.set_xlabel(f'True {time_label}', fontsize=default_fontsize)
+        ax.set_ylabel(f'Estimated {time_label}', fontsize=default_fontsize)
+        ax.set_title('True vs Estimated Cell Time', fontsize=default_fontsize)
+        ax.legend(fontsize=default_fontsize * 0.8)
+
+    else:
+        # No validation data available
+        ax.text(0.5, 0.5, f'True vs estimated validation\nnot available for {check_type} checks',
+               ha='center', va='center', transform=ax.transAxes, fontsize=default_fontsize)
+        ax.set_title('True vs Estimated Cell Time', fontsize=default_fontsize)
+
+    ax.grid(True, alpha=0.3)
+    ax.tick_params(labelsize=default_fontsize * 0.75)
+
+
+def _plot_temporal_uncertainty(
+    adata: AnnData,
+    parameters: Dict[str, torch.Tensor],
+    ax: plt.Axes,
+    check_type: str,
+    default_fontsize: Union[int, float]
+) -> None:
+    """Plot temporal uncertainty analysis using coefficient of variation."""
+
+    # Extract temporal coordinates and samples
+    estimated_t_star = adata.obs.get('t_star', None)
+    t_star_samples = parameters.get('t_star', None)
+
+    if estimated_t_star is not None and t_star_samples is not None:
+        num_cells = len(estimated_t_star)
+        uncertainty, cv_values = _compute_temporal_uncertainty(t_star_samples, num_cells)
+
+        if cv_values is not None:
+            # Create scatter plot of CV vs estimated time
+            scatter = ax.scatter(estimated_t_star, cv_values, alpha=0.7, s=20, color='orange')
+
+            # Add horizontal line for mean CV
+            mean_cv = np.mean(cv_values)
+            ax.axhline(mean_cv, color='red', linestyle='--', alpha=0.8,
+                      label=f'Mean CV = {mean_cv:.3f}')
+
+            # Get parameter labels using metadata system
+            from pyrovelocity.plots.parameter_metadata import (
+                get_parameter_label,
+            )
+            time_label = get_parameter_label(
+                param_name="t_star",
+                label_type="short",
+                model=None,
+                fallback_to_legacy=True
+            )
+
+            ax.set_xlabel(f'Estimated {time_label}', fontsize=default_fontsize)
+            ax.set_ylabel('Coefficient of Variation', fontsize=default_fontsize)
+            ax.set_title('Temporal Uncertainty (CV)', fontsize=default_fontsize)
+            ax.legend(fontsize=default_fontsize * 0.8)
+
+            # Add interpretation text
+            high_uncertainty_threshold = mean_cv + 2 * np.std(cv_values)
+            high_uncertainty_cells = np.sum(cv_values > high_uncertainty_threshold)
+            uncertainty_text = f'High uncertainty cells: {high_uncertainty_cells}/{len(cv_values)}'
+            ax.text(0.05, 0.95, uncertainty_text, transform=ax.transAxes,
+                   fontsize=default_fontsize * 0.8, verticalalignment='top',
+                   bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+        else:
+            ax.text(0.5, 0.5, 'Cannot compute temporal\nuncertainty from samples',
+                   ha='center', va='center', transform=ax.transAxes, fontsize=default_fontsize)
+            ax.set_title('Temporal Uncertainty (CV)', fontsize=default_fontsize)
+    else:
+        ax.text(0.5, 0.5, f'Temporal uncertainty analysis\nnot available for {check_type} checks',
+               ha='center', va='center', transform=ax.transAxes, fontsize=default_fontsize)
+        ax.set_title('Temporal Uncertainty (CV)', fontsize=default_fontsize)
+
+    ax.grid(True, alpha=0.3)
+    ax.tick_params(labelsize=default_fontsize * 0.75)
+
+
+def _compute_temporal_uncertainty(
+    t_star_samples: torch.Tensor,
+    num_cells: int
+) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
+    """
+    Compute temporal uncertainty metrics from posterior samples.
+
+    Args:
+        t_star_samples: Tensor of temporal coordinate samples
+        num_cells: Expected number of cells
+
+    Returns:
+        Tuple of (standard_deviation, coefficient_of_variation) arrays
+    """
+    try:
+        # Handle different tensor shapes
+        if t_star_samples.ndim == 1:
+            # Flattened: [num_samples * num_cells]
+            # Try to infer num_samples
+            total_length = len(t_star_samples)
+            if total_length % num_cells == 0:
+                num_samples = total_length // num_cells
+                samples_reshaped = t_star_samples.view(num_samples, num_cells)
+            else:
+                # Cannot reshape properly
+                return None, None
+        elif t_star_samples.ndim == 2:
+            # Already shaped: [num_samples, num_cells]
+            samples_reshaped = t_star_samples
+        else:
+            # Higher dimensions: try to flatten and reshape
+            samples_flat = t_star_samples.flatten()
+            if len(samples_flat) % num_cells == 0:
+                num_samples = len(samples_flat) // num_cells
+                samples_reshaped = samples_flat.view(num_samples, num_cells)
+            else:
+                return None, None
+
+        # Ensure we have the right number of cells
+        if samples_reshaped.shape[1] != num_cells:
+            return None, None
+
+        # Compute statistics across samples (dim=0)
+        samples_np = samples_reshaped.detach().cpu().numpy()
+        mean_values = np.mean(samples_np, axis=0)
+        std_values = np.std(samples_np, axis=0)
+
+        # Compute coefficient of variation (CV = std/mean)
+        # Avoid division by zero
+        cv_values = np.where(mean_values > 1e-8, std_values / mean_values, 0.0)
+
+        return std_values, cv_values
+
+    except Exception as e:
+        print(f"Warning: Could not compute temporal uncertainty: {e}")
+        return None, None
+
+
 def _classify_parameters_into_patterns(
     parameters: Dict[str, torch.Tensor],
     n_examples: int = 10
@@ -1812,13 +2114,25 @@ def plot_prior_predictive_checks(
         plot_expression_validation(prior_adata, check_type, save_path=save_path, file_prefix="10", default_fontsize=default_fontsize)
         plot_pattern_analysis(prior_adata, processed_parameters, check_type, save_path=save_path, file_prefix="11", default_fontsize=default_fontsize, observed_adata=observed_adata)
 
-        # Plot 12: Training loss (ELBO) - only for posterior checks when model has been trained
+        # Plot 12: Temporal coordinate validation
+        plot_temporal_coordinate_validation(
+            model=model,
+            adata=prior_adata,
+            parameters=processed_parameters,
+            true_parameters_adata=true_parameters_adata,
+            save_path=save_path,
+            file_prefix="12",
+            check_type=check_type,
+            default_fontsize=default_fontsize
+        )
+
+        # Plot 13: Training loss (ELBO) - only for posterior checks when model has been trained
         if check_type == "posterior":
             try:
                 plot_training_loss(
                     model=model,
                     save_path=save_path,
-                    file_prefix="12",
+                    file_prefix="13",
                     default_fontsize=default_fontsize
                 )
             except ValueError as e:
