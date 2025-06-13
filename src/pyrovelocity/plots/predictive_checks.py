@@ -1470,11 +1470,15 @@ def _plot_true_vs_estimated_time(
 
         # Create scatter plot
         if cv_values is not None and len(cv_values) == min_length:
-            # Color points by coefficient of variation
-            scatter = ax.scatter(true_t_star, estimated_t_star, c=cv_values,
+            # Use log scale for CV coloring to better distinguish small values
+            epsilon = 1e-6
+            log_cv_values = np.log10(cv_values + epsilon)
+
+            # Color points by log(coefficient of variation)
+            scatter = ax.scatter(true_t_star, estimated_t_star, c=log_cv_values,
                                cmap='viridis', alpha=0.7, s=20, edgecolors='none')
             cbar = plt.colorbar(scatter, ax=ax, shrink=0.8)
-            cbar.set_label('CV', fontsize=default_fontsize * 0.9)
+            cbar.set_label('log10(CV)', fontsize=default_fontsize * 0.9)
             cbar.ax.tick_params(labelsize=default_fontsize * 0.75)
         else:
             ax.scatter(true_t_star, estimated_t_star, alpha=0.7, s=20, color='steelblue')
@@ -1541,12 +1545,18 @@ def _plot_temporal_uncertainty(
         uncertainty, cv_values = _compute_temporal_uncertainty(t_star_samples, num_cells)
 
         if cv_values is not None:
-            # Create scatter plot of CV vs estimated time
-            scatter = ax.scatter(estimated_t_star, cv_values, alpha=0.7, s=20, color='orange')
+            # Use log scale for CV to better distinguish small values
+            # Add small epsilon to avoid log(0) issues
+            epsilon = 1e-6
+            log_cv_values = np.log10(cv_values + epsilon)
 
-            # Add horizontal line for mean CV
+            # Create scatter plot of log(CV) vs estimated time
+            scatter = ax.scatter(estimated_t_star, log_cv_values, alpha=0.7, s=20, color='orange')
+
+            # Add horizontal line for mean log(CV)
+            mean_log_cv = np.mean(log_cv_values)
             mean_cv = np.mean(cv_values)
-            ax.axhline(mean_cv, color='red', linestyle='--', alpha=0.8,
+            ax.axhline(mean_log_cv, color='red', linestyle='--', alpha=0.8,
                       label=f'Mean CV = {mean_cv:.3f}')
 
             # Get parameter labels using metadata system
@@ -1561,14 +1571,14 @@ def _plot_temporal_uncertainty(
             )
 
             ax.set_xlabel(f'Estimated {time_label}', fontsize=default_fontsize)
-            ax.set_ylabel('Coefficient of Variation', fontsize=default_fontsize)
-            ax.set_title('Temporal Uncertainty (CV)', fontsize=default_fontsize)
+            ax.set_ylabel('log10(Coefficient of Variation)', fontsize=default_fontsize)
+            ax.set_title('Temporal Uncertainty (log CV)', fontsize=default_fontsize)
             ax.legend(fontsize=default_fontsize * 0.8)
 
-            # Add interpretation text
+            # Add interpretation text with both linear and log scale info
             high_uncertainty_threshold = mean_cv + 2 * np.std(cv_values)
             high_uncertainty_cells = np.sum(cv_values > high_uncertainty_threshold)
-            uncertainty_text = f'High uncertainty cells: {high_uncertainty_cells}/{len(cv_values)}'
+            uncertainty_text = f'High uncertainty cells: {high_uncertainty_cells}/{len(cv_values)}\nCV range: [{np.min(cv_values):.3f}, {np.max(cv_values):.3f}]'
             ax.text(0.05, 0.95, uncertainty_text, transform=ax.transAxes,
                    fontsize=default_fontsize * 0.8, verticalalignment='top',
                    bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
