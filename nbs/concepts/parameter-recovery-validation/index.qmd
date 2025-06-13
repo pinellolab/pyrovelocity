@@ -795,10 +795,10 @@ This eliminates the need to infer $u^*_{0i}$ and $s^*_{0i}$ as separate paramete
 
 The dimensionless system with piecewise activation becomes:
 
-$$\begin{align}
+\begin{align}
 \frac{du^{\ast}}{dt^{\ast}} &= \alpha^*_i(t^*) - u^{\ast} \\
 \frac{ds^{\ast}}{dt^{\ast}} &= u^{\ast} - \gamma^{\ast}_i s^{\ast}
-\end{align}$$
+\end{align}
 
 We solve this system analytically for each of the three phases:
 
@@ -806,10 +806,10 @@ We solve this system analytically for each of the three phases:
 
 With constant transcription rate $\alpha^*_{\text{off}i} = 1.0$ and initial conditions at steady state, the system remains at equilibrium:
 
-$$\begin{align}
+\begin{align}
 u^*_{ij}(t^*) &= 1.0 \\
 s^*_{ij}(t^*) &= \frac{1.0}{\gamma^*_i}
-\end{align}$$
+\end{align}
 
 **Note**: This phase may not be observed if $t^*_{0,\text{on}i} < 0$ (pre-activation scenario).
 
@@ -823,18 +823,18 @@ $$u^*_{\text{on},0i} = 1.0, \quad s^*_{\text{on},0i} = \frac{1.0}{\gamma^*_i}$$
 **Analytical solutions:**
 
 For $\gamma^*_i \neq 1$:
-$$\begin{align}
+\begin{align}
 u^*_{ij}(\tau_{\text{on}}) &= R_{\text{on},i} + (1.0 - R_{\text{on},i}) e^{-\tau_{\text{on}}} \\
 s^*_{ij}(\tau_{\text{on}}) &= \frac{R_{\text{on},i}}{\gamma^*_i} + \left(\frac{1.0}{\gamma^*_i} - \xi_{\text{on}i} - \frac{R_{\text{on},i}}{\gamma^*_i}\right) e^{-\gamma^*_i \tau_{\text{on}}} + \xi_{\text{on}i} e^{-\tau_{\text{on}}}
-\end{align}$$
+\end{align}
 
 where $\xi_{\text{on}i} = \frac{1.0 - R_{\text{on},i}}{\gamma^*_i - 1}$.
 
 For $\gamma^*_i = 1$:
-$$\begin{align}
+\begin{align}
 u^*_{ij}(\tau_{\text{on}}) &= R_{\text{on},i} + (1.0 - R_{\text{on},i}) e^{-\tau_{\text{on}}} \\
 s^*_{ij}(\tau_{\text{on}}) &= R_{\text{on},i} + (1.0 - R_{\text{on},i}) e^{-\tau_{\text{on}}} + (1.0 - R_{\text{on},i}) \tau_{\text{on}} e^{-\tau_{\text{on}}}
-\end{align}$$
+\end{align}
 
 **Special case interpretation ($\gamma^*_i = 1$):**
 
@@ -855,34 +855,34 @@ Let $\tau_{\text{off}} = t^* - (t^*_{0,\text{on}i} + \delta^*_i)$ be the time si
 The initial conditions for Phase 3 are the endpoint values from Phase 2, computed explicitly as:
 
 For $\gamma^*_i \neq 1$:
-$$\begin{align}
+\begin{align}
 u^*_{\text{off},0i} &= R_{\text{on},i} + (1.0 - R_{\text{on},i}) e^{-\delta^*_i} \\
 s^*_{\text{off},0i} &= \frac{R_{\text{on},i}}{\gamma^*_i} + \left(\frac{1.0}{\gamma^*_i} - \xi_{\text{on}i} - \frac{R_{\text{on},i}}{\gamma^*_i}\right) e^{-\gamma^*_i \delta^*_i} + \xi_{\text{on}i} e^{-\delta^*_i}
-\end{align}$$
+\end{align}
 
 For $\gamma^*_i = 1$:
-$$\begin{align}
+\begin{align}
 u^*_{\text{off},0i} &= R_{\text{on},i} + (1.0 - R_{\text{on},i}) e^{-\delta^*_i} \\
 s^*_{\text{off},0i} &= R_{\text{on},i} + (1.0 - R_{\text{on},i}) e^{-\delta^*_i} + (1.0 - R_{\text{on},i}) \delta^*_i e^{-\delta^*_i}
-\end{align}$$
+\end{align}
 
 where $\xi_{\text{on}i} = \frac{1.0 - R_{\text{on},i}}{\gamma^*_i - 1}$ for the $\gamma^*_i \neq 1$ case.
 
 **Analytical solutions:**
 
 For $\gamma^*_i \neq 1$:
-$$\begin{align}
+\begin{align}
 u^*_{ij}(\tau_{\text{off}}) &= 1.0 + (u^*_{\text{off},0i} - 1.0) e^{-\tau_{\text{off}}} \\
 s^*_{ij}(\tau_{\text{off}}) &= \frac{1.0}{\gamma^*_i} + \left(s^*_{\text{off},0i} - \xi_{\text{off}i} - \frac{1.0}{\gamma^*_i}\right) e^{-\gamma^*_i \tau_{\text{off}}} + \xi_{\text{off}i} e^{-\tau_{\text{off}}}
-\end{align}$$
+\end{align}
 
 where $\xi_{\text{off}i} = \frac{u^*_{\text{off},0i} - 1.0}{\gamma^*_i - 1}$.
 
 For $\gamma^*_i = 1$:
-$$\begin{align}
+\begin{align}
 u^*_{ij}(\tau_{\text{off}}) &= 1.0 + (u^*_{\text{off},0i} - 1.0) e^{-\tau_{\text{off}}} \\
 s^*_{ij}(\tau_{\text{off}}) &= 1.0 + (s^*_{\text{off},0i} - 1.0) e^{-\tau_{\text{off}}} + (u^*_{\text{off},0i} - 1.0) \tau_{\text{off}} e^{-\tau_{\text{off}}}
-\end{align}$$
+\end{align}
 
 ### Gene Expression Pattern Classification
 
@@ -890,10 +890,10 @@ This piecewise framework enables representation of diverse gene expression patte
 
 **Parameter Framework**: The classification uses relative temporal parameters ($\tilde{t}^*_{0,\text{on}i}$, $\tilde{\delta}^*_i$) that are scaled by the global maximum time $T_M^*$ to produce absolute temporal parameters:
 
-$$\begin{align}
+\begin{align}
 t^*_{0,\text{on}i} &= T_M^* \times \tilde{t}^*_{0,\text{on}i} \quad \text{(absolute activation onset time)} \\
 \delta^*_i &= T_M^* \times \tilde{\delta}^*_i \quad \text{(absolute activation duration)}
-\end{align}$$
+\end{align}
 
 This hierarchical structure separates global temporal scaling from gene-specific temporal patterns, enabling consistent pattern classification across different experimental timescales.
 
@@ -1320,6 +1320,213 @@ $$p(\tilde{y}) = \int p(\tilde{y} | \theta) p(\theta) d\theta$$
 
 where $\theta$ represents the complete parameter vector including all gene-specific parameters $(\gamma^*_i, R_{\text{on},i}, \tilde{t}^*_{0,\text{on}i}, \tilde{\delta}^*_i, U_{0i})$, hierarchical time parameters $(T_{M}^*, t_{loc}, t_{scl}, t^*_j)$, and cell-specific capture efficiencies $(\lambda_j)$.
 
+#### **Prior Predictive Distribution: Mathematical Foundation**
+
+**Fundamental Definition and Interpretation**
+
+The prior predictive distribution represents the model's predictions about observable data before conditioning on any observations, providing a complete characterization of the model's predictive uncertainty in the absence of data. This marginal distribution integrates over all possible parameter configurations weighted by their prior probabilities.
+
+For the piecewise activation model, this becomes:
+
+\begin{align}
+p(\tilde{y}) &= \int p(\tilde{y} | \gamma^*_i, R_{\text{on},i}, \tilde{t}^*_{0,\text{on}i}, \tilde{\delta}^*_i, U_{0i}, T_{M}^*, t_{loc}, t_{scl}, t^*_j, \lambda_j) \times \nonumber \\
+&\quad p(\gamma^*_i, R_{\text{on},i}, \tilde{t}^*_{0,\text{on}i}, \tilde{\delta}^*_i, U_{0i}, T_{M}^*, t_{loc}, t_{scl}, t^*_j, \lambda_j) \, d\theta \label{eq-prior-predictive-piecewise}
+\end{align}
+
+where the integration spans the complete hierarchical parameter space defined by the model's prior distributions.
+
+**Hierarchical Integration Decomposition**
+
+The prior predictive distribution decomposes according to the model's hierarchical structure:
+
+\begin{align}
+p(\tilde{y}) &= \int \int \int \int \int p(\tilde{y} | T_{M}^*, \theta_{\text{gene}}, \theta_{\text{cell}}, \theta_{\text{tech}}) \times \nonumber \\
+&\quad p(T_{M}^*) \, p(\theta_{\text{gene}}) \, p(\theta_{\text{cell}}) \, p(\theta_{\text{tech}}) \, dT_{M}^* \, d\theta_{\text{gene}} \, d\theta_{\text{cell}} \, d\theta_{\text{tech}} \label{eq-hierarchical-integration}
+\end{align}
+
+where:
+
+- $\theta_{\text{gene}} = \{\gamma^*_i, R_{\text{on},i}, \tilde{t}^*_{0,\text{on}i}, \tilde{\delta}^*_i, U_{0i}\}_{i=1}^G$ represents gene-specific parameters
+- $\theta_{\text{cell}} = \{t_{loc}, t_{scl}, \tilde{t}_j, t^*_j\}_{j=1}^N$ represents cell-specific temporal parameters
+- $\theta_{\text{tech}} = \{\lambda_j\}_{j=1}^N$ represents technical efficiency parameters
+
+This decomposition reflects the model's assumption that gene-specific kinetics, population-level temporal structure, and technical factors contribute independently to the prior uncertainty.
+
+**Monte Carlo Approximation**
+
+The prior predictive distribution is computed via Monte Carlo sampling:
+
+\begin{align}
+p(\tilde{y}) \approx \frac{1}{S} \sum_{s=1}^S p(\tilde{y} | \theta^{(s)}) \label{eq-mc-prior-predictive}
+\end{align}
+
+where $\theta^{(s)} \sim p(\theta)$ are samples from the joint prior distribution.
+
+**Detailed Sampling Procedure:**
+
+1. **Sample hierarchical time parameters**:
+   \begin{align}
+   {T_{M}^*}^{(s)} &\sim \text{Gamma}(\alpha_{T}, \beta_{T}), \quad {t_{loc}}^{(s)} \sim \text{Gamma}(\alpha_{t_{loc}}, \beta_{t_{loc}}), \quad {t_{scl}}^{(s)} \sim \text{Gamma}(\alpha_{t_{scl}}, \beta_{t_{scl}})
+   \end{align}
+
+2. **Sample cell-specific relative times**:
+   \begin{align}
+   {\tilde{t}_j}^{(s)} &\sim \text{Normal}({t_{loc}}^{(s)}, ({t_{scl}}^{(s)})^2) \quad \text{for } j \in \{1, \ldots, N\}
+   \end{align}
+
+3. **Transform to absolute times**:
+   \begin{align}
+   {t^{*}_j}^{(s)} &= {T_{M}^*}^{(s)} \times \max({\tilde{t}_j}^{(s)}, \epsilon)
+   \end{align}
+
+4. **Sample gene-specific parameters**:
+   \begin{align}
+   {\gamma^{*}_i}^{(s)} &\sim \text{LogNormal}(\log(1.0), 0.5^2) \\
+   {R_{\text{on},i}}^{(s)} &\sim \text{LogNormal}(\log(2.5), 0.4^2) \\
+   {\tilde{t}^*_{0,\text{on}i}}^{(s)} &\sim \text{Normal}(0.5, 0.8^2) \\
+   {\tilde{\delta}^*_i}^{(s)} &\sim \text{LogNormal}(\log(0.45), 0.45^2) \\
+   {U_{0i}}^{(s)} &\sim \text{LogNormal}(\mu_{U_0}, \sigma_{U_0}^2)
+   \end{align}
+
+5. **Transform relative temporal parameters**:
+   \begin{align}
+   {t^*_{0,\text{on}i}}^{(s)} &= {T_{M}^*}^{(s)} \times {\tilde{t}^*_{0,\text{on}i}}^{(s)}, \quad {\delta^*_i}^{(s)} = {T_{M}^*}^{(s)} \times {\tilde{\delta}^*_i}^{(s)}
+   \end{align}
+
+6. **Sample capture efficiencies**:
+   \begin{align}
+   {\lambda_j}^{(s)} &\sim \text{LogNormal}(\mu_{\lambda}, \sigma_{\lambda}^2)
+   \end{align}
+
+7. **Compute latent concentrations**:
+   \begin{align}
+   {u^{*}_{ij}}^{(s)}, {s^{*}_{ij}}^{(s)} &= f_{\text{piecewise}}({t^*_j}^{(s)}, {\gamma^*_i}^{(s)}, {R_{\text{on},i}}^{(s)}, {t^*_{0,\text{on}i}}^{(s)}, {\delta^*_i}^{(s)})
+   \end{align}
+
+8. **Sample observations**:
+   \begin{align}
+   {u_{ij}}^{(s)} &\sim \text{Poisson}({\lambda_j}^{(s)} \cdot {U_{0i}}^{(s)} \cdot {u^{*}_{ij}}^{(s)}) \\
+   {s_{ij}}^{(s)} &\sim \text{Poisson}({\lambda_j}^{(s)} \cdot {U_{0i}}^{(s)} \cdot {s^{*}_{ij}}^{(s)})
+   \end{align}
+
+**Prior Predictive Uncertainty Decomposition**
+
+The total prior predictive uncertainty decomposes across the hierarchical parameter structure:
+
+\begin{align}
+\text{Var}[\tilde{y}] = \mathbb{E}_\theta[\text{Var}[y|\theta]] + \text{Var}_\theta[\mathbb{E}[y|\theta]] \label{eq-prior-uncertainty-decomp}
+\end{align}
+
+where the expectation and variance are taken over the joint prior distribution $p(\theta)$.
+
+**Uncertainty Sources in Prior Predictive:**
+
+The piecewise activation model exhibits multiple sources of prior uncertainty that propagate through the hierarchical structure:
+
+1. **Global temporal scale uncertainty**: Uncertainty in $T_{M}^*$ affects the absolute timescale of all temporal processes, scaling both activation onset times and durations proportionally
+
+2. **Population temporal distribution uncertainty**: Uncertainty in $t_{loc}, t_{scl}$ affects the distribution of cells across the relative temporal coordinate, determining population-level temporal heterogeneity
+
+3. **Gene-specific kinetic uncertainty**: Prior uncertainty in $\gamma^*_i, R_{\text{on},i}$ affects the shape and magnitude of concentration trajectories during each phase
+
+4. **Gene-specific temporal pattern uncertainty**: Prior uncertainty in $\tilde{t}^*_{0,\text{on}i}, \tilde{\delta}^*_i$ affects when activation occurs and how long it lasts relative to the population timeline
+
+5. **Characteristic scale uncertainty**: Prior uncertainty in $U_{0i}$ affects the absolute magnitude of expression levels for each gene
+
+6. **Technical efficiency uncertainty**: Prior uncertainty in $\lambda_j$ affects the detection efficiency and overall count levels for each cell
+
+7. **Observation noise**: Irreducible Poisson variance in count observations that persists regardless of parameter knowledge
+
+**Mathematical Decomposition:**
+
+For individual observations, the prior predictive variance decomposes as:
+
+\begin{align}
+\text{Var}[\tilde{y}_{ij}] = \mathbb{E}[\lambda_j U_{0i} u^*_{ij}(\theta)] + \text{Var}[\lambda_j U_{0i} u^*_{ij}(\theta)] \label{eq-individual-prior-variance}
+\end{align}
+
+where the first term represents the expected Poisson variance (observation noise) and the second term represents the variance due to parameter uncertainty propagating through the piecewise dynamics.
+
+**Nonlinear Uncertainty Propagation in Prior Predictive:**
+
+Parameter uncertainty propagates nonlinearly through the piecewise analytical solutions under the prior:
+
+- **Phase assignment uncertainty**: Prior uncertainty in temporal parameters creates uncertainty about which phase each cell-gene pair occupies, leading to mixture-like behavior in the prior predictive distribution
+
+- **Exponential amplification**: The exponential terms in analytical solutions amplify prior parameter uncertainty, particularly for genes with large characteristic scales or cells at extreme time points
+
+- **Temporal scaling interactions**: Uncertainty in $T_{M}^*$ interacts multiplicatively with uncertainty in relative temporal parameters, creating complex correlation structures
+
+- **Special case transitions**: Prior probability mass near $\gamma^*_i = 1$ creates discontinuous changes in the analytical solution form, contributing additional uncertainty
+
+**Relationship to Posterior Predictive**
+
+**Bayesian Learning Interpretation:**
+
+The posterior predictive distribution represents the prior predictive distribution updated by observed data:
+
+\begin{align}
+p(\tilde{y} | y_{obs}) = \int p(\tilde{y} | \theta) p(\theta | y_{obs}) d\theta \label{eq-posterior-predictive-relation}
+\end{align}
+
+where $p(\theta | y_{obs}) \propto p(y_{obs} | \theta) p(\theta)$ incorporates the likelihood of observed data through Bayes' theorem.
+
+**Uncertainty Reduction:**
+
+Bayesian learning systematically reduces predictive uncertainty:
+
+\begin{align}
+\text{Var}[\tilde{y} | y_{obs}] \leq \text{Var}[\tilde{y}] \label{eq-uncertainty-reduction}
+\end{align}
+
+with equality only when the observed data provides no information about the parameters (i.e., when the likelihood is flat).
+
+**Information Content Quantification:**
+
+The reduction in predictive uncertainty quantifies the information content of the observed data:
+
+\begin{align}
+\text{Information} = \text{Var}[\tilde{y}] - \text{Var}[\tilde{y} | y_{obs}] \label{eq-information-content}
+\end{align}
+
+This quantity measures how much the data constrains the model's predictions about future observations.
+
+**Prior Predictive Validation Applications**
+
+**Model Specification Validation:**
+
+Prior predictive checks validate whether the model can generate data with realistic characteristics:
+
+1. **Count distribution realism**: Do prior predictive counts match expected single-cell RNA-seq distributional properties (mean-variance relationships, sparsity patterns, dynamic range)?
+
+2. **Temporal coordination**: Does the hierarchical time structure produce biologically plausible cell orderings and temporal relationships?
+
+3. **Expression magnitude realism**: Do the characteristic scales $U_{0i}$ and capture efficiencies $\lambda_j$ combine to produce realistic expression levels?
+
+4. **Kinetic parameter coverage**: Does the prior cover the range of biologically plausible kinetic behaviors without generating unrealistic dynamics?
+
+**Prior Sensitivity Analysis:**
+
+Compare prior predictive distributions under different hyperparameter choices:
+
+\begin{align}
+p(\tilde{y} | \alpha_1) \text{ vs. } p(\tilde{y} | \alpha_2) \label{eq-prior-sensitivity}
+\end{align}
+
+where $\alpha_1, \alpha_2$ represent different hyperparameter configurations. This analysis identifies which hyperparameters most strongly influence prior predictions.
+
+**Computational Validation:**
+
+Prior predictive sampling validates computational implementation:
+
+1. **Convergence assessment**: Do prior predictive samples converge to stable distributions as the number of samples increases?
+
+2. **Numerical stability**: Are analytical solutions numerically stable across the full range of prior parameter values?
+
+3. **Phase assignment consistency**: Do temporal parameters correctly determine phase assignments across all prior samples?
+
+4. **Parameter constraint satisfaction**: Do all prior samples satisfy model constraints (e.g., positive concentrations, valid phase boundaries)?
+
 **Posterior Predictive Distribution**
 
 After observing synthetic data $y_{obs}$, the posterior predictive distribution incorporates learned parameter constraints:
@@ -1369,22 +1576,26 @@ where $f_{\text{piecewise}}$ represents the appropriate analytical solution (Pha
 
 The final observations follow Poisson distributions with rates determined by the latent concentrations:
 
-$$\begin{align}
+\begin{align}
 u_{ij} | \theta &\sim \text{Poisson}(\lambda_j \cdot U_{0i} \cdot u^*_{ij}(\theta)) \\
 s_{ij} | \theta &\sim \text{Poisson}(\lambda_j \cdot U_{0i} \cdot s^*_{ij}(\theta))
-\end{align}$$
+\end{align}
 
 This scaling structure ensures that parameter uncertainty propagates through the characteristic scales $U_{0i}$ and capture efficiencies $\lambda_j$ to the final count observations.
 
 #### **Validation Procedure: Mathematical Description**
 
+The parameter recovery validation procedure systematically compares prior and posterior predictive distributions to assess the model's ability to learn from data.
+
 **Step 1: Synthetic Data Generation from Prior Predictive**
 
-Generate synthetic data with known "true" parameters by sampling from the prior predictive distribution:
+Generate synthetic data with known "true" parameters by sampling from the prior predictive distribution as described in equations \eqref{eq-prior-predictive-piecewise}-\eqref{eq-mc-prior-predictive}:
 
-1. Sample true parameters: $\theta_{true} \sim p(\theta)$
-2. Compute latent concentrations: $u^*_{ij,true}, s^*_{ij,true} = f_{\text{piecewise}}(t^*_{j,true}, \theta_{true})$
-3. Generate synthetic observations: $y_{obs} = \{u_{ij}, s_{ij}\} \sim p(y | \theta_{true})$
+1. **Sample true parameters**: $\theta_{true} \sim p(\theta)$ following the hierarchical sampling procedure
+2. **Compute latent concentrations**: $u^*_{ij,true}, s^*_{ij,true} = f_{\text{piecewise}}(t^*_{j,true}, \theta_{true})$ using the piecewise analytical solutions
+3. **Generate synthetic observations**: $y_{obs} = \{u_{ij}, s_{ij}\} \sim p(y | \theta_{true})$ from the Poisson observation model
+
+This step creates a controlled validation scenario where the "true" parameter values are known by construction, enabling direct assessment of parameter recovery performance.
 
 **Step 2: Posterior Inference**
 
@@ -1412,18 +1623,20 @@ $$\tilde{y}^{(s)} \sim p(y | \theta^{(s)})$$
 
 **Correct Sampling**: Each $\tilde{y}^{(s)}$ must be generated using the complete parameter vector $\theta^{(s)}$:
 
-1. Compute phase assignments for each cell-gene pair using ${t^{\ast}_{j}}^{(s)}$, ${t^{\ast}_{0,\text{on}i}}^{(s)}$, ${\delta^{\ast}_i}^{(s)}$
-2. Evaluate analytical solutions: ${u^*_{ij}}^{(s)}, {s^*_{ij}}^{(s)} = f_{\text{piecewise}}({t^*_{j}}^{(s)}, {\gamma^*_i}^{(s)}, {R_{\text{on},i}}^{(s)}, {t^*_{0,\text{on}i}}^{(s)}, {\delta^*_i}^{(s)})$
+1. Compute phase assignments for each cell-gene pair using ${{t^{\ast}_{j}}}^{(s)}$, ${{t^{\ast}_{0,\text{on}i}}}^{(s)}$, ${{\delta^{\ast}_i}}^{(s)}$
+2. Evaluate analytical solutions: ${{u^*_{ij}}}^{(s)}, {{s^*_{ij}}}^{(s)} = f_{\text{piecewise}}({{t^*_{j}}}^{(s)}, {{\gamma^*_i}}^{(s)}, {{R_{\text{on},i}}}^{(s)}, {{t^*_{0,\text{on}i}}}^{(s)}, {{\delta^*_i}}^{(s)})$
 3. Sample observations: 
 
 \begin{align}
-{u_{ij}}^{(s)} &\sim \text{Poisson}({\lambda_j}^{(s)} \cdot {U_{0i}}^{(s)} \cdot {u^*_{ij}}^{(s)})$\\
-${s_{ij}}^{(s)} &\sim \text{Poisson}({\lambda_j}^{(s)} \cdot {U_{0i}}^{(s)} \cdot {s^*_{ij}}^{(s)})
+{{u_{ij}}}^{(s)} &\sim \text{Poisson}({{\lambda_j}}^{(s)} \cdot {{U_{0i}}}^{(s)} \cdot {{u^*_{ij}}}^{(s)}) \\
+{{s_{ij}}}^{(s)} &\sim \text{Poisson}({{\lambda_j}}^{(s)} \cdot {{U_{0i}}}^{(s)} \cdot {{s^*_{ij}}}^{(s)})
 \end{align}
 
 The posterior predictive distribution cannot be computed using averaged parameters such as
 
-$$\bar{\theta} = \frac{1}{S}\sum_{s=1}^S \theta^{(s)}$$
+\begin{align}
+\bar{\theta} = \frac{1}{S}\sum_{s=1}^S {\theta}^{(s)}
+\end{align}
 
 Using $\bar{\theta}$ would violate the fundamental definition of posterior predictive distributions and fails to capture parameter uncertainty propagation through the nonlinear dynamics.
 
@@ -1456,10 +1669,10 @@ Parameter uncertainty propagates nonlinearly through the piecewise analytical so
 
 For the piecewise activation model, the total predictive uncertainty can be decomposed as:
 
-$$\begin{align}
+\begin{align}
 \text{Var}[\tilde{y}_{ij} | y_{obs}] &= \mathbb{E}_\theta[\lambda_j U_{0i} u^*_{ij}(\theta)] + \text{Var}_\theta[\lambda_j U_{0i} u^*_{ij}(\theta)] \\
 &= \text{Poisson variance} + \text{Parameter uncertainty}
-\end{align}$$
+\end{align}
 
 The parameter uncertainty term captures the complex propagation of uncertainty through the hierarchical parameter structure and piecewise dynamics.
 
@@ -1492,35 +1705,6 @@ Compare observed synthetic data $y_{obs}$ to posterior predictive samples $\{\ti
 3. **Posterior predictive p-values**: Probability that replicated data would be more extreme than observed data
    $$p_{pp} = P(T(\tilde{y}) \geq T(y_{obs}) | y_{obs})$$
    where $T(\cdot)$ is a test statistic (e.g., mean, variance, skewness).
-
-#### **Critical Implementation Requirements**
-
-**Prohibition Against Parameter Averaging**
-
-The mathematical definition of posterior predictive distributions explicitly requires sampling parameters and observables jointly, without ad hoc averaging. 
-
-**Correct Sample-wise Implementation**
-
-Each posterior predictive sample must be generated independently:
-
-```python
-# CORRECT: Sample-wise generation
-for s in range(S):
-    theta_s = posterior_samples[s]  # Complete parameter vector
-    y_pred_s = generate_observations(theta_s)  # Use full parameter vector
-    posterior_predictive_samples.append(y_pred_s)
-
-# INCORRECT: Parameter averaging (mathematically invalid)
-theta_mean = np.mean(posterior_samples, axis=0)  # WRONG
-y_pred = generate_observations(theta_mean)  # WRONG
-```
-
-**Uncertainty Propagation Requirements**
-
-1. **Preserve parameter correlations**: Use complete parameter vectors $\theta^{(s)}$ to maintain posterior correlations
-2. **Respect phase boundaries**: Ensure temporal parameters correctly determine phase assignments for each sample
-3. **Include all uncertainty sources**: Propagate uncertainty from all hierarchical levels
-4. **Maintain biological constraints**: Ensure all generated samples satisfy model constraints (e.g., positive concentrations)
 
 #### **Computational Considerations for Piecewise Models**
 
@@ -1631,7 +1815,7 @@ This validation workflow demonstrates the key capabilities of the piecewise acti
 - **Pre-activation modeling**: Supports negative onset times for genes already activated before observation
 - **Dimensional consistency**: Eliminates parameter redundancy through fixed reference state parameterization
 - **Biological interpretability**: All parameters have clear biological meaning and interpretable ranges
-- **Coarse-grained expression pattern classification**: Classification of temporal expression patterns covering pre-activation, transient, and sustained that should all be able to be generated by the prior and prior predictive in order to ensure the ability to represent the expected collection of expression patterns in the underlying data
+- **Comprehensive prior predictive framework**: Mathematical foundation for validating model specification through prior predictive checking as detailed in equations \eqref{eq-prior-predictive-piecewise}-\eqref{eq-information-content}, ensuring the model can generate realistic data patterns before observing any data
 - **Relative temporal parameterization**: Enables interpretable parameter values and consistent pattern classification across different experimental timescales and even distinct data sets
 
-The complete validation scripts referenced in the introduction (`prior-predictive-check.py` and `posterior-predictive-check.py`) provide comprehensive parameter recovery validation including visualization and statistical assessment of recovery performance.
+The complete validation scripts referenced in the introduction (`prior-predictive-check.py` and `posterior-predictive-check.py`) provide comprehensive parameter recovery validation including visualization and statistical assessment of recovery performance. The prior predictive checking framework validates model specification and prior adequacy, while the posterior predictive checking framework assesses parameter recovery and predictive accuracy.
