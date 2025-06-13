@@ -27,10 +27,14 @@ print(f"  Likelihood: {model.likelihood_model}")
 print(f"  Guide: {model.guide_model}")
 
 # Generate num_samples datasets for prior predictive check
+# Optimized configuration for hierarchical model convergence:
+# - More samples (400) for better global parameter convergence
+# - Fewer cells/genes to maintain computational efficiency
+# - Total parameters: 400 × (100 + 25) = 50,000 (vs 25,000 previously)
 prior_predictive_adata = model.generate_predictive_samples(
-    num_cells=200,
-    num_genes=50,
-    num_samples=100,
+    num_cells=100,      # Reduced from 200 for efficiency
+    num_genes=25,       # Reduced from 50 for efficiency
+    num_samples=400,    # Increased from 100 for convergence
     return_format="anndata"
 )
 
