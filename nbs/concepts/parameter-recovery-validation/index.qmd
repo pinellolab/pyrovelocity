@@ -20,10 +20,10 @@ author:
   - name: Pyrovelocity Team
     email: team@pyrovelocity.net
 abstract: |
-  This notebook demonstrates parameter recovery validation for PyroVelocity models using the direct dimensionless approach,
-  progressing from analytical solutions with observed time to numerical simulation with latent time coordinates.
-  We focus on models that naturally avoid identifiability issues while maintaining biological interpretability,
-  using hierarchical priors on characteristic scales and lumped effective capture efficiency.
+  This notebook demonstrates parameter recovery validation for PyroVelocity models using dimensionless models.
+  We progress from analytically tractable models where the temporal coordinate is an observed variable toward the more complicated situation of models with latent variables that represent temporal ordering and must therefore be inferred.
+  We focus on constructing models that naturally avoid identifiability issues while maintaining biological interpretability,
+  using hierarchical priors on characteristic scales and simple accounting of technical artifacts through effective parameters that aggregate sources of error.
   We illustrate how to systematically validate that probabilistic models can recover
   known parameters from synthetic data, which is essential before applying models
   to real-world data where true parameter values are unknown.
@@ -62,11 +62,11 @@ Parameter recovery validation is a critical step in validating probabilistic mod
 3. **Evaluating recovery performance**
 4. **Assessing model identifiability**
 
-This notebook demonstrates parameter recovery validation for PyroVelocity models using the dimensionless parameterization that naturally avoids identifiability issues while maintaining biological interpretability. We implement hierarchical priors on characteristic scales and lumped effective capture efficiency, progressing from analytical solutions with observed time to numerical simulation with latent time coordinates. For each model we include a graphical representation of the model's generative process as well as a mathematical description of the prior, observation model, and likelihood.
+This notebook demonstrates parameter recovery validation for PyroVelocity models using the dimensionless parameterization that naturally avoids identifiability issues while maintaining biological interpretability. We implement hierarchical priors on characteristic scales and lumped effective capture efficiency, progressing from analytical solutions with observed time to numerical simulation with latent time coordinates. For each model we include a graphical representation of the model's generative process as well as a mathematical description of the prior, observation model, and likelihood. We illustrate how to perform a somewhat simplified version of prior and posterior predictive checking for the piecewise activation model with latent time.
 
-## Model Progression
+## Model Development
 
-We validate parameter recovery across a progression of **dimensionless models** that naturally avoid identifiability issues while maintaining biological interpretability. Each model builds complexity while preserving the core dimensionless parameterization.
+We work through a progression of **dimensionless models** that naturally avoid or aim to avoid identifiability issues while maintaining biological interpretability. Each model builds complexity while preserving the core dimensionless parameterization.
 
 ### Dimensionless Analytical Dynamics with Observed Time
 
@@ -132,8 +132,6 @@ from pyrovelocity.io.datasets import bifurcation_14
 torch.manual_seed(42)
 pyro.set_rng_seed(42)
 np.random.seed(42)
-
-print("Setup complete!")
 ```
 
 ## Dimensionless analytical dynamics with observed time {#sec-dimless-observed-time}
@@ -1439,13 +1437,9 @@ For each posterior sample $\theta^{(s)}$, generate a corresponding posterior pre
 
 $$\tilde{y}^{(s)} \sim p(y | \theta^{(s)})$$
 
-**Mathematical Prohibition Against Parameter Averaging**: The posterior predictive distribution is **NOT** computed using averaged parameters:
+**Mathematical Prohibition Against Parameter Averaging**: 
 
-$$\bar{\theta} = \frac{1}{S}\sum_{s=1}^S \theta^{(s)} \quad \text{(MATHEMATICALLY INCORRECT)}$$
-
-Using $\bar{\theta}$ violates the fundamental definition of posterior predictive distributions and fails to capture parameter uncertainty propagation through the nonlinear piecewise dynamics.
-
-**Correct Sample-wise Generation**: Each $\tilde{y}^{(s)}$ must be generated using the complete parameter vector $\theta^{(s)}$:
+**Correct Sampling**: Each $\tilde{y}^{(s)}$ must be generated using the complete parameter vector $\theta^{(s)}$:
 
 1. Compute phase assignments for each cell-gene pair using ${t^{\ast}_{j}}^{(s)}$, ${t^{\ast}_{0,\text{on}i}}^{(s)}$, ${\delta^{\ast}_i}^{(s)}$
 2. Evaluate analytical solutions: ${u^*_{ij}}^{(s)}, {s^*_{ij}}^{(s)} = f_{\text{piecewise}}({t^*_{j}}^{(s)}, {\gamma^*_i}^{(s)}, {R_{\text{on},i}}^{(s)}, {t^*_{0,\text{on}i}}^{(s)}, {\delta^*_i}^{(s)})$
@@ -1455,6 +1449,12 @@ Using $\bar{\theta}$ violates the fundamental definition of posterior predictive
 {u_{ij}}^{(s)} &\sim \text{Poisson}({\lambda_j}^{(s)} \cdot {U_{0i}}^{(s)} \cdot {u^*_{ij}}^{(s)})$\\
 ${s_{ij}}^{(s)} &\sim \text{Poisson}({\lambda_j}^{(s)} \cdot {U_{0i}}^{(s)} \cdot {s^*_{ij}}^{(s)})
 \end{align}
+
+The posterior predictive distribution cannot be computed using averaged parameters such as
+
+$$\bar{\theta} = \frac{1}{S}\sum_{s=1}^S \theta^{(s)}$$
+
+Using $\bar{\theta}$ would violate the fundamental definition of posterior predictive distributions and fails to capture parameter uncertainty propagation through the nonlinear dynamics.
 
 **Step 5: Validation Assessment**
 
@@ -1526,12 +1526,7 @@ Compare observed synthetic data $y_{obs}$ to posterior predictive samples $\{\ti
 
 **Prohibition Against Parameter Averaging**
 
-The mathematical definition of posterior predictive distributions explicitly requires sample-wise generation. **Parameter averaging is mathematically incorrect** because:
-
-1. **Nonlinear dynamics**: The piecewise analytical solutions are nonlinear functions of parameters, so $f(\mathbb{E}[\theta]) \neq \mathbb{E}[f(\theta)]$
-2. **Phase discontinuities**: Averaged temporal parameters may place cells in incorrect phases
-3. **Uncertainty underestimation**: Averaging eliminates parameter uncertainty propagation
-4. **Invalid inference**: Results do not represent valid Bayesian posterior predictive distributions
+The mathematical definition of posterior predictive distributions explicitly requires sampling parameters and observables jointly, without ad hoc averaging. 
 
 **Correct Sample-wise Implementation**
 
