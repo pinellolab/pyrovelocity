@@ -2723,26 +2723,28 @@ class PyroVelocityModel:
                     # Convert to numpy
                     coord_array = value.detach().cpu().numpy()
 
-                    # Handle different tensor shapes
+                    # Handle different tensor shapes - AVERAGE ACROSS SAMPLES FIRST
                     if coord_array.ndim >= 2:
+                        # Average across sample dimension (first dimension) if multiple samples
+                        if coord_array.shape[0] > 1:
+                            coord_array = coord_array.mean(axis=0)
+
                         # Try to find a dimension that matches num_cells
                         for dim_idx in range(coord_array.ndim):
                             if coord_array.shape[dim_idx] == num_cells:
                                 # Extract the cell dimension
-                                if coord_array.ndim == 2:
+                                if coord_array.ndim == 1:
+                                    temporal_coord = coord_array
+                                elif coord_array.ndim == 2:
                                     if dim_idx == 0:
-                                        temporal_coord = coord_array[:, 0]  # Take first column
+                                        temporal_coord = coord_array[:, 0] if coord_array.shape[1] == 1 else coord_array.flatten()
                                     else:
-                                        temporal_coord = coord_array[0, :]  # Take first row
+                                        temporal_coord = coord_array[0, :] if coord_array.shape[0] == 1 else coord_array.flatten()
                                 elif coord_array.ndim > 2:
-                                    # For higher dimensions, take first slice along other dimensions
-                                    if dim_idx == 0:
-                                        temporal_coord = coord_array[:, 0, 0] if coord_array.shape[1] > 0 else coord_array[:, 0]
-                                    else:
-                                        # Reshape to get cell dimension
-                                        coord_flat = coord_array.flatten()
-                                        if len(coord_flat) >= num_cells:
-                                            temporal_coord = coord_flat[:num_cells]
+                                    # For higher dimensions, flatten and take first num_cells elements
+                                    coord_flat = coord_array.flatten()
+                                    if len(coord_flat) >= num_cells:
+                                        temporal_coord = coord_flat[:num_cells]
                                 break
                     elif coord_array.ndim == 1 and len(coord_array) == num_cells:
                         temporal_coord = coord_array
@@ -2798,15 +2800,16 @@ class PyroVelocityModel:
                     value = predictive_samples[param_name]
                     if isinstance(value, torch.Tensor):
                         param_array = value.detach().cpu().numpy()
-                        # Handle batch dimensions
+                        # Handle batch dimensions - COMPUTE POSTERIOR MEAN ACROSS SAMPLES
                         if param_array.ndim > 1:
                             if param_array.shape[0] == 1:
                                 param_array = param_array[0]
                             elif param_name == 'tilde_t' and param_array.shape[-1] == num_cells:
-                                # For tilde_t, take the first sample and last dimension
-                                param_array = param_array[0, :] if param_array.ndim == 2 else param_array[0, 0, :]
+                                # For tilde_t, compute mean across samples for each cell
+                                param_array = param_array.mean(axis=0) if param_array.ndim == 2 else param_array.mean(axis=(0, 1))
                             else:
-                                param_array = param_array.flatten()
+                                # For other parameters, compute mean across samples
+                                param_array = param_array.mean(axis=0) if param_array.shape[0] > 1 else param_array.flatten()
                         hierarchical_params[param_name] = param_array
 
             # If not found in predictive samples, check samples parameter
@@ -2853,16 +2856,22 @@ class PyroVelocityModel:
                 else:
                     tilde_t_val = np.array(tilde_t)
 
-                # Handle batch dimensions
+                # Handle batch dimensions - COMPUTE POSTERIOR MEAN ACROSS SAMPLES
                 if T_M_star_val.ndim > 0:
-                    # Take the first sample if we have multiple samples
-                    T_M_star_scalar = T_M_star_val.flatten()[0]
+                    # Compute mean across all samples (not just first sample!)
+                    T_M_star_scalar = float(T_M_star_val.mean())
                 else:
                     T_M_star_scalar = float(T_M_star_val)
 
                 if tilde_t_val.ndim > 1:
-                    # Take the first sample if we have multiple samples
-                    tilde_t_cells = tilde_t_val[0] if tilde_t_val.shape[0] > 1 else tilde_t_val.flatten()
+                    # Compute mean across all samples for each cell (not just first sample!)
+                    if tilde_t_val.shape[0] > 1:  # Multiple samples
+                        tilde_t_cells = tilde_t_val.mean(axis=0)  # Average across sample dimension
+                        # Flatten to get cell dimension
+                        if tilde_t_cells.ndim > 1:
+                            tilde_t_cells = tilde_t_cells.flatten()
+                    else:
+                        tilde_t_cells = tilde_t_val.flatten()
                 else:
                     tilde_t_cells = tilde_t_val
 
@@ -2899,12 +2908,45 @@ class PyroVelocityModel:
                 for key in ['t_star', 't_cell', 'cell_time', 'latent_time']:
                     if key in true_params:
                         param_value = true_params[key]
-                        if hasattr(param_value, 'shape') and len(param_value) == num_cells:
-                            temporal_coord = param_value.flatten() if hasattr(param_value, 'flatten') else param_value
-                            source_name = key
-                            break
-                        elif hasattr(param_value, '__len__') and len(param_value) == num_cells:
-                            temporal_coord = np.array(param_value)
+
+                        # Convert to numpy array if needed
+                        if isinstance(param_value, torch.Tensor):
+                            param_array = param_value.detach().cpu().numpy()
+                        else:
+                            param_array = np.array(param_value)
+
+                        # Handle multi-dimensional arrays (e.g., shape (10, 1, 1, 20))
+                        if param_array.ndim > 1:
+                            # Average across sample dimension (first dimension)
+                            if param_array.shape[0] > 1:
+                                param_array = param_array.mean(axis=0)
+
+                            # Find the dimension that matches num_cells
+                            for dim_idx in range(param_array.ndim):
+                                if param_array.shape[dim_idx] == num_cells:
+                                    # Extract the cell dimension
+                                    if param_array.ndim == 1:
+                                        temporal_coord = param_array
+                                    elif param_array.ndim == 2:
+                                        if dim_idx == 0:
+                                            temporal_coord = param_array[:, 0] if param_array.shape[1] == 1 else param_array.flatten()
+                                        else:
+                                            temporal_coord = param_array[0, :] if param_array.shape[0] == 1 else param_array.flatten()
+                                    else:
+                                        # For higher dimensions, flatten and take first num_cells elements
+                                        param_flat = param_array.flatten()
+                                        if len(param_flat) >= num_cells:
+                                            temporal_coord = param_flat[:num_cells]
+                                    break
+
+                            # If we found a matching dimension, use it
+                            if temporal_coord is not None:
+                                source_name = key
+                                break
+
+                        # Handle 1D arrays
+                        elif param_array.ndim == 1 and len(param_array) == num_cells:
+                            temporal_coord = param_array
                             source_name = key
                             break
 
