@@ -26,11 +26,11 @@ print(f"  Prior: {model.prior_model}")
 print(f"  Likelihood: {model.likelihood_model}")
 print(f"  Guide: {model.guide_model}")
 
-# Generate a single dataset with 100 genes and 200 cells for better parameter coverage
+# Generate num_samples datasets for prior predictive check
 prior_predictive_adata = model.generate_predictive_samples(
     num_cells=200,
-    num_genes=100,  # Increased for better gene-level parameter coverage
-    num_samples=1,   # Single dataset with parameters stored in AnnData
+    num_genes=50,
+    num_samples=100,
     return_format="anndata"
 )
 
@@ -68,6 +68,7 @@ fig_prior = plot_prior_predictive_checks(
     figure_name=f"piecewise_activation_prior_checks_{RANDOM_SEED}",
     combine_individual_pdfs=True,
     default_fontsize=5,
+    num_genes=10,
     true_parameters_adata=prior_predictive_adata,  # For prior predictive, true parameters are in the same adata
 )
 
