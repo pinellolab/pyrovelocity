@@ -2039,7 +2039,7 @@ For each branch $k \in \{1, \ldots, K\}$, let $\mathcal{C}_k = \{j : Z_j = k\}$ 
 \begin{align}
 V_{k,\ell} &\sim \text{Beta}(1, \mathcal{N}_k - \ell) \quad \text{for } \ell \in \{1, \ldots, \mathcal{N}_k - 1\} \label{eq-branch-beta-variables-rigorous} \\
 \tilde{t}_{k,1} &= 0 \label{eq-branch-first-time} \\
-\tilde{t}_{k,\ell} &= \tilde{t}_{k,\ell-1} + V_{k,\ell-1} \prod_{m=1}^{\ell-2} (1 - V_{k,m}) \quad \text{for } \ell \in \{2, \ldots, \mathcal{N}_k\} \label{eq-branch-stick-construction-rigorous} \\
+\tilde{t}_{k,\ell} &= \tilde{t}_{k,\ell-1} + V_{k,\ell-1} \times (1 - \tilde{t}_{k,\ell-1}) \quad \text{for } \ell \in \{2, \ldots, \mathcal{N}_k-1\} \label{eq-branch-stick-construction-rigorous} \\
 \tilde{t}_{k,\mathcal{N}_k} &= 1 \quad \text{(normalization constraint)} \label{eq-branch-last-time} \\
 {t^*}_{j_{k,\ell}} &= T_{\max,k} \times \tilde{t}_{k,\ell} \quad \text{for } \ell \in \{1, \ldots, \mathcal{N}_k\} \label{eq-branch-time-scaling-rigorous}
 \end{align}
