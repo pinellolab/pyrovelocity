@@ -2006,6 +2006,12 @@ pgm.render()
 
 The branching mixture model extends the stick-breaking framework with **discrete branch assignments** and **branch-specific parameters**. The model maintains analytical tractability and identifiability while enabling rich heterogeneity across developmental trajectories.
 
+**Hyperpriors for branch structure:**
+\begin{align}
+\alpha_K &\sim \text{Gamma}(2.0, 1.0) \label{eq-alpha-K-hyperprior} \\
+\alpha_\pi &\sim \text{Gamma}(1.0, 1.0) \label{eq-alpha-pi-hyperprior}
+\end{align}
+
 **Branch structure:**
 \begin{align}
 K &\sim \text{Poisson}(\alpha_K) + 1 \label{eq-branch-count} \\
@@ -2015,35 +2021,75 @@ Z_j &\sim \text{Categorical}(\boldsymbol{\pi}) \quad \text{for } j \in \{1, \ldo
 
 where $K$ is the number of branches, $\boldsymbol{\pi} = (\pi_1, \ldots, \pi_K)$ are branch probabilities, and $Z_j \in \{1, \ldots, K\}$ is the branch assignment for cell $j$.
 
-**Branch-specific temporal coordinates:**
+**Hyperpriors for temporal parameters:**
 \begin{align}
-T_{\max,k} &\sim \text{Gamma}(\alpha_T, \beta_T) \quad \text{for } k \in \{1, \ldots, K\} \label{eq-branch-duration} \\
-{t^*}_j \mid Z_j = k &= \text{stick\_breaking}(0, T_{\max,k}) \label{eq-branch-stick-breaking}
+\alpha_T &\sim \text{Gamma}(5.0, 1.0) \label{eq-alpha-T-hyperprior} \\
+\beta_T &\sim \text{Gamma}(1.0, 1.0) \label{eq-beta-T-hyperprior}
 \end{align}
 
-Each branch $k$ has its own process duration $T_{\max,k}$ and stick-breaking temporal coordinate system with fixed anchors at $0$ and $T_{\max,k}$.
+**Branch-specific temporal coordinates:**
+\begin{align}
+T_{\max,k} &\sim \text{Gamma}(\alpha_T, \beta_T) \quad \text{for } k \in \{1, \ldots, K\} \label{eq-branch-duration}
+\end{align}
+
+**Rigorous stick-breaking specification within branches:**
+
+For each branch $k \in \{1, \ldots, K\}$, let $\mathcal{C}_k = \{j : Z_j = k\}$ denote the set of cells assigned to branch $k$, and let $\mathcal{N}_k = |\mathcal{C}_k|$ be the number of cells in branch $k$. Order the cells within branch $k$ as $j_{k,1}, j_{k,2}, \ldots, j_{k,\mathcal{N}_k}$ (ordering can be arbitrary). The stick-breaking process for branch $k$ is defined as:
+
+\begin{align}
+V_{k,\ell} &\sim \text{Beta}(1, \mathcal{N}_k - \ell) \quad \text{for } \ell \in \{1, \ldots, \mathcal{N}_k - 1\} \label{eq-branch-beta-variables-rigorous} \\
+\tilde{t}_{k,1} &= 0 \label{eq-branch-first-time} \\
+\tilde{t}_{k,\ell} &= \tilde{t}_{k,\ell-1} + V_{k,\ell-1} \prod_{m=1}^{\ell-2} (1 - V_{k,m}) \quad \text{for } \ell \in \{2, \ldots, \mathcal{N}_k\} \label{eq-branch-stick-construction-rigorous} \\
+\tilde{t}_{k,\mathcal{N}_k} &= 1 \quad \text{(normalization constraint)} \label{eq-branch-last-time} \\
+{t^*}_{j_{k,\ell}} &= T_{\max,k} \times \tilde{t}_{k,\ell} \quad \text{for } \ell \in \{1, \ldots, \mathcal{N}_k\} \label{eq-branch-time-scaling-rigorous}
+\end{align}
+
+This construction ensures that for each branch $k$:
+\begin{align}
+0 = {t^*}_{j_{k,1}} < {t^*}_{j_{k,2}} < \cdots < {t^*}_{j_{k,\mathcal{N}_k}} = T_{\max,k} \label{eq-branch-ordering}
+\end{align}
+
+**Hyperpriors for shared gene parameters:**
+\begin{align}
+\mu_{\gamma^*} &\sim \text{Normal}(0.0, 1.0^2) \label{eq-mu-gamma-hyperprior} \\
+\sigma_{\gamma^*}^2 &\sim \text{InverseGamma}(2.0, 0.5^2) \label{eq-sigma-gamma-hyperprior} \\
+\mu_{U_0} &\sim \text{Normal}(4.0, 1.0^2) \label{eq-mu-U0-hyperprior} \\
+\sigma_{U_0}^2 &\sim \text{InverseGamma}(2.0, 0.5^2) \label{eq-sigma-U0-hyperprior} \\
+\mu_{\lambda} &\sim \text{Normal}(0.0, 1.0^2) \label{eq-mu-lambda-hyperprior} \\
+\sigma_{\lambda}^2 &\sim \text{InverseGamma}(2.0, 0.5^2) \label{eq-sigma-lambda-hyperprior}
+\end{align}
 
 **Gene-specific parameters (shared across branches):**
 \begin{align}
-\gamma^*_i &\sim \text{LogNormal}(\mu_{\gamma^*}, \sigma_{\gamma^*}^2) \label{eq-shared-gamma} \\
-U_{0i} &\sim \text{LogNormal}(\mu_{U_0}, \sigma_{U_0}^2) \label{eq-shared-U0}
+\gamma^*_i &\sim \text{LogNormal}(\mu_{\gamma^*}, \sigma_{\gamma^*}^2) \quad \text{for } i \in \{1, \ldots, G\} \label{eq-shared-gamma} \\
+U_{0i} &\sim \text{LogNormal}(\mu_{U_0}, \sigma_{U_0}^2) \quad \text{for } i \in \{1, \ldots, G\} \label{eq-shared-U0}
+\end{align}
+
+**Hyperpriors for branch-specific gene parameters:**
+\begin{align}
+\mu_{on,k} &\sim \text{Normal}(2.5, 1.5^2) \quad \text{for } k \in \{1, \ldots, K\} \label{eq-mu-on-k-hyperprior} \\
+\sigma_{on}^2 &\sim \text{InverseGamma}(2.0, 1.0^2) \label{eq-sigma-on-hyperprior} \\
+\mu_{\delta,k} &\sim \text{Normal}(0.0, 0.5^2) \quad \text{for } k \in \{1, \ldots, K\} \label{eq-mu-delta-k-hyperprior} \\
+\sigma_{\delta}^2 &\sim \text{InverseGamma}(2.0, 0.25^2) \label{eq-sigma-delta-hyperprior} \\
+\mu_{R,k} &\sim \text{Normal}(\log(2.5), 0.4^2) \quad \text{for } k \in \{1, \ldots, K\} \label{eq-mu-R-k-hyperprior} \\
+\sigma_R^2 &\sim \text{InverseGamma}(2.0, 0.2^2) \label{eq-sigma-R-hyperprior}
 \end{align}
 
 **Branch-gene-specific parameters:**
 \begin{align}
 {t^*_{on}}_{ik} &\sim \text{Normal}(\mu_{on,k}, \sigma_{on}^2) \quad \text{for } i \in \{1, \ldots, G\}, k \in \{1, \ldots, K\} \label{eq-branch-onset} \\
-\delta^*_{ik} &\sim \text{LogNormal}(\mu_{\delta,k}, \sigma_{\delta}^2) \label{eq-branch-duration-gene} \\
-R_{on,ik} &\sim \text{LogNormal}(\mu_{R,k}, \sigma_R^2) \label{eq-branch-fold-change}
+\delta^*_{ik} &\sim \text{LogNormal}(\mu_{\delta,k}, \sigma_{\delta}^2) \quad \text{for } i \in \{1, \ldots, G\}, k \in \{1, \ldots, K\} \label{eq-branch-duration-gene} \\
+R_{on,ik} &\sim \text{LogNormal}(\mu_{R,k}, \sigma_R^2) \quad \text{for } i \in \{1, \ldots, G\}, k \in \{1, \ldots, K\} \label{eq-branch-fold-change}
 \end{align}
 
 **Cell-specific capture efficiency:**
 \begin{align}
-\lambda_j &\sim \text{LogNormal}(\mu_{\lambda}, \sigma_{\lambda}^2) \label{eq-branch-lambda}
+\lambda_j &\sim \text{LogNormal}(\mu_{\lambda}, \sigma_{\lambda}^2) \quad \text{for } j \in \{1, \ldots, N\} \label{eq-branch-lambda}
 \end{align}
 
 **Branch-specific piecewise analytical solutions:**
 
-For cell $j$ assigned to branch $k$ (i.e., $Z_j = k$), the dimensionless concentrations follow the same piecewise analytical solutions as the single-branch model, but using branch-specific parameters:
+For cell $j$ assigned to branch $k$ (i.e., $Z_j = k$), the dimensionless transcription rate for gene $i$ is:
 
 \begin{align}
 \alpha^*_{ik}(t^*) &:= \begin{cases}
@@ -2053,22 +2099,32 @@ R_{on,ik} & \text{if } {t^*_{on}}_{ik} \leq t^* < {t^*_{on}}_{ik} + \delta^*_{ik
 \end{cases} \label{eq-branch-piecewise-transcription}
 \end{align}
 
-The analytical solutions for each phase remain identical to the single-branch case, but now use branch-gene-specific parameters ${t^*_{on}}_{ik}$, $\delta^*_{ik}$, and $R_{on,ik}$.
+The dimensionless concentrations $u^*_{ij}$ and $s^*_{ij}$ are computed using the same piecewise analytical solutions as the single-branch model, but with branch-gene-specific parameters ${t^*_{on}}_{ik}$, $\delta^*_{ik}$, and $R_{on,ik}$, and cell-specific temporal coordinate ${t^*}_j$ determined by the stick-breaking process for branch $Z_j$.
 
-**Mixture likelihood:**
+**Conditional independence structure:**
+
+Given branch assignments $\{Z_j\}_{j=1}^N$ and all parameters, the observations are conditionally independent:
 \begin{align}
-\mathcal{L}(\text{data}) &= \prod_{j=1}^N \sum_{k=1}^K \pi_k \cdot \mathcal{L}_k(\text{data}_j \mid \text{branch } k) \label{eq-mixture-likelihood}
+p(\{u_{ij}, s_{ij}\}_{i,j} \mid \{Z_j\}, \text{all parameters}) &= \prod_{j=1}^N \prod_{i=1}^G p(u_{ij}, s_{ij} \mid Z_j, \text{parameters}) \label{eq-conditional-independence}
 \end{align}
 
-where $\mathcal{L}_k(\text{data}_j \mid \text{branch } k)$ is the likelihood for cell $j$ under branch $k$ using branch-specific parameters.
-
-**Observation model (unchanged):**
+**Observation model:**
 \begin{align}
-u_{ij} &\sim \text{Poisson}(\lambda_j \cdot U_{0i} \cdot u^*_{ij}) \label{eq-branch-u-obs} \\
-s_{ij} &\sim \text{Poisson}(\lambda_j \cdot U_{0i} \cdot s^*_{ij}) \label{eq-branch-s-obs}
+u_{ij} \mid Z_j = k &\sim \text{Poisson}(\lambda_j \cdot U_{0i} \cdot u^*_{ij}(k)) \label{eq-branch-u-obs} \\
+s_{ij} \mid Z_j = k &\sim \text{Poisson}(\lambda_j \cdot U_{0i} \cdot s^*_{ij}(k)) \label{eq-branch-s-obs}
 \end{align}
 
-where $u^*_{ij}$ and $s^*_{ij}$ are computed using the branch-specific piecewise analytical solutions for the branch to which cell $j$ is assigned.
+where $u^*_{ij}(k)$ and $s^*_{ij}(k)$ denote the dimensionless concentrations computed using branch $k$'s parameters and temporal coordinates.
+
+**Marginal likelihood (integrating over branch assignments):**
+\begin{align}
+p(\{u_{ij}, s_{ij}\}_{i,j} \mid \text{parameters}) &= \prod_{j=1}^N \sum_{k=1}^K \pi_k \prod_{i=1}^G p(u_{ij}, s_{ij} \mid Z_j = k, \text{parameters}) \label{eq-marginal-likelihood}
+\end{align}
+
+**Complete data likelihood (given branch assignments):**
+\begin{align}
+p(\{u_{ij}, s_{ij}\}_{i,j}, \{Z_j\}_{j=1}^N \mid \text{parameters}) &= \prod_{j=1}^N \pi_{Z_j} \prod_{i=1}^G p(u_{ij}, s_{ij} \mid Z_j, \text{parameters}) \label{eq-complete-likelihood}
+\end{align}
 
 ### Branch-Specific Parameter Structure
 
@@ -2151,35 +2207,42 @@ The branching mixture model implements **independent stick-breaking processes** 
 
 #### **Branch-Specific Stick-Breaking Construction**
 
-For each branch $k \in \{1, \ldots, K\}$, cells assigned to that branch ($\{j : Z_j = k\}$) follow an independent stick-breaking process:
+The rigorous stick-breaking specification is provided in the Mathematical Description section above (equations \eqref{eq-branch-beta-variables-rigorous}-\eqref{eq-branch-ordering}). Each branch $k$ implements an independent stick-breaking process with the following key properties:
 
-\begin{align}
-\text{Let } \mathcal{N}_k &= |\{j : Z_j = k\}| \quad \text{(number of cells in branch } k\text{)} \\
-\text{For cells } j_1, j_2, \ldots, j_{\mathcal{N}_k} &\text{ where } Z_{j_\ell} = k: \\
-V_{k,\ell} &\sim \text{Beta}(1, \mathcal{N}_k - \ell) \quad \text{for } \ell \in \{1, \ldots, \mathcal{N}_k - 1\} \label{eq-branch-beta-variables} \\
-\tilde{t}_{k,1} &= 0 \quad \text{(first cell at branch start)} \\
-\tilde{t}_{k,\ell} &= \tilde{t}_{k,\ell-1} + V_{k,\ell-1} \prod_{m=1}^{\ell-2} (1 - V_{k,m}) \quad \text{for } \ell \in \{2, \ldots, \mathcal{N}_k\} \label{eq-branch-stick-construction} \\
-{t^*}_{j_\ell} &= T_{\max,k} \times \tilde{t}_{k,\ell} \quad \text{(branch-specific scaling)} \label{eq-branch-time-scaling}
-\end{align}
+- **Independent Beta variables**: $V_{k,\ell} \sim \text{Beta}(1, \mathcal{N}_k - \ell)$ for each position $\ell$ within branch $k$
+- **Recursive construction**: Temporal coordinates built sequentially using stick-breaking formula
+- **Fixed anchors**: First cell at $t^* = 0$, last cell at $t^* = T_{\max,k}$
+- **Proper ordering**: Ensures $0 = {t^*}_{j_{k,1}} < {t^*}_{j_{k,2}} < \cdots < {t^*}_{j_{k,\mathcal{N}_k}} = T_{\max,k}$
 
 #### **Mathematical Properties of Branch-Specific Stick-Breaking**
 
 **Ordering preservation within branches:**
+
+From equation \eqref{eq-branch-ordering}, each branch maintains strict temporal ordering:
 \begin{align}
-0 = {t^*}_{j_1} < {t^*}_{j_2} < \cdots < {t^*}_{j_{\mathcal{N}_k}} = T_{\max,k}
+0 = {t^*}_{j_{k,1}} < {t^*}_{j_{k,2}} < \cdots < {t^*}_{j_{k,\mathcal{N}_k}} = T_{\max,k} \quad \text{for all } k \in \{1, \ldots, K\} \label{eq-branch-ordering-property}
 \end{align}
 
 **Independence across branches:**
+
+The Beta variables for different branches are mutually independent:
 \begin{align}
-\{V_{k,\ell}\}_{\ell=1}^{\mathcal{N}_k-1} \perp \{V_{k',\ell'}\}_{\ell'=1}^{\mathcal{N}_{k'}-1} \quad \text{for } k \neq k'
+\{V_{k,\ell}\}_{\ell=1}^{\mathcal{N}_k-1} \perp \{V_{k',\ell'}\}_{\ell'=1}^{\mathcal{N}_{k'}-1} \quad \text{for } k \neq k' \label{eq-branch-independence}
+\end{align}
+
+**Conditional independence of temporal coordinates:**
+
+Given branch assignments $\{Z_j\}_{j=1}^N$ and process durations $\{T_{\max,k}\}_{k=1}^K$, the temporal coordinates are conditionally independent across branches:
+\begin{align}
+p(\{{t^*}_j\}_{j=1}^N \mid \{Z_j\}, \{T_{\max,k}\}) &= \prod_{k=1}^K p(\{{t^*}_j : j \in \mathcal{C}_k\} \mid T_{\max,k}) \label{eq-conditional-independence-time}
 \end{align}
 
 **Identifiability within each branch:**
 
 Each branch maintains the same identifiability properties as the single-branch model:
-- Fixed anchors: ${t^*}_{j_1} = 0$ and ${t^*}_{j_{\mathcal{N}_k}} = T_{\max,k}$
-- No scaling symmetry within branch due to fixed endpoints
-- Gene parameters ${t^*_{on}}_{ik}$, $\delta^*_{ik}$ are independent of $T_{\max,k}$
+- **Fixed anchors**: ${t^*}_{j_{k,1}} = 0$ and ${t^*}_{j_{k,\mathcal{N}_k}} = T_{\max,k}$ eliminate scaling symmetry
+- **Independent gene parameters**: ${t^*_{on}}_{ik}$, $\delta^*_{ik}$ are sampled independently of $T_{\max,k}$ (equations \eqref{eq-branch-onset}-\eqref{eq-branch-fold-change})
+- **Analytical tractability**: Same piecewise solutions apply within each branch
 
 #### **Computational Complexity Analysis**
 
@@ -2202,10 +2265,12 @@ Each branch maintains the same identifiability properties as the single-branch m
 
 **Branch assignment updates:**
 
-During MCMC sampling, branch assignments $Z_j$ are updated using standard categorical sampling:
+During MCMC sampling, branch assignments $Z_j$ are updated using the conditional posterior distribution:
 \begin{align}
-P(Z_j = k \mid \text{rest}) \propto \pi_k \cdot \mathcal{L}_k(\text{data}_j \mid \text{branch } k)
+P(Z_j = k \mid \{u_{ij}, s_{ij}\}_{i=1}^G, \text{all other parameters}) &\propto \pi_k \prod_{i=1}^G p(u_{ij}, s_{ij} \mid Z_j = k, \text{parameters}) \label{eq-branch-assignment-posterior}
 \end{align}
+
+where the likelihood term is computed using branch $k$'s temporal coordinates and gene-specific parameters as specified in equations \eqref{eq-branch-u-obs}-\eqref{eq-branch-s-obs}.
 
 **Stick-breaking recomputation:**
 
@@ -2467,33 +2532,11 @@ where:
 
 **Parallel computation strategies:**
 
-1. **Branch-parallel likelihood evaluation**:
-   ```python
-   # Compute likelihood for each branch in parallel
-   branch_likelihoods = parallel_map(
-       lambda k: compute_branch_likelihood(data, branch_k_params),
-       branches
-   )
-   ```
+1. **Branch-parallel likelihood evaluation**: The marginal likelihood in equation \eqref{eq-marginal-likelihood} can be computed in parallel across branches since each branch's contribution is independent given the parameters.
 
-2. **Gene-parallel parameter updates**:
-   ```python
-   # Update gene parameters across branches in parallel
-   for k in branches:
-       gene_params[k] = parallel_map(
-           lambda i: update_gene_params(gene_i, branch_k),
-           genes
-       )
-   ```
+2. **Gene-parallel parameter updates**: Branch-gene-specific parameters (equations \eqref{eq-branch-onset}-\eqref{eq-branch-fold-change}) can be updated in parallel across genes within each branch due to conditional independence.
 
-3. **Cell-parallel branch assignment updates**:
-   ```python
-   # Update branch assignments for cells in parallel
-   new_assignments = parallel_map(
-       lambda j: sample_branch_assignment(cell_j, branch_likelihoods),
-       cells
-   )
-   ```
+3. **Cell-parallel branch assignment updates**: The posterior probabilities in equation \eqref{eq-branch-assignment-posterior} can be computed in parallel across cells since assignments are conditionally independent given all other parameters.
 
 **Efficient MCMC sampling:**
 
@@ -2519,45 +2562,18 @@ where:
 
 **Numerical stability:**
 
-**Beta variable sampling:**
-```python
-# Ensure numerical stability in stick-breaking
-def sample_beta_variables(branch_size):
-    # Avoid extreme values that cause numerical issues
-    alpha, beta = 1.0, max(branch_size - 1, 1.0)
-    return np.clip(np.random.beta(alpha, beta), 1e-8, 1-1e-8)
-```
+**Beta variable sampling**: The Beta variables $V_{k,\ell} \sim \text{Beta}(1, \mathcal{N}_k - \ell)$ in equation \eqref{eq-branch-beta-variables-rigorous} should be bounded away from 0 and 1 to prevent degenerate stick-breaking constructions.
 
-**Likelihood computation:**
-```python
-# Use log-space arithmetic to prevent overflow/underflow
-def compute_mixture_likelihood(data, branch_params, branch_probs):
-    log_likelihoods = []
-    for k, (params, prob) in enumerate(zip(branch_params, branch_probs)):
-        log_lik = compute_log_likelihood(data, params) + np.log(prob)
-        log_likelihoods.append(log_lik)
-    return logsumexp(log_likelihoods)
-```
+**Likelihood computation**: The marginal likelihood in equation \eqref{eq-marginal-likelihood} should be computed in log-space to prevent numerical overflow/underflow, particularly when $K$ is large or when branch probabilities $\pi_k$ are small.
 
 **Memory management:**
 
 **Efficient data structures:**
-- **Sparse representations**: Use sparse matrices for gene expression data
-- **Branch indexing**: Maintain efficient mappings from cells to branches
-- **Parameter caching**: Cache frequently accessed parameter combinations
+- **Sparse representations**: Gene expression matrices can be stored sparsely since many genes may have zero counts
+- **Branch indexing**: Maintain efficient mappings between cells and their branch assignments $Z_j$
+- **Parameter caching**: Cache frequently accessed combinations of branch-gene parameters
 
-**Memory-efficient sampling:**
-```python
-# Process branches sequentially to limit memory usage
-def memory_efficient_sampling(data, max_memory_per_branch):
-    for branch_k in branches:
-        # Load only data for current branch
-        branch_data = data[branch_assignments == k]
-        # Process branch with limited memory footprint
-        updated_params = sample_branch_parameters(branch_data)
-        # Store results and free memory
-        store_and_cleanup(updated_params)
-```
+**Memory-efficient processing**: For large datasets, branches can be processed sequentially rather than simultaneously to limit memory usage, taking advantage of the conditional independence structure in equations \eqref{eq-conditional-independence} and \eqref{eq-conditional-independence-time}.
 
 #### **Validation and Diagnostics**
 
@@ -2592,28 +2608,10 @@ def memory_efficient_sampling(data, max_memory_per_branch):
 - **Cross-branch parameter discrimination**: Verify that branch-specific parameters are distinguishable
 
 **Computational benchmarking:**
-```python
-# Benchmark computational performance
-def benchmark_branching_model(n_cells, n_genes, n_branches):
-    start_time = time.time()
 
-    # Generate synthetic data
-    data = generate_branching_data(n_cells, n_genes, n_branches)
-
-    # Fit model
-    model = BranchingPyroVelocityModel()
-    results = model.fit(data, num_samples=1000)
-
-    # Record performance metrics
-    total_time = time.time() - start_time
-    memory_usage = get_peak_memory_usage()
-
-    return {
-        'total_time': total_time,
-        'memory_usage': memory_usage,
-        'time_per_sample': total_time / 1000,
-        'scalability_metrics': compute_scalability_metrics(results)
-    }
-```
+Performance evaluation should focus on the scaling properties derived from the mathematical structure:
+- **Time complexity**: $O(K \cdot N \log N + KNG + NK)$ as specified in equations \eqref{eq-branch-beta-variables-rigorous}-\eqref{eq-branch-time-scaling-rigorous}
+- **Memory complexity**: $O(K(G + N + 1))$ for storing branch-specific parameters and assignments
+- **Convergence assessment**: Monitor convergence of branch assignments $Z_j$ and branch-specific parameters using standard MCMC diagnostics
 
 This comprehensive computational framework ensures that the branching mixture model remains **practically implementable** while providing **rigorous mathematical foundations** for modeling complex developmental processes with multiple trajectories.
