@@ -913,12 +913,160 @@ For any scaling factor $\lambda \neq 1$, the likelihood functions are not equal:
 $$\mathcal{L}(T_{\max}, \{t^*_j\}, \{t^*_{0,\text{on}i}\}, \{\delta^*_i\}) \neq \mathcal{L}(\lambda T_{\max}, \{\lambda t^*_j\}, \{t^*_{0,\text{on}i}\}, \{\delta^*_i\})$$
 
 **Proof:**
+
 1. **Fixed anchor constraint**: The scaled system requires $t^*_1 = \lambda \cdot 0 = 0$ and $t^*_N = \lambda T_{\max}$
 2. **Process duration independence**: Gene parameters $t^*_{0,\text{on}i}, \delta^*_i$ are sampled independently of $T_{\max}$ and do not scale
 3. **Asymmetric scaling**: Scaling $T_{\max} \rightarrow \lambda T_{\max}$ and $t^*_j \rightarrow \lambda t^*_j$ changes the relative positioning of gene events within the process timeline
 4. **Likelihood dependence**: The piecewise analytical solutions depend on comparisons like $t^*_j$ vs. $t^*_{0,\text{on}i}$, which change under asymmetric scaling
 
 Therefore, the likelihood is not invariant under parameter scaling, eliminating the scaling symmetry. □
+
+#### **Mathematical and Biological Foundations of Stick-Breaking for Temporal Coordinates**
+
+The stick-breaking construction for temporal coordinates addresses fundamental challenges in modeling cellular developmental progression and provides the mathematically natural solution to the constrained latent temporal assignment problem.
+
+**1. The Fundamental Problem Being Solved**
+
+**Physical vs. Biological Time Mismatch:**
+
+Single-cell RNA sequencing captures all cells simultaneously at a fixed experimental time $t_{\text{experiment}}$, yet each cell exists at a different stage of the underlying biological process. This creates a fundamental mismatch:
+
+- **Physical observation**: All cells measured at $t_{\text{experiment}}$
+- **Biological reality**: Each cell $j$ at developmental stage $t^*_j$ within process duration $[0, T_{\max}]$
+
+**Constrained Latent Temporal Assignment Problem:**
+
+The inference challenge becomes assigning temporal coordinates $\{t^*_j\}_{j=1}^N$ that satisfy multiple biological constraints:
+
+\begin{align}
+\mathcal{C}_{\text{boundary}} &: t^*_1 = 0, \quad t^*_N = T_{\max} \quad \text{(process boundaries)} \\
+\mathcal{C}_{\text{ordering}} &: t^*_1 \leq t^*_2 \leq \cdots \leq t^*_N \quad \text{(developmental progression)} \\
+\mathcal{C}_{\text{continuity}} &: \|x_i - x_j\| \text{ small} \Rightarrow |t^*_i - t^*_j| \text{ small} \quad \text{(state-time proximity)}
+\end{align}
+
+where $x_i, x_j$ represent gene expression states and $\mathcal{C}_{\text{continuity}}$ enforces the differential equation requirement that cells close in expression space should be close in developmental time.
+
+**2. Mathematical Object Definition**
+
+**Constrained Order Statistics Space:**
+
+Stick-breaking provides a probability distribution over the constrained order statistics space:
+
+$$\mathcal{T}_N^{T_{\max}} = \{(t^*_1, t^*_2, \ldots, t^*_N) \in \mathbb{R}^N : 0 = t^*_1 \leq t^*_2 \leq \cdots \leq t^*_N = T_{\max}\}$$
+
+This space is isomorphic to the $(N-2)$-simplex with fixed boundary conditions, enabling efficient sampling and probability computation.
+
+**Probability Density with Jacobian Transformation:**
+
+The stick-breaking construction transforms independent Beta random variables to ordered temporal coordinates:
+
+\begin{align}
+\xi_j &\sim \text{Beta}(1, N-j) \quad \text{for } j \in \{2, \ldots, N-1\} \\
+t^*_j &= t^*_{j-1} + \xi_{j-1}(T_{\max} - t^*_{j-1}) \quad \text{(recursive construction)}
+\end{align}
+
+The joint density on $\mathcal{T}_N^{T_{\max}}$ becomes:
+
+$$p(t^*_2, \ldots, t^*_{N-1} | T_{\max}) = \frac{(N-2)!}{T_{\max}^{N-2}} \prod_{j=2}^{N-1} (N-j) \quad \text{for } (t^*_1, \ldots, t^*_N) \in \mathcal{T}_N^{T_{\max}}$$
+
+This uniform density over the constrained space reflects maximum entropy subject to biological constraints.
+
+**3. State Space Proximity Preservation**
+
+**Ordering Constraint and Biological Continuity:**
+
+The ordering constraint $t^*_1 \leq t^*_2 \leq \cdots \leq t^*_N$ directly enforces the biological assumption that cells close in expression state should be close in developmental time. This constraint ensures that the temporal manifold respects the underlying differential equation dynamics.
+
+**Variable Spacing Property:**
+
+The stick-breaking construction exhibits adaptive spacing that accommodates heterogeneous cell density:
+
+$$\mathbb{E}[t^*_{j+1} - t^*_j | T_{\max}] = \frac{T_{\max}}{N+1} \cdot \frac{1}{N-j}$$
+
+This variable spacing allows:
+- **Dense regions**: Smaller temporal intervals where many cells cluster in expression space
+- **Sparse regions**: Larger temporal intervals where few cells exist
+- **Adaptive resolution**: Automatic adjustment to local cell density
+
+**State Space Distance Integration:**
+
+The Beta parameters can be adapted to incorporate state space distance information:
+
+$$\xi_j \sim \text{Beta}(\alpha_j, \beta_j) \quad \text{where } \alpha_j, \beta_j \propto f(\|x_{j+1} - x_j\|)$$
+
+enabling data-driven temporal spacing that respects expression similarity.
+
+**4. Information-Theoretic Optimality**
+
+**Maximum Entropy Principle:**
+
+Stick-breaking with uniform Beta$(1, N-j)$ parameters is the **maximum entropy distribution** subject to:
+- Fixed endpoints: $t^*_1 = 0$, $t^*_N = T_{\max}$
+- Ordering constraints: $t^*_j \leq t^*_{j+1}$
+- Exchangeability: Symmetric treatment of intermediate cells
+
+**Minimal Assumptions:**
+
+This maximum entropy property ensures **minimal assumptions** beyond biological requirements:
+- No artificial temporal clustering
+- No preferred developmental stages
+- Maximal uncertainty preservation where data provides no constraints
+
+**Information Preservation:**
+
+The construction preserves **maximal information** about temporal relationships by avoiding arbitrary distributional assumptions that could bias inference toward specific temporal patterns.
+
+**5. Why Alternative Approaches Fail**
+
+**Random Temporal Assignment:**
+
+Random assignment of temporal coordinates $t^*_j \sim \text{Uniform}(0, T_{\max})$ violates differential equation continuity assumptions:
+- Cells with similar expression states could be assigned vastly different developmental times
+- Discontinuous jumps in the temporal manifold create unrealistic dynamics
+- Loss of biological interpretability for developmental progression
+
+**Truncated/Constrained Distributions:**
+
+Direct sampling from truncated distributions over ordered statistics creates computational problems:
+- Complex normalization constants that scale exponentially with $N$
+- Inefficient rejection sampling with low acceptance rates
+- Numerical instability for large cell populations
+
+**Uniform Distributions:**
+
+Uniform spacing $t^*_j = j \cdot T_{\max}/N$ truncates the dynamical range needed for meaningful exponential convergence:
+- Fixed spacing cannot adapt to heterogeneous cell density
+- Insufficient resolution in regions of rapid expression change
+- Loss of stochastic modeling of temporal uncertainty
+
+**6. Connection to Differential Equation Framework**
+
+**Bridging Observation and Inference:**
+
+Stick-breaking provides the essential bridge for inverting the observation process:
+
+\begin{align}
+\text{Differential Equation:} \quad &t^* \rightarrow \text{Gene Expression} \rightarrow \text{Counts} \\
+\text{Inference Problem:} \quad &\text{Counts} \rightarrow \text{Gene Expression} \rightarrow t^*
+\end{align}
+
+The stick-breaking construction enables tractable Bayesian inference over the biologically meaningful temporal manifold by:
+
+**Preserving Dynamical Structure:**
+
+The ordered constraint ensures that inferred temporal coordinates respect the underlying dynamical system structure, maintaining consistency with the forward differential equation model.
+
+**Enabling Posterior Inference:**
+
+The explicit probability density over $\mathcal{T}_N^{T_{\max}}$ enables efficient MCMC sampling and variational inference for temporal coordinate estimation.
+
+**Maintaining Analytical Tractability:**
+
+The construction preserves the analytical advantages of the piecewise solutions while providing a principled probabilistic framework for temporal uncertainty quantification.
+
+**Validation Connection:**
+
+The effectiveness of this approach is demonstrated in the parameter recovery validation studies (see §\ref{sec-validation-strategy}), where stick-breaking temporal coordinates enable accurate recovery of both kinetic and temporal parameters across diverse biological scenarios.
 
 ### Gene Expression Pattern Classification
 
