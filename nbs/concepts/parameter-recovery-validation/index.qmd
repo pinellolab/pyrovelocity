@@ -1866,3 +1866,754 @@ This validation workflow demonstrates the key capabilities of the process durati
 - **Process boundary parameterization**: Enables interpretable parameter values and consistent pattern classification across different experimental timescales through natural temporal reference frame
 
 The complete validation scripts referenced in the introduction (`prior-predictive-check.py` and `posterior-predictive-check.py`) provide comprehensive parameter recovery validation including visualization and statistical assessment of recovery performance. The prior predictive checking framework validates model specification and prior adequacy, while the posterior predictive checking framework assesses parameter recovery and predictive accuracy.
+
+## Dimensionless Analytical Dynamics with Branching Trajectories and Piecewise Activation {#sec-dimless-branching-piecewise}
+
+This validation study extends the stick-breaking temporal coordinate model to accommodate **branching developmental trajectories** through a mathematically rigorous mixture model framework. The key innovation is a **branch mixture extension** that maintains all analytical tractability and identifiability properties while enabling modeling of cell fate decisions, lineage bifurcations, and heterogeneous developmental pathways within a unified probabilistic framework.
+
+### Model Description
+
+The branching mixture model extends the process duration with stick-breaking framework by introducing **discrete branch assignments** that partition cells into distinct developmental trajectories. Each branch maintains its own temporal coordinate system and gene expression parameters while sharing the same underlying analytical solutions and dimensional consistency principles. This approach enables modeling of complex developmental processes where cells follow different trajectories with branch-specific timing and expression patterns.
+
+The model generates count data for unspliced ($u$) and spliced ($s$) RNA molecules per cell, with dynamics governed by **branch-specific piecewise analytical solutions** and observation model that scales back to dimensional counts through characteristic scales and effective capture efficiency. Each cell is assigned to exactly one branch, and all parameters are conditionally independent given branch assignments.
+
+### Probabilistic Graphical Model
+
+The probabilistic graphical model represents the branching extension with discrete branch assignments, branch-specific temporal coordinates, and branch-specific gene expression parameters. The model maintains the same dimensional consistency and analytical tractability as the single-branch framework while enabling rich heterogeneity across developmental trajectories.
+
+```{python}
+#| label: fig-branching-model-pgm
+#| code-fold: true
+#| fig-cap: Probabilistic graphical model for dimensionless analytical dynamics with branching trajectories and piecewise activation. Branch assignments partition cells into distinct developmental pathways with branch-specific temporal coordinates and gene expression parameters.
+
+import daft
+import matplotlib.pyplot as plt
+
+plt.rcParams["font.family"] = "serif"
+plt.rcParams["font.size"] = 14
+plt.rcParams["text.usetex"] = True
+plt.rcParams["text.latex.preamble"] = r"\usepackage{amsmath}"
+
+pgm = daft.PGM(line_width=1.2)
+
+# Branch structure hyperparameters
+pgm.add_node("alpha_K", r"$\alpha_K$", 0.5, 7, fixed=True)
+pgm.add_node("alpha_pi", r"$\alpha_\pi$", 1.5, 7, fixed=True)
+
+# Gene parameter hyperparameters (shared across branches)
+pgm.add_node("mu_gamma", r"$\mu_{\gamma^*}$", 3, 7, fixed=True)
+pgm.add_node("sigma_gamma", r"$\sigma_{\gamma^*}^2$", 3.5, 7, fixed=True)
+pgm.add_node("mu_U0", r"$\mu_{U_0}$", 4.5, 7, fixed=True)
+pgm.add_node("sigma_U0", r"$\sigma_{U_0}^2$", 5, 7, fixed=True)
+
+# Branch-specific hyperparameters
+pgm.add_node("alpha_T", r"$\alpha_T$", 6, 7, fixed=True)
+pgm.add_node("beta_T", r"$\beta_T$", 6.5, 7, fixed=True)
+pgm.add_node("mu_on_k", r"$\mu_{on,k}$", 7.5, 7, fixed=True)
+pgm.add_node("sigma_on", r"$\sigma_{on}^2$", 8, 7, fixed=True)
+pgm.add_node("mu_delta_k", r"$\mu_{\delta,k}$", 8.5, 7, fixed=True)
+pgm.add_node("sigma_delta", r"$\sigma_{\delta}^2$", 9, 7, fixed=True)
+pgm.add_node("mu_R_k", r"$\mu_{R,k}$", 9.5, 7, fixed=True)
+pgm.add_node("sigma_R", r"$\sigma_R^2$", 10, 7, fixed=True)
+
+# Branch structure
+pgm.add_node("K", r"$K$", 1, 6)
+pgm.add_node("pi", r"$\boldsymbol{\pi}$", 2, 6)
+
+# Branch-specific parameters
+pgm.add_node("T_max_k", r"$T_{\max,k}$", 6.25, 6)
+
+# Gene-specific parameters (shared)
+pgm.add_node("gamma_star_i", r"$\gamma^*_i$", 3.25, 5.5)
+pgm.add_node("U_0i", r"$U_{0i}$", 4.5, 5.5)
+
+# Branch-gene-specific parameters
+pgm.add_node("t_on_ik", r"${t^*_{on}}_{ik}$", 7.5, 5.5)
+pgm.add_node("delta_ik", r"$\delta^*_{ik}$", 8.5, 5.5)
+pgm.add_node("R_on_ik", r"$R_{on,ik}$", 9.5, 5.5)
+
+# Cell assignments and parameters
+pgm.add_node("Z_j", r"$Z_j$", 2, 5)
+pgm.add_node("t_star_j", r"${t^*}_j$", 6.25, 5)
+pgm.add_node("lambda_j", r"$\lambda_j$", 5, 4.5)
+
+# Latent concentrations
+pgm.add_node("u_star_ij", r"$u^*_{ij}$", 3.25, 4, scale=1.0, shape="rectangle")
+pgm.add_node("s_star_ij", r"$s^*_{ij}$", 4.5, 4, scale=1.0, shape="rectangle")
+
+# Observed counts
+pgm.add_node("u_obs_ij", r"$u_{ij}$", 3.25, 3, scale=1.0, observed=True)
+pgm.add_node("s_obs_ij", r"$s_{ij}$", 4.5, 3, scale=1.0, observed=True)
+
+# edges
+edge_params = {"head_length": 0.25, "head_width": 0.2, "lw": 0.6}
+
+# Branch structure edges
+pgm.add_edge("alpha_K", "K", plot_params=edge_params)
+pgm.add_edge("alpha_pi", "pi", plot_params=edge_params)
+pgm.add_edge("K", "pi", plot_params=edge_params)
+pgm.add_edge("pi", "Z_j", plot_params=edge_params)
+
+# Branch-specific parameter edges
+pgm.add_edge("alpha_T", "T_max_k", plot_params=edge_params)
+pgm.add_edge("beta_T", "T_max_k", plot_params=edge_params)
+pgm.add_edge("mu_on_k", "t_on_ik", plot_params=edge_params)
+pgm.add_edge("sigma_on", "t_on_ik", plot_params=edge_params)
+pgm.add_edge("mu_delta_k", "delta_ik", plot_params=edge_params)
+pgm.add_edge("sigma_delta", "delta_ik", plot_params=edge_params)
+pgm.add_edge("mu_R_k", "R_on_ik", plot_params=edge_params)
+pgm.add_edge("sigma_R", "R_on_ik", plot_params=edge_params)
+
+# Gene parameter edges
+pgm.add_edge("mu_gamma", "gamma_star_i", plot_params=edge_params)
+pgm.add_edge("sigma_gamma", "gamma_star_i", plot_params=edge_params)
+pgm.add_edge("mu_U0", "U_0i", plot_params=edge_params)
+pgm.add_edge("sigma_U0", "U_0i", plot_params=edge_params)
+
+# Temporal coordinate edges
+pgm.add_edge("Z_j", "t_star_j", plot_params=edge_params)
+pgm.add_edge("T_max_k", "t_star_j", plot_params=edge_params)
+
+# Dynamics edges
+pgm.add_edge("gamma_star_i", "u_star_ij", plot_params=edge_params)
+pgm.add_edge("gamma_star_i", "s_star_ij", plot_params=edge_params)
+pgm.add_edge("t_on_ik", "u_star_ij", plot_params=edge_params)
+pgm.add_edge("t_on_ik", "s_star_ij", plot_params=edge_params)
+pgm.add_edge("delta_ik", "u_star_ij", plot_params=edge_params)
+pgm.add_edge("delta_ik", "s_star_ij", plot_params=edge_params)
+pgm.add_edge("R_on_ik", "u_star_ij", plot_params=edge_params)
+pgm.add_edge("R_on_ik", "s_star_ij", plot_params=edge_params)
+pgm.add_edge("t_star_j", "u_star_ij", plot_params=edge_params)
+pgm.add_edge("t_star_j", "s_star_ij", plot_params=edge_params)
+
+# Observation edges
+pgm.add_edge("u_star_ij", "u_obs_ij", plot_params=edge_params)
+pgm.add_edge("s_star_ij", "s_obs_ij", plot_params=edge_params)
+pgm.add_edge("U_0i", "u_obs_ij", plot_params=edge_params)
+pgm.add_edge("U_0i", "s_obs_ij", plot_params=edge_params)
+pgm.add_edge("lambda_j", "u_obs_ij", plot_params=edge_params)
+pgm.add_edge("lambda_j", "s_obs_ij", plot_params=edge_params)
+
+# plates
+pgm.add_plate([0.75, 6.25, 1.75, 1.25], label=r"$k \in \{1, \ldots, K\}$", shift=-0.1, fontsize=10)
+pgm.add_plate([2.75, 4.75, 7.25, 1.25], label=r"$i \in \{1, \ldots, G\}$", shift=-0.1, fontsize=10)
+pgm.add_plate([1.5, 2.5, 4, 3], label=r"$j \in \{1, \ldots, N\}$", shift=-0.1, fontsize=10)
+
+pgm.render()
+```
+
+### Mathematical Description
+
+The branching mixture model extends the stick-breaking framework with **discrete branch assignments** and **branch-specific parameters**. The model maintains analytical tractability and identifiability while enabling rich heterogeneity across developmental trajectories.
+
+**Branch structure:**
+\begin{align}
+K &\sim \text{Poisson}(\alpha_K) + 1 \label{eq-branch-count} \\
+\boldsymbol{\pi} &\sim \text{Dirichlet}\left(\frac{\alpha_\pi}{K} \mathbf{1}_K\right) \label{eq-branch-probabilities} \\
+Z_j &\sim \text{Categorical}(\boldsymbol{\pi}) \quad \text{for } j \in \{1, \ldots, N\} \label{eq-branch-assignments}
+\end{align}
+
+where $K$ is the number of branches, $\boldsymbol{\pi} = (\pi_1, \ldots, \pi_K)$ are branch probabilities, and $Z_j \in \{1, \ldots, K\}$ is the branch assignment for cell $j$.
+
+**Branch-specific temporal coordinates:**
+\begin{align}
+T_{\max,k} &\sim \text{Gamma}(\alpha_T, \beta_T) \quad \text{for } k \in \{1, \ldots, K\} \label{eq-branch-duration} \\
+{t^*}_j \mid Z_j = k &= \text{stick\_breaking}(0, T_{\max,k}) \label{eq-branch-stick-breaking}
+\end{align}
+
+Each branch $k$ has its own process duration $T_{\max,k}$ and stick-breaking temporal coordinate system with fixed anchors at $0$ and $T_{\max,k}$.
+
+**Gene-specific parameters (shared across branches):**
+\begin{align}
+\gamma^*_i &\sim \text{LogNormal}(\mu_{\gamma^*}, \sigma_{\gamma^*}^2) \label{eq-shared-gamma} \\
+U_{0i} &\sim \text{LogNormal}(\mu_{U_0}, \sigma_{U_0}^2) \label{eq-shared-U0}
+\end{align}
+
+**Branch-gene-specific parameters:**
+\begin{align}
+{t^*_{on}}_{ik} &\sim \text{Normal}(\mu_{on,k}, \sigma_{on}^2) \quad \text{for } i \in \{1, \ldots, G\}, k \in \{1, \ldots, K\} \label{eq-branch-onset} \\
+\delta^*_{ik} &\sim \text{LogNormal}(\mu_{\delta,k}, \sigma_{\delta}^2) \label{eq-branch-duration-gene} \\
+R_{on,ik} &\sim \text{LogNormal}(\mu_{R,k}, \sigma_R^2) \label{eq-branch-fold-change}
+\end{align}
+
+**Cell-specific capture efficiency:**
+\begin{align}
+\lambda_j &\sim \text{LogNormal}(\mu_{\lambda}, \sigma_{\lambda}^2) \label{eq-branch-lambda}
+\end{align}
+
+**Branch-specific piecewise analytical solutions:**
+
+For cell $j$ assigned to branch $k$ (i.e., $Z_j = k$), the dimensionless concentrations follow the same piecewise analytical solutions as the single-branch model, but using branch-specific parameters:
+
+\begin{align}
+\alpha^*_{ik}(t^*) &:= \begin{cases}
+1.0 & \text{if } t^* < {t^*_{on}}_{ik} \\
+R_{on,ik} & \text{if } {t^*_{on}}_{ik} \leq t^* < {t^*_{on}}_{ik} + \delta^*_{ik} \\
+1.0 & \text{if } t^* \geq {t^*_{on}}_{ik} + \delta^*_{ik}
+\end{cases} \label{eq-branch-piecewise-transcription}
+\end{align}
+
+The analytical solutions for each phase remain identical to the single-branch case, but now use branch-gene-specific parameters ${t^*_{on}}_{ik}$, $\delta^*_{ik}$, and $R_{on,ik}$.
+
+**Mixture likelihood:**
+\begin{align}
+\mathcal{L}(\text{data}) &= \prod_{j=1}^N \sum_{k=1}^K \pi_k \cdot \mathcal{L}_k(\text{data}_j \mid \text{branch } k) \label{eq-mixture-likelihood}
+\end{align}
+
+where $\mathcal{L}_k(\text{data}_j \mid \text{branch } k)$ is the likelihood for cell $j$ under branch $k$ using branch-specific parameters.
+
+**Observation model (unchanged):**
+\begin{align}
+u_{ij} &\sim \text{Poisson}(\lambda_j \cdot U_{0i} \cdot u^*_{ij}) \label{eq-branch-u-obs} \\
+s_{ij} &\sim \text{Poisson}(\lambda_j \cdot U_{0i} \cdot s^*_{ij}) \label{eq-branch-s-obs}
+\end{align}
+
+where $u^*_{ij}$ and $s^*_{ij}$ are computed using the branch-specific piecewise analytical solutions for the branch to which cell $j$ is assigned.
+
+### Branch-Specific Parameter Structure
+
+The branching mixture model introduces a **hierarchical parameter organization** that balances biological interpretability with computational efficiency. Parameters are strategically partitioned into shared and branch-specific categories based on biological considerations and identifiability requirements.
+
+#### **Shared Parameters Across Branches**
+
+**$\gamma^*_i$ (Relative degradation rate)**
+
+- **Rationale**: mRNA degradation kinetics are primarily determined by sequence-specific features (3' UTR elements, miRNA binding sites, RNA-binding protein motifs) that are intrinsic to the gene and independent of developmental trajectory
+- **Biological justification**: Degradation machinery (exonucleases, deadenylation complexes) operates consistently across cell types within the same organism
+- **Mathematical advantage**: Reduces parameter space from $G \times K$ to $G$ parameters while maintaining biological realism
+- **Identifiability**: Shared degradation rates enable borrowing strength across branches for better parameter estimation
+
+**$U_{0i}$ (Characteristic concentration scale)**
+
+- **Rationale**: Represents the gene's fundamental expression capacity, which reflects promoter strength, chromatin accessibility, and transcriptional machinery availability
+- **Biological justification**: While absolute expression levels vary across branches, the characteristic scale represents the gene's intrinsic transcriptional potential
+- **Mathematical advantage**: Separates scaling effects from temporal dynamics, maintaining dimensional consistency across branches
+- **Identifiability**: Shared scaling parameters prevent confounding between branch-specific temporal effects and expression magnitude
+
+#### **Branch-Specific Parameters**
+
+**$T_{\max,k}$ (Branch-specific process duration)**
+
+- **Definition**: Maximum dimensionless time for developmental process in branch $k$
+- **Biological interpretation**: Different developmental trajectories may proceed at different rates, with some lineages requiring longer maturation times
+- **Examples**:
+  - Neuronal differentiation (slow, $T_{\max} \sim 10$) vs. myeloid differentiation (fast, $T_{\max} \sim 3$)
+  - Stress response (rapid, $T_{\max} \sim 2$) vs. metabolic adaptation (gradual, $T_{\max} \sim 8$)
+- **Mathematical role**: Provides branch-specific temporal scaling while maintaining stick-breaking identifiability
+
+**${t^*_{on}}_{ik}$ (Branch-gene-specific onset time)**
+
+- **Definition**: Dimensionless activation onset time for gene $i$ in branch $k$
+- **Biological interpretation**: Different developmental trajectories activate the same genes at different relative timepoints
+- **Examples**:
+  - Transcription factor cascades: Early TFs activate first in committed lineages, later in multipotent cells
+  - Metabolic genes: Glycolytic genes activate early in proliferative branches, late in quiescent branches
+  - Stress response: Immediate early genes activate quickly in acute stress, slowly in chronic adaptation
+- **Prior structure**: $\text{Normal}(\mu_{on,k}, \sigma_{on}^2)$ allows branch-specific timing while sharing variance across genes
+
+**$\delta^*_{ik}$ (Branch-gene-specific activation duration)**
+
+- **Definition**: Dimensionless activation duration for gene $i$ in branch $k$
+- **Biological interpretation**: Same genes may have different activation durations across developmental trajectories
+- **Examples**:
+  - Cell cycle genes: Brief activation in rapidly dividing cells, prolonged in slowly cycling cells
+  - Differentiation markers: Transient in intermediate states, sustained in terminal differentiation
+  - Signaling molecules: Pulse-like in signaling cells, sustained in responding cells
+- **Prior structure**: $\text{LogNormal}(\mu_{\delta,k}, \sigma_{\delta}^2)$ ensures positive durations with branch-specific means
+
+**$R_{on,ik}$ (Branch-gene-specific fold-change)**
+
+- **Definition**: Fold-change in transcription rate during activation for gene $i$ in branch $k$
+- **Biological interpretation**: Same genes may be activated to different extents across developmental trajectories
+- **Examples**:
+  - Lineage markers: Strong activation in committed lineages, weak in multipotent cells
+  - Metabolic enzymes: High fold-change in metabolically active branches, low in quiescent branches
+  - Stress genes: Massive activation in stressed cells, moderate in adapted cells
+- **Prior structure**: $\text{LogNormal}(\mu_{R,k}, \sigma_R^2)$ ensures positive fold-changes with branch-specific means
+
+#### **Hyperparameter Interpretation**
+
+**Branch-specific location parameters** ($\mu_{on,k}$, $\mu_{\delta,k}$, $\mu_{R,k}$):
+
+- **Biological meaning**: Characteristic timing and expression patterns for each developmental trajectory
+- **Identifiability**: Enable learning of branch-specific expression programs while sharing variance parameters
+- **Flexibility**: Allow each branch to have distinct temporal and expression characteristics
+
+**Shared variance parameters** ($\sigma_{on}^2$, $\sigma_{\delta}^2$, $\sigma_R^2$):
+
+- **Statistical efficiency**: Borrowing strength across branches improves parameter estimation
+- **Biological realism**: Gene-to-gene variation in timing and expression is similar across developmental contexts
+- **Computational advantage**: Reduces parameter space while maintaining model flexibility
+
+### Stick-Breaking Within Branches
+
+The branching mixture model implements **independent stick-breaking processes** within each branch, maintaining all identifiability and computational advantages of the single-branch framework while enabling branch-specific temporal dynamics.
+
+#### **Branch-Specific Stick-Breaking Construction**
+
+For each branch $k \in \{1, \ldots, K\}$, cells assigned to that branch ($\{j : Z_j = k\}$) follow an independent stick-breaking process:
+
+\begin{align}
+\text{Let } \mathcal{N}_k &= |\{j : Z_j = k\}| \quad \text{(number of cells in branch } k\text{)} \\
+\text{For cells } j_1, j_2, \ldots, j_{\mathcal{N}_k} &\text{ where } Z_{j_\ell} = k: \\
+V_{k,\ell} &\sim \text{Beta}(1, \mathcal{N}_k - \ell) \quad \text{for } \ell \in \{1, \ldots, \mathcal{N}_k - 1\} \label{eq-branch-beta-variables} \\
+\tilde{t}_{k,1} &= 0 \quad \text{(first cell at branch start)} \\
+\tilde{t}_{k,\ell} &= \tilde{t}_{k,\ell-1} + V_{k,\ell-1} \prod_{m=1}^{\ell-2} (1 - V_{k,m}) \quad \text{for } \ell \in \{2, \ldots, \mathcal{N}_k\} \label{eq-branch-stick-construction} \\
+{t^*}_{j_\ell} &= T_{\max,k} \times \tilde{t}_{k,\ell} \quad \text{(branch-specific scaling)} \label{eq-branch-time-scaling}
+\end{align}
+
+#### **Mathematical Properties of Branch-Specific Stick-Breaking**
+
+**Ordering preservation within branches:**
+\begin{align}
+0 = {t^*}_{j_1} < {t^*}_{j_2} < \cdots < {t^*}_{j_{\mathcal{N}_k}} = T_{\max,k}
+\end{align}
+
+**Independence across branches:**
+\begin{align}
+\{V_{k,\ell}\}_{\ell=1}^{\mathcal{N}_k-1} \perp \{V_{k',\ell'}\}_{\ell'=1}^{\mathcal{N}_{k'}-1} \quad \text{for } k \neq k'
+\end{align}
+
+**Identifiability within each branch:**
+
+Each branch maintains the same identifiability properties as the single-branch model:
+- Fixed anchors: ${t^*}_{j_1} = 0$ and ${t^*}_{j_{\mathcal{N}_k}} = T_{\max,k}$
+- No scaling symmetry within branch due to fixed endpoints
+- Gene parameters ${t^*_{on}}_{ik}$, $\delta^*_{ik}$ are independent of $T_{\max,k}$
+
+#### **Computational Complexity Analysis**
+
+**Time complexity:**
+- **Single-branch stick-breaking**: $O(N \log N)$ for $N$ cells
+- **Multi-branch stick-breaking**: $O\left(\sum_{k=1}^K \mathcal{N}_k \log \mathcal{N}_k\right) = O(N \log N)$ since $\sum_{k=1}^K \mathcal{N}_k = N$
+- **No asymptotic increase**: Branching does not increase computational complexity
+
+**Memory complexity:**
+- **Additional storage**: $O(K)$ for branch-specific parameters
+- **Cell assignments**: $O(N)$ for storing $Z_j$ values
+- **Total increase**: $O(K + N)$, linear in problem size
+
+**Parallel computation opportunities:**
+- **Independent branch processing**: Stick-breaking for each branch can be computed in parallel
+- **Gene parameter updates**: Branch-gene parameters can be updated independently across branches
+- **Likelihood evaluation**: Branch-specific likelihoods can be computed in parallel
+
+#### **Implementation Considerations**
+
+**Branch assignment updates:**
+
+During MCMC sampling, branch assignments $Z_j$ are updated using standard categorical sampling:
+\begin{align}
+P(Z_j = k \mid \text{rest}) \propto \pi_k \cdot \mathcal{L}_k(\text{data}_j \mid \text{branch } k)
+\end{align}
+
+**Stick-breaking recomputation:**
+
+When branch assignments change, only the affected branches need stick-breaking recomputation:
+- **Efficient updates**: Only recompute stick-breaking for branches that gained or lost cells
+- **Unchanged branches**: Branches with stable membership retain their temporal coordinates
+- **Computational savings**: Avoid full recomputation when only a few cells change branches
+
+**Numerical stability:**
+
+- **Beta variable bounds**: Ensure $V_{k,\ell} \in (0, 1)$ to prevent degenerate stick-breaking
+- **Minimum branch size**: Require $\mathcal{N}_k \geq 2$ for meaningful stick-breaking (at least start and end points)
+- **Empty branch handling**: Branches with $\mathcal{N}_k = 0$ are automatically excluded from likelihood computation
+
+### Identifiability Analysis
+
+The branching mixture model preserves all identifiability properties of the single-branch framework while introducing additional structure that enhances parameter recovery through **conditional independence** and **hierarchical regularization**.
+
+#### **Preservation of Single-Branch Identifiability**
+
+**Theorem (Branch-Conditional Identifiability):**
+
+Given branch assignments $\{Z_j\}_{j=1}^N$, each branch $k$ maintains the same identifiability properties as the single-branch model.
+
+**Proof:**
+
+1. **Fixed anchors within branch**: For cells in branch $k$, we have ${t^*}_{j_1} = 0$ and ${t^*}_{j_{\mathcal{N}_k}} = T_{\max,k}$
+
+2. **Independent gene parameters**: ${t^*_{on}}_{ik}$ and $\delta^*_{ik}$ are sampled independently of $T_{\max,k}$
+
+3. **No scaling symmetry**: The same argument as in the single-branch case applies within each branch
+
+4. **Analytical solutions**: The piecewise analytical solutions within each branch are identical to the single-branch case
+
+Therefore, conditional on branch assignments, each branch is identifiable. □
+
+#### **Enhanced Identifiability Through Mixture Structure**
+
+**Cross-branch parameter constraints:**
+
+The mixture structure introduces additional identifiability through **cross-branch comparisons**:
+
+\begin{align}
+\mathcal{L}_{\text{mixture}} &= \prod_{j=1}^N \sum_{k=1}^K \pi_k \cdot \mathcal{L}_k(\text{data}_j \mid \text{branch } k) \\
+&\neq \prod_{j=1}^N \sum_{k=1}^K \pi_k \cdot \mathcal{L}_k(\text{data}_j \mid \text{scaled branch } k)
+\end{align}
+
+**Theorem (Mixture Identifiability Enhancement):**
+
+The mixture likelihood is not invariant under branch-specific parameter scaling, providing additional identifiability constraints beyond single-branch identifiability.
+
+**Proof:**
+
+1. **Asymmetric scaling**: Scaling parameters in branch $k$ but not branch $k'$ changes the relative likelihood contributions
+
+2. **Branch assignment sensitivity**: Cells near branch boundaries become more or less likely to be assigned to scaled branches
+
+3. **Cross-branch competition**: The mixture structure creates competition between branches that prevents arbitrary scaling
+
+4. **Hierarchical constraints**: Shared hyperparameters ($\sigma_{on}^2$, $\sigma_{\delta}^2$, $\sigma_R^2$) provide additional regularization
+
+Therefore, the mixture structure enhances identifiability beyond the single-branch case. □
+
+#### **Identifiability of Branch Structure Parameters**
+
+**Number of branches ($K$):**
+
+- **Identifiable through**: Model comparison using information criteria (WAIC, LOO-CV)
+- **Practical bounds**: $K \leq N/2$ to ensure sufficient cells per branch for stick-breaking
+- **Biological constraints**: $K$ should reflect known developmental trajectories
+
+**Branch probabilities ($\boldsymbol{\pi}$):**
+
+- **Identifiable through**: Observed frequencies of branch assignments
+- **Dirichlet prior**: Provides regularization while allowing flexible branch sizes
+- **Constraint**: $\sum_{k=1}^K \pi_k = 1$ ensures proper probability distribution
+
+**Branch assignments ($\{Z_j\}$):**
+
+- **Identifiable through**: Likelihood comparison across branches for each cell
+- **Uncertainty quantification**: Posterior probabilities $P(Z_j = k \mid \text{data})$ provide assignment confidence
+- **Soft clustering**: Cells can have uncertain branch assignments, reflecting biological reality
+
+#### **Practical Identifiability Considerations**
+
+**Minimum branch size requirements:**
+
+- **Stick-breaking constraint**: Each branch needs $\mathcal{N}_k \geq 2$ for meaningful temporal ordering
+- **Parameter estimation**: Larger branches provide better parameter estimates
+- **Recommended minimum**: $\mathcal{N}_k \geq 10$ for stable parameter recovery
+
+**Gene parameter identifiability:**
+
+- **Shared parameters**: $\gamma^*_i$ and $U_{0i}$ benefit from pooling across branches
+- **Branch-specific parameters**: Require sufficient cells and temporal coverage within each branch
+- **Hierarchical regularization**: Branch-specific means with shared variances improve identifiability
+
+**Temporal coverage requirements:**
+
+- **Within-branch coverage**: Each branch should span sufficient temporal range for parameter recovery
+- **Cross-branch comparison**: Overlapping temporal ranges enable branch discrimination
+- **Gene activation coverage**: Each branch should contain cells before, during, and after gene activation events
+
+### Biological Interpretation
+
+The branching mixture model provides a **mathematically rigorous framework** for modeling complex developmental processes where cells follow distinct trajectories with different temporal dynamics and gene expression programs.
+
+#### **Developmental Biology Applications**
+
+**Cell fate decisions and lineage bifurcations:**
+
+The model naturally captures **binary and multi-way cell fate decisions** where progenitor cells commit to distinct developmental lineages:
+
+- **Hematopoiesis**: Multipotent stem cells differentiating into myeloid vs. lymphoid lineages
+- **Neural development**: Neural progenitors becoming neurons vs. glia
+- **Embryonic development**: Pluripotent cells committing to different germ layers
+- **Tissue regeneration**: Stem cells responding to injury with different repair programs
+
+**Branch-specific temporal dynamics:**
+
+Different developmental trajectories often proceed at **different rates** and with **different timing**:
+
+- **Fast vs. slow differentiation**: Some lineages mature rapidly (hours), others slowly (days)
+- **Sequential vs. parallel activation**: Genes may activate in different orders across branches
+- **Transient vs. sustained expression**: Same genes may show different temporal patterns across lineages
+
+**Examples of branch-specific gene expression patterns:**
+
+1. **Transcription factor cascades**:
+   - **Branch 1 (Neural)**: Early activation of neuronal TFs, sustained expression of synaptic genes
+   - **Branch 2 (Glial)**: Later activation of glial TFs, transient expression of migration genes
+
+2. **Metabolic reprogramming**:
+   - **Branch 1 (Proliferative)**: Early glycolytic gene activation, sustained cell cycle gene expression
+   - **Branch 2 (Quiescent)**: Early oxidative metabolism genes, transient stress response activation
+
+3. **Stress response pathways**:
+   - **Branch 1 (Adaptation)**: Gradual activation of protective genes, sustained expression
+   - **Branch 2 (Apoptosis)**: Rapid activation of death genes, transient survival gene expression
+
+#### **Experimental Design Connections**
+
+**Single-cell trajectory inference:**
+
+The model provides a **probabilistic foundation** for trajectory inference methods:
+
+- **Pseudotime estimation**: Branch-specific temporal coordinates provide principled pseudotime
+- **Lineage tracing**: Branch assignments correspond to inferred lineage relationships
+- **Trajectory topology**: Number of branches and their relationships reflect developmental structure
+
+**Lineage tracing validation:**
+
+The model can be **validated against experimental lineage tracing**:
+
+- **Clonal analysis**: Compare inferred branch assignments to known clonal relationships
+- **Barcode sequencing**: Use genetic barcodes to validate branch structure
+- **Time-course experiments**: Compare inferred temporal coordinates to known sampling times
+
+**Perturbation experiments:**
+
+The model enables **quantitative analysis of developmental perturbations**:
+
+- **Knockout effects**: Compare branch structure and gene expression patterns in wild-type vs. knockout
+- **Drug treatments**: Assess how chemical perturbations alter developmental trajectories
+- **Environmental stress**: Model how external conditions affect lineage commitment and timing
+
+#### **Connection to Established Developmental Biology Concepts**
+
+**Waddington's epigenetic landscape:**
+
+The branching model provides a **quantitative implementation** of Waddington's landscape metaphor:
+
+- **Branches as valleys**: Each developmental trajectory corresponds to a valley in the landscape
+- **Branch probabilities as basin sizes**: $\pi_k$ reflects the relative attractiveness of each trajectory
+- **Temporal coordinates as progress**: ${t^*}_j$ represents progress down the developmental valley
+- **Gene expression as landscape features**: Branch-specific parameters define the molecular landscape
+
+**Canalization and developmental constraints:**
+
+The model captures **developmental canalization** through parameter structure:
+
+- **Shared degradation rates**: Reflect conserved post-transcriptional machinery
+- **Branch-specific timing**: Captures lineage-specific developmental programs
+- **Hierarchical priors**: Represent evolutionary constraints on developmental variation
+
+**Developmental plasticity and robustness:**
+
+The mixture structure enables modeling of **developmental plasticity**:
+
+- **Branch assignment uncertainty**: Reflects cellular plasticity and fate choice flexibility
+- **Parameter variation**: Captures individual cell variation within developmental programs
+- **Environmental responsiveness**: Branch probabilities can depend on external conditions
+
+#### **Clinical and Therapeutic Applications**
+
+**Disease modeling:**
+
+The framework can model **pathological developmental processes**:
+
+- **Cancer progression**: Tumor cells following different evolutionary trajectories
+- **Developmental disorders**: Disrupted lineage specification and timing
+- **Aging**: Age-related changes in stem cell differentiation capacity
+
+**Drug discovery:**
+
+The model enables **quantitative assessment of therapeutic interventions**:
+
+- **Target identification**: Genes with branch-specific expression patterns as therapeutic targets
+- **Timing optimization**: Optimal timing of interventions based on developmental stage
+- **Combination therapy**: Targeting multiple branches simultaneously
+
+**Regenerative medicine:**
+
+The framework supports **rational design of regenerative therapies**:
+
+- **Directed differentiation**: Optimizing protocols to bias cells toward desired branches
+- **Reprogramming efficiency**: Quantifying success of cellular reprogramming approaches
+- **Tissue engineering**: Designing scaffolds that support specific developmental trajectories
+
+### Computational Considerations
+
+The branching mixture model maintains **computational efficiency** while significantly expanding modeling capabilities through careful algorithmic design and mathematical structure preservation.
+
+#### **Scalability Analysis**
+
+**Time complexity scaling:**
+
+\begin{align}
+\text{Single-branch model:} &\quad O(N \log N + NG) \\
+\text{Branching mixture model:} &\quad O(K \cdot N \log N + KNG + NK)
+\end{align}
+
+where:
+
+- $N$ = number of cells
+- $G$ = number of genes
+- $K$ = number of branches
+
+**Asymptotic behavior:**
+
+- **Linear in $K$**: Computational cost scales linearly with number of branches
+- **No interaction terms**: $K$, $N$, and $G$ scaling factors are multiplicative, not exponential
+- **Practical bounds**: For typical values ($K \leq 10$, $N \leq 10^4$, $G \leq 10^3$), computational cost remains manageable
+
+**Memory complexity:**
+\begin{align}
+\text{Additional memory:} &\quad O(KG + KN + K) \\
+&= O(K(G + N + 1))
+\end{align}
+
+**Storage breakdown:**
+
+- **Branch-gene parameters**: $O(KG)$ for ${t^*_{on}}_{ik}$, $\delta^*_{ik}$, $R_{on,ik}$
+- **Branch assignments**: $O(N)$ for $Z_j$ values
+- **Branch-specific temporal coordinates**: $O(KN)$ for stick-breaking variables
+- **Branch probabilities**: $O(K)$ for $\boldsymbol{\pi}$
+
+#### **Algorithmic Optimizations**
+
+**Parallel computation strategies:**
+
+1. **Branch-parallel likelihood evaluation**:
+   ```python
+   # Compute likelihood for each branch in parallel
+   branch_likelihoods = parallel_map(
+       lambda k: compute_branch_likelihood(data, branch_k_params),
+       branches
+   )
+   ```
+
+2. **Gene-parallel parameter updates**:
+   ```python
+   # Update gene parameters across branches in parallel
+   for k in branches:
+       gene_params[k] = parallel_map(
+           lambda i: update_gene_params(gene_i, branch_k),
+           genes
+       )
+   ```
+
+3. **Cell-parallel branch assignment updates**:
+   ```python
+   # Update branch assignments for cells in parallel
+   new_assignments = parallel_map(
+       lambda j: sample_branch_assignment(cell_j, branch_likelihoods),
+       cells
+   )
+   ```
+
+**Efficient MCMC sampling:**
+
+**Block updates for branch structure:**
+
+- **Joint branch probability update**: Sample $\boldsymbol{\pi}$ using conjugate Dirichlet posterior
+- **Efficient branch assignment**: Use categorical sampling with precomputed likelihoods
+- **Adaptive branch proposals**: Propose branch reassignments based on likelihood ratios
+
+**Hierarchical parameter updates:**
+
+- **Shared parameter pooling**: Update $\gamma^*_i$ and $U_{0i}$ using data from all branches
+- **Branch-specific parameter blocks**: Update all parameters for branch $k$ jointly
+- **Hyperparameter updates**: Use conjugate priors where possible for efficient sampling
+
+**Stick-breaking optimizations:**
+
+- **Incremental updates**: Only recompute stick-breaking for branches with changed membership
+- **Cached computations**: Store intermediate stick-breaking results to avoid recomputation
+- **Vectorized operations**: Use efficient linear algebra for Beta variable sampling
+
+#### **Implementation Considerations**
+
+**Numerical stability:**
+
+**Beta variable sampling:**
+```python
+# Ensure numerical stability in stick-breaking
+def sample_beta_variables(branch_size):
+    # Avoid extreme values that cause numerical issues
+    alpha, beta = 1.0, max(branch_size - 1, 1.0)
+    return np.clip(np.random.beta(alpha, beta), 1e-8, 1-1e-8)
+```
+
+**Likelihood computation:**
+```python
+# Use log-space arithmetic to prevent overflow/underflow
+def compute_mixture_likelihood(data, branch_params, branch_probs):
+    log_likelihoods = []
+    for k, (params, prob) in enumerate(zip(branch_params, branch_probs)):
+        log_lik = compute_log_likelihood(data, params) + np.log(prob)
+        log_likelihoods.append(log_lik)
+    return logsumexp(log_likelihoods)
+```
+
+**Memory management:**
+
+**Efficient data structures:**
+- **Sparse representations**: Use sparse matrices for gene expression data
+- **Branch indexing**: Maintain efficient mappings from cells to branches
+- **Parameter caching**: Cache frequently accessed parameter combinations
+
+**Memory-efficient sampling:**
+```python
+# Process branches sequentially to limit memory usage
+def memory_efficient_sampling(data, max_memory_per_branch):
+    for branch_k in branches:
+        # Load only data for current branch
+        branch_data = data[branch_assignments == k]
+        # Process branch with limited memory footprint
+        updated_params = sample_branch_parameters(branch_data)
+        # Store results and free memory
+        store_and_cleanup(updated_params)
+```
+
+#### **Validation and Diagnostics**
+
+**Convergence diagnostics:**
+
+**Branch-specific convergence:**
+
+- **Within-branch parameter convergence**: Monitor $\hat{R}$ statistics for each branch separately
+- **Cross-branch parameter comparison**: Ensure branch-specific parameters are distinguishable
+- **Branch assignment stability**: Track branch assignment changes across MCMC iterations
+
+**Model selection criteria:**
+
+**Information criteria for branch number:**
+\begin{align}
+\text{WAIC}_K &= -2 \sum_{j=1}^N \log \mathbb{E}[p(y_j \mid \theta)] + 2 p_{\text{eff}} \\
+\text{LOO-CV}_K &= \sum_{j=1}^N \log p(y_j \mid y_{-j})
+\end{align}
+
+**Cross-validation strategies:**
+
+- **Leave-one-branch-out**: Assess model performance when excluding entire branches
+- **Temporal cross-validation**: Validate on held-out time points within each branch
+- **Gene-wise validation**: Test parameter recovery for held-out genes
+
+**Parameter recovery validation:**
+
+**Branch-specific validation metrics:**
+
+- **Branch assignment accuracy**: Compare inferred vs. true branch assignments
+- **Within-branch parameter recovery**: Assess parameter recovery within each branch
+- **Cross-branch parameter discrimination**: Verify that branch-specific parameters are distinguishable
+
+**Computational benchmarking:**
+```python
+# Benchmark computational performance
+def benchmark_branching_model(n_cells, n_genes, n_branches):
+    start_time = time.time()
+
+    # Generate synthetic data
+    data = generate_branching_data(n_cells, n_genes, n_branches)
+
+    # Fit model
+    model = BranchingPyroVelocityModel()
+    results = model.fit(data, num_samples=1000)
+
+    # Record performance metrics
+    total_time = time.time() - start_time
+    memory_usage = get_peak_memory_usage()
+
+    return {
+        'total_time': total_time,
+        'memory_usage': memory_usage,
+        'time_per_sample': total_time / 1000,
+        'scalability_metrics': compute_scalability_metrics(results)
+    }
+```
+
+This comprehensive computational framework ensures that the branching mixture model remains **practically implementable** while providing **rigorous mathematical foundations** for modeling complex developmental processes with multiple trajectories.
