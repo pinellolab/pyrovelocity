@@ -429,21 +429,21 @@ To accommodate realistic gene expression scenarios, including genes that are alr
 For each gene $i$, the dimensionless transcription rate follows a three-phase piecewise constant function:
 
 $$\alpha^*_i(t^*) := \begin{cases}
-1.0 & \text{if } t^* < t^*_{0,\text{on}i}, \\
-R_{\text{on},i} & \text{if } t^*_{0,\text{on}i} \leq t^* < t^*_{0,\text{on}i} + \delta^*_i, \\
-1.0 & \text{if } t^* \geq t^*_{0,\text{on}i} + \delta^*_i
+1.0 & \text{if } t^* < t^*_{on,i}, \\
+R_{\text{on},i} & \text{if } t^*_{on,i} \leq t^* < t^*_{on,i} + \delta^*_i, \\
+1.0 & \text{if } t^* \geq t^*_{on,i} + \delta^*_i
 \end{cases}$$
 
 where:
 
 - $\alpha^*_{\text{off}i} = 1.0$ is the fixed reference transcription rate
 - $R_{\text{on},i} = \alpha^*_{\text{on}i}/\alpha^*_{\text{off}i} = \alpha^*_{\text{on}i}$ is the fold-change during activation (inferred parameter)
-- $t^*_{0,\text{on}i}$ is the dimensionless activation onset time (can be negative for pre-activation scenarios)
+- $t^*_{on,i}$ is the dimensionless activation onset time (can be negative for pre-activation scenarios)
 - $\delta^*_i$ is the dimensionless activation duration
 
 #### Biological Interpretation of Negative Onset Times
 
-When $t^*_{0,\text{on}i} < 0$:
+When $t^*_{on,i} < 0$:
 
 - The gene was **already activated** before observation began ($t^* = 0$)
 - Cells at early timepoints may show **high expression** for such genes
@@ -469,7 +469,7 @@ The dimensionless system with piecewise activation becomes:
 
 We solve this system analytically for each of the three phases:
 
-#### **Phase 1: Off State** ($t^* < t^*_{0,\text{on}i}$)
+#### **Phase 1: Off State** ($t^* < t^*_{on,i}$)
 
 With constant transcription rate $\alpha^*_{\text{off}i} = 1.0$ and initial conditions at steady state, the system remains at equilibrium:
 
@@ -478,11 +478,11 @@ u^*_{ij}(t^*) &= 1.0 \\
 s^*_{ij}(t^*) &= \frac{1.0}{\gamma^*_i}
 \end{align}
 
-**Note**: This phase may not be observed if $t^*_{0,\text{on}i} < 0$ (pre-activation scenario).
+**Note**: This phase may not be observed if $t^*_{on,i} < 0$ (pre-activation scenario).
 
-#### **Phase 2: On State** ($t^*_{0,\text{on}i} \leq t^* < t^*_{0,\text{on}i} + \delta^*_i$)
+#### **Phase 2: On State** ($t^*_{on,i} \leq t^* < t^*_{on,i} + \delta^*_i$)
 
-Let $\tau_{\text{on}} = t^* - t^*_{0,\text{on}i}$ be the time since activation onset. The system transitions from the off-state steady state toward the on-state steady state.
+Let $\tau_{\text{on}} = t^* - t^*_{on,i}$ be the time since activation onset. The system transitions from the off-state steady state toward the on-state steady state.
 
 **Initial conditions for Phase 2:**
 $$u^*_{\text{on},0i} = 1.0, \quad s^*_{\text{on},0i} = \frac{1.0}{\gamma^*_i}$$
@@ -513,9 +513,9 @@ The case $\gamma^*_i = 1$ represents **balanced splicing-degradation kinetics** 
 - **Parameter recovery implications**: Inference near $\gamma^*_i = 1$ may exhibit slower convergence due to the discontinuous derivative in the analytical solutions
 - **Numerical considerations**: The transition between $\gamma^*_i \neq 1$ and $\gamma^*_i = 1$ solutions requires careful handling to maintain numerical stability
 
-#### **Phase 3: Return to Off State** ($t^* \geq t^*_{0,\text{on}i} + \delta^*_i$)
+#### **Phase 3: Return to Off State** ($t^* \geq t^*_{on,i} + \delta^*_i$)
 
-Let $\tau_{\text{off}} = t^* - (t^*_{0,\text{on}i} + \delta^*_i)$ be the time since returning to the off state. The system transitions from the end-of-phase-2 state back toward the off-state steady state.
+Let $\tau_{\text{off}} = t^* - (t^*_{on,i} + \delta^*_i)$ be the time since returning to the off state. The system transitions from the end-of-phase-2 state back toward the off-state steady state.
 
 **Initial conditions for Phase 3:**
 
@@ -585,8 +585,8 @@ This independent structure eliminates scaling symmetry by removing multiplicativ
 
 **Parameter specifications**:
 
-- $0 < t^*_{on,i} < 0.3 \mathbb{E}[T_M]$ (early activation within process duration)
-- $\delta^*_i < 0.4 \mathbb{E}[T_M]$ (short activation duration relative to process)
+- $0 < t^*_{on,i} < 1.5$ (early activation within process duration, assuming conservative prior Gamma(5,1))
+- $\delta^*_i < 2.0$ (short activation duration relative to process, assuming conservative prior Gamma(5,1))
 - $R_{\text{on},i} > 2.0$ (sufficient fold-change to observe activation)
 
 **Biological interpretation**: These genes activate early enough and for a short enough duration that the complete activation-decay cycle is observable within the experimental window. The constraints ensure that both the activation and subsequent decay phases are captured.
@@ -599,8 +599,8 @@ This independent structure eliminates scaling symmetry by removing multiplicativ
 
 **Parameter specifications**:
 
-- $0 < t^*_{on,i} < 0.3 \mathbb{E}[T_M]$ (early activation within process duration)
-- $\delta^*_i > 0.5 \mathbb{E}[T_M]$ (long activation duration relative to process)
+- $0 < t^*_{on,i} < 1.5$ (early activation within process duration, assuming conservative prior Gamma(5,1))
+- $\delta^*_i > 2.5$ (long activation duration relative to process, assuming conservative prior Gamma(5,1))
 - $R_{\text{on},i} > 2.0$ (strong fold-change during activation)
 
 **Biological interpretation**: These genes activate early in the observation window and maintain high expression levels throughout most of the observed period. The long activation duration relative to the observation window means that decay back to baseline is either minimal or occurs beyond the observation period.
@@ -667,16 +667,16 @@ With independent parameterization, gene timing parameters should be calibrated t
 
 **General principle:**
 \begin{align}
-t^*_{on,i} &\sim \text{Normal}(f_{on} \times \mathbb{E}[T_M], \sigma_{on}^2) \\
-\delta^*_i &\sim \text{LogNormal}(\log(f_{\delta} \times \mathbb{E}[T_M]), \sigma_{\delta}^2)
+t^*_{on,i} &\sim \text{Normal}(f_{on} \times \text{E}[T_{\max}], \sigma_{on}^2) \\
+\delta^*_i &\sim \text{LogNormal}(\log(f_{\delta} \times \text{E}[T_{\max}]), \sigma_{\delta}^2)
 \end{align}
 
 where $f_{on} = 0.3$ (expect activation at 30% of process) and $f_{\delta} = 0.4$ (expect 40% duration activation) are scaling factors based on biological expectations.
 
 **Concrete examples for different experimental contexts:**
-- **Conservative (Gamma(5,1))**: $\mathbb{E}[T_M] = 5$ → $t^*_{on,i} \sim \text{Normal}(1.5, \sigma_{on}^2)$
-- **Skeptical (Gamma(1,1))**: $\mathbb{E}[T_M] = 1$ → $t^*_{on,i} \sim \text{Normal}(0.3, \sigma_{on}^2)$
-- **Permissive (Gamma(1,0.2))**: $\mathbb{E}[T_M] = 5$ → $t^*_{on,i} \sim \text{Normal}(1.5, \sigma_{on}^2)$
+- **Conservative (Gamma(5,1))**: E[$T_{\max}$] = 5 → $t^*_{on,i} \sim \text{Normal}(1.5, \sigma_{on}^2)$
+- **Skeptical (Gamma(1,1))**: E[$T_{\max}$] = 1 → $t^*_{on,i} \sim \text{Normal}(0.3, \sigma_{on}^2)$
+- **Permissive (Gamma(1,0.2))**: E[$T_{\max}$] = 5 → $t^*_{on,i} \sim \text{Normal}(1.5, \sigma_{on}^2)$
 
 This ensures gene parameters are scaled appropriately to the expected process duration while maintaining independence and supporting the three piecewise activation patterns (pre-activation, transient, sustained).
 
@@ -817,7 +817,7 @@ for pattern_name, constraints in patterns.items():
 
 ### Probabilistic Graphical Model
 
-The probabilistic graphical model extends Study 2 by adding gene-specific piecewise activation parameters while using independent temporal parameterization to eliminate scaling symmetry. For visual clarity, we use $\theta_i$ to represent the vector of non-temporal piecewise activation parameters $(\gamma^*_i, R_{\text{on},i})$ and $\Delta_i$ to represent the vector of independent temporal gene parameters $(t^*_{0,\text{on}i}, \delta^*_i)$. Note that $\alpha^*_{\text{off}i} = 1.0$ is fixed and not shown as a random variable.
+The probabilistic graphical model extends Study 2 by adding gene-specific piecewise activation parameters while using independent temporal parameterization to eliminate scaling symmetry. For visual clarity, we use $\theta_i$ to represent the vector of non-temporal piecewise activation parameters $(\gamma^*_i, R_{\text{on},i})$ and $\Delta_i$ to represent the vector of independent temporal gene parameters $(t^*_{on,i}, \delta^*_i)$. Note that $\alpha^*_{\text{off}i} = 1.0$ is fixed and not shown as a random variable.
 
 ```{python}
 #| label: fig-piecewise-activation-pgm
@@ -986,10 +986,8 @@ The priors are designed to encode biologically reasonable parameter ranges while
 **Pattern classification framework**: The three expression patterns are defined by constraints on the independent temporal parameters:
 
 - **Pre-activation**: $t^*_{on,i} < 0.0$ and $R_{\text{on},i} > 2.0$
-- **Transient**: $0 < t^*_{on,i} < 0.3 \mathbb{E}[T_M]$, $\delta^*_i < 0.4 \mathbb{E}[T_M]$, and $R_{\text{on},i} > 2.0$
-- **Sustained**: $0 < t^*_{on,i} < 0.3 \mathbb{E}[T_M]$, $\delta^*_i > 0.5 \mathbb{E}[T_M]$, and $R_{\text{on},i} > 2.0$
-
-where $\mathbb{E}[T_M] = \alpha_T/\beta_T$ for the Gamma prior, so these thresholds adapt to the chosen hyperparameters.
+- **Transient**: $0 < t^*_{on,i} < 1.5$, $\delta^*_i < 2.0$, and $R_{\text{on},i} > 2.0$ (assuming conservative prior Gamma(5,1))
+- **Sustained**: $0 < t^*_{on,i} < 1.5$, $\delta^*_i > 2.5$, and $R_{\text{on},i} > 2.0$ (assuming conservative prior Gamma(5,1))
 
 **Biological interpretation of independent prior choices:**
 
@@ -1003,15 +1001,15 @@ where $\mathbb{E}[T_M] = \alpha_T/\beta_T$ for the Gamma prior, so these thresho
 
 - **$T_M \sim \text{Gamma}(\alpha_{T}, \beta_{T})$**: Process duration with hyperparameters chosen based on experimental context (conservative: Gamma(5,1), permissive: Gamma(1,0.2), skeptical: Gamma(1,1)).
 
-- **$t^*_{on,i} \sim \text{Normal}(\mu_{on}, \sigma_{on}^2)$**: Absolute activation onset time, typically centered around $0.3 \times \mathbb{E}[T_M]$ to expect activation at 30% of process duration. **Negative values** enable pre-activation scenarios where genes were already activated before observation began.
+- **$t^*_{on,i} \sim \text{Normal}(\mu_{on}, \sigma_{on}^2)$**: Absolute activation onset time, typically centered around 1.5 to expect activation at 30% of process duration (assuming conservative prior Gamma(5,1) with mean 5). **Negative values** enable pre-activation scenarios where genes were already activated before observation began.
 
-- **$\delta^*_i \sim \text{LogNormal}(\mu_{\delta}, \sigma_{\delta}^2)$**: Absolute activation duration, typically centered around $0.4 \times \mathbb{E}[T_M]$ to expect 40% duration activation. This enables both transient (short duration) and sustained (long duration) activation patterns.
+- **$\delta^*_i \sim \text{LogNormal}(\mu_{\delta}, \sigma_{\delta}^2)$**: Absolute activation duration, typically centered around 2.0 to expect 40% duration activation (assuming conservative prior Gamma(5,1) with mean 5). This enables both transient (short duration) and sustained (long duration) activation patterns.
 
 **Pattern classification implications:**
 
 - **Pre-activation** ($t^*_{on,i} < 0$): Probability depends on $\mu_{on}$ and $\sigma_{on}$ choices
-- **Transient** ($0 < t^*_{on,i} < 0.3 \mathbb{E}[T_M]$ and $\delta^*_i < 0.4 \mathbb{E}[T_M]$): Balanced probability for observable complete cycles
-- **Sustained** ($0 < t^*_{on,i} < 0.3 \mathbb{E}[T_M]$ and $\delta^*_i > 0.5 \mathbb{E}[T_M]$): Balanced probability for long-duration activation
+- **Transient** ($0 < t^*_{on,i} < 1.5$ and $\delta^*_i < 2.0$): Balanced probability for observable complete cycles (assuming conservative prior Gamma(5,1))
+- **Sustained** ($0 < t^*_{on,i} < 1.5$ and $\delta^*_i > 2.5$): Balanced probability for long-duration activation (assuming conservative prior Gamma(5,1))
 
 **Independent parameterization benefits:**
 
