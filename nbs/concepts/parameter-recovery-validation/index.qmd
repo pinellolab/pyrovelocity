@@ -1039,6 +1039,7 @@ When fitting the model to experimental data, the inferred $T_M$ reveals the unde
 $$\text{Inferred characteristic timescale} = \frac{\text{Known experimental duration}}{T_M^{\text{posterior}}}$$
 
 **Practical example:**
+
 - **Experimental setup**: 24-hour differentiation time course
 - **Posterior estimate**: $T_M \approx 3.0$
 - **Inferred characteristic timescale**: $24/3 = 8$ hours
@@ -1055,6 +1056,7 @@ This bidirectional relationship enables both forward simulation (given biologica
 - **Relative interpretation**: Gene $i$ activates at $(t^*_{on,i}/T_M) \times 100\%$ through the process
 
 **Example interpretations:**
+
 - $t^*_{on,i} = 1.5$, $T_M = 5.0$: Gene activates 30% through the process
 - $t^*_{on,i} = -0.5$: Gene was already active 0.5 timescales before observation began
 
