@@ -84,9 +84,9 @@ This model uses the direct dimensionless approach with analytical solutions:
 
 This model extends the latent time framework with piecewise constant transcription rates:
 
-- **Time coordinates**: Same hierarchical latent $t^*_j$ structure as previous model
+- **Time coordinates**: Independent latent $t^*_j$ coordinates sampled uniformly within process duration $T_{\max}$
 - **Dynamics**: Piecewise constant transcription with three phases (off, on, return-to-off)
-- **Parameters**: $\gamma^*_i$, $R_{\text{on},i}$ (fold-change), $t^*_{0,\text{on}i}$ (onset), $\delta^*_i$ (duration), plus hierarchical time structure
+- **Parameters**: $\gamma^*_i$, $R_{\text{on},i}$ (fold-change), $t^*_{0,\text{on}i}$ (onset), $\delta^*_i$ (duration), with independent temporal structure
 - **Key innovation**: Fixed reference state ($\alpha^*_{\text{off}i} = 1.0$) eliminates parameter redundancy
 - **Enhanced patterns**: Supports pre-activation scenarios with negative onset times
 - **Analytical solutions**: Closed-form solutions for all three phases, including $\gamma^*_i = 1$ special case
@@ -585,8 +585,8 @@ This independent structure eliminates scaling symmetry by removing multiplicativ
 
 **Parameter specifications**:
 
-- $0 < t^*_{0,\text{on}i} < 0.3 \mathbb{E}[T_{\max}]$ (early activation within process duration)
-- $\delta^*_i < 0.4 \mathbb{E}[T_{\max}]$ (short activation duration relative to process)
+- $0 < t^*_{0,\text{on}i} < 1.5$ (early activation within process duration, assuming conservative prior Gamma(5,1))
+- $\delta^*_i < 2.0$ (short activation duration relative to process, assuming conservative prior Gamma(5,1))
 - $R_{\text{on},i} > 2.0$ (sufficient fold-change to observe activation)
 
 **Biological interpretation**: These genes activate early enough and for a short enough duration that the complete activation-decay cycle is observable within the experimental window. The constraints ensure that both the activation and subsequent decay phases are captured.
@@ -599,8 +599,8 @@ This independent structure eliminates scaling symmetry by removing multiplicativ
 
 **Parameter specifications**:
 
-- $0 < t^*_{0,\text{on}i} < 0.3 \mathbb{E}[T_{\max}]$ (early activation within process duration)
-- $\delta^*_i > 0.5 \mathbb{E}[T_{\max}]$ (long activation duration relative to process)
+- $0 < t^*_{0,\text{on}i} < 1.5$ (early activation within process duration, assuming conservative prior Gamma(5,1))
+- $\delta^*_i > 2.5$ (long activation duration relative to process, assuming conservative prior Gamma(5,1))
 - $R_{\text{on},i} > 2.0$ (strong fold-change during activation)
 
 **Biological interpretation**: These genes activate early in the observation window and maintain high expression levels throughout most of the observed period. The long activation duration relative to the observation window means that decay back to baseline is either minimal or occurs beyond the observation period.
@@ -813,7 +813,7 @@ The probabilistic graphical model extends Study 2 by adding gene-specific piecew
 ```{python}
 #| label: fig-piecewise-activation-pgm
 #| code-fold: true
-#| fig-cap: Probabilistic graphical model for dimensionless analytical dynamics with hierarchical latent time coordinates and piecewise activation.
+#| fig-cap: Probabilistic graphical model for dimensionless analytical dynamics with independent latent time coordinates and piecewise activation.
 
 import daft
 import matplotlib.pyplot as plt
@@ -992,15 +992,15 @@ The priors are designed to encode biologically reasonable parameter ranges while
 
 - **$T_{\max} \sim \text{Gamma}(\alpha_{T}, \beta_{T})$**: Process duration with hyperparameters chosen based on experimental context (conservative: Gamma(5,1), permissive: Gamma(1,0.2), skeptical: Gamma(1,1)).
 
-- **$t^*_{0,\text{on}i} \sim \text{Normal}(\mu_{on}, \sigma_{on}^2)$**: Absolute activation onset time, typically centered around $0.3 \mathbb{E}[T_{\max}]$ to expect activation at 30% of process duration. **Negative values** enable pre-activation scenarios where genes were already activated before observation began.
+- **$t^*_{0,\text{on}i} \sim \text{Normal}(\mu_{on}, \sigma_{on}^2)$**: Absolute activation onset time, typically centered around 1.5 to expect activation at 30% of process duration (assuming conservative prior Gamma(5,1) with mean 5). **Negative values** enable pre-activation scenarios where genes were already activated before observation began.
 
-- **$\delta^*_i \sim \text{LogNormal}(\mu_{\delta}, \sigma_{\delta}^2)$**: Absolute activation duration, typically centered around $0.4 \mathbb{E}[T_{\max}]$ to expect 40% duration activation. This enables both transient (short duration) and sustained (long duration) activation patterns.
+- **$\delta^*_i \sim \text{LogNormal}(\mu_{\delta}, \sigma_{\delta}^2)$**: Absolute activation duration, typically centered around 2.0 to expect 40% duration activation (assuming conservative prior Gamma(5,1) with mean 5). This enables both transient (short duration) and sustained (long duration) activation patterns.
 
 **Pattern classification implications:**
 
 - **Pre-activation** ($t^*_{0,\text{on}i} < 0$): Probability depends on $\mu_{on}$ and $\sigma_{on}$ choices
-- **Transient** ($0 < t^*_{0,\text{on}i} < 0.3 \mathbb{E}[T_{\max}]$ and $\delta^*_i < 0.4 \mathbb{E}[T_{\max}]$): Balanced probability for observable complete cycles
-- **Sustained** ($0 < t^*_{0,\text{on}i} < 0.3 \mathbb{E}[T_{\max}]$ and $\delta^*_i > 0.5 \mathbb{E}[T_{\max}]$): Balanced probability for long-duration activation
+- **Transient** ($0 < t^*_{0,\text{on}i} < 1.5$ and $\delta^*_i < 2.0$): Balanced probability for observable complete cycles (assuming conservative prior Gamma(5,1))
+- **Sustained** ($0 < t^*_{0,\text{on}i} < 1.5$ and $\delta^*_i > 2.5$): Balanced probability for long-duration activation (assuming conservative prior Gamma(5,1))
 
 **Independent parameterization benefits:**
 
@@ -1212,7 +1212,7 @@ Prior predictive checks validate whether the model can generate data with realis
 
 1. **Count distribution realism**: Do prior predictive counts match expected single-cell RNA-seq distributional properties (mean-variance relationships, sparsity patterns, dynamic range)?
 
-2. **Temporal coordination**: Does the hierarchical time structure produce biologically plausible cell orderings and temporal relationships?
+2. **Temporal coordination**: Does the independent time structure produce biologically plausible cell orderings and temporal relationships?
 
 3. **Expression magnitude realism**: Do the characteristic scales $U_{0i}$ and capture efficiencies $\lambda_j$ combine to produce realistic expression levels?
 
@@ -1253,7 +1253,7 @@ This distribution quantifies the model's uncertainty about future observations g
 The piecewise activation model exhibits a complex uncertainty hierarchy that propagates from parameters through latent concentrations to final observations:
 
 1. **Parameter uncertainty**: $\text{Var}[\theta | y_{obs}]$ from the posterior distribution over all model parameters
-2. **Temporal uncertainty**: Uncertainty in latent time coordinates $t^*_j$ and their hierarchical structure
+2. **Temporal uncertainty**: Uncertainty in latent time coordinates $t^*_j$ and process duration $T_{\max}$
 3. **Kinetic uncertainty**: Uncertainty in gene-specific kinetic parameters $\gamma^*_i$ and fold-changes $R_{\text{on},i}$
 4. **Concentration uncertainty**: Uncertainty in predicted latent concentrations $u^*_{ij}(\theta), s^*_{ij}(\theta)$ arising from parameter uncertainty
 5. **Observation uncertainty**: Poisson noise in final count observations
@@ -1481,7 +1481,7 @@ Large posterior predictive sample sets require careful memory management:
 - **Pre-activation scenarios**: Models genes already activated when observation begins
 - **Flexible onset timing**: Normal prior allows negative onset times naturally
 - **Biological realism**: Captures realistic experimental scenarios better
-- **Maintains population structure**: Hierarchical time modeling preserved
+- **Maintains temporal structure**: Independent time modeling with process duration constraints
 
 #### **Rich Expression Pattern Representation**
 
@@ -1502,7 +1502,7 @@ The framework captures three core expression patterns that encompass the full ra
 #### **Biological Interpretability**
 
 - **Dimensionless parameters**: Universal interpretation across experimental conditions
-- **Temporal coordination**: Hierarchical time structure captures population-level timing
+- **Temporal coordination**: Independent time structure with process duration constraints captures temporal relationships
 - **Gene-specific dynamics**: Each gene can follow distinct activation pattern
 
 ### Parameter Recovery Validation Strategy
