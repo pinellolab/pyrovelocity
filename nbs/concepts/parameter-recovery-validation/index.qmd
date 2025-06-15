@@ -1048,15 +1048,15 @@ This bidirectional relationship enables both forward simulation (given biologica
 
 #### **Gene Parameter Interpretation in Dimensionless Framework**
 
-**Activation Onset Times**: $t^*_{0,\text{on}i} \sim \text{Normal}(\mu_{on}, \sigma_{on}^2)$
+**Activation Onset Times**: $t^*_{on,i} \sim \text{Normal}(\mu_{on}, \sigma_{on}^2)$
 
-- **Dimensionless interpretation**: Gene $i$ activates at $t^*_{0,\text{on}i}$ characteristic timescales after process initiation
-- **Real-time interpretation**: Gene $i$ activates at $t^*_{0,\text{on}i}/\alpha_{\text{ref}}$ hours after process start
-- **Relative interpretation**: Gene $i$ activates at $(t^*_{0,\text{on}i}/T_M) \times 100\%$ through the process
+- **Dimensionless interpretation**: Gene $i$ activates at $t^*_{on,i}$ characteristic timescales after process initiation
+- **Real-time interpretation**: Gene $i$ activates at $t^*_{on,i}/\alpha_{\text{ref}}$ hours after process start
+- **Relative interpretation**: Gene $i$ activates at $(t^*_{on,i}/T_M) \times 100\%$ through the process
 
 **Example interpretations:**
-- $t^*_{0,\text{on}i} = 1.5$, $T_M = 5.0$: Gene activates 30% through the process
-- $t^*_{0,\text{on}i} = -0.5$: Gene was already active 0.5 timescales before observation began
+- $t^*_{on,i} = 1.5$, $T_M = 5.0$: Gene activates 30% through the process
+- $t^*_{on,i} = -0.5$: Gene was already active 0.5 timescales before observation began
 
 **Activation Durations**: $\delta^*_i \sim \text{LogNormal}(\mu_{\delta}, \sigma_{\delta}^2)$
 
@@ -1128,26 +1128,26 @@ The dimensionless framework creates a bidirectional relationship between process
 
 - Posterior: $T_M \approx 6.0 \pm 0.5$
 - Inferred characteristic timescale: $48/6 = 8$ hours
-- Gene with $t^*_{0,\text{on}i} = 2.0$: Activates at $2.0 \times 8 = 16$ hours
+- Gene with $t^*_{on,i} = 2.0$: Activates at $2.0 \times 8 = 16$ hours
 - Gene with $\delta^*_i = 1.5$: Active for $1.5 \times 8 = 12$ hours
 
 #### **Independent Parameterization Justification**
 
 In the dimensionless framework, **gene timing parameters represent intrinsic biological properties** that should not scale with the arbitrary choice of observation window:
 
-- $t^*_{0,\text{on}i}$: When a gene's regulatory program activates (intrinsic timing)
+- $t^*_{on,i}$: When a gene's regulatory program activates (intrinsic timing)
 - $\delta^*_i$: How long a gene's regulatory program lasts (intrinsic duration)
 
 **These are biological constants** that don't change based on how long we choose to observe the system. Therefore:
 
 \begin{align}
-t^*_{0,\text{on}i} &\sim \text{Normal}(1.5, 0.8^2) \quad \text{(fixed biological timing)} \\
+t^*_{on,i} &\sim \text{Normal}(1.5, 0.8^2) \quad \text{(fixed biological timing)} \\
 \delta^*_i &\sim \text{LogNormal}(0.0, 0.45^2) \quad \text{(fixed biological duration)}
 \end{align}
 
 **NOT dependent on $T_M$:**
 \begin{align}
-t^*_{0,\text{on}i} &\not\sim \text{Normal}(0.3 \times T_M, 0.8^2) \quad \text{(would create artificial scaling)}
+t^*_{on,i} &\not\sim \text{Normal}(0.3 \times T_M, 0.8^2) \quad \text{(would create artificial scaling)}
 \end{align}
 
 This independence ensures that gene regulatory timing is treated as an intrinsic biological property rather than an artifact of experimental design.
@@ -1158,17 +1158,17 @@ This independence ensures that gene regulatory timing is treated as an intrinsic
 
 **Proof:** For any scaling factor $\lambda \neq 1$:
 
-1. **Gene parameters are sampled independently**: $t^*_{0,\text{on}i} \not\propto T_M$ and $\delta^*_i \not\propto T_M$
+1. **Gene parameters are sampled independently**: $t^*_{on,i} \not\propto T_M$ and $\delta^*_i \not\propto T_M$
 
 2. **Scaling cell times but not gene parameters changes piecewise phase assignments**:
-   - Original: Cell $j$ in phase determined by comparing $t^*_j$ vs. $t^*_{0,\text{on}i}$
-   - Scaled: Cell $j$ in phase determined by comparing $\lambda t^*_j$ vs. $t^*_{0,\text{on}i}$ (unchanged)
+   - Original: Cell $j$ in phase determined by comparing $t^*_j$ vs. $t^*_{on,i}$
+   - Scaled: Cell $j$ in phase determined by comparing $\lambda t^*_j$ vs. $t^*_{on,i}$ (unchanged)
 
-3. **The piecewise analytical solutions depend on comparisons like $t^*_j$ vs. $t^*_{0,\text{on}i}$**:
+3. **The piecewise analytical solutions depend on comparisons like $t^*_j$ vs. $t^*_{on,i}$**:
    - Phase boundaries change when cell times are scaled but gene times are not
    - Different phase assignments lead to different analytical solution forms
 
-4. **Therefore**: $\mathcal{L}(T_M, \{t^*_j\}, \{t^*_{0,\text{on}i}\}, \{\delta^*_i\}) \neq \mathcal{L}(\lambda T_M, \{\lambda t^*_j\}, \{t^*_{0,\text{on}i}\}, \{\delta^*_i\})$ □
+4. **Therefore**: $\mathcal{L}(T_M, \{t^*_j\}, \{t^*_{on,i}\}, \{\delta^*_i\}) \neq \mathcal{L}(\lambda T_M, \{\lambda t^*_j\}, \{t^*_{on,i}\}, \{\delta^*_i\})$ □
 
 **Corollary:** Parameter recovery is uniquely identifiable because no two distinct parameter configurations can produce identical likelihoods.
 
