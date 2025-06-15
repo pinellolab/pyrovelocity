@@ -29,44 +29,28 @@ in practice and what kinds of temporal patterns it can generate.
 """
 
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import seaborn as sns
 import torch
 from torch.distributions import Beta, Gamma
 
-# Import the PDF combination function from pyrovelocity
 from pyrovelocity.plots.predictive_checks import combine_pdfs
 from pyrovelocity.styles import configure_matplotlib_style
 
 
 configure_matplotlib_style()
 
-# Configure matplotlib for publication-quality plots
-# plt.rcParams.update({
-#     'font.size': 8,
-#     'axes.titlesize': 10,
-#     'axes.labelsize': 9,
-#     'xtick.labelsize': 8,
-#     'ytick.labelsize': 8,
-#     'legend.fontsize': 8,
-#     'figure.titlesize': 12,
-#     'font.family': 'serif',
-#     'text.usetex': False,  # Set to True if LaTeX is available
-#     'axes.grid': True,
-#     'grid.alpha': 0.3,
-#     'axes.spines.top': False,
-#     'axes.spines.right': False,
-# })
 
 # Set color palette
 colors = sns.color_palette("husl", 8)
 heterogeneity_colors = {
-    'low': colors[0],      # Blue
-    'moderate': colors[2], # Green
-    'high': colors[1],     # Orange
-    'uniform': colors[7]   # Gray
+    'low': colors[0],       # Blue
+    'moderate': colors[2],  # Green
+    'high': colors[1],      # Orange
+    'very_high': colors[3], # Red
+    'uniform': colors[7]    # Gray
 }
 
 
@@ -78,6 +62,17 @@ def hierarchical_stick_breaking_sample(
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Generate a single sample from the hierarchical spacing stick-breaking model.
+
+    - κ ~ Gamma(2.0, 2.0) [global heterogeneity parameter]
+    - α_j ~ Gamma(κ·(N-j), κ) for j ∈ {1, ..., N-1} [position-dependent hierarchical rates]
+    - ξ_j ~ Beta(1.0, α_j) for j ∈ {1, ..., N-1} [hierarchical stick-breaking variables]
+    - t*_j = t*_{j-1} + ξ_{j-1} × (T_max - t*_{j-1}) [recursive construction]
+
+    Key Properties:
+    - E[α_j] = N-j (matches standard stick-breaking expectation)
+    - Var[α_j] = (N-j)/κ (heterogeneity controlled by κ)
+    - As κ→∞: α_j → N-j deterministically → ξ_j ~ Beta(1, N-j) → exact standard stick-breaking
+    - As κ→0: High variability in α_j → meaningful position-specific heterogeneity
 
     Args:
         n_cells: Number of cells (temporal coordinates)
@@ -91,10 +86,16 @@ def hierarchical_stick_breaking_sample(
     if seed is not None:
         torch.manual_seed(seed)
 
-    # Sample position-specific spacing rates
-    # α_j ~ Gamma(κ, κ) for j = 1, ..., N-1
-    alpha_dist = Gamma(kappa, kappa)
-    spacing_rates = alpha_dist.sample((n_cells - 1,))
+    # CORRECTED: Position-dependent hierarchical rates
+    # α_j ~ Gamma(κ·(N-j), κ) for j = 1, ..., N-1
+    position_weights = torch.arange(n_cells - 1, 0, -1).float()  # [N-1, N-2, ..., 1]
+
+    spacing_rates = torch.zeros(n_cells - 1)
+    for j in range(n_cells - 1):
+        concentration = kappa * position_weights[j]  # κ·(N-j)
+        rate = kappa
+        alpha_dist = Gamma(concentration, rate)
+        spacing_rates[j] = alpha_dist.sample()
 
     # Sample stick-breaking variables
     # ξ_j ~ Beta(1.0, α_j)
@@ -148,6 +149,75 @@ def uniform_stick_breaking_sample(
         temporal_coords[j] = temporal_coords[j-1] + xi * remaining_time
 
     return temporal_coords
+
+
+def validate_convergence_to_standard(
+    n_cells: int = 20,
+    T_max: float = 10.0,
+    kappa_values: List[float] = [1.0, 10.0, 100.0, 1000.0],
+    n_samples: int = 1000,
+    seed: Optional[int] = None
+) -> Dict[str, float]:
+    """
+    Verify hierarchical model converges to standard stick-breaking as κ→∞.
+
+    This function computes the Wasserstein distance between hierarchical and standard
+    stick-breaking distributions for increasing κ values to validate mathematical correctness.
+
+    Args:
+        n_cells: Number of cells
+        T_max: Maximum time value
+        kappa_values: List of κ values to test convergence
+        n_samples: Number of samples for distance computation
+        seed: Random seed for reproducibility
+
+    Returns:
+        Dictionary mapping κ values to Wasserstein distances from standard stick-breaking
+    """
+    if seed is not None:
+        torch.manual_seed(seed)
+
+    print("🔬 Validating Convergence to Standard Stick-Breaking...")
+    print("-" * 50)
+
+    # Generate standard stick-breaking samples for comparison
+    standard_samples = []
+    for _ in range(n_samples):
+        coords = uniform_stick_breaking_sample(n_cells, T_max, seed=None)
+        standard_samples.append(coords)
+    standard_samples = torch.stack(standard_samples)
+
+    # Compute distances for each κ value
+    distances = {}
+
+    for kappa in kappa_values:
+        # Generate hierarchical samples
+        hierarchical_samples = []
+        for _ in range(n_samples):
+            coords, _, _ = hierarchical_stick_breaking_sample(n_cells, T_max, kappa, seed=None)
+            hierarchical_samples.append(coords)
+        hierarchical_samples = torch.stack(hierarchical_samples)
+
+        # Compute Wasserstein distance (approximated by mean absolute difference of sorted samples)
+        # This is a simplified metric but sufficient for convergence validation
+        standard_sorted = torch.sort(standard_samples.flatten())[0]
+        hierarchical_sorted = torch.sort(hierarchical_samples.flatten())[0]
+
+        wasserstein_distance = torch.mean(torch.abs(standard_sorted - hierarchical_sorted)).item()
+        distances[kappa] = wasserstein_distance
+
+        print(f"κ = {kappa:8.1f}: Wasserstein distance = {wasserstein_distance:.6f}")
+
+    print("\n✅ Convergence Analysis:")
+    print(f"   Distance reduction: {distances[kappa_values[0]]:.6f} → {distances[kappa_values[-1]]:.6f}")
+    print(f"   Improvement factor: {distances[kappa_values[0]] / distances[kappa_values[-1]]:.1f}x")
+
+    if distances[kappa_values[-1]] < 0.01:
+        print("   ✅ PASS: High κ converges to standard stick-breaking")
+    else:
+        print("   ❌ FAIL: High κ does not sufficiently converge")
+
+    return distances
 
 
 def generate_multiple_samples(
@@ -257,15 +327,17 @@ def plot_sample_trajectories(
     Returns:
         matplotlib Figure object
     """
-    fig, axes = plt.subplots(2, 2, figsize=figsize, sharex=True, sharey=True)
+    # Adjust subplot layout for 5 levels
+    fig, axes = plt.subplots(2, 3, figsize=(11.25, 6.0), sharex=True, sharey=True)
     axes = axes.flatten()
 
-    levels = ['uniform', 'low', 'moderate', 'high']
+    levels = ['uniform', 'low', 'moderate', 'high', 'very_high']
     level_names = {
         'uniform': 'Standard Uniform\nStick-Breaking',
         'low': r'Low Heterogeneity' + '\n' + r'($\kappa = 0.5$)',
         'moderate': r'Moderate Heterogeneity' + '\n' + r'($\kappa = 2.0$)',
-        'high': r'High Heterogeneity' + '\n' + r'($\kappa = 8.0$)'
+        'high': r'High Heterogeneity' + '\n' + r'($\kappa = 10.0$)',
+        'very_high': r'Very High Heterogeneity' + '\n' + r'($\kappa = 100.0$)'
     }
 
     for idx, level in enumerate(levels):
@@ -299,17 +371,22 @@ def plot_sample_trajectories(
         ax.set_ylim(0, n_cells - 1)
         ax.grid(True, alpha=0.3)
 
-        if idx >= 2:  # Bottom row
+        if idx >= 3:  # Bottom row (adjusted for 2x3 layout)
             ax.set_xlabel(r'Temporal Coordinate $t^*$')
-        if idx % 2 == 0:  # Left column
+        if idx % 3 == 0:  # Left column (adjusted for 2x3 layout)
             ax.set_ylabel('Cell Index')
+
+    # Hide the extra subplot (6th position)
+    if len(levels) < 6:
+        axes[5].set_visible(False)
 
     # Add overall title and legend
     fig.suptitle('Hierarchical Spacing Stick-Breaking: Sample Trajectories',
                 fontsize=12, y=0.95)
 
-    # Add legend to the last subplot
-    axes[-1].legend(loc='lower right', fontsize=8)
+    # Add legend to the very_high subplot
+    if 'very_high' in samples:
+        axes[4].legend(loc='lower right', fontsize=8)
 
     plt.tight_layout()
 
@@ -342,12 +419,13 @@ def plot_spacing_analysis(
     """
     fig, axes = plt.subplots(2, 2, figsize=figsize)
 
-    levels = ['uniform', 'low', 'moderate', 'high']
+    levels = ['uniform', 'low', 'moderate', 'high', 'very_high']
     level_names = {
         'uniform': 'Uniform',
         'low': r'Low ($\kappa=0.5$)',
         'moderate': r'Moderate ($\kappa=2.0$)',
-        'high': r'High ($\kappa=8.0$)'
+        'high': r'High ($\kappa=10.0$)',
+        'very_high': r'Very High ($\kappa=100.0$)'
     }
 
     # Collect spacing data
@@ -482,11 +560,12 @@ def plot_parameter_analysis(
     """
     fig, axes = plt.subplots(3, 2, figsize=figsize)
 
-    levels = ['low', 'moderate', 'high']  # Exclude uniform for parameter analysis
+    levels = ['low', 'moderate', 'high', 'very_high']  # Exclude uniform for parameter analysis
     level_names = {
         'low': r'Low ($\kappa=0.5$)',
         'moderate': r'Moderate ($\kappa=2.0$)',
-        'high': r'High ($\kappa=8.0$)'
+        'high': r'High ($\kappa=10.0$)',
+        'very_high': r'Very High ($\kappa=100.0$)'
     }
 
     # Plot 1: Spacing rates distributions
@@ -679,12 +758,13 @@ def plot_uncertainty_quantification(
     """
     fig, axes = plt.subplots(2, 2, figsize=figsize)
 
-    levels = ['uniform', 'low', 'moderate', 'high']
+    levels = ['uniform', 'low', 'moderate', 'high', 'very_high']
     level_names = {
         'uniform': 'Uniform',
         'low': r'Low ($\kappa=0.5$)',
         'moderate': r'Moderate ($\kappa=2.0$)',
-        'high': r'High ($\kappa=8.0$)'
+        'high': r'High ($\kappa=10.0$)',
+        'very_high': r'Very High ($\kappa=100.0$)'
     }
 
     # Plot 1: Credible interval widths
@@ -864,12 +944,13 @@ def plot_comparison_summary(
     fig = plt.figure(figsize=figsize)
     gs = fig.add_gridspec(4, 2, height_ratios=[1, 1, 1, 0.8], hspace=0.3, wspace=0.3)
 
-    levels = ['uniform', 'low', 'moderate', 'high']
+    levels = ['uniform', 'low', 'moderate', 'high', 'very_high']
     level_names = {
         'uniform': 'Standard Uniform',
         'low': r'Low Heterogeneity ($\kappa=0.5$)',
         'moderate': r'Moderate Heterogeneity ($\kappa=2.0$)',
-        'high': r'High Heterogeneity ($\kappa=8.0$)'
+        'high': r'High Heterogeneity ($\kappa=10.0$)',
+        'very_high': r'Very High Heterogeneity ($\kappa=100.0$)'
     }
 
     # Plot 1: Representative trajectories
@@ -1061,12 +1142,13 @@ def main():
     n_samples = 50
     seed = 42
 
-    # Define heterogeneity levels
+    # Define heterogeneity levels (UPDATED with high κ values for convergence testing)
     kappa_values = {
-        'uniform': None,  # Standard stick-breaking
-        'low': 0.5,       # High heterogeneity (low kappa)
-        'moderate': 2.0,  # Moderate heterogeneity
-        'high': 8.0       # Low heterogeneity (high kappa)
+        'uniform': None,    # Standard stick-breaking
+        'low': 0.5,         # High heterogeneity (low kappa)
+        'moderate': 2.0,    # Moderate heterogeneity
+        'high': 10.0,       # Low heterogeneity (increased from 8.0)
+        'very_high': 100.0  # Should approximate standard stick-breaking
     }
 
     print(f"Parameters:")
@@ -1075,6 +1157,17 @@ def main():
     print(f"  • Samples per level: {n_samples}")
     print(f"  • Random seed: {seed}")
     print(f"  • Heterogeneity levels: {list(kappa_values.keys())}")
+    print()
+
+    # Validate convergence to standard stick-breaking
+    print("🧪 Validating Mathematical Correctness...")
+    convergence_distances = validate_convergence_to_standard(
+        n_cells=n_cells,
+        T_max=T_max,
+        kappa_values=[0.5, 2.0, 10.0, 100.0, 1000.0],
+        n_samples=500,  # Smaller sample for faster validation
+        seed=seed
+    )
     print()
 
     # Generate samples
@@ -1160,13 +1253,48 @@ def main():
         print(f"  Mean CI width: {ci_widths.mean():.3f}")
         print(f"  Max CI width: {ci_widths.max():.3f}")
 
+    print("\n🔬 Mathematical Validation Results:")
+    print("-" * 40)
+
+    # Compare very_high κ with standard stick-breaking
+    if 'very_high' in samples and 'uniform' in samples:
+        uniform_coords = samples['uniform']['temporal_coords']
+        very_high_coords = samples['very_high']['temporal_coords']
+
+        # Compute mean absolute difference
+        uniform_mean = uniform_coords.mean(dim=0)
+        very_high_mean = very_high_coords.mean(dim=0)
+        mean_diff = torch.mean(torch.abs(uniform_mean - very_high_mean)).item()
+
+        # Compute spacing correlation
+        uniform_spacings = torch.diff(uniform_coords, dim=1).flatten()
+        very_high_spacings = torch.diff(very_high_coords, dim=1).flatten()
+
+        # Compute correlation coefficient
+        uniform_centered = uniform_spacings - uniform_spacings.mean()
+        very_high_centered = very_high_spacings - very_high_spacings.mean()
+        correlation = torch.sum(uniform_centered * very_high_centered) / (
+            torch.sqrt(torch.sum(uniform_centered**2)) * torch.sqrt(torch.sum(very_high_centered**2))
+        )
+
+        print(f"✅ Convergence Metrics:")
+        print(f"   Mean trajectory difference (κ=100 vs uniform): {mean_diff:.4f}")
+        print(f"   Spacing correlation (κ=100 vs uniform): {correlation:.4f}")
+
+        if mean_diff < 0.5 and correlation > 0.8:
+            print("   ✅ PASS: High κ successfully approximates standard stick-breaking")
+        else:
+            print("   ⚠️  PARTIAL: Some convergence observed but not complete")
+
     print("\n🎓 Educational Insights:")
     print("-" * 40)
+    print("• CORRECTED: Position-dependent rates α_j ~ Gamma(κ·(N-j), κ)")
     print("• Lower κ values create more heterogeneous spacing patterns")
     print("• Higher κ values approach uniform stick-breaking behavior")
     print("• Position-specific rates α_j enable adaptive temporal resolution")
     print("• The model maintains biological ordering constraints")
     print("• Uncertainty quantification reveals model flexibility")
+    print("• Mathematical fix ensures proper convergence as κ→∞")
 
     print(f"\n🔗 For detailed mathematical derivations, see:")
     print(f"   pyrovelocity-01032024/nbs/concepts/parameter-recovery-validation/")
