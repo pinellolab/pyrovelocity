@@ -667,16 +667,16 @@ With independent parameterization, gene timing parameters should be calibrated t
 
 **General principle:**
 \begin{align}
-t^*_{on,i} &\sim \text{Normal}(f_{on} \times \text{E}[T_{\max}], \sigma_{on}^2) \\
-\delta^*_i &\sim \text{LogNormal}(\log(f_{\delta} \times \text{E}[T_{\max}]), \sigma_{\delta}^2)
+t^*_{on,i} &\sim \text{Normal}(f_{on} \times \text{E}[T_M], \sigma_{on}^2) \\
+\delta^*_i &\sim \text{LogNormal}(\log(f_{\delta} \times \text{E}[T_M]), \sigma_{\delta}^2)
 \end{align}
 
 where $f_{on} = 0.3$ (expect activation at 30% of process) and $f_{\delta} = 0.4$ (expect 40% duration activation) are scaling factors based on biological expectations.
 
 **Concrete examples for different experimental contexts:**
-- **Conservative (Gamma(5,1))**: E[$T_{\max}$] = 5 → $t^*_{on,i} \sim \text{Normal}(1.5, \sigma_{on}^2)$
-- **Skeptical (Gamma(1,1))**: E[$T_{\max}$] = 1 → $t^*_{on,i} \sim \text{Normal}(0.3, \sigma_{on}^2)$
-- **Permissive (Gamma(1,0.2))**: E[$T_{\max}$] = 5 → $t^*_{on,i} \sim \text{Normal}(1.5, \sigma_{on}^2)$
+- **Conservative (Gamma(5,1))**: E[$T_M$] = 5 → $t^*_{on,i} \sim \text{Normal}(1.5, \sigma_{on}^2)$
+- **Skeptical (Gamma(1,1))**: E[$T_M$] = 1 → $t^*_{on,i} \sim \text{Normal}(0.3, \sigma_{on}^2)$
+- **Permissive (Gamma(1,0.2))**: E[$T_M$] = 5 → $t^*_{on,i} \sim \text{Normal}(1.5, \sigma_{on}^2)$
 
 This ensures gene parameters are scaled appropriately to the expected process duration while maintaining independence and supporting the three piecewise activation patterns (pre-activation, transient, sustained).
 
@@ -1017,29 +1017,30 @@ where:
 
 #### **Process Duration Parameter: Biological Interpretation**
 
-The process duration $T_{\max}$ represents how many characteristic timescales the biological process spans:
+The process duration $T_M$ represents how many characteristic timescales the biological process spans:
 
-$$T_{\max} = \frac{\text{Biological process duration}}{\text{Characteristic timescale of cellular rates}}$$
+$$T_M = \frac{\text{Biological process duration}}{\text{Characteristic timescale of cellular rates}}$$
 
 **Biological interpretation examples:**
-- $T_{\max} = 1$: Process duration equals one characteristic timescale
-- $T_{\max} = 5$: Process duration equals five characteristic timescales
-- $T_{\max} = 0.5$: Process duration is half a characteristic timescale
 
-**Steady-state achievement**: The fraction of steady-state dynamics observable is $1 - e^{-T_{\max}}$:
-- $T_{\max} = 1$: Observes 63% approach to steady state
-- $T_{\max} = 3$: Observes 95% approach to steady state
-- $T_{\max} = 5$: Observes >99% approach to steady state
+- $T_M = 1$: Process duration equals one characteristic timescale
+- $T_M = 5$: Process duration equals five characteristic timescales
+- $T_M = 0.5$: Process duration is half a characteristic timescale
+
+**Steady-state achievement**: The fraction of steady-state dynamics observable is $1 - e^{-T_M}$:
+- $T_M = 1$: Observes 63% approach to steady state
+- $T_M = 3$: Observes 95% approach to steady state
+- $T_M = 5$: Observes >99% approach to steady state
 
 #### **Connection to Real Timescales During Model Fitting**
 
-When fitting the model to experimental data, the inferred $T_{\max}$ reveals the underlying biological rates:
+When fitting the model to experimental data, the inferred $T_M$ reveals the underlying biological rates:
 
-$$\text{Inferred characteristic timescale} = \frac{\text{Known experimental duration}}{T_{\max}^{\text{posterior}}}$$
+$$\text{Inferred characteristic timescale} = \frac{\text{Known experimental duration}}{T_M^{\text{posterior}}}$$
 
 **Practical example:**
 - **Experimental setup**: 24-hour differentiation time course
-- **Posterior estimate**: $T_{\max} \approx 3.0$
+- **Posterior estimate**: $T_M \approx 3.0$
 - **Inferred characteristic timescale**: $24/3 = 8$ hours
 - **Biological interpretation**: Cellular processes (splicing, degradation) occur on ~8 hour timescales
 
@@ -1051,41 +1052,41 @@ This bidirectional relationship enables both forward simulation (given biologica
 
 - **Dimensionless interpretation**: Gene $i$ activates at $t^*_{0,\text{on}i}$ characteristic timescales after process initiation
 - **Real-time interpretation**: Gene $i$ activates at $t^*_{0,\text{on}i}/\alpha_{\text{ref}}$ hours after process start
-- **Relative interpretation**: Gene $i$ activates at $(t^*_{0,\text{on}i}/T_{\max}) \times 100\%$ through the process
+- **Relative interpretation**: Gene $i$ activates at $(t^*_{0,\text{on}i}/T_M) \times 100\%$ through the process
 
 **Example interpretations:**
-- $t^*_{0,\text{on}i} = 1.5$, $T_{\max} = 5.0$: Gene activates 30% through the process
+- $t^*_{0,\text{on}i} = 1.5$, $T_M = 5.0$: Gene activates 30% through the process
 - $t^*_{0,\text{on}i} = -0.5$: Gene was already active 0.5 timescales before observation began
 
 **Activation Durations**: $\delta^*_i \sim \text{LogNormal}(\mu_{\delta}, \sigma_{\delta}^2)$
 
 - **Dimensionless interpretation**: Gene $i$ remains active for $\delta^*_i$ characteristic timescales
 - **Real-time interpretation**: Gene $i$ remains active for $\delta^*_i/\alpha_{\text{ref}}$ hours
-- **Relative interpretation**: Gene $i$ remains active for $(\delta^*_i/T_{\max}) \times 100\%$ of the process
+- **Relative interpretation**: Gene $i$ remains active for $(\delta^*_i/T_M) \times 100\%$ of the process
 
 #### **Hyperparameter Choice as Biological Prior Knowledge**
 
-The choice of $T_{\max}$ hyperparameters encodes specific biological assumptions about process duration:
+The choice of $T_M$ hyperparameters encodes specific biological assumptions about process duration:
 
-**Conservative Prior: $T_{\max} \sim \text{Gamma}(5.0, 1.0)$**
+**Conservative Prior: $T_M \sim \text{Gamma}(5.0, 1.0)$**
 
-- $\mathbb{E}[T_{\max}] = 5$, $\text{Var}[T_{\max}] = 5$
+- $\mathbb{E}[T_M] = 5$, $\text{Var}[T_M] = 5$
 - **Biological assumption**: "I expect this process to span approximately 5 characteristic timescales, allowing observation of near-complete dynamics"
 - **Implications**: If experimental duration is 20 hours, assumes characteristic timescale ≈ 4 hours
 - **Expectation**: Observes 99% approach to steady state ($1 - e^{-5} \approx 0.99$)
 - **Data burden**: Data must provide strong evidence if process is much shorter or longer
 
-**Permissive Prior: $T_{\max} \sim \text{Gamma}(1.0, 0.2)$**
+**Permissive Prior: $T_M \sim \text{Gamma}(1.0, 0.2)$**
 
-- $\mathbb{E}[T_{\max}] = 5$, $\text{Var}[T_{\max}] = 25$
+- $\mathbb{E}[T_M] = 5$, $\text{Var}[T_M] = 25$
 - **Biological assumption**: "I'm uncertain about process duration - it could range from rapid (1 timescale) to very slow (15+ timescales)"
 - **Implications**: Wide uncertainty allows data to determine appropriate timescale
 - **Flexibility**: Can accommodate both early transient dynamics and complete processes
 - **Data burden**: Minimal prior bias on process duration
 
-**Skeptical Prior: $T_{\max} \sim \text{Gamma}(1.0, 1.0)$**
+**Skeptical Prior: $T_M \sim \text{Gamma}(1.0, 1.0)$**
 
-- $\mathbb{E}[T_{\max}] = 1$, $\text{Var}[T_{\max}] = 1$
+- $\mathbb{E}[T_M] = 1$, $\text{Var}[T_M] = 1$
 - **Biological assumption**: "I expect rapid cellular responses, likely observing only early dynamics"
 - **Implications**: Assumes observation of primarily transient phase (63% approach: $1 - e^{-1} \approx 0.63$)
 - **Data burden**: Data must strongly support longer timescales if present
@@ -1109,14 +1110,14 @@ The dimensionless framework creates a bidirectional relationship between process
 
 1. Choose biological timescales (e.g., β = splicing rate)
 2. Set process duration in real time (e.g., 24 hours)
-3. Compute $T_{\max} = t_{\text{process}} \times β$
+3. Compute $T_M = t_{\text{process}} \times β$
 4. Generate dimensionless dynamics
 
 **Inverse (inference from data):**
 
 1. Observe expression data over known duration
-2. Infer $T_{\max}$ from temporal patterns
-3. Estimate characteristic rates: $\hat{β} = T_{\max}/t_{\text{experiment}}$
+2. Infer $T_M$ from temporal patterns
+3. Estimate characteristic rates: $\hat{β} = T_M/t_{\text{experiment}}$
 4. Convert all dimensionless parameters to real time
 
 **Practical Example:**
@@ -1125,7 +1126,7 @@ The dimensionless framework creates a bidirectional relationship between process
 
 **Model fitting results:**
 
-- Posterior: $T_{\max} \approx 6.0 \pm 0.5$
+- Posterior: $T_M \approx 6.0 \pm 0.5$
 - Inferred characteristic timescale: $48/6 = 8$ hours
 - Gene with $t^*_{0,\text{on}i} = 2.0$: Activates at $2.0 \times 8 = 16$ hours
 - Gene with $\delta^*_i = 1.5$: Active for $1.5 \times 8 = 12$ hours
@@ -1144,9 +1145,9 @@ t^*_{0,\text{on}i} &\sim \text{Normal}(1.5, 0.8^2) \quad \text{(fixed biological
 \delta^*_i &\sim \text{LogNormal}(0.0, 0.45^2) \quad \text{(fixed biological duration)}
 \end{align}
 
-**NOT dependent on $T_{\max}$:**
+**NOT dependent on $T_M$:**
 \begin{align}
-t^*_{0,\text{on}i} &\not\sim \text{Normal}(0.3 \times T_{\max}, 0.8^2) \quad \text{(would create artificial scaling)}
+t^*_{0,\text{on}i} &\not\sim \text{Normal}(0.3 \times T_M, 0.8^2) \quad \text{(would create artificial scaling)}
 \end{align}
 
 This independence ensures that gene regulatory timing is treated as an intrinsic biological property rather than an artifact of experimental design.
@@ -1157,7 +1158,7 @@ This independence ensures that gene regulatory timing is treated as an intrinsic
 
 **Proof:** For any scaling factor $\lambda \neq 1$:
 
-1. **Gene parameters are sampled independently**: $t^*_{0,\text{on}i} \not\propto T_{\max}$ and $\delta^*_i \not\propto T_{\max}$
+1. **Gene parameters are sampled independently**: $t^*_{0,\text{on}i} \not\propto T_M$ and $\delta^*_i \not\propto T_M$
 
 2. **Scaling cell times but not gene parameters changes piecewise phase assignments**:
    - Original: Cell $j$ in phase determined by comparing $t^*_j$ vs. $t^*_{0,\text{on}i}$
@@ -1167,7 +1168,7 @@ This independence ensures that gene regulatory timing is treated as an intrinsic
    - Phase boundaries change when cell times are scaled but gene times are not
    - Different phase assignments lead to different analytical solution forms
 
-4. **Therefore**: $\mathcal{L}(T_{\max}, \{t^*_j\}, \{t^*_{0,\text{on}i}\}, \{\delta^*_i\}) \neq \mathcal{L}(\lambda T_{\max}, \{\lambda t^*_j\}, \{t^*_{0,\text{on}i}\}, \{\delta^*_i\})$ □
+4. **Therefore**: $\mathcal{L}(T_M, \{t^*_j\}, \{t^*_{0,\text{on}i}\}, \{\delta^*_i\}) \neq \mathcal{L}(\lambda T_M, \{\lambda t^*_j\}, \{t^*_{0,\text{on}i}\}, \{\delta^*_i\})$ □
 
 **Corollary:** Parameter recovery is uniquely identifiable because no two distinct parameter configurations can produce identical likelihoods.
 
