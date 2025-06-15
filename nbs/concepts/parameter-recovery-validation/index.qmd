@@ -680,26 +680,6 @@ where $f_{on} = 0.3$ (expect activation at 30% of process) and $f_{\delta} = 0.4
 
 This ensures gene parameters are scaled appropriately to the expected process duration while maintaining independence and supporting the three piecewise activation patterns (pre-activation, transient, sustained).
 
-### Identifiability Proof for Independent Parameterization
-
-**Theorem:** The piecewise activation likelihood with independent parameterization is not invariant under parameter scaling.
-
-**Proof:** For any scaling factor $\lambda \neq 1$:
-
-1. **Gene parameters are sampled independently**: $t^*_{on,i} \not\propto T_M$ and $\delta^*_i \not\propto T_M$
-
-2. **Scaling cell times but not gene parameters changes piecewise phase assignments**:
-   - Original: Cell $j$ in phase determined by comparing $t^*_j$ vs. $t^*_{on,i}$
-   - Scaled: Cell $j$ in phase determined by comparing $\lambda t^*_j$ vs. $t^*_{on,i}$ (unchanged)
-
-3. **The piecewise analytical solutions depend on comparisons like $t^*_j$ vs. $t^*_{on,i}$**:
-   - Phase boundaries change when cell times are scaled but gene times are not
-   - Different phase assignments lead to different analytical solution forms
-
-4. **Therefore**: $\mathcal{L}(T_M, \{t^*_j\}, \{t^*_{on,i}\}, \{\delta^*_i\}) \neq \mathcal{L}(\lambda T_M, \{\lambda t^*_j\}, \{t^*_{on,i}\}, \{\delta^*_i\})$ □
-
-**Corollary:** Parameter recovery is uniquely identifiable because no two distinct parameter configurations can produce identical likelihoods.
-
 ### Mathematical Framework for Pre-Activation Scenarios
 
 The Normal prior for onset times enables modeling of **pre-activation scenarios** where genes are already activated when observation begins. This extension is mathematically valid and biologically realistic:
