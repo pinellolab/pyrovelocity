@@ -585,8 +585,8 @@ This independent structure eliminates scaling symmetry by removing multiplicativ
 
 **Parameter specifications**:
 
-- $0 < t^*_{on,i} < 1.5$ (early activation within process duration, assuming conservative prior Gamma(5,1))
-- $\delta^*_i < 2.0$ (short activation duration relative to process, assuming conservative prior Gamma(5,1))
+- $0 < t^*_{on,i} < 0.3 \mathbb{E}[T_M]$ (early activation within process duration)
+- $\delta^*_i < 0.4 \mathbb{E}[T_M]$ (short activation duration relative to process)
 - $R_{\text{on},i} > 2.0$ (sufficient fold-change to observe activation)
 
 **Biological interpretation**: These genes activate early enough and for a short enough duration that the complete activation-decay cycle is observable within the experimental window. The constraints ensure that both the activation and subsequent decay phases are captured.
@@ -599,8 +599,8 @@ This independent structure eliminates scaling symmetry by removing multiplicativ
 
 **Parameter specifications**:
 
-- $0 < t^*_{on,i} < 1.5$ (early activation within process duration, assuming conservative prior Gamma(5,1))
-- $\delta^*_i > 2.5$ (long activation duration relative to process, assuming conservative prior Gamma(5,1))
+- $0 < t^*_{on,i} < 0.3 \mathbb{E}[T_M]$ (early activation within process duration)
+- $\delta^*_i > 0.5 \mathbb{E}[T_M]$ (long activation duration relative to process)
 - $R_{\text{on},i} > 2.0$ (strong fold-change during activation)
 
 **Biological interpretation**: These genes activate early in the observation window and maintain high expression levels throughout most of the observed period. The long activation duration relative to the observation window means that decay back to baseline is either minimal or occurs beyond the observation period.
@@ -663,12 +663,20 @@ Test model robustness across different prior specifications to ensure conclusion
 
 #### **Connection to Gene Parameter Priors**
 
-With independent parameterization, gene timing parameters should be calibrated to $T_M$ expectations:
+With independent parameterization, gene timing parameters should be calibrated to the expected process duration based on chosen $T_M$ hyperparameters:
 
+**General principle:**
 \begin{align}
-t^*_{on,i} &\sim \text{Normal}(0.3 \times 5, \sigma_{on}^2) = \text{Normal}(1.5, \sigma_{on}^2) \quad \text{(expect activation at 30% of process)} \\
-\delta^*_i &\sim \text{LogNormal}(\log(0.4 \times 5), \sigma_{\delta}^2) = \text{LogNormal}(\log(2.0), \sigma_{\delta}^2) \quad \text{(expect 40% duration activation)}
+t^*_{on,i} &\sim \text{Normal}(f_{on} \times \mathbb{E}[T_M], \sigma_{on}^2) \\
+\delta^*_i &\sim \text{LogNormal}(\log(f_{\delta} \times \mathbb{E}[T_M]), \sigma_{\delta}^2)
 \end{align}
+
+where $f_{on} = 0.3$ (expect activation at 30% of process) and $f_{\delta} = 0.4$ (expect 40% duration activation) are scaling factors based on biological expectations.
+
+**Concrete examples for different experimental contexts:**
+- **Conservative (Gamma(5,1))**: $\mathbb{E}[T_M] = 5$ → $t^*_{on,i} \sim \text{Normal}(1.5, \sigma_{on}^2)$
+- **Skeptical (Gamma(1,1))**: $\mathbb{E}[T_M] = 1$ → $t^*_{on,i} \sim \text{Normal}(0.3, \sigma_{on}^2)$
+- **Permissive (Gamma(1,0.2))**: $\mathbb{E}[T_M] = 5$ → $t^*_{on,i} \sim \text{Normal}(1.5, \sigma_{on}^2)$
 
 This ensures gene parameters are scaled appropriately to the expected process duration while maintaining independence and supporting the three piecewise activation patterns (pre-activation, transient, sustained).
 
@@ -756,12 +764,13 @@ def calculate_normal_cdf_probability(loc, scale, threshold, upper=True):
         return stats.norm.cdf(threshold, loc=loc, scale=scale)
 
 # Prior hyperparameters (updated for independent absolute parameterization)
-# Assuming T_M ~ Gamma(5.0, 1.0) with E[T_M] = 5.0
-E_T_M = 5.0
+# Adaptive to chosen T_M hyperparameters
+alpha_T, beta_T = 5.0, 1.0  # Conservative prior example
+E_T_M = alpha_T / beta_T  # Expected process duration
 priors = {
     'R_on': {'loc': 0.916, 'scale': 0.4},                           # log(2.5), fold-change (LogNormal)
-    't_on_star': {'loc': 1.5, 'scale': 0.8},                       # Normal(1.5, 0.8²), absolute onset
-    'delta_star': {'loc': np.log(2.0), 'scale': 0.45},             # log(2.0), absolute duration (LogNormal)
+    't_on_star': {'loc': 0.3 * E_T_M, 'scale': 0.8},               # Normal(0.3*E[T_M], 0.8²), absolute onset
+    'delta_star': {'loc': np.log(0.4 * E_T_M), 'scale': 0.45},     # log(0.4*E[T_M]), absolute duration (LogNormal)
 }
 
 # Calculate constraint feasibility for each pattern (updated for independent parameterization)
@@ -772,14 +781,14 @@ patterns = {
     ],
     'transient': [
         ('t_on_star', '>', 0.0),                    # Activation within observation window
-        ('t_on_star', '<', 1.5),                   # Early enough to complete cycle
-        ('delta_star', '<', 2.0),                  # Short pulse duration
+        ('t_on_star', '<', 0.3 * E_T_M),           # Early enough to complete cycle
+        ('delta_star', '<', 0.4 * E_T_M),          # Short pulse duration
         ('R_on', '>', 2.0),                        # Sufficient fold change to observe
     ],
     'sustained': [
         ('t_on_star', '>', 0.0),                    # Activation within observation window
-        ('t_on_star', '<', 1.5),                   # Early activation onset
-        ('delta_star', '>', 2.5),                  # Long activation duration
+        ('t_on_star', '<', 0.3 * E_T_M),           # Early activation onset
+        ('delta_star', '>', 0.5 * E_T_M),          # Long activation duration
         ('R_on', '>', 2.0),                        # Strong fold change
     ]
 }
@@ -977,8 +986,10 @@ The priors are designed to encode biologically reasonable parameter ranges while
 **Pattern classification framework**: The three expression patterns are defined by constraints on the independent temporal parameters:
 
 - **Pre-activation**: $t^*_{on,i} < 0.0$ and $R_{\text{on},i} > 2.0$
-- **Transient**: $0 < t^*_{on,i} < 1.5$, $\delta^*_i < 2.0$, and $R_{\text{on},i} > 2.0$ (assuming conservative prior Gamma(5,1))
-- **Sustained**: $0 < t^*_{on,i} < 1.5$, $\delta^*_i > 2.5$, and $R_{\text{on},i} > 2.0$ (assuming conservative prior Gamma(5,1))
+- **Transient**: $0 < t^*_{on,i} < 0.3 \mathbb{E}[T_M]$, $\delta^*_i < 0.4 \mathbb{E}[T_M]$, and $R_{\text{on},i} > 2.0$
+- **Sustained**: $0 < t^*_{on,i} < 0.3 \mathbb{E}[T_M]$, $\delta^*_i > 0.5 \mathbb{E}[T_M]$, and $R_{\text{on},i} > 2.0$
+
+where $\mathbb{E}[T_M] = \alpha_T/\beta_T$ for the Gamma prior, so these thresholds adapt to the chosen hyperparameters.
 
 **Biological interpretation of independent prior choices:**
 
@@ -992,15 +1003,15 @@ The priors are designed to encode biologically reasonable parameter ranges while
 
 - **$T_M \sim \text{Gamma}(\alpha_{T}, \beta_{T})$**: Process duration with hyperparameters chosen based on experimental context (conservative: Gamma(5,1), permissive: Gamma(1,0.2), skeptical: Gamma(1,1)).
 
-- **$t^*_{on,i} \sim \text{Normal}(\mu_{on}, \sigma_{on}^2)$**: Absolute activation onset time, typically centered around 1.5 to expect activation at 30% of process duration (assuming conservative prior Gamma(5,1) with mean 5). **Negative values** enable pre-activation scenarios where genes were already activated before observation began.
+- **$t^*_{on,i} \sim \text{Normal}(\mu_{on}, \sigma_{on}^2)$**: Absolute activation onset time, typically centered around $0.3 \times \mathbb{E}[T_M]$ to expect activation at 30% of process duration. **Negative values** enable pre-activation scenarios where genes were already activated before observation began.
 
-- **$\delta^*_i \sim \text{LogNormal}(\mu_{\delta}, \sigma_{\delta}^2)$**: Absolute activation duration, typically centered around 2.0 to expect 40% duration activation (assuming conservative prior Gamma(5,1) with mean 5). This enables both transient (short duration) and sustained (long duration) activation patterns.
+- **$\delta^*_i \sim \text{LogNormal}(\mu_{\delta}, \sigma_{\delta}^2)$**: Absolute activation duration, typically centered around $0.4 \times \mathbb{E}[T_M]$ to expect 40% duration activation. This enables both transient (short duration) and sustained (long duration) activation patterns.
 
 **Pattern classification implications:**
 
 - **Pre-activation** ($t^*_{on,i} < 0$): Probability depends on $\mu_{on}$ and $\sigma_{on}$ choices
-- **Transient** ($0 < t^*_{on,i} < 1.5$ and $\delta^*_i < 2.0$): Balanced probability for observable complete cycles (assuming conservative prior Gamma(5,1))
-- **Sustained** ($0 < t^*_{on,i} < 1.5$ and $\delta^*_i > 2.5$): Balanced probability for long-duration activation (assuming conservative prior Gamma(5,1))
+- **Transient** ($0 < t^*_{on,i} < 0.3 \mathbb{E}[T_M]$ and $\delta^*_i < 0.4 \mathbb{E}[T_M]$): Balanced probability for observable complete cycles
+- **Sustained** ($0 < t^*_{on,i} < 0.3 \mathbb{E}[T_M]$ and $\delta^*_i > 0.5 \mathbb{E}[T_M]$): Balanced probability for long-duration activation
 
 **Independent parameterization benefits:**
 
