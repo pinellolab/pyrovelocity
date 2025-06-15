@@ -44,57 +44,58 @@ from pyrovelocity.styles import configure_matplotlib_style
 
 configure_matplotlib_style()
 
-# Set comprehensive color palette for different parameter configurations
-colors = sns.color_palette("husl", 12)
+# Set color palette for κ-based configurations
+colors = sns.color_palette("viridis", 5)
 config_colors = {
-    'standard': colors[0],      # Blue - Standard Beta(1, N-j)
-    'symmetric_05': colors[1],  # Orange - Beta(0.5, 0.5)
-    'symmetric_10': colors[2],  # Green - Beta(1.0, 1.0)
-    'symmetric_20': colors[3],  # Red - Beta(2.0, 2.0)
-    'symmetric_50': colors[4],  # Purple - Beta(5.0, 5.0)
-    'asymmetric_12': colors[5], # Brown - Beta(1.0, 2.0)
-    'asymmetric_21': colors[6], # Pink - Beta(2.0, 1.0)
-    'asymmetric_15': colors[7], # Gray - Beta(1.0, 5.0)
-    'asymmetric_51': colors[8], # Olive - Beta(5.0, 1.0)
-    'boundary_var': colors[9],  # Cyan - Variable T_max
-    'truncated': colors[10],    # Navy - Early truncation
-    'large_n': colors[11],      # Magenta - Large N scaling
+    'kappa_1.00': colors[0],    # Dark blue - Standard (κ=1.0)
+    'kappa_0.50': colors[1],    # Blue-green - Medium variance (κ=0.5)
+    'kappa_0.30': colors[2],    # Green - High variance (κ=0.3)
+    'kappa_0.20': colors[3],    # Yellow-green - Higher variance (κ=0.2)
+    'kappa_0.10': colors[4],    # Yellow - Maximum variance (κ=0.1)
 }
 
 
 def standard_stick_breaking_sample(
     n_components: int,
     T_max: float,
-    beta_params: Tuple[float, Optional[float]] = (1, None),
+    kappa: float = 1.0,
     seed: Optional[int] = None
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     """
-    Generate a single sample from the standard stick-breaking process.
+    Generate a single sample from the κ-based stick-breaking process.
 
     Mathematical Implementation:
-    - ξ_j ~ Beta(α, β_j) where β_j = N-j for standard case
+    - ξ_j ~ Beta(κ, κ(N-j)) for j ∈ {1, ..., N-1}
     - t*_1 = 0, t*_N = T_max (fixed boundary conditions)
     - t*_j = t*_{j-1} + ξ_{j-1} × (T_max - t*_{j-1}) for j ∈ {2, ..., N-1}
 
     Theoretical Properties:
-    - E[ξ_j] = α/(α + β_j) = 1/(N-j+1) for standard Beta(1, N-j)
-    - Var[ξ_j] = αβ_j/((α+β_j)²(α+β_j+1)) = (N-j)/((N-j+1)²(N-j+2))
+    - E[ξ_j] = κ/(κ + κ(N-j)) = 1/(N-j+1) (mean preserved for all κ)
+    - Var[ξ_j] = κ²(N-j)/[κ²(N-j+1)²(κ(N-j+1)+1)] (variance scales with κ)
+    - Lower κ → higher variance, more variable spacing patterns
+    - κ = 1.0 recovers standard stick-breaking: Beta(1, N-j)
     - Ordering constraint: 0 = t*_1 < t*_2 < ... < t*_N = T_max
     - Scale invariance: t*/T_max has same distribution for any T_max > 0
+
+    Concentration Parameter Effects:
+    - κ = 1.0: Standard stick-breaking (moderate variance)
+    - κ < 1.0: Increased variance, more heterogeneous spacing
+    - κ → 0: Maximum variance (numerical stability limit at κ = 0.1)
 
     Args:
         n_components: Number of temporal coordinates (N)
         T_max: Maximum time boundary
-        beta_params: Tuple (α, β) for Beta distribution. If β is None, uses standard N-j
+        kappa: Concentration parameter controlling variance (0.1 ≤ κ ≤ 1.0)
         seed: Random seed for reproducibility
 
     Returns:
         Tuple of (temporal_coordinates, stick_breaking_variables)
     """
+    # Validate κ parameter
+    assert 0.1 <= kappa <= 1.0, f"κ must be in [0.1, 1.0], got {kappa}"
+
     if seed is not None:
         torch.manual_seed(seed)
-
-    alpha, beta_override = beta_params
 
     # Initialize arrays
     temporal_coords = torch.zeros(n_components)
@@ -106,14 +107,12 @@ def standard_stick_breaking_sample(
 
     # Generate stick-breaking variables and construct coordinates
     for j in range(n_components - 1):
-        # Determine beta parameter
-        if beta_override is not None:
-            beta_param = beta_override
-        else:
-            beta_param = n_components - j - 1  # Standard: N-j
+        # κ-based Beta parameterization: Beta(κ, κ(N-j))
+        alpha_param = kappa
+        beta_param = kappa * (n_components - j - 1)
 
         # Sample stick-breaking variable
-        beta_dist = Beta(alpha, beta_param)
+        beta_dist = Beta(alpha_param, beta_param)
         xi = beta_dist.sample()
         stick_breaking_vars[j] = xi
 
@@ -127,70 +126,48 @@ def standard_stick_breaking_sample(
 
 def generate_parameter_configurations() -> Dict[str, Dict[str, Any]]:
     """
-    Generate comprehensive parameter configurations for stick-breaking analysis.
+    Generate κ-based parameter configurations for stick-breaking analysis.
+
+    Mathematical Framework:
+    All configurations use ξ_j ~ Beta(κ, κ(N-j)) parameterization where:
+    - κ controls variance scaling while preserving mean structure
+    - E[ξ_j] = 1/(N-j+1) for all κ (mean preservation)
+    - Var[ξ_j] scales with κ (lower κ → higher variance)
+    - κ = 1.0 recovers standard stick-breaking
 
     Returns:
-        Dictionary mapping configuration names to parameter dictionaries
+        Dictionary mapping configuration names to κ-based parameter dictionaries
     """
     configurations = {
-        # Standard stick-breaking
-        'standard': {
-            'beta_params': (1, None),
-            'description': r'Standard: $\xi_j \sim \text{Beta}(1, N-j)$',
+        'kappa_1.00': {
+            'kappa': 1.0,
+            'description': r'Standard: $\xi_j \sim \text{Beta}(1, N-j)$ ($\kappa=1.0$)',
             'theoretical_mean': lambda n, j: 1.0 / (n - j),
-            'theoretical_var': lambda n, j: (n - j - 1) / ((n - j) ** 2 * (n - j + 1))
+            'theoretical_var': lambda n, j, k=1.0: (k**2 * (n - j - 1)) / ((k * (n - j))**2 * (k * (n - j) + 1))
         },
-
-        # Symmetric Beta distributions
-        'symmetric_05': {
-            'beta_params': (0.5, 0.5),
-            'description': r'Symmetric: $\xi_j \sim \text{Beta}(0.5, 0.5)$',
-            'theoretical_mean': lambda n, j: 0.5,
-            'theoretical_var': lambda n, j: 0.125
+        'kappa_0.50': {
+            'kappa': 0.5,
+            'description': r'Medium variance: $\xi_j \sim \text{Beta}(0.5, 0.5(N-j))$ ($\kappa=0.5$)',
+            'theoretical_mean': lambda n, j: 1.0 / (n - j),
+            'theoretical_var': lambda n, j, k=0.5: (k**2 * (n - j - 1)) / ((k * (n - j))**2 * (k * (n - j) + 1))
         },
-        'symmetric_10': {
-            'beta_params': (1.0, 1.0),
-            'description': r'Uniform: $\xi_j \sim \text{Beta}(1.0, 1.0)$',
-            'theoretical_mean': lambda n, j: 0.5,
-            'theoretical_var': lambda n, j: 1.0 / 12.0
+        'kappa_0.30': {
+            'kappa': 0.3,
+            'description': r'High variance: $\xi_j \sim \text{Beta}(0.3, 0.3(N-j))$ ($\kappa=0.3$)',
+            'theoretical_mean': lambda n, j: 1.0 / (n - j),
+            'theoretical_var': lambda n, j, k=0.3: (k**2 * (n - j - 1)) / ((k * (n - j))**2 * (k * (n - j) + 1))
         },
-        'symmetric_20': {
-            'beta_params': (2.0, 2.0),
-            'description': r'Symmetric: $\xi_j \sim \text{Beta}(2.0, 2.0)$',
-            'theoretical_mean': lambda n, j: 0.5,
-            'theoretical_var': lambda n, j: 1.0 / 20.0
+        'kappa_0.20': {
+            'kappa': 0.2,
+            'description': r'Higher variance: $\xi_j \sim \text{Beta}(0.2, 0.2(N-j))$ ($\kappa=0.2$)',
+            'theoretical_mean': lambda n, j: 1.0 / (n - j),
+            'theoretical_var': lambda n, j, k=0.2: (k**2 * (n - j - 1)) / ((k * (n - j))**2 * (k * (n - j) + 1))
         },
-        'symmetric_50': {
-            'beta_params': (5.0, 5.0),
-            'description': r'Concentrated: $\xi_j \sim \text{Beta}(5.0, 5.0)$',
-            'theoretical_mean': lambda n, j: 0.5,
-            'theoretical_var': lambda n, j: 1.0 / 44.0
-        },
-
-        # Asymmetric Beta distributions
-        'asymmetric_12': {
-            'beta_params': (1.0, 2.0),
-            'description': r'Left-skewed: $\xi_j \sim \text{Beta}(1.0, 2.0)$',
-            'theoretical_mean': lambda n, j: 1.0 / 3.0,
-            'theoretical_var': lambda n, j: 1.0 / 18.0
-        },
-        'asymmetric_21': {
-            'beta_params': (2.0, 1.0),
-            'description': r'Right-skewed: $\xi_j \sim \text{Beta}(2.0, 1.0)$',
-            'theoretical_mean': lambda n, j: 2.0 / 3.0,
-            'theoretical_var': lambda n, j: 1.0 / 18.0
-        },
-        'asymmetric_15': {
-            'beta_params': (1.0, 5.0),
-            'description': r'Highly left-skewed: $\xi_j \sim \text{Beta}(1.0, 5.0)$',
-            'theoretical_mean': lambda n, j: 1.0 / 6.0,
-            'theoretical_var': lambda n, j: 5.0 / 252.0
-        },
-        'asymmetric_51': {
-            'beta_params': (5.0, 1.0),
-            'description': r'Highly right-skewed: $\xi_j \sim \text{Beta}(5.0, 1.0)$',
-            'theoretical_mean': lambda n, j: 5.0 / 6.0,
-            'theoretical_var': lambda n, j: 5.0 / 252.0
+        'kappa_0.10': {
+            'kappa': 0.1,
+            'description': r'Maximum variance: $\xi_j \sim \text{Beta}(0.1, 0.1(N-j))$ ($\kappa=0.1$)',
+            'theoretical_mean': lambda n, j: 1.0 / (n - j),
+            'theoretical_var': lambda n, j, k=0.1: (k**2 * (n - j - 1)) / ((k * (n - j))**2 * (k * (n - j) + 1))
         }
     }
 
@@ -296,11 +273,11 @@ def validate_theoretical_properties(
     tolerance: float = 0.1
 ) -> Dict[str, Dict[str, bool]]:
     """
-    Validate theoretical properties against empirical samples.
+    Validate theoretical properties against empirical samples for κ-based configurations.
 
     Args:
         samples: Dictionary mapping config names to sample tensors
-        configurations: Parameter configurations with theoretical properties
+        configurations: κ-based parameter configurations with theoretical properties
         n_components: Number of components
         tolerance: Tolerance for validation (relative error)
 
@@ -315,13 +292,15 @@ def validate_theoretical_properties(
 
         config = configurations[config_name]
         temporal_coords, stick_vars = sample_data
+        kappa = config['kappa']
 
         results = {
             'ordering_constraint': True,
             'boundary_conditions': True,
             'mean_validation': {},
             'variance_validation': {},
-            'scale_invariance': True
+            'scale_invariance': True,
+            'kappa_value': kappa
         }
 
         # Check ordering constraint: t*_1 < t*_2 < ... < t*_N
@@ -342,11 +321,15 @@ def validate_theoretical_properties(
                 empirical_mean = stick_vars[:, j].mean().item()
                 empirical_var = stick_vars[:, j].var().item()
 
+                # For κ-based parameterization: E[ξ_j] = 1/(N-j+1) (preserved for all κ)
                 theoretical_mean = config['theoretical_mean'](n_components, j)
-                theoretical_var = config['theoretical_var'](n_components, j)
 
-                mean_error = abs(empirical_mean - theoretical_mean) / theoretical_mean
-                var_error = abs(empirical_var - theoretical_var) / theoretical_var
+                # Variance formula for Beta(κ, κ(N-j)): κ²(N-j)/[κ²(N-j+1)²(κ(N-j+1)+1)]
+                n_minus_j = n_components - j - 1
+                theoretical_var = (kappa**2 * n_minus_j) / ((kappa * (n_minus_j + 1))**2 * (kappa * (n_minus_j + 1) + 1))
+
+                mean_error = abs(empirical_mean - theoretical_mean) / theoretical_mean if theoretical_mean > 0 else abs(empirical_mean - theoretical_mean)
+                var_error = abs(empirical_var - theoretical_var) / theoretical_var if theoretical_var > 0 else abs(empirical_var - theoretical_var)
 
                 results['mean_validation'][f'position_{j}'] = mean_error < tolerance
                 results['variance_validation'][f'position_{j}'] = var_error < tolerance
@@ -362,7 +345,7 @@ def parameter_sensitivity_study(
     seed: Optional[int] = None
 ) -> Dict[str, Dict[str, torch.Tensor]]:
     """
-    Conduct comprehensive parameter sensitivity analysis.
+    Conduct comprehensive parameter sensitivity analysis for κ-based configurations.
 
     Args:
         param_ranges: Dictionary of parameter ranges to explore
@@ -374,7 +357,7 @@ def parameter_sensitivity_study(
     """
     sensitivity_results = {}
 
-    # N-component scaling analysis
+    # N-component scaling analysis (using standard κ=1.0)
     if 'n_components' in param_ranges:
         n_scaling_results = {}
         for n in param_ranges['n_components']:
@@ -384,7 +367,7 @@ def parameter_sensitivity_study(
                 coords, stick_vars = standard_stick_breaking_sample(
                     n_components=n,
                     T_max=10.0,
-                    beta_params=(1, None),
+                    kappa=1.0,
                     seed=sample_seed
                 )
                 samples.append((coords, stick_vars))
@@ -401,7 +384,7 @@ def parameter_sensitivity_study(
 
         sensitivity_results['n_scaling'] = n_scaling_results
 
-    # T_max scaling analysis
+    # T_max scaling analysis (using standard κ=1.0)
     if 'T_max' in param_ranges:
         t_scaling_results = {}
         for t_max in param_ranges['T_max']:
@@ -411,7 +394,7 @@ def parameter_sensitivity_study(
                 coords, stick_vars = standard_stick_breaking_sample(
                     n_components=20,
                     T_max=t_max,
-                    beta_params=(1, None),
+                    kappa=1.0,
                     seed=sample_seed
                 )
                 samples.append((coords, stick_vars))
@@ -452,9 +435,8 @@ def plot_sample_trajectories(
     Returns:
         matplotlib Figure object
     """
-    # Select key configurations for display
-    display_configs = ['standard', 'symmetric_10', 'symmetric_20', 'asymmetric_12',
-                      'asymmetric_21', 'asymmetric_15']
+    # Select all κ-based configurations for display
+    display_configs = ['kappa_1.00', 'kappa_0.50', 'kappa_0.30', 'kappa_0.20', 'kappa_0.10']
     display_configs = [c for c in display_configs if c in samples]
 
     n_configs = len(display_configs)
@@ -554,7 +536,7 @@ def plot_spacing_distributions(
 
     # Plot 1: Spacing distributions (overlaid histograms)
     ax1 = axes[0, 0]
-    for config_name in ['standard', 'symmetric_10', 'symmetric_20', 'asymmetric_12']:
+    for config_name in ['kappa_1.00', 'kappa_0.50', 'kappa_0.30', 'kappa_0.10']:
         if config_name in all_spacings:
             spacings = all_spacings[config_name].numpy()
             color = config_colors[config_name]
@@ -588,26 +570,26 @@ def plot_spacing_distributions(
         ax2.text(bar.get_x() + bar.get_width()/2., height + 0.01,
                 f'{cv:.2f}', ha='center', va='bottom', fontsize=8)
 
-    # Plot 3: Spacing vs position for standard configuration
+    # Plot 3: Spacing vs position for κ=1.0 configuration
     ax3 = axes[0, 2]
-    if 'standard' in samples:
-        temporal_coords, _ = samples['standard']
+    if 'kappa_1.00' in samples:
+        temporal_coords, _ = samples['kappa_1.00']
         spacings = torch.diff(temporal_coords, dim=1)
         mean_spacings = spacings.mean(dim=0)
         std_spacings = spacings.std(dim=0)
 
         positions = torch.arange(1, len(mean_spacings) + 1)
-        ax3.plot(positions, mean_spacings, color=config_colors['standard'],
+        ax3.plot(positions, mean_spacings, color=config_colors['kappa_1.00'],
                 linewidth=2, marker='o', markersize=4, label='Empirical')
         ax3.fill_between(positions, mean_spacings - std_spacings,
                         mean_spacings + std_spacings,
-                        color=config_colors['standard'], alpha=0.2)
+                        color=config_colors['kappa_1.00'], alpha=0.2)
 
-        # Add theoretical expectation for standard case
+        # Add theoretical expectation for κ=1.0 case
         n_components = temporal_coords.shape[1]
         theoretical_spacings = []
         for j in range(n_components - 1):
-            # E[spacing_j] for standard stick-breaking
+            # E[spacing_j] for κ-based stick-breaking (same for all κ)
             remaining_positions = n_components - j - 1
             expected_spacing = 10.0 / (remaining_positions + 1)  # T_max = 10.0
             theoretical_spacings.append(expected_spacing)
@@ -617,7 +599,7 @@ def plot_spacing_distributions(
 
     ax3.set_xlabel('Position in Sequence')
     ax3.set_ylabel('Mean Spacing')
-    ax3.set_title('Spacing vs Position (Standard)')
+    ax3.set_title(r'Spacing vs Position ($\kappa=1.0$)')
     ax3.legend()
     ax3.grid(True, alpha=0.3)
 
@@ -795,7 +777,7 @@ def plot_parameter_sensitivity(
         # Generate samples and compute error relative to large sample
         samples = []
         for i in range(n_samples):
-            coords, _ = standard_stick_breaking_sample(20, 10.0, (1, None), seed=42+i)
+            coords, _ = standard_stick_breaking_sample(20, 10.0, kappa=1.0, seed=42+i)
             samples.append(coords)
 
         coords_tensor = torch.stack(samples)
@@ -808,7 +790,7 @@ def plot_parameter_sensitivity(
             # Use pre-computed reference or compute on-the-fly
             ref_samples = []
             for i in range(5000):
-                coords, _ = standard_stick_breaking_sample(20, 10.0, (1, None), seed=42+i)
+                coords, _ = standard_stick_breaking_sample(20, 10.0, kappa=1.0, seed=42+i)
                 ref_samples.append(coords)
             reference_mean = torch.stack(ref_samples).mean(dim=0)
 
@@ -913,10 +895,10 @@ def plot_theoretical_validation(
     """
     fig, axes = plt.subplots(2, 3, figsize=figsize)
 
-    # Plot 1: Empirical vs Theoretical Means (Standard configuration)
+    # Plot 1: Empirical vs Theoretical Means (κ=1.0 configuration)
     ax1 = axes[0, 0]
-    if 'standard' in samples:
-        temporal_coords, stick_vars = samples['standard']
+    if 'kappa_1.00' in samples:
+        temporal_coords, stick_vars = samples['kappa_1.00']
         n_components = temporal_coords.shape[1]
 
         positions = list(range(n_components - 1))
@@ -933,7 +915,7 @@ def plot_theoretical_validation(
 
         ax1.set_xlabel('Theoretical Mean')
         ax1.set_ylabel('Empirical Mean')
-        ax1.set_title('Mean Validation (Standard)')
+        ax1.set_title(r'Mean Validation ($\kappa=1.0$)')
         ax1.legend()
         ax1.grid(True, alpha=0.3)
 
@@ -945,10 +927,15 @@ def plot_theoretical_validation(
 
     # Plot 2: Empirical vs Theoretical Variances
     ax2 = axes[0, 1]
-    if 'standard' in samples:
+    if 'kappa_1.00' in samples:
         empirical_vars = [stick_vars[:, j].var().item() for j in positions]
-        theoretical_vars = [(n_components - j - 1) / ((n_components - j) ** 2 * (n_components - j + 1))
-                           for j in positions]
+        # For κ=1.0: theoretical variance formula
+        kappa = 1.0
+        theoretical_vars = []
+        for j in positions:
+            n_minus_j = n_components - j - 1
+            var_theoretical = (kappa**2 * n_minus_j) / ((kappa * (n_minus_j + 1))**2 * (kappa * (n_minus_j + 1) + 1))
+            theoretical_vars.append(var_theoretical)
 
         ax2.scatter(theoretical_vars, empirical_vars, color='green', s=50, alpha=0.7)
 
@@ -959,7 +946,7 @@ def plot_theoretical_validation(
 
         ax2.set_xlabel('Theoretical Variance')
         ax2.set_ylabel('Empirical Variance')
-        ax2.set_title('Variance Validation (Standard)')
+        ax2.set_title(r'Variance Validation ($\kappa=1.0$)')
         ax2.legend()
         ax2.grid(True, alpha=0.3)
 
@@ -1022,13 +1009,14 @@ def plot_theoretical_validation(
 
     # Plot 4: Beta distribution comparison (theoretical vs empirical)
     ax4 = axes[1, 0]
-    if 'standard' in samples:
+    if 'kappa_1.00' in samples:
         # Select a middle position for detailed comparison
         position = (n_components - 1) // 2
         empirical_values = stick_vars[:, position].numpy()
 
-        # Theoretical Beta distribution
-        alpha, beta = 1, n_components - position
+        # Theoretical Beta distribution for κ=1.0: Beta(1, N-j)
+        kappa = 1.0
+        alpha, beta = kappa, kappa * (n_components - position - 1)
         x = np.linspace(0, 1, 100)
         theoretical_pdf = stats.beta.pdf(x, alpha, beta)
 
@@ -1038,7 +1026,7 @@ def plot_theoretical_validation(
 
         ax4.set_xlabel(r'$\xi_j$ Value')
         ax4.set_ylabel('Density')
-        ax4.set_title(f'Beta Distribution Comparison (Position {position})')
+        ax4.set_title(rf'Beta Distribution Comparison (Position {position}, $\kappa=1.0$)')
         ax4.legend()
         ax4.grid(True, alpha=0.3)
 
@@ -1234,7 +1222,7 @@ def plot_comprehensive_summary(
     # Plot 1: Representative trajectories comparison
     ax1 = fig.add_subplot(gs[0, :])
 
-    key_configs = ['standard', 'symmetric_10', 'asymmetric_12', 'asymmetric_21']
+    key_configs = ['kappa_1.00', 'kappa_0.50', 'kappa_0.30', 'kappa_0.10']
     key_configs = [c for c in key_configs if c in samples]
 
     for config_name in key_configs:
@@ -1303,7 +1291,7 @@ def plot_comprehensive_summary(
             validation_scores.append(0)
 
     colors_list = [config_colors.get(name, 'gray') for name in config_names]
-    bars = ax3.bar(range(len(config_names)), validation_scores, color=colors_list, alpha=0.7)
+    ax3.bar(range(len(config_names)), validation_scores, color=colors_list, alpha=0.7)
 
     ax3.set_xlabel('Configuration')
     ax3.set_ylabel('Validation Score')
@@ -1336,22 +1324,23 @@ def plot_comprehensive_summary(
     ax5.axis('off')
 
     framework_text = r"""
-Standard Stick-Breaking Process: Mathematical Framework and Key Properties
+$\kappa$-Based Stick-Breaking Process: Mathematical Framework and Key Properties
 
 Core Algorithm:
 1. Initialize: $t^*_1 = 0$, $t^*_N = T_{\max}$ (boundary conditions)
-2. For $j = 1, \ldots, N-1$: Sample $\xi_j \sim \text{Beta}(\alpha, \beta_j)$ (stick-breaking variables)
+2. For $j = 1, \ldots, N-1$: Sample $\xi_j \sim \text{Beta}(\kappa, \kappa(N-j))$ ($\kappa$-based stick-breaking variables)
 3. Construct: $t^*_j = t^*_{j-1} + \xi_{j-1} \times (T_{\max} - t^*_{j-1})$ (recursive construction)
 
-Parameter Variations Explored:
-• Standard: $\xi_j \sim \text{Beta}(1, N-j)$ → Position-dependent concentration
-• Symmetric: $\xi_j \sim \text{Beta}(\alpha, \alpha)$ → Uniform concentration across positions
-• Asymmetric: $\xi_j \sim \text{Beta}(\alpha, \beta)$ → Directional bias in spacing patterns
+$\kappa$-Based Parameterization:
+• Concentration Parameter: $\kappa \in [0.1, 1.0]$ controls variance scaling
+• Mean Preservation: $E[\xi_j] = \frac{\kappa}{\kappa + \kappa(N-j)} = \frac{1}{N-j+1}$ (identical for all $\kappa$)
+• Variance Scaling: $\text{Var}[\xi_j] = \frac{\kappa^2(N-j)}{[\kappa(N-j+1)]^2[\kappa(N-j+1)+1]}$ (decreases with $\kappa$)
+• Standard Recovery: $\kappa = 1.0$ recovers $\xi_j \sim \text{Beta}(1, N-j)$
 
 Key Mathematical Properties:
 • Ordering Constraint: $0 = t^*_1 < t^*_2 < \ldots < t^*_N = T_{\max}$ (guaranteed by construction)
 • Scale Invariance: Distribution of $t^*/T_{\max}$ independent of $T_{\max}$ value
-• Theoretical Moments: $E[\xi_j] = \alpha/(\alpha + \beta_j)$, $\text{Var}[\xi_j] = \alpha\beta_j/((\alpha+\beta_j)^2(\alpha+\beta_j+1))$
+• Variance Control: Lower $\kappa$ leads to higher variance and more heterogeneous spacing patterns
 • Computational Complexity: $O(N)$ time, $O(N)$ space for $N$ components
     """
 
@@ -1446,7 +1435,7 @@ def run_comprehensive_analysis(
             coords, stick_vars = standard_stick_breaking_sample(
                 n_components=n_components,
                 T_max=T_max,
-                beta_params=config['beta_params'],
+                kappa=config['kappa'],
                 seed=sample_seed
             )
             config_samples.append((coords, stick_vars))
@@ -1600,11 +1589,12 @@ def main():
 
     # Statistical summary
     print(f"\n📊 Statistical Properties:")
-    key_configs = ['standard', 'symmetric_10', 'asymmetric_12']
+    key_configs = ['kappa_1.00', 'kappa_0.50', 'kappa_0.30', 'kappa_0.10']
     for config_name in key_configs:
         if config_name in results['spacing_stats']:
             stats = results['spacing_stats'][config_name]
-            print(f"\n  {config_name.upper()}:")
+            kappa_val = results['configurations'][config_name]['kappa']
+            print(f"\n  {config_name.upper()} (κ={kappa_val}):")
             print(f"    Mean spacing: {stats['mean_spacing']:.3f} ± {stats['std_spacing']:.3f}")
             print(f"    CV: {stats['cv_spacing']:.3f}")
             print(f"    Skewness: {stats['skewness']:.3f}")
@@ -1634,12 +1624,13 @@ def main():
 
     # Educational insights
     print(f"\n🎓 Key Educational Insights:")
-    print("  • Standard stick-breaking provides position-dependent concentration")
-    print("  • Symmetric Beta distributions create uniform spacing patterns")
-    print("  • Asymmetric distributions introduce directional bias")
+    print("  • κ-based parameterization provides principled variance scaling")
+    print("  • Mean spacing patterns preserved across all κ values")
+    print("  • Lower κ values increase spacing variance and heterogeneity")
+    print("  • κ = 1.0 recovers standard stick-breaking exactly")
     print("  • Scale invariance holds across all T_max values")
     print("  • Computational complexity scales linearly with N")
-    print("  • All configurations maintain ordering constraints")
+    print("  • All κ configurations maintain ordering constraints")
 
     print(f"\n🔗 For mathematical details and derivations, see:")
     print(f"   {save_path}/standard_stick_breaking_complete_analysis.pdf")
