@@ -84,9 +84,9 @@ This model uses the direct dimensionless approach with analytical solutions:
 
 This model extends the latent time framework with piecewise constant transcription rates:
 
-- **Time coordinates**: Independent latent $t^*_j$ coordinates sampled uniformly within process duration $T_{\max}$
+- **Time coordinates**: Independent latent $t^*_j$ coordinates sampled uniformly within process duration $T_M$
 - **Dynamics**: Piecewise constant transcription with three phases (off, on, return-to-off)
-- **Parameters**: $\gamma^*_i$, $R_{\text{on},i}$ (fold-change), $t^*_{0,\text{on}i}$ (onset), $\delta^*_i$ (duration), with independent temporal structure
+- **Parameters**: $\gamma^*_i$, $R_{\text{on},i}$ (fold-change), $t^*_{on,i}$ (onset), $\delta^*_i$ (duration), with independent temporal structure
 - **Key innovation**: Fixed reference state ($\alpha^*_{\text{off}i} = 1.0$) eliminates parameter redundancy
 - **Enhanced patterns**: Supports pre-activation scenarios with negative onset times
 - **Analytical solutions**: Closed-form solutions for all three phases, including $\gamma^*_i = 1$ special case
