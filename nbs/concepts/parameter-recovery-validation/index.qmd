@@ -607,11 +607,30 @@ This independent structure eliminates scaling symmetry by removing multiplicativ
 
 **Biological examples**: Lineage-specific transcription factors, structural proteins, metabolic enzymes, terminal differentiation markers, long-term stress adaptation genes
 
-### Biological Interpretation of Timescale Prior Hyperparameters
+### Biological Interpretation of Timescale Prior Hyperparameters and Dimensionless Framework
 
-The process duration $T_M$ determines the temporal scope of observable dynamics and requires careful hyperparameter selection based on biological expectations and experimental context.
+The dimensionless parameterization requires careful interpretation to connect mathematical parameters to biological reality. This section clarifies the relationship between dimensionless temporal parameters and real biological timescales, with particular focus on how hyperparameter choices encode biological prior knowledge.
 
-#### **Dynamical Range and Steady-State Achievement**
+#### **Fundamental Dimensionless Transformation**
+
+The dimensionless framework transforms real time into natural units based on characteristic biological rates:
+
+$$t^* = t_{\text{real}} \times \alpha_{\text{ref}}$$
+
+where:
+- $t_{\text{real}}$ is time in physical units (hours, days, etc.)
+- $\alpha_{\text{ref}} = \alpha^*_{\text{off}} = 1.0$ is the reference transcription rate (fixed)
+- $t^*$ is dimensionless time in units of characteristic process rates
+
+**Key insight**: All temporal parameters are expressed as multiples of the natural timescale $1/\alpha_{\text{ref}}$, where the characteristic timescale is typically the splicing/degradation timescale.
+
+#### **Process Duration Parameter: Biological Interpretation**
+
+The process duration $T_M$ represents how many characteristic timescales the biological process spans:
+
+$$T_M = \frac{\text{Biological process duration}}{\text{Characteristic timescale of cellular rates}}$$
+
+**Dynamical Range and Steady-State Achievement**
 
 In the dimensionless framework where the reference rate is 1, the process duration $T_M$ determines what fraction of steady-state dynamics will be observable:
 
@@ -619,33 +638,35 @@ $$\text{Steady-state approach} = 1 - e^{-T_M}$$
 
 **Key thresholds:**
 
-- $T_M = 1$: Observes 63% approach to steady state
-- $T_M = 3$: Observes 95% approach to steady state
-- $T_M = 5$: Observes >99% approach to steady state
+- $T_M = 1$: Process duration equals one characteristic timescale, observes 63% approach to steady state
+- $T_M = 3$: Process duration equals three characteristic timescales, observes 95% approach to steady state
+- $T_M = 5$: Process duration equals five characteristic timescales, observes >99% approach to steady state
 
 #### **Hyperparameter Strategy and Biological Prior Knowledge**
+
+The choice of $T_M$ hyperparameters encodes specific biological assumptions about process duration:
 
 **Conservative Prior (Expect Complete Dynamics):**
 $$T_M \sim \text{Gamma}(5.0, 1.0) \quad \text{(mean = 5, variance = 5)}$$
 
-- **Biological assumption**: Process likely spans ~5 characteristic timescales
-- **Dynamical expectation**: Will observe near-complete approach to steady state
-- **Data burden**: Data must provide evidence if process is shorter than expected
+- **Biological assumption**: "I expect this process to span approximately 5 characteristic timescales, allowing observation of near-complete dynamics"
+- **Dynamical expectation**: Will observe near-complete approach to steady state (99%: $1 - e^{-5} \approx 0.99$)
+- **Data burden**: Data must provide strong evidence if process is much shorter or longer
 - **Use case**: When biological knowledge suggests complete developmental programs
 
 **Permissive Prior (Let Data Determine Range):**
 $$T_M \sim \text{Gamma}(1.0, 0.2) \quad \text{(mean = 5, variance = 25)}$$
 
-- **Biological assumption**: Uncertain about process duration, wide range possible
+- **Biological assumption**: "I'm uncertain about process duration - it could range from rapid (1 timescale) to very slow (15+ timescales)"
 - **Dynamical expectation**: Could observe early transients or complete dynamics
-- **Data burden**: Data determines whether short or long timescales are needed
+- **Data burden**: Minimal prior bias on process duration, data determines whether short or long timescales are needed
 - **Use case**: When process duration is unknown, exploratory analysis
 
 **Skeptical Prior (Assume Short Processes):**
 $$T_M \sim \text{Gamma}(1.0, 1.0) \quad \text{(mean = 1, variance = 1, heavy tail)}$$
 
-- **Biological assumption**: Most cellular processes are rapid (early dynamics only)
-- **Dynamical expectation**: Primarily observe transient phase (63% approach)
+- **Biological assumption**: "I expect rapid cellular responses, likely observing only early dynamics"
+- **Dynamical expectation**: Primarily observe transient phase (63% approach: $1 - e^{-1} \approx 0.63$)
 - **Data burden**: Data must strongly support longer timescales if present
 - **Use case**: When expecting rapid responses, stress conditions, acute perturbations
 
@@ -661,6 +682,40 @@ $$T_M \sim \text{Gamma}(1.0, 1.0) \quad \text{(mean = 1, variance = 1, heavy tai
 **Sensitivity analysis recommendation:**
 Test model robustness across different prior specifications to ensure conclusions are not prior-dependent.
 
+#### **Connection to Real Timescales During Model Fitting**
+
+When fitting the model to experimental data, the inferred $T_M$ reveals the underlying biological rates:
+
+$$\text{Inferred characteristic timescale} = \frac{\text{Known experimental duration}}{T_M^{\text{posterior}}}$$
+
+**Practical example:**
+
+- **Experimental setup**: 24-hour differentiation time course
+- **Posterior estimate**: $T_M \approx 3.0$
+- **Inferred characteristic timescale**: $24/3 = 8$ hours
+- **Biological interpretation**: Cellular processes (splicing, degradation) occur on ~8 hour timescales
+
+This bidirectional relationship enables both forward simulation (given biological rates) and inverse inference (estimating rates from data).
+
+#### **Gene Parameter Interpretation in Dimensionless Framework**
+
+**Activation Onset Times**: $t^*_{on,i} \sim \text{Normal}(\mu_{on}, \sigma_{on}^2)$
+
+- **Dimensionless interpretation**: Gene $i$ activates at $t^*_{on,i}$ characteristic timescales after process initiation
+- **Real-time interpretation**: Gene $i$ activates at $t^*_{on,i}/\alpha_{\text{ref}}$ hours after process start
+- **Relative interpretation**: Gene $i$ activates at $(t^*_{on,i}/T_M) \times 100\%$ through the process
+
+**Example interpretations:**
+
+- $t^*_{on,i} = 1.5$, $T_M = 5.0$: Gene activates 30% through the process
+- $t^*_{on,i} = -0.5$: Gene was already active 0.5 timescales before observation began
+
+**Activation Durations**: $\delta^*_i \sim \text{LogNormal}(\mu_{\delta}, \sigma_{\delta}^2)$
+
+- **Dimensionless interpretation**: Gene $i$ remains active for $\delta^*_i$ characteristic timescales
+- **Real-time interpretation**: Gene $i$ remains active for $\delta^*_i/\alpha_{\text{ref}}$ hours
+- **Relative interpretation**: Gene $i$ remains active for $(\delta^*_i/T_M) \times 100\%$ of the process
+
 #### **Connection to Gene Parameter Priors**
 
 With independent parameterization, gene timing parameters should be calibrated to the expected process duration based on chosen $T_M$ hyperparameters:
@@ -674,11 +729,33 @@ t^*_{on,i} &\sim \text{Normal}(f_{on} \times \text{E}[T_M], \sigma_{on}^2) \\
 where $f_{on} = 0.3$ (expect activation at 30% of process) and $f_{\delta} = 0.4$ (expect 40% duration activation) are scaling factors based on biological expectations.
 
 **Concrete examples for different experimental contexts:**
+
 - **Conservative (Gamma(5,1))**: E[$T_M$] = 5 → $t^*_{on,i} \sim \text{Normal}(1.5, \sigma_{on}^2)$
 - **Skeptical (Gamma(1,1))**: E[$T_M$] = 1 → $t^*_{on,i} \sim \text{Normal}(0.3, \sigma_{on}^2)$
 - **Permissive (Gamma(1,0.2))**: E[$T_M$] = 5 → $t^*_{on,i} \sim \text{Normal}(1.5, \sigma_{on}^2)$
 
 This ensures gene parameters are scaled appropriately to the expected process duration while maintaining independence and supporting the three piecewise activation patterns (pre-activation, transient, sustained).
+
+#### **Independent Parameterization Justification**
+
+In the dimensionless framework, **gene timing parameters represent intrinsic biological properties** that should not scale with the arbitrary choice of observation window:
+
+- $t^*_{on,i}$: When a gene's regulatory program activates (intrinsic timing)
+- $\delta^*_i$: How long a gene's regulatory program lasts (intrinsic duration)
+
+**These are biological constants** that don't change based on how long we choose to observe the system. Therefore:
+
+\begin{align}
+t^*_{on,i} &\sim \text{Normal}(1.5, 0.8^2) \quad \text{(fixed biological timing)} \\
+\delta^*_i &\sim \text{LogNormal}(0.0, 0.45^2) \quad \text{(fixed biological duration)}
+\end{align}
+
+**NOT dependent on $T_M$:**
+\begin{align}
+t^*_{on,i} &\not\sim \text{Normal}(0.3 \times T_M, 0.8^2) \quad \text{(would create artificial scaling)}
+\end{align}
+
+This independence ensures that gene regulatory timing is treated as an intrinsic biological property rather than an artifact of experimental design.
 
 ### Mathematical Framework for Pre-Activation Scenarios
 
@@ -998,161 +1075,7 @@ The priors are designed to encode biologically reasonable parameter ranges while
 - **Biological interpretability**: All parameters have direct biological meaning
 - **Flexible prior specification**: Gene timing parameters can be calibrated to expected process duration
 
-### Dimensionless Framework and Biological Timescale Connection
 
-The dimensionless parameterization requires careful interpretation to connect mathematical parameters to biological reality. This section clarifies the relationship between dimensionless temporal parameters and real biological timescales.
-
-#### **Fundamental Dimensionless Transformation**
-
-The dimensionless framework transforms real time into natural units based on characteristic biological rates:
-
-$$t^* = t_{\text{real}} \times \alpha_{\text{ref}}$$
-
-where:
-- $t_{\text{real}}$ is time in physical units (hours, days, etc.)
-- $\alpha_{\text{ref}} = \alpha^*_{\text{off}} = 1.0$ is the reference transcription rate (fixed)
-- $t^*$ is dimensionless time in units of characteristic process rates
-
-**Key insight**: All temporal parameters are expressed as multiples of the natural timescale $1/\alpha_{\text{ref}}$, where the characteristic timescale is typically the splicing/degradation timescale.
-
-#### **Process Duration Parameter: Biological Interpretation**
-
-The process duration $T_M$ represents how many characteristic timescales the biological process spans:
-
-$$T_M = \frac{\text{Biological process duration}}{\text{Characteristic timescale of cellular rates}}$$
-
-**Biological interpretation examples:**
-
-- $T_M = 1$: Process duration equals one characteristic timescale
-- $T_M = 5$: Process duration equals five characteristic timescales
-- $T_M = 0.5$: Process duration is half a characteristic timescale
-
-**Steady-state achievement**: The fraction of steady-state dynamics observable is $1 - e^{-T_M}$:
-- $T_M = 1$: Observes 63% approach to steady state
-- $T_M = 3$: Observes 95% approach to steady state
-- $T_M = 5$: Observes >99% approach to steady state
-
-#### **Connection to Real Timescales During Model Fitting**
-
-When fitting the model to experimental data, the inferred $T_M$ reveals the underlying biological rates:
-
-$$\text{Inferred characteristic timescale} = \frac{\text{Known experimental duration}}{T_M^{\text{posterior}}}$$
-
-**Practical example:**
-
-- **Experimental setup**: 24-hour differentiation time course
-- **Posterior estimate**: $T_M \approx 3.0$
-- **Inferred characteristic timescale**: $24/3 = 8$ hours
-- **Biological interpretation**: Cellular processes (splicing, degradation) occur on ~8 hour timescales
-
-This bidirectional relationship enables both forward simulation (given biological rates) and inverse inference (estimating rates from data).
-
-#### **Gene Parameter Interpretation in Dimensionless Framework**
-
-**Activation Onset Times**: $t^*_{on,i} \sim \text{Normal}(\mu_{on}, \sigma_{on}^2)$
-
-- **Dimensionless interpretation**: Gene $i$ activates at $t^*_{on,i}$ characteristic timescales after process initiation
-- **Real-time interpretation**: Gene $i$ activates at $t^*_{on,i}/\alpha_{\text{ref}}$ hours after process start
-- **Relative interpretation**: Gene $i$ activates at $(t^*_{on,i}/T_M) \times 100\%$ through the process
-
-**Example interpretations:**
-
-- $t^*_{on,i} = 1.5$, $T_M = 5.0$: Gene activates 30% through the process
-- $t^*_{on,i} = -0.5$: Gene was already active 0.5 timescales before observation began
-
-**Activation Durations**: $\delta^*_i \sim \text{LogNormal}(\mu_{\delta}, \sigma_{\delta}^2)$
-
-- **Dimensionless interpretation**: Gene $i$ remains active for $\delta^*_i$ characteristic timescales
-- **Real-time interpretation**: Gene $i$ remains active for $\delta^*_i/\alpha_{\text{ref}}$ hours
-- **Relative interpretation**: Gene $i$ remains active for $(\delta^*_i/T_M) \times 100\%$ of the process
-
-#### **Hyperparameter Choice as Biological Prior Knowledge**
-
-The choice of $T_M$ hyperparameters encodes specific biological assumptions about process duration:
-
-**Conservative Prior: $T_M \sim \text{Gamma}(5.0, 1.0)$**
-
-- $\mathbb{E}[T_M] = 5$, $\text{Var}[T_M] = 5$
-- **Biological assumption**: "I expect this process to span approximately 5 characteristic timescales, allowing observation of near-complete dynamics"
-- **Implications**: If experimental duration is 20 hours, assumes characteristic timescale ≈ 4 hours
-- **Expectation**: Observes 99% approach to steady state ($1 - e^{-5} \approx 0.99$)
-- **Data burden**: Data must provide strong evidence if process is much shorter or longer
-
-**Permissive Prior: $T_M \sim \text{Gamma}(1.0, 0.2)$**
-
-- $\mathbb{E}[T_M] = 5$, $\text{Var}[T_M] = 25$
-- **Biological assumption**: "I'm uncertain about process duration - it could range from rapid (1 timescale) to very slow (15+ timescales)"
-- **Implications**: Wide uncertainty allows data to determine appropriate timescale
-- **Flexibility**: Can accommodate both early transient dynamics and complete processes
-- **Data burden**: Minimal prior bias on process duration
-
-**Skeptical Prior: $T_M \sim \text{Gamma}(1.0, 1.0)$**
-
-- $\mathbb{E}[T_M] = 1$, $\text{Var}[T_M] = 1$
-- **Biological assumption**: "I expect rapid cellular responses, likely observing only early dynamics"
-- **Implications**: Assumes observation of primarily transient phase (63% approach: $1 - e^{-1} \approx 0.63$)
-- **Data burden**: Data must strongly support longer timescales if present
-- **Use cases**: Stress responses, drug treatments, acute perturbations
-
-**Priors for other gene-specific parameters:**
-\begin{align}
-    U_{0i} &\sim \text{LogNormal}(\mu_{U_0}, \sigma_{U_0}^2)
-\end{align}
-
-**Cell-specific capture efficiency:**
-\begin{align}
-    \lambda_j &\sim \text{LogNormal}(\mu_{\lambda}, \sigma_{\lambda}^2)
-\end{align}
-
-#### **Model Fitting and Timescale Inference**
-
-The dimensionless framework creates a bidirectional relationship between process duration and characteristic rates:
-
-**Forward (simulation):**
-
-1. Choose biological timescales (e.g., β = splicing rate)
-2. Set process duration in real time (e.g., 24 hours)
-3. Compute $T_M = t_{\text{process}} \times β$
-4. Generate dimensionless dynamics
-
-**Inverse (inference from data):**
-
-1. Observe expression data over known duration
-2. Infer $T_M$ from temporal patterns
-3. Estimate characteristic rates: $\hat{β} = T_M/t_{\text{experiment}}$
-4. Convert all dimensionless parameters to real time
-
-**Practical Example:**
-
-**Experimental setup:** 48-hour differentiation time course
-
-**Model fitting results:**
-
-- Posterior: $T_M \approx 6.0 \pm 0.5$
-- Inferred characteristic timescale: $48/6 = 8$ hours
-- Gene with $t^*_{on,i} = 2.0$: Activates at $2.0 \times 8 = 16$ hours
-- Gene with $\delta^*_i = 1.5$: Active for $1.5 \times 8 = 12$ hours
-
-#### **Independent Parameterization Justification**
-
-In the dimensionless framework, **gene timing parameters represent intrinsic biological properties** that should not scale with the arbitrary choice of observation window:
-
-- $t^*_{on,i}$: When a gene's regulatory program activates (intrinsic timing)
-- $\delta^*_i$: How long a gene's regulatory program lasts (intrinsic duration)
-
-**These are biological constants** that don't change based on how long we choose to observe the system. Therefore:
-
-\begin{align}
-t^*_{on,i} &\sim \text{Normal}(1.5, 0.8^2) \quad \text{(fixed biological timing)} \\
-\delta^*_i &\sim \text{LogNormal}(0.0, 0.45^2) \quad \text{(fixed biological duration)}
-\end{align}
-
-**NOT dependent on $T_M$:**
-\begin{align}
-t^*_{on,i} &\not\sim \text{Normal}(0.3 \times T_M, 0.8^2) \quad \text{(would create artificial scaling)}
-\end{align}
-
-This independence ensures that gene regulatory timing is treated as an intrinsic biological property rather than an artifact of experimental design.
 
 ### Identifiability Proof for Independent Parameterization
 
